@@ -8,7 +8,8 @@
 #include "mozilla/dom/ElementInternalsBinding.h"
 #include "nsGenericHTMLElement.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ElementInternals, mTarget)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ElementInternals)
@@ -28,4 +29,5 @@ JSObject* ElementInternals::WrapObject(JSContext* aCx,
   return ElementInternals_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

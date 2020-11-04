@@ -27,7 +27,8 @@
 #include "nsWrapperCacheInlines.h"
 #include "NodeUbiReporting.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 //----------------------------------------------------------------------
 bool Attr::sInitialized;
@@ -221,4 +222,5 @@ void Attr::ConstructUbiNode(void* storage) {
   JS::ubi::Concrete<Attr>::construct(storage, this);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -25,7 +25,8 @@
 #include "nsPrintfCString.h"
 #include "psshparser/PsshParser.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaKeySession, DOMEventTargetHelper,
                                    mMediaKeyError, mKeys, mKeyStatusMap,
@@ -619,4 +620,5 @@ nsString ToString(MediaKeySessionType aType) {
   return NS_ConvertUTF8toUTF16(ToCString(aType));
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

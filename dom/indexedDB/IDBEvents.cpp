@@ -15,7 +15,8 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::indexedDB;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 namespace indexedDB {
 
 const char16_t* kAbortEventType = u"abort";
@@ -93,4 +94,5 @@ JSObject* IDBVersionChangeEvent::WrapObjectInternal(
   return IDBVersionChangeEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

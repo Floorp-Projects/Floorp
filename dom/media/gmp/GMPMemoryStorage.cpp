@@ -6,7 +6,8 @@
 #include "GMPStorage.h"
 #include "nsClassHashtable.h"
 
-namespace mozilla::gmp {
+namespace mozilla {
+namespace gmp {
 
 class GMPMemoryStorage : public GMPStorage {
  public:
@@ -76,4 +77,5 @@ already_AddRefed<GMPStorage> CreateGMPMemoryStorage() {
   return RefPtr<GMPStorage>(new GMPMemoryStorage()).forget();
 }
 
-}  // namespace mozilla::gmp
+}  // namespace gmp
+}  // namespace mozilla

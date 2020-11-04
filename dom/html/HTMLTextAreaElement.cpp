@@ -45,7 +45,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(TextArea)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLTextAreaElement::HTMLTextAreaElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
@@ -1177,4 +1178,5 @@ void HTMLTextAreaElement::GetAutocomplete(DOMString& aValue) {
       attributeVal, aValue, mAutocompleteAttrState);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

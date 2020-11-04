@@ -8,7 +8,8 @@
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/StorageEventBinding.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(StorageEvent)
 
@@ -81,4 +82,5 @@ void StorageEvent::InitStorageEvent(const nsAString& aType, bool aCanBubble,
   mStorageArea = aStorageArea;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

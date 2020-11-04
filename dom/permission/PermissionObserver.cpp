@@ -13,7 +13,8 @@
 #include "nsIPermission.h"
 #include "PermissionUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 namespace {
 PermissionObserver* gInstance = nullptr;
@@ -112,4 +113,5 @@ PermissionObserver::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

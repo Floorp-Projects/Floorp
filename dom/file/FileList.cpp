@@ -9,7 +9,8 @@
 #include "mozilla/dom/FileListBinding.h"
 #include "mozilla/dom/File.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FileList, mFiles, mParent)
 
@@ -56,4 +57,5 @@ void FileList::ToSequence(Sequence<RefPtr<File>>& aSequence,
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

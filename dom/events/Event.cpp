@@ -40,7 +40,8 @@
 #include "nsPIWindowRoot.h"
 #include "nsRFPService.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 Event::Event(EventTarget* aOwner, nsPresContext* aPresContext,
              WidgetEvent* aEvent) {
@@ -828,7 +829,8 @@ void Event::GetWidgetEventType(WidgetEvent* aEvent, nsAString& aType) {
   aType.Truncate();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 using namespace mozilla;
 using namespace mozilla::dom;

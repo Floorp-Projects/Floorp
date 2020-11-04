@@ -18,7 +18,8 @@
 #include "mozilla/Unused.h"
 #include "nsProxyRelease.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -274,4 +275,5 @@ FileSystemTaskParentBase::Run() {
   return NS_OK;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

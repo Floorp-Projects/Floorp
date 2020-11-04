@@ -7,8 +7,12 @@
 #include "FileInfoTImpl.h"
 #include "FileManager.h"
 
-namespace mozilla::dom::indexedDB {
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
 
 template class FileInfoT<FileManager>;
 
-}  // namespace mozilla::dom::indexedDB
+}  // namespace indexedDB
+}  // namespace dom
+}  // namespace mozilla

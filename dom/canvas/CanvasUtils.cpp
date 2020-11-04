@@ -42,7 +42,8 @@
 
 using namespace mozilla::gfx;
 
-namespace mozilla::CanvasUtils {
+namespace mozilla {
+namespace CanvasUtils {
 
 bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
                               nsIPrincipal& aPrincipal) {
@@ -319,4 +320,5 @@ bool CheckWriteOnlySecurity(bool aCORSUsed, nsIPrincipal* aPrincipal,
   return false;
 }
 
-}  // namespace mozilla::CanvasUtils
+}  // namespace CanvasUtils
+}  // namespace mozilla

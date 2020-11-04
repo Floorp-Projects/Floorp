@@ -20,7 +20,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Menu)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 enum MenuType : uint8_t { MENU_TYPE_CONTEXT = 1, MENU_TYPE_TOOLBAR };
 
@@ -212,4 +213,5 @@ JSObject* HTMLMenuElement::WrapNode(JSContext* aCx,
   return HTMLMenuElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

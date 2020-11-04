@@ -15,7 +15,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableCell)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLTableCellElement::~HTMLTableCellElement() = default;
 
@@ -213,4 +214,5 @@ nsMapRuleToAttributesFunc HTMLTableCellElement::GetAttributeMappingFunction()
   return &MapAttributesIntoRule;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

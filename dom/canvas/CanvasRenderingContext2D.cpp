@@ -140,7 +140,8 @@ using namespace mozilla::image;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 // Cap sigma to avoid overly large temp surfaces.
 const Float SIGMA_MAX = 100;
@@ -5729,4 +5730,5 @@ size_t BindingJSObjectMallocBytes(CanvasRenderingContext2D* aContext) {
   return bytes.value();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

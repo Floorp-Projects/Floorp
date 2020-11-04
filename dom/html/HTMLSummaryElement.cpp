@@ -17,7 +17,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Summary)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLSummaryElement::~HTMLSummaryElement() = default;
 
@@ -136,4 +137,5 @@ JSObject* HTMLSummaryElement::WrapNode(JSContext* aCx,
   return HTMLElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

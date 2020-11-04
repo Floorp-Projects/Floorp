@@ -18,7 +18,9 @@
 
 class nsIInputStream;
 
-namespace mozilla::dom::quota {
+namespace mozilla {
+namespace dom {
+namespace quota {
 
 // static
 already_AddRefed<MemoryOutputStream> MemoryOutputStream::Create(
@@ -93,4 +95,6 @@ MemoryOutputStream::IsNonBlocking(bool* _retval) {
   return NS_OK;
 }
 
-}  // namespace mozilla::dom::quota
+}  // namespace quota
+}  // namespace dom
+}  // namespace mozilla

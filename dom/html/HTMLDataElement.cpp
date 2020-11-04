@@ -10,7 +10,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Data)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLDataElement::HTMLDataElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
@@ -25,4 +26,5 @@ JSObject* HTMLDataElement::WrapNode(JSContext* aCx,
   return HTMLDataElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

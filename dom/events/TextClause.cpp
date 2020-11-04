@@ -8,7 +8,8 @@
 #include "mozilla/dom/TextClauseBinding.h"
 #include "mozilla/TextEvents.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 // Only needed for refcounted objects.
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(TextClause)
@@ -42,4 +43,5 @@ JSObject* TextClause::WrapObject(JSContext* aCx,
 
 TextClause::~TextClause() = default;
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

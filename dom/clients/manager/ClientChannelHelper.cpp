@@ -19,7 +19,8 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 using mozilla::ipc::PrincipalInfoToPrincipal;
 
@@ -367,4 +368,5 @@ void CreateReservedSourceIfNeeded(nsIChannel* aChannel,
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

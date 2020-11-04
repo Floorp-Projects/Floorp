@@ -16,7 +16,8 @@
 #  include <windows.h>
 #endif
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 void MessageManagerGlobal::Dump(const nsAString& aStr) {
   if (!nsJSUtils::DumpEnabled()) {
@@ -46,4 +47,5 @@ void MessageManagerGlobal::Btoa(const nsAString& aBase64Data,
   aError = nsContentUtils::Btoa(aBase64Data, aAsciiString);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

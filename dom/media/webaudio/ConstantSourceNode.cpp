@@ -11,7 +11,8 @@
 #include "AudioNodeEngine.h"
 #include "AudioNodeTrack.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ConstantSourceNode, AudioScheduledSourceNode,
                                    mOffset)
@@ -274,4 +275,5 @@ void ConstantSourceNode::NotifyMainThreadTrackEnded() {
   MarkInactive();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

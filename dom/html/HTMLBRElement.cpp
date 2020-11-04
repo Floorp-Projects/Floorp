@@ -13,7 +13,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(BR)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLBRElement::HTMLBRElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
@@ -74,4 +75,5 @@ JSObject* HTMLBRElement::WrapNode(JSContext* aCx,
   return HTMLBRElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

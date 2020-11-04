@@ -56,7 +56,8 @@
 #endif
 #include "nsIException.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 /* static */
 void ChromeUtils::NondeterministicGetWeakMapKeys(
@@ -1363,4 +1364,5 @@ void ChromeUtils::GetAllDOMProcesses(
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

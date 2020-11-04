@@ -22,7 +22,8 @@
 #include "xpcprivate.h"
 #include "nsICrashReporter.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JSActor)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -461,4 +462,5 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(JSActor::QueryHandler)
 
 NS_IMPL_CYCLE_COLLECTION(JSActor::QueryHandler, mActor, mPromise)
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

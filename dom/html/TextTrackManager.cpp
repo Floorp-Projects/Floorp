@@ -30,7 +30,8 @@ mozilla::LazyLogModule gTextTrackLog("WebVTT");
   MOZ_LOG(gTextTrackLog, LogLevel::Verbose, \
           ("TextTrackManager=%p, " msg, this, ##__VA_ARGS__))
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_ISUPPORTS(TextTrackManager::ShutdownObserverProxy, nsIObserver);
 
@@ -874,4 +875,5 @@ void TextTrackManager::MaybeRunTimeMarchesOn() {
   TimeMarchesOn();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

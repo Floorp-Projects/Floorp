@@ -13,7 +13,8 @@
 
 #include "mozilla/dom/WorkerRef.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 void ClientManagerChild::ActorDestroy(ActorDestroyReason aReason) {
   mIPCWorkerRef = nullptr;
@@ -133,4 +134,5 @@ WorkerPrivate* ClientManagerChild::GetWorkerPrivate() const {
   return mIPCWorkerRef->Private();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

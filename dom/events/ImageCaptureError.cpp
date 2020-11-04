@@ -7,7 +7,8 @@
 #include "mozilla/dom/ImageCaptureError.h"
 #include "mozilla/dom/ImageCaptureErrorEventBinding.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ImageCaptureError, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ImageCaptureError)
@@ -36,4 +37,5 @@ void ImageCaptureError::GetMessage(nsAString& retval) const {
   retval = mMessage;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

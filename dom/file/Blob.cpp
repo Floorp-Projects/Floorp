@@ -20,7 +20,8 @@
 #include "StringBlobImpl.h"
 #include "js/GCAPI.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Blob)
 
@@ -373,4 +374,5 @@ void Blob::Stream(JSContext* aCx, JS::MutableHandle<JSObject*> aStream,
   aStream.set(holder->GetReadableStreamBody());
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

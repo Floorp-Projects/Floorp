@@ -10,7 +10,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 GetUserMediaRequest::GetUserMediaRequest(
     nsPIDOMWindowInner* aInnerWindow, const nsAString& aCallID,
@@ -75,4 +76,5 @@ void GetUserMediaRequest::GetConstraints(MediaStreamConstraints& result) {
   result = *mConstraints;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

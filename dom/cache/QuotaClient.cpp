@@ -197,7 +197,9 @@ static nsresult LockedGetPaddingSizeFromDB(
 
 }  // namespace
 
-namespace mozilla::dom::cache {
+namespace mozilla {
+namespace dom {
+namespace cache {
 
 const nsLiteralString kCachesSQLiteFilename = u"caches.sqlite"_ns;
 
@@ -566,4 +568,6 @@ nsresult WipePaddingFile(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir) {
 
   return rv;
 }
-}  // namespace mozilla::dom::cache
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

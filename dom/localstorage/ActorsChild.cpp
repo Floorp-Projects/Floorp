@@ -19,7 +19,8 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "nsCOMPtr.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 /*******************************************************************************
  * LSDatabaseChild
@@ -322,4 +323,5 @@ mozilla::ipc::IPCResult LSSnapshotChild::RecvMarkDirty() {
   return IPC_OK();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

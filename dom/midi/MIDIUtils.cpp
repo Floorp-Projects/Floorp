@@ -22,7 +22,9 @@ static const uint8_t kCommandLengths[] = {3, 3, 3, 3, 2, 2, 3};
 // Taken from MIDI Spec v1.0, Pg. 105, Table 5
 static const uint8_t kSystemLengths[] = {0, 2, 3, 2, 1, 1, 1, 1};
 
-namespace mozilla::dom::MIDIUtils {
+namespace mozilla {
+namespace dom {
+namespace MIDIUtils {
 
 // Checks validity of MIDIMessage passed to it. Throws debug warnings and
 // returns false if message is not valid.
@@ -121,4 +123,6 @@ bool IsSysexMessage(const MIDIMessage& aMsg) {
   }
   return false;
 }
-}  // namespace mozilla::dom::MIDIUtils
+}  // namespace MIDIUtils
+}  // namespace dom
+}  // namespace mozilla

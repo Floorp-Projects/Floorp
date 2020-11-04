@@ -8,7 +8,8 @@
 #include "AudioContext.h"
 #include "mozilla/dom/PeriodicWaveBinding.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PeriodicWave, mContext)
 
@@ -146,4 +147,5 @@ JSObject* PeriodicWave::WrapObject(JSContext* aCx,
   return PeriodicWave_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

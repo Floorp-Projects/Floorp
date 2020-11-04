@@ -9,7 +9,8 @@
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/StaticPrefs_media.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 using AudibleState = AudioChannelService::AudibleState;
 
@@ -165,4 +166,5 @@ MediaPlaybackDelayPolicy::CreateResumeDelayedPlaybackAgent(
   return agent->InitDelegate(aElement, aIsAudible) ? agent : nullptr;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

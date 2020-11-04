@@ -17,7 +17,9 @@
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
 
-namespace mozilla::gmp {
+namespace mozilla {
+
+namespace gmp {
 
 // States:
 // Initial: mIsOpen == false
@@ -487,4 +489,5 @@ void GMPVideoDecoderParent::UnblockResetAndDrain() {
   CancelResetCompleteTimeout();
 }
 
-}  // namespace mozilla::gmp
+}  // namespace gmp
+}  // namespace mozilla

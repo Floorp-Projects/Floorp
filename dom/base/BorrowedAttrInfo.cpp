@@ -6,7 +6,8 @@
 
 #include "mozilla/dom/BorrowedAttrInfo.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 BorrowedAttrInfo::BorrowedAttrInfo(const nsAttrName* aName,
                                    const nsAttrValue* aValue)
@@ -19,4 +20,5 @@ BorrowedAttrInfo::BorrowedAttrInfo(const BorrowedAttrInfo& aOther)
   MOZ_ASSERT_IF(mName, mValue);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

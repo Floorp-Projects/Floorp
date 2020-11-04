@@ -7,7 +7,8 @@
 #include "mozilla/dom/MIDIManagerParent.h"
 #include "mozilla/dom/MIDIPlatformService.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 void MIDIManagerParent::ActorDestroy(ActorDestroyReason aWhy) {}
 
@@ -23,4 +24,5 @@ mozilla::ipc::IPCResult MIDIManagerParent::RecvShutdown() {
   return IPC_OK();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -44,7 +44,8 @@ bool DeserializeArrayBuffer(JSContext* cx, const nsTArray<uint8_t>& aBuffer,
 
 }  // namespace IPC
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(TCPSocketChildBase)
 
@@ -177,4 +178,5 @@ mozilla::ipc::IPCResult TCPSocketChild::RecvRequestDelete() {
   return IPC_OK();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

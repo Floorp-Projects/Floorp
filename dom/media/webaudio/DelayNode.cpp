@@ -13,7 +13,8 @@
 #include "DelayBuffer.h"
 #include "PlayingRefChangeHandler.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(DelayNode, AudioNode, mDelay)
 
@@ -218,4 +219,5 @@ JSObject* DelayNode::WrapObject(JSContext* aCx,
   return DelayNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

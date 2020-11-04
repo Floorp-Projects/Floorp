@@ -11,7 +11,8 @@
 #include "MultipartBlobImpl.h"
 #include "StringBlobImpl.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 nsresult BlobSet::AppendVoidPtr(const void* aData, uint32_t aLength) {
   NS_ENSURE_ARG_POINTER(aData);
@@ -73,4 +74,5 @@ nsresult BlobSet::AppendBlobImpl(BlobImpl* aBlobImpl) {
   return NS_OK;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

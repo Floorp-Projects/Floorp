@@ -8,7 +8,8 @@
 #include "mozilla/dom/GamepadManager.h"
 #include "mozilla/dom/Promise.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(GamepadHapticActuator)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(GamepadHapticActuator)
@@ -77,4 +78,5 @@ void GamepadHapticActuator::Set(const GamepadHapticActuator* aOther) {
   mIndex = aOther->mIndex;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

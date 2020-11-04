@@ -8,7 +8,8 @@
 
 #include "mozilla/TextEvents.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -125,4 +126,5 @@ AutoHandlingUserInputStatePusher::~AutoHandlingUserInputStatePusher() {
   UserActivation::StopHandlingUserInput(mMessage);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

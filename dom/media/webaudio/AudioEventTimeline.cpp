@@ -52,7 +52,8 @@ static float ExtractValueFromCurve(double startTime, float* aCurve,
   }
 }
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 AudioTimelineEvent::AudioTimelineEvent(Type aType, double aTime, float aValue,
                                        double aTimeConstant, double aDuration,
@@ -366,4 +367,5 @@ const AudioTimelineEvent* AudioEventTimeline::GetPreviousEvent(
   return previous;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

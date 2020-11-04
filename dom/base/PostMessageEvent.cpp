@@ -33,7 +33,8 @@
 #include "nsPresContext.h"
 #include "nsQueryObject.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 PostMessageEvent::PostMessageEvent(BrowsingContext* aSource,
                                    const nsAString& aCallerOrigin,
@@ -307,4 +308,5 @@ void PostMessageEvent::DispatchToTargetThread(ErrorResult& aError) {
   aError = mTargetWindow->Dispatch(TaskCategory::Other, event.forget());
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

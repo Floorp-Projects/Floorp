@@ -43,7 +43,8 @@
 #include "nscore.h"
 #include "xpcpublic.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -584,4 +585,5 @@ void SimpleRequestResolver::OnResponse(
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

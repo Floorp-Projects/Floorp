@@ -9,7 +9,8 @@
 #include "MediaTrackList.h"
 #include "VideoTrack.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 MediaTrack::MediaTrack(nsIGlobalObject* aOwnerGlobal, const nsAString& aId,
                        const nsAString& aKind, const nsAString& aLabel,
@@ -31,4 +32,5 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 void MediaTrack::SetTrackList(MediaTrackList* aList) { mList = aList; }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

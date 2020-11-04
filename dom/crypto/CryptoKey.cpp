@@ -14,7 +14,8 @@
 #include "nsNSSComponent.h"
 #include "pk11pub.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CryptoKey, mGlobal)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(CryptoKey)
@@ -1105,4 +1106,5 @@ already_AddRefed<CryptoKey> CryptoKey::ReadStructuredClone(
   return key.forget();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

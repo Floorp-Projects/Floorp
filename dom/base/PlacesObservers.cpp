@@ -10,7 +10,8 @@
 #include "nsIWeakReferenceUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 template <class T>
 struct Flagged {
@@ -337,4 +338,5 @@ void PlacesObservers::NotifyListeners(
   gCallingListeners = false;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -10,7 +10,8 @@
 
 #include "SpeechRecognition.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SpeechRecognitionResultList, mParent,
                                       mItems)
@@ -55,4 +56,5 @@ already_AddRefed<SpeechRecognitionResult> SpeechRecognitionResultList::Item(
   return result.forget();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

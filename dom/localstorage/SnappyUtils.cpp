@@ -13,7 +13,8 @@
 #include "nsString.h"
 #include "snappy/snappy.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 bool SnappyCompress(const nsACString& aSource, nsACString& aDest) {
   MOZ_ASSERT(!aSource.IsVoid());
@@ -69,4 +70,5 @@ bool SnappyUncompress(const nsACString& aSource, nsACString& aDest) {
   return true;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

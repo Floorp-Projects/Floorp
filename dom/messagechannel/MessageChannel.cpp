@@ -15,7 +15,8 @@
 #include "nsIGlobalObject.h"
 #include "nsServiceManagerUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MessageChannel, mGlobal, mPort1, mPort2)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MessageChannel)
@@ -87,4 +88,5 @@ already_AddRefed<MessageChannel> MessageChannel::Constructor(
   return channel.forget();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

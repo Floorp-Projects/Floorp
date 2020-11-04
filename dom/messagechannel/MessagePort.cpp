@@ -41,7 +41,8 @@
 #  undef PostMessage
 #endif
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 void UniqueMessagePortId::ForceClose() {
   if (!mIdentifier.neutered()) {
@@ -871,4 +872,5 @@ void MessagePort::DispatchError() {
   DispatchEvent(*event);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

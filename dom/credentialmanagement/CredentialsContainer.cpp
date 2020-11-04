@@ -11,7 +11,8 @@
 #include "nsFocusManager.h"
 #include "nsIDocShell.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CredentialsContainer, mParent, mManager)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(CredentialsContainer)
@@ -157,4 +158,5 @@ already_AddRefed<Promise> CredentialsContainer::PreventSilentAccess(
   return promise.forget();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

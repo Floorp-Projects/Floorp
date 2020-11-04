@@ -8,7 +8,8 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 FileCreatorChild::FileCreatorChild() = default;
 
@@ -55,4 +56,5 @@ void FileCreatorChild::ActorDestroy(ActorDestroyReason aWhy) {
   }
 };
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

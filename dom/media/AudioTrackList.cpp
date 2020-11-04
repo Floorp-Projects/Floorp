@@ -7,7 +7,8 @@
 #include "mozilla/dom/AudioTrackList.h"
 #include "mozilla/dom/AudioTrackListBinding.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 JSObject* AudioTrackList::WrapObject(JSContext* aCx,
                                      JS::Handle<JSObject*> aGivenProto) {
@@ -29,4 +30,5 @@ AudioTrack* AudioTrackList::GetTrackById(const nsAString& aId) {
   return track ? track->AsAudioTrack() : nullptr;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

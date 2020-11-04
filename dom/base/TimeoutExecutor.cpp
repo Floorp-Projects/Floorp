@@ -15,7 +15,8 @@
 
 extern mozilla::LazyLogModule gTimeoutLog;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_ISUPPORTS(TimeoutExecutor, nsIRunnable, nsITimerCallback, nsINamed)
 
@@ -253,4 +254,5 @@ TimeoutExecutor::GetName(nsACString& aNameOut) {
   return NS_OK;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

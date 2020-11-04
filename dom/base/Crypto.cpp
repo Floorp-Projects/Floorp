@@ -17,7 +17,8 @@
 
 using mozilla::dom::ContentChild;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Crypto)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -99,4 +100,5 @@ SubtleCrypto* Crypto::Subtle() {
   return mSubtle;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

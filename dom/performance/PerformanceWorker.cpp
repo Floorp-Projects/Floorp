@@ -8,7 +8,8 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/StaticPrefs_dom.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 PerformanceWorker::PerformanceWorker(WorkerPrivate* aWorkerPrivate)
     : Performance(aWorkerPrivate->UsesSystemPrincipal()),
@@ -49,4 +50,5 @@ bool PerformanceWorker::CrossOriginIsolated() const {
   return mWorkerPrivate->CrossOriginIsolated();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

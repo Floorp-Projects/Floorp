@@ -7,7 +7,8 @@
 #include "ClientManagerChild.h"
 #include "ClientManagerParent.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 PClientManagerChild* AllocClientManagerChild() {
   MOZ_ASSERT_UNREACHABLE(
@@ -34,4 +35,5 @@ void InitClientManagerParent(PClientManagerParent* aActor) {
   actor->Init();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

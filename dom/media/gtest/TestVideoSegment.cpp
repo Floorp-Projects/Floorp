@@ -7,9 +7,11 @@
 
 using namespace mozilla;
 
-namespace mozilla::layer {
+namespace mozilla {
+namespace layer {
 class Image;
-}  // namespace mozilla::layer
+}  // namespace layer
+}  // namespace mozilla
 
 TEST(VideoSegment, TestAppendFrameForceBlack)
 {

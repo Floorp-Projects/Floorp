@@ -11,7 +11,9 @@
 #include "nsContentUtils.h"
 #include "nsPrintfCString.h"
 
-namespace mozilla::dom::indexedDB {
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
 
 void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr) {
   // Get leaf of file path
@@ -28,4 +30,6 @@ void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr) {
       true /* Internal errors are chrome context only */);
 }
 
-}  // namespace mozilla::dom::indexedDB
+}  // namespace indexedDB
+}  // namespace dom
+}  // namespace mozilla

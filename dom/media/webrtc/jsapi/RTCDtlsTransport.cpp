@@ -7,7 +7,8 @@
 #include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/RTCDtlsTransportBinding.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(RTCDtlsTransport, DOMEventTargetHelper)
 
@@ -66,4 +67,5 @@ void RTCDtlsTransport::UpdateState(TransportLayer::State aState) {
   DispatchTrustedEvent(event);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

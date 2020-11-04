@@ -9,7 +9,8 @@
 
 #define MAX_NUM_TIMERS 1000
 
-namespace mozilla::gmp {
+namespace mozilla {
+namespace gmp {
 
 GMPTimerChild::GMPTimerChild(GMPChild* aPlugin)
     : mTimerCount(1), mPlugin(aPlugin) {
@@ -56,4 +57,5 @@ mozilla::ipc::IPCResult GMPTimerChild::RecvTimerExpired(
   return IPC_OK();
 }
 
-}  // namespace mozilla::gmp
+}  // namespace gmp
+}  // namespace mozilla

@@ -9,7 +9,8 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/MessageManagerBinding.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 ParentProcessMessageManager::ParentProcessMessageManager()
     : MessageBroadcaster(nullptr, MessageManagerFlags::MM_CHROME |
@@ -28,4 +29,5 @@ JSObject* ParentProcessMessageManager::WrapObject(
   return ParentProcessMessageManager_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -13,7 +13,8 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(MerchantValidationEvent, Event,
                                    mValidationURL, mRequest)
@@ -184,4 +185,5 @@ JSObject* MerchantValidationEvent::WrapObjectInternal(
   return MerchantValidationEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

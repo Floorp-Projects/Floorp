@@ -18,7 +18,8 @@
 #include "AudioNodeEngine.h"
 #include "nsPrintfCString.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(AudioBuffer)
 
@@ -479,4 +480,5 @@ size_t AudioBuffer::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return amount;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

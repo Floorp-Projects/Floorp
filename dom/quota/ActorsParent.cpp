@@ -189,7 +189,9 @@
 #define MB *1024ULL KB
 #define GB *1024ULL MB
 
-namespace mozilla::dom::quota {
+namespace mozilla {
+namespace dom {
+namespace quota {
 
 using namespace mozilla::ipc;
 using mozilla::net::MozURL;
@@ -11879,4 +11881,6 @@ nsresult RestoreDirectoryMetadata2Helper::ProcessOriginDirectory(
   return NS_OK;
 }
 
-}  // namespace mozilla::dom::quota
+}  // namespace quota
+}  // namespace dom
+}  // namespace mozilla

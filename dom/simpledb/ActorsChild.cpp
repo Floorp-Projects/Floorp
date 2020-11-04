@@ -19,7 +19,8 @@
 #include "nsISDBResults.h"
 #include "nsVariant.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 /*******************************************************************************
  * SDBConnectionChild
@@ -219,4 +220,5 @@ mozilla::ipc::IPCResult SDBRequestChild::Recv__delete__(
   return IPC_OK();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -21,7 +21,8 @@
 
 #define BLOB_MEMORY_TEMPORARY_FILE 1048576
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -664,4 +665,5 @@ void MutableBlobStorage::CloseFD() {
   mFD = nullptr;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

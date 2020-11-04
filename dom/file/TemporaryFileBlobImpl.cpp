@@ -16,7 +16,8 @@
 
 using namespace mozilla::ipc;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -132,4 +133,5 @@ void TemporaryFileBlobImpl::CreateInputStream(nsIInputStream** aStream,
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

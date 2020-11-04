@@ -21,7 +21,8 @@
 #include "nsPrintfCString.h"
 #include "nsTHashtable.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioWorkletGlobalScope, WorkletGlobalScope,
                                    mNameToProcessorMap);
@@ -354,4 +355,5 @@ RefPtr<MessagePort> AudioWorkletGlobalScope::TakePortForProcessorCtor() {
   return std::move(mPortForProcessor);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

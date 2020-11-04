@@ -19,7 +19,8 @@
 #include "nsIStorageStream.h"
 #include "nsStringStream.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 static nsresult GetBufferDataAsStream(
     const uint8_t* aData, uint32_t aDataLength, nsIInputStream** aResult,
@@ -179,4 +180,5 @@ nsresult BodyExtractor<const URLSearchParams>::GetAsStream(
                             aCharset);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

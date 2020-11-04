@@ -14,7 +14,8 @@
 #include "mozilla/dom/PClientNavigateOpParent.h"
 #include "mozilla/Unused.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 using mozilla::ipc::IPCResult;
 
@@ -106,4 +107,5 @@ ClientManagerParent::~ClientManagerParent() { mService->RemoveManager(this); }
 
 void ClientManagerParent::Init() { mService->AddManager(this); }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -18,7 +18,8 @@
 
 #define DEVICECHANGE_HOLD_TIME_IN_MS 1000
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 MediaDevices::~MediaDevices() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -248,4 +249,5 @@ JSObject* MediaDevices::WrapObject(JSContext* aCx,
   return MediaDevices_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

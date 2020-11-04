@@ -16,7 +16,9 @@
 #include "nsStringStream.h"
 #include "nsTArray.h"
 
-namespace mozilla::dom::cache {
+namespace mozilla {
+namespace dom {
+namespace cache {
 
 using mozilla::Unused;
 using mozilla::ipc::AutoIPCStream;
@@ -606,4 +608,6 @@ ReadStream::IsNonBlocking(bool* aNonBlockingOut) {
   return mInner->IsNonBlocking(aNonBlockingOut);
 }
 
-}  // namespace mozilla::dom::cache
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

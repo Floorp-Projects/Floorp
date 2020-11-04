@@ -11,7 +11,8 @@
 #include "mozilla/dom/GridBinding.h"
 #include "nsGridContainerFrame.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Grid, mParent, mRows, mCols, mAreas)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Grid)
@@ -92,4 +93,5 @@ void Grid::GetAreas(nsTArray<RefPtr<GridArea>>& aAreas) const {
   aAreas = mAreas.Clone();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

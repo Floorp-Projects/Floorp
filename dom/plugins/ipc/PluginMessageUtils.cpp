@@ -40,7 +40,8 @@ DeferNPObjectReleaseRunnable::Run() {
 
 }  // namespace
 
-namespace mozilla::plugins {
+namespace mozilla {
+namespace plugins {
 
 NPRemoteWindow::NPRemoteWindow()
     : window(0),
@@ -138,4 +139,5 @@ void DeferNPVariantLastRelease(const NPNetscapeFuncs* f, NPVariant* v) {
   VOID_TO_NPVARIANT(*v);
 }
 
-}  // namespace mozilla::plugins
+}  // namespace plugins
+}  // namespace mozilla

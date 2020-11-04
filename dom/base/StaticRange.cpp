@@ -8,7 +8,8 @@
 #include "mozilla/dom/StaticRangeBinding.h"
 #include "nsINode.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 template already_AddRefed<StaticRange> StaticRange::Create(
     const RangeBoundary& aStartBoundary, const RangeBoundary& aEndBoundary,
@@ -120,4 +121,5 @@ JSObject* StaticRange::WrapObject(JSContext* aCx,
   return StaticRange_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

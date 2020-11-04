@@ -8,7 +8,8 @@
 #include "mozilla/dom/DOMTypes.h"
 #include "nsSerializationHelper.h"
 
-namespace mozilla::ipc {
+namespace mozilla {
+namespace ipc {
 
 void IPDLParamTraits<nsDocShellLoadState*>::Write(IPC::Message* aMsg,
                                                   IProtocol* aActor,
@@ -36,4 +37,5 @@ bool IPDLParamTraits<nsDocShellLoadState*>::Read(
   return true;
 }
 
-}  // namespace mozilla::ipc
+}  // namespace ipc
+}  // namespace mozilla

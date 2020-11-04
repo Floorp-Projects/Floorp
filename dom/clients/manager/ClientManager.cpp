@@ -16,7 +16,8 @@
 #include "nsContentUtils.h"
 #include "prthread.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 using mozilla::ipc::BackgroundChild;
 using mozilla::ipc::PBackgroundChild;
@@ -345,4 +346,5 @@ RefPtr<ClientOpPromise> ClientManager::OpenWindow(
   return mgr->StartOp(aArgs, aSerialEventTarget);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

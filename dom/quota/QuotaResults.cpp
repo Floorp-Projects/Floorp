@@ -11,7 +11,9 @@
 #include "mozilla/MacroForEach.h"
 #include "nscore.h"
 
-namespace mozilla::dom::quota {
+namespace mozilla {
+namespace dom {
+namespace quota {
 
 UsageResult::UsageResult(const nsACString& aOrigin, bool aPersisted,
                          uint64_t aUsage, uint64_t aLastAccessed)
@@ -94,4 +96,6 @@ EstimateResult::GetLimit(uint64_t* aLimit) {
   return NS_OK;
 }
 
-}  // namespace mozilla::dom::quota
+}  // namespace quota
+}  // namespace dom
+}  // namespace mozilla

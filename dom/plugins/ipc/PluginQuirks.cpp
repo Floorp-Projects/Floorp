@@ -8,7 +8,8 @@
 
 #include "nsPluginHost.h"
 
-namespace mozilla::plugins {
+namespace mozilla {
+namespace plugins {
 
 int GetQuirksFromMimeTypeAndFilename(const nsCString& aMimeType,
                                      const nsCString& aPluginFilename) {
@@ -51,4 +52,5 @@ int GetQuirksFromMimeTypeAndFilename(const nsCString& aMimeType,
   return quirks;
 }
 
-}  // namespace mozilla::plugins
+} /* namespace plugins */
+} /* namespace mozilla */

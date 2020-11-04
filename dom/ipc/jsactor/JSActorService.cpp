@@ -34,7 +34,8 @@
 #include "mozilla/Logging.h"
 #include "nsIObserverService.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 namespace {
 StaticRefPtr<JSActorService> gJSActorService;
 }
@@ -303,4 +304,5 @@ JSActorService::GetJSWindowActorProtocol(const nsACString& aName) {
   return mWindowActorDescriptors.Get(aName);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

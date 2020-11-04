@@ -9,7 +9,8 @@
 #include "mozilla/Unused.h"
 #include "nsFrameLoader.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BrowserBridgeHost)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -84,4 +85,5 @@ already_AddRefed<nsIWidget> BrowserBridgeHost::GetWidget() const {
   return widget.forget();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

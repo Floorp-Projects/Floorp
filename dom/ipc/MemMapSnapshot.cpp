@@ -10,7 +10,9 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ipc/FileDescriptor.h"
 
-namespace mozilla::ipc {
+namespace mozilla {
+
+namespace ipc {
 
 Result<Ok, nsresult> MemMapSnapshot::Init(size_t aSize) {
   MOZ_ASSERT(!mInitialized);
@@ -41,4 +43,5 @@ Result<Ok, nsresult> MemMapSnapshot::Finalize(loader::AutoMemMap& aMem) {
   return Ok();
 }
 
-}  // namespace mozilla::ipc
+}  // namespace ipc
+}  // namespace mozilla

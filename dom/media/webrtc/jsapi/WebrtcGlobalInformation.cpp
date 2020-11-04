@@ -41,7 +41,8 @@ static const char* wgiLogTag = "WebrtcGlobalInformation";
 #endif
 #define LOGTAG wgiLogTag
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 typedef nsTArray<RTCStatsReportInternal> Stats;
 
@@ -918,4 +919,5 @@ void WebrtcGlobalInformation::StoreLongTermICEStatistics(
           [=](nsresult aError) {});
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -9,7 +9,8 @@
 #include "GridLines.h"
 #include "mozilla/dom/GridBinding.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(GridLine, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(GridLine)
@@ -68,4 +69,5 @@ void GridLine::SetLineNames(const nsTArray<RefPtr<nsAtom>>& aNames) {
   mNames = aNames.Clone();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

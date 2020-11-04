@@ -10,7 +10,8 @@
 #include "nsIContent.h"
 #include "prtime.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 MouseEvent::MouseEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                        WidgetMouseEventBase* aEvent)
@@ -323,7 +324,8 @@ uint16_t MouseEvent::MozInputSource() const {
   return mEvent->AsMouseEventBase()->mInputSource;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 using namespace mozilla;
 using namespace mozilla::dom;

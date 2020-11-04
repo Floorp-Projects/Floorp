@@ -10,7 +10,8 @@
 #include "nsCOMPtr.h"
 #include "nsIPrincipal.h"
 
-namespace mozilla::ipc {
+namespace mozilla {
+namespace ipc {
 
 void IPDLParamTraits<nsIPrincipal*>::Write(IPC::Message* aMsg,
                                            IProtocol* aActor,
@@ -51,4 +52,5 @@ bool IPDLParamTraits<nsIPrincipal*>::Read(const IPC::Message* aMsg,
   return true;
 }
 
-}  // namespace mozilla::ipc
+}  // namespace ipc
+}  // namespace mozilla

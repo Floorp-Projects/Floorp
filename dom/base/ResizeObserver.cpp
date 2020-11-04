@@ -13,7 +13,8 @@
 #include "nsIContentInlines.h"
 #include <limits>
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 /**
  * Returns the length of the parent-traversal path (in terms of the number of
@@ -320,4 +321,5 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ResizeObserverSize)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

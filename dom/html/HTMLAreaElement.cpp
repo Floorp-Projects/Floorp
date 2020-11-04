@@ -17,7 +17,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Area)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLAreaElement::HTMLAreaElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
@@ -125,4 +126,5 @@ JSObject* HTMLAreaElement::WrapNode(JSContext* aCx,
   return HTMLAreaElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

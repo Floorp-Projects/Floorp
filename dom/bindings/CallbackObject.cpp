@@ -21,7 +21,8 @@
 #include "js/ContextOptions.h"
 #include "nsJSPrincipals.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CallbackObject)
   NS_INTERFACE_MAP_ENTRY(mozilla::dom::CallbackObject)
@@ -430,4 +431,5 @@ already_AddRefed<nsISupports> CallbackObjectHolderBase::ToXPCOMCallback(
   return retval.forget();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

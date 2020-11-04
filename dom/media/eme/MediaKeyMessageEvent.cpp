@@ -16,7 +16,8 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/MediaKeys.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(MediaKeyMessageEvent)
 
@@ -104,4 +105,5 @@ void MediaKeyMessageEvent::GetMessage(JSContext* cx,
   aMessage.set(mMessage);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

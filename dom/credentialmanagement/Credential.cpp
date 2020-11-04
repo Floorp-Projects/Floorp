@@ -8,7 +8,8 @@
 #include "mozilla/dom/CredentialManagementBinding.h"
 #include "nsCycleCollectionParticipant.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Credential, mParent)
 
@@ -37,4 +38,5 @@ void Credential::SetId(const nsAString& aId) { mId.Assign(aId); }
 
 void Credential::SetType(const nsAString& aType) { mType.Assign(aType); }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

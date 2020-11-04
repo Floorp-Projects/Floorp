@@ -8,7 +8,8 @@
 #include "File.h"
 #include "mozilla/CheckedInt.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 // Makes sure that aStart and aEnd is less then or equal to aSize and greater
 // than 0
@@ -94,4 +95,5 @@ nsresult BlobImpl::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
 
 NS_IMPL_ISUPPORTS(BlobImpl, BlobImpl)
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

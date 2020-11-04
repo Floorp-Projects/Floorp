@@ -40,7 +40,8 @@
 #  include "mozilla/java/GeckoRuntimeWrappers.h"
 #endif
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -430,4 +431,5 @@ RefPtr<ClientOpPromise> ClientOpenWindow(const ClientOpenWindowArgs& aArgs) {
   return promise;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

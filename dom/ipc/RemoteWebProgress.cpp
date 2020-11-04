@@ -4,7 +4,8 @@
 
 #include "RemoteWebProgress.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_ADDREF(RemoteWebProgress)
 NS_IMPL_RELEASE(RemoteWebProgress)
@@ -55,4 +56,5 @@ NS_IMETHODIMP RemoteWebProgress::SetTarget(nsIEventTarget* aTarget) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

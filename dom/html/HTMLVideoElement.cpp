@@ -48,7 +48,8 @@ nsGenericHTMLElement* NS_NewHTMLVideoElement(
   return element;
 }
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 nsresult HTMLVideoElement::Clone(mozilla::dom::NodeInfo* aNodeInfo,
                                  nsINode** aResult) const {
@@ -596,4 +597,5 @@ void HTMLVideoElement::OnSecondaryVideoOutputFirstFrameRendered() {
       mVisualCloneTarget->GetVideoFrameContainer());
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

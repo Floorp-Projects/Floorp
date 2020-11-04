@@ -59,7 +59,8 @@ class Runnable;
 
 using namespace mozilla::dom::quota;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -767,4 +768,5 @@ JSObject* StorageManager::WrapObject(JSContext* aCx,
   return StorageManager_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

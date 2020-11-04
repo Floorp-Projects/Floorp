@@ -18,7 +18,8 @@
 #include "mozilla/dom/WorkerScope.h"
 #include "nsIGlobalObject.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 using mozilla::dom::ipc::StructuredCloneData;
 
@@ -207,4 +208,5 @@ already_AddRefed<Promise> Client::Navigate(const nsAString& aURL,
   return outerPromise.forget();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -7,7 +7,8 @@
 #include "FunctionBrokerChild.h"
 #include "FunctionBrokerThread.h"
 
-namespace mozilla::plugins {
+namespace mozilla {
+namespace plugins {
 
 FunctionBrokerChild* FunctionBrokerChild::sInstance = nullptr;
 
@@ -106,4 +107,5 @@ void FunctionBrokerChild::Destroy() {
   sInstance = nullptr;
 }
 
-}  // namespace mozilla::plugins
+}  // namespace plugins
+}  // namespace mozilla

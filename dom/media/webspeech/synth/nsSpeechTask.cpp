@@ -17,7 +17,8 @@ extern mozilla::LogModule* GetSpeechSynthLog();
 
 #define AUDIO_TRACK 1
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 // nsSpeechTask
 
@@ -384,4 +385,5 @@ void nsSpeechTask::SetAudioOutputVolume(float aVolume) {
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

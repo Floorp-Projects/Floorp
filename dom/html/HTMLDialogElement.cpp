@@ -26,7 +26,8 @@ nsGenericHTMLElement* NS_NewHTMLDialogElement(
   return new (nim) mozilla::dom::HTMLUnknownElement(nodeInfo.forget());
 }
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLDialogElement::~HTMLDialogElement() = default;
 
@@ -217,4 +218,5 @@ JSObject* HTMLDialogElement::WrapNode(JSContext* aCx,
   return HTMLDialogElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

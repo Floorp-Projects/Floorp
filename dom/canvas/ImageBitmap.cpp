@@ -38,7 +38,8 @@ using namespace mozilla::layers;
 using mozilla::dom::HTMLMediaElement_Binding::HAVE_METADATA;
 using mozilla::dom::HTMLMediaElement_Binding::NETWORK_EMPTY;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ImageBitmap, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ImageBitmap)
@@ -1710,4 +1711,5 @@ void CreateImageBitmapFromBlob::WorkerShuttingDown() {
   mGlobalObject = nullptr;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

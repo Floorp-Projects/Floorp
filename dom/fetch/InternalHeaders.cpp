@@ -15,7 +15,8 @@
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 InternalHeaders::InternalHeaders(nsTArray<Entry>&& aHeaders,
                                  HeadersGuardEnum aGuard)
@@ -634,4 +635,5 @@ void InternalHeaders::ReuseExistingNameIfExists(nsCString& aName) const {
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

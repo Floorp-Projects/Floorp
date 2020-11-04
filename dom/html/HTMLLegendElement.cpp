@@ -12,7 +12,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Legend)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLLegendElement::~HTMLLegendElement() = default;
 
@@ -113,4 +114,5 @@ JSObject* HTMLLegendElement::WrapNode(JSContext* aCx,
   return HTMLLegendElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

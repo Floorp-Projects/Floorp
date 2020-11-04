@@ -52,7 +52,9 @@
 
 #define PROFILE_BEFORE_CHANGE_QM_OBSERVER_ID "profile-before-change-qm"
 
-namespace mozilla::dom::quota {
+namespace mozilla {
+namespace dom {
+namespace quota {
 
 using namespace mozilla::ipc;
 
@@ -986,4 +988,6 @@ nsresult QuotaManagerService::IdleMaintenanceInfo::InitiateRequest(
   return NS_OK;
 }
 
-}  // namespace mozilla::dom::quota
+}  // namespace quota
+}  // namespace dom
+}  // namespace mozilla

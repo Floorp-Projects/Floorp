@@ -11,7 +11,8 @@
 #include "mozilla/EMEUtils.h"
 #include "GMPUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MediaKeyStatusMap)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(MediaKeyStatusMap)
@@ -100,4 +101,5 @@ void MediaKeyStatusMap::Update(const nsTArray<CDMCaps::KeyStatus>& aKeys) {
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

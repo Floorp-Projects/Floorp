@@ -9,7 +9,8 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "nsThreadUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 using namespace mozilla::ipc;
 
@@ -104,4 +105,5 @@ void GamepadEventChannelParent::DispatchUpdateEvent(
                                    NS_DISPATCH_NORMAL);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -24,7 +24,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Shared)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 extern nsAttrValue::EnumTable kListTypeTable[];
 
@@ -291,4 +292,5 @@ JSObject* HTMLSharedElement::WrapNode(JSContext* aCx,
   return HTMLHtmlElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

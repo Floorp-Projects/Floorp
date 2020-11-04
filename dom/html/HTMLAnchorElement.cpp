@@ -23,7 +23,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Anchor)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 #define ANCHOR_ELEMENT_FLAG_BIT(n_) \
   NODE_FLAG_BIT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + (n_))
@@ -268,4 +269,5 @@ void HTMLAnchorElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
   *aNodeSize += Link::SizeOfExcludingThis(aSizes.mState);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

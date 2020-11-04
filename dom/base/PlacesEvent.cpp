@@ -8,7 +8,8 @@
 
 #include "mozilla/HoldDropJSObjects.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(PlacesEvent)
 
@@ -39,4 +40,5 @@ JSObject* PlacesEvent::WrapObject(JSContext* aCx,
   return PlacesEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

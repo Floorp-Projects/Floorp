@@ -150,7 +150,8 @@ using namespace mozilla::layers;
 using mozilla::net::nsMediaFragmentURIParser;
 using namespace mozilla::dom::HTMLMediaElement_Binding;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 using AudibleState = AudioChannelService::AudibleState;
 
@@ -7851,7 +7852,8 @@ bool HTMLMediaElement::IsBeingUsedInPictureInPictureMode() const {
   return static_cast<const HTMLVideoElement*>(this)->IsCloningElementVisually();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #undef LOG
 #undef LOG_EVENT

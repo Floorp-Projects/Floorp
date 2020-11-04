@@ -10,7 +10,8 @@
 #include "AudioNodeTrack.h"
 #include "nsPrintfCString.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 class ChannelMergerNodeEngine final : public AudioNodeEngine {
  public:
@@ -95,4 +96,5 @@ JSObject* ChannelMergerNode::WrapObject(JSContext* aCx,
   return ChannelMergerNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
