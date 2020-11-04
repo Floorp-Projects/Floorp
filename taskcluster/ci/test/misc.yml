@@ -8,7 +8,7 @@ job-defaults:
 geckoview-junit:
     description: "Geckoview junit run"
     suite: geckoview-junit
-    variants: ["geckoview-e10s-multi", "geckoview-fission"]
+    variants: ["geckoview-e10s-single", "geckoview-fission"]
     treeherder-symbol: gv-junit
     loopback-video: true
     e10s: true
