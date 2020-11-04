@@ -26,7 +26,7 @@ import android.net.NetworkRequest
  * ```
  */
 class WifiConnectionMonitor(app: Application) {
-    private val callbacks = mutableSetOf<(Boolean) -> Unit>()
+    private val callbacks = mutableListOf<(Boolean) -> Unit>()
     private val connectivityManager = app.getSystemService(Context.CONNECTIVITY_SERVICE) as
             ConnectivityManager
 
@@ -35,14 +35,19 @@ class WifiConnectionMonitor(app: Application) {
 
     private val frameworkListener = object : ConnectivityManager.NetworkCallback() {
         override fun onLost(network: Network?) {
-            callbacks.forEach { it(false) }
+            notifyListeners(false)
             lastKnownStateWasAvailable = false
         }
 
         override fun onAvailable(network: Network?) {
-            callbacks.forEach { it(true) }
+            notifyListeners(true)
             lastKnownStateWasAvailable = true
         }
+    }
+
+    internal fun notifyListeners(value: Boolean) {
+        val items = ArrayList(callbacks)
+        items.forEach { it(value) }
     }
 
     /**
@@ -65,7 +70,7 @@ class WifiConnectionMonitor(app: Application) {
         val noCallbacksReceivedYet = lastKnownStateWasAvailable == null
         if (noCallbacksReceivedYet) {
             lastKnownStateWasAvailable = false
-            callbacks.forEach { it(false) }
+            notifyListeners(false)
         }
 
         connectivityManager.registerNetworkCallback(request, frameworkListener)
