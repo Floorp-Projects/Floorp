@@ -801,12 +801,13 @@ static bool IsTrimmableSpace(char aCh) {
 }
 
 static bool IsTrimmableSpace(const nsTextFragment* aFrag, uint32_t aPos,
-                             const nsStyleText* aStyleText) {
+                             const nsStyleText* aStyleText,
+                             bool aAllowHangingWS = false) {
   NS_ASSERTION(aPos < aFrag->GetLength(), "No text for IsSpace!");
 
   switch (aFrag->CharAt(aPos)) {
     case ' ':
-      return !aStyleText->WhiteSpaceIsSignificant() &&
+      return (!aStyleText->WhiteSpaceIsSignificant() || aAllowHangingWS) &&
              !IsSpaceCombiningSequenceTail(aFrag, aPos + 1);
     case '\n':
       return !aStyleText->NewlineIsSignificantStyle() &&
@@ -814,7 +815,7 @@ static bool IsTrimmableSpace(const nsTextFragment* aFrag, uint32_t aPos,
     case '\t':
     case '\r':
     case '\f':
-      return !aStyleText->WhiteSpaceIsSignificant();
+      return !aStyleText->WhiteSpaceIsSignificant() || aAllowHangingWS;
     default:
       return false;
   }
@@ -3049,11 +3050,13 @@ gfxSkipCharsIterator nsTextFrame::EnsureTextRun(
 static uint32_t GetEndOfTrimmedText(const nsTextFragment* aFrag,
                                     const nsStyleText* aStyleText,
                                     uint32_t aStart, uint32_t aEnd,
-                                    gfxSkipCharsIterator* aIterator) {
+                                    gfxSkipCharsIterator* aIterator,
+                                    bool aAllowHangingWS = false) {
   aIterator->SetSkippedOffset(aEnd);
   while (aIterator->GetSkippedOffset() > aStart) {
     aIterator->AdvanceSkipped(-1);
-    if (!IsTrimmableSpace(aFrag, aIterator->GetOriginalOffset(), aStyleText))
+    if (!IsTrimmableSpace(aFrag, aIterator->GetOriginalOffset(), aStyleText,
+                          aAllowHangingWS))
       return aIterator->GetSkippedOffset() + 1;
   }
   return aStart;
@@ -8348,6 +8351,7 @@ void nsTextFrame::AddInlineMinISizeForFlow(gfxContext* aRenderingContext,
   bool collapseWhitespace = !textStyle->WhiteSpaceIsSignificant();
   bool preformatNewlines = textStyle->NewlineIsSignificant(this);
   bool preformatTabs = textStyle->WhiteSpaceIsSignificant();
+  bool whitespaceCanHang = textStyle->WhiteSpaceCanHangOrVisuallyCollapse();
   gfxFloat tabWidth = -1;
   uint32_t start = FindStartAfterSkippingWhitespace(&provider, aData, textStyle,
                                                     &iter, flowEndInTextRun);
@@ -8408,9 +8412,9 @@ void nsTextFrame::AddInlineMinISizeForFlow(gfxContext* aRenderingContext,
       aData->mCurrentLine = NSCoordSaturatingAdd(aData->mCurrentLine, width);
       aData->mAtStartOfLine = false;
 
-      if (collapseWhitespace) {
+      if (collapseWhitespace || whitespaceCanHang) {
         uint32_t trimStart =
-            GetEndOfTrimmedText(frag, textStyle, wordStart, i, &iter);
+            GetEndOfTrimmedText(frag, textStyle, wordStart, i, &iter, whitespaceCanHang);
         if (trimStart == start) {
           // This is *all* trimmable whitespace, so whatever trailingWhitespace
           // we saw previously is still trailing...
@@ -9275,9 +9279,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
 
   bool isBreakSpaces = textStyle->mWhiteSpace == StyleWhiteSpace::BreakSpaces;
   // allow whitespace to overflow the container
-  bool whitespaceCanHang = !isBreakSpaces &&
-                           textStyle->WhiteSpaceCanWrapStyle() &&
-                           textStyle->WhiteSpaceIsSignificant();
+  bool whitespaceCanHang = textStyle->WhiteSpaceCanHangOrVisuallyCollapse();
   gfxBreakPriority breakPriority = aLineLayout.LastOptionalBreakPriority();
   gfxTextRun::SuppressBreak suppressBreak = gfxTextRun::eNoSuppressBreak;
   bool shouldSuppressLineBreak = ShouldSuppressLineBreak();

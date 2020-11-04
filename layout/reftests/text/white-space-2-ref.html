@@ -3,11 +3,14 @@
 <head>
 <!-- Reference -->
 <style>
-div { border:1px solid black; }
+div { font:16px sans-serif; border:1px solid black; }
 .container { float:left; width:20%; border-color:cyan; }
 p { width:0; }
 b { font-weight:normal; background-color:yellow; white-space:pre; }
 .cell { display:table-cell; border:1px solid green; }
+.hang { display:inline-block; width:0; overflow:visible; }
+.hang span { display:inline; background-color:yellow; }
+.clip { overflow: hidden; }
 </style>
 </head>
 <body>
@@ -17,7 +20,7 @@ b { font-weight:normal; background-color:yellow; white-space:pre; }
 Kitty</b></span>
 <p><span class="cell"><b>Hello Kitty</b></span>
 <p><span class="cell"><b>Hello Kitty</b></span>
-<p><span class="cell"><b>Hello 
+<p><span class="cell"><b>Hello
 Kitty</b></span>
 </div>
 
@@ -28,7 +31,7 @@ Kitty</b></span>
 Kitty</b></span>
 <p><span class="cell"><b>Hello
 Kitty</b></span>
-<p><span class="cell"><b>Hello 
+<p><span class="cell"><b>Hello
 Kitty</b></span>
 </div>
 
@@ -37,7 +40,7 @@ Kitty</b></span>
  Kitty</b></span>
 <p><span class="cell"><b>Hello  Kitty</b></span>
 <p><span class="cell"><b>Hello  Kitty</b></span>
-<p><span class="cell"><b>Hello 
+<p><span class="cell clip"><b>Hello<span class="hang"><span> </span></span>
  Kitty</b></span>
 </div>
 
@@ -46,18 +49,18 @@ Kitty</b></span>
 Kitty</b></span>
 <p><span class="cell"><b>Hello  Kitty</b></span>
 <p><span class="cell"><b>Hello Kitty</b></span>
-<p><span class="cell"><b>Hello 
+<p><span class="cell"><b>Hello
 Kitty</b></span>
 </div>
 
 <div class="container">
-<p><span class="cell"><b>Hello  
+<p><span class="cell"><b>Hello<span class="hang"><span> </span></span>
 Kitty</b></span>
-<p><span class="cell"><b>Hello  
+<p><span class="cell"><b>Hello 
 Kitty</b></span>
-<p><span class="cell"><b>Hello  
+<p><span class="cell"><b>Hello<span class="hang"><span> </span></span>
 Kitty</b></span>
-<p><span class="cell"><b>Hello  
+<p><span class="cell"><b>Hello
 Kitty</b></span>
 </div>
 
