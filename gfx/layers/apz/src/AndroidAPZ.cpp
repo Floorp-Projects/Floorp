@@ -54,9 +54,8 @@ AsyncPanZoomAnimation* AndroidSpecificState::CreateFlingAnimation(
     AsyncPanZoomController& aApzc, const FlingHandoffState& aHandoffState,
     float aPLPPI) {
   if (StaticPrefs::apz_android_chrome_fling_physics_enabled()) {
-    return new GenericFlingAnimation<AndroidFlingPhysics>(
-        aApzc, aHandoffState.mChain, aHandoffState.mIsHandoff,
-        aHandoffState.mScrolledApzc, aPLPPI);
+    return new GenericFlingAnimation<AndroidFlingPhysics>(aApzc, aHandoffState,
+                                                          aPLPPI);
   } else {
     return new StackScrollerFlingAnimation(aApzc, this, aHandoffState.mChain,
                                            aHandoffState.mIsHandoff,

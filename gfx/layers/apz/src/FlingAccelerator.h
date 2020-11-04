@@ -13,6 +13,8 @@
 namespace mozilla {
 namespace layers {
 
+struct FlingHandoffState;
+
 /**
  * This class is used to track state that is used when determining whether a
  * fling should be accelerated.
@@ -29,8 +31,9 @@ class FlingAccelerator final {
 
   // Starts a new fling, and returns the (potentially accelerated) velocity that
   // should be used for that fling.
-  ParentLayerPoint GetFlingStartingVelocity(const SampleTime& aNow,
-                                            const ParentLayerPoint& aVelocity);
+  ParentLayerPoint GetFlingStartingVelocity(
+      const SampleTime& aNow, const ParentLayerPoint& aVelocity,
+      const FlingHandoffState& aHandoffState);
 
   void ObserveFlingCanceled(const ParentLayerPoint& aVelocity) {
     mPreviousFlingCancelVelocity = aVelocity;
@@ -38,7 +41,8 @@ class FlingAccelerator final {
 
  protected:
   bool ShouldAccelerate(const SampleTime& aNow,
-                        const ParentLayerPoint& aVelocity) const;
+                        const ParentLayerPoint& aVelocity,
+                        const FlingHandoffState& aHandoffState) const;
 
   // The initial velocity of the most recent fling.
   ParentLayerPoint mPreviousFlingStartingVelocity;

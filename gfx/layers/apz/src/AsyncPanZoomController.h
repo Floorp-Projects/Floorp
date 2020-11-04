@@ -818,7 +818,8 @@ class AsyncPanZoomController {
    * position of the start point so that the pan gesture is calculated
    * regardless of if the window/GeckoView moved during the pan.
    */
-  nsEventStatus StartPanning(const ExternalPoint& aStartPoint);
+  nsEventStatus StartPanning(const ExternalPoint& aStartPoint,
+                             const TimeStamp& aEventTime);
 
   /**
    * Wrapper for Axis::UpdateWithTouchAtDevicePoint(). Calls this function for
@@ -1676,6 +1677,13 @@ class AsyncPanZoomController {
   }
 
  private:
+  // The timestamp of the latest touch start event.
+  TimeStamp mTouchStartTime;
+  // The time duration between mTouchStartTime and the touchmove event that
+  // started the pan (the touchmove event that transitioned this APZC from the
+  // TOUCHING state to one of the PANNING* states). Only valid while this APZC
+  // is in a panning state.
+  TimeDuration mTouchStartRestingTimeBeforePan;
   // Extra offset to add to the async scroll position for testing
   CSSPoint mTestAsyncScrollOffset;
   // Extra zoom to include in the aync zoom for testing

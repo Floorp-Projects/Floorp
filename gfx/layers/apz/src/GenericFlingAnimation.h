@@ -55,14 +55,11 @@ template <typename FlingPhysics>
 class GenericFlingAnimation : public AsyncPanZoomAnimation,
                               public FlingPhysics {
  public:
-  GenericFlingAnimation(
-      AsyncPanZoomController& aApzc,
-      const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
-      bool aFlingIsHandedOff,
-      const RefPtr<const AsyncPanZoomController>& aScrolledApzc, float aPLPPI)
+  GenericFlingAnimation(AsyncPanZoomController& aApzc,
+                        const FlingHandoffState& aHandoffState, float aPLPPI)
       : mApzc(aApzc),
-        mOverscrollHandoffChain(aOverscrollHandoffChain),
-        mScrolledApzc(aScrolledApzc) {
+        mOverscrollHandoffChain(aHandoffState.mChain),
+        mScrolledApzc(aHandoffState.mScrolledApzc) {
     MOZ_ASSERT(mOverscrollHandoffChain);
 
     // Drop any velocity on axes where we don't have room to scroll anyways
@@ -80,7 +77,7 @@ class GenericFlingAnimation : public AsyncPanZoomAnimation,
       mApzc.mY.SetVelocity(0);
     }
 
-    if (aFlingIsHandedOff) {
+    if (aHandoffState.mIsHandoff) {
       // Only apply acceleration in the APZC that originated the fling, not in
       // APZCs further down the handoff chain during handoff.
       mApzc.mFlingAccelerator.Reset();
@@ -88,7 +85,7 @@ class GenericFlingAnimation : public AsyncPanZoomAnimation,
 
     ParentLayerPoint velocity =
         mApzc.mFlingAccelerator.GetFlingStartingVelocity(
-            aApzc.GetFrameTime(), mApzc.GetVelocityVector());
+            aApzc.GetFrameTime(), mApzc.GetVelocityVector(), aHandoffState);
 
     mApzc.SetVelocityVector(velocity);
 

@@ -156,6 +156,12 @@ struct FlingHandoffState {
   // otherwise it may not stay alive for the entire handoff.
   RefPtr<const OverscrollHandoffChain> mChain;
 
+  // The time duration between the touch start and the touch move that started
+  // the pan gesture which triggered this fling. In other words, the time it
+  // took for the finger to move enough to cross the touch slop threshold.
+  // Nothing if this fling was not immediately caused by a touch pan.
+  Maybe<TimeDuration> mTouchStartRestingTime;
+
   // Whether handoff has happened by this point, or we're still process
   // the original fling.
   bool mIsHandoff;
