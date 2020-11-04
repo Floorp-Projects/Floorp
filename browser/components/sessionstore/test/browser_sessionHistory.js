@@ -18,7 +18,7 @@ add_task(async function test_load_start() {
 
   // Load a new URI.
   let historyReplacePromise = promiseOnHistoryReplaceEntryInChild(browser);
-  await BrowserTestUtils.loadURI(browser, PAGE);
+  BrowserTestUtils.loadURI(browser, PAGE);
 
   // Remove the tab before it has finished loading.
   await historyReplacePromise;
