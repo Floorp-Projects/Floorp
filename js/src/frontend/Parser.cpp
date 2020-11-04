@@ -868,8 +868,8 @@ bool PerHandlerParser<ParseHandler>::
 
   uint32_t slotCount = 0;
   for (BindingIter bi = scope.bindings(pc_); bi; bi++) {
+    bool closedOver = false;
     if (UsedNamePtr p = usedNames_.lookup(bi.name())) {
-      bool closedOver;
       p->value().noteBoundInScope(scriptId, scopeId, &closedOver);
       if (closedOver) {
         bi.setClosedOver();
@@ -880,7 +880,11 @@ bool PerHandlerParser<ParseHandler>::
             return false;
           }
         }
-      } else if constexpr (!isSyntaxParser) {
+      }
+    }
+
+    if constexpr (!isSyntaxParser) {
+      if (!closedOver) {
         slotCount++;
       }
     }
