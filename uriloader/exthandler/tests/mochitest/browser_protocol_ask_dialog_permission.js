@@ -97,21 +97,59 @@ function testAlwaysAsk(scheme, ask) {
 }
 
 /**
- * Load a test URL with the desired scheme in a browser.
- * The load is triggered by the content principal of the browser.
+ * Open a test URL with the desired scheme.
+ * By default the load is triggered by the content principal of the browser.
  * @param {MozBrowser} browser - Browser to load the test URL in.
  * @param {string} scheme - Scheme of the test URL.
- * @param {nsIPrincipal} [triggeringPrincipal] - Principal to trigger the load
- * with. Defaults to the browsers content principal.
+ * @param {Object} [opts] - Options for the triggering principal.
+ * @param {nsIPrincipal} [opts.triggeringPrincipal] - Principal to trigger the
+ * load with. Defaults to the browsers content principal.
+ * @param {boolean} [opts.useNullPrincipal] - If true, we will trigger the load
+ * with a null principal.
+ * @param {boolean} [opts.omitTriggeringPrincipal] - If true, we will directly
+ * call the protocol handler dialogs without a principal.
  */
-function contentOpenProto(
+function triggerOpenProto(
   browser,
   scheme,
-  triggeringPrincipal = browser.contentPrincipal
+  {
+    triggeringPrincipal = browser.contentPrincipal,
+    useNullPrincipal = false,
+    omitTriggeringPrincipal = false,
+  } = {}
 ) {
   let uri = `${scheme}://test`;
+
+  if (useNullPrincipal) {
+    // Create and load iframe with data URI.
+    // This will be a null principal.
+    ContentTask.spawn(browser, { uri }, args => {
+      let frame = content.document.createElement("iframe");
+      frame.src = `data:text/html,<script>location.href="${args.uri}"</script>`;
+      content.document.body.appendChild(frame);
+    });
+    return;
+  }
+
+  if (omitTriggeringPrincipal) {
+    // Directly call ContentDispatchChooser without a triggering principal
+    let contentDispatchChooser = Cc[
+      "@mozilla.org/content-dispatch-chooser;1"
+    ].createInstance(Ci.nsIContentDispatchChooser);
+
+    let handler = HandlerServiceTestUtils.getHandlerInfo(scheme);
+
+    contentDispatchChooser.handleURI(
+      handler,
+      Services.io.newURI(uri),
+      null,
+      browser.browsingContext
+    );
+    return;
+  }
+
   info("Loading uri: " + uri);
-  return browser.loadURI(uri, { triggeringPrincipal });
+  browser.loadURI(uri, { triggeringPrincipal });
 }
 
 /**
@@ -124,6 +162,8 @@ function contentOpenProto(
  * dialog. If defined, we expect this dialog to be shown.
  * @param {Object} [options.chooserDialogOptions] - Test options for the chooser
  * dialog. If defined, we expect this dialog to be shown.
+ * @param {Object} [options.loadOptions] - Options for triggering the protocol
+ * load which causes the dialog to show.
  * @param {nsIPrincipal} [options.triggeringPrincipal] - Principal to trigger
  * the load with. Defaults to the browsers content principal.
  * @returns {Promise} - A promise which resolves once the test is complete.
@@ -131,7 +171,7 @@ function contentOpenProto(
 async function testOpenProto(
   browser,
   scheme,
-  { permDialogOptions, chooserDialogOptions, triggeringPrincipal } = {}
+  { permDialogOptions, chooserDialogOptions, loadOptions } = {}
 ) {
   let permDialogOpenPromise;
   let chooserDialogOpenPromise;
@@ -145,7 +185,7 @@ async function testOpenProto(
     info("Should see chooser dialog");
     chooserDialogOpenPromise = waitForProtocolAppChooserDialog(browser, true);
   }
-  contentOpenProto(browser, scheme, triggeringPrincipal);
+  triggerOpenProto(browser, scheme, loadOptions);
   let webHandlerLoadedPromise;
 
   let webHandlerShouldOpen =
@@ -540,7 +580,9 @@ add_task(async function test_permission_system_principal() {
   await BrowserTestUtils.withNewTab(ORIGIN1, async browser => {
     await testOpenProto(browser, scheme, {
       chooserDialogOptions: { hasCheckbox: true, actionConfirm: false },
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      loadOptions: {
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      },
     });
   });
 });
@@ -611,4 +653,56 @@ add_task(async function test_change_app_checkbox_cancel() {
 
   // Should not have applied value from checkbox
   testAlwaysAsk(scheme, true);
+});
+
+/**
+ * Tests that the external protocol dialogs behave correctly when a null
+ * principal is passed.
+ */
+add_task(async function test_null_principal() {
+  let scheme = TEST_PROTOS[0];
+
+  await BrowserTestUtils.withNewTab(ORIGIN1, async browser => {
+    await testOpenProto(browser, scheme, {
+      loadOptions: {
+        useNullPrincipal: true,
+      },
+      permDialogOptions: {
+        hasCheckbox: false,
+        chooserIsNext: true,
+        hasChangeApp: false,
+        actionConfirm: true,
+      },
+      chooserDialogOptions: {
+        hasCheckbox: true,
+        actionConfirm: false, // Cancel dialog
+      },
+    });
+  });
+});
+
+/**
+ * Tests that the external protocol dialogs behave correctly when no principal
+ * is passed.
+ */
+add_task(async function test_no_principal() {
+  let scheme = TEST_PROTOS[1];
+
+  await BrowserTestUtils.withNewTab(ORIGIN1, async browser => {
+    await testOpenProto(browser, scheme, {
+      loadOptions: {
+        omitTriggeringPrincipal: true,
+      },
+      permDialogOptions: {
+        hasCheckbox: false,
+        chooserIsNext: true,
+        hasChangeApp: false,
+        actionConfirm: true,
+      },
+      chooserDialogOptions: {
+        hasCheckbox: true,
+        actionConfirm: false, // Cancel dialog
+      },
+    });
+  });
 });
