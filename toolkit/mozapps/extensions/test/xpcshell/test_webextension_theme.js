@@ -299,3 +299,67 @@ add_task(async function test_theme_update() {
   addon = await AddonManager.getAddonByID(DEFAULT_THEME);
   ok(!addon.userDisabled, "default theme is enabled after upgrade");
 });
+
+add_task(async function test_builtin_theme_permissions() {
+  const ADDON_ID = "mytheme@mozilla.org";
+
+  let themeDef = {
+    manifest: {
+      applications: { gecko: { id: ADDON_ID } },
+      version: "1.0",
+      theme: {},
+    },
+  };
+
+  function checkPerms(addon) {
+    // builtin themes enable or disable based on disabled state
+    Assert.equal(
+      addon.userDisabled,
+      hasFlag(addon.permissions, AddonManager.PERM_CAN_ENABLE),
+      "enable permission is correct"
+    );
+    Assert.equal(
+      !addon.userDisabled,
+      hasFlag(addon.permissions, AddonManager.PERM_CAN_DISABLE),
+      "disable permission is correct"
+    );
+    // builtin themes do not get any other permission
+    Assert.ok(
+      !hasFlag(addon.permissions, AddonManager.PERM_CAN_INSTALL),
+      "cannot install by user"
+    );
+    Assert.ok(
+      !hasFlag(addon.permissions, AddonManager.PERM_CAN_UPGRADE),
+      "cannot upgrade"
+    );
+    Assert.ok(
+      !hasFlag(addon.permissions, AddonManager.PERM_CAN_UNINSTALL),
+      "cannot uninstall"
+    );
+    Assert.ok(
+      !hasFlag(
+        addon.permissions,
+        AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS
+      ),
+      "can change private browsing access"
+    );
+    Assert.ok(
+      hasFlag(addon.permissions, AddonManager.PERM_API_CAN_UNINSTALL),
+      "can uninstall via API"
+    );
+  }
+
+  await setupBuiltinExtension(themeDef, "first-loc", false);
+  await AddonManager.maybeInstallBuiltinAddon(
+    ADDON_ID,
+    "1.0",
+    "resource://first-loc/"
+  );
+
+  let addon = await AddonManager.getAddonByID(ADDON_ID);
+  checkPerms(addon);
+  await addon.enable();
+  checkPerms(addon);
+
+  await addon.uninstall();
+});
