@@ -92,6 +92,10 @@ static bool SetProfileLevel(VTCompressionSessionRef& aSession,
 RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
   MOZ_ASSERT(!mInited, "Cannot initialize encoder again without shutting down");
 
+  if (mConfig.mSize.width == 0 || mConfig.mSize.height == 0) {
+    return InitPromise::CreateAndReject(NS_ERROR_ILLEGAL_VALUE, __func__);
+  }
+
   AutoCFRelease<CFDictionaryRef> spec(BuildEncoderSpec());
   AutoCFRelease<CFDictionaryRef> srcBufferAttr(
       BuildSourceImageBufferAttributes());
