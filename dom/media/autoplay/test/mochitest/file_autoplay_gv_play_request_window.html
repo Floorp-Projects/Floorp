@@ -40,7 +40,7 @@ async function createChildFrame(testInfo) {
   let frame = document.createElement("iframe");
   let origin = testInfo.iframe == "same-orgin"
     ? "http://mochi.test:8888" : "http://example.org";
-  frame.src = origin + "/tests/dom/media/test/file_autoplay_gv_play_request_frame.html";
+  frame.src = origin + "/tests/dom/media/autoplay/test/mochitest/file_autoplay_gv_play_request_frame.html";
   document.body.appendChild(frame);
   info(`waiting for iframe loading`);
   is((await nextWindowMessage()).data, "ready", "iframe has finished loading");
