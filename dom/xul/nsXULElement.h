@@ -451,14 +451,6 @@ class nsXULElement : public nsStyledElement {
   void SetMaxHeight(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetXULAttr(nsGkAtoms::maxheight, aValue, rv);
   }
-  void GetLeft(DOMString& aValue) const { GetXULAttr(nsGkAtoms::left, aValue); }
-  void SetLeft(const nsAString& aValue, mozilla::ErrorResult& rv) {
-    SetXULAttr(nsGkAtoms::left, aValue, rv);
-  }
-  void GetTop(DOMString& aValue) const { GetXULAttr(nsGkAtoms::top, aValue); }
-  void SetTop(const nsAString& aValue, mozilla::ErrorResult& rv) {
-    SetXULAttr(nsGkAtoms::top, aValue, rv);
-  }
   void GetTooltipText(DOMString& aValue) const {
     GetXULAttr(nsGkAtoms::tooltiptext, aValue);
   }
