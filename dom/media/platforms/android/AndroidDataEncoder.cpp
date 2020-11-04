@@ -444,7 +444,7 @@ void AndroidDataEncoder::Error(const MediaResult& aError) {
   }
   AssertOnTaskQueue();
 
-  mError.emplace(aError);
+  mError = Some(aError);
 }
 
 void AndroidDataEncoder::CallbacksSupport::HandleInput(int64_t aTimestamp,
