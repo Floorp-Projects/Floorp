@@ -54,6 +54,7 @@ const EXT_STATE_STALE = nsIAccessibleStates.EXT_STATE_STALE;
 const EXT_STATE_SUPPORTS_AUTOCOMPLETION =
   nsIAccessibleStates.EXT_STATE_SUPPORTS_AUTOCOMPLETION;
 const EXT_STATE_VERTICAL = nsIAccessibleStates.EXT_STATE_VERTICAL;
+const EXT_STATE_SELECTABLE_TEXT = nsIAccessibleStates.EXT_STATE_SELECTABLE_TEXT;
 
 const kOrdinalState = false;
 const kExtraState = 1;

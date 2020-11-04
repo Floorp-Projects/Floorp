@@ -34,12 +34,18 @@
       testStates("document", STATE_READONLY);
       testStates("editable_document", 0, EXT_STATE_EDITABLE, STATE_READONLY);
 
+      testStates("p", 0, EXT_STATE_SELECTABLE_TEXT, 0, EXT_STATE_EDITABLE);
+      testStates("unselectable_p", 0, 0, 0, EXT_STATE_SELECTABLE_TEXT | EXT_STATE_EDITABLE);
+      testStates("unselectable_link", 0, 0, 0, EXT_STATE_SELECTABLE_TEXT | EXT_STATE_EDITABLE);
+
       document.designMode = "on";
 
       testStates(document, 0, EXT_STATE_EDITABLE, STATE_READONLY);
-      testStates("p", 0, EXT_STATE_EDITABLE, STATE_READONLY);
+      testStates("p", 0, EXT_STATE_EDITABLE | EXT_STATE_SELECTABLE_TEXT, STATE_READONLY);
       testStates("document", 0, EXT_STATE_EDITABLE, STATE_READONLY);
       testStates("editable_document", 0, EXT_STATE_EDITABLE, STATE_READONLY);
+      testStates("unselectable_p", 0, EXT_STATE_SELECTABLE_TEXT | EXT_STATE_EDITABLE);
+      testStates("unselectable_link", 0, EXT_STATE_SELECTABLE_TEXT | EXT_STATE_EDITABLE);
 
       document.designMode = "off";
 
@@ -79,6 +85,8 @@
   </pre>
 
   <p id="p">hello</p>
+
+  <p id="unselectable_p" style="user-select: none;">unselectable <a id="unselectable_link" href="#">link</a></p>
 
   <div id="document" role="document">document</div>
   <div id="editable_document" role="document" contentEditable="true">editable document</doc>
