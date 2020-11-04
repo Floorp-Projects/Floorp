@@ -19,25 +19,6 @@ const enginesSettings = {
   buildID: "TBD",
   appVersion: "TBD",
   locale: "en-US",
-  visibleDefaultEngines: [
-    "engine",
-    "engine-pref",
-    "engine-rel-searchform-purpose",
-    "engine-chromeicon",
-    "engine-resourceicon",
-    "engine-reordered",
-  ],
-  builtInEngineList: [
-    { id: "engine@search.mozilla.org", locale: "default" },
-    { id: "engine-pref@search.mozilla.org", locale: "default" },
-    {
-      id: "engine-rel-searchform-purpose@search.mozilla.org",
-      locale: "default",
-    },
-    { id: "engine-chromeicon@search.mozilla.org", locale: "default" },
-    { id: "engine-resourceicon@search.mozilla.org", locale: "default" },
-    { id: "engine-reordered@search.mozilla.org", locale: "default" },
-  ],
   metaData: {
     searchDefault: "Test search engine",
     searchDefaultHash: "TBD",
@@ -127,17 +108,8 @@ add_task(async function test_cached_engine_properties() {
     "Should have successfully created the search service"
   );
 
-  const scalars = Services.telemetry.getSnapshotForScalars("main", false)
-    .parent;
-  Assert.equal(
-    scalars["browser.searchinit.engines_cache_corrupted"],
-    true,
-    "Should have recorded the engine settings as corrupted"
-  );
-
   const engines = await Services.search.getEngines();
 
-  // Modern config has a slightly different expected order.
   const expectedEngines = [
     // Default engines
     "Test search engine",

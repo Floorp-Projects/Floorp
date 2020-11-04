@@ -5,11 +5,6 @@ Telemetry
 Scalars
 -------
 
-browser.searchinit.engines_cache_corrupted
-  Records if the saved search engine list is different to the expected
-  list on startup. Various cases are ignored, e.g. major version changes,
-  locale changes.
-
 browser.searchinit.init_result_status_code
   Records the search service initialization code on startup. This is typically
   one of the error values in https://searchfox.org/mozilla-central/source/xpcom/base/ErrorList.py

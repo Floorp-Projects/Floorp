@@ -202,7 +202,6 @@ class SearchSettings {
     // directories are blown away during updates, so we'll detect their changes.
     settings.buildID = buildID;
     settings.locale = locale;
-    settings.builtInEngineList = this._searchService._searchOrder;
     settings.engines = [...this._searchService._engines.values()];
     settings.metaData = this._metaData;
 
