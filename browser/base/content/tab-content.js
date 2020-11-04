@@ -11,11 +11,6 @@ var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(
   this,
-  "E10SUtils",
-  "resource://gre/modules/E10SUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm"
 );
@@ -42,25 +37,11 @@ var WebBrowserChrome = {
     aTriggeringPrincipal,
     aCsp
   ) {
-    if (!E10SUtils.shouldLoadURI(aDocShell, aURI, aHasPostData)) {
-      E10SUtils.redirectLoad(
-        aDocShell,
-        aURI,
-        aReferrerInfo,
-        aTriggeringPrincipal,
-        null,
-        aCsp
-      );
-      return false;
-    }
-
     return true;
   },
 
   shouldLoadURIInThisProcess(aURI) {
-    let remoteSubframes = docShell.QueryInterface(Ci.nsILoadContext)
-      .useRemoteSubframes;
-    return E10SUtils.shouldLoadURIInThisProcess(aURI, remoteSubframes);
+    return true;
   },
 };
 

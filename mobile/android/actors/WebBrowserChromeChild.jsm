@@ -12,7 +12,6 @@ const { GeckoViewActorChild } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
-  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   GeckoViewSettings: "resource://gre/modules/GeckoViewSettings.jsm",
 });
 
@@ -40,28 +39,12 @@ class WebBrowserChromeChild extends GeckoViewActorChild {
     aTriggeringPrincipal,
     aCsp
   ) {
-    debug`shouldLoadURI ${aURI.displaySpec}`;
-
-    if (!E10SUtils.shouldLoadURI(aDocShell, aURI, aHasPostData)) {
-      E10SUtils.redirectLoad(
-        aDocShell,
-        aURI,
-        aReferrerInfo,
-        aTriggeringPrincipal,
-        null,
-        aCsp
-      );
-      return false;
-    }
-
     return true;
   }
 
   // nsIWebBrowserChrome
   shouldLoadURIInThisProcess(aURI) {
-    debug`shouldLoadURIInThisProcess ${aURI.displaySpec}`;
-    const remoteSubframes = this.docShell.nsILoadContext.useRemoteSubframes;
-    return E10SUtils.shouldLoadURIInThisProcess(aURI, remoteSubframes);
+    return true;
   }
 }
 
