@@ -41,14 +41,21 @@ add_task(async function test_selectChoose() {
   let menuList = win.document.getElementById("editBMPanel_folderMenuList");
   let folderTreeRow = win.document.getElementById("editBMPanel_folderTreeRow");
 
+  let expectedFolder = gBookmarksToolbar2h2020
+    ? "BookmarksToolbarFolderTitle"
+    : "OtherBookmarksFolderTitle";
+  let expectedGuid = gBookmarksToolbar2h2020
+    ? PlacesUtils.bookmarks.toolbarGuid
+    : PlacesUtils.bookmarks.unfiledGuid;
+
   Assert.equal(
     menuList.label,
-    PlacesUtils.getString("OtherBookmarksFolderTitle"),
+    PlacesUtils.getString(expectedFolder),
     "Should have the other bookmarks folder selected by default"
   );
   Assert.equal(
     menuList.getAttribute("selectedGuid"),
-    PlacesUtils.bookmarks.unfiledGuid,
+    expectedGuid,
     "Should have the correct default guid selected"
   );
   Assert.equal(
@@ -80,12 +87,12 @@ add_task(async function test_selectChoose() {
 
   Assert.equal(
     menuList.getAttribute("selectedGuid"),
-    PlacesUtils.bookmarks.unfiledGuid,
+    expectedGuid,
     "Should still have the correct selected guid"
   );
   Assert.equal(
     menuList.label,
-    PlacesUtils.getString("OtherBookmarksFolderTitle"),
+    PlacesUtils.getString(expectedFolder),
     "Should have kept the same menu label"
   );
 
