@@ -27,6 +27,8 @@ class MockAudioSendStream : public webrtc::AudioSendStream {
 
   void Stop() override {}
 
+  void SendAudioData(std::unique_ptr<AudioFrame> audio_frame) override {}
+
   bool SendTelephoneEvent(int payload_type, int payload_frequency, int event,
                           int duration_ms) override {
     return true;
@@ -50,15 +52,19 @@ class MockAudioReceiveStream : public webrtc::AudioReceiveStream {
 
   void Stop() override {}
 
-  Stats GetStats() const override { return mStats; }
+  Stats GetStats(bool get_and_clear_legacy_stats) const override {
+    return mStats;
+  }
 
-  int GetOutputLevel() const override { return 0; }
-
-  void SetSink(std::unique_ptr<AudioSinkInterface> sink) override {}
+  void SetSink(AudioSinkInterface* sink) override {}
 
   void SetGain(float gain) override {}
 
   std::vector<RtpSource> GetSources() const override { return mRtpSources; }
+
+  void Reconfigure(const Config& config) override {}
+  bool SetBaseMinimumPlayoutDelayMs(int delay_ms) override { return false; }
+  int GetBaseMinimumPlayoutDelayMs() const override { return 0; }
 
   virtual ~MockAudioReceiveStream() {}
 
@@ -85,8 +91,14 @@ class MockVideoSendStream : public webrtc::VideoSendStream {
 
   Stats GetStats() override { return mStats; }
 
-  void EnableEncodedFrameRecording(const std::vector<rtc::PlatformFile>& files,
-                                   size_t byte_limit) override {}
+  void UpdateActiveSimulcastLayers(
+      const std::vector<bool> active_layers) override {}
+
+  void AddAdaptationResource(rtc::scoped_refptr<Resource> resource) override {}
+
+  std::vector<rtc::scoped_refptr<Resource>> GetAdaptationResources() override {
+    return std::vector<rtc::scoped_refptr<Resource>>();
+  }
 
   virtual ~MockVideoSendStream() {}
 
@@ -102,11 +114,30 @@ class MockVideoReceiveStream : public webrtc::VideoReceiveStream {
 
   Stats GetStats() const override { return mStats; }
 
-  void EnableEncodedFrameRecording(rtc::PlatformFile file,
-                                   size_t byte_limit) override {}
+  void AddSecondarySink(RtpPacketSinkInterface* sink) override {}
+  void RemoveSecondarySink(const RtpPacketSinkInterface* sink) override {}
 
-  void AddSecondarySink(RtpPacketSinkInterface* sink) override{};
-  void RemoveSecondarySink(const RtpPacketSinkInterface* sink) override{};
+  std::vector<RtpSource> GetSources() const override {
+    return std::vector<RtpSource>();
+  }
+
+  bool SetBaseMinimumPlayoutDelayMs(int delay_ms) override { return false; }
+
+  int GetBaseMinimumPlayoutDelayMs() const override { return 0; }
+
+  void SetFrameDecryptor(
+      rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor) override {}
+
+  void SetDepacketizerToDecoderFrameTransformer(
+      rtc::scoped_refptr<FrameTransformerInterface> frame_transformer)
+      override {}
+
+  RecordingState SetAndGetRecordingState(RecordingState state,
+                                         bool generate_key_frame) override {
+    return {};
+  }
+
+  void GenerateKeyFrame() override {}
 
   virtual ~MockVideoReceiveStream() {}
 
@@ -173,31 +204,26 @@ class MockCall : public webrtc::Call {
   void DestroyFlexfecReceiveStream(
       FlexfecReceiveStream* receive_stream) override {}
 
+  void AddAdaptationResource(rtc::scoped_refptr<Resource> resource) override {}
+
   PacketReceiver* Receiver() override { return nullptr; }
 
+  RtpTransportControllerSendInterface* GetTransportControllerSend() override {
+    return nullptr;
+  }
+
   Stats GetStats() const override { return mStats; }
-
-  void SetBitrateConfig(const Config::BitrateConfig& bitrate_config) override {}
-
-  void SetBitrateConfigMask(
-      const Config::BitrateConfigMask& bitrate_mask) override {}
-
-  void SetBitrateAllocationStrategy(
-      std::unique_ptr<rtc::BitrateAllocationStrategy>
-          bitrate_allocation_strategy) override {}
 
   void SignalChannelNetworkState(MediaType media, NetworkState state) override {
   }
 
-  void OnTransportOverheadChanged(MediaType media,
-                                  int transport_overhead_per_packet) override {}
-
-  void OnNetworkRouteChanged(const std::string& transport_name,
-                             const rtc::NetworkRoute& network_route) override {}
+  void OnAudioTransportOverheadChanged(
+      int transport_overhead_per_packet) override {}
 
   void OnSentPacket(const rtc::SentPacket& sent_packet) override {}
 
-  VoiceEngine* voice_engine() override { return nullptr; }
+  void SetClientBitratePreferences(
+      const BitrateSettings& preferences) override {}
 
   std::vector<webrtc::VideoStream> CreateEncoderStreams(int width, int height) {
     const VideoEncoderConfig& config = mCurrentVideoSendStream->mEncoderConfig;
