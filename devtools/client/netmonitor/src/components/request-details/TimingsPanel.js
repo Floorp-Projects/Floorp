@@ -55,7 +55,7 @@ class TimingsPanel extends Component {
   renderServerTimings() {
     const { serverTimings, totalTime } = this.props.request.eventTimings;
 
-    if (!serverTimings.length) {
+    if (!serverTimings?.length) {
       return null;
     }
 
