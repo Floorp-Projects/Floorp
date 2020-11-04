@@ -392,9 +392,14 @@
   value: 1.0f
   mirror: always
 
-- name: apz.fling_accel_min_velocity
+- name: apz.fling_accel_min_fling_velocity
   type: AtomicFloat
   value: 1.5f
+  mirror: always
+
+- name: apz.fling_accel_min_pan_velocity
+  type: AtomicFloat
+  value: 0.8f
   mirror: always
 
 - name: apz.fling_accel_max_pause_interval_ms

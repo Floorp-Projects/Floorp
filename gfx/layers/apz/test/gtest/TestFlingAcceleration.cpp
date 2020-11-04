@@ -178,3 +178,41 @@ TEST_F(APZCFlingAccelerationTester, ShouldNotAccelerateWhenPausedAtStartOfPan) {
        0, 0, 0, 0, 0, -8, -18, -34, -53, -70, -75, -75, -64});
   CHECK_VELOCITY(Down, 6.7, 9.1);
 }
+
+TEST_F(APZCFlingAccelerationTester, ShouldNotAccelerateWhenPausedDuringPan) {
+  SCOPED_GFX_PREF_INT("apz.fling_accel_interval_ms", 750);
+
+  ExecutePanGesture100Hz(
+      ScreenIntPoint{732, 1423},
+      {0, 0, 0, -5, 0, -15, -41, -71, -90, -93, -85, -64, -44});
+  CHECK_VELOCITY(Down, 7.5, 10.0);
+
+  ExecuteWait(TimeDuration::FromMilliseconds(204));
+  CHECK_VELOCITY(Down, 4.8, 9.3);
+
+  ExecutePanGesture100Hz(
+      ScreenIntPoint{651, 1372},
+      {0,   0,   0,  -6, 0,  -16, -26, -41, -49, -65, -66, -61, -50, -35, -24,
+       -17, -11, -8, -6, -5, -4,  -3,  -2,  -2,  -2,  -2,  -2,  -2,  -2,  -2,
+       -3,  -4,  -5, -7, -9, -10, -10, -12, -18, -25, -23, -28, -30, -24});
+  CHECK_VELOCITY(Down, 2.5, 3.1);
+}
+
+TEST_F(APZCFlingAccelerationTester,
+       ShouldNotAccelerateWhenOppositeDirectionDuringPan) {
+  SCOPED_GFX_PREF_INT("apz.fling_accel_interval_ms", 750);
+
+  ExecutePanGesture100Hz(ScreenIntPoint{663, 1371},
+                         {0, 0, 0, -5, -18, -31, -49, -56, -61, -54, -55});
+  CHECK_VELOCITY(Down, 5.4, 7.0);
+
+  ExecuteWait(TimeDuration::FromMilliseconds(255));
+  CHECK_VELOCITY(Down, 3.1, 6.0);
+
+  ExecutePanGesture100Hz(
+      ScreenIntPoint{726, 930},
+      {0,  0,   0,   0,   30,  0,   19,  24,  32,  30, 37, 33,
+       33, 32,  25,  23,  23,  18,  13,  9,   5,   3,  1,  0,
+       -7, -19, -38, -53, -68, -79, -85, -73, -64, -54});
+  CHECK_VELOCITY(Down, 7.0, 10.0);
+}

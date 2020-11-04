@@ -258,10 +258,15 @@ typedef PlatformSpecificStateBase
  * be disabled.\n
  * Units: milliseconds
  *
- * \li\b apz.fling_accel_min_velocity
+ * \li\b apz.fling_accel_min_fling_velocity
  * The minimum velocity of the second fling, and the minimum velocity of the
  * previous fling animation at the point of interruption, for the new fling to
  * be considered for fling acceleration.
+ * Units: screen pixels per milliseconds
+ *
+ * \li\b apz.fling_accel_min_pan_velocity
+ * The minimum velocity during the pan gesture that causes a fling for that
+ * fling to be considered for fling acceleration.
  * Units: screen pixels per milliseconds
  *
  * \li\b apz.fling_accel_max_pause_interval_ms
@@ -1803,8 +1808,11 @@ nsEventStatus AsyncPanZoomController::HandleEndOfPan() {
   // which nulls out mTreeManager, could be called concurrently.
   if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
     const FlingHandoffState handoffState{
-        flingVelocity, GetCurrentInputBlock()->GetOverscrollHandoffChain(),
-        Some(mTouchStartRestingTimeBeforePan), false /* not handoff */,
+        flingVelocity,
+        GetCurrentInputBlock()->GetOverscrollHandoffChain(),
+        Some(mTouchStartRestingTimeBeforePan),
+        mMinimumVelocityDuringPan.valueOr(0),
+        false /* not handoff */,
         GetCurrentInputBlock()->GetScrolledApzc()};
     treeManagerLocal->DispatchFling(this, handoffState);
   }
@@ -3166,6 +3174,7 @@ nsEventStatus AsyncPanZoomController::StartPanning(
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
                                    (uint32_t)ScrollInputMethod::ApzTouch);
     mTouchStartRestingTimeBeforePan = aEventTime - mTouchStartTime;
+    mMinimumVelocityDuringPan = Nothing();
 
     if (RefPtr<GeckoContentController> controller =
             GetGeckoContentController()) {
@@ -3487,9 +3496,9 @@ void AsyncPanZoomController::HandleFlingOverscroll(
     const RefPtr<const AsyncPanZoomController>& aScrolledApzc) {
   APZCTreeManager* treeManagerLocal = GetApzcTreeManager();
   if (treeManagerLocal) {
-    const FlingHandoffState handoffState{aVelocity, aOverscrollHandoffChain,
-                                         Nothing(), true /* handoff */,
-                                         aScrolledApzc};
+    const FlingHandoffState handoffState{
+        aVelocity, aOverscrollHandoffChain, Nothing(),
+        0,         true /* handoff */,      aScrolledApzc};
     ParentLayerPoint residualVelocity =
         treeManagerLocal->DispatchFling(this, handoffState);
     FLING_LOG("APZC %p left with residual velocity %s\n", this,
@@ -3637,6 +3646,15 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
   ParentLayerPoint touchPoint = GetFirstTouchPoint(aEvent);
 
   UpdateWithTouchAtDevicePoint(aEvent);
+
+  auto velocity = GetVelocityVector().Length();
+  if (mMinimumVelocityDuringPan) {
+    mMinimumVelocityDuringPan =
+        Some(std::min(*mMinimumVelocityDuringPan, velocity));
+  } else {
+    mMinimumVelocityDuringPan = Some(velocity);
+  }
+
   if (prevTouchPoint != touchPoint) {
     MOZ_ASSERT(GetCurrentTouchBlock());
     OverscrollHandoffState handoffState(

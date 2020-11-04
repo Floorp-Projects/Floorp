@@ -82,21 +82,31 @@ bool FlingAccelerator::ShouldAccelerate(
   double msBetweenTouchStartAndPanStart =
       aHandoffState.mTouchStartRestingTime->ToMilliseconds();
   FLING_LOG(
-      "%p ShouldAccelerate with pan velocity %f pixels/ms, previous fling "
+      "%p ShouldAccelerate with pan velocity %f pixels/ms, min pan velocity %f "
+      "pixels/ms, previous fling "
       "cancel velocity %f pixels/ms, time elapsed since starting previous "
       "fling %fms, time between touch start and pan start %fms.\n",
-      this, float(aVelocity.Length()),
+      this, float(aVelocity.Length()), float(aHandoffState.mMinPanVelocity),
       float(mPreviousFlingCancelVelocity.Length()), float(msSincePreviousFling),
       float(msBetweenTouchStartAndPanStart));
 
-  if (aVelocity.Length() < StaticPrefs::apz_fling_accel_min_velocity()) {
+  if (aVelocity.Length() < StaticPrefs::apz_fling_accel_min_fling_velocity()) {
     FLING_LOG("%p Fling velocity too low (%f), not accelerating.\n", this,
               float(aVelocity.Length()));
     return false;
   }
 
+  if (aHandoffState.mMinPanVelocity <
+      StaticPrefs::apz_fling_accel_min_pan_velocity()) {
+    FLING_LOG(
+        "%p Panning velocity was too slow at some point during the pan (%f), "
+        "not accelerating.\n",
+        this, float(aHandoffState.mMinPanVelocity));
+    return false;
+  }
+
   if (mPreviousFlingCancelVelocity.Length() <
-      StaticPrefs::apz_fling_accel_min_velocity()) {
+      StaticPrefs::apz_fling_accel_min_fling_velocity()) {
     FLING_LOG(
         "%p The previous fling animation had slowed down too much when it was "
         "interrupted (%f), not accelerating.\n",

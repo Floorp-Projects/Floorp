@@ -162,6 +162,10 @@ struct FlingHandoffState {
   // Nothing if this fling was not immediately caused by a touch pan.
   Maybe<TimeDuration> mTouchStartRestingTime;
 
+  // The slowest panning velocity encountered during the pan that triggered this
+  // fling.
+  ParentLayerCoord mMinPanVelocity;
+
   // Whether handoff has happened by this point, or we're still process
   // the original fling.
   bool mIsHandoff;
