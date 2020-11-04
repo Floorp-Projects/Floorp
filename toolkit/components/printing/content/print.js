@@ -1567,7 +1567,7 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
 
   disable() {
     for (let element of this.elements) {
-      element.disabled = true;
+      element.disabled = element.name != "cancel";
     }
   }
 
