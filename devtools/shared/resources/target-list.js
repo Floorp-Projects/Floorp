@@ -7,9 +7,6 @@
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
-// eslint-disable-next-line mozilla/reject-some-requires
-const { gDevTools } = require("devtools/client/framework/devtools");
-
 const BROWSERTOOLBOX_FISSION_ENABLED = "devtools.browsertoolbox.fission";
 
 const {
@@ -255,9 +252,7 @@ class TargetList extends EventEmitter {
         types = TargetList.ALL_TYPES;
       }
     } else if (this.targetFront.isLocalTab) {
-      if (gDevTools.isFissionContentToolboxEnabled()) {
-        types = [TargetList.TYPES.FRAME];
-      }
+      types = [TargetList.TYPES.FRAME];
     }
     if (this.listenForWorkers && !types.includes(TargetList.TYPES.WORKER)) {
       types.push(TargetList.TYPES.WORKER);
