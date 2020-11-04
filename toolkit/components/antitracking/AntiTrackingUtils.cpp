@@ -475,23 +475,6 @@ bool AntiTrackingUtils::GetPrincipalAndTrackingOrigin(
 };
 
 /* static */
-bool AntiTrackingUtils::IsFirstLevelSubContext(
-    BrowsingContext* aBrowsingContext) {
-  MOZ_ASSERT(aBrowsingContext);
-
-  RefPtr<BrowsingContext> parentBC = aBrowsingContext->GetParent();
-
-  if (!parentBC) {
-    // No parent means it is the top.
-    return false;
-  }
-
-  // We can know if it is first-level sub context by checking whether the
-  // parent is the top.
-  return parentBC->IsTopContent();
-}
-
-/* static */
 uint32_t AntiTrackingUtils::GetCookieBehavior(
     BrowsingContext* aBrowsingContext) {
   MOZ_ASSERT(aBrowsingContext);
