@@ -6,6 +6,7 @@ package org.mozilla.fenix.ui
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -251,6 +252,31 @@ class TabbedBrowsingTest {
             // Tap an empty spot on the app homescreen to make sure it's into focus
             sendSingleTapToScreen(20, 20)
             verifyHomeScreen()
+        }
+    }
+
+    @Test
+    fun verifyTabTrayNotShowingStateHalfExpanded() {
+        homeScreen { }.dismissOnboarding()
+
+        navigationToolbar {
+        }.openTabTray {
+            verifyNoTabsOpened()
+            // With no tabs opened the state should be STATE_COLLAPSED.
+            verifyBehaviorState(BottomSheetBehavior.STATE_COLLAPSED)
+            // Need to ensure the halfExpandedRatio is very small so that when in STATE_HALF_EXPANDED
+            // the tabTray will actually have a very small height (for a very short time) akin to being hidden.
+            verifyHalfExpandedRatio()
+        }.clickTopBar {
+        }.waitForTabTrayBehaviorToIdle {
+            // Touching the topBar would normally advance the tabTray to the next state.
+            // We don't want that.
+            verifyBehaviorState(BottomSheetBehavior.STATE_COLLAPSED)
+        }.advanceToHalfExpandedState {
+        }.waitForTabTrayBehaviorToIdle {
+            // TabTray should not be displayed in STATE_HALF_EXPANDED.
+            // When advancing to this state it should immediately be hidden.
+            verifyTabTrayIsClosed()
         }
     }
 

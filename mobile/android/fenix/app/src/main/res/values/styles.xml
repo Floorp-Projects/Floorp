@@ -624,7 +624,8 @@
         <item name="behavior_fitToContents">false</item>
         <item name="behavior_expandedOffset">80</item>
         <item name="behavior_skipCollapsed">false</item>
-        <item name="behavior_halfExpandedRatio">0.4</item>
+        <!-- Effectively disable STATE_HALF_EXPANDED by having the tray have a minuscule height in this state -->
+        <item name="behavior_halfExpandedRatio">0.001</item>
     </style>
 
     <style name="TopSite.Favicon" parent="Mozac.Widgets.Favicon">

@@ -7,13 +7,17 @@
 package org.mozilla.fenix.ui.robots
 
 import android.content.Context
+import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoMatchingViewException
+import androidx.test.espresso.UiController
+import androidx.test.espresso.ViewAction
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers
@@ -28,14 +32,19 @@ import androidx.test.uiautomator.By.text
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import androidx.test.uiautomator.Until.findObject
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.anyOf
 import org.hamcrest.CoreMatchers.containsString
+import org.hamcrest.Matcher
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
+import org.mozilla.fenix.helpers.idlingresource.BottomSheetBehaviorStateIdlingResource
+import org.mozilla.fenix.helpers.matchers.BottomSheetBehaviorHalfExpandedMaxRatioMatcher
+import org.mozilla.fenix.helpers.matchers.BottomSheetBehaviorStateMatcher
 
 /**
  * Implementation of Robot Pattern for the home screen menu.
@@ -51,6 +60,10 @@ class TabDrawerRobot {
     fun verifyNormalModeSelected() = assertNormalModeSelected()
     fun verifyNewTabButton() = assertNewTabButton()
     fun verifyTabTrayOverflowMenu(visibility: Boolean) = assertTabTrayOverflowButton(visibility)
+
+    fun verifyTabTrayIsClosed() = assertTabTrayDoesNotExist()
+    fun verifyHalfExpandedRatio() = assertMinisculeHalfExpandedRatio()
+    fun verifyBehaviorState(expectedState: Int) = assertBehaviorState(expectedState)
 
     fun closeTab() {
         closeTabButton().click()
@@ -126,9 +139,7 @@ class TabDrawerRobot {
         fun closeTabDrawer(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.waitForIdle(waitingTime)
 
-            // Dismisses the tab tray bottom sheet with 2 handle clicks
             onView(withId(R.id.handle)).perform(
-                click(),
                 click()
             )
             BrowserRobot().interact()
@@ -168,6 +179,52 @@ class TabDrawerRobot {
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
+        }
+
+        fun clickTopBar(interact: TabDrawerRobot.() -> Unit): Transition {
+            onView(withId(R.id.topBar)).click()
+            TabDrawerRobot().interact()
+            return Transition()
+        }
+
+        fun advanceToHalfExpandedState(interact: TabDrawerRobot.() -> Unit): Transition {
+            onView(withId(R.id.tab_wrapper)).perform(object : ViewAction {
+                override fun getDescription(): String {
+                    return "Advance a BottomSheetBehavior to STATE_HALF_EXPANDED"
+                }
+
+                override fun getConstraints(): Matcher<View> {
+                    return ViewMatchers.isAssignableFrom(View::class.java)
+                }
+
+                override fun perform(uiController: UiController?, view: View?) {
+                    val behavior = BottomSheetBehavior.from(view!!)
+                    behavior.state = BottomSheetBehavior.STATE_HALF_EXPANDED
+                }
+            })
+            TabDrawerRobot().interact()
+            return Transition()
+        }
+
+        fun waitForTabTrayBehaviorToIdle(interact: TabDrawerRobot.() -> Unit): Transition {
+            var behavior: BottomSheetBehavior<*>? = null
+            onView(withId(R.id.tab_wrapper)).perform(object : ViewAction {
+                override fun getDescription(): String {
+                    return "Postpone actions to after the BottomSheetBehavior has settled"
+                }
+
+                override fun getConstraints(): Matcher<View> {
+                    return ViewMatchers.isAssignableFrom(View::class.java)
+                }
+
+                override fun perform(uiController: UiController?, view: View?) {
+                    behavior = BottomSheetBehavior.from(view!!)
+                }
+            })
+            runWithIdleRes(BottomSheetBehaviorStateIdlingResource(behavior!!)) {
+                TabDrawerRobot().interact()
+            }
+            return Transition()
         }
     }
 }
@@ -238,6 +295,21 @@ private fun assertPrivateModeSelected() =
 private fun assertTabTrayOverflowButton(visible: Boolean) =
     onView(withId(R.id.tab_tray_overflow))
         .check(matches(withEffectiveVisibility(visibleOrGone(visible))))
+
+private fun assertTabTrayDoesNotExist() {
+    onView(withId(R.id.tab_wrapper))
+        .check(doesNotExist())
+}
+
+private fun assertMinisculeHalfExpandedRatio() {
+    onView(withId(R.id.tab_wrapper))
+        .check(matches(BottomSheetBehaviorHalfExpandedMaxRatioMatcher(0.001f)))
+}
+
+private fun assertBehaviorState(expectedState: Int) {
+    onView(withId(R.id.tab_wrapper))
+        .check(matches(BottomSheetBehaviorStateMatcher(expectedState)))
+}
 
 private fun tab(title: String) =
     onView(

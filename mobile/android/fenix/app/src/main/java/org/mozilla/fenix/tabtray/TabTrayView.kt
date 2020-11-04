@@ -117,6 +117,9 @@ class TabTrayView(
 
         toggleFabText(isPrivate)
 
+        view.topBar.setOnClickListener {
+            // no-op, consume the touch event to prevent it advancing the tray to the next state.
+        }
         behavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
                 if (interactor.onModeRequested() is Mode.Normal && !hasAccessibilityEnabled) {
@@ -132,6 +135,10 @@ class TabTrayView(
                 if (newState == BottomSheetBehavior.STATE_HIDDEN) {
                     components.analytics.metrics.track(Event.TabsTrayClosed)
                     interactor.onTabTrayDismissed()
+                }
+                // We only support expanded and collapsed states. Don't allow STATE_HALF_EXPANDED.
+                else if (newState == BottomSheetBehavior.STATE_HALF_EXPANDED) {
+                    behavior.state = BottomSheetBehavior.STATE_HIDDEN
                 }
             }
         })
