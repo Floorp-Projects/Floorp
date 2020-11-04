@@ -63,16 +63,38 @@ add_task(async function testSoundIndicatorShouldDisappearAfterTabNavigation() {
   BrowserTestUtils.removeTab(tab);
 });
 
+add_task(
+  async function testSoundIndicatorShouldDisappearAfterWebAudioBecomesSilent() {
+    info("create a tab loading media document");
+    const tab = await createBlankForegroundTab();
+
+    info(`sound indicator should appear when audible web audio starts playing`);
+    await Promise.all([
+      initWebAudioDocument(tab, { duration: 0.1 }),
+      waitForTabSoundIndicatorAppears(tab),
+    ]);
+
+    info(`sound indicator should disappear after web audio become silent`);
+    await waitForTabSoundIndicatorDisappears(tab);
+
+    info("remove tab");
+    BrowserTestUtils.removeTab(tab);
+  }
+);
+
 /**
  * Following are helper functions
  */
-function initWebAudioDocument(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [], async _ => {
+function initWebAudioDocument(tab, { duration } = {}) {
+  return SpecialPowers.spawn(tab.linkedBrowser, [duration], async duration => {
     content.ac = new content.AudioContext();
     const ac = content.ac;
     const dest = ac.destination;
     const source = new content.OscillatorNode(ac);
     source.start(ac.currentTime);
+    if (duration != undefined) {
+      source.stop(ac.currentTime + duration);
+    }
     // create a gain node for future muting/unmuting
     content.gainNode = ac.createGain();
     source.connect(content.gainNode);
