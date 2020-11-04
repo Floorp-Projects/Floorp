@@ -1684,6 +1684,7 @@ class AsyncPanZoomController {
   // TOUCHING state to one of the PANNING* states). Only valid while this APZC
   // is in a panning state.
   TimeDuration mTouchStartRestingTimeBeforePan;
+  Maybe<ParentLayerCoord> mMinimumVelocityDuringPan;
   // Extra offset to add to the async scroll position for testing
   CSSPoint mTestAsyncScrollOffset;
   // Extra zoom to include in the aync zoom for testing
