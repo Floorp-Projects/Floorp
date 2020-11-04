@@ -57,7 +57,7 @@ add_task(async function checkDontShowStopFromLocalURI() {
   stopReloadContainerObserver.observe(stopReloadContainer, {
     attributeFilter: ["animate"],
   });
-  await BrowserTestUtils.loadURI(tab.linkedBrowser, "about:mozilla");
+  BrowserTestUtils.loadURI(tab.linkedBrowser, "about:mozilla");
   BrowserTestUtils.removeTab(tab);
 
   Assert.ok(
@@ -82,7 +82,7 @@ add_task(async function checkDontShowStopFromNonLocalURI() {
   stopReloadContainerObserver.observe(stopReloadContainer, {
     attributeFilter: ["animate"],
   });
-  await BrowserTestUtils.loadURI(tab.linkedBrowser, "about:mozilla");
+  BrowserTestUtils.loadURI(tab.linkedBrowser, "about:mozilla");
   BrowserTestUtils.removeTab(tab);
 
   Assert.ok(
@@ -132,7 +132,7 @@ add_task(async function checkAnimateStopOnTabAfterTabFinishesOpening() {
     return !gBrowser.tabAnimationsInProgress;
   });
   let animatePromise = getAnimatePromise(stopReloadContainer);
-  await BrowserTestUtils.loadURI(tab.linkedBrowser, "https://example.com");
+  BrowserTestUtils.loadURI(tab.linkedBrowser, "https://example.com");
   await animatePromise;
   BrowserTestUtils.removeTab(tab);
 
@@ -158,7 +158,7 @@ add_task(async function checkDoShowStopFromLocalURI() {
     return !gBrowser.tabAnimationsInProgress;
   });
   let animatePromise = getAnimatePromise(stopReloadContainer);
-  await BrowserTestUtils.loadURI(tab.linkedBrowser, "https://example.com");
+  BrowserTestUtils.loadURI(tab.linkedBrowser, "https://example.com");
   await animatePromise;
   await waitForNoAnimation(stopReloadContainer);
   BrowserTestUtils.removeTab(tab);

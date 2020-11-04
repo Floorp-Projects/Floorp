@@ -83,7 +83,7 @@ add_task(async function test_URIAndDomainCounts() {
   checkCounts({ totalURIs: 0, domainCount: 0, totalUnfilteredURIs: 0 });
 
   // Open a different page and check the counts.
-  await BrowserTestUtils.loadURI(firstTab.linkedBrowser, "http://example.com/");
+  BrowserTestUtils.loadURI(firstTab.linkedBrowser, "http://example.com/");
   await BrowserTestUtils.browserLoaded(firstTab.linkedBrowser);
   checkCounts({ totalURIs: 1, domainCount: 1, totalUnfilteredURIs: 1 });
 
@@ -98,7 +98,7 @@ add_task(async function test_URIAndDomainCounts() {
 
   // Open a new window and set the tab to a new address.
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
-  await BrowserTestUtils.loadURI(
+  BrowserTestUtils.loadURI(
     newWin.gBrowser.selectedBrowser,
     "http://example.com/"
   );
@@ -123,7 +123,7 @@ add_task(async function test_URIAndDomainCounts() {
 
   // Check that we're counting page fragments.
   let loadingStopped = browserLocationChanged(newWin.gBrowser.selectedBrowser);
-  await BrowserTestUtils.loadURI(
+  BrowserTestUtils.loadURI(
     newWin.gBrowser.selectedBrowser,
     "http://example.com/#2"
   );
@@ -131,7 +131,7 @@ add_task(async function test_URIAndDomainCounts() {
   checkCounts({ totalURIs: 3, domainCount: 1, totalUnfilteredURIs: 3 });
 
   // Check that a different URI from the example.com domain doesn't increment the unique count.
-  await BrowserTestUtils.loadURI(
+  BrowserTestUtils.loadURI(
     newWin.gBrowser.selectedBrowser,
     "http://test1.example.com/"
   );
@@ -139,7 +139,7 @@ add_task(async function test_URIAndDomainCounts() {
   checkCounts({ totalURIs: 4, domainCount: 1, totalUnfilteredURIs: 4 });
 
   // Make sure that the unique domains counter is incrementing for a different domain.
-  await BrowserTestUtils.loadURI(
+  BrowserTestUtils.loadURI(
     newWin.gBrowser.selectedBrowser,
     "https://example.org/"
   );
@@ -169,7 +169,7 @@ add_task(async function test_URIAndDomainCounts() {
   // Check that uncommon protocols get counted in the unfiltered URI probe.
   const TEST_PAGE =
     "data:text/html,<a id='target' href='%23par1'>Click me</a><a name='par1'>The paragraph.</a>";
-  await BrowserTestUtils.loadURI(newWin.gBrowser.selectedBrowser, TEST_PAGE);
+  BrowserTestUtils.loadURI(newWin.gBrowser.selectedBrowser, TEST_PAGE);
   await BrowserTestUtils.browserLoaded(newWin.gBrowser.selectedBrowser);
   checkCounts({ totalURIs: 5, domainCount: 2, totalUnfilteredURIs: 6 });
 

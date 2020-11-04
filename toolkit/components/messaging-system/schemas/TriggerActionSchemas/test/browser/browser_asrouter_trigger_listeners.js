@@ -16,7 +16,7 @@ ChromeUtils.defineModuleGetter(
 
 async function openURLInWindow(window, url) {
   const { selectedBrowser } = window.gBrowser;
-  await BrowserTestUtils.loadURI(selectedBrowser, url);
+  BrowserTestUtils.loadURI(selectedBrowser, url);
   await BrowserTestUtils.browserLoaded(selectedBrowser, false, url);
 }
 

@@ -38,7 +38,7 @@ async function testHelper(connectURL, expectedURL) {
     set: [["security.default_personal_cert", "Ask Every Time"]],
   });
 
-  await BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, connectURL);
+  BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, connectURL);
 
   await BrowserTestUtils.browserLoaded(
     win.gBrowser.selectedBrowser,
