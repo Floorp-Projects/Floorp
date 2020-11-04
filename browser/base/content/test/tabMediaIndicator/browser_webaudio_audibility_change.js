@@ -82,6 +82,24 @@ add_task(
   }
 );
 
+add_task(async function testNoSoundIndicatorWhenSimplyCreateAudioContext() {
+  info("create a tab loading media document");
+  const tab = await createBlankForegroundTab({ needObserver: true });
+
+  info(`sound indicator should not appear when simply create an AudioContext`);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async _ => {
+    content.ac = new content.AudioContext();
+    while (content.ac.state != "running") {
+      info(`wait until web audio starts running`);
+      await new Promise(r => (content.ac.onstatechange = r));
+    }
+  });
+  ok(!tab.observer.hasEverUpdated(), "didn't ever update sound indicator");
+
+  info("remove tab");
+  BrowserTestUtils.removeTab(tab);
+});
+
 /**
  * Following are helper functions
  */
