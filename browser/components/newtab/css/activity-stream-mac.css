@@ -679,6 +679,8 @@ main {
     .top-site-outer .title .sponsored-label {
       color: #737373;
       font-size: 0.9em; }
+    .top-site-outer .title:not(.sponsored) > .sponsored-label {
+      visibility: hidden; }
   .top-site-outer .edit-button {
     background-image: url("chrome://activity-stream/content/data/content/assets/glyph-edit-16.svg"); }
   .top-site-outer.placeholder .tile {
