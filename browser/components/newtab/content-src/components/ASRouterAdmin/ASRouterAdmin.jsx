@@ -505,6 +505,8 @@ export class ASRouterAdminInner extends React.PureComponent {
     this.onNewTargetingParams = this.onNewTargetingParams.bind(this);
     this.handleUpdateWNMessages = this.handleUpdateWNMessages.bind(this);
     this.handleForceWNP = this.handleForceWNP.bind(this);
+    this.handleCloseWNP = this.handleCloseWNP.bind(this);
+    this.resetPanel = this.resetPanel.bind(this);
     this.restoreWNMessageState = this.restoreWNMessageState.bind(this);
     this.toggleJSON = this.toggleJSON.bind(this);
     this.toggleAllMessages = this.toggleAllMessages.bind(this);
@@ -611,6 +613,31 @@ export class ASRouterAdminInner extends React.PureComponent {
     }));
   }
 
+  resetAllJSON() {
+    let messageCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+
+    for (const checkbox of messageCheckboxes) {
+      let trimmedId = checkbox.id.replace(" checkbox", "");
+
+      let message = this.state.messages.filter(msg => msg.id === trimmedId);
+      let msgId = message[0].id;
+
+      document.getElementById(`${msgId}-textarea`).value = JSON.stringify(
+        message[0],
+        null,
+        2
+      );
+    }
+    this.setState({
+      WNMessages: [],
+    });
+  }
+
+  resetPanel() {
+    this.resetAllJSON();
+    this.handleCloseWNP();
+  }
+
   handleOverride(id) {
     return () =>
       ASRouterUtils.overrideMessage(id).then(state => {
@@ -632,6 +659,10 @@ export class ASRouterAdminInner extends React.PureComponent {
 
   handleForceWNP() {
     ASRouterUtils.sendMessage({ type: "FORCE_WHATSNEW_PANEL" });
+  }
+
+  handleCloseWNP() {
+    ASRouterUtils.sendMessage({ type: "CLOSE_WHATSNEW_PANEL" });
   }
 
   expireCache() {
@@ -1681,15 +1712,16 @@ export class ASRouterAdminInner extends React.PureComponent {
         <p className="helpLink">
           <span className="icon icon-small-spacer icon-info" />{" "}
           <span>
-            To correctly render selected messages, please check "Disable Popup
-            Auto-Hide" in the browser toolbox, or set{" "}
-            <i>ui.popup.disable_autohide</i> to <b>true</b> in{" "}
-            <i>about:config</i>. Then, click 'Open What's New Panel', select the
-            messages you want to see, and click 'Render Selected Messages'.
+            To correctly render selected messages, click 'Open What's New
+            Panel', select the messages you want to see, and click 'Render
+            Selected Messages'.
             <br />
             <br />
             To modify a message, select it, modify the JSON and click 'Render
             Selected Messages' again to see your changes.
+            <br />
+            Click 'Reset Panel' to close the panel and reset all JSON to its
+            original state.
           </span>
         </p>
         <div>
@@ -1704,6 +1736,12 @@ export class ASRouterAdminInner extends React.PureComponent {
             onClick={this.handleUpdateWNMessages}
           >
             Render Selected Messages
+          </button>
+          <button
+            className="ASRouterButton secondary button"
+            onClick={this.resetPanel}
+          >
+            Reset Panel
           </button>
           <h2>Messages</h2>
           <button

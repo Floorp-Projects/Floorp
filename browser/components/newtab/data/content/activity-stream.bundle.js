@@ -1189,6 +1189,8 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     this.onNewTargetingParams = this.onNewTargetingParams.bind(this);
     this.handleUpdateWNMessages = this.handleUpdateWNMessages.bind(this);
     this.handleForceWNP = this.handleForceWNP.bind(this);
+    this.handleCloseWNP = this.handleCloseWNP.bind(this);
+    this.resetPanel = this.resetPanel.bind(this);
     this.restoreWNMessageState = this.restoreWNMessageState.bind(this);
     this.toggleJSON = this.toggleJSON.bind(this);
     this.toggleAllMessages = this.toggleAllMessages.bind(this);
@@ -1295,6 +1297,26 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     }));
   }
 
+  resetAllJSON() {
+    let messageCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+
+    for (const checkbox of messageCheckboxes) {
+      let trimmedId = checkbox.id.replace(" checkbox", "");
+      let message = this.state.messages.filter(msg => msg.id === trimmedId);
+      let msgId = message[0].id;
+      document.getElementById(`${msgId}-textarea`).value = JSON.stringify(message[0], null, 2);
+    }
+
+    this.setState({
+      WNMessages: []
+    });
+  }
+
+  resetPanel() {
+    this.resetAllJSON();
+    this.handleCloseWNP();
+  }
+
   handleOverride(id) {
     return () => _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__["ASRouterUtils"].overrideMessage(id).then(state => {
       this.setStateFromParent(state);
@@ -1316,6 +1338,12 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
   handleForceWNP() {
     _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__["ASRouterUtils"].sendMessage({
       type: "FORCE_WHATSNEW_PANEL"
+    });
+  }
+
+  handleCloseWNP() {
+    _asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_1__["ASRouterUtils"].sendMessage({
+      type: "CLOSE_WHATSNEW_PANEL"
     });
   }
 
@@ -2053,13 +2081,16 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
       className: "helpLink"
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", {
       className: "icon icon-small-spacer icon-info"
-    }), " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", null, "To correctly render selected messages, please check \"Disable Popup Auto-Hide\" in the browser toolbox, or set", " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("i", null, "ui.popup.disable_autohide"), " to ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("b", null, "true"), " in", " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("i", null, "about:config"), ". Then, click 'Open What's New Panel', select the messages you want to see, and click 'Render Selected Messages'.", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("br", null), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("br", null), "To modify a message, select it, modify the JSON and click 'Render Selected Messages' again to see your changes.")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
+    }), " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", null, "To correctly render selected messages, click 'Open What's New Panel', select the messages you want to see, and click 'Render Selected Messages'.", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("br", null), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("br", null), "To modify a message, select it, modify the JSON and click 'Render Selected Messages' again to see your changes.", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("br", null), "Click 'Reset Panel' to close the panel and reset all JSON to its original state.")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
       className: "ASRouterButton primary button",
       onClick: this.handleForceWNP
     }, "Open What's New Panel"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
       className: "ASRouterButton secondary button",
       onClick: this.handleUpdateWNMessages
-    }, "Render Selected Messages"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h2", null, "Messages"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
+    }, "Render Selected Messages"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
+      className: "ASRouterButton secondary button",
+      onClick: this.resetPanel
+    }, "Reset Panel"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h2", null, "Messages"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
       className: "ASRouterButton slim button" // eslint-disable-next-line react/jsx-no-bind
       ,
       onClick: e => this.toggleAllMessages(messagesToShow)
@@ -2383,7 +2414,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const MESSAGE_TYPE_LIST = ["BLOCK_MESSAGE_BY_ID", "USER_ACTION", "IMPRESSION", "TRIGGER", "NEWTAB_MESSAGE_REQUEST", "DOORHANGER_TELEMETRY", "TOOLBAR_BADGE_TELEMETRY", "TOOLBAR_PANEL_TELEMETRY", "MOMENTS_PAGE_TELEMETRY", "AS_ROUTER_TELEMETRY_USER_EVENT", // Admin types
-"ADMIN_CONNECT_STATE", "UNBLOCK_MESSAGE_BY_ID", "UNBLOCK_ALL", "BLOCK_BUNDLE", "UNBLOCK_BUNDLE", "DISABLE_PROVIDER", "ENABLE_PROVIDER", "EVALUATE_JEXL_EXPRESSION", "EXPIRE_QUERY_CACHE", "FORCE_ATTRIBUTION", "FORCE_WHATSNEW_PANEL", "OVERRIDE_MESSAGE", "MODIFY_MESSAGE_JSON", "RESET_PROVIDER_PREF", "SET_PROVIDER_USER_PREF", "RESET_GROUPS_STATE"];
+"ADMIN_CONNECT_STATE", "UNBLOCK_MESSAGE_BY_ID", "UNBLOCK_ALL", "BLOCK_BUNDLE", "UNBLOCK_BUNDLE", "DISABLE_PROVIDER", "ENABLE_PROVIDER", "EVALUATE_JEXL_EXPRESSION", "EXPIRE_QUERY_CACHE", "FORCE_ATTRIBUTION", "FORCE_WHATSNEW_PANEL", "CLOSE_WHATSNEW_PANEL", "OVERRIDE_MESSAGE", "MODIFY_MESSAGE_JSON", "RESET_PROVIDER_PREF", "SET_PROVIDER_USER_PREF", "RESET_GROUPS_STATE"];
 const MESSAGE_TYPE_HASH = MESSAGE_TYPE_LIST.reduce((hash, value) => {
   hash[value] = value;
   return hash;
