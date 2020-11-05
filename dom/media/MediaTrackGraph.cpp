@@ -2432,33 +2432,6 @@ SourceMediaTrack::SourceMediaTrack(MediaSegment::Type aType,
   mUpdateTrack->mInForcedShutdown = false;
 }
 
-nsresult SourceMediaTrack::OpenAudioInput(CubebUtils::AudioDeviceID aID,
-                                          AudioDataListener* aListener) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(GraphImpl());
-  MOZ_ASSERT(!mInputListener);
-  mInputListener = aListener;
-  return GraphImpl()->OpenAudioInput(aID, aListener);
-}
-
-void SourceMediaTrack::CloseAudioInput(Maybe<CubebUtils::AudioDeviceID>& aID) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(GraphImpl());
-  if (!mInputListener) {
-    return;
-  }
-  GraphImpl()->CloseAudioInput(aID, mInputListener);
-  mInputListener = nullptr;
-}
-
-void SourceMediaTrack::Destroy() {
-  MOZ_ASSERT(NS_IsMainThread());
-  Maybe<CubebUtils::AudioDeviceID> id = Nothing();
-  CloseAudioInput(id);
-
-  MediaTrack::Destroy();
-}
-
 void SourceMediaTrack::DestroyImpl() {
   GraphImpl()->AssertOnGraphThreadOrNotRunning();
   for (int32_t i = mConsumers.Length() - 1; i >= 0; --i) {
