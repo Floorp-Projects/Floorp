@@ -158,9 +158,6 @@ av_get_token
 av_gettime
 av_gettime_relative
 av_gettime_relative_is_monotonic
-av_hwdevice_get_hwframe_constraints
-av_hwdevice_hwconfig_alloc
-av_hwframe_constraints_free
 av_hwframe_get_buffer
 av_image_alloc
 av_image_check_sar
@@ -323,9 +320,5 @@ avpriv_slicethread_free
 av_hwdevice_get_type_name
 av_hwframe_ctx_alloc
 av_hwframe_ctx_init
-av_hwdevice_ctx_alloc
-av_hwdevice_ctx_init
-av_hwframe_transfer_get_formats
-av_hwdevice_ctx_create_derived
 av_malloc_array
 av_mallocz_array
