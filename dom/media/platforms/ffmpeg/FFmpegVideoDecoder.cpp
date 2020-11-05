@@ -125,8 +125,8 @@ static AVPixelFormat ChooseVAAPIPixelFormat(AVCodecContext* aCodecContext,
   return AV_PIX_FMT_NONE;
 }
 
-DMABufSurfaceWrapper::DMABufSurfaceWrapper(DMABufSurface* aSurface,
-                                           FFmpegLibWrapper* aLib)
+DMABufSurfaceWrapper<LIBAV_VER>::DMABufSurfaceWrapper(DMABufSurface* aSurface,
+                                                      FFmpegLibWrapper* aLib)
     : mSurface(aSurface),
       mLib(aLib),
       mAVHWFramesContext(nullptr),
@@ -139,8 +139,8 @@ DMABufSurfaceWrapper::DMABufSurfaceWrapper(DMABufSurface* aSurface,
              mSurface->GetUID());
 }
 
-void DMABufSurfaceWrapper::LockVAAPIData(AVCodecContext* aAVCodecContext,
-                                         AVFrame* aAVFrame) {
+void DMABufSurfaceWrapper<LIBAV_VER>::LockVAAPIData(
+    AVCodecContext* aAVCodecContext, AVFrame* aAVFrame) {
   FFMPEG_LOG("DMABufSurfaceWrapper: VAAPI locking dmabuf surface UID = %d",
              mSurface->GetUID());
   if (aAVCodecContext && aAVFrame) {
@@ -149,7 +149,7 @@ void DMABufSurfaceWrapper::LockVAAPIData(AVCodecContext* aAVCodecContext,
   }
 }
 
-void DMABufSurfaceWrapper::ReleaseVAAPIData() {
+void DMABufSurfaceWrapper<LIBAV_VER>::ReleaseVAAPIData() {
   FFMPEG_LOG("DMABufSurfaceWrapper: VAAPI releasing dmabuf surface UID = %d",
              mSurface->GetUID());
   if (mHWAVBuffer && mAVHWFramesContext) {
@@ -159,7 +159,7 @@ void DMABufSurfaceWrapper::ReleaseVAAPIData() {
   mSurface->ReleaseSurface();
 }
 
-DMABufSurfaceWrapper::~DMABufSurfaceWrapper() {
+DMABufSurfaceWrapper<LIBAV_VER>::~DMABufSurfaceWrapper() {
   FFMPEG_LOG("DMABufSurfaceWrapper: deleting dmabuf surface UID = %d",
              mSurface->GetUID());
   ReleaseVAAPIData();
@@ -182,7 +182,14 @@ AVCodec* FFmpegVideoDecoder<LIBAV_VER>::FindVAAPICodec() {
   return nullptr;
 }
 
-class VAAPIDisplayHolder {
+template <int V>
+class VAAPIDisplayHolder {};
+
+template <>
+class VAAPIDisplayHolder<LIBAV_VER>;
+
+template <>
+class VAAPIDisplayHolder<LIBAV_VER> {
  public:
   VAAPIDisplayHolder(FFmpegLibWrapper* aLib, VADisplay aDisplay)
       : mLib(aLib), mDisplay(aDisplay){};
@@ -194,7 +201,8 @@ class VAAPIDisplayHolder {
 };
 
 static void VAAPIDisplayReleaseCallback(struct AVHWDeviceContext* hwctx) {
-  auto displayHolder = static_cast<VAAPIDisplayHolder*>(hwctx->user_opaque);
+  auto displayHolder =
+      static_cast<VAAPIDisplayHolder<LIBAV_VER>*>(hwctx->user_opaque);
   delete displayHolder;
 }
 
@@ -235,7 +243,7 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
     }
   }
 
-  hwctx->user_opaque = new VAAPIDisplayHolder(mLib, mDisplay);
+  hwctx->user_opaque = new VAAPIDisplayHolder<LIBAV_VER>(mLib, mDisplay);
   hwctx->free = VAAPIDisplayReleaseCallback;
 
   int major, minor;
@@ -710,7 +718,7 @@ void FFmpegVideoDecoder<LIBAV_VER>::ReleaseUnusedVAAPIFrames() {
   }
 }
 
-DMABufSurfaceWrapper*
+DMABufSurfaceWrapper<LIBAV_VER>*
 FFmpegVideoDecoder<LIBAV_VER>::GetUnusedDMABufSurfaceWrapper() {
   int len = mDMABufSurfaces.Length();
   for (int i = 0; i < len; i++) {
@@ -769,7 +777,8 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageDMABuf(
 
   RefPtr<DMABufSurfaceYUV> surface;
 
-  DMABufSurfaceWrapper* surfaceWrapper = GetUnusedDMABufSurfaceWrapper();
+  DMABufSurfaceWrapper<LIBAV_VER>* surfaceWrapper =
+      GetUnusedDMABufSurfaceWrapper();
   if (!surfaceWrapper) {
     if (mVAAPIDeviceContext) {
       surface = DMABufSurfaceYUV::CreateYUVSurface(vaDesc);
