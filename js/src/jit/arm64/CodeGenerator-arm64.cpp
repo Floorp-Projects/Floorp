@@ -1259,9 +1259,11 @@ void CodeGenerator::visitUnbox(LUnbox* unbox) {
   // Assert the types match.
   JSValueTag tag = MIRTypeToTag(mir->type());
   Label ok;
-  ScratchTagScope scratch(masm, input);
-  masm.splitTagForTest(input, scratch);
-  masm.cmpTag(scratch, ImmTag(tag));
+  {
+    ScratchTagScope scratch(masm, input);
+    masm.splitTagForTest(input, scratch);
+    masm.cmpTag(scratch, ImmTag(tag));
+  }
   masm.B(&ok, Assembler::Condition::Equal);
   masm.assumeUnreachable("Infallible unbox type mismatch");
   masm.bind(&ok);

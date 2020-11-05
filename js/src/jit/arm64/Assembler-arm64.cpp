@@ -133,8 +133,26 @@ BufferOffset Assembler::emitExtendedJumpTable() {
     //   [Patchable 8-byte constant high bits]
     DebugOnly<size_t> preOffset = size_t(armbuffer_.nextOffset().getOffset());
 
-    ldr(vixl::ip0, ptrdiff_t(8 / vixl::kInstructionSize));
-    br(vixl::ip0);
+    // The unguarded use of ScratchReg64 here is OK:
+    //
+    // - The present function is called from code that does not claim any
+    //   scratch registers, we're done compiling user code and are emitting jump
+    //   tables.  Hence the scratch registers are available when we enter.
+    //
+    // - The pendingJumps_ represent jumps to other code sections that are not
+    //   known to this MacroAssembler instance, and we're generating code to
+    //   jump there.  It is safe to assume that any code using such a generated
+    //   branch to an unknown location did not store any valuable value in any
+    //   scratch register.  Hence the scratch registers can definitely be
+    //   clobbered here.
+    //
+    // - Scratch register usage is restricted to sequential control flow within
+    //   MacroAssembler functions.  Hence the scratch registers will not be
+    //   clobbered by ldr and br as they are Assembler primitives, not
+    //   MacroAssembler functions.
+
+    ldr(ScratchReg64, ptrdiff_t(8 / vixl::kInstructionSize));
+    br(ScratchReg64);
 
     DebugOnly<size_t> prePointer = size_t(armbuffer_.nextOffset().getOffset());
     MOZ_ASSERT_IF(!oom(),

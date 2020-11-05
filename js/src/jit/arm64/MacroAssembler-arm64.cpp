@@ -979,8 +979,11 @@ void MacroAssembler::call(ImmWord imm) { call(ImmPtr((void*)imm.value)); }
 
 void MacroAssembler::call(ImmPtr imm) {
   syncStackPtr();
-  movePtr(imm, ip0);
-  Blr(vixl::ip0);
+  vixl::UseScratchRegisterScope temps(this);
+  MOZ_ASSERT(temps.IsAvailable(ScratchReg64));  // ip0
+  temps.Exclude(ScratchReg64);
+  movePtr(imm, ScratchReg64.asUnsized());
+  Blr(ScratchReg64);
 }
 
 CodeOffset MacroAssembler::call(wasm::SymbolicAddress imm) {

@@ -171,8 +171,13 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   // Push the number of actual arguments and the calleeToken.
   // The result address is used to store the actual number of arguments
   // without adding an argument to EnterJIT.
-  masm.unboxInt32(Address(reg_vp, 0x0), ip0);
-  masm.push(ip0, reg_callee);
+  {
+    vixl::UseScratchRegisterScope temps(&masm.asVIXL());
+    MOZ_ASSERT(temps.IsAvailable(ScratchReg64));  // ip0
+    temps.Exclude(ScratchReg64);
+    masm.unboxInt32(Address(reg_vp, 0x0), ScratchReg64.asUnsized());
+    masm.push(ScratchReg64.asUnsized(), reg_callee);
+  }
   masm.checkStackAlignment();
 
   // Calculate the number of bytes pushed so far.
@@ -189,13 +194,19 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.branchTestPtr(Assembler::Zero, OsrFrameReg, OsrFrameReg, &notOsr);
 
     // Push return address and previous frame pointer.
-    masm.Adr(ScratchReg2_64, &osrReturnPoint);
-    masm.push(ScratchReg2, BaselineFrameReg);
+    {
+      vixl::UseScratchRegisterScope temps(&masm.asVIXL());
+      MOZ_ASSERT(temps.IsAvailable(ScratchReg2_64));  // ip1
+      temps.Exclude(ScratchReg2_64);
 
-    // Reserve frame.
-    masm.subFromStackPtr(Imm32(BaselineFrame::Size()));
+      masm.Adr(ScratchReg2_64, &osrReturnPoint);
+      masm.push(ScratchReg2, BaselineFrameReg);
 
-    masm.touchFrameValues(reg_osrNStack, ScratchReg2, BaselineFrameReg);
+      // Reserve frame.
+      masm.subFromStackPtr(Imm32(BaselineFrame::Size()));
+
+      masm.touchFrameValues(reg_osrNStack, ScratchReg2, BaselineFrameReg);
+    }
     masm.moveStackPtrTo(BaselineFrameReg);
 
     // Reserve space for locals and stack values.
