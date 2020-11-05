@@ -156,7 +156,7 @@ add_task(async function() {
       );
 
       // Have some breathing room between a11y service shutdowns.
-      await new Promise(resolve => executeSoon(resolve));
+      await TestUtils.waitForTick();
 
       info("Removing a service in content");
       // Now allow a11y service to shutdown in content.
