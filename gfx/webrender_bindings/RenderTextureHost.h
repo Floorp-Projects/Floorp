@@ -23,6 +23,7 @@ class GLContext;
 
 namespace wr {
 
+class RenderCompositor;
 class RenderDXGITextureHost;
 class RenderMacIOSurfaceTextureHost;
 class RenderBufferTextureHost;
@@ -44,6 +45,7 @@ class RenderTextureHost {
   virtual void Unlock() {}
 
   virtual wr::WrExternalImage LockSWGL(uint8_t aChannelIndex, void* aContext,
+                                       RenderCompositor* aCompositor,
                                        wr::ImageRendering aRendering);
 
   virtual void UnlockSWGL() {}
