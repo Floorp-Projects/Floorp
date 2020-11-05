@@ -6,10 +6,7 @@
 // working out a plan for them, updating the local data and mirror, etc.
 
 use interrupt_support::Interruptee;
-use rusqlite::{
-    types::{Null, ToSql},
-    Connection, Row, Transaction,
-};
+use rusqlite::{types::ToSql, Connection, Row, Transaction};
 use sql_support::ConnExt;
 use sync15_traits::Payload;
 use sync_guid::Guid as SyncGuid;
@@ -17,7 +14,7 @@ use sync_guid::Guid as SyncGuid;
 use crate::api::{StorageChanges, StorageValueChange};
 use crate::error::*;
 
-use super::{merge, remove_matching_keys, JsonMap, Record, RecordData};
+use super::{merge, remove_matching_keys, JsonMap, Record};
 
 /// The state data can be in. Could be represented as Option<JsonMap>, but this
 /// is clearer and independent of how the data is stored.
@@ -91,19 +88,8 @@ pub fn stage_incoming(
             for record in chunk {
                 signal.err_if_interrupted()?;
                 params.push(&record.guid as &dyn ToSql);
-                match &record.data {
-                    RecordData::Data {
-                        ref ext_id,
-                        ref data,
-                    } => {
-                        params.push(ext_id);
-                        params.push(data);
-                    }
-                    RecordData::Tombstone => {
-                        params.push(&Null);
-                        params.push(&Null);
-                    }
-                }
+                params.push(&record.ext_id);
+                params.push(&record.data);
             }
             tx.execute(&sql, &params)?;
             Ok(())
@@ -112,21 +98,21 @@ pub fn stage_incoming(
     Ok(())
 }
 
+/// Details about an incoming item.
+#[derive(Debug, PartialEq)]
+pub struct IncomingItem {
+    guid: SyncGuid,
+    ext_id: String,
+}
+
 /// The "state" we find ourselves in when considering an incoming/staging
-/// record. This "state" is the input to calculating the IncomingAction and
-/// carries all the data we need to make the required local changes.
+/// record. This "state" is the input to calculating the IncomingAction.
 #[derive(Debug, PartialEq)]
 pub enum IncomingState {
     /// There's an incoming item, but data for that extension doesn't exist
     /// either in our local data store or in the local mirror. IOW, this is the
     /// very first time we've seen this extension.
-    IncomingOnlyData { ext_id: String, data: JsonMap },
-
-    /// An incoming tombstone that doesn't exist locally. Because tombstones
-    /// don't carry the ext-id, it means it's not in our mirror. We are just
-    /// going to ignore it, but we track the state for consistency.
-    IncomingOnlyTombstone,
-
+    IncomingOnly { incoming: DataState },
     /// There's an incoming item and we have data for the same extension in
     /// our local store - but not in our mirror. This should be relatively
     /// uncommon as it means:
@@ -135,7 +121,6 @@ pub enum IncomingState {
     /// * This is the first sync for this profile since both those events
     ///   happened.
     HasLocal {
-        ext_id: String,
         incoming: DataState,
         local: DataState,
     },
@@ -143,14 +128,12 @@ pub enum IncomingState {
     /// the mirror. The addon probably doesn't exist locally, or if it does,
     /// the last time we synced we synced the deletion of all data.
     NotLocal {
-        ext_id: String,
         incoming: DataState,
         mirror: DataState,
     },
     /// This will be the most common "incoming" case - there's data incoming,
     /// in the mirror and in the local store for an addon.
     Everywhere {
-        ext_id: String,
         incoming: DataState,
         mirror: DataState,
         local: DataState,
@@ -159,64 +142,44 @@ pub enum IncomingState {
 
 /// Get the items we need to process from the staging table. Return details about
 /// the item and the state of that item, ready for processing.
-pub fn get_incoming(conn: &Connection) -> Result<Vec<(SyncGuid, IncomingState)>> {
+pub fn get_incoming(conn: &Connection) -> Result<Vec<(IncomingItem, IncomingState)>> {
     let sql = "
         SELECT
             s.guid as guid,
-            l.ext_id as l_ext_id,
-            m.ext_id as m_ext_id,
-            s.ext_id as s_ext_id,
+            m.guid IS NOT NULL as m_exists,
+            l.ext_id IS NOT NULL as l_exists,
+            s.ext_id,
             s.data as s_data, m.data as m_data, l.data as l_data,
             l.sync_change_counter
         FROM temp.storage_sync_staging s
         LEFT JOIN storage_sync_mirror m ON m.guid = s.guid
-        LEFT JOIN storage_sync_data l on l.ext_id IN (m.ext_id, s.ext_id);";
+        LEFT JOIN storage_sync_data l on l.ext_id = s.ext_id;";
 
-    fn from_row(row: &Row<'_>) -> Result<(SyncGuid, IncomingState)> {
+    fn from_row(row: &Row<'_>) -> Result<(IncomingItem, IncomingState)> {
         let guid = row.get("guid")?;
-        // This is complicated because the staging row doesn't hold the ext_id.
-        // However, both the local table and the mirror do.
-        let mirror_ext_id: Option<String> = row.get("m_ext_id")?;
-        let local_ext_id: Option<String> = row.get("l_ext_id")?;
-        let staged_ext_id: Option<String> = row.get("s_ext_id")?;
+        let ext_id = row.get("ext_id")?;
         let incoming = json_map_from_row(row, "s_data")?;
 
-        // We find the state by examining which tables the ext-id exists in,
-        // using whether that column is null as a proxy for that.
-        let state = match (local_ext_id, mirror_ext_id) {
-            (None, None) => {
-                match staged_ext_id {
-                    Some(ext_id) => {
-                        let data = match incoming {
-                            // incoming record with missing data that's not a
-                            // tombstone shouldn't happen, but we can cope by
-                            // pretending it was an empty json map.
-                            DataState::Deleted => JsonMap::new(),
-                            DataState::Exists(data) => data,
-                        };
-                        IncomingState::IncomingOnlyData { ext_id, data }
-                    }
-                    None => IncomingState::IncomingOnlyTombstone,
-                }
-            }
-            (Some(ext_id), None) => IncomingState::HasLocal {
-                ext_id,
+        let mirror_exists = row.get("m_exists")?;
+        let local_exists = row.get("l_exists")?;
+
+        let state = match (local_exists, mirror_exists) {
+            (false, false) => IncomingState::IncomingOnly { incoming },
+            (true, false) => IncomingState::HasLocal {
                 incoming,
                 local: json_map_from_row(row, "l_data")?,
             },
-            (None, Some(ext_id)) => IncomingState::NotLocal {
-                ext_id,
+            (false, true) => IncomingState::NotLocal {
                 incoming,
                 mirror: json_map_from_row(row, "m_data")?,
             },
-            (Some(ext_id), Some(_)) => IncomingState::Everywhere {
-                ext_id,
+            (true, true) => IncomingState::Everywhere {
                 incoming,
                 mirror: json_map_from_row(row, "m_data")?,
                 local: json_map_from_row(row, "l_data")?,
             },
         };
-        Ok((guid, state))
+        Ok((IncomingItem { guid, ext_id }, state))
     }
 
     Ok(conn.conn().query_rows_and_then_named(sql, &[], from_row)?)
@@ -228,33 +191,25 @@ pub fn get_incoming(conn: &Connection) -> Result<Vec<(SyncGuid, IncomingState)>>
 #[derive(Debug, PartialEq)]
 pub enum IncomingAction {
     /// We should locally delete the data for this record
-    DeleteLocally {
-        ext_id: String,
-        changes: StorageChanges,
-    },
+    DeleteLocally { changes: StorageChanges },
     /// We will take the remote.
     TakeRemote {
-        ext_id: String,
         data: JsonMap,
         changes: StorageChanges,
     },
     /// We merged this data - this is what we came up with.
     Merge {
-        ext_id: String,
         data: JsonMap,
         changes: StorageChanges,
     },
     /// Entry exists locally and it's the same as the incoming record.
-    Same { ext_id: String },
-    /// Incoming tombstone for an item we've never seen.
-    Nothing,
+    Same,
 }
 
 /// Takes the state of an item and returns the action we should take for it.
 pub fn plan_incoming(s: IncomingState) -> IncomingAction {
     match s {
         IncomingState::Everywhere {
-            ext_id,
             incoming,
             local,
             mirror,
@@ -267,7 +222,7 @@ pub fn plan_incoming(s: IncomingState) -> IncomingAction {
                     DataState::Exists(mirror_data),
                 ) => {
                     // all records have data - 3-way merge.
-                    merge(ext_id, incoming_data, local_data, Some(mirror_data))
+                    merge(incoming_data, local_data, Some(mirror_data))
                 }
                 (
                     DataState::Exists(incoming_data),
@@ -275,12 +230,11 @@ pub fn plan_incoming(s: IncomingState) -> IncomingAction {
                     DataState::Deleted,
                 ) => {
                     // No parent, so first time seeing this remotely - 2-way merge
-                    merge(ext_id, incoming_data, local_data, None)
+                    merge(incoming_data, local_data, None)
                 }
                 (DataState::Exists(incoming_data), DataState::Deleted, _) => {
                     // Incoming data, removed locally. Server wins.
                     IncomingAction::TakeRemote {
-                        ext_id,
                         changes: changes_for_new_incoming(&incoming_data),
                         data: incoming_data,
                     }
@@ -293,10 +247,9 @@ pub fn plan_incoming(s: IncomingState) -> IncomingAction {
                     if result.is_empty() {
                         // If there were no more keys left, we can
                         // delete our version too.
-                        IncomingAction::DeleteLocally { ext_id, changes }
+                        IncomingAction::DeleteLocally { changes }
                     } else {
                         IncomingAction::Merge {
-                            ext_id,
                             data: result,
                             changes,
                         }
@@ -310,7 +263,6 @@ pub fn plan_incoming(s: IncomingState) -> IncomingAction {
                     // knew was present. Unfortunately, we don't know
                     // any keys that were present, so we delete no keys.
                     IncomingAction::Merge {
-                        ext_id,
                         data: local_data,
                         changes: StorageChanges::new(),
                     }
@@ -318,15 +270,11 @@ pub fn plan_incoming(s: IncomingState) -> IncomingAction {
                 (DataState::Deleted, DataState::Deleted, _) => {
                     // We agree with the remote (regardless of what we
                     // have mirrored).
-                    IncomingAction::Same { ext_id }
+                    IncomingAction::Same
                 }
             }
         }
-        IncomingState::HasLocal {
-            ext_id,
-            incoming,
-            local,
-        } => {
+        IncomingState::HasLocal { incoming, local } => {
             // So we have a local record and an incoming/staging record, but *not* a
             // mirror record. This means some other device has synced this for
             // the first time and we are yet to do the same.
@@ -335,7 +283,7 @@ pub fn plan_incoming(s: IncomingState) -> IncomingAction {
                     // This means the extension exists locally and remotely
                     // but this is the first time we've synced it. That's no problem, it's
                     // just a 2-way merge...
-                    merge(ext_id, incoming_data, local_data, None)
+                    merge(incoming_data, local_data, None)
                 }
                 (DataState::Deleted, DataState::Exists(local_data)) => {
                     // We've data locally, but there's an incoming deletion.
@@ -343,7 +291,6 @@ pub fn plan_incoming(s: IncomingState) -> IncomingAction {
                     // present on the server, but we don't know what
                     // was on the server, so we don't remove anything.
                     IncomingAction::Merge {
-                        ext_id,
                         data: local_data,
                         changes: StorageChanges::new(),
                     }
@@ -351,45 +298,40 @@ pub fn plan_incoming(s: IncomingState) -> IncomingAction {
                 (DataState::Exists(incoming_data), DataState::Deleted) => {
                     // No data locally, but some is incoming - take it.
                     IncomingAction::TakeRemote {
-                        ext_id,
                         changes: changes_for_new_incoming(&incoming_data),
                         data: incoming_data,
                     }
                 }
                 (DataState::Deleted, DataState::Deleted) => {
                     // Nothing anywhere - odd, but OK.
-                    IncomingAction::Same { ext_id }
+                    IncomingAction::Same
                 }
             }
         }
-        IncomingState::NotLocal {
-            ext_id, incoming, ..
-        } => {
+        IncomingState::NotLocal { incoming, .. } => {
             // No local data but there's mirror and an incoming record.
             // This means a local deletion is being replaced by, or just re-doing
             // the incoming record.
             match incoming {
                 DataState::Exists(data) => IncomingAction::TakeRemote {
-                    ext_id,
                     changes: changes_for_new_incoming(&data),
                     data,
                 },
-                DataState::Deleted => IncomingAction::Same { ext_id },
+                DataState::Deleted => IncomingAction::Same,
             }
         }
-        IncomingState::IncomingOnlyData { ext_id, data } => {
-            // Only the staging record exists and it's not a tombstone.
-            // This means it's the first time we've ever seen it. No
-            // conflict possible, just take the remote.
-            IncomingAction::TakeRemote {
-                ext_id,
-                changes: changes_for_new_incoming(&data),
-                data,
+        IncomingState::IncomingOnly { incoming } => {
+            // Only the staging record exists - this means it's the first time
+            // we've ever seen it. No conflict possible, just take the remote.
+            match incoming {
+                DataState::Exists(data) => IncomingAction::TakeRemote {
+                    changes: changes_for_new_incoming(&data),
+                    data,
+                },
+                DataState::Deleted => IncomingAction::DeleteLocally {
+                    changes: StorageChanges::new(),
+                },
             }
-        }
-        IncomingState::IncomingOnlyTombstone => {
-            // Only the staging record exists and it is a tombstone - nothing to do.
-            IncomingAction::Nothing
         }
     }
 }
@@ -409,67 +351,57 @@ fn insert_changes(tx: &Transaction<'_>, ext_id: &str, changes: &StorageChanges) 
 // Apply the actions necessary to fully process the incoming items.
 pub fn apply_actions(
     tx: &Transaction<'_>,
-    actions: Vec<(SyncGuid, IncomingAction)>,
+    actions: Vec<(IncomingItem, IncomingAction)>,
     signal: &dyn Interruptee,
 ) -> Result<()> {
     for (item, action) in actions {
         signal.err_if_interrupted()?;
 
-        log::trace!("action for '{:?}': {:?}", item, action);
+        log::trace!("action for '{}': {:?}", item.ext_id, action);
         match action {
-            IncomingAction::DeleteLocally { ext_id, changes } => {
+            IncomingAction::DeleteLocally { changes } => {
                 // Can just nuke it entirely.
                 tx.execute_named_cached(
                     "DELETE FROM storage_sync_data WHERE ext_id = :ext_id",
-                    &[(":ext_id", &ext_id)],
+                    &[(":ext_id", &item.ext_id)],
                 )?;
-                insert_changes(tx, &ext_id, &changes)?;
+                insert_changes(tx, &item.ext_id, &changes)?;
             }
             // We want to update the local record with 'data' and after this update the item no longer is considered dirty.
-            IncomingAction::TakeRemote {
-                ext_id,
-                data,
-                changes,
-            } => {
+            IncomingAction::TakeRemote { data, changes } => {
                 tx.execute_named_cached(
                     "INSERT OR REPLACE INTO storage_sync_data(ext_id, data, sync_change_counter)
                         VALUES (:ext_id, :data, 0)",
                     &[
-                        (":ext_id", &ext_id),
+                        (":ext_id", &item.ext_id),
                         (":data", &serde_json::Value::Object(data)),
                     ],
                 )?;
-                insert_changes(tx, &ext_id, &changes)?;
+                insert_changes(tx, &item.ext_id, &changes)?;
             }
 
             // We merged this data, so need to update locally but still consider
             // it dirty because the merged data must be uploaded.
-            IncomingAction::Merge {
-                ext_id,
-                data,
-                changes,
-            } => {
+            IncomingAction::Merge { data, changes } => {
                 tx.execute_named_cached(
                     "UPDATE storage_sync_data SET data = :data, sync_change_counter = sync_change_counter + 1 WHERE ext_id = :ext_id",
                     &[
-                        (":ext_id", &ext_id),
+                        (":ext_id", &item.ext_id),
                         (":data", &serde_json::Value::Object(data)),
                     ]
                 )?;
-                insert_changes(tx, &ext_id, &changes)?;
+                insert_changes(tx, &item.ext_id, &changes)?;
             }
 
             // Both local and remote ended up the same - only need to nuke the
             // change counter.
-            IncomingAction::Same { ext_id } => {
+            IncomingAction::Same => {
                 tx.execute_named_cached(
                     "UPDATE storage_sync_data SET sync_change_counter = 0 WHERE ext_id = :ext_id",
-                    &[(":ext_id", &ext_id)],
+                    &[(":ext_id", &item.ext_id)],
                 )?;
                 // no changes to write
             }
-            // Literally nothing to do!
-            IncomingAction::Nothing => {}
         }
     }
     Ok(())
@@ -587,12 +519,17 @@ mod tests {
 
         let incoming = get_incoming(&tx)?;
         assert_eq!(incoming.len(), 1);
-        assert_eq!(incoming[0].0, SyncGuid::new("guid"),);
+        assert_eq!(
+            incoming[0].0,
+            IncomingItem {
+                guid: SyncGuid::new("guid"),
+                ext_id: "ext_id".into()
+            }
+        );
         assert_eq!(
             incoming[0].1,
-            IncomingState::IncomingOnlyData {
-                ext_id: "ext_id".to_string(),
-                data: map!({"foo": "bar"}),
+            IncomingState::IncomingOnly {
+                incoming: DataState::Exists(map!({"foo": "bar"})),
             }
         );
 
@@ -609,7 +546,6 @@ mod tests {
         assert_eq!(
             incoming[0].1,
             IncomingState::NotLocal {
-                ext_id: "ext_id".to_string(),
                 incoming: DataState::Exists(map!({"foo": "bar"})),
                 mirror: DataState::Exists(map!({"foo": "new"})),
             }
@@ -622,7 +558,6 @@ mod tests {
         assert_eq!(
             incoming[0].1,
             IncomingState::Everywhere {
-                ext_id: "ext_id".to_string(),
                 incoming: DataState::Exists(map!({"foo": "bar"})),
                 local: DataState::Exists(map!({"foo": "local"})),
                 mirror: DataState::Exists(map!({"foo": "new"})),
@@ -637,31 +572,41 @@ mod tests {
         let mut db = new_syncable_mem_db();
         let tx = db.transaction()?;
 
-        // Start with a tombstone just in staging.
+        // Start with an item just in staging.
         tx.execute(
             r#"
             INSERT INTO temp.storage_sync_staging (guid, ext_id, data)
-            VALUES ('guid', NULL, NULL)
+            VALUES ('guid', 'ext_id', NULL)
         "#,
             NO_PARAMS,
         )?;
 
         let incoming = get_incoming(&tx)?;
         assert_eq!(incoming.len(), 1);
-        assert_eq!(incoming[0].1, IncomingState::IncomingOnlyTombstone,);
+        assert_eq!(
+            incoming[0].1,
+            IncomingState::IncomingOnly {
+                incoming: DataState::Deleted
+            }
+        );
 
-        // Add the same item to the mirror (can't store an ext_id for a
-        // tombstone in the mirror as incoming tombstones never have it)
+        // Add the same item to the mirror.
         tx.execute(
             r#"
             INSERT INTO storage_sync_mirror (guid, ext_id, data)
-            VALUES ('guid', NULL, NULL)
+            VALUES ('guid', 'ext_id', NULL)
         "#,
             NO_PARAMS,
         )?;
         let incoming = get_incoming(&tx)?;
         assert_eq!(incoming.len(), 1);
-        assert_eq!(incoming[0].1, IncomingState::IncomingOnlyTombstone);
+        assert_eq!(
+            incoming[0].1,
+            IncomingState::NotLocal {
+                incoming: DataState::Deleted,
+                mirror: DataState::Deleted,
+            }
+        );
 
         tx.execute(
             r#"
@@ -674,10 +619,11 @@ mod tests {
         assert_eq!(incoming.len(), 1);
         assert_eq!(
             incoming[0].1,
-            // IncomingOnly* seems a little odd, but it is because we can't
-            // tie the tombstones together due to the lack of any ext-id/guid
-            // mapping in this case.
-            IncomingState::IncomingOnlyTombstone
+            IncomingState::Everywhere {
+                incoming: DataState::Deleted,
+                local: DataState::Deleted,
+                mirror: DataState::Deleted,
+            }
         );
         Ok(())
     }
@@ -732,8 +678,11 @@ mod tests {
     }
 
     fn do_apply_action(tx: &Transaction<'_>, action: IncomingAction) {
-        let guid = SyncGuid::new("guid");
-        apply_actions(tx, vec![(guid, action)], &NeverInterrupts).expect("should apply");
+        let item = IncomingItem {
+            guid: SyncGuid::new("guid"),
+            ext_id: "ext_id".into(),
+        };
+        apply_actions(tx, vec![(item, action)], &NeverInterrupts).expect("should apply");
     }
 
     #[test]
@@ -751,7 +700,6 @@ mod tests {
         do_apply_action(
             &tx,
             IncomingAction::DeleteLocally {
-                ext_id: "ext_id".to_string(),
                 changes: changes.clone(),
             },
         );
@@ -780,7 +728,6 @@ mod tests {
         do_apply_action(
             &tx,
             IncomingAction::TakeRemote {
-                ext_id: "ext_id".to_string(),
                 data: map!({"foo": "remote"}),
                 changes: changes.clone(),
             },
@@ -815,7 +762,6 @@ mod tests {
         do_apply_action(
             &tx,
             IncomingAction::Merge {
-                ext_id: "ext_id".to_string(),
                 data: map!({"foo": "remote"}),
                 changes: changes.clone(),
             },
@@ -845,12 +791,7 @@ mod tests {
                 sync_change_counter: 1
             })
         );
-        do_apply_action(
-            &tx,
-            IncomingAction::Same {
-                ext_id: "ext_id".to_string(),
-            },
-        );
+        do_apply_action(&tx, IncomingAction::Same);
         assert_eq!(
             get_local_item(&tx),
             Some(LocalItem {

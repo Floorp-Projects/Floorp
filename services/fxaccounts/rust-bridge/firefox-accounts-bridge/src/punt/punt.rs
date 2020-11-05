@@ -14,7 +14,7 @@ use xpcom::{interfaces::nsIVariant, RefPtr};
 /// result to its callback.
 pub enum Punt {
     ToJson,
-    BeginOAuthFlow(Vec<String>, String),
+    BeginOAuthFlow(Vec<String>),
     CompleteOAuthFlow(String, String),
     Disconnect,
     GetAccessToken(String, Option<u64>),

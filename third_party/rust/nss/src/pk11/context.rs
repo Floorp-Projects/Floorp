@@ -12,32 +12,28 @@ use crate::{
 };
 use std::{convert::TryFrom, ptr};
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 #[repr(u8)]
 pub enum HashAlgorithm {
     SHA256,
-    SHA384,
 }
 
 impl HashAlgorithm {
     fn result_len(&self) -> u32 {
         match self {
             HashAlgorithm::SHA256 => nss_sys::SHA256_LENGTH,
-            HashAlgorithm::SHA384 => nss_sys::SHA384_LENGTH,
         }
     }
 
     fn as_hmac_mechanism(&self) -> u32 {
         match self {
             HashAlgorithm::SHA256 => nss_sys::CKM_SHA256_HMAC,
-            HashAlgorithm::SHA384 => nss_sys::CKM_SHA384_HMAC,
         }
     }
 
     pub(crate) fn as_hkdf_mechanism(&self) -> u32 {
         match self {
             HashAlgorithm::SHA256 => nss_sys::CKM_NSS_HKDF_SHA256,
-            HashAlgorithm::SHA384 => nss_sys::CKM_NSS_HKDF_SHA384,
         }
     }
 }
@@ -46,7 +42,6 @@ impl From<&HashAlgorithm> for nss_sys::SECOidTag {
     fn from(alg: &HashAlgorithm) -> Self {
         match alg {
             HashAlgorithm::SHA256 => nss_sys::SECOidTag::SEC_OID_SHA256,
-            HashAlgorithm::SHA384 => nss_sys::SECOidTag::SEC_OID_SHA384,
         }
     }
 }

@@ -170,7 +170,6 @@ mod tests {
     use crate::record_types::{MetaGlobalEngine, MetaGlobalRecord};
     use crate::request::{CollectionRequest, InfoCollections, InfoConfiguration};
     use crate::telemetry;
-    use anyhow::Result;
     use std::cell::{Cell, RefCell};
     use std::collections::HashMap;
     use sync_guid::Guid;
@@ -231,7 +230,7 @@ mod tests {
             &self,
             _inbound: Vec<IncomingChangeset>,
             _telem: &mut telemetry::Engine,
-        ) -> Result<OutgoingChangeset> {
+        ) -> Result<OutgoingChangeset, failure::Error> {
             unreachable!("these tests shouldn't call these");
         }
 
@@ -239,28 +238,28 @@ mod tests {
             &self,
             _new_timestamp: ServerTimestamp,
             _records_synced: Vec<Guid>,
-        ) -> Result<()> {
+        ) -> Result<(), failure::Error> {
             unreachable!("these tests shouldn't call these");
         }
 
         fn get_collection_requests(
             &self,
             _server_timestamp: ServerTimestamp,
-        ) -> Result<Vec<CollectionRequest>> {
+        ) -> Result<Vec<CollectionRequest>, failure::Error> {
             unreachable!("these tests shouldn't call these");
         }
 
-        fn get_sync_assoc(&self) -> Result<StoreSyncAssociation> {
+        fn get_sync_assoc(&self) -> Result<StoreSyncAssociation, failure::Error> {
             Ok(self.assoc.replace(StoreSyncAssociation::Disconnected))
         }
 
-        fn reset(&self, new_assoc: &StoreSyncAssociation) -> Result<()> {
+        fn reset(&self, new_assoc: &StoreSyncAssociation) -> Result<(), failure::Error> {
             self.assoc.replace(new_assoc.clone());
             *self.num_resets.borrow_mut() += 1;
             Ok(())
         }
 
-        fn wipe(&self) -> Result<()> {
+        fn wipe(&self) -> Result<(), failure::Error> {
             unreachable!("these tests shouldn't call these");
         }
     }

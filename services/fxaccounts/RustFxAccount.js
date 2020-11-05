@@ -74,11 +74,10 @@ class RustFxAccount {
    * `completeOAuthFlow(...)` to complete the flow.
    *
    * @param {[string]} scopes
-   * @param {string} entryPoint - a string for metrics.
    * @returns {Promise<string>}  a URL string that the caller should navigate to.
    */
-  async beginOAuthFlow(scopes, entryPoint = "desktop") {
-    return promisify(this.bridge.beginOAuthFlow, scopes, entryPoint);
+  async beginOAuthFlow(scopes) {
+    return promisify(this.bridge.beginOAuthFlow, scopes);
   }
   /**
    * Complete an OAuth flow initiated by `beginOAuthFlow(...)`.

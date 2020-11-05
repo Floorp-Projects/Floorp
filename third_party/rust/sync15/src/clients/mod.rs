@@ -8,7 +8,6 @@ mod engine;
 mod record;
 mod ser;
 
-use anyhow::Result;
 pub use engine::Engine;
 pub use sync15_traits::client::{ClientData, DeviceType, RemoteClient};
 
@@ -32,7 +31,7 @@ pub trait CommandProcessor {
 
     /// Fetches commands to send to other clients. An error return value means
     /// commands couldn't be fetched, and halts the sync.
-    fn fetch_outgoing_commands(&self) -> Result<HashSet<Command>>;
+    fn fetch_outgoing_commands(&self) -> Result<HashSet<Command>, failure::Error>;
 
     /// Applies a command sent to this client from another client. This method
     /// should return a `CommandStatus` indicating whether the command was
@@ -42,7 +41,7 @@ pub trait CommandProcessor {
     /// applying the command, and halts the sync to prevent unexpected behavior
     /// (for example, merging local and remote bookmarks, when we were told to
     /// wipe our local bookmarks).
-    fn apply_incoming_command(&self, command: Command) -> Result<CommandStatus>;
+    fn apply_incoming_command(&self, command: Command) -> Result<CommandStatus, failure::Error>;
 }
 
 /// Indicates if a command was applied successfully, ignored, or not supported.

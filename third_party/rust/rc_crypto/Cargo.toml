@@ -10,15 +10,17 @@ crate-type = ["lib"]
 
 [dependencies]
 base64 = "0.12"
-thiserror = "1.0"
+failure = "0.1"
+failure_derive = "0.1"
 error-support = { path = "../error" }
 nss = { path = "nss" }
-hawk = { version = "3.2", default-features = false, optional = true }
-ece = { version = "1.2" , default-features = false, features = ["serializable-keys"], optional = true }
+libsqlite3-sys = { version = "0.20.1", features = ["bundled"] }
+hawk = { version = "3.1", default-features = false, optional = true }
+ece = { version = "1.1", default-features = false, features = ["serializable-keys"], optional = true }
 
 [dev-dependencies]
 hex = "0.4"
 
 [features]
 default = []
-gecko = ["nss/gecko"]
+gecko = []

@@ -13,7 +13,7 @@ use sync_guid::Guid as SyncGuid;
 
 use crate::error::*;
 
-use super::{Record, RecordData};
+use super::Record;
 
 fn outgoing_from_row(row: &Row<'_>) -> Result<Payload> {
     let guid: SyncGuid = row.get("guid")?;
@@ -21,11 +21,9 @@ fn outgoing_from_row(row: &Row<'_>) -> Result<Payload> {
     let raw_data: Option<String> = row.get("data")?;
     let payload = match raw_data {
         Some(raw_data) => Payload::from_record(Record {
+            ext_id,
             guid,
-            data: RecordData::Data {
-                ext_id,
-                data: raw_data,
-            },
+            data: Some(raw_data),
         })?,
         None => Payload::new_tombstone(guid),
     };
@@ -62,9 +60,8 @@ pub fn stage_outgoing(tx: &Transaction<'_>) -> Result<()> {
         INSERT OR REPLACE INTO storage_sync_data (ext_id, data, sync_change_counter)
         SELECT ext_id, data, 0
         FROM storage_sync_staging s
-        WHERE ext_id IS NOT NULL
-        AND NOT EXISTS(SELECT 1 FROM storage_sync_outgoing_staging o
-                       WHERE o.guid = s.guid);";
+        WHERE NOT EXISTS(SELECT 1 FROM storage_sync_outgoing_staging o
+                         WHERE o.guid = s.guid);";
     tx.execute_batch(sql)?;
     Ok(())
 }

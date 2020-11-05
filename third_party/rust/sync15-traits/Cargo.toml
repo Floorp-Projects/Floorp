@@ -15,4 +15,6 @@ serde_json = "1"
 log = "0.4"
 ffi-support = "0.4"
 url = "2.1"
-anyhow = "1.0"
+failure = "0.1"
+
+interrupt-support = { path = "../interrupt" }

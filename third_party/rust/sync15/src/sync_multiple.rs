@@ -14,6 +14,7 @@ use crate::state::{EngineChangesNeeded, GlobalState, PersistedGlobalState, Setup
 use crate::status::{ServiceStatus, SyncResult};
 use crate::sync::{self, Store};
 use crate::telemetry;
+use failure::Fail;
 use interrupt_support::Interruptee;
 use std::collections::HashMap;
 use std::mem;
@@ -373,7 +374,10 @@ impl<'info, 'res, 'pgs, 'mcs> SyncMultipleDriver<'info, 'res, 'pgs, 'mcs> {
         let changes = state_machine.changes_needed.take();
         // The state machine might have updated our persisted_global_state, so
         // update the caller's repr of it.
-        *self.persisted_global_state = Some(serde_json::to_string(&pgs)?);
+        mem::replace(
+            self.persisted_global_state,
+            Some(serde_json::to_string(&pgs)?),
+        );
 
         // Now that we've gone through the state machine, store the declined list in
         // the sync_result
@@ -456,17 +460,16 @@ impl<'info, 'res, 'pgs, 'mcs> SyncMultipleDriver<'info, 'res, 'pgs, 'mcs> {
     }
 
     fn prepare_persisted_state(&mut self) -> PersistedGlobalState {
-        // Note that any failure to use a persisted state means we also decline
-        // to use our memory cached state, so that we fully rebuild that
-        // persisted state for next time.
         match self.persisted_global_state {
-            Some(persisted_string) if !persisted_string.is_empty() => {
+            Some(persisted_string) => {
                 match serde_json::from_str::<PersistedGlobalState>(&persisted_string) {
                     Ok(state) => {
                         log::trace!("Read persisted state: {:?}", state);
-                        // Note that we don't set `result.declined` from the
-                        // data in state - it remains None, which explicitly
-                        // indicates "we don't have updated info".
+                        // TODO: we might want to consider setting `result.declined`
+                        // to what `state` has in it's declined list. I've opted not
+                        // to do that so that `result.declined == null` can be used
+                        // to determine whether or not we managed to update the
+                        // remote declined list.
                         state
                     }
                     _ => {
@@ -475,17 +478,15 @@ impl<'info, 'res, 'pgs, 'mcs> SyncMultipleDriver<'info, 'res, 'pgs, 'mcs> {
                         log::error!(
                             "Failed to parse PersistedGlobalState from JSON! Falling back to default"
                         );
-                        *self.mem_cached_state = MemoryCachedState::default();
                         PersistedGlobalState::default()
                     }
                 }
             }
-            _ => {
+            None => {
                 log::info!(
                     "The application didn't give us persisted state - \
                      this is only expected on the very first run for a given user."
                 );
-                *self.mem_cached_state = MemoryCachedState::default();
                 PersistedGlobalState::default()
             }
         }

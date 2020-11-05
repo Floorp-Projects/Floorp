@@ -96,7 +96,7 @@ macro_rules! scoped_ptr {
             #[allow(dead_code)]
             unsafe fn from_ptr(ptr: *mut $target) -> crate::error::Result<$scoped> {
                 if !ptr.is_null() {
-                    Ok($scoped { ptr })
+                    Ok($scoped { ptr: ptr })
                 } else {
                     Err(crate::error::ErrorKind::InternalError.into())
                 }

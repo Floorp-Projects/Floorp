@@ -125,8 +125,6 @@ pub struct IncomingEnvelope {
     pub modified: ServerTimestamp,
     #[serde(default)]
     pub sortindex: Option<i32>,
-    #[serde(default)]
-    pub ttl: Option<u32>,
     // Don't provide access to the cleartext directly. We want all callers to
     // use `IncomingEnvelope::payload`, so that we can validate the cleartext.
     cleartext: String,
@@ -144,10 +142,7 @@ impl IncomingEnvelope {
                 payload: payload.id,
             });
         }
-        // Remove auto field data from payload and replace with real data
-        Ok(payload
-            .with_auto_field("ttl", self.ttl)
-            .with_auto_field("sortindex", self.sortindex))
+        Ok(payload)
     }
 }
 
@@ -158,21 +153,14 @@ impl IncomingEnvelope {
 pub struct OutgoingEnvelope {
     id: Guid,
     cleartext: String,
-    sortindex: Option<i32>,
-    ttl: Option<u32>,
 }
 
 impl From<Payload> for OutgoingEnvelope {
-    fn from(mut payload: Payload) -> Self {
+    fn from(payload: Payload) -> Self {
         let id = payload.id.clone();
-        // Remove auto field data from OutgoingEnvelope payload
-        let ttl = payload.take_auto_field("ttl");
-        let sortindex = payload.take_auto_field("sortindex");
         OutgoingEnvelope {
             id,
             cleartext: payload.into_json_string(),
-            sortindex,
-            ttl,
         }
     }
 }

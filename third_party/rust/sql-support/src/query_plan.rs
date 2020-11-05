@@ -168,10 +168,6 @@ mod plan_log {
         if sql.starts_with("EXPLAIN") {
             return;
         }
-        let _ = conn.set_db_config(
-            rusqlite::config::DbConfig::SQLITE_DBCONFIG_TRIGGER_EQP,
-            true,
-        );
         let plan = match QueryPlan::new(conn, sql, params) {
             Ok(plan) => plan,
             Err(e) => {
