@@ -40,7 +40,7 @@ class SearchEngineWriterTest {
             name = "example",
             icon = mock(),
             type = SearchEngine.Type.CUSTOM,
-            resultUrls = listOf("https://www.example.com/search?q=%s'")
+            resultUrls = listOf("https://www.example.com/search?q={searchTerms}'")
         )
 
         val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()

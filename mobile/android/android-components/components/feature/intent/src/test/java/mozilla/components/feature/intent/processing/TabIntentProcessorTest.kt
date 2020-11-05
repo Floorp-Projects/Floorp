@@ -50,7 +50,6 @@ class TabIntentProcessorTest {
     private val sessionUseCases = SessionUseCases(store, sessionManager)
     private val searchEngineManager = mock<SearchEngineManager>()
     private val searchUseCases = SearchUseCases(
-        testContext,
         store,
         searchEngineManager.toDefaultSearchEngineProvider(testContext),
         sessionManager
@@ -262,7 +261,6 @@ class TabIntentProcessorTest {
         val sessionManager = spy(SessionManager(engine))
 
         val searchUseCases = SearchUseCases(
-            testContext,
             store,
             searchEngineManager.toDefaultSearchEngineProvider(testContext),
             sessionManager
@@ -338,7 +336,6 @@ class TabIntentProcessorTest {
         val sessionManager = spy(SessionManager(engine))
 
         val searchUseCases = SearchUseCases(
-            testContext,
             store,
             searchEngineManager.toDefaultSearchEngineProvider(testContext),
             sessionManager
@@ -402,7 +399,6 @@ class TabIntentProcessorTest {
         val sessionManager = spy(SessionManager(engine))
 
         val searchUseCases = SearchUseCases(
-            testContext,
             store,
             searchEngineManager.toDefaultSearchEngineProvider(testContext),
             sessionManager

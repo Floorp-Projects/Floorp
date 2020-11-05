@@ -14,6 +14,9 @@ permalink: /changelog/
 * **accounts-push**
   * 🚒 Bug fixed [issue #8745](https://github.com/mozilla-mobile/android-components/issues/8745) - Remove OneTimeFxaPushReset from FxaPushSupportFeature
     * ⚠️ **This is a breaking change** because the public API changes with the removal of the class.
+    
+* **feature-search**
+ * * ⚠️ **This is a breaking change**: `SearchUseCases` no longer requires a `Context` parameter in the constructor. 
 
 # 65.0.0
 

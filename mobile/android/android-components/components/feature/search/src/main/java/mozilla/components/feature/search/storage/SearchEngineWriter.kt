@@ -81,8 +81,7 @@ internal class SearchEngineWriter {
         searchEngine.resultUrls.forEach { url ->
             val urlElement = xmlDocument.createElement("Url")
             urlElement.setAttribute("type", URL_TYPE_SEARCH_HTML)
-            val templateSearchString = url.replace("%s", "{searchTerms}")
-            urlElement.setAttribute("template", templateSearchString)
+            urlElement.setAttribute("template", url)
             rootElement.appendChild(urlElement)
         }
 

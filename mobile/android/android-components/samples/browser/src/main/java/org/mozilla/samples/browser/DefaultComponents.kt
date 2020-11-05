@@ -201,7 +201,7 @@ open class DefaultComponents(private val applicationContext: Context) {
     }
 
     val searchUseCases by lazy {
-        SearchUseCases(applicationContext, store, store.toDefaultSearchEngineProvider(), sessionManager)
+        SearchUseCases(store, store.toDefaultSearchEngineProvider(), sessionManager)
     }
 
     val defaultSearchUseCase by lazy {

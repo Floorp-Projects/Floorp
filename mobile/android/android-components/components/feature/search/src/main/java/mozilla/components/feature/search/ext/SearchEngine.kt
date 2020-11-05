@@ -4,8 +4,11 @@
 
 package mozilla.components.feature.search.ext
 
+import android.graphics.Bitmap
 import android.net.Uri
 import mozilla.components.browser.state.search.SearchEngine
+import java.lang.IllegalArgumentException
+import java.util.UUID
 
 /**
  * Converts a [SearchEngine] (from `browser-state`) to the legacy `SearchEngine` type from
@@ -24,3 +27,24 @@ fun SearchEngine.legacy() = mozilla.components.browser.search.SearchEngine(
     resultsUris = resultUrls.map { Uri.parse(it) },
     suggestUri = suggestUrl?.let { Uri.parse(it) }
 )
+
+/**
+ * Creates a custom [SearchEngine].
+ */
+fun createSearchEngine(
+    name: String,
+    url: String,
+    icon: Bitmap
+): SearchEngine {
+    if (!url.contains("{searchTerms}")) {
+        throw IllegalArgumentException("URL does not contain search terms placeholder")
+    }
+
+    return SearchEngine(
+        id = UUID.randomUUID().toString(),
+        name = name,
+        icon = icon,
+        type = SearchEngine.Type.CUSTOM,
+        resultUrls = listOf(url)
+    )
+}
