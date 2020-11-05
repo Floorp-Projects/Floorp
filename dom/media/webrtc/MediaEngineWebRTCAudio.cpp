@@ -124,8 +124,8 @@ nsresult MediaEngineWebRTCMicrophoneSource::EvaluateSettings(
   prefs.mChannels = c.mChannelCount.Get(std::min(prefs.mChannels, maxChannels));
   prefs.mChannels = std::max(1, std::min(prefs.mChannels, maxChannels));
 
-  LOG("Audio config: aec: %d, agc: %d, noise: %d, channels: %d",
-      prefs.mAecOn ? prefs.mAec : -1, prefs.mAgcOn ? prefs.mAgc : -1,
+  LOG("Mic source %p Audio config: aec: %d, agc: %d, noise: %d, channels: %d",
+      this, prefs.mAecOn ? prefs.mAec : -1, prefs.mAgcOn ? prefs.mAgc : -1,
       prefs.mNoiseOn ? prefs.mNoise : -1, prefs.mChannels);
 
   *aOutPrefs = prefs;
@@ -484,7 +484,8 @@ nsresult MediaEngineWebRTCMicrophoneSource::Deallocate() {
   MOZ_ASSERT(mState != kStarted, "Source not stopped");
 
   mState = kReleased;
-  LOG("Audio device %s deallocated", NS_ConvertUTF16toUTF8(mDeviceName).get());
+  LOG("Mic source %p Audio device %s deallocated", this,
+      NS_ConvertUTF16toUTF8(mDeviceName).get());
   return NS_OK;
 }
 
@@ -508,7 +509,8 @@ void MediaEngineWebRTCMicrophoneSource::SetTrack(
         track->Resume();  // Suspended by MediaManager
       }));
 
-  LOG("Track %p registered for microphone capture", aTrack.get());
+  LOG("Mic source %p Track %p registered for microphone capture", this,
+      aTrack.get());
 }
 
 class StartStopMessage : public ControlMessage {
@@ -654,6 +656,10 @@ void AudioInputProcessing::SetPassThrough(MediaTrackGraphImpl* aGraph,
   MOZ_ASSERT(aGraph->OnGraphThread());
   if (!mSkipProcessing && aPassThrough && mPacketizerInput) {
     MOZ_ASSERT(mPacketizerInput->PacketsAvailable() == 0);
+    LOG_FRAME(
+        "AudioInputProcessing %p Appending %u frames of null data for data "
+        "discarded in the packetizer",
+        this, mPacketizerInput->FramesAvailable());
     mSegment.AppendNullData(mPacketizerInput->FramesAvailable());
     mPacketizerInput->Clear();
   }
@@ -693,8 +699,10 @@ void AudioInputProcessing::UpdateAECSettings(
     if (aLevel != EchoCancellation::SuppressionLevel::kLowSuppression &&
         aLevel != EchoCancellation::SuppressionLevel::kModerateSuppression &&
         aLevel != EchoCancellation::SuppressionLevel::kHighSuppression) {
-      LOG_ERROR("Attempt to set invalid AEC suppression level %d",
-                static_cast<int>(aLevel));
+      LOG_ERROR(
+          "AudioInputProcessing %p Attempt to set invalid AEC suppression "
+          "level %d",
+          this, static_cast<int>(aLevel));
 
       aLevel = EchoCancellation::SuppressionLevel::kModerateSuppression;
     }
@@ -711,14 +719,18 @@ void AudioInputProcessing::UpdateAGCSettings(bool aEnable,
   if (aMode != GainControl::Mode::kAdaptiveAnalog &&
       aMode != GainControl::Mode::kAdaptiveDigital &&
       aMode != GainControl::Mode::kFixedDigital) {
-    LOG_ERROR("Attempt to set invalid AGC mode %d", static_cast<int>(aMode));
+    LOG_ERROR("AudioInputProcessing %p Attempt to set invalid AGC mode %d",
+              this, static_cast<int>(aMode));
 
     aMode = GainControl::Mode::kAdaptiveDigital;
   }
 
 #if defined(WEBRTC_IOS) || defined(ATA) || defined(WEBRTC_ANDROID)
   if (aMode == GainControl::Mode::kAdaptiveAnalog) {
-    LOG_ERROR("Invalid AGC mode kAgcAdaptiveAnalog on mobile");
+    LOG_ERROR(
+        "AudioInputProcessing %p Invalid AGC mode kAgcAdaptiveAnalog on "
+        "mobile",
+        this);
     MOZ_ASSERT_UNREACHABLE(
         "Bad pref set in all.js or in about:config"
         " for the auto gain, on mobile.");
@@ -739,8 +751,10 @@ void AudioInputProcessing::UpdateNSSettings(
       aLevel != NoiseSuppression::Level::kModerate &&
       aLevel != NoiseSuppression::Level::kHigh &&
       aLevel != NoiseSuppression::Level::kVeryHigh) {
-    LOG_ERROR("Attempt to set invalid noise suppression level %d",
-              static_cast<int>(aLevel));
+    LOG_ERROR(
+        "AudioInputProcessing %p Attempt to set invalid noise suppression "
+        "level %d",
+        this, static_cast<int>(aLevel));
 
     aLevel = NoiseSuppression::Level::kModerate;
   }
@@ -813,6 +827,9 @@ void AudioInputProcessing::Pull(MediaTrackGraphImpl* aGraph, GraphTime aFrom,
       MOZ_ASSERT(mPacketizerInput);
       MOZ_ASSERT((buffering - mLiveBufferingAppended) ==
                  mPacketizerInput->mPacketSize);
+      LOG_FRAME("AudioInputProcessing %p Inserting %" PRId64
+                " frames of silence due to buffer increase",
+                this, buffering - mLiveBufferingAppended);
       mSegment.InsertNullDataAtStart(buffering - mLiveBufferingAppended);
       mLiveBufferingAppended = buffering;
     } else if (MOZ_UNLIKELY(buffering < mLiveBufferingAppended)) {
@@ -823,6 +840,9 @@ void AudioInputProcessing::Pull(MediaTrackGraphImpl* aGraph, GraphTime aFrom,
                  (mLiveBufferingAppended - buffering));
       TrackTime frames =
           std::min(mSegment.GetDuration(), mLiveBufferingAppended - buffering);
+      LOG_FRAME("AudioInputProcessing %p Removing %" PRId64
+                " frames of silence due to buffer decrease",
+                this, frames);
       mLiveBufferingAppended -= frames;
       mSegment.RemoveLeading(frames);
     }
@@ -832,14 +852,18 @@ void AudioInputProcessing::Pull(MediaTrackGraphImpl* aGraph, GraphTime aFrom,
     if (!mLiveFramesAppended) {
       // First real data being pulled in. Add the appropriate amount of
       // buffering before the real data to avoid glitches.
-      LOG_FRAME("Buffering %" PRId64 " frames of pre-silence for %u channels.",
-                buffering, mRequestedInputChannelCount);
+      LOG_FRAME("AudioInputProcessing %p Buffering %" PRId64
+                " frames of pre-silence for %u channels.",
+                this, buffering, mRequestedInputChannelCount);
       mSegment.InsertNullDataAtStart(buffering - mLiveBufferingAppended);
       mLiveFramesAppended = true;
       mLiveBufferingAppended = buffering;
     }
     MOZ_ASSERT(buffering == mLiveBufferingAppended);
     TrackTime frames = std::min(mSegment.GetDuration(), delta);
+    LOG_FRAME("AudioInputProcessing %p Appending %" PRId64
+              " frames of real data for %u channels.",
+              this, frames, mRequestedInputChannelCount);
     aSegment->AppendSlice(mSegment, 0, frames);
     mSegment.RemoveLeading(frames);
     delta -= frames;
@@ -855,8 +879,9 @@ void AudioInputProcessing::Pull(MediaTrackGraphImpl* aGraph, GraphTime aFrom,
     return;
   }
 
-  LOG_FRAME("Pulling %" PRId64 " frames of silence for %u channels.", delta,
-            mRequestedInputChannelCount);
+  LOG_FRAME("AudioInputProcessing %p Pulling %" PRId64
+            " frames of silence for %u channels.",
+            this, delta, mRequestedInputChannelCount);
 
   // This assertion fails if we append silence here after having appended live
   // frames. Before appending live frames we should add sufficient buffering to
@@ -973,6 +998,9 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
         aRate / 100, aChannels);
   }
 
+  LOG_FRAME("AudioInputProcessing %p Appending %zu frames to packetizer", this,
+            aFrames);
+
   // Packetize our input data into 10ms chunks, deinterleave into planar channel
   // buffers, process, and append to the right MediaStreamTrack.
   mPacketizerInput->Input(aBuffer, static_cast<uint32_t>(aFrames));
@@ -1066,8 +1094,8 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
       continue;
     }
 
-    LOG_FRAME("Appending %" PRIu32 " frames of packetized audio",
-              mPacketizerInput->mPacketSize);
+    LOG_FRAME("AudioInputProcessing %p Appending %u frames of packetized audio",
+              this, mPacketizerInput->mPacketSize);
 
     // We already have planar audio data of the right format. Insert into the
     // MTG.
@@ -1112,7 +1140,8 @@ void AudioInputProcessing::InsertInGraph(MediaTrackGraphImpl* aGraph,
                                  write_channels.Elements());
   }
 
-  LOG_FRAME("Appending %zu frames of raw audio", aFrames);
+  LOG_FRAME("AudioInputProcessing %p Appending %zu frames of raw audio", this,
+            aFrames);
 
   MOZ_ASSERT(aChannels == channels.Length());
   mSegment.AppendFrames(buffer.forget(), channels, aFrames, mPrincipal);
