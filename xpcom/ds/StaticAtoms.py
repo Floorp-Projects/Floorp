@@ -641,7 +641,6 @@ STATIC_ATOMS = [
     Atom("mediaType", "media-type"),
     Atom("menu", "menu"),
     Atom("menubar", "menubar"),
-    Atom("menubutton", "menubutton"),
     Atom("menucaption", "menucaption"),
     Atom("menugroup", "menugroup"),
     Atom("menuitem", "menuitem"),
