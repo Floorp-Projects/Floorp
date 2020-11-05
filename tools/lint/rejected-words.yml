@@ -110,7 +110,7 @@ avoid-blacklist-and-whitelist:
         - dom/ipc/ContentParent.cpp
         - dom/ipc/fuzztest/content_parent_ipc_libfuzz.cpp
         - dom/ipc/URLClassifierParent.cpp
-        - dom/media/AutoplayPolicy.cpp
+        - dom/media/autoplay/AutoplayPolicy.cpp
         - dom/media/gmp/GMPChild.cpp
         - dom/media/ipc/RDDProcessManager.cpp
         - dom/media/ipc/RemoteDecoderManagerParent.cpp
