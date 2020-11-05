@@ -185,7 +185,7 @@ def test_doc_flavor(mocked_func):
 
 @mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
 @mock.patch("mozperftest.mach_commands.MachCommandBase.activate_virtualenv")
-@mock.patch("mozperftest.mach_commands.PerftestTests._run_script")
+@mock.patch("mozperftest.utils.run_script")
 def test_test_runner(*mocked):
     with running_on_try(False), _get_command(PerftestTests) as test:
         test.run_tests(tests=[EXAMPLE_TEST], verbose=True)
@@ -193,7 +193,7 @@ def test_test_runner(*mocked):
 
 @mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
 @mock.patch("mozperftest.mach_commands.MachCommandBase.activate_virtualenv")
-@mock.patch("mozperftest.mach_commands.PerftestTests._run_python_script")
+@mock.patch("mozperftest.utils.run_python_script")
 def test_test_runner_on_try(*mocked):
     # simulating on try to run the paths parser
     with running_on_try(), _get_command(PerftestTests) as test:
@@ -202,7 +202,7 @@ def test_test_runner_on_try(*mocked):
 
 @mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
 @mock.patch("mozperftest.mach_commands.MachCommandBase.activate_virtualenv")
-@mock.patch("mozperftest.mach_commands.PerftestTests._run_script")
+@mock.patch("mozperftest.utils.run_script")
 def test_test_runner_coverage(*mocked):
     # simulating with coverage not installed
     with running_on_try(False), _get_command(PerftestTests) as test:
@@ -212,28 +212,6 @@ def test_test_runner_coverage(*mocked):
             test.run_tests(tests=[EXAMPLE_TEST])
         finally:
             sys.meta_path = old
-
-
-@mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
-@mock.patch("mozperftest.mach_commands.MachCommandBase.activate_virtualenv")
-def test_run_python_script(*mocked):
-    with _get_command(PerftestTests) as test, silence(test) as captured:
-        test._run_python_script("lib2to3", *["--help"])
-
-    stdout, stderr = captured
-    stdout.seek(0)
-    assert stdout.read() == "=> lib2to3 [OK]\n"
-
-
-@mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
-@mock.patch("mozperftest.mach_commands.MachCommandBase.activate_virtualenv")
-def test_run_python_script_failed(*mocked):
-    with _get_command(PerftestTests) as test, silence(test) as captured:
-        test._run_python_script("nothing")
-
-    stdout, stderr = captured
-    stdout.seek(0)
-    assert stdout.read().endswith("[FAILED]\n")
 
 
 def fzf_selection(*args):

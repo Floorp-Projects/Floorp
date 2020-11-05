@@ -20,6 +20,7 @@ from mozperftest.utils import (
     get_revision_namespace_url,
     convert_day,
     load_class,
+    checkout_python_script,
 )
 from mozperftest.tests.support import temp_file, requests_content, EXAMPLE_TESTS_DIR
 
@@ -168,6 +169,28 @@ def test_load_class():
 
     klass = load_class("mozperftest.tests.test_utils:ImportMe")
     assert klass is ImportMe
+
+
+class _Venv:
+    python_path = sys.executable
+
+
+def test_checkout_python_script():
+    with silence() as captured:
+        assert checkout_python_script(_Venv(), "lib2to3", ["--help"])
+
+    stdout, stderr = captured
+    stdout.seek(0)
+    assert stdout.read() == "=> lib2to3 [OK]\n"
+
+
+def test_run_python_script_failed():
+    with silence() as captured:
+        assert not checkout_python_script(_Venv(), "nothing")
+
+    stdout, stderr = captured
+    stdout.seek(0)
+    assert stdout.read().endswith("[FAILED]\n")
 
 
 if __name__ == "__main__":

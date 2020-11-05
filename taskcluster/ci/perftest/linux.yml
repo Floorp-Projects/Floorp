@@ -173,6 +173,7 @@ livesites:
             {perftest_testname}
             --browsertime-binary ${MOZ_FETCHES_DIR}/firefox/firefox-bin
             --browsertime-iterations 10
+            --visualmetrics
             --flavor desktop-browser
             --perfherder
             --perfherder-metrics {perftest_metrics}

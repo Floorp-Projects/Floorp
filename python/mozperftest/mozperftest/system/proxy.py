@@ -93,7 +93,6 @@ class ProxyRunner(Layer):
 
     def run(self, metadata):
         self.metadata = metadata
-
         replay_file = self.get_arg("replay")
         if replay_file is not None and replay_file.startswith("http"):
             self.tmpdir = tempfile.TemporaryDirectory()
