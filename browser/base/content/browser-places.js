@@ -468,7 +468,9 @@ var PlacesCommandHook = {
     let isNewBookmark = !info;
     let showEditUI = !isNewBookmark || StarUI.showForNewBookmarks;
     if (isNewBookmark) {
-      let parentGuid = PlacesUtils.bookmarks.unfiledGuid;
+      // This is async because we have to validate the guid
+      // coming from prefs.
+      let parentGuid = await PlacesUIUtils.defaultParentGuid;
       info = { url, parentGuid };
       // Bug 1148838 - Make this code work for full page plugins.
       let charset = null;
