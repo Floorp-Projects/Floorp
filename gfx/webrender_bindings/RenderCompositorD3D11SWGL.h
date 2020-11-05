@@ -68,13 +68,12 @@ class RenderCompositorD3D11SWGL : public RenderCompositor {
   void UnmapTile() override;
   void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aVirtualOffset,
                      wr::DeviceIntSize aTileSize, bool aIsOpaque) override;
-  void CreateExternalSurface(wr::NativeSurfaceId aId, bool aIsOpaque) override {
-  }
+  void CreateExternalSurface(wr::NativeSurfaceId aId, bool aIsOpaque) override;
   void DestroySurface(NativeSurfaceId aId) override;
   void CreateTile(wr::NativeSurfaceId, int32_t aX, int32_t aY) override;
   void DestroyTile(wr::NativeSurfaceId, int32_t aX, int32_t aY) override;
   void AttachExternalImage(wr::NativeSurfaceId aId,
-                           wr::ExternalImageId aExternalImage) override {}
+                           wr::ExternalImageId aExternalImage) override;
   void AddSurface(wr::NativeSurfaceId aId,
                   const wr::CompositorSurfaceTransform& aTransform,
                   wr::DeviceIntRect aClipRect,
@@ -133,6 +132,7 @@ class RenderCompositorD3D11SWGL : public RenderCompositor {
     bool mIsOpaque;
     bool mIsExternal = false;
     std::unordered_map<TileKey, Tile, Tile::KeyHashFn> mTiles;
+    RefPtr<RenderTextureHost> mExternalImage;
 
     struct IdHashFn {
       std::size_t operator()(const wr::NativeSurfaceId& aId) const {
