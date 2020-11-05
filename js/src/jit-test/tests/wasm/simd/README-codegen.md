@@ -1,4 +1,4 @@
-About x86 ion whitebox code generation tests (*-codegen.js):
+About whitebox code generation tests (*-codegen.js):
 
 These test that extraneous moves are not inserted by the register
 allocator or code generator under ideal conditions: when it is in
@@ -11,9 +11,9 @@ changes to the register allocator, but how else would we test that
 code generation and register allocation work when presented with the
 easiest case?  And if they don't work then, when will they work?
 
-For a reliable test, the inputs must be known to be in xmm0, xmm1,
-xmm2, etc (the function argument registers) and the result must be
-known to be desired in xmm0 (the function result).
+For a reliable test, the inputs must be known to be in the fixed
+parameter registers and the result must be known to be desired in the
+fixed function result register.
 
 Sometimes, to test optimal codegen, we need the inputs to be in
 reversed or permuted locations so as to avoid generating moves that

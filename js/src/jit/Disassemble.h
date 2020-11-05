@@ -15,6 +15,7 @@ namespace jit {
 
 using InstrCallback = void (*)(const char* text);
 
+extern bool HasDisassembler();
 extern void Disassemble(uint8_t* code, size_t length, InstrCallback callback);
 
 }  // namespace jit
