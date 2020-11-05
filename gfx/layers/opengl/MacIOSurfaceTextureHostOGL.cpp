@@ -166,7 +166,7 @@ void MacIOSurfaceTextureHostOGL::PushResourceUpdates(
                     ? &wr::TransactionBuilder::AddExternalImage
                     : &wr::TransactionBuilder::UpdateExternalImage;
   auto imageType =
-      wr::ExternalImageType::TextureHandle(wr::ImageBufferKind::TextureRect);
+      wr::ExternalImageType::TextureHandle(wr::TextureTarget::Rect);
 
   switch (GetFormat()) {
     case gfx::SurfaceFormat::B8G8R8A8:
