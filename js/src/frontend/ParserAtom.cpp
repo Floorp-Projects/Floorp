@@ -321,9 +321,13 @@ ParserAtomsTable::ParserAtomsTable(JSRuntime* rt, LifoAlloc& alloc)
     : wellKnownTable_(*rt->commonParserNames), alloc_(&alloc) {}
 
 JS::Result<const ParserAtom*, OOM> ParserAtomsTable::addEntry(
-    JSContext* cx, EntrySet::AddPtr& addPtr, ParserAtomEntry* entry) {
+    JSContext* cx, EntryMap::AddPtr& addPtr, ParserAtomEntry* entry) {
   MOZ_ASSERT(!addPtr);
-  if (!entrySet_.add(addPtr, entry)) {
+  ParserAtomIndex index = ParserAtomIndex(entries_.length());
+  if (!entries_.append(entry)) {
+    return RaiseParserAtomsOOMError(cx);
+  }
+  if (!entryMap_.add(addPtr, entry, index)) {
     return RaiseParserAtomsOOMError(cx);
   }
   return entry->asAtom();
@@ -331,7 +335,7 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::addEntry(
 
 template <typename AtomCharT, typename SeqCharT>
 JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internChar16Seq(
-    JSContext* cx, EntrySet::AddPtr& addPtr, HashNumber hash,
+    JSContext* cx, EntryMap::AddPtr& addPtr, HashNumber hash,
     InflatedChar16Sequence<SeqCharT> seq, uint32_t length) {
   MOZ_ASSERT(!addPtr);
 
@@ -349,10 +353,15 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internChar16Seq(
   MOZ_TRY_VAR(entry, ParserAtomEntry::allocate<AtomCharT>(cx, *alloc_, seq,
                                                           length, hash));
 
-  // We do not have an AddPtr, but caller still ensures it is unique so we can
-  // use `putNew` to avoid comparissons in release builds.
+  ParserAtomIndex index = ParserAtomIndex(entries_.length());
+  if (!entries_.append(entry)) {
+    return RaiseParserAtomsOOMError(cx);
+  }
   SpecificParserAtomLookup<SeqCharT> lookup(seq, hash);
-  if (!entrySet_.putNew(lookup, entry)) {
+  // This will be removed in later patch.
+  auto addPtr = entryMap_.lookupForAdd(lookup);
+  MOZ_ASSERT(!addPtr);
+  if (!entryMap_.add(addPtr, entry, index)) {
     return RaiseParserAtomsOOMError(cx);
   }
   return entry->asAtom();
@@ -382,9 +391,9 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internLatin1(
   }
 
   // Check for existing atom.
-  auto addPtr = entrySet_.lookupForAdd(lookup);
+  auto addPtr = entryMap_.lookupForAdd(lookup);
   if (addPtr) {
-    return (*addPtr)->asAtom();
+    return addPtr->key()->asAtom();
   }
 
   return internChar16Seq<Latin1Char>(cx, addPtr, lookup.hash(), seq, length);
@@ -445,9 +454,9 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internUtf8(
   InflatedChar16Sequence<mozilla::Utf8Unit> seq(utf8Ptr, nbyte);
   SpecificParserAtomLookup<mozilla::Utf8Unit> lookup(seq);
   MOZ_ASSERT(wellKnownTable_.lookupChar16Seq(lookup) == nullptr);
-  EntrySet::AddPtr addPtr = entrySet_.lookupForAdd(lookup);
+  EntryMap::AddPtr addPtr = entryMap_.lookupForAdd(lookup);
   if (addPtr) {
-    return (*addPtr)->asAtom();
+    return addPtr->key()->asAtom();
   }
 
   // Compute length in code-points.
@@ -481,9 +490,9 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internChar16(
   }
 
   // Check for existing atom.
-  EntrySet::AddPtr addPtr = entrySet_.lookupForAdd(lookup);
+  EntryMap::AddPtr addPtr = entryMap_.lookupForAdd(lookup);
   if (addPtr) {
-    return (*addPtr)->asAtom();
+    return addPtr->key()->asAtom();
   }
 
   // Compute the target encoding.
@@ -575,9 +584,9 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::concatAtoms(
   SpecificParserAtomLookup<const ParserAtom*> lookup(seq);
 
   // Check for existing atom.
-  auto addPtr = entrySet_.lookupForAdd(lookup);
+  auto addPtr = entryMap_.lookupForAdd(lookup);
   if (addPtr) {
-    return (*addPtr)->asAtom();
+    return addPtr->key()->asAtom();
   }
 
   // Otherwise, add new entry.
@@ -616,8 +625,7 @@ const ParserAtom* ParserAtomsTable::getStatic2(StaticParserString2 s) const {
 
 size_t ParserAtomsTable::requiredNonStaticAtomCount() const {
   size_t count = 0;
-  for (auto iter = entrySet_.iter(); !iter.done(); iter.next()) {
-    const auto& entry = iter.get();
+  for (const auto& entry : entries_) {
     if (entry->isNotInstantiatedAndMarked() || entry->isAtomIndex()) {
       count++;
     }
@@ -627,8 +635,7 @@ size_t ParserAtomsTable::requiredNonStaticAtomCount() const {
 
 bool ParserAtomsTable::instantiateMarkedAtoms(
     JSContext* cx, CompilationAtomCache& atomCache) const {
-  for (auto iter = entrySet_.iter(); !iter.done(); iter.next()) {
-    const auto& entry = iter.get();
+  for (const auto& entry : entries_) {
     if (entry->isNotInstantiatedAndMarked()) {
       if (!entry->instantiate(cx, atomCache)) {
         return false;
