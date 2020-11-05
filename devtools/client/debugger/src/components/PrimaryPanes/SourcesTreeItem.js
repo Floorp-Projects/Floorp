@@ -27,8 +27,13 @@ import {
   isUrlExtension,
   isExtensionDirectoryPath,
   shouldBlackbox,
+  sourceTypes,
 } from "../../utils/source";
-import { isDirectory, getPathWithoutThread } from "../../utils/sources-tree";
+import {
+  isDirectory,
+  getPathWithoutThread,
+  getFileExtension,
+} from "../../utils/sources-tree";
 import { copyToTheClipboard } from "../../utils/clipboard";
 import { features } from "../../utils/prefs";
 import { downloadFile } from "../../utils/utils";
@@ -360,7 +365,13 @@ class SourceTreeItem extends Component<Props, State> {
       return (
         <SourceIcon
           source={source}
-          modifier={icon => (icon === "extension" ? "javascript" : icon)}
+          modifier={icon =>
+            // In the SourceTree, extension files should use the file-extension based icon,
+            // whereas we use the extension icon in other Components (eg. source tabs and breakpoints pane).
+            icon === "extension"
+              ? sourceTypes[getFileExtension(source)] || "javascript"
+              : icon
+          }
         />
       );
     }
