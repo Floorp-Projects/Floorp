@@ -109,7 +109,7 @@
     }, "MediaRecorder will not fire an exception when stopped after having just been spontaneously stopped");
 
     promise_test(async t => {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+        const {stream} = createAudioVideoStream(t);
         const recorder = new MediaRecorder(stream);
         const events = [];
         const startPromise = new Promise(resolve => recorder.onstart = resolve);
@@ -126,7 +126,7 @@
     }, "MediaRecorder will fire start event even if stopped synchronously");
 
     promise_test(async t => {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+        const {stream} = createAudioVideoStream(t);
         const recorder = new MediaRecorder(stream);
         const events = [];
         const startPromise = new Promise(resolve => recorder.onstart = resolve);
