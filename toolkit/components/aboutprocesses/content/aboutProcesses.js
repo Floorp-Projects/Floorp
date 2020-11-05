@@ -74,8 +74,8 @@ function wait(ms = 0) {
  * units during initialization, asynchronously.
  *
  * @type Promise<{
- *   durationUnits: { ns: String, us: String, ms: String, s: String, min: String, h: String, d: String },
- *   memoryUnits: { B: String, KB: String, MB: String, GB: String, TB: String, PB: String, EB: String }
+ *   duration: { ns: String, us: String, ms: String, s: String, m: String, h: String, d: String },
+ *   memory: { B: String, KB: String, MB: String, GB: String, TB: String, PB: String, EB: String }
  * }.
  */
 let gPromisePrefetchedUnits;
@@ -954,7 +954,7 @@ var Control = {
         us,
         ms,
         s,
-        min,
+        m,
         h,
         d,
         B,
@@ -981,7 +981,7 @@ var Control = {
         { id: "memory-unit-EB" },
       ]);
       return {
-        duration: { ns, us, ms, s, min, h, d },
+        duration: { ns, us, ms, s, m, h, d },
         memory: { B, KB, MB, GB, TB, PB, EB },
       };
     })();
