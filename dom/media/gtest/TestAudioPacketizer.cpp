@@ -136,7 +136,7 @@ TEST(AudioPacketizer, Test)
         ap.Input(b.Get(), 128);
         while (ap.PacketsAvailable()) {
           std::unique_ptr<int16_t[]> packet(ap.Output());
-          for (uint32_t k = 0; k < ap.PacketSize(); k++) {
+          for (uint32_t k = 0; k < ap.mPacketSize; k++) {
             for (int32_t c = 0; c < channels; c++) {
               ASSERT_TRUE(packet[k * channels + c] ==
                           static_cast<int16_t>(((2 << 14) * sine(outPhase))));
@@ -145,6 +145,19 @@ TEST(AudioPacketizer, Test)
           }
         }
       }
+    }
+    // Test that clearing the packetizer empties it and starts returning zeros.
+    {
+      AudioPacketizer<int16_t, int16_t> ap(441, channels);
+      AutoBuffer<int16_t> b(440 * channels);
+      Sequence(b.Get(), 440 * channels);
+      ap.Input(b.Get(), 440);
+      EXPECT_EQ(ap.FramesAvailable(), 440U);
+      ap.Clear();
+      EXPECT_EQ(ap.FramesAvailable(), 0U);
+      EXPECT_TRUE(ap.Empty());
+      std::unique_ptr<int16_t[]> out(ap.Output());
+      Zero(std::move(out), 441);
     }
   }
 }
