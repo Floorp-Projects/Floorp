@@ -2,12 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{DirtyRect, ExternalImageType, ImageFormat, ImageBufferKind};
+use api::{DirtyRect, ExternalImageType, ImageFormat};
 use api::{DebugFlags, ImageDescriptor};
 use api::units::*;
 #[cfg(test)]
 use api::{DocumentId, IdNamespace};
-use euclid::point2;
 use crate::device::{TextureFilter, TextureFormatPair};
 use crate::freelist::{FreeListHandle, WeakFreeListHandle};
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};
@@ -39,7 +38,7 @@ pub enum TargetShader {
     Text,
 }
 
-/// The size of each region in shared cache texture arrays.
+/// The size of each region/layer in shared cache texture arrays.
 pub const TEXTURE_REGION_DIMENSIONS: i32 = 512;
 
 const PICTURE_TEXTURE_SLICE_COUNT: usize = 8;
@@ -70,8 +69,8 @@ enum EntryDetails {
     Cache {
         /// Origin within the texture layer where this item exists.
         origin: DeviceIntPoint,
-        /// The index of the allocator region.
-        region_index: usize,
+        /// The layer index of the texture array.
+        layer_index: usize,
     },
 }
 
@@ -80,7 +79,7 @@ impl EntryDetails {
         match *self {
             EntryDetails::Standalone { .. }  => (0, DeviceIntPoint::zero()),
             EntryDetails::Picture { layer_index, .. } => (layer_index, DeviceIntPoint::zero()),
-            EntryDetails::Cache { origin, .. } => (0, origin),
+            EntryDetails::Cache { origin, layer_index, .. } => (layer_index, origin),
         }
     }
 }
@@ -239,11 +238,11 @@ impl EvictionNotice {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct SharedTextures {
-    color8_nearest: TextureUnits,
-    alpha8_linear: TextureUnits,
-    alpha16_linear: TextureUnits,
-    color8_linear: TextureUnits,
-    color8_glyphs: TextureUnits,
+    array_color8_nearest: TextureArray,
+    array_alpha8_linear: TextureArray,
+    array_alpha16_linear: TextureArray,
+    array_color8_linear: TextureArray,
+    array_color8_glyphs: TextureArray,
 }
 
 impl SharedTextures {
@@ -253,34 +252,34 @@ impl SharedTextures {
             // Used primarily for cached shadow masks. There can be lots of
             // these on some pages like francine, but most pages don't use it
             // much.
-            alpha8_linear: TextureUnits::new(
+            array_alpha8_linear: TextureArray::new(
                 TextureFormatPair::from(ImageFormat::R8),
                 TextureFilter::Linear,
-                2
+                8,
             ),
             // Used for experimental hdr yuv texture support, but not used in
             // production Firefox.
-            alpha16_linear: TextureUnits::new(
+            array_alpha16_linear: TextureArray::new(
                 TextureFormatPair::from(ImageFormat::R16),
                 TextureFilter::Linear,
-                1
+                1,
             ),
             // The primary cache for images, etc.
-            color8_linear: TextureUnits::new(
+            array_color8_linear: TextureArray::new(
                 color_formats.clone(),
                 TextureFilter::Linear,
-                4,
+                16,
             ),
             // The cache for glyphs (separate to help with batching).
-            color8_glyphs: TextureUnits::new(
+            array_color8_glyphs: TextureArray::new(
                 color_formats.clone(),
                 TextureFilter::Linear,
-                4,
+                16,
             ),
             // Used for image-rendering: crisp. This is mostly favicons, which
             // are small. Some other images use it too, but those tend to be
             // larger than 512x512 and thus don't use the shared cache anyway.
-            color8_nearest: TextureUnits::new(
+            array_color8_nearest: TextureArray::new(
                 color_formats,
                 TextureFilter::Nearest,
                 1,
@@ -290,32 +289,32 @@ impl SharedTextures {
 
     /// Clears each texture in the set, with the given set of pending updates.
     fn clear(&mut self, updates: &mut TextureUpdateList) {
-        self.alpha8_linear.clear(updates);
-        self.alpha16_linear.clear(updates);
-        self.color8_linear.clear(updates);
-        self.color8_nearest.clear(updates);
-        self.color8_glyphs.clear(updates);
+        self.array_alpha8_linear.clear(updates);
+        self.array_alpha16_linear.clear(updates);
+        self.array_color8_linear.clear(updates);
+        self.array_color8_nearest.clear(updates);
+        self.array_color8_glyphs.clear(updates);
     }
 
     /// Returns a mutable borrow for the shared texture array matching the parameters.
     fn select(
         &mut self, external_format: ImageFormat, filter: TextureFilter, shader: TargetShader,
-    ) -> &mut TextureUnits {
+    ) -> &mut TextureArray {
         match external_format {
             ImageFormat::R8 => {
                 assert_eq!(filter, TextureFilter::Linear);
-                &mut self.alpha8_linear
+                &mut self.array_alpha8_linear
             }
             ImageFormat::R16 => {
                 assert_eq!(filter, TextureFilter::Linear);
-                &mut self.alpha16_linear
+                &mut self.array_alpha16_linear
             }
             ImageFormat::RGBA8 |
             ImageFormat::BGRA8 => {
                 match (filter, shader) {
-                    (TextureFilter::Linear, TargetShader::Text) => &mut self.color8_glyphs,
-                    (TextureFilter::Linear, _) => &mut self.color8_linear,
-                    (TextureFilter::Nearest, _) => &mut self.color8_nearest,
+                    (TextureFilter::Linear, TargetShader::Text) => &mut self.array_color8_glyphs,
+                    (TextureFilter::Linear, _) => &mut self.array_color8_linear,
+                    (TextureFilter::Nearest, _) => &mut self.array_color8_nearest,
                     _ => panic!("Unexpexcted filter {:?}", filter),
                 }
             }
@@ -453,6 +452,9 @@ pub struct TextureCache {
     /// Maximum texture size supported by hardware.
     max_texture_size: i32,
 
+    /// Maximum number of texture layers supported by hardware.
+    max_texture_layers: usize,
+
     /// Settings on using texture unit swizzling.
     swizzle: Option<SwizzleSettings>,
 
@@ -505,10 +507,39 @@ impl TextureCache {
 
     pub fn new(
         max_texture_size: i32,
+        mut max_texture_layers: usize,
         default_picture_tile_size: DeviceIntSize,
         color_formats: TextureFormatPair<ImageFormat>,
         swizzle: Option<SwizzleSettings>,
     ) -> Self {
+        // On MBP integrated Intel GPUs, texture arrays appear to be
+        // implemented as a single texture of stacked layers, and that
+        // texture appears to be subject to the texture size limit. As such,
+        // allocating more than 32 512x512 regions results in a dimension
+        // longer than 16k (the max texture size), causing incorrect behavior.
+        //
+        // So we clamp the number of layers on mac. This results in maximum
+        // texture array size of 32MB, which isn't ideal but isn't terrible
+        // either. OpenGL on mac is not long for this earth, so this may be
+        // good enough until we have WebRender on gfx-rs (on Metal).
+        //
+        // On all platforms, we also clamp the number of textures per layer to 16
+        // to avoid the cost of resizing large texture arrays (at the expense
+        // of batching efficiency).
+        //
+        // Note that we could also define this more generally in terms of
+        // |max_texture_size / TEXTURE_REGION_DIMENSION|, except:
+        //   * max_texture_size is actually clamped beyond the device limit
+        //     by Gecko to 8192, so we'd need to thread the raw device value
+        //     here, and:
+        //   * The bug we're working around is likely specific to a single
+        //     driver family, and those drivers are also likely to share
+        //     the same max texture size of 16k. If we do encounter a driver
+        //     with the same bug but a lower max texture size, we might need
+        //     to rethink our strategy anyway, since a limit below 32MB might
+        //     start to introduce performance issues.
+        max_texture_layers = max_texture_layers.min(16);
+
         let pending_updates = TextureUpdateList::new();
 
         // Shared texture cache controls swizzling on a per-entry basis, assuming that
@@ -526,6 +557,7 @@ impl TextureCache {
                 default_picture_tile_size,
             ),
             max_texture_size,
+            max_texture_layers,
             swizzle,
             debug_flags: DebugFlags::empty(),
             next_id: next_texture_id,
@@ -545,10 +577,12 @@ impl TextureCache {
     #[cfg(test)]
     pub fn new_for_testing(
         max_texture_size: i32,
+        max_texture_layers: usize,
         image_format: ImageFormat,
     ) -> Self {
         let mut cache = Self::new(
             max_texture_size,
+            max_texture_layers,
             crate::picture::TILE_SIZE_DEFAULT,
             TextureFormatPair::from(image_format),
             None,
@@ -614,33 +648,33 @@ impl TextureCache {
         // Release of empty shared textures is done at the end of the frame. That way, if the
         // eviction at the start of the frame frees up a texture, that is then subsequently
         // used during the frame, we avoid doing a free/alloc for it.
-        self.shared_textures.alpha8_linear.release_empty_textures(&mut self.pending_updates);
-        self.shared_textures.alpha16_linear.release_empty_textures(&mut self.pending_updates);
-        self.shared_textures.color8_linear.release_empty_textures(&mut self.pending_updates);
-        self.shared_textures.color8_nearest.release_empty_textures(&mut self.pending_updates);
-        self.shared_textures.color8_glyphs.release_empty_textures(&mut self.pending_updates);
+        self.shared_textures.array_alpha8_linear.release_empty_textures(&mut self.pending_updates);
+        self.shared_textures.array_alpha16_linear.release_empty_textures(&mut self.pending_updates);
+        self.shared_textures.array_color8_linear.release_empty_textures(&mut self.pending_updates);
+        self.shared_textures.array_color8_nearest.release_empty_textures(&mut self.pending_updates);
+        self.shared_textures.array_color8_glyphs.release_empty_textures(&mut self.pending_updates);
 
-        self.shared_textures.alpha8_linear.update_profile(
+        self.shared_textures.array_alpha8_linear.update_profile(
             profiler::TEXTURE_CACHE_A8_REGIONS,
             profiler::TEXTURE_CACHE_A8_MEM,
             profile,
         );
-        self.shared_textures.alpha16_linear.update_profile(
+        self.shared_textures.array_alpha16_linear.update_profile(
             profiler::TEXTURE_CACHE_A16_REGIONS,
             profiler::TEXTURE_CACHE_A16_MEM,
             profile,
         );
-        self.shared_textures.color8_linear.update_profile(
+        self.shared_textures.array_color8_linear.update_profile(
             profiler::TEXTURE_CACHE_RGBA8_LINEAR_REGIONS,
             profiler::TEXTURE_CACHE_RGBA8_LINEAR_MEM,
             profile,
         );
-        self.shared_textures.color8_nearest.update_profile(
+        self.shared_textures.array_color8_nearest.update_profile(
             profiler::TEXTURE_CACHE_RGBA8_NEAREST_REGIONS,
             profiler::TEXTURE_CACHE_RGBA8_NEAREST_MEM,
             profile,
         );
-        self.shared_textures.color8_glyphs.update_profile(
+        self.shared_textures.array_color8_glyphs.update_profile(
             profiler::TEXTURE_CACHE_RGBA8_GLYPHS_REGIONS,
             profiler::TEXTURE_CACHE_RGBA8_GLYPHS_MEM,
             profile,
@@ -686,8 +720,13 @@ impl TextureCache {
     }
 
     #[cfg(feature = "replay")]
+    pub fn max_texture_layers(&self) -> usize {
+        self.max_texture_layers
+    }
+
+    #[cfg(feature = "replay")]
     pub fn color_formats(&self) -> TextureFormatPair<ImageFormat> {
-        self.shared_textures.color8_linear.formats.clone()
+        self.shared_textures.array_color8_linear.formats.clone()
     }
 
     #[cfg(feature = "replay")]
@@ -771,12 +810,13 @@ impl TextureCache {
             // texture format (thus avoiding the conversion by the driver).
             // Otherwise, pass the external format to the driver.
             let use_upload_format = self.swizzle.is_none();
-            let (_, origin) = entry.details.describe();
+            let (layer_index, origin) = entry.details.describe();
             let op = TextureCacheUpdate::new_update(
                 data,
                 &descriptor,
                 origin,
                 entry.size,
+                layer_index as i32,
                 use_upload_format,
                 &dirty_rect,
             );
@@ -873,11 +913,11 @@ impl TextureCache {
     }
 
     pub fn dump_color8_linear_as_svg(&self, output: &mut dyn std::io::Write) -> std::io::Result<()> {
-        self.shared_textures.color8_linear.dump_as_svg(output)
+        self.shared_textures.array_color8_linear.dump_as_svg(output)
     }
 
     pub fn dump_glyphs_as_svg(&self, output: &mut dyn std::io::Write) -> std::io::Result<()> {
-        self.shared_textures.color8_glyphs.dump_as_svg(output)
+        self.shared_textures.array_color8_glyphs.dump_as_svg(output)
     }
 
     /// Expire picture cache tiles that haven't been referenced in the last frame.
@@ -985,14 +1025,14 @@ impl TextureCache {
                 // This is a standalone texture allocation. Free it directly.
                 self.pending_updates.push_free(entry.texture_id);
             }
-            EntryDetails::Cache { origin, region_index, .. } => {
+            EntryDetails::Cache { origin, layer_index, .. } => {
                 // Free the block in the given region.
                 let texture_array = self.shared_textures.select(entry.input_format, entry.filter, entry.shader);
                 let unit = texture_array.units
                     .iter_mut()
                     .find(|unit| unit.texture_id == entry.texture_id)
                     .expect("Unable to find the associated texture array unit");
-                let region = &mut unit.regions[region_index];
+                let region = &mut unit.regions[layer_index];
 
                 self.shared_bytes_allocated -= region.slab_size.size_in_bytes(texture_array.formats.internal);
 
@@ -1005,7 +1045,7 @@ impl TextureCache {
                         origin,
                         region.slab_size.width,
                         region.slab_size.height,
-                        0,
+                        layer_index,
                     );
                 }
                 region.free(origin, &mut unit.empty_regions);
@@ -1033,12 +1073,12 @@ impl TextureCache {
             }
         };
 
+        let max_texture_layers = self.max_texture_layers;
         let slab_size = SlabSize::new(params.descriptor.size);
 
-        let info = TextureCacheAllocInfo {
-            target: ImageBufferKind::Texture2D,
-            width: texture_array.regions_per_row * TEXTURE_REGION_DIMENSIONS,
-            height: texture_array.regions_per_row * TEXTURE_REGION_DIMENSIONS,
+        let mut info = TextureCacheAllocInfo {
+            width: TEXTURE_REGION_DIMENSIONS,
+            height: TEXTURE_REGION_DIMENSIONS,
             format: texture_array.formats.internal,
             filter: texture_array.filter,
             layer_count: 1,
@@ -1051,21 +1091,31 @@ impl TextureCache {
             .position(|unit| unit.can_alloc(slab_size))
         {
             index
+        } else if let Some(index) = texture_array.units
+            .iter()
+            .position(|unit| unit.regions.len() < max_texture_layers)
+        {
+            let unit = &mut texture_array.units[index];
+
+            unit.push_regions(texture_array.layers_per_allocation);
+
+            info.layer_count = unit.regions.len() as i32;
+            self.pending_updates.push_realloc(unit.texture_id, info);
+
+            index
         } else {
             let index = texture_array.units.len();
-            let regions_per_row = texture_array.regions_per_row;
-            texture_array.units.push(TextureUnit {
+            texture_array.units.push(TextureArrayUnit {
                 texture_id: self.next_id,
-                regions_per_row,
                 regions: Vec::new(),
                 empty_regions: 0,
             });
 
-            let num_regions = texture_array.regions_per_texture();
             let unit = &mut texture_array.units[index];
 
-            unit.push_regions(num_regions);
+            unit.push_regions(texture_array.layers_per_allocation);
 
+            info.layer_count = unit.regions.len() as i32;
             self.pending_updates.push_alloc(self.next_id, info);
             self.next_id.0 += 1;
             index
@@ -1119,7 +1169,6 @@ impl TextureCache {
 
         // Push a command to allocate device storage of the right size / format.
         let info = TextureCacheAllocInfo {
-            target: ImageBufferKind::Texture2D,
             width: params.descriptor.size.width,
             height: params.descriptor.size.height,
             format: params.descriptor.format,
@@ -1226,11 +1275,11 @@ impl TextureCache {
     }
 
     pub fn shared_alpha_expected_format(&self) -> ImageFormat {
-        self.shared_textures.alpha8_linear.formats.external
+        self.shared_textures.array_alpha8_linear.formats.external
     }
 
     pub fn shared_color_expected_format(&self) -> ImageFormat {
-        self.shared_textures.color8_linear.formats.external
+        self.shared_textures.array_color8_linear.formats.external
     }
 
 
@@ -1302,23 +1351,23 @@ impl TextureLocation {
     }
 }
 
-/// A region is a rectangular part of a texture cache texture, split into fixed-size slabs.
+/// A region corresponds to a layer in a shared cache texture.
+///
+/// All allocations within a region are of the same size.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct TextureRegion {
-    index: usize,
+    layer_index: usize,
     slab_size: SlabSize,
-    offset: DeviceIntPoint,
     free_slots: Vec<TextureLocation>,
     total_slot_count: usize,
 }
 
 impl TextureRegion {
-    fn new(index: usize, offset: DeviceIntPoint) -> Self {
+    fn new(layer_index: usize) -> Self {
         TextureRegion {
-            index,
+            layer_index,
             slab_size: SlabSize::invalid(),
-            offset,
             free_slots: Vec::new(),
             total_slot_count: 0,
         }
@@ -1362,17 +1411,17 @@ impl TextureRegion {
         debug_assert!(self.slab_size != SlabSize::invalid());
 
         self.free_slots.pop().map(|location| {
-            point2(
-                self.offset.x + self.slab_size.width * location.0 as i32,
-                self.offset.y + self.slab_size.height * location.1 as i32,
+            DeviceIntPoint::new(
+                self.slab_size.width * location.0 as i32,
+                self.slab_size.height * location.1 as i32,
             )
         })
     }
 
     // Free a block in this region.
     fn free(&mut self, point: DeviceIntPoint, empty_regions: &mut usize) {
-        let x = (point.x - self.offset.x) / self.slab_size.width;
-        let y = (point.y - self.offset.y) / self.slab_size.height;
+        let x = point.x / self.slab_size.width;
+        let y = point.y / self.slab_size.height;
         self.free_slots.push(TextureLocation::new(x, y));
 
         // If this region is completely unused, deinit it
@@ -1384,33 +1433,23 @@ impl TextureRegion {
     }
 }
 
-/// A 2D texture divided into regions.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-struct TextureUnit {
+struct TextureArrayUnit {
     texture_id: CacheTextureId,
     regions: Vec<TextureRegion>,
     empty_regions: usize,
-    regions_per_row: i32,
 }
 
-impl TextureUnit {
+impl TextureArrayUnit {
     /// Adds a new empty region to the array.
     fn push_regions(&mut self, count: i32) {
         assert!(self.empty_regions <= self.regions.len());
         for _ in 0..count {
             let index = self.regions.len();
-            let offset = self.region_offset(index as i32);
-            self.regions.push(TextureRegion::new(index, offset));
+            self.regions.push(TextureRegion::new(index));
             self.empty_regions += 1;
         }
-    }
-
-    fn region_offset(&self, index: i32) -> DeviceIntPoint {
-        point2(
-            (index % self.regions_per_row) * TEXTURE_REGION_DIMENSIONS,
-            (index / self.regions_per_row) * TEXTURE_REGION_DIMENSIONS,
-        )
     }
 
     /// Returns true if we can allocate the given entry.
@@ -1425,33 +1464,29 @@ impl TextureUnit {
     }
 }
 
-/// A number of 2D textures (single layer), each with a number of
-/// regions that can act as a slab allocator.
+/// A texture array contains a number of textures, each with a number of
+/// layers, where each layer contains a region that can act as a slab allocator.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-struct TextureUnits {
+struct TextureArray {
     filter: TextureFilter,
     formats: TextureFormatPair<ImageFormat>,
-    units: SmallVec<[TextureUnit; 1]>,
-    regions_per_row: i32,
+    units: SmallVec<[TextureArrayUnit; 1]>,
+    layers_per_allocation: i32,
 }
 
-impl TextureUnits {
+impl TextureArray {
     fn new(
         formats: TextureFormatPair<ImageFormat>,
         filter: TextureFilter,
-        regions_per_row: i32,
+        layers_per_allocation: i32,
     ) -> Self {
-        TextureUnits {
+        TextureArray {
             formats,
             filter,
             units: SmallVec::new(),
-            regions_per_row,
+            layers_per_allocation,
         }
-    }
-
-    fn regions_per_texture(&self) -> i32 {
-        self.regions_per_row * self.regions_per_row
     }
 
     /// Returns the number of GPU bytes consumed by this texture array.
@@ -1518,7 +1553,7 @@ impl TextureUnits {
             } else if region.slab_size == slab_size {
                 if let Some(location) = region.alloc() {
                     entry_details = Some(EntryDetails::Cache {
-                        region_index: region.index,
+                        layer_index: region.layer_index,
                         origin: location,
                     });
                     break;
@@ -1533,7 +1568,7 @@ impl TextureUnits {
                 let region = &mut unit.regions[empty_region_index.unwrap()];
                 region.init(slab_size, &mut unit.empty_regions);
                 EntryDetails::Cache {
-                    region_index: region.index,
+                    layer_index: region.layer_index,
                     origin: region.alloc().unwrap(),
                 }
             }
@@ -1561,15 +1596,15 @@ impl TextureUnits {
         use svg_fmt::*;
 
         let num_arrays = self.units.len() as f32;
-        let num_regions = self.regions_per_texture() as f32;
+        let num_layers = self.layers_per_allocation as f32;
 
         let text_spacing = 15.0;
         let array_spacing = 60.0;
-        let unit_spacing = 10.0;
-        let unit_size = 100.0;
+        let layer_spacing = 10.0;
+        let layer_size = 100.0;
 
-        let svg_w = array_spacing * 2.0 + num_regions * (unit_size + unit_spacing);
-        let svg_h = unit_spacing * 2.0 + num_arrays * (text_spacing * 2.0 + array_spacing + unit_size);
+        let svg_w = array_spacing * 2.0 + num_layers * (layer_size + layer_spacing);
+        let svg_h = layer_spacing * 2.0 + num_arrays * (text_spacing * 2.0 + array_spacing + layer_size);
 
         writeln!(output, "{}", BeginSvg { w: svg_w, h: svg_h })?;
 
@@ -1600,12 +1635,13 @@ impl TextureUnits {
 
                 let y = y + text_spacing;
 
-                let texture_background = if region.is_empty() { rgb(30, 30, 30) } else { rgb(40, 40, 130) };
-                writeln!(output, "    {}", rectangle(x, y, unit_size, unit_size).inflate(1.0, 1.0).fill(rgb(10, 10, 10)))?;
-                writeln!(output, "    {}", rectangle(x, y, unit_size, unit_size).fill(texture_background))?;
+                // Texture array layer.
+                let layer_background = if region.is_empty() { rgb(30, 30, 30) } else { rgb(40, 40, 130) };
+                writeln!(output, "    {}", rectangle(x, y, layer_size, layer_size).inflate(1.0, 1.0).fill(rgb(10, 10, 10)))?;
+                writeln!(output, "    {}", rectangle(x, y, layer_size, layer_size).fill(layer_background))?;
 
-                let sw = (slab_size.width as f32 / 512.0) * unit_size;
-                let sh = (slab_size.height as f32 / 512.0) * unit_size;
+                let sw = (slab_size.width as f32 / 512.0) * layer_size;
+                let sh = (slab_size.height as f32 / 512.0) * layer_size;
 
                 for slot in &region.free_slots {
                     let sx = x + slot.0 as f32 * sw;
@@ -1615,10 +1651,10 @@ impl TextureUnits {
                     writeln!(output, "    {}", rectangle(sx, sy, sw, sh).inflate(-0.5, -0.5).fill(rgb(30, 30, 30)))?;
                 }
 
-                x += unit_spacing + unit_size;
+                x += layer_spacing + layer_size;
             }
 
-            y += array_spacing + unit_size;
+            y += array_spacing + layer_size;
             x = array_spacing;
         }
 
@@ -1650,7 +1686,6 @@ struct WholeTextureArray {
 impl WholeTextureArray {
     fn to_info(&self) -> TextureCacheAllocInfo {
         TextureCacheAllocInfo {
-            target: ImageBufferKind::Texture2DArray,
             width: self.size.width,
             height: self.size.height,
             format: self.format,
@@ -1729,6 +1764,7 @@ impl TextureCacheUpdate {
         descriptor: &ImageDescriptor,
         origin: DeviceIntPoint,
         size: DeviceIntSize,
+        layer_index: i32,
         use_upload_format: bool,
         dirty_rect: &ImageDirtyRect,
     ) -> TextureCacheUpdate {
@@ -1778,7 +1814,7 @@ impl TextureCacheUpdate {
                     stride: Some(stride),
                     offset,
                     format_override,
-                    layer_index: 0,
+                    layer_index,
                 }
             }
             DirtyRect::All => {
@@ -1788,7 +1824,7 @@ impl TextureCacheUpdate {
                     stride: descriptor.stride,
                     offset: descriptor.offset,
                     format_override,
-                    layer_index: 0,
+                    layer_index,
                 }
             }
         }

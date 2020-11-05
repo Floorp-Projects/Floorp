@@ -1808,6 +1808,7 @@ impl ResourceCache {
                 self.current_frame_id = FrameId::INVALID;
                 self.texture_cache = TextureCache::new(
                     self.texture_cache.max_texture_size(),
+                    self.texture_cache.max_texture_layers(),
                     self.texture_cache.default_picture_tile_size(),
                     self.texture_cache.color_formats(),
                     self.texture_cache.swizzle_settings(),
