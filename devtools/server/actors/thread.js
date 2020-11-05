@@ -273,7 +273,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   get sourcesManager() {
-    return this._parent.sources;
+    return this._parent.sourcesManager;
   },
 
   get breakpoints() {
@@ -1740,7 +1740,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
           return createValueGrip(v, this.threadLifetimePool, this.objectGrip);
         },
-        sources: () => this.sourcesManager,
+        getSourcesManager: () => this.sourcesManager,
         createEnvironmentActor: (e, p) => this.createEnvironmentActor(e, p),
         promote: () => this.threadObjectGrip(actor),
         isThreadLifetimePool: () =>
