@@ -2060,7 +2060,7 @@ class StaticAnalysis(MachCommandBase):
         args = [binary, prettier, "--stdin-filepath", assume_filename]
 
         process = subprocess.Popen(args, stdin=subprocess.PIPE)
-        with open(path, "r") as fin:
+        with open(path, "rb") as fin:
             process.stdin.write(fin.read())
             process.stdin.close()
             process.wait()
