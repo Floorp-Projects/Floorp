@@ -6,25 +6,25 @@
     <string name="app_name_private_4">%s (ᱱᱤᱡᱮᱨᱟᱜ)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
-    <string name="content_description_menu">ᱰᱷᱮᱨ ᱮᱴᱟᱜᱟᱠ</string>
+    <string name="content_description_menu">ᱰᱷᱮᱨ ᱮᱴᱟᱜᱟᱜ</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_private_browsing_button">ᱱᱤᱡᱮᱨᱟᱜ ᱵᱨᱟᱩᱡᱤᱝ ᱦᱩᱭ ᱦᱚᱪᱚᱜ ᱢᱮ</string>
+    <string name="content_description_private_browsing_button">ᱱᱤᱡᱮᱨᱟᱜ ᱵᱽᱨᱳᱣᱡᱤᱝ ᱦᱩᱭ ᱦᱚᱪᱚᱭ ᱢᱮ</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_disable_private_browsing_button">ᱱᱤᱡᱮᱨᱟᱜ ᱵᱨᱟᱩᱡᱤᱝ ᱵᱟᱝ ᱦᱩᱭ ᱦᱚᱪᱚᱜ ᱢᱮ</string>
+    <string name="content_description_disable_private_browsing_button">ᱱᱤᱡᱮᱨᱟᱜ ᱵᱽᱨᱳᱣᱡᱤᱝ ᱵᱟᱝ ᱦᱩᱭ ᱦᱚᱪᱚᱜ ᱢᱮ</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">ᱥᱮᱸᱫᱽᱨᱟ ᱵᱟᱝᱠᱷᱟᱱ ᱴᱷᱤᱠᱟᱹᱬᱟ ᱟᱫᱮᱨ</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">ᱟᱢᱟᱜ ᱠᱷᱩᱞᱟᱹ ᱟᱠᱟᱱ ᱴᱮᱵ ᱠᱚ ᱫᱚ ᱱᱚᱰᱮ ᱫᱮᱠᱷᱟᱣᱼᱜᱟ ᱾</string>
     <!-- No Private Tabs Message Description -->
-    <string name="no_private_tabs_description">ᱟᱢᱟᱜ ᱱᱤᱡᱚᱨᱟᱜ ᱴᱮᱵ ᱠᱚ ᱫᱚ ᱱᱚᱱᱰᱮ ᱩᱫᱩᱜ ᱦᱩᱭᱩᱜ-ᱟ ᱾</string>
+    <string name="no_private_tabs_description">ᱟᱢᱟᱜ ᱱᱤᱡᱚᱨᱟᱜ ᱴᱮᱵᱽ ᱠᱚ ᱫᱚ ᱱᱚᱰᱮ ᱩᱫᱩᱜ ᱦᱩᱭᱩᱜ-ᱟ ᱾</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string name="open_tab_tray_single">1 ᱴᱮᱵ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ ᱾ ᱴᱮᱵ ᱵᱚᱫᱚᱞ ᱞᱟᱹᱜᱤᱫ ᱴᱤᱯᱟᱹᱣ ᱢᱮ ᱾</string>
+    <string name="open_tab_tray_single">1 ᱴᱮᱵᱽ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ ᱾ ᱴᱮᱵᱽ ᱵᱚᱫᱚᱞ ᱞᱟᱹᱜᱤᱫ ᱴᱤᱯᱟᱹᱣ ᱢᱮ ᱾</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">%1$s ᱴᱮᱵ ᱠᱚ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ ᱾ ᱴᱮᱵ ᱵᱚᱫᱚᱞ ᱞᱟᱹᱜᱤᱫ ᱴᱤᱯᱟᱹᱣ ᱢᱮ ᱾</string>
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d ᱵᱟᱪᱷᱟᱣᱮᱱᱟ</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
-    <string name="tab_tray_add_new_collection">ᱱᱟᱶᱟ ᱛᱩᱢᱟᱹᱞ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="tab_tray_add_new_collection">ᱱᱟᱶᱟ ᱛᱩᱢᱟᱹᱞ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
     <string name="tab_tray_add_new_collection_name">ᱧᱩᱛᱩᱢ</string>
     <!-- Label of button in save to collection dialog for selecting a current collection  -->
@@ -59,18 +59,18 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">ᱟᱢᱟᱜ ᱚᱲᱟᱜ ᱤᱥᱠᱨᱤᱱ ᱠᱷᱚᱱ ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵ ᱡᱷᱤᱡ ᱞᱟᱹᱜᱤ ᱛᱮ ᱢᱤᱫᱴᱟᱹᱝ ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱥᱮᱞᱮᱫ ᱛᱟᱞᱟᱝ ᱢᱮ ᱾</string>
+    <string name="cfr_message">ᱟᱢᱟᱜ ᱚᱲᱟᱜ ᱤᱥᱠᱨᱤᱱ ᱠᱷᱚᱱ ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵᱽ ᱡᱷᱤᱡ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱢᱤᱫᱴᱟᱹᱝ ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱥᱮᱞᱮᱫᱽ ᱛᱟᱞᱟᱝ ᱢᱮ ᱾</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="cfr_pos_button_text">ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
 
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">ᱵᱟᱝᱟ ᱥᱟᱨᱦᱟᱣ</string>
 
     <!-- Search widget "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Firefox  ᱞᱚᱜᱚᱱ ᱚᱰᱚᱠ ᱢᱮ, ᱚᱲᱟᱜ ᱥᱠᱨᱤᱤᱱ ᱨᱮ ᱣᱤᱡᱮᱴ ᱥᱮᱞᱮᱫ ᱢᱮ ᱾</string>
+    <string name="search_widget_cfr_message">Firefox  ᱞᱚᱜᱚᱱ ᱚᱰᱚᱠ ᱢᱮ, ᱚᱲᱟᱜ ᱥᱠᱨᱤᱤᱱ ᱨᱮ ᱣᱤᱡᱮᱴ ᱥᱮᱞᱮᱫᱽ ᱢᱮ ᱾</string>
     <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">ᱣᱤᱡᱮᱴ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="search_widget_cfr_pos_button_text">ᱣᱤᱡᱮᱴ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱸᱝᱟ</string>
 
@@ -100,16 +100,16 @@
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
-    <string name="home_screen_shortcut_open_new_tab_2">ᱱᱟᱶᱟ ᱴᱮᱵ</string>
+    <string name="home_screen_shortcut_open_new_tab_2">ᱱᱟᱶᱟ ᱴᱮᱵᱽ</string>
     <!-- Shortcut action to open new private tab -->
-    <string name="home_screen_shortcut_open_new_private_tab_2">ᱱᱟᱶᱟ ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵ</string>
+    <string name="home_screen_shortcut_open_new_private_tab_2">ᱱᱟᱶᱟ ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵᱽ</string>
 
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">ᱪᱮᱛᱟᱱ ᱨᱤᱱ ᱥᱟᱭᱤᱴ ᱠᱚ</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">ᱡᱷᱤᱡ ᱴᱮᱵ ᱠᱚ</string>
+    <string name="browser_tabs_button">ᱡᱷᱤᱡ ᱴᱮᱵᱽ ᱠᱚ</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">ᱛᱟᱭᱚᱢ</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -125,7 +125,7 @@
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">ᱮᱰ-ᱟᱸᱱᱥ</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">ᱱᱚᱱᱰᱮ ᱮᱰ-ᱟᱸᱱᱥ ᱠᱚ ᱵᱟᱹᱱᱩᱜᱼᱟ</string>
+    <string name="no_add_ons">ᱱᱚᱰᱮ ᱮᱰ-ᱟᱸᱱᱥ ᱠᱚ ᱵᱟᱹᱱᱩᱜᱼᱟ</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">ᱜᱚᱲᱚ</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -137,7 +137,7 @@
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">ᱰᱮᱥᱠᱴᱟᱹᱯ ᱥᱟᱭᱤᱴ</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
-    <string name="browser_menu_add_to_homescreen">ᱚᱲᱟᱜ ᱥᱠᱨᱤᱱ ᱨᱮ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="browser_menu_add_to_homescreen">ᱚᱲᱟᱜ ᱥᱠᱨᱤᱱ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">ᱵᱚᱦᱟᱞ ᱢᱮ</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
@@ -147,7 +147,7 @@
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">ᱥᱟᱦᱴᱟ ᱨᱮ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
     <!-- Browser menu button that creates a private tab -->
-    <string name="browser_menu_private_tab">ᱱᱤᱡᱚᱨᱟᱜ ᱴᱮᱵ</string>
+    <string name="browser_menu_private_tab">ᱱᱤᱡᱚᱨᱟᱜ ᱴᱮᱵᱽ᱿</string>
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">ᱱᱟᱶᱟ ᱴᱮᱵ</string>
     <!-- Browser menu button that saves the current tab to a collection -->
@@ -185,7 +185,7 @@
     <!-- Content description for search icon -->
     <string name="a11y_search_icon_content_description">ᱥᱮᱸᱫᱽᱨᱟ</string>
     <!-- Text for default locale item -->
-    <string name="default_locale_text">ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱯᱟᱹᱨᱥᱤ ᱯᱟᱸᱪᱟᱣ ᱢᱮ</string>
+    <string name="default_locale_text">ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱯᱟᱹᱨᱥᱤ ᱯᱟᱸᱡᱟᱭ ᱢᱮ</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="locale_search_hint">ᱯᱟᱹᱨᱥᱤ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
 
@@ -271,7 +271,7 @@
     <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
     <string name="preferences_screenshots_in_private_mode_disclaimer">ᱡᱩᱫᱤ ᱢᱟᱸᱡᱩᱨ ᱮᱱᱟ, ᱯᱨᱟᱭᱣᱮᱴ ᱴᱮᱵ ᱠᱚ ᱫᱚ ᱧᱮᱞᱚᱜ ᱜᱮᱭᱟ ᱡᱩᱫᱤ ᱢᱟᱹᱞᱴᱤᱯᱟᱹᱞ ᱮᱯᱯ ᱠᱚ ᱠᱷᱩᱞᱟᱹ ᱛᱟᱦᱮᱸᱱᱟ</string>
     <!-- Preference for adding private browsing shortcut -->
-    <string name="preferences_add_private_browsing_shortcut">ᱱᱤᱡᱮᱨᱟᱜ ᱵᱨᱟᱩᱡᱤᱝ ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="preferences_add_private_browsing_shortcut">ᱱᱤᱡᱮᱨᱟᱜ ᱵᱨᱟᱩᱡᱤᱝ ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">ᱟᱹᱛᱩᱨ ᱫᱟᱲᱮᱭᱟᱜ</string>
     <!-- Preference to override the Firefox Account server -->
@@ -354,7 +354,7 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">ᱛᱩᱢᱟᱹᱞ ᱢᱟᱞᱤᱠ (ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ ID)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">ᱥᱮᱞᱮᱫ ᱮᱦᱚᱵ ᱛᱩᱢᱟᱹᱞ ᱵᱚᱫᱚᱞᱮᱱᱟ ᱾ ᱵᱚᱫᱚᱞ ᱠᱚ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱮᱯᱯᱞᱤᱠᱮᱥᱚᱱ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱᱟ…</string>
+    <string name="toast_customize_addon_collection_done">ᱥᱮᱞᱮᱫᱽ ᱮᱦᱚᱵᱽ ᱛᱩᱢᱟᱹᱞ ᱵᱚᱫᱚᱞᱮᱱᱟ ᱾ ᱵᱚᱫᱚᱞ ᱠᱚ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱮᱯᱯᱞᱤᱠᱮᱥᱚᱱ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱᱟ…</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -465,7 +465,7 @@
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">ᱠᱮᱢᱨᱟ ᱡᱷᱤᱜ ᱢᱮ</string>
     <!-- Button to cancel pairing -->
-    <string name="pair_cancel">ᱵᱟᱹᱲᱨᱟ</string>
+    <string name="pair_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
@@ -501,7 +501,7 @@
     <!-- Option in Library to open Screenshots page -->
     <string name="library_screenshots">ᱤᱥᱠᱨᱤᱱᱥᱚᱴ ᱠᱚ</string>
     <!-- Option in Library to open Downloads page -->
-    <string name="library_downloads">ᱰᱟᱩᱱᱞᱳᱰ ᱠᱚ</string>
+    <string name="library_downloads">ᱰᱟᱩᱱᱞᱚᱰ ᱠᱚ</string>
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
     <!-- Option in library to open Desktop Bookmarks root page -->
@@ -570,9 +570,9 @@
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">ᱯᱨᱭᱣᱮᱴ ᱴᱮᱵ ᱠᱚ</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
-    <string name="add_tab">ᱴᱮᱵ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="add_tab">ᱴᱮᱵ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
-    <string name="add_private_tab">ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="add_private_tab">ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">ᱯᱨᱭᱣᱮᱴ</string>
     <!-- Text shown as the title of the open tab tray -->
@@ -654,9 +654,9 @@
     <!-- History overflow menu share button -->
     <string name="history_menu_share_button">ᱦᱟᱹᱴᱤᱝ ᱢᱮ</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">ᱱᱟᱶᱟ ᱴᱮᱵ ᱨᱮ ᱡᱷᱤᱜ ᱢᱮ</string>
+    <string name="history_menu_open_in_new_tab_button">ᱱᱟᱶᱟ ᱴᱮᱵ ᱨᱮ ᱡᱷᱤᱡ ᱢᱮ</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵ ᱨᱮ ᱡᱷᱤᱜ ᱢᱮ</string>
+    <string name="history_menu_open_in_private_tab_button">ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵ ᱨᱮ ᱡᱷᱤᱡ ᱢᱮ</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- History multi select title in app bar
@@ -682,7 +682,7 @@
 
     <!-- Downloads -->
     <!-- Text shown when no download exists -->
-    <string name="download_empty_message">ᱱᱚᱰᱮ ᱰᱟᱩᱱᱞᱳᱰ ᱠᱚ ᱵᱚᱱᱩᱜ-ᱟ</string>
+    <string name="download_empty_message">ᱱᱚᱰᱮ ᱰᱟᱩᱱᱞᱚᱰ ᱠᱚ ᱵᱚᱱᱩᱜ-ᱟ</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d ᱵᱟᱪᱷᱟᱣᱮᱱᱟ</string>
@@ -720,7 +720,7 @@
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">%1$s ᱢᱮᱴᱟᱣᱮᱱᱟ</string>
     <!-- Screen title for adding a bookmarks folder -->
-    <string name="bookmark_add_folder">ᱯᱚᱴᱚᱢ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="bookmark_add_folder">ᱯᱚᱴᱚᱢ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_created_snackbar">ᱵᱩᱠᱢᱟᱨᱠ ᱵᱮᱱᱟᱣᱱᱟ ᱾</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -736,9 +736,9 @@
     <!-- Bookmark overflow menu share button -->
     <string name="bookmark_menu_share_button">ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
     <!-- Bookmark overflow menu open in new tab button -->
-    <string name="bookmark_menu_open_in_new_tab_button">ᱱᱟᱶᱟ ᱴᱮᱵ ᱨᱮ ᱡᱷᱤᱜ ᱢᱮ</string>
+    <string name="bookmark_menu_open_in_new_tab_button">ᱱᱟᱶᱟ ᱴᱮᱵ ᱨᱮ ᱡᱷᱤᱡ ᱢᱮ</string>
     <!-- Bookmark overflow menu open in private tab button -->
-    <string name="bookmark_menu_open_in_private_tab_button">ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵ ᱨᱮ ᱡᱷᱤᱜ ᱢᱮ</string>
+    <string name="bookmark_menu_open_in_private_tab_button">ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵ ᱨᱮ ᱡᱷᱤᱡ ᱢᱮ</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!--Bookmark overflow menu save button -->
@@ -749,7 +749,7 @@
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">ᱵᱩᱠᱢᱟᱨᱠ ᱥᱟᱯᱲᱣ ᱢᱮ</string>
     <!-- Bookmark folder editing screen title -->
-    <string name="edit_bookmark_folder_fragment_title">ᱯᱚᱴᱚᱢ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="edit_bookmark_folder_fragment_title">ᱯᱚᱴᱚᱢ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Bookmark sign in button message -->
     <string name="bookmark_sign_in_button">ᱥᱭᱸᱠᱼᱰ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱢᱮ</string>
     <!-- Bookmark URL editing field label -->
@@ -759,7 +759,7 @@
     <!-- Bookmark NAME editing field label -->
     <string name="bookmark_name_label">ᱧᱩᱛᱩᱢ</string>
     <!-- Bookmark add folder screen title -->
-    <string name="bookmark_add_folder_fragment_label">ᱯᱚᱴᱚᱢ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="bookmark_add_folder_fragment_label">ᱯᱚᱴᱚᱢ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Bookmark select folder screen title -->
     <string name="bookmark_select_folder_fragment_label">ᱯᱚᱴᱚᱢ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
     <!-- Bookmark editing error missing title -->
@@ -853,7 +853,7 @@
     <!-- Title for the "name collection" step of the collection creator -->
     <string name="create_collection_name_collection">ᱛᱩᱢᱟᱹᱞ ᱧᱩᱛᱩᱢᱼᱟᱜ ᱢᱮ</string>
     <!-- Button to add new collection for the "select collection" step of the collection creator -->
-    <string name="create_collection_add_new_collection">ᱱᱟᱶᱟ ᱛᱩᱢᱟᱹᱞ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="create_collection_add_new_collection">ᱱᱟᱶᱟ ᱛᱩᱢᱟᱹᱞ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">ᱡᱚᱛᱚ ᱠᱚ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
@@ -951,7 +951,7 @@
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">ᱴᱮᱵ ᱠᱚ ᱵᱚᱸᱫᱚᱭᱮᱱᱟ</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">ᱛᱮᱛᱟᱱ ᱥᱟᱭᱤᱴ ᱨᱮ ᱥᱮᱞᱮᱫ ᱮᱱᱥ</string>
+    <string name="snackbar_added_to_top_sites">ᱪᱮᱛᱟᱱ ᱥᱟᱭᱤᱴ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱮᱱᱥ!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵ ᱵᱚᱸᱫᱚᱭᱮᱱᱟ</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -982,7 +982,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">ᱵᱟᱹᱲᱨᱟ</string>
+    <string name="tab_collection_dialog_negative">ᱵᱟᱹᱰᱨᱟᱹ</string>
 
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">ᱯᱩᱨᱟᱹ ᱠᱨᱤᱱ ᱢᱳᱰ ᱵᱚᱞᱚᱱ ᱠᱟᱱᱟᱢ</string>
@@ -1043,7 +1043,7 @@
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s ᱵᱟᱪᱷᱟᱣᱟᱜ ᱵᱨᱟᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱢᱮᱴᱟᱣ ᱟᱭ ᱾</string>
     <!-- Text for the cancel button for the data deletion dialog -->
-    <string name="delete_browsing_data_prompt_cancel">ᱵᱟᱹᱲᱨᱟ</string>
+    <string name="delete_browsing_data_prompt_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
     <!-- Text for the allow button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_allow">ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
@@ -1085,7 +1085,7 @@
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">ᱱᱚᱰᱮ ᱛᱮᱞᱟ ᱠᱚ ᱧᱟᱢ ᱟᱢ</string>
     <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">ᱵᱩᱠᱢᱟᱨᱠ, ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱟᱨ ᱵᱟᱹᱲᱛᱤ ᱠᱚ ᱞᱟᱹᱜᱤᱛ ᱟᱢᱟᱜ Firefox ᱠᱷᱟᱛᱟ ᱨᱮ ᱥᱭᱸᱠ ᱮᱦᱚᱵ ᱢᱮ ᱾</string>
+    <string name="onboarding_account_sign_in_header">ᱵᱩᱠᱢᱟᱨᱠ, ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱟᱨ ᱵᱟᱹᱲᱛᱤ ᱠᱚ ᱞᱟᱹᱜᱤᱛ ᱟᱢᱟᱜ Firefox ᱠᱷᱟᱛᱟ ᱨᱮ ᱥᱭᱸᱠ ᱮᱦᱚᱵᱽ ᱢᱮ ᱾</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
@@ -1145,7 +1145,7 @@
     <string name="onboarding_close">ᱵᱚᱸᱫᱚᱭ</string>
 
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">ᱵᱨᱟᱩᱡᱤᱝ ᱮᱦᱚᱵ ᱢᱮ</string>
+    <string name="onboarding_finish">ᱵᱨᱟᱩᱡᱤᱝ ᱮᱦᱚᱵᱽ ᱢᱮ</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
@@ -1186,7 +1186,7 @@
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">ᱡᱚᱱᱚᱲᱟᱣ ᱚᱪᱚᱜ</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_cancel">ᱵᱟᱹᱲᱨᱟ</string>
+    <string name="sign_out_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
     <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
     <string name="bookmark_cannot_edit_root">ᱢᱩᱞ ᱯᱚᱴᱚᱢ ᱵᱟᱞᱮ ᱥᱟᱯᱲᱟᱣ ᱫᱟᱰᱮᱟ</string>
 
@@ -1292,7 +1292,7 @@
 
     <!-- Toast shown to the user when they are activating the secret dev menu
         The first parameter is number of long clicks left to enable the menu -->
-    <string name="about_debug_menu_toast_progress">ᱫᱚᱥ ᱥᱟᱦᱟ ᱢᱮᱱᱭᱩ:%1$d ᱮᱦᱚᱵ ᱞᱟᱹᱜᱤᱫ ᱞᱮᱸᱜᱟ ᱥᱮᱫ ᱚᱛᱟᱭ ᱢᱮ</string>
+    <string name="about_debug_menu_toast_progress">ᱫᱚᱥ ᱥᱟᱦᱟ ᱢᱮᱱᱭᱩ:%1$d ᱮᱦᱚᱵᱽ ᱞᱟᱹᱜᱤᱫ ᱞᱮᱸᱜᱟ ᱥᱮᱫ ᱚᱛᱟᱭ ᱢᱮ</string>
     <string name="about_debug_menu_toast_done">ᱫᱚᱥ ᱥᱟᱦᱟ ᱢᱮᱱᱭᱩ ᱮᱢᱮᱱᱟ</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
@@ -1312,18 +1312,18 @@
     <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL ᱠᱞᱤᱯᱵᱳᱰ ᱨᱮ ᱱᱚᱠᱚᱞᱮᱱᱟ</string>
 
     <!-- Title text for the Add To Homescreen dialog -->
-    <string name="add_to_homescreen_title">ᱚᱲᱟᱜ ᱤᱥᱠᱨᱤᱱ ᱨᱮ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="add_to_homescreen_title">ᱚᱲᱟᱜ ᱤᱥᱠᱨᱤᱱ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
-    <string name="add_to_homescreen_cancel">ᱵᱟᱹᱲᱨᱟ</string>
+    <string name="add_to_homescreen_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
     <!-- Add button text for the Add to Homescreen dialog -->
-    <string name="add_to_homescreen_add">ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="add_to_homescreen_add">ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
     <string name="add_to_homescreen_continue">ᱣᱮᱵᱥᱟᱭᱤᱴ ᱛᱮ ᱞᱟᱦᱟᱜ ᱢᱮ</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱧᱩᱛᱩᱢ</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description_2">ᱟᱢ ᱞᱚᱜᱚᱱ ᱵᱨᱟᱩᱡ ᱟᱨ ᱮᱯᱯ ᱞᱮᱠᱷᱟᱱ ᱚᱱᱩᱵᱷᱟᱹᱵ ᱤᱫᱤ ᱞᱟᱹᱜᱤᱫ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱫᱚ ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱚᱲᱟᱜ ᱥᱠᱨᱭᱤᱱ ᱨᱮ ᱥᱮᱞᱮᱫ ᱫᱟᱲᱮᱟᱜᱼᱟᱢ ᱾</string>
+    <string name="add_to_homescreen_description_2">ᱟᱢ ᱞᱚᱜᱚᱱ ᱵᱨᱟᱩᱡ ᱟᱨ ᱮᱯᱯ ᱞᱮᱠᱷᱟᱱ ᱚᱱᱩᱵᱷᱟᱹᱵ ᱤᱫᱤ ᱞᱟᱹᱜᱤᱫ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱫᱚ ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱚᱲᱟᱜ ᱥᱠᱨᱭᱤᱱ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱫᱟᱲᱮᱟᱜᱼᱟᱢ ᱾</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">ᱵᱚᱞᱚᱱ ᱠᱚ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱠᱚ</string>
@@ -1432,11 +1432,11 @@
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">ᱞᱚᱜᱤᱱ ᱢᱮᱱᱭᱩ ᱥᱟᱞᱟᱭ ᱢᱮ</string>
 
     <!-- Title of the Add search engine screen -->
-    <string name="search_engine_add_custom_search_engine_title">ᱥᱮᱸᱫᱽᱨᱟ ᱤᱱᱡᱤᱱ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="search_engine_add_custom_search_engine_title">ᱥᱮᱸᱫᱽᱨᱟ ᱤᱱᱡᱤᱱ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">ᱥᱮᱸᱫᱽᱨᱟ ᱤᱧᱡᱤᱱ ᱥᱟᱯᱲᱟᱣ ᱢᱮ</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="search_engine_add_button_content_description">ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
     <string name="search_engine_add_custom_search_engine_edit_button_content_description">ᱥᱟᱸᱪᱟᱣ</string>
     <!-- Text for the menu button to edit a search engine -->
@@ -1516,7 +1516,7 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">ᱪᱮᱫ ᱟᱢ ᱜᱚᱴᱟ ᱢᱮᱱᱟᱢᱼᱟ ᱱᱚᱶᱟ ᱵᱩᱠᱢᱟᱨᱠ ᱢᱮᱴᱟᱣ ᱞᱟ.ᱜᱤᱫ ᱛᱮ?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">ᱛᱮᱛᱟᱱ ᱥᱟᱭᱤᱴ ᱨᱮ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="browser_menu_add_to_top_sites">ᱪᱮᱛᱟᱱ ᱥᱟᱭᱤᱴ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">ᱯᱚᱨᱢᱟᱱᱤᱡᱺ%1$s</string>
@@ -1573,7 +1573,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">ᱴᱚᱯ ᱥᱟᱭᱤᱴ ᱞᱤᱢᱤᱴ ᱥᱮᱴᱮᱨᱮᱱᱟ</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content_2">ᱱᱟᱶᱟ ᱴᱟᱹᱯ ᱥᱟᱭᱤᱴ ᱥᱮᱞᱮᱫ ᱞᱟᱹᱜᱤᱫ, ᱢᱤᱫᱴᱟᱹᱝ ᱚᱰᱚᱠ ᱢᱮ ᱾ ᱥᱟᱭᱤᱴ ᱴᱤᱯᱟᱹᱣ ᱟᱨ ᱚᱛᱟ ᱛᱷᱤᱨ ᱠᱟᱛᱮ ᱪᱚᱭᱚᱱ ᱢᱮ ᱟᱨ ᱚᱰᱚᱠ ᱢᱮ ᱾</string>
+    <string name="top_sites_max_limit_content_2">ᱱᱟᱶᱟ ᱴᱟᱹᱯ ᱥᱟᱭᱤᱴ ᱥᱮᱞᱮᱫᱽ ᱞᱟᱹᱜᱤᱫ, ᱢᱤᱫᱴᱟᱹᱝ ᱚᱰᱚᱠ ᱢᱮ ᱾ ᱥᱟᱭᱤᱴ ᱴᱤᱯᱟᱹᱣ ᱟᱨ ᱚᱛᱟ ᱛᱷᱤᱨ ᱠᱟᱛᱮ ᱪᱚᱭᱚᱱ ᱢᱮ ᱟᱨ ᱚᱰᱚᱠ ᱢᱮ ᱾</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ᱴᱷᱤᱠ, ᱵᱟᱰᱟᱭ ᱠᱮᱜᱼᱟᱹᱧ</string>
     <!-- Label for the show most visited sites preference -->
@@ -1596,5 +1596,5 @@
     <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
     <string name="onboarding_firefox_account_auto_signin_header_2">ᱟᱢ %s ᱞᱮᱠᱷᱟᱛᱮ ᱚᱞᱜᱟ Firefox ᱵᱨᱟᱩᱡᱟᱹᱨ ᱨᱮ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱛᱮ ᱵᱚᱞᱚ ᱟᱠᱟᱱᱟᱢ ᱾ ᱟᱢ ᱪᱮᱫ ᱱᱚᱶᱟ ᱠᱷᱟᱛᱟ ᱨᱮ ᱵᱚᱞᱚ ᱥᱟᱱᱟᱢ ᱠᱟᱱᱟ?</string>
     <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">ᱟᱢ ᱞᱚᱜᱚᱱ ᱵᱨᱟᱩᱡ ᱟᱨ ᱮᱯᱯ ᱞᱮᱠᱷᱟᱱ ᱚᱱᱩᱵᱷᱟᱹᱵ ᱤᱫᱤ ᱞᱟᱹᱜᱤᱫ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱫᱚ ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱚᱲᱟᱜ ᱥᱠᱨᱭᱤᱱ ᱨᱮ ᱥᱮᱞᱮᱫ ᱫᱟᱲᱮᱟᱜᱼᱟᱢ ᱾</string>
+    <string name="add_to_homescreen_description">ᱟᱢ ᱞᱚᱜᱚᱱ ᱵᱨᱟᱩᱡ ᱟᱨ ᱮᱯᱯ ᱞᱮᱠᱷᱟᱱ ᱚᱱᱩᱵᱷᱟᱹᱵ ᱤᱫᱤ ᱞᱟᱹᱜᱤᱫ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱫᱚ ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱚᱲᱟᱜ ᱥᱠᱨᱭᱤᱱ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱫᱟᱲᱮᱟᱜᱼᱟᱢ ᱾</string>
 </resources>
