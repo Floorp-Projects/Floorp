@@ -11,6 +11,7 @@ EXPORTS.mozilla.webrender += [
     "RenderBufferTextureHost.h",
     "RenderBufferTextureHostSWGL.h",
     "RenderCompositor.h",
+    "RenderCompositorD3D11SWGL.h",
     "RenderCompositorEGL.h",
     "RenderCompositorOGL.h",
     "RenderCompositorSWGL.h",
@@ -34,6 +35,7 @@ UNIFIED_SOURCES += [
     "RenderBufferTextureHost.cpp",
     "RenderBufferTextureHostSWGL.cpp",
     "RenderCompositor.cpp",
+    "RenderCompositorD3D11SWGL.cpp",
     "RenderCompositorEGL.cpp",
     "RenderCompositorOGL.cpp",
     "RenderCompositorSWGL.cpp",
@@ -118,3 +120,4 @@ include("/ipc/chromium/chromium-config.mozbuild")
 FINAL_LIBRARY = "xul"
 
 CXXFLAGS += CONFIG["TK_CFLAGS"]
+CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"] 

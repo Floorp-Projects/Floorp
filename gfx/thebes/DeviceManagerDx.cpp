@@ -1391,8 +1391,6 @@ IDirectDraw7* DeviceManagerDx::GetDirectDraw() { return mDirectDraw; }
 void DeviceManagerDx::GetCompositorDevices(
     RefPtr<ID3D11Device>* aOutDevice,
     RefPtr<layers::DeviceAttachmentsD3D11>* aOutAttachments) {
-  MOZ_ASSERT(layers::CompositorThreadHolder::IsInCompositorThread());
-
   RefPtr<ID3D11Device> device;
   {
     MutexAutoLock lock(mDeviceLock);
