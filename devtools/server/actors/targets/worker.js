@@ -39,7 +39,7 @@ exports.WorkerTargetActor = TargetActorMixin(
       this.workerGlobal = workerGlobal;
 
       this._workerDebuggerData = workerDebuggerData;
-      this._sources = null;
+      this._sourcesManager = null;
 
       this.makeDebugger = makeDebuggerUtil.bind(null, {
         findDebuggees: () => {
@@ -83,12 +83,12 @@ exports.WorkerTargetActor = TargetActorMixin(
       return this._dbg;
     },
 
-    get sources() {
-      if (this._sources === null) {
-        this._sources = new SourcesManager(this.threadActor);
+    get sourcesManager() {
+      if (this._sourcesManager === null) {
+        this._sourcesManager = new SourcesManager(this.threadActor);
       }
 
-      return this._sources;
+      return this._sourcesManager;
     },
 
     // This is called from the ThreadActor#onAttach method
@@ -100,9 +100,9 @@ exports.WorkerTargetActor = TargetActorMixin(
     destroy() {
       Actor.prototype.destroy.call(this);
 
-      if (this._sources) {
-        this._sources.destroy();
-        this._sources = null;
+      if (this._sourcesManager) {
+        this._sourcesManager.destroy();
+        this._sourcesManager = null;
       }
 
       this.workerGlobal = null;
