@@ -136,6 +136,10 @@ urlbar.tips
     Incremented when the user picks the update_web search intervention.
   - ``intervention_update_web-shown``
     Incremented when the update_web search intervention is shown.
+  - ``tabtosearch_onboard-shown``
+    Incremented when a tab-to-search onboarding result is shown. Please note
+    that the number of times tab-to-search onboarding results are picked is
+    the sum of all keys in ``urlbar.searchmode.tabtosearch_onboard``.
   - ``searchTip_onboard-picked``
     Incremented when the user picks the onboarding search tip.
   - ``searchTip_onboard-shown``
