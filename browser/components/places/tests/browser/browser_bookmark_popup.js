@@ -54,7 +54,7 @@ async function test_bookmarks_popup({
     try {
       if (!isNewBookmark) {
         await PlacesUtils.bookmarks.insert({
-          parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+          parentGuid: await PlacesUIUtils.defaultParentGuid,
           url: TEST_URL,
           title: "Home Page",
         });
@@ -127,6 +127,7 @@ async function test_bookmarks_popup({
         );
       }
 
+      let defaultLocation = await PlacesUIUtils.defaultParentGuid;
       let bookmarkRemovedPromise = Promise.resolve();
       if (isBookmarkRemoved) {
         bookmarkRemovedPromise = PlacesTestUtils.waitForNotification(
@@ -134,8 +135,7 @@ async function test_bookmarks_popup({
           events =>
             events.some(
               event =>
-                event.parentGuid == PlacesUtils.bookmarks.unfiledGuid &&
-                TEST_URL == event.url
+                event.parentGuid == defaultLocation && TEST_URL == event.url
             ),
           "places"
         );
