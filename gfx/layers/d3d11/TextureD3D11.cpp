@@ -1060,6 +1060,11 @@ void DXGITextureHostD3D11::PushDisplayItems(
     return;
   }
 
+  bool supportsExternalCompositing = false;
+  if (gfx::gfxVars::UseSoftwareWebRender()) {
+    supportsExternalCompositing = true;
+  }
+
   switch (GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:
     case gfx::SurfaceFormat::R8G8B8A8:
@@ -1069,7 +1074,7 @@ void DXGITextureHostD3D11::PushDisplayItems(
       aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0],
                          !(mFlags & TextureFlags::NON_PREMULTIPLIED),
                          wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
-                         preferCompositorSurface);
+                         preferCompositorSurface, supportsExternalCompositing);
       break;
     }
     case gfx::SurfaceFormat::P010:
@@ -1251,7 +1256,7 @@ bool DXGIYCbCrTextureHostD3D11::BindTextureSource(
 void DXGIYCbCrTextureHostD3D11::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
   RefPtr<wr::RenderTextureHost> texture = new wr::RenderDXGIYCbCrTextureHost(
-      mHandles, mYUVColorSpace, mColorDepth, mSizeY, mSizeCbCr);
+      mHandles, mYUVColorSpace, mColorDepth, mColorRange, mSizeY, mSizeCbCr);
 
   wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
                                                  texture.forget());
@@ -1304,13 +1309,19 @@ void DXGIYCbCrTextureHostD3D11::PushDisplayItems(
     return;
   }
 
+  bool supportsExternalCompositing = false;
+  if (gfx::gfxVars::UseSoftwareWebRender()) {
+    supportsExternalCompositing = true;
+  }
+
   MOZ_ASSERT(aImageKeys.length() == 3);
 
   aBuilder.PushYCbCrPlanarImage(
       aBounds, aClip, true, aImageKeys[0], aImageKeys[1], aImageKeys[2],
       wr::ToWrColorDepth(mColorDepth), wr::ToWrYuvColorSpace(mYUVColorSpace),
       wr::ToWrColorRange(mColorRange), aFilter,
-      aFlags.contains(PushDisplayItemFlag::PREFER_COMPOSITOR_SURFACE));
+      aFlags.contains(PushDisplayItemFlag::PREFER_COMPOSITOR_SURFACE),
+      supportsExternalCompositing);
 }
 
 bool DXGIYCbCrTextureHostD3D11::AcquireTextureSource(
