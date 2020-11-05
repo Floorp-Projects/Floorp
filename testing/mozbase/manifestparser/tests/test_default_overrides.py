@@ -26,23 +26,19 @@ class TestDefaultSkipif(unittest.TestCase):
         parser = ManifestParser(manifests=(default,))
         for test in parser.tests:
             if test["name"] == "test1":
-                self.assertEqual(test["skip-if"], "(os == 'win' && debug) || (debug)")
+                self.assertEqual(test["skip-if"], "os == 'win' && debug\ndebug")
             elif test["name"] == "test2":
-                self.assertEqual(
-                    test["skip-if"], "(os == 'win' && debug) || (os == 'linux')"
-                )
+                self.assertEqual(test["skip-if"], "os == 'win' && debug\nos == 'linux'")
             elif test["name"] == "test3":
-                self.assertEqual(
-                    test["skip-if"], "(os == 'win' && debug) || (os == 'win')"
-                )
+                self.assertEqual(test["skip-if"], "os == 'win' && debug\nos == 'win'")
             elif test["name"] == "test4":
                 self.assertEqual(
-                    test["skip-if"], "(os == 'win' && debug) || (os == 'win' && debug)"
+                    test["skip-if"], "os == 'win' && debug\nos == 'win' && debug"
                 )
             elif test["name"] == "test5":
                 self.assertEqual(test["skip-if"], "os == 'win' && debug")
             elif test["name"] == "test6":
-                self.assertEqual(test["skip-if"], "(os == 'win' && debug) || (debug)")
+                self.assertEqual(test["skip-if"], "os == 'win' && debug\ndebug")
 
 
 class TestDefaultSupportFiles(unittest.TestCase):
