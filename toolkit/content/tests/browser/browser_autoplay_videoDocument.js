@@ -1,6 +1,7 @@
 "use strict";
 
-const PAGE = GetTestWebBasedURL("audio.ogg");
+const PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/audio.ogg";
 
 function setup_test_preference() {
   return SpecialPowers.pushPrefEnv({

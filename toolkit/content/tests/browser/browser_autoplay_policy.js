@@ -3,7 +3,8 @@
  * under different situations.
  * Spec discussion : https://github.com/WICG/autoplay/issues/1
  */
-const PAGE = GetTestWebBasedURL("file_empty.html");
+const PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/file_empty.html";
 
 function setupTestPreferences(isAllowedAutoplay, isAllowedMuted) {
   let autoplayDefault = SpecialPowers.Ci.nsIAutoplay.ALLOWED;
