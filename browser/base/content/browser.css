@@ -1031,6 +1031,10 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
   direction: ltr;
 }
 
+#ContentSelectDropdown > menupopup::part(arrowscrollbox-scrollbox) {
+  scrollbar-width: var(--content-select-scrollbar-width, auto);
+}
+
 /* Indent options in optgroups */
 .contentSelectDropdown-ingroup .menu-iconic-text {
   padding-inline-start: 2em;
