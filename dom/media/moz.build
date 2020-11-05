@@ -28,7 +28,6 @@ with Files("GetUserMedia*"):
     BUG_COMPONENT = component_av
 
 DIRS += [
-    "autoplay",
     "doctor",
     "eme",
     "encoder",
@@ -93,6 +92,7 @@ if CONFIG["MOZ_WEBRTC"]:
 
 XPIDL_SOURCES += [
     "nsIAudioDeviceInfo.idl",
+    "nsIAutoplay.idl",
     "nsIDOMNavigatorUserMedia.idl",
     "nsIMediaManager.idl",
 ]
@@ -119,6 +119,7 @@ EXPORTS += [
     "AudioSegment.h",
     "AudioStream.h",
     "AudioThreadRegistry.h",
+    "AutoplayPolicy.h",
     "BackgroundVideoDecodingPermissionObserver.h",
     "Benchmark.h",
     "BitReader.h",
@@ -136,6 +137,9 @@ EXPORTS += [
     "FileBlockCache.h",
     "ForwardedInputTrack.h",
     "FrameStatistics.h",
+    "GVAutoplayPermissionRequest.h",
+    "GVAutoplayRequestStatusIPC.h",
+    "GVAutoplayRequestUtils.h",
     "ImageToI420.h",
     "Intervals.h",
     "MediaCache.h",
@@ -243,6 +247,7 @@ UNIFIED_SOURCES += [
     "AudioStreamTrack.cpp",
     "AudioTrack.cpp",
     "AudioTrackList.cpp",
+    "AutoplayPolicy.cpp",
     "BackgroundVideoDecodingPermissionObserver.cpp",
     "BaseMediaResource.cpp",
     "Benchmark.cpp",
@@ -261,6 +266,7 @@ UNIFIED_SOURCES += [
     "GetUserMediaRequest.cpp",
     "GraphDriver.cpp",
     "GraphRunner.cpp",
+    "GVAutoplayPermissionRequest.cpp",
     "ImageToI420.cpp",
     "MediaCache.cpp",
     "MediaContainerType.cpp",

@@ -1,4 +1,5 @@
-const VIDEO_PAGE = GetTestWebBasedURL("file_video.html");
+const VIDEO_PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/file_video.html";
 
 function setup_test_preference(enableUserGesture) {
   let state = enableUserGesture ? "enable" : "disable";

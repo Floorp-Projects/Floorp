@@ -110,7 +110,7 @@ avoid-blacklist-and-whitelist:
         - dom/ipc/ContentParent.cpp
         - dom/ipc/fuzztest/content_parent_ipc_libfuzz.cpp
         - dom/ipc/URLClassifierParent.cpp
-        - dom/media/autoplay/AutoplayPolicy.cpp
+        - dom/media/AutoplayPolicy.cpp
         - dom/media/gmp/GMPChild.cpp
         - dom/media/ipc/RDDProcessManager.cpp
         - dom/media/ipc/RemoteDecoderManagerParent.cpp
@@ -119,9 +119,9 @@ avoid-blacklist-and-whitelist:
         - dom/media/platforms/apple/AppleVTDecoder.cpp
         - dom/media/platforms/wmf/DXVA2Manager.cpp
         - dom/media/platforms/wmf/WMFVideoMFTManager.cpp
-        - dom/media/autoplay/test/mochitest/file_autoplay_policy_key_blacklist.html
-        - dom/media/autoplay/test/mochitest/test_autoplay_policy_key_blacklist.html
-        - dom/media/autoplay/test/mochitest/test_autoplay_policy_permission.html
+        - dom/media/test/file_autoplay_policy_key_blacklist.html
+        - dom/media/test/test_autoplay_policy_key_blacklist.html
+        - dom/media/test/test_autoplay_policy_permission.html
         - dom/media/webm/WebMDecoder.cpp
         - dom/media/webrtc/jsapi/PeerConnectionMedia.cpp
         - dom/media/webrtc/libwebrtcglue/VideoConduit.cpp
