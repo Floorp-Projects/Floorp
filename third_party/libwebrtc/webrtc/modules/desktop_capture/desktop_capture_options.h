@@ -141,7 +141,7 @@ class DesktopCaptureOptions {
   bool disable_effects_ = true;
   bool detect_updated_region_ = false;
 #if defined(WEBRTC_USE_PIPEWIRE)
-  bool allow_pipewire_ = true;
+  bool allow_pipewire_ = false;
 #endif
 };
 

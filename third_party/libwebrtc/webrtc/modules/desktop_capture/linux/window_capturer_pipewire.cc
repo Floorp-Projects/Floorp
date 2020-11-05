@@ -15,7 +15,7 @@
 namespace webrtc {
 
 WindowCapturerPipeWire::WindowCapturerPipeWire()
-    : BaseCapturerPipeWire(BaseCapturerPipeWire::CaptureSourceType::kWindow) {}
+    : BaseCapturerPipeWire(BaseCapturerPipeWire::CaptureSourceType::Window) {}
 WindowCapturerPipeWire::~WindowCapturerPipeWire() {}
 
 // static

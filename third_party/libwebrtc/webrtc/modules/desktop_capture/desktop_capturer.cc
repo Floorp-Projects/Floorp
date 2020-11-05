@@ -13,11 +13,6 @@
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer_differ_wrapper.h"
 
-#if defined(WEBRTC_USE_PIPEWIRE) || defined(USE_X11)
-#include <gtk/gtk.h>
-#include <gtk/gtkx.h>
-#endif
-
 namespace webrtc {
 
 DesktopCapturer::~DesktopCapturer() = default;
@@ -77,19 +72,7 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateTabCapturer(
 }
 
 #if defined(WEBRTC_USE_PIPEWIRE) || defined(USE_X11)
-// Return true if Firefox is actually running with Wayland backend.
-static bool IsWaylandDisplayUsed() {
-  const auto display = gdk_display_get_default();
-  if (display == nullptr) {
-    // We're running in headless mode.
-    return false;
-  }
-  return !GDK_IS_X11_DISPLAY(display);
-}
-
-// Return true if Firefox is actually running on Wayland enabled session.
-// It means some screensharing capabilities may be limited.
-static bool IsWaylandSessionUsed() {
+bool DesktopCapturer::IsRunningUnderWayland() {
   const char* xdg_session_type = getenv("XDG_SESSION_TYPE");
   if (!xdg_session_type || strncmp(xdg_session_type, "wayland", 7) != 0)
     return false;
@@ -98,10 +81,6 @@ static bool IsWaylandSessionUsed() {
     return false;
 
   return true;
-}
-
-bool DesktopCapturer::IsRunningUnderWayland() {
-  return IsWaylandSessionUsed() ? IsWaylandDisplayUsed() : false;
 }
 #endif  // defined(WEBRTC_USE_PIPEWIRE) || defined(USE_X11)
 
