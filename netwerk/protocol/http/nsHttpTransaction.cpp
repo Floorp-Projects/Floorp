@@ -2413,6 +2413,11 @@ void nsHttpTransaction::DisableHttp3() {
     // After CloneAsDirectRoute(), http3 will be disabled.
     RefPtr<nsHttpConnectionInfo> connInfo;
     mConnInfo->CloneAsDirectRoute(getter_AddRefs(connInfo));
+    if (mRequestHead) {
+      DebugOnly<nsresult> rv =
+          mRequestHead->SetHeader(nsHttp::Alternate_Service_Used, "0"_ns);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
     MOZ_ASSERT(!connInfo->IsHttp3());
     mConnInfo.swap(connInfo);
   }
@@ -2803,6 +2808,11 @@ nsresult nsHttpTransaction::RestartOnFastOpenError() {
     RefPtr<nsHttpConnectionInfo> ci;
     mConnInfo->CloneAsDirectRoute(getter_AddRefs(ci));
     mConnInfo = ci;
+    if (mRequestHead) {
+      DebugOnly<nsresult> rv =
+          mRequestHead->SetHeader(nsHttp::Alternate_Service_Used, "0"_ns);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
   }
   mEarlyDataDisposition = EARLY_NONE;
   m0RTTInProgress = false;
