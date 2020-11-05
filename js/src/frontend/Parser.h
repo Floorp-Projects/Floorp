@@ -267,6 +267,8 @@ class MOZ_STACK_CLASS ParserSharedBase {
  public:
   CompilationInfo& getCompilationInfo() { return compilationInfo_; }
 
+  LifoAlloc& stencilAlloc() { return compilationInfo_.stencil.alloc; }
+
   JSAtom* liftParserAtomToJSAtom(const ParserAtom* parserAtom) {
     return parserAtom->toJSAtom(cx_, compilationInfo_.input.atomCache);
   }

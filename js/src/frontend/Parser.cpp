@@ -1067,7 +1067,7 @@ Maybe<ParserGlobalScopeData*> NewGlobalScopeData(JSContext* cx,
 
 Maybe<ParserGlobalScopeData*> ParserBase::newGlobalScopeData(
     ParseContext::Scope& scope) {
-  return NewGlobalScopeData(cx_, scope, alloc_, pc_);
+  return NewGlobalScopeData(cx_, scope, stencilAlloc(), pc_);
 }
 
 Maybe<ParserModuleScopeData*> NewModuleScopeData(JSContext* cx,
@@ -1133,7 +1133,7 @@ Maybe<ParserModuleScopeData*> NewModuleScopeData(JSContext* cx,
 
 Maybe<ParserModuleScopeData*> ParserBase::newModuleScopeData(
     ParseContext::Scope& scope) {
-  return NewModuleScopeData(cx_, scope, alloc_, pc_);
+  return NewModuleScopeData(cx_, scope, stencilAlloc(), pc_);
 }
 
 Maybe<ParserEvalScopeData*> NewEvalScopeData(JSContext* cx,
@@ -1172,7 +1172,7 @@ Maybe<ParserEvalScopeData*> NewEvalScopeData(JSContext* cx,
 
 Maybe<ParserEvalScopeData*> ParserBase::newEvalScopeData(
     ParseContext::Scope& scope) {
-  return NewEvalScopeData(cx_, scope, alloc_, pc_);
+  return NewEvalScopeData(cx_, scope, stencilAlloc(), pc_);
 }
 
 Maybe<ParserFunctionScopeData*> NewFunctionScopeData(JSContext* cx,
@@ -1298,7 +1298,8 @@ bool FunctionScopeHasClosedOverBindings(ParseContext* pc) {
 
 Maybe<ParserFunctionScopeData*> ParserBase::newFunctionScopeData(
     ParseContext::Scope& scope, bool hasParameterExprs) {
-  return NewFunctionScopeData(cx_, scope, hasParameterExprs, alloc_, pc_);
+  return NewFunctionScopeData(cx_, scope, hasParameterExprs, stencilAlloc(),
+                              pc_);
 }
 
 ParserVarScopeData* NewEmptyVarScopeData(JSContext* cx, LifoAlloc& alloc,
@@ -1353,7 +1354,7 @@ static bool VarScopeHasBindings(ParseContext* pc) {
 
 Maybe<ParserVarScopeData*> ParserBase::newVarScopeData(
     ParseContext::Scope& scope) {
-  return NewVarScopeData(cx_, scope, alloc_, pc_);
+  return NewVarScopeData(cx_, scope, stencilAlloc(), pc_);
 }
 
 Maybe<ParserLexicalScopeData*> NewLexicalScopeData(JSContext* cx,
@@ -1429,7 +1430,7 @@ bool LexicalScopeHasClosedOverBindings(ParseContext* pc,
 
 Maybe<ParserLexicalScopeData*> ParserBase::newLexicalScopeData(
     ParseContext::Scope& scope) {
-  return NewLexicalScopeData(cx_, scope, alloc_, pc_);
+  return NewLexicalScopeData(cx_, scope, stencilAlloc(), pc_);
 }
 
 template <>
