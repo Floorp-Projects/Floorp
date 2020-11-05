@@ -25,6 +25,8 @@ function getSourceIcon(source) {
   }
 }
 
+let HISTORY_URL = "https://mozilla.org/";
+
 async function urlResultIsNotRestyled(resultDetails) {
   Assert.equal(
     resultDetails.type,
@@ -43,6 +45,11 @@ async function urlResultIsNotRestyled(resultDetails) {
     resultDetails.displayed.action,
     actionText,
     "The result's action text is unchanged."
+  );
+  Assert.equal(
+    resultDetails.image,
+    `page-icon:${HISTORY_URL}`,
+    "The result's icon should be restored to being the URL's favicon."
   );
 }
 
@@ -149,7 +156,7 @@ add_task(async function init() {
   await Services.search.moveEngine(engine, 0);
 
   for (let i = 0; i < 5; i++) {
-    await PlacesTestUtils.addVisits("https://mozilla.org/");
+    await PlacesTestUtils.addVisits(HISTORY_URL);
   }
 
   await SpecialPowers.pushPrefEnv({
