@@ -34,7 +34,7 @@ from .util.schema import validate_schema, Schema
 from .util.taskcluster import get_artifact, insert_index
 from .util.taskgraph import find_decision_task, find_existing_tasks_from_previous_kinds
 from .util.yaml import load_yaml
-from voluptuous import Required, Optional
+from voluptuous import Required, Optional, Any
 
 
 logger = logging.getLogger(__name__)
@@ -130,6 +130,10 @@ try_task_config_schema = Schema(
             "argument in `taskgraph.optimize.optimize_task_graph`.",
         ): text_type,
         Optional("rebuild"): int,
+        Optional("tasks-regex"): {
+            "include": Any(None, [text_type]),
+            "exclude": Any(None, [text_type]),
+        },
         Optional("use-artifact-builds"): bool,
         Optional(
             "worker-overrides",
