@@ -63,7 +63,8 @@ async function startTest() {
     const err = await new Promise(r => mediaRecorder.onerror = r);
     mediaRecorder.onerror = unexpected;
     ok(true, 'error event fired');
-    is(err.error.name, 'UnknownError', 'Error name should be UnknownError.');
+    is(err.error.name, 'InvalidModificationError',
+      'Error name should be InvalidModificationError.');
     ok(err.error.stack.includes('test_mediarecorder_onerror_pause.html'),
       'Events fired from onerror should include an error with a stack trace indicating ' +
       'an error in this test');
