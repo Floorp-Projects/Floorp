@@ -387,8 +387,8 @@ class AudioCallbackDriver::FallbackWrapper : public GraphInterface {
                         TrackRate aRate, uint32_t aChannels) override {
     MOZ_CRASH("Unexpected NotifyOutputData from fallback SystemClockDriver");
   }
-  void NotifyStarted() override {
-    MOZ_CRASH("Unexpected NotifyStarted from fallback SystemClockDriver");
+  void NotifyInputStopped() override {
+    MOZ_CRASH("Unexpected NotifyInputStopped from fallback SystemClockDriver");
   }
   void NotifyInputData(const AudioDataValue* aBuffer, size_t aFrames,
                        TrackRate aRate, uint32_t aChannels) override {
@@ -730,7 +730,6 @@ void AudioCallbackDriver::Start() {
   MOZ_ASSERT(mAudioStreamState == AudioStreamState::None);
   MOZ_ASSERT_IF(PreviousDriver(), PreviousDriver()->InIteration());
   mAudioStreamState = AudioStreamState::Pending;
-  mRanFirstIteration = false;
 
   if (mFallbackDriverState == FallbackDriverState::None) {
     // Starting an audio driver could take a while. We start a system driver in
@@ -893,11 +892,6 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   AutoInCallback aic(this);
 #endif
 
-  if (!mRanFirstIteration) {
-    Graph()->NotifyStarted();
-    mRanFirstIteration = true;
-  }
-
   uint32_t durationMS = aFrames * 1000 / mSampleRate;
 
   // For now, simply average the duration with the previous
@@ -1008,6 +1002,9 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
                           aFrames * mOutputChannelCount);
 
   if (result.IsStop()) {
+    if (mInputDeviceID) {
+      mGraphInterface->NotifyInputStopped();
+    }
     // Signal that we have stopped.
     result.Stopped();
     // Update the flag before handing over the graph and going to drain.
@@ -1022,6 +1019,9 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     LOG(LogLevel::Debug,
         ("%p: Switching to %s driver.", Graph(),
          nextDriver->AsAudioCallbackDriver() ? "audio" : "system"));
+    if (mInputDeviceID) {
+      mGraphInterface->NotifyInputStopped();
+    }
     result.Switched();
     mAudioStreamState = AudioStreamState::Stopping;
     nextDriver->SetState(mIterationStart, mIterationEnd, mStateComputedTime);
@@ -1075,6 +1075,14 @@ void AudioCallbackDriver::StateCallback(cubeb_state aState) {
         // Only switch to fallback if it's not already running. It could be
         // running with the callback driver having started but not seen a single
         // callback yet. I.e., handover from fallback to callback is not done.
+        if (mInputDeviceID) {
+#ifdef DEBUG
+          // No audio callback after an error. We're calling into the graph here
+          // so we need to be regarded as "in iteration".
+          AutoInCallback aic(this);
+#endif
+          mGraphInterface->NotifyInputStopped();
+        }
         FallbackToSystemClockDriver();
       }
     }
