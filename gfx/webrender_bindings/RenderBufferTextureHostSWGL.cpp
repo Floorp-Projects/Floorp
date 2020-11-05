@@ -69,8 +69,7 @@ gfx::YUVColorSpace RenderBufferTextureHostSWGL::GetYUVColorSpace() const {
   }
 }
 
-bool RenderBufferTextureHostSWGL::MapPlane(RenderCompositor* aCompositor,
-                                           uint8_t aChannelIndex,
+bool RenderBufferTextureHostSWGL::MapPlane(uint8_t aChannelIndex,
                                            PlaneInfo& aPlaneInfo) {
   switch (mDescriptor.type()) {
     case layers::BufferDescriptor::TYCbCrDescriptor: {

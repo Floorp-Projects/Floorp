@@ -10,8 +10,7 @@
 namespace mozilla {
 namespace wr {
 
-bool RenderTextureHostSWGL::UpdatePlanes(RenderCompositor* aCompositor,
-                                         wr::ImageRendering aRendering) {
+bool RenderTextureHostSWGL::UpdatePlanes(wr::ImageRendering aRendering) {
   wr_swgl_make_current(mContext);
   size_t planeCount = GetPlaneCount();
   bool filterUpdate = IsFilterUpdateNecessary(aRendering);
@@ -26,7 +25,7 @@ bool RenderTextureHostSWGL::UpdatePlanes(RenderCompositor* aCompositor,
   gfx::ColorDepth colorDepth = GetColorDepth();
   for (size_t i = 0; i < planeCount; i++) {
     PlaneInfo& plane = mPlanes[i];
-    if (!MapPlane(aCompositor, i, plane)) {
+    if (!MapPlane(i, plane)) {
       if (i > 0) {
         UnmapPlanes();
       }
@@ -95,13 +94,12 @@ bool RenderTextureHostSWGL::SetContext(void* aContext) {
 }
 
 wr::WrExternalImage RenderTextureHostSWGL::LockSWGL(
-    uint8_t aChannelIndex, void* aContext, RenderCompositor* aCompositor,
-    wr::ImageRendering aRendering) {
+    uint8_t aChannelIndex, void* aContext, wr::ImageRendering aRendering) {
   if (!SetContext(aContext)) {
     return InvalidToWrExternalImage();
   }
   if (!mLocked) {
-    if (!UpdatePlanes(aCompositor, aRendering)) {
+    if (!UpdatePlanes(aRendering)) {
       return InvalidToWrExternalImage();
     }
     mLocked = true;
@@ -144,7 +142,7 @@ bool RenderTextureHostSWGL::LockSWGLCompositeSurface(
     return false;
   }
   if (!mLocked) {
-    if (!UpdatePlanes(nullptr, mCachedRendering)) {
+    if (!UpdatePlanes(mCachedRendering)) {
       return false;
     }
     mLocked = true;
