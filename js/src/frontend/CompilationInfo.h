@@ -93,7 +93,7 @@ struct ScopeContext {
 };
 
 struct CompilationAtomCache {
-  // Atoms lowered into or converted from CompilationStencil.parserAtoms.
+  // Atoms lowered into or converted from CompilationStencil.parserAtomData.
   //
   // This field is here instead of in CompilationGCOutput because atoms lowered
   // from JSAtom is part of input (enclosing scope bindings, lazy function name,
@@ -194,6 +194,8 @@ struct CompilationInput {
   void trace(JSTracer* trc);
 } JS_HAZ_GC_POINTER;
 
+struct CompilationStencil;
+
 struct MOZ_RAII CompilationState {
   // Until we have dealt with Atoms in the front end, we need to hold
   // onto them.
@@ -204,18 +206,13 @@ struct MOZ_RAII CompilationState {
   UsedNameTracker usedNames;
   LifoAllocScope& allocScope;
 
-  ParserAtomsTable& parserAtoms;
+  // Table of parser atoms for this compilation.
+  ParserAtomsTable parserAtoms;
 
-  CompilationState(JSContext* cx, LifoAllocScope& alloc,
+  CompilationState(JSContext* cx, LifoAllocScope& frontendAllocScope,
                    const JS::ReadOnlyCompileOptions& options,
-                   ParserAtomsTable& parserAtoms,
-                   Scope* enclosingScope = nullptr,
-                   JSObject* enclosingEnv = nullptr)
-      : directives(options.forceStrictMode()),
-        scopeContext(cx, enclosingScope, enclosingEnv),
-        usedNames(cx),
-        allocScope(alloc),
-        parserAtoms(parserAtoms) {}
+                   CompilationStencil& stencil, Scope* enclosingScope = nullptr,
+                   JSObject* enclosingEnv = nullptr);
 };
 
 // The top level struct of stencil.
@@ -254,14 +251,13 @@ struct CompilationStencil {
           mozilla::DefaultHasher<FunctionIndex>, js::SystemAllocPolicy>
       asmJS;
 
-  // Table of parser atoms for this compilation.
-  ParserAtomsTable parserAtoms;
+  // List of parser atoms for this compilation.
+  ParserAtomVector parserAtomData;
 
   // Parameterized chunk size to use for LifoAlloc.
   static constexpr size_t LifoAllocChunkSize = 512;
 
-  explicit CompilationStencil(JSRuntime* rt)
-      : alloc(LifoAllocChunkSize), parserAtoms(rt, alloc) {}
+  CompilationStencil() : alloc(LifoAllocChunkSize) {}
 
   // We need a move-constructor to work with Rooted, but must be explicit in
   // order to steal the LifoAlloc data.
@@ -274,11 +270,9 @@ struct CompilationStencil {
         scopeData(std::move(other.scopeData)),
         moduleMetadata(std::move(other.moduleMetadata)),
         asmJS(std::move(other.asmJS)),
-        parserAtoms(std::move(other.parserAtoms)) {
-    // Steal the data from the LifoAlloc. Anything that holds a reference to
-    // this will need to be updated.
+        parserAtomData(std::move(other.parserAtomData)) {
+    // Steal the data from the LifoAlloc.
     alloc.steal(&other.alloc);
-    parserAtoms.updateLifoAlloc(alloc);
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
@@ -422,7 +416,7 @@ struct CompilationInfo {
 
   // Construct a CompilationInfo
   CompilationInfo(JSContext* cx, const JS::ReadOnlyCompileOptions& options)
-      : input(options), stencil(cx->runtime()) {}
+      : input(options) {}
 
   MOZ_MUST_USE bool prepareInputAndStencilForInstantiate(JSContext* cx);
   MOZ_MUST_USE bool prepareGCOutputForInstantiate(

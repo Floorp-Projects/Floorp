@@ -19,7 +19,7 @@
 
 #include "frontend/AbstractScopePtr.h"  // ScopeIndex
 #include "frontend/BytecodeSection.h"   // EmitScriptThingsVector
-#include "frontend/CompilationInfo.h"   // CompilationInfo
+#include "frontend/CompilationInfo.h"   // CompilationState, CompilationInfo
 #include "frontend/Parser.h"  // NewEmptyLexicalScopeData, NewEmptyGlobalScopeData, NewEmptyVarScopeData, NewEmptyFunctionScopeData
 #include "frontend/ParserAtom.h"        // ParserAtomsTable
 #include "frontend/smoosh_generated.h"  // CVec, Smoosh*, smoosh_*
@@ -34,9 +34,9 @@
 #include "js/RegExpFlags.h"           // JS::RegExpFlag, JS::RegExpFlags
 #include "js/RootingAPI.h"            // JS::MutableHandle
 #include "js/UniquePtr.h"             // js::UniquePtr
-#include "js/Utility.h"        // JS::UniqueTwoByteChars, StringBufferArena
-#include "vm/JSScript.h"       // JSScript
-#include "vm/ScopeKind.h"      // ScopeKind
+#include "js/Utility.h"    // JS::UniqueTwoByteChars, StringBufferArena
+#include "vm/JSScript.h"   // JSScript
+#include "vm/ScopeKind.h"  // ScopeKind
 #include "vm/SharedStencil.h"  // ImmutableScriptData, ScopeNote, TryNote, GCThingIndex
 
 using mozilla::Utf8Unit;
@@ -52,7 +52,7 @@ namespace frontend {
 // Given the result of SmooshMonkey's parser, Convert the list of atoms into
 // the list of ParserAtoms.
 bool ConvertAtoms(JSContext* cx, const SmooshResult& result,
-                  CompilationInfo& compilationInfo,
+                  CompilationState& compilationState,
                   Vector<const ParserAtom*>& allAtoms) {
   size_t numAtoms = result.all_atoms_len;
 
@@ -65,8 +65,7 @@ bool ConvertAtoms(JSContext* cx, const SmooshResult& result,
         smoosh_get_atom_at(result, i));
     auto len = smoosh_get_atom_len_at(result, i);
     const ParserAtom* atom =
-        compilationInfo.stencil.parserAtoms.internUtf8(cx, s, len)
-            .unwrapOr(nullptr);
+        compilationState.parserAtoms.internUtf8(cx, s, len).unwrapOr(nullptr);
     if (!atom) {
       return false;
     }
@@ -249,7 +248,8 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
 // Given the result of SmooshMonkey's parser, convert a list of RegExp data
 // into a list of RegExpStencil.
 bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
-                       CompilationInfo& compilationInfo) {
+                       CompilationInfo& compilationInfo,
+                       CompilationState& compilationState) {
   for (size_t i = 0; i < result.regexps.len; i++) {
     SmooshRegExpItem& item = result.regexps.data[i];
     auto s = smoosh_get_slice_at(result, item.pattern);
@@ -300,7 +300,7 @@ bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
     const mozilla::Utf8Unit* sUtf8 =
         reinterpret_cast<const mozilla::Utf8Unit*>(s);
     const ParserAtom* atom =
-        compilationInfo.stencil.parserAtoms.internUtf8(cx, sUtf8, len)
+        compilationState.parserAtoms.internUtf8(cx, sUtf8, len)
             .unwrapOr(nullptr);
     if (!atom) {
       return false;
@@ -562,8 +562,12 @@ bool Smoosh::compileGlobalScriptToStencil(JSContext* cx,
 
   *unimplemented = false;
 
+  LifoAllocScope allocScope(&cx->tempLifoAlloc());
+
   Vector<const ParserAtom*> allAtoms(cx);
-  if (!ConvertAtoms(cx, result, compilationInfo, allAtoms)) {
+  CompilationState compilationState(
+      cx, allocScope, compilationInfo.input.options, compilationInfo.stencil);
+  if (!ConvertAtoms(cx, result, compilationState, allAtoms)) {
     return false;
   }
 
@@ -571,7 +575,7 @@ bool Smoosh::compileGlobalScriptToStencil(JSContext* cx,
     return false;
   }
 
-  if (!ConvertRegExpData(cx, result, compilationInfo)) {
+  if (!ConvertRegExpData(cx, result, compilationInfo, compilationState)) {
     return false;
   }
 

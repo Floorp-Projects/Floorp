@@ -10297,10 +10297,9 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
     }
   }
 
-  const ParserAtom* atom =
-      this->getCompilationInfo()
-          .stencil.parserAtoms.internChar16(cx_, chars.begin(), chars.length())
-          .unwrapOr(nullptr);
+  const ParserAtom* atom = this->compilationState_.parserAtoms
+                               .internChar16(cx_, chars.begin(), chars.length())
+                               .unwrapOr(nullptr);
   if (!atom) {
     return nullptr;
   }
