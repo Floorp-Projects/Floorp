@@ -145,8 +145,7 @@ gfx::YUVColorSpace RenderMacIOSurfaceTextureHost::GetYUVColorSpace() const {
   return mSurface->GetYUVColorSpace();
 }
 
-bool RenderMacIOSurfaceTextureHost::MapPlane(RenderCompositor* aCompositor,
-                                             uint8_t aChannelIndex,
+bool RenderMacIOSurfaceTextureHost::MapPlane(uint8_t aChannelIndex,
                                              PlaneInfo& aPlaneInfo) {
   if (!aChannelIndex) {
     mSurface->Lock();

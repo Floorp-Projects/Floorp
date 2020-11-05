@@ -32,8 +32,7 @@ class RenderSharedSurfaceTextureHostSWGL final : public RenderTextureHostSWGL {
 
   gfx::ColorDepth GetColorDepth() const override;
 
-  bool MapPlane(RenderCompositor* aCompositor, uint8_t aChannelIndex,
-                PlaneInfo& aPlaneInfo) override;
+  bool MapPlane(uint8_t aChannelIndex, PlaneInfo& aPlaneInfo) override;
 
   void UnmapPlanes() override;
 

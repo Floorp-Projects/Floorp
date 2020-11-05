@@ -113,8 +113,6 @@ class RendererOGL {
 
   RenderTextureHost* GetRenderTexture(wr::ExternalImageId aExternalImageId);
 
-  RenderCompositor* GetCompositor() { return mCompositor.get(); }
-
   void AccumulateMemoryReport(MemoryReport* aReport);
 
   void SetProfilerUI(const nsCString& aUI);

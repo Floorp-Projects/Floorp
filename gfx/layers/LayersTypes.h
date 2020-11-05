@@ -182,7 +182,6 @@ enum class WebRenderCompositor : int8_t {
   DIRECT_COMPOSITION,
   CORE_ANIMATION,
   SOFTWARE,
-  D3D11,
   LAST
 };
 

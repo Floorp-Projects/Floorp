@@ -34,8 +34,7 @@ gfx::ColorDepth RenderSharedSurfaceTextureHostSWGL::GetColorDepth() const {
   return gfx::ColorDepth::COLOR_8;
 }
 
-bool RenderSharedSurfaceTextureHostSWGL::MapPlane(RenderCompositor* aCompositor,
-                                                  uint8_t aChannelIndex,
+bool RenderSharedSurfaceTextureHostSWGL::MapPlane(uint8_t aChannelIndex,
                                                   PlaneInfo& aPlaneInfo) {
   if (NS_WARN_IF(
           !mSurface->Map(gfx::DataSourceSurface::MapType::READ, &mMap))) {
