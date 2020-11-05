@@ -109,10 +109,11 @@ gfx::YUVColorSpace RenderTextureHostWrapper::GetYUVColorSpace() const {
   return gfx::YUVColorSpace::UNKNOWN;
 }
 
-bool RenderTextureHostWrapper::MapPlane(uint8_t aChannelIndex,
+bool RenderTextureHostWrapper::MapPlane(RenderCompositor* aCompositor,
+                                        uint8_t aChannelIndex,
                                         PlaneInfo& aPlaneInfo) {
   if (RenderTextureHostSWGL* swglHost = EnsureRenderTextureHostSWGL()) {
-    return swglHost->MapPlane(aChannelIndex, aPlaneInfo);
+    return swglHost->MapPlane(aCompositor, aChannelIndex, aPlaneInfo);
   }
   return false;
 }
