@@ -986,8 +986,12 @@ pub trait Compositor {
 
     /// Notify the compositor that all tiles have been invalidated and all
     /// native surfaces have been added, thus it is safe to start compositing
-    /// valid surfaces.
-    fn start_compositing(&mut self) {}
+    /// valid surfaces. The dirty rects array allows native compositors that
+    /// support partial present to skip copying unchanged areas.
+    fn start_compositing(
+        &mut self,
+        _dirty_rects: &[DeviceIntRect],
+    ) {}
 
     /// Commit any changes in the compositor tree for this frame. WR calls
     /// this once when all surface and visual updates are complete, to signal
