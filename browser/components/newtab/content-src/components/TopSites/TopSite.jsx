@@ -261,19 +261,19 @@ export class TopSiteLink extends React.PureComponent {
                 />
               )}
             </div>
-            <div
-              className={`title${link.isPinned ? " has-icon pinned" : ""}${
-                link.type === SPOC_TYPE || link.sponsored_position
-                  ? " sponsored"
-                  : ""
-              }`}
-            >
+            <div className={`title${link.isPinned ? " has-icon pinned" : ""}`}>
               {link.isPinned && <div className="icon icon-pin-small" />}
               <span dir="auto">{title || <br />}</span>
-              <span
-                className="sponsored-label"
-                data-l10n-id="newtab-topsite-sponsored"
-              />
+              {link.type === SPOC_TYPE || link.sponsored_position ? (
+                <span
+                  className="sponsored-label"
+                  data-l10n-id="newtab-topsite-sponsored"
+                />
+              ) : (
+                <span className="sponsored-label">
+                  <br />
+                </span>
+              )}
             </div>
           </a>
           {children}
@@ -563,33 +563,11 @@ export class TopSiteList extends React.PureComponent {
         if (index === this.state.draggedIndex) {
           this.setState({ topSitesPreview: null });
         } else {
-          let topSites = this._getTopSites();
-          let adjustedIndex = index;
-          // Disallow dropping on sponsored sites since their position is
-          // fixed.
-          while (topSites[adjustedIndex]?.sponsored_position) {
-            adjustedIndex++;
-          }
-          this.setState({
-            topSitesPreview: this._makeTopSitesPreview(adjustedIndex),
-          });
+          this.setState({ topSitesPreview: this._makeTopSitesPreview(index) });
         }
         break;
       case "drop":
         if (index !== this.state.draggedIndex) {
-          // Adjust insertion index for sponsored sites since their position is
-          // fixed.
-          let topSites = this._getTopSites();
-          let adjustedIndex = index;
-          for (let i = 0; i < index; i++) {
-            if (
-              topSites[i]?.sponsored_position &&
-              i !== this.state.draggedIndex
-            ) {
-              adjustedIndex--;
-            }
-          }
-
           this.dropped = true;
           this.props.dispatch(
             ac.AlsoToMain({
@@ -605,12 +583,12 @@ export class TopSiteList extends React.PureComponent {
                     searchTopSite: true,
                   }),
                 },
-                index: adjustedIndex,
+                index,
                 draggedFromIndex: this.state.draggedIndex,
               },
             })
           );
-          this.userEvent("DROP", adjustedIndex);
+          this.userEvent("DROP", index);
         }
         break;
     }
@@ -630,45 +608,37 @@ export class TopSiteList extends React.PureComponent {
   _makeTopSitesPreview(index) {
     const topSites = this._getTopSites();
     topSites[this.state.draggedIndex] = null;
-    const preview = topSites.map(site =>
-      site && (site.isPinned || site.sponsored_position) ? site : null
+    const pinnedOnly = topSites.map(site =>
+      site && site.isPinned ? site : null
     );
-    const unpinned = topSites.filter(
-      site => site && !site.isPinned && !site.sponsored_position
-    );
+    const unpinned = topSites.filter(site => site && !site.isPinned);
     const siteToInsert = Object.assign({}, this.state.draggedSite, {
       isPinned: true,
-      sponsored_position: 0,
       isDragged: true,
     });
-
-    if (!preview[index]) {
-      preview[index] = siteToInsert;
+    if (!pinnedOnly[index]) {
+      pinnedOnly[index] = siteToInsert;
     } else {
       // Find the hole to shift the pinned site(s) towards. We shift towards the
       // hole left by the site being dragged.
       let holeIndex = index;
       const indexStep = index > this.state.draggedIndex ? -1 : 1;
-      while (preview[holeIndex]) {
+      while (pinnedOnly[holeIndex]) {
         holeIndex += indexStep;
       }
 
       // Shift towards the hole.
       const shiftingStep = index > this.state.draggedIndex ? 1 : -1;
-      while (
-        index > this.state.draggedIndex ? holeIndex < index : holeIndex > index
-      ) {
-        let nextIndex = holeIndex + shiftingStep;
-        while (preview[nextIndex]?.sponsored_position) {
-          nextIndex += shiftingStep;
-        }
-        preview[holeIndex] = preview[nextIndex];
+      while (holeIndex !== index) {
+        const nextIndex = holeIndex + shiftingStep;
+        pinnedOnly[holeIndex] = pinnedOnly[nextIndex];
         holeIndex = nextIndex;
       }
-      preview[index] = siteToInsert;
+      pinnedOnly[index] = siteToInsert;
     }
 
     // Fill in the remaining holes with unpinned sites.
+    const preview = pinnedOnly;
     for (let i = 0; i < preview.length; i++) {
       if (!preview[i]) {
         preview[i] = unpinned.shift() || null;
