@@ -180,10 +180,11 @@ class ScopeStencil {
   // True if this is a FunctionScope for an arrow function.
   bool isArrow_ = false;
 
-  // The list of binding and scope-specific data. Note that the back pointers to
-  // the owning JSFunction / ModuleObject are not set until Stencils are
-  // converted to GC allocations.
-  js::UniquePtr<BaseParserScopeData> data_;
+  // The list of binding and scope-specific data.
+  // Note: The back pointers to the owning JSFunction / ModuleObject are not set
+  //       until Stencils are converted to GC allocations.
+  // Note: This allocation is owned by CompilationStencil.
+  BaseParserScopeData* data_ = nullptr;
 
  public:
   // For XDR only.
@@ -202,8 +203,6 @@ class ScopeStencil {
         functionIndex_(functionIndex),
         isArrow_(isArrow),
         data_(data) {}
-
-  js::UniquePtr<BaseParserScopeData>& data() { return data_; }
 
   static bool createForFunctionScope(JSContext* cx, CompilationStencil& stencil,
                                      ParserFunctionScopeData* dataArg,
@@ -281,7 +280,7 @@ class ScopeStencil {
         typename SpecificScopeType ::template AbstractData<const ParserAtom>;
 
     MOZ_ASSERT(data_);
-    return *static_cast<Data*>(data_.get());
+    return *static_cast<Data*>(data_);
   }
 
   // Transfer ownership into a new UniquePtr.

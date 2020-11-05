@@ -1022,7 +1022,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
 
   switch (kind_) {
     case ScopeKind::Function: {
-      auto* data = static_cast<ParserFunctionScopeData*>(data_.get());
+      auto* data = static_cast<ParserFunctionScopeData*>(data_);
       json.property("nextFrameSlot", data->nextFrameSlot);
       json.property("hasParameterExprs", data->hasParameterExprs);
       json.property("nonPositionalFormalStart", data->nonPositionalFormalStart);
@@ -1034,7 +1034,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
     }
 
     case ScopeKind::FunctionBodyVar: {
-      auto* data = static_cast<ParserVarScopeData*>(data_.get());
+      auto* data = static_cast<ParserVarScopeData*>(data_);
       json.property("nextFrameSlot", data->nextFrameSlot);
 
       trailingNames = &data->trailingNames;
@@ -1049,7 +1049,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
     case ScopeKind::StrictNamedLambda:
     case ScopeKind::FunctionLexical:
     case ScopeKind::ClassBody: {
-      auto* data = static_cast<ParserLexicalScopeData*>(data_.get());
+      auto* data = static_cast<ParserLexicalScopeData*>(data_);
       json.property("nextFrameSlot", data->nextFrameSlot);
       json.property("constStart", data->constStart);
 
@@ -1064,7 +1064,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
 
     case ScopeKind::Eval:
     case ScopeKind::StrictEval: {
-      auto* data = static_cast<ParserEvalScopeData*>(data_.get());
+      auto* data = static_cast<ParserEvalScopeData*>(data_);
       json.property("nextFrameSlot", data->nextFrameSlot);
 
       trailingNames = &data->trailingNames;
@@ -1074,7 +1074,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
 
     case ScopeKind::Global:
     case ScopeKind::NonSyntactic: {
-      auto* data = static_cast<ParserGlobalScopeData*>(data_.get());
+      auto* data = static_cast<ParserGlobalScopeData*>(data_);
       json.property("letStart", data->letStart);
       json.property("constStart", data->constStart);
 
@@ -1084,7 +1084,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
     }
 
     case ScopeKind::Module: {
-      auto* data = static_cast<ParserModuleScopeData*>(data_.get());
+      auto* data = static_cast<ParserModuleScopeData*>(data_);
       json.property("nextFrameSlot", data->nextFrameSlot);
       json.property("varStart", data->varStart);
       json.property("letStart", data->letStart);
@@ -1098,7 +1098,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
     case ScopeKind::WasmInstance: {
       auto* data =
           static_cast<AbstractScopeData<WasmInstanceScope, const ParserAtom>*>(
-              data_.get());
+              data_);
       json.property("nextFrameSlot", data->nextFrameSlot);
       json.property("globalsStart", data->globalsStart);
 
@@ -1110,7 +1110,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
     case ScopeKind::WasmFunction: {
       auto* data =
           static_cast<AbstractScopeData<WasmFunctionScope, const ParserAtom>*>(
-              data_.get());
+              data_);
       json.property("nextFrameSlot", data->nextFrameSlot);
 
       trailingNames = &data->trailingNames;
