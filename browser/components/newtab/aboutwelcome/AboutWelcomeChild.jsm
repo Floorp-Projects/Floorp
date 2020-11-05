@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   DEFAULT_SITES: "resource://activity-stream/lib/DefaultSites.jsm",
   ExperimentAPI: "resource://messaging-system/experiments/ExperimentAPI.jsm",
   shortURL: "resource://activity-stream/lib/ShortURL.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   TippyTopProvider: "resource://activity-stream/lib/TippyTopProvider.jsm",
 });
 
@@ -189,8 +190,8 @@ class AboutWelcomeChild extends JSWindowActorChild {
       defineAs: "AWGetSelectedTheme",
     });
 
-    Cu.exportFunction(this.AWGetRegion.bind(this), window, {
-      defineAs: "AWGetRegion",
+    Cu.exportFunction(this.AWWaitForRegionChange.bind(this), window, {
+      defineAs: "AWWaitForRegionChange",
     });
 
     Cu.exportFunction(this.AWSelectTheme.bind(this), window, {
@@ -365,8 +366,21 @@ class AboutWelcomeChild extends JSWindowActorChild {
     return this.wrapPromise(this.sendQuery("AWPage:WAIT_FOR_MIGRATION_CLOSE"));
   }
 
-  AWGetRegion() {
-    return this.wrapPromise(this.sendQuery("AWPage:GET_REGION"));
+  AWWaitForRegionChange() {
+    return this.wrapPromise(
+      new Promise(resolve =>
+        Services.prefs.addObserver(SEARCH_REGION_PREF, function observer(
+          subject,
+          topic,
+          data
+        ) {
+          if (data === SEARCH_REGION_PREF && topic === "nsPref:changed") {
+            Services.prefs.removeObserver(SEARCH_REGION_PREF, observer);
+            resolve(searchRegion);
+          }
+        })
+      )
+    );
   }
 
   /**
