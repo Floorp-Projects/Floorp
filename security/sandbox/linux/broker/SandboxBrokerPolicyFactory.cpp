@@ -503,7 +503,7 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
     }
     policy->AddPath(SandboxBroker::MAY_CONNECT, bumblebeeSocket);
 
-#if defined(MOZ_WIDGET_GTK) && defined(MOZ_X11)
+#if defined(MOZ_WIDGET_GTK)
     // Allow local X11 connections, for Primus and VirtualGL to contact
     // the secondary X server. No exception for Wayland.
 #  if defined(MOZ_WAYLAND)
