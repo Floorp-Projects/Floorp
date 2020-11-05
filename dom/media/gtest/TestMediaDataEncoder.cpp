@@ -13,7 +13,6 @@
 #include "PEMFactory.h"
 #include "TimeUnits.h"
 #include "VideoUtils.h"
-
 #include <algorithm>
 
 #include <fstream>
@@ -136,7 +135,10 @@ class MediaDataEncoderTest : public testing::Test {
 };
 
 static already_AddRefed<MediaDataEncoder> CreateH264Encoder(
-    MediaDataEncoder::Usage aUsage, MediaDataEncoder::PixelFormat aPixelFormat,
+    MediaDataEncoder::Usage aUsage = MediaDataEncoder::Usage::Realtime,
+    MediaDataEncoder::PixelFormat aPixelFormat =
+        MediaDataEncoder::PixelFormat::YUV420P,
+    int32_t aWidth = WIDTH, int32_t aHeight = HEIGHT,
     const Maybe<MediaDataEncoder::H264Specific>& aSpecific =
         Some(MediaDataEncoder::H264Specific(
             KEYFRAME_INTERVAL,
@@ -147,10 +149,10 @@ static already_AddRefed<MediaDataEncoder> CreateH264Encoder(
     return nullptr;
   }
 
-  VideoInfo videoInfo(WIDTH, HEIGHT);
+  VideoInfo videoInfo(aWidth, aHeight);
   videoInfo.mMimeType = nsLiteralCString(VIDEO_MP4);
   const RefPtr<TaskQueue> taskQueue(
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR)));
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_ENCODER)));
 
   RefPtr<MediaDataEncoder> e;
   if (aSpecific) {
@@ -188,9 +190,7 @@ void WaitForShutdown(RefPtr<MediaDataEncoder> aEncoder) {
 TEST_F(MediaDataEncoderTest, H264Create) {
   SKIP_IF_NOT_SUPPORTED(VIDEO_MP4);
 
-  RefPtr<MediaDataEncoder> e =
-      CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
-                        MediaDataEncoder::PixelFormat::YUV420P);
+  RefPtr<MediaDataEncoder> e = CreateH264Encoder();
 
   EXPECT_TRUE(e);
 
@@ -216,9 +216,9 @@ static bool EnsureInit(RefPtr<MediaDataEncoder> aEncoder) {
 TEST_F(MediaDataEncoderTest, H264InitWithoutSpecific) {
   SKIP_IF_NOT_SUPPORTED(VIDEO_MP4);
 
-  RefPtr<MediaDataEncoder> e =
-      CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
-                        MediaDataEncoder::PixelFormat::YUV420P, Nothing());
+  RefPtr<MediaDataEncoder> e = CreateH264Encoder(
+      MediaDataEncoder::Usage::Realtime, MediaDataEncoder::PixelFormat::YUV420P,
+      WIDTH, HEIGHT, Nothing());
 
 #if defined(MOZ_WIDGET_ANDROID)  // Android encoder requires I-frame interval
   EXPECT_FALSE(EnsureInit(e));
@@ -232,9 +232,7 @@ TEST_F(MediaDataEncoderTest, H264InitWithoutSpecific) {
 TEST_F(MediaDataEncoderTest, H264Init) {
   SKIP_IF_NOT_SUPPORTED(VIDEO_MP4);
 
-  RefPtr<MediaDataEncoder> e =
-      CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
-                        MediaDataEncoder::PixelFormat::YUV420P);
+  RefPtr<MediaDataEncoder> e = CreateH264Encoder();
 
   EXPECT_TRUE(EnsureInit(e));
 
@@ -284,9 +282,7 @@ static MediaDataEncoder::EncodedData Encode(
 TEST_F(MediaDataEncoderTest, H264EncodeOneFrameAsAnnexB) {
   SKIP_IF_NOT_SUPPORTED(VIDEO_MP4);
 
-  RefPtr<MediaDataEncoder> e =
-      CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
-                        MediaDataEncoder::PixelFormat::YUV420P);
+  RefPtr<MediaDataEncoder> e = CreateH264Encoder();
   EnsureInit(e);
 
   MediaDataEncoder::EncodedData output = Encode(e, 1UL, mData);
@@ -299,9 +295,7 @@ TEST_F(MediaDataEncoderTest, H264EncodeOneFrameAsAnnexB) {
 TEST_F(MediaDataEncoderTest, EncodeMultipleFramesAsAnnexB) {
   SKIP_IF_NOT_SUPPORTED(VIDEO_MP4);
 
-  RefPtr<MediaDataEncoder> e =
-      CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
-                        MediaDataEncoder::PixelFormat::YUV420P);
+  RefPtr<MediaDataEncoder> e = CreateH264Encoder();
   EnsureInit(e);
 
   MediaDataEncoder::EncodedData output = Encode(e, NUM_FRAMES, mData);
@@ -316,8 +310,8 @@ TEST_F(MediaDataEncoderTest, EncodeMultipleFramesAsAnnexB) {
 TEST_F(MediaDataEncoderTest, EncodeMultipleFramesAsAVCC) {
   SKIP_IF_NOT_SUPPORTED(VIDEO_MP4);
 
-  RefPtr<MediaDataEncoder> e = CreateH264Encoder(
-      MediaDataEncoder::Usage::Record, MediaDataEncoder::PixelFormat::YUV420P);
+  RefPtr<MediaDataEncoder> e =
+      CreateH264Encoder(MediaDataEncoder::Usage::Record);
   EnsureInit(e);
 
   MediaDataEncoder::EncodedData output = Encode(e, NUM_FRAMES, mData);
@@ -329,3 +323,39 @@ TEST_F(MediaDataEncoderTest, EncodeMultipleFramesAsAVCC) {
 
   WaitForShutdown(e);
 }
+
+#ifndef DEBUG  // Zero width or height will assert/crash in debug builds.
+TEST_F(MediaDataEncoderTest, InvalidSize) {
+  SKIP_IF_NOT_SUPPORTED(VIDEO_MP4);
+
+  RefPtr<MediaDataEncoder> e0x0 =
+      CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
+                        MediaDataEncoder::PixelFormat::YUV420P, 0, 0);
+  EXPECT_NE(e0x0, nullptr);
+  EXPECT_FALSE(EnsureInit(e0x0));
+
+  RefPtr<MediaDataEncoder> e0x1 =
+      CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
+                        MediaDataEncoder::PixelFormat::YUV420P, 0, 1);
+  EXPECT_NE(e0x1, nullptr);
+  EXPECT_FALSE(EnsureInit(e0x1));
+
+  RefPtr<MediaDataEncoder> e1x0 =
+      CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
+                        MediaDataEncoder::PixelFormat::YUV420P, 1, 0);
+  EXPECT_NE(e1x0, nullptr);
+  EXPECT_FALSE(EnsureInit(e1x0));
+}
+#endif
+
+#ifdef MOZ_WIDGET_ANDROID
+TEST_F(MediaDataEncoderTest, AndroidNotSupportedSize) {
+  SKIP_IF_NOT_SUPPORTED(VIDEO_MP4);
+
+  RefPtr<MediaDataEncoder> e =
+      CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
+                        MediaDataEncoder::PixelFormat::YUV420P, 1, 1);
+  EXPECT_NE(e, nullptr);
+  EXPECT_FALSE(EnsureInit(e));
+}
+#endif
