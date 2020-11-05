@@ -5111,8 +5111,9 @@ int32_t Simulator::call(uint8_t* entry, int argument_count, ...) {
   va_start(parameters, argument_count);
 
   // First four arguments passed in registers.
-  MOZ_ASSERT(argument_count >= 1);
-  set_register(r0, va_arg(parameters, int32_t));
+  if (argument_count >= 1) {
+    set_register(r0, va_arg(parameters, int32_t));
+  }
   if (argument_count >= 2) {
     set_register(r1, va_arg(parameters, int32_t));
   }
