@@ -8,7 +8,7 @@
 #define MOZILLA_GFX_RENDERD3D11TEXTUREHOST_H
 
 #include "GLTypes.h"
-#include "RenderTextureHostSWGL.h"
+#include "RenderTextureHost.h"
 
 struct ID3D11Texture2D;
 struct IDXGIKeyedMutex;
@@ -17,7 +17,7 @@ namespace mozilla {
 
 namespace wr {
 
-class RenderDXGITextureHost final : public RenderTextureHostSWGL {
+class RenderDXGITextureHost final : public RenderTextureHost {
  public:
   explicit RenderDXGITextureHost(WindowsHandle aHandle,
                                  gfx::SurfaceFormat aFormat,
@@ -37,31 +37,13 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
 
   RenderDXGITextureHost* AsRenderDXGITextureHost() override { return this; }
 
+  gfx::SurfaceFormat GetFormat() const { return mFormat; }
+
+  gfx::YUVColorSpace GetYUVColorSpace() const { return mYUVColorSpace; }
+
   gfx::ColorRange GetColorRange() const { return mColorRange; }
 
   ID3D11Texture2D* GetD3D11Texture2D();
-
-  // RenderTextureHostSWGL
-  gfx::SurfaceFormat GetFormat() const override { return mFormat; }
-  gfx::ColorDepth GetColorDepth() const override {
-    if (mFormat == gfx::SurfaceFormat::P010) {
-      return gfx::ColorDepth::COLOR_10;
-    }
-    if (mFormat == gfx::SurfaceFormat::P016) {
-      return gfx::ColorDepth::COLOR_16;
-    }
-    return gfx::ColorDepth::COLOR_8;
-  }
-  size_t GetPlaneCount() const override;
-  bool MapPlane(RenderCompositor* aCompositor, uint8_t aChannelIndex,
-                PlaneInfo& aPlaneInfo) override;
-  void UnmapPlanes() override;
-  gfx::YUVColorSpace GetYUVColorSpace() const override {
-    return mYUVColorSpace;
-  }
-
-  bool EnsureD3D11Texture2D(ID3D11Device* aDevice);
-  bool LockInternal();
 
  private:
   virtual ~RenderDXGITextureHost();
@@ -76,11 +58,6 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
   WindowsHandle mHandle;
   RefPtr<ID3D11Texture2D> mTexture;
   RefPtr<IDXGIKeyedMutex> mKeyedMutex;
-
-  // Temporary state between MapPlane and UnmapPlanes.
-  RefPtr<ID3D11DeviceContext> mDeviceContext;
-  RefPtr<ID3D11Texture2D> mCpuTexture;
-  D3D11_MAPPED_SUBRESOURCE mMappedSubresource;
 
   EGLSurface mSurface;
   EGLStreamKHR mStream;
@@ -97,18 +74,11 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
   bool mLocked;
 };
 
-class RenderDXGIYCbCrTextureHost final : public RenderTextureHostSWGL {
+class RenderDXGIYCbCrTextureHost final : public RenderTextureHost {
  public:
   explicit RenderDXGIYCbCrTextureHost(WindowsHandle (&aHandles)[3],
-                                      gfx::YUVColorSpace aYUVColorSpace,
-                                      gfx::ColorDepth aColorDepth,
-                                      gfx::ColorRange aColorRange,
                                       gfx::IntSize aSizeY,
                                       gfx::IntSize aSizeCbCr);
-
-  RenderDXGIYCbCrTextureHost* AsRenderDXGIYCbCrTextureHost() override {
-    return this;
-  }
 
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
                            wr::ImageRendering aRendering) override;
@@ -119,28 +89,6 @@ class RenderDXGIYCbCrTextureHost final : public RenderTextureHostSWGL {
   GLuint GetGLHandle(uint8_t aChannelIndex) const;
 
   bool SyncObjectNeeded() override { return true; }
-
-  gfx::ColorRange GetColorRange() const { return mColorRange; }
-
-  // RenderTextureHostSWGL
-  gfx::SurfaceFormat GetFormat() const override {
-    return gfx::SurfaceFormat::YUV;
-  }
-  gfx::ColorDepth GetColorDepth() const override { return mColorDepth; }
-  size_t GetPlaneCount() const override { return 3; }
-  bool MapPlane(RenderCompositor* aCompositor, uint8_t aChannelIndex,
-                PlaneInfo& aPlaneInfo) override;
-  void UnmapPlanes() override;
-  gfx::YUVColorSpace GetYUVColorSpace() const override {
-    return mYUVColorSpace;
-  }
-
-  bool EnsureD3D11Texture2D(ID3D11Device* aDevice);
-  bool LockInternal();
-
-  ID3D11Texture2D* GetD3D11Texture2D(uint8_t aChannelIndex) {
-    return mTextures[aChannelIndex];
-  }
 
  private:
   virtual ~RenderDXGIYCbCrTextureHost();
@@ -161,13 +109,6 @@ class RenderDXGIYCbCrTextureHost final : public RenderTextureHostSWGL {
   // The gl handles for Y, Cb and Cr data.
   GLuint mTextureHandles[3];
 
-  // Temporary state between MapPlane and UnmapPlanes.
-  RefPtr<ID3D11DeviceContext> mDeviceContext;
-  RefPtr<ID3D11Texture2D> mCpuTexture[3];
-
-  gfx::YUVColorSpace mYUVColorSpace;
-  gfx::ColorDepth mColorDepth;
-  gfx::ColorRange mColorRange;
   gfx::IntSize mSizeY;
   gfx::IntSize mSizeCbCr;
 
