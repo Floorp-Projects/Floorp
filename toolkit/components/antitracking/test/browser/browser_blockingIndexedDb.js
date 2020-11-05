@@ -1,5 +1,7 @@
 /* import-globals-from antitracking_head.js */
 
+requestLongerTimeout(4);
+
 AntiTracking.runTestInNormalAndPrivateMode(
   "IndexedDB",
   // blocking callback
