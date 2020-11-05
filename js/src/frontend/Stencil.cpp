@@ -229,8 +229,8 @@ static JSFunction* CreateFunction(JSContext* cx,
 }
 
 static bool InstantiateAtoms(JSContext* cx, CompilationInfo& compilationInfo) {
-  return compilationInfo.stencil.parserAtoms.instantiateMarkedAtoms(
-      cx, compilationInfo.input.atomCache);
+  return InstantiateMarkedAtoms(cx, compilationInfo.stencil.parserAtomData,
+                                compilationInfo.input.atomCache);
 }
 
 static bool InstantiateScriptSourceObject(JSContext* cx,
@@ -800,7 +800,7 @@ bool CompilationInfoVector::instantiateStencilsAfterPreparation(
 
 bool CompilationInfo::prepareInputAndStencilForInstantiate(JSContext* cx) {
   if (!input.atomCache.atoms.reserve(
-          stencil.parserAtoms.requiredNonStaticAtomCount())) {
+          RequiredNonStaticAtomCount(stencil.parserAtomData))) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -888,7 +888,7 @@ bool CompilationInfoVector::deserializeStencils(JSContext* cx,
   if (succeededOut) {
     *succeededOut = false;
   }
-  MOZ_ASSERT(initial.stencil.parserAtoms.empty());
+  MOZ_ASSERT(initial.stencil.parserAtomData.empty());
   XDRStencilDecoder decoder(cx, &initial.input.options, range);
 
   XDRResult res = decoder.codeStencils(*this);
@@ -906,6 +906,18 @@ bool CompilationInfoVector::deserializeStencils(JSContext* cx,
   }
   return true;
 }
+
+CompilationState::CompilationState(JSContext* cx,
+                                   LifoAllocScope& frontendAllocScope,
+                                   const JS::ReadOnlyCompileOptions& options,
+                                   CompilationStencil& stencil,
+                                   Scope* enclosingScope /* = nullptr */,
+                                   JSObject* enclosingEnv /* = nullptr */)
+    : directives(options.forceStrictMode()),
+      scopeContext(cx, enclosingScope, enclosingEnv),
+      usedNames(cx),
+      allocScope(frontendAllocScope),
+      parserAtoms(cx->runtime(), stencil.alloc, stencil.parserAtomData) {}
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
 

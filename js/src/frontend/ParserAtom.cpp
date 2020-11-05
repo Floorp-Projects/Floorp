@@ -317,8 +317,11 @@ void ParserAtomEntry::dumpCharsNoQuote(js::GenericPrinter& out) const {
 }
 #endif
 
-ParserAtomsTable::ParserAtomsTable(JSRuntime* rt, LifoAlloc& alloc)
-    : wellKnownTable_(*rt->commonParserNames), alloc_(&alloc) {}
+ParserAtomsTable::ParserAtomsTable(JSRuntime* rt, LifoAlloc& alloc,
+                                   ParserAtomVector& entries)
+    : wellKnownTable_(*rt->commonParserNames),
+      alloc_(alloc),
+      entries_(entries) {}
 
 JS::Result<const ParserAtom*, OOM> ParserAtomsTable::addEntry(
     JSContext* cx, EntryMap::AddPtr& addPtr, ParserAtomEntry* entry) {
@@ -340,7 +343,7 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internChar16Seq(
   MOZ_ASSERT(!addPtr);
 
   ParserAtomEntry* entry;
-  MOZ_TRY_VAR(entry, ParserAtomEntry::allocate<AtomCharT>(cx, *alloc_, seq,
+  MOZ_TRY_VAR(entry, ParserAtomEntry::allocate<AtomCharT>(cx, alloc_, seq,
                                                           length, hash));
   return addEntry(cx, addPtr, entry);
 }
@@ -350,7 +353,7 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internChar16Seq(
     JSContext* cx, HashNumber hash, InflatedChar16Sequence<SeqCharT> seq,
     uint32_t length) {
   ParserAtomEntry* entry;
-  MOZ_TRY_VAR(entry, ParserAtomEntry::allocate<AtomCharT>(cx, *alloc_, seq,
+  MOZ_TRY_VAR(entry, ParserAtomEntry::allocate<AtomCharT>(cx, alloc_, seq,
                                                           length, hash));
 
   ParserAtomIndex index = ParserAtomIndex(entries_.length());
@@ -623,9 +626,9 @@ const ParserAtom* ParserAtomsTable::getStatic2(StaticParserString2 s) const {
   return WellKnownParserAtoms::rom_.length2Table[size_t(s)].asAtom();
 }
 
-size_t ParserAtomsTable::requiredNonStaticAtomCount() const {
+size_t RequiredNonStaticAtomCount(const ParserAtomVector& entries) {
   size_t count = 0;
-  for (const auto& entry : entries_) {
+  for (const auto& entry : entries) {
     if (entry->isNotInstantiatedAndMarked() || entry->isAtomIndex()) {
       count++;
     }
@@ -633,9 +636,9 @@ size_t ParserAtomsTable::requiredNonStaticAtomCount() const {
   return count;
 }
 
-bool ParserAtomsTable::instantiateMarkedAtoms(
-    JSContext* cx, CompilationAtomCache& atomCache) const {
-  for (const auto& entry : entries_) {
+bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomVector& entries,
+                            CompilationAtomCache& atomCache) {
+  for (const auto& entry : entries) {
     if (entry->isNotInstantiatedAndMarked()) {
       if (!entry->instantiate(cx, atomCache)) {
         return false;

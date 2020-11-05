@@ -100,12 +100,12 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
  protected:
   explicit SourceAwareCompiler(JSContext* cx, LifoAllocScope& allocScope,
                                const JS::ReadOnlyCompileOptions& options,
-                               ParserAtomsTable& parserAtoms,
+                               CompilationStencil& stencil,
                                SourceText<Unit>& sourceBuffer,
                                js::Scope* enclosingScope = nullptr,
                                JSObject* enclosingEnv = nullptr)
       : sourceBuffer_(sourceBuffer),
-        compilationState_(cx, allocScope, options, parserAtoms, enclosingScope,
+        compilationState_(cx, allocScope, options, stencil, enclosingScope,
                           enclosingEnv) {
     MOZ_ASSERT(sourceBuffer_.get() != nullptr);
   }
@@ -161,11 +161,11 @@ class MOZ_STACK_CLASS frontend::ScriptCompiler
  public:
   explicit ScriptCompiler(JSContext* cx, LifoAllocScope& allocScope,
                           const JS::ReadOnlyCompileOptions& options,
-                          ParserAtomsTable& parserAtoms,
+                          CompilationStencil& stencil,
                           SourceText<Unit>& sourceBuffer,
                           js::Scope* enclosingScope = nullptr,
                           JSObject* enclosingEnv = nullptr)
-      : Base(cx, allocScope, options, parserAtoms, sourceBuffer, enclosingScope,
+      : Base(cx, allocScope, options, stencil, sourceBuffer, enclosingScope,
              enclosingEnv) {}
 
   using Base::createSourceAndParser;
@@ -250,9 +250,9 @@ static bool CompileGlobalScriptToStencilImpl(JSContext* cx,
   AutoAssertReportedException assertException(cx);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::ScriptCompiler<Unit> compiler(
-      cx, allocScope, compilationInfo.input.options,
-      compilationInfo.stencil.parserAtoms, srcBuf);
+  frontend::ScriptCompiler<Unit> compiler(cx, allocScope,
+                                          compilationInfo.input.options,
+                                          compilationInfo.stencil, srcBuf);
 
   if (!compiler.createSourceAndParser(cx, compilationInfo)) {
     return false;
@@ -450,8 +450,7 @@ static JSScript* CompileEvalScriptImpl(
 
   frontend::ScriptCompiler<Unit> compiler(
       cx, allocScope, compilationInfo.get().input.options,
-      compilationInfo.get().stencil.parserAtoms, srcBuf, enclosingScope,
-      enclosingEnv);
+      compilationInfo.get().stencil, srcBuf, enclosingScope, enclosingEnv);
   if (!compiler.createSourceAndParser(cx, compilationInfo.get())) {
     return nullptr;
   }
@@ -498,11 +497,11 @@ class MOZ_STACK_CLASS frontend::ModuleCompiler final
  public:
   explicit ModuleCompiler(JSContext* cx, LifoAllocScope& allocScope,
                           const JS::ReadOnlyCompileOptions& options,
-                          ParserAtomsTable& parserAtoms,
+                          CompilationStencil& stencil,
                           SourceText<Unit>& sourceBuffer,
                           js::Scope* enclosingScope = nullptr,
                           JSObject* enclosingEnv = nullptr)
-      : Base(cx, allocScope, options, parserAtoms, sourceBuffer, enclosingScope,
+      : Base(cx, allocScope, options, stencil, sourceBuffer, enclosingScope,
              enclosingEnv) {}
 
   bool compile(JSContext* cx, CompilationInfo& compilationInfo);
@@ -526,11 +525,11 @@ class MOZ_STACK_CLASS frontend::StandaloneFunctionCompiler final
  public:
   explicit StandaloneFunctionCompiler(JSContext* cx, LifoAllocScope& allocScope,
                                       const JS::ReadOnlyCompileOptions& options,
-                                      ParserAtomsTable& parserAtoms,
+                                      CompilationStencil& stencil,
                                       SourceText<Unit>& sourceBuffer,
                                       js::Scope* enclosingScope = nullptr,
                                       JSObject* enclosingEnv = nullptr)
-      : Base(cx, allocScope, options, parserAtoms, sourceBuffer, enclosingScope,
+      : Base(cx, allocScope, options, stencil, sourceBuffer, enclosingScope,
              enclosingEnv) {}
 
   using Base::createSourceAndParser;
@@ -894,7 +893,7 @@ static bool ParseModuleToStencilImpl(JSContext* cx,
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   ModuleCompiler<Unit> compiler(cx, allocScope, compilationInfo.input.options,
-                                compilationInfo.stencil.parserAtoms, srcBuf);
+                                compilationInfo.stencil, srcBuf);
   if (!compiler.compile(cx, compilationInfo)) {
     return false;
   }
@@ -1020,8 +1019,8 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::CompilationState compilationState(
-      cx, allocScope, compilationInfo.input.options,
-      compilationInfo.stencil.parserAtoms, fun->enclosingScope());
+      cx, allocScope, compilationInfo.input.options, compilationInfo.stencil,
+      fun->enclosingScope());
 
   Parser<FullParseHandler, Unit> parser(
       cx, compilationInfo.input.options, units, length,
@@ -1120,7 +1119,7 @@ static JSFunction* CompileStandaloneFunction(
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   StandaloneFunctionCompiler<char16_t> compiler(
       cx, allocScope, compilationInfo.get().input.options,
-      compilationInfo.get().stencil.parserAtoms, srcBuf, enclosingScope);
+      compilationInfo.get().stencil, srcBuf, enclosingScope);
   if (!compiler.createSourceAndParser(cx, compilationInfo.get())) {
     return nullptr;
   }
