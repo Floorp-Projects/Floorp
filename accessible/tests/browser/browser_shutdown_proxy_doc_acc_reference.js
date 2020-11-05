@@ -59,7 +59,7 @@ add_task(async function() {
       // is a reference to an accessible proxy.
       forceGC();
       // Have some breathing room when removing a11y service references.
-      await new Promise(resolve => executeSoon(resolve));
+      await TestUtils.waitForTick();
 
       // Now allow a11y service to shutdown.
       canShutdown = true;
