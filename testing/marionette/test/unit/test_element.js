@@ -53,6 +53,10 @@ class DOMElement extends Element {
     if (typeof this.ownerDocument == "undefined") {
       this.ownerDocument = { designMode: "off" };
     }
+    if (typeof this.ownerDocument.documentElement == "undefined") {
+      this.ownerDocument.documentElement = { namespaceURI: XHTML_NS };
+    }
+
     if (typeof this.type == "undefined") {
       this.type = "text";
     }
@@ -90,12 +94,24 @@ class XULElement extends Element {
   constructor(tagName, attrs = {}) {
     super(tagName, attrs);
     this.namespaceURI = XUL_NS;
+
+    if (typeof this.ownerDocument == "undefined") {
+      this.ownerDocument = {};
+    }
+    if (typeof this.ownerDocument.documentElement == "undefined") {
+      this.ownerDocument.documentElement = { namespaceURI: XUL_NS };
+    }
   }
 }
 
 const domEl = new DOMElement("p");
 const svgEl = new SVGElement("rect");
 const xulEl = new XULElement("browser");
+const domElInXULDocument = new DOMElement("input", {
+  ownerDocument: {
+    documentElement: { namespaceURI: XUL_NS },
+  },
+});
 
 class WindowProxy {
   get parent() {
@@ -170,6 +186,7 @@ add_test(function test_isElement() {
 
 add_test(function test_isDOMElement() {
   ok(element.isDOMElement(domEl));
+  ok(element.isDOMElement(domElInXULDocument));
   ok(element.isDOMElement(svgEl));
   ok(!element.isDOMElement(xulEl));
   ok(!element.isDOMElement(domWin));
@@ -183,6 +200,7 @@ add_test(function test_isDOMElement() {
 
 add_test(function test_isXULElement() {
   ok(element.isXULElement(xulEl));
+  ok(!element.isXULElement(domElInXULDocument));
   ok(!element.isXULElement(domEl));
   ok(!element.isXULElement(svgEl));
   ok(!element.isDOMElement(domWin));
@@ -198,6 +216,7 @@ add_test(function test_isDOMWindow() {
   ok(element.isDOMWindow(domWin));
   ok(element.isDOMWindow(domFrame));
   ok(!element.isDOMWindow(domEl));
+  ok(!element.isDOMWindow(domElInXULDocument));
   ok(!element.isDOMWindow(svgEl));
   ok(!element.isDOMWindow(xulEl));
   for (let typ of [true, 42, {}, [], undefined, null]) {
@@ -418,6 +437,7 @@ add_test(function test_WebElement_from() {
   ok(WebElement.from(domWin) instanceof ContentWebWindow);
   ok(WebElement.from(domFrame) instanceof ContentWebFrame);
   ok(WebElement.from(xulEl) instanceof ChromeWebElement);
+  ok(WebElement.from(domElInXULDocument) instanceof ChromeWebElement);
 
   Assert.throws(() => WebElement.from({}), /InvalidArgumentError/);
 
