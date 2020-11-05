@@ -25,6 +25,8 @@ XPIDL_SOURCES += [
 
 MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
 
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
