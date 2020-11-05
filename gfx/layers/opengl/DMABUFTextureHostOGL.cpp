@@ -135,7 +135,7 @@ void DMABUFTextureHostOGL::PushResourceUpdates(
                     ? &wr::TransactionBuilder::AddExternalImage
                     : &wr::TransactionBuilder::UpdateExternalImage;
   auto imageType =
-      wr::ExternalImageType::TextureHandle(wr::TextureTarget::Default);
+      wr::ExternalImageType::TextureHandle(wr::ImageBufferKind::Texture2D);
 
   switch (mSurface->GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:
