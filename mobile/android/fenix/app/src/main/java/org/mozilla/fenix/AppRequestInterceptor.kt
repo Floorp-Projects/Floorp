@@ -7,6 +7,7 @@ package org.mozilla.fenix
 import android.content.Context
 import android.net.ConnectivityManager
 import androidx.core.content.getSystemService
+import androidx.navigation.NavController
 import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
@@ -14,8 +15,18 @@ import mozilla.components.concept.engine.request.RequestInterceptor
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.isOnline
+import java.lang.ref.WeakReference
 
-class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
+class AppRequestInterceptor(
+    private val context: Context
+) : RequestInterceptor {
+
+    private var navController: WeakReference<NavController>? = null
+
+    fun setNavigationController(navController: NavController) {
+        this.navController = WeakReference(navController)
+    }
+
     override fun onLoadRequest(
         engineSession: EngineSession,
         uri: String,
@@ -26,6 +37,11 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         isDirectNavigation: Boolean,
         isSubframeRequest: Boolean
     ): RequestInterceptor.InterceptionResponse? {
+
+        interceptAmoRequest(uri, isSameDomain, hasUserGesture)?.let { response ->
+            return response
+        }
+
         return context.components.services.appLinksInterceptor
             .onLoadRequest(
                 engineSession,
@@ -57,6 +73,42 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         )
 
         return RequestInterceptor.ErrorResponse.Uri(errorPageUri)
+    }
+
+    /**
+     * Checks if the provided [uri] is a request to install an add-on from addons.mozilla.org and
+     * redirects to Add-ons Manager to trigger installation if needed.
+     *
+     * @return [RequestInterceptor.InterceptionResponse.Deny] when installation was triggered and
+     * the original request can be skipped, otherwise null to continue loading the page.
+     */
+    private fun interceptAmoRequest(
+        uri: String,
+        isSameDomain: Boolean,
+        hasUserGesture: Boolean
+    ): RequestInterceptor.InterceptionResponse? {
+        // First we execute a quick check to see if this is a request we're interested in i.e. a
+        // request triggered by the user and coming from AMO.
+        if (hasUserGesture && isSameDomain && uri.startsWith(AMO_BASE_URL)) {
+
+            // Check if this is a request to install an add-on.
+            val matchResult = AMO_INSTALL_URL_REGEX.toRegex().matchEntire(uri)
+            if (matchResult != null) {
+
+                // Navigate and trigger add-on installation.
+                matchResult.groupValues.getOrNull(1)?.let { addonId ->
+                    navController?.get()?.navigate(
+                        NavGraphDirections.actionGlobalAddonsManagementFragment(addonId)
+                    )
+
+                    // We've redirected to the add-ons management fragment, skip original request.
+                    return RequestInterceptor.InterceptionResponse.Deny
+                }
+            }
+        }
+
+        // In all other case we let the original request proceed.
+        return null
     }
 
     /**
@@ -116,5 +168,7 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
     companion object {
         internal const val LOW_AND_MEDIUM_RISK_ERROR_PAGES = "low_and_medium_risk_error_pages.html"
         internal const val HIGH_RISK_ERROR_PAGES = "high_risk_error_pages.html"
+        internal const val AMO_BASE_URL = "https://addons.mozilla.org"
+        internal const val AMO_INSTALL_URL_REGEX = "$AMO_BASE_URL/android/downloads/file/([^\\s]+)/([^\\s]+\\.xpi)"
     }
 }

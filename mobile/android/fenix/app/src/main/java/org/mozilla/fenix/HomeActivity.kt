@@ -238,6 +238,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         startupTelemetryOnCreateCalled(intent.toSafeIntent(), savedInstanceState != null)
 
+        components.core.requestInterceptor.setNavigationController(navHost.navController)
+
         StartupTimeline.onActivityCreateEndHome(this) // DO NOT MOVE ANYTHING BELOW HERE.
     }
 

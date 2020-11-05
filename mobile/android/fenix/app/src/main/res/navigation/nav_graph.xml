@@ -85,7 +85,13 @@
         app:destination="@id/bookmarkEditFragment" />
     <action
         android:id="@+id/action_global_addonsManagementFragment"
-        app:destination="@id/addons_management_graph" />
+        app:destination="@id/addons_management_graph">
+        <argument
+            android:name="installAddonId"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+    </action>
     <action
         android:id="@+id/action_global_trackingProtectionFragment"
         app:destination="@id/trackingProtectionFragment" />
@@ -866,6 +872,11 @@
             <action
                 android:id="@+id/action_addonsManagementFragment_to_notYetSupportedAddonFragment"
                 app:destination="@id/notYetSupportedAddonFragment" />
+            <argument
+                android:name="installAddonId"
+                android:defaultValue="@null"
+                app:argType="string"
+                app:nullable="true" />
         </fragment>
         <fragment
             android:id="@+id/installedAddonDetailsFragment"

@@ -6,14 +6,17 @@ package org.mozilla.fenix
 
 import android.net.ConnectivityManager
 import androidx.core.content.getSystemService
+import androidx.navigation.NavController
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.verify
 import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,6 +29,7 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 class AppRequestInterceptorTest {
 
     private lateinit var interceptor: RequestInterceptor
+    private lateinit var navigationController: NavController
 
     @Before
     fun setUp() {
@@ -34,7 +38,96 @@ class AppRequestInterceptorTest {
 
         every { testContext.getSystemService<ConnectivityManager>()!!.isOnline() } returns true
 
-        interceptor = AppRequestInterceptor(testContext)
+        navigationController = mockk(relaxed = true)
+        interceptor = AppRequestInterceptor(testContext).also {
+            it.setNavigationController(navigationController)
+        }
+    }
+
+    @Test
+    fun `GIVEN request to install add-on WHEN on same domain and triggered by user THEN start add-on installation`() {
+        val addonId = "12345678"
+        val result = interceptor.onLoadRequest(
+            engineSession = mockk(),
+            uri = "https://addons.mozilla.org/android/downloads/file/$addonId/test.xpi",
+            lastUri = "https://addons.mozilla.org/en-US/firefox/",
+            hasUserGesture = true,
+            isSameDomain = true,
+            isDirectNavigation = false,
+            isRedirect = false,
+            isSubframeRequest = false
+        )
+
+        verify { navigationController.navigate(NavGraphDirections.actionGlobalAddonsManagementFragment(addonId)) }
+        assertEquals(RequestInterceptor.InterceptionResponse.Deny, result)
+    }
+
+    @Test
+    fun `GIVEN request to install add-on WHEN on a different domain THEN no add-on installation is started`() {
+        val result = interceptor.onLoadRequest(
+            engineSession = mockk(),
+            uri = "https://addons.mozilla.org/android/downloads/file/12345678/test.xpi",
+            lastUri = "https://getpocket.com",
+            hasUserGesture = true,
+            isSameDomain = false,
+            isDirectNavigation = false,
+            isRedirect = false,
+            isSubframeRequest = false
+        )
+
+        verify(exactly = 0) { navigationController.navigate(NavGraphDirections.actionGlobalAddonsManagementFragment()) }
+        assertNull(result)
+    }
+
+    @Test
+    fun `GIVEN invalid request to install add-on WHEN on same domain and triggered by user THEN no add-on installation is started`() {
+        val result = interceptor.onLoadRequest(
+            engineSession = mockk(),
+            uri = "https://addons.mozilla.org/android/downloads/file/12345678/test.invalid",
+            lastUri = "https://addons.mozilla.org/en-US/firefox/",
+            hasUserGesture = true,
+            isSameDomain = true,
+            isDirectNavigation = false,
+            isRedirect = false,
+            isSubframeRequest = false
+        )
+
+        verify(exactly = 0) { navigationController.navigate(NavGraphDirections.actionGlobalAddonsManagementFragment()) }
+        assertNull(result)
+    }
+
+    @Test
+    fun `GIVEN request to install add-on WHEN not triggered by user THEN no add-on installation is started`() {
+        val result = interceptor.onLoadRequest(
+            engineSession = mockk(),
+            uri = "https://addons.mozilla.org/android/downloads/file/12345678/test.xpi",
+            lastUri = "https://addons.mozilla.org/en-US/firefox/",
+            hasUserGesture = false,
+            isSameDomain = true,
+            isDirectNavigation = false,
+            isRedirect = false,
+            isSubframeRequest = false
+        )
+
+        verify(exactly = 0) { navigationController.navigate(NavGraphDirections.actionGlobalAddonsManagementFragment()) }
+        assertNull(result)
+    }
+
+    @Test
+    fun `GIVEN any request WHEN on same domain and triggered by user THEN no add-on installation is started`() {
+        val result = interceptor.onLoadRequest(
+            engineSession = mockk(),
+            uri = "https://blog.mozilla.org/blog/2020/10/20/mozilla-reaction-to-u-s-v-google/",
+            lastUri = "https://blog.mozilla.org",
+            hasUserGesture = true,
+            isSameDomain = true,
+            isDirectNavigation = false,
+            isRedirect = false,
+            isSubframeRequest = false
+        )
+
+        verify(exactly = 0) { navigationController.navigate(NavGraphDirections.actionGlobalAddonsManagementFragment()) }
+        assertNull(result)
     }
 
     @Test

@@ -100,7 +100,7 @@ class Core(
      */
     val engine: Engine by lazyMonitored {
         val defaultSettings = DefaultSettings(
-            requestInterceptor = AppRequestInterceptor(context),
+            requestInterceptor = requestInterceptor,
             remoteDebuggingEnabled = context.settings().isRemoteDebuggingEnabled &&
                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.M,
             testingModeEnabled = false,
@@ -140,6 +140,15 @@ class Core(
             }
         }
     }
+
+    /**
+     * Passed to [engine] to intercept requests for app links,
+     * and various features triggered by page load requests.
+     *
+     * NB: This does not need to be lazy as it is initialized
+     * with the engine on startup.
+     */
+    val requestInterceptor = AppRequestInterceptor(context)
 
     /**
      * [Client] implementation to be used for code depending on `concept-fetch``

@@ -5,18 +5,26 @@
 package org.mozilla.fenix
 
 import android.content.Context
+import androidx.navigation.NavController
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ui.robots.appContext
+import java.lang.ref.WeakReference
 
 /**
  * This class overrides the application's request interceptor to
  * deactivate the FxA web channel
  * which is not supported on the staging servers.
  */
-
 class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
+
+    private var navController: WeakReference<NavController>? = null
+
+    fun setNavigationController(navController: NavController) {
+        this.navController = WeakReference(navController)
+    }
+
     override fun onLoadRequest(
         engineSession: EngineSession,
         uri: String,
