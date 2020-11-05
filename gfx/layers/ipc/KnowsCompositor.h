@@ -103,9 +103,7 @@ class KnowsCompositor {
   bool SupportsD3D11() const {
     return GetCompositorBackendType() == layers::LayersBackend::LAYERS_D3D11 ||
            (GetCompositorBackendType() == layers::LayersBackend::LAYERS_WR &&
-            (GetCompositorUseANGLE() ||
-             mTextureFactoryIdentifier.mWebRenderCompositor ==
-                 layers::WebRenderCompositor::D3D11));
+            GetCompositorUseANGLE());
   }
 
   bool GetCompositorUseANGLE() const {
