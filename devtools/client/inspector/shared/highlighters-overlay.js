@@ -68,10 +68,6 @@ const TYPES = {
  * It makes it difficult to do project-wide searches for exact matches.
  */
 const HIGHLIGHTER_EVENTS = {
-  [TYPES.BOXMODEL]: {
-    shown: "box-model-highlighter-shown",
-    hidden: "box-model-highlighter-hidden",
-  },
   [TYPES.GRID]: {
     shown: "grid-highlighter-shown",
     hidden: "grid-highlighter-hidden",

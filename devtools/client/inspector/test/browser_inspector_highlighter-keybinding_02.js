@@ -10,6 +10,7 @@ const TEST_URL = URL_ROOT + "doc_inspector_highlighter_dom.html";
 
 add_task(async function() {
   const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URL);
+  const { waitForHighlighterTypeShown } = getHighlighterTestHelpers(inspector);
 
   await startPicker(toolbox);
 
@@ -53,8 +54,8 @@ add_task(async function() {
   function doKeyHover(args) {
     info("Key pressed. Waiting for element to be highlighted/hovered");
     const onPickerHovered = toolbox.nodePicker.once("picker-node-hovered");
-    const onHighlighterShown = inspector.highlighters.once(
-      "box-model-highlighter-shown"
+    const onHighlighterShown = waitForHighlighterTypeShown(
+      inspector.highlighters.TYPES.BOXMODEL
     );
     testActor.synthesizeKey(args);
     return Promise.all([onPickerHovered, onHighlighterShown]);

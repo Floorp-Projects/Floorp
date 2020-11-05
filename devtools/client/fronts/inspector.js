@@ -146,6 +146,7 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
       pendingGetHighlighter = (async () => {
         const highlighter = await this.getHighlighterByType(type);
         this._highlighters.set(type, highlighter);
+        this._pendingGetHighlighterMap.delete(type);
         return highlighter;
       })();
 
@@ -154,7 +155,6 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
 
     if (pendingGetHighlighter) {
       front = await pendingGetHighlighter;
-      this._pendingGetHighlighterMap.delete(type);
     }
 
     return front;
