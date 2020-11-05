@@ -30,6 +30,8 @@ namespace jit {
 
 #if defined(JS_JITSPEW) && (defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64))
 
+bool HasDisassembler() { return true; }
+
 void Disassemble(uint8_t* code, size_t length, InstrCallback callback) {
   zydisDisassemble(code, length, callback);
 }
@@ -51,6 +53,8 @@ class ARM64Disassembler : public vixl::Disassembler {
   InstrCallback callback_;
 };
 
+bool HasDisassembler() { return true; }
+
 void Disassemble(uint8_t* code, size_t length, InstrCallback callback) {
   ARM64Disassembler dis(callback);
   vixl::Decoder decoder;
@@ -67,6 +71,8 @@ void Disassemble(uint8_t* code, size_t length, InstrCallback callback) {
 }
 
 #elif defined(JS_JITSPEW) && defined(JS_CODEGEN_ARM)
+
+bool HasDisassembler() { return true; }
 
 void Disassemble(uint8_t* code, size_t length, InstrCallback callback) {
   disasm::NameConverter converter;
@@ -90,6 +96,8 @@ void Disassemble(uint8_t* code, size_t length, InstrCallback callback) {
 }
 
 #else
+
+bool HasDisassembler() { return false; }
 
 void Disassemble(uint8_t* code, size_t length, InstrCallback callback) {
   callback("*** No disassembly available ***\n");

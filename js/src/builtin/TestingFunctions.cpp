@@ -1093,6 +1093,12 @@ struct DisasmBuffer {
   explicit DisasmBuffer(JSContext* cx) : builder(cx), oom(false) {}
 };
 
+static bool HasDisassembler(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setBoolean(jit::HasDisassembler());
+  return true;
+}
+
 MOZ_THREAD_LOCAL(DisasmBuffer*) disasmBuf;
 
 static void captureDisasmText(const char* text) {
@@ -6445,6 +6451,10 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gcparam", GCParameter, 2, 0,
 "gcparam(name [, value])",
 "  Wrapper for JS_[GS]etGCParameter. The name is one of:" GC_PARAMETER_ARGS_LIST),
+
+    JS_FN_HELP("hasDisassembler", HasDisassembler, 0, 0,
+"hasDisassembler()",
+"  Return true if a disassembler is present (for disnative and wasmDis)."),
 
     JS_FN_HELP("disnative", DisassembleNative, 2, 0,
 "disnative(fun,[path])",
