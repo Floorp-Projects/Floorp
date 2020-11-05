@@ -19,7 +19,9 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/mscom/Aggregation.h"
 #include "mozilla/mscom/Utils.h"
+#include "nsISerialEventTarget.h"
 #include "nsISupportsImpl.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace mscom {
@@ -51,8 +53,8 @@ class ForgettableAsyncCall : public ISynchronize {
   AsyncInterface* GetInterface() const { return mAsyncCall; }
 
   // IUnknown
-  STDMETHODIMP QueryInterface(REFIID aIid, void** aOutInterface) override {
-    if (aIid == IID_IUnknown || aIid == IID_ISynchronize) {
+  STDMETHODIMP QueryInterface(REFIID aIid, void** aOutInterface) final {
+    if (aIid == IID_ISynchronize || aIid == IID_IUnknown) {
       RefPtr<ISynchronize> ptr(this);
       ptr.forget(aOutInterface);
       return S_OK;
@@ -61,13 +63,13 @@ class ForgettableAsyncCall : public ISynchronize {
     return mInnerUnk->QueryInterface(aIid, aOutInterface);
   }
 
-  STDMETHODIMP_(ULONG) AddRef() override {
+  STDMETHODIMP_(ULONG) AddRef() final {
     ULONG result = ++mRefCnt;
     NS_LOG_ADDREF(this, result, "ForgettableAsyncCall", sizeof(*this));
     return result;
   }
 
-  STDMETHODIMP_(ULONG) Release() override {
+  STDMETHODIMP_(ULONG) Release() final {
     ULONG result = --mRefCnt;
     NS_LOG_RELEASE(this, result, "ForgettableAsyncCall");
     if (!result) {
@@ -94,7 +96,7 @@ class ForgettableAsyncCall : public ISynchronize {
   }
 
  protected:
-  virtual ~ForgettableAsyncCall() {}
+  virtual ~ForgettableAsyncCall() = default;
 
  private:
   Atomic<ULONG> mRefCnt;
@@ -163,8 +165,64 @@ class WaitableAsyncCall : public ForgettableAsyncCall<AsyncInterface> {
 };
 
 template <typename AsyncInterface>
+class EventDrivenAsyncCall : public ForgettableAsyncCall<AsyncInterface> {
+ public:
+  explicit EventDrivenAsyncCall(ICallFactory* aCallFactory)
+      : ForgettableAsyncCall<AsyncInterface>(aCallFactory) {}
+
+  bool HasCompletionRunnable() const { return !!mCompletionRunnable; }
+
+  void ClearCompletionRunnable() { mCompletionRunnable = nullptr; }
+
+  void SetCompletionRunnable(already_AddRefed<nsIRunnable> aRunnable) {
+    nsCOMPtr<nsIRunnable> innerRunnable(aRunnable);
+    MOZ_ASSERT(!!innerRunnable);
+    if (!innerRunnable) {
+      return;
+    }
+
+    // We need to retain a ref to ourselves to outlive the AsyncInvoker
+    // such that our callback can execute.
+    RefPtr<EventDrivenAsyncCall<AsyncInterface>> self(this);
+
+    mCompletionRunnable = NS_NewRunnableFunction(
+        "EventDrivenAsyncCall outer completion Runnable",
+        [innerRunnable = std::move(innerRunnable), self = std::move(self)]() {
+          innerRunnable->Run();
+        });
+  }
+
+  void SetEventTarget(nsISerialEventTarget* aTarget) { mEventTarget = aTarget; }
+
+  STDMETHODIMP Signal() override {
+    MOZ_ASSERT(!!mCompletionRunnable);
+    if (!mCompletionRunnable) {
+      return S_OK;
+    }
+
+    nsCOMPtr<nsISerialEventTarget> eventTarget(mEventTarget.forget());
+    if (!eventTarget) {
+      eventTarget = GetMainThreadSerialEventTarget();
+    }
+
+    DebugOnly<nsresult> rv =
+        eventTarget->Dispatch(mCompletionRunnable.forget(), NS_DISPATCH_NORMAL);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return S_OK;
+  }
+
+ private:
+  nsCOMPtr<nsIRunnable> mCompletionRunnable;
+  nsCOMPtr<nsISerialEventTarget> mEventTarget;
+};
+
+template <typename AsyncInterface>
 class FireAndForgetInvoker {
  protected:
+  void OnBeginInvoke() {}
+  void OnSyncInvoke(HRESULT aHr) {}
+  void OnAsyncInvokeFailed() {}
+
   typedef ForgettableAsyncCall<AsyncInterface> AsyncCallType;
 
   RefPtr<ForgettableAsyncCall<AsyncInterface>> mAsyncCall;
@@ -183,9 +241,59 @@ class WaitableInvoker {
   }
 
  protected:
+  void OnBeginInvoke() {}
+  void OnSyncInvoke(HRESULT aHr) {}
+  void OnAsyncInvokeFailed() {}
+
   typedef WaitableAsyncCall<AsyncInterface> AsyncCallType;
 
   RefPtr<WaitableAsyncCall<AsyncInterface>> mAsyncCall;
+};
+
+template <typename AsyncInterface>
+class EventDrivenInvoker {
+ public:
+  void SetCompletionRunnable(already_AddRefed<nsIRunnable> aRunnable) {
+    if (mAsyncCall) {
+      mAsyncCall->SetCompletionRunnable(std::move(aRunnable));
+      return;
+    }
+
+    mCompletionRunnable = aRunnable;
+  }
+
+  void SetAsyncEventTarget(nsISerialEventTarget* aTarget) {
+    if (mAsyncCall) {
+      mAsyncCall->SetEventTarget(aTarget);
+    }
+  }
+
+ protected:
+  void OnBeginInvoke() {
+    MOZ_RELEASE_ASSERT(
+        mCompletionRunnable ||
+            (mAsyncCall && mAsyncCall->HasCompletionRunnable()),
+        "You should have called SetCompletionRunnable before invoking!");
+  }
+
+  void OnSyncInvoke(HRESULT aHr) {
+    nsCOMPtr<nsIRunnable> completionRunnable(mCompletionRunnable.forget());
+    if (FAILED(aHr)) {
+      return;
+    }
+
+    completionRunnable->Run();
+  }
+
+  void OnAsyncInvokeFailed() {
+    MOZ_ASSERT(!!mAsyncCall);
+    mAsyncCall->ClearCompletionRunnable();
+  }
+
+  typedef EventDrivenAsyncCall<AsyncInterface> AsyncCallType;
+
+  RefPtr<EventDrivenAsyncCall<AsyncInterface>> mAsyncCall;
+  nsCOMPtr<nsIRunnable> mCompletionRunnable;
 };
 
 }  // namespace detail
@@ -230,6 +338,16 @@ class WaitableInvoker {
  * In general you should avoid using the waitable version, but in some corner
  * cases it is absolutely necessary in order to preserve correctness while
  * avoiding deadlock.
+ *
+ * Finally, it is also possible to have the async invoker enqueue a runnable
+ * to the main thread when the async operation completes:
+ *
+ * EVENT_DRIVEN_ASYNC_INVOKER_FOR(Ifoo) myInvoker(foo);
+ * // myRunnable will be invoked on the main thread once the async operation
+ * // has completed. Note that we set this *before* we do the ASYNC_INVOKE!
+ * myInvoker.SetCompletionRunnable(myRunnable.forget());
+ * HRESULT hr = ASYNC_INVOKE(myInvoker, Bar, 7);
+ * // ...
  */
 template <typename SyncInterface, typename AsyncInterface,
           template <typename Iface> class WaitPolicy =
@@ -284,22 +402,32 @@ class MOZ_RAII AsyncInvoker final : public WaitPolicy<AsyncInterface> {
   template <typename SyncMethod, typename AsyncMethod, typename... Args>
   HRESULT Invoke(SyncMethod aSyncMethod, AsyncMethod aAsyncMethod,
                  Args&&... aArgs) {
+    this->OnBeginInvoke();
     if (mSyncObj) {
-      return (mSyncObj->*aSyncMethod)(std::forward<Args>(aArgs)...);
+      HRESULT hr = (mSyncObj->*aSyncMethod)(std::forward<Args>(aArgs)...);
+      this->OnSyncInvoke(hr);
+      return hr;
     }
 
     MOZ_ASSERT(this->mAsyncCall);
     if (!this->mAsyncCall) {
+      this->OnAsyncInvokeFailed();
       return E_POINTER;
     }
 
     AsyncInterface* asyncInterface = this->mAsyncCall->GetInterface();
     MOZ_ASSERT(asyncInterface);
     if (!asyncInterface) {
+      this->OnAsyncInvokeFailed();
       return E_POINTER;
     }
 
-    return (asyncInterface->*aAsyncMethod)(std::forward<Args>(aArgs)...);
+    HRESULT hr = (asyncInterface->*aAsyncMethod)(std::forward<Args>(aArgs)...);
+    if (FAILED(hr)) {
+      this->OnAsyncInvokeFailed();
+    }
+
+    return hr;
   }
 
   AsyncInvoker(const AsyncInvoker& aOther) = delete;
@@ -322,6 +450,10 @@ template <typename SyncInterface, typename AsyncInterface>
 using WaitableAsyncInvoker =
     AsyncInvoker<SyncInterface, AsyncInterface, detail::WaitableInvoker>;
 
+template <typename SyncInterface, typename AsyncInterface>
+using EventDrivenAsyncInvoker =
+    AsyncInvoker<SyncInterface, AsyncInterface, detail::EventDrivenInvoker>;
+
 }  // namespace mscom
 }  // namespace mozilla
 
@@ -330,6 +462,9 @@ using WaitableAsyncInvoker =
 
 #define WAITABLE_ASYNC_INVOKER_FOR(SyncIface) \
   mozilla::mscom::WaitableAsyncInvoker<SyncIface, Async##SyncIface>
+
+#define EVENT_DRIVEN_ASYNC_INVOKER_FOR(SyncIface) \
+  mozilla::mscom::EventDrivenAsyncInvoker<SyncIface, Async##SyncIface>
 
 #define ASYNC_INVOKE(InvokerObj, SyncMethodName, ...)                 \
   InvokerObj.Invoke(                                                  \
