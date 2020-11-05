@@ -20,6 +20,7 @@ describe("ASRouterParentProcessMessageHandler", () => {
       evaluateExpression: sandbox.stub().resolves(),
       forceAttribution: sandbox.stub().resolves(),
       forceWNPanel: sandbox.stub().resolves(),
+      closeWNPanel: sandbox.stub().resolves(),
       loadMessagesFromAllProviders: sandbox.stub().resolves(returnValue),
       sendNewTabMessage: sandbox.stub().resolves(returnValue),
       sendTriggerMessage: sandbox.stub().resolves(returnValue),
@@ -320,6 +321,17 @@ describe("ASRouterParentProcessMessageHandler", () => {
         assert.calledWith(config.router.forceWNPanel, { ownerGlobal: {} });
       });
     });
+    describe("CLOSE_WHATSNEW_PANEL action", () => {
+      it("default calls closeWNPanel", () => {
+        handler.handleMessage(
+          msg.CLOSE_WHATSNEW_PANEL,
+          {},
+          { browser: { ownerGlobal: {} } }
+        );
+        assert.calledOnce(config.router.closeWNPanel);
+        assert.calledWith(config.router.closeWNPanel, { ownerGlobal: {} });
+      });
+    });
     describe("MODIFY_MESSAGE_JSON action", () => {
       it("default calls sendMessage", async () => {
         const result = await handler.handleMessage(
@@ -336,7 +348,7 @@ describe("ASRouterParentProcessMessageHandler", () => {
           config.router.sendMessage,
           { text: "something" },
           { content: { text: "something" } },
-          false,
+          true,
           { ownerGlobal: {} }
         );
         assert.deepEqual(result, { value: 1 });
