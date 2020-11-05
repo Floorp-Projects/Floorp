@@ -58,7 +58,6 @@ HttpConnectionUDP::HttpConnectionUDP()
       mLastReadTime(0),
       mLastWriteTime(0),
       mTotalBytesRead(0),
-      mContentBytesWritten(0),
       mConnectedTransport(false),
       mDontReuse(false),
       mIsReused(false),
@@ -556,7 +555,6 @@ nsresult HttpConnectionUDP::OnSocketWritable() {
   LOG(("  writing transaction request stream\n"));
   nsresult rv = mHttp3Session->ReadSegmentsAgain(
       this, nsIOService::gDefaultSegmentSize, &transactionBytes, &again);
-  mContentBytesWritten += transactionBytes;
   return rv;
 }
 

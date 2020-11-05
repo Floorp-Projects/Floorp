@@ -149,7 +149,6 @@ class Http3Session final : public nsAHttpTransaction,
       mStreamTransactionHash;
 
   nsDeque<Http3Stream> mReadyForWrite;
-  nsTArray<uint64_t> mReadyForWriteButBlocked;
   nsTArray<RefPtr<Http3Stream>> mSlowConsumersReadyForRead;
   nsDeque<Http3Stream> mQueuedStreams;
 

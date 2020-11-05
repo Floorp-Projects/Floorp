@@ -370,18 +370,16 @@ nsresult Http3Session::ProcessEvents(uint32_t count) {
         }
         break;
       }
-      case Http3Event::Tag::DataWritable:
+      case Http3Event::Tag::DataWritable: {
         MOZ_ASSERT(CanSandData());
         LOG(("Http3Session::ProcessEvents - DataWritable"));
-        if (mReadyForWriteButBlocked.RemoveElement(
-                event.data_writable.stream_id)) {
-          RefPtr<Http3Stream> stream =
-              mStreamIdHash.Get(event.data_writable.stream_id);
-          if (stream) {
-            StreamReadyToWrite(stream);
-          }
+
+        RefPtr<Http3Stream> stream =
+            mStreamIdHash.Get(event.data_writable.stream_id);
+        if (stream) {
+          StreamReadyToWrite(stream);
         }
-        break;
+      } break;
       case Http3Event::Tag::Reset:
         LOG(("Http3Session::ProcessEvents - Reset"));
         ResetRecvd(event.reset.stream_id, event.reset.error);
@@ -719,7 +717,6 @@ static void RemoveStreamFromQueue(Http3Stream* aStream,
 void Http3Session::RemoveStreamFromQueues(Http3Stream* aStream) {
   RemoveStreamFromQueue(aStream, mReadyForWrite);
   RemoveStreamFromQueue(aStream, mQueuedStreams);
-  mReadyForWriteButBlocked.RemoveElement(aStream->StreamId());
   mSlowConsumersReadyForRead.RemoveElement(aStream);
 }
 
@@ -772,8 +769,11 @@ nsresult Http3Session::TryActivating(
         mBlockedByStreamLimitCount++;
       }
       QueueStream(aStream);
+      return rv;
     }
-    return rv;
+    // Ignore this error. This may happen if some events are not handled yet.
+    // TODO we may try to add an assertion here.
+    return NS_OK;
   }
 
   LOG(("Http3Session::TryActivating streamId=0x%" PRIx64
@@ -813,6 +813,10 @@ nsresult Http3Session::SendRequestBody(uint64_t aStreamId, const char* buf,
       aStreamId, (const uint8_t*)buf, count, countRead);
   if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
     mTransactionsSenderBlockedByFlowControlCount++;
+  } else if (NS_FAILED(rv)) {
+    // Ignore this error. This may happen if some events are not handled yet.
+    // TODO we may try to add an assertion here.
+    rv = NS_OK;
   }
 
   return rv;
@@ -973,35 +977,14 @@ nsresult Http3Session::ReadSegmentsAgain(nsAHttpSegmentReader* reader,
          "[this=%p]",
          stream, this));
 
-    uint32_t countReadSingle = 0;
-    do {
-      countReadSingle = 0;
-      rv = stream->ReadSegments(this, count, &countReadSingle);
-      *countRead += countReadSingle;
+    rv = stream->ReadSegments(this);
 
-      // Exit when:
-      //   1) RequestBlockedOnRead is true -> We are blocked waiting for input
-      //      - either more http headers or any request body data. When more
-      //      data from the request stream becomes available the
-      //      httptransaction will call conn->ResumeSend().
-      //   2) An error happens -> on an stream error we return earlier to let
-      //      the error be handled.
-      //   3) *countRead == 0 -> httptransaction is done writing data.
-    } while (!stream->RequestBlockedOnRead() && NS_SUCCEEDED(rv) &&
-             (countReadSingle > 0));
-
-    // on an stream error we return earlier to let the error be handled.
+    // on stream error we return earlier to let the error be handled.
     if (NS_FAILED(rv)) {
       LOG3(("Http3Session::ReadSegmentsAgain %p returns error code 0x%" PRIx32,
             this, static_cast<uint32_t>(rv)));
-      if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-        // The stream is blocked on max_stream_data.
-        MOZ_ASSERT(!mReadyForWriteButBlocked.Contains(stream->StreamId()));
-        if (!mReadyForWriteButBlocked.Contains(stream->StreamId())) {
-          mReadyForWriteButBlocked.AppendElement(stream->StreamId());
-        }
-        // NS_BASE_STREAM_WOULD_BLOCK is not a real error, it is just saying
-        // that the transaction stream is blocked. Therefor overwrite it.
+      MOZ_ASSERT(rv != NS_BASE_STREAM_WOULD_BLOCK);
+      if (rv == NS_BASE_STREAM_WOULD_BLOCK) {  // Just in case!
         rv = NS_OK;
       } else if (ASpdySession::SoftStreamError(rv)) {
         CloseStream(stream, rv);
@@ -1369,16 +1352,18 @@ nsresult Http3Session::ReadResponseData(uint64_t aStreamId, char* aBuf,
                                         uint32_t* aCountWritten, bool* aFin) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  nsresult rv = mHttp3Connection->ReadResponseData(aStreamId, (uint8_t*)aBuf, aCount,
-                                                   aCountWritten, aFin);
+  nsresult rv = mHttp3Connection->ReadResponseData(aStreamId, (uint8_t*)aBuf,
+                                                   aCount, aCountWritten, aFin);
 
-  // This should not happen, i.e. stream must be present in neqo and in necko at the same time.
+  // This should not happen, i.e. stream must be present in neqo and in necko at
+  // the same time.
   MOZ_ASSERT(rv != NS_ERROR_INVALID_ARG);
   if (NS_FAILED(rv)) {
-    LOG3(("Http3Session::ReadResponseData return an error %" PRIx32 " [this=%p]",
+    LOG3(("Http3Session::ReadResponseData return an error %" PRIx32
+          " [this=%p]",
           static_cast<uint32_t>(rv), this));
-    // This error will be handled by neqo and the whole connection will be cloed.
-    // We will return NS_BASE_STREAM_WOULD_BLOCK here.
+    // This error will be handled by neqo and the whole connection will be
+    // cloed. We will return NS_BASE_STREAM_WOULD_BLOCK here.
     rv = NS_BASE_STREAM_WOULD_BLOCK;
   }
   return rv;
@@ -1401,8 +1386,7 @@ void Http3Session::TransactionHasDataToWrite(nsAHttpTransaction* caller) {
   LOG3(("Http3Session::TransactionHasDataToWrite %p ID is 0x%" PRIx64, this,
         stream->StreamId()));
 
-  MOZ_ASSERT(!mReadyForWriteButBlocked.Contains(stream->StreamId()));
-  if (!IsClosing() && !mReadyForWriteButBlocked.Contains(stream->StreamId())) {
+  if (!IsClosing()) {
     StreamReadyToWrite(stream);
   } else {
     LOG3(

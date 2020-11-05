@@ -47,13 +47,35 @@ trait HttpServer: Display {
     fn process_events(&mut self);
 }
 
-impl HttpServer for Http3Server {
+struct Http3TestServer {
+    server: Http3Server,
+    // This a map from a post request to amount of data ithas been received on the request.
+    // The respons will carry the amount of data received.
+    posts: HashMap<String, usize>,
+}
+
+impl ::std::fmt::Display for Http3TestServer {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        write!(f, "{}", self.server)
+    }
+}
+
+impl Http3TestServer {
+    pub fn new(server: Http3Server) -> Self {
+        Self {
+            server,
+            posts: HashMap::new(),
+        }
+    }
+}
+
+impl HttpServer for Http3TestServer {
     fn process(&mut self, dgram: Option<Datagram>) -> Output {
-        self.process(dgram, Instant::now())
+        self.server.process(dgram, Instant::now())
     }
 
     fn process_events(&mut self) {
-        while let Some(event) = self.next_event() {
+        while let Some(event) = self.server.next_event() {
             qtrace!("Event: {:?}", event);
             match event {
                 Http3ServerEvent::Headers {
@@ -185,6 +207,9 @@ impl HttpServer for Http3Server {
                                         &vec![b'a'; 8000],
                                     )
                                     .unwrap();
+                            } else if path == "/post" {
+                                // Read all data before responding.
+                                self.posts.insert(format!("{}", request), 0);
                             } else {
                                 match path.trim_matches(|p| p == '/').parse::<usize>() {
                                     Ok(v) => request
@@ -210,6 +235,37 @@ impl HttpServer for Http3Server {
                             request
                                 .set_response(&default_headers, &default_ret)
                                 .unwrap();
+                        }
+                    }
+                }
+                Http3ServerEvent::Data {
+                    mut request,
+                    data,
+                    fin,
+                } => {
+                    if let Some(r) = self.posts.get_mut(&format!("{}", request)) {
+                        *r += data.len();
+                    }
+                    if fin {
+                        if let Some(r) = self.posts.remove(&format!("{}", request)) {
+                          let default_ret = b"Hello World".to_vec();
+                          request
+                              .set_response(
+                                  &[
+                                       (String::from(":status"), String::from("200")),
+                                       (
+                                           String::from("Cache-Control"),
+                                           String::from("no-cache"),
+                                       ),
+                                       (String::from("x-data-received-length"), r.to_string()),
+                                       (
+                                           String::from("content-length"),
+                                           default_ret.len().to_string(),
+                                       ),
+                                   ],
+                                   &default_ret,
+                              )
+                              .unwrap();
                         }
                     }
                 }
@@ -391,19 +447,20 @@ impl ServersRunner {
 
         if http3 {
             Box::new(
-                Http3Server::new(
-                    Instant::now(),
-                    &[" HTTP2 Test Cert"],
-                    PROTOCOLS,
-                    anti_replay,
-                    cid_mgr,
-                    QpackSettings {
-                        max_table_size_encoder: MAX_TABLE_SIZE,
-                        max_table_size_decoder: MAX_TABLE_SIZE,
-                        max_blocked_streams: MAX_BLOCKED_STREAMS,
-                    },
+                Http3TestServer::new(
+                    Http3Server::new(
+                        Instant::now(),
+                        &[" HTTP2 Test Cert"],
+                        PROTOCOLS,
+                        anti_replay,
+                        cid_mgr,
+                        QpackSettings {
+                            max_table_size_encoder: MAX_TABLE_SIZE,
+                            max_table_size_decoder: MAX_TABLE_SIZE,
+                            max_blocked_streams: MAX_BLOCKED_STREAMS,
+                        },
+                    ).expect("We cannot make a server!")
                 )
-                .expect("We cannot make a server!"),
             )
         } else {
             Box::new(
