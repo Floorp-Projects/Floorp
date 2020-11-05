@@ -204,14 +204,18 @@ struct MOZ_RAII CompilationState {
   UsedNameTracker usedNames;
   LifoAllocScope& allocScope;
 
+  ParserAtomsTable& parserAtoms;
+
   CompilationState(JSContext* cx, LifoAllocScope& alloc,
                    const JS::ReadOnlyCompileOptions& options,
+                   ParserAtomsTable& parserAtoms,
                    Scope* enclosingScope = nullptr,
                    JSObject* enclosingEnv = nullptr)
       : directives(options.forceStrictMode()),
         scopeContext(cx, enclosingScope, enclosingEnv),
         usedNames(cx),
-        allocScope(alloc) {}
+        allocScope(alloc),
+        parserAtoms(parserAtoms) {}
 };
 
 // The top level struct of stencil.
