@@ -176,7 +176,7 @@ MOZ_ALWAYS_INLINE bool SharedArrayBufferObject::byteLengthGetterImpl(
     JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsSharedArrayBuffer(args.thisv()));
   auto* buffer = &args.thisv().toObject().as<SharedArrayBufferObject>();
-  args.rval().setInt32(buffer->byteLength().deprecatedGetUint32());
+  args.rval().setNumber(buffer->byteLength().get());
   return true;
 }
 
