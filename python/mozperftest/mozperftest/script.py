@@ -253,16 +253,17 @@ class ScriptInfo(defaultdict):
         result.update(options.get(simple_platform(), {}))
         result.update(args)
 
-        # Ensure special-typed options are correct here
+        # XXX this is going away, see https://bugzilla.mozilla.org/show_bug.cgi?id=1675102
         for opt, val in result.items():
-            if "metrics" in opt:
-                if not isinstance(val, list):
-                    raise BadOptionTypeError("Metrics should be defined within a list")
-                for metric in val:
-                    if not isinstance(metric, dict):
-                        raise BadOptionTypeError(
-                            "Each individual metrics must be defined within a JSON-like object"
-                        )
+            if opt.startswith("visualmetrics") or "metrics" not in opt:
+                continue
+            if not isinstance(val, list):
+                raise BadOptionTypeError("Metrics should be defined within a list")
+            for metric in val:
+                if not isinstance(metric, dict):
+                    raise BadOptionTypeError(
+                        "Each individual metrics must be defined within a JSON-like object"
+                    )
 
         if self.script_type == ScriptType.xpcshell:
             result["flavor"] = "xpcshell"
