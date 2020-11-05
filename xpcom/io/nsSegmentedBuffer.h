@@ -84,8 +84,7 @@ class nsSegmentedBuffer {
  private:
   void FreeOMT(void* aPtr);
 
-  // This event queue is used to free segment memory.
-  nsCOMPtr<nsISerialEventTarget> mFreeMemoryQueue;
+  nsCOMPtr<nsIEventTarget> mIOThread;
 };
 
 // NS_SEGMENTARRAY_INITIAL_SIZE: This number needs to start out as a
