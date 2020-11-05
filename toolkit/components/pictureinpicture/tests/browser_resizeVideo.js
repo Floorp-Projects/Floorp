@@ -59,17 +59,17 @@ async function testVideo(browser, videoID, pipWin, { pinX, pinY } = {}) {
     newWidth,
     newHeight
   ) {
-    if (pinX) {
+    if (pinX || previousScreenX == 0) {
       Assert.equal(
         previousScreenX,
         newScreenX,
         "New video is still in the same X position"
       );
     } else {
-      Assert.equal(
-        previousScreenX + previousWidth,
-        newScreenX + newWidth,
-        "New video ends at the same screen X position"
+      Assert.less(
+        Math.abs(previousScreenX + previousWidth - (newScreenX + newWidth)),
+        2,
+        "New video ends at the same screen X position (within 1 pixel)"
       );
     }
     if (pinY) {
@@ -112,8 +112,12 @@ async function testVideo(browser, videoID, pipWin, { pinX, pinY } = {}) {
     133, // 4 / 3 = 1.333333333
     "Resized aspect ratio is 4:3"
   );
-  Assert.equal(initialWidth, resizedWidth, "Resized video has the same width");
-  Assert.greater(resizedHeight, initialHeight, "Resized video grew vertically");
+  Assert.less(resizedWidth, initialWidth, "Resized video has smaller width");
+  Assert.equal(
+    resizedHeight,
+    initialHeight,
+    "Resized video is the same vertically"
+  );
 
   let resizedScreenX = pipWin.mozInnerScreenX;
   let resizedScreenY = pipWin.mozInnerScreenY;
@@ -133,16 +137,27 @@ async function testVideo(browser, videoID, pipWin, { pinX, pinY } = {}) {
   let verticalWidth = pipWin.innerWidth;
   let verticalHeight = pipWin.innerHeight;
   let verticalAspectRatio = verticalWidth / verticalHeight;
-  Assert.equal(
-    Math.floor(verticalAspectRatio * 100),
-    50, // 1 / 2 = 0.5
-    "Vertical aspect ratio is 1:2"
-  );
+
+  if (verticalWidth == 136) {
+    // The video is minimun width allowed
+    Assert.equal(
+      Math.floor(verticalAspectRatio * 100),
+      56, // 1 / 2 = 0.5
+      "Vertical aspect ratio is 1:2"
+    );
+  } else {
+    Assert.equal(
+      Math.floor(verticalAspectRatio * 100),
+      50, // 1 / 2 = 0.5
+      "Vertical aspect ratio is 1:2"
+    );
+  }
+
   Assert.less(verticalWidth, resizedWidth, "Vertical video width shrunk");
   Assert.equal(
-    resizedWidth,
     verticalHeight,
-    "Vertical video height matches previous width"
+    initialHeight,
+    "Vertical video height matches previous height"
   );
 
   let verticalScreenX = pipWin.mozInnerScreenX;
@@ -168,9 +183,9 @@ async function testVideo(browser, videoID, pipWin, { pinX, pinY } = {}) {
     177,
     "Restored aspect ratio is still 16:9"
   );
-  Assert.equal(
-    initialWidth,
-    pipWin.innerWidth,
+  Assert.less(
+    Math.abs(initialWidth - pipWin.innerWidth),
+    2,
     "Restored video has its original width"
   );
   Assert.equal(
@@ -244,6 +259,5 @@ add_task(async () => {
       }
     );
   }
-
   await SpecialPowers.popPrefEnv();
 });
