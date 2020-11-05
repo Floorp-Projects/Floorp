@@ -149,6 +149,8 @@ class CompositorD3D11 : public Compositor {
     mTarget = nullptr;
   }
 
+  SyncObjectHost* GetSyncObject();
+
  private:
   enum Severity {
     Recoverable,
