@@ -324,9 +324,6 @@ class ContentParent final
   static void SendAsyncUpdate(nsIWidget* aWidget);
 #endif
 
-  // Let managees query if it is safe to send messages.
-  bool IsDestroyed() const { return !mIPCOpen; }
-
   mozilla::ipc::IPCResult RecvCreateGMPService();
 
   mozilla::ipc::IPCResult RecvLoadPlugin(
@@ -1518,7 +1515,6 @@ class ContentParent final
   uint8_t mCalledKillHard : 1;
   uint8_t mCreatedPairedMinidumps : 1;
   uint8_t mShutdownPending : 1;
-  uint8_t mIPCOpen : 1;
 
   // True if the input event queue on the main thread of the content process is
   // enabled.
