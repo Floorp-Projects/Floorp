@@ -7,5 +7,6 @@
 
 #include "mozilla/glean/Counter.h"
 #include "mozilla/glean/Timespan.h"
+#include "mozilla/glean/Boolean.h"
 
 #endif  // mozilla_Glean_MetricTypes_h
