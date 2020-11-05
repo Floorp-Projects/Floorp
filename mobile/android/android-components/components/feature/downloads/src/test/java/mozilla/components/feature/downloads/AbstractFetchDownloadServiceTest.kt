@@ -1116,6 +1116,22 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
+    fun `performDownload - use the client response when resuming a download`() {
+        val responseFromDownloadState = mock<Response>()
+        val responseFromClient = mock<Response>()
+        val download = spy(DownloadState("https://example.com/file.txt", "file.txt", response = responseFromDownloadState))
+        val downloadJob = DownloadJobState(currentBytesCopied = 100, state = download, status = DOWNLOADING)
+
+        doReturn(404).`when`(responseFromClient).status
+        doReturn(responseFromClient).`when`(client).fetch(any())
+
+        service.performDownload(downloadJob)
+
+        verify(responseFromClient, atLeastOnce()).status
+        verifyZeroInteractions(responseFromDownloadState)
+    }
+
+    @Test
     fun `onDestroy cancels all running jobs`() = runBlocking {
         val download = DownloadState("https://example.com/file.txt", "file.txt")
         val response = Response(

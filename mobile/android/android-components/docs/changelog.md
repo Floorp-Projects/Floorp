@@ -14,7 +14,10 @@ permalink: /changelog/
 * **accounts-push**
   * 🚒 Bug fixed [issue #8745](https://github.com/mozilla-mobile/android-components/issues/8745) - Remove OneTimeFxaPushReset from FxaPushSupportFeature
     * ⚠️ **This is a breaking change** because the public API changes with the removal of the class.
-    
+
+* **feature-downloads**
+  * 🚒 Bug fixed [issue #8904](https://github.com/mozilla-mobile/android-components/issues/8904) Fix resuming downloads in nightly/beta more details see the [Fenix issue](https://github.com/mozilla-mobile/fenix/issues/9354).
+
 * **feature-search**
  * * ⚠️ **This is a breaking change**: `SearchUseCases` no longer requires a `Context` parameter in the constructor. 
 

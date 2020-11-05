@@ -614,7 +614,13 @@ abstract class AbstractFetchDownloadService : Service() {
         }
 
         val request = Request(download.url.sanitizeURL(), headers = headers, cookiePolicy = cookiePolicy)
-        val response = download.response ?: httpClient.fetch(request)
+        // When resuming a download we need to use the httpClient as
+        // download.response doesn't support adding headers.
+        val response = if (isResumingDownload) {
+            httpClient.fetch(request)
+        } else {
+            download.response ?: httpClient.fetch(request)
+        }
         logger.debug("Fetching download for ${currentDownloadJobState.state.id} ")
 
         // If we are resuming a download and the response does not contain a CONTENT_RANGE
