@@ -489,13 +489,14 @@ nsresult MediaEngineWebRTCMicrophoneSource::Deallocate() {
 }
 
 void MediaEngineWebRTCMicrophoneSource::SetTrack(
-    const RefPtr<SourceMediaTrack>& aTrack, const PrincipalHandle& aPrincipal) {
+    const RefPtr<MediaTrack>& aTrack, const PrincipalHandle& aPrincipal) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aTrack);
+  MOZ_ASSERT(aTrack->AsSourceTrack());
 
   MOZ_ASSERT(!mTrack);
   MOZ_ASSERT(mPrincipal == PRINCIPAL_HANDLE_NONE);
-  mTrack = aTrack;
+  mTrack = aTrack->AsSourceTrack();
   mPrincipal = aPrincipal;
 
   mInputProcessing =
@@ -1199,8 +1200,7 @@ nsString MediaEngineWebRTCAudioCaptureSource::GetGroupId() const {
 }
 
 void MediaEngineWebRTCAudioCaptureSource::SetTrack(
-    const RefPtr<SourceMediaTrack>& aTrack,
-    const PrincipalHandle& aPrincipalHandle) {
+    const RefPtr<MediaTrack>& aTrack, const PrincipalHandle& aPrincipalHandle) {
   AssertIsOnOwningThread();
   // Nothing to do here. aTrack is a placeholder dummy and not exposed.
 }

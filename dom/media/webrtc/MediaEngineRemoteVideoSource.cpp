@@ -263,14 +263,15 @@ nsresult MediaEngineRemoteVideoSource::Deallocate() {
   return NS_OK;
 }
 
-void MediaEngineRemoteVideoSource::SetTrack(
-    const RefPtr<SourceMediaTrack>& aTrack, const PrincipalHandle& aPrincipal) {
+void MediaEngineRemoteVideoSource::SetTrack(const RefPtr<MediaTrack>& aTrack,
+                                            const PrincipalHandle& aPrincipal) {
   LOG("%s", __PRETTY_FUNCTION__);
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kAllocated);
   MOZ_ASSERT(!mTrack);
   MOZ_ASSERT(aTrack);
+  MOZ_ASSERT(aTrack->AsSourceTrack());
 
   if (!mImageContainer) {
     mImageContainer = layers::LayerManager::CreateImageContainer(
@@ -279,7 +280,7 @@ void MediaEngineRemoteVideoSource::SetTrack(
 
   {
     MutexAutoLock lock(mMutex);
-    mTrack = aTrack;
+    mTrack = aTrack->AsSourceTrack();
     mPrincipal = aPrincipal;
   }
 }
