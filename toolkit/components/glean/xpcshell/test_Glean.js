@@ -42,3 +42,9 @@ add_task(async function test_fog_timespan_works() {
   Assert.ok(Glean.test_only.can_we_time_it.testHasValue("test-ping"));
   Assert.ok(Glean.test_only.can_we_time_it.testGetValue("test-ping") > 0);
 });
+
+add_task(function test_fog_boolean_works() {
+  Glean.test_only.can_we_flag_it.set(false);
+  Assert.ok(Glean.test_only.can_we_flag_it.testHasValue("test-ping"));
+  Assert.equal(false, Glean.test_only.can_we_flag_it.testGetValue("test-ping"));
+});
