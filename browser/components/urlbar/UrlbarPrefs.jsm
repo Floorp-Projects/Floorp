@@ -198,7 +198,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   //  0 - Show nothing
   //  1 - Show search history
   //  2 - Show search and browsing history
-  ["update2.emptySearchBehavior", 2],
+  ["update2.emptySearchBehavior", 0],
 
   // Whether the urlbar displays one-offs to filter searches to history,
   // bookmarks, or tabs.

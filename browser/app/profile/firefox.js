@@ -353,7 +353,7 @@ pref("browser.urlbar.update2.disableOneOffsHorizontalKeyNavigation", true);
 //  0 - Show nothing
 //  1 - Show search history
 //  2 - Show search and browsing history
-pref("browser.urlbar.update2.emptySearchBehavior", 2);
+pref("browser.urlbar.update2.emptySearchBehavior", 0);
 
 // Whether the urlbar displays one-offs to filter searches to history,
 // bookmarks, or tabs.
