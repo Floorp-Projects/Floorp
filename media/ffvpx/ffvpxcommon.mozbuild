@@ -71,9 +71,5 @@ elif not CONFIG['RELEASE_OR_BETA']:
     # Enable fast assertions in opt builds of Nightly and Aurora.
     DEFINES['ASSERT_LEVEL'] = 1
 
-if CONFIG['MOZ_WAYLAND']:
-    CFLAGS += CONFIG['MOZ_WAYLAND_CFLAGS']
-    CXXFLAGS += CONFIG['MOZ_WAYLAND_CFLAGS']
-
 # Add libFuzzer configuration directives
 include('/tools/fuzzing/libfuzzer-config.mozbuild')

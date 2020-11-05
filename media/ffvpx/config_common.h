@@ -18,14 +18,4 @@
 #define CONFIG_RDFT 1
 #endif
 
-#ifdef MOZ_WAYLAND
-#define CONFIG_VAAPI 1
-#define CONFIG_VP8_VAAPI_HWACCEL 1
-#define CONFIG_VP9_VAAPI_HWACCEL 1
-#else
-#define CONFIG_VAAPI 0
-#define CONFIG_VP8_VAAPI_HWACCEL 0
-#define CONFIG_VP9_VAAPI_HWACCEL 0
-#endif
-
 #endif
