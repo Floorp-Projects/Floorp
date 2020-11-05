@@ -51,7 +51,7 @@ add_task(async function setup() {
   });
 });
 
-add_task(async function bookmarks_toolbar_shown_on_newtab() {
+add_task(async function bookmarks_toolbar_not_shown_when_empty() {
   for (let featureEnabled of [true, false]) {
     info(
       "Testing with the feature " + (featureEnabled ? "enabled" : "disabled")
@@ -128,7 +128,34 @@ add_task(async function bookmarks_toolbar_shown_on_newtab() {
         "Toolbar is not visible when there are no items or nested bookmarks in the toolbar area",
     });
 
+    // 6: Add a toolbarbutton and make sure that the toolbar appears when the button is visible
+    let button = document.createElementNS(
+      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+      "toolbarbutton"
+    );
+    let toolbar = document.getElementById("PersonalToolbar");
+    button = toolbar.appendChild(button);
+    await BrowserTestUtils.switchTab(gBrowser, example);
+    await BrowserTestUtils.switchTab(gBrowser, newtab);
+    if (featureEnabled) {
+      await waitForBookmarksToolbarVisibility({
+        visible: true,
+        message:
+          "Toolbar is visible when there is a visible button in the toolbar",
+      });
+    }
+    button.hidden = true;
+    await BrowserTestUtils.switchTab(gBrowser, example);
+    await BrowserTestUtils.switchTab(gBrowser, newtab);
+    await waitForBookmarksToolbarVisibility({
+      visible: false,
+      message:
+        "Toolbar is hidden when there are no visible buttons in the toolbar",
+    });
+    button.remove();
+
     await BrowserTestUtils.removeTab(newtab);
     await BrowserTestUtils.removeTab(example);
+    CustomizableUI.reset();
   }
 });

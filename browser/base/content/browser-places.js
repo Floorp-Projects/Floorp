@@ -1625,22 +1625,21 @@ var BookmarkingUI = {
   },
 
   bookmarksToolbarHasVisibleChildren() {
-    let bookmarksToolbarWidgets = CustomizableUI.getWidgetsInArea(
-      CustomizableUI.AREA_BOOKMARKS
+    let bookmarksToolbarItemsPlacement = CustomizableUI.getPlacementOfWidget(
+      "personal-bookmarks"
     );
 
-    const BOOKMARKS_TOOLBAR_ITEMS_ID = "personal-bookmarks";
     if (
-      bookmarksToolbarWidgets.find(w => w.id == BOOKMARKS_TOOLBAR_ITEMS_ID) &&
+      bookmarksToolbarItemsPlacement.area == CustomizableUI.AREA_BOOKMARKS &&
       PlacesUtils.getChildCountForFolder(PlacesUtils.bookmarks.toolbarGuid)
     ) {
       return true;
     }
 
-    // The bookmarks items may not have any children, but if there are
-    // other widgets present then treat them as visible.
-    return bookmarksToolbarWidgets.some(
-      w => w.id != BOOKMARKS_TOOLBAR_ITEMS_ID
+    let bookmarksToolbar = document.getElementById("PersonalToolbar");
+    return !!bookmarksToolbar.querySelector(
+      `#PersonalToolbar > toolbarbutton:not([hidden]),
+       #PersonalToolbar > toolbaritem:not([hidden]):not(#personal-bookmarks)`
     );
   },
 
