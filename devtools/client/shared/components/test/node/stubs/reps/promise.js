@@ -196,4 +196,50 @@ stubs.set("FulfilledWithDisconnectedNode", {
   },
 });
 
+stubs.set("RejectedWithNumber", {
+  type: "object",
+  actor: "server0.conn0.child3/obj27",
+  class: "Promise",
+  promiseState: {
+    state: "rejected",
+    reason: 123,
+    creationTimestamp: 1604166587850.8196,
+    timeToSettle: 0.002147999999579042,
+  },
+  ownPropertyLength: 0,
+  preview: {
+    kind: "Object",
+    ownProperties: {},
+    ownPropertiesLength: 0,
+    safeGetterValues: {},
+  },
+});
+
+stubs.set("RejectedWithObject", {
+  type: "object",
+  actor: "server0.conn0.child3/obj67",
+  class: "Promise",
+  promiseState: {
+    state: "rejected",
+    reason: {
+      type: "object",
+      actor: "server1.conn1.child1/obj68",
+      class: "Object",
+      extensible: true,
+      frozen: false,
+      sealed: false,
+      ownPropertyLength: 1,
+    },
+    creationTimestamp: 1604166111838.8694,
+    timeToSettle: 0.0017999999690800905,
+  },
+  ownPropertyLength: 0,
+  preview: {
+    kind: "Object",
+    ownProperties: {},
+    ownPropertiesLength: 0,
+    safeGetterValues: {},
+  },
+});
+
 module.exports = stubs;
