@@ -54,7 +54,6 @@ FRAME_CLASSES = [
     Frame("nsMathMLmathBlockFrame", "Block", NOT_LEAF),
     Frame("nsMathMLmathInlineFrame", "Inline", NOT_LEAF),
     Frame("nsMathMLmencloseFrame", "None", NOT_LEAF),
-    Frame("nsMathMLmfencedFrame", "None", NOT_LEAF),
     Frame("nsMathMLmfracFrame", "None", NOT_LEAF),
     Frame("nsMathMLmmultiscriptsFrame", "None", NOT_LEAF),
     Frame("nsMathMLmoFrame", "None", NOT_LEAF),

@@ -21,7 +21,6 @@ UNIFIED_SOURCES += [
     "nsMathMLFrame.cpp",
     "nsMathMLmactionFrame.cpp",
     "nsMathMLmencloseFrame.cpp",
-    "nsMathMLmfencedFrame.cpp",
     "nsMathMLmfracFrame.cpp",
     "nsMathMLmmultiscriptsFrame.cpp",
     "nsMathMLmoFrame.cpp",
