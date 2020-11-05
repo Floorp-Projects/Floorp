@@ -85,3 +85,46 @@ add_task(async function test_shortcut_location() {
   await shownPromise;
   await checkSelection();
 });
+
+// Note: Bookmarking frames is tested in browser_addBookmarkForFrame.js
+
+/**
+ * Verify that bookmarks created with the link context menu go to the default
+ * bookmark location.
+ */
+add_task(async function test_context_menu_link() {
+  await withBookmarksDialog(
+    true,
+    async function openDialog() {
+      const contextMenu = win.document.getElementById("contentAreaContextMenu");
+      is(contextMenu.state, "closed", "checking if popup is closed");
+      let promisePopupShown = BrowserTestUtils.waitForEvent(
+        contextMenu,
+        "popupshown"
+      );
+      BrowserTestUtils.synthesizeMouseAtCenter(
+        "a[href]",
+        { type: "contextmenu", button: 2 },
+        win.gBrowser.selectedBrowser
+      );
+      await promisePopupShown;
+      win.document.getElementById("context-bookmarklink").click();
+    },
+    async function test(dialogWin) {
+      let expectedFolder = win.gBookmarksToolbar2h2020
+        ? "BookmarksToolbarFolderTitle"
+        : "OtherBookmarksFolderTitle";
+      let expectedFolderName = PlacesUtils.getString(expectedFolder);
+
+      let folderPicker = dialogWin.document.getElementById(
+        "editBMPanel_folderMenuList"
+      );
+
+      // Check the initial state of the folder picker.
+      await BrowserTestUtils.waitForCondition(
+        () => folderPicker.selectedItem.label == expectedFolderName,
+        "The folder is the expected one."
+      );
+    }
+  );
+});
