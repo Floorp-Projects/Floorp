@@ -5144,9 +5144,7 @@ impl Renderer {
         draw_target: DrawTarget,
         projection: &default::Transform3D<f32>,
         results: &mut RenderResults,
-        buffer_age: usize,
-        max_partial_present_rects: usize,
-        draw_previous_partial_present_regions: bool,
+        partial_present_mode: Option<PartialPresentMode>,
     ) {
         let _gm = self.gpu_profiler.start_marker("framebuffer");
         let _timer = self.gpu_profiler.start_timer(GPU_TAG_COMPOSITE);
@@ -5154,83 +5152,6 @@ impl Renderer {
         self.device.bind_draw_target(draw_target);
         self.device.enable_depth(DepthFunction::LessEqual);
         self.device.enable_depth_write();
-
-        // Determine the partial present mode for this frame, which is used during
-        // framebuffer clears and calculating the clip rect for each tile that is drawn.
-        let mut partial_present_mode = None;
-
-        if max_partial_present_rects > 0 {
-            let prev_frames_damage_rect = if let Some(..) = self.compositor_config.partial_present() {
-                self.buffer_damage_tracker
-                    .get_damage_rect(buffer_age)
-                    .or_else(|| Some(DeviceRect::from_size(draw_target.dimensions().to_f32())))
-            } else {
-                None
-            };
-
-            let can_use_partial_present =
-                composite_state.dirty_rects_are_valid &&
-                !self.force_redraw &&
-                !(prev_frames_damage_rect.is_none() && draw_previous_partial_present_regions) &&
-                !self.debug_overlay_state.is_enabled;
-
-            if can_use_partial_present {
-                let mut combined_dirty_rect = DeviceRect::zero();
-
-                // Work out how many dirty rects WR produced, and if that's more than
-                // what the device supports.
-                for tile in composite_state.opaque_tiles.iter().chain(composite_state.alpha_tiles.iter()) {
-                    let tile_dirty_rect = tile.dirty_rect.translate(tile.rect.origin.to_vector());
-                    combined_dirty_rect = combined_dirty_rect.union(&tile_dirty_rect);
-                }
-
-                let combined_dirty_rect = combined_dirty_rect.round();
-                let combined_dirty_rect_i32 = combined_dirty_rect.to_i32();
-                // Return this frame's dirty region. If nothing has changed, don't return any dirty
-                // rects at all (the client can use this as a signal to skip present completely).
-                if !combined_dirty_rect.is_empty() {
-                    results.dirty_rects.push(combined_dirty_rect_i32);
-                }
-
-                // Track this frame's dirty region, for calculating subsequent frames' damage.
-                if draw_previous_partial_present_regions {
-                    self.buffer_damage_tracker.push_dirty_rect(&combined_dirty_rect);
-                }
-
-                // If the implementation requires manually keeping the buffer consistent,
-                // then we must combine this frame's dirty region with that of previous frames
-                // to determine the total_dirty_rect. The is used to determine what region we
-                // render to, and is what we send to the compositor as the buffer damage region
-                // (eg for KHR_partial_update).
-                let total_dirty_rect = if draw_previous_partial_present_regions {
-                    combined_dirty_rect.union(&prev_frames_damage_rect.unwrap())
-                } else {
-                    combined_dirty_rect
-                };
-
-                partial_present_mode = Some(PartialPresentMode::Single {
-                    dirty_rect: total_dirty_rect,
-                });
-
-                if let Some(partial_present) = self.compositor_config.partial_present() {
-                    partial_present.set_buffer_damage_region(&[total_dirty_rect.to_i32()]);
-                }
-            } else {
-                // If we don't have a valid partial present scenario, return a single
-                // dirty rect to the client that covers the entire framebuffer.
-                let fb_rect = DeviceIntRect::new(
-                    DeviceIntPoint::zero(),
-                    draw_target.dimensions(),
-                );
-                results.dirty_rects.push(fb_rect);
-
-                if draw_previous_partial_present_regions {
-                    self.buffer_damage_tracker.push_dirty_rect(&fb_rect.to_f32());
-                }
-            }
-
-            self.force_redraw = false;
-        }
 
         // Clear the framebuffer
         let clear_color = self.clear_color.map(|color| color.to_array());
@@ -5941,6 +5862,107 @@ impl Renderer {
         }
     }
 
+    /// Update the dirty rects based on current compositing mode and config
+    // TODO(gw): This can be tidied up significantly once the Draw compositor
+    //           is implemented in terms of the compositor trait.
+    fn calculate_dirty_rects(
+        &mut self,
+        buffer_age: usize,
+        composite_state: &CompositeState,
+        draw_target_dimensions: DeviceIntSize,
+        results: &mut RenderResults,
+    ) -> Option<PartialPresentMode> {
+        let mut partial_present_mode = None;
+
+        let (max_partial_present_rects, draw_previous_partial_present_regions) = match self.current_compositor_kind {
+            CompositorKind::Native { .. } => {
+                // Assume that we can return a single dirty rect for native
+                // compositor for now, and that there is no buffer-age functionality.
+                // These params can be exposed by the compositor capabilities struct
+                // as the Draw compositor is ported to use it.
+                (1, false)
+            }
+            CompositorKind::Draw { draw_previous_partial_present_regions, max_partial_present_rects } => {
+                (max_partial_present_rects, draw_previous_partial_present_regions)
+            }
+        };
+
+        if max_partial_present_rects > 0 {
+            let prev_frames_damage_rect = if let Some(..) = self.compositor_config.partial_present() {
+                self.buffer_damage_tracker
+                    .get_damage_rect(buffer_age)
+                    .or_else(|| Some(DeviceRect::from_size(draw_target_dimensions.to_f32())))
+            } else {
+                None
+            };
+
+            let can_use_partial_present =
+                composite_state.dirty_rects_are_valid &&
+                !self.force_redraw &&
+                !(prev_frames_damage_rect.is_none() && draw_previous_partial_present_regions) &&
+                !self.debug_overlay_state.is_enabled;
+
+            if can_use_partial_present {
+                let mut combined_dirty_rect = DeviceRect::zero();
+
+                // Work out how many dirty rects WR produced, and if that's more than
+                // what the device supports.
+                for tile in composite_state.opaque_tiles.iter().chain(composite_state.alpha_tiles.iter()) {
+                    let tile_dirty_rect = tile.dirty_rect.translate(tile.rect.origin.to_vector());
+                    combined_dirty_rect = combined_dirty_rect.union(&tile_dirty_rect);
+                }
+
+                let combined_dirty_rect = combined_dirty_rect.round();
+                let combined_dirty_rect_i32 = combined_dirty_rect.to_i32();
+                // Return this frame's dirty region. If nothing has changed, don't return any dirty
+                // rects at all (the client can use this as a signal to skip present completely).
+                if !combined_dirty_rect.is_empty() {
+                    results.dirty_rects.push(combined_dirty_rect_i32);
+                }
+
+                // Track this frame's dirty region, for calculating subsequent frames' damage.
+                if draw_previous_partial_present_regions {
+                    self.buffer_damage_tracker.push_dirty_rect(&combined_dirty_rect);
+                }
+
+                // If the implementation requires manually keeping the buffer consistent,
+                // then we must combine this frame's dirty region with that of previous frames
+                // to determine the total_dirty_rect. The is used to determine what region we
+                // render to, and is what we send to the compositor as the buffer damage region
+                // (eg for KHR_partial_update).
+                let total_dirty_rect = if draw_previous_partial_present_regions {
+                    combined_dirty_rect.union(&prev_frames_damage_rect.unwrap())
+                } else {
+                    combined_dirty_rect
+                };
+
+                partial_present_mode = Some(PartialPresentMode::Single {
+                    dirty_rect: total_dirty_rect,
+                });
+
+                if let Some(partial_present) = self.compositor_config.partial_present() {
+                    partial_present.set_buffer_damage_region(&[total_dirty_rect.to_i32()]);
+                }
+            } else {
+                // If we don't have a valid partial present scenario, return a single
+                // dirty rect to the client that covers the entire framebuffer.
+                let fb_rect = DeviceIntRect::new(
+                    DeviceIntPoint::zero(),
+                    draw_target_dimensions,
+                );
+                results.dirty_rects.push(fb_rect);
+
+                if draw_previous_partial_present_regions {
+                    self.buffer_damage_tracker.push_dirty_rect(&fb_rect.to_f32());
+                }
+            }
+
+            self.force_redraw = false;
+        }
+
+        partial_present_mode
+    }
+
     /// Allocates a texture to be used as the output for a rendering pass.
     ///
     /// We make an effort to reuse render target textures across passes and
@@ -6110,6 +6132,20 @@ impl Renderer {
 
         self.bind_frame_data(frame);
 
+        // Determine the present mode and dirty rects, if device_size
+        // is Some(..). If it's None, no composite will occur and only
+        // picture cache and texture cache targets will be updated.
+        // TODO(gw): Split Frame so that it's clearer when a composite
+        //           is occurring.
+        let present_mode = device_size.and_then(|device_size| {
+            self.calculate_dirty_rects(
+                buffer_age,
+                &frame.composite_state,
+                device_size,
+                results,
+            )
+        });
+
         // If we have a native OS compositor, then make use of that interface to
         // specify how to composite each of the picture cache surfaces. First, we
         // need to find each tile that may be bound and updated later in the frame
@@ -6144,7 +6180,10 @@ impl Renderer {
             // we have already invalidated any tiles that such surfaces may depend upon, so
             // the native render compositor can keep track of when to actually schedule
             // composition as surfaces are updated.
-            frame.composite_state.composite_native(&mut **compositor);
+            frame.composite_state.composite_native(
+                &results.dirty_rects,
+                &mut **compositor,
+            );
         }
 
         for (_pass_index, pass) in frame.passes.iter_mut().enumerate() {
@@ -6215,15 +6254,13 @@ impl Renderer {
                                     results,
                                 );
                             }
-                            CompositorKind::Draw { max_partial_present_rects, draw_previous_partial_present_regions, .. } => {
+                            CompositorKind::Draw { .. } => {
                                 self.composite_simple(
                                     &frame.composite_state,
                                     draw_target,
                                     &projection,
                                     results,
-                                    buffer_age,
-                                    max_partial_present_rects,
-                                    draw_previous_partial_present_regions,
+                                    present_mode,
                                 );
                             }
                         }
@@ -7831,6 +7868,7 @@ impl CompositeState {
     /// cache tiles to the OS compositor
     fn composite_native(
         &self,
+        dirty_rects: &[DeviceIntRect],
         compositor: &mut dyn Compositor,
     ) {
         // Add each surface to the visual tree. z-order is implicit based on
@@ -7844,7 +7882,7 @@ impl CompositeState {
                 surface.image_rendering,
             );
         }
-        compositor.start_compositing();
+        compositor.start_compositing(dirty_rects);
     }
 }
 
