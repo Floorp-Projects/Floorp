@@ -8,12 +8,14 @@ const { PermissionTestUtils } = ChromeUtils.import(
   "resource://testing-common/PermissionTestUtils.jsm"
 );
 
-const VIDEO_PAGE_URI =
-  "https://example.com/browser/toolkit/content/tests/browser/file_empty.html";
-const SAME_ORIGIN_FRAME_URI =
-  "https://example.com/browser/toolkit/content/tests/browser/file_mediaplayback_frame.html";
-const DIFFERENT_ORIGIN_FRAME_URI =
-  "https://example.org/browser/toolkit/content/tests/browser/file_mediaplayback_frame.html";
+const VIDEO_PAGE_URI = GetTestWebBasedURL("file_empty.html");
+const SAME_ORIGIN_FRAME_URI = GetTestWebBasedURL(
+  "file_mediaplayback_frame.html"
+);
+const DIFFERENT_ORIGIN_FRAME_URI = GetTestWebBasedURL(
+  "file_mediaplayback_frame.html",
+  { crossOrigin: true }
+);
 
 const gPermissionName = "autoplay-media";
 
