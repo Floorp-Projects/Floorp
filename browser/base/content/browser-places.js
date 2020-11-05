@@ -1588,12 +1588,6 @@ var BookmarkingUI = {
     menu.setAttribute("id", "toggle_" + toolbar.id);
     menu.setAttribute("accesskey", toolbar.getAttribute("accesskey"));
     menu.setAttribute("toolbarId", toolbar.id);
-
-    // Used by the Places context menu in the Bookmarks Toolbar
-    // when nothing is selected
-    menu.setAttribute("selectiontype", "none");
-
-    MozXULElement.insertFTLIfNeeded("browser/toolbarContextMenu.ftl");
     let menuItems = [
       [
         showOnNewTabMenuItem,
@@ -1639,21 +1633,22 @@ var BookmarkingUI = {
   },
 
   bookmarksToolbarHasVisibleChildren() {
-    let bookmarksToolbarItemsPlacement = CustomizableUI.getPlacementOfWidget(
-      "personal-bookmarks"
+    let bookmarksToolbarWidgets = CustomizableUI.getWidgetsInArea(
+      CustomizableUI.AREA_BOOKMARKS
     );
 
+    const BOOKMARKS_TOOLBAR_ITEMS_ID = "personal-bookmarks";
     if (
-      bookmarksToolbarItemsPlacement.area == CustomizableUI.AREA_BOOKMARKS &&
+      bookmarksToolbarWidgets.find(w => w.id == BOOKMARKS_TOOLBAR_ITEMS_ID) &&
       PlacesUtils.getChildCountForFolder(PlacesUtils.bookmarks.toolbarGuid)
     ) {
       return true;
     }
 
-    let bookmarksToolbar = document.getElementById("PersonalToolbar");
-    return !!bookmarksToolbar.querySelector(
-      `#PersonalToolbar > toolbarbutton:not([hidden]),
-       #PersonalToolbar > toolbaritem:not([hidden]):not(#personal-bookmarks)`
+    // The bookmarks items may not have any children, but if there are
+    // other widgets present then treat them as visible.
+    return bookmarksToolbarWidgets.some(
+      w => w.id != BOOKMARKS_TOOLBAR_ITEMS_ID
     );
   },
 
@@ -2311,7 +2306,6 @@ var BookmarkingUI = {
       let result = PlacesUtils.getFolderContents(unfiledGuid);
       let node = result.root;
       otherBookmarksPopup._placesNode = PlacesUtils.asContainer(node);
-      otherBookmarks._placesNode = PlacesUtils.asContainer(node);
 
       otherBookmarks.hidden = false;
     } else {
