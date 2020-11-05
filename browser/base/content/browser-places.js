@@ -542,9 +542,11 @@ var PlacesCommandHook = {
       return;
     }
 
+    let parentGuid = await PlacesUIUtils.defaultParentGuid;
+    let parentId = await PlacesUtils.promiseItemId(parentGuid);
     let defaultInsertionPoint = new PlacesInsertionPoint({
-      parentId: PlacesUtils.bookmarksMenuFolderId,
-      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      parentId,
+      parentGuid,
     });
     PlacesUIUtils.showBookmarkDialog(
       {
