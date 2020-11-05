@@ -1207,8 +1207,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
         private const val REQUEST_CODE_APP_PERMISSIONS = 3
-
-        private const val LOADING_PROGRESS_COMPLETE = 100
     }
 
     override fun onAccessibilityStateChanged(enabled: Boolean) {

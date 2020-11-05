@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.res.Configuration
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar
@@ -24,6 +25,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
 
+@ExperimentalCoroutinesApi
 abstract class ToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,
@@ -45,7 +47,7 @@ abstract class ToolbarIntegration(
     )
 
     private val menuPresenter =
-        MenuPresenter(toolbar, context.components.core.sessionManager, sessionId)
+        MenuPresenter(toolbar, context.components.core.store, sessionId)
 
     init {
         toolbar.display.menuBuilder = toolbarMenu.menuBuilder
@@ -67,6 +69,7 @@ abstract class ToolbarIntegration(
     }
 }
 
+@ExperimentalCoroutinesApi
 class DefaultToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,

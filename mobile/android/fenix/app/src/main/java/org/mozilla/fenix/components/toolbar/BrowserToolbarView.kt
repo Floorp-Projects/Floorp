@@ -21,6 +21,7 @@ import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_browser_top_toolbar.*
 import kotlinx.android.synthetic.main.component_browser_top_toolbar.view.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.state.ExternalAppType
@@ -49,6 +50,7 @@ interface BrowserToolbarViewInteractor {
     fun onReaderModePressed(enabled: Boolean)
 }
 
+@ExperimentalCoroutinesApi
 @SuppressWarnings("LargeClass")
 class BrowserToolbarView(
     private val container: ViewGroup,

@@ -9,6 +9,7 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.google.android.material.appbar.AppBarLayout
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.EngineView.InputResult.INPUT_RESULT_UNHANDLED
 import org.mozilla.fenix.ext.settings
@@ -16,6 +17,7 @@ import org.mozilla.fenix.ext.settings
 /**
  * ScrollingViewBehavior that will setScrollFlags on BrowserToolbar based on EngineView touch handling
  */
+@ExperimentalCoroutinesApi
 class SwipeRefreshScrollingViewBehavior(
     context: Context,
     attrs: AttributeSet?,

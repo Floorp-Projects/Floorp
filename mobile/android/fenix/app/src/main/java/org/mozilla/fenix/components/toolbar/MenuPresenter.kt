@@ -5,36 +5,46 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.view.View
-import mozilla.components.browser.session.SelectionAwareSessionObserver
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.mapNotNull
+import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
-import mozilla.components.concept.engine.manifest.WebAppManifest
+import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 
+@ExperimentalCoroutinesApi
 class MenuPresenter(
     private val menuToolbar: BrowserToolbar,
-    sessionManager: SessionManager,
+    private val store: BrowserStore,
     private val sessionId: String? = null
-) : SelectionAwareSessionObserver(sessionManager), View.OnAttachStateChangeListener {
+) : View.OnAttachStateChangeListener {
+
+    private var scope: CoroutineScope? = null
 
     fun start() {
-        observeIdOrSelected(sessionId)
         menuToolbar.addOnAttachStateChangeListener(this)
+        scope = store.flowScoped { flow ->
+            flow.mapNotNull { state -> state.findCustomTabOrSelectedTab(sessionId) }
+                .ifAnyChanged { tab ->
+                    arrayOf(
+                        tab.content.loading,
+                        tab.content.canGoBack,
+                        tab.content.canGoForward,
+                        tab.content.webAppManifest
+                    )
+                }
+                .collect {
+                    invalidateActions()
+                }
+        }
     }
 
-    /** Redraw the refresh/stop button */
-    override fun onLoadingStateChanged(session: Session, loading: Boolean) {
-        invalidateActions()
-    }
-
-    /** Redraw the back and forward buttons */
-    override fun onNavigationStateChanged(session: Session, canGoBack: Boolean, canGoForward: Boolean) {
-        invalidateActions()
-    }
-
-    /** Redraw the install web app button */
-    override fun onWebAppManifestChanged(session: Session, manifest: WebAppManifest?) {
-        invalidateActions()
+    fun stop() {
+        scope?.cancel()
     }
 
     fun invalidateActions() {
