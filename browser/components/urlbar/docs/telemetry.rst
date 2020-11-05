@@ -323,7 +323,7 @@ SEARCH_COUNTS
       Note there is often confusion between the terms alias and keyword, and
       they may be used inappropriately: aliases refer to search engines, while
       keywords refer to bookmarks. We expect no results for this SAP in Firefox
-      82+, since urlbar-searchmode replaces it.
+      83+, since urlbar-searchmode replaces it.
     - ``abouthome``
     - ``contextmenu``
     - ``newtab``
