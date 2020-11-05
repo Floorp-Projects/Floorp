@@ -15,8 +15,10 @@
 
 #include <spa/param/format-utils.h>
 #include <spa/param/props.h>
-#include <spa/param/video/raw-utils.h>
-#include <spa/support/type-map.h>
+
+#include <sys/mman.h>
+#include <sys/ioctl.h>
+#include <sys/syscall.h>
 
 #include <memory>
 #include <utility>
@@ -37,28 +39,41 @@ const char kRequestInterfaceName[] = "org.freedesktop.portal.Request";
 const char kScreenCastInterfaceName[] = "org.freedesktop.portal.ScreenCast";
 
 // static
-void BaseCapturerPipeWire::OnStateChanged(void* data,
-                                          pw_remote_state old_state,
-                                          pw_remote_state state,
-                                          const char* error_message) {
-  BaseCapturerPipeWire* that = static_cast<BaseCapturerPipeWire*>(data);
-  RTC_DCHECK(that);
+struct dma_buf_sync {
+  uint64_t flags;
+};
+#define DMA_BUF_SYNC_READ      (1 << 0)
+#define DMA_BUF_SYNC_START     (0 << 2)
+#define DMA_BUF_SYNC_END       (1 << 2)
+#define DMA_BUF_BASE           'b'
+#define DMA_BUF_IOCTL_SYNC     _IOW(DMA_BUF_BASE, 0, struct dma_buf_sync)
 
-  switch (state) {
-    case PW_REMOTE_STATE_ERROR:
-      RTC_LOG(LS_ERROR) << "PipeWire remote state error: " << error_message;
+static void SyncDmaBuf(int fd, uint64_t start_or_end) {
+  struct dma_buf_sync sync = { 0 };
+
+  sync.flags = start_or_end | DMA_BUF_SYNC_READ;
+
+  while(true) {
+    int ret;
+    ret = ioctl (fd, DMA_BUF_IOCTL_SYNC, &sync);
+    if (ret == -1 && errno == EINTR) {
+      continue;
+    } else if (ret == -1) {
+      RTC_LOG(LS_ERROR) << "Failed to synchronize DMA buffer: " << g_strerror(errno);
       break;
-    case PW_REMOTE_STATE_CONNECTED:
-      RTC_LOG(LS_INFO) << "PipeWire remote state: connected.";
-      that->CreateReceivingStream();
+    } else {
       break;
-    case PW_REMOTE_STATE_CONNECTING:
-      RTC_LOG(LS_INFO) << "PipeWire remote state: connecting.";
-      break;
-    case PW_REMOTE_STATE_UNCONNECTED:
-      RTC_LOG(LS_INFO) << "PipeWire remote state: unconnected.";
-      break;
+    }
   }
+}
+
+// static
+void BaseCapturerPipeWire::OnCoreError(void *data,
+                                       uint32_t id,
+                                       int seq,
+                                       int res,
+                                       const char *message) {
+  RTC_LOG(LS_ERROR) << "core error: " << message;
 }
 
 // static
@@ -73,76 +88,54 @@ void BaseCapturerPipeWire::OnStreamStateChanged(void* data,
     case PW_STREAM_STATE_ERROR:
       RTC_LOG(LS_ERROR) << "PipeWire stream state error: " << error_message;
       break;
-    case PW_STREAM_STATE_CONFIGURE:
-      pw_stream_set_active(that->pw_stream_, true);
-      break;
-    case PW_STREAM_STATE_UNCONNECTED:
-    case PW_STREAM_STATE_CONNECTING:
-    case PW_STREAM_STATE_READY:
     case PW_STREAM_STATE_PAUSED:
     case PW_STREAM_STATE_STREAMING:
+    case PW_STREAM_STATE_UNCONNECTED:
+    case PW_STREAM_STATE_CONNECTING:
       break;
   }
 }
 
 // static
-void BaseCapturerPipeWire::OnStreamFormatChanged(void* data,
-                                                 const struct spa_pod* format) {
+void BaseCapturerPipeWire::OnStreamParamChanged(void *data, uint32_t id,
+                                                const struct spa_pod *format) {
   BaseCapturerPipeWire* that = static_cast<BaseCapturerPipeWire*>(data);
   RTC_DCHECK(that);
 
-  RTC_LOG(LS_INFO) << "PipeWire stream format changed.";
+  RTC_LOG(LS_INFO) << "PipeWire stream param changed.";
 
-  if (!format) {
-    pw_stream_finish_format(that->pw_stream_, /*res=*/0, /*params=*/nullptr,
-                            /*n_params=*/0);
+  if (!format || id != SPA_PARAM_Format) {
     return;
   }
 
-  that->spa_video_format_ = new spa_video_info_raw();
-  spa_format_video_raw_parse(format, that->spa_video_format_,
-                             &that->pw_type_->format_video);
+  spa_format_video_raw_parse(format, &that->spa_video_format_);
 
-  auto width = that->spa_video_format_->size.width;
-  auto height = that->spa_video_format_->size.height;
+  auto width = that->spa_video_format_.size.width;
+  auto height = that->spa_video_format_.size.height;
   auto stride = SPA_ROUND_UP_N(width * kBytesPerPixel, 4);
   auto size = height * stride;
+
+  that->desktop_size_ = DesktopSize(width, height);
 
   uint8_t buffer[1024] = {};
   auto builder = spa_pod_builder{buffer, sizeof(buffer)};
 
   // Setup buffers and meta header for new format.
-  const struct spa_pod* params[2];
-  params[0] = reinterpret_cast<spa_pod*>(spa_pod_builder_object(
-      &builder,
-      // id to enumerate buffer requirements
-      that->pw_core_type_->param.idBuffers,
-      that->pw_core_type_->param_buffers.Buffers,
-      // Size: specified as integer (i) and set to specified size
-      ":", that->pw_core_type_->param_buffers.size, "i", size,
-      // Stride: specified as integer (i) and set to specified stride
-      ":", that->pw_core_type_->param_buffers.stride, "i", stride,
-      // Buffers: specifies how many buffers we want to deal with, set as
-      // integer (i) where preferred number is 8, then allowed number is defined
-      // as range (r) from min and max values and it is undecided (u) to allow
-      // negotiation
-      ":", that->pw_core_type_->param_buffers.buffers, "iru", 8,
-      SPA_POD_PROP_MIN_MAX(1, 32),
-      // Align: memory alignment of the buffer, set as integer (i) to specified
-      // value
-      ":", that->pw_core_type_->param_buffers.align, "i", 16));
-  params[1] = reinterpret_cast<spa_pod*>(spa_pod_builder_object(
-      &builder,
-      // id to enumerate supported metadata
-      that->pw_core_type_->param.idMeta, that->pw_core_type_->param_meta.Meta,
-      // Type: specified as id or enum (I)
-      ":", that->pw_core_type_->param_meta.type, "I",
-      that->pw_core_type_->meta.Header,
-      // Size: size of the metadata, specified as integer (i)
-      ":", that->pw_core_type_->param_meta.size, "i",
-      sizeof(struct spa_meta_header)));
-
-  pw_stream_finish_format(that->pw_stream_, /*res=*/0, params, /*n_params=*/2);
+  const struct spa_pod* params[3];
+  params[0] = reinterpret_cast<spa_pod *>(spa_pod_builder_add_object(&builder,
+              SPA_TYPE_OBJECT_ParamBuffers, SPA_PARAM_Buffers,
+              SPA_PARAM_BUFFERS_size, SPA_POD_Int(size),
+              SPA_PARAM_BUFFERS_stride, SPA_POD_Int(stride),
+              SPA_PARAM_BUFFERS_buffers, SPA_POD_CHOICE_RANGE_Int(8, 1, 32)));
+  params[1] = reinterpret_cast<spa_pod *>(spa_pod_builder_add_object(&builder,
+              SPA_TYPE_OBJECT_ParamMeta, SPA_PARAM_Meta,
+              SPA_PARAM_META_type, SPA_POD_Id(SPA_META_Header),
+              SPA_PARAM_META_size, SPA_POD_Int(sizeof(struct spa_meta_header))));
+  params[2] = reinterpret_cast<spa_pod *>(spa_pod_builder_add_object(&builder,
+              SPA_TYPE_OBJECT_ParamMeta, SPA_PARAM_Meta,
+              SPA_PARAM_META_type, SPA_POD_Id (SPA_META_VideoCrop),
+              SPA_PARAM_META_size, SPA_POD_Int (sizeof(struct spa_meta_region))));
+  pw_stream_update_params(that->pw_stream_, params, 3);
 }
 
 // static
@@ -150,15 +143,26 @@ void BaseCapturerPipeWire::OnStreamProcess(void* data) {
   BaseCapturerPipeWire* that = static_cast<BaseCapturerPipeWire*>(data);
   RTC_DCHECK(that);
 
-  pw_buffer* buf = nullptr;
+  struct pw_buffer *next_buffer;
+  struct pw_buffer *buffer = nullptr;
 
-  if (!(buf = pw_stream_dequeue_buffer(that->pw_stream_))) {
+  next_buffer = pw_stream_dequeue_buffer(that->pw_stream_);
+  while (next_buffer) {
+    buffer = next_buffer;
+    next_buffer = pw_stream_dequeue_buffer(that->pw_stream_);
+
+    if (next_buffer) {
+      pw_stream_queue_buffer (that->pw_stream_, buffer);
+    }
+  }
+
+  if (!buffer) {
     return;
   }
 
-  that->HandleBuffer(buf);
+  that->HandleBuffer(buffer);
 
-  pw_stream_queue_buffer(that->pw_stream_, buf);
+  pw_stream_queue_buffer(that->pw_stream_, buffer);
 }
 
 BaseCapturerPipeWire::BaseCapturerPipeWire(CaptureSourceType source_type)
@@ -169,36 +173,20 @@ BaseCapturerPipeWire::~BaseCapturerPipeWire() {
     pw_thread_loop_stop(pw_main_loop_);
   }
 
-  if (pw_type_) {
-    delete pw_type_;
-  }
-
-  if (spa_video_format_) {
-    delete spa_video_format_;
-  }
-
   if (pw_stream_) {
     pw_stream_destroy(pw_stream_);
   }
 
-  if (pw_remote_) {
-    pw_remote_destroy(pw_remote_);
+  if (pw_core_) {
+    pw_core_disconnect(pw_core_);
   }
 
-  if (pw_core_) {
-    pw_core_destroy(pw_core_);
+  if (pw_context_) {
+    pw_context_destroy(pw_context_);
   }
 
   if (pw_main_loop_) {
     pw_thread_loop_destroy(pw_main_loop_);
-  }
-
-  if (pw_loop_) {
-    pw_loop_destroy(pw_loop_);
-  }
-
-  if (current_frame_) {
-    free(current_frame_);
   }
 
   if (start_request_signal_id_) {
@@ -250,27 +238,35 @@ void BaseCapturerPipeWire::InitPortal() {
 void BaseCapturerPipeWire::InitPipeWire() {
   pw_init(/*argc=*/nullptr, /*argc=*/nullptr);
 
-  pw_loop_ = pw_loop_new(/*properties=*/nullptr);
-  pw_main_loop_ = pw_thread_loop_new(pw_loop_, "pipewire-main-loop");
+  pw_main_loop_ = pw_thread_loop_new("pipewire-main-loop", nullptr);
+  pw_context_ = pw_context_new(pw_thread_loop_get_loop(pw_main_loop_), nullptr, 0);
+  if (!pw_context_) {
+    RTC_LOG(LS_ERROR) << "Failed to create PipeWire context";
+    return;
+  }
 
-  pw_core_ = pw_core_new(pw_loop_, /*properties=*/nullptr);
-  pw_core_type_ = pw_core_get_type(pw_core_);
-  pw_remote_ = pw_remote_new(pw_core_, nullptr, /*user_data_size=*/0);
-
-  InitPipeWireTypes();
+  pw_core_ = pw_context_connect(pw_context_, nullptr, 0);
+  if (!pw_core_) {
+    RTC_LOG(LS_ERROR) << "Failed to connect PipeWire context";
+    return;
+  }
 
   // Initialize event handlers, remote end and stream-related.
-  pw_remote_events_.version = PW_VERSION_REMOTE_EVENTS;
-  pw_remote_events_.state_changed = &OnStateChanged;
+  pw_core_events_.version = PW_VERSION_CORE_EVENTS;
+  pw_core_events_.error = &OnCoreError;
 
   pw_stream_events_.version = PW_VERSION_STREAM_EVENTS;
   pw_stream_events_.state_changed = &OnStreamStateChanged;
-  pw_stream_events_.format_changed = &OnStreamFormatChanged;
+  pw_stream_events_.param_changed = &OnStreamParamChanged;
   pw_stream_events_.process = &OnStreamProcess;
 
-  pw_remote_add_listener(pw_remote_, &spa_remote_listener_, &pw_remote_events_,
-                         this);
-  pw_remote_connect_fd(pw_remote_, pw_fd_);
+  pw_core_add_listener(pw_core_, &spa_core_listener_, &pw_core_events_, this);
+
+  pw_stream_ = CreateReceivingStream();
+  if (!pw_stream_) {
+    RTC_LOG(LS_ERROR) << "Failed to create PipeWire stream";
+    return;
+  }
 
   if (pw_thread_loop_start(pw_main_loop_) < 0) {
     RTC_LOG(LS_ERROR) << "Failed to start main PipeWire loop";
@@ -278,105 +274,164 @@ void BaseCapturerPipeWire::InitPipeWire() {
   }
 }
 
-void BaseCapturerPipeWire::InitPipeWireTypes() {
-  spa_type_map* map = pw_core_type_->map;
-  pw_type_ = new PipeWireType();
-
-  spa_type_media_type_map(map, &pw_type_->media_type);
-  spa_type_media_subtype_map(map, &pw_type_->media_subtype);
-  spa_type_format_video_map(map, &pw_type_->format_video);
-  spa_type_video_format_map(map, &pw_type_->video_format);
-}
-
-void BaseCapturerPipeWire::CreateReceivingStream() {
+pw_stream* BaseCapturerPipeWire::CreateReceivingStream() {
   spa_rectangle pwMinScreenBounds = spa_rectangle{1, 1};
-  spa_rectangle pwScreenBounds =
-      spa_rectangle{static_cast<uint32_t>(desktop_size_.width()),
-                    static_cast<uint32_t>(desktop_size_.height())};
+  spa_rectangle pwMaxScreenBounds = spa_rectangle{UINT32_MAX, UINT32_MAX};
 
-  spa_fraction pwFrameRateMin = spa_fraction{0, 1};
-  spa_fraction pwFrameRateMax = spa_fraction{60, 1};
+  auto stream = pw_stream_new(pw_core_, "webrtc-pipewire-stream", nullptr);
 
-  pw_properties* reuseProps = pw_properties_new("pipewire.client.reuse", "1",
-                                                /*end of varargs*/ nullptr);
-  pw_stream_ = pw_stream_new(pw_remote_, "webrtc-consume-stream", reuseProps);
+  if (!stream) {
+    RTC_LOG(LS_ERROR) << "Could not create receiving stream.";
+    return nullptr;
+  }
 
   uint8_t buffer[1024] = {};
-  const spa_pod* params[1];
-  spa_pod_builder builder = spa_pod_builder{buffer, sizeof(buffer)};
-  params[0] = reinterpret_cast<spa_pod*>(spa_pod_builder_object(
-      &builder,
-      // id to enumerate formats
-      pw_core_type_->param.idEnumFormat, pw_core_type_->spa_format, "I",
-      pw_type_->media_type.video, "I", pw_type_->media_subtype.raw,
-      // Video format: specified as id or enum (I), preferred format is BGRx,
-      // then allowed formats are enumerated (e) and the format is undecided (u)
-      // to allow negotiation
-      ":", pw_type_->format_video.format, "Ieu", pw_type_->video_format.BGRx,
-      SPA_POD_PROP_ENUM(2, pw_type_->video_format.RGBx,
-                        pw_type_->video_format.BGRx),
-      // Video size: specified as rectangle (R), preferred size is specified as
-      // first parameter, then allowed size is defined as range (r) from min and
-      // max values and the format is undecided (u) to allow negotiation
-      ":", pw_type_->format_video.size, "Rru", &pwScreenBounds, 2,
-      &pwMinScreenBounds, &pwScreenBounds,
-      // Frame rate: specified as fraction (F) and set to minimum frame rate
-      // value
-      ":", pw_type_->format_video.framerate, "F", &pwFrameRateMin,
-      // Max frame rate: specified as fraction (F), preferred frame rate is set
-      // to maximum value, then allowed frame rate is defined as range (r) from
-      // min and max values and it is undecided (u) to allow negotiation
-      ":", pw_type_->format_video.max_framerate, "Fru", &pwFrameRateMax, 2,
-      &pwFrameRateMin, &pwFrameRateMax));
+  const spa_pod* params[2];
+  spa_pod_builder builder = SPA_POD_BUILDER_INIT(buffer, sizeof (buffer));
 
-  pw_stream_add_listener(pw_stream_, &spa_stream_listener_, &pw_stream_events_,
-                         this);
-  pw_stream_flags flags = static_cast<pw_stream_flags>(
-      PW_STREAM_FLAG_AUTOCONNECT | PW_STREAM_FLAG_INACTIVE |
-      PW_STREAM_FLAG_MAP_BUFFERS);
-  if (pw_stream_connect(pw_stream_, PW_DIRECTION_INPUT, /*port_path=*/nullptr,
-                        flags, params,
-                        /*n_params=*/1) != 0) {
+  params[0] = reinterpret_cast<spa_pod *>(spa_pod_builder_add_object(&builder,
+              SPA_TYPE_OBJECT_Format, SPA_PARAM_EnumFormat,
+              SPA_FORMAT_mediaType, SPA_POD_Id(SPA_MEDIA_TYPE_video),
+              SPA_FORMAT_mediaSubtype, SPA_POD_Id(SPA_MEDIA_SUBTYPE_raw),
+              SPA_FORMAT_VIDEO_format, SPA_POD_CHOICE_ENUM_Id(5, SPA_VIDEO_FORMAT_BGRx, SPA_VIDEO_FORMAT_RGBx, SPA_VIDEO_FORMAT_RGBA,
+                                                                 SPA_VIDEO_FORMAT_BGRx, SPA_VIDEO_FORMAT_BGRA),
+              SPA_FORMAT_VIDEO_size, SPA_POD_CHOICE_RANGE_Rectangle(&pwMinScreenBounds,
+                                                                    &pwMinScreenBounds,
+                                                                    &pwMaxScreenBounds),
+              0));
+  pw_stream_add_listener(stream, &spa_stream_listener_, &pw_stream_events_, this);
+
+  if (pw_stream_connect(stream, PW_DIRECTION_INPUT, pw_stream_node_id_,
+      PW_STREAM_FLAG_AUTOCONNECT, params, 1) != 0) {
     RTC_LOG(LS_ERROR) << "Could not connect receiving stream.";
     portal_init_failed_ = true;
-    return;
+  }
+
+  return stream;
+}
+
+static void SpaBufferUnmap(unsigned char *map, int map_size, bool IsDMABuf, int fd) {
+  if (map) {
+    if (IsDMABuf) {
+      SyncDmaBuf(fd, DMA_BUF_SYNC_END);
+    }
+    munmap(map, map_size);
   }
 }
 
 void BaseCapturerPipeWire::HandleBuffer(pw_buffer* buffer) {
   spa_buffer* spaBuffer = buffer->buffer;
-  void* src = nullptr;
+  uint8_t *map = nullptr;
+  uint8_t* src = nullptr;
 
-  if (!(src = spaBuffer->datas[0].data)) {
+  if (spaBuffer->datas[0].chunk->size == 0) {
+    RTC_LOG(LS_ERROR) << "Failed to get video stream: Zero size.";
     return;
   }
 
-  uint32_t maxSize = spaBuffer->datas[0].maxsize;
-  int32_t srcStride = spaBuffer->datas[0].chunk->stride;
-  if (srcStride != (desktop_size_.width() * kBytesPerPixel)) {
-    RTC_LOG(LS_ERROR) << "Got buffer with stride different from screen stride: "
-                      << srcStride
-                      << " != " << (desktop_size_.width() * kBytesPerPixel);
-    portal_init_failed_ = true;
+  switch (spaBuffer->datas[0].type) {
+    case SPA_DATA_MemFd:
+    case SPA_DATA_DmaBuf:
+      map = static_cast<uint8_t*>(mmap(
+          nullptr, spaBuffer->datas[0].maxsize + spaBuffer->datas[0].mapoffset,
+          PROT_READ, MAP_PRIVATE, spaBuffer->datas[0].fd, 0));
+      if (map == MAP_FAILED) {
+        RTC_LOG(LS_ERROR) << "Failed to mmap memory: " << std::strerror(errno);
+        return;
+      }
+      if (spaBuffer->datas[0].type == SPA_DATA_DmaBuf) {
+        SyncDmaBuf(spaBuffer->datas[0].fd, DMA_BUF_SYNC_START);
+      }
+      src = SPA_MEMBER(map, spaBuffer->datas[0].mapoffset, uint8_t);
+      break;
+    case SPA_DATA_MemPtr:
+      map = nullptr;
+      src = static_cast<uint8_t*>(spaBuffer->datas[0].data);
+      break;
+    default:
+      return;
+  }
+
+  if (!src) {
+    RTC_LOG(LS_ERROR) << "Failed to get video stream: Wrong data after mmap()";
+    SpaBufferUnmap(map,
+      spaBuffer->datas[0].maxsize + spaBuffer->datas[0].mapoffset,
+      spaBuffer->datas[0].type == SPA_DATA_DmaBuf, spaBuffer->datas[0].fd);
     return;
   }
 
-  if (!current_frame_) {
-    current_frame_ = static_cast<uint8_t*>(malloc(maxSize));
-  }
-  RTC_DCHECK(current_frame_ != nullptr);
+  struct spa_meta_region* video_metadata =
+    static_cast<struct spa_meta_region*>(
+       spa_buffer_find_meta_data(spaBuffer, SPA_META_VideoCrop, sizeof(*video_metadata)));
 
-  // If both sides decided to go with the RGBx format we need to convert it to
-  // BGRx to match color format expected by WebRTC.
-  if (spa_video_format_->format == pw_type_->video_format.RGBx) {
-    uint8_t* tempFrame = static_cast<uint8_t*>(malloc(maxSize));
-    std::memcpy(tempFrame, src, maxSize);
-    ConvertRGBxToBGRx(tempFrame, maxSize);
-    std::memcpy(current_frame_, tempFrame, maxSize);
-    free(tempFrame);
+  // Video size from metada is bigger than an actual video stream size.
+  // The metadata are wrong or we should up-scale te video...in both cases
+  // just quit now.
+  if (video_metadata &&
+      (video_metadata->region.size.width > (uint32_t)desktop_size_.width() ||
+        video_metadata->region.size.height > (uint32_t)desktop_size_.height())) {
+    RTC_LOG(LS_ERROR) << "Stream metadata sizes are wrong!";
+    SpaBufferUnmap(map,
+      spaBuffer->datas[0].maxsize + spaBuffer->datas[0].mapoffset,
+      spaBuffer->datas[0].type == SPA_DATA_DmaBuf, spaBuffer->datas[0].fd);
+    return;
+  }
+
+  // Use video metada when video size from metadata is set and smaller than
+  // video stream size, so we need to adjust it.
+  video_metadata_use_ = (video_metadata &&
+      video_metadata->region.size.width != 0 &&
+        video_metadata->region.size.height != 0 &&
+          (video_metadata->region.size.width < (uint32_t)desktop_size_.width() ||
+            video_metadata->region.size.height < (uint32_t)desktop_size_.height()));
+
+  DesktopSize video_size_prev = video_size_;
+    if (video_metadata_use_) {
+    video_size_ = DesktopSize(video_metadata->region.size.width,
+                              video_metadata->region.size.height);
   } else {
-    std::memcpy(current_frame_, src, maxSize);
+    video_size_ = desktop_size_;
   }
+
+  if (!current_frame_ ||
+      (video_metadata_use_ && !video_size_.equals(video_size_prev))) {
+    current_frame_ =
+      std::make_unique<uint8_t[]>
+        (video_size_.width() * video_size_.height() * kBytesPerPixel);
+  }
+
+  const int32_t dstStride = video_size_.width() * kBytesPerPixel;
+  const int32_t srcStride = spaBuffer->datas[0].chunk->stride;
+
+  // Adjust source content based on metadata video position
+  if (video_metadata_use_ &&
+      (video_metadata->region.position.y + video_size_.height() <= desktop_size_.height())) {
+    src += srcStride * video_metadata->region.position.y;
+  }
+  const int xOffset =
+      video_metadata_use_ &&
+        (video_metadata->region.position.x + video_size_.width() <= desktop_size_.width())
+          ? video_metadata->region.position.x * kBytesPerPixel
+          : 0;
+
+  uint8_t* dst = current_frame_.get();
+  for (int i = 0; i < video_size_.height(); ++i) {
+    // Adjust source content based on crop video position if needed
+    src += xOffset;
+    std::memcpy(dst, src, dstStride);
+    // If both sides decided to go with the RGBx format we need to convert it to
+    // BGRx to match color format expected by WebRTC.
+    if (spa_video_format_.format == SPA_VIDEO_FORMAT_RGBx ||
+        spa_video_format_.format == SPA_VIDEO_FORMAT_RGBA) {
+      ConvertRGBxToBGRx(dst, dstStride);
+    }
+    src += srcStride - xOffset;
+    dst += dstStride;
+  }
+
+  SpaBufferUnmap(map,
+    spaBuffer->datas[0].maxsize + spaBuffer->datas[0].mapoffset,
+    spaBuffer->datas[0].type == SPA_DATA_DmaBuf, spaBuffer->datas[0].fd);
 }
 
 void BaseCapturerPipeWire::ConvertRGBxToBGRx(uint8_t* frame, uint32_t size) {
@@ -718,17 +773,12 @@ void BaseCapturerPipeWire::OnStartRequestResponseSignal(
 
     while (g_variant_iter_next(iter, "@(ua{sv})", &variant)) {
       guint32 stream_id;
-      gint32 width;
-      gint32 height;
       GVariant* options;
 
       g_variant_get(variant, "(u@a{sv})", &stream_id, &options);
       RTC_DCHECK(options != nullptr);
 
-      g_variant_lookup(options, "size", "(ii)", &width, &height);
-
-      that->desktop_size_.set(width, height);
-
+      that->pw_stream_node_id_ = stream_id;
       g_variant_unref(options);
       g_variant_unref(variant);
     }
@@ -813,10 +863,15 @@ void BaseCapturerPipeWire::CaptureFrame() {
     return;
   }
 
-  std::unique_ptr<DesktopFrame> result(new BasicDesktopFrame(desktop_size_));
+  DesktopSize frame_size = desktop_size_;
+  if (video_metadata_use_) {
+    frame_size = video_size_;
+  }
+
+  std::unique_ptr<DesktopFrame> result(new BasicDesktopFrame(frame_size));
   result->CopyPixelsFrom(
-      current_frame_, (desktop_size_.width() * kBytesPerPixel),
-      DesktopRect::MakeWH(desktop_size_.width(), desktop_size_.height()));
+      current_frame_.get(), (frame_size.width() * kBytesPerPixel),
+      DesktopRect::MakeWH(frame_size.width(), frame_size.height()));
   if (!result) {
     callback_->OnCaptureResult(Result::ERROR_TEMPORARY, nullptr);
     return;
@@ -835,6 +890,24 @@ bool BaseCapturerPipeWire::GetSourceList(SourceList* sources) {
 bool BaseCapturerPipeWire::SelectSource(SourceId id) {
   // Screen selection is handled by the xdg-desktop-portal.
   return true;
+}
+
+// static
+std::unique_ptr<DesktopCapturer>
+BaseCapturerPipeWire::CreateRawScreenCapturer(
+    const DesktopCaptureOptions& options) {
+  std::unique_ptr<BaseCapturerPipeWire> capturer =
+      std::make_unique<BaseCapturerPipeWire>(BaseCapturerPipeWire::CaptureSourceType::kAny);
+  return std::move(capturer);}
+
+// static
+std::unique_ptr<DesktopCapturer>
+BaseCapturerPipeWire::CreateRawWindowCapturer(
+    const DesktopCaptureOptions& options) {
+
+  std::unique_ptr<BaseCapturerPipeWire> capturer =
+      std::make_unique<BaseCapturerPipeWire>(BaseCapturerPipeWire::CaptureSourceType::kAny);
+  return std::move(capturer);
 }
 
 }  // namespace webrtc
