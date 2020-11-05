@@ -110,15 +110,15 @@ const ContentProcessTargetActor = TargetActorMixin(
       return this._consoleScope;
     },
 
-    get sources() {
-      if (!this._sources) {
+    get sourcesManager() {
+      if (!this._sourcesManager) {
         assert(
           this.threadActor,
-          "threadActor should exist when creating sources."
+          "threadActor should exist when creating SourcesManager."
         );
-        this._sources = new SourcesManager(this.threadActor);
+        this._sourcesManager = new SourcesManager(this.threadActor);
       }
-      return this._sources;
+      return this._sourcesManager;
     },
 
     /*
@@ -224,9 +224,9 @@ const ContentProcessTargetActor = TargetActorMixin(
         this._workerList = null;
       }
 
-      if (this._sources) {
-        this._sources.destroy();
-        this._sources = null;
+      if (this._sourcesManager) {
+        this._sourcesManager.destroy();
+        this._sourcesManager = null;
       }
 
       if (this._dbg) {

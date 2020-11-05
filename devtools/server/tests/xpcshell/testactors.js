@@ -184,11 +184,11 @@ const TestTargetActor = protocol.ActorClassWithSpec(browsingContextTargetSpec, {
     return this._global.__name;
   },
 
-  get sources() {
-    if (!this._sources) {
-      this._sources = new SourcesManager(this.threadActor);
+  get sourcesManager() {
+    if (!this._sourcesManager) {
+      this._sourcesManager = new SourcesManager(this.threadActor);
     }
-    return this._sources;
+    return this._sourcesManager;
   },
 
   form: function() {
@@ -224,7 +224,7 @@ const TestTargetActor = protocol.ActorClassWithSpec(browsingContextTargetSpec, {
   },
 
   reload: function(request) {
-    this.sources.reset();
+    this.sourcesManager.reset();
     this.threadActor.clearDebuggees();
     this.threadActor.dbg.addDebuggees();
     return {};

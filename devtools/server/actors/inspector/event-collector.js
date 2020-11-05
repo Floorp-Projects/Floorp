@@ -970,7 +970,7 @@ class EventCollector {
         line = script.startLine;
         column = script.startColumn;
         url = script.url;
-        const actor = this.targetActor.sources.getOrCreateSourceActor(
+        const actor = this.targetActor.sourcesManager.getOrCreateSourceActor(
           script.source
         );
         sourceActor = actor ? actor.actorID : null;
