@@ -131,11 +131,6 @@
 ./libavcodec/thread.h
 ./libavcodec/unary.h
 ./libavcodec/utils.c
-./libavcodec/vaapi.h
-./libavcodec/vaapi_decode.h
-./libavcodec/vaapi_decode.c
-./libavcodec/vaapi_vp8.c
-./libavcodec/vaapi_vp9.c
 ./libavcodec/version.h
 ./libavcodec/videodsp.c
 ./libavcodec/videodsp.h
@@ -268,11 +263,7 @@
 ./libavutil/frame.h
 ./libavutil/hwcontext.c
 ./libavutil/hwcontext.h
-./libavutil/hwcontext_drm.h
-./libavutil/hwcontext_drm.c
 ./libavutil/hwcontext_internal.h
-./libavutil/hwcontext_vaapi.h
-./libavutil/hwcontext_vaapi.c
 ./libavutil/imgutils.c
 ./libavutil/imgutils.h
 ./libavutil/imgutils_internal.h
