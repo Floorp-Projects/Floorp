@@ -686,7 +686,7 @@ this.TopSitesFeed = class TopSitesFeed {
         withPinned.splice(index, 0, link);
       }
     });
-    // Remove excess items after we inserted pinned and sponsored ones.
+    // Remove excess items after we inserted sponsored ones.
     withPinned = withPinned.slice(0, numItems);
 
     let searchTileOverrideURLs = new Map();
