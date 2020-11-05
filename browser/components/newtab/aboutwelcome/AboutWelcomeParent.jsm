@@ -22,6 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AboutWelcomeTelemetry:
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm",
   AttributionCode: "resource:///modules/AttributionCode.jsm",
+  Region: "resource://gre/modules/Region.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -222,7 +223,21 @@ class AboutWelcomeParent extends JSWindowActorParent {
           key => LIGHT_WEIGHT_THEMES[key] === activeTheme?.id
         );
         return themeShortName?.toLowerCase();
-
+      case "AWPage:GET_REGION":
+        return new Promise(resolve => {
+          if (Region.home !== null) {
+            resolve(Region.home);
+          }
+          Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+            if (
+              aData === Region.REGION_UPDATED &&
+              aTopic === Region.REGION_TOPIC
+            ) {
+              Services.obs.removeObserver(observer, aTopic);
+              resolve(Region.home);
+            }
+          }, Region.REGION_TOPIC);
+        });
       case "AWPage:WAIT_FOR_MIGRATION_CLOSE":
         return new Promise(resolve =>
           Services.ww.registerNotification(function observer(subject, topic) {
