@@ -6,11 +6,13 @@
 
 #include "MP3Demuxer.h"
 
-#include <algorithm>
 #include <inttypes.h>
+
+#include <algorithm>
 #include <limits>
 
 #include "ByteWriter.h"
+#include "Intervals.h"
 #include "TimeUnits.h"
 #include "VideoUtils.h"
 #include "mozilla/Assertions.h"
@@ -22,6 +24,7 @@ extern mozilla::LazyLogModule gMediaDemuxerLog;
   DDMOZ_LOG(gMediaDemuxerLog, LogLevel::Verbose, msg, ##__VA_ARGS__)
 
 using mozilla::BufferReader;
+using mozilla::media::Interval;
 using mozilla::media::TimeInterval;
 using mozilla::media::TimeIntervals;
 using mozilla::media::TimeUnit;
@@ -631,15 +634,6 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
 
   UpdateState(aRange);
 
-  frame->mTime = Duration(mFrameIndex - 1);
-  frame->mDuration = Duration(1);
-  frame->mTimecode = frame->mTime;
-  frame->mKeyframe = true;
-  frame->mEOS = mEOS;
-
-  MOZ_ASSERT(!frame->mTime.IsNegative());
-  MOZ_ASSERT(frame->mDuration.IsPositive());
-
   if (mNumParsedFrames == 1) {
     // First frame parsed, let's read VBR info if available.
     BufferReader reader(frame->Data(), frame->Size());
@@ -655,6 +649,31 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
       }
     }
   }
+
+  frame->mTime = Duration(mFrameIndex - 1);
+  frame->mDuration = Duration(1);
+  frame->mTimecode = frame->mTime;
+  frame->mKeyframe = true;
+  frame->mEOS = mEOS;
+
+  auto duration = Duration();
+  if (duration) {
+    auto actualFramesInterval = TimeInterval(
+        FramesToTimeUnit(mEncoderDelay, mSamplesPerSecond),
+        *duration - FramesToTimeUnit(mEncoderPadding, mSamplesPerSecond));
+
+    auto frameInterval = TimeInterval(frame->mTime, frame->GetEndTime());
+    auto realFrameInterval = actualFramesInterval.Intersection(frameInterval);
+    if (realFrameInterval != frameInterval) {
+      frame->mOriginalPresentationWindow = Some(frameInterval);
+      frame->mDuration = realFrameInterval.Length();
+      frame->mTime = realFrameInterval.mStart;
+    }
+  }
+
+  MOZ_ASSERT(!frame->mTime.IsNegative());
+  MOZ_ASSERT(frame->mDuration.IsPositive() ||
+             frame->mDuration.ToSeconds() == 0.);
 
   MP3LOGV("GetNext() End mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64
           " mFrameIndex=%" PRId64 " mTotalFrameLen=%" PRIu64
