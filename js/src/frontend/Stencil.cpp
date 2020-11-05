@@ -919,20 +919,7 @@ void RegExpStencil::dump(js::JSONPrinter& json) {
   GenericPrinter& out = json.beginString();
 
   out.put("/");
-  for (size_t i = 0; i < length_; i++) {
-    char16_t c = buf_[i];
-    if (c == '\n') {
-      out.put("\\n");
-    } else if (c == '\t') {
-      out.put("\\t");
-    } else if (c >= 32 && c < 127) {
-      out.putChar(char(buf_[i]));
-    } else if (c <= 255) {
-      out.printf("\\x%02x", unsigned(c));
-    } else {
-      out.printf("\\u%04x", unsigned(c));
-    }
-  }
+  atom_->dumpCharsNoQuote(out);
   out.put("/");
 
   if (flags_.global()) {

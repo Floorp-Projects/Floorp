@@ -10294,14 +10294,18 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
     }
   }
 
-  RegExpIndex index(this->getCompilationInfo().stencil.regExpData.length());
-  if (!this->getCompilationInfo().stencil.regExpData.emplaceBack()) {
-    js::ReportOutOfMemory(cx_);
+  const ParserAtom* atom =
+      this->getCompilationInfo()
+          .stencil.parserAtoms.internChar16(cx_, chars.begin(), chars.length())
+          .unwrapOr(nullptr);
+  if (!atom) {
     return nullptr;
   }
+  atom->markUsedByStencil();
 
-  if (!this->getCompilationInfo().stencil.regExpData[index].init(cx_, range,
-                                                                 flags)) {
+  RegExpIndex index(this->getCompilationInfo().stencil.regExpData.length());
+  if (!this->getCompilationInfo().stencil.regExpData.emplaceBack(atom, flags)) {
+    js::ReportOutOfMemory(cx_);
     return nullptr;
   }
 
