@@ -948,6 +948,10 @@ PlacesToolbar.prototype = {
       this._chevron._placesView.uninit();
     }
 
+    if (this._otherBookmarks._placesView) {
+      this._otherBookmarks._placesView.uninit();
+    }
+
     PlacesViewBase.prototype.uninit.apply(this, arguments);
   },
 
@@ -1129,7 +1133,13 @@ PlacesToolbar.prototype = {
     if (aEvent.target != this._otherBookmarksPopup) {
       return;
     }
-    this._rebuildPopup(this._otherBookmarksPopup);
+
+    if (!this._otherBookmarks._placesView) {
+      this._otherBookmarks._placesView = new PlacesMenu(
+        aEvent,
+        "place:parent=" + PlacesUtils.bookmarks.unfiledGuid
+      );
+    }
   },
 
   handleEvent: function PT_handleEvent(aEvent) {
