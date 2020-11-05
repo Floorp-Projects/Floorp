@@ -64,7 +64,7 @@ export const MultiStageAboutWelcome = props => {
   const [region, setRegion] = useState(null);
   useEffect(() => {
     (async () => {
-      setRegion(await window.AWGetRegion());
+      setRegion(await window.AWWaitForRegionChange());
     })();
   }, []);
 
