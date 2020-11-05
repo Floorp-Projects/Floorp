@@ -175,3 +175,39 @@ describe("Promise - fulfilled with node", () => {
     expect(onInspectIconClick.mock.calls).toHaveLength(1);
   });
 });
+
+describe("Promise - rejected with number", () => {
+  const object = stubs.get("RejectedWithNumber");
+  const defaultOutput = 'Promise { <state>: "rejected", <reason>: 123 }';
+
+  it("selects PromiseRep Rep for Promise rejected with an object", () => {
+    expect(getRep(object)).toBe(PromiseRep.rep);
+  });
+
+  it("should render as expected", () => {
+    expect(renderRep(object, { mode: undefined }).text()).toBe(defaultOutput);
+    expect(renderRep(object, { mode: MODE.TINY }).text()).toBe(
+      'Promise { "rejected" }'
+    );
+    expect(renderRep(object, { mode: MODE.SHORT }).text()).toBe(defaultOutput);
+    expect(renderRep(object, { mode: MODE.LONG }).text()).toBe(defaultOutput);
+  });
+});
+
+describe("Promise - rejected with object", () => {
+  const object = stubs.get("RejectedWithObject");
+  const defaultOutput = 'Promise { <state>: "rejected", <reason>: {…} }';
+
+  it("selects PromiseRep Rep for Promise rejected with an object", () => {
+    expect(getRep(object)).toBe(PromiseRep.rep);
+  });
+
+  it("should render as expected", () => {
+    expect(renderRep(object, { mode: undefined }).text()).toBe(defaultOutput);
+    expect(renderRep(object, { mode: MODE.TINY }).text()).toBe(
+      'Promise { "rejected" }'
+    );
+    expect(renderRep(object, { mode: MODE.SHORT }).text()).toBe(defaultOutput);
+    expect(renderRep(object, { mode: MODE.LONG }).text()).toBe(defaultOutput);
+  });
+});

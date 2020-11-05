@@ -30,6 +30,7 @@ Array [
   },
   Object {
     "contents": Object {
+      "front": null,
       "value": Object {
         "type": "3",
       },
