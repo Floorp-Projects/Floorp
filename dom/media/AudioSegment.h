@@ -265,6 +265,9 @@ struct AudioChunk {
  * The audio rate is determined by the track, not stored in this class.
  */
 class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
+  // The channel count that MaxChannelCount() returned last time it was called.
+  uint32_t mMemoizedMaxChannelCount = 0;
+
  public:
   typedef mozilla::AudioSampleFormat SampleFormat;
 
@@ -399,17 +402,20 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
   // aChannelCount channels.
   void Mix(AudioMixer& aMixer, uint32_t aChannelCount, uint32_t aSampleRate);
 
-  // Returns the maximum
+  // Returns the maximum channel count across all chunks in this segment.
+  // Should there be no chunk with a channel count we return the memoized return
+  // value from last time this method was called.
   uint32_t MaxChannelCount() {
-    // Find the first chunk that has non-zero channels. A chunk that hs zero
-    // channels is just silence and we can simply discard it.
     uint32_t channelCount = 0;
     for (ChunkIterator ci(*this); !ci.IsEnded(); ci.Next()) {
       if (ci->ChannelCount()) {
         channelCount = std::max(channelCount, ci->ChannelCount());
       }
     }
-    return channelCount;
+    if (channelCount == 0) {
+      return mMemoizedMaxChannelCount;
+    }
+    return mMemoizedMaxChannelCount = channelCount;
   }
 
   static Type StaticType() { return AUDIO; }
