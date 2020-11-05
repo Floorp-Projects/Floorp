@@ -9,16 +9,24 @@ use crate::{
     commands,
     error::*,
     http_client::{
-        CommandData, DeviceUpdateRequest, DeviceUpdateRequestBuilder, PendingCommand,
-        UpdateDeviceResponse,
+        DeviceUpdateRequest, DeviceUpdateRequestBuilder, PendingCommand, UpdateDeviceResponse,
     },
-    util, CachedResponse, FirefoxAccount, IncomingDeviceCommand,
+    telemetry, util, CachedResponse, FirefoxAccount, IncomingDeviceCommand,
 };
 use serde_derive::*;
 use std::collections::{HashMap, HashSet};
 
 // An devices response is considered fresh for `DEVICES_FRESHNESS_THRESHOLD` ms.
 const DEVICES_FRESHNESS_THRESHOLD: u64 = 60_000; // 1 minute
+
+/// The reason we are fetching commands.
+#[derive(Clone, Copy)]
+pub enum CommandFetchReason {
+    /// We are polling in-case we've missed some.
+    Poll,
+    /// We got a push notification with the index of the message.
+    Push(u64),
+}
 
 impl FirefoxAccount {
     /// Fetches the list of devices from the current account including
@@ -162,19 +170,33 @@ impl FirefoxAccount {
     /// Poll and parse any pending available command for our device.
     /// This should be called semi-regularly as the main method of
     /// commands delivery (push) can sometimes be unreliable on mobile devices.
+    /// Typically called even when a push notification is received, so that
+    /// any prior messages for which a push didn't arrive are still handled.
     ///
     /// **💾 This method alters the persisted account state.**
-    pub fn poll_device_commands(&mut self) -> Result<Vec<IncomingDeviceCommand>> {
+    pub fn poll_device_commands(
+        &mut self,
+        reason: CommandFetchReason,
+    ) -> Result<Vec<IncomingDeviceCommand>> {
         let last_command_index = self.state.last_handled_command.unwrap_or(0);
         // We increment last_command_index by 1 because the server response includes the current index.
-        self.fetch_and_parse_commands(last_command_index + 1, None)
+        self.fetch_and_parse_commands(last_command_index + 1, None, reason)
     }
 
     /// Retrieve and parse a specific command designated by its index.
     ///
     /// **💾 This method alters the persisted account state.**
-    pub fn fetch_device_command(&mut self, index: u64) -> Result<IncomingDeviceCommand> {
-        let mut device_commands = self.fetch_and_parse_commands(index, Some(1))?;
+    ///
+    /// Note that this should not be used if possible, as it does not correctly
+    /// handle missed messages. It's currently used only on iOS due to platform
+    /// restrictions (but we should still try and work out how to correctly
+    /// handle missed messages within those restrictions)
+    /// (What's wrong: if we get a push for tab-1 and a push for tab-3, and
+    /// between them I've never explicitly polled, I'll miss tab-2, even if I
+    /// try polling now)
+    pub fn ios_fetch_device_command(&mut self, index: u64) -> Result<IncomingDeviceCommand> {
+        let mut device_commands =
+            self.fetch_and_parse_commands(index, Some(1), CommandFetchReason::Push(index))?;
         let device_command = device_commands
             .pop()
             .ok_or_else(|| ErrorKind::IllegalState("Index fetch came out empty."))?;
@@ -188,6 +210,7 @@ impl FirefoxAccount {
         &mut self,
         index: u64,
         limit: Option<u64>,
+        reason: CommandFetchReason,
     ) -> Result<Vec<IncomingDeviceCommand>> {
         let refresh_token = self.get_refresh_token()?;
         let pending_commands =
@@ -197,7 +220,7 @@ impl FirefoxAccount {
             return Ok(Vec::new());
         }
         log::info!("Handling {} messages", pending_commands.messages.len());
-        let device_commands = self.parse_commands_messages(pending_commands.messages)?;
+        let device_commands = self.parse_commands_messages(pending_commands.messages, reason)?;
         self.state.last_handled_command = Some(pending_commands.index);
         Ok(device_commands)
     }
@@ -205,11 +228,12 @@ impl FirefoxAccount {
     fn parse_commands_messages(
         &mut self,
         messages: Vec<PendingCommand>,
+        reason: CommandFetchReason,
     ) -> Result<Vec<IncomingDeviceCommand>> {
         let devices = self.get_devices(false)?;
         let parsed_commands = messages
             .into_iter()
-            .filter_map(|msg| match self.parse_command(msg.data, &devices) {
+            .filter_map(|msg| match self.parse_command(msg, &devices, reason) {
                 Ok(device_command) => Some(device_command),
                 Err(e) => {
                     log::error!("Error while processing command: {}", e);
@@ -222,15 +246,24 @@ impl FirefoxAccount {
 
     fn parse_command(
         &mut self,
-        command_data: CommandData,
+        command: PendingCommand,
         devices: &[Device],
+        reason: CommandFetchReason,
     ) -> Result<IncomingDeviceCommand> {
+        let telem_reason = match reason {
+            CommandFetchReason::Poll => telemetry::ReceivedReason::Poll,
+            CommandFetchReason::Push(index) if command.index < index => {
+                telemetry::ReceivedReason::PushMissed
+            }
+            _ => telemetry::ReceivedReason::Push,
+        };
+        let command_data = command.data;
         let sender = command_data
             .sender
             .and_then(|s| devices.iter().find(|i| i.id == s).cloned());
         match command_data.command.as_str() {
             commands::send_tab::COMMAND_NAME => {
-                self.handle_send_tab_command(sender, command_data.payload)
+                self.handle_send_tab_command(sender, command_data.payload, telem_reason)
             }
             _ => Err(ErrorKind::UnknownCommand(command_data.command).into()),
         }

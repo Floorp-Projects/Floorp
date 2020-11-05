@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::util::ensure_nss_initialized;
-use std::{convert::TryInto, os::raw::c_void};
+use std::os::raw::c_void;
 
 pub fn secure_memcmp(a: &[u8], b: &[u8]) -> bool {
     ensure_nss_initialized();
@@ -16,7 +16,7 @@ pub fn secure_memcmp(a: &[u8], b: &[u8]) -> bool {
         nss_sys::NSS_SecureMemcmp(
             a.as_ptr() as *const c_void,
             b.as_ptr() as *const c_void,
-            a.len().try_into().unwrap(),
+            a.len(),
         )
     };
     result == 0
