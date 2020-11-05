@@ -601,18 +601,6 @@ pref("browser.bookmarks.max_backups",             15);
 // Whether menu should close after Ctrl-click, middle-click, etc.
 pref("browser.bookmarks.openInTabClosesMenu", true);
 
-// Where new bookmarks go by default.
-// Use PlacesUIUtils.defaultParentGuid to read this; do NOT read the pref
-// directly.
-// The pref is ignored if the browser.toolbars.bookmarks.2h2020 pref is false,
-// in which case bookmarks always go in the "Other bookmarks" folder.
-// The value is one of:
-// - a bookmarks guid
-// - "toolbar", "menu" or "unfiled" for those folders.
-// If we use the pref but the value isn't any of these, we'll fall back to
-// the bookmarks toolbar as a default.
-pref("browser.bookmarks.defaultLocation", "toolbar");
-
 // Scripts & Windows prefs
 pref("dom.disable_open_during_load",              true);
 pref("javascript.options.showInConsole",          true);
