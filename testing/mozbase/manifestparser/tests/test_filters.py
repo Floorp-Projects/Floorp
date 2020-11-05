@@ -25,9 +25,15 @@ here = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_data_model():
-    foo = lambda x, y: x
-    bar = lambda x, y: x
-    baz = lambda x, y: x
+    def foo(x, y):
+        return x
+
+    def bar(x, y):
+        return x
+
+    def baz(x, y):
+        return x
+
     fl = filterlist()
 
     fl.extend([foo, bar])
@@ -58,8 +64,12 @@ def test_add_non_callable_to_list():
 
 
 def test_add_duplicates_to_list():
-    foo = lambda x, y: x
-    bar = lambda x, y: x
+    def foo(x, y):
+        return x
+
+    def bar(x, y):
+        return x
+
     sub = subsuite("foo")
     fl = filterlist([foo, bar, sub])
     assert len(fl) == 3
@@ -85,12 +95,23 @@ def test_add_two_tags_filters():
 
 
 def test_filters_run_in_order():
-    a = lambda x, y: x
-    b = lambda x, y: x
-    c = lambda x, y: x
-    d = lambda x, y: x
-    e = lambda x, y: x
-    f = lambda x, y: x
+    def a(x, y):
+        return x
+
+    def b(x, y):
+        return x
+
+    def c(x, y):
+        return x
+
+    def d(x, y):
+        return x
+
+    def e(x, y):
+        return x
+
+    def f(x, y):
+        return x
 
     fl = filterlist([a, b])
     fl.append(c)
@@ -146,6 +167,7 @@ def tests(create_tests):
         ("test5", {"subsuite": "baz"}),
         ("test6", {"subsuite": "baz,foo == 'bar'"}),
         ("test7", {"tags": "foo bar"}),
+        ("test8", {"skip-if": "\nbaz\nfoo == 'bar'\nfoo == 'baz'"}),
     )
 
 
@@ -156,17 +178,18 @@ def test_skip_if(tests):
 
     tests = deepcopy(ref)
     tests = list(skip_if(tests, {"foo": "bar"}))
-    assert tests[1] not in ref
+    assert "disabled" in tests[1]
+    assert "disabled" in tests[8]
 
 
 def test_run_if(tests):
     ref = deepcopy(tests)
     tests = list(run_if(tests, {}))
-    assert ref[2] not in tests
+    assert "disabled" in tests[2]
 
     tests = deepcopy(ref)
     tests = list(run_if(tests, {"foo": "bar"}))
-    assert len(tests) == len(ref)
+    assert "disabled" not in tests[2]
 
 
 def test_fail_if(tests):

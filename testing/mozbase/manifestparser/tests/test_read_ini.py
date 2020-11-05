@@ -106,11 +106,31 @@ def test_defaults_handling(parse_manifest):
     )[0][1]
     assert result["flower"] == "rose"
     assert result["colour"] == "pink"
-    assert result["skip-if"] == "(false) || (true)"
+    assert result["skip-if"] == "false\ntrue"
 
     result = parse_manifest(manifest.replace("DEFAULT", "default"))[0][1]
     assert result["flower"] == "rose"
     assert result["skip-if"] == "true"
+
+
+def test_multiline_skip(parse_manifest):
+    manifest = """
+    [test_multiline_skip]
+    skip-if =
+        os == "mac"  # bug 123
+        os == "linux" && debug  # bug 456
+    """
+
+    result = parse_manifest(manifest)[0][1]
+    assert (
+        result["skip-if"]
+        == dedent(
+            """
+        os == "mac"
+        os == "linux" && debug
+    """
+        ).rstrip()
+    )
 
 
 if __name__ == "__main__":
