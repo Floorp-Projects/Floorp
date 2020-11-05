@@ -1455,7 +1455,7 @@ impl Compositor for SwCompositor {
     /// frame will not have overlap dependencies assigned and so must instead
     /// be added to the late_surfaces queue to be processed at the end of the
     /// frame.
-    fn start_compositing(&mut self) {
+    fn start_compositing(&mut self, _dirty_rects: &[DeviceIntRect]) {
         if let Some(ref composite_thread) = self.composite_thread {
             composite_thread.start_compositing();
             // Issue any initial composite jobs for the SwComposite thread.
