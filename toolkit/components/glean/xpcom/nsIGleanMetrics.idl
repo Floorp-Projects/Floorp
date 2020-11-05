@@ -5,6 +5,52 @@
 
 #include "nsISupports.idl"
 
+[scriptable, uuid(d3180fe0-19fa-11eb-8b6f-0800200c9a66)]
+interface nsIGleanBoolean : nsISupports
+{
+  /**
+   * Set to the specified boolean value.
+   *
+   * @param value the value to set.
+   */
+  [implicit_jscontext]
+  void set(in bool value);
+
+  /**
+   * **Test-only API**
+   *
+   * Tests whether a value is stored for the metric.
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * Parent process only. Panics in child processes.
+   *
+   * @param aStorageName the name of the ping to retrieve the metric for.
+   * @return true if metric value exists, otherwise false
+   */
+  [implicit_jscontext]
+  bool testHasValue(in ACString aStorageName);
+
+  /**
+   * **Test-only API**
+   *
+   * Gets the currently stored value as a boolean.
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * This doesn't clear the stored value.
+   * Parent process only. Panics in child processes.
+   *
+   * @return value of the stored metric.
+   */
+  [implicit_jscontext]
+  bool testGetValue(in ACString aStorageName);
+};
+
 [scriptable, uuid(05b89d2a-d57c-11ea-82da-3f63399a6f5a)]
 interface nsIGleanCounter : nsISupports
 {
