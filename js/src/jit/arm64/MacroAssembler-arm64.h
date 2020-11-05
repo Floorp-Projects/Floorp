@@ -722,8 +722,12 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   void jump(TrampolinePtr code) { jump(ImmPtr(code.value)); }
   void jump(Register reg) { Br(ARMRegister(reg, 64)); }
   void jump(const Address& addr) {
-    loadPtr(addr, ip0);
-    Br(vixl::ip0);
+    vixl::UseScratchRegisterScope temps(this);
+    MOZ_ASSERT(temps.IsAvailable(ScratchReg64));  // ip0
+    temps.Exclude(ScratchReg64);
+    MOZ_ASSERT(addr.base != ScratchReg64.asUnsized());
+    loadPtr(addr, ScratchReg64.asUnsized());
+    br(ScratchReg64);
   }
 
   void align(int alignment) { armbuffer_.align(alignment); }
@@ -1299,11 +1303,14 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   }
 
   void retn(Imm32 n) {
+    vixl::UseScratchRegisterScope temps(this);
+    MOZ_ASSERT(temps.IsAvailable(ScratchReg64));  // ip0
+    temps.Exclude(ScratchReg64);
     // ip0 <- [sp]; sp += n; ret ip0
-    Ldr(vixl::ip0,
+    Ldr(ScratchReg64,
         MemOperand(GetStackPointer64(), ptrdiff_t(n.value), vixl::PostIndex));
     syncStackPtr();  // SP is always used to transmit the stack between calls.
-    Ret(vixl::ip0);
+    Ret(ScratchReg64);
   }
 
   void j(Condition cond, Label* dest) { B(dest, cond); }
