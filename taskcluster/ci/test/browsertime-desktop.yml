@@ -100,8 +100,8 @@ browsertime-tp6:
             firefox:
                 by-test-platform:
                     (linux|windows|macos)(?!.*shippable).*: []
-                    linux.*shippable.*: ["autoland", "mozilla-central"]
-                    macos.*shippable.*: ["autoland", "mozilla-central"]
+                    linux.*shippable.*: ["trunk", "mozilla-beta"]
+                    macos.*shippable.*: ["trunk", "mozilla-beta"]
                     default: []
             default: []
     limit-platforms:

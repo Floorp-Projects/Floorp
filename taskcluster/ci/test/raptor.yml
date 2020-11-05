@@ -27,12 +27,14 @@ job-defaults:
                                 by-test-platform:
                                     (linux|windows|macos)(?!.*shippable).*: []
                                     linux.*shippable.*: []
+                                    macos.*shippable.*: []
                                     default: ["mozilla-central"]
                             cold:
                                 by-test-platform:
                                     macosx.*64(?:-qr)?/opt: ["mozilla-central"]
                                     (linux|windows|macos)(?!.*shippable).*: []
                                     linux.*shippable.*: []
+                                    macos.*shippable.*: []
                                     default: ["trunk", "mozilla-beta"]
                     default:
                         by-test-platform:
