@@ -115,7 +115,9 @@ void CopyBindingNames(JSContext* cx, CVec<COption<SmooshBindingName>>& from,
 // into a list of ScopeStencil.
 bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
                          Vector<const ParserAtom*>& allAtoms,
-                         CompilationInfo& compilationInfo, LifoAlloc& alloc) {
+                         CompilationInfo& compilationInfo) {
+  LifoAlloc& alloc = compilationInfo.stencil.alloc;
+
   for (size_t i = 0; i < result.scopes.len; i++) {
     SmooshScopeData& scopeData = result.scopes.data[i];
     ScopeIndex index;
@@ -559,9 +561,7 @@ bool Smoosh::compileGlobalScriptToStencil(JSContext* cx,
     return false;
   }
 
-  LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  auto& alloc = allocScope.alloc();
-  if (!ConvertScopeStencil(cx, result, allAtoms, compilationInfo, alloc)) {
+  if (!ConvertScopeStencil(cx, result, allAtoms, compilationInfo)) {
     return false;
   }
 
