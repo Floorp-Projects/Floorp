@@ -1,7 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-import subprocess
 import json
 import os
 import sys
@@ -10,7 +9,8 @@ from pathlib import Path
 
 from mozfile import which
 from mozperftest.layers import Layer
-from mozperftest.utils import silence
+from mozperftest.utils import silence, run_script
+
 
 METRICS_FIELDS = (
     "SpeedIndex",
@@ -36,7 +36,8 @@ class VisualData:
     def transform(self, data):
         return data
 
-    merge = transform
+    def merge(self, data):
+        return data
 
 
 class VisualMetrics(Layer):
@@ -47,11 +48,11 @@ class VisualMetrics(Layer):
     arguments = {}
 
     def setup(self):
-        self.metrics = []
+        self.metrics = {}
         self.metrics_fields = []
 
         # making sure we have ffmpeg and imagemagick available
-        for tool in ("ffmpeg", "magick"):
+        for tool in ("ffmpeg", "convert"):
             if sys.platform in ("win32", "msys"):
                 tool += ".exe"
             path = which(tool)
@@ -84,13 +85,14 @@ class VisualMetrics(Layer):
             treated += self.run_visual_metrics(browsertime_json)
 
         self.info(f"Treated {treated} videos.")
+
         if len(self.metrics) > 0:
             metadata.add_result(
                 {
-                    "name": "visualmetrics",
+                    "name": metadata.script["name"] + "-vm",
                     "framework": {"name": "mozperftest"},
                     "transformer": "mozperftest.metrics.visualmetrics:VisualData",
-                    "results": self.metrics,
+                    "results": list(self.metrics.values()),
                 }
             )
 
@@ -112,27 +114,10 @@ class VisualMetrics(Layer):
             self.warning("No video was treated.")
         return metadata
 
-    def run_command(self, *cmd):
-        cmd = list(cmd)
-        self.debug(f"Running command {' '.join(cmd)}")
-        env = dict(os.environ)
-        path = [
-            p
-            for p in env["PATH"].split(os.pathsep)
-            if p != self.mach_cmd.virtualenv_manager.bin_path
-        ]
-        env["PATH"] = os.pathsep.join(path)
-        try:
-            res = subprocess.check_output(cmd, universal_newlines=True, env=env)
-            self.debug("Command succeeded", result=res)
-            return 0, res
-        except subprocess.CalledProcessError as e:
-            self.debug("Command failed", cmd=cmd, status=e.returncode, output=e.output)
-            return e.returncode, e.output
-
     def run_visual_metrics(self, browsertime_json):
         verbose = self.get_arg("verbose")
         self.info(f"Looking at {browsertime_json}")
+        venv = self.mach_cmd.virtualenv_manager
 
         class _display:
             def __enter__(self, *args, **kw):
@@ -146,34 +131,66 @@ class VisualMetrics(Layer):
             browsertime_json_data = json.loads(f.read())
 
         videos = 0
+        global_options = [
+            str(self.visualmetrics),
+            "--orange",
+            "--perceptual",
+            "--contentful",
+            "--force",
+            "--renderignore",
+            "5",
+            "--viewport",
+        ]
+        if verbose:
+            global_options += ["-vvv"]
+
         for site in browsertime_json_data:
-            for video in site["files"]["video"]:
+            # collecting metrics from browserScripts
+            # because it can be used in splitting
+            for index, bs in enumerate(site["browserScripts"]):
+                for name, val in bs.items():
+                    if not isinstance(val, (str, int)):
+                        continue
+                    self.append_metrics(index, name, val)
+
+            extra = {"lowerIsBetter": True, "unit": "ms"}
+
+            for index, video in enumerate(site["files"]["video"]):
                 videos += 1
                 video_path = browsertime_json.parent / video
-                res = "[]"
+                output = "[]"
                 with may_silence():
-                    code, res = self.run_command(
-                        str(self.visualmetrics), "--video", str(video_path), "--json"
+                    res, output = run_script(
+                        venv.python_path,
+                        global_options + ["--video", str(video_path), "--json"],
+                        verbose=verbose,
+                        label="visual metrics",
+                        display=False,
                     )
-                    if code != 0:
-                        raise IOError(str(res))
-                try:
-                    res = json.loads(res)
-                except json.JSONDecodeError:
-                    self.error(
-                        "Could not read the json output from" " visualmetrics.py"
-                    )
-                    raise
+                    if not res:
+                        self.error(f"Failed {res}")
+                        continue
 
-                for name, value in res.items():
-                    if name in ("VisualProgress",):
-                        self._expand_visual_progress(name, value)
+                output = output.strip()
+                if verbose:
+                    self.info(str(output))
+                try:
+                    output = json.loads(output)
+                except json.JSONDecodeError:
+                    self.error("Could not read the json output from visualmetrics.py")
+                    continue
+
+                for name, value in output.items():
+                    if name.endswith(
+                        "Progress",
+                    ):
+                        self._expand_visual_progress(index, name, value, **extra)
                     else:
-                        self.append_metrics(name, value)
+                        self.append_metrics(index, name, value, **extra)
 
         return videos
 
-    def _expand_visual_progress(self, name, value):
+    def _expand_visual_progress(self, index, name, value, **fields):
         def _split_percent(val):
             # value is of the form "567=94%"
             val = val.split("=")
@@ -192,11 +209,13 @@ class VisualMetrics(Layer):
         percents = list(percents.items())
         percents.sort()
         for percent, value in percents[:5]:
-            self.append_metrics(f"{name}{percent}", value)
+            self.append_metrics(index, f"{name}{percent}", value, **fields)
 
-    def append_metrics(self, name, value):
+    def append_metrics(self, index, name, value, **fields):
         if name not in self.metrics_fields:
             self.metrics_fields.append(name)
-        self.metrics.append(
-            {"name": name, "values": [value], "lowerIsBetter": True, "unit": "ms"}
-        )
+        if name not in self.metrics:
+            self.metrics[name] = {"name": name, "values": []}
+
+        self.metrics[name]["values"].append(value)
+        self.metrics[name].update(**fields)

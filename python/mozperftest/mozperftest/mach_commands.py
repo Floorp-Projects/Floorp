@@ -4,8 +4,6 @@
 import os
 import sys
 from functools import partial
-import subprocess
-import shlex
 import json
 
 from mach.decorators import CommandProvider, Command, CommandArgument
@@ -165,51 +163,6 @@ class Perftest(MachCommandBase):
 
 @CommandProvider
 class PerftestTests(MachCommandBase):
-    def _run_script(self, cmd, *args, **kw):
-        """Used to run a command in a subprocess."""
-        display = kw.pop("display", False)
-        verbose = kw.pop("verbose", False)
-        if isinstance(cmd, str):
-            cmd = shlex.split(cmd)
-        try:
-            joiner = shlex.join
-        except AttributeError:
-            # Python < 3.8
-            joiner = subprocess.list2cmdline
-
-        sys.stdout.write("=> %s " % kw.pop("label", joiner(cmd)))
-        args = cmd + list(args)
-        sys.stdout.flush()
-        try:
-            if verbose:
-                sys.stdout.write("\nRunning %s\n" % " ".join(args))
-                sys.stdout.flush()
-            output = subprocess.check_output(args, stderr=subprocess.STDOUT)
-            if display:
-                sys.stdout.write("\n")
-                for line in output.split(b"\n"):
-                    sys.stdout.write(line.decode("utf8") + "\n")
-            sys.stdout.write("[OK]\n")
-            sys.stdout.flush()
-            return True
-        except subprocess.CalledProcessError as e:
-            for line in e.output.split(b"\n"):
-                sys.stdout.write(line.decode("utf8") + "\n")
-            sys.stdout.write("[FAILED]\n")
-            sys.stdout.flush()
-            return False
-
-    def _run_python_script(self, module, *args, **kw):
-        """Used to run a Python script in isolation.
-
-        Coverage needs to run in isolation so it's not
-        reimporting modules and produce wrong coverage info.
-        """
-        cmd = [self.virtualenv_manager.python_path, "-m", module]
-        if "label" not in kw:
-            kw["label"] = module
-        return self._run_script(cmd, *args, **kw)
-
     @Command(
         "perftest-test",
         category="testing",
@@ -246,8 +199,14 @@ class PerftestTests(MachCommandBase):
     def _run_tests(self, **kwargs):
         from pathlib import Path
         from mozperftest.runner import _setup_path
-        from mozperftest.utils import install_package, ON_TRY
+        from mozperftest.utils import (
+            install_package,
+            ON_TRY,
+            checkout_script,
+            checkout_python_script,
+        )
 
+        venv = self.virtualenv_manager
         skip_linters = kwargs.get("skip_linters", False)
         verbose = kwargs.get("verbose", False)
 
@@ -270,7 +229,7 @@ class PerftestTests(MachCommandBase):
             if verbose:
                 cmd += " -v"
             cmd += " " + str(HERE)
-            if not self._run_script(
+            if not checkout_script(
                 cmd, label="linters", display=verbose, verbose=verbose
             ):
                 raise AssertionError("Please fix your code.")
@@ -302,8 +261,8 @@ class PerftestTests(MachCommandBase):
             options += "v"
 
         if run_coverage_check:
-            assert self._run_python_script(
-                "coverage", "erase", label="remove old coverage data"
+            assert checkout_python_script(
+                venv, "coverage", ["erase"], label="remove old coverage data"
             )
         args = [
             "run",
@@ -313,10 +272,10 @@ class PerftestTests(MachCommandBase):
             "10",
             tests,
         ]
-        assert self._run_python_script(
-            "coverage", *args, label="running tests", verbose=verbose, display=verbose
+        assert checkout_python_script(
+            venv, "coverage", args, label="running tests", verbose=verbose
         )
-        if run_coverage_check and not self._run_python_script(
-            "coverage", "report", display=True
+        if run_coverage_check and not checkout_python_script(
+            venv, "coverage", ["report"], display=True
         ):
             raise ValueError("Coverage is too low!")

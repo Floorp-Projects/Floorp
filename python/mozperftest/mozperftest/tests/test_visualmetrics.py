@@ -49,10 +49,12 @@ def mocked_executable():
 def test_visual_metrics(device):
     os.environ["VISUALMETRICS_PY"] = ""
     mach_cmd, metadata, env = get_running_env(
-        visualmetrics=True, perfherder=True, verbose=True
+        visualmetrics=True,
+        perfherder=True,
+        verbose=True,
+        tests=[EXAMPLE_TEST],
     )
     metrics = env.layers[METRICS]
-    env.set_arg("tests", [str(EXAMPLE_TEST)])
 
     metadata.add_result({"results": str(BT_DATA_VIDEO.parent), "name": "browsertime"})
 
@@ -83,10 +85,12 @@ def test_visual_metrics(device):
 def test_visual_metrics_no_ffmpeg(device):
     os.environ["VISUALMETRICS_PY"] = ""
     mach_cmd, metadata, env = get_running_env(
-        visualmetrics=True, perfherder=True, verbose=True
+        visualmetrics=True,
+        perfherder=True,
+        verbose=True,
+        tests=[EXAMPLE_TEST],
     )
     metrics = env.layers[METRICS]
-    env.set_arg("tests", [str(EXAMPLE_TEST)])
     metadata.add_result({"results": str(BT_DATA_VIDEO.parent), "name": "browsertime"})
 
     with pytest.raises(FileNotFoundError):

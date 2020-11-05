@@ -14,6 +14,8 @@ from pathlib import Path
 import tempfile
 import shutil
 import importlib
+import subprocess
+import shlex
 
 
 RETRY_SLEEP = 10
@@ -238,14 +240,17 @@ def temporary_env(**env):
     old = {}
     for key, value in env.items():
         old[key] = os.environ.get(key)
-        os.environ[key] = value
+        if value is None and key in os.environ:
+            del os.environ[key]
+        elif value is not None:
+            os.environ[key] = value
     try:
         yield
     finally:
         for key, value in old.items():
-            if value is None:
+            if value is None and key in os.environ:
                 del os.environ[key]
-            else:
+            elif value is not None:
                 os.environ[key] = value
 
 
@@ -326,3 +331,73 @@ def load_class(path):
     except AttributeError:
         raise ImportError(f"Can't find '{klass_name}' in '{mod_name}'")
     return klass
+
+
+def run_script(cmd, cmd_args=None, verbose=False, display=False, label=None):
+    """Used to run a command in a subprocess."""
+    if isinstance(cmd, str):
+        cmd = shlex.split(cmd)
+    try:
+        joiner = shlex.join
+    except AttributeError:
+        # Python < 3.8
+        joiner = subprocess.list2cmdline
+
+    if label is None:
+        label = joiner(cmd)
+    sys.stdout.write(f"=> {label} ")
+    if cmd_args is None:
+        args = cmd
+    else:
+        args = cmd + list(cmd_args)
+    sys.stdout.flush()
+    try:
+        if verbose:
+            sys.stdout.write(f"\nRunning {' '.join(args)}\n")
+            sys.stdout.flush()
+        output = subprocess.check_output(args)
+        if display:
+            sys.stdout.write("\n")
+            for line in output.split(b"\n"):
+                sys.stdout.write(line.decode("utf8") + "\n")
+        sys.stdout.write("[OK]\n")
+        sys.stdout.flush()
+        return True, output
+    except subprocess.CalledProcessError as e:
+        for line in e.output.split(b"\n"):
+            sys.stdout.write(line.decode("utf8") + "\n")
+        sys.stdout.write("[FAILED]\n")
+        sys.stdout.flush()
+        return False, e
+
+
+def run_python_script(
+    virtualenv_manager,
+    module,
+    module_args=None,
+    verbose=False,
+    display=False,
+    label=None,
+):
+    """Used to run a Python script in isolation."""
+    if label is None:
+        label = module
+    cmd = [virtualenv_manager.python_path, "-m", module]
+    return run_script(cmd, module_args, verbose=verbose, display=display, label=label)
+
+
+def checkout_script(cmd, cmd_args=None, verbose=False, display=False, label=None):
+    return run_script(cmd, cmd_args, verbose, display, label)[0]
+
+
+def checkout_python_script(
+    virtualenv_manager,
+    module,
+    module_args=None,
+    verbose=False,
+    display=False,
+    label=None,
+):
+    return run_python_script(
+        virtualenv_manager, module, module_args, verbose, display, label
+    )[0]

@@ -61,6 +61,8 @@ def test_browser(*mocked):
         browsertime_iterations=1,
         browsertime_extra_options="one=1,two=2",
         tests=[EXAMPLE_TEST],
+        browsertime_no_window_recorder=False,
+        browsertime_viewport_size="1234x567",
     )
 
     sys = env.layers[SYSTEM]
@@ -199,6 +201,8 @@ def test_browser_failed(*mocked):
         browsertime_iterations=1,
         browsertime_extra_options="one=1,two=2",
         tests=[EXAMPLE_TEST],
+        browsertime_no_window_recorder=False,
+        browsertime_viewport_size="1234x567",
     )
     # set the return value to 1 to simulate a node failure
     mach_cmd.run_process.return_value = 1
@@ -223,6 +227,8 @@ def test_browser_desktop(*mocked):
         browsertime_iterations=1,
         browsertime_extra_options="one=1,two=2",
         tests=[EXAMPLE_TEST],
+        browsertime_no_window_recorder=False,
+        browsertime_viewport_size="1234x567",
     )
     browser = env.layers[TEST]
     sys = env.layers[SYSTEM]
@@ -268,6 +274,8 @@ def test_install_url(*mocked):
     mach, metadata, env = get_running_env(
         browsertime_install_url=url,
         tests=[EXAMPLE_TEST],
+        browsertime_no_window_recorder=False,
+        browsertime_viewport_size="1234x567",
     )
     browser = env.layers[TEST]
     sys = env.layers[SYSTEM]

@@ -59,6 +59,8 @@ def test_android_log(*mocked):
             "android-app-name": "org.mozilla.fenix",
             "androidlog": True,
             "output": output,
+            "browsertime-no-window-recorder": False,
+            "browsertime-viewport-size": "1234x567",
             "tests": [EXAMPLE_TEST],
         }
 
