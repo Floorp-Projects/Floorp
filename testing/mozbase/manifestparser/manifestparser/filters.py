@@ -39,6 +39,12 @@ def log(msg, level="info"):
 # built-in filters
 
 
+def _match(exprs, **values):
+    if any(parse(e, **values) for e in exprs.splitlines() if e):
+        return True
+    return False
+
+
 def skip_if(tests, values):
     """
     Sets disabled on all tests containing the `skip-if` tag and whose condition
@@ -46,7 +52,7 @@ def skip_if(tests, values):
     """
     tag = "skip-if"
     for test in tests:
-        if tag in test and parse(test[tag], **values):
+        if tag in test and _match(test[tag], **values):
             test.setdefault("disabled", "{}: {}".format(tag, test[tag]))
         yield test
 
@@ -58,7 +64,7 @@ def run_if(tests, values):
     """
     tag = "run-if"
     for test in tests:
-        if tag in test and not parse(test[tag], **values):
+        if tag in test and not _match(test[tag], **values):
             test.setdefault("disabled", "{}: {}".format(tag, test[tag]))
         yield test
 
@@ -70,7 +76,7 @@ def fail_if(tests, values):
     """
     tag = "fail-if"
     for test in tests:
-        if tag in test and parse(test[tag], **values):
+        if tag in test and _match(test[tag], **values):
             test["expected"] = "fail"
         yield test
 

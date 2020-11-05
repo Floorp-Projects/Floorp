@@ -168,7 +168,7 @@ def combine_fields(global_vars, local_vars):
         return global_vars.copy()
     field_patterns = {
         "prefs": "%s %s",
-        "skip-if": "(%s) || (%s)",
+        "skip-if": "%s\n%s",
         "support-files": "%s %s",
     }
     final_mapping = global_vars.copy()

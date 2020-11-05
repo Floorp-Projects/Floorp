@@ -137,14 +137,26 @@ dupe-manifest
 
    The value of this key is ignored.
 
-
 skip-if
    Skip this test if the specified condition is true.
    See :ref:`manifest_filter_language`.
 
+   Conditions can be specified on multiple lines, where each line is implicitly
+   joined by a logical OR (``||``). This makes it easier to add comments to
+   distinct failures. For example:
+
+   .. parsed-literal::
+
+      [test_foo.js]
+      skip-if =
+          os == "mac" && fission  # bug 123 - fails on fission
+          os == "windows" && debug  # bug 456 - hits an assertion
+
 fail-if
    Expect test failure if the specified condition is true.
    See :ref:`manifest_filter_language`.
+
+   Conditions can be specified on multiple lines (see ``skip-if``).
 
 run-sequentially
    If present, the test should not be run in parallel with other tests.
