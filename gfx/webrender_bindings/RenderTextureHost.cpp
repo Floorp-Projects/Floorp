@@ -49,7 +49,6 @@ wr::WrExternalImage RenderTextureHost::Lock(uint8_t aChannelIndex,
 
 wr::WrExternalImage RenderTextureHost::LockSWGL(uint8_t aChannelIndex,
                                                 void* aContext,
-                                                RenderCompositor* aCompositor,
                                                 wr::ImageRendering aRendering) {
   return InvalidToWrExternalImage();
 }

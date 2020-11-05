@@ -71,8 +71,7 @@ wr::WrExternalImage wr_renderer_lock_external_image(
   if (auto* gl = renderer->gl()) {
     return texture->Lock(aChannelIndex, gl, aRendering);
   } else if (auto* swgl = renderer->swgl()) {
-    return texture->LockSWGL(aChannelIndex, swgl, renderer->GetCompositor(),
-                             aRendering);
+    return texture->LockSWGL(aChannelIndex, swgl, aRendering);
   } else {
     gfxCriticalNoteOnce
         << "No GL or SWGL context available to lock ExternalImage for extId:"

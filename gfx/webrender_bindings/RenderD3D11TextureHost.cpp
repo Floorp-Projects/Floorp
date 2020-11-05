@@ -58,93 +58,6 @@ ID3D11Texture2D* RenderDXGITextureHost::GetD3D11Texture2D() {
   return mTexture;
 }
 
-size_t RenderDXGITextureHost::GetPlaneCount() const {
-  if (mFormat == gfx::SurfaceFormat::NV12 ||
-      mFormat == gfx::SurfaceFormat::P010 ||
-      mFormat == gfx::SurfaceFormat::P016) {
-    return 2;
-  }
-  return 1;
-}
-
-template <typename T>
-static bool MapTexture(T* aHost, RenderCompositor* aCompositor,
-                       RefPtr<ID3D11Texture2D>& aTexture,
-                       RefPtr<ID3D11DeviceContext>& aDeviceContext,
-                       RefPtr<ID3D11Texture2D>& aCpuTexture,
-                       D3D11_MAPPED_SUBRESOURCE& aMappedSubresource) {
-  RenderCompositorD3D11SWGL* compositor =
-      aCompositor->AsRenderCompositorD3D11SWGL();
-  if (!compositor) {
-    return false;
-  }
-
-  if (!aHost->EnsureD3D11Texture2D(compositor->GetDevice())) {
-    return false;
-  }
-
-  if (!aHost->LockInternal()) {
-    return false;
-  }
-
-  D3D11_TEXTURE2D_DESC textureDesc = {0};
-  aTexture->GetDesc(&textureDesc);
-
-  compositor->GetDevice()->GetImmediateContext(getter_AddRefs(aDeviceContext));
-
-  textureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-  textureDesc.Usage = D3D11_USAGE_STAGING;
-  textureDesc.BindFlags = 0;
-  textureDesc.MiscFlags = 0;
-  textureDesc.MipLevels = 1;
-  HRESULT hr = compositor->GetDevice()->CreateTexture2D(
-      &textureDesc, nullptr, getter_AddRefs(aCpuTexture));
-  if (FAILED(hr)) {
-    return false;
-  }
-
-  aDeviceContext->CopyResource(aCpuTexture, aTexture);
-  aHost->Unlock();
-
-  hr = aDeviceContext->Map(aCpuTexture, 0, D3D11_MAP_READ, 0,
-                           &aMappedSubresource);
-  return SUCCEEDED(hr);
-}
-
-bool RenderDXGITextureHost::MapPlane(RenderCompositor* aCompositor,
-                                     uint8_t aChannelIndex,
-                                     PlaneInfo& aPlaneInfo) {
-  // TODO: We currently readback from the GPU texture into a new
-  // staging texture every time this is mapped. We might be better
-  // off retaining the mapped memory to trade performance for memory
-  // usage.
-  if (!mCpuTexture && !MapTexture(this, aCompositor, mTexture, mDeviceContext,
-                                  mCpuTexture, mMappedSubresource)) {
-    return false;
-  }
-
-  aPlaneInfo.mSize = GetSize(aChannelIndex);
-  aPlaneInfo.mStride = mMappedSubresource.RowPitch;
-  aPlaneInfo.mData = mMappedSubresource.pData;
-
-  // If this is the second plane, then offset the data pointer by the
-  // size of the first plane.
-  if (aChannelIndex == 1) {
-    aPlaneInfo.mData =
-        (uint8_t*)aPlaneInfo.mData + aPlaneInfo.mStride * GetSize(0).height;
-  }
-  return true;
-}
-
-void RenderDXGITextureHost::UnmapPlanes() {
-  mMappedSubresource.pData = nullptr;
-  if (mCpuTexture) {
-    mDeviceContext->Unmap(mCpuTexture, 0);
-    mCpuTexture = nullptr;
-  }
-  mDeviceContext = nullptr;
-}
-
 bool RenderDXGITextureHost::EnsureD3D11Texture2D() {
   if (mTexture) {
     return true;
@@ -167,16 +80,8 @@ bool RenderDXGITextureHost::EnsureD3D11Texture2D() {
     return false;
   }
 
-  return EnsureD3D11Texture2D(device);
-}
-
-bool RenderDXGITextureHost::EnsureD3D11Texture2D(ID3D11Device* aDevice) {
-  if (mTexture) {
-    return true;
-  }
-
   // Get the D3D11 texture from shared handle.
-  HRESULT hr = aDevice->OpenSharedResource(
+  HRESULT hr = device->OpenSharedResource(
       (HANDLE)mHandle, __uuidof(ID3D11Texture2D),
       (void**)(ID3D11Texture2D**)getter_AddRefs(mTexture));
   if (FAILED(hr)) {
@@ -189,7 +94,6 @@ bool RenderDXGITextureHost::EnsureD3D11Texture2D(ID3D11Device* aDevice) {
     return false;
   }
   MOZ_ASSERT(mTexture.get());
-  mTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mKeyedMutex));
   return true;
 }
 
@@ -232,6 +136,7 @@ bool RenderDXGITextureHost::EnsureLockable(wr::ImageRendering aRendering) {
   if (!EnsureD3D11Texture2D()) {
     return false;
   }
+  mTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mKeyedMutex));
 
   // Create the EGLStream.
   mStream = egl->fCreateStreamKHR(nullptr);
@@ -318,28 +223,21 @@ wr::WrExternalImage RenderDXGITextureHost::Lock(uint8_t aChannelIndex,
     return InvalidToWrExternalImage();
   }
 
-  if (!LockInternal()) {
-    return InvalidToWrExternalImage();
-  }
-
-  gfx::IntSize size = GetSize(aChannelIndex);
-  return NativeTextureToWrExternalImage(GetGLHandle(aChannelIndex), 0, 0,
-                                        size.width, size.height);
-}
-
-bool RenderDXGITextureHost::LockInternal() {
   if (!mLocked) {
     if (mKeyedMutex) {
       HRESULT hr = mKeyedMutex->AcquireSync(0, 10000);
       if (hr != S_OK) {
         gfxCriticalError() << "RenderDXGITextureHost AcquireSync timeout, hr="
                            << gfx::hexa(hr);
-        return false;
+        return InvalidToWrExternalImage();
       }
     }
     mLocked = true;
   }
-  return true;
+
+  gfx::IntSize size = GetSize(aChannelIndex);
+  return NativeTextureToWrExternalImage(GetGLHandle(aChannelIndex), 0, 0,
+                                        size.width, size.height);
 }
 
 void RenderDXGITextureHost::Unlock() {
@@ -414,16 +312,11 @@ gfx::IntSize RenderDXGITextureHost::GetSize(uint8_t aChannelIndex) const {
 }
 
 RenderDXGIYCbCrTextureHost::RenderDXGIYCbCrTextureHost(
-    WindowsHandle (&aHandles)[3], gfx::YUVColorSpace aYUVColorSpace,
-    gfx::ColorDepth aColorDepth, gfx::ColorRange aColorRange,
-    gfx::IntSize aSizeY, gfx::IntSize aSizeCbCr)
+    WindowsHandle (&aHandles)[3], gfx::IntSize aSizeY, gfx::IntSize aSizeCbCr)
     : mHandles{aHandles[0], aHandles[1], aHandles[2]},
       mSurfaces{0},
       mStreams{0},
       mTextureHandles{0},
-      mYUVColorSpace(aYUVColorSpace),
-      mColorDepth(aColorDepth),
-      mColorRange(aColorRange),
       mSizeY(aSizeY),
       mSizeCbCr(aSizeCbCr),
       mLocked(false) {
@@ -434,31 +327,6 @@ RenderDXGIYCbCrTextureHost::RenderDXGIYCbCrTextureHost(
              (mSizeCbCr.height == mSizeY.height ||
               mSizeCbCr.height == (mSizeY.height + 1) >> 1));
   MOZ_ASSERT(aHandles[0] && aHandles[1] && aHandles[2]);
-}
-
-bool RenderDXGIYCbCrTextureHost::MapPlane(RenderCompositor* aCompositor,
-                                          uint8_t aChannelIndex,
-                                          PlaneInfo& aPlaneInfo) {
-  D3D11_MAPPED_SUBRESOURCE mappedSubresource;
-  if (!MapTexture(this, aCompositor, mTextures[aChannelIndex], mDeviceContext,
-                  mCpuTexture[aChannelIndex], mappedSubresource)) {
-    return false;
-  }
-
-  aPlaneInfo.mSize = GetSize(aChannelIndex);
-  aPlaneInfo.mStride = mappedSubresource.RowPitch;
-  aPlaneInfo.mData = mappedSubresource.pData;
-  return true;
-}
-
-void RenderDXGIYCbCrTextureHost::UnmapPlanes() {
-  for (uint32_t i = 0; i < 3; i++) {
-    if (mCpuTexture[i]) {
-      mDeviceContext->Unmap(mCpuTexture[i], 0);
-      mCpuTexture[i] = nullptr;
-    }
-  }
-  mDeviceContext = nullptr;
 }
 
 RenderDXGIYCbCrTextureHost::~RenderDXGIYCbCrTextureHost() {
@@ -510,7 +378,27 @@ bool RenderDXGIYCbCrTextureHost::EnsureLockable(wr::ImageRendering aRendering) {
     return false;
   }
 
-  EnsureD3D11Texture2D(device);
+  for (int i = 0; i < 3; ++i) {
+    // Get the R8 D3D11 texture from shared handle.
+    HRESULT hr = device->OpenSharedResource(
+        (HANDLE)mHandles[i], __uuidof(ID3D11Texture2D),
+        (void**)(ID3D11Texture2D**)getter_AddRefs(mTextures[i]));
+    if (FAILED(hr)) {
+      NS_WARNING(
+          "RenderDXGIYCbCrTextureHost::EnsureLockable(): Failed to open "
+          "shared "
+          "texture");
+      gfxCriticalNote
+          << "RenderDXGIYCbCrTextureHost Failed to open shared texture, hr="
+          << gfx::hexa(hr);
+      return false;
+    }
+  }
+
+  for (int i = 0; i < 3; ++i) {
+    mTextures[i]->QueryInterface(
+        (IDXGIKeyedMutex**)getter_AddRefs(mKeyedMutexs[i]));
+  }
 
   mGL->fGenTextures(3, mTextureHandles);
   bool ok = true;
@@ -546,49 +434,6 @@ bool RenderDXGIYCbCrTextureHost::EnsureLockable(wr::ImageRendering aRendering) {
   return true;
 }
 
-bool RenderDXGIYCbCrTextureHost::EnsureD3D11Texture2D(ID3D11Device* aDevice) {
-  for (int i = 0; i < 3; ++i) {
-    // Get the R8 D3D11 texture from shared handle.
-    HRESULT hr = aDevice->OpenSharedResource(
-        (HANDLE)mHandles[i], __uuidof(ID3D11Texture2D),
-        (void**)(ID3D11Texture2D**)getter_AddRefs(mTextures[i]));
-    if (FAILED(hr)) {
-      NS_WARNING(
-          "RenderDXGIYCbCrTextureHost::EnsureLockable(): Failed to open "
-          "shared "
-          "texture");
-      gfxCriticalNote
-          << "RenderDXGIYCbCrTextureHost Failed to open shared texture, hr="
-          << gfx::hexa(hr);
-      return false;
-    }
-  }
-
-  for (int i = 0; i < 3; ++i) {
-    mTextures[i]->QueryInterface(
-        (IDXGIKeyedMutex**)getter_AddRefs(mKeyedMutexs[i]));
-  }
-  return true;
-}
-
-bool RenderDXGIYCbCrTextureHost::LockInternal() {
-  if (!mLocked) {
-    if (mKeyedMutexs[0]) {
-      for (const auto& mutex : mKeyedMutexs) {
-        HRESULT hr = mutex->AcquireSync(0, 10000);
-        if (hr != S_OK) {
-          gfxCriticalError()
-              << "RenderDXGIYCbCrTextureHost AcquireSync timeout, hr="
-              << gfx::hexa(hr);
-          return false;
-        }
-      }
-    }
-    mLocked = true;
-  }
-  return true;
-}
-
 wr::WrExternalImage RenderDXGIYCbCrTextureHost::Lock(
     uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
   if (mGL.get() != aGL) {
@@ -609,8 +454,19 @@ wr::WrExternalImage RenderDXGIYCbCrTextureHost::Lock(
     return InvalidToWrExternalImage();
   }
 
-  if (!LockInternal()) {
-    return InvalidToWrExternalImage();
+  if (!mLocked) {
+    if (mKeyedMutexs[0]) {
+      for (const auto& mutex : mKeyedMutexs) {
+        HRESULT hr = mutex->AcquireSync(0, 10000);
+        if (hr != S_OK) {
+          gfxCriticalError()
+              << "RenderDXGIYCbCrTextureHost AcquireSync timeout, hr="
+              << gfx::hexa(hr);
+          return InvalidToWrExternalImage();
+        }
+      }
+    }
+    mLocked = true;
   }
 
   gfx::IntSize size = GetSize(aChannelIndex);

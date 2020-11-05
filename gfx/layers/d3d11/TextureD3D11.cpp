@@ -999,6 +999,12 @@ void DXGITextureHostD3D11::PushResourceUpdates(
     MOZ_ASSERT_UNREACHABLE("unexpected to be called without ANGLE");
     return;
   }
+  // XXX Software WebRender is not handled yet.
+  if (gfx::gfxVars::UseSoftwareWebRender()) {
+    gfxCriticalNoteOnce
+        << "Software WebRender is not suppored by DXGITextureHostD3D11.";
+    return;
+  }
 
   MOZ_ASSERT(mHandle);
   auto method = aOp == TextureHost::ADD_IMAGE
@@ -1013,10 +1019,7 @@ void DXGITextureHostD3D11::PushResourceUpdates(
 
       wr::ImageDescriptor descriptor(mSize, GetFormat());
       auto imageType =
-          gfx::gfxVars::UseSoftwareWebRender()
-              ? wr::ExternalImageType::TextureHandle(wr::TextureTarget::Rect)
-              : wr::ExternalImageType::TextureHandle(
-                    wr::TextureTarget::External);
+          wr::ExternalImageType::TextureHandle(wr::TextureTarget::External);
       (aResources.*method)(aImageKeys[0], descriptor, aExtID, imageType, 0);
       break;
     }
@@ -1035,10 +1038,7 @@ void DXGITextureHostD3D11::PushResourceUpdates(
                                           ? gfx::SurfaceFormat::R8G8
                                           : gfx::SurfaceFormat::R16G16);
       auto imageType =
-          gfx::gfxVars::UseSoftwareWebRender()
-              ? wr::ExternalImageType::TextureHandle(wr::TextureTarget::Rect)
-              : wr::ExternalImageType::TextureHandle(
-                    wr::TextureTarget::External);
+          wr::ExternalImageType::TextureHandle(wr::TextureTarget::External);
       (aResources.*method)(aImageKeys[0], descriptor0, aExtID, imageType, 0);
       (aResources.*method)(aImageKeys[1], descriptor1, aExtID, imageType, 1);
       break;
@@ -1059,10 +1059,11 @@ void DXGITextureHostD3D11::PushDisplayItems(
     MOZ_ASSERT_UNREACHABLE("unexpected to be called without ANGLE");
     return;
   }
-
-  bool supportsExternalCompositing = false;
+  // XXX Software WebRender is not handled yet.
   if (gfx::gfxVars::UseSoftwareWebRender()) {
-    supportsExternalCompositing = true;
+    gfxCriticalNoteOnce
+        << "Software WebRender is not suppored by DXGITextureHostD3D11.";
+    return;
   }
 
   switch (GetFormat()) {
@@ -1074,7 +1075,7 @@ void DXGITextureHostD3D11::PushDisplayItems(
       aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0],
                          !(mFlags & TextureFlags::NON_PREMULTIPLIED),
                          wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
-                         preferCompositorSurface, supportsExternalCompositing);
+                         preferCompositorSurface);
       break;
     }
     case gfx::SurfaceFormat::P010:
@@ -1255,8 +1256,8 @@ bool DXGIYCbCrTextureHostD3D11::BindTextureSource(
 
 void DXGIYCbCrTextureHostD3D11::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
-  RefPtr<wr::RenderTextureHost> texture = new wr::RenderDXGIYCbCrTextureHost(
-      mHandles, mYUVColorSpace, mColorDepth, mColorRange, mSizeY, mSizeCbCr);
+  RefPtr<wr::RenderTextureHost> texture =
+      new wr::RenderDXGIYCbCrTextureHost(mHandles, mSizeY, mSizeCbCr);
 
   wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
                                                  texture.forget());
@@ -1274,6 +1275,12 @@ void DXGIYCbCrTextureHostD3D11::PushResourceUpdates(
     MOZ_ASSERT_UNREACHABLE("unexpected to be called without ANGLE");
     return;
   }
+  // XXX Software WebRender is not handled yet.
+  if (gfx::gfxVars::UseSoftwareWebRender()) {
+    gfxCriticalNoteOnce
+        << "Software WebRender is not suppored by DXGIYCbCrTextureHostD3D11.";
+    return;
+  }
 
   MOZ_ASSERT(mHandles[0] && mHandles[1] && mHandles[2]);
   MOZ_ASSERT(aImageKeys.length() == 3);
@@ -1287,9 +1294,7 @@ void DXGIYCbCrTextureHostD3D11::PushResourceUpdates(
                     ? &wr::TransactionBuilder::AddExternalImage
                     : &wr::TransactionBuilder::UpdateExternalImage;
   auto imageType =
-      gfx::gfxVars::UseSoftwareWebRender()
-          ? wr::ExternalImageType::TextureHandle(wr::TextureTarget::Rect)
-          : wr::ExternalImageType::TextureHandle(wr::TextureTarget::External);
+      wr::ExternalImageType::TextureHandle(wr::TextureTarget::External);
 
   // y
   wr::ImageDescriptor descriptor0(mSizeY, gfx::SurfaceFormat::A8);
@@ -1308,10 +1313,11 @@ void DXGIYCbCrTextureHostD3D11::PushDisplayItems(
     MOZ_ASSERT_UNREACHABLE("unexpected to be called without ANGLE");
     return;
   }
-
-  bool supportsExternalCompositing = false;
+  // XXX Software WebRender is not handled yet.
   if (gfx::gfxVars::UseSoftwareWebRender()) {
-    supportsExternalCompositing = true;
+    gfxCriticalNoteOnce
+        << "Software WebRender is not suppored by DXGIYCbCrTextureHostD3D11.";
+    return;
   }
 
   MOZ_ASSERT(aImageKeys.length() == 3);
@@ -1320,8 +1326,7 @@ void DXGIYCbCrTextureHostD3D11::PushDisplayItems(
       aBounds, aClip, true, aImageKeys[0], aImageKeys[1], aImageKeys[2],
       wr::ToWrColorDepth(mColorDepth), wr::ToWrYuvColorSpace(mYUVColorSpace),
       wr::ToWrColorRange(mColorRange), aFilter,
-      aFlags.contains(PushDisplayItemFlag::PREFER_COMPOSITOR_SURFACE),
-      supportsExternalCompositing);
+      aFlags.contains(PushDisplayItemFlag::PREFER_COMPOSITOR_SURFACE));
 }
 
 bool DXGIYCbCrTextureHostD3D11::AcquireTextureSource(

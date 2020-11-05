@@ -314,7 +314,7 @@ bool DeviceManagerDx::CreateCompositorDevices() {
   // Fallback from WR to D3D11 Non-WR compositor without re-creating gpu process
   // could happen when WR causes error. In this case, the attachments are loaded
   // synchronously.
-  if (!gfx::gfxVars::UseWebRender() || gfx::gfxVars::UseSoftwareWebRender()) {
+  if (!gfx::gfxVars::UseWebRender()) {
     PreloadAttachmentsOnCompositorThread();
   }
 
@@ -1391,6 +1391,8 @@ IDirectDraw7* DeviceManagerDx::GetDirectDraw() { return mDirectDraw; }
 void DeviceManagerDx::GetCompositorDevices(
     RefPtr<ID3D11Device>* aOutDevice,
     RefPtr<layers::DeviceAttachmentsD3D11>* aOutAttachments) {
+  MOZ_ASSERT(layers::CompositorThreadHolder::IsInCompositorThread());
+
   RefPtr<ID3D11Device> device;
   {
     MutexAutoLock lock(mDeviceLock);
@@ -1429,8 +1431,7 @@ void DeviceManagerDx::PreloadAttachmentsOnCompositorThread() {
     return;
   }
 
-  bool enableAL = gfxConfig::IsEnabled(Feature::ADVANCED_LAYERS) &&
-                  !gfx::gfxVars::UseSoftwareWebRender();
+  bool enableAL = gfxConfig::IsEnabled(Feature::ADVANCED_LAYERS);
 
   RefPtr<Runnable> task = NS_NewRunnableFunction(
       "DeviceManagerDx::PreloadAttachmentsOnCompositorThread",
