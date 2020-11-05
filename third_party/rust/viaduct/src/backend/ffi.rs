@@ -51,7 +51,7 @@ impl Backend for FfiBackend {
         let response = unsafe { fetch(buf) };
         // This way we'll Drop it if we panic, unlike if we just got a slice into
         // it. Besides, we already own it.
-        let response_bytes = response.into_vec();
+        let response_bytes = response.destroy_into_vec();
 
         let response: msg_types::Response = match Message::decode(response_bytes.as_slice()) {
             Ok(v) => v,
@@ -64,11 +64,6 @@ impl Backend for FfiBackend {
         };
 
         if let Some(exn) = response.exception_message {
-            log::error!(
-                // Well, we caught *something* java wanted to tell us about, anyway.
-                "Caught network error (presumably). Message: {:?}",
-                exn
-            );
             return Err(Error::NetworkError(format!("Java error: {:?}", exn)));
         }
         let status = response

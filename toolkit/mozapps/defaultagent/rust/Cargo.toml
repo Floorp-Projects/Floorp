@@ -13,7 +13,7 @@ serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
 url = "2.1"
-viaduct = { git = "https://github.com/mozilla/application-services", rev = "641353a8648602ce17d23c89b88e2a22d108fb03"}
+viaduct = { git = "https://github.com/mozilla/application-services", rev = "1c4dd52e61324eb124ba41cfbb56dcbc6b930d9f"}
 wineventlog = { path = "../../../components/updateagent/wineventlog"}
 wio = "0.2"
 winapi = { version = "0.3", features = ["errhandlingapi", "handleapi", "minwindef", "winerror", "wininet", "winuser"] }

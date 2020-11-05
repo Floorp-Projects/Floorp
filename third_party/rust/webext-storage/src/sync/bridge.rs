@@ -176,7 +176,7 @@ mod tests {
         )?;
         engine.db.execute(
             "INSERT INTO storage_sync_mirror (guid, ext_id, data)
-                 VALUES ('guid', 'ext-a', null)",
+                 VALUES ('guid', 'ext-a', '3')",
             rusqlite::NO_PARAMS,
         )?;
         engine.set_last_sync(1)?;

@@ -6,19 +6,20 @@ pub mod attached_clients;
 
 use crate::{
     error::*,
-    http_client::OAuthTokenResponse,
+    http_client::{AuthorizationRequestParameters, OAuthTokenResponse},
     scoped_keys::{ScopedKey, ScopedKeysFlow},
     util, FirefoxAccount,
 };
+use jwcrypto::{EncryptionAlgorithm, EncryptionParameters};
 use rc_crypto::digest;
 use serde_derive::*;
+use std::convert::TryFrom;
 use std::{
-    collections::HashSet,
+    collections::{HashMap, HashSet},
     iter::FromIterator,
     time::{SystemTime, UNIX_EPOCH},
 };
 use url::Url;
-
 // If a cached token has less than `OAUTH_MIN_TIME_LEFT` seconds left to live,
 // it will be considered already expired.
 const OAUTH_MIN_TIME_LEFT: u64 = 60;
@@ -92,11 +93,13 @@ impl FirefoxAccount {
     }
 
     /// Check whether user is authorized using our refresh token.
-    pub fn check_authorization_status(&self) -> Result<IntrospectInfo> {
+    pub fn check_authorization_status(&mut self) -> Result<IntrospectInfo> {
         let resp = match self.state.refresh_token {
-            Some(ref refresh_token) => self
-                .client
-                .oauth_introspect_refresh_token(&self.state.config, &refresh_token.token)?,
+            Some(ref refresh_token) => {
+                self.auth_circuit_breaker.check()?;
+                self.client
+                    .oauth_introspect_refresh_token(&self.state.config, &refresh_token.token)?
+            }
             None => return Err(ErrorKind::NoRefreshToken.into()),
         };
         Ok(IntrospectInfo {
@@ -109,8 +112,20 @@ impl FirefoxAccount {
     /// * `pairing_url` - A pairing URL obtained by scanning a QR code produced by
     /// the pairing authority.
     /// * `scopes` - Space-separated list of requested scopes by the pairing supplicant.
-    pub fn begin_pairing_flow(&mut self, pairing_url: &str, scopes: &[&str]) -> Result<String> {
+    /// * `entrypoint` - The entrypoint to be used for data collection
+    /// * `metrics` - Optional parameters for metrics
+    pub fn begin_pairing_flow(
+        &mut self,
+        pairing_url: &str,
+        scopes: &[&str],
+        entrypoint: &str,
+        metrics: Option<MetricsParams>,
+    ) -> Result<String> {
         let mut url = self.state.config.pair_supp_url()?;
+        url.query_pairs_mut().append_pair("entrypoint", entrypoint);
+        if let Some(metrics) = metrics {
+            metrics.append_params_to_url(&mut url);
+        }
         let pairing_url = Url::parse(pairing_url)?;
         if url.host_str() != pairing_url.host_str() {
             return Err(ErrorKind::OriginMismatch.into());
@@ -122,7 +137,14 @@ impl FirefoxAccount {
     /// Initiate an OAuth login flow and return a URL that should be navigated to.
     ///
     /// * `scopes` - Space-separated list of requested scopes.
-    pub fn begin_oauth_flow(&mut self, scopes: &[&str]) -> Result<String> {
+    /// * `entrypoint` - The entrypoint to be used for metrics
+    /// * `metrics` - Optional metrics parameters
+    pub fn begin_oauth_flow(
+        &mut self,
+        scopes: &[&str],
+        entrypoint: &str,
+        metrics: Option<MetricsParams>,
+    ) -> Result<String> {
         let mut url = if self.state.last_seen_profile.is_some() {
             self.state.config.oauth_force_auth_url()?
         } else {
@@ -131,7 +153,11 @@ impl FirefoxAccount {
 
         url.query_pairs_mut()
             .append_pair("action", "email")
-            .append_pair("response_type", "code");
+            .append_pair("response_type", "code")
+            .append_pair("entrypoint", entrypoint);
+        if let Some(metrics) = metrics {
+            metrics.append_params_to_url(&mut url);
+        }
 
         if let Some(ref cached_profile) = self.state.last_seen_profile {
             url.query_pairs_mut()
@@ -156,27 +182,87 @@ impl FirefoxAccount {
     }
 
     /// Fetch an OAuth code for a particular client using a session token from the account state.
-    /// This method doesn't support OAuth public clients at this time.
     ///
-    /// * `client_id` - OAuth client id.
-    /// * `scopes` - Space-separated list of requested scopes.
-    /// * `state` - OAuth state.
-    /// * `access_type` - Type of OAuth access, can be "offline" and "online.
+    /// * `auth_params` Authorization parameters  which includes:
+    ///     *  `client_id` - OAuth client id.
+    ///     *  `scope` - list of requested scopes.
+    ///     *  `state` - OAuth state.
+    ///     *  `access_type` - Type of OAuth access, can be "offline" and "online"
+    ///     *  `pkce_params` - Optional PKCE parameters for public clients (`code_challenge` and `code_challenge_method`)
+    ///     *  `keys_jwk` - Optional JWK used to encrypt scoped keys
     pub fn authorize_code_using_session_token(
         &self,
-        client_id: &str,
-        scope: &str,
-        state: &str,
-        access_type: &str,
+        auth_params: AuthorizationParameters,
     ) -> Result<String> {
         let session_token = self.get_session_token()?;
+
+        // Validate request to ensure that the client is actually allowed to request
+        // the scopes they requested
+        let allowed_scopes = self.client.scoped_key_data(
+            &self.state.config,
+            &session_token,
+            &auth_params.client_id,
+            &auth_params.scope.join(" "),
+        )?;
+
+        if let Some(not_allowed_scope) = auth_params
+            .scope
+            .iter()
+            .find(|scope| !allowed_scopes.contains_key(*scope))
+        {
+            return Err(ErrorKind::ScopeNotAllowed(
+                auth_params.client_id.clone(),
+                not_allowed_scope.clone(),
+            )
+            .into());
+        }
+
+        let keys_jwe = if let Some(keys_jwk) = auth_params.keys_jwk {
+            let mut scoped_keys = HashMap::new();
+            allowed_scopes
+                .iter()
+                .try_for_each(|(scope, _)| -> Result<()> {
+                    scoped_keys.insert(
+                        scope,
+                        self.state
+                            .scoped_keys
+                            .get(scope)
+                            .ok_or_else(|| ErrorKind::NoScopedKey(scope.clone()))?,
+                    );
+                    Ok(())
+                })?;
+            let scoped_keys = serde_json::to_string(&scoped_keys)?;
+            let keys_jwk = base64::decode_config(keys_jwk, base64::URL_SAFE_NO_PAD)?;
+            let jwk = serde_json::from_slice(&keys_jwk)?;
+            Some(jwcrypto::encrypt_to_jwe(
+                scoped_keys.as_bytes(),
+                EncryptionParameters::ECDH_ES {
+                    enc: EncryptionAlgorithm::A256GCM,
+                    peer_jwk: &jwk,
+                },
+            )?)
+        } else {
+            None
+        };
+        let auth_request_params = AuthorizationRequestParameters {
+            client_id: auth_params.client_id,
+            scope: auth_params.scope.join(" "),
+            state: auth_params.state,
+            access_type: auth_params.access_type,
+            code_challenge: auth_params
+                .pkce_params
+                .as_ref()
+                .map(|param| param.code_challenge.clone()),
+            code_challenge_method: auth_params
+                .pkce_params
+                .map(|param| param.code_challenge_method),
+            keys_jwe,
+        };
+
         let resp = self.client.authorization_code_using_session_token(
             &self.state.config,
-            &client_id,
             &session_token,
-            &scope,
-            &state,
-            &access_type,
+            auth_request_params,
         )?;
 
         Ok(resp.code)
@@ -189,7 +275,8 @@ impl FirefoxAccount {
         let code_challenge = digest::digest(&digest::SHA256, &code_verifier.as_bytes())?;
         let code_challenge = base64::encode_config(&code_challenge, base64::URL_SAFE_NO_PAD);
         let scoped_keys_flow = ScopedKeysFlow::with_random_key()?;
-        let jwk_json = scoped_keys_flow.generate_keys_jwk()?;
+        let jwk = scoped_keys_flow.get_public_key_jwk()?;
+        let jwk_json = serde_json::to_string(&jwk)?;
         let keys_jwk = base64::encode_config(&jwk_json, base64::URL_SAFE_NO_PAD);
         url.query_pairs_mut()
             .append_pair("client_id", &self.state.config.client_id)
@@ -273,7 +360,7 @@ impl FirefoxAccount {
         let old_refresh_token = self.state.refresh_token.clone();
         let new_refresh_token = resp
             .refresh_token
-            .ok_or_else(|| ErrorKind::RefreshTokenNotPresent)?;
+            .ok_or_else(|| ErrorKind::UnrecoverableServerError("No refresh token in response"))?;
         // Destroying a refresh token also destroys its associated device,
         // grab the device information for replication later.
         let old_device_info = match old_refresh_token {
@@ -337,13 +424,14 @@ impl FirefoxAccount {
         )?;
         let new_refresh_token = resp
             .refresh_token
-            .ok_or_else(|| ErrorKind::RefreshTokenNotPresent)?;
+            .ok_or_else(|| ErrorKind::UnrecoverableServerError("No refresh token in response"))?;
         self.state.refresh_token = Some(RefreshToken {
             token: new_refresh_token,
             scopes: HashSet::from_iter(resp.scope.split(' ').map(ToString::to_string)),
         });
         self.state.session_token = Some(session_token.to_owned());
         self.clear_access_token_cache();
+        self.clear_devices_and_attached_clients_cache();
         // When our keys change, we might need to re-register device capabilities with the server.
         // Ensure that this happens on the next call to ensure_capabilities.
         self.state.device_capabilities.clear();
@@ -353,6 +441,147 @@ impl FirefoxAccount {
     /// **💾 This method may alter the persisted account state.**
     pub fn clear_access_token_cache(&mut self) {
         self.state.access_token_cache.clear();
+    }
+
+    #[cfg(feature = "integration_test")]
+    pub fn new_logged_in(
+        config: crate::Config,
+        session_token: &str,
+        scoped_keys: HashMap<String, ScopedKey>,
+    ) -> Self {
+        let mut fxa = FirefoxAccount::with_config(config);
+        fxa.state.session_token = Some(session_token.to_owned());
+        scoped_keys.iter().for_each(|(key, val)| {
+            fxa.state.scoped_keys.insert(key.to_string(), val.clone());
+        });
+        fxa
+    }
+}
+
+const AUTH_CIRCUIT_BREAKER_CAPACITY: u8 = 5;
+const AUTH_CIRCUIT_BREAKER_RENEWAL_RATE: f32 = 3.0 / 60.0 / 1000.0; // 3 tokens every minute.
+
+// The auth circuit breaker rate-limits access to the `oauth_introspect_refresh_token`
+// using a fairly naively implemented token bucket algorithm.
+#[derive(Clone, Copy)]
+pub(crate) struct AuthCircuitBreaker {
+    tokens: u8,
+    last_refill: u64, // in ms.
+}
+
+impl Default for AuthCircuitBreaker {
+    fn default() -> Self {
+        AuthCircuitBreaker {
+            tokens: AUTH_CIRCUIT_BREAKER_CAPACITY,
+            last_refill: Self::now(),
+        }
+    }
+}
+
+impl AuthCircuitBreaker {
+    pub(crate) fn check(&mut self) -> Result<()> {
+        self.refill();
+        if self.tokens == 0 {
+            return Err(ErrorKind::AuthCircuitBreakerError.into());
+        }
+        self.tokens -= 1;
+        Ok(())
+    }
+
+    fn refill(&mut self) {
+        let now = Self::now();
+        let new_tokens =
+            ((now - self.last_refill) as f64 * AUTH_CIRCUIT_BREAKER_RENEWAL_RATE as f64) as u8; // `as` is a truncating/saturing cast.
+        if new_tokens > 0 {
+            self.last_refill = now;
+            self.tokens = std::cmp::min(
+                AUTH_CIRCUIT_BREAKER_CAPACITY,
+                self.tokens.saturating_add(new_tokens),
+            );
+        }
+    }
+
+    #[cfg(not(test))]
+    #[inline]
+    fn now() -> u64 {
+        util::now()
+    }
+
+    #[cfg(test)]
+    fn now() -> u64 {
+        1600000000000
+    }
+}
+
+#[derive(Clone)]
+pub struct AuthorizationPKCEParams {
+    pub code_challenge: String,
+    pub code_challenge_method: String,
+}
+
+#[derive(Clone)]
+pub struct AuthorizationParameters {
+    pub client_id: String,
+    pub scope: Vec<String>,
+    pub state: String,
+    pub access_type: String,
+    pub pkce_params: Option<AuthorizationPKCEParams>,
+    pub keys_jwk: Option<String>,
+}
+
+impl TryFrom<Url> for AuthorizationParameters {
+    type Error = Error;
+
+    fn try_from(url: Url) -> Result<Self> {
+        let query_map: HashMap<String, String> = url.query_pairs().into_owned().collect();
+        let scope = query_map
+            .get("scope")
+            .cloned()
+            .ok_or_else(|| ErrorKind::MissingUrlParameter("scope"))?;
+        let client_id = query_map
+            .get("client_id")
+            .cloned()
+            .ok_or_else(|| ErrorKind::MissingUrlParameter("client_id"))?;
+        let state = query_map
+            .get("state")
+            .cloned()
+            .ok_or_else(|| ErrorKind::MissingUrlParameter("state"))?;
+        let access_type = query_map
+            .get("access_type")
+            .cloned()
+            .ok_or_else(|| ErrorKind::MissingUrlParameter("access_type"))?;
+        let code_challenge = query_map.get("code_challenge").cloned();
+        let code_challenge_method = query_map.get("code_challenge_method").cloned();
+        let pkce_params = match (code_challenge, code_challenge_method) {
+            (Some(code_challenge), Some(code_challenge_method)) => Some(AuthorizationPKCEParams {
+                code_challenge,
+                code_challenge_method,
+            }),
+            _ => None,
+        };
+        let keys_jwk = query_map.get("keys_jwk").cloned();
+        Ok(Self {
+            client_id,
+            scope: scope.split_whitespace().map(|s| s.to_string()).collect(),
+            state,
+            access_type,
+            pkce_params,
+            keys_jwk,
+        })
+    }
+}
+pub struct MetricsParams {
+    pub parameters: std::collections::HashMap<String, String>,
+}
+
+impl MetricsParams {
+    fn append_params_to_url(&self, url: &mut Url) {
+        self.parameters
+            .iter()
+            .for_each(|(parameter_name, parameter_value)| {
+                url.query_pairs_mut()
+                    .append_pair(parameter_name, parameter_value);
+            });
     }
 }
 
@@ -427,15 +656,20 @@ mod tests {
             "12345678",
             "https://foo.bar",
         );
+        let mut params = HashMap::new();
+        params.insert("flow_id".to_string(), "87654321".to_string());
+        let metrics_params = MetricsParams { parameters: params };
         let mut fxa = FirefoxAccount::with_config(config);
-        let url = fxa.begin_oauth_flow(&["profile"]).unwrap();
+        let url = fxa
+            .begin_oauth_flow(&["profile"], "test_oauth_flow_url", Some(metrics_params))
+            .unwrap();
         let flow_url = Url::parse(&url).unwrap();
 
         assert_eq!(flow_url.host_str(), Some("accounts.firefox.com"));
         assert_eq!(flow_url.path(), "/authorization");
 
         let mut pairs = flow_url.query_pairs();
-        assert_eq!(pairs.count(), 10);
+        assert_eq!(pairs.count(), 12);
         assert_eq!(
             pairs.next(),
             Some((Cow::Borrowed("action"), Cow::Borrowed("email")))
@@ -444,7 +678,17 @@ mod tests {
             pairs.next(),
             Some((Cow::Borrowed("response_type"), Cow::Borrowed("code")))
         );
-
+        assert_eq!(
+            pairs.next(),
+            Some((
+                Cow::Borrowed("entrypoint"),
+                Cow::Borrowed("test_oauth_flow_url")
+            ))
+        );
+        assert_eq!(
+            pairs.next(),
+            Some((Cow::Borrowed("flow_id"), Cow::Borrowed("87654321")))
+        );
         assert_eq!(
             pairs.next(),
             Some((Cow::Borrowed("client_id"), Cow::Borrowed("12345678")))
@@ -490,7 +734,9 @@ mod tests {
         let mut fxa = FirefoxAccount::with_config(config);
         let email = "test@example.com";
         fxa.add_cached_profile("123", email);
-        let url = fxa.begin_oauth_flow(&["profile"]).unwrap();
+        let url = fxa
+            .begin_oauth_flow(&["profile"], "test_force_auth_url", None)
+            .unwrap();
         let url = Url::parse(&url).unwrap();
         assert_eq!(url.path(), "/oauth/force_auth");
         let mut pairs = url.query_pairs();
@@ -511,7 +757,9 @@ mod tests {
             "urn:ietf:wg:oauth:2.0:oob:oauth-redirect-webchannel",
         );
         let mut fxa = FirefoxAccount::with_config(config);
-        let url = fxa.begin_oauth_flow(&SCOPES).unwrap();
+        let url = fxa
+            .begin_oauth_flow(&SCOPES, "test_webchannel_context_url", None)
+            .unwrap();
         let url = Url::parse(&url).unwrap();
         let query_params: HashMap<_, _> = url.query_pairs().into_owned().collect();
         let context = &query_params["context"];
@@ -530,7 +778,14 @@ mod tests {
             "urn:ietf:wg:oauth:2.0:oob:oauth-redirect-webchannel",
         );
         let mut fxa = FirefoxAccount::with_config(config);
-        let url = fxa.begin_pairing_flow(&PAIRING_URL, &SCOPES).unwrap();
+        let url = fxa
+            .begin_pairing_flow(
+                &PAIRING_URL,
+                &SCOPES,
+                "test_webchannel_pairing_context_url",
+                None,
+            )
+            .unwrap();
         let url = Url::parse(&url).unwrap();
         let query_params: HashMap<_, _> = url.query_pairs().into_owned().collect();
         let context = &query_params["context"];
@@ -549,8 +804,19 @@ mod tests {
             "12345678",
             "https://foo.bar",
         );
+        let mut params = HashMap::new();
+        params.insert("flow_id".to_string(), "87654321".to_string());
+        let metrics_params = MetricsParams { parameters: params };
+
         let mut fxa = FirefoxAccount::with_config(config);
-        let url = fxa.begin_pairing_flow(&PAIRING_URL, &SCOPES).unwrap();
+        let url = fxa
+            .begin_pairing_flow(
+                &PAIRING_URL,
+                &SCOPES,
+                "test_pairing_flow_url",
+                Some(metrics_params),
+            )
+            .unwrap();
         let flow_url = Url::parse(&url).unwrap();
         let expected_parsed_url = Url::parse(EXPECTED_URL).unwrap();
 
@@ -559,7 +825,18 @@ mod tests {
         assert_eq!(flow_url.fragment(), expected_parsed_url.fragment());
 
         let mut pairs = flow_url.query_pairs();
-        assert_eq!(pairs.count(), 8);
+        assert_eq!(pairs.count(), 10);
+        assert_eq!(
+            pairs.next(),
+            Some((
+                Cow::Borrowed("entrypoint"),
+                Cow::Borrowed("test_pairing_flow_url")
+            ))
+        );
+        assert_eq!(
+            pairs.next(),
+            Some((Cow::Borrowed("flow_id"), Cow::Borrowed("87654321")))
+        );
         assert_eq!(
             pairs.next(),
             Some((Cow::Borrowed("client_id"), Cow::Borrowed("12345678")))
@@ -607,8 +884,12 @@ mod tests {
         static PAIRING_URL: &str = "https://bad.origin.com/pair#channel_id=foo&channel_key=bar";
         let config = Config::stable_dev("12345678", "https://foo.bar");
         let mut fxa = FirefoxAccount::with_config(config);
-        let url =
-            fxa.begin_pairing_flow(&PAIRING_URL, &["https://identity.mozilla.com/apps/oldsync"]);
+        let url = fxa.begin_pairing_flow(
+            &PAIRING_URL,
+            &["https://identity.mozilla.com/apps/oldsync"],
+            "test_pairiong_flow_origin_mismatch",
+            None,
+        );
 
         assert!(url.is_err());
 
@@ -645,5 +926,221 @@ mod tests {
 
         let auth_status = fxa.check_authorization_status().unwrap();
         assert_eq!(auth_status.active, true);
+    }
+
+    #[test]
+    fn test_check_authorization_status_circuit_breaker() {
+        let config = Config::stable_dev("12345678", "https://foo.bar");
+        let mut fxa = FirefoxAccount::with_config(config);
+
+        let refresh_token_scopes = std::collections::HashSet::new();
+        fxa.state.refresh_token = Some(RefreshToken {
+            token: "refresh_token".to_owned(),
+            scopes: refresh_token_scopes,
+        });
+
+        let mut client = FxAClientMock::new();
+        // This copy-pasta (equivalent to `.returns(..).times(5)`) is there
+        // because `Error` is not cloneable :/
+        client
+            .expect_oauth_introspect_refresh_token(mockiato::Argument::any, |token| {
+                token.partial_eq("refresh_token")
+            })
+            .returns_once(Ok(IntrospectResponse { active: true }));
+        client
+            .expect_oauth_introspect_refresh_token(mockiato::Argument::any, |token| {
+                token.partial_eq("refresh_token")
+            })
+            .returns_once(Ok(IntrospectResponse { active: true }));
+        client
+            .expect_oauth_introspect_refresh_token(mockiato::Argument::any, |token| {
+                token.partial_eq("refresh_token")
+            })
+            .returns_once(Ok(IntrospectResponse { active: true }));
+        client
+            .expect_oauth_introspect_refresh_token(mockiato::Argument::any, |token| {
+                token.partial_eq("refresh_token")
+            })
+            .returns_once(Ok(IntrospectResponse { active: true }));
+        client
+            .expect_oauth_introspect_refresh_token(mockiato::Argument::any, |token| {
+                token.partial_eq("refresh_token")
+            })
+            .returns_once(Ok(IntrospectResponse { active: true }));
+        client.expect_oauth_introspect_refresh_token_calls_in_order();
+        fxa.set_client(Arc::new(client));
+
+        for _ in 0..5 {
+            assert!(fxa.check_authorization_status().is_ok());
+        }
+        match fxa.check_authorization_status() {
+            Ok(_) => unreachable!("should not happen"),
+            Err(err) => assert!(matches!(err.kind(), ErrorKind::AuthCircuitBreakerError)),
+        }
+    }
+
+    #[test]
+    fn test_auth_circuit_breaker_unit_recovery() {
+        let mut breaker = AuthCircuitBreaker::default();
+        // AuthCircuitBreaker::now is fixed for tests, let's assert that for sanity.
+        assert_eq!(AuthCircuitBreaker::now(), 1600000000000);
+        for _ in 0..AUTH_CIRCUIT_BREAKER_CAPACITY {
+            assert!(breaker.check().is_ok());
+        }
+        assert!(breaker.check().is_err());
+        // Jump back in time (1 min).
+        breaker.last_refill -= 60 * 1000;
+        let expected_tokens_before_check: u8 =
+            (AUTH_CIRCUIT_BREAKER_RENEWAL_RATE * 60.0 * 1000.0) as u8;
+        assert!(breaker.check().is_ok());
+        assert_eq!(breaker.tokens, expected_tokens_before_check - 1);
+    }
+
+    use crate::scopes;
+
+    #[test]
+    fn test_auth_code_pair_valid_not_allowed_scope() {
+        let config = Config::stable_dev("12345678", "https://foo.bar");
+        let mut fxa = FirefoxAccount::with_config(config);
+        fxa.set_session_token("session");
+        let mut client = FxAClientMock::new();
+        let not_allowed_scope = "https://identity.mozilla.com/apps/lockbox";
+        let expected_scopes = scopes::OLD_SYNC
+            .chars()
+            .chain(std::iter::once(' '))
+            .chain(not_allowed_scope.chars())
+            .collect::<String>();
+        client
+            .expect_scoped_key_data(
+                mockiato::Argument::any,
+                |arg| arg.partial_eq("session"),
+                |arg| arg.partial_eq("12345678"),
+                |arg| arg.partial_eq(expected_scopes),
+            )
+            .returns_once(Err(ErrorKind::RemoteError {
+                code: 400,
+                errno: 163,
+                error: "Invalid Scopes".to_string(),
+                message: "Not allowed to request scopes".to_string(),
+                info: "fyi, there was a server error".to_string(),
+            }
+            .into()));
+        fxa.set_client(Arc::new(client));
+        let auth_params = AuthorizationParameters {
+            client_id: "12345678".to_string(),
+            scope: vec![scopes::OLD_SYNC.to_string(), not_allowed_scope.to_string()],
+            state: "somestate".to_string(),
+            access_type: "offline".to_string(),
+            pkce_params: None,
+            keys_jwk: None,
+        };
+        let res = fxa.authorize_code_using_session_token(auth_params);
+        assert!(res.is_err());
+        let err = res.unwrap_err();
+        if let ErrorKind::RemoteError {
+            code,
+            errno,
+            error: _,
+            message: _,
+            info: _,
+        } = err.kind()
+        {
+            assert_eq!(*code, 400);
+            assert_eq!(*errno, 163); // Requested scopes not allowed
+        } else {
+            panic!("Should return an error from the server specifying that the requested scopes are not allowed");
+        }
+    }
+
+    #[test]
+    fn test_auth_code_pair_invalid_scope_not_allowed() {
+        let config = Config::stable_dev("12345678", "https://foo.bar");
+        let mut fxa = FirefoxAccount::with_config(config);
+        fxa.set_session_token("session");
+        let mut client = FxAClientMock::new();
+        let invalid_scope = "IamAnInvalidScope";
+        let expected_scopes = scopes::OLD_SYNC
+            .chars()
+            .chain(std::iter::once(' '))
+            .chain(invalid_scope.chars())
+            .collect::<String>();
+        let mut server_ret = HashMap::new();
+        server_ret.insert(
+            scopes::OLD_SYNC.to_string(),
+            ScopedKeyDataResponse {
+                key_rotation_secret: "IamASecret".to_string(),
+                key_rotation_timestamp: 100,
+                identifier: "".to_string(),
+            },
+        );
+        client
+            .expect_scoped_key_data(
+                mockiato::Argument::any,
+                |arg| arg.partial_eq("session"),
+                |arg| arg.partial_eq("12345678"),
+                |arg| arg.partial_eq(expected_scopes),
+            )
+            .returns_once(Ok(server_ret));
+        fxa.set_client(Arc::new(client));
+
+        let auth_params = AuthorizationParameters {
+            client_id: "12345678".to_string(),
+            scope: vec![scopes::OLD_SYNC.to_string(), invalid_scope.to_string()],
+            state: "somestate".to_string(),
+            access_type: "offline".to_string(),
+            pkce_params: None,
+            keys_jwk: None,
+        };
+        let res = fxa.authorize_code_using_session_token(auth_params);
+        assert!(res.is_err());
+        let err = res.unwrap_err();
+        if let ErrorKind::ScopeNotAllowed(client_id, scope) = err.kind() {
+            assert_eq!(client_id.clone(), "12345678");
+            assert_eq!(scope.clone(), "IamAnInvalidScope");
+        } else {
+            panic!("Should return an error that specifies the scope that is not allowed");
+        }
+    }
+
+    #[test]
+    fn test_auth_code_pair_scope_not_in_state() {
+        let config = Config::stable_dev("12345678", "https://foo.bar");
+        let mut fxa = FirefoxAccount::with_config(config);
+        fxa.set_session_token("session");
+        let mut client = FxAClientMock::new();
+        let mut server_ret = HashMap::new();
+        server_ret.insert(
+            scopes::OLD_SYNC.to_string(),
+            ScopedKeyDataResponse {
+                key_rotation_secret: "IamASecret".to_string(),
+                key_rotation_timestamp: 100,
+                identifier: "".to_string(),
+            },
+        );
+        client
+            .expect_scoped_key_data(
+                mockiato::Argument::any,
+                |arg| arg.partial_eq("session"),
+                |arg| arg.partial_eq("12345678"),
+                |arg| arg.partial_eq(scopes::OLD_SYNC),
+            )
+            .returns_once(Ok(server_ret));
+        fxa.set_client(Arc::new(client));
+        let auth_params = AuthorizationParameters {
+            client_id: "12345678".to_string(),
+            scope: vec![scopes::OLD_SYNC.to_string()],
+            state: "somestate".to_string(),
+            access_type: "offline".to_string(),
+            pkce_params: None,
+            keys_jwk: Some("IAmAVerySecretKeysJWkInBase64".to_string()),
+        };
+        let res = fxa.authorize_code_using_session_token(auth_params);
+        assert!(res.is_err());
+        let err = res.unwrap_err();
+        if let ErrorKind::NoScopedKey(scope) = err.kind() {
+            assert_eq!(scope.clone(), scopes::OLD_SYNC.to_string());
+        } else {
+            panic!("Should return an error that specifies the scope that is not in the state");
+        }
     }
 }

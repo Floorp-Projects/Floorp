@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::*;
-use std::os::raw::{c_int, c_ulong, c_void};
+use std::os::raw::{c_int, c_void};
+
+pub type size_t = usize;
 
 extern "C" {
     pub fn PORT_FreeArena(arena: *mut PLArenaPool, zero: PRBool);
     pub fn NSS_SecureMemcmp(a: *const c_void, b: *const c_void, n: size_t) -> c_int;
 }
-
-pub type size_t = c_ulong;

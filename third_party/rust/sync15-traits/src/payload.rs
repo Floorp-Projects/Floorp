@@ -40,6 +40,51 @@ impl Payload {
         self
     }
 
+    /// "Auto" fields are fields like 'sortindex' and 'ttl', which are:
+    ///
+    /// - Added to the payload automatically when deserializing if present on
+    ///   the incoming BSO or envelope.
+    /// - Removed from the payload automatically and attached to the BSO or
+    ///   envelope if present on the outgoing payload.
+    pub fn with_auto_field<T: Into<JsonValue>>(mut self, name: &str, v: Option<T>) -> Payload {
+        let old_value: Option<JsonValue> = if let Some(value) = v {
+            self.data.insert(name.into(), value.into())
+        } else {
+            self.data.remove(name)
+        };
+
+        // This is a little dubious, but it seems like if we have a e.g. `sortindex` field on the payload
+        // it's going to be a bug if we use it instead of the "real" sort index.
+        if let Some(old_value) = old_value {
+            log::warn!(
+                "Payload for record {} already contains 'automatic' field \"{}\"? \
+                 Overwriting auto value: {} with 'real' value",
+                self.id,
+                name,
+                old_value,
+            );
+        }
+        self
+    }
+
+    pub fn take_auto_field<V>(&mut self, name: &str) -> Option<V>
+    where
+        for<'a> V: Deserialize<'a>,
+    {
+        let v = self.data.remove(name)?;
+        match serde_json::from_value(v) {
+            Ok(v) => Some(v),
+            Err(e) => {
+                log::error!(
+                    "Automatic field {} exists on payload, but cannot be deserialized: {}",
+                    name,
+                    e
+                );
+                None
+            }
+        }
+    }
+
     #[inline]
     pub fn id(&self) -> &str {
         &self.id[..]
@@ -54,6 +99,24 @@ impl Payload {
         serde_json::from_value(value)
     }
 
+    /// Deserializes the BSO payload into a specific record type `T`.
+    ///
+    /// BSO payloads are unstructured JSON objects, with string keys and
+    /// dynamically-typed values. `into_record` makes it more convenient to
+    /// work with payloads by converting them into data type-specific structs.
+    /// Your record type only needs to derive or implement `serde::Deserialize`;
+    /// Serde will take care of the rest.
+    ///
+    /// # Errors
+    ///
+    /// `into_record` returns errors for type mismatches. As an example, trying
+    /// to deserialize a string value from the payload into an integer field in
+    /// `T` will fail.
+    ///
+    /// If there's a chance that a field contains invalid or mistyped data,
+    /// you'll want to extract it from `payload.data` manually, instead of using
+    /// `into_record`. This has been seen in the wild: for example, `dateAdded`
+    /// for bookmarks can be either an integer or a string.
     pub fn into_record<T>(self) -> Result<T, serde_json::Error>
     where
         for<'a> T: Deserialize<'a>,

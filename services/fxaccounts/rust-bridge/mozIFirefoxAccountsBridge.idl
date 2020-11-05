@@ -25,7 +25,7 @@ interface mozIFirefoxAccountsBridge : nsISupports {
     void initFromJSON(in AUTF8String json);
     void stateJSON(in mozIFirefoxAccountsBridgeCallback callback);
 
-    void beginOAuthFlow(in Array<AUTF8String> scopes, in mozIFirefoxAccountsBridgeCallback callback);
+    void beginOAuthFlow(in Array<AUTF8String> scopes, in AUTF8String entryPoint, in mozIFirefoxAccountsBridgeCallback callback);
     void completeOAuthFlow(in AUTF8String code, in AUTF8String state, in mozIFirefoxAccountsBridgeCallback callback);
     void disconnect(in mozIFirefoxAccountsBridgeCallback callback);
 

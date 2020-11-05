@@ -105,6 +105,7 @@ pub(crate) struct StateV2 {
     pub(crate) session_token: Option<String>, // Hex-formatted string.
     pub(crate) last_seen_profile: Option<CachedResponse<Profile>>,
     pub(crate) in_flight_migration: Option<MigrationData>,
+    pub(crate) ecosystem_user_id: Option<String>,
 }
 
 impl StateV2 {
@@ -124,6 +125,7 @@ impl StateV2 {
             device_capabilities: HashSet::new(),
             session_token: None,
             in_flight_migration: None,
+            ecosystem_user_id: None,
         }
     }
 }
@@ -189,6 +191,7 @@ impl From<StateV1> for Result<StateV2> {
             last_seen_profile: None,
             in_flight_migration: None,
             access_token_cache: HashMap::new(),
+            ecosystem_user_id: None,
         })
     }
 }
