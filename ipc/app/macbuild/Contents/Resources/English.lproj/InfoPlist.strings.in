@@ -4,4 +4,4 @@
 
 /* Localized versions of Info.plist keys */
 
-CFBundleName = "%APP_NAME%";
+CFBundleName = "@APP_NAME@";
