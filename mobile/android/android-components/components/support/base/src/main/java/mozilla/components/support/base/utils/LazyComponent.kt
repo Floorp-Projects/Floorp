@@ -62,7 +62,7 @@ class LazyComponent<T>(initializer: () -> T) {
      * Returns whether or not the component has been initialized yet.
      */
     @VisibleForTesting(otherwise = PRIVATE)
-    fun isInitialized(): Boolean = lazyValue.isInitialized()
+    internal fun isInitialized(): Boolean = lazyValue.isInitialized()
 
     companion object {
         /**
