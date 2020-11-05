@@ -115,12 +115,11 @@ impl Bridge {
     xpcom_method!(
         begin_oauth_flow => BeginOAuthFlow(
             scopes: *const ThinVec<nsCString>,
-            entry_point: *const nsACString,
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
 
-    punt!(begin_oauth_flow, scopes: &ThinVec<nsCString>, entry_point: &nsACString);
+    punt!(begin_oauth_flow, scopes: &ThinVec<nsCString>);
 
     xpcom_method!(
         complete_oauth_flow => CompleteOAuthFlow(

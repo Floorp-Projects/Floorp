@@ -1,47 +1,48 @@
 use crate::crypto::CryptoError;
+use failure::Fail;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(thiserror::Error, Debug)]
+#[derive(Fail, Debug)]
 pub enum Error {
-    #[error("Unparseable Hawk header: {0}")]
+    #[fail(display = "Unparseable Hawk header: {}", _0)]
     HeaderParseError(String),
 
-    #[error("Invalid url: {0}")]
+    #[fail(display = "Invalid url: {}", _0)]
     InvalidUrl(String),
 
-    #[error("Missing `ts` attribute in Hawk header")]
+    #[fail(display = "Missing `ts` attribute in Hawk header")]
     MissingTs,
 
-    #[error("Missing `nonce` attribute in Hawk header")]
+    #[fail(display = "Missing `nonce` attribute in Hawk header")]
     MissingNonce,
 
-    #[error("{0}")]
-    InvalidBewit(#[source] InvalidBewit),
+    #[fail(display = "{}", _0)]
+    InvalidBewit(#[fail(cause)] InvalidBewit),
 
-    #[error("{0}")]
-    Io(#[source] std::io::Error),
+    #[fail(display = "{}", _0)]
+    Io(#[fail(cause)] std::io::Error),
 
-    #[error("Base64 Decode error: {0}")]
-    Decode(#[source] base64::DecodeError),
+    #[fail(display = "Base64 Decode error: {}", _0)]
+    Decode(#[fail(cause)] base64::DecodeError),
 
-    #[error("Crypto error: {0}")]
-    Crypto(#[source] CryptoError),
+    #[fail(display = "Crypto error: {}", _0)]
+    Crypto(#[fail(cause)] CryptoError),
 }
 
-#[derive(thiserror::Error, Debug, PartialEq)]
+#[derive(Fail, Debug, PartialEq)]
 pub enum InvalidBewit {
-    #[error("Multiple bewits in URL")]
+    #[fail(display = "Multiple bewits in URL")]
     Multiple,
-    #[error("Invalid bewit format")]
+    #[fail(display = "Invalid bewit format")]
     Format,
-    #[error("Invalid bewit id")]
+    #[fail(display = "Invalid bewit id")]
     Id,
-    #[error("Invalid bewit exp")]
+    #[fail(display = "Invalid bewit exp")]
     Exp,
-    #[error("Invalid bewit mac")]
+    #[fail(display = "Invalid bewit mac")]
     Mac,
-    #[error("Invalid bewit ext")]
+    #[fail(display = "Invalid bewit ext")]
     Ext,
 }
 

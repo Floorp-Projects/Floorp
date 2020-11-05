@@ -9,6 +9,7 @@
 //! [`Cryptographer`] and using the [`set_cryptographer`] or
 //! [`set_boxed_cryptographer`] functions.
 use crate::DigestAlgorithm;
+use failure::Fail;
 
 pub(crate) mod holder;
 pub(crate) use holder::get_crypographer;
@@ -21,17 +22,20 @@ mod ring;
 #[cfg(not(any(feature = "use_ring", feature = "use_openssl")))]
 pub use self::holder::{set_boxed_cryptographer, set_cryptographer};
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Fail)]
 pub enum CryptoError {
     /// The configured cryptographer does not support the digest algorithm
     /// specified. This should only happen for custom `Cryptographer` implementations
-    #[error("Digest algorithm {0:?} is unsupported by this Cryptographer")]
+    #[fail(
+        display = "Digest algorithm {:?} is unsupported by this Cryptographer",
+        _0
+    )]
     UnsupportedDigest(DigestAlgorithm),
 
     /// The configured cryptographer implementation failed to perform an
     /// operation in some way.
-    #[error("{0}")]
-    Other(#[source] anyhow::Error),
+    #[fail(display = "{}", _0)]
+    Other(#[fail(cause)] failure::Error),
 }
 
 /// A trait encapsulating the cryptographic operations required by this library.

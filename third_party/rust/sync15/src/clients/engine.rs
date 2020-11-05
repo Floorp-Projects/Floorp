@@ -347,9 +347,9 @@ impl<'a> Engine<'a> {
 mod tests {
     use crate::clients::{CommandStatus, DeviceType, Settings};
     use crate::util::ServerTimestamp;
-    use anyhow::Result;
     use interrupt_support::NeverInterrupts;
     use serde_json::{json, Value};
+    use std::result;
 
     use super::*;
 
@@ -363,7 +363,10 @@ mod tests {
             &self.settings
         }
 
-        fn apply_incoming_command(&self, command: Command) -> Result<CommandStatus> {
+        fn apply_incoming_command(
+            &self,
+            command: Command,
+        ) -> result::Result<CommandStatus, failure::Error> {
             Ok(if let Command::Reset(name) = command {
                 if name == "forms" {
                     CommandStatus::Unsupported
@@ -375,7 +378,7 @@ mod tests {
             })
         }
 
-        fn fetch_outgoing_commands(&self) -> Result<HashSet<Command>> {
+        fn fetch_outgoing_commands(&self) -> result::Result<HashSet<Command>, failure::Error> {
             Ok(self.outgoing_commands.clone())
         }
     }

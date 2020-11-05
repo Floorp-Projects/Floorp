@@ -9,9 +9,7 @@ use crate::punt::{
 use atomic_refcell::AtomicRefCell;
 use fxa_client::{
     device::{
-        Capability as FxaDeviceCapability,
-        CommandFetchReason,
-        PushSubscription as FxaPushSubscription,
+        Capability as FxaDeviceCapability, PushSubscription as FxaPushSubscription,
         Type as FxaDeviceType,
     },
     FirefoxAccount,
@@ -67,7 +65,6 @@ impl PuntTask {
     pub fn for_begin_oauth_flow(
         fxa: &Arc<Mutex<FirefoxAccount>>,
         scopes: &[nsCString],
-        entry_point: &nsACString,
         callback: &mozIFirefoxAccountsBridgeCallback,
     ) -> error::Result<PuntTask> {
         let scopes = scopes.iter().try_fold(
@@ -77,8 +74,7 @@ impl PuntTask {
                 Ok(acc)
             },
         )?;
-        let entry_point = str::from_utf8(&*entry_point)?.into();
-        Self::new(fxa, Punt::BeginOAuthFlow(scopes, entry_point), callback)
+        Self::new(fxa, Punt::BeginOAuthFlow(scopes), callback)
     }
 
     /// Creates a task that calls complete_oauth_flow.
@@ -389,9 +385,9 @@ impl PuntTask {
         let mut fxa = fxa.lock()?;
         Ok(match punt {
             Punt::ToJson => fxa.to_json().map(PuntResult::String),
-            Punt::BeginOAuthFlow(scopes, entry_point) => {
+            Punt::BeginOAuthFlow(scopes) => {
                 let scopes: Vec<&str> = scopes.iter().map(AsRef::as_ref).collect();
-                fxa.begin_oauth_flow(&scopes, &entry_point, None).map(PuntResult::String)
+                fxa.begin_oauth_flow(&scopes).map(PuntResult::String)
             }
             Punt::CompleteOAuthFlow(code, state) => fxa
                 .complete_oauth_flow(&code, &state)
@@ -451,7 +447,7 @@ impl PuntTask {
             Punt::HandlePushMessage(payload) => fxa
                 .handle_push_message(&payload)
                 .map(PuntResult::json_stringify),
-            Punt::PollDeviceCommands => fxa.poll_device_commands(CommandFetchReason::Poll).map(PuntResult::json_stringify),
+            Punt::PollDeviceCommands => fxa.poll_device_commands().map(PuntResult::json_stringify),
             Punt::SendSingleTab(target_id, title, url) => fxa
                 .send_tab(&target_id, &title, &url)
                 .map(|_| PuntResult::Null),
