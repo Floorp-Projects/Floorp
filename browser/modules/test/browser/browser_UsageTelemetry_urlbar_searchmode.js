@@ -536,6 +536,13 @@ add_task(async function test_tabtosearch_onboard() {
     entry: "tabtosearch_onboard",
   });
 
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, false);
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "urlbar.tips",
+    "tabtosearch_onboard-shown",
+    1
+  );
   assertSearchModeScalar("tabtosearch_onboard", "other");
 
   await UrlbarTestUtils.exitSearchMode(window);
