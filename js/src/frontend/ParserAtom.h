@@ -538,10 +538,6 @@ class ParserAtomsTable {
   JS::Result<const ParserAtom*, OOM> internChar16Seq(
       JSContext* cx, EntryMap::AddPtr& addPtr, HashNumber hash,
       InflatedChar16Sequence<SeqCharT> seq, uint32_t length);
-  template <typename AtomCharT, typename SeqCharT>
-  JS::Result<const ParserAtom*, OOM> internChar16Seq(
-      JSContext* cx, HashNumber hash, InflatedChar16Sequence<SeqCharT> seq,
-      uint32_t length);
 
  public:
   bool empty() const { return entryMap_.empty(); }
@@ -553,10 +549,6 @@ class ParserAtomsTable {
   JS::Result<const ParserAtom*, OOM> internLatin1(
       JSContext* cx, const JS::Latin1Char* latin1Ptr, uint32_t length);
 
-  JS::Result<const ParserAtom*, OOM> internLatin1ForXDR(
-      JSContext* cx, const JS::Latin1Char* latin1Ptr, HashNumber hash,
-      uint32_t length);
-
   JS::Result<const ParserAtom*, OOM> internUtf8(
       JSContext* cx, const mozilla::Utf8Unit* utf8Ptr, uint32_t nbyte);
 
@@ -564,16 +556,40 @@ class ParserAtomsTable {
                                                   const char16_t* char16Ptr,
                                                   uint32_t length);
 
-  JS::Result<const ParserAtom*, OOM> internChar16ForXDR(
-      JSContext* cx, LittleEndianChars twoByteLE, HashNumber hash,
-      uint32_t length);
-
   JS::Result<const ParserAtom*, OOM> internJSAtom(
       JSContext* cx, CompilationInfo& compilationInfo, JSAtom* atom);
 
   JS::Result<const ParserAtom*, OOM> concatAtoms(
       JSContext* cx, mozilla::Range<const ParserAtom*> atoms);
+};
 
+// Lightweight version of ParserAtomsTable.
+// This doesn't support deduplication.
+// Used while decoding XDR.
+class ParserAtomVectorBuilder {
+ private:
+  const WellKnownParserAtoms& wellKnownTable_;
+  LifoAlloc* alloc_;
+  ParserAtomVector& entries_;
+
+ public:
+  ParserAtomVectorBuilder(JSRuntime* rt, LifoAlloc& alloc,
+                          ParserAtomVector& entries);
+
+  JS::Result<const ParserAtom*, OOM> internLatin1(
+      JSContext* cx, const JS::Latin1Char* latin1Ptr, HashNumber hash,
+      uint32_t length);
+
+  JS::Result<const ParserAtom*, OOM> internChar16(
+      JSContext* cx, const LittleEndianChars twoByteLE, HashNumber hash,
+      uint32_t length);
+
+ private:
+  template <typename CharT, typename SeqCharT, typename InputCharsT>
+  JS::Result<const ParserAtom*, OOM> intern(JSContext* cx, InputCharsT chars,
+                                            HashNumber hash, uint32_t length);
+
+ public:
   const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;
   const ParserAtom* getStatic1(StaticParserString1 s) const;
   const ParserAtom* getStatic2(StaticParserString2 s) const;
