@@ -28,7 +28,7 @@ class PrincipalInfo;
 
 class MediaEnginePhotoCallback;
 class MediaEnginePrefs;
-class SourceMediaTrack;
+class MediaTrack;
 
 /**
  * Callback interface for TakePhoto(). Either PhotoComplete() or PhotoError()
@@ -113,12 +113,12 @@ class MediaEngineSourceInterface {
                             const char** aOutBadConstraint) = 0;
 
   /**
-   * Called by MediaEngine when a SourceMediaTrack has been provided for the
-   * source to feed data to.
+   * Called by MediaEngine when a MediaTrack has been provided for the source to
+   * feed data to.
    *
    * This must be called before Start.
    */
-  virtual void SetTrack(const RefPtr<SourceMediaTrack>& aTrack,
+  virtual void SetTrack(const RefPtr<MediaTrack>& aTrack,
                         const PrincipalHandle& aPrincipal) = 0;
 
   /**
