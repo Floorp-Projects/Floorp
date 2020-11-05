@@ -176,7 +176,7 @@ class AudioInputProcessing : public AudioDataListener {
                            const AudioDataValue* aBuffer, size_t aFrames,
                            TrackRate aRate, uint32_t aChannels);
 
-  void SetPassThrough(bool aPassThrough);
+  void SetPassThrough(MediaTrackGraphImpl* aGraph, bool aPassThrough);
   uint32_t GetRequestedInputChannelCount();
   void SetRequestedInputChannelCount(MediaTrackGraphImpl* aGraph,
                                      uint32_t aRequestedInputChannelCount);
