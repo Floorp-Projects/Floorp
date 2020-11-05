@@ -576,6 +576,10 @@ class ParserAtomVectorBuilder {
   ParserAtomVectorBuilder(JSRuntime* rt, LifoAlloc& alloc,
                           ParserAtomVector& entries);
 
+  bool reserve(JSContext* cx, size_t count);
+  size_t length() const { return entries_.length(); }
+  ParserAtom* get(size_t index) { return entries_[index]->asAtom(); }
+
   JS::Result<const ParserAtom*, OOM> internLatin1(
       JSContext* cx, const JS::Latin1Char* latin1Ptr, HashNumber hash,
       uint32_t length);

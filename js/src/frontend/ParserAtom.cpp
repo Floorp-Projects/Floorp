@@ -387,6 +387,14 @@ ParserAtomVectorBuilder::ParserAtomVectorBuilder(JSRuntime* rt,
       alloc_(&alloc),
       entries_(entries) {}
 
+bool ParserAtomVectorBuilder::reserve(JSContext* cx, size_t count) {
+  if (!entries_.reserve(count)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  return true;
+}
+
 JS::Result<const ParserAtom*, OOM> ParserAtomVectorBuilder::internLatin1(
     JSContext* cx, const Latin1Char* latin1Ptr, HashNumber hash,
     uint32_t length) {
@@ -947,10 +955,10 @@ XDRResult XDRParserAtom(XDRState<mode>* xdr, const ParserAtom** atomp) {
 
   switch (tag) {
     case ParserAtomTag::Normal:
-      if (atomIndex >= xdr->parserAtomTable().length()) {
+      if (atomIndex >= xdr->frontendAtoms().length()) {
         return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
       }
-      *atomp = xdr->parserAtomTable()[atomIndex];
+      *atomp = xdr->frontendAtoms().get(atomIndex);
       break;
     case ParserAtomTag::WellKnown:
       if (atomIndex >= uint32_t(WellKnownAtomId::Limit)) {

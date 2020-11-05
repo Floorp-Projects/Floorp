@@ -45,8 +45,6 @@ using XDRResult = XDRResultT<mozilla::Ok>;
 using XDRAtomTable = JS::GCVector<PreBarriered<JSAtom*>>;
 using XDRAtomMap = JS::GCHashMap<PreBarriered<JSAtom*>, uint32_t>;
 
-using XDRParserAtomTable =
-    Vector<const frontend::ParserAtom*, 0, SystemAllocPolicy>;
 using XDRParserAtomMap = HashMap<const frontend::ParserAtom*, uint32_t>;
 
 class XDRBufferBase {
@@ -279,10 +277,6 @@ class XDRState : public XDRCoderBase {
     MOZ_CRASH("does not have frontendAtoms");
   }
   virtual LifoAlloc& stencilAlloc() { MOZ_CRASH("does not have stencilAlloc"); }
-  virtual XDRParserAtomTable& parserAtomTable() {
-    // This accessor is only used when encoding stencils.
-    MOZ_CRASH("does not have parserAtomTable");
-  }
   virtual void finishAtomTable() { MOZ_CRASH("does not have atomTable"); }
 
   virtual bool isMainBuf() { return true; }
@@ -542,7 +536,6 @@ class XDRStencilDecoder : public XDRDecoderBase {
     return *parserAtomBuilder_;
   }
   LifoAlloc& stencilAlloc() override { return *stencilAlloc_; }
-  XDRParserAtomTable& parserAtomTable() override { return parserAtomTable_; }
   void finishAtomTable() override { hasFinishedAtomTable_ = true; }
 
   bool hasOptions() const override { return true; }
@@ -552,7 +545,6 @@ class XDRStencilDecoder : public XDRDecoderBase {
 
  private:
   const JS::ReadOnlyCompileOptions* options_;
-  XDRParserAtomTable parserAtomTable_;
   bool hasFinishedAtomTable_ = false;
   frontend::ParserAtomVectorBuilder* parserAtomBuilder_ = nullptr;
   LifoAlloc* stencilAlloc_ = nullptr;
