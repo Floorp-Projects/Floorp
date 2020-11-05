@@ -364,17 +364,22 @@ function getAdHocFrontOrPrimitiveGrip(packet, parentFront) {
  * @param {String|Number|Object} packet: The packet returned by the server
  */
 function createChildFronts(objectFront, packet) {
-  // Handle Promise fullfilled value
-  if (
-    packet.class == "Promise" &&
-    packet.promiseState &&
-    packet.promiseState.state == "fulfilled" &&
-    packet.promiseState.value
-  ) {
-    packet.promiseState.value = getAdHocFrontOrPrimitiveGrip(
-      packet.promiseState.value,
-      objectFront
-    );
+  // Handle Promise fullfilled and rejected values
+  if (packet.class == "Promise" && packet.promiseState) {
+    if (packet.promiseState.state == "fulfilled" && packet.promiseState.value) {
+      packet.promiseState.value = getAdHocFrontOrPrimitiveGrip(
+        packet.promiseState.value,
+        objectFront
+      );
+    } else if (
+      packet.promiseState.state == "rejected" &&
+      packet.promiseState.reason
+    ) {
+      packet.promiseState.reason = getAdHocFrontOrPrimitiveGrip(
+        packet.promiseState.reason,
+        objectFront
+      );
+    }
   }
 
   if (packet.preview) {

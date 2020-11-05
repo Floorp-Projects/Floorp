@@ -102,8 +102,10 @@ define(function(require, exports, module) {
 
   function getProps(props, promiseState) {
     const keys = ["state"];
-    if (Object.keys(promiseState).includes("value")) {
+    if (promiseState.hasOwnProperty("value")) {
       keys.push("value");
+    } else if (promiseState.hasOwnProperty("reason")) {
+      keys.push("reason");
     }
 
     return keys.reduce((res, key, i) => {

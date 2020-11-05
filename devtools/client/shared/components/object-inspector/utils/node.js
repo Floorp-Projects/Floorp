@@ -304,7 +304,10 @@ function makeNodesForPromiseProperties(item) {
       createNode({
         parent: item,
         name: "<reason>",
-        contents: { value: reason },
+        contents: {
+          value: reason.getGrip ? reason.getGrip() : reason,
+          front: reason.getGrip ? reason : null,
+        },
         type: NODE_TYPES.PROMISE_REASON,
       })
     );
