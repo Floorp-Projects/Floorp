@@ -259,7 +259,7 @@ JSAtom* ParserAtomEntry::toExistingJSAtom(
 
     case AtomIndexKind::NotInstantiatedAndNotMarked:
     case AtomIndexKind::NotInstantiatedAndMarked:
-      MOZ_CRASH("ParserAtom should already be instantiatedd");
+      MOZ_CRASH("ParserAtom should already be instantiated");
   }
 
   return nullptr;

@@ -297,14 +297,20 @@ bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
       return false;
     }
 
-    RegExpIndex index(compilationInfo.stencil.regExpData.length());
-    if (!compilationInfo.stencil.regExpData.emplaceBack()) {
-      js::ReportOutOfMemory(cx);
+    const mozilla::Utf8Unit* sUtf8 =
+        reinterpret_cast<const mozilla::Utf8Unit*>(s);
+    const ParserAtom* atom =
+        compilationInfo.stencil.parserAtoms.internUtf8(cx, sUtf8, len)
+            .unwrapOr(nullptr);
+    if (!atom) {
       return false;
     }
+    atom->markUsedByStencil();
 
-    if (!compilationInfo.stencil.regExpData[index].init(
-            cx, range, JS::RegExpFlags(flags))) {
+    RegExpIndex index(compilationInfo.stencil.regExpData.length());
+    if (!compilationInfo.stencil.regExpData.emplaceBack(
+            atom, JS::RegExpFlags(flags))) {
+      js::ReportOutOfMemory(cx);
       return false;
     }
 

@@ -84,30 +84,26 @@ FunctionFlags InitialFunctionFlags(FunctionSyntaxKind kind,
                                    bool isSelfHosting = false,
                                    bool hasUnclonedName = false);
 
-// This owns a set of characters, previously syntax checked as a RegExp. Used
-// to avoid allocating the RegExp on the GC heap during parsing.
+// A syntax-checked regular expression string.
 class RegExpStencil {
   friend class StencilXDR;
 
-  UniqueTwoByteChars buf_;
-  size_t length_ = 0;
+  const ParserAtom* atom_;
   JS::RegExpFlags flags_;
 
  public:
   RegExpStencil() = default;
 
-  MOZ_MUST_USE bool init(JSContext* cx, mozilla::Range<const char16_t> range,
-                         JS::RegExpFlags flags) {
-    length_ = range.length();
-    buf_ = js::DuplicateString(cx, range.begin().get(), range.length());
-    if (!buf_) {
-      return false;
-    }
-    flags_ = flags;
-    return true;
-  }
+  RegExpStencil(const ParserAtom* atom, JS::RegExpFlags flags)
+      : atom_(atom), flags_(flags) {}
 
-  RegExpObject* createRegExp(JSContext* cx) const;
+  RegExpObject* createRegExp(JSContext* cx,
+                             CompilationAtomCache& atomCache) const;
+
+  // This is used by `Reflect.parse` when we need the RegExpObject but are not
+  // doing a complete instantiation of the CompilationStencil.
+  RegExpObject* createRegExpAndEnsureAtom(
+      JSContext* cx, CompilationAtomCache& atomCache) const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();

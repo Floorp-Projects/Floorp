@@ -867,29 +867,20 @@ template <XDRMode mode>
 template <XDRMode mode>
 /* static */ XDRResult StencilXDR::RegExp(XDRState<mode>* xdr,
                                           RegExpStencil& stencil) {
-  uint64_t length;
   uint8_t flags;
 
   if (mode == XDR_ENCODE) {
-    length = stencil.length_;
     flags = stencil.flags_.value();
   }
 
-  MOZ_TRY(xdr->codeUint64(&length));
+  MOZ_TRY(XDRParserAtom(xdr, &stencil.atom_));
   MOZ_TRY(xdr->codeUint8(&flags));
 
-  XDRTranscodeString<char16_t> chars;
-
   if (mode == XDR_DECODE) {
-    stencil.buf_ = xdr->cx()->template make_pod_array<char16_t>(length);
-    if (!stencil.buf_) {
-      return xdr->fail(JS::TranscodeResult_Throw);
-    }
-    stencil.length_ = length;
     stencil.flags_ = JS::RegExpFlags(flags);
   }
 
-  return xdr->codeChars(stencil.buf_.get(), stencil.length_);
+  return Ok();
 }
 
 template <XDRMode mode>
