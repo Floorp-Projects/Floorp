@@ -464,7 +464,9 @@ var PictureInPicture = {
     // back to calculating the default location.
     let screen = this.getWorkingScreen(
       windowOrPlayer.screenX,
-      windowOrPlayer.screenY
+      windowOrPlayer.screenY,
+      windowOrPlayer.innerWidth,
+      windowOrPlayer.innerHeight
     );
     let [
       screenLeft,
@@ -639,7 +641,7 @@ var PictureInPicture = {
    * @returns screen
    *  the screen the left and top are on otherwise, default screen
    */
-  getWorkingScreen(left, top) {
+  getWorkingScreen(left, top, width = 1, height = 1) {
     // Get the screen manager
     let screenManager = Cc["@mozilla.org/gfx/screenmanager;1"].getService(
       Ci.nsIScreenManager
@@ -647,7 +649,7 @@ var PictureInPicture = {
     // use screenForRect to get screen
     // this returns the default screen if left and top are not
     // on any screen
-    let screen = screenManager.screenForRect(left, top, 1, 1);
+    let screen = screenManager.screenForRect(left, top, width, height);
 
     return screen;
   },
