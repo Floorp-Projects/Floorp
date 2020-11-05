@@ -32,10 +32,6 @@
 #include "mozilla/plugins/PluginMessageUtils.h"
 #include "mozilla/plugins/PluginQuirks.h"
 
-#if defined(MOZ_WIDGET_GTK)
-#  include <glib.h>
-#endif
-
 namespace mozilla {
 
 class ChildProfilerController;

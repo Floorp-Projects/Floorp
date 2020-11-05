@@ -1247,7 +1247,7 @@ mozilla::ipc::IPCResult PluginInstanceChild::AnswerNPP_SetWindow(
 
 #elif defined(ANDROID)
   // TODO: Need Android impl
-#elif defined(MOZ_WIDGET_UIKIT) || defined(MOZ_WAYLAND)
+#elif defined(MOZ_WIDGET_UIKIT)
   // Don't care
 #else
 #  error Implement me for your OS
@@ -1257,7 +1257,7 @@ mozilla::ipc::IPCResult PluginInstanceChild::AnswerNPP_SetWindow(
 }
 
 bool PluginInstanceChild::Initialize() {
-#if defined(MOZ_WIDGET_GTK) && defined(MOZ_X11)
+#ifdef MOZ_WIDGET_GTK
   if (mWsInfo.display) {
     // Already initialized
     return true;

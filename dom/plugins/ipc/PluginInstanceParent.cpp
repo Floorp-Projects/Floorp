@@ -230,8 +230,8 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVnetscapeWindow(
   XID id;
 #elif defined(XP_DARWIN)
   intptr_t id;
-#elif defined(ANDROID) || defined(MOZ_WAYLAND)
-  // TODO: Need impl
+#elif defined(ANDROID)
+  // TODO: Need Android impl
   int id;
 #else
 #  warning Implement me
