@@ -272,9 +272,6 @@ class MOZ_STACK_CLASS ParserSharedBase {
   JSAtom* liftParserAtomToJSAtom(const ParserAtom* parserAtom) {
     return parserAtom->toJSAtom(cx_, compilationInfo_.input.atomCache);
   }
-  const ParserAtom* lowerJSAtomToParserAtom(JSAtom* atom) {
-    return compilationInfo_.lowerJSAtomToParserAtom(cx_, atom);
-  }
 };
 
 class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,

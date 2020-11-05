@@ -279,7 +279,6 @@ class SharedContext {
 
   inline JSAtom* liftParserAtomToJSAtom(JSContext* cx,
                                         const ParserAtom* atomId);
-  inline const ParserAtom* lowerJSAtomToParserAtom(JSContext* cx, JSAtom* atom);
 
   void copyScriptFields(ScriptStencil& script);
 };
@@ -424,8 +423,7 @@ class FunctionBox : public SharedContext {
   // End of fields.
 
   FunctionBox(JSContext* cx, SourceExtent extent,
-              CompilationInfo& compilationInfo,
-              CompilationState& compilationState, Directives directives,
+              CompilationInfo& compilationInfo, Directives directives,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
               const ParserAtom* atom, FunctionFlags flags, FunctionIndex index,
               TopLevelFunction isTopLevel);
