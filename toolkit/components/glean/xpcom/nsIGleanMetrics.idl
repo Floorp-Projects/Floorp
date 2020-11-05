@@ -109,3 +109,55 @@ interface nsIGleanTimespan : nsISupports
   [implicit_jscontext]
   long long testGetValue(in ACString aStorageName);
 };
+
+[scriptable, uuid(395700e7-06f6-46be-adcc-ea58977fda6d)]
+interface nsIGleanUuid : nsISupports
+{
+  /**
+   * Set to the specified value.
+   *
+   * @param aValue The UUID to set the metric to.
+   */
+  [implicit_jscontext]
+  void set(in ACString aValue);
+
+  /**
+   * Generate a new random UUID and set the metric to it.
+   */
+  [implicit_jscontext]
+  void generateAndSet();
+
+  /**
+   * **Test-only API**
+   *
+   * Tests whether a value is stored for the metric.
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * Parent process only. Panics in child processes.
+   *
+   * @param aStorageName the name of the ping to retrieve the metric for.
+   * @return true if metric value exists, otherwise false
+   */
+  [implicit_jscontext]
+  bool testHasValue(in ACString aStorageName);
+
+  /**
+   * **Test-only API**
+   *
+   * Gets the currently stored value as an integer.
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * This doesn't clear the stored value.
+   * Parent process only. Panics in child processes.
+   *
+   * @return value of the stored metric.
+   */
+  [implicit_jscontext]
+  ACString testGetValue(in ACString aStorageName);
+};
