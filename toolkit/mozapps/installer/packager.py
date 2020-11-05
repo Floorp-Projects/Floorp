@@ -30,11 +30,26 @@ from mozpack.mozjar import JAR_BROTLI
 import mozpack.path as mozpath
 import buildconfig
 from argparse import ArgumentParser
+from collections import OrderedDict
 from createprecomplete import generate_precomplete
 import os
+import plistlib
 import six
 from six import StringIO
 import subprocess
+
+
+class PackagerFileFinder(FileFinder):
+    def get(self, path):
+        f = super(PackagerFileFinder, self).get(path)
+        # Normalize Info.plist files, and remove the MozillaDeveloper*Path
+        # entries which are only needed on unpackaged builds.
+        if mozpath.basename(path) == "Info.plist":
+            info = plistlib.load(f.open(), dict_type=OrderedDict)
+            info.pop("MozillaDeveloperObjPath", None)
+            info.pop("MozillaDeveloperRepoPath", None)
+            return GeneratedFile(plistlib.dumps(info, sort_keys=False))
+        return f
 
 
 class RemovedFiles(GeneratedFile):
@@ -222,7 +237,7 @@ def main():
                     os.path.abspath(os.path.dirname(__file__)), "js-compare-ast.js"
                 ),
             ]
-        finder = FileFinder(args.source, find_executables=True, **finder_args)
+        finder = PackagerFileFinder(args.source, find_executables=True, **finder_args)
         if "NO_PKG_FILES" in os.environ:
             sinkformatter = NoPkgFilesRemover(formatter, args.manifest is not None)
         else:
