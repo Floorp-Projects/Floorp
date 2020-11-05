@@ -170,9 +170,10 @@ var BookmarkPropertiesPanel = {
       if ("defaultInsertionPoint" in dialogInfo) {
         this._defaultInsertionPoint = dialogInfo.defaultInsertionPoint;
       } else {
+        let guid = await PlacesUIUtils.defaultParentGuid;
         this._defaultInsertionPoint = new PlacesInsertionPoint({
-          parentId: PlacesUtils.bookmarksMenuFolderId,
-          parentGuid: PlacesUtils.bookmarks.menuGuid,
+          parentId: await PlacesUtils.promiseItemId(guid),
+          parentGuid: guid,
         });
       }
 
@@ -236,8 +237,6 @@ var BookmarkPropertiesPanel = {
    * dialog to initialize the state of the panel.
    */
   async onDialogLoad() {
-    await this._determineItemInfo();
-
     document.title = this._getDialogTitle();
     document.addEventListener("dialogaccept", function() {
       BookmarkPropertiesPanel.onDialogAccept();
@@ -251,6 +250,7 @@ var BookmarkPropertiesPanel = {
       .getElementById("bookmarkpropertiesdialog")
       .getButton("accept");
     acceptButton.disabled = true;
+    await this._determineItemInfo();
 
     // Allow initialization to complete in a truely async manner so that we're
     // not blocking the main thread.
