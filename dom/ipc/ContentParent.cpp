@@ -1134,32 +1134,23 @@ RefPtr<ContentParent::LaunchPromise> ContentParent::WaitForLaunchAsync(
   // We've started an async content process launch.
   Telemetry::Accumulate(Telemetry::CONTENT_PROCESS_LAUNCH_IS_SYNC, 0);
 
-  // We have located a process that hasn't finished initializing. Let's race
-  // against whoever launched it (and whoever else is already racing). Once
-  // the race is complete, the winner will finish the initialization.
+  // We have located a process that hasn't finished initializing, then attempt
+  // to finish initializing. Both `LaunchSubprocessResolve` and
+  // `LaunchSubprocessReject` are safe to call multiple times if we race with
+  // other `WaitForLaunchAsync` callbacks.
   return mSubprocess->WhenProcessHandleReady()->Then(
       GetCurrentSerialEventTarget(), __func__,
-      // On resolve.
-      [self = RefPtr{this}, aPriority]() {
-        if (self->IsLaunching()) {
-          if (!self->LaunchSubprocessResolve(/* aIsSync = */ false,
-                                             aPriority)) {
-            self->LaunchSubprocessReject();
-            return LaunchPromise::CreateAndReject(LaunchError(), __func__);
-          }
+      [self = RefPtr{this}, aPriority] {
+        if (self->LaunchSubprocessResolve(/* aIsSync = */ false, aPriority)) {
           self->mActivateTS = TimeStamp::Now();
-        } else if (self->IsDead()) {
-          // This could happen if we're racing against a sync launch and it
-          // failed.
-          return LaunchPromise::CreateAndReject(LaunchError(), __func__);
+          return LaunchPromise::CreateAndResolve(self, __func__);
         }
-        return LaunchPromise::CreateAndResolve(self, __func__);
+
+        self->LaunchSubprocessReject();
+        return LaunchPromise::CreateAndReject(LaunchError(), __func__);
       },
-      // On reject.
-      [self = RefPtr{this}]() {
-        if (self->IsLaunching()) {
-          self->LaunchSubprocessReject();
-        }
+      [self = RefPtr{this}] {
+        self->LaunchSubprocessReject();
         return LaunchPromise::CreateAndReject(LaunchError(), __func__);
       });
 }
@@ -2402,6 +2393,18 @@ void ContentParent::LaunchSubprocessReject() {
 bool ContentParent::LaunchSubprocessResolve(bool aIsSync,
                                             ProcessPriority aPriority) {
   AUTO_PROFILER_LABEL("ContentParent::LaunchSubprocess::resolve", OTHER);
+
+  // Take the pending IPC channel. This channel will be used to open the raw IPC
+  // connection between this process and the launched content process.
+  UniquePtr<IPC::Channel> channel = mSubprocess->TakeChannel();
+  if (!channel) {
+    // We don't have a channel, so this method must've been called already.
+    MOZ_ASSERT(sCreatedFirstContentProcess);
+    MOZ_ASSERT(!mPrefSerializer);
+    MOZ_ASSERT(mLifecycleState != LifecycleState::LAUNCHING);
+    return true;
+  }
+
   // Now that communication with the child is complete, we can cleanup
   // the preference serializer.
   mPrefSerializer = nullptr;
@@ -2426,7 +2429,7 @@ bool ContentParent::LaunchSubprocessResolve(bool aIsSync,
 
   base::ProcessId procId =
       base::GetProcId(mSubprocess->GetChildProcessHandle());
-  Open(mSubprocess->TakeChannel(), procId);
+  Open(std::move(channel), procId);
 
   ContentProcessManager::GetSingleton()->AddContentProcess(this);
 
@@ -2435,7 +2438,16 @@ bool ContentParent::LaunchSubprocessResolve(bool aIsSync,
       CodeCoverageHandler::Get()->GetMutexHandle(procId));
 #endif
 
+  // We must be in the LAUNCHING state still. If we've somehow already been
+  // marked as DEAD, fail the process launch, and immediately begin tearing down
+  // the content process.
+  if (IsDead()) {
+    ShutDownProcess(SEND_SHUTDOWN_MESSAGE);
+    return false;
+  }
+  MOZ_ASSERT(mLifecycleState == LifecycleState::LAUNCHING);
   mLifecycleState = LifecycleState::ALIVE;
+
   if (!InitInternal(aPriority)) {
     NS_WARNING("failed to initialize child in the parent");
     // We've already called Open() by this point, so we need to close the
