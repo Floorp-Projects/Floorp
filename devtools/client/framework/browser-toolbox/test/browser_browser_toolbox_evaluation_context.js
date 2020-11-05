@@ -17,6 +17,7 @@ requestLongerTimeout(4);
 add_task(async function() {
   // Forces the Browser Toolbox to open on the console by default
   await pushPref("devtools.browsertoolbox.panel", "webconsole");
+  await pushPref("devtools.webconsole.input.context", true);
 
   // Open the test *before* opening the Browser toolbox in order to have the right target title.
   // Once created, the target won't update its title, and so would be "New Tab", instead of "Test tab"
