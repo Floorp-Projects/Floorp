@@ -53,7 +53,7 @@ add_task(async function() {
   // references to accessible objects.
   forceGC();
   // Have some breathing room when removing a11y service references.
-  await new Promise(resolve => executeSoon(resolve));
+  await TestUtils.waitForTick();
 
   // Remove a reference to an accessible object.
   acc = null;
@@ -62,7 +62,7 @@ add_task(async function() {
   // a reference to an accessible document.
   forceGC();
   // Have some breathing room when removing a11y service references.
-  await new Promise(resolve => executeSoon(resolve));
+  await TestUtils.waitForTick();
 
   // Now allow a11y service to shutdown.
   canShutdown = true;
