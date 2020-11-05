@@ -12,8 +12,7 @@ const { PermissionTestUtils } = ChromeUtils.import(
   "resource://testing-common/PermissionTestUtils.jsm"
 );
 
-const PAGE =
-  "https://example.com/browser/toolkit/content/tests/browser/file_empty.html";
+const PAGE = GetTestWebBasedURL("file_empty.html");
 
 function setup_test_preference() {
   return SpecialPowers.pushPrefEnv({
