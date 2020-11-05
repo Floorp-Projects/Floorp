@@ -670,8 +670,13 @@ add_task(async function test_scrollbar_props() {
   let { tab, selectPopup } = await openSelectPopup(SELECT_SCROLLBAR_PROPS);
 
   let popupStyle = getComputedStyle(selectPopup);
-  is(popupStyle.scrollbarWidth, "thin");
+  is(popupStyle.getPropertyValue("--content-select-scrollbar-width"), "thin");
   is(popupStyle.scrollbarColor, "rgb(255, 0, 0) rgb(0, 0, 255)");
+
+  let scrollBoxStyle = getComputedStyle(selectPopup.scrollBox.scrollbox);
+  is(scrollBoxStyle.overflow, "auto", "Should be the scrollable box");
+  is(scrollBoxStyle.scrollbarWidth, "thin");
+  is(scrollBoxStyle.scrollbarColor, "rgb(255, 0, 0) rgb(0, 0, 255)");
 
   await hideSelectPopup(selectPopup, "escape");
   BrowserTestUtils.removeTab(tab);
