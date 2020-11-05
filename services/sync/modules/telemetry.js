@@ -57,8 +57,6 @@ XPCOMUtils.defineLazyGetter(
 const log = Log.repository.getLogger("Sync.Telemetry");
 
 const TOPICS = [
-  "profile-before-change",
-
   // For tracking change to account/device identifiers.
   "fxaccounts:new_device_id",
   "fxaccounts:onlogout",
@@ -581,6 +579,7 @@ class SyncTelemetryImpl {
     this.sessionStartDate = TelemetryUtils.toLocalTimeISOString(
       TelemetryUtils.truncateToHours(sessionStartDate)
     );
+    TelemetryController.registerSyncPingShutdown(() => this.shutdown());
   }
 
   sanitizeFxaDeviceId(deviceId) {
@@ -952,10 +951,6 @@ class SyncTelemetryImpl {
     log.trace(`observed ${topic} ${data}`);
 
     switch (topic) {
-      case "profile-before-change":
-        this.shutdown();
-        break;
-
       case "weave:service:ready":
       case "weave:service:login:change":
       case "fxaccounts:new_device_id":
