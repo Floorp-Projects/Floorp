@@ -836,7 +836,8 @@ void MediaTrackGraphImpl::NotifyInputStopped() {
 
 void MediaTrackGraphImpl::NotifyInputData(const AudioDataValue* aBuffer,
                                           size_t aFrames, TrackRate aRate,
-                                          uint32_t aChannels) {
+                                          uint32_t aChannels,
+                                          uint32_t aAlreadyBuffered) {
 #ifdef ANDROID
   if (!mInputDeviceUsers.GetValue(mInputDeviceID)) {
     return;
@@ -854,7 +855,8 @@ void MediaTrackGraphImpl::NotifyInputData(const AudioDataValue* aBuffer,
       mInputDeviceUsers.GetValue(mInputDeviceID);
   MOZ_ASSERT(listeners);
   for (auto& listener : *listeners) {
-    listener->NotifyInputData(this, aBuffer, aFrames, aRate, aChannels);
+    listener->NotifyInputData(this, aBuffer, aFrames, aRate, aChannels,
+                              aAlreadyBuffered);
   }
 }
 
