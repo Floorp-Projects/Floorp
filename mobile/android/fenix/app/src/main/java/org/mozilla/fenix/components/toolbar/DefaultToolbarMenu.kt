@@ -125,7 +125,7 @@ class DefaultToolbarMenu(
         }
 
         val share = BrowserMenuItemToolbar.Button(
-            imageResource = R.drawable.ic_hollow_share,
+            imageResource = R.drawable.ic_share_filled,
             contentDescription = context.getString(R.string.browser_menu_share),
             iconTintColorResource = primaryTextColor(),
             listener = {
@@ -133,7 +133,6 @@ class DefaultToolbarMenu(
             }
         )
 
-        registerForIsBookmarkedUpdates()
         val bookmark = BrowserMenuItemToolbar.TwoStateButton(
             primaryImageResource = R.drawable.ic_bookmark_filled,
             primaryContentDescription = context.getString(R.string.browser_menu_edit_bookmark),
