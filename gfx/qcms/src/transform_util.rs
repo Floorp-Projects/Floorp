@@ -22,7 +22,6 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use ::libc;
-use libc::{free, malloc};
 
 use crate::matrix::matrix;
 use crate::{
@@ -379,20 +378,14 @@ invert_lut will produce an inverse of:
 which has an maximum error of about 9855 (pixel difference of ~38.346)
 
 For now, we punt the decision of output size to the caller. */
-unsafe fn invert_lut(mut table: &[u16], mut out_length: i32) -> *mut u16 {
+fn invert_lut(mut table: &[u16], mut out_length: i32) -> Vec<u16> {
     /* for now we invert the lut by creating a lut of size out_length
      * and attempting to lookup a value for each entry using lut_inverse_interp16 */
-    let mut output: *mut u16 =
-        malloc(::std::mem::size_of::<u16>() * out_length as usize) as *mut u16;
-    if output.is_null() {
-        return 0 as *mut u16;
-    }
-    let mut i: i32 = 0;
-    while i < out_length {
+    let mut output = Vec::with_capacity(out_length as usize);
+    for i in 0..out_length {
         let mut x: f64 = i as f64 * 65535.0f64 / (out_length - 1) as f64;
         let mut input: uint16_fract_t = (x + 0.5f64).floor() as uint16_fract_t;
-        *output.offset(i as isize) = lut_inverse_interp16(input, table);
-        i += 1
+        output.push(lut_inverse_interp16(input, table));
     }
     return output;
 }
@@ -447,12 +440,8 @@ pub unsafe extern "C" fn compute_precache(mut trc: &curveType, mut output: *mut 
             if inverted_size < 256 {
                 inverted_size = 256
             }
-            let mut inverted: *mut u16 = invert_lut(&gamma_table_uint, inverted_size);
-            if inverted.is_null() {
-                return false;
-            }
-            compute_precache_lut(output, inverted, inverted_size);
-            free(inverted as *mut libc::c_void);
+            let mut inverted = invert_lut(&gamma_table_uint, inverted_size);
+            compute_precache_lut(output, inverted.as_mut_ptr(), inverted_size);
         }
         curveType::Curve(data) => {
             if data.len() == 0 {
@@ -471,87 +460,58 @@ pub unsafe extern "C" fn compute_precache(mut trc: &curveType, mut output: *mut 
                 if inverted_size_0 < 256 {
                     inverted_size_0 = 256
                 } //XXX turn this conversion into a function
-                let mut inverted_0: *mut u16 = invert_lut(data, inverted_size_0);
-                if inverted_0.is_null() {
-                    return false;
-                }
-                compute_precache_lut(output, inverted_0, inverted_size_0);
-                free(inverted_0 as *mut libc::c_void);
+                let mut inverted_0 = invert_lut(data, inverted_size_0);
+                compute_precache_lut(output, inverted_0.as_mut_ptr(), inverted_size_0);
             }
         }
     }
     return true;
 }
-unsafe extern "C" fn build_linear_table(mut length: i32) -> *mut u16 {
-    let mut output: *mut u16 = malloc(::std::mem::size_of::<u16>() * length as usize) as *mut u16;
-    if output.is_null() {
-        return 0 as *mut u16;
-    }
-    let mut i: i32 = 0;
-    while i < length {
+fn build_linear_table(mut length: i32) -> Vec<u16> {
+    let mut output = Vec::with_capacity(length as usize);
+    for i in 0..length {
         let mut x: f64 = i as f64 * 65535.0f64 / (length - 1) as f64;
         let mut input: uint16_fract_t = (x + 0.5f64).floor() as uint16_fract_t;
-        *output.offset(i as isize) = input;
-        i += 1
+        output.push(input);
     }
     return output;
 }
-unsafe extern "C" fn build_pow_table(mut gamma: f32, mut length: i32) -> *mut u16 {
-    let mut output: *mut u16 = malloc(::std::mem::size_of::<u16>() * length as usize) as *mut u16;
-    if output.is_null() {
-        return 0 as *mut u16;
-    }
-    let mut i: i32 = 0;
-    while i < length {
+fn build_pow_table(mut gamma: f32, mut length: i32) -> Vec<u16> {
+    let mut output = Vec::with_capacity(length as usize);
+    for i in 0..length {
         let mut x: f64 = i as f64 / (length - 1) as f64;
         x = x.powf(gamma as f64);
         let mut result: uint16_fract_t = (x * 65535.0f64 + 0.5f64).floor() as uint16_fract_t;
-        *output.offset(i as isize) = result;
-        i += 1
+        output.push(result);
     }
     return output;
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn build_output_lut(
-    mut trc: &curveType,
-    mut output_gamma_lut: *mut *mut u16,
-    mut output_gamma_lut_length: *mut usize,
-) {
+pub fn build_output_lut(mut trc: &curveType) -> Vec<u16> {
     match trc {
         curveType::Parametric(params) => {
             let mut gamma_table = Vec::with_capacity(256);
-
-            let mut output: *mut u16 = malloc(::std::mem::size_of::<u16>() * 256) as *mut u16;
-            if output.is_null() {
-                *output_gamma_lut = 0 as *mut u16;
-                return;
-            }
+            let mut output = Vec::with_capacity(256);
             compute_curve_gamma_table_type_parametric(&mut gamma_table, params);
-            *output_gamma_lut_length = 256;
-            let mut i: u16 = 0u16;
-            while (i as i32) < 256 {
-                *output.offset(i as isize) = (gamma_table[i as usize] * 65535f32) as u16;
-                i = i + 1
+            for i in 0..256 {
+                output.push((gamma_table[i as usize] * 65535f32) as u16);
             }
-            *output_gamma_lut = output
+            return output;
         }
         curveType::Curve(data) => {
             if data.len() == 0 {
-                *output_gamma_lut = build_linear_table(4096);
-                *output_gamma_lut_length = 4096
+                return build_linear_table(4096);
             } else if data.len() == 1 {
                 let mut gamma: f32 = (1.0f64 / u8Fixed8Number_to_float(data[0]) as f64) as f32;
-                *output_gamma_lut = build_pow_table(gamma, 4096);
-                *output_gamma_lut_length = 4096
+                return build_pow_table(gamma, 4096);
             } else {
                 //XXX: the choice of a minimum of 256 here is not backed by any theory,
                 //     measurement or data, however it is what lcms uses.
-                *output_gamma_lut_length = data.len();
-                if *output_gamma_lut_length < 256 {
-                    *output_gamma_lut_length = 256
+                let mut output_gamma_lut_length = data.len();
+                if output_gamma_lut_length < 256 {
+                    output_gamma_lut_length = 256
                 }
-                *output_gamma_lut = invert_lut(data, *output_gamma_lut_length as i32)
+                return invert_lut(data, output_gamma_lut_length as i32);
             }
         }
     }
