@@ -550,6 +550,13 @@ class UrlbarController {
       resultIndex,
       1
     );
+    if (this.input.searchMode) {
+      Services.telemetry.keyedScalarAdd(
+        `urlbar.picked.searchmode.${this.input.searchMode.entry}`,
+        resultIndex,
+        1
+      );
+    }
 
     // These histograms should be removed after a deprecation time where we'll
     // confirm goodness of the new scalar above.
