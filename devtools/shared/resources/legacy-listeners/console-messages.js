@@ -13,14 +13,19 @@ module.exports = async function({ targetList, targetFront, onAvailable }) {
   // Also allow frame, but only in content toolbox, i.e. still ignore them in
   // the context of the browser toolbox as we inspect messages via the process
   // targets
-  // Also ignore workers as they are not supported yet. (see bug 1592584)
   const listenForFrames = targetList.targetFront.isLocalTab;
-  const isAllowed =
+
+  // Allow workers when messages aren't dispatched to the main thread.
+  const listenForWorkers = !targetList.rootFront.traits
+    .workerConsoleApiMessagesDispatchedToMainThread;
+
+  const acceptTarget =
     targetFront.isTopLevel ||
     targetFront.targetType === targetList.TYPES.PROCESS ||
-    (targetFront.targetType === targetList.TYPES.FRAME && listenForFrames);
+    (targetFront.targetType === targetList.TYPES.FRAME && listenForFrames) ||
+    (targetFront.targetType === targetList.TYPES.WORKER && listenForWorkers);
 
-  if (!isAllowed) {
+  if (!acceptTarget) {
     return;
   }
 
