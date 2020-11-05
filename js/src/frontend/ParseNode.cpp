@@ -397,15 +397,25 @@ const ParserAtom* NumericLiteral::toAtom(JSContext* cx,
   return NumberToParserAtom(cx, parserAtoms, value());
 }
 
-RegExpObject* RegExpStencil::createRegExp(JSContext* cx) const {
-  MOZ_ASSERT(buf_);
-  return RegExpObject::createSyntaxChecked(cx, buf_.get(), length_, flags_,
-                                           TenuredObject);
+RegExpObject* RegExpStencil::createRegExp(
+    JSContext* cx, CompilationAtomCache& atomCache) const {
+  RootedAtom atom(cx, atom_->toExistingJSAtom(cx, atomCache));
+  return RegExpObject::createSyntaxChecked(cx, atom, flags_, TenuredObject);
+}
+
+RegExpObject* RegExpStencil::createRegExpAndEnsureAtom(
+    JSContext* cx, CompilationAtomCache& atomCache) const {
+  RootedAtom atom(cx, atom_->toJSAtom(cx, atomCache));
+  if (!atom) {
+    return nullptr;
+  }
+  return RegExpObject::createSyntaxChecked(cx, atom, flags_, TenuredObject);
 }
 
 RegExpObject* RegExpLiteral::create(JSContext* cx,
+                                    CompilationAtomCache& atomCache,
                                     CompilationStencil& stencil) const {
-  return stencil.regExpData[index_].createRegExp(cx);
+  return stencil.regExpData[index_].createRegExpAndEnsureAtom(cx, atomCache);
 }
 
 bool js::frontend::IsAnonymousFunctionDefinition(ParseNode* pn) {

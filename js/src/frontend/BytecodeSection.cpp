@@ -92,7 +92,7 @@ bool js::frontend::EmitScriptThingsVector(
 
     bool operator()(const RegExpIndex& rindex) {
       RegExpStencil& data = stencil.regExpData[rindex];
-      RegExpObject* regexp = data.createRegExp(cx);
+      RegExpObject* regexp = data.createRegExp(cx, atomCache);
       if (!regexp) {
         return false;
       }
