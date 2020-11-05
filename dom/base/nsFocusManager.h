@@ -870,8 +870,8 @@ class nsFocusManager final : public nsIFocusManager,
   // these fields store a content node temporarily while it is being focused
   // or blurred to ensure that a recursive call doesn't refire the same event.
   // They will always be cleared afterwards.
-  nsCOMPtr<nsIContent> mFirstBlurEvent;
-  nsCOMPtr<nsIContent> mFirstFocusEvent;
+  RefPtr<mozilla::dom::Element> mFirstBlurEvent;
+  RefPtr<mozilla::dom::Element> mFirstFocusEvent;
 
   // keep track of a window while it is being lowered
   nsCOMPtr<nsPIDOMWindowOuter> mWindowBeingLowered;
