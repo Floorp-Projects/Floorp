@@ -39,7 +39,10 @@ pub const CKA_WRAP: u32 = 262;
 pub const CKA_SIGN: u32 = 264;
 pub const CKA_EC_PARAMS: u32 = 384;
 pub const CKA_EC_POINT: u32 = 385;
+// https://searchfox.org/nss/rev/4d480919bbf204df5e199b9fdedec8f2a6295778/lib/util/pkcs11t.h#1244
+pub const CKM_VENDOR_DEFINED: u32 = 0x80000000;
 pub const CKM_SHA256_HMAC: u32 = 593;
+pub const CKM_SHA384_HMAC: u32 = 609;
 pub const CKM_SHA512_HMAC: u32 = 625;
 pub const CKM_EC_KEY_PAIR_GEN: u32 = 4160;
 pub const CKM_ECDH1_DERIVE: u32 = 4176;

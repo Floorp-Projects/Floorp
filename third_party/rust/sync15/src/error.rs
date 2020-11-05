@@ -2,13 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use failure::Fail;
 use interrupt_support::Interrupted;
 use rc_crypto::hawk;
 use std::string;
 use std::time::SystemTime;
 use sync15_traits::request::UnacceptableBaseUrl;
-
 /// This enum is to discriminate `StorageHttpError`, and not used as an error.
 #[derive(Debug, Clone)]
 pub enum ErrorResponse {
@@ -23,90 +21,85 @@ pub enum ErrorResponse {
     RequestFailed { route: String, status: u16 },
 }
 
-#[derive(Debug, Fail)]
+#[derive(Debug, thiserror::Error)]
 pub enum ErrorKind {
-    #[fail(display = "Key {} had wrong length, got {}, expected {}", _0, _1, _2)]
+    #[error("Key {0} had wrong length, got {1}, expected {2}")]
     BadKeyLength(&'static str, usize, usize),
 
-    #[fail(display = "SHA256 HMAC Mismatch error")]
+    #[error("SHA256 HMAC Mismatch error")]
     HmacMismatch,
 
-    #[fail(
-        display = "HTTP status {} when requesting a token from the tokenserver",
-        _0
-    )]
+    #[error("HTTP status {0} when requesting a token from the tokenserver")]
     TokenserverHttpError(u16),
 
-    #[fail(display = "HTTP storage error: {:?}", _0)]
+    #[error("HTTP storage error: {0:?}")]
     StorageHttpError(ErrorResponse),
 
-    #[fail(display = "Server requested backoff. Retry after {:?}", _0)]
+    #[error("Server requested backoff. Retry after {0:?}")]
     BackoffError(SystemTime),
 
-    #[fail(display = "Outgoing record is too large to upload")]
+    #[error("Outgoing record is too large to upload")]
     RecordTooLargeError,
 
     // Do we want to record the concrete problems?
-    #[fail(display = "Not all records were successfully uploaded")]
+    #[error("Not all records were successfully uploaded")]
     RecordUploadFailed,
 
     /// Used for things like a node reassignment or an unexpected syncId
     /// implying the app needs to "reset" its understanding of remote storage.
-    #[fail(display = "The server has reset the storage for this account")]
+    #[error("The server has reset the storage for this account")]
     StorageResetError,
 
-    #[fail(display = "Unacceptable URL: {}", _0)]
+    #[error("Unacceptable URL: {0}")]
     UnacceptableUrl(String),
 
-    #[fail(display = "Missing server timestamp header in request")]
+    #[error("Missing server timestamp header in request")]
     MissingServerTimestamp,
 
-    #[fail(display = "Unexpected server behavior during batch upload: {}", _0)]
+    #[error("Unexpected server behavior during batch upload: {0}")]
     ServerBatchProblem(&'static str),
 
-    #[fail(
-        display = "It appears some other client is also trying to setup storage; try again later"
-    )]
+    #[error("It appears some other client is also trying to setup storage; try again later")]
     SetupRace,
 
-    #[fail(display = "Client upgrade required; server storage version too new")]
+    #[error("Client upgrade required; server storage version too new")]
     ClientUpgradeRequired,
 
     // This means that our global state machine needs to enter a state (such as
     // "FreshStartNeeded", but the allowed_states don't include that state.)
     // It typically means we are trying to do a "fast" or "read-only" sync.
-    #[fail(display = "Our storage needs setting up and we can't currently do it")]
+    #[error("Our storage needs setting up and we can't currently do it")]
     SetupRequired,
 
-    #[fail(display = "Store error: {}", _0)]
-    StoreError(#[fail(cause)] failure::Error),
+    #[error("Store error: {0}")]
+    StoreError(#[from] anyhow::Error),
 
-    #[fail(display = "Crypto/NSS error: {}", _0)]
-    CryptoError(#[fail(cause)] rc_crypto::Error),
+    #[error("Crypto/NSS error: {0}")]
+    CryptoError(#[from] rc_crypto::Error),
 
-    #[fail(display = "Base64 decode error: {}", _0)]
-    Base64Decode(#[fail(cause)] base64::DecodeError),
+    #[error("Base64 decode error: {0}")]
+    Base64Decode(#[from] base64::DecodeError),
 
-    #[fail(display = "JSON error: {}", _0)]
-    JsonError(#[fail(cause)] serde_json::Error),
+    #[error("JSON error: {0}")]
+    JsonError(#[from] serde_json::Error),
 
-    #[fail(display = "Bad cleartext UTF8: {}", _0)]
-    BadCleartextUtf8(#[fail(cause)] string::FromUtf8Error),
+    #[error("Bad cleartext UTF8: {0}")]
+    BadCleartextUtf8(#[from] string::FromUtf8Error),
 
-    #[fail(display = "Network error: {}", _0)]
-    RequestError(#[fail(cause)] viaduct::Error),
+    #[error("Network error: {0}")]
+    RequestError(#[from] viaduct::Error),
 
-    #[fail(display = "Unexpected HTTP status: {}", _0)]
-    UnexpectedStatus(#[fail(cause)] viaduct::UnexpectedStatus),
+    #[error("Unexpected HTTP status: {0}")]
+    UnexpectedStatus(#[from] viaduct::UnexpectedStatus),
 
-    #[fail(display = "HAWK error: {}", _0)]
-    HawkError(#[fail(cause)] hawk::Error),
+    #[error("HAWK error: {0}")]
+    HawkError(#[from] hawk::Error),
 
-    #[fail(display = "URL parse error: {}", _0)]
-    MalformedUrl(#[fail(cause)] url::ParseError),
+    #[error("URL parse error: {0}")]
+    MalformedUrl(#[from] url::ParseError),
 
-    #[fail(display = "The operation was interrupted.")]
-    Interrupted(#[fail(cause)] Interrupted),
+    #[error("The operation was interrupted.")]
+    Interrupted(#[from] Interrupted),
 }
 
 error_support::define_error! {
@@ -119,7 +112,7 @@ error_support::define_error! {
         (UnexpectedStatus, viaduct::UnexpectedStatus),
         (MalformedUrl, url::ParseError),
         // A bit dubious, since we only want this to happen inside `synchronize`
-        (StoreError, failure::Error),
+        (StoreError, anyhow::Error),
         (Interrupted, Interrupted),
         (HawkError, hawk::Error),
     }

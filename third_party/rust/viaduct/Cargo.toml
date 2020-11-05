@@ -13,8 +13,6 @@ crate-type = ["lib"]
 default = []
 
 [dependencies]
-failure = "0.1"
-failure_derive = "0.1"
 url = "2.1"
 log = "0.4"
 serde = "1"
@@ -23,3 +21,4 @@ once_cell = "1.4"
 prost = "0.6"
 prost-derive = "0.6"
 ffi-support = "0.4"
+thiserror = "1.0"

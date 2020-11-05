@@ -1,13 +1,12 @@
 use super::{CryptoError, Cryptographer, Hasher, HmacKey};
 use crate::DigestAlgorithm;
-use failure::err_msg;
 use ring::{digest, hmac};
 use std::convert::{TryFrom, TryInto};
 
 impl From<ring::error::Unspecified> for CryptoError {
     // Ring's errors are entirely opaque
     fn from(_: ring::error::Unspecified) -> Self {
-        CryptoError::Other(err_msg("Unspecified ring error"))
+        CryptoError::Other(anyhow::Error::msg("Unspecified ring error"))
     }
 }
 

@@ -23,7 +23,7 @@ pub fn now_secs() -> u64 {
 
 pub fn random_base64_url_string(len: usize) -> Result<String> {
     let mut out = vec![0u8; len];
-    rand::fill(&mut out).map_err(|_| ErrorKind::RngFailure)?;
+    rand::fill(&mut out)?;
     Ok(base64::encode_config(&out, base64::URL_SAFE_NO_PAD))
 }
 

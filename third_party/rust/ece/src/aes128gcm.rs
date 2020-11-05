@@ -95,29 +95,29 @@ impl Aes128GcmEceWebPush {
         payload: &[u8],
     ) -> Result<Vec<u8>> {
         if payload.len() < ECE_AES128GCM_HEADER_LENGTH {
-            return Err(ErrorKind::HeaderTooShort.into());
+            return Err(Error::HeaderTooShort);
         }
 
         let key_id_len = payload[ECE_SALT_LENGTH + 4] as usize;
         if payload.len() < ECE_AES128GCM_HEADER_LENGTH + key_id_len {
-            return Err(ErrorKind::HeaderTooShort.into());
+            return Err(Error::HeaderTooShort);
         }
 
         let rs = BigEndian::read_u32(&payload[ECE_SALT_LENGTH..]);
         if rs < ECE_AES128GCM_MIN_RS {
-            return Err(ErrorKind::InvalidRecordSize.into());
+            return Err(Error::InvalidRecordSize);
         }
 
         let salt = &payload[0..ECE_SALT_LENGTH];
         if key_id_len != ECE_WEBPUSH_PUBLIC_KEY_LENGTH {
-            return Err(ErrorKind::InvalidKeyLength.into());
+            return Err(Error::InvalidKeyLength);
         }
         let key_id_pos = ECE_AES128GCM_HEADER_LENGTH;
         let key_id = &payload[key_id_pos..key_id_pos + key_id_len];
 
         let ciphertext_start = ECE_AES128GCM_HEADER_LENGTH + key_id_len;
         if payload.len() == ciphertext_start {
-            return Err(ErrorKind::ZeroCiphertext.into());
+            return Err(Error::ZeroCiphertext);
         }
         let ciphertext = &payload[ciphertext_start..];
         let cryptographer = crypto::holder::get_cryptographer();
@@ -153,11 +153,11 @@ impl EceWebPush for Aes128GcmEceWebPush {
     fn unpad(block: &[u8], last_record: bool) -> Result<&[u8]> {
         let pos = match block.iter().rposition(|&b| b != 0) {
             Some(pos) => pos,
-            None => return Err(ErrorKind::ZeroCiphertext.into()),
+            None => return Err(Error::ZeroCiphertext),
         };
         let expected_delim = if last_record { 2 } else { 1 };
         if block[pos] != expected_delim {
-            return Err(ErrorKind::DecryptPadding.into());
+            return Err(Error::DecryptPadding);
         }
         Ok(&block[..pos])
     }

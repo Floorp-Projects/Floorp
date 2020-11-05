@@ -9,11 +9,12 @@ CREATE TEMP TABLE IF NOT EXISTS storage_sync_staging (
     guid TEXT NOT NULL PRIMARY KEY,
 
     /* The extension_id is explicitly not the GUID used on the server.
-       It can't be  a regular foreign-key relationship back to storage_sync_data
-       as the ext_id for incoming items may not appear in storage_sync_data at
-       the time we populate this table.
+       It can't be  a regular foreign-key relationship back to storage_sync_data,
+       nor can it be NOT NULL, as the ext_id for incoming items may not appear
+       in storage_sync_data at the time we populate this table, and also
+       because incoming tombstones have no extension ID.
     */
-    ext_id TEXT NOT NULL UNIQUE,
+    ext_id TEXT UNIQUE,
 
     /* The JSON payload. We *do* allow NULL here - it means "deleted" */
     data TEXT
@@ -53,14 +54,16 @@ BEGIN
     -- and we'll merge them again on the next sync.
     UPDATE storage_sync_data SET
       sync_change_counter = sync_change_counter - NEW.sync_change_counter
-    WHERE ext_id = NEW.ext_id;
+    WHERE NEW.ext_id IS NOT NULL AND ext_id = NEW.ext_id;
 
     -- Delete uploaded tombstones entirely; they're only kept in the mirror.
     DELETE FROM storage_sync_data WHERE data IS NULL AND sync_change_counter = 0 AND ext_id = NEW.ext_id;
 
     -- And write the uploaded item back to the mirror.
     INSERT OR REPLACE INTO storage_sync_mirror (guid, ext_id, data)
-    VALUES (NEW.guid, NEW.ext_id, NEW.data);
+    -- Our mirror has a constraint for tombstones, so handle that - if data is
+    -- null we want a null ext_id (as that's whats on the server)
+    VALUES (NEW.guid, CASE WHEN NEW.data IS NULL THEN NULL ELSE NEW.ext_id END, NEW.data);
 END;
 
 DELETE FROM temp.storage_sync_outgoing_staging;

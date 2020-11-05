@@ -253,10 +253,7 @@ where
 
     #[inline]
     fn in_batch(&self) -> bool {
-        match &self.batch {
-            BatchState::Unsupported | BatchState::NoBatch => false,
-            _ => true,
-        }
+        !matches!(&self.batch, BatchState::Unsupported | BatchState::NoBatch)
     }
 
     pub fn enqueue(&mut self, record: &EncryptedBso) -> Result<bool> {

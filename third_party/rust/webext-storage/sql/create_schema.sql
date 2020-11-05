@@ -34,12 +34,17 @@ CREATE TABLE IF NOT EXISTS storage_sync_mirror (
     /* The extension_id is explicitly not the GUID used on the server.
        It can't be  a regular foreign-key relationship back to storage_sync_data
        as items with no data on the server (ie, deleted items) will not appear
-       in storage_sync_data.
+       in storage_sync_data, and the guid isn't in that table either.
+       It must allow NULL as tombstones do not carry the ext_id, so we have
+       an additional CHECK constraint.
     */
-    ext_id TEXT NOT NULL UNIQUE,
+    ext_id TEXT UNIQUE,
 
     /* The JSON payload. We *do* allow NULL here - it means "deleted" */
     data TEXT
+
+    /* tombstones have no ext_id and no data. Non tombstones must have both */
+    CHECK((ext_id IS NULL AND data IS NULL) OR (ext_id IS NOT NULL AND data IS NOT NULL))
 );
 
 -- This table holds key-value metadata - primarily for sync.
