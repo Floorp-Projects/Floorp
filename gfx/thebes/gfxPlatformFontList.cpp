@@ -502,6 +502,8 @@ nsresult gfxPlatformFontList::InitFontList() {
       }
     } else {
       // something went wrong, fall back to in-process list
+      gfxCriticalNote << "Failed to initialize shared font list, "
+                         "falling back to in-process list.";
       mSharedFontList.reset(nullptr);
     }
     if (oldSharedList) {
