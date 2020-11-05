@@ -314,7 +314,7 @@ bool DeviceManagerDx::CreateCompositorDevices() {
   // Fallback from WR to D3D11 Non-WR compositor without re-creating gpu process
   // could happen when WR causes error. In this case, the attachments are loaded
   // synchronously.
-  if (!gfx::gfxVars::UseWebRender()) {
+  if (!gfx::gfxVars::UseWebRender() || gfx::gfxVars::UseSoftwareWebRender()) {
     PreloadAttachmentsOnCompositorThread();
   }
 
@@ -1429,7 +1429,8 @@ void DeviceManagerDx::PreloadAttachmentsOnCompositorThread() {
     return;
   }
 
-  bool enableAL = gfxConfig::IsEnabled(Feature::ADVANCED_LAYERS);
+  bool enableAL = gfxConfig::IsEnabled(Feature::ADVANCED_LAYERS) &&
+                  !gfx::gfxVars::UseSoftwareWebRender();
 
   RefPtr<Runnable> task = NS_NewRunnableFunction(
       "DeviceManagerDx::PreloadAttachmentsOnCompositorThread",
