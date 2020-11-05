@@ -104,11 +104,10 @@ void WaitUntil(MediaEventSource<T>& aEvent, const CallbackFunction& aF) {
 /*
  * Common ControlMessages
  */
-class StartInputProcessing : public ControlMessage {
-  RefPtr<AudioInputTrack> mInputTrack;
-  RefPtr<AudioInputProcessing> mInputProcessing;
+struct StartInputProcessing : public ControlMessage {
+  const RefPtr<AudioInputTrack> mInputTrack;
+  const RefPtr<AudioInputProcessing> mInputProcessing;
 
- public:
   StartInputProcessing(AudioInputTrack* aTrack,
                        AudioInputProcessing* aInputProcessing)
       : ControlMessage(aTrack),
@@ -117,13 +116,28 @@ class StartInputProcessing : public ControlMessage {
   void Run() override { mInputProcessing->Start(); }
 };
 
-class StopInputProcessing : public ControlMessage {
-  RefPtr<AudioInputProcessing> mInputProcessing;
+struct StopInputProcessing : public ControlMessage {
+  const RefPtr<AudioInputProcessing> mInputProcessing;
 
- public:
   explicit StopInputProcessing(AudioInputProcessing* aInputProcessing)
       : ControlMessage(nullptr), mInputProcessing(aInputProcessing) {}
   void Run() override { mInputProcessing->Stop(); }
+};
+
+struct SetPassThrough : public ControlMessage {
+  const RefPtr<AudioInputProcessing> mInputProcessing;
+  const bool mPassThrough;
+
+  SetPassThrough(MediaTrack* aTrack, AudioInputProcessing* aInputProcessing,
+                 bool aPassThrough)
+      : ControlMessage(aTrack),
+        mInputProcessing(aInputProcessing),
+        mPassThrough(aPassThrough) {}
+  void Run() override {
+    EXPECT_EQ(mInputProcessing->PassThrough(mTrack->GraphImpl()),
+              !mPassThrough);
+    mInputProcessing->SetPassThrough(mTrack->GraphImpl(), mPassThrough);
+  }
 };
 #endif  // MOZ_WEBRTC
 
@@ -276,7 +290,8 @@ TEST(TestAudioTrackGraph, ErrorCallback)
   Unused << WaitFor(Invoke([&] {
     inputTrack = AudioInputTrack::Create(graph);
     listener = new AudioInputProcessing(2, PRINCIPAL_HANDLE_NONE);
-    listener->SetPassThrough(true);
+    inputTrack->GraphImpl()->AppendMessage(
+        MakeUnique<SetPassThrough>(inputTrack, listener, true));
     inputTrack->SetInputProcessing(listener);
     inputTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(inputTrack, listener));
@@ -342,7 +357,8 @@ TEST(TestAudioTrackGraph, AudioInputTrack)
     port = outputTrack->AllocateInputPort(inputTrack);
     /* Primary graph: Open Audio Input through SourceMediaTrack */
     listener = new AudioInputProcessing(2, PRINCIPAL_HANDLE_NONE);
-    listener->SetPassThrough(true);
+    inputTrack->GraphImpl()->AppendMessage(
+        MakeUnique<SetPassThrough>(inputTrack, listener, true));
     inputTrack->SetInputProcessing(listener);
     inputTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(inputTrack, listener));
@@ -429,7 +445,8 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
   DispatchFunction([&] {
     inputTrack = AudioInputTrack::Create(primary);
     listener = new AudioInputProcessing(2, PRINCIPAL_HANDLE_NONE);
-    listener->SetPassThrough(true);
+    inputTrack->GraphImpl()->AppendMessage(
+        MakeUnique<SetPassThrough>(inputTrack, listener, true));
     inputTrack->SetInputProcessing(listener);
     inputTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(inputTrack, listener));
