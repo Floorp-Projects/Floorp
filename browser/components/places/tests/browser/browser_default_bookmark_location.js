@@ -3,12 +3,14 @@
 
 "use strict";
 
+const LOCATION_PREF = "browser.bookmarks.defaultLocation";
 const TEST_URL = "about:about";
 let bookmarkPanel;
 let folders;
 let win;
 
 add_task(async function setup() {
+  Services.prefs.clearUserPref(LOCATION_PREF);
   await PlacesUtils.bookmarks.eraseEverything();
 
   win = await BrowserTestUtils.openNewBrowserWindow();
@@ -32,8 +34,26 @@ add_task(async function setup() {
     await BrowserTestUtils.closeWindow(win);
     win = null;
     await PlacesUtils.bookmarks.eraseEverything();
+    Services.prefs.clearUserPref(LOCATION_PREF);
   });
 });
+
+async function cancelBookmarkCreationInPanel() {
+  let hiddenPromise = promisePopupHidden(
+    win.document.getElementById("editBookmarkPanel")
+  );
+  // Confirm and close the dialog.
+
+  let guid = win.gEditItemOverlay._paneInfo.itemGuid;
+  let promiseRemoved = PlacesTestUtils.waitForNotification(
+    "bookmark-removed",
+    events => events.some(e => e.guid == guid),
+    "places"
+  );
+  win.document.getElementById("editBookmarkPanelRemoveButton").click();
+  await hiddenPromise;
+  await promiseRemoved;
+}
 
 /**
  * Helper to check the selected folder is correct.
@@ -56,12 +76,7 @@ async function checkSelection() {
     "Should have the correct default guid selected"
   );
 
-  let hiddenPromise = promisePopupHidden(
-    win.document.getElementById("editBookmarkPanel")
-  );
-  // Confirm and close the dialog.
-  win.document.getElementById("editBookmarkPanelRemoveButton").click();
-  await hiddenPromise;
+  await cancelBookmarkCreationInPanel();
 }
 
 /**
@@ -103,7 +118,7 @@ add_task(async function test_context_menu_link() {
         "popupshown"
       );
       BrowserTestUtils.synthesizeMouseAtCenter(
-        "a[href]",
+        "a[href*=config]", // Bookmark about:config
         { type: "contextmenu", button: 2 },
         win.gBrowser.selectedBrowser
       );
@@ -127,4 +142,142 @@ add_task(async function test_context_menu_link() {
       );
     }
   );
+});
+
+/**
+ * Verify that if we change the location, we persist that selection.
+ */
+add_task(async function test_change_location_panel() {
+  await clickBookmarkStar(win);
+
+  let menuList = win.document.getElementById("editBMPanel_folderMenuList");
+
+  let expectedFolderGuid = win.gBookmarksToolbar2h2020
+    ? PlacesUtils.bookmarks.toolbarGuid
+    : PlacesUtils.bookmarks.unfiledGuid;
+
+  info("Pref value: " + Services.prefs.getCharPref(LOCATION_PREF, ""));
+  await TestUtils.waitForCondition(
+    () => menuList.getAttribute("selectedGuid") == expectedFolderGuid,
+    "Should initially select the unfiled or toolbar item"
+  );
+
+  // Now move this new bookmark to the menu:
+  let promisePopup = BrowserTestUtils.waitForEvent(
+    menuList.menupopup,
+    "popupshown"
+  );
+  EventUtils.synthesizeMouseAtCenter(menuList, {}, win);
+  await promisePopup;
+
+  let itemGuid = win.gEditItemOverlay._paneInfo.itemGuid;
+  // Make sure we wait for the move to complete.
+  let itemMovedPromise = PlacesTestUtils.waitForNotification(
+    "onItemMoved",
+    (id, oldParentId, oldIndex, newParentId, newIndex, type, guid) =>
+      newParentId == PlacesUtils.bookmarksMenuFolderId && guid == itemGuid
+  );
+
+  // Wait for the pref to change
+  let prefChangedPromise = TestUtils.waitForPrefChange(LOCATION_PREF);
+
+  // Click the choose item.
+  EventUtils.synthesizeMouseAtCenter(
+    win.document.getElementById("editBMPanel_bmRootItem"),
+    {},
+    win
+  );
+
+  await TestUtils.waitForCondition(
+    () =>
+      menuList.getAttribute("selectedGuid") == PlacesUtils.bookmarks.menuGuid,
+    "Should select the menu folder item"
+  );
+
+  info("Waiting for item to move.");
+  await itemMovedPromise;
+  info("Waiting for transactions to finish.");
+  await Promise.all(win.gEditItemOverlay.transactionPromises);
+  info("Moved; waiting to hide panel.");
+
+  await hideBookmarksPanel(win);
+  info("Waiting for pref change.");
+  await prefChangedPromise;
+
+  // Check that it's in the menu, and remove the bookmark:
+  let bm = await PlacesUtils.bookmarks.fetch({ url: TEST_URL });
+  is(
+    bm?.parentGuid,
+    PlacesUtils.bookmarks.menuGuid,
+    "Bookmark was put in the menu."
+  );
+  if (bm) {
+    await PlacesUtils.bookmarks.remove(bm);
+  }
+
+  // Now create a new bookmark and check it starts in the menu.
+  await clickBookmarkStar(win);
+
+  Assert.equal(
+    menuList.label,
+    PlacesUtils.getString("BookmarksMenuFolderTitle"),
+    `Should have menu folder selected by default`
+  );
+  Assert.equal(
+    menuList.getAttribute("selectedGuid"),
+    PlacesUtils.bookmarks.menuGuid,
+    "Should have the correct default guid selected"
+  );
+
+  // Now select a different item.
+  promisePopup = BrowserTestUtils.waitForEvent(
+    menuList.menupopup,
+    "popupshown"
+  );
+  EventUtils.synthesizeMouseAtCenter(menuList, {}, win);
+  await promisePopup;
+
+  // Click the toolbar item.
+  EventUtils.synthesizeMouseAtCenter(
+    win.document.getElementById("editBMPanel_toolbarFolderItem"),
+    {},
+    win
+  );
+
+  await TestUtils.waitForCondition(
+    () =>
+      menuList.getAttribute("selectedGuid") ==
+      PlacesUtils.bookmarks.toolbarGuid,
+    "Should select the toolbar item"
+  );
+
+  await cancelBookmarkCreationInPanel();
+
+  is(
+    await PlacesUIUtils.defaultParentGuid,
+    PlacesUtils.bookmarks.menuGuid,
+    "Default folder should not change if we cancel the panel."
+  );
+
+  // Now open the panel for an existing bookmark whose parent doesn't match
+  // the default and check we don't overwrite the default folder.
+  let testBM = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "Yoink",
+    url: TEST_URL,
+  });
+  await TestUtils.waitForCondition(
+    () => win.BookmarkingUI.star.hasAttribute("starred"),
+    "Wait for bookmark to show up for current page."
+  );
+  await clickBookmarkStar(win);
+
+  await hideBookmarksPanel(win);
+  is(
+    await PlacesUIUtils.defaultParentGuid,
+    PlacesUtils.bookmarks.menuGuid,
+    "Default folder should not change if we accept the panel, but didn't change folders."
+  );
+
+  await PlacesUtils.bookmarks.remove(testBM);
 });
