@@ -206,9 +206,6 @@ PlacesController.prototype = {
         let selectedNode = this._view.selectedNode;
         return (
           selectedNode &&
-          !PlacesUtils.isRootItem(
-            PlacesUtils.getConcreteItemGuid(selectedNode)
-          ) &&
           (PlacesUtils.nodeIsTagQuery(selectedNode) ||
             PlacesUtils.nodeIsBookmark(selectedNode) ||
             (PlacesUtils.nodeIsFolder(selectedNode) &&
