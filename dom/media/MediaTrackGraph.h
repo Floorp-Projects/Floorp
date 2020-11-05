@@ -419,6 +419,11 @@ class MediaTrack : public mozilla::LinkedListElement<MediaTrack> {
   GraphTime StartTime() const { return mStartTime; }
   bool Ended() const { return mEnded; }
 
+  // Returns the current number of channels this track contains if it's an audio
+  // track. Calling this on a video track will trip assertions. Graph thread
+  // only.
+  virtual uint32_t NumberOfChannels() const = 0;
+
   // The DisabledTrackMode after combining the explicit mode and that of the
   // input, if any.
   virtual DisabledTrackMode CombinedDisabledMode() const {
@@ -689,6 +694,8 @@ class SourceMediaTrack : public MediaTrack {
     mMutex.AssertCurrentThreadOwns();
     MediaTrack::ApplyTrackDisabling(aSegment, aRawSegment);
   }
+
+  uint32_t NumberOfChannels() const override;
 
   void RemoveAllDirectListenersImpl() override;
 

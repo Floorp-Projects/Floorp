@@ -30,6 +30,8 @@ class ForwardedInputTrack : public ProcessedMediaTrack {
   void SetDisabledTrackModeImpl(DisabledTrackMode aMode) override;
   void OnInputDisabledModeChanged(DisabledTrackMode aInputMode) override;
 
+  uint32_t NumberOfChannels() const override;
+
   friend class MediaTrackGraphImpl;
 
  protected:

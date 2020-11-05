@@ -28,6 +28,8 @@ class AudioCaptureTrack : public ProcessedMediaTrack,
 
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
 
+  uint32_t NumberOfChannels() const override;
+
  protected:
   void MixerCallback(AudioDataValue* aMixedBuffer, AudioSampleFormat aFormat,
                      uint32_t aChannels, uint32_t aFrames,

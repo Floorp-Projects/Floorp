@@ -91,6 +91,8 @@ class FakeAudioTrack : public mozilla::ProcessedMediaTrack {
 
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override {}
 
+  uint32_t NumberOfChannels() const override { return NUM_CHANNELS; }
+
  private:
   mozilla::Mutex mMutex;
   MediaTrackListener* mListener = nullptr;
@@ -98,11 +100,10 @@ class FakeAudioTrack : public mozilla::ProcessedMediaTrack {
   nsCOMPtr<nsITimer> mTimer;
   int mCount = 0;
 
+  static const int AUDIO_BUFFER_SIZE = 1600;
+  static const int NUM_CHANNELS = 2;
   static void FakeAudioTrackGenerateData(nsITimer* timer, void* closure) {
     auto t = static_cast<FakeAudioTrack*>(closure);
-    const int AUDIO_BUFFER_SIZE = 1600;
-    const int NUM_CHANNELS = 2;
-
     mozilla::MutexAutoLock lock(t->mMutex);
     if (t->mSuspended) {
       return;

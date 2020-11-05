@@ -230,6 +230,14 @@ void ForwardedInputTrack::OnInputDisabledModeChanged(
   NotifyIfDisabledModeChangedFrom(oldMode);
 }
 
+uint32_t ForwardedInputTrack::NumberOfChannels() const {
+  MOZ_DIAGNOSTIC_ASSERT(mSegment->GetType() == MediaSegment::AUDIO);
+  if (!mInputPort || !mInputPort->GetSource()) {
+    return GetData<AudioSegment>()->MaxChannelCount();
+  }
+  return mInputPort->GetSource()->NumberOfChannels();
+}
+
 void ForwardedInputTrack::AddDirectListenerImpl(
     already_AddRefed<DirectMediaTrackListener> aListener) {
   RefPtr<DirectMediaTrackListener> listener = aListener;

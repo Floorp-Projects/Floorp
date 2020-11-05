@@ -2847,6 +2847,15 @@ void SourceMediaTrack::SetDisabledTrackModeImpl(DisabledTrackMode aMode) {
   MediaTrack::SetDisabledTrackModeImpl(aMode);
 }
 
+uint32_t SourceMediaTrack::NumberOfChannels() const {
+  AudioSegment* audio = GetData<AudioSegment>();
+  MOZ_DIAGNOSTIC_ASSERT(audio);
+  if (!audio) {
+    return 0;
+  }
+  return audio->MaxChannelCount();
+}
+
 void SourceMediaTrack::RemoveAllDirectListenersImpl() {
   GraphImpl()->AssertOnGraphThreadOrNotRunning();
   MutexAutoLock lock(mMutex);
@@ -3619,16 +3628,7 @@ uint32_t MediaTrackGraphImpl::AudioOutputChannelCount() const {
   // output channel count the machine can do, whichever is smaller.
   uint32_t channelCount = 0;
   for (auto& tkv : mAudioOutputs) {
-    MediaTrack* t = tkv.mTrack;
-    // This is an AudioDestinationNode
-    if (t->AsAudioNodeTrack()) {
-      channelCount = std::max<uint32_t>(
-          channelCount, t->AsAudioNodeTrack()->NumberOfChannels());
-    } else if (t->GetData<AudioSegment>()) {
-      AudioSegment* segment = t->GetData<AudioSegment>();
-      channelCount =
-          std::max<uint32_t>(channelCount, segment->MaxChannelCount());
-    }
+    channelCount = std::max(channelCount, tkv.mTrack->NumberOfChannels());
   }
   channelCount = std::min(channelCount, mMaxOutputChannelCount);
   if (channelCount) {
