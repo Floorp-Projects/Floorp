@@ -816,7 +816,7 @@ void MediaTrackGraphImpl::NotifyOutputData(AudioDataValue* aBuffer,
   }
 }
 
-void MediaTrackGraphImpl::NotifyStarted() {
+void MediaTrackGraphImpl::NotifyInputStopped() {
 #ifdef ANDROID
   if (!mInputDeviceUsers.GetValue(mInputDeviceID)) {
     return;
@@ -830,7 +830,7 @@ void MediaTrackGraphImpl::NotifyStarted() {
       mInputDeviceUsers.GetValue(mInputDeviceID);
   MOZ_ASSERT(listeners);
   for (auto& listener : *listeners) {
-    listener->NotifyStarted(this);
+    listener->NotifyInputStopped(this);
   }
 }
 

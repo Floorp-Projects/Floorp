@@ -1118,7 +1118,7 @@ void AudioInputProcessing::InsertInGraph(MediaTrackGraphImpl* aGraph,
   mSegment.AppendFrames(buffer.forget(), channels, aFrames, mPrincipal);
 }
 
-void AudioInputProcessing::NotifyStarted(MediaTrackGraphImpl* aGraph) {
+void AudioInputProcessing::NotifyInputStopped(MediaTrackGraphImpl* aGraph) {
   MOZ_ASSERT(aGraph->OnGraphThread());
   // This is called when an AudioCallbackDriver switch has happened for any
   // reason, including other reasons than starting this audio input stream. We
