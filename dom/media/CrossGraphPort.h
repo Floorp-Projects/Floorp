@@ -31,6 +31,9 @@ class CrossGraphTransmitter : public ProcessedMediaTrack {
                         RefPtr<CrossGraphReceiver> aReceiver);
   CrossGraphTransmitter* AsCrossGraphTransmitter() override { return this; }
 
+  uint32_t NumberOfChannels() const override {
+    MOZ_CRASH("CrossGraphTransmitter has no segment. It cannot be played out.");
+  }
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
 
  private:
@@ -45,6 +48,7 @@ class CrossGraphReceiver : public ProcessedMediaTrack {
   CrossGraphReceiver(TrackRate aSampleRate, TrackRate aTransmitterRate);
   CrossGraphReceiver* AsCrossGraphReceiver() override { return this; }
 
+  uint32_t NumberOfChannels() const override;
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
 
   int EnqueueAudio(AudioChunk& aChunk);

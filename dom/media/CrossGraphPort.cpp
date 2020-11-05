@@ -162,6 +162,10 @@ CrossGraphReceiver::CrossGraphReceiver(TrackRate aSampleRate,
                           static_cast<MediaSegment*>(new AudioSegment())),
       mDriftCorrection(aTransmitterRate, aSampleRate) {}
 
+uint32_t CrossGraphReceiver::NumberOfChannels() const {
+  return GetData<AudioSegment>()->MaxChannelCount();
+}
+
 void CrossGraphReceiver::ProcessInput(GraphTime aFrom, GraphTime aTo,
                                       uint32_t aFlags) {
   LOG(LogLevel::Verbose,

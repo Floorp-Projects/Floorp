@@ -101,6 +101,10 @@ void AudioCaptureTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
   }
 }
 
+uint32_t AudioCaptureTrack::NumberOfChannels() const {
+  return GetData<AudioSegment>()->MaxChannelCount();
+}
+
 void AudioCaptureTrack::MixerCallback(AudioDataValue* aMixedBuffer,
                                       AudioSampleFormat aFormat,
                                       uint32_t aChannels, uint32_t aFrames,

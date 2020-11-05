@@ -115,7 +115,7 @@ class AudioNodeTrack : public ProcessedMediaTrack {
     mAudioParamTrack = true;
   }
   // The value for channelCount on an AudioNode, but on the audio thread side.
-  uint32_t NumberOfChannels() const;
+  uint32_t NumberOfChannels() const override;
 
   /*
    * Resume track after updating its concept of current time by aAdvance.
