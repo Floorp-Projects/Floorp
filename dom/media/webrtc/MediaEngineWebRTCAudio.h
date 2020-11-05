@@ -146,7 +146,7 @@ class AudioInputProcessing : public AudioDataListener {
   void NotifyOutputData(MediaTrackGraphImpl* aGraph, AudioDataValue* aBuffer,
                         size_t aFrames, TrackRate aRate,
                         uint32_t aChannels) override;
-  void NotifyStarted(MediaTrackGraphImpl* aGraph) override;
+  void NotifyInputStopped(MediaTrackGraphImpl* aGraph) override;
   void NotifyInputData(MediaTrackGraphImpl* aGraph,
                        const AudioDataValue* aBuffer, size_t aFrames,
                        TrackRate aRate, uint32_t aChannels) override;
