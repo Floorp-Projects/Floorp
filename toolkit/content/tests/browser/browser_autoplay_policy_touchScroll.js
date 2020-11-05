@@ -5,7 +5,8 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
-const PAGE = GetTestWebBasedURL("file_nonAutoplayAudio.html");
+const PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/file_nonAutoplayAudio.html";
 
 function checkMediaPlayingState(isPlaying) {
   let audio = content.document.getElementById("testAudio");

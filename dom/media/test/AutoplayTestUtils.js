@@ -1,4 +1,4 @@
-/* import-globals-from ../../../test/manifest.js */
+/* import-globals-from manifest.js */
 
 function playAndPostResult(muted, parent_window) {
   let element = document.createElement("video");

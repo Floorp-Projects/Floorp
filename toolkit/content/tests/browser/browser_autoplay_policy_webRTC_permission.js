@@ -8,7 +8,8 @@ const { PermissionTestUtils } = ChromeUtils.import(
   "resource://testing-common/PermissionTestUtils.jsm"
 );
 
-const VIDEO_PAGE = GetTestWebBasedURL("file_empty.html");
+const VIDEO_PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/file_empty.html";
 
 add_task(() => {
   return SpecialPowers.pushPrefEnv({
