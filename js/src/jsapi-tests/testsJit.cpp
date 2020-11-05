@@ -6,6 +6,7 @@
 
 #include "jsapi-tests/testsJit.h"
 
+#include "jit/JitCommon.h"
 #include "jit/Linker.h"
 
 #include "jit/MacroAssembler-inl.h"
@@ -19,6 +20,14 @@ void PrepareJit(js::jit::MacroAssembler& masm) {
 #endif
   AllocatableRegisterSet regs(RegisterSet::All());
   LiveRegisterSet save(regs.asLiveSet());
+#if defined(JS_CODEGEN_ARM)
+  save.add(js::jit::d15);
+#endif
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+  save.add(js::jit::ra);
+#elif defined(JS_USE_LINK_REGISTER)
+  save.add(js::jit::lr);
+#endif
   masm.PushRegsInMask(save);
 }
 
@@ -28,6 +37,14 @@ bool ExecuteJit(JSContext* cx, js::jit::MacroAssembler& masm) {
   using namespace js::jit;
   AllocatableRegisterSet regs(RegisterSet::All());
   LiveRegisterSet save(regs.asLiveSet());
+#if defined(JS_CODEGEN_ARM)
+  save.add(js::jit::d15);
+#endif
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+  save.add(js::jit::ra);
+#elif defined(JS_USE_LINK_REGISTER)
+  save.add(js::jit::lr);
+#endif
   masm.PopRegsInMask(save);
 #if defined(JS_CODEGEN_ARM64)
   // Return using the value popped into x30.
@@ -36,7 +53,8 @@ bool ExecuteJit(JSContext* cx, js::jit::MacroAssembler& masm) {
   // Reset stack pointer.
   masm.SetStackPointer64(PseudoStackPointer64);
 #else
-  masm.ret();  // Add return statement to be sure.
+  // Exit the JIT-ed code using the ABI return style.
+  masm.abiret();
 #endif
 
   if (masm.oom()) {
@@ -55,6 +73,6 @@ bool ExecuteJit(JSContext* cx, js::jit::MacroAssembler& masm) {
 
   JS::AutoSuppressGCAnalysis suppress;
   EnterTest test = code->as<EnterTest>();
-  test();
+  CALL_GENERATED_0(test);
   return true;
 }

@@ -20,6 +20,10 @@
         intptr_t(p2), intptr_t(p3), intptr_t(p4), intptr_t(p5), intptr_t(p6), \
         intptr_t(p7)))
 
+#  define CALL_GENERATED_0(entry)                                              \
+    (js::jit::Simulator::Current()->call(JS_FUNC_TO_DATA_PTR(uint8_t*, entry), \
+                                         0))
+
 #  define CALL_GENERATED_1(entry, p0)                                          \
     (js::jit::Simulator::Current()->call(JS_FUNC_TO_DATA_PTR(uint8_t*, entry), \
                                          1, intptr_t(p0)))
@@ -39,6 +43,7 @@
 #  define CALL_GENERATED_CODE(entry, p0, p1, p2, p3, p4, p5, p6, p7) \
     entry(p0, p1, p2, p3, p4, p5, p6, p7)
 
+#  define CALL_GENERATED_0(entry) entry()
 #  define CALL_GENERATED_1(entry, p0) entry(p0)
 #  define CALL_GENERATED_2(entry, p0, p1) entry(p0, p1)
 #  define CALL_GENERATED_3(entry, p0, p1, p2) entry(p0, p1, p2)
