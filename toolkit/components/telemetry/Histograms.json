@@ -9938,6 +9938,20 @@
     "operating_systems": ["android"],
     "description": "Records a value each time GeckoView remote decoding process crashes unexpectedly while decoding media content."
   },
+  "MEDIA_AUDIO_INIT_FAILURE": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "geckoview_streaming"],
+    "alert_emails": ["padenot@mozilla.com", "kinetik@flim.org", "cchang@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": [
+      "first",
+      "other"
+    ],
+    "description": "Failure occurs when initializing the audio stream",
+    "bug_numbers": [1671714]
+  },
   "WEBRTC_DTLS_CIPHER": {
     "record_in_processes": ["content", "socket"],
     "products": ["firefox"],
