@@ -4017,7 +4017,6 @@ nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
       SIMPLE_TAG_CHAIN(description,
                        nsCSSFrameConstructor::FindXULDescriptionData),
       SIMPLE_XUL_CREATE(menu, NS_NewMenuFrame),
-      SIMPLE_XUL_CREATE(menubutton, NS_NewMenuFrame),
       SIMPLE_XUL_CREATE(menulist, NS_NewMenuFrame),
       SIMPLE_XUL_CREATE(menuitem, NS_NewMenuItemFrame),
 #  ifdef XP_MACOSX
