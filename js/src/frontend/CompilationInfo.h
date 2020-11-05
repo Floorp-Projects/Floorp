@@ -438,11 +438,6 @@ struct CompilationInfo {
   MOZ_MUST_USE bool serializeStencils(JSContext* cx, JS::TranscodeBuffer& buf,
                                       bool* succeededOut = nullptr);
 
-  const ParserAtom* lowerJSAtomToParserAtom(JSContext* cx, JSAtom* atom) {
-    auto result = stencil.parserAtoms.internJSAtom(cx, *this, atom);
-    return result.unwrapOr(nullptr);
-  }
-
   // Move constructor is necessary to use Rooted.
   CompilationInfo(CompilationInfo&&) = default;
 
