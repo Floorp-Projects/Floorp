@@ -32,6 +32,14 @@ add_task(function test_fog_counter_works() {
   Assert.equal(31, Glean.test_only.bad_code.testGetValue("test-ping"));
 });
 
+add_task(async function test_fog_string_works() {
+  const value = "a cheesy string!";
+  Glean.test_only.cheesy_string.set(value);
+
+  Assert.ok(Glean.test_only.cheesy_string.testHasValue("test-ping"));
+  Assert.equal(value, Glean.test_only.cheesy_string.testGetValue("test-ping"));
+});
+
 add_task(async function test_fog_timespan_works() {
   // We start, briefly sleep and then stop.
   // That guarantees some time to measure.

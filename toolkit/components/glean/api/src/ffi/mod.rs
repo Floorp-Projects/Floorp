@@ -22,6 +22,38 @@ define_metric_ffi!(TIMESPAN_MAP {
     stop -> fog_timespan_stop(),
 });
 
+// The String functions are custom because test_get needs to use an outparam.
+// If we can make test_get optional, we can go back to using the macro to
+// generate the rest of the functions, or something.
+
+#[no_mangle]
+pub extern "C" fn fog_string_test_has_value(id: u32, storage_name: FfiStr) -> u8 {
+    match crate::metrics::__glean_metric_maps::STRING_MAP.get(&id.into()) {
+        Some(metric) => metric.test_get_value(storage_name.as_str()).is_some() as u8,
+        None => panic!("No metric for id {}", id),
+    }
+}
+
+#[cfg(feature = "with_gecko")]
+#[no_mangle]
+pub extern "C" fn fog_string_test_get_value(id: u32, storage_name: FfiStr, value: &mut nsACString) {
+    match crate::metrics::__glean_metric_maps::STRING_MAP.get(&id.into()) {
+        Some(metric) => {
+            value.assign(&metric.test_get_value(storage_name.as_str()).unwrap());
+        }
+        None => panic!("No metric for id {}", id),
+    }
+}
+
+#[cfg(feature = "with_gecko")]
+#[no_mangle]
+pub extern "C" fn fog_string_set(id: u32, value: &nsACString) {
+    match crate::metrics::__glean_metric_maps::STRING_MAP.get(&id.into()) {
+        Some(metric) => metric.set(value.to_utf8()),
+        None => panic!("No metric for id {}", id),
+    }
+}
+
 // The Uuid functions are custom because test_get needs to use an outparam.
 // If we can make test_get optional, we can go back to using the macro to
 // generate the rest of the functions, or something.
