@@ -11,6 +11,9 @@
 #include "mozilla/Types.h"
 #include "PlatformDecoderModule.h"
 #include "prlink.h"
+#ifdef MOZ_WAYLAND
+#  include "gfxPlatformGtk.h"
+#endif
 
 #define AV_LOG_DEBUG 48
 #define AV_LOG_INFO 32
@@ -252,6 +255,52 @@ void FFmpegLibWrapper::Unlink() {
 #endif
   PodZero(this);
 }
+
+#ifdef MOZ_WAYLAND
+void FFmpegLibWrapper::LinkVAAPILibs() {
+  if (gfxPlatformGtk::GetPlatform()->UseHardwareVideoDecoding()) {
+    PRLibSpec lspec;
+    lspec.type = PR_LibSpec_Pathname;
+
+    if (gfxPlatformGtk::GetPlatform()->UseDRMVAAPIDisplay()) {
+      const char* libDrm = "libva-drm.so.2";
+      lspec.value.pathname = libDrm;
+      mVALibDrm = PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
+      if (!mVALibDrm) {
+        FFMPEG_LOG("VA-API support: Missing or old %s library.\n", libDrm);
+      }
+    } else {
+      if (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay()) {
+        const char* libWayland = "libva-wayland.so.2";
+        lspec.value.pathname = libWayland;
+        mVALibWayland = PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
+        if (!mVALibWayland) {
+          FFMPEG_LOG("VA-API support: Missing or old %s library.\n",
+                     libWayland);
+        }
+      } else {
+        FFMPEG_LOG("VA-API X11 display is not implemented.\n");
+      }
+    }
+
+    if (mVALibWayland || mVALibDrm) {
+      const char* lib = "libva.so.2";
+      lspec.value.pathname = lib;
+      mVALib = PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
+      // Don't use libva when it's missing vaExportSurfaceHandle.
+      if (mVALib && !PR_FindSymbol(mVALib, "vaExportSurfaceHandle")) {
+        PR_UnloadLibrary(mVALib);
+        mVALib = nullptr;
+      }
+      if (!mVALib) {
+        FFMPEG_LOG("VA-API support: Missing or old %s library.\n", lib);
+      }
+    }
+  } else {
+    FFMPEG_LOG("VA-API FFmpeg is disabled by platform");
+  }
+}
+#endif
 
 #ifdef MOZ_WAYLAND
 bool FFmpegLibWrapper::IsVAAPIAvailable() {
