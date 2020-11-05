@@ -6731,14 +6731,18 @@ static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
   }
 
   buffer.set(&AsAnyArrayBuffer(bufferVal));
-  uint64_t memoryLength = uint64_t(ByteLength32(buffer));
+
+  // Do not assume the buffer's length fits within the wasm heap limit, so do
+  // not call ByteLength32().
+  size_t memoryLength = buffer->byteLength().get();
 
   if (!IsValidAsmJSHeapLength(memoryLength)) {
-    UniqueChars msg(JS_smprintf(
-        "ArrayBuffer byteLength 0x%" PRIx64
-        " is not a valid heap length. The next "
-        "valid length is 0x%" PRIx64,
-        memoryLength, RoundUpToNextValidAsmJSHeapLength(memoryLength)));
+    UniqueChars msg(
+        JS_smprintf("ArrayBuffer byteLength 0x%" PRIx64
+                    " is not a valid heap length. The next "
+                    "valid length is 0x%" PRIx64,
+                    uint64_t(memoryLength),
+                    RoundUpToNextValidAsmJSHeapLength(memoryLength)));
     if (!msg) {
       return false;
     }
@@ -6754,7 +6758,8 @@ static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
                                 " is less than 0x%" PRIx64 " (the "
                                 "size implied "
                                 "by const heap accesses).",
-                                memoryLength, metadata.minMemoryLength));
+                                uint64_t(memoryLength),
+                                metadata.minMemoryLength));
     if (!msg) {
       return false;
     }
@@ -7259,8 +7264,13 @@ JSString* js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun) {
   return out.finishString();
 }
 
-bool js::IsValidAsmJSHeapLength(uint32_t length) {
+bool js::IsValidAsmJSHeapLength(size_t length) {
   if (length < MinHeapLength) {
+    return false;
+  }
+
+  // The heap length is limited by what wasm can handle.
+  if (length > MaxMemory32Bytes) {
     return false;
   }
 
