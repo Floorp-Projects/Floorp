@@ -15,7 +15,7 @@
 namespace webrtc {
 
 ScreenCapturerPipeWire::ScreenCapturerPipeWire()
-    : BaseCapturerPipeWire(BaseCapturerPipeWire::CaptureSourceType::Screen) {}
+    : BaseCapturerPipeWire(BaseCapturerPipeWire::CaptureSourceType::kScreen) {}
 ScreenCapturerPipeWire::~ScreenCapturerPipeWire() {}
 
 // static

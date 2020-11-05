@@ -22,17 +22,13 @@
 
 namespace webrtc {
 
-class PipeWireType {
- public:
-  spa_type_media_type media_type;
-  spa_type_media_subtype media_subtype;
-  spa_type_format_video format_video;
-  spa_type_video_format video_format;
-};
-
 class BaseCapturerPipeWire : public DesktopCapturer {
  public:
-  enum CaptureSourceType { Screen = 1, Window };
+  enum CaptureSourceType : uint32_t {
+    kScreen = 0b01,
+    kWindow = 0b10,
+    kAny = 0b11
+  };
 
   explicit BaseCapturerPipeWire(CaptureSourceType source_type);
   ~BaseCapturerPipeWire() override;
@@ -43,28 +39,32 @@ class BaseCapturerPipeWire : public DesktopCapturer {
   bool GetSourceList(SourceList* sources) override;
   bool SelectSource(SourceId id) override;
 
+  static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
+      const DesktopCaptureOptions& options);
+
+  static std::unique_ptr<DesktopCapturer> CreateRawWindowCapturer(
+      const DesktopCaptureOptions& options);
+
  private:
   // PipeWire types -->
+  pw_context* pw_context_ = nullptr;
   pw_core* pw_core_ = nullptr;
-  pw_type* pw_core_type_ = nullptr;
   pw_stream* pw_stream_ = nullptr;
-  pw_remote* pw_remote_ = nullptr;
-  pw_loop* pw_loop_ = nullptr;
   pw_thread_loop* pw_main_loop_ = nullptr;
-  PipeWireType* pw_type_ = nullptr;
 
+  spa_hook spa_core_listener_ = {};
   spa_hook spa_stream_listener_ = {};
-  spa_hook spa_remote_listener_ = {};
 
+  pw_core_events pw_core_events_ = {};
   pw_stream_events pw_stream_events_ = {};
-  pw_remote_events pw_remote_events_ = {};
 
-  spa_video_info_raw* spa_video_format_ = nullptr;
+  struct spa_video_info_raw spa_video_format_;
 
+  guint32 pw_stream_node_id_ = 0;
   gint32 pw_fd_ = -1;
 
   CaptureSourceType capture_source_type_ =
-      BaseCapturerPipeWire::CaptureSourceType::Screen;
+      BaseCapturerPipeWire::CaptureSourceType::kAny;
 
   // <-- end of PipeWire types
 
@@ -78,33 +78,36 @@ class BaseCapturerPipeWire : public DesktopCapturer {
   guint sources_request_signal_id_ = 0;
   guint start_request_signal_id_ = 0;
 
+  bool video_metadata_use_ = false;
+  DesktopSize video_size_;
   DesktopSize desktop_size_ = {};
   DesktopCaptureOptions options_ = {};
 
-  uint8_t* current_frame_ = nullptr;
+  std::unique_ptr<uint8_t[]> current_frame_;
   Callback* callback_ = nullptr;
 
   bool portal_init_failed_ = false;
 
   void InitPortal();
   void InitPipeWire();
-  void InitPipeWireTypes();
 
-  void CreateReceivingStream();
+  pw_stream* CreateReceivingStream();
   void HandleBuffer(pw_buffer* buffer);
 
   void ConvertRGBxToBGRx(uint8_t* frame, uint32_t size);
 
-  static void OnStateChanged(void* data,
-                             pw_remote_state old_state,
-                             pw_remote_state state,
-                             const char* error);
+  static void OnCoreError(void *data,
+                          uint32_t id,
+                          int seq,
+                          int res,
+                          const char *message);
+  static void OnStreamParamChanged(void *data,
+                                   uint32_t id,
+                                   const struct spa_pod *format);
   static void OnStreamStateChanged(void* data,
                                    pw_stream_state old_state,
                                    pw_stream_state state,
                                    const char* error_message);
-
-  static void OnStreamFormatChanged(void* data, const struct spa_pod* format);
   static void OnStreamProcess(void* data);
   static void OnNewBuffer(void* data, uint32_t id);
 
