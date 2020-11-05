@@ -1455,6 +1455,11 @@ void gfxDWriteFontList::InitSharedFontListForPlatform() {
     SharedFontList()->SetFamilyNames(families);
     GetPrefsAndStartLoader();
   }
+
+  if (!SharedFontList()->Initialized()) {
+    return;
+  }
+
   GetDirectWriteSubstitutes();
   GetFontSubstitutes();
 }
