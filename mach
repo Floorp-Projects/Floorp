@@ -21,7 +21,6 @@ py2commands="
     marionette-test
     jstests
     mozharness
-    prettier-format
     raptor
     raptor-test
     telemetry-tests-client
