@@ -60,6 +60,11 @@ add_task(async function() {
             "accenti%3D%E0%E8%EC%F2%F9&search%3D%25s",
             "POST data is correct"
           );
+          Assert.equal(
+            entry.parentGuid,
+            await PlacesUIUtils.defaultParentGuid,
+            "Should have created the keyword in the right folder."
+          );
 
           info("Check the charset has been saved");
           let pageInfo = await PlacesUtils.history.fetch(TEST_URL, {
