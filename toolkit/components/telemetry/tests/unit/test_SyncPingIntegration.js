@@ -2,6 +2,13 @@
    http://creativecommons.org/publicdomain/zero/1.0/
 */
 
+// Enable the collection (during test) for all products so even products
+// that don't collect the data will be able to run the test without failure.
+Services.prefs.setBoolPref(
+  "toolkit.telemetry.testing.overrideProductsCheck",
+  true
+);
+
 add_task(async function test_setup() {
   // Addon manager needs a profile directory
   do_get_profile();
