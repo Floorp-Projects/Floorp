@@ -3317,7 +3317,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 103;
+    const UI_VERSION = 104;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -3980,6 +3980,15 @@ BrowserGlue.prototype = {
 
       Services.prefs.clearUserPref(
         "browser.livebookmarks.migrationAttemptsLeft"
+      );
+    }
+
+    // For existing profiles, continue putting bookmarks in the
+    // "other bookmarks" folder.
+    if (currentUIVersion < 104) {
+      Services.prefs.setCharPref(
+        "browser.bookmarks.defaultLocation",
+        "unfiled"
       );
     }
 
