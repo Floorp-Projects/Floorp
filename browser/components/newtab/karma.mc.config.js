@@ -68,6 +68,12 @@ module.exports = function(config) {
           functions: 100,
           branches: 66,
           overrides: {
+            "lib/AboutPreferences.jsm": {
+              statements: 98,
+              lines: 98,
+              functions: 100,
+              branches: 66,
+            },
             "lib/ActivityStreamStorage.jsm": {
               statements: 100,
               lines: 100,

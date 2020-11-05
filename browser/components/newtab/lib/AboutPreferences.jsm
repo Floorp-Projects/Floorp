@@ -28,16 +28,16 @@ const PREFS_BEFORE_SECTIONS = [
       feed: "feeds.topsites",
       titleString: "home-prefs-topsites-header",
       descString: "home-prefs-topsites-description",
-      nestedPrefs: Services.prefs.getBoolPref(
-        "browser.topsites.useRemoteSetting"
-      )
-        ? [
-            {
-              name: "showSponsoredTopSites",
-              titleString: "home-prefs-topsites-by-option-sponsored",
-            },
-          ]
-        : [],
+      get nestedPrefs() {
+        return Services.prefs.getBoolPref("browser.topsites.useRemoteSetting")
+          ? [
+              {
+                name: "showSponsoredTopSites",
+                titleString: "home-prefs-topsites-by-option-sponsored",
+              },
+            ]
+          : [];
+      },
     },
     icon: "topsites",
     maxRows: 4,
