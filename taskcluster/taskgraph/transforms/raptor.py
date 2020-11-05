@@ -48,7 +48,13 @@ raptor_description_schema = Schema(
             test_description_schema["run-on-projects"],
         ),
         Optional("webrender-run-on-projects"): optionally_keyed_by(
-            "app", test_description_schema["webrender-run-on-projects"]
+            "app",
+            "pageload",
+            "test-name",
+            "raptor-test",
+            "subtest",
+            "test-platform",
+            test_description_schema["webrender-run-on-projects"],
         ),
         Optional("variants"): optionally_keyed_by(
             "app", "subtest", test_description_schema["variants"]

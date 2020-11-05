@@ -128,7 +128,7 @@ browsertime-tp6m:
                     refbrow: 2
                     fennec: 2
                     default: 3
-    run-on-projects:
+    webrender-run-on-projects:
         by-raptor-test:
             amazon:
                 by-app:
@@ -181,6 +181,54 @@ browsertime-tp6m:
                             geckoview:
                                 by-test-platform: *android-warm-settings
                             default: []
+    run-on-projects:
+        by-app:
+            geckoview:
+                by-subtest:
+                    allrecipes:
+                        by-pageload:
+                            cold:
+                                by-test-platform: *android-cold-settings
+                            warm:
+                                by-test-platform: *android-warm-settings
+                    amazon-search:
+                        by-pageload:
+                            cold:
+                                by-test-platform: *android-cold-settings
+                            warm:
+                                by-test-platform: *android-warm-settings
+                    espn:
+                        by-pageload:
+                            cold:
+                                by-test-platform: *android-cold-settings
+                            warm:
+                                by-test-platform: *android-warm-settings
+                    facebook:
+                        by-pageload:
+                            cold:
+                                by-test-platform: *android-cold-settings
+                            warm:
+                                by-test-platform: *android-warm-settings
+                    google:
+                        by-pageload:
+                            cold:
+                                by-test-platform: *android-cold-settings
+                            warm:
+                                by-test-platform: *android-warm-settings
+                    microsoft-support:
+                        by-pageload:
+                            cold:
+                                by-test-platform: *android-cold-settings
+                            warm:
+                                by-test-platform: *android-warm-settings
+                    youtube-watch:
+                        by-pageload:
+                            cold:
+                                by-test-platform: *android-cold-settings
+                            warm:
+                                by-test-platform: *android-warm-settings
+                    default: []
+            default: []
     pageload: cold
     run-visual-metrics: true
     treeherder-symbol: Btime(tp6m)
@@ -206,7 +254,7 @@ browsertime-youtube-playback-mobile:
                 - [youtube-playback-widevine-hfr, ytp-widevine-hfr]
                 - [youtube-playback-widevine-vp9-sfr, ytp-widevine-vp9-sfr]
     apps: ["fenix", "geckoview", "refbrow"]
-    run-on-projects:
+    webrender-run-on-projects:
         by-app:
             geckoview:
                 by-test-platform:
@@ -288,7 +336,7 @@ browsertime-tp6m-live:
                 - youtube
                 - [youtube-watch, youtube-w]
     apps: ["fenix", "chrome-m", "geckoview"]
-    run-on-projects:
+    webrender-run-on-projects:
         by-app:
             geckoview:
                 by-test-platform:
@@ -326,7 +374,7 @@ browsertime-speedometer-mobile:
         by-app:
             fenix: 1
             default: 3
-    run-on-projects:
+    webrender-run-on-projects:
         by-app:
             geckoview:
                 by-test-platform:
@@ -344,7 +392,7 @@ browsertime-unity-webgl-mobile:
     description: "Browsertime Unity WebGL on Android"
     apps: ["geckoview", "refbrow", "fenix", "chrome-m"]
     treeherder-symbol: Btime(ugl)
-    run-on-projects:
+    webrender-run-on-projects:
         by-app:
             geckoview:
                 by-test-platform:
@@ -368,7 +416,7 @@ browsertime-power:
         - idle
         - idle-bg
         - [speedometer, sp]
-    variants: []
+    variants: ["webrender"]
     run-on-projects: []
     treeherder-symbol: Btime-P(power)
     mozharness:
