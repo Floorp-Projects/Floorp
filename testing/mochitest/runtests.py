@@ -1296,7 +1296,14 @@ class MochitestDesktop(object):
         self.startWebServer(options)
         self.startWebSocketServer(options, debuggerInfo)
 
-        if options.subsuite in ["media"]:
+        # Only webrtc mochitests in the media suite need the websocketprocessbridge.
+        tests = self.getActiveTests(options)
+        is_webrtc_tag_present = False
+        for test in tests:
+            if "webrtc" in test.get("tags", ""):
+                is_webrtc_tag_present = True
+                break
+        if is_webrtc_tag_present and options.subsuite in ["media"]:
             self.startWebsocketProcessBridge(options)
 
         # start SSL pipe
@@ -1624,6 +1631,8 @@ toolbar#nav-bar {
                 testob["expected"] = test["expected"]
             if "scheme" in test:
                 testob["scheme"] = test["scheme"]
+            if "tags" in test:
+                testob["tags"] = test["tags"]
             if options.failure_pattern_file:
                 pat_file = os.path.join(
                     os.path.dirname(test["manifest"]), options.failure_pattern_file
