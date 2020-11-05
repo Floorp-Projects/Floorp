@@ -1266,11 +1266,6 @@ var PlacesUIUtils = {
 
   placesContextShowing(event) {
     let menupopup = event.target;
-    if (menupopup.id != "placesContext") {
-      // Ignore any popupshowing events from submenus
-      return true;
-    }
-
     let isManaged = !!menupopup.triggerNode.closest("#managed-bookmarks");
     if (isManaged) {
       this.managedPlacesContextShowing(event);
