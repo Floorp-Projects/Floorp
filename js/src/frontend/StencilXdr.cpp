@@ -334,10 +334,10 @@ static UniquePtr<BaseParserScopeData> NewEmptyScopeData(JSContext* cx,
 }
 
 template <XDRMode mode>
-static XDRResult XDRParserFunctionScopeData(
-    XDRState<mode>* xdr, UniquePtr<BaseParserScopeData>& ownedData) {
+/* static */ XDRResult StencilXDR::FunctionScopeData(XDRState<mode>* xdr,
+                                                     ScopeStencil& stencil) {
   ParserFunctionScopeData* data =
-      static_cast<ParserFunctionScopeData*>(ownedData.get());
+      static_cast<ParserFunctionScopeData*>(stencil.data_.get());
 
   uint32_t nextFrameSlot = 0;
   uint8_t hasParameterExprs = 0;
@@ -361,8 +361,7 @@ static XDRResult XDRParserFunctionScopeData(
 
   // Reconstruct the scope-data object for decode.
   if (mode == XDR_DECODE) {
-    MOZ_ASSERT(!ownedData);
-    ownedData =
+    stencil.data_ =
         NewEmptyScopeData<FunctionScope>(xdr->cx(), length, [&](auto data) {
           data->nextFrameSlot = nextFrameSlot;
           MOZ_ASSERT(hasParameterExprs <= 1);
@@ -371,10 +370,10 @@ static XDRResult XDRParserFunctionScopeData(
           data->varStart = varStart;
           data->length = length;
         });
-    if (!ownedData) {
+    if (!stencil.data_) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
-    data = static_cast<ParserFunctionScopeData*>(ownedData.get());
+    data = static_cast<ParserFunctionScopeData*>(stencil.data_.get());
   }
 
   // Decode each name in TrailingNames.
@@ -384,9 +383,10 @@ static XDRResult XDRParserFunctionScopeData(
 }
 
 template <XDRMode mode>
-static XDRResult XDRParserVarScopeData(
-    XDRState<mode>* xdr, UniquePtr<BaseParserScopeData>& ownedData) {
-  ParserVarScopeData* data = static_cast<ParserVarScopeData*>(ownedData.get());
+/* static */ XDRResult StencilXDR::VarScopeData(XDRState<mode>* xdr,
+                                                ScopeStencil& stencil) {
+  ParserVarScopeData* data =
+      static_cast<ParserVarScopeData*>(stencil.data_.get());
 
   uint32_t nextFrameSlot = 0;
   uint32_t length = 0;
@@ -401,15 +401,15 @@ static XDRResult XDRParserVarScopeData(
 
   // Reconstruct the scope-data object for decode.
   if (mode == XDR_DECODE) {
-    MOZ_ASSERT(!ownedData);
-    ownedData = NewEmptyScopeData<VarScope>(xdr->cx(), length, [&](auto data) {
-      data->nextFrameSlot = nextFrameSlot;
-      data->length = length;
-    });
-    if (!ownedData) {
+    stencil.data_ =
+        NewEmptyScopeData<VarScope>(xdr->cx(), length, [&](auto data) {
+          data->nextFrameSlot = nextFrameSlot;
+          data->length = length;
+        });
+    if (!stencil.data_) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
-    data = static_cast<ParserVarScopeData*>(ownedData.get());
+    data = static_cast<ParserVarScopeData*>(stencil.data_.get());
   }
 
   // Decode each name in TrailingNames.
@@ -419,10 +419,10 @@ static XDRResult XDRParserVarScopeData(
 }
 
 template <XDRMode mode>
-static XDRResult XDRParserLexicalScopeData(
-    XDRState<mode>* xdr, UniquePtr<BaseParserScopeData>& ownedData) {
+/* static */ XDRResult StencilXDR::LexicalScopeData(XDRState<mode>* xdr,
+                                                    ScopeStencil& stencil) {
   ParserLexicalScopeData* data =
-      static_cast<ParserLexicalScopeData*>(ownedData.get());
+      static_cast<ParserLexicalScopeData*>(stencil.data_.get());
 
   uint32_t nextFrameSlot = 0;
   uint32_t constStart = 0;
@@ -440,17 +440,16 @@ static XDRResult XDRParserLexicalScopeData(
 
   // Reconstruct the scope-data object for decode.
   if (mode == XDR_DECODE) {
-    MOZ_ASSERT(!ownedData);
-    ownedData =
+    stencil.data_ =
         NewEmptyScopeData<LexicalScope>(xdr->cx(), length, [&](auto data) {
           data->nextFrameSlot = nextFrameSlot;
           data->constStart = constStart;
           data->length = length;
         });
-    if (!ownedData) {
+    if (!stencil.data_) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
-    data = static_cast<ParserLexicalScopeData*>(ownedData.get());
+    data = static_cast<ParserLexicalScopeData*>(stencil.data_.get());
   }
 
   // Decode each name in TrailingNames.
@@ -460,10 +459,10 @@ static XDRResult XDRParserLexicalScopeData(
 }
 
 template <XDRMode mode>
-static XDRResult XDRParserGlobalScopeData(
-    XDRState<mode>* xdr, UniquePtr<BaseParserScopeData>& ownedData) {
+/* static */ XDRResult StencilXDR::GlobalScopeData(XDRState<mode>* xdr,
+                                                   ScopeStencil& stencil) {
   ParserGlobalScopeData* data =
-      static_cast<ParserGlobalScopeData*>(ownedData.get());
+      static_cast<ParserGlobalScopeData*>(stencil.data_.get());
 
   uint32_t letStart = 0;
   uint32_t constStart = 0;
@@ -481,17 +480,17 @@ static XDRResult XDRParserGlobalScopeData(
 
   // Reconstruct the scope-data object for decode.
   if (mode == XDR_DECODE) {
-    MOZ_ASSERT(!ownedData);
-    ownedData =
+    MOZ_ASSERT(!stencil.data_);
+    stencil.data_ =
         NewEmptyScopeData<GlobalScope>(xdr->cx(), length, [&](auto data) {
           data->letStart = letStart;
           data->constStart = constStart;
           data->length = length;
         });
-    if (!ownedData) {
+    if (!stencil.data_) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
-    data = static_cast<ParserGlobalScopeData*>(ownedData.get());
+    data = static_cast<ParserGlobalScopeData*>(stencil.data_.get());
   }
 
   // Decode each name in TrailingNames.
@@ -501,10 +500,10 @@ static XDRResult XDRParserGlobalScopeData(
 }
 
 template <XDRMode mode>
-static XDRResult XDRParserModuleScopeData(
-    XDRState<mode>* xdr, UniquePtr<BaseParserScopeData>& ownedData) {
+/* static */ XDRResult StencilXDR::ModuleScopeData(XDRState<mode>* xdr,
+                                                   ScopeStencil& stencil) {
   ParserModuleScopeData* data =
-      static_cast<ParserModuleScopeData*>(ownedData.get());
+      static_cast<ParserModuleScopeData*>(stencil.data_.get());
 
   uint32_t nextFrameSlot = 0;
   uint32_t varStart = 0;
@@ -528,8 +527,7 @@ static XDRResult XDRParserModuleScopeData(
 
   // Reconstruct the scope-data object for decode.
   if (mode == XDR_DECODE) {
-    MOZ_ASSERT(!ownedData);
-    ownedData =
+    stencil.data_ =
         NewEmptyScopeData<ModuleScope>(xdr->cx(), length, [&](auto data) {
           data->nextFrameSlot = nextFrameSlot;
           data->varStart = varStart;
@@ -537,10 +535,10 @@ static XDRResult XDRParserModuleScopeData(
           data->constStart = constStart;
           data->length = length;
         });
-    if (!ownedData) {
+    if (!stencil.data_) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
-    data = static_cast<ParserModuleScopeData*>(ownedData.get());
+    data = static_cast<ParserModuleScopeData*>(stencil.data_.get());
   }
 
   // Decode each name in TrailingNames.
@@ -550,10 +548,10 @@ static XDRResult XDRParserModuleScopeData(
 }
 
 template <XDRMode mode>
-static XDRResult XDRParserEvalScopeData(
-    XDRState<mode>* xdr, UniquePtr<BaseParserScopeData>& ownedData) {
+/* static */ XDRResult StencilXDR::EvalScopeData(XDRState<mode>* xdr,
+                                                 ScopeStencil& stencil) {
   ParserEvalScopeData* data =
-      static_cast<ParserEvalScopeData*>(ownedData.get());
+      static_cast<ParserEvalScopeData*>(stencil.data_.get());
 
   uint32_t nextFrameSlot = 0;
   uint32_t length = 0;
@@ -568,15 +566,16 @@ static XDRResult XDRParserEvalScopeData(
 
   // Reconstruct the scope-data object for decode.
   if (mode == XDR_DECODE) {
-    MOZ_ASSERT(!ownedData);
-    ownedData = NewEmptyScopeData<EvalScope>(xdr->cx(), length, [&](auto data) {
-      data->nextFrameSlot = nextFrameSlot;
-      data->length = length;
-    });
-    if (!ownedData) {
+    MOZ_ASSERT(!stencil.data_);
+    stencil.data_ =
+        NewEmptyScopeData<EvalScope>(xdr->cx(), length, [&](auto data) {
+          data->nextFrameSlot = nextFrameSlot;
+          data->length = length;
+        });
+    if (!stencil.data_) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
-    data = static_cast<ParserEvalScopeData*>(ownedData.get());
+    data = static_cast<ParserEvalScopeData*>(stencil.data_.get());
   }
 
   // Decode each name in TrailingNames.
@@ -776,13 +775,13 @@ template <XDRMode mode>
   switch (stencil.kind_) {
     // FunctionScope
     case ScopeKind::Function: {
-      MOZ_TRY(XDRParserFunctionScopeData(xdr, stencil.data_));
+      MOZ_TRY(StencilXDR::FunctionScopeData(xdr, stencil));
       break;
     }
 
     // VarScope
     case ScopeKind::FunctionBodyVar: {
-      MOZ_TRY(XDRParserVarScopeData(xdr, stencil.data_));
+      MOZ_TRY(StencilXDR::VarScopeData(xdr, stencil));
       break;
     }
 
@@ -794,7 +793,7 @@ template <XDRMode mode>
     case ScopeKind::StrictNamedLambda:
     case ScopeKind::FunctionLexical:
     case ScopeKind::ClassBody: {
-      MOZ_TRY(XDRParserLexicalScopeData(xdr, stencil.data_));
+      MOZ_TRY(StencilXDR::LexicalScopeData(xdr, stencil));
       break;
     }
 
@@ -807,20 +806,20 @@ template <XDRMode mode>
     // EvalScope
     case ScopeKind::Eval:
     case ScopeKind::StrictEval: {
-      MOZ_TRY(XDRParserEvalScopeData(xdr, stencil.data_));
+      MOZ_TRY(StencilXDR::EvalScopeData(xdr, stencil));
       break;
     }
 
     // GlobalScope
     case ScopeKind::Global:
     case ScopeKind::NonSyntactic: {
-      MOZ_TRY(XDRParserGlobalScopeData(xdr, stencil.data_));
+      MOZ_TRY(StencilXDR::GlobalScopeData(xdr, stencil));
       break;
     }
 
     // ModuleScope
     case ScopeKind::Module: {
-      MOZ_TRY(XDRParserModuleScopeData(xdr, stencil.data_));
+      MOZ_TRY(StencilXDR::ModuleScopeData(xdr, stencil));
       break;
     }
 
