@@ -5,4 +5,4 @@
 /* Localized versions of Info.plist keys */
 
 CFBundleName = "Software Update";
-CFBundleDisplayName = "%APP_NAME% Software Update";
+CFBundleDisplayName = "@APP_NAME@ Software Update";
