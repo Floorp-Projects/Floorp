@@ -140,7 +140,7 @@ element.Store = class {
     const isDOMElement = element.isDOMElement(el);
     const isDOMWindow = element.isDOMWindow(el);
     const isXULElement = element.isXULElement(el);
-    const context = isXULElement ? "chrome" : "content";
+    const context = element.isInXULDocument(el) ? "chrome" : "content";
 
     if (!(isDOMElement || isDOMWindow || isXULElement)) {
       throw new TypeError(
@@ -1417,7 +1417,7 @@ element.isDOMElement = function(node) {
 };
 
 /**
- * Ascertains whether <var>el</var> is a XUL element.
+ * Ascertains whether <var>node</var> is a XUL element.
  *
  * @param {*} node
  *     Element to check
@@ -1433,6 +1433,25 @@ element.isXULElement = function(node) {
     "nodeType" in node &&
     node.nodeType === node.ELEMENT_NODE &&
     node.namespaceURI === XUL_NS
+  );
+};
+
+/**
+ * Ascertains whether <var>node</var> is in a XUL document.
+ *
+ * @param {*} node
+ *     Element to check
+ *
+ * @return {boolean}
+ *     True if <var>node</var> is in a XUL document,
+ *     false otherwise.
+ */
+element.isInXULDocument = function(node) {
+  return (
+    typeof node == "object" &&
+    node !== null &&
+    "ownerDocument" in node &&
+    node.ownerDocument.documentElement.namespaceURI === XUL_NS
   );
 };
 
@@ -1570,15 +1589,17 @@ class WebElement {
   static from(node) {
     const uuid = WebElement.generateUUID();
 
-    if (element.isDOMElement(node)) {
+    if (element.isElement(node)) {
+      if (element.isInXULDocument(node)) {
+        // If the node is in a XUL document, we are in "chrome" context.
+        return new ChromeWebElement(uuid);
+      }
       return new ContentWebElement(uuid);
     } else if (element.isDOMWindow(node)) {
       if (node.parent === node) {
         return new ContentWebWindow(uuid);
       }
       return new ContentWebFrame(uuid);
-    } else if (element.isXULElement(node)) {
-      return new ChromeWebElement(uuid);
     }
 
     throw new error.InvalidArgumentError(
