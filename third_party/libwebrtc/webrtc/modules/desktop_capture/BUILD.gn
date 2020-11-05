@@ -157,12 +157,7 @@ if (rtc_include_tests) {
 
 if (is_linux) {
   if (rtc_use_pipewire) {
-    pkg_config("pipewire") {
-      packages = [ "libpipewire-0.2" ]
-
-      defines = [ "WEBRTC_USE_PIPEWIRE" ]
-    }
-
+    defines = [ "WEBRTC_USE_PIPEWIRE" ]
     pkg_config("gio") {
       packages = [
         "gio-2.0",
@@ -331,6 +326,7 @@ rtc_static_library("desktop_capture_generic") {
   }
 
   if (use_x11 || rtc_use_pipewire) {
+    include_dirs = [ "/third_party/libwebrtc/third_party/pipewire" ]
     sources += [
       "mouse_cursor_monitor_linux.cc",
       "screen_capturer_linux.cc",
@@ -372,6 +368,7 @@ rtc_static_library("desktop_capture_generic") {
   }
 
   if (rtc_use_pipewire) {
+    include_dirs = [ "/third_party/libwebrtc/third_party/pipewire" ]
     sources += [
       "linux/base_capturer_pipewire.cc",
       "linux/base_capturer_pipewire.h",
