@@ -18,7 +18,6 @@
 #include "mozilla/Vector.h"
 #include "mozilla/WindowsDpiAwareness.h"
 #include "mozilla/WindowsVersion.h"
-#include "mozilla/WinHeaderOnlyUtils.h"
 
 namespace mozilla {
 
@@ -128,23 +127,6 @@ static double sCSSToDevPixelScaling;
 
 static const int kAnimationCSSPixelsPerFrame = 21;
 static const int kAnimationCSSExtraWindowSize = 300;
-
-static const wchar_t* sEnabledRegSuffix = L"|Enabled";
-static const wchar_t* sScreenXRegSuffix = L"|ScreenX";
-static const wchar_t* sScreenYRegSuffix = L"|ScreenY";
-static const wchar_t* sWidthRegSuffix = L"|Width";
-static const wchar_t* sHeightRegSuffix = L"|Height";
-static const wchar_t* sMaximizedRegSuffix = L"|Maximized";
-static const wchar_t* sUrlbarHorizontalOffsetCSSRegSuffix =
-    L"|UrlbarHorizontalOffsetCSS";
-static const wchar_t* sUrlbarWidthCSSRegSuffix = L"|UrlbarWidthCSS";
-static const wchar_t* sCssToDevPixelScalingRegSuffix = L"|CssToDevPixelScaling";
-
-std::wstring GetRegValueName(const wchar_t* prefix, const wchar_t* suffix) {
-  std::wstring result(prefix);
-  result.append(suffix);
-  return result;
-}
 
 // We could use nsAutoRegKey, but including nsWindowsHelpers.h causes build
 // failures in random places because we're in mozglue. Overall it should be
@@ -749,13 +731,11 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance) {
   }
   AutoCloseRegKey closeKey(regKey);
 
-  UniquePtr<wchar_t[]> binPath = GetFullModulePath(nullptr);
   DWORD dataLen = sizeof(uint32_t);
   uint32_t enabled;
-  LSTATUS result = ::RegGetValueW(
-      regKey, nullptr,
-      GetRegValueName(binPath.get(), sEnabledRegSuffix).c_str(),
-      RRF_RT_REG_DWORD, nullptr, reinterpret_cast<PBYTE>(&enabled), &dataLen);
+  LSTATUS result =
+      ::RegGetValueW(regKey, nullptr, L"enabled", RRF_RT_REG_DWORD, nullptr,
+                     reinterpret_cast<PBYTE>(&enabled), &dataLen);
   if (result != ERROR_SUCCESS || enabled == 0) {
     return;
   }
@@ -788,50 +768,41 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance) {
   }
 
   uint32_t screenX;
-  result = ::RegGetValueW(
-      regKey, nullptr,
-      GetRegValueName(binPath.get(), sScreenXRegSuffix).c_str(),
-      RRF_RT_REG_DWORD, nullptr, reinterpret_cast<PBYTE>(&screenX), &dataLen);
+  result = ::RegGetValueW(regKey, nullptr, L"screenX", RRF_RT_REG_DWORD,
+                          nullptr, reinterpret_cast<PBYTE>(&screenX), &dataLen);
   if (result != ERROR_SUCCESS) {
     printf_stderr("Error reading screenX %lu\n", GetLastError());
     return;
   }
 
   uint32_t screenY;
-  result = ::RegGetValueW(
-      regKey, nullptr,
-      GetRegValueName(binPath.get(), sScreenYRegSuffix).c_str(),
-      RRF_RT_REG_DWORD, nullptr, reinterpret_cast<PBYTE>(&screenY), &dataLen);
+  result = ::RegGetValueW(regKey, nullptr, L"screenY", RRF_RT_REG_DWORD,
+                          nullptr, reinterpret_cast<PBYTE>(&screenY), &dataLen);
   if (result != ERROR_SUCCESS) {
     printf_stderr("Error reading screenY %lu\n", GetLastError());
     return;
   }
 
   uint32_t windowWidth;
-  result = ::RegGetValueW(
-      regKey, nullptr, GetRegValueName(binPath.get(), sWidthRegSuffix).c_str(),
-      RRF_RT_REG_DWORD, nullptr, reinterpret_cast<PBYTE>(&windowWidth),
-      &dataLen);
+  result = ::RegGetValueW(regKey, nullptr, L"width", RRF_RT_REG_DWORD, nullptr,
+                          reinterpret_cast<PBYTE>(&windowWidth), &dataLen);
   if (result != ERROR_SUCCESS) {
     printf_stderr("Error reading width %lu\n", GetLastError());
     return;
   }
 
   uint32_t windowHeight;
-  result = ::RegGetValueW(
-      regKey, nullptr, GetRegValueName(binPath.get(), sHeightRegSuffix).c_str(),
-      RRF_RT_REG_DWORD, nullptr, reinterpret_cast<PBYTE>(&windowHeight),
-      &dataLen);
+  result = ::RegGetValueW(regKey, nullptr, L"height", RRF_RT_REG_DWORD, nullptr,
+                          reinterpret_cast<PBYTE>(&windowHeight), &dataLen);
   if (result != ERROR_SUCCESS) {
     printf_stderr("Error reading height %lu\n", GetLastError());
     return;
   }
 
   uint32_t maximized;
-  result = ::RegGetValueW(
-      regKey, nullptr,
-      GetRegValueName(binPath.get(), sMaximizedRegSuffix).c_str(),
-      RRF_RT_REG_DWORD, nullptr, reinterpret_cast<PBYTE>(&maximized), &dataLen);
+  result =
+      ::RegGetValueW(regKey, nullptr, L"maximized", RRF_RT_REG_DWORD, nullptr,
+                     reinterpret_cast<PBYTE>(&maximized), &dataLen);
   if (result != ERROR_SUCCESS) {
     printf_stderr("Error reading maximized %lu\n", GetLastError());
     return;
@@ -841,10 +812,7 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance) {
   dataLen = sizeof(double);
   double urlbarHorizontalOffsetCSS;
   result = ::RegGetValueW(
-      regKey, nullptr,
-      GetRegValueName(binPath.get(), sUrlbarHorizontalOffsetCSSRegSuffix)
-          .c_str(),
-      RRF_RT_REG_BINARY, nullptr,
+      regKey, nullptr, L"urlbarHorizontalOffsetCSS", RRF_RT_REG_BINARY, nullptr,
       reinterpret_cast<PBYTE>(&urlbarHorizontalOffsetCSS), &dataLen);
   if (result != ERROR_SUCCESS || dataLen != sizeof(double)) {
     printf_stderr("Error reading urlbarHorizontalOffsetCSS %lu\n",
@@ -853,20 +821,16 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance) {
   }
 
   double urlbarWidthCSS;
-  result = ::RegGetValueW(
-      regKey, nullptr,
-      GetRegValueName(binPath.get(), sUrlbarWidthCSSRegSuffix).c_str(),
-      RRF_RT_REG_BINARY, nullptr, reinterpret_cast<PBYTE>(&urlbarWidthCSS),
-      &dataLen);
+  result = ::RegGetValueW(regKey, nullptr, L"urlbarWidthCSS", RRF_RT_REG_BINARY,
+                          nullptr, reinterpret_cast<PBYTE>(&urlbarWidthCSS),
+                          &dataLen);
   if (result != ERROR_SUCCESS || dataLen != sizeof(double)) {
     printf_stderr("Error reading urlbarWidthCSS %lu\n", GetLastError());
     return;
   }
 
   result = ::RegGetValueW(
-      regKey, nullptr,
-      GetRegValueName(binPath.get(), sCssToDevPixelScalingRegSuffix).c_str(),
-      RRF_RT_REG_BINARY, nullptr,
+      regKey, nullptr, L"cssToDevPixelScaling", RRF_RT_REG_BINARY, nullptr,
       reinterpret_cast<PBYTE>(&sCSSToDevPixelScaling), &dataLen);
   if (result != ERROR_SUCCESS || dataLen != sizeof(double)) {
     printf_stderr("Error reading cssToDevPixelScaling %lu\n", GetLastError());
@@ -976,76 +940,63 @@ void PersistPreXULSkeletonUIValues(int screenX, int screenY, int width,
   }
   AutoCloseRegKey closeKey(regKey);
 
-  UniquePtr<wchar_t[]> binPath = GetFullModulePath(nullptr);
-
   LSTATUS result;
-  result = ::RegSetValueExW(
-      regKey, GetRegValueName(binPath.get(), sScreenXRegSuffix).c_str(), 0,
-      REG_DWORD, reinterpret_cast<PBYTE>(&screenX), sizeof(screenX));
+  result = ::RegSetValueExW(regKey, L"screenX", 0, REG_DWORD,
+                            reinterpret_cast<PBYTE>(&screenX), sizeof(screenX));
   if (result != ERROR_SUCCESS) {
     printf_stderr("Failed persisting screenX to Windows registry\n");
     return;
   }
 
-  result = ::RegSetValueExW(
-      regKey, GetRegValueName(binPath.get(), sScreenYRegSuffix).c_str(), 0,
-      REG_DWORD, reinterpret_cast<PBYTE>(&screenY), sizeof(screenY));
+  result = ::RegSetValueExW(regKey, L"screenY", 0, REG_DWORD,
+                            reinterpret_cast<PBYTE>(&screenY), sizeof(screenY));
   if (result != ERROR_SUCCESS) {
     printf_stderr("Failed persisting screenY to Windows registry\n");
     return;
   }
 
-  result = ::RegSetValueExW(
-      regKey, GetRegValueName(binPath.get(), sWidthRegSuffix).c_str(), 0,
-      REG_DWORD, reinterpret_cast<PBYTE>(&width), sizeof(width));
+  result = ::RegSetValueExW(regKey, L"width", 0, REG_DWORD,
+                            reinterpret_cast<PBYTE>(&width), sizeof(width));
   if (result != ERROR_SUCCESS) {
     printf_stderr("Failed persisting width to Windows registry\n");
     return;
   }
 
-  result = ::RegSetValueExW(
-      regKey, GetRegValueName(binPath.get(), sHeightRegSuffix).c_str(), 0,
-      REG_DWORD, reinterpret_cast<PBYTE>(&height), sizeof(height));
+  result = ::RegSetValueExW(regKey, L"height", 0, REG_DWORD,
+                            reinterpret_cast<PBYTE>(&height), sizeof(height));
   if (result != ERROR_SUCCESS) {
     printf_stderr("Failed persisting height to Windows registry\n");
     return;
   }
 
   DWORD maximizedDword = maximized ? 1 : 0;
-  result = ::RegSetValueExW(
-      regKey, GetRegValueName(binPath.get(), sMaximizedRegSuffix).c_str(), 0,
-      REG_DWORD, reinterpret_cast<PBYTE>(&maximizedDword),
-      sizeof(maximizedDword));
+  result = ::RegSetValueExW(regKey, L"maximized", 0, REG_DWORD,
+                            reinterpret_cast<PBYTE>(&maximizedDword),
+                            sizeof(maximizedDword));
   if (result != ERROR_SUCCESS) {
     printf_stderr("Failed persisting maximized to Windows registry\n");
   }
 
-  result = ::RegSetValueExW(
-      regKey,
-      GetRegValueName(binPath.get(), sUrlbarHorizontalOffsetCSSRegSuffix)
-          .c_str(),
-      0, REG_BINARY, reinterpret_cast<PBYTE>(&urlbarHorizontalOffsetCSS),
-      sizeof(urlbarHorizontalOffsetCSS));
+  result = ::RegSetValueExW(regKey, L"urlbarHorizontalOffsetCSS", 0, REG_BINARY,
+                            reinterpret_cast<PBYTE>(&urlbarHorizontalOffsetCSS),
+                            sizeof(urlbarHorizontalOffsetCSS));
   if (result != ERROR_SUCCESS) {
     printf_stderr(
         "Failed persisting urlbarHorizontalOffsetCSS to Windows registry\n");
     return;
   }
 
-  result = ::RegSetValueExW(
-      regKey, GetRegValueName(binPath.get(), sUrlbarWidthCSSRegSuffix).c_str(),
-      0, REG_BINARY, reinterpret_cast<PBYTE>(&urlbarWidthCSS),
-      sizeof(urlbarWidthCSS));
+  result = ::RegSetValueExW(regKey, L"urlbarWidthCSS", 0, REG_BINARY,
+                            reinterpret_cast<PBYTE>(&urlbarWidthCSS),
+                            sizeof(urlbarWidthCSS));
   if (result != ERROR_SUCCESS) {
     printf_stderr("Failed persisting urlbarWidthCSS to Windows registry\n");
     return;
   }
 
-  result = ::RegSetValueExW(
-      regKey,
-      GetRegValueName(binPath.get(), sCssToDevPixelScalingRegSuffix).c_str(), 0,
-      REG_BINARY, reinterpret_cast<PBYTE>(&cssToDevPixelScaling),
-      sizeof(cssToDevPixelScaling));
+  result = ::RegSetValueExW(regKey, L"cssToDevPixelScaling", 0, REG_BINARY,
+                            reinterpret_cast<PBYTE>(&cssToDevPixelScaling),
+                            sizeof(cssToDevPixelScaling));
   if (result != ERROR_SUCCESS) {
     printf_stderr(
         "Failed persisting cssToDevPixelScaling to Windows registry\n");
@@ -1061,12 +1012,10 @@ MFBT_API void SetPreXULSkeletonUIEnabled(bool value) {
     return;
   }
   AutoCloseRegKey closeKey(regKey);
-
-  UniquePtr<wchar_t[]> binPath = GetFullModulePath(nullptr);
   DWORD enabled = value;
-  LSTATUS result = ::RegSetValueExW(
-      regKey, GetRegValueName(binPath.get(), sEnabledRegSuffix).c_str(), 0,
-      REG_DWORD, reinterpret_cast<PBYTE>(&enabled), sizeof(enabled));
+  LSTATUS result =
+      ::RegSetValueExW(regKey, L"enabled", 0, REG_DWORD,
+                       reinterpret_cast<PBYTE>(&enabled), sizeof(enabled));
   if (result != ERROR_SUCCESS) {
     printf_stderr("Failed persisting enabled to Windows registry\n");
     return;
