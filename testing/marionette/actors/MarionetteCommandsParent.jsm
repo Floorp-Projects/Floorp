@@ -5,6 +5,7 @@
 ("use strict");
 
 const EXPORTED_SYMBOLS = [
+  "clearElementIdCache",
   "getMarionetteCommandsActorProxy",
   "MarionetteCommandsParent",
 ];
@@ -79,10 +80,6 @@ class MarionetteCommandsParent extends JSWindowActorParent {
     } else {
       return evaluate.fromJSON(result.data, elementIdCache);
     }
-  }
-
-  cleanUp() {
-    elementIdCache.clear();
   }
 
   // Proxying methods for WebDriver commands
@@ -284,6 +281,13 @@ class MarionetteCommandsParent extends JSWindowActorParent {
         throw new TypeError(`Invalid capture format: ${format}`);
     }
   }
+}
+
+/**
+ * Clear all the entries from the element id cache.
+ */
+function clearElementIdCache() {
+  elementIdCache.clear();
 }
 
 /**

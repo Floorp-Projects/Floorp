@@ -24,6 +24,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Capabilities: "chrome://marionette/content/capabilities.js",
   capture: "chrome://marionette/content/capture.js",
   ChromeWebElement: "chrome://marionette/content/element.js",
+  clearElementIdCache:
+    "chrome://marionette/content/actors/MarionetteFrameParent.jsm",
   Context: "chrome://marionette/content/browser.js",
   cookie: "chrome://marionette/content/cookie.js",
   DebounceCallback: "chrome://marionette/content/sync.js",
@@ -3014,16 +3016,7 @@ GeckoDriver.prototype.deleteSession = function() {
   }
 
   if (MarionettePrefs.useActors) {
-    if (this.getBrowsingContext()) {
-      try {
-        // reset any global state used by parent actor
-        this.getActor().cleanUp();
-      } catch (e) {
-        if (e.result != Cr.NS_ERROR_DOM_NOT_FOUND_ERR) {
-          throw e;
-        }
-      }
-    }
+    clearElementIdCache();
 
     ChromeUtils.unregisterWindowActor("MarionetteCommands");
   }
