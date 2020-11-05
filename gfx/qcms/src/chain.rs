@@ -54,9 +54,9 @@ pub struct qcms_modular_transform {
     pub output_clut_table_g: *mut f32,
     pub output_clut_table_b: *mut f32,
     pub output_clut_table_length: u16,
-    pub output_gamma_lut_r: *mut u16,
-    pub output_gamma_lut_g: *mut u16,
-    pub output_gamma_lut_b: *mut u16,
+    pub output_gamma_lut_r: Option<Vec<u16>>,
+    pub output_gamma_lut_g: Option<Vec<u16>>,
+    pub output_gamma_lut_b: Option<Vec<u16>>,
     pub output_gamma_lut_r_length: usize,
     pub output_gamma_lut_g_length: usize,
     pub output_gamma_lut_b_length: usize,
@@ -584,24 +584,15 @@ unsafe extern "C" fn qcms_transform_module_gamma_lut(
         let mut in_b: f32 = *fresh32;
         out_r = lut_interp_linear(
             in_r as f64,
-            std::slice::from_raw_parts(
-                (*transform).output_gamma_lut_r,
-                (*transform).output_gamma_lut_r_length,
-            ),
+            &(*transform).output_gamma_lut_r.as_ref().unwrap(),
         );
         out_g = lut_interp_linear(
             in_g as f64,
-            std::slice::from_raw_parts(
-                (*transform).output_gamma_lut_g,
-                (*transform).output_gamma_lut_g_length,
-            ),
+            &(*transform).output_gamma_lut_g.as_ref().unwrap(),
         );
         out_b = lut_interp_linear(
             in_b as f64,
-            std::slice::from_raw_parts(
-                (*transform).output_gamma_lut_b,
-                (*transform).output_gamma_lut_b_length,
-            ),
+            &(*transform).output_gamma_lut_b.as_ref().unwrap(),
         );
         let fresh33 = dest;
         dest = dest.offset(1);
@@ -765,14 +756,14 @@ unsafe extern "C" fn qcms_modular_transform_release(mut transform: *mut qcms_mod
                 free((*transform).output_clut_table_b as *mut libc::c_void);
             }
         }
-        if !(*transform).output_gamma_lut_r.is_null() {
-            free((*transform).output_gamma_lut_r as *mut libc::c_void);
+        if !(*transform).output_gamma_lut_r.is_none() {
+            (*transform).output_gamma_lut_r = None;
         }
-        if !(*transform).output_gamma_lut_g.is_null() {
-            free((*transform).output_gamma_lut_g as *mut libc::c_void);
+        if !(*transform).output_gamma_lut_g.is_none() {
+            (*transform).output_gamma_lut_g = None;
         }
-        if !(*transform).output_gamma_lut_b.is_null() {
-            free((*transform).output_gamma_lut_b as *mut libc::c_void);
+        if !(*transform).output_gamma_lut_b.is_none() {
+            (*transform).output_gamma_lut_b = None;
         }
         free(transform as *mut libc::c_void);
         transform = next_transform
@@ -1266,21 +1257,12 @@ unsafe extern "C" fn qcms_modular_transform_create_output(
                     current_block = 15713701561912628542;
                 } else {
                     append_transform(transform, &mut next_transform);
-                    build_output_lut(
-                        (*out).redTRC.as_deref().unwrap(),
-                        &mut (*transform).output_gamma_lut_r,
-                        &mut (*transform).output_gamma_lut_r_length,
-                    );
-                    build_output_lut(
-                        (*out).greenTRC.as_deref().unwrap(),
-                        &mut (*transform).output_gamma_lut_g,
-                        &mut (*transform).output_gamma_lut_g_length,
-                    );
-                    build_output_lut(
-                        (*out).blueTRC.as_deref().unwrap(),
-                        &mut (*transform).output_gamma_lut_b,
-                        &mut (*transform).output_gamma_lut_b_length,
-                    );
+                    (*transform).output_gamma_lut_r =
+                        Some(build_output_lut((*out).redTRC.as_deref().unwrap()));
+                    (*transform).output_gamma_lut_g =
+                        Some(build_output_lut((*out).greenTRC.as_deref().unwrap()));
+                    (*transform).output_gamma_lut_b =
+                        Some(build_output_lut((*out).blueTRC.as_deref().unwrap()));
                     (*transform).transform_module_fn = Some(
                         qcms_transform_module_gamma_lut
                             as unsafe extern "C" fn(
@@ -1290,9 +1272,9 @@ unsafe extern "C" fn qcms_modular_transform_create_output(
                                 _: usize,
                             ) -> (),
                     );
-                    if (*transform).output_gamma_lut_r.is_null()
-                        || (*transform).output_gamma_lut_g.is_null()
-                        || (*transform).output_gamma_lut_b.is_null()
+                    if (*transform).output_gamma_lut_r.is_none()
+                        || (*transform).output_gamma_lut_g.is_none()
+                        || (*transform).output_gamma_lut_b.is_none()
                     {
                         current_block = 15713701561912628542;
                     } else {
