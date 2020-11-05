@@ -20,7 +20,10 @@ permalink: /changelog/
   * 🚒 Bug fixed [issue #9073](https://github.com/mozilla-mobile/android-components/issues/9073) - Fix crash downloading a file with multiple dots on it, for more details see the [Fenix issue](https://github.com/mozilla-mobile/fenix/issues/16443).
 
 * **feature-app-links**
-    * Added handling of PackageItemInfo.packageName NullPointerException on some Xiaomi and TCL devices
+  * Added handling of PackageItemInfo.packageName NullPointerException on some Xiaomi and TCL devices
+
+* **service-glean**
+  * 🆙  Updated Glean to version 33.1.2 ([changelog](https://github.com/mozilla/glean/releases/tag/v33.1.2))
 
 * **feature-tab-collections**:
     * [createCollection] now returns the id of the newly created collection
