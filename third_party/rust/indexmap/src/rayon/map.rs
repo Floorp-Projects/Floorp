@@ -6,23 +6,23 @@
 //! Requires crate feature `"rayon"`
 
 use super::collect;
-use super::rayon::prelude::*;
-use super::rayon::iter::plumbing::{Consumer, UnindexedConsumer, ProducerCallback};
+use rayon::iter::plumbing::{Consumer, ProducerCallback, UnindexedConsumer};
+use rayon::prelude::*;
 
-use std::cmp::Ordering;
-use std::fmt;
-use std::hash::Hash;
-use std::hash::BuildHasher;
+use crate::vec::Vec;
+use core::cmp::Ordering;
+use core::fmt;
+use core::hash::{BuildHasher, Hash};
 
-use Bucket;
-use Entries;
-use IndexMap;
+use crate::Bucket;
+use crate::Entries;
+use crate::IndexMap;
 
 /// Requires crate feature `"rayon"`.
 impl<K, V, S> IntoParallelIterator for IndexMap<K, V, S>
-    where K: Hash + Eq + Send,
-          V: Send,
-          S: BuildHasher,
+where
+    K: Send,
+    V: Send,
 {
     type Item = (K, V);
     type Iter = IntoParIter<K, V>;
@@ -46,7 +46,7 @@ pub struct IntoParIter<K, V> {
 }
 
 impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for IntoParIter<K, V> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let iter = self.entries.iter().map(Bucket::refs);
         f.debug_list().entries(iter).finish()
     }
@@ -62,12 +62,11 @@ impl<K: Send, V: Send> IndexedParallelIterator for IntoParIter<K, V> {
     indexed_parallel_iterator_methods!(Bucket::key_value);
 }
 
-
 /// Requires crate feature `"rayon"`.
 impl<'a, K, V, S> IntoParallelIterator for &'a IndexMap<K, V, S>
-    where K: Hash + Eq + Sync,
-          V: Sync,
-          S: BuildHasher,
+where
+    K: Sync,
+    V: Sync,
 {
     type Item = (&'a K, &'a V);
     type Iter = ParIter<'a, K, V>;
@@ -86,18 +85,18 @@ impl<'a, K, V, S> IntoParallelIterator for &'a IndexMap<K, V, S>
 ///
 /// [`par_iter`]: ../struct.IndexMap.html#method.par_iter
 /// [`IndexMap`]: ../struct.IndexMap.html
-pub struct ParIter<'a, K: 'a, V: 'a> {
+pub struct ParIter<'a, K, V> {
     entries: &'a [Bucket<K, V>],
 }
 
-impl<'a, K, V> Clone for ParIter<'a, K, V> {
-    fn clone(&self) -> ParIter<'a, K, V> {
+impl<K, V> Clone for ParIter<'_, K, V> {
+    fn clone(&self) -> Self {
         ParIter { ..*self }
     }
 }
 
-impl<'a, K: fmt::Debug, V: fmt::Debug> fmt::Debug for ParIter<'a, K, V> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for ParIter<'_, K, V> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let iter = self.entries.iter().map(Bucket::refs);
         f.debug_list().entries(iter).finish()
     }
@@ -109,16 +108,15 @@ impl<'a, K: Sync, V: Sync> ParallelIterator for ParIter<'a, K, V> {
     parallel_iterator_methods!(Bucket::refs);
 }
 
-impl<'a, K: Sync, V: Sync> IndexedParallelIterator for ParIter<'a, K, V> {
+impl<K: Sync, V: Sync> IndexedParallelIterator for ParIter<'_, K, V> {
     indexed_parallel_iterator_methods!(Bucket::refs);
 }
 
-
 /// Requires crate feature `"rayon"`.
 impl<'a, K, V, S> IntoParallelIterator for &'a mut IndexMap<K, V, S>
-    where K: Hash + Eq + Sync + Send,
-          V: Send,
-          S: BuildHasher,
+where
+    K: Sync + Send,
+    V: Send,
 {
     type Item = (&'a K, &'a mut V);
     type Iter = ParIterMut<'a, K, V>;
@@ -137,7 +135,7 @@ impl<'a, K, V, S> IntoParallelIterator for &'a mut IndexMap<K, V, S>
 ///
 /// [`par_iter_mut`]: ../struct.IndexMap.html#method.par_iter_mut
 /// [`IndexMap`]: ../struct.IndexMap.html
-pub struct ParIterMut<'a, K: 'a, V: 'a> {
+pub struct ParIterMut<'a, K, V> {
     entries: &'a mut [Bucket<K, V>],
 }
 
@@ -147,22 +145,25 @@ impl<'a, K: Sync + Send, V: Send> ParallelIterator for ParIterMut<'a, K, V> {
     parallel_iterator_methods!(Bucket::ref_mut);
 }
 
-impl<'a, K: Sync + Send, V: Send> IndexedParallelIterator for ParIterMut<'a, K, V> {
+impl<K: Sync + Send, V: Send> IndexedParallelIterator for ParIterMut<'_, K, V> {
     indexed_parallel_iterator_methods!(Bucket::ref_mut);
 }
 
-
-/// Requires crate feature `"rayon"`.
+/// Parallel iterator methods and other parallel methods.
+///
+/// The following methods **require crate feature `"rayon"`**.
+///
+/// See also the `IntoParallelIterator` implementations.
 impl<K, V, S> IndexMap<K, V, S>
-    where K: Hash + Eq + Sync,
-          V: Sync,
-          S: BuildHasher,
+where
+    K: Sync,
+    V: Sync,
 {
     /// Return a parallel iterator over the keys of the map.
     ///
     /// While parallel iterators can process items in any order, their relative order
     /// in the map is still preserved for operations like `reduce` and `collect`.
-    pub fn par_keys(&self) -> ParKeys<K, V> {
+    pub fn par_keys(&self) -> ParKeys<'_, K, V> {
         ParKeys {
             entries: self.as_entries(),
         }
@@ -172,23 +173,31 @@ impl<K, V, S> IndexMap<K, V, S>
     ///
     /// While parallel iterators can process items in any order, their relative order
     /// in the map is still preserved for operations like `reduce` and `collect`.
-    pub fn par_values(&self) -> ParValues<K, V> {
+    pub fn par_values(&self) -> ParValues<'_, K, V> {
         ParValues {
             entries: self.as_entries(),
         }
     }
+}
 
+impl<K, V, S> IndexMap<K, V, S>
+where
+    K: Hash + Eq + Sync,
+    V: Sync,
+    S: BuildHasher,
+{
     /// Returns `true` if `self` contains all of the same key-value pairs as `other`,
     /// regardless of each map's indexed order, determined in parallel.
     pub fn par_eq<V2, S2>(&self, other: &IndexMap<K, V2, S2>) -> bool
-        where V: PartialEq<V2>,
-              V2: Sync,
-              S2: BuildHasher + Sync
+    where
+        V: PartialEq<V2>,
+        V2: Sync,
+        S2: BuildHasher + Sync,
     {
-        self.len() == other.len() &&
-            self.par_iter().all(move |(key, value)| {
-                other.get(key).map_or(false, |v| *value == *v)
-            })
+        self.len() == other.len()
+            && self
+                .par_iter()
+                .all(move |(key, value)| other.get(key).map_or(false, |v| *value == *v))
     }
 }
 
@@ -199,18 +208,18 @@ impl<K, V, S> IndexMap<K, V, S>
 ///
 /// [`par_keys`]: ../struct.IndexMap.html#method.par_keys
 /// [`IndexMap`]: ../struct.IndexMap.html
-pub struct ParKeys<'a, K: 'a, V: 'a> {
+pub struct ParKeys<'a, K, V> {
     entries: &'a [Bucket<K, V>],
 }
 
-impl<'a, K, V> Clone for ParKeys<'a, K, V> {
-    fn clone(&self) -> ParKeys<'a, K, V> {
+impl<K, V> Clone for ParKeys<'_, K, V> {
+    fn clone(&self) -> Self {
         ParKeys { ..*self }
     }
 }
 
-impl<'a, K: fmt::Debug, V> fmt::Debug for ParKeys<'a, K, V> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl<K: fmt::Debug, V> fmt::Debug for ParKeys<'_, K, V> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let iter = self.entries.iter().map(Bucket::key_ref);
         f.debug_list().entries(iter).finish()
     }
@@ -222,7 +231,7 @@ impl<'a, K: Sync, V: Sync> ParallelIterator for ParKeys<'a, K, V> {
     parallel_iterator_methods!(Bucket::key_ref);
 }
 
-impl<'a, K: Sync, V: Sync> IndexedParallelIterator for ParKeys<'a, K, V> {
+impl<K: Sync, V: Sync> IndexedParallelIterator for ParKeys<'_, K, V> {
     indexed_parallel_iterator_methods!(Bucket::key_ref);
 }
 
@@ -233,18 +242,18 @@ impl<'a, K: Sync, V: Sync> IndexedParallelIterator for ParKeys<'a, K, V> {
 ///
 /// [`par_values`]: ../struct.IndexMap.html#method.par_values
 /// [`IndexMap`]: ../struct.IndexMap.html
-pub struct ParValues<'a, K: 'a, V: 'a> {
+pub struct ParValues<'a, K, V> {
     entries: &'a [Bucket<K, V>],
 }
 
-impl<'a, K, V> Clone for ParValues<'a, K, V> {
-    fn clone(&self) -> ParValues<'a, K, V> {
+impl<K, V> Clone for ParValues<'_, K, V> {
+    fn clone(&self) -> Self {
         ParValues { ..*self }
     }
 }
 
-impl<'a, K, V: fmt::Debug> fmt::Debug for ParValues<'a, K, V> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl<K, V: fmt::Debug> fmt::Debug for ParValues<'_, K, V> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let iter = self.entries.iter().map(Bucket::value_ref);
         f.debug_list().entries(iter).finish()
     }
@@ -256,30 +265,37 @@ impl<'a, K: Sync, V: Sync> ParallelIterator for ParValues<'a, K, V> {
     parallel_iterator_methods!(Bucket::value_ref);
 }
 
-impl<'a, K: Sync, V: Sync> IndexedParallelIterator for ParValues<'a, K, V> {
+impl<K: Sync, V: Sync> IndexedParallelIterator for ParValues<'_, K, V> {
     indexed_parallel_iterator_methods!(Bucket::value_ref);
 }
 
-
 /// Requires crate feature `"rayon"`.
 impl<K, V, S> IndexMap<K, V, S>
-    where K: Hash + Eq + Send,
-          V: Send,
-          S: BuildHasher,
+where
+    K: Send,
+    V: Send,
 {
     /// Return a parallel iterator over mutable references to the the values of the map
     ///
     /// While parallel iterators can process items in any order, their relative order
     /// in the map is still preserved for operations like `reduce` and `collect`.
-    pub fn par_values_mut(&mut self) -> ParValuesMut<K, V> {
+    pub fn par_values_mut(&mut self) -> ParValuesMut<'_, K, V> {
         ParValuesMut {
             entries: self.as_entries_mut(),
         }
     }
+}
 
+impl<K, V, S> IndexMap<K, V, S>
+where
+    K: Hash + Eq + Send,
+    V: Send,
+    S: BuildHasher,
+{
     /// Sort the map’s key-value pairs in parallel, by the default ordering of the keys.
     pub fn par_sort_keys(&mut self)
-        where K: Ord,
+    where
+        K: Ord,
     {
         self.with_entries(|entries| {
             entries.par_sort_by(|a, b| K::cmp(&a.key, &b.key));
@@ -292,7 +308,8 @@ impl<K, V, S> IndexMap<K, V, S>
     /// The comparison function receives two key and value pairs to compare (you
     /// can sort by keys or values or their combination as needed).
     pub fn par_sort_by<F>(&mut self, cmp: F)
-        where F: Fn(&K, &V, &K, &V) -> Ordering + Sync,
+    where
+        F: Fn(&K, &V, &K, &V) -> Ordering + Sync,
     {
         self.with_entries(|entries| {
             entries.par_sort_by(move |a, b| cmp(&a.key, &a.value, &b.key, &b.value));
@@ -302,7 +319,8 @@ impl<K, V, S> IndexMap<K, V, S>
     /// Sort the key-value pairs of the map in parallel and return a by value parallel
     /// iterator of the key-value pairs with the result.
     pub fn par_sorted_by<F>(self, cmp: F) -> IntoParIter<K, V>
-        where F: Fn(&K, &V, &K, &V) -> Ordering + Sync
+    where
+        F: Fn(&K, &V, &K, &V) -> Ordering + Sync,
     {
         let mut entries = self.into_entries();
         entries.par_sort_by(move |a, b| cmp(&a.key, &a.value, &b.key, &b.value));
@@ -317,7 +335,7 @@ impl<K, V, S> IndexMap<K, V, S>
 ///
 /// [`par_values_mut`]: ../struct.IndexMap.html#method.par_values_mut
 /// [`IndexMap`]: ../struct.IndexMap.html
-pub struct ParValuesMut<'a, K: 'a, V: 'a> {
+pub struct ParValuesMut<'a, K, V> {
     entries: &'a mut [Bucket<K, V>],
 }
 
@@ -327,19 +345,20 @@ impl<'a, K: Send, V: Send> ParallelIterator for ParValuesMut<'a, K, V> {
     parallel_iterator_methods!(Bucket::value_mut);
 }
 
-impl<'a, K: Send, V: Send> IndexedParallelIterator for ParValuesMut<'a, K, V> {
+impl<K: Send, V: Send> IndexedParallelIterator for ParValuesMut<'_, K, V> {
     indexed_parallel_iterator_methods!(Bucket::value_mut);
 }
 
-
 /// Requires crate feature `"rayon"`.
 impl<K, V, S> FromParallelIterator<(K, V)> for IndexMap<K, V, S>
-    where K: Eq + Hash + Send,
-          V: Send,
-          S: BuildHasher + Default + Send,
+where
+    K: Eq + Hash + Send,
+    V: Send,
+    S: BuildHasher + Default + Send,
 {
     fn from_par_iter<I>(iter: I) -> Self
-        where I: IntoParallelIterator<Item = (K, V)>
+    where
+        I: IntoParallelIterator<Item = (K, V)>,
     {
         let list = collect(iter);
         let len = list.iter().map(Vec::len).sum();
@@ -353,12 +372,14 @@ impl<K, V, S> FromParallelIterator<(K, V)> for IndexMap<K, V, S>
 
 /// Requires crate feature `"rayon"`.
 impl<K, V, S> ParallelExtend<(K, V)> for IndexMap<K, V, S>
-    where K: Eq + Hash + Send,
-          V: Send,
-          S: BuildHasher + Send,
+where
+    K: Eq + Hash + Send,
+    V: Send,
+    S: BuildHasher + Send,
 {
     fn par_extend<I>(&mut self, iter: I)
-        where I: IntoParallelIterator<Item = (K, V)>
+    where
+        I: IntoParallelIterator<Item = (K, V)>,
     {
         for vec in collect(iter) {
             self.extend(vec);
@@ -368,12 +389,14 @@ impl<K, V, S> ParallelExtend<(K, V)> for IndexMap<K, V, S>
 
 /// Requires crate feature `"rayon"`.
 impl<'a, K: 'a, V: 'a, S> ParallelExtend<(&'a K, &'a V)> for IndexMap<K, V, S>
-    where K: Copy + Eq + Hash + Send + Sync,
-          V: Copy + Send + Sync,
-          S: BuildHasher + Send,
+where
+    K: Copy + Eq + Hash + Send + Sync,
+    V: Copy + Send + Sync,
+    S: BuildHasher + Send,
 {
     fn par_extend<I>(&mut self, iter: I)
-        where I: IntoParallelIterator<Item = (&'a K, &'a V)>
+    where
+        I: IntoParallelIterator<Item = (&'a K, &'a V)>,
     {
         for vec in collect(iter) {
             self.extend(vec);
@@ -381,10 +404,10 @@ impl<'a, K: 'a, V: 'a, S> ParallelExtend<(&'a K, &'a V)> for IndexMap<K, V, S>
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::string::String;
 
     #[test]
     fn insert_order() {
@@ -400,9 +423,12 @@ mod tests {
         insert.par_iter().zip(map.par_keys()).for_each(|(a, b)| {
             assert_eq!(a, b);
         });
-        (0..insert.len()).into_par_iter().zip(map.par_keys()).for_each(|(i, k)| {
-            assert_eq!(map.get_index(i).unwrap().0, k);
-        });
+        (0..insert.len())
+            .into_par_iter()
+            .zip(map.par_keys())
+            .for_each(|(i, k)| {
+                assert_eq!(map.get_index(i).unwrap().0, k);
+            });
     }
 
     #[test]
@@ -412,13 +438,13 @@ mod tests {
         map_a.insert(2, "2");
         let mut map_b = map_a.clone();
         assert!(map_a.par_eq(&map_b));
-        map_b.remove(&1);
+        map_b.swap_remove(&1);
         assert!(!map_a.par_eq(&map_b));
         map_b.insert(3, "3");
         assert!(!map_a.par_eq(&map_b));
 
-        let map_c: IndexMap<_, String>
-            = map_b.into_par_iter().map(|(k, v)| (k, v.to_owned())).collect();
+        let map_c: IndexMap<_, String> =
+            map_b.into_par_iter().map(|(k, v)| (k, v.into())).collect();
         assert!(!map_a.par_eq(&map_c));
         assert!(!map_c.par_eq(&map_a));
     }
@@ -428,7 +454,10 @@ mod tests {
         let mut map = IndexMap::new();
         map.par_extend(vec![(&1, &2), (&3, &4)]);
         map.par_extend(vec![(5, 6)]);
-        assert_eq!(map.into_par_iter().collect::<Vec<_>>(), vec![(1, 2), (3, 4), (5, 6)]);
+        assert_eq!(
+            map.into_par_iter().collect::<Vec<_>>(),
+            vec![(1, 2), (3, 4), (5, 6)]
+        );
     }
 
     #[test]
@@ -457,9 +486,7 @@ mod tests {
     fn values_mut() {
         let vec = vec![(1, 1), (2, 2), (3, 3)];
         let mut map: IndexMap<_, _> = vec.into_par_iter().collect();
-        map.par_values_mut().for_each(|value| {
-            *value = (*value) * 2
-        });
+        map.par_values_mut().for_each(|value| *value *= 2);
         let values: Vec<_> = map.par_values().cloned().collect();
         assert_eq!(values.len(), 3);
         assert!(values.contains(&2));
