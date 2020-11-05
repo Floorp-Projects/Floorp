@@ -127,7 +127,9 @@ class TargetList extends EventEmitter {
     // Public flag to allow listening for workers even if the fission pref is off
     // This allows listening for workers in the content toolbox outside of fission contexts
     // For now, this is only toggled by tests.
-    this.listenForWorkers = false;
+    this.listenForWorkers =
+      this.rootFront.traits.workerConsoleApiMessagesDispatchedToMainThread ===
+      false;
     this.listenForServiceWorkers = false;
     this.destroyServiceWorkersOnNavigation = false;
   }
