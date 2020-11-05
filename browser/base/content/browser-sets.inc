@@ -265,15 +265,11 @@
          data-l10n-id="bookmark-this-page-shortcut"
          oncommand="PlacesUIUtils.showBookmarkPagesDialog(PlacesCommandHook.uniqueCurrentPages);"
          modifiers="accel,shift"/>
-    <key id="manBookmarkKb" data-l10n-id="bookmark-show-library-shortcut" command="Browser:ShowAllBookmarks" modifiers="accel,shift"/>
+    <key id="manBookmarkKb" data-l10n-id="bookmark-show-all-shortcut" command="Browser:ShowAllBookmarks" modifiers="accel,shift"/>
     <key id="viewBookmarksSidebarKb"
          data-l10n-id="bookmark-show-sidebar-shortcut"
          modifiers="accel"
          oncommand="SidebarUI.toggle('viewBookmarksSidebar');"/>
-    <key id="viewBookmarksToolbarKb"
-         data-l10n-id="bookmark-show-toolbar-shortcut"
-         oncommand="toggleBookmarksToolbar()"
-         modifiers="accel,shift"/>
 
     <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
 
