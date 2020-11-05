@@ -140,7 +140,8 @@ class AudioInputProcessing : public AudioDataListener {
                        const PrincipalHandle& aPrincipalHandle);
 
   void Pull(MediaTrackGraphImpl* aGraph, GraphTime aFrom, GraphTime aTo,
-            GraphTime aTrackEnd, AudioSegment* aSegment, bool* aEnded);
+            GraphTime aTrackEnd, AudioSegment* aSegment,
+            bool aLastPullThisIteration, bool* aEnded);
 
   void NotifyOutputData(MediaTrackGraphImpl* aGraph, AudioDataValue* aBuffer,
                         size_t aFrames, TrackRate aRate,
@@ -228,17 +229,15 @@ class AudioInputProcessing : public AudioDataListener {
   AlignedFloatBuffer mInputDownmixBuffer;
   // Stores data waiting to be pulled.
   AudioSegment mSegment;
-#ifdef DEBUG
-  // The MTGImpl::IterationEnd() of the last time we appended data from an
-  // audio callback.
-  GraphTime mLastCallbackAppendTime;
-#endif
   // Set to false by Start(). Becomes true after the first time we append real
   // audio frames from the audio callback.
   bool mLiveFramesAppended;
-  // Set to false by Start(). Becomes true after the first time we append
-  // silence *after* the first audio callback has appended real frames.
-  bool mLiveSilenceAppended;
+  // Once live frames have been appended, this is the number of frames appended
+  // as pre-buffer for that data, to avoid underruns. Buffering in the track
+  // might be needed because of the AUDIO_BLOCK interval at which we run the
+  // graph, the packetizer keeping some input data. Care must be taken when
+  // turning on and off the packetizer.
+  TrackTime mLiveBufferingAppended;
   // Principal for the data that flows through this class.
   const PrincipalHandle mPrincipal;
   // Whether or not this MediaEngine is enabled. If it's not enabled, it
