@@ -6516,29 +6516,6 @@ function onViewToolbarCommand(aEvent) {
   updateToggleControlLabel(node);
 }
 
-function toggleBookmarksToolbar() {
-  // We only show the bookmarks toolbar if the shortcut is enabled.
-  const shortcutEnabled = Services.prefs.getBoolPref(
-    "browser.toolbars.bookmarks.2h2020",
-    false
-  );
-
-  if (!shortcutEnabled) {
-    PlacesCommandHook.showPlacesOrganizer("UnfiledBookmarks");
-    return;
-  }
-
-  let toolbar = document.getElementById("PersonalToolbar");
-  let isVisible = toolbar.getAttribute("collapsed") === "true";
-
-  CustomizableUI.setToolbarVisibility("PersonalToolbar", isVisible);
-  BrowserUsageTelemetry.recordToolbarVisibility(
-    "PersonalToolbar",
-    isVisible,
-    "shortcut"
-  );
-}
-
 function setToolbarVisibility(toolbar, isVisible, persist = true) {
   let hidingAttribute;
   if (toolbar.getAttribute("type") == "menubar") {
