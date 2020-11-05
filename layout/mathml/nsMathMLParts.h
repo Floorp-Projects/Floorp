@@ -29,8 +29,6 @@ nsIFrame* NS_NewMathMLmspaceFrame(mozilla::PresShell* aPresShell,
                                   mozilla::ComputedStyle* aStyle);
 nsIFrame* NS_NewMathMLmsFrame(mozilla::PresShell* aPresShell,
                               mozilla::ComputedStyle* aStyle);
-nsIFrame* NS_NewMathMLmfencedFrame(mozilla::PresShell* aPresShell,
-                                   mozilla::ComputedStyle* aStyle);
 nsIFrame* NS_NewMathMLmfracFrame(mozilla::PresShell* aPresShell,
                                  mozilla::ComputedStyle* aStyle);
 nsIFrame* NS_NewMathMLmsubFrame(mozilla::PresShell* aPresShell,

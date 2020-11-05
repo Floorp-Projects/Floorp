@@ -34,8 +34,6 @@ class PresShell;
   0x00000002  // size calculations include embellishments
 
 class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
-  friend class nsMathMLmfencedFrame;
-
  public:
   nsMathMLContainerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                          ClassID aID)

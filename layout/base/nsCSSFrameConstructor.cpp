@@ -4715,16 +4715,6 @@ nsCSSFrameConstructor::FindMathMLData(const Element& aElement,
     return &sInlineMathData;
   }
 
-  if (!StaticPrefs::mathml_mfenced_element_disabled() &&
-      tag == nsGkAtoms::mfenced_) {
-    // These flags are the same as those of SIMPLE_MATHML_CREATE.
-    static const FrameConstructionData sMathFencedData = FCDATA_DECL(
-        FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_FORCE_NULL_ABSPOS_CONTAINER |
-            FCDATA_WRAP_KIDS_IN_BLOCKS,
-        NS_NewMathMLmfencedFrame);
-    return &sMathFencedData;
-  }
-
   static const FrameConstructionDataByTag sMathMLData[] = {
       SIMPLE_MATHML_CREATE(annotation_, NS_NewMathMLTokenFrame),
       SIMPLE_MATHML_CREATE(annotation_xml_, NS_NewMathMLmrowFrame),
