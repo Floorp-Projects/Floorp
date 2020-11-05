@@ -9,7 +9,11 @@ import re
 
 from perfdocs.logger import PerfDocLogger
 from perfdocs.utils import read_yaml
-from perfdocs.framework_gatherers import RaptorGatherer, MozperftestGatherer
+from perfdocs.framework_gatherers import (
+    RaptorGatherer,
+    MozperftestGatherer,
+    TalosGatherer,
+)
 
 logger = PerfDocLogger()
 
@@ -17,6 +21,7 @@ logger = PerfDocLogger()
 frameworks = {
     "raptor": RaptorGatherer,
     "mozperftest": MozperftestGatherer,
+    "Talos": TalosGatherer,
 }
 
 
