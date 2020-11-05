@@ -25,7 +25,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   capture: "chrome://marionette/content/capture.js",
   ChromeWebElement: "chrome://marionette/content/element.js",
   clearElementIdCache:
-    "chrome://marionette/content/actors/MarionetteFrameParent.jsm",
+    "chrome://marionette/content/actors/MarionetteCommandsParent.jsm",
   Context: "chrome://marionette/content/browser.js",
   cookie: "chrome://marionette/content/cookie.js",
   DebounceCallback: "chrome://marionette/content/sync.js",
