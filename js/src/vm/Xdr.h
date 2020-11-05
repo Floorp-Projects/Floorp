@@ -275,7 +275,7 @@ class XDRState : public XDRCoderBase {
 
   virtual bool hasAtomTable() const { return false; }
   virtual XDRAtomTable& atomTable() { MOZ_CRASH("does not have atomTable"); }
-  virtual frontend::ParserAtomsTable& frontendAtoms() {
+  virtual frontend::ParserAtomVectorBuilder& frontendAtoms() {
     MOZ_CRASH("does not have frontendAtoms");
   }
   virtual LifoAlloc& stencilAlloc() { MOZ_CRASH("does not have stencilAlloc"); }
@@ -538,7 +538,9 @@ class XDRStencilDecoder : public XDRDecoderBase {
   bool isForStencil() const override { return true; }
 
   bool hasAtomTable() const override { return hasFinishedAtomTable_; }
-  frontend::ParserAtomsTable& frontendAtoms() override { return *parserAtoms_; }
+  frontend::ParserAtomVectorBuilder& frontendAtoms() override {
+    return *parserAtomBuilder_;
+  }
   LifoAlloc& stencilAlloc() override { return *stencilAlloc_; }
   XDRParserAtomTable& parserAtomTable() override { return parserAtomTable_; }
   void finishAtomTable() override { hasFinishedAtomTable_ = true; }
@@ -552,7 +554,7 @@ class XDRStencilDecoder : public XDRDecoderBase {
   const JS::ReadOnlyCompileOptions* options_;
   XDRParserAtomTable parserAtomTable_;
   bool hasFinishedAtomTable_ = false;
-  frontend::ParserAtomsTable* parserAtoms_ = nullptr;
+  frontend::ParserAtomVectorBuilder* parserAtomBuilder_ = nullptr;
   LifoAlloc* stencilAlloc_ = nullptr;
 };
 
