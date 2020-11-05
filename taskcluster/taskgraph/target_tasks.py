@@ -7,7 +7,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
-from re import search
+import re
 
 import six
 from taskgraph import try_option_syntax
@@ -140,7 +140,24 @@ def filter_by_uncommon_try_tasks(task, optional_filters=None):
         filters = copy.deepcopy(filters)
         filters.extend(optional_filters)
 
-    return not any(search(pattern, task) for pattern in UNCOMMON_TRY_TASK_LABELS)
+    return not any(re.search(pattern, task) for pattern in UNCOMMON_TRY_TASK_LABELS)
+
+
+def filter_by_regex(task_label, regexes, mode="include"):
+    """Filters tasks according to a list of pre-compiled reguar expressions.
+
+    If mode is "include", a task label must match any regex to pass.
+    If it is "exclude", a task label must _not_ match any regex to pass.
+    """
+    if not regexes:
+        return True
+
+    assert mode in ["include", "exclude"]
+
+    any_match = any(r.search(task_label) for r in regexes)
+    if any_match:
+        return mode == "include"
+    return mode != "include"
 
 
 def filter_release_tasks(task, parameters):
@@ -381,6 +398,13 @@ def target_tasks_try_auto(full_task_graph, parameters, graph_config):
     params = dict(parameters)
     params["project"] = "autoland"
     parameters = Parameters(**params)
+
+    regex_filters = parameters["try_task_config"].get("tasks-regex")
+    include_regexes = exclude_regexes = []
+    if regex_filters:
+        include_regexes = [re.compile(r) for r in regex_filters.get("include", [])]
+        exclude_regexes = [re.compile(r) for r in regex_filters.get("exclude", [])]
+
     return [
         l
         for l, t in six.iteritems(full_task_graph.tasks)
@@ -388,6 +412,8 @@ def target_tasks_try_auto(full_task_graph, parameters, graph_config):
         and filter_out_shipping_phase(t, parameters)
         and filter_out_devedition(t, parameters)
         and filter_by_uncommon_try_tasks(t.label)
+        and filter_by_regex(t.label, include_regexes, mode="include")
+        and filter_by_regex(t.label, exclude_regexes, mode="exclude")
     ]
 
 
