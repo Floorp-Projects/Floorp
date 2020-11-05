@@ -127,7 +127,8 @@ class AudioDataListenerInterface {
    */
   virtual void NotifyInputData(MediaTrackGraphImpl* aGraph,
                                const AudioDataValue* aBuffer, size_t aFrames,
-                               TrackRate aRate, uint32_t aChannels) = 0;
+                               TrackRate aRate, uint32_t aChannels,
+                               uint32_t aAlreadyBuffered) = 0;
 
   /**
    * Number of audio input channels.

@@ -1133,11 +1133,18 @@ void AudioInputProcessing::NotifyInputStopped(MediaTrackGraphImpl* aGraph) {
 void AudioInputProcessing::NotifyInputData(MediaTrackGraphImpl* aGraph,
                                            const AudioDataValue* aBuffer,
                                            size_t aFrames, TrackRate aRate,
-                                           uint32_t aChannels) {
+                                           uint32_t aChannels,
+                                           uint32_t aAlreadyBuffered) {
   MOZ_ASSERT(aGraph->OnGraphThread());
   TRACE();
 
   MOZ_ASSERT(mEnabled);
+
+  if (!mLiveFramesAppended) {
+    // First time we see live frames getting added. Use what's already buffered
+    // in the driver's scratch buffer as a starting point.
+    mLiveBufferingAppended = aAlreadyBuffered;
+  }
 
   // If some processing is necessary, packetize and insert in the WebRTC.org
   // code. Otherwise, directly insert the mic data in the MTG, bypassing all

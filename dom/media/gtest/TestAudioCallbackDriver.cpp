@@ -26,8 +26,8 @@ class MockGraphInterface : public GraphInterface {
   MOCK_METHOD4(NotifyOutputData,
                void(AudioDataValue*, size_t, TrackRate, uint32_t));
   MOCK_METHOD0(NotifyInputStopped, void());
-  MOCK_METHOD4(NotifyInputData,
-               void(const AudioDataValue*, size_t, TrackRate, uint32_t));
+  MOCK_METHOD5(NotifyInputData, void(const AudioDataValue*, size_t, TrackRate,
+                                     uint32_t, uint32_t));
   MOCK_METHOD0(DeviceChanged, void());
   /* OneIteration cannot be mocked because IterationResult is non-memmovable and
    * cannot be passed as a parameter, which GMock does internally. */

@@ -430,7 +430,8 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   /* Called on the graph thread when there is new input data for listeners. This
    * is the raw audio input for this MediaTrackGraph. */
   void NotifyInputData(const AudioDataValue* aBuffer, size_t aFrames,
-                       TrackRate aRate, uint32_t aChannels) override;
+                       TrackRate aRate, uint32_t aChannels,
+                       uint32_t aAlreadyBuffered) override;
   /* Called every time there are changes to input/output audio devices like
    * plug/unplug etc. This can be called on any thread, and posts a message to
    * the main thread so that it can post a message to the graph thread. */

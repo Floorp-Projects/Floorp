@@ -149,7 +149,8 @@ class AudioInputProcessing : public AudioDataListener {
   void NotifyInputStopped(MediaTrackGraphImpl* aGraph) override;
   void NotifyInputData(MediaTrackGraphImpl* aGraph,
                        const AudioDataValue* aBuffer, size_t aFrames,
-                       TrackRate aRate, uint32_t aChannels) override;
+                       TrackRate aRate, uint32_t aChannels,
+                       uint32_t aAlreadyBuffered) override;
   bool IsVoiceInput(MediaTrackGraphImpl* aGraph) const override {
     // If we're passing data directly without AEC or any other process, this
     // means that all voice-processing has been disabled intentionaly. In this
