@@ -7,7 +7,5 @@
 
 #include "mozilla/glean/Counter.h"
 #include "mozilla/glean/Timespan.h"
-#include "mozilla/glean/String.h"
-#include "mozilla/glean/Uuid.h"
 
 #endif  // mozilla_Glean_MetricTypes_h
