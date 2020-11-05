@@ -662,8 +662,8 @@ vec4 textureLinearRG8(S sampler, vec2 P, int32_t zoffset = 0) {
 // signed I16. One bit of precision is shifted away from the bottom end to
 // accommodate the sign bit, so only 15 bits of precision is left.
 template <typename S>
-static inline I16 textureLinearPackedR16(S sampler, ivec2 i,
-                                         int32_t zoffset = 0) {
+static inline I16 textureLinearUnpackedR16(S sampler, ivec2 i,
+                                           int32_t zoffset = 0) {
   assert(sampler->format == TextureFormat::R16);
 
   ivec2 frac = i;
@@ -739,7 +739,7 @@ vec4 textureLinearR16(S sampler, vec2 P, int32_t zoffset = 0) {
   assert(sampler->format == TextureFormat::R16);
 
   ivec2 i(linearQuantize(P, 128, sampler));
-  Float r = CONVERT(textureLinearPackedR16(sampler, i, zoffset), Float);
+  Float r = CONVERT(textureLinearUnpackedR16(sampler, i, zoffset), Float);
   return vec4(r * (1.0f / 32767.0f), 0.0f, 0.0f, 1.0f);
 }
 
@@ -1078,7 +1078,7 @@ static ALWAYS_INLINE VectorType<uint16_t, N> addsat(VectorType<uint16_t, N> x,
 }
 
 template <typename P, typename S>
-static VectorType<uint8_t, 4 * sizeof(P)> gaussianBlurHorizontal(
+static VectorType<uint16_t, 4 * sizeof(P)> gaussianBlurHorizontal(
     S sampler, const ivec2_scalar& i, int minX, int maxX, int radius,
     float coeff, float coeffStep, int zoffset = 0) {
   // Packed and unpacked vectors for a chunk of the given pixel type.
@@ -1144,11 +1144,11 @@ static VectorType<uint8_t, 4 * sizeof(P)> gaussianBlurHorizontal(
   }
 
   // Shift away the intermediate precision.
-  return pack(sum >> 8);
+  return sum >> 8;
 }
 
 template <typename P, typename S>
-static VectorType<uint8_t, 4 * sizeof(P)> gaussianBlurVertical(
+static VectorType<uint16_t, 4 * sizeof(P)> gaussianBlurVertical(
     S sampler, const ivec2_scalar& i, int minY, int maxY, int radius,
     float coeff, float coeffStep, int zoffset = 0) {
   // Packed and unpacked vectors for a chunk of the given pixel type.
@@ -1215,7 +1215,7 @@ static VectorType<uint8_t, 4 * sizeof(P)> gaussianBlurVertical(
   }
 
   // Shift away the intermediate precision.
-  return pack(sum >> 8);
+  return sum >> 8;
 }
 
 }  // namespace glsl
