@@ -843,7 +843,6 @@ already_AddRefed<ContentParent> ContentParent::MinTabSelect(
   for (uint32_t i = 0; i < maxSelectable; i++) {
     ContentParent* p = aContentParents[i];
     MOZ_DIAGNOSTIC_ASSERT(!p->IsDead());
-    MOZ_DIAGNOSTIC_ASSERT(!p->mShutdownPending);
 
     uint32_t tabCount = cpm->GetBrowserParentCountByProcessId(p->ChildID());
     if (tabCount < min) {
@@ -1598,6 +1597,10 @@ void ContentParent::MaybeAsyncSendShutDownMessage() {
 }
 
 void ContentParent::ShutDownProcess(ShutDownMethod aMethod) {
+  // NB: must MarkAsDead() here so that this isn't accidentally
+  // returned from Get*() while in the midst of shutdown.
+  MarkAsDead();
+
   // Shutting down by sending a shutdown message works differently than the
   // other methods. We first call Shutdown() in the child. After the child is
   // ready, it calls FinishShutdown() on us. Then we close the channel.
@@ -1606,7 +1609,6 @@ void ContentParent::ShutDownProcess(ShutDownMethod aMethod) {
       // Stop sending input events with input priority when shutting down.
       SetInputPriorityEventEnabled(false);
       if (SendShutdown()) {
-        RemoveFromList();
         mShutdownPending = true;
         // Start the force-kill timer if we haven't already.
         StartForceKillTimer();
@@ -1641,10 +1643,6 @@ void ContentParent::ShutDownProcess(ShutDownMethod aMethod) {
             iter.Get()->GetKey());
     ocuParent->StopSendingMessagesToChild();
   }
-
-  // NB: must MarkAsDead() here so that this isn't accidentally
-  // returned from Get*() while in the midst of shutdown.
-  MarkAsDead();
 
   // A ContentParent object might not get freed until after XPCOM shutdown has
   // shut down the cycle collector.  But by then it's too late to release any
@@ -1712,10 +1710,7 @@ void ContentParent::AssertNotInPool() {
   }
 }
 
-void ContentParent::AssertAlive() {
-  MOZ_DIAGNOSTIC_ASSERT(!IsDead());
-  MOZ_DIAGNOSTIC_ASSERT(!mShutdownPending);
-}
+void ContentParent::AssertAlive() { MOZ_DIAGNOSTIC_ASSERT(!IsDead()); }
 
 void ContentParent::RemoveFromList() {
   if (IsForJSPlugin()) {
@@ -1770,9 +1765,7 @@ void ContentParent::MarkAsDead() {
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
           ("Marking ContentProcess %p as dead", this));
   MOZ_DIAGNOSTIC_ASSERT(!sInProcessSelector);
-  if (!mShutdownPending) {
-    RemoveFromList();
-  }
+  RemoveFromList();
 
   PreallocatedProcessManager::Erase(this);
 
@@ -2017,7 +2010,7 @@ bool ContentParent::TryToRecycle() {
       ("TryToRecycle ContentProcess %p (%u) with lifespan %f seconds", this,
        (unsigned int)ChildID(), (TimeStamp::Now() - mActivateTS).ToSeconds()));
 
-  if (mShutdownPending || mCalledKillHard || !IsAlive() ||
+  if (mCalledKillHard || !IsAlive() ||
       (TimeStamp::Now() - mActivateTS).ToSeconds() > kMaxLifeSpan) {
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
             ("TryToRecycle did not recycle %p", this));
