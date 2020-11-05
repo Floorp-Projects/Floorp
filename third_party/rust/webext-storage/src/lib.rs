@@ -8,7 +8,6 @@
 mod api;
 mod db;
 pub mod error;
-mod ffi;
 mod migration;
 mod schema;
 pub mod store;
@@ -22,5 +21,3 @@ pub use sync::STORAGE_VERSION;
 pub use api::SYNC_MAX_ITEMS;
 pub use api::SYNC_QUOTA_BYTES;
 pub use api::SYNC_QUOTA_BYTES_PER_ITEM;
-
-pub use api::UsageInfo;

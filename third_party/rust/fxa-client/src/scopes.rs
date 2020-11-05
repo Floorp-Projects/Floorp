@@ -3,5 +3,4 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 pub const PROFILE: &str = "profile";
-pub const PROFILE_WRITE: &str = "profile:write";
 pub const OLD_SYNC: &str = "https://identity.mozilla.com/apps/oldsync";
