@@ -25,7 +25,8 @@ LOCAL_INCLUDES += [
     "/ipc/chromium/src",
     "/ipc/glue",
     "/media/libyuv/libyuv/include/",
-    "/third_party/libwebrtc/webrtc/"
+    "/third_party/libwebrtc/webrtc/",
+    "/third_party/pipewire"
 ]
 
 UNIFIED_SOURCES += [
@@ -161,6 +162,7 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
+    DEFINES["WEBRTC_USE_PIPEWIRE"] = "1"
 
     OS_LIBS += [
         "rt",
@@ -191,6 +193,14 @@ if CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/webrtc/modules/desktop_capture/mouse_cursor_monitor_linux.cc",
         "/third_party/libwebrtc/webrtc/modules/desktop_capture/screen_capturer_linux.cc",
         "/third_party/libwebrtc/webrtc/modules/desktop_capture/window_capturer_linux.cc"
+    ]
+
+    CXXFLAGS += CONFIG['TK_CFLAGS']
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/webrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc",
+        "/third_party/libwebrtc/webrtc/modules/desktop_capture/linux/screen_capturer_pipewire.cc",
+        "/third_party/libwebrtc/webrtc/modules/desktop_capture/linux/window_capturer_pipewire.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "NetBSD":
