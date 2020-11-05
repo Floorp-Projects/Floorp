@@ -49,6 +49,7 @@ class RenderCompositorD3D11SWGL : public RenderCompositor {
   layers::WebRenderCompositor CompositorType() const override {
     return layers::WebRenderCompositor::D3D11;
   }
+  RenderCompositorD3D11SWGL* AsRenderCompositorD3D11SWGL() { return this; }
 
   // Interface for wr::Compositor
   CompositorCapabilities GetCompositorCapabilities() override;
@@ -94,6 +95,8 @@ class RenderCompositorD3D11SWGL : public RenderCompositor {
     int32_t mX;
     int32_t mY;
   };
+
+  ID3D11Device* GetDevice() { return mCompositor->GetDevice(); }
 
  private:
   RefPtr<layers::CompositorD3D11> mCompositor;
