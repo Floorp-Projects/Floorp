@@ -4,6 +4,7 @@ let gb = 1 * 1024 * 1024 * 1024;
 
 function test1() {
     let ab = new ArrayBuffer(7 * gb);
+    assertEq(ab.byteLength, 7 * gb);
 
     let taInt16 = new Int16Array(ab);
     assertEq(taInt16.byteOffset, 0);

@@ -369,7 +369,7 @@ MOZ_ALWAYS_INLINE bool ArrayBufferObject::byteLengthGetterImpl(
     JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsArrayBuffer(args.thisv()));
   auto* buffer = &args.thisv().toObject().as<ArrayBufferObject>();
-  args.rval().setInt32(buffer->byteLength().deprecatedGetUint32());
+  args.rval().setNumber(buffer->byteLength().get());
   return true;
 }
 
