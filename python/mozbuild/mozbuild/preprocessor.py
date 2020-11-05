@@ -495,7 +495,9 @@ class Preprocessor:
         Uses OptionParser internally, no args mean sys.argv[1:].
         """
 
-        def get_output_file(path):
+        def get_output_file(path, encoding=None):
+            if encoding is None:
+                encoding = "utf-8"
             dir = os.path.dirname(path)
             if dir:
                 try:
@@ -503,7 +505,7 @@ class Preprocessor:
                 except OSError as error:
                     if error.errno != errno.EEXIST:
                         raise
-            return io.open(path, "w", encoding="utf-8", newline="\n")
+            return io.open(path, "w", encoding=encoding, newline="\n")
 
         p = self.getCommandLineParser()
         options, args = p.parse_args(args=args)
@@ -511,7 +513,11 @@ class Preprocessor:
         depfile = None
 
         if options.output:
-            out = get_output_file(options.output)
+            out = get_output_file(options.output, options.output_encoding)
+        elif options.output_encoding:
+            raise Preprocessor.Error(
+                self, "--output-encoding doesn't work without --output", None
+            )
         if defaultToStdin and len(args) == 0:
             args = [sys.stdin]
             if options.depend:
@@ -596,7 +602,7 @@ class Preprocessor:
             type="string",
             default=None,
             metavar="FILENAME",
-            help="Output to the specified file " + "instead of stdout",
+            help="Output to the specified file instead of stdout",
         )
         p.add_option(
             "--depend",
@@ -617,6 +623,13 @@ class Preprocessor:
             action="callback",
             callback=handleSilenceDirectiveWarnings,
             help="Don't emit warnings about missing directives",
+        )
+        p.add_option(
+            "--output-encoding",
+            type="string",
+            default=None,
+            metavar="ENCODING",
+            help="Encoding to use for the output",
         )
         return p
 
