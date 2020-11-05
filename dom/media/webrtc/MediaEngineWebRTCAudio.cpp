@@ -803,7 +803,7 @@ void AudioInputProcessing::Pull(MediaTrackGraphImpl* aGraph, GraphTime aFrom,
       // Processing is active and is processed in chunks of 10ms through the
       // input packetizer. We allow for 10ms of silence on the track to
       // accomodate the buffering worst-case.
-      delta += mPacketizerInput->PacketSize();
+      delta += mPacketizerInput->mPacketSize;
     }
   }
 
@@ -860,8 +860,8 @@ void AudioInputProcessing::NotifyOutputData(MediaTrackGraphImpl* aGraph,
   MOZ_ASSERT(aGraph->OnGraphThread());
   MOZ_ASSERT(mEnabled);
 
-  if (!mPacketizerOutput || mPacketizerOutput->PacketSize() != aRate / 100u ||
-      mPacketizerOutput->Channels() != aChannels) {
+  if (!mPacketizerOutput || mPacketizerOutput->mPacketSize != aRate / 100u ||
+      mPacketizerOutput->mChannels != aChannels) {
     // It's ok to drop the audio still in the packetizer here: if this changes,
     // we changed devices or something.
     mPacketizerOutput = MakeUnique<AudioPacketizer<AudioDataValue, float>>(
@@ -872,7 +872,7 @@ void AudioInputProcessing::NotifyOutputData(MediaTrackGraphImpl* aGraph,
 
   while (mPacketizerOutput->PacketsAvailable()) {
     uint32_t samplesPerPacket =
-        mPacketizerOutput->PacketSize() * mPacketizerOutput->Channels();
+        mPacketizerOutput->mPacketSize * mPacketizerOutput->mChannels;
     if (mOutputBuffer.Length() < samplesPerPacket) {
       mOutputBuffer.SetLength(samplesPerPacket);
     }
@@ -893,7 +893,7 @@ void AudioInputProcessing::NotifyOutputData(MediaTrackGraphImpl* aGraph,
       AudioConverter converter(
           AudioConfig(aChannels, 0, AudioConfig::FORMAT_FLT),
           AudioConfig(MAX_CHANNELS, 0, AudioConfig::FORMAT_FLT));
-      framesPerPacketFarend = mPacketizerOutput->PacketSize();
+      framesPerPacketFarend = mPacketizerOutput->mPacketSize;
       framesPerPacketFarend =
           converter.Process(mInputDownmixBuffer, packet, framesPerPacketFarend);
       interleavedFarend = mInputDownmixBuffer.Data();
@@ -902,7 +902,7 @@ void AudioInputProcessing::NotifyOutputData(MediaTrackGraphImpl* aGraph,
     } else {
       interleavedFarend = packet;
       channelCountFarend = aChannels;
-      framesPerPacketFarend = mPacketizerOutput->PacketSize();
+      framesPerPacketFarend = mPacketizerOutput->mPacketSize;
       deinterleavedPacketDataChannelPointers.SetLength(aChannels);
     }
 
@@ -951,8 +951,8 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
   MOZ_ASSERT(mEnabled);
   size_t offset = 0;
 
-  if (!mPacketizerInput || mPacketizerInput->PacketSize() != aRate / 100u ||
-      mPacketizerInput->Channels() != aChannels) {
+  if (!mPacketizerInput || mPacketizerInput->mPacketSize != aRate / 100u ||
+      mPacketizerInput->mChannels != aChannels) {
     // It's ok to drop the audio still in the packetizer here.
     mPacketizerInput = MakeUnique<AudioPacketizer<AudioDataValue, float>>(
         aRate / 100, aChannels);
@@ -964,7 +964,7 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
 
   while (mPacketizerInput->PacketsAvailable()) {
     uint32_t samplesPerPacket =
-        mPacketizerInput->PacketSize() * mPacketizerInput->Channels();
+        mPacketizerInput->mPacketSize * mPacketizerInput->mChannels;
     if (mInputBuffer.Length() < samplesPerPacket) {
       mInputBuffer.SetLength(samplesPerPacket);
     }
@@ -991,7 +991,7 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
       // Downmix to mono (and effectively have a planar buffer) by summing all
       // channels in the first channel.
       size_t readIndex = 0;
-      for (size_t i = 0; i < mPacketizerInput->PacketSize(); i++) {
+      for (size_t i = 0; i < mPacketizerInput->mPacketSize; i++) {
         mDeinterleavedBuffer.Data()[i] = 0.;
         for (size_t j = 0; j < aChannels; j++) {
           mDeinterleavedBuffer.Data()[i] += packet[readIndex++];
@@ -1008,10 +1008,10 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
            i < deinterleavedPacketizedInputDataChannelPointers.Length(); ++i) {
         deinterleavedPacketizedInputDataChannelPointers[i] =
             mDeinterleavedBuffer.Data() + offset;
-        offset += mPacketizerInput->PacketSize();
+        offset += mPacketizerInput->mPacketSize;
       }
       // Deinterleave to mInputBuffer, pointed to by inputBufferChannelPointers.
-      Deinterleave(packet, mPacketizerInput->PacketSize(), channelCountInput,
+      Deinterleave(packet, mPacketizerInput->mPacketSize, channelCountInput,
                    deinterleavedPacketizedInputDataChannelPointers.Elements());
     }
 
@@ -1024,7 +1024,7 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
 
     // Bug 1414837: find a way to not allocate here.
     CheckedInt<size_t> bufferSize(sizeof(float));
-    bufferSize *= mPacketizerInput->PacketSize();
+    bufferSize *= mPacketizerInput->mPacketSize;
     bufferSize *= channelCountInput;
     RefPtr<SharedBuffer> buffer = SharedBuffer::Create(bufferSize);
 
@@ -1040,7 +1040,7 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
           static_cast<float*>(buffer->Data()) + offset;
       processedOutputChannelPointersConst[i] =
           static_cast<float*>(buffer->Data()) + offset;
-      offset += mPacketizerInput->PacketSize();
+      offset += mPacketizerInput->mPacketSize;
     }
 
     mAudioProcessing->ProcessStream(
@@ -1052,7 +1052,7 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
     }
 
     LOG_FRAME("Appending %" PRIu32 " frames of packetized audio",
-              mPacketizerInput->PacketSize());
+              mPacketizerInput->mPacketSize);
 
 #ifdef DEBUG
     mLastCallbackAppendTime = aGraph->IterationEnd();
@@ -1063,7 +1063,7 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
     MOZ_ASSERT(processedOutputChannelPointers.Length() == channelCountInput);
     RefPtr<SharedBuffer> other = buffer;
     mSegment.AppendFrames(other.forget(), processedOutputChannelPointersConst,
-                          mPacketizerInput->PacketSize(), mPrincipal);
+                          mPacketizerInput->mPacketSize, mPrincipal);
   }
 }
 

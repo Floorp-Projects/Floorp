@@ -187,8 +187,8 @@ class AudioProxyThread {
 
     uint32_t audio_10ms = aRate / 100;
 
-    if (!mPacketizer || mPacketizer->PacketSize() != audio_10ms ||
-        mPacketizer->Channels() != aChannels) {
+    if (!mPacketizer || mPacketizer->mPacketSize != audio_10ms ||
+        mPacketizer->mChannels != aChannels) {
       // It's the right thing to drop the bit of audio still in the packetizer:
       // we don't want to send to the conduit audio that has two different
       // rates while telling it that it has a constante rate.
@@ -201,8 +201,8 @@ class AudioProxyThread {
 
     while (mPacketizer->PacketsAvailable()) {
       mPacketizer->Output(mPacket.get());
-      mConduit->SendAudioFrame(mPacket.get(), mPacketizer->PacketSize(), aRate,
-                               mPacketizer->Channels(), 0);
+      mConduit->SendAudioFrame(mPacket.get(), mPacketizer->mPacketSize, aRate,
+                               mPacketizer->mChannels, 0);
     }
   }
 
