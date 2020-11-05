@@ -271,7 +271,8 @@ var PictureInPicture = {
       reason,
       1
     );
-
+    // Saves the location of the Picture in Picture window
+    this.savePosition(window);
     this.clearPipTabIcon();
     delete this._weakPipPlayer;
     delete this.browser;
@@ -332,8 +333,9 @@ var PictureInPicture = {
   },
 
   /**
-   * Calculate the desired size and position for a Picture in Picture window
-   * for the provided window and videoData.
+   * This function tries to restore the last known Picture-in-Picture location
+   * and size. If those values are unknown or offscreen, then a default
+   * location and size is used.
    *
    * @param windowOrPlayer (chrome window|player window)
    *   The window hosting the browser that requested the Picture in
@@ -350,7 +352,7 @@ var PictureInPicture = {
    *   videoWidth (int):
    *     The preferred width of the video.
    *
-   * @returns object
+   * @returns (object)
    *   The size and position for the player window.
    *
    *   top (int):
@@ -367,74 +369,121 @@ var PictureInPicture = {
    */
   fitToScreen(windowOrPlayer, videoData) {
     let { videoHeight, videoWidth } = videoData;
+
+    // if current PiP window is being resized, the underlying video is changing,
+    // then save the location and size for opening the new window
     let isPlayerWindow = windowOrPlayer == this.getWeakPipPlayer();
+    if (isPlayerWindow) {
+      this.savePosition(windowOrPlayer);
+    }
 
-    // The Picture in Picture window will open on the same display as the
-    // originating window, and anchor to the bottom right.
-    let screenManager = Cc["@mozilla.org/gfx/screenmanager;1"].getService(
-      Ci.nsIScreenManager
-    );
-    let screen = screenManager.screenForRect(
+    // The last PiP location and size
+    let { top, left, width, height } = this.loadPosition();
+
+    // Check that previous location and size were loaded
+    if (!isNaN(top) && !isNaN(left) && !isNaN(width) && !isNaN(height)) {
+      // Center position of PiP window
+      let centerX = left + width / 2;
+      let centerY = top + height / 2;
+
+      // Get the screen of the last PiP using the center of the PiP
+      // window to check.
+      // PiP screen will be the default screen if the center was
+      // not on a screen.
+      let PiPScreen = this.getWorkingScreen(centerX, centerY);
+
+      // We have the screen, now we will get the dimensions of the screen
+      let [
+        PiPScreenLeft,
+        PiPScreenTop,
+        PiPScreenWidth,
+        PiPScreenHeight,
+      ] = this.getAvailScreenSize(PiPScreen);
+
+      // Check that the center of the last PiP location is within the screen limits
+      // If it's not, then we will use the default size and position
+      if (
+        PiPScreenLeft <= centerX &&
+        centerX <= PiPScreenLeft + PiPScreenWidth &&
+        PiPScreenTop <= centerY &&
+        centerY <= PiPScreenTop + PiPScreenHeight
+      ) {
+        let oldWidth = width;
+
+        // The new PiP window will keep the height of the old
+        // PiP window and adjust the width to the correct ratio
+        width = Math.round((height * videoWidth) / videoHeight);
+
+        // Minimum window size on Windows is 136
+        if (AppConstants.platform == "win") {
+          width = 136 > width ? 136 : width;
+        }
+
+        // WIGGLE_ROOM allows the PiP window to be within 5 pixels of the right
+        // side of the screen to stay snapped to the right side
+        const WIGGLE_ROOM = 5;
+        // If the PiP window was right next to the right side of the screen
+        // then move the PiP window to the right the same distance that
+        // the width changes from previous width to current width
+        let rightScreen = PiPScreenLeft + PiPScreenWidth;
+        let distFromRight = rightScreen - (left + width);
+        if (
+          0 < distFromRight &&
+          distFromRight <= WIGGLE_ROOM + (oldWidth - width)
+        ) {
+          left += distFromRight;
+        }
+
+        // Checks if some of the PiP window is off screen and
+        // if so it will adjust to move everything on screen
+        if (left < PiPScreenLeft) {
+          // off the left of the screen
+          // slide right
+          left += PiPScreenLeft - left;
+        }
+        if (top < PiPScreenTop) {
+          // off the top of the screen
+          // slide down
+          top += PiPScreenTop - top;
+        }
+        if (left + width > PiPScreenLeft + PiPScreenWidth) {
+          // off the right of the screen
+          // slide left
+          left += PiPScreenLeft + PiPScreenWidth - left - width;
+        }
+        if (top + height > PiPScreenTop + PiPScreenHeight) {
+          // off the bottom of the screen
+          // slide up
+          top += PiPScreenTop + PiPScreenHeight - top - height;
+        }
+        return { top, left, width, height };
+      }
+    }
+
+    // We don't have the size or position of the last PiP window, so fall
+    // back to calculating the default location.
+    let screen = this.getWorkingScreen(
       windowOrPlayer.screenX,
-      windowOrPlayer.screenY,
-      1,
-      1
+      windowOrPlayer.screenY
     );
-
-    // Now that we have the right screen, let's see how much available
-    // real-estate there is for us to work with.
-    let screenLeft = {},
-      screenTop = {},
-      screenWidth = {},
-      screenHeight = {};
-    screen.GetAvailRectDisplayPix(
+    let [
       screenLeft,
       screenTop,
       screenWidth,
-      screenHeight
-    );
-    let fullLeft = {},
-      fullTop = {},
-      fullWidth = {},
-      fullHeight = {};
-    screen.GetRectDisplayPix(fullLeft, fullTop, fullWidth, fullHeight);
+      screenHeight,
+    ] = this.getAvailScreenSize(screen);
 
-    // We have to divide these dimensions by the CSS scale factor for the
-    // display in order for the video to be positioned correctly on displays
-    // that are not at a 1.0 scaling.
-    let scaleFactor = screen.contentsScaleFactor / screen.defaultCSSScaleFactor;
-    screenWidth.value *= scaleFactor;
-    screenHeight.value *= scaleFactor;
-    screenLeft.value =
-      (screenLeft.value - fullLeft.value) * scaleFactor + fullLeft.value;
-    screenTop.value =
-      (screenTop.value - fullTop.value) * scaleFactor + fullTop.value;
-
-    // If we have a player window, maintain the previous player window's size by
-    // clamping the new video's largest dimension to the player window's
-    // largest dimension.
-    //
-    // Otherwise the Picture in Picture window will be a maximum of a quarter of
+    // The Picture in Picture window will be a maximum of a quarter of
     // the screen height, and a third of the screen width.
-    let preferredSize;
-    if (isPlayerWindow) {
-      let prevWidth = windowOrPlayer.innerWidth;
-      let prevHeight = windowOrPlayer.innerHeight;
-      preferredSize = prevWidth >= prevHeight ? prevWidth : prevHeight;
-    }
-    const MAX_HEIGHT = preferredSize || screenHeight.value / 4;
-    const MAX_WIDTH = preferredSize || screenWidth.value / 3;
+    const MAX_HEIGHT = screenHeight / 4;
+    const MAX_WIDTH = screenWidth / 3;
 
-    let width = videoWidth;
-    let height = videoHeight;
+    width = videoWidth;
+    height = videoHeight;
     let aspectRatio = videoWidth / videoHeight;
 
-    if (
-      videoHeight > MAX_HEIGHT ||
-      videoWidth > MAX_WIDTH ||
-      (isPlayerWindow && videoHeight < MAX_HEIGHT && videoWidth < MAX_WIDTH)
-    ) {
-      // We're bigger than the max, or smaller than the previous player window.
+    if (videoHeight > MAX_HEIGHT || videoWidth > MAX_WIDTH) {
+      // We're bigger than the max.
       // Take the largest dimension and clamp it to the associated max.
       // Recalculate the other dimension to maintain aspect ratio.
       if (videoWidth >= videoHeight) {
@@ -454,43 +503,6 @@ var PictureInPicture = {
       }
     }
 
-    // Figure out where to position the window on screen. If we have a player
-    // window this will account for any change in video size. Otherwise the
-    // video will be positioned in the bottom right.
-
-    if (isPlayerWindow) {
-      // We might need to move the window to keep its positioning in a similar
-      // part of the screen.
-      //
-      // Find the distance from each edge of the screen of the old video, we'll
-      // keep the closest edge in the same spot.
-      let prevWidth = windowOrPlayer.innerWidth;
-      let prevHeight = windowOrPlayer.innerHeight;
-      let distanceLeft = windowOrPlayer.screenX;
-      let distanceRight =
-        screenWidth.value - windowOrPlayer.screenX - prevWidth;
-      let distanceTop = windowOrPlayer.screenY;
-      let distanceBottom =
-        screenHeight.value - windowOrPlayer.screenY - prevHeight;
-
-      let left = windowOrPlayer.screenX;
-      let top = windowOrPlayer.screenY;
-
-      if (distanceRight < distanceLeft) {
-        // Closer to the right edge than the left. Move the window right by
-        // the difference in the video widths.
-        left += prevWidth - width;
-      }
-
-      if (distanceBottom < distanceTop) {
-        // Closer to the bottom edge than the top. Move the window down by
-        // the difference in the video heights.
-        top += prevHeight - height;
-      }
-
-      return { top, left, width, height };
-    }
-
     // Now that we have the dimensions of the video, we need to figure out how
     // to position it in the bottom right corner. Since we know the width of the
     // available rect, we need to subtract the dimensions of the window we're
@@ -506,10 +518,8 @@ var PictureInPicture = {
     // the screenLeft and screenTop values, which tell us where this screen is
     // located relative to the "origin" in absolute coordinates.
     let isRTL = Services.locale.isAppLocaleRTL;
-    let left = isRTL
-      ? screenLeft.value
-      : screenLeft.value + screenWidth.value - width;
-    let top = screenTop.value + screenHeight.value - height;
+    left = isRTL ? screenLeft : screenLeft + screenWidth - width;
+    top = screenTop + screenHeight - height;
 
     return { top, left, width, height };
   },
@@ -557,5 +567,146 @@ var PictureInPicture = {
 
   hideToggle() {
     Services.prefs.setBoolPref(TOGGLE_ENABLED_PREF, false);
+  },
+
+  /**
+   * This function takes a screen and will return the left, top, width and
+   * height of the screen
+   * @param screen
+   * The screen we need to get the sizec and coordinates of
+   *
+   * @returns array
+   * Size and location of screen
+   *
+   *   screenLeft.value (int):
+   *     The left position for the screen.
+   *
+   *   screenTop.value (int):
+   *     The top position for the screen.
+   *
+   *   screenWidth.value (int):
+   *     The width of the screen.
+   *
+   *   screenHeight.value (int):
+   *     The height of the screen.
+   */
+  getAvailScreenSize(screen) {
+    let screenLeft = {},
+      screenTop = {},
+      screenWidth = {},
+      screenHeight = {};
+    screen.GetAvailRectDisplayPix(
+      screenLeft,
+      screenTop,
+      screenWidth,
+      screenHeight
+    );
+    let fullLeft = {},
+      fullTop = {},
+      fullWidth = {},
+      fullHeight = {};
+    screen.GetRectDisplayPix(fullLeft, fullTop, fullWidth, fullHeight);
+
+    // We have to divide these dimensions by the CSS scale factor for the
+    // display in order for the video to be positioned correctly on displays
+    // that are not at a 1.0 scaling.
+    let scaleFactor = screen.contentsScaleFactor / screen.defaultCSSScaleFactor;
+    screenWidth.value *= scaleFactor;
+    screenHeight.value *= scaleFactor;
+    screenLeft.value =
+      (screenLeft.value - fullLeft.value) * scaleFactor + fullLeft.value;
+    screenTop.value =
+      (screenTop.value - fullTop.value) * scaleFactor + fullTop.value;
+
+    return [
+      screenLeft.value,
+      screenTop.value,
+      screenWidth.value,
+      screenHeight.value,
+    ];
+  },
+
+  /**
+   * This function takes in a left and top value and returns the screen they
+   * are located on.
+   * If the left and top are not on any screen, it will return the
+   * default screen
+   * @param left
+   *  left or x coordinate
+   * @param top
+   *  top or y coordinate
+   *
+   * @returns screen
+   *  the screen the left and top are on otherwise, default screen
+   */
+  getWorkingScreen(left, top) {
+    // Get the screen manager
+    let screenManager = Cc["@mozilla.org/gfx/screenmanager;1"].getService(
+      Ci.nsIScreenManager
+    );
+    // use screenForRect to get screen
+    // this returns the default screen if left and top are not
+    // on any screen
+    let screen = screenManager.screenForRect(left, top, 1, 1);
+
+    return screen;
+  },
+
+  /**
+   * Saves position and size of Picture-in-Picture window
+   * @param win The Picture-in-Picture window
+   */
+  savePosition(win) {
+    let xulStore = Services.xulStore;
+
+    let left = win.screenX;
+    let top = win.screenY;
+    let width = win.innerWidth;
+    let height = win.innerHeight;
+
+    xulStore.setValue(PLAYER_URI, "picture-in-picture", "left", left);
+    xulStore.setValue(PLAYER_URI, "picture-in-picture", "top", top);
+    xulStore.setValue(PLAYER_URI, "picture-in-picture", "width", width);
+    xulStore.setValue(PLAYER_URI, "picture-in-picture", "height", height);
+  },
+
+  /**
+   * Load last Picture in Picture location and size
+   * @returns object
+   *   The size and position of the last Picture in Picture window.
+   *
+   *   top (int):
+   *     The top position for the last player window.
+   *     Otherwise NaN
+   *
+   *   left (int):
+   *     The left position for the last player window.
+   *     Otherwise NaN
+   *
+   *   width (int):
+   *     The width of the player last window.
+   *     Otherwise NaN
+   *
+   *   height (int):
+   *     The height of the player last window.
+   *     Otherwise NaN
+   */
+  loadPosition() {
+    let xulStore = Services.xulStore;
+
+    let left = parseInt(
+      xulStore.getValue(PLAYER_URI, "picture-in-picture", "left")
+    );
+    let top = parseInt(
+      xulStore.getValue(PLAYER_URI, "picture-in-picture", "top")
+    );
+    let width = parseInt(
+      xulStore.getValue(PLAYER_URI, "picture-in-picture", "width")
+    );
+    let height = parseInt(
+      xulStore.getValue(PLAYER_URI, "picture-in-picture", "height")
+    );
+
+    return { top, left, width, height };
   },
 };
