@@ -40,6 +40,24 @@ class AutoParser(BaseTryParser):
                 "`taskcluster/taskgraph/optimize/__init__.py`.",
             },
         ],
+        [
+            ["--tasks-regex"],
+            {
+                "default": [],
+                "action": "append",
+                "help": "Apply a regex filter to the tasks selected. Specifying "
+                "multiple times schedules the union of computed tasks.",
+            },
+        ],
+        [
+            ["--tasks-regex-exclude"],
+            {
+                "default": [],
+                "action": "append",
+                "help": "Apply a regex filter to the tasks selected. Specifying "
+                "multiple times excludes computed tasks matching any regex.",
+            },
+        ],
     ]
 
     def validate(self, args):
@@ -63,6 +81,8 @@ def run(
     push=True,
     closed_tree=False,
     strategy=None,
+    tasks_regex=None,
+    tasks_regex_exclude=None,
     try_config=None,
     **ignored
 ):
@@ -74,6 +94,11 @@ def run(
 
     if strategy:
         params["optimize_strategies"] = strategy
+
+    if tasks_regex or tasks_regex_exclude:
+        params.setdefault("try_task_config", {})["tasks-regex"] = {}
+        params["try_task_config"]["tasks-regex"]["include"] = tasks_regex
+        params["try_task_config"]["tasks-regex"]["exclude"] = tasks_regex_exclude
 
     task_config = {
         "version": 2,
