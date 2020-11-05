@@ -4,14 +4,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/WindowsRegistry.jsm"
 );
 
-function getFirefoxExecutableFile() {
-  let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-  file = Services.dirsvc.get("GreBinD", Ci.nsIFile);
-
-  file.append(AppConstants.MOZ_APP_NAME + ".exe");
-  return file;
-}
-
 // This is copied from WindowsRegistry.jsm, but extended to support
 // TYPE_BINARY, as that is how we represent doubles in the registry for
 // the skeleton UI. However, we didn't extend WindowsRegistry.jsm itself,
@@ -54,11 +46,10 @@ add_task(async function testWritesEnabledOnPrefChange() {
 
   const win = await BrowserTestUtils.openNewBrowserWindow();
 
-  const firefoxPath = getFirefoxExecutableFile().path;
   let enabled = WindowsRegistry.readRegKey(
     Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
     "Software\\Mozilla\\Firefox\\PreXULSkeletonUISettings",
-    `${firefoxPath}|Enabled`
+    "enabled"
   );
   is(enabled, 1, "Pre-XUL skeleton UI is enabled in the Windows registry");
 
@@ -66,7 +57,7 @@ add_task(async function testWritesEnabledOnPrefChange() {
   enabled = WindowsRegistry.readRegKey(
     Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
     "Software\\Mozilla\\Firefox\\PreXULSkeletonUISettings",
-    `${firefoxPath}|Enabled`
+    "enabled"
   );
   is(enabled, 0, "Pre-XUL skeleton UI is disabled in the Windows registry");
 
@@ -80,13 +71,13 @@ add_task(async function testWritesSizeValuesOnChange() {
   });
 
   const regKeys = [
-    "Width",
-    "Height",
-    "ScreenX",
-    "ScreenY",
-    "UrlbarHorizontalOffsetCSS",
-    "UrlbarWidthCSS",
-    "CssToDevPixelScaling",
+    "width",
+    "height",
+    "screenX",
+    "screenY",
+    "urlbarHorizontalOffsetCSS",
+    "urlbarWidthCSS",
+    "cssToDevPixelScaling",
   ];
 
   // Remove all of the registry values to ensure old tests aren't giving us false
@@ -100,12 +91,11 @@ add_task(async function testWritesSizeValuesOnChange() {
   }
 
   const win = await BrowserTestUtils.openNewBrowserWindow();
-  const firefoxPath = getFirefoxExecutableFile().path;
   for (let key of regKeys) {
     let value = readRegKeyExtended(
       Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
       "Software\\Mozilla\\Firefox\\PreXULSkeletonUISettings",
-      `${firefoxPath}|${key}`
+      key
     );
     ok(
       value,
