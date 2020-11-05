@@ -126,8 +126,11 @@ class ASRouterParentProcessMessageHandler {
       case msg.FORCE_WHATSNEW_PANEL: {
         return this._router.forceWNPanel(browser);
       }
+      case msg.CLOSE_WHATSNEW_PANEL: {
+        return this._router.closeWNPanel(browser);
+      }
       case msg.MODIFY_MESSAGE_JSON: {
-        return this._router.sendMessage(data.content, data, false, browser);
+        return this._router.sendMessage(data.content, data, true, browser);
       }
       case msg.OVERRIDE_MESSAGE: {
         return this._router.setMessageById(data, true, browser);

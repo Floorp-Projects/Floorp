@@ -103,6 +103,7 @@ class ASRouterChild extends JSWindowActorChild {
         case msg.ENABLE_PROVIDER:
         case msg.EXPIRE_QUERY_CACHE:
         case msg.FORCE_WHATSNEW_PANEL:
+        case msg.CLOSE_WHATSNEW_PANEL:
         case msg.IMPRESSION:
         case msg.RESET_PROVIDER_PREF:
         case msg.SET_PROVIDER_USER_PREF:
