@@ -1648,3 +1648,22 @@ javascript.gc:
       - dev-telemetry-gc-alerts@mozilla.org
       - jcoppeard@mozilla.com
     expires: never
+
+media:
+  audio_init_failure:
+    type: labeled_counter
+    labels:
+      - first
+      - other
+    gecko_datapoint: MEDIA_AUDIO_INIT_FAILURE
+    description: >
+      Failure occurs when initializing the audio stream.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671714
+    data_reviews:
+      - TODO
+    notification_emails:
+      - padenot@mozilla.com
+      - kinetik@flim.org
+      - cchang@mozilla.com
+    expires: never

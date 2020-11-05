@@ -72,6 +72,7 @@ namespace mozilla {
 
 namespace {
 
+using Telemetry::LABELS_MEDIA_AUDIO_INIT_FAILURE;
 LazyLogModule gCubebLog("cubeb");
 
 void CubebLogCallback(const char* aFmt, ...) {
@@ -547,9 +548,8 @@ void ReportCubebStreamInitFailure(bool aIsFirst) {
     // failures to open multiple streams in a process over time.
     return;
   }
-  Telemetry::Accumulate(Telemetry::AUDIOSTREAM_BACKEND_USED,
-                        aIsFirst ? CUBEB_BACKEND_INIT_FAILURE_FIRST
-                                 : CUBEB_BACKEND_INIT_FAILURE_OTHER);
+  AccumulateCategorical(aIsFirst ? LABELS_MEDIA_AUDIO_INIT_FAILURE::first
+                                 : LABELS_MEDIA_AUDIO_INIT_FAILURE::other);
 }
 
 uint32_t GetCubebPlaybackLatencyInMilliseconds() {
