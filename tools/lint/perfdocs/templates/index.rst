@@ -2,8 +2,13 @@
 Performance Testing
 ###################
 
-Below you can find links to the various documentation that exists for performance testing and the associated tests.
+Performance tests are designed to catch performance regressions before they reach our
+end users. At this time, there is no unified approach for these types of tests,
+but `mozperftest </testing/perfdocs/mozperftest.html>`_ aims to provide this in the future.
+
+For more detailed information about each test suite, see each projects' documentation:
 
 {test_documentation}
 
-For more information please see this `wiki page <https://wiki.mozilla.org/TestEngineering/Performance>`_.
+For more information about the performance testing team,
+`visit the wiki page <https://wiki.mozilla.org/TestEngineering/Performance>`_.

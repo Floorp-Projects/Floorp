@@ -235,3 +235,12 @@ class MozperftestGatherer(FrameworkGatherer):
 
     def build_suite_section(self, title, content):
         return self._build_section_with_header(title, content, header_type="H4")
+
+
+class TalosGatherer(FrameworkGatherer):
+    """
+    Gatherer for the Talos framework.
+    TODO - Bug 1674220
+    """
+
+    pass
