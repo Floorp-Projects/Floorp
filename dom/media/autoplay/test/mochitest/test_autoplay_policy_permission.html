@@ -25,7 +25,7 @@
         async function testPlayInOrigin(testCase) {
           // Run test in a new window, to ensure its user gesture
           // activation state isn't tainted by preceeding tests.
-          let url = testCase.origin + "/tests/dom/media/test/file_autoplay_policy_activation_frame.html";
+          let url = testCase.origin + "/tests/dom/media/autoplay/test/mochitest/file_autoplay_policy_activation_frame.html";
           let child = window.open(url, "", "width=500,height=500");
           is((await nextWindowMessage()).data, "ready", "Expected a 'ready' message");
           child.postMessage("play-audible", testCase.origin);

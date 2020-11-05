@@ -21,7 +21,7 @@
           let frame = document.createElement("iframe");
           let origin = testInfo.same_origin_child
             ? "http://mochi.test:8888" : "http://example.org";
-          frame.src = origin + "/tests/dom/media/test/file_autoplay_policy_activation_frame.html";
+          frame.src = origin + "/tests/dom/media/autoplay/test/mochitest/file_autoplay_policy_activation_frame.html";
           // Wait for it to load...
           document.body.appendChild(frame);
           is((await nextWindowMessage()).data, "ready", "Expected a 'ready' message");
