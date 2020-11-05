@@ -4703,6 +4703,7 @@ nl
 // Norid geographical second level domains : https://www.norid.no/en/om-domenenavn/regelverk-for-no/vedlegg-b/
 // Norid category second level domains : https://www.norid.no/en/om-domenenavn/regelverk-for-no/vedlegg-c/
 // Norid category second-level domains managed by parties other than Norid : https://www.norid.no/en/om-domenenavn/regelverk-for-no/vedlegg-d/
+// RSS feed: https://teknisk.norid.no/en/feed/
 no
 // Norid category second level domains : https://www.norid.no/en/om-domenenavn/regelverk-for-no/vedlegg-c/
 fhs.no
@@ -7110,7 +7111,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-10-28T17:55:28Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-11-03T17:59:28Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -7337,7 +7338,7 @@ avianca
 // aws : 2015-06-25 Amazon Registry Services, Inc.
 aws
 
-// axa : 2013-12-19 AXA SA
+// axa : 2013-12-19 AXA Group Operations SAS
 axa
 
 // azure : 2014-12-18 Microsoft Corporation
@@ -12055,6 +12056,10 @@ ravendb.community
 ravendb.me
 development.run
 ravendb.run
+
+// Hong Kong Productivity Council: https://www.hkpc.org/
+// Submitted by SECaaS Team <summchan@hkpc.org>
+secaas.hk
 
 // HOSTBIP REGISTRY : https://www.hostbip.com/
 // Submitted by Atanunu Igbunuroghene <publicsuffixlist@hostbip.com>
