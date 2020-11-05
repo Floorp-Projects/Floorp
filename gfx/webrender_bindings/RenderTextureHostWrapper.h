@@ -41,7 +41,8 @@ class RenderTextureHostWrapper final : public RenderTextureHostSWGL {
   gfx::SurfaceFormat GetFormat() const override;
   gfx::ColorDepth GetColorDepth() const override;
   gfx::YUVColorSpace GetYUVColorSpace() const override;
-  bool MapPlane(uint8_t aChannelIndex, PlaneInfo& aPlaneInfo) override;
+  bool MapPlane(RenderCompositor* aCompositor, uint8_t aChannelIndex,
+                PlaneInfo& aPlaneInfo) override;
   void UnmapPlanes() override;
 
  private:
