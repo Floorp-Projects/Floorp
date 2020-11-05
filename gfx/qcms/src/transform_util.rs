@@ -145,17 +145,12 @@ fn compute_curve_gamma_table_type1(mut gamma_table: &mut Vec<f32>, mut gamma: u1
         gamma_table.push((i as f64 / 255.0f64).powf(gamma_float as f64) as f32);
     }
 }
-#[no_mangle]
-pub unsafe fn compute_curve_gamma_table_type2(mut gamma_table: &mut Vec<f32>, mut table: &[u16]) {
+fn compute_curve_gamma_table_type2(mut gamma_table: &mut Vec<f32>, mut table: &[u16]) {
     for i in 0..256 {
         gamma_table.push(lut_interp_linear(i as f64 / 255.0f64, table));
     }
 }
-#[no_mangle]
-pub unsafe fn compute_curve_gamma_table_type_parametric(
-    mut gamma_table: &mut Vec<f32>,
-    mut params: &[f32],
-) {
+fn compute_curve_gamma_table_type_parametric(mut gamma_table: &mut Vec<f32>, mut params: &[f32]) {
     let mut interval: f32;
     let mut a: f32;
     let mut b: f32;
@@ -230,8 +225,7 @@ fn compute_curve_gamma_table_type0(mut gamma_table: &mut Vec<f32>) {
         gamma_table.push((i as f64 / 255.0f64) as f32);
     }
 }
-#[no_mangle]
-pub unsafe fn build_input_gamma_table(mut TRC: Option<&curveType>) -> Option<Vec<f32>> {
+pub fn build_input_gamma_table(mut TRC: Option<&curveType>) -> Option<Vec<f32>> {
     let TRC = match TRC {
         Some(TRC) => TRC,
         None => return None,
