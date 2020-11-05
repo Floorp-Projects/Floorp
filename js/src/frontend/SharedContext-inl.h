@@ -20,10 +20,6 @@ inline JSAtom* SharedContext::liftParserAtomToJSAtom(JSContext* cx,
                                                      const ParserAtom* atomId) {
   return atomId->toJSAtom(cx, compilationInfo_.input.atomCache);
 }
-inline const ParserAtom* SharedContext::lowerJSAtomToParserAtom(JSContext* cx,
-                                                                JSAtom* atom) {
-  return compilationInfo_.lowerJSAtomToParserAtom(cx, atom);
-}
 
 }  // namespace frontend
 
