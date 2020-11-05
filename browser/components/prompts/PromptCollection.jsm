@@ -71,7 +71,7 @@ class PromptCollection {
     return buttonPressed === 0;
   }
 
-  asyncBeforeUnloadCheck(browsingContext) {
+  async asyncBeforeUnloadCheck(browsingContext) {
     let title;
     let message;
     let leaveLabel;
@@ -95,16 +95,13 @@ class PromptCollection {
 
     let contentViewer = browsingContext?.docShell?.contentViewer;
 
-    // TODO: Do we really want to allow modal dialogs from inactive
-    // content viewers at all, particularly for permit unload prompts?
-    let modalAllowed = contentViewer
-      ? contentViewer.isTabModalPromptAllowed
-      : browsingContext.ancestorsAreCurrent;
-
-    let modalType =
-      Ci.nsIPromptService[
-        modalAllowed ? "MODAL_TYPE_CONTENT" : "MODAL_TYPE_WINDOW"
-      ];
+    if (
+      (contentViewer && !contentViewer.isTabModalPromptAllowed) ||
+      !browsingContext.ancestorsAreCurrent
+    ) {
+      Cu.reportError("Can't prompt from inactive content viewer");
+      return true;
+    }
 
     let buttonFlags =
       Ci.nsIPromptService.BUTTON_POS_0_DEFAULT |
@@ -113,27 +110,26 @@ class PromptCollection {
       (Ci.nsIPromptService.BUTTON_TITLE_IS_STRING *
         Ci.nsIPromptService.BUTTON_POS_1);
 
-    return Services.prompt
-      .asyncConfirmEx(
-        browsingContext,
-        modalType,
-        title,
-        message,
-        buttonFlags,
-        leaveLabel,
-        stayLabel,
-        null,
-        null,
-        false,
-        // Tell the prompt service that this is a permit unload prompt
-        // so that it can set the appropriate flag on the detail object
-        // of the events it dispatches.
-        { inPermitUnload: true }
-      )
-      .then(
-        result =>
-          result.QueryInterface(Ci.nsIPropertyBag2).get("buttonNumClicked") == 0
-      );
+    let result = await Services.prompt.asyncConfirmEx(
+      browsingContext,
+      Services.prompt.MODAL_TYPE_CONTENT,
+      title,
+      message,
+      buttonFlags,
+      leaveLabel,
+      stayLabel,
+      null,
+      null,
+      false,
+      // Tell the prompt service that this is a permit unload prompt
+      // so that it can set the appropriate flag on the detail object
+      // of the events it dispatches.
+      { inPermitUnload: true }
+    );
+
+    return (
+      result.QueryInterface(Ci.nsIPropertyBag2).get("buttonNumClicked") == 0
+    );
   }
 }
 
