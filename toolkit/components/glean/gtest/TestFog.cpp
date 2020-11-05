@@ -69,13 +69,3 @@ TEST(FOG, TestCppTimespanWorks)
   ASSERT_TRUE(
       mozilla::glean::test_only::can_we_time_it.TestGetValue("test-ping") > 0);
 }
-
-TEST(FOG, TestCppBooleanWorks)
-{
-  mozilla::glean::test_only::can_we_flag_it.Set(false);
-
-  ASSERT_TRUE(
-      mozilla::glean::test_only::can_we_flag_it.TestHasValue("test-ping"));
-  ASSERT_EQ(false, mozilla::glean::test_only::can_we_flag_it.TestGetValue(
-                       "test-ping"));
-}

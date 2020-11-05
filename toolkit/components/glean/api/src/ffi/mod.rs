@@ -17,16 +17,3 @@ define_metric_ffi!(TIMESPAN_MAP {
     start -> fog_timespan_start(),
     stop -> fog_timespan_stop(),
 });
-
-define_metric_ffi!(BOOLEAN_MAP {
-    test_has -> fog_boolean_test_has_value,
-    test_get -> fog_boolean_test_get_value: u8,
-});
-
-#[no_mangle]
-pub extern "C" fn fog_boolean_set(id: u32, value: u8) {
-    match crate::metrics::__glean_metric_maps::BOOLEAN_MAP.get(&id.into()) {
-        Some(metric) => metric.set(value != 0),
-        None => panic!("No metric for id {}", id),
-    }
-}
