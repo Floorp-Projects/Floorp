@@ -1574,6 +1574,12 @@ var BookmarkingUI = {
     menu.setAttribute("id", "toggle_" + toolbar.id);
     menu.setAttribute("accesskey", toolbar.getAttribute("accesskey"));
     menu.setAttribute("toolbarId", toolbar.id);
+
+    // Used by the Places context menu in the Bookmarks Toolbar
+    // when nothing is selected
+    menu.setAttribute("selectiontype", "none");
+
+    MozXULElement.insertFTLIfNeeded("browser/toolbarContextMenu.ftl");
     let menuItems = [
       [
         showOnNewTabMenuItem,
@@ -2292,6 +2298,7 @@ var BookmarkingUI = {
       let result = PlacesUtils.getFolderContents(unfiledGuid);
       let node = result.root;
       otherBookmarksPopup._placesNode = PlacesUtils.asContainer(node);
+      otherBookmarks._placesNode = PlacesUtils.asContainer(node);
 
       otherBookmarks.hidden = false;
     } else {
