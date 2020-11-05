@@ -386,7 +386,7 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
                 mRequestedInputChannelCount(aRequestedInputChannelCount) {}
 
           void Run() override {
-            mInputProcessing->SetPassThrough(mPassThrough);
+            mInputProcessing->SetPassThrough(mTrack->GraphImpl(), mPassThrough);
             mInputProcessing->SetRequestedInputChannelCount(
                 mTrack->GraphImpl(), mRequestedInputChannelCount);
           }
@@ -649,7 +649,9 @@ bool AudioInputProcessing::PassThrough(MediaTrackGraphImpl* aGraph) const {
   return mSkipProcessing;
 }
 
-void AudioInputProcessing::SetPassThrough(bool aPassThrough) {
+void AudioInputProcessing::SetPassThrough(MediaTrackGraphImpl* aGraph,
+                                          bool aPassThrough) {
+  MOZ_ASSERT(aGraph->OnGraphThread());
   if (!mSkipProcessing && aPassThrough && mPacketizerInput) {
     MOZ_ASSERT(mPacketizerInput->PacketsAvailable() == 0);
     mSegment.AppendNullData(mPacketizerInput->FramesAvailable());
