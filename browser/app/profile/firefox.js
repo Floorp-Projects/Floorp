@@ -1340,6 +1340,8 @@ pref("browser.topsites.useRemoteSetting", false);
 
 pref("browser.partnerlink.attributionURL", "https://topsites.services.mozilla.com/cid/amzn_2020_a1");
 
+pref("browser.partnerlink.useAttributionURL", false);
+
 // Whether to show tab level system prompts opened via nsIPrompt(Service) as
 // SubDialogs in the TabDialogBox (true) or as TabModalPrompt in the
 // TabModalPromptBox (false).
