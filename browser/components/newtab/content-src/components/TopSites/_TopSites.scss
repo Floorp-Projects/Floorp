@@ -264,6 +264,10 @@ $hover-transition-duration: 150ms;
       color: $grey-50;
       font-size: 0.9em;
     }
+
+    &:not(.sponsored) > .sponsored-label {
+      visibility: hidden;
+    }
   }
 
   .edit-button {
