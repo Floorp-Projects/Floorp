@@ -439,6 +439,9 @@ class WellKnownParserAtoms_ROM {
   }
 };
 
+using ParserAtomIndex = TypedIndex<ParserAtom>;
+using ParserAtomVector = Vector<ParserAtomEntry*, 0, js::SystemAllocPolicy>;
+
 /**
  * WellKnownParserAtoms reserves a set of common ParserAtoms on the JSRuntime
  * in a read-only format to be used by parser. These reserved atoms can be
@@ -509,9 +512,10 @@ class ParserAtomsTable {
   LifoAlloc* alloc_;
 
   // The ParserAtomEntry are owned by the LifoAlloc.
-  using EntrySet =
-      HashSet<ParserAtomEntry*, ParserAtomLookupHasher, js::SystemAllocPolicy>;
-  EntrySet entrySet_;
+  using EntryMap = HashMap<ParserAtomEntry*, ParserAtomIndex,
+                           ParserAtomLookupHasher, js::SystemAllocPolicy>;
+  EntryMap entryMap_;
+  ParserAtomVector entries_;
 
  public:
   explicit ParserAtomsTable(JSRuntime* rt, LifoAlloc& alloc);
@@ -523,11 +527,11 @@ class ParserAtomsTable {
   // Internal APIs for interning to the table after well-known atoms cases have
   // been tested.
   JS::Result<const ParserAtom*, OOM> addEntry(JSContext* cx,
-                                              EntrySet::AddPtr& addPtr,
+                                              EntryMap::AddPtr& addPtr,
                                               ParserAtomEntry* entry);
   template <typename AtomCharT, typename SeqCharT>
   JS::Result<const ParserAtom*, OOM> internChar16Seq(
-      JSContext* cx, EntrySet::AddPtr& addPtr, HashNumber hash,
+      JSContext* cx, EntryMap::AddPtr& addPtr, HashNumber hash,
       InflatedChar16Sequence<SeqCharT> seq, uint32_t length);
   template <typename AtomCharT, typename SeqCharT>
   JS::Result<const ParserAtom*, OOM> internChar16Seq(
@@ -535,7 +539,7 @@ class ParserAtomsTable {
       uint32_t length);
 
  public:
-  bool empty() const { return entrySet_.empty(); }
+  bool empty() const { return entryMap_.empty(); }
 
   // The number of atoms with either NotInstantiatedAndMarked or AtomIndex kind,
   // that requires space in CompilationAtomCache.atoms while instantiation.
