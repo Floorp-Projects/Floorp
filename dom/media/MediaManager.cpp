@@ -66,6 +66,7 @@
 #include "MediaEngineDefault.h"
 #if defined(MOZ_WEBRTC)
 #  include "MediaEngineWebRTC.h"
+#  include "MediaEngineWebRTCAudio.h"
 #  include "browser_logging/WebRtcLog.h"
 #  include "webrtc/modules/audio_processing/include/audio_processing.h"
 #endif
@@ -1287,7 +1288,17 @@ class GetUserMediaStreamRunnable : public Runnable {
       } else {
         nsString audioDeviceName;
         mAudioDevice->GetName(audioDeviceName);
-        RefPtr<MediaTrack> track = mtg->CreateSourceTrack(MediaSegment::AUDIO);
+        RefPtr<MediaTrack> track;
+#ifdef MOZ_WEBRTC
+        if (mAudioDevice->mIsFake) {
+          track = mtg->CreateSourceTrack(MediaSegment::AUDIO);
+        } else {
+          track = AudioInputTrack::Create(mtg);
+          track->Suspend();  // Microphone source resumes in SetTrack
+        }
+#else
+        track = mtg->CreateSourceTrack(MediaSegment::AUDIO);
+#endif
         audioTrackSource = new LocalTrackSource(
             principal, audioDeviceName, mSourceListener,
             mAudioDevice->GetMediaSource(), track, mPeerIdentity);
