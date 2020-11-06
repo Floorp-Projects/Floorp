@@ -2130,13 +2130,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case BailoutKind::Hole:
     case BailoutKind::NoDenseElementsGuard:
     case BailoutKind::NegativeIndex:
-    case BailoutKind::NonInt32Input:
-    case BailoutKind::NonNumericInput:
-    case BailoutKind::NonBooleanInput:
-    case BailoutKind::NonObjectInput:
-    case BailoutKind::NonStringInput:
-    case BailoutKind::NonSymbolInput:
-    case BailoutKind::NonBigIntInput:
+    case BailoutKind::Unbox:
     case BailoutKind::Debugger:
     case BailoutKind::SpecificAtomGuard:
     case BailoutKind::SpecificSymbolGuard:

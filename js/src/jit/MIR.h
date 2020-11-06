@@ -2994,12 +2994,9 @@ class MConstructArray
 class MBail : public MNullaryInstruction {
  protected:
   explicit MBail(BailoutKind kind) : MNullaryInstruction(classOpcode) {
-    bailoutKind_ = kind;
+    setBailoutKind(kind);
     setGuard();
   }
-
- private:
-  BailoutKind bailoutKind_;
 
  public:
   INSTRUCTION_HEADER(Bail)
@@ -3012,8 +3009,6 @@ class MBail : public MNullaryInstruction {
   }
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
-
-  BailoutKind bailoutKind() const { return bailoutKind_; }
 };
 
 class MUnreachable : public MAryControlInstruction<0, 0>,
@@ -3391,10 +3386,8 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data {
 
  private:
   Mode mode_;
-  BailoutKind bailoutKind_;
 
-  MUnbox(MDefinition* ins, MIRType type, Mode mode, BailoutKind kind,
-         TempAllocator& alloc)
+  MUnbox(MDefinition* ins, MIRType type, Mode mode, TempAllocator& alloc)
       : MUnaryInstruction(classOpcode, ins), mode_(mode) {
     // Only allow unboxing a non MIRType::Value when input and output types
     // don't match. This is often used to force a bailout. Boxing happens
@@ -3419,57 +3412,17 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data {
       setGuard();
     }
 
-    bailoutKind_ = kind;
+    setBailoutKind(BailoutKind::Unbox);
   }
 
  public:
   INSTRUCTION_HEADER(Unbox)
   static MUnbox* New(TempAllocator& alloc, MDefinition* ins, MIRType type,
                      Mode mode) {
-    // Unless we were given a specific BailoutKind, pick a default based on
-    // the type we expect.
-    BailoutKind kind;
-    switch (type) {
-      case MIRType::Boolean:
-        kind = BailoutKind::NonBooleanInput;
-        break;
-      case MIRType::Int32:
-        kind = BailoutKind::NonInt32Input;
-        break;
-      case MIRType::Double:
-        kind = BailoutKind::NonNumericInput;  // Int32s are fine too
-        break;
-      case MIRType::String:
-        kind = BailoutKind::NonStringInput;
-        break;
-      case MIRType::Symbol:
-        kind = BailoutKind::NonSymbolInput;
-        break;
-      case MIRType::BigInt:
-        kind = BailoutKind::NonBigIntInput;
-        break;
-      case MIRType::Object:
-        kind = BailoutKind::NonObjectInput;
-        break;
-      default:
-        MOZ_CRASH("Given MIRType cannot be unboxed.");
-    }
-
-    return new (alloc) MUnbox(ins, type, mode, kind, alloc);
-  }
-
-  static MUnbox* New(TempAllocator& alloc, MDefinition* ins, MIRType type,
-                     Mode mode, BailoutKind kind) {
-    return new (alloc) MUnbox(ins, type, mode, kind, alloc);
+    return new (alloc) MUnbox(ins, type, mode, alloc);
   }
 
   Mode mode() const { return mode_; }
-  BailoutKind bailoutKind() const {
-    // If infallible, no bailout should be generated.
-    MOZ_ASSERT(fallible());
-    return bailoutKind_;
-  }
-  BailoutKind bailoutKindUnchecked() const { return bailoutKind_; }
   bool fallible() const { return mode() != Infallible; }
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isUnbox() || ins->toUnbox()->mode() != mode()) {
@@ -6909,14 +6862,16 @@ class MWasmTrap : public MAryControlInstruction<0, 0>,
 // Checks if a value is JS_UNINITIALIZED_LEXICAL, bailout out if so, leaving
 // it to baseline to throw at the correct pc.
 class MLexicalCheck : public MUnaryInstruction, public BoxPolicy<0>::Data {
-  BailoutKind kind_;
-  explicit MLexicalCheck(MDefinition* input,
-                         BailoutKind kind = BailoutKind::UninitializedLexical)
-      : MUnaryInstruction(classOpcode, input), kind_(kind) {
+  explicit MLexicalCheck(MDefinition* input)
+      : MUnaryInstruction(classOpcode, input) {
     setResultType(MIRType::Value);
     setResultTypeSet(input->resultTypeSet());
     setMovable();
     setGuard();
+
+    // If this instruction bails out, we will set a flag to prevent
+    // lexical checks in this script from being moved.
+    setBailoutKind(BailoutKind::UninitializedLexical);
   }
 
  public:
@@ -6924,8 +6879,6 @@ class MLexicalCheck : public MUnaryInstruction, public BoxPolicy<0>::Data {
   TRIVIAL_NEW_WRAPPERS
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
-
-  BailoutKind bailoutKind() const { return kind_; }
 
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins);
@@ -8182,19 +8135,17 @@ class MLoadElement : public MBinaryInstruction, public NoTypePolicy::Data {
 class MLoadElementAndUnbox : public MBinaryInstruction,
                              public NoTypePolicy::Data {
   MUnbox::Mode mode_;
-  BailoutKind bailoutKind_;
 
  protected:
   MLoadElementAndUnbox(MDefinition* elements, MDefinition* index,
                        MUnbox::Mode mode, MIRType type, BailoutKind kind)
-      : MBinaryInstruction(classOpcode, elements, index),
-        mode_(mode),
-        bailoutKind_(kind) {
+      : MBinaryInstruction(classOpcode, elements, index), mode_(mode) {
     setResultType(type);
     setMovable();
     if (mode_ == MUnbox::TypeBarrier || mode_ == MUnbox::Fallible) {
       setGuard();
     }
+    setBailoutKind(kind);
   }
 
  public:
@@ -8203,13 +8154,11 @@ class MLoadElementAndUnbox : public MBinaryInstruction,
   NAMED_OPERANDS((0, elements), (1, index))
 
   MUnbox::Mode mode() const { return mode_; }
-  BailoutKind bailoutKind() const { return bailoutKind_; }
   bool fallible() const { return mode_ != MUnbox::Infallible; }
 
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isLoadElementAndUnbox() ||
-        mode() != ins->toLoadElementAndUnbox()->mode() ||
-        bailoutKind() != ins->toLoadElementAndUnbox()->bailoutKind()) {
+        mode() != ins->toLoadElementAndUnbox()->mode()) {
       return false;
     }
     return congruentIfOperandsEqual(ins);
@@ -8956,20 +8905,17 @@ class MLoadFixedSlotAndUnbox : public MUnaryInstruction,
                                public SingleObjectPolicy::Data {
   size_t slot_;
   MUnbox::Mode mode_;
-  BailoutKind bailoutKind_;
 
  protected:
   MLoadFixedSlotAndUnbox(MDefinition* obj, size_t slot, MUnbox::Mode mode,
                          MIRType type, BailoutKind kind)
-      : MUnaryInstruction(classOpcode, obj),
-        slot_(slot),
-        mode_(mode),
-        bailoutKind_(kind) {
+      : MUnaryInstruction(classOpcode, obj), slot_(slot), mode_(mode) {
     setResultType(type);
     setMovable();
     if (mode_ == MUnbox::TypeBarrier || mode_ == MUnbox::Fallible) {
       setGuard();
     }
+    setBailoutKind(kind);
   }
 
  public:
@@ -8979,13 +8925,11 @@ class MLoadFixedSlotAndUnbox : public MUnaryInstruction,
 
   size_t slot() const { return slot_; }
   MUnbox::Mode mode() const { return mode_; }
-  BailoutKind bailoutKind() const { return bailoutKind_; }
   bool fallible() const { return mode_ != MUnbox::Infallible; }
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isLoadFixedSlotAndUnbox() ||
         slot() != ins->toLoadFixedSlotAndUnbox()->slot() ||
-        mode() != ins->toLoadFixedSlotAndUnbox()->mode() ||
-        bailoutKind() != ins->toLoadFixedSlotAndUnbox()->bailoutKind()) {
+        mode() != ins->toLoadFixedSlotAndUnbox()->mode()) {
       return false;
     }
     return congruentIfOperandsEqual(ins);
@@ -9006,20 +8950,17 @@ class MLoadDynamicSlotAndUnbox : public MUnaryInstruction,
                                  public NoTypePolicy::Data {
   size_t slot_;
   MUnbox::Mode mode_;
-  BailoutKind bailoutKind_;
 
  protected:
   MLoadDynamicSlotAndUnbox(MDefinition* slots, size_t slot, MUnbox::Mode mode,
                            MIRType type, BailoutKind kind)
-      : MUnaryInstruction(classOpcode, slots),
-        slot_(slot),
-        mode_(mode),
-        bailoutKind_(kind) {
+      : MUnaryInstruction(classOpcode, slots), slot_(slot), mode_(mode) {
     setResultType(type);
     setMovable();
     if (mode_ == MUnbox::TypeBarrier || mode_ == MUnbox::Fallible) {
       setGuard();
     }
+    setBailoutKind(kind);
   }
 
  public:
@@ -9029,14 +8970,12 @@ class MLoadDynamicSlotAndUnbox : public MUnaryInstruction,
 
   size_t slot() const { return slot_; }
   MUnbox::Mode mode() const { return mode_; }
-  BailoutKind bailoutKind() const { return bailoutKind_; }
   bool fallible() const { return mode_ != MUnbox::Infallible; }
 
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isLoadDynamicSlotAndUnbox() ||
         slot() != ins->toLoadDynamicSlotAndUnbox()->slot() ||
-        mode() != ins->toLoadDynamicSlotAndUnbox()->mode() ||
-        bailoutKind() != ins->toLoadDynamicSlotAndUnbox()->bailoutKind()) {
+        mode() != ins->toLoadDynamicSlotAndUnbox()->mode()) {
       return false;
     }
     return congruentIfOperandsEqual(ins);
@@ -10355,17 +10294,16 @@ class MGuardObjectGroup : public MUnaryInstruction,
                           public SingleObjectPolicy::Data {
   CompilerObjectGroup group_;
   bool bailOnEquality_;
-  BailoutKind bailoutKind_;
 
   MGuardObjectGroup(MDefinition* obj, ObjectGroup* group, bool bailOnEquality,
                     BailoutKind bailoutKind)
       : MUnaryInstruction(classOpcode, obj),
         group_(group),
-        bailOnEquality_(bailOnEquality),
-        bailoutKind_(bailoutKind) {
+        bailOnEquality_(bailOnEquality) {
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
+    setBailoutKind(bailoutKind);
   }
 
  public:
@@ -10375,7 +10313,6 @@ class MGuardObjectGroup : public MUnaryInstruction,
 
   const ObjectGroup* group() const { return group_; }
   bool bailOnEquality() const { return bailOnEquality_; }
-  BailoutKind bailoutKind() const { return bailoutKind_; }
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isGuardObjectGroup()) {
       return false;
@@ -10384,9 +10321,6 @@ class MGuardObjectGroup : public MUnaryInstruction,
       return false;
     }
     if (bailOnEquality() != ins->toGuardObjectGroup()->bailOnEquality()) {
-      return false;
-    }
-    if (bailoutKind() != ins->toGuardObjectGroup()->bailoutKind()) {
       return false;
     }
     return congruentIfOperandsEqual(ins);

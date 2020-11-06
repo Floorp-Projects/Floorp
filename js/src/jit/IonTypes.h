@@ -131,14 +131,8 @@ enum class BailoutKind : uint8_t {
   // Bailout triggered by MGuardStringToDouble.
   StringToDoubleGuard,
 
-  // Unbox expects a given type, bails out if it doesn't get it.
-  NonInt32Input,
-  NonNumericInput,  // unboxing a double works with int32 too
-  NonBooleanInput,
-  NonObjectInput,
-  NonStringInput,
-  NonSymbolInput,
-  NonBigIntInput,
+  // Unbox expects a given type.
+  Unbox,
 
   // We hit a |debugger;| statement.
   Debugger,
@@ -305,20 +299,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "StringToInt32Guard";
     case BailoutKind::StringToDoubleGuard:
       return "StringToDoubleGuard";
-    case BailoutKind::NonInt32Input:
-      return "NonInt32Input";
-    case BailoutKind::NonNumericInput:
-      return "NonNumericInput";
-    case BailoutKind::NonBooleanInput:
-      return "NonBooleanInput";
-    case BailoutKind::NonObjectInput:
-      return "NonObjectInput";
-    case BailoutKind::NonStringInput:
-      return "NonStringInput";
-    case BailoutKind::NonSymbolInput:
-      return "NonSymbolInput";
-    case BailoutKind::NonBigIntInput:
-      return "NonBigIntInput";
+    case BailoutKind::Unbox:
+      return "Unbox";
     case BailoutKind::Debugger:
       return "Debugger";
     case BailoutKind::FirstExecution:
