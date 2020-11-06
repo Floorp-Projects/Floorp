@@ -6,6 +6,8 @@ from __future__ import absolute_import
 
 import copy
 
+import requests
+
 from marionette_harness import MarionetteTestCase
 
 
@@ -20,6 +22,23 @@ class TestCommandLineArguments(MarionetteTestCase):
         self.marionette.quit(clean=True)
 
         super(TestCommandLineArguments, self).tearDown()
+
+    def test_remote_agent_enabled(self):
+        debugger_address = self.marionette.session_capabilities.get(
+            "moz:debuggerAddress"
+        )
+        self.assertIsNone(debugger_address)
+
+        self.marionette.instance.app_args.append("-remote-debugging-port")
+
+        self.marionette.quit()
+        self.marionette.start_session()
+
+        debugger_address = self.marionette.session_capabilities["moz:debuggerAddress"]
+        self.assertEqual(debugger_address, "localhost:9222")
+
+        result = requests.get(url="http://{}/json/version".format(debugger_address))
+        self.assertTrue(result.ok)
 
     def test_start_in_safe_mode(self):
         self.marionette.instance.app_args.append("-safe-mode")
