@@ -122,7 +122,6 @@ class WebRenderLayerManager final : public LayerManager {
   void SendInvalidRegion(const nsIntRegion& aRegion) override;
 
   void ScheduleComposite() override;
-  void ForceComposite() override;
 
   void SetNeedsComposite(bool aNeedsComposite) override {
     mNeedsComposite = aNeedsComposite;

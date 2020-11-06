@@ -381,12 +381,6 @@ class LayerManager : public FrameRecorder {
    */
   virtual void ScheduleComposite() {}
 
-  /**
-   * Force a composition with the remote Compositor, if one exists
-   * for this LayerManager, as soon as possible.
-   */
-  virtual void ForceComposite() {}
-
   virtual void SetNeedsComposite(bool aNeedsComposite) {}
   virtual bool NeedsComposite() const { return false; }
 

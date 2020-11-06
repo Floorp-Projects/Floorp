@@ -1827,16 +1827,6 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvScheduleComposite() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult WebRenderBridgeParent::RecvForceComposite() {
-  MOZ_ASSERT(IsRootWebRenderBridgeParent());
-  if (mDestroyed) {
-    return IPC_OK();
-  }
-
-  ScheduleForcedGenerateFrame();
-  return IPC_OK();
-}
-
 void WebRenderBridgeParent::InvalidateRenderedFrame() {
   if (mDestroyed) {
     return;
