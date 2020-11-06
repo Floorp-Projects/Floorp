@@ -15,7 +15,6 @@
 #include "mozilla/layers/KnowsCompositor.h"
 #ifdef MOZ_WAYLAND_USE_VAAPI
 #  include "H264.h"
-#  include "gfxPlatformGtk.h"
 #  include "mozilla/layers/DMABUFSurfaceImage.h"
 #  include "mozilla/widget/DMABufLibWrapper.h"
 #endif
@@ -210,7 +209,7 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
   AVHWDeviceContext* hwctx = (AVHWDeviceContext*)mVAAPIDeviceContext->data;
   AVVAAPIDeviceContext* vactx = (AVVAAPIDeviceContext*)hwctx->hwctx;
 
-  if (gfxPlatformGtk::GetPlatform()->UseDRMVAAPIDisplay()) {
+  if (StaticPrefs::media_ffmpeg_vaapi_drm_display_enabled()) {
     mDisplay =
         mLib->vaGetDisplayDRM(widget::GetDMABufDevice()->GetGbmDeviceFd());
     if (!mDisplay) {
@@ -218,19 +217,14 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
       return false;
     }
   } else {
-    if (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay()) {
-      wl_display* display = widget::WaylandDisplayGetWLDisplay();
-      if (!display) {
-        FFMPEG_LOG("Can't get default wayland display.");
-        return false;
-      }
-      mDisplay = mLib->vaGetDisplayWl(display);
-      if (!mDisplay) {
-        FFMPEG_LOG("Can't get Wayland VA-API display.");
-        return false;
-      }
-    } else {
-      FFMPEG_LOG("VA-API X11 display is not implemented.");
+    wl_display* display = widget::WaylandDisplayGetWLDisplay();
+    if (!display) {
+      FFMPEG_LOG("Can't get default wayland display.");
+      return false;
+    }
+    mDisplay = mLib->vaGetDisplayWl(display);
+    if (!mDisplay) {
+      FFMPEG_LOG("Can't get Wayland VA-API display.");
       return false;
     }
   }
@@ -359,11 +353,10 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
   mExtraData->AppendElements(*aConfig.mExtraData);
 
 #ifdef MOZ_WAYLAND_USE_VAAPI
-  mUseDMABufSurfaces =
-      gfxPlatformGtk::GetPlatform()->UseDMABufVideoTextures() &&
-      mImageAllocator &&
-      (mImageAllocator->GetCompositorBackendType() ==
-       layers::LayersBackend::LAYERS_WR);
+  mUseDMABufSurfaces = widget::GetDMABufDevice()->IsDMABufVAAPIEnabled() &&
+                       mImageAllocator &&
+                       (mImageAllocator->GetCompositorBackendType() ==
+                        layers::LayersBackend::LAYERS_WR);
 
   if (!mUseDMABufSurfaces) {
     FFMPEG_LOG("DMA-Buf/VA-API can't be used, WebRender/DMA-Buf is disabled");
@@ -754,10 +747,17 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageDMABuf(
              aPts, mFrame->pkt_dts, aDuration, mCodecContext->reordered_opaque);
 
   // With SW decode we support only YUV420P format with DMABuf surfaces.
-  if (!mVAAPIDeviceContext && mCodecContext->pix_fmt != AV_PIX_FMT_YUV420P) {
-    return MediaResult(
-        NS_ERROR_NOT_IMPLEMENTED,
-        RESULT_DETAIL("DMA-BUF textures supports YUV420P format only"));
+  if (!mVAAPIDeviceContext) {
+    if (StaticPrefs::media_ffmpeg_dmabuf_textures_disabled()) {
+      return MediaResult(
+          NS_ERROR_NOT_IMPLEMENTED,
+          RESULT_DETAIL("DMA-BUF textures are disabled by preference"));
+    }
+    if (mCodecContext->pix_fmt != AV_PIX_FMT_YUV420P) {
+      return MediaResult(
+          NS_ERROR_NOT_IMPLEMENTED,
+          RESULT_DETAIL("DMA-BUF textures supports YUV420P format only"));
+    }
   }
 
   VADRMPRIMESurfaceDescriptor vaDesc;
