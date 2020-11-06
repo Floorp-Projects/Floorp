@@ -51,7 +51,6 @@ bool RemoteDecoderModule::SupportsMimeType(
 bool RemoteDecoderModule::Supports(
     const SupportDecoderParams& aParams,
     DecoderDoctorDiagnostics* aDiagnostics) const {
-  RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded(mLocation);
 
   bool supports =
       RemoteDecoderManagerChild::Supports(mLocation, aParams, aDiagnostics);
