@@ -164,6 +164,9 @@ about-logins-confirm-export-dialog-title = Export logins and passwords
 about-logins-confirm-export-dialog-message = Your passwords will be saved as readable text (e.g., BadP@ssw0rd) so anyone who can open the exported file can view them.
 about-logins-confirm-export-dialog-confirm-button = Export…
 
+about-logins-alert-import-title = Import Complete
+about-logins-alert-import-message = View detailed import summary
+
 confirm-discard-changes-dialog-title = Discard unsaved changes?
 confirm-discard-changes-dialog-message = All unsaved changes will be lost.
 confirm-discard-changes-dialog-confirm-button = Discard
@@ -227,3 +230,34 @@ about-logins-import-file-picker-csv-filter-title =
       [macos] CSV Document
      *[other] CSV File
   }
+
+##
+## Variables:
+##  $count (number) - The number of affected elements
+
+about-logins-import-dialog-title = Import Complete
+about-logins-import-dialog-items-added =
+  { $count ->
+      [one] <span>New login added:</span> <span data-l10n-name="count">{ $count }</span>
+     *[other] <span>New logins added:</span> <span data-l10n-name="count">{ $count }</span>
+  }
+
+about-logins-import-dialog-items-modified =
+  { $count ->
+      [one] <span>Existing login updated:</span> <span data-l10n-name="count">{ $count }</span>
+     *[other] <span>Existing logins updated:</span> <span data-l10n-name="count">{ $count }</span>
+  }
+
+about-logins-import-dialog-items-no-change =
+  { $count ->
+      [0] Duplicate logins found: <span data-l10n-name="count">{ $count }</span> <span data-l10n-name="meta"></span>
+      [one] Duplicate login found: <span data-l10n-name="count">{ $count }</span> <span data-l10n-name="meta">(not imported)</span>
+     *[other] Duplicate logins found: <span data-l10n-name="count">{ $count }</span> <span data-l10n-name="meta">(not imported)</span>
+  }
+about-logins-import-dialog-items-error =
+  { $count ->
+      [0] Errors: <span data-l10n-name="count">{ $count }</span> <span data-l10n-name="meta"></span>
+      [one] Error: <span data-l10n-name="count">{ $count }</span> <span data-l10n-name="meta">(not imported)</span>
+      *[other] Errors: <span data-l10n-name="count">{ $count }</span> <span data-l10n-name="meta">(not imported)</span>
+  }
+about-logins-import-dialog-done = Done
