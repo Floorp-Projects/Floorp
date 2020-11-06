@@ -297,10 +297,13 @@ class JSONSchemaWriter {
 class UniqueJSONStrings {
  public:
   // Start an empty list of unique strings.
-  MFBT_API UniqueJSONStrings();
+  MFBT_API explicit UniqueJSONStrings(
+      JSONWriter::CollectionStyle aStyle = JSONWriter::MultiLineStyle);
 
   // Start with a copy of the strings from another list.
-  MFBT_API explicit UniqueJSONStrings(const UniqueJSONStrings& aOther);
+  MFBT_API explicit UniqueJSONStrings(
+      const UniqueJSONStrings& aOther,
+      JSONWriter::CollectionStyle aStyle = JSONWriter::MultiLineStyle);
 
   MFBT_API ~UniqueJSONStrings();
 
