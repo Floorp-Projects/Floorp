@@ -3063,6 +3063,7 @@ nsresult nsNavHistory::QueryRowToResult(int64_t itemId,
 nsresult nsNavHistory::VisitIdToResultNode(int64_t visitId,
                                            nsNavHistoryQueryOptions* aOptions,
                                            nsNavHistoryResultNode** aResult) {
+  MOZ_ASSERT(visitId > 0, "The passed-in visit id must be valid");
   nsAutoCString tagsFragment;
   GetTagsSqlFragment(GetTagsFolder(), "h.id"_ns, true, tagsFragment);
 
@@ -3113,8 +3114,13 @@ nsresult nsNavHistory::VisitIdToResultNode(int64_t visitId,
   rv = statement->ExecuteStep(&hasMore);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!hasMore) {
-    MOZ_ASSERT_UNREACHABLE("Trying to get a result node for an invalid visit");
-    return NS_ERROR_INVALID_ARG;
+    // Oops, we were passed an id that doesn't exist! It is indeed possible
+    // that between the insertion and the notification time, another enqueued
+    // task removed it. Since this can happen, we'll just issue a warning.
+    NS_WARNING(
+        "Cannot build a result node for a non existing visit id, was it "
+        "removed?");
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   nsCOMPtr<mozIStorageValueArray> row = do_QueryInterface(statement, &rv);
@@ -3126,6 +3132,7 @@ nsresult nsNavHistory::VisitIdToResultNode(int64_t visitId,
 nsresult nsNavHistory::BookmarkIdToResultNode(
     int64_t aBookmarkId, nsNavHistoryQueryOptions* aOptions,
     nsNavHistoryResultNode** aResult) {
+  MOZ_ASSERT(aBookmarkId > 0, "The passed-in bookmark id must be valid");
   nsAutoCString tagsFragment;
   GetTagsSqlFragment(GetTagsFolder(), "h.id"_ns, true, tagsFragment);
   // Should match kGetInfoIndex_*
@@ -3150,10 +3157,13 @@ nsresult nsNavHistory::BookmarkIdToResultNode(
   rv = stmt->ExecuteStep(&hasMore);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!hasMore) {
-    MOZ_ASSERT_UNREACHABLE(
-        "Trying to get a result node for an invalid "
-        "bookmark identifier");
-    return NS_ERROR_INVALID_ARG;
+    // Oops, we were passed an id that doesn't exist! It is indeed possible
+    // that between the insertion and the notification time, another enqueued
+    // task removed it. Since this can happen, we'll just issue a warning.
+    NS_WARNING(
+        "Cannot build a result node for a non existing bookmark id, was it "
+        "removed?");
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   nsCOMPtr<mozIStorageValueArray> row = do_QueryInterface(stmt, &rv);
@@ -3165,6 +3175,7 @@ nsresult nsNavHistory::BookmarkIdToResultNode(
 nsresult nsNavHistory::URIToResultNode(nsIURI* aURI,
                                        nsNavHistoryQueryOptions* aOptions,
                                        nsNavHistoryResultNode** aResult) {
+  MOZ_ASSERT(aURI, "The passed-in URI must be not-null");
   nsAutoCString tagsFragment;
   GetTagsSqlFragment(GetTagsFolder(), "h.id"_ns, true, tagsFragment);
   // Should match kGetInfoIndex_*
@@ -3189,8 +3200,13 @@ nsresult nsNavHistory::URIToResultNode(nsIURI* aURI,
   rv = stmt->ExecuteStep(&hasMore);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!hasMore) {
-    MOZ_ASSERT_UNREACHABLE("Trying to get a result node for an invalid url");
-    return NS_ERROR_INVALID_ARG;
+    // Oops, we were passed an URL that doesn't exist! It is indeed possible
+    // that between the insertion and the notification time, another enqueued
+    // task removed it. Since this can happen, we'll just issue a warning.
+    NS_WARNING(
+        "Cannot build a result node for a non existing page id, was it "
+        "removed?");
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   nsCOMPtr<mozIStorageValueArray> row = do_QueryInterface(stmt, &rv);
