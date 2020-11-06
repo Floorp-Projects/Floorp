@@ -592,10 +592,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     return id == window.docShell.browsingContext.id;
   },
 
-  protocolDescription: function() {
-    return require("devtools/shared/protocol").dumpProtocolSpec();
-  },
-
   /**
    * Remove the extra actor (added by ActorRegistry.addGlobalActor or
    * ActorRegistry.addTargetScopedActor) name |name|.
