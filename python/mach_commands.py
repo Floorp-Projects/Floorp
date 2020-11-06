@@ -61,8 +61,10 @@ class MachCommands(MachCommandBase):
         }
 
         if no_virtualenv:
+            from mach_bootstrap import mach_sys_path
+
             python_path = sys.executable
-            append_env["PYTHONPATH"] = os.pathsep.join(sys.path)
+            append_env["PYTHONPATH"] = os.pathsep.join(mach_sys_path(self.topsrcdir))
         else:
             self.activate_virtualenv()
             python_path = self.virtualenv_manager.python_path
