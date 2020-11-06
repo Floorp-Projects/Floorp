@@ -34,6 +34,9 @@
 #ifdef MOZ_WIDGET_GTK
 #  include "gfxPlatformGtk.h"
 #endif
+#ifdef MOZ_WAYLAND
+#  include "mozilla/widget/nsWaylandDisplay.h"
+#endif
 #include "ReadbackLayer.h"
 
 #include <utility>
@@ -87,7 +90,7 @@ already_AddRefed<ContentClient> ContentClient::CreateContentClient(
   {
 #ifdef MOZ_WIDGET_GTK
 #  ifdef MOZ_WAYLAND
-    if (gfxPlatformGtk::GetPlatform()->UseDMABufTextures()) {
+    if (widget::GetDMABufDevice()->IsDMABufTexturesEnabled()) {
       useDoubleBuffering = true;
     } else
 #  endif

@@ -294,7 +294,7 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
   if ((layersBackend == LayersBackend::LAYERS_OPENGL ||
        (layersBackend == LayersBackend::LAYERS_WR &&
         !aKnowsCompositor->UsingSoftwareWebRender())) &&
-      gfxPlatformGtk::GetPlatform()->UseDMABufTextures() &&
+      widget::GetDMABufDevice()->IsDMABufTexturesEnabled() &&
       aFormat != SurfaceFormat::A8) {
     return TextureType::DMABUF;
   }
