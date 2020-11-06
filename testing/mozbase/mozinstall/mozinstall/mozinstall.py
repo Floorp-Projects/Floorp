@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function
 
 from optparse import OptionParser
 import os
+import plistlib
 import shutil
 import subprocess
 import sys
@@ -16,7 +17,7 @@ import zipfile
 
 import requests
 
-from six import reraise
+from six import PY3, reraise
 
 import mozfile
 import mozinfo
@@ -27,9 +28,6 @@ try:
     has_pefile = True
 except ImportError:
     has_pefile = False
-
-if mozinfo.isMac:
-    from plistlib import readPlist
 
 
 TIMEOUT_UNINSTALL = 60
@@ -58,6 +56,13 @@ class UninstallError(Exception):
     """Thrown when uninstallation fails. Includes traceback if available."""
 
 
+def _readPlist(path):
+    if PY3:
+        with open(path, "rb") as fp:
+            return plistlib.load(fp)
+    return plistlib.readPlist(path)
+
+
 def get_binary(path, app_name):
     """Find the binary in the specified path, and return its path. If binary is
     not found throw an InvalidBinary exception.
@@ -74,7 +79,7 @@ def get_binary(path, app_name):
             raise InvalidBinary("%s/Contents/Info.plist not found" % path)
 
         binary = os.path.join(
-            path, "Contents/MacOS/", readPlist(plist)["CFBundleExecutable"]
+            path, "Contents/MacOS/", _readPlist(plist)["CFBundleExecutable"]
         )
 
     else:
