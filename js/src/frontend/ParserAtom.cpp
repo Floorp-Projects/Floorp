@@ -273,9 +273,9 @@ JSAtom* ParserAtomEntry::instantiate(JSContext* cx,
 
   JSAtom* atom;
   if (hasLatin1Chars()) {
-    atom = AtomizeChars(cx, latin1Chars(), length());
+    atom = AtomizeChars(cx, hash(), latin1Chars(), length());
   } else {
-    atom = AtomizeChars(cx, twoByteChars(), length());
+    atom = AtomizeChars(cx, hash(), twoByteChars(), length());
   }
   if (!atom) {
     js::ReportOutOfMemory(cx);

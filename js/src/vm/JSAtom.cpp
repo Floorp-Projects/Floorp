@@ -96,6 +96,26 @@ struct js::AtomHasher::Lookup {
         atom(nullptr),
         hash(mozilla::HashString(chars, length)) {}
 
+  MOZ_ALWAYS_INLINE Lookup(HashNumber hash, const char16_t* chars,
+                           size_t length)
+      : twoByteChars(chars),
+        type(TwoByteChar),
+        length(length),
+        atom(nullptr),
+        hash(hash) {
+    MOZ_ASSERT(hash == mozilla::HashString(chars, length));
+  }
+
+  MOZ_ALWAYS_INLINE Lookup(HashNumber hash, const JS::Latin1Char* chars,
+                           size_t length)
+      : latin1Chars(chars),
+        type(Latin1),
+        length(length),
+        atom(nullptr),
+        hash(hash) {
+    MOZ_ASSERT(hash == mozilla::HashString(chars, length));
+  }
+
   inline explicit Lookup(const JSAtom* atom)
       : type(atom->hasLatin1Chars() ? Latin1 : TwoByteChar),
         length(atom->length()),
@@ -1064,6 +1084,25 @@ template JSAtom* js::AtomizeChars(JSContext* cx, const Latin1Char* chars,
 
 template JSAtom* js::AtomizeChars(JSContext* cx, const char16_t* chars,
                                   size_t length, PinningBehavior pin);
+
+/* |chars| must not point into an inline or short string. */
+template <typename CharT>
+JSAtom* js::AtomizeChars(JSContext* cx, HashNumber hash, const CharT* chars,
+                         size_t length) {
+  if (JSAtom* s = cx->staticStrings().lookup(chars, length)) {
+    return s;
+  }
+
+  AtomHasher::Lookup lookup(hash, chars, length);
+  return AtomizeAndCopyCharsFromLookup(
+      cx, chars, length, lookup, PinningBehavior::DoNotPinAtom, Nothing());
+}
+
+template JSAtom* js::AtomizeChars(JSContext* cx, HashNumber hash,
+                                  const Latin1Char* chars, size_t length);
+
+template JSAtom* js::AtomizeChars(JSContext* cx, HashNumber hash,
+                                  const char16_t* chars, size_t length);
 
 template <typename CharsT>
 JSAtom* AtomizeUTF8OrWTF8Chars(JSContext* cx, const char* utf8Chars,
