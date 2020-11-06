@@ -362,16 +362,16 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     fun getTabTimeoutString(): String = when {
         closeTabsAfterOneDay -> {
-            appContext.getString(R.string.close_tabs_after_one_day)
+            appContext.getString(R.string.close_tabs_after_one_day_summary)
         }
         closeTabsAfterOneWeek -> {
-            appContext.getString(R.string.close_tabs_after_one_week)
+            appContext.getString(R.string.close_tabs_after_one_week_summary)
         }
         closeTabsAfterOneMonth -> {
-            appContext.getString(R.string.close_tabs_after_one_month)
+            appContext.getString(R.string.close_tabs_after_one_month_summary)
         }
         else -> {
-            appContext.getString(R.string.close_tabs_manually)
+            appContext.getString(R.string.close_tabs_manually_summary)
         }
     }
 
