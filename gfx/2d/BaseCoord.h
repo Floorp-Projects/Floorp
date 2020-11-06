@@ -32,35 +32,43 @@ struct BaseCoord {
 
   constexpr operator T() const { return value; }
 
-  friend bool operator==(Sub aA, Sub aB) { return aA.value == aB.value; }
-  friend bool operator!=(Sub aA, Sub aB) { return aA.value != aB.value; }
+  friend constexpr bool operator==(Sub aA, Sub aB) {
+    return aA.value == aB.value;
+  }
+  friend constexpr bool operator!=(Sub aA, Sub aB) {
+    return aA.value != aB.value;
+  }
 
-  friend Sub operator+(Sub aA, Sub aB) { return Sub(aA.value + aB.value); }
-  friend Sub operator-(Sub aA, Sub aB) { return Sub(aA.value - aB.value); }
-  friend Sub operator*(Sub aCoord, T aScale) {
+  friend constexpr Sub operator+(Sub aA, Sub aB) {
+    return Sub(aA.value + aB.value);
+  }
+  friend constexpr Sub operator-(Sub aA, Sub aB) {
+    return Sub(aA.value - aB.value);
+  }
+  friend constexpr Sub operator*(Sub aCoord, T aScale) {
     return Sub(aCoord.value * aScale);
   }
-  friend Sub operator*(T aScale, Sub aCoord) {
+  friend constexpr Sub operator*(T aScale, Sub aCoord) {
     return Sub(aScale * aCoord.value);
   }
-  friend Sub operator/(Sub aCoord, T aScale) {
+  friend constexpr Sub operator/(Sub aCoord, T aScale) {
     return Sub(aCoord.value / aScale);
   }
   // 'scale / coord' is intentionally omitted because it doesn't make sense.
 
-  Sub& operator+=(Sub aCoord) {
+  constexpr Sub& operator+=(Sub aCoord) {
     value += aCoord.value;
     return *static_cast<Sub*>(this);
   }
-  Sub& operator-=(Sub aCoord) {
+  constexpr Sub& operator-=(Sub aCoord) {
     value -= aCoord.value;
     return *static_cast<Sub*>(this);
   }
-  Sub& operator*=(T aScale) {
+  constexpr Sub& operator*=(T aScale) {
     value *= aScale;
     return *static_cast<Sub*>(this);
   }
-  Sub& operator/=(T aScale) {
+  constexpr Sub& operator/=(T aScale) {
     value /= aScale;
     return *static_cast<Sub*>(this);
   }
@@ -69,16 +77,16 @@ struct BaseCoord {
   // mixed-type operator overloads to avoid ambiguities at mixed-type call
   // sites. As we transition more of our code to strongly-typed classes, we
   // may be able to remove some or all of these overloads.
-  friend bool operator==(Sub aA, T aB) { return aA.value == aB; }
-  friend bool operator==(T aA, Sub aB) { return aA == aB.value; }
-  friend bool operator!=(Sub aA, T aB) { return aA.value != aB; }
-  friend bool operator!=(T aA, Sub aB) { return aA != aB.value; }
-  friend T operator+(Sub aA, T aB) { return aA.value + aB; }
-  friend T operator+(T aA, Sub aB) { return aA + aB.value; }
-  friend T operator-(Sub aA, T aB) { return aA.value - aB; }
-  friend T operator-(T aA, Sub aB) { return aA - aB.value; }
+  friend constexpr bool operator==(Sub aA, T aB) { return aA.value == aB; }
+  friend constexpr bool operator==(T aA, Sub aB) { return aA == aB.value; }
+  friend constexpr bool operator!=(Sub aA, T aB) { return aA.value != aB; }
+  friend constexpr bool operator!=(T aA, Sub aB) { return aA != aB.value; }
+  friend constexpr T operator+(Sub aA, T aB) { return aA.value + aB; }
+  friend constexpr T operator+(T aA, Sub aB) { return aA + aB.value; }
+  friend constexpr T operator-(Sub aA, T aB) { return aA.value - aB; }
+  friend constexpr T operator-(T aA, Sub aB) { return aA - aB.value; }
 
-  Sub operator-() const { return Sub(-value); }
+  constexpr Sub operator-() const { return Sub(-value); }
 
   friend std::ostream& operator<<(std::ostream& aStream,
                                   const BaseCoord<T, Sub>& aCoord) {
