@@ -44,6 +44,7 @@ RenderCompositorD3D11SWGL::RenderCompositorD3D11SWGL(
       mCompositor(aCompositor),
       mContext(aContext) {
   MOZ_ASSERT(mContext);
+  mSyncObject = mCompositor->GetSyncObject();
 }
 
 RenderCompositorD3D11SWGL::~RenderCompositorD3D11SWGL() {

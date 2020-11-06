@@ -30,6 +30,8 @@ class CompositorWidget;
 
 namespace wr {
 
+class RenderCompositorD3D11SWGL;
+
 class RenderCompositor {
  public:
   static UniquePtr<RenderCompositor> Create(
@@ -83,6 +85,10 @@ class RenderCompositor {
   }
   virtual layers::WebRenderCompositor CompositorType() const {
     return layers::WebRenderCompositor::DRAW;
+  }
+
+  virtual RenderCompositorD3D11SWGL* AsRenderCompositorD3D11SWGL() {
+    return nullptr;
   }
 
   // True if AttachExternalImage supports being used with an external
