@@ -34,12 +34,6 @@ export const ASRouterUtils = {
       data: { content },
     });
   },
-  dismissById(id) {
-    return ASRouterUtils.sendMessage({
-      type: msg.DISMISS_MESSAGE_BY_ID,
-      data: { id },
-    });
-  },
   executeAction(button_action) {
     return ASRouterUtils.sendMessage({
       type: msg.USER_ACTION,

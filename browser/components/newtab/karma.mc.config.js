@@ -87,8 +87,8 @@ module.exports = function(config) {
               branches: 0,
             },
             "content-src/asrouter/asrouter-utils.js": {
-              statements: 68,
-              lines: 68,
+              statements: 66,
+              lines: 66,
               functions: 100,
               branches: 63,
             },

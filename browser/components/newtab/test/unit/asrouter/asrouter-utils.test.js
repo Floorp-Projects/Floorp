@@ -46,15 +46,6 @@ describe("ASRouterUtils", () => {
       );
     });
   });
-  describe("dismissById", () => {
-    it("default", () => {
-      ASRouterUtils.dismissById(1);
-      assert.calledWith(
-        globals.ASRouterMessage,
-        sinon.match({ data: { id: 1 } })
-      );
-    });
-  });
   describe("executeAction", () => {
     it("default", () => {
       ASRouterUtils.executeAction({ foo: "bar" });
