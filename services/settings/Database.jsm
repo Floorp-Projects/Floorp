@@ -30,7 +30,7 @@ class Database {
   }
 
   async list(options = {}) {
-    const { filters = {}, sort = "" } = options;
+    const { filters = {}, order = "" } = options;
     let results = [];
     try {
       await executeIDB(
@@ -73,7 +73,7 @@ class Database {
     for (const result of results) {
       delete result._cid;
     }
-    return sort ? Utils.sortObjects(sort, results) : results;
+    return order ? Utils.sortObjects(order, results) : results;
   }
 
   async importChanges(metadata, timestamp, records = [], options = {}) {
