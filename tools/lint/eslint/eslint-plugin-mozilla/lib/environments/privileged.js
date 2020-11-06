@@ -402,6 +402,7 @@ module.exports = {
     PannerNode: false,
     ParentProcessMessageManager: false,
     Path2D: false,
+    PathUtils: false,
     PaymentAddress: false,
     PaymentMethodChangeEvent: false,
     PaymentRequest: false,
