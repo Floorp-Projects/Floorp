@@ -1265,7 +1265,7 @@ MFBT_API void SetPreXULSkeletonUIEnabledIfAllowed(bool value) {
     return;
   }
 
-  sPreXULSkeletonUIEnabled = true;
+  sPreXULSkeletonUIEnabled = value;
 }
 
 MFBT_API void PollPreXULSkeletonUIEvents() {
