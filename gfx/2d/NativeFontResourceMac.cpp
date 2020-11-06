@@ -70,17 +70,16 @@ already_AddRefed<NativeFontResourceMac> NativeFontResourceMac::Create(
                                 nullptr, nullptr,  nullptr, FontDataDeallocate,
                                 nullptr};
   CFAllocatorRef allocator = CFAllocatorCreate(kCFAllocatorDefault, &context);
+
+  // We create a CFDataRef here that we'l hold until we've determined that we
+  // have a valid font. If and only if we can create a font from the data,
+  // we'll store the font data in our map. Whether or not the font is valid,
+  // we'll later release this CFDataRef.
   CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, fontData,
                                                aDataLength, allocator);
 
-  {
-    auto set = sWeakFontDataSet.Lock();
-    set->insert(fontData);
-  }
-
   CTFontDescriptorRef ctFontDesc =
       CTFontManagerCreateFontDescriptorFromData(data);
-  CFRelease(data);
 
   // creating the CGFontRef via the CTFont avoids the data being held alive
   // in a cache.
@@ -93,8 +92,18 @@ already_AddRefed<NativeFontResourceMac> NativeFontResourceMac::Create(
   CFRelease(ctFont);
 
   if (!fontRef) {
+    // Not a valid font; release the structures we've been holding.
+    CFRelease(data);
+    CFRelease(ctFontDesc);
     return nullptr;
   }
+
+  {
+    auto set = sWeakFontDataSet.Lock();
+    set->insert(fontData);
+  }
+  // It's now safe to release our CFDataRef.
+  CFRelease(data);
 
   // passes ownership of fontRef to the NativeFontResourceMac instance
   RefPtr<NativeFontResourceMac> fontResource =
