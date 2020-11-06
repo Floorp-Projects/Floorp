@@ -230,11 +230,13 @@ py-black:
         mach: lint -v -l black -f treeherder -f json:/builds/worker/mozlint.json *
     when:
         files-changed:
+            # The list of extensions should match tools/lint/black.yml
             - '**/*.py'
+            - '**/moz.build'
+            - '**/*.configure'
+            - '**/*.mozbuild'
             - 'pyproject.toml'
             - 'tools/lint/flake8.yml'
-            # moz.configure files are also Python files.
-            # However, we don't currently check them with black
 
 py-pylint:
     description: pylint run over the gecko codebase
