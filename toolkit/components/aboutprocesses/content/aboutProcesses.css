@@ -52,11 +52,6 @@ td:nth-child(2) {
   width: 15%;
 }
 #process-tbody td:nth-child(2) {
-  /*
-  Right-alignment is more readable in LTR languages.
-  At the time of this writing, the units are not localized, so this is also true in RTL
-  languages. However, if/when we localize units, we should make this a `text-align: end`.
-  */
   text-align: end;
 }
 
@@ -65,11 +60,6 @@ td:nth-child(3) {
   width: 15%;
 }
 #process-tbody td:nth-child(3) {
-  /*
-  Right-alignment is more readable in LTR languages.
-  At the time of this writing, the units are not localized, so this is also true in RTL
-  languages. However, if/when we localize units, we should make this a `text-align: end`.
-  */
   text-align: end;
 }
 
@@ -88,8 +78,7 @@ td:nth-child(4) {
   background-color: var(--in-content-button-background);
 }
 #process-thead > tr > td:not(:first-child) {
-  border-inline-start-width: 1px;
-  border-inline-start-style: solid;
+  border-inline-start: 1px solid;
   border-image: linear-gradient(transparent 0%, transparent 20%, var(--in-content-box-border-color) 20%, var(--in-content-box-border-color) 80%, transparent 80%, transparent 100%) 1 1;
   border-bottom: 1px solid var(--in-content-border-color);
 }
@@ -161,10 +150,7 @@ td.type:dir(rtl), td.favicon:dir(rtl) {
 .clickable:dir(rtl) {
   background-position-x: left 4px;
 }
-.asc {
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
+.asc,
 .desc {
   -moz-context-properties: fill;
   fill: currentColor;
@@ -192,7 +178,7 @@ td.type:dir(rtl), td.favicon:dir(rtl) {
 #process-thead > tr > td.clickable:hover {
   background-color: var(--in-content-button-background-hover);
 }
-#process-thead > tr > td.clickable:active {
+#process-thead > tr > td.clickable:hover:active {
   background-color: var(--in-content-button-background-active);
 }
 
@@ -218,7 +204,8 @@ td.type:dir(rtl), td.favicon:dir(rtl) {
   background: url("chrome://global/skin/icons/close.svg") no-repeat center;
   opacity: 0;      /* Start out as transparent */
   fill-opacity: 0; /* Make SVG background transparent */
-  -moz-context-properties: fill-opacity;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
 }
 
 tr:is([selected], :hover):not(.killing) > .close-icon {
@@ -226,7 +213,11 @@ tr:is([selected], :hover):not(.killing) > .close-icon {
 }
 
 .close-icon:hover {
-  background-color: var(--in-content-button-background);
+  background-color: var(--in-content-button-background-hover);
+}
+
+.close-icon:hover:active {
+  background-color: var(--in-content-button-background-active);
 }
 
 /* column-name */
