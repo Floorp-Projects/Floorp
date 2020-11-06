@@ -1,9 +1,7 @@
 function test() {
   var isWin7OrHigher = false;
   try {
-    let version = Cc["@mozilla.org/system-info;1"]
-      .getService(Ci.nsIPropertyBag2)
-      .getProperty("version");
+    let version = Services.sysinfo.getProperty("version");
     isWin7OrHigher = parseFloat(version) >= 6.1;
   } catch (ex) {}
 

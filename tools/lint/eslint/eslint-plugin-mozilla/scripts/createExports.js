@@ -39,6 +39,25 @@ const shipModulesFile = path.join(
 
 fs.writeFileSync(shipModulesFile, fs.readFileSync(modulesFile));
 
+console.log("Copying services.json");
+
+const env = helpers.getBuildEnvironment();
+
+const servicesFile = path.join(
+  env.topobjdir,
+  "xpcom",
+  "components",
+  "services.json"
+);
+const shipServicesFile = path.join(
+  eslintDir,
+  "eslint-plugin-mozilla",
+  "lib",
+  "services.json"
+);
+
+fs.writeFileSync(shipServicesFile, fs.readFileSync(servicesFile));
+
 console.log("Generating globals file");
 
 // Export the environments.
@@ -56,10 +75,7 @@ return fs.writeFile(
     console.log("Globals file generation complete");
 
     console.log("Creating rules data file");
-    // Also export data for the use-services.js rule
-    let rulesData = {
-      "use-services.js": require("../lib/rules/use-services.js")().getServicesInterfaceMap(),
-    };
+    let rulesData = {};
 
     return fs.writeFile(rulesFile, JSON.stringify({ rulesData }), err1 => {
       if (err1) {

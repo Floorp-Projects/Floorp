@@ -52,8 +52,9 @@ var nativeHandle = baseWindow.nativeHandle;
 // eslint-disable-next-line no-unsanitized/property
 $("display").innerHTML = "found nativeHandle for this window: "+nativeHandle;
 
-var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-var win = wm.getMostRecentWindow("navigator:browser");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+var win = Services.wm.getMostRecentWindow("navigator:browser");
 let docShell = getBaseWindowInterfaceFromDocShell(win);
 
 ok(

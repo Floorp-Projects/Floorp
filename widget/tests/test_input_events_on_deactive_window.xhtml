@@ -24,8 +24,8 @@
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests, window);
 
-var fm = Cc["@mozilla.org/focus-manager;1"].
-           getService(Ci.nsIFocusManager);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 var textarea = document.getElementById("textarea");
 var otherWindow;
 var timer;
@@ -33,8 +33,8 @@ var timer;
 function runTests()
 {
   textarea.focus();
-  is(fm.focusedElement, textarea, "we're deactive");
-  if (fm.focusedElement != textarea) {
+  is(Services.focus.focusedElement, textarea, "we're deactive");
+  if (Services.focus.focusedElement != textarea) {
     SimpleTest.finish();
     return;
   }
@@ -56,8 +56,8 @@ function runTests()
 function startTests()
 {
   clearTimeout(timer);
-  isnot(fm.focusedWindow, window, "we're not deactive");
-  if (fm.focusedWindow == window) {
+  isnot(Services.focus.focusedWindow, window, "we're not deactive");
+  if (Services.focus.focusedWindow == window) {
     otherWindow.close();
     SimpleTest.finish();
     return;

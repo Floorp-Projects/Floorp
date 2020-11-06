@@ -882,9 +882,7 @@ if (
   manifestNavigator().userAgent.includes("Mobile") ||
   manifestNavigator().userAgent.includes("Tablet")
 ) {
-  androidVersion = SpecialPowers.Cc["@mozilla.org/system-info;1"]
-    .getService(SpecialPowers.Ci.nsIPropertyBag2)
-    .getProperty("version");
+  androidVersion = SpecialPowers.Services.sysinfo.getProperty("version");
 }
 
 function getAndroidVersion() {
