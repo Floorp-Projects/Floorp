@@ -22,11 +22,13 @@
 namespace mozilla {
 namespace gfx {
 
-static StaticDataMutex<std::unordered_set<void*>> sWeakFontDataSet("WeakFonts");
+#define FONT_NAME_MAX 32
+static StaticDataMutex<std::unordered_map<void*, nsAutoCStringN<FONT_NAME_MAX>>>
+    sWeakFontDataMap("WeakFonts");
 
 void FontDataDeallocate(void*, void* info) {
-  auto set = sWeakFontDataSet.Lock();
-  set->erase(info);
+  auto fontMap = sWeakFontDataMap.Lock();
+  fontMap->erase(info);
   free(info);
 }
 
@@ -46,10 +48,10 @@ class NativeFontResourceMacReporter final : public nsIMemoryReporter {
   }
 
   static size_t SizeOfData(mozilla::MallocSizeOf aMallocSizeOf) {
-    auto fontData = sWeakFontDataSet.Lock();
+    auto fontMap = sWeakFontDataMap.Lock();
     size_t total = 0;
-    for (auto& i : *fontData) {
-      total += aMallocSizeOf(i);
+    for (auto& i : *fontMap) {
+      total += aMallocSizeOf(i.first) + FONT_NAME_MAX;
     }
     return total;
   }
@@ -98,9 +100,28 @@ already_AddRefed<NativeFontResourceMac> NativeFontResourceMac::Create(
     return nullptr;
   }
 
+  // Determine the font name and store it with the font data in the map.
+  nsAutoCStringN<FONT_NAME_MAX> fontName;
+
+  CFStringRef psname = CGFontCopyPostScriptName(fontRef);
+  if (psname) {
+    const char* cstr = CFStringGetCStringPtr(psname, kCFStringEncodingUTF8);
+    if (cstr) {
+      fontName.Assign(cstr);
+    } else {
+      char buf[FONT_NAME_MAX];
+      if (CFStringGetCString(psname, buf, FONT_NAME_MAX,
+                             kCFStringEncodingUTF8)) {
+        fontName.Assign(buf);
+      }
+    }
+    CFRelease(psname);
+  }
+
   {
-    auto set = sWeakFontDataSet.Lock();
-    set->insert(fontData);
+    auto fontMap = sWeakFontDataMap.Lock();
+    void* key = (void*)fontData;
+    fontMap->insert({key, fontName});
   }
   // It's now safe to release our CFDataRef.
   CFRelease(data);
