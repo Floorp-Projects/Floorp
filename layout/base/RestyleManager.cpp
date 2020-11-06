@@ -743,14 +743,11 @@ static bool RecomputePosition(nsIFrame* aFrame) {
       for (nsIFrame* cont = aFrame; cont;
            cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
         nsIFrame* cb = cont->GetContainingBlock();
-        nsMargin newOffsets;
         WritingMode wm = cb->GetWritingMode();
-        const LogicalSize size = cb->ContentSize();
-
-        ReflowInput::ComputeRelativeOffsets(wm, cont, size, newOffsets);
-        NS_ASSERTION(newOffsets.left == -newOffsets.right &&
-                         newOffsets.top == -newOffsets.bottom,
-                     "ComputeRelativeOffsets should return valid results");
+        const LogicalSize cbSize = cb->ContentSize();
+        const LogicalMargin newLogicalOffsets =
+            ReflowInput::ComputeRelativeOffsets(wm, cont, cbSize);
+        const nsMargin newOffsets = newLogicalOffsets.GetPhysicalMargin(wm);
 
         // ReflowInput::ApplyRelativePositioning would work here, but
         // since we've already checked mPosition and aren't changing the frame's

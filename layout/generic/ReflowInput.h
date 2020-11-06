@@ -941,9 +941,11 @@ struct ReflowInput : public SizeComputationInput {
   }
 
   // Compute the offsets for a relative position element
-  static void ComputeRelativeOffsets(mozilla::WritingMode aWM, nsIFrame* aFrame,
-                                     const mozilla::LogicalSize& aCBSize,
-                                     nsMargin& aComputedOffsets);
+  //
+  // @param aWM the writing mode of aCBSize and the returned offsets.
+  static mozilla::LogicalMargin ComputeRelativeOffsets(
+      mozilla::WritingMode aWM, nsIFrame* aFrame,
+      const mozilla::LogicalSize& aCBSize);
 
   // If a relatively positioned element, adjust the position appropriately.
   static void ApplyRelativePositioning(nsIFrame* aFrame,
