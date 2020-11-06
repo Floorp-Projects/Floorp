@@ -218,10 +218,13 @@ class ReaderViewFeature(
         val feature = WeakReference(this)
         val store = WeakReference(store)
         extensionController.install(engine, onSuccess = {
-            // In case the extension was installed while an extension page was
-            // displayed (if on startup we opened directly into a
-            // restored reader view page), we have to reload the extension page,
-            // as we may have missed to connect the port.
+            // If we open directly into a restored reader page on startup it's
+            // currently possible that we miss the "onPortConnected" message.
+            // These messages should be queued and delivered once a handler is
+            // present, but are currently flushed by the first native app that
+            // connects, which may be a different port / app:
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1675644
+            // This attempts to work around the problem until the fix lands.
             feature.get()?.connectReaderViewContentScript()
             val selectedTab = store.get()?.state?.selectedTab
             if (selectedTab?.readerState?.active == true) {
