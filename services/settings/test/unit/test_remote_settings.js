@@ -302,6 +302,52 @@ add_task(async function test_get_falls_back_to_dump_if_db_fails() {
 });
 add_task(clear_state);
 
+add_task(async function test_get_sorts_results_if_specified() {
+  await client.db.importChanges(
+    {},
+    42,
+    [
+      {
+        field: 12,
+        id: "9d500963-d80e-3a91-6e74-66f3811b99cc",
+      },
+      {
+        field: 7,
+        id: "d83444a4-f348-4cd8-8228-842cb927db9f",
+      },
+    ],
+    { clear: true }
+  );
+
+  const records = await client.get({ order: "field" });
+  ok(
+    records[0].field < records[records.length - 1].field,
+    "records are sorted"
+  );
+});
+add_task(clear_state);
+
+add_task(async function test_get_falls_back_sorts_results() {
+  if (IS_ANDROID) {
+    // Skip test: we don't ship remote settings dumps on Android (see package-manifest).
+    return;
+  }
+  const backup = clientWithDump.db.getLastModified;
+  clientWithDump.db.getLastModified = () => {
+    throw new Error("Unknown error");
+  };
+
+  const records = await clientWithDump.get({
+    dumpFallback: true,
+    order: "-id",
+  });
+
+  ok(records[0].id > records[records.length - 1].id, "records are sorted");
+
+  clientWithDump.db.getLastModified = backup;
+});
+add_task(clear_state);
+
 add_task(async function test_get_falls_back_to_dump_if_db_fails_later() {
   if (IS_ANDROID) {
     // Skip test: we don't ship remote settings dumps on Android (see package-manifest).
