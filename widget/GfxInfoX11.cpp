@@ -341,7 +341,9 @@ void GfxInfo::GetData() {
   mIsWayland = gdk_display_get_default() &&
                !GDK_IS_X11_DISPLAY(gdk_display_get_default());
   if (mIsWayland) {
-    mIsWaylandDRM = GetDMABufDevice()->IsDMABufEnabled();
+    mIsWaylandDRM = GetDMABufDevice()->IsDMABufVAAPIEnabled() ||
+                    GetDMABufDevice()->IsDMABufWebGLEnabled() ||
+                    GetDMABufDevice()->IsDMABufTexturesEnabled();
   }
 #endif
 
