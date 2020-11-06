@@ -1962,7 +1962,7 @@ static void ReflectSkeletonUIPrefToRegistry(const char* aPref, void* aData) {
   }
 
   if (GetPreXULSkeletonUIEnabled() != shouldBeEnabled) {
-    SetPreXULSkeletonUIEnabled(shouldBeEnabled);
+    SetPreXULSkeletonUIEnabledIfAllowed(shouldBeEnabled);
   }
 }
 

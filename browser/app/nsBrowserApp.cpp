@@ -319,7 +319,7 @@ int main(int argc, char* argv[], char* envp[]) {
 #endif
 
 #if defined(XP_WIN)
-  mozilla::CreateAndStorePreXULSkeletonUI(GetModuleHandle(nullptr));
+  mozilla::CreateAndStorePreXULSkeletonUI(GetModuleHandle(nullptr), argc, argv);
 #endif
 
   nsresult rv = InitXPCOMGlue(LibLoadingStrategy::ReadAhead);
