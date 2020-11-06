@@ -291,11 +291,11 @@ ProfileBufferBlockIndex AddMarkerToBuffer(
       aBuffer, aName, aCategory, std::move(aOptions), aTs...);
 }
 
-template <typename NameCallback, typename StackCallback>
+template <typename StackCallback>
 [[nodiscard]] bool DeserializeAfterKindAndStream(
     ProfileBufferEntryReader& aEntryReader,
     baseprofiler::SpliceableJSONWriter& aWriter, int aThreadIdOrZero,
-    NameCallback&& aNameCallback, StackCallback&& aStackCallback) {
+    StackCallback&& aStackCallback) {
   // Each entry is made up of the following:
   //   ProfileBufferEntry::Kind::Marker, <- already read by caller
   //   options,                          <- next location in entries
@@ -311,8 +311,7 @@ template <typename NameCallback, typename StackCallback>
   // [name, startTime, endTime, phase, category, data]
   aWriter.StartArrayElement();
   {
-    std::forward<NameCallback>(aNameCallback)(
-        aEntryReader.ReadObject<ProfilerString8View>());
+    aWriter.UniqueStringElement(aEntryReader.ReadObject<ProfilerString8View>());
 
     const double startTime = options.Timing().GetStartTime();
     aWriter.DoubleElement(startTime);
