@@ -2830,6 +2830,14 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
           data.forEach(id => this.clearProvider(id));
           break;
         }
+
+      case "EnterSnippetsPreviewMode":
+        {
+          this.props.dispatch({
+            type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_1__["actionTypes"].SNIPPETS_PREVIEW_MODE
+          });
+          break;
+        }
     }
   }
 

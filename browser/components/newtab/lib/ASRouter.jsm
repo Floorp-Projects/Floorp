@@ -1665,13 +1665,15 @@ class _ASRouter {
     return state;
   }
 
-  addPreviewEndpoint(url) {
-    // When you view a preview snippet we want to hide all real content
+  addPreviewEndpoint(url, browser) {
     const providers = [...this.state.providers];
     if (
       this._validPreviewEndpoint(url) &&
       !providers.find(p => p.url === url)
     ) {
+      // When you view a preview snippet we want to hide all real content -
+      // sending EnterSnippetsPreviewMode puts this browser tab in that state.
+      browser.sendMessageToActor("EnterSnippetsPreviewMode", {}, "ASRouter");
       providers.push({
         id: "preview",
         type: "remote",
@@ -1735,7 +1737,7 @@ class _ASRouter {
 
     // Load preview endpoint for snippets if one is sent
     if (endpoint) {
-      await this.addPreviewEndpoint(endpoint.url);
+      await this.addPreviewEndpoint(endpoint.url, browser);
     }
 
     // Load all messages

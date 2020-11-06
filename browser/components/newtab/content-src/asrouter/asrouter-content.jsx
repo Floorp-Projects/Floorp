@@ -201,6 +201,10 @@ export class ASRouterUISurface extends React.PureComponent {
         data.forEach(id => this.clearProvider(id));
         break;
       }
+      case "EnterSnippetsPreviewMode": {
+        this.props.dispatch({ type: at.SNIPPETS_PREVIEW_MODE });
+        break;
+      }
     }
   }
 
