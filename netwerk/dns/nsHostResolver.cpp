@@ -921,6 +921,7 @@ already_AddRefed<nsHostRecord> nsHostResolver::InitLoopbackRecord(
 
   nsTArray<NetAddr> addresses;
   PRNetAddr prAddr;
+  memset(&prAddr, 0, sizeof(prAddr));
   if (key.af == PR_AF_INET || key.af == PR_AF_UNSPEC) {
     MOZ_RELEASE_ASSERT(PR_StringToNetAddr("127.0.0.1", &prAddr) == PR_SUCCESS);
     addresses.AppendElement(NetAddr(&prAddr));

@@ -1532,6 +1532,7 @@ nsresult nsSocketTransport::InitiateSocket() {
   // Initiate the connect() to the host...
   //
   PRNetAddr prAddr;
+  memset(&prAddr, 0, sizeof(prAddr));
   {
     if (mBindAddr) {
       MutexAutoLock lock(mLock);
