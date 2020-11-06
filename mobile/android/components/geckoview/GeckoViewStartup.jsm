@@ -158,7 +158,6 @@ class GeckoViewStartup {
           Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT
         ) {
           ActorManagerParent.addJSWindowActors(JSWINDOWACTORS);
-          ActorManagerParent.flush();
 
           Services.mm.loadFrameScript(
             "chrome://geckoview/content/GeckoViewPromptChild.js",

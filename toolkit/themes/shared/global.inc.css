@@ -43,7 +43,7 @@ html|textarea {
   background-repeat: no-repeat;
   appearance: none;
   -moz-window-shadow: none;
-  /* Set pointer-events: none; so that mousemove events can be handled by browser-content.js. */
+  /* Set pointer-events: none; so that mousemove events can be handled by AutoScrollChild.jsm. */
   pointer-events: none;
 }
 

@@ -41,7 +41,6 @@ const known_scripts = {
     "resource:///actors/LinkHandlerChild.jsm",
     "resource:///actors/PageStyleChild.jsm",
     "resource:///actors/SearchTelemetryChild.jsm",
-    "resource://gre/modules/ActorManagerChild.jsm",
     "resource://gre/modules/E10SUtils.jsm",
     "resource://gre/modules/Readerable.jsm",
 
@@ -57,9 +56,6 @@ const known_scripts = {
   frameScripts: new Set([
     // Test related
     "chrome://mochikit/content/shutdown-leaks-collector.js",
-
-    // Browser front-end
-    "chrome://global/content/browser-content.js",
 
     // Extensions
     "resource://gre/modules/addons/Content.js",
