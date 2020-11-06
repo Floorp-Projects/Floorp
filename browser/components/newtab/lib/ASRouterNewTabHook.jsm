@@ -15,6 +15,10 @@ class ASRouterNewTabHookInstance {
       this._newTabMessageHandler === null
         ? Promise.resolve()
         : this._newTabMessageHandler.clearChildMessages(...params);
+    this._clearChildProviders = (...params) =>
+      this._newTabMessageHandler === null
+        ? Promise.resolve()
+        : this._newTabMessageHandler.clearChildProviders(...params);
     this._updateAdminState = (...params) =>
       this._newTabMessageHandler === null
         ? Promise.resolve()
@@ -43,6 +47,7 @@ class ASRouterNewTabHookInstance {
         sendTelemetry: this._parentProcessMessageHandler.handleTelemetry,
         dispatchCFRAction: this._parentProcessMessageHandler.handleCFRAction,
         clearChildMessages: this._clearChildMessages,
+        clearChildProviders: this._clearChildProviders,
         updateAdminState: this._updateAdminState,
       });
     }
@@ -62,6 +67,7 @@ class ASRouterNewTabHookInstance {
    * Params:
    *    newTabMessageHandler - {
    *      clearChildMessages: clears child messages and returns Promise
+   *      clearChildProviders: clears child providers and returns Promise.
    *      updateAdminState: updates admin state and returns Promise
    *   }
    * Returns: parentProcessMessageHandler

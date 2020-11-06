@@ -544,6 +544,7 @@ class _ASRouter {
   constructor(localProviders = LOCAL_MESSAGE_PROVIDERS) {
     this.initialized = false;
     this.clearChildMessages = null;
+    this.clearChildProviders = null;
     this.updateAdminState = null;
     this.sendTelemetry = null;
     this.dispatchCFRAction = null;
@@ -575,8 +576,8 @@ class _ASRouter {
   }
 
   async onPrefChange(prefName) {
-    let invalidMessages = [];
     if (TARGETING_PREFERENCES.includes(prefName)) {
+      let invalidMessages = [];
       // Notify all tabs of messages that have become invalid after pref change
       const context = this._getMessagesContext();
       const targetingContext = new TargetingContext(context);
@@ -590,17 +591,20 @@ class _ASRouter {
           invalidMessages.push(msg.id);
         }
       }
+      this.clearChildMessages(invalidMessages);
     } else {
       // Update message providers and fetch new messages on pref change
       this._loadLocalProviders();
-      invalidMessages = await this._updateMessageProviders();
+      let invalidProviders = await this._updateMessageProviders();
+      if (invalidProviders.length) {
+        this.clearChildProviders(invalidProviders);
+      }
       await this.loadMessagesFromAllProviders();
       // Any change in user prefs can disable or enable groups
       await this.setState(state => ({
         groups: state.groups.map(this._checkGroupEnabled),
       }));
     }
-    this.clearChildMessages(invalidMessages);
   }
 
   // Fetch and decode the message provider pref JSON, and update the message providers
@@ -641,12 +645,12 @@ class _ASRouter {
     );
 
     const providerIDs = providers.map(p => p.id);
-    let invalidMessages = [];
+    let invalidProviders = [];
 
     // Clear old messages for providers that are no longer enabled
     for (const prevProvider of previousProviders) {
       if (!providerIDs.includes(prevProvider.id)) {
-        invalidMessages.push(prevProvider.id);
+        invalidProviders.push(prevProvider.id);
       }
     }
 
@@ -658,7 +662,7 @@ class _ASRouter {
           providerIDs.includes(message.provider)
         ),
       ],
-    })).then(() => invalidMessages);
+    })).then(() => invalidProviders);
   }
 
   get state() {
@@ -881,12 +885,14 @@ class _ASRouter {
     storage,
     sendTelemetry,
     clearChildMessages,
+    clearChildProviders,
     updateAdminState,
     dispatchCFRAction,
   }) {
     this._storage = storage;
     this.ALLOWLIST_HOSTS = this._loadSnippetsAllowHosts();
     this.clearChildMessages = this.toWaitForInitFunc(clearChildMessages);
+    this.clearChildProviders = this.toWaitForInitFunc(clearChildProviders);
     // NOTE: This is only necessary to sync devtools and snippets when devtools is active.
     this.updateAdminState = this.toWaitForInitFunc(updateAdminState);
     this.sendTelemetry = sendTelemetry;
@@ -927,6 +933,7 @@ class _ASRouter {
       (await this._storage.get("groupImpressions")) || {};
     const previousSessionEnd =
       (await this._storage.get("previousSessionEnd")) || 0;
+
     await this.setState({
       messageBlockList,
       groupImpressions,
@@ -951,6 +958,7 @@ class _ASRouter {
     this._storage.set("previousSessionEnd", Date.now());
 
     this.clearChildMessages = null;
+    this.clearChildProviders = null;
     this.updateAdminState = null;
     this.sendTelemetry = null;
     this.dispatchCFRAction = null;

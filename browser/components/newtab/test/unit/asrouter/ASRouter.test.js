@@ -82,6 +82,7 @@ describe("ASRouter", () => {
       },
       sendTelemetry: sandbox.stub().resolves(),
       clearChildMessages: sandbox.stub().resolves(),
+      clearChildProviders: sandbox.stub().resolves(),
       updateAdminState: sandbox.stub().resolves(),
       dispatchCFRAction: sandbox.stub().resolves(),
     };
@@ -615,6 +616,25 @@ describe("ASRouter", () => {
       const provider = Router.state.providers.find(p => p.url === "baz.com");
       assert.lengthOf(Router.state.providers, length);
       assert.isDefined(provider);
+    });
+    it("should clear disabled providers on pref change", async () => {
+      const TEST_PROVIDER_ID = "some_provider_id";
+      await Router.setState({
+        providers: [{ id: TEST_PROVIDER_ID }],
+      });
+      const modifiedRemoteProvider = Object.assign({}, FAKE_REMOTE_PROVIDER, {
+        id: TEST_PROVIDER_ID,
+        enabled: false,
+      });
+      setMessageProviderPref([
+        FAKE_LOCAL_PROVIDER,
+        modifiedRemoteProvider,
+        FAKE_REMOTE_SETTINGS_PROVIDER,
+      ]);
+      await Router.onPrefChange(MESSAGE_PROVIDER_PREF_NAME);
+
+      assert.calledOnce(initParams.clearChildProviders);
+      assert.calledWith(initParams.clearChildProviders, [TEST_PROVIDER_ID]);
     });
   });
 

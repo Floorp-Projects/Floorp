@@ -2805,6 +2805,14 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
     }
   }
 
+  clearProvider(id) {
+    if (this.state.message.provider === id) {
+      this.setState({
+        message: {}
+      });
+    }
+  }
+
   onMessageFromParent({
     type,
     data
@@ -2814,6 +2822,12 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
       case "ClearMessages":
         {
           data.forEach(id => this.clearMessage(id));
+          break;
+        }
+
+      case "ClearProviders":
+        {
+          data.forEach(id => this.clearProvider(id));
           break;
         }
     }

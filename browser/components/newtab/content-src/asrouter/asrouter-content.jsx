@@ -184,11 +184,21 @@ export class ASRouterUISurface extends React.PureComponent {
     }
   }
 
+  clearProvider(id) {
+    if (this.state.message.provider === id) {
+      this.setState({ message: {} });
+    }
+  }
+
   onMessageFromParent({ type, data }) {
     // These only exists due to onPrefChange events in ASRouter
     switch (type) {
       case "ClearMessages": {
         data.forEach(id => this.clearMessage(id));
+        break;
+      }
+      case "ClearProviders": {
+        data.forEach(id => this.clearProvider(id));
         break;
       }
     }
