@@ -23,11 +23,11 @@
 
 use ::libc;
 
-use crate::matrix::matrix;
 use crate::{
     iccread::{curveType, qcms_profile},
     s15Fixed16Number_to_float,
 };
+use crate::{matrix::matrix, transform::PRECACHE_OUTPUT_MAX, transform::PRECACHE_OUTPUT_SIZE};
 
 pub type int32_t = i32;
 
@@ -106,17 +106,19 @@ unsafe extern "C" fn lut_interp_linear_precache_output(
      * We'll divide out the PRECACHE_OUTPUT_MAX next */
     let mut value: u32 = input_value * (length - 1) as libc::c_uint;
     /* equivalent to ceil(value/PRECACHE_OUTPUT_MAX) */
-    let mut upper: u32 = (value + (8192 - 1) as libc::c_uint - 1) / (8192 - 1) as libc::c_uint;
+    let mut upper: u32 =
+        (value + PRECACHE_OUTPUT_MAX as libc::c_uint - 1) / (8192 - 1) as libc::c_uint;
     /* equivalent to floor(value/PRECACHE_OUTPUT_MAX) */
-    let mut lower: u32 = value / (8192 - 1) as libc::c_uint;
+    let mut lower: u32 = value / PRECACHE_OUTPUT_MAX as libc::c_uint;
     /* interp is the distance from upper to value scaled to 0..PRECACHE_OUTPUT_MAX */
-    let mut interp: u32 = value % (8192 - 1) as libc::c_uint;
+    let mut interp: u32 = value % PRECACHE_OUTPUT_MAX as libc::c_uint;
     /* the table values range from 0..65535 */
     value = *table.offset(upper as isize) as libc::c_uint * interp
-        + *table.offset(lower as isize) as libc::c_uint * ((8192 - 1) as libc::c_uint - interp); // 0..(65535*PRECACHE_OUTPUT_MAX)
-                                                                                                 /* round and scale */
-    value = value + ((8192 - 1) * 65535 / 255 / 2) as libc::c_uint; // scale to 0..255
-    value = value / ((8192 - 1) * 65535 / 255) as libc::c_uint;
+        + *table.offset(lower as isize) as libc::c_uint
+            * (PRECACHE_OUTPUT_MAX as libc::c_uint - interp); // 0..(65535*PRECACHE_OUTPUT_MAX)
+                                                              /* round and scale */
+    value = value + (PRECACHE_OUTPUT_MAX * 65535 / 255 / 2) as libc::c_uint; // scale to 0..255
+    value = value / (PRECACHE_OUTPUT_MAX * 65535 / 255) as libc::c_uint;
     return value as u8;
 }
 /* value must be a value between 0 and 1 */
@@ -385,10 +387,10 @@ fn invert_lut(mut table: &[u16], mut out_length: i32) -> Vec<u16> {
 }
 unsafe extern "C" fn compute_precache_pow(mut output: *mut u8, mut gamma: f32) {
     let mut v: u32 = 0;
-    while v < 8192 {
+    while v < PRECACHE_OUTPUT_SIZE as u32 {
         //XXX: don't do integer/float conversion... and round?
         *output.offset(v as isize) =
-            (255.0f64 * (v as f64 / (8192 - 1) as f64).powf(gamma as f64)) as u8;
+            (255.0f64 * (v as f64 / PRECACHE_OUTPUT_MAX as f64).powf(gamma as f64)) as u8;
         v = v + 1
     }
 }
@@ -399,7 +401,7 @@ pub unsafe extern "C" fn compute_precache_lut(
     mut length: i32,
 ) {
     let mut v: u32 = 0;
-    while v < 8192 {
+    while v < PRECACHE_OUTPUT_SIZE as u32 {
         *output.offset(v as isize) = lut_interp_linear_precache_output(v, table, length);
         v = v + 1
     }
@@ -407,7 +409,7 @@ pub unsafe extern "C" fn compute_precache_lut(
 #[no_mangle]
 pub unsafe extern "C" fn compute_precache_linear(mut output: *mut u8) {
     let mut v: u32 = 0;
-    while v < 8192 {
+    while v < PRECACHE_OUTPUT_SIZE as u32 {
         //XXX: round?
         *output.offset(v as isize) = (v / (8192 / 256) as libc::c_uint) as u8;
         v = v + 1

@@ -57,8 +57,8 @@ use ::libc::{self, free, malloc};
 use std::sync::Arc;
 use std::{ptr::null_mut, sync::atomic::Ordering};
 
-const PRECACHE_OUTPUT_SIZE: usize = 8192;
-const PRECACHE_OUTPUT_MAX: usize = PRECACHE_OUTPUT_SIZE - 1;
+pub const PRECACHE_OUTPUT_SIZE: usize = 8192;
+pub const PRECACHE_OUTPUT_MAX: usize = PRECACHE_OUTPUT_SIZE - 1;
 pub const FLOATSCALE: f32 = PRECACHE_OUTPUT_SIZE as f32;
 pub const CLAMPMAXVAL: f32 = ((PRECACHE_OUTPUT_SIZE - 1) as f32) / PRECACHE_OUTPUT_SIZE as f32;
 
