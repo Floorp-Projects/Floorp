@@ -202,6 +202,26 @@ urlbar.searchmode.*
   Wikipedia sites (Wikipedia (en), Wikipedia (fr), etc.) to "Wikipedia". This
   is done to reduce the number of keys used by these scalars.
 
+urlbar.picked.searchmode.*
+  This is a set of keyed scalars whose values are uints incremented each time a
+  result is picked from the Urlbar while the Urlbar is in search mode. The
+  suffix on the scalar name is the search mode entry point. The keys for the
+  scalars are the 0-based index of the result in the urlbar panel when it was
+  picked.
+
+  .. note::
+    These scalars share elements of both ``urlbar.picked.*`` and
+    ``urlbar.searchmode.*``. Scalar name suffixes are search mode entry points,
+    like ``urlbar.searchmode.*``. The keys for these scalars are result indices,
+    like ``urlbar.picked.*``.
+
+  .. note::
+    These data are a subset of the data recorded by ``urlbar.picked.*``. For
+    example, if the user enters search mode by clicking a one-off then selects
+    a Google search suggestion at index 2, we would record in **both**
+    ``urlbar.picked.searchsuggestion`` and ``urlbar.picked.searchmode.oneoff``.
+
+
 Event Telemetry
 ---------------
 
