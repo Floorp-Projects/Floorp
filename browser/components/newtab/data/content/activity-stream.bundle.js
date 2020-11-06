@@ -2313,15 +2313,6 @@ const ASRouterUtils = {
     });
   },
 
-  dismissById(id) {
-    return ASRouterUtils.sendMessage({
-      type: common_ActorConstants_jsm__WEBPACK_IMPORTED_MODULE_0__["MESSAGE_TYPE_HASH"].DISMISS_MESSAGE_BY_ID,
-      data: {
-        id
-      }
-    });
-  },
-
   executeAction(button_action) {
     return ASRouterUtils.sendMessage({
       type: common_ActorConstants_jsm__WEBPACK_IMPORTED_MODULE_0__["MESSAGE_TYPE_HASH"].USER_ACTION,
