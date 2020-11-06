@@ -1718,6 +1718,13 @@ bool CompositorD3D11::Failed(HRESULT hr, const char* aContext) {
   return true;
 }
 
+SyncObjectHost* CompositorD3D11::GetSyncObject() {
+  if (mAttachments) {
+    return mAttachments->mSyncObject;
+  }
+  return nullptr;
+}
+
 void CompositorD3D11::HandleError(HRESULT hr, Severity aSeverity) {
   if (SUCCEEDED(hr)) {
     return;
