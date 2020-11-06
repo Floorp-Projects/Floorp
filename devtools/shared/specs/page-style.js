@@ -14,11 +14,6 @@ const {
 // Load the shared types for style actors
 require("devtools/shared/specs/style/style-types");
 
-// Preload the style-rule spec to make sure that domstylerule is fully defined.
-// The inspector still uses actorHasMethod, which relies on dumping the protocol
-// specs. This can be removed when actorHasMethod is removed.
-require("devtools/shared/specs/style-rule");
-
 const pageStyleSpec = generateActorSpec({
   typeName: "pagestyle",
 
