@@ -67,15 +67,27 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   bool pushedResult_ = false;
 #endif
 
+  inline void addUnchecked(MInstruction* ins) {
+    current->add(ins);
+
+    // If we have not set a more specific bailout kind, mark this instruction
+    // as transpiled CacheIR. If one of these instructions bails out, we
+    // expect to hit the baseline fallback stub and invalidate the Warp script
+    // in tryAttach.
+    if (ins->bailoutKind() == BailoutKind::Unknown) {
+      ins->setBailoutKind(BailoutKind::TranspiledCacheIR);
+    }
+  }
+
   inline void add(MInstruction* ins) {
     MOZ_ASSERT(!ins->isEffectful());
-    current->add(ins);
+    addUnchecked(ins);
   }
 
   inline void addEffectful(MInstruction* ins) {
     MOZ_ASSERT(ins->isEffectful());
     MOZ_ASSERT(!effectful_, "Can only have one effectful instruction");
-    current->add(ins);
+    addUnchecked(ins);
 #ifdef DEBUG
     effectful_ = ins;
 #endif
@@ -84,7 +96,7 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   // Bypasses all checks in addEffectful. Only used for testing functions.
   inline void addEffectfulUnsafe(MInstruction* ins) {
     MOZ_ASSERT(ins->isEffectful());
-    current->add(ins);
+    addUnchecked(ins);
   }
 
   MOZ_MUST_USE bool resumeAfterUnchecked(MInstruction* ins) {
@@ -3788,7 +3800,7 @@ bool WarpCacheIRTranspiler::emitFunApplyArgs(WrappedFunction* wrappedTarget,
   MDefinition* argThis = callInfo_->getArg(0);
 
   MArgumentsLength* numArgs = MArgumentsLength::New(alloc());
-  current->add(numArgs);
+  add(numArgs);
 
   MApplyArgs* apply =
       MApplyArgs::New(alloc(), wrappedTarget, argFunc, numArgs, argThis);
