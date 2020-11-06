@@ -248,6 +248,12 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
       padding-top: 146px;
     }
 
+    &.visible-logo {
+      main {
+        padding-top: 291px;
+      }
+    }
+
     .search-wrapper {
       $search-header-bar-height: 95px;
       $search-height: 35px;
@@ -275,6 +281,10 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
         &:dir(rtl) {
           background-position-x: right $search-icon-padding;
         }
+      }
+
+      .logo-and-wordmark {
+        display: none;
       }
     }
 

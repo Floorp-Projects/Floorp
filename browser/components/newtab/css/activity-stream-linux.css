@@ -1188,6 +1188,8 @@ main {
 @media (min-height: 701px) {
   body:not(.inline-onboarding) .fixed-search main {
     padding-top: 146px; }
+  body:not(.inline-onboarding) .fixed-search.visible-logo main {
+    padding-top: 291px; }
   body:not(.inline-onboarding) .fixed-search .search-wrapper {
     background-color: var(--newtab-search-header-background-color);
     border-bottom: solid 1px var(--newtab-border-secondary-color);
@@ -1205,6 +1207,8 @@ main {
       background-size: 16px; }
       body:not(.inline-onboarding) .fixed-search .search-wrapper input:dir(rtl) {
         background-position-x: right 16px; }
+    body:not(.inline-onboarding) .fixed-search .search-wrapper .logo-and-wordmark {
+      display: none; }
   body:not(.inline-onboarding) .fixed-search .search-handoff-button {
     background-position-x: 12px;
     background-size: 24px; }
