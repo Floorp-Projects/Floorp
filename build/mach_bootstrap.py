@@ -177,6 +177,13 @@ def search_path(mozilla_dir, packages_txt):
             yield path
 
 
+def mach_sys_path(mozilla_dir):
+    return [
+        os.path.join(mozilla_dir, path)
+        for path in search_path(mozilla_dir, "build/mach_virtualenv_packages.txt")
+    ]
+
+
 def bootstrap(topsrcdir, mozilla_dir=None):
     if mozilla_dir is None:
         mozilla_dir = topsrcdir
@@ -198,10 +205,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
     # case. For default behavior, we educate users and give them an opportunity
     # to react. We always exit after creating the directory because users don't
     # like surprises.
-    sys.path[0:0] = [
-        os.path.join(mozilla_dir, path)
-        for path in search_path(mozilla_dir, "build/mach_virtualenv_packages.txt")
-    ]
+    sys.path[0:0] = mach_sys_path(mozilla_dir)
     import mach.base
     import mach.main
     from mach.util import setenv
