@@ -1,10 +1,5 @@
-use crate::{
-    allocator::*,
-    stats::MemoryTypeUtilization, MemoryUtilization,
-    Size,
-};
+use crate::{allocator::*, stats::MemoryTypeUtilization, MemoryUtilization, Size};
 use hal::memory::Properties;
-
 
 #[derive(Debug)]
 pub(super) enum BlockFlavor<B: hal::Backend> {
@@ -38,8 +33,8 @@ impl<B: hal::Backend> MemoryType<B> {
     pub(super) fn new(
         type_id: hal::MemoryTypeId,
         hal_memory_type: &hal::adapter::MemoryType,
-        general_config: &GeneralConfig,
-        linear_config: &LinearConfig,
+        general_config: GeneralConfig,
+        linear_config: LinearConfig,
         non_coherent_atom_size: Size,
     ) -> Self {
         MemoryType {
@@ -83,21 +78,18 @@ impl<B: hal::Backend> MemoryType<B> {
         align: Size,
     ) -> Result<(BlockFlavor<B>, Size), hal::device::AllocationError> {
         let (block, allocated) = match kind {
-            Kind::Dedicated => {
-                self.dedicated
-                    .alloc(device, size, align)
-                    .map(|(block, size)| (BlockFlavor::Dedicated(block), size))
-            }
-            Kind::General => {
-                self.general
-                    .alloc(device, size, align)
-                    .map(|(block, size)| (BlockFlavor::General(block), size))
-            }
-            Kind::Linear => {
-                self.linear
-                    .alloc(device, size, align)
-                    .map(|(block, size)| (BlockFlavor::Linear(block), size))
-            }
+            Kind::Dedicated => self
+                .dedicated
+                .alloc(device, size, align)
+                .map(|(block, size)| (BlockFlavor::Dedicated(block), size)),
+            Kind::General => self
+                .general
+                .alloc(device, size, align)
+                .map(|(block, size)| (BlockFlavor::General(block), size)),
+            Kind::Linear => self
+                .linear
+                .alloc(device, size, align)
+                .map(|(block, size)| (BlockFlavor::Linear(block), size)),
         }?;
         self.effective += block.size();
         self.used += allocated;
@@ -112,10 +104,9 @@ impl<B: hal::Backend> MemoryType<B> {
         }
     }
 
-    pub(super) fn clear(&mut self, device: &B::Device) {
-        log::trace!("Dispose memory allocators");
-        self.general.clear(device);
-        self.linear.clear(device);
+    pub(super) fn clear(&mut self, device: &B::Device) -> Size {
+        log::trace!("Clear memory allocators.");
+        self.general.clear(device) + self.linear.clear(device)
     }
 
     pub(super) fn utilization(&self) -> MemoryTypeUtilization {

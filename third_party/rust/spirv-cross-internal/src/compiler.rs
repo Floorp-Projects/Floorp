@@ -106,16 +106,40 @@ impl spirv::Type {
         match ty {
             B::Unknown => Unknown,
             B::Void => Void,
-            B::Boolean => Boolean { vecsize, columns, array },
+            B::Boolean => Boolean {
+                vecsize,
+                columns,
+                array,
+            },
             B::Char => Char { array },
-            B::Int => Int { vecsize, columns, array },
-            B::UInt => UInt { vecsize, columns, array },
+            B::Int => Int {
+                vecsize,
+                columns,
+                array,
+            },
+            B::UInt => UInt {
+                vecsize,
+                columns,
+                array,
+            },
             B::Int64 => Int64 { vecsize, array },
             B::UInt64 => UInt64 { vecsize, array },
             B::AtomicCounter => AtomicCounter { array },
-            B::Half => Half { vecsize, columns, array },
-            B::Float => Float { vecsize, columns, array },
-            B::Double => Double { vecsize, columns, array },
+            B::Half => Half {
+                vecsize,
+                columns,
+                array,
+            },
+            B::Float => Float {
+                vecsize,
+                columns,
+                array,
+            },
+            B::Double => Double {
+                vecsize,
+                columns,
+                array,
+            },
             B::Struct => Struct {
                 member_types,
                 array,

@@ -1,15 +1,11 @@
 //! Graphics pipeline descriptor.
 
 use crate::{
-    image,
-    pass,
+    image, pass,
     pso::{
-        input_assembler::{AttributeDesc, InputAssemblerDesc, Primitive, VertexBufferDesc},
+        input_assembler::{AttributeDesc, InputAssemblerDesc, VertexBufferDesc},
         output_merger::{ColorBlendDesc, DepthStencilDesc, Face},
-        BasePipeline,
-        EntryPoint,
-        PipelineCreationFlags,
-        State,
+        BasePipeline, EntryPoint, PipelineCreationFlags, State,
     },
     Backend,
 };
@@ -56,38 +52,6 @@ pub type ColorValue = [f32; 4];
 pub type DepthValue = f32;
 /// A single value from a stencil buffer.
 pub type StencilValue = u32;
-
-/// A complete set of shaders to build a graphics pipeline.
-///
-/// All except the vertex shader are optional; omitting them
-/// passes through the inputs without change.
-///
-/// If a fragment shader is omitted, the results of fragment
-/// processing are undefined. Specifically, any fragment color
-/// outputs are considered to have undefined values, and the
-/// fragment depth is considered to be unmodified. This can
-/// be useful for depth-only rendering.
-#[derive(Clone, Debug)]
-pub struct GraphicsShaderSet<'a, B: Backend> {
-    /// A shader that outputs a vertex in a model.
-    pub vertex: EntryPoint<'a, B>,
-    /// A hull shader takes in an input patch (values representing
-    /// a small portion of a shape, which may be actual geometry or may
-    /// be parameters for creating geometry) and produces one or more
-    /// output patches.
-    pub hull: Option<EntryPoint<'a, B>>,
-    /// A shader that takes in domains produced from a hull shader's output
-    /// patches and computes actual vertex positions.
-    pub domain: Option<EntryPoint<'a, B>>,
-    /// A shader that takes given input vertexes and outputs zero
-    /// or more output vertexes.
-    pub geometry: Option<EntryPoint<'a, B>>,
-    /// A shader that outputs a value for a fragment.
-    /// Usually this value is a color that is then displayed as a
-    /// pixel on a screen.
-    pub fragment: Option<EntryPoint<'a, B>>,
-}
-
 /// Baked-in pipeline states.
 #[derive(Clone, Debug, Default, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -101,22 +65,63 @@ pub struct BakedStates {
     /// Static depth bounds.
     pub depth_bounds: Option<Range<f32>>,
 }
-
+#[derive(Debug)]
+/// Primitive Assembler describes how input data are fetched in the pipeline and formed into primitives before being sent into the fragment shader.
+pub enum PrimitiveAssemblerDesc<'a, B: Backend> {
+    /// Vertex based pipeline
+    Vertex {
+        /// Vertex buffers (IA)
+        buffers: &'a [VertexBufferDesc],
+        /// Vertex attributes (IA)
+        attributes: &'a [AttributeDesc],
+        /// Input assembler attributes, describes how
+        /// vertices are assembled into primitives (such as triangles).
+        input_assembler: InputAssemblerDesc,
+        /// A shader that outputs a vertex in a model.
+        vertex: EntryPoint<'a, B>,
+        /// Tesselation shaders consisting of:
+        ///
+        /// 1. Hull shader: takes in an input patch (values representing
+        /// a small portion of a shape, which may be actual geometry or may
+        /// be parameters for creating geometry) and produces one or more
+        /// output patches.
+        ///
+        /// 2. Domain shader: takes in domains produced from a hull shader's output
+        /// patches and computes actual vertex positions.
+        tessellation: Option<(EntryPoint<'a, B>, EntryPoint<'a, B>)>,
+        /// A shader that takes given input vertexes and outputs zero
+        /// or more output vertexes.
+        geometry: Option<EntryPoint<'a, B>>,
+    },
+    /// Mesh shading pipeline
+    Mesh {
+        /// A shader that creates a variable amount of mesh shader
+        /// invocations.
+        task: Option<EntryPoint<'a, B>>,
+        /// A shader of which each workgroup emits zero or
+        /// more output primitives and the group of vertices and their
+        /// associated data required for each output primitive.
+        mesh: EntryPoint<'a, B>,
+    },
+}
 /// A description of all the settings that can be altered
 /// when creating a graphics pipeline.
 #[derive(Debug)]
 pub struct GraphicsPipelineDesc<'a, B: Backend> {
-    /// A set of graphics shaders to use for the pipeline.
-    pub shaders: GraphicsShaderSet<'a, B>,
+    /// Primitive assembler
+    pub primitive_assembler: PrimitiveAssemblerDesc<'a, B>,
     /// Rasterizer setup
     pub rasterizer: Rasterizer,
-    /// Vertex buffers (IA)
-    pub vertex_buffers: Vec<VertexBufferDesc>,
-    /// Vertex attributes (IA)
-    pub attributes: Vec<AttributeDesc>,
-    /// Input assembler attributes, describes how
-    /// vertices are assembled into primitives (such as triangles).
-    pub input_assembler: InputAssemblerDesc,
+    /// A shader that outputs a value for a fragment.
+    /// Usually this value is a color that is then displayed as a
+    /// pixel on a screen.
+    ///
+    /// If a fragment shader is omitted, the results of fragment
+    /// processing are undefined. Specifically, any fragment color
+    /// outputs are considered to have undefined values, and the
+    /// fragment depth is considered to be unmodified. This can
+    /// be useful for depth-only rendering.
+    pub fragment: Option<EntryPoint<'a, B>>,
     /// Description of how blend operations should be performed.
     pub blender: BlendDesc,
     /// Depth stencil (DSV)
@@ -139,18 +144,16 @@ pub struct GraphicsPipelineDesc<'a, B: Backend> {
 impl<'a, B: Backend> GraphicsPipelineDesc<'a, B> {
     /// Create a new empty PSO descriptor.
     pub fn new(
-        shaders: GraphicsShaderSet<'a, B>,
-        primitive: Primitive,
+        primitive_assembler: PrimitiveAssemblerDesc<'a, B>,
         rasterizer: Rasterizer,
+        fragment: Option<EntryPoint<'a, B>>,
         layout: &'a B::PipelineLayout,
         subpass: pass::Subpass<'a, B>,
     ) -> Self {
         GraphicsPipelineDesc {
-            shaders,
+            primitive_assembler,
             rasterizer,
-            vertex_buffers: Vec::new(),
-            attributes: Vec::new(),
-            input_assembler: InputAssemblerDesc::new(primitive),
+            fragment,
             blender: BlendDesc::default(),
             depth_stencil: DepthStencilDesc::default(),
             multisampling: None,

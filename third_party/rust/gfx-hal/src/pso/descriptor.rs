@@ -18,7 +18,9 @@
 
 use std::{borrow::Borrow, fmt, iter};
 
-use crate::{buffer::SubRange, image::Layout, pso::ShaderStageFlags, Backend, PseudoVec};
+use crate::{
+    buffer::SubRange, device::OutOfMemory, image::Layout, pso::ShaderStageFlags, Backend, PseudoVec,
+};
 
 ///
 pub type DescriptorSetIndex = u16;
@@ -137,12 +139,10 @@ pub struct DescriptorRangeDesc {
 /// An error allocating descriptor sets from a pool.
 #[derive(Clone, Debug, PartialEq)]
 pub enum AllocationError {
-    /// Memory allocation on the host side failed.
+    /// OutOfMemory::Host: Memory allocation on the host side failed.
+    /// OutOfMemory::Device: Memory allocation on the device side failed.
     /// This could be caused by a lack of memory or pool fragmentation.
-    Host,
-    /// Memory allocation on the host side failed.
-    /// This could be caused by a lack of memory or pool fragmentation.
-    Device,
+    OutOfMemory(OutOfMemory),
     /// Memory allocation failed as there is not enough in the pool.
     /// This could be caused by too many descriptor sets being created.
     OutOfPoolMemory,
@@ -155,10 +155,10 @@ pub enum AllocationError {
 impl std::fmt::Display for AllocationError {
     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            AllocationError::Host => {
+            AllocationError::OutOfMemory(OutOfMemory::Host) => {
                 write!(fmt, "Failed to allocate descriptor set: Out of host memory")
             }
-            AllocationError::Device => write!(
+            AllocationError::OutOfMemory(OutOfMemory::Device) => write!(
                 fmt,
                 "Failed to allocate descriptor set: Out of device memory"
             ),
@@ -226,7 +226,7 @@ pub trait DescriptorPool<B: Backend>: Send + Sync + fmt::Debug {
     }
 
     /// Free the given descriptor sets provided as an iterator.
-    unsafe fn free_sets<I>(&mut self, descriptor_sets: I)
+    unsafe fn free<I>(&mut self, descriptor_sets: I)
     where
         I: IntoIterator<Item = B::DescriptorSet>;
 
@@ -237,22 +237,27 @@ pub trait DescriptorPool<B: Backend>: Send + Sync + fmt::Debug {
     unsafe fn reset(&mut self);
 }
 
-/// Writes the actual descriptors to be bound into a descriptor set. Should be provided
-/// to the `write_descriptor_sets` method of a `Device`.
-#[allow(missing_docs)]
+/// Writes the actual descriptors to be bound into a descriptor set.
+///
+/// Should be provided to the `write_descriptor_sets` method of a `Device`.
 #[derive(Debug)]
 pub struct DescriptorSetWrite<'a, B: Backend, WI>
 where
     WI: IntoIterator,
     WI::Item: Borrow<Descriptor<'a, B>>,
 {
+    /// The descriptor set to modify.
     pub set: &'a B::DescriptorSet,
-    /// *Note*: when there is more descriptors provided than
+    /// Binding index to start writing at.
+    ///
+    /// *Note*: when there are more descriptors provided than
     /// array elements left in the specified binding starting
-    /// at specified, offset, the updates are spilled onto
+    /// at the specified offset, the updates are spilled onto
     /// the next binding (starting with offset 0), and so on.
     pub binding: DescriptorBinding,
+    /// Offset into the array to copy to.
     pub array_offset: DescriptorArrayIndex,
+    /// Descriptors to write to the set.
     pub descriptors: WI,
 }
 
@@ -270,17 +275,34 @@ pub enum Descriptor<'a, B: Backend> {
     TexelBuffer(&'a B::BufferView),
 }
 
-/// Copies a range of descriptors to be bound from one descriptor set to another Should be
-/// provided to the `copy_descriptor_sets` method of a `Device`.
-#[allow(missing_docs)]
+/// Copies a range of descriptors to be bound from one descriptor set to another.
+///
+/// Should be provided to the `copy_descriptor_sets` method of a `Device`.
 #[derive(Clone, Copy, Debug)]
 pub struct DescriptorSetCopy<'a, B: Backend> {
+    /// Descriptor set to copy from.
     pub src_set: &'a B::DescriptorSet,
+    /// Binding to copy from.
+    ///
+    /// *Note*: when there are more descriptors required than
+    /// array elements left in the specified binding starting
+    /// at the specified offset, the updates are taken from
+    /// the next binding (starting with offset 0), and so on.
     pub src_binding: DescriptorBinding,
+    /// Offset into the descriptor array to start copying from.
     pub src_array_offset: DescriptorArrayIndex,
+    /// Descriptor set to copy to.
     pub dst_set: &'a B::DescriptorSet,
+    /// Binding to copy to.
+    ///
+    /// *Note*: when there are more descriptors provided than
+    /// array elements left in the specified binding starting
+    /// at the specified offset, the updates are spilled onto
+    /// the next binding (starting with offset 0), and so on.
     pub dst_binding: DescriptorBinding,
+    /// Offset into the descriptor array to copy to.
     pub dst_array_offset: DescriptorArrayIndex,
+    /// How many descriptors to copy.
     pub count: usize,
 }
 
