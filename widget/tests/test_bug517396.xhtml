@@ -31,9 +31,8 @@ SimpleTest.waitForFocus(function () {
     return;
   }
 
-  var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-              getService(Ci.nsIWindowMediator);
-  var win = wm.getMostRecentWindow("navigator:browser");
+  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  var win = Services.wm.getMostRecentWindow("navigator:browser");
   var oldWidth = win.outerWidth, oldHeight = win.outerHeight;
   win.maximize();
   var newWidth = win.outerWidth, newHeight = win.outerHeight;

@@ -28,7 +28,7 @@ function runTest() {
   var Cc = SpecialPowers.Cc;
   var Ci = SpecialPowers.Ci;
 
-  var sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
+  var sysInfo = SpecialPowers.Services.sysinfo;
   var xr = SpecialPowers.Services.appinfo;
 
   var windows = SpecialPowers.Services.ww.getWindowEnumerator();

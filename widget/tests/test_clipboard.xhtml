@@ -51,20 +51,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=948065
   }
 
   function initAndRunTests() {
-    let clipboard = Cc['@mozilla.org/widget/clipboard;1']
-                    .getService(Ci.nsIClipboard);
+    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     // Test copy.
     const data = "random number: " + Math.random();
     let helper = Cc['@mozilla.org/widget/clipboardhelper;1']
                  .getService(Ci.nsIClipboardHelper);
     helper.copyString(data);
-    is(paste(clipboard), data, 'Data was successfully copied.');
+    is(paste(Services.clipboard), data, 'Data was successfully copied.');
 
     // Test emptyClipboard, disabled for OSX because bug 666254
     if (!kIsMac) {
-      clipboard.emptyClipboard(Ci.nsIClipboard.kGlobalClipboard);
-      is(paste(clipboard), '', 'Data was successfully cleared.');
+      Services.clipboard.emptyClipboard(Ci.nsIClipboard.kGlobalClipboard);
+      is(paste(Services.clipboard), '', 'Data was successfully cleared.');
     }
   }
 

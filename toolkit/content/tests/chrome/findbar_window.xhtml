@@ -21,20 +21,18 @@
   <script type="application/javascript"><![CDATA[
     const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-
-    var gPrefsvc = SpecialPowers.Services.prefs.nsIPrefBranch;
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     const SAMPLE_URL = "http://www.mozilla.org/";
     const SAMPLE_TEXT = "Some text in a text field.";
     const SEARCH_TEXT = "Text Test (δοκιμή)";
     const NOT_FOUND_TEXT = "This text is not on the page."
-    const ITERATOR_TIMEOUT = gPrefsvc.getIntPref("findbar.iteratorTimeout");
+    const ITERATOR_TIMEOUT = Services.prefs.getIntPref("findbar.iteratorTimeout");
 
     var gFindBar = null;
     var gBrowser;
 
-    var gClipboard = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
-    var gHasFindClipboard = gClipboard.supportsFindClipboard();
+    var gHasFindClipboard = Services.clipboard.supportsFindClipboard();
 
     var gStatusText;
     var gXULBrowserWindow = {
@@ -662,7 +660,7 @@
       gFindBar.clear();
 
       // Case-insensitive should already be the current value.
-      gPrefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 0);
+      Services.prefs.setIntPref("accessibility.typeaheadfind.casesensitive", 0);
 
       await enterStringIntoFindField("t");
       await SpecialPowers.spawn(gBrowser, [], async function() {
@@ -679,7 +677,7 @@
     // 1. Do a search that fails with case sensitivity but matches with no case sensitivity.
     // 2. Uncheck case sensitivity button to match the string.
     async function testFailedStringReset() {
-      gPrefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 1);
+      Services.prefs.setIntPref("accessibility.typeaheadfind.casesensitive", 1);
 
       let promise = promiseFindResult(gBrowser.hasAttribute("remote") ? SEARCH_TEXT.toUpperCase() : "");
       await enterStringIntoFindField(SEARCH_TEXT.toUpperCase(), false);
@@ -765,7 +763,7 @@
 
     function changeCase(value) {
       let promise = gBrowser.hasAttribute("remote") ? promiseFindResult() : Promise.resolve();
-      gPrefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", value);
+      Services.prefs.setIntPref("accessibility.typeaheadfind.casesensitive", value);
       return promise;
     }
   ]]></script>

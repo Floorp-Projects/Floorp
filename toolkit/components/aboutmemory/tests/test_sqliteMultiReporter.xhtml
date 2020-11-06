@@ -27,9 +27,7 @@
   file.append("test_sqliteMultiReporter-fake-DB-tmp.sqlite");
 
   // Open and close the DB.
-  let storage = Cc["@mozilla.org/storage/service;1"].
-                getService(Ci.mozIStorageService);
-  let db = storage.openDatabase(file);
+  let db = SpecialPowers.Services.storage.openDatabase(file);
   db.close();
 
   // Invoke all the reporters.  The SQLite multi-reporter is among

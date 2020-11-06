@@ -46,13 +46,12 @@
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const IS_MAC = navigator.platform.indexOf("Mac") == 0;
 const IS_WIN = navigator.platform.indexOf("Win") == 0;
 const OS_VERSION =
-  IS_WIN  ? parseFloat(Cc["@mozilla.org/system-info;1"]
-                         .getService(Ci.nsIPropertyBag2)
-                         .getProperty("version")) : 0;
+  IS_WIN  ? parseFloat(Services.sysinfo.getProperty("version")) : 0;
 const WIN7 = 6.1;
 const WIN8 = 6.2;
 

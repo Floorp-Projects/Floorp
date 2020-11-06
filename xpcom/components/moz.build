@@ -42,6 +42,7 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
         "Components.h",
         "StaticComponentData.h",
         "StaticComponents.cpp",
+        "services.json",
         script="gen_static_components.py",
         inputs=["!manifest-lists.json", "StaticComponents.cpp.in"],
     )

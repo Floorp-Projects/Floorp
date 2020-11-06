@@ -24,6 +24,7 @@
 
   <script type="application/javascript"><![CDATA[
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     SimpleTest.waitForExplicitFinish();
 
@@ -40,9 +41,7 @@
     }
 
     function setGlobals() {
-      var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-                  getService(Ci.nsIWindowMediator);
-      let chromeWindow = wm.getMostRecentWindow("navigator:browser");
+      let chromeWindow = Services.wm.getMostRecentWindow("navigator:browser");
       // For some reason, a global <key> element's oncommand handler only gets
       // invoked if the focus is outside both of the <browser> elements
       // (tab1browser and tab2browser).  So, to make sure we can see a

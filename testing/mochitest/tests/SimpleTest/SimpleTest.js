@@ -2141,9 +2141,7 @@ function getAndroidSdk() {
       var versionString = nav.userAgent.includes("Android")
         ? "version"
         : "sdk_version";
-      gAndroidSdk = SpecialPowers.Cc["@mozilla.org/system-info;1"]
-        .getService(SpecialPowers.Ci.nsIPropertyBag2)
-        .getProperty(versionString);
+      gAndroidSdk = SpecialPowers.Services.sysinfo.getProperty(versionString);
     }
     document.documentElement.removeChild(iframe);
   }

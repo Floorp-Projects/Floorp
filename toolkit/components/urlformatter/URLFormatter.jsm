@@ -48,13 +48,11 @@ function nsURLFormatterService() {
 
   XPCOMUtils.defineLazyGetter(this, "OSVersion", function UFS_OSVersion() {
     let OSVersion = "default";
-    let sysInfo = Cc["@mozilla.org/system-info;1"].getService(
-      Ci.nsIPropertyBag2
-    );
+    let { sysinfo } = Services;
     try {
       OSVersion =
-        sysInfo.getProperty("name") + " " + sysInfo.getProperty("version");
-      OSVersion += " (" + sysInfo.getProperty("secondaryLibrary") + ")";
+        sysinfo.getProperty("name") + " " + sysinfo.getProperty("version");
+      OSVersion += ` (${sysinfo.getProperty("secondaryLibrary")})`;
     } catch (e) {}
 
     return encodeURIComponent(OSVersion);

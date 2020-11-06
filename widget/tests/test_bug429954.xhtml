@@ -24,9 +24,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429954
 SimpleTest.waitForExplicitFinish();
 
 SimpleTest.waitForFocus(function () {
-  var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-              getService(Ci.nsIWindowMediator);
-  var win = wm.getMostRecentWindow("navigator:browser");
+  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  var win = Services.wm.getMostRecentWindow("navigator:browser");
   win.maximize();
   var maxX = win.screenX, maxY = win.screenY;
   var maxWidth = win.outerWidth, maxHeight = win.outerHeight;

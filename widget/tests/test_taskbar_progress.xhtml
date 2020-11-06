@@ -9,15 +9,13 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script class="testbody" type="application/javascript">
   <![CDATA[
-    ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
     
     let TP = Ci.nsITaskbarProgress;
     
     function IsWin7OrHigher() {
       try {
-        var sysInfo = Cc["@mozilla.org/system-info;1"].
-                      getService(Ci.nsIPropertyBag2);
-        var ver = parseFloat(sysInfo.getProperty("version"));
+        var ver = parseFloat(Services.sysinfo.getProperty("version"));
         if (ver >= 6.1)
           return true;
       } catch (ex) { }
@@ -37,8 +35,7 @@
         return null;
       
       // HACK from mconnor:
-      var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-      let win = wm.getMostRecentWindow("navigator:browser");
+      let win = Services.wm.getMostRecentWindow("navigator:browser");
       let docShell = win.docShell;
 
       let progress = taskbar.getTaskbarProgress(docShell);
