@@ -59,6 +59,18 @@ TEST(FOG, TestCppCounterWorks)
   ASSERT_EQ(42, mozilla::glean::test_only::bad_code.TestGetValue("test-ping"));
 }
 
+TEST(FOG, TestCppStringWorks)
+{
+  auto kValue = "cheez!"_ns;
+  mozilla::glean::test_only::cheesy_string.Set(kValue);
+
+  ASSERT_TRUE(
+      mozilla::glean::test_only::cheesy_string.TestHasValue("test-ping"));
+  ASSERT_STREQ(
+      kValue.get(),
+      mozilla::glean::test_only::cheesy_string.TestGetValue("test-ping").get());
+}
+
 TEST(FOG, TestCppTimespanWorks)
 {
   mozilla::glean::test_only::can_we_time_it.Start();
