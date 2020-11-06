@@ -92,11 +92,6 @@ const rootSpecPrototype = {
       },
     },
 
-    protocolDescription: {
-      request: {},
-      response: RetVal("json"),
-    },
-
     requestTypes: {
       request: {},
       response: RetVal("json"),

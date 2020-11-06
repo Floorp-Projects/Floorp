@@ -10,11 +10,11 @@ In general, we should strive to maintain feature support for existing servers as
 
 The important compatibility scenarios are:
 
-1. Nightly desktop client **MUST** maintain existing compatibility back to release channel servers.
+- Nightly desktop client **MUST** maintain existing compatibility back to release channel servers.
 
 This is mainly to simplify cross-platform use cases, i.e. desktop Nightly with release Fennec.
 
-2. Servers **MAY** use traits to state a feature is not supported yet.
+- Servers **MAY** use traits to state a feature is not supported yet.
 
 This helps us support alternate environments, which does not implement every possible server feature.
 
@@ -28,9 +28,11 @@ The easiest way to test this is to check your work against a Firefox for Android
 
 ## Feature Detection
 
-Starting with Firefox 36 (thanks to [bug 1069673](https://bugzilla.mozilla.org/show_bug.cgi?id=1069673)), you can use actor feature detection to determine which actors exist and what methods they expose.
+Starting with Firefox 36 (thanks to [bug 1069673](https://bugzilla.mozilla.org/show_bug.cgi?id=1069673)), you can use actor feature detection to determine which actors exist.
 
-1. Detecting if the server has an actor: all you need is access to the `Toolbox` instance, which all panels do, when they get instantiated. Then you can do:
+### Target hasActor helper
+
+Detecting if the server has an actor: all you need is access to the `Toolbox` instance, which all panels do, when they get instantiated. Then you can do:
 
 ```js
 let hasPerformanceActor = toolbox.target.hasActor("performance");
@@ -38,15 +40,24 @@ let hasPerformanceActor = toolbox.target.hasActor("performance");
 
 The `hasActor` method returns a boolean synchronously.
 
-2. Detecting if an actor has a given method: same thing here, you need access to the toolbox:
+### Traits
 
-```js
-toolbox.target.actorHasMethod("domwalker", "duplicateNode").then(hasMethod => {
+Expose traits on an Actor in order to flag certain features as available or not. For instance if a new method "someMethod" is added to an Actor, expose a "supportsSomeMethod" flag in the traits object for the Actor, set to true. When debugging older servers, the flag will be missing and will default to false.
 
-}).catch(console.error);
-```
+Traits need to be forwarded to the client, and stored or used by the corresponding Front. There is no unique way of exposing traits, but there are still a few typical patterns found in the codebase.
 
-The `actorHasMethod` returns a promise that resolves to a boolean.
+For Actors using a "form()" method, for which the Front is automatically created by protocol.js, the usual pattern is to add a "traits" property to the form, that contains all the traits for the actor. The Front can then read the traits in its corresponding "form()" method. Example:
+- [NodeActor form method](https://searchfox.org/mozilla-central/rev/e75e8e5b980ef18f4596a783fbc8a36621de7d1e/devtools/server/actors/inspector/node.js#209)
+- [NodeFront form method](https://searchfox.org/mozilla-central/rev/e75e8e5b980ef18f4596a783fbc8a36621de7d1e/devtools/client/fronts/node.js#145)
+
+For other Actors, there are two options. First option is to define the trait on the Root actor. Those traits will be available both via TargetMixin::getTrait(), and on DevToolsClient.traits. The second option is to implement a "getTraits()" method on the Actor, which will return the traits for the Actor. Example:
+- [CompatibilityActor getTraits method](https://searchfox.org/mozilla-central/rev/e75e8e5b980ef18f4596a783fbc8a36621de7d1e/devtools/shared/specs/compatibility.js#40)
+- [CompatibilitySpec getTraits definition](https://searchfox.org/mozilla-central/rev/e75e8e5b980ef18f4596a783fbc8a36621de7d1e/devtools/shared/specs/compatibility.js#40-43)
+- [CompatibilityFront getTraits method](https://searchfox.org/mozilla-central/rev/e75e8e5b980ef18f4596a783fbc8a36621de7d1e/devtools/client/fronts/compatibility.js#41-47)
+
+Ironically, "getTraits" needs to be handled with backwards compatibility. But there is no way to check that "getTraits" is available on the server other than performing a try catch around the method. See the CompatibilityFront example.
+
+Whenever traits are added, make sure to add a relevant backward compatibility comment so that we know when the trait can be removed.
 
 ## Removing old backward compatibility code
 
