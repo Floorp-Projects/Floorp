@@ -641,12 +641,12 @@ var PrintEventHandler = {
         .add(elapsed);
     }
 
-    // This resolves with a PrintPreviewSuccessInfo dictionary.  That also has
-    // a `sheetCount` property available which we should use (bug 1662331).
-    let totalPageCount, hasSelection;
+    let totalPageCount, sheetCount, hasSelection;
     try {
+      // This resolves with a PrintPreviewSuccessInfo dictionary.
       ({
         totalPageCount,
+        sheetCount,
         hasSelection,
       } = await previewBrowser.frameLoader.printPreview(settings, sourceWinId));
     } catch (e) {
@@ -654,18 +654,12 @@ var PrintEventHandler = {
       throw e;
     }
 
-    // Send the page count and show the preview.
-    let numPages = totalPageCount;
-    // Adjust number of pages if the user specifies the pages they want printed
-    if (settings.printRange == Ci.nsIPrintSettings.kRangeSpecifiedPageRange) {
-      numPages = settings.endPageRange - settings.startPageRange + 1;
-    }
     // Update the settings print options on whether there is a selection.
     settings.isPrintSelectionRBEnabled = hasSelection;
 
     document.dispatchEvent(
       new CustomEvent("page-count", {
-        detail: { numPages, totalPages: totalPageCount },
+        detail: { numPages: sheetCount, totalPages: totalPageCount },
       })
     );
 
