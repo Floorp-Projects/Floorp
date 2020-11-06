@@ -55,7 +55,6 @@ class UseCases(
      */
     val searchUseCases by lazyMonitored {
         SearchUseCases(
-            context,
             store,
             searchEngineManager.toDefaultSearchEngineProvider(context),
             sessionManager
