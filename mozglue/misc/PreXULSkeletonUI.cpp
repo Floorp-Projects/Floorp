@@ -12,6 +12,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/HelperMacros.h"
 #include "mozilla/glue/Debug.h"
 #include "mozilla/BaseProfilerMarkers.h"
 #include "mozilla/UniquePtr.h"
@@ -62,6 +63,13 @@ static const wchar_t kPreXULSkeletonUIKeyPath[] =
     L"\\" MOZ_APP_VENDOR L"\\" MOZ_APP_BASENAME L"\\PreXULSkeletonUISettings";
 
 static bool sPreXULSkeletonUIEnabled = false;
+// sPreXULSkeletonUIDisallowed means that we don't even have the capacity to
+// enable the skeleton UI, whether because we're on a platform that doesn't
+// support it or because we launched with command line arguments that we don't
+// support. Some of these situations are transient, so we want to make sure we
+// don't mess with registry values in these scenarios that we may use in
+// other scenarios in which the skeleton UI is actually enabled.
+static bool sPreXULSkeletonUIDisallowed = false;
 static HWND sPreXULSkeletonUIWindow;
 static LPWSTR const gStockApplicationIcon = MAKEINTRESOURCEW(32512);
 static LPWSTR const gIDCWait = MAKEINTRESOURCEW(32514);
@@ -762,10 +770,156 @@ bool LoadGdi32AndUser32Procedures() {
   return true;
 }
 
-void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance) {
+// Strips "--", "-", and "/" from the front of the arg if one of those exists,
+// returning `arg + 2`, `arg + 1`, and `arg + 1` respectively. If none of these
+// prefixes are found, the argument is not a flag, and nullptr is returned.
+const char* NormalizeFlag(const char* arg) {
+  if (strstr(arg, "--") == arg) {
+    return arg + 2;
+  }
+
+  if (arg[0] == '-') {
+    return arg + 1;
+  }
+
+  if (arg[0] == '/') {
+    return arg + 1;
+  }
+
+  return nullptr;
+}
+
+// Ensures that we only see arguments in the command line which are acceptable.
+// This is based on manual inspection of the list of arguments listed in the MDN
+// page for Gecko/Firefox commandline options:
+// https://developer.mozilla.org/en-US/docs/Mozilla/Command_Line_Options
+// Broadly speaking, we want to reject any argument which causes us to show
+// something other than the default window at its normal size. Here is a non-
+// exhaustive list of command line options we want to *exclude*:
+//
+//   -ProfileManager : This will display the profile manager window, which does
+//                     not match the skeleton UI at all.
+//
+//   -CreateProfile  : This will display a firefox window with the default
+//                     screen position and size, and not the position and size
+//                     which we have recorded in the registry.
+//
+//   -P <profile>    : This could cause us to display firefox with a position
+//                     and size of a different profile than that in which we
+//                     were previously running.
+//
+//   -width, -height : This will cause the width and height values in the
+//                     registry to be incorrect.
+//
+//   -kiosk          : See above.
+//
+//   -headless       : This one should be rather obvious.
+//
+//   -migration      : This will start with the import wizard, which of course
+//                     does not match the skeleton UI.
+//
+//   -private-window : This is tricky, but the colors of the main content area
+//                     make this not feel great with the white content of the
+//                     default skeleton UI.
+//
+// NOTE: we generally want to skew towards erroneous rejections of the command
+// line rather than erroneous approvals. The consequence of a bad rejection
+// is that we don't show the skeleton UI, which is business as usual. The
+// consequence of a bad approval is that we show it when we're not supposed to,
+// which is visually jarring and can also be unpredictable - there's no
+// guarantee that the code which handles the non-default window is set up to
+// properly handle the transition from the skeleton UI window.
+bool AreAllCmdlineArgumentsApproved(int argc, char** argv) {
+  const char* approvedArgumentsList[] = {
+      // These won't cause the browser to be visualy different in any way
+      "new-instance", "no-remote", "browser", "foreground", "setDefaultBrowser",
+      "attach-console", "wait-for-browser", "osint",
+
+      // These will cause the chrome to be a bit different or extra windows to
+      // be created, but overall the skeleton UI should still be broadly
+      // correct enough.
+      "new-tab", "new-window",
+
+      // These will cause the content area to appear different, but won't
+      // meaningfully affect the chrome
+      "preferences", "search", "url",
+
+      // There are other arguments which are likely okay. However, they are
+      // not included here because this list is not intended to be
+      // exhaustive - it only intends to green-light some somewhat commonly
+      // used arguments. We want to err on the side of an unnecessary
+      // rejection of the command line.
+  };
+
+  // On local builds, we want to allow -profile, because it's how `mach run`
+  // operates, and excluding that would create an unnecessary blind spot for
+  // Firefox devs.
+  const char* releaseChannel = MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL);
+  bool acceptProfileArgument = !strcmp(releaseChannel, "default");
+
+  const int numApproved =
+      sizeof(approvedArgumentsList) / sizeof(approvedArgumentsList[0]);
+  for (int i = 1; i < argc; ++i) {
+    const char* flag = NormalizeFlag(argv[i]);
+    if (!flag) {
+      // If this is not a flag, then we interpret it as a URL, similar to
+      // BrowserContentHandler.jsm. Some command line options take additional
+      // arguments, which may or may not be URLs. We don't need to know this,
+      // because we don't need to parse them out; we just rely on the
+      // assumption that if arg X is actually a parameter for the preceding
+      // arg Y, then X must not look like a flag (starting with "--", "-",
+      // or "/").
+      //
+      // The most important thing here is the assumption that if something is
+      // going to meaningfully alter the appearance of the window itself, it
+      // must be a flag.
+      continue;
+    }
+
+    // Just force true for marionette - tests are a special case where we
+    // want to ensure we accept things like -profile.
+    if (!strcmp(flag, "marionette")) {
+      return true;
+    }
+
+    if (acceptProfileArgument && !strcmp(flag, "profile")) {
+      continue;
+    }
+
+    bool approved = false;
+    for (int j = 0; j < numApproved; ++j) {
+      const char* approvedArg = approvedArgumentsList[j];
+      // We do a case-insensitive compare here with _stricmp. Even though some
+      // of these arguments are *not* read as case-insensitive, others *are*.
+      // Similar to the flag logic above, we don't really care about this
+      // distinction, because we don't need to parse the arguments - we just
+      // rely on the assumption that none of the listed flags in our
+      // approvedArgumentsList are overloaded in such a way that a different
+      // casing would visually alter the firefox window.
+      if (!_stricmp(flag, approvedArg)) {
+        approved = true;
+        break;
+      }
+    }
+
+    if (!approved) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
+                                    char** argv) {
 #ifdef MOZ_GECKO_PROFILER
   const TimeStamp skeletonStart = TimeStamp::NowUnfuzzed();
 #endif
+
+  if (!AreAllCmdlineArgumentsApproved(argc, argv)) {
+    sPreXULSkeletonUIDisallowed = true;
+    return;
+  }
 
   HKEY regKey;
   if (!IsWin10OrLater() || !OpenPreXULSkeletonUIRegKey(regKey)) {
@@ -1080,7 +1234,21 @@ void PersistPreXULSkeletonUIValues(int screenX, int screenY, int width,
 
 MFBT_API bool GetPreXULSkeletonUIEnabled() { return sPreXULSkeletonUIEnabled; }
 
-MFBT_API void SetPreXULSkeletonUIEnabled(bool value) {
+MFBT_API void SetPreXULSkeletonUIEnabledIfAllowed(bool value) {
+  // If the pre-XUL skeleton UI was disallowed for some reason, we just want to
+  // ignore changes to the registry. An example of how things could be bad if
+  // we didn't: someone running firefox with the -profile argument could
+  // turn the skeleton UI on or off for the default profile. Turning it off
+  // maybe isn't so bad (though it's likely still incorrect), but turning it
+  // on could be bad if the user had specifically disabled it for a profile for
+  // some reason. Ultimately there's no correct decision here, and the
+  // messiness of this is just a consequence of sharing the registry values
+  // across profiles. However, whatever ill effects we observe should be
+  // correct themselves after one session.
+  if (sPreXULSkeletonUIDisallowed) {
+    return;
+  }
+
   HKEY regKey;
   if (!OpenPreXULSkeletonUIRegKey(regKey)) {
     return;
