@@ -2115,6 +2115,11 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
 
   switch (bailoutKind) {
     // Normal bailouts.
+    case BailoutKind::TranspiledCacheIR:
+      // Do nothing. The baseline fallback code will invalidate the script
+      // if necessary to prevent bailout loops.
+      break;
+
     case BailoutKind::Inevitable:
     case BailoutKind::DuringVMCall:
     case BailoutKind::TooManyArguments:
