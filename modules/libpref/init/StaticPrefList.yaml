@@ -7226,8 +7226,8 @@
     mirror: always
 
 #ifdef MOZ_WAYLAND
-# Use DMABuf for ffmpeg video textures on Linux
-- name: media.ffmpeg.dmabuf-textures.enabled
+# Disable DMABuf for ffmpeg video textures on Linux
+- name: media.ffmpeg.dmabuf-textures.disabled
   type: RelaxedAtomicBool
   value: false
   mirror: always
