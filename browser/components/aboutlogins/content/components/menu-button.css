@@ -71,7 +71,7 @@
 }
 
 .menuitem-import-file {
-  background-image: url("chrome://browser/skin/open.svg");
+  background-image: url("chrome://browser/skin/import.svg");
 }
 
 .menuitem-export {
