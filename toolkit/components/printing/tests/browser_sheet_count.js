@@ -91,3 +91,31 @@ add_task(async function testSheetCount() {
     await helper.closeDialog();
   });
 });
+
+add_task(async function testSheetCountPageRange() {
+  await PrintHelper.withTestPage(async helper => {
+    await helper.startPrint();
+    await helper.waitForPreview(() =>
+      helper.dispatchSettingsChange({
+        shrinkToFit: false,
+        scaling: 2,
+      })
+    );
+
+    let sheetCount = helper.get("sheet-count");
+    let sheets = getSheetCount(sheetCount);
+    ok(sheets >= 3, "There are at least 3 pages");
+
+    // Set page range to 2-3, sheet count should be 2.
+    await helper.waitForPreview(() =>
+      helper.dispatchSettingsChange({
+        printRange: helper.settings.kRangeSpecifiedPageRange,
+        startPageRange: 2,
+        endPageRange: 3,
+      })
+    );
+
+    sheets = getSheetCount(sheetCount);
+    is(sheets, 2, "There are now only 2 pages shown");
+  });
+});
