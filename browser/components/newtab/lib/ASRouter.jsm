@@ -570,7 +570,6 @@ class _ASRouter {
     this._onLocaleChanged = this._onLocaleChanged.bind(this);
     this.isUnblockedMessage = this.isUnblockedMessage.bind(this);
     this.unblockAll = this.unblockAll.bind(this);
-    this.renderWNMessages = this.renderWNMessages.bind(this);
     this.forceWNPanel = this.forceWNPanel.bind(this);
     Services.telemetry.setEventRecordingEnabled(REACH_EVENT_CATEGORY, true);
   }
@@ -1819,12 +1818,6 @@ class _ASRouter {
       false,
       browser
     );
-  }
-
-  renderWNMessages(browserWindow, messageIds) {
-    let messages = messageIds.map(msgId => this.getMessageById(msgId));
-
-    ToolbarPanelHub.forceShowMessage(browserWindow, messages);
   }
 
   async forceWNPanel(browserWindow) {
