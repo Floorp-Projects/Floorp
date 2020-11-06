@@ -152,10 +152,15 @@ class ComputedStyle {
   // only set on ComputedStyles whose pseudo is nsCSSAnonBoxes::mozText().
   bool IsTextCombined() const { return bool(Flags() & Flag::IS_TEXT_COMBINED); }
 
-  // Is this horizontal-in-vertical (tate-chu-yoko) text? This flag is
-  // only set on ComputedStyles whose pseudo is nsCSSAnonBoxes::mozText().
-  bool DependsOnFontMetrics() const {
-    return bool(Flags() & Flag::DEPENDS_ON_FONT_METRICS);
+  // Whether there's any font metric dependency coming directly from our style.
+  bool DependsOnSelfFontMetrics() const {
+    return bool(Flags() & Flag::DEPENDS_ON_SELF_FONT_METRICS);
+  }
+
+  // Whether there's any font metric dependency coming directly from our parent
+  // style.
+  bool DependsOnInheritedFontMetrics() const {
+    return bool(Flags() & Flag::DEPENDS_ON_INHERITED_FONT_METRICS);
   }
 
   // Does this ComputedStyle represent the style for a pseudo-element or
