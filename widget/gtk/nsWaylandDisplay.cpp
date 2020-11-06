@@ -7,7 +7,6 @@
 
 #include "nsWaylandDisplay.h"
 #include "mozilla/StaticPrefs_widget.h"
-#include "DMABufLibWrapper.h"
 
 namespace mozilla {
 namespace widget {

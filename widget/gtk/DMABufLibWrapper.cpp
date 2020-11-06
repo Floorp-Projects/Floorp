@@ -167,8 +167,8 @@ nsDMABufDevice::nsDMABufDevice()
   if (gdk_display_get_default() &&
       !GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     wl_display* display = WaylandDisplayGetWLDisplay();
-    mRegistry = wl_display_get_registry(display);
-    wl_registry_add_listener(mRegistry, &registry_listener, this);
+    mRegistry = (void*)wl_display_get_registry(display);
+    wl_registry_add_listener((wl_registry*)mRegistry, &registry_listener, this);
     wl_display_roundtrip(display);
     wl_display_roundtrip(display);
   }
@@ -176,7 +176,7 @@ nsDMABufDevice::nsDMABufDevice()
 
 nsDMABufDevice::~nsDMABufDevice() {
   if (mRegistry) {
-    wl_registry_destroy(mRegistry);
+    wl_registry_destroy((wl_registry*)mRegistry);
     mRegistry = nullptr;
   }
 }

@@ -24,13 +24,14 @@ MOZ_EXPORT struct wl_display* wl_display_connect(const char* name);
 MOZ_EXPORT int wl_display_roundtrip_queue(struct wl_display* display,
                                           struct wl_event_queue* queue);
 MOZ_EXPORT uint32_t wl_proxy_get_version(struct wl_proxy* proxy);
+MOZ_EXPORT void wl_proxy_marshal(struct wl_proxy* p, uint32_t opcode, ...);
 MOZ_EXPORT struct wl_proxy* wl_proxy_marshal_constructor(
     struct wl_proxy* proxy, uint32_t opcode,
     const struct wl_interface* interface, ...);
 MOZ_EXPORT struct wl_proxy* wl_proxy_marshal_constructor_versioned(
     struct wl_proxy* proxy, uint32_t opcode,
     const struct wl_interface* interface, uint32_t version, ...);
-
+MOZ_EXPORT void wl_proxy_destroy(struct wl_proxy* proxy);
 MOZ_EXPORT void* wl_proxy_create_wrapper(void* proxy);
 MOZ_EXPORT void wl_proxy_wrapper_destroy(void* proxy_wrapper);
 
