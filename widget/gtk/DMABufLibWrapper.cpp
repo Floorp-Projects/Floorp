@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DMABufLibWrapper.h"
 #include "nsWaylandDisplay.h"
+#include "DMABufLibWrapper.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -21,8 +21,6 @@
 
 namespace mozilla {
 namespace widget {
-
-static nsDMABufDevice* gDMABufDevice;
 
 #define GBMLIB_NAME "libgbm.so.1"
 #define DRMLIB_NAME "libdrm.so.2"
@@ -108,7 +106,96 @@ bool nsGbmLib::Load() {
   return sGbmLibHandle;
 }
 
+gbm_device* nsDMABufDevice::GetGbmDevice() {
+  return IsDMABufEnabled() ? mGbmDevice : nullptr;
+}
+
+int nsDMABufDevice::GetGbmDeviceFd() { return IsDMABufEnabled() ? mGbmFd : -1; }
+
+static void dmabuf_modifiers(void* data,
+                             struct zwp_linux_dmabuf_v1* zwp_linux_dmabuf,
+                             uint32_t format, uint32_t modifier_hi,
+                             uint32_t modifier_lo) {
+  auto* device = static_cast<nsDMABufDevice*>(data);
+  switch (format) {
+    case GBM_FORMAT_ARGB8888:
+      device->AddFormatModifier(true, format, modifier_hi, modifier_lo);
+      break;
+    case GBM_FORMAT_XRGB8888:
+      device->AddFormatModifier(false, format, modifier_hi, modifier_lo);
+      break;
+    default:
+      break;
+  }
+}
+
+static void dmabuf_format(void* data,
+                          struct zwp_linux_dmabuf_v1* zwp_linux_dmabuf,
+                          uint32_t format) {
+  // XXX: deprecated
+}
+
+static const struct zwp_linux_dmabuf_v1_listener dmabuf_listener = {
+    dmabuf_format, dmabuf_modifiers};
+
+static void global_registry_handler(void* data, wl_registry* registry,
+                                    uint32_t id, const char* interface,
+                                    uint32_t version) {
+  auto* device = static_cast<nsDMABufDevice*>(data);
+  if (strcmp(interface, "zwp_linux_dmabuf_v1") == 0 && version > 2) {
+    auto* dmabuf = WaylandRegistryBind<zwp_linux_dmabuf_v1>(
+        registry, id, &zwp_linux_dmabuf_v1_interface, 3);
+    LOGDMABUF(("zwp_linux_dmabuf_v1 is available."));
+    device->ResetFormatsModifiers();
+    zwp_linux_dmabuf_v1_add_listener(dmabuf, &dmabuf_listener, data);
+  } else if (strcmp(interface, "wl_drm") == 0) {
+    LOGDMABUF(("wl_drm is available."));
+  }
+}
+
+static void global_registry_remover(void* data, wl_registry* registry,
+                                    uint32_t id) {}
+
+static const struct wl_registry_listener registry_listener = {
+    global_registry_handler, global_registry_remover};
+
+nsDMABufDevice::nsDMABufDevice()
+    : mXRGBFormat({true, false, GBM_FORMAT_XRGB8888, nullptr, 0}),
+      mARGBFormat({true, true, GBM_FORMAT_ARGB8888, nullptr, 0}),
+      mGbmDevice(nullptr),
+      mGbmFd(-1) {
+  if (gdk_display_get_default() &&
+      !GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+    wl_display* display = WaylandDisplayGetWLDisplay();
+    mRegistry = wl_display_get_registry(display);
+    wl_registry_add_listener(mRegistry, &registry_listener, this);
+    wl_display_roundtrip(display);
+    wl_display_roundtrip(display);
+  }
+}
+
+nsDMABufDevice::~nsDMABufDevice() {
+  if (mRegistry) {
+    wl_registry_destroy(mRegistry);
+    mRegistry = nullptr;
+  }
+}
+
 bool nsDMABufDevice::Configure() {
+  bool isDMABufUsed = (
+#ifdef NIGHTLY_BUILD
+      StaticPrefs::widget_dmabuf_textures_enabled() ||
+#endif
+      StaticPrefs::widget_dmabuf_webgl_enabled() ||
+      StaticPrefs::media_ffmpeg_vaapi_enabled() ||
+      StaticPrefs::media_ffmpeg_vaapi_drm_display_enabled());
+
+  if (!isDMABufUsed) {
+    // Disabled by user, just quit.
+    LOGDMABUF(("IsDMABufEnabled(): Disabled by preferences."));
+    return false;
+  }
+
   if (!nsGbmLib::IsAvailable()) {
     LOGDMABUF(("nsGbmLib is not available!"));
     return false;
@@ -138,127 +225,9 @@ bool nsDMABufDevice::Configure() {
   return true;
 }
 
-gbm_device* nsDMABufDevice::GetGbmDevice() {
-  if (!mGdmConfigured) {
-    Configure();
-    mGdmConfigured = true;
-  }
-  return mGbmDevice;
-}
-
-int nsDMABufDevice::GetGbmDeviceFd() {
-  if (!mGdmConfigured) {
-    Configure();
-    mGdmConfigured = true;
-  }
-  return mGbmFd;
-}
-
-static void dmabuf_modifiers(void* data,
-                             struct zwp_linux_dmabuf_v1* zwp_linux_dmabuf,
-                             uint32_t format, uint32_t modifier_hi,
-                             uint32_t modifier_lo) {
-  switch (format) {
-    case GBM_FORMAT_ARGB8888:
-      gDMABufDevice->AddFormatModifier(true, format, modifier_hi, modifier_lo);
-      break;
-    case GBM_FORMAT_XRGB8888:
-      gDMABufDevice->AddFormatModifier(false, format, modifier_hi, modifier_lo);
-      break;
-    default:
-      break;
-  }
-}
-
-static void dmabuf_format(void* data,
-                          struct zwp_linux_dmabuf_v1* zwp_linux_dmabuf,
-                          uint32_t format) {
-  // XXX: deprecated
-}
-
-static const struct zwp_linux_dmabuf_v1_listener dmabuf_listener = {
-    dmabuf_format, dmabuf_modifiers};
-
-static void global_registry_handler(void* data, wl_registry* registry,
-                                    uint32_t id, const char* interface,
-                                    uint32_t version) {
-  auto* display = static_cast<nsWaylandDisplay*>(data);
-  if (!display) {
-    return;
-  }
-
-  if (strcmp(interface, "zwp_linux_dmabuf_v1") == 0 && version > 2) {
-    auto* dmabuf = WaylandRegistryBind<zwp_linux_dmabuf_v1>(
-        registry, id, &zwp_linux_dmabuf_v1_interface, 3);
-    LOGDMABUF(("zwp_linux_dmabuf_v1 is available."));
-    gDMABufDevice->ResetFormatsModifiers();
-    zwp_linux_dmabuf_v1_add_listener(dmabuf, &dmabuf_listener, data);
-  } else if (strcmp(interface, "wl_drm") == 0) {
-    LOGDMABUF(("wl_drm is available."));
-  }
-}
-
-static void global_registry_remover(void* data, wl_registry* registry,
-                                    uint32_t id) {}
-
-static const struct wl_registry_listener registry_listener = {
-    global_registry_handler, global_registry_remover};
-
-nsDMABufDevice::nsDMABufDevice()
-    : mXRGBFormat({true, false, GBM_FORMAT_XRGB8888, nullptr, 0}),
-      mARGBFormat({true, true, GBM_FORMAT_ARGB8888, nullptr, 0}),
-      mGbmDevice(nullptr),
-      mGbmFd(-1),
-      mGdmConfigured(false),
-      mIsDMABufEnabled(false),
-      mIsDMABufConfigured(false) {}
-
-void nsDMABufDevice::Init() {
-  if (gdk_display_get_default() &&
-      !GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
-    wl_display* display = WaylandDisplayGetWLDisplay();
-    mRegistry = wl_display_get_registry(display);
-    wl_registry_add_listener(mRegistry, &registry_listener, this);
-    wl_display_roundtrip(display);
-    wl_display_roundtrip(display);
-  }
-}
-
-nsDMABufDevice::~nsDMABufDevice() {
-  if (mRegistry) {
-    wl_registry_destroy(mRegistry);
-    mRegistry = nullptr;
-  }
-}
-
 bool nsDMABufDevice::IsDMABufEnabled() {
-  if (mIsDMABufConfigured) {
-    return mIsDMABufEnabled;
-  }
-
-  mIsDMABufConfigured = true;
-  bool isDMABufUsed = (
-#ifdef NIGHTLY_BUILD
-      StaticPrefs::widget_dmabuf_textures_enabled() ||
-#endif
-      StaticPrefs::widget_dmabuf_webgl_enabled() ||
-      StaticPrefs::media_ffmpeg_dmabuf_textures_enabled() ||
-      StaticPrefs::media_ffmpeg_vaapi_enabled() ||
-      StaticPrefs::media_ffmpeg_vaapi_drm_display_enabled());
-
-  if (!isDMABufUsed) {
-    // Disabled by user, just quit.
-    LOGDMABUF(("IsDMABufEnabled(): Disabled by preferences."));
-    return false;
-  }
-
-  if (!Configure()) {
-    LOGDMABUF(("Failed to create GbmDevice, DMABUF/DRM won't be available!"));
-    return false;
-  }
-
-  mIsDMABufEnabled = true;
-  return true;
+  static bool isDMABufEnabled = Configure();
+  return isDMABufEnabled;
 }
 
 #ifdef NIGHTLY_BUILD
@@ -269,17 +238,13 @@ bool nsDMABufDevice::IsDMABufTexturesEnabled() {
 #else
 bool nsDMABufDevice::IsDMABufTexturesEnabled() { return false; }
 #endif
-bool nsDMABufDevice::IsDMABufVideoTexturesEnabled() {
+bool nsDMABufDevice::IsDMABufVAAPIEnabled() {
   return gfx::gfxVars::UseEGL() && IsDMABufEnabled() &&
-         StaticPrefs::media_ffmpeg_dmabuf_textures_enabled();
+         StaticPrefs::media_ffmpeg_vaapi_enabled();
 }
 bool nsDMABufDevice::IsDMABufWebGLEnabled() {
   return gfx::gfxVars::UseEGL() && IsDMABufEnabled() &&
          StaticPrefs::widget_dmabuf_webgl_enabled();
-}
-bool nsDMABufDevice::IsDRMVAAPIDisplayEnabled() {
-  return gfx::gfxVars::UseEGL() && IsDMABufEnabled() &&
-         StaticPrefs::media_ffmpeg_vaapi_drm_display_enabled();
 }
 
 GbmFormat* nsDMABufDevice::GetGbmFormat(bool aHasAlpha) {
@@ -323,11 +288,8 @@ void nsDMABufDevice::ResetFormatsModifiers() {
 }
 
 nsDMABufDevice* GetDMABufDevice() {
-  if (!gDMABufDevice) {
-    gDMABufDevice = new nsDMABufDevice();
-    gDMABufDevice->Init();
-  }
-  return gDMABufDevice;
+  static nsDMABufDevice dmaBufDevice;
+  return &dmaBufDevice;
 }
 
 }  // namespace widget
