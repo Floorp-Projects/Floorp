@@ -134,7 +134,7 @@ MOZ_MUST_USE bool EmitScriptThingsVector(
     mozilla::Span<JS::GCCellPtr> output);
 
 struct CGTryNoteList {
-  Vector<TryNote> list;
+  Vector<TryNote, 0> list;
   explicit CGTryNoteList(JSContext* cx) : list(cx) {}
 
   MOZ_MUST_USE bool append(TryNoteKind kind, uint32_t stackDepth,
@@ -146,7 +146,7 @@ struct CGTryNoteList {
 };
 
 struct CGScopeNoteList {
-  Vector<ScopeNote> list;
+  Vector<ScopeNote, 0> list;
   explicit CGScopeNoteList(JSContext* cx) : list(cx) {}
 
   MOZ_MUST_USE bool append(GCThingIndex scopeIndex, BytecodeOffset offset,
@@ -163,7 +163,7 @@ struct CGScopeNoteList {
 };
 
 struct CGResumeOffsetList {
-  Vector<uint32_t> list;
+  Vector<uint32_t, 0> list;
   explicit CGResumeOffsetList(JSContext* cx) : list(cx) {}
 
   MOZ_MUST_USE bool append(uint32_t offset) { return list.append(offset); }
