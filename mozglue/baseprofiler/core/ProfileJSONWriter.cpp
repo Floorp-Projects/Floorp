@@ -15,7 +15,7 @@ UniqueJSONStrings::UniqueJSONStrings(JSONWriter::CollectionStyle aStyle) {
 UniqueJSONStrings::UniqueJSONStrings(const UniqueJSONStrings& aOther,
                                      JSONWriter::CollectionStyle aStyle) {
   mStringTableWriter.StartBareList(aStyle);
-  uint32_t count = mStringHashToIndexMap.count();
+  uint32_t count = aOther.mStringHashToIndexMap.count();
   if (count != 0) {
     MOZ_RELEASE_ASSERT(mStringHashToIndexMap.reserve(count));
     for (auto iter = aOther.mStringHashToIndexMap.iter(); !iter.done();
