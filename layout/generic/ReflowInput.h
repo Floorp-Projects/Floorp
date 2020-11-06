@@ -427,8 +427,9 @@ struct ReflowInput : public SizeComputationInput {
     return LogicalMargin(mWritingMode, mComputedOffsets);
   }
 
-  void SetComputedLogicalOffsets(const LogicalMargin& aOffsets) {
-    mComputedOffsets = aOffsets.GetPhysicalMargin(mWritingMode);
+  void SetComputedLogicalOffsets(mozilla::WritingMode aWM,
+                                 const LogicalMargin& aOffsets) {
+    mComputedOffsets = aOffsets.GetPhysicalMargin(aWM);
   }
 
   // Return the state's computed size including border-padding, with
