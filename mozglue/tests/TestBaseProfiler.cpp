@@ -3555,6 +3555,196 @@ void TestProfiler() {
   printf("TestProfiler done\n");
 }
 
+// Minimal string escaping, similar to how C++ stringliterals should be entered,
+// to help update comparison strings in tests below.
+void printEscaped(std::string_view aString) {
+  for (const char c : aString) {
+    switch (c) {
+      case '\n':
+        fprintf(stderr, "\\n\n");
+        break;
+      case '"':
+        fprintf(stderr, "\\\"");
+        break;
+      case '\\':
+        fprintf(stderr, "\\\\");
+        break;
+      default:
+        if (c >= ' ' && c <= '~') {
+          fprintf(stderr, "%c", c);
+        } else {
+          fprintf(stderr, "\\x%02x", unsigned(c));
+        }
+        break;
+    }
+  }
+}
+
+// Run aF(SpliceableChunkedJSONWriter&, UniqueJSONStrings&) from inside a JSON
+// array, then output the string table, and compare the full output to
+// aExpected.
+template <typename F>
+static void VerifyUniqueStringContents(
+    F&& aF, std::string_view aExpectedData,
+    std::string_view aExpectedUniqueStrings,
+    mozilla::baseprofiler::UniqueJSONStrings* aUniqueStringsOrNull = nullptr) {
+  mozilla::baseprofiler::SpliceableChunkedJSONWriter writer;
+
+  // By default use a local UniqueJSONStrings, otherwise use the one provided.
+  mozilla::baseprofiler::UniqueJSONStrings localUniqueStrings(
+      mozilla::JSONWriter::SingleLineStyle);
+  mozilla::baseprofiler::UniqueJSONStrings& uniqueStrings =
+      aUniqueStringsOrNull ? *aUniqueStringsOrNull : localUniqueStrings;
+
+  writer.Start(mozilla::JSONWriter::SingleLineStyle);
+  {
+    writer.StartArrayProperty("data", mozilla::JSONWriter::SingleLineStyle);
+    { std::forward<F>(aF)(writer, uniqueStrings); }
+    writer.EndArray();
+
+    writer.StartArrayProperty("stringTable",
+                              mozilla::JSONWriter::SingleLineStyle);
+    { uniqueStrings.SpliceStringTableElements(writer); }
+    writer.EndArray();
+  }
+  writer.End();
+
+  UniquePtr<char[]> jsonString = writer.ChunkedWriteFunc().CopyData();
+  MOZ_RELEASE_ASSERT(jsonString);
+  std::string_view jsonStringView(jsonString.get());
+  std::string expected = "{\"data\": [";
+  expected += aExpectedData;
+  expected += "], \"stringTable\": [";
+  expected += aExpectedUniqueStrings;
+  expected += "]}\n";
+  if (jsonStringView != expected) {
+    fprintf(stderr,
+            "Expected:\n"
+            "------\n");
+    printEscaped(expected);
+    fprintf(stderr,
+            "\n"
+            "------\n"
+            "Actual:\n"
+            "------\n");
+    printEscaped(jsonStringView);
+    fprintf(stderr,
+            "\n"
+            "------\n");
+  }
+  MOZ_RELEASE_ASSERT(jsonStringView == expected);
+}
+
+void TestUniqueJSONStrings() {
+  printf("TestUniqueJSONStrings...\n");
+
+  using SCJW = mozilla::baseprofiler::SpliceableChunkedJSONWriter;
+  using UJS = mozilla::baseprofiler::UniqueJSONStrings;
+
+  // Empty everything.
+  VerifyUniqueStringContents([](SCJW& aWriter, UJS& aUniqueStrings) {}, "", "");
+
+  // Empty unique strings.
+  VerifyUniqueStringContents(
+      [](SCJW& aWriter, UJS& aUniqueStrings) {
+        aWriter.StringElement("string");
+      },
+      R"("string")", "");
+
+  // One unique string.
+  VerifyUniqueStringContents(
+      [](SCJW& aWriter, UJS& aUniqueStrings) {
+        aUniqueStrings.WriteElement(aWriter, "string");
+      },
+      "0", R"("string")");
+
+  // One unique string twice.
+  VerifyUniqueStringContents(
+      [](SCJW& aWriter, UJS& aUniqueStrings) {
+        aUniqueStrings.WriteElement(aWriter, "string");
+        aUniqueStrings.WriteElement(aWriter, "string");
+      },
+      "0, 0", R"("string")");
+
+  // Two single unique strings.
+  VerifyUniqueStringContents(
+      [](SCJW& aWriter, UJS& aUniqueStrings) {
+        aUniqueStrings.WriteElement(aWriter, "string0");
+        aUniqueStrings.WriteElement(aWriter, "string1");
+      },
+      "0, 1", R"("string0", "string1")");
+
+  // Two unique strings with repetition.
+  VerifyUniqueStringContents(
+      [](SCJW& aWriter, UJS& aUniqueStrings) {
+        aUniqueStrings.WriteElement(aWriter, "string0");
+        aUniqueStrings.WriteElement(aWriter, "string1");
+        aUniqueStrings.WriteElement(aWriter, "string0");
+      },
+      "0, 1, 0", R"("string0", "string1")");
+
+  // Mix some object properties, for coverage.
+  VerifyUniqueStringContents(
+      [](SCJW& aWriter, UJS& aUniqueStrings) {
+        aUniqueStrings.WriteElement(aWriter, "string0");
+        aWriter.StartObjectElement(mozilla::JSONWriter::SingleLineStyle);
+        {
+          aUniqueStrings.WriteProperty(aWriter, "p0", "prop");
+          aUniqueStrings.WriteProperty(aWriter, "p1", "string0");
+          aUniqueStrings.WriteProperty(aWriter, "p2", "prop");
+        }
+        aWriter.EndObject();
+        aUniqueStrings.WriteElement(aWriter, "string1");
+        aUniqueStrings.WriteElement(aWriter, "string0");
+        aUniqueStrings.WriteElement(aWriter, "prop");
+      },
+      R"(0, {"p0": 1, "p1": 0, "p2": 1}, 2, 0, 1)",
+      R"("string0", "prop", "string1")");
+
+  // Unique string table with pre-existing data.
+  {
+    UJS ujs(mozilla::JSONWriter::SingleLineStyle);
+    {
+      SCJW writer;
+      ujs.WriteElement(writer, "external0");
+      ujs.WriteElement(writer, "external1");
+      ujs.WriteElement(writer, "external0");
+    }
+    VerifyUniqueStringContents(
+        [](SCJW& aWriter, UJS& aUniqueStrings) {
+          aUniqueStrings.WriteElement(aWriter, "string0");
+          aUniqueStrings.WriteElement(aWriter, "string1");
+          aUniqueStrings.WriteElement(aWriter, "string0");
+        },
+        "2, 3, 2", R"("external0", "external1", "string0", "string1")", &ujs);
+  }
+
+// This currently fails, demonstrating the regression from bug 1520104, to be
+// fixed in the next patch in bug 1674968.
+#  if 0
+  // Unique string table with pre-existing data from another table.
+  {
+    UJS ujs(mozilla::JSONWriter::SingleLineStyle);
+    {
+      SCJW writer;
+      ujs.WriteElement(writer, "external0");
+      ujs.WriteElement(writer, "external1");
+      ujs.WriteElement(writer, "external0");
+    }
+    UJS ujsCopy(ujs, mozilla::JSONWriter::SingleLineStyle);
+    VerifyUniqueStringContents(
+        [](SCJW& aWriter, UJS& aUniqueStrings) {
+          aUniqueStrings.WriteElement(aWriter, "string0");
+          aUniqueStrings.WriteElement(aWriter, "string1");
+          aUniqueStrings.WriteElement(aWriter, "string0");
+        },
+        "2, 3, 2", R"("external0", "external1", "string0", "string1")", &ujs);
+  }
+#  endif
+
+  printf("TestUniqueJSONStrings done\n");
+}
+
 void StreamMarkers(const mozilla::ProfileChunkedBuffer& aBuffer,
                    mozilla::JSONWriter& aWriter) {
   aWriter.Start();
@@ -3872,6 +4062,7 @@ void TestProfilerMarkers() {
          mozilla::baseprofiler::profiler_current_thread_id());
   // ::SleepMilli(10000);
 
+  TestUniqueJSONStrings();
   TestMarkerCategory();
   TestMarkerThreadId();
   TestMarkerNoPayload();
