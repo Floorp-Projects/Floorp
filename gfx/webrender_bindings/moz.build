@@ -76,9 +76,11 @@ if CONFIG["MOZ_ENABLE_D3D10_LAYER"]:
     EXPORTS.mozilla.webrender += [
         "DCLayerTree.h",
         "RenderCompositorANGLE.h",
+        "RenderCompositorD3D11SWGL.h",
         "RenderD3D11TextureHost.h",
     ]
     UNIFIED_SOURCES += [
+        "RenderCompositorD3D11SWGL.cpp",
         "RenderD3D11TextureHost.cpp",
     ]
     SOURCES += [
@@ -118,3 +120,4 @@ include("/ipc/chromium/chromium-config.mozbuild")
 FINAL_LIBRARY = "xul"
 
 CXXFLAGS += CONFIG["TK_CFLAGS"]
+CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
