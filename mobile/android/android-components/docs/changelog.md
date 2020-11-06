@@ -18,6 +18,9 @@ permalink: /changelog/
 * **feature-search**
  * * ⚠️ **This is a breaking change**: `SearchUseCases` no longer requires a `Context` parameter in the constructor. 
 
+* **browser-session**
+  * `SelectionAwareSessionObserver` is now deprecated. All session state changes can be observed using the browser store (`browser-state` module).    
+
 # 65.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v64.0.0...v65.0.0)

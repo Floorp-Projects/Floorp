@@ -12,8 +12,9 @@ import android.view.ViewGroup
 import androidx.annotation.CallSuper
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_browser.view.*
-import mozilla.components.browser.session.SelectionAwareSessionObserver
-import mozilla.components.browser.session.Session
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.mapNotNull
+import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.downloads.manager.FetchDownloadManager
 import mozilla.components.feature.privatemode.feature.SecureWindowFeature
@@ -24,12 +25,13 @@ import mozilla.components.feature.session.SwipeRefreshFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.toolbar.ToolbarFeature
-import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import org.mozilla.samples.browser.downloads.DownloadService
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.ContextMenuIntegration
@@ -89,21 +91,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
                 layout.swipeToRefresh),
             owner = this,
             view = layout)
-
-        val menuUpdaterFeature = object : SelectionAwareSessionObserver(components.sessionManager),
-            LifecycleAwareFeature {
-            override fun onLoadingStateChanged(session: Session, loading: Boolean) {
-                layout.toolbar.invalidateActions()
-            }
-
-            override fun onNavigationStateChanged(session: Session, canGoBack: Boolean, canGoForward: Boolean) {
-                layout.toolbar.invalidateActions()
-            }
-
-            override fun start() {
-                observeIdOrSelected(sessionId)
-            }
-        }
 
         downloadsFeature.set(
             feature = DownloadsFeature(
@@ -209,11 +196,26 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
         // Observe the lifecycle for supported features
         lifecycle.addObservers(
             scrollFeature,
-            menuUpdaterFeature,
             secureWindowFeature
         )
 
         return layout
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        consumeFlow(components.store) { flow ->
+            flow.mapNotNull { state -> state.findCustomTabOrSelectedTab(sessionId) }
+                .ifAnyChanged { tab ->
+                    arrayOf(
+                        tab.content.loading,
+                        tab.content.canGoBack,
+                        tab.content.canGoForward
+                    )
+                }
+                .collect {
+                    view.toolbar.invalidateActions()
+                }
+        }
     }
 
     @CallSuper

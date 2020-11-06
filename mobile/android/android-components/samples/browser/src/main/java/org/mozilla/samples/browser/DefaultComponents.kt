@@ -361,33 +361,52 @@ open class DefaultComponents(private val applicationContext: Context) {
     }
 
     private val menuToolbar by lazy {
-        val forward = BrowserMenuItemToolbar.Button(
-            mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
-            iconTintColorResource = R.color.photonBlue90,
-            contentDescription = "Forward",
-            isEnabled = { sessionManager.selectedSession?.canGoForward == true }
+        val back = BrowserMenuItemToolbar.TwoStateButton(
+            primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_back,
+            primaryImageTintResource = R.color.photonBlue90,
+            primaryContentDescription = "Back",
+            isInPrimaryState = {
+                sessionManager.selectedSession?.canGoBack ?: true
+            },
+            disableInSecondaryState = true,
+            secondaryImageTintResource = R.color.photonGrey40
+        ) {
+            sessionUseCases.goBack()
+        }
+
+        val forward = BrowserMenuItemToolbar.TwoStateButton(
+            primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
+            primaryContentDescription = "Forward",
+            primaryImageTintResource = R.color.photonBlue90,
+            isInPrimaryState = {
+                sessionManager.selectedSession?.canGoForward ?: true
+            },
+            disableInSecondaryState = true,
+            secondaryImageTintResource = R.color.photonGrey40
         ) {
             sessionUseCases.goForward()
         }
 
-        val refresh = BrowserMenuItemToolbar.Button(
-            mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
-            iconTintColorResource = R.color.photonBlue90,
-            contentDescription = "Refresh",
-            isEnabled = { sessionManager.selectedSession?.loading != true }
+        val refresh = BrowserMenuItemToolbar.TwoStateButton(
+            primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
+            primaryContentDescription = "Refresh",
+            primaryImageTintResource = R.color.photonBlue90,
+            isInPrimaryState = {
+                sessionManager.selectedSession?.loading == false
+            },
+            secondaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_stop,
+            secondaryContentDescription = "Stop",
+            secondaryImageTintResource = R.color.photonBlue90,
+            disableInSecondaryState = false
         ) {
-            sessionUseCases.reload()
+            if (sessionManager.selectedSession?.loading == true) {
+                sessionUseCases.stopLoading()
+            } else {
+                sessionUseCases.reload()
+            }
         }
 
-        val stop = BrowserMenuItemToolbar.Button(
-            mozilla.components.ui.icons.R.drawable.mozac_ic_stop,
-            iconTintColorResource = R.color.photonBlue90,
-            contentDescription = "Stop"
-        ) {
-            sessionUseCases.stopLoading()
-        }
-
-        BrowserMenuItemToolbar(listOf(forward, refresh, stop))
+        BrowserMenuItemToolbar(listOf(back, forward, refresh))
     }
 
     val shippedDomainsProvider by lazy {

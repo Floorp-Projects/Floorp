@@ -10,7 +10,6 @@ import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_
 import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED
 import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL
 import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP
-import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
@@ -22,12 +21,13 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  *
  * A use case could be collapsing a toolbar every time that the user scrolls.
  */
+@Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/7482
 class CoordinateScrollingFeature(
     sessionManager: SessionManager,
     private val engineView: EngineView,
     private val view: View,
     private val scrollFlags: Int = DEFAULT_SCROLL_FLAGS
-) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature {
+) : mozilla.components.browser.session.SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature {
 
     /**
      * Start feature: Starts adding scrolling behavior for the indicated view.

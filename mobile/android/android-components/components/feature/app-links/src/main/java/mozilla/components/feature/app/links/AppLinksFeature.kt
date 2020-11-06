@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.FragmentManager
-import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineSession
@@ -48,41 +47,42 @@ class AppLinksFeature(
     private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase? = null
 ) : LifecycleAwareFeature {
 
+    @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/8913
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal val observer: SelectionAwareSessionObserver = object : SelectionAwareSessionObserver(sessionManager) {
-        override fun onLaunchIntentRequest(
-            session: Session,
-            url: String,
-            appIntent: Intent?
-        ) {
-            if (appIntent == null) {
+    internal val observer = object : mozilla.components.browser.session.SelectionAwareSessionObserver(sessionManager) {
+            override fun onLaunchIntentRequest(
+                session: Session,
+                url: String,
+                appIntent: Intent?
+            ) {
+                if (appIntent == null) {
+                    return
+                }
+
+                val doOpenApp = {
+                    useCases.openAppLink(appIntent, failedToLaunchAction = failedToLaunchAction)
+                }
+
+                val doNotOpenApp = {
+                    loadUrlUseCase?.invoke(url, session, EngineSession.LoadUrlFlags.none())
+                }
+
+                if (!session.private || fragmentManager == null) {
+                    doOpenApp()
+                    return
+                }
+
+                val dialog = getOrCreateDialog()
+                dialog.setAppLinkRedirectUrl(url)
+                dialog.onConfirmRedirect = doOpenApp
+                dialog.onCancelRedirect = doNotOpenApp
+
+                if (!isAlreadyADialogCreated()) {
+                    dialog.showNow(fragmentManager, FRAGMENT_TAG)
+                }
+
                 return
             }
-
-            val doOpenApp = {
-                useCases.openAppLink(appIntent, failedToLaunchAction = failedToLaunchAction)
-            }
-
-            val doNotOpenApp = {
-                loadUrlUseCase?.invoke(url, session, EngineSession.LoadUrlFlags.none())
-            }
-
-            if (!session.private || fragmentManager == null) {
-                doOpenApp()
-                return
-            }
-
-            val dialog = getOrCreateDialog()
-            dialog.setAppLinkRedirectUrl(url)
-            dialog.onConfirmRedirect = doOpenApp
-            dialog.onCancelRedirect = doNotOpenApp
-
-            if (!isAlreadyADialogCreated()) {
-                dialog.showNow(fragmentManager, FRAGMENT_TAG)
-            }
-
-            return
-        }
     }
 
     /**

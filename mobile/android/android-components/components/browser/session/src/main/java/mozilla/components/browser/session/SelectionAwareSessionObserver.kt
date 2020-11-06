@@ -16,6 +16,7 @@ import androidx.annotation.CallSuper
  * @property activeSession the currently observed session
  * @property sessionManager the application's session manager
  */
+@Deprecated("Use browser store for observing session state changes instead")
 abstract class SelectionAwareSessionObserver(
     private val sessionManager: SessionManager
 ) : SessionManager.Observer, Session.Observer {
