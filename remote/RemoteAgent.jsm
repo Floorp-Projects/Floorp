@@ -31,14 +31,6 @@ class RemoteAgentClass {
     return !!this.server && !this.server.isStopped();
   }
 
-  get debuggerAddress() {
-    if (!this.server) {
-      return "";
-    }
-
-    return `${this.host}:${this.port}`;
-  }
-
   listen(url) {
     if (!Preferences.get(ENABLED, false)) {
       throw Components.Exception(
@@ -51,10 +43,6 @@ class RemoteAgentClass {
         "May only be instantiated in parent process",
         Cr.NS_ERROR_LAUNCHED_CHILD_PROCESS
       );
-    }
-
-    if (this.listening) {
-      return Promise.resolve();
     }
 
     if (!(url instanceof Ci.nsIURI)) {
@@ -72,6 +60,10 @@ class RemoteAgentClass {
     // nsIServerSocket uses -1 for atomic port allocation
     if (port === 0) {
       port = -1;
+    }
+
+    if (this.listening) {
+      return Promise.resolve();
     }
 
     Preferences.set(RecommendedPreferences);
@@ -148,20 +140,14 @@ class RemoteAgentClass {
     if (!this.server) {
       return null;
     }
-
-    // Bug 1675471: When using the nsIRemoteAgent interface the HTTPd server's
-    // primary identity ("this.server.identity.primaryHost") is lazily set.
-    return this.server._host;
+    return this.server.identity.primaryHost;
   }
 
   get port() {
     if (!this.server) {
       return null;
     }
-
-    // Bug 1675471: When using the nsIRemoteAgent interface the HTTPd server's
-    // primary identity ("this.server.identity.primaryPort") is lazily set.
-    return this.server._port;
+    return this.server.identity.primaryPort;
   }
 
   // XPCOM
