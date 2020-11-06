@@ -13,7 +13,6 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/KnowsCompositor.h"
 #include "mozilla/layers/SharedRGBImage.h"
-#include "nsMathUtils.h"
 
 #include <stdint.h>
 
@@ -74,17 +73,15 @@ bool AudioData::SetTrimWindow(const media::TimeInterval& aTrim) {
     return false;
   }
 
-  auto roundToNearestFrame = [&](const TimeUnit& aTime) -> uint64_t {
-    MOZ_ASSERT((TimeUnitToFrames(aTime, mRate) + 1).isValid());
-    return NS_round(aTime.ToSeconds() * mRate);
-  };
-
-  uint64_t trimBefore = roundToNearestFrame(aTrim.mStart - mOriginalTime);
+  auto trimBefore = TimeUnitToFrames(aTrim.mStart - mOriginalTime, mRate);
   auto trimAfter = aTrim.mEnd == GetEndTime()
                        ? originalFrames
-                       : roundToNearestFrame(aTrim.mEnd - mOriginalTime);
-
-  MOZ_DIAGNOSTIC_ASSERT(trimAfter >= trimBefore,
+                       : TimeUnitToFrames(aTrim.mEnd - mOriginalTime, mRate);
+  if (!trimBefore.isValid() || !trimAfter.isValid()) {
+    // Overflow.
+    return false;
+  }
+  MOZ_DIAGNOSTIC_ASSERT(trimAfter.value() >= trimBefore.value(),
                         "Something went wrong with trimming value");
   if (!mTrimWindow && trimBefore == 0 && trimAfter == originalFrames) {
     // Nothing to change, abort early to prevent rounding errors.
@@ -92,13 +89,13 @@ bool AudioData::SetTrimWindow(const media::TimeInterval& aTrim) {
   }
 
   mTrimWindow = Some(aTrim);
-  mDataOffset = trimBefore * mChannels;
+  mDataOffset = trimBefore.value() * mChannels;
   MOZ_DIAGNOSTIC_ASSERT(mDataOffset <= mAudioData.Length(),
                         "Data offset outside original buffer");
-  mFrames = trimAfter - trimBefore;
+  mFrames = (trimAfter - trimBefore).value();
   MOZ_DIAGNOSTIC_ASSERT(mFrames <= originalFrames,
                         "More frames than found in container");
-  mTime = mOriginalTime + FramesToTimeUnit(trimBefore, mRate);
+  mTime = mOriginalTime + FramesToTimeUnit(trimBefore.value(), mRate);
   mDuration = FramesToTimeUnit(mFrames, mRate);
 
   return true;
