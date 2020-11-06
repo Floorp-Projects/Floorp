@@ -42,6 +42,9 @@ class MachCommands(MachCommandBase):
         "--no-virtualenv", action="store_true", help="Do not set up a virtualenv"
     )
     @CommandArgument(
+        "--no-activate", action="store_true", help="Do not activate the virtualenv"
+    )
+    @CommandArgument(
         "--exec-file", default=None, help="Execute this Python file using `exec`"
     )
     @CommandArgument(
@@ -51,7 +54,7 @@ class MachCommands(MachCommandBase):
         help="Use ipython instead of the default Python REPL.",
     )
     @CommandArgument("args", nargs=argparse.REMAINDER)
-    def python(self, no_virtualenv, exec_file, ipython, args):
+    def python(self, no_virtualenv, no_activate, exec_file, ipython, args):
         # Avoid logging the command
         self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
 
@@ -66,7 +69,9 @@ class MachCommands(MachCommandBase):
             python_path = sys.executable
             append_env["PYTHONPATH"] = os.pathsep.join(mach_sys_path(self.topsrcdir))
         else:
-            self.activate_virtualenv()
+            self.virtualenv_manager.ensure()
+            if not no_activate:
+                self.virtualenv_manager.activate()
             python_path = self.virtualenv_manager.python_path
 
         if exec_file:
