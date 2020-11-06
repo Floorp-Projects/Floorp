@@ -9,6 +9,7 @@ from mozbuild.base import MozbuildObject
 from mozlint.pathutils import findobject
 from mozlint.parser import Parser
 from mozlint.result import ResultSummary
+from mozlog.structuredlog import StructuredLogger
 from mozpack import path
 
 import pytest
@@ -135,6 +136,50 @@ def lint(config, root):
 
 
 @pytest.fixture
+def structuredlog_lint(config, root, logger=None):
+    """Find and return the 'lint' function for the external linter named in the
+    LINTER global variable. This variant of the lint function is for linters that
+    use the 'structuredlog' type.
+
+    This will automatically pass in the 'config' and 'root' arguments if not
+    specified.
+    """
+    try:
+        func = findobject(config["payload"])
+    except (ImportError, ValueError):
+        pytest.fail(
+            "could not resolve a lint function from '{}'".format(config["payload"])
+        )
+
+    ResultSummary.root = root
+
+    if not logger:
+        logger = structured_logger()
+
+    def wrapper(
+        paths,
+        config=config,
+        root=root,
+        logger=logger,
+        collapse_results=False,
+        **lintargs,
+    ):
+        lintargs["log"] = logging.LoggerAdapter(
+            logger, {"lintname": config.get("name"), "pid": os.getpid()}
+        )
+        results = func(paths, config, root=root, logger=logger, **lintargs)
+        if not collapse_results:
+            return results
+
+        ret = defaultdict(list)
+        for r in results:
+            ret[r.path].append(r)
+        return ret
+
+    return wrapper
+
+
+@pytest.fixture
 def create_temp_file(tmpdir):
     def inner(contents, name=None):
         name = name or "temp.py"
@@ -143,3 +188,8 @@ def create_temp_file(tmpdir):
         return path.strpath
 
     return inner
+
+
+@pytest.fixture
+def structured_logger():
+    return StructuredLogger("logger")
