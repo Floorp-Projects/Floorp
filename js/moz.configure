@@ -537,13 +537,20 @@ set_define("MOZ_RUST_SIMD", rust_simd)
 # ==============================================================
 
 
-@depends(milestone.is_nightly, "--enable-jit", "--enable-simulator", target, target_is_windows)
+@depends(
+    milestone.is_nightly,
+    "--enable-jit",
+    "--enable-simulator",
+    target,
+    target_is_windows,
+)
 def cranelift_default(is_nightly, jit_enabled, simulator, target, is_windows):
     if is_nightly and jit_enabled and not is_windows:
         if target.cpu == "aarch64":
             return True
         if simulator and simulator[0] == "arm64":
             return True
+
 
 option(
     "--enable-cranelift",
