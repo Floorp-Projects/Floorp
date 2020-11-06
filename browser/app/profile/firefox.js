@@ -273,6 +273,12 @@ pref("browser.startup.firstrunSkipsHomepage", true);
   pref("browser.startup.blankWindow", false);
 #endif
 
+// Show a skeleton UI window prior to loading libxul. Only visible for windows
+// users as it is not implemented anywhere else.
+#if defined(XP_WIN)
+pref("browser.startup.preXulSkeletonUI", false);
+#endif
+
 // Don't create the hidden window during startup on
 // platforms that don't always need it (Win/Linux).
 pref("toolkit.lazyHiddenWindow", true);
