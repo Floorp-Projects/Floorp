@@ -12,7 +12,6 @@ import requests
 import subprocess
 import sys
 import urllib
-import urlparse
 import zipfile
 
 
@@ -72,7 +71,9 @@ def server_has_file(filename):
     Send the symbol server a HEAD request to see if it has this symbol file.
     """
     try:
-        r = requests.head(urlparse.urljoin(SYMBOL_SERVER_URL, urllib.quote(filename)))
+        r = requests.head(
+            urllib.parse.urljoin(SYMBOL_SERVER_URL, urllib.parse.quote(filename))
+        )
         return r.status_code == 200
     except requests.exceptions.RequestException:
         return False
