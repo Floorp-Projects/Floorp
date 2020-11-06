@@ -6,9 +6,9 @@ use winapi::{
 use hal::{buffer, format, image, memory, pass, pso};
 use range_alloc::RangeAllocator;
 
-use crate::{root_constants::RootConstant, Backend, MAX_VERTEX_BUFFERS};
+use crate::{descriptors_cpu::Handle, root_constants::RootConstant, Backend, MAX_VERTEX_BUFFERS};
 
-use std::{cell::UnsafeCell, collections::BTreeMap, fmt, ops::Range};
+use std::{cell::UnsafeCell, collections::BTreeMap, fmt, ops::Range, sync::Arc};
 
 // ShaderModule is either a precompiled if the source comes from HLSL or
 // the SPIR-V module doesn't contain specialization constants or push constants
@@ -44,7 +44,7 @@ impl BarrierDesc {
         BarrierDesc {
             flags: d3d12::D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY,
             ..self.clone()
-        } .. BarrierDesc {
+        }..BarrierDesc {
             flags: d3d12::D3D12_RESOURCE_BARRIER_FLAG_END_ONLY,
             ..self
         }
@@ -79,6 +79,7 @@ pub struct RenderPass {
     pub(crate) attachments: Vec<pass::Attachment>,
     pub(crate) subpasses: Vec<SubpassDesc>,
     pub(crate) post_barriers: Vec<BarrierDesc>,
+    pub(crate) raw_name: Vec<u16>,
 }
 
 // Indirection layer attribute -> remap -> binding.
@@ -97,10 +98,8 @@ pub struct VertexBinding {
 #[derive(Debug)]
 pub struct GraphicsPipeline {
     pub(crate) raw: native::PipelineState,
-    pub(crate) signature: native::RootSignature, // weak-ptr, owned by `PipelineLayout`
-    pub(crate) num_parameter_slots: usize,       // signature parameter slots, see `PipelineLayout`
+    pub(crate) shared: Arc<PipelineShared>,
     pub(crate) topology: d3d12::D3D12_PRIMITIVE_TOPOLOGY,
-    pub(crate) constants: Vec<RootConstant>,
     pub(crate) vertex_bindings: [Option<VertexBinding>; MAX_VERTEX_BUFFERS],
     pub(crate) baked_states: pso::BakedStates,
 }
@@ -110,9 +109,7 @@ unsafe impl Sync for GraphicsPipeline {}
 #[derive(Debug)]
 pub struct ComputePipeline {
     pub(crate) raw: native::PipelineState,
-    pub(crate) signature: native::RootSignature, // weak-ptr, owned by `PipelineLayout`
-    pub(crate) num_parameter_slots: usize,       // signature parameter slots, see `PipelineLayout`
-    pub(crate) constants: Vec<RootConstant>,
+    pub(crate) shared: Arc<PipelineShared>,
 }
 
 unsafe impl Send for ComputePipeline {}
@@ -136,33 +133,33 @@ pub struct RootTable {
     pub offset: RootSignatureOffset,
 }
 
-#[derive(Debug, Hash)]
-pub struct RootDescriptor {
-    pub offset: RootSignatureOffset,
-}
-
 #[derive(Debug)]
 pub struct RootElement {
     pub table: RootTable,
-    //TODO: remove this or find a better way to use it
-    pub descriptors: Vec<RootDescriptor>,
     pub mutable_bindings: auxil::FastHashSet<pso::DescriptorBinding>,
 }
 
 #[derive(Debug)]
-pub struct PipelineLayout {
-    pub(crate) raw: native::RootSignature,
-    // Disjunct, sorted vector of root constant ranges.
+pub struct PipelineShared {
+    pub(crate) signature: native::RootSignature,
+    /// Disjunct, sorted vector of root constant ranges.
     pub(crate) constants: Vec<RootConstant>,
+    /// A root offset per parameter.
+    pub(crate) parameter_offsets: Vec<u32>,
+    /// Total number of root slots occupied by the pipeline.
+    pub(crate) total_slots: u32,
+}
+
+unsafe impl Send for PipelineShared {}
+unsafe impl Sync for PipelineShared {}
+
+#[derive(Debug)]
+pub struct PipelineLayout {
+    pub(crate) shared: Arc<PipelineShared>,
     // Storing for each associated descriptor set layout, which tables we created
     // in the root signature. This is required for binding descriptor sets.
     pub(crate) elements: Vec<RootElement>,
-    // Number of parameter slots in this layout, can be larger than number of tables.
-    // Required for updating the root signature when flushing user data.
-    pub(crate) num_parameter_slots: usize,
 }
-unsafe impl Send for PipelineLayout {}
-unsafe impl Sync for PipelineLayout {}
 
 #[derive(Debug, Clone)]
 pub struct Framebuffer {
@@ -171,16 +168,17 @@ pub struct Framebuffer {
     pub(crate) layers: image::Layer,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct BufferUnbound {
     pub(crate) requirements: memory::Requirements,
     pub(crate) usage: buffer::Usage,
+    pub(crate) name: Option<Vec<u16>>,
 }
 
 pub struct BufferBound {
     pub(crate) resource: native::Resource,
     pub(crate) requirements: memory::Requirements,
-    pub(crate) clear_uav: Option<native::CpuDescriptor>,
+    pub(crate) clear_uav: Option<Handle>,
 }
 
 impl fmt::Debug for BufferBound {
@@ -222,9 +220,9 @@ impl Buffer {
 #[derive(Copy, Clone)]
 pub struct BufferView {
     // Descriptor handle for uniform texel buffers.
-    pub(crate) handle_srv: native::CpuDescriptor,
+    pub(crate) handle_srv: Option<Handle>,
     // Descriptor handle for storage texel buffers.
-    pub(crate) handle_uav: native::CpuDescriptor,
+    pub(crate) handle_uav: Option<Handle>,
 }
 
 impl fmt::Debug for BufferView {
@@ -237,9 +235,9 @@ unsafe impl Send for BufferView {}
 unsafe impl Sync for BufferView {}
 
 #[derive(Clone)]
-pub enum Place {
-    SwapChain,
-    Heap { raw: native::Heap, offset: u64 },
+pub struct Place {
+    pub(crate) heap: native::Heap,
+    pub(crate) offset: u64,
 }
 
 #[derive(Clone)]
@@ -248,6 +246,7 @@ pub struct ImageBound {
     pub(crate) place: Place,
     pub(crate) surface_type: format::SurfaceType,
     pub(crate) kind: image::Kind,
+    pub(crate) mip_levels: image::Level,
     pub(crate) usage: image::Usage,
     pub(crate) default_view_format: Option<DXGI_FORMAT>,
     pub(crate) view_caps: image::ViewCapabilities,
@@ -255,9 +254,9 @@ pub struct ImageBound {
     pub(crate) bytes_per_block: u8,
     // Dimension of a texel block (compressed formats).
     pub(crate) block_dim: (u8, u8),
-    pub(crate) clear_cv: Vec<native::CpuDescriptor>,
-    pub(crate) clear_dv: Vec<native::CpuDescriptor>,
-    pub(crate) clear_sv: Vec<native::CpuDescriptor>,
+    pub(crate) clear_cv: Vec<Handle>,
+    pub(crate) clear_dv: Vec<Handle>,
+    pub(crate) clear_sv: Vec<Handle>,
     pub(crate) requirements: memory::Requirements,
 }
 
@@ -271,15 +270,6 @@ unsafe impl Send for ImageBound {}
 unsafe impl Sync for ImageBound {}
 
 impl ImageBound {
-    /// Get `SubresourceRange` of the whole image.
-    pub fn to_subresource_range(&self, aspects: format::Aspects) -> image::SubresourceRange {
-        image::SubresourceRange {
-            aspects,
-            levels: 0 .. self.descriptor.MipLevels as _,
-            layers: 0 .. self.kind.num_layers(),
-        }
-    }
-
     pub fn calc_subresource(&self, mip_level: UINT, layer: UINT, plane: UINT) -> UINT {
         mip_level
             + (layer * self.descriptor.MipLevels as UINT)
@@ -287,7 +277,7 @@ impl ImageBound {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct ImageUnbound {
     pub(crate) desc: d3d12::D3D12_RESOURCE_DESC,
     pub(crate) view_format: Option<DXGI_FORMAT>,
@@ -295,6 +285,7 @@ pub struct ImageUnbound {
     pub(crate) requirements: memory::Requirements,
     pub(crate) format: format::Format,
     pub(crate) kind: image::Kind,
+    pub(crate) mip_levels: image::Level,
     pub(crate) usage: image::Usage,
     pub(crate) tiling: image::Tiling,
     pub(crate) view_caps: image::ViewCapabilities,
@@ -302,6 +293,7 @@ pub struct ImageUnbound {
     pub(crate) bytes_per_block: u8,
     // Dimension of a texel block (compressed formats).
     pub(crate) block_dim: (u8, u8),
+    pub(crate) name: Option<Vec<u16>>,
 }
 
 impl fmt::Debug for ImageUnbound {
@@ -361,12 +353,29 @@ impl Image {
 }
 
 #[derive(Copy, Clone)]
+pub enum RenderTargetHandle {
+    None,
+    Swapchain(native::CpuDescriptor),
+    Pool(Handle),
+}
+
+impl RenderTargetHandle {
+    pub fn raw(&self) -> Option<native::CpuDescriptor> {
+        match *self {
+            RenderTargetHandle::None => None,
+            RenderTargetHandle::Swapchain(rtv) => Some(rtv),
+            RenderTargetHandle::Pool(ref handle) => Some(handle.raw),
+        }
+    }
+}
+
+#[derive(Copy, Clone)]
 pub struct ImageView {
     pub(crate) resource: native::Resource, // weak-ptr owned by image.
-    pub(crate) handle_srv: Option<native::CpuDescriptor>,
-    pub(crate) handle_rtv: Option<native::CpuDescriptor>,
-    pub(crate) handle_dsv: Option<native::CpuDescriptor>,
-    pub(crate) handle_uav: Option<native::CpuDescriptor>,
+    pub(crate) handle_srv: Option<Handle>,
+    pub(crate) handle_rtv: RenderTargetHandle,
+    pub(crate) handle_dsv: Option<Handle>,
+    pub(crate) handle_uav: Option<Handle>,
     // Required for attachment resolves.
     pub(crate) dxgi_format: DXGI_FORMAT,
     pub(crate) num_levels: image::Level,
@@ -391,7 +400,7 @@ impl ImageView {
 }
 
 pub struct Sampler {
-    pub(crate) handle: native::CpuDescriptor,
+    pub(crate) handle: Handle,
 }
 
 impl fmt::Debug for Sampler {
@@ -459,9 +468,7 @@ impl DescriptorContent {
 impl From<pso::DescriptorType> for DescriptorContent {
     fn from(ty: pso::DescriptorType) -> Self {
         use hal::pso::{
-            BufferDescriptorFormat as Bdf,
-            BufferDescriptorType as Bdt,
-            DescriptorType as Dt,
+            BufferDescriptorFormat as Bdf, BufferDescriptorType as Bdt, DescriptorType as Dt,
             ImageDescriptorType as Idt,
         };
 
@@ -516,12 +523,11 @@ pub struct DescriptorRange {
     pub(crate) handle: DualHandle,
     pub(crate) ty: pso::DescriptorType,
     pub(crate) handle_size: u64,
-    pub(crate) count: u64,
 }
 
 impl DescriptorRange {
     pub(crate) fn at(&self, index: u64) -> native::CpuDescriptor {
-        assert!(index < self.count);
+        assert!(index < self.handle.size);
         let ptr = self.handle.cpu.ptr + (self.handle_size * index) as usize;
         native::CpuDescriptor { ptr }
     }
@@ -549,6 +555,7 @@ pub struct DescriptorSet {
     pub(crate) binding_infos: Vec<DescriptorBindingInfo>,
     pub(crate) first_gpu_sampler: Option<native::GpuDescriptor>,
     pub(crate) first_gpu_view: Option<native::GpuDescriptor>,
+    pub(crate) raw_name: Vec<u16>,
 }
 
 impl fmt::Debug for DescriptorSet {
@@ -648,7 +655,7 @@ impl DescriptorHeapSlice {
     /// Do not use this with handles not given out by this `DescriptorHeapSlice`.
     pub(crate) fn free_handles(&mut self, handle: DualHandle) {
         let start = (handle.gpu.ptr - self.start.gpu.ptr) / self.handle_size;
-        let handle_range = start .. start + handle.size as u64;
+        let handle_range = start..start + handle.size;
         self.range_allocator.free_range(handle_range);
     }
 
@@ -711,7 +718,6 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
                     Some(DescriptorRange {
                         handle,
                         ty: binding.ty,
-                        count,
                         handle_size: self.heap_srv_cbv_uav.handle_size,
                     })
                 } else {
@@ -732,7 +738,6 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
                         Some(DescriptorRange {
                             handle,
                             ty: binding.ty,
-                            count,
                             handle_size: self.heap_sampler.handle_size,
                         })
                     } else {
@@ -757,21 +762,22 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
             binding_infos,
             first_gpu_sampler,
             first_gpu_view,
+            raw_name: Vec::new(),
         })
     }
 
-    unsafe fn free_sets<I>(&mut self, descriptor_sets: I)
+    unsafe fn free<I>(&mut self, descriptor_sets: I)
     where
         I: IntoIterator<Item = DescriptorSet>,
     {
         for descriptor_set in descriptor_sets {
-            for binding_info in &descriptor_set.binding_infos {
-                if let Some(ref view_range) = binding_info.view_range {
+            for binding_info in descriptor_set.binding_infos {
+                if let Some(view_range) = binding_info.view_range {
                     if binding_info.content.intersects(DescriptorContent::VIEW) {
                         self.heap_srv_cbv_uav.free_handles(view_range.handle);
                     }
                 }
-                if let Some(ref sampler_range) = binding_info.sampler_range {
+                if let Some(sampler_range) = binding_info.sampler_range {
                     if binding_info.content.intersects(DescriptorContent::SAMPLER) {
                         self.heap_sampler.free_handles(sampler_range.handle);
                     }

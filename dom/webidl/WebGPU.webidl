@@ -214,7 +214,7 @@ interface GPUBufferUsage {
     const GPUBufferUsageFlags QUERY_RESOLVE = 0x0200;
 };
 
-dictionary GPUBufferDescriptor {
+dictionary GPUBufferDescriptor : GPUObjectDescriptorBase {
     required GPUSize64 size;
     required GPUBufferUsageFlags usage;
     boolean mappedAtCreation = false;
@@ -317,7 +317,7 @@ interface GPUTextureUsage {
     const GPUTextureUsageFlags OUTPUT_ATTACHMENT = 0x10;
 };
 
-dictionary GPUTextureDescriptor {
+dictionary GPUTextureDescriptor : GPUObjectDescriptorBase {
     required GPUExtent3D size;
     GPUIntegerCoordinate mipLevelCount = 1;
     GPUSize32 sampleCount = 1;
@@ -455,8 +455,8 @@ dictionary GPUBindGroupLayoutEntry {
     required GPUIndex32 binding;
     required GPUShaderStageFlags visibility;
     required GPUBindingType type;
-    GPUTextureViewDimension viewDimension = "2d";
-    GPUTextureComponentType textureComponentType = "float";
+    GPUTextureViewDimension viewDimension;
+    GPUTextureComponentType textureComponentType;
     boolean multisampled = false;
     boolean hasDynamicOffset = false;
     GPUTextureFormat storageTextureFormat;

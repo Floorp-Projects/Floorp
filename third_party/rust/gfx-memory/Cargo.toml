@@ -13,28 +13,23 @@
 [package]
 edition = "2018"
 name = "gfx-memory"
-version = "0.1.3"
+version = "0.2.2"
 authors = ["omni-viral <scareaangel@gmail.com>", "The Gfx-rs Developers"]
-description = "fx-hal memory allocator"
+description = "gfx-hal memory allocator"
 documentation = "https://docs.rs/gfx-descriptor"
 keywords = ["graphics", "gfx-hal"]
 categories = ["rendering"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/gfx-rs/gfx-extras"
-[dependencies.colorful]
-version = "0.2"
-optional = true
+[dependencies.bit-set]
+version = "0.5"
 
 [dependencies.fxhash]
 version = "0.2"
 
 [dependencies.hal]
-version = "0.5"
-package = "gfx-hal"
-
-[dependencies.hibitset]
 version = "0.6"
-default-features = false
+package = "gfx-hal"
 
 [dependencies.log]
 version = "0.4"

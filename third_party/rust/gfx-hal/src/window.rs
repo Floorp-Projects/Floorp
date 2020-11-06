@@ -1,19 +1,26 @@
-//! Windowing system interoperability
+//! Windowing system interoperability.
 //!
 //! Screen presentation (fullscreen or window) of images requires two objects:
 //!
-//! * [Surface](window::Surface) is the host abstraction of the native screen
-//! * [Swapchain](window::Swapchain) is the device abstraction for a surface, containing multiple presentable images
+//! * [Surface][Surface] is an abstraction of a native screen or window, for graphics use.
+//! * [Swapchain][Swapchain] is a chain of multiple images, which can be presented on
+//!   a surface.
 //!
 //! ## Window
 //!
-//! // DOC TODO
+//! `gfx-hal` does not provide any methods for creating a native window or screen.
+//! This is handled exeternally, either by managing your own window or by using a
+//! library such as [winit](https://github.com/rust-windowing/winit), and providing
+//! the [raw window handle](https://github.com/rust-windowing/raw-window-handle).
 //!
 //! ## Surface
 //!
-//! // DOC TODO
+//! Once you have a window handle, you need to [create a surface][crate::Instance::create_surface]
+//! compatible with the [instance][crate::Instance] of the graphics API you currently use.
 //!
-//! ## Swapchain
+//! ## PresentationSurface
+//!
+//! A surface has an implicit swapchain in it.
 //!
 //! The most interesting part of a swapchain are the contained presentable images/backbuffers.
 //! Presentable images are specialized images, which can be presented on the screen. They are
@@ -27,17 +34,16 @@
 //! # fn main() {
 //! # use gfx_hal::prelude::*;
 //!
-//! # let mut swapchain: empty::Swapchain = return;
+//! # let mut surface: empty::Surface = return;
 //! # let device: empty::Device = return;
 //! # let mut present_queue: empty::CommandQueue = return;
 //! # unsafe {
-//! let acquisition_semaphore = device.create_semaphore().unwrap();
 //! let render_semaphore = device.create_semaphore().unwrap();
 //!
-//! let (frame, suboptimal) = swapchain.acquire_image(!0, Some(&acquisition_semaphore), None).unwrap();
+//! let (frame, suboptimal) = surface.acquire_image(!0).unwrap();
 //! // render the scene..
 //! // `render_semaphore` will be signalled once rendering has been finished
-//! swapchain.present(&mut present_queue, 0, &[render_semaphore]);
+//! present_queue.present(&mut surface, frame, Some(&render_semaphore));
 //! # }}
 //! ```
 //!
@@ -49,19 +55,15 @@
 //!
 //! DOC TODO
 
-use crate::device;
-use crate::format::Format;
-use crate::image;
-use crate::queue::CommandQueue;
-use crate::Backend;
+use crate::{device, format::Format, image, Backend};
 
-use std::any::Any;
-use std::borrow::Borrow;
-use std::cmp::{max, min};
-use std::fmt;
-use std::iter;
-use std::ops::RangeInclusive;
-
+use std::{
+    any::Any,
+    borrow::Borrow,
+    cmp::{max, min},
+    fmt,
+    ops::RangeInclusive,
+};
 
 /// Default image usage for the swapchain.
 pub const DEFAULT_USAGE: image::Usage = image::Usage::COLOR_ATTACHMENT;
@@ -226,12 +228,6 @@ impl SurfaceCapabilities {
 /// A `Surface` abstracts the surface of a native window.
 pub trait Surface<B: Backend>: fmt::Debug + Any + Send + Sync {
     /// Check if the queue family supports presentation to this surface.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    ///
-    /// ```
     fn supports_queue_family(&self, family: &B::QueueFamily) -> bool;
 
     /// Query surface capabilities for this physical device.
@@ -277,12 +273,6 @@ pub trait PresentationSurface<B: Backend>: Surface<B> {
     /// # Synchronization
     ///
     /// The acquired image is available to render. No synchronization is required.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    ///
-    /// ```
     unsafe fn acquire_image(
         &mut self,
         timeout_ns: u64,
@@ -381,12 +371,6 @@ pub struct SwapchainConfig {
 
 impl SwapchainConfig {
     /// Create a new default configuration (color images only).
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    ///
-    /// ```
     pub fn new(width: u32, height: u32, format: Format, image_count: SwapImageIndex) -> Self {
         SwapchainConfig {
             present_mode: PresentMode::FIFO,
@@ -555,70 +539,6 @@ impl std::error::Error for PresentError {
             PresentError::DeviceLost(err) => Some(err),
             _ => None,
         }
-    }
-}
-
-/// The `Swapchain` is the backend representation of the surface.
-/// It consists of multiple buffers, which will be presented on the surface.
-pub trait Swapchain<B: Backend>: fmt::Debug + Any + Send + Sync {
-    /// Acquire a new swapchain image for rendering. This needs to be called before presenting.
-    ///
-    /// May fail according to one of the reasons indicated in `AcquireError` enum.
-    ///
-    /// # Synchronization
-    ///
-    /// The acquired image will not be immediately available when the function returns.
-    /// Once available the provided [`Semaphore`](../trait.Resources.html#associatedtype.Semaphore)
-    /// and [`Fence`](../trait.Resources.html#associatedtype.Fence) will be signaled.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    ///
-    /// ```
-    unsafe fn acquire_image(
-        &mut self,
-        timeout_ns: u64,
-        semaphore: Option<&B::Semaphore>,
-        fence: Option<&B::Fence>,
-    ) -> Result<(SwapImageIndex, Option<Suboptimal>), AcquireError>;
-
-    /// Present one acquired image.
-    ///
-    /// # Safety
-    ///
-    /// The passed queue _must_ support presentation on the surface, which is
-    /// used for creating this swapchain.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    ///
-    /// ```
-    unsafe fn present<'a, S, Iw>(
-        &'a self,
-        present_queue: &mut B::CommandQueue,
-        image_index: SwapImageIndex,
-        wait_semaphores: Iw,
-    ) -> Result<Option<Suboptimal>, PresentError>
-    where
-        Self: 'a + Sized + Borrow<B::Swapchain>,
-        S: 'a + Borrow<B::Semaphore>,
-        Iw: IntoIterator<Item = &'a S>,
-    {
-        present_queue.present(iter::once((self, image_index)), wait_semaphores)
-    }
-
-    /// Present one acquired image without any semaphore synchronization.
-    unsafe fn present_without_semaphores<'a>(
-        &'a self,
-        present_queue: &mut B::CommandQueue,
-        image_index: SwapImageIndex,
-    ) -> Result<Option<Suboptimal>, PresentError>
-    where
-        Self: 'a + Sized + Borrow<B::Swapchain>,
-    {
-        self.present::<B::Semaphore, _>(present_queue, image_index, iter::empty())
     }
 }
 

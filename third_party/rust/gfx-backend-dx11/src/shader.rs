@@ -4,11 +4,11 @@ use spirv_cross::{hlsl, spirv, ErrorCode as SpirvErrorCode};
 
 use winapi::{
     shared::winerror,
-    um::{d3dcommon, d3dcompiler},
+    um::{d3d11, d3dcommon, d3dcompiler},
 };
 use wio::com::ComPtr;
 
-use auxil::spirv_cross_specialize_ast;
+use auxil::{spirv_cross_specialize_ast, ShaderStage};
 use hal::{device, pso};
 
 use crate::{conv, Backend, PipelineLayout};
@@ -32,9 +32,57 @@ fn gen_query_error(err: SpirvErrorCode) -> device::ShaderError {
     device::ShaderError::CompilationFailed(msg)
 }
 
+/// Introspects the input attributes of given SPIR-V shader and returns an optional vertex semantic remapping.
+///
+/// The returned hashmap has attribute location as a key and an Optional remapping to a two part semantic.
+///
+/// eg.
+/// `2 -> None` means use default semantic `TEXCOORD2`
+/// `2 -> Some((0, 2))` means use two part semantic `TEXCOORD0_2`. This is how matrices are represented by spirv-cross.
+///
+/// This is a temporary workaround for https://github.com/KhronosGroup/SPIRV-Cross/issues/1512.
+///
+/// This workaround also exists under the same name in the DX12 backend.
+pub(crate) fn introspect_spirv_vertex_semantic_remapping(raw_data: &[u32]) -> Result<auxil::FastHashMap<u32, Option<(u32, u32)>>, device::ShaderError> {
+    // This is inefficient as we already parse it once before. This is a temporary workaround only called
+    // on vertex shaders. If this becomes permanent or shows up in profiles, deduplicate these as first course of action.
+    let ast = parse_spirv(raw_data)?;
+
+    let mut map = auxil::FastHashMap::default();
+
+    let inputs = ast.get_shader_resources().map_err(gen_query_error)?.stage_inputs;
+    for input in inputs {
+        let idx = ast.get_decoration(input.id, spirv::Decoration::Location).map_err(gen_query_error)?;
+
+        let ty = ast.get_type(input.type_id).map_err(gen_query_error)?;
+
+        match ty {
+            spirv::Type::Boolean { columns, .. }
+                | spirv::Type::Int { columns, .. }
+                | spirv::Type::UInt { columns, .. }
+                | spirv::Type::Half { columns, .. }
+                | spirv::Type::Float { columns, .. }
+                | spirv::Type::Double { columns, .. } if columns > 1 => {
+                for col in 0..columns {
+                    if let Some(_) = map.insert(idx + col, Some((idx, col))) {
+                        return Err(device::ShaderError::CompilationFailed(format!("Shader has overlapping input attachments at location {}", idx)))
+                    }
+                }
+            }
+            _ => {
+                if let Some(_) = map.insert(idx, None) {
+                    return Err(device::ShaderError::CompilationFailed(format!("Shader has overlapping input attachments at location {}", idx)))
+                }
+            }
+        }
+    }
+
+    Ok(map)
+}
+
 pub(crate) fn compile_spirv_entrypoint(
     raw_data: &[u32],
-    stage: pso::Stage,
+    stage: ShaderStage,
     source: &pso::EntryPoint<Backend>,
     layout: &PipelineLayout,
     features: &hal::Features,
@@ -44,11 +92,11 @@ pub(crate) fn compile_spirv_entrypoint(
 
     patch_spirv_resources(&mut ast, stage, layout)?;
     let shader_model = hlsl::ShaderModel::V5_0;
-    let shader_code = translate_spirv(&mut ast, shader_model, layout, stage, features)?;
+    let shader_code = translate_spirv(&mut ast, shader_model, layout, stage, features, source.entry)?;
     log::debug!(
-        "Generated {:?} shader:\n{:?}",
+        "Generated {:?} shader:\n{}",
         stage,
-        shader_code.replace("\n", "\r\n")
+        shader_code,
     );
 
     let real_name = ast
@@ -74,16 +122,16 @@ pub(crate) fn compile_spirv_entrypoint(
 }
 
 pub(crate) fn compile_hlsl_shader(
-    stage: pso::Stage,
+    stage: ShaderStage,
     shader_model: hlsl::ShaderModel,
     entry: &str,
     code: &[u8],
 ) -> Result<*mut d3dcommon::ID3DBlob, device::ShaderError> {
     let stage_str = {
         let stage = match stage {
-            pso::Stage::Vertex => "vs",
-            pso::Stage::Fragment => "ps",
-            pso::Stage::Compute => "cs",
+            ShaderStage::Vertex => "vs",
+            ShaderStage::Fragment => "ps",
+            ShaderStage::Compute => "cs",
             _ => unimplemented!(),
         };
 
@@ -147,7 +195,7 @@ fn parse_spirv(raw_data: &[u32]) -> Result<spirv::Ast<hlsl::Target>, device::Sha
 
 fn patch_spirv_resources(
     ast: &mut spirv::Ast<hlsl::Target>,
-    stage: pso::Stage,
+    stage: ShaderStage,
     layout: &PipelineLayout,
 ) -> Result<(), device::ShaderError> {
     // we remap all `layout(binding = n, set = n)` to a flat space which we get from our
@@ -191,12 +239,43 @@ fn patch_spirv_resources(
         let binding = ast
             .get_decoration(storage_buffer.id, spirv::Decoration::Binding)
             .map_err(gen_query_error)?;
-        let (_content, res_index) = layout.sets[set].find_register(stage, binding);
+
+        let read_only = match layout.sets[set].bindings[binding as usize].ty {
+            pso::DescriptorType::Buffer {
+                ty: pso::BufferDescriptorType::Storage {
+                    read_only
+                },
+                ..
+            } => {
+                read_only
+            }
+            _ => unreachable!()
+        };
+
+        let (_content, res_index) = if read_only {
+            layout.sets[set].find_register(stage, binding)
+        } else {
+            layout.sets[set].find_uav_register(stage, binding)
+        };
+
+        // If the binding is read/write, we need to generate a UAV here.
+        if !read_only {
+            ast.set_member_decoration(storage_buffer.type_id, 0, spirv::Decoration::NonWritable, 0)
+                .map_err(gen_unexpected_error)?;
+        }
+
+        let index = if read_only {
+            res_index.t as u32
+        } else if stage == ShaderStage::Compute {
+            res_index.u as u32
+        } else {
+            d3d11::D3D11_PS_CS_UAV_REGISTER_COUNT - 1 - res_index.u as u32
+        };
 
         ast.set_decoration(
             storage_buffer.id,
             spirv::Decoration::Binding,
-            res_index.u as u32, //TODO: also decorate `res_index.t`
+            index,
         )
         .map_err(gen_unexpected_error)?;
     }
@@ -208,12 +287,21 @@ fn patch_spirv_resources(
         let binding = ast
             .get_decoration(image.id, spirv::Decoration::Binding)
             .map_err(gen_query_error)?;
-        let (_content, res_index) = layout.sets[set].find_register(stage, binding);
+        let (_content, res_index) = layout.sets[set].find_uav_register(stage, binding);
+
+        // Read only storage images are generated as UAVs by spirv-cross.
+        //
+        // Compute uses bottom up stack, all other stages use top down.
+        let index = if stage == ShaderStage::Compute {
+            res_index.u as u32
+        } else {
+            d3d11::D3D11_PS_CS_UAV_REGISTER_COUNT - 1 - res_index.u as u32
+        };
 
         ast.set_decoration(
             image.id,
             spirv::Decoration::Binding,
-            res_index.u as u32, //TODO: also decorate `res_index.t`
+            index,
         )
         .map_err(gen_unexpected_error)?;
     }
@@ -244,6 +332,20 @@ fn patch_spirv_resources(
             .map_err(gen_unexpected_error)?;
     }
 
+    assert!(shader_resources.push_constant_buffers.len() <= 1, "Only 1 push constant buffer is supported");
+    for push_constant_buffer in &shader_resources.push_constant_buffers {
+        ast.set_decoration(
+            push_constant_buffer.id,
+            spirv::Decoration::DescriptorSet,
+            0 // value doesn't matter, just needs a value
+        ).map_err(gen_unexpected_error)?;
+        ast.set_decoration(
+            push_constant_buffer.id,
+            spirv::Decoration::Binding,
+            d3d11::D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT - 1
+        ).map_err(gen_unexpected_error)?;
+    }
+
     Ok(())
 }
 
@@ -251,12 +353,15 @@ fn translate_spirv(
     ast: &mut spirv::Ast<hlsl::Target>,
     shader_model: hlsl::ShaderModel,
     _layout: &PipelineLayout,
-    _stage: pso::Stage,
+    stage: ShaderStage,
     features: &hal::Features,
+    entry_point: &str,
 ) -> Result<String, device::ShaderError> {
     let mut compile_options = hlsl::CompilerOptions::default();
     compile_options.shader_model = shader_model;
     compile_options.vertex.invert_y = !features.contains(hal::Features::NDC_Y_UP);
+    compile_options.force_zero_initialized_variables = true;
+    compile_options.entry_point = Some((entry_point.to_string(), conv::map_stage(stage)));
 
     //let stage_flag = stage.into();
 

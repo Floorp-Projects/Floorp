@@ -1,5 +1,6 @@
 use crate::bindings as br;
 use crate::{compiler, spirv, ErrorCode};
+use std::ffi::CString;
 use std::marker::PhantomData;
 use std::ptr;
 
@@ -62,6 +63,7 @@ impl Default for CompilerVertexOptions {
 }
 
 /// HLSL compiler options.
+#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct CompilerOptions {
     pub shader_model: ShaderModel,
@@ -72,20 +74,11 @@ pub struct CompilerOptions {
     pub vertex: CompilerVertexOptions,
     pub force_storage_buffer_as_uav: bool,
     pub nonwritable_uav_texture_as_srv: bool,
-}
-
-impl CompilerOptions {
-    fn as_raw(&self) -> br::ScHlslCompilerOptions {
-        br::ScHlslCompilerOptions {
-            shader_model: self.shader_model.as_raw(),
-            point_size_compat: self.point_size_compat,
-            point_coord_compat: self.point_coord_compat,
-            vertex_invert_y: self.vertex.invert_y,
-            vertex_transform_clip_space: self.vertex.transform_clip_space,
-            force_storage_buffer_as_uav: self.force_storage_buffer_as_uav,
-            nonwritable_uav_texture_as_srv: self.nonwritable_uav_texture_as_srv,
-        }
-    }
+    /// Whether to force all uninitialized variables to be initialized to zero.
+    pub force_zero_initialized_variables: bool,
+    /// The name and execution model of the entry point to use. If no entry
+    /// point is specified, then the first entry point found will be used.
+    pub entry_point: Option<(String, spirv::ExecutionModel)>,
 }
 
 impl Default for CompilerOptions {
@@ -97,6 +90,8 @@ impl Default for CompilerOptions {
             vertex: CompilerVertexOptions::default(),
             force_storage_buffer_as_uav: false,
             nonwritable_uav_texture_as_srv: false,
+            force_zero_initialized_variables: false,
+            entry_point: None,
         }
     }
 }
@@ -132,7 +127,27 @@ impl spirv::Compile<Target> for spirv::Ast<Target> {
 
     /// Set HLSL compiler specific compilation settings.
     fn set_compiler_options(&mut self, options: &CompilerOptions) -> Result<(), ErrorCode> {
-        let raw_options = options.as_raw();
+        if let Some((name, model)) = &options.entry_point {
+            let name_raw = CString::new(name.as_str()).map_err(|_| ErrorCode::Unhandled)?;
+            let model = model.as_raw();
+            unsafe {
+                check!(br::sc_internal_compiler_set_entry_point(
+                    self.compiler.sc_compiler,
+                    name_raw.as_ptr(),
+                    model,
+                ));
+            }
+        };
+        let raw_options = br::ScHlslCompilerOptions {
+            shader_model: options.shader_model.as_raw(),
+            point_size_compat: options.point_size_compat,
+            point_coord_compat: options.point_coord_compat,
+            vertex_invert_y: options.vertex.invert_y,
+            vertex_transform_clip_space: options.vertex.transform_clip_space,
+            force_storage_buffer_as_uav: options.force_storage_buffer_as_uav,
+            nonwritable_uav_texture_as_srv: options.nonwritable_uav_texture_as_srv,
+            force_zero_initialized_variables: options.force_zero_initialized_variables,
+        };
         unsafe {
             check!(br::sc_internal_compiler_hlsl_set_options(
                 self.compiler.sc_compiler,

@@ -85,3 +85,11 @@ pub enum ErrorCode {
     Unhandled,
     CompilationError(String),
 }
+
+impl std::fmt::Display for ErrorCode {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl std::error::Error for ErrorCode {}

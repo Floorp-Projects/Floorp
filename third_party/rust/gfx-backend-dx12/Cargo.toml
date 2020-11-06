@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "gfx-backend-dx12"
-version = "0.5.10"
+version = "0.6.12"
 authors = ["The Gfx-rs Developers"]
 description = "DirectX-12 API backend for gfx-rs"
 homepage = "https://github.com/gfx-rs/gfx"
@@ -27,16 +27,22 @@ default-target = "x86_64-pc-windows-msvc"
 
 [lib]
 name = "gfx_backend_dx12"
+[dependencies.arrayvec]
+version = "0.5"
+
 [dependencies.auxil]
-version = "0.4"
+version = "0.7"
 features = ["spirv_cross"]
 package = "gfx-auxil"
+
+[dependencies.bit-set]
+version = "0.5"
 
 [dependencies.bitflags]
 version = "1"
 
 [dependencies.hal]
-version = "0.5.3"
+version = "0.6"
 package = "gfx-hal"
 
 [dependencies.log]
@@ -57,7 +63,7 @@ version = "0.3"
 version = "1"
 
 [dependencies.spirv_cross]
-version = "0.20"
+version = "0.22"
 features = ["hlsl"]
 
 [dependencies.winapi]
