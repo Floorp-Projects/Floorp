@@ -1,7 +1,8 @@
 //! Memory buffers.
 //!
-//! Buffers interpret memory slices as linear contiguous data array.
+//! # Buffer
 //!
+//! Buffers interpret memory slices as linear contiguous data array.
 //! They can be used as shader resources, vertex buffers, index buffers or for
 //! specifying the action commands for indirect execution.
 

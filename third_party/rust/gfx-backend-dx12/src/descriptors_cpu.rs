@@ -1,6 +1,5 @@
-use bit_set::BitSet;
 use native::{CpuDescriptor, DescriptorHeapFlags, DescriptorHeapType};
-use std::fmt;
+use std::{collections::HashSet, fmt};
 
 // Linear stack allocator for CPU descriptor heaps.
 pub struct HeapLinear {
@@ -76,7 +75,7 @@ impl fmt::Debug for Heap {
 }
 
 impl Heap {
-    fn new(device: native::Device, ty: DescriptorHeapType) -> Self {
+    pub fn new(device: native::Device, ty: DescriptorHeapType) -> Self {
         let (heap, _hr) = device.create_descriptor_heap(
             HEAP_SIZE_FIXED as _,
             ty,
@@ -104,13 +103,6 @@ impl Heap {
         }
     }
 
-    pub fn free_handle(&mut self, handle: CpuDescriptor) {
-        let slot = (handle.ptr - self.start.ptr) / self.handle_size;
-        assert!(slot < HEAP_SIZE_FIXED);
-        assert_eq!(self.availability & (1 << slot), 0);
-        self.availability ^= 1 << slot;
-    }
-
     pub fn is_full(&self) -> bool {
         self.availability == 0
     }
@@ -120,17 +112,11 @@ impl Heap {
     }
 }
 
-#[derive(Clone, Copy)]
-pub struct Handle {
-    pub raw: CpuDescriptor,
-    heap_index: usize,
-}
-
 pub struct DescriptorCpuPool {
     device: native::Device,
     ty: DescriptorHeapType,
     heaps: Vec<Heap>,
-    avaliable_heap_indices: BitSet,
+    free_list: HashSet<usize>,
 }
 
 impl fmt::Debug for DescriptorCpuPool {
@@ -145,39 +131,29 @@ impl DescriptorCpuPool {
             device,
             ty,
             heaps: Vec::new(),
-            avaliable_heap_indices: BitSet::new(),
+            free_list: HashSet::new(),
         }
     }
 
-    pub fn alloc_handle(&mut self) -> Handle {
-        let heap_index = self
-            .avaliable_heap_indices
-            .iter()
-            .next()
-            .unwrap_or_else(|| {
-                // Allocate a new heap
-                let id = self.heaps.len();
-                self.heaps.push(Heap::new(self.device, self.ty));
-                self.avaliable_heap_indices.insert(id);
-                id
-            });
+    pub fn alloc_handle(&mut self) -> CpuDescriptor {
+        let heap_id = self.free_list.iter().cloned().next().unwrap_or_else(|| {
+            // Allocate a new heap
+            let id = self.heaps.len();
+            self.heaps.push(Heap::new(self.device, self.ty));
+            self.free_list.insert(id);
+            id
+        });
 
-        let heap = &mut self.heaps[heap_index];
-        let handle = Handle {
-            raw: heap.alloc_handle(),
-            heap_index,
-        };
+        let heap = &mut self.heaps[heap_id];
+        let handle = heap.alloc_handle();
         if heap.is_full() {
-            self.avaliable_heap_indices.remove(heap_index);
+            self.free_list.remove(&heap_id);
         }
 
         handle
     }
 
-    pub fn free_handle(&mut self, handle: Handle) {
-        self.heaps[handle.heap_index].free_handle(handle.raw);
-        self.avaliable_heap_indices.insert(handle.heap_index);
-    }
+    // TODO: free handles
 
     pub unsafe fn destroy(&self) {
         for heap in &self.heaps {

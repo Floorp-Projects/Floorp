@@ -1,7 +1,7 @@
-version: 1.1.0
+version: 1.0.0
 
 rust:
   formatter:
     name: rustfmt
-  repo_checkers:
-    - name: rust-clippy
+    ignore_paths:
+      - ".*"

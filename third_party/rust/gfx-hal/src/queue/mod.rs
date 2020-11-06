@@ -11,7 +11,7 @@ pub mod family;
 use crate::{
     device::OutOfMemory,
     pso,
-    window::{PresentError, PresentationSurface, Suboptimal},
+    window::{PresentError, PresentationSurface, Suboptimal, SwapImageIndex},
     Backend,
 };
 use std::{any::Any, borrow::Borrow, fmt, iter};
@@ -57,9 +57,7 @@ impl QueueType {
 /// `1.0` (high).
 pub type QueuePriority = f32;
 
-/// Submission information for a [command queue][CommandQueue].
-///
-/// The submission is sent to the device through the [`submit`][CommandQueue::submit] method.
+/// Submission information for a command queue.
 #[derive(Debug)]
 pub struct Submission<Ic, Iw, Is> {
     /// Command buffers to submit.
@@ -70,29 +68,16 @@ pub struct Submission<Ic, Iw, Is> {
     pub signal_semaphores: Is,
 }
 
-/// Abstraction for an internal GPU execution engine.
-///
-/// Commands are executed on the the device by submitting
-/// [command buffers][crate::command::CommandBuffer].
-///
-/// Queues can also be used for presenting to a surface
-/// (that is, flip the front buffer with the next one in the chain).
+/// `RawCommandQueue` are abstractions to the internal GPU execution engines.
+/// Commands are executed on the the device by submitting command buffers to queues.
 pub trait CommandQueue<B: Backend>: fmt::Debug + Any + Send + Sync {
     /// Submit command buffers to queue for execution.
+    /// `fence` must be in unsignalled state, and will be signalled after all command buffers in the submission have
+    /// finished execution.
     ///
-    /// # Arguments
-    ///
-    /// * `submission` - information about which command buffers to submit,
-    ///   as well as what semaphores to wait for or to signal when done.
-    /// * `fence` - must be in unsignaled state, and will be signaled after
-    ///   all command buffers in the submission have finished execution.
-    ///
-    /// # Safety
-    ///
-    /// It's not checked that the queue can process the submitted command buffers.
-    ///
-    /// For example, trying to submit compute commands to a graphics queue
-    /// will result in undefined behavior.
+    /// Unsafe because it's not checked that the queue can process the submitted command buffers.
+    /// Trying to submit compute commands to a graphics queue will result in undefined behavior.
+    /// Each queue implements safer wrappers according to their supported functionalities!
     unsafe fn submit<'a, T, Ic, S, Iw, Is>(
         &mut self,
         submission: Submission<Ic, Iw, Is>,
@@ -121,19 +106,44 @@ pub trait CommandQueue<B: Backend>: fmt::Debug + Any + Send + Sync {
         self.submit::<_, _, B::Semaphore, _, _>(submission, fence)
     }
 
-    /// Present a swapchain image directly to a surface, after waiting on `wait_semaphore`.
+    /// Presents the result of the queue to the given swapchains, after waiting on all the
+    /// semaphores given in `wait_semaphores`. A given swapchain must not appear in this
+    /// list more than once.
     ///
-    /// # Safety
-    ///
-    /// Unsafe for the same reasons as [`submit`][CommandQueue::submit].
-    /// No checks are performed to verify that this queue supports present operations.
-    unsafe fn present(
+    /// Unsafe for the same reasons as `submit()`.
+    unsafe fn present<'a, W, Is, S, Iw>(
+        &mut self,
+        swapchains: Is,
+        wait_semaphores: Iw,
+    ) -> Result<Option<Suboptimal>, PresentError>
+    where
+        Self: Sized,
+        W: 'a + Borrow<B::Swapchain>,
+        Is: IntoIterator<Item = (&'a W, SwapImageIndex)>,
+        S: 'a + Borrow<B::Semaphore>,
+        Iw: IntoIterator<Item = &'a S>;
+
+    /// Simplified version of `present` that doesn't expect any semaphores.
+    unsafe fn present_without_semaphores<'a, W, Is>(
+        &mut self,
+        swapchains: Is,
+    ) -> Result<Option<Suboptimal>, PresentError>
+    where
+        Self: Sized,
+        W: 'a + Borrow<B::Swapchain>,
+        Is: IntoIterator<Item = (&'a W, SwapImageIndex)>,
+    {
+        self.present::<_, _, B::Semaphore, _>(swapchains, iter::empty())
+    }
+
+    /// Present the a
+    unsafe fn present_surface(
         &mut self,
         surface: &mut B::Surface,
         image: <B::Surface as PresentationSurface<B>>::SwapchainImage,
         wait_semaphore: Option<&B::Semaphore>,
     ) -> Result<Option<Suboptimal>, PresentError>;
 
-    /// Wait for the queue to be idle.
+    /// Wait for the queue to idle.
     fn wait_idle(&self) -> Result<(), OutOfMemory>;
 }

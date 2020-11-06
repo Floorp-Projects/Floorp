@@ -30,16 +30,15 @@ pub enum MemoryUsage {
 
 impl MemoryUsage {
     /// Set of required memory properties for this usage.
-    pub fn properties_required(self) -> m::Properties {
-        match self {
+    pub fn properties_required(&self) -> m::Properties {
+        match *self {
             MemoryUsage::Private => m::Properties::DEVICE_LOCAL,
             MemoryUsage::Dynamic { .. } | MemoryUsage::Staging { .. } => m::Properties::CPU_VISIBLE,
         }
     }
 
-    #[allow(clippy::identity_op)]
-    pub(crate) fn memory_fitness(self, properties: m::Properties) -> u32 {
-        match self {
+    pub(crate) fn memory_fitness(&self, properties: m::Properties) -> u32 {
+        match *self {
             MemoryUsage::Private => {
                 assert!(properties.contains(m::Properties::DEVICE_LOCAL));
                 0 | (!properties.contains(m::Properties::CPU_VISIBLE) as u32) << 3

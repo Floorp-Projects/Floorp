@@ -63,8 +63,7 @@ public:
 private:
 #if defined(_MSC_VER) && _MSC_VER < 1900
 	// MSVC 2013 workarounds, sigh ...
-	union
-	{
+	union {
 		char aligned_char[sizeof(T) * N];
 		double dummy_aligner;
 	} u;
@@ -328,9 +327,8 @@ public:
 			size_t target_capacity = buffer_capacity;
 			if (target_capacity == 0)
 				target_capacity = 1;
-
-			// Weird parens works around macro issues on Windows if NOMINMAX is not used.
-			target_capacity = (std::max)(target_capacity, N);
+			if (target_capacity < N)
+				target_capacity = N;
 
 			// Need to ensure there is a POT value of target capacity which is larger than count,
 			// otherwise this will overflow.
