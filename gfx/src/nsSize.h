@@ -19,8 +19,8 @@ typedef mozilla::gfx::IntSize nsIntSize;
 struct nsSize : public mozilla::gfx::BaseSize<nscoord, nsSize> {
   typedef mozilla::gfx::BaseSize<nscoord, nsSize> Super;
 
-  nsSize() : Super() {}
-  nsSize(nscoord aWidth, nscoord aHeight) : Super(aWidth, aHeight) {}
+  constexpr nsSize() : Super() {}
+  constexpr nsSize(nscoord aWidth, nscoord aHeight) : Super(aWidth, aHeight) {}
 
   inline mozilla::gfx::IntSize ScaleToNearestPixels(
       float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const;
