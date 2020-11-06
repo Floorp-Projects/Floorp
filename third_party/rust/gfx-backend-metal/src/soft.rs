@@ -1,9 +1,13 @@
 use crate::{
-    command::IndexBuffer, native::RasterizerState, BufferPtr, ResourceIndex, ResourcePtr,
-    SamplerPtr, TexturePtr,
+    command::IndexBuffer,
+    native::RasterizerState,
+    BufferPtr,
+    ResourceIndex,
+    ResourcePtr,
+    SamplerPtr,
+    TexturePtr,
 };
 
-use auxil::ShaderStage;
 use hal;
 use metal;
 
@@ -64,28 +68,28 @@ pub enum RenderCommand<R: Resources> {
     SetRasterizerState(RasterizerState),
     SetVisibilityResult(metal::MTLVisibilityResultMode, hal::buffer::Offset),
     BindBuffer {
-        stage: ShaderStage,
+        stage: hal::pso::Stage,
         index: ResourceIndex,
         buffer: BufferPtr,
         offset: hal::buffer::Offset,
     },
     BindBuffers {
-        stage: ShaderStage,
+        stage: hal::pso::Stage,
         index: ResourceIndex,
         buffers: R::BufferArray,
     },
     BindBufferData {
-        stage: ShaderStage,
+        stage: hal::pso::Stage,
         index: ResourceIndex,
         words: R::Data,
     },
     BindTextures {
-        stage: ShaderStage,
+        stage: hal::pso::Stage,
         index: ResourceIndex,
         textures: R::TextureArray,
     },
     BindSamplers {
-        stage: ShaderStage,
+        stage: hal::pso::Stage,
         index: ResourceIndex,
         samplers: R::SamplerArray,
     },
@@ -237,7 +241,7 @@ impl Own {
                     let start = self.buffers.len() as CacheResourceIndex;
                     self.buffers.extend_from_slice(buffers);
                     self.buffer_offsets.extend_from_slice(offsets);
-                    start..self.buffers.len() as CacheResourceIndex
+                    start .. self.buffers.len() as CacheResourceIndex
                 },
             },
             BindBufferData {
@@ -259,7 +263,7 @@ impl Own {
                 textures: {
                     let start = self.textures.len() as CacheResourceIndex;
                     self.textures.extend_from_slice(textures);
-                    start..self.textures.len() as CacheResourceIndex
+                    start .. self.textures.len() as CacheResourceIndex
                 },
             },
             BindSamplers {
@@ -272,7 +276,7 @@ impl Own {
                 samplers: {
                     let start = self.samplers.len() as CacheResourceIndex;
                     self.samplers.extend_from_slice(samplers);
-                    start..self.samplers.len() as CacheResourceIndex
+                    start .. self.samplers.len() as CacheResourceIndex
                 },
             },
             BindPipeline(pso) => BindPipeline(pso.to_owned()),
@@ -343,7 +347,7 @@ impl Own {
                     let start = self.buffers.len() as CacheResourceIndex;
                     self.buffers.extend_from_slice(buffers);
                     self.buffer_offsets.extend_from_slice(offsets);
-                    start..self.buffers.len() as CacheResourceIndex
+                    start .. self.buffers.len() as CacheResourceIndex
                 },
             },
             BindBufferData { index, words } => BindBufferData {
@@ -355,7 +359,7 @@ impl Own {
                 textures: {
                     let start = self.textures.len() as CacheResourceIndex;
                     self.textures.extend_from_slice(textures);
-                    start..self.textures.len() as CacheResourceIndex
+                    start .. self.textures.len() as CacheResourceIndex
                 },
             },
             BindSamplers { index, samplers } => BindSamplers {
@@ -363,7 +367,7 @@ impl Own {
                 samplers: {
                     let start = self.samplers.len() as CacheResourceIndex;
                     self.samplers.extend_from_slice(samplers);
-                    start..self.samplers.len() as CacheResourceIndex
+                    start .. self.samplers.len() as CacheResourceIndex
                 },
             },
             BindPipeline(pso) => BindPipeline(pso.to_owned()),
@@ -486,39 +490,29 @@ impl<'b> AsSlice<hal::buffer::Offset, &'b Ref>
 impl AsSlice<Option<BufferPtr>, Own> for Range<CacheResourceIndex> {
     #[inline(always)]
     fn as_slice<'a>(&'a self, resources: &'a Own) -> &'a [Option<BufferPtr>] {
-        &resources.buffers[self.start as usize..self.end as usize]
+        &resources.buffers[self.start as usize .. self.end as usize]
     }
 }
 impl AsSlice<hal::buffer::Offset, Own> for Range<CacheResourceIndex> {
     #[inline(always)]
     fn as_slice<'a>(&'a self, resources: &'a Own) -> &'a [hal::buffer::Offset] {
-        &resources.buffer_offsets[self.start as usize..self.end as usize]
+        &resources.buffer_offsets[self.start as usize .. self.end as usize]
     }
 }
 impl AsSlice<Option<TexturePtr>, Own> for Range<CacheResourceIndex> {
     #[inline(always)]
     fn as_slice<'a>(&'a self, resources: &'a Own) -> &'a [Option<TexturePtr>] {
-        &resources.textures[self.start as usize..self.end as usize]
+        &resources.textures[self.start as usize .. self.end as usize]
     }
 }
 impl AsSlice<Option<SamplerPtr>, Own> for Range<CacheResourceIndex> {
     #[inline(always)]
     fn as_slice<'a>(&'a self, resources: &'a Own) -> &'a [Option<SamplerPtr>] {
-        &resources.samplers[self.start as usize..self.end as usize]
+        &resources.samplers[self.start as usize .. self.end as usize]
     }
 }
 
-fn _test_command_sizes(
-    render: RenderCommand<&Ref>,
-    blit: BlitCommand,
-    compute: ComputeCommand<&Ref>,
-) {
-    use std::mem::transmute;
-    let _ = unsafe {
-        (
-            transmute::<_, [usize; 6]>(render),
-            transmute::<_, [usize; 9]>(blit),
-            transmute::<_, [usize; 7]>(compute),
-        )
-    };
+fn _test_render_command_size(com: RenderCommand<Own>) -> [usize; 6] {
+    use std::mem;
+    unsafe { mem::transmute(com) }
 }

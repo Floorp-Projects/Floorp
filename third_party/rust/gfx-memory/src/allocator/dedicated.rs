@@ -99,7 +99,7 @@ pub struct DedicatedAllocator {
 }
 
 impl DedicatedAllocator {
-    /// Create new `DedicatedAllocator`
+    /// Create new `LinearAllocator`
     /// for `memory_type` with `memory_properties` specified
     pub fn new(
         memory_type: hal::MemoryTypeId,
