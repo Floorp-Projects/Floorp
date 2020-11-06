@@ -9,10 +9,6 @@
 #define __MOZ_DMABUF_LIB_WRAPPER_H__
 
 #include "mozilla/widget/gbm.h"
-#include "mozilla/widget/gtk-primary-selection-client-protocol.h"
-#include "mozilla/widget/idle-inhibit-unstable-v1-client-protocol.h"
-#include "mozilla/widget/linux-dmabuf-unstable-v1-client-protocol.h"
-#include "mozilla/widget/primary-selection-unstable-v1-client-protocol.h"
 
 #ifdef MOZ_LOGGING
 #  include "mozilla/Logging.h"
@@ -155,7 +151,7 @@ class nsDMABufDevice {
   bool IsDMABufEnabled();
   bool Configure();
 
-  wl_registry* mRegistry;
+  void* mRegistry;
 
   GbmFormat mXRGBFormat;
   GbmFormat mARGBFormat;
