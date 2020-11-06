@@ -24,8 +24,10 @@ async function run() {
       isnot(printer.name, "", "Printer name should never be empty.");
 
       info(printer.name);
-      let printerInfo = await printer.printerInfo;
-      for (let paper of printerInfo.paperList) {
+      info("duplex(" + printer.supportsDuplex + ")");
+
+      let paperList = await printer.paperList;
+      for (let paper of paperList) {
         paper.QueryInterface(Ci.nsIPaper);
 
         info(`${paper.name}: ${paper.width}x${paper.height}`);

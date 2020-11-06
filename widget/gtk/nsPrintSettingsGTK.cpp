@@ -717,5 +717,22 @@ nsPrintSettingsGTK::SetDuplex(int32_t aDuplex) {
              "value is out of bounds for GtkPrintDuplex enum");
   gtk_print_settings_set_duplex(mPrintSettings,
                                 static_cast<GtkPrintDuplex>(aDuplex));
+
+  // We want to set the GTK CUPS Duplex setting in addition to calling
+  // gtk_print_settings_set_duplex(). Some systems may look for one, or the
+  // other, so it is best to set them both consistently.
+  constexpr char kCupsDuplex[] = "cups-Duplex";
+  switch (aDuplex) {
+    case GTK_PRINT_DUPLEX_SIMPLEX:
+      gtk_print_settings_set(mPrintSettings, kCupsDuplex, "None");
+      break;
+    case GTK_PRINT_DUPLEX_HORIZONTAL:
+      gtk_print_settings_set(mPrintSettings, kCupsDuplex, "DuplexNoTumble");
+      break;
+    case GTK_PRINT_DUPLEX_VERTICAL:
+      gtk_print_settings_set(mPrintSettings, kCupsDuplex, "DuplexTumble");
+      break;
+  }
+
   return NS_OK;
 }

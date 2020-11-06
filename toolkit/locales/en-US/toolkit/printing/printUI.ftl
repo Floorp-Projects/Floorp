@@ -50,6 +50,10 @@ printui-scale-fit-to-page-width = Fit to page width
 # Label for input control where user can set the scale percentage
 printui-scale-pcent = Scale
 
+# Section title (noun) for the two-sided print options
+printui-two-sided-printing = Two-sided printing
+printui-duplex-checkbox = Print on both sides
+
 # Section title for miscellaneous print options
 printui-options = Options
 printui-headers-footers-checkbox = Print headers and footers
