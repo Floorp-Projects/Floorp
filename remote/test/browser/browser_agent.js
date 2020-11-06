@@ -7,7 +7,13 @@ const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
 
-const URL = Services.io.newURI("http://localhost:0");
+// To fully test the Remote Agent's capabilities an instance of the interface
+// needs to be used. This refers to the Rust specific implementation.
+const remoteAgentInstance = Cc["@mozilla.org/remote/agent;1"].createInstance(
+  Ci.nsIRemoteAgent
+);
+
+const URL = "http://localhost:0";
 
 // set up test conditions and clean up
 function add_agent_task(originalTask) {
@@ -27,10 +33,21 @@ function add_agent_task(originalTask) {
   add_plain_task(task);
 }
 
+add_agent_task(async function debuggerAddress() {
+  const port = getNonAtomicFreePort();
+
+  await RemoteAgent.listen(`http://localhost:${port}`);
+  is(
+    remoteAgentInstance.debuggerAddress,
+    `localhost:${port}`,
+    "debuggerAddress set"
+  );
+});
+
 add_agent_task(async function listening() {
-  is(RemoteAgent.listening, false, "Agent is not listening");
+  is(remoteAgentInstance.listening, false, "Agent is not listening");
   await RemoteAgent.listen(URL);
-  is(RemoteAgent.listening, true, "Agent is listening");
+  is(remoteAgentInstance.listening, true, "Agent is listening");
 });
 
 add_agent_task(async function listen() {
