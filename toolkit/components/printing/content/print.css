@@ -80,7 +80,7 @@ body[loading] #print {
   margin: 0;
 }
 
-body[rendering] #sheet-count,
+#sheet-count[loading],
 body[invalid] #sheet-count {
   visibility: hidden;
 }
