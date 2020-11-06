@@ -7,6 +7,7 @@ package org.mozilla.fenix.customtabs
 import android.content.Intent
 import android.os.Bundle
 import androidx.navigation.NavDirections
+import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
@@ -56,6 +57,15 @@ class ExternalAppBrowserActivityTest {
         activity.navigateToBrowserOnColdStart()
 
         verify(exactly = 0) { activity.openToBrowser(BrowserDirection.FromGlobal, null) }
+    }
+
+    @Test
+    fun `handleNewIntent does nothing for external app browser activity`() {
+        val activity = spyk(ExternalAppBrowserActivity())
+        val intent: Intent = mockk(relaxed = true)
+
+        activity.handleNewIntent(intent)
+        verify { intent wasNot Called }
     }
 
     @Test

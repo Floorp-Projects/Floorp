@@ -397,8 +397,12 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
      */
     final override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        intent ?: return
+        intent?.let {
+            handleNewIntent(it)
+        }
+    }
 
+    open fun handleNewIntent(intent: Intent) {
         // Diagnostic breadcrumb for "Display already aquired" crash:
         // https://github.com/mozilla-mobile/android-components/issues/7960
         breadcrumb(

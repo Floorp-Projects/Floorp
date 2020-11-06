@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.customtabs
 
+import android.content.Intent
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
 import kotlinx.android.synthetic.main.activity_home.*
@@ -47,6 +48,10 @@ open class ExternalAppBrowserActivity : HomeActivity() {
     }
 
     override fun navigateToBrowserOnColdStart() {
+        // No-op for external app
+    }
+
+    override fun handleNewIntent(intent: Intent) {
         // No-op for external app
     }
 
