@@ -4,7 +4,12 @@
 ---
 loader: taskgraph.loader.transform:loader
 
+kind-dependencies:
+    - toolchain
+    - fetch
+
 transforms:
+    - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
 job-defaults:
@@ -14,7 +19,7 @@ job-defaults:
         enable-full-crashsymbols: true
     treeherder:
         platform: symbols/opt
-        kind: build
+        kind: other
         tier: 2
     worker-type: b-linux
 
@@ -32,19 +37,34 @@ jobs:
             artifacts:
                 - name: public/build
                   type: directory
-                  path: /home/worker/artifacts/
+                  path: /builds/worker/artifacts/
             docker-image: {in-tree: system-symbols-mac}
             max-run-time: 28800
+        run:
+            using: run-task
+            command: >-
+                ./run.sh
         treeherder:
             symbol: system-symbols-mac
     win:
         description: Extract windows system symbols found in crashreports
+        index:
+            product: system-symbols
+            job-name: win
+            type: generic
         worker:
             artifacts:
                 - name: public/build
                   type: directory
-                  path: /home/worker/artifacts/
+                  path: /builds/worker/artifacts/
             docker-image: {in-tree: system-symbols-win}
             max-run-time: 3600
+        run:
+            using: run-task
+            command: >-
+                ./run.sh
         treeherder:
             symbol: system-symbols-win
+        fetches:
+            toolchain:
+                - linux64-dump-syms

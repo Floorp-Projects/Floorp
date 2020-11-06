@@ -28,9 +28,9 @@ from reposadolib import reposadocommon
 
 reposadocommon.get_main_dir = lambda: "/usr/local/bin/"
 
-products = reposadocommon.getProductInfo()
+products = reposadocommon.get_product_info()
 args = []
-for product_id, p in products.iteritems():
+for product_id, p in products.items():
     try:
         t = p["title"]
     except KeyError:

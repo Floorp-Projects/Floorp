@@ -1,23 +1,42 @@
-FROM ubuntu:16.04
-RUN apt-get update && apt-get install -y git python curl pax gzip tar subversion autoconf build-essential libxml2-dev openssl libssl-dev make libz-dev libusb-dev cmake libbz2-dev libpng-dev wget virtualenv zip python-setuptools python-dev liblzma-dev
-RUN easy_install pip && pip install futures
-RUN useradd -d /home/worker -s /bin/bash -m worker
+FROM          $DOCKER_IMAGE_PARENT
+MAINTAINER    Gabriele Svelto <gsvelto@mozilla.com>
+
+RUN mkdir -p /builds
+RUN id worker || useradd -d /builds/worker -s /bin/bash -m worker
+WORKDIR /builds/worker
+
+# We need to declare all potentially cache volumes as caches. Also,
+# making high I/O paths volumes increase I/O throughput because of
+# AUFS slowness.
+VOLUME /builds/worker/checkouts
+
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y python3-dev python3-pip python3-requests-futures python3-setuptools curl pax build-essential libxml2-dev libssl-dev zlib1g-dev libusb-dev cmake libbz2-dev libpng-dev wget zip liblzma-dev && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN mkdir /opt/data-reposado/
-RUN mkdir /home/worker/bin/
-RUN chown -R worker.worker /opt/data-reposado/ /home/worker/
+RUN chown -R worker.worker /opt/data-reposado/
 
 COPY setup.sh /setup/
 COPY requirements.txt /setup/
 # %include tools/crashreporter/system-symbols/mac
-COPY topsrcdir/tools/crashreporter/system-symbols/mac/repo_sync /setup/
 
 RUN /bin/sh /setup/setup.sh
 
 ADD https://github.com/marco-c/breakpad-mac-update-symbols/raw/21221733edfbcac49d40e50fc219fab7d17437a0/lipo /usr/local/bin/
 RUN chmod +x /usr/local/bin/lipo
 
-USER worker
-WORKDIR /home/worker/
-COPY topsrcdir/tools/crashreporter/system-symbols/mac /home/worker/mac-update-symbols
-WORKDIR /home/worker/mac-update-symbols
-CMD ["./run.sh"]
+COPY topsrcdir/tools/crashreporter/system-symbols/mac /builds/worker/mac-update-symbols
+WORKDIR /builds/worker/mac-update-symbols
+
+# Set up first-run experience for interactive mode
+# %include taskcluster/docker/debian10-test/motd
+COPY topsrcdir/taskcluster/docker/debian10-test/motd /etc/taskcluster-motd
+# %include taskcluster/docker/debian10-test/taskcluster-interactive-shell
+COPY topsrcdir/taskcluster/docker/debian10-test/taskcluster-interactive-shell /bin/taskcluster-interactive-shell
+RUN chmod +x /bin/taskcluster-interactive-shell
+
+RUN chown -R worker:worker /builds/worker
+
+# Set a default command useful for debugging
+CMD ["/bin/bash", "--login"]

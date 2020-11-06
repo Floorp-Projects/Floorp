@@ -274,7 +274,7 @@ def read_processed_packages(tracking_file):
     if tracking_file is None or not os.path.exists(tracking_file):
         return set()
     logging.info("Reading processed packages from {}".format(tracking_file))
-    return set(open(tracking_file, "rb").read().splitlines())
+    return set(open(tracking_file, "r").read().splitlines())
 
 
 def write_processed_packages(tracking_file, processed_packages):
@@ -285,7 +285,7 @@ def write_processed_packages(tracking_file, processed_packages):
             len(processed_packages), tracking_file
         )
     )
-    open(tracking_file, "wb").write("\n".join(processed_packages))
+    open(tracking_file, "w").write("\n".join(processed_packages))
 
 
 def process_packages(package_finder, to, tracking_file, dump_syms):
