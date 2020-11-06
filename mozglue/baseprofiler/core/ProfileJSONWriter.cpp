@@ -8,11 +8,14 @@
 
 namespace mozilla::baseprofiler {
 
-UniqueJSONStrings::UniqueJSONStrings() { mStringTableWriter.StartBareList(); }
+UniqueJSONStrings::UniqueJSONStrings(JSONWriter::CollectionStyle aStyle) {
+  mStringTableWriter.StartBareList(aStyle);
+}
 
-UniqueJSONStrings::UniqueJSONStrings(const UniqueJSONStrings& aOther) {
-  mStringTableWriter.StartBareList();
-  uint32_t count = mStringHashToIndexMap.count();
+UniqueJSONStrings::UniqueJSONStrings(const UniqueJSONStrings& aOther,
+                                     JSONWriter::CollectionStyle aStyle) {
+  mStringTableWriter.StartBareList(aStyle);
+  uint32_t count = aOther.mStringHashToIndexMap.count();
   if (count != 0) {
     MOZ_RELEASE_ASSERT(mStringHashToIndexMap.reserve(count));
     for (auto iter = aOther.mStringHashToIndexMap.iter(); !iter.done();
