@@ -12,10 +12,10 @@ indexmap
 .. |docs| image:: https://docs.rs/indexmap/badge.svg
 .. _docs: https://docs.rs/indexmap
 
-.. |rustc| image:: https://img.shields.io/badge/rust-1.18%2B-orange.svg
-.. _rustc: https://img.shields.io/badge/rust-1.18%2B-orange.svg
+.. |rustc| image:: https://img.shields.io/badge/rust-1.32%2B-orange.svg
+.. _rustc: https://img.shields.io/badge/rust-1.32%2B-orange.svg
 
-A safe, pure-Rust hash table which preserves insertion order.
+A pure-Rust hash table which preserves (in a limited sense) insertion order.
 
 This crate implements compact map and set data-structures,
 where the iteration order of the keys is independent from their hash or
@@ -38,16 +38,7 @@ was indexmap, a hash table that has following properties:
 - Fast to iterate.
 - Indexed in compact space.
 - Preserves insertion order **as long** as you don't call ``.remove()``.
-- Uses robin hood hashing just like Rust's libstd ``HashMap`` used to do
-  (before std switched to hashbrown).
-
-  - It's the usual backwards shift deletion, but only on the index vector, so
-    it's cheaper because it's moving less memory around.
-
-Does not implement (Yet)
-------------------------
-
-- ``.reserve()`` exists but does not have a complete implementation
+- Uses hashbrown for the inner table, just like Rust's libstd ``HashMap`` does.
 
 Performance
 -----------
@@ -55,15 +46,14 @@ Performance
 ``IndexMap`` derives a couple of performance facts directly from how it is constructed,
 which is roughly:
 
-  Two vectors, the first, sparse, with hashes and key-value indices, and the
-  second, dense, the key-value pairs.
+  A raw hash table of key-value indices, and a vector of key-value pairs.
 
 - Iteration is very fast since it is on the dense key-values.
-- Removal is fast since it moves memory areas only in the first vector,
-  and uses a single swap in the second vector.
-- Lookup is fast-ish because the hashes and indices are densely stored.
-  Lookup also is slow-ish since hashes and key-value pairs are stored in
-  separate places. (Visible when cpu caches size is limiting.)
+- Removal is fast since it moves memory areas only in the table,
+  and uses a single swap in the vector.
+- Lookup is fast-ish because the initial 7-bit hash lookup uses SIMD, and indices are
+  densely stored. Lookup also is slow-ish since the actual key-value pairs are stored
+  separately. (Visible when cpu caches size is limiting.)
 
 - In practice, ``IndexMap`` has been tested out as the hashmap in rustc in PR45282_ and
   the performance was roughly on par across the whole workload. 
@@ -72,42 +62,104 @@ which is roughly:
 
 .. _PR45282: https://github.com/rust-lang/rust/pull/45282
 
-Interesting Features
---------------------
-
-- Insertion order is preserved (``.swap_remove()`` perturbs the order, like the method name says).
-- Implements ``.pop() -> Option<(K, V)>`` in O(1) time.
-- ``IndexMap::new()`` is empty and uses no allocation until you insert something.
-- Lookup key-value pairs by index and vice versa.
-- No ``unsafe``.
-- Supports ``IndexMut``.
-
-
-Where to go from here?
-----------------------
-
-- Ideas and PRs for how to implement insertion-order preserving remove (for example tombstones)
-  are welcome. The plan is to split the crate into two hash table implementations
-  a) the current compact index space version and b) the full insertion order version.
-
-
-Ideas that we already did
--------------------------
-
-- It can be an *indexable* ordered map in the current fashion
-  (This was implemented in 0.2.0, for potential use as a graph datastructure).
-
-- Idea for more cache efficient lookup (This was implemented in 0.1.2).
-
-  Current ``indices: Vec<Pos>``. ``Pos`` is interpreted as ``(u32, u32)`` more
-  or less when ``.raw_capacity()`` fits in 32 bits. ``Pos`` then stores both the lower
-  half of the hash and the entry index.
-  This means that the hash values in ``Bucket`` don't need to be accessed
-  while scanning for an entry.
-
 
 Recent Changes
 ==============
+
+- 1.6.0
+
+  - **MSRV**: Rust 1.36 or later is now required.
+
+  - The ``hashbrown`` dependency has been updated to version 0.9.
+
+- 1.5.2
+
+  - The new "std" feature will force the use of ``std`` for users that explicitly
+    want the default ``S = RandomState``, bypassing the autodetection added in 1.3.0,
+    by @cuviper in PR 145_.
+
+.. _145: https://github.com/bluss/indexmap/pull/145
+
+- 1.5.1
+
+  - Values can now be indexed by their ``usize`` position by @cuviper in PR 132_.
+
+  - Some of the generic bounds have been relaxed to match ``std`` by @cuviper in PR 141_.
+
+  - ``drain`` now accepts any ``R: RangeBounds<usize>`` by @cuviper in PR 142_.
+
+.. _132: https://github.com/bluss/indexmap/pull/132
+.. _141: https://github.com/bluss/indexmap/pull/141
+.. _142: https://github.com/bluss/indexmap/pull/142
+
+- 1.5.0
+
+  - **MSRV**: Rust 1.32 or later is now required.
+
+  - The inner hash table is now based on ``hashbrown`` by @cuviper in PR 131_.
+    This also completes the method ``reserve`` and adds ``shrink_to_fit``.
+
+  - Add new methods ``get_key_value``, ``remove_entry``, ``swap_remove_entry``,
+    and ``shift_remove_entry``, by @cuviper in PR 136_
+
+  - ``Clone::clone_from`` reuses allocations by @cuviper in PR 125_
+
+  - Add new method ``reverse`` by @linclelinkpart5 in PR 128_
+
+.. _125: https://github.com/bluss/indexmap/pull/125
+.. _128: https://github.com/bluss/indexmap/pull/128
+.. _131: https://github.com/bluss/indexmap/pull/131
+.. _136: https://github.com/bluss/indexmap/pull/136
+
+- 1.4.0
+
+  - Add new method ``get_index_of`` by @Thermatrix in PR 115_ and 120_
+
+  - Fix build script rebuild-if-changed configuration to use "build.rs";
+    fixes issue 123_. Fix by @cuviper.
+
+  - Dev-dependencies (rand and quickcheck) have been updated. The crate's tests
+    now run using Rust 1.32 or later (MSRV for building the crate has not changed).
+    by @kjeremy and @bluss
+
+.. _123: https://github.com/bluss/indexmap/issues/123
+.. _115: https://github.com/bluss/indexmap/pull/115
+.. _120: https://github.com/bluss/indexmap/pull/120
+
+- 1.3.2
+
+  - Maintenance update to regenerate the published `Cargo.toml`.
+
+- 1.3.1
+
+  - Maintenance update for formatting and ``autocfg`` 1.0.
+
+- 1.3.0
+
+  - The deprecation messages in the previous version have been removed.
+    (The methods have not otherwise changed.) Docs for removal methods have been
+    improved.
+  - From Rust 1.36, this crate supports being built **without std**, requiring
+    ``alloc`` instead. This is enabled automatically when it is detected that
+    ``std`` is not available. There is no crate feature to enable/disable to
+    trigger this. The new build-dep ``autocfg`` enables this.
+
+- 1.2.0
+
+  - Plain ``.remove()`` now has a deprecation message, it informs the user
+    about picking one of the removal functions ``swap_remove`` and ``shift_remove``
+    which have different performance and order semantics.
+    Plain ``.remove()`` will not be removed, the warning message and method
+    will remain until further.
+
+  - Add new method ``shift_remove`` for order preserving removal on the map,
+    and ``shift_take`` for the corresponding operation on the set.
+
+  - Add methods ``swap_remove``, ``swap_remove_entry`` to ``Entry``.
+
+  - Fix indexset/indexmap to support full paths, like ``indexmap::indexmap!()``
+
+  - Internal improvements: fix warnings, deprecations and style lints
 
 - 1.1.0
 
