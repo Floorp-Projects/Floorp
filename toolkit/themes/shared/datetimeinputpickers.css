@@ -36,6 +36,10 @@
   --disabled-fill-color: ButtonShadow;
 
   --disabled-opacity: 0.2;
+
+  /* We need to hide the scroll bar but maintain its scrolling
+     capability, so using |overflow: hidden| is not an option. */
+  scrollbar-width: none;
 }
 
 html {
