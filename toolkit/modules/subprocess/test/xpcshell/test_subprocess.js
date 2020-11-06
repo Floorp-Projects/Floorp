@@ -683,6 +683,8 @@ add_task(async function test_subprocess_arguments() {
 add_task(async function test_subprocess_environment() {
   let environment = {
     FOO: "BAR",
+    EMPTY: "",
+    IGNORED: null,
   };
 
   // Our Windows environment can't handle launching python without
@@ -698,15 +700,19 @@ add_task(async function test_subprocess_environment() {
 
   let proc = await Subprocess.call({
     command: PYTHON,
-    arguments: ["-u", TEST_SCRIPT, "env", "FOO", "BAR"],
+    arguments: ["-u", TEST_SCRIPT, "env", "FOO", "BAR", "EMPTY", "IGNORED"],
     environment,
   });
 
   let foo = await read(proc.stdout);
   let bar = await read(proc.stdout);
+  let empty = await read(proc.stdout);
+  let ignored = await read(proc.stdout);
 
   equal(foo, "BAR", "Got expected $FOO value");
-  equal(bar, "", "Got expected $BAR value");
+  equal(bar, "!", "Got expected $BAR value");
+  equal(empty, "", "Got expected $EMPTY value");
+  equal(ignored, "!", "Got expected $IGNORED value");
 
   let { exitCode } = await proc.wait();
 
@@ -715,6 +721,8 @@ add_task(async function test_subprocess_environment() {
 
 add_task(async function test_subprocess_environmentAppend() {
   env.set("VALUE_FROM_BASE_ENV", "untouched");
+  env.set("VALUE_FROM_BASE_ENV_EMPTY", "untouched");
+  env.set("VALUE_FROM_BASE_ENV_REMOVED", "untouched");
 
   let proc = await Subprocess.call({
     command: PYTHON,
@@ -723,21 +731,37 @@ add_task(async function test_subprocess_environmentAppend() {
       TEST_SCRIPT,
       "env",
       "VALUE_FROM_BASE_ENV",
+      "VALUE_FROM_BASE_ENV_EMPTY",
+      "VALUE_FROM_BASE_ENV_REMOVED",
       "VALUE_APPENDED_ONCE",
     ],
     environmentAppend: true,
     environment: {
+      VALUE_FROM_BASE_ENV_EMPTY: "",
+      VALUE_FROM_BASE_ENV_REMOVED: null,
       VALUE_APPENDED_ONCE: "soon empty",
     },
   });
 
   let valueFromBaseEnv = await read(proc.stdout);
+  let valueFromBaseEnvEmpty = await read(proc.stdout);
+  let valueFromBaseEnvRemoved = await read(proc.stdout);
   let valueAppendedOnce = await read(proc.stdout);
 
   equal(
     valueFromBaseEnv,
     "untouched",
     "Got expected $VALUE_FROM_BASE_ENV value"
+  );
+  equal(
+    valueFromBaseEnvEmpty,
+    "",
+    "Got expected $VALUE_FROM_BASE_ENV_EMPTY value"
+  );
+  equal(
+    valueFromBaseEnvRemoved,
+    "!",
+    "Got expected $VALUE_FROM_BASE_ENV_REMOVED value"
   );
   equal(
     valueAppendedOnce,
@@ -769,7 +793,7 @@ add_task(async function test_subprocess_environmentAppend() {
     "untouched",
     "Got expected $VALUE_FROM_BASE_ENV value"
   );
-  equal(valueAppendedOnce, "", "Got expected $VALUE_APPENDED_ONCE value");
+  equal(valueAppendedOnce, "!", "Got expected $VALUE_APPENDED_ONCE value");
 
   ({ exitCode } = await proc.wait());
 
