@@ -522,11 +522,19 @@ var PrintEventHandler = {
 
         let paperHeightInInches = paperWrapper.paper.height * INCHES_PER_POINT;
         let paperWidthInInches = paperWrapper.paper.width * INCHES_PER_POINT;
+        let height =
+          (changedSettings.orientation || this.viewSettings.orientation) == 0
+            ? paperHeightInInches
+            : paperWidthInInches;
+        let width =
+          (changedSettings.orientation || this.viewSettings.orientation) == 0
+            ? paperWidthInInches
+            : paperHeightInInches;
 
         if (
           parseFloat(this.viewSettings.customMargins.marginTop) +
             parseFloat(this.viewSettings.customMargins.marginBottom) >
-            paperHeightInInches -
+            height -
               paperWrapper.unwriteableMarginTop -
               paperWrapper.unwriteableMarginBottom ||
           this.viewSettings.customMargins.marginTop < 0 ||
@@ -540,7 +548,7 @@ var PrintEventHandler = {
         if (
           parseFloat(this.viewSettings.customMargins.marginRight) +
             parseFloat(this.viewSettings.customMargins.marginLeft) >
-            paperWidthInInches -
+            width -
               paperWrapper.unwriteableMarginRight -
               paperWrapper.unwriteableMarginLeft ||
           this.viewSettings.customMargins.marginLeft < 0 ||
@@ -1986,7 +1994,8 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
     // Re-evaluate which margin options should be enabled whenever the printer or paper changes
     if (
       settings.paperId !== this._paperId ||
-      settings.printerName !== this._printerName
+      settings.printerName !== this._printerName ||
+      settings.orientation !== this._orientation
     ) {
       let enabledMargins = settings.marginOptions;
       for (let option of this._marginPicker.options) {
@@ -1994,13 +2003,19 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
       }
       this._paperId = settings.paperId;
       this._printerName = settings.printerName;
+      this._orientation = settings.orientation;
+
+      let height =
+        this._orientation == 0 ? settings.paperHeight : settings.paperWidth;
+      let width =
+        this._orientation == 0 ? settings.paperWidth : settings.paperHeight;
 
       this._maxHeight =
-        settings.paperHeight -
+        height -
         settings.unwriteableMarginTop -
         settings.unwriteableMarginBottom;
       this._maxWidth =
-        settings.paperWidth -
+        width -
         settings.unwriteableMarginLeft -
         settings.unwriteableMarginRight;
 
