@@ -65,17 +65,6 @@ fn get_cert_subject_dn(cert_info: &CERT_INFO) -> Result<Vec<u8>, ()> {
     Ok(subject_dn_string_bytes)
 }
 
-/// Helper function to determine which slot to expose a certificate/key on.
-/// Certificates with keys that are available via the CNG APIs are exposed on the modern slot.
-/// Certificates with keys that are only available via the CryptoAPI APIs are exposed on the legacy
-/// slot.
-fn get_slot_type_for_cert(cert: &CertContext) -> Result<SlotType, ()> {
-    match KeyHandle::from_cert_no_ui(cert)? {
-        KeyHandle::NCrypt(_) => Ok(SlotType::Modern),
-        KeyHandle::CryptoAPI(_, _) => Ok(SlotType::Legacy),
-    }
-}
-
 /// Represents a certificate for which there exists a corresponding private key.
 pub struct Cert {
     /// PKCS #11 object class. Will be `CKO_CERTIFICATE`.
@@ -99,7 +88,7 @@ pub struct Cert {
 }
 
 impl Cert {
-    fn new(cert_context: PCCERT_CONTEXT, slot_type: SlotType) -> Result<Cert, ()> {
+    fn new(cert_context: PCCERT_CONTEXT) -> Result<Cert, ()> {
         let cert = unsafe { &*cert_context };
         let cert_info = unsafe { &*cert.pCertInfo };
         let value =
@@ -125,7 +114,7 @@ impl Cert {
             issuer,
             serial_number,
             subject,
-            slot_type,
+            slot_type: SlotType::Modern,
         })
     }
 
@@ -231,21 +220,13 @@ enum KeyHandle {
 
 impl KeyHandle {
     fn from_cert(cert: &CertContext) -> Result<KeyHandle, ()> {
-        KeyHandle::from_cert_common(cert, 0)
-    }
-
-    fn from_cert_no_ui(cert: &CertContext) -> Result<KeyHandle, ()> {
-        KeyHandle::from_cert_common(cert, CRYPT_ACQUIRE_SILENT_FLAG)
-    }
-
-    fn from_cert_common(cert: &CertContext, extra_flags: DWORD) -> Result<KeyHandle, ()> {
         let mut key_handle = 0;
         let mut key_spec = 0;
         let mut must_free = 0;
         unsafe {
             if CryptAcquireCertificatePrivateKey(
                 **cert,
-                CRYPT_ACQUIRE_PREFER_NCRYPT_KEY_FLAG | extra_flags,
+                CRYPT_ACQUIRE_PREFER_NCRYPT_KEY_FLAG,
                 std::ptr::null_mut(),
                 &mut key_handle,
                 &mut key_spec,
@@ -628,7 +609,6 @@ impl Key {
             return Err(());
         };
         let cert = CertContext::new(cert_context);
-        let slot_type = get_slot_type_for_cert(&cert)?;
         Ok(Key {
             cert,
             class: serialize_uint(CKO_PRIVATE_KEY)?,
@@ -639,7 +619,7 @@ impl Key {
             modulus,
             ec_params,
             key_type_enum,
-            slot_type,
+            slot_type: SlotType::Modern,
         })
     }
 
@@ -934,7 +914,7 @@ pub fn list_objects() -> Vec<Object> {
                     Ok(key) => key,
                     Err(()) => continue,
                 };
-                let cert = match Cert::new(*cert_context, key.slot_type) {
+                let cert = match Cert::new(*cert_context) {
                     Ok(cert) => cert,
                     Err(()) => continue,
                 };
@@ -944,7 +924,7 @@ pub fn list_objects() -> Vec<Object> {
             None => {}
         };
         for cert_context in cert_contexts.iter().skip(1) {
-            if let Ok(cert) = Cert::new(*cert_context, SlotType::Legacy) {
+            if let Ok(cert) = Cert::new(*cert_context) {
                 objects.push(Object::Cert(cert));
             }
         }
