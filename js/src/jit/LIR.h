@@ -1312,10 +1312,10 @@ class LRecoverInfo : public TempObject {
 // compressed and saved in the compiled script.
 class LSnapshot : public TempObject {
  private:
-  uint32_t numSlots_;
   LAllocation* slots_;
   LRecoverInfo* recoverInfo_;
   SnapshotOffset snapshotOffset_;
+  uint32_t numSlots_;
   BailoutId bailoutId_;
   BailoutKind bailoutKind_;
 

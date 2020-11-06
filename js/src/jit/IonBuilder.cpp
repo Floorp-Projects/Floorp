@@ -12782,25 +12782,6 @@ MInstruction* IonBuilder::addShapeGuard(MDefinition* obj, Shape* const shape) {
   return guard;
 }
 
-MInstruction* IonBuilder::addGroupGuard(MDefinition* obj, ObjectGroup* group,
-                                        BailoutKind bailoutKind) {
-  MGuardObjectGroup* guard =
-      MGuardObjectGroup::New(alloc(), obj, group,
-                             /* bailOnEquality = */ false, bailoutKind);
-  current->add(guard);
-
-  // If a shape guard failed in the past, don't optimize group guards.
-  if (failedShapeGuard_) {
-    guard->setNotMovable();
-  }
-
-  LifoAlloc* lifoAlloc = alloc().lifoAlloc();
-  guard->setResultTypeSet(
-      lifoAlloc->new_<TemporaryTypeSet>(lifoAlloc, TypeSet::ObjectType(group)));
-
-  return guard;
-}
-
 MInstruction* IonBuilder::addGuardReceiverPolymorphic(
     MDefinition* obj, const BaselineInspector::ReceiverVector& receivers) {
   if (receivers.length() == 1) {

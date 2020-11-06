@@ -4100,7 +4100,7 @@ void LinearSum::dump() const {
 }
 
 MDefinition* jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
-                                   const LinearSum& sum, bool convertConstant) {
+                                   const LinearSum& sum) {
   MDefinition* def = nullptr;
 
   for (size_t i = 0; i < sum.numTerms(); i++) {
@@ -4140,19 +4140,6 @@ MDefinition* jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
     }
   }
 
-  if (convertConstant && sum.constant()) {
-    MConstant* constant = MConstant::New(alloc, Int32Value(sum.constant()));
-    block->insertAtEnd(constant);
-    constant->computeRange(alloc);
-    if (def) {
-      def = MAdd::New(alloc, def, constant, MIRType::Int32);
-      block->insertAtEnd(def->toInstruction());
-      def->computeRange(alloc);
-    } else {
-      def = constant;
-    }
-  }
-
   if (!def) {
     def = MConstant::New(alloc, Int32Value(0));
     block->insertAtEnd(def->toInstruction());
@@ -4160,75 +4147,6 @@ MDefinition* jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
   }
 
   return def;
-}
-
-MCompare* jit::ConvertLinearInequality(TempAllocator& alloc, MBasicBlock* block,
-                                       const LinearSum& sum) {
-  LinearSum lhs(sum);
-
-  // Look for a term with a -1 scale which we can use for the rhs.
-  MDefinition* rhsDef = nullptr;
-  for (size_t i = 0; i < lhs.numTerms(); i++) {
-    if (lhs.term(i).scale == -1) {
-      AutoEnterOOMUnsafeRegion oomUnsafe;
-      rhsDef = lhs.term(i).term;
-      if (!lhs.add(rhsDef, 1)) {
-        oomUnsafe.crash("ConvertLinearInequality");
-      }
-      break;
-    }
-  }
-
-  MDefinition* lhsDef = nullptr;
-  JSOp op = JSOp::Ge;
-
-  do {
-    if (!lhs.numTerms()) {
-      lhsDef = MConstant::New(alloc, Int32Value(lhs.constant()));
-      block->insertAtEnd(lhsDef->toInstruction());
-      lhsDef->computeRange(alloc);
-      break;
-    }
-
-    lhsDef = ConvertLinearSum(alloc, block, lhs);
-    if (lhs.constant() == 0) {
-      break;
-    }
-
-    if (lhs.constant() == -1) {
-      op = JSOp::Gt;
-      break;
-    }
-
-    if (!rhsDef) {
-      int32_t constant = lhs.constant();
-      if (SafeMul(constant, -1, &constant)) {
-        rhsDef = MConstant::New(alloc, Int32Value(constant));
-        block->insertAtEnd(rhsDef->toInstruction());
-        rhsDef->computeRange(alloc);
-        break;
-      }
-    }
-
-    MDefinition* constant = MConstant::New(alloc, Int32Value(lhs.constant()));
-    block->insertAtEnd(constant->toInstruction());
-    constant->computeRange(alloc);
-    lhsDef = MAdd::New(alloc, lhsDef, constant, MIRType::Int32);
-    block->insertAtEnd(lhsDef->toInstruction());
-    lhsDef->computeRange(alloc);
-  } while (false);
-
-  if (!rhsDef) {
-    rhsDef = MConstant::New(alloc, Int32Value(0));
-    block->insertAtEnd(rhsDef->toInstruction());
-    rhsDef->computeRange(alloc);
-  }
-
-  MCompare* compare = MCompare::New(alloc, lhsDef, rhsDef, op);
-  block->insertAtEnd(compare);
-  compare->setCompareType(MCompare::Compare_Int32);
-
-  return compare;
 }
 
 static bool AnalyzePoppedThis(JSContext* cx, DPAConstraintInfo& constraintInfo,
