@@ -160,11 +160,13 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // The maximum number of times we show the larger tip-style tab-to-search
   // result.
-  ["tabToSearch.onboard.maxShown", 10],
+  // Temporarily set to a high value due to bug 1675611. See bug 1675622.
+  ["tabToSearch.onboard.maxShown", 60],
 
   // The maximum number of times per session we show the larger tip-style
   // tab-to-search result.
-  ["tabToSearch.onboard.maxShownPerSession", 2],
+  // Temporarily set to a high value due to bug 1675611. See bug 1675622.
+  ["tabToSearch.onboard.maxShownPerSession", 20],
 
   // The number of times the user has been shown the onboarding search tip.
   ["tipShownCount.searchTip_onboard", 0],
