@@ -20,6 +20,7 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -425,15 +426,17 @@ private fun assertAboutHeading(): ViewInteraction {
 }
 
 private fun assertRateOnGooglePlay(): ViewInteraction {
-    scrollToElementByText("About Firefox Preview")
+    onView(withId(R.id.recycler_view))
+        .perform(RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(hasDescendant(withText("Rate on Google Play"))))
     return onView(withText("Rate on Google Play"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun assertAboutFirefoxPreview(): ViewInteraction {
-    scrollToElementByText("About Firefox Preview")
+    onView(withId(R.id.recycler_view))
+        .perform(RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(hasDescendant(withText("About Firefox Preview"))))
     return onView(withText("About Firefox Preview"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(isDisplayed()))
 }
 
 fun swipeToBottom() = onView(withId(R.id.recycler_view)).perform(ViewActions.swipeUp())
