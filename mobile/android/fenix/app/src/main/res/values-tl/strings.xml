@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">Pribado %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (Pribado)</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">Pangalan</string>
+
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">Salamat na lang</string>
+
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Hindi ngayon</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">Bumalik</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">Tumigil</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">Bookmark</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">Mga Add-on</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">Tulong</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Ano ang Bago</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">Mga Setting</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">Library</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">i-Install</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="browser_menu_private_tab">Pribadong tab</string>
+    <!-- Browser menu button that creates a new tab -->
+    <string name="browser_menu_new_tab">Bagong tab</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">Ibahagi</string>
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">Ibahagi sa…</string>
+
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">Hanapin</string>
+
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">Payagan</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">Huwag Payagan</string>
+
+    <!-- Preference linking to help about Fenix -->
+    <string name="preferences_help">Tulong</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Toolbar</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Tema</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Home</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Firefox Account</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">Wika</string>
+
+    </resources>
