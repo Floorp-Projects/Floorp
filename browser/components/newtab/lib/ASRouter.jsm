@@ -1011,7 +1011,7 @@ class _ASRouter {
       providerPrefs: ASRouterPreferences.providers,
       userPrefs: ASRouterPreferences.getAllUserPreferences(),
       targetingParameters,
-      trailhead: ASRouterPreferences.trailhead,
+      trailheadTriplet: ASRouterPreferences.trailheadTriplet,
       errors: this.errors,
     }));
   }
@@ -1329,8 +1329,7 @@ class _ASRouter {
       return {
         message: {
           ...message,
-          trailheadTriplet:
-            ASRouterPreferences.trailhead.trailheadTriplet || "",
+          trailheadTriplet: ASRouterPreferences.trailheadTriplet || "",
           bundle: bundledMessages && bundledMessages.bundle,
         },
       };
