@@ -240,7 +240,9 @@ const clearLocalStorage = async function(options) {
     Services.obs.notifyObservers(null, "extension:purge-localStorage");
   }
 
-  return clearQuotaManager(options, "localStorage");
+  if (Services.domStorageManager.nextGenLocalStorageEnabled) {
+    return clearQuotaManager(options, "localStorage");
+  }
 };
 
 const clearPasswords = async function(options) {
