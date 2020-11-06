@@ -1046,7 +1046,8 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
               return MakeStringSpan("DOMEvent");
             }
             static void StreamJSONMarkerData(
-                JSONWriter& aWriter, const ProfilerString16View& aEventType,
+                baseprofiler::SpliceableJSONWriter& aWriter,
+                const ProfilerString16View& aEventType,
                 const TimeStamp& aStartTime, const TimeStamp& aEventTimeStamp) {
               aWriter.StringProperty(
                   "eventType", NS_ConvertUTF16toUTF8(aEventType.Data(),

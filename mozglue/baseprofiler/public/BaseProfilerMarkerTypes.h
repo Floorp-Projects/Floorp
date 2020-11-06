@@ -33,7 +33,7 @@ struct Tracing {
   static constexpr Span<const char> MarkerTypeName() {
     return MakeStringSpan("tracing");
   }
-  static void StreamJSONMarkerData(JSONWriter& aWriter,
+  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter,
                                    const ProfilerString8View& aCategory) {
     if (aCategory.Length() != 0) {
       aWriter.StringProperty("category", aCategory);
@@ -52,7 +52,7 @@ struct UserTimingMark {
   static constexpr Span<const char> MarkerTypeName() {
     return MakeStringSpan("UserTimingMark");
   }
-  static void StreamJSONMarkerData(JSONWriter& aWriter,
+  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter,
                                    const ProfilerString8View& aName) {
     aWriter.StringProperty("name", aName);
     aWriter.StringProperty("entryType", "mark");
@@ -77,7 +77,7 @@ struct UserTimingMeasure {
   static constexpr Span<const char> MarkerTypeName() {
     return MakeStringSpan("UserTimingMeasure");
   }
-  static void StreamJSONMarkerData(JSONWriter& aWriter,
+  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter,
                                    const ProfilerString8View& aName,
                                    const Maybe<ProfilerString8View>& aStartMark,
                                    const Maybe<ProfilerString8View>& aEndMark) {
@@ -115,7 +115,7 @@ struct Hang {
   static constexpr Span<const char> MarkerTypeName() {
     return MakeStringSpan("BHR-detected hang");
   }
-  static void StreamJSONMarkerData(JSONWriter& aWriter) {}
+  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter) {}
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
     MS schema{MS::Location::markerChart, MS::Location::markerTable,
@@ -128,7 +128,7 @@ struct LongTask {
   static constexpr Span<const char> MarkerTypeName() {
     return MakeStringSpan("MainThreadLongTask");
   }
-  static void StreamJSONMarkerData(JSONWriter& aWriter) {
+  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter) {
     aWriter.StringProperty("category", "LongTask");
   }
   static MarkerSchema MarkerTypeDisplay() {
@@ -143,7 +143,7 @@ struct Log {
   static constexpr Span<const char> MarkerTypeName() {
     return MakeStringSpan("Log");
   }
-  static void StreamJSONMarkerData(JSONWriter& aWriter,
+  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter,
                                    const ProfilerString8View& aModule,
                                    const ProfilerString8View& aText) {
     aWriter.StringProperty("module", aModule);
@@ -163,7 +163,7 @@ struct MediaSample {
   static constexpr Span<const char> MarkerTypeName() {
     return MakeStringSpan("MediaSample");
   }
-  static void StreamJSONMarkerData(JSONWriter& aWriter,
+  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter,
                                    int64_t aSampleStartTimeUs,
                                    int64_t aSampleEndTimeUs) {
     aWriter.IntProperty("sampleStartTimeUs", aSampleStartTimeUs);
