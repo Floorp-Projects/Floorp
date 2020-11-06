@@ -12,7 +12,7 @@ struct FileIOMarker {
   static constexpr Span<const char> MarkerTypeName() {
     return MakeStringSpan("FileIO");
   }
-  static void StreamJSONMarkerData(JSONWriter& aWriter,
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
                                    const ProfilerString8View& aOperation,
                                    const ProfilerString8View& aSource,
                                    const ProfilerString8View& aFilename,
