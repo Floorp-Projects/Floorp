@@ -1600,7 +1600,7 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
     bStartIsAuto = false;
   }
 
-  SetComputedLogicalOffsets(offsets.ConvertTo(wm, cbwm));
+  SetComputedLogicalOffsets(cbwm, offsets);
 
   if (wm.IsOrthogonalTo(cbwm)) {
     if (bStartIsAuto || bEndIsAuto) {
@@ -1831,8 +1831,7 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
   ComputedBSize() = computedSize.ConvertTo(wm, cbwm).BSize(wm);
   ComputedISize() = computedSize.ConvertTo(wm, cbwm).ISize(wm);
 
-  SetComputedLogicalOffsets(offsets.ConvertTo(wm, cbwm));
-
+  SetComputedLogicalOffsets(cbwm, offsets);
   SetComputedLogicalMargin(cbwm, margin);
 
   // If we have auto margins, update our UsedMarginProperty. The property

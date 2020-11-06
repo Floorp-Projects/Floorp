@@ -650,7 +650,7 @@ void nsAbsoluteContainingBlock::ResolveSizeDependentOffsets(
           logicalCBSizeOuterWM.BSize(outerWM) -
           (aOffsets->BStart(outerWM) + aKidSize.BSize(outerWM));
     }
-    aKidReflowInput.SetComputedLogicalOffsets(aOffsets->ConvertTo(wm, outerWM));
+    aKidReflowInput.SetComputedLogicalOffsets(outerWM, *aOffsets);
   }
 }
 
