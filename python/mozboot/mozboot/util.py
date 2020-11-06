@@ -181,7 +181,7 @@ def locate_java_bin_path():
         if not java_path:
             raise JavaLocationFailedException(
                 'Could not find "java" on the $PATH. Please install '
-                "the Java 1.8 JDK."
+                "the Java 1.8 JDK and/or set $JAVA_HOME."
             )
 
         java_version = _resolve_java_version(java_path)

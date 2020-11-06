@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from mock import patch
 from six import StringIO
 import os
 import sys
@@ -558,23 +559,70 @@ class TestChecksConfigure(unittest.TestCase):
             ),
         )
 
-    def test_java_tool_checks(self):
-        # A valid set of tools in a standard location.
+    @unittest.skipIf(
+        not sys.platform.startswith("linux"),
+        "Linux-only test, assumes Java is located from a $PATH",
+    )
+    def test_java_tool_checks_linux(self):
+        def run_configure_java(
+            mock_fs_paths, mock_java_home=None, mock_path=None, args=[]
+        ):
+            script = textwrap.dedent(
+                """\
+                    @depends('--help')
+                    def host(_):
+                        return namespace(os='unknown')
+                    include('%(topsrcdir)s/build/moz.configure/java.configure')
+                """
+                % {"topsrcdir": topsrcdir}
+            )
+
+            def mock_which(exe, path=None):
+                for mock_fs_path in mock_fs_paths.keys():
+                    (base, filename) = os.path.split(mock_fs_path)
+                    if filename == exe:
+                        if path and os.path.normpath(base) != os.path.normpath(path):
+                            continue
+                        return mock_fs_path
+
+            # Don't let system JAVA_HOME influence the test
+            original_java_home = os.environ.pop("JAVA_HOME", None)
+            configure_environ = {}
+
+            if mock_java_home:
+                os.environ["JAVA_HOME"] = mock_java_home
+                configure_environ["JAVA_HOME"] = mock_java_home
+
+            if mock_path:
+                configure_environ["PATH"] = mock_path
+
+            # * Don't attempt to invoke Java, just resolve each mock Java's version as "1.8"
+            # * Even if the real file sysphabtem has a symlink at the mocked path, don't let
+            #   realpath follow it, as it may influence the test.
+            # * When finding a binary, check the mock paths rather than the real filesystem.
+            # Note: Python doesn't allow the different "with" bits to be put in parenthesis,
+            # because then it thinks it's an un-with-able tuple. Additionally, if this is cleanly
+            # lined up with "\", black removes them and autoformats them to the block that is
+            # below.
+            with patch("mozboot.util._resolve_java_version", return_value="1.8"), patch(
+                "os.path.realpath", side_effect=lambda path: path
+            ), patch("mozboot.util.which", side_effect=mock_which):
+                result = self.get_result(
+                    args=args,
+                    command=script,
+                    extra_paths=paths,
+                    environ=configure_environ,
+                )
+
+            if original_java_home:
+                os.environ["JAVA_HOME"] = original_java_home
+            return result
+
         java = mozpath.abspath("/usr/bin/java")
+        javac = mozpath.abspath("/usr/bin/javac")
+        paths = {java: None, javac: None}
 
-        paths = {java: None}
-
-        script = textwrap.dedent(
-            """\
-                @depends('--help')
-                def host(_):
-                    return namespace(os='unknown')
-                include('%(topsrcdir)s/build/moz.configure/java.configure')
-            """
-            % {"topsrcdir": topsrcdir}
-        )
-
-        config, out, status = self.get_result(command=script, extra_paths=paths)
+        config, out, status = run_configure_java(paths)
         self.assertEqual(status, 0)
         self.assertEqual(
             config,
@@ -595,15 +643,12 @@ class TestChecksConfigure(unittest.TestCase):
 
         # An alternative valid set of tools referred to by JAVA_HOME.
         alt_java = mozpath.abspath("/usr/local/bin/java")
+        alt_javac = mozpath.abspath("/usr/local/bin/javac")
         alt_java_home = mozpath.dirname(mozpath.dirname(alt_java))
+        paths = {alt_java: None, alt_javac: None, java: None, javac: None}
 
-        paths.update({alt_java: None})
-
-        config, out, status = self.get_result(
-            command=script,
-            extra_paths=paths,
-            environ={"JAVA_HOME": alt_java_home, "PATH": mozpath.dirname(java)},
-        )
+        alt_path = mozpath.dirname(java)
+        config, out, status = run_configure_java(paths, alt_java_home, alt_path)
         self.assertEqual(status, 0)
         self.assertEqual(
             config,
@@ -624,11 +669,10 @@ class TestChecksConfigure(unittest.TestCase):
 
         # We can use --with-java-bin-path instead of JAVA_HOME to similar
         # effect.
-        config, out, status = self.get_result(
-            command=script,
+        config, out, status = run_configure_java(
+            paths,
+            mock_path=mozpath.dirname(java),
             args=["--with-java-bin-path=%s" % mozpath.dirname(alt_java)],
-            extra_paths=paths,
-            environ={"PATH": mozpath.dirname(java)},
         )
         self.assertEqual(status, 0)
         self.assertEqual(
@@ -650,14 +694,11 @@ class TestChecksConfigure(unittest.TestCase):
 
         # If --with-java-bin-path and JAVA_HOME are both set,
         # --with-java-bin-path takes precedence.
-        config, out, status = self.get_result(
-            command=script,
+        config, out, status = run_configure_java(
+            paths,
+            mock_java_home=mozpath.dirname(mozpath.dirname(java)),
+            mock_path=mozpath.dirname(java),
             args=["--with-java-bin-path=%s" % mozpath.dirname(alt_java)],
-            extra_paths=paths,
-            environ={
-                "PATH": mozpath.dirname(java),
-                "JAVA_HOME": mozpath.dirname(mozpath.dirname(java)),
-            },
         )
         self.assertEqual(status, 0)
         self.assertEqual(
@@ -678,14 +719,12 @@ class TestChecksConfigure(unittest.TestCase):
         )
 
         # --enable-java-coverage should set MOZ_JAVA_CODE_COVERAGE.
-        config, out, status = self.get_result(
-            command=script,
+        alt_java_home = mozpath.dirname(mozpath.dirname(java))
+        config, out, status = run_configure_java(
+            paths,
+            mock_java_home=alt_java_home,
+            mock_path=mozpath.dirname(java),
             args=["--enable-java-coverage"],
-            extra_paths=paths,
-            environ={
-                "PATH": mozpath.dirname(java),
-                "JAVA_HOME": mozpath.dirname(mozpath.dirname(java)),
-            },
         )
         self.assertEqual(status, 0)
         self.assertEqual(
@@ -697,9 +736,11 @@ class TestChecksConfigure(unittest.TestCase):
         )
 
         # Any missing tool is fatal when these checks run.
-        del paths[java]
-        config, out, status = self.get_result(
-            command=script, extra_paths=paths, environ={"PATH": mozpath.dirname(java)}
+        paths = {}
+        config, out, status = run_configure_java(
+            mock_fs_paths={},
+            mock_path=mozpath.dirname(java),
+            args=["--enable-java-coverage"],
         )
         self.assertEqual(status, 1)
         self.assertEqual(config, {})
@@ -707,10 +748,9 @@ class TestChecksConfigure(unittest.TestCase):
             out,
             textwrap.dedent(
                 """\
-             checking for java... not found
-             ERROR: The program java was not found.  Set $JAVA_HOME to your \
-Java SDK directory or use '--with-java-bin-path={java-bin-dir}'
-        """
+            ERROR: Could not find "java" on the $PATH. Please install the Java 1.8 JDK \
+and/or set $JAVA_HOME.
+            """
             ),
         )
 
