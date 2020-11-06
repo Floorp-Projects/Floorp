@@ -430,8 +430,7 @@ add_task(async function onboard_sessionlimit() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.tabToSearch.onboard.maxShown", 10],
-      // browser.urlbar.tabToSearch.onboard.maxShownPerSession can be its
-      // default value.
+      ["browser.urlbar.tabToSearch.onboard.maxShownPerSession", 2],
     ],
   });
 
