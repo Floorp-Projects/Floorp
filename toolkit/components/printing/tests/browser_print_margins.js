@@ -713,3 +713,39 @@ add_task(async function testRevalidateCustomMarginsAfterPaperChanges() {
     );
   });
 });
+
+add_task(async function testRevalidateCustomMarginsAfterOrientationChanges() {
+  await PrintHelper.withTestPage(async helper => {
+    await setupLetterPaper();
+    await helper.startPrint();
+    await helper.openMoreSettings();
+    this.changeDefaultToCustom(helper);
+    await helper.awaitAnimationFrame();
+    let marginError = helper.get("error-invalid-margin");
+
+    await helper.assertSettingsChanged(
+      { marginTop: 0.5, marginRight: 0.5, marginBottom: 0.5, marginLeft: 0.5 },
+      { marginTop: 5, marginRight: 0.5, marginBottom: 5, marginLeft: 0.5 },
+      async () => {
+        await helper.text(helper.get("custom-margin-top"), "5");
+        await helper.text(helper.get("custom-margin-bottom"), "5");
+        assertPendingMarginsUpdate(helper);
+
+        // Wait for the preview to update, the margin options delay updates by
+        // INPUT_DELAY_MS, which is 500ms.
+        await helper.waitForSettingsEvent();
+        ok(marginError.hidden, "Margin error is hidden");
+      }
+    );
+
+    await helper.assertSettingsChanged(
+      { marginTop: 5, marginRight: 0.5, marginBottom: 5, marginLeft: 0.5 },
+      { marginTop: 0.5, marginRight: 0.5, marginBottom: 0.5, marginLeft: 0.5 },
+      async () => {
+        await helper.dispatchSettingsChange({ orientation: 1 });
+        await helper.waitForSettingsEvent();
+        ok(marginError.hidden, "Margin error is hidden");
+      }
+    );
+  });
+});
