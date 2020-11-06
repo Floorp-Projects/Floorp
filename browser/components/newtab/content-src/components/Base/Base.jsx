@@ -115,7 +115,8 @@ export class BaseContent extends React.PureComponent {
   }
 
   onWindowScroll() {
-    const SCROLL_THRESHOLD = 34;
+    const showLogo = this.props.Prefs.values["logowordmark.alwaysVisible"];
+    const SCROLL_THRESHOLD = showLogo ? 179 : 34;
     if (global.scrollY > SCROLL_THRESHOLD && !this.state.fixedSearch) {
       this.setState({ fixedSearch: true });
     } else if (global.scrollY <= SCROLL_THRESHOLD && this.state.fixedSearch) {
@@ -147,6 +148,7 @@ export class BaseContent extends React.PureComponent {
       !pocketEnabled &&
       filteredSections.filter(section => section.enabled).length === 0;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
+    const showLogo = prefs["logowordmark.alwaysVisible"];
 
     const outerClassName = [
       "outer-wrapper",
@@ -157,6 +159,7 @@ export class BaseContent extends React.PureComponent {
         !noSectionsEnabled &&
         "fixed-search",
       prefs.showSearch && noSectionsEnabled && "only-search",
+      showLogo && "visible-logo",
     ]
       .filter(v => v)
       .join(" ");
@@ -169,7 +172,7 @@ export class BaseContent extends React.PureComponent {
               <div className="non-collapsible-section">
                 <ErrorBoundary>
                   <Search
-                    showLogo={noSectionsEnabled}
+                    showLogo={noSectionsEnabled || showLogo}
                     handoffEnabled={searchHandoffEnabled}
                     {...props.Search}
                   />

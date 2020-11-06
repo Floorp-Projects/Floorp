@@ -55,3 +55,29 @@ test_newtab(function test_render_topsites_again() {
   let topSites = content.document.querySelector(".top-sites-list");
   ok(topSites, "Got the top sites section again");
 });
+
+test_newtab({
+  async before({ pushPrefs }) {
+    await pushPrefs([
+      "browser.newtabpage.activity-stream.logowordmark.alwaysVisible",
+      true,
+    ]);
+  },
+  test: function test_render_logo() {
+    let logoWordmark = content.document.querySelector(".logo-and-wordmark");
+    ok(logoWordmark, "The logo is rendered when pref is true");
+  },
+});
+
+test_newtab({
+  async before({ pushPrefs }) {
+    await pushPrefs([
+      "browser.newtabpage.activity-stream.logowordmark.alwaysVisible",
+      false,
+    ]);
+  },
+  test: function test_render_logo_false() {
+    let logoWordmark = content.document.querySelector(".logo-and-wordmark");
+    ok(!logoWordmark, "The logo is not rendered when pref is false");
+  },
+});
