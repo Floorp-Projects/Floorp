@@ -43,7 +43,7 @@ fxhash = "0.2"
 hashbrown = "0.9"
 hashglobe = { path = "../hashglobe" }
 html5ever = {version = "0.24", optional = true}
-indexmap = "1.0"
+indexmap = {version = "1.0", features = ["std"]}
 itertools = "0.8"
 itoa = "0.4"
 lazy_static = "1"
