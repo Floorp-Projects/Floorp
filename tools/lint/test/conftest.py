@@ -15,7 +15,7 @@ from mozpack import path
 import pytest
 
 here = path.abspath(path.dirname(__file__))
-build = MozbuildObject.from_environment(cwd=here)
+build = MozbuildObject.from_environment(cwd=here, virtualenv_name="python-test")
 
 lintdir = path.dirname(here)
 sys.path.insert(0, lintdir)
@@ -94,7 +94,7 @@ def run_setup(config):
         return
 
     func = findobject(config["setup"])
-    func(build.topsrcdir)
+    func(build.topsrcdir, virtualenv_manager=build.virtualenv_manager)
 
 
 @pytest.fixture

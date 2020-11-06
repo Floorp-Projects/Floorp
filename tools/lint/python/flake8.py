@@ -13,7 +13,6 @@ import mozpack.path as mozpath
 
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
-from mozlint.util import pip
 
 here = os.path.abspath(os.path.dirname(__file__))
 FLAKE8_REQUIREMENTS_PATH = os.path.join(here, "flake8_requirements.txt")
@@ -76,7 +75,12 @@ class NothingToLint(Exception):
 
 
 def setup(root, **lintargs):
-    if not pip.reinstall_program(FLAKE8_REQUIREMENTS_PATH):
+    virtualenv_manager = lintargs["virtualenv_manager"]
+    try:
+        virtualenv_manager.install_pip_requirements(
+            FLAKE8_REQUIREMENTS_PATH, quiet=True
+        )
+    except subprocess.CalledProcessError:
         print(FLAKE8_INSTALL_ERROR)
         return 1
 
