@@ -8051,7 +8051,7 @@ function assertEach(callback) {
       const subkey = `${key}[${i}]`;
       const v = val[i];
       callback(node, subkey, v);
-      if (Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) (0, _validate.validateChild)(node, subkey, v);
+      if (Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) (0, _validate.validateChild)(node, subkey, v);
     }
   }
 
@@ -10041,7 +10041,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
   fields: {
     elements: {
       validate: (0, _utils.chain)((0, _utils.assertValueType)("array"), (0, _utils.assertEach)((0, _utils.assertNodeOrValueType)("null", "Expression", "SpreadElement"))),
-      default: !Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING ? [] : undefined
+      default: !Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING ? [] : undefined
     }
   },
   visitor: ["elements"],
@@ -10051,7 +10051,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
   fields: {
     operator: {
       validate: function () {
-        if (!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) {
+        if (!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) {
           return (0, _utils.assertValueType)("string");
         }
 
@@ -10064,7 +10064,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
       }()
     },
     left: {
-      validate: !Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING ? (0, _utils.assertNodeType)("LVal") : (0, _utils.assertNodeType)("Identifier", "MemberExpression", "ArrayPattern", "ObjectPattern")
+      validate: !Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING ? (0, _utils.assertNodeType)("LVal") : (0, _utils.assertNodeType)("Identifier", "MemberExpression", "ArrayPattern", "ObjectPattern")
     },
     right: {
       validate: (0, _utils.assertNodeType)("Expression")
@@ -10160,7 +10160,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
     arguments: {
       validate: (0, _utils.chain)((0, _utils.assertValueType)("array"), (0, _utils.assertEach)((0, _utils.assertNodeType)("Expression", "SpreadElement", "JSXNamespacedName", "ArgumentPlaceholder")))
     }
-  }, !Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING ? {
+  }, !Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING ? {
     optional: {
       validate: (0, _utils.assertOneOf)(true, false),
       optional: true
@@ -10249,7 +10249,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
       validate: (0, _utils.assertNodeType)("Program")
     },
     comments: {
-      validate: !Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING ? Object.assign(() => {}, {
+      validate: !Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING ? Object.assign(() => {}, {
         each: {
           oneOfNodeTypes: ["CommentBlock", "CommentLine"]
         }
@@ -10269,7 +10269,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
   aliases: ["Scopable", "Statement", "For", "BlockParent", "Loop", "ForXStatement"],
   fields: {
     left: {
-      validate: !Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING ? (0, _utils.assertNodeType)("VariableDeclaration", "LVal") : (0, _utils.assertNodeType)("VariableDeclaration", "Identifier", "MemberExpression", "ArrayPattern", "ObjectPattern")
+      validate: !Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING ? (0, _utils.assertNodeType)("VariableDeclaration", "LVal") : (0, _utils.assertNodeType)("VariableDeclaration", "Identifier", "MemberExpression", "ArrayPattern", "ObjectPattern")
     },
     right: {
       validate: (0, _utils.assertNodeType)("Expression")
@@ -10344,7 +10344,7 @@ exports.functionDeclarationCommon = functionDeclarationCommon;
   }),
   aliases: ["Scopable", "Function", "BlockParent", "FunctionParent", "Statement", "Pureish", "Declaration"],
   validate: function () {
-    if (!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) return () => {};
+    if (!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) return () => {};
     const identifier = (0, _utils.assertNodeType)("Identifier");
     return function (parent, key, node) {
       if (!(0, _is.default)("ExportDefaultDeclaration", parent)) {
@@ -10383,7 +10383,7 @@ exports.patternLikeCommon = patternLikeCommon;
   fields: Object.assign({}, patternLikeCommon, {
     name: {
       validate: (0, _utils.chain)((0, _utils.assertValueType)("string"), Object.assign(function (node, key, val) {
-        if (!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) return;
+        if (!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) return;
 
         if (!(0, _isValidIdentifier.default)(val, false)) {
           throw new TypeError(`"${val}" is not a valid identifier name`);
@@ -10399,7 +10399,7 @@ exports.patternLikeCommon = patternLikeCommon;
   }),
 
   validate(parent, key, node) {
-    if (!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) return;
+    if (!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) return;
     const match = /\.(\w+)$/.exec(key);
     if (!match) return;
     const [, parentKey] = match;
@@ -10500,7 +10500,7 @@ exports.patternLikeCommon = patternLikeCommon;
     },
     flags: {
       validate: (0, _utils.chain)((0, _utils.assertValueType)("string"), Object.assign(function (node, key, val) {
-        if (!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) return;
+        if (!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) return;
         const invalid = /[^gimsuy]/.exec(val);
 
         if (invalid) {
@@ -10554,7 +10554,7 @@ exports.patternLikeCommon = patternLikeCommon;
     computed: {
       default: false
     }
-  }, !Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING ? {
+  }, !Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING ? {
     optional: {
       validate: (0, _utils.assertOneOf)(true, false),
       optional: true
@@ -10604,7 +10604,7 @@ exports.patternLikeCommon = patternLikeCommon;
   fields: Object.assign({}, functionCommon, functionTypeAnnotationCommon, {
     kind: Object.assign({
       validate: (0, _utils.assertOneOf)("method", "get", "set")
-    }, !Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING ? {
+    }, !Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING ? {
       default: "method"
     } : {}),
     computed: {
@@ -10636,7 +10636,7 @@ exports.patternLikeCommon = patternLikeCommon;
   aliases: ["UserWhitespacable", "Function", "Scopable", "BlockParent", "FunctionParent", "Method", "ObjectMember"]
 });
 (0, _utils.default)("ObjectProperty", {
-  builder: ["key", "value", "computed", "shorthand", ...(!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING ? ["decorators"] : [])],
+  builder: ["key", "value", "computed", "shorthand", ...(!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING ? ["decorators"] : [])],
   fields: {
     computed: {
       default: false
@@ -10660,7 +10660,7 @@ exports.patternLikeCommon = patternLikeCommon;
     },
     shorthand: {
       validate: (0, _utils.chain)((0, _utils.assertValueType)("boolean"), Object.assign(function (node, key, val) {
-        if (!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) return;
+        if (!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) return;
 
         if (val && node.computed) {
           throw new TypeError("Property shorthand of ObjectProperty cannot be true if computed is true");
@@ -10668,7 +10668,7 @@ exports.patternLikeCommon = patternLikeCommon;
       }, {
         type: "boolean"
       }), function (node, key, val) {
-        if (!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) return;
+        if (!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) return;
 
         if (val && !(0, _is.default)("Identifier", node.key)) {
           throw new TypeError("Property shorthand of ObjectProperty cannot be true if key is not an Identifier");
@@ -10687,7 +10687,7 @@ exports.patternLikeCommon = patternLikeCommon;
     const pattern = (0, _utils.assertNodeType)("Identifier", "Pattern");
     const expression = (0, _utils.assertNodeType)("Expression");
     return function (parent, key, node) {
-      if (!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) return;
+      if (!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) return;
       const validator = (0, _is.default)("ObjectPattern", parent) ? pattern : expression;
       validator(node, "value", node.value);
     };
@@ -10700,12 +10700,12 @@ exports.patternLikeCommon = patternLikeCommon;
   deprecatedAlias: "RestProperty",
   fields: Object.assign({}, patternLikeCommon, {
     argument: {
-      validate: !Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING ? (0, _utils.assertNodeType)("LVal") : (0, _utils.assertNodeType)("Identifier", "Pattern", "MemberExpression")
+      validate: !Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING ? (0, _utils.assertNodeType)("LVal") : (0, _utils.assertNodeType)("Identifier", "Pattern", "MemberExpression")
     }
   }),
 
   validate(parent, key) {
-    if (!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) return;
+    if (!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) return;
     const match = /(\w+)\[(\d+)\]/.exec(key);
     if (!match) throw new Error("Internal Babel error: malformed key.");
     const [, listKey, index] = match;
@@ -10786,7 +10786,7 @@ exports.patternLikeCommon = patternLikeCommon;
   fields: {
     block: {
       validate: (0, _utils.chain)((0, _utils.assertNodeType)("BlockStatement"), Object.assign(function (node) {
-        if (!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) return;
+        if (!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) return;
 
         if (!node.handler && !node.finalizer) {
           throw new TypeError("TryStatement expects either a handler or finalizer, or both");
@@ -10828,7 +10828,7 @@ exports.patternLikeCommon = patternLikeCommon;
       default: false
     },
     argument: {
-      validate: !Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING ? (0, _utils.assertNodeType)("Expression") : (0, _utils.assertNodeType)("Identifier", "MemberExpression")
+      validate: !Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING ? (0, _utils.assertNodeType)("Expression") : (0, _utils.assertNodeType)("Identifier", "MemberExpression")
     },
     operator: {
       validate: (0, _utils.assertOneOf)(..._constants.UPDATE_OPERATORS)
@@ -10855,7 +10855,7 @@ exports.patternLikeCommon = patternLikeCommon;
   },
 
   validate(parent, key, node) {
-    if (!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) return;
+    if (!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) return;
     if (!(0, _is.default)("ForXStatement", parent, {
       left: node
     })) return;
@@ -10871,7 +10871,7 @@ exports.patternLikeCommon = patternLikeCommon;
   fields: {
     id: {
       validate: function () {
-        if (!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) {
+        if (!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) {
           return (0, _utils.assertNodeType)("LVal");
         }
 
@@ -12147,7 +12147,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
   validate: function () {
     const identifier = (0, _utils.assertNodeType)("Identifier");
     return function (parent, key, node) {
-      if (!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) return;
+      if (!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) return;
 
       if (!(0, _is.default)("ExportDefaultDeclaration", parent)) {
         identifier(node, "id", node.id);
@@ -12180,7 +12180,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
     declaration: {
       optional: true,
       validate: (0, _utils.chain)((0, _utils.assertNodeType)("Declaration"), Object.assign(function (node, key, val) {
-        if (!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) return;
+        if (!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) return;
 
         if (val && node.specifiers.length) {
           throw new TypeError("Only declaration or specifiers is allowed on ExportNamedDeclaration");
@@ -12188,7 +12188,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
       }, {
         oneOfNodeTypes: ["Declaration"]
       }), function (node, key, val) {
-        if (!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) return;
+        if (!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) return;
 
         if (val && node.source) {
           throw new TypeError("Cannot export a declaration from a source");
@@ -12200,7 +12200,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
       validate: (0, _utils.chain)((0, _utils.assertValueType)("array"), (0, _utils.assertEach)(function () {
         const sourced = (0, _utils.assertNodeType)("ExportSpecifier", "ExportDefaultSpecifier", "ExportNamespaceSpecifier");
         const sourceless = (0, _utils.assertNodeType)("ExportSpecifier");
-        if (!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) return sourced;
+        if (!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) return sourced;
         return function (node, key, val) {
           const validator = node.source ? sourced : sourceless;
           validator(node, key, val);
@@ -12233,7 +12233,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
   fields: {
     left: {
       validate: function () {
-        if (!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) {
+        if (!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) {
           return (0, _utils.assertNodeType)("VariableDeclaration", "LVal");
         }
 
@@ -12315,7 +12315,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
   fields: {
     meta: {
       validate: (0, _utils.chain)((0, _utils.assertNodeType)("Identifier"), Object.assign(function (node, key, val) {
-        if (!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) return;
+        if (!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) return;
         let property;
 
         switch (val.name) {
@@ -12483,7 +12483,7 @@ exports.classMethodOrDeclareMethodCommon = classMethodOrDeclareMethodCommon;
   fields: {
     delegate: {
       validate: (0, _utils.chain)((0, _utils.assertValueType)("boolean"), Object.assign(function (node, key, val) {
-        if (!Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING) return;
+        if (!Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING) return;
 
         if (val && !node.argument) {
           throw new TypeError("Property delegate of YieldExpression cannot be true if there is no argument");
@@ -33454,7 +33454,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 (0, _utils.default)("BindExpression", {
   visitor: ["object", "callee"],
   aliases: ["Expression"],
-  fields: !Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING ? {
+  fields: !Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING ? {
     object: {
       validate: Object.assign(() => {}, {
         oneOfNodeTypes: ["Expression"]
@@ -33531,7 +33531,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
       default: false
     },
     optional: {
-      validate: !Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING ? (0, _utils.assertValueType)("boolean") : (0, _utils.chain)((0, _utils.assertValueType)("boolean"), (0, _utils.assertOptionalChainStart)())
+      validate: !Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING ? (0, _utils.assertValueType)("boolean") : (0, _utils.chain)((0, _utils.assertValueType)("boolean"), (0, _utils.assertOptionalChainStart)())
     }
   }
 });
@@ -33568,7 +33568,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
       validate: (0, _utils.chain)((0, _utils.assertValueType)("array"), (0, _utils.assertEach)((0, _utils.assertNodeType)("Expression", "SpreadElement", "JSXNamespacedName")))
     },
     optional: {
-      validate: !Object({"NODE_ENV":"production","TARGET":"firefox-panel"}).BABEL_TYPES_8_BREAKING ? (0, _utils.assertValueType)("boolean") : (0, _utils.chain)((0, _utils.assertValueType)("boolean"), (0, _utils.assertOptionalChainStart)())
+      validate: !Object({"NODE_ENV":"production"}).BABEL_TYPES_8_BREAKING ? (0, _utils.assertValueType)("boolean") : (0, _utils.chain)((0, _utils.assertValueType)("boolean"), (0, _utils.assertOptionalChainStart)())
     },
     typeArguments: {
       validate: (0, _utils.assertNodeType)("TypeParameterInstantiation"),

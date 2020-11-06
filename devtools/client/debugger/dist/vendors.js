@@ -1089,7 +1089,7 @@ var _react = _interopRequireDefault(__webpack_require__(6));
 
 var _tab = _interopRequireDefault(__webpack_require__(711));
 
-var _tabList = _interopRequireDefault(__webpack_require__(940));
+var _tabList = _interopRequireDefault(__webpack_require__(958));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1215,7 +1215,7 @@ var _react = _interopRequireDefault(__webpack_require__(6));
 
 var _ref = _interopRequireDefault(__webpack_require__(938));
 
-var _tab = _interopRequireDefault(__webpack_require__(939));
+var _tab = _interopRequireDefault(__webpack_require__(957));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -2663,20 +2663,6 @@ exports.default = _default;
 
 /***/ }),
 
-/***/ 939:
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-
-/***/ 940:
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-
 /***/ 941:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2868,7 +2854,7 @@ const PropTypes = __webpack_require__(0);
 
 const dom = __webpack_require__(1);
 
-__webpack_require__(947);
+__webpack_require__(959);
 /**
  * This component represents a Splitter. The splitter supports vertical
  * as well as horizontal mode.
@@ -3222,13 +3208,6 @@ module.exports = Draggable;
 
 /***/ }),
 
-/***/ 947:
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-
 /***/ 948:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -3264,6 +3243,27 @@ function move(array, moveIndex, toIndex) {
   }
   return array;
 }
+
+/***/ }),
+
+/***/ 957:
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+
+/***/ 958:
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+
+/***/ 959:
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
 
 /***/ })
 

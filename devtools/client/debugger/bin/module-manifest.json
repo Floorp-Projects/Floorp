@@ -1098,7 +1098,17 @@
       "../node_modules/babel-loader/lib/index.js??ref--1!../packages/devtools-splitter/src/Draggable.js": 946,
       "../node_modules/extract-text-webpack-plugin/dist/loader.js??ref--3-0!../node_modules/css-loader/index.js??ref--3-1!../node_modules/postcss-loader/lib/index.js!../packages/devtools-splitter/src/SplitBox.css": 947,
       "../node_modules/lodash-move/lib/index.js": 948,
-      "../node_modules/css-loader/lib/css-base.js": 949
+      "../node_modules/css-loader/lib/css-base.js": 949,
+      "../node_modules/babel-loader/lib/index.js?ignore=src/lib!workers/parser/worker.js": 950,
+      "../node_modules/babel-loader/lib/index.js?ignore=src/lib!workers/pretty-print/worker.js": 951,
+      "../node_modules/babel-loader/lib/index.js?ignore=src/lib!workers/search/worker.js": 952,
+      "../node_modules/babel-loader/lib/index.js?ignore=src/lib!../packages/devtools-source-map/src/worker.js": 953,
+      "../node_modules/babel-loader/lib/index.js?ignore=src/lib!../packages/devtools-source-map/src/index.js": 954,
+      "../node_modules/babel-loader/lib/index.js?ignore=src/lib!vendors.js": 955,
+      "../node_modules/babel-loader/lib/index.js??ref--1!../packages/devtools-utils/src/network-request.js": 956,
+      "../node_modules/extract-text-webpack-plugin/dist/loader.js??ref--3-0!../node_modules/css-loader/index.js??ref--3-1!../node_modules/react-aria-components/src/tabs/tab.css": 957,
+      "../node_modules/extract-text-webpack-plugin/dist/loader.js??ref--3-0!../node_modules/css-loader/index.js??ref--3-1!../node_modules/react-aria-components/src/tabs/tab-list.css": 958,
+      "../node_modules/extract-text-webpack-plugin/dist/loader.js??ref--3-0!../node_modules/css-loader/index.js??ref--3-1!../packages/devtools-splitter/src/SplitBox.css": 959
     },
     "usedIds": {
       "0": 0,
@@ -2050,7 +2060,17 @@
       "946": 946,
       "947": 947,
       "948": 948,
-      "949": 949
+      "949": 949,
+      "950": 950,
+      "951": 951,
+      "952": 952,
+      "953": 953,
+      "954": 954,
+      "955": 955,
+      "956": 956,
+      "957": 957,
+      "958": 958,
+      "959": 959
     }
   },
   "chunks": {
@@ -2142,6 +2162,69 @@
       "modules": {
         "byIdentifier": {
           "../node_modules/css-loader/index.js??ref--3-1!../node_modules/postcss-loader/lib/index.js!../node_modules/react-aria-components/src/tabs/tab-list.css": 0,
+          "../node_modules/css-loader/lib/css-base.js": 1
+        },
+        "usedIds": {
+          "0": 0,
+          "1": 1
+        }
+      },
+      "chunks": {
+        "byName": {},
+        "byBlocks": {},
+        "usedIds": {
+          "0": 0
+        }
+      }
+    }
+  ],
+  "extract-text-webpack-plugin ../node_modules/extract-text-webpack-plugin/dist ../node_modules/css-loader/index.js??ref--3-1!../packages/devtools-splitter/src/SplitBox.css": [
+    {
+      "modules": {
+        "byIdentifier": {
+          "../node_modules/css-loader/index.js??ref--3-1!../packages/devtools-splitter/src/SplitBox.css": 0,
+          "../node_modules/css-loader/lib/css-base.js": 1
+        },
+        "usedIds": {
+          "0": 0,
+          "1": 1
+        }
+      },
+      "chunks": {
+        "byName": {},
+        "byBlocks": {},
+        "usedIds": {
+          "0": 0
+        }
+      }
+    }
+  ],
+  "extract-text-webpack-plugin ../node_modules/extract-text-webpack-plugin/dist ../node_modules/css-loader/index.js??ref--3-1!../node_modules/react-aria-components/src/tabs/tab.css": [
+    {
+      "modules": {
+        "byIdentifier": {
+          "../node_modules/css-loader/index.js??ref--3-1!../node_modules/react-aria-components/src/tabs/tab.css": 0,
+          "../node_modules/css-loader/lib/css-base.js": 1
+        },
+        "usedIds": {
+          "0": 0,
+          "1": 1
+        }
+      },
+      "chunks": {
+        "byName": {},
+        "byBlocks": {},
+        "usedIds": {
+          "0": 0
+        }
+      }
+    }
+  ],
+  "extract-text-webpack-plugin ../node_modules/extract-text-webpack-plugin/dist ../node_modules/css-loader/index.js??ref--3-1!../node_modules/react-aria-components/src/tabs/tab-list.css": [
+    {
+      "modules": {
+        "byIdentifier": {
+          "../node_modules/css-loader/index.js??ref--3-1!../node_modules/react-aria-components/src/tabs/tab-list.css": 0,
           "../node_modules/css-loader/lib/css-base.js": 1
         },
         "usedIds": {
