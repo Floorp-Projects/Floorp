@@ -41,19 +41,27 @@ class NativeFontResourceMacReporter final : public nsIMemoryReporter {
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData, bool aAnonymize) override {
-    MOZ_COLLECT_REPORT("explicit/gfx/native-font-resource-mac", KIND_HEAP,
-                       UNITS_BYTES, SizeOfData(MallocSizeOf),
-                       "Total memory used by native font API resource data.");
-    return NS_OK;
-  }
-
-  static size_t SizeOfData(mozilla::MallocSizeOf aMallocSizeOf) {
     auto fontMap = sWeakFontDataMap.Lock();
-    size_t total = 0;
+
+    nsAutoCString path("explicit/gfx/native-font-resource-mac/");
+
+    unsigned int unknownFontIndex = 0;
     for (auto& i : *fontMap) {
-      total += aMallocSizeOf(i.first) + FONT_NAME_MAX;
+      nsAutoCString subPath(path);
+      if (i.second.Length()) {
+        subPath.Append(i.second);
+      } else {
+        subPath.AppendPrintf("Unknown(%d)", unknownFontIndex);
+      }
+
+      size_t bytes = MallocSizeOf(i.first) + FONT_NAME_MAX;
+
+      aHandleReport->Callback(""_ns, subPath, KIND_HEAP, UNITS_BYTES, bytes,
+                              "Memory used by this native font."_ns, aData);
+
+      unknownFontIndex++;
     }
-    return total;
+    return NS_OK;
   }
 };
 
