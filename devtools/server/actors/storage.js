@@ -232,6 +232,10 @@ StorageActors.defaults = function(typeName, observationTopics) {
     },
 
     destroy() {
+      if (!this.storageActor) {
+        return;
+      }
+
       if (observationTopics) {
         observationTopics.forEach(observationTopic => {
           Services.obs.removeObserver(this, observationTopic);
@@ -1750,7 +1754,6 @@ if (Services.prefs.getBoolPref(EXTENSION_STORAGE_ENABLED_PREF, false)) {
         this.storageActor.off("window-destroyed", this.onWindowDestroyed);
 
         this.hostVsStores.clear();
-
         protocol.Actor.prototype.destroy.call(this);
 
         this.storageActor = null;
