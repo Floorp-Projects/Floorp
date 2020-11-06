@@ -506,7 +506,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
   getBreakpointPositions: async function(query) {
     const scripts = this._findDebuggeeScripts(
       query,
-      /* forBreakpoiontPositions */ true
+      /* forBreakpointPositions */ true
     );
 
     const positions = [];
