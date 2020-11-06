@@ -9,11 +9,12 @@
 
 "use strict";
 
-const SCALAR_PREFIX = "urlbar.searchmode.";
-const ENGINE_NAME = "MozSearch";
-const ENGINE_DOMAIN = "example.com";
+const ENTRY_SCALAR_PREFIX = "urlbar.searchmode.";
+const PICKED_SCALAR_PREFIX = "urlbar.picked.searchmode.";
 const ENGINE_ALIAS = "alias";
 const TEST_QUERY = "test";
+let engineName;
+let engineDomain;
 
 // The preference to enable suggestions.
 const SUGGEST_PREF = "browser.search.suggest.enabled";
@@ -34,28 +35,48 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 /**
- * Asserts that search mode telemetry was recorded correctly.
+ * Asserts that search mode telemetry was recorded correctly. Checks both the
+ * urlbar.searchmode.* and urlbar.searchmode_picked.* probes.
  * @param {string} entry
- * @param {string} key
+ *   A search mode entry point.
+ * @param {string} engineOrSource
+ *   An engine name or a search mode source.
+ * @param {number} [resultIndex]
+ *   The index of the result picked while in search mode. Only pass this
+ *   parameter if a result is picked.
  */
-function assertSearchModeScalar(entry, key) {
+function assertSearchModeScalars(entry, engineOrSource, resultIndex = -1) {
   // Check if the urlbar.searchmode.entry scalar contains the expected value.
   const scalars = TelemetryTestUtils.getProcessScalars("parent", true, false);
-  TelemetryTestUtils.assertKeyedScalar(scalars, SCALAR_PREFIX + entry, key, 1);
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    ENTRY_SCALAR_PREFIX + entry,
+    engineOrSource,
+    1
+  );
 
   for (let e of UrlbarUtils.SEARCH_MODE_ENTRY) {
     if (e == entry) {
       Assert.equal(
-        Object.keys(scalars[SCALAR_PREFIX + entry]).length,
+        Object.keys(scalars[ENTRY_SCALAR_PREFIX + entry]).length,
         1,
         `This search must only increment one entry in the correct scalar: ${e}`
       );
     } else {
       Assert.ok(
-        !scalars[SCALAR_PREFIX + e],
+        !scalars[ENTRY_SCALAR_PREFIX + e],
         `No other urlbar.searchmode scalars should be recorded. Checking ${e}`
       );
     }
+  }
+
+  if (resultIndex >= 0) {
+    TelemetryTestUtils.assertKeyedScalar(
+      scalars,
+      PICKED_SCALAR_PREFIX + entry,
+      resultIndex,
+      1
+    );
   }
 
   Services.telemetry.clearScalars();
@@ -71,20 +92,21 @@ add_task(async function setup() {
     ],
   });
 
-  // Create a new search engine.
-  await Services.search.addEngineWithDetails(ENGINE_NAME, {
-    alias: ENGINE_ALIAS,
-    method: "GET",
-    template: `http://${ENGINE_DOMAIN}/?q={searchTerms}`,
-  });
+  // Create an engine to generate search suggestions and add it as default
+  // for this test.
+  const url =
+    getRootDirectory(gTestPath) + "usageTelemetrySearchSuggestions.xml";
+  let suggestionEngine = await Services.search.addOpenSearchEngine(url, "");
+  suggestionEngine.alias = ENGINE_ALIAS;
+  engineDomain = suggestionEngine.getResultDomain();
+  engineName = suggestionEngine.name;
 
   // Make it the default search engine.
-  let engine = Services.search.getEngineByName(ENGINE_NAME);
   let originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(suggestionEngine);
 
   // And the first one-off engine.
-  await Services.search.moveEngine(engine, 0);
+  await Services.search.moveEngine(suggestionEngine, 0);
 
   // Enable local telemetry recording for the duration of the tests.
   let oldCanRecord = Services.telemetry.canRecordExtended;
@@ -107,7 +129,7 @@ add_task(async function setup() {
   registerCleanupFunction(async function() {
     Services.telemetry.canRecordExtended = oldCanRecord;
     await Services.search.setDefault(originalEngine);
-    await Services.search.removeEngine(engine);
+    await Services.search.removeEngine(suggestionEngine);
     await PlacesUtils.history.clear();
     Services.telemetry.setEventRecordingEnabled("navigation", false);
     UrlbarTestUtils.uninit();
@@ -127,8 +149,10 @@ add_task(async function test_oneoff_remote() {
   });
   // Enters search mode by clicking a one-off.
   await UrlbarTestUtils.enterSearchMode(window);
-  assertSearchModeScalar("oneoff", "other");
-  await UrlbarTestUtils.exitSearchMode(window);
+  let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  EventUtils.synthesizeKey("KEY_Enter");
+  await loadPromise;
+  assertSearchModeScalars("oneoff", "other", 0);
 
   BrowserTestUtils.removeTab(tab);
 });
@@ -148,8 +172,11 @@ add_task(async function test_oneoff_local() {
   await UrlbarTestUtils.enterSearchMode(window, {
     source: UrlbarUtils.RESULT_SOURCE.HISTORY,
   });
-  assertSearchModeScalar("oneoff", "history");
-  await UrlbarTestUtils.exitSearchMode(window);
+  let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  EventUtils.synthesizeKey("KEY_Enter");
+  await loadPromise;
+  assertSearchModeScalars("oneoff", "history", 0);
 
   BrowserTestUtils.removeTab(tab);
 });
@@ -174,7 +201,7 @@ add_task(async function test_oneoff_amazon() {
   await UrlbarTestUtils.enterSearchMode(window, {
     engineName: "Amazon.com",
   });
-  assertSearchModeScalar("oneoff", "Amazon");
+  assertSearchModeScalars("oneoff", "Amazon");
   await UrlbarTestUtils.exitSearchMode(window);
 
   BrowserTestUtils.removeTab(tab);
@@ -201,7 +228,7 @@ add_task(async function test_oneoff_wikipedia() {
   await UrlbarTestUtils.enterSearchMode(window, {
     engineName: "Wikipedia (en)",
   });
-  assertSearchModeScalar("oneoff", "Wikipedia");
+  assertSearchModeScalars("oneoff", "Wikipedia");
   await UrlbarTestUtils.exitSearchMode(window);
 
   BrowserTestUtils.removeTab(tab);
@@ -225,19 +252,18 @@ add_task(async function test_shortcut() {
   await searchPromise;
 
   await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: ENGINE_NAME,
+    engineName,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     entry: "shortcut",
   });
-  assertSearchModeScalar("shortcut", "other");
-  await UrlbarTestUtils.exitSearchMode(window);
+  assertSearchModeScalars("shortcut", "other");
 
   BrowserTestUtils.removeTab(tab);
 });
 
 // Enters search mode by selecting a Top Site from the Urlbar.
 add_task(async function test_topsites_urlbar() {
-  // Disable suggestions to avoid hitting Wikipedia servers.
+  // Disable suggestions to avoid hitting Amazon servers.
   await SpecialPowers.pushPrefEnv({
     set: [[SUGGEST_PREF, false]],
   });
@@ -273,7 +299,7 @@ add_task(async function test_topsites_urlbar() {
     engineName: amazonSearch.result.payload.engine,
     entry: "topsites_urlbar",
   });
-  assertSearchModeScalar("topsites_urlbar", "Amazon");
+  assertSearchModeScalars("topsites_urlbar", "Amazon");
   await UrlbarTestUtils.exitSearchMode(window);
 
   BrowserTestUtils.removeTab(tab);
@@ -311,11 +337,10 @@ add_task(async function test_keywordoffer() {
   await searchPromise;
 
   await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: ENGINE_NAME,
+    engineName,
     entry: "keywordoffer",
   });
-  assertSearchModeScalar("keywordoffer", "other");
-  await UrlbarTestUtils.exitSearchMode(window);
+  assertSearchModeScalars("keywordoffer", "other");
 
   BrowserTestUtils.removeTab(tab);
 });
@@ -338,11 +363,10 @@ add_task(async function test_typed() {
   await searchPromise;
 
   await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: ENGINE_NAME,
+    engineName,
     entry: "typed",
   });
-  assertSearchModeScalar("typed", "other");
-  await UrlbarTestUtils.exitSearchMode(window);
+  assertSearchModeScalars("typed", "other");
 
   BrowserTestUtils.removeTab(tab);
 });
@@ -350,6 +374,10 @@ add_task(async function test_typed() {
 // Enters search mode by calling the same function called by the Search
 // Bookmarks menu item in Library > Bookmarks.
 add_task(async function test_bookmarkmenu() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
   let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
   PlacesCommandHook.searchBookmarks();
   await searchPromise;
@@ -358,8 +386,8 @@ add_task(async function test_bookmarkmenu() {
     source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
     entry: "bookmarkmenu",
   });
-  assertSearchModeScalar("bookmarkmenu", "bookmarks");
-  await UrlbarTestUtils.exitSearchMode(window);
+  assertSearchModeScalars("bookmarkmenu", "bookmarks");
+  BrowserTestUtils.removeTab(tab);
 });
 
 // Enters search mode by calling the same function called by the Search Tabs
@@ -373,8 +401,7 @@ add_task(async function test_tabmenu() {
     source: UrlbarUtils.RESULT_SOURCE.TABS,
     entry: "tabmenu",
   });
-  assertSearchModeScalar("tabmenu", "tabs");
-  await UrlbarTestUtils.exitSearchMode(window);
+  assertSearchModeScalars("tabmenu", "tabs");
 });
 
 // Enters search mode by performing a search handoff on about:privatebrowsing.
@@ -400,10 +427,10 @@ add_task(async function test_handoff_pbm() {
   await new Promise(r => EventUtils.synthesizeKey("f", {}, win, r));
   await searchPromise;
   await UrlbarTestUtils.assertSearchMode(win, {
-    engineName: ENGINE_NAME,
+    engineName,
     entry: "handoff",
   });
-  assertSearchModeScalar("handoff", "other");
+  assertSearchModeScalars("handoff", "other");
 
   await UrlbarTestUtils.exitSearchMode(win);
   await UrlbarTestUtils.promisePopupClose(win);
@@ -416,6 +443,11 @@ add_task(async function test_touchbar() {
     return;
   }
 
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
+
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: TEST_QUERY,
@@ -427,8 +459,12 @@ add_task(async function test_touchbar() {
     source: UrlbarUtils.RESULT_SOURCE.HISTORY,
     entry: "touchbar",
   });
-  assertSearchModeScalar("touchbar", "history");
-  await UrlbarTestUtils.exitSearchMode(window);
+  let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  EventUtils.synthesizeKey("KEY_Enter");
+  await loadPromise;
+  assertSearchModeScalars("touchbar", "history", 0);
+  BrowserTestUtils.removeTab(tab);
 });
 
 // Enters search mode by selecting a tab-to-search result.
@@ -443,11 +479,11 @@ add_task(async function test_tabtosearch() {
       ["browser.urlbar.tabToSearch.onboard.maxShown", 0],
     ],
   });
-  await PlacesTestUtils.addVisits([`https://${ENGINE_DOMAIN}/`]);
+  await PlacesTestUtils.addVisits([`http://${engineDomain}/`]);
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    value: ENGINE_DOMAIN.slice(0, 4),
+    value: engineDomain.slice(0, 4),
   });
   let tabToSearchResult = (
     await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1)
@@ -459,7 +495,7 @@ add_task(async function test_tabtosearch() {
   );
   Assert.equal(
     tabToSearchResult.payload.engine,
-    ENGINE_NAME,
+    engineName,
     "The tab-to-search result is for the correct engine."
   );
   await UrlbarTestUtils.assertSearchMode(window, null);
@@ -475,11 +511,11 @@ add_task(async function test_tabtosearch() {
   await searchPromise;
 
   await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: ENGINE_NAME,
+    engineName,
     entry: "tabtosearch",
   });
 
-  assertSearchModeScalar("tabtosearch", "other");
+  assertSearchModeScalars("tabtosearch", "other");
 
   await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
@@ -495,11 +531,11 @@ add_task(async function test_tabtosearch_onboard() {
   });
   UrlbarProviderTabToSearch.onboardingResultsThisSession = 0;
 
-  await PlacesTestUtils.addVisits([`https://${ENGINE_DOMAIN}/`]);
+  await PlacesTestUtils.addVisits([`http://${engineDomain}/`]);
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    value: ENGINE_DOMAIN.slice(0, 4),
+    value: engineDomain.slice(0, 4),
   });
   let tabToSearchResult = (
     await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1)
@@ -511,7 +547,7 @@ add_task(async function test_tabtosearch_onboard() {
   );
   Assert.equal(
     tabToSearchResult.payload.engine,
-    ENGINE_NAME,
+    engineName,
     "The tab-to-search result is for the correct engine."
   );
   Assert.equal(
@@ -532,7 +568,7 @@ add_task(async function test_tabtosearch_onboard() {
   await searchPromise;
 
   await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: ENGINE_NAME,
+    engineName,
     entry: "tabtosearch_onboard",
   });
 
@@ -543,7 +579,7 @@ add_task(async function test_tabtosearch_onboard() {
     "tabtosearch_onboard-shown",
     1
   );
-  assertSearchModeScalar("tabtosearch_onboard", "other");
+  assertSearchModeScalars("tabtosearch_onboard", "other");
 
   await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);

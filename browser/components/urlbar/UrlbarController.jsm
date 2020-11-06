@@ -523,6 +523,13 @@ class UrlbarController {
       selectedResult,
       this._userSelectionBehavior
     );
+    if (this.input.searchMode) {
+      Services.telemetry.keyedScalarAdd(
+        `urlbar.picked.searchmode.${this.input.searchMode.entry}`,
+        resultIndex,
+        1
+      );
+    }
 
     if (!result) {
       return;

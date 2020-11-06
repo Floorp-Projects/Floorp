@@ -5469,7 +5469,7 @@ urlbar.searchmode:
       - 1665076
     description: >
       A keyed uint recording how many times the user entered a particular search
-      mode after selecing the Search Bookmarks menu item in the Library menu.
+      mode after being handed off from the search bar on the new tab page.
     expires: never
     kind: uint
     keyed: true
@@ -5537,7 +5537,7 @@ urlbar.searchmode:
       - 1665076
     description: >
       A keyed uint recording how many times the user entered a particular search
-      mode after selecing the Search Tabs menu item in the Tab Overflow menu.
+      mode after selecting the Search Tabs menu item in the Tab Overflow menu.
     expires: never
     kind: uint
     keyed: true
@@ -5605,7 +5605,7 @@ urlbar.searchmode:
       - 1654680
     description: >
       A keyed uint recording how many times the user entered a particular search
-      mode after selecting a search shortcut Top Site in the Urlbar..
+      mode after selecting a search shortcut Top Site in the Urlbar.
     expires: never
     kind: uint
     keyed: true
@@ -5658,6 +5658,242 @@ urlbar.searchmode:
       A keyed uint recording how many times the user entered a particular search
       mode from an unknown entry point. If values appear for this probe in
       Telemetry, we should review the entry points to search mode.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
+urlbar.picked.searchmode:
+  bookmarkmenu:
+    bug_numbers:
+      - 1674874
+    description: >
+      A keyed uint recording how many times the user picked a particular kind of
+      result while in search mode after entering search mode from the Search
+      Bookmarks menu item in the Library menu.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  handoff:
+    bug_numbers:
+      - 1674874
+    description: >
+      A keyed uint recording how many times the user picked a particular kind of
+      result while in search mode after entering search mode by being handed off
+      from the search bar on the new tab page.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  keywordoffer:
+    bug_numbers:
+      - 1674874
+    description: >
+      A keyed uint recording how many times the user picked a particular kind of
+      result while in search mode after entering search mode by selecting a
+      keyword offer result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  oneoff:
+    bug_numbers:
+      - 1674874
+    description: >
+      A keyed uint recording how many times the user picked a particular kind of
+      result while in search mode after entering search mode by selecting a
+      one-off.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  shortcut:
+    bug_numbers:
+      - 1674874
+    description: >
+      A keyed uint recording how many times the user picked a particular kind of
+      result while in search mode after entering search mode by pressing a
+      keyboard shortcut.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  tabmenu:
+    bug_numbers:
+      - 1674874
+    description: >
+      A keyed uint recording how many times the user picked a particular kind of
+      result while in search mode after entering search mode by selecting the
+      Search Tabs menu item in the Tab Overflow menu.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  tabtosearch:
+    bug_numbers:
+      - 1674874
+    description: >
+      A keyed uint recording how many times the user picked a particular kind of
+      result while in search mode after entering search mode by selecting a
+      tab-to-search result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  tabtosearch_onboard:
+    bug_numbers:
+      - 1674874
+    description: >
+      A keyed uint recording how many times the user picked a particular kind of
+      result while in search mode after entering search mode by selecting a
+      tab-to-search onboarding result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  topsites_newtab:
+    bug_numbers:
+      - 1674874
+    description: >
+      A keyed uint recording how many times the user picked a particular kind of
+      result while in search mode after entering search mode by selecting a
+      search shortcut Top Site on the New Tab Page.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  topsites_urlbar:
+    bug_numbers:
+      - 1674874
+    description: >
+      A keyed uint recording how many times the user picked a particular kind of
+      result while in search mode after entering search mode by selecting a
+      search shortcut Top Site in the Urlbar.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  touchbar:
+    bug_numbers:
+      - 1674874
+    description: >
+      A keyed uint recording how many times the user picked a particular kind of
+      result while in search mode after entering search mode by selecting a
+      search shortcut on the macOS Touch Bar.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  typed:
+    bug_numbers:
+      - 1674874
+    description: >
+      A keyed uint recording how many times the user picked a particular kind of
+      result while in search mode after entering search mode by typing an alias.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  other:
+    bug_numbers:
+      - 1674874
+    description: >
+      A keyed uint recording how many times the user picked a particular kind of
+      result while in search mode after entering search mode from an unknown
+      entry point. If values appear for this probe in Telemetry, we should
+      review the entry points to search mode.
     expires: never
     kind: uint
     keyed: true
