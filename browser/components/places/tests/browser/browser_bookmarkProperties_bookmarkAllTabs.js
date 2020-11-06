@@ -37,6 +37,26 @@ add_task(async function() {
       );
       fillBookmarkTextField("editBMPanel_namePicker", "folder", dialog);
       await promiseTitleChange;
+
+      let folderPicker = dialog.document.getElementById(
+        "editBMPanel_folderMenuList"
+      );
+
+      let defaultParentGuid = await PlacesUIUtils.defaultParentGuid;
+      // Check the initial state of the folder picker.
+      await TestUtils.waitForCondition(
+        () => folderPicker.getAttribute("selectedGuid") == defaultParentGuid,
+        "The folder is the expected one."
+      );
+
+      let savedItemId = dialog.gEditItemOverlay.itemId;
+      let savedItemGuid = await PlacesUtils.promiseItemGuid(savedItemId);
+      let entry = await PlacesUtils.bookmarks.fetch(savedItemGuid);
+      Assert.equal(
+        entry.parentGuid,
+        defaultParentGuid,
+        "Should have created the keyword in the right folder."
+      );
     },
     dialog => {
       let savedItemId = dialog.gEditItemOverlay.itemId;
