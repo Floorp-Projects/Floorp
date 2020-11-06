@@ -288,10 +288,10 @@ bool LRecoverInfo::init(MResumePoint* rp) {
 }
 
 LSnapshot::LSnapshot(LRecoverInfo* recoverInfo, BailoutKind kind)
-    : numSlots_(TotalOperandCount(recoverInfo) * BOX_PIECES),
-      slots_(nullptr),
+    : slots_(nullptr),
       recoverInfo_(recoverInfo),
       snapshotOffset_(INVALID_SNAPSHOT_OFFSET),
+      numSlots_(TotalOperandCount(recoverInfo) * BOX_PIECES),
       bailoutId_(INVALID_BAILOUT_ID),
       bailoutKind_(kind) {}
 

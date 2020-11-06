@@ -166,16 +166,10 @@ class LinearSum {
   int32_t constant_;
 };
 
-// Convert all components of a linear sum (except, optionally, the constant)
+// Convert all components of a linear sum (except the constant)
 // and add any new instructions to the end of block.
 MDefinition* ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
-                              const LinearSum& sum,
-                              bool convertConstant = false);
-
-// Convert the test 'sum >= 0' to a comparison, adding any necessary
-// instructions to the end of block.
-MCompare* ConvertLinearInequality(TempAllocator& alloc, MBasicBlock* block,
-                                  const LinearSum& sum);
+                              const LinearSum& sum);
 
 MOZ_MUST_USE bool AnalyzeNewScriptDefiniteProperties(
     JSContext* cx, DPAConstraintInfo& constraintInfo, JS::HandleFunction fun,
