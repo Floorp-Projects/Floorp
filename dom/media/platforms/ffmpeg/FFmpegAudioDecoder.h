@@ -38,6 +38,8 @@ class FFmpegAudioDecoder<LIBAV_VER>
  private:
   MediaResult DoDecode(MediaRawData* aSample, uint8_t* aData, int aSize,
                        bool* aGotFrame, DecodedData& aResults) override;
+  uint32_t mEncoderDelay = 0;
+  uint32_t mEncoderPadding = 0;
 };
 
 }  // namespace mozilla

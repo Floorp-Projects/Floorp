@@ -12,33 +12,18 @@
 SimpleTest.waitForExplicitFinish();
 
 var tests = [
-  {
-    name: "half-a-second-8000.mp3",
-    duration: 0.5
-  },
-  {
-    name: "half-a-second-48000.mp3",
-    duration: 0.5
-  },
-  {
-    name: "v3.mp3",
-    duration: 3
-  },
-  {
-    // Weird file that has the end padding larger than a packet size.
-    name: "cropped_8000hz_8kbs_mono_lame3.100.abr.mp3",
-    duration: 28.65675
-  }
+  "half-a-second-8000.mp3",
+  "half-a-second-48000.mp3",
 ];
 
 async function doit(t) {
   var count = 0;
   var context = new OfflineAudioContext(1, 128, 48000);
-  tests.forEach(async testcase => {
-    var response = await fetch(testcase.name);
+  tests.forEach(async testfile => {
+    var response = await fetch(testfile);
     var buffer = await response.arrayBuffer();
     var decoded = await context.decodeAudioData(buffer);
-    is(decoded.duration, testcase.duration, "The file has the correct duration.");
+    is(decoded.duration, 0.5, "The file is half a second.");
     if (++count == tests.length) {
       SimpleTest.finish();
     }
