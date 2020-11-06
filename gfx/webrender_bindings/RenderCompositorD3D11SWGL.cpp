@@ -10,6 +10,7 @@
 
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/layers/Effects.h"
+#include "mozilla/webrender/RenderD3D11TextureHost.h"
 
 namespace mozilla {
 using namespace layers;
@@ -95,6 +96,70 @@ void RenderCompositorD3D11SWGL::CompositorEndFrame() {
       mCompositor->DrawQuad(drawRect, frameSurface.mClipRect, effect, 1.0,
                             frameSurface.mTransform, drawRect);
     }
+
+    if (surface.mExternalImage) {
+      // We need to hold the texture source separately from the effect,
+      // since the effect doesn't hold a strong reference.
+      RefPtr<DataTextureSourceD3D11> layer;
+      RefPtr<TexturedEffect> texturedEffect;
+      gfx::IntSize size;
+      if (auto* host = surface.mExternalImage->AsRenderDXGITextureHost()) {
+        host->EnsureD3D11Texture2D(mCompositor->GetDevice());
+
+        layer = new DataTextureSourceD3D11(mCompositor->GetDevice(),
+                                           host->GetFormat(),
+                                           host->GetD3D11Texture2D());
+        if (host->GetFormat() == SurfaceFormat::NV12 ||
+            host->GetFormat() == SurfaceFormat::P010 ||
+            host->GetFormat() == SurfaceFormat::P016) {
+          texturedEffect = new EffectNV12(
+              layer, host->GetYUVColorSpace(), host->GetColorRange(),
+              host->GetColorDepth(), frameSurface.mFilter);
+        } else {
+          MOZ_ASSERT(host->GetFormat() == SurfaceFormat::B8G8R8X8 ||
+                     host->GetFormat() == SurfaceFormat::B8G8R8A8);
+          texturedEffect = CreateTexturedEffect(host->GetFormat(), layer,
+                                                frameSurface.mFilter, true);
+        }
+        size = host->GetSize(0);
+        host->LockInternal();
+      } else if (auto* host =
+                     surface.mExternalImage->AsRenderDXGIYCbCrTextureHost()) {
+        host->EnsureD3D11Texture2D(mCompositor->GetDevice());
+
+        layer = new DataTextureSourceD3D11(mCompositor->GetDevice(),
+                                           SurfaceFormat::A8,
+                                           host->GetD3D11Texture2D(0));
+        RefPtr<DataTextureSourceD3D11> u = new DataTextureSourceD3D11(
+            mCompositor->GetDevice(), SurfaceFormat::A8,
+            host->GetD3D11Texture2D(1));
+        layer->SetNextSibling(u);
+        RefPtr<DataTextureSourceD3D11> v = new DataTextureSourceD3D11(
+            mCompositor->GetDevice(), SurfaceFormat::A8,
+            host->GetD3D11Texture2D(2));
+        u->SetNextSibling(v);
+
+        texturedEffect = new EffectYCbCr(
+            layer, host->GetYUVColorSpace(), host->GetColorRange(),
+            host->GetColorDepth(), frameSurface.mFilter);
+        size = host->GetSize(0);
+        host->LockInternal();
+      }
+
+      gfx::Rect drawRect(0, 0, size.width, size.height);
+
+      EffectChain effect;
+      effect.mPrimaryEffect = texturedEffect;
+      mCompositor->DrawQuad(drawRect, frameSurface.mClipRect, effect, 1.0,
+                            frameSurface.mTransform, drawRect);
+
+      if (auto* host = surface.mExternalImage->AsRenderDXGITextureHost()) {
+        host->Unlock();
+      } else if (auto* host =
+                     surface.mExternalImage->AsRenderDXGIYCbCrTextureHost()) {
+        host->Unlock();
+      }
+    }
   }
   mFrameSurfaces.Clear();
 }
@@ -172,6 +237,14 @@ void RenderCompositorD3D11SWGL::CreateSurface(wr::NativeSurfaceId aId,
   mSurfaces.insert({aId, Surface{aTileSize, aIsOpaque}});
 }
 
+void RenderCompositorD3D11SWGL::CreateExternalSurface(wr::NativeSurfaceId aId,
+                                                      bool aIsOpaque) {
+  MOZ_RELEASE_ASSERT(mSurfaces.find(aId) == mSurfaces.end());
+  Surface surface{wr::DeviceIntSize{}, aIsOpaque};
+  surface.mIsExternal = true;
+  mSurfaces.insert({aId, std::move(surface)});
+}
+
 void RenderCompositorD3D11SWGL::DestroySurface(NativeSurfaceId aId) {
   auto surfaceCursor = mSurfaces.find(aId);
   MOZ_RELEASE_ASSERT(surfaceCursor != mSurfaces.end());
@@ -204,6 +277,23 @@ void RenderCompositorD3D11SWGL::DestroyTile(wr::NativeSurfaceId aId, int32_t aX,
   auto layerCursor = surface.mTiles.find(TileKey(aX, aY));
   MOZ_RELEASE_ASSERT(layerCursor != surface.mTiles.end());
   surface.mTiles.erase(layerCursor);
+}
+
+void RenderCompositorD3D11SWGL::AttachExternalImage(
+    wr::NativeSurfaceId aId, wr::ExternalImageId aExternalImage) {
+  RenderTextureHost* image =
+      RenderThread::Get()->GetRenderTexture(aExternalImage);
+  MOZ_RELEASE_ASSERT(image);
+  MOZ_RELEASE_ASSERT(image->AsRenderDXGITextureHost() ||
+                     image->AsRenderDXGIYCbCrTextureHost());
+
+  auto surfaceCursor = mSurfaces.find(aId);
+  MOZ_RELEASE_ASSERT(surfaceCursor != mSurfaces.end());
+
+  Surface& surface = surfaceCursor->second;
+  surface.mExternalImage = image;
+  MOZ_RELEASE_ASSERT(surface.mTiles.empty());
+  MOZ_RELEASE_ASSERT(surface.mIsExternal);
 }
 
 gfx::SamplingFilter ToSamplingFilter(wr::ImageRendering aImageRendering) {

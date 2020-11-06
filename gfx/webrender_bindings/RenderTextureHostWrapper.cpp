@@ -72,6 +72,15 @@ RenderDXGITextureHost* RenderTextureHostWrapper::AsRenderDXGITextureHost() {
   return mTextureHost->AsRenderDXGITextureHost();
 }
 
+RenderDXGIYCbCrTextureHost*
+RenderTextureHostWrapper::AsRenderDXGIYCbCrTextureHost() {
+  EnsureTextureHost();
+  if (!mTextureHost) {
+    return nullptr;
+  }
+  return mTextureHost->AsRenderDXGIYCbCrTextureHost();
+}
+
 RenderTextureHostSWGL* RenderTextureHostWrapper::EnsureRenderTextureHostSWGL()
     const {
   EnsureTextureHost();

@@ -102,8 +102,13 @@ class RenderDXGIYCbCrTextureHost final : public RenderTextureHostSWGL {
   explicit RenderDXGIYCbCrTextureHost(WindowsHandle (&aHandles)[3],
                                       gfx::YUVColorSpace aYUVColorSpace,
                                       gfx::ColorDepth aColorDepth,
+                                      gfx::ColorRange aColorRange,
                                       gfx::IntSize aSizeY,
                                       gfx::IntSize aSizeCbCr);
+
+  RenderDXGIYCbCrTextureHost* AsRenderDXGIYCbCrTextureHost() override {
+    return this;
+  }
 
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
                            wr::ImageRendering aRendering) override;
@@ -114,6 +119,8 @@ class RenderDXGIYCbCrTextureHost final : public RenderTextureHostSWGL {
   GLuint GetGLHandle(uint8_t aChannelIndex) const;
 
   bool SyncObjectNeeded() override { return true; }
+
+  gfx::ColorRange GetColorRange() const { return mColorRange; }
 
   // RenderTextureHostSWGL
   gfx::SurfaceFormat GetFormat() const override {
@@ -130,6 +137,10 @@ class RenderDXGIYCbCrTextureHost final : public RenderTextureHostSWGL {
 
   bool EnsureD3D11Texture2D(ID3D11Device* aDevice);
   bool LockInternal();
+
+  ID3D11Texture2D* GetD3D11Texture2D(uint8_t aChannelIndex) {
+    return mTextures[aChannelIndex];
+  }
 
  private:
   virtual ~RenderDXGIYCbCrTextureHost();
@@ -156,6 +167,7 @@ class RenderDXGIYCbCrTextureHost final : public RenderTextureHostSWGL {
 
   gfx::YUVColorSpace mYUVColorSpace;
   gfx::ColorDepth mColorDepth;
+  gfx::ColorRange mColorRange;
   gfx::IntSize mSizeY;
   gfx::IntSize mSizeCbCr;
 

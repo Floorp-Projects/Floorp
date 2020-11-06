@@ -415,13 +415,15 @@ gfx::IntSize RenderDXGITextureHost::GetSize(uint8_t aChannelIndex) const {
 
 RenderDXGIYCbCrTextureHost::RenderDXGIYCbCrTextureHost(
     WindowsHandle (&aHandles)[3], gfx::YUVColorSpace aYUVColorSpace,
-    gfx::ColorDepth aColorDepth, gfx::IntSize aSizeY, gfx::IntSize aSizeCbCr)
+    gfx::ColorDepth aColorDepth, gfx::ColorRange aColorRange,
+    gfx::IntSize aSizeY, gfx::IntSize aSizeCbCr)
     : mHandles{aHandles[0], aHandles[1], aHandles[2]},
       mSurfaces{0},
       mStreams{0},
       mTextureHandles{0},
       mYUVColorSpace(aYUVColorSpace),
       mColorDepth(aColorDepth),
+      mColorRange(aColorRange),
       mSizeY(aSizeY),
       mSizeCbCr(aSizeCbCr),
       mLocked(false) {
