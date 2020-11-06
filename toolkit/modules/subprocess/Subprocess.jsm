@@ -75,16 +75,17 @@ var Subprocess = {
    * @param {string[]} [options.arguments]
    * A list of strings to pass as arguments to the process.
    *
-   * @param {object} [options.environment]
-   * An object containing a key and value for each environment variable
-   * to pass to the process. Only the object's own, enumerable properties
-   * are added to the environment.
+   * @param {object} [options.environment] An object containing a key
+   * and value for each environment variable to pass to the
+   * process. Values that are `=== null` are ignored. Only the
+   * object's own, enumerable properties are added to the environment.
    *
-   * @param {boolean} [options.environmentAppend]
-   * If true, append the environment variables passed in `environment` to
-   * the existing set of environment variables. Otherwise, the values in
-   * 'environment' constitute the entire set of environment variables
-   * passed to the new process.
+   * @param {boolean} [options.environmentAppend] If true, append the
+   * environment variables passed in `environment` to the existing set
+   * of environment variables. Values that are `=== null` are removed
+   * from the environment. Otherwise, the values in 'environment'
+   * constitute the entire set of environment variables passed to the
+   * new process.
    *
    * @param {string} [options.stderr]
    * Defines how the process's stderr output is handled. One of:
@@ -134,9 +135,9 @@ var Subprocess = {
       Object.assign(environment, options.environment);
     }
 
-    options.environment = Object.entries(environment).map(([key, val]) =>
-      encodeEnvVar(key, val)
-    );
+    options.environment = Object.entries(environment)
+      .map(([key, val]) => (val !== null ? encodeEnvVar(key, val) : null))
+      .filter(s => s);
 
     options.arguments = Array.from(options.arguments || []);
 

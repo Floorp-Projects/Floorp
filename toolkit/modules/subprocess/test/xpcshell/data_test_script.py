@@ -35,7 +35,7 @@ elif cmd == "exit":
     sys.exit(int(sys.argv[2]))
 elif cmd == "env":
     for var in sys.argv[2:]:
-        output(os.environ.get(var, ""))
+        output(os.environ.get(var, "!"))
 elif cmd == "pwd":
     output(os.path.abspath(os.curdir))
 elif cmd == "print_args":
