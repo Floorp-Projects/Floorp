@@ -756,9 +756,10 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
         aReflowInput.AvailableBSize() -
         border.ConvertTo(wm, outerWM).BStart(wm) -
         kidReflowInput.ComputedLogicalMargin(wm).BStart(wm);
-    if (NS_AUTOOFFSET != kidReflowInput.ComputedLogicalOffsets().BStart(wm)) {
-      kidReflowInput.AvailableBSize() -=
-          kidReflowInput.ComputedLogicalOffsets().BStart(wm);
+    const nscoord kidOffsetBStart =
+        kidReflowInput.ComputedLogicalOffsets(wm).BStart(wm);
+    if (NS_AUTOOFFSET != kidOffsetBStart) {
+      kidReflowInput.AvailableBSize() -= kidOffsetBStart;
     }
   }
 
@@ -768,8 +769,7 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
 
   const LogicalSize kidSize = kidDesiredSize.Size(wm).ConvertTo(outerWM, wm);
 
-  LogicalMargin offsets =
-      kidReflowInput.ComputedLogicalOffsets().ConvertTo(outerWM, wm);
+  LogicalMargin offsets = kidReflowInput.ComputedLogicalOffsets(outerWM);
 
   // If we're solving for start in either inline or block direction,
   // then compute it now that we know the dimensions.

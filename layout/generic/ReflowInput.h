@@ -423,8 +423,8 @@ struct ReflowInput : public SizeComputationInput {
   const nsMargin& ComputedPhysicalOffsets() const { return mComputedOffsets; }
   nsMargin& ComputedPhysicalOffsets() { return mComputedOffsets; }
 
-  const LogicalMargin ComputedLogicalOffsets() const {
-    return LogicalMargin(mWritingMode, mComputedOffsets);
+  LogicalMargin ComputedLogicalOffsets(mozilla::WritingMode aWM) const {
+    return LogicalMargin(aWM, mComputedOffsets);
   }
 
   void SetComputedLogicalOffsets(mozilla::WritingMode aWM,
@@ -961,8 +961,9 @@ struct ReflowInput : public SizeComputationInput {
 
   void ApplyRelativePositioning(mozilla::LogicalPoint* aPosition,
                                 const nsSize& aContainerSize) const {
-    ApplyRelativePositioning(mFrame, mWritingMode, ComputedLogicalOffsets(),
-                             aPosition, aContainerSize);
+    ApplyRelativePositioning(mFrame, mWritingMode,
+                             ComputedLogicalOffsets(mWritingMode), aPosition,
+                             aContainerSize);
   }
 
 #ifdef DEBUG

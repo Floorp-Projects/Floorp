@@ -708,9 +708,7 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
 
     // Note that legend's writing mode may be different from the fieldset's,
     // so we need to convert offsets before applying them to it (bug 1134534).
-    LogicalMargin offsets =
-        legendReflowInput->ComputedLogicalOffsets().ConvertTo(
-            wm, legendReflowInput->GetWritingMode());
+    LogicalMargin offsets = legendReflowInput->ComputedLogicalOffsets(wm);
     ReflowInput::ApplyRelativePositioning(legend, wm, offsets, &actualLegendPos,
                                           containerSize);
 
