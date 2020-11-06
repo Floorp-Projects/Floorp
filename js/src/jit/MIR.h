@@ -471,7 +471,6 @@ class MDefinition : public MNode {
   Opcode op_;              // Opcode.
   uint16_t flags_;         // Bit flags.
   Range* range_;           // Any computed range for this def.
-  MIRType resultType_;     // Representation of result type.
   TemporaryTypeSet* resultTypeSet_;  // Optional refinement of the result type.
   union {
     MDefinition*
@@ -485,6 +484,15 @@ class MDefinition : public MNode {
   // Track bailouts by storing the current pc in MIR instruction. Also used
   // for profiling and keeping track of what the last known pc was.
   const BytecodeSite* trackedSite_;
+
+  // If we generate a bailout path for this instruction, this is the
+  // bailout kind that will be encoded in the snapshot. When we bail out,
+  // FinishBailoutToBaseline may take action based on the bailout kind to
+  // prevent bailout loops. (For example, if an instruction bails out after
+  // being hoisted by LICM, we will disable LICM when recompiling the script.)
+  BailoutKind bailoutKind_;
+
+  MIRType resultType_;  // Representation of result type.
 
  private:
   enum Flag {
@@ -519,10 +527,11 @@ class MDefinition : public MNode {
         op_(op),
         flags_(0),
         range_(nullptr),
-        resultType_(MIRType::None),
         resultTypeSet_(nullptr),
         loadDependency_(nullptr),
-        trackedSite_(nullptr) {}
+        trackedSite_(nullptr),
+        bailoutKind_(BailoutKind::Unknown),
+        resultType_(MIRType::None) {}
 
   // Copying a definition leaves the list of uses and the block empty.
   explicit MDefinition(const MDefinition& other)
@@ -531,10 +540,11 @@ class MDefinition : public MNode {
         op_(other.op_),
         flags_(other.flags_),
         range_(other.range_),
-        resultType_(other.resultType_),
         resultTypeSet_(other.resultTypeSet_),
         loadDependency_(other.loadDependency_),
-        trackedSite_(other.trackedSite_) {}
+        trackedSite_(other.trackedSite_),
+        bailoutKind_(other.bailoutKind_),
+        resultType_(other.resultType_) {}
 
   Opcode op() const { return op_; }
 
@@ -571,6 +581,9 @@ class MDefinition : public MNode {
   InlineScriptTree* trackedTree() const {
     return trackedSite_ ? trackedSite_->tree() : nullptr;
   }
+
+  BailoutKind bailoutKind() const { return bailoutKind_; }
+  void setBailoutKind(BailoutKind kind) { bailoutKind_ = kind; }
 
   JSScript* profilerLeaveScript() const {
     return trackedTree()->outermostCaller()->script();

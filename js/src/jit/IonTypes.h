@@ -58,6 +58,8 @@ static const SnapshotOffset INVALID_SNAPSHOT_OFFSET = uint32_t(-1);
 
 // Different kinds of bailouts.
 enum class BailoutKind : uint8_t {
+  Unknown,
+
   // Normal bailouts, that don't need to be handled specially when restarting
   // in baseline.
 
@@ -262,6 +264,8 @@ enum class BailoutKind : uint8_t {
 
 inline const char* BailoutKindString(BailoutKind kind) {
   switch (kind) {
+    case BailoutKind::Unknown:
+      return "Unknown";
     // Normal bailouts.
     case BailoutKind::Inevitable:
       return "Inevitable";
