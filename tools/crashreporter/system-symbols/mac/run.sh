@@ -3,9 +3,9 @@
 set -v -e -x
 
 base="$(realpath "$(dirname "$0")")"
-export PATH="$PATH:/home/worker/bin:$base"
+export PATH="$PATH:/builds/worker/bin:$base"
 
-cd /home/worker
+cd /builds/worker
 
 if test "$PROCESSED_PACKAGES_INDEX" && test "$PROCESSED_PACKAGES_PATH" && test "$TASKCLUSTER_ROOT_URL"; then
   PROCESSED_PACKAGES="$TASKCLUSTER_ROOT_URL/api/index/v1/task/$PROCESSED_PACKAGES_INDEX/artifacts/$PROCESSED_PACKAGES_PATH"
@@ -31,21 +31,21 @@ fi
 mkdir -p /opt/data-reposado/html /opt/data-reposado/metadata
 
 # First, just fetch all the update info.
-repo_sync --no-download
+python3 /usr/local/bin/repo_sync --no-download
 
 # Next, fetch just the update packages we're interested in.
-packages=$(python "${base}/list-packages.py")
+packages=$(python3 "${base}/list-packages.py")
 # shellcheck disable=SC2086
-repo_sync $packages
+python3 /usr/local/bin/repo_sync $packages
 
 du -sh /opt/data-reposado
 
 # Now scrape symbols out of anything that was downloaded.
 mkdir -p symbols artifacts
-python "${base}/PackageSymbolDumper.py" --tracking-file=/home/worker/processed-packages --dump_syms=/home/worker/bin/dump_syms_mac /opt/data-reposado/html/content/downloads /home/worker/symbols
+python3 "${base}/PackageSymbolDumper.py" --tracking-file=/builds/worker/processed-packages --dump_syms=/builds/worker/bin/dump_syms_mac /opt/data-reposado/html/content/downloads /builds/worker/symbols
 
 # Hand out artifacts
 gzip -c processed-packages > artifacts/processed-packages.gz
 
 cd symbols
-zip -r9 /home/worker/artifacts/target.crashreporter-symbols.zip ./* || echo "No symbols dumped"
+zip -r9 /builds/worker/artifacts/target.crashreporter-symbols.zip ./* || echo "No symbols dumped"
