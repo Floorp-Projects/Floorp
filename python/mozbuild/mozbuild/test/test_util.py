@@ -22,6 +22,7 @@ from mozbuild.util import (
     expand_variables,
     group_unified_files,
     hash_file,
+    hexdump,
     memoize,
     memoized_property,
     pair,
@@ -912,6 +913,18 @@ class TestIndentedRepr(unittest.TestCase):
         write_indented_repr(buf, obj)
 
         self.assertEqual(buf.getvalue(), data)
+
+
+class TestHexDump(unittest.TestCase):
+    @unittest.skipUnless(six.PY3, "requires Python 3")
+    def test_hexdump(self):
+        self.assertEqual(
+            hexdump("abcdef123💩ZYXWVU".encode("utf-8")),
+            [
+                "00  61 62 63 64 65 66 31 32  33 f0 9f 92 a9 5a 59 58  |abcdef123....ZYX|\n",
+                "10  57 56 55                                          |WVU             |\n",
+            ],
+        )
 
 
 if __name__ == "__main__":
