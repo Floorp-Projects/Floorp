@@ -28,6 +28,7 @@ const FAKE_PROVIDERS = [
 ];
 const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 const FAKE_RESPONSE_HEADERS = { get() {} };
+const FAKE_BUNDLE = [FAKE_LOCAL_MESSAGES[1], FAKE_LOCAL_MESSAGES[2]];
 
 const USE_REMOTE_L10N_PREF =
   "browser.newtabpage.activity-stream.asrouter.useRemoteL10n";
@@ -1494,6 +1495,654 @@ describe("ASRouter", () => {
     });
   });
 
+  describe("sendNewTabMessage", () => {
+    it("should construct an appropriate response message", async () => {
+      Router.loadMessagesFromAllProviders.resetHistory();
+      Router.loadMessagesFromAllProviders.onFirstCall().resolves();
+
+      let message = {
+        id: "foo",
+        provider: "snippets",
+        groups: ["snippets"],
+      };
+
+      await Router.setState({
+        messages: [message],
+        providers: [{ id: "snippets" }],
+      });
+
+      ASRouterTargeting.findMatchingMessage.callsFake(
+        ({ messages }) => messages[0]
+      );
+
+      let response = await Router.sendNewTabMessage({
+        tabId: 0,
+        browser: {},
+      });
+
+      assert.deepEqual(response.message, message);
+    });
+    it("should send an empty object message if no bundle is available", async () => {
+      // force the only message to be a bundled message that needs 2 messages in the bundle
+      await Router.setState({
+        messages: [
+          {
+            id: "foo1",
+            groups: ["snippets"],
+            provider: "snippets",
+            template: "simple_template",
+            bundled: 2,
+            content: { title: "Foo1", body: "Foo123-1" },
+          },
+        ],
+      });
+      let response = await Router.sendNewTabMessage({
+        tabId: 0,
+        browser: {},
+      });
+      assert.deepEqual(response.message, {});
+    });
+    it("should send an empty object message if no messages are available", async () => {
+      await Router.setState({ messages: [] });
+      let response = await Router.sendNewTabMessage({
+        tabId: 0,
+        browser: {},
+      });
+
+      assert.deepEqual(response.message, {});
+    });
+
+    describe("#addPreviewEndpoint", () => {
+      it("should make a request to the provided endpoint", async () => {
+        const url = "https://snippets-admin.mozilla.org/foo";
+        const browser = {};
+        browser.sendMessageToActor = sandbox.stub();
+
+        await Router.sendNewTabMessage({
+          endpoint: { url },
+          tabId: 0,
+          browser,
+        });
+
+        assert.calledWith(global.fetch, url);
+        assert.lengthOf(
+          Router.state.providers.filter(p => p.url === url),
+          0
+        );
+      });
+      it("should send EnterSnippetPreviewMode when adding a preview endpoint", async () => {
+        const url = "https://snippets-admin.mozilla.org/foo";
+        const browser = {};
+        browser.sendMessageToActor = sandbox.stub();
+
+        await Router.addPreviewEndpoint(url, browser);
+
+        assert.calledWithExactly(
+          browser.sendMessageToActor,
+          "EnterSnippetsPreviewMode",
+          {},
+          "ASRouter"
+        );
+      });
+      it("should not add a url that is not from an allowed host", async () => {
+        const url = "https://mozilla.org";
+        const browser = {};
+        browser.sendMessageToActor = sandbox.stub();
+
+        await Router.addPreviewEndpoint(url, browser);
+
+        assert.lengthOf(
+          Router.state.providers.filter(p => p.url === url),
+          0
+        );
+      });
+      it("should reject bad urls", async () => {
+        const url = "foo";
+        const browser = {};
+        browser.sendMessageToActor = sandbox.stub();
+
+        await Router.addPreviewEndpoint(url, browser);
+
+        assert.lengthOf(
+          Router.state.providers.filter(p => p.url === url),
+          0
+        );
+      });
+    });
+
+    it("should handle onboarding message provider", async () => {
+      const handleMessageRequestStub = sandbox.stub(
+        Router,
+        "handleMessageRequest"
+      );
+      handleMessageRequestStub
+        .withArgs({
+          template: "extended_triplets",
+        })
+        .resolves({ id: "foo" });
+      sandbox.stub(Router, "sendNewTabMessage").resolves();
+      await Router.sendNewTabMessage({
+        tabId: 0,
+        browser: {},
+      });
+
+      assert.calledOnce(Router.sendNewTabMessage);
+    });
+    it("should hide extended triplets by default when browser.aboutwelcome.enabled is true", async () => {
+      const handleMessageRequestStub = sandbox.stub(
+        Router,
+        "handleMessageRequest"
+      );
+      handleMessageRequestStub
+        .withArgs({
+          template: "extended_triplets",
+        })
+        .resolves({ id: "foo" });
+      await Router.sendNewTabMessage({
+        tabId: 0,
+        browser: {},
+      });
+
+      assert.calledOnce(handleMessageRequestStub);
+      assert.calledWithExactly(handleMessageRequestStub, {
+        provider: "snippets",
+      });
+    });
+    it("should show extended triplets when browser.aboutwelcome.enabled is false", async () => {
+      globals.set({ isSeparateAboutWelcome: false });
+      const handleMessageRequestStub = sandbox.stub(
+        Router,
+        "handleMessageRequest"
+      );
+      handleMessageRequestStub
+        .withArgs({
+          template: "extended_triplets",
+        })
+        .resolves({ id: "foo" });
+      await Router.sendNewTabMessage({
+        tabId: 0,
+        browser: {},
+      });
+
+      assert.calledOnce(handleMessageRequestStub);
+      assert.calledWithExactly(handleMessageRequestStub, {
+        template: "extended_triplets",
+      });
+    });
+    it("should fallback to snippets if onboarding message provider returned none when browser.aboutwelcome.enabled is false", async () => {
+      globals.set({ isSeparateAboutWelcome: false });
+      const handleMessageRequestStub = sandbox.stub(
+        Router,
+        "handleMessageRequest"
+      );
+      handleMessageRequestStub
+        .withArgs({
+          template: "extended_triplets",
+        })
+        .resolves(null);
+      await Router.sendNewTabMessage({
+        tabId: 0,
+        browser: {},
+      });
+
+      assert.calledTwice(handleMessageRequestStub);
+      assert.calledWithExactly(handleMessageRequestStub, {
+        template: "extended_triplets",
+      });
+      assert.calledWithExactly(handleMessageRequestStub, {
+        provider: "snippets",
+      });
+    });
+    it("should record telemetry for message request duration", async () => {
+      const startTelemetryStopwatch = sandbox.stub(
+        global.TelemetryStopwatch,
+        "start"
+      );
+      const finishTelemetryStopwatch = sandbox.stub(
+        global.TelemetryStopwatch,
+        "finish"
+      );
+      sandbox.stub(Router, "handleMessageRequest");
+      const tabId = 123;
+      await Router.sendNewTabMessage({
+        tabId,
+        browser: {},
+      });
+
+      assert.calledOnce(startTelemetryStopwatch);
+      assert.calledWithExactly(
+        startTelemetryStopwatch,
+        "MS_MESSAGE_REQUEST_TIME_MS",
+        { tabId }
+      );
+      assert.calledOnce(finishTelemetryStopwatch);
+      assert.calledWithExactly(
+        finishTelemetryStopwatch,
+        "MS_MESSAGE_REQUEST_TIME_MS",
+        { tabId }
+      );
+    });
+    it("should return the preview message if that's available and remove it from Router.state", async () => {
+      const expectedObj = {
+        id: "foo",
+        groups: ["preview"],
+        provider: "preview",
+      };
+      await Router.setState({
+        messages: [expectedObj],
+        providers: [{ id: "preview" }],
+      });
+
+      ASRouterTargeting.findMatchingMessage.callsFake(
+        ({ messages }) => expectedObj
+      );
+
+      Router.loadMessagesFromAllProviders.resetHistory();
+      Router.loadMessagesFromAllProviders.onFirstCall().resolves();
+
+      let response = await Router.sendNewTabMessage({
+        endpoint: { url: "foo.com" },
+        tabId: 0,
+        browser: {},
+      });
+
+      assert.deepEqual(response.message, expectedObj);
+
+      assert.isUndefined(
+        Router.state.messages.find(m => m.provider === "preview")
+      );
+    });
+  });
+
+  describe("#setMessageById", async () => {
+    it("should call _getBundledMessages if we request a message that needs to be bundled", async () => {
+      sandbox.stub(Router, "_getBundledMessages").resolves();
+      // forcefully pick a message which needs to be bundled (the second message in FAKE_LOCAL_MESSAGES)
+      const [, testMessage] = Router.state.messages;
+      await Router.setMessageById({ id: testMessage.id });
+      assert.calledOnce(Router._getBundledMessages);
+    });
+    it("should properly pick another message of the same template if it is bundled; force = true", async () => {
+      // forcefully pick a message which needs to be bundled (the second message in FAKE_LOCAL_MESSAGES)
+      const [, testMessage1, testMessage2] = Router.state.messages;
+      let response = await Router.setMessageById(
+        { id: testMessage1.id },
+        true /* force */
+      );
+
+      // Expected object should have some properties of the original message it picked (testMessage1)
+      // plus the bundled content of the others that it picked of the same template (testMessage2)
+      const expectedObj = {
+        template: testMessage1.template,
+        provider: testMessage1.provider,
+        bundle: [
+          { content: testMessage1.content, id: testMessage1.id, order: 1 },
+          { content: testMessage2.content, id: testMessage2.id },
+        ],
+      };
+
+      assert.deepEqual(response.message, expectedObj);
+    });
+    it("should properly pick another message of the same template if it is bundled; force = false", async () => {
+      // forcefully pick a message which needs to be bundled (the second message in FAKE_LOCAL_MESSAGES)
+      const [, testMessage1, testMessage2] = Router.state.messages;
+
+      ASRouterTargeting.findMatchingMessage.callsFake(({ messages }) => [
+        messages[0],
+      ]);
+
+      let response = await Router.setMessageById(
+        { id: testMessage1.id },
+        false
+      );
+
+      // Expected object should have some properties of the original message it picked (testMessage1)
+      // plus the bundled content of the others that it picked of the same template (testMessage2)
+      const expectedObj = {
+        template: testMessage1.template,
+        provider: testMessage1.provider,
+        bundle: [
+          { content: testMessage1.content, id: testMessage1.id, order: 1 },
+          {
+            content: testMessage2.content,
+            id: testMessage2.id,
+            order: 2,
+            blockOnClick: false,
+          },
+        ],
+      };
+
+      assert.deepEqual(response.message, expectedObj);
+    });
+    it("should send an empty message if provided id did not resolve to a message", async () => {
+      let response = await Router.setMessageById({ id: -1 }, true, {});
+      assert.deepEqual(response.message, {});
+    });
+  });
+
+  describe("#isUnblockedMessage", () => {
+    it("should block a message if the group is blocked", async () => {
+      const msg = { id: "msg1", groups: ["foo"], provider: "unit-test" };
+      await Router.setState({
+        groups: [{ id: "foo", enabled: false }],
+        messages: [msg],
+        providers: [{ id: "unit-test" }],
+      });
+      assert.isFalse(Router.isUnblockedMessage(msg));
+
+      await Router.setState({ groups: [{ id: "foo", enabled: true }] });
+
+      assert.isTrue(Router.isUnblockedMessage(msg));
+    });
+    it("should block a message if at least one group is blocked", async () => {
+      const msg = {
+        id: "msg1",
+        groups: ["foo", "bar"],
+        provider: "unit-test",
+      };
+      await Router.setState({
+        groups: [
+          { id: "foo", enabled: false },
+          { id: "bar", enabled: false },
+        ],
+        messages: [msg],
+        providers: [{ id: "unit-test" }],
+      });
+      assert.isFalse(Router.isUnblockedMessage(msg));
+
+      await Router.setState({
+        groups: [
+          { id: "foo", enabled: true },
+          { id: "bar", enabled: false },
+        ],
+      });
+
+      assert.isFalse(Router.isUnblockedMessage(msg));
+    });
+  });
+
+  describe("#blockMessageById", () => {
+    it("should add the id to the messageBlockList", async () => {
+      await Router.blockMessageById("foo");
+      assert.isTrue(Router.state.messageBlockList.includes("foo"));
+    });
+    it("should add the campaign to the messageBlockList instead of id if .campaign is specified and not select messages of that campaign again", async () => {
+      await Router.setState({
+        messages: [
+          { id: "1", campaign: "foocampaign" },
+          { id: "2", campaign: "foocampaign" },
+        ],
+      });
+      await Router.blockMessageById("1");
+
+      assert.isTrue(Router.state.messageBlockList.includes("foocampaign"));
+      assert.isEmpty(Router.state.messages.filter(Router.isUnblockedMessage));
+    });
+    it("should be able to add multiple items to the messageBlockList", async () => {
+      await await Router.blockMessageById(FAKE_BUNDLE.map(b => b.id));
+      assert.isTrue(Router.state.messageBlockList.includes(FAKE_BUNDLE[0].id));
+      assert.isTrue(Router.state.messageBlockList.includes(FAKE_BUNDLE[1].id));
+    });
+    it("should save the messageBlockList", async () => {
+      await await Router.blockMessageById(FAKE_BUNDLE.map(b => b.id));
+      assert.calledWithExactly(Router._storage.set, "messageBlockList", [
+        FAKE_BUNDLE[0].id,
+        FAKE_BUNDLE[1].id,
+      ]);
+    });
+  });
+
+  describe("#unblockMessageById", () => {
+    it("should remove the id from the messageBlockList", async () => {
+      await Router.blockMessageById("foo");
+      assert.isTrue(Router.state.messageBlockList.includes("foo"));
+      await Router.unblockMessageById("foo");
+      assert.isFalse(Router.state.messageBlockList.includes("foo"));
+    });
+    it("should remove the campaign from the messageBlockList if it is defined", async () => {
+      await Router.setState({ messages: [{ id: "1", campaign: "foo" }] });
+      await Router.blockMessageById("1");
+      assert.isTrue(
+        Router.state.messageBlockList.includes("foo"),
+        "blocklist has campaign id"
+      );
+      await Router.unblockMessageById("1");
+      assert.isFalse(
+        Router.state.messageBlockList.includes("foo"),
+        "campaign id removed from blocklist"
+      );
+    });
+    it("should save the messageBlockList", async () => {
+      await Router.unblockMessageById("foo");
+      assert.calledWithExactly(Router._storage.set, "messageBlockList", []);
+    });
+  });
+
+  describe("#sendMessage", () => {
+    it("should allow for echoing back message modifications", async () => {
+      const message = { somekey: "some value" };
+      const data = { content: message };
+      const browser = {};
+      let msg = await Router.sendMessage(data.content, data, false, browser);
+      assert.deepEqual(msg.message, message);
+    });
+    it("should call CFRPageActions.forceRecommendation if the template is cfr_action and force is true", async () => {
+      sandbox.stub(CFRPageActions, "forceRecommendation");
+      const testMessage = { id: "foo", template: "cfr_doorhanger" };
+      await Router.setState({ messages: [testMessage] });
+      await Router.sendMessage(testMessage, null, true, {});
+
+      assert.calledOnce(CFRPageActions.forceRecommendation);
+    });
+    it("should call BookmarkPanelHub.forceShowMessage the provider is cfr-fxa", async () => {
+      const testMessage = { id: "foo", template: "fxa_bookmark_panel" };
+      await Router.setState({ messages: [testMessage] });
+      await Router.sendMessage(testMessage, null, true, {});
+      assert.calledOnce(FakeBookmarkPanelHub.forceShowMessage);
+    });
+    it("should call CFRPageActions.addRecommendation if the template is cfr_action and force is false", async () => {
+      sandbox.stub(CFRPageActions, "addRecommendation");
+      const testMessage = { id: "foo", template: "cfr_doorhanger" };
+      await Router.setState({ messages: [testMessage] });
+      await Router.sendMessage(testMessage, {}, false, {});
+      assert.calledOnce(CFRPageActions.addRecommendation);
+    });
+  });
+
+  describe("#updateTargetingParameters", () => {
+    it("should return an object containing the whole state", async () => {
+      sandbox.stub(Router, "getTargetingParameters").resolves({});
+      let msg = await Router.updateTargetingParameters();
+      let expected = Object.assign({}, Router.state, {
+        providerPrefs: ASRouterPreferences.providers,
+        userPrefs: ASRouterPreferences.getAllUserPreferences(),
+        targetingParameters: {},
+        trailheadTriplet: ASRouterPreferences.trailheadTriplet,
+        errors: Router.errors,
+      });
+
+      assert.deepEqual(msg, expected);
+    });
+  });
+
+  describe("#sendTriggerMessage", () => {
+    it("should pass the trigger to ASRouterTargeting when sending trigger message", async () => {
+      await Router.setState({
+        messages: [
+          {
+            id: "foo1",
+            provider: "onboarding",
+            template: "onboarding",
+            trigger: { id: "firstRun" },
+            content: { title: "Foo1", body: "Foo123-1" },
+            groups: ["onboarding"],
+          },
+        ],
+        providers: [{ id: "onboarding" }],
+      });
+
+      Router.loadMessagesFromAllProviders.resetHistory();
+      Router.loadMessagesFromAllProviders.onFirstCall().resolves();
+
+      await Router.sendTriggerMessage({
+        tabId: 0,
+        browser: {},
+        id: "firstRun",
+      });
+
+      assert.calledOnce(ASRouterTargeting.findMatchingMessage);
+      assert.deepEqual(
+        ASRouterTargeting.findMatchingMessage.firstCall.args[0].trigger,
+        {
+          id: "firstRun",
+          param: undefined,
+          context: undefined,
+        }
+      );
+    });
+    it("should record telemetry information", async () => {
+      const startTelemetryStopwatch = sandbox.stub(
+        global.TelemetryStopwatch,
+        "start"
+      );
+      const finishTelemetryStopwatch = sandbox.stub(
+        global.TelemetryStopwatch,
+        "finish"
+      );
+
+      const tabId = 123;
+
+      await Router.sendTriggerMessage({
+        tabId,
+        browser: {},
+        id: "firstRun",
+      });
+
+      assert.calledOnce(startTelemetryStopwatch);
+      assert.calledWithExactly(
+        startTelemetryStopwatch,
+        "MS_MESSAGE_REQUEST_TIME_MS",
+        { tabId }
+      );
+      assert.calledOnce(finishTelemetryStopwatch);
+      assert.calledWithExactly(
+        finishTelemetryStopwatch,
+        "MS_MESSAGE_REQUEST_TIME_MS",
+        { tabId }
+      );
+    });
+    it("should have previousSessionEnd in the message context", () => {
+      assert.propertyVal(
+        Router._getMessagesContext(),
+        "previousSessionEnd",
+        100
+      );
+    });
+    it("should record the Reach event if found any", async () => {
+      let messages = [
+        {
+          id: "foo1",
+          forReachEvent: { sent: false, group: "cfr" },
+          experimentSlug: "exp01",
+          branchSlug: "branch01",
+          template: "simple_template",
+          trigger: { id: "foo" },
+          content: { title: "Foo1", body: "Foo123-1" },
+        },
+        {
+          id: "foo2",
+          template: "simple_template",
+          trigger: { id: "bar" },
+          content: { title: "Foo2", body: "Foo123-2" },
+          provider: "onboarding",
+        },
+        {
+          id: "foo3",
+          forReachEvent: { sent: false, group: "cfr" },
+          experimentSlug: "exp02",
+          branchSlug: "branch02",
+          template: "simple_template",
+          trigger: { id: "foo" },
+          content: { title: "Foo1", body: "Foo123-1" },
+        },
+      ];
+      sandbox.stub(Router, "handleMessageRequest").resolves(messages);
+      sandbox.spy(Services.telemetry, "recordEvent");
+
+      await Router.sendTriggerMessage({
+        tabId: 0,
+        browser: {},
+        id: "foo",
+      });
+
+      assert.calledTwice(Services.telemetry.recordEvent);
+    });
+    it("should not record the Reach event if it's already sent", async () => {
+      let messages = [
+        {
+          id: "foo1",
+          forReachEvent: { sent: true, group: "cfr" },
+          experimentSlug: "exp01",
+          branchSlug: "branch01",
+          template: "simple_template",
+          trigger: { id: "foo" },
+          content: { title: "Foo1", body: "Foo123-1" },
+        },
+      ];
+      sandbox.stub(Router, "handleMessageRequest").resolves(messages);
+      sandbox.spy(Services.telemetry, "recordEvent");
+
+      await Router.sendTriggerMessage({
+        tabId: 0,
+        browser: {},
+        id: "foo",
+      });
+      assert.notCalled(Services.telemetry.recordEvent);
+    });
+  });
+
+  describe("_getBundledMessages", () => {
+    it("should return a null bundle if we do not have enough messages to fill the bundle", async () => {
+      // force the only message to be a bundled message that needs 2 messages in the bundle
+      await Router.setState({
+        messages: [
+          {
+            id: "foo1",
+            template: "simple_template",
+            bundled: 2,
+            content: { title: "Foo1", body: "Foo123-1" },
+            groups: ["bundle"],
+            provider: "snippets",
+          },
+        ],
+        providers: [{ id: "snippets" }],
+      });
+      const bundle = await Router._getBundledMessages(Router.state.messages[0]);
+      assert.equal(bundle, null);
+    });
+    it("should send down extra attributes in the bundle if they exist", async () => {
+      sandbox.stub(Router, "_findProvider").returns({
+        getExtraAttributes() {
+          return Promise.resolve({ header: "header" });
+        },
+      });
+      await Router.setState({
+        messages: [
+          {
+            id: "foo1",
+            template: "simple_template",
+            bundled: 1,
+            content: { title: "Foo1", body: "Foo123-1" },
+            groups: ["snippets"],
+          },
+        ],
+        providers: [{ id: "snippets" }],
+      });
+      const result = await Router._getBundledMessages(Router.state.messages[0]);
+      assert.equal(result.extraTemplateStrings.header, "header");
+    });
+  });
+
   describe("forceAttribution", () => {
     let setReferrerUrl;
     beforeEach(() => {
@@ -1523,6 +2172,29 @@ describe("ASRouter", () => {
 
       assert.calledOnce(setReferrerUrl);
       assert.calledWithMatch(setReferrerUrl, "", "?foo=FOO!&bar=BAR%3F");
+    });
+  });
+
+  describe("#forceWNPanel", () => {
+    let browserWindow = {
+      document: new Document(),
+      PanelUI: {
+        showSubView: sinon.stub(),
+        panel: {
+          setAttribute: sinon.stub(),
+        },
+      },
+    };
+    let fakePanel = {
+      setAttribute: sinon.stub(),
+    };
+    sinon.stub(browserWindow.document, "getElementById").returns(fakePanel);
+
+    it("should call enableToolbarButton", async () => {
+      await Router.forceWNPanel(browserWindow);
+      assert.calledOnce(FakeToolbarPanelHub.enableToolbarButton);
+      assert.calledOnce(browserWindow.PanelUI.showSubView);
+      assert.calledWith(fakePanel.setAttribute, "noautohide", true);
     });
   });
 

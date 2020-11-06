@@ -77,17 +77,27 @@ describe("ASRouterParent", () => {
         data: { id: 1 },
       });
       assert.calledOnce(handleMessage);
+      // No "ClearMessages" message should be sent.
       assert.notCalled(ASRouterParent.tabs.messagePreloaded);
       assert.equal(result, "handle-message-result");
     });
-    it("passes preloadedOnly BLOCK_MESSAGE_BY_ID calls to messagePreloaded and returns false", async () => {
-      const result = await asRouterParent.receiveMessage({
-        name: msg.BLOCK_MESSAGE_BY_ID,
-        data: { id: 1, preloadedOnly: true },
-      });
-      assert.calledOnce(handleMessage);
-      assert.calledOnce(ASRouterParent.tabs.messagePreloaded);
-      assert.equal(result, false);
-    });
+    it(
+      "passes preloadedOnly BLOCK_MESSAGE_BY_ID calls to messagePreloaded, sends " +
+        "a message to clear messages, and then returns false",
+      async () => {
+        const MESSAGE_ID = 1;
+        const result = await asRouterParent.receiveMessage({
+          name: msg.BLOCK_MESSAGE_BY_ID,
+          data: { id: MESSAGE_ID, preloadedOnly: true },
+        });
+        assert.calledOnce(handleMessage);
+        assert.calledWithExactly(
+          ASRouterParent.tabs.messagePreloaded,
+          "ClearMessages",
+          [MESSAGE_ID]
+        );
+        assert.equal(result, false);
+      }
+    );
   });
 });
