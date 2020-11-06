@@ -2,7 +2,11 @@ use hal::adapter::{AdapterInfo, DeviceType};
 
 use winapi::{
     shared::{
-        dxgi, dxgi1_2, dxgi1_3, dxgi1_4, dxgi1_5,
+        dxgi,
+        dxgi1_2,
+        dxgi1_3,
+        dxgi1_4,
+        dxgi1_5,
         guiddef::{GUID, REFIID},
         winerror,
     },
@@ -150,7 +154,7 @@ fn get_adapter_desc(adapter: *mut dxgi::IDXGIAdapter, version: DxgiVersion) -> A
 
             let device_name = {
                 let len = desc.Description.iter().take_while(|&&c| c != 0).count();
-                let name = <OsString as OsStringExt>::from_wide(&desc.Description[..len]);
+                let name = <OsString as OsStringExt>::from_wide(&desc.Description[.. len]);
                 name.to_string_lossy().into_owned()
             };
 
@@ -176,7 +180,7 @@ fn get_adapter_desc(adapter: *mut dxgi::IDXGIAdapter, version: DxgiVersion) -> A
 
             let device_name = {
                 let len = desc.Description.iter().take_while(|&&c| c != 0).count();
-                let name = <OsString as OsStringExt>::from_wide(&desc.Description[..len]);
+                let name = <OsString as OsStringExt>::from_wide(&desc.Description[.. len]);
                 name.to_string_lossy().into_owned()
             };
 

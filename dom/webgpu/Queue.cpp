@@ -79,8 +79,8 @@ void Queue::WriteTexture(const dom::GPUTextureCopyView& aDestination,
   ffi::WGPUExtent3d extent = {};
   CommandEncoder::ConvertExtent3DToFFI(aSize, &extent);
 
-  const auto bpb = aDestination.mTexture->mBytesPerBlock;
-  if (!bpb) {
+  const auto bpt = aDestination.mTexture->BytesPerTexel();
+  if (bpt == 0) {
     aRv.ThrowAbortError(nsPrintfCString("Invalid texture format"));
     return;
   }
@@ -89,13 +89,12 @@ void Queue::WriteTexture(const dom::GPUTextureCopyView& aDestination,
     return;
   }
 
-  // TODO: support block-compressed formats
   aData.ComputeState();
   const auto fullRows =
       (CheckedInt<size_t>(extent.depth - 1) * aDataLayout.mRowsPerImage +
        extent.height - 1);
   const auto checkedSize = fullRows * aDataLayout.mBytesPerRow +
-                           CheckedInt<size_t>(extent.width) * bpb.value();
+                           CheckedInt<size_t>(extent.width) * bpt;
   if (!checkedSize.isValid()) {
     aRv.ThrowRangeError("Mapped size is too large");
     return;

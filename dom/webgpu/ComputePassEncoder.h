@@ -32,7 +32,7 @@ class ComputePassEncoder final : public ObjectBase,
   virtual ~ComputePassEncoder();
   void Cleanup() {}
 
-  ffi::WGPUComputePass* const mRaw;
+  ffi::WGPURawPass mRaw;
   // keep all the used objects alive while the pass is recorded
   nsTArray<RefPtr<const BindGroup>> mUsedBindGroups;
   nsTArray<RefPtr<const ComputePipeline>> mUsedPipelines;

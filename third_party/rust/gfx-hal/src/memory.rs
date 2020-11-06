@@ -1,4 +1,4 @@
-//! Types to describe the properties of memory allocated for graphics resources.
+//! Types to describe the properties of memory allocated for gfx resources.
 
 use crate::{buffer, image, queue, Backend};
 use std::ops::Range;
@@ -99,7 +99,7 @@ pub struct Requirements {
     /// Memory alignment.
     pub alignment: u64,
     /// Supported memory types.
-    pub type_mask: u32,
+    pub type_mask: u64,
 }
 
 /// A linear segment within a memory block.

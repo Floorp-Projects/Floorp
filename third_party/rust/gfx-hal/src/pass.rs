@@ -1,17 +1,9 @@
-//! Render pass handling.
-//!
-//! A *render pass* represents a collection of
-//!
-//! - [attachments][crate::pass::Attachment]
-//! - [subpasses][crate::pass::SubpassDesc]
-//! - [dependencies][crate::pass::SubpassDependency] between the subpasses
-//!
-//! and describes how the attachments are used over the course of the subpasses.
+//! RenderPass handling.
 
 use crate::{format::Format, image, memory::Dependencies, pso::PipelineStage, Backend};
 use std::ops::Range;
 
-/// Specifies the operation to be used when reading data from a subpass attachment.
+/// Specifies the operation which will be applied at the beginning of a subpass.
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AttachmentLoadOp {
@@ -23,7 +15,7 @@ pub enum AttachmentLoadOp {
     DontCare,
 }
 
-/// Specifies the operation to be used when writing data to a subpass attachment.
+///
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AttachmentStoreOp {
@@ -79,27 +71,23 @@ impl AttachmentOps {
     }
 }
 
-/// An attachment is a description of a resource provided to a render subpass.
-///
+/// An `Attachment` is a description of a resource provided to a render subpass.
 /// It includes things such as render targets, images that were produced from
 /// previous subpasses, etc.
 #[derive(Clone, Debug, Hash, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Attachment {
-    /// Format of this attachment.
+    /// Attachment format
     ///
     /// In the most cases `format` is not `None`. It should be only used for
     /// creating dummy renderpasses, which are used as placeholder for compatible
     /// renderpasses.
     pub format: Option<Format>,
-    /// Number of samples to use when loading from this attachment.
-    ///
-    /// If greater than 1, [multisampling](https://en.wikipedia.org/wiki/Multisample_anti-aliasing)
-    /// will take effect.
+    /// Number of samples.
     pub samples: image::NumSamples,
-    /// Load and store operations of the attachment.
+    /// Load and store operations of the attachment
     pub ops: AttachmentOps,
-    /// Load and store operations of the stencil aspect, if any.
+    /// Load and store operations of the stencil aspect, if any
     #[cfg_attr(feature = "serde", serde(default = "AttachmentOps::whatever"))]
     pub stencil_ops: AttachmentOps,
     /// Initial and final image layouts of the renderpass.
@@ -107,9 +95,8 @@ pub struct Attachment {
 }
 
 impl Attachment {
-    /// Returns true if this attachment has some clear operations.
-    ///
-    /// Useful when starting a render pass, since there has to be a clear value provided.
+    /// Returns true if this attachment has some clear operations. This is useful
+    /// when starting a render pass, since there has to be a clear value provided.
     pub fn has_clears(&self) -> bool {
         self.ops.load == AttachmentLoadOp::Clear || self.stencil_ops.load == AttachmentLoadOp::Clear
     }
@@ -125,10 +112,9 @@ pub const ATTACHMENT_UNUSED: AttachmentId = !0;
 /// Index of a subpass.
 pub type SubpassId = u8;
 
-/// Expresses a dependency between multiple [subpasses][SubpassDesc].
-///
-/// This is used both to describe a source or destination subpass;
-/// data either explicitly passes from this subpass to the next or from another
+/// Expresses a dependency between multiple subpasses. This is used
+/// both to describe a source or destination subpass; data either
+/// explicitly passes from this subpass to the next or from another
 /// subpass into this one.
 #[derive(Clone, Debug, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -146,7 +132,7 @@ pub struct SubpassDependency {
     pub flags: Dependencies,
 }
 
-/// Description of a subpass for render pass creation.
+/// Description of a subpass for renderpass creation.
 #[derive(Clone, Debug)]
 pub struct SubpassDesc<'a> {
     /// Which attachments will be used as color buffers.
@@ -158,11 +144,8 @@ pub struct SubpassDesc<'a> {
     /// Which attachments will be used as resolve destinations.
     ///
     /// The number of resolve attachments may be zero or equal to the number of color attachments.
-    ///
     /// At the end of a subpass the color attachment will be resolved to the corresponding
-    /// resolve attachment.
-    ///
-    /// The resolve attachment must not be multisampled.
+    /// resolve attachment. The resolve attachment must not be multisampled.
     pub resolves: &'a [AttachmentRef],
     /// Attachments that are not used by the subpass but must be preserved to be
     /// passed on to subsequent passes.
@@ -189,7 +172,7 @@ impl<'a, B: Backend> Clone for Subpass<'a, B> {
 
 impl<'a, B: Backend> PartialEq for Subpass<'a, B> {
     fn eq(&self, other: &Self) -> bool {
-        self.index == other.index && std::ptr::eq(self.main_pass, other.main_pass)
+        self.index == other.index && self.main_pass as *const _ == other.main_pass as *const _
     }
 }
 

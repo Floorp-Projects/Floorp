@@ -1,4 +1,6 @@
 use crate::Size;
+#[cfg(feature = "colorful")]
+use colorful::{core::color_string::CString, Color, Colorful as _};
 use hal::memory::Properties;
 
 /// Memory utilization stats.
@@ -43,6 +45,7 @@ pub struct TotalMemoryUtilization {
     pub heaps: Vec<MemoryHeapUtilization>,
 }
 
+#[cfg(feature = "colorful")]
 impl std::fmt::Display for TotalMemoryUtilization {
     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         const MB: Size = 1024 * 1024;
@@ -64,15 +67,16 @@ impl std::fmt::Display for TotalMemoryUtilization {
                 10000
             };
 
-            let line = "|".repeat(fill) + &(" ".repeat(50 - fill));
+            let line = ("|".repeat(fill) + &(" ".repeat(50 - fill)))
+                .gradient_with_color(Color::Green, Color::Red);
             writeln!(
                 fmt,
                 "Heap {}:\n{:6} / {:<6} or{} {{ effective:{} }} [{}]",
-                format!("{}", index),
+                format!("{}", index).magenta(),
                 format!("{}MB", used / MB),
                 format!("{}MB", size / MB),
                 format_basis_points(usage_basis_points),
-                format_basis_points(effective_basis_points),
+                format_basis_points_inverted(effective_basis_points),
                 line
             )?;
 
@@ -91,7 +95,7 @@ impl std::fmt::Display for TotalMemoryUtilization {
                     "         {:>6} or{} {{ effective:{} }} | {:?}",
                     format!("{}MB", used / MB),
                     format_basis_points(usage_basis_points),
-                    format_basis_points(effective_basis_points),
+                    format_basis_points_inverted(effective_basis_points),
                     properties,
                 )?;
             }
@@ -101,7 +105,36 @@ impl std::fmt::Display for TotalMemoryUtilization {
     }
 }
 
-fn format_basis_points(basis_points: Size) -> String {
+#[cfg(feature = "colorful")]
+fn format_basis_points(basis_points: Size) -> CString {
     debug_assert!(basis_points <= 10000);
-    format!("{:>3}.{:02}%", basis_points / 100, basis_points % 100)
+    let s = format!("{:>3}.{:02}%", basis_points / 100, basis_points % 100);
+    if basis_points > 7500 {
+        s.red()
+    } else if basis_points > 5000 {
+        s.yellow()
+    } else if basis_points > 2500 {
+        s.green()
+    } else if basis_points > 100 {
+        s.blue()
+    } else {
+        s.white()
+    }
+}
+
+#[cfg(feature = "colorful")]
+fn format_basis_points_inverted(basis_points: Size) -> CString {
+    debug_assert!(basis_points <= 10000);
+    let s = format!("{:>3}.{:02}%", basis_points / 100, basis_points % 100);
+    if basis_points > 9900 {
+        s.white()
+    } else if basis_points > 7500 {
+        s.blue()
+    } else if basis_points > 5000 {
+        s.green()
+    } else if basis_points > 2500 {
+        s.yellow()
+    } else {
+        s.red()
+    }
 }

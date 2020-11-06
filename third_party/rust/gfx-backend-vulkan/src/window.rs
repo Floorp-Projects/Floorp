@@ -1,6 +1,7 @@
 use std::{
     borrow::Borrow,
-    fmt, hash,
+    fmt,
+    hash,
     os::raw::c_void,
     ptr,
     sync::{Arc, Mutex},
@@ -13,7 +14,14 @@ use smallvec::SmallVec;
 
 use crate::{conv, info, native};
 use crate::{
-    Backend, Device, Instance, PhysicalDevice, QueueFamily, RawDevice, RawInstance, VK_ENTRY,
+    Backend,
+    Device,
+    Instance,
+    PhysicalDevice,
+    QueueFamily,
+    RawDevice,
+    RawInstance,
+    VK_ENTRY,
 };
 
 #[derive(Debug, Default)]
@@ -384,9 +392,9 @@ impl w::Surface<Backend> for Surface {
                     u | conv::map_vk_present_mode(m)
                 }),
             composite_alpha_modes: conv::map_vk_composite_alpha(caps.supported_composite_alpha),
-            image_count: caps.min_image_count..=max_images,
+            image_count: caps.min_image_count ..= max_images,
             current_extent,
-            extents: min_extent..=max_extent,
+            extents: min_extent ..= max_extent,
             max_image_layers: caps.max_image_array_layers as _,
             usage: conv::map_vk_image_usage(caps.supported_usage_flags),
         }
@@ -462,7 +470,8 @@ impl w::PresentationSurface<Backend> for Surface {
                             hal::format::Swizzle::NO,
                             hal::image::SubresourceRange {
                                 aspects: hal::format::Aspects::COLOR,
-                                ..Default::default()
+                                layers: 0 .. 1,
+                                levels: 0 .. 1,
                             },
                         )
                         .unwrap();
@@ -489,6 +498,8 @@ impl w::PresentationSurface<Backend> for Surface {
         &mut self,
         mut timeout_ns: u64,
     ) -> Result<(Self::SwapchainImage, Option<w::Suboptimal>), w::AcquireError> {
+        use hal::window::Swapchain as _;
+
         let ssc = self.swapchain.as_mut().unwrap();
         let moment = Instant::now();
         let (index, suboptimal) =
@@ -513,7 +524,8 @@ impl w::PresentationSurface<Backend> for Surface {
                         view: frame.view,
                         range: hal::image::SubresourceRange {
                             aspects: hal::format::Aspects::COLOR,
-                            ..Default::default()
+                            layers: 0 .. 1,
+                            levels: 0 .. 1,
                         },
                         owner: native::ImageViewOwner::Surface(FramebufferCachePtr(Arc::clone(
                             &frame.framebuffers.0,
@@ -554,7 +566,7 @@ impl fmt::Debug for Swapchain {
     }
 }
 
-impl Swapchain {
+impl w::Swapchain<Backend> for Swapchain {
     unsafe fn acquire_image(
         &mut self,
         timeout_ns: u64,

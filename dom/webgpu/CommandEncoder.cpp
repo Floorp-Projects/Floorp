@@ -111,11 +111,9 @@ void CommandEncoder::CopyBufferToBuffer(const Buffer& aSource,
                                         BufferAddress aDestinationOffset,
                                         BufferAddress aSize) {
   if (mValid) {
-    ipc::ByteBuf bb;
-    ffi::wgpu_command_encoder_copy_buffer_to_buffer(
-        aSource.mId, aSourceOffset, aDestination.mId, aDestinationOffset, aSize,
-        ToFFI(&bb));
-    mBridge->SendCommandEncoderAction(mId, std::move(bb));
+    mBridge->SendCommandEncoderCopyBufferToBuffer(
+        mId, aSource.mId, aSourceOffset, aDestination.mId, aDestinationOffset,
+        aSize);
   }
 }
 
@@ -124,11 +122,11 @@ void CommandEncoder::CopyBufferToTexture(
     const dom::GPUTextureCopyView& aDestination,
     const dom::GPUExtent3D& aCopySize) {
   if (mValid) {
-    ipc::ByteBuf bb;
-    ffi::wgpu_command_encoder_copy_buffer_to_texture(
-        ConvertBufferCopyView(aSource), ConvertTextureCopyView(aDestination),
-        ConvertExtent(aCopySize), ToFFI(&bb));
-    mBridge->SendCommandEncoderAction(mId, std::move(bb));
+    const auto source = ConvertBufferCopyView(aSource);
+    const auto destination = ConvertTextureCopyView(aDestination);
+    const auto size = ConvertExtent(aCopySize);
+    mBridge->SendCommandEncoderCopyBufferToTexture(mId, source, destination,
+                                                   size);
   }
 }
 void CommandEncoder::CopyTextureToBuffer(
@@ -136,11 +134,11 @@ void CommandEncoder::CopyTextureToBuffer(
     const dom::GPUBufferCopyView& aDestination,
     const dom::GPUExtent3D& aCopySize) {
   if (mValid) {
-    ipc::ByteBuf bb;
-    ffi::wgpu_command_encoder_copy_texture_to_buffer(
-        ConvertTextureCopyView(aSource), ConvertBufferCopyView(aDestination),
-        ConvertExtent(aCopySize), ToFFI(&bb));
-    mBridge->SendCommandEncoderAction(mId, std::move(bb));
+    const auto source = ConvertTextureCopyView(aSource);
+    const auto destination = ConvertBufferCopyView(aDestination);
+    const auto size = ConvertExtent(aCopySize);
+    mBridge->SendCommandEncoderCopyTextureToBuffer(mId, source, destination,
+                                                   size);
   }
 }
 void CommandEncoder::CopyTextureToTexture(
@@ -148,11 +146,11 @@ void CommandEncoder::CopyTextureToTexture(
     const dom::GPUTextureCopyView& aDestination,
     const dom::GPUExtent3D& aCopySize) {
   if (mValid) {
-    ipc::ByteBuf bb;
-    ffi::wgpu_command_encoder_copy_texture_to_texture(
-        ConvertTextureCopyView(aSource), ConvertTextureCopyView(aDestination),
-        ConvertExtent(aCopySize), ToFFI(&bb));
-    mBridge->SendCommandEncoderAction(mId, std::move(bb));
+    const auto source = ConvertTextureCopyView(aSource);
+    const auto destination = ConvertTextureCopyView(aDestination);
+    const auto size = ConvertExtent(aCopySize);
+    mBridge->SendCommandEncoderCopyTextureToTexture(mId, source, destination,
+                                                    size);
   }
 }
 
@@ -179,26 +177,36 @@ already_AddRefed<RenderPassEncoder> CommandEncoder::BeginRenderPass(
   return pass.forget();
 }
 
-void CommandEncoder::EndComputePass(ffi::WGPUComputePass& aPass,
+void CommandEncoder::EndComputePass(Span<const uint8_t> aData,
                                     ErrorResult& aRv) {
   if (!mValid) {
     return aRv.ThrowInvalidStateError("Command encoder is not valid");
   }
+  ipc::Shmem shmem;
+  if (!mBridge->AllocShmem(aData.Length(), ipc::Shmem::SharedMemory::TYPE_BASIC,
+                           &shmem)) {
+    return aRv.ThrowAbortError(nsPrintfCString(
+        "Unable to allocate shmem of size %zu", aData.Length()));
+  }
 
-  ipc::ByteBuf byteBuf;
-  ffi::wgpu_compute_pass_finish(&aPass, ToFFI(&byteBuf));
-  mBridge->SendCommandEncoderAction(mId, std::move(byteBuf));
+  memcpy(shmem.get<uint8_t>(), aData.data(), aData.Length());
+  mBridge->SendCommandEncoderRunComputePass(mId, std::move(shmem));
 }
 
-void CommandEncoder::EndRenderPass(ffi::WGPURenderPass& aPass,
+void CommandEncoder::EndRenderPass(Span<const uint8_t> aData,
                                    ErrorResult& aRv) {
   if (!mValid) {
     return aRv.ThrowInvalidStateError("Command encoder is not valid");
   }
+  ipc::Shmem shmem;
+  if (!mBridge->AllocShmem(aData.Length(), ipc::Shmem::SharedMemory::TYPE_BASIC,
+                           &shmem)) {
+    return aRv.ThrowAbortError(nsPrintfCString(
+        "Unable to allocate shmem of size %zu", aData.Length()));
+  }
 
-  ipc::ByteBuf byteBuf;
-  ffi::wgpu_render_pass_finish(&aPass, ToFFI(&byteBuf));
-  mBridge->SendCommandEncoderAction(mId, std::move(byteBuf));
+  memcpy(shmem.get<uint8_t>(), aData.data(), aData.Length());
+  mBridge->SendCommandEncoderRunRenderPass(mId, std::move(shmem));
 }
 
 already_AddRefed<CommandBuffer> CommandEncoder::Finish(

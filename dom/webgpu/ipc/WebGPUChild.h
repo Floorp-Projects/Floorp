@@ -24,8 +24,6 @@ struct WGPUTextureViewDescriptor;
 
 typedef MozPromise<RawId, Maybe<ipc::ResponseRejectReason>, true> RawIdPromise;
 
-ffi::WGPUByteBuf* ToFFI(ipc::ByteBuf* x);
-
 class WebGPUChild final : public PWebGPUChild {
  public:
   friend class layers::CompositorBridgeChild;
@@ -44,10 +42,13 @@ class WebGPUChild final : public PWebGPUChild {
                                     const dom::GPUDeviceDescriptor& aDesc);
   RawId DeviceCreateBuffer(RawId aSelfId,
                            const dom::GPUBufferDescriptor& aDesc);
+  static UniquePtr<ffi::WGPUTextureViewDescriptor> GetDefaultViewDescriptor(
+      const dom::GPUTextureDescriptor& aDesc);
   RawId DeviceCreateTexture(RawId aSelfId,
                             const dom::GPUTextureDescriptor& aDesc);
-  RawId TextureCreateView(RawId aSelfId,
-                          const dom::GPUTextureViewDescriptor& aDesc);
+  RawId TextureCreateView(
+      RawId aSelfId, const dom::GPUTextureViewDescriptor& aDesc,
+      const ffi::WGPUTextureViewDescriptor& aDefaultViewDesc);
   RawId DeviceCreateSampler(RawId aSelfId,
                             const dom::GPUSamplerDescriptor& aDesc);
   RawId DeviceCreateCommandEncoder(

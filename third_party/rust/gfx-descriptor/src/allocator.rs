@@ -25,17 +25,8 @@ pub struct DescriptorSet<B: Backend> {
 }
 
 impl<B: Backend> DescriptorSet<B> {
-    /// Get a reference to gfx-hal descriptor set.
     pub fn raw(&self) -> &B::DescriptorSet {
         &self.raw
-    }
-
-    /// Get a mutable reference to gfx-hal descriptor set.
-    ///
-    /// # Safety
-    /// Object needs not to be replaced.
-    pub unsafe fn raw_mut(&mut self) -> &mut B::DescriptorSet {
-        &mut self.raw
     }
 }
 
@@ -46,23 +37,19 @@ struct Allocation<B: Backend> {
 }
 
 impl<B: Backend> Allocation<B> {
-    fn grow(
+    unsafe fn grow(
         &mut self,
         pool: &mut B::DescriptorPool,
         layout: &B::DescriptorSetLayout,
         count: u32,
     ) -> Result<(), OutOfMemory> {
         let sets_were = self.sets.len();
-        match unsafe {
-            pool.allocate(
-                std::iter::repeat(layout).take(count as usize),
-                &mut self.sets,
-            )
-        } {
+        match pool.allocate(std::iter::repeat(layout).take(count as usize), &mut self.sets) {
             Err(err) => {
-                unsafe { pool.free(self.sets.drain(sets_were..)) };
-                match err {
-                    AllocationError::OutOfMemory(oom) => Err(oom),
+                pool.free_sets(self.sets.drain(sets_were..));
+                Err(match err {
+                    AllocationError::Host => OutOfMemory::Host,
+                    AllocationError::Device => OutOfMemory::Device,
                     _ => {
                         // We check pool for free descriptors and sets before calling this function,
                         // so it can't be exhausted.
@@ -77,7 +64,7 @@ impl<B: Backend> Allocation<B> {
                         // """
                         panic!("Unexpected error: {:?}", err);
                     }
-                }
+                })
             }
             Ok(()) => {
                 assert_eq!(self.sets.len(), sets_were + count as usize);
@@ -118,7 +105,7 @@ impl<B: Backend> DescriptorBucket<B> {
             .next_power_of_two() // rounded up to nearest 2^N
     }
 
-    fn dispose(mut self, device: &B::Device) {
+    unsafe fn dispose(mut self, device: &B::Device) {
         if self.total > 0 {
             log::error!("Not all descriptor sets were deallocated");
         }
@@ -130,11 +117,11 @@ impl<B: Backend> DescriptorBucket<B> {
                     pool
                 );
             }
-            unsafe { device.destroy_descriptor_pool(pool.raw) };
+            device.destroy_descriptor_pool(pool.raw);
         }
     }
 
-    fn allocate(
+    unsafe fn allocate(
         &mut self,
         device: &B::Device,
         layout: &B::DescriptorSetLayout,
@@ -174,13 +161,11 @@ impl<B: Backend> DescriptorBucket<B> {
                 size,
                 pool_counts,
             );
-            let mut raw = unsafe {
-                device.create_descriptor_pool(
-                    size as usize,
-                    pool_counts.filtered(),
-                    DescriptorPoolCreateFlags::FREE_DESCRIPTOR_SET,
-                )?
-            };
+            let mut raw = device.create_descriptor_pool(
+                size as usize,
+                pool_counts.iter(),
+                DescriptorPoolCreateFlags::FREE_DESCRIPTOR_SET,
+            )?;
 
             let allocate = size.min(count);
             allocation.grow(&mut raw, layout, allocate)?;
@@ -202,28 +187,26 @@ impl<B: Backend> DescriptorBucket<B> {
         Ok(())
     }
 
-    fn free(&mut self, sets: impl IntoIterator<Item = B::DescriptorSet>, pool_id: PoolIndex) {
+    unsafe fn free(&mut self, sets: impl IntoIterator<Item = B::DescriptorSet>, pool_id: PoolIndex) {
         let pool = &mut self.pools[(pool_id - self.pools_offset) as usize];
         let mut count = 0;
-        unsafe {
-            pool.raw.free(sets.into_iter().map(|set| {
-                count += 1;
-                set
-            }))
-        };
+        pool.raw.free_sets(sets.into_iter().map(|set| {
+            count += 1;
+            set
+        }));
         pool.available += count;
         self.total -= count as u64;
         log::trace!("Freed {} from descriptor bucket", count);
     }
 
-    fn cleanup(&mut self, device: &B::Device) {
+    unsafe fn cleanup(&mut self, device: &B::Device) {
         while let Some(pool) = self.pools.pop_front() {
             if pool.available < pool.capacity {
                 self.pools.push_front(pool);
                 break;
             }
             log::trace!("Destroying used up descriptor pool");
-            unsafe { device.destroy_descriptor_pool(pool.raw) };
+            device.destroy_descriptor_pool(pool.raw);
             self.pools_offset += 1;
         }
     }
@@ -249,10 +232,7 @@ impl<B: Backend> Drop for DescriptorAllocator<B> {
 
 impl<B: Backend> DescriptorAllocator<B> {
     /// Create new allocator instance.
-    ///
-    /// # Safety
-    /// All later operations assume the device is not lost.
-    pub unsafe fn new() -> Self {
+    pub fn new() -> Self {
         DescriptorAllocator {
             buckets: HashMap::default(),
             allocation: Allocation {
@@ -264,13 +244,21 @@ impl<B: Backend> DescriptorAllocator<B> {
         }
     }
 
+    /// Clear the allocator instance.
+    /// All sets allocated from this allocator become invalid.
+    pub unsafe fn clear(&mut self, device: &B::Device) {
+        for (_, bucket) in self.buckets.drain() {
+            bucket.dispose(device);
+        }
+    }
+
     /// Allocate descriptor set with specified layout.
     /// `DescriptorCounts` must match descriptor numbers of the layout.
     /// `DescriptorCounts` can be constructed [from bindings] that were used
     /// to create layout instance.
     ///
     /// [from bindings]: .
-    pub fn allocate(
+    pub unsafe fn allocate(
         &mut self,
         device: &B::Device,
         layout: &B::DescriptorSetLayout,
@@ -296,8 +284,7 @@ impl<B: Backend> DescriptorAllocator<B> {
         match bucket.allocate(device, layout, layout_counts, count, &mut self.allocation) {
             Ok(()) => {
                 extend.extend(
-                    self.allocation
-                        .pools
+                    self.allocation.pools
                         .drain(..)
                         .zip(self.allocation.sets.drain(..))
                         .map(|(pool_id, set)| DescriptorSet {
@@ -368,19 +355,8 @@ impl<B: Backend> DescriptorAllocator<B> {
         }
     }
 
-    /// Clear the allocator instance.
-    /// All sets allocated from this allocator become invalid.
-    ///
-    /// # Safety
-    /// Assumes none of the allocated blocks will be used from here.
-    pub unsafe fn clear(&mut self, device: &B::Device) {
-        for (_, bucket) in self.buckets.drain() {
-            bucket.dispose(device);
-        }
-    }
-
     /// Perform cleanup to allow resources reuse.
-    pub fn cleanup(&mut self, device: &B::Device) {
+    pub unsafe fn cleanup(&mut self, device: &B::Device) {
         for bucket in self.buckets.values_mut() {
             bucket.cleanup(device)
         }

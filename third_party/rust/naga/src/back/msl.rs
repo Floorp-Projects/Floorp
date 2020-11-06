@@ -14,12 +14,20 @@ the output struct. If there is a structure in the outputs, and it contains any b
 we move them up to the root output structure that we define ourselves.
 !*/
 
+use std::{
+    fmt::{
+        Display, Error as FmtError, Formatter, Write,
+    },
+};
+
 use crate::{
     arena::Handle,
-    proc::{ResolveContext, ResolveError, Typifier},
     FastHashMap,
 };
-use std::fmt::{Display, Error as FmtError, Formatter, Write};
+
+/// Expect all the global variables to have a pointer type,
+/// like in SPIR-V.
+const GLOBAL_POINTERS: bool = false;
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct BindTarget {
@@ -31,17 +39,17 @@ pub struct BindTarget {
 
 #[derive(Clone, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub struct BindSource {
-    pub group: u32,
-    pub binding: u32,
+    pub set: spirv::Word,
+    pub binding: spirv::Word,
 }
 
 pub type BindingMap = FastHashMap<BindSource, BindTarget>;
 
 enum ResolvedBinding {
-    BuiltIn(crate::BuiltIn),
-    Attribute(u32),
-    Color(u32),
-    User { prefix: &'static str, index: u32 },
+    BuiltIn(spirv::BuiltIn),
+    Attribute(spirv::Word),
+    Color(spirv::Word),
+    User { prefix: &'static str, index: spirv::Word },
     Resource(BindTarget),
 }
 
@@ -53,44 +61,26 @@ impl Level {
 }
 impl Display for Level {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> Result<(), FmtError> {
-        (0..self.0).map(|_| formatter.write_str("\t")).collect()
+        (0 .. self.0).map(|_| formatter.write_str("\t")).collect()
     }
 }
-
-// Note: some of these should be removed in favor of proper IR validation.
 
 #[derive(Debug)]
 pub enum Error {
     Format(FmtError),
-    Type(ResolveError),
+    UnsupportedExecutionModel(spirv::ExecutionModel),
     UnexpectedLocation,
-    MissingBinding(Handle<crate::GlobalVariable>),
+    MixedExecutionModels(crate::Handle<crate::Function>),
+    MissingBinding(crate::Handle<crate::GlobalVariable>),
     MissingBindTarget(BindSource),
-    InvalidImageAccess(crate::StorageAccess),
-    MutabilityViolation(Handle<crate::GlobalVariable>),
+    InvalidImageFlags(crate::ImageFlags),
+    MutabilityViolation(crate::Handle<crate::GlobalVariable>),
     BadName(String),
-    UnexpectedGlobalType(Handle<crate::Type>),
-    UnimplementedBindTarget(BindTarget),
-    UnsupportedCompose(Handle<crate::Type>),
-    UnsupportedBinaryOp(crate::BinaryOperator),
-    UnexpectedSampleLevel(crate::SampleLevel),
-    UnsupportedCall(String),
-    UnsupportedDynamicArrayLength,
-    UnableToReturnValue(Handle<crate::Expression>),
-    AccessIndexExceedsStaticLength(u32, u32),
-    /// The source IR is not valid.
-    Validation,
 }
 
 impl From<FmtError> for Error {
     fn from(e: FmtError) -> Self {
         Error::Format(e)
-    }
-}
-
-impl From<ResolveError> for Error {
-    fn from(e: ResolveError) -> Self {
-        Error::Type(e)
     }
 }
 
@@ -108,11 +98,7 @@ pub struct Options<'a> {
 }
 
 impl Options<'_> {
-    fn resolve_binding(
-        self,
-        binding: &crate::Binding,
-        mode: LocationMode,
-    ) -> Result<ResolvedBinding, Error> {
+    fn resolve_binding(&self, binding: &crate::Binding, mode: LocationMode) -> Result<ResolvedBinding, Error> {
         match *binding {
             crate::Binding::BuiltIn(built_in) => Ok(ResolvedBinding::BuiltIn(built_in)),
             crate::Binding::Location(index) => match mode {
@@ -124,17 +110,19 @@ impl Options<'_> {
                 }),
                 LocationMode::Uniform => Err(Error::UnexpectedLocation),
             },
-            crate::Binding::Resource { group, binding } => {
-                let source = BindSource { group, binding };
+            crate::Binding::Descriptor { set, binding } => {
+                let source = BindSource { set, binding };
                 self.binding_map
                     .get(&source)
                     .cloned()
                     .map(ResolvedBinding::Resource)
                     .ok_or(Error::MissingBindTarget(source))
+
             }
         }
     }
 }
+
 
 trait Indexed {
     const CLASS: &'static str;
@@ -142,44 +130,44 @@ trait Indexed {
     fn id(&self) -> usize;
 }
 
-impl Indexed for Handle<crate::Type> {
+impl Indexed for crate::Handle<crate::Type> {
     const CLASS: &'static str = "Type";
-    fn id(&self) -> usize {
-        self.index()
-    }
+    fn id(&self) -> usize { self.index() }
 }
-impl Indexed for Handle<crate::GlobalVariable> {
+impl Indexed for crate::Handle<crate::GlobalVariable> {
     const CLASS: &'static str = "global";
-    fn id(&self) -> usize {
-        self.index()
-    }
+    fn id(&self) -> usize { self.index() }
 }
-impl Indexed for Handle<crate::LocalVariable> {
+impl Indexed for crate::Handle<crate::LocalVariable> {
     const CLASS: &'static str = "local";
-    fn id(&self) -> usize {
-        self.index()
-    }
+    fn id(&self) -> usize { self.index() }
 }
-impl Indexed for Handle<crate::Function> {
+impl Indexed for crate::Handle<crate::Function> {
     const CLASS: &'static str = "function";
-    fn id(&self) -> usize {
-        self.index()
-    }
+    fn id(&self) -> usize { self.index() }
 }
 
 struct MemberIndex(usize);
 impl Indexed for MemberIndex {
     const CLASS: &'static str = "field";
-    fn id(&self) -> usize {
-        self.0
-    }
+    fn id(&self) -> usize { self.0 }
 }
 struct ParameterIndex(usize);
 impl Indexed for ParameterIndex {
     const CLASS: &'static str = "param";
-    fn id(&self) -> usize {
-        self.0
-    }
+    fn id(&self) -> usize { self.0 }
+}
+struct InputStructIndex(crate::Handle<crate::Function>);
+impl Indexed for InputStructIndex {
+    const CLASS: &'static str = "Input";
+    const PREFIX: bool = true;
+    fn id(&self) -> usize { self.0.index() }
+}
+struct OutputStructIndex(crate::Handle<crate::Function>);
+impl Indexed for OutputStructIndex {
+    const CLASS: &'static str = "Output";
+    const PREFIX: bool = true;
+    fn id(&self) -> usize { self.0.index() }
 }
 
 enum NameSource<'a> {
@@ -187,7 +175,9 @@ enum NameSource<'a> {
     Index(usize),
 }
 
-const RESERVED_NAMES: &[&str] = &["main"];
+const RESERVED_NAMES: &[&str] = &[
+    "main",
+];
 
 struct Name<'a> {
     class: &'static str,
@@ -196,14 +186,10 @@ struct Name<'a> {
 impl Display for Name<'_> {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> Result<(), FmtError> {
         match self.source {
-            NameSource::Custom {
-                name,
-                prefix: false,
-            } if RESERVED_NAMES.contains(&name) => write!(formatter, "{}_", name),
-            NameSource::Custom {
-                name,
-                prefix: false,
-            } => formatter.write_str(name),
+            NameSource::Custom { name, prefix: false } if RESERVED_NAMES.contains(&name) => {
+                write!(formatter, "{}_", name)
+            }
+            NameSource::Custom { name, prefix: false } => formatter.write_str(name),
             NameSource::Custom { name, prefix: true } => {
                 let (head, tail) = name.split_at(1);
                 write!(formatter, "{}{}{}", self.class, head.to_uppercase(), tail)
@@ -229,10 +215,7 @@ impl AsName for Option<String> {
         Name {
             class: I::CLASS,
             source: match *self {
-                Some(ref name) if !name.is_empty() => NameSource::Custom {
-                    name,
-                    prefix: I::PREFIX,
-                },
+                Some(ref name) if !name.is_empty() => NameSource::Custom { name, prefix: I::PREFIX },
                 _ => NameSource::Index(index.id()),
             },
         }
@@ -241,103 +224,88 @@ impl AsName for Option<String> {
 
 struct TypedGlobalVariable<'a> {
     module: &'a crate::Module,
-    handle: Handle<crate::GlobalVariable>,
+    handle: crate::Handle<crate::GlobalVariable>,
     usage: crate::GlobalUse,
 }
-
-impl<'a> TypedGlobalVariable<'a> {
-    fn try_fmt<W: Write>(&self, formatter: &mut W) -> Result<(), Error> {
+impl Display for TypedGlobalVariable<'_> {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> Result<(), FmtError> {
         let var = &self.module.global_variables[self.handle];
         let name = var.name.or_index(self.handle);
-        let ty = &self.module.types[var.ty];
-        let ty_name = ty.name.or_index(var.ty);
-
-        let (space_qualifier, reference) = match ty.inner {
-            crate::TypeInner::Struct { .. } => match var.class {
-                crate::StorageClass::Constant
-                | crate::StorageClass::Uniform
-                | crate::StorageClass::StorageBuffer => {
-                    let space = if self.usage.contains(crate::GlobalUse::STORE) {
-                        "device "
-                    } else {
-                        "constant "
-                    };
-                    (space, "&")
-                }
-                _ => ("", ""),
-            },
-            _ => ("", ""),
+        let (space_qualifier, reference) = match var.class {
+            spirv::StorageClass::Uniform |
+            spirv::StorageClass::UniformConstant |
+            spirv::StorageClass::StorageBuffer => {
+                let space = if self.usage.contains(crate::GlobalUse::STORE) {
+                    "device "
+                } else {
+                    "constant "
+                };
+                (space, "&")
+            }
+            _ => ("", "")
         };
-        Ok(write!(
-            formatter,
-            "{}{}{} {}",
-            space_qualifier, ty_name, reference, name
-        )?)
+        if GLOBAL_POINTERS {
+            let ty = &self.module.types[var.ty];
+            match ty.inner {
+                crate::TypeInner::Pointer { base, class }  => {
+                    let ty_handle = match class {
+                        spirv::StorageClass::Input |
+                        spirv::StorageClass::Output |
+                        spirv::StorageClass::Uniform |
+                        spirv::StorageClass::UniformConstant => base,
+                        _ => var.ty
+                    };
+                    let ty_name = self.module.types[ty_handle].name.or_index(ty_handle);
+                    write!(formatter, "{} {}", ty_name, name)
+                }
+                _ => panic!("Unexpected global type {:?} = {:?}", var.ty, ty),
+            }
+        } else {
+            let ty_name = self.module.types[var.ty].name.or_index(var.ty);
+            write!(formatter, "{}{}{} {}", space_qualifier, ty_name, reference, name)
+        }
     }
 }
 
-impl ResolvedBinding {
-    fn try_fmt<W: Write>(&self, formatter: &mut W) -> Result<(), Error> {
+impl Display for ResolvedBinding {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> Result<(), FmtError> {
         match *self {
             ResolvedBinding::BuiltIn(built_in) => {
-                use crate::BuiltIn as Bi;
                 let name = match built_in {
-                    // vertex
-                    Bi::BaseInstance => "base_instance",
-                    Bi::BaseVertex => "base_vertex",
-                    Bi::ClipDistance => "clip_distance",
-                    Bi::InstanceIndex => "instance_id",
-                    Bi::PointSize => "point_size",
-                    Bi::Position => "position",
-                    Bi::VertexIndex => "vertex_id",
-                    // fragment
-                    Bi::FragCoord => "position",
-                    Bi::FragDepth => "depth(any)",
-                    Bi::FrontFacing => "front_facing",
-                    Bi::SampleIndex => "sample_id",
-                    // compute
-                    Bi::GlobalInvocationId => "thread_position_in_grid",
-                    Bi::LocalInvocationId => "thread_position_in_threadgroup",
-                    Bi::LocalInvocationIndex => "thread_index_in_threadgroup",
-                    Bi::WorkGroupId => "threadgroup_position_in_grid",
+                    spirv::BuiltIn::ClipDistance => "clip_distance",
+                    spirv::BuiltIn::GlobalInvocationId => "thread_position_in_grid",
+                    spirv::BuiltIn::PointSize => "point_size",
+                    spirv::BuiltIn::Position => "position",
+                    _ => panic!("Built in {:?} is not implemented", built_in),
                 };
-                Ok(formatter.write_str(name)?)
+                formatter.write_str(name)
             }
-            ResolvedBinding::Attribute(index) => Ok(write!(formatter, "attribute({})", index)?),
-            ResolvedBinding::Color(index) => Ok(write!(formatter, "color({})", index)?),
+            ResolvedBinding::Attribute(index) => {
+                write!(formatter, "attribute({})", index)
+            }
+            ResolvedBinding::Color(index) => {
+                write!(formatter, "color({})", index)
+            }
             ResolvedBinding::User { prefix, index } => {
-                Ok(write!(formatter, "user({}{})", prefix, index)?)
+                write!(formatter, "user({}{})", prefix, index)
             }
             ResolvedBinding::Resource(ref target) => {
                 if let Some(id) = target.buffer {
-                    Ok(write!(formatter, "buffer({})", id)?)
+                    write!(formatter, "buffer({})", id)
                 } else if let Some(id) = target.texture {
-                    Ok(write!(formatter, "texture({})", id)?)
+                    write!(formatter, "texture({})", id)
                 } else if let Some(id) = target.sampler {
-                    Ok(write!(formatter, "sampler({})", id)?)
+                    write!(formatter, "sampler({})", id)
                 } else {
-                    Err(Error::UnimplementedBindTarget(target.clone()))
+                    unimplemented!()
                 }
             }
         }
-    }
-
-    fn try_fmt_decorated<W: Write>(
-        &self,
-        formatter: &mut W,
-        terminator: &str,
-    ) -> Result<(), Error> {
-        formatter.write_str(" [[")?;
-        self.try_fmt(formatter)?;
-        formatter.write_str("]]")?;
-        formatter.write_str(terminator)?;
-        Ok(())
     }
 }
 
 pub struct Writer<W> {
     out: W,
-    typifier: Typifier,
 }
 
 fn scalar_kind_string(kind: crate::ScalarKind) -> &'static str {
@@ -362,108 +330,118 @@ const LOCATION_INPUT_STRUCT_NAME: &str = "input";
 const COMPONENTS: &[char] = &['x', 'y', 'z', 'w'];
 
 fn separate(is_last: bool) -> &'static str {
-    if is_last {
-        ""
-    } else {
-        ","
+    if is_last { "" } else { "," }
+}
+
+#[derive(Debug)]
+enum MaybeOwned<'a, T: 'a> {
+    Borrowed(&'a T),
+    Owned(T),
+}
+
+impl<T> MaybeOwned<'_, T> {
+    fn borrow(&self) -> &T {
+        match *self {
+            MaybeOwned::Borrowed(inner) => inner,
+            MaybeOwned::Owned(ref inner) => inner,
+        }
+    }
+}
+
+impl crate::Module {
+    fn borrow_type(&self, handle: Handle<crate::Type>) -> MaybeOwned<crate::TypeInner> {
+        MaybeOwned::Borrowed(&self.types[handle].inner)
     }
 }
 
 impl<W: Write> Writer<W> {
-    fn put_call(
-        &mut self,
-        name: &str,
-        parameters: &[Handle<crate::Expression>],
-        function: &crate::Function,
-        module: &crate::Module,
-    ) -> Result<(), Error> {
-        write!(self.out, "{}(", name)?;
-        for (i, &handle) in parameters.iter().enumerate() {
-            if i != 0 {
-                write!(self.out, ", ")?;
-            }
-            self.put_expression(handle, function, module)?;
-        }
-        write!(self.out, ")")?;
-        Ok(())
-    }
-
-    fn put_expression(
+    fn put_expression<'a>(
         &mut self,
         expr_handle: Handle<crate::Expression>,
         function: &crate::Function,
-        module: &crate::Module,
-    ) -> Result<(), Error> {
+        module: &'a crate::Module,
+    ) -> Result<MaybeOwned<'a, crate::TypeInner>, Error> {
         let expression = &function.expressions[expr_handle];
         log::trace!("expression {:?} = {:?}", expr_handle, expression);
         match *expression {
             crate::Expression::Access { base, index } => {
-                self.put_expression(base, function, module)?;
-                self.out.write_str("[")?;
-                self.put_expression(index, function, module)?;
-                self.out.write_str("]")?;
+                match *self.put_expression(base, function, module)?.borrow() {
+                    crate::TypeInner::Array { base, .. } => {
+                        //TODO: add size check
+                        self.out.write_str("[")?;
+                        self.put_expression(index, function, module)?;
+                        self.out.write_str("]")?;
+                        Ok(module.borrow_type(base))
+                    }
+                    ref other => panic!("Unexpected indexing of {:?}", other),
+                }
             }
             crate::Expression::AccessIndex { base, index } => {
-                self.put_expression(base, function, module)?;
-                match *self.typifier.get(base, &module.types) {
+                match *self.put_expression(base, function, module)?.borrow() {
                     crate::TypeInner::Struct { ref members } => {
                         let member = &members[index as usize];
                         let name = member.name.or_index(MemberIndex(index as usize));
                         write!(self.out, ".{}", name)?;
+                        Ok(module.borrow_type(member.ty))
                     }
-                    crate::TypeInner::Matrix { rows: size, .. }
-                    | crate::TypeInner::Vector { size, .. } => {
-                        if index >= size as u32 {
-                            return Err(Error::AccessIndexExceedsStaticLength(index, size as u32));
-                        }
+                    crate::TypeInner::Matrix { rows, kind, width, .. } => {
                         write!(self.out, ".{}", COMPONENTS[index as usize])?;
+                        Ok(MaybeOwned::Owned(crate::TypeInner::Vector { size: rows, kind, width }))
                     }
-                    crate::TypeInner::Array { size, .. } => {
+                    crate::TypeInner::Vector { kind, width, .. } => {
+                        write!(self.out, ".{}", COMPONENTS[index as usize])?;
+                        Ok(MaybeOwned::Owned(crate::TypeInner::Scalar { kind, width }))
+                    }
+                    crate::TypeInner::Array { base, size } => {
                         if let crate::ArraySize::Static(length) = size {
-                            if index >= length {
-                                return Err(Error::AccessIndexExceedsStaticLength(index, length));
-                            }
+                            assert!(index < length);
                         }
                         write!(self.out, "[{}]", index)?;
+                        Ok(module.borrow_type(base))
                     }
-                    _ => {
-                        // unexpected indexing, should fail validation
-                    }
+                    ref other => panic!("Unexpected indexing of {:?}", other),
                 }
             }
-            crate::Expression::Constant(handle) => self.put_constant(handle, module)?,
+            crate::Expression::Constant(handle) => {
+                self.put_constant(handle, module)
+            }
             crate::Expression::Compose { ty, ref components } => {
                 let inner = &module.types[ty].inner;
                 match *inner {
                     crate::TypeInner::Vector { size, kind, .. } => {
-                        write!(
-                            self.out,
-                            "{}{}",
-                            scalar_kind_string(kind),
-                            vector_size_string(size)
-                        )?;
-                        self.put_call("", components, function, module)?;
+                        write!(self.out, "{}{}(", scalar_kind_string(kind), vector_size_string(size))?;
+                        for (i, &handle) in components.iter().enumerate() {
+                            if i != 0 {
+                                write!(self.out, ",")?;
+                            }
+                            self.put_expression(handle, function, module)?;
+                        }
+                        write!(self.out, ")")?;
                     }
-                    crate::TypeInner::Scalar { width: 4, kind } if components.len() == 1 => {
-                        self.put_call(scalar_kind_string(kind), components, function, module)?;
-                    }
-                    _ => return Err(Error::UnsupportedCompose(ty)),
+                    _ => panic!("Unsupported compose {:?}", ty),
                 }
-            }
-            crate::Expression::FunctionParameter(index) => {
-                let name = Name::from(ParameterIndex(index as usize));
-                write!(self.out, "{}", name)?;
+                Ok(MaybeOwned::Borrowed(inner))
             }
             crate::Expression::GlobalVariable(handle) => {
                 let var = &module.global_variables[handle];
+                let inner = &module.types[var.ty].inner;
                 match var.class {
-                    crate::StorageClass::Output => {
-                        if let crate::TypeInner::Struct { .. } = module.types[var.ty].inner {
-                            return Ok(());
+                    spirv::StorageClass::Output => {
+                        if GLOBAL_POINTERS {
+                            if let crate::TypeInner::Pointer { base, .. } = *inner {
+                                let base_inner = &module.types[base].inner;
+                                if let crate::TypeInner::Struct { .. } = *base_inner {
+                                    return Ok(MaybeOwned::Borrowed(base_inner));
+                                }
+                            }
+                        } else {
+                            if let crate::TypeInner::Struct { .. } = *inner {
+                                return Ok(MaybeOwned::Borrowed(inner));
+                            }
                         }
                         write!(self.out, "{}.", OUTPUT_STRUCT_NAME)?;
                     }
-                    crate::StorageClass::Input => {
+                    spirv::StorageClass::Input => {
                         if let Some(crate::Binding::Location(_)) = var.binding {
                             write!(self.out, "{}.", LOCATION_INPUT_STRUCT_NAME)?;
                         }
@@ -472,69 +450,23 @@ impl<W: Write> Writer<W> {
                 }
                 let name = var.name.or_index(handle);
                 write!(self.out, "{}", name)?;
+                Ok(MaybeOwned::Borrowed(inner))
             }
             crate::Expression::LocalVariable(handle) => {
                 let var = &function.local_variables[handle];
+                let inner = &module.types[var.ty].inner;
                 let name = var.name.or_index(handle);
                 write!(self.out, "{}", name)?;
+                Ok(MaybeOwned::Borrowed(inner))
             }
             crate::Expression::Load { pointer } => {
                 //write!(self.out, "*")?;
-                self.put_expression(pointer, function, module)?;
-            }
-            crate::Expression::ImageSample {
-                image,
-                sampler,
-                coordinate,
-                level,
-                depth_ref,
-            } => {
-                let op = match depth_ref {
-                    Some(_) => "sample_compare",
-                    None => "sample",
-                };
-                //TODO: handle arrayed images
-                self.put_expression(image, function, module)?;
-                write!(self.out, ".{}(", op)?;
-                self.put_expression(sampler, function, module)?;
-                write!(self.out, ", ")?;
-                self.put_expression(coordinate, function, module)?;
-                if let Some(dref) = depth_ref {
-                    write!(self.out, ", ")?;
-                    self.put_expression(dref, function, module)?;
-                }
-                match level {
-                    crate::SampleLevel::Auto => {}
-                    crate::SampleLevel::Zero => {
-                        write!(self.out, ", level(0)")?;
+                match *self.put_expression(pointer, function, module)?.borrow() {
+                    crate::TypeInner::Pointer { base, .. } => {
+                        Ok(module.borrow_type(base))
                     }
-                    crate::SampleLevel::Exact(h) => {
-                        write!(self.out, ", level(")?;
-                        self.put_expression(h, function, module)?;
-                        write!(self.out, ")")?;
-                    }
-                    crate::SampleLevel::Bias(h) => {
-                        write!(self.out, ", bias(")?;
-                        self.put_expression(h, function, module)?;
-                        write!(self.out, ")")?;
-                    }
+                    ref other => panic!("Unexpected load pointer {:?}", other),
                 }
-                write!(self.out, ")")?;
-            }
-            crate::Expression::ImageLoad {
-                image,
-                coordinate,
-                index,
-            } => {
-                //TODO: handle arrayed images
-                self.put_expression(image, function, module)?;
-                write!(self.out, ".read(")?;
-                self.put_expression(coordinate, function, module)?;
-                if let Some(index) = index {
-                    write!(self.out, ", ")?;
-                    self.put_expression(index, function, module)?;
-                }
-                write!(self.out, ")")?;
             }
             crate::Expression::Unary { op, expr } => {
                 let op_str = match op {
@@ -542,7 +474,7 @@ impl<W: Write> Writer<W> {
                     crate::UnaryOperator::Not => "!",
                 };
                 write!(self.out, "{}", op_str)?;
-                self.put_expression(expr, function, module)?;
+                self.put_expression(expr, function, module)
             }
             crate::Expression::Binary { op, left, right } => {
                 let op_str = match op {
@@ -557,101 +489,101 @@ impl<W: Write> Writer<W> {
                     crate::BinaryOperator::LessEqual => "<=",
                     crate::BinaryOperator::Greater => "==",
                     crate::BinaryOperator::GreaterEqual => ">=",
-                    crate::BinaryOperator::And => "&",
-                    other => return Err(Error::UnsupportedBinaryOp(other)),
+                    _ => panic!("Unsupported binary op {:?}", op),
                 };
                 //write!(self.out, "(")?;
-                self.put_expression(left, function, module)?;
+                let ty_left = self.put_expression(left, function, module)?;
                 write!(self.out, " {} ", op_str)?;
-                self.put_expression(right, function, module)?;
+                let ty_right = self.put_expression(right, function, module)?;
                 //write!(self.out, ")")?;
-            }
-            crate::Expression::Intrinsic { fun, argument } => {
-                let op = match fun {
-                    crate::IntrinsicFunction::Any => "any",
-                    crate::IntrinsicFunction::All => "all",
-                    crate::IntrinsicFunction::IsNan => "",
-                    crate::IntrinsicFunction::IsInf => "",
-                    crate::IntrinsicFunction::IsFinite => "",
-                    crate::IntrinsicFunction::IsNormal => "",
-                };
-                self.put_call(op, &[argument], function, module)?;
-            }
-            crate::Expression::Transpose(expr) => {
-                self.put_call("transpose", &[expr], function, module)?;
-            }
-            crate::Expression::DotProduct(a, b) => {
-                self.put_call("dot", &[a, b], function, module)?;
-            }
-            crate::Expression::CrossProduct(a, b) => {
-                self.put_call("cross", &[a, b], function, module)?;
-            }
-            crate::Expression::As {
-                expr,
-                kind,
-                convert,
-            } => {
-                let scalar = scalar_kind_string(kind);
-                let size = match *self.typifier.get(expr, &module.types) {
-                    crate::TypeInner::Scalar { .. } => "",
-                    crate::TypeInner::Vector { size, .. } => vector_size_string(size),
-                    _ => return Err(Error::Validation),
-                };
-                let op = if convert { "static_cast" } else { "as_type" };
-                write!(self.out, "{}<{}{}>(", op, scalar, size)?;
-                self.put_expression(expr, function, module)?;
-                write!(self.out, ")")?;
-            }
-            crate::Expression::Derivative { axis, expr } => {
-                let op = match axis {
-                    crate::DerivativeAxis::X => "dfdx",
-                    crate::DerivativeAxis::Y => "dfdy",
-                    crate::DerivativeAxis::Width => "fwidth",
-                };
-                self.put_call(op, &[expr], function, module)?;
-            }
-            crate::Expression::Call {
-                origin: crate::FunctionOrigin::Local(handle),
-                ref arguments,
-            } => {
-                let name = module.functions[handle].name.or_index(handle);
-                write!(self.out, "{}", name)?;
-                self.put_call("", arguments, function, module)?;
-            }
-            crate::Expression::Call {
-                origin: crate::FunctionOrigin::External(ref name),
-                ref arguments,
-            } => match name.as_str() {
-                "atan2" | "cos" | "distance" | "length" | "mix" | "normalize" | "sin" => {
-                    self.put_call(name, arguments, function, module)?;
-                }
-                "fclamp" => {
-                    self.put_call("clamp", arguments, function, module)?;
-                }
-                other => return Err(Error::UnsupportedCall(other.to_owned())),
-            },
-            crate::Expression::ArrayLength(expr) => {
-                let size = match *self.typifier.get(expr, &module.types) {
-                    crate::TypeInner::Array {
-                        size: crate::ArraySize::Static(size),
-                        ..
-                    } => size,
-                    crate::TypeInner::Array { .. } => {
-                        return Err(Error::UnsupportedDynamicArrayLength)
+
+                Ok(if op_str.len() == 1 {
+                    match (ty_left.borrow(), ty_right.borrow()) {
+                        (&crate::TypeInner::Scalar { kind, width }, &crate::TypeInner::Scalar { .. }) =>
+                            MaybeOwned::Owned(crate::TypeInner::Scalar { kind, width }),
+                        (&crate::TypeInner::Scalar { .. }, &crate::TypeInner::Vector { size, kind, width }) |
+                        (&crate::TypeInner::Vector { size, kind, width }, &crate::TypeInner::Scalar { .. }) |
+                        (&crate::TypeInner::Vector { size, kind, width }, &crate::TypeInner::Vector { .. }) =>
+                            MaybeOwned::Owned(crate::TypeInner::Vector { size, kind, width }),
+                        other => panic!("Unable to infer {:?} for {:?}", op, other),
                     }
-                    _ => return Err(Error::Validation),
-                };
-                write!(self.out, "{}", size)?;
+                } else {
+                    MaybeOwned::Owned(crate::TypeInner::Scalar { kind: crate::ScalarKind::Bool, width: 1 })
+                })
             }
+            crate::Expression::ImageSample { image, sampler, coordinate } => {
+                let ty_image = self.put_expression(image, function, module)?;
+                write!(self.out, ".sample(")?;
+                self.put_expression(sampler, function, module)?;
+                write!(self.out, ", ")?;
+                self.put_expression(coordinate, function, module)?;
+                write!(self.out, ")")?;
+                match *ty_image.borrow() {
+                    crate::TypeInner::Image { base, .. } => Ok(module.borrow_type(base)),
+                    ref other => panic!("Unexpected image type {:?}", other),
+                }
+            }
+            crate::Expression::Call { ref name, ref arguments } => {
+                match name.as_str() {
+                    "cos" |
+                    "normalize" |
+                    "sin" => {
+                        write!(self.out, "{}(", name)?;
+                        let result = self.put_expression(arguments[0], function, module)?;
+                        write!(self.out, ")")?;
+                        Ok(result)
+                    }
+                    "fclamp" => {
+                        write!(self.out, "clamp(")?;
+                        let result = self.put_expression(arguments[0], function, module)?;
+                        write!(self.out, ", ")?;
+                        self.put_expression(arguments[1], function, module)?;
+                        write!(self.out, ", ")?;
+                        self.put_expression(arguments[2], function, module)?;
+                        write!(self.out, ")")?;
+                        Ok(result)
+                    }
+                    "atan2" => {
+                        write!(self.out, "{}(", name)?;
+                        let result = self.put_expression(arguments[0], function, module)?;
+                        write!(self.out, ", ")?;
+                        self.put_expression(arguments[1], function, module)?;
+                        write!(self.out, ")")?;
+                        Ok(result)
+                    }
+                    "distance" => {
+                        write!(self.out, "distance(")?;
+                        let result = match *self.put_expression(arguments[0], function, module)?.borrow() {
+                            crate::TypeInner::Vector { kind, width, .. } => crate::TypeInner::Scalar { kind, width },
+                            ref other => panic!("Unexpected distance argument {:?}", other),
+                        };
+                        write!(self.out, ", ")?;
+                        self.put_expression(arguments[1], function, module)?;
+                        write!(self.out, ")")?;
+                        Ok(MaybeOwned::Owned(result))
+                    }
+                    "length" => {
+                        write!(self.out, "length(")?;
+                        let result = match *self.put_expression(arguments[0], function, module)?.borrow() {
+                            crate::TypeInner::Vector { kind, width, .. } => crate::TypeInner::Scalar { kind, width },
+                            ref other => panic!("Unexpected distance argument {:?}", other),
+                        };
+                        write!(self.out, ")")?;
+                        Ok(MaybeOwned::Owned(result))
+                    }
+
+                    _ => panic!("Unsupported call to '{}'", name),
+                }
+            }
+            ref other => panic!("Unsupported {:?}", other),
         }
-        Ok(())
     }
 
-    fn put_constant(
+    fn put_constant<'a>(
         &mut self,
         handle: Handle<crate::Constant>,
-        module: &crate::Module,
-    ) -> Result<(), Error> {
+        module: &'a crate::Module,
+    ) -> Result<MaybeOwned<'a, crate::TypeInner>, Error> {
         let constant = &module.constants[handle];
         let ty = &module.types[constant.ty];
 
@@ -684,103 +616,75 @@ impl<W: Write> Writer<W> {
             }
         }
 
-        Ok(())
+        Ok(MaybeOwned::Borrowed(&ty.inner))
     }
 
-    fn put_block(
+    fn put_statement<'a>(
         &mut self,
         level: Level,
-        statements: &[crate::Statement],
+        statement: &crate::Statement,
         function: &crate::Function,
-        module: &crate::Module,
+        has_output: bool,
+        module: &'a crate::Module,
     ) -> Result<(), Error> {
-        for statement in statements {
-            log::trace!("statement[{}] {:?}", level.0, statement);
-            match *statement {
-                crate::Statement::Block(ref block) => {
-                    if !block.is_empty() {
-                        writeln!(self.out, "{}{{", level)?;
-                        self.put_block(level.next(), block, function, module)?;
-                        writeln!(self.out, "{}}}", level)?;
+        log::trace!("statement[{}] {:?}", level.0, statement);
+        match *statement {
+            crate::Statement::Empty => {}
+            crate::Statement::If { condition, ref accept, ref reject } => {
+                write!(self.out, "{}if (", level)?;
+                self.put_expression(condition, function, module)?;
+                writeln!(self.out, ") {{")?;
+                for s in accept {
+                    self.put_statement(level.next(), s, function, has_output, module)?;
+                }
+                if !reject.is_empty() {
+                    writeln!(self.out, "{}}} else {{", level)?;
+                    for s in reject {
+                        self.put_statement(level.next(), s, function, has_output, module)?;
                     }
                 }
-                crate::Statement::If {
-                    condition,
-                    ref accept,
-                    ref reject,
-                } => {
-                    write!(self.out, "{}if (", level)?;
-                    self.put_expression(condition, function, module)?;
-                    writeln!(self.out, ") {{")?;
-                    self.put_block(level.next(), accept, function, module)?;
-                    if !reject.is_empty() {
-                        writeln!(self.out, "{}}} else {{", level)?;
-                        self.put_block(level.next(), reject, function, module)?;
-                    }
-                    writeln!(self.out, "{}}}", level)?;
-                }
-                crate::Statement::Switch {
-                    selector,
-                    ref cases,
-                    ref default,
-                } => {
-                    write!(self.out, "{}switch(", level)?;
-                    self.put_expression(selector, function, module)?;
-                    writeln!(self.out, ") {{")?;
-                    let lcase = level.next();
-                    for (&value, &(ref block, ref fall_through)) in cases.iter() {
-                        writeln!(self.out, "{}case {}: {{", lcase, value)?;
-                        self.put_block(lcase.next(), block, function, module)?;
-                        if fall_through.is_none() {
-                            writeln!(self.out, "{}break;", lcase.next())?;
-                        }
-                        writeln!(self.out, "{}}}", lcase)?;
-                    }
-                    writeln!(self.out, "{}default: {{", lcase)?;
-                    self.put_block(lcase.next(), default, function, module)?;
-                    writeln!(self.out, "{}}}", lcase)?;
-                    writeln!(self.out, "{}}}", level)?;
-                }
-                crate::Statement::Loop {
-                    ref body,
-                    ref continuing,
-                } => {
-                    writeln!(self.out, "{}while(true) {{", level)?;
-                    self.put_block(level.next(), body, function, module)?;
-                    if !continuing.is_empty() {
-                        //TODO
-                    }
-                    writeln!(self.out, "{}}}", level)?;
-                }
-                crate::Statement::Break => {
-                    writeln!(self.out, "{}break;", level)?;
-                }
-                crate::Statement::Continue => {
-                    writeln!(self.out, "{}continue;", level)?;
-                }
-                crate::Statement::Return { value } => {
-                    write!(self.out, "{}return ", level)?;
-                    match value {
-                        None => self.out.write_str(OUTPUT_STRUCT_NAME)?,
-                        Some(expr_handle) => {
-                            self.put_expression(expr_handle, function, module)?;
-                        }
-                    }
-                    writeln!(self.out, ";")?;
-                }
-                crate::Statement::Kill => {
-                    writeln!(self.out, "{}discard_fragment();", level)?;
-                }
-                crate::Statement::Store { pointer, value } => {
-                    //write!(self.out, "\t*")?;
-                    write!(self.out, "{}", level)?;
-                    self.put_expression(pointer, function, module)?;
-                    write!(self.out, " = ")?;
-                    self.put_expression(value, function, module)?;
-                    writeln!(self.out, ";")?;
-                }
+                writeln!(self.out, "{}}}", level)?;
             }
-        }
+            crate::Statement::Loop { ref body, ref continuing } => {
+                writeln!(self.out, "{}while(true) {{", level)?;
+                for s in body {
+                    self.put_statement(level.next(), s, function, has_output, module)?;
+                }
+                if !continuing.is_empty() {
+                    //TODO
+                }
+                writeln!(self.out, "{}}}", level)?;
+            }
+            crate::Statement::Store { pointer, value } => {
+                //write!(self.out, "\t*")?;
+                write!(self.out, "{}", level)?;
+                self.put_expression(pointer, function, module)?;
+                write!(self.out, " = ")?;
+                self.put_expression(value, function, module)?;
+                writeln!(self.out, ";")?;
+            }
+            crate::Statement::Break => {
+                writeln!(self.out, "{}break;", level)?;
+            }
+            crate::Statement::Continue => {
+                writeln!(self.out, "{}continue;", level)?;
+            }
+            crate::Statement::Return { value } => {
+                write!(self.out, "{}return ", level)?;
+                match value {
+                    None if has_output => self.out.write_str(OUTPUT_STRUCT_NAME)?,
+                    None => {}
+                    Some(expr_handle) if has_output => {
+                        panic!("Unable to return value {:?} from an entry point!", expr_handle)
+                    }
+                    Some(expr_handle) => {
+                        self.put_expression(expr_handle, function, module)?;
+                    }
+                }
+                writeln!(self.out, ";")?;
+            }
+            _ => panic!("Unsupported {:?}", statement),
+        };
         Ok(())
     }
 
@@ -790,7 +694,7 @@ impl<W: Write> Writer<W> {
         writeln!(self.out, "using namespace metal;")?;
 
         writeln!(self.out)?;
-        self.write_type_defs(module)?;
+        self.write_type_defs(module, options)?;
 
         writeln!(self.out)?;
         self.write_functions(module, options)?;
@@ -798,58 +702,40 @@ impl<W: Write> Writer<W> {
         Ok(())
     }
 
-    fn write_type_defs<'a>(&mut self, module: &'a crate::Module) -> Result<(), Error> {
+    fn write_type_defs(&mut self, module: &crate::Module, options: Options) -> Result<(), Error> {
         for (handle, ty) in module.types.iter() {
             let name = ty.name.or_index(handle);
             match ty.inner {
                 crate::TypeInner::Scalar { kind, .. } => {
                     write!(self.out, "typedef {} {}", scalar_kind_string(kind), name)?;
-                }
+                },
                 crate::TypeInner::Vector { size, kind, .. } => {
-                    write!(
-                        self.out,
-                        "typedef {}{} {}",
-                        scalar_kind_string(kind),
-                        vector_size_string(size),
-                        name
-                    )?;
-                }
-                crate::TypeInner::Matrix { columns, rows, .. } => {
-                    write!(
-                        self.out,
-                        "typedef {}{}x{} {}",
-                        scalar_kind_string(crate::ScalarKind::Float),
-                        vector_size_string(columns),
-                        vector_size_string(rows),
-                        name
-                    )?;
+                    write!(self.out, "typedef {}{} {}", scalar_kind_string(kind), vector_size_string(size), name)?;
+                },
+                crate::TypeInner::Matrix { columns, rows, kind, .. } => {
+                    write!(self.out, "typedef {}{}x{} {}", scalar_kind_string(kind), vector_size_string(columns), vector_size_string(rows), name)?;
                 }
                 crate::TypeInner::Pointer { base, class } => {
-                    use crate::StorageClass as Sc;
                     let base_name = module.types[base].name.or_index(base);
                     let class_name = match class {
-                        Sc::Input | Sc::Output => continue,
-                        Sc::Constant | Sc::Uniform => "constant",
-                        Sc::StorageBuffer => "device",
-                        Sc::Private | Sc::Function | Sc::WorkGroup => "",
+                        spirv::StorageClass::Input |
+                        spirv::StorageClass::Output => continue,
+                        spirv::StorageClass::Uniform |
+                        spirv::StorageClass::UniformConstant => "constant",
+                        other => {
+                            log::warn!("Unexpected pointer class {:?}", other);
+                            ""
+                        }
                     };
                     write!(self.out, "typedef {} {} *{}", class_name, base_name, name)?;
                 }
-                crate::TypeInner::Array {
-                    base,
-                    size,
-                    stride: _,
-                } => {
+                crate::TypeInner::Array { base, size } => {
                     let base_name = module.types[base].name.or_index(base);
                     let resolved_size = match size {
                         crate::ArraySize::Static(length) => length,
                         crate::ArraySize::Dynamic => 1,
                     };
-                    write!(
-                        self.out,
-                        "typedef {} {}[{}]",
-                        base_name, name, resolved_size
-                    )?;
+                    write!(self.out, "typedef {} {}[{}]", base_name, name, resolved_size)?;
                 }
                 crate::TypeInner::Struct { ref members } => {
                     writeln!(self.out, "struct {} {{", name)?;
@@ -857,68 +743,40 @@ impl<W: Write> Writer<W> {
                         let name = member.name.or_index(MemberIndex(index));
                         let base_name = module.types[member.ty].name.or_index(member.ty);
                         write!(self.out, "\t{} {}", base_name, name)?;
-                        match member.origin {
-                            crate::MemberOrigin::Empty => {}
-                            crate::MemberOrigin::BuiltIn(built_in) => {
-                                ResolvedBinding::BuiltIn(built_in)
-                                    .try_fmt_decorated(&mut self.out, "")?;
-                            }
-                            crate::MemberOrigin::Offset(_) => {
-                                //TODO
-                            }
+                        if let Some(ref binding) = member.binding {
+                            let resolved = options.resolve_binding(binding, LocationMode::Intermediate)?;
+                            write!(self.out, " [[{}]]", resolved)?;
                         }
                         writeln!(self.out, ";")?;
                     }
                     write!(self.out, "}}")?;
                 }
-                crate::TypeInner::Image {
-                    dim,
-                    arrayed,
-                    class,
-                } => {
-                    let dim_str = match dim {
-                        crate::ImageDimension::D1 => "1d",
-                        crate::ImageDimension::D2 => "2d",
-                        crate::ImageDimension::D3 => "3d",
-                        crate::ImageDimension::Cube => "Cube",
+                crate::TypeInner::Image { base, dim, flags } => {
+                    let base_name = module.types[base].name.or_index(base);
+                    let dim = match dim {
+                        spirv::Dim::Dim1D => "1d",
+                        spirv::Dim::Dim2D => "2d",
+                        spirv::Dim::Dim3D => "3d",
+                        spirv::Dim::DimCube => "Cube",
+                        _ => panic!("Unsupported dim {:?}", dim),
                     };
-                    let (texture_str, msaa_str, kind, access) = match class {
-                        crate::ImageClass::Sampled { kind, multi } => {
-                            ("texture", if multi { "_ms" } else { "" }, kind, "sample")
+                    let access = if flags.contains(crate::ImageFlags::SAMPLED) {
+                        if flags.intersects(crate::ImageFlags::CAN_STORE) {
+                            return Err(Error::InvalidImageFlags(flags));
                         }
-                        crate::ImageClass::Depth => {
-                            ("depth", "", crate::ScalarKind::Float, "sample")
-                        }
-                        crate::ImageClass::Storage(format) => {
-                            let (_, global) = module
-                                .global_variables
-                                .iter()
-                                .find(|(_, var)| var.ty == handle)
-                                .expect("Unable to find a global variable using the image type");
-                            let access = if global
-                                .storage_access
-                                .contains(crate::StorageAccess::LOAD | crate::StorageAccess::STORE)
-                            {
-                                "read_write"
-                            } else if global.storage_access.contains(crate::StorageAccess::STORE) {
-                                "write"
-                            } else if global.storage_access.contains(crate::StorageAccess::LOAD) {
-                                "read"
-                            } else {
-                                return Err(Error::InvalidImageAccess(global.storage_access));
-                            };
-                            ("texture", "", format.into(), access)
-                        }
+                        "sample"
+                    } else if flags.contains(crate::ImageFlags::CAN_LOAD | crate::ImageFlags::CAN_STORE) {
+                        "read_write"
+                    } else if flags.contains(crate::ImageFlags::CAN_STORE) {
+                        "write"
+                    } else if flags.contains(crate::ImageFlags::CAN_LOAD) {
+                        "read"
+                    } else {
+                        return Err(Error::InvalidImageFlags(flags));
                     };
-                    let base_name = scalar_kind_string(kind);
-                    let array_str = if arrayed { "_array" } else { "" };
-                    write!(
-                        self.out,
-                        "typedef {}{}{}{}<{}, access::{}> {}",
-                        texture_str, dim_str, msaa_str, array_str, base_name, access, name
-                    )?;
+                    write!(self.out, "typedef texture{}<{}, access::{}> {}", dim, base_name, access, name)?;
                 }
-                crate::TypeInner::Sampler { comparison: _ } => {
+                crate::TypeInner::Sampler => {
                     write!(self.out, "typedef sampler {}", name)?;
                 }
             }
@@ -929,274 +787,181 @@ impl<W: Write> Writer<W> {
 
     fn write_functions(&mut self, module: &crate::Module, options: Options) -> Result<(), Error> {
         for (fun_handle, fun) in module.functions.iter() {
-            self.typifier.resolve_all(
-                &fun.expressions,
-                &module.types,
-                &ResolveContext {
-                    constants: &module.constants,
-                    global_vars: &module.global_variables,
-                    local_vars: &fun.local_variables,
-                    functions: &module.functions,
-                    parameter_types: &fun.parameter_types,
-                },
-            )?;
-
             let fun_name = fun.name.or_index(fun_handle);
-            let result_type_handle = fun.return_type.unwrap();
-            let result_type_name = module.types[result_type_handle]
-                .name
-                .or_index(result_type_handle);
-            writeln!(self.out, "{} {}(", result_type_name, fun_name)?;
-
-            for (index, &ty) in fun.parameter_types.iter().enumerate() {
-                let name = Name::from(ParameterIndex(index));
-                let member_type_name = module.types[ty].name.or_index(ty);
-                let separator = separate(index + 1 == fun.parameter_types.len());
-                writeln!(self.out, "\t{} {}{}", member_type_name, name, separator)?;
-            }
-            writeln!(self.out, ") {{")?;
-
-            for (local_handle, local) in fun.local_variables.iter() {
-                let ty_name = module.types[local.ty].name.or_index(local.ty);
-                write!(
-                    self.out,
-                    "\t{} {}",
-                    ty_name,
-                    local.name.or_index(local_handle)
-                )?;
-                if let Some(value) = local.init {
-                    write!(self.out, " = ")?;
-                    self.put_expression(value, fun, module)?;
-                }
-                writeln!(self.out, ";")?;
-            }
-            self.put_block(Level(1), &fun.body, fun, module)?;
-            writeln!(self.out, "}}")?;
-        }
-
-        for (&(stage, ref ep_name), ep) in module.entry_points.iter() {
-            let fun = &ep.function;
-            self.typifier.resolve_all(
-                &fun.expressions,
-                &module.types,
-                &ResolveContext {
-                    constants: &module.constants,
-                    global_vars: &module.global_variables,
-                    local_vars: &fun.local_variables,
-                    functions: &module.functions,
-                    parameter_types: &fun.parameter_types,
-                },
-            )?;
-
             // find the entry point(s) and inputs/outputs
+            let mut exec_model = None;
             let mut last_used_global = None;
             for ((handle, var), &usage) in module.global_variables.iter().zip(&fun.global_usage) {
                 match var.class {
-                    crate::StorageClass::Input => {
+                    spirv::StorageClass::Input => {
                         if let Some(crate::Binding::Location(_)) = var.binding {
-                            continue;
+                            continue
                         }
                     }
-                    crate::StorageClass::Output => continue,
+                    spirv::StorageClass::Output => continue,
                     _ => {}
                 }
                 if !usage.is_empty() {
                     last_used_global = Some(handle);
                 }
             }
-
-            let fun_name = format!("{}{:?}", ep_name, stage);
-            let output_name = Name {
-                class: "Output",
-                source: NameSource::Custom {
-                    name: &fun_name,
-                    prefix: true,
-                },
-            };
-
-            let (em_str, in_mode, out_mode) = match stage {
-                crate::ShaderStage::Vertex => (
-                    "vertex",
-                    LocationMode::VertexInput,
-                    LocationMode::Intermediate,
-                ),
-                crate::ShaderStage::Fragment { .. } => (
-                    "fragment",
-                    LocationMode::Intermediate,
-                    LocationMode::FragmentOutput,
-                ),
-                crate::ShaderStage::Compute { .. } => {
-                    ("kernel", LocationMode::Uniform, LocationMode::Uniform)
+            for ep in module.entry_points.iter() {
+                if ep.function == fun_handle {
+                    if exec_model.is_some() {
+                        if exec_model != Some(ep.exec_model) {
+                            return Err(Error::MixedExecutionModels(fun_handle));
+                        }
+                    } else {
+                        exec_model = Some(ep.exec_model);
+                    }
                 }
-            };
-            let location_input_name = Name {
-                class: "Input",
-                source: NameSource::Custom {
-                    name: &fun_name,
-                    prefix: true,
-                },
-            };
+            }
+            let output_name = fun.name.or_index(OutputStructIndex(fun_handle));
 
-            match stage {
-                crate::ShaderStage::Vertex | crate::ShaderStage::Fragment => {
-                    // make dedicated input/output structs
+            // make dedicated input/output structs
+            if let Some(em) = exec_model {
+                assert_eq!(fun.return_type, None);
+                let (em_str, in_mode, out_mode) = match em {
+                    spirv::ExecutionModel::Vertex => ("vertex", LocationMode::VertexInput, LocationMode::Intermediate),
+                    spirv::ExecutionModel::Fragment => ("fragment", LocationMode::Intermediate, LocationMode::FragmentOutput),
+                    spirv::ExecutionModel::GLCompute => ("kernel", LocationMode::Uniform, LocationMode::Uniform),
+                    _ => return Err(Error::UnsupportedExecutionModel(em)),
+                };
+                let location_input_name = fun.name.or_index(InputStructIndex(fun_handle));
+
+                if em != spirv::ExecutionModel::GLCompute {
                     writeln!(self.out, "struct {} {{", location_input_name)?;
-
-                    for ((handle, var), &usage) in
-                        module.global_variables.iter().zip(&fun.global_usage)
-                    {
-                        if var.class != crate::StorageClass::Input
-                            || !usage.contains(crate::GlobalUse::LOAD)
-                        {
-                            continue;
+                    for ((handle, var), &usage) in module.global_variables.iter().zip(&fun.global_usage) {
+                        if var.class != spirv::StorageClass::Input || !usage.contains(crate::GlobalUse::LOAD) {
+                            continue
                         }
                         // if it's a struct, lift all the built-in contents up to the root
-                        let ty_handle = var.ty;
-                        if let crate::TypeInner::Struct { ref members } =
-                            module.types[ty_handle].inner
-                        {
+                        let mut ty_handle = var.ty;
+                        if GLOBAL_POINTERS {
+                            if let crate::TypeInner::Pointer { base, .. } = module.types[var.ty].inner {
+                                ty_handle = base;
+                            }
+                        }
+                        if let crate::TypeInner::Struct { ref members } = module.types[ty_handle].inner {
                             for (index, member) in members.iter().enumerate() {
-                                if let crate::MemberOrigin::BuiltIn(built_in) = member.origin {
+                                if let Some(ref binding@crate::Binding::Location(_)) = member.binding {
                                     let name = member.name.or_index(MemberIndex(index));
                                     let ty_name = module.types[member.ty].name.or_index(member.ty);
-                                    write!(self.out, "\t{} {}", ty_name, name)?;
-                                    ResolvedBinding::BuiltIn(built_in)
-                                        .try_fmt_decorated(&mut self.out, ";\n")?;
-                                }
-                            }
-                        } else if let Some(ref binding @ crate::Binding::Location(_)) = var.binding
-                        {
-                            let tyvar = TypedGlobalVariable {
-                                module,
-                                handle,
-                                usage: crate::GlobalUse::empty(),
-                            };
-                            let resolved = options.resolve_binding(binding, in_mode)?;
-
-                            write!(self.out, "\t")?;
-                            tyvar.try_fmt(&mut self.out)?;
-                            resolved.try_fmt_decorated(&mut self.out, ";\n")?;
-                        }
-                    }
-                    writeln!(self.out, "}};")?;
-
-                    writeln!(self.out, "struct {} {{", output_name)?;
-                    for ((handle, var), &usage) in
-                        module.global_variables.iter().zip(&fun.global_usage)
-                    {
-                        if var.class != crate::StorageClass::Output
-                            || !usage.contains(crate::GlobalUse::STORE)
-                        {
-                            continue;
-                        }
-                        // if it's a struct, lift all the built-in contents up to the root
-                        let ty_handle = var.ty;
-                        if let crate::TypeInner::Struct { ref members } =
-                            module.types[ty_handle].inner
-                        {
-                            for (index, member) in members.iter().enumerate() {
-                                let name = member.name.or_index(MemberIndex(index));
-                                let ty_name = module.types[member.ty].name.or_index(member.ty);
-                                match member.origin {
-                                    crate::MemberOrigin::Empty => {}
-                                    crate::MemberOrigin::BuiltIn(built_in) => {
-                                        write!(self.out, "\t{} {}", ty_name, name)?;
-                                        ResolvedBinding::BuiltIn(built_in)
-                                            .try_fmt_decorated(&mut self.out, ";\n")?;
-                                    }
-                                    crate::MemberOrigin::Offset(_) => {
-                                        //TODO
-                                    }
+                                    let resolved = options.resolve_binding(binding, in_mode)?;
+                                    writeln!(self.out, "\t{} {} [[{}]];", ty_name, name, resolved)?;
                                 }
                             }
                         } else {
-                            let tyvar = TypedGlobalVariable {
-                                module,
-                                handle,
-                                usage: crate::GlobalUse::empty(),
-                            };
-                            write!(self.out, "\t")?;
-                            tyvar.try_fmt(&mut self.out)?;
+                            if let Some(ref binding@crate::Binding::Location(_)) = var.binding {
+                                let tyvar = TypedGlobalVariable { module, handle, usage: crate::GlobalUse::empty() };
+                                let resolved = options.resolve_binding(binding, in_mode)?;
+                                writeln!(self.out, "\t{} [[{}]];", tyvar, resolved)?;
+                            }
+                        }
+                    }
+                    writeln!(self.out, "}};")?;
+                    writeln!(self.out, "struct {} {{", output_name)?;
+                    for ((handle, var), &usage) in module.global_variables.iter().zip(&fun.global_usage) {
+                        if var.class != spirv::StorageClass::Output || !usage.contains(crate::GlobalUse::STORE) {
+                            continue
+                        }
+                        // if it's a struct, lift all the built-in contents up to the root
+                        let mut ty_handle = var.ty;
+                        if GLOBAL_POINTERS {
+                            if let crate::TypeInner::Pointer { base, .. } = module.types[var.ty].inner {
+                                ty_handle = base;
+                            }
+                        }
+                        if let crate::TypeInner::Struct { ref members } = module.types[ty_handle].inner {
+                            for (index, member) in members.iter().enumerate() {
+                                let name = member.name.or_index(MemberIndex(index));
+                                let ty_name = module.types[member.ty].name.or_index(member.ty);
+                                let binding = member.binding
+                                    .as_ref()
+                                    .ok_or(Error::MissingBinding(handle))?;
+                                let resolved = options.resolve_binding(binding, out_mode)?;
+                                writeln!(self.out, "\t{} {} [[{}]];", ty_name, name, resolved)?;
+                            }
+                        } else {
+                            let tyvar = TypedGlobalVariable { module, handle, usage: crate::GlobalUse::empty() };
+                            write!(self.out, "\t{}", tyvar)?;
                             if let Some(ref binding) = var.binding {
                                 let resolved = options.resolve_binding(binding, out_mode)?;
-                                resolved.try_fmt_decorated(&mut self.out, "")?;
+                                write!(self.out, " [[{}]]", resolved)?;
                             }
                             writeln!(self.out, ";")?;
                         }
                     }
                     writeln!(self.out, "}};")?;
-
                     writeln!(self.out, "{} {} {}(", em_str, output_name, fun_name)?;
                     let separator = separate(last_used_global.is_none());
-                    writeln!(
-                        self.out,
-                        "\t{} {} [[stage_in]]{}",
-                        location_input_name, LOCATION_INPUT_STRUCT_NAME, separator
-                    )?;
-                }
-                crate::ShaderStage::Compute => {
+                    writeln!(self.out, "\t{} {} [[stage_in]]{}",
+                        location_input_name, LOCATION_INPUT_STRUCT_NAME, separator)?;
+                } else {
                     writeln!(self.out, "{} void {}(", em_str, fun_name)?;
                 }
-            };
 
-            for ((handle, var), &usage) in module.global_variables.iter().zip(&fun.global_usage) {
-                if usage.is_empty() || var.class == crate::StorageClass::Output {
-                    continue;
+                for ((handle, var), &usage) in module.global_variables.iter().zip(&fun.global_usage) {
+                    if usage.is_empty() || var.class == spirv::StorageClass::Output {
+                        continue
+                    }
+                    if var.class == spirv::StorageClass::Input {
+                        if let Some(crate::Binding::Location(_)) = var.binding {
+                            // location inputs are put into a separate struct
+                            continue
+                        }
+                    }
+                    let loc_mode = match (em, var.class) {
+                        (spirv::ExecutionModel::Vertex, spirv::StorageClass::Input) => LocationMode::VertexInput,
+                        (spirv::ExecutionModel::Vertex, spirv::StorageClass::Output) |
+                        (spirv::ExecutionModel::Fragment, spirv::StorageClass::Input) => LocationMode::Intermediate,
+                        (spirv::ExecutionModel::Fragment, spirv::StorageClass::Output) => LocationMode::FragmentOutput,
+                        _ => LocationMode::Uniform,
+                    };
+                    let resolved = options.resolve_binding(var.binding.as_ref().unwrap(), loc_mode)?;
+                    let tyvar = TypedGlobalVariable { module, handle, usage };
+                    let separator = separate(last_used_global == Some(handle));
+                    writeln!(self.out, "\t{} [[{}]]{}", tyvar, resolved, separator)?;
                 }
-                if var.class == crate::StorageClass::Input {
-                    if let Some(crate::Binding::Location(_)) = var.binding {
-                        // location inputs are put into a separate struct
-                        continue;
-                    }
+            } else {
+                let result_type_name = match fun.return_type {
+                    Some(type_id) => module.types[type_id].name.or_index(type_id),
+                    None => Name {
+                        class: "",
+                        source: NameSource::Custom { name: "void", prefix: false },
+                    },
+                };
+                writeln!(self.out, "{} {}(", result_type_name, fun_name)?;
+                for (index, &ty) in fun.parameter_types.iter().enumerate() {
+                    let name = Name::from(ParameterIndex(index));
+                    let member_type_name = module.types[ty].name.or_index(ty);
+                    let separator = separate(index + 1 == fun.parameter_types.len() && last_used_global.is_none());
+                    writeln!(self.out, "\t{} {}{}", member_type_name, name, separator)?;
                 }
-                let loc_mode = match (stage, var.class) {
-                    (crate::ShaderStage::Vertex, crate::StorageClass::Input) => {
-                        LocationMode::VertexInput
-                    }
-                    (crate::ShaderStage::Vertex, crate::StorageClass::Output)
-                    | (crate::ShaderStage::Fragment { .. }, crate::StorageClass::Input) => {
-                        LocationMode::Intermediate
-                    }
-                    (crate::ShaderStage::Fragment { .. }, crate::StorageClass::Output) => {
-                        LocationMode::FragmentOutput
-                    }
-                    _ => LocationMode::Uniform,
-                };
-                let resolved = options.resolve_binding(var.binding.as_ref().unwrap(), loc_mode)?;
-                let tyvar = TypedGlobalVariable {
-                    module,
-                    handle,
-                    usage,
-                };
-                let separator = separate(last_used_global == Some(handle));
-                write!(self.out, "\t")?;
-                tyvar.try_fmt(&mut self.out)?;
-                resolved.try_fmt_decorated(&mut self.out, separator)?;
-                writeln!(self.out)?;
             }
             writeln!(self.out, ") {{")?;
 
-            match stage {
-                crate::ShaderStage::Vertex | crate::ShaderStage::Fragment => {
+            // write down function body
+            let has_output = match exec_model {
+                Some(spirv::ExecutionModel::Vertex) |
+                Some(spirv::ExecutionModel::Fragment) => {
                     writeln!(self.out, "\t{} {};", output_name, OUTPUT_STRUCT_NAME)?;
+                    true
                 }
-                crate::ShaderStage::Compute => {}
-            }
+                _ => false
+            };
             for (local_handle, local) in fun.local_variables.iter() {
                 let ty_name = module.types[local.ty].name.or_index(local.ty);
-                write!(
-                    self.out,
-                    "\t{} {}",
-                    ty_name,
-                    local.name.or_index(local_handle)
-                )?;
+                write!(self.out, "\t{} {}", ty_name, local.name.or_index(local_handle))?;
                 if let Some(value) = local.init {
                     write!(self.out, " = ")?;
                     self.put_expression(value, fun, module)?;
                 }
                 writeln!(self.out, ";")?;
             }
-            self.put_block(Level(1), &fun.body, fun, module)?;
+            for statement in fun.body.iter() {
+                self.put_statement(Level(1), statement, fun, has_output, module)?;
+            }
             writeln!(self.out, "}}")?;
         }
 
@@ -1205,10 +970,7 @@ impl<W: Write> Writer<W> {
 }
 
 pub fn write_string(module: &crate::Module, options: Options) -> Result<String, Error> {
-    let mut w = Writer {
-        out: String::new(),
-        typifier: Typifier::new(),
-    };
+    let mut w = Writer { out: String::new() };
     w.write(module, options)?;
     Ok(w.out)
 }
