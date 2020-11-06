@@ -6,6 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["JSONHandler"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 const { HTTP_404, HTTP_505 } = ChromeUtils.import(
   "chrome://remote/content/server/HTTPD.jsm"
 );
@@ -27,10 +29,15 @@ class JSONHandler {
 
   getVersion() {
     const mainProcessTarget = this.agent.targets.getMainProcessTarget();
+
+    const { userAgent } = Cc[
+      "@mozilla.org/network/protocol;1?name=http"
+    ].getService(Ci.nsIHttpProtocolHandler);
+
     return {
-      Browser: "Firefox",
+      Browser: `${Services.appinfo.name}/${Services.appinfo.version}`,
       "Protocol-Version": "1.0",
-      "User-Agent": "Mozilla",
+      "User-Agent": userAgent,
       "V8-Version": "1.0",
       "WebKit-Version": "1.0",
       webSocketDebuggerUrl: mainProcessTarget.toJSON().webSocketDebuggerUrl,
