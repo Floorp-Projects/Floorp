@@ -22,8 +22,8 @@ const { prefs } = Services;
 const defaultPrefs = prefs.getDefaultBranch("");
 
 const FRAME_SCRIPT_INIT = `
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
-  var {prefs} = Services;
+  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  var { prefs } = Services;
   var defaultPrefs = prefs.getDefaultBranch("");
 `;
 

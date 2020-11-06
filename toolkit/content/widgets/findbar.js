@@ -795,9 +795,7 @@
         return;
       }
 
-      // The event information comes from the child process. If we need more
-      // properties/information here, change the list of sent properties in
-      // browser-content.js.
+      // The event information comes from the child process.
       let event = new target.ownerGlobal.KeyboardEvent(
         fakeEvent.type,
         fakeEvent

@@ -336,10 +336,6 @@ function registerJSWindowActor() {
   }
   isJSWindowActorRegistered = true;
   ActorManagerParent.addJSWindowActors(JSWindowActorsConfig);
-
-  // Force the immediate activation of this JSWindow Actor, so that we can immediately
-  // use the JSWindowActor, from the same event loop.
-  ActorManagerParent.flush();
 }
 
 function unregisterJSWindowActor() {

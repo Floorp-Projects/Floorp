@@ -24,13 +24,6 @@ MainProcessSingleton.prototype = {
           null
         );
 
-        // Load this script early so that console.* is initialized
-        // before other frame scripts.
-        Services.mm.loadFrameScript(
-          "chrome://global/content/browser-content.js",
-          true,
-          true
-        );
         Services.ppmm.loadProcessScript(
           "chrome://global/content/process-content.js",
           true
