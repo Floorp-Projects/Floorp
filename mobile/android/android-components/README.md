@@ -142,9 +142,9 @@ _Combined components to implement feature-specific use cases._
 
 * 🔴 [**P2P**](components/feature/p2p/README.md) - A component that provides peer-to-peer communication.
 
-* ⚪ [**Reader View**](components/feature/readerview/README.md) - A component that provides Reader View functionality.
+* 🔵 [**Reader View**](components/feature/readerview/README.md) - A component that provides Reader View functionality.
 
-* ⚪ [**QR**](components/feature/qr/README.md) - A component that provides functionality for scanning QR codes.
+* 🔵 [**QR**](components/feature/qr/README.md) - A component that provides functionality for scanning QR codes.
 
 * 🔵 [**Search**](components/feature/search/README.md) - A component that connects an (concept) engine implementation with the browser search module.
 
