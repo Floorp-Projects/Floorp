@@ -21,6 +21,7 @@ async function run() {
     for (let printer of printers) {
       printer.QueryInterface(Ci.nsIPrinter);
       info(printer.name);
+      info("duplex(" + await printer.supportsDuplex + ")");
 
       const printerInfo = await printer.printerInfo;
       const settings = printerInfo.defaultSettings;
@@ -29,7 +30,6 @@ async function run() {
       is(typeof settings.printerName, "string", "Printer name should be a string.");
       is(settings.printerName, printer.name, "Print settings' printer should match the printer that created them.");
 
-      console.log(typeof settings.paperWidth);
       is(typeof settings.paperId, "string", "Paper ID should never be null.");
       is(typeof settings.paperWidth, "number", "Paper width should never be null.");
       is(typeof settings.paperHeight, "number", "Paper height should never be null.");
