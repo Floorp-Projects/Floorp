@@ -4940,7 +4940,7 @@ bool jit::FoldLoadsWithUnbox(MIRGenerator* mir, MIRGraph& graph) {
 
       MIRType type = unbox->type();
       MUnbox::Mode mode = unbox->mode();
-      BailoutKind bailoutKind = unbox->bailoutKindUnchecked();
+      BailoutKind bailoutKind = unbox->bailoutKind();
 
       MInstruction* replacement;
       switch (load->op()) {
