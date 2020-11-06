@@ -861,7 +861,10 @@ secmod_parseCryptoPolicy(const char *policyConfig, PRBool printPolicyFeedback)
         /* don't overwrite other (future) lock flags */
         rv = NSS_OptionGet(NSS_DEFAULT_LOCKS, &locks);
         if (rv == SECSuccess) {
-            NSS_OptionSet(NSS_DEFAULT_LOCKS, locks | NSS_DEFAULT_SSL_LOCK);
+            rv = NSS_OptionSet(NSS_DEFAULT_LOCKS, locks | NSS_DEFAULT_SSL_LOCK);
+        }
+        if (rv != SECSuccess) {
+            return rv;
         }
     }
     if (NSSUTIL_ArgHasFlag("flags", "policy-lock", policyConfig)) {

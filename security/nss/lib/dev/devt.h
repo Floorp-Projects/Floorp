@@ -96,6 +96,9 @@ struct NSSSlotStr {
 };
 
 struct nssSessionStr {
+    /* Must not hold slot->lock when taking lock.
+     * See ordering in nssSlot_IsTokenPresent.
+     */
     PZLock *lock;
     CK_SESSION_HANDLE handle;
     NSSSlot *slot;
