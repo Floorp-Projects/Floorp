@@ -1821,26 +1821,28 @@ class _ASRouter {
   }
 
   async forceWNPanel(browserWindow) {
-    const win = browserWindow.ownerGlobal;
     await ToolbarPanelHub.enableToolbarButton();
 
-    win.PanelUI.showSubView(
+    browserWindow.PanelUI.showSubView(
       "PanelUI-whatsNew",
-      win.document.getElementById("whats-new-menu-button")
+      browserWindow.document.getElementById("whats-new-menu-button")
     );
 
-    let panel = win.document.getElementById("customizationui-widget-panel");
+    let panel = browserWindow.document.getElementById(
+      "customizationui-widget-panel"
+    );
     // Set the attribute to keep the panel open
     panel.setAttribute("noautohide", true);
   }
 
   async closeWNPanel(browserWindow) {
-    const win = browserWindow.ownerGlobal;
-    let panel = win.document.getElementById("customizationui-widget-panel");
+    let panel = browserWindow.document.getElementById(
+      "customizationui-widget-panel"
+    );
     // Set the attribute to allow the panel to close
     panel.setAttribute("noautohide", false);
     // Removing the button is enough to close the panel.
-    await ToolbarPanelHub._hideToolbarButton(win);
+    await ToolbarPanelHub._hideToolbarButton(browserWindow);
   }
 }
 this._ASRouter = _ASRouter;
