@@ -266,6 +266,7 @@ def run(
     setup=False,
     list_linters=False,
     num_procs=None,
+    virtualenv_manager=None,
     **lintargs
 ):
     from mozlint import LintRoller, formatters
@@ -285,7 +286,7 @@ def run(
     lint.read(find_linters(lintargs["config_paths"], linters))
 
     # Always run bootstrapping, but return early if --setup was passed in.
-    ret = lint.setup()
+    ret = lint.setup(virtualenv_manager=virtualenv_manager)
     if setup:
         return ret
 

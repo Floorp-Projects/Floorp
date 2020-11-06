@@ -4,6 +4,7 @@
 
 import os
 import re
+import subprocess
 
 # py2-compat
 try:
@@ -14,7 +15,6 @@ except ImportError:
 from mozfile import which
 
 from mozlint import result
-from mozlint.util import pip
 from mozlint.util.implementation import LintProcess
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -87,7 +87,12 @@ def get_codespell_binary():
 
 
 def setup(root, **lintargs):
-    if not pip.reinstall_program(CODESPELL_REQUIREMENTS_PATH):
+    virtualenv_manager = lintargs["virtualenv_manager"]
+    try:
+        virtualenv_manager.install_pip_requirements(
+            CODESPELL_REQUIREMENTS_PATH, quiet=True
+        )
+    except subprocess.CalledProcessError:
         print(CODESPELL_INSTALL_ERROR)
         return 1
 

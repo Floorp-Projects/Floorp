@@ -186,7 +186,7 @@ class LintRoller(object):
             linter.setdefault("exclude", []).extend(self.exclude)
             self.linters.append(linter)
 
-    def setup(self):
+    def setup(self, virtualenv_manager=None):
         """Run setup for applicable linters"""
         if not self.linters:
             raise LintersNotConfigured
@@ -198,6 +198,8 @@ class LintRoller(object):
             try:
                 setupargs = copy.deepcopy(self.lintargs)
                 setupargs["name"] = linter["name"]
+                if virtualenv_manager is not None:
+                    setupargs["virtualenv_manager"] = virtualenv_manager
                 start_time = time.time()
                 res = findobject(linter["setup"])(**setupargs)
                 self.log.debug(

@@ -8,7 +8,6 @@ import subprocess
 
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
-from mozlint.util import pip
 from mozfile import which
 
 # Error Levels
@@ -43,7 +42,12 @@ RSTCHECK_FORMAT_REGEX = re.compile(r"(.*):(.*): \(.*/([0-9]*)\) (.*)$")
 
 
 def setup(root, **lintargs):
-    if not pip.reinstall_program(rstcheck_requirements_file):
+    virtualenv_manager = lintargs["virtualenv_manager"]
+    try:
+        virtualenv_manager.install_pip_requirements(
+            rstcheck_requirements_file, quiet=True
+        )
+    except subprocess.CalledProcessError:
         print(RSTCHECK_INSTALL_ERROR)
         return 1
 
