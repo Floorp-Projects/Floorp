@@ -383,12 +383,14 @@ bool UnscaledFontMac::GetFontDescriptor(FontDescriptorOutput aCb,
   const char* cstr = CFStringGetCStringPtr(psname, kCFStringEncodingUTF8);
   if (!cstr) {
     if (!CFStringGetCString(psname, buf, sizeof(buf), kCFStringEncodingUTF8)) {
+      CFRelease(psname);
       return false;
     }
     cstr = buf;
   }
 
   aCb(reinterpret_cast<const uint8_t*>(cstr), strlen(cstr), 0, aBaton);
+  CFRelease(psname);
   return true;
 }
 
