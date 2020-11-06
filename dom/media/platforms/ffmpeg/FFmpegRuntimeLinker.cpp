@@ -10,7 +10,8 @@
 #include "FFmpegLog.h"
 #include "prlink.h"
 #ifdef MOZ_WAYLAND
-#  include "gfxPlatformGtk.h"
+#  include "mozilla/widget/DMABufLibWrapper.h"
+#  include "mozilla/StaticPrefs_media.h"
 #endif
 
 namespace mozilla {
@@ -57,30 +58,23 @@ bool FFmpegRuntimeLinker::Init() {
   }
 
 #ifdef MOZ_WAYLAND
-  if (gfxPlatformGtk::GetPlatform()->UseHardwareVideoDecoding()) {
+  if (widget::GetDMABufDevice()->IsDMABufVAAPIEnabled()) {
     PRLibSpec lspec;
     lspec.type = PR_LibSpec_Pathname;
+    const char* libDrm = "libva-drm.so.2";
+    lspec.value.pathname = libDrm;
+    sLibAV.mVALibDrm = PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
+    if (!sLibAV.mVALibDrm) {
+      FFMPEG_LOG("VA-API support: Missing or old %s library.\n", libDrm);
+    }
 
-    if (gfxPlatformGtk::GetPlatform()->UseDRMVAAPIDisplay()) {
-      const char* libDrm = "libva-drm.so.2";
-      lspec.value.pathname = libDrm;
-      sLibAV.mVALibDrm =
+    if (!StaticPrefs::media_ffmpeg_vaapi_drm_display_enabled()) {
+      const char* libWayland = "libva-wayland.so.2";
+      lspec.value.pathname = libWayland;
+      sLibAV.mVALibWayland =
           PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
-      if (!sLibAV.mVALibDrm) {
-        FFMPEG_LOG("VA-API support: Missing or old %s library.\n", libDrm);
-      }
-    } else {
-      if (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay()) {
-        const char* libWayland = "libva-wayland.so.2";
-        lspec.value.pathname = libWayland;
-        sLibAV.mVALibWayland =
-            PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
-        if (!sLibAV.mVALibWayland) {
-          FFMPEG_LOG("VA-API support: Missing or old %s library.\n",
-                     libWayland);
-        }
-      } else {
-        FFMPEG_LOG("VA-API X11 display is not implemented.\n");
+      if (!sLibAV.mVALibWayland) {
+        FFMPEG_LOG("VA-API support: Missing or old %s library.\n", libWayland);
       }
     }
 
