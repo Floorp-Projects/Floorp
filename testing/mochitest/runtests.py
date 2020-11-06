@@ -1278,6 +1278,20 @@ class MochitestDesktop(object):
                 "websocket/process bridge startup."
             )
 
+    def needsWebsocketProcessBridge(self, options):
+        """
+        Returns a bool indicating if the current test configuration needs
+        to start the websocket process bridge or not. The boils down to if
+        WebRTC tests that need the bridge are present.
+        """
+        tests = self.getActiveTests(options)
+        is_webrtc_tag_present = False
+        for test in tests:
+            if "webrtc" in test.get("tags", ""):
+                is_webrtc_tag_present = True
+                break
+        return is_webrtc_tag_present and options.subsuite in ["media"]
+
     def startServers(self, options, debuggerInfo, public=None):
         # start servers and set ports
         # TODO: pass these values, don't set on `self`
@@ -1296,7 +1310,8 @@ class MochitestDesktop(object):
         self.startWebServer(options)
         self.startWebSocketServer(options, debuggerInfo)
 
-        if options.subsuite in ["media"]:
+        # Only webrtc mochitests in the media suite need the websocketprocessbridge.
+        if self.needsWebsocketProcessBridge(options):
             self.startWebsocketProcessBridge(options)
 
         # start SSL pipe
@@ -1624,6 +1639,8 @@ toolbar#nav-bar {
                 testob["expected"] = test["expected"]
             if "scheme" in test:
                 testob["scheme"] = test["scheme"]
+            if "tags" in test:
+                testob["tags"] = test["tags"]
             if options.failure_pattern_file:
                 pat_file = os.path.join(
                     os.path.dirname(test["manifest"]), options.failure_pattern_file

@@ -89,6 +89,14 @@ class JUnitTestRunner(MochitestDesktop):
         self.startServers(self.options, debuggerInfo=None, public=True)
         self.log.debug("Servers started")
 
+    def needsWebsocketProcessBridge(self, options):
+        """
+        Overrides MochitestDesktop.needsWebsocketProcessBridge and always
+        returns False as the junit tests do not use the websocket process
+        bridge. This is needed to satisfy MochitestDesktop.startServers.
+        """
+        return False
+
     def server_init(self):
         """
         Additional initialization required to satisfy MochitestDesktop.startServers
