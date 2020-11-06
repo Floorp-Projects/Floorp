@@ -94,6 +94,9 @@ class TestCapabilities(MarionetteTestCase):
 
         self.assertIn("moz:buildID", self.caps)
         self.assertEqual(self.caps["moz:buildID"], self.appinfo["buildID"])
+
+        self.assertNotIn("moz:debuggerAddress", self.caps)
+
         self.assertIn("moz:useNonSpecCompliantPointerOrigin", self.caps)
         self.assertFalse(self.caps["moz:useNonSpecCompliantPointerOrigin"])
 
