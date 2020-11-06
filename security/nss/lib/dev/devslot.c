@@ -171,11 +171,12 @@ nssSlot_IsTokenPresent(
 
     nssSlot_EnterMonitor(slot);
     ckrv = CKAPI(epv)->C_GetSlotInfo(slot->slotID, &slotInfo);
-    nssSlot_ExitMonitor(slot);
     if (ckrv != CKR_OK) {
-        slot->token->base.name[0] = 0; /* XXX */
+        if (slot->token) {
+            slot->token->base.name[0] = 0; /* XXX */
+        }
         isPresent = PR_FALSE;
-        goto done;
+        goto done; /* slot lock held */
     }
     slot->ckFlags = slotInfo.flags;
     /* check for the presence of the token */
@@ -183,7 +184,7 @@ nssSlot_IsTokenPresent(
         if (!slot->token) {
             /* token was never present */
             isPresent = PR_FALSE;
-            goto done;
+            goto done; /* slot lock held */
         }
         session = nssToken_GetDefaultSession(slot->token);
         if (session) {
@@ -206,8 +207,16 @@ nssSlot_IsTokenPresent(
         /* clear the token cache */
         nssToken_Remove(slot->token);
         isPresent = PR_FALSE;
-        goto done;
+        goto done; /* slot lock held */
     }
+    if (!slot->token) {
+        /* This should not occur, based on the fact that the
+         * below calls will dereference NULL otherwise. */
+        PORT_Assert(0);
+        isPresent = PR_FALSE;
+        goto done; /* slot lock held */
+    }
+
     /* token is present, use the session info to determine if the card
      * has been removed and reinserted.
      */
@@ -230,7 +239,7 @@ nssSlot_IsTokenPresent(
         /* token not removed, finished */
         if (!tokenRemoved) {
             isPresent = PR_TRUE;
-            goto done;
+            goto done; /* slot lock held */
         }
     }
     /* the token has been removed, and reinserted, or the slot contains
@@ -248,6 +257,7 @@ nssSlot_IsTokenPresent(
         isPresent = PR_FALSE;
     }
 done:
+    nssSlot_ExitMonitor(slot);
     /* Once we've set up the condition variable,
      * Before returning, it's necessary to:
      *  1) Set the lastTokenPingTime so that any other threads waiting on this

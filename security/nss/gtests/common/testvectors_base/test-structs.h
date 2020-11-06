@@ -32,6 +32,7 @@ typedef struct AesCmacTestVectorStr {
   std::string tag;
   bool invalid;
 } AesCmacTestVector;
+typedef AesCmacTestVector HmacTestVector;
 
 typedef struct AesGcmKatValueStr {
   uint32_t id;
@@ -66,6 +67,8 @@ typedef struct EcdsaTestVectorStr {
   bool valid;
 } EcdsaTestVector;
 
+typedef EcdsaTestVector DsaTestVector;
+
 typedef struct EcdhTestVectorStr {
   uint32_t id;
   std::vector<uint8_t> private_key;
@@ -74,6 +77,16 @@ typedef struct EcdhTestVectorStr {
   bool invalid_asn;
   bool valid;
 } EcdhTestVector;
+
+typedef struct HkdfTestVectorStr {
+  uint32_t id;
+  std::string ikm;
+  std::string salt;
+  std::string info;
+  std::string okm;
+  uint32_t size;
+  bool valid;
+} HkdfTestVector;
 
 typedef struct RsaSignatureTestVectorStr {
   SECOidTag hash_oid;
