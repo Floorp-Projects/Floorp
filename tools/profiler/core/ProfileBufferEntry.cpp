@@ -1212,10 +1212,6 @@ void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
         if (mozilla::base_profiler_markers_detail::
                 DeserializeAfterKindAndStream(
                     aER, aWriter, aThreadId,
-                    [&](const mozilla::ProfilerString8View& aName) {
-                      aUniqueStacks.mUniqueStrings->WriteElement(aWriter,
-                                                                 aName);
-                    },
                     [&](ProfileChunkedBuffer& aChunkedBuffer) {
                       ProfilerBacktrace backtrace("", &aChunkedBuffer);
                       backtrace.StreamJSON(aWriter, aProcessStartTime,

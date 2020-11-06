@@ -3772,11 +3772,7 @@ void StreamMarkers(const mozilla::ProfileChunkedBuffer& aBuffer,
 
       const bool success =
           mozilla::base_profiler_markers_detail::DeserializeAfterKindAndStream(
-              aEntryReader, aWriter, 0,
-              [&](const mozilla::ProfilerString8View& aName) {
-                aWriter.StringElement(aName);
-              },
-              [&](mozilla::ProfileChunkedBuffer&) {
+              aEntryReader, aWriter, 0, [&](mozilla::ProfileChunkedBuffer&) {
                 aWriter.StringElement("Real backtrace would be here");
               });
       MOZ_RELEASE_ASSERT(success);
