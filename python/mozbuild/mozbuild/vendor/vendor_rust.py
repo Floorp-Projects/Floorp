@@ -73,7 +73,13 @@ class VendorRust(MozbuildObject):
 
             cargo = which("cargo")
             if not cargo:
-                raise OSError(errno.ENOENT, "Could not find 'cargo' on your $PATH.")
+                raise OSError(
+                    errno.ENOENT,
+                    (
+                        "Could not find 'cargo' on your $PATH. "
+                        "Hint: have you run `mach build` or `mach configure`?"
+                    ),
+                )
             return cargo
 
     def check_cargo_version(self, cargo):
