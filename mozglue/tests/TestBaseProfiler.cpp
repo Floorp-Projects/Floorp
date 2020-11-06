@@ -3742,7 +3742,7 @@ void TestUniqueJSONStrings() {
 }
 
 void StreamMarkers(const mozilla::ProfileChunkedBuffer& aBuffer,
-                   mozilla::JSONWriter& aWriter) {
+                   mozilla::baseprofiler::SpliceableJSONWriter& aWriter) {
   aWriter.Start();
   {
     aWriter.StartArrayProperty("data");
@@ -3922,8 +3922,9 @@ void TestUserMarker() {
     static constexpr Span<const char> MarkerTypeName() {
       return MakeStringSpan("test-minimal");
     }
-    static void StreamJSONMarkerData(mozilla::JSONWriter& aWriter,
-                                     const std::string& aText) {
+    static void StreamJSONMarkerData(
+        mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+        const std::string& aText) {
       aWriter.StringProperty("text", aText);
     }
     static mozilla::MarkerSchema MarkerTypeDisplay() {

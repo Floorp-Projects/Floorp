@@ -48,7 +48,8 @@ struct Budget {
   static constexpr mozilla::Span<const char> MarkerTypeName() {
     return mozilla::MakeStringSpan("Budget");
   }
-  static void StreamJSONMarkerData(mozilla::JSONWriter& aWriter) {}
+  static void StreamJSONMarkerData(
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter) {}
   static mozilla::MarkerSchema MarkerTypeDisplay() {
     using MS = mozilla::MarkerSchema;
     MS schema{MS::Location::markerChart, MS::Location::markerTable};
@@ -62,7 +63,7 @@ struct Pref {
     return mozilla::MakeStringSpan("PreferenceRead");
   }
   static void StreamJSONMarkerData(
-      mozilla::JSONWriter& aWriter,
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
       const mozilla::ProfilerString8View& aPrefName,
       const mozilla::Maybe<mozilla::PrefValueKind>& aPrefKind,
       const mozilla::Maybe<mozilla::PrefType>& aPrefType,
@@ -124,9 +125,9 @@ struct LayerTranslation {
   static constexpr mozilla::Span<const char> MarkerTypeName() {
     return mozilla::MakeStringSpan("LayerTranslation");
   }
-  static void StreamJSONMarkerData(mozilla::JSONWriter& aWriter,
-                                   mozilla::layers::Layer* aLayer,
-                                   mozilla::gfx::Point aPoint) {
+  static void StreamJSONMarkerData(
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+      mozilla::layers::Layer* aLayer, mozilla::gfx::Point aPoint) {
     const size_t bufferSize = 32;
     char buffer[bufferSize];
     SprintfLiteral(buffer, "%p", aLayer);
@@ -150,7 +151,8 @@ struct Vsync {
   static constexpr mozilla::Span<const char> MarkerTypeName() {
     return mozilla::MakeStringSpan("VsyncTimestamp");
   }
-  static void StreamJSONMarkerData(mozilla::JSONWriter& aWriter) {}
+  static void StreamJSONMarkerData(
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter) {}
   static mozilla::MarkerSchema MarkerTypeDisplay() {
     using MS = mozilla::MarkerSchema;
     MS schema{MS::Location::markerChart, MS::Location::markerTable};
@@ -164,7 +166,7 @@ struct Network {
     return mozilla::MakeStringSpan("Network");
   }
   static void StreamJSONMarkerData(
-      mozilla::JSONWriter& aWriter, int64_t aID,
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter, int64_t aID,
       const mozilla::ProfilerString8View& aURI, NetworkLoadType aType,
       const mozilla::TimeStamp& aStartTime, const mozilla::TimeStamp& aEndTime,
       int32_t aPri, int64_t aCount,
@@ -266,7 +268,7 @@ struct ScreenshotPayload {
     return mozilla::MakeStringSpan("CompositorScreenshot");
   }
   static void StreamJSONMarkerData(
-      mozilla::JSONWriter& aWriter,
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
       const mozilla::ProfilerString8View& aScreenshotDataURL,
       const mozilla::gfx::IntSize& aWindowSize, uintptr_t aWindowIdentifier) {
     // TODO: Use UniqueStacks&Strings
@@ -290,7 +292,7 @@ struct GCSlice {
     return mozilla::MakeStringSpan("GCSlice");
   }
   static void StreamJSONMarkerData(
-      mozilla::JSONWriter& aWriter,
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
       const mozilla::ProfilerString8View& aTimingJSON) {
     if (aTimingJSON.Length() != 0) {
       // TODO: Is SplicedJSONProperty necessary here? (Guessing yes!)
@@ -314,7 +316,7 @@ struct GCMajor {
     return mozilla::MakeStringSpan("GCMajor");
   }
   static void StreamJSONMarkerData(
-      mozilla::JSONWriter& aWriter,
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
       const mozilla::ProfilerString8View& aTimingJSON) {
     if (aTimingJSON.Length() != 0) {
       // TODO: Is SplicedJSONProperty necessary here? (Guessing yes!)
@@ -338,7 +340,7 @@ struct GCMinor {
     return mozilla::MakeStringSpan("GCMinor");
   }
   static void StreamJSONMarkerData(
-      mozilla::JSONWriter& aWriter,
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
       const mozilla::ProfilerString8View& aTimingJSON) {
     if (aTimingJSON.Length() != 0) {
       // TODO: Is SplicedJSONProperty necessary here? (Guessing yes!)
@@ -362,7 +364,7 @@ struct StyleMarkerPayload {
     return mozilla::MakeStringSpan("Styles");
   }
   static void StreamJSONMarkerData(
-      mozilla::JSONWriter& aWriter,
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
       const mozilla::ServoTraversalStatistics& aStats) {
     aWriter.IntProperty("elementsTraversed", aStats.mElementsTraversed);
     aWriter.IntProperty("elementsStyled", aStats.mElementsStyled);
@@ -393,7 +395,7 @@ class JsAllocationMarkerPayload {
     return mozilla::MakeStringSpan("JS allocation");
   }
   static void StreamJSONMarkerData(
-      mozilla::JSONWriter& aWriter,
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
       const mozilla::ProfilerString16View& aTypeName,
       const mozilla::ProfilerString8View& aClassName,
       const mozilla::ProfilerString16View& aDescriptiveTypeName,
@@ -429,8 +431,9 @@ struct NativeAllocationMarkerPayload {
   static constexpr mozilla::Span<const char> MarkerTypeName() {
     return mozilla::MakeStringSpan("Native allocation");
   }
-  static void StreamJSONMarkerData(mozilla::JSONWriter& aWriter, int64_t aSize,
-                                   uintptr_t aMemoryAddress, int aThreadId) {
+  static void StreamJSONMarkerData(
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter, int64_t aSize,
+      uintptr_t aMemoryAddress, int aThreadId) {
     aWriter.IntProperty("size", aSize);
     aWriter.IntProperty("memoryAddress", static_cast<int64_t>(aMemoryAddress));
     aWriter.IntProperty("threadId", aThreadId);
@@ -444,14 +447,12 @@ struct IPCMarkerPayload {
   static constexpr mozilla::Span<const char> MarkerTypeName() {
     return mozilla::MakeStringSpan("IPC");
   }
-  static void StreamJSONMarkerData(mozilla::JSONWriter& aWriter,
-                                   int32_t aOtherPid, int32_t aMessageSeqno,
-                                   IPC::Message::msgid_t aMessageType,
-                                   mozilla::ipc::Side aSide,
-                                   mozilla::ipc::MessageDirection aDirection,
-                                   mozilla::ipc::MessagePhase aPhase,
-                                   bool aSync,
-                                   const mozilla::TimeStamp& aTime) {
+  static void StreamJSONMarkerData(
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter, int32_t aOtherPid,
+      int32_t aMessageSeqno, IPC::Message::msgid_t aMessageType,
+      mozilla::ipc::Side aSide, mozilla::ipc::MessageDirection aDirection,
+      mozilla::ipc::MessagePhase aPhase, bool aSync,
+      const mozilla::TimeStamp& aTime) {
     // TODO: Remove these Legacy times when frontend is updated.
     mozilla::baseprofiler::WritePropertyTime(aWriter, "startTime", aTime);
     mozilla::baseprofiler::WritePropertyTime(aWriter, "endTime", aTime);

@@ -20,7 +20,7 @@
 // Everything below is internal implementation detail, you shouldn't need to
 // look at it unless working on the profiler code.
 
-#  include "mozilla/JSONWriter.h"
+#  include "mozilla/BaseProfileJSONWriter.h"
 #  include "mozilla/ProfileBufferEntryKinds.h"
 
 #  include <limits>
@@ -45,7 +45,7 @@ struct Streaming {
   // A `MarkerDataDeserializer` is a free function that can read a serialized
   // payload from an `EntryReader` and streams it as JSON object properties.
   using MarkerDataDeserializer = void (*)(ProfileBufferEntryReader&,
-                                          JSONWriter&);
+                                          baseprofiler::SpliceableJSONWriter&);
 
   // A `MarkerTypeNameFunction` is a free function that returns the name of the
   // marker type.
@@ -91,10 +91,10 @@ template <typename T>
 struct StreamFunctionTypeHelper;
 
 // Helper specialization that takes the expected
-// `StreamJSONMarkerData(JSONWriter&, ...)` function and provide information
-// about the `...` parameters.
+// `StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter&, ...)` function and
+// provide information about the `...` parameters.
 template <typename R, typename... As>
-struct StreamFunctionTypeHelper<R(JSONWriter&, As...)> {
+struct StreamFunctionTypeHelper<R(baseprofiler::SpliceableJSONWriter&, As...)> {
   constexpr static size_t scArity = sizeof...(As);
   using TupleType =
       std::tuple<std::remove_cv_t<std::remove_reference_t<As>>...>;
@@ -120,8 +120,9 @@ struct StreamFunctionTypeHelper<R(JSONWriter&, As...)> {
 // functions. See example in BaseProfilerMarkers.h.
 template <typename MarkerType>
 struct MarkerTypeSerialization {
-  // Definitions to access the expected `StreamJSONMarkerData(JSONWriter&, ...)`
-  // function and its parameters.
+  // Definitions to access the expected
+  // `StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter&, ...)` function
+  // and its parameters.
   using StreamFunctionType =
       StreamFunctionTypeHelper<decltype(MarkerType::StreamJSONMarkerData)>;
   constexpr static size_t scStreamFunctionParameterCount =
@@ -170,7 +171,8 @@ struct MarkerTypeSerialization {
   // stream call; tested up to 40 arguments: https://godbolt.org/z/5KeeM4
   template <size_t i = 0, typename... Args>
   static void DeserializeArguments(ProfileBufferEntryReader& aEntryReader,
-                                   JSONWriter& aWriter, const Args&... aArgs) {
+                                   baseprofiler::SpliceableJSONWriter& aWriter,
+                                   const Args&... aArgs) {
     static_assert(sizeof...(Args) == i,
                   "We should have collected `i` arguments so far");
     if constexpr (i < scStreamFunctionParameterCount) {
@@ -189,7 +191,7 @@ struct MarkerTypeSerialization {
 
  public:
   static void Deserialize(ProfileBufferEntryReader& aEntryReader,
-                          JSONWriter& aWriter) {
+                          baseprofiler::SpliceableJSONWriter& aWriter) {
     aWriter.StringProperty("type", MarkerType::MarkerTypeName());
     DeserializeArguments(aEntryReader, aWriter);
   }
@@ -221,7 +223,8 @@ static ProfileBufferBlockIndex AddMarkerWithOptionalStackToBuffer(
         static constexpr Span<const char> MarkerTypeName() {
           return MakeStringSpan("NoPayloadUserData");
         }
-        static void StreamJSONMarkerData(JSONWriter& aWriter) {
+        static void StreamJSONMarkerData(
+            baseprofiler::SpliceableJSONWriter& aWriter) {
           // No user payload.
         }
         static mozilla::MarkerSchema MarkerTypeDisplay() {
@@ -290,9 +293,9 @@ ProfileBufferBlockIndex AddMarkerToBuffer(
 
 template <typename NameCallback, typename StackCallback>
 [[nodiscard]] bool DeserializeAfterKindAndStream(
-    ProfileBufferEntryReader& aEntryReader, JSONWriter& aWriter,
-    int aThreadIdOrZero, NameCallback&& aNameCallback,
-    StackCallback&& aStackCallback) {
+    ProfileBufferEntryReader& aEntryReader,
+    baseprofiler::SpliceableJSONWriter& aWriter, int aThreadIdOrZero,
+    NameCallback&& aNameCallback, StackCallback&& aStackCallback) {
   // Each entry is made up of the following:
   //   ProfileBufferEntry::Kind::Marker, <- already read by caller
   //   options,                          <- next location in entries
