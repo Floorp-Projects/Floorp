@@ -2049,29 +2049,33 @@ getHardcodedLayout = isBasicLayout => ({
             alignment: "left-align",
             links: [
               {
-                name: "Must Reads",
-                url: "https://getpocket.com/explore/must-reads?src=fx_new_tab",
-              },
-              {
                 name: "Self Improvement",
                 url:
-                  "https://getpocket.com/explore/self-improvement?src=fx_new_tab",
+                  "https://getpocket.com/explore/self-improvement?utm_source=pocket-newtab",
+              },
+              {
+                name: "Food",
+                url:
+                  "https://getpocket.com/explore/food?utm_source=pocket-newtab",
+              },
+              {
+                name: "Entertainment",
+                url:
+                  "https://getpocket.com/explore/entertainment?utm_source=pocket-newtab",
               },
               {
                 name: "Health",
-                url: "https://getpocket.com/explore/health?src=fx_new_tab",
+                url:
+                  "https://getpocket.com/explore/health?utm_source=pocket-newtab",
               },
               {
-                name: "Business",
-                url: "https://getpocket.com/explore/business?src=fx_new_tab",
-              },
-              {
-                name: "Technology",
-                url: "https://getpocket.com/explore/technology?src=fx_new_tab",
+                name: "Science",
+                url:
+                  "https://getpocket.com/explore/science?utm_source=pocket-newtab",
               },
               {
                 name: "More Recommendations ›",
-                url: "https://getpocket.com/explore?src=fx_new_tab&cdn=0",
+                url: "https://getpocket.com/explore?utm_source=pocket-newtab",
               },
             ],
           },
