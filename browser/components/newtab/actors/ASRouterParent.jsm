@@ -27,6 +27,7 @@ class ASRouterTabs {
       .then(initializer => {
         const parentProcessMessageHandler = initializer.connect({
           clearChildMessages: ids => this.messageAll("ClearMessages", ids),
+          clearChildProviders: ids => this.messageAll("ClearProviders", ids),
           updateAdminState: state => this.messageAll("UpdateAdminState", state),
         });
         this.destroy = () => {
