@@ -72,6 +72,7 @@ job-defaults:
               type: directory
     run-visual-metrics: True
     chimera: True
+    web-render-only: True
     run:
         using: run-task
         checkout: false
@@ -106,6 +107,7 @@ jobs:
 
     tp6m-2-cold:
         test-name: google
+        web-render-only: False
         treeherder:
             symbol: 'Btime(tp6m-2-c)'
 
@@ -126,6 +128,7 @@ jobs:
 
     tp6m-6-cold:
         test-name: amazon-search
+        web-render-only: False
         treeherder:
             symbol: 'Btime(tp6m-6-c)'
 
@@ -151,6 +154,7 @@ jobs:
 
     tp6m-11-cold:
         test-name: microsoft-support
+        web-render-only: False
         treeherder:
             symbol: 'Btime(tp6m-11-c)'
 
@@ -161,6 +165,7 @@ jobs:
 
     tp6m-13-cold:
         test-name: espn
+        web-render-only: False
         treeherder:
             symbol: 'Btime(tp6m-13-c)'
 
@@ -171,6 +176,7 @@ jobs:
 
     tp6m-15-cold:
         test-name: facebook
+        web-render-only: False
         treeherder:
             symbol: 'Btime(tp6m-15-c)'
 
@@ -196,6 +202,7 @@ jobs:
 
     tp6m-20-cold:
         test-name: youtube-watch
+        web-render-only: False
         treeherder:
             symbol: 'Btime(tp6m-20-c)'
 
@@ -216,6 +223,7 @@ jobs:
 
     tp6m-24-cold:
         test-name: allrecipes
+        web-render-only: False
         treeherder:
             symbol: 'Btime(tp6m-24-c)'
 

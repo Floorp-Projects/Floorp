@@ -111,6 +111,23 @@ def build_browsertime_task(config, tasks):
 
 
 @transforms.add
+def enable_webrender(config, tasks):
+    for task in tasks:
+        if not task.pop("web-render-only", False):
+            newtask = copy.deepcopy(task)
+            yield newtask
+        task["run"]["command"].append("--enable-webrender")
+        task["name"] += "-wr"
+        task["description"] += "-wr"
+
+        # Setup group symbol
+        group, sym = task["treeherder"]["symbol"].split("(")
+        task["treeherder"]["symbol"] = "{}-wr({})".format(group, sym[:-1])
+
+        yield task
+
+
+@transforms.add
 def fill_email_data(config, tasks):
     product_name = config.graph_config['taskgraph']['repositories']['mobile']['name']
     format_kwargs = {
