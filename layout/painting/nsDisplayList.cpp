@@ -883,6 +883,18 @@ bool nsDisplayListBuilder::ShouldRebuildDisplayListDueToPrefChange() {
   return false;
 }
 
+void nsDisplayListBuilder::AddScrollFrameToNotify(
+    nsIScrollableFrame* aScrollFrame) {
+  mScrollFramesToNotify.insert(aScrollFrame);
+}
+
+void nsDisplayListBuilder::NotifyAndClearScrollFrames() {
+  for (const auto& it : mScrollFramesToNotify) {
+    it->NotifyApzTransaction();
+  }
+  mScrollFramesToNotify.clear();
+}
+
 bool nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(
     nsIFrame* aDirtyFrame, nsIFrame* aFrame, const nsRect& aVisibleRect,
     const nsRect& aDirtyRect) {
@@ -2320,6 +2332,8 @@ FrameLayerBuilder* nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
       root = layerBuilder->BuildContainerLayerFor(aBuilder, aLayerManager,
                                                   frame, nullptr, this,
                                                   containerParameters, nullptr);
+
+      aBuilder->NotifyAndClearScrollFrames();
 
       if (!record.GetStart().IsNull() &&
           StaticPrefs::layers_acceleration_draw_fps()) {
