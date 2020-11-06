@@ -399,7 +399,7 @@
 
 - name: apz.fling_accel_max_pause_interval_ms
   type: RelaxedAtomicInt32
-  value: 65
+  value: 50
   mirror: always
 
 - name: apz.fling_curve_function_x1
