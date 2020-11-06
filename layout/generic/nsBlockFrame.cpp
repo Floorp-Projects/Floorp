@@ -6650,8 +6650,7 @@ void nsBlockFrame::ReflowFloat(BlockReflowInput& aState,
   aFloatMargin =
       // float margins don't collapse
       floatRS.ComputedLogicalMargin(wm);
-  aFloatOffsets =
-      floatRS.ComputedLogicalOffsets().ConvertTo(wm, floatRS.GetWritingMode());
+  aFloatOffsets = floatRS.ComputedLogicalOffsets(wm);
 
   const ReflowOutput& metrics = brc.GetMetrics();
 
