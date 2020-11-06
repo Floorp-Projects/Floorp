@@ -3,6 +3,12 @@ name = "qcms"
 authors = ["Jeff Muizelaar", "Benoit Girard", "Andrew Osmond"]
 version = "0.1.0"
 edition = "2018"
+include = ["src/**/*", "build.rs"]
+description = "lightweight color management"
+documentation = "https://docs.rs/qcms"
+license = "MIT"
+keywords = ["color"]
+categories = ["graphics"]
 
 [dependencies]
 libc = "0.2"
