@@ -1,16 +1,19 @@
 #![feature(test)]
-
 extern crate test;
+extern crate rand;
+extern crate fnv;
 #[macro_use]
 extern crate lazy_static;
 
+use std::hash::Hash;
 use fnv::FnvHasher;
 use std::hash::BuildHasherDefault;
-use std::hash::Hash;
 type FnvBuilder = BuildHasherDefault<FnvHasher>;
 
-use test::black_box;
 use test::Bencher;
+use test::black_box;
+
+extern crate indexmap;
 
 use indexmap::IndexMap;
 
@@ -18,33 +21,35 @@ use std::collections::HashMap;
 use std::iter::FromIterator;
 
 use rand::rngs::SmallRng;
+use rand::FromEntropy;
 use rand::seq::SliceRandom;
-use rand::SeedableRng;
-
-/// Use a consistently seeded Rng for benchmark stability
-fn small_rng() -> SmallRng {
-    let seed = u64::from_le_bytes(*b"indexmap");
-    SmallRng::seed_from_u64(seed)
-}
 
 #[bench]
 fn new_hashmap(b: &mut Bencher) {
-    b.iter(|| HashMap::<String, String>::new());
+    b.iter(|| {
+        HashMap::<String, String>::new()
+    });
 }
 
 #[bench]
-fn new_indexmap(b: &mut Bencher) {
-    b.iter(|| IndexMap::<String, String>::new());
+fn new_orderedmap(b: &mut Bencher) {
+    b.iter(|| {
+        IndexMap::<String, String>::new()
+    });
 }
 
 #[bench]
 fn with_capacity_10e5_hashmap(b: &mut Bencher) {
-    b.iter(|| HashMap::<String, String>::with_capacity(10_000));
+    b.iter(|| {
+        HashMap::<String, String>::with_capacity(10_000)
+    });
 }
 
 #[bench]
-fn with_capacity_10e5_indexmap(b: &mut Bencher) {
-    b.iter(|| IndexMap::<String, String>::with_capacity(10_000));
+fn with_capacity_10e5_orderedmap(b: &mut Bencher) {
+    b.iter(|| {
+        IndexMap::<String, String>::with_capacity(10_000)
+    });
 }
 
 #[bench]
@@ -60,7 +65,7 @@ fn insert_hashmap_10_000(b: &mut Bencher) {
 }
 
 #[bench]
-fn insert_indexmap_10_000(b: &mut Bencher) {
+fn insert_orderedmap_10_000(b: &mut Bencher) {
     let c = 10_000;
     b.iter(|| {
         let mut map = IndexMap::with_capacity(c);
@@ -84,7 +89,7 @@ fn insert_hashmap_string_10_000(b: &mut Bencher) {
 }
 
 #[bench]
-fn insert_indexmap_string_10_000(b: &mut Bencher) {
+fn insert_orderedmap_string_10_000(b: &mut Bencher) {
     let c = 10_000;
     b.iter(|| {
         let mut map = IndexMap::with_capacity(c);
@@ -109,7 +114,7 @@ fn insert_hashmap_str_10_000(b: &mut Bencher) {
 }
 
 #[bench]
-fn insert_indexmap_str_10_000(b: &mut Bencher) {
+fn insert_orderedmap_str_10_000(b: &mut Bencher) {
     let c = 10_000;
     let ss = Vec::from_iter((0..c).map(|x| x.to_string()));
     b.iter(|| {
@@ -135,7 +140,7 @@ fn insert_hashmap_int_bigvalue_10_000(b: &mut Bencher) {
 }
 
 #[bench]
-fn insert_indexmap_int_bigvalue_10_000(b: &mut Bencher) {
+fn insert_orderedmap_int_bigvalue_10_000(b: &mut Bencher) {
     let c = 10_000;
     let value = [0u64; 10];
     b.iter(|| {
@@ -160,7 +165,7 @@ fn insert_hashmap_100_000(b: &mut Bencher) {
 }
 
 #[bench]
-fn insert_indexmap_100_000(b: &mut Bencher) {
+fn insert_orderedmap_100_000(b: &mut Bencher) {
     let c = 100_000;
     b.iter(|| {
         let mut map = IndexMap::with_capacity(c);
@@ -184,7 +189,7 @@ fn insert_hashmap_150(b: &mut Bencher) {
 }
 
 #[bench]
-fn insert_indexmap_150(b: &mut Bencher) {
+fn insert_orderedmap_150(b: &mut Bencher) {
     let c = 150;
     b.iter(|| {
         let mut map = IndexMap::with_capacity(c);
@@ -208,7 +213,7 @@ fn entry_hashmap_150(b: &mut Bencher) {
 }
 
 #[bench]
-fn entry_indexmap_150(b: &mut Bencher) {
+fn entry_orderedmap_150(b: &mut Bencher) {
     let c = 150;
     b.iter(|| {
         let mut map = IndexMap::with_capacity(c);
@@ -223,31 +228,35 @@ fn entry_indexmap_150(b: &mut Bencher) {
 fn iter_sum_hashmap_10_000(b: &mut Bencher) {
     let c = 10_000;
     let mut map = HashMap::with_capacity(c);
-    let len = c - c / 10;
+    let len = c - c/10;
     for x in 0..len {
         map.insert(x, ());
     }
     assert_eq!(map.len(), len);
-    b.iter(|| map.keys().sum::<usize>());
+    b.iter(|| {
+        map.keys().sum::<usize>()
+    });
 }
 
 #[bench]
-fn iter_sum_indexmap_10_000(b: &mut Bencher) {
+fn iter_sum_orderedmap_10_000(b: &mut Bencher) {
     let c = 10_000;
     let mut map = IndexMap::with_capacity(c);
-    let len = c - c / 10;
+    let len = c - c/10;
     for x in 0..len {
         map.insert(x, ());
     }
     assert_eq!(map.len(), len);
-    b.iter(|| map.keys().sum::<usize>());
+    b.iter(|| {
+        map.keys().sum::<usize>()
+    });
 }
 
 #[bench]
 fn iter_black_box_hashmap_10_000(b: &mut Bencher) {
     let c = 10_000;
     let mut map = HashMap::with_capacity(c);
-    let len = c - c / 10;
+    let len = c - c/10;
     for x in 0..len {
         map.insert(x, ());
     }
@@ -260,10 +269,10 @@ fn iter_black_box_hashmap_10_000(b: &mut Bencher) {
 }
 
 #[bench]
-fn iter_black_box_indexmap_10_000(b: &mut Bencher) {
+fn iter_black_box_orderedmap_10_000(b: &mut Bencher) {
     let c = 10_000;
     let mut map = IndexMap::with_capacity(c);
-    let len = c - c / 10;
+    let len = c - c/10;
     for x in 0..len {
         map.insert(x, ());
     }
@@ -276,11 +285,10 @@ fn iter_black_box_indexmap_10_000(b: &mut Bencher) {
 }
 
 fn shuffled_keys<I>(iter: I) -> Vec<I::Item>
-where
-    I: IntoIterator,
+    where I: IntoIterator
 {
     let mut v = Vec::from_iter(iter);
-    let mut rng = small_rng();
+    let mut rng = SmallRng::from_entropy();
     v.shuffle(&mut rng);
     v
 }
@@ -320,7 +328,7 @@ fn lookup_hashmap_10_000_noexist(b: &mut Bencher) {
 }
 
 #[bench]
-fn lookup_indexmap_10_000_exist(b: &mut Bencher) {
+fn lookup_orderedmap_10_000_exist(b: &mut Bencher) {
     let c = 10_000;
     let mut map = IndexMap::with_capacity(c);
     let keys = shuffled_keys(0..c);
@@ -337,7 +345,7 @@ fn lookup_indexmap_10_000_exist(b: &mut Bencher) {
 }
 
 #[bench]
-fn lookup_indexmap_10_000_noexist(b: &mut Bencher) {
+fn lookup_orderedmap_10_000_noexist(b: &mut Bencher) {
     let c = 10_000;
     let mut map = IndexMap::with_capacity(c);
     let keys = shuffled_keys(0..c);
@@ -358,9 +366,12 @@ const LOOKUP_MAP_SIZE: u32 = 100_000_u32;
 const LOOKUP_SAMPLE_SIZE: u32 = 5000;
 const SORT_MAP_SIZE: usize = 10_000;
 
+
 // use lazy_static so that comparison benchmarks use the exact same inputs
 lazy_static! {
-    static ref KEYS: Vec<u32> = shuffled_keys(0..LOOKUP_MAP_SIZE);
+    static ref KEYS: Vec<u32> = {
+        shuffled_keys(0..LOOKUP_MAP_SIZE)
+    };
 }
 
 lazy_static! {
@@ -376,7 +387,7 @@ lazy_static! {
 }
 
 lazy_static! {
-    static ref IMAP_100K: IndexMap<u32, u32> = {
+    static ref OMAP_100K: IndexMap<u32, u32> = {
         let c = LOOKUP_MAP_SIZE;
         let mut map = IndexMap::with_capacity(c as usize);
         let keys = &*KEYS;
@@ -388,7 +399,7 @@ lazy_static! {
 }
 
 lazy_static! {
-    static ref IMAP_SORT_U32: IndexMap<u32, u32> = {
+    static ref OMAP_SORT_U32: IndexMap<u32, u32> = {
         let mut map = IndexMap::with_capacity(SORT_MAP_SIZE);
         for &key in &KEYS[..SORT_MAP_SIZE] {
             map.insert(key, key);
@@ -397,7 +408,7 @@ lazy_static! {
     };
 }
 lazy_static! {
-    static ref IMAP_SORT_S: IndexMap<String, String> = {
+    static ref OMAP_SORT_S: IndexMap<String, String> = {
         let mut map = IndexMap::with_capacity(SORT_MAP_SIZE);
         for &key in &KEYS[..SORT_MAP_SIZE] {
             map.insert(format!("{:^16x}", &key), String::new());
@@ -418,9 +429,10 @@ fn lookup_hashmap_100_000_multi(b: &mut Bencher) {
     });
 }
 
+
 #[bench]
-fn lookup_indexmap_100_000_multi(b: &mut Bencher) {
-    let map = &*IMAP_100K;
+fn lookup_ordermap_100_000_multi(b: &mut Bencher) {
+    let map = &*OMAP_100K;
     b.iter(|| {
         let mut found = 0;
         for key in 0..LOOKUP_SAMPLE_SIZE {
@@ -444,9 +456,10 @@ fn lookup_hashmap_100_000_inorder_multi(b: &mut Bencher) {
     });
 }
 
+
 #[bench]
-fn lookup_indexmap_100_000_inorder_multi(b: &mut Bencher) {
-    let map = &*IMAP_100K;
+fn lookup_ordermap_100_000_inorder_multi(b: &mut Bencher) {
+    let map = &*OMAP_100K;
     let keys = &*KEYS;
     b.iter(|| {
         let mut found = 0;
@@ -467,9 +480,10 @@ fn lookup_hashmap_100_000_single(b: &mut Bencher) {
     });
 }
 
+
 #[bench]
-fn lookup_indexmap_100_000_single(b: &mut Bencher) {
-    let map = &*IMAP_100K;
+fn lookup_ordermap_100_000_single(b: &mut Bencher) {
+    let map = &*OMAP_100K;
     let mut iter = (0..LOOKUP_MAP_SIZE + LOOKUP_SAMPLE_SIZE).cycle();
     b.iter(|| {
         let key = iter.next().unwrap();
@@ -493,7 +507,7 @@ fn grow_fnv_hashmap_100_000(b: &mut Bencher) {
 }
 
 #[bench]
-fn grow_fnv_indexmap_100_000(b: &mut Bencher) {
+fn grow_fnv_ordermap_100_000(b: &mut Bencher) {
     b.iter(|| {
         let mut map: IndexMap<_, _, FnvBuilder> = IndexMap::default();
         for x in 0..GROW_SIZE {
@@ -502,6 +516,7 @@ fn grow_fnv_indexmap_100_000(b: &mut Bencher) {
         map
     });
 }
+
 
 const MERGE: u64 = 10_000;
 #[bench]
@@ -520,7 +535,7 @@ fn hashmap_merge_shuffle(b: &mut Bencher) {
     let first_map: HashMap<u64, _> = (0..MERGE).map(|i| (i, ())).collect();
     let second_map: HashMap<u64, _> = (MERGE..MERGE * 2).map(|i| (i, ())).collect();
     let mut v = Vec::new();
-    let mut rng = small_rng();
+    let mut rng = SmallRng::from_entropy();
     b.iter(|| {
         let mut merged = first_map.clone();
         v.extend(second_map.iter().map(|(&k, &v)| (k, v)));
@@ -532,7 +547,7 @@ fn hashmap_merge_shuffle(b: &mut Bencher) {
 }
 
 #[bench]
-fn indexmap_merge_simple(b: &mut Bencher) {
+fn ordermap_merge_simple(b: &mut Bencher) {
     let first_map: IndexMap<u64, _> = (0..MERGE).map(|i| (i, ())).collect();
     let second_map: IndexMap<u64, _> = (MERGE..MERGE * 2).map(|i| (i, ())).collect();
     b.iter(|| {
@@ -543,11 +558,11 @@ fn indexmap_merge_simple(b: &mut Bencher) {
 }
 
 #[bench]
-fn indexmap_merge_shuffle(b: &mut Bencher) {
+fn ordermap_merge_shuffle(b: &mut Bencher) {
     let first_map: IndexMap<u64, _> = (0..MERGE).map(|i| (i, ())).collect();
     let second_map: IndexMap<u64, _> = (MERGE..MERGE * 2).map(|i| (i, ())).collect();
     let mut v = Vec::new();
-    let mut rng = small_rng();
+    let mut rng = SmallRng::from_entropy();
     b.iter(|| {
         let mut merged = first_map.clone();
         v.extend(second_map.iter().map(|(&k, &v)| (k, v)));
@@ -559,16 +574,16 @@ fn indexmap_merge_shuffle(b: &mut Bencher) {
 }
 
 #[bench]
-fn swap_remove_indexmap_100_000(b: &mut Bencher) {
-    let map = IMAP_100K.clone();
+fn remove_ordermap_100_000(b: &mut Bencher) {
+    let map = OMAP_100K.clone();
     let mut keys = Vec::from_iter(map.keys().cloned());
-    let mut rng = small_rng();
+    let mut rng = SmallRng::from_entropy();
     keys.shuffle(&mut rng);
 
     b.iter(|| {
         let mut map = map.clone();
         for key in &keys {
-            map.swap_remove(key);
+            map.remove(key);
         }
         assert_eq!(map.len(), 0);
         map
@@ -576,50 +591,12 @@ fn swap_remove_indexmap_100_000(b: &mut Bencher) {
 }
 
 #[bench]
-fn shift_remove_indexmap_100_000_few(b: &mut Bencher) {
-    let map = IMAP_100K.clone();
-    let mut keys = Vec::from_iter(map.keys().cloned());
-    let mut rng = small_rng();
-    keys.shuffle(&mut rng);
-    keys.truncate(50);
+fn pop_ordermap_100_000(b: &mut Bencher) {
+    let map = OMAP_100K.clone();
 
     b.iter(|| {
         let mut map = map.clone();
-        for key in &keys {
-            map.shift_remove(key);
-        }
-        assert_eq!(map.len(), IMAP_100K.len() - keys.len());
-        map
-    });
-}
-
-#[bench]
-fn shift_remove_indexmap_2_000_full(b: &mut Bencher) {
-    let mut keys = KEYS[..2_000].to_vec();
-    let mut map = IndexMap::with_capacity(keys.len());
-    for &key in &keys {
-        map.insert(key, key);
-    }
-    let mut rng = small_rng();
-    keys.shuffle(&mut rng);
-
-    b.iter(|| {
-        let mut map = map.clone();
-        for key in &keys {
-            map.shift_remove(key);
-        }
-        assert_eq!(map.len(), 0);
-        map
-    });
-}
-
-#[bench]
-fn pop_indexmap_100_000(b: &mut Bencher) {
-    let map = IMAP_100K.clone();
-
-    b.iter(|| {
-        let mut map = map.clone();
-        while !map.is_empty() {
+        while map.len() > 0 {
             map.pop();
         }
         assert_eq!(map.len(), 0);
@@ -628,8 +605,8 @@ fn pop_indexmap_100_000(b: &mut Bencher) {
 }
 
 #[bench]
-fn few_retain_indexmap_100_000(b: &mut Bencher) {
-    let map = IMAP_100K.clone();
+fn few_retain_ordermap_100_000(b: &mut Bencher) {
+    let map = OMAP_100K.clone();
 
     b.iter(|| {
         let mut map = map.clone();
@@ -650,8 +627,8 @@ fn few_retain_hashmap_100_000(b: &mut Bencher) {
 }
 
 #[bench]
-fn half_retain_indexmap_100_000(b: &mut Bencher) {
-    let map = IMAP_100K.clone();
+fn half_retain_ordermap_100_000(b: &mut Bencher) {
+    let map = OMAP_100K.clone();
 
     b.iter(|| {
         let mut map = map.clone();
@@ -672,8 +649,8 @@ fn half_retain_hashmap_100_000(b: &mut Bencher) {
 }
 
 #[bench]
-fn many_retain_indexmap_100_000(b: &mut Bencher) {
-    let map = IMAP_100K.clone();
+fn many_retain_ordermap_100_000(b: &mut Bencher) {
+    let map = OMAP_100K.clone();
 
     b.iter(|| {
         let mut map = map.clone();
@@ -693,6 +670,7 @@ fn many_retain_hashmap_100_000(b: &mut Bencher) {
     });
 }
 
+
 // simple sort impl for comparison
 pub fn simple_sort<K: Ord + Hash, V>(m: &mut IndexMap<K, V>) {
     let mut ordered: Vec<_> = m.drain(..).collect();
@@ -700,9 +678,10 @@ pub fn simple_sort<K: Ord + Hash, V>(m: &mut IndexMap<K, V>) {
     m.extend(ordered);
 }
 
+
 #[bench]
-fn indexmap_sort_s(b: &mut Bencher) {
-    let map = IMAP_SORT_S.clone();
+fn ordermap_sort_s(b: &mut Bencher) {
+    let map = OMAP_SORT_S.clone();
 
     // there's a map clone there, but it's still useful to profile this
     b.iter(|| {
@@ -713,8 +692,8 @@ fn indexmap_sort_s(b: &mut Bencher) {
 }
 
 #[bench]
-fn indexmap_simple_sort_s(b: &mut Bencher) {
-    let map = IMAP_SORT_S.clone();
+fn ordermap_simple_sort_s(b: &mut Bencher) {
+    let map = OMAP_SORT_S.clone();
 
     // there's a map clone there, but it's still useful to profile this
     b.iter(|| {
@@ -725,8 +704,8 @@ fn indexmap_simple_sort_s(b: &mut Bencher) {
 }
 
 #[bench]
-fn indexmap_sort_u32(b: &mut Bencher) {
-    let map = IMAP_SORT_U32.clone();
+fn ordermap_sort_u32(b: &mut Bencher) {
+    let map = OMAP_SORT_U32.clone();
 
     // there's a map clone there, but it's still useful to profile this
     b.iter(|| {
@@ -737,8 +716,8 @@ fn indexmap_sort_u32(b: &mut Bencher) {
 }
 
 #[bench]
-fn indexmap_simple_sort_u32(b: &mut Bencher) {
-    let map = IMAP_SORT_U32.clone();
+fn ordermap_simple_sort_u32(b: &mut Bencher) {
+    let map = OMAP_SORT_U32.clone();
 
     // there's a map clone there, but it's still useful to profile this
     b.iter(|| {
@@ -750,15 +729,20 @@ fn indexmap_simple_sort_u32(b: &mut Bencher) {
 
 // measure the fixed overhead of cloning in sort benchmarks
 #[bench]
-fn indexmap_clone_for_sort_s(b: &mut Bencher) {
-    let map = IMAP_SORT_S.clone();
+fn ordermap_clone_for_sort_s(b: &mut Bencher) {
+    let map = OMAP_SORT_S.clone();
 
-    b.iter(|| map.clone());
+    b.iter(|| {
+        map.clone()
+    });
 }
 
 #[bench]
-fn indexmap_clone_for_sort_u32(b: &mut Bencher) {
-    let map = IMAP_SORT_U32.clone();
+fn ordermap_clone_for_sort_u32(b: &mut Bencher) {
+    let map = OMAP_SORT_U32.clone();
 
-    b.iter(|| map.clone());
+    b.iter(|| {
+        map.clone()
+    });
 }
+
