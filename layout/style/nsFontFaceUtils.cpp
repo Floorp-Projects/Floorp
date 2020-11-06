@@ -24,40 +24,67 @@ enum class FontUsageKind {
   None = 0,
   // The frame uses the given font, but doesn't use font-metric-dependent units,
   // which means that its style doesn't depend on this font.
-  Frame,
-  // The frame uses this font and also has some font-metric-dependent units.
+  Frame = 1 << 0,
+  // The frame uses has some font-metric-dependent units on this font.
   // This means that its style depends on this font, and we need to restyle the
   // element the frame came from.
-  FrameAndFontMetrics,
+  FontMetrics = 1 << 1,
+
+  Max = Frame | FontMetrics,
 };
 
-static FontUsageKind StyleFontUsage(ComputedStyle* aComputedStyle,
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(FontUsageKind);
+
+static FontUsageKind StyleFontUsage(nsIFrame* aFrame, ComputedStyle* aStyle,
                                     nsPresContext* aPresContext,
-                                    const gfxUserFontSet* aUserFontSet,
                                     const gfxUserFontEntry* aFont,
-                                    const nsAString& aFamilyName) {
+                                    const nsAString& aFamilyName,
+                                    bool aIsExtraStyle) {
   MOZ_ASSERT(NS_ConvertUTF8toUTF16(aFont->FamilyName()) == aFamilyName);
 
-  // first, check if the family name is in the fontlist
-  if (!aComputedStyle->StyleFont()->mFont.fontlist.Contains(aFamilyName)) {
-    return FontUsageKind::None;
+  auto FontIsUsed = [&aFont, &aPresContext,
+                     &aFamilyName](ComputedStyle* aStyle) {
+    if (!aStyle->StyleFont()->mFont.fontlist.Contains(aFamilyName)) {
+      return false;
+    }
+
+    // family name is in the fontlist, check to see if the font group
+    // associated with the frame includes the specific userfont.
+    //
+    // TODO(emilio): Is this check really useful? I guess it's useful for
+    // different font faces of the same font?
+    RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetFontMetricsForComputedStyle(
+        aStyle, aPresContext, 1.0f);
+    return fm->GetThebesFontGroup()->ContainsUserFont(aFont);
+  };
+
+  auto usage = FontUsageKind::None;
+
+  if (FontIsUsed(aStyle)) {
+    usage |= FontUsageKind::Frame;
+    if (aStyle->DependsOnSelfFontMetrics()) {
+      MOZ_ASSERT(aPresContext->UsesExChUnits());
+      usage |= FontUsageKind::FontMetrics;
+    }
   }
 
-  // family name is in the fontlist, check to see if the font group
-  // associated with the frame includes the specific userfont
-  RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetFontMetricsForComputedStyle(
-      aComputedStyle, aPresContext, 1.0f);
-
-  if (!fm->GetThebesFontGroup()->ContainsUserFont(aFont)) {
-    return FontUsageKind::None;
-  }
-
-  if (aComputedStyle->DependsOnFontMetrics()) {
+  if (aStyle->DependsOnInheritedFontMetrics() &&
+      !(usage & FontUsageKind::FontMetrics)) {
     MOZ_ASSERT(aPresContext->UsesExChUnits());
-    return FontUsageKind::FrameAndFontMetrics;
+    ComputedStyle* parentStyle = nullptr;
+    if (aIsExtraStyle) {
+      parentStyle = aFrame->Style();
+    } else {
+      nsIFrame* provider = nullptr;
+      parentStyle = aFrame->GetParentComputedStyle(&provider);
+    }
+
+    if (parentStyle && FontIsUsed(parentStyle)) {
+      usage |= FontUsageKind::FontMetrics;
+    }
   }
 
-  return FontUsageKind::Frame;
+  return usage;
 }
 
 static FontUsageKind FrameFontUsage(nsIFrame* aFrame,
@@ -65,10 +92,9 @@ static FontUsageKind FrameFontUsage(nsIFrame* aFrame,
                                     const gfxUserFontEntry* aFont,
                                     const nsAString& aFamilyName) {
   // check the style of the frame
-  gfxUserFontSet* ufs = aPresContext->GetUserFontSet();
-  FontUsageKind kind =
-      StyleFontUsage(aFrame->Style(), aPresContext, ufs, aFont, aFamilyName);
-  if (kind == FontUsageKind::FrameAndFontMetrics) {
+  FontUsageKind kind = StyleFontUsage(aFrame, aFrame->Style(), aPresContext,
+                                      aFont, aFamilyName, /* extra = */ false);
+  if (kind == FontUsageKind::Max) {
     return kind;
   }
 
@@ -77,9 +103,9 @@ static FontUsageKind FrameFontUsage(nsIFrame* aFrame,
   for (ComputedStyle* extraContext;
        (extraContext = aFrame->GetAdditionalComputedStyle(contextIndex));
        ++contextIndex) {
-    kind = std::max(kind, StyleFontUsage(extraContext, aPresContext, ufs, aFont,
-                                         aFamilyName));
-    if (kind == FontUsageKind::FrameAndFontMetrics) {
+    kind |= StyleFontUsage(aFrame, extraContext, aPresContext, aFont,
+                           aFamilyName, /* extra = */ true);
+    if (kind == FontUsageKind::Max) {
       break;
     }
   }
@@ -160,11 +186,12 @@ void nsFontFaceUtils::MarkDirtyForFontChange(nsIFrame* aSubtreeRoot,
       // and skip checking its children
       FontUsageKind kind = FrameFontUsage(f, pc, aFont, familyName);
       if (kind != FontUsageKind::None) {
-        if (alreadyScheduled == ReflowAlreadyScheduled::No) {
+        if ((kind & FontUsageKind::Frame) &&
+            alreadyScheduled == ReflowAlreadyScheduled::No) {
           ScheduleReflow(presShell, f);
           alreadyScheduled = ReflowAlreadyScheduled::Yes;
         }
-        if (kind == FontUsageKind::FrameAndFontMetrics) {
+        if (kind & FontUsageKind::FontMetrics) {
           MOZ_ASSERT(f->GetContent() && f->GetContent()->IsElement(),
                      "How could we target a non-element with selectors?");
           f->PresContext()->RestyleManager()->PostRestyleEvent(
