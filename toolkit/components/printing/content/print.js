@@ -130,7 +130,6 @@ var PrintEventHandler = {
     printInColor: Ci.nsIPrintSettings.kInitSaveInColor,
     scaling: Ci.nsIPrintSettings.kInitSaveScaling,
     shrinkToFit: Ci.nsIPrintSettings.kInitSaveShrinkToFit,
-    printDuplex: Ci.nsIPrintSettings.kInitSaveDuplex,
     printFootersHeaders:
       Ci.nsIPrintSettings.kInitSaveHeaderLeft |
       Ci.nsIPrintSettings.kInitSaveHeaderCenter |
@@ -405,7 +404,6 @@ var PrintEventHandler = {
     } else if (!this.viewSettings.supportsMonochrome) {
       settingsToUpdate.printInColor = true;
     }
-
     if (
       settingsToUpdate.printInColor != this._userChangedSettings.printInColor
     ) {
@@ -991,12 +989,10 @@ var PrintSettingsViewProxy = {
       let basePrinterInfo;
       try {
         [
-          printerInfo.supportsDuplex,
           printerInfo.supportsColor,
           printerInfo.supportsMonochrome,
           basePrinterInfo,
         ] = await Promise.all([
-          printerInfo.printer.supportsDuplex,
           printerInfo.printer.supportsColor,
           printerInfo.printer.supportsMonochrome,
           printerInfo.printer.printerInfo,
@@ -1160,12 +1156,6 @@ var PrintSettingsViewProxy = {
             };
           });
 
-      case "supportsDuplex":
-        return this.availablePrinters[target.printerName].supportsDuplex;
-
-      case "printDuplex":
-        return target.duplex;
-
       case "printBackgrounds":
         return target.printBGImages || target.printBGColors;
 
@@ -1251,12 +1241,6 @@ var PrintSettingsViewProxy = {
       case "printBackgrounds":
         target.printBGImages = value;
         target.printBGColors = value;
-        break;
-
-      case "printDuplex":
-        target.duplex = value
-          ? Ci.nsIPrintSettings.kDuplexHorizontal
-          : Ci.nsIPrintSettings.kSimplex;
         break;
 
       case "printFootersHeaders":
@@ -1571,8 +1555,6 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
       AppConstants.platform === "win" && !settings.defaultSystemPrinter;
 
     this.querySelector("#copies").hidden = settings.willSaveToFile;
-
-    this.querySelector("#two-sided-printing").hidden = !settings.supportsDuplex;
   }
 
   enable() {
