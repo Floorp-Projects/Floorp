@@ -16,6 +16,7 @@ import mozilla.components.browser.state.state.availableSearchEngines
 import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.feature.search.ext.createSearchEngine
 import mozilla.components.feature.search.storage.CustomSearchEngineStorage
 import mozilla.components.feature.search.storage.SearchMetadataStorage
 import mozilla.components.support.test.ext.joinBlocking
@@ -702,6 +703,132 @@ class SearchMiddlewareTest {
             wait(store, dispatcher)
 
             assertEquals(1, store.state.search.customSearchEngines.size)
+        }
+    }
+
+    @Test
+    fun `Migration - custom search engine and default search engine`() {
+        val customStorage = CustomSearchEngineStorage(testContext, dispatcher)
+        val metadataStorage = SearchMetadataStorage(testContext)
+
+        run {
+            val searchMiddleware = SearchMiddleware(
+                testContext,
+                ioDispatcher = dispatcher,
+                customStorage = customStorage,
+                metadataStorage = metadataStorage,
+                migration = object : SearchMiddleware.Migration {
+                    override fun getValuesToMigrate() = SearchMiddleware.Migration.MigrationValues(
+                        customSearchEngines = listOf(
+                            createSearchEngine(
+                                name = "Example",
+                                url = "https://example.org/?q={searchTerms}",
+                                icon = mock()
+                            )
+                        ),
+                        defaultSearchEngineName = "Example"
+                    )
+                }
+            )
+
+            val store = BrowserStore(middleware = listOf(searchMiddleware))
+
+            store.dispatch(SearchAction.SetRegionAction(
+                RegionState("US", "US")
+            )).joinBlocking()
+
+            wait(store, dispatcher)
+
+            assertEquals(1, store.state.search.customSearchEngines.size)
+
+            val selectedSearchEngine = store.state.search.selectedOrDefaultSearchEngine
+            assertNotNull(selectedSearchEngine!!)
+
+            assertEquals("Example", selectedSearchEngine.name)
+            assertEquals("https://example.org/?q={searchTerms}", selectedSearchEngine.resultUrls[0])
+        }
+
+        run {
+            val searchMiddleware = SearchMiddleware(
+                testContext,
+                ioDispatcher = dispatcher,
+                customStorage = customStorage,
+                metadataStorage = metadataStorage
+            )
+
+            val store = BrowserStore(middleware = listOf(searchMiddleware))
+
+            store.dispatch(SearchAction.SetRegionAction(
+                RegionState("US", "US")
+            )).joinBlocking()
+
+            wait(store, dispatcher)
+
+            assertEquals(1, store.state.search.customSearchEngines.size)
+
+            val selectedSearchEngine = store.state.search.selectedOrDefaultSearchEngine
+            assertNotNull(selectedSearchEngine!!)
+
+            assertEquals("Example", selectedSearchEngine.name)
+            assertEquals("https://example.org/?q={searchTerms}", selectedSearchEngine.resultUrls[0])
+        }
+    }
+
+    @Test
+    fun `Migration - default search engine`() {
+        val customStorage = CustomSearchEngineStorage(testContext, dispatcher)
+        val metadataStorage = SearchMetadataStorage(testContext)
+
+        run {
+            val searchMiddleware = SearchMiddleware(
+                testContext,
+                ioDispatcher = dispatcher,
+                customStorage = customStorage,
+                metadataStorage = metadataStorage,
+                migration = object : SearchMiddleware.Migration {
+                    override fun getValuesToMigrate() = SearchMiddleware.Migration.MigrationValues(
+                        customSearchEngines = listOf(),
+                        defaultSearchEngineName = "Amazon.com"
+                    )
+                }
+            )
+
+            val store = BrowserStore(middleware = listOf(searchMiddleware))
+
+            store.dispatch(SearchAction.SetRegionAction(
+                RegionState("US", "US")
+            )).joinBlocking()
+
+            wait(store, dispatcher)
+
+            val selectedSearchEngine = store.state.search.selectedOrDefaultSearchEngine
+            assertNotNull(selectedSearchEngine!!)
+
+            assertEquals("Amazon.com", selectedSearchEngine.name)
+            assertTrue(selectedSearchEngine.resultUrls[0].startsWith("https://www.amazon.com/"))
+        }
+
+        run {
+            val searchMiddleware = SearchMiddleware(
+                testContext,
+                ioDispatcher = dispatcher,
+                customStorage = customStorage,
+                metadataStorage = metadataStorage
+            )
+
+            val store = BrowserStore(middleware = listOf(searchMiddleware))
+
+            store.dispatch(SearchAction.SetRegionAction(
+                RegionState("US", "US")
+            )).joinBlocking()
+
+            wait(store, dispatcher)
+
+            val selectedSearchEngine = store.state.search.selectedOrDefaultSearchEngine
+            assertNotNull(selectedSearchEngine!!)
+
+            assertEquals("Amazon.com", selectedSearchEngine.name)
+            assertTrue(selectedSearchEngine.resultUrls[0].startsWith("https://www.amazon.com/"))
         }
     }
 }

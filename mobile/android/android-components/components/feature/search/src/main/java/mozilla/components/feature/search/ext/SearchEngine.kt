@@ -29,6 +29,25 @@ fun SearchEngine.legacy() = mozilla.components.browser.search.SearchEngine(
 )
 
 /**
+ * Converts a custom legacy `SearchEngine` from `browser-search` to a [SearchEngine] (from
+ * `browser-state`).
+ *
+ * This method is a temporary workaround to allow applications to migrate their existing custom
+ * search engines to the new type. Once all consuming apps have been migrated this extension will
+ * be removed and all components will be migrated to use only the new [SearchEngine] class.
+ *
+ * https://github.com/mozilla-mobile/android-components/issues/8686
+ */
+fun mozilla.components.browser.search.SearchEngine.migrate() = SearchEngine(
+    id = identifier,
+    name = name,
+    icon = icon,
+    type = SearchEngine.Type.CUSTOM,
+    resultUrls = resultsUris.map { it.toString() },
+    suggestUrl = suggestUri?.toString()
+)
+
+/**
  * Creates a custom [SearchEngine].
  */
 fun createSearchEngine(

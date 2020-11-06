@@ -16,8 +16,8 @@ class SearchEngine(
     val identifier: String,
     val name: String,
     val icon: Bitmap,
-    private val resultsUris: List<Uri>,
-    private val suggestUri: Uri? = null
+    val resultsUris: List<Uri>,
+    val suggestUri: Uri? = null
 ) {
     val canProvideSearchSuggestions: Boolean = suggestUri != null
 
