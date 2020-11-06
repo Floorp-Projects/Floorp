@@ -13,7 +13,6 @@ import sys
 
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
-from mozlint.util import pip
 from mozprocess import ProcessHandler
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -109,7 +108,10 @@ def run_process(config, cmd):
 
 
 def setup(root, **lintargs):
-    if not pip.reinstall_program(BLACK_REQUIREMENTS_PATH):
+    virtualenv_manager = lintargs["virtualenv_manager"]
+    try:
+        virtualenv_manager.install_pip_requirements(BLACK_REQUIREMENTS_PATH, quiet=True)
+    except subprocess.CalledProcessError:
         print(BLACK_INSTALL_ERROR)
         return 1
 
