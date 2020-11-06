@@ -2206,6 +2206,12 @@ class PageCount extends PrintUIControlMixin(HTMLElement) {
     document.l10n.setAttributes(this, "printui-sheets-count", {
       sheetCount: this.sheetCount * this.numCopies,
     });
+
+    // The loading attribute must be removed on first render
+    if (this.hasAttribute("loading")) {
+      this.removeAttribute("loading");
+    }
+
     if (this.id) {
       // We're showing the sheet count, so let it describe the dialog.
       document.body.setAttribute("aria-describedby", this.id);
