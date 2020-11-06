@@ -999,12 +999,6 @@ void DXGITextureHostD3D11::PushResourceUpdates(
     MOZ_ASSERT_UNREACHABLE("unexpected to be called without ANGLE");
     return;
   }
-  // XXX Software WebRender is not handled yet.
-  if (gfx::gfxVars::UseSoftwareWebRender()) {
-    gfxCriticalNoteOnce
-        << "Software WebRender is not suppored by DXGITextureHostD3D11.";
-    return;
-  }
 
   MOZ_ASSERT(mHandle);
   auto method = aOp == TextureHost::ADD_IMAGE
@@ -1019,7 +1013,10 @@ void DXGITextureHostD3D11::PushResourceUpdates(
 
       wr::ImageDescriptor descriptor(mSize, GetFormat());
       auto imageType =
-          wr::ExternalImageType::TextureHandle(wr::TextureTarget::External);
+          gfx::gfxVars::UseSoftwareWebRender()
+              ? wr::ExternalImageType::TextureHandle(wr::TextureTarget::Rect)
+              : wr::ExternalImageType::TextureHandle(
+                    wr::TextureTarget::External);
       (aResources.*method)(aImageKeys[0], descriptor, aExtID, imageType, 0);
       break;
     }
@@ -1038,7 +1035,10 @@ void DXGITextureHostD3D11::PushResourceUpdates(
                                           ? gfx::SurfaceFormat::R8G8
                                           : gfx::SurfaceFormat::R16G16);
       auto imageType =
-          wr::ExternalImageType::TextureHandle(wr::TextureTarget::External);
+          gfx::gfxVars::UseSoftwareWebRender()
+              ? wr::ExternalImageType::TextureHandle(wr::TextureTarget::Rect)
+              : wr::ExternalImageType::TextureHandle(
+                    wr::TextureTarget::External);
       (aResources.*method)(aImageKeys[0], descriptor0, aExtID, imageType, 0);
       (aResources.*method)(aImageKeys[1], descriptor1, aExtID, imageType, 1);
       break;
@@ -1057,12 +1057,6 @@ void DXGITextureHostD3D11::PushDisplayItems(
       aFlags.contains(PushDisplayItemFlag::PREFER_COMPOSITOR_SURFACE);
   if (!gfx::gfxVars::UseWebRenderANGLE()) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called without ANGLE");
-    return;
-  }
-  // XXX Software WebRender is not handled yet.
-  if (gfx::gfxVars::UseSoftwareWebRender()) {
-    gfxCriticalNoteOnce
-        << "Software WebRender is not suppored by DXGITextureHostD3D11.";
     return;
   }
 
@@ -1256,8 +1250,8 @@ bool DXGIYCbCrTextureHostD3D11::BindTextureSource(
 
 void DXGIYCbCrTextureHostD3D11::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
-  RefPtr<wr::RenderTextureHost> texture =
-      new wr::RenderDXGIYCbCrTextureHost(mHandles, mSizeY, mSizeCbCr);
+  RefPtr<wr::RenderTextureHost> texture = new wr::RenderDXGIYCbCrTextureHost(
+      mHandles, mYUVColorSpace, mColorDepth, mSizeY, mSizeCbCr);
 
   wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
                                                  texture.forget());
@@ -1275,12 +1269,6 @@ void DXGIYCbCrTextureHostD3D11::PushResourceUpdates(
     MOZ_ASSERT_UNREACHABLE("unexpected to be called without ANGLE");
     return;
   }
-  // XXX Software WebRender is not handled yet.
-  if (gfx::gfxVars::UseSoftwareWebRender()) {
-    gfxCriticalNoteOnce
-        << "Software WebRender is not suppored by DXGIYCbCrTextureHostD3D11.";
-    return;
-  }
 
   MOZ_ASSERT(mHandles[0] && mHandles[1] && mHandles[2]);
   MOZ_ASSERT(aImageKeys.length() == 3);
@@ -1294,7 +1282,9 @@ void DXGIYCbCrTextureHostD3D11::PushResourceUpdates(
                     ? &wr::TransactionBuilder::AddExternalImage
                     : &wr::TransactionBuilder::UpdateExternalImage;
   auto imageType =
-      wr::ExternalImageType::TextureHandle(wr::TextureTarget::External);
+      gfx::gfxVars::UseSoftwareWebRender()
+          ? wr::ExternalImageType::TextureHandle(wr::TextureTarget::Rect)
+          : wr::ExternalImageType::TextureHandle(wr::TextureTarget::External);
 
   // y
   wr::ImageDescriptor descriptor0(mSizeY, gfx::SurfaceFormat::A8);
@@ -1311,12 +1301,6 @@ void DXGIYCbCrTextureHostD3D11::PushDisplayItems(
     const Range<wr::ImageKey>& aImageKeys, PushDisplayItemFlagSet aFlags) {
   if (!gfx::gfxVars::UseWebRenderANGLE()) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called without ANGLE");
-    return;
-  }
-  // XXX Software WebRender is not handled yet.
-  if (gfx::gfxVars::UseSoftwareWebRender()) {
-    gfxCriticalNoteOnce
-        << "Software WebRender is not suppored by DXGIYCbCrTextureHostD3D11.";
     return;
   }
 
