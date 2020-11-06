@@ -152,6 +152,8 @@ struct OStreamJSONWriteFunc final : public JSONWriteFunc {
   std::ostream& mStream;
 };
 
+class UniqueJSONStrings;
+
 class SpliceableJSONWriter : public JSONWriter {
  public:
   explicit SpliceableJSONWriter(UniquePtr<JSONWriteFunc> aWriter)
@@ -211,6 +213,30 @@ class SpliceableJSONWriter : public JSONWriter {
     aFunc.mChunkLengths.clear();
     mNeedComma[mDepth] = true;
   }
+
+  // Set (or reset) the pointer to a UniqueJSONStrings.
+  void SetUniqueStrings(UniqueJSONStrings& aUniqueStrings) {
+    MOZ_RELEASE_ASSERT(!mUniqueStrings);
+    mUniqueStrings = &aUniqueStrings;
+  }
+
+  // Set (or reset) the pointer to a UniqueJSONStrings.
+  void ResetUniqueStrings() {
+    MOZ_RELEASE_ASSERT(mUniqueStrings);
+    mUniqueStrings = nullptr;
+  }
+
+  // Add `aStr` to the unique-strings list (if not already there), and write its
+  // index as a named object property.
+  inline void UniqueStringProperty(const Span<const char>& aName,
+                                   const Span<const char>& aStr);
+
+  // Add `aStr` to the unique-strings list (if not already there), and write its
+  // index as an array element.
+  inline void UniqueStringElement(const Span<const char>& aStr);
+
+ private:
+  UniqueJSONStrings* mUniqueStrings = nullptr;
 };
 
 class SpliceableChunkedJSONWriter final : public SpliceableJSONWriter {
@@ -332,6 +358,19 @@ class UniqueJSONStrings {
   SpliceableChunkedJSONWriter mStringTableWriter;
   HashMap<HashNumber, uint32_t> mStringHashToIndexMap;
 };
+
+void SpliceableJSONWriter::UniqueStringProperty(const Span<const char>& aName,
+                                                const Span<const char>& aStr) {
+  MOZ_RELEASE_ASSERT(mUniqueStrings);
+  mUniqueStrings->WriteProperty(*this, aName, aStr);
+}
+
+// Add `aStr` to the list (if not already there), and write its index as an
+// array element.
+void SpliceableJSONWriter::UniqueStringElement(const Span<const char>& aStr) {
+  MOZ_RELEASE_ASSERT(mUniqueStrings);
+  mUniqueStrings->WriteElement(*this, aStr);
+}
 
 }  // namespace baseprofiler
 }  // namespace mozilla
