@@ -3719,9 +3719,6 @@ void TestUniqueJSONStrings() {
         "2, 3, 2", R"("external0", "external1", "string0", "string1")", &ujs);
   }
 
-// This currently fails, demonstrating the regression from bug 1520104, to be
-// fixed in the next patch in bug 1674968.
-#  if 0
   // Unique string table with pre-existing data from another table.
   {
     UJS ujs(mozilla::JSONWriter::SingleLineStyle);
@@ -3740,7 +3737,6 @@ void TestUniqueJSONStrings() {
         },
         "2, 3, 2", R"("external0", "external1", "string0", "string1")", &ujs);
   }
-#  endif
 
   printf("TestUniqueJSONStrings done\n");
 }
