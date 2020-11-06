@@ -659,7 +659,7 @@ var PrintEventHandler = {
 
     document.dispatchEvent(
       new CustomEvent("page-count", {
-        detail: { numPages: sheetCount, totalPages: totalPageCount },
+        detail: { sheetCount, totalPages: totalPageCount },
       })
     );
 
@@ -1800,7 +1800,7 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
 
     if (e.type == "page-count") {
       let { totalPages } = e.detail;
-      this._startRange.max = this._endRange.max = this._numPages = totalPages;
+      this._startRange.max = this._endRange.max = this._totalPages = totalPages;
       this._startRange.disabled = this._endRange.disabled = false;
       let isChanged = false;
 
@@ -1808,11 +1808,11 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
       // change the number of pages. We need to update the start and end rages
       // if their values are no longer valid.
       if (!this._startRange.checkValidity()) {
-        this._startRange.value = this._numPages;
+        this._startRange.value = this._totalPages;
         isChanged = true;
       }
       if (!this._endRange.checkValidity()) {
-        this._endRange.value = this._numPages;
+        this._endRange.value = this._totalPages;
         isChanged = true;
       }
       if (isChanged) {
@@ -1839,7 +1839,7 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
       this._startRange.required = this._endRange.required = !printAll;
       this.querySelector(".range-group").hidden = printAll;
       this._startRange.value = 1;
-      this._endRange.value = this._numPages || 1;
+      this._endRange.value = this._totalPages || 1;
 
       this.updatePageRange();
 
@@ -1869,7 +1869,7 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
       this._rangeError,
       "printui-error-invalid-range",
       {
-        numPages: this._numPages,
+        numPages: this._totalPages,
       }
     );
 
@@ -2200,11 +2200,11 @@ class PageCount extends PrintUIControlMixin(HTMLElement) {
   }
 
   render() {
-    if (!this.numCopies || !this.numPages) {
+    if (!this.numCopies || !this.sheetCount) {
       return;
     }
     document.l10n.setAttributes(this, "printui-sheets-count", {
-      sheetCount: this.numPages * this.numCopies,
+      sheetCount: this.sheetCount * this.numCopies,
     });
     if (this.id) {
       // We're showing the sheet count, so let it describe the dialog.
@@ -2213,8 +2213,7 @@ class PageCount extends PrintUIControlMixin(HTMLElement) {
   }
 
   handleEvent(e) {
-    let { numPages } = e.detail;
-    this.numPages = numPages;
+    this.sheetCount = e.detail.sheetCount;
     this.render();
   }
 }
