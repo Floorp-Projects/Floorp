@@ -1499,3 +1499,34 @@ def process_time():
         return time.clock()
     else:
         return time.process_time()
+
+
+def hexdump(buf):
+    """
+    Returns a list of hexdump-like lines corresponding to the given input buffer.
+    """
+    assert six.PY3
+    off_format = "%0{}x ".format(len(str(len(buf))))
+    lines = []
+    for off in range(0, len(buf), 16):
+        line = off_format % off
+        chunk = buf[off : min(off + 16, len(buf))]
+        for n, byte in enumerate(chunk):
+            line += " %02x" % byte
+            if n == 7:
+                line += " "
+        for n in range(len(chunk), 16):
+            line += "   "
+            if n == 7:
+                line += " "
+        line += "  |"
+        for byte in chunk:
+            if byte < 127 and byte >= 32:
+                line += chr(byte)
+            else:
+                line += "."
+        for n in range(len(chunk), 16):
+            line += " "
+        line += "|\n"
+        lines.append(line)
+    return lines

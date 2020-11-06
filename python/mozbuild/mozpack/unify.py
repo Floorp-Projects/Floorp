@@ -14,6 +14,7 @@ from mozpack.executables import (
 )
 from mozpack.mozjar import JarReader
 from mozpack.errors import errors
+from mozbuild.util import hexdump
 from tempfile import mkstemp
 import mozpack.path as mozpath
 import struct
@@ -157,9 +158,16 @@ class UnifiedFinder(BaseFinder):
         ):
             from difflib import unified_diff
 
+            try:
+                lines1 = [l.decode("utf-8") for l in file1.open().readlines()]
+                lines2 = [l.decode("utf-8") for l in file2.open().readlines()]
+            except UnicodeDecodeError:
+                lines1 = hexdump(file1.open().read())
+                lines2 = hexdump(file2.open().read())
+
             for line in unified_diff(
-                [l.decode("utf-8") for l in file1.open().readlines()],
-                [l.decode("utf-8") for l in file2.open().readlines()],
+                lines1,
+                lines2,
                 os.path.join(self._finder1.base, path),
                 os.path.join(self._finder2.base, path),
             ):
