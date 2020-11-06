@@ -1,16 +1,23 @@
-use std::{fmt, hash, marker::PhantomData, num::NonZeroU32};
+use std::{cmp::Ordering, fmt, hash, marker::PhantomData, num::NonZeroU32};
 
 /// An unique index in the arena array that a handle points to.
 ///
-/// This type is independent of `spirv::Word`. `spirv::Word` is used in data
+/// This type is independent of `spv::Word`. `spv::Word` is used in data
 /// representation. It holds a SPIR-V and refers to that instruction. In
 /// structured representation, we use Handle to refer to an SPIR-V instruction.
 /// `Index` is an implementation detail to `Handle`.
 type Index = NonZeroU32;
 
 /// A strongly typed reference to a SPIR-V element.
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
+#[cfg_attr(
+    any(feature = "serialize", feature = "deserialize"),
+    serde(transparent)
+)]
 pub struct Handle<T> {
     index: Index,
+    #[cfg_attr(any(feature = "serialize", feature = "deserialize"), serde(skip))]
     marker: PhantomData<T>,
 }
 
@@ -29,6 +36,16 @@ impl<T> PartialEq for Handle<T> {
     }
 }
 impl<T> Eq for Handle<T> {}
+impl<T> PartialOrd for Handle<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.index.partial_cmp(&other.index)
+    }
+}
+impl<T> Ord for Handle<T> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.index.cmp(&other.index)
+    }
+}
 impl<T> fmt::Debug for Handle<T> {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         write!(formatter, "Handle({})", self.index)
@@ -63,7 +80,18 @@ impl<T> Handle<T> {
 
 /// An arena holding some kind of component (e.g., type, constant,
 /// instruction, etc.) that can be referenced.
+///
+/// Adding new items to the arena produces a strongly-typed [`Handle`].
+/// The arena can be indexed using the given handle to obtain
+/// a reference to the stored item.
 #[derive(Debug)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
+#[cfg_attr(
+    any(feature = "serialize", feature = "deserialize"),
+    serde(transparent)
+)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct Arena<T> {
     /// Values of this arena.
     data: Vec<T>,
@@ -76,14 +104,23 @@ impl<T> Default for Arena<T> {
 }
 
 impl<T> Arena<T> {
+    /// Create a new arena with no initial capacity allocated.
     pub fn new() -> Self {
         Arena { data: Vec::new() }
     }
 
+    /// Returns the current number of items stored in this arena.
     pub fn len(&self) -> usize {
         self.data.len()
     }
 
+    /// Returns `true` if the arena contains no elements.
+    pub fn is_empty(&self) -> bool {
+        self.data.is_empty()
+    }
+
+    /// Returns an iterator over the items stored in this arena, returning both
+    /// the item's handle and a reference to it.
     pub fn iter(&self) -> impl Iterator<Item = (Handle<T>, &T)> {
         self.data.iter().enumerate().map(|(i, v)| {
             let position = i + 1;
@@ -102,19 +139,38 @@ impl<T> Arena<T> {
         Handle::new(index)
     }
 
-    /// Adds a value with a check for uniqueness: returns a handle pointing to
-    /// an existing element if its value matches the given one, or adds a new
+    /// Fetch a handle to an existing type.
+    pub fn fetch_if<F: Fn(&T) -> bool>(&self, fun: F) -> Option<Handle<T>> {
+        self.data
+            .iter()
+            .position(fun)
+            .map(|index| Handle::new(unsafe { Index::new_unchecked((index + 1) as u32) }))
+    }
+
+    /// Adds a value with a custom check for uniqueness:
+    /// returns a handle pointing to
+    /// an existing element if the check succeeds, or adds a new
     /// element otherwise.
-    pub fn fetch_or_append(&mut self, value: T) -> Handle<T>
-    where
-        T: PartialEq,
-    {
-        if let Some(index) = self.data.iter().position(|d| d == &value) {
+    pub fn fetch_if_or_append<F: Fn(&T, &T) -> bool>(&mut self, value: T, fun: F) -> Handle<T> {
+        if let Some(index) = self.data.iter().position(|d| fun(d, &value)) {
             let index = unsafe { Index::new_unchecked((index + 1) as u32) };
             Handle::new(index)
         } else {
             self.append(value)
         }
+    }
+
+    /// Adds a value with a check for uniqueness, where the check is plain comparison.
+    pub fn fetch_or_append(&mut self, value: T) -> Handle<T>
+    where
+        T: PartialEq,
+    {
+        self.fetch_if_or_append(value, T::eq)
+    }
+
+    /// Get a mutable reference to an element in the arena.
+    pub fn get_mut(&mut self, handle: Handle<T>) -> &mut T {
+        self.data.get_mut(handle.index.get() as usize - 1).unwrap()
     }
 }
 

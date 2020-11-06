@@ -2,16 +2,7 @@
 
 use std::{borrow::Cow, ops::Range, slice};
 
-/// Specialization constant for pipelines.
-///
-/// Specialization constants allow for easy configuration of
-/// multiple similar pipelines. For example, there may be a
-/// boolean exposed to the shader that switches the specularity on/off
-/// provided via a specialization constant.
-/// That would produce separate PSO's for the "on" and "off" states
-/// but they share most of the internal stuff and are fast to produce.
-/// More importantly, they are fast to execute, since the driver
-/// can optimize out the branch on that other PSO creation.
+/// Description of a specialization constant for the pipeline.
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct SpecializationConstant {
     /// Constant identifier in shader source.
@@ -20,12 +11,22 @@ pub struct SpecializationConstant {
     pub range: Range<u16>,
 }
 
-/// Specialization information structure.
+/// Information required for pipeline specialization.
+///
+/// Specialization allows for easy configuration of multiple similar pipelines.
+/// For example, there may be a boolean exposed to the shader that switches
+/// the [specularity](https://en.wikipedia.org/wiki/Specularity) on/off,
+/// provided via a [specialization constant][SpecializationConstant].
+///
+/// That would produce separate PSO's for the "on" and "off" states
+/// but they share most of the internal stuff and are fast to produce.
+/// More importantly, they are fast to execute, since the driver
+/// can optimize out the branch on that other PSO creation.
 #[derive(Debug, Clone)]
 pub struct Specialization<'a> {
-    /// Constant array.
+    /// Array of descriptors of specialization constants to override.
     pub constants: Cow<'a, [SpecializationConstant]>,
-    /// Raw data.
+    /// Raw data of the specialization constants
     pub data: Cow<'a, [u8]>,
 }
 
@@ -95,17 +96,18 @@ where
         let offset = storage.data.len() as u16;
         storage.data.extend_from_slice(unsafe {
             // Inspecting bytes is always safe.
-            slice::from_raw_parts(&self.head.1 as *const H as *const u8, size)
+            let head_ptr: *const H = &self.head.1;
+            slice::from_raw_parts(head_ptr as *const u8, size)
         });
         storage.constants.push(SpecializationConstant {
             id: self.head.0,
-            range: offset .. offset + size as u16,
+            range: offset..offset + size as u16,
         });
         self.tail.fold(storage)
     }
 }
 
-/// Macro for specifying list of specialization constatns for `EntryPoint`.
+/// Macro for specifying list of specialization constants for `EntryPoint`.
 #[macro_export]
 macro_rules! spec_const_list {
     (@ $(,)?) => {

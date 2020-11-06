@@ -3,23 +3,16 @@ use crate::native as n;
 use ash::vk;
 
 use hal::{
-    buffer,
-    command,
-    format,
-    image,
+    buffer, command, format, image,
     memory::Segment,
-    pass,
-    pso,
-    query,
+    pass, pso, query,
     window::{CompositeAlphaMode, PresentMode},
-    Features,
-    IndexType,
+    Features, IndexType,
 };
 
 use smallvec::SmallVec;
 
 use std::{borrow::Borrow, mem, ptr};
-
 
 pub fn map_format(format: format::Format) -> vk::Format {
     vk::Format::from_raw(format as i32)
@@ -121,10 +114,14 @@ pub fn map_subresource_layers(sub: &image::SubresourceLayers) -> vk::ImageSubres
 pub fn map_subresource_range(range: &image::SubresourceRange) -> vk::ImageSubresourceRange {
     vk::ImageSubresourceRange {
         aspect_mask: map_image_aspects(range.aspects),
-        base_mip_level: range.levels.start as _,
-        level_count: (range.levels.end - range.levels.start) as _,
-        base_array_layer: range.layers.start as _,
-        layer_count: (range.layers.end - range.layers.start) as _,
+        base_mip_level: range.level_start as _,
+        level_count: range
+            .level_count
+            .map_or(vk::REMAINING_MIP_LEVELS, |c| c as _),
+        base_array_layer: range.layer_start as _,
+        layer_count: range
+            .layer_count
+            .map_or(vk::REMAINING_ARRAY_LAYERS, |c| c as _),
     }
 }
 
@@ -419,7 +416,9 @@ pub(crate) fn map_device_features(features: Features) -> crate::DeviceCreationFe
             .texture_compression_bc(features.contains(Features::FORMAT_BC))
             .occlusion_query_precise(features.contains(Features::PRECISE_OCCLUSION_QUERY))
             .pipeline_statistics_query(features.contains(Features::PIPELINE_STATISTICS_QUERY))
-            .vertex_pipeline_stores_and_atomics(features.contains(Features::VERTEX_STORES_AND_ATOMICS))
+            .vertex_pipeline_stores_and_atomics(
+                features.contains(Features::VERTEX_STORES_AND_ATOMICS),
+            )
             .fragment_stores_and_atomics(features.contains(Features::FRAGMENT_STORES_AND_ATOMICS))
             .shader_tessellation_and_geometry_point_size(
                 features.contains(Features::SHADER_TESSELLATION_AND_GEOMETRY_POINT_SIZE),
@@ -471,16 +470,32 @@ pub(crate) fn map_device_features(features: Features) -> crate::DeviceCreationFe
         descriptor_indexing: if features.intersects(
             Features::SAMPLED_TEXTURE_DESCRIPTOR_INDEXING
                 | Features::STORAGE_TEXTURE_DESCRIPTOR_INDEXING
-                | Features::UNSIZED_DESCRIPTOR_ARRAY
+                | Features::UNSIZED_DESCRIPTOR_ARRAY,
         ) {
             Some(
                 vk::PhysicalDeviceDescriptorIndexingFeaturesEXT::builder()
-                    .shader_sampled_image_array_non_uniform_indexing(features.contains(Features::SAMPLED_TEXTURE_DESCRIPTOR_INDEXING))
-                    .shader_storage_image_array_non_uniform_indexing(features.contains(Features::STORAGE_TEXTURE_DESCRIPTOR_INDEXING))
+                    .shader_sampled_image_array_non_uniform_indexing(
+                        features.contains(Features::SAMPLED_TEXTURE_DESCRIPTOR_INDEXING),
+                    )
+                    .shader_storage_image_array_non_uniform_indexing(
+                        features.contains(Features::STORAGE_TEXTURE_DESCRIPTOR_INDEXING),
+                    )
                     .runtime_descriptor_array(features.contains(Features::UNSIZED_DESCRIPTOR_ARRAY))
-                    .build()
+                    .build(),
             )
-        } else { None }
+        } else {
+            None
+        },
+        mesh_shaders: if features.intersects(Features::TASK_SHADER | Features::MESH_SHADER) {
+            Some(
+                vk::PhysicalDeviceMeshShaderFeaturesNV::builder()
+                    .task_shader(features.contains(Features::TASK_SHADER))
+                    .mesh_shader(features.contains(Features::MESH_SHADER))
+                    .build(),
+            )
+        } else {
+            None
+        },
     }
 }
 

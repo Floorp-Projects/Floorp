@@ -4,14 +4,19 @@ use std::{
     ops::{AddAssign, SubAssign},
 };
 
+use arrayvec::ArrayVec;
+
 pub use hal::pso::{
     BufferDescriptorFormat, BufferDescriptorType, DescriptorRangeDesc, DescriptorSetLayoutBinding,
     DescriptorType, ImageDescriptorType,
 };
 
-const DESCRIPTOR_TYPES_COUNT: usize = 15;
+/// Length of the [`DESCRIPTOR_TYPES`] array.
+pub const DESCRIPTOR_TYPES_COUNT: usize = 15;
 
-const DESCRIPTOR_TYPES: [DescriptorType; DESCRIPTOR_TYPES_COUNT] = [
+/// List of all possible descriptor types, with all the possible values
+/// the enum variants could have.
+pub const DESCRIPTOR_TYPES: [DescriptorType; DESCRIPTOR_TYPES_COUNT] = [
     DescriptorType::Sampler,
     DescriptorType::Image {
         ty: ImageDescriptorType::Sampled { with_sampler: true },
@@ -78,9 +83,9 @@ const DESCRIPTOR_TYPES: [DescriptorType; DESCRIPTOR_TYPES_COUNT] = [
     DescriptorType::InputAttachment,
 ];
 
-fn descriptor_type_index(ty: &DescriptorType) -> usize {
+fn descriptor_type_index(ty: DescriptorType) -> usize {
     match ty {
-         DescriptorType::Sampler => 0,
+        DescriptorType::Sampler => 0,
         DescriptorType::Image {
             ty: ImageDescriptorType::Sampled { with_sampler: true },
         } => 1,
@@ -97,15 +102,17 @@ fn descriptor_type_index(ty: &DescriptorType) -> usize {
         } => 4,
         DescriptorType::Buffer {
             ty: BufferDescriptorType::Storage { read_only: true },
-            format: BufferDescriptorFormat::Structured {
-                dynamic_offset: true,
-            },
+            format:
+                BufferDescriptorFormat::Structured {
+                    dynamic_offset: true,
+                },
         } => 5,
         DescriptorType::Buffer {
             ty: BufferDescriptorType::Storage { read_only: true },
-            format: BufferDescriptorFormat::Structured {
-                dynamic_offset: false,
-            },
+            format:
+                BufferDescriptorFormat::Structured {
+                    dynamic_offset: false,
+                },
         } => 6,
         DescriptorType::Buffer {
             ty: BufferDescriptorType::Storage { read_only: true },
@@ -113,15 +120,17 @@ fn descriptor_type_index(ty: &DescriptorType) -> usize {
         } => 7,
         DescriptorType::Buffer {
             ty: BufferDescriptorType::Storage { read_only: false },
-            format: BufferDescriptorFormat::Structured {
-                dynamic_offset: true,
-            },
+            format:
+                BufferDescriptorFormat::Structured {
+                    dynamic_offset: true,
+                },
         } => 8,
         DescriptorType::Buffer {
             ty: BufferDescriptorType::Storage { read_only: false },
-            format: BufferDescriptorFormat::Structured {
-                dynamic_offset: false,
-            },
+            format:
+                BufferDescriptorFormat::Structured {
+                    dynamic_offset: false,
+                },
         } => 9,
         DescriptorType::Buffer {
             ty: BufferDescriptorType::Storage { read_only: false },
@@ -129,15 +138,17 @@ fn descriptor_type_index(ty: &DescriptorType) -> usize {
         } => 10,
         DescriptorType::Buffer {
             ty: BufferDescriptorType::Uniform,
-            format: BufferDescriptorFormat::Structured {
-                dynamic_offset: true,
-            },
+            format:
+                BufferDescriptorFormat::Structured {
+                    dynamic_offset: true,
+                },
         } => 11,
         DescriptorType::Buffer {
             ty: BufferDescriptorType::Uniform,
-            format: BufferDescriptorFormat::Structured {
-                dynamic_offset: false,
-            },
+            format:
+                BufferDescriptorFormat::Structured {
+                    dynamic_offset: false,
+                },
         } => 12,
         DescriptorType::Buffer {
             ty: BufferDescriptorType::Uniform,
@@ -149,7 +160,7 @@ fn descriptor_type_index(ty: &DescriptorType) -> usize {
 
 #[test]
 fn test_descriptor_types() {
-    for (index, ty) in DESCRIPTOR_TYPES.iter().enumerate() {
+    for (index, &ty) in DESCRIPTOR_TYPES.iter().enumerate() {
         assert_eq!(index, descriptor_type_index(ty));
     }
 }
@@ -161,7 +172,7 @@ pub struct DescriptorCounts {
 }
 
 impl DescriptorCounts {
-	/// Empty descriptor counts.
+    /// Empty descriptor counts.
     pub const EMPTY: Self = DescriptorCounts {
         counts: [0; DESCRIPTOR_TYPES_COUNT],
     };
@@ -169,19 +180,20 @@ impl DescriptorCounts {
     /// Add a single layout binding.
     /// Useful when created with `DescriptorCounts::EMPTY`.
     pub fn add_binding(&mut self, binding: DescriptorSetLayoutBinding) {
-        self.counts[descriptor_type_index(&binding.ty)] += binding.count as u32;
+        self.counts[descriptor_type_index(binding.ty)] += binding.count as u32;
     }
 
-    /// Iterate through counts yelding descriptor types and their amount.
-    pub fn iter(&self) -> impl '_ + Iterator<Item = DescriptorRangeDesc> {
+    /// Return the filtered list of descriptors.
+    pub fn filtered(&self) -> ArrayVec<[DescriptorRangeDesc; DESCRIPTOR_TYPES_COUNT]> {
         self.counts
-        	.iter()
-        	.enumerate()
+            .iter()
+            .enumerate()
             .filter(|&(_, count)| *count != 0)
             .map(|(index, count)| DescriptorRangeDesc {
                 count: *count as usize,
                 ty: DESCRIPTOR_TYPES[index],
             })
+            .collect()
     }
 
     /// Multiply all the counts by a value.
@@ -195,21 +207,22 @@ impl DescriptorCounts {
 }
 
 impl FromIterator<DescriptorSetLayoutBinding> for DescriptorCounts {
-	fn from_iter<T>(iter: T) -> Self where
-		T: IntoIterator<Item = DescriptorSetLayoutBinding>
-	{
+    fn from_iter<T>(iter: T) -> Self
+    where
+        T: IntoIterator<Item = DescriptorSetLayoutBinding>,
+    {
         let mut descs = Self::EMPTY;
 
         for binding in iter {
-            descs.counts[descriptor_type_index(&binding.ty)] += binding.count as u32;
+            descs.counts[descriptor_type_index(binding.ty)] += binding.count as u32;
         }
 
         descs
-	}
+    }
 }
 
 impl PartialOrd for DescriptorCounts {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         let mut ord = self.counts[0].partial_cmp(&other.counts[0])?;
         for i in 1..DESCRIPTOR_TYPES_COUNT {
             match (ord, self.counts[i].partial_cmp(&other.counts[i])?) {

@@ -126,7 +126,11 @@ fn ast_gets_array_dimensions() {
         spirv::Type::Struct { member_types, .. } => {
             assert_eq!(member_types.len(), 3);
             let is_float = match ast.get_type(member_types[2]).unwrap() {
-                spirv::Type::Float { vecsize, columns, array } => {
+                spirv::Type::Float {
+                    vecsize,
+                    columns,
+                    array,
+                } => {
                     assert_eq!(vecsize, 3);
                     assert_eq!(columns, 1);
                     assert_eq!(array.len(), 1);

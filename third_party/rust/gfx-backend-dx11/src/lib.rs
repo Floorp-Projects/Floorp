@@ -20,49 +20,32 @@ of continuous descriptor ranges (per type, per shader stage).
 extern crate bitflags;
 #[macro_use]
 extern crate log;
-#[macro_use]
-extern crate winapi;
 
+use auxil::ShaderStage;
 use hal::{
-    adapter,
-    buffer,
-    command,
-    format,
-    image,
-    memory,
-    pass,
-    pso,
-    query,
-    queue,
-    window,
-    DrawCount,
-    IndexCount,
-    InstanceCount,
-    Limits,
-    VertexCount,
-    VertexOffset,
-    WorkGroupCount,
+    adapter, buffer, command, format, image, memory, pass, pso, query, queue, window, DrawCount,
+    IndexCount, InstanceCount, Limits, TaskCount, VertexCount, VertexOffset, WorkGroupCount,
 };
-
 use range_alloc::RangeAllocator;
-
-use winapi::{
-    shared::{
-        dxgi::{IDXGIAdapter, IDXGIFactory, IDXGISwapChain},
-        dxgiformat,
-        minwindef::{FALSE, HMODULE, UINT},
-        windef::{HWND, RECT},
-        winerror,
-    },
-    um::{d3d11, d3dcommon, winuser::GetClientRect},
-    Interface as _,
+use crate::{
+    device::DepthStencilState,
+    debug::set_debug_name,
 };
+
+use winapi::{shared::{
+    dxgi::{IDXGIAdapter, IDXGIFactory, IDXGISwapChain},
+    dxgiformat,
+    minwindef::{FALSE, HMODULE, UINT},
+    windef::{HWND, RECT},
+    winerror,
+}, um::{d3d11, d3d11_1, d3dcommon, winuser::GetClientRect}, Interface as _};
 
 use wio::com::ComPtr;
 
-use parking_lot::{Condvar, Mutex};
+use arrayvec::ArrayVec;
+use parking_lot::{Condvar, Mutex, RwLock};
 
-use std::{borrow::Borrow, cell::RefCell, fmt, mem, ops::Range, os::raw::c_void, ptr, sync::Arc};
+use std::{borrow::Borrow, cell::RefCell, fmt, mem, ops::Range, os::raw::c_void, ptr, sync::{Arc, Weak}};
 
 macro_rules! debug_scope {
     ($context:expr, $($arg:tt)+) => ({
@@ -86,14 +69,13 @@ macro_rules! debug_marker {
         {
             $crate::debug::debug_marker(
                 $context,
-                format_args!($($arg)+),
+                &format!($($arg)+),
             );
         }
     });
 }
 
 mod conv;
-#[cfg(debug_assertions)]
 mod debug;
 mod device;
 mod dxgi;
@@ -120,7 +102,8 @@ pub(crate) struct ViewInfo {
     caps: image::ViewCapabilities,
     view_kind: image::ViewKind,
     format: dxgiformat::DXGI_FORMAT,
-    range: image::SubresourceRange,
+    levels: Range<image::Level>,
+    layers: Range<image::Layer>,
 }
 
 impl fmt::Debug for ViewInfo {
@@ -152,16 +135,173 @@ impl Instance {
 
 fn get_features(
     _device: ComPtr<d3d11::ID3D11Device>,
-    _feature_level: d3dcommon::D3D_FEATURE_LEVEL,
+    feature_level: d3dcommon::D3D_FEATURE_LEVEL,
 ) -> hal::Features {
-    hal::Features::empty()
-        | hal::Features::ROBUST_BUFFER_ACCESS
-        | hal::Features::FULL_DRAW_INDEX_U32
-        | hal::Features::FORMAT_BC
+    let mut features = hal::Features::empty()
+        | hal::Features::ROBUST_BUFFER_ACCESS // TODO: verify
         | hal::Features::INSTANCE_RATE
+        | hal::Features::INDEPENDENT_BLENDING // TODO: verify
         | hal::Features::SAMPLER_MIP_LOD_BIAS
         | hal::Features::SAMPLER_MIRROR_CLAMP_EDGE
-        | hal::Features::NDC_Y_UP
+        | hal::Features::SAMPLER_ANISOTROPY
+        | hal::Features::DEPTH_CLAMP
+        | hal::Features::NDC_Y_UP;
+
+    features.set(
+        hal::Features::TEXTURE_DESCRIPTOR_ARRAY
+        | hal::Features::FULL_DRAW_INDEX_U32
+        | hal::Features::GEOMETRY_SHADER,
+        feature_level >= d3dcommon::D3D_FEATURE_LEVEL_10_0
+    );
+
+    features.set(
+        hal::Features::IMAGE_CUBE_ARRAY,
+        feature_level >= d3dcommon::D3D_FEATURE_LEVEL_10_1
+    );
+
+    features.set(
+        hal::Features::VERTEX_STORES_AND_ATOMICS
+        | hal::Features::FRAGMENT_STORES_AND_ATOMICS
+        | hal::Features::FORMAT_BC
+        | hal::Features::TESSELLATION_SHADER
+        | hal::Features::DRAW_INDIRECT_FIRST_INSTANCE,
+        feature_level >= d3dcommon::D3D_FEATURE_LEVEL_11_0
+    );
+
+    features.set(
+        hal::Features::LOGIC_OP, // TODO: Optional at 10_0 -> 11_0
+        feature_level >= d3dcommon::D3D_FEATURE_LEVEL_11_1
+    );
+
+    features
+}
+
+const MAX_PUSH_CONSTANT_SIZE: usize = 256;
+
+fn get_limits(feature_level: d3dcommon::D3D_FEATURE_LEVEL) -> hal::Limits {
+    let max_texture_uv_dimension = match feature_level {
+        d3dcommon::D3D_FEATURE_LEVEL_9_1 | d3dcommon::D3D_FEATURE_LEVEL_9_2 => 2048,
+        d3dcommon::D3D_FEATURE_LEVEL_9_3 => 4096,
+        d3dcommon::D3D_FEATURE_LEVEL_10_0 | d3dcommon::D3D_FEATURE_LEVEL_10_1 => 8192,
+        d3dcommon::D3D_FEATURE_LEVEL_11_0 | d3dcommon::D3D_FEATURE_LEVEL_11_1 | _ => 16384,
+    };
+
+    let max_texture_w_dimension = match feature_level {
+        d3dcommon::D3D_FEATURE_LEVEL_9_1
+        | d3dcommon::D3D_FEATURE_LEVEL_9_2
+        | d3dcommon::D3D_FEATURE_LEVEL_9_3 => 256,
+        d3dcommon::D3D_FEATURE_LEVEL_10_0
+        | d3dcommon::D3D_FEATURE_LEVEL_10_1
+        | d3dcommon::D3D_FEATURE_LEVEL_11_0
+        | d3dcommon::D3D_FEATURE_LEVEL_11_1
+        | _ => 2048,
+    };
+
+    let max_texture_cube_dimension = match feature_level {
+        d3dcommon::D3D_FEATURE_LEVEL_9_1
+        | d3dcommon::D3D_FEATURE_LEVEL_9_2 => 512,
+        _ => max_texture_uv_dimension,
+    };
+
+    let max_image_uav = 2;
+    let max_buffer_uav = d3d11::D3D11_PS_CS_UAV_REGISTER_COUNT as usize - max_image_uav;
+
+    let max_input_slots = match feature_level {
+        d3dcommon::D3D_FEATURE_LEVEL_9_1
+        | d3dcommon::D3D_FEATURE_LEVEL_9_2
+        | d3dcommon::D3D_FEATURE_LEVEL_9_3
+        | d3dcommon::D3D_FEATURE_LEVEL_10_0 => 16,
+        d3dcommon::D3D_FEATURE_LEVEL_10_1
+        | d3dcommon::D3D_FEATURE_LEVEL_11_0
+        | d3dcommon::D3D_FEATURE_LEVEL_11_1
+        | _ => 32,
+    };
+
+    let max_color_attachments = match feature_level {
+        d3dcommon::D3D_FEATURE_LEVEL_9_1
+        | d3dcommon::D3D_FEATURE_LEVEL_9_2
+        | d3dcommon::D3D_FEATURE_LEVEL_9_3
+        | d3dcommon::D3D_FEATURE_LEVEL_10_0 => 4,
+        d3dcommon::D3D_FEATURE_LEVEL_10_1
+        | d3dcommon::D3D_FEATURE_LEVEL_11_0
+        | d3dcommon::D3D_FEATURE_LEVEL_11_1
+        | _ => 8,
+    };
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11device-checkmultisamplequalitylevels#remarks
+    // for more information.
+    let max_samples = match feature_level {
+        d3dcommon::D3D_FEATURE_LEVEL_9_1
+        | d3dcommon::D3D_FEATURE_LEVEL_9_2
+        | d3dcommon::D3D_FEATURE_LEVEL_9_3
+        | d3dcommon::D3D_FEATURE_LEVEL_10_0 => 0b0001, // Conservative, MSAA isn't required.
+        d3dcommon::D3D_FEATURE_LEVEL_10_1 => 0b0101, // Optimistic, 4xMSAA is required on all formats _but_ RGBA32.
+        d3dcommon::D3D_FEATURE_LEVEL_11_0
+        | d3dcommon::D3D_FEATURE_LEVEL_11_1
+        | _ => 0b1101, // Optimistic, 8xMSAA and 4xMSAA is required on all formats _but_ RGBA32 which requires 4x.
+    };
+
+    let max_constant_buffers = d3d11::D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT - 1;
+
+    hal::Limits {
+        max_image_1d_size: max_texture_uv_dimension,
+        max_image_2d_size: max_texture_uv_dimension,
+        max_image_3d_size: max_texture_w_dimension,
+        max_image_cube_size: max_texture_cube_dimension,
+        max_image_array_layers: max_texture_cube_dimension as _,
+        max_per_stage_descriptor_samplers: d3d11::D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT as _,
+        // Leave top buffer for push constants
+        max_per_stage_descriptor_uniform_buffers: max_constant_buffers as _,
+        max_per_stage_descriptor_storage_buffers: max_buffer_uav,
+        max_per_stage_descriptor_storage_images: max_image_uav,
+        max_per_stage_descriptor_sampled_images: d3d11::D3D11_COMMONSHADER_INPUT_RESOURCE_REGISTER_COUNT as _,
+        max_descriptor_set_uniform_buffers_dynamic: max_constant_buffers as _,
+        max_descriptor_set_storage_buffers_dynamic: 0, // TODO: Implement dynamic offsets for storage buffers
+        max_texel_elements: max_texture_uv_dimension as _, //TODO
+        max_patch_size: d3d11::D3D11_IA_PATCH_MAX_CONTROL_POINT_COUNT as _,
+        max_viewports: d3d11::D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE as _,
+        max_viewport_dimensions: [d3d11::D3D11_VIEWPORT_BOUNDS_MAX; 2],
+        max_framebuffer_extent: hal::image::Extent {
+            //TODO
+            width: 4096,
+            height: 4096,
+            depth: 1,
+        },
+        max_compute_work_group_count: [
+            d3d11::D3D11_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION,
+            d3d11::D3D11_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION,
+            d3d11::D3D11_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION,
+        ],
+        max_compute_work_group_invocations: d3d11::D3D11_CS_THREAD_GROUP_MAX_THREADS_PER_GROUP as _,
+        max_compute_work_group_size: [
+            d3d11::D3D11_CS_THREAD_GROUP_MAX_X,
+            d3d11::D3D11_CS_THREAD_GROUP_MAX_Y,
+            d3d11::D3D11_CS_THREAD_GROUP_MAX_Z,
+        ], // TODO
+        max_vertex_input_attribute_offset: 255, // TODO
+        max_vertex_input_attributes: max_input_slots,
+        max_vertex_input_binding_stride: d3d11::D3D11_REQ_MULTI_ELEMENT_STRUCTURE_SIZE_IN_BYTES as _,
+        max_vertex_input_bindings: d3d11::D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT as _, // TODO: verify same as attributes
+        max_vertex_output_components: d3d11::D3D11_VS_OUTPUT_REGISTER_COUNT as _, // TODO
+        min_texel_buffer_offset_alignment: 1,                                     // TODO
+        min_uniform_buffer_offset_alignment: 16,
+        min_storage_buffer_offset_alignment: 16, // TODO
+        framebuffer_color_sample_counts: max_samples,
+        framebuffer_depth_sample_counts: max_samples,
+        framebuffer_stencil_sample_counts: max_samples,
+        max_color_attachments,
+        buffer_image_granularity: 1,
+        non_coherent_atom_size: 1, // TODO
+        max_sampler_anisotropy: 16.,
+        optimal_buffer_copy_offset_alignment: 1, // TODO
+        // buffer -> image and image -> buffer paths use compute shaders that, at maximum, read 4 pixels from the buffer
+        // at a time, so need an alignment of at least 4.
+        optimal_buffer_copy_pitch_alignment: 4,
+        min_vertex_input_binding_stride_alignment: 1,
+        max_push_constants_size: MAX_PUSH_CONSTANT_SIZE,
+        max_uniform_buffer_range: 1 << 16,
+        ..hal::Limits::default() //TODO
+    }
 }
 
 fn get_format_properties(
@@ -367,54 +507,7 @@ impl hal::Instance<Backend> for Instance {
                 memory_heaps: vec![!0, !0],
             };
 
-            let limits = hal::Limits {
-                max_image_1d_size: d3d11::D3D11_REQ_TEXTURE1D_U_DIMENSION as _,
-                max_image_2d_size: d3d11::D3D11_REQ_TEXTURE2D_U_OR_V_DIMENSION as _,
-                max_image_3d_size: d3d11::D3D11_REQ_TEXTURE3D_U_V_OR_W_DIMENSION as _,
-                max_image_cube_size: d3d11::D3D11_REQ_TEXTURECUBE_DIMENSION as _,
-                max_image_array_layers: d3d11::D3D11_REQ_TEXTURE2D_ARRAY_AXIS_DIMENSION as _,
-                max_texel_elements: d3d11::D3D11_REQ_TEXTURE2D_U_OR_V_DIMENSION as _, //TODO
-                max_patch_size: 0,                                                    // TODO
-                max_viewports: d3d11::D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE as _,
-                max_viewport_dimensions: [d3d11::D3D11_VIEWPORT_BOUNDS_MAX; 2],
-                max_framebuffer_extent: hal::image::Extent {
-                    //TODO
-                    width: 4096,
-                    height: 4096,
-                    depth: 1,
-                },
-                max_compute_work_group_count: [
-                    d3d11::D3D11_CS_THREAD_GROUP_MAX_X,
-                    d3d11::D3D11_CS_THREAD_GROUP_MAX_Y,
-                    d3d11::D3D11_CS_THREAD_GROUP_MAX_Z,
-                ],
-                max_compute_work_group_size: [
-                    d3d11::D3D11_CS_THREAD_GROUP_MAX_THREADS_PER_GROUP,
-                    1,
-                    1,
-                ], // TODO
-                max_vertex_input_attribute_offset: 255, // TODO
-                max_vertex_input_attributes: d3d11::D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT as _,
-                max_vertex_input_binding_stride:
-                    d3d11::D3D11_REQ_MULTI_ELEMENT_STRUCTURE_SIZE_IN_BYTES as _,
-                max_vertex_input_bindings: d3d11::D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT as _, // TODO: verify same as attributes
-                max_vertex_output_components: d3d11::D3D11_VS_OUTPUT_REGISTER_COUNT as _, // TODO
-                min_texel_buffer_offset_alignment: 1,                                     // TODO
-                min_uniform_buffer_offset_alignment: 16, // TODO: verify
-                min_storage_buffer_offset_alignment: 1,  // TODO
-                framebuffer_color_sample_counts: 1,      // TODO
-                framebuffer_depth_sample_counts: 1,      // TODO
-                framebuffer_stencil_sample_counts: 1,    // TODO
-                max_color_attachments: d3d11::D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT as _,
-                buffer_image_granularity: 1,
-                non_coherent_atom_size: 1, // TODO
-                max_sampler_anisotropy: 16.,
-                optimal_buffer_copy_offset_alignment: 1, // TODO
-                optimal_buffer_copy_pitch_alignment: 1,  // TODO
-                min_vertex_input_binding_stride_alignment: 1,
-                ..hal::Limits::default() //TODO
-            };
-
+            let limits = get_limits(feature_level);
             let features = get_features(device.clone(), feature_level);
             let format_properties = get_format_properties(device.clone());
             let hints = hal::Hints::BASE_VERTEX_INSTANCE_DRAWING;
@@ -516,7 +609,7 @@ fn get_feature_level(func: &CreateFun, adapter: *mut IDXGIAdapter) -> d3dcommon:
                     d3dcommon::D3D_DRIVER_TYPE_UNKNOWN,
                     ptr::null_mut(),
                     0,
-                    requested_feature_levels[1 ..].as_ptr(),
+                    requested_feature_levels[1..].as_ptr(),
                     (requested_feature_levels.len() - 1) as _,
                     d3d11::D3D11_SDK_VERSION,
                     ptr::null_mut(),
@@ -559,7 +652,7 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             let create_flags = 0;
 
             // TODO: request debug device only on debug config?
-            let mut device = ptr::null_mut();
+            let mut device: *mut d3d11::ID3D11Device = ptr::null_mut();
             let mut cxt = ptr::null_mut();
             let hr = func(
                 self.adapter.as_raw() as *mut _,
@@ -581,13 +674,16 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
                 return Err(hal::device::CreationError::InitializationFailed);
             }
 
-            info!("feature level={:x}", feature_level);
+            info!("feature level={:x}=FL{}_{}", feature_level, feature_level >> 12, feature_level >> 8 & 0xF);
 
             (ComPtr::from_raw(device), ComPtr::from_raw(cxt))
         };
 
+        let device1 = device.cast::<d3d11_1::ID3D11Device1>().ok();
+
         let device = device::Device::new(
             device,
+            device1,
             cxt,
             requested_features,
             self.memory_properties.clone(),
@@ -741,6 +837,8 @@ struct Presentation {
     view: ComPtr<d3d11::ID3D11RenderTargetView>,
     format: format::Format,
     size: window::Extent2D,
+    mode: window::PresentMode,
+    is_init: bool,
 }
 
 pub struct Surface {
@@ -780,19 +878,20 @@ impl window::Surface<Backend> for Surface {
         // NOTE: some swap effects affect msaa capabilities..
         // TODO: _DISCARD swap effects can only have one image?
         window::SurfaceCapabilities {
-            present_modes: window::PresentMode::FIFO, //TODO
+            present_modes: window::PresentMode::IMMEDIATE
+                | window::PresentMode::FIFO,
             composite_alpha_modes: window::CompositeAlphaMode::OPAQUE, //TODO
-            image_count: 1 ..= 16,                    // TODO:
+            image_count: 1..=16,                                       // TODO:
             current_extent,
             extents: window::Extent2D {
                 width: 16,
                 height: 16,
-            } ..= window::Extent2D {
+            }..=window::Extent2D {
                 width: 4096,
                 height: 4096,
             },
             max_image_layers: 1,
-            usage: image::Usage::COLOR_ATTACHMENT | image::Usage::TRANSFER_SRC,
+            usage: image::Usage::COLOR_ATTACHMENT,
         }
     }
 
@@ -855,6 +954,7 @@ impl window::PresentationSurface<Backend> for Surface {
                 &mut resource as *mut *mut _ as *mut *mut _,
             )
         );
+        set_debug_name(&*resource, "Swapchain Image");
 
         let kind = image::Kind::D2(config.extent.width, config.extent.height, 1, 1);
         let format = conv::map_format(config.format).unwrap();
@@ -866,13 +966,11 @@ impl window::PresentationSurface<Backend> for Surface {
             caps: image::ViewCapabilities::empty(),
             view_kind: image::ViewKind::D2,
             format: decomposed.rtv.unwrap(),
-            range: image::SubresourceRange {
-                aspects: format::Aspects::COLOR,
-                levels: 0 .. 1,
-                layers: 0 .. 1,
-            },
+            levels: 0..1,
+            layers: 0..1,
         };
         let view = device.view_image_as_render_target(&view_info).unwrap();
+        set_debug_name(&view, "Swapchain Image View");
 
         (*resource).Release();
 
@@ -881,6 +979,8 @@ impl window::PresentationSurface<Backend> for Surface {
             view,
             format: config.format,
             size: config.extent,
+            mode: config.present_mode,
+            is_init: true,
         });
         Ok(())
     }
@@ -895,40 +995,16 @@ impl window::PresentationSurface<Backend> for Surface {
     ) -> Result<(ImageView, Option<window::Suboptimal>), window::AcquireError> {
         let present = self.presentation.as_ref().unwrap();
         let image_view = ImageView {
+            subresource: d3d11::D3D11CalcSubresource(0, 0, 1),
             format: present.format,
-            rtv_handle: Some(present.view.clone()),
+            rtv_handle: Some(present.view.as_raw()),
             dsv_handle: None,
             srv_handle: None,
             uav_handle: None,
+            rodsv_handle: None,
+            owned: false,
         };
         Ok((image_view, None))
-    }
-}
-
-pub struct Swapchain {
-    dxgi_swapchain: ComPtr<IDXGISwapChain>,
-}
-
-impl fmt::Debug for Swapchain {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.write_str("Swapchain")
-    }
-}
-
-unsafe impl Send for Swapchain {}
-unsafe impl Sync for Swapchain {}
-
-impl window::Swapchain<Backend> for Swapchain {
-    unsafe fn acquire_image(
-        &mut self,
-        _timeout_ns: u64,
-        _semaphore: Option<&Semaphore>,
-        _fence: Option<&Fence>,
-    ) -> Result<(window::SwapImageIndex, Option<window::Suboptimal>), window::AcquireError> {
-        // TODO: non-`_DISCARD` swap effects have more than one buffer, `FLIP`
-        //       effects are dxgi 1.3 (w10+?) in which case there is
-        //       `GetCurrentBackBufferIndex()` on the swapchain
-        Ok((0, None))
     }
 }
 
@@ -1006,36 +1082,22 @@ impl queue::CommandQueue<Backend> for CommandQueue {
         }
     }
 
-    unsafe fn present<'a, W, Is, S, Iw>(
-        &mut self,
-        swapchains: Is,
-        _wait_semaphores: Iw,
-    ) -> Result<Option<window::Suboptimal>, window::PresentError>
-    where
-        W: 'a + Borrow<Swapchain>,
-        Is: IntoIterator<Item = (&'a W, window::SwapImageIndex)>,
-        S: 'a + Borrow<Semaphore>,
-        Iw: IntoIterator<Item = &'a S>,
-    {
-        for (swapchain, _idx) in swapchains {
-            swapchain.borrow().dxgi_swapchain.Present(1, 0);
-        }
-
-        Ok(None)
-    }
-
-    unsafe fn present_surface(
+    unsafe fn present(
         &mut self,
         surface: &mut Surface,
         _image: ImageView,
         _wait_semaphore: Option<&Semaphore>,
     ) -> Result<Option<window::Suboptimal>, window::PresentError> {
-        surface
-            .presentation
-            .as_ref()
-            .unwrap()
-            .swapchain
-            .Present(1, 0);
+        let mut presentation = surface.presentation.as_mut().unwrap();
+        let (interval, flags) = match presentation.mode {
+            window::PresentMode::IMMEDIATE => (0, 0),
+            //Note: this ends up not presenting anything for some reason
+            //window::PresentMode::MAILBOX if !presentation.is_init => (1, DXGI_PRESENT_DO_NOT_SEQUENCE),
+            window::PresentMode::FIFO => (1, 0),
+            _ => (0, 0),
+        };
+        presentation.is_init = false;
+        presentation.swapchain.Present(interval, flags);
         Ok(None)
     }
 
@@ -1064,7 +1126,7 @@ pub struct RenderPassCache {
 impl RenderPassCache {
     pub fn start_subpass(
         &mut self,
-        internal: &mut internal::Internal,
+        internal: &internal::Internal,
         context: &ComPtr<d3d11::ID3D11DeviceContext>,
         cache: &mut CommandBufferState,
     ) {
@@ -1074,15 +1136,19 @@ impl RenderPassCache {
             .filter(|clear| clear.subpass_id == Some(self.current_subpass))
             .map(|clear| clear.raw);
 
-        cache
-            .dirty_flag
-            .insert(DirtyStateFlag::GRAPHICS_PIPELINE | DirtyStateFlag::VIEWPORTS);
+        cache.dirty_flag.insert(
+            DirtyStateFlag::GRAPHICS_PIPELINE
+                | DirtyStateFlag::DEPTH_STENCIL_STATE
+                | DirtyStateFlag::PIPELINE_PS
+                | DirtyStateFlag::VIEWPORTS
+                | DirtyStateFlag::RENDER_TARGETS_AND_UAVS,
+        );
         internal.clear_attachments(
             context,
             attachments,
             &[pso::ClearRect {
                 rect: self.target_rect,
-                layers: 0 .. 1,
+                layers: 0..1,
             }],
             &self,
         );
@@ -1094,38 +1160,79 @@ impl RenderPassCache {
             .map(|&(id, _)| {
                 self.framebuffer.attachments[id]
                     .rtv_handle
-                    .clone()
                     .unwrap()
-                    .as_raw()
             })
             .collect::<Vec<_>>();
-        let ds_view = match subpass.depth_stencil_attachment {
-            Some((id, _)) => Some(
-                self.framebuffer.attachments[id]
+        let (ds_view, rods_view) = match subpass.depth_stencil_attachment {
+            Some((id, _)) => {
+                let attachment = &self.framebuffer.attachments[id];
+                let ds_view = attachment
                     .dsv_handle
-                    .clone()
-                    .unwrap()
-                    .as_raw(),
-            ),
-            None => None,
+                    .unwrap();
+
+                let rods_view = attachment
+                    .rodsv_handle
+                    .unwrap();
+
+                (Some(ds_view), Some(rods_view))
+            },
+            None => (None, None),
         };
 
-        cache.set_render_targets(&color_views, ds_view);
+        cache.set_render_targets(&color_views, ds_view, rods_view);
         cache.bind(context);
     }
 
-    pub fn next_subpass(&mut self) {
+    fn resolve_msaa(&mut self, context: &ComPtr<d3d11::ID3D11DeviceContext>) {
+        let subpass: &SubpassDesc = &self.render_pass.subpasses[self.current_subpass as usize];
+
+        for (&(color_id, _), &(resolve_id, _)) in subpass.color_attachments.iter().zip(subpass.resolve_attachments.iter()) {
+            if color_id == pass::ATTACHMENT_UNUSED || resolve_id == pass::ATTACHMENT_UNUSED {
+                continue;
+            }
+
+            let color_framebuffer = &self.framebuffer.attachments[color_id];
+            let resolve_framebuffer = &self.framebuffer.attachments[resolve_id];
+
+            let mut color_resource: *mut d3d11::ID3D11Resource = ptr::null_mut();
+            let mut resolve_resource: *mut d3d11::ID3D11Resource = ptr::null_mut();
+
+            unsafe {
+                (&*color_framebuffer.rtv_handle.expect("Framebuffer must have COLOR_ATTACHMENT usage")).GetResource(&mut color_resource as *mut *mut _);
+                (&*resolve_framebuffer.rtv_handle.expect("Resolve texture must have COLOR_ATTACHMENT usage")).GetResource(&mut resolve_resource as *mut *mut _);
+
+                context.ResolveSubresource(
+                    resolve_resource,
+                    resolve_framebuffer.subresource,
+                    color_resource,
+                    color_framebuffer.subresource,
+                    conv::map_format(color_framebuffer.format).unwrap()
+                );
+
+                (&*color_resource).Release();
+                (&*resolve_resource).Release();
+            }
+        }
+    }
+
+    pub fn next_subpass(&mut self, context: &ComPtr<d3d11::ID3D11DeviceContext>) {
+        self.resolve_msaa(context);
         self.current_subpass += 1;
     }
 }
 
 bitflags! {
     struct DirtyStateFlag : u32 {
-        const RENDER_TARGETS = (1 << 1);
+        const RENDER_TARGETS_AND_UAVS = (1 << 1);
         const VERTEX_BUFFERS = (1 << 2);
         const GRAPHICS_PIPELINE = (1 << 3);
-        const VIEWPORTS = (1 << 4);
-        const BLEND_STATE = (1 << 5);
+        const PIPELINE_GS = (1 << 4);
+        const PIPELINE_HS = (1 << 5);
+        const PIPELINE_DS = (1 << 6);
+        const PIPELINE_PS = (1 << 7);
+        const VIEWPORTS = (1 << 8);
+        const BLEND_STATE = (1 << 9);
+        const DEPTH_STENCIL_STATE = (1 << 10);
     }
 }
 
@@ -1134,7 +1241,11 @@ pub struct CommandBufferState {
 
     render_target_len: u32,
     render_targets: [*mut d3d11::ID3D11RenderTargetView; 8],
+    uav_len: u32,
+    uavs: [*mut d3d11::ID3D11UnorderedAccessView; d3d11::D3D11_PS_CS_UAV_REGISTER_COUNT as _],
     depth_target: Option<*mut d3d11::ID3D11DepthStencilView>,
+    readonly_depth_target: Option<*mut d3d11::ID3D11DepthStencilView>,
+    depth_target_read_only: bool,
     graphics_pipeline: Option<GraphicsPipeline>,
 
     // a bitmask that keeps track of what vertex buffer bindings have been "bound" into
@@ -1169,7 +1280,11 @@ impl CommandBufferState {
             dirty_flag: DirtyStateFlag::empty(),
             render_target_len: 0,
             render_targets: [ptr::null_mut(); 8],
+            uav_len: 0,
+            uavs: [ptr::null_mut(); 8],
             depth_target: None,
+            readonly_depth_target: None,
+            depth_target_read_only: false,
             graphics_pipeline: None,
             bound_bindings: 0,
             required_bindings: None,
@@ -1188,7 +1303,10 @@ impl CommandBufferState {
 
     fn clear(&mut self) {
         self.render_target_len = 0;
+        self.uav_len = 0;
         self.depth_target = None;
+        self.readonly_depth_target = None;
+        self.depth_target_read_only = false;
         self.graphics_pipeline = None;
         self.bound_bindings = 0;
         self.required_bindings = None;
@@ -1224,6 +1342,10 @@ impl CommandBufferState {
     }
 
     pub fn bind_vertex_buffers(&mut self, context: &ComPtr<d3d11::ID3D11DeviceContext>) {
+        if !self.dirty_flag.contains(DirtyStateFlag::VERTEX_BUFFERS) {
+            return;
+        }
+
         if let Some(binding_count) = self.max_bindings {
             if self.vertex_buffers.len() >= binding_count as usize
                 && self.vertex_strides.len() >= binding_count as usize
@@ -1251,6 +1373,10 @@ impl CommandBufferState {
     }
 
     pub fn bind_viewports(&mut self, context: &ComPtr<d3d11::ID3D11DeviceContext>) {
+        if !self.dirty_flag.contains(DirtyStateFlag::VIEWPORTS) {
+            return;
+        }
+
         if let Some(ref pipeline) = self.graphics_pipeline {
             if let Some(ref viewport) = pipeline.baked_states.viewport {
                 unsafe {
@@ -1274,6 +1400,7 @@ impl CommandBufferState {
         &mut self,
         render_targets: &[*mut d3d11::ID3D11RenderTargetView],
         depth_target: Option<*mut d3d11::ID3D11DepthStencilView>,
+        readonly_depth_target: Option<*mut d3d11::ID3D11DepthStencilView>
     ) {
         for (idx, &rt) in render_targets.iter().enumerate() {
             self.render_targets[idx] = rt;
@@ -1281,24 +1408,45 @@ impl CommandBufferState {
 
         self.render_target_len = render_targets.len() as u32;
         self.depth_target = depth_target;
+        self.readonly_depth_target = readonly_depth_target;
 
-        self.dirty_flag.insert(DirtyStateFlag::RENDER_TARGETS);
+        self.dirty_flag.insert(DirtyStateFlag::RENDER_TARGETS_AND_UAVS);
     }
 
     pub fn bind_render_targets(&mut self, context: &ComPtr<d3d11::ID3D11DeviceContext>) {
-        unsafe {
-            context.OMSetRenderTargets(
-                self.render_target_len,
-                self.render_targets.as_ptr(),
-                if let Some(dsv) = self.depth_target {
-                    dsv
-                } else {
-                    ptr::null_mut()
-                },
-            );
+        if !self.dirty_flag.contains(DirtyStateFlag::RENDER_TARGETS_AND_UAVS) {
+            return;
         }
 
-        self.dirty_flag.remove(DirtyStateFlag::RENDER_TARGETS);
+        let depth_target = if self.depth_target_read_only {
+            self.readonly_depth_target
+        } else {
+            self.depth_target
+        }.unwrap_or(ptr::null_mut());
+
+        let uav_start_index = d3d11::D3D11_PS_CS_UAV_REGISTER_COUNT - self.uav_len;
+
+        unsafe {
+            if self.uav_len > 0 {
+                context.OMSetRenderTargetsAndUnorderedAccessViews(
+                    self.render_target_len,
+                    self.render_targets.as_ptr(),
+                    depth_target,
+                    uav_start_index,
+                    self.uav_len,
+                    &self.uavs[uav_start_index as usize] as *const *mut _,
+                    ptr::null(),
+                )
+            } else {
+                context.OMSetRenderTargets(
+                    self.render_target_len,
+                    self.render_targets.as_ptr(),
+                    depth_target,
+                )
+            };
+        }
+
+        self.dirty_flag.remove(DirtyStateFlag::RENDER_TARGETS_AND_UAVS);
     }
 
     pub fn set_blend_factor(&mut self, factor: [f32; 4]) {
@@ -1328,13 +1476,81 @@ impl CommandBufferState {
         }
     }
 
-    pub fn set_graphics_pipeline(&mut self, pipeline: GraphicsPipeline) {
-        self.graphics_pipeline = Some(pipeline);
+    pub fn set_stencil_ref(&mut self, value: pso::StencilValue) {
+        self.stencil_ref = Some(value);
+        self.dirty_flag.insert(DirtyStateFlag::DEPTH_STENCIL_STATE);
+    }
 
-        self.dirty_flag.insert(DirtyStateFlag::GRAPHICS_PIPELINE);
+    pub fn bind_depth_stencil_state(&mut self, context: &ComPtr<d3d11::ID3D11DeviceContext>) {
+        if !self.dirty_flag.contains(DirtyStateFlag::DEPTH_STENCIL_STATE) {
+            return;
+        }
+
+        let pipeline = match self.graphics_pipeline {
+            Some(ref pipeline) => pipeline,
+            None => return,
+        };
+
+        if let Some(ref state) = pipeline.depth_stencil_state {
+            let stencil_ref = state.stencil_ref.static_or(self.stencil_ref.unwrap_or(0));
+
+            unsafe {
+                context.OMSetDepthStencilState(state.raw.as_raw(), stencil_ref);
+            }
+        }
+
+        self.dirty_flag.remove(DirtyStateFlag::DEPTH_STENCIL_STATE)
+    }
+
+    pub fn set_graphics_pipeline(&mut self, pipeline: GraphicsPipeline) {
+        let prev = self.graphics_pipeline.take();
+
+        let mut prev_has_ps = false;
+        let mut prev_has_gs = false;
+        let mut prev_has_ds = false;
+        let mut prev_has_hs = false;
+        if let Some(p) = prev {
+            prev_has_ps = p.ps.is_some();
+            prev_has_gs = p.gs.is_some();
+            prev_has_ds = p.ds.is_some();
+            prev_has_hs = p.hs.is_some();
+        }
+
+        if prev_has_ps || pipeline.ps.is_some() {
+            self.dirty_flag.insert(DirtyStateFlag::PIPELINE_PS);
+        }
+        if prev_has_gs || pipeline.gs.is_some() {
+            self.dirty_flag.insert(DirtyStateFlag::PIPELINE_GS);
+        }
+        if prev_has_ds || pipeline.ds.is_some() {
+            self.dirty_flag.insert(DirtyStateFlag::PIPELINE_DS);
+        }
+        if prev_has_hs || pipeline.hs.is_some() {
+            self.dirty_flag.insert(DirtyStateFlag::PIPELINE_HS);
+        }
+
+        // If we don't have depth stencil state, we use the old value, so we don't bother changing anything.
+        let depth_target_read_only =
+            pipeline
+                .depth_stencil_state
+                .as_ref()
+                .map_or(self.depth_target_read_only, |ds| ds.read_only);
+
+        if self.depth_target_read_only != depth_target_read_only {
+            self.depth_target_read_only = depth_target_read_only;
+            self.dirty_flag.insert(DirtyStateFlag::RENDER_TARGETS_AND_UAVS);
+        }
+
+        self.dirty_flag.insert(DirtyStateFlag::GRAPHICS_PIPELINE | DirtyStateFlag::DEPTH_STENCIL_STATE);
+
+        self.graphics_pipeline = Some(pipeline);
     }
 
     pub fn bind_graphics_pipeline(&mut self, context: &ComPtr<d3d11::ID3D11DeviceContext>) {
+        if !self.dirty_flag.contains(DirtyStateFlag::GRAPHICS_PIPELINE) {
+            return;
+        }
+
         if let Some(ref pipeline) = self.graphics_pipeline {
             self.vertex_strides.clear();
             self.vertex_strides.extend(&pipeline.strides);
@@ -1351,17 +1567,33 @@ impl CommandBufferState {
                 context.IASetInputLayout(pipeline.input_layout.as_raw());
 
                 context.VSSetShader(pipeline.vs.as_raw(), ptr::null_mut(), 0);
-                if let Some(ref ps) = pipeline.ps {
-                    context.PSSetShader(ps.as_raw(), ptr::null_mut(), 0);
+
+                if self.dirty_flag.contains(DirtyStateFlag::PIPELINE_PS) {
+                    let ps = pipeline.ps.as_ref().map_or(ptr::null_mut(), |ps| ps.as_raw());
+                    context.PSSetShader(ps, ptr::null_mut(), 0);
+
+                    self.dirty_flag.remove(DirtyStateFlag::PIPELINE_PS)
                 }
-                if let Some(ref gs) = pipeline.gs {
-                    context.GSSetShader(gs.as_raw(), ptr::null_mut(), 0);
+
+                if self.dirty_flag.contains(DirtyStateFlag::PIPELINE_GS) {
+                    let gs = pipeline.gs.as_ref().map_or(ptr::null_mut(), |gs| gs.as_raw());
+                    context.GSSetShader(gs, ptr::null_mut(), 0);
+
+                    self.dirty_flag.remove(DirtyStateFlag::PIPELINE_GS)
                 }
-                if let Some(ref hs) = pipeline.hs {
-                    context.HSSetShader(hs.as_raw(), ptr::null_mut(), 0);
+
+                if self.dirty_flag.contains(DirtyStateFlag::PIPELINE_HS) {
+                    let hs = pipeline.hs.as_ref().map_or(ptr::null_mut(), |hs| hs.as_raw());
+                    context.HSSetShader(hs, ptr::null_mut(), 0);
+
+                    self.dirty_flag.remove(DirtyStateFlag::PIPELINE_HS)
                 }
-                if let Some(ref ds) = pipeline.ds {
-                    context.DSSetShader(ds.as_raw(), ptr::null_mut(), 0);
+
+                if self.dirty_flag.contains(DirtyStateFlag::PIPELINE_DS) {
+                    let ds = pipeline.ds.as_ref().map_or(ptr::null_mut(), |ds| ds.as_raw());
+                    context.DSSetShader(ds, ptr::null_mut(), 0);
+
+                    self.dirty_flag.remove(DirtyStateFlag::PIPELINE_DS)
                 }
 
                 context.RSSetState(pipeline.rasterizer_state.as_raw());
@@ -1372,47 +1604,152 @@ impl CommandBufferState {
                     context.RSSetScissorRects(1, [conv::map_rect(&scissor)].as_ptr());
                 }
 
-                if let Some((ref state, reference)) = pipeline.depth_stencil_state {
-                    let stencil_ref = if let pso::State::Static(reference) = reference {
-                        reference
-                    } else {
-                        self.stencil_ref.unwrap_or(0)
-                    };
-
-                    context.OMSetDepthStencilState(state.as_raw(), stencil_ref);
-                }
                 self.current_blend = Some(pipeline.blend_state.as_raw());
             }
         };
 
         self.bind_blend_state(context);
+        self.bind_depth_stencil_state(context);
 
         self.dirty_flag.remove(DirtyStateFlag::GRAPHICS_PIPELINE);
     }
 
     pub fn bind(&mut self, context: &ComPtr<d3d11::ID3D11DeviceContext>) {
-        if self.dirty_flag.contains(DirtyStateFlag::RENDER_TARGETS) {
-            self.bind_render_targets(context);
-        }
-
-        if self.dirty_flag.contains(DirtyStateFlag::GRAPHICS_PIPELINE) {
-            self.bind_graphics_pipeline(context);
-        }
-
-        if self.dirty_flag.contains(DirtyStateFlag::VERTEX_BUFFERS) {
-            self.bind_vertex_buffers(context);
-        }
-
-        if self.dirty_flag.contains(DirtyStateFlag::VIEWPORTS) {
-            self.bind_viewports(context);
-        }
+        self.bind_render_targets(context);
+        self.bind_graphics_pipeline(context);
+        self.bind_vertex_buffers(context);
+        self.bind_viewports(context);
     }
 }
 
+type PerConstantBufferVec<T> = ArrayVec<[T; d3d11::D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT as _]>;
+
+fn generate_graphics_dynamic_constant_buffer_offsets<'a>(
+    bindings: impl IntoIterator<Item = &'a pso::DescriptorSetLayoutBinding>,
+    offset_iter: &mut impl Iterator<Item = u32>,
+    context1_some: bool,
+) -> (PerConstantBufferVec<UINT>, PerConstantBufferVec<UINT>) {
+    let mut vs_offsets = ArrayVec::new();
+    let mut fs_offsets = ArrayVec::new();
+
+    let mut exists_dynamic_constant_buffer = false;
+
+    for binding in bindings.into_iter() {
+        match binding.ty {
+            pso::DescriptorType::Buffer {
+                format: pso::BufferDescriptorFormat::Structured {
+                    dynamic_offset: true
+                },
+                ty: pso::BufferDescriptorType::Uniform,
+            } => {
+                let offset = offset_iter.next().unwrap();
+
+                if binding.stage_flags.contains(pso::ShaderStageFlags::VERTEX) {
+                    vs_offsets.push(offset / 16)
+                };
+
+                if binding.stage_flags.contains(pso::ShaderStageFlags::FRAGMENT) {
+                    fs_offsets.push(offset / 16)
+                };
+                exists_dynamic_constant_buffer = true;
+            }
+            pso::DescriptorType::Buffer {
+                format: pso::BufferDescriptorFormat::Structured {
+                    dynamic_offset: false
+                },
+                ty: pso::BufferDescriptorType::Uniform,
+            } => {
+                if binding.stage_flags.contains(pso::ShaderStageFlags::VERTEX) {
+                    vs_offsets.push(0)
+                };
+
+                if binding.stage_flags.contains(pso::ShaderStageFlags::FRAGMENT) {
+                    fs_offsets.push(0)
+                };
+            }
+            pso::DescriptorType::Buffer {
+                ty: pso::BufferDescriptorType::Storage { .. },
+                format: pso::BufferDescriptorFormat::Structured {
+                    dynamic_offset: true
+                },
+            } => {
+                // TODO: Storage buffer offsets require new buffer views with correct sizes.
+                //       Might also require D3D11_BUFFEREX_SRV to act like RBA is happening.
+                let _ = offset_iter.next().unwrap();
+                warn!("Dynamic offsets into storage buffers are currently unsupported on DX11.");
+            }
+            _ => {}
+        }
+    }
+
+    if exists_dynamic_constant_buffer && !context1_some {
+        warn!("D3D11.1 runtime required for dynamic offsets into constant buffers. Offsets will be ignored.");
+    }
+
+    (vs_offsets, fs_offsets)
+}
+
+fn generate_compute_dynamic_constant_buffer_offsets<'a>(
+    bindings: impl IntoIterator<Item = &'a pso::DescriptorSetLayoutBinding>,
+    offset_iter: &mut impl Iterator<Item = u32>,
+    context1_some: bool,
+) -> PerConstantBufferVec<UINT> {
+    let mut cs_offsets = ArrayVec::new();
+
+    let mut exists_dynamic_constant_buffer = false;
+
+    for binding in bindings.into_iter() {
+        match binding.ty {
+            pso::DescriptorType::Buffer {
+                format: pso::BufferDescriptorFormat::Structured {
+                    dynamic_offset: true
+                },
+                ty: pso::BufferDescriptorType::Uniform,
+            } => {
+                let offset = offset_iter.next().unwrap();
+
+                if binding.stage_flags.contains(pso::ShaderStageFlags::COMPUTE) {
+                    cs_offsets.push(offset / 16)
+                };
+
+                exists_dynamic_constant_buffer = true;
+            }
+            pso::DescriptorType::Buffer {
+                format: pso::BufferDescriptorFormat::Structured {
+                    dynamic_offset: false
+                },
+                ty: pso::BufferDescriptorType::Uniform,
+            } => {
+                if binding.stage_flags.contains(pso::ShaderStageFlags::COMPUTE) {
+                    cs_offsets.push(0)
+                };
+            }
+            pso::DescriptorType::Buffer {
+                ty: pso::BufferDescriptorType::Storage { .. },
+                format: pso::BufferDescriptorFormat::Structured {
+                    dynamic_offset: true
+                },
+            } => {
+                // TODO: Storage buffer offsets require new buffer views with correct sizes.
+                //       Might also require D3D11_BUFFEREX_SRV to act like RBA is happening.
+                let _ = offset_iter.next().unwrap();
+                warn!("Dynamic offsets into storage buffers are currently unsupported on DX11.");
+            }
+            _ => {}
+        }
+    }
+
+    if exists_dynamic_constant_buffer && !context1_some {
+        warn!("D3D11.1 runtime required for dynamic offsets into constant buffers. Offsets will be ignored.");
+    }
+
+    cs_offsets
+}
+
 pub struct CommandBuffer {
-    // TODO: better way of sharing
-    internal: internal::Internal,
+    internal: Arc<internal::Internal>,
     context: ComPtr<d3d11::ID3D11DeviceContext>,
+    context1: Option<ComPtr<d3d11_1::ID3D11DeviceContext1>>,
     list: RefCell<Option<ComPtr<d3d11::ID3D11CommandList>>>,
 
     // since coherent memory needs to be synchronized at submission, we need to gather up all
@@ -1424,9 +1761,16 @@ pub struct CommandBuffer {
     // holds information about the active render pass
     render_pass_cache: Option<RenderPassCache>,
 
+    // Have to update entire push constant buffer at once, keep whole buffer data local.
+    push_constant_data: [u32; MAX_PUSH_CONSTANT_SIZE / 4],
+    push_constant_buffer: ComPtr<d3d11::ID3D11Buffer>,
+
     cache: CommandBufferState,
 
     one_time_submit: bool,
+
+    debug_name: Option<String>,
+    debug_scopes: Vec<Option<debug::DebugScope>>,
 }
 
 impl fmt::Debug for CommandBuffer {
@@ -1439,21 +1783,68 @@ unsafe impl Send for CommandBuffer {}
 unsafe impl Sync for CommandBuffer {}
 
 impl CommandBuffer {
-    fn create_deferred(device: ComPtr<d3d11::ID3D11Device>, internal: internal::Internal) -> Self {
-        let mut context: *mut d3d11::ID3D11DeviceContext = ptr::null_mut();
-        let hr =
-            unsafe { device.CreateDeferredContext(0, &mut context as *mut *mut _ as *mut *mut _) };
-        assert_eq!(hr, winerror::S_OK);
+    fn create_deferred(
+        device: &d3d11::ID3D11Device,
+        device1: Option<&d3d11_1::ID3D11Device1>,
+        internal: Arc<internal::Internal>,
+    ) -> Self {
+        let (context, context1) = if let Some(device1) = device1 {
+            let mut context1: *mut d3d11_1::ID3D11DeviceContext1 = ptr::null_mut();
+            let hr =
+                unsafe { device1.CreateDeferredContext1(0, &mut context1 as *mut *mut _) };
+            assert_eq!(hr, winerror::S_OK);
+
+            let context1 = unsafe { ComPtr::from_raw(context1) };
+            let context = context1.cast::<d3d11::ID3D11DeviceContext>().unwrap();
+
+            (context, Some(context1))
+        } else {
+            let mut context: *mut d3d11::ID3D11DeviceContext = ptr::null_mut();
+            let hr =
+                unsafe { device.CreateDeferredContext(0, &mut context as *mut *mut _) };
+            assert_eq!(hr, winerror::S_OK);
+
+            let context = unsafe { ComPtr::from_raw(context) };
+
+            (context, None)
+        };
+
+        let push_constant_buffer = {
+            let desc = d3d11::D3D11_BUFFER_DESC {
+                ByteWidth: MAX_PUSH_CONSTANT_SIZE as _,
+                Usage: d3d11::D3D11_USAGE_DEFAULT,
+                BindFlags: d3d11::D3D11_BIND_CONSTANT_BUFFER,
+                CPUAccessFlags: 0,
+                MiscFlags: 0,
+                StructureByteStride: 0,
+            };
+
+            let mut buffer: *mut d3d11::ID3D11Buffer = ptr::null_mut();
+            let hr = unsafe {
+                device.CreateBuffer(&desc as *const _, ptr::null_mut(), &mut buffer as *mut _)
+            };
+
+            assert_eq!(hr, winerror::S_OK);
+
+            unsafe { ComPtr::from_raw(buffer) }
+        };
+
+        let push_constant_data = [0_u32; 64];
 
         CommandBuffer {
             internal,
-            context: unsafe { ComPtr::from_raw(context) },
+            context,
+            context1,
             list: RefCell::new(None),
             flush_coherent_memory: Vec::new(),
             invalidate_coherent_memory: Vec::new(),
             render_pass_cache: None,
+            push_constant_data,
+            push_constant_buffer,
             cache: CommandBufferState::new(),
             one_time_submit: false,
+            debug_name: None,
+            debug_scopes: Vec::new(),
         }
     }
 
@@ -1472,7 +1863,7 @@ impl CommandBuffer {
             .any(|m| m.buffer == buffer.internal.raw)
         {
             self.flush_coherent_memory.push(MemoryFlush {
-                host_memory: buffer.host_ptr,
+                host_memory: buffer.memory_ptr,
                 sync_range: SyncRange::Whole,
                 buffer: buffer.internal.raw,
             });
@@ -1488,8 +1879,9 @@ impl CommandBuffer {
             self.invalidate_coherent_memory.push(MemoryInvalidate {
                 working_buffer: Some(self.internal.working_buffer.clone()),
                 working_buffer_size: self.internal.working_buffer_size,
-                host_memory: buffer.host_ptr,
-                sync_range: buffer.bound_range.clone(),
+                host_memory: buffer.memory_ptr,
+                host_sync_range: buffer.bound_range.clone(),
+                buffer_sync_range: buffer.bound_range.clone(),
                 buffer: buffer.internal.raw,
             });
         }
@@ -1500,6 +1892,7 @@ impl CommandBuffer {
         self.invalidate_coherent_memory.clear();
         self.render_pass_cache = None;
         self.cache.clear();
+        self.debug_scopes.clear();
     }
 }
 
@@ -1511,14 +1904,36 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
     ) {
         self.one_time_submit = flags.contains(command::CommandBufferFlags::ONE_TIME_SUBMIT);
         self.reset();
+
+        // Push constants are at the top register to allow them to be bound only once.
+        let raw_push_constant_buffer = self.push_constant_buffer.as_raw();
+        self.context.VSSetConstantBuffers(
+            d3d11::D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT - 1,
+            1,
+            &raw_push_constant_buffer as *const _
+        );
+        self.context.PSSetConstantBuffers(
+            d3d11::D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT - 1,
+            1,
+            &raw_push_constant_buffer as *const _
+        );
+        self.context.CSSetConstantBuffers(
+            d3d11::D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT - 1,
+            1,
+            &raw_push_constant_buffer as *const _
+        );
     }
 
     unsafe fn finish(&mut self) {
-        let mut list = ptr::null_mut();
+        let mut list: *mut d3d11::ID3D11CommandList = ptr::null_mut();
         let hr = self
             .context
-            .FinishCommandList(FALSE, &mut list as *mut *mut _ as *mut *mut _);
+            .FinishCommandList(FALSE, &mut list as *mut *mut _);
         assert_eq!(hr, winerror::S_OK);
+
+        if let Some(ref name) = self.debug_name {
+            set_debug_name(&*list, name);
+        }
 
         self.list.replace(Some(ComPtr::from_raw(list)));
     }
@@ -1630,19 +2045,22 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
         });
 
         if let Some(ref mut current_render_pass) = self.render_pass_cache {
-            current_render_pass.start_subpass(&mut self.internal, &self.context, &mut self.cache);
+            current_render_pass.start_subpass(&self.internal, &self.context, &mut self.cache);
         }
     }
 
     unsafe fn next_subpass(&mut self, _contents: command::SubpassContents) {
         if let Some(ref mut current_render_pass) = self.render_pass_cache {
-            // TODO: resolve msaa
-            current_render_pass.next_subpass();
-            current_render_pass.start_subpass(&mut self.internal, &self.context, &mut self.cache);
+            current_render_pass.next_subpass(&self.context);
+            current_render_pass.start_subpass(&self.internal, &self.context, &mut self.cache);
         }
     }
 
     unsafe fn end_render_pass(&mut self) {
+        if let Some(ref mut current_render_pass) = self.render_pass_cache {
+            current_render_pass.resolve_msaa(&self.context);
+        }
+
         self.context
             .OMSetRenderTargets(8, [ptr::null_mut(); 8].as_ptr(), ptr::null_mut());
 
@@ -1674,31 +2092,28 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
     {
         for range in subresource_ranges {
             let range = range.borrow();
-
-            // TODO: clear Int/Uint depending on format
-            if range.aspects.contains(format::Aspects::COLOR) {
-                for layer in range.layers.clone() {
-                    for level in range.levels.clone() {
-                        self.context.ClearRenderTargetView(
-                            image.get_rtv(level, layer).unwrap().as_raw(),
-                            &value.color.float32,
-                        );
-                    }
-                }
-            }
+            let num_levels = range.resolve_level_count(image.mip_levels);
+            let num_layers = range.resolve_layer_count(image.kind.num_layers());
 
             let mut depth_stencil_flags = 0;
             if range.aspects.contains(format::Aspects::DEPTH) {
                 depth_stencil_flags |= d3d11::D3D11_CLEAR_DEPTH;
             }
-
             if range.aspects.contains(format::Aspects::STENCIL) {
                 depth_stencil_flags |= d3d11::D3D11_CLEAR_STENCIL;
             }
 
-            if depth_stencil_flags != 0 {
-                for layer in range.layers.clone() {
-                    for level in range.levels.clone() {
+            // TODO: clear Int/Uint depending on format
+            for rel_layer in 0..num_layers {
+                for rel_level in 0..num_levels {
+                    let level = range.level_start + rel_level;
+                    let layer = range.layer_start + rel_layer;
+                    if range.aspects.contains(format::Aspects::COLOR) {
+                        self.context.ClearRenderTargetView(
+                            image.get_rtv(level, layer).unwrap().as_raw(),
+                            &value.color.float32,
+                        );
+                    } else {
                         self.context.ClearDepthStencilView(
                             image.get_dsv(level, layer).unwrap().as_raw(),
                             depth_stencil_flags,
@@ -1721,8 +2136,10 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
         if let Some(ref pass) = self.render_pass_cache {
             self.cache.dirty_flag.insert(
                 DirtyStateFlag::GRAPHICS_PIPELINE
+                    | DirtyStateFlag::DEPTH_STENCIL_STATE
+                    | DirtyStateFlag::PIPELINE_PS
                     | DirtyStateFlag::VIEWPORTS
-                    | DirtyStateFlag::RENDER_TARGETS,
+                    | DirtyStateFlag::RENDER_TARGETS_AND_UAVS,
             );
             self.internal
                 .clear_attachments(&self.context, clears, rects, pass);
@@ -1760,7 +2177,7 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
     {
         self.cache
             .dirty_flag
-            .insert(DirtyStateFlag::GRAPHICS_PIPELINE);
+            .insert(DirtyStateFlag::GRAPHICS_PIPELINE | DirtyStateFlag::PIPELINE_PS);
 
         self.internal
             .blit_2d_image(&self.context, src, dst, filter, regions);
@@ -1785,7 +2202,7 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
             let idx = i + first_binding as usize;
             let buf = buf.borrow();
 
-            if buf.properties.contains(memory::Properties::COHERENT) {
+            if buf.is_coherent {
                 self.defer_coherent_flush(buf);
             }
 
@@ -1838,7 +2255,8 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
     }
 
     unsafe fn set_stencil_reference(&mut self, _faces: pso::Face, value: pso::StencilValue) {
-        self.cache.stencil_ref = Some(value);
+        self.cache.set_stencil_ref(value);
+        self.cache.bind_depth_stencil_state(&self.context);
     }
 
     unsafe fn set_stencil_read_mask(&mut self, _faces: pso::Face, value: pso::StencilValue) {
@@ -1864,7 +2282,7 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
 
     unsafe fn bind_graphics_pipeline(&mut self, pipeline: &GraphicsPipeline) {
         self.cache.set_graphics_pipeline(pipeline.clone());
-        self.cache.bind_graphics_pipeline(&self.context);
+        self.cache.bind(&self.context);
     }
 
     unsafe fn bind_graphics_descriptor_sets<'a, I, J>(
@@ -1872,7 +2290,7 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
         layout: &PipelineLayout,
         first_set: usize,
         sets: I,
-        _offsets: J,
+        offsets: J,
     ) where
         I: IntoIterator,
         I::Item: Borrow<DescriptorSet>,
@@ -1882,17 +2300,18 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
         let _scope = debug_scope!(&self.context, "BindGraphicsDescriptorSets");
 
         // TODO: find a better solution to invalidating old bindings..
+        let nulls = [ptr::null_mut(); d3d11::D3D11_PS_CS_UAV_REGISTER_COUNT as usize];
         self.context.CSSetUnorderedAccessViews(
             0,
-            16,
-            [ptr::null_mut(); 16].as_ptr(),
+            d3d11::D3D11_PS_CS_UAV_REGISTER_COUNT,
+            nulls.as_ptr(),
             ptr::null_mut(),
         );
 
-        //let offsets: Vec<command::DescriptorSetOffset> = offsets.into_iter().map(|o| *o.borrow()).collect();
+        let mut offset_iter = offsets.into_iter().map(|o: J::Item| *o.borrow());
 
-        for (set, info) in sets.into_iter().zip(&layout.sets[first_set ..]) {
-            let set = set.borrow();
+        for (set, info) in sets.into_iter().zip(&layout.sets[first_set..]) {
+            let set: &DescriptorSet = set.borrow();
 
             {
                 let coherent_buffers = set.coherent_buffers.lock();
@@ -1921,59 +2340,127 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
                             working_buffer: Some(self.internal.working_buffer.clone()),
                             working_buffer_size: self.internal.working_buffer_size,
                             host_memory: sync.host_ptr,
-                            sync_range: sync.range.clone(),
+                            host_sync_range: sync.range.clone(),
+                            buffer_sync_range: sync.range.clone(),
                             buffer: sync.device_buffer,
                         });
                     }
                 }
             }
 
-            // TODO: offsets
+            let (vs_offsets, fs_offsets) = generate_graphics_dynamic_constant_buffer_offsets(
+                &*set.layout.bindings,
+                &mut offset_iter,
+                self.context1.is_some()
+            );
 
             if let Some(rd) = info.registers.vs.c.as_some() {
-                self.context.VSSetConstantBuffers(
-                    rd.res_index as u32,
-                    rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
-                );
+                let start_slot = rd.res_index as u32;
+                let num_buffers = rd.count as u32;
+                let constant_buffers = set.handles.offset(rd.pool_offset as isize);
+                if let Some(ref context1) = self.context1 {
+                    // This call with offsets won't work right with command list emulation
+                    // unless we reset the first and last constant buffers to null.
+                    if self.internal.command_list_emulation {
+                        let null_cbuf = [ptr::null_mut::<d3d11::ID3D11Buffer>()];
+                        context1.VSSetConstantBuffers(start_slot, 1, &null_cbuf as *const _);
+                        if num_buffers > 1 {
+                            context1.VSSetConstantBuffers(start_slot + num_buffers - 1, 1, &null_cbuf as *const _);
+                        }
+                    }
+
+                    // TODO: This should be the actual buffer length for RBA purposes,
+                    //       but that information isn't easily accessible here.
+                    context1.VSSetConstantBuffers1(
+                        start_slot,
+                        num_buffers,
+                        constant_buffers as *const *mut _,
+                        vs_offsets.as_ptr(),
+                        self.internal.constant_buffer_count_buffer.as_ptr(),
+                    );
+                } else {
+                    self.context.VSSetConstantBuffers(
+                        start_slot,
+                        num_buffers,
+                        constant_buffers as *const *mut _
+                    );
+                }
             }
             if let Some(rd) = info.registers.vs.t.as_some() {
                 self.context.VSSetShaderResources(
                     rd.res_index as u32,
                     rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
+                    set.handles.offset(rd.pool_offset as isize) as *const *mut _,
                 );
             }
             if let Some(rd) = info.registers.vs.s.as_some() {
                 self.context.VSSetSamplers(
                     rd.res_index as u32,
                     rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
+                    set.handles.offset(rd.pool_offset as isize) as *const *mut _,
                 );
             }
 
             if let Some(rd) = info.registers.ps.c.as_some() {
-                self.context.PSSetConstantBuffers(
-                    rd.res_index as u32,
-                    rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
-                );
+                let start_slot = rd.res_index as u32;
+                let num_buffers = rd.count as u32;
+                let constant_buffers = set.handles.offset(rd.pool_offset as isize);
+                if let Some(ref context1) = self.context1 {
+                    // This call with offsets won't work right with command list emulation
+                    // unless we reset the first and last constant buffers to null.
+                    if self.internal.command_list_emulation {
+                        let null_cbuf = [ptr::null_mut::<d3d11::ID3D11Buffer>()];
+                        context1.PSSetConstantBuffers(start_slot, 1, &null_cbuf as *const _);
+                        if num_buffers > 1 {
+                            context1.PSSetConstantBuffers(start_slot + num_buffers - 1, 1, &null_cbuf as *const _);
+                        }
+                    }
+
+                    context1.PSSetConstantBuffers1(
+                        start_slot,
+                        num_buffers,
+                        constant_buffers as *const *mut _,
+                        fs_offsets.as_ptr(),
+                        self.internal.constant_buffer_count_buffer.as_ptr(),
+                    );
+                } else {
+                    self.context.PSSetConstantBuffers(
+                        start_slot,
+                        num_buffers,
+                        constant_buffers as *const *mut _
+                    );
+                }
             }
             if let Some(rd) = info.registers.ps.t.as_some() {
                 self.context.PSSetShaderResources(
                     rd.res_index as u32,
                     rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
+                    set.handles.offset(rd.pool_offset as isize) as *const *mut _,
                 );
             }
             if let Some(rd) = info.registers.ps.s.as_some() {
                 self.context.PSSetSamplers(
                     rd.res_index as u32,
                     rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
+                    set.handles.offset(rd.pool_offset as isize) as *const *mut _,
                 );
             }
+
+            // UAVs going to the graphics pipeline are always treated as pixel shader bindings.
+            if let Some(rd) = info.registers.ps.u.as_some() {
+            	// We bind UAVs in inverse order from the top to prevent invalidation
+            	// when the render target count changes.
+                for idx in (0..(rd.count)).rev() {
+                    let ptr = (*set.handles.offset(rd.pool_offset as isize + idx as isize)).0;
+                    let uav_register = d3d11::D3D11_PS_CS_UAV_REGISTER_COUNT - 1 - rd.res_index as u32 - idx as u32;
+                    self.cache.uavs[uav_register as usize] = ptr as *mut _;
+                }
+                self.cache.uav_len = (rd.res_index + rd.count) as u32;
+                self.cache.dirty_flag.insert(DirtyStateFlag::RENDER_TARGETS_AND_UAVS);
+            }
         }
+
+        self.cache.bind_render_targets(&self.context);
     }
 
     unsafe fn bind_compute_pipeline(&mut self, pipeline: &ComputePipeline) {
@@ -1986,7 +2473,7 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
         layout: &PipelineLayout,
         first_set: usize,
         sets: I,
-        _offsets: J,
+        offsets: J,
     ) where
         I: IntoIterator,
         I::Item: Borrow<DescriptorSet>,
@@ -1995,14 +2482,18 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
     {
         let _scope = debug_scope!(&self.context, "BindComputeDescriptorSets");
 
+        let nulls = [ptr::null_mut(); d3d11::D3D11_PS_CS_UAV_REGISTER_COUNT as usize];
         self.context.CSSetUnorderedAccessViews(
             0,
-            16,
-            [ptr::null_mut(); 16].as_ptr(),
+            d3d11::D3D11_PS_CS_UAV_REGISTER_COUNT,
+            nulls.as_ptr(),
             ptr::null_mut(),
         );
-        for (set, info) in sets.into_iter().zip(&layout.sets[first_set ..]) {
-            let set = set.borrow();
+
+        let mut offset_iter = offsets.into_iter().map(|o: J::Item| *o.borrow());
+
+        for (set, info) in sets.into_iter().zip(&layout.sets[first_set..]) {
+            let set: &DescriptorSet = set.borrow();
 
             {
                 let coherent_buffers = set.coherent_buffers.lock();
@@ -2030,34 +2521,64 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
                             working_buffer: Some(self.internal.working_buffer.clone()),
                             working_buffer_size: self.internal.working_buffer_size,
                             host_memory: sync.host_ptr,
-                            sync_range: sync.range.clone(),
+                            host_sync_range: sync.range.clone(),
+                            buffer_sync_range: sync.range.clone(),
                             buffer: sync.device_buffer,
                         });
                     }
                 }
             }
 
-            // TODO: offsets
+            let cs_offsets = generate_compute_dynamic_constant_buffer_offsets(
+                &*set.layout.bindings,
+                &mut offset_iter,
+                self.context1.is_some()
+            );
 
             if let Some(rd) = info.registers.cs.c.as_some() {
-                self.context.CSSetConstantBuffers(
-                    rd.res_index as u32,
-                    rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
-                );
+                let start_slot = rd.res_index as u32;
+                let num_buffers = rd.count as u32;
+                let constant_buffers = set.handles.offset(rd.pool_offset as isize);
+                if let Some(ref context1) = self.context1 {
+                    // This call with offsets won't work right with command list emulation
+                    // unless we reset the first and last constant buffers to null.
+                    if self.internal.command_list_emulation {
+                        let null_cbuf = [ptr::null_mut::<d3d11::ID3D11Buffer>()];
+                        context1.CSSetConstantBuffers(start_slot, 1, &null_cbuf as *const _);
+                        if num_buffers > 1 {
+                            context1.CSSetConstantBuffers(start_slot + num_buffers - 1, 1, &null_cbuf as *const _);
+                        }
+                    }
+
+                    // TODO: This should be the actual buffer length for RBA purposes,
+                    //       but that information isn't easily accessible here.
+                    context1.CSSetConstantBuffers1(
+                        start_slot,
+                        num_buffers,
+                        constant_buffers as *const *mut _,
+                        cs_offsets.as_ptr(),
+                        self.internal.constant_buffer_count_buffer.as_ptr(),
+                    );
+                } else {
+                    self.context.CSSetConstantBuffers(
+                        start_slot,
+                        num_buffers,
+                        constant_buffers as *const *mut _
+                    );
+                }
             }
             if let Some(rd) = info.registers.cs.t.as_some() {
                 self.context.CSSetShaderResources(
                     rd.res_index as u32,
                     rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
+                    set.handles.offset(rd.pool_offset as isize) as *const *mut _,
                 );
             }
             if let Some(rd) = info.registers.cs.u.as_some() {
                 self.context.CSSetUnorderedAccessViews(
                     rd.res_index as u32,
                     rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
+                    set.handles.offset(rd.pool_offset as isize) as *const *mut _,
                     ptr::null_mut(),
                 );
             }
@@ -2065,7 +2586,7 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
                 self.context.CSSetSamplers(
                     rd.res_index as u32,
                     rd.count as u32,
-                    set.handles.offset(rd.pool_offset as isize) as *const *mut _ as *const *mut _,
+                    set.handles.offset(rd.pool_offset as isize) as *const *mut _,
                 );
             }
         }
@@ -2092,7 +2613,7 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
         T: IntoIterator,
         T::Item: Borrow<command::BufferCopy>,
     {
-        if src.properties.contains(memory::Properties::COHERENT) {
+        if src.is_coherent {
             self.defer_coherent_flush(src);
         }
 
@@ -2158,12 +2679,12 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
         T: IntoIterator,
         T::Item: Borrow<command::BufferImageCopy>,
     {
-        if buffer.properties.contains(memory::Properties::COHERENT) {
+        if buffer.is_coherent {
             self.defer_coherent_flush(buffer);
         }
 
         self.internal
-            .copy_buffer_to_image_2d(&self.context, buffer, image, regions);
+            .copy_buffer_to_image(&self.context, buffer, image, regions);
     }
 
     unsafe fn copy_image_to_buffer<T>(
@@ -2176,12 +2697,12 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
         T: IntoIterator,
         T::Item: Borrow<command::BufferImageCopy>,
     {
-        if buffer.properties.contains(memory::Properties::COHERENT) {
+        if buffer.is_coherent {
             self.defer_coherent_invalidate(buffer);
         }
 
         self.internal
-            .copy_image_2d_to_buffer(&self.context, image, buffer, regions);
+            .copy_image_to_buffer(&self.context, image, buffer, regions);
     }
 
     unsafe fn draw(&mut self, vertices: Range<VertexCount>, instances: Range<InstanceCount>) {
@@ -2210,22 +2731,80 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
 
     unsafe fn draw_indirect(
         &mut self,
-        _buffer: &Buffer,
-        _offset: buffer::Offset,
-        _draw_count: DrawCount,
+        buffer: &Buffer,
+        offset: buffer::Offset,
+        draw_count: DrawCount,
         _stride: u32,
     ) {
-        unimplemented!()
+        assert_eq!(draw_count, 1, "DX11 doesn't support MULTI_DRAW_INDIRECT");
+        self.context.DrawInstancedIndirect(
+            buffer.internal.raw,
+            offset as _,
+        );
     }
 
     unsafe fn draw_indexed_indirect(
         &mut self,
-        _buffer: &Buffer,
-        _offset: buffer::Offset,
-        _draw_count: DrawCount,
+        buffer: &Buffer,
+        offset: buffer::Offset,
+        draw_count: DrawCount,
         _stride: u32,
     ) {
-        unimplemented!()
+        assert_eq!(draw_count, 1, "DX11 doesn't support MULTI_DRAW_INDIRECT");
+        self.context.DrawIndexedInstancedIndirect(
+            buffer.internal.raw,
+            offset as _,
+        );
+    }
+
+    unsafe fn draw_indirect_count(
+        &mut self,
+        _buffer: &Buffer,
+        _offset: buffer::Offset,
+        _count_buffer: &Buffer,
+        _count_buffer_offset: buffer::Offset,
+        _max_draw_count: u32,
+        _stride: u32,
+    ) {
+        panic!("DX11 doesn't support DRAW_INDIRECT_COUNT")
+    }
+
+    unsafe fn draw_indexed_indirect_count(
+        &mut self,
+        _buffer: &Buffer,
+        _offset: buffer::Offset,
+        _count_buffer: &Buffer,
+        _count_buffer_offset: buffer::Offset,
+        _max_draw_count: u32,
+        _stride: u32,
+    ) {
+        panic!("DX11 doesn't support DRAW_INDIRECT_COUNT")
+    }
+
+    unsafe fn draw_mesh_tasks(&mut self, _: TaskCount, _: TaskCount) {
+        panic!("DX11 doesn't support MESH_SHADERS")
+    }
+
+    unsafe fn draw_mesh_tasks_indirect(
+        &mut self,
+        _: &Buffer,
+        _: buffer::Offset,
+        _: hal::DrawCount,
+        _: u32,
+    ) {
+        panic!("DX11 doesn't support MESH_SHADERS")
+    }
+
+    unsafe fn draw_mesh_tasks_indirect_count(
+        &mut self,
+        _: &Buffer,
+        _: buffer::Offset,
+        _: &Buffer,
+        _: buffer::Offset,
+        _: hal::DrawCount,
+        _: u32,
+    ) {
+        panic!("DX11 doesn't support MESH_SHADERS")
     }
 
     unsafe fn set_event(&mut self, _: &(), _: pso::PipelineStage) {
@@ -2278,19 +2857,43 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
         &mut self,
         _layout: &PipelineLayout,
         _stages: pso::ShaderStageFlags,
-        _offset: u32,
-        _constants: &[u32],
+        offset: u32,
+        constants: &[u32],
     ) {
-        // unimplemented!()
+        let start = (offset / 4) as usize;
+        let end = start + constants.len();
+
+        self.push_constant_data[start..end].copy_from_slice(constants);
+
+        self.context.UpdateSubresource(
+            self.push_constant_buffer.as_raw() as *mut _,
+            0,
+            ptr::null(),
+            self.push_constant_data.as_ptr() as *const _,
+            MAX_PUSH_CONSTANT_SIZE as _,
+            1,
+        );
     }
 
     unsafe fn push_compute_constants(
         &mut self,
         _layout: &PipelineLayout,
-        _offset: u32,
-        _constants: &[u32],
+        offset: u32,
+        constants: &[u32],
     ) {
-        unimplemented!()
+        let start = (offset / 4) as usize;
+        let end = start + constants.len();
+
+        self.push_constant_data[start..end].copy_from_slice(constants);
+
+        self.context.UpdateSubresource(
+            self.push_constant_buffer.as_raw() as *mut _,
+            0,
+            ptr::null(),
+            self.push_constant_data.as_ptr() as *const _,
+            MAX_PUSH_CONSTANT_SIZE as _,
+            1,
+        );
     }
 
     unsafe fn execute_commands<'a, T, I>(&mut self, _buffers: I)
@@ -2301,14 +2904,15 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
         unimplemented!()
     }
 
-    unsafe fn insert_debug_marker(&mut self, _name: &str, _color: u32) {
-        //TODO
+    unsafe fn insert_debug_marker(&mut self, name: &str, _color: u32) {
+        debug::debug_marker(&self.context, &format!("{}", name))
     }
     unsafe fn begin_debug_marker(&mut self, _name: &str, _color: u32) {
-        //TODO
+        // TODO: This causes everything after this to be part of this scope, why?
+        // self.debug_scopes.push(debug::DebugScope::with_name(&self.context, format_args!("{}", name)))
     }
     unsafe fn end_debug_marker(&mut self) {
-        //TODO
+        // self.debug_scopes.pop();
     }
 }
 
@@ -2320,7 +2924,7 @@ enum SyncRange {
 
 #[derive(Debug)]
 pub struct MemoryFlush {
-    host_memory: *mut u8,
+    host_memory: *const u8,
     sync_range: SyncRange,
     buffer: *mut d3d11::ID3D11Buffer,
 }
@@ -2329,7 +2933,8 @@ pub struct MemoryInvalidate {
     working_buffer: Option<ComPtr<d3d11::ID3D11Buffer>>,
     working_buffer_size: u64,
     host_memory: *mut u8,
-    sync_range: Range<u64>,
+    host_sync_range: Range<u64>,
+    buffer_sync_range: Range<u64>,
     buffer: *mut d3d11::ID3D11Buffer,
 }
 
@@ -2340,14 +2945,11 @@ impl fmt::Debug for MemoryInvalidate {
 }
 
 fn intersection(a: &Range<u64>, b: &Range<u64>) -> Option<Range<u64>> {
-    let min = if a.start < b.start { a } else { b };
-    let max = if min == a { b } else { a };
-
-    if min.end < max.start {
-        None
+    let r = a.start.max(b.start)..a.end.min(b.end);
+    if r.start < r.end {
+        Some(r)
     } else {
-        let end = if min.end < max.end { min.end } else { max.end };
-        Some(max.start .. end)
+        None
     }
 }
 
@@ -2372,11 +2974,7 @@ impl MemoryFlush {
             context.UpdateSubresource(
                 self.buffer as _,
                 0,
-                if let Some(region) = region {
-                    &region
-                } else {
-                    ptr::null_mut()
-                },
+                region.as_ref().map_or(ptr::null(), |r| r),
                 src as _,
                 0,
                 0,
@@ -2390,8 +2988,12 @@ impl MemoryInvalidate {
         &self,
         context: &ComPtr<d3d11::ID3D11DeviceContext>,
         buffer: *mut d3d11::ID3D11Buffer,
-        range: Range<u64>,
+        host_range: Range<u64>,
+        buffer_range: Range<u64>
     ) {
+        // Range<u64> doesn't impl `len` for some bizzare reason relating to underflow
+        debug_assert_eq!(host_range.end - host_range.start, buffer_range.end - buffer_range.start);
+
         unsafe {
             context.CopySubresourceRegion(
                 self.working_buffer.clone().unwrap().as_raw() as _,
@@ -2402,40 +3004,49 @@ impl MemoryInvalidate {
                 buffer as _,
                 0,
                 &d3d11::D3D11_BOX {
-                    left: range.start as _,
+                    left: buffer_range.start as _,
                     top: 0,
                     front: 0,
-                    right: range.end as _,
+                    right: buffer_range.end as _,
                     bottom: 1,
                     back: 1,
                 },
             );
 
             // copy over to our vec
-            let dst = self.host_memory.offset(range.start as isize);
+            let dst = self.host_memory.offset(host_range.start as isize);
             let src = self.map(&context);
-            ptr::copy(src, dst, (range.end - range.start) as usize);
+            ptr::copy(src, dst, (host_range.end - host_range.start) as usize);
             self.unmap(&context);
         }
     }
 
     fn do_invalidate(&self, context: &ComPtr<d3d11::ID3D11DeviceContext>) {
         let stride = self.working_buffer_size;
-        let range = &self.sync_range;
-        let len = range.end - range.start;
+        let len = self.host_sync_range.end - self.host_sync_range.start;
         let chunks = len / stride;
         let remainder = len % stride;
 
         // we split up the copies into chunks the size of our working buffer
-        for i in 0 .. chunks {
-            let offset = range.start + i * stride;
-            let range = offset .. (offset + stride);
+        for i in 0..chunks {
+            let host_offset = self.host_sync_range.start + i * stride;
+            let host_range = host_offset..(host_offset + stride);
+            let buffer_offset = self.buffer_sync_range.start + i * stride;
+            let buffer_range = buffer_offset..(buffer_offset + stride);
 
-            self.download(context, self.buffer, range);
+            self.download(context, self.buffer, host_range, buffer_range);
         }
 
         if remainder != 0 {
-            self.download(context, self.buffer, (chunks * stride) .. range.end);
+            let host_offset = self.host_sync_range.start + chunks * stride;
+            let host_range = host_offset..self.host_sync_range.end;
+            let buffer_offset = self.buffer_sync_range.start + chunks * stride;
+            let buffer_range = buffer_offset..self.buffer_sync_range.end;
+
+            debug_assert!(host_range.end - host_range.start <= stride);
+            debug_assert!(buffer_range.end - buffer_range.start <= stride);
+
+            self.download(context, self.buffer, host_range, buffer_range);
         }
     }
 
@@ -2465,7 +3076,9 @@ impl MemoryInvalidate {
     }
 }
 
-// Since we dont have any heaps to work with directly, everytime we bind a
+type LocalResourceArena<T> = thunderdome::Arena<(Range<u64>, T)>;
+
+// Since we dont have any heaps to work with directly, Beverytime we bind a
 // buffer/image to memory we allocate a dx11 resource and assign it a range.
 //
 // `HOST_VISIBLE` memory gets a `Vec<u8>` which covers the entire memory
@@ -2476,16 +3089,11 @@ pub struct Memory {
     properties: memory::Properties,
     size: u64,
 
-    mapped_ptr: *mut u8,
-
-    // staging buffer covering the whole memory region, if it's HOST_VISIBLE
-    host_visible: Option<RefCell<Vec<u8>>>,
+    // pointer to staging memory, if it's HOST_VISIBLE
+    host_ptr: *mut u8,
 
     // list of all buffers bound to this memory
-    local_buffers: RefCell<Vec<(Range<u64>, InternalBuffer)>>,
-
-    // list of all images bound to this memory
-    _local_images: RefCell<Vec<(Range<u64>, InternalImage)>>,
+    local_buffers: Arc<RwLock<LocalResourceArena<InternalBuffer>>>,
 }
 
 impl fmt::Debug for Memory {
@@ -2499,68 +3107,62 @@ unsafe impl Sync for Memory {}
 
 impl Memory {
     pub fn resolve(&self, segment: &memory::Segment) -> Range<u64> {
-        segment.offset .. segment.size.map_or(self.size, |s| segment.offset + s)
+        segment.offset..segment.size.map_or(self.size, |s| segment.offset + s)
     }
 
-    pub fn bind_buffer(&self, range: Range<u64>, buffer: InternalBuffer) {
-        self.local_buffers.borrow_mut().push((range, buffer));
+    pub fn bind_buffer(&self, range: Range<u64>, buffer: InternalBuffer) -> thunderdome::Index {
+        let mut local_buffers = self.local_buffers.write();
+        local_buffers.insert((range, buffer))
     }
 
     pub fn flush(&self, context: &ComPtr<d3d11::ID3D11DeviceContext>, range: Range<u64>) {
         use buffer::Usage;
 
-        for &(ref buffer_range, ref buffer) in self.local_buffers.borrow().iter() {
-            if let Some(range) = intersection(&range, &buffer_range) {
-                let ptr = self.mapped_ptr;
-
-                // we need to handle 3 cases for updating buffers:
-                //
-                //   1. if our buffer was created as a `UNIFORM` buffer *and* other usage flags, we
-                //      also have a disjoint buffer which only has `D3D11_BIND_CONSTANT_BUFFER` due
-                //      to DX11 limitation. we then need to update both the original buffer and the
-                //      disjoint one with the *whole* range (TODO: allow for partial updates)
-                //
-                //   2. if our buffer was created with *only* `UNIFORM` usage we need to upload
-                //      the whole range (TODO: allow for partial updates)
-                //
-                //   3. the general case, without any `UNIFORM` usage has no restrictions on
-                //      partial updates, so we upload the specified range
-                //
-                if buffer.usage.contains(Usage::UNIFORM) && buffer.usage != Usage::UNIFORM {
-                    MemoryFlush {
-                        host_memory: unsafe { ptr.offset(buffer_range.start as _) },
-                        sync_range: SyncRange::Whole,
-                        buffer: buffer.raw,
-                    }
-                    .do_flush(&context);
-
-                    if let Some(disjoint) = buffer.disjoint_cb {
-                        MemoryFlush {
-                            host_memory: unsafe { ptr.offset(buffer_range.start as _) },
-                            sync_range: SyncRange::Whole,
-                            buffer: disjoint,
-                        }
-                        .do_flush(&context);
-                    }
-                } else if buffer.usage == Usage::UNIFORM {
-                    MemoryFlush {
-                        host_memory: unsafe { ptr.offset(buffer_range.start as _) },
-                        sync_range: SyncRange::Whole,
-                        buffer: buffer.raw,
-                    }
-                    .do_flush(&context);
-                } else {
-                    let local_start = range.start - buffer_range.start;
-                    let local_len = range.end - range.start;
-
-                    MemoryFlush {
-                        host_memory: unsafe { ptr.offset(range.start as _) },
-                        sync_range: SyncRange::Partial(local_start .. (local_start + local_len)),
-                        buffer: buffer.raw,
-                    }
-                    .do_flush(&context);
+        for (_, &(ref buffer_range, ref buffer)) in self.local_buffers.read().iter() {
+            let range = match intersection(&range, &buffer_range) {
+                Some(r) => r,
+                None => continue,
+            };
+            // we need to handle 3 cases for updating buffers:
+            //
+            //   1. if our buffer was created as a `UNIFORM` buffer *and* other usage flags, we
+            //      also have a disjoint buffer which only has `D3D11_BIND_CONSTANT_BUFFER` due
+            //      to DX11 limitation. we then need to update both the original buffer and the
+            //      disjoint one with the *whole* range
+            //
+            //   2. if our buffer was created with *only* `UNIFORM` usage we need to upload
+            //      the whole range
+            //
+            //   3. the general case, without any `UNIFORM` usage has no restrictions on
+            //      partial updates, so we upload the specified range
+            //
+            if let Some(disjoint) = buffer.disjoint_cb {
+                MemoryFlush {
+                    host_memory: unsafe { self.host_ptr.offset(buffer_range.start as _) },
+                    sync_range: SyncRange::Whole,
+                    buffer: disjoint,
                 }
+                .do_flush(&context);
             }
+
+            let mem_flush = if buffer.usage == Usage::UNIFORM {
+                MemoryFlush {
+                    host_memory: unsafe { self.host_ptr.offset(buffer_range.start as _) },
+                    sync_range: SyncRange::Whole,
+                    buffer: buffer.raw,
+                }
+            } else {
+                let local_start = range.start - buffer_range.start;
+                let local_end = range.end - buffer_range.start;
+
+                MemoryFlush {
+                    host_memory: unsafe { self.host_ptr.offset(range.start as _) },
+                    sync_range: SyncRange::Partial(local_start..local_end),
+                    buffer: buffer.raw,
+                }
+            };
+
+            mem_flush.do_flush(&context)
         }
     }
 
@@ -2571,13 +3173,19 @@ impl Memory {
         working_buffer: ComPtr<d3d11::ID3D11Buffer>,
         working_buffer_size: u64,
     ) {
-        for &(ref buffer_range, ref buffer) in self.local_buffers.borrow().iter() {
+        for (_, &(ref buffer_range, ref buffer)) in self.local_buffers.read().iter() {
             if let Some(range) = intersection(&range, &buffer_range) {
+                let buffer_start_offset = range.start - buffer_range.start;
+                let buffer_end_offset = range.end - buffer_range.start;
+
+                let buffer_sync_range = buffer_start_offset..buffer_end_offset;
+
                 MemoryInvalidate {
                     working_buffer: Some(working_buffer.clone()),
                     working_buffer_size,
-                    host_memory: self.mapped_ptr,
-                    sync_range: range.clone(),
+                    host_memory: self.host_ptr,
+                    host_sync_range: range.clone(),
+                    buffer_sync_range: buffer_sync_range,
                     buffer: buffer.raw,
                 }
                 .do_invalidate(&context);
@@ -2589,7 +3197,8 @@ impl Memory {
 #[derive(Debug)]
 pub struct CommandPool {
     device: ComPtr<d3d11::ID3D11Device>,
-    internal: internal::Internal,
+    device1: Option<ComPtr<d3d11_1::ID3D11Device1>>,
+    internal: Arc<internal::Internal>,
 }
 
 unsafe impl Send for CommandPool {}
@@ -2601,7 +3210,7 @@ impl hal::pool::CommandPool<Backend> for CommandPool {
     }
 
     unsafe fn allocate_one(&mut self, _level: command::Level) -> CommandBuffer {
-        CommandBuffer::create_deferred(self.device.clone(), self.internal.clone())
+        CommandBuffer::create_deferred(&self.device, self.device1.as_deref(), Arc::clone(&self.internal))
     }
 
     unsafe fn free<I>(&mut self, _cbufs: I)
@@ -2669,13 +3278,32 @@ pub struct InternalBuffer {
     srv: Option<*mut d3d11::ID3D11ShaderResourceView>,
     uav: Option<*mut d3d11::ID3D11UnorderedAccessView>,
     usage: buffer::Usage,
+    debug_name: Option<String>,
+}
+
+impl InternalBuffer {
+    unsafe fn release_resources(&mut self) {
+        (&*self.raw).Release();
+        self.raw = ptr::null_mut();
+        self.disjoint_cb.take().map(|cb| (&*cb).Release());
+        self.uav.take().map(|uav| (&*uav).Release());
+        self.srv.take().map(|srv| (&*srv).Release());
+        self.usage = buffer::Usage::empty();
+        self.debug_name = None;
+    }
 }
 
 pub struct Buffer {
     internal: InternalBuffer,
-    properties: memory::Properties, // empty if unbound
-    host_ptr: *mut u8,              // null if unbound
-    bound_range: Range<u64>,        // 0 if unbound
+    is_coherent: bool,
+    memory_ptr: *mut u8,     // null if unbound or non-cpu-visible
+    bound_range: Range<u64>, // 0 if unbound
+    /// Handle to the Memory arena storing this buffer.
+    local_memory_arena: Weak<RwLock<LocalResourceArena<InternalBuffer>>>,
+    /// Index into the above memory arena.
+    ///
+    /// Once memory is bound to a buffer, this should never be None.
+    memory_index: Option<thunderdome::Index>,
     requirements: memory::Requirements,
     bind: d3d11::D3D11_BIND_FLAG,
 }
@@ -2723,6 +3351,19 @@ pub struct InternalImage {
 
     /// Contains RTVs for all subresources
     render_target_views: Vec<ComPtr<d3d11::ID3D11RenderTargetView>>,
+
+    debug_name: Option<String>
+}
+
+impl InternalImage {
+    unsafe fn release_resources(&mut self) {
+        (&*self.raw).Release();
+        self.copy_srv = None;
+        self.srv = None;
+        self.unordered_access_views.clear();
+        self.depth_stencil_views.clear();
+        self.render_target_views.clear();
+    }
 }
 
 impl fmt::Debug for InternalImage {
@@ -2770,13 +3411,52 @@ impl Image {
     }
 }
 
-#[derive(Clone)]
 pub struct ImageView {
+    subresource: UINT,
     format: format::Format,
-    rtv_handle: Option<ComPtr<d3d11::ID3D11RenderTargetView>>,
-    srv_handle: Option<ComPtr<d3d11::ID3D11ShaderResourceView>>,
-    dsv_handle: Option<ComPtr<d3d11::ID3D11DepthStencilView>>,
-    uav_handle: Option<ComPtr<d3d11::ID3D11UnorderedAccessView>>,
+    rtv_handle: Option<*mut d3d11::ID3D11RenderTargetView>,
+    srv_handle: Option<*mut d3d11::ID3D11ShaderResourceView>,
+    dsv_handle: Option<*mut d3d11::ID3D11DepthStencilView>,
+    rodsv_handle: Option<*mut d3d11::ID3D11DepthStencilView>,
+    uav_handle: Option<*mut d3d11::ID3D11UnorderedAccessView>,
+    owned: bool,
+}
+
+impl Clone for ImageView {
+    fn clone(&self) -> Self {
+        Self {
+            subresource: self.subresource,
+            format: self.format,
+            rtv_handle: self.rtv_handle.clone(),
+            srv_handle: self.srv_handle.clone(),
+            dsv_handle: self.dsv_handle.clone(),
+            rodsv_handle: self.rodsv_handle.clone(),
+            uav_handle: self.uav_handle.clone(),
+            owned: false
+        }
+    }
+}
+
+impl Drop for ImageView {
+    fn drop(&mut self) {
+        if self.owned {
+            if let Some(rtv) = self.rtv_handle.take() {
+                unsafe { (&*rtv).Release() };
+            }
+            if let Some(srv) = self.srv_handle.take() {
+                unsafe { (&*srv).Release() };
+            }
+            if let Some(dsv) = self.dsv_handle.take() {
+                unsafe { (&*dsv).Release() };
+            }
+            if let Some(rodsv) = self.rodsv_handle.take() {
+                unsafe { (&*rodsv).Release() };
+            }
+            if let Some(uav) = self.uav_handle.take() {
+                unsafe { (&*uav).Release() };
+            }
+        }
+    }
 }
 
 impl fmt::Debug for ImageView {
@@ -2830,10 +3510,7 @@ pub struct GraphicsPipeline {
     input_layout: ComPtr<d3d11::ID3D11InputLayout>,
     rasterizer_state: ComPtr<d3d11::ID3D11RasterizerState>,
     blend_state: ComPtr<d3d11::ID3D11BlendState>,
-    depth_stencil_state: Option<(
-        ComPtr<d3d11::ID3D11DepthStencilState>,
-        pso::State<pso::StencilValue>,
-    )>,
+    depth_stencil_state: Option<DepthStencilState>,
     baked_states: pso::BakedStates,
     required_bindings: u32,
     max_vertex_bindings: u32,
@@ -2891,10 +3568,6 @@ impl RegisterData<DescriptorIndex> {
         }
     }
 
-    fn add_content(&mut self, content: DescriptorContent) {
-        self.add_content_many(content, 1)
-    }
-
     fn sum(&self) -> DescriptorIndex {
         self.c + self.t + self.u + self.s
     }
@@ -2908,11 +3581,11 @@ struct MultiStageData<T> {
 }
 
 impl<T> MultiStageData<T> {
-    fn select(self, stage: pso::Stage) -> T {
+    fn select(self, stage: ShaderStage) -> T {
         match stage {
-            pso::Stage::Vertex => self.vs,
-            pso::Stage::Fragment => self.ps,
-            pso::Stage::Compute => self.cs,
+            ShaderStage::Vertex => self.vs,
+            ShaderStage::Fragment => self.ps,
+            ShaderStage::Compute => self.cs,
             _ => panic!("Unsupported stage {:?}", stage),
         }
     }
@@ -2937,15 +3610,15 @@ impl<T> MultiStageData<RegisterData<T>> {
 }
 
 impl MultiStageData<RegisterData<DescriptorIndex>> {
-    fn add_content(&mut self, content: DescriptorContent, stages: pso::ShaderStageFlags) {
+    fn add_content_many(&mut self, content: DescriptorContent, stages: pso::ShaderStageFlags, count: DescriptorIndex) {
         if stages.contains(pso::ShaderStageFlags::VERTEX) {
-            self.vs.add_content(content);
+            self.vs.add_content_many(content, count);
         }
         if stages.contains(pso::ShaderStageFlags::FRAGMENT) {
-            self.ps.add_content(content);
+            self.ps.add_content_many(content, count);
         }
         if stages.contains(pso::ShaderStageFlags::COMPUTE) {
-            self.cs.add_content(content);
+            self.cs.add_content_many(content, count);
         }
     }
 
@@ -3058,7 +3731,7 @@ struct DescriptorSetInfo {
 impl DescriptorSetInfo {
     fn find_register(
         &self,
-        stage: pso::Stage,
+        stage: ShaderStage,
         binding_index: pso::DescriptorBinding,
     ) -> (DescriptorContent, RegisterData<ResourceIndex>) {
         let mut res_offsets = self
@@ -3066,11 +3739,44 @@ impl DescriptorSetInfo {
             .map_register(|info| info.res_index as DescriptorIndex)
             .select(stage);
         for binding in self.bindings.iter() {
+            if !binding.stage_flags.contains(stage.to_flag()) {
+                continue;
+            }
             let content = DescriptorContent::from(binding.ty);
             if binding.binding == binding_index {
                 return (content, res_offsets.map(|offset| *offset as ResourceIndex));
             }
-            res_offsets.add_content(content);
+            res_offsets.add_content_many(content, 1);
+        }
+        panic!("Unable to find binding {:?}", binding_index);
+    }
+
+    fn find_uav_register(
+        &self,
+        stage: ShaderStage,
+        binding_index: pso::DescriptorBinding,
+    ) -> (DescriptorContent, RegisterData<ResourceIndex>) {
+        // Look only where uavs are stored for that stage.
+        let register_stage = if stage == ShaderStage::Compute {
+            stage
+        } else {
+            ShaderStage::Fragment
+        };
+
+        let mut res_offsets = self
+            .registers
+            .map_register(|info| info.res_index as DescriptorIndex)
+            .select(register_stage);
+        for binding in self.bindings.iter() {
+            // We don't care what stage they're in, only if they are UAVs or not.
+            let content = DescriptorContent::from(binding.ty);
+            if !content.contains(DescriptorContent::UAV) {
+                continue;
+            }
+            if binding.binding == binding_index {
+                return (content, res_offsets.map(|offset| *offset as ResourceIndex));
+            }
+            res_offsets.add_content_many(content, 1);
         }
         panic!("Unable to find binding {:?}", binding_index);
     }
@@ -3125,7 +3831,7 @@ impl CoherentBuffers {
 
             let sync_range = CoherentBufferFlushRange {
                 device_buffer: new,
-                host_ptr: buffer.host_ptr,
+                host_ptr: buffer.memory_ptr,
                 range: SyncRange::Whole,
             };
 
@@ -3142,7 +3848,7 @@ impl CoherentBuffers {
 
                 let sync_range = CoherentBufferFlushRange {
                     device_buffer: disjoint,
-                    host_ptr: buffer.host_ptr,
+                    host_ptr: buffer.memory_ptr,
                     range: SyncRange::Whole,
                 };
 
@@ -3165,7 +3871,7 @@ impl CoherentBuffers {
 
             let sync_range = CoherentBufferInvalidateRange {
                 device_buffer: new,
-                host_ptr: buffer.host_ptr,
+                host_ptr: buffer.memory_ptr,
                 range: buffer.bound_range.clone(),
             };
 
@@ -3180,7 +3886,7 @@ impl CoherentBuffers {
 
 /// Newtype around a common interface that all bindable resources inherit from.
 #[derive(Debug, Copy, Clone)]
-#[repr(C)]
+#[repr(transparent)]
 struct Descriptor(*mut d3d11::ID3D11DeviceChild);
 
 bitflags! {
@@ -3201,9 +3907,7 @@ bitflags! {
 impl From<pso::DescriptorType> for DescriptorContent {
     fn from(ty: pso::DescriptorType) -> Self {
         use hal::pso::{
-            BufferDescriptorFormat as Bdf,
-            BufferDescriptorType as Bdt,
-            DescriptorType as Dt,
+            BufferDescriptorFormat as Bdf, BufferDescriptorType as Bdt, DescriptorType as Dt,
             ImageDescriptorType as Idt,
         };
         match ty {
@@ -3216,13 +3920,10 @@ impl From<pso::DescriptorType> for DescriptorContent {
                     with_sampler: false,
                 },
             }
-            | Dt::Image {
-                ty: Idt::Storage { read_only: true },
-            }
             | Dt::InputAttachment => DescriptorContent::SRV,
             Dt::Image {
-                ty: Idt::Storage { read_only: false },
-            } => DescriptorContent::SRV | DescriptorContent::UAV,
+                ty: Idt::Storage { .. },
+            } => DescriptorContent::UAV,
             Dt::Buffer {
                 ty: Bdt::Uniform,
                 format:
@@ -3246,7 +3947,7 @@ impl From<pso::DescriptorType> for DescriptorContent {
                     Bdf::Structured {
                         dynamic_offset: true,
                     },
-            } => DescriptorContent::SRV | DescriptorContent::UAV | DescriptorContent::DYNAMIC,
+            } => DescriptorContent::UAV | DescriptorContent::DYNAMIC,
             Dt::Buffer {
                 ty: Bdt::Storage { read_only: true },
                 ..
@@ -3254,7 +3955,7 @@ impl From<pso::DescriptorType> for DescriptorContent {
             Dt::Buffer {
                 ty: Bdt::Storage { read_only: false },
                 ..
-            } => DescriptorContent::SRV | DescriptorContent::UAV,
+            } => DescriptorContent::UAV,
         }
     }
 }
@@ -3328,7 +4029,7 @@ impl DescriptorPool {
     fn with_capacity(size: DescriptorIndex) -> Self {
         DescriptorPool {
             handles: vec![Descriptor(ptr::null_mut()); size as usize],
-            allocator: RangeAllocator::new(0 .. size),
+            allocator: RangeAllocator::new(0..size),
         }
     }
 }
@@ -3347,7 +4048,7 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
         self.allocator
             .allocate_range(len)
             .map(|range| {
-                for handle in &mut self.handles[range.start as usize .. range.end as usize] {
+                for handle in &mut self.handles[range.start as usize..range.end as usize] {
                     *handle = Descriptor(ptr::null_mut());
                 }
 
@@ -3368,13 +4069,13 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
             .map_err(|_| pso::AllocationError::OutOfPoolMemory)
     }
 
-    unsafe fn free_sets<I>(&mut self, descriptor_sets: I)
+    unsafe fn free<I>(&mut self, descriptor_sets: I)
     where
         I: IntoIterator<Item = DescriptorSet>,
     {
         for set in descriptor_sets {
             self.allocator
-                .free_range(set.offset .. (set.offset + set.len))
+                .free_range(set.offset..(set.offset + set.len))
         }
     }
 
@@ -3402,9 +4103,7 @@ impl hal::Backend for Backend {
     type Instance = Instance;
     type PhysicalDevice = PhysicalDevice;
     type Device = device::Device;
-
     type Surface = Surface;
-    type Swapchain = Swapchain;
 
     type QueueFamily = QueueFamily;
     type CommandQueue = CommandQueue;

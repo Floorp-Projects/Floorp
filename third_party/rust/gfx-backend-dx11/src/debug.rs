@@ -1,42 +1,17 @@
-use winapi::um::d3d11;
+use winapi::um::{d3d11, d3d11_1, d3dcommon};
 
 use wio::{com::ComPtr, wide::ToWide};
 
 use std::{env, ffi::OsStr, fmt};
 
-// TODO: replace with new winapi version when available
-#[allow(bad_style, unused)]
-mod temp {
-    use winapi::{
-        shared::minwindef::{BOOL, INT},
-        um::{
-            unknwnbase::{IUnknown, IUnknownVtbl},
-            winnt::LPCWSTR,
-        },
-    };
-
-    RIDL! {#[uuid(0xb2daad8b, 0x03d4, 0x4dbf, 0x95, 0xeb, 0x32, 0xab, 0x4b, 0x63, 0xd0, 0xab)]
-    interface ID3DUserDefinedAnnotation(ID3DUserDefinedAnnotationVtbl):
-        IUnknown(IUnknownVtbl) {
-        fn BeginEvent(
-            Name: LPCWSTR,
-        ) -> INT,
-        fn EndEvent() -> INT,
-        fn SetMarker(
-            Name: LPCWSTR,
-        ) -> (),
-        fn GetStatus() -> BOOL,
-    }}
-}
-
 #[must_use]
-#[cfg(debug_assertions)]
 pub struct DebugScope {
-    annotation: ComPtr<temp::ID3DUserDefinedAnnotation>,
+    annotation: ComPtr<d3d11_1::ID3DUserDefinedAnnotation>,
 }
 
-#[cfg(debug_assertions)]
 impl DebugScope {
+    // TODO: Not used currently in release, will be used in the future
+    #[allow(dead_code)]
     pub fn with_name(
         context: &ComPtr<d3d11::ID3D11DeviceContext>,
         args: fmt::Arguments,
@@ -52,7 +27,7 @@ impl DebugScope {
             }
         }
 
-        let annotation = context.cast::<temp::ID3DUserDefinedAnnotation>().unwrap();
+        let annotation = context.cast::<d3d11_1::ID3DUserDefinedAnnotation>().unwrap();
         let msg: &OsStr = name.as_ref();
         let msg: Vec<u16> = msg.to_wide_null();
 
@@ -64,7 +39,6 @@ impl DebugScope {
     }
 }
 
-#[cfg(debug_assertions)]
 impl Drop for DebugScope {
     fn drop(&mut self) {
         unsafe {
@@ -73,10 +47,7 @@ impl Drop for DebugScope {
     }
 }
 
-#[cfg(debug_assertions)]
-pub fn debug_marker(context: &ComPtr<d3d11::ID3D11DeviceContext>, args: fmt::Arguments) {
-    let name = format!("{}", args);
-
+pub fn debug_marker(context: &ComPtr<d3d11::ID3D11DeviceContext>, name: &str) {
     // same here
     if unsafe { context.GetType() } == d3d11::D3D11_DEVICE_CONTEXT_DEFERRED {
         if env::var("GFX_NO_RENDERDOC").is_ok() {
@@ -84,11 +55,44 @@ pub fn debug_marker(context: &ComPtr<d3d11::ID3D11DeviceContext>, args: fmt::Arg
         }
     }
 
-    let annotation = context.cast::<temp::ID3DUserDefinedAnnotation>().unwrap();
+    let annotation = context.cast::<d3d11_1::ID3DUserDefinedAnnotation>().unwrap();
     let msg: &OsStr = name.as_ref();
     let msg: Vec<u16> = msg.to_wide_null();
 
     unsafe {
         annotation.SetMarker(msg.as_ptr() as _);
     }
+}
+
+pub fn verify_debug_ascii(name: &str) -> bool {
+    let res = name.is_ascii();
+    if !res {
+        error!("DX11 buffer names must be ASCII");
+    }
+    res
+}
+
+/// Set the debug name of a resource.
+///
+/// Must be ASCII.
+///
+/// SetPrivateData will copy the data internally so the data doesn't need to live.
+pub fn set_debug_name(resource: &d3d11::ID3D11DeviceChild, name: &str) {
+    unsafe {
+        resource.SetPrivateData((&d3dcommon::WKPDID_D3DDebugObjectName) as *const _, name.len() as _, name.as_ptr() as *const _);
+    }
+}
+
+/// Set the debug name of a resource with a given suffix.
+///
+/// Must be ASCII.
+///
+/// The given string will be mutated to add the suffix, then restored to it's original state.
+/// This saves an allocation. SetPrivateData will copy the data internally so the data doesn't need to live.
+pub fn set_debug_name_with_suffix(resource: &d3d11::ID3D11DeviceChild, name: &mut String, suffix: &str) {
+    name.push_str(suffix);
+    unsafe {
+        resource.SetPrivateData((&d3dcommon::WKPDID_D3DDebugObjectName) as *const _, name.len() as _, name.as_ptr() as *const _);
+    }
+    name.drain((name.len() - suffix.len())..);
 }
