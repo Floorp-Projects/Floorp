@@ -17,7 +17,7 @@ namespace mozilla {
 namespace layers {
 
 // Helper function for AutoscrollAnimation::DoSample().
-// Basically copied as-is from toolkit/content/browser-content.js.
+// Basically copied as-is from toolkit/actors/AutoScrollChild.jsm.
 static float Accelerate(ScreenCoord curr, ScreenCoord start) {
   static const int speed = 12;
   float val = (curr - start) / speed;
@@ -45,7 +45,7 @@ bool AutoscrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
 
   // The implementation of this function closely mirrors that of its main-
   // thread equivalent, the autoscrollLoop() function in
-  // toolkit/content/browser-content.js.
+  // toolkit/actors/AutoScrollChild.jsm.
 
   // Avoid long jumps when the browser hangs for more than |maxTimeDelta| ms.
   static const TimeDuration maxTimeDelta = TimeDuration::FromMilliseconds(100);
