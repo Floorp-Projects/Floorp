@@ -142,6 +142,13 @@ class CompositorD3D11 : public Compositor {
     mAllowFrameRecording = aWillRecord;
   }
 
+  void Readback(gfx::DrawTarget* aDrawTarget) {
+    mTarget = aDrawTarget;
+    mTargetBounds = gfx::IntRect();
+    PaintToTarget();
+    mTarget = nullptr;
+  }
+
  private:
   enum Severity {
     Recoverable,
