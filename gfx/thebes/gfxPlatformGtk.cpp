@@ -708,21 +708,3 @@ already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
 }
 
 #endif
-
-#ifdef MOZ_WAYLAND
-bool gfxPlatformGtk::UseDMABufTextures() {
-  return gfxVars::UseEGL() && GetDMABufDevice()->IsDMABufTexturesEnabled();
-}
-bool gfxPlatformGtk::UseDMABufVideoTextures() {
-  return gfxVars::UseEGL() &&
-         (GetDMABufDevice()->IsDMABufVideoTexturesEnabled() ||
-          StaticPrefs::media_ffmpeg_vaapi_enabled());
-}
-bool gfxPlatformGtk::UseHardwareVideoDecoding() {
-  return gfxPlatform::CanUseHardwareVideoDecoding() &&
-         StaticPrefs::media_ffmpeg_vaapi_enabled();
-}
-bool gfxPlatformGtk::UseDRMVAAPIDisplay() {
-  return IsX11Display() || GetDMABufDevice()->IsDRMVAAPIDisplayEnabled();
-}
-#endif
