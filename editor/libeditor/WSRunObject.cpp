@@ -122,6 +122,12 @@ EditActionResult WhiteSpaceVisibilityKeeper::
         "failed at left block");
     return EditActionResult(rv);
   }
+  if (!afterRightBlockChild.IsSetAndValid()) {
+    NS_WARNING(
+        "WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces() caused "
+        "running script and the point to be modified was changed");
+    return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
 
   OwningNonNull<Element> rightBlockElement = aRightBlockElement;
   {
@@ -263,6 +269,12 @@ EditActionResult WhiteSpaceVisibilityKeeper::
         "WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces() failed "
         "at right block");
     return EditActionResult(rv);
+  }
+  if (!aAtLeftBlockChild.IsSetAndValid()) {
+    NS_WARNING(
+        "WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces() caused "
+        "running script and the point to be modified was changed");
+    return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
   OwningNonNull<Element> originalLeftBlockElement = aLeftBlockElement;
