@@ -56,10 +56,6 @@ XPCOMUtils.defineLazyGetter(this, "converter", () => {
   return conv;
 });
 
-XPCOMUtils.defineLazyGetter(this, "sysInfo", () => {
-  return Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
-});
-
 var logging = Services.prefs.getBoolPref("devtools.discovery.log");
 function log(msg) {
   if (logging) {
@@ -162,7 +158,7 @@ LocalDevice.prototype = {
     if (Services.appinfo.widgetToolkit == "android") {
       // For Firefox for Android, use the device's model name.
       // TODO: Bug 1180997: Find the right way to expose an editable name
-      this.name = sysInfo.get("device");
+      this.name = Services.sysinfo.get("device");
     } else {
       this.name = Cc["@mozilla.org/network/dns-service;1"].getService(
         Ci.nsIDNSService

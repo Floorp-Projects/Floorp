@@ -18,13 +18,12 @@
   <script type="application/javascript">
     <![CDATA[
 
-    ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     SimpleTest.waitForExplicitFinish();
 
     function onLoad() {
-      var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-      var win = wm.getMostRecentWindow("navigator:browser");
+      var win = Services.wm.getMostRecentWindow("navigator:browser");
 
       /*
       switch(win.windowState) {
