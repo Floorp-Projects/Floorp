@@ -195,11 +195,9 @@ class MozbuildObject(ProcessExecutionMixin):
         if detect_virtualenv_mozinfo and os.path.isfile(mozinfo_path):
             topsrcdir, topobjdir, mozconfig = load_mozinfo(mozinfo_path)
 
-        # If we were successful, we're only guaranteed to find a topsrcdir. If
-        # we couldn't find that, there's nothing we can do.
         if not topsrcdir:
-            raise BuildEnvironmentNotFoundException(
-                "Could not find Mozilla source tree or build environment."
+            topsrcdir = os.path.abspath(
+                os.path.join(os.path.dirname(__file__), "..", "..", "..")
             )
 
         topsrcdir = mozpath.normsep(topsrcdir)

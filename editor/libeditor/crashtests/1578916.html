@@ -1,0 +1,15 @@
+<script>
+function go() {
+  b.appendChild(document.body.firstChild)
+  document.getSelection().setBaseAndExtent(c.appendChild(b),0,b,1)
+  a.addEventListener("DOMCharacterDataModified", function() {
+    window.getSelection().removeAllRanges()
+  })
+  document.execCommand("delete", false)
+}
+</script>
+<body onload=go()>
+<audio id="a">
+<li contenteditable="true">
+<data id="c">
+<source id="b">
