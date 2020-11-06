@@ -230,7 +230,8 @@ void nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
       MOZ_ASSERT(mBlockReflowInput->GetWritingMode() == pfd->mWritingMode,
                  "mBlockReflowInput->frame == frame, "
                  "hence they should have identical writing mode");
-      pfd->mOffsets = mBlockReflowInput->ComputedLogicalOffsets();
+      pfd->mOffsets =
+          mBlockReflowInput->ComputedLogicalOffsets(pfd->mWritingMode);
     }
   }
 }
@@ -824,14 +825,12 @@ void nsLineLayout::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
     if (reflowInput.ComputedISize() == NS_UNCONSTRAINEDSIZE) {
       reflowInput.AvailableISize() = availableSpaceOnLine;
     }
-    WritingMode stateWM = reflowInput.GetWritingMode();
     pfd->mMargin = reflowInput.ComputedLogicalMargin(lineWM);
     pfd->mBorderPadding = reflowInput.ComputedLogicalBorderPadding(lineWM);
     pfd->mRelativePos =
         reflowInput.mStyleDisplay->IsRelativelyPositionedStyle();
     if (pfd->mRelativePos) {
-      pfd->mOffsets =
-          reflowInput.ComputedLogicalOffsets().ConvertTo(frameWM, stateWM);
+      pfd->mOffsets = reflowInput.ComputedLogicalOffsets(frameWM);
     }
 
     // Calculate whether the the frame should have a start margin and
