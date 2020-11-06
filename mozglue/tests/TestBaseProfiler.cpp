@@ -3738,43 +3738,69 @@ void TestUniqueJSONStrings() {
         "2, 3, 2", R"("external0", "external1", "string0", "string1")", &ujs);
   }
 
+  // Unique string table through SpliceableJSONWriter.
+  VerifyUniqueStringContents(
+      [](SCJW& aWriter, UJS& aUniqueStrings) {
+        aWriter.SetUniqueStrings(aUniqueStrings);
+        aWriter.UniqueStringElement("string0");
+        aWriter.StartObjectElement(mozilla::JSONWriter::SingleLineStyle);
+        {
+          aWriter.UniqueStringProperty("p0", "prop");
+          aWriter.UniqueStringProperty("p1", "string0");
+          aWriter.UniqueStringProperty("p2", "prop");
+        }
+        aWriter.EndObject();
+        aWriter.UniqueStringElement("string1");
+        aWriter.UniqueStringElement("string0");
+        aWriter.UniqueStringElement("prop");
+        aWriter.ResetUniqueStrings();
+      },
+      R"(0, {"p0": 1, "p1": 0, "p2": 1}, 2, 0, 1)",
+      R"("string0", "prop", "string1")");
+
   printf("TestUniqueJSONStrings done\n");
 }
 
 void StreamMarkers(const mozilla::ProfileChunkedBuffer& aBuffer,
                    mozilla::baseprofiler::SpliceableJSONWriter& aWriter) {
-  aWriter.Start();
+  aWriter.StartArrayProperty("data");
   {
-    aWriter.StartArrayProperty("data");
-    {
-      aBuffer.ReadEach([&](mozilla::ProfileBufferEntryReader& aEntryReader) {
-        mozilla::ProfileBufferEntryKind entryKind =
-            aEntryReader.ReadObject<mozilla::ProfileBufferEntryKind>();
-        MOZ_RELEASE_ASSERT(entryKind ==
-                           mozilla::ProfileBufferEntryKind::Marker);
+    aBuffer.ReadEach([&](mozilla::ProfileBufferEntryReader& aEntryReader) {
+      mozilla::ProfileBufferEntryKind entryKind =
+          aEntryReader.ReadObject<mozilla::ProfileBufferEntryKind>();
+      MOZ_RELEASE_ASSERT(entryKind == mozilla::ProfileBufferEntryKind::Marker);
 
-        const bool success = mozilla::base_profiler_markers_detail::
-            DeserializeAfterKindAndStream(
-                aEntryReader, aWriter, 0,
-                [&](const mozilla::ProfilerString8View& aName) {
-                  aWriter.StringElement(aName);
-                },
-                [&](mozilla::ProfileChunkedBuffer&) {
-                  aWriter.StringElement("Real backtrace would be here");
-                });
-        MOZ_RELEASE_ASSERT(success);
-      });
-    }
-    aWriter.EndArray();
+      const bool success =
+          mozilla::base_profiler_markers_detail::DeserializeAfterKindAndStream(
+              aEntryReader, aWriter, 0,
+              [&](const mozilla::ProfilerString8View& aName) {
+                aWriter.StringElement(aName);
+              },
+              [&](mozilla::ProfileChunkedBuffer&) {
+                aWriter.StringElement("Real backtrace would be here");
+              });
+      MOZ_RELEASE_ASSERT(success);
+    });
   }
-  aWriter.End();
+  aWriter.EndArray();
 }
 
 void PrintMarkers(const mozilla::ProfileChunkedBuffer& aBuffer) {
   mozilla::baseprofiler::SpliceableJSONWriter writer(
       mozilla::MakeUnique<mozilla::baseprofiler::OStreamJSONWriteFunc>(
           std::cout));
-  StreamMarkers(aBuffer, writer);
+  mozilla::baseprofiler::UniqueJSONStrings uniqueStrings;
+  writer.SetUniqueStrings(uniqueStrings);
+  writer.Start();
+  {
+    StreamMarkers(aBuffer, writer);
+
+    writer.StartArrayProperty("stringTable");
+    { uniqueStrings.SpliceStringTableElements(writer); }
+    writer.EndArray();
+  }
+  writer.End();
+  writer.ResetUniqueStrings();
 }
 
 static void SubTestMarkerCategory(
