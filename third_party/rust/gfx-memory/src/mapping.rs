@@ -26,7 +26,10 @@ impl<T, B: Backend> Writer<'_, '_, T, B> {
     /// The segment to flush is returned. The user is responsible
     /// to flush this segment manually.
     pub fn forget(mut self) -> (*mut T, Option<hal::memory::Segment>) {
-        (self.slice.as_mut_ptr(), self.flush.take().map(|f| f.segment))
+        (
+            self.slice.as_mut_ptr(),
+            self.flush.take().map(|f| f.segment),
+        )
     }
 }
 

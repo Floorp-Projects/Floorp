@@ -1,15 +1,13 @@
 use auxil::FastHashMap;
 use std::{
     ffi::CStr,
-    mem,
-    ptr,
+    mem, ptr,
     sync::{Arc, Mutex},
 };
 
 use winapi::{
     shared::{
-        dxgiformat,
-        dxgitype,
+        dxgiformat, dxgitype,
         minwindef::{FALSE, TRUE},
         winerror,
     },
@@ -118,7 +116,7 @@ impl ServicePipes {
             0,
             d3d12::D3D12_COMPARISON_FUNC_ALWAYS,
             native::StaticBorderColor::TransparentBlack,
-            0.0 .. d3d12::D3D12_FLOAT32_MAX,
+            0.0..d3d12::D3D12_FLOAT32_MAX,
         )];
 
         let (signature_raw, error) = match self.library.serialize_root_signature(

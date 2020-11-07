@@ -58,6 +58,7 @@ unsafe fn allocate_memory_helper<B: hal::Backend>(
 ) -> Result<(Memory<B>, Option<NonNull<u8>>), hal::device::AllocationError> {
     use hal::device::Device as _;
 
+    log::trace!("Raw allocation of size {} for type {:?}", size, memory_type);
     let raw = device.allocate_memory(memory_type, size)?;
 
     let ptr = if memory_properties.contains(hal::memory::Properties::CPU_VISIBLE) {

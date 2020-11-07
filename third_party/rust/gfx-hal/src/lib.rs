@@ -1,7 +1,43 @@
-#![deny(missing_debug_implementations, missing_docs, unused)]
+#![warn(
+    trivial_casts,
+    trivial_numeric_casts,
+    unused_extern_crates,
+    unused_import_braces,
+    unused_qualifications
+)]
+#![deny(
+    intra_doc_link_resolution_failure,
+    missing_debug_implementations,
+    missing_docs,
+    unused
+)]
 
 //! Low-level graphics abstraction for Rust. Mostly operates on data, not types.
 //! Designed for use by libraries and higher-level abstractions only.
+//!
+//! This crate provides a [hardware abstraction layer][hal] for [graphics adapters][gpus],
+//! for both compute and graphics operations. The API design is heavily inspired by
+//! the [Vulkan API](https://www.khronos.org/vulkan/), and borrows some of the terminology.
+//!
+//! [hal]: https://en.wikipedia.org/wiki/Hardware_abstraction
+//! [gpus]: https://en.wikipedia.org/wiki/Video_card
+//!
+//! # Usage
+//!
+//! Most of the functionality is implemented in separate crates, one for each backend.
+//! This crate only exposes a few generic traits and structures. You can import
+//! all the necessary traits through the [`prelude`][prelude] module.
+//!
+//! The first step to using `gfx-hal` is to initialize one of the available
+//! [backends][Backend], by creating an [`Instance`][Instance]. Then proceed by
+//! [enumerating][Instance::enumerate_adapters] the available
+//! [graphics adapters][adapter::Adapter] and querying their available
+//! [features][Features] and [queues][queue::family::QueueFamily].
+//!
+//! You can use the [`open`][adapter::PhysicalDevice::open] method on a
+//! [`PhysicalDevice`][adapter::PhysicalDevice] to get a [logical device
+//! handle][device::Device], from which you can manage all the other device-specific
+//! resources.
 
 #[macro_use]
 extern crate bitflags;
@@ -28,17 +64,17 @@ pub mod query;
 pub mod queue;
 pub mod window;
 
-/// Prelude module re-exports all the traits necessary to use gfx-hal.
+/// Prelude module re-exports all the traits necessary to use `gfx-hal`.
 pub mod prelude {
     pub use crate::{
-        adapter::PhysicalDevice as _,
-        command::CommandBuffer as _,
-        device::Device as _,
-        pool::CommandPool as _,
-        pso::DescriptorPool as _,
-        queue::{CommandQueue as _, QueueFamily as _},
-        window::{PresentationSurface as _, Surface as _, Swapchain as _},
-        Instance as _,
+        adapter::PhysicalDevice,
+        command::CommandBuffer,
+        device::Device,
+        pool::CommandPool,
+        pso::DescriptorPool,
+        queue::{CommandQueue, QueueFamily},
+        window::{PresentationSurface, Surface},
+        Instance,
     };
 }
 
@@ -54,12 +90,18 @@ pub type InstanceCount = u32;
 pub type DrawCount = u32;
 /// Number of work groups.
 pub type WorkGroupCount = [u32; 3];
+/// Number of tasks.
+pub type TaskCount = u32;
 
 bitflags! {
     //TODO: add a feature for non-normalized samplers
     //TODO: add a feature for mutable comparison samplers
     /// Features that the device supports.
+    ///
     /// These only include features of the core interface and not API extensions.
+    ///
+    /// Can be obtained from a [physical device][adapter::PhysicalDevice] by calling
+    /// [`features`][adapter::PhysicalDevice::features].
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct Features: u128 {
         /// Bit mask of Vulkan Core/Extension features.
@@ -68,6 +110,8 @@ bitflags! {
         const PORTABILITY_MASK  = 0x0000_FFFF_0000_0000_0000_0000;
         /// Bit mask for extra WebGPU features.
         const WEBGPU_MASK = 0xFFFF_0000_0000_0000_0000_0000;
+        /// Bit mask for all extensions.
+        const EXTENSIONS_MASK = 0xFFFF_FFFF_0000_0000_0000_0000_0000_0000;
 
         /// Support for robust buffer access.
         /// Buffer access by SPIR-V shaders is checked against the buffer/image boundaries.
@@ -210,6 +254,11 @@ bitflags! {
 
         /// Make the NDC coordinate system pointing Y up, to match D3D and Metal.
         const NDC_Y_UP = 0x0001 << 80;
+
+        /// Supports task shader stage.
+        const TASK_SHADER = 0x0001 << 96;
+        /// Supports mesh shader stage.
+        const MESH_SHADER = 0x0002 << 96;
     }
 }
 
@@ -372,6 +421,45 @@ pub struct Limits {
 
     /// The alignment of the vertex buffer stride.
     pub min_vertex_input_binding_stride_alignment: buffer::Offset,
+
+    /// The maximum number of local workgroups that can be launched by a single draw mesh tasks command
+    pub max_draw_mesh_tasks_count: u32,
+    /// The maximum total number of task shader invocations in a single local workgroup. The product of the X, Y, and
+    /// Z sizes, as specified by the LocalSize execution mode in shader modules or by the object decorated by the
+    /// WorkgroupSize decoration, must be less than or equal to this limit.
+    pub max_task_work_group_invocations: u32,
+    /// The maximum size of a local task workgroup. These three values represent the maximum local workgroup size in
+    /// the X, Y, and Z dimensions, respectively. The x, y, and z sizes, as specified by the LocalSize execution mode
+    /// or by the object decorated by the WorkgroupSize decoration in shader modules, must be less than or equal to
+    /// the corresponding limit.
+    pub max_task_work_group_size: [u32; 3],
+    /// The maximum number of bytes that the task shader can use in total for shared and output memory combined.
+    pub max_task_total_memory_size: u32,
+    /// The maximum number of output tasks a single task shader workgroup can emit.
+    pub max_task_output_count: u32,
+    /// The maximum total number of mesh shader invocations in a single local workgroup. The product of the X, Y, and
+    /// Z sizes, as specified by the LocalSize execution mode in shader modules or by the object decorated by the
+    /// WorkgroupSize decoration, must be less than or equal to this limit.
+    pub max_mesh_work_group_invocations: u32,
+    /// The maximum size of a local mesh workgroup. These three values represent the maximum local workgroup size in
+    /// the X, Y, and Z dimensions, respectively. The x, y, and z sizes, as specified by the LocalSize execution mode
+    /// or by the object decorated by the WorkgroupSize decoration in shader modules, must be less than or equal to the
+    /// corresponding limit.
+    pub max_mesh_work_group_size: [u32; 3],
+    /// The maximum number of bytes that the mesh shader can use in total for shared and output memory combined.
+    pub max_mesh_total_memory_size: u32,
+    /// The maximum number of vertices a mesh shader output can store.
+    pub max_mesh_output_vertices: u32,
+    /// The maximum number of primitives a mesh shader output can store.
+    pub max_mesh_output_primitives: u32,
+    /// The maximum number of multi-view views a mesh shader can use.
+    pub max_mesh_multiview_view_count: u32,
+    /// The granularity with which mesh vertex outputs are allocated. The value can be used to compute the memory size
+    /// used by the mesh shader, which must be less than or equal to maxMeshTotalMemorySize.
+    pub mesh_output_per_vertex_granularity: u32,
+    /// The granularity with which mesh outputs qualified as per-primitive are allocated. The value can be used to
+    /// compute the memory size used by the mesh shader, which must be less than or equal to
+    pub mesh_output_per_primitive_granularity: u32,
 }
 
 /// An enum describing the type of an index value in a slice's index buffer
@@ -386,7 +474,7 @@ pub enum IndexType {
 
 /// Error creating an instance of a backend on the platform that
 /// doesn't support this backend.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct UnsupportedBackend;
 
 /// An instantiated backend.
@@ -400,32 +488,55 @@ pub struct UnsupportedBackend;
 /// # extern crate gfx_backend_empty;
 /// # extern crate gfx_hal;
 /// use gfx_backend_empty as backend;
-/// use gfx_hal as hal;
+/// use gfx_hal::Instance;
 ///
 /// // Create a concrete instance of our backend (this is backend-dependent and may be more
 /// // complicated for some backends).
-/// let instance = backend::Instance;
+/// let instance = backend::Instance::create("My App", 1).unwrap();
 /// // We can get a list of the available adapters, which are either physical graphics
 /// // devices, or virtual adapters. Because we are using the dummy `empty` backend,
 /// // there will be nothing in this list.
-/// for (idx, adapter) in hal::Instance::enumerate_adapters(&instance).iter().enumerate() {
+/// for (idx, adapter) in instance.enumerate_adapters().iter().enumerate() {
 ///     println!("Adapter {}: {:?}", idx, adapter.info);
 /// }
 /// ```
 pub trait Instance<B: Backend>: Any + Send + Sync + Sized {
     /// Create a new instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - name of the application using the API.
+    /// * `version` - free form representation of the application's version.
+    ///
+    /// This metadata is passed further down the graphics stack.
+    ///
+    /// # Errors
+    ///
+    /// Returns an `Err` variant if the requested backend [is not supported
+    /// on the current platform][UnsupportedBackend].
     fn create(name: &str, version: u32) -> Result<Self, UnsupportedBackend>;
-    /// Return all available adapters.
+
+    /// Return all available [graphics adapters][adapter::Adapter].
     fn enumerate_adapters(&self) -> Vec<adapter::Adapter<B>>;
-    /// Create a new surface.
+
+    /// Create a new [surface][window::Surface].
+    ///
+    /// Surfaces can be used to render to windows.
+    ///
+    /// # Safety
+    ///
+    /// This method can cause undefined behavior if `raw_window_handle` isn't
+    /// a handle to a valid window for the current platform.
     unsafe fn create_surface(
         &self,
-        _: &impl raw_window_handle::HasRawWindowHandle,
+        raw_window_handle: &impl raw_window_handle::HasRawWindowHandle,
     ) -> Result<B::Surface, window::InitError>;
-    /// Destroy a surface.
+
+    /// Destroy a surface, freeing the resources associated with it and
+    /// releasing it from this graphics API.
     ///
-    /// The surface shouldn't be destroyed before the attached
-    /// swapchain is destroyed.
+    /// # Safety
+    ///
     unsafe fn destroy_surface(&self, surface: B::Surface);
 }
 
@@ -442,7 +553,7 @@ impl From<usize> for MemoryTypeId {
 
 struct PseudoVec<T>(Option<T>);
 
-impl<T> std::iter::Extend<T> for PseudoVec<T> {
+impl<T> Extend<T> for PseudoVec<T> {
     fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
         let mut iter = iter.into_iter();
         self.0 = iter.next();
@@ -450,45 +561,71 @@ impl<T> std::iter::Extend<T> for PseudoVec<T> {
     }
 }
 
-/// The `Backend` trait wraps together all the types needed
-/// for a graphics backend. Each backend module, such as OpenGL
-/// or Metal, will implement this trait with its own concrete types.
-#[allow(missing_docs)]
+/// Wraps together all the types needed for a graphics backend.
+///
+/// Each backend module, such as OpenGL or Metal, will implement this trait
+/// with its own concrete types.
 pub trait Backend: 'static + Sized + Eq + Clone + Hash + fmt::Debug + Any + Send + Sync {
+    /// The corresponding [instance][Instance] type for this backend.
     type Instance: Instance<Self>;
+    /// The corresponding [physical device][adapter::PhysicalDevice] type for this backend.
     type PhysicalDevice: adapter::PhysicalDevice<Self>;
+    /// The corresponding [logical device][device::Device] type for this backend.
     type Device: device::Device<Self>;
-
+    /// The corresponding [surface][window::PresentationSurface] type for this backend.
     type Surface: window::PresentationSurface<Self>;
-    type Swapchain: window::Swapchain<Self>;
 
+    /// The corresponding [queue family][queue::QueueFamily] type for this backend.
     type QueueFamily: queue::QueueFamily;
+    /// The corresponding [command queue][queue::CommandQueue] type for this backend.
     type CommandQueue: queue::CommandQueue<Self>;
+    /// The corresponding [command buffer][command::CommandBuffer] type for this backend.
     type CommandBuffer: command::CommandBuffer<Self>;
 
+    /// The corresponding shader module type for this backend.
     type ShaderModule: fmt::Debug + Any + Send + Sync;
+    /// The corresponding render pass type for this backend.
     type RenderPass: fmt::Debug + Any + Send + Sync;
+    /// The corresponding framebuffer type for this backend.
     type Framebuffer: fmt::Debug + Any + Send + Sync;
 
+    /// The corresponding memory type for this backend.
     type Memory: fmt::Debug + Any + Send + Sync;
+    /// The corresponding [command pool][pool::CommandPool] type for this backend.
     type CommandPool: pool::CommandPool<Self>;
 
+    /// The corresponding buffer type for this backend.
     type Buffer: fmt::Debug + Any + Send + Sync;
+    /// The corresponding buffer view type for this backend.
     type BufferView: fmt::Debug + Any + Send + Sync;
+    /// The corresponding image type for this backend.
     type Image: fmt::Debug + Any + Send + Sync;
+    /// The corresponding image view type for this backend.
     type ImageView: fmt::Debug + Any + Send + Sync;
+    /// The corresponding sampler type for this backend.
     type Sampler: fmt::Debug + Any + Send + Sync;
 
+    /// The corresponding compute pipeline type for this backend.
     type ComputePipeline: fmt::Debug + Any + Send + Sync;
+    /// The corresponding graphics pipeline type for this backend.
     type GraphicsPipeline: fmt::Debug + Any + Send + Sync;
+    /// The corresponding pipeline cache type for this backend.
     type PipelineCache: fmt::Debug + Any + Send + Sync;
+    /// The corresponding pipeline layout type for this backend.
     type PipelineLayout: fmt::Debug + Any + Send + Sync;
+    /// The corresponding [descriptor pool][pso::DescriptorPool] type for this backend.
     type DescriptorPool: pso::DescriptorPool<Self>;
+    /// The corresponding descriptor set type for this backend.
     type DescriptorSet: fmt::Debug + Any + Send + Sync;
+    /// The corresponding descriptor set layout type for this backend.
     type DescriptorSetLayout: fmt::Debug + Any + Send + Sync;
 
+    /// The corresponding fence type for this backend.
     type Fence: fmt::Debug + Any + Send + Sync;
+    /// The corresponding semaphore type for this backend.
     type Semaphore: fmt::Debug + Any + Send + Sync;
+    /// The corresponding event type for this backend.
     type Event: fmt::Debug + Any + Send + Sync;
+    /// The corresponding query pool type for this backend.
     type QueryPool: fmt::Debug + Any + Send + Sync;
 }

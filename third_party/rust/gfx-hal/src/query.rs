@@ -1,7 +1,9 @@
-//! Queries are commands that can be submitted to a command buffer to record statistics or
-//! other useful values as the command buffer is running. They are often intended for profiling
-//! or other introspection, providing a mechanism for the command buffer to record data about its
-//! operation as it is running.
+//! Commands that can be used to record statistics or other useful values
+//! as the command buffer is running.
+//!
+//! They are often intended for profiling or other introspection,
+//! providing a mechanism for the command buffer to record data about its operation
+//! as it is running.
 
 use crate::device::OutOfMemory;
 use crate::Backend;

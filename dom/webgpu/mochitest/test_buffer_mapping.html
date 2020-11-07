@@ -25,7 +25,7 @@ const func = async function() {
 
   await bufferRead.mapAsync(GPUMapMode.READ);
   const data = bufferRead.getMappedRange();
-  const value = new Float32Array(data)[0];
+  const value = (new Float32Array(data))[0];
   bufferRead.unmap();
 
   ok(value == 1.0, 'value == 1.0');

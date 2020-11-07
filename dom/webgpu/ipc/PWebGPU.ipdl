@@ -9,21 +9,9 @@ using layers::RGBDescriptor from "mozilla/layers/LayersSurfaces.h";
 using wr::ExternalImageId from "mozilla/webrender/WebRenderAPI.h";
 using RawId from "mozilla/webgpu/WebGPUTypes.h";
 using BufferAddress from "mozilla/webgpu/WebGPUTypes.h";
-using SerialBindGroupLayoutDescriptor from "mozilla/webgpu/WebGPUTypes.h";
-using SerialPipelineLayoutDescriptor from "mozilla/webgpu/WebGPUTypes.h";
-using SerialBindGroupDescriptor from "mozilla/webgpu/WebGPUTypes.h";
-using SerialComputePipelineDescriptor from "mozilla/webgpu/WebGPUTypes.h";
-using SerialRenderPipelineDescriptor from "mozilla/webgpu/WebGPUTypes.h";
-using SerialSamplerDescriptor from "mozilla/webgpu/WebGPUTypes.h";
 using dom::GPURequestAdapterOptions from "mozilla/dom/WebGPUBinding.h";
 using dom::GPUDeviceDescriptor from "mozilla/dom/WebGPUBinding.h";
-using dom::GPUCommandEncoderDescriptor from "mozilla/dom/WebGPUBinding.h";
 using dom::GPUCommandBufferDescriptor from "mozilla/dom/WebGPUBinding.h";
-using dom::GPUPipelineLayoutDescriptor from "mozilla/dom/WebGPUBinding.h";
-using webgpu::ffi::WGPUBufferDescriptor from "mozilla/webgpu/ffi/wgpu.h";
-using webgpu::ffi::WGPUTextureDescriptor from "mozilla/webgpu/ffi/wgpu.h";
-using webgpu::ffi::WGPUTextureViewDescriptor from "mozilla/webgpu/ffi/wgpu.h";
-using webgpu::ffi::WGPUBufferCopyView from "mozilla/webgpu/ffi/wgpu.h";
 using webgpu::ffi::WGPUTextureDataLayout from "mozilla/webgpu/ffi/wgpu.h";
 using webgpu::ffi::WGPUTextureCopyView from "mozilla/webgpu/ffi/wgpu.h";
 using webgpu::ffi::WGPUExtent3d from "mozilla/webgpu/ffi/wgpu.h";
@@ -45,29 +33,22 @@ async protocol PWebGPU
   manager PCompositorBridge;
 
 parent:
+  async DeviceAction(RawId selfId, ByteBuf buf);
+  async TextureAction(RawId selfId, ByteBuf buf);
+  async CommandEncoderAction(RawId selfId, ByteBuf buf);
+
   async InstanceRequestAdapter(GPURequestAdapterOptions options, RawId[] ids) returns (RawId adapterId);
   async AdapterRequestDevice(RawId selfId, GPUDeviceDescriptor desc, RawId newId);
   async AdapterDestroy(RawId selfId);
-  async DeviceCreateBuffer(RawId selfId, WGPUBufferDescriptor desc, nsCString label, RawId newId);
   async BufferReturnShmem(RawId selfId, Shmem shmem);
   async BufferMap(RawId selfId, WGPUHostMap hostMap, uint64_t offset, uint64_t size) returns (Shmem sm);
   async BufferUnmap(RawId selfId, Shmem shmem, bool flush);
   async BufferDestroy(RawId selfId);
-  async DeviceCreateTexture(RawId selfId, WGPUTextureDescriptor desc, nsCString label, RawId newId);
-  async TextureCreateView(RawId selfId, WGPUTextureViewDescriptor desc, nsCString label, RawId newId);
   async TextureDestroy(RawId selfId);
   async TextureViewDestroy(RawId selfId);
-  async DeviceCreateSampler(RawId selfId, SerialSamplerDescriptor desc, RawId newId);
   async SamplerDestroy(RawId selfId);
   async DeviceDestroy(RawId selfId);
 
-  async DeviceCreateCommandEncoder(RawId selfId, GPUCommandEncoderDescriptor desc, RawId newId);
-  async CommandEncoderCopyBufferToBuffer(RawId selfId, RawId sourceId, BufferAddress sourceOffset, RawId destinationId, BufferAddress destinationOffset, BufferAddress size);
-  async CommandEncoderCopyBufferToTexture(RawId selfId, WGPUBufferCopyView source, WGPUTextureCopyView destination, WGPUExtent3d extent);
-  async CommandEncoderCopyTextureToBuffer(RawId selfId, WGPUTextureCopyView source, WGPUBufferCopyView destination, WGPUExtent3d extent);
-  async CommandEncoderCopyTextureToTexture(RawId selfId, WGPUTextureCopyView source, WGPUTextureCopyView destination, WGPUExtent3d extent);
-  async CommandEncoderRunComputePass(RawId selfId, Shmem shmem);
-  async CommandEncoderRunRenderPass(RawId selfId, Shmem shmem);
   async CommandEncoderFinish(RawId selfId, GPUCommandBufferDescriptor desc);
   async CommandEncoderDestroy(RawId selfId);
   async CommandBufferDestroy(RawId selfId);
@@ -75,17 +56,11 @@ parent:
   async QueueWriteBuffer(RawId selfId, RawId bufferId, BufferAddress bufferOffset, Shmem shmem);
   async QueueWriteTexture(RawId selfId, WGPUTextureCopyView destination, Shmem shmem, WGPUTextureDataLayout layout, WGPUExtent3d extent);
 
-  async DeviceCreateBindGroupLayout(RawId selfId, SerialBindGroupLayoutDescriptor desc, RawId newId);
   async BindGroupLayoutDestroy(RawId selfId);
-  async DeviceCreatePipelineLayout(RawId selfId, SerialPipelineLayoutDescriptor desc, RawId newId);
   async PipelineLayoutDestroy(RawId selfId);
-  async DeviceCreateBindGroup(RawId selfId, SerialBindGroupDescriptor desc, RawId newId);
   async BindGroupDestroy(RawId selfId);
-  async DeviceCreateShaderModule(RawId selfId, uint32_t[] spirv, nsCString wgsl, RawId newId);
   async ShaderModuleDestroy(RawId selfId);
-  async DeviceCreateComputePipeline(RawId selfId, SerialComputePipelineDescriptor desc, RawId newId);
   async ComputePipelineDestroy(RawId selfId);
-  async DeviceCreateRenderPipeline(RawId selfId, SerialRenderPipelineDescriptor desc, RawId newId);
   async RenderPipelineDestroy(RawId selfId);
   async DeviceCreateSwapChain(RawId selfId, RawId queueId, RGBDescriptor desc, RawId[] bufferIds, ExternalImageId externalId);
   async SwapChainPresent(ExternalImageId externalId, RawId textureId, RawId commandEncoderId);

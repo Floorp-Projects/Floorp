@@ -9,6 +9,9 @@ use std::fmt::Debug;
 /// General information about a queue family, available upon adapter discovery.
 ///
 /// Note that a backend can expose multiple queue families with the same properties.
+///
+/// Can be obtained from an [adapter][crate::adapter::Adapter] through its
+/// [`queue_families`][crate::adapter::Adapter::queue_families] field.
 pub trait QueueFamily: Debug + Any + Send + Sync {
     /// Returns the type of queues.
     fn queue_type(&self) -> QueueType;

@@ -15,6 +15,7 @@ bitflags!(
     /// the `Rgba8Unorm` format only specifies a `COLOR` aspect,
     /// while `D32SfloatS8Uint` specifies both a depth and stencil
     /// aspect but no color.
+    #[derive(Default)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct Aspects: u8 {
         /// Color aspect.

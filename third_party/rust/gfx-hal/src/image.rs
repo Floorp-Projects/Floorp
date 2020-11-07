@@ -4,8 +4,7 @@
 
 use crate::{
     buffer::Offset as RawOffset,
-    device,
-    format,
+    device, format,
     pso::{Comparison, Rect},
 };
 use std::{f32, hash, ops::Range};
@@ -87,7 +86,7 @@ impl Offset {
             y: self.y + extent.height as i32,
             z: self.z + extent.depth as i32,
         };
-        self .. end
+        self..end
     }
 }
 
@@ -205,7 +204,7 @@ pub enum LayerError {
     /// The source image kind doesn't support array slices.
     NotExpected(Kind),
     /// Selected layers are outside of the provided range.
-    OutOfBounds(Range<Layer>),
+    OutOfBounds,
 }
 
 impl std::fmt::Display for LayerError {
@@ -214,11 +213,7 @@ impl std::fmt::Display for LayerError {
             LayerError::NotExpected(kind) => {
                 write!(fmt, "Kind {{{:?}}} does not support arrays", kind)
             }
-            LayerError::OutOfBounds(layers) => write!(
-                fmt,
-                "Out of bounds layers {} .. {}",
-                layers.start, layers.end
-            ),
+            LayerError::OutOfBounds => write!(fmt, "Out of bounds layers"),
         }
     }
 }
@@ -325,7 +320,7 @@ impl Kind {
     }
 
     /// Count the number of mipmap levels.
-    pub fn num_levels(&self) -> Level {
+    pub fn compute_num_levels(&self) -> Level {
         use std::cmp::max;
         match *self {
             Kind::D2(_, _, _, s) if s > 1 => {
@@ -335,7 +330,7 @@ impl Kind {
             _ => {
                 let extent = self.extent();
                 let dominant = max(max(extent.width, extent.height), extent.depth);
-                (1 ..).find(|level| dominant >> level == 0).unwrap()
+                (1..).find(|level| dominant >> level == 0).unwrap()
             }
         }
     }
@@ -462,7 +457,7 @@ pub struct Lod(pub f32);
 
 impl Lod {
     /// Possible LOD range.
-    pub const RANGE: Range<Self> = Lod(f32::MIN) .. Lod(f32::MAX);
+    pub const RANGE: Range<Self> = Lod(f32::MIN)..Lod(f32::MAX);
 }
 
 impl Eq for Lod {}
@@ -654,15 +649,49 @@ pub struct SubresourceLayers {
 }
 
 /// A subset of resources contained within an image.
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, Hash, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct SubresourceRange {
     /// Included aspects: color/depth/stencil
     pub aspects: format::Aspects,
-    /// Included mipmap levels
-    pub levels: Range<Level>,
-    /// Included array levels
-    pub layers: Range<Layer>,
+    /// First mipmap level in this subresource
+    pub level_start: Level,
+    /// Number of sequential levels in this subresource.
+    ///
+    /// A value of `None` indicates the subresource contains
+    /// all of the remaining levels.
+    pub level_count: Option<Level>,
+    /// First layer in this subresource
+    pub layer_start: Layer,
+    /// Number of sequential layers in this subresource.
+    ///
+    /// A value of `None` indicates the subresource contains
+    /// all of the remaining layers.
+    pub layer_count: Option<Layer>,
+}
+
+impl From<SubresourceLayers> for SubresourceRange {
+    fn from(sub: SubresourceLayers) -> Self {
+        SubresourceRange {
+            aspects: sub.aspects,
+            level_start: sub.level,
+            level_count: Some(1),
+            layer_start: sub.layers.start,
+            layer_count: Some(sub.layers.end - sub.layers.start),
+        }
+    }
+}
+
+impl SubresourceRange {
+    /// Resolve the concrete level count based on the total number of layers in an image.
+    pub fn resolve_level_count(&self, total: Level) -> Level {
+        self.level_count.unwrap_or(total - self.level_start)
+    }
+
+    /// Resolve the concrete layer count based on the total number of layer in an image.
+    pub fn resolve_layer_count(&self, total: Layer) -> Layer {
+        self.layer_count.unwrap_or(total - self.layer_start)
+    }
 }
 
 /// Image format properties.

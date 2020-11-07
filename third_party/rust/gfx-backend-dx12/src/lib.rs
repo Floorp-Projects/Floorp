@@ -14,15 +14,7 @@ mod root_constants;
 mod window;
 
 use hal::{
-    adapter,
-    format as f,
-    image,
-    memory,
-    pso::PipelineStage,
-    queue as q,
-    Features,
-    Hints,
-    Limits,
+    adapter, format as f, image, memory, pso::PipelineStage, queue as q, Features, Hints, Limits,
 };
 
 use winapi::{
@@ -52,6 +44,7 @@ pub(crate) struct HeapProperties {
 // https://msdn.microsoft.com/de-de/library/windows/desktop/dn770377(v=vs.85).aspx
 // Only 16 input slots allowed.
 const MAX_VERTEX_BUFFERS: usize = 16;
+const MAX_DESCRIPTOR_SETS: usize = 8;
 
 const NUM_HEAP_PROPERTIES: usize = 3;
 
@@ -271,7 +264,7 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
                     }
                     QueueFamily::Normal(_) => {
                         let list_type = family.native_type();
-                        for _ in 0 .. priorities.len() {
+                        for _ in 0..priorities.len() {
                             let (queue, hr_queue) = device_raw.create_command_queue(
                                 list_type,
                                 native::Priority::Normal,
@@ -481,26 +474,7 @@ impl q::CommandQueue<Backend> for CommandQueue {
         }
     }
 
-    unsafe fn present<'a, W, Is, S, Iw>(
-        &mut self,
-        swapchains: Is,
-        _wait_semaphores: Iw,
-    ) -> Result<Option<hal::window::Suboptimal>, hal::window::PresentError>
-    where
-        W: 'a + Borrow<window::Swapchain>,
-        Is: IntoIterator<Item = (&'a W, hal::window::SwapImageIndex)>,
-        S: 'a + Borrow<resource::Semaphore>,
-        Iw: IntoIterator<Item = &'a S>,
-    {
-        // TODO: semaphores
-        for (swapchain, _) in swapchains {
-            swapchain.borrow().inner.Present(1, 0);
-        }
-
-        Ok(None)
-    }
-
-    unsafe fn present_surface(
+    unsafe fn present(
         &mut self,
         surface: &mut window::Surface,
         _image: resource::ImageView,
@@ -567,6 +541,60 @@ impl Shared {
     }
 }
 
+struct DescriptorUpdater {
+    heaps: Vec<descriptors_cpu::HeapLinear>,
+    heap_index: usize,
+    reset_heap_index: usize,
+}
+
+impl DescriptorUpdater {
+    fn new(device: native::Device) -> Self {
+        DescriptorUpdater {
+            heaps: vec![Self::create_heap(device)],
+            heap_index: 0,
+            reset_heap_index: 0,
+        }
+    }
+
+    unsafe fn destroy(&mut self) {
+        for heap in self.heaps.drain(..) {
+            heap.destroy();
+        }
+    }
+
+    fn reset(&mut self) {
+        self.reset_heap_index = self.heap_index;
+        // Note: this could clear all the heaps, but WARP has an issue with that
+        if false {
+            for heap in self.heaps.iter_mut() {
+                heap.clear();
+            }
+        }
+    }
+
+    fn create_heap(device: native::Device) -> descriptors_cpu::HeapLinear {
+        let size = 1 << 12; //arbitrary
+        descriptors_cpu::HeapLinear::new(device, native::DescriptorHeapType::CbvSrvUav, size)
+    }
+
+    fn alloc_handle(&mut self, device: native::Device) -> native::CpuDescriptor {
+        if self.heaps[self.heap_index].is_full() {
+            self.heap_index += 1;
+            if self.heap_index == self.heaps.len() {
+                self.heap_index = 0;
+            }
+            if self.heap_index == self.reset_heap_index {
+                let heap = Self::create_heap(device);
+                self.heaps.insert(self.heap_index, heap);
+                self.reset_heap_index += 1;
+            } else {
+                self.heaps[self.heap_index].clear();
+            }
+        }
+        self.heaps[self.heap_index].alloc_handle()
+    }
+}
+
 pub struct Device {
     raw: native::Device,
     private_caps: Capabilities,
@@ -578,7 +606,7 @@ pub struct Device {
     dsv_pool: Mutex<DescriptorCpuPool>,
     srv_uav_pool: Mutex<DescriptorCpuPool>,
     sampler_pool: Mutex<DescriptorCpuPool>,
-    descriptor_update_pools: Mutex<Vec<descriptors_cpu::HeapLinear>>,
+    descriptor_updater: Mutex<DescriptorUpdater>,
     // CPU/GPU descriptor heaps
     heap_srv_cbv_uav: Mutex<resource::DescriptorHeap>,
     heap_sampler: Mutex<resource::DescriptorHeap>,
@@ -659,7 +687,7 @@ impl Device {
             dsv_pool: Mutex::new(dsv_pool),
             srv_uav_pool: Mutex::new(srv_uav_pool),
             sampler_pool: Mutex::new(sampler_pool),
-            descriptor_update_pools: Mutex::new(Vec::new()),
+            descriptor_updater: Mutex::new(DescriptorUpdater::new(device)),
             heap_srv_cbv_uav: Mutex::new(heap_srv_cbv_uav),
             heap_sampler: Mutex::new(heap_sampler),
             events: Mutex::new(Vec::new()),
@@ -699,9 +727,7 @@ impl Drop for Device {
             self.srv_uav_pool.lock().unwrap().destroy();
             self.sampler_pool.lock().unwrap().destroy();
 
-            for pool in &*self.descriptor_update_pools.lock().unwrap() {
-                pool.destroy();
-            }
+            self.descriptor_updater.lock().unwrap().destroy();
 
             // Debug tracking alive objects
             let (debug_device, hr_debug) = self.raw.cast::<d3d12sdklayers::ID3D12DebugDevice>();
@@ -866,7 +892,7 @@ impl hal::Instance<Backend> for Instance {
 
             let device_name = {
                 let len = desc.Description.iter().take_while(|&&c| c != 0).count();
-                let name = <OsString as OsStringExt>::from_wide(&desc.Description[.. len]);
+                let name = <OsString as OsStringExt>::from_wide(&desc.Description[..len]);
                 name.to_string_lossy().into_owned()
             };
 
@@ -1016,7 +1042,7 @@ impl hal::Instance<Backend> for Instance {
                 // `device::MEM_TYPE_IMAGE_SHIFT`, `device::MEM_TYPE_TARGET_SHIFT`)
                 // denote the usage group.
                 let mut types = Vec::new();
-                for i in 0 .. MemoryGroup::NumGroups as _ {
+                for i in 0..MemoryGroup::NumGroups as _ {
                     types.extend(base_memory_types.iter().map(|mem_type| {
                         let mut ty = mem_type.clone();
 
@@ -1073,6 +1099,27 @@ impl hal::Instance<Backend> for Instance {
             //TODO: find a way to get a tighter bound?
             let sample_count_mask = 0x3F;
 
+            // Theoretically vram limited, but in practice 2^20 is the limit
+            let tier3_practical_descriptor_limit = 1 << 20;
+
+            let full_heap_count = match features.ResourceBindingTier {
+                d3d12::D3D12_RESOURCE_BINDING_TIER_1 => {
+                    d3d12::D3D12_MAX_SHADER_VISIBLE_DESCRIPTOR_HEAP_SIZE_TIER_1
+                }
+                d3d12::D3D12_RESOURCE_BINDING_TIER_2 => {
+                    d3d12::D3D12_MAX_SHADER_VISIBLE_DESCRIPTOR_HEAP_SIZE_TIER_2
+                }
+                d3d12::D3D12_RESOURCE_BINDING_TIER_3 => tier3_practical_descriptor_limit,
+                _ => unreachable!(),
+            } as _;
+
+            let uav_limit = match features.ResourceBindingTier {
+                d3d12::D3D12_RESOURCE_BINDING_TIER_1 => 8, // conservative, is 64 on feature level 11.1
+                d3d12::D3D12_RESOURCE_BINDING_TIER_2 => 64,
+                d3d12::D3D12_RESOURCE_BINDING_TIER_3 => tier3_practical_descriptor_limit,
+                _ => unreachable!(),
+            } as _;
+
             let physical_device = PhysicalDevice {
                 library: Arc::clone(&self.library),
                 adapter,
@@ -1089,18 +1136,54 @@ impl hal::Instance<Backend> for Instance {
                     Features::MULTI_DRAW_INDIRECT |
                     Features::FORMAT_BC |
                     Features::INSTANCE_RATE |
+                    Features::DEPTH_CLAMP |
                     Features::SAMPLER_MIP_LOD_BIAS |
                     Features::SAMPLER_ANISOTROPY |
                     Features::TEXTURE_DESCRIPTOR_ARRAY |
                     Features::SAMPLER_MIRROR_CLAMP_EDGE |
                     Features::NDC_Y_UP |
+                    Features::SHADER_SAMPLED_IMAGE_ARRAY_DYNAMIC_INDEXING |
+                    Features::SHADER_STORAGE_IMAGE_ARRAY_DYNAMIC_INDEXING |
                     Features::SAMPLED_TEXTURE_DESCRIPTOR_INDEXING |
                     Features::STORAGE_TEXTURE_DESCRIPTOR_INDEXING |
                     Features::UNSIZED_DESCRIPTOR_ARRAY |
                     Features::DRAW_INDIRECT_COUNT,
                 hints:
                     Hints::BASE_VERTEX_INSTANCE_DRAWING,
-                limits: Limits { // TODO
+                limits: Limits {
+                    //TODO: verify all of these not linked to constants
+                    max_bound_descriptor_sets: MAX_DESCRIPTOR_SETS as u16,
+                    max_descriptor_set_uniform_buffers_dynamic: 8,
+                    max_descriptor_set_storage_buffers_dynamic: 4,
+                    max_descriptor_set_sampled_images: full_heap_count,
+                    max_descriptor_set_storage_buffers: uav_limit,
+                    max_descriptor_set_storage_images: uav_limit,
+                    max_descriptor_set_uniform_buffers: full_heap_count,
+                    max_descriptor_set_samplers: d3d12::D3D12_MAX_SHADER_VISIBLE_SAMPLER_HEAP_SIZE as _,
+                    max_per_stage_descriptor_sampled_images: match features.ResourceBindingTier {
+                        d3d12::D3D12_RESOURCE_BINDING_TIER_1 => 128,
+                        d3d12::D3D12_RESOURCE_BINDING_TIER_2
+                        | d3d12::D3D12_RESOURCE_BINDING_TIER_3
+                        | _ => full_heap_count,
+                    } as _,
+                    max_per_stage_descriptor_samplers: match features.ResourceBindingTier {
+                        d3d12::D3D12_RESOURCE_BINDING_TIER_1 => 16,
+                        d3d12::D3D12_RESOURCE_BINDING_TIER_2
+                        | d3d12::D3D12_RESOURCE_BINDING_TIER_3
+                        | _ => d3d12::D3D12_MAX_SHADER_VISIBLE_SAMPLER_HEAP_SIZE
+                    } as _,
+                    max_per_stage_descriptor_storage_buffers: uav_limit,
+                    max_per_stage_descriptor_storage_images: uav_limit,
+                    max_per_stage_descriptor_uniform_buffers: match features.ResourceBindingTier {
+                        d3d12::D3D12_RESOURCE_BINDING_TIER_1
+                        | d3d12::D3D12_RESOURCE_BINDING_TIER_2 => d3d12::D3D12_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT,
+                        d3d12::D3D12_RESOURCE_BINDING_TIER_3
+                        | _ => full_heap_count as _,
+                    } as _,
+                    max_uniform_buffer_range: (d3d12::D3D12_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16) as _,
+                    max_storage_buffer_range: !0,
+                    // Is actually 256, but need space for the descriptors in there, so leave at 128 to discourage explosions
+                    max_push_constants_size: 128,
                     max_image_1d_size: d3d12::D3D12_REQ_TEXTURE1D_U_DIMENSION as _,
                     max_image_2d_size: d3d12::D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION as _,
                     max_image_3d_size: d3d12::D3D12_REQ_TEXTURE3D_U_V_OR_W_DIMENSION as _,
@@ -1116,14 +1199,15 @@ impl hal::Instance<Backend> for Instance {
                         depth: 1,
                     },
                     max_compute_work_group_count: [
+                        d3d12::D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION,
+                        d3d12::D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION,
+                        d3d12::D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION,
+                    ],
+                    max_compute_work_group_invocations: d3d12::D3D12_CS_THREAD_GROUP_MAX_THREADS_PER_GROUP as _,
+                    max_compute_work_group_size: [
                         d3d12::D3D12_CS_THREAD_GROUP_MAX_X,
                         d3d12::D3D12_CS_THREAD_GROUP_MAX_Y,
                         d3d12::D3D12_CS_THREAD_GROUP_MAX_Z,
-                    ],
-                    max_compute_work_group_size: [
-                        d3d12::D3D12_CS_THREAD_GROUP_MAX_THREADS_PER_GROUP,
-                        1, //TODO
-                        1, //TODO
                     ],
                     max_vertex_input_attributes: d3d12::D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT as _,
                     max_vertex_input_bindings: 31, //TODO
@@ -1131,8 +1215,8 @@ impl hal::Instance<Backend> for Instance {
                     max_vertex_input_binding_stride: d3d12::D3D12_REQ_MULTI_ELEMENT_STRUCTURE_SIZE_IN_BYTES as _,
                     max_vertex_output_components: 16, // TODO
                     min_texel_buffer_offset_alignment: 1, // TODO
-                    min_uniform_buffer_offset_alignment: 256, // Required alignment for CBVs
-                    min_storage_buffer_offset_alignment: 1, // TODO
+                    min_uniform_buffer_offset_alignment: d3d12::D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT as _,
+                    min_storage_buffer_offset_alignment: 4, // TODO
                     framebuffer_color_sample_counts: sample_count_mask,
                     framebuffer_depth_sample_counts: sample_count_mask,
                     framebuffer_stencil_sample_counts: sample_count_mask,
@@ -1192,9 +1276,7 @@ impl hal::Backend for Backend {
     type Instance = Instance;
     type PhysicalDevice = PhysicalDevice;
     type Device = Device;
-
     type Surface = window::Surface;
-    type Swapchain = window::Swapchain;
 
     type QueueFamily = QueueFamily;
     type CommandQueue = CommandQueue;
@@ -1258,7 +1340,7 @@ impl FormatProperties {
     fn new(device: native::Device) -> Self {
         let mut buf = Vec::with_capacity(f::NUM_FORMATS);
         buf.push(Mutex::new(Some(FormatInfo::default())));
-        for _ in 1 .. f::NUM_FORMATS {
+        for _ in 1..f::NUM_FORMATS {
             buf.push(Mutex::new(None))
         }
         FormatProperties {
@@ -1273,6 +1355,7 @@ impl FormatProperties {
             return info;
         }
         let format: f::Format = unsafe { mem::transmute(idx as u32) };
+        let is_compressed = format.surface_desc().is_compressed();
         let dxgi_format = match conv::map_format(format) {
             Some(format) => format,
             None => {
@@ -1303,7 +1386,7 @@ impl FormatProperties {
                         | d3d12::D3D12_FORMAT_SUPPORT1_TEXTURE2D
                         | d3d12::D3D12_FORMAT_SUPPORT1_TEXTURE3D
                         | d3d12::D3D12_FORMAT_SUPPORT1_TEXTURECUBE);
-            let can_linear = can_image && !format.surface_desc().is_compressed();
+            let can_linear = can_image && !is_compressed;
             if can_image {
                 props.optimal_tiling |= f::ImageFeature::SAMPLED | f::ImageFeature::BLIT_SRC;
             }
@@ -1357,25 +1440,31 @@ impl FormatProperties {
             props
         };
 
-        let mut sample_count_mask = 0;
-        for i in 0 .. 6 {
-            let mut data = d3d12::D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS {
-                Format: dxgi_format,
-                SampleCount: 1 << i,
-                Flags: 0,
-                NumQualityLevels: 0,
-            };
-            assert_eq!(winerror::S_OK, unsafe {
-                self.device.CheckFeatureSupport(
-                    d3d12::D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
-                    &mut data as *mut _ as *mut _,
-                    mem::size_of::<d3d12::D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS>() as _,
-                )
-            });
-            if data.NumQualityLevels != 0 {
-                sample_count_mask |= 1 << i;
+        let sample_count_mask = if is_compressed {
+            // just an optimization to avoid the queries
+            1
+        } else {
+            let mut mask = 0;
+            for i in 0..6 {
+                let mut data = d3d12::D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS {
+                    Format: dxgi_format,
+                    SampleCount: 1 << i,
+                    Flags: 0,
+                    NumQualityLevels: 0,
+                };
+                assert_eq!(winerror::S_OK, unsafe {
+                    self.device.CheckFeatureSupport(
+                        d3d12::D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
+                        &mut data as *mut _ as *mut _,
+                        mem::size_of::<d3d12::D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS>() as _,
+                    )
+                });
+                if data.NumQualityLevels != 0 {
+                    mask |= 1 << i;
+                }
             }
-        }
+            mask
+        };
 
         let info = FormatInfo {
             properties,

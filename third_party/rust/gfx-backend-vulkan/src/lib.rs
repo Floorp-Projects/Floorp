@@ -14,6 +14,7 @@ use ash::extensions::{
     ext::{DebugReport, DebugUtils},
     khr::DrawIndirectCount,
 };
+use ash::extensions::{khr::Swapchain, nv::MeshShader};
 use ash::version::{DeviceV1_0, EntryV1_0, InstanceV1_0};
 use ash::vk;
 #[cfg(not(feature = "use-rtld-next"))]
@@ -22,15 +23,11 @@ use ash::{Entry, LoadingError};
 use hal::{
     adapter,
     device::{CreationError as DeviceCreationError, DeviceLost, OutOfMemory, SurfaceLost},
-    format,
-    image,
-    memory,
+    format, image, memory,
     pso::{PatchSize, PipelineStage},
     queue,
-    window::{PresentError, Suboptimal, SwapImageIndex},
-    Features,
-    Hints,
-    Limits,
+    window::{PresentError, Suboptimal},
+    Features, Hints, Limits,
 };
 
 use std::borrow::{Borrow, Cow};
@@ -88,6 +85,8 @@ lazy_static! {
         CStr::from_bytes_with_nul(b"VK_AMD_negative_viewport_height\0").unwrap();
     static ref KHR_MAINTENANCE1: &'static CStr =
         CStr::from_bytes_with_nul(b"VK_KHR_maintenance1\0").unwrap();
+    static ref KHR_MAINTENANCE3: &'static CStr =
+        CStr::from_bytes_with_nul(b"VK_KHR_maintenance3\0").unwrap();
     static ref KHR_SAMPLER_MIRROR_MIRROR_CLAMP_TO_EDGE : &'static CStr =
         CStr::from_bytes_with_nul(b"VK_KHR_sampler_mirror_clamp_to_edge\0").unwrap();
     static ref KHR_GET_PHYSICAL_DEVICE_PROPERTIES2: &'static CStr =
@@ -96,6 +95,7 @@ lazy_static! {
         CStr::from_bytes_with_nul(b"VK_KHR_draw_indirect_count\0").unwrap();
     static ref EXT_DESCRIPTOR_INDEXING: &'static CStr =
         CStr::from_bytes_with_nul(b"VK_EXT_descriptor_indexing\0").unwrap();
+    static ref MESH_SHADER: &'static CStr = MeshShader::name();
 }
 
 #[cfg(not(feature = "use-rtld-next"))]
@@ -368,12 +368,10 @@ impl hal::Instance<Backend> for Instance {
                 hal::UnsupportedBackend
             })?;
 
-        let instance_layers = entry
-            .enumerate_instance_layer_properties()
-            .map_err(|e| {
-                info!("Unable to enumerate instance layers: {:?}", e);
-                hal::UnsupportedBackend
-            })?;
+        let instance_layers = entry.enumerate_instance_layer_properties().map_err(|e| {
+            info!("Unable to enumerate instance layers: {:?}", e);
+            hal::UnsupportedBackend
+        })?;
 
         // Check our extensions against the available extensions
         let extensions = SURFACE_EXTENSIONS
@@ -427,7 +425,7 @@ impl hal::Instance<Backend> for Instance {
                 enabled_layer_count: layers.len() as _,
                 pp_enabled_layer_names: str_pointers.as_ptr(),
                 enabled_extension_count: extensions.len() as _,
-                pp_enabled_extension_names: str_pointers[layers.len() ..].as_ptr(),
+                pp_enabled_extension_names: str_pointers[layers.len()..].as_ptr(),
             };
 
             unsafe { entry.create_instance(&create_info, None) }.map_err(|e| {
@@ -441,7 +439,9 @@ impl hal::Instance<Backend> for Instance {
             .find(|&&ext| ext == *KHR_GET_PHYSICAL_DEVICE_PROPERTIES2)
             .map(|_| {
                 vk::KhrGetPhysicalDeviceProperties2Fn::load(|name| unsafe {
-                    std::mem::transmute(entry.get_instance_proc_addr(instance.handle(), name.as_ptr()))
+                    std::mem::transmute(
+                        entry.get_instance_proc_addr(instance.handle(), name.as_ptr()),
+                    )
                 })
             });
 
@@ -484,7 +484,11 @@ impl hal::Instance<Backend> for Instance {
         let debug_messenger = None;
 
         Ok(Instance {
-            raw: Arc::new(RawInstance{ inner: instance, debug_messenger, get_physical_device_properties }),
+            raw: Arc::new(RawInstance {
+                inner: instance,
+                debug_messenger,
+                get_physical_device_properties,
+            }),
             extensions,
         })
     }
@@ -502,7 +506,8 @@ impl hal::Instance<Backend> for Instance {
             .into_iter()
             .map(|device| {
                 let extensions =
-                    unsafe { self.raw.inner.enumerate_device_extension_properties(device) }.unwrap();
+                    unsafe { self.raw.inner.enumerate_device_extension_properties(device) }
+                        .unwrap();
                 let properties = unsafe { self.raw.inner.get_physical_device_properties(device) };
                 let info = adapter::AdapterInfo {
                     name: unsafe {
@@ -531,12 +536,11 @@ impl hal::Instance<Backend> for Instance {
                     handle: device,
                     extensions,
                     properties,
-                    known_memory_flags:
-                        vk::MemoryPropertyFlags::DEVICE_LOCAL |
-                        vk::MemoryPropertyFlags::HOST_VISIBLE |
-                        vk::MemoryPropertyFlags::HOST_COHERENT |
-                        vk::MemoryPropertyFlags::HOST_CACHED |
-                        vk::MemoryPropertyFlags::LAZILY_ALLOCATED,
+                    known_memory_flags: vk::MemoryPropertyFlags::DEVICE_LOCAL
+                        | vk::MemoryPropertyFlags::HOST_VISIBLE
+                        | vk::MemoryPropertyFlags::HOST_COHERENT
+                        | vk::MemoryPropertyFlags::HOST_CACHED
+                        | vk::MemoryPropertyFlags::LAZILY_ALLOCATED,
                 };
                 let queue_families = unsafe {
                     self.raw
@@ -568,7 +572,12 @@ impl hal::Instance<Backend> for Instance {
         use raw_window_handle::RawWindowHandle;
 
         match has_handle.raw_window_handle() {
-            #[cfg(all(unix, not(target_os = "android"), not(target_os = "macos")))]
+            #[cfg(all(
+                unix,
+                not(target_os = "android"),
+                not(target_os = "macos"),
+                not(target_os = "solaris")
+            ))]
             RawWindowHandle::Wayland(handle)
                 if self
                     .extensions
@@ -580,7 +589,8 @@ impl hal::Instance<Backend> for Instance {
                 feature = "x11",
                 unix,
                 not(target_os = "android"),
-                not(target_os = "macos")
+                not(target_os = "macos"),
+                not(target_os = "solaris")
             ))]
             RawWindowHandle::Xlib(handle)
                 if self
@@ -672,6 +682,7 @@ impl fmt::Debug for PhysicalDevice {
 pub struct DeviceCreationFeatures {
     core: vk::PhysicalDeviceFeatures,
     descriptor_indexing: Option<vk::PhysicalDeviceDescriptorIndexingFeaturesEXT>,
+    mesh_shaders: Option<vk::PhysicalDeviceMeshShaderFeaturesNV>,
 }
 
 impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
@@ -696,7 +707,11 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             return Err(DeviceCreationError::MissingFeature);
         }
 
-        let maintenance_level = if self.supports_extension(*KHR_MAINTENANCE1) { 1 } else { 0 };
+        let maintenance_level = if self.supports_extension(*KHR_MAINTENANCE1) {
+            1
+        } else {
+            0
+        };
         let mut enabled_features = conv::map_device_features(requested_features);
         let enabled_extensions = DEVICE_EXTENSIONS
             .iter()
@@ -708,24 +723,43 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
                     None
                 },
             )
+            .chain(match maintenance_level {
+                0 => None,
+                1 => Some(*KHR_MAINTENANCE1),
+                _ => unreachable!(),
+            })
             .chain(
-                match maintenance_level {
-                    0 => None,
-                    1 => Some(*KHR_MAINTENANCE1),
-                    _ => unreachable!(),
-                }
-            ).chain(if requested_features.contains(Features::DRAW_INDIRECT_COUNT) {
-                Some(*KHR_DRAW_INDIRECT_COUNT)
-            } else {
-                None
-            });
+                if requested_features.intersects(
+                    Features::SAMPLED_TEXTURE_DESCRIPTOR_INDEXING
+                        | Features::STORAGE_TEXTURE_DESCRIPTOR_INDEXING
+                        | Features::UNSIZED_DESCRIPTOR_ARRAY,
+                ) {
+                    vec![*KHR_MAINTENANCE3, *EXT_DESCRIPTOR_INDEXING]
+                } else {
+                    vec![]
+                },
+            )
+            .chain(
+                if requested_features.intersects(Features::TASK_SHADER | Features::MESH_SHADER) {
+                    Some(*MESH_SHADER)
+                } else {
+                    None
+                },
+            )
+            .chain(
+                if requested_features.contains(Features::DRAW_INDIRECT_COUNT) {
+                    Some(*KHR_DRAW_INDIRECT_COUNT)
+                } else {
+                    None
+                },
+            );
 
         let valid_ash_memory_types = {
-            let mem_properties = self.instance
+            let mem_properties = self
+                .instance
                 .inner
                 .get_physical_device_memory_properties(self.handle);
-            mem_properties
-                .memory_types[.. mem_properties.memory_type_count as usize]
+            mem_properties.memory_types[..mem_properties.memory_type_count as usize]
                 .iter()
                 .enumerate()
                 .fold(0, |u, (i, mem)| {
@@ -748,8 +782,15 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
                 .enabled_extension_names(&str_pointers)
                 .enabled_features(&enabled_features.core);
 
-            let info = if let Some(ref mut descriptor_indexing) = enabled_features.descriptor_indexing {
-                info.push_next(descriptor_indexing)
+            let info =
+                if let Some(ref mut descriptor_indexing) = enabled_features.descriptor_indexing {
+                    info.push_next(descriptor_indexing)
+                } else {
+                    info
+                };
+
+            let info = if let Some(ref mut mesh_shaders) = enabled_features.mesh_shaders {
+                info.push_next(mesh_shaders)
             } else {
                 info
             };
@@ -775,13 +816,14 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             }
         };
 
-        let swapchain_fn = vk::KhrSwapchainFn::load(|name| {
-            mem::transmute(
-                self.instance
-                    .inner
-                    .get_device_proc_addr(device_raw.handle(), name.as_ptr()),
-            )
-        });
+        let swapchain_fn = Swapchain::new(&self.instance.inner, &device_raw);
+
+        let mesh_fn =
+            if requested_features.intersects(Features::TASK_SHADER | Features::MESH_SHADER) {
+                Some(MeshShader::new(&self.instance.inner, &device_raw))
+            } else {
+                None
+            };
 
         let indirect_count_fn = if requested_features.contains(Features::DRAW_INDIRECT_COUNT) {
             Some(DrawIndirectCount::new(&self.instance.inner, &device_raw))
@@ -795,7 +837,8 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
                 features: requested_features,
                 instance: Arc::clone(&self.instance),
                 extension_fns: DeviceExtensionFunctions {
-                    draw_indirect_count: indirect_count_fn
+                    mesh_shaders: mesh_fn,
+                    draw_indirect_count: indirect_count_fn,
                 },
                 maintenance_level,
             }),
@@ -809,7 +852,7 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             .map(|&(family, ref priorities)| {
                 let mut family_raw =
                     queue::QueueGroup::new(queue::QueueFamilyId(family.index as usize));
-                for id in 0 .. priorities.len() {
+                for id in 0..priorities.len() {
                     let queue_raw = device_arc.raw.get_device_queue(family.index, id as _);
                     family_raw.add_queue(CommandQueue {
                         raw: Arc::new(queue_raw),
@@ -851,19 +894,21 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
         view_caps: image::ViewCapabilities,
     ) -> Option<image::FormatProperties> {
         let format_properties = unsafe {
-            self.instance.inner.get_physical_device_image_format_properties(
-                self.handle,
-                conv::map_format(format),
-                match dimensions {
-                    1 => vk::ImageType::TYPE_1D,
-                    2 => vk::ImageType::TYPE_2D,
-                    3 => vk::ImageType::TYPE_3D,
-                    _ => panic!("Unexpected image dimensionality: {}", dimensions),
-                },
-                conv::map_tiling(tiling),
-                conv::map_image_usage(usage),
-                conv::map_view_capabilities(view_caps),
-            )
+            self.instance
+                .inner
+                .get_physical_device_image_format_properties(
+                    self.handle,
+                    conv::map_format(format),
+                    match dimensions {
+                        1 => vk::ImageType::TYPE_1D,
+                        2 => vk::ImageType::TYPE_2D,
+                        3 => vk::ImageType::TYPE_3D,
+                        _ => panic!("Unexpected image dimensionality: {}", dimensions),
+                    },
+                    conv::map_tiling(tiling),
+                    conv::map_image_usage(usage),
+                    conv::map_view_capabilities(view_caps),
+                )
         };
 
         match format_properties {
@@ -892,31 +937,44 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
                 .inner
                 .get_physical_device_memory_properties(self.handle)
         };
-        let memory_heaps = mem_properties.memory_heaps
-            [.. mem_properties.memory_heap_count as usize]
+        let memory_heaps = mem_properties.memory_heaps[..mem_properties.memory_heap_count as usize]
             .iter()
             .map(|mem| mem.size)
             .collect();
-        let memory_types = mem_properties
-            .memory_types[.. mem_properties.memory_type_count as usize]
+        let memory_types = mem_properties.memory_types[..mem_properties.memory_type_count as usize]
             .iter()
-            .filter_map(|mem| { 
+            .filter_map(|mem| {
                 use crate::memory::Properties;
                 let mut properties = Properties::empty();
 
-                if mem.property_flags.contains(vk::MemoryPropertyFlags::DEVICE_LOCAL) {
+                if mem
+                    .property_flags
+                    .contains(vk::MemoryPropertyFlags::DEVICE_LOCAL)
+                {
                     properties |= Properties::DEVICE_LOCAL;
                 }
-                if mem.property_flags.contains(vk::MemoryPropertyFlags::HOST_VISIBLE) {
+                if mem
+                    .property_flags
+                    .contains(vk::MemoryPropertyFlags::HOST_VISIBLE)
+                {
                     properties |= Properties::CPU_VISIBLE;
                 }
-                if mem.property_flags.contains(vk::MemoryPropertyFlags::HOST_COHERENT) {
+                if mem
+                    .property_flags
+                    .contains(vk::MemoryPropertyFlags::HOST_COHERENT)
+                {
                     properties |= Properties::COHERENT;
                 }
-                if mem.property_flags.contains(vk::MemoryPropertyFlags::HOST_CACHED) {
+                if mem
+                    .property_flags
+                    .contains(vk::MemoryPropertyFlags::HOST_CACHED)
+                {
                     properties |= Properties::CPU_CACHED;
                 }
-                if mem.property_flags.contains(vk::MemoryPropertyFlags::LAZILY_ALLOCATED) {
+                if mem
+                    .property_flags
+                    .contains(vk::MemoryPropertyFlags::LAZILY_ALLOCATED)
+                {
                     properties |= Properties::LAZILY_ALLOCATED;
                 }
 
@@ -926,10 +984,12 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
                         heap_index: mem.heap_index as usize,
                     })
                 } else {
-                    warn!("Skipping memory type with unknown flags {:?}", mem.property_flags);
+                    warn!(
+                        "Skipping memory type with unknown flags {:?}",
+                        mem.property_flags
+                    );
                     None
                 }
-                
             })
             .collect();
 
@@ -949,22 +1009,34 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
                     == info::intel::DEVICE_SKY_LAKE_MASK);
 
         let mut descriptor_indexing_features = None;
-        let features = if let Some(ref get_device_properties) = self.instance.get_physical_device_properties {
+        let features = if let Some(ref get_device_properties) =
+            self.instance.get_physical_device_properties
+        {
             let features = vk::PhysicalDeviceFeatures::builder().build();
-            let mut features2 = vk::PhysicalDeviceFeatures2KHR::builder().features(features).build();
+            let mut features2 = vk::PhysicalDeviceFeatures2KHR::builder()
+                .features(features)
+                .build();
 
             // Add extension infos to the p_next chain
             if self.supports_extension(*EXT_DESCRIPTOR_INDEXING) {
-                descriptor_indexing_features = Some(vk::PhysicalDeviceDescriptorIndexingFeaturesEXT::builder().build());
+                descriptor_indexing_features =
+                    Some(vk::PhysicalDeviceDescriptorIndexingFeaturesEXT::builder().build());
 
                 let mut_ref = descriptor_indexing_features.as_mut().unwrap();
                 mut_ref.p_next = mem::replace(&mut features2.p_next, mut_ref as *mut _ as *mut _);
             }
 
-            unsafe { get_device_properties.get_physical_device_features2_khr(self.handle, &mut features2 as *mut _); }
+            unsafe {
+                get_device_properties
+                    .get_physical_device_features2_khr(self.handle, &mut features2 as *mut _);
+            }
             features2.features
         } else {
-            unsafe { self.instance.inner.get_physical_device_features(self.handle) }
+            unsafe {
+                self.instance
+                    .inner
+                    .get_physical_device_features(self.handle)
+            }
         };
 
         let mut bits = Features::empty()
@@ -1162,6 +1234,10 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
         if features.inherited_queries != 0 {
             bits |= Features::INHERITED_QUERIES;
         }
+        if self.supports_extension(*MESH_SHADER) {
+            bits |= Features::TASK_SHADER;
+            bits |= Features::MESH_SHADER
+        }
 
         bits
     }
@@ -1271,6 +1347,22 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             max_uniform_buffer_range: limits.max_uniform_buffer_range as _,
             min_memory_map_alignment: limits.min_memory_map_alignment,
             standard_sample_locations: limits.standard_sample_locations == ash::vk::TRUE,
+
+            // TODO: Implement Limits for Mesh Shaders
+            //       Depends on VkPhysicalDeviceMeshShaderPropertiesNV which depends on VkPhysicalProperties2
+            max_draw_mesh_tasks_count: 0,
+            max_task_work_group_invocations: 0,
+            max_task_work_group_size: [0; 3],
+            max_task_total_memory_size: 0,
+            max_task_output_count: 0,
+            max_mesh_work_group_invocations: 0,
+            max_mesh_work_group_size: [0; 3],
+            max_mesh_total_memory_size: 0,
+            max_mesh_output_vertices: 0,
+            max_mesh_output_primitives: 0,
+            max_mesh_multiview_view_count: 0,
+            mesh_output_per_vertex_granularity: 0,
+            mesh_output_per_primitive_granularity: 0,
         }
     }
 
@@ -1317,11 +1409,11 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             return false;
         }
 
-        if self.properties.pipeline_cache_uuid != cache[16 .. 16 + vk::UUID_SIZE] {
+        if self.properties.pipeline_cache_uuid != cache[16..16 + vk::UUID_SIZE] {
             warn!(
                 "Pipeline cache UUID mismatch. Device: {:?}, cache: {:?}.",
                 self.properties.pipeline_cache_uuid,
-                &cache[16 .. 16 + vk::UUID_SIZE],
+                &cache[16..16 + vk::UUID_SIZE],
             );
             return false;
         }
@@ -1330,6 +1422,7 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
 }
 
 struct DeviceExtensionFunctions {
+    mesh_shaders: Option<MeshShader>,
     draw_indirect_count: Option<DrawIndirectCount>,
 }
 
@@ -1373,7 +1466,7 @@ pub type RawCommandQueue = Arc<vk::Queue>;
 pub struct CommandQueue {
     raw: RawCommandQueue,
     device: Arc<RawDevice>,
-    swapchain_fn: vk::KhrSwapchainFn,
+    swapchain_fn: Swapchain,
 }
 
 impl fmt::Debug for CommandQueue {
@@ -1436,57 +1529,7 @@ impl queue::CommandQueue<Backend> for CommandQueue {
         assert_eq!(Ok(()), result);
     }
 
-    unsafe fn present<'a, W, Is, S, Iw>(
-        &mut self,
-        swapchains: Is,
-        wait_semaphores: Iw,
-    ) -> Result<Option<Suboptimal>, PresentError>
-    where
-        W: 'a + Borrow<window::Swapchain>,
-        Is: IntoIterator<Item = (&'a W, SwapImageIndex)>,
-        S: 'a + Borrow<native::Semaphore>,
-        Iw: IntoIterator<Item = &'a S>,
-    {
-        let semaphores = wait_semaphores
-            .into_iter()
-            .map(|sem| sem.borrow().0)
-            .collect::<Vec<_>>();
-
-        let mut frames = Vec::new();
-        let mut vk_swapchains = Vec::new();
-        for (swapchain, index) in swapchains {
-            vk_swapchains.push(swapchain.borrow().raw);
-            frames.push(index);
-        }
-
-        let info = vk::PresentInfoKHR {
-            s_type: vk::StructureType::PRESENT_INFO_KHR,
-            p_next: ptr::null(),
-            wait_semaphore_count: semaphores.len() as _,
-            p_wait_semaphores: semaphores.as_ptr(),
-            swapchain_count: vk_swapchains.len() as _,
-            p_swapchains: vk_swapchains.as_ptr(),
-            p_image_indices: frames.as_ptr(),
-            p_results: ptr::null_mut(),
-        };
-
-        match self.swapchain_fn.queue_present_khr(*self.raw, &info) {
-            vk::Result::SUCCESS => Ok(None),
-            vk::Result::SUBOPTIMAL_KHR => Ok(Some(Suboptimal)),
-            vk::Result::ERROR_OUT_OF_HOST_MEMORY => {
-                Err(PresentError::OutOfMemory(OutOfMemory::Host))
-            }
-            vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => {
-                Err(PresentError::OutOfMemory(OutOfMemory::Device))
-            }
-            vk::Result::ERROR_DEVICE_LOST => Err(PresentError::DeviceLost(DeviceLost)),
-            vk::Result::ERROR_OUT_OF_DATE_KHR => Err(PresentError::OutOfDate),
-            vk::Result::ERROR_SURFACE_LOST_KHR => Err(PresentError::SurfaceLost(SurfaceLost)),
-            _ => panic!("Failed to present frame"),
-        }
-    }
-
-    unsafe fn present_surface(
+    unsafe fn present(
         &mut self,
         surface: &mut window::Surface,
         image: window::SurfaceImage,
@@ -1524,21 +1567,18 @@ impl queue::CommandQueue<Backend> for CommandQueue {
             p_results: ptr::null_mut(),
         };
 
-        match self
-            .swapchain_fn
-            .queue_present_khr(*self.raw, &present_info)
-        {
-            vk::Result::SUCCESS => Ok(None),
-            vk::Result::SUBOPTIMAL_KHR => Ok(Some(Suboptimal)),
-            vk::Result::ERROR_OUT_OF_HOST_MEMORY => {
+        match self.swapchain_fn.queue_present(*self.raw, &present_info) {
+            Ok(true) => Ok(None),
+            Ok(false) => Ok(Some(Suboptimal)),
+            Err(vk::Result::ERROR_OUT_OF_HOST_MEMORY) => {
                 Err(PresentError::OutOfMemory(OutOfMemory::Host))
             }
-            vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => {
+            Err(vk::Result::ERROR_OUT_OF_DEVICE_MEMORY) => {
                 Err(PresentError::OutOfMemory(OutOfMemory::Device))
             }
-            vk::Result::ERROR_DEVICE_LOST => Err(PresentError::DeviceLost(DeviceLost)),
-            vk::Result::ERROR_OUT_OF_DATE_KHR => Err(PresentError::OutOfDate),
-            vk::Result::ERROR_SURFACE_LOST_KHR => Err(PresentError::SurfaceLost(SurfaceLost)),
+            Err(vk::Result::ERROR_DEVICE_LOST) => Err(PresentError::DeviceLost(DeviceLost)),
+            Err(vk::Result::ERROR_OUT_OF_DATE_KHR) => Err(PresentError::OutOfDate),
+            Err(vk::Result::ERROR_SURFACE_LOST_KHR) => Err(PresentError::SurfaceLost(SurfaceLost)),
             _ => panic!("Failed to present frame"),
         }
     }
@@ -1566,9 +1606,7 @@ impl hal::Backend for Backend {
     type Instance = Instance;
     type PhysicalDevice = PhysicalDevice;
     type Device = Device;
-
     type Surface = window::Surface;
-    type Swapchain = window::Swapchain;
 
     type QueueFamily = QueueFamily;
     type CommandQueue = CommandQueue;
