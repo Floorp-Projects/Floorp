@@ -586,12 +586,6 @@ findbar {
   overflow-x: hidden;
 }
 
-/*********** tabmodalprompt ************/
-tabmodalprompt {
-  overflow: hidden;
-  text-shadow: none;
-}
-
 /* Some elements that in HTML blocks should be inline-level by default */
 label, button, image {
   display: -moz-inline-box;
