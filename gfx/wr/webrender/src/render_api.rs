@@ -1502,5 +1502,6 @@ pub struct MemoryReport {
     pub render_target_textures: usize,
     pub texture_cache_textures: usize,
     pub depth_target_textures: usize,
+    pub texture_upload_pbos: usize,
     pub swap_chain: usize,
 }
