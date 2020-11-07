@@ -2494,6 +2494,26 @@ function* testContinuousTrustedEvents()
         horizontal: { expected: true,  preventDefault: true,  detail: gHorizontalLine },
         vertical:   { expected: true,  preventDefault: true,  detail: gLineHeight } },
     },
+    { description: "modifier key tests without content checking mode (alt, line)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
+               isCustomizedByPrefs: false,
+               shiftKey: false, ctrlKey: false, altKey: true, metaKey: false },
+      wheel: {
+        expected: true, preventDefault: false,
+        skipDeltaModeCheck: true,
+        deltaX: SpecialPowers.getIntPref("dom.event.wheel-deltaMode-lines-to-pixel-scale"),
+        deltaY: SpecialPowers.getIntPref("dom.event.wheel-deltaMode-lines-to-pixel-scale"),
+        deltaZ: SpecialPowers.getIntPref("dom.event.wheel-deltaMode-lines-to-pixel-scale"),
+      },
+      DOMMouseScroll: {
+        horizontal: { expected: true,  preventDefault: false, detail: 1 },
+        vertical:   { expected: true,  preventDefault: false, detail: 1 } },
+      MozMousePixelScroll: {
+        horizontal: { expected: true,  preventDefault: true,  detail: gHorizontalLine },
+        vertical:   { expected: true,  preventDefault: true,  detail: gLineHeight } },
+    },
     { description: "modifier key tests (alt, page)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
@@ -3058,14 +3078,24 @@ function* testContinuousTrustedEvents()
 
     is(aEvent.target, gScrolledElement,
        description + "target was invalid");
-    is(aEvent.deltaMode, currentWheelEventTest.event.deltaMode,
-       description + "deltaMode was invalid");
-    is(aEvent.deltaX, currentWheelEventTest.wheel.deltaX,
-       description + "deltaX was invalid");
-    is(aEvent.deltaY, currentWheelEventTest.wheel.deltaY,
-       description + "deltaY was invalid");
-    is(aEvent.deltaZ, currentWheelEventTest.wheel.deltaZ,
-       description + "deltaZ was invalid");
+    if (!currentWheelEventTest.wheel.skipDeltaModeCheck) {
+      is(aEvent.deltaMode, currentWheelEventTest.event.deltaMode,
+         description + "deltaMode was invalid");
+    }
+    is(SpecialPowers.wrap(aEvent).deltaMode, currentWheelEventTest.event.deltaMode,
+       description + "deltaMode is raw value from privileged script");
+    for (let prop of ["deltaX", "deltaY", "deltaZ"]) {
+      is(aEvent[prop], currentWheelEventTest.wheel[prop],
+         description + prop + " was invalid");
+      if (currentWheelEventTest.wheel.skipDeltaModeCheck) {
+        is(aEvent.deltaMode, WheelEvent.DOM_DELTA_PIXEL,
+           description + "deltaMode should become pixels for line scrolling if unchecked by content")
+        if (aEvent[prop] != 0) {
+          isnot(aEvent[prop], SpecialPowers.wrap(aEvent)[prop],
+                description + "should keep returning raw value for privileged script");
+        }
+      }
+    }
     is(aEvent.shiftKey, currentWheelEventTest.event.shiftKey,
        description + "shiftKey was invalid");
     is(aEvent.ctrlKey, currentWheelEventTest.event.ctrlKey,
@@ -3225,6 +3255,12 @@ function* testBody()
 function runTests()
 {
   SpecialPowers.pushPrefEnv({"set": [
+    // FIXME(emilio): This test is broken in HiDPI, unclear if
+    // MozMousePixelScroll is not properly converting to CSS pixels, or
+    // whether sendWheelAndWait expectes device rather than CSS pixels, or
+    // something else.
+    ["layout.css.devPixelsPerPx", 1.0],
+
     ["mousewheel.transaction.timeout", 100000],
     ["mousewheel.default.delta_multiplier_x", 100],
     ["mousewheel.default.delta_multiplier_y", 100],
