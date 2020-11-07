@@ -421,7 +421,6 @@ struct ReflowInput : public SizeComputationInput {
   // XXX this will need to change when we make mComputedOffsets logical;
   // we won't be able to return a reference for the physical offsets
   const nsMargin& ComputedPhysicalOffsets() const { return mComputedOffsets; }
-  nsMargin& ComputedPhysicalOffsets() { return mComputedOffsets; }
 
   LogicalMargin ComputedLogicalOffsets(mozilla::WritingMode aWM) const {
     return LogicalMargin(aWM, mComputedOffsets);

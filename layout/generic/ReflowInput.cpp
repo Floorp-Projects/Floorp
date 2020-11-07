@@ -2093,7 +2093,7 @@ void ReflowInput::InitConstraints(
     // Override mComputedMargin since reflow roots start from the
     // frame's boundary, which is inside the margin.
     SetComputedLogicalMargin(wm, LogicalMargin(wm));
-    ComputedPhysicalOffsets().SizeTo(0, 0, 0, 0);
+    SetComputedLogicalOffsets(wm, LogicalMargin(wm));
 
     const auto borderPadding = ComputedLogicalBorderPadding(wm);
     ComputedISize() = AvailableISize() - borderPadding.IStartEnd(wm);
@@ -2206,7 +2206,7 @@ void ReflowInput::InitConstraints(
       SetComputedLogicalOffsets(cbwm, offsets);
     } else {
       // Initialize offsets to 0
-      ComputedPhysicalOffsets().SizeTo(0, 0, 0, 0);
+      SetComputedLogicalOffsets(wm, LogicalMargin(wm));
     }
 
     // Calculate the computed values for min and max properties.  Note that

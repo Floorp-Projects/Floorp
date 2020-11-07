@@ -859,26 +859,26 @@ static bool RecomputePosition(nsIFrame* aFrame) {
     // match the reflow code path.
     //
     // TODO(emilio): It'd be nice if this did logical math instead, but it seems
-    // to me the math should work out on vertical writing modes as well.
-    if (NS_AUTOOFFSET == reflowInput.ComputedPhysicalOffsets().left) {
-      reflowInput.ComputedPhysicalOffsets().left =
-          cbSize.width - reflowInput.ComputedPhysicalOffsets().right -
-          reflowInput.ComputedPhysicalMargin().right - size.width -
-          reflowInput.ComputedPhysicalMargin().left;
+    // to me the math should work out on vertical writing modes as well. See Bug
+    // 1675861 for some hints.
+    const nsMargin offset = reflowInput.ComputedPhysicalOffsets();
+    const nsMargin margin = reflowInput.ComputedPhysicalMargin();
+
+    nscoord left = offset.left;
+    if (left == NS_AUTOOFFSET) {
+      left =
+          cbSize.width - offset.right - margin.right - size.width - margin.left;
     }
 
-    if (NS_AUTOOFFSET == reflowInput.ComputedPhysicalOffsets().top) {
-      reflowInput.ComputedPhysicalOffsets().top =
-          cbSize.height - reflowInput.ComputedPhysicalOffsets().bottom -
-          reflowInput.ComputedPhysicalMargin().bottom - size.height -
-          reflowInput.ComputedPhysicalMargin().top;
+    nscoord top = offset.top;
+    if (top == NS_AUTOOFFSET) {
+      top = cbSize.height - offset.bottom - margin.bottom - size.height -
+            margin.top;
     }
 
     // Move the frame
-    nsPoint pos(parentBorder.left + reflowInput.ComputedPhysicalOffsets().left +
-                    reflowInput.ComputedPhysicalMargin().left,
-                parentBorder.top + reflowInput.ComputedPhysicalOffsets().top +
-                    reflowInput.ComputedPhysicalMargin().top);
+    nsPoint pos(parentBorder.left + left + margin.left,
+                parentBorder.top + top + margin.top);
     aFrame->SetPosition(pos);
 
     if (aFrame->IsInScrollAnchorChain()) {
