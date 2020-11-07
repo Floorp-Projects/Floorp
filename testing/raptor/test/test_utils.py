@@ -51,7 +51,7 @@ def test_write_yml_file():
     assert os.path.exists(yml_file)
 
     with open(yml_file, "r") as yml_in:
-        yml_loaded = yaml.load(yml_in)
+        yml_loaded = yaml.unsafe_load(yml_in)
         assert yml_loaded == yml_data
 
 
