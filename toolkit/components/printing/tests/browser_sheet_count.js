@@ -109,9 +109,7 @@ add_task(async function testSheetCountPageRange() {
     // Set page range to 2-3, sheet count should be 2.
     await helper.waitForPreview(() =>
       helper.dispatchSettingsChange({
-        printRange: helper.settings.kRangeSpecifiedPageRange,
-        startPageRange: 2,
-        endPageRange: 3,
+        pageRanges: [2, 3],
       })
     );
 

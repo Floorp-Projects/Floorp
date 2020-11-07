@@ -78,10 +78,8 @@ class nsPrintSettings : public nsIPrintSettings {
   nsIntMargin mEdge;
   nsIntMargin mUnwriteableMargin;
 
-  // scriptable data members
-  int16_t mPrintRange;
-  int32_t mStartPageNum;  // only used for ePrintRange_SpecifiedRange
-  int32_t mEndPageNum;
+  nsTArray<int32_t> mPageRanges;
+
   double mScaling;
   bool mPrintBGColors;  // print background colors
   bool mPrintBGImages;  // print background images

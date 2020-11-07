@@ -39,8 +39,7 @@ add_task(async function testRangeResetAfterScale() {
       helper.resolvePrint();
     });
     helper.assertPrintedWithSettings({
-      startPageRange: 1,
-      endPageRange: 1,
+      pageRanges: [1, 1],
       scaling: 0.1,
     });
   });
@@ -56,8 +55,8 @@ add_task(async function testInvalidRangeResetAfterDestinationChange() {
     let startPageRange = helper.get("custom-range-start");
 
     await helper.assertSettingsChanged(
-      { printRange: 0 },
-      { printRange: 1 },
+      { pageRanges: [] },
+      { pageRanges: [1, 1] },
       async () => {
         await helper.waitForPreview(() => changeAllToCustom(helper));
       }
@@ -65,7 +64,7 @@ add_task(async function testInvalidRangeResetAfterDestinationChange() {
 
     let rangeError = helper.get("error-invalid-start-range-overflow");
 
-    await helper.assertSettingsNotChanged({ startPageRange: 1 }, async () => {
+    await helper.assertSettingsNotChanged({ pageRanges: [1, 1] }, async () => {
       ok(rangeError.hidden, "Range error is hidden");
       await helper.text(startPageRange, "9");
       await BrowserTestUtils.waitForAttributeRemoval("hidden", rangeError);

@@ -302,17 +302,28 @@ class PrintHelper {
     return this.win.PrintEventHandler.viewSettings;
   }
 
+  _assertMatches(a, b, msg) {
+    if (Array.isArray(a)) {
+      is(a.length, b.length, msg);
+      for (let i = 0; i < a.length; ++i) {
+        this._assertMatches(a[i], b[i], msg);
+      }
+      return;
+    }
+    is(a, b, msg);
+  }
+
   assertSettingsMatch(expected) {
     let { settings } = this;
     for (let [setting, value] of Object.entries(expected)) {
-      is(settings[setting], value, `${setting} matches`);
+      this._assertMatches(settings[setting], value, `${setting} matches`);
     }
   }
 
   assertPrintedWithSettings(expected) {
     ok(this._printedSettings, "Printed settings have been recorded");
     for (let [setting, value] of Object.entries(expected)) {
-      is(
+      this._assertMatches(
         this._printedSettings[setting],
         value,
         `${setting} matches printed setting`

@@ -5,6 +5,7 @@
 
 #include "nsPrintSettingsImpl.h"
 
+#include "prenv.h"
 #include "nsCoord.h"
 #include "nsPaper.h"
 #include "nsReadableUtils.h"
@@ -16,10 +17,7 @@
 NS_IMPL_ISUPPORTS(nsPrintSettings, nsIPrintSettings)
 
 nsPrintSettings::nsPrintSettings()
-    : mPrintRange(kRangeAllPages),
-      mStartPageNum(1),
-      mEndPageNum(1),
-      mScaling(1.0),
+    : mScaling(1.0),
       mPrintBGColors(false),
       mPrintBGImages(false),
       mIsCancelled(false),
@@ -103,6 +101,7 @@ NS_IMETHODIMP nsPrintSettings::GetPrintSession(
   NS_ADDREF(*aPrintSession);
   return NS_OK;
 }
+
 NS_IMETHODIMP nsPrintSettings::SetPrintSession(nsIPrintSession* aPrintSession) {
   // Clearing it by passing nullptr is not allowed. That's why we
   // use a weak ref so that it doesn't have to be cleared.
@@ -118,28 +117,7 @@ NS_IMETHODIMP nsPrintSettings::SetPrintSession(nsIPrintSession* aPrintSession) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrintSettings::GetStartPageRange(int32_t* aStartPageRange) {
-  // NS_ENSURE_ARG_POINTER(aStartPageRange);
-  *aStartPageRange = mStartPageNum;
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintSettings::SetStartPageRange(int32_t aStartPageRange) {
-  mStartPageNum = aStartPageRange;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsPrintSettings::GetEndPageRange(int32_t* aEndPageRange) {
-  // NS_ENSURE_ARG_POINTER(aEndPageRange);
-  *aEndPageRange = mEndPageNum;
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintSettings::SetEndPageRange(int32_t aEndPageRange) {
-  mEndPageNum = aEndPageRange;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsPrintSettings::GetPrintReversed(bool* aPrintReversed) {
-  // NS_ENSURE_ARG_POINTER(aPrintReversed);
   *aPrintReversed = mPrintReversed;
   return NS_OK;
 }
@@ -149,7 +127,6 @@ NS_IMETHODIMP nsPrintSettings::SetPrintReversed(bool aPrintReversed) {
 }
 
 NS_IMETHODIMP nsPrintSettings::GetPrintInColor(bool* aPrintInColor) {
-  // NS_ENSURE_ARG_POINTER(aPrintInColor);
   *aPrintInColor = mPrintInColor;
   return NS_OK;
 }
@@ -159,7 +136,6 @@ NS_IMETHODIMP nsPrintSettings::SetPrintInColor(bool aPrintInColor) {
 }
 
 NS_IMETHODIMP nsPrintSettings::GetOrientation(int32_t* aOrientation) {
-  NS_ENSURE_ARG_POINTER(aOrientation);
   *aOrientation = mOrientation;
   return NS_OK;
 }
@@ -453,16 +429,6 @@ NS_IMETHODIMP nsPrintSettings::SetPrintBGImages(bool aPrintBGImages) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrintSettings::GetPrintRange(int16_t* aPrintRange) {
-  NS_ENSURE_ARG_POINTER(aPrintRange);
-  *aPrintRange = mPrintRange;
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintSettings::SetPrintRange(int16_t aPrintRange) {
-  mPrintRange = aPrintRange;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsPrintSettings::GetTitle(nsAString& aTitle) {
   aTitle = mTitle;
   return NS_OK;
@@ -732,9 +698,35 @@ nsPrintSettings::GetEffectivePageSize(double* aWidth, double* aHeight) {
 }
 
 NS_IMETHODIMP
-nsPrintSettings::GetPageRanges(nsTArray<int32_t>& aPages) {
-  aPages.Clear();
+nsPrintSettings::SetPageRanges(const nsTArray<int32_t>& aPages) {
+  // Needs to be a set of (start, end) pairs.
+  if (aPages.Length() % 2 != 0) {
+    return NS_ERROR_FAILURE;
+  }
+  mPageRanges = aPages.Clone();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrintSettings::GetPageRanges(nsTArray<int32_t>& aPages) {
+  aPages = mPageRanges.Clone();
+  return NS_OK;
+}
+
+bool nsIPrintSettings::IsPageSkipped(int32_t aPageNum,
+                                     const nsTArray<int32_t>& aRanges) {
+  MOZ_RELEASE_ASSERT(aRanges.Length() % 2 == 0);
+  if (aRanges.IsEmpty()) {
+    return false;
+  }
+  for (size_t i = 0; i < aRanges.Length(); i += 2) {
+    if (aRanges[i] <= aPageNum && aPageNum <= aRanges[i + 1]) {
+      // The page is included in this piece of the custom range,
+      // so it's not skipped.
+      return false;
+    }
+  }
+  return true;
 }
 
 nsresult nsPrintSettings::_Clone(nsIPrintSettings** _retval) {
@@ -767,15 +759,13 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs) {
     return *this;
   }
 
-  mStartPageNum = rhs.mStartPageNum;
-  mEndPageNum = rhs.mEndPageNum;
+  mPageRanges = rhs.mPageRanges.Clone();
   mMargin = rhs.mMargin;
   mEdge = rhs.mEdge;
   mUnwriteableMargin = rhs.mUnwriteableMargin;
   mScaling = rhs.mScaling;
   mPrintBGColors = rhs.mPrintBGColors;
   mPrintBGImages = rhs.mPrintBGImages;
-  mPrintRange = rhs.mPrintRange;
   mTitle = rhs.mTitle;
   mURL = rhs.mURL;
   mIsCancelled = rhs.mIsCancelled;

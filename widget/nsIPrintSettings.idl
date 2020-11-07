@@ -16,7 +16,6 @@
  */
 native nsNativeIntMargin(nsIntMargin);
 [ref] native nsNativeIntMarginRef(nsIntMargin);
-[ref] native IntegerArray(nsTArray<int32_t>);
 
 interface nsIPrintSession;
 
@@ -61,10 +60,6 @@ interface nsIPrintSettings : nsISupports
   const unsigned long kInitSaveScaling        = 0x10000000;
 
   const unsigned long kInitSaveAll            = 0xFFFFFFFF;
-
-  /* Print Range Enums */
-  const long kRangeAllPages           = 0;
-  const long kRangeSpecifiedPageRange = 1;
 
   /* Justification Enums */
   const long kJustLeft   = 0;
@@ -118,9 +113,6 @@ interface nsIPrintSettings : nsISupports
    */
   [noscript] attribute nsIPrintSession printSession; /* We hold a weak reference */
 
-  attribute long    startPageRange;
-  attribute long    endPageRange;
-
   /**
    * The edge measurements define the positioning of the headers
    * and footers on the page. They're treated as an offset from the edges of
@@ -166,8 +158,6 @@ interface nsIPrintSettings : nsISupports
 
   /** Whether to only print the selected nodes */
   [infallible] attribute boolean printSelectionOnly;
-
-  attribute short   printRange;
 
   attribute AString title;
   attribute AString docURL;
@@ -270,9 +260,13 @@ interface nsIPrintSettings : nsISupports
    * ranges (start, end), must not overlap and must be in the
    * (startPageRange, endPageRange) scope.
    *
-   * If there are no print ranges the aPages array is cleared.
+   * If there are no print ranges the aPages array is empty.
    */
-  [noscript] void GetPageRanges(in IntegerArray aPages);
+  attribute Array<long> pageRanges;
+
+%{C++
+  static bool IsPageSkipped(int32_t aPageNum, const nsTArray<int32_t>& aRanges);
+%}
 };
 
 %{ C++

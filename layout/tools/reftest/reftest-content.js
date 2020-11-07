@@ -274,7 +274,7 @@ function printToPdf() {
     if (printRange) {
         if (printRange === 'selection') {
             isPrintSelection = true;
-        } else if (!/^[1-9]\d*-[1-9]\d*$/.test(printRange)) {
+        } else if (!printRange.split(',').every(range => /^[1-9]\d*-[1-9]\d*$/.test(range))) {
             SendException("invalid value for reftest-print-range");
             return;
         }

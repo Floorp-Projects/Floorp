@@ -48,7 +48,7 @@ nsPrintSettingsGTK::nsPrintSettingsGTK()
 }
 
 already_AddRefed<nsIPrintSettings> CreatePlatformPrintSettings(
-    const PrintSettingsInitializer& aSettings) {
+    const mozilla::PrintSettingsInitializer& aSettings) {
   RefPtr<nsPrintSettings> settings = new nsPrintSettingsGTK();
   settings->InitWithInitializer(aSettings);
   settings->SetDefaultFileName();
@@ -204,91 +204,26 @@ NS_IMETHODIMP nsPrintSettingsGTK::GetOutputFormat(int16_t* aOutputFormat) {
  * from the GTK objects rather than our own variables.
  */
 
-NS_IMETHODIMP nsPrintSettingsGTK::GetPrintRange(int16_t* aPrintRange) {
-  NS_ENSURE_ARG_POINTER(aPrintRange);
-
-  GtkPrintPages gtkRange = gtk_print_settings_get_print_pages(mPrintSettings);
-  if (gtkRange == GTK_PRINT_PAGES_RANGES)
-    *aPrintRange = kRangeSpecifiedPageRange;
-  else
-    *aPrintRange = kRangeAllPages;
-
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintSettingsGTK::SetPrintRange(int16_t aPrintRange) {
-  if (aPrintRange == kRangeSpecifiedPageRange)
-    gtk_print_settings_set_print_pages(mPrintSettings, GTK_PRINT_PAGES_RANGES);
-  else
-    gtk_print_settings_set_print_pages(mPrintSettings, GTK_PRINT_PAGES_ALL);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetStartPageRange(int32_t* aStartPageRange) {
-  gint ctRanges;
-  GtkPageRange* lstRanges =
-      gtk_print_settings_get_page_ranges(mPrintSettings, &ctRanges);
-
-  // Make sure we got a range.
-  if (ctRanges < 1) {
-    *aStartPageRange = 1;
-  } else {
-    // GTK supports multiple page ranges; gecko only supports 1. So find
-    // the lowest start page.
-    int32_t start(lstRanges[0].start);
-    for (gint ii = 1; ii < ctRanges; ii++) {
-      start = std::min(lstRanges[ii].start, start);
-    }
-    *aStartPageRange = start + 1;
+nsPrintSettingsGTK::SetPageRanges(const nsTArray<int32_t>& aRanges) {
+  if (aRanges.Length() % 2 != 0) {
+    return NS_ERROR_FAILURE;
   }
 
-  g_free(lstRanges);
-  return NS_OK;
-}
-NS_IMETHODIMP
-nsPrintSettingsGTK::SetStartPageRange(int32_t aStartPageRange) {
-  int32_t endRange;
-  GetEndPageRange(&endRange);
+  gtk_print_settings_set_print_pages(
+      mPrintSettings,
+      aRanges.IsEmpty() ? GTK_PRINT_PAGES_ALL : GTK_PRINT_PAGES_RANGES);
 
-  GtkPageRange gtkRange;
-  gtkRange.start = aStartPageRange - 1;
-  gtkRange.end = endRange - 1;
-
-  gtk_print_settings_set_page_ranges(mPrintSettings, &gtkRange, 1);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrintSettingsGTK::GetEndPageRange(int32_t* aEndPageRange) {
-  gint ctRanges;
-  GtkPageRange* lstRanges =
-      gtk_print_settings_get_page_ranges(mPrintSettings, &ctRanges);
-
-  if (ctRanges < 1) {
-    *aEndPageRange = 1;
-  } else {
-    int32_t end(lstRanges[0].end);
-    for (gint ii = 1; ii < ctRanges; ii++) {
-      end = std::max(lstRanges[ii].end, end);
-    }
-    *aEndPageRange = end + 1;
+  nsTArray<GtkPageRange> ranges;
+  ranges.SetCapacity(aRanges.Length() / 2);
+  for (size_t i = 0; i < aRanges.Length(); i += 2) {
+    GtkPageRange* gtkRange = ranges.AppendElement();
+    gtkRange->start = aRanges[i] - 1;
+    gtkRange->end = aRanges[i + 1] - 1;
   }
 
-  g_free(lstRanges);
-  return NS_OK;
-}
-NS_IMETHODIMP
-nsPrintSettingsGTK::SetEndPageRange(int32_t aEndPageRange) {
-  int32_t startRange;
-  GetStartPageRange(&startRange);
-
-  GtkPageRange gtkRange;
-  gtkRange.start = startRange - 1;
-  gtkRange.end = aEndPageRange - 1;
-
-  gtk_print_settings_set_page_ranges(mPrintSettings, &gtkRange, 1);
-
+  gtk_print_settings_set_page_ranges(mPrintSettings, ranges.Elements(),
+                                     ranges.Length());
   return NS_OK;
 }
 
@@ -406,7 +341,7 @@ nsPrintSettingsGTK::GetPrinterName(nsAString& aPrinter) {
       return NS_OK;
     }
   }
-  CopyUTF8toUTF16(MakeStringSpan(gtkPrintName), aPrinter);
+  CopyUTF8toUTF16(mozilla::MakeStringSpan(gtkPrintName), aPrinter);
   return NS_OK;
 }
 
@@ -668,17 +603,21 @@ nsPrintSettingsGTK::SetupSilentPrinting() {
 
 NS_IMETHODIMP
 nsPrintSettingsGTK::GetPageRanges(nsTArray<int32_t>& aPages) {
+  GtkPrintPages gtkRange = gtk_print_settings_get_print_pages(mPrintSettings);
+  if (gtkRange != GTK_PRINT_PAGES_RANGES) {
+    aPages.Clear();
+    return NS_OK;
+  }
+
   gint ctRanges;
   GtkPageRange* lstRanges =
       gtk_print_settings_get_page_ranges(mPrintSettings, &ctRanges);
 
   aPages.Clear();
 
-  if (ctRanges > 1) {
-    for (gint i = 0; i < ctRanges; i++) {
-      aPages.AppendElement(lstRanges[i].start + 1);
-      aPages.AppendElement(lstRanges[i].end + 1);
-    }
+  for (gint i = 0; i < ctRanges; i++) {
+    aPages.AppendElement(lstRanges[i].start + 1);
+    aPages.AppendElement(lstRanges[i].end + 1);
   }
 
   g_free(lstRanges);

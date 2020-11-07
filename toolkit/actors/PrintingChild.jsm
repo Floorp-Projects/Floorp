@@ -98,11 +98,7 @@ class PrintingChild extends JSWindowActorChild {
           BrowsingContext.get(data.browsingContextId),
           data.simplifiedMode,
           data.changingBrowsers,
-          data.lastUsedPrinterName,
-          data.outputFormat,
-          data.startPageRange,
-          data.endPageRange,
-          data.printRange
+          data.lastUsedPrinterName
         );
         break;
       }
@@ -332,11 +328,7 @@ class PrintingChild extends JSWindowActorChild {
     browsingContext,
     simplifiedMode,
     changingBrowsers,
-    lastUsedPrinterName,
-    outputFormat,
-    startPageRange,
-    endPageRange,
-    printRange
+    lastUsedPrinterName
   ) {
     const { docShell } = this;
 
@@ -349,16 +341,6 @@ class PrintingChild extends JSWindowActorChild {
         "print.tab_modal.enabled",
         false
       );
-
-      if (outputFormat == printSettings.kOutputFormatPDF) {
-        printSettings.outputFormat = printSettings.kOutputFormatPDF;
-        printSettings.printToFile = true;
-      }
-
-      // TODO: waiting on the print preview to be updated in Bug 1659005
-      printSettings.startPageRange = startPageRange;
-      printSettings.endPageRange = endPageRange;
-      printSettings.printRange = printRange;
 
       // If we happen to be on simplified mode, we need to set docURL in order
       // to generate header/footer content correctly, since simplified tab has

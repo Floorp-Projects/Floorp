@@ -219,19 +219,24 @@ static nsresult ShowNativePrintDialog(HWND aHWnd,
     prntdlg.Flags |= PD_NOSELECTION;
   }
 
-  int16_t printRangeType = nsIPrintSettings::kRangeAllPages;
-  aPrintSettings->GetPrintRange(&printRangeType);
-  // if there is a specified page range then enable the "Custom" radio button
-  if (printRangeType == nsIPrintSettings::kRangeSpecifiedPageRange) {
+  nsTArray<int32_t> pageRanges;
+  aPrintSettings->GetPageRanges(pageRanges);
+
+  // If there is a specified page range then enable the "Custom" radio button
+  if (!pageRanges.IsEmpty()) {
     prntdlg.Flags |= PD_PAGENUMS;
   }
 
-  int32_t pg = 1;
-  aPrintSettings->GetStartPageRange(&pg);
-  prntdlg.nFromPage = pg;
+  // TODO(emilio): Can we represent all the page ranges instead?
+  int32_t start = 1;
+  int32_t end = 1;
+  for (size_t i = 0; i < pageRanges.Length(); i += 2) {
+    start = std::min(start, pageRanges[i]);
+    end = std::max(end, pageRanges[i + 1]);
+  }
 
-  aPrintSettings->GetEndPageRange(&pg);
-  prntdlg.nToPage = pg;
+  prntdlg.nFromPage = start;
+  prntdlg.nToPage = end;
 
   prntdlg.nMinPage = 1;
   prntdlg.nMaxPage = 0xFFFF;
@@ -303,13 +308,14 @@ static nsresult ShowNativePrintDialog(HWND aHWnd,
     aPrintSettings->SetPrinterName(nsDependentString(device));
     aPrintSettings->SetPrintSelectionOnly(prntdlg.Flags & PD_SELECTION);
 
+    nsTArray<int32_t> pageRanges;
     if (prntdlg.Flags & PD_PAGENUMS) {
-      aPrintSettings->SetPrintRange(nsIPrintSettings::kRangeSpecifiedPageRange);
-      aPrintSettings->SetStartPageRange(prntdlg.nFromPage);
-      aPrintSettings->SetEndPageRange(prntdlg.nToPage);
-    } else {  // (prntdlg.Flags & PD_ALLPAGES)
-      aPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
+      pageRanges.AppendElement(prntdlg.nFromPage);
+      pageRanges.AppendElement(prntdlg.nToPage);
+    } else {
+      // (prntdlg.Flags & PD_ALLPAGES)
     }
+    aPrintSettings->SetPageRanges(pageRanges);
 
     // Unlock DeviceNames
     ::GlobalUnlock(prntdlg.hDevNames);
