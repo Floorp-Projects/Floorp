@@ -666,14 +666,14 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
                    ComputedLogicalBorderPadding(wm).BStartEnd(wm));
   }
 
-  bool dependsOnCBBSize =
-      (mStylePosition->BSizeDependsOnContainer(wm) &&
-       // FIXME: condition this on not-abspos?
-       !mStylePosition->BSize(wm).IsAuto()) ||
-      mStylePosition->MinBSizeDependsOnContainer(wm) ||
-      mStylePosition->MaxBSizeDependsOnContainer(wm) ||
-      mStylePosition->OffsetHasPercent(wm.PhysicalSide(eLogicalSideBStart)) ||
-      !mStylePosition->mOffset.GetBEnd(wm).IsAuto() || mFrame->IsXULBoxFrame();
+  bool dependsOnCBBSize = (mStylePosition->BSizeDependsOnContainer(wm) &&
+                           // FIXME: condition this on not-abspos?
+                           !mStylePosition->BSize(wm).IsAuto()) ||
+                          mStylePosition->MinBSizeDependsOnContainer(wm) ||
+                          mStylePosition->MaxBSizeDependsOnContainer(wm) ||
+                          mStylePosition->mOffset.GetBStart(wm).HasPercent() ||
+                          !mStylePosition->mOffset.GetBEnd(wm).IsAuto() ||
+                          mFrame->IsXULBoxFrame();
 
   if (mStyleText->mLineHeight.IsMozBlockHeight()) {
     // line-height depends on block bsize
