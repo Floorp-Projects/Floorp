@@ -226,6 +226,8 @@ function getTargetOrigin(aTarget) {
 
 // Convert (aX, aY), in CSS pixels relative to aTarget's bounding rect
 // to device pixels relative to the screen.
+// TODO: this function currently does not incorporate some CSS transforms on
+// elements enclosing aTarget, e.g. scale transforms.
 function coordinatesRelativeToScreen(aX, aY, aTarget) {
   // Note that |window| might not be the root content window, for two
   // possible reasons:
@@ -759,6 +761,10 @@ function promiseMoveMouseAndScrollWheelOver(
 // processed by the widget code can be detected by listening for the mousemove
 // events in the caller, or for some other event that is triggered by the
 // mousemove, such as the scroll event resulting from the scrollbar drag.
+// The scaleFactor argument should be provided if the scrollframe has been
+// scaled by an enclosing CSS transform. (TODO: this is a workaround for the
+// fact that coordinatesRelativeToScreen is supposed to do this automatically
+// but it currently does not).
 // Note: helper_scrollbar_snap_bug1501062.html contains a copy of this code
 // with modifications. Fixes here should be copied there if appropriate.
 // |target| can be an element (for subframes) or a window (for root frames).
@@ -766,7 +772,8 @@ function* dragVerticalScrollbar(
   target,
   testDriver,
   distance = 20,
-  increment = 5
+  increment = 5,
+  scaleFactor = 1
 ) {
   var targetElement = elementForTarget(target);
   var w = {},
@@ -780,6 +787,8 @@ function* dragVerticalScrollbar(
   var upArrowHeight = verticalScrollbarWidth; // assume square scrollbar buttons
   var mouseX = targetElement.clientWidth + verticalScrollbarWidth / 2;
   var mouseY = upArrowHeight + 5; // start dragging somewhere in the thumb
+  mouseX *= scaleFactor;
+  mouseY *= scaleFactor;
 
   dump(
     "Starting drag at " +

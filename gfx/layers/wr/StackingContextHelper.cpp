@@ -124,7 +124,7 @@ Maybe<gfx::Matrix4x4> StackingContextHelper::GetDeferredTransformMatrix()
     gfx::Matrix4x4 result =
         (*mDeferredTransformItem)->GetTransform().GetMatrix();
     if (mDeferredAncestorTransform) {
-      result = *mDeferredAncestorTransform * result;
+      result = result * *mDeferredAncestorTransform;
     }
     return Some(result);
   } else {
