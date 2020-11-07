@@ -17,7 +17,7 @@ FissionTestHelper.startTestPromise
   .then(loadOOPIFrame("testframe1", "helper_fission_empty.html"))
   .then(loadOOPIFrame("testframe2", "helper_fission_empty.html"))
   .then(waitUntilApzStable)
-  .then(runAsyncContinuation(test))
+  .then(test)
   .then(FissionTestHelper.subtestDone, FissionTestHelper.subtestFailed);
 
 
@@ -41,7 +41,7 @@ let iframe_compositor_test_data = function() {
   return result;
 };
 
-async function* test() {
+async function test() {
   let iframe1 = document.getElementById("testframe1");
   let iframe2 = document.getElementById("testframe2");
 
@@ -58,28 +58,15 @@ async function* test() {
 
   // Hit-testing the iframe with pointer-events:none should end up hitting the
   // document containing the iframe instead (i.e. this document).
-  checkHitResult(hitTest(centerOf(iframe1)),
+  checkHitResult(await fissionHitTest(centerOf(iframe1), iframe1),
                  APZHitResultFlags.VISIBLE,
                  utils.getViewId(document.scrollingElement),
                  utils.getLayersId(),
                  "center of pointer-events:none iframe should hit parent doc");
 
   // Hit-testing the iframe that doesn't have pointer-events:none should end up
-  // hitting that iframe. But! the APZ code puts the hit-test information into
-  // the APZ test data based on the layers id, so the hit result information
-  // needs to be fished out of the iframe's DOMWindowUtils.
-  /*let uselessResult = */hitTest(centerOf(iframe2));
-  let data = JSON.parse(
-    await FissionTestHelper.sendToOopif(iframe2, `(${iframe_compositor_test_data})()`)
-  );
-  let result = data.hitResults[Object.keys(data.hitResults).length - 1];
-  let realHitResult = {
-    hitInfo: result.hitResult,
-    scrollId: result.scrollId,
-    layersId: result.layersId,
-  };
-  dump("Real hit result is " + JSON.stringify(realHitResult) + "\n");
-  checkHitResult(realHitResult,
+  // hitting that iframe.
+  checkHitResult(await fissionHitTest(centerOf(iframe2), iframe2),
                  APZHitResultFlags.VISIBLE,
                  iframe2Expected.viewId,
                  iframe2Expected.layersId,
