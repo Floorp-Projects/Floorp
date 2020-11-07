@@ -667,28 +667,30 @@ extern JS_PUBLIC_API bool IsProfileTimelineRecordingEnabled();
 }  // namespace JS
 
 #ifdef JS_HAS_CTYPES
+
+namespace JS {
+
 /**
  * Initialize the 'ctypes' object on a global variable 'obj'. The 'ctypes'
  * object will be sealed.
  */
-extern JS_PUBLIC_API bool JS_InitCTypesClass(JSContext* cx,
-                                             JS::HandleObject global);
+extern JS_PUBLIC_API bool InitCTypesClass(JSContext* cx,
+                                          JS::Handle<JSObject*> global);
 
 /**
  * Convert a unicode string 'source' of length 'slen' to the platform native
  * charset, returning a null-terminated string allocated with JS_malloc. On
  * failure, this function should report an error.
  */
-using JSCTypesUnicodeToNativeFun = char* (*)(JSContext*, const char16_t*,
-                                             size_t);
+using CTypesUnicodeToNativeFun = char* (*)(JSContext*, const char16_t*, size_t);
 
 /**
  * Set of function pointers that ctypes can use for various internal functions.
- * See JS_SetCTypesCallbacks below. Providing nullptr for a function is safe,
+ * See JS::SetCTypesCallbacks below. Providing nullptr for a function is safe
  * and will result in the applicable ctypes functionality not being available.
  */
-struct JSCTypesCallbacks {
-  JSCTypesUnicodeToNativeFun unicodeToNative;
+struct CTypesCallbacks {
+  CTypesUnicodeToNativeFun unicodeToNative;
 };
 
 /**
@@ -697,8 +699,11 @@ struct JSCTypesCallbacks {
  * may safely be altered after calling this function and without having
  * to call this function again.
  */
-extern JS_PUBLIC_API void JS_SetCTypesCallbacks(
-    JSObject* ctypesObj, const JSCTypesCallbacks* callbacks);
+extern JS_PUBLIC_API void SetCTypesCallbacks(JSObject* ctypesObj,
+                                             const CTypesCallbacks* callbacks);
+
+}  // namespace JS
+
 #endif
 
 /*

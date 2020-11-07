@@ -737,14 +737,13 @@ JS_FRIEND_API void js::SetScriptEnvironmentPreparer(
   cx->runtime()->scriptEnvironmentPreparer = preparer;
 }
 
-JS_FRIEND_API void js::SetCTypesActivityCallback(JSContext* cx,
+JS_FRIEND_API void JS::SetCTypesActivityCallback(JSContext* cx,
                                                  CTypesActivityCallback cb) {
   cx->runtime()->ctypesActivityCallback = cb;
 }
 
-js::AutoCTypesActivityCallback::AutoCTypesActivityCallback(
-    JSContext* cx, js::CTypesActivityType beginType,
-    js::CTypesActivityType endType)
+JS::AutoCTypesActivityCallback::AutoCTypesActivityCallback(
+    JSContext* cx, CTypesActivityType beginType, CTypesActivityType endType)
     : cx(cx),
       callback(cx->runtime()->ctypesActivityCallback),
       endType(endType) {
