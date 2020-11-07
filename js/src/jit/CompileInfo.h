@@ -76,6 +76,7 @@ class CompileInfo {
         analysisMode_(analysisMode),
         scriptNeedsArgsObj_(scriptNeedsArgsObj),
         hadOverflowBailout_(script->hadOverflowBailout()),
+        hadSpeculativePhiBailout_(script->hadSpeculativePhiBailout()),
         hadFrequentBailouts_(script->hadFrequentBailouts()),
         mayReadFrameArgsDirectly_(script->mayReadFrameArgsDirectly()),
         isDerivedClassConstructor_(script->isDerivedClassConstructor()),
@@ -137,6 +138,7 @@ class CompileInfo {
         analysisMode_(Analysis_None),
         scriptNeedsArgsObj_(false),
         hadOverflowBailout_(false),
+        hadSpeculativePhiBailout_(false),
         hadFrequentBailouts_(false),
         mayReadFrameArgsDirectly_(false),
         inlineScriptTree_(nullptr),
@@ -365,6 +367,7 @@ class CompileInfo {
   // Check previous bailout states to prevent doing the same bailout in the
   // next compilation.
   bool hadOverflowBailout() const { return hadOverflowBailout_; }
+  bool hadSpeculativePhiBailout() const { return hadSpeculativePhiBailout_; }
   bool hadFrequentBailouts() const { return hadFrequentBailouts_; }
   bool mayReadFrameArgsDirectly() const { return mayReadFrameArgsDirectly_; }
 
@@ -390,6 +393,7 @@ class CompileInfo {
   // Record the state of previous bailouts in order to prevent compiling the
   // same function identically the next time.
   bool hadOverflowBailout_;
+  bool hadSpeculativePhiBailout_;
   bool hadFrequentBailouts_;
 
   bool mayReadFrameArgsDirectly_;
