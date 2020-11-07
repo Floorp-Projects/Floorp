@@ -643,57 +643,6 @@ extern JS_FRIEND_API void PrepareScriptEnvironmentAndInvoke(
 JS_FRIEND_API void SetScriptEnvironmentPreparer(
     JSContext* cx, ScriptEnvironmentPreparer* preparer);
 
-}  // namespace js
-
-namespace JS {
-
-/**
- * The type of ctypes activity that is occurring.
- */
-enum class CTypesActivityType {
-  BeginCall,
-  EndCall,
-  BeginCallback,
-  EndCallback,
-};
-
-/**
- * The signature of a function invoked at the leading or trailing edge of ctypes
- * activity.
- */
-using CTypesActivityCallback = void (*)(JSContext*, CTypesActivityType);
-
-/**
- * Sets a callback that is run whenever js-ctypes is about to be used when
- * calling into C.
- */
-extern JS_FRIEND_API void SetCTypesActivityCallback(JSContext* cx,
-                                                    CTypesActivityCallback cb);
-
-class MOZ_RAII JS_FRIEND_API AutoCTypesActivityCallback {
- private:
-  JSContext* cx;
-  CTypesActivityCallback callback;
-  CTypesActivityType endType;
-
- public:
-  AutoCTypesActivityCallback(JSContext* cx, CTypesActivityType beginType,
-                             CTypesActivityType endType);
-
-  ~AutoCTypesActivityCallback() { DoEndCallback(); }
-
-  void DoEndCallback() {
-    if (callback) {
-      callback(cx, endType);
-      callback = nullptr;
-    }
-  }
-};
-
-}  // namespace JS
-
-namespace js {
-
 // Abstract base class for objects that build allocation metadata for JavaScript
 // values.
 struct AllocationMetadataBuilder {
