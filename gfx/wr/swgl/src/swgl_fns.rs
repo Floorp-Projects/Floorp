@@ -2166,7 +2166,7 @@ impl Gl for Context {
         //ptr::null()
     }
 
-    fn client_wait_sync(&self, sync: GLsync, flags: GLbitfield, timeout: GLuint64) {
+    fn client_wait_sync(&self, sync: GLsync, flags: GLbitfield, timeout: GLuint64) -> GLenum {
         panic!();
     }
 
@@ -2315,6 +2315,20 @@ impl Gl for Context {
         _unpack_premultiply_alpha: GLboolean,
         _unpack_unmultiply_alpha: GLboolean,
     ) {
+        unimplemented!("Not supported by SWGL");
+    }
+
+    fn buffer_storage(
+        &self,
+        target: GLenum,
+        size: GLsizeiptr,
+        data: *const GLvoid,
+        flags: GLbitfield,
+    ) {
+        unimplemented!("Not supported by SWGL");
+    }
+
+    fn flush_mapped_buffer_range(&self, target: GLenum, offset: GLintptr, length: GLsizeiptr) {
         unimplemented!("Not supported by SWGL");
     }
 }
