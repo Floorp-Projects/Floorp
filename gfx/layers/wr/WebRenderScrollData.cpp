@@ -6,6 +6,8 @@
 
 #include "mozilla/layers/WebRenderScrollData.h"
 
+#include <ostream>
+
 #include "Layers.h"
 #include "mozilla/layers/LayersMessageUtils.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
@@ -116,34 +118,46 @@ CSSTransformMatrix WebRenderLayerScrollData::GetTransformTyped() const {
   return ViewAs<CSSTransformMatrix>(GetTransform());
 }
 
-void WebRenderLayerScrollData::Dump(const WebRenderScrollData& aOwner) const {
-  printf_stderr("LayerScrollData(%p) descendants %d\n", this, mDescendantCount);
-  for (size_t i : mScrollIds) {
-    printf_stderr("  metadata: %s\n",
-                  ToString(aOwner.GetScrollMetadata(i)).c_str());
+void WebRenderLayerScrollData::Dump(std::ostream& aOut,
+                                    const WebRenderScrollData& aOwner) const {
+  aOut << "WebRenderLayerScrollData(" << this
+       << "), descendantCount=" << mDescendantCount;
+  for (size_t i = 0; i < mScrollIds.Length(); i++) {
+    aOut << ", metadata" << i << "=" << aOwner.GetScrollMetadata(mScrollIds[i]);
   }
-  printf_stderr("  ancestor transform: %s\n",
-                ToString(mAncestorTransform).c_str());
-  printf_stderr("  transform: %s perspective: %d visible: %s\n",
-                ToString(mTransform).c_str(), mTransformIsPerspective,
-                ToString(mVisibleRegion).c_str());
-  printf_stderr("  event regions override: 0x%x\n", mEventRegionsOverride);
+  if (!mAncestorTransform.IsIdentity()) {
+    aOut << ", ancestorTransform=" << mAncestorTransform;
+  }
+  if (!mTransform.IsIdentity()) {
+    aOut << ", transform=" << mTransform;
+    if (mTransformIsPerspective) {
+      aOut << ", transformIsPerspective";
+    }
+  }
+  aOut << ", visible=" << mVisibleRegion;
   if (mReferentId) {
-    printf_stderr("  ref layers id: 0x%" PRIx64 "\n", uint64_t(*mReferentId));
+    aOut << ", refLayersId=" << *mReferentId;
   }
-  printf_stderr("  scrollbar type: %d animation: %" PRIx64 "\n",
-                (int)mScrollbarData.mScrollbarLayerType,
-                mScrollbarAnimationId.valueOr(0));
-  printf_stderr("  fixed container: %" PRIu64 " animation %" PRIx64 "\n",
-                mFixedPosScrollContainerId,
-                mFixedPositionAnimationId.valueOr(0));
-  printf_stderr("  sticky container: %" PRIu64 " animation %" PRIx64
-                " inner: %s outer: %s\n",
-                mStickyPosScrollContainerId,
-                mStickyPositionAnimationId.valueOr(0),
-                ToString(mStickyScrollRangeInner).c_str(),
-                ToString(mStickyScrollRangeOuter).c_str());
-  printf_stderr("  fixed/sticky side bits: 0x%x\n", (int)mFixedPositionSides);
+  if (mEventRegionsOverride) {
+    aOut << std::hex << ", eventRegionsOverride=0x"
+         << (int)mEventRegionsOverride << std::dec;
+  }
+  if (mScrollbarData.mScrollbarLayerType != ScrollbarLayerType::None) {
+    aOut << ", scrollbarType=" << (int)mScrollbarData.mScrollbarLayerType
+         << std::hex << ", scrollbarAnimationId=0x"
+         << mScrollbarAnimationId.valueOr(0) << std::dec;
+  }
+  if (mFixedPosScrollContainerId != ScrollableLayerGuid::NULL_SCROLL_ID) {
+    aOut << ", fixedContainer=" << mFixedPosScrollContainerId << std::hex
+         << ", fixedAnimation=0x" << mFixedPositionAnimationId.valueOr(0)
+         << ", sideBits=0x" << (int)mFixedPositionSides << std::dec;
+  }
+  if (mStickyPosScrollContainerId != ScrollableLayerGuid::NULL_SCROLL_ID) {
+    aOut << ", stickyContainer=" << mStickyPosScrollContainerId << std::hex
+         << ", stickyAnimation=" << mStickyPositionAnimationId.valueOr(0)
+         << std::dec << ", stickyInner=" << mStickyScrollRangeInner
+         << ", stickyOuter=" << mStickyScrollRangeOuter;
+  }
 }
 
 WebRenderScrollData::WebRenderScrollData()
@@ -221,12 +235,48 @@ void WebRenderScrollData::ApplyUpdates(ScrollUpdatesMap&& aUpdates,
   mPaintSequenceNumber = aPaintSequenceNumber;
 }
 
-void WebRenderScrollData::Dump() const {
-  printf_stderr("WebRenderScrollData with %zu layers firstpaint: %d\n",
-                mLayerScrollData.Length(), mIsFirstPaint);
-  for (size_t i = 0; i < mLayerScrollData.Length(); i++) {
-    mLayerScrollData.ElementAt(i).Dump(*this);
+void WebRenderScrollData::DumpSubtree(std::ostream& aOut, size_t aIndex,
+                                      const std::string& aIndent) const {
+  aOut << aIndent;
+  mLayerScrollData.ElementAt(aIndex).Dump(aOut, *this);
+  aOut << std::endl;
+
+  int32_t descendants = mLayerScrollData.ElementAt(aIndex).GetDescendantCount();
+  if (descendants == 0) {
+    return;
   }
+
+  // Build a stack of indices at which this aIndex's children live. We do
+  // this because we want to dump them first-to-last but they are stored
+  // last-to-first.
+  std::stack<size_t> childIndices;
+  size_t childIndex = aIndex + 1;
+  while (descendants > 0) {
+    childIndices.push(childIndex);
+    // "1" for the child itelf, plus whatever descendants it has
+    int32_t subtreeSize =
+        1 + mLayerScrollData.ElementAt(childIndex).GetDescendantCount();
+    childIndex += subtreeSize;
+    descendants -= subtreeSize;
+    MOZ_ASSERT(descendants >= 0);
+  }
+
+  std::string indent = aIndent + "    ";
+  while (!childIndices.empty()) {
+    size_t child = childIndices.top();
+    childIndices.pop();
+    DumpSubtree(aOut, child, indent);
+  }
+}
+
+std::ostream& operator<<(std::ostream& aOut, const WebRenderScrollData& aData) {
+  aOut << "--- WebRenderScrollData (firstPaint=" << aData.mIsFirstPaint
+       << ") ---" << std::endl;
+
+  if (aData.mLayerScrollData.Length() > 0) {
+    aData.DumpSubtree(aOut, 0, std::string());
+  }
+  return aOut;
 }
 
 bool WebRenderScrollData::RepopulateMap() {

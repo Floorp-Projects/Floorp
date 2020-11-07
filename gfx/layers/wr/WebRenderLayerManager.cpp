@@ -377,7 +377,9 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     }
     mScrollData.SetPaintSequenceNumber(mPaintSequenceNumber);
     if (dumpEnabled) {
-      mScrollData.Dump();
+      std::stringstream str;
+      str << mScrollData;
+      print_stderr(str);
     }
   }
 

@@ -8,6 +8,7 @@
 #define GFX_WEBRENDERSCROLLDATA_H
 
 #include <map>
+#include <iosfwd>
 
 #include "chrome/common/ipc_message_utils.h"
 #include "FrameMetrics.h"
@@ -161,7 +162,7 @@ class WebRenderLayerScrollData final {
   }
   bool IsAsyncZoomContainer() const { return mAsyncZoomContainerId.isSome(); }
 
-  void Dump(const WebRenderScrollData& aOwner) const;
+  void Dump(std::ostream& aOut, const WebRenderScrollData& aOwner) const;
 
   friend struct IPC::ParamTraits<WebRenderLayerScrollData>;
 
@@ -240,12 +241,17 @@ class WebRenderScrollData final {
 
   friend struct IPC::ParamTraits<WebRenderScrollData>;
 
-  void Dump() const;
+  friend std::ostream& operator<<(std::ostream& aOut,
+                                  const WebRenderScrollData& aData);
 
  private:
   // This is called by the ParamTraits implementation to rebuild mScrollIdMap
   // based on mScrollMetadatas
   bool RepopulateMap();
+
+  // This is a helper for the dumping code
+  void DumpSubtree(std::ostream& aOut, size_t aIndex,
+                   const std::string& aIndent) const;
 
  private:
   // Pointer back to the layer manager; if this is non-null, it will always be
