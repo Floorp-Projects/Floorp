@@ -247,13 +247,24 @@ class AlternateServerPlayback:
                 rflow = self.next_flow(f)
                 if rflow:
                     response = rflow.response.copy()
-                    response.is_replay = True
-                    # Refresh server replay responses by adjusting date, expires and
-                    # last-modified headers, as well as adjusting cookie expiration.
-                    response.refresh()
+                    if response.get_content():
+                        response.is_replay = True
+                        # Refresh server replay responses by adjusting date, expires and
+                        # last-modified headers, as well as adjusting cookie expiration.
+                        response.refresh()
 
-                    f.response = response
-                    self._replayed += 1
+                        f.response = response
+                        self._replayed += 1
+                    else:
+                        f.response = http.HTTPResponse.make(
+                            404, b"", {"content-type": "text/plain"}
+                        )
+                        ctx.log.info(
+                            "server_playback: dropped request with no-content response {}".format(
+                                f.request.url
+                            )
+                        )
+                        self._not_replayed += 1
                 else:
                     # returns 404 rather than dropping the whole HTTP/2 connection
                     ctx.log.warn(
