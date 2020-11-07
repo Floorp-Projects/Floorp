@@ -78,14 +78,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">아니오</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Firefox를 더 빨리 사용하세요. 홈 화면에 위젯을 추가하세요.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">위젯 추가</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">나중에</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string name="open_in_app_cfr_info_message">앱에서 링크를 자동으로 열도록 Firefox를 설정할 수 있습니다.</string>
@@ -648,8 +640,10 @@
 
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">모음집 이름</string>
-    <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">삭제</string>
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">이름 변경</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">삭제</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">기록에서 삭제</string>
@@ -703,11 +697,24 @@
     <string name="history_empty_message">기록 없음</string>
 
     <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">다운로드 삭제</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">다운로드를 삭제하시겠습니까?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
+    <string name="download_delete_multiple_items_snackbar">다운로드 삭제됨</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">다운로드 없음</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d개 선택됨</string>
+
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">열기</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="download_delete_item">삭제</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -1665,6 +1672,16 @@
 
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">자주 방문한 사이트 표시</string>
+
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">이름</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">상위 사이트 이름</string>
+
+    <!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">확인</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">취소</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">삭제</string>

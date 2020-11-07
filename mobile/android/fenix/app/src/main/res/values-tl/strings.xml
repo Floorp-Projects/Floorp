@@ -4,17 +4,66 @@
     <string name="app_name_private_5">Pribado %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (Pribado)</string>
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Iba pang pagpipilian</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">Paganahin ang private browsing</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
     <string name="tab_tray_add_new_collection_name">Pangalan</string>
 
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">Napili</string>
+
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s ay gawa ng Mozilla.</string>
+
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">Ikaw ay nasa pribadong sesyon</string>
+    <!-- Delete session button to erase your history in a private session -->
+    <string name="private_browsing_delete_session">Burahin ang sesyon</string>
+
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Magdagdag ng shortcut</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Salamat na lang</string>
 
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Magdagdag ng widget</string>
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Hindi ngayon</string>
 
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Magpunta sa Settings</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Alisin</string>
+
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Magpunta sa settings</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Alisin</string>
+
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Tingnan ang mga pagpipilian</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Alisin</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">Bagong tab</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">Bagong private tab</string>
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Mga pangunahing site</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
+    <string name="browser_tabs_button">Buksan ang mga Tab</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">Bumalik</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">Sumulong</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Tumigil</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
@@ -29,8 +78,14 @@
     <string name="browser_menu_settings">Mga Setting</string>
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_library">Library</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">Desktop site</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">i-Install</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">i-Resync</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">Hanapin sa pahina</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Pribadong tab</string>
     <!-- Browser menu button that creates a new tab -->

@@ -1605,7 +1605,7 @@
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">Limyt foar topwebsites berikke</string>
+    <string name="top_sites_max_limit_title">Limyt foar topwebsites berikt</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_content_2">Smyt in topwebsite fuort om in nije ta te foegjen. Hâld de website yndrukt en selektearje Fuortsmite.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
