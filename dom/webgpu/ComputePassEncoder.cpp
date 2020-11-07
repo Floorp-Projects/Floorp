@@ -17,6 +17,14 @@ GPU_IMPL_CYCLE_COLLECTION(ComputePassEncoder, mParent, mUsedBindGroups,
                           mUsedPipelines)
 GPU_IMPL_JS_WRAP(ComputePassEncoder)
 
+ffi::WGPUComputePass* ScopedFfiComputeTraits::empty() { return nullptr; }
+
+void ScopedFfiComputeTraits::release(ffi::WGPUComputePass* raw) {
+  if (raw) {
+    ffi::wgpu_compute_pass_destroy(raw);
+  }
+}
+
 ffi::WGPUComputePass* BeginComputePass(
     RawId aEncoderId, const dom::GPUComputePassDescriptor& aDesc) {
   ffi::WGPUComputePassDescriptor desc = {};
@@ -26,12 +34,11 @@ ffi::WGPUComputePass* BeginComputePass(
 
 ComputePassEncoder::ComputePassEncoder(
     CommandEncoder* const aParent, const dom::GPUComputePassDescriptor& aDesc)
-    : ChildOf(aParent), mRaw(BeginComputePass(aParent->mId, aDesc)) {}
+    : ChildOf(aParent), mPass(BeginComputePass(aParent->mId, aDesc)) {}
 
 ComputePassEncoder::~ComputePassEncoder() {
   if (mValid) {
     mValid = false;
-    ffi::wgpu_compute_pass_destroy(mRaw);
   }
 }
 
@@ -40,7 +47,7 @@ void ComputePassEncoder::SetBindGroup(
     const dom::Sequence<uint32_t>& aDynamicOffsets) {
   if (mValid) {
     mUsedBindGroups.AppendElement(&aBindGroup);
-    ffi::wgpu_compute_pass_set_bind_group(mRaw, aSlot, aBindGroup.mId,
+    ffi::wgpu_compute_pass_set_bind_group(mPass, aSlot, aBindGroup.mId,
                                           aDynamicOffsets.Elements(),
                                           aDynamicOffsets.Length());
   }
@@ -49,20 +56,20 @@ void ComputePassEncoder::SetBindGroup(
 void ComputePassEncoder::SetPipeline(const ComputePipeline& aPipeline) {
   if (mValid) {
     mUsedPipelines.AppendElement(&aPipeline);
-    ffi::wgpu_compute_pass_set_pipeline(mRaw, aPipeline.mId);
+    ffi::wgpu_compute_pass_set_pipeline(mPass, aPipeline.mId);
   }
 }
 
 void ComputePassEncoder::Dispatch(uint32_t x, uint32_t y, uint32_t z) {
   if (mValid) {
-    ffi::wgpu_compute_pass_dispatch(mRaw, x, y, z);
+    ffi::wgpu_compute_pass_dispatch(mPass, x, y, z);
   }
 }
 
 void ComputePassEncoder::DispatchIndirect(const Buffer& aIndirectBuffer,
                                           uint64_t aIndirectOffset) {
   if (mValid) {
-    ffi::wgpu_compute_pass_dispatch_indirect(mRaw, aIndirectBuffer.mId,
+    ffi::wgpu_compute_pass_dispatch_indirect(mPass, aIndirectBuffer.mId,
                                              aIndirectOffset);
   }
 }
@@ -70,8 +77,9 @@ void ComputePassEncoder::DispatchIndirect(const Buffer& aIndirectBuffer,
 void ComputePassEncoder::EndPass(ErrorResult& aRv) {
   if (mValid) {
     mValid = false;
-    MOZ_ASSERT(mRaw);
-    mParent->EndComputePass(*mRaw, aRv);
+    auto* pass = mPass.forget();
+    MOZ_ASSERT(pass);
+    mParent->EndComputePass(*pass, aRv);
   }
 }
 
