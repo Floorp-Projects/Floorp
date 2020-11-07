@@ -18,6 +18,11 @@ WheelEvent::WheelEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                      ? aWheelEvent
                      : new WidgetWheelEvent(false, eVoidEvent, nullptr)),
       mAppUnitsPerDevPixel(0) {
+
+  if (StaticPrefs::dom_event_wheel_deltaMode_lines_always_disabled()) {
+    mDeltaModeCheckingState = DeltaModeCheckingState::Unchecked;
+  }
+
   if (aWheelEvent) {
     mEventIsInternal = false;
     // If the delta mode is pixel, the WidgetWheelEvent's delta values are in
@@ -55,31 +60,55 @@ void WheelEvent::InitWheelEvent(
   wheelEvent->mDeltaMode = aDeltaMode;
 }
 
-double WheelEvent::DeltaX() {
-  if (!mAppUnitsPerDevPixel) {
-    return mEvent->AsWheelEvent()->mDeltaX;
+double WheelEvent::ToWebExposedDelta(const WidgetWheelEvent& aWidgetEvent,
+                                     double aDelta, CallerType aCallerType) {
+  if (aCallerType != CallerType::System) {
+    if (mDeltaModeCheckingState == DeltaModeCheckingState::Unknown) {
+      mDeltaModeCheckingState = DeltaModeCheckingState::Unchecked;
+    }
+    if (mDeltaModeCheckingState == DeltaModeCheckingState::Unchecked &&
+        aWidgetEvent.mDeltaMode == WheelEvent_Binding::DOM_DELTA_LINE &&
+        StaticPrefs::dom_event_wheel_deltaMode_lines_disabled()) {
+      // TODO(emilio, bug 1675949): Consider not using a fixed multiplier here?
+      return aDelta *
+             StaticPrefs::dom_event_wheel_deltaMode_lines_to_pixel_scale();
+    }
   }
-  return mEvent->AsWheelEvent()->mDeltaX * mAppUnitsPerDevPixel /
-         AppUnitsPerCSSPixel();
+  if (!mAppUnitsPerDevPixel) {
+    return aDelta;
+  }
+  return aDelta * mAppUnitsPerDevPixel / AppUnitsPerCSSPixel();
 }
 
-double WheelEvent::DeltaY() {
-  if (!mAppUnitsPerDevPixel) {
-    return mEvent->AsWheelEvent()->mDeltaY;
-  }
-  return mEvent->AsWheelEvent()->mDeltaY * mAppUnitsPerDevPixel /
-         AppUnitsPerCSSPixel();
+double WheelEvent::DeltaX(CallerType aCallerType) {
+  WidgetWheelEvent* ev = mEvent->AsWheelEvent();
+  return ToWebExposedDelta(*ev, ev->mDeltaX, aCallerType);
 }
 
-double WheelEvent::DeltaZ() {
-  if (!mAppUnitsPerDevPixel) {
-    return mEvent->AsWheelEvent()->mDeltaZ;
-  }
-  return mEvent->AsWheelEvent()->mDeltaZ * mAppUnitsPerDevPixel /
-         AppUnitsPerCSSPixel();
+double WheelEvent::DeltaY(CallerType aCallerType) {
+  WidgetWheelEvent* ev = mEvent->AsWheelEvent();
+  return ToWebExposedDelta(*ev, ev->mDeltaY, aCallerType);
 }
 
-uint32_t WheelEvent::DeltaMode() { return mEvent->AsWheelEvent()->mDeltaMode; }
+double WheelEvent::DeltaZ(CallerType aCallerType) {
+  WidgetWheelEvent* ev = mEvent->AsWheelEvent();
+  return ToWebExposedDelta(*ev, ev->mDeltaZ, aCallerType);
+}
+
+uint32_t WheelEvent::DeltaMode(CallerType aCallerType) {
+  uint32_t mode = mEvent->AsWheelEvent()->mDeltaMode;
+  if (aCallerType != CallerType::System) {
+    if (mDeltaModeCheckingState == DeltaModeCheckingState::Unknown) {
+      mDeltaModeCheckingState = DeltaModeCheckingState::Checked;
+    } else if (mDeltaModeCheckingState == DeltaModeCheckingState::Unchecked &&
+               mode == WheelEvent_Binding::DOM_DELTA_LINE &&
+               StaticPrefs::dom_event_wheel_deltaMode_lines_disabled()) {
+      return WheelEvent_Binding::DOM_DELTA_PIXEL;
+    }
+  }
+
+  return mode;
+}
 
 already_AddRefed<WheelEvent> WheelEvent::Constructor(
     const GlobalObject& aGlobal, const nsAString& aType,
