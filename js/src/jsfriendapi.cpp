@@ -21,6 +21,7 @@
 #include "gc/WeakMap.h"
 #include "js/CharacterEncoding.h"
 #include "js/experimental/CodeCoverage.h"
+#include "js/experimental/CTypes.h"  // JS::AutoCTypesActivityCallback, JS::SetCTypesActivityCallback
 #include "js/experimental/Intl.h"  // JS::Add{,Moz}DisplayNamesConstructor, JS::AddMozDateTimeFormatConstructor
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // JS_STACK_GROWTH_DIRECTION

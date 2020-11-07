@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ctypes/CTypes.h"
-#include "js/experimental/CTypes.h"  // JS::CTypesActivity{Callback,Type}, JS::SetCTypesActivityCallback
+#include "js/experimental/CTypes.h"  // JS::CTypesActivity{Callback,Type}, JS::InitCTypesClass, JS::SetCTypesActivityCallback, JS::SetCTypesCallbacks
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
