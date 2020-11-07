@@ -418,17 +418,17 @@ struct ReflowInput : public SizeComputationInput {
     return nsSize(ComputedWidth(), ComputedHeight());
   }
 
-  // XXX this will need to change when we make mComputedOffsets logical;
-  // we won't be able to return a reference for the physical offsets
-  const nsMargin& ComputedPhysicalOffsets() const { return mComputedOffsets; }
+  nsMargin ComputedPhysicalOffsets() const {
+    return mComputedOffsets.GetPhysicalMargin(mWritingMode);
+  }
 
   LogicalMargin ComputedLogicalOffsets(mozilla::WritingMode aWM) const {
-    return LogicalMargin(aWM, mComputedOffsets);
+    return mComputedOffsets.ConvertTo(aWM, mWritingMode);
   }
 
   void SetComputedLogicalOffsets(mozilla::WritingMode aWM,
                                  const LogicalMargin& aOffsets) {
-    mComputedOffsets = aOffsets.GetPhysicalMargin(aWM);
+    mComputedOffsets = aOffsets.ConvertTo(mWritingMode, aWM);
   }
 
   // Return the state's computed size including border-padding, with
@@ -492,9 +492,9 @@ struct ReflowInput : public SizeComputationInput {
   MOZ_INIT_OUTSIDE_CTOR
   nscoord mComputedHeight;
 
-  // Computed values for 'left/top/right/bottom' offsets. Only applies to
-  // 'positioned' elements. These are PHYSICAL coordinates (for now).
-  nsMargin mComputedOffsets;
+  // Computed values for 'inset' properties. Only applies to 'positioned'
+  // elements.
+  mozilla::LogicalMargin mComputedOffsets{mWritingMode};
 
   // Computed values for 'min-width/max-width' and 'min-height/max-height'
   // XXXldb The width ones here should go; they should be needed only
@@ -507,7 +507,7 @@ struct ReflowInput : public SizeComputationInput {
 
  public:
   // Our saved containing block dimensions.
-  LogicalSize mContainingBlockSize = LogicalSize(mWritingMode);
+  LogicalSize mContainingBlockSize{mWritingMode};
 
   // Cached pointers to the various style structs used during initialization.
   const nsStyleDisplay* mStyleDisplay = nullptr;
