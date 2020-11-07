@@ -3,7 +3,6 @@
 //! This module contains items used to create and manage Pipelines.
 
 use crate::{device, pass, Backend};
-use std::{fmt, io, slice};
 
 mod compute;
 mod descriptor;
@@ -13,12 +12,7 @@ mod output_merger;
 mod specialization;
 
 pub use self::{
-    compute::*,
-    descriptor::*,
-    graphics::*,
-    input_assembler::*,
-    output_merger::*,
-    specialization::*,
+    compute::*, descriptor::*, graphics::*, input_assembler::*, output_merger::*, specialization::*,
 };
 
 /// Error types happening upon PSO creation on the device side.
@@ -26,6 +20,8 @@ pub use self::{
 pub enum CreationError {
     /// Unknown other error.
     Other,
+    /// Unsupported pipeline on hardware or implementation. Example: mesh shaders on DirectX 11.
+    UnsupportedPipeline,
     /// Invalid subpass (not part of renderpass).
     InvalidSubpass(pass::SubpassId),
     /// Shader compilation error.
@@ -45,6 +41,7 @@ impl std::fmt::Display for CreationError {
         match self {
             CreationError::OutOfMemory(err) => write!(fmt, "Failed to create pipeline: {}", err),
             CreationError::Other => write!(fmt, "Failed to create pipeline: Unsupported usage: Implementation specific error occurred"),
+            CreationError::UnsupportedPipeline => write!(fmt, "Failed to create pipeline: pipeline type is not supported"),
             CreationError::InvalidSubpass(subpass) => write!(fmt, "Failed to create pipeline: Invalid subpass: {}", subpass),
             CreationError::Shader(err) => write!(fmt, "Failed to create pipeline: {}", err),
         }
@@ -58,6 +55,7 @@ impl std::error::Error for CreationError {
             CreationError::Shader(err) => Some(err),
             CreationError::InvalidSubpass(_) => None,
             CreationError::Other => None,
+            CreationError::UnsupportedPipeline => None,
         }
     }
 }
@@ -100,6 +98,10 @@ bitflags!(
         /// Read/Write access from host.
         /// (Not a real pipeline stage)
         const HOST = 0x4000;
+        /// Task shader stage.
+        const TASK_SHADER = 0x80000;
+        /// Mesh shader stage.
+        const MESH_SHADER = 0x100000;
     }
 );
 
@@ -119,6 +121,10 @@ bitflags!(
         const FRAGMENT = 0x10;
         /// Compute shader stage.
         const COMPUTE  = 0x20;
+        /// Task shader stage.
+        const TASK     = 0x40;
+        /// Mesh shader stage.
+        const MESH     = 0x80;
         /// All graphics pipeline shader stages.
         const GRAPHICS = Self::VERTEX.bits | Self::HULL.bits |
             Self::DOMAIN.bits | Self::GEOMETRY.bits | Self::FRAGMENT.bits;
@@ -127,55 +133,14 @@ bitflags!(
     }
 );
 
-// Note: this type is only needed for backends, not used anywhere within gfx_hal.
-/// Which program stage this shader represents.
-#[allow(missing_docs)]
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[repr(u8)]
-pub enum Stage {
-    Vertex,
-    Hull,
-    Domain,
-    Geometry,
-    Fragment,
-    Compute,
-}
-
-impl From<Stage> for ShaderStageFlags {
-    fn from(stage: Stage) -> Self {
-        match stage {
-            Stage::Vertex => ShaderStageFlags::VERTEX,
-            Stage::Hull => ShaderStageFlags::HULL,
-            Stage::Domain => ShaderStageFlags::DOMAIN,
-            Stage::Geometry => ShaderStageFlags::GEOMETRY,
-            Stage::Fragment => ShaderStageFlags::FRAGMENT,
-            Stage::Compute => ShaderStageFlags::COMPUTE,
-        }
-    }
-}
-
-impl fmt::Display for Stage {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(match self {
-            Stage::Vertex => "vertex",
-            Stage::Hull => "hull",
-            Stage::Domain => "domain",
-            Stage::Geometry => "geometry",
-            Stage::Fragment => "fragment",
-            Stage::Compute => "compute",
-        })
-    }
-}
-
 /// Shader entry point.
 #[derive(Debug)]
 pub struct EntryPoint<'a, B: Backend> {
     /// Entry point name.
     pub entry: &'a str,
-    /// Shader module reference.
+    /// Reference to the shader module containing this entry point.
     pub module: &'a B::ShaderModule,
-    /// Specialization.
+    /// Specialization constants to be used when creating the pipeline.
     pub specialization: Specialization<'a>,
 }
 
@@ -251,61 +216,4 @@ impl<T> State<T> {
     pub fn is_dynamic(self) -> bool {
         !self.is_static()
     }
-}
-
-/// Safely read SPIR-V
-///
-/// Converts to native endianness and returns correctly aligned storage without unnecessary
-/// copying. Returns an `InvalidData` error if the input is trivially not SPIR-V.
-///
-/// This function can also be used to convert an already in-memory `&[u8]` to a valid `Vec<u32>`,
-/// but prefer working with `&[u32]` from the start whenever possible.
-///
-/// # Examples
-/// ```no_run
-/// let mut file = std::fs::File::open("/path/to/shader.spv").unwrap();
-/// let words = gfx_hal::pso::read_spirv(&mut file).unwrap();
-/// ```
-/// ```
-/// const SPIRV: &[u8] = &[
-///     0x03, 0x02, 0x23, 0x07, // ...
-/// ];
-/// let words = gfx_hal::pso::read_spirv(std::io::Cursor::new(&SPIRV[..])).unwrap();
-/// ```
-pub fn read_spirv<R: io::Read + io::Seek>(mut x: R) -> io::Result<Vec<u32>> {
-    let size = x.seek(io::SeekFrom::End(0))?;
-    if size % 4 != 0 {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidData,
-            "input length not divisible by 4",
-        ));
-    }
-    if size > usize::max_value() as u64 {
-        return Err(io::Error::new(io::ErrorKind::InvalidData, "input too long"));
-    }
-    let words = (size / 4) as usize;
-    let mut result = Vec::<u32>::with_capacity(words);
-    x.seek(io::SeekFrom::Start(0))?;
-    unsafe {
-        // Writing all bytes through a pointer with less strict alignment when our type has no
-        // invalid bitpatterns is safe.
-        x.read_exact(slice::from_raw_parts_mut(
-            result.as_mut_ptr() as *mut u8,
-            words * 4,
-        ))?;
-        result.set_len(words);
-    }
-    const MAGIC_NUMBER: u32 = 0x07230203;
-    if result.len() > 0 && result[0] == MAGIC_NUMBER.swap_bytes() {
-        for word in &mut result {
-            *word = word.swap_bytes();
-        }
-    }
-    if result.len() == 0 || result[0] != MAGIC_NUMBER {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidData,
-            "input missing SPIR-V magic number",
-        ));
-    }
-    Ok(result)
 }

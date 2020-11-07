@@ -10,8 +10,7 @@ use hal::{
     pool::CommandPoolCreateFlags,
     pso::VertexInputRate,
     window::SwapchainConfig,
-    {buffer, device as d, format, image, pass, pso, query, queue},
-    {Features, MemoryTypeId},
+    {buffer, device as d, format, image, pass, pso, query, queue}, {Features, MemoryTypeId},
 };
 
 use std::borrow::Borrow;
@@ -102,70 +101,93 @@ impl GraphicsPipelineInfoBuf {
     ) {
         let mut this = Pin::get_mut(this.as_mut()); // use into_inner when it gets stable
 
-        // Vertex stage
-        // vertex shader is required
-        this.add_stage(vk::ShaderStageFlags::VERTEX, &desc.shaders.vertex);
+        match desc.primitive_assembler {
+            pso::PrimitiveAssemblerDesc::Vertex {
+                ref buffers,
+                ref attributes,
+                ref input_assembler,
+                ref vertex,
+                ref tessellation,
+                ref geometry,
+            } => {
+                // Vertex stage
+                // vertex shader is required
+                this.add_stage(vk::ShaderStageFlags::VERTEX, vertex);
+
+                // Geometry stage
+                if let Some(ref entry) = geometry {
+                    this.add_stage(vk::ShaderStageFlags::GEOMETRY, entry);
+                }
+                // Tessellation stage
+                if let Some(ts) = tessellation {
+                    this.add_stage(vk::ShaderStageFlags::TESSELLATION_CONTROL, &ts.0);
+                    this.add_stage(vk::ShaderStageFlags::TESSELLATION_EVALUATION, &ts.1);
+                }
+                this.vertex_bindings = buffers.iter().map(|vbuf| {
+                    vk::VertexInputBindingDescription {
+                        binding: vbuf.binding,
+                        stride: vbuf.stride as u32,
+                        input_rate: match vbuf.rate {
+                            VertexInputRate::Vertex => vk::VertexInputRate::VERTEX,
+                            VertexInputRate::Instance(divisor) => {
+                                debug_assert_eq!(divisor, 1, "Custom vertex rate divisors not supported in Vulkan backend without extension");
+                                vk::VertexInputRate::INSTANCE
+                            },
+                        },
+                    }
+                }).collect();
+
+                this.vertex_attributes = attributes
+                    .iter()
+                    .map(|attr| vk::VertexInputAttributeDescription {
+                        location: attr.location as u32,
+                        binding: attr.binding as u32,
+                        format: conv::map_format(attr.element.format),
+                        offset: attr.element.offset as u32,
+                    })
+                    .collect();
+
+                this.vertex_input_state = vk::PipelineVertexInputStateCreateInfo {
+                    s_type: vk::StructureType::PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+                    p_next: ptr::null(),
+                    flags: vk::PipelineVertexInputStateCreateFlags::empty(),
+                    vertex_binding_description_count: this.vertex_bindings.len() as _,
+                    p_vertex_binding_descriptions: this.vertex_bindings.as_ptr(),
+                    vertex_attribute_description_count: this.vertex_attributes.len() as _,
+                    p_vertex_attribute_descriptions: this.vertex_attributes.as_ptr(),
+                };
+
+                this.input_assembly_state = vk::PipelineInputAssemblyStateCreateInfo {
+                    s_type: vk::StructureType::PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+                    p_next: ptr::null(),
+                    flags: vk::PipelineInputAssemblyStateCreateFlags::empty(),
+                    topology: conv::map_topology(&input_assembler),
+                    primitive_restart_enable: match input_assembler.restart_index {
+                        Some(_) => vk::TRUE,
+                        None => vk::FALSE,
+                    },
+                };
+            }
+            pso::PrimitiveAssemblerDesc::Mesh { ref task, ref mesh } => {
+                this.vertex_bindings = Vec::new();
+                this.vertex_attributes = Vec::new();
+                this.vertex_input_state = vk::PipelineVertexInputStateCreateInfo::default();
+                this.input_assembly_state = vk::PipelineInputAssemblyStateCreateInfo::default();
+
+                // Task stage, optional
+                if let Some(ref entry) = task {
+                    this.add_stage(vk::ShaderStageFlags::TASK_NV, entry);
+                }
+
+                // Mesh stage
+                this.add_stage(vk::ShaderStageFlags::MESH_NV, mesh);
+            }
+        };
+
         // Pixel stage
-        if let Some(ref entry) = desc.shaders.fragment {
+        if let Some(ref entry) = desc.fragment {
             this.add_stage(vk::ShaderStageFlags::FRAGMENT, entry);
         }
-        // Geometry stage
-        if let Some(ref entry) = desc.shaders.geometry {
-            this.add_stage(vk::ShaderStageFlags::GEOMETRY, entry);
-        }
-        // Domain stage
-        if let Some(ref entry) = desc.shaders.domain {
-            this.add_stage(vk::ShaderStageFlags::TESSELLATION_EVALUATION, entry);
-        }
-        // Hull stage
-        if let Some(ref entry) = desc.shaders.hull {
-            this.add_stage(vk::ShaderStageFlags::TESSELLATION_CONTROL, entry);
-        }
-
-        this.vertex_bindings = desc.vertex_buffers.iter().map(|vbuf| {
-            vk::VertexInputBindingDescription {
-                binding: vbuf.binding,
-                stride: vbuf.stride as u32,
-                input_rate: match vbuf.rate {
-                    VertexInputRate::Vertex => vk::VertexInputRate::VERTEX,
-                    VertexInputRate::Instance(divisor) => {
-                        debug_assert_eq!(divisor, 1, "Custom vertex rate divisors not supported in Vulkan backend without extension");
-                        vk::VertexInputRate::INSTANCE
-                    },
-                },
-            }
-        }).collect();
-        this.vertex_attributes = desc
-            .attributes
-            .iter()
-            .map(|attr| vk::VertexInputAttributeDescription {
-                location: attr.location as u32,
-                binding: attr.binding as u32,
-                format: conv::map_format(attr.element.format),
-                offset: attr.element.offset as u32,
-            })
-            .collect();
-
-        this.vertex_input_state = vk::PipelineVertexInputStateCreateInfo {
-            s_type: vk::StructureType::PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::PipelineVertexInputStateCreateFlags::empty(),
-            vertex_binding_description_count: this.vertex_bindings.len() as _,
-            p_vertex_binding_descriptions: this.vertex_bindings.as_ptr(),
-            vertex_attribute_description_count: this.vertex_attributes.len() as _,
-            p_vertex_attribute_descriptions: this.vertex_attributes.as_ptr(),
-        };
-
-        this.input_assembly_state = vk::PipelineInputAssemblyStateCreateInfo {
-            s_type: vk::StructureType::PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::PipelineInputAssemblyStateCreateFlags::empty(),
-            topology: conv::map_topology(&desc.input_assembler),
-            primitive_restart_enable: match desc.input_assembler.restart_index {
-                Some(_) => vk::TRUE,
-                None => vk::FALSE,
-            },
-        };
 
         let depth_bias = match desc.rasterizer.depth_bias {
             Some(pso::State::Static(db)) => db,
@@ -204,7 +226,7 @@ impl GraphicsPipelineInfoBuf {
             } else {
                 vk::FALSE
             },
-            rasterizer_discard_enable: if desc.shaders.fragment.is_none()
+            rasterizer_discard_enable: if desc.fragment.is_none()
                 && desc.depth_stencil.depth.is_none()
                 && desc.depth_stencil.stencil.is_none()
             {
@@ -227,14 +249,20 @@ impl GraphicsPipelineInfoBuf {
         };
 
         this.tessellation_state = {
-            if let pso::Primitive::PatchList(patch_control_points) = desc.input_assembler.primitive
+            if let pso::PrimitiveAssemblerDesc::Vertex {
+                input_assembler, ..
+            } = &desc.primitive_assembler
             {
-                Some(vk::PipelineTessellationStateCreateInfo {
-                    s_type: vk::StructureType::PIPELINE_TESSELLATION_STATE_CREATE_INFO,
-                    p_next: ptr::null(),
-                    flags: vk::PipelineTessellationStateCreateFlags::empty(),
-                    patch_control_points: patch_control_points as _,
-                })
+                if let pso::Primitive::PatchList(patch_control_points) = input_assembler.primitive {
+                    Some(vk::PipelineTessellationStateCreateInfo {
+                        s_type: vk::StructureType::PIPELINE_TESSELLATION_STATE_CREATE_INFO,
+                        p_next: ptr::null(),
+                        flags: vk::PipelineTessellationStateCreateFlags::empty(),
+                        patch_control_points: patch_control_points as _,
+                    })
+                } else {
+                    None
+                }
             } else {
                 None
             }
@@ -527,129 +555,140 @@ impl d::Device<B> for Device {
     where
         IA: IntoIterator,
         IA::Item: Borrow<pass::Attachment>,
+        IA::IntoIter: ExactSizeIterator,
         IS: IntoIterator,
         IS::Item: Borrow<pass::SubpassDesc<'a>>,
+        IS::IntoIter: ExactSizeIterator,
         ID: IntoIterator,
         ID::Item: Borrow<pass::SubpassDependency>,
+        ID::IntoIter: ExactSizeIterator,
     {
-        let attachments = attachments
-            .into_iter()
-            .map(|attachment| {
-                let attachment = attachment.borrow();
-                vk::AttachmentDescription {
-                    flags: vk::AttachmentDescriptionFlags::empty(), // TODO: may even alias!
-                    format: attachment
-                        .format
-                        .map_or(vk::Format::UNDEFINED, conv::map_format),
-                    samples: vk::SampleCountFlags::from_raw(
-                        (attachment.samples as u32) & vk::SampleCountFlags::all().as_raw(),
-                    ),
-                    load_op: conv::map_attachment_load_op(attachment.ops.load),
-                    store_op: conv::map_attachment_store_op(attachment.ops.store),
-                    stencil_load_op: conv::map_attachment_load_op(attachment.stencil_ops.load),
-                    stencil_store_op: conv::map_attachment_store_op(attachment.stencil_ops.store),
-                    initial_layout: conv::map_image_layout(attachment.layouts.start),
-                    final_layout: conv::map_image_layout(attachment.layouts.end),
-                }
-            })
-            .collect::<Vec<_>>();
+        let attachments = attachments.into_iter().map(|attachment| {
+            let attachment = attachment.borrow();
+            vk::AttachmentDescription {
+                flags: vk::AttachmentDescriptionFlags::empty(), // TODO: may even alias!
+                format: attachment
+                    .format
+                    .map_or(vk::Format::UNDEFINED, conv::map_format),
+                samples: vk::SampleCountFlags::from_raw(
+                    (attachment.samples as u32) & vk::SampleCountFlags::all().as_raw(),
+                ),
+                load_op: conv::map_attachment_load_op(attachment.ops.load),
+                store_op: conv::map_attachment_store_op(attachment.ops.store),
+                stencil_load_op: conv::map_attachment_load_op(attachment.stencil_ops.load),
+                stencil_store_op: conv::map_attachment_store_op(attachment.stencil_ops.store),
+                initial_layout: conv::map_image_layout(attachment.layouts.start),
+                final_layout: conv::map_image_layout(attachment.layouts.end),
+            }
+        });
 
-        let clear_attachments_mask = attachments
-            .iter()
-            .enumerate()
-            .filter_map(|(i, at)| {
-                if at.load_op == vk::AttachmentLoadOp::CLEAR
-                    || at.stencil_load_op == vk::AttachmentLoadOp::CLEAR
-                {
-                    Some(1 << i as u64)
-                } else {
-                    None
-                }
-            })
-            .sum();
+        let dependencies = dependencies.into_iter().map(|subpass_dep| {
+            let sdep = subpass_dep.borrow();
+            // TODO: checks
+            vk::SubpassDependency {
+                src_subpass: sdep
+                    .passes
+                    .start
+                    .map_or(vk::SUBPASS_EXTERNAL, |id| id as u32),
+                dst_subpass: sdep.passes.end.map_or(vk::SUBPASS_EXTERNAL, |id| id as u32),
+                src_stage_mask: conv::map_pipeline_stage(sdep.stages.start),
+                dst_stage_mask: conv::map_pipeline_stage(sdep.stages.end),
+                src_access_mask: conv::map_image_access(sdep.accesses.start),
+                dst_access_mask: conv::map_image_access(sdep.accesses.end),
+                dependency_flags: mem::transmute(sdep.flags),
+            }
+        });
 
-        let attachment_refs = subpasses
-            .into_iter()
-            .map(|subpass| {
-                let subpass = subpass.borrow();
-                fn make_ref(&(id, layout): &pass::AttachmentRef) -> vk::AttachmentReference {
-                    vk::AttachmentReference {
-                        attachment: id as _,
-                        layout: conv::map_image_layout(layout),
-                    }
-                }
-                let colors = subpass.colors.iter().map(make_ref).collect::<Box<[_]>>();
-                let depth_stencil = subpass.depth_stencil.map(make_ref);
-                let inputs = subpass.inputs.iter().map(make_ref).collect::<Box<[_]>>();
-                let preserves = subpass
-                    .preserves
+        let (clear_attachments_mask, result) =
+            inplace_it::inplace_or_alloc_array(attachments.len(), |uninit_guard| {
+                let attachments = uninit_guard.init_with_iter(attachments);
+
+                let clear_attachments_mask = attachments
                     .iter()
-                    .map(|&id| id as u32)
+                    .enumerate()
+                    .filter_map(|(i, at)| {
+                        if at.load_op == vk::AttachmentLoadOp::CLEAR
+                            || at.stencil_load_op == vk::AttachmentLoadOp::CLEAR
+                        {
+                            Some(1 << i as u64)
+                        } else {
+                            None
+                        }
+                    })
+                    .sum();
+
+                let attachment_refs = subpasses
+                    .into_iter()
+                    .map(|subpass| {
+                        let subpass = subpass.borrow();
+                        fn make_ref(
+                            &(id, layout): &pass::AttachmentRef,
+                        ) -> vk::AttachmentReference {
+                            vk::AttachmentReference {
+                                attachment: id as _,
+                                layout: conv::map_image_layout(layout),
+                            }
+                        }
+                        let colors = subpass.colors.iter().map(make_ref).collect::<Box<[_]>>();
+                        let depth_stencil = subpass.depth_stencil.map(make_ref);
+                        let inputs = subpass.inputs.iter().map(make_ref).collect::<Box<[_]>>();
+                        let preserves = subpass
+                            .preserves
+                            .iter()
+                            .map(|&id| id as u32)
+                            .collect::<Box<[_]>>();
+                        let resolves = subpass.resolves.iter().map(make_ref).collect::<Box<[_]>>();
+
+                        (colors, depth_stencil, inputs, preserves, resolves)
+                    })
                     .collect::<Box<[_]>>();
-                let resolves = subpass.resolves.iter().map(make_ref).collect::<Box<[_]>>();
 
-                (colors, depth_stencil, inputs, preserves, resolves)
-            })
-            .collect::<Box<[_]>>();
+                let subpasses = attachment_refs
+                    .iter()
+                    .map(|(colors, depth_stencil, inputs, preserves, resolves)| {
+                        vk::SubpassDescription {
+                            flags: vk::SubpassDescriptionFlags::empty(),
+                            pipeline_bind_point: vk::PipelineBindPoint::GRAPHICS,
+                            input_attachment_count: inputs.len() as u32,
+                            p_input_attachments: inputs.as_ptr(),
+                            color_attachment_count: colors.len() as u32,
+                            p_color_attachments: colors.as_ptr(),
+                            p_resolve_attachments: if resolves.is_empty() {
+                                ptr::null()
+                            } else {
+                                resolves.as_ptr()
+                            },
+                            p_depth_stencil_attachment: match depth_stencil {
+                                Some(ref aref) => aref as *const _,
+                                None => ptr::null(),
+                            },
+                            preserve_attachment_count: preserves.len() as u32,
+                            p_preserve_attachments: preserves.as_ptr(),
+                        }
+                    })
+                    .collect::<Box<[_]>>();
 
-        let subpasses = attachment_refs
-            .iter()
-            .map(
-                |(colors, depth_stencil, inputs, preserves, resolves)| vk::SubpassDescription {
-                    flags: vk::SubpassDescriptionFlags::empty(),
-                    pipeline_bind_point: vk::PipelineBindPoint::GRAPHICS,
-                    input_attachment_count: inputs.len() as u32,
-                    p_input_attachments: inputs.as_ptr(),
-                    color_attachment_count: colors.len() as u32,
-                    p_color_attachments: colors.as_ptr(),
-                    p_resolve_attachments: if resolves.is_empty() {
-                        ptr::null()
-                    } else {
-                        resolves.as_ptr()
-                    },
-                    p_depth_stencil_attachment: match depth_stencil {
-                        Some(ref aref) => aref as *const _,
-                        None => ptr::null(),
-                    },
-                    preserve_attachment_count: preserves.len() as u32,
-                    p_preserve_attachments: preserves.as_ptr(),
-                },
-            )
-            .collect::<Box<[_]>>();
+                let result =
+                    inplace_it::inplace_or_alloc_array(dependencies.len(), |uninit_guard| {
+                        let dependencies = uninit_guard.init_with_iter(dependencies);
 
-        let dependencies = dependencies
-            .into_iter()
-            .map(|subpass_dep| {
-                let sdep = subpass_dep.borrow();
-                // TODO: checks
-                vk::SubpassDependency {
-                    src_subpass: sdep
-                        .passes
-                        .start
-                        .map_or(vk::SUBPASS_EXTERNAL, |id| id as u32),
-                    dst_subpass: sdep.passes.end.map_or(vk::SUBPASS_EXTERNAL, |id| id as u32),
-                    src_stage_mask: conv::map_pipeline_stage(sdep.stages.start),
-                    dst_stage_mask: conv::map_pipeline_stage(sdep.stages.end),
-                    src_access_mask: conv::map_image_access(sdep.accesses.start),
-                    dst_access_mask: conv::map_image_access(sdep.accesses.end),
-                    dependency_flags: mem::transmute(sdep.flags),
-                }
-            })
-            .collect::<Vec<_>>();
+                        let info = vk::RenderPassCreateInfo {
+                            s_type: vk::StructureType::RENDER_PASS_CREATE_INFO,
+                            p_next: ptr::null(),
+                            flags: vk::RenderPassCreateFlags::empty(),
+                            attachment_count: attachments.len() as u32,
+                            p_attachments: attachments.as_ptr(),
+                            subpass_count: subpasses.len() as u32,
+                            p_subpasses: subpasses.as_ptr(),
+                            dependency_count: dependencies.len() as u32,
+                            p_dependencies: dependencies.as_ptr(),
+                        };
 
-        let info = vk::RenderPassCreateInfo {
-            s_type: vk::StructureType::RENDER_PASS_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::RenderPassCreateFlags::empty(),
-            attachment_count: attachments.len() as u32,
-            p_attachments: attachments.as_ptr(),
-            subpass_count: subpasses.len() as u32,
-            p_subpasses: subpasses.as_ptr(),
-            dependency_count: dependencies.len() as u32,
-            p_dependencies: dependencies.as_ptr(),
-        };
+                        self.shared.raw.create_render_pass(&info, None)
+                    });
 
-        let result = self.shared.raw.create_render_pass(&info, None);
+                (clear_attachments_mask, result)
+            });
 
         match result {
             Ok(renderpass) => Ok(n::RenderPass {
@@ -670,39 +709,44 @@ impl d::Device<B> for Device {
     where
         IS: IntoIterator,
         IS::Item: Borrow<n::DescriptorSetLayout>,
+        IS::IntoIter: ExactSizeIterator,
         IR: IntoIterator,
         IR::Item: Borrow<(pso::ShaderStageFlags, Range<u32>)>,
+        IR::IntoIter: ExactSizeIterator,
     {
-        let set_layouts = sets
-            .into_iter()
-            .map(|set| set.borrow().raw)
-            .collect::<Vec<_>>();
+        let set_layouts = sets.into_iter().map(|set| set.borrow().raw);
 
-        debug!("create_pipeline_layout {:?}", set_layouts);
+        let push_constant_ranges = push_constant_ranges.into_iter().map(|range| {
+            let &(s, ref r) = range.borrow();
+            vk::PushConstantRange {
+                stage_flags: conv::map_stage_flags(s),
+                offset: r.start,
+                size: r.end - r.start,
+            }
+        });
 
-        let push_constant_ranges = push_constant_ranges
-            .into_iter()
-            .map(|range| {
-                let &(s, ref r) = range.borrow();
-                vk::PushConstantRange {
-                    stage_flags: conv::map_stage_flags(s),
-                    offset: r.start,
-                    size: r.end - r.start,
-                }
+        let result = inplace_it::inplace_or_alloc_array(set_layouts.len(), |uninit_guard| {
+            let set_layouts = uninit_guard.init_with_iter(set_layouts);
+
+            // TODO: set_layouts doesnt implement fmt::Debug, submit PR?
+            // debug!("create_pipeline_layout {:?}", set_layouts);
+
+            inplace_it::inplace_or_alloc_array(push_constant_ranges.len(), |uninit_guard| {
+                let push_constant_ranges = uninit_guard.init_with_iter(push_constant_ranges);
+
+                let info = vk::PipelineLayoutCreateInfo {
+                    s_type: vk::StructureType::PIPELINE_LAYOUT_CREATE_INFO,
+                    p_next: ptr::null(),
+                    flags: vk::PipelineLayoutCreateFlags::empty(),
+                    set_layout_count: set_layouts.len() as u32,
+                    p_set_layouts: set_layouts.as_ptr(),
+                    push_constant_range_count: push_constant_ranges.len() as u32,
+                    p_push_constant_ranges: push_constant_ranges.as_ptr(),
+                };
+
+                self.shared.raw.create_pipeline_layout(&info, None)
             })
-            .collect::<Vec<_>>();
-
-        let info = vk::PipelineLayoutCreateInfo {
-            s_type: vk::StructureType::PIPELINE_LAYOUT_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::PipelineLayoutCreateFlags::empty(),
-            set_layout_count: set_layouts.len() as u32,
-            p_set_layouts: set_layouts.as_ptr(),
-            push_constant_range_count: push_constant_ranges.len() as u32,
-            p_push_constant_ranges: push_constant_ranges.as_ptr(),
-        };
-
-        let result = self.shared.raw.create_pipeline_layout(&info, None);
+        });
 
         match result {
             Ok(raw) => Ok(n::PipelineLayout { raw }),
@@ -766,17 +810,20 @@ impl d::Device<B> for Device {
     where
         I: IntoIterator,
         I::Item: Borrow<n::PipelineCache>,
+        I::IntoIter: ExactSizeIterator,
     {
-        let caches = sources
-            .into_iter()
-            .map(|s| s.borrow().raw)
-            .collect::<Vec<_>>();
-        let result = self.shared.raw.fp_v1_0().merge_pipeline_caches(
-            self.shared.raw.handle(),
-            target.raw,
-            caches.len() as u32,
-            caches.as_ptr(),
-        );
+        let caches = sources.into_iter().map(|s| s.borrow().raw);
+
+        let result = inplace_it::inplace_or_alloc_array(caches.len(), |uninit_guard| {
+            let caches = uninit_guard.init_with_iter(caches);
+
+            self.shared.raw.fp_v1_0().merge_pipeline_caches(
+                self.shared.raw.handle(),
+                target.raw,
+                caches.len() as u32,
+                caches.as_ptr(),
+            )
+        });
 
         match result {
             vk::Result::SUCCESS => Ok(()),
@@ -1453,7 +1500,7 @@ impl d::Device<B> for Device {
         let layout = self.shared.raw.get_image_subresource_layout(image.raw, sub);
 
         image::SubresourceFootprint {
-            slice: layout.offset .. layout.offset + layout.size,
+            slice: layout.offset..layout.offset + layout.size,
             row_pitch: layout.row_pitch,
             array_pitch: layout.array_pitch,
             depth_pitch: layout.depth_pitch,
@@ -1468,7 +1515,10 @@ impl d::Device<B> for Device {
     ) -> Result<(), d::BindError> {
         // TODO: error handling
         // TODO: check required type
-        let result = self.shared.raw.bind_image_memory(image.raw, memory.raw, offset);
+        let result = self
+            .shared
+            .raw
+            .bind_image_memory(image.raw, memory.raw, offset);
 
         match result {
             Ok(()) => Ok(()),
@@ -1527,28 +1577,30 @@ impl d::Device<B> for Device {
     where
         T: IntoIterator,
         T::Item: Borrow<pso::DescriptorRangeDesc>,
+        T::IntoIter: ExactSizeIterator,
     {
-        let pools = descriptor_pools
-            .into_iter()
-            .map(|pool| {
-                let pool = pool.borrow();
-                vk::DescriptorPoolSize {
-                    ty: conv::map_descriptor_type(pool.ty),
-                    descriptor_count: pool.count as u32,
-                }
-            })
-            .collect::<Vec<_>>();
+        let pools = descriptor_pools.into_iter().map(|pool| {
+            let pool = pool.borrow();
+            vk::DescriptorPoolSize {
+                ty: conv::map_descriptor_type(pool.ty),
+                descriptor_count: pool.count as u32,
+            }
+        });
 
-        let info = vk::DescriptorPoolCreateInfo {
-            s_type: vk::StructureType::DESCRIPTOR_POOL_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: conv::map_descriptor_pool_create_flags(flags),
-            max_sets: max_sets as u32,
-            pool_size_count: pools.len() as u32,
-            p_pool_sizes: pools.as_ptr(),
-        };
+        let result = inplace_it::inplace_or_alloc_array(pools.len(), |uninit_guard| {
+            let pools = uninit_guard.init_with_iter(pools);
 
-        let result = self.shared.raw.create_descriptor_pool(&info, None);
+            let info = vk::DescriptorPoolCreateInfo {
+                s_type: vk::StructureType::DESCRIPTOR_POOL_CREATE_INFO,
+                p_next: ptr::null(),
+                flags: conv::map_descriptor_pool_create_flags(flags),
+                max_sets: max_sets as u32,
+                pool_size_count: pools.len() as u32,
+                p_pool_sizes: pools.as_ptr(),
+            };
+
+            self.shared.raw.create_descriptor_pool(&info, None)
+        });
 
         match result {
             Ok(pool) => Ok(n::DescriptorPool {
@@ -1572,53 +1624,57 @@ impl d::Device<B> for Device {
         I::Item: Borrow<pso::DescriptorSetLayoutBinding>,
         J: IntoIterator,
         J::Item: Borrow<n::Sampler>,
+        J::IntoIter: ExactSizeIterator,
     {
-        let immutable_samplers = immutable_sampler_iter
-            .into_iter()
-            .map(|is| is.borrow().0)
-            .collect::<Vec<_>>();
+        let immutable_samplers = immutable_sampler_iter.into_iter().map(|is| is.borrow().0);
         let mut sampler_offset = 0;
 
-        let bindings = Arc::new(
-            binding_iter
-                .into_iter()
-                .map(|b| b.borrow().clone())
-                .collect::<Vec<_>>(),
-        );
+        let mut bindings = binding_iter
+            .into_iter()
+            .map(|b| b.borrow().clone())
+            .collect::<Vec<_>>();
+        // Sorting will come handy in `write_descriptor_sets`.
+        bindings.sort_by_key(|b| b.binding);
 
-        let raw_bindings = bindings
-            .iter()
-            .map(|b| vk::DescriptorSetLayoutBinding {
+        let result = inplace_it::inplace_or_alloc_array(immutable_samplers.len(), |uninit_guard| {
+            let immutable_samplers = uninit_guard.init_with_iter(immutable_samplers);
+
+            let raw_bindings = bindings.iter().map(|b| vk::DescriptorSetLayoutBinding {
                 binding: b.binding,
                 descriptor_type: conv::map_descriptor_type(b.ty),
                 descriptor_count: b.count as _,
                 stage_flags: conv::map_stage_flags(b.stage_flags),
                 p_immutable_samplers: if b.immutable_samplers {
-                    let slice = &immutable_samplers[sampler_offset ..];
+                    let slice = &immutable_samplers[sampler_offset..];
                     sampler_offset += b.count;
                     slice.as_ptr()
                 } else {
                     ptr::null()
                 },
+            });
+
+            inplace_it::inplace_or_alloc_array(raw_bindings.len(), |uninit_guard| {
+                let raw_bindings = uninit_guard.init_with_iter(raw_bindings);
+
+                // TODO raw_bindings doesnt implement fmt::Debug
+                // debug!("create_descriptor_set_layout {:?}", raw_bindings);
+
+                let info = vk::DescriptorSetLayoutCreateInfo {
+                    s_type: vk::StructureType::DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+                    p_next: ptr::null(),
+                    flags: vk::DescriptorSetLayoutCreateFlags::empty(),
+                    binding_count: raw_bindings.len() as _,
+                    p_bindings: raw_bindings.as_ptr(),
+                };
+
+                self.shared.raw.create_descriptor_set_layout(&info, None)
             })
-            .collect::<Vec<_>>();
-
-        debug!("create_descriptor_set_layout {:?}", raw_bindings);
-
-        let info = vk::DescriptorSetLayoutCreateInfo {
-            s_type: vk::StructureType::DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::DescriptorSetLayoutCreateFlags::empty(),
-            binding_count: raw_bindings.len() as _,
-            p_bindings: raw_bindings.as_ptr(),
-        };
-
-        let result = self.shared.raw.create_descriptor_set_layout(&info, None);
+        });
 
         match result {
             Ok(layout) => Ok(n::DescriptorSetLayout {
                 raw: layout,
-                bindings,
+                bindings: Arc::new(bindings),
             }),
             Err(vk::Result::ERROR_OUT_OF_HOST_MEMORY) => Err(d::OutOfMemory::Host.into()),
             Err(vk::Result::ERROR_OUT_OF_DEVICE_MEMORY) => Err(d::OutOfMemory::Device.into()),
@@ -1632,33 +1688,56 @@ impl d::Device<B> for Device {
         J: IntoIterator,
         J::Item: Borrow<pso::Descriptor<'a, B>>,
     {
-        let mut raw_writes = Vec::new();
+        let mut raw_writes = Vec::<vk::WriteDescriptorSet>::new();
         let mut image_infos = Vec::new();
         let mut buffer_infos = Vec::new();
         let mut texel_buffer_views = Vec::new();
 
         for sw in write_iter {
-            let layout = sw
+            // gfx-hal allows the type and stages to be different between the descriptor
+            // in a single write, while Vulkan requires them to be the same.
+            let mut last_type = vk::DescriptorType::SAMPLER;
+            let mut last_stages = pso::ShaderStageFlags::empty();
+
+            let mut binding_pos = sw
                 .set
                 .bindings
-                .iter()
-                .find(|lb| lb.binding == sw.binding)
+                .binary_search_by_key(&sw.binding, |b| b.binding)
                 .expect("Descriptor set writes don't match the set layout!");
-            let mut raw = vk::WriteDescriptorSet {
-                s_type: vk::StructureType::WRITE_DESCRIPTOR_SET,
-                p_next: ptr::null(),
-                dst_set: sw.set.raw,
-                dst_binding: sw.binding,
-                dst_array_element: sw.array_offset as _,
-                descriptor_count: 0,
-                descriptor_type: conv::map_descriptor_type(layout.ty),
-                p_image_info: ptr::null(),
-                p_buffer_info: ptr::null(),
-                p_texel_buffer_view: ptr::null(),
-            };
+            let mut array_offset = sw.array_offset;
 
             for descriptor in sw.descriptors {
-                raw.descriptor_count += 1;
+                let layout_binding = &sw.set.bindings[binding_pos];
+                array_offset += 1;
+                if array_offset == layout_binding.count {
+                    array_offset = 0;
+                    binding_pos += 1;
+                }
+
+                let descriptor_type = conv::map_descriptor_type(layout_binding.ty);
+                if descriptor_type == last_type && layout_binding.stage_flags == last_stages {
+                    raw_writes.last_mut().unwrap().descriptor_count += 1;
+                } else {
+                    last_type = descriptor_type;
+                    last_stages = layout_binding.stage_flags;
+                    raw_writes.push(vk::WriteDescriptorSet {
+                        s_type: vk::StructureType::WRITE_DESCRIPTOR_SET,
+                        p_next: ptr::null(),
+                        dst_set: sw.set.raw,
+                        dst_binding: layout_binding.binding,
+                        dst_array_element: if layout_binding.binding == sw.binding {
+                            sw.array_offset as _
+                        } else {
+                            0
+                        },
+                        descriptor_count: 1,
+                        descriptor_type,
+                        p_image_info: image_infos.len() as _,
+                        p_buffer_info: buffer_infos.len() as _,
+                        p_texel_buffer_view: texel_buffer_views.len() as _,
+                    });
+                }
+
                 match *descriptor.borrow() {
                     pso::Descriptor::Sampler(sampler) => {
                         image_infos.push(vk::DescriptorImageInfo {
@@ -1693,14 +1772,9 @@ impl d::Device<B> for Device {
                     }
                 }
             }
-
-            raw.p_image_info = image_infos.len() as _;
-            raw.p_buffer_info = buffer_infos.len() as _;
-            raw.p_texel_buffer_view = texel_buffer_views.len() as _;
-            raw_writes.push(raw);
         }
 
-        // Patch the pointers now that we have all the storage allocated
+        // Patch the pointers now that we have all the storage allocated.
         for raw in &mut raw_writes {
             use crate::vk::DescriptorType as Dt;
             match raw.descriptor_type {
@@ -1711,14 +1785,13 @@ impl d::Device<B> for Device {
                 | Dt::INPUT_ATTACHMENT => {
                     raw.p_buffer_info = ptr::null();
                     raw.p_texel_buffer_view = ptr::null();
-                    let base = raw.p_image_info as usize - raw.descriptor_count as usize;
-                    raw.p_image_info = image_infos[base ..].as_ptr();
+                    raw.p_image_info = image_infos[raw.p_image_info as usize..].as_ptr();
                 }
                 Dt::UNIFORM_TEXEL_BUFFER | Dt::STORAGE_TEXEL_BUFFER => {
                     raw.p_buffer_info = ptr::null();
                     raw.p_image_info = ptr::null();
-                    let base = raw.p_texel_buffer_view as usize - raw.descriptor_count as usize;
-                    raw.p_texel_buffer_view = texel_buffer_views[base ..].as_ptr();
+                    raw.p_texel_buffer_view =
+                        texel_buffer_views[raw.p_texel_buffer_view as usize..].as_ptr();
                 }
                 Dt::UNIFORM_BUFFER
                 | Dt::STORAGE_BUFFER
@@ -1726,8 +1799,7 @@ impl d::Device<B> for Device {
                 | Dt::UNIFORM_BUFFER_DYNAMIC => {
                     raw.p_image_info = ptr::null();
                     raw.p_texel_buffer_view = ptr::null();
-                    let base = raw.p_buffer_info as usize - raw.descriptor_count as usize;
-                    raw.p_buffer_info = buffer_infos[base ..].as_ptr();
+                    raw.p_buffer_info = buffer_infos[raw.p_buffer_info as usize..].as_ptr();
                 }
                 _ => panic!("unknown descriptor type"),
             }
@@ -1740,26 +1812,28 @@ impl d::Device<B> for Device {
     where
         I: IntoIterator,
         I::Item: Borrow<pso::DescriptorSetCopy<'a, B>>,
+        I::IntoIter: ExactSizeIterator,
     {
-        let copies = copies
-            .into_iter()
-            .map(|copy| {
-                let c = copy.borrow();
-                vk::CopyDescriptorSet {
-                    s_type: vk::StructureType::COPY_DESCRIPTOR_SET,
-                    p_next: ptr::null(),
-                    src_set: c.src_set.raw,
-                    src_binding: c.src_binding as u32,
-                    src_array_element: c.src_array_offset as u32,
-                    dst_set: c.dst_set.raw,
-                    dst_binding: c.dst_binding as u32,
-                    dst_array_element: c.dst_array_offset as u32,
-                    descriptor_count: c.count as u32,
-                }
-            })
-            .collect::<Vec<_>>();
+        let copies = copies.into_iter().map(|copy| {
+            let c = copy.borrow();
+            vk::CopyDescriptorSet {
+                s_type: vk::StructureType::COPY_DESCRIPTOR_SET,
+                p_next: ptr::null(),
+                src_set: c.src_set.raw,
+                src_binding: c.src_binding as u32,
+                src_array_element: c.src_array_offset as u32,
+                dst_set: c.dst_set.raw,
+                dst_binding: c.dst_binding as u32,
+                dst_array_element: c.dst_array_offset as u32,
+                descriptor_count: c.count as u32,
+            }
+        });
 
-        self.shared.raw.update_descriptor_sets(&[], &copies);
+        inplace_it::inplace_or_alloc_array(copies.len(), |uninit_guard| {
+            let copies = uninit_guard.init_with_iter(copies);
+
+            self.shared.raw.update_descriptor_sets(&[], &copies);
+        });
     }
 
     unsafe fn map_memory(
@@ -1861,12 +1935,14 @@ impl d::Device<B> for Device {
     where
         I: IntoIterator,
         I::Item: Borrow<n::Fence>,
+        I::IntoIter: ExactSizeIterator,
     {
-        let fences = fences
-            .into_iter()
-            .map(|fence| fence.borrow().0)
-            .collect::<Vec<_>>();
-        let result = self.shared.raw.reset_fences(&fences);
+        let fences = fences.into_iter().map(|fence| fence.borrow().0);
+
+        let result = inplace_it::inplace_or_alloc_array(fences.len(), |uninit_guard| {
+            let fences = uninit_guard.init_with_iter(fences);
+            self.shared.raw.reset_fences(&fences)
+        });
 
         match result {
             Ok(()) => Ok(()),
@@ -1885,16 +1961,20 @@ impl d::Device<B> for Device {
     where
         I: IntoIterator,
         I::Item: Borrow<n::Fence>,
+        I::IntoIter: ExactSizeIterator,
     {
-        let fences = fences
-            .into_iter()
-            .map(|fence| fence.borrow().0)
-            .collect::<Vec<_>>();
+        let fences = fences.into_iter().map(|fence| fence.borrow().0);
+
         let all = match wait {
             d::WaitFor::Any => false,
             d::WaitFor::All => true,
         };
-        let result = self.shared.raw.wait_for_fences(&fences, all, timeout_ns);
+
+        let result = inplace_it::inplace_or_alloc_array(fences.len(), |uninit_guard| {
+            let fences = uninit_guard.init_with_iter(fences);
+            self.shared.raw.wait_for_fences(&fences, all, timeout_ns)
+        });
+
         match result {
             Ok(()) => Ok(true),
             Err(vk::Result::TIMEOUT) => Ok(false),
@@ -2034,7 +2114,241 @@ impl d::Device<B> for Device {
         }
     }
 
-    unsafe fn create_swapchain(
+    unsafe fn destroy_query_pool(&self, pool: n::QueryPool) {
+        self.shared.raw.destroy_query_pool(pool.0, None);
+    }
+
+    unsafe fn destroy_shader_module(&self, module: n::ShaderModule) {
+        self.shared.raw.destroy_shader_module(module.raw, None);
+    }
+
+    unsafe fn destroy_render_pass(&self, rp: n::RenderPass) {
+        self.shared.raw.destroy_render_pass(rp.raw, None);
+    }
+
+    unsafe fn destroy_pipeline_layout(&self, pl: n::PipelineLayout) {
+        self.shared.raw.destroy_pipeline_layout(pl.raw, None);
+    }
+
+    unsafe fn destroy_graphics_pipeline(&self, pipeline: n::GraphicsPipeline) {
+        self.shared.raw.destroy_pipeline(pipeline.0, None);
+    }
+
+    unsafe fn destroy_compute_pipeline(&self, pipeline: n::ComputePipeline) {
+        self.shared.raw.destroy_pipeline(pipeline.0, None);
+    }
+
+    unsafe fn destroy_framebuffer(&self, fb: n::Framebuffer) {
+        if fb.owned {
+            self.shared.raw.destroy_framebuffer(fb.raw, None);
+        }
+    }
+
+    unsafe fn destroy_buffer(&self, buffer: n::Buffer) {
+        self.shared.raw.destroy_buffer(buffer.raw, None);
+    }
+
+    unsafe fn destroy_buffer_view(&self, view: n::BufferView) {
+        self.shared.raw.destroy_buffer_view(view.raw, None);
+    }
+
+    unsafe fn destroy_image(&self, image: n::Image) {
+        self.shared.raw.destroy_image(image.raw, None);
+    }
+
+    unsafe fn destroy_image_view(&self, view: n::ImageView) {
+        match view.owner {
+            n::ImageViewOwner::User => {
+                self.shared.raw.destroy_image_view(view.view, None);
+            }
+            n::ImageViewOwner::Surface(_fbo_cache) => {
+                //TODO: mark as deleted?
+            }
+        }
+    }
+
+    unsafe fn destroy_sampler(&self, sampler: n::Sampler) {
+        self.shared.raw.destroy_sampler(sampler.0, None);
+    }
+
+    unsafe fn destroy_descriptor_pool(&self, pool: n::DescriptorPool) {
+        self.shared.raw.destroy_descriptor_pool(pool.raw, None);
+    }
+
+    unsafe fn destroy_descriptor_set_layout(&self, layout: n::DescriptorSetLayout) {
+        self.shared
+            .raw
+            .destroy_descriptor_set_layout(layout.raw, None);
+    }
+
+    unsafe fn destroy_fence(&self, fence: n::Fence) {
+        self.shared.raw.destroy_fence(fence.0, None);
+    }
+
+    unsafe fn destroy_semaphore(&self, semaphore: n::Semaphore) {
+        self.shared.raw.destroy_semaphore(semaphore.0, None);
+    }
+
+    unsafe fn destroy_event(&self, event: n::Event) {
+        self.shared.raw.destroy_event(event.0, None);
+    }
+
+    fn wait_idle(&self) -> Result<(), d::OutOfMemory> {
+        match unsafe { self.shared.raw.device_wait_idle() } {
+            Ok(()) => Ok(()),
+            Err(vk::Result::ERROR_OUT_OF_HOST_MEMORY) => Err(d::OutOfMemory::Host),
+            Err(vk::Result::ERROR_OUT_OF_DEVICE_MEMORY) => Err(d::OutOfMemory::Device),
+            _ => unreachable!(),
+        }
+    }
+
+    unsafe fn set_image_name(&self, image: &mut n::Image, name: &str) {
+        self.set_object_name(vk::ObjectType::IMAGE, image.raw.as_raw(), name)
+    }
+
+    unsafe fn set_buffer_name(&self, buffer: &mut n::Buffer, name: &str) {
+        self.set_object_name(vk::ObjectType::BUFFER, buffer.raw.as_raw(), name)
+    }
+
+    unsafe fn set_command_buffer_name(&self, command_buffer: &mut cmd::CommandBuffer, name: &str) {
+        self.set_object_name(
+            vk::ObjectType::COMMAND_BUFFER,
+            command_buffer.raw.as_raw(),
+            name,
+        )
+    }
+
+    unsafe fn set_semaphore_name(&self, semaphore: &mut n::Semaphore, name: &str) {
+        self.set_object_name(vk::ObjectType::SEMAPHORE, semaphore.0.as_raw(), name)
+    }
+
+    unsafe fn set_fence_name(&self, fence: &mut n::Fence, name: &str) {
+        self.set_object_name(vk::ObjectType::FENCE, fence.0.as_raw(), name)
+    }
+
+    unsafe fn set_framebuffer_name(&self, framebuffer: &mut n::Framebuffer, name: &str) {
+        self.set_object_name(vk::ObjectType::FRAMEBUFFER, framebuffer.raw.as_raw(), name)
+    }
+
+    unsafe fn set_render_pass_name(&self, render_pass: &mut n::RenderPass, name: &str) {
+        self.set_object_name(vk::ObjectType::RENDER_PASS, render_pass.raw.as_raw(), name)
+    }
+
+    unsafe fn set_descriptor_set_name(&self, descriptor_set: &mut n::DescriptorSet, name: &str) {
+        self.set_object_name(
+            vk::ObjectType::DESCRIPTOR_SET,
+            descriptor_set.raw.as_raw(),
+            name,
+        )
+    }
+
+    unsafe fn set_descriptor_set_layout_name(
+        &self,
+        descriptor_set_layout: &mut n::DescriptorSetLayout,
+        name: &str,
+    ) {
+        self.set_object_name(
+            vk::ObjectType::DESCRIPTOR_SET_LAYOUT,
+            descriptor_set_layout.raw.as_raw(),
+            name,
+        )
+    }
+
+    unsafe fn set_pipeline_layout_name(&self, pipeline_layout: &mut n::PipelineLayout, name: &str) {
+        self.set_object_name(
+            vk::ObjectType::PIPELINE_LAYOUT,
+            pipeline_layout.raw.as_raw(),
+            name,
+        )
+    }
+
+    unsafe fn set_compute_pipeline_name(
+        &self,
+        compute_pipeline: &mut n::ComputePipeline,
+        name: &str,
+    ) {
+        self.set_object_name(vk::ObjectType::PIPELINE, compute_pipeline.0.as_raw(), name)
+    }
+
+    unsafe fn set_graphics_pipeline_name(
+        &self,
+        graphics_pipeline: &mut n::GraphicsPipeline,
+        name: &str,
+    ) {
+        self.set_object_name(vk::ObjectType::PIPELINE, graphics_pipeline.0.as_raw(), name)
+    }
+}
+
+impl Device {
+    /// We only work with a subset of Ash-exposed memory types that we know.
+    /// This function filters an ash mask into our mask.
+    fn filter_memory_requirements(&self, ash_mask: u32) -> u32 {
+        let mut hal_index = 0;
+        let mut mask = 0;
+        for ash_index in 0..32 {
+            if self.valid_ash_memory_types & (1 << ash_index) != 0 {
+                if ash_mask & (1 << ash_index) != 0 {
+                    mask |= 1 << hal_index;
+                }
+                hal_index += 1;
+            }
+        }
+        mask
+    }
+
+    fn get_ash_memory_type_index(&self, hal_type: MemoryTypeId) -> u32 {
+        let mut hal_count = hal_type.0;
+        for ash_index in 0..32 {
+            if self.valid_ash_memory_types & (1 << ash_index) != 0 {
+                if hal_count == 0 {
+                    return ash_index;
+                }
+                hal_count -= 1;
+            }
+        }
+        panic!("Unable to get Ash memory type for {:?}", hal_type);
+    }
+
+    unsafe fn set_object_name(&self, object_type: vk::ObjectType, object_handle: u64, name: &str) {
+        let instance = &self.shared.instance;
+        if let Some(DebugMessenger::Utils(ref debug_utils_ext, _)) = instance.debug_messenger {
+            // Keep variables outside the if-else block to ensure they do not
+            // go out of scope while we hold a pointer to them
+            let mut buffer: [u8; 64] = [0u8; 64];
+            let mut buffer_vec: Vec<u8>;
+
+            // Append a null terminator to the string
+            let name_ptr = if name.len() < 64 {
+                // Common case, string is very small. Allocate a copy on the stack.
+                std::ptr::copy_nonoverlapping(name.as_ptr(), buffer.as_mut_ptr(), name.len());
+                // Add null terminator
+                buffer[name.len()] = 0;
+                buffer.as_mut_ptr()
+            } else {
+                // Less common case, the string is large.
+                // This requires a heap allocation.
+                buffer_vec = name
+                    .as_bytes()
+                    .iter()
+                    .cloned()
+                    .chain(std::iter::once(0))
+                    .collect::<Vec<u8>>();
+                buffer_vec.as_mut_ptr()
+            };
+            let _result = debug_utils_ext.debug_utils_set_object_name(
+                self.shared.raw.handle(),
+                &vk::DebugUtilsObjectNameInfoEXT {
+                    s_type: vk::StructureType::DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+                    p_next: std::ptr::null_mut(),
+                    object_type,
+                    object_handle,
+                    p_object_name: name_ptr as *const _,
+                },
+            );
+        }
+    }
+
+    pub(crate) unsafe fn create_swapchain(
         &self,
         surface: &mut w::Surface,
         config: SwapchainConfig,
@@ -2125,203 +2439,6 @@ impl d::Device<B> for Device {
             .collect();
 
         Ok((swapchain, images))
-    }
-
-    unsafe fn destroy_swapchain(&self, swapchain: w::Swapchain) {
-        swapchain.functor.destroy_swapchain(swapchain.raw, None);
-    }
-
-    unsafe fn destroy_query_pool(&self, pool: n::QueryPool) {
-        self.shared.raw.destroy_query_pool(pool.0, None);
-    }
-
-    unsafe fn destroy_shader_module(&self, module: n::ShaderModule) {
-        self.shared.raw.destroy_shader_module(module.raw, None);
-    }
-
-    unsafe fn destroy_render_pass(&self, rp: n::RenderPass) {
-        self.shared.raw.destroy_render_pass(rp.raw, None);
-    }
-
-    unsafe fn destroy_pipeline_layout(&self, pl: n::PipelineLayout) {
-        self.shared.raw.destroy_pipeline_layout(pl.raw, None);
-    }
-
-    unsafe fn destroy_graphics_pipeline(&self, pipeline: n::GraphicsPipeline) {
-        self.shared.raw.destroy_pipeline(pipeline.0, None);
-    }
-
-    unsafe fn destroy_compute_pipeline(&self, pipeline: n::ComputePipeline) {
-        self.shared.raw.destroy_pipeline(pipeline.0, None);
-    }
-
-    unsafe fn destroy_framebuffer(&self, fb: n::Framebuffer) {
-        if fb.owned {
-            self.shared.raw.destroy_framebuffer(fb.raw, None);
-        }
-    }
-
-    unsafe fn destroy_buffer(&self, buffer: n::Buffer) {
-        self.shared.raw.destroy_buffer(buffer.raw, None);
-    }
-
-    unsafe fn destroy_buffer_view(&self, view: n::BufferView) {
-        self.shared.raw.destroy_buffer_view(view.raw, None);
-    }
-
-    unsafe fn destroy_image(&self, image: n::Image) {
-        self.shared.raw.destroy_image(image.raw, None);
-    }
-
-    unsafe fn destroy_image_view(&self, view: n::ImageView) {
-        match view.owner {
-            n::ImageViewOwner::User => {
-                self.shared.raw.destroy_image_view(view.view, None);
-            }
-            n::ImageViewOwner::Surface(_fbo_cache) => {
-                //TODO: mark as deleted?
-            }
-        }
-    }
-
-    unsafe fn destroy_sampler(&self, sampler: n::Sampler) {
-        self.shared.raw.destroy_sampler(sampler.0, None);
-    }
-
-    unsafe fn destroy_descriptor_pool(&self, pool: n::DescriptorPool) {
-        self.shared.raw.destroy_descriptor_pool(pool.raw, None);
-    }
-
-    unsafe fn destroy_descriptor_set_layout(&self, layout: n::DescriptorSetLayout) {
-        self.shared.raw.destroy_descriptor_set_layout(layout.raw, None);
-    }
-
-    unsafe fn destroy_fence(&self, fence: n::Fence) {
-        self.shared.raw.destroy_fence(fence.0, None);
-    }
-
-    unsafe fn destroy_semaphore(&self, semaphore: n::Semaphore) {
-        self.shared.raw.destroy_semaphore(semaphore.0, None);
-    }
-
-    unsafe fn destroy_event(&self, event: n::Event) {
-        self.shared.raw.destroy_event(event.0, None);
-    }
-
-    fn wait_idle(&self) -> Result<(), d::OutOfMemory> {
-        match unsafe { self.shared.raw.device_wait_idle() } {
-            Ok(()) => Ok(()),
-            Err(vk::Result::ERROR_OUT_OF_HOST_MEMORY) => Err(d::OutOfMemory::Host),
-            Err(vk::Result::ERROR_OUT_OF_DEVICE_MEMORY) => Err(d::OutOfMemory::Device),
-            _ => unreachable!(),
-        }
-    }
-
-    unsafe fn set_image_name(&self, image: &mut n::Image, name: &str) {
-        self.set_object_name(vk::ObjectType::IMAGE, image.raw.as_raw(), name)
-    }
-
-    unsafe fn set_buffer_name(&self, buffer: &mut n::Buffer, name: &str) {
-        self.set_object_name(vk::ObjectType::BUFFER, buffer.raw.as_raw(), name)
-    }
-
-    unsafe fn set_command_buffer_name(&self, command_buffer: &mut cmd::CommandBuffer, name: &str) {
-        self.set_object_name(
-            vk::ObjectType::COMMAND_BUFFER,
-            command_buffer.raw.as_raw(),
-            name,
-        )
-    }
-
-    unsafe fn set_semaphore_name(&self, semaphore: &mut n::Semaphore, name: &str) {
-        self.set_object_name(vk::ObjectType::SEMAPHORE, semaphore.0.as_raw(), name)
-    }
-
-    unsafe fn set_fence_name(&self, fence: &mut n::Fence, name: &str) {
-        self.set_object_name(vk::ObjectType::FENCE, fence.0.as_raw(), name)
-    }
-
-    unsafe fn set_framebuffer_name(&self, framebuffer: &mut n::Framebuffer, name: &str) {
-        self.set_object_name(vk::ObjectType::FRAMEBUFFER, framebuffer.raw.as_raw(), name)
-    }
-
-    unsafe fn set_render_pass_name(&self, render_pass: &mut n::RenderPass, name: &str) {
-        self.set_object_name(vk::ObjectType::RENDER_PASS, render_pass.raw.as_raw(), name)
-    }
-
-    unsafe fn set_descriptor_set_name(&self, descriptor_set: &mut n::DescriptorSet, name: &str) {
-        self.set_object_name(
-            vk::ObjectType::DESCRIPTOR_SET,
-            descriptor_set.raw.as_raw(),
-            name,
-        )
-    }
-
-    unsafe fn set_descriptor_set_layout_name(
-        &self,
-        descriptor_set_layout: &mut n::DescriptorSetLayout,
-        name: &str,
-    ) {
-        self.set_object_name(
-            vk::ObjectType::DESCRIPTOR_SET_LAYOUT,
-            descriptor_set_layout.raw.as_raw(),
-            name,
-        )
-    }
-}
-
-impl Device {
-    /// We only work with a subset of Ash-exposed memory types that we know.
-    /// This function filters an ash mask into our mask.
-    fn filter_memory_requirements(&self, ash_mask: u32) -> u64 {
-        let mut hal_index = 0;
-        let mut mask = 0;
-        for ash_index in 0 .. 32 {
-            if self.valid_ash_memory_types & (1 << ash_index) != 0 {
-                if ash_mask & (1 << ash_index) != 0 {
-                    mask |= 1 << hal_index;
-                }
-                hal_index += 1;
-            }
-        }
-        mask
-    }
-
-    fn get_ash_memory_type_index(&self, hal_type: MemoryTypeId) -> u32 {
-        let mut hal_count = hal_type.0;
-        for ash_index in 0 .. 32 {
-            if self.valid_ash_memory_types & (1 << ash_index) != 0 {
-                if hal_count == 0 {
-                    return ash_index;
-                }
-                hal_count -= 1;
-            }
-        }
-        panic!("Unable to get Ash memory type for {:?}", hal_type);
-    }
-
-    unsafe fn set_object_name(&self, object_type: vk::ObjectType, object_handle: u64, name: &str) {
-        let instance = &self.shared.instance;
-        if let Some(DebugMessenger::Utils(ref debug_utils_ext, _)) = instance.debug_messenger {
-            // Append a null terminator to the string while avoiding allocating memory
-            static mut NAME_BUF: [u8; 64] = [0u8; 64];
-            std::ptr::copy_nonoverlapping(
-                name.as_ptr(),
-                &mut NAME_BUF[0],
-                name.len().min(NAME_BUF.len()),
-            );
-            NAME_BUF[name.len()] = 0;
-            let _result = debug_utils_ext.debug_utils_set_object_name(
-                self.shared.raw.handle(),
-                &vk::DebugUtilsObjectNameInfoEXT {
-                    s_type: vk::StructureType::DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
-                    p_next: std::ptr::null_mut(),
-                    object_type,
-                    object_handle,
-                    p_object_name: NAME_BUF.as_ptr() as *mut _,
-                },
-            );
-        }
     }
 }
 

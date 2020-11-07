@@ -67,6 +67,7 @@ extern "C"
                 auto glsl_options = compiler_glsl->get_common_options();
                 glsl_options.vertex.fixup_clipspace = options->vertex_transform_clip_space;
                 glsl_options.vertex.flip_vert_y = options->vertex_invert_y;
+                glsl_options.force_zero_initialized_variables = options->force_zero_initialized_variables;
                 compiler_glsl->set_common_options(glsl_options);
 
                 auto compiler_hlsl = (spirv_cross::CompilerHLSL *)compiler;
@@ -109,7 +110,7 @@ extern "C"
     }
 
     ScInternalResult sc_internal_compiler_msl_compile(const ScInternalCompilerBase *compiler, const char **shader,
-                                                      const spirv_cross::MSLVertexAttr *p_vat_overrides, const size_t vat_override_count,
+                                                      const spirv_cross::MSLShaderInput *p_vat_overrides, const size_t vat_override_count,
                                                       const spirv_cross::MSLResourceBinding *p_res_overrides, const size_t res_override_count,
                                                       const ScMslConstSamplerMapping *p_const_samplers, const size_t const_sampler_count)
     {
@@ -119,7 +120,7 @@ extern "C"
 
                 for (size_t i = 0; i < vat_override_count; i++)
                 {
-                    compiler_msl->add_msl_vertex_attribute(p_vat_overrides[i]);
+                    compiler_msl->add_msl_shader_input(p_vat_overrides[i]);
                 }
 
                 for (size_t i = 0; i < res_override_count; i++)
@@ -146,6 +147,7 @@ extern "C"
                 auto glsl_options = compiler_msl->get_common_options();
                 glsl_options.vertex.fixup_clipspace = options->vertex_transform_clip_space;
                 glsl_options.vertex.flip_vert_y = options->vertex_invert_y;
+                glsl_options.force_zero_initialized_variables = options->force_zero_initialized_variables;
                 compiler_msl->set_common_options(glsl_options);
 
                 auto msl_options = compiler_msl->get_msl_options();
@@ -164,6 +166,7 @@ extern "C"
                 msl_options.tess_domain_origin_lower_left = options->tess_domain_origin_lower_left;
                 msl_options.argument_buffers = options->argument_buffers;
                 msl_options.pad_fragment_output_components = options->pad_fragment_output_components;
+                msl_options.force_native_arrays = options->force_native_arrays;
                 compiler_msl->set_msl_options(msl_options);
             } while (0);)
     }
@@ -188,9 +191,21 @@ extern "C"
                 auto glsl_options = compiler_glsl->get_common_options();
                 glsl_options.version = options->version;
                 glsl_options.es = options->es;
+                glsl_options.force_temporary = options->force_temporary;
+                glsl_options.vulkan_semantics = options->vulkan_semantics;
+                glsl_options.separate_shader_objects = options->separate_shader_objects;
+                glsl_options.flatten_multidimensional_arrays = options->flatten_multidimensional_arrays;
                 glsl_options.enable_420pack_extension = options->enable_420_pack_extension;
+                glsl_options.emit_push_constant_as_uniform_buffer = options->emit_push_constant_as_uniform_buffer;
+                glsl_options.emit_uniform_buffer_as_plain_uniforms = options->emit_uniform_buffer_as_plain_uniforms;
+                glsl_options.emit_line_directives = options->emit_line_directives;
+                glsl_options.enable_storage_image_qualifier_deduction = options->enable_storage_image_qualifier_deduction;
+                glsl_options.force_zero_initialized_variables = options->force_zero_initialized_variables;
                 glsl_options.vertex.fixup_clipspace = options->vertex_transform_clip_space;
                 glsl_options.vertex.flip_vert_y = options->vertex_invert_y;
+                glsl_options.vertex.support_nonzero_base_instance = options->vertex_support_nonzero_base_instance;
+                glsl_options.fragment.default_float_precision = static_cast<spirv_cross::CompilerGLSL::Options::Precision>(options->fragment_default_float_precision);
+                glsl_options.fragment.default_int_precision = static_cast<spirv_cross::CompilerGLSL::Options::Precision>(options->fragment_default_int_precision);
                 compiler_glsl->set_common_options(glsl_options);
             } while (0);)
     }
@@ -210,6 +225,22 @@ extern "C"
                 const spirv_cross::SmallVector<spirv_cross::CombinedImageSampler>& ret = ((spirv_cross::CompilerGLSL *)compiler)->get_combined_image_samplers();
                 *samplers = (const ScCombinedImageSampler *)ret.data();
                 *size = ret.size();
+            } while (0);)
+    }
+
+    ScInternalResult sc_internal_compiler_glsl_add_header_line(const ScInternalCompilerBase *compiler, const char *str)
+    {
+        INTERNAL_RESULT(
+            do {
+                ((spirv_cross::CompilerGLSL *)compiler)->add_header_line(std::string(str));
+            } while (0);)
+    }
+
+    ScInternalResult sc_internal_compiler_glsl_flatten_buffer_block(const ScInternalCompilerBase *compiler, const uint32_t id)
+    {
+        INTERNAL_RESULT(
+            do {
+                ((spirv_cross::CompilerGLSL *)compiler)->flatten_buffer_block(id);
             } while (0);)
     }
 #endif
@@ -488,6 +519,11 @@ extern "C"
 
             *constants = p_constants;
         } while (0);)
+    }
+
+    ScInternalResult sc_internal_compiler_set_entry_point(const ScInternalCompilerBase *compiler, const char *name, const spv::ExecutionModel execution_model)
+    {
+        INTERNAL_RESULT(((spirv_cross::Compiler *)compiler)->set_entry_point(name, execution_model);)
     }
 
     ScInternalResult sc_internal_compiler_compile(const ScInternalCompilerBase *compiler, const char **shader)

@@ -2,21 +2,15 @@ use std::{collections::VecDeque, fmt, mem, os::raw::c_void};
 
 use winapi::{
     shared::{
-        dxgi,
-        dxgi1_4,
+        dxgi, dxgi1_4,
         windef::{HWND, RECT},
         winerror,
     },
-    um::{
-        synchapi,
-        winbase,
-        winnt::HANDLE,
-        winuser::GetClientRect,
-    },
+    um::{synchapi, winbase, winnt::HANDLE, winuser::GetClientRect},
 };
 
 use crate::{conv, resource as r, Backend, Device, Instance, PhysicalDevice, QueueFamily};
-use hal::{self, device::{Device as _}, format as f, image as i, window as w};
+use hal::{device::Device as _, format as f, image as i, window as w};
 
 impl Instance {
     pub fn create_surface_from_hwnd(&self, hwnd: *mut c_void) -> Surface {
@@ -84,12 +78,12 @@ impl w::Surface<Backend> for Surface {
         w::SurfaceCapabilities {
             present_modes: w::PresentMode::FIFO,                  //TODO
             composite_alpha_modes: w::CompositeAlphaMode::OPAQUE, //TODO
-            image_count: 2 ..= dxgi::DXGI_MAX_SWAP_CHAIN_BUFFERS,
+            image_count: 2..=16, // we currently use a flip effect which supports 2..=16 buffers
             current_extent,
             extents: w::Extent2D {
                 width: 16,
                 height: 16,
-            } ..= w::Extent2D {
+            }..=w::Extent2D {
                 width: 4096,
                 height: 4096,
             },
@@ -162,8 +156,9 @@ impl w::PresentationSurface<Backend> for Surface {
         if let Some(mut present) = self.presentation.take() {
             let _ = present.swapchain.wait(winbase::INFINITE);
             let _ = device.wait_idle(); //TODO: this shouldn't be needed,
-            // but it complains that the queue is still used otherwise
-            device.destroy_swapchain(present.swapchain);
+                                        // but it complains that the queue is still used otherwise
+            let inner = present.swapchain.release_resources();
+            inner.destroy();
         }
     }
 
@@ -173,14 +168,14 @@ impl w::PresentationSurface<Backend> for Surface {
     ) -> Result<(r::ImageView, Option<w::Suboptimal>), w::AcquireError> {
         let present = self.presentation.as_mut().unwrap();
         let sc = &mut present.swapchain;
- 
+
         sc.wait((timeout_ns / 1_000_000) as u32)?;
 
         let index = sc.inner.GetCurrentBackBufferIndex();
         let view = r::ImageView {
             resource: sc.resources[index as usize],
             handle_srv: None,
-            handle_rtv: Some(sc.rtv_heap.at(index as _, 0).cpu),
+            handle_rtv: r::RenderTargetHandle::Swapchain(sc.rtv_heap.at(index as _, 0).cpu),
             handle_uav: None,
             handle_dsv: None,
             dxgi_format: conv::map_format(present.format).unwrap(),
@@ -216,36 +211,14 @@ impl Swapchain {
     }
 
     pub(crate) fn wait(&mut self, timeout_ms: u32) -> Result<(), w::AcquireError> {
-        match unsafe {
-            synchapi::WaitForSingleObject(self.waitable, timeout_ms)
-        } {
-            winbase::WAIT_ABANDONED |
-            winbase::WAIT_FAILED => Err(w::AcquireError::DeviceLost(hal::device::DeviceLost)),
+        match unsafe { synchapi::WaitForSingleObject(self.waitable, timeout_ms) } {
+            winbase::WAIT_ABANDONED | winbase::WAIT_FAILED => {
+                Err(w::AcquireError::DeviceLost(hal::device::DeviceLost))
+            }
             winbase::WAIT_OBJECT_0 => Ok(()),
             winerror::WAIT_TIMEOUT => Err(w::AcquireError::Timeout),
             hr => panic!("Unexpected wait status 0x{:X}", hr),
         }
-    }
-}
-
-impl w::Swapchain<Backend> for Swapchain {
-    unsafe fn acquire_image(
-        &mut self,
-        _timout_ns: u64,
-        _semaphore: Option<&r::Semaphore>,
-        _fence: Option<&r::Fence>,
-    ) -> Result<(w::SwapImageIndex, Option<w::Suboptimal>), w::AcquireError> {
-        // TODO: sync
-
-        let index = self.inner.GetCurrentBackBufferIndex();
-        if false {
-            // TODO: we need to block this at some point? (running out of backbuffers)
-            //let num_images = self.images.len();
-            self.frame_queue.push_back(index as usize);
-        }
-
-        // TODO:
-        Ok((index, None))
     }
 }
 

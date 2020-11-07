@@ -1,7 +1,7 @@
 use crate::pso;
 use std::fmt;
 
-/// A clear color union, which can be either f32, i32, or u32.
+/// A clear color union, which can be either `f32`, `i32`, or `u32`.
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub union ClearColor {
@@ -31,6 +31,9 @@ pub struct ClearDepthStencil {
 }
 
 /// A set of clear values for a single attachment.
+///
+/// These are passed to a command buffer by
+/// [beginning a render pass][crate::command::CommandBuffer::begin_render_pass].
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub union ClearValue {

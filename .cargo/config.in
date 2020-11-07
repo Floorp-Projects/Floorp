@@ -28,7 +28,7 @@ replace-with = "vendored-sources"
 rev = "1dc60327164a3f64f87180147b1f3a2a9cc74276"
 
 [source."https://github.com/kvark/spirv_cross"]
-branch = "wgpu3"
+branch = "wgpu4"
 git = "https://github.com/kvark/spirv_cross"
 replace-with = "vendored-sources"
 
@@ -50,7 +50,7 @@ rev = "0917fe780032a6bbb23d71be545f9c1834128d75"
 [source."https://github.com/gfx-rs/naga"]
 git = "https://github.com/gfx-rs/naga"
 replace-with = "vendored-sources"
-rev = "bce6358eb1026c13d2f1c6d365af37afe8869a86"
+rev = "aa35110471ee7915e1f4e1de61ea41f2f32f92c4"
 
 [source."https://github.com/djg/cubeb-pulse-rs"]
 git = "https://github.com/djg/cubeb-pulse-rs"
