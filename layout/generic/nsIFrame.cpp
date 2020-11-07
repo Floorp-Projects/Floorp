@@ -12382,7 +12382,8 @@ void ReflowInput::DisplayInitConstraintsExit(nsIFrame* aFrame,
     DR_state->PrettyUC(aState->ComputedMaxHeight(), cmxh, 16);
     printf("InitConstraints= cw=(%s <= %s <= %s) ch=(%s <= %s <= %s)", cmiw, cw,
            cmxw, cmih, ch, cmxh);
-    DR_state->PrintMargin("co", &aState->ComputedPhysicalOffsets());
+    const nsMargin m = aState->ComputedPhysicalOffsets();
+    DR_state->PrintMargin("co", &m);
     putchar('\n');
   }
   DR_state->DeleteTreeNode(*treeNode);
