@@ -451,6 +451,160 @@ there a layer for async scrolling to actually occur on the scrollframe
 itself. At that point the scrollframe will start receiving new input
 blocks and will scroll normally.
 
+WebRender Integration
+~~~~~~~~~~~~~~~~~~~~~
+
+The APZ code was originally written to work with the "layers" graphics
+backend. Many of the concepts (and therefore variable/function names)
+stem from the integration with the layers backend. After the WebRender
+backend was added, the existing code evolved over time to integrate
+with that backend as well, resulting in a bit of a hodge-podge effect.
+With that cautionary note out of the way, there are three main pieces
+that need to be understood to grasp the integration between the APZ
+code and WebRender. These are detailed below.
+
+HitTestingTree
+^^^^^^^^^^^^^^
+
+The APZCTreeManager keeps as part of its internal state a tree of
+HitTestingTreeNode instances. This is referred to as the HitTestingTree.
+As the name implies, this was used for hit-testing purposes, so that
+APZ could determine which scrollframe a particular incoming input event
+would be targeting. Doing the hit-test requires access to a bunch of state,
+such as CSS transforms and clip rects, as well as ancillary data like
+event regions, which affect how APZ reacts to input events.
+
+With the layers backend, all this information was provided by a layer tree
+update, and so the HitTestingTree was created to mirror the layer tree,
+allowing APZ access to that information from other threads. The structure
+of the tree was identical to the layer tree. But with WebRender, there
+is no "layer tree" per se, and instead we "fake it" by creating a
+HitTestingTree structure that is similar to what it would be like on the
+equivalent layer tree. But the bigger difference is that with WebRender,
+the HitTestingTree is not actually used for hit-testing at all; instead
+we get WebRender to do the hit-test for us, as it can do so using its
+own internal state and produce a more precise result.
+
+Information stored in the HitTestingTree (e.g. CSS transforms) is still
+used by other pieces of APZ (e.g. some of the scrollbar manipulation code)
+so it is still needed, even with the WebRender backend. For this reason,
+and for consistency between the two backends, we try to populate as much
+information in the HitTestingTree that we can, even with the WebRender
+backend.
+
+With the layers backend, the way the HitTestingTree is created is by
+walking the layer tree with a LayerMetricsWrapper class. This wraps
+a layer tree but also expands layers with multiple ScrollMetadata into
+multiple nodes. The equivalent in the WebRender world is the
+WebRenderScrollDataWrapper, which wraps a WebRenderScrollData object. The
+WebRenderScrollData object is roughly analogous to a layer tree, but
+is something that is constructed deliberately rather than being a natural
+output from the WebRender paint transaction (i.e. we create it explicitly
+for APZ's consumption, rather than something that we would create anyway
+for WebRender's consumption).
+
+The WebRenderScrollData structure contains within it a tree of
+WebRenderLayerScrollData instances, which are analogous to individual
+layers in a layer tree. These instances contain various fields like
+CSS transforms, fixed/sticky position info, etc. that would normally be
+found on individual layers in the layer tree. This allows the code
+that builds the HitTestingTree to consume either a WebRenderScrollData
+or a layer tree in a more-or-less unified fashion.
+
+Working backwards a bit more, the WebRenderLayerScrollData instances
+are created as we traverse the Gecko display list and build the
+WebRender display list. In the layers world, the code in FrameLayerBuilder
+was responsible for building the layer tree from the Gecko display list,
+but in the WebRender world, this happens primarily in WebRenderCommandBuilder.
+As of this writing, the architecture for this is that, as we walk
+the Gecko display list, we query it to see if it contains any information
+that APZ might need to know (e.g. CSS transforms) via a call to
+`nsDisplayItem::UpdateScrollData(nullptr, nullptr)`. If this call
+returns true, we create a WebRenderLayerScrollData instance for the item,
+and populate it with the necessary information in
+`WebRenderLayerScrollData::Initialize`. We also create
+WebRenderLayerScrollData instances if we detect (via ASR changes) that
+we are now processing a Gecko display item that is in a different scrollframe
+than the previous item. This is equivalent to how FrameLayerBuilder will
+flatten items with different ASRs into different layers, so that it
+is cheap to scroll scrollframes in the compositor.
+
+The main sources of complexity in this code come from:
+
+1. Ensuring the ScrollMetadata instances end on the proper
+   WebRenderLayerScrollData instances (such that every path from a leaf
+   WebRenderLayerScrollData node to the root has a consistent ordering of
+   scrollframes without duplications).
+2. The deferred-transform optimization that is described in more detail
+   at the declaration of StackingContextHelper::mDeferredTransformItem.
+
+Hit-testing
+^^^^^^^^^^^
+
+Since the HitTestingTree is not used for actual hit-testing purposes
+with the WebRender backend (see previous section), this section describes
+how hit-testing actually works with WebRender.
+
+With both layers and WebRender, the Gecko display list contains display items
+(`nsDisplayCompositorHitTestInfo`) that store hit-testing state. These
+items implement the `CreateWebRenderCommands` method and generate a "hit-test
+item" into the WebRender display list. This is basically just a rectangle
+item in the WebRender display list that is no-op for painting purposes,
+but contains information that should be returned by the hit-test (specifically
+the hit info flags and the scrollId of the enclosing scrollframe). The
+hit-test item gets clipped and transformed in the same way that all the other
+items in the WebRender display list do, via clip chains and enclosing
+reference frame/stacking context items.
+
+When WebRender needs to do a hit-test, it goes through its display list,
+taking into account the current clips and transforms, adjusted for the
+most recent async scroll/zoom, and determines which hit-test item(s) are under
+the target point, and returns those items. APZ can then take the frontmost
+item from that list (or skip over it if it happens to be inside a OOP
+subdocument that's pointer-events:none) and use that as the hit target.
+It's important to note that when APZ does hit-testing for the layers backend,
+it uses the most recent available async transforms, even if those transforms
+have not yet been composited. With WebRender, the hit-test uses the last
+transform provided by the `SampleForWebRender` API (see next section) which
+generally reflects the last composite, and doesn't take into account further
+changes to the transforms that have occurred since then.
+
+When debugging hit-test issues, it is often useful to apply the patches
+on bug 1656260, which introduce a guid on Gecko display items and propagate
+it all the way through to where APZ gets the hit-test result. This allows
+answering the question "which nsDisplayCompositorHitTestInfo was responsible
+for this hit-test result?" which is often a very good first step in
+solving the bug. From there, one can determine if there was some other
+display item in front that should have generated a
+nsDisplayCompositorHitTestInfo but didn't, or if display item itself had
+incorrect information. The second patch on that bug further allows exposing
+hand-written debug info to the APZ code, so that the WR hit-testing
+mechanism itself can be more effectively debugged, in case there is a problem
+with the WR display items getting improperly transformed or clipped.
+
+Sampling
+^^^^^^^^
+
+With both the layers and WebRender backend, the compositing step needs to
+read the latest async transforms from APZ in order to ensure scrollframes
+are rendered at the right position. In both cases, the API for this is
+exposed via the `APZSampler` class. The difference is that with the layers
+backend, the `AsyncCompositionManager` walks the layer tree and queries
+the transform components for each layer individually via the various getters
+on `APZSampler`. In contrast, with the WebRender backend, there is a single
+`APZSampler::SampleForWebRender` API that returns all the information needed
+for all the scrollframes, scrollthumbs, etc. Conceptually though, the
+functionality is pretty similar, because the compositor needs the same
+information from APZ regardless of which backend is in use.
+
+Along with sampling the APZ transforms, the compositor also triggers APZ
+animations to advance to the next timestep (usually the next vsync). Again,
+with both the WebRender and layers backend, this happens just before reading
+the APZ transforms. The only difference is that with the layers backend,
+the `AsyncCompositionManager` invokes the `APZSampler::AdvanceAnimations` API
+directly, whereas with the WebRender backend this happens as part of the
+`APZSampler::SampleForWebRender` implementation.
+
 Threading / Locking Overview
 ----------------------------
 
