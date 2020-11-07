@@ -4,14 +4,13 @@
 
 package mozilla.components.support.base.utils
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class LazyComponentTest {
 
@@ -59,9 +58,14 @@ class LazyComponentTest {
             4
         }
 
+        // coroutines add complex behavior - suspension, test APIs affecting true concurrency, etc. -
+        // so we use traditional threads for a simpler implementation.
+        val executorService = Executors.newFixedThreadPool(12)
         for (i in 1..100) {
-            GlobalScope.launch(Dispatchers.Default) { component.get() }
+            executorService.submit { component.get() }
         }
+        executorService.shutdown()
+        executorService.awaitTermination(1, TimeUnit.SECONDS)
 
         assertEquals(1, componentsInitialized)
     }
