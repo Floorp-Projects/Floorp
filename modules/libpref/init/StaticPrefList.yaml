@@ -614,7 +614,7 @@
 
 - name: apz.velocity_relevance_time_ms
   type: RelaxedAtomicUint32
-  value: 150
+  value: 100
   mirror: always
 
 - name: apz.windows.force_disable_direct_manipulation
