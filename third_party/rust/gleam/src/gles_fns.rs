@@ -2009,10 +2009,10 @@ impl Gl for GlesFns {
         unsafe { self.ffi_gl_.FenceSync(condition, flags) as *const _ }
     }
 
-    fn client_wait_sync(&self, sync: GLsync, flags: GLbitfield, timeout: GLuint64) {
+    fn client_wait_sync(&self, sync: GLsync, flags: GLbitfield, timeout: GLuint64) -> GLenum {
         unsafe {
             self.ffi_gl_
-                .ClientWaitSync(sync as *const _, flags, timeout);
+                .ClientWaitSync(sync as *const _, flags, timeout)
         }
     }
 
@@ -2246,6 +2246,24 @@ impl Gl for GlesFns {
                 unpack_premultiply_alpha,
                 unpack_unmultiply_alpha,
             );
+        }
+    }
+
+    fn buffer_storage(
+        &self,
+        target: GLenum,
+        size: GLsizeiptr,
+        data: *const GLvoid,
+        flags: GLbitfield,
+    ) {
+        unsafe {
+            self.ffi_gl_.BufferStorageEXT(target, size, data, flags);
+        }
+    }
+
+    fn flush_mapped_buffer_range(&self, target: GLenum, offset: GLintptr, length: GLsizeiptr) {
+        unsafe {
+            self.ffi_gl_.FlushMappedBufferRange(target, offset, length);
         }
     }
 }

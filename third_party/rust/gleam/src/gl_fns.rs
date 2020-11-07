@@ -2011,10 +2011,10 @@ impl Gl for GlFns {
         unsafe { self.ffi_gl_.FenceSync(condition, flags) as *const _ }
     }
 
-    fn client_wait_sync(&self, sync: GLsync, flags: GLbitfield, timeout: GLuint64) {
+    fn client_wait_sync(&self, sync: GLsync, flags: GLbitfield, timeout: GLuint64) -> GLenum {
         unsafe {
             self.ffi_gl_
-                .ClientWaitSync(sync as *const _, flags, timeout);
+                .ClientWaitSync(sync as *const _, flags, timeout)
         }
     }
 
@@ -2245,5 +2245,23 @@ impl Gl for GlFns {
         _unpack_unmultiply_alpha: GLboolean,
     ) {
         unimplemented!("This extension is ANGLE only");
+    }
+
+    fn buffer_storage(
+        &self,
+        target: GLenum,
+        size: GLsizeiptr,
+        data: *const GLvoid,
+        flags: GLbitfield,
+    ) {
+        unsafe {
+            self.ffi_gl_.BufferStorage(target, size, data, flags);
+        }
+    }
+
+    fn flush_mapped_buffer_range(&self, target: GLenum, offset: GLintptr, length: GLsizeiptr) {
+        unsafe {
+            self.ffi_gl_.FlushMappedBufferRange(target, offset, length);
+        }
     }
 }

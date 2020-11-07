@@ -649,7 +649,7 @@ declare_gl_apis! {
     fn push_debug_group_khr(&self, source: GLenum, id: GLuint, message: &str);
     fn pop_debug_group_khr(&self);
     fn fence_sync(&self, condition: GLenum, flags: GLbitfield) -> GLsync;
-    fn client_wait_sync(&self, sync: GLsync, flags: GLbitfield, timeout: GLuint64);
+    fn client_wait_sync(&self, sync: GLsync, flags: GLbitfield, timeout: GLuint64) -> GLenum;
     fn wait_sync(&self, sync: GLsync, flags: GLbitfield, timeout: GLuint64);
     fn delete_sync(&self, sync: GLsync);
     fn texture_range_apple(&self, target: GLenum, data: &[u8]);
@@ -746,6 +746,16 @@ declare_gl_apis! {
         unpack_premultiply_alpha: GLboolean,
         unpack_unmultiply_alpha: GLboolean,
     );
+
+    fn buffer_storage(
+        &self,
+        target: GLenum,
+        size: GLsizeiptr,
+        data: *const GLvoid,
+        flags: GLbitfield,
+    );
+
+    fn flush_mapped_buffer_range(&self, target: GLenum, offset: GLintptr, length: GLsizeiptr);
 }
 
 //#[deprecated(since = "0.6.11", note = "use ErrorReactingGl instead")]
