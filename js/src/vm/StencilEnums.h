@@ -323,6 +323,9 @@ enum class MutableScriptFlagsEnum : uint32_t {
 
   // Lexical check did fail and bail out.
   FailedLexicalCheck = 1 << 24,
+
+  // A guard inserted by phi specialization failed.
+  HadSpeculativePhiBailout = 1 << 25,
 };
 
 }  // namespace js

@@ -2120,6 +2120,13 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
       // if necessary to prevent bailout loops.
       break;
 
+    case BailoutKind::SpeculativePhi:
+      // A value of an unexpected type flowed into a phi.
+      MOZ_ASSERT(!outerScript->hadSpeculativePhiBailout());
+      outerScript->setHadSpeculativePhiBailout();
+      InvalidateAfterBailout(cx, outerScript, "phi specialization failure");
+      break;
+
     case BailoutKind::Inevitable:
     case BailoutKind::DuringVMCall:
     case BailoutKind::TooManyArguments:
