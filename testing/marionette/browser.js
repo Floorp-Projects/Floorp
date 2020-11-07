@@ -390,11 +390,31 @@ browser.Context = class {
 
     switch (this.driver.appName) {
       case "firefox":
-        const opened = waitForEvent(this.window, "TabOpen");
-        this.window.BrowserOpenTab();
-        await opened;
+        const loaded = [waitForEvent(this.window, "TabOpen")];
 
+        this.window.BrowserOpenTab();
         tab = this.tabBrowser.selectedTab;
+
+        // wait until the framescript has been registered
+        loaded.push(
+          new Promise(resolve => {
+            let cb = msg => {
+              if (msg.json.frameId === tab.linkedBrowser.browsingContext.id) {
+                this.driver.mm.removeMessageListener(
+                  "Marionette:ListenersAttached",
+                  cb
+                );
+                resolve();
+              }
+            };
+            this.driver.mm.addMessageListener(
+              "Marionette:ListenersAttached",
+              cb
+            );
+          })
+        );
+
+        await Promise.all(loaded);
 
         // The new tab is always selected by default. If focus is not wanted,
         // the previously tab needs to be selected again.
