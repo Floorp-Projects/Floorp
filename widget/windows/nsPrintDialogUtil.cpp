@@ -227,7 +227,7 @@ static nsresult ShowNativePrintDialog(HWND aHWnd,
     prntdlg.Flags |= PD_PAGENUMS;
   }
 
-  // TODO(emilio): Can we represent all the page ranges instead?
+  // TODO(emilio, bug 1675956): Can we represent all the page ranges instead?
   int32_t start = 1;
   int32_t end = 1;
   for (size_t i = 0; i < pageRanges.Length(); i += 2) {
@@ -312,8 +312,6 @@ static nsresult ShowNativePrintDialog(HWND aHWnd,
     if (prntdlg.Flags & PD_PAGENUMS) {
       pageRanges.AppendElement(prntdlg.nFromPage);
       pageRanges.AppendElement(prntdlg.nToPage);
-    } else {
-      // (prntdlg.Flags & PD_ALLPAGES)
     }
     aPrintSettings->SetPageRanges(pageRanges);
 
