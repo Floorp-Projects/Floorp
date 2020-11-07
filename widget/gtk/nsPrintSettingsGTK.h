@@ -46,16 +46,6 @@ class nsPrintSettingsGTK : public nsPrintSettings {
   GtkPrinter* GetGtkPrinter() { return mGTKPrinter; };
   void SetGtkPrinter(GtkPrinter* aPrinter);
 
-  // If not printing the selection, this is stored in the GtkPrintSettings.
-  NS_IMETHOD GetPrintRange(int16_t* aPrintRange) override;
-  NS_IMETHOD SetPrintRange(int16_t aPrintRange) override;
-
-  // The page range is stored as as single range in the GtkPrintSettings object.
-  NS_IMETHOD GetStartPageRange(int32_t* aStartPageRange) override;
-  NS_IMETHOD SetStartPageRange(int32_t aStartPageRange) override;
-  NS_IMETHOD GetEndPageRange(int32_t* aEndPageRange) override;
-  NS_IMETHOD SetEndPageRange(int32_t aEndPageRange) override;
-
   // Reversed, color, orientation and file name are all stored in the
   // GtkPrintSettings. Orientation is also stored in the GtkPageSetup and its
   // setting takes priority when getting the orientation.
@@ -109,7 +99,8 @@ class nsPrintSettingsGTK : public nsPrintSettings {
 
   NS_IMETHOD SetupSilentPrinting() override;
 
-  NS_IMETHOD GetPageRanges(nsTArray<int32_t>& aPages) override;
+  NS_IMETHOD SetPageRanges(const nsTArray<int32_t>&) override;
+  NS_IMETHOD GetPageRanges(nsTArray<int32_t>&) override;
 
   NS_IMETHOD GetResolution(int32_t* aResolution) override;
   NS_IMETHOD SetResolution(int32_t aResolution) override;

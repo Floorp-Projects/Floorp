@@ -15,8 +15,6 @@ struct CStringKeyValue {
 
 struct PrintData {
   nullable PRemotePrintJob remotePrintJob;
-  int32_t startPageRange;
-  int32_t endPageRange;
   double edgeTop;
   double edgeLeft;
   double edgeBottom;
@@ -36,7 +34,7 @@ struct PrintData {
   bool showMarginGuides;
   bool isPrintSelectionRBEnabled;
   bool printSelectionOnly;
-  short printRange;
+  int32_t[] pageRanges;
   nsString title;
   nsString docURL;
   nsString headerStrLeft;
