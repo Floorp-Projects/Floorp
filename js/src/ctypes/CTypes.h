@@ -388,14 +388,14 @@ struct ClosureInfo {
 bool IsCTypesGlobal(HandleValue v);
 bool IsCTypesGlobal(JSObject* obj);
 
-const JSCTypesCallbacks* GetCallbacks(JSObject* obj);
+const JS::CTypesCallbacks* GetCallbacks(JSObject* obj);
 
 /*******************************************************************************
 ** JSClass reserved slot definitions
 *******************************************************************************/
 
 enum CTypesGlobalSlot {
-  SLOT_CALLBACKS = 0,  // pointer to JSCTypesCallbacks struct
+  SLOT_CALLBACKS = 0,  // pointer to JS::CTypesCallbacks struct
   SLOT_ERRNO = 1,      // Value for latest |errno|
   SLOT_LASTERROR =
       2,  // Value for latest |GetLastError|, used only with Windows
@@ -512,7 +512,7 @@ ffi_type* GetFFIType(JSContext* cx, JSObject* obj);
 JSString* GetName(JSContext* cx, HandleObject obj);
 JSObject* GetProtoFromCtor(JSObject* obj, CTypeProtoSlot slot);
 JSObject* GetProtoFromType(JSContext* cx, JSObject* obj, CTypeProtoSlot slot);
-const JSCTypesCallbacks* GetCallbacksFromType(JSObject* obj);
+const JS::CTypesCallbacks* GetCallbacksFromType(JSObject* obj);
 }  // namespace CType
 
 namespace PointerType {
