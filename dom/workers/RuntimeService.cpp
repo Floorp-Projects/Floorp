@@ -21,6 +21,7 @@
 #include <algorithm>
 #include "mozilla/ipc/BackgroundChild.h"
 #include "GeckoProfiler.h"
+#include "js/experimental/CTypes.h"  // JS::CTypesActivityType, JS::SetCTypesActivityCallback
 #include "jsfriendapi.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/ContextOptions.h"

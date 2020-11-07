@@ -34,6 +34,7 @@
 #include "js/AllocationRecording.h"
 #include "js/BuildId.h"  // JS::BuildIdOp
 #include "js/Debug.h"
+#include "js/experimental/CTypes.h"      // JS::CTypesActivityCallback
 #include "js/experimental/SourceHook.h"  // js::SourceHook
 #include "js/friend/StackLimits.h"       // js::ReportOverRecursed
 #include "js/friend/UsageStatistics.h"   // JSAccumulateTelemetryDataCallback
