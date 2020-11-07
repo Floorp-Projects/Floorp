@@ -1,8 +1,8 @@
-//! Logical device
+//! Logical graphics device.
 //!
 //! # Device
 //!
-//! This module exposes the `Device` trait, which provides methods for creating
+//! This module exposes the [`Device`][Device] trait, which provides methods for creating
 //! and managing graphics resources such as buffers, images and memory.
 //!
 //! The `Adapter` and `Device` types are very similar to the Vulkan concept of
@@ -17,9 +17,7 @@ use std::ops::Range;
 use std::{fmt, iter};
 
 use crate::{
-    buffer,
-    format,
-    image,
+    buffer, format, image,
     memory::{Requirements, Segment},
     pass,
     pool::CommandPoolCreateFlags,
@@ -27,9 +25,7 @@ use crate::{
     pso::DescriptorPoolCreateFlags,
     query,
     queue::QueueFamilyId,
-    window::{self, SwapchainConfig},
-    Backend,
-    MemoryTypeId,
+    Backend, MemoryTypeId,
 };
 
 /// Error occurred caused device to be lost.
@@ -237,6 +233,8 @@ pub enum MapError {
     OutOfBounds,
     /// Failed to allocate an appropriately sized contiguous virtual address range
     MappingFailed,
+    /// Memory is not CPU visible
+    Access,
 }
 
 impl From<OutOfMemory> for MapError {
@@ -250,7 +248,11 @@ impl std::fmt::Display for MapError {
         match self {
             MapError::OutOfMemory(err) => write!(fmt, "Failed to map memory: {}", err),
             MapError::OutOfBounds => write!(fmt, "Failed to map memory: Requested range is outside the resource"),
-            MapError::MappingFailed => write!(fmt, "Failed to map memory: Unable to allocate an appropriately sized contiguous virtual address range"),
+            MapError::MappingFailed => write!(
+                fmt,
+                "Failed to map memory: Unable to allocate an appropriately sized contiguous virtual address range"
+            ),
+            MapError::Access => write!(fmt, "Failed to map memory: Memory is not CPU visible"),
         }
     }
 }
@@ -327,7 +329,7 @@ pub enum ShaderError {
     /// The shader has a mismatch of interface (e.g missing push constants).
     InterfaceMismatch(String),
     /// The shader stage is not supported.
-    UnsupportedStage(pso::Stage),
+    UnsupportedStage(pso::ShaderStageFlags),
     /// Out of either host or device memory.
     OutOfMemory(OutOfMemory),
 }
@@ -367,15 +369,14 @@ impl std::error::Error for ShaderError {
     }
 }
 
-/// # Overview
-///
-/// A `Device` is responsible for creating and managing resources for the physical device
-/// it was created from.
+/// Logical device handle, responsible for creating and managing resources
+/// for the physical device it was created from.
 ///
 /// ## Resource Construction and Handling
 ///
-/// This device structure can then be used to create and manage different resources, like buffers,
-/// shader programs and textures. See the individual methods for more information.
+/// This device structure can then be used to create and manage different resources,
+/// like [buffers][Device::create_buffer], [shader modules][Device::create_shader_module]
+/// and [images][Device::create_image]. See the individual methods for more information.
 ///
 /// ## Mutability
 ///
@@ -405,9 +406,10 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
     /// Free device memory
     unsafe fn free_memory(&self, memory: B::Memory);
 
-    /// Create a new command pool for a given queue family.
+    /// Create a new [command pool][crate::pool::CommandPool] for a given queue family.
     ///
-    /// *Note*: the family has to be associated by one as the `Gpu::queue_groups`.
+    /// *Note*: the family has to be associated with one of [the queue groups
+    /// of this device][crate::adapter::Gpu::queue_groups].
     unsafe fn create_command_pool(
         &self,
         family: QueueFamilyId,
@@ -417,11 +419,18 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
     /// Destroy a command pool.
     unsafe fn destroy_command_pool(&self, pool: B::CommandPool);
 
-    /// Create a render pass with the given attachments and subpasses.
+    /// Create a [render pass][crate::pass] with the given attachments and subpasses.
     ///
-    /// A *render pass* represents a collection of attachments, subpasses, and dependencies between
-    /// the subpasses, and describes how the attachments are used over the course of the subpasses.
     /// The use of a render pass in a command buffer is a *render pass* instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `attachments` - [image attachments][crate::pass::Attachment] to be used in
+    ///   this render pass. Usually you need at least one attachment, to be used as output.
+    /// * `subpasses` - [subpasses][crate::pass::SubpassDesc] to use.
+    ///   You need to use at least one subpass.
+    /// * `dependencies` - [dependencies between subpasses][crate::pass::SubpassDependency].
+    ///   Can be empty.
     unsafe fn create_render_pass<'a, IA, IS, ID>(
         &self,
         attachments: IA,
@@ -431,12 +440,15 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
     where
         IA: IntoIterator,
         IA::Item: Borrow<pass::Attachment>,
+        IA::IntoIter: ExactSizeIterator,
         IS: IntoIterator,
         IS::Item: Borrow<pass::SubpassDesc<'a>>,
+        IS::IntoIter: ExactSizeIterator,
         ID: IntoIterator,
-        ID::Item: Borrow<pass::SubpassDependency>;
+        ID::Item: Borrow<pass::SubpassDependency>,
+        ID::IntoIter: ExactSizeIterator;
 
-    /// Destroy a `RenderPass`.
+    /// Destroys a *render pass* created by this device.
     unsafe fn destroy_render_pass(&self, rp: B::RenderPass);
 
     /// Create a new pipeline layout object.
@@ -463,8 +475,10 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
     where
         IS: IntoIterator,
         IS::Item: Borrow<B::DescriptorSetLayout>,
+        IS::IntoIter: ExactSizeIterator,
         IR: IntoIterator,
-        IR::Item: Borrow<(pso::ShaderStageFlags, Range<u32>)>;
+        IR::Item: Borrow<(pso::ShaderStageFlags, Range<u32>)>,
+        IR::IntoIter: ExactSizeIterator;
 
     /// Destroy a pipeline layout object
     unsafe fn destroy_pipeline_layout(&self, layout: B::PipelineLayout);
@@ -489,19 +503,28 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
     ) -> Result<(), OutOfMemory>
     where
         I: IntoIterator,
-        I::Item: Borrow<B::PipelineCache>;
+        I::Item: Borrow<B::PipelineCache>,
+        I::IntoIter: ExactSizeIterator;
 
     /// Destroy a pipeline cache object.
     unsafe fn destroy_pipeline_cache(&self, cache: B::PipelineCache);
 
     /// Create a graphics pipeline.
+    ///
+    /// # Arguments
+    ///
+    /// * `desc` - the [description][crate::pso::GraphicsPipelineDesc] of
+    ///   the graphics pipeline to create.
+    /// * `cache` - the pipeline cache,
+    ///   [obtained from this device][Device::create_pipeline_cache],
+    ///   used for faster PSO creation.
     unsafe fn create_graphics_pipeline<'a>(
         &self,
         desc: &pso::GraphicsPipelineDesc<'a, B>,
         cache: Option<&B::PipelineCache>,
     ) -> Result<B::GraphicsPipeline, pso::CreationError>;
 
-    /// Create graphics pipelines.
+    /// Create multiple graphics pipelines.
     unsafe fn create_graphics_pipelines<'a, I>(
         &self,
         descs: I,
@@ -572,10 +595,12 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
     /// which references the framebuffer, has finished execution.
     unsafe fn destroy_framebuffer(&self, buf: B::Framebuffer);
 
-    /// Create a new shader module object through the SPIR-V binary data.
+    /// Create a new shader module object from the SPIR-V binary data.
     ///
-    /// Once a shader module has been created, any entry points it contains can be used in pipeline
-    /// shader stages as described in *Compute Pipelines* and *Graphics Pipelines*.
+    /// Once a shader module has been created, any [entry points][crate::pso::EntryPoint]
+    /// it contains can be used in pipeline shader stages of
+    /// [compute pipelines][crate::pso::ComputePipelineDesc] and
+    /// [graphics pipelines][crate::pso::GraphicsPipelineDesc].
     unsafe fn create_shader_module(
         &self,
         spirv_data: &[u32],
@@ -695,7 +720,8 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
     ) -> Result<B::DescriptorPool, OutOfMemory>
     where
         I: IntoIterator,
-        I::Item: Borrow<pso::DescriptorRangeDesc>;
+        I::Item: Borrow<pso::DescriptorRangeDesc>,
+        I::IntoIter: ExactSizeIterator;
 
     /// Destroy a descriptor pool object
     ///
@@ -719,7 +745,8 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
         I: IntoIterator,
         I::Item: Borrow<pso::DescriptorSetLayoutBinding>,
         J: IntoIterator,
-        J::Item: Borrow<B::Sampler>;
+        J::Item: Borrow<B::Sampler>,
+        J::IntoIter: ExactSizeIterator;
 
     /// Destroy a descriptor set layout object
     unsafe fn destroy_descriptor_set_layout(&self, layout: B::DescriptorSetLayout);
@@ -735,7 +762,8 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
     unsafe fn copy_descriptor_sets<'a, I>(&self, copy_iter: I)
     where
         I: IntoIterator,
-        I::Item: Borrow<pso::DescriptorSetCopy<'a, B>>;
+        I::Item: Borrow<pso::DescriptorSetCopy<'a, B>>,
+        I::IntoIter: ExactSizeIterator;
 
     /// Map a memory object into application address space
     ///
@@ -757,31 +785,46 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
     /// Unmap a memory object once host access to it is no longer needed by the application
     unsafe fn unmap_memory(&self, memory: &B::Memory);
 
-    /// Create a new semaphore object
+    /// Create a new semaphore object.
     fn create_semaphore(&self) -> Result<B::Semaphore, OutOfMemory>;
 
-    /// Destroy a semaphore object
+    /// Destroy a semaphore object.
     unsafe fn destroy_semaphore(&self, semaphore: B::Semaphore);
 
-    /// Create a new fence object
+    /// Create a new fence object.
     ///
     /// Fences are a synchronization primitive that **can** be used to insert a dependency from
-    /// a queue to the host. Fences have two states - signaled and unsignaled. A fence **can** be
-    /// signaled as part of the execution of a *queue submission* command. Fences **can** be unsignaled
-    /// on the host with *reset_fences*. Fences **can** be waited on by the host with the
-    /// *wait_for_fences* command, and the current state **can** be queried with *get_fence_status*.
+    /// a queue to the host.
+    /// Fences have two states - signaled and unsignaled.
+    ///
+    /// A fence **can** be signaled as part of the execution of a
+    /// [queue submission][crate::queue::CommandQueue::submit] command.
+    ///
+    /// Fences **can** be unsignaled on the host with
+    /// [`reset_fences`][Device::reset_fences].
+    ///
+    /// Fences **can** be waited on by the host with the
+    /// [`wait_for_fences`][Device::wait_for_fences] command.
+    ///
+    /// A fence's current state **can** be queried with
+    /// [`get_fence_status`][Device::get_fence_status].
+    ///
+    /// # Arguments
+    ///
+    /// * `signaled` - the fence will be in its signaled state.
     fn create_fence(&self, signaled: bool) -> Result<B::Fence, OutOfMemory>;
 
-    ///
+    /// Resets a given fence to its original, unsignaled state.
     unsafe fn reset_fence(&self, fence: &B::Fence) -> Result<(), OutOfMemory> {
         self.reset_fences(iter::once(fence))
     }
 
-    ///
+    /// Resets multiple fences to their original states.
     unsafe fn reset_fences<I>(&self, fences: I) -> Result<(), OutOfMemory>
     where
         I: IntoIterator,
         I::Item: Borrow<B::Fence>,
+        I::IntoIter: ExactSizeIterator,
     {
         for fence in fences {
             self.reset_fence(fence.borrow())?;
@@ -810,6 +853,7 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
     where
         I: IntoIterator,
         I::Item: Borrow<B::Fence>,
+        I::IntoIter: ExactSizeIterator,
     {
         use std::{thread, time};
         fn to_ns(duration: time::Duration) -> u64 {
@@ -896,43 +940,6 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
         flags: query::ResultFlags,
     ) -> Result<bool, OomOrDeviceLost>;
 
-    /// Create a new swapchain from a surface and a queue family, optionally providing the old
-    /// swapchain to aid in resource reuse and rendering continuity.
-    ///
-    /// *Note*: The number of exposed images in the back buffer might differ
-    /// from number of internally used buffers.
-    ///
-    /// # Safety
-    ///
-    /// The queue family _must_ support surface presentation.
-    /// This can be checked by calling [`supports_queue_family`](trait.Surface.html#tymethod.supports_queue_family)
-    /// on this surface.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// # extern crate gfx_backend_empty as empty;
-    /// # extern crate gfx_hal;
-    /// # fn main() {
-    /// use gfx_hal::{prelude::*, format::Format, window::SwapchainConfig};
-    ///
-    /// # let mut surface: empty::Surface = return;
-    /// # let device: empty::Device = return;
-    /// # unsafe {
-    /// let swapchain_config = SwapchainConfig::new(100, 100, Format::Rgba8Srgb, 2);
-    /// device.create_swapchain(&mut surface, swapchain_config, None);
-    /// # }}
-    /// ```
-    unsafe fn create_swapchain(
-        &self,
-        surface: &mut B::Surface,
-        config: SwapchainConfig,
-        old_swapchain: Option<B::Swapchain>,
-    ) -> Result<(B::Swapchain, Vec<B::Image>), window::CreationError>;
-
-    ///
-    unsafe fn destroy_swapchain(&self, swapchain: B::Swapchain);
-
     /// Wait for all queues associated with this device to idle.
     ///
     /// Host access to all queues needs to be **externally** sycnhronized!
@@ -968,6 +975,23 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
     unsafe fn set_descriptor_set_layout_name(
         &self,
         descriptor_set_layout: &mut B::DescriptorSetLayout,
+        name: &str,
+    );
+    /// Associate a name with a pipeline layout, for easier debugging in external tools or with
+    /// validation layers that can print a friendly name when referring to objects in error messages
+    unsafe fn set_pipeline_layout_name(&self, pipeline_layout: &mut B::PipelineLayout, name: &str);
+    /// Associate a name with a compute pipeline, for easier debugging in external tools or with
+    /// validation layers that can print a friendly name when referring to objects in error messages
+    unsafe fn set_compute_pipeline_name(
+        &self,
+        compute_pipeline: &mut B::ComputePipeline,
+        name: &str,
+    );
+    /// Associate a name with a graphics pipeline, for easier debugging in external tools or with
+    /// validation layers that can print a friendly name when referring to objects in error messages
+    unsafe fn set_graphics_pipeline_name(
+        &self,
+        graphics_pipeline: &mut B::GraphicsPipeline,
         name: &str,
     );
 }

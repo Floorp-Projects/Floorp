@@ -2230,24 +2230,32 @@ pub mod root {
             ControlPointArray = 21,
             Char = 22,
         }
-        #[repr(u32)]
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum MSLVertexFormat {
-            MSL_VERTEX_FORMAT_OTHER = 0,
-            MSL_VERTEX_FORMAT_UINT8 = 1,
-            MSL_VERTEX_FORMAT_UINT16 = 2,
-            MSL_VERTEX_FORMAT_INT_MAX = 2147483647,
-        }
+        pub const MSLShaderInputFormat_MSL_SHADER_INPUT_FORMAT_OTHER:
+            root::spirv_cross::MSLShaderInputFormat = 0;
+        pub const MSLShaderInputFormat_MSL_SHADER_INPUT_FORMAT_UINT8:
+            root::spirv_cross::MSLShaderInputFormat = 1;
+        pub const MSLShaderInputFormat_MSL_SHADER_INPUT_FORMAT_UINT16:
+            root::spirv_cross::MSLShaderInputFormat = 2;
+        pub const MSLShaderInputFormat_MSL_SHADER_INPUT_FORMAT_ANY16:
+            root::spirv_cross::MSLShaderInputFormat = 3;
+        pub const MSLShaderInputFormat_MSL_SHADER_INPUT_FORMAT_ANY32:
+            root::spirv_cross::MSLShaderInputFormat = 4;
+        pub const MSLShaderInputFormat_MSL_VERTEX_FORMAT_OTHER:
+            root::spirv_cross::MSLShaderInputFormat = 0;
+        pub const MSLShaderInputFormat_MSL_VERTEX_FORMAT_UINT8:
+            root::spirv_cross::MSLShaderInputFormat = 1;
+        pub const MSLShaderInputFormat_MSL_VERTEX_FORMAT_UINT16:
+            root::spirv_cross::MSLShaderInputFormat = 2;
+        pub const MSLShaderInputFormat_MSL_SHADER_INPUT_FORMAT_INT_MAX:
+            root::spirv_cross::MSLShaderInputFormat = 2147483647;
+        pub type MSLShaderInputFormat = u32;
         #[repr(C)]
         #[derive(Debug, Copy, Clone)]
-        pub struct MSLVertexAttr {
+        pub struct MSLShaderInput {
             pub location: u32,
-            pub msl_buffer: u32,
-            pub msl_offset: u32,
-            pub msl_stride: u32,
-            pub per_instance: bool,
-            pub format: root::spirv_cross::MSLVertexFormat,
+            pub format: root::spirv_cross::MSLShaderInputFormat,
             pub builtin: root::spv::BuiltIn,
+            pub vecsize: u32,
         }
         #[repr(C)]
         #[derive(Debug, Copy, Clone)]
@@ -2455,6 +2463,7 @@ pub mod root {
         pub vertex_invert_y: bool,
         pub force_storage_buffer_as_uav: bool,
         pub nonwritable_uav_texture_as_srv: bool,
+        pub force_zero_initialized_variables: bool,
     }
     #[repr(C)]
     #[derive(Debug, Copy, Clone)]
@@ -2476,15 +2485,29 @@ pub mod root {
         pub tess_domain_origin_lower_left: bool,
         pub argument_buffers: bool,
         pub pad_fragment_output_components: bool,
+        pub force_native_arrays: bool,
+        pub force_zero_initialized_variables: bool,
     }
     #[repr(C)]
     #[derive(Debug, Copy, Clone)]
     pub struct ScGlslCompilerOptions {
         pub vertex_transform_clip_space: bool,
         pub vertex_invert_y: bool,
+        pub vertex_support_nonzero_base_instance: bool,
+        pub fragment_default_float_precision: u8,
+        pub fragment_default_int_precision: u8,
         pub version: u32,
         pub es: bool,
+        pub force_temporary: bool,
+        pub vulkan_semantics: bool,
+        pub separate_shader_objects: bool,
+        pub flatten_multidimensional_arrays: bool,
         pub enable_420_pack_extension: bool,
+        pub emit_push_constant_as_uniform_buffer: bool,
+        pub emit_uniform_buffer_as_plain_uniforms: bool,
+        pub emit_line_directives: bool,
+        pub enable_storage_image_qualifier_deduction: bool,
+        pub force_zero_initialized_variables: bool,
     }
     #[repr(C)]
     #[derive(Debug, Copy, Clone)]
@@ -2587,7 +2610,7 @@ pub mod root {
         pub fn sc_internal_compiler_msl_compile(
             compiler: *const root::ScInternalCompilerBase,
             shader: *mut *const ::std::os::raw::c_char,
-            p_vat_overrides: *const root::spirv_cross::MSLVertexAttr,
+            p_vat_overrides: *const root::spirv_cross::MSLShaderInput,
             vat_override_count: usize,
             p_res_overrides: *const root::spirv_cross::MSLResourceBinding,
             res_override_count: usize,
@@ -2618,6 +2641,18 @@ pub mod root {
             compiler: *const root::ScInternalCompilerBase,
             samplers: *mut *const root::ScCombinedImageSampler,
             size: *mut usize,
+        ) -> root::ScInternalResult;
+    }
+    extern "C" {
+        pub fn sc_internal_compiler_glsl_add_header_line(
+            compiler: *const root::ScInternalCompilerBase,
+            str: *const ::std::os::raw::c_char,
+        ) -> root::ScInternalResult;
+    }
+    extern "C" {
+        pub fn sc_internal_compiler_glsl_flatten_buffer_block(
+            compiler: *const root::ScInternalCompilerBase,
+            id: u32,
         ) -> root::ScInternalResult;
     }
     extern "C" {
@@ -2762,6 +2797,13 @@ pub mod root {
         pub fn sc_internal_compiler_get_work_group_size_specialization_constants(
             compiler: *const root::ScInternalCompilerBase,
             constants: *mut *mut root::ScSpecializationConstant,
+        ) -> root::ScInternalResult;
+    }
+    extern "C" {
+        pub fn sc_internal_compiler_set_entry_point(
+            compiler: *const root::ScInternalCompilerBase,
+            name: *const ::std::os::raw::c_char,
+            execution_model: root::spv::ExecutionModel,
         ) -> root::ScInternalResult;
     }
     extern "C" {

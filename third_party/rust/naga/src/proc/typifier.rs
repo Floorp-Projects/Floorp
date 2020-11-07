@@ -1,155 +1,366 @@
 use crate::arena::{Arena, Handle};
 
-pub struct Typifier {
-    types: Vec<Handle<crate::Type>>,
+use thiserror::Error;
+
+#[derive(Debug, PartialEq)]
+enum Resolution {
+    Handle(Handle<crate::Type>),
+    Value(crate::TypeInner),
+}
+
+// Clone is only implemented for numeric variants of `TypeInner`.
+impl Clone for Resolution {
+    fn clone(&self) -> Self {
+        match *self {
+            Resolution::Handle(handle) => Resolution::Handle(handle),
+            Resolution::Value(ref v) => Resolution::Value(match *v {
+                crate::TypeInner::Scalar { kind, width } => {
+                    crate::TypeInner::Scalar { kind, width }
+                }
+                crate::TypeInner::Vector { size, kind, width } => {
+                    crate::TypeInner::Vector { size, kind, width }
+                }
+                crate::TypeInner::Matrix {
+                    rows,
+                    columns,
+                    width,
+                } => crate::TypeInner::Matrix {
+                    rows,
+                    columns,
+                    width,
+                },
+                _ => panic!("Unepxected clone type: {:?}", v),
+            }),
+        }
+    }
 }
 
 #[derive(Debug)]
+pub struct Typifier {
+    resolutions: Vec<Resolution>,
+}
+
+#[derive(Clone, Debug, Error)]
 pub enum ResolveError {
+    #[error("Invalid index into array")]
     InvalidAccessIndex,
+    #[error("Function {name} not defined")]
+    FunctionNotDefined { name: String },
+    #[error("Function without return type")]
+    FunctionReturnsVoid,
+    #[error("Type is not found in the given immutable arena")]
+    TypeNotFound,
+}
+
+pub struct ResolveContext<'a> {
+    pub constants: &'a Arena<crate::Constant>,
+    pub global_vars: &'a Arena<crate::GlobalVariable>,
+    pub local_vars: &'a Arena<crate::LocalVariable>,
+    pub functions: &'a Arena<crate::Function>,
+    pub parameter_types: &'a [Handle<crate::Type>],
 }
 
 impl Typifier {
     pub fn new() -> Self {
         Typifier {
-            types: Vec::new(),
+            resolutions: Vec::new(),
         }
     }
 
-    pub fn resolve(
+    pub fn clear(&mut self) {
+        self.resolutions.clear()
+    }
+
+    pub fn get<'a>(
+        &'a self,
+        expr_handle: Handle<crate::Expression>,
+        types: &'a Arena<crate::Type>,
+    ) -> &'a crate::TypeInner {
+        match self.resolutions[expr_handle.index()] {
+            Resolution::Handle(ty_handle) => &types[ty_handle].inner,
+            Resolution::Value(ref inner) => inner,
+        }
+    }
+
+    fn resolve_impl(
+        &self,
+        expr: &crate::Expression,
+        types: &Arena<crate::Type>,
+        ctx: &ResolveContext,
+    ) -> Result<Resolution, ResolveError> {
+        Ok(match *expr {
+            crate::Expression::Access { base, .. } => match *self.get(base, types) {
+                crate::TypeInner::Array { base, .. } => Resolution::Handle(base),
+                crate::TypeInner::Vector {
+                    size: _,
+                    kind,
+                    width,
+                } => Resolution::Value(crate::TypeInner::Scalar { kind, width }),
+                crate::TypeInner::Matrix {
+                    rows: size,
+                    columns: _,
+                    width,
+                } => Resolution::Value(crate::TypeInner::Vector {
+                    size,
+                    kind: crate::ScalarKind::Float,
+                    width,
+                }),
+                ref other => panic!("Can't access into {:?}", other),
+            },
+            crate::Expression::AccessIndex { base, index } => match *self.get(base, types) {
+                crate::TypeInner::Vector { size, kind, width } => {
+                    if index >= size as u32 {
+                        return Err(ResolveError::InvalidAccessIndex);
+                    }
+                    Resolution::Value(crate::TypeInner::Scalar { kind, width })
+                }
+                crate::TypeInner::Matrix {
+                    columns,
+                    rows,
+                    width,
+                } => {
+                    if index >= columns as u32 {
+                        return Err(ResolveError::InvalidAccessIndex);
+                    }
+                    Resolution::Value(crate::TypeInner::Vector {
+                        size: rows,
+                        kind: crate::ScalarKind::Float,
+                        width,
+                    })
+                }
+                crate::TypeInner::Array { base, .. } => Resolution::Handle(base),
+                crate::TypeInner::Struct { ref members } => {
+                    let member = members
+                        .get(index as usize)
+                        .ok_or(ResolveError::InvalidAccessIndex)?;
+                    Resolution::Handle(member.ty)
+                }
+                ref other => panic!("Can't access into {:?}", other),
+            },
+            crate::Expression::Constant(h) => Resolution::Handle(ctx.constants[h].ty),
+            crate::Expression::Compose { ty, .. } => Resolution::Handle(ty),
+            crate::Expression::FunctionParameter(index) => {
+                Resolution::Handle(ctx.parameter_types[index as usize])
+            }
+            crate::Expression::GlobalVariable(h) => Resolution::Handle(ctx.global_vars[h].ty),
+            crate::Expression::LocalVariable(h) => Resolution::Handle(ctx.local_vars[h].ty),
+            crate::Expression::Load { .. } => unimplemented!(),
+            crate::Expression::ImageSample { image, .. }
+            | crate::Expression::ImageLoad { image, .. } => match *self.get(image, types) {
+                crate::TypeInner::Image { class, .. } => Resolution::Value(match class {
+                    crate::ImageClass::Depth => crate::TypeInner::Scalar {
+                        kind: crate::ScalarKind::Float,
+                        width: 4,
+                    },
+                    crate::ImageClass::Sampled { kind, multi: _ } => crate::TypeInner::Vector {
+                        kind,
+                        width: 4,
+                        size: crate::VectorSize::Quad,
+                    },
+                    crate::ImageClass::Storage(format) => crate::TypeInner::Vector {
+                        kind: format.into(),
+                        width: 4,
+                        size: crate::VectorSize::Quad,
+                    },
+                }),
+                _ => unreachable!(),
+            },
+            crate::Expression::Unary { expr, .. } => self.resolutions[expr.index()].clone(),
+            crate::Expression::Binary { op, left, right } => match op {
+                crate::BinaryOperator::Add
+                | crate::BinaryOperator::Subtract
+                | crate::BinaryOperator::Divide
+                | crate::BinaryOperator::Modulo => self.resolutions[left.index()].clone(),
+                crate::BinaryOperator::Multiply => {
+                    let ty_left = self.get(left, types);
+                    let ty_right = self.get(right, types);
+                    if ty_left == ty_right {
+                        self.resolutions[left.index()].clone()
+                    } else if let crate::TypeInner::Scalar { .. } = *ty_right {
+                        self.resolutions[left.index()].clone()
+                    } else {
+                        match *ty_left {
+                            crate::TypeInner::Scalar { .. } => {
+                                self.resolutions[right.index()].clone()
+                            }
+                            crate::TypeInner::Matrix {
+                                columns,
+                                rows: _,
+                                width,
+                            } => Resolution::Value(crate::TypeInner::Vector {
+                                size: columns,
+                                kind: crate::ScalarKind::Float,
+                                width,
+                            }),
+                            _ => panic!("Incompatible arguments {:?} x {:?}", ty_left, ty_right),
+                        }
+                    }
+                }
+                crate::BinaryOperator::Equal
+                | crate::BinaryOperator::NotEqual
+                | crate::BinaryOperator::Less
+                | crate::BinaryOperator::LessEqual
+                | crate::BinaryOperator::Greater
+                | crate::BinaryOperator::GreaterEqual
+                | crate::BinaryOperator::LogicalAnd
+                | crate::BinaryOperator::LogicalOr => self.resolutions[left.index()].clone(),
+                crate::BinaryOperator::And
+                | crate::BinaryOperator::ExclusiveOr
+                | crate::BinaryOperator::InclusiveOr
+                | crate::BinaryOperator::ShiftLeftLogical
+                | crate::BinaryOperator::ShiftRightLogical
+                | crate::BinaryOperator::ShiftRightArithmetic => {
+                    self.resolutions[left.index()].clone()
+                }
+            },
+            crate::Expression::Intrinsic { .. } => unimplemented!(),
+            crate::Expression::Transpose(expr) => match *self.get(expr, types) {
+                crate::TypeInner::Matrix {
+                    columns,
+                    rows,
+                    width,
+                } => Resolution::Value(crate::TypeInner::Matrix {
+                    columns: rows,
+                    rows: columns,
+                    width,
+                }),
+                ref other => panic!("incompatible transpose of {:?}", other),
+            },
+            crate::Expression::DotProduct(left_expr, _) => match *self.get(left_expr, types) {
+                crate::TypeInner::Vector {
+                    kind,
+                    size: _,
+                    width,
+                } => Resolution::Value(crate::TypeInner::Scalar { kind, width }),
+                ref other => panic!("incompatible dot of {:?}", other),
+            },
+            crate::Expression::CrossProduct(_, _) => unimplemented!(),
+            crate::Expression::As {
+                expr,
+                kind,
+                convert: _,
+            } => match *self.get(expr, types) {
+                crate::TypeInner::Scalar { kind: _, width } => {
+                    Resolution::Value(crate::TypeInner::Scalar { kind, width })
+                }
+                crate::TypeInner::Vector {
+                    kind: _,
+                    size,
+                    width,
+                } => Resolution::Value(crate::TypeInner::Vector { kind, size, width }),
+                ref other => panic!("incompatible as of {:?}", other),
+            },
+            crate::Expression::Derivative { .. } => unimplemented!(),
+            crate::Expression::Call {
+                origin: crate::FunctionOrigin::External(ref name),
+                ref arguments,
+            } => match name.as_str() {
+                "distance" | "length" => match *self.get(arguments[0], types) {
+                    crate::TypeInner::Vector { kind, width, .. }
+                    | crate::TypeInner::Scalar { kind, width } => {
+                        Resolution::Value(crate::TypeInner::Scalar { kind, width })
+                    }
+                    ref other => panic!("Unexpected argument {:?} on {}", other, name),
+                },
+                "dot" => match *self.get(arguments[0], types) {
+                    crate::TypeInner::Vector { kind, width, .. } => {
+                        Resolution::Value(crate::TypeInner::Scalar { kind, width })
+                    }
+                    ref other => panic!("Unexpected argument {:?} on {}", other, name),
+                },
+                //Note: `cross` is here too, we still need to figure out what to do with it
+                "abs" | "atan2" | "cos" | "sin" | "floor" | "inverse" | "normalize" | "min"
+                | "max" | "reflect" | "pow" | "clamp" | "fclamp" | "mix" | "step"
+                | "smoothstep" | "cross" => self.resolutions[arguments[0].index()].clone(),
+                _ => return Err(ResolveError::FunctionNotDefined { name: name.clone() }),
+            },
+            crate::Expression::Call {
+                origin: crate::FunctionOrigin::Local(handle),
+                arguments: _,
+            } => {
+                let ty = ctx.functions[handle]
+                    .return_type
+                    .ok_or(ResolveError::FunctionReturnsVoid)?;
+                Resolution::Handle(ty)
+            }
+            crate::Expression::ArrayLength(_) => Resolution::Value(crate::TypeInner::Scalar {
+                kind: crate::ScalarKind::Uint,
+                width: 4,
+            }),
+        })
+    }
+
+    pub fn grow(
         &mut self,
         expr_handle: Handle<crate::Expression>,
         expressions: &Arena<crate::Expression>,
         types: &mut Arena<crate::Type>,
-        constants: &Arena<crate::Constant>,
-        global_vars: &Arena<crate::GlobalVariable>,
-        local_vars: &Arena<crate::LocalVariable>,
-    ) -> Result<Handle<crate::Type>, ResolveError> {
-        if self.types.len() <= expr_handle.index() {
-            for (eh, expr) in expressions.iter().skip(self.types.len()) {
-                let ty = match *expr {
-                    crate::Expression::Access { base, .. } => {
-                        match types[self.types[base.index()]].inner {
-                            crate::TypeInner::Array { base, .. } => base,
-                            ref other => panic!("Can't access into {:?}", other),
-                        }
-                    }
-                    crate::Expression::AccessIndex { base, index } => {
-                        match types[self.types[base.index()]].inner {
-                            crate::TypeInner::Vector { size, kind, width } => {
-                                if index >= size as u32 {
-                                    return Err(ResolveError::InvalidAccessIndex)
-                                }
-                                let inner = crate::TypeInner::Scalar { kind, width };
-                                Self::deduce_type_handle(inner, types)
-                            }
-                            crate::TypeInner::Matrix { columns, rows, kind, width } => {
-                                if index >= columns as u32 {
-                                    return Err(ResolveError::InvalidAccessIndex)
-                                }
-                                let inner = crate::TypeInner::Vector { size: rows, kind, width };
-                                Self::deduce_type_handle(inner, types)
-                            }
-                            crate::TypeInner::Array { base, .. } => base,
-                            crate::TypeInner::Struct { ref members } => {
-                                members.get(index as usize)
-                                    .ok_or(ResolveError::InvalidAccessIndex)?
-                                    .ty
-                            }
-                            ref other => panic!("Can't access into {:?}", other),
-                        }
-                    }
-                    crate::Expression::Constant(h) => constants[h].ty,
-                    crate::Expression::Compose { ty, .. } => ty,
-                    crate::Expression::FunctionParameter(_) => unimplemented!(),
-                    crate::Expression::GlobalVariable(h) => global_vars[h].ty,
-                    crate::Expression::LocalVariable(h) => local_vars[h].ty,
-                    crate::Expression::Load { .. } => unimplemented!(),
-                    crate::Expression::ImageSample { .. } => unimplemented!(),
-                    crate::Expression::Unary { expr, .. } => self.types[expr.index()],
-                    crate::Expression::Binary { op, left, right } => {
-                        match op {
-                            crate::BinaryOperator::Add |
-                            crate::BinaryOperator::Subtract |
-                            crate::BinaryOperator::Divide |
-                            crate::BinaryOperator::Modulo => {
-                                self.types[left.index()]
-                            }
-                            crate::BinaryOperator::Multiply => {
-                                let ty_left = self.types[left.index()];
-                                let ty_right = self.types[right.index()];
-                                if ty_left == ty_right {
-                                    ty_left
-                                } else if let crate::TypeInner::Scalar { .. } = types[ty_right].inner {
-                                    ty_left
-                                } else if let crate::TypeInner::Matrix { columns, kind, width, .. } = types[ty_left].inner {
-                                    let inner = crate::TypeInner::Vector { size: columns, kind, width};
-                                    Self::deduce_type_handle(inner, types)
-                                } else {
-                                    panic!("Incompatible arguments {:?} x {:?}", types[ty_left], types[ty_right]);
-                                }
-                            }
-                            crate::BinaryOperator::Equal |
-                            crate::BinaryOperator::NotEqual |
-                            crate::BinaryOperator::Less |
-                            crate::BinaryOperator::LessEqual |
-                            crate::BinaryOperator::Greater |
-                            crate::BinaryOperator::GreaterEqual |
-                            crate::BinaryOperator::LogicalAnd |
-                            crate::BinaryOperator::LogicalOr => {
-                                self.types[left.index()]
-                            }
-                            crate::BinaryOperator::And |
-                            crate::BinaryOperator::ExclusiveOr |
-                            crate::BinaryOperator::InclusiveOr |
-                            crate::BinaryOperator::ShiftLeftLogical |
-                            crate::BinaryOperator::ShiftRightLogical |
-                            crate::BinaryOperator::ShiftRightArithmetic => {
-                                self.types[left.index()]
-                            }
-                        }
-                    }
-                    crate::Expression::Intrinsic { .. } => unimplemented!(),
-                    crate::Expression::DotProduct(_, _) => unimplemented!(),
-                    crate::Expression::CrossProduct(_, _) => unimplemented!(),
-                    crate::Expression::Derivative { .. } => unimplemented!(),
-                    crate::Expression::Call { ref name, ref arguments } => {
-                        match name.as_str() {
-                            "distance" | "length" => {
-                                let ty_handle = self.types[arguments[0].index()];
-                                let inner = match types[ty_handle].inner {
-                                    crate::TypeInner::Vector { kind, width, .. } => {
-                                        crate::TypeInner::Scalar { kind, width }
-                                    }
-                                    ref other => panic!("Unexpected argument {:?}", other),
-                                };
-                                Self::deduce_type_handle(inner, types)
-                            }
-                            "normalize" | "fclamp" => self.types[arguments[0].index()],
-                            _ => panic!("Unknown '{}' call", name),
-                        }
-                    }
+        ctx: &ResolveContext,
+    ) -> Result<(), ResolveError> {
+        if self.resolutions.len() <= expr_handle.index() {
+            for (eh, expr) in expressions.iter().skip(self.resolutions.len()) {
+                let resolution = self.resolve_impl(expr, types, ctx)?;
+                log::debug!("Resolving {:?} = {:?} : {:?}", eh, expr, resolution);
+
+                let ty_handle = match resolution {
+                    Resolution::Handle(h) => h,
+                    Resolution::Value(inner) => types
+                        .fetch_if_or_append(crate::Type { name: None, inner }, |a, b| {
+                            a.inner == b.inner
+                        }),
                 };
-                log::debug!("Resolving {:?} = {:?} : {:?}", eh, expr, ty);
-                self.types.push(ty);
-            };
+                self.resolutions.push(Resolution::Handle(ty_handle));
+            }
         }
-        Ok(self.types[expr_handle.index()])
+        Ok(())
     }
 
-    pub fn deduce_type_handle(
-        inner: crate::TypeInner,
-        arena: &mut Arena<crate::Type>,
-    ) -> Handle<crate::Type> {
-        if let Some((token, _)) = arena
-            .iter()
-            .find(|(_, ty)| ty.inner == inner)
-        {
-            return token;
+    pub fn resolve_all(
+        &mut self,
+        expressions: &Arena<crate::Expression>,
+        types: &Arena<crate::Type>,
+        ctx: &ResolveContext,
+    ) -> Result<(), ResolveError> {
+        self.clear();
+        for (_, expr) in expressions.iter() {
+            let resolution = self.resolve_impl(expr, types, ctx)?;
+            self.resolutions.push(resolution);
         }
-        arena.append(crate::Type {
-            name: None,
-            inner,
-        })
+        Ok(())
+    }
+}
+
+pub fn check_constant_type(inner: &crate::ConstantInner, type_inner: &crate::TypeInner) -> bool {
+    match (inner, type_inner) {
+        (
+            crate::ConstantInner::Sint(_),
+            crate::TypeInner::Scalar {
+                kind: crate::ScalarKind::Sint,
+                width: _,
+            },
+        ) => true,
+        (
+            crate::ConstantInner::Uint(_),
+            crate::TypeInner::Scalar {
+                kind: crate::ScalarKind::Uint,
+                width: _,
+            },
+        ) => true,
+        (
+            crate::ConstantInner::Float(_),
+            crate::TypeInner::Scalar {
+                kind: crate::ScalarKind::Float,
+                width: _,
+            },
+        ) => true,
+        (
+            crate::ConstantInner::Bool(_),
+            crate::TypeInner::Scalar {
+                kind: crate::ScalarKind::Bool,
+                width: _,
+            },
+        ) => true,
+        (crate::ConstantInner::Composite(_inner), _) => true, // TODO recursively check composite types
+        (_, _) => false,
     }
 }

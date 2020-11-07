@@ -15,11 +15,63 @@ namespace webgpu {
 GPU_IMPL_CYCLE_COLLECTION(Texture, mParent)
 GPU_IMPL_JS_WRAP(Texture)
 
+static Maybe<uint8_t> GetBytesPerBlock(dom::GPUTextureFormat format) {
+  switch (format) {
+    case dom::GPUTextureFormat::R8unorm:
+    case dom::GPUTextureFormat::R8snorm:
+    case dom::GPUTextureFormat::R8uint:
+    case dom::GPUTextureFormat::R8sint:
+      return Some<uint8_t>(1u);
+    case dom::GPUTextureFormat::R16uint:
+    case dom::GPUTextureFormat::R16sint:
+    case dom::GPUTextureFormat::R16float:
+    case dom::GPUTextureFormat::Rg8unorm:
+    case dom::GPUTextureFormat::Rg8snorm:
+    case dom::GPUTextureFormat::Rg8uint:
+    case dom::GPUTextureFormat::Rg8sint:
+      return Some<uint8_t>(2u);
+    case dom::GPUTextureFormat::R32uint:
+    case dom::GPUTextureFormat::R32sint:
+    case dom::GPUTextureFormat::R32float:
+    case dom::GPUTextureFormat::Rg16uint:
+    case dom::GPUTextureFormat::Rg16sint:
+    case dom::GPUTextureFormat::Rg16float:
+    case dom::GPUTextureFormat::Rgba8unorm:
+    case dom::GPUTextureFormat::Rgba8unorm_srgb:
+    case dom::GPUTextureFormat::Rgba8snorm:
+    case dom::GPUTextureFormat::Rgba8uint:
+    case dom::GPUTextureFormat::Rgba8sint:
+    case dom::GPUTextureFormat::Bgra8unorm:
+    case dom::GPUTextureFormat::Bgra8unorm_srgb:
+    case dom::GPUTextureFormat::Rgb10a2unorm:
+    case dom::GPUTextureFormat::Rg11b10float:
+      return Some<uint8_t>(4u);
+    case dom::GPUTextureFormat::Rg32uint:
+    case dom::GPUTextureFormat::Rg32sint:
+    case dom::GPUTextureFormat::Rg32float:
+    case dom::GPUTextureFormat::Rgba16uint:
+    case dom::GPUTextureFormat::Rgba16sint:
+    case dom::GPUTextureFormat::Rgba16float:
+      return Some<uint8_t>(8u);
+    case dom::GPUTextureFormat::Rgba32uint:
+    case dom::GPUTextureFormat::Rgba32sint:
+    case dom::GPUTextureFormat::Rgba32float:
+      return Some<uint8_t>(16u);
+    case dom::GPUTextureFormat::Depth32float:
+      return Some<uint8_t>(4u);
+    case dom::GPUTextureFormat::Depth24plus:
+    case dom::GPUTextureFormat::Depth24plus_stencil8:
+    case dom::GPUTextureFormat::EndGuard_:
+      return Nothing();
+  }
+  return Nothing();
+}
+
 Texture::Texture(Device* const aParent, RawId aId,
                  const dom::GPUTextureDescriptor& aDesc)
     : ChildOf(aParent),
       mId(aId),
-      mDefaultViewDescriptor(WebGPUChild::GetDefaultViewDescriptor(aDesc)) {}
+      mBytesPerBlock(GetBytesPerBlock(aDesc.mFormat)) {}
 
 Texture::~Texture() { Cleanup(); }
 
@@ -33,57 +85,9 @@ void Texture::Cleanup() {
   }
 }
 
-uint8_t Texture::BytesPerTexel() const {
-  switch (mDefaultViewDescriptor->format) {
-    case ffi::WGPUTextureFormat_R8Unorm:
-    case ffi::WGPUTextureFormat_R8Snorm:
-    case ffi::WGPUTextureFormat_R8Uint:
-    case ffi::WGPUTextureFormat_R8Sint:
-      return 1;
-    case ffi::WGPUTextureFormat_R16Uint:
-    case ffi::WGPUTextureFormat_R16Sint:
-    case ffi::WGPUTextureFormat_R16Float:
-    case ffi::WGPUTextureFormat_Rg8Unorm:
-    case ffi::WGPUTextureFormat_Rg8Snorm:
-    case ffi::WGPUTextureFormat_Rg8Uint:
-    case ffi::WGPUTextureFormat_Rg8Sint:
-      return 2;
-    case ffi::WGPUTextureFormat_R32Uint:
-    case ffi::WGPUTextureFormat_R32Sint:
-    case ffi::WGPUTextureFormat_R32Float:
-    case ffi::WGPUTextureFormat_Rg16Uint:
-    case ffi::WGPUTextureFormat_Rg16Sint:
-    case ffi::WGPUTextureFormat_Rg16Float:
-    case ffi::WGPUTextureFormat_Rgba8Unorm:
-    case ffi::WGPUTextureFormat_Rgba8UnormSrgb:
-    case ffi::WGPUTextureFormat_Rgba8Snorm:
-    case ffi::WGPUTextureFormat_Rgba8Uint:
-    case ffi::WGPUTextureFormat_Rgba8Sint:
-    case ffi::WGPUTextureFormat_Bgra8Unorm:
-    case ffi::WGPUTextureFormat_Bgra8UnormSrgb:
-    case ffi::WGPUTextureFormat_Rgb10a2Unorm:
-    case ffi::WGPUTextureFormat_Rg11b10Float:
-      return 4;
-    case ffi::WGPUTextureFormat_Rg32Uint:
-    case ffi::WGPUTextureFormat_Rg32Sint:
-    case ffi::WGPUTextureFormat_Rg32Float:
-      return 8;
-    case ffi::WGPUTextureFormat_Rgba16Uint:
-    case ffi::WGPUTextureFormat_Rgba16Sint:
-    case ffi::WGPUTextureFormat_Rgba16Float:
-    case ffi::WGPUTextureFormat_Rgba32Uint:
-    case ffi::WGPUTextureFormat_Rgba32Sint:
-    case ffi::WGPUTextureFormat_Rgba32Float:
-      return 16;
-    default:
-      return 0;
-  }
-}
-
 already_AddRefed<TextureView> Texture::CreateView(
     const dom::GPUTextureViewDescriptor& aDesc) {
-  RawId id = mParent->GetBridge()->TextureCreateView(mId, aDesc,
-                                                     *mDefaultViewDescriptor);
+  RawId id = mParent->GetBridge()->TextureCreateView(mId, aDesc);
   RefPtr<TextureView> view = new TextureView(this, id);
   return view.forget();
 }
