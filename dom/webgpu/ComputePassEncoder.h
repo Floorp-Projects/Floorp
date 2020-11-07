@@ -6,18 +6,26 @@
 #ifndef GPU_ComputePassEncoder_H_
 #define GPU_ComputePassEncoder_H_
 
+#include "mozilla/Scoped.h"
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/webgpu/WebGPUTypes.h"
-#include "mozilla/webgpu/ffi/wgpu.h"
 #include "ObjectModel.h"
 
 namespace mozilla {
 namespace webgpu {
+namespace ffi {
+struct WGPUComputePass;
+}  // namespace ffi
 
 class BindGroup;
 class Buffer;
 class CommandEncoder;
 class ComputePipeline;
+
+struct ScopedFfiComputeTraits {
+  typedef ffi::WGPUComputePass* type;
+  static type empty();
+  static void release(type raw);
+};
 
 class ComputePassEncoder final : public ObjectBase,
                                  public ChildOf<CommandEncoder> {
@@ -32,7 +40,7 @@ class ComputePassEncoder final : public ObjectBase,
   virtual ~ComputePassEncoder();
   void Cleanup() {}
 
-  ffi::WGPUComputePass* const mRaw;
+  Scoped<ScopedFfiComputeTraits> mPass;
   // keep all the used objects alive while the pass is recorded
   nsTArray<RefPtr<const BindGroup>> mUsedBindGroups;
   nsTArray<RefPtr<const ComputePipeline>> mUsedPipelines;
