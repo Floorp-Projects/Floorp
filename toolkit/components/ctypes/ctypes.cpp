@@ -5,6 +5,7 @@
 
 #include "ctypes.h"
 #include "jsapi.h"
+#include "js/experimental/CTypes.h"  // JS::CTypesCallbacks, JS::InitCTypesClass, JS::SetCTypesCallbacks
 #include "js/MemoryFunctions.h"
 #include "nsMemory.h"
 #include "nsString.h"

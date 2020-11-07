@@ -11,6 +11,7 @@
 
 #include "ctypes/CTypes.h"
 #include "js/CharacterEncoding.h"
+#include "js/experimental/CTypes.h"  // JS::CTypesCallbacks
 #include "js/MemoryFunctions.h"
 #include "js/Object.h"  // JS::GetReservedSlot
 #include "js/PropertySpec.h"
