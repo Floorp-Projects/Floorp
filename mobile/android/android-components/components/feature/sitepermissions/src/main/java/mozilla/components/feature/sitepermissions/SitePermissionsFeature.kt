@@ -79,7 +79,6 @@ internal const val FRAGMENT_TAG = "mozac_feature_sitepermissions_prompt_dialog"
 @Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 class SitePermissionsFeature(
     private val context: Context,
-    private val sessionManager: SessionManager,
     private var sessionId: String? = null,
     private val storage: SitePermissionsStorage = SitePermissionsStorage(context),
     var sitePermissionsRules: SitePermissionsRules? = null,
@@ -88,8 +87,7 @@ class SitePermissionsFeature(
     private val dialogConfig: DialogConfig? = null,
     override val onNeedToRequestPermissions: OnNeedToRequestPermissions,
     val onShouldShowRequestPermissionRationale: (permission: String) -> Boolean,
-    private val store: BrowserStore,
-    private val customTabId: String? = null
+    private val store: BrowserStore
 ) : LifecycleAwareFeature, PermissionsFeature {
 
     internal val ioCoroutineScope by lazy { coroutineScopeInitializer() }
@@ -119,7 +117,7 @@ class SitePermissionsFeature(
         appPermissionScope =
             store.flowScoped { flow ->
                 flow.mapNotNull { state ->
-                    state.findTabOrCustomTabOrSelectedTab(customTabId)?.content?.appPermissionRequestsList
+                    state.findTabOrCustomTabOrSelectedTab(sessionId)?.content?.appPermissionRequestsList
                 }
                     .filterChanged { it }
                     .collect { appPermissionRequest ->
@@ -134,7 +132,7 @@ class SitePermissionsFeature(
         sitePermissionScope =
             store.flowScoped { flow ->
                 flow.mapNotNull { state ->
-                    state.findTabOrCustomTabOrSelectedTab(customTabId)?.content?.permissionRequestsList
+                    state.findTabOrCustomTabOrSelectedTab(sessionId)?.content?.permissionRequestsList
                 }
                     .filterChanged { it }
                     .collect { permissionRequest ->
@@ -161,7 +159,7 @@ class SitePermissionsFeature(
         permissionRequest: PermissionRequest,
         optionalSessionId: String? = null
     ) {
-        val thisSessionId = optionalSessionId ?: sessionId
+        val thisSessionId = optionalSessionId ?: getCurrentTabState()?.id
         thisSessionId?.let { sessionId ->
             store.dispatch(ContentAction.ConsumePermissionsRequest(sessionId, permissionRequest))
         }
@@ -172,7 +170,7 @@ class SitePermissionsFeature(
         appPermissionRequest: PermissionRequest,
         optionalSessionId: String? = null
     ) {
-        val thisSessionId = optionalSessionId ?: sessionId
+        val thisSessionId = optionalSessionId ?: getCurrentTabState()?.id
         thisSessionId?.let { sessionId ->
             store.dispatch(
                 ContentAction.ConsumeAppPermissionsRequest(
@@ -224,8 +222,10 @@ class SitePermissionsFeature(
     }
 
     @VisibleForTesting
-    internal fun getCurrentContentState() =
-        store.state.findTabOrCustomTabOrSelectedTab(customTabId)?.content
+    internal fun getCurrentContentState() = getCurrentTabState()?.content
+
+    @VisibleForTesting
+    internal fun getCurrentTabState() = store.state.findTabOrCustomTabOrSelectedTab(sessionId)
 
     @VisibleForTesting
     internal fun findRequestedAppPermission(permissions: Array<String>): PermissionRequest? {
@@ -615,8 +615,8 @@ class SitePermissionsFeature(
     ): SitePermissionsDialogFragment {
         val title = context.getString(titleId, host)
 
-        val currentSessionId: String =
-            sessionManager.selectedSessionOrThrow.id
+        val currentSessionId: String = store.state.findTabOrCustomTabOrSelectedTab(sessionId)?.id
+                ?: throw IllegalStateException("Unable to find session for $sessionId or selected session")
 
         return SitePermissionsDialogFragment.newInstance(
             currentSessionId,
@@ -682,12 +682,8 @@ class SitePermissionsFeature(
      * Re-attaches a fragment that is still visible but not linked to this feature anymore.
      */
     private fun reattachFragment(fragment: SitePermissionsDialogFragment) {
-        val session = sessionManager.findSessionById(fragment.sessionId)
-        val contentState = getCurrentContentState()
-
-        if (session == null || contentState == null ||
-            (noPermissionRequests(contentState))
-        ) {
+        val currentTab = store.state.findTabOrCustomTabOrSelectedTab(fragment.sessionId)?.content
+        if (currentTab == null || (noPermissionRequests(currentTab))) {
             fragmentManager.beginTransaction()
                 .remove(fragment)
                 .commitAllowingStateLoss()

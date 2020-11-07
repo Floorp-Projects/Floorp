@@ -48,7 +48,6 @@ class SitePermissionsRulesTest {
 
         rules = SitePermissionsFeature(
             context = testContext,
-            sessionManager = mockSessionManager,
             onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
             storage = mockStorage,
             fragmentManager = mock(),

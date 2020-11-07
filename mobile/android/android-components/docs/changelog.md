@@ -21,8 +21,11 @@ permalink: /changelog/
 * **feature-search**
  * * ⚠️ **This is a breaking change**: `SearchUseCases` no longer requires a `Context` parameter in the constructor. 
 
+* **feature-sitepermissions**
+  * ⚠️ **This is a breaking change**: The `SitePermissionsFeature`'s constructor does not requires a `sessionManager` parameter anymore pass a `store` instead.
+
 * **browser-session**
-  * `SelectionAwareSessionObserver` is now deprecated. All session state changes can be observed using the browser store (`browser-state` module).    
+  * `SelectionAwareSessionObserver` is now deprecated. All session state changes can be observed using the browser store (`browser-state` module).
 
 # 65.0.0
 

@@ -4,6 +4,8 @@
 
 package mozilla.components.feature.sitepermissions
 
+import android.content.pm.PackageManager.PERMISSION_DENIED
+import android.content.pm.PackageManager.PERMISSION_GRANTED
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -15,12 +17,11 @@ import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.Permission.AppAudio
 import mozilla.components.concept.engine.permission.Permission.ContentAudioCapture
@@ -53,6 +54,7 @@ import org.mockito.Mockito.anyString
 import org.mockito.Mockito.atLeastOnce
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
@@ -61,7 +63,6 @@ import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
 class SitePermissionsFeatureTest {
-    private lateinit var mockSessionManager: SessionManager
     private lateinit var sitePermissionFeature: SitePermissionsFeature
     private lateinit var mockOnNeedToRequestPermissions: OnNeedToRequestPermissions
     private lateinit var mockStorage: SitePermissionsStorage
@@ -71,6 +72,7 @@ class SitePermissionsFeatureTest {
     private lateinit var mockPermissionRequest: PermissionRequest
     private lateinit var mockAppPermissionRequest: PermissionRequest
     private lateinit var mockSitePermissionRules: SitePermissionsRules
+    private lateinit var selectedTab: TabSessionState
 
     private val testCoroutineDispatcher = TestCoroutineDispatcher()
     private val testScope = CoroutineScope(testCoroutineDispatcher)
@@ -84,21 +86,22 @@ class SitePermissionsFeatureTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testCoroutineDispatcher)
-        val engine = mock<Engine>()
-        mockSessionManager = spy(SessionManager(engine))
         mockOnNeedToRequestPermissions = mock()
         mockStorage = mock()
         mockFragmentManager = mockFragmentManager()
-        mockStore = mock()
         mockContentState = mock()
         mockPermissionRequest = mock()
         mockAppPermissionRequest = mock()
         mockSitePermissionRules = mock()
 
+        selectedTab = mozilla.components.browser.state.state.createTab(
+            url = "https://www.mozilla.org",
+            id = SESSION_ID
+        )
+        mockStore = spy(BrowserStore(initialState = BrowserState(tabs = listOf(selectedTab), selectedTabId = selectedTab.id)))
         sitePermissionFeature = spy(
             SitePermissionsFeature(
                 context = testContext,
-                sessionManager = mockSessionManager,
                 sitePermissionsRules = mockSitePermissionRules,
                 onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
                 storage = mockStorage,
@@ -130,14 +133,14 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
-    fun `GIVEN no sessionId WHEN calling consumePermissionRequest THEN dispatch ConsumePermissionsRequest action with feature sessionId`() {
+    fun `GIVEN no sessionId WHEN calling consumePermissionRequest THEN dispatch ConsumePermissionsRequest action with selected tab`() {
         // when
         sitePermissionFeature.consumePermissionRequest(mockPermissionRequest)
 
         // then
         verify(mockStore).dispatch(
             ContentAction.ConsumePermissionsRequest
-                (SESSION_ID, mockPermissionRequest)
+                (selectedTab.id, mockPermissionRequest)
         )
     }
 
@@ -154,27 +157,25 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
-    fun `GIVEN no sessionId WHEN calling consumeAppPermissionRequest THEN dispatch ConsumeAppPermissionsRequest action with feature sessionId`() {
+    fun `GIVEN no sessionId WHEN calling consumeAppPermissionRequest THEN dispatch ConsumeAppPermissionsRequest action with selected tab`() {
         // when
         sitePermissionFeature.consumeAppPermissionRequest(mockAppPermissionRequest)
 
         // then
         verify(mockStore).dispatch(
             ContentAction.ConsumeAppPermissionsRequest
-                (SESSION_ID, mockAppPermissionRequest)
+                (selectedTab.id, mockAppPermissionRequest)
         )
     }
 
     @Test
     fun `GIVEN an appPermissionRequest with all granted permissions WHEN onPermissionsResult() THEN grant() and consumeAppPermissionRequest() are called`() {
         // given
-        doReturn(mockContentState).`when`(sitePermissionFeature)
-            .getCurrentContentState()
         doReturn(mockAppPermissionRequest).`when`(sitePermissionFeature)
             .findRequestedAppPermission(any())
 
         // when
-        sitePermissionFeature.onPermissionsResult(arrayOf("permission"), arrayOf(0).toIntArray())
+        sitePermissionFeature.onPermissionsResult(arrayOf("permission"), arrayOf(PERMISSION_GRANTED).toIntArray())
 
         // then
         verify(mockAppPermissionRequest).grant()
@@ -184,8 +185,6 @@ class SitePermissionsFeatureTest {
     @Test
     fun `GIVEN an appPermissionRequest with blocked permissions and !onShouldShowRequestPermissionRationale WHEN onPermissionsResult() THEN reject(), storeSitePermissions, consume are called`() {
         // given
-        doReturn(mockContentState).`when`(sitePermissionFeature)
-            .getCurrentContentState()
         doReturn(mockAppPermissionRequest).`when`(sitePermissionFeature)
             .findRequestedAppPermission(any())
         doNothing().`when`(sitePermissionFeature)
@@ -194,13 +193,13 @@ class SitePermissionsFeatureTest {
         // when
         sitePermissionFeature.onPermissionsResult(
             arrayOf("permission1", "permission2"),
-            arrayOf(-1, -1).toIntArray()
+            arrayOf(PERMISSION_DENIED, PERMISSION_DENIED).toIntArray()
         )
 
         // then
         verify(mockAppPermissionRequest).reject()
         verify(sitePermissionFeature, times(2))
-            .storeSitePermissions(mockContentState, mockAppPermissionRequest, BLOCKED)
+            .storeSitePermissions(selectedTab.content, mockAppPermissionRequest, BLOCKED)
         verify(sitePermissionFeature).consumeAppPermissionRequest(mockAppPermissionRequest)
     }
 
@@ -209,15 +208,27 @@ class SitePermissionsFeatureTest {
         // given
         doNothing().`when`(sitePermissionFeature)
             .storeSitePermissions(any(), any(), any(), any())
-        doReturn(mockContentState).`when`(sitePermissionFeature)
-            .getCurrentContentState()
 
         // when
         sitePermissionFeature.onContentPermissionGranted(mockPermissionRequest, true)
 
         // then
         verify(sitePermissionFeature)
-            .storeSitePermissions(mockContentState, mockPermissionRequest, ALLOWED)
+            .storeSitePermissions(selectedTab.content, mockPermissionRequest, ALLOWED)
+    }
+
+    @Test
+    fun `GIVEN shouldStore false WHEN onContentPermissionGranted() THEN storeSitePermissions() MUST NOT BE called`() {
+        // given
+        doNothing().`when`(sitePermissionFeature)
+                .storeSitePermissions(any(), any(), any(), any())
+
+        // when
+        sitePermissionFeature.onContentPermissionGranted(mockPermissionRequest, false)
+
+        // then
+        verify(sitePermissionFeature, never())
+                .storeSitePermissions(selectedTab.content, mockPermissionRequest, ALLOWED)
     }
 
     @Test
@@ -327,10 +338,24 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
+    fun `GIVEN a permissionRequest WITH a private tab WHEN storeSitePermissions() THEN save or update MUST NOT BE called`() {
+        // then
+        sitePermissionFeature.storeSitePermissions(
+            selectedTab.content.copy(private = true),
+            mockPermissionRequest,
+            ALLOWED,
+            testScope
+        )
+
+        // when
+        verify(mockStorage, never()).save(any())
+        verify(mockStorage, never()).update(any())
+    }
+
+    @Test
     fun `GIVEN permissionRequest WHEN onContentPermissionDeny THEN reject(), storeSitePermissions are called`() {
         // given
         doNothing().`when`(mockPermissionRequest).reject()
-        doReturn(mockContentState).`when`(sitePermissionFeature).getCurrentContentState()
         doNothing().`when`(sitePermissionFeature).storeSitePermissions(any(), any(), any(), any())
 
         // then
@@ -339,7 +364,7 @@ class SitePermissionsFeatureTest {
         // when
         verify(mockPermissionRequest).reject()
         verify(sitePermissionFeature).storeSitePermissions(
-            mockContentState,
+            selectedTab.content,
             mockPermissionRequest,
             BLOCKED
         )
@@ -475,7 +500,6 @@ class SitePermissionsFeatureTest {
         val sitePermissionFeature = spy(
             SitePermissionsFeature(
                 context = testContext,
-                sessionManager = mockSessionManager,
                 sitePermissionsRules = null,
                 onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
                 storage = mockStorage,
@@ -685,14 +709,10 @@ class SitePermissionsFeatureTest {
 
     @Test
     fun `feature will re-attach to already existing fragment`() {
-        doReturn(mockContentState).`when`(sitePermissionFeature).getCurrentContentState()
         doReturn(false).`when`(sitePermissionFeature).noPermissionRequests(any())
 
-        val session = getSelectedSession().apply {
-        }
-
         val fragment: SitePermissionsDialogFragment = mock()
-        doReturn(session.id).`when`(fragment).sessionId
+        doReturn(selectedTab.id).`when`(fragment).sessionId
         doReturn(fragment).`when`(mockFragmentManager).findFragmentByTag(any())
 
         sitePermissionFeature.start()
@@ -702,7 +722,7 @@ class SitePermissionsFeatureTest {
     @Test
     fun `already existing fragment will be removed if session has none permissions request set anymore`() {
         // given
-        val session = getSelectedSession()
+        val session = selectedTab
         val fragment: SitePermissionsDialogFragment = mock()
         doReturn(session.id).`when`(fragment).sessionId
         val transaction: FragmentTransaction = mock()
@@ -812,12 +832,5 @@ class SitePermissionsFeatureTest {
         val transaction: FragmentTransaction = mock()
         doReturn(transaction).`when`(fragmentManager).beginTransaction()
         return fragmentManager
-    }
-
-    private fun getSelectedSession(): Session {
-        val session = Session("", id = "test")
-        mockSessionManager.add(session)
-        mockSessionManager.select(session)
-        return session
     }
 }
