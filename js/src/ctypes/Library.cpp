@@ -97,7 +97,7 @@ bool Library::Name(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 JSObject* Library::Create(JSContext* cx, HandleValue path,
-                          const JSCTypesCallbacks* callbacks) {
+                          const JS::CTypesCallbacks* callbacks) {
   RootedObject libraryObj(cx, JS_NewObject(cx, &sLibraryClass));
   if (!libraryObj) {
     return nullptr;

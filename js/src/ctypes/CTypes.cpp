@@ -67,7 +67,9 @@ using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiDigit;
 
 using JS::AutoCheckCannotGC;
+using JS::AutoCTypesActivityCallback;
 using JS::AutoStableStringChars;
+using JS::CTypesActivityType;
 
 namespace js::ctypes {
 
@@ -441,7 +443,7 @@ static bool Join(JSContext* cx, unsigned argc, Value* vp);
 *******************************************************************************/
 
 // Class representing the 'ctypes' object itself. This exists to contain the
-// JSCTypesCallbacks set of function pointers.
+// JS::CTypesCallbacks set of function pointers.
 static const JSClass sCTypesGlobalClass = {
     "ctypes", JSCLASS_HAS_RESERVED_SLOTS(CTYPESGLOBAL_SLOTS)};
 
@@ -2343,8 +2345,8 @@ bool IsCTypesGlobal(HandleValue v) {
   return v.isObject() && IsCTypesGlobal(&v.toObject());
 }
 
-// Get the JSCTypesCallbacks struct from the 'ctypes' object 'obj'.
-const JSCTypesCallbacks* GetCallbacks(JSObject* obj) {
+// Get the JS::CTypesCallbacks struct from the 'ctypes' object 'obj'.
+const JS::CTypesCallbacks* GetCallbacks(JSObject* obj) {
   MOZ_ASSERT(IsCTypesGlobal(obj));
 
   Value result = JS::GetReservedSlot(obj, SLOT_CALLBACKS);
@@ -2352,7 +2354,7 @@ const JSCTypesCallbacks* GetCallbacks(JSObject* obj) {
     return nullptr;
   }
 
-  return static_cast<const JSCTypesCallbacks*>(result.toPrivate());
+  return static_cast<const JS::CTypesCallbacks*>(result.toPrivate());
 }
 
 // Utility function to access a property of an object as an object
@@ -2380,7 +2382,8 @@ static bool GetObjectProperty(JSContext* cx, HandleObject obj,
 using namespace js;
 using namespace js::ctypes;
 
-JS_PUBLIC_API bool JS_InitCTypesClass(JSContext* cx, HandleObject global) {
+JS_PUBLIC_API bool JS::InitCTypesClass(JSContext* cx,
+                                       Handle<JSObject*> global) {
   // attach ctypes property to global object
   RootedObject ctypes(cx, JS_NewObject(cx, &sCTypesGlobalClass));
   if (!ctypes) {
@@ -2436,20 +2439,22 @@ JS_PUBLIC_API bool JS_InitCTypesClass(JSContext* cx, HandleObject global) {
   return JS_FreezeObject(cx, ctypes);
 }
 
-JS_PUBLIC_API void JS_SetCTypesCallbacks(JSObject* ctypesObj,
-                                         const JSCTypesCallbacks* callbacks) {
+JS_PUBLIC_API void JS::SetCTypesCallbacks(JSObject* ctypesObj,
+                                          const CTypesCallbacks* callbacks) {
   MOZ_ASSERT(callbacks);
   MOZ_ASSERT(IsCTypesGlobal(ctypesObj));
 
   // Set the callbacks on a reserved slot.
   JS_SetReservedSlot(ctypesObj, SLOT_CALLBACKS,
-                     PrivateValue(const_cast<JSCTypesCallbacks*>(callbacks)));
+                     PrivateValue(const_cast<CTypesCallbacks*>(callbacks)));
 }
 
 namespace js {
 
-JS_FRIEND_API size_t SizeOfDataIfCDataObject(mozilla::MallocSizeOf mallocSizeOf,
-                                             JSObject* obj) {
+namespace ctypes {
+
+size_t SizeOfDataIfCDataObject(mozilla::MallocSizeOf mallocSizeOf,
+                               JSObject* obj) {
   if (!CData::IsCData(obj)) {
     return 0;
   }
@@ -2469,8 +2474,6 @@ JS_FRIEND_API size_t SizeOfDataIfCDataObject(mozilla::MallocSizeOf mallocSizeOf,
   }
   return n;
 }
-
-namespace ctypes {
 
 /*******************************************************************************
 ** Type conversion functions
@@ -7088,8 +7091,8 @@ bool FunctionType::Call(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Let the runtime callback know that we are about to call into C.
-  js::AutoCTypesActivityCallback autoCallback(cx, js::CTYPES_CALL_BEGIN,
-                                              js::CTYPES_CALL_END);
+  AutoCTypesActivityCallback autoCallback(cx, CTypesActivityType::BeginCall,
+                                          CTypesActivityType::EndCall);
 
   uintptr_t fn = *reinterpret_cast<uintptr_t*>(CData::GetData(obj));
 
@@ -7378,8 +7381,8 @@ void CClosure::ClosureStub(ffi_cif* cif, void* result, void** args,
 bool CClosure::ArgClosure::operator()(JSContext* cx) {
   // Let the runtime callback know that we are about to call into JS again. The
   // end callback will fire automatically when we exit this function.
-  js::AutoCTypesActivityCallback autoCallback(cx, js::CTYPES_CALLBACK_BEGIN,
-                                              js::CTYPES_CALLBACK_END);
+  AutoCTypesActivityCallback autoCallback(cx, CTypesActivityType::BeginCallback,
+                                          CTypesActivityType::EndCallback);
 
   RootedObject typeObj(cx, cinfo->typeObj);
   RootedObject thisObj(cx, cinfo->thisObj);

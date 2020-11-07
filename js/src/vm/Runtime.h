@@ -414,7 +414,7 @@ struct JSRuntime {
 
   js::MainThreadData<js::ScriptEnvironmentPreparer*> scriptEnvironmentPreparer;
 
-  js::MainThreadData<js::CTypesActivityCallback> ctypesActivityCallback;
+  js::MainThreadData<JS::CTypesActivityCallback> ctypesActivityCallback;
 
  private:
   js::WriteOnceData<const JSClass*> windowProxyClass_;
