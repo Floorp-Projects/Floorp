@@ -517,7 +517,7 @@ Here are some example APZ workflows. Observe how they all obey
 the global thread/lock ordering. Feel free to add others:
 
 - **Input handling** (in WR+GPU) case: UI main -> GPU main -> APZ tree lock -> RenderBackend thread
-- **Sync messages** in ``PComposiorBridge.ipdl``: UI main thread -> Compositor thread
+- **Sync messages** in ``PCompositorBridge.ipdl``: UI main thread -> Compositor thread
 - **GetAPZTestData**: Compositor thread -> SceneBuilder thread -> test lock
 - **Scene swap**: SceneBuilder thread -> APZ tree lock -> RenderBackend thread
 - **Updating hit-testing tree**: SceneBuilder thread -> APZ tree lock -> APZC instance lock
