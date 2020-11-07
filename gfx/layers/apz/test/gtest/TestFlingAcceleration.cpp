@@ -152,10 +152,10 @@ TEST_F(APZCFlingAccelerationTester,
                          {0, 9, 15, 23, 31, 30, 0, 34, 31, 29, 28, 24, 24, 11});
   CHECK_VELOCITY(Up, 2.2, 3.0);
   ExecuteWait(TimeDuration::FromMilliseconds(498));
-  CHECK_VELOCITY(Up, 0.8, 1.0);
+  CHECK_VELOCITY(Up, 0.5, 1.0);
   ExecutePanGesture100Hz(ScreenIntPoint{745, 1056},
                          {0, 10, 17, 29, 29, 33, 33, 0, 31, 27, 13});
-  CHECK_VELOCITY(Up, 2.3, 2.7);
+  CHECK_VELOCITY(Up, 1.8, 2.7);
 }
 
 TEST_F(APZCFlingAccelerationTester, ShouldNotAccelerateWhenPausedAtStartOfPan) {
@@ -188,7 +188,7 @@ TEST_F(APZCFlingAccelerationTester, ShouldNotAccelerateWhenPausedDuringPan) {
       {0,   0,   0,  -6, 0,  -16, -26, -41, -49, -65, -66, -61, -50, -35, -24,
        -17, -11, -8, -6, -5, -4,  -3,  -2,  -2,  -2,  -2,  -2,  -2,  -2,  -2,
        -3,  -4,  -5, -7, -9, -10, -10, -12, -18, -25, -23, -28, -30, -24});
-  CHECK_VELOCITY(Down, 2.5, 3.1);
+  CHECK_VELOCITY(Down, 2.5, 3.4);
 }
 
 TEST_F(APZCFlingAccelerationTester,
