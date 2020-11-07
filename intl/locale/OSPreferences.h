@@ -66,6 +66,9 @@ class OSPreferences : public mozIOSPreferences {
    * instance, but does not need to hold a reference, as in
    *    nsAutoCString str;
    *    OSPreferences::GetInstance()->GetSystemLocale(str);
+   *
+   * NOTE that this is not safe for off-main-thread use, because it is possible
+   * that XPCOM shutdown on the main thread could invalidate it at any moment!
    */
   static OSPreferences* GetInstance();
 
@@ -73,9 +76,7 @@ class OSPreferences : public mozIOSPreferences {
    * Return an addRef'd pointer to the singleton instance. This is used by the
    * XPCOM constructor that exists to support usage from JS.
    */
-  static already_AddRefed<OSPreferences> GetInstanceAddRefed() {
-    return RefPtr<OSPreferences>(GetInstance()).forget();
-  }
+  static already_AddRefed<OSPreferences> GetInstanceAddRefed();
 
   static bool GetPatternForSkeleton(const nsACString& aSkeleton,
                                     const nsACString& aLocale,
