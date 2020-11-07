@@ -961,6 +961,9 @@ pub struct Capabilities {
     pub supports_texture_usage: bool,
     /// Whether offscreen render targets can be partially updated.
     pub supports_render_target_partial_update: bool,
+    /// Whether the driver prefers fewer and larger texture uploads
+    /// over many smaller updates.
+    pub prefers_batched_texture_uploads: bool,
     /// The name of the renderer, as reported by GL
     pub renderer_name: String,
 }
@@ -1580,10 +1583,16 @@ impl Device {
         // from a non-zero offset within a PBO to fail. See bug 1603783.
         let supports_nonzero_pbo_offsets = !is_macos;
 
+        let is_mali_g = renderer_name.starts_with("Mali-G");
+
         // On Mali-Gxx there is a driver bug when rendering partial updates to
         // offscreen render targets, so we must ensure we render to the entire target.
         // See bug 1663355.
-        let supports_render_target_partial_update = !renderer_name.starts_with("Mali-G");
+        let supports_render_target_partial_update = !is_mali_g;
+
+        // On Mali-Gxx the driver really struggles with many small texture uploads,
+        // and handles fewer, larger uploads better.
+        let prefers_batched_texture_uploads = is_mali_g;
 
         Device {
             gl,
@@ -1606,6 +1615,7 @@ impl Device {
                 supports_nonzero_pbo_offsets,
                 supports_texture_usage,
                 supports_render_target_partial_update,
+                prefers_batched_texture_uploads,
                 renderer_name,
             },
 
