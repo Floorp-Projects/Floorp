@@ -19,11 +19,10 @@ interface WheelEvent : MouseEvent
   const unsigned long DOM_DELTA_LINE  = 0x01;
   const unsigned long DOM_DELTA_PAGE  = 0x02;
 
-  readonly attribute double        deltaX;
-  readonly attribute double        deltaY;
-  readonly attribute double        deltaZ;
-  readonly attribute unsigned long deltaMode;
-
+  [NeedsCallerType] readonly attribute double        deltaX;
+  [NeedsCallerType] readonly attribute double        deltaY;
+  [NeedsCallerType] readonly attribute double        deltaZ;
+  [NeedsCallerType] readonly attribute unsigned long deltaMode;
 };
 
 dictionary WheelEventInit : MouseEventInit

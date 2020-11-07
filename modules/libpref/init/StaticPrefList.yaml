@@ -1670,6 +1670,33 @@
   value: true
   mirror: always
 
+# Whether WheelEvent should return pixels instead of lines for
+# WheelEvent.deltaX/Y/Z, when deltaMode hasn't been checked.
+#
+# Other browsers don't use line deltas and websites forget to check for it, see
+# bug 1392460.
+- name: dom.event.wheel-deltaMode-lines.disabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
+# Mostly for debugging. Whether we should do the same as
+# dom.event.wheel-deltaMode-lines.disabled, but unconditionally rather than
+# only when deltaMode hasn't been checked.
+- name: dom.event.wheel-deltaMode-lines.always-disabled
+  type: bool
+  value: false
+  mirror: always
+
+# When dom.event.wheel-deltaMode-lines.disabled is true, this is the lines to
+# pixels multiplier that gets used.
+#
+# The value here is taken from PIXELS_PER_LINE_SCALE from pdf.js.
+- name: dom.event.wheel-deltaMode-lines-to-pixel-scale
+  type: uint32_t
+  value: 30
+  mirror: always
+
 #if defined(XP_MACOSX)
 # Whether to disable treating ctrl click as right click
 - name: dom.event.treat_ctrl_click_as_right_click.disabled
