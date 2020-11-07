@@ -1594,6 +1594,9 @@ class TypeAnalyzer {
   bool specializeValidFloatOps();
   bool tryEmitFloatOperations();
 
+  bool shouldSpecializeOsrPhis() const;
+  MIRType guessPhiType(MPhi* phi, bool* hasInputsWithEmptyTypes) const;
+
  public:
   TypeAnalyzer(MIRGenerator* mir, MIRGraph& graph) : mir(mir), graph(graph) {}
 
@@ -1602,7 +1605,7 @@ class TypeAnalyzer {
 
 } /* anonymous namespace */
 
-static bool ShouldSpecializeOsrPhis() {
+bool TypeAnalyzer::shouldSpecializeOsrPhis() const {
   // [SMDOC] WarpBuilder OSR Phi Type Specialization
   //
   // IonBuilder does type specialization while building MIR. This includes
@@ -1640,7 +1643,7 @@ static bool ShouldSpecializeOsrPhis() {
   // OSR phi specialization happens in three steps:
   //
   // (1) Specialize phis but ignore MOsrValue phi inputs. In other words,
-  //     pretend the OSR entry block doesn't exist. See GuessPhiType.
+  //     pretend the OSR entry block doesn't exist. See guessPhiType.
   //
   // (2) Once phi specialization is done, look at the types of loop header phis
   //     and add these types to the corresponding preheader phis. This way, the
@@ -1657,11 +1660,12 @@ static bool ShouldSpecializeOsrPhis() {
   //
   //     * TypeAnalyzer::replaceRedundantPhi: adds a type guard for values that
   //       can't be unboxed (null/undefined/magic Values).
-  return JitOptions.warpBuilder;
+  return JitOptions.warpBuilder && !mir->outerInfo().hadSpeculativePhiBailout();
 }
 
 // Try to specialize this phi based on its non-cyclic inputs.
-static MIRType GuessPhiType(MPhi* phi, bool* hasInputsWithEmptyTypes) {
+MIRType TypeAnalyzer::guessPhiType(MPhi* phi,
+                                   bool* hasInputsWithEmptyTypes) const {
 #ifdef DEBUG
   // Check that different magic constants aren't flowing together. Ignore
   // JS_OPTIMIZED_OUT, since an operand could be legitimately optimized
@@ -1700,15 +1704,16 @@ static MIRType GuessPhiType(MPhi* phi, bool* hasInputsWithEmptyTypes) {
       }
     }
 
-    // Ignore operands which we've never observed.
+    // Ignore operands which we've never observed, unless this caused a
+    // bailout in a previous compilation of this script.
     if (in->resultTypeSet() && in->resultTypeSet()->empty()) {
       *hasInputsWithEmptyTypes = true;
       continue;
     }
 
-    // See ShouldSpecializeOsrPhis comment. This is the first step mentioned
+    // See shouldSpecializeOsrPhis comment. This is the first step mentioned
     // there.
-    if (ShouldSpecializeOsrPhis() && in->isOsrValue()) {
+    if (shouldSpecializeOsrPhis() && in->isOsrValue()) {
       // TODO(post-Warp): simplify float32 handling in this function or (better)
       // make the float32 analysis a stand-alone optimization pass instead of
       // complicating type analysis. See bug 1655773.
@@ -1846,7 +1851,7 @@ bool TypeAnalyzer::specializePhis() {
       }
 
       bool hasInputsWithEmptyTypes;
-      MIRType type = GuessPhiType(*phi, &hasInputsWithEmptyTypes);
+      MIRType type = guessPhiType(*phi, &hasInputsWithEmptyTypes);
       phi->specialize(type);
       if (type == MIRType::None) {
         // We tried to guess the type but failed because all operands are
@@ -1875,7 +1880,7 @@ bool TypeAnalyzer::specializePhis() {
     }
 
     // When two phis have a cyclic dependency and inputs that have an empty
-    // typeset (which are ignored by GuessPhiType), we may still have to
+    // typeset (which are ignored by guessPhiType), we may still have to
     // specialize these to MIRType::Value.
     while (!phisWithEmptyInputTypes.empty()) {
       if (mir->shouldCancel("Specialize Phis (phisWithEmptyInputTypes)")) {
@@ -1892,8 +1897,8 @@ bool TypeAnalyzer::specializePhis() {
     }
   } while (!phiWorklist_.empty());
 
-  if (ShouldSpecializeOsrPhis() && graph.osrBlock()) {
-    // See ShouldSpecializeOsrPhis comment. This is the second step, propagating
+  if (shouldSpecializeOsrPhis() && graph.osrBlock()) {
+    // See shouldSpecializeOsrPhis comment. This is the second step, propagating
     // loop header phi types to preheader phis.
     MBasicBlock* preHeader = graph.osrPreHeaderBlock();
     MBasicBlock* header = preHeader->getSingleSuccessor();
@@ -1972,6 +1977,7 @@ bool TypeAnalyzer::adjustPhiInputs(MPhi* phi) {
 
             MUnbox* unbox =
                 MUnbox::New(alloc(), in, MIRType::Double, MUnbox::Fallible);
+            unbox->setBailoutKind(BailoutKind::SpeculativePhi);
             in->block()->insertBefore(in->block()->lastIns(), unbox);
             replacement = MToFloat32::New(alloc(), in);
           }
@@ -1990,6 +1996,7 @@ bool TypeAnalyzer::adjustPhiInputs(MPhi* phi) {
           replacement = MUnbox::New(alloc(), in, phiType, MUnbox::Fallible);
         }
 
+        replacement->setBailoutKind(BailoutKind::SpeculativePhi);
         in->block()->insertBefore(in->block()->lastIns(), replacement);
         phi->replaceOperand(i, replacement);
       }
@@ -2074,14 +2081,15 @@ void TypeAnalyzer::replaceRedundantPhi(MPhi* phi) {
   block->insertBefore(*(block->begin()), c);
   phi->justReplaceAllUsesWith(c);
 
-  if (ShouldSpecializeOsrPhis() && block == graph.osrPreHeaderBlock()) {
-    // See ShouldSpecializeOsrPhis comment. This is part of the third step,
+  if (shouldSpecializeOsrPhis() && block == graph.osrPreHeaderBlock()) {
+    // See shouldSpecializeOsrPhis comment. This is part of the third step,
     // guard the incoming MOsrValue is of this type.
     MBasicBlock* osrBlock = graph.osrBlock();
     MOZ_ASSERT(block->getPredecessor(1) == osrBlock);
     MDefinition* def = phi->getOperand(1);
     if (def->isOsrValue()) {
       MGuardValue* guard = MGuardValue::New(alloc(), def, v);
+      guard->setBailoutKind(BailoutKind::SpeculativePhi);
       osrBlock->insertBefore(osrBlock->lastIns(), guard);
     } else {
       MOZ_ASSERT(def->isConstant());

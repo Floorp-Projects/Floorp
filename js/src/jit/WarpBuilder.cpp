@@ -253,7 +253,7 @@ bool WarpBuilder::startNewOsrPreHeaderBlock(BytecodeLocation loopHead) {
   current->add(start);
 
   // Note: phi specialization can add type guard instructions to the OSR entry
-  // block if needed. See ShouldSpecializeOsrPhis.
+  // block if needed. See TypeAnalyzer::shouldSpecializeOsrPhis.
 
   // Create the preheader block, with the predecessor block and OSR block as
   // predecessors.

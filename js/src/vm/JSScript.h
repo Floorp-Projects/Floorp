@@ -1727,6 +1727,7 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   MUTABLE_FLAG_GETTER_SETTER(invalidatedIdempotentCache,
                              InvalidatedIdempotentCache)
   MUTABLE_FLAG_GETTER_SETTER(failedLexicalCheck, FailedLexicalCheck)
+  MUTABLE_FLAG_GETTER_SETTER(hadSpeculativePhiBailout, HadSpeculativePhiBailout)
 
 #undef IMMUTABLE_FLAG_GETTER
 #undef MUTABLE_FLAG_GETTER_SETTER

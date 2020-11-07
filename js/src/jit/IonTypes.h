@@ -65,6 +65,11 @@ enum class BailoutKind : uint8_t {
   // and avoid a bailout loop.
   TranspiledCacheIR,
 
+  // An optimistic unbox on the cold path for a non-Value phi failed. If this
+  // instruction bails out, we will invalidate the script and mark the
+  // HadSpeculativePhiBailout flag on the script.
+  SpeculativePhi,
+
   // Normal bailouts, that don't need to be handled specially when restarting
   // in baseline.
 
@@ -267,6 +272,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "Unknown";
     case BailoutKind::TranspiledCacheIR:
       return "TranspiledCacheIR";
+    case BailoutKind::SpeculativePhi:
+      return "SpeculativePhi";
 
     // Normal bailouts.
     case BailoutKind::Inevitable:
