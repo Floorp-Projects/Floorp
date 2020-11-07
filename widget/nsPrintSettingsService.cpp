@@ -91,8 +91,7 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
     data->remotePrintJobChild() = session->GetRemotePrintJob();
   }
 
-  aSettings->GetStartPageRange(&data->startPageRange());
-  aSettings->GetEndPageRange(&data->endPageRange());
+  aSettings->GetPageRanges(data->pageRanges());
 
   aSettings->GetEdgeTop(&data->edgeTop());
   aSettings->GetEdgeLeft(&data->edgeLeft());
@@ -117,8 +116,6 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
   data->showMarginGuides() = aSettings->GetShowMarginGuides();
   data->isPrintSelectionRBEnabled() = aSettings->GetIsPrintSelectionRBEnabled();
   data->printSelectionOnly() = aSettings->GetPrintSelectionOnly();
-
-  aSettings->GetPrintRange(&data->printRange());
 
   aSettings->GetTitle(data->title());
   aSettings->GetDocURL(data->docURL());
@@ -180,8 +177,8 @@ nsPrintSettingsService::DeserializeToPrintSettings(const PrintData& data,
     session->SetRemotePrintJob(
         static_cast<RemotePrintJobChild*>(data.remotePrintJobChild()));
   }
-  settings->SetStartPageRange(data.startPageRange());
-  settings->SetEndPageRange(data.endPageRange());
+
+  settings->SetPageRanges(data.pageRanges());
 
   settings->SetEdgeTop(data.edgeTop());
   settings->SetEdgeLeft(data.edgeLeft());
@@ -205,7 +202,6 @@ nsPrintSettingsService::DeserializeToPrintSettings(const PrintData& data,
   settings->SetShowMarginGuides(data.showMarginGuides());
   settings->SetIsPrintSelectionRBEnabled(data.isPrintSelectionRBEnabled());
   settings->SetPrintSelectionOnly(data.printSelectionOnly());
-  settings->SetPrintRange(data.printRange());
 
   settings->SetTitle(data.title());
   settings->SetDocURL(data.docURL());

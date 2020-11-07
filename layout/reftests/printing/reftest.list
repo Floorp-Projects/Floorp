@@ -12,6 +12,7 @@ print test-print-selection.html test-text-ref.html
 print test-print-selection-shadow-dom.html test-text-ref.html
 print test-print-selection-iframe.html test-text-ref.html
 print test-print-range.html test-print-range-ref.html
+print test-print-range-complex.html test-print-range-complex-ref.html
 fails print test-print-single-page.html test-print-single-page-noref.html
 print test-async-print.html test-text-ref.html
 fails print test-unexpected-text.html test-unexpected-text-noref.html

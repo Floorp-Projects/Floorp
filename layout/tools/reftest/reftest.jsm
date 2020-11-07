@@ -1702,10 +1702,10 @@ function RecvStartPrint(isPrintSelection, printRange)
     ps.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
     ps.printSelectionOnly = isPrintSelection;
     if (printRange) {
-        ps.printRange = Ci.nsIPrintSettings.kRangeSpecifiedPageRange;
-        let range = printRange.split('-');
-        ps.startPageRange = +range[0] || 1;
-        ps.endPageRange = +range[1] || 1;
+        ps.pageRanges = printRange.split(',').map(function(r) {
+            let range = r.split('-');
+            return [+range[0] || 1, +range[1] || 1]
+        }).flat();
     }
 
     var prefs = Cc["@mozilla.org/preferences-service;1"].
