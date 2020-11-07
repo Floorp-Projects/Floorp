@@ -81,11 +81,9 @@ void CheckerboardEvent::LogInfo(RendertraceProperty aProperty,
     // append a truncation message when this event ends.
     return;
   }
-  // The log is consumed by the page at
-  // http://people.mozilla.org/~kgupta/rendertrace.html and will move to
-  // about:checkerboard in bug 1238042. The format is not formally specced, but
-  // an informal description can be found at
-  // https://github.com/staktrace/rendertrace/blob/master/index.html#L30
+  // The log is consumed by the page at about:checkerboard. The format is not
+  // formally specced, but an informal description can be found at
+  // https://searchfox.org/mozilla-central/rev/d866b96d74ec2a63f09ee418f048d23f4fd379a2/toolkit/components/aboutcheckerboard/content/aboutCheckerboard.js#86
   mRendertraceInfo << "RENDERTRACE "
                    << (aTimestamp - mOriginTime).ToMilliseconds() << " rect "
                    << sColors[aProperty] << " " << aRect.X() << " " << aRect.Y()
