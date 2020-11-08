@@ -189,3 +189,67 @@ add_task(async function autofill() {
 
   await PlacesUtils.history.clear();
 });
+
+add_task(async function() {
+  info(
+    "Test whether canonization is disabled until the ctrl key is releasing if the key was used to paste text into urlbar"
+  );
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.ctrlCanonizesURLs", true]],
+  });
+
+  info("Paste the word to the urlbar");
+  const testWord = "example";
+  simulatePastingToUrlbar(testWord);
+  is(gURLBar.value, testWord, "Paste the test word correctly");
+
+  info("Send enter key while pressing the ctrl key");
+  EventUtils.synthesizeKey("VK_RETURN", { type: "keydown", ctrlKey: true });
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  is(
+    gBrowser.selectedBrowser.documentURI.spec,
+    `http://mochi.test:8888/?terms=${testWord}`,
+    "The loaded url is not canonized"
+  );
+
+  EventUtils.synthesizeKey("VK_CONTROL", { type: "keyup" });
+});
+
+add_task(async function() {
+  info("Test whether canonization is enabled again after releasing the ctrl");
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.ctrlCanonizesURLs", true]],
+  });
+
+  info("Paste the word to the urlbar");
+  const testWord = "example";
+  simulatePastingToUrlbar(testWord);
+  is(gURLBar.value, testWord, "Paste the test word correctly");
+
+  info("Release the ctrl key befoer typing Enter key");
+  EventUtils.synthesizeKey("VK_CONTROL", { type: "keyup" });
+
+  info("Send enter key with the ctrl");
+  EventUtils.synthesizeKey("VK_RETURN", { type: "keydown", ctrlKey: true });
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  is(
+    gBrowser.selectedBrowser.documentURI.spec,
+    `http://www.${testWord}.com/`,
+    "The loaded url is canonized"
+  );
+});
+
+function simulatePastingToUrlbar(text) {
+  gURLBar.focus();
+
+  const keyForPaste = document
+    .getElementById("key_paste")
+    .getAttribute("key")
+    .toLowerCase();
+  EventUtils.synthesizeKey(keyForPaste, { type: "keydown", ctrlKey: true });
+
+  gURLBar.select();
+  EventUtils.sendString(text);
+}
