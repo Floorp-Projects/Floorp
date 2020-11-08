@@ -22,7 +22,12 @@ tabmodalprompt {
   border: 1px solid hsla(0,0%,0%,.5);
 }
 
+.tabmodalprompt-topContainer {
+  padding: 20px;
+}
+
 .tabmodalprompt-buttonContainer {
+  padding: 12px 20px 15px;
   background-color: hsla(0,0%,0%,.05);
   border-top: 1px solid hsla(0,0%,0%,.05);
 }
