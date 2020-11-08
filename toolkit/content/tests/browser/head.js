@@ -185,6 +185,12 @@ class DateTimeTestHelper {
     await this.waitForPickerReady();
   }
 
+  promisePickerClosed() {
+    return new Promise(resolve => {
+      this.panel.addEventListener("popuphidden", resolve, { once: true });
+    });
+  }
+
   async waitForPickerReady() {
     let readyPromise;
     let loadPromise = new Promise(resolve => {
@@ -242,9 +248,7 @@ class DateTimeTestHelper {
    */
   async tearDown() {
     if (!this.panel.hidden) {
-      let pickerClosePromise = new Promise(resolve => {
-        this.panel.addEventListener("popuphidden", resolve, { once: true });
-      });
+      let pickerClosePromise = this.promisePickerClosed();
       this.panel.hidePopup();
       await pickerClosePromise;
     }

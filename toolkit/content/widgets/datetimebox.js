@@ -612,13 +612,22 @@ this.DateTimeInputBaseImplWidget = class {
       "onBlur originalTarget: " +
         aEvent.originalTarget +
         " target: " +
-        aEvent.target
+        aEvent.target +
+        " rt: " +
+        aEvent.relatedTarget
     );
 
     let target = aEvent.originalTarget;
     target.setAttribute("typeBuffer", "");
     this.setInputValueFromFields();
-    this.mInputElement.setFocusState(false);
+    // No need to set and unset the focus state if the focus is staying within
+    // our input. Same about closing the picker.
+    if (aEvent.relatedTarget != this.mInputElement) {
+      this.mInputElement.setFocusState(false);
+      if (this.mIsPickerOpen) {
+        this.mInputElement.closeDateTimePicker();
+      }
+    }
   }
 
   onKeyPress(aEvent) {
