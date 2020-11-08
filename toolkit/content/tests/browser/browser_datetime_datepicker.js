@@ -215,6 +215,32 @@ add_task(async function test_datepicker_open() {
 });
 
 /**
+ * Ensure picker closes when focus moves to a different input.
+ */
+add_task(async function test_datepicker_focus_change() {
+  await helper.openPicker(
+    `data:text/html,<input id=date type=date><input id=other>`
+  );
+  let browser = helper.tab.linkedBrowser;
+  await verifyPickerPosition(browser, "date");
+
+  isnot(helper.panel.hidden, "Panel should be visible");
+
+  await SpecialPowers.spawn(browser, [], () => {
+    content.document.querySelector("#other").focus();
+  });
+
+  // NOTE: Would be cool to be able to use promisePickerClosed(), but
+  // popuphidden isn't really triggered for this code path it seems, so oh
+  // well.
+  await BrowserTestUtils.waitForCondition(
+    () => helper.panel.hidden,
+    "waiting for close"
+  );
+  await helper.tearDown();
+});
+
+/**
  * When the prev month button is clicked, calendar should display the dates for
  * the previous month.
  */
