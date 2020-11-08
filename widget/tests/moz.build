@@ -71,7 +71,7 @@ with Files("*chrome_context_menus_win*"):
     BUG_COMPONENT = ("Core", "General")
 
 with Files("*composition_text_querycontent*"):
-    BUG_COMPONENT = ("Core", "Internationalization")
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 with Files("*key_event_counts*"):
     BUG_COMPONENT = ("Core", "Widget: Cocoa")
