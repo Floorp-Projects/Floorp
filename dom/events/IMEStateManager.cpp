@@ -823,6 +823,16 @@ void IMEStateManager::OnReFocus(nsPresContext* aPresContext,
 
   nsCOMPtr<nsIWidget> widget(sWidget);
 
+  // Don't update IME state during composition.
+  if (sTextCompositions) {
+    if (TextComposition* composition =
+            sTextCompositions->GetCompositionFor(widget)) {
+      if (composition->IsComposing()) {
+        return;
+      }
+    }
+  }
+
   InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
                             InputContextAction::FOCUS_NOT_CHANGED);
   IMEState newState = GetNewIMEState(aPresContext, &aContent);
