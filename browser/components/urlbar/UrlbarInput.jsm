@@ -2245,6 +2245,7 @@ class UrlbarInput {
     // and only if we get a keyboard event, to match user expectations.
     if (
       !(event instanceof KeyboardEvent) ||
+      event._disableCanonization ||
       !event.ctrlKey ||
       !UrlbarPrefs.get("ctrlCanonizesURLs") ||
       !/^\s*[^.:\/\s]+(?:\/.*|\s*)$/i.test(value)
@@ -2759,6 +2760,7 @@ class UrlbarInput {
       this._keyDownEnterDeferred.resolve();
       this._keyDownEnterDeferred = null;
     }
+    this._isKeyDownWithCtrl = false;
 
     Services.obs.notifyObservers(null, "urlbar-blur");
   }
@@ -3091,6 +3093,9 @@ class UrlbarInput {
         this._keyDownEnterDeferred.reject();
       }
       this._keyDownEnterDeferred = PromiseUtils.defer();
+      event._disableCanonization = this._isKeyDownWithCtrl;
+    } else if (event.keyCode !== KeyEvent.DOM_VK_CONTROL && event.ctrlKey) {
+      this._isKeyDownWithCtrl = true;
     }
 
     // Due to event deferring, it's possible preventDefault() won't be invoked
@@ -3126,6 +3131,8 @@ class UrlbarInput {
       }
       this._keyDownEnterDeferred = null;
       return;
+    } else if (event.keyCode === KeyEvent.DOM_VK_CONTROL) {
+      this._isKeyDownWithCtrl = false;
     }
 
     this._toggleActionOverride(event);
