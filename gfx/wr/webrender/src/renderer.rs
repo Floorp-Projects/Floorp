@@ -3116,9 +3116,6 @@ impl Renderer {
                     }
                     self.notifications.append(&mut notifications);
                 }
-                ResultMsg::ForceRedraw => {
-                    self.force_redraw = true;
-                }
                 ResultMsg::RefreshShader(path) => {
                     self.pending_shader_updates.push(path);
                 }
