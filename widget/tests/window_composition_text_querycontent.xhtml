@@ -5357,6 +5357,42 @@ async function runBug1584901Test()
      "runBug1584901Test: space must not be removed by composition change");
 }
 
+function runBug1675313Test()
+{
+  input.value = "";
+  input.focus();
+  let count = 0;
+
+  function handler() {
+    input.focus();
+    count++;
+  }
+
+  input.addEventListener("keyup", handler);
+
+  synthesizeCompositionChange({
+    composition: {
+      string: "a",
+      clauses: [{length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE}],
+      key: { key: "a", type: "keyup" },
+    },
+  });
+  synthesizeCompositionChange({
+    composition: {
+      string: "b",
+      clauses: [{length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE}],
+      key: { key: "b", type: "keyup" },
+    },
+  });
+  synthesizeComposition({type: "compositioncommitasis"});
+
+  is(count, 3, "runBug1675313Test: keyup event is fired correctly");
+  is(input.value, "b",
+     "runBug1675313Test: re-focus element doesn't commit composition if re-focus isn't click by user");
+
+  input.removeEventListener("keyup", handler);
+}
+
 function runCommitCompositionWithSpaceKey()
 {
   contenteditable.focus();
@@ -9571,6 +9607,7 @@ async function runTest()
   runBug1375825Test();
   runBug1530649Test();
   runBug1571375Test();
+  runBug1675313Test();
   runCommitCompositionWithSpaceKey();
   runForceCommitTest();
   runNestedSettingValue();
