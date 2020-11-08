@@ -1,3 +1,5 @@
+// |jit-test| skip-if: getBuildConfiguration()["pointer-byte-size"] != 8
+
 var stdlib = this;
 // The significance of this constant is that it is a 31-bit value that is larger
 // than the largest valid wasm32 heap size on 32-bit platforms -- valid sizes
