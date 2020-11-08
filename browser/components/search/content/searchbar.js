@@ -341,7 +341,7 @@
       this.handleSearchCommandWhere(aEvent, aEngine, where, params);
     }
 
-    handleSearchCommandWhere(aEvent, aEngine, aWhere, aParams) {
+    handleSearchCommandWhere(aEvent, aEngine, aWhere, aParams = {}) {
       let textBox = this._textbox;
       let textValue = textBox.value;
 
@@ -383,12 +383,20 @@
         }
       }
 
+      if (aWhere === "tab" && !!aParams.inBackground) {
+        // Keep the focus in the search bar.
+        aParams.avoidBrowserFocus = true;
+      } else if (
+        aWhere !== "window" &&
+        aEvent.keyCode === KeyEvent.DOM_VK_RETURN
+      ) {
+        // Move the focus to the selected browser when keyup the Enter.
+        aParams.avoidBrowserFocus = true;
+        this._needBrowserFocusAtEnterKeyUp = true;
+      }
+
       // This is a one-off search only if oneOffRecorded is true.
       this.doSearch(textValue, aWhere, aEngine, aParams, oneOffRecorded);
-
-      if (aWhere == "tab" && aParams && aParams.inBackground) {
-        this.focus();
-      }
     }
 
     doSearch(aData, aWhere, aEngine, aParams, aOneOff) {
@@ -802,6 +810,16 @@
           this.textbox._selectionDetails = null;
         }
         this.handleSearchCommand(event, engine);
+      };
+
+      this.textbox.onkeyup = event => {
+        if (
+          event.keyCode === KeyEvent.DOM_VK_RETURN &&
+          this._needBrowserFocusAtEnterKeyUp
+        ) {
+          this._needBrowserFocusAtEnterKeyUp = false;
+          gBrowser.selectedBrowser.focus();
+        }
       };
     }
 
