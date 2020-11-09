@@ -49,11 +49,6 @@ NS_IMPL_ISUPPORTS0(MediaMgrError)
 
 namespace dom {
 
-MediaStreamError::MediaStreamError(nsPIDOMWindowInner* aParent, Name aName,
-                                   const nsAString& aMessage,
-                                   const nsAString& aConstraint)
-    : BaseMediaMgrError(aName, aMessage, aConstraint), mParent(aParent) {}
-
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MediaStreamError, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MediaStreamError)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(MediaStreamError)
