@@ -571,6 +571,8 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mBlockAllMixedContent(rhs.mBlockAllMixedContent),
       mUpgradeInsecureRequests(rhs.mUpgradeInsecureRequests),
       mBrowserUpgradeInsecureRequests(rhs.mBrowserUpgradeInsecureRequests),
+      mBrowserDidUpgradeInsecureRequests(
+          rhs.mBrowserDidUpgradeInsecureRequests),
       mBrowserWouldUpgradeInsecureRequests(
           rhs.mBrowserWouldUpgradeInsecureRequests),
       mForceAllowDataURI(rhs.mForceAllowDataURI),
@@ -632,6 +634,7 @@ LoadInfo::LoadInfo(
     uint32_t aTriggeringSandboxFlags, nsContentPolicyType aContentPolicyType,
     LoadTainting aTainting, bool aBlockAllMixedContent,
     bool aUpgradeInsecureRequests, bool aBrowserUpgradeInsecureRequests,
+    bool aBrowserDidUpgradeInsecureRequests,
     bool aBrowserWouldUpgradeInsecureRequests, bool aForceAllowDataURI,
     bool aAllowInsecureRedirectToDataURI, bool aBypassCORSChecks,
     bool aSkipContentPolicyCheckForWebRequest, bool aOriginalFrameSrcLoad,
@@ -676,6 +679,7 @@ LoadInfo::LoadInfo(
       mBlockAllMixedContent(aBlockAllMixedContent),
       mUpgradeInsecureRequests(aUpgradeInsecureRequests),
       mBrowserUpgradeInsecureRequests(aBrowserUpgradeInsecureRequests),
+      mBrowserDidUpgradeInsecureRequests(aBrowserDidUpgradeInsecureRequests),
       mBrowserWouldUpgradeInsecureRequests(
           aBrowserWouldUpgradeInsecureRequests),
       mForceAllowDataURI(aForceAllowDataURI),
@@ -1155,6 +1159,12 @@ LoadInfo::GetBrowserUpgradeInsecureRequests(bool* aResult) {
 }
 
 NS_IMETHODIMP
+LoadInfo::GetBrowserDidUpgradeInsecureRequests(bool* aResult) {
+  *aResult = mBrowserDidUpgradeInsecureRequests;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 LoadInfo::GetBrowserWouldUpgradeInsecureRequests(bool* aResult) {
   *aResult = mBrowserWouldUpgradeInsecureRequests;
   return NS_OK;
@@ -1447,6 +1457,13 @@ void LoadInfo::SetUpgradeInsecureRequests(bool aValue) {
 
 void LoadInfo::SetBrowserUpgradeInsecureRequests() {
   mBrowserUpgradeInsecureRequests = true;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetBrowserDidUpgradeInsecureRequests(
+    bool aBrowserDidUpgradeInsecureRequests) {
+  mBrowserDidUpgradeInsecureRequests = aBrowserDidUpgradeInsecureRequests;
+  return NS_OK;
 }
 
 void LoadInfo::SetBrowserWouldUpgradeInsecureRequests() {

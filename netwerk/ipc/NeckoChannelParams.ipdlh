@@ -89,6 +89,7 @@ struct LoadInfoArgs
   bool                        blockAllMixedContent;
   bool                        upgradeInsecureRequests;
   bool                        browserUpgradeInsecureRequests;
+  bool                        browserDidUpgradeInsecureRequests;
   bool                        browserWouldUpgradeInsecureRequests;
   bool                        forceAllowDataURI;
   bool                        allowInsecureRedirectToDataURI;
