@@ -13,6 +13,9 @@ const { ExperimentAPI } = ChromeUtils.import(
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/MSTestUtils.jsm"
 );
+const { TelemetryFeed } = ChromeUtils.import(
+  "resource://activity-stream/lib/TelemetryFeed.jsm"
+);
 
 const EXPERIMENT_PAYLOAD = ExperimentFakes.recipe("test_xman_cfr", {
   id: "xman_test_message",
@@ -156,6 +159,12 @@ add_task(async function test_loading_experimentsAPI() {
   await BrowserTestUtils.waitForCondition(
     () => ExperimentAPI.getExperiment({ featureId: "cfr" }),
     "ExperimentAPI should return an experiment"
+  );
+
+  const telemetryFeedInstance = new TelemetryFeed();
+  Assert.ok(
+    telemetryFeedInstance.isInCFRCohort,
+    "Telemetry should return true"
   );
 
   // Reload the provider
