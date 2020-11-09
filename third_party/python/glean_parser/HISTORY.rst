@@ -5,6 +5,18 @@ History
 Unreleased
 ----------
 
+1.29.0 (2020-10-07)
+-------------------
+
+* **Breaking change:** `glean_parser` will now return an error code when any of the input files do not exist (unless the `--allow-missing-files` flag is passed).
+* Generated code now includes a comment next to each metric containing the name of the metric in its original `snake_case` form.
+* When metrics don't provide a `unit` parameter, it is not included in the output (as provided by probe-scraper).
+
+1.28.6 (2020-09-24)
+-------------------
+
+* BUGFIX: Ensure Kotlin arguments are deterministically ordered
+
 1.28.5 (2020-09-14)
 -------------------
 
