@@ -2,7 +2,7 @@
 
 <img align="right" src="./logo.png" />
 
-[![Build Status](https://travis-ci.com/servo/bincode.svg)](https://travis-ci.com/servo/bincode)
+![CI](https://github.com/servo/bincode/workflows/CI/badge.svg)
 [![](https://meritbadge.herokuapp.com/bincode)](https://crates.io/crates/bincode)
 [![](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 

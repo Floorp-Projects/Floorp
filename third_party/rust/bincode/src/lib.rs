@@ -1,4 +1,5 @@
 #![deny(missing_docs)]
+#![allow(unknown_lints, bare_trait_objects, deprecated)]
 
 //! Bincode is a crate for encoding and decoding using a tiny binary
 //! serialization strategy.  Using it, you can easily go from having
@@ -23,7 +24,7 @@
 //! Support for `i128` and `u128` is automatically enabled on Rust toolchains
 //! greater than or equal to `1.26.0` and disabled for targets which do not support it
 
-#![doc(html_root_url = "https://docs.rs/bincode/1.2.1")]
+#![doc(html_root_url = "https://docs.rs/bincode/1.3.1")]
 #![crate_name = "bincode"]
 #![crate_type = "rlib"]
 #![crate_type = "dylib"]
@@ -32,39 +33,20 @@ extern crate byteorder;
 #[macro_use]
 extern crate serde;
 
-mod config;
-mod de;
+/// Configuration settings for bincode.
+pub mod config;
+/// Deserialize bincode data to a Rust data structure.
+pub mod de;
+
 mod error;
 mod internal;
 mod ser;
 
-pub use config::Config;
-pub use de::read::{BincodeRead, IoReader, SliceReader};
+pub use config::{Config, DefaultOptions, Options};
+pub use de::read::BincodeRead;
+pub use de::Deserializer;
 pub use error::{Error, ErrorKind, Result};
-
-/// An object that implements this trait can be passed a
-/// serde::Deserializer without knowing its concrete type.
-///
-/// This trait should be used only for `with_deserializer` functions.
-#[doc(hidden)]
-pub trait DeserializerAcceptor<'a> {
-    /// The return type for the accept method
-    type Output;
-    /// Accept a serde::Deserializer and do whatever you want with it.
-    fn accept<T: serde::Deserializer<'a>>(self, T) -> Self::Output;
-}
-
-/// An object that implements this trait can be passed a
-/// serde::Serializer without knowing its concrete type.
-///
-/// This trait should be used only for `with_serializer` functions.
-#[doc(hidden)]
-pub trait SerializerAcceptor {
-    /// The return type for the accept method
-    type Output;
-    /// Accept a serde::Serializer and do whatever you want with it.
-    fn accept<T: serde::Serializer>(self, T) -> Self::Output;
-}
+pub use ser::Serializer;
 
 /// Get a default configuration object.
 ///
@@ -74,8 +56,21 @@ pub trait SerializerAcceptor {
 /// |------------|------------|
 /// | Unlimited  | Little     |
 #[inline(always)]
+#[deprecated(since = "1.3.0", note = "please use `options()` instead")]
 pub fn config() -> Config {
     Config::new()
+}
+
+/// Get a default configuration object.
+///
+/// ### Default Configuration:
+///
+/// | Byte limit | Endianness | Int Encoding | Trailing Behavior |
+/// |------------|------------|--------------|-------------------|
+/// | Unlimited  | Little     | Varint       | Reject            |
+#[inline(always)]
+pub fn options() -> DefaultOptions {
+    DefaultOptions::new()
 }
 
 /// Serializes an object directly into a `Writer` using the default configuration.
@@ -87,7 +82,9 @@ where
     W: std::io::Write,
     T: serde::Serialize,
 {
-    config().serialize_into(writer, value)
+    DefaultOptions::new()
+        .with_fixint_encoding()
+        .serialize_into(writer, value)
 }
 
 /// Serializes a serializable object into a `Vec` of bytes using the default configuration.
@@ -95,7 +92,10 @@ pub fn serialize<T: ?Sized>(value: &T) -> Result<Vec<u8>>
 where
     T: serde::Serialize,
 {
-    config().serialize(value)
+    DefaultOptions::new()
+        .with_fixint_encoding()
+        .allow_trailing_bytes()
+        .serialize(value)
 }
 
 /// Deserializes an object directly from a `Read`er using the default configuration.
@@ -106,7 +106,10 @@ where
     R: std::io::Read,
     T: serde::de::DeserializeOwned,
 {
-    config().deserialize_from(reader)
+    DefaultOptions::new()
+        .with_fixint_encoding()
+        .allow_trailing_bytes()
+        .deserialize_from(reader)
 }
 
 /// Deserializes an object from a custom `BincodeRead`er using the default configuration.
@@ -119,7 +122,10 @@ where
     R: de::read::BincodeRead<'a>,
     T: serde::de::DeserializeOwned,
 {
-    config().deserialize_from_custom(reader)
+    DefaultOptions::new()
+        .with_fixint_encoding()
+        .allow_trailing_bytes()
+        .deserialize_from_custom(reader)
 }
 
 /// Only use this if you know what you're doing.
@@ -131,7 +137,10 @@ where
     T: serde::de::Deserialize<'a>,
     R: BincodeRead<'a>,
 {
-    config().deserialize_in_place(reader, place)
+    DefaultOptions::new()
+        .with_fixint_encoding()
+        .allow_trailing_bytes()
+        .deserialize_in_place(reader, place)
 }
 
 /// Deserializes a slice of bytes into an instance of `T` using the default configuration.
@@ -139,7 +148,10 @@ pub fn deserialize<'a, T>(bytes: &'a [u8]) -> Result<T>
 where
     T: serde::de::Deserialize<'a>,
 {
-    config().deserialize(bytes)
+    DefaultOptions::new()
+        .with_fixint_encoding()
+        .allow_trailing_bytes()
+        .deserialize(bytes)
 }
 
 /// Returns the size that an object would be if serialized using Bincode with the default configuration.
@@ -147,27 +159,8 @@ pub fn serialized_size<T: ?Sized>(value: &T) -> Result<u64>
 where
     T: serde::Serialize,
 {
-    config().serialized_size(value)
-}
-
-/// Executes the acceptor with a serde::Deserializer instance.
-/// NOT A PART OF THE STABLE PUBLIC API
-#[doc(hidden)]
-pub fn with_deserializer<'a, A, R>(reader: R, acceptor: A) -> A::Output
-where
-    A: DeserializerAcceptor<'a>,
-    R: BincodeRead<'a>,
-{
-    config().with_deserializer(reader, acceptor)
-}
-
-/// Executes the acceptor with a serde::Serializer instance.
-/// NOT A PART OF THE STABLE PUBLIC API
-#[doc(hidden)]
-pub fn with_serializer<A, W>(writer: W, acceptor: A) -> A::Output
-where
-    A: SerializerAcceptor,
-    W: std::io::Write,
-{
-    config().with_serializer(writer, acceptor)
+    DefaultOptions::new()
+        .with_fixint_encoding()
+        .allow_trailing_bytes()
+        .serialized_size(value)
 }

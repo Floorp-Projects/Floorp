@@ -91,7 +91,7 @@ impl Bucketing for PrecomputedExponential {
 }
 
 impl Histogram<PrecomputedExponential> {
-    /// Create a histogram with `count` exponential buckets in the range `min` to `max`.
+    /// Creates a histogram with `count` exponential buckets in the range `min` to `max`.
     pub fn exponential(
         min: u64,
         max: u64,

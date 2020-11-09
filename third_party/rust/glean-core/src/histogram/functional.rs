@@ -42,7 +42,7 @@ impl Functional {
         // Set the FPU control flag to the required state within this function
         let _fpc = FloatingPointContext::new();
 
-        ((sample + 1) as f64).log(self.exponent) as u64
+        ((sample.saturating_add(1)) as f64).log(self.exponent) as u64
     }
 
     /// Determines the minimum value of a bucket, given a bucket index.
@@ -70,7 +70,7 @@ impl Bucketing for Functional {
 }
 
 impl Histogram<Functional> {
-    /// Create a histogram with functional buckets.
+    /// Creates a histogram with functional buckets.
     pub fn functional(log_base: f64, buckets_per_magnitude: f64) -> Histogram<Functional> {
         Histogram {
             values: HashMap::new(),
@@ -80,7 +80,7 @@ impl Histogram<Functional> {
         }
     }
 
-    /// Get a snapshot of all contiguous values.
+    /// Gets a snapshot of all contiguous values.
     ///
     /// **Caution** This is a more specific implementation of `snapshot_values` on functional
     /// histograms. `snapshot_values` cannot be used with those, due to buckets not being

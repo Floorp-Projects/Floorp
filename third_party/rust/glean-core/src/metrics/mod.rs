@@ -16,6 +16,7 @@ mod custom_distribution;
 mod datetime;
 mod event;
 mod experiment;
+mod jwe;
 mod labeled;
 mod memory_distribution;
 mod memory_unit;
@@ -37,15 +38,16 @@ use crate::Glean;
 
 pub use self::boolean::BooleanMetric;
 pub use self::counter::CounterMetric;
+pub use self::custom_distribution::CustomDistributionMetric;
 pub use self::datetime::DatetimeMetric;
 pub use self::event::EventMetric;
 pub(crate) use self::experiment::ExperimentMetric;
 pub use crate::histogram::HistogramType;
 // Note: only expose RecordedExperimentData to tests in
 // the next line, so that glean-core\src\lib.rs won't fail to build.
-pub use self::custom_distribution::CustomDistributionMetric;
 #[cfg(test)]
 pub(crate) use self::experiment::RecordedExperimentData;
+pub use self::jwe::JweMetric;
 pub use self::labeled::{
     combine_base_identifier_and_label, dynamic_label, strip_label, LabeledMetric,
 };
@@ -113,6 +115,8 @@ pub enum Metric {
     TimingDistribution(Histogram<Functional>),
     /// A memory distribution. See [`MemoryDistributionMetric`](struct.MemoryDistributionMetric.html) for more information.
     MemoryDistribution(Histogram<Functional>),
+    /// A JWE metric. See [`JweMetric`](struct.JweMetric.html) for more information.
+    Jwe(String),
 }
 
 /// A `MetricType` describes common behavior across all metrics.
@@ -133,7 +137,7 @@ pub trait MetricType {
 }
 
 impl Metric {
-    /// The ping section the metric fits into.
+    /// Gets the ping section the metric fits into.
     ///
     /// This determines the section of the ping to place the metric data in when
     /// assembling the ping payload.
@@ -153,6 +157,7 @@ impl Metric {
             Metric::TimingDistribution(_) => "timing_distribution",
             Metric::Uuid(_) => "uuid",
             Metric::MemoryDistribution(_) => "memory_distribution",
+            Metric::Jwe(_) => "jwe",
         }
     }
 
@@ -176,6 +181,7 @@ impl Metric {
             Metric::TimingDistribution(hist) => json!(timing_distribution::snapshot(hist)),
             Metric::Uuid(s) => json!(s),
             Metric::MemoryDistribution(hist) => json!(memory_distribution::snapshot(hist)),
+            Metric::Jwe(s) => json!(s),
         }
     }
 }
