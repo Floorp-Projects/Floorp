@@ -10,6 +10,6 @@ add_task(async function() {
     CHROME_URL_ROOT + "summary-graph_end-delay-sign_head.js",
     this
   );
-  await pushPref("intl.uidirection", 1);
+  await pushPref("intl.l10n.pseudo", "bidi");
   await testSummaryGraphEndDelaySign();
 });

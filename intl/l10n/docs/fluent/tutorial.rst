@@ -621,9 +621,7 @@ The three classes of potential problems that this can help with are:
 
  - Bidi adaptation.
 
-   For many developers, testing the UI in right-to-left mode is hard. Mozilla
-   offers a pref :js:`intl.uidirection` which switches the direction of the layout,
-   but that doesn't expose problems related to right-to-left text.
+   For many developers, testing the UI in right-to-left mode is hard.
    Pseudolocalization shows how a right-to-left locale will look like.
 
 To turn on pseudolocalization, add a new string pref :js:`intl.l10n.pseudo` and

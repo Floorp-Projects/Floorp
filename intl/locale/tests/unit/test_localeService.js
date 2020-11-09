@@ -152,7 +152,6 @@ add_test(function test_isAppLocaleRTL_pseudo() {
 
   localeService.availableLocales = ["en-US"];
   localeService.requestedLocales = ["en-US"];
-  Services.prefs.setIntPref("intl.uidirection", -1);
   Services.prefs.setCharPref("intl.l10n.pseudo", "");
 
   Assert.ok(localeService.isAppLocaleRTL === false);
