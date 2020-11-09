@@ -30,10 +30,14 @@ export class TopSiteLink extends React.PureComponent {
 
   /*
    * Helper to determine whether the drop zone should allow a drop. We only allow
-   * dropping top sites for now.
+   * dropping top sites for now. We don't allow dropping on sponsored top sites
+   * as their position is fixed.
    */
   _allowDrop(e) {
-    return e.dataTransfer.types.includes("text/topsite-index");
+    return (
+      !this.props.link.sponsored_position &&
+      e.dataTransfer.types.includes("text/topsite-index")
+    );
   }
 
   onDragEvent(event) {
@@ -563,18 +567,8 @@ export class TopSiteList extends React.PureComponent {
         if (index === this.state.draggedIndex) {
           this.setState({ topSitesPreview: null });
         } else {
-          let topSites = this._getTopSites();
-          let adjustedIndex = index;
-          // Disallow dropping on sponsored sites since their position is
-          // fixed.
-          while (
-            topSites[adjustedIndex] &&
-            topSites[adjustedIndex].sponsored_position
-          ) {
-            adjustedIndex++;
-          }
           this.setState({
-            topSitesPreview: this._makeTopSitesPreview(adjustedIndex),
+            topSitesPreview: this._makeTopSitesPreview(index),
           });
         }
         break;
