@@ -3873,20 +3873,6 @@ Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext&,
                                             ErrorResult* const out_error);
 }  // namespace webgl
 
-void webgl::TexUnpackBlobDesc::Shrink(const webgl::PackingInfo& pi) {
-  if (cpuData) {
-    uint8_t bpp = 0;
-    if (!GetBytesPerPixel(pi, &bpp)) return;
-
-    const auto pixels = unpacking.UsedPixels(size);
-    const auto bytesNeeded = pixels * bpp;
-    if (!bytesNeeded.isValid()) return;
-    const auto& newSize = bytesNeeded.value();
-    cpuData->Shrink(newSize);
-    return;
-  }
-}
-
 void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
                                   GLint level, GLenum respecFormat,
                                   const ivec3& offset, const ivec3& isize,
@@ -4021,30 +4007,14 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
 
   // -
 
-  desc->Shrink(pi);
   Run<RPROC(TexImage)>(static_cast<uint32_t>(level), respecFormat,
                        CastUvec3(offset), pi, std::move(*desc));
-}
-
-static Maybe<size_t> EstimateCompressedTexDataBytes(const GLenum sizedFormat,
-                                                    const uvec3& size) {
-  const auto format = webgl::FindSizedFormat(sizedFormat);
-  if (!format || !format->compression) return {};
-  const auto& comp = *format->compression;
-
-  const auto xBlocks =
-      (CheckedInt<size_t>(size.x) + comp.blockWidth - 1) / comp.blockWidth;
-  const auto yBlocks =
-      (CheckedInt<size_t>(size.y) + comp.blockHeight - 1) / comp.blockHeight;
-  const auto bytes = xBlocks * yBlocks * size.z * comp.bytesPerBlock;
-  if (!bytes.isValid()) return {};
-  return Some(bytes.value());
 }
 
 void ClientWebGLContext::CompressedTexImage(bool sub, uint8_t funcDims,
                                             GLenum imageTarget, GLint level,
                                             GLenum format, const ivec3& offset,
-                                            const ivec3& isize, GLint border,
+                                            const ivec3& size, GLint border,
                                             const TexImageSource& src,
                                             GLsizei pboImageSize) const {
   const FuncScope funcScope(*this, "compressedTex(Sub)Image[23]D");
@@ -4075,15 +4045,9 @@ void ClientWebGLContext::CompressedTexImage(bool sub, uint8_t funcDims,
     MOZ_CRASH("impossible");
   }
 
-  const auto size = CastUvec3(isize);
-  const auto estBytes = EstimateCompressedTexDataBytes(format, size);
-  if (estBytes) {
-    range.Shrink(*estBytes);
-  }
-
   Run<RPROC(CompressedTexImage)>(
       sub, imageTarget, static_cast<uint32_t>(level), format, CastUvec3(offset),
-      size, range, static_cast<uint32_t>(pboImageSize), pboOffset);
+      CastUvec3(size), range, static_cast<uint32_t>(pboImageSize), pboOffset);
 }
 
 void ClientWebGLContext::CopyTexImage(uint8_t funcDims, GLenum imageTarget,
