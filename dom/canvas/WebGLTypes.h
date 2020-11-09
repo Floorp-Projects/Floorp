@@ -739,6 +739,11 @@ class RawBuffer final {
   const auto& begin() const { return mBegin; }
   const auto& size() const { return mLen; }
 
+  void Shrink(const size_t newLen) {
+    if (mLen <= newLen) return;
+    mLen = newLen;
+  }
+
   RawBuffer() = default;
 
   RawBuffer(const RawBuffer&) = delete;
@@ -934,6 +939,31 @@ struct WebGLPixelStore final {
 
     return ret;
   }
+
+  CheckedInt<size_t> UsedPixelsPerRow(const uvec3& size) const {
+    return CheckedInt<size_t>(mUnpackSkipPixels) + size.x;
+  }
+
+  CheckedInt<size_t> FullRowsNeeded(const uvec3& size) const {
+    if (!size.x || !size.y || !size.z) return 0;
+
+    // The spec doesn't bound SKIP_ROWS + height <= IMAGE_HEIGHT, unfortunately.
+    auto skipFullRows =
+        CheckedInt<size_t>(mUnpackSkipImages) * mUnpackImageHeight;
+    skipFullRows += mUnpackSkipRows;
+
+    // Full rows in the final image, excluding the tail.
+    auto usedFullRows = CheckedInt<size_t>(size.z - 1) * mUnpackImageHeight;
+    usedFullRows += size.y - 1;
+
+    return skipFullRows + usedFullRows;
+  }
+
+  CheckedInt<size_t> UsedPixels(const uvec3& size) const {
+    auto pixels = FullRowsNeeded(size) * mUnpackRowLength;
+    pixels += UsedPixelsPerRow(size);
+    return pixels;
+  }
 };
 
 struct TexImageData final {
@@ -960,6 +990,8 @@ struct TexUnpackBlobDesc final {
   RefPtr<gfx::DataSourceSurface> surf;
 
   WebGLPixelStore unpacking;
+
+  void Shrink(const webgl::PackingInfo&);
 };
 
 }  // namespace webgl
