@@ -270,7 +270,7 @@ class URLParams final {
     return mParams[aIndex].mValue;
   }
 
-  nsresult Sort();
+  void Sort();
 
  private:
   static void DecodeString(const nsACString& aInput, nsAString& aOutput);
