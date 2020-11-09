@@ -85,6 +85,8 @@ geckoview:
       The time taken to load a page. This includes all static contents, no
       dynamic content.
       Loading of about: pages is not counted.
+      Back back navigation (sometimes via BFCache) is included which is a
+      source of bimodality due to the <50ms load times.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1499418
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109
