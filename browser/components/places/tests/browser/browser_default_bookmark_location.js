@@ -152,9 +152,11 @@ add_task(async function test_change_location_panel() {
 
   let menuList = win.document.getElementById("editBMPanel_folderMenuList");
 
+  let { toolbarGuid, menuGuid, unfiledGuid } = PlacesUtils.bookmarks;
+
   let expectedFolderGuid = win.gBookmarksToolbar2h2020
-    ? PlacesUtils.bookmarks.toolbarGuid
-    : PlacesUtils.bookmarks.unfiledGuid;
+    ? toolbarGuid
+    : unfiledGuid;
 
   info("Pref value: " + Services.prefs.getCharPref(LOCATION_PREF, ""));
   await TestUtils.waitForCondition(
@@ -189,8 +191,7 @@ add_task(async function test_change_location_panel() {
   );
 
   await TestUtils.waitForCondition(
-    () =>
-      menuList.getAttribute("selectedGuid") == PlacesUtils.bookmarks.menuGuid,
+    () => menuList.getAttribute("selectedGuid") == menuGuid,
     "Should select the menu folder item"
   );
 
@@ -206,26 +207,26 @@ add_task(async function test_change_location_panel() {
 
   // Check that it's in the menu, and remove the bookmark:
   let bm = await PlacesUtils.bookmarks.fetch({ url: TEST_URL });
-  is(
-    bm?.parentGuid,
-    PlacesUtils.bookmarks.menuGuid,
-    "Bookmark was put in the menu."
-  );
+  is(bm?.parentGuid, menuGuid, "Bookmark was put in the menu.");
   if (bm) {
     await PlacesUtils.bookmarks.remove(bm);
   }
 
-  // Now create a new bookmark and check it starts in the menu.
+  // Now create a new bookmark and check it starts in the menu if the pref
+  // for the 2020h2 bookmarks has been flipped.
   await clickBookmarkStar(win);
 
+  let expectedFolder = gBookmarksToolbar2h2020
+    ? "BookmarksMenuFolderTitle"
+    : "OtherBookmarksFolderTitle";
   Assert.equal(
     menuList.label,
-    PlacesUtils.getString("BookmarksMenuFolderTitle"),
+    PlacesUtils.getString(expectedFolder),
     `Should have menu folder selected by default`
   );
   Assert.equal(
     menuList.getAttribute("selectedGuid"),
-    PlacesUtils.bookmarks.menuGuid,
+    gBookmarksToolbar2h2020 ? menuGuid : unfiledGuid,
     "Should have the correct default guid selected"
   );
 
@@ -245,9 +246,7 @@ add_task(async function test_change_location_panel() {
   );
 
   await TestUtils.waitForCondition(
-    () =>
-      menuList.getAttribute("selectedGuid") ==
-      PlacesUtils.bookmarks.toolbarGuid,
+    () => menuList.getAttribute("selectedGuid") == toolbarGuid,
     "Should select the toolbar item"
   );
 
@@ -255,14 +254,14 @@ add_task(async function test_change_location_panel() {
 
   is(
     await PlacesUIUtils.defaultParentGuid,
-    PlacesUtils.bookmarks.menuGuid,
+    gBookmarksToolbar2h2020 ? menuGuid : unfiledGuid,
     "Default folder should not change if we cancel the panel."
   );
 
   // Now open the panel for an existing bookmark whose parent doesn't match
   // the default and check we don't overwrite the default folder.
   let testBM = await PlacesUtils.bookmarks.insert({
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    parentGuid: unfiledGuid,
     title: "Yoink",
     url: TEST_URL,
   });
@@ -275,7 +274,7 @@ add_task(async function test_change_location_panel() {
   await hideBookmarksPanel(win);
   is(
     await PlacesUIUtils.defaultParentGuid,
-    PlacesUtils.bookmarks.menuGuid,
+    gBookmarksToolbar2h2020 ? menuGuid : unfiledGuid,
     "Default folder should not change if we accept the panel, but didn't change folders."
   );
 
