@@ -21,4 +21,4 @@ nsstring = { path = "../../../../xpcom/rust/nsstring" }
 xpcom = { path = "../../../../xpcom/rust/xpcom" }
 storage_variant = { path = "../../../../storage/variant" }
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
-fxa-client = { git = "https://github.com/mozilla/application-services", rev = "641353a8648602ce17d23c89b88e2a22d108fb03", features = ["gecko"] }
+fxa-client = { git = "https://github.com/mozilla/application-services", rev = "8a576fbe79199fa8664f64285524017f74ebcc5f", features = ["gecko"] }

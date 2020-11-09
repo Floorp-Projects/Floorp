@@ -122,3 +122,21 @@ message AccountEvent {
 message AccountEvents {
     repeated AccountEvent events = 1;
 }
+
+message AuthorizationPKCEParams {
+    required string code_challenge = 1;
+    required string code_challenge_method = 2;
+}
+
+message AuthorizationParams {
+    required string client_id = 1;
+    required string scope = 2;
+    required string state = 3;
+    required string access_type = 4;
+    optional AuthorizationPKCEParams pkce_params = 5;
+    optional string keys_jwk = 6;
+}
+
+message MetricsParams {
+    map<string, string> parameters = 1;
+}

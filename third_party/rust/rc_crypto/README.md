@@ -9,6 +9,7 @@ offers the following functionality:
 * Cryptographic [digests](./src/digest.rs), [hmac](./src/hmac.rs), and [hkdf](./src/hkdf.rs).
 * Authenticated encryption ([AEAD](./src/aead.rs)) routines.
 * ECDH [key agreement](./src/agreement.rs).
+* ECDSA [signature verification](./src/signature.rs).
 * Constant-time [string comparison](./src/constant_time.rs).
 * HTTP [Hawk Authentication](./src/hawk_crypto.rs) through the [rust-hawk crate](https://github.com/taskcluster/rust-hawk/).
 * HTTP [Encrypted Content-Encoding](./src/ece.rs) through the [ece crate](https://github.com/mozilla/rust-ece).

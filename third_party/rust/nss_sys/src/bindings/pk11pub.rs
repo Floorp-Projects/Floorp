@@ -76,6 +76,15 @@ extern "C" {
         data: *const c_uchar,
         dataLen: c_uint,
     ) -> SECStatus;
+    pub fn PK11_VerifyWithMechanism(
+        key: *mut SECKEYPublicKey,
+        mechanism: CK_MECHANISM_TYPE,
+        param: *const SECItem,
+        sig: *const SECItem,
+        hash: *const SECItem,
+        wincx: *mut c_void,
+    ) -> SECStatus;
+    pub fn PK11_MapSignKeyType(keyType: u32 /* KeyType */) -> CK_MECHANISM_TYPE;
     pub fn PK11_DestroyContext(context: *mut PK11Context, freeit: PRBool);
     pub fn PK11_CreateContextBySymKey(
         type_: CK_MECHANISM_TYPE,
@@ -110,4 +119,20 @@ extern "C" {
         attr: CK_ATTRIBUTE_TYPE,
         item: *mut SECItem,
     ) -> SECStatus;
+    pub fn PK11_CreatePBEV2AlgorithmID(
+        pbeAlgTag: u32,    /* SECOidTag */
+        cipherAlgTag: u32, /* SECOidTag */
+        prfAlgTag: u32,    /* SECOidTag */
+        keyLength: c_int,
+        iteration: c_int,
+        salt: *mut SECItem,
+    ) -> *mut SECAlgorithmID;
+
+    pub fn PK11_PBEKeyGen(
+        slot: *mut PK11SlotInfo,
+        algid: *mut SECAlgorithmID,
+        pwitem: *mut SECItem,
+        faulty3DES: PRBool,
+        wincx: *mut c_void,
+    ) -> *mut PK11SymKey;
 }

@@ -2,115 +2,83 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use failure::Fail;
 use rc_crypto::hawk;
 use std::string;
-
-#[derive(Debug, Fail)]
+#[derive(Debug, thiserror::Error)]
 pub enum ErrorKind {
-    #[fail(display = "Unknown OAuth State")]
+    #[error("Server asked the client to back off, please wait {0} seconds to try again")]
+    BackoffError(u64),
+
+    #[error("Unknown OAuth State")]
     UnknownOAuthState,
 
-    #[fail(display = "The client requested keys alongside the token but they were not included")]
-    TokenWithoutKeys,
-
-    #[fail(display = "Login state needs to be Married for the current operation")]
-    NotMarried,
-
-    #[fail(display = "Multiple OAuth scopes requested")]
+    #[error("Multiple OAuth scopes requested")]
     MultipleScopesRequested,
 
-    #[fail(display = "No cached token for scope {}", _0)]
+    #[error("No cached token for scope {0}")]
     NoCachedToken(String),
 
-    #[fail(display = "No cached scoped keys for scope {}", _0)]
+    #[error("No cached scoped keys for scope {0}")]
     NoScopedKey(String),
 
-    #[fail(display = "No stored refresh token")]
+    #[error("No stored refresh token")]
     NoRefreshToken,
 
-    #[fail(display = "No stored session token")]
+    #[error("No stored session token")]
     NoSessionToken,
 
-    #[fail(display = "No stored migration data")]
+    #[error("No stored migration data")]
     NoMigrationData,
 
-    #[fail(display = "No stored current device id")]
+    #[error("No stored current device id")]
     NoCurrentDeviceId,
 
-    #[fail(display = "Could not find a refresh token in the server response")]
-    RefreshTokenNotPresent,
-
-    #[fail(display = "Action requires a prior device registration")]
-    DeviceUnregistered,
-
-    #[fail(display = "Device target is unknown (Device ID: {})", _0)]
+    #[error("Device target is unknown (Device ID: {0})")]
     UnknownTargetDevice(String),
 
-    #[fail(display = "Unrecoverable server error {}", _0)]
+    #[error("Unrecoverable server error {0}")]
     UnrecoverableServerError(&'static str),
 
-    #[fail(display = "Invalid OAuth scope value {}", _0)]
-    InvalidOAuthScopeValue(String),
-
-    #[fail(display = "Illegal state: {}", _0)]
+    #[error("Illegal state: {0}")]
     IllegalState(&'static str),
 
-    #[fail(display = "Unknown command: {}", _0)]
+    #[error("Unknown command: {0}")]
     UnknownCommand(String),
 
-    #[fail(display = "Send Tab diagnosis error: {}", _0)]
+    #[error("Send Tab diagnosis error: {0}")]
     SendTabDiagnosisError(&'static str),
 
-    #[fail(display = "Empty names")]
-    EmptyOAuthScopeNames,
-
-    #[fail(display = "Key {} had wrong length, got {}, expected {}", _0, _1, _2)]
-    BadKeyLength(&'static str, usize, usize),
-
-    #[fail(
-        display = "Cannot xor arrays with different lengths: {} and {}",
-        _0, _1
-    )]
+    #[error("Cannot xor arrays with different lengths: {0} and {1}")]
     XorLengthMismatch(usize, usize),
 
-    #[fail(display = "Audience URL without a host")]
-    AudienceURLWithoutHost,
-
-    #[fail(display = "Origin mismatch")]
+    #[error("Origin mismatch")]
     OriginMismatch,
 
-    #[fail(display = "JWT signature validation failed")]
-    JWTSignatureValidationFailed,
-
-    #[fail(display = "ECDH key generation failed")]
-    KeyGenerationFailed,
-
-    #[fail(display = "Public key computation failed")]
-    PublicKeyComputationFailed,
-
-    #[fail(display = "Remote key and local key mismatch")]
+    #[error("Remote key and local key mismatch")]
     MismatchedKeys,
 
-    #[fail(display = "Key import failed")]
-    KeyImportFailed,
+    #[error("Could not find a suitable anon_id key")]
+    NoAnonIdKey,
 
-    #[fail(display = "AEAD open failure")]
-    AEADOpenFailure,
+    #[error("Client: {0} is not allowed to request scope: {1}")]
+    ScopeNotAllowed(String, String),
 
-    #[fail(display = "Random number generation failure")]
-    RngFailure,
-
-    #[fail(display = "HMAC mismatch")]
-    HmacMismatch,
-
-    #[fail(display = "Unsupported command: {}", _0)]
+    #[error("Unsupported command: {0}")]
     UnsupportedCommand(&'static str),
 
-    #[fail(
-        display = "Remote server error: '{}' '{}' '{}' '{}' '{}'",
-        code, errno, error, message, info
-    )]
+    #[error("Missing URL parameter: {0}")]
+    MissingUrlParameter(&'static str),
+
+    #[error("Null pointer passed to FFI")]
+    NullPointer,
+
+    #[error("Invalid buffer length: {0}")]
+    InvalidBufferLength(i32),
+
+    #[error("Too many calls to auth introspection endpoint")]
+    AuthCircuitBreakerError,
+
+    #[error("Remote server error: '{code}' '{errno}' '{error}' '{message}' '{info}'")]
     RemoteError {
         code: u64,
         errno: u64,
@@ -120,41 +88,44 @@ pub enum ErrorKind {
     },
 
     // Basically reimplement error_chain's foreign_links. (Ugh, this sucks).
-    #[fail(display = "Crypto/NSS error: {}", _0)]
-    CryptoError(#[fail(cause)] rc_crypto::Error),
+    #[error("Crypto/NSS error: {0}")]
+    CryptoError(#[from] rc_crypto::Error),
 
-    #[fail(display = "http-ece encryption error: {}", _0)]
-    EceError(#[fail(cause)] rc_crypto::ece::Error),
+    #[error("http-ece encryption error: {0}")]
+    EceError(#[from] rc_crypto::ece::Error),
 
-    #[fail(display = "Hex decode error: {}", _0)]
-    HexDecodeError(#[fail(cause)] hex::FromHexError),
+    #[error("Hex decode error: {0}")]
+    HexDecodeError(#[from] hex::FromHexError),
 
-    #[fail(display = "Base64 decode error: {}", _0)]
-    Base64Decode(#[fail(cause)] base64::DecodeError),
+    #[error("Base64 decode error: {0}")]
+    Base64Decode(#[from] base64::DecodeError),
 
-    #[fail(display = "JSON error: {}", _0)]
-    JsonError(#[fail(cause)] serde_json::Error),
+    #[error("JSON error: {0}")]
+    JsonError(#[from] serde_json::Error),
 
-    #[fail(display = "UTF8 decode error: {}", _0)]
-    UTF8DecodeError(#[fail(cause)] string::FromUtf8Error),
+    #[error("JWCrypto error: {0}")]
+    JwCryptoError(#[from] jwcrypto::JwCryptoError),
 
-    #[fail(display = "Network error: {}", _0)]
-    RequestError(#[fail(cause)] viaduct::Error),
+    #[error("UTF8 decode error: {0}")]
+    UTF8DecodeError(#[from] string::FromUtf8Error),
 
-    #[fail(display = "Malformed URL error: {}", _0)]
-    MalformedUrl(#[fail(cause)] url::ParseError),
+    #[error("Network error: {0}")]
+    RequestError(#[from] viaduct::Error),
 
-    #[fail(display = "Unexpected HTTP status: {}", _0)]
-    UnexpectedStatus(#[fail(cause)] viaduct::UnexpectedStatus),
+    #[error("Malformed URL error: {0}")]
+    MalformedUrl(#[from] url::ParseError),
 
-    #[fail(display = "Sync15 error: {}", _0)]
-    SyncError(#[fail(cause)] sync15::Error),
+    #[error("Unexpected HTTP status: {0}")]
+    UnexpectedStatus(#[from] viaduct::UnexpectedStatus),
 
-    #[fail(display = "HAWK error: {}", _0)]
-    HawkError(#[fail(cause)] hawk::Error),
+    #[error("Sync15 error: {0}")]
+    SyncError(#[from] sync15::Error),
 
-    #[fail(display = "Protobuf decode error: {}", _0)]
-    ProtobufDecodeError(#[fail(cause)] prost::DecodeError),
+    #[error("HAWK error: {0}")]
+    HawkError(#[from] hawk::Error),
+
+    #[error("Protobuf decode error: {0}")]
+    ProtobufDecodeError(#[from] prost::DecodeError),
 }
 
 error_support::define_error! {
@@ -164,6 +135,7 @@ error_support::define_error! {
         (HexDecodeError, hex::FromHexError),
         (Base64Decode, base64::DecodeError),
         (JsonError, serde_json::Error),
+        (JwCryptoError, jwcrypto::JwCryptoError),
         (UTF8DecodeError, std::string::FromUtf8Error),
         (RequestError, viaduct::Error),
         (UnexpectedStatus, viaduct::UnexpectedStatus),

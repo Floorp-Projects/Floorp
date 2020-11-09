@@ -4,7 +4,12 @@
 
 pub use crate::*;
 
-pub const CKM_NSS_HKDF_SHA256: u32 = 3_461_563_220; // (CKM_NSS + 4)
+// https://searchfox.org/nss/rev/4d480919bbf204df5e199b9fdedec8f2a6295778/lib/util/pkcs11n.h#27
+pub const NSSCK_VENDOR_NSS: u32 = 0x4E534350;
+
+pub const CKM_NSS: u32 = CKM_VENDOR_DEFINED | NSSCK_VENDOR_NSS;
+pub const CKM_NSS_HKDF_SHA256: u32 = CKM_NSS + 4;
+pub const CKM_NSS_HKDF_SHA384: u32 = CKM_NSS + 5;
 
 pub type CK_GCM_PARAMS = CK_GCM_PARAMS_V3;
 #[repr(C)]

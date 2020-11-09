@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "hawk"
-version = "3.1.1"
+version = "3.2.1"
 authors = ["Jonas Finnemann Jensen <jopsen@gmail.com>", "Dustin J. Mitchell <dustin@mozilla.com>"]
 build = "build.rs"
 exclude = ["docker/*", ".taskcluster.yml", ".git*"]
@@ -23,32 +23,31 @@ documentation = "https://docs.rs/hawk/"
 readme = "README.md"
 license = "MPL-2.0"
 repository = "https://github.com/taskcluster/rust-hawk"
-[dependencies.base64]
-version = "0.12.0"
+[dependencies.anyhow]
+version = "1.0"
 
-[dependencies.failure]
-version = "0.1.5"
-features = ["derive"]
+[dependencies.base64]
+version = "0.12"
 
 [dependencies.log]
-version = "0.4.8"
+version = "0.4"
 
 [dependencies.once_cell]
-version = "1.0.1"
+version = "1.4"
 
 [dependencies.openssl]
 version = "0.10.20"
 optional = true
 
-[dependencies.rand]
-version = "0.7.0"
-
 [dependencies.ring]
 version = "0.16.0"
 optional = true
 
+[dependencies.thiserror]
+version = "1.0"
+
 [dependencies.url]
-version = "2.0.0"
+version = "2.1"
 [dev-dependencies.pretty_assertions]
 version = "^0.6.1"
 

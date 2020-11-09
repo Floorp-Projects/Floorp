@@ -10,6 +10,7 @@ pub mod aes;
 pub mod ec;
 pub mod ecdh;
 mod error;
+pub mod pbkdf2;
 pub mod pk11;
 pub mod secport;
 pub use crate::error::{Error, ErrorKind, Result};

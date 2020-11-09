@@ -47,7 +47,7 @@ pub fn digest(algorithm: &Algorithm, data: &[u8]) -> Result<Digest> {
     let value = nss::pk11::context::hash_buf(algorithm, data)?;
     Ok(Digest {
         value,
-        algorithm: algorithm.clone(),
+        algorithm: *algorithm,
     })
 }
 

@@ -9,7 +9,6 @@ use lazy_static::lazy_static;
 use serde::de::{Deserialize, DeserializeOwned};
 use serde::ser::Serialize;
 use serde_derive::*;
-use serde_json::Value as JsonValue;
 use std::ops::{Deref, DerefMut};
 pub use sync15_traits::Payload;
 use sync_guid::Guid;
@@ -165,8 +164,8 @@ impl<T> DerefMut for BsoRecord<T> {
 impl CleartextBso {
     pub fn from_payload(mut payload: Payload, collection: impl Into<String>) -> Self {
         let id = payload.id.clone();
-        let sortindex: Option<i32> = take_auto_field(&mut payload, "sortindex");
-        let ttl: Option<u32> = take_auto_field(&mut payload, "ttl");
+        let sortindex: Option<i32> = payload.take_auto_field("sortindex");
+        let ttl: Option<u32> = payload.take_auto_field("ttl");
         BsoRecord {
             id,
             collection: collection.into(),
@@ -181,49 +180,6 @@ impl CleartextBso {
 pub type EncryptedBso = BsoRecord<EncryptedPayload>;
 pub type CleartextBso = BsoRecord<Payload>;
 
-/// "Auto" fields are fields like 'sortindex' (and potentially 'ttl' in
-/// the future) which are:
-///
-/// - Added to the payload automatically when deserializing if present on
-///   the incoming BSO.
-/// - Removed from the payload automatically and attached to the BSO if
-///   present on the outgoing payload.
-fn add_auto_field<T: Into<JsonValue>>(p: &mut Payload, name: &str, v: Option<T>) {
-    // This is a little dubious, but it seems like if we have a e.g. `sortindex` field on the payload
-    // it's going to be a bug if we use it instead of the "real" sort index.
-    if p.data.contains_key(name) {
-        log::warn!(
-            "Payload for record {} already contains 'automatic' field \"{}\"? \
-             Overwriting with 'real' value",
-            p.id,
-            name
-        );
-    }
-
-    if let Some(value) = v {
-        p.data.insert(name.into(), value.into());
-    } else {
-        p.data.remove(name);
-    }
-}
-
-fn take_auto_field<V>(p: &mut Payload, name: &str) -> Option<V>
-where
-    for<'a> V: Deserialize<'a>,
-{
-    let v = p.data.remove(name)?;
-    match serde_json::from_value(v) {
-        Ok(v) => Some(v),
-        Err(e) => {
-            log::error!(
-                "Automatic field {} exists on payload, but cannot be deserialized: {}",
-                name,
-                e
-            );
-            None
-        }
-    }
-}
 // Contains the methods to automatically deserialize the payload to/from json.
 mod as_json {
     use serde::de::{self, Deserialize, DeserializeOwned, Deserializer};
@@ -297,10 +253,11 @@ impl EncryptedPayload {
 
 impl EncryptedBso {
     pub fn decrypt(self, key: &KeyBundle) -> error::Result<CleartextBso> {
-        let mut new_payload: Payload = self.payload.decrypt_and_parse_payload(key)?;
-        // This is a slightly dodgy place to do this, but whatever.
-        add_auto_field(&mut new_payload, "sortindex", self.sortindex);
-        add_auto_field(&mut new_payload, "ttl", self.ttl);
+        let new_payload = self
+            .payload
+            .decrypt_and_parse_payload::<Payload>(key)?
+            .with_auto_field("sortindex", self.sortindex)
+            .with_auto_field("ttl", self.ttl);
 
         let result = self.with_payload(new_payload);
         Ok(result)
@@ -332,6 +289,7 @@ impl CleartextBso {
 mod tests {
     use super::*;
     use serde_json::json;
+    use serde_json::Value as JsonValue;
 
     #[test]
     fn test_deserialize_enc() {

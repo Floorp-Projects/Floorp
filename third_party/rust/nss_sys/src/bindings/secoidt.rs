@@ -7,6 +7,15 @@ use std::os::raw::{c_char, c_ulong};
 
 #[repr(C)]
 #[derive(Copy, Clone)]
+pub struct SECAlgorithmIDStr {
+    pub algorithm: SECItem,
+    pub parameters: SECItem,
+}
+
+pub type SECAlgorithmID = SECAlgorithmIDStr;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
 pub struct SECOidDataStr {
     pub oid: SECItem,
     pub offset: u32, /* SECOidTag */
@@ -232,7 +241,7 @@ pub enum SECOidTag {
     SEC_OID_ANSIX962_EC_PRIME239V1 = 205,
     SEC_OID_ANSIX962_EC_PRIME239V2 = 206,
     SEC_OID_ANSIX962_EC_PRIME239V3 = 207,
-    SEC_OID_ANSIX962_EC_PRIME256V1 = 208,
+    SEC_OID_SECG_EC_SECP256R1 = 208,
     SEC_OID_SECG_EC_SECP112R1 = 209,
     SEC_OID_SECG_EC_SECP112R2 = 210,
     SEC_OID_SECG_EC_SECP128R1 = 211,

@@ -6,5 +6,8 @@ edition = "2018"
 license = "MPL-2.0"
 
 [dependencies]
-failure = "0.1"
+thiserror = "1.0"
 
+[dependencies.backtrace]
+optional = true
+version = "0.3"
