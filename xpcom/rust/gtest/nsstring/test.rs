@@ -12,7 +12,8 @@ fn nonfatal_fail(msg: String) {
         fn GTest_ExpectFailure(message: *const c_char);
     }
     unsafe {
-        GTest_ExpectFailure(CString::new(msg).unwrap().as_ptr());
+        let msg = CString::new(msg).unwrap();
+        GTest_ExpectFailure(msg.as_ptr());
     }
 }
 
