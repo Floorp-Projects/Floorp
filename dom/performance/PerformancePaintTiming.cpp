@@ -26,7 +26,7 @@ PerformancePaintTiming::PerformancePaintTiming(Performance* aPerformance,
                                                const TimeStamp& aStartTime)
     : PerformanceEntry(aPerformance->GetParentObject(), aName, u"paint"_ns),
       mPerformance(aPerformance),
-      mStartTime(aStartTime) {}
+      mRawStarTime(aStartTime) {}
 
 PerformancePaintTiming::~PerformancePaintTiming() = default;
 
@@ -36,11 +36,15 @@ JSObject* PerformancePaintTiming::WrapObject(
 }
 
 DOMHighResTimeStamp PerformancePaintTiming::StartTime() const {
-  DOMHighResTimeStamp rawValue =
-      mPerformance->GetDOMTiming()->TimeStampToDOMHighRes(mStartTime);
-  return nsRFPService::ReduceTimePrecisionAsMSecs(
-      rawValue, mPerformance->GetRandomTimelineSeed(),
-      mPerformance->IsSystemPrincipal(), mPerformance->CrossOriginIsolated());
+  if (mCachedStartTime.isNothing()) {
+    DOMHighResTimeStamp rawValue =
+        mPerformance->GetDOMTiming()->TimeStampToDOMHighRes(mRawStarTime);
+    mCachedStartTime.emplace(nsRFPService::ReduceTimePrecisionAsMSecs(
+        rawValue, mPerformance->GetRandomTimelineSeed(),
+        mPerformance->IsSystemPrincipal(),
+        mPerformance->CrossOriginIsolated()));
+  }
+  return mCachedStartTime.value();
 }
 
 size_t PerformancePaintTiming::SizeOfIncludingThis(
