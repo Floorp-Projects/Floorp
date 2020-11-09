@@ -45,4 +45,6 @@ XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 
 MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
 
+REFTEST_MANIFESTS += ["test/reftest/reftest.list"]
+
 FINAL_LIBRARY = "xul"

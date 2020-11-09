@@ -457,3 +457,4 @@ include display-list/reftest.list
 
 # Media
 include ../../dom/media/test/reftest/reftest.list
+include ../../dom/media/webvtt/test/reftest/reftest.list
