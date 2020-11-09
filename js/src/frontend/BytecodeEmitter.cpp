@@ -2524,8 +2524,7 @@ bool BytecodeEmitter::getNslots(uint32_t* nslots) {
   return true;
 }
 
-bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode,
-                                         TopLevelFunction isTopLevel) {
+bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode) {
   MOZ_ASSERT(inPrologue());
   ListNode* paramsBody = &funNode->body()->as<ListNode>();
   MOZ_ASSERT(paramsBody->isKind(ParseNodeKind::ParamsBody));
@@ -2564,7 +2563,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode,
     return false;
   }
 
-  if (isTopLevel == TopLevelFunction::Yes) {
+  if (funbox->index() == CompilationInfo::TopLevelIndex) {
     if (!NameFunctions(cx, compilationState.parserAtoms, funNode)) {
       return false;
     }
@@ -5778,7 +5777,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
     }
 
     /* We measured the max scope depth when we parsed the function. */
-    if (!bce2.emitFunctionScript(funNode, TopLevelFunction::No)) {
+    if (!bce2.emitFunctionScript(funNode)) {
       return false;
     }
 
