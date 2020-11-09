@@ -8,8 +8,35 @@
 #define nsCSPParser_h___
 
 #include "nsCSPUtils.h"
+#include "nsCSPContext.h"
 #include "nsIURI.h"
 #include "PolicyTokenizer.h"
+
+bool isNumberToken(char16_t aSymbol);
+bool isValidHexDig(char16_t aHexDig);
+
+// clang-format off
+const char16_t COLON        = ':';
+const char16_t SEMICOLON    = ';';
+const char16_t SLASH        = '/';
+const char16_t PLUS         = '+';
+const char16_t DASH         = '-';
+const char16_t DOT          = '.';
+const char16_t UNDERLINE    = '_';
+const char16_t TILDE        = '~';
+const char16_t WILDCARD     = '*';
+const char16_t SINGLEQUOTE  = '\'';
+const char16_t NUMBER_SIGN  = '#';
+const char16_t QUESTIONMARK = '?';
+const char16_t PERCENT_SIGN = '%';
+const char16_t EXCLAMATION  = '!';
+const char16_t DOLLAR       = '$';
+const char16_t AMPERSAND    = '&';
+const char16_t OPENBRACE    = '(';
+const char16_t CLOSINGBRACE = ')';
+const char16_t EQUALS       = '=';
+const char16_t ATSYMBOL     = '@';
+// clang-format on
 
 class nsCSPParser {
  public:

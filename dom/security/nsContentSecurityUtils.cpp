@@ -8,24 +8,44 @@
 
 #include "nsContentSecurityUtils.h"
 
+#include "mozilla/dom/nsMixedContentBlocker.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIURI.h"
 #include "nsITransfer.h"
+#include "nsSandboxFlags.h"
 #if defined(XP_WIN)
 #  include "WinUtils.h"
 #  include <wininet.h>
 #endif
 
+#include "FramingChecker.h"
 #include "js/Array.h"  // JS::GetArrayLength
+#include "js/RegExp.h"
+#include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/Logging.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/nsCSPContext.h"
+#include "mozilla/StaticPrefs_security.h"
 #include "LoadInfo.h"
 #include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryComms.h"
+#include "mozilla/TelemetryEventEnums.h"
+#include "nsIConsoleService.h"
+#include "nsIStringBundle.h"
+
+using namespace mozilla;
+using namespace mozilla::dom;
+using namespace mozilla::Telemetry;
+
+extern mozilla::LazyLogModule sCSMLog;
+extern Atomic<bool, mozilla::Relaxed> sTelemetryEventEnabled;
 
 // Helper function for IsConsideredSameOriginForUIR which makes
 // Principals of scheme 'http' return Principals of scheme 'https'.
@@ -104,11 +124,11 @@ nsresult RegexEval(const nsAString& aPattern, const nsAString& aString,
   MOZ_ASSERT(NS_IsMainThread());
   aMatchResult = false;
 
-  AutoJSAPI jsapi;
+  mozilla::dom::AutoJSAPI jsapi;
   jsapi.Init();
 
   JSContext* cx = jsapi.cx();
-  AutoDisableJSInterruptCallback disabler(cx);
+  mozilla::AutoDisableJSInterruptCallback disabler(cx);
 
   // We can use the junk scope here, because we're just using it for regexp
   // evaluation, not actual script execution, and we disable statics so that the
@@ -1104,10 +1124,10 @@ long nsContentSecurityUtils::ClassifyDownload(
     loadingPrincipal = loadInfo->TriggeringPrincipal();
   }
   // Creating a fake Loadinfo that is just used for the MCB check.
-  nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
-      new LoadInfo(loadingPrincipal, loadInfo->TriggeringPrincipal(), nullptr,
-                   nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
-                   nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD);
+  nsCOMPtr<nsILoadInfo> secCheckLoadInfo = new mozilla::net::LoadInfo(
+      loadingPrincipal, loadInfo->TriggeringPrincipal(), nullptr,
+      nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
+      nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD);
 
   int16_t decission = nsIContentPolicy::ACCEPT;
   nsMixedContentBlocker::ShouldLoad(false,  //  aHadInsecureImageRedirect

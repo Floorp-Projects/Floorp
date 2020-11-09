@@ -19,6 +19,8 @@
 #include "nsContentUtils.h"
 #include "nsContentPolicyUtils.h"
 #include "nsNetUtil.h"
+#include "nsIProtocolHandler.h"
+#include "nsQueryObject.h"
 #include "mozilla/net/DocumentLoadListener.h"
 #include "mozilla/net/DocumentChannel.h"
 

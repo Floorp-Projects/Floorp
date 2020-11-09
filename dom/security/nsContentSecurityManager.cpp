@@ -18,6 +18,7 @@
 #include "nsIOService.h"
 #include "nsContentUtils.h"
 #include "nsCORSListenerProxy.h"
+#include "nsIParentChannel.h"
 #include "nsIStreamListener.h"
 #include "nsIRedirectHistoryEntry.h"
 #include "nsReadableUtils.h"
@@ -31,6 +32,7 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/Components.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -43,14 +45,16 @@
 #include "jsapi.h"
 #include "js/RegExp.h"
 
+using namespace mozilla;
+using namespace mozilla::dom;
 using namespace mozilla::Telemetry;
 
 NS_IMPL_ISUPPORTS(nsContentSecurityManager, nsIContentSecurityManager,
                   nsIChannelEventSink)
 
-static mozilla::LazyLogModule sCSMLog("CSMLog");
+mozilla::LazyLogModule sCSMLog("CSMLog");
 
-static Atomic<bool, mozilla::Relaxed> sTelemetryEventEnabled(false);
+Atomic<bool, mozilla::Relaxed> sTelemetryEventEnabled(false);
 
 /* static */
 bool nsContentSecurityManager::AllowTopLevelNavigationToDataURI(

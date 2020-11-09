@@ -435,7 +435,7 @@ TestHTTPAnswerRunnable::OnStartRequest(nsIRequest* aRequest) {
     nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
         do_QueryInterface(httpsOnlyChannel);
     bool isAuthChannel = false;
-    Unused << httpChannelInternal->GetIsAuthChannel(&isAuthChannel);
+    mozilla::Unused << httpChannelInternal->GetIsAuthChannel(&isAuthChannel);
     if (!topLevelLoadInProgress && !isAuthChannel) {
       // Only really cancel the original top-level channel if it's
       // status is still NS_OK, otherwise it might have already
