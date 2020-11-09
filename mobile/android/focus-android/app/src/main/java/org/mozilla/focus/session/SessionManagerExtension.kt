@@ -6,15 +6,12 @@ package org.mozilla.focus.session
 
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import org.mozilla.focus.ext.savedWebViewState
+import org.mozilla.focus.ext.savedGeckoSession
 import org.mozilla.focus.utils.AppConstants
-import org.mozilla.focus.web.GeckoWebViewProvider
-import org.mozilla.geckoview.GeckoSession
 
 fun SessionManager.removeAndCloseSession(session: Session) {
     if (AppConstants.isGeckoBuild) {
-        val geckoSession =
-            session.savedWebViewState?.getParcelable<GeckoSession>(GeckoWebViewProvider.GECKO_SESSION)
+        val geckoSession = session.savedGeckoSession
         if (geckoSession != null && geckoSession.isOpen) {
             geckoSession.close()
         }
@@ -25,8 +22,7 @@ fun SessionManager.removeAndCloseSession(session: Session) {
 fun SessionManager.removeAndCloseAllSessions() {
     if (AppConstants.isGeckoBuild) {
         sessions.forEach { session ->
-            val geckoSession =
-                session.savedWebViewState?.getParcelable<GeckoSession>(GeckoWebViewProvider.GECKO_SESSION)
+            val geckoSession = session.savedGeckoSession
             if (geckoSession != null && geckoSession.isOpen) {
                 geckoSession.close()
             }
@@ -38,8 +34,7 @@ fun SessionManager.removeAndCloseAllSessions() {
 fun SessionManager.removeAllAndCloseAllSessions() {
     if (AppConstants.isGeckoBuild) {
         all.forEach { session ->
-            val geckoSession =
-                session.savedWebViewState?.getParcelable<GeckoSession>(GeckoWebViewProvider.GECKO_SESSION)
+            val geckoSession = session.savedGeckoSession
             if (geckoSession != null && geckoSession.isOpen) {
                 geckoSession.close()
             }

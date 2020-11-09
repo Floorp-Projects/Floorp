@@ -6,6 +6,7 @@ package org.mozilla.focus.ext
 
 import android.os.Bundle
 import mozilla.components.browser.session.Session
+import org.mozilla.geckoview.GeckoSession
 import java.util.WeakHashMap
 
 // Extension methods on the Session class. This is used for additional session data that is not part
@@ -25,9 +26,23 @@ private fun getOrPutExtension(session: Session): SessionExtension {
 }
 
 private class SessionExtension {
+    var savedGeckoSession: GeckoSession? = null
     var savedWebViewState: Bundle? = null
     var shouldRequestDesktopSite: Boolean = false
 }
+
+/**
+ * Saving the Gecko Session attached to the component session. We need this now because we can no
+ * longer serialize a gecko session into a [Bundle] as we did before.
+ *
+ * Temporary solution until we can use the browser-engine component.
+ *
+ * Component upstream issue:
+ * https://github.com/mozilla-mobile/android-components/issues/408
+ */
+var Session.savedGeckoSession: GeckoSession?
+    get() = getOrPutExtension(this).savedGeckoSession
+    set(value) { getOrPutExtension(this).savedGeckoSession = value }
 
 /**
  * Saving the state attached ot a session.
