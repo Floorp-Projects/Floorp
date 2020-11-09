@@ -96,9 +96,9 @@ void nsHTTPSOnlyStreamListener::RecordUpgradeTelemetry(nsIRequest* request,
 
   nsAutoCString category;
   nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+  nsContentPolicyType internalType = loadInfo->InternalContentPolicyType();
 
-  if (loadInfo->InternalContentPolicyType() ==
-      nsIContentPolicy::TYPE_DOCUMENT) {
+  if (internalType == nsIContentPolicy::TYPE_DOCUMENT) {
     category.AppendLiteral("top_");
   } else {
     category.AppendLiteral("sub_");
@@ -136,9 +136,96 @@ void nsHTTPSOnlyStreamListener::RecordUpgradeTelemetry(nsIRequest* request,
       category.AppendLiteral("f_other");
     }
   }
-
   mozilla::Telemetry::Accumulate(
       mozilla::Telemetry::HTTPS_ONLY_MODE_UPGRADE_TIME_MS, category, duration);
+
+  bool success = NS_SUCCEEDED(aStatus);
+  nsContentPolicyType externalType = loadInfo->GetExternalContentPolicyType();
+  auto typeKey = nsAutoCString("unknown");
+
+  if (externalType == nsIContentPolicy::TYPE_MEDIA) {
+    switch (internalType) {
+      case nsIContentPolicy::TYPE_INTERNAL_AUDIO:
+      case nsIContentPolicy::TYPE_INTERNAL_TRACK:
+        typeKey = "audio"_ns;
+        break;
+
+      case nsIContentPolicy::TYPE_INTERNAL_VIDEO:
+        typeKey = "video"_ns;
+        break;
+    }
+  } else {
+    switch (externalType) {
+      case nsIContentPolicy::TYPE_SCRIPT:
+        typeKey = "script"_ns;
+        break;
+
+      case nsIContentPolicy::TYPE_OBJECT:
+      case nsIContentPolicy::TYPE_OBJECT_SUBREQUEST:
+        typeKey = "object"_ns;
+        break;
+
+      case nsIContentPolicy::TYPE_DOCUMENT:
+        typeKey = "document"_ns;
+        break;
+
+      case nsIContentPolicy::TYPE_SUBDOCUMENT:
+        typeKey = "subdocument"_ns;
+        break;
+
+      case nsIContentPolicy::TYPE_XMLHTTPREQUEST:
+        typeKey = "xmlhttprequest"_ns;
+        break;
+
+      case nsIContentPolicy::TYPE_IMAGE:
+      case nsIContentPolicy::TYPE_IMAGESET:
+        typeKey = "image"_ns;
+        break;
+
+      case nsIContentPolicy::TYPE_DTD:
+        typeKey = "dtd"_ns;
+        break;
+
+      case nsIContentPolicy::TYPE_FONT:
+        typeKey = "font"_ns;
+        break;
+
+      case nsIContentPolicy::TYPE_FETCH:
+        typeKey = "fetch"_ns;
+        break;
+
+      case nsIContentPolicy::TYPE_WEBSOCKET:
+        typeKey = "websocket"_ns;
+        break;
+
+      case nsIContentPolicy::TYPE_STYLESHEET:
+        typeKey = "stylesheet"_ns;
+        break;
+
+      case nsIContentPolicy::TYPE_CSP_REPORT:
+        typeKey = "cspreport"_ns;
+        break;
+
+      case nsIContentPolicy::TYPE_WEB_MANIFEST:
+        typeKey = "webmanifest"_ns;
+        break;
+
+      case nsIContentPolicy::TYPE_PING:
+        typeKey = "ping"_ns;
+        break;
+
+      case nsIContentPolicy::TYPE_REFRESH:
+        typeKey = "refresh"_ns;
+        break;
+
+      case nsIContentPolicy::TYPE_XSLT:
+        typeKey = "xslt"_ns;
+        break;
+    }
+  }
+
+  mozilla::Telemetry::Accumulate(
+      mozilla::Telemetry::HTTPS_ONLY_MODE_UPGRADE_TYPE, typeKey, success);
 }
 
 void nsHTTPSOnlyStreamListener::LogUpgradeFailure(nsIRequest* request,
