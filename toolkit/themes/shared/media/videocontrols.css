@@ -404,6 +404,7 @@
   font: message-box;
   font-size: var(--label-font-size);
   font-size-adjust: 0.55;
+  font-variant-numeric: tabular-nums;
 }
 
 %ifdef XP_MACOSX
