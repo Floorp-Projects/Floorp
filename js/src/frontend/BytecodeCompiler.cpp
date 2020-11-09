@@ -839,7 +839,7 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
       return false;
     }
 
-    if (!emitter->emitFunctionScript(parsedFunction, TopLevelFunction::Yes)) {
+    if (!emitter->emitFunctionScript(parsedFunction)) {
       return false;
     }
 
@@ -1047,7 +1047,7 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
     return false;
   }
 
-  if (!bce.emitFunctionScript(pn, TopLevelFunction::Yes)) {
+  if (!bce.emitFunctionScript(pn)) {
     return false;
   }
 

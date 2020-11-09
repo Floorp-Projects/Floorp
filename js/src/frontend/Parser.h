@@ -577,8 +577,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
                               FunctionFlags flags, uint32_t toStringStart,
                               Directives directives,
                               GeneratorKind generatorKind,
-                              FunctionAsyncKind asyncKind,
-                              TopLevelFunction isTopLevel);
+                              FunctionAsyncKind asyncKind);
 
  public:
   // ErrorReportMixin.

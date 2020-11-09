@@ -6015,8 +6015,7 @@ static bool ParseFunction(ModuleValidator<Unit>& m, FunctionNode** funNodeOut,
   FunctionFlags flags(FunctionFlags::INTERPRETED_NORMAL);
   FunctionBox* funbox = m.parser().newFunctionBox(
       funNode, name, flags, toStringStart, directives,
-      GeneratorKind::NotGenerator, FunctionAsyncKind::SyncFunction,
-      TopLevelFunction::No);
+      GeneratorKind::NotGenerator, FunctionAsyncKind::SyncFunction);
   if (!funbox) {
     return false;
   }
