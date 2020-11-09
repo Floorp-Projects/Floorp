@@ -74,16 +74,18 @@ static inline V* FindOrNull(const std::map<K, V*>& dest, const K2& key) {
 }
 
 // Returns a pointer to the in-place value for `key`.
-template <typename K, typename V, typename K2>
-static inline V* FindPtrOrNull(std::map<K, V>& dest, const K2& key) {
-  auto itr = dest.find(key);
-  if (itr == dest.end()) return nullptr;
+template <typename C, typename K2>
+static inline auto FindPtrOrNull(C& container, const K2& key) {
+  auto itr = container.find(key);
+  using R = decltype(&(itr->second));
+  if (itr == container.end()) return R{nullptr};
 
   return &(itr->second);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
+std::unordered_map<GLenum, EffectiveFormat> gSizedFormatMap;
 std::map<EffectiveFormat, const CompressedFormatInfo> gCompressedFormatInfoMap;
 std::map<EffectiveFormat, FormatInfo> gFormatInfoMap;
 
@@ -281,6 +283,8 @@ static void AddFormatInfo(EffectiveFormat format, const char* name,
                            d,
                            s};
   AlwaysInsert(gFormatInfoMap, format, info);
+
+  gSizedFormatMap.insert({sizedFormat, format});
 }
 
 static void InitFormatInfo() {
@@ -578,6 +582,16 @@ const FormatInfo* GetFormat(EffectiveFormat format) {
   EnsureInitFormatTables(lock);
 
   return GetFormatInfo_NoLock(format);
+}
+
+const FormatInfo* FindSizedFormat(const GLenum sizedFormat) {
+  StaticMutexAutoLock lock(gFormatMapMutex);
+  EnsureInitFormatTables(lock);
+
+  const auto effFormat = FindPtrOrNull(gSizedFormatMap, sizedFormat);
+  if (!effFormat) return nullptr;
+
+  return GetFormatInfo_NoLock(*effFormat);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
