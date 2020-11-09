@@ -451,3 +451,140 @@ add_task(async function testHiddenAfterRefresh() {
     );
   });
 });
+
+add_task(async function test3rdPartyStoragePermission() {
+  // 3rdPartyStorage permissions are listed under an anchor container - test
+  // that this works correctly, i.e. the permission items are added to the
+  // anchor when relevant, and other permission items are added to the default
+  // anchor, and adding/removing permissions preserves this behavior correctly.
+  SpecialPowers.pushPrefEnv({
+    set: [["browser.contentblocking.state-partitioning.mvp.ui.enabled", true]],
+  });
+
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(browser) {
+    await openIdentityPopup();
+
+    let permissionsList = document.getElementById(
+      "identity-popup-permission-list"
+    );
+    let storagePermissionAnchor = permissionsList.querySelector(
+      `.identity-popup-permission-list-anchor[anchorfor="3rdPartyStorage"]`
+    );
+    let emptyLabel = permissionsList.nextElementSibling.nextElementSibling;
+    ok(!BrowserTestUtils.is_hidden(emptyLabel), "List of permissions is empty");
+    ok(
+      BrowserTestUtils.is_hidden(storagePermissionAnchor.firstElementChild),
+      "Anchor header is hidden"
+    );
+
+    await closeIdentityPopup();
+
+    let storagePermissionID = "3rdPartyStorage^example2.com";
+    PermissionTestUtils.add(
+      browser.currentURI,
+      storagePermissionID,
+      Services.perms.ALLOW_ACTION
+    );
+
+    await openIdentityPopup();
+
+    ok(
+      BrowserTestUtils.is_hidden(emptyLabel),
+      "List of permissions is not empty"
+    );
+    ok(
+      BrowserTestUtils.is_visible(storagePermissionAnchor.firstElementChild),
+      "Anchor header is visible"
+    );
+
+    let labelText = SitePermissions.getPermissionLabel(storagePermissionID);
+    let labels = storagePermissionAnchor.querySelectorAll(
+      ".identity-popup-permission-label"
+    );
+    is(labels.length, 1, "One permission visible in 3rdPartyStorage anchor");
+    is(
+      labels[0].getAttribute("value"),
+      labelText,
+      "Permission label has the correct value"
+    );
+
+    await closeIdentityPopup();
+
+    PermissionTestUtils.add(
+      browser.currentURI,
+      "camera",
+      Services.perms.ALLOW_ACTION
+    );
+
+    await openIdentityPopup();
+
+    ok(
+      BrowserTestUtils.is_hidden(emptyLabel),
+      "List of permissions is not empty"
+    );
+    ok(
+      BrowserTestUtils.is_visible(storagePermissionAnchor.firstElementChild),
+      "Anchor header is visible"
+    );
+
+    labels = permissionsList.querySelectorAll(
+      ".identity-popup-permission-label"
+    );
+    is(labels.length, 2, "Two permissions visible in main view");
+    labels = storagePermissionAnchor.querySelectorAll(
+      ".identity-popup-permission-label"
+    );
+    is(labels.length, 1, "One permission visible in 3rdPartyStorage anchor");
+
+    storagePermissionAnchor
+      .querySelector(".identity-popup-permission-remove-button")
+      .click();
+    is(
+      storagePermissionAnchor.querySelectorAll(
+        ".identity-popup-permission-label"
+      ).length,
+      0,
+      "Permission item should be removed"
+    );
+    is(
+      PermissionTestUtils.testPermission(
+        browser.currentURI,
+        storagePermissionID
+      ),
+      SitePermissions.UNKNOWN,
+      "Permission removed from permission manager"
+    );
+
+    await closeIdentityPopup();
+
+    await openIdentityPopup();
+
+    ok(
+      BrowserTestUtils.is_hidden(emptyLabel),
+      "List of permissions is not empty"
+    );
+    ok(
+      BrowserTestUtils.is_hidden(storagePermissionAnchor.firstElementChild),
+      "Anchor header is hidden"
+    );
+
+    labels = permissionsList.querySelectorAll(
+      ".identity-popup-permission-label"
+    );
+    is(labels.length, 1, "One permission visible in main view");
+
+    await closeIdentityPopup();
+
+    PermissionTestUtils.remove(browser.currentURI, "camera");
+
+    await openIdentityPopup();
+
+    ok(!BrowserTestUtils.is_hidden(emptyLabel), "List of permissions is empty");
+    ok(
+      BrowserTestUtils.is_hidden(storagePermissionAnchor.firstElementChild),
+      "Anchor header is hidden"
+    );
+
+    await closeIdentityPopup();
+  });
+});
