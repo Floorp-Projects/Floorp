@@ -3,10 +3,14 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const CB_STRICT_FEATURES_PREF = "browser.contentblocking.features.strict";
+const CB_STRICT_FEATURES_VALUE = "tp,tpPrivate,cookieBehavior5,cm,fp,stp";
 const MVP_UI_PREF = "browser.contentblocking.state-partitioning.mvp.ui.enabled";
+const COOKIE_BEHAVIOR_PREF = "network.cookie.cookieBehavior";
+const COOKIE_BEHAVIOR_VALUE = 5;
 
 async function testStrings(mvpUIEnabed) {
-  SpecialPowers.pushPrefEnv({ set: [[MVP_UI_PREF, mvpUIEnabed]] });
+  await SpecialPowers.pushPrefEnv({ set: [[MVP_UI_PREF, mvpUIEnabed]] });
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
 
   let doc = gBrowser.contentDocument;
@@ -58,6 +62,16 @@ async function testStrings(mvpUIEnabed) {
 }
 
 add_task(async function runTests() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[CB_STRICT_FEATURES_PREF, CB_STRICT_FEATURES_VALUE]],
+  });
+  let defaults = Services.prefs.getDefaultBranch("");
+  let originalCookieBehavior = defaults.getIntPref(COOKIE_BEHAVIOR_PREF);
+  defaults.setIntPref(COOKIE_BEHAVIOR_PREF, COOKIE_BEHAVIOR_VALUE);
+  registerCleanupFunction(() => {
+    defaults.setIntPref(COOKIE_BEHAVIOR_PREF, originalCookieBehavior);
+  });
+
   await testStrings(true);
   await testStrings(false);
 });
