@@ -635,7 +635,7 @@ IntrinsicSize nsSubDocumentFrame::GetIntrinsicSize() {
   }
 
   // We must be an HTML <iframe>. Return fallback size.
-  return IntrinsicSize(CSSPixel::ToAppUnits(kFallbackIntrinsicSizeInPixels));
+  return IntrinsicSize(kFallbackIntrinsicSize);
 }
 
 /* virtual */

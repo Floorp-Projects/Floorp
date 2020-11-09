@@ -90,6 +90,13 @@ inline constexpr CSSIntCoord kFallbackIntrinsicHeightInPixels(150);
 inline constexpr CSSIntSize kFallbackIntrinsicSizeInPixels(
     kFallbackIntrinsicWidthInPixels, kFallbackIntrinsicHeightInPixels);
 
+inline constexpr nscoord kFallbackIntrinsicWidth =
+    kFallbackIntrinsicWidthInPixels * AppUnitsPerCSSPixel();
+inline constexpr nscoord kFallbackIntrinsicHeight =
+    kFallbackIntrinsicHeightInPixels * AppUnitsPerCSSPixel();
+inline constexpr nsSize kFallbackIntrinsicSize(kFallbackIntrinsicWidth,
+                                               kFallbackIntrinsicHeight);
+
 /**
  * This is used in some nsLayoutUtils functions.
  * Declared here so that fewer files need to include nsLayoutUtils.h.
