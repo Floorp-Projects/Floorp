@@ -34,14 +34,9 @@ pub trait DeflateBackend: Backend {
     fn reset(&mut self);
 }
 
-// hardwire wasm to the Rust implementation so no C compilers need be dealt
-// with there, otherwise if miniz-sys/zlib are enabled we use that and fall
-// back to the default of Rust
+// Default to Rust implementation unless explicitly opted in to a different backend.
 cfg_if::cfg_if! {
-    if #[cfg(target_arch = "wasm32")] {
-        mod rust;
-        pub use self::rust::*;
-    } else if #[cfg(any(feature = "miniz-sys", feature = "zlib"))] {
+    if #[cfg(any(feature = "miniz-sys", feature = "any_zlib"))] {
         mod c;
         pub use self::c::*;
     } else {

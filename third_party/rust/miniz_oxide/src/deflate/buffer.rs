@@ -10,6 +10,17 @@ pub const LZ_CODE_BUF_SIZE: usize = 64 * 1024;
 pub const OUT_BUF_SIZE: usize = (LZ_CODE_BUF_SIZE * 13) / 10;
 pub const LZ_DICT_FULL_SIZE: usize = LZ_DICT_SIZE + MAX_MATCH_LEN - 1 + 1;
 
+/// Size of hash values in the hash chains.
+pub const LZ_HASH_BITS: i32 = 15;
+/// How many bits to shift when updating the current hash value.
+pub const LZ_HASH_SHIFT: i32 = (LZ_HASH_BITS + 2) / 3;
+/// Size of the chained hash tables.
+pub const LZ_HASH_SIZE: usize = 1 << LZ_HASH_BITS;
+
+pub fn update_hash(current_hash: u32, byte: u8) -> u32 {
+    ((current_hash << LZ_HASH_SHIFT) ^ u32::from(byte)) & (LZ_HASH_SIZE as u32 - 1)
+}
+
 pub struct HashBuffers {
     pub dict: [u8; LZ_DICT_FULL_SIZE],
     pub next: [u16; LZ_DICT_SIZE],

@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use std::ffi::OsString;
 use std::fmt::{self, Display};
 use std::io;
@@ -5,7 +9,7 @@ use std::result;
 
 use ffi_support::{handle_map::HandleError, ExternError};
 
-use rkv::error::StoreError;
+use rkv::StoreError;
 
 /// A specialized [`Result`] type for this crate's operations.
 ///
@@ -23,6 +27,7 @@ pub type Result<T> = result::Result<T, Error>;
 /// This list is intended to grow over time and it is not recommended to
 /// exhaustively match against it.
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum ErrorKind {
     /// Lifetime conversion failed
     Lifetime(i32),
@@ -60,8 +65,8 @@ pub enum ErrorKind {
     /// Glean not initialized
     NotInitialized,
 
-    #[doc(hidden)]
-    __NonExhaustive,
+    /// Ping request body size overflowed
+    PingBodyOverflow(usize),
 }
 
 /// A specialized [`Error`] type for this crate's operations.
@@ -73,7 +78,7 @@ pub struct Error {
 }
 
 impl Error {
-    /// Return a new UTF-8 error
+    /// Returns a new UTF-8 error
     ///
     /// This is exposed in order to expose conversion errors on the FFI layer.
     pub fn utf8_error() -> Error {
@@ -88,6 +93,11 @@ impl Error {
             kind: ErrorKind::NotInitialized,
         }
     }
+
+    /// Returns the kind of the current error instance.
+    pub fn kind(&self) -> &ErrorKind {
+        &self.kind
+    }
 }
 
 impl std::error::Error for Error {}
@@ -95,7 +105,7 @@ impl std::error::Error for Error {}
 impl Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use ErrorKind::*;
-        match &self.kind {
+        match self.kind() {
             Lifetime(l) => write!(f, "Lifetime conversion from {} failed", l),
             Handle(e) => write!(f, "Invalid handle: {}", e),
             IoError(e) => write!(f, "An I/O error occurred: {}", e),
@@ -108,7 +118,11 @@ impl Display for Error {
             Utf8Error => write!(f, "Invalid UTF-8 byte sequence in string"),
             InvalidConfig => write!(f, "Invalid Glean configuration provided"),
             NotInitialized => write!(f, "Global Glean object missing"),
-            __NonExhaustive => write!(f, "Unknown error"),
+            PingBodyOverflow(s) => write!(
+                f,
+                "Ping request body size exceeded maximum size allowed: {}kB.",
+                s / 1024
+            ),
         }
     }
 }

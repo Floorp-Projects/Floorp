@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.1
+
+- upgrade `parking_lot` to `0.11.0`
+- make `sync::OnceCell<T>` pass https://doc.rust-lang.org/nomicon/dropck.html#an-escape-hatch[dropck] with `parking_lot` feature enabled.
+  This fixes a (minor) semver-incompatible changed introduced in `1.4.0`
+
 ## 1.4.0
 
 - upgrade `parking_lot` to `0.10` (note that this bumps MSRV with `parking_lot` feature enabled to `1.36.0`).
