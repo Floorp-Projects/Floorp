@@ -125,7 +125,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     var showGridViewInTabsSettings by featureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_show_grid_view_tabs_settings),
-        default = false,
+        default = Config.channel.isNightlyOrDebug,
         featureFlag = FeatureFlags.showGridViewInTabsSettings
     )
 
