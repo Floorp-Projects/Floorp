@@ -298,9 +298,18 @@ class AndroidVsyncSource final : public VsyncSource {
     using Base = java::VsyncSource::Natives<JavaVsyncSupport>;
     using Base::DisposeNative;
 
-    static void NotifyVsync() {
+    static void NotifyVsync(int64_t aFrameTimeNanos) {
+      // Convert aFrameTimeNanos to a TimeStamp. The value converts trivially to
+      // the internal ticks representation of TimeStamp_posix; both use the
+      // monotonic clock and are in nanoseconds.
+      TimeStamp nativeTime = TimeStamp::FromSystemTime(aFrameTimeNanos);
+
+      // Use the timebase from the frame callback as the vsync time, unless it
+      // is in the future.
+      TimeStamp now = TimeStamp::Now();
+      TimeStamp vsyncTime = nativeTime < now ? nativeTime : now;
+
       Display& display = GetDisplayInstance();
-      TimeStamp vsyncTime = TimeStamp::Now();
       TimeStamp outputTime = vsyncTime + display.GetVsyncRate();
       display.NotifyVsync(vsyncTime, outputTime);
     }
