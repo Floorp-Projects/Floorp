@@ -273,9 +273,20 @@ element.ReferenceStore = class {
     this.domRefs = new Map();
   }
 
-  clear() {
-    this.refs.clear();
-    this.domRefs.clear();
+  clear(browsingContext) {
+    if (!browsingContext) {
+      this.refs.clear();
+      this.domRefs.clear();
+      return;
+    }
+    for (const context of browsingContext.getAllBrowsingContextsInSubtree()) {
+      for (const [uuid, elId] of this.refs) {
+        if (elId.browsingContextId == context.id) {
+          this.refs.delete(uuid);
+          this.domRefs.delete(elId.id);
+        }
+      }
+    }
   }
 
   /**
