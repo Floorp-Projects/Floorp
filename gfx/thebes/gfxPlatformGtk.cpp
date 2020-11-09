@@ -71,6 +71,12 @@ using namespace mozilla::widget;
 using mozilla::dom::SystemFontListEntry;
 
 static FT_Library gPlatformFTLibrary = nullptr;
+static int32_t sDPI;
+
+static void screen_resolution_changed(GdkScreen* aScreen, GParamSpec* aPspec,
+                                      gpointer aClosure) {
+  sDPI = 0;
+}
 
 gfxPlatformGtk::gfxPlatformGtk() {
   if (!gfxPlatform::IsHeadless()) {
@@ -103,6 +109,9 @@ gfxPlatformGtk::gfxPlatformGtk() {
   gPlatformFTLibrary = Factory::NewFTLibrary();
   MOZ_RELEASE_ASSERT(gPlatformFTLibrary);
   Factory::SetFTLibrary(gPlatformFTLibrary);
+
+  g_signal_connect(gdk_screen_get_default(), "notify::resolution",
+                   G_CALLBACK(screen_resolution_changed), nullptr);
 }
 
 gfxPlatformGtk::~gfxPlatformGtk() {
@@ -246,13 +255,18 @@ gfxPlatformFontList* gfxPlatformGtk::CreatePlatformFontList() {
 }
 
 int32_t gfxPlatformGtk::GetFontScaleDPI() {
+  if (MOZ_LIKELY(sDPI != 0)) {
+    return sDPI;
+  }
   GdkScreen* screen = gdk_screen_get_default();
+  // Ensure settings in config files are processed.
   gtk_settings_get_for_screen(screen);
   int32_t dpi = int32_t(round(gdk_screen_get_resolution(screen)));
   if (dpi <= 0) {
     // Fall back to something sane
     dpi = 96;
   }
+  sDPI = dpi;
   return dpi;
 }
 
