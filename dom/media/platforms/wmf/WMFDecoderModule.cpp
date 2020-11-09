@@ -34,6 +34,8 @@
 #include "nsWindowsHelpers.h"
 #include "prsystem.h"
 
+#define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+
 #ifdef MOZ_GECKO_PROFILER
 #  include "ProfilerMarkerPayload.h"
 #  define WFM_DECODER_MODULE_STATUS_MARKER(tag, text, markerTime)            \
@@ -46,6 +48,18 @@
 extern const GUID CLSID_WebmMfVpxDec;
 
 namespace mozilla {
+
+// Helper function to add a profile marker and log at the same time.
+static void MOZ_FORMAT_PRINTF(2, 3)
+    WmfDeocderModuleMarkerAndLog(const char* aTag, const char* aFormat, ...) {
+  va_list ap;
+  va_start(ap, aFormat);
+  const nsVprintfCString markerString(aFormat, ap);
+  va_end(ap);
+  WFM_DECODER_MODULE_STATUS_MARKER(aTag, markerString,
+                                   TimeStamp::NowUnfuzzed());
+  LOG("%s", markerString.get());
+}
 
 static Atomic<bool> sDXVAEnabled(false);
 static Atomic<bool> sUsableVPXMFT(false);
@@ -109,14 +123,37 @@ void WMFDecoderModule::Init() {
     sDXVAEnabled = !mozilla::BrowserTabsRemoteAutostart();
   }
 
+  // We have heavy logging below to help diagnose issue around hardware decoding
+  // failures. Due to these failures often relating to driver level problems
+  // they're hard to nail down, so we want lots of info. We may be able to relax
+  // this in future if we're not seeing such problems (see bug 1673007 for
+  // references to the bugs motivating this).
   sDXVAEnabled = sDXVAEnabled && gfx::gfxVars::CanUseHardwareVideoDecoding();
   bool testForVPx = gfx::gfxVars::CanUseHardwareVideoDecoding();
   if (testForVPx && StaticPrefs::media_wmf_vp9_enabled_AtStartup()) {
     gfx::WMFVPXVideoCrashGuard guard;
     if (!guard.Crashed()) {
+      WmfDeocderModuleMarkerAndLog("WMFInit VPx Pending",
+                                   "Attempting to create MFT decoder for VPx");
+
       sUsableVPXMFT = CanCreateMFTDecoder(CLSID_WebmMfVpxDec);
+
+      WmfDeocderModuleMarkerAndLog("WMFInit VPx Initialized",
+                                   "CanCreateMFTDecoder returned %s for VPx",
+                                   sUsableVPXMFT ? "true" : "false");
+    } else {
+      WmfDeocderModuleMarkerAndLog(
+          "WMFInit VPx Failure",
+          "Will not use MFT VPx due to crash guard reporting a crash");
     }
   }
+
+  WmfDeocderModuleMarkerAndLog(
+      "WMFInit Result",
+      "WMFDecoderModule::Init finishing with sDXVAEnabled=%s testForVPx=%s "
+      "sUsableVPXMFT=%s",
+      sDXVAEnabled ? "true" : "false", testForVPx ? "true" : "false",
+      sUsableVPXMFT ? "true" : "false");
 }
 
 /* static */
@@ -148,23 +185,19 @@ already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateVideoDecoder(
     if (aParams.mError) {
       *aParams.mError = result;
     }
-    nsPrintfCString markerString(
+    WmfDeocderModuleMarkerAndLog(
+        "WMFVDecoderCreation Failure",
         "WMFDecoderModule::CreateVideoDecoder failed for manager with "
         "description %s with result: %s",
         manager->GetDescriptionName().get(), result.Description().get());
-    LOG(markerString.get());
-    WFM_DECODER_MODULE_STATUS_MARKER("WMFVDecoderCreation Failure",
-                                     markerString, TimeStamp::NowUnfuzzed());
     return nullptr;
   }
 
-  nsPrintfCString markerString(
+  WmfDeocderModuleMarkerAndLog(
+      "WMFVDecoderCreation Success",
       "WMFDecoderModule::CreateVideoDecoder success for manager with "
       "description %s",
       manager->GetDescriptionName().get());
-  LOG(markerString.get());
-  WFM_DECODER_MODULE_STATUS_MARKER("WMFVDecoderCreation Success", markerString,
-                                   TimeStamp::NowUnfuzzed());
 
   RefPtr<MediaDataDecoder> decoder = new WMFMediaDataDecoder(manager.release());
   return decoder.forget();
@@ -176,23 +209,19 @@ already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateAudioDecoder(
       new WMFAudioMFTManager(aParams.AudioConfig()));
 
   if (!manager->Init()) {
-    nsPrintfCString markerString(
+    WmfDeocderModuleMarkerAndLog(
+        "WMFADecoderCreation Failure",
         "WMFDecoderModule::CreateAudioDecoder failed for manager with "
         "description %s",
         manager->GetDescriptionName().get());
-    LOG(markerString.get());
-    WFM_DECODER_MODULE_STATUS_MARKER("WMFADecoderCreation Failure",
-                                     markerString, TimeStamp::NowUnfuzzed());
     return nullptr;
   }
 
-  nsPrintfCString markerString(
+  WmfDeocderModuleMarkerAndLog(
+      "WMFADecoderCreation Success",
       "WMFDecoderModule::CreateAudioDecoder success for manager with "
       "description %s",
       manager->GetDescriptionName().get());
-  LOG(markerString.get());
-  WFM_DECODER_MODULE_STATUS_MARKER("WMFADecoderCreation Success", markerString,
-                                   TimeStamp::NowUnfuzzed());
 
   RefPtr<MediaDataDecoder> decoder = new WMFMediaDataDecoder(manager.release());
   return decoder.forget();
@@ -313,3 +342,6 @@ bool WMFDecoderModule::Supports(const SupportDecoderParams& aParams,
 }
 
 }  // namespace mozilla
+
+#undef WFM_DECODER_MODULE_STATUS_MARKER
+#undef LOG
