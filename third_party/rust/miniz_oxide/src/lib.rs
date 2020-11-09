@@ -21,18 +21,9 @@
 //!
 //! ```
 
-#![allow(warnings)]
 #![forbid(unsafe_code)]
-#![cfg_attr(any(has_alloc, feature = "rustc-dep-of-std"), no_std)]
 
-// autocfg does not work when building in libstd, so manually enable this for that use case now.
-#[cfg(any(has_alloc, feature = "rustc-dep-of-std"))]
-extern crate alloc;
-#[cfg(all(not(has_alloc), not(feature = "rustc-dep-of-std")))]
-use std as alloc;
-
-#[cfg(test)]
-extern crate std;
+extern crate adler32;
 
 pub mod deflate;
 pub mod inflate;
@@ -154,13 +145,13 @@ impl StreamResult {
     }
 }
 
-impl core::convert::From<StreamResult> for MZResult {
+impl std::convert::From<StreamResult> for MZResult {
     fn from(res: StreamResult) -> Self {
         res.status
     }
 }
 
-impl core::convert::From<&StreamResult> for MZResult {
+impl std::convert::From<&StreamResult> for MZResult {
     fn from(res: &StreamResult) -> Self {
         res.status
     }

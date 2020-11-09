@@ -1,8 +1,0 @@
-error: Default method can't have a body
-  --> $DIR/default-with-body.rs:12:21
-   |
-12 |           fn a(&self) {
-   |  _____________________^
-13 | |             println!("Default with a body >:-P");
-14 | |         }
-   | |_________^

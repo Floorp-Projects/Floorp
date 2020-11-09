@@ -25,13 +25,13 @@ pub enum MemoryUnit {
 }
 
 impl MemoryUnit {
-    /// Converts a value in the given unit to bytes.
+    /// Convert a value in the given unit to bytes.
     ///
-    /// # Arguments
+    /// ## Arguments
     ///
     /// * `value` - the value to convert.
     ///
-    /// # Returns
+    /// ## Return value
     ///
     /// The integer representation of the byte value.
     pub fn as_bytes(self, value: u64) -> u64 {
