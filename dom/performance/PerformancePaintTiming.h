@@ -41,7 +41,9 @@ class PerformancePaintTiming final : public PerformanceEntry {
  private:
   ~PerformancePaintTiming();
   RefPtr<Performance> mPerformance;
-  const TimeStamp mStartTime;
+
+  const TimeStamp mRawStarTime;
+  mutable Maybe<DOMHighResTimeStamp> mCachedStartTime;
 };
 
 }  // namespace dom
