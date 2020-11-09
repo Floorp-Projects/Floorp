@@ -265,13 +265,15 @@ internal fun JSONObject.getAddons(): List<Addon> {
 
 internal fun JSONObject.toAddons(): Addon {
     return with(getJSONObject("addon")) {
+        val download = getDownload()
         Addon(
             id = getSafeString("guid"),
             authors = getAuthors(),
             categories = getCategories(),
             createdAt = getSafeString("created"),
             updatedAt = getSafeString("last_updated"),
-            downloadUrl = getDownloadUrl(),
+            downloadId = download?.getDownloadId() ?: "",
+            downloadUrl = download?.getDownloadUrl() ?: "",
             version = getCurrentVersion(),
             permissions = getPermissions(),
             translatableName = getSafeMap("name"),
@@ -324,11 +326,18 @@ internal fun JSONObject.getCurrentVersion(): String {
     return optJSONObject("current_version")?.getSafeString("version") ?: ""
 }
 
-internal fun JSONObject.getDownloadUrl(): String {
+internal fun JSONObject.getDownload(): JSONObject? {
     return (getJSONObject("current_version")
         .optJSONArray("files")
         ?.getJSONObject(0))
-        ?.getSafeString("url") ?: ""
+}
+
+internal fun JSONObject.getDownloadId(): String {
+    return getSafeString("id")
+}
+
+internal fun JSONObject.getDownloadUrl(): String {
+    return getSafeString("url")
 }
 
 internal fun JSONObject.getAuthors(): List<Addon.Author> {

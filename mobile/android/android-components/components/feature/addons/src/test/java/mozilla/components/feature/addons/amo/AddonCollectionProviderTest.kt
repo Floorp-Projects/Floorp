@@ -58,6 +58,10 @@ class AddonCollectionProviderTest {
             addon.siteUrl
         )
         assertEquals(
+            "3428595",
+            addon.downloadId
+        )
+        assertEquals(
             "https://addons.mozilla.org/firefox/downloads/file/3428595/ublock_origin-1.23.0-an+fx.xpi?src=",
             addon.downloadUrl
         )
@@ -108,6 +112,7 @@ class AddonCollectionProviderTest {
         assertEquals("", addon.iconUrl)
         assertEquals("", addon.siteUrl)
         assertEquals("", addon.version)
+        assertEquals("", addon.downloadId)
         assertEquals("", addon.downloadUrl)
         assertTrue(addon.permissions.isEmpty())
         assertTrue(addon.translatableName.isEmpty())

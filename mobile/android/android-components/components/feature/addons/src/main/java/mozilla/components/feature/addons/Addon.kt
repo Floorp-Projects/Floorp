@@ -17,7 +17,8 @@ import kotlinx.android.parcel.Parcelize
  * @property id The unique ID of this add-on.
  * @property authors List holding information about the add-on authors.
  * @property categories List of categories the add-on belongs to.
- * @property downloadUrl The (absolute) URL to download the add-on file (eg xpi).
+ * @property downloadId The unique ID of the latest version of the add-on (xpi) file.
+ * @property downloadUrl The (absolute) URL to download the latest version of the add-on file.
  * @property version The add-on version e.g "1.23.0".
  * @property permissions List of the add-on permissions for this File.
  * @property translatableName A map containing the different translations for the add-on name,
@@ -40,6 +41,7 @@ data class Addon(
     val id: String,
     val authors: List<Author> = emptyList(),
     val categories: List<String> = emptyList(),
+    val downloadId: String = "",
     val downloadUrl: String = "",
     val version: String = "",
     val permissions: List<String> = emptyList(),

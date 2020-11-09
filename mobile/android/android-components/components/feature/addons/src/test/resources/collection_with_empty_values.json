@@ -28,7 +28,6 @@
           "edit_url": "https://addons.mozilla.org/en-US/developers/addon/ublock-origin/versions/4884220",
           "files": [
             {
-              "id": 3428595,
               "created": "2019-10-21T16:37:32Z",
               "hash": "sha256:b72c8bf1038d18e2d8badd0accd20f9d6938efe2f45303e99aaab189a66dbbc1",
               "is_restart_required": false,

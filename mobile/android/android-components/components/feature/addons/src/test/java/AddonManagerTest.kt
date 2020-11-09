@@ -427,16 +427,7 @@ class AddonManagerTest {
 
     @Test
     fun `installAddon successfully`() {
-        val addon = Addon(
-            id = "ext1",
-            authors = emptyList(),
-            categories = emptyList(),
-            downloadUrl = "",
-            version = "",
-            createdAt = "",
-            updatedAt = ""
-        )
-
+        val addon = Addon(id = "ext1")
         val engine: Engine = mock()
         val onSuccessCaptor = argumentCaptor<((WebExtension) -> Unit)>()
 
@@ -460,15 +451,7 @@ class AddonManagerTest {
 
     @Test
     fun `installAddon failure`() {
-        val addon = Addon(id = "ext1",
-            authors = emptyList(),
-            categories = emptyList(),
-            downloadUrl = "",
-            version = "",
-            createdAt = "",
-            updatedAt = ""
-        )
-
+        val addon = Addon(id = "ext1")
         val engine: Engine = mock()
         val onErrorCaptor = argumentCaptor<((String, Throwable) -> Unit)>()
 
@@ -520,12 +503,6 @@ class AddonManagerTest {
     fun `uninstallAddon successfully`() {
         val installedAddon = Addon(
             id = "ext1",
-            authors = emptyList(),
-            categories = emptyList(),
-            downloadUrl = "",
-            version = "",
-            createdAt = "",
-            updatedAt = "",
             installedState = Addon.InstalledState("ext1", "1.0", "", true)
         )
 
@@ -550,16 +527,7 @@ class AddonManagerTest {
 
     @Test
     fun `uninstallAddon failure cases`() {
-        val addon = Addon(
-            id = "ext1",
-            authors = emptyList(),
-            categories = emptyList(),
-            downloadUrl = "",
-            version = "",
-            createdAt = "",
-            updatedAt = ""
-        )
-
+        val addon = Addon(id = "ext1")
         val engine: Engine = mock()
         val onErrorCaptor = argumentCaptor<((String, Throwable) -> Unit)>()
         var throwable: Throwable? = null
@@ -598,12 +566,6 @@ class AddonManagerTest {
     fun `enableAddon successfully`() {
         val addon = Addon(
             id = "ext1",
-            authors = emptyList(),
-            categories = emptyList(),
-            downloadUrl = "",
-            version = "",
-            createdAt = "",
-            updatedAt = "",
             installedState = Addon.InstalledState("ext1", "1.0", "", true)
         )
 
@@ -629,15 +591,7 @@ class AddonManagerTest {
 
     @Test
     fun `enableAddon failure cases`() {
-        val addon = Addon(
-            id = "ext1",
-            authors = emptyList(),
-            categories = emptyList(),
-            downloadUrl = "",
-            version = "",
-            createdAt = "",
-            updatedAt = ""
-        )
+        val addon = Addon(id = "ext1")
         val engine: Engine = mock()
         val onErrorCaptor = argumentCaptor<((Throwable) -> Unit)>()
         var throwable: Throwable? = null
@@ -673,12 +627,6 @@ class AddonManagerTest {
     fun `disableAddon successfully`() {
         val addon = Addon(
             id = "ext1",
-            authors = emptyList(),
-            categories = emptyList(),
-            downloadUrl = "",
-            version = "",
-            createdAt = "",
-            updatedAt = "",
             installedState = Addon.InstalledState("ext1", "1.0", "", true)
         )
 
@@ -704,15 +652,7 @@ class AddonManagerTest {
 
     @Test
     fun `disableAddon failure cases`() {
-        val addon = Addon(
-            id = "ext1",
-            authors = emptyList(),
-            categories = emptyList(),
-            downloadUrl = "",
-            version = "",
-            createdAt = "",
-            updatedAt = ""
-        )
+        val addon = Addon(id = "ext1")
         val engine: Engine = mock()
         val onErrorCaptor = argumentCaptor<((Throwable) -> Unit)>()
         var throwable: Throwable? = null
