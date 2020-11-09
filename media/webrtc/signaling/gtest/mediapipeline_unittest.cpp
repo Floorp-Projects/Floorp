@@ -523,9 +523,7 @@ class MediaPipelineFilterTest : public ::testing::Test {
     webrtc::RTPHeader header;
     header.ssrc = ssrc;
     header.payloadType = payload_type;
-    mid.apply([&](const auto& mid) {
-      header.extension.mid.Set(mid.c_str(), mid.length());
-    });
+    mid.apply([&](const auto& mid) { header.extension.mid = mid; });
     return filter.Filter(header);
   }
 };
