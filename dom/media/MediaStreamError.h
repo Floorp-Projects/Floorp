@@ -76,10 +76,6 @@ class MediaStreamError final : public nsISupports,
                                public BaseMediaMgrError,
                                public nsWrapperCache {
  public:
-  MediaStreamError(nsPIDOMWindowInner* aParent, Name aName,
-                   const nsAString& aMessage = u""_ns,
-                   const nsAString& aConstraint = u""_ns);
-
   MediaStreamError(nsPIDOMWindowInner* aParent, const BaseMediaMgrError& aOther)
       : BaseMediaMgrError(aOther.mName, aOther.mMessage, aOther.mConstraint),
         mParent(aParent) {}
