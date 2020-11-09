@@ -60,10 +60,7 @@ enum class IsRemoveNotification {
 // |Document* doc|
 #define IMPL_MUTATION_NOTIFICATION(func_, content_, params_, remove_)      \
   PR_BEGIN_MACRO                                                           \
-  bool needsEnterLeave = doc->MayHaveDOMMutationObservers();               \
-  if (needsEnterLeave) {                                                   \
-    nsDOMMutationObserver::EnterMutationHandling();                        \
-  }                                                                        \
+  nsDOMMutationEnterLeave enterLeave(doc);                                 \
   nsINode* node = content_;                                                \
   COMPOSED_DOC_DECL                                                        \
   NS_ASSERTION(node->OwnerDoc() == doc, "Bogus document");                 \
@@ -98,17 +95,11 @@ enum class IsRemoveNotification {
       presShell->func_ params_;                                            \
     }                                                                      \
   }                                                                        \
-  if (needsEnterLeave) {                                                   \
-    nsDOMMutationObserver::LeaveMutationHandling();                        \
-  }                                                                        \
   PR_END_MACRO
 
 #define IMPL_ANIMATION_NOTIFICATION(func_, content_, params_)               \
   PR_BEGIN_MACRO                                                            \
-  bool needsEnterLeave = doc->MayHaveDOMMutationObservers();                \
-  if (needsEnterLeave) {                                                    \
-    nsDOMMutationObserver::EnterMutationHandling();                         \
-  }                                                                         \
+  nsDOMMutationEnterLeave enterLeave(doc);                                  \
   nsINode* node = content_;                                                 \
   do {                                                                      \
     nsINode::nsSlots* slots = node->GetExistingSlots();                     \
@@ -122,9 +113,6 @@ enum class IsRemoveNotification {
       node = node->GetParentNode();                                         \
     }                                                                       \
   } while (node);                                                           \
-  if (needsEnterLeave) {                                                    \
-    nsDOMMutationObserver::LeaveMutationHandling();                         \
-  }                                                                         \
   PR_END_MACRO
 
 namespace mozilla {
