@@ -38,6 +38,7 @@ pub mod metrics;
 pub mod ping;
 pub mod storage;
 mod system;
+pub mod traits;
 pub mod upload;
 mod util;
 
@@ -47,7 +48,7 @@ use crate::debug::DebugOptions;
 pub use crate::error::{Error, ErrorKind, Result};
 pub use crate::error_recording::{test_get_num_recorded_errors, ErrorType};
 use crate::event_database::EventDatabase;
-use crate::internal_metrics::CoreMetrics;
+use crate::internal_metrics::{CoreMetrics, DatabaseMetrics};
 use crate::internal_pings::InternalPings;
 use crate::metrics::{Metric, MetricType, PingType};
 use crate::ping::PingMaker;
@@ -76,12 +77,12 @@ pub(crate) const DELETION_REQUEST_PINGS_DIRECTORY: &str = "deletion_request";
 /// Glean.
 static GLEAN: OnceCell<Mutex<Glean>> = OnceCell::new();
 
-/// Get a reference to the global Glean object.
+/// Gets a reference to the global Glean object.
 pub fn global_glean() -> Option<&'static Mutex<Glean>> {
     GLEAN.get()
 }
 
-/// Set or replace the global Glean object.
+/// Sets or replaces the global Glean object.
 pub fn setup_glean(glean: Glean) -> Result<()> {
     // The `OnceCell` type wrapping our Glean is thread-safe and can only be set once.
     // Therefore even if our check for it being empty succeeds, setting it could fail if a
@@ -170,6 +171,7 @@ pub struct Glean {
     data_store: Option<Database>,
     event_data_store: EventDatabase,
     core_metrics: CoreMetrics,
+    database_metrics: DatabaseMetrics,
     internal_pings: InternalPings,
     data_path: PathBuf,
     application_id: String,
@@ -182,10 +184,11 @@ pub struct Glean {
 }
 
 impl Glean {
-    /// Create and initialize a new Glean object for use in a subprocess.
+    /// Creates and initializes a new Glean object for use in a subprocess.
+    ///
     /// Importantly, this will not send any pings at startup, since that
     /// sort of management should only happen in the main process.
-    pub fn new_for_subprocess(cfg: &Configuration) -> Result<Self> {
+    pub fn new_for_subprocess(cfg: &Configuration, scan_directories: bool) -> Result<Self> {
         log::info!("Creating new Glean v{}", GLEAN_VERSION);
 
         let application_id = sanitize_application_id(&cfg.application_id);
@@ -199,17 +202,23 @@ impl Glean {
         let event_data_store = EventDatabase::new(&cfg.data_path)?;
 
         // Create an upload manager with rate limiting of 10 pings every 60 seconds.
-        let mut upload_manager =
-            PingUploadManager::new(&cfg.data_path, &cfg.language_binding_name, false);
+        let mut upload_manager = PingUploadManager::new(&cfg.data_path, &cfg.language_binding_name);
         upload_manager.set_rate_limiter(
-            /* seconds per interval */ 60, /* max tasks per interval */ 10,
+            /* seconds per interval */ 60, /* max tasks per interval */ 15,
         );
+
+        // We only scan the pending ping sdirectories when calling this from a subprocess,
+        // when calling this from ::new we need to scan the directories after dealing with the upload state.
+        if scan_directories {
+            let _scanning_thread = upload_manager.scan_pending_pings_directories();
+        }
 
         Ok(Self {
             upload_enabled: cfg.upload_enabled,
             data_store,
             event_data_store,
             core_metrics: CoreMetrics::new(),
+            database_metrics: DatabaseMetrics::new(),
             internal_pings: InternalPings::new(),
             upload_manager,
             data_path: PathBuf::from(&cfg.data_path),
@@ -222,12 +231,12 @@ impl Glean {
         })
     }
 
-    /// Create and initialize a new Glean object.
+    /// Creates and initializes a new Glean object.
     ///
     /// This will create the necessary directories and files in `data_path`.
     /// This will also initialize the core metrics.
     pub fn new(cfg: Configuration) -> Result<Self> {
-        let mut glean = Self::new_for_subprocess(&cfg)?;
+        let mut glean = Self::new_for_subprocess(&cfg, false)?;
 
         // The upload enabled flag may have changed since the last run, for
         // example by the changing of a config file.
@@ -260,6 +269,12 @@ impl Glean {
             }
         }
 
+        // We only scan the pendings pings directories **after** dealing with the upload state.
+        // If upload is disabled, we delete all pending pings files
+        // and we need to do that **before** scanning the pending pings folder
+        // to ensure we don't enqueue pings before their files are deleted.
+        let _scanning_thread = glean.upload_manager.scan_pending_pings_directories();
+
         Ok(glean)
     }
 
@@ -269,7 +284,7 @@ impl Glean {
         data_path: &str,
         application_id: &str,
         upload_enabled: bool,
-    ) -> Result<Self> {
+    ) -> Self {
         let cfg = Configuration {
             data_path: data_path.into(),
             application_id: application_id.into(),
@@ -279,16 +294,22 @@ impl Glean {
             delay_ping_lifetime_io: false,
         };
 
-        Self::new(cfg)
+        let mut glean = Self::new(cfg).unwrap();
+
+        // Disable all upload manager policies for testing
+        glean.upload_manager = PingUploadManager::no_policy(data_path);
+
+        glean
     }
 
-    /// Destroy the database.
+    /// Destroys the database.
+    ///
     /// After this Glean needs to be reinitialized.
     pub fn destroy_db(&mut self) {
         self.data_store = None;
     }
 
-    /// Initialize the core metrics managed by Glean's Rust core.
+    /// Initializes the core metrics managed by Glean's Rust core.
     fn initialize_core_metrics(&mut self) {
         let need_new_client_id = match self
             .core_metrics
@@ -318,19 +339,34 @@ impl Glean {
         self.set_application_lifetime_core_metrics();
     }
 
-    /// Called when Glean is initialized to the point where it can correctly
-    /// assemble pings. Usually called from the language specific layer after all
-    /// of the core metrics have been set and the ping types have been
-    /// registered.
+    /// Initializes the database metrics managed by Glean's Rust core.
+    fn initialize_database_metrics(&mut self) {
+        log::trace!("Initializing database metrics");
+
+        if let Some(size) = self
+            .data_store
+            .as_ref()
+            .and_then(|database| database.file_size())
+        {
+            log::trace!("Database file size: {}", size.get());
+            self.database_metrics.size.accumulate(self, size.get())
+        }
+    }
+
+    /// Signals that the environment is ready to submit pings.
     ///
-    /// # Return value
+    /// Should be called when Glean is initialized to the point where it can correctly assemble pings.
+    /// Usually called from the language binding after all of the core metrics have been set
+    /// and the ping types have been registered.
     ///
-    /// `true` if at least one ping was generated, `false` otherwise.
+    /// # Returns
+    ///
+    /// Whether at least one ping was generated.
     pub fn on_ready_to_submit_pings(&self) -> bool {
         self.event_data_store.flush_pending_events_on_startup(&self)
     }
 
-    /// Set whether upload is enabled or not.
+    /// Sets whether upload is enabled or not.
     ///
     /// When uploading is disabled, metrics aren't recorded at all and no
     /// data is uploaded.
@@ -347,8 +383,8 @@ impl Glean {
     ///
     /// # Returns
     ///
-    /// * Returns true when the flag was different from the current value, and
-    ///   actual work was done to clear or reinstate metrics.
+    /// Whether the flag was different from the current value,
+    /// and actual work was done to clear or reinstate metrics.
     pub fn set_upload_enabled(&mut self, flag: bool) -> bool {
         log::info!("Upload enabled: {:?}", flag);
 
@@ -364,7 +400,7 @@ impl Glean {
         }
     }
 
-    /// Determine whether upload is enabled.
+    /// Determines whether upload is enabled.
     ///
     /// When upload is disabled, no data will be recorded.
     pub fn is_upload_enabled(&self) -> bool {
@@ -380,6 +416,7 @@ impl Glean {
     fn on_upload_enabled(&mut self) {
         self.upload_enabled = true;
         self.initialize_core_metrics();
+        self.initialize_database_metrics();
     }
 
     /// Handles the changing of state from upload enabled to disabled.
@@ -459,27 +496,27 @@ impl Glean {
         }
     }
 
-    /// Get the application ID as specified on instantiation.
+    /// Gets the application ID as specified on instantiation.
     pub fn get_application_id(&self) -> &str {
         &self.application_id
     }
 
-    /// Get the data path of this instance.
+    /// Gets the data path of this instance.
     pub fn get_data_path(&self) -> &Path {
         &self.data_path
     }
 
-    /// Get a handle to the database.
+    /// Gets a handle to the database.
     pub fn storage(&self) -> &Database {
         &self.data_store.as_ref().expect("No database found")
     }
 
-    /// Get a handle to the event database.
+    /// Gets a handle to the event database.
     pub fn event_storage(&self) -> &EventDatabase {
         &self.event_data_store
     }
 
-    /// Get the maximum number of events to store before sending a ping.
+    /// Gets the maximum number of events to store before sending a ping.
     pub fn get_max_events(&self) -> usize {
         self.max_events
     }
@@ -490,17 +527,13 @@ impl Glean {
     ///
     /// * `Wait` - which means the requester should ask again later;
     /// * `Upload(PingRequest)` - which means there is a ping to upload. This wraps the actual request object;
-    /// * `Done` - which means there are no more pings queued right now.
+    /// * `Done` - which means requester should stop asking for now.
     ///
-    /// ## Arguments
+    /// # Returns
     ///
-    /// * `log_ping` - Whether to log the ping before returning.
-    ///
-    /// # Return value
-    ///
-    /// `PingUploadTask` - an enum representing the possible tasks.
+    /// A [`PingUploadTask`](upload/enum.PingUploadTask.html) representing the next task.
     pub fn get_upload_task(&self) -> PingUploadTask {
-        self.upload_manager.get_upload_task(self.log_pings())
+        self.upload_manager.get_upload_task(self, self.log_pings())
     }
 
     /// Processes the response from an attempt to upload a ping.
@@ -510,26 +543,20 @@ impl Glean {
     /// * `uuid` - The UUID of the ping in question.
     /// * `status` - The upload result.
     pub fn process_ping_upload_response(&self, uuid: &str, status: UploadResult) {
-        if let Some(label) = status.get_label() {
-            let metric = self.core_metrics.ping_upload_failure.get(label);
-            metric.add(self, 1);
-        }
-
         self.upload_manager
-            .process_ping_upload_response(uuid, status);
+            .process_ping_upload_response(self, uuid, status);
     }
 
-    /// Take a snapshot for the given store and optionally clear it.
+    /// Takes a snapshot for the given store and optionally clear it.
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
     /// * `store_name` - The store to snapshot.
     /// * `clear_store` - Whether to clear the store after snapshotting.
     ///
-    /// ## Return value
+    /// # Returns
     ///
-    /// Returns the snapshot in a string encoded as JSON.
-    /// If the snapshot is empty, it returns an empty string.
+    /// The snapshot in a string encoded as JSON. If the snapshot is empty, returns an empty string.
     pub fn snapshot(&mut self, store_name: &str, clear_store: bool) -> String {
         StorageManager
             .snapshot(&self.storage(), store_name, clear_store)
@@ -546,23 +573,29 @@ impl Glean {
         )
     }
 
-    /// Collect and submit a ping for eventual uploading.
+    /// Collects and submits a ping for eventual uploading.
     ///
     /// The ping content is assembled as soon as possible, but upload is not
-    /// guaranteed to happen immediately, as that depends on the upload
-    /// policies.
+    /// guaranteed to happen immediately, as that depends on the upload policies.
     ///
-    /// If the ping currently contains no content, it will not be sent.
+    /// If the ping currently contains no content, it will not be sent,
+    /// unless it is configured to be sent if empty.
     ///
-    /// Returns true if a ping was assembled and queued, false otherwise.
-    /// Returns an error if collecting or writing the ping to disk failed.
+    /// # Arguments
     ///
-    /// ## Arguments
-    /// * `ping`: The ping to submit
-    /// * `reason`: A reason code to include in the ping
+    /// * `ping` - The ping to submit
+    /// * `reason` - A reason code to include in the ping
+    ///
+    /// # Returns
+    ///
+    /// Whether the ping was succesfully assembled and queued.
+    ///
+    /// # Errors
+    ///
+    /// If collecting or writing the ping to disk failed.
     pub fn submit_ping(&self, ping: &PingType, reason: Option<&str>) -> Result<bool> {
         if !self.is_upload_enabled() {
-            log::error!("Glean disabled: not submitting any pings.");
+            log::info!("Glean disabled: not submitting any pings.");
             return Ok(false);
         }
 
@@ -590,7 +623,7 @@ impl Glean {
                     return Err(e.into());
                 }
 
-                self.upload_manager.enqueue_ping_from_file(&doc_id);
+                self.upload_manager.enqueue_ping_from_file(self, &doc_id);
 
                 log::info!(
                     "The ping '{}' was submitted and will be sent as soon as possible",
@@ -601,20 +634,26 @@ impl Glean {
         }
     }
 
-    /// Collect and submit a ping by name for eventual uploading.
+    /// Collects and submits a ping by name for eventual uploading.
     ///
     /// The ping content is assembled as soon as possible, but upload is not
-    /// guaranteed to happen immediately, as that depends on the upload
-    /// policies.
+    /// guaranteed to happen immediately, as that depends on the upload policies.
     ///
-    /// If the ping currently contains no content, it will not be sent.
+    /// If the ping currently contains no content, it will not be sent,
+    /// unless it is configured to be sent if empty.
     ///
-    /// Returns true if a ping was assembled and queued, false otherwise.
-    /// Returns an error if collecting or writing the ping to disk failed.
+    /// # Arguments
     ///
-    /// ## Arguments
-    /// * `ping_name`: The name of the ping to submit
-    /// * `reason`: A reason code to include in the ping
+    /// * `ping_name` - The name of the ping to submit
+    /// * `reason` - A reason code to include in the ping
+    ///
+    /// # Returns
+    ///
+    /// Whether the ping was succesfully assembled and queued.
+    ///
+    /// # Errors
+    ///
+    /// If collecting or writing the ping to disk failed.
     pub fn submit_ping_by_name(&self, ping_name: &str, reason: Option<&str>) -> Result<bool> {
         match self.get_ping_by_name(ping_name) {
             None => {
@@ -625,12 +664,13 @@ impl Glean {
         }
     }
 
-    /// Get a [`PingType`](metrics/struct.PingType.html) by name.
+    /// Gets a [`PingType`] by name.
     ///
-    /// ## Return value
+    /// # Returns
     ///
-    /// Returns the `PingType` if a ping of the given name was registered before.
-    /// Returns `None` otherwise.
+    /// The [`PingType`] of a ping if the given name was registered before, `None` otherwise.
+    ///
+    /// [`PingType`]: metrics/struct.PingType.html
     pub fn get_ping_by_name(&self, ping_name: &str) -> Option<&PingType> {
         self.ping_registry.get(ping_name)
     }
@@ -638,7 +678,7 @@ impl Glean {
     /// Register a new [`PingType`](metrics/struct.PingType.html).
     pub fn register_ping_type(&mut self, ping: &PingType) {
         if self.ping_registry.contains_key(&ping.name) {
-            log::error!("Duplicate ping named '{}'", ping.name)
+            log::debug!("Duplicate ping named '{}'", ping.name)
         }
 
         self.ping_registry.insert(ping.name.clone(), ping.clone());
@@ -649,11 +689,12 @@ impl Glean {
         self.start_time
     }
 
-    /// Indicate that an experiment is running.
+    /// Indicates that an experiment is running.
+    ///
     /// Glean will then add an experiment annotation to the environment
     /// which is sent with pings. This information is not persisted between runs.
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
     /// * `experiment_id` - The id of the active experiment (maximum 30 bytes).
     /// * `branch` - The experiment branch (maximum 30 bytes).
@@ -668,9 +709,9 @@ impl Glean {
         metric.set_active(&self, branch, extra);
     }
 
-    /// Indicate that an experiment is no longer running.
+    /// Indicates that an experiment is no longer running.
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
     /// * `experiment_id` - The id of the active experiment to deactivate (maximum 30 bytes).
     pub fn set_experiment_inactive(&self, experiment_id: String) {
@@ -678,7 +719,7 @@ impl Glean {
         metric.set_inactive(&self);
     }
 
-    /// Persist Lifetime::Ping data that might be in memory
+    /// Persists Lifetime::Ping data that might be in memory
     /// in case `delay_ping_lifetime_io` is set or was set
     /// at a previous time.
     ///
@@ -691,14 +732,14 @@ impl Glean {
         Ok(())
     }
 
-    /// Set internally-handled application lifetime metrics.
+    /// Sets internally-handled application lifetime metrics.
     fn set_application_lifetime_core_metrics(&self) {
         self.core_metrics.os.set(self, system::OS);
     }
 
     /// ** This is not meant to be used directly.**
     ///
-    /// Clear all the metrics that have `Lifetime::Application`.
+    /// Clears all the metrics that have `Lifetime::Application`.
     pub fn clear_application_lifetime_metrics(&self) {
         log::debug!("Clearing Lifetime::Application metrics");
         if let Some(data) = self.data_store.as_ref() {
@@ -709,19 +750,19 @@ impl Glean {
         self.set_application_lifetime_core_metrics();
     }
 
-    /// Return whether or not this is the first run on this profile.
+    /// Whether or not this is the first run on this profile.
     pub fn is_first_run(&self) -> bool {
         self.is_first_run
     }
 
-    /// Set a debug view tag.
+    /// Sets a debug view tag.
     ///
     /// This will return `false` in case `value` is not a valid tag.
     ///
     /// When the debug view tag is set, pings are sent with a `X-Debug-ID` header with the value of the tag
     /// and are sent to the ["Ping Debug Viewer"](https://mozilla.github.io/glean/book/dev/core/internal/debug-pings.html).
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
     /// * `value` - A valid HTTP header value. Must match the regex: "[a-zA-Z0-9-]{1,20}".
     pub fn set_debug_view_tag(&mut self, value: &str) -> bool {
@@ -736,14 +777,35 @@ impl Glean {
         self.debug.debug_view_tag.get()
     }
 
-    /// Set the log pings debug option.
+    /// Sets source tags.
+    ///
+    /// This will return `false` in case `value` contains invalid tags.
+    ///
+    /// Ping tags will show in the destination datasets, after ingestion.
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - A vector of at most 5 valid HTTP header values. Individual tags must match the regex: "[a-zA-Z0-9-]{1,20}".
+    pub fn set_source_tags(&mut self, value: Vec<String>) -> bool {
+        self.debug.source_tags.set(value)
+    }
+
+    /// Return the value for the source tags or `None` if it hasn't been set.
+    ///
+    /// The source_tags may be set from an environment variable (GLEAN_SOURCE_TAGS)
+    /// or through the `set_source_tags` function.
+    pub(crate) fn source_tags(&self) -> Option<&Vec<String>> {
+        self.debug.source_tags.get()
+    }
+
+    /// Sets the log pings debug option.
     ///
     /// This will return `false` in case we are unable to set the option.
     ///
     /// When the log pings debug option is `true`,
     /// we log the payload of all succesfully assembled pings.
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
     /// * `value` - The value of the log pings option
     pub fn set_log_pings(&mut self, value: bool) -> bool {
@@ -771,7 +833,8 @@ impl Glean {
 
     /// ** This is not meant to be used directly.**
     ///
-    /// Set the value of a "dirty flag" in the permanent storage.
+    /// Sets the value of a "dirty flag" in the permanent storage.
+    ///
     /// The "dirty flag" is meant to have the following behaviour, implemented
     /// by the consumers of the FFI layer:
     ///
@@ -789,7 +852,7 @@ impl Glean {
 
     /// ** This is not meant to be used directly.**
     ///
-    /// Check the stored value of the "dirty flag".
+    /// Checks the stored value of the "dirty flag".
     pub fn is_dirty_flag_set(&self) -> bool {
         let dirty_bit_metric = self.get_dirty_bit_metric();
         match StorageManager.snapshot_metric(
@@ -804,15 +867,15 @@ impl Glean {
 
     /// **Test-only API (exported for FFI purposes).**
     ///
-    /// Check if an experiment is currently active.
+    /// Checks if an experiment is currently active.
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
     /// * `experiment_id` - The id of the experiment (maximum 30 bytes).
     ///
-    /// ## Return value
+    /// # Returns
     ///
-    /// True if the experiment is active, false otherwise.
+    /// Whether the experiment is active.
     pub fn test_is_experiment_active(&self, experiment_id: String) -> bool {
         self.test_get_experiment_data_as_json(experiment_id)
             .is_some()
@@ -820,17 +883,17 @@ impl Glean {
 
     /// **Test-only API (exported for FFI purposes).**
     ///
-    /// Get stored data for the requested experiment.
+    /// Gets stored data for the requested experiment.
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
     /// * `experiment_id` - The id of the active experiment (maximum 30 bytes).
     ///
-    /// ## Return value
+    /// # Returns
     ///
-    /// If the requested experiment is active, a JSON string with the following format:
+    /// A JSON string with the following format:
     /// { 'branch': 'the-branch-name', 'extra': {'key': 'value', ...}}
-    /// Otherwise, None.
+    /// if the requested experiment is active, `None` otherwise.
     pub fn test_get_experiment_data_as_json(&self, experiment_id: String) -> Option<String> {
         let metric = metrics::ExperimentMetric::new(&self, experiment_id);
         metric.test_get_value_as_json_string(&self)
@@ -838,7 +901,8 @@ impl Glean {
 
     /// **Test-only API (exported for FFI purposes).**
     ///
-    /// Delete all stored metrics.
+    /// Deletes all stored metrics.
+    ///
     /// Note that this also includes the ping sequence numbers, so it has
     /// the effect of resetting those to their initial values.
     pub fn test_clear_all_stores(&self) {

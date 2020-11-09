@@ -71,7 +71,7 @@ impl Bucketing for PrecomputedLinear {
 }
 
 impl Histogram<PrecomputedLinear> {
-    /// Create a histogram with `bucket_count` linear buckets in the range `min` to `max`.
+    /// Creates a histogram with `bucket_count` linear buckets in the range `min` to `max`.
     pub fn linear(min: u64, max: u64, bucket_count: usize) -> Histogram<PrecomputedLinear> {
         Histogram {
             values: HashMap::new(),
