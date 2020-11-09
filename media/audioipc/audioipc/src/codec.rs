@@ -5,7 +5,7 @@
 
 //! `Encoder`s and `Decoder`s from items to/from `BytesMut` buffers.
 
-use bincode::{self, deserialize, serialized_size};
+use bincode::{self, deserialize, serialized_size, Options};
 use bytes::{BufMut, ByteOrder, BytesMut, LittleEndian};
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
@@ -170,8 +170,8 @@ where
 
         buf.put_u32_le(encoded_len as u32);
 
-        if let Err(e) = bincode::config()
-            .limit(encoded_len)
+        if let Err(e) = bincode::options()
+            .with_limit(encoded_len)
             .serialize_into::<_, Self::In>(&mut buf.writer(), &item)
         {
             match *e {
