@@ -298,8 +298,18 @@ impl AtomicRefcnt {
     pub unsafe fn dec(&self) -> nsrefcnt {
         let result = self.0.fetch_sub(1, Ordering::Release) as nsrefcnt - 1;
         if result == 0 {
-            // We're going to destroy the object on this thread.
-            atomic::fence(Ordering::Acquire);
+            // We're going to destroy the object on this thread, so we need
+            // acquire semantics to synchronize with the memory released by
+            // the last release on other threads, that is, to ensure that
+            // writes prior to that release are now visible on this thread.
+            if cfg!(feature = "thread_sanitizer") {
+                // TSan doesn't understand atomic::fence, so in order to avoid
+                // a false positive for every time a refcounted object is
+                // deleted, we replace the fence with an atomic operation.
+                self.0.load(Ordering::Acquire);
+            } else {
+                atomic::fence(Ordering::Acquire);
+            }
         }
         result
     }
