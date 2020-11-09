@@ -11,6 +11,7 @@
 #include "mozilla/dom/ReportingBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SimpleGlobalObject.h"
+#include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_dom.h"

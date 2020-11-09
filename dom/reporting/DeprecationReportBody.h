@@ -7,7 +7,9 @@
 #ifndef mozilla_dom_DeprecationReportBody_h
 #define mozilla_dom_DeprecationReportBody_h
 
+#include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/ReportBody.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace dom {
