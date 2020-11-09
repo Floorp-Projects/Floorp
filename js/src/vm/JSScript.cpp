@@ -2282,6 +2282,14 @@ MOZ_MUST_USE bool ScriptSource::setRetrievedSource(JSContext* cx,
                                      SourceRetrievable::Yes);
 }
 
+bool js::IsOffThreadSourceCompressionEnabled() {
+  // If we don't have concurrent execution compression will contend with
+  // main-thread execution, in which case we disable. Similarly we don't want to
+  // block the thread pool if it is too small.
+  return HelperThreadState().cpuCount > 1 &&
+         HelperThreadState().threadCount > 1 && CanUseExtraThreads();
+}
+
 bool ScriptSource::tryCompressOffThread(JSContext* cx) {
   // Beware: |js::SynchronouslyCompressSource| assumes that this function is
   // only called once, just after a script has been compiled, and it's never
@@ -2307,11 +2315,8 @@ bool ScriptSource::tryCompressOffThread(JSContext* cx) {
   // Otherwise, enqueue a compression task to be processed when a major
   // GC is requested.
 
-  bool canCompressOffThread = HelperThreadState().cpuCount > 1 &&
-                              HelperThreadState().threadCount >= 2 &&
-                              CanUseExtraThreads();
   if (length() < ScriptSource::MinimumCompressibleLength ||
-      !canCompressOffThread) {
+      !IsOffThreadSourceCompressionEnabled()) {
     return true;
   }
 

@@ -17,20 +17,24 @@
 #include "jsapi.h"  // JS_EnsureLinearString, JS_GC, JS_Get{Latin1,TwoByte}LinearStringChars, JS_GetStringLength, JS_ValueToFunction
 #include "jstypes.h"  // JS_PUBLIC_API
 
+#include "gc/GC.h"                        // js::gc::FinishGC
 #include "js/CompilationAndEvaluation.h"  // JS::Evaluate
 #include "js/CompileOptions.h"            // JS::CompileOptions
 #include "js/Conversions.h"               // JS::ToString
 #include "js/MemoryFunctions.h"           // JS_malloc
-#include "js/RootingAPI.h"                // JS::MutableHandle, JS::Rooted
-#include "js/SourceText.h"                // JS::SourceOwnership, JS::SourceText
+#include "js/OffThreadScriptCompilation.h"  // JS::CompileOffThread, JS::OffThreadToken, JS::FinishOffThreadScript
+#include "js/RootingAPI.h"  // JS::MutableHandle, JS::Rooted
+#include "js/SourceText.h"  // JS::SourceOwnership, JS::SourceText
 #include "js/String.h"  // JS::GetLatin1LinearStringChars, JS::GetTwoByteLinearStringChars, JS::StringHasLatin1Chars
 #include "js/UniquePtr.h"  // js::UniquePtr
 #include "js/Utility.h"    // JS::FreePolicy
 #include "js/Value.h"      // JS::NullValue, JS::ObjectValue, JS::Value
 #include "jsapi-tests/tests.h"
-#include "vm/Compression.h"  // js::Compressor::CHUNK_SIZE
-#include "vm/JSFunction.h"   // JSFunction::getOrCreateScript
+#include "vm/Compression.h"        // js::Compressor::CHUNK_SIZE
+#include "vm/HelperThreadState.h"  // js::RunPendingSourceCompressions
+#include "vm/JSFunction.h"         // JSFunction::getOrCreateScript
 #include "vm/JSScript.h"  // JSScript, js::ScriptSource::MinimumCompressibleLength, js::SynchronouslyCompressSource
+#include "vm/Monitor.h"   // js::Monitor, js::AutoLockMonitor
 
 using mozilla::ArrayLength;
 using mozilla::Utf8Unit;
@@ -469,3 +473,73 @@ bool run() {
   return true;
 }
 END_TEST(testScriptSourceCompression_spansMultipleMiddleChunks)
+
+BEGIN_TEST(testScriptSourceCompression_automatic) {
+  constexpr size_t len = MinimumCompressibleLength + 55;
+  auto chars = MakeSourceAllWhitespace<char16_t>(cx, len);
+  CHECK(chars);
+
+  JS::SourceText<char16_t> source;
+  CHECK(source.init(cx, std::move(chars), len));
+
+  JS::CompileOptions options(cx);
+  JS::Rooted<JSScript*> script(cx, JS::Compile(cx, options, source));
+  CHECK(script);
+
+  // Check that source compression was triggered by the compile. If the
+  // off-thread source compression system is globally disabled, the source will
+  // remain uncompressed.
+  js::RunPendingSourceCompressions(cx->runtime());
+  bool expected = js::IsOffThreadSourceCompressionEnabled();
+  CHECK(script->scriptSource()->hasCompressedSource() == expected);
+
+  return true;
+}
+END_TEST(testScriptSourceCompression_automatic)
+
+BEGIN_TEST(testScriptSourceCompression_offThread) {
+  constexpr size_t len = MinimumCompressibleLength + 55;
+  auto chars = MakeSourceAllWhitespace<char16_t>(cx, len);
+  CHECK(chars);
+
+  JS::SourceText<char16_t> source;
+  CHECK(source.init(cx, std::move(chars), len));
+
+  js::Monitor monitor(js::mutexid::ShellOffThreadState);
+  JS::CompileOptions options(cx);
+  JS::OffThreadToken* token;
+
+  // Force off-thread even though if this is a small file.
+  options.forceAsync = true;
+
+  CHECK(JS::CompileOffThread(cx, options, source, callback, &monitor, &token));
+
+  {
+    // Finish any active GC in case it is blocking off-thread work.
+    js::gc::FinishGC(cx);
+
+    js::AutoLockMonitor lock(monitor);
+    lock.wait();
+  }
+
+  JS::Rooted<JSScript*> script(cx, JS::FinishOffThreadScript(cx, token));
+  CHECK(script);
+
+  // Check that source compression was triggered by the compile. If the
+  // off-thread source compression system is globally disabled, the source will
+  // remain uncompressed.
+  js::RunPendingSourceCompressions(cx->runtime());
+  bool expected = js::IsOffThreadSourceCompressionEnabled();
+  CHECK(script->scriptSource()->hasCompressedSource() == expected);
+
+  return true;
+}
+
+static void callback(JS::OffThreadToken* token, void* context) {
+  js::Monitor& monitor = *static_cast<js::Monitor*>(context);
+
+  js::AutoLockMonitor lock(monitor);
+  lock.notify();
+}
+
+END_TEST(testScriptSourceCompression_offThread)
