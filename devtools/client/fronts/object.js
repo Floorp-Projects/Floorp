@@ -53,14 +53,6 @@ class ObjectFront extends FrontClassWithSpec(objectSpec) {
     return this._grip.extensible;
   }
 
-  getDefinitionSite() {
-    if (this._grip.class != "Function") {
-      console.error("getDefinitionSite is only valid for function grips.");
-      return null;
-    }
-    return super.definitionSite();
-  }
-
   /**
    * Request the names of a function's formal parameters.
    */
