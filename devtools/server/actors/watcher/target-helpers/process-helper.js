@@ -93,6 +93,28 @@ function onMessageManagerClose(messageManager, topic, data) {
   actors.delete(messageManager);
 }
 
+function closeWatcherTransports(watcher) {
+  for (let i = 0; i < Services.ppmm.childCount; i++) {
+    const messageManager = Services.ppmm.getChildAt(i);
+    let list = actors.get(messageManager);
+    if (!list || list.length == 0) {
+      continue;
+    }
+    list = list.filter(item => item.watcher != watcher);
+    for (const item of list) {
+      // If we have a child transport, the actor has already
+      // been created. We need to stop using this message manager.
+      item.childTransport.close();
+      watcher.conn.cancelForwarding(item.prefix);
+    }
+    if (list.length == 0) {
+      actors.delete(messageManager);
+    } else {
+      actors.set(messageManager, list);
+    }
+  }
+}
+
 function maybeRegisterMessageListeners(watcher) {
   const sizeBefore = watchers.size;
   watchers.add(watcher);
@@ -119,6 +141,8 @@ function maybeRegisterMessageListeners(watcher) {
 function maybeUnregisterMessageListeners(watcher) {
   const sizeBefore = watchers.size;
   watchers.delete(watcher);
+  closeWatcherTransports(watcher);
+
   if (sizeBefore == 1 && watchers.size == 0) {
     Services.ppmm.removeMessageListener(
       "debug:content-process-actor",
