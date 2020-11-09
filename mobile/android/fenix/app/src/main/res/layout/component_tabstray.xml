@@ -53,6 +53,7 @@
         android:layout_width="match_parent"
         android:layout_height="80dp"
         android:background="@color/foundation_normal_theme"
+        android:importantForAccessibility="no"
         app:layout_constraintTop_toBottomOf="@+id/handle">
 
         <ImageButton
@@ -76,6 +77,7 @@
             android:layout_marginStart="12dp"
             android:textColor="@color/contrast_text_normal_theme"
             android:textSize="18sp"
+            android:focusableInTouchMode="true"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/collect_multi_select"
             app:layout_constraintHorizontal_bias="0.0"
