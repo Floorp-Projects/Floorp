@@ -2185,6 +2185,8 @@ bool HTMLInputElement::MozIsTextField(bool aExcludePassword) {
 
 void HTMLInputElement::SetUserInput(const nsAString& aValue,
                                     nsIPrincipal& aSubjectPrincipal) {
+  AutoHandlingUserInputStatePusher inputStatePusher(true);
+
   if (mType == NS_FORM_INPUT_FILE && !aSubjectPrincipal.IsSystemPrincipal()) {
     return;
   }
