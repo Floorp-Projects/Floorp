@@ -5805,6 +5805,17 @@
     ],
     "description": "Time it takes for a request that has been upgraded with HTTPS-Only Mode to complete, broken down by top-level (top) / sub-resource (sub) and status"
   },
+  "HTTPS_ONLY_MODE_UPGRADE_TYPE": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["seceng-telemetry@mozilla.com", "julianwels@mozilla.com"],
+    "bug_numbers": [1675533],
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "What content type did we upgrade, and did it load successfully?"
+  },
   "PLACES_DATABASE_CORRUPTION_HANDLING_STAGE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "thunderbird"],
