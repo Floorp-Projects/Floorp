@@ -188,6 +188,7 @@ UNIFIED_SOURCES += [
     "LoadInfo.cpp",
     "MemoryDownloader.cpp",
     "NetworkConnectivityService.cpp",
+    "NetworkDataCountLayer.cpp",
     "nsAsyncRedirectVerifyHelper.cpp",
     "nsAsyncStreamCopier.cpp",
     "nsAuthInformationHolder.cpp",
