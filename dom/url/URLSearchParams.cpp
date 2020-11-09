@@ -134,10 +134,8 @@ const nsAString& URLSearchParams::GetValueAtIndex(uint32_t aIndex) const {
 }
 
 void URLSearchParams::Sort(ErrorResult& aRv) {
-  aRv = mParams->Sort();
-  if (!aRv.Failed()) {
-    NotifyObserver();
-  }
+  mParams->Sort();
+  NotifyObserver();
 }
 
 bool URLSearchParams::WriteStructuredClone(
