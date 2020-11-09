@@ -14,7 +14,6 @@ import {
   waitForState,
   waitATick,
 } from "../../utils/test-head";
-import defer from "../../utils/defer.js";
 
 function waitForPreview(store, expression) {
   return waitForState(store, state => {
@@ -113,12 +112,18 @@ describe("preview", () => {
   // and the 2nd setPreview has not dispatched yet,
   // the first setPreview should not finish dispatching
   it("queued previews (w/ the 1st finishing first)", async () => {
-    const firstSetPreview = defer();
-    const secondSetPreview = defer();
-    const promises = [firstSetPreview, secondSetPreview];
+    let resolveFirst, resolveSecond;
+    const promises = [
+      new Promise(resolve => {
+        resolveFirst = resolve;
+      }),
+      new Promise(resolve => {
+        resolveSecond = resolve;
+      }),
+    ];
 
     const client = mockThreadFront({
-      loadObjectProperties: () => promises.shift().promise,
+      loadObjectProperties: () => promises.shift(),
     });
     const store = createStore(client);
 
@@ -139,12 +144,15 @@ describe("preview", () => {
 
     let fail = false;
 
-    firstSetPreview.resolve();
+    /* $FlowIgnore[not-a-function] this is guarantied to be initialized because
+       `new new Promise(foo)` calls foo synchronously */
+    resolveFirst();
     waitForPreview(store, "firstSetPreview").then(() => {
       fail = true;
     });
 
-    secondSetPreview.resolve();
+    // $FlowIgnore[not-a-function] same as above
+    resolveSecond();
     await waitForPreview(store, "secondSetPreview");
     expect(fail).toEqual(false);
 
@@ -156,12 +164,18 @@ describe("preview", () => {
   // and the 2nd setPreview has dispatched,
   // the first setPreview should not finish dispatching
   it("queued previews (w/ the 2nd finishing first)", async () => {
-    const firstSetPreview = defer();
-    const secondSetPreview = defer();
-    const promises = [firstSetPreview, secondSetPreview];
+    let resolveFirst, resolveSecond;
+    const promises = [
+      new Promise(resolve => {
+        resolveFirst = resolve;
+      }),
+      new Promise(resolve => {
+        resolveSecond = resolve;
+      }),
+    ];
 
     const client = mockThreadFront({
-      loadObjectProperties: () => promises.shift().promise,
+      loadObjectProperties: () => promises.shift(),
     });
     const store = createStore(client);
 
@@ -182,10 +196,13 @@ describe("preview", () => {
 
     let fail = false;
 
-    secondSetPreview.resolve();
+    /* $FlowIgnore[not-a-function] this is guarantied to be initialized because
+       `new new Promise(foo)` calls foo synchronously */
+    resolveSecond();
     await waitForPreview(store, "secondSetPreview");
 
-    firstSetPreview.resolve();
+    // $FlowIgnore[not-a-function] same as above
+    resolveFirst();
     waitForPreview(store, "firstSetPreview").then(() => {
       fail = true;
     });
