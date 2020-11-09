@@ -72,7 +72,7 @@ public class VideoCaptureDeviceInfoAndroid {
           boolean ir = enumerator.isInfrared(camera);
           device.infrared = ir;
           if (ir) {
-            device.name += "(infrared)";
+            device.name += " (infrared)";
           }
 
           // This isn't part of the new API, but we don't call
