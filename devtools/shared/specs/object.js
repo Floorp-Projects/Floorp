@@ -29,12 +29,6 @@ types.addDictType("object.completion", {
   throw: "nullable:json",
 });
 
-types.addDictType("object.definitionSite", {
-  source: "source",
-  line: "number",
-  column: "number",
-});
-
 types.addDictType("object.prototypeproperties", {
   prototype: "object.descriptor",
   ownProperties: "nullable:json",
@@ -117,10 +111,6 @@ const objectSpec = generateActorSpec({
         pretty: Arg(0, "boolean"),
       },
       response: RetVal("object.decompile"),
-    },
-    definitionSite: {
-      request: {},
-      response: RetVal("object.definitionSite"),
     },
     dependentPromises: {
       request: {},

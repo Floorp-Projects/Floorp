@@ -511,11 +511,6 @@ function createObjectGrip(targetActor, depth, object, pool) {
       decrementGripDepth: () => gripDepth--,
       createValueGrip: v => createValueGripForTarget(targetActor, v, gripDepth),
       createEnvironmentActor: env => createEnvironmentActor(env, targetActor),
-      getSourcesManager: () =>
-        DevToolsUtils.reportException(
-          "WebConsoleActor",
-          Error("getSourcesManager not yet implemented")
-        ),
     },
     targetActor.conn
   );

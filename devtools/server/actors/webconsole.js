@@ -512,11 +512,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
         incrementGripDepth: () => this._gripDepth++,
         decrementGripDepth: () => this._gripDepth--,
         createValueGrip: v => this.createValueGrip(v),
-        getSourcesManager: () =>
-          DevToolsUtils.reportException(
-            "WebConsoleActor",
-            Error("getSourcesManager not yet implemented")
-          ),
         createEnvironmentActor: env => this.createEnvironmentActor(env),
       },
       this.conn
