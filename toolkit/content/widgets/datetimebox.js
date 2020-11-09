@@ -634,14 +634,19 @@ this.DateTimeInputBaseImplWidget = class {
     this.log("onKeyPress key: " + aEvent.key);
 
     switch (aEvent.key) {
-      // Close picker on Enter, Escape or Space key.
+      // Toggle the picker on space/enter, close on Escape.
       case "Enter":
       case "Escape":
       case " ": {
         if (this.mIsPickerOpen) {
           this.mInputElement.closeDateTimePicker();
-          aEvent.preventDefault();
+        } else if (aEvent.key != "Escape") {
+          this.mInputElement.openDateTimePicker(this.getCurrentValue());
+        } else {
+          // Don't preventDefault();
+          break;
         }
+        aEvent.preventDefault();
         break;
       }
       case "Backspace": {
