@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -493,9 +494,13 @@ class VirtualenvManager(VirtualenvHelper):
         # havoc. While this may work, invoking a new process is safer.
 
         try:
+            env = os.environ.copy()
+            env.setdefault("ARCHFLAGS", get_archflags())
+            env = ensure_subprocess_env(env)
             output = subprocess.check_output(
                 program,
                 cwd=directory,
+                env=env,
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
             )
@@ -649,6 +654,10 @@ class VirtualenvManager(VirtualenvHelper):
         return self._run_pip(args)
 
     def _run_pip(self, args):
+        env = os.environ.copy()
+        env.setdefault("ARCHFLAGS", get_archflags())
+        env = ensure_subprocess_env(env)
+
         # It's tempting to call pip natively via pip.main(). However,
         # the current Python interpreter may not be the virtualenv python.
         # This will confuse pip and cause the package to attempt to install
@@ -661,8 +670,18 @@ class VirtualenvManager(VirtualenvHelper):
             [pip] + args,
             stderr=subprocess.STDOUT,
             cwd=self.topsrcdir,
+            env=env,
             universal_newlines=PY3,
         )
+
+
+def get_archflags():
+    # distutils will use the architecture of the running Python instance when building packages.
+    # However, it's possible for the Xcode Python to be a universal binary (x86_64 and
+    # arm64) without the associated macOS SDK supporting arm64, thereby causing a build
+    # failure. To avoid this, we explicitly influence the build to only target a single
+    # architecture - our current architecture.
+    return "-arch {}".format(platform.machine())
 
 
 def verify_python_version(log_handle):
