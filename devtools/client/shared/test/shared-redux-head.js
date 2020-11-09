@@ -5,7 +5,6 @@
 
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 /* import-globals-from ./shared-head.js */
-// Currently this file expects "defer" to be imported into scope.
 
 // Common utility functions for working with Redux stores.  The file is meant
 // to be safe to load in both mochitest and xpcshell environments.
@@ -21,22 +20,21 @@
  *         Resolved once the store reaches the expected state.
  */
 function waitUntilState(store, predicate) {
-  const deferred = defer();
-  const unsubscribe = store.subscribe(check);
+  return new Promise(resolve => {
+    const unsubscribe = store.subscribe(check);
 
-  info(`Waiting for state predicate "${predicate}"`);
-  function check() {
-    if (predicate(store.getState())) {
-      info(`Found state predicate "${predicate}"`);
-      unsubscribe();
-      deferred.resolve();
+    info(`Waiting for state predicate "${predicate}"`);
+    function check() {
+      if (predicate(store.getState())) {
+        info(`Found state predicate "${predicate}"`);
+        unsubscribe();
+        resolve();
+      }
     }
-  }
 
-  // Fire the check immediately in case the action has already occurred
-  check();
-
-  return deferred.promise;
+    // Fire the check immediately in case the action has already occurred
+    check();
+  });
 }
 
 /**
@@ -51,23 +49,22 @@ function waitUntilState(store, predicate) {
  *         Resolved once the expected action is emitted by the store.
  */
 function waitUntilAction(store, actionType, count = 1) {
-  const deferred = defer();
-  const unsubscribe = store.subscribe(check);
-  const history = store.history;
-  let index = history.length;
+  return new Promise(resolve => {
+    const unsubscribe = store.subscribe(check);
+    const history = store.history;
+    let index = history.length;
 
-  info(`Waiting for action "${actionType}"`);
-  function check() {
-    const action = history[index++];
-    if (action && action.type === actionType) {
-      info(`Found action "${actionType}"`);
-      count--;
-      if (count === 0) {
-        unsubscribe();
-        deferred.resolve(store.getState());
+    info(`Waiting for action "${actionType}"`);
+    function check() {
+      const action = history[index++];
+      if (action && action.type === actionType) {
+        info(`Found action "${actionType}"`);
+        count--;
+        if (count === 0) {
+          unsubscribe();
+          resolve(store.getState());
+        }
       }
     }
-  }
-
-  return deferred.promise;
+  });
 }
