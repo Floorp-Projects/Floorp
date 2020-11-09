@@ -1023,19 +1023,19 @@ void URLParams::DecodeString(const nsACString& aInput, nsAString& aOutput) {
 
 /* static */
 bool URLParams::Parse(const nsACString& aInput, ForEachIterator& aIterator) {
-  nsACString::const_iterator start, end;
-  aInput.BeginReading(start);
-  aInput.EndReading(end);
-  nsACString::const_iterator iter(start);
+  const auto* start = aInput.BeginReading();
+  const auto* const end = aInput.EndReading();
+  const auto* iter = start;
 
   while (start != end) {
-    nsAutoCString string;
+    nsDependentCSubstring string;
 
-    if (FindCharInReadable('&', iter, end)) {
-      string.Assign(Substring(start, iter));
+    iter = std::find(iter, end, '&');
+    if (iter != end) {
+      string.Rebind(start, iter);
       start = ++iter;
     } else {
-      string.Assign(Substring(start, end));
+      string.Rebind(start, end);
       start = end;
     }
 
@@ -1043,21 +1043,21 @@ bool URLParams::Parse(const nsACString& aInput, ForEachIterator& aIterator) {
       continue;
     }
 
-    nsACString::const_iterator eqStart, eqEnd;
-    string.BeginReading(eqStart);
-    string.EndReading(eqEnd);
-    nsACString::const_iterator eqIter(eqStart);
+    const auto* const eqStart = string.BeginReading();
+    const auto* const eqEnd = string.EndReading();
+    const auto* eqIter = eqStart;
 
-    nsAutoCString name;
-    nsAutoCString value;
+    nsDependentCSubstring name;
+    nsDependentCSubstring value;
 
-    if (FindCharInReadable('=', eqIter, eqEnd)) {
-      name.Assign(Substring(eqStart, eqIter));
+    eqIter = std::find(eqIter, eqEnd, '=');
+    if (eqIter != eqEnd) {
+      name.Rebind(eqStart, eqIter);
 
       ++eqIter;
-      value.Assign(Substring(eqIter, eqEnd));
+      value.Rebind(eqIter, eqEnd);
     } else {
-      name.Assign(string);
+      name.Rebind(string, 0);
     }
 
     nsAutoString decodedName;
