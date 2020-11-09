@@ -2,31 +2,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use failure::Fail;
-
-#[derive(Debug, Fail)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[fail(display = "Illegal characters in request header '{}'", _0)]
+    #[error("[no-sentry] Illegal characters in request header '{0}'")]
     RequestHeaderError(crate::HeaderName),
 
-    #[fail(display = "Backend error: {}", _0)]
+    #[error("[no-sentry] Backend error: {0}")]
     BackendError(String),
 
-    #[fail(display = "Network error: {}", _0)]
+    #[error("[no-sentry] Network error: {0}")]
     NetworkError(String),
 
-    #[fail(display = "The rust-components network backend must be initialized before use!")]
+    #[error("The rust-components network backend must be initialized before use!")]
     BackendNotInitialized,
 
-    #[fail(display = "Backend already initialized.")]
+    #[error("Backend already initialized.")]
     SetBackendError,
 
     /// Note: we return this if the server returns a bad URL with
     /// its response. This *probably* should never happen, but who knows.
-    #[fail(display = "URL Parse Error: {}", _0)]
-    UrlError(#[fail(cause)] url::ParseError),
+    #[error("[no-sentry] URL Parse Error: {0}")]
+    UrlError(#[source] url::ParseError),
 
-    #[fail(display = "Validation error: URL does not use TLS protocol.")]
+    #[error("[no-sentry] Validation error: URL does not use TLS protocol.")]
     NonTlsUrl,
 }
 
@@ -41,8 +39,8 @@ impl From<url::ParseError> for Error {
 ///
 /// Note that it's not a variant on `Error` to distinguish between errors
 /// caused by the network, and errors returned from the server.
-#[derive(failure::Fail, Debug, Clone, PartialEq)]
-#[fail(display = "Error: {} {} returned {}", method, url, status)]
+#[derive(thiserror::Error, Debug, Clone, PartialEq)]
+#[error("Error: {method} {url} returned {status}")]
 pub struct UnexpectedStatus {
     pub status: u16,
     pub method: crate::Method,

@@ -87,7 +87,7 @@ pub fn sign(key: &SigningKey, data: &[u8]) -> Result<Signature> {
     let value = nss::pk11::context::hmac_sign(key.digest_alg, &key.key_value, data)?;
     Ok(Signature(digest::Digest {
         value,
-        algorithm: key.digest_alg.clone(),
+        algorithm: *key.digest_alg,
     }))
 }
 

@@ -8,5 +8,12 @@ license = "MPL-2.0"
 [lib]
 crate-type = ["lib"]
 
+[dependencies]
+libsqlite3-sys = { version = "0.20.1", features = ["bundled"] }
+
 [build-dependencies]
 nss_build_common = {path = "../nss_build_common"}
+
+[features]
+default = []
+gecko = []

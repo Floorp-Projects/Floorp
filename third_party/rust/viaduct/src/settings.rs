@@ -14,12 +14,12 @@ use std::time::Duration;
 /// in the concept-fetch backend it would only store the settings, and populate
 /// things on the fly.
 #[derive(Debug, PartialEq)]
+#[non_exhaustive]
 pub struct Settings {
     pub read_timeout: Option<Duration>,
     pub connect_timeout: Option<Duration>,
     pub follow_redirects: bool,
     pub use_caches: bool,
-    _priv: (),
 }
 
 #[cfg(target_os = "ios")]
@@ -34,5 +34,4 @@ pub static GLOBAL_SETTINGS: &Settings = &Settings {
     connect_timeout: Some(TIMEOUT_DURATION),
     follow_redirects: true,
     use_caches: false,
-    _priv: (),
 };

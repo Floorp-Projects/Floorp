@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "ece"
-version = "1.1.2"
+version = "1.2.1"
 authors = ["Edouard Oger <eoger@fastmail.com>", "JR Conlin <jrconlin@gmail.com>"]
 description = "Encrypted Content-Encoding for HTTP Rust implementation."
 keywords = ["http-ece", "web-push"]
@@ -25,22 +25,16 @@ version = "0.12"
 [dependencies.byteorder]
 version = "1.3"
 
-[dependencies.failure]
-version = "0.1"
-
-[dependencies.failure_derive]
-version = "0.1"
-
 [dependencies.hkdf]
-version = "0.7"
+version = "0.9"
 optional = true
 
 [dependencies.lazy_static]
-version = "1.2"
+version = "1.4"
 optional = true
 
 [dependencies.once_cell]
-version = "1.0"
+version = "1.4"
 
 [dependencies.openssl]
 version = "0.10"
@@ -52,10 +46,13 @@ features = ["derive"]
 optional = true
 
 [dependencies.sha2]
-version = "0.8"
+version = "0.9"
 optional = true
+
+[dependencies.thiserror]
+version = "1.0"
 [dev-dependencies.hex]
-version = "0.3"
+version = "0.4"
 
 [features]
 backend-openssl = ["openssl", "lazy_static", "hkdf", "sha2"]

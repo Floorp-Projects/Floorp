@@ -6,7 +6,7 @@ use crate::{
     client::ClientData, telemetry, CollectionRequest, Guid, IncomingChangeset, OutgoingChangeset,
     ServerTimestamp,
 };
-use failure::Error;
+use anyhow::Result;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CollSyncIds {
@@ -44,7 +44,7 @@ pub trait Store {
     /// TODO(issue #2590): This is pretty cludgey and will be hard to extend for
     /// any case other than the tabs case. We should find another way to support
     /// tabs...
-    fn prepare_for_sync(&self, _get_client_data: &dyn Fn() -> ClientData) -> Result<(), Error> {
+    fn prepare_for_sync(&self, _get_client_data: &dyn Fn() -> ClientData) -> Result<()> {
         Ok(())
     }
 
@@ -58,13 +58,13 @@ pub trait Store {
         &self,
         inbound: Vec<IncomingChangeset>,
         telem: &mut telemetry::Engine,
-    ) -> Result<OutgoingChangeset, Error>;
+    ) -> Result<OutgoingChangeset>;
 
     fn sync_finished(
         &self,
         new_timestamp: ServerTimestamp,
         records_synced: Vec<Guid>,
-    ) -> Result<(), Error>;
+    ) -> Result<()>;
 
     /// The store is responsible for building the collection request. Engines
     /// typically will store a lastModified timestamp and use that to build a
@@ -83,15 +83,15 @@ pub trait Store {
     fn get_collection_requests(
         &self,
         server_timestamp: ServerTimestamp,
-    ) -> Result<Vec<CollectionRequest>, Error>;
+    ) -> Result<Vec<CollectionRequest>>;
 
     /// Get persisted sync IDs. If they don't match the global state we'll be
     /// `reset()` with the new IDs.
-    fn get_sync_assoc(&self) -> Result<StoreSyncAssociation, Error>;
+    fn get_sync_assoc(&self) -> Result<StoreSyncAssociation>;
 
     /// Reset the store without wiping local data, ready for a "first sync".
     /// `assoc` defines how this store is to be associated with sync.
-    fn reset(&self, assoc: &StoreSyncAssociation) -> Result<(), Error>;
+    fn reset(&self, assoc: &StoreSyncAssociation) -> Result<()>;
 
-    fn wipe(&self) -> Result<(), Error>;
+    fn wipe(&self) -> Result<()>;
 }

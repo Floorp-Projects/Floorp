@@ -354,6 +354,45 @@ pub fn get_bytes_in_use(conn: &Connection, ext_id: &str, keys: JsonValue) -> Res
     Ok(size)
 }
 
+/// Information about the usage of a single extension.
+#[derive(Debug, Clone, PartialEq)]
+pub struct UsageInfo {
+    /// The extension id.
+    pub ext_id: String,
+    /// The number of keys the extension uses.
+    pub num_keys: usize,
+    /// The number of bytes used by the extension. This result is somewhat rough
+    /// -- it doesn't bother counting the size of the extension ID, or data in
+    /// the mirror, and favors returning the exact number of bytes used by the
+    /// column (that is, the size of the JSON object) rather than replicating
+    /// the `get_bytes_in_use` return value for all keys.
+    pub num_bytes: usize,
+}
+
+/// Exposes information about per-collection usage for the purpose of telemetry.
+/// (Doesn't map to an actual `chrome.storage.sync` API).
+pub fn usage(db: &Connection) -> Result<Vec<UsageInfo>> {
+    type JsonObject = Map<String, JsonValue>;
+    let sql = "
+        SELECT ext_id, data
+        FROM storage_sync_data
+        WHERE data IS NOT NULL
+        -- for tests and determinism
+        ORDER BY ext_id
+    ";
+    db.query_rows_into(sql, &[], |row| {
+        let ext_id: String = row.get("ext_id")?;
+        let data: String = row.get("data")?;
+        let num_bytes = data.len();
+        let num_keys = serde_json::from_str::<JsonObject>(&data)?.len();
+        Ok(UsageInfo {
+            ext_id,
+            num_bytes,
+            num_keys,
+        })
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -671,5 +710,36 @@ mod tests {
         );
         assert_eq!(get_bytes_in_use(&tx, &ext_id, json!(null))?, 22);
         Ok(())
+    }
+
+    #[test]
+    fn test_usage() {
+        let mut db = new_mem_db();
+        let tx = db.transaction().unwrap();
+        // '{"a":"a","b":"bb","c":"ccc","n":999999}': 39 bytes
+        set(&tx, "xyz", json!({ "a": "a" })).unwrap();
+        set(&tx, "xyz", json!({ "b": "bb" })).unwrap();
+        set(&tx, "xyz", json!({ "c": "ccc" })).unwrap();
+        set(&tx, "xyz", json!({ "n": 999_999 })).unwrap();
+
+        // '{"a":"a"}': 9 bytes
+        set(&tx, "abc", json!({ "a": "a" })).unwrap();
+
+        tx.commit().unwrap();
+
+        let usage = usage(&db).unwrap();
+        let expect = [
+            UsageInfo {
+                ext_id: "abc".to_string(),
+                num_keys: 1,
+                num_bytes: 9,
+            },
+            UsageInfo {
+                ext_id: "xyz".to_string(),
+                num_keys: 4,
+                num_bytes: 39,
+            },
+        ];
+        assert_eq!(&usage, &expect);
     }
 }

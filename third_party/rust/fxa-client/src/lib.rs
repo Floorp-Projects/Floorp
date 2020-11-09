@@ -8,35 +8,38 @@
 use crate::{
     commands::send_tab::SendTabPayload,
     device::Device,
-    oauth::{OAuthFlow, OAUTH_WEBCHANNEL_REDIRECT},
+    oauth::{AuthCircuitBreaker, OAuthFlow, OAUTH_WEBCHANNEL_REDIRECT},
     scoped_keys::ScopedKey,
     state_persistence::State,
 };
 pub use crate::{
     config::Config,
     error::*,
-    oauth::IntrospectInfo,
-    oauth::{AccessTokenInfo, RefreshToken},
+    oauth::{AccessTokenInfo, IntrospectInfo, RefreshToken},
     profile::Profile,
+    telemetry::FxaTelemetry,
 };
 use serde_derive::*;
 use std::{
+    cell::RefCell,
     collections::{HashMap, HashSet},
     sync::Arc,
 };
 use url::Url;
 
+#[cfg(feature = "integration_test")]
+pub mod auth;
 mod commands;
 mod config;
 pub mod device;
 pub mod error;
 pub mod ffi;
+mod http_client;
 pub mod migrator;
 // Include the `msg_types` module, which is generated from msg_types.proto.
 pub mod msg_types {
     include!("mozilla.appservices.fxaclient.protobuf.rs");
 }
-mod http_client;
 mod oauth;
 mod profile;
 mod push;
@@ -44,6 +47,7 @@ mod scoped_keys;
 pub mod scopes;
 pub mod send_tab;
 mod state_persistence;
+mod telemetry;
 mod util;
 
 type FxAClient = dyn http_client::FxAClient + Sync + Send;
@@ -63,6 +67,10 @@ pub struct FirefoxAccount {
     flow_store: HashMap<String, OAuthFlow>,
     attached_clients_cache: Option<CachedResponse<Vec<http_client::GetAttachedClientResponse>>>,
     devices_cache: Option<CachedResponse<Vec<http_client::GetDeviceResponse>>>,
+    auth_circuit_breaker: AuthCircuitBreaker,
+    // 'telemetry' is only currently used by `&mut self` functions, but that's
+    // not something we want to insist on going forward, so RefCell<> it.
+    telemetry: RefCell<FxaTelemetry>,
 }
 
 impl FirefoxAccount {
@@ -73,6 +81,8 @@ impl FirefoxAccount {
             flow_store: HashMap::new(),
             attached_clients_cache: None,
             devices_cache: None,
+            auth_circuit_breaker: Default::default(),
+            telemetry: RefCell::new(FxaTelemetry::new()),
         }
     }
 
@@ -92,6 +102,7 @@ impl FirefoxAccount {
             last_seen_profile: None,
             access_token_cache: HashMap::new(),
             in_flight_migration: None,
+            ecosystem_user_id: None,
         })
     }
 
@@ -148,6 +159,7 @@ impl FirefoxAccount {
         self.state = self.state.start_over();
         self.flow_store.clear();
         self.clear_devices_and_attached_clients_cache();
+        self.telemetry.replace(FxaTelemetry::new());
     }
 
     /// Get the Sync Token Server endpoint URL.
@@ -225,7 +237,7 @@ impl FirefoxAccount {
         }
     }
 
-    /// Disconnect from the account and optionaly destroy our device record. This will
+    /// Disconnect from the account and optionally destroy our device record. This will
     /// leave the account object in a state where it can eventually reconnect to the same user.
     /// This is a "best effort" infallible method: e.g. if the network is unreachable,
     /// the device could still be in the FxA devices manager.

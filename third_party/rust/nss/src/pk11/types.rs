@@ -33,6 +33,17 @@ scoped_ptr!(
 scoped_ptr!(Context, nss_sys::PK11Context, pk11_destroy_context_true);
 scoped_ptr!(Slot, nss_sys::PK11SlotInfo, nss_sys::PK11_FreeSlot);
 
+scoped_ptr!(
+    AlgorithmID,
+    nss_sys::SECAlgorithmID,
+    secoid_destroy_algorithm_id_true
+);
+
+#[inline]
+unsafe fn secoid_destroy_algorithm_id_true(alg_id: *mut nss_sys::SECAlgorithmID) {
+    nss_sys::SECOID_DestroyAlgorithmID(alg_id, nss_sys::PR_TRUE);
+}
+
 #[inline]
 unsafe fn pk11_destroy_context_true(context: *mut nss_sys::PK11Context) {
     nss_sys::PK11_DestroyContext(context, nss_sys::PR_TRUE);

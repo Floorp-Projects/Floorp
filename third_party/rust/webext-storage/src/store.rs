@@ -59,6 +59,11 @@ impl Store {
         Ok(result)
     }
 
+    /// Returns information about per-extension usage
+    pub fn usage(&self) -> Result<Vec<crate::UsageInfo>> {
+        api::usage(&self.db)
+    }
+
     /// Returns the values for one or more keys `keys` can be:
     ///
     /// - `null`, in which case all key-value pairs for the extension are

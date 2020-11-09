@@ -19,13 +19,14 @@ url = "2.1"
 log = "0.4"
 lazy_static = "1.4"
 base16 = "0.2"
-failure = "0.1"
 rc_crypto = { path = "../support/rc_crypto", features = ["hawk"] }
 viaduct = { path = "../viaduct" }
 interrupt-support = { path = "../support/interrupt" }
 error-support = { path = "../support/error" }
 sync-guid = { path = "../support/guid", features = ["random"] }
 sync15-traits = {path = "../support/sync15-traits"}
+thiserror = "1.0"
+anyhow = "1.0"
 
 [dev-dependencies]
-env_logger = "0.7"
+env_logger = { version = "0.7", default-features = false }

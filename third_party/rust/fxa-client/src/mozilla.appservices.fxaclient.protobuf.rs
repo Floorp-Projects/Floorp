@@ -179,3 +179,30 @@ pub struct AccountEvents {
     #[prost(message, repeated, tag="1")]
     pub events: ::std::vec::Vec<AccountEvent>,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct AuthorizationPkceParams {
+    #[prost(string, required, tag="1")]
+    pub code_challenge: std::string::String,
+    #[prost(string, required, tag="2")]
+    pub code_challenge_method: std::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct AuthorizationParams {
+    #[prost(string, required, tag="1")]
+    pub client_id: std::string::String,
+    #[prost(string, required, tag="2")]
+    pub scope: std::string::String,
+    #[prost(string, required, tag="3")]
+    pub state: std::string::String,
+    #[prost(string, required, tag="4")]
+    pub access_type: std::string::String,
+    #[prost(message, optional, tag="5")]
+    pub pkce_params: ::std::option::Option<AuthorizationPkceParams>,
+    #[prost(string, optional, tag="6")]
+    pub keys_jwk: ::std::option::Option<std::string::String>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MetricsParams {
+    #[prost(map="string, string", tag="1")]
+    pub parameters: ::std::collections::HashMap<std::string::String, std::string::String>,
+}

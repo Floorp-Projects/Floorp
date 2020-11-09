@@ -17,8 +17,8 @@ pub struct HeaderName(pub(super) Cow<'static, str>);
 /// instead. This is because it would likely come through as
 /// a network error if we emitted it for local headers, when
 /// it's actually a bug that we'd need to fix.
-#[derive(failure::Fail, Debug, Clone, PartialEq)]
-#[fail(display = "Invalid header name: {:?}", _0)]
+#[derive(thiserror::Error, Debug, Clone, PartialEq)]
+#[error("Invalid header name: {0:?}")]
 pub struct InvalidHeaderName(Cow<'static, str>);
 
 impl From<&'static str> for HeaderName {
