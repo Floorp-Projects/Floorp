@@ -115,9 +115,9 @@ Now the fun starts
 
 You have the code, you’ve compiled Firefox. Fire it up with
 ``./mach run`` and you’re ready to start hacking. The next steps
-are up to you: join us on IRC in the ``#introduction`` channel,
-and find `a bug to start working
-on. <https://codetribute.mozilla.org/>`_
+are up to you: join us on `Matrix <https://chat.mozilla.org/>`_
+in the `Introduction <https://chat.mozilla.org/#/room/#introduction:mozilla.org>`_
+channel, and find `a bug to start working on. <https://codetribute.mozilla.org/>`_
 
 
 General considerations
