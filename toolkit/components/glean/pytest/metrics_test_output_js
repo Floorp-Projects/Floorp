@@ -16,8 +16,8 @@
 #define GLEAN_INDEX_BITS (32)
 #define GLEAN_ID_BITS (27)
 #define GLEAN_TYPE_ID(id) ((id) >> GLEAN_ID_BITS)
-#define GLEAN_METRIC_ID(id) ((id) & ((1L << GLEAN_ID_BITS) - 1))
-#define GLEAN_OFFSET(entry) (entry & ((1L << GLEAN_INDEX_BITS) - 1))
+#define GLEAN_METRIC_ID(id) ((id) & ((1ULL << GLEAN_ID_BITS) - 1))
+#define GLEAN_OFFSET(entry) (entry & ((1ULL << GLEAN_INDEX_BITS) - 1))
 
 namespace mozilla::glean {
 
@@ -37,81 +37,27 @@ static already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
   uint32_t metricId = GLEAN_METRIC_ID(id);
 
   switch (typeId) {
-    case 1: /* Boolean */
-    {
-      RefPtr<nsISupports> metric = new mozilla::glean::GleanBoolean(metricId);
-      return metric.forget();
-      break;
-    }
-    case 2: /* LabeledBoolean */
-    {
-      RefPtr<nsISupports> metric = new mozilla::glean::GleanLabeledBoolean(metricId);
-      return metric.forget();
-      break;
-    }
     case 3: /* Counter */
     {
-      RefPtr<nsISupports> metric = new mozilla::glean::GleanCounter(metricId);
-      return metric.forget();
-      break;
-    }
-    case 4: /* LabeledCounter */
-    {
-      RefPtr<nsISupports> metric = new mozilla::glean::GleanLabeledCounter(metricId);
+      RefPtr<nsISupports> metric = new GleanCounter(metricId);
       return metric.forget();
       break;
     }
     case 5: /* String */
     {
-      RefPtr<nsISupports> metric = new mozilla::glean::GleanString(metricId);
-      return metric.forget();
-      break;
-    }
-    case 6: /* LabeledString */
-    {
-      RefPtr<nsISupports> metric = new mozilla::glean::GleanLabeledString(metricId);
-      return metric.forget();
-      break;
-    }
-    case 7: /* StringList */
-    {
-      RefPtr<nsISupports> metric = new mozilla::glean::GleanStringList(metricId);
+      RefPtr<nsISupports> metric = new GleanString(metricId);
       return metric.forget();
       break;
     }
     case 8: /* Timespan */
     {
-      RefPtr<nsISupports> metric = new mozilla::glean::GleanTimespan(metricId);
-      return metric.forget();
-      break;
-    }
-    case 9: /* TimingDistribution */
-    {
-      RefPtr<nsISupports> metric = new mozilla::glean::GleanTimingDistribution(metricId);
-      return metric.forget();
-      break;
-    }
-    case 10: /* MemoryDistribution */
-    {
-      RefPtr<nsISupports> metric = new mozilla::glean::GleanMemoryDistribution(metricId);
+      RefPtr<nsISupports> metric = new GleanTimespan(metricId);
       return metric.forget();
       break;
     }
     case 11: /* Uuid */
     {
-      RefPtr<nsISupports> metric = new mozilla::glean::GleanUuid(metricId);
-      return metric.forget();
-      break;
-    }
-    case 12: /* Datetime */
-    {
-      RefPtr<nsISupports> metric = new mozilla::glean::GleanDatetime(metricId);
-      return metric.forget();
-      break;
-    }
-    case 13: /* Event */
-    {
-      RefPtr<nsISupports> metric = new mozilla::glean::GleanEvent(metricId);
+      RefPtr<nsISupports> metric = new GleanUuid(metricId);
       return metric.forget();
       break;
     }
@@ -251,7 +197,7 @@ static const char* GetMetricIdentifier(metric_entry_t entry) {
  * Or return `Nothing()` if the entry was not found.
  */
 static Maybe<uint32_t> category_result_check(const nsACString& aKey, category_entry_t entry) {
-  if (entry > sizeof(gCategoryStringTable)) {
+  if (MOZ_UNLIKELY(entry > sizeof(gCategoryStringTable))) {
     return Nothing();
   }
   if (aKey.EqualsASCII(gCategoryStringTable + entry)) {
