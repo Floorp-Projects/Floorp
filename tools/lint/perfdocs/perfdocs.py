@@ -49,9 +49,11 @@ def run_perfdocs(config, logger=None, paths=None, generate=True):
     if not top_dir:
         floc = os.path.abspath(__file__)
         top_dir = floc.split("tools")[0]
+    top_dir = top_dir.replace("\\", "\\\\")
 
     PerfDocLogger.LOGGER = logger
     PerfDocLogger.TOP_DIR = top_dir
+
     # Convert all the paths to relative ones
     rel_paths = [re.sub(top_dir, "", path) for path in paths]
     PerfDocLogger.PATHS = rel_paths
