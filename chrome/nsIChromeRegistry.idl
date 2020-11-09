@@ -44,7 +44,6 @@ interface nsIChromeRegistry : nsISupports
 interface nsIXULChromeRegistry : nsIChromeRegistry
 {
   // Get whether the default writing direction of the locale is RTL
-  // (or may be overridden by intl.uidirection pref)
   boolean isLocaleRTL(in ACString package);
 
   /**
