@@ -53,7 +53,7 @@ public class VideoCaptureAndroid implements CameraVideoCapturer.CameraEventsHand
     // Remove the camera facing information from the name.
     String[] parts = deviceName.split("Facing (front|back):");
     if (parts.length == 2) {
-      this.deviceName = parts[1];
+      this.deviceName = parts[1].replace(" (infrared)", "");
     } else {
       Log.e(TAG, "VideoCaptureAndroid: Expected facing mode as part of name: " + deviceName);
       this.deviceName = deviceName;
