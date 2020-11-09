@@ -268,6 +268,14 @@ var gEditItemOverlay = {
       onPanelReady,
     } = this._setPaneInfo(aInfo);
 
+    // If we're creating a new item on the toolbar, show it:
+    if (
+      aInfo.isNewBookmark &&
+      parentGuid == PlacesUtils.bookmarks.toolbarGuid
+    ) {
+      this._autoshowBookmarksToolbar();
+    }
+
     let showOrCollapse = (
       rowId,
       isAppropriateForInput,
