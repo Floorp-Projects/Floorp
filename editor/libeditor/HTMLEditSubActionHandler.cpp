@@ -415,8 +415,14 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
     if (GetTopLevelEditSubAction() == EditSubAction::eDeleteSelectedContent &&
         TopLevelEditSubActionDataRef().mDidDeleteNonCollapsedRange &&
         !TopLevelEditSubActionDataRef().mDidDeleteEmptyParentBlocks) {
+      EditorDOMPoint newCaretPosition =
+          EditorBase::GetStartPoint(*SelectionRefPtr());
+      if (!newCaretPosition.IsSet()) {
+        NS_WARNING("There was no selection range");
+        return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+      }
       nsresult rv = InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
-          EditorBase::GetStartPoint(*SelectionRefPtr()));
+          newCaretPosition);
       if (NS_FAILED(rv)) {
         NS_WARNING(
             "HTMLEditor::"
