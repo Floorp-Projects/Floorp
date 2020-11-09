@@ -31,6 +31,20 @@ def test_resolve_tests_by_suite(patch_resolver):
     patch_resolver(
         [],
         [
+            {
+                "flavor": "xpcshell",
+                "srcdir_relpath": "xpcshell.js",
+                "manifest_relpath": "xpcshell.ini",
+            },
+        ],
+    )
+    assert resolve_tests_by_suite(["xpcshell.ini"]) == {
+        "xpcshell": ["xpcshell.ini"],
+    }
+
+    patch_resolver(
+        [],
+        [
             {"flavor": "xpcshell", "srcdir_relpath": "xpcshell.js"},
             {"flavor": "mochitest", "srcdir_relpath": "mochitest.js"},
         ],

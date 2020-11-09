@@ -163,7 +163,7 @@ def resolve_tests_by_suite(paths):
             continue
         found_path = None
         for path in remaining_paths_by_suite[key]:
-            if test_path.startswith(path):
+            if test_path.startswith(path) or test.get("manifest_relpath") == path:
                 found_path = path
                 break
         if found_path:
