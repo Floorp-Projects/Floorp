@@ -704,6 +704,31 @@ add_task(async function test_datepicker_abs_min() {
   await helper.tearDown();
 });
 
+// This test checks if the change event is considered as user input event.
+add_task(async function test_datepicker_handling_user_input() {
+  await helper.openPicker(`data:text/html, <input type="date">`);
+
+  let changeEventPromise = SpecialPowers.spawn(
+    helper.tab.linkedBrowser,
+    [],
+    async () => {
+      let input = content.document.querySelector("input");
+      await ContentTaskUtils.waitForEvent(input, "change", false, e => {
+        ok(
+          content.window.windowUtils.isHandlingUserInput,
+          "isHandlingUserInput should be true"
+        );
+        return true;
+      });
+    }
+  );
+  // Click the first item (top-left corner) of the calendar
+  helper.click(helper.getElement(DAYS_VIEW).children[0]);
+  await changeEventPromise;
+
+  await helper.tearDown();
+});
+
 add_task(async function test_datepicker_abs_max() {
   const inputValue = "275760-09-13";
   await helper.openPicker(
