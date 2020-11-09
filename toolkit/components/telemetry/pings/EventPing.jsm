@@ -89,9 +89,6 @@ var TelemetryEventPing = {
   },
 
   startup() {
-    if (!Services.prefs.getBoolPref(Utils.Preferences.EventPingEnabled, true)) {
-      return;
-    }
     this._log.trace("Starting up.");
 
     // Calculate process creation once.
@@ -102,12 +99,6 @@ var TelemetryEventPing = {
 
     Services.obs.addObserver(this, EVENT_LIMIT_REACHED_TOPIC);
 
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "maxEventsPerPing",
-      Utils.Preferences.EventPingEventLimit,
-      DEFAULT_EVENT_LIMIT
-    );
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "maxFrequency",
@@ -190,7 +181,7 @@ var TelemetryEventPing = {
     let snapshot = Telemetry.snapshotEvents(
       this.dataset,
       true /* clear */,
-      this.maxEventsPerPing
+      DEFAULT_EVENT_LIMIT
     );
 
     if (!this._testing) {
