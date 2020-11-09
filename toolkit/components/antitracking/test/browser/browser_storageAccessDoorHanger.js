@@ -46,6 +46,7 @@ async function testDoorHanger(
         "privacy.restrict3rdpartystorage.userInteractionRequiredForHosts",
         "tracking.example.com,tracking.example.org",
       ],
+      ["browser.contentblocking.state-partitioning.mvp.ui.enabled", true],
     ],
   });
 
@@ -217,6 +218,30 @@ async function testDoorHanger(
     await Promise.all([ct, shownPromise]);
   } else {
     await Promise.all([ct, permChanged]);
+  }
+  if (choice != BLOCK) {
+    let identityPopupPromise = BrowserTestUtils.waitForEvent(
+      window,
+      "popupshown",
+      true,
+      event => event.target == gIdentityHandler._identityPopup
+    );
+    gIdentityHandler._identityBox.click();
+    await identityPopupPromise;
+    let permissionItem = document.getElementById(
+      `identity-popup-permission-label-3rdPartyStorage^https://tracking.example.org`
+    );
+    ok(permissionItem, "Permission item exists");
+    ok(
+      BrowserTestUtils.is_visible(permissionItem),
+      "Permission item visible in the identity panel"
+    );
+    identityPopupPromise = BrowserTestUtils.waitForEvent(
+      gIdentityHandler._identityPopup,
+      "popuphidden"
+    );
+    gIdentityHandler._identityPopup.hidePopup();
+    await identityPopupPromise;
   }
 
   BrowserTestUtils.removeTab(tab);
