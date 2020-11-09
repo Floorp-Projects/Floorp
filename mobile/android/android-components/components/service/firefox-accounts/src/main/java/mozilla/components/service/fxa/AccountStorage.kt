@@ -123,7 +123,7 @@ internal interface AccountStorage {
 @SuppressWarnings("TooGenericExceptionCaught")
 internal class SharedPrefAccountStorage(
     val context: Context,
-    crashReporter: CrashReporting? = null,
+    private val crashReporter: CrashReporting? = null,
     migrateFromSecureStorage: Boolean = true
 ) : AccountStorage {
     internal val logger = Logger("mozac/SharedPrefAccountStorage")
@@ -160,7 +160,7 @@ internal class SharedPrefAccountStorage(
                 ?: return null
 
         // May throw a generic FxaException if it fails to process saved JSON.
-        return FirefoxAccount.fromJSONString(savedJSON)
+        return FirefoxAccount.fromJSONString(savedJSON, crashReporter)
     }
 
     override fun write(accountState: String) {
@@ -240,7 +240,7 @@ internal class SecureAbove22AccountStorage(
                 // Clear prefs to make sure we only submit this exception once.
                 prefs.edit().clear().apply()
             }
-        }?.let { FirefoxAccount.fromJSONString(it) }
+        }?.let { FirefoxAccount.fromJSONString(it, crashReporter) }
     }
 
     override fun write(accountState: String) {

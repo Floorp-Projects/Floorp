@@ -261,6 +261,8 @@ class FirefoxAccount internal constructor(
          * Restores the account's authentication state from a JSON string produced by
          * [FirefoxAccount.toJSONString].
          *
+         * @param crashReporter object used for logging caught exceptions
+         *
          * @param persistCallback This callback will be called every time the [FirefoxAccount]
          * internal state has mutated.
          * The FirefoxAccount instance can be later restored using the
@@ -271,8 +273,12 @@ class FirefoxAccount internal constructor(
          *
          * @return [FirefoxAccount] representing the authentication state
          */
-        fun fromJSONString(json: String, persistCallback: PersistCallback? = null): FirefoxAccount {
-            return FirefoxAccount(InternalFxAcct.fromJSONString(json, persistCallback))
+        fun fromJSONString(
+            json: String,
+            crashReporter: CrashReporting?,
+            persistCallback: PersistCallback? = null
+        ): FirefoxAccount {
+            return FirefoxAccount(InternalFxAcct.fromJSONString(json, persistCallback), crashReporter)
         }
     }
 }

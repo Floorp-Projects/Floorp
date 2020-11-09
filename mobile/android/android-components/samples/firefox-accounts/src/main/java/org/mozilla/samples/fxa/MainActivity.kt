@@ -162,7 +162,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         val savedJSON = getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE).getString(FXA_STATE_KEY, "")
         return savedJSON?.let {
             try {
-                FirefoxAccount.fromJSONString(it)
+                FirefoxAccount.fromJSONString(it, null)
             } catch (e: FxaException) {
                 null
             }
