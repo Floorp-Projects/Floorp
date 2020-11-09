@@ -58,20 +58,31 @@ bool RenderCompositorD3D11SWGL::MakeCurrent() {
 }
 
 bool RenderCompositorD3D11SWGL::BeginFrame() {
+  MOZ_ASSERT(!mInFrame);
   MakeCurrent();
   IntRect rect = IntRect(IntPoint(0, 0), GetBufferSize().ToUnknownSize());
-  mCompositor->BeginFrameForWindow(nsIntRegion(rect), Nothing(), rect,
-                                   nsIntRegion());
+  if (!mCompositor->BeginFrameForWindow(nsIntRegion(rect), Nothing(), rect,
+                                        nsIntRegion())) {
+    return false;
+  }
+  mInFrame = true;
   return true;
 }
 
 void RenderCompositorD3D11SWGL::CancelFrame() {
-  mFrameSurfaces.Clear();
+  MOZ_ASSERT(mInFrame);
   mCompositor->CancelFrame();
+  mInFrame = false;
 }
 
 void RenderCompositorD3D11SWGL::CompositorEndFrame() {
-  for (auto& frameSurface : mFrameSurfaces) {
+  nsTArray<FrameSurface> frameSurfaces = std::move(mFrameSurfaces);
+
+  if (!mInFrame) {
+    return;
+  }
+
+  for (auto& frameSurface : frameSurfaces) {
     auto surfaceCursor = mSurfaces.find(frameSurface.mId);
     MOZ_RELEASE_ASSERT(surfaceCursor != mSurfaces.end());
     Surface& surface = surfaceCursor->second;
@@ -161,11 +172,12 @@ void RenderCompositorD3D11SWGL::CompositorEndFrame() {
       }
     }
   }
-  mFrameSurfaces.Clear();
 }
 
 RenderedFrameId RenderCompositorD3D11SWGL::EndFrame(
     const nsTArray<DeviceIntRect>& aDirtyRects) {
+  MOZ_ASSERT(mInFrame);
+  mInFrame = false;
   mCompositor->EndFrame();
   return GetNextRenderFrameId();
 }
