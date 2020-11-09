@@ -3,7 +3,7 @@
 //! As of now this is mainly inteded for use to build a higher-level wrapper.
 //!
 //! There is no DeflateState as the needed state is contained in the compressor struct itself.
-use std::convert::{AsMut, AsRef};
+use core::convert::{AsMut, AsRef};
 
 use crate::deflate::core::{compress, CompressorOxide, TDEFLFlush, TDEFLStatus};
 use crate::{MZError, MZFlush, MZStatus, StreamResult};
@@ -100,6 +100,9 @@ mod test {
     use crate::deflate::CompressorOxide;
     use crate::inflate::decompress_to_vec_zlib;
     use crate::{MZFlush, MZStatus};
+    use std::prelude::v1::*;
+    use std::vec;
+
     #[test]
     fn test_state() {
         let data = b"Hello zlib!";

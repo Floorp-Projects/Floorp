@@ -1,17 +1,16 @@
 use std::{
     cell::UnsafeCell,
-    mem::{self, MaybeUninit},
+    hint,
     panic::{RefUnwindSafe, UnwindSafe},
-    ptr,
     sync::atomic::{AtomicBool, Ordering},
 };
 
-use parking_lot::{lock_api::RawMutex as _RawMutex, RawMutex};
+use parking_lot::Mutex;
 
 pub(crate) struct OnceCell<T> {
-    mutex: Mutex,
+    mutex: Mutex<()>,
     is_initialized: AtomicBool,
-    value: UnsafeCell<MaybeUninit<T>>,
+    value: UnsafeCell<Option<T>>,
 }
 
 // Why do we need `T: Send`?
@@ -28,9 +27,9 @@ impl<T: UnwindSafe> UnwindSafe for OnceCell<T> {}
 impl<T> OnceCell<T> {
     pub(crate) const fn new() -> OnceCell<T> {
         OnceCell {
-            mutex: Mutex::new(),
+            mutex: parking_lot::const_mutex(()),
             is_initialized: AtomicBool::new(false),
-            value: UnsafeCell::new(MaybeUninit::uninit()),
+            value: UnsafeCell::new(None),
         }
     }
 
@@ -60,7 +59,9 @@ impl<T> OnceCell<T> {
             let value = f()?;
             // Safe b/c we have a unique access and no panic may happen
             // until the cell is marked as initialized.
-            unsafe { self.as_mut_ptr().write(value) };
+            let slot: &mut Option<T> = unsafe { &mut *self.value.get() };
+            debug_assert!(slot.is_none());
+            *slot = Some(value);
             self.is_initialized.store(true, Ordering::Release);
         }
         Ok(())
@@ -75,84 +76,29 @@ impl<T> OnceCell<T> {
     /// the contents are acquired by (synchronized to) this thread.
     pub(crate) unsafe fn get_unchecked(&self) -> &T {
         debug_assert!(self.is_initialized());
-        &*self.as_ptr()
+        let slot: &Option<T> = &*self.value.get();
+        match slot {
+            Some(value) => value,
+            // This unsafe does improve performance, see `examples/bench`.
+            None => {
+                debug_assert!(false);
+                hint::unreachable_unchecked()
+            }
+        }
     }
 
     /// Gets the mutable reference to the underlying value.
     /// Returns `None` if the cell is empty.
     pub(crate) fn get_mut(&mut self) -> Option<&mut T> {
-        if self.is_initialized() {
-            // Safe b/c we have a unique access and value is initialized.
-            Some(unsafe { &mut *self.as_mut_ptr() })
-        } else {
-            None
-        }
+        // Safe b/c we have an exclusive access
+        let slot: &mut Option<T> = unsafe { &mut *self.value.get() };
+        slot.as_mut()
     }
 
     /// Consumes this `OnceCell`, returning the wrapped value.
     /// Returns `None` if the cell was empty.
     pub(crate) fn into_inner(self) -> Option<T> {
-        if !self.is_initialized() {
-            return None;
-        }
-
-        // Safe b/c we have a unique access and value is initialized.
-        let value: T = unsafe { ptr::read(self.as_ptr()) };
-
-        // It's OK to `mem::forget` without dropping, because both `self.mutex`
-        // and `self.is_initialized` are not heap-allocated.
-        mem::forget(self);
-
-        Some(value)
-    }
-
-    fn as_ptr(&self) -> *const T {
-        unsafe {
-            let slot: &MaybeUninit<T> = &*self.value.get();
-            slot.as_ptr()
-        }
-    }
-
-    fn as_mut_ptr(&self) -> *mut T {
-        unsafe {
-            let slot: &mut MaybeUninit<T> = &mut *self.value.get();
-            slot.as_mut_ptr()
-        }
-    }
-}
-
-impl<T> Drop for OnceCell<T> {
-    fn drop(&mut self) {
-        if self.is_initialized() {
-            // Safe b/c we have a unique access and value is initialized.
-            unsafe { ptr::drop_in_place(self.as_mut_ptr()) };
-        }
-    }
-}
-
-/// Wrapper around parking_lot's `RawMutex` which has `const fn` new.
-struct Mutex {
-    inner: RawMutex,
-}
-
-impl Mutex {
-    const fn new() -> Mutex {
-        Mutex { inner: RawMutex::INIT }
-    }
-
-    fn lock(&self) -> MutexGuard<'_> {
-        self.inner.lock();
-        MutexGuard { inner: &self.inner }
-    }
-}
-
-struct MutexGuard<'a> {
-    inner: &'a RawMutex,
-}
-
-impl Drop for MutexGuard<'_> {
-    fn drop(&mut self) {
-        self.inner.unlock();
+        self.value.into_inner()
     }
 }
 
