@@ -1177,12 +1177,10 @@ void URLParams::Serialize(nsAString& aValue) const {
   }
 }
 
-nsresult URLParams::Sort() {
+void URLParams::Sort() {
   mParams.StableSort([](const Param& lhs, const Param& rhs) {
     return Compare(lhs.mKey, rhs.mKey);
   });
-
-  return NS_OK;
 }
 
 }  // namespace mozilla
