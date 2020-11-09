@@ -11,6 +11,7 @@
 #include "nsILoadInfo.h"
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
+#include "nsJSUtils.h"
 
 #include "mozilla/StaticPrefs_dom.h"
 
@@ -41,7 +42,7 @@ void DOMSecurityMonitor::AuditParsingOfHTMLXMLFragments(
 
   // check if we should skip assertion. Please only ever set this pref to
   // true if really needed for testing purposes.
-  if (StaticPrefs::dom_security_skip_html_fragment_assertion()) {
+  if (mozilla::StaticPrefs::dom_security_skip_html_fragment_assertion()) {
     return;
   }
 
