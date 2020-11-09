@@ -952,6 +952,38 @@ static const struct EVInfo kEVInfos[] = {
     "ZW5UcnVzdCBDb21tZXJjaWFsIFJvb3QgQ0EgMQ==",
     "CgFCgAAAAUUjyES1AAAAAg==",
   },
+  {
+    // CN=Trustwave Global Certification Authority,O="Trustwave Holdings, Inc.",L=Chicago,ST=Illinois,C=US
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0x97, 0x55, 0x20, 0x15, 0xF5, 0xDD, 0xFC, 0x3C, 0x87, 0x88, 0xC0, 0x06, 0x94, 0x45, 0x55, 0x40, 0x88, 0x94, 0x45, 0x00, 0x84, 0xF1, 0x00, 0x86, 0x70, 0x86, 0xBC, 0x1A, 0x2B, 0xB5, 0x8D, 0xC8 },
+    "MIGIMQswCQYDVQQGEwJVUzERMA8GA1UECAwISWxsaW5vaXMxEDAOBgNVBAcMB0No"
+    "aWNhZ28xITAfBgNVBAoMGFRydXN0d2F2ZSBIb2xkaW5ncywgSW5jLjExMC8GA1UE"
+    "AwwoVHJ1c3R3YXZlIEdsb2JhbCBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eQ==",
+    "BfcOhtpJ80Y1Lrqy",
+  },
+  {
+    // CN=Trustwave Global ECC P256 Certification Authority,O="Trustwave Holdings, Inc.",L=Chicago,ST=Illinois,C=US
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0x94, 0x5B, 0xBC, 0x82, 0x5E, 0xA5, 0x54, 0xF4, 0x89, 0xD1, 0xFD, 0x51, 0xA7, 0x3D, 0xDF, 0x2E, 0xA6, 0x24, 0xAC, 0x70, 0x19, 0xA0, 0x52, 0x05, 0x22, 0x5C, 0x22, 0xA7, 0x8C, 0xCF, 0xA8, 0xB4 },
+    "MIGRMQswCQYDVQQGEwJVUzERMA8GA1UECBMISWxsaW5vaXMxEDAOBgNVBAcTB0No"
+    "aWNhZ28xITAfBgNVBAoTGFRydXN0d2F2ZSBIb2xkaW5ncywgSW5jLjE6MDgGA1UE"
+    "AxMxVHJ1c3R3YXZlIEdsb2JhbCBFQ0MgUDI1NiBDZXJ0aWZpY2F0aW9uIEF1dGhv"
+    "cml0eQ==",
+    "DWpfCD8oXD5Rld9d",
+  },
+  {
+    // CN=Trustwave Global ECC P384 Certification Authority,O="Trustwave Holdings, Inc.",L=Chicago,ST=Illinois,C=US
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0x55, 0x90, 0x38, 0x59, 0xC8, 0xC0, 0xC3, 0xEB, 0xB8, 0x75, 0x9E, 0xCE, 0x4E, 0x25, 0x57, 0x22, 0x5F, 0xF5, 0x75, 0x8B, 0xBD, 0x38, 0xEB, 0xD4, 0x82, 0x76, 0x60, 0x1E, 0x1B, 0xD5, 0x80, 0x97 },
+    "MIGRMQswCQYDVQQGEwJVUzERMA8GA1UECBMISWxsaW5vaXMxEDAOBgNVBAcTB0No"
+    "aWNhZ28xITAfBgNVBAoTGFRydXN0d2F2ZSBIb2xkaW5ncywgSW5jLjE6MDgGA1UE"
+    "AxMxVHJ1c3R3YXZlIEdsb2JhbCBFQ0MgUDM4NCBDZXJ0aWZpY2F0aW9uIEF1dGhv"
+    "cml0eQ==",
+    "CL2Fl2yZJ6SAaEc7",
+  },
     // clang-format on
 };
 
