@@ -3,6 +3,9 @@
 
 "use strict";
 
+if (AppConstants.MOZ_GLEAN) {
+  Cu.importGlobalProperties(["Glean"]);
+}
 const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
@@ -25,6 +28,13 @@ function run_test() {
     "datareporting",
     "state.json"
   );
+
+  if (AppConstants.MOZ_GLEAN) {
+    // We need to ensure FOG is initialized, otherwise operations will be stuck in the pre-init queue.
+    let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
+    FOG.initializeFOG();
+  }
+
   run_next_test();
 }
 
@@ -55,7 +65,7 @@ add_task(async function test_ecosystemClientID() {
   Assert.notEqual(newEcosystemClientID, ecosystemClientID);
 });
 
-add_task(async function() {
+add_task(async function test_client_id() {
   const invalidIDs = [
     [-1, "setIntPref"],
     [0.5, "setIntPref"],
@@ -70,6 +80,14 @@ add_task(async function() {
   let clientID = await ClientID.getClientID();
   Assert.equal(typeof clientID, "string");
   Assert.ok(uuidRegex.test(clientID));
+  if (AppConstants.MOZ_GLEAN) {
+    Assert.equal(
+      Glean.fog_validation.legacy_telemetry_client_id.testGetValue(
+        "fog-validation"
+      ),
+      clientID
+    );
+  }
 
   // We should be guarded against invalid DRS json.
   await ClientID._reset();
@@ -80,6 +98,14 @@ add_task(async function() {
   clientID = await ClientID.getClientID();
   Assert.equal(typeof clientID, "string");
   Assert.ok(uuidRegex.test(clientID));
+  if (AppConstants.MOZ_GLEAN) {
+    Assert.equal(
+      Glean.fog_validation.legacy_telemetry_client_id.testGetValue(
+        "fog-validation"
+      ),
+      clientID
+    );
+  }
 
   // If the DRS data is broken, we should end up with a new client ID.
   for (let [invalidID] of invalidIDs) {
@@ -88,6 +114,14 @@ add_task(async function() {
     clientID = await ClientID.getClientID();
     Assert.equal(typeof clientID, "string");
     Assert.ok(uuidRegex.test(clientID));
+    if (AppConstants.MOZ_GLEAN) {
+      Assert.equal(
+        Glean.fog_validation.legacy_telemetry_client_id.testGetValue(
+          "fog-validation"
+        ),
+        clientID
+      );
+    }
   }
 
   // Assure that cached IDs are being checked for validity.
@@ -121,6 +155,14 @@ add_task(async function test_setCanaryClientIDs() {
   await ClientID.setCanaryClientIDs();
   let clientID = await ClientID.getClientID();
   Assert.equal(KNOWN_UUID, clientID);
+  if (AppConstants.MOZ_GLEAN) {
+    Assert.equal(
+      Glean.fog_validation.legacy_telemetry_client_id.testGetValue(
+        "fog-validation"
+      ),
+      clientID
+    );
+  }
 });
 
 add_task(async function test_resetEcosystemClientID() {
@@ -129,6 +171,14 @@ add_task(async function test_resetEcosystemClientID() {
   let firstClientID = await ClientID.getClientID();
   let firstEcosystemClientID = await ClientID.getEcosystemClientID();
   Assert.ok(firstClientID);
+  if (AppConstants.MOZ_GLEAN) {
+    Assert.equal(
+      Glean.fog_validation.legacy_telemetry_client_id.testGetValue(
+        "fog-validation"
+      ),
+      firstClientID
+    );
+  }
   Assert.ok(firstEcosystemClientID);
 
   // We should reset the ecosystem client id, but not the main client id.
@@ -136,6 +186,14 @@ add_task(async function test_resetEcosystemClientID() {
   let secondClientID = await ClientID.getClientID();
   let secondEcosystemClientID = await ClientID.getEcosystemClientID();
   Assert.equal(firstClientID, secondClientID);
+  if (AppConstants.MOZ_GLEAN) {
+    Assert.equal(
+      Glean.fog_validation.legacy_telemetry_client_id.testGetValue(
+        "fog-validation"
+      ),
+      firstClientID
+    );
+  }
   Assert.notEqual(firstEcosystemClientID, secondEcosystemClientID);
 
   // The new id should have been persisted to disk.
@@ -155,6 +213,14 @@ add_task(async function test_removeClientIDs() {
   Assert.equal(typeof firstEcosystemClientID, "string");
   Assert.ok(uuidRegex.test(firstClientID));
   Assert.ok(uuidRegex.test(firstEcosystemClientID));
+  if (AppConstants.MOZ_GLEAN) {
+    Assert.equal(
+      Glean.fog_validation.legacy_telemetry_client_id.testGetValue(
+        "fog-validation"
+      ),
+      firstClientID
+    );
+  }
 
   await ClientID.removeClientIDs();
 
@@ -239,6 +305,14 @@ add_task(async function test_removeParallelGet() {
     otherClientID,
     "Getting the client ID in parallel to a reset should give the same id."
   );
+  if (AppConstants.MOZ_GLEAN) {
+    Assert.equal(
+      Glean.fog_validation.legacy_telemetry_client_id.testGetValue(
+        "fog-validation"
+      ),
+      newClientID
+    );
+  }
 });
 
 add_task(

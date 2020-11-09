@@ -47,3 +47,24 @@ fog.ipc:
       - chutten@mozilla.com
       - glean-team@mozilla.com
     expires: never
+
+fog_validation:
+  legacy_telemetry_client_id:
+    type: uuid
+    description:
+      The Telemetry client_id.
+      To be sent only in the "fog-validation" ping.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1674233
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1674233#c4
+    data_sensitivity:
+      - technical
+      - highly_sensitive
+    lifetime: application
+    notification_emails:
+      - chutten@mozilla.com
+      - glean-team@mozilla.com
+    expires: "89"
+    send_in_pings:
+      - fog-validation
