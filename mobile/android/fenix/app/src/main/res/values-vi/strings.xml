@@ -71,14 +71,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Không, cảm ơn</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Truy cập Firefox nhanh hơn. Thêm widget vào màn hình chính của bạn.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">Thêm widget</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">Không phải bây giờ</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string name="open_in_app_cfr_info_message">Bạn có thể đặt Firefox để tự động mở các liên kết trong ứng dụng.</string>
@@ -561,6 +553,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Sau một tháng</string>
 
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Đóng thủ công</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Đóng sau một ngày</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Đóng sau một tuần</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Đóng sau một tháng</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Các thẻ đang mở</string>
@@ -629,8 +630,10 @@
 
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Tên bộ sưu tập</string>
-    <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">Xóa</string>
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Đổi tên</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Xóa</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Xóa khỏi lịch sử</string>
@@ -683,11 +686,23 @@
     <string name="history_empty_message">Không có lịch sử ở đây</string>
 
     <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Xóa nội dung tải xuống</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">Bạn có chắc chắn muốn xóa nội dung tải xuống của mình không?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
+    <string name="download_delete_multiple_items_snackbar">Đã xóa nội dung tải xuống</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">Không có tải xuống ở đây</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d đã chọn</string>
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Mở</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="download_delete_item">Xóa</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -1605,6 +1620,15 @@
 
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Hiển thị các trang web được truy cập nhiều nhất</string>
+
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Tên</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Tên trang web hàng đầu</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">OK</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Huỷ bỏ</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Xóa</string>

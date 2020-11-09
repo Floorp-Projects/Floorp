@@ -75,14 +75,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">不了，谢谢</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">在主屏幕添加微件，一键启动 Firefox。</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">添加微件</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">现在不要</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string name="open_in_app_cfr_info_message">您可以将 Firefox 设为链接的打开方式。</string>
@@ -579,6 +571,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">1 个月后</string>
 
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">手动关闭</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">1 天后关闭</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">1 周后关闭</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">1 个月后关闭</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">标签页</string>
@@ -648,8 +649,10 @@
 
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">收藏集名称</string>
-    <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">移除</string>
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">重命名</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">移除</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">删除历史记录</string>
@@ -703,11 +706,23 @@
     <string name="history_empty_message">无历史记录</string>
 
     <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">删除下载项</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">您确定要清除下载项吗？</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
+    <string name="download_delete_multiple_items_snackbar">下载项已删除</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">暂无下载项</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">已选择 %1$d 个下载项</string>
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">打开</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="download_delete_item">删除</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -1652,6 +1667,15 @@
 
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">显示最常访问的网站</string>
+
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">名称</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">常用网站名称</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">确定</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">取消</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">移除</string>

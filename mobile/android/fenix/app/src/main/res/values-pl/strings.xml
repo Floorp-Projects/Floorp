@@ -72,14 +72,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Nie, dziękuję</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Szybciej otwieraj Firefoksa. Dodaj widżet do ekranu głównego.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">Dodaj widżet</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">Nie teraz</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string name="open_in_app_cfr_info_message">Można ustawić Firefoksa tak, aby automatycznie otwierał odnośniki w aplikacjach.</string>
@@ -568,6 +560,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Po miesiącu</string>
 
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Zamykane ręcznie</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Zamykane po jednym dniu</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Zamykane po tygodniu</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Zamykane po miesiącu</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Otwarte karty</string>
@@ -637,8 +638,10 @@
 
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Nazwa kolekcji</string>
-    <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">Usuń</string>
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Zmień nazwę</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Usuń</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Usuń z historii</string>
@@ -692,11 +695,23 @@
     <string name="history_empty_message">Nie ma jeszcze historii</string>
 
     <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Wyczyść listę</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">Czy na pewno wyczyścić listę pobranych plików?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
+    <string name="download_delete_multiple_items_snackbar">Wyczyszczono listę</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">Nie ma pobranych plików</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">Zaznaczone: %1$d</string>
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Otwórz</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="download_delete_item">Usuń</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -1624,6 +1639,15 @@
 
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Najczęściej odwiedzane strony</string>
+
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Nazwa</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Nazwa popularnej strony</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">OK</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Anuluj</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Usuń</string>

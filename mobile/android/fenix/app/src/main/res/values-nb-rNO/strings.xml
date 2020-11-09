@@ -562,6 +562,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Etter en måned</string>
 
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Lukk manuelt</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Lukk etter en dag</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Lukk etter en uke</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Lukk etter en måned</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Åpne faner</string>
@@ -689,6 +698,8 @@
     <!-- Downloads -->
     <!-- Text for the button to clear all downloads -->
     <string name="download_delete_all">Slett nedlastinger</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">Er du sikker på at du vil tømme nedlastningene dine?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
     <string name="download_delete_multiple_items_snackbar">Nedlastinger slettet</string>
     <!-- Text shown when no download exists -->

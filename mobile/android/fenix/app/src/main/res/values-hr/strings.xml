@@ -70,14 +70,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Ne, hvala</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Dođi brže do Firefoxa. Dodaj programčić na početnu stranicu.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">Dodaj programčić</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">Ne sada</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string name="open_in_app_cfr_info_message">Možeš postaviti da Firefox automatski otvara poveznice u aplikacijama.</string>
@@ -565,6 +557,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Nakon jednog mjeseca</string>
 
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Zatvori ručno</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Zatvori nakon jednog dana</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Zatvori nakon jednog tjedna</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Zatvori nakon jednog mjeseca</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Otvorene kartice</string>
@@ -633,8 +634,10 @@
 
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Naziv zbirke</string>
-    <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">Ukloni</string>
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Preimenuj</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Ukloni</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Izbriši iz povijesti</string>
@@ -690,11 +693,23 @@
     <string name="history_empty_message">Nema povijesti</string>
 
     <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Izbriši preuzimanja</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">Sigurno želiš očistiti svoja preuzimanja?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
+    <string name="download_delete_multiple_items_snackbar">Preuzimanja su izbrisana</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">Ovdje nema preuzimanja</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">Odabrano: %1$d</string>
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Otvori</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="download_delete_item">Izbriši</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -827,7 +842,7 @@
     <!-- Label that indicates that a permission must be allowed -->
     <string name="preference_option_phone_feature_allowed">Dozvoljeno</string>
     <!--Label that indicates a permission is by the Android OS-->
-    <string name="phone_feature_blocked_by_android">Blokirano od Androida</string>
+    <string name="phone_feature_blocked_by_android">Blokirao Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Iznimke</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1628,6 +1643,15 @@
 
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Prikaži najposjećenije stranice</string>
+
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Naziv</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Naziv omiljene stranice</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">U redu</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Odustani</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Ukloni</string>

@@ -69,14 +69,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Jo, faleminderit</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Kaloni më shpejt te Firefox-i. Shtoni te skena juaj e Kreut një &lt;em&gt;widget&lt;/em&gt;.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">Shtoni &lt;em&gt;widget&lt;/em&gt;</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">Jo tani</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string name="open_in_app_cfr_info_message">Mund ta ujdisni Firefox-in të hapë automatikisht lidhje në aplikacione.</string>
@@ -560,6 +552,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Pas një muaji</string>
 
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Mbylleni dorazi</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Mbylle pas një dite</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Mbylle pas një jave</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Mbylle pas një muaji</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Skeda të hapura</string>
@@ -629,8 +630,10 @@
 
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Emër koleksioni</string>
-    <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">Hiqe</string>
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Rimertojeni</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Hiqe</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Fshije prej historiku</string>
@@ -683,11 +686,23 @@
     <string name="history_empty_message">S’ka historik këtu</string>
 
     <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Fshiji shkarkimet</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">Jeni i sigurt se doni të spastrohet historiku i shfletimeve tuaja?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
+    <string name="download_delete_multiple_items_snackbar">Shkarkimet u Fshinë</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">S’ka shkarkime këtu</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d të përzgjedhura</string>
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Hape</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="download_delete_item">Fshije</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -1615,6 +1630,15 @@
 
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Shfaq sajtet më të vizituar</string>
+
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Emër</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Emër sajti kryesor</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">OK</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Anuloje</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Hiqe</string>

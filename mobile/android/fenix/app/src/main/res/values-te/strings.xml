@@ -70,14 +70,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">ఫరవాలేదు వద్దు</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Firefoxకి వేగంగా చేరుకోడానికి మీ ముంగిలి తెరకు విడ్జెట్టును చేర్చుకోండి.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">విడ్జెటును చేర్చు</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">ఇప్పుడు కాదు</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string name="open_in_app_cfr_info_message">లంకెలను Firefox స్వయంచాలకంగా అనువర్తనాలలో తెరిచేలా మీరు అమర్చుకోవచ్చు.</string>
@@ -206,7 +198,6 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">ఇంకా తెలుసుకోండి</string>
 
-    <!-- Search Widget -->
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">వెతకండి</string>
     <!-- Text preview for larger sized widgets -->
@@ -332,6 +323,15 @@
 
     <!-- Preference for notifications -->
     <string name="preferences_notifications">గమనింపులు</string>
+
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">సరే</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">రద్దుచేయి</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">సేకరణ పేరు</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">సేకరణ యజమాని (వాడుకరి ID)</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -513,6 +513,8 @@
     <string name="recently_closed_empty_message">ఇటీవల మూసివేసిన ట్యాబులు ఏమీ ఇక్కడ లేవు</string>
 
     <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">ట్యాబులు</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">ట్యాబుల మూసివేత</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -591,8 +593,10 @@
     <string name="collection_rename">సేకరణ పేరుమార్చు</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">ట్యాబులను తెరువు</string>
-    <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">తీసివేయి</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">సేకరణ పేరు</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">తీసివేయి</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">చరిత్ర నుండి తొలగించు</string>
@@ -631,6 +635,10 @@
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">%1$d అంశాలను తొలగించు</string>
 
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">ఈరోజు</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">నిన్న</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">గత 24 గంటలు</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -643,11 +651,14 @@
     <string name="history_empty_message">ఇక్కడ చరిత్రేమీ లేదు</string>
 
     <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">దింపుకోళ్ళను తొలగించు</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">దింపుకోళ్ళేమీ లేవు</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d ఎంచుకున్నారు</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -1570,12 +1581,24 @@
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">ఎక్కువగా చూసిన సైట్లను చూపించు</string>
 
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">పేరు</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">మేటి సైటు పేరు</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">సరే</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">రద్దుచేయి</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">తొలగించు</string>
 
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">%s నుండి ఎక్కువగా పొందండి.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">మరిన్ని వివరాలకు నొక్కండి</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">మీకు ముఖ్యమైన విషయాలను సేకరించండి</string>

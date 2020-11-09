@@ -29,11 +29,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Salamat na lang</string>
 
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">Magdagdag ng widget</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">Hindi ngayon</string>
-
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Magpunta sa Settings</string>
     <!-- Text for the negative action button -->
@@ -103,6 +98,16 @@
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">Huwag Payagan</string>
 
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Maghanap</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Hanapin sa web</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">Mga Setting</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">Tungkol sa</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Tulong</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -115,5 +120,6 @@
     <string name="preferences_account_default_name">Firefox Account</string>
     <!-- Preference for language -->
     <string name="preferences_language">Wika</string>
+
 
     </resources>

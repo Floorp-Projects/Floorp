@@ -74,14 +74,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Innò, vi ringraziu</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Accidite più prestu à Firefox. Aghjunghjite un widget à u vostru screnu d’accolta.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">Aghjunghje u widget</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">Micca subitu</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string name="open_in_app_cfr_info_message">Pudete cunfigurà Firefox per apre autumaticamente e leie in d’altre appiecazioni.</string>
@@ -570,6 +562,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Dopu un mese</string>
 
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Chjusura manuale</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Chjusura dopu un ghjornu</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Chjusura dopu una settimana</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Chjusura dopu un mese</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Unghjette aperte</string>
@@ -632,14 +633,16 @@
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Squassà a cullezzione</string>
     <!-- Text for the menu button to rename a collection -->
-    <string name="collection_rename">Rinumà a cullezzione</string>
+    <string name="collection_rename">Rinuminà a cullezzione</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Apre l’unghjette</string>
 
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Nome di a cullezzione</string>
-    <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">Caccià</string>
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Rinuminà</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Caccià</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Squassà da a crunulogia</string>
@@ -692,11 +695,24 @@
     <string name="history_empty_message">Alcuna crunulogia</string>
 
     <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Squassà a lista di i scaricamenti</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">Site sicuru di vulè squassà a lista di i vostri scaricamenti ?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
+    <string name="download_delete_multiple_items_snackbar">Lista di i scaricamenti squassata</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">Alcunu scaricamentu quì</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d selezziunatu(i)</string>
+
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Apre</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="download_delete_item">Squassà</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -953,7 +969,7 @@
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Cullezzione squassata</string>
     <!-- Text shown in snackbar when user renames a collection -->
-    <string name="snackbar_collection_renamed">Cullezzione rinumata</string>
+    <string name="snackbar_collection_renamed">Cullezzione rinuminata</string>
     <!-- Text shown in snackbar when user deletes a tab -->
     <string name="snackbar_tab_deleted">Unghjetta squassata</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
@@ -1630,6 +1646,15 @@
 
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Affissà i siti visitati aspessu</string>
+
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Nome</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Nome di u situ principale</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">Vai</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Abbandunà</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Caccià</string>

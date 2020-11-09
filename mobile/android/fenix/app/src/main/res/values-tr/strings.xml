@@ -71,14 +71,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Gerek yok</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Firefox’a daha hızlı ulaşın. Ana ekranınıza bir widget ekleyin.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">Widget ekle</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">Daha sonra</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string name="open_in_app_cfr_info_message">Firefox’u, bağlantıları otomatik olarak uygulamalarda açacak şekilde ayarlayabilirsiniz.</string>
@@ -564,6 +556,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Bir ay sonra</string>
 
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Elle kapat</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Bir gün sonra kapat</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Bir hafta sonra kapat</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Bir ay sonra kapat</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Açık sekmeler</string>
@@ -633,8 +634,10 @@
 
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Koleksiyon adı</string>
-    <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">Kaldır</string>
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Adını değiștir</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Kaldır</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Geçmişten sil</string>
@@ -687,11 +690,23 @@
     <string name="history_empty_message">Geçmiş yok</string>
 
     <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">İndirmeleri sil</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">İndirmelerinizi temizlemek istediğinizden emin misiniz?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
+    <string name="download_delete_multiple_items_snackbar">İndirmeler silindi</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">Hiçbir şey indirilmemiş</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d indirme seçildi</string>
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Aç</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="download_delete_item">Sil</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -1612,6 +1627,15 @@
 
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Sık ziyaret edilen siteleri göster</string>
+
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Adı</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Sık kullanılan adı</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">Tamam</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">İptal</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Kaldır</string>
