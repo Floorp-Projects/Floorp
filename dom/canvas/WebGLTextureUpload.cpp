@@ -1171,7 +1171,8 @@ void WebGLTexture::CompressedTexImage(bool sub, GLenum imageTarget,
         break;
 
       // Full-only: (The ES3 default)
-      default:  // PVRTC
+      case webgl::CompressionFamily::ASTC:
+      case webgl::CompressionFamily::PVRTC:
         if (offset.x || offset.y || size.x != imageInfo->mWidth ||
             size.y != imageInfo->mHeight) {
           mContext->ErrorInvalidOperation(
@@ -1181,6 +1182,22 @@ void WebGLTexture::CompressedTexImage(bool sub, GLenum imageTarget,
         }
         break;
     }
+  }
+
+  switch (usage->format->compression->family) {
+    case webgl::CompressionFamily::BPTC:
+    case webgl::CompressionFamily::RGTC:
+      if (level == 0) {
+        if (size.x % 4 != 0 || size.y % 4 != 0) {
+          mContext->ErrorInvalidOperation(
+              "For level == 0, width and height must be multiples of 4.");
+          return;
+        }
+      }
+      break;
+
+    default:
+      break;
   }
 
   if (!ValidateCompressedTexUnpack(mContext, size, usage->format, imageSize))
