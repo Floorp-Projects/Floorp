@@ -12,7 +12,6 @@
 #include "jsapi.h"
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject, JS::NewArrayObject
 #include "mozilla/Maybe.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
@@ -116,6 +115,8 @@ const uint32_t kMaxObjectNameByteLength = 20;
 const uint32_t kMaxExtraKeyNameByteLength = 15;
 // The maximum number of valid extra keys for an event.
 const uint32_t kMaxExtraKeyCount = 10;
+// The number of event records allowed in an event ping.
+const uint32_t kEventPingLimit = 1000;
 
 struct EventKey {
   uint32_t id;
@@ -470,19 +471,11 @@ RecordEventResult RecordEvent(const StaticMutexAutoLock& lock,
     return RecordEventResult::Ok;
   }
 
-  static bool sEventPingEnabled = mozilla::Preferences::GetBool(
-      "toolkit.telemetry.eventping.enabled", true);
-  if (!sEventPingEnabled) {
-    return RecordEventResult::Ok;
-  }
-
   EventRecordArray* eventRecords = GetEventRecordsForProcess(lock, processType);
   eventRecords->AppendElement(EventRecord(timestamp, *eventKey, value, extra));
 
   // Notify observers when we hit the "event" ping event record limit.
-  static uint32_t sEventPingLimit = mozilla::Preferences::GetUint(
-      "toolkit.telemetry.eventping.eventLimit", 1000);
-  if (eventRecords->Length() == sEventPingLimit) {
+  if (eventRecords->Length() == kEventPingLimit) {
     return RecordEventResult::StorageLimitReached;
   }
 

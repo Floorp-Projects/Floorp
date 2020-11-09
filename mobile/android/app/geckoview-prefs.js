@@ -22,8 +22,6 @@ pref("dom.ipc.keepProcessesAlive.web", 1);
 pref("dom.ipc.processCount", 1);
 pref("dom.ipc.processPrelaunch.enabled", false);
 
-// Disable the Telemetry Event Ping
-pref("toolkit.telemetry.eventping.enabled", false);
 // Don't create the hidden window during startup.
 pref("toolkit.lazyHiddenWindow", true);
 
