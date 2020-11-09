@@ -203,8 +203,10 @@ static nsresult ShowNativePrintDialog(HWND aHWnd,
       CreateGlobalDevModeAndInit(printerName, aPrintSettings));
 
   // Prepare to Display the Print Dialog
-  PRINTDLGW prntdlg;
-  memset(&prntdlg, 0, sizeof(PRINTDLGW));
+  // https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms646942(v=vs.85)
+  // https://docs.microsoft.com/en-us/windows/win32/api/commdlg/ns-commdlg-printdlgexw
+  PRINTDLGEXW prntdlg;
+  memset(&prntdlg, 0, sizeof(prntdlg));
 
   prntdlg.lStructSize = sizeof(prntdlg);
   prntdlg.hwndOwner = aHWnd;
@@ -214,125 +216,144 @@ static nsresult ShowNativePrintDialog(HWND aHWnd,
   prntdlg.Flags =
       PD_ALLPAGES | PD_RETURNIC | PD_USEDEVMODECOPIESANDCOLLATE | PD_COLLATE;
 
-  // if there is a current selection then enable the "Selection" radio button
+  // If there is a current selection then enable the "Selection" radio button
   if (!aPrintSettings->GetIsPrintSelectionRBEnabled()) {
     prntdlg.Flags |= PD_NOSELECTION;
   }
 
-  nsTArray<int32_t> pageRanges;
-  aPrintSettings->GetPageRanges(pageRanges);
+  // 10 seems like a reasonable max number of ranges to support by default if
+  // the user doesn't choose a greater thing in the UI.
+  constexpr size_t kMinSupportedRanges = 10;
 
-  // If there is a specified page range then enable the "Custom" radio button
-  if (!pageRanges.IsEmpty()) {
-    prntdlg.Flags |= PD_PAGENUMS;
+  AutoTArray<PRINTPAGERANGE, kMinSupportedRanges> winPageRanges;
+  // Set up the page ranges.
+  {
+    AutoTArray<int32_t, kMinSupportedRanges * 2> pageRanges;
+    aPrintSettings->GetPageRanges(pageRanges);
+    // If there is a specified page range then enable the "Custom" radio button
+    if (!pageRanges.IsEmpty()) {
+      prntdlg.Flags |= PD_PAGENUMS;
+    }
+
+    const size_t specifiedRanges = pageRanges.Length() / 2;
+    const size_t maxRanges = std::max(kMinSupportedRanges, specifiedRanges);
+
+    prntdlg.nMaxPageRanges = maxRanges;
+    prntdlg.nPageRanges = specifiedRanges;
+
+    winPageRanges.SetCapacity(maxRanges);
+    for (size_t i = 0; i < pageRanges.Length(); i += 2) {
+      PRINTPAGERANGE* range = winPageRanges.AppendElement();
+      range->nFromPage = pageRanges[i];
+      range->nToPage = pageRanges[i + 1];
+    }
+    prntdlg.lpPageRanges = winPageRanges.Elements();
+
+    prntdlg.nMinPage = 1;
+    // TODO(emilio): Could probably get the right page number here from the
+    // new print UI.
+    prntdlg.nMaxPage = 0xFFFF;
   }
 
-  // TODO(emilio, bug 1675956): Can we represent all the page ranges instead?
-  int32_t start = 1;
-  int32_t end = 1;
-  for (size_t i = 0; i < pageRanges.Length(); i += 2) {
-    start = std::min(start, pageRanges[i]);
-    end = std::max(end, pageRanges[i + 1]);
-  }
-
-  prntdlg.nFromPage = start;
-  prntdlg.nToPage = end;
-
-  prntdlg.nMinPage = 1;
-  prntdlg.nMaxPage = 0xFFFF;
+  // NOTE(emilio): This can always be 1 because we use the DEVMODE copies
+  // feature (see PD_USEDEVMODECOPIESANDCOLLATE).
   prntdlg.nCopies = 1;
-  prntdlg.lpfnSetupHook = nullptr;
-  prntdlg.lpSetupTemplateName = nullptr;
-  prntdlg.hPrintTemplate = nullptr;
-  prntdlg.hSetupTemplate = nullptr;
 
   prntdlg.hInstance = nullptr;
   prntdlg.lpPrintTemplateName = nullptr;
 
-  prntdlg.lCustData = 0;
-  prntdlg.lpfnPrintHook = nullptr;
+  prntdlg.lpCallback = nullptr;
+  prntdlg.nPropertyPages = 0;
+  prntdlg.lphPropertyPages = nullptr;
 
-  BOOL result;
+  prntdlg.nStartPage = START_PAGE_GENERAL;
+  prntdlg.dwResultAction = 0;
+
+  HRESULT result;
   {
     mozilla::widget::WinUtils::AutoSystemDpiAware dpiAwareness;
     mozilla::BackgroundHangMonitor().NotifyWait();
-    result = ::PrintDlgW(&prntdlg);
+    result = ::PrintDlgExW(&prntdlg);
   }
 
-  if (TRUE == result) {
-    // check to make sure we don't have any nullptr pointers
-    NS_ENSURE_TRUE(aPrintSettings && prntdlg.hDevMode, NS_ERROR_FAILURE);
-
-    if (prntdlg.hDevNames == nullptr) {
-      return NS_ERROR_FAILURE;
-    }
-    // Lock the deviceNames and check for nullptr
-    DEVNAMES* devnames = (DEVNAMES*)::GlobalLock(prntdlg.hDevNames);
-    if (devnames == nullptr) {
-      return NS_ERROR_FAILURE;
-    }
-
-    char16_t* device = &(((char16_t*)devnames)[devnames->wDeviceOffset]);
-    char16_t* driver = &(((char16_t*)devnames)[devnames->wDriverOffset]);
-
-    // Check to see if the "Print To File" control is checked
-    // then take the name from devNames and set it in the PrintSettings
-    //
-    // NOTE:
-    // As per Microsoft SDK documentation the returned value offset from
-    // devnames->wOutputOffset is either "FILE:" or nullptr
-    // if the "Print To File" checkbox is checked it MUST be "FILE:"
-    // We assert as an extra safety check.
-    if (prntdlg.Flags & PD_PRINTTOFILE) {
-      char16ptr_t fileName = &(((wchar_t*)devnames)[devnames->wOutputOffset]);
-      NS_ASSERTION(wcscmp(fileName, L"FILE:") == 0, "FileName must be `FILE:`");
-      aPrintSettings->SetToFileName(nsDependentString(fileName));
-      aPrintSettings->SetPrintToFile(true);
-    } else {
-      // clear "print to file" info
-      aPrintSettings->SetPrintToFile(false);
-      aPrintSettings->SetToFileName(u""_ns);
-    }
-
-    nsCOMPtr<nsIPrintSettingsWin> psWin(do_QueryInterface(aPrintSettings));
-    if (!psWin) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // Setup local Data members
-    psWin->SetDeviceName(nsDependentString(device));
-    psWin->SetDriverName(nsDependentString(driver));
-
-    // fill the print options with the info from the dialog
-
-    aPrintSettings->SetPrinterName(nsDependentString(device));
-    aPrintSettings->SetPrintSelectionOnly(prntdlg.Flags & PD_SELECTION);
-
-    nsTArray<int32_t> pageRanges;
-    if (prntdlg.Flags & PD_PAGENUMS) {
-      pageRanges.AppendElement(prntdlg.nFromPage);
-      pageRanges.AppendElement(prntdlg.nToPage);
-    }
-    aPrintSettings->SetPageRanges(pageRanges);
-
-    // Unlock DeviceNames
-    ::GlobalUnlock(prntdlg.hDevNames);
-
-    // Transfer the settings from the native data to the PrintSettings
-    LPDEVMODEW devMode = (LPDEVMODEW)::GlobalLock(prntdlg.hDevMode);
-    if (!devMode || !prntdlg.hDC) {
-      return NS_ERROR_FAILURE;
-    }
-    psWin->SetDevMode(devMode);  // copies DevMode
-    psWin->CopyFromNative(prntdlg.hDC, devMode);
-    ::GlobalUnlock(prntdlg.hDevMode);
-    ::DeleteDC(prntdlg.hDC);
-  } else {
+  auto cancelOnExit = mozilla::MakeScopeExit([&] {
     ::SetFocus(aHWnd);
     aPrintSettings->SetIsCancelled(true);
+  });
+
+  if (NS_WARN_IF(!SUCCEEDED(result))) {
+#ifdef DEBUG
+    printf_stderr("PrintDlgExW failed with %x\n", result);
+#endif
+    return NS_ERROR_FAILURE;
+  }
+  if (NS_WARN_IF(prntdlg.dwResultAction != PD_RESULT_PRINT)) {
     return NS_ERROR_ABORT;
   }
+  // check to make sure we don't have any nullptr pointers
+  NS_ENSURE_TRUE(prntdlg.hDevMode, NS_ERROR_ABORT);
+  NS_ENSURE_TRUE(prntdlg.hDevNames, NS_ERROR_ABORT);
+  // Lock the deviceNames and check for nullptr
+  DEVNAMES* devnames = (DEVNAMES*)::GlobalLock(prntdlg.hDevNames);
+  NS_ENSURE_TRUE(devnames, NS_ERROR_ABORT);
 
+  char16_t* device = &(((char16_t*)devnames)[devnames->wDeviceOffset]);
+  char16_t* driver = &(((char16_t*)devnames)[devnames->wDriverOffset]);
+
+  // Check to see if the "Print To File" control is checked
+  // then take the name from devNames and set it in the PrintSettings
+  //
+  // NOTE:
+  // As per Microsoft SDK documentation the returned value offset from
+  // devnames->wOutputOffset is either "FILE:" or nullptr
+  // if the "Print To File" checkbox is checked it MUST be "FILE:"
+  // We assert as an extra safety check.
+  if (prntdlg.Flags & PD_PRINTTOFILE) {
+    char16ptr_t fileName = &(((wchar_t*)devnames)[devnames->wOutputOffset]);
+    NS_ASSERTION(wcscmp(fileName, L"FILE:") == 0, "FileName must be `FILE:`");
+    aPrintSettings->SetToFileName(nsDependentString(fileName));
+    aPrintSettings->SetPrintToFile(true);
+  } else {
+    // clear "print to file" info
+    aPrintSettings->SetPrintToFile(false);
+    aPrintSettings->SetToFileName(u""_ns);
+  }
+
+  nsCOMPtr<nsIPrintSettingsWin> psWin(do_QueryInterface(aPrintSettings));
+  MOZ_RELEASE_ASSERT(psWin);
+
+  // Setup local Data members
+  psWin->SetDeviceName(nsDependentString(device));
+  psWin->SetDriverName(nsDependentString(driver));
+
+  // Fill the print options with the info from the dialog
+  aPrintSettings->SetPrinterName(nsDependentString(device));
+  aPrintSettings->SetPrintSelectionOnly(prntdlg.Flags & PD_SELECTION);
+
+  AutoTArray<int32_t, kMinSupportedRanges * 2> pageRanges;
+  if (prntdlg.Flags & PD_PAGENUMS) {
+    pageRanges.SetCapacity(prntdlg.nPageRanges * 2);
+    for (const auto& range : Span(prntdlg.lpPageRanges, prntdlg.nPageRanges)) {
+      pageRanges.AppendElement(range.nFromPage);
+      pageRanges.AppendElement(range.nToPage);
+    }
+  }
+  aPrintSettings->SetPageRanges(pageRanges);
+
+  // Unlock DeviceNames
+  ::GlobalUnlock(prntdlg.hDevNames);
+
+  // Transfer the settings from the native data to the PrintSettings
+  LPDEVMODEW devMode = (LPDEVMODEW)::GlobalLock(prntdlg.hDevMode);
+  if (!devMode || !prntdlg.hDC) {
+    return NS_ERROR_FAILURE;
+  }
+  psWin->SetDevMode(devMode);  // copies DevMode
+  psWin->CopyFromNative(prntdlg.hDC, devMode);
+  ::GlobalUnlock(prntdlg.hDevMode);
+  ::DeleteDC(prntdlg.hDC);
+
+  cancelOnExit.release();
   return NS_OK;
 }
 
