@@ -299,6 +299,10 @@ function DatePicker(context) {
      *        }
      */
     set({ year, month, day }) {
+      if (!this.state) {
+        return;
+      }
+
       const { dateKeeper } = this.state;
 
       dateKeeper.setCalendarMonth({
