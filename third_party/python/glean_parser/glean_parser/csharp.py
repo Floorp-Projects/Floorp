@@ -11,7 +11,7 @@ Outputter to generate C# code for metrics.
 import enum
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Union  # noqa
+from typing import Any, Dict, List, Optional, Union  # noqa
 
 from . import metrics
 from . import pings
@@ -104,7 +104,7 @@ def class_name(obj_type: str) -> str:
 
 
 def output_csharp(
-    objs: metrics.ObjectTree, output_dir: Path, options: Dict[str, Any] = {}
+    objs: metrics.ObjectTree, output_dir: Path, options: Optional[Dict[str, Any]] = None
 ) -> None:
     """
     Given a tree of objects, output C# code to `output_dir`.
@@ -120,6 +120,9 @@ def output_csharp(
           This is where glean objects will be imported from in the generated
           code.
     """
+    if options is None:
+        options = {}
+
     template = util.get_jinja2_template(
         "csharp.jinja2",
         filters=(

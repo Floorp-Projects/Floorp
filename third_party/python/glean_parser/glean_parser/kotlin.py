@@ -12,7 +12,7 @@ from collections import OrderedDict
 import enum
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Union  # noqa
+from typing import Any, Dict, List, Optional, Union  # noqa
 
 from . import metrics
 from . import pings
@@ -102,7 +102,7 @@ def class_name(obj_type: str) -> str:
 
 
 def output_gecko_lookup(
-    objs: metrics.ObjectTree, output_dir: Path, options: Dict[str, Any] = {}
+    objs: metrics.ObjectTree, output_dir: Path, options: Optional[Dict[str, Any]] = None
 ) -> None:
     """
     Given a tree of objects, generate a Kotlin map between Gecko histograms and
@@ -119,6 +119,9 @@ def output_gecko_lookup(
           This is where glean objects will be imported from in the generated
           code.
     """
+    if options is None:
+        options = {}
+
     template = util.get_jinja2_template(
         "kotlin.geckoview.jinja2",
         filters=(
@@ -197,7 +200,7 @@ def output_gecko_lookup(
 
 
 def output_kotlin(
-    objs: metrics.ObjectTree, output_dir: Path, options: Dict[str, Any] = {}
+    objs: metrics.ObjectTree, output_dir: Path, options: Optional[Dict[str, Any]] = None
 ) -> None:
     """
     Given a tree of objects, output Kotlin code to `output_dir`.
@@ -213,6 +216,9 @@ def output_kotlin(
           This is where glean objects will be imported from in the generated
           code.
     """
+    if options is None:
+        options = {}
+
     template = util.get_jinja2_template(
         "kotlin.jinja2",
         filters=(
