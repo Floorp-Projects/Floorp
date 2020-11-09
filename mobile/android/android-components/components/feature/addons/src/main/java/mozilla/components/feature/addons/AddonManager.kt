@@ -52,13 +52,15 @@ class AddonManager(
      * @param waitForPendingActions whether or not to wait (suspend, but not
      * block) until all pending add-on actions (install/uninstall/enable/disable)
      * are completed in either success or failure.
+     * @param allowCache whether or not the result may be provided
+     * from a previously cached response, defaults to true.
      * @return list of all [Addon]s with up-to-date [Addon.installedState].
      * @throws AddonManagerException in case of a problem reading from
      * the [addonsProvider] or querying web extension state from the engine / store.
      */
     @Throws(AddonManagerException::class)
     @Suppress("TooGenericExceptionCaught")
-    suspend fun getAddons(waitForPendingActions: Boolean = true): List<Addon> {
+    suspend fun getAddons(waitForPendingActions: Boolean = true, allowCache: Boolean = true): List<Addon> {
         try {
             // Make sure extension support is initialized, i.e. the state of all installed extensions is known.
             WebExtensionSupport.awaitInitialization()
@@ -71,8 +73,10 @@ class AddonManager(
             // Get all available/supported addons from provider and add state if installed.
             // NB: We're keeping translations only for the default locale.
             val locales = listOf(Locale.getDefault().language)
-            val supportedAddons = addonsProvider.getAvailableAddons()
-                .map { addon -> addon.filterTranslations(locales) }
+            val supportedAddons = addonsProvider.getAvailableAddons(allowCache)
+                .map {
+                    addon -> addon.filterTranslations(locales)
+                }
                 .map { addon ->
                     installedExtensions[addon.id]?.let {
                         addon.copy(installedState = it.toInstalledState())

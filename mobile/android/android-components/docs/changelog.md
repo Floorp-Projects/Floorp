@@ -27,6 +27,9 @@ permalink: /changelog/
 * **browser-session**
   * `SelectionAwareSessionObserver` is now deprecated. All session state changes can be observed using the browser store (`browser-state` module).
 
+* **feature-addons**
+  * `AddonManager.getAddons()` now accepts a new (optional) `allowCache` parameter to configure whether or not a cached response may be returned. This is useful in case a UI flow needs the most up-to-date addons list, or to support "refresh" functionality. By default, cached responses are allowed.
+
 # 65.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v64.0.0...v65.0.0)

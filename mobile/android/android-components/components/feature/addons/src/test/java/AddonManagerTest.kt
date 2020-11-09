@@ -301,6 +301,29 @@ class AddonManagerTest {
     }
 
     @Test
+    fun `getAddons - passes on allowCache parameter`() = runBlocking {
+        val store = BrowserStore()
+
+        val engine: Engine = mock()
+        val callbackCaptor = argumentCaptor<((List<WebExtension>) -> Unit)>()
+        whenever(engine.listInstalledWebExtensions(callbackCaptor.capture(), any())).thenAnswer {
+            callbackCaptor.value.invoke(emptyList())
+        }
+        WebExtensionSupport.initialize(engine, store)
+
+        val addonsProvider: AddonsProvider = mock()
+        whenever(addonsProvider.getAvailableAddons(anyBoolean(), eq(null))).thenReturn(emptyList())
+        val addonsManager = AddonManager(store, mock(), addonsProvider, mock())
+
+        addonsManager.getAddons()
+        verify(addonsProvider).getAvailableAddons(eq(true), eq(null))
+
+        addonsManager.getAddons(allowCache = false)
+        verify(addonsProvider).getAvailableAddons(eq(false), eq(null))
+        Unit
+    }
+
+    @Test
     fun `updateAddon - when a extension is updated successfully`() {
         val engine: Engine = mock()
         val engineSession: EngineSession = mock()
