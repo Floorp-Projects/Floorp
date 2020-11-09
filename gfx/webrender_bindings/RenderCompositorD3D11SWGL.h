@@ -154,6 +154,7 @@ class RenderCompositorD3D11SWGL : public RenderCompositor {
     gfx::SamplingFilter mFilter;
   };
   nsTArray<FrameSurface> mFrameSurfaces;
+  bool mInFrame = false;
 };
 
 static inline bool operator==(const RenderCompositorD3D11SWGL::TileKey& a0,
