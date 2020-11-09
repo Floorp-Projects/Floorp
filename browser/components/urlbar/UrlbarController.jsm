@@ -550,7 +550,7 @@ class UrlbarController {
       resultIndex,
       1
     );
-    if (this.input.searchMode) {
+    if (this.input.searchMode && !this.input.searchMode.isPreview) {
       Services.telemetry.keyedScalarAdd(
         `urlbar.picked.searchmode.${this.input.searchMode.entry}`,
         resultIndex,
