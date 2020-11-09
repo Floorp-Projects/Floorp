@@ -6,7 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["ClientID"];
 
-Cu.importGlobalProperties(["Glean"]);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -446,11 +445,6 @@ var ClientIDImpl = {
     }
 
     this._clientID = id;
-
-    if (AppConstants.MOZ_GLEAN) {
-      Glean.fog_validation.legacy_telemetry_client_id.set(this._clientID);
-    }
-
     this._clientIDHash = null;
     Services.prefs.setStringPref(PREF_CACHED_CLIENTID, this._clientID);
     return true;
