@@ -136,68 +136,96 @@ class DebugCodegenVal {
 };
 
 template <typename Debug = NoDebug>
-static bool ToWebAssemblyValue_i32(JSContext* cx, HandleValue val,
-                                   int32_t* loc) {
+static bool ToWebAssemblyValue_i32(JSContext* cx, HandleValue val, int32_t* loc,
+                                   bool mustWrite64) {
   bool ok = ToInt32(cx, val, loc);
+  if (ok && mustWrite64) {
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+    loc[1] = loc[0] >> 31;
+#else
+    loc[1] = 0;
+#endif
+  }
   Debug::print(*loc);
   return ok;
 }
 template <typename Debug = NoDebug>
-static bool ToWebAssemblyValue_i64(JSContext* cx, HandleValue val,
-                                   int64_t* loc) {
+static bool ToWebAssemblyValue_i64(JSContext* cx, HandleValue val, int64_t* loc,
+                                   bool mustWrite64) {
+  MOZ_ASSERT(mustWrite64);
   JS_TRY_VAR_OR_RETURN_FALSE(cx, *loc, ToBigInt64(cx, val));
   Debug::print(*loc);
   return true;
 }
 template <typename Debug = NoDebug>
-static bool ToWebAssemblyValue_f32(JSContext* cx, HandleValue val, float* loc) {
+static bool ToWebAssemblyValue_f32(JSContext* cx, HandleValue val, float* loc,
+                                   bool mustWrite64) {
   bool ok = RoundFloat32(cx, val, loc);
+  if (ok && mustWrite64) {
+    loc[1] = 0.0;
+  }
   Debug::print(*loc);
   return ok;
 }
 template <typename Debug = NoDebug>
-static bool ToWebAssemblyValue_f64(JSContext* cx, HandleValue val,
-                                   double* loc) {
+static bool ToWebAssemblyValue_f64(JSContext* cx, HandleValue val, double* loc,
+                                   bool mustWrite64) {
+  MOZ_ASSERT(mustWrite64);
   bool ok = ToNumber(cx, val, loc);
   Debug::print(*loc);
   return ok;
 }
 template <typename Debug = NoDebug>
 static bool ToWebAssemblyValue_externref(JSContext* cx, HandleValue val,
-                                         void** loc) {
+                                         void** loc, bool mustWrite64) {
   RootedAnyRef result(cx, AnyRef::null());
   if (!BoxAnyRef(cx, val, &result)) {
     return false;
   }
   *loc = result.get().forCompiledCode();
+#ifndef JS_64BIT
+  if (mustWrite64) {
+    loc[1] = nullptr;
+  }
+#endif
   Debug::print(*loc);
   return true;
 }
 template <typename Debug = NoDebug>
-static bool ToWebAssemblyValue_eqref(JSContext* cx, HandleValue val,
-                                     void** loc) {
+static bool ToWebAssemblyValue_eqref(JSContext* cx, HandleValue val, void** loc,
+                                     bool mustWrite64) {
   RootedAnyRef result(cx, AnyRef::null());
   if (!CheckEqRefValue(cx, val, &result)) {
     return false;
   }
   *loc = result.get().forCompiledCode();
+#ifndef JS_64BIT
+  if (mustWrite64) {
+    loc[1] = nullptr;
+  }
+#endif
   Debug::print(*loc);
   return true;
 }
 template <typename Debug = NoDebug>
 static bool ToWebAssemblyValue_funcref(JSContext* cx, HandleValue val,
-                                       void** loc) {
+                                       void** loc, bool mustWrite64) {
   RootedFunction fun(cx);
   if (!CheckFuncRefValue(cx, val, &fun)) {
     return false;
   }
   *loc = fun;
+#ifndef JS_64BIT
+  if (mustWrite64) {
+    loc[1] = nullptr;
+  }
+#endif
   Debug::print(*loc);
   return true;
 }
 template <typename Debug = NoDebug>
 static bool ToWebAssemblyValue_typeref(JSContext* cx, HandleValue val,
-                                       void** loc) {
+                                       void** loc, bool mustWrite64) {
   JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                            JSMSG_WASM_TYPEREF_FROM_JS);
   return false;
@@ -205,16 +233,16 @@ static bool ToWebAssemblyValue_typeref(JSContext* cx, HandleValue val,
 
 template <typename Debug = NoDebug>
 static bool ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
-                               void* loc) {
+                               void* loc, bool mustWrite64) {
   switch (type.kind()) {
     case ValType::I32:
-      return ToWebAssemblyValue_i32<Debug>(cx, val, (int32_t*)loc);
+      return ToWebAssemblyValue_i32<Debug>(cx, val, (int32_t*)loc, mustWrite64);
     case ValType::I64:
-      return ToWebAssemblyValue_i64<Debug>(cx, val, (int64_t*)loc);
+      return ToWebAssemblyValue_i64<Debug>(cx, val, (int64_t*)loc, mustWrite64);
     case ValType::F32:
-      return ToWebAssemblyValue_f32<Debug>(cx, val, (float*)loc);
+      return ToWebAssemblyValue_f32<Debug>(cx, val, (float*)loc, mustWrite64);
     case ValType::F64:
-      return ToWebAssemblyValue_f64<Debug>(cx, val, (double*)loc);
+      return ToWebAssemblyValue_f64<Debug>(cx, val, (double*)loc, mustWrite64);
     case ValType::V128:
       MOZ_CRASH("unexpected v128 in ToWebAssemblyValue");
     case ValType::Ref:
@@ -229,13 +257,17 @@ static bool ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
 #endif
       switch (type.refTypeKind()) {
         case RefType::Func:
-          return ToWebAssemblyValue_funcref<Debug>(cx, val, (void**)loc);
+          return ToWebAssemblyValue_funcref<Debug>(cx, val, (void**)loc,
+                                                   mustWrite64);
         case RefType::Extern:
-          return ToWebAssemblyValue_externref<Debug>(cx, val, (void**)loc);
+          return ToWebAssemblyValue_externref<Debug>(cx, val, (void**)loc,
+                                                     mustWrite64);
         case RefType::Eq:
-          return ToWebAssemblyValue_eqref<Debug>(cx, val, (void**)loc);
+          return ToWebAssemblyValue_eqref<Debug>(cx, val, (void**)loc,
+                                                 mustWrite64);
         case RefType::TypeIndex:
-          return ToWebAssemblyValue_typeref<Debug>(cx, val, (void**)loc);
+          return ToWebAssemblyValue_typeref<Debug>(cx, val, (void**)loc,
+                                                   mustWrite64);
       }
   }
   MOZ_CRASH("unreachable");
@@ -391,7 +423,7 @@ static bool UnpackResults(JSContext* cx, const ValTypeVector& resultTypes,
     // Result is either one scalar value to unpack to a wasm value, or
     // an ignored value for a zero-valued function.
     if (resultTypes.length() == 1) {
-      return ToWebAssemblyValue(cx, rval, resultTypes[0], argv);
+      return ToWebAssemblyValue(cx, rval, resultTypes[0], argv, true);
     }
     return true;
   }
@@ -411,6 +443,8 @@ static bool UnpackResults(JSContext* cx, const ValTypeVector& resultTypes,
                              got.get());
     return false;
   }
+
+  DebugOnly<uint64_t> previousOffset = ~(uint64_t)0;
 
   ABIResultIter iter(ResultType::Vector(resultTypes));
   // The values are converted in the order they are pushed on the
@@ -432,14 +466,25 @@ static bool UnpackResults(JSContext* cx, const ValTypeVector& resultTypes,
       // and set `argv[0]` set to the extracted result, to be returned by
       // register in the stub.  The register result follows any stack
       // results, so this preserves conversion order.
-      if (!ToWebAssemblyValue(cx, rval, result.type(), argv)) {
+      if (!ToWebAssemblyValue(cx, rval, result.type(), argv, true)) {
         return false;
       }
       seenRegisterResult = true;
       continue;
     }
+    uint32_t result_size = result.size();
+    MOZ_ASSERT(result_size == 4 || result_size == 8);
+#ifdef DEBUG
+    if (previousOffset == ~(uint64_t)0) {
+      previousOffset = (uint64_t)result.stackOffset();
+    } else {
+      MOZ_ASSERT(previousOffset - (uint64_t)result_size ==
+                 (uint64_t)result.stackOffset());
+      previousOffset -= (uint64_t)result_size;
+    }
+#endif
     char* loc = stackResultsArea.value() + result.stackOffset();
-    if (!ToWebAssemblyValue(cx, rval, result.type(), loc)) {
+    if (!ToWebAssemblyValue(cx, rval, result.type(), loc, result_size == 8)) {
       return false;
     }
   }
@@ -2125,7 +2170,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
     size_t naturalIdx = argTypes.naturalIndex(i);
     v = naturalIdx < args.length() ? args[naturalIdx] : UndefinedValue();
     ValType type = funcType->arg(naturalIdx);
-    if (!ToWebAssemblyValue<DebugCodegenVal>(cx, v, type, rawArgLoc)) {
+    if (!ToWebAssemblyValue<DebugCodegenVal>(cx, v, type, rawArgLoc, true)) {
       return false;
     }
     if (type.isReference()) {
