@@ -111,17 +111,19 @@ void main(void) {
     vec2 r_br = clip.bottom_right.outer_inner_radius.xy;
     vec2 r_bl = clip.bottom_left.outer_inner_radius.xy;
 
-    vClipCenter_Radius_TL = vec4(clip_rect.p0 + r_tl, r_tl);
+    vClipCenter_Radius_TL = vec4(clip_rect.p0 + r_tl,
+                                 inverse_radii_squared(r_tl));
 
     vClipCenter_Radius_TR = vec4(clip_rect.p1.x - r_tr.x,
                                  clip_rect.p0.y + r_tr.y,
-                                 r_tr);
+                                 inverse_radii_squared(r_tr));
 
-    vClipCenter_Radius_BR = vec4(clip_rect.p1 - r_br, r_br);
+    vClipCenter_Radius_BR = vec4(clip_rect.p1 - r_br,
+                                 inverse_radii_squared(r_br));
 
     vClipCenter_Radius_BL = vec4(clip_rect.p0.x + r_bl.x,
                                  clip_rect.p1.y - r_bl.y,
-                                 r_bl);
+                                 inverse_radii_squared(r_bl));
 #endif
 }
 #endif

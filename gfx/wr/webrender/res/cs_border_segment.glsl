@@ -265,13 +265,11 @@ vec4 evaluate_color_for_style_in_corner(
             // third of the rounded edge.
             float d_radii_a = distance_to_ellipse(
                 clip_relative_pos,
-                clip_radii.xy - vPartialWidths.xy,
-                aa_range
+                clip_radii.xy - vPartialWidths.xy
             );
             float d_radii_b = distance_to_ellipse(
                 clip_relative_pos,
-                clip_radii.xy - 2.0 * vPartialWidths.xy,
-                aa_range
+                clip_radii.xy - 2.0 * vPartialWidths.xy
             );
             float d = min(-d_radii_a, d_radii_b);
             color0 *= distance_aa(aa_range, d);
@@ -281,8 +279,7 @@ vec4 evaluate_color_for_style_in_corner(
         case BORDER_STYLE_RIDGE: {
             float d = distance_to_ellipse(
                 clip_relative_pos,
-                clip_radii.xy - vPartialWidths.zw,
-                aa_range
+                clip_radii.xy - vPartialWidths.zw
             );
             float alpha = distance_aa(aa_range, d);
             float swizzled_factor;
@@ -402,8 +399,8 @@ void main(void) {
     }
 
     if (in_clip_region) {
-        float d_radii_a = distance_to_ellipse(clip_relative_pos, vClipRadii.xy, aa_range);
-        float d_radii_b = distance_to_ellipse(clip_relative_pos, vClipRadii.zw, aa_range);
+        float d_radii_a = distance_to_ellipse(clip_relative_pos, vClipRadii.xy);
+        float d_radii_b = distance_to_ellipse(clip_relative_pos, vClipRadii.zw);
         float d_radii = max(d_radii_a, -d_radii_b);
         d = max(d, d_radii);
 

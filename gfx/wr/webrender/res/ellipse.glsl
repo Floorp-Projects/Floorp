@@ -2,6 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Preprocess the radii for computing the distance approximation. This should
+// be used in the vertex shader if possible to avoid doing expensive division
+// in the fragment shader. When dealing with a point (zero radii), approximate
+// it as an ellipse with very small radii so that we don't need to branch.
+vec2 inverse_radii_squared(vec2 radii) {
+    return any(lessThanEqual(radii, vec2(0.0)))
+        ? vec2(1.0 / (1.0e-3 * 1.0e-3))
+        : 1.0 / (radii * radii);
+}
+
 #ifdef WR_FRAGMENT_SHADER
 
 // One iteration of Newton's method on the 2D equation of an ellipse:
@@ -18,35 +28,33 @@
 //
 // See G. Taubin, "Distance Approximations for Rasterizing Implicit
 // Curves", section 3.
-float distance_to_ellipse(vec2 p, vec2 radii, float aa_range) {
-    float dist;
-    if (any(lessThanEqual(radii, vec2(0.0)))) {
-        dist = length(p);
-    } else {
-        vec2 invRadiiSq = 1.0 / (radii * radii);
-        float g = dot(p * p * invRadiiSq, vec2(1.0)) - 1.0;
-        vec2 dG = 2.0 * p * invRadiiSq;
-        dist = g * inversesqrt(dot(dG, dG));
-    }
-    return clamp(dist, -aa_range, aa_range);
+float distance_to_ellipse_approx(vec2 p, vec2 inv_radii_sq) {
+    float g = dot(p * p, inv_radii_sq) - 1.0;
+    vec2 dG = 2.0 * p * inv_radii_sq;
+    return g * inversesqrt(dot(dG, dG));
+}
+
+// Slower but more accurate version that uses the exact distance when dealing
+// with a 0-radius point distance and otherwise uses the faster approximation
+// when dealing with non-zero radii.
+float distance_to_ellipse(vec2 p, vec2 radii) {
+    return any(lessThanEqual(radii, vec2(0.0)))
+        ? length(p)
+        : distance_to_ellipse_approx(p, 1.0 / (radii * radii));
 }
 
 float clip_against_ellipse_if_needed(
     vec2 pos,
-    float current_distance,
     vec4 ellipse_center_radius,
-    vec2 sign_modifier,
-    float aa_range
+    vec2 sign_modifier
 ) {
-    if (!all(lessThan(sign_modifier * pos, sign_modifier * ellipse_center_radius.xy))) {
-      return current_distance;
-    }
-
-    float distance = distance_to_ellipse(pos - ellipse_center_radius.xy,
-                                         ellipse_center_radius.zw,
-                                         aa_range);
-
-    return max(distance, current_distance);
+    vec2 p = pos - ellipse_center_radius.xy;
+    // If we're not within the distance bounds of both of the radii (in the
+    // corner), then return a large magnitude negative value to cause us to
+    // clamp off the anti-aliasing.
+    return all(lessThan(sign_modifier * p, vec2(0.0)))
+        ? distance_to_ellipse_approx(p, ellipse_center_radius.zw)
+        : -1.0e6;
 }
 
 float rounded_rect(vec2 pos,
@@ -55,35 +63,15 @@ float rounded_rect(vec2 pos,
                    vec4 clip_center_radius_br,
                    vec4 clip_center_radius_bl,
                    float aa_range) {
-    // Start with a negative value (means "inside") for all fragments that are not
-    // in a corner. If the fragment is in a corner, one of the clip_against_ellipse_if_needed
-    // calls below will update it.
-    float current_distance = -aa_range;
-
-    // Clip against each ellipse.
-    current_distance = clip_against_ellipse_if_needed(pos,
-                                                      current_distance,
-                                                      clip_center_radius_tl,
-                                                      vec2(1.0),
-                                                      aa_range);
-
-    current_distance = clip_against_ellipse_if_needed(pos,
-                                                      current_distance,
-                                                      clip_center_radius_tr,
-                                                      vec2(-1.0, 1.0),
-                                                      aa_range);
-
-    current_distance = clip_against_ellipse_if_needed(pos,
-                                                      current_distance,
-                                                      clip_center_radius_br,
-                                                      vec2(-1.0),
-                                                      aa_range);
-
-    current_distance = clip_against_ellipse_if_needed(pos,
-                                                      current_distance,
-                                                      clip_center_radius_bl,
-                                                      vec2(1.0, -1.0),
-                                                      aa_range);
+    // Clip against each ellipse. If the fragment is in a corner, one of the
+    // clip_against_ellipse_if_needed calls below will update it. If outside
+    // any ellipse, the clip routine will return a negative value so that max()
+    // will choose the greatest amount of applicable anti-aliasing.
+    float current_distance = 
+        max(max(clip_against_ellipse_if_needed(pos, clip_center_radius_tl, vec2(1.0)),
+                clip_against_ellipse_if_needed(pos, clip_center_radius_tr, vec2(-1.0, 1.0))),
+            max(clip_against_ellipse_if_needed(pos, clip_center_radius_br, vec2(-1.0)),
+                clip_against_ellipse_if_needed(pos, clip_center_radius_bl, vec2(1.0, -1.0))));
 
     // Apply AA
     // See comment in ps_border_corner about the choice of constants.
