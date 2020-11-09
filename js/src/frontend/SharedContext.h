@@ -315,7 +315,6 @@ inline EvalSharedContext* SharedContext::asEvalContext() {
 }
 
 enum class HasHeritage { No, Yes };
-enum class TopLevelFunction { No, Yes };
 
 class FunctionBox : public SharedContext {
   friend struct GCThingList;
@@ -372,8 +371,6 @@ class FunctionBox : public SharedContext {
   // Back pointer used by asm.js for error messages.
   FunctionNode* functionNode = nullptr;
 
-  TopLevelFunction isTopLevel_ = TopLevelFunction::No;
-
   // True if bytecode will be emitted for this function in the current
   // compilation.
   bool emitBytecode : 1;
@@ -421,8 +418,7 @@ class FunctionBox : public SharedContext {
   FunctionBox(JSContext* cx, SourceExtent extent,
               CompilationInfo& compilationInfo, Directives directives,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-              const ParserAtom* atom, FunctionFlags flags, FunctionIndex index,
-              TopLevelFunction isTopLevel);
+              const ParserAtom* atom, FunctionFlags flags, FunctionIndex index);
 
   ScriptStencil& functionStencil() const;
 
