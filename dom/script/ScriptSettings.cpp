@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ScriptSettings.h"
+#include "LoadedScript.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSContext.h"
@@ -14,6 +15,7 @@
 #include "mozilla/dom/WorkerPrivate.h"
 
 #include "jsapi.h"
+#include "js/CompilationAndEvaluation.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_OUT_OF_MEMORY
 #include "js/Warnings.h"              // JS::{Get,}WarningReporter
 #include "xpcpublic.h"
@@ -30,6 +32,33 @@
 
 namespace mozilla {
 namespace dom {
+
+JSObject* GetElementCallback(JSContext* aCx, JS::HandleValue aValue) {
+  JS::RootedValue privateValue(aCx, aValue);
+  MOZ_ASSERT(!privateValue.isObjectOrNull() && !privateValue.isUndefined());
+  LoadedScript* script = static_cast<LoadedScript*>(privateValue.toPrivate());
+
+  if (!script->GetFetchOptions()) {
+    return nullptr;
+  }
+
+  nsCOMPtr<Element> domElement = script->GetFetchOptions()->mElement;
+  if (!domElement) {
+    return nullptr;
+  }
+
+  JSObject* globalObject =
+      domElement->OwnerDoc()->GetScopeObject()->GetGlobalJSObject();
+  JSAutoRealm ar(aCx, globalObject);
+
+  JS::Rooted<JS::Value> elementValue(aCx);
+  nsresult rv = nsContentUtils::WrapNative(aCx, domElement, &elementValue,
+                                           /* aAllowWrapping = */ true);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+  return elementValue.toObjectOrNull();
+}
 
 static MOZ_THREAD_LOCAL(ScriptSettingsStackEntry*) sScriptSettingsTLS;
 

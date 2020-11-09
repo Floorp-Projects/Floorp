@@ -50,4 +50,5 @@ dom/power/
 dom/quota/
 dom/reporting/
 dom/res/
+dom/script/
 dom/simpledb/

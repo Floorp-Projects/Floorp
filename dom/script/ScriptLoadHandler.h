@@ -15,6 +15,9 @@
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
+
+class Decoder;
+
 namespace dom {
 
 class ScriptLoadRequest;
