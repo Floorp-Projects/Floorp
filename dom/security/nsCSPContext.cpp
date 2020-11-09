@@ -13,6 +13,7 @@
 #include "nsCSPContext.h"
 #include "nsCSPParser.h"
 #include "nsCSPService.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsError.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIClassInfoImpl.h"

@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_SRICheck_h
 #define mozilla_dom_SRICheck_h
 
+#include "nsTString.h"
+#include "nsStringFwd.h"
 #include "nsCOMPtr.h"
 #include "nsICryptoHash.h"
 
