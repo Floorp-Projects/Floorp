@@ -260,12 +260,18 @@ SelectContentHelper.prototype = {
           let inputEvent = new win.Event("input", {
             bubbles: true,
           });
-          element.dispatchEvent(inputEvent);
 
           let changeEvent = new win.Event("change", {
             bubbles: true,
           });
-          element.dispatchEvent(changeEvent);
+
+          let handlingUserInput = win.windowUtils.setHandlingUserInput(true);
+          try {
+            element.dispatchEvent(inputEvent);
+            element.dispatchEvent(changeEvent);
+          } finally {
+            handlingUserInput.destruct();
+          }
         }
 
         // Fire click event

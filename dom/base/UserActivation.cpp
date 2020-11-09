@@ -55,7 +55,6 @@ bool UserActivation::IsUserInteractionEvent(const WidgetEvent* aEvent) {
       // unexpected time.
       return aEvent->AsKeyboardEvent()->CanTreatAsUserInput();
     // eBasicEventClass
-    case eFormChange:
     // eMouseEventClass
     case eMouseClick:
     case eMouseDown:
