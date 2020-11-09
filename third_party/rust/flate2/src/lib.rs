@@ -192,23 +192,23 @@ impl Compression {
     ///
     /// The integer here is typically on a scale of 0-9 where 0 means "no
     /// compression" and 9 means "take as long as you'd like".
-    pub const fn new(level: u32) -> Compression {
+    pub fn new(level: u32) -> Compression {
         Compression(level)
     }
 
     /// No compression is to be performed, this may actually inflate data
     /// slightly when encoding.
-    pub const fn none() -> Compression {
+    pub fn none() -> Compression {
         Compression(0)
     }
 
     /// Optimize for the best speed of encoding.
-    pub const fn fast() -> Compression {
+    pub fn fast() -> Compression {
         Compression(1)
     }
 
     /// Optimize for the size of data being encoded.
-    pub const fn best() -> Compression {
+    pub fn best() -> Compression {
         Compression(9)
     }
 
