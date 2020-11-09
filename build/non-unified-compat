@@ -48,4 +48,5 @@ dom/permission/
 dom/plugins/
 dom/power/
 dom/quota/
+dom/reporting/
 dom/simpledb/

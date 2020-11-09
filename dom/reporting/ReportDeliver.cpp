@@ -8,6 +8,7 @@
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/ReportBody.h"
 #include "mozilla/dom/ReportDeliver.h"
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/RequestBinding.h"

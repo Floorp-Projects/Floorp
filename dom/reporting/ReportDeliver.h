@@ -9,6 +9,8 @@
 
 #include "nsIObserver.h"
 #include "nsITimer.h"
+#include "nsString.h"
+#include "nsTArray.h"
 
 class nsIPrincipal;
 class nsPIDOMWindowInner;
