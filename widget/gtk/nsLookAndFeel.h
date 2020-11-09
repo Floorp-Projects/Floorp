@@ -43,6 +43,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
  protected:
   bool WidgetUsesImage(WidgetNodeType aNodeType);
   void RecordLookAndFeelSpecificTelemetry() override;
+  bool ShouldHonorThemeScrollbarColors();
 
   // Cached fonts
   nsString mDefaultFontName;

@@ -24,6 +24,7 @@
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/Telemetry.h"
 #include "ScreenHelperGTK.h"
+#include "nsNativeBasicThemeGTK.h"
 
 #include "gtkdrawing.h"
 #include "nsStyleConsts.h"
@@ -1081,28 +1082,37 @@ void nsLookAndFeel::EnsureInit() {
     mPrefersReducedMotion = !enableAnimations;
 
     // Colors that we pass to content processes through the LookAndFeelCache.
-    style = GetStyleContext(MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL);
-    gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL,
-                                           &color);
-    mMozScrollbar = mThemedScrollbar = GDK_RGBA_TO_NS_RGBA(color);
-    gtk_style_context_get_background_color(style, GTK_STATE_FLAG_BACKDROP,
-                                           &color);
-    mThemedScrollbarInactive = GDK_RGBA_TO_NS_RGBA(color);
+    if (ShouldHonorThemeScrollbarColors()) {
+      style = GetStyleContext(MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL);
+      gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL,
+                                             &color);
+      mMozScrollbar = mThemedScrollbar = GDK_RGBA_TO_NS_RGBA(color);
+      gtk_style_context_get_background_color(style, GTK_STATE_FLAG_BACKDROP,
+                                             &color);
+      mThemedScrollbarInactive = GDK_RGBA_TO_NS_RGBA(color);
 
-    style = GetStyleContext(MOZ_GTK_SCROLLBAR_THUMB_VERTICAL);
-    gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL,
-                                           &color);
-    mThemedScrollbarThumb = GDK_RGBA_TO_NS_RGBA(color);
-    gtk_style_context_get_background_color(style, GTK_STATE_FLAG_PRELIGHT,
-                                           &color);
-    mThemedScrollbarThumbHover = GDK_RGBA_TO_NS_RGBA(color);
-    gtk_style_context_get_background_color(
-        style, GtkStateFlags(GTK_STATE_FLAG_PRELIGHT | GTK_STATE_FLAG_ACTIVE),
-        &color);
-    mThemedScrollbarThumbActive = GDK_RGBA_TO_NS_RGBA(color);
-    gtk_style_context_get_background_color(style, GTK_STATE_FLAG_BACKDROP,
-                                           &color);
-    mThemedScrollbarThumbInactive = GDK_RGBA_TO_NS_RGBA(color);
+      style = GetStyleContext(MOZ_GTK_SCROLLBAR_THUMB_VERTICAL);
+      gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL,
+                                             &color);
+      mThemedScrollbarThumb = GDK_RGBA_TO_NS_RGBA(color);
+      gtk_style_context_get_background_color(style, GTK_STATE_FLAG_PRELIGHT,
+                                             &color);
+      mThemedScrollbarThumbHover = GDK_RGBA_TO_NS_RGBA(color);
+      gtk_style_context_get_background_color(
+          style, GtkStateFlags(GTK_STATE_FLAG_PRELIGHT | GTK_STATE_FLAG_ACTIVE),
+          &color);
+      mThemedScrollbarThumbActive = GDK_RGBA_TO_NS_RGBA(color);
+      gtk_style_context_get_background_color(style, GTK_STATE_FLAG_BACKDROP,
+                                             &color);
+      mThemedScrollbarThumbInactive = GDK_RGBA_TO_NS_RGBA(color);
+    } else {
+      mMozScrollbar = mThemedScrollbar = widget::sScrollbarColor.ToABGR();
+      mThemedScrollbarInactive = widget::sScrollbarColor.ToABGR();
+      mThemedScrollbarThumb = widget::sScrollbarThumbColor.ToABGR();
+      mThemedScrollbarThumbHover = widget::sScrollbarThumbColorHover.ToABGR();
+      mThemedScrollbarThumbActive = widget::sScrollbarThumbColorActive.ToABGR();
+      mThemedScrollbarThumbInactive = widget::sScrollbarThumbColor.ToABGR();
+    }
   }
 
   // The label is not added to a parent widget, but shared for constructing
@@ -1447,4 +1457,14 @@ void nsLookAndFeel::RecordLookAndFeelSpecificTelemetry() {
   mozilla::Telemetry::ScalarSet(
       mozilla::Telemetry::ScalarID::WIDGET_GTK_THEME_SCROLLBAR_USES_IMAGES,
       scrollbarUsesImage);
+}
+
+bool nsLookAndFeel::ShouldHonorThemeScrollbarColors() {
+  // If the Gtk theme uses anything other than solid color backgrounds for Gtk
+  // scrollbar parts, this is a good indication that painting XUL scrollbar part
+  // elements using colors extracted from the theme won't provide good results.
+  return !WidgetUsesImage(MOZ_GTK_SCROLLBAR_VERTICAL) &&
+         !WidgetUsesImage(MOZ_GTK_SCROLLBAR_CONTENTS_VERTICAL) &&
+         !WidgetUsesImage(MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL) &&
+         !WidgetUsesImage(MOZ_GTK_SCROLLBAR_THUMB_VERTICAL);
 }
