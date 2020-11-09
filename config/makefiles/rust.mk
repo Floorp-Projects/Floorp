@@ -53,6 +53,11 @@ ifeq (1,$(MOZ_PARALLEL_BUILD))
 cargo_build_flags += -j1
 endif
 
+# This should also be paired with -Zbuild-std, but that doesn't work yet.
+ifdef MOZ_TSAN
+RUSTFLAGS += -Zsanitizer=thread
+endif
+
 # These flags are passed via `cargo rustc` and only apply to the final rustc
 # invocation (i.e., only the top-level crate, not its dependencies).
 cargo_rustc_flags = $(CARGO_RUSTCFLAGS)
