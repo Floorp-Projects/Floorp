@@ -258,7 +258,7 @@ MediaPipeline::MediaPipeline(const std::string& aPc,
       mRtpBytesReceived(0),
       mPc(aPc),
       mFilter(),
-      mRtpParser(webrtc::RtpHeaderParser::Create()),
+      mRtpParser(webrtc::RtpHeaderParser::CreateForTest().release()),
       mPacketDumper(new PacketDumper(mPc)) {
   if (mDirection == DirectionType::RECEIVE) {
     mConduit->SetReceiverTransport(mTransport);
@@ -334,8 +334,7 @@ void MediaPipeline::UpdateTransport_s(
 
   if (mFilter) {
     for (const auto& extension : mFilter->GetExtmap()) {
-      mRtpParser->DeregisterRtpHeaderExtension(
-          webrtc::StringToRtpExtensionType(extension.uri));
+      mRtpParser->DeregisterRtpHeaderExtension(extension);
     }
   }
   if (mFilter && aFilter) {
@@ -347,8 +346,7 @@ void MediaPipeline::UpdateTransport_s(
   }
   if (mFilter) {
     for (const auto& extension : mFilter->GetExtmap()) {
-      mRtpParser->RegisterRtpHeaderExtension(
-          webrtc::StringToRtpExtensionType(extension.uri), extension.id);
+      mRtpParser->RegisterRtpHeaderExtension(extension);
     }
   }
 }
