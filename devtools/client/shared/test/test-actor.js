@@ -13,7 +13,6 @@ const {
   getAdjustedQuads,
   getWindowDimensions,
 } = require("devtools/shared/layout/utils");
-const defer = require("devtools/shared/defer");
 const {
   isAgentStylesheet,
   getCSSStyleRules,
@@ -680,18 +679,17 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
    * @param {String} selector The node selector
    */
   reloadFrame: function(selector) {
-    const node = this._querySelector(selector);
+    return new Promise(resolve => {
+      const node = this._querySelector(selector);
 
-    const deferred = defer();
+      const onLoad = function() {
+        node.removeEventListener("load", onLoad);
+        resolve();
+      };
+      node.addEventListener("load", onLoad);
 
-    const onLoad = function() {
-      node.removeEventListener("load", onLoad);
-      deferred.resolve();
-    };
-    node.addEventListener("load", onLoad);
-
-    node.contentWindow.location.reload();
-    return deferred.promise;
+      node.contentWindow.location.reload();
+    });
   },
 
   /**
@@ -729,30 +727,28 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
       return {};
     }
 
-    const deferred = defer();
-    this.content.addEventListener(
-      "scroll",
-      function(event) {
-        const data = { x: this.content.scrollX, y: this.content.scrollY };
-        deferred.resolve(data);
-      },
-      { once: true }
-    );
+    return new Promise(resolve => {
+      this.content.addEventListener(
+        "scroll",
+        function(event) {
+          const data = { x: this.content.scrollX, y: this.content.scrollY };
+          resolve(data);
+        },
+        { once: true }
+      );
 
-    this.content[relative ? "scrollBy" : "scrollTo"](x, y);
-
-    return deferred.promise;
+      this.content[relative ? "scrollBy" : "scrollTo"](x, y);
+    });
   },
 
   /**
    * Forces the reflow and waits for the next repaint.
    */
   reflow: function() {
-    const deferred = defer();
-    this.content.document.documentElement.offsetWidth;
-    this.content.requestAnimationFrame(deferred.resolve);
-
-    return deferred.promise;
+    return new Promise(resolve => {
+      this.content.document.documentElement.offsetWidth;
+      this.content.requestAnimationFrame(resolve);
+    });
   },
 
   async getNodeRect(selector) {
