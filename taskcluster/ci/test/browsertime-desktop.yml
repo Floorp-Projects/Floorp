@@ -108,7 +108,7 @@ browsertime-tp6:
         by-app:
             chrome:
                 - linux.*shippable[^-qr].*
-                - mac.*shippable[^-qr].*
+                - macosx1014-64-shippable-qr/opt
             chromium:
                 # Run on non-QR shippable, but test-platforms.yml doesn't have
                 # any more non-QR macosx shippable things. So for macosx we want
