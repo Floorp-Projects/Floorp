@@ -21,22 +21,16 @@ add_task(async function() {
     ticks: [],
   };
 
-  const deferreds = {
-    markers: defer(),
-    memory: defer(),
-    ticks: defer(),
-  };
-
-  front.on("timeline-data", handler);
+  const done = new Promise(resolve => {
+    front.on("timeline-data", (name, data) => handler(name, data, resolve));
+  });
 
   const rec = await front.startRecording({
     withMarkers: true,
     withMemory: true,
     withTicks: true,
   });
-  await Promise.all(
-    Object.keys(deferreds).map(type => deferreds[type].promise)
-  );
+  await done;
   await front.stopRecording(rec);
   front.off("timeline-data", handler);
 
@@ -47,7 +41,7 @@ add_task(async function() {
   await target.destroy();
   gBrowser.removeCurrentTab();
 
-  function handler(name, data) {
+  function handler(name, data, resolve) {
     if (name === "markers") {
       if (counters.markers.length >= 1) {
         return;
@@ -87,11 +81,11 @@ add_task(async function() {
     }
 
     if (
-      (name === "markers" && counters[name].length === 1) ||
-      (name === "memory" && counters[name].length === 3) ||
-      (name === "ticks" && counters[name].length === 3)
+      counters.markers.length === 1 &&
+      counters.memory.length === 3 &&
+      counters.ticks.length === 3
     ) {
-      deferreds[name].resolve();
+      resolve();
     }
   }
 });
