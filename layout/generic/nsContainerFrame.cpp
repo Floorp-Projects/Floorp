@@ -2513,6 +2513,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
 
   const bool isOrthogonal = aWM.IsOrthogonalTo(parentFrame->GetWritingMode());
   const bool isVertical = aWM.IsVertical();
+  const LogicalSize fallbackIntrinsicSize(aWM, kFallbackIntrinsicSize);
   const auto& isizeCoord =
       isVertical ? aIntrinsicSize.height : aIntrinsicSize.width;
   const bool hasIntrinsicISize = isizeCoord.isSome();
@@ -2660,7 +2661,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
           tentISize = 0;
         }
       } else {
-        tentISize = nsPresContext::CSSPixelsToAppUnits(300);
+        tentISize = fallbackIntrinsicSize.ISize(aWM);
       }
 
       // If we need to clamp the inline size to fit the CB, we use the 'stretch'
@@ -2676,7 +2677,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
       } else if (logicalRatio) {
         tentBSize = logicalRatio.Inverted().ApplyTo(tentISize);
       } else {
-        tentBSize = nsPresContext::CSSPixelsToAppUnits(150);
+        tentBSize = fallbackIntrinsicSize.BSize(aWM);
       }
 
       // (ditto the comment about clamping the inline size above)
@@ -2742,7 +2743,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
             iSize = intrinsicISize;
           }  // else - leave iSize as is to fill the CB
         } else {
-          iSize = nsPresContext::CSSPixelsToAppUnits(300);
+          iSize = fallbackIntrinsicSize.ISize(aWM);
         }
       }  // else - leave iSize as is to fill the CB
       iSize = NS_CSS_MINMAX(iSize, minISize, maxISize);
@@ -2760,7 +2761,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
             bSize = intrinsicBSize;
           }  // else - leave bSize as is to fill the CB
         } else {
-          bSize = nsPresContext::CSSPixelsToAppUnits(150);
+          bSize = fallbackIntrinsicSize.BSize(aWM);
         }
       }  // else - leave bSize as is to fill the CB
       bSize = NS_CSS_MINMAX(bSize, minBSize, maxBSize);
