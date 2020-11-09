@@ -4,7 +4,12 @@
 
 ("use strict");
 
-const EXPORTED_SYMBOLS = ["EventDispatcher", "MarionetteEventsParent"];
+const EXPORTED_SYMBOLS = [
+  "EventDispatcher",
+  "MarionetteEventsParent",
+  "registerEventsActor",
+  "unregisterEventsActor",
+];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -35,4 +40,37 @@ class MarionetteEventsParent extends JSWindowActorParent {
 
     return rv;
   }
+}
+
+/**
+ * Register Events actors to listen for page load events via EventDispatcher.
+ */
+function registerEventsActor() {
+  // Register the JSWindowActor pair for events as used by Marionette
+  ChromeUtils.registerWindowActor("MarionetteEvents", {
+    kind: "JSWindowActor",
+    parent: {
+      moduleURI:
+        "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
+    },
+    child: {
+      moduleURI: "chrome://marionette/content/actors/MarionetteEventsChild.jsm",
+      events: {
+        beforeunload: { capture: true },
+        DOMContentLoaded: { mozSystemGroup: true },
+        hashchange: { mozSystemGroup: true },
+        pagehide: { mozSystemGroup: true },
+        pageshow: { mozSystemGroup: true },
+        // popstate doesn't bubble, as such use capturing phase
+        popstate: { capture: true, mozSystemGroup: true },
+      },
+    },
+
+    allFrames: true,
+    includeChrome: true,
+  });
+}
+
+function unregisterEventsActor() {
+  ChromeUtils.unregisterWindowActor("MarionetteEvents");
 }
