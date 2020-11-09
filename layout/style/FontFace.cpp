@@ -328,8 +328,6 @@ FontFaceLoadStatus FontFace::Status() { return mStatus; }
 Promise* FontFace::Load(ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mFontFaceSet->FlushUserFontSet();
-
   EnsurePromise();
 
   if (!mLoaded) {
