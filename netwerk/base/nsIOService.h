@@ -17,7 +17,6 @@
 #include "nsCategoryCache.h"
 #include "nsISpeculativeConnect.h"
 #include "nsDataHashtable.h"
-#include "nsWeakReference.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"

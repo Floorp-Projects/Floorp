@@ -9,7 +9,6 @@
 #include "nsContentUtils.h"
 #include "nsCSPUtils.h"
 #include "nsDebug.h"
-#include "nsCSPParser.h"
 #include "nsIConsoleService.h"
 #include "nsIChannel.h"
 #include "nsICryptoHash.h"
@@ -19,7 +18,6 @@
 #include "nsReadableUtils.h"
 #include "nsSandboxFlags.h"
 
-#include "mozilla/dom/CSPDictionariesBinding.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/StaticPrefs_security.h"
 
@@ -119,7 +117,7 @@ bool CSP_ShouldResponseInheritCSP(nsIChannel* aChannel) {
 
 void CSP_ApplyMetaCSPToDoc(mozilla::dom::Document& aDoc,
                            const nsAString& aPolicyStr) {
-  if (!mozilla::StaticPrefs::security_csp_enable() || aDoc.IsLoadedAsData()) {
+  if (!StaticPrefs::security_csp_enable() || aDoc.IsLoadedAsData()) {
     return;
   }
 
