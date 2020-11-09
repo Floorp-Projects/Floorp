@@ -100,12 +100,13 @@ module.exports = [
     description:
       "Measure open/close toolbox on webconsole panel against complicated document",
   },
-  {
-    name: "complicated.inspector",
-    path: "inspector/complicated.js",
-    description:
-      "Measure open/close toolbox on inspector panel against complicated document",
-  },
+  // Bug 1503499 - disable for frequent failures on fission
+  // {
+  //  name: "complicated.inspector",
+  //  path: "inspector/complicated.js",
+  //  description:
+  //    "Measure open/close toolbox on inspector panel against complicated document",
+  // },
   {
     name: "complicated.debugger",
     path: "debugger/complicated.js",
