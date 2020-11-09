@@ -56,6 +56,13 @@ enum class IsRemoveNotification {
   do {                                       \
   } while (0)
 
+#define NOTIFY_PRESSHELL_IF(condition_, func_, params_)        \
+  if (condition_) {                                            \
+    if (PresShell* presShell = doc->GetObservingPresShell()) { \
+      presShell->func_ params_;                                \
+    }                                                          \
+  }
+
 // This macro expects the ownerDocument of content_ to be in scope as
 // |Document* doc|
 #define IMPL_MUTATION_NOTIFICATION(func_, content_, params_, remove_)      \
@@ -64,10 +71,8 @@ enum class IsRemoveNotification {
   nsINode* node = content_;                                                \
   COMPOSED_DOC_DECL                                                        \
   NS_ASSERTION(node->OwnerDoc() == doc, "Bogus document");                 \
-  if (remove_ == IsRemoveNotification::Yes && node->GetComposedDoc()) {    \
-    if (PresShell* presShell = doc->GetObservingPresShell()) {             \
-      presShell->func_ params_;                                            \
-    }                                                                      \
+  if ((remove_) == IsRemoveNotification::Yes) {                            \
+    NOTIFY_PRESSHELL_IF(node->GetComposedDoc(), func_, params_);           \
   }                                                                        \
   CALL_BINDING_MANAGER(func_, params_);                                    \
   nsINode* last;                                                           \
@@ -90,10 +95,8 @@ enum class IsRemoveNotification {
   MOZ_ASSERT((last == doc) == wasInComposedDoc ||                          \
              (remove_ == IsRemoveNotification::Yes &&                      \
               !strcmp(#func_, "NativeAnonymousChildListChange")));         \
-  if (remove_ == IsRemoveNotification::No && last == doc) {                \
-    if (PresShell* presShell = doc->GetObservingPresShell()) {             \
-      presShell->func_ params_;                                            \
-    }                                                                      \
+  if ((remove_) == IsRemoveNotification::No) {                             \
+    NOTIFY_PRESSHELL_IF(last == doc, func_, params_);                      \
   }                                                                        \
   PR_END_MACRO
 
