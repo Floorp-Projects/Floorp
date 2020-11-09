@@ -42,13 +42,13 @@ import org.mozilla.gecko.GeckoAppShell;
     }
 
     @WrapForJNI(stubName = "NotifyVsync")
-    private static native void nativeNotifyVsync();
+    private static native void nativeNotifyVsync(final long frameTimeNanos);
 
     // Choreographer callback implementation.
     public void doFrame(final long frameTimeNanos) {
         if (mObservingVsync) {
             mChoreographer.postFrameCallback(this);
-            nativeNotifyVsync();
+            nativeNotifyVsync(frameTimeNanos);
         }
     }
 
