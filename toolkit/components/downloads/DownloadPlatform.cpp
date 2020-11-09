@@ -49,10 +49,6 @@ DownloadPlatform* DownloadPlatform::GetDownloadPlatform() {
 
   NS_ADDREF(gDownloadPlatformService);
 
-#if defined(MOZ_WIDGET_GTK)
-  g_type_init();
-#endif
-
   return gDownloadPlatformService;
 }
 
