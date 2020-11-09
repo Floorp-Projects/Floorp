@@ -65,8 +65,6 @@ const proto = {
    *        the caller:
    *          - createValueGrip
    *              Creates a value grip for the given object
-   *          - getSourcesManager
-   *              SourcesManager getter that manages the sources of a thread
    *          - createEnvironmentActor
    *              Creates and return an environment actor
    *          - getGripDepth
@@ -81,7 +79,6 @@ const proto = {
     {
       thread,
       createValueGrip: createValueGripHook,
-      getSourcesManager,
       createEnvironmentActor,
       getGripDepth,
       incrementGripDepth,
@@ -100,7 +97,6 @@ const proto = {
     this.thread = thread;
     this.hooks = {
       createValueGrip: createValueGripHook,
-      getSourcesManager,
       createEnvironmentActor,
       getGripDepth,
       incrementGripDepth,
@@ -272,34 +268,6 @@ const proto = {
     }
 
     return promiseState;
-  },
-
-  /**
-   * Handle a protocol request to provide the definition site of this function
-   * object.
-   */
-  definitionSite: function() {
-    if (this.obj.class != "Function") {
-      return this.throwError(
-        "objectNotFunction",
-        this.actorID + " is not a function."
-      );
-    }
-
-    if (!this.obj.script) {
-      return this.throwError(
-        "noScript",
-        this.actorID + " has no Debugger.Script"
-      );
-    }
-
-    return {
-      source: this.hooks
-        .getSourcesManager()
-        .createSourceActor(this.obj.script.source),
-      line: this.obj.script.startLine,
-      column: 0, // TODO bug 901138: use Debugger.Script.prototype.startColumn
-    };
   },
 
   /**

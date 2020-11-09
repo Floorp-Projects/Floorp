@@ -1740,7 +1740,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
           return createValueGrip(v, this.threadLifetimePool, this.objectGrip);
         },
-        getSourcesManager: () => this.sourcesManager,
         createEnvironmentActor: (e, p) => this.createEnvironmentActor(e, p),
         promote: () => this.threadObjectGrip(actor),
         isThreadLifetimePool: () =>
