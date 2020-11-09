@@ -269,7 +269,7 @@ Internal API
 These functions are only supposed to be used by Telemetry internally or in tests.
 
 Also, the ``event-telemetry-storage-limit-reached`` topic is notified when the event ping event
-limit is reached (configurable via the ``toolkit.telemetry.eventping.eventLimit`` preference).
+limit is reached (1000 event records).
 This is intended only for use internally or in tests.
 
 .. _events.event-summary:

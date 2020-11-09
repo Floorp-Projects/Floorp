@@ -79,8 +79,6 @@ var TelemetryUtils = {
     PreviousBuildID: "toolkit.telemetry.previousBuildID",
 
     // Event Ping Preferences
-    EventPingEnabled: "toolkit.telemetry.eventping.enabled",
-    EventPingEventLimit: "toolkit.telemetry.eventping.eventLimit",
     EventPingMinimumFrequency: "toolkit.telemetry.eventping.minimumFrequency",
     EventPingMaximumFrequency: "toolkit.telemetry.eventping.maximumFrequency",
 

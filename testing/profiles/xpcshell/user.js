@@ -27,9 +27,6 @@ user_pref("dom.ipc.processPriorityManager.enabled", false);
 // Avoid idle-daily notifications, to avoid expensive operations that may
 // cause unexpected test timeouts.
 user_pref("idle.lastDailyNotification", -1);
-// Enable telemetry event ping during tests, even for geckoview, where it
-// is normally disabled.
-user_pref("toolkit.telemetry.eventping.enabled", true);
 // XXX: Bug 1617611 - Fix all the tests broken by "cookies SameSite=Lax by default"
 user_pref("network.cookie.sameSite.laxByDefault", false);
 // Bug 455077 - Ensure we use sRGB as the output profile for test consistency.
