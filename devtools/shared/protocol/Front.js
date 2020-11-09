@@ -62,30 +62,28 @@ class Front extends Pool {
   }
 
   destroy() {
-    super.destroy();
+    // Prevent destroying twice if a `forwardCancelling` event has already been received
+    // and already called `baseFrontClassDestroy`
+    this.baseFrontClassDestroy();
+
+    // Keep `clearEvents` out of baseFrontClassDestroy as we still want TargetMixin to be
+    // able to emit `target-destroyed` after we called baseFrontClassDestroy from DevToolsClient.purgeRequests.
     this.clearEvents();
-    // Prevent purging requests if a forwardCancelling request has already been received
-    // and already called purgeRequests
-    if (this.actorID) {
-      this.purgeRequestsForDestroy();
-    }
-    this.targetFront = null;
-    this.parentFront = null;
-    this._frontCreationListeners = null;
-    this._frontDestructionListeners = null;
-    this._beforeListeners = null;
   }
 
-  // This method is also called from DevToolsClient, when a connector is destroyed
-  // and we should reject all pending request made to the remote process/target/thread.
-  // And also avoid trying to do new request against this remote context.
-  // When a connector is destroy a forwardCancelling RDP event is sent by the server.
-  // This is done in a distinct method from `destroy` in order to be able to purge
-  // requests immediately, even if `Front.destroy` is overloaded by an async method.
-  purgeRequestsForDestroy() {
+  // This method is also called from `DevToolsClient`, when a connector is destroyed
+  // and we should:
+  // - reject all pending request made to the remote process/target/thread.
+  // - avoid trying to do new request against this remote context.
+  // - unmanage this front, so that DevToolsClient.getFront no longer returns it.
+  //
+  // When a connector is destroyed a `forwardCancelling` RDP event is sent by the server.
+  // This is done in a distinct method from `destroy` in order to do all that immediately,
+  // even if `Front.destroy` is overloaded by an async method.
+  baseFrontClassDestroy() {
     // Reject all outstanding requests, they won't make sense after
     // the front is destroyed.
-    while (this._requests && this._requests.length > 0) {
+    while (this._requests.length > 0) {
       const { deferred, to, type, stack } = this._requests.shift();
       // Note: many tests are ignoring `Connection closed` promise rejections,
       // via PromiseTestUtils.allowMatchingRejectionsGlobally.
@@ -100,7 +98,17 @@ class Front extends Pool {
         stack.formattedStack;
       deferred.reject(new Error(msg));
     }
-    this.actorID = null;
+
+    if (this.actorID) {
+      super.destroy();
+      this.actorID = null;
+    }
+
+    this.targetFront = null;
+    this.parentFront = null;
+    this._frontCreationListeners = null;
+    this._frontDestructionListeners = null;
+    this._beforeListeners = null;
   }
 
   isDestroyed() {
@@ -289,7 +297,7 @@ class Front extends Pool {
   onPacket(packet) {
     if (this.isDestroyed()) {
       // If the Front was already destroyed, all the requests have been purged
-      // and rejected with detailed error messages in purgeRequestsForDestroy.
+      // and rejected with detailed error messages in baseFrontClassDestroy.
       return;
     }
 
