@@ -320,10 +320,6 @@ enum class TopLevelFunction { No, Yes };
 class FunctionBox : public SharedContext {
   friend struct GCThingList;
 
-  // The parser handles tracing the fields below via the FunctionBox linked
-  // list represented by |traceLink_|.
-  FunctionBox* traceLink_ = nullptr;
-
   // If this FunctionBox refers to a lazy child of the function being
   // compiled, this field holds the child's immediately enclosing scope's index.
   // Once compilation succeeds, we will store the scope pointed by this in the
@@ -698,8 +694,6 @@ class FunctionBox : public SharedContext {
   }
 
   FunctionIndex index() { return funcDataIndex_; }
-
-  FunctionBox* traceLink() { return traceLink_; }
 
   void finishScriptFlags();
   void copyScriptFields(ScriptStencil& script);
