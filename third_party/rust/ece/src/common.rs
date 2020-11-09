@@ -67,13 +67,13 @@ pub trait EceWebPush {
         plaintext: &[u8],
     ) -> Result<Vec<u8>> {
         if auth_secret.len() != ECE_WEBPUSH_AUTH_SECRET_LENGTH {
-            return Err(ErrorKind::InvalidAuthSecret.into());
+            return Err(Error::InvalidAuthSecret);
         }
         if salt.len() != ECE_SALT_LENGTH {
-            return Err(ErrorKind::InvalidSalt.into());
+            return Err(Error::InvalidSalt);
         }
         if plaintext.is_empty() {
-            return Err(ErrorKind::ZeroPlaintext.into());
+            return Err(Error::ZeroPlaintext);
         }
         let (key, nonce) = Self::derive_key_and_nonce(
             EceMode::ENCRYPT,
@@ -136,7 +136,7 @@ pub trait EceWebPush {
                 // We have padding left, but not enough plaintext to form a full record.
                 // Writing trailing padding-only records will still leak size information,
                 // so we force the caller to pick a smaller padding length.
-                return Err(ErrorKind::EncryptPadding.into());
+                return Err(Error::EncryptPadding);
             }
 
             let iv = generate_iv(&nonce, counter);
@@ -163,17 +163,17 @@ pub trait EceWebPush {
         ciphertext: &[u8],
     ) -> Result<Vec<u8>> {
         if auth_secret.len() != ECE_WEBPUSH_AUTH_SECRET_LENGTH {
-            return Err(ErrorKind::InvalidAuthSecret.into());
+            return Err(Error::InvalidAuthSecret);
         }
         if salt.len() != ECE_SALT_LENGTH {
-            return Err(ErrorKind::InvalidSalt.into());
+            return Err(Error::InvalidSalt);
         }
         if ciphertext.is_empty() {
-            return Err(ErrorKind::ZeroCiphertext.into());
+            return Err(Error::ZeroCiphertext);
         }
         if Self::needs_trailer(rs, ciphertext.len()) {
             // If we're missing a trailing block, the ciphertext is truncated.
-            return Err(ErrorKind::DecryptTruncated.into());
+            return Err(Error::DecryptTruncated);
         }
         let (key, nonce) = Self::derive_key_and_nonce(
             EceMode::DECRYPT,
@@ -188,7 +188,7 @@ pub trait EceWebPush {
             .enumerate()
             .map(|(count, record)| {
                 if record.len() <= ECE_TAG_LENGTH {
-                    return Err(ErrorKind::BlockTooShort.into());
+                    return Err(Error::BlockTooShort);
                 }
                 let iv = generate_iv(&nonce, count);
                 assert!(record.len() > ECE_TAG_LENGTH);
@@ -196,7 +196,7 @@ pub trait EceWebPush {
                 let plaintext = cryptographer.aes_gcm_128_decrypt(&key, &iv, record)?;
                 let last_record = count == records_count - 1;
                 if plaintext.len() < Self::pad_size() {
-                    return Err(ErrorKind::BlockTooShort.into());
+                    return Err(Error::BlockTooShort);
                 }
                 Ok(Self::unpad(&plaintext, last_record)?.to_vec())
             })

@@ -25,7 +25,7 @@ pub struct RemoteClient {
 
 /// The type of a client. Please keep these variants in sync with the device
 /// types in the FxA client and sync manager.
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum DeviceType {
     Desktop,
     Mobile,

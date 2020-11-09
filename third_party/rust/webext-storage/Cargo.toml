@@ -11,7 +11,8 @@ default = []
 
 [dependencies]
 error-support = { path = "../support/error" }
-failure = "0.1"
+thiserror = "1.0"
+ffi-support = "0.4"
 interrupt-support = { path = "../support/interrupt" }
 lazy_static = "1.4"
 log = "0.4"
@@ -25,13 +26,12 @@ url = { version = "2.1", features = ["serde"] }
 
 [dependencies.rusqlite]
 version = "0.24.1"
-features = ["functions", "bundled", "serde_json", "column_decltype"]
+features = ["functions", "bundled", "serde_json", "unlock_notify", "column_decltype"]
 
 [dev-dependencies]
-env_logger = "0.7"
+env_logger = { version = "0.7", default-features = false }
 prettytable-rs = "0.8"
 tempfile = "3"
-
 # A *direct* dep on the -sys crate is required for our build.rs
 # to see the DEP_SQLITE3_LINK_TARGET env var that cargo sets
 # on its behalf.

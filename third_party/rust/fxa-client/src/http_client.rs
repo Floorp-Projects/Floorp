@@ -3,19 +3,28 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::{config::Config, error::*};
-use rc_crypto::hawk::{Credentials, Key, PayloadHasher, RequestBuilder, SHA256};
-use rc_crypto::{digest, hkdf, hmac};
-use serde_derive::*;
+use jwcrypto::Jwk;
+use rc_crypto::{
+    digest,
+    hawk::{Credentials, Key, PayloadHasher, RequestBuilder, SHA256},
+    hkdf, hmac,
+};
+use serde_derive::{Deserialize, Serialize};
 use serde_json::json;
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    sync::Mutex,
+    time::{Duration, Instant},
+};
 use url::Url;
 use viaduct::{header_names, status_codes, Method, Request, Response};
 
 const HAWK_HKDF_SALT: [u8; 32] = [0b0; 32];
 const HAWK_KEY_LENGTH: usize = 32;
+const RETRY_AFTER_DEFAULT_SECONDS: u64 = 10;
 
 #[cfg_attr(test, mockiato::mockable)]
-pub trait FxAClient {
+pub(crate) trait FxAClient {
     fn refresh_token_with_code(
         &self,
         config: &Config,
@@ -49,11 +58,8 @@ pub trait FxAClient {
     fn authorization_code_using_session_token(
         &self,
         config: &Config,
-        client_id: &str,
         session_token: &str,
-        scope: &str,
-        state: &str,
-        access_type: &str,
+        auth_params: AuthorizationRequestParameters,
     ) -> Result<OAuthAuthResponse>;
     fn duplicate_session(
         &self,
@@ -68,6 +74,12 @@ pub trait FxAClient {
         profile_access_token: &str,
         etag: Option<String>,
     ) -> Result<Option<ResponseAndETag<ProfileResponse>>>;
+    fn set_ecosystem_anon_id(
+        &self,
+        config: &Config,
+        access_token: &str,
+        ecosystem_anon_id: &str,
+    ) -> Result<()>;
     fn pending_commands(
         &self,
         config: &Config,
@@ -100,12 +112,35 @@ pub trait FxAClient {
         &self,
         config: &Config,
         session_token: &str,
+        client_id: &str,
         scope: &str,
     ) -> Result<HashMap<String, ScopedKeyDataResponse>>;
+    fn fxa_client_configuration(&self, config: &Config) -> Result<ClientConfigurationResponse>;
+    fn openid_configuration(&self, config: &Config) -> Result<OpenIdConfigurationResponse>;
 }
 
-pub struct Client;
+enum HttpClientState {
+    Ok,
+    Backoff {
+        backoff_end_duration: Duration,
+        time_since_backoff: Instant,
+    },
+}
+
+pub struct Client {
+    state: Mutex<HashMap<String, HttpClientState>>,
+}
 impl FxAClient for Client {
+    fn fxa_client_configuration(&self, config: &Config) -> Result<ClientConfigurationResponse> {
+        // Why go through two-levels of indirection? It looks kinda dumb.
+        // Well, `config:Config` also needs to fetch the config, but does not have access
+        // to an instance of `http_client`, so it calls the helper function directly.
+        fxa_client_configuration(config.client_config_url()?)
+    }
+    fn openid_configuration(&self, config: &Config) -> Result<OpenIdConfigurationResponse> {
+        openid_configuration(config.openid_config_url()?)
+    }
+
     fn profile(
         &self,
         config: &Config,
@@ -118,7 +153,7 @@ impl FxAClient for Client {
         if let Some(etag) = etag {
             request = request.header(header_names::IF_NONE_MATCH, format!("\"{}\"", etag))?;
         }
-        let resp = Self::make_request(request)?;
+        let resp = self.make_request(request)?;
         if resp.status == status_codes::NOT_MODIFIED {
             return Ok(None);
         }
@@ -130,6 +165,25 @@ impl FxAClient for Client {
             etag,
             response: resp.json()?,
         }))
+    }
+
+    fn set_ecosystem_anon_id(
+        &self,
+        config: &Config,
+        access_token: &str,
+        ecosystem_anon_id: &str,
+    ) -> Result<()> {
+        let url = config.profile_url_path("v1/ecosystem_anon_id")?;
+        let body = json!({
+            "ecosystemAnonId": ecosystem_anon_id,
+        });
+        let request = Request::post(url)
+            .header(header_names::AUTHORIZATION, bearer_token(access_token))?
+            // If-none-match prevents us from overwriting an already set value.
+            .header(header_names::IF_NONE_MATCH, "*")?
+            .body(body.to_string());
+        self.make_request(request)?;
+        Ok(())
     }
 
     // For the one-off generation of a `refresh_token` and associated meta from transient credentials.
@@ -165,7 +219,7 @@ impl FxAClient for Client {
         let request = HawkRequestBuilder::new(Method::Post, url, &key)
             .body(body)
             .build()?;
-        Ok(Self::make_request(request)?.json()?)
+        Ok(self.make_request(request)?.json()?)
     }
 
     // For the regular generation of an `access_token` from long-lived credentials.
@@ -202,32 +256,23 @@ impl FxAClient for Client {
         let request = HawkRequestBuilder::new(Method::Post, url, &key)
             .body(parameters)
             .build()?;
-        Self::make_request(request)?.json().map_err(Into::into)
+        self.make_request(request)?.json().map_err(Into::into)
     }
 
     fn authorization_code_using_session_token(
         &self,
         config: &Config,
-        client_id: &str,
         session_token: &str,
-        scope: &str,
-        state: &str,
-        access_type: &str,
+        auth_params: AuthorizationRequestParameters,
     ) -> Result<OAuthAuthResponse> {
-        let parameters = json!({
-            "client_id": client_id,
-            "scope": scope,
-            "response_type": "code",
-            "state": state,
-            "access_type": access_type,
-        });
+        let parameters = serde_json::to_value(&auth_params)?;
         let key = derive_auth_key_from_session_token(session_token)?;
         let url = config.auth_url_path("v1/oauth/authorization")?;
         let request = HawkRequestBuilder::new(Method::Post, url, &key)
             .body(parameters)
             .build()?;
 
-        Ok(Self::make_request(request)?.json()?)
+        Ok(self.make_request(request)?.json()?)
     }
 
     fn oauth_introspect_refresh_token(
@@ -240,7 +285,7 @@ impl FxAClient for Client {
             "token": refresh_token,
         });
         let url = config.introspection_endpoint()?;
-        Ok(Self::make_request(Request::post(url).json(&body))?.json()?)
+        Ok(self.make_request(Request::post(url).json(&body))?.json()?)
     }
 
     fn duplicate_session(
@@ -257,7 +302,7 @@ impl FxAClient for Client {
             .body(duplicate_body)
             .build()?;
 
-        Ok(Self::make_request(request)?.json()?)
+        Ok(self.make_request(request)?.json()?)
     }
 
     fn destroy_access_token(&self, config: &Config, access_token: &str) -> Result<()> {
@@ -288,7 +333,7 @@ impl FxAClient for Client {
         if let Some(limit) = limit {
             request = request.query(&[("limit", &limit.to_string())])
         }
-        Ok(Self::make_request(request)?.json()?)
+        Ok(self.make_request(request)?.json()?)
     }
 
     fn invoke_command(
@@ -309,7 +354,7 @@ impl FxAClient for Client {
             .header(header_names::AUTHORIZATION, bearer_token(refresh_token))?
             .header(header_names::CONTENT_TYPE, "application/json")?
             .body(body.to_string());
-        Self::make_request(request)?;
+        self.make_request(request)?;
         Ok(())
     }
 
@@ -317,7 +362,7 @@ impl FxAClient for Client {
         let url = config.auth_url_path("v1/account/devices")?;
         let request =
             Request::get(url).header(header_names::AUTHORIZATION, bearer_token(refresh_token))?;
-        Ok(Self::make_request(request)?.json()?)
+        Ok(self.make_request(request)?.json()?)
     }
 
     fn update_device(
@@ -331,7 +376,7 @@ impl FxAClient for Client {
             .header(header_names::AUTHORIZATION, bearer_token(refresh_token))?
             .header(header_names::CONTENT_TYPE, "application/json")?
             .body(serde_json::to_string(&update)?);
-        Ok(Self::make_request(request)?.json()?)
+        Ok(self.make_request(request)?.json()?)
     }
 
     fn destroy_device(&self, config: &Config, refresh_token: &str, id: &str) -> Result<()> {
@@ -344,7 +389,7 @@ impl FxAClient for Client {
             .header(header_names::CONTENT_TYPE, "application/json")?
             .body(body.to_string());
 
-        Self::make_request(request)?;
+        self.make_request(request)?;
         Ok(())
     }
 
@@ -356,17 +401,18 @@ impl FxAClient for Client {
         let url = config.auth_url_path("v1/account/attached_clients")?;
         let key = derive_auth_key_from_session_token(session_token)?;
         let request = HawkRequestBuilder::new(Method::Get, url, &key).build()?;
-        Ok(Self::make_request(request)?.json()?)
+        Ok(self.make_request(request)?.json()?)
     }
 
     fn scoped_key_data(
         &self,
         config: &Config,
         session_token: &str,
+        client_id: &str,
         scope: &str,
     ) -> Result<HashMap<String, ScopedKeyDataResponse>> {
         let body = json!({
-            "client_id": config.client_id,
+            "client_id": client_id,
             "scope": scope,
         });
         let url = config.auth_url_path("v1/account/scoped-key-data")?;
@@ -374,18 +420,38 @@ impl FxAClient for Client {
         let request = HawkRequestBuilder::new(Method::Post, url, &key)
             .body(body)
             .build()?;
-        Self::make_request(request)?.json().map_err(|e| e.into())
+        self.make_request(request)?.json().map_err(|e| e.into())
     }
+}
+
+macro_rules! fetch {
+    ($url:expr) => {
+        viaduct::Request::get($url)
+            .send()?
+            .require_success()?
+            .json()?
+    };
+}
+
+#[inline]
+pub(crate) fn fxa_client_configuration(url: Url) -> Result<ClientConfigurationResponse> {
+    Ok(fetch!(url))
+}
+#[inline]
+pub(crate) fn openid_configuration(url: Url) -> Result<OpenIdConfigurationResponse> {
+    Ok(fetch!(url))
 }
 
 impl Client {
     pub fn new() -> Self {
-        Self {}
+        Self {
+            state: Mutex::new(HashMap::new()),
+        }
     }
 
     fn destroy_token_helper(&self, config: &Config, body: &serde_json::Value) -> Result<()> {
         let url = config.oauth_url_path("v1/destroy")?;
-        Self::make_request(Request::post(url).json(body))?;
+        self.make_request(Request::post(url).json(body))?;
         Ok(())
     }
 
@@ -395,25 +461,64 @@ impl Client {
         body: serde_json::Value,
     ) -> Result<OAuthTokenResponse> {
         let url = config.token_endpoint()?;
-        Ok(Self::make_request(Request::post(url).json(&body))?.json()?)
+        Ok(self.make_request(Request::post(url).json(&body))?.json()?)
     }
 
-    fn make_request(request: Request) -> Result<Response> {
+    fn handle_too_many_requests(&self, resp: Response) -> Result<Response> {
+        let path = resp.url.path().to_string();
+        if let Some(retry_after) = resp.headers.get_as::<u64, _>(header_names::RETRY_AFTER) {
+            let retry_after = retry_after.unwrap_or(RETRY_AFTER_DEFAULT_SECONDS);
+            let time_out_state = HttpClientState::Backoff {
+                backoff_end_duration: Duration::from_secs(retry_after),
+                time_since_backoff: Instant::now(),
+            };
+            self.state.lock().unwrap().insert(path, time_out_state);
+            return Err(ErrorKind::BackoffError(retry_after).into());
+        }
+        Self::default_handle_response_error(resp)
+    }
+
+    fn default_handle_response_error(resp: Response) -> Result<Response> {
+        let json: std::result::Result<serde_json::Value, _> = resp.json();
+        match json {
+            Ok(json) => Err(ErrorKind::RemoteError {
+                code: json["code"].as_u64().unwrap_or(0),
+                errno: json["errno"].as_u64().unwrap_or(0),
+                error: json["error"].as_str().unwrap_or("").to_string(),
+                message: json["message"].as_str().unwrap_or("").to_string(),
+                info: json["info"].as_str().unwrap_or("").to_string(),
+            }
+            .into()),
+            Err(_) => Err(resp.require_success().unwrap_err().into()),
+        }
+    }
+
+    fn make_request(&self, request: Request) -> Result<Response> {
+        let url = request.url.path().to_string();
+        if let HttpClientState::Backoff {
+            backoff_end_duration,
+            time_since_backoff,
+        } = self
+            .state
+            .lock()
+            .unwrap()
+            .get(&url)
+            .unwrap_or(&HttpClientState::Ok)
+        {
+            let elapsed_time = time_since_backoff.elapsed();
+            if elapsed_time < *backoff_end_duration {
+                let remaining = *backoff_end_duration - elapsed_time;
+                return Err(ErrorKind::BackoffError(remaining.as_secs()).into());
+            }
+        }
+        self.state.lock().unwrap().insert(url, HttpClientState::Ok);
         let resp = request.send()?;
         if resp.is_success() || resp.status == status_codes::NOT_MODIFIED {
             Ok(resp)
         } else {
-            let json: std::result::Result<serde_json::Value, _> = resp.json();
-            match json {
-                Ok(json) => Err(ErrorKind::RemoteError {
-                    code: json["code"].as_u64().unwrap_or(0),
-                    errno: json["errno"].as_u64().unwrap_or(0),
-                    error: json["error"].as_str().unwrap_or("").to_string(),
-                    message: json["message"].as_str().unwrap_or("").to_string(),
-                    info: json["info"].as_str().unwrap_or("").to_string(),
-                }
-                .into()),
-                Err(_) => Err(resp.require_success().unwrap_err().into()),
+            match resp.status {
+                status_codes::TOO_MANY_REQUESTS => self.handle_too_many_requests(resp),
+                _ => Self::default_handle_response_error(resp),
             }
         }
     }
@@ -436,6 +541,84 @@ pub fn derive_auth_key_from_session_token(session_token: &str) -> Result<Vec<u8>
     let mut out = vec![0u8; HAWK_KEY_LENGTH * 2];
     hkdf::extract_and_expand(&salt, &session_token_bytes, &context_info, &mut out)?;
     Ok(out)
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct AuthorizationRequestParameters {
+    pub client_id: String,
+    pub scope: String,
+    pub state: String,
+    pub access_type: String,
+    pub code_challenge: Option<String>,
+    pub code_challenge_method: Option<String>,
+    pub keys_jwe: Option<String>,
+}
+
+// Keeping those functions out of the FxAClient trate becouse functions in the
+// FxAClient trate with a `test only` feature upsets the mockiato proc macro
+// And it's okay since they are only used in tests. (if they were not test only
+// Mockiato would not complain)
+#[cfg(feature = "integration_test")]
+pub fn send_authorization_request(
+    config: &Config,
+    auth_params: AuthorizationRequestParameters,
+    auth_key: &[u8],
+) -> anyhow::Result<String> {
+    let auth_endpoint = config.auth_url_path("v1/oauth/authorization")?;
+    let req = HawkRequestBuilder::new(Method::Post, auth_endpoint, auth_key)
+        .body(serde_json::to_value(&auth_params)?)
+        .build()?;
+    let client = Client::new();
+    let resp: serde_json::Value = client.make_request(req)?.json()?;
+    Ok(resp
+        .get("redirect")
+        .ok_or_else(|| anyhow::Error::msg("No redirect uri"))?
+        .as_str()
+        .ok_or_else(|| anyhow::Error::msg("redirect URI is not a string"))?
+        .to_string())
+}
+
+#[cfg(feature = "integration_test")]
+pub fn get_scoped_key_data_response(
+    scope: &str,
+    client_id: &str,
+    auth_key: &[u8],
+    config: &Config,
+) -> Result<serde_json::Value> {
+    let scoped_endpoint = config.auth_url_path("v1/account/scoped-key-data")?;
+    let body = json!({
+        "client_id": client_id,
+        "scope": scope,
+    });
+    let req = HawkRequestBuilder::new(Method::Post, scoped_endpoint, auth_key)
+        .body(body)
+        .build()?;
+    let client = Client::new();
+    let resp = client.make_request(req)?.json()?;
+    Ok(resp)
+}
+
+#[cfg(feature = "integration_test")]
+pub fn get_keys_bundle(config: &Config, hkdf_sha256_key: &[u8]) -> Result<Vec<u8>> {
+    let keys_url = config.auth_url_path("v1/account/keys").unwrap();
+    let req = HawkRequestBuilder::new(Method::Get, keys_url, hkdf_sha256_key).build()?;
+    let client = Client::new();
+    let resp: serde_json::Value = client.make_request(req)?.json()?;
+    let bundle = hex::decode(
+        &resp["bundle"]
+            .as_str()
+            .ok_or_else(|| ErrorKind::UnrecoverableServerError("bundle not present"))?,
+    )?;
+    Ok(bundle)
+}
+
+#[cfg(feature = "integration_test")]
+pub fn send_verification(config: &Config, body: serde_json::Value) -> Result<Response> {
+    let verify_endpoint = config
+        .auth_url_path("v1/recovery_email/verify_code")
+        .unwrap();
+    let resp = Request::post(verify_endpoint).json(&body).send()?;
+    Ok(resp)
 }
 
 struct HawkRequestBuilder<'a> {
@@ -494,6 +677,27 @@ impl<'a> HawkRequestBuilder<'a> {
         }
         Ok(request)
     }
+}
+
+#[derive(Deserialize)]
+pub(crate) struct ClientConfigurationResponse {
+    pub(crate) auth_server_base_url: String,
+    pub(crate) oauth_server_base_url: String,
+    pub(crate) profile_server_base_url: String,
+    pub(crate) sync_tokenserver_base_url: String,
+    // XXX: Remove Option once all prod servers have this field.
+    pub(crate) ecosystem_anon_id_keys: Option<Vec<Jwk>>,
+}
+
+#[derive(Deserialize)]
+pub(crate) struct OpenIdConfigurationResponse {
+    pub(crate) authorization_endpoint: String,
+    pub(crate) introspection_endpoint: String,
+    pub(crate) issuer: String,
+    pub(crate) jwks_uri: String,
+    #[allow(dead_code)]
+    pub(crate) token_endpoint: String,
+    pub(crate) userinfo_endpoint: String,
 }
 
 #[derive(Clone)]
@@ -743,19 +947,14 @@ pub struct IntrospectResponse {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ProfileResponse {
     pub uid: String,
     pub email: String,
-    pub locale: String,
-    #[serde(rename = "displayName")]
     pub display_name: Option<String>,
     pub avatar: String,
-    #[serde(rename = "avatarDefault")]
     pub avatar_default: bool,
-    #[serde(rename = "amrValues")]
-    pub amr_values: Vec<String>,
-    #[serde(rename = "twoFactorAuthentication")]
-    pub two_factor_authentication: bool,
+    pub ecosystem_anon_id: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -780,7 +979,7 @@ pub struct DuplicateTokenResponse {
 #[cfg(test)]
 mod tests {
     use super::*;
-
+    use mockito::mock;
     #[test]
     #[allow(non_snake_case)]
     fn check_OAauthTokenRequest_serialization() {
@@ -799,5 +998,165 @@ mod tests {
             ttl: Some(123),
         };
         assert_eq!("{\"grant_type\":\"refresh_token\",\"client_id\":\"bar\",\"refresh_token\":\"foo\",\"scope\":\"bobo\",\"ttl\":123}", serde_json::to_string(&using_code).unwrap());
+    }
+
+    #[test]
+    fn test_backoff() {
+        viaduct_reqwest::use_reqwest_backend();
+        let m = mock("POST", "/v1/account/devices/invoke_command")
+            .with_status(429)
+            .with_header("Content-Type", "application/json")
+            .with_header("retry-after", "1000000")
+            .with_body(
+                r#"{
+                "code": 429,
+                "errno": 120,
+                "error": "Too many requests",
+                "message": "Too many requests",
+                "retryAfter": 1000000,
+                "info": "Some information"
+            }"#,
+            )
+            .create();
+        let client = Client::new();
+        let path = format!(
+            "{}/{}",
+            mockito::server_url(),
+            "v1/account/devices/invoke_command"
+        );
+        let url = Url::parse(&path).unwrap();
+        let path = url.path().to_string();
+        let request = Request::post(url);
+        assert!(client.make_request(request.clone()).is_err());
+        let state = client.state.lock().unwrap();
+        if let HttpClientState::Backoff {
+            backoff_end_duration,
+            time_since_backoff: _,
+        } = state.get(&path).unwrap()
+        {
+            assert_eq!(*backoff_end_duration, Duration::from_secs(1_000_000));
+            // Hacky way to drop the mutex gaurd, so that the next call to
+            // client.make_request doesn't hang or panic
+            std::mem::drop(state);
+            assert!(client.make_request(request).is_err());
+            // We should be backed off, the second "make_request" should not
+            // send a request to the server
+            m.expect(1).assert();
+        } else {
+            panic!("HttpClientState should be a timeout!");
+        }
+    }
+
+    #[test]
+    fn test_backoff_then_ok() {
+        viaduct_reqwest::use_reqwest_backend();
+        let m = mock("POST", "/v1/account/devices/invoke_command")
+            .with_status(429)
+            .with_header("Content-Type", "application/json")
+            .with_header("retry-after", "1")
+            .with_body(
+                r#"{
+                "code": 429,
+                "errno": 120,
+                "error": "Too many requests",
+                "message": "Too many requests",
+                "retryAfter": 1,
+                "info": "Some information"
+            }"#,
+            )
+            .create();
+        let client = Client::new();
+        let path = format!(
+            "{}/{}",
+            mockito::server_url(),
+            "v1/account/devices/invoke_command"
+        );
+        let url = Url::parse(&path).unwrap();
+        let path = url.path().to_string();
+        let request = Request::post(url);
+        assert!(client.make_request(request.clone()).is_err());
+        let state = client.state.lock().unwrap();
+        if let HttpClientState::Backoff {
+            backoff_end_duration,
+            time_since_backoff: _,
+        } = state.get(&path).unwrap()
+        {
+            assert_eq!(*backoff_end_duration, Duration::from_secs(1));
+            // We sleep for 1 second, so pass the backoff timeout
+            std::thread::sleep(*backoff_end_duration);
+
+            // Hacky way to drop the mutex gaurd, so that the next call to
+            // client.make_request doesn't hang or panic
+            std::mem::drop(state);
+            assert!(client.make_request(request).is_err());
+            // We backed off, but the time has passed, the second request should have
+            // went to the server
+            m.expect(2).assert();
+        } else {
+            panic!("HttpClientState should be a timeout!");
+        }
+    }
+
+    #[test]
+    fn test_backoff_per_path() {
+        viaduct_reqwest::use_reqwest_backend();
+        let m1 = mock("POST", "/v1/account/devices/invoke_command")
+            .with_status(429)
+            .with_header("Content-Type", "application/json")
+            .with_header("retry-after", "1000000")
+            .with_body(
+                r#"{
+                "code": 429,
+                "errno": 120,
+                "error": "Too many requests",
+                "message": "Too many requests",
+                "retryAfter": 1000000,
+                "info": "Some information"
+            }"#,
+            )
+            .create();
+        let m2 = mock("GET", "/v1/account/device/commands")
+            .with_status(200)
+            .with_header("Content-Type", "application/json")
+            .with_body(
+                r#"
+        {
+         "index": 3,
+         "last": true,
+         "messages": []
+        }"#,
+            )
+            .create();
+        let client = Client::new();
+        let path = format!(
+            "{}/{}",
+            mockito::server_url(),
+            "v1/account/devices/invoke_command"
+        );
+        let url = Url::parse(&path).unwrap();
+        let path = url.path().to_string();
+        let request = Request::post(url);
+        assert!(client.make_request(request).is_err());
+        let state = client.state.lock().unwrap();
+        if let HttpClientState::Backoff {
+            backoff_end_duration,
+            time_since_backoff: _,
+        } = state.get(&path).unwrap()
+        {
+            assert_eq!(*backoff_end_duration, Duration::from_secs(1_000_000));
+
+            let path2 = format!("{}/{}", mockito::server_url(), "v1/account/device/commands");
+            // Hacky way to drop the mutex guard, so that the next call to
+            // client.make_request doesn't hang or panic
+            std::mem::drop(state);
+            let second_request = Request::get(Url::parse(&path2).unwrap());
+            assert!(client.make_request(second_request).is_ok());
+            // The first endpoint is backed off, but the second one is not
+            // Both endpoint should be hit
+            m1.expect(1).assert();
+            m2.expect(1).assert();
+        } else {
+            panic!("HttpClientState should be a timeout!");
+        }
     }
 }

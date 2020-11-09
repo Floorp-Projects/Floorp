@@ -24,6 +24,8 @@ use core::marker::PhantomData;
 pub use ec::{Curve, EcKey};
 use nss::{ec, ecdh};
 
+pub type EphemeralKeyPair = KeyPair<Ephemeral>;
+
 /// A key agreement algorithm.
 #[derive(PartialEq)]
 pub struct Algorithm {
@@ -32,6 +34,10 @@ pub struct Algorithm {
 
 pub static ECDH_P256: Algorithm = Algorithm {
     curve_id: ec::Curve::P256,
+};
+
+pub static ECDH_P384: Algorithm = Algorithm {
+    curve_id: ec::Curve::P384,
 };
 
 /// How many times the key may be used.
@@ -118,6 +124,29 @@ impl PublicKey {
     }
 }
 
+/// An unparsed public key for key agreement.
+pub struct UnparsedPublicKey<'a> {
+    alg: &'static Algorithm,
+    bytes: &'a [u8],
+}
+
+impl<'a> UnparsedPublicKey<'a> {
+    pub fn new(algorithm: &'static Algorithm, bytes: &'a [u8]) -> Self {
+        Self {
+            alg: algorithm,
+            bytes,
+        }
+    }
+
+    pub fn algorithm(&self) -> &'static Algorithm {
+        self.alg
+    }
+
+    pub fn bytes(&self) -> &'a [u8] {
+        &self.bytes
+    }
+}
+
 /// A private key for key agreement.
 pub struct PrivateKey<U: Lifetime> {
     wrapped: ec::PrivateKey,
@@ -142,17 +171,8 @@ impl<U: Lifetime> PrivateKey<U> {
     /// Ephemeral agreement.
     /// This consumes `self`, ensuring that the private key can
     /// only be used for a single agreement operation.
-    pub fn agree(
-        self,
-        peer_public_key_alg: &Algorithm,
-        peer_public_key: &[u8],
-    ) -> Result<InputKeyMaterial> {
-        agree_(
-            &self.wrapped,
-            self.alg,
-            peer_public_key_alg,
-            peer_public_key,
-        )
+    pub fn agree(self, peer_public_key: &UnparsedPublicKey<'_>) -> Result<InputKeyMaterial> {
+        agree_(&self.wrapped, self.alg, peer_public_key)
     }
 }
 
@@ -162,21 +182,16 @@ impl PrivateKey<Static> {
     /// be used for a multiple agreement operations.
     pub fn agree_static(
         &self,
-        peer_public_key_alg: &Algorithm,
-        peer_public_key: &[u8],
+        peer_public_key: &UnparsedPublicKey<'_>,
     ) -> Result<InputKeyMaterial> {
-        agree_(
-            &self.wrapped,
-            self.alg,
-            peer_public_key_alg,
-            peer_public_key,
-        )
+        agree_(&self.wrapped, self.alg, peer_public_key)
     }
 
     pub fn import(ec_key: &EcKey) -> Result<Self> {
         // XXX: we should just let ec::PrivateKey own alg.
         let alg = match ec_key.curve() {
             Curve::P256 => &ECDH_P256,
+            Curve::P384 => &ECDH_P384,
         };
         let private_key = ec::PrivateKey::import(ec_key)?;
         Ok(Self {
@@ -205,14 +220,13 @@ impl PrivateKey<Static> {
 fn agree_(
     my_private_key: &ec::PrivateKey,
     my_alg: &Algorithm,
-    peer_public_key_alg: &Algorithm,
-    peer_public_key: &[u8],
+    peer_public_key: &UnparsedPublicKey<'_>,
 ) -> Result<InputKeyMaterial> {
     let alg = &my_alg;
-    if peer_public_key_alg != *alg {
+    if peer_public_key.algorithm() != *alg {
         return Err(ErrorKind::InternalError.into());
     }
-    let pub_key = ec::PublicKey::from_bytes(my_private_key.curve(), peer_public_key)?;
+    let pub_key = ec::PublicKey::from_bytes(my_private_key.curve(), peer_public_key.bytes())?;
     let value = ecdh::ecdh_agreement(my_private_key, &pub_key)?;
     Ok(InputKeyMaterial { value })
 }
@@ -277,9 +291,10 @@ mod tests {
 
     #[test]
     fn test_static_agreement() {
-        let pub_key = base64::decode_config(PUB_KEY_1_B64, base64::URL_SAFE_NO_PAD).unwrap();
+        let pub_key_raw = base64::decode_config(PUB_KEY_1_B64, base64::URL_SAFE_NO_PAD).unwrap();
+        let peer_pub_key = UnparsedPublicKey::new(&ECDH_P256, &pub_key_raw);
         let prv_key = load_priv_key_2();
-        let ikm = prv_key.agree_static(&ECDH_P256, &pub_key).unwrap();
+        let ikm = prv_key.agree_static(&peer_pub_key).unwrap();
         let secret = ikm
             .derive(|z| -> Result<Vec<u8>> { Ok(z.to_vec()) })
             .unwrap();
@@ -293,15 +308,15 @@ mod tests {
             KeyPair::<Ephemeral>::generate(&ECDH_P256).unwrap().split();
         let (their_prv_key, their_pub_key) =
             KeyPair::<Ephemeral>::generate(&ECDH_P256).unwrap().split();
-        let ikm_1 = our_prv_key
-            .agree(&ECDH_P256, &their_pub_key.to_bytes().unwrap())
-            .unwrap();
+        let their_pub_key_raw = their_pub_key.to_bytes().unwrap();
+        let peer_public_key_1 = UnparsedPublicKey::new(&ECDH_P256, &their_pub_key_raw);
+        let ikm_1 = our_prv_key.agree(&peer_public_key_1).unwrap();
         let secret_1 = ikm_1
             .derive(|z| -> Result<Vec<u8>> { Ok(z.to_vec()) })
             .unwrap();
-        let ikm_2 = their_prv_key
-            .agree(&ECDH_P256, &our_pub_key.to_bytes().unwrap())
-            .unwrap();
+        let our_pub_key_raw = our_pub_key.to_bytes().unwrap();
+        let peer_public_key_2 = UnparsedPublicKey::new(&ECDH_P256, &our_pub_key_raw);
+        let ikm_2 = their_prv_key.agree(&peer_public_key_2).unwrap();
         let secret_2 = ikm_2
             .derive(|z| -> Result<Vec<u8>> { Ok(z.to_vec()) })
             .unwrap();
@@ -355,33 +370,45 @@ mod tests {
         let mut invalid_pub_key =
             base64::decode_config(PUB_KEY_1_B64, base64::URL_SAFE_NO_PAD).unwrap();
         invalid_pub_key[0] = invalid_pub_key[0].wrapping_add(1);
-        assert!(prv_key.agree_static(&ECDH_P256, &invalid_pub_key).is_err());
+        assert!(prv_key
+            .agree_static(&UnparsedPublicKey::new(&ECDH_P256, &invalid_pub_key))
+            .is_err());
 
         let mut invalid_pub_key =
             base64::decode_config(PUB_KEY_1_B64, base64::URL_SAFE_NO_PAD).unwrap();
         invalid_pub_key[0] = 0x02;
-        assert!(prv_key.agree_static(&ECDH_P256, &invalid_pub_key).is_err());
+        assert!(prv_key
+            .agree_static(&UnparsedPublicKey::new(&ECDH_P256, &invalid_pub_key))
+            .is_err());
 
         let mut invalid_pub_key =
             base64::decode_config(PUB_KEY_1_B64, base64::URL_SAFE_NO_PAD).unwrap();
         invalid_pub_key[64] = invalid_pub_key[0].wrapping_add(1);
-        assert!(prv_key.agree_static(&ECDH_P256, &invalid_pub_key).is_err());
+        assert!(prv_key
+            .agree_static(&UnparsedPublicKey::new(&ECDH_P256, &invalid_pub_key))
+            .is_err());
 
         let mut invalid_pub_key = [0u8; 65];
-        assert!(prv_key.agree_static(&ECDH_P256, &invalid_pub_key).is_err());
+        assert!(prv_key
+            .agree_static(&UnparsedPublicKey::new(&ECDH_P256, &invalid_pub_key))
+            .is_err());
         invalid_pub_key[0] = 0x04;
 
         let mut invalid_pub_key = base64::decode_config(PUB_KEY_1_B64, base64::URL_SAFE_NO_PAD)
             .unwrap()
             .to_vec();
         invalid_pub_key = invalid_pub_key[0..64].to_vec();
-        assert!(prv_key.agree_static(&ECDH_P256, &invalid_pub_key).is_err());
+        assert!(prv_key
+            .agree_static(&UnparsedPublicKey::new(&ECDH_P256, &invalid_pub_key))
+            .is_err());
 
         // From FxA tests at https://github.com/mozilla/fxa-crypto-relier/blob/04f61dc/test/deriver/DeriverUtils.js#L78
         // We trust that NSS will do the right thing here, but it seems worthwhile to confirm for completeness.
         let invalid_pub_key_b64 = "BEogZ-rnm44oJkKsOE6Tc7NwFMgmntf7Btm_Rc4atxcqq99Xq1RWNTFpk99pdQOSjUvwELss51PkmAGCXhLfMV0";
         let invalid_pub_key =
             base64::decode_config(invalid_pub_key_b64, base64::URL_SAFE_NO_PAD).unwrap();
-        assert!(prv_key.agree_static(&ECDH_P256, &invalid_pub_key).is_err());
+        assert!(prv_key
+            .agree_static(&UnparsedPublicKey::new(&ECDH_P256, &invalid_pub_key))
+            .is_err());
     }
 }

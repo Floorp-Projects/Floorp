@@ -64,11 +64,9 @@ struct TokenServerFetcher {
 }
 
 fn fixup_server_url(mut url: Url) -> Result<Url> {
-    // base_url is the end-point as returned by .well-known/fxa-client-configuration,
+    // The given `url` is the end-point as returned by .well-known/fxa-client-configuration,
     // or as directly specified by self-hosters. As a result, it may or may not have
-    // the sync 1.5 suffix of "/1.0/sync/1.5" - so add it on here if it does not.
-    // (Note that base_url must end in a slash, or the last path element in
-    // the base url will be replaced with this suffix.)
+    // the sync 1.5 suffix of "/1.0/sync/1.5", so add it on here if it does not.
     if url.as_str().ends_with("1.0/sync/1.5") {
         Ok(url)
     } else if url.as_str().ends_with("1.0/sync/1.5/") {
@@ -79,7 +77,14 @@ fn fixup_server_url(mut url: Url) -> Result<Url> {
         }
         Ok(url)
     } else {
-        Ok(url.join("1.0/sync/1.5")?)
+        // We deliberately don't use `.join()` here in order to preserve all path components.
+        // For example, "http://example.com/token" should produce "http://example.com/token/1.0/sync/1.5"
+        // but using `.join()` would produce "http://example.com/1.0/sync/1.5".
+        if let Ok(mut path) = url.path_segments_mut() {
+            path.pop_if_empty();
+            path.extend(&["1.0", "sync", "1.5"]);
+        }
+        Ok(url)
     }
 }
 
@@ -579,6 +584,34 @@ mod tests {
                 .unwrap()
                 .as_str(),
             "https://token.services.mozilla.com/1.0/sync/1.5"
+        );
+        assert_eq!(
+            fixup_server_url(
+                Url::parse("https://selfhosted.example.com/token/1.0/sync/1.5").unwrap()
+            )
+            .unwrap()
+            .as_str(),
+            "https://selfhosted.example.com/token/1.0/sync/1.5"
+        );
+        assert_eq!(
+            fixup_server_url(
+                Url::parse("https://selfhosted.example.com/token/1.0/sync/1.5/").unwrap()
+            )
+            .unwrap()
+            .as_str(),
+            "https://selfhosted.example.com/token/1.0/sync/1.5"
+        );
+        assert_eq!(
+            fixup_server_url(Url::parse("https://selfhosted.example.com/token/").unwrap())
+                .unwrap()
+                .as_str(),
+            "https://selfhosted.example.com/token/1.0/sync/1.5"
+        );
+        assert_eq!(
+            fixup_server_url(Url::parse("https://selfhosted.example.com/token").unwrap())
+                .unwrap()
+                .as_str(),
+            "https://selfhosted.example.com/token/1.0/sync/1.5"
         );
     }
 }

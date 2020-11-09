@@ -264,8 +264,8 @@ mod aes128gcm_tests {
             "45b74d2b69be9b074de3b35aa87e7c15611d",
         )
         .unwrap_err();
-        match err.kind() {
-            ErrorKind::HeaderTooShort => {}
+        match err {
+            Error::HeaderTooShort => {}
             _ => unreachable!(),
         };
     }
@@ -279,8 +279,8 @@ mod aes128gcm_tests {
             "de5b696b87f1a15cb6adebdd79d6f99e000000120100b6bc1826c37c9f73dd6b4859c2b505181952",
         )
         .unwrap_err();
-        match err.kind() {
-            ErrorKind::InvalidKeyLength => {}
+        match err {
+            Error::InvalidKeyLength => {}
             _ => unreachable!(),
         };
     }
@@ -293,8 +293,8 @@ mod aes128gcm_tests {
             "355a38cd6d9bef15990e2d3308dbd600",
             "8115f4988b8c392a7bacb43c8f1ac5650000001241041994483c541e9bc39a6af03ff713aa7745c284e138a42a2435b797b20c4b698cf5118b4f8555317c190eabebfab749c164d3f6bdebe0d441719131a357d8890a13c4dbd4b16ff3dd5a83f7c91ad6e040ac42730a7f0b3cd3245e9f8d6ff31c751d410cfd"
         ).unwrap_err();
-        match err.kind() {
-            ErrorKind::OpenSSLError(_) => {}
+        match err {
+            Error::OpenSSLError(_) => {}
             _ => unreachable!(),
         };
     }
@@ -307,8 +307,8 @@ mod aes128gcm_tests {
             "40c241fde4269ee1e6d725592d982718",
             "dbe215507d1ad3d2eaeabeae6e874d8f0000001241047bc4343f34a8348cdc4e462ffc7c40aa6a8c61a739c4c41d45125505f70e9fc5f9efa86852dd488dcf8e8ea2cafb75e07abd5ee7c9d5c038bafef079571b0bda294411ce98c76dd031c0e580577a4980a375e45ed30429be0e2ee9da7e6df8696d01b8ec"
         ).unwrap_err();
-        match err.kind() {
-            ErrorKind::DecryptPadding => {}
+        match err {
+            Error::DecryptPadding => {}
             _ => unreachable!(),
         };
     }
@@ -366,6 +366,43 @@ mod aesgcm_tests {
 
         let result = try_decrypt(priv_key_raw, pub_key_raw, auth_raw, &block).unwrap();
 
+        assert!(result == plaintext)
+    }
+
+    #[test]
+    fn test_decode_padding() {
+        // generated the content using pywebpush, which verified against the client.
+        let auth_raw = "LsuUOBKVQRY6-l7_Ajo-Ag";
+        let priv_key_raw = "yerDmA9uNFoaUnSt2TkWWLwPseG1qtzS2zdjUl8Z7tc";
+        let pub_key_raw = "BLBlTYure2QVhJCiDt4gRL0JNmUBMxtNB5B6Z1hDg5h-Epw6mVFV4whoYGBlWNY-ENR1FObkGFyMf7-6ZMHMAxw";
+
+        // Incoming Crypto-Key: dh=
+        let dh = "BCX7KJ_1Em-LjeB56E2KDoMjKDhTaDhjv8c6dwbvZQZ_Gsfp3AT54x2zYUPcBwd1GVyGsk55ProJ98cFrVxrPz4";
+        // Incoming Encryption-Key: salt=
+        let salt = "x2I2OZpSCoe-Cc5UW36Nng";
+        // Incoming Body (this is normally raw bytes. It's encoded here for presentation)
+        let ciphertext = base64::decode_config("Ua3-WW5kTbt11dBTiXBP6_hLBYhBNOtDFfue5QHMTd2DicL0wutDnt5z9pjRJ76w562egPq5qro95YLnsX0NWGmDQbsQ0Azds6jcBGsxHPt0p5GELAtR4AJj2OsB_LV7dTuGHN2SqsyXLARjTFN2wsF3xWhmuw",
+            base64::URL_SAFE_NO_PAD).unwrap();
+        let plaintext = "Tabs are the real indent";
+
+        let block = AesGcmEncryptedBlock::new(
+            &base64::decode_config(dh, base64::URL_SAFE_NO_PAD).unwrap(),
+            &base64::decode_config(salt, base64::URL_SAFE_NO_PAD).unwrap(),
+            4096,
+            ciphertext,
+        )
+        .unwrap();
+
+        let result = try_decrypt(priv_key_raw, pub_key_raw, auth_raw, &block).unwrap();
+
+        println!(
+            "Result: b64={}",
+            base64::encode_config(&result, base64::URL_SAFE_NO_PAD)
+        );
+        println!(
+            "Plaintext: b64={}",
+            base64::encode_config(&plaintext, base64::URL_SAFE_NO_PAD)
+        );
         assert!(result == plaintext)
     }
 

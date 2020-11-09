@@ -159,7 +159,7 @@ impl Cryptographer for OpensslCryptographer {
     }
 
     fn hkdf_sha256(&self, salt: &[u8], secret: &[u8], info: &[u8], len: usize) -> Result<Vec<u8>> {
-        let hk = Hkdf::<Sha256>::extract(Some(&salt[..]), &secret);
+        let (_, hk) = Hkdf::<Sha256>::extract(Some(&salt[..]), &secret);
         let mut okm = vec![0u8; len];
         hk.expand(&info, &mut okm).unwrap();
         Ok(okm)
