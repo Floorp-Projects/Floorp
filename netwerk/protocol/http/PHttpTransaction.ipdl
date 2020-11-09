@@ -60,9 +60,10 @@ parent:
                       int64_t transferSize,
                       TimingStructArgs timings,
                       nsHttpHeaderArray? responseTrailers,
-                      bool hasStickyConn,
                       TransactionObserverResult? transactionObserverResult,
-                      TimeStamp lastActiveTabOptimization);
+                      TimeStamp lastActiveTabOptimization,
+                      uint32_t caps,
+                      HttpConnectionInfoCloneArgs connInfoArgs);
   async OnInitFailed(nsresult status);
   async OnH2PushStream(uint32_t pushedStreamId,
                        nsCString resourceUrl,
