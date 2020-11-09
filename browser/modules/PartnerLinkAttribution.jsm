@@ -31,10 +31,7 @@ var PartnerLinkAttribution = {
     record("click", source);
 
     const attributionUrl = Services.prefs.getStringPref(
-      Services.prefs.getBoolPref("browser.partnerlink.useAttributionURL")
-        ? "browser.partnerlink.attributionURL"
-        : `browser.newtabpage.searchTileOverride.${partner}.attributionURL`,
-      ""
+      "browser.partnerlink.attributionURL"
     );
     if (!attributionUrl) {
       record("attribution", "abort");
