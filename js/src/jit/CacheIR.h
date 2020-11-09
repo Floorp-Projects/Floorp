@@ -86,10 +86,10 @@ class OperandId {
   static const uint16_t InvalidId = UINT16_MAX;
   uint16_t id_;
 
-  OperandId() : id_(InvalidId) {}
   explicit OperandId(uint16_t id) : id_(id) {}
 
  public:
+  OperandId() : id_(InvalidId) {}
   uint16_t id() const { return id_; }
   bool valid() const { return id_ != InvalidId; }
 };
@@ -406,7 +406,8 @@ enum class ArgumentKind : uint8_t {
   Arg0,
   Arg1,
   Arg2,
-  Arg3
+  Arg3,
+  NumKinds
 };
 
 // This function calculates the index of an argument based on the call flags.
