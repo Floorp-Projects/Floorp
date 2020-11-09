@@ -318,10 +318,7 @@ merge-automation:
             version-files:
                 - filename: "browser/config/version_display.txt"
                   new-suffix: ''
-            replacements:
-                - - build/defines.sh
-                  - EARLY_BETA_OR_EARLIER=1
-                  - EARLY_BETA_OR_EARLIER=
+            replacements: []
             merge-old-head: true
             base-tag: 'FIREFOX_RELEASE_{major_version}_BASE'
             end-tag: 'FIREFOX_RELEASE_{major_version}_END'
