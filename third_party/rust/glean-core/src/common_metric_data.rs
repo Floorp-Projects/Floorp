@@ -75,7 +75,7 @@ pub struct CommonMetricData {
 }
 
 impl CommonMetricData {
-    /// Create a new metadata object.
+    /// Creates a new metadata object.
     pub fn new<A: Into<String>, B: Into<String>, C: Into<String>>(
         category: A,
         name: B,

@@ -79,12 +79,12 @@ pub struct EventDatabase {
 }
 
 impl EventDatabase {
-    /// Create a new event database.
+    /// Creates a new event database.
     ///
     /// # Arguments
     ///
     /// * `data_path` - The directory to store events in. A new directory
-    ///   `events` will be created inside of this directory.
+    /// * `events` - will be created inside of this directory.
     pub fn new(data_path: &str) -> Result<Self> {
         let path = Path::new(data_path).join("events");
         create_dir_all(&path)?;
@@ -96,8 +96,9 @@ impl EventDatabase {
         })
     }
 
-    /// Initialize events storage after Glean is fully initialized and ready to
-    /// send pings. This must be called once on application startup, e.g. from
+    /// Initializes events storage after Glean is fully initialized and ready to send pings.
+    ///
+    /// This must be called once on application startup, e.g. from
     /// [Glean.initialize], but after we are ready to send pings, since this
     /// could potentially collect and send pings.
     ///
@@ -113,9 +114,9 @@ impl EventDatabase {
     ///
     /// * `glean` - The Glean instance.
     ///
-    /// # Return value
+    /// # Returns
     ///
-    /// `true` if at least one ping was generated, `false` otherwise.
+    /// Whether at least one ping was generated.
     pub fn flush_pending_events_on_startup(&self, glean: &Glean) -> bool {
         match self.load_events_from_disk() {
             Ok(_) => self.send_all_events(glean),
@@ -168,7 +169,7 @@ impl EventDatabase {
         ping_sent
     }
 
-    /// Record an event in the desired stores.
+    /// Records an event in the desired stores.
     ///
     /// # Arguments
     ///
@@ -186,6 +187,11 @@ impl EventDatabase {
         timestamp: u64,
         extra: Option<HashMap<String, String>>,
     ) {
+        // If upload is disabled we don't want to record.
+        if !glean.is_upload_enabled() {
+            return;
+        }
+
         // Create RecordedEvent object, and its JSON form for serialization
         // on disk.
         let event = RecordedEvent {
@@ -242,7 +248,7 @@ impl EventDatabase {
         }
     }
 
-    /// Get a snapshot of the stored event data as a JsonValue.
+    /// Gets a snapshot of the stored event data as a JsonValue.
     ///
     /// # Arguments
     ///
@@ -251,7 +257,7 @@ impl EventDatabase {
     ///
     /// # Returns
     ///
-    /// The an array of events, JSON encoded, if any.
+    /// A array of events, JSON encoded, if any. Otherwise `None`.
     pub fn snapshot_as_json(&self, store_name: &str, clear_store: bool) -> Option<JsonValue> {
         let result = {
             let mut db = self.event_stores.write().unwrap(); // safe unwrap, only error case is poisoning
@@ -295,7 +301,7 @@ impl EventDatabase {
         result
     }
 
-    /// Clear all stored events, both in memory and on-disk.
+    /// Clears all stored events, both in memory and on-disk.
     pub fn clear_all(&self) -> Result<()> {
         // safe unwrap, only error case is poisoning
         self.event_stores.write().unwrap().clear();
@@ -310,7 +316,7 @@ impl EventDatabase {
 
     /// **Test-only API (exported for FFI purposes).**
     ///
-    /// Return whether there are any events currently stored for the given even
+    /// Returns whether there are any events currently stored for the given even
     /// metric.
     ///
     /// This doesn't clear the stored value.
@@ -326,7 +332,7 @@ impl EventDatabase {
 
     /// **Test-only API (exported for FFI purposes).**
     ///
-    /// Get the vector of currently stored events for the given event metric in
+    /// Gets the vector of currently stored events for the given event metric in
     /// the given store.
     ///
     /// This doesn't clear the stored value.
@@ -356,6 +362,8 @@ impl EventDatabase {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::tests::new_glean;
+    use crate::CommonMetricData;
 
     #[test]
     fn handle_truncated_events_on_disk() {
@@ -449,5 +457,41 @@ mod test {
             serde_json::from_str(&event_empty_json).unwrap()
         );
         assert_eq!(event_data, serde_json::from_str(&event_data_json).unwrap());
+    }
+
+    #[test]
+    fn doesnt_record_when_upload_is_disabled() {
+        let (mut glean, dir) = new_glean(None);
+        let db = EventDatabase::new(dir.path().to_str().unwrap()).unwrap();
+
+        let test_storage = "test-storage";
+        let test_category = "category";
+        let test_name = "name";
+        let test_timestamp = 2;
+        let test_meta = CommonMetricData::new(test_category, test_name, test_storage);
+        let event_data = RecordedEvent {
+            timestamp: test_timestamp,
+            category: test_category.to_string(),
+            name: test_name.to_string(),
+            extra: None,
+        };
+
+        // Upload is not yet disabled,
+        // so let's check that everything is getting recorded as expected.
+        db.record(&glean, &test_meta, 2, None);
+        {
+            let event_stores = db.event_stores.read().unwrap();
+            assert_eq!(&event_data, &event_stores.get(test_storage).unwrap()[0]);
+            assert_eq!(event_stores.get(test_storage).unwrap().len(), 1);
+        }
+
+        glean.set_upload_enabled(false);
+
+        // Now that upload is disabled, let's check nothing is recorded.
+        db.record(&glean, &test_meta, 2, None);
+        {
+            let event_stores = db.event_stores.read().unwrap();
+            assert_eq!(event_stores.get(test_storage).unwrap().len(), 1);
+        }
     }
 }

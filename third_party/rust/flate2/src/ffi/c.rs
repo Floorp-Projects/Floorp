@@ -1,4 +1,3 @@
-
 //! Implementation for C backends.
 use std::alloc::{self, Layout};
 use std::cmp;
@@ -39,13 +38,13 @@ impl Default for StreamWrapper {
                 reserved: 0,
                 opaque: ptr::null_mut(),
                 state: ptr::null_mut(),
-                #[cfg(feature = "zlib")]
+                #[cfg(feature = "any_zlib")]
                 zalloc,
-                #[cfg(feature = "zlib")]
+                #[cfg(feature = "any_zlib")]
                 zfree,
-                #[cfg(not(feature = "zlib"))]
+                #[cfg(not(feature = "any_zlib"))]
                 zalloc: Some(zalloc),
-                #[cfg(not(feature = "zlib"))]
+                #[cfg(not(feature = "any_zlib"))]
                 zfree: Some(zfree),
             }),
         }
@@ -220,7 +219,7 @@ impl InflateBackend for Inflate {
         }
     }
 
-    #[cfg(feature = "zlib")]
+    #[cfg(feature = "any_zlib")]
     fn reset(&mut self, zlib_header: bool) {
         let bits = if zlib_header {
             MZ_DEFAULT_WINDOW_BITS
@@ -234,7 +233,7 @@ impl InflateBackend for Inflate {
         self.inner.total_in = 0;
     }
 
-    #[cfg(not(feature = "zlib"))]
+    #[cfg(not(feature = "any_zlib"))]
     fn reset(&mut self, zlib_header: bool) {
         *self = Self::make(zlib_header, MZ_DEFAULT_WINDOW_BITS as u8);
     }
@@ -274,7 +273,7 @@ impl DeflateBackend for Deflate {
                 } else {
                     -(window_bits as c_int)
                 },
-                9,
+                8,
                 MZ_DEFAULT_STRATEGY,
             );
             assert_eq!(ret, 0);
@@ -339,14 +338,17 @@ impl Backend for Deflate {
 pub use self::c_backend::*;
 
 /// Miniz specific
-#[cfg(not(feature = "zlib"))]
+#[cfg(not(feature = "any_zlib"))]
 mod c_backend {
     pub use miniz_sys::*;
     pub type AllocSize = libc::size_t;
 }
 
 /// Zlib specific
-#[cfg(feature = "zlib")]
+#[cfg(any(
+    feature = "zlib-ng-compat",
+    all(feature = "zlib", not(feature = "cloudflare_zlib"))
+))]
 #[allow(bad_style)]
 mod c_backend {
     use libc::{c_char, c_int};
@@ -399,11 +401,72 @@ mod c_backend {
             mem::size_of::<mz_stream>() as c_int,
         )
     }
-    pub unsafe extern "C" fn mz_inflateInit2(
-        stream: *mut mz_stream,
-        window_bits: c_int,
-    ) -> c_int {
+    pub unsafe extern "C" fn mz_inflateInit2(stream: *mut mz_stream, window_bits: c_int) -> c_int {
         libz_sys::inflateInit2_(
+            stream,
+            window_bits,
+            ZLIB_VERSION.as_ptr() as *const c_char,
+            mem::size_of::<mz_stream>() as c_int,
+        )
+    }
+}
+
+/// Cloudflare optimized Zlib specific
+#[cfg(all(feature = "cloudflare_zlib", not(feature = "zlib-ng-compat")))]
+#[allow(bad_style)]
+mod c_backend {
+    use libc::{c_char, c_int};
+    use std::mem;
+
+    pub use cloudflare_zlib_sys::deflate as mz_deflate;
+    pub use cloudflare_zlib_sys::deflateEnd as mz_deflateEnd;
+    pub use cloudflare_zlib_sys::deflateReset as mz_deflateReset;
+    pub use cloudflare_zlib_sys::inflate as mz_inflate;
+    pub use cloudflare_zlib_sys::inflateEnd as mz_inflateEnd;
+    pub use cloudflare_zlib_sys::z_stream as mz_stream;
+    pub use cloudflare_zlib_sys::*;
+
+    pub use cloudflare_zlib_sys::Z_BLOCK as MZ_BLOCK;
+    pub use cloudflare_zlib_sys::Z_BUF_ERROR as MZ_BUF_ERROR;
+    pub use cloudflare_zlib_sys::Z_DATA_ERROR as MZ_DATA_ERROR;
+    pub use cloudflare_zlib_sys::Z_DEFAULT_STRATEGY as MZ_DEFAULT_STRATEGY;
+    pub use cloudflare_zlib_sys::Z_DEFLATED as MZ_DEFLATED;
+    pub use cloudflare_zlib_sys::Z_FINISH as MZ_FINISH;
+    pub use cloudflare_zlib_sys::Z_FULL_FLUSH as MZ_FULL_FLUSH;
+    pub use cloudflare_zlib_sys::Z_NEED_DICT as MZ_NEED_DICT;
+    pub use cloudflare_zlib_sys::Z_NO_FLUSH as MZ_NO_FLUSH;
+    pub use cloudflare_zlib_sys::Z_OK as MZ_OK;
+    pub use cloudflare_zlib_sys::Z_PARTIAL_FLUSH as MZ_PARTIAL_FLUSH;
+    pub use cloudflare_zlib_sys::Z_STREAM_END as MZ_STREAM_END;
+    pub use cloudflare_zlib_sys::Z_STREAM_ERROR as MZ_STREAM_ERROR;
+    pub use cloudflare_zlib_sys::Z_SYNC_FLUSH as MZ_SYNC_FLUSH;
+    pub type AllocSize = cloudflare_zlib_sys::uInt;
+
+    pub const MZ_DEFAULT_WINDOW_BITS: c_int = 15;
+
+    const ZLIB_VERSION: &'static str = "1.2.8\0";
+
+    pub unsafe extern "C" fn mz_deflateInit2(
+        stream: *mut mz_stream,
+        level: c_int,
+        method: c_int,
+        window_bits: c_int,
+        mem_level: c_int,
+        strategy: c_int,
+    ) -> c_int {
+        cloudflare_zlib_sys::deflateInit2_(
+            stream,
+            level,
+            method,
+            window_bits,
+            mem_level,
+            strategy,
+            ZLIB_VERSION.as_ptr() as *const c_char,
+            mem::size_of::<mz_stream>() as c_int,
+        )
+    }
+    pub unsafe extern "C" fn mz_inflateInit2(stream: *mut mz_stream, window_bits: c_int) -> c_int {
+        cloudflare_zlib_sys::inflateInit2_(
             stream,
             window_bits,
             ZLIB_VERSION.as_ptr() as *const c_char,

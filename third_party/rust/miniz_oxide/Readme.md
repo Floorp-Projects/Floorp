@@ -1,7 +1,9 @@
 # miniz_oxide
 
 A pure rust replacement for the [miniz](https://github.com/richgel999/miniz) DEFLATE/zlib encoder/decoder.
-The plan for this crate is to be used as a back-end for the [flate2](https://github.com/alexcrichton/flate2-rs) crate and eventually remove the need to depend on a C library.
+The main intention of this crate is to be used as a back-end for the [flate2](https://github.com/alexcrichton/flate2-rs), but it can also be used on it's own. Using flate2 with the ```rust_backend``` feature provides an easy to use streaming API for miniz_oxide.
+
+Requires at least rust 1.34.
 
 ## Usage
 Simple compression/decompression:
@@ -18,5 +20,3 @@ fn roundtrip(data: &[u8]) {
 }
 
 ```
-
-TODO: Advanced functions.
