@@ -1896,6 +1896,11 @@ describe("TelemetryFeed", () => {
       });
 
       assert.ok(instance.isInCFRCohort);
+      assert.propertyVal(
+        ExperimentAPI.getExperiment.firstCall.args[0],
+        "featureId",
+        "cfr"
+      );
     });
   });
 });
