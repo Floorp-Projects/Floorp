@@ -307,7 +307,6 @@ var StarUI = {
       onPanelReady,
       hiddenRows: ["location", "keyword"],
       focusedElement: "preferred",
-      isNewBookmark: this._isNewBookmark,
     });
 
     this.panel.openPopup(this._anchorElement, "bottomcenter topright");
