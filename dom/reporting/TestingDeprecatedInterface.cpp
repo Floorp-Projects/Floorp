@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/TestingDeprecatedInterface.h"
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/ReportingBinding.h"
 
 namespace mozilla {
 namespace dom {
