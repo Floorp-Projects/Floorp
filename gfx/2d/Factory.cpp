@@ -929,6 +929,13 @@ RefPtr<IDWriteFontCollection> Factory::GetDWriteSystemFonts(bool aUpdate) {
   }
 
   if (!mDWriteFactory) {
+    if ((rand() & 0x3f) == 0) {
+      gfxCriticalError(int(gfx::LogOptions::AssertOnCall))
+          << "Failed to create DWrite factory";
+    } else {
+      gfxWarning() << "Failed to create DWrite factory";
+    }
+
     return nullptr;
   }
 
