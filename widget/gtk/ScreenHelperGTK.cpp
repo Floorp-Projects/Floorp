@@ -32,6 +32,12 @@ static void monitors_changed(GdkScreen* aScreen, gpointer aClosure) {
   self->RefreshScreens();
 }
 
+static void screen_resolution_changed(GdkScreen* aScreen,
+                                      GParamSpec* aPspec,
+                                      ScreenHelperGTK* self) {
+  self->RefreshScreens();
+}
+
 static GdkFilterReturn root_window_event_filter(GdkXEvent* aGdkXEvent,
                                                 GdkEvent* aGdkEvent,
                                                 gpointer aClosure) {
@@ -82,6 +88,10 @@ ScreenHelperGTK::ScreenHelperGTK()
 
   g_signal_connect(defaultScreen, "monitors-changed",
                    G_CALLBACK(monitors_changed), this);
+  // Use _after to ensure this callback is run after gfxPlatformGtk.cpp's
+  // handler.
+  g_signal_connect_after(defaultScreen, "notify::resolution",
+                         G_CALLBACK(screen_resolution_changed), this);
 #ifdef MOZ_X11
   gdk_window_add_filter(mRootWindow, root_window_event_filter, this);
   if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
@@ -94,8 +104,7 @@ ScreenHelperGTK::ScreenHelperGTK()
 
 ScreenHelperGTK::~ScreenHelperGTK() {
   if (mRootWindow) {
-    g_signal_handlers_disconnect_by_func(
-        gdk_screen_get_default(), FuncToGpointer(monitors_changed), this);
+    g_signal_handlers_disconnect_by_data(gdk_screen_get_default(), this);
 
     gdk_window_remove_filter(mRootWindow, root_window_event_filter, this);
     g_object_unref(mRootWindow);
