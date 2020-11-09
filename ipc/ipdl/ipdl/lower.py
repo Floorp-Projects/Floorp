@@ -3646,6 +3646,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         else:
             inherits.append(Inherit(p.managerInterfaceType(), viz="public"))
 
+        if hasAsyncReturns:
+            inherits.append(Inherit(Type("SupportsWeakPtr"), viz="public"))
+            self.hdrfile.addthing(CppDirective("include", '"mozilla/WeakPtr.h"'))
+
         if ptype.isToplevel() and self.side == "parent":
             self.hdrfile.addthings(
                 [_makeForwardDeclForQClass("nsIFile", []), Whitespace.NL]
@@ -5064,25 +5068,20 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ),
             failifsendok,
         ]
-
-        resolverfn = ExprLambda(
-            [ExprVar.THIS, ExprVar("self__"), routingId, seqno],
-            [Decl(Type.AUTORVAL, "aParam")],
+        selfvar = ExprVar("self__")
+        ifactorisdead = StmtIf(ExprNot(selfvar))
+        ifactorisdead.addifstmts(
+            [
+                _printWarningMessage("Not resolving response because actor is dead."),
+                StmtReturn(),
+            ]
         )
-        resolverfn.addcode(
-            """
-            if (!self__->Get()) {
-                NS_WARNING("Not resolving response because actor is dead.");
-                return;
-            }
-            MOZ_ASSERT(self__->Get() == this, "wrong value for 'this'");
-
-            IPC::Message* ${replyvar} = ${replyCtor}(${routingId});
-            bool resolve__ = true;
-            """,
-            replyvar=self.replyvar,
-            replyCtor=ExprVar(md.pqReplyCtorFunc()),
-            routingId=routingId,
+        resolverfn = ExprLambda(
+            [ExprVar.THIS, selfvar, routingId, seqno], [Decl(Type.AUTORVAL, "aParam")]
+        )
+        resolverfn.addstmts(
+            [ifactorisdead]
+            + [StmtDecl(Decl(Type.BOOL, resolve.name), init=ExprLiteral.TRUE)]
         )
         fwdparam = ExprCode("std::forward<decltype(aParam)>(aParam)")
         if len(md.returns) > 1:
@@ -5115,12 +5114,18 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             )
         resolverfn.addstmts(
             [
+                StmtDecl(
+                    Decl(Type("IPC::Message", ptr=True), self.replyvar.name),
+                    init=ExprCall(ExprVar(md.pqReplyCtorFunc()), args=[routingId]),
+                )
+            ]
+            + [
                 _ParamTraits.checkedWrite(
                     None,
                     resolve,
                     self.replyvar,
                     sentinelKey=resolve.name,
-                    actor=ExprVar.THIS,
+                    actor=selfvar,
                 )
             ]
             + [
@@ -5129,27 +5134,26 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     ExprMove(r.var()),
                     self.replyvar,
                     sentinelKey=r.name,
-                    actor=ExprVar.THIS,
+                    actor=selfvar,
                 )
                 for r in md.returns
             ]
         )
         resolverfn.addstmts(sendmsg)
 
-        return [
-            StmtCode(
-                """
-                int32_t seqno__ = ${msgvar}.seqno();
-                RefPtr<mozilla::ipc::ActorLifecycleProxy> self__ =
-                    GetLifecycleProxy();
-
-                ${resolvertype} resolver = ${resolverfn};
-                """,
-                msgvar=self.msgvar,
-                resolvertype=Type(md.resolverName()),
-                resolverfn=resolverfn,
-            )
+        makeresolver = [
+            Whitespace.NL,
+            StmtDecl(
+                Decl(Type.INT32, seqno.name),
+                init=ExprCall(ExprSelect(self.msgvar, ".", "seqno")),
+            ),
+            StmtDecl(
+                Decl(Type("WeakPtr", T=ExprVar(self.clsname)), selfvar.name),
+                init=ExprVar.THIS,
+            ),
+            StmtDecl(Decl(resolvertype, "resolver"), init=resolverfn),
         ]
+        return makeresolver
 
     def makeReply(self, md, errfn, routingId):
         if routingId is None:

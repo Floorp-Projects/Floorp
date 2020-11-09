@@ -26,7 +26,7 @@ typedef MozPromise<RawId, Maybe<ipc::ResponseRejectReason>, true> RawIdPromise;
 
 ffi::WGPUByteBuf* ToFFI(ipc::ByteBuf* x);
 
-class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
+class WebGPUChild final : public PWebGPUChild {
  public:
   friend class layers::CompositorBridgeChild;
 
