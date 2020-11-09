@@ -152,6 +152,10 @@ class HttpTransactionShell : public nsISupports {
 
   virtual bool TakeRestartedState() = 0;
   virtual Maybe<uint32_t> HTTPSSVCReceivedStage() = 0;
+
+  virtual bool Http2Disabled() const = 0;
+  virtual bool Http3Disabled() const = 0;
+  virtual already_AddRefed<nsHttpConnectionInfo> GetConnInfo() const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
@@ -206,7 +210,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
   virtual nsHttpTransaction* AsHttpTransaction() override;                     \
   virtual HttpTransactionParent* AsHttpTransactionParent() override;           \
   virtual bool TakeRestartedState() override;                                  \
-  virtual Maybe<uint32_t> HTTPSSVCReceivedStage() override;
+  virtual Maybe<uint32_t> HTTPSSVCReceivedStage() override;                    \
+  virtual bool Http2Disabled() const override;                                 \
+  virtual bool Http3Disabled() const override;                                 \
+  virtual already_AddRefed<nsHttpConnectionInfo> GetConnInfo() const override;
 }  // namespace net
 }  // namespace mozilla
 

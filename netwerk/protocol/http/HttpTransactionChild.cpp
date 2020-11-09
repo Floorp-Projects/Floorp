@@ -562,12 +562,14 @@ HttpTransactionChild::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
     mDataBridgeParent = nullptr;
   }
 
+  RefPtr<nsHttpConnectionInfo> connInfo = mTransaction->GetConnInfo();
+  HttpConnectionInfoCloneArgs infoArgs;
+  nsHttpConnectionInfo::SerializeHttpConnectionInfo(connInfo, infoArgs);
   Unused << SendOnStopRequest(aStatus, mTransaction->ResponseIsComplete(),
                               mTransaction->GetTransferSize(),
                               ToTimingStructArgs(mTransaction->Timings()),
-                              responseTrailers,
-                              mTransaction->HasStickyConnection(),
-                              mTransactionObserverResult, lastActTabOpt);
+                              responseTrailers, mTransactionObserverResult,
+                              lastActTabOpt, mTransaction->Caps(), infoArgs);
 
   return NS_OK;
 }

@@ -7717,6 +7717,16 @@ nsHttpChannel::OnStopRequest(nsIRequest* request, nsresult status) {
     if (mCaps & NS_HTTP_STICKY_CONNECTION ||
         mTransaction->HasStickyConnection()) {
       transactionWithStickyConn = mTransaction;
+      // Make sure we use the updated caps and connection info from transaction.
+      // We read these values when the transaction is already closed, so there
+      // should be no race.
+      if (mTransaction->Http2Disabled()) {
+        mCaps |= NS_HTTP_DISALLOW_SPDY;
+      }
+      if (mTransaction->Http3Disabled()) {
+        mCaps |= NS_HTTP_DISALLOW_HTTP3;
+      }
+      mConnectionInfo = mTransaction->GetConnInfo();
       LOG(("  transaction %p has sticky connection",
            transactionWithStickyConn.get()));
     }

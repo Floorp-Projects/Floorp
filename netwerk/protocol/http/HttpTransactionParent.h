@@ -66,9 +66,9 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const nsresult& aStatus, const bool& aResponseIsComplete,
       const int64_t& aTransferSize, const TimingStructArgs& aTimings,
       const Maybe<nsHttpHeaderArray>& responseTrailers,
-      const bool& aHasStickyConn,
       Maybe<TransactionObserverResult>&& aTransactionObserverResult,
-      const TimeStamp& aLastActiveTabOptHit);
+      const TimeStamp& aLastActiveTabOptHit, const uint32_t& aCaps,
+      const HttpConnectionInfoCloneArgs& aArgs);
   mozilla::ipc::IPCResult RecvOnInitFailed(const nsresult& aStatus);
 
   mozilla::ipc::IPCResult RecvOnH2PushStream(const uint32_t& aPushedStreamId,
@@ -107,8 +107,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const nsresult& aStatus, const bool& aResponseIsComplete,
       const int64_t& aTransferSize, const TimingStructArgs& aTimings,
       const Maybe<nsHttpHeaderArray>& responseTrailers,
-      const bool& aHasStickyConn,
-      Maybe<TransactionObserverResult>&& aTransactionObserverResult);
+      Maybe<TransactionObserverResult>&& aTransactionObserverResult,
+      const uint32_t& aCaps, nsHttpConnectionInfo* aConnInfo);
   void DoNotifyListener();
   void ContinueDoNotifyListener();
   // Get event target for ODA.
@@ -135,7 +135,6 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   int32_t mSuspendCount;
   bool mResponseHeadTaken;
   bool mResponseTrailersTaken;
-  bool mHasStickyConnection;
   bool mOnStartRequestCalled;
   bool mOnStopRequestCalled;
   bool mResolvedByTRR;
@@ -144,6 +143,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   bool mDataSentToChildProcess;
   bool mIsDocumentLoad;
   bool mRestarted;
+  uint32_t mCaps;
   TimeStamp mRedirectStart;
   TimeStamp mRedirectEnd;
 
@@ -157,6 +157,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   nsTArray<uint8_t> mDataForSniffer;
   std::function<void()> mCallOnResume;
   Maybe<uint32_t> mHTTPSSVCReceivedStage;
+  RefPtr<nsHttpConnectionInfo> mConnInfo;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionParent,
