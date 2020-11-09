@@ -15368,7 +15368,7 @@
     "high": 100000,
     "n_buckets": 100,
     "bug_numbers": [1499418, 1584109],
-    "description": "GeckoView: Time taken to load a page in ms. This includes all static contents, no dynamic content. Loading of about: pages is not counted."
+    "description": "GeckoView: Time taken to load a page in ms. This includes all static contents, no dynamic content. Loading of about: pages is not counted. Back back navigation (sometimes via BFCache) is included which is a source of bimodality due to the <50ms load times."
   },
   "GV_PAGE_RELOAD_MS": {
     "record_in_processes": ["main", "content"],
