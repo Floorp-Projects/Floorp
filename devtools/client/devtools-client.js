@@ -686,11 +686,11 @@ DevToolsClient.prototype = {
 
     for (const front of fronts) {
       if (!front.isDestroyed() && front.actorID.startsWith(prefix)) {
-        // Call Front.purgeRequestsForDestroy instead of Front.destroy in order to flush requests
+        // Call Front.baseFrontClassDestroy nstead of Front.destroy in order to flush requests
         // and nullify front.actorID immediately, even if Front.destroy is overloaded
         // by an async function which would otherwise be able to try emitting new request
         // after the purge.
-        front.purgeRequestsForDestroy();
+        front.baseFrontClassDestroy();
       }
     }
   },
