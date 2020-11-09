@@ -253,4 +253,6 @@ void TextTrackCue::SetActive(bool aActive) {
   }
 }
 
+#undef LOG
+
 }  // namespace mozilla::dom
