@@ -148,8 +148,8 @@ void main(void) {
 
     float d = -1.0;
     if (in_clip_region) {
-        float d_radii_a = distance_to_ellipse(clip_relative_pos, vClipRadii.xy, aa_range);
-        float d_radii_b = distance_to_ellipse(clip_relative_pos, vClipRadii.zw, aa_range);
+        float d_radii_a = distance_to_ellipse(clip_relative_pos, vClipRadii.xy);
+        float d_radii_b = distance_to_ellipse(clip_relative_pos, vClipRadii.zw);
         d = max(d_radii_a, -d_radii_b);
     }
 
@@ -157,7 +157,7 @@ void main(void) {
     clip_relative_pos = vPos - vHorizontalClipCenter_Sign.xy;
     in_clip_region = all(lessThan(vHorizontalClipCenter_Sign.zw * clip_relative_pos, vec2(0.0)));
     if (in_clip_region) {
-        float d_radii = distance_to_ellipse(clip_relative_pos, vHorizontalClipRadii.xy, aa_range);
+        float d_radii = distance_to_ellipse(clip_relative_pos, vHorizontalClipRadii.xy);
         d = max(d_radii, d);
     }
 
@@ -165,7 +165,7 @@ void main(void) {
     clip_relative_pos = vPos - vVerticalClipCenter_Sign.xy;
     in_clip_region = all(lessThan(vVerticalClipCenter_Sign.zw * clip_relative_pos, vec2(0.0)));
     if (in_clip_region) {
-        float d_radii = distance_to_ellipse(clip_relative_pos, vVerticalClipRadii.xy, aa_range);
+        float d_radii = distance_to_ellipse(clip_relative_pos, vVerticalClipRadii.xy);
         d = max(d_radii, d);
     }
 
