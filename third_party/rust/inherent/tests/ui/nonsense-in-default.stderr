@@ -1,0 +1,5 @@
+error: expected `fn`
+  --> $DIR/nonsense-in-default.rs:12:15
+   |
+12 |         const NONSENSE: usize = 1;
+   |               ^^^^^^^^
