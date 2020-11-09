@@ -165,7 +165,7 @@ add_task(async function testObserver() {
     "locale change triggers UI direction update"
   );
 
-  Services.prefs.setIntPref("intl.uidirection", 1);
+  Services.prefs.setStringPref("intl.l10n.pseudo", "bidi");
 
   Assert.equal(
     component.updateDir.callCount,

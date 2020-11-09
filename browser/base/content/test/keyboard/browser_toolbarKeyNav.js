@@ -283,7 +283,7 @@ add_task(async function testArrowsInPanelMultiView() {
 
 // Test that right/left arrows move in the expected direction for RTL locales.
 add_task(async function testArrowsRtl() {
-  await SpecialPowers.pushPrefEnv({ set: [["intl.uidirection", 1]] });
+  await SpecialPowers.pushPrefEnv({ set: [["intl.l10n.pseudo", "bidi"]] });
   // window.RTL_UI doesn't update in existing windows when this pref is changed,
   // so we need to test in a new window.
   let win = await BrowserTestUtils.openNewBrowserWindow();

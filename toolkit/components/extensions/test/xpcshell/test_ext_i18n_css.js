@@ -161,14 +161,14 @@ async function test_i18n_css(options = {}) {
 
   // We don't currently have a good way to mock this.
   if (false) {
-    const DIR = "intl.uidirection";
+    const DIR = "intl.l10n.pseudo";
 
     // We don't wind up actually switching the chrome registry locale, since we
     // don't have a chrome package for Hebrew. So just override it, and force
     // RTL directionality.
     const origReqLocales = Services.locale.requestedLocales;
     Services.locale.requestedLocales = ["he"];
-    Preferences.set(DIR, 1);
+    Preferences.set(DIR, "bidi");
 
     css = await fetch(baseURL + "locale.css");
     equal(

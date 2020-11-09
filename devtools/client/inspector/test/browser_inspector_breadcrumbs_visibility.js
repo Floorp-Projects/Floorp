@@ -46,11 +46,11 @@ add_task(async function() {
   await inspectorResized;
 
   info("Testing transitions ltr");
-  await pushPref("intl.uidirection", 0);
+  await pushPref("intl.l10n.pseudo", "");
   await testBreadcrumbTransitions(hostWindow, inspector);
 
   info("Testing transitions rtl");
-  await pushPref("intl.uidirection", 1);
+  await pushPref("intl.l10n.pseudo", "bidi");
   await testBreadcrumbTransitions(hostWindow, inspector);
 
   hostWindow.resizeTo(originalWidth, originalHeight);

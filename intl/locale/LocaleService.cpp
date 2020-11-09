@@ -235,6 +235,10 @@ void LocaleService::LocalesChanged() {
 }
 
 bool LocaleService::IsLocaleRTL(const nsACString& aLocale) {
+  return unic_langid_is_rtl(&aLocale);
+}
+
+bool LocaleService::IsAppLocaleRTL() {
   // First, let's check if there's a manual override
   // preference for directionality set.
   int pref = Preferences::GetInt("intl.uidirection", -1);
@@ -242,11 +246,7 @@ bool LocaleService::IsLocaleRTL(const nsACString& aLocale) {
     return (pref > 0);
   }
 
-  return unic_langid_is_rtl(&aLocale);
-}
-
-bool LocaleService::IsAppLocaleRTL() {
-  // First, check if there is a pseudo locale `bidi` set.
+  // Next, check if there is a pseudo locale `bidi` set.
   nsAutoCString pseudoLocale;
   if (NS_SUCCEEDED(Preferences::GetCString("intl.l10n.pseudo", pseudoLocale))) {
     if (pseudoLocale.EqualsLiteral("bidi")) {

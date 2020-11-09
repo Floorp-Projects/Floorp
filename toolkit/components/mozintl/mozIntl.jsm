@@ -3,9 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 
 const mozIntlHelper = Cc["@mozilla.org/mozintlhelper;1"].getService(
   Ci.mozIMozIntlHelper
@@ -768,20 +765,6 @@ class MozIntl {
   constructor() {
     this._cache = {};
     Services.obs.addObserver(this, "intl:app-locales-changed", true);
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "_forcedDir",
-      "intl.uidirection",
-      -1,
-      () => this.observe()
-    );
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "_pseudo",
-      "intl.l10n.pseudo",
-      "",
-      () => this.observe()
-    );
   }
 
   observe() {
@@ -810,13 +793,7 @@ class MozIntl {
       mozIntlHelper.addGetLocaleInfo(this._cache);
     }
 
-    let info = this._cache.getLocaleInfo(getLocales(locales), ...args);
-    if (this._pseudo == "bidi") {
-      info.direction = "rtl";
-    } else if (this._forcedDir != -1) {
-      info.direction = this._forcedDir == 1 ? "rtl" : "ltr";
-    }
-    return info;
+    return this._cache.getLocaleInfo(getLocales(locales), ...args);
   }
 
   getAvailableLocaleDisplayNames(type) {

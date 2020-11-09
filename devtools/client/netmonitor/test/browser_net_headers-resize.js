@@ -13,7 +13,11 @@ add_task(async function() {
 });
 
 async function testForGivenDir(dir) {
-  await pushPref("intl.uidirection", dir === "rtl" ? 1 : -1);
+  if (dir === "rtl") {
+    await pushPref("intl.l10n.pseudo", "bidi");
+  } else {
+    await pushPref("intl.l10n.pseudo", "");
+  }
 
   // Reset visibleColumns so we only get the default ones
   // and not all that are set in head.js
