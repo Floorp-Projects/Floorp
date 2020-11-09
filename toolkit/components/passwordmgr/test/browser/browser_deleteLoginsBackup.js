@@ -95,22 +95,28 @@ add_task(async function test_deleteLoginsBackup_removeAll() {
   await OS.File.remove(loginStorePath, { ignoreAbsent: true });
   await OS.File.remove(loginBackupPath, { ignoreAbsent: true });
 
+  let storageUpdatePromise = TestUtils.topicObserved(
+    "password-storage-updated"
+  );
   info("Add a login to create logins.json");
   Services.logins.addLogin(login1);
   await loginStoreExists();
-  info("logins.json now exists");
+  ok(true, "logins.json now exists");
 
   info("Add a second login to create logins-backup.json");
   Services.logins.addLogin(login2);
   await loginBackupExists();
   info("logins-backup.json now exists");
 
+  await storageUpdatePromise;
+  info("Writes to storage are complete for addLogin calls");
+
+  storageUpdatePromise = TestUtils.topicObserved("password-storage-updated");
   info("Removing all logins");
   Services.logins.removeAllLogins();
 
-  const numLogins = Services.logins.countLogins("", "", "");
-  ok(!numLogins, "Logins were removed successfully");
-
+  await storageUpdatePromise;
+  info("Writes to storage are complete when removeAllLogins() is called");
   await loginBackupDeleted();
   info(
     "logins-backup.json was deleted as expected when all logins were removed"
@@ -118,18 +124,28 @@ add_task(async function test_deleteLoginsBackup_removeAll() {
 
   info("Testing the removeLogin() case when there is no saved fxa key");
   info("Adding two logins");
+  storageUpdatePromise = TestUtils.topicObserved("password-storage-updated");
   Services.logins.addLogin(login1);
   await loginStoreExists();
   Services.logins.addLogin(login2);
   await loginBackupExists();
   info("logins-backup.json now exists");
 
+  await storageUpdatePromise;
+  info("Writes to storage are complete for addLogin calls");
+
+  storageUpdatePromise = TestUtils.topicObserved("password-storage-updated");
   info("Removing one login");
   Services.logins.removeLogin(login1);
+  await storageUpdatePromise;
+  info("Writes to storage are complete after one removeLogin call");
   await loginBackupExists();
 
+  storageUpdatePromise = TestUtils.topicObserved("password-storage-updated");
   info("Removing the last login");
   Services.logins.removeLogin(login2);
+  await storageUpdatePromise;
+  info("Writes to storage are complete after the last removeLogin call");
   await loginBackupDeleted();
   info(
     "logins-backup.json was deleted as expected when the last saved login was removed"
@@ -137,20 +153,28 @@ add_task(async function test_deleteLoginsBackup_removeAll() {
 
   info("Testing the removeLogin() case when there is a saved fxa key");
   info("Adding two logins: fxa key and a user facing login");
+  storageUpdatePromise = TestUtils.topicObserved("password-storage-updated");
   Services.logins.addLogin(login1);
   await loginStoreExists();
   Services.logins.addLogin(fxaKey);
   await loginBackupExists();
   info("logins-backup.json now exists");
+  await storageUpdatePromise;
+  info("Writes to storage are complete for addLogin calls");
 
+  storageUpdatePromise = TestUtils.topicObserved("password-storage-updated");
   info("Removing the last user facing login");
   Services.logins.removeLogin(login1);
-
+  await storageUpdatePromise;
+  info("Writes to storage are complete after one removeLogin call");
   await waitForBackupUpdate();
   info("logins-backup.json was updated to only store the fxa key, as expected");
 
+  storageUpdatePromise = TestUtils.topicObserved("password-storage-updated");
   info("Removing the fxa key");
   Services.logins.removeLogin(fxaKey);
+  await storageUpdatePromise;
+  info("Writes to storage are complete after the last removeLogin call");
   await loginBackupDeleted();
   info(
     "logins-backup.json was deleted when the last login was removed, as expected"
