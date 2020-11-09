@@ -41,6 +41,6 @@ EXTRA_JS_MODULES += [
     "vtt.jsm",
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 
 FINAL_LIBRARY = "xul"
