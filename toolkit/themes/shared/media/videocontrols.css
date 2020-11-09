@@ -20,6 +20,10 @@
   white-space: normal !important;
 }
 
+.videocontrols[flipped="true"] {
+  transform: scaleX(-1);
+}
+
 .controlsContainer {
   --clickToPlay-size: 48px;
   --button-size: 30px;
