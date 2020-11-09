@@ -70,6 +70,14 @@ bool HyperTextIterator::NormalizeForward() {
       // If we are not a link, it is a root hypertext accessible.
       return false;
     }
+    if (!mCurrentContainer->Parent() ||
+        !mCurrentContainer->Parent()->IsHyperText()) {
+      // If we are a link, but our parent is not a hypertext accessible
+      // treat the current container as the root hypertext accessible.
+      // This can be the case with some XUL containers that are not
+      // hypertext accessibles.
+      return false;
+    }
     uint32_t endOffset = mCurrentContainer->EndOffset();
     if (endOffset != 0) {
       mCurrentContainer = mCurrentContainer->Parent()->AsHyperText();
@@ -110,6 +118,14 @@ bool HyperTextIterator::NormalizeBackward() {
     // start offset.
     if (!mCurrentContainer->IsLink()) {
       // If we are not a link, it is a root hypertext accessible.
+      return false;
+    }
+    if (!mCurrentContainer->Parent() ||
+        !mCurrentContainer->Parent()->IsHyperText()) {
+      // If we are a link, but our parent is not a hypertext accessible
+      // treat the current container as the root hypertext accessible.
+      // This can be the case with some XUL containers that are not
+      // hypertext accessibles.
       return false;
     }
 
