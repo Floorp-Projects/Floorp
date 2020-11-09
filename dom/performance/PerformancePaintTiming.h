@@ -33,7 +33,7 @@ class PerformancePaintTiming final : public PerformanceEntry {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  DOMHighResTimeStamp StartTime() const override { return mStartTime; }
+  DOMHighResTimeStamp StartTime() const override;
 
   size_t SizeOfIncludingThis(
       mozilla::MallocSizeOf aMallocSizeOf) const override;
@@ -41,8 +41,7 @@ class PerformancePaintTiming final : public PerformanceEntry {
  private:
   ~PerformancePaintTiming();
   RefPtr<Performance> mPerformance;
-  const DOMHighResTimeStamp mStartTime;
-  DOMHighResTimeStamp CalculateStartTime(const TimeStamp& aStartTime) const;
+  const TimeStamp mStartTime;
 };
 
 }  // namespace dom
