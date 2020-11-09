@@ -760,6 +760,58 @@ add_task(async function multipleMatchingEngines() {
   await Services.search.removeEngine(testEngineFoo);
 });
 
+// Tests that UrlbarProviderTokenAliasEngines is disabled in search mode.
+add_task(async function doNotShowInSearchMode() {
+  // Do a search for "@" to show all the @ aliases.
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "@",
+  });
+
+  // Find our test engine in the results.  It's probably last, but for
+  // robustness don't assume it is.
+  let testEngineItem;
+  for (let i = 0; !testEngineItem; i++) {
+    let details = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+    if (details.searchParams && details.searchParams.keyword == ALIAS) {
+      testEngineItem = await UrlbarTestUtils.waitForAutocompleteResultAt(
+        window,
+        i
+      );
+    }
+  }
+
+  Assert.equal(
+    testEngineItem.result.payload.keyword,
+    ALIAS,
+    "Sanity check: we found our engine."
+  );
+
+  // Click it.
+  let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
+  EventUtils.synthesizeMouseAtCenter(testEngineItem, {});
+  await searchPromise;
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: testEngineItem.result.payload.engine,
+    entry: "keywordoffer",
+  });
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "@",
+    fireInputEvent: true,
+  });
+
+  let resultCount = UrlbarTestUtils.getResultCount(window);
+  for (let i = 0; i < resultCount; i++) {
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+    Assert.ok(
+      !result.searchParams.keyword,
+      `Result at index ${i} is not a keywordoffer.`
+    );
+  }
+});
+
 async function assertFirstResultIsAlias(isAlias, expectedAlias) {
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.equal(

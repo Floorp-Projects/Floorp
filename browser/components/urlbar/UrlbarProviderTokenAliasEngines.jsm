@@ -76,6 +76,11 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
       return false;
     }
 
+    // Do not show token alias results in search mode.
+    if (queryContext.searchMode) {
+      return false;
+    }
+
     this._engines = await UrlbarSearchUtils.tokenAliasEngines();
     if (!this._engines.length) {
       return false;
