@@ -7,7 +7,6 @@ package org.mozilla.fenix.home.intent
 import android.content.Intent
 import androidx.navigation.NavController
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.sessionsOfType
 
@@ -22,16 +21,10 @@ class NotificationsIntentProcessor(
     override fun process(intent: Intent, navController: NavController, out: Intent): Boolean {
         return if (intent.extras?.getBoolean(HomeActivity.EXTRA_DELETE_PRIVATE_TABS) == true) {
             out.putExtra(HomeActivity.EXTRA_DELETE_PRIVATE_TABS, false)
-            activity.components.analytics.metrics.track(Event.PrivateBrowsingNotificationDeleteAndOpenTapped)
             activity.components.core.sessionManager.run {
                 sessionsOfType(private = true).forEach { remove(it) }
             }
             true
-        } else if (intent.extras?.getBoolean(HomeActivity.EXTRA_OPENED_FROM_NOTIFICATION) == true) {
-            activity.components.analytics.metrics.track(Event.PrivateBrowsingNotificationOpenTapped)
-            true
-        } else {
-            false
-        }
+        } else intent.extras?.getBoolean(HomeActivity.EXTRA_OPENED_FROM_NOTIFICATION) == true
     }
 }

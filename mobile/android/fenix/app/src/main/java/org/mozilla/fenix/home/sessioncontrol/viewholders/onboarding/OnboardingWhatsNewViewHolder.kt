@@ -8,9 +8,7 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_whats_new.view.*
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.addUnderline
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.sessioncontrol.OnboardingInteractor
 
 class OnboardingWhatsNewViewHolder(
@@ -27,7 +25,6 @@ class OnboardingWhatsNewViewHolder(
         view.get_answers.addUnderline()
         view.get_answers.setOnClickListener {
             interactor.onWhatsNewGetAnswersClicked()
-            view.context.components.analytics.metrics.track(Event.OnboardingWhatsNew)
         }
     }
 

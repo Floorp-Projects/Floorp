@@ -212,11 +212,9 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             toolbarView.view.clearFocus()
 
             if (requireContext().settings().shouldShowCameraPermissionPrompt) {
-                requireComponents.analytics.metrics.track(Event.QRScannerOpened)
                 qrFeature.get()?.scan(R.id.search_wrapper)
             } else {
                 if (requireContext().isPermissionGranted(Manifest.permission.CAMERA)) {
-                    requireComponents.analytics.metrics.track(Event.QRScannerOpened)
                     qrFeature.get()?.scan(R.id.search_wrapper)
                 } else {
                     interactor.onCameraPermissionsNeeded()
@@ -357,11 +355,9 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                         )
                         setMessage(spannable)
                         setNegativeButton(R.string.qr_scanner_dialog_negative) { dialog: DialogInterface, _ ->
-                            requireComponents.analytics.metrics.track(Event.QRScannerNavigationDenied)
                             dialog.cancel()
                         }
                         setPositiveButton(R.string.qr_scanner_dialog_positive) { dialog: DialogInterface, _ ->
-                            requireComponents.analytics.metrics.track(Event.QRScannerNavigationAllowed)
                             (activity as HomeActivity)
                                 .openToBrowserAndLoad(
                                     searchTermOrURL = result,
@@ -372,7 +368,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                         }
                         create()
                     }.show()
-                    requireComponents.analytics.metrics.track(Event.QRScannerPromptDisplayed)
                 }
             }
         )

@@ -84,11 +84,6 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         requireComponents.analytics.metrics.track(Event.SyncAccountOpened)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        requireComponents.analytics.metrics.track(Event.SyncAccountClosed)
-    }
-
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

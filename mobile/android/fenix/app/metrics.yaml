@@ -433,21 +433,6 @@ onboarding:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
     expires: "2021-08-01"
-  whats_new:
-    type: event
-    description:
-      The onboarding What\'s New card was tapped.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/10824
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/11867
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - fenix-core@mozilla.com
-      - erichards@mozilla.com
-    expires: "2021-08-01"
   pref_toggled_theme_picker:
     type: event
     description:
@@ -1659,67 +1644,6 @@ activation:
     no_lint:
       - USER_LIFETIME_EXPIRATION
 
-qr_scanner:
-  opened:
-    type: event
-    description: |
-      A user opened the QR scanner
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/1857
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2021-08-01"
-  prompt_displayed:
-    type: event
-    description: |
-      A user scanned a QR code, causing a confirmation prompt to display asking
-      if they want to navigate to the page
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/1857
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2021-08-01"
-  navigation_allowed:
-    type: event
-    description: |
-      A user tapped "allow" on the prompt, directing the user to the website
-      scanned
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/1857
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2021-08-01"
-  navigation_denied:
-    type: event
-    description: |
-      A user tapped "deny" on the prompt, putting the user back to the scanning
-      view
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/1857
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2021-08-01"
-
 error_page:
   visited_error:
     type: event
@@ -1858,22 +1782,6 @@ sync_auth:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
-  auto_login:
-    type: event
-    description: |
-      User signed into FxA via an account shared from another locally installed
-      Mozilla application (e.g. Fennec)
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/4971
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-    data_sensitivity:
-      - technical
-      - interaction
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2021-08-01"
   recovered:
     type: event
     description: |
@@ -1926,20 +1834,6 @@ sync_account:
     type: event
     description: |
       A user opened the sync account page
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/1190
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2021-08-01"
-  closed:
-    type: event
-    description: |
-      A user closed the sync account page
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
@@ -2592,21 +2486,6 @@ search_widget:
     expires: "2021-08-01"
 
 private_browsing_mode:
-  garbage_icon:
-    type: event
-    description: |
-      A user pressed the garbage can icon on the private browsing home page,
-      deleting all private tabs.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/4658
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/4968
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2021-08-01"
   snackbar_undo:
     type: event
     description: |
@@ -2626,35 +2505,6 @@ private_browsing_mode:
     type: event
     description: |
       A user pressed the private browsing mode notification itself.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/4658
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/4968
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2021-08-01"
-  notification_open:
-    type: event
-    description: |
-      A user pressed the private browsing mode notification's "Open" button.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/4658
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/4968
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2021-08-01"
-  notification_delete:
-    type: event
-    description: |
-      A user pressed the private browsing mode notification's "Delete and Open"
-      button.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:

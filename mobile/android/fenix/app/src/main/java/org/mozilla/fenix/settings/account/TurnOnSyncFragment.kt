@@ -43,11 +43,9 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
 
     private val paringClickListener = View.OnClickListener {
         if (requireContext().settings().shouldShowCameraPermissionPrompt) {
-            requireComponents.analytics.metrics.track(Event.QRScannerOpened)
             navigateToPairFragment()
         } else {
             if (requireContext().isPermissionGranted(Manifest.permission.CAMERA)) {
-                requireComponents.analytics.metrics.track(Event.QRScannerOpened)
                 navigateToPairFragment()
             } else {
                 interactor.onCameraPermissionsNeeded()
