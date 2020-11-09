@@ -301,6 +301,12 @@ var gIdentityHandler = {
       "identity-popup-permission-list"
     ));
   },
+  get _defaultPermissionAnchor() {
+    delete this._defaultPermissionAnchor;
+    return (this._defaultPermissionAnchor = document.getElementById(
+      "identity-popup-permission-list-default-anchor"
+    ));
+  },
   get _permissionEmptyHint() {
     delete this._permissionEmptyHint;
     return (this._permissionEmptyHint = document.getElementById(
@@ -1498,7 +1504,7 @@ var gIdentityHandler = {
     if (this._popupInitialized && this._identityPopup.state != "closed") {
       this._permissionReloadHint.setAttribute("hidden", "true");
 
-      if (!this._permissionList.hasChildNodes()) {
+      if (this._isPermissionListEmpty()) {
         this._permissionEmptyHint.removeAttribute("hidden");
       }
     }
@@ -1512,10 +1518,19 @@ var gIdentityHandler = {
     }
   },
 
+  _isPermissionListEmpty() {
+    return !this._permissionList.querySelectorAll(
+      ".identity-popup-permission-item"
+    ).length;
+  },
+
   updateSitePermissions() {
-    while (this._permissionList.hasChildNodes()) {
-      this._permissionList.removeChild(this._permissionList.lastChild);
-    }
+    let permissionItemSelector = [
+      ".identity-popup-permission-item, .identity-popup-permission-item-container",
+    ];
+    this._permissionList
+      .querySelectorAll(permissionItemSelector)
+      .forEach(e => e.remove());
 
     let permissions = SitePermissions.getAllPermissionDetailsForBrowser(
       gBrowser.selectedBrowser
@@ -1591,6 +1606,9 @@ var gIdentityHandler = {
       }
 
       let item;
+      let anchor =
+        this._permissionList.querySelector(`[anchorfor="${id}"]`) ||
+        this._defaultPermissionAnchor;
 
       if (id == "open-protocol-handler") {
         let permContainer = this._createProtocolHandlerPermissionItem(
@@ -1598,18 +1616,19 @@ var gIdentityHandler = {
           key
         );
         if (permContainer) {
-          this._permissionList.appendChild(permContainer);
+          anchor.appendChild(permContainer);
         }
       } else {
-        item = this._createPermissionItem(
+        item = this._createPermissionItem({
           permission,
-          id == "geo" || id == "xr"
-        );
+          isContainer: id == "geo" || id == "xr",
+          nowrapLabel: id == "3rdPartyStorage",
+        });
 
         if (!item) {
           continue;
         }
-        this._permissionList.appendChild(item);
+        anchor.appendChild(item);
       }
 
       if (id == "popup" && totalBlockedPopups) {
@@ -1626,14 +1645,14 @@ var gIdentityHandler = {
         state: SitePermissions.getDefault("popup"),
         scope: SitePermissions.SCOPE_PERSISTENT,
       };
-      let item = this._createPermissionItem(permission);
-      this._permissionList.appendChild(item);
+      let item = this._createPermissionItem({ permission });
+      this._defaultPermissionAnchor.appendChild(item);
       this._createBlockedPopupIndicator(totalBlockedPopups);
     }
 
     // Show a placeholder text if there's no permission and no reload hint.
     if (
-      !this._permissionList.hasChildNodes() &&
+      this._isPermissionListEmpty() &&
       this._permissionReloadHint.hasAttribute("hidden")
     ) {
       this._permissionEmptyHint.removeAttribute("hidden");
@@ -1642,13 +1661,33 @@ var gIdentityHandler = {
     }
   },
 
-  _createPermissionItem(
-    aPermission,
+  /**
+   * Creates a permission item based on the supplied options and returns it.
+   * It is up to the caller to actually insert the element somewhere.
+   *
+   * @param permission - An object containing information representing the
+   *                     permission, typically obtained via SitePermissions.jsm
+   * @param isContainer - If true, the permission item will be added to a vbox
+   *                      and the vbox will be returned.
+   * @param permClearButton - Whether to show an "x" button to clear the permission
+   * @param showStateLabel - Whether to show a label indicating the current status
+   *                         of the permission e.g. "Temporary Allowed"
+   * @param idNoSuffix - Some permission types have additional information suffixed
+   *                     to the ID - callers can pass the unsuffixed ID via this
+   *                     parameter to indicate the permission type manually.
+   * @param nowrapLabel - Whether to prevent the permission item's label from
+   *                      wrapping its text content. This allows styling text-overflow
+   *                      and is useful for e.g. 3rdPartyStorage permissions whose
+   *                      labels are origins - which could be of any length.
+   */
+  _createPermissionItem({
+    permission,
     isContainer = false,
     permClearButton = true,
     showStateLabel = true,
-    idNoSuffix = aPermission.id
-  ) {
+    idNoSuffix = permission.id,
+    nowrapLabel = false,
+  }) {
     let container = document.createXULElement("hbox");
     container.setAttribute("class", "identity-popup-permission-item");
     container.setAttribute("align", "center");
@@ -1657,18 +1696,18 @@ var gIdentityHandler = {
     let img = document.createXULElement("image");
     img.classList.add("identity-popup-permission-icon", idNoSuffix + "-icon");
     if (
-      aPermission.state == SitePermissions.BLOCK ||
-      aPermission.state == SitePermissions.AUTOPLAY_BLOCKED_ALL
+      permission.state == SitePermissions.BLOCK ||
+      permission.state == SitePermissions.AUTOPLAY_BLOCKED_ALL
     ) {
       img.classList.add("blocked-permission-icon");
     }
 
     if (
-      aPermission.sharingState ==
+      permission.sharingState ==
         Ci.nsIMediaManagerService.STATE_CAPTURE_ENABLED ||
       (idNoSuffix == "screen" &&
-        aPermission.sharingState &&
-        !aPermission.sharingState.includes("Paused"))
+        permission.sharingState &&
+        !permission.sharingState.includes("Paused"))
     ) {
       img.classList.add("in-use");
 
@@ -1693,14 +1732,20 @@ var gIdentityHandler = {
     if (label === null) {
       return null;
     }
-    nameLabel.textContent = label;
+    if (nowrapLabel) {
+      nameLabel.setAttribute("value", label);
+      nameLabel.setAttribute("tooltiptext", label);
+      nameLabel.setAttribute("crop", "end");
+    } else {
+      nameLabel.textContent = label;
+    }
     let nameLabelId = "identity-popup-permission-label-" + idNoSuffix;
     nameLabel.setAttribute("id", nameLabelId);
 
     let isPolicyPermission = [
       SitePermissions.SCOPE_POLICY,
       SitePermissions.SCOPE_GLOBAL,
-    ].includes(aPermission.scope);
+    ].includes(permission.scope);
 
     if (
       (idNoSuffix == "popup" && !isPolicyPermission) ||
@@ -1710,6 +1755,7 @@ var gIdentityHandler = {
       let menupopup = document.createXULElement("menupopup");
       let block = document.createXULElement("vbox");
       block.setAttribute("id", "identity-popup-popup-container");
+      block.setAttribute("class", "identity-popup-permission-item-container");
       menulist.setAttribute("sizetopopup", "none");
       menulist.setAttribute("id", "identity-popup-popup-menulist");
 
@@ -1732,10 +1778,10 @@ var gIdentityHandler = {
 
       menulist.appendChild(menupopup);
 
-      if (aPermission.state == SitePermissions.getDefault(idNoSuffix)) {
+      if (permission.state == SitePermissions.getDefault(idNoSuffix)) {
         menulist.value = "0";
       } else {
-        menulist.value = aPermission.state;
+        menulist.value = permission.state;
       }
 
       // Avoiding listening to the "select" event on purpose. See Bug 1404262.
@@ -1761,7 +1807,7 @@ var gIdentityHandler = {
     let labelledBy = nameLabelId;
 
     if (showStateLabel) {
-      let stateLabel = this._createStateLabel(aPermission, idNoSuffix);
+      let stateLabel = this._createStateLabel(permission, idNoSuffix);
       container.appendChild(stateLabel);
       labelledBy += " " + stateLabel.id;
     }
@@ -1778,9 +1824,10 @@ var gIdentityHandler = {
     if (isContainer) {
       let block = document.createXULElement("vbox");
       block.setAttribute("id", "identity-popup-" + idNoSuffix + "-container");
+      block.setAttribute("class", "identity-popup-permission-item-container");
 
       if (permClearButton) {
-        let button = this._createPermissionClearButton(aPermission, block);
+        let button = this._createPermissionClearButton(permission, block);
         container.appendChild(button);
       }
 
@@ -1789,7 +1836,7 @@ var gIdentityHandler = {
     }
 
     if (permClearButton) {
-      let button = this._createPermissionClearButton(aPermission, container);
+      let button = this._createPermissionClearButton(permission, container);
       container.appendChild(button);
     }
 
@@ -1977,13 +2024,13 @@ var gIdentityHandler = {
 
     if (!container) {
       // First open-protocol-handler permission, create container.
-      container = this._createPermissionItem(
+      container = this._createPermissionItem({
         permission,
-        true,
-        false,
-        false,
-        "open-protocol-handler"
-      );
+        isContainer: true,
+        permClearButton: false,
+        showStateLabel: false,
+        idNoSuffix: "open-protocol-handler",
+      });
       initialCall = true;
     }
 
