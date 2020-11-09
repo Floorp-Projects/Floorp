@@ -82,9 +82,10 @@ struct ScopedCanberraFile {
 static ca_context* ca_context_get_default() {
   // This allows us to avoid race conditions with freeing the context by handing
   // that responsibility to Glib, and still use one context at a time
-  static GStaticPrivate ctx_static_private = G_STATIC_PRIVATE_INIT;
+  static GPrivate ctx_private =
+      G_PRIVATE_INIT((GDestroyNotify)ca_context_destroy);
 
-  ca_context* ctx = (ca_context*)g_static_private_get(&ctx_static_private);
+  ca_context* ctx = (ca_context*)g_private_get(&ctx_private);
 
   if (ctx) {
     return ctx;
@@ -95,8 +96,7 @@ static ca_context* ca_context_get_default() {
     return nullptr;
   }
 
-  g_static_private_set(&ctx_static_private, ctx,
-                       (GDestroyNotify)ca_context_destroy);
+  g_private_set(&ctx_private, ctx);
 
   GtkSettings* settings = gtk_settings_get_default();
   if (g_object_class_find_property(G_OBJECT_GET_CLASS(settings),
