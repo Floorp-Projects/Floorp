@@ -98,7 +98,18 @@
                    role="heading" aria-level="2"
                    data-l10n-id="identity-permissions"/>
           </hbox>
-          <vbox id="identity-popup-permission-list"/>
+          <vbox id="identity-popup-permission-list">
+            <vbox id="identity-popup-permission-list-default-anchor" class="identity-popup-permission-list-anchor"/>
+            <vbox class="identity-popup-permission-list-anchor" anchorfor="3rdPartyStorage">
+              <vbox id="identity-popup-storage-access-permission-list-header">
+                <hbox align="center" role="group">
+                  <image class="identity-popup-permission-icon storage-access-icon"/>
+                  <label data-l10n-id="identity-permissions-storage-access-header" class="identity-popup-permission-header-label"/>
+                </hbox>
+                <description id="identity-popup-storage-access-permission-list-hint" data-l10n-id="identity-permissions-storage-access-hint"></description>
+              </vbox>
+            </vbox>
+          </vbox>
           <description id="identity-popup-permission-reload-hint" data-l10n-id="identity-permissions-reload-hint"></description>
           <description id="identity-popup-permission-empty-hint" data-l10n-id="identity-permissions-empty"></description>
         </vbox>
