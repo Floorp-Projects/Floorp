@@ -242,15 +242,15 @@ async function waitForBookmarksToolbarVisibility({
   message,
 }) {
   let result = await TestUtils.waitForCondition(() => {
-    let toolbar = win.gNavToolbox.querySelector("#PersonalToolbar");
-    return visible ? !toolbar.collapsed : toolbar.collapsed;
+    let toolbar = win.document.getElementById("PersonalToolbar");
+    return toolbar && (visible ? !toolbar.collapsed : toolbar.collapsed);
   }, message || "waiting for toolbar to become " + (visible ? "visible" : "hidden"));
   ok(result, message);
   return result;
 }
 
 function isBookmarksToolbarVisible(win = window) {
-  let toolbar = win.gNavToolbox.querySelector("#PersonalToolbar");
+  let toolbar = win.document.getElementById("PersonalToolbar");
   return !toolbar.collapsed;
 }
 
@@ -263,8 +263,11 @@ async function waitForBookmarksToolbarVisibilityWithExitConditions({
     if (exitConditions.earlyExit) {
       return exitConditions.earlyExit;
     }
-    let toolbar = win.gNavToolbox.querySelector("#PersonalToolbar");
-    return exitConditions.visible ? !toolbar.collapsed : toolbar.collapsed;
+    let toolbar = win.document.getElementById("PersonalToolbar");
+    return (
+      toolbar &&
+      (exitConditions.visible ? !toolbar.collapsed : toolbar.collapsed)
+    );
   }, message || "waiting for toolbar to become " + (exitConditions.visible ? "visible" : "hidden"));
   if (exitConditions.earlyExit) {
     ok(true, "Early exit condition met");
