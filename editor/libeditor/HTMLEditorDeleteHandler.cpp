@@ -1959,9 +1959,15 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::
       return EditActionHandled(rv);
     }
   }
+  EditorDOMPoint newCaretPosition =
+      EditorBase::GetStartPoint(*aHTMLEditor.SelectionRefPtr());
+  if (!newCaretPosition.IsSet()) {
+    NS_WARNING("There was no selection range");
+    return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
   nsresult rv =
       aHTMLEditor.InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
-          EditorBase::GetStartPoint(*aHTMLEditor.SelectionRefPtr()));
+          newCaretPosition);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary() "
@@ -2064,12 +2070,19 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::
       "AutoDeleteRangesHandler::DeleteNodeIfInvisibleAndEditableTextNode() "
       "failed, but ignored");
 
+  EditorDOMPoint newCaretPosition =
+      EditorBase::GetStartPoint(*aHTMLEditor.SelectionRefPtr());
+  if (!newCaretPosition.IsSet()) {
+    NS_WARNING("There was no selection range");
+    return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
+
   // XXX `Selection` may be modified by mutation event listeners so
   //     that we should use EditorDOMPoint::AtEndOf(visibleTextNode)
   //     instead.  (Perhaps, we don't and/or shouldn't need to do this
   //     if the text node is preformatted.)
   rv = aHTMLEditor.InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
-      EditorBase::GetStartPoint(*aHTMLEditor.SelectionRefPtr()));
+      newCaretPosition);
   if (NS_FAILED(rv)) {
     NS_WARNING(
         "HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary()"
@@ -2288,8 +2301,15 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAtomicContent(
     return EditActionHandled(rv);
   }
 
+  EditorDOMPoint newCaretPosition =
+      EditorBase::GetStartPoint(*aHTMLEditor.SelectionRefPtr());
+  if (!newCaretPosition.IsSet()) {
+    NS_WARNING("There was no selection range");
+    return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
+
   rv = aHTMLEditor.InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
-      EditorBase::GetStartPoint(*aHTMLEditor.SelectionRefPtr()));
+      newCaretPosition);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary() "
