@@ -689,6 +689,13 @@ interface nsILoadInfo : nsISupports
   [infallible] readonly attribute boolean browserUpgradeInsecureRequests;
 
   /**
+   * Returns true if the display content was or will get upgraded from http to https.
+   * Requires 'security.mixed_content.upgrade_display_content' pref to be true.
+   * Flag is set purely to collect telemetry.
+   */
+  [infallible] attribute boolean browserDidUpgradeInsecureRequests;
+
+  /**
    * Returns true if the the page is https and the content is upgradable from http
    * requires 'security.mixed_content.upgrade_display_content' pref to be false.
    * See browserUpgradeInsecureRequests for more details, this only happens

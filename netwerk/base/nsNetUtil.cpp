@@ -2850,6 +2850,10 @@ nsresult NS_ShouldSecureUpgrade(
           nsContentUtils::ReportToConsoleByWindowID(
               message, nsIScriptError::warningFlag, "Mixed Content Message"_ns,
               innerWindowId, aURI);
+
+          // Set this flag so we know we'll upgrade because of
+          // 'security.mixed_content.upgrade_display_content'.
+          aLoadInfo->SetBrowserDidUpgradeInsecureRequests(true);
           Telemetry::AccumulateCategorical(
               Telemetry::LABELS_HTTP_SCHEME_UPGRADE_TYPE::BrowserDisplay);
         }

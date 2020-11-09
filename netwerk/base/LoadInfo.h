@@ -199,6 +199,7 @@ class LoadInfo final : public nsILoadInfo {
            nsContentPolicyType aContentPolicyType, LoadTainting aTainting,
            bool aBlockAllMixedContent, bool aUpgradeInsecureRequests,
            bool aBrowserUpgradeInsecureRequests,
+           bool aBrowserDidUpgradeInsecureRequests,
            bool aBrowserWouldUpgradeInsecureRequests, bool aForceAllowDataURI,
            bool aAllowInsecureRedirectToDataURI, bool aBypassCORSChecks,
            bool aSkipContentPolicyCheckForWebRequest,
@@ -285,6 +286,7 @@ class LoadInfo final : public nsILoadInfo {
   bool mBlockAllMixedContent = false;
   bool mUpgradeInsecureRequests = false;
   bool mBrowserUpgradeInsecureRequests = false;
+  bool mBrowserDidUpgradeInsecureRequests = false;
   bool mBrowserWouldUpgradeInsecureRequests = false;
   bool mForceAllowDataURI = false;
   bool mAllowInsecureRedirectToDataURI = false;
