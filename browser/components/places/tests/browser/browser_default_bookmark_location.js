@@ -6,7 +6,6 @@
 const LOCATION_PREF = "browser.bookmarks.defaultLocation";
 const TEST_URL = "about:about";
 let bookmarkPanel;
-let folders;
 let win;
 
 add_task(async function setup() {
