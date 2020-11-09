@@ -96,7 +96,8 @@ let Agent = {
   },
 
   /**
-   * Constructs the cached about:home document using ReactDOMServer.
+   * Constructs the cached about:home document using ReactDOMServer. This will
+   * be called when "construct" messages are sent to this PromiseWorker.
    *
    * @param state (Object)
    *   The most recent Activity Stream Redux state.
@@ -110,6 +111,39 @@ let Agent = {
    *     The generated script for the document.
    */
   construct(state) {
+    // If anything in this function throws an exception, PromiseWorker
+    // runs the risk of leaving the Promise associated with this method
+    // forever unresolved. This is particularly bad when this method is
+    // called via AsyncShutdown, since the forever unresolved Promise can
+    // result in a AsyncShutdown timeout crash.
+    //
+    // To help ensure that no matter what, the Promise resolves with something,
+    // we wrap the whole operation in a try/catch.
+    try {
+      return this._construct(state);
+    } catch (e) {
+      console.error("about:home startup cache construction failed:", e);
+      return { page: null, script: null };
+    }
+  },
+
+  /**
+   * Internal method that actually does the work of constructing the cached
+   * about:home document using ReactDOMServer. This should be called from
+   * `construct` only.
+   *
+   * @param state (Object)
+   *   The most recent Activity Stream Redux state.
+   * @return Object
+   *   An object with the following properties:
+   *
+   *   page (String):
+   *     The generated markup for the document.
+   *
+   *   script (String):
+   *     The generated script for the document.
+   */
+  _construct(state) {
     state.App.isForStartupCache = true;
 
     // ReactDOMServer.renderToString expects a Redux store to pull
