@@ -538,9 +538,6 @@ struct RoleDescrComparator {
 };
 
 - (NSString*)moxRoleDescription {
-  if (mRole == roles::DOCUMENT)
-    return utils::LocalizedString(u"htmlContent"_ns);
-
   if (mRole == roles::FIGURE) return utils::LocalizedString(u"figure"_ns);
 
   if (mRole == roles::HEADING) return utils::LocalizedString(u"heading"_ns);

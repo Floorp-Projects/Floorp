@@ -58,7 +58,102 @@ addAccessibleTask(
       "group",
       "Root group is a document element"
     );
+
+    // Adding an 'application' role to the body should
+    // create a root group with an application subrole.
+    let evt = waitForMacEvent("AXMozRoleChanged");
+    await SpecialPowers.spawn(browser, [], () => {
+      content.document.body.setAttribute("role", "application");
+    });
+    await evt;
+
+    is(
+      doc.getAttributeValue("AXRole"),
+      "AXWebArea",
+      "doc still has web area role"
+    );
+    is(
+      doc.getAttributeValue("AXRoleDescription"),
+      "HTML Content",
+      "doc has correct role description"
+    );
+    ok(
+      !doc.attributeNames.includes("AXSubrole"),
+      "sub role not available on web area"
+    );
+
+    rootGroup = doc.getAttributeValue("AXChildren")[0];
+    is(
+      rootGroup.getAttributeValue("AXIdentifier"),
+      "root-group",
+      "Is generated root group"
+    );
+    is(
+      rootGroup.getAttributeValue("AXRole"),
+      "AXGroup",
+      "root group has AXGroup role"
+    );
+    is(
+      rootGroup.getAttributeValue("AXSubrole"),
+      "AXLandmarkApplication",
+      "root group has application subrole"
+    );
+    is(
+      rootGroup.getAttributeValue("AXRoleDescription"),
+      "application",
+      "root group has application role description"
+    );
   }
+);
+
+/**
+ * Test document with body[role=application] and a top-level group
+ */
+addAccessibleTask(
+  `<div role="grouping" id="group"><p>hello</p><p>world</p></div>`,
+  async (browser, accDoc) => {
+    let doc = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+
+    is(
+      doc.getAttributeValue("AXRole"),
+      "AXWebArea",
+      "doc still has web area role"
+    );
+    is(
+      doc.getAttributeValue("AXRoleDescription"),
+      "HTML Content",
+      "doc has correct role description"
+    );
+    ok(
+      !doc.attributeNames.includes("AXSubrole"),
+      "sub role not available on web area"
+    );
+
+    let rootGroup = doc.getAttributeValue("AXChildren")[0];
+    is(
+      rootGroup.getAttributeValue("AXIdentifier"),
+      "root-group",
+      "Is generated root group"
+    );
+    is(
+      rootGroup.getAttributeValue("AXRole"),
+      "AXGroup",
+      "root group has AXGroup role"
+    );
+    is(
+      rootGroup.getAttributeValue("AXSubrole"),
+      "AXLandmarkApplication",
+      "root group has application subrole"
+    );
+    is(
+      rootGroup.getAttributeValue("AXRoleDescription"),
+      "application",
+      "root group has application role description"
+    );
+  },
+  { contentDocBodyAttrs: { role: "application" } }
 );
 
 /**
