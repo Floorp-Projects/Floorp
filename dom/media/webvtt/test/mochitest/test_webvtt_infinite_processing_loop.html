@@ -40,6 +40,7 @@ let video = document.getElementById("v");
 video.currentTime = 3.0;
 video.play();
 video.onended = () => {
+  ok(true, "video ends without entering an infinite processing loop");
   SimpleTest.finish();
 }
 
