@@ -225,3 +225,15 @@ add_task(async function test_cache_worker() {
   let placeholders = doc.querySelectorAll(".ds-card.placeholder");
   equal(placeholders.length, 2, "There should be 2 placeholders");
 });
+
+/**
+ * Tests that if the cache-worker construct method throws an exception
+ * that the construct Promise still resolves. Passing a null state should
+ * be enough to get it to throw.
+ */
+add_task(async function test_cache_worker_exception() {
+  let cacheWorker = new BasePromiseWorker(CACHE_WORKER_URL);
+  let { page, script } = await cacheWorker.post("construct", [null]);
+  equal(page, null, "Should have gotten a null page nsIInputStream");
+  equal(script, null, "Should have gotten a null script nsIInputStream");
+});
