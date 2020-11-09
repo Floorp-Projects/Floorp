@@ -62,14 +62,14 @@ commands:
 jobs:
     build-36:
         docker:
-            - image: circleci/python:3.6.9
+            - image: circleci/python:3.6.12
         steps:
             - test-start
             - test-python-version
 
     build-36-min:
         docker:
-            - image: circleci/python:3.6.9
+            - image: circleci/python:3.6.12
         steps:
             - test-start
             - test-min-requirements
@@ -77,7 +77,7 @@ jobs:
 
     build-37:
         docker:
-            - image: circleci/python:3.7.5
+            - image: circleci/python:3.7.9
         steps:
             - test-start
             - test-python-version
@@ -92,17 +92,24 @@ jobs:
 
     build-38:
         docker:
-            - image: circleci/python:3.8.0
+            - image: circleci/python:3.8.5
         steps:
             - test-start
             - test-python-version
 
     build-38-min:
         docker:
-            - image: circleci/python:3.8.0
+            - image: circleci/python:3.8.5
         steps:
             - test-start
             - test-min-requirements
+            - test-python-version
+
+    build-39:
+        docker:
+            - image: circleci/python:3.9.0rc1
+        steps:
+            - test-start
             - test-python-version
 
     docs-deploy:
@@ -171,6 +178,10 @@ workflows:
                         tags:
                             only: /.*/
             - build-38-min:
+                    filters:
+                        tags:
+                            only: /.*/
+            - build-39:
                     filters:
                         tags:
                             only: /.*/

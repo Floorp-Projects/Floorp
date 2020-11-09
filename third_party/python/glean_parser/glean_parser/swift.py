@@ -11,7 +11,7 @@ Outputter to generate Swift code for metrics.
 import enum
 import json
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any, Dict, Optional, Union
 
 from . import metrics
 from . import pings
@@ -117,7 +117,7 @@ class Category:
 
 
 def output_swift(
-    objs: metrics.ObjectTree, output_dir: Path, options: Dict[str, Any] = {}
+    objs: metrics.ObjectTree, output_dir: Path, options: Optional[Dict[str, Any]] = None
 ) -> None:
     """
     Given a tree of objects, output Swift code to `output_dir`.
@@ -130,6 +130,9 @@ def output_swift(
         - glean_namespace: The namespace to import Glean from
         - allow_reserved: When True, this is a Glean-internal build
     """
+    if options is None:
+        options = {}
+
     template = util.get_jinja2_template(
         "swift.jinja2",
         filters=(

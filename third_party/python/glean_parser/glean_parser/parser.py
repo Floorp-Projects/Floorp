@@ -53,13 +53,21 @@ def _update_validator(validator):
 
 
 def _load_file(
-    filepath: Path,
+    filepath: Path, parser_config: Dict[str, Any]
 ) -> Generator[str, None, Tuple[Dict[str, util.JSONType], Optional[str]]]:
     """
     Load a metrics.yaml or pings.yaml format file.
+
+    If the `filepath` does not exist, raises `FileNotFoundError`, unless
+    `parser_config["allow_missing_files"]` is `True`.
     """
     try:
         content = util.load_yaml_or_json(filepath, ordered_dict=True)
+    except FileNotFoundError:
+        if not parser_config.get("allow_missing_files", False):
+            raise
+        else:
+            return {}, None
     except Exception as e:
         yield util.format_error(filepath, "", textwrap.fill(str(e)))
         return {}, None
@@ -313,7 +321,7 @@ def _preprocess_objects(objs: ObjectTree, config: Dict[str, Any]) -> ObjectTree:
 
 @util.keep_value
 def parse_objects(
-    filepaths: Iterable[Path], config: Dict[str, Any] = {}
+    filepaths: Iterable[Path], config: Optional[Dict[str, Any]] = None
 ) -> Generator[str, None, ObjectTree]:
     """
     Parse one or more metrics.yaml and/or pings.yaml files, returning a tree of
@@ -342,12 +350,17 @@ def parse_objects(
           This is useful when you want to retain the original "disabled"
           value from the `metrics.yaml`, rather than having it overridden when
           the metric expires.
+        - `allow_missing_files`: Do not raise a `FileNotFoundError` if any of
+          the input `filepaths` do not exist.
     """
+    if config is None:
+        config = {}
+
     all_objects: ObjectTree = OrderedDict()
     sources: Dict[Any, Path] = {}
     filepaths = util.ensure_list(filepaths)
     for filepath in filepaths:
-        content, filetype = yield from _load_file(filepath)
+        content, filetype = yield from _load_file(filepath, config)
         if filetype == "metrics":
             yield from _instantiate_metrics(
                 all_objects, sources, content, filepath, config
