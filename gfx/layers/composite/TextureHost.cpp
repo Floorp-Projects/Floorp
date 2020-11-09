@@ -677,12 +677,12 @@ void BufferTextureHost::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
   RefPtr<wr::RenderTextureHost> texture;
 
-  if (UseExternalTextures()) {
-    texture =
-        new wr::RenderExternalTextureHost(GetBuffer(), GetBufferDescriptor());
-  } else if (gfx::gfxVars::UseSoftwareWebRender()) {
+  if (gfx::gfxVars::UseSoftwareWebRender()) {
     texture =
         new wr::RenderBufferTextureHostSWGL(GetBuffer(), GetBufferDescriptor());
+  } else if (UseExternalTextures()) {
+    texture =
+        new wr::RenderExternalTextureHost(GetBuffer(), GetBufferDescriptor());
   } else {
     texture =
         new wr::RenderBufferTextureHost(GetBuffer(), GetBufferDescriptor());

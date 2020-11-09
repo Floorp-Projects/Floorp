@@ -114,3 +114,5 @@ fuzzy-if(winWidget,0-94,0-1575) fuzzy-if(cocoaWidget,0-1,0-24) random-if(/^Windo
 == 1347147-1.html 1347147-1-ref.html
 == 1353000-1.html 1353000-1-ref.html
 == 1447035-1.html 1447035-1-ref.html
+
+== large-canvas.html large-canvas-ref.html
