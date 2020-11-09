@@ -3,19 +3,12 @@
 
 "use strict";
 
-const BOOKMARKS_H2_2020_PREF = "browser.toolbars.bookmarks.2h2020";
-
 /**
  * Test the behavior of keypress shortcuts for the bookmarks toolbar.
  */
 
-// Test that the bookmarks toolbar's visibility is toggled when the
-// bookmarks-shortcut pref is enabled.
-add_task(async function testEnabledBookmarksShortcutPref() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[BOOKMARKS_H2_2020_PREF, true]],
-  });
-
+// Test that the bookmarks toolbar's visibility is toggled using the bookmarks-shortcut.
+add_task(async function testBookmarksToolbarShortcut() {
   let blankTab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     opening: "example.com",
@@ -44,45 +37,6 @@ add_task(async function testEnabledBookmarksShortcutPref() {
   ok(true, "bookmarks toolbar is not visible");
 
   await testIsBookmarksMenuItemStateChecked("never");
-
-  await BrowserTestUtils.removeTab(blankTab);
-});
-
-// Test that the bookmarks toolbar remains collapsed when the
-// bookmarks-shortcut pref is disabled.
-add_task(async function testDisabledBookmarksShortcutPref() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[BOOKMARKS_H2_2020_PREF, false]],
-  });
-
-  let blankTab = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser,
-    opening: "example.com",
-    waitForLoad: false,
-  });
-
-  info("Check that the bookmarks library windows opens.");
-  let bookmarksLibraryOpened = promiseOpenBookmarksLibrary();
-
-  let toolbar = document.getElementById("PersonalToolbar");
-  is(
-    toolbar.getAttribute("collapsed"),
-    "true",
-    "Bookmarks toolbar should be collapsed"
-  );
-
-  await EventUtils.synthesizeKey("b", { shiftKey: true, accelKey: true });
-
-  let win = await bookmarksLibraryOpened;
-
-  toolbar = document.getElementById("PersonalToolbar");
-  is(
-    toolbar.getAttribute("collapsed"),
-    "true",
-    "Bookmarks toolbar should still be collapsed"
-  );
-
-  win.close();
 
   await BrowserTestUtils.removeTab(blankTab);
 });

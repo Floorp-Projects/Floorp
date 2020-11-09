@@ -6564,23 +6564,6 @@ function onViewToolbarCommand(aEvent) {
   BrowserUsageTelemetry.recordToolbarVisibility(toolbarId, isVisible, menuId);
 }
 
-function toggleBookmarksToolbarViaKeyboardShortcut() {
-  // We only show the bookmarks toolbar if the shortcut is enabled.
-  const shortcutEnabled = Services.prefs.getBoolPref(
-    "browser.toolbars.bookmarks.2h2020",
-    false
-  );
-
-  if (!shortcutEnabled) {
-    // The shortcut was previously used to open the Library,
-    // so if the shortcut is disabled then return to opening the Library.
-    PlacesCommandHook.showPlacesOrganizer("UnfiledBookmarks");
-    return;
-  }
-
-  BookmarkingUI.toggleBookmarksToolbar("shortcut");
-}
-
 function setToolbarVisibility(
   toolbar,
   isVisible,
