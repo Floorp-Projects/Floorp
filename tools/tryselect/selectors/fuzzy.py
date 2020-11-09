@@ -46,7 +46,7 @@ appropriate instructions for your platform:
 Only the binary is required, if you do not wish to install the shell and
 editor integrations, download the appropriate binary and put it on your $PATH:
 
-    https://github.com/junegunn/fzf-bin/releases
+    https://github.com/junegunn/fzf/releases
 """.lstrip()
 
 FZF_VERSION_FAILED = """
@@ -61,7 +61,7 @@ instructions for your platform:
 Only the binary is required, if you do not wish to install the shell and
 editor integrations, download the appropriate binary and put it on your $PATH:
 
-    https://github.com/junegunn/fzf-bin/releases
+    https://github.com/junegunn/fzf/releases
 """.lstrip()
 
 FZF_INSTALL_FAILED = """
@@ -75,7 +75,7 @@ platform:
 Only the binary is required, if you do not wish to install the shell and
 editor integrations, download the appropriate binary and put it on your $PATH:
 
-    https://github.com/junegunn/fzf-bin/releases
+    https://github.com/junegunn/fzf/releases
 """.lstrip()
 
 FZF_HEADER = """
