@@ -4,8 +4,11 @@
 
 package org.mozilla.fenix.search
 
-import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.state.SearchState
+import mozilla.components.browser.state.state.searchEngines
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
@@ -13,7 +16,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.search.ext.areShortcutsAvailable
 
 /**
  * The [Store] for holding the [SearchFragmentState] and applying [SearchFragmentAction]s.
@@ -29,7 +31,11 @@ class SearchFragmentStore(
  * Wraps a `SearchEngine` to give consumers the context that it was selected as a shortcut
  */
 sealed class SearchEngineSource {
-    abstract val searchEngine: SearchEngine
+    abstract val searchEngine: SearchEngine?
+
+    object None : SearchEngineSource() {
+        override val searchEngine: SearchEngine? = null
+    }
 
     data class Default(override val searchEngine: SearchEngine) : SearchEngineSource()
     data class Shortcut(override val searchEngine: SearchEngine) : SearchEngineSource()
@@ -37,17 +43,20 @@ sealed class SearchEngineSource {
 
 /**
  * The state for the Search Screen
+ *
  * @property query The current search query string
  * @property url The current URL of the tab (if this fragment is shown for an already existing tab)
  * @property searchTerms The search terms used to search previously in this tab (if this fragment is shown
  * for an already existing tab)
  * @property searchEngineSource The current selected search engine with the context of how it was selected
- * @property defaultEngineSource The current default search engine source
+ * @property defaultEngine The current default search engine (or null if none is available yet)
  * @property showSearchSuggestions Whether or not to show search suggestions from the search engine in the AwesomeBar
  * @property showSearchSuggestionsHint Whether or not to show search suggestions in private hint panel
  * @property showSearchShortcuts Whether or not to show search shortcuts in the AwesomeBar
  * @property areShortcutsAvailable Whether or not there are >=2 search engines installed
- *                                 so to know to present users with certain options or not.
+ * so to know to present users with certain options or not.
+ * @property showSearchShortcutsSetting Whether the setting for showing search shortcuts is enabled
+ * or disabled.
  * @property showClipboardSuggestions Whether or not to show clipboard suggestion in the AwesomeBar
  * @property showHistorySuggestions Whether or not to show history suggestions in the AwesomeBar
  * @property showBookmarkSuggestions Whether or not to show the bookmark suggestion in the AwesomeBar
@@ -58,11 +67,12 @@ data class SearchFragmentState(
     val url: String,
     val searchTerms: String,
     val searchEngineSource: SearchEngineSource,
-    val defaultEngineSource: SearchEngineSource.Default,
+    val defaultEngine: SearchEngine?,
     val showSearchSuggestions: Boolean,
     val showSearchSuggestionsHint: Boolean,
     val showSearchShortcuts: Boolean,
     val areShortcutsAvailable: Boolean,
+    val showSearchShortcutsSetting: Boolean,
     val showClipboardSuggestions: Boolean,
     val showHistorySuggestions: Boolean,
     val showBookmarkSuggestions: Boolean,
@@ -81,16 +91,9 @@ fun createInitialSearchFragmentState(
 ): SearchFragmentState {
     val settings = components.settings
     val tab = tabId?.let { components.core.store.state.findTab(it) }
-
     val url = tab?.content?.url.orEmpty()
-    val currentSearchEngine = SearchEngineSource.Default(
-        components.search.provider.getDefaultEngine(activity)
-    )
 
-    val browsingMode = activity.browsingModeManager.mode
-    val areShortcutsAvailable = components.search.provider.areShortcutsAvailable(activity)
-
-    val shouldShowSearchSuggestions = when (browsingMode) {
+    val shouldShowSearchSuggestions = when (activity.browsingModeManager.mode) {
         BrowsingMode.Normal -> settings.shouldShowSearchSuggestions
         BrowsingMode.Private ->
             settings.shouldShowSearchSuggestions && settings.shouldShowSearchSuggestionsInPrivate
@@ -100,14 +103,13 @@ fun createInitialSearchFragmentState(
         query = url,
         url = url,
         searchTerms = tab?.content?.searchTerms.orEmpty(),
-        searchEngineSource = currentSearchEngine,
-        defaultEngineSource = currentSearchEngine,
+        searchEngineSource = SearchEngineSource.None,
+        defaultEngine = null,
         showSearchSuggestions = shouldShowSearchSuggestions,
         showSearchSuggestionsHint = false,
-        showSearchShortcuts = url.isEmpty() &&
-            areShortcutsAvailable &&
-            settings.shouldShowSearchShortcuts,
-        areShortcutsAvailable = areShortcutsAvailable,
+        showSearchShortcuts = false,
+        areShortcutsAvailable = false,
+        showSearchShortcutsSetting = settings.shouldShowSearchShortcuts,
         showClipboardSuggestions = settings.shouldShowClipboardSuggestions,
         showHistorySuggestions = settings.shouldShowHistorySuggestions,
         showBookmarkSuggestions = settings.shouldShowBookmarkSuggestions,
@@ -124,11 +126,14 @@ fun createInitialSearchFragmentState(
 sealed class SearchFragmentAction : Action {
     data class SetShowSearchSuggestions(val show: Boolean) : SearchFragmentAction()
     data class SearchShortcutEngineSelected(val engine: SearchEngine) : SearchFragmentAction()
-    data class SelectNewDefaultSearchEngine(val engine: SearchEngine) : SearchFragmentAction()
     data class ShowSearchShortcutEnginePicker(val show: Boolean) : SearchFragmentAction()
-    data class UpdateShortcutsAvailability(val areShortcutsAvailable: Boolean) : SearchFragmentAction()
     data class AllowSearchSuggestionsInPrivateModePrompt(val show: Boolean) : SearchFragmentAction()
     data class UpdateQuery(val query: String) : SearchFragmentAction()
+
+    /**
+     * Updates the local `SearchFragmentState` from the global `SearchState` in `BrowserStore`.
+     */
+    data class UpdateSearchState(val search: SearchState) : SearchFragmentAction()
 }
 
 /**
@@ -143,15 +148,26 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
             )
         is SearchFragmentAction.ShowSearchShortcutEnginePicker ->
             state.copy(showSearchShortcuts = action.show && state.areShortcutsAvailable)
-        is SearchFragmentAction.UpdateShortcutsAvailability ->
-            state.copy(areShortcutsAvailable = action.areShortcutsAvailable)
         is SearchFragmentAction.UpdateQuery ->
             state.copy(query = action.query)
-        is SearchFragmentAction.SelectNewDefaultSearchEngine ->
-            state.copy(searchEngineSource = SearchEngineSource.Default(action.engine))
         is SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt ->
             state.copy(showSearchSuggestionsHint = action.show)
         is SearchFragmentAction.SetShowSearchSuggestions ->
             state.copy(showSearchSuggestions = action.show)
+        is SearchFragmentAction.UpdateSearchState -> {
+            state.copy(
+                defaultEngine = action.search.selectedOrDefaultSearchEngine,
+                areShortcutsAvailable = action.search.searchEngines.size > 1,
+                showSearchShortcuts = state.url.isEmpty() &&
+                    state.showSearchShortcutsSetting &&
+                    action.search.searchEngines.size > 1,
+                searchEngineSource = if (state.searchEngineSource !is SearchEngineSource.Shortcut) {
+                    action.search.selectedOrDefaultSearchEngine?.let { SearchEngineSource.Default(it) }
+                        ?: SearchEngineSource.None
+                } else {
+                    state.searchEngineSource
+                }
+            )
+        }
     }
 }

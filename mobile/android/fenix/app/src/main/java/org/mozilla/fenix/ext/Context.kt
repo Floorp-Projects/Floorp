@@ -14,7 +14,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityManager
 import androidx.annotation.StringRes
-import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.components.Components
@@ -40,12 +39,6 @@ val Context.components: Components
  */
 val Context.metrics: MetricController
     get() = this.components.analytics.metrics
-
-/**
- * Helper function to get the SearchEngineManager off of context.
- */
-val Context.searchEngineManager: SearchEngineManager
-    get() = this.components.search.searchEngineManager
 
 fun Context.asActivity() = (this as? ContextThemeWrapper)?.baseContext as? Activity
     ?: this as? Activity

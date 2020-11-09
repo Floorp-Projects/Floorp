@@ -12,9 +12,10 @@ import android.text.SpannableString
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.navigation.NavController
-import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -22,7 +23,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.metrics.MetricsUtils
-import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
 import org.mozilla.fenix.crashes.CrashListActivity
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.settings.SupportUtils
@@ -50,7 +50,8 @@ interface SearchController {
 class SearchDialogController(
     private val activity: HomeActivity,
     private val sessionManager: SessionManager,
-    private val store: SearchFragmentStore,
+    private val store: BrowserStore,
+    private val fragmentStore: SearchFragmentStore,
     private val navController: NavController,
     private val settings: Settings,
     private val metrics: MetricController,
@@ -81,25 +82,27 @@ class SearchDialogController(
     }
 
     private fun openSearchOrUrl(url: String) {
+        val searchEngine = fragmentStore.state.searchEngineSource.searchEngine
+
         activity.openToBrowserAndLoad(
             searchTermOrURL = url,
-            newTab = store.state.tabId == null,
+            newTab = fragmentStore.state.tabId == null,
             from = BrowserDirection.FromSearchDialog,
-            engine = store.state.searchEngineSource.searchEngine
+            engine = searchEngine
         )
 
-        val event = if (url.isUrl()) {
+        val event = if (url.isUrl() || searchEngine == null) {
             Event.EnteredUrl(false)
         } else {
-            val searchAccessPoint = when (store.state.searchAccessPoint) {
+            val searchAccessPoint = when (fragmentStore.state.searchAccessPoint) {
                 Event.PerformedSearch.SearchAccessPoint.NONE -> Event.PerformedSearch.SearchAccessPoint.ACTION
-                else -> store.state.searchAccessPoint
+                else -> fragmentStore.state.searchAccessPoint
             }
 
             searchAccessPoint?.let { sap ->
                 MetricsUtils.createSearchEvent(
-                    store.state.searchEngineSource.searchEngine,
-                    activity,
+                    searchEngine,
+                    store,
                     sap
                 )
             }
@@ -114,17 +117,17 @@ class SearchDialogController(
 
     override fun handleTextChanged(text: String) {
         // Display the search shortcuts on each entry of the search fragment (see #5308)
-        val textMatchesCurrentUrl = store.state.url == text
-        val textMatchesCurrentSearch = store.state.searchTerms == text
+        val textMatchesCurrentUrl = fragmentStore.state.url == text
+        val textMatchesCurrentSearch = fragmentStore.state.searchTerms == text
 
-        store.dispatch(SearchFragmentAction.UpdateQuery(text))
-        store.dispatch(
+        fragmentStore.dispatch(SearchFragmentAction.UpdateQuery(text))
+        fragmentStore.dispatch(
             SearchFragmentAction.ShowSearchShortcutEnginePicker(
                 (textMatchesCurrentUrl || textMatchesCurrentSearch || text.isEmpty()) &&
                         settings.shouldShowSearchShortcuts
             )
         )
-        store.dispatch(
+        fragmentStore.dispatch(
             SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(
                 text.isNotEmpty() &&
                         activity.browsingModeManager.mode.isPrivate &&
@@ -139,7 +142,7 @@ class SearchDialogController(
 
         activity.openToBrowserAndLoad(
             searchTermOrURL = url,
-            newTab = store.state.tabId == null,
+            newTab = fragmentStore.state.tabId == null,
             from = BrowserDirection.FromSearchDialog
         )
 
@@ -149,39 +152,41 @@ class SearchDialogController(
     override fun handleSearchTermsTapped(searchTerms: String) {
         clearToolbarFocus()
 
+        val searchEngine = fragmentStore.state.searchEngineSource.searchEngine
+
         activity.openToBrowserAndLoad(
             searchTermOrURL = searchTerms,
-            newTab = store.state.tabId == null,
+            newTab = fragmentStore.state.tabId == null,
             from = BrowserDirection.FromSearchDialog,
-            engine = store.state.searchEngineSource.searchEngine,
+            engine = searchEngine,
             forceSearch = true
         )
 
-        val searchAccessPoint = when (store.state.searchAccessPoint) {
+        val searchAccessPoint = when (fragmentStore.state.searchAccessPoint) {
             Event.PerformedSearch.SearchAccessPoint.NONE -> Event.PerformedSearch.SearchAccessPoint.SUGGESTION
-            else -> store.state.searchAccessPoint
+            else -> fragmentStore.state.searchAccessPoint
         }
 
-        val event = searchAccessPoint?.let { sap ->
+        if (searchAccessPoint != null && searchEngine != null) {
             MetricsUtils.createSearchEvent(
-                store.state.searchEngineSource.searchEngine,
-                activity,
-                sap
-            )
+                searchEngine,
+                store,
+                searchAccessPoint
+            )?.apply {
+                metrics.track(this)
+            }
         }
-        event?.let { metrics.track(it) }
     }
 
     override fun handleSearchShortcutEngineSelected(searchEngine: SearchEngine) {
-        store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine))
-        val isCustom =
-            CustomSearchEngineStore.isCustomSearchEngine(activity, searchEngine.identifier)
+        fragmentStore.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine))
+        val isCustom = searchEngine.type == SearchEngine.Type.CUSTOM
         metrics.track(Event.SearchShortcutSelected(searchEngine, isCustom))
     }
 
     override fun handleSearchShortcutsButtonClicked() {
-        val isOpen = store.state.showSearchShortcuts
-        store.dispatch(SearchFragmentAction.ShowSearchShortcutEnginePicker(!isOpen))
+        val isOpen = fragmentStore.state.showSearchShortcuts
+        fragmentStore.dispatch(SearchFragmentAction.ShowSearchShortcutEnginePicker(!isOpen))
     }
 
     override fun handleClickSearchEngineSettings() {

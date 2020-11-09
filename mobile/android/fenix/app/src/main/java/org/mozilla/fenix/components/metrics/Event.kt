@@ -6,7 +6,7 @@ package org.mozilla.fenix.components.metrics
 
 import android.content.Context
 import mozilla.components.browser.errorpages.ErrorType
-import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.AppTheme
@@ -404,7 +404,7 @@ sealed class Event {
             // https://github.com/mozilla-mobile/fenix/issues/1607
             // Sanitize identifiers for custom search engines.
             val identifier: String
-                get() = if (isCustom) "custom" else engine.identifier
+                get() = if (isCustom) "custom" else engine.id
 
             val searchEngine: SearchEngine
                 get() = when (this) {

@@ -4,8 +4,8 @@
 
 package org.mozilla.fenix.search.awesomebar
 
-import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.search.SearchEngine
 
 /**
  * Interface for the AwesomeBarView Interactor. This interface is implemented by objects that want

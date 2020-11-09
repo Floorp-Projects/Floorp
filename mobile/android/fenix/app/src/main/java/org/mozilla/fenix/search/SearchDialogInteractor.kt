@@ -4,8 +4,8 @@
 
 package org.mozilla.fenix.search
 
-import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.search.SearchEngine
 import org.mozilla.fenix.search.awesomebar.AwesomeBarInteractor
 import org.mozilla.fenix.search.toolbar.ToolbarInteractor
 

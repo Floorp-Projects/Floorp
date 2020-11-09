@@ -78,7 +78,6 @@ open class MozillaUseLazyMonitored(config: Config) : Rule(config) {
             "IntentProcessors",
             "PerformanceComponent",
             "Push",
-            "Search",
             "Services",
             "UseCases"
         ).map { "app/src/main/java/org/mozilla/fenix/components/$it.kt" }

@@ -6,18 +6,21 @@ package org.mozilla.fenix.home.intent
 
 import android.content.Intent
 import androidx.navigation.NavController
+import androidx.test.core.app.ApplicationProvider
 import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.SearchState
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.feature.search.ext.createSearchEngine
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.widget.VoiceSearchActivity.Companion.SPEECH_PROCESSING
 
@@ -29,16 +32,32 @@ class SpeechProcessingIntentProcessorTest {
     private val out: Intent = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
 
+    private val searchEngine = createSearchEngine(
+        name = "Test",
+        url = "https://www.example.org/?q={searchTerms}",
+        icon = mockk()
+    )
+
+    private lateinit var store: BrowserStore
+
     @Before
     fun setup() {
-        val searchEngine = mockk<SearchEngine>(relaxed = true)
-        every { activity.components.search.searchEngineManager.defaultSearchEngine } returns searchEngine
-        every { activity.components.search.provider.getDefaultEngine(activity) } returns searchEngine
+        val searchEngine = searchEngine
+
+        store = BrowserStore(BrowserState(
+            search = SearchState(
+                customSearchEngines = listOf(searchEngine),
+                userSelectedSearchEngineId = searchEngine.id,
+                complete = true
+            )
+        ))
+
+        every { activity.applicationContext } returns ApplicationProvider.getApplicationContext()
     }
 
     @Test
     fun `do not process blank intents`() {
-        val processor = SpeechProcessingIntentProcessor(activity, metrics)
+        val processor = SpeechProcessingIntentProcessor(activity, store, metrics)
         processor.process(Intent(), navController, out)
 
         verify { activity wasNot Called }
@@ -52,7 +71,7 @@ class SpeechProcessingIntentProcessorTest {
         val intent = Intent().apply {
             putExtra(HomeActivity.OPEN_TO_BROWSER_AND_LOAD, false)
         }
-        val processor = SpeechProcessingIntentProcessor(activity, metrics)
+        val processor = SpeechProcessingIntentProcessor(activity, store, metrics)
         processor.process(intent, navController, out)
 
         verify { activity wasNot Called }
@@ -62,34 +81,13 @@ class SpeechProcessingIntentProcessorTest {
     }
 
     @Test
-    fun `process when open extra is true`() {
-        val intent = Intent().apply {
-            putExtra(HomeActivity.OPEN_TO_BROWSER_AND_LOAD, true)
-        }
-        val processor = SpeechProcessingIntentProcessor(activity, metrics)
-
-        processor.process(intent, navController, out)
-
-        verify {
-            activity.openToBrowserAndLoad(
-                searchTermOrURL = "",
-                newTab = true,
-                from = BrowserDirection.FromGlobal,
-                forceSearch = true
-            )
-        }
-        verify { navController wasNot Called }
-        verify { out.putExtra(HomeActivity.OPEN_TO_BROWSER_AND_LOAD, false) }
-    }
-
-    @Test
     fun `reads the speech processing extra`() {
         val intent = Intent().apply {
             putExtra(HomeActivity.OPEN_TO_BROWSER_AND_LOAD, true)
             putExtra(SPEECH_PROCESSING, "hello world")
         }
-        val processor = SpeechProcessingIntentProcessor(activity, metrics)
 
+        val processor = SpeechProcessingIntentProcessor(activity, store, metrics)
         processor.process(intent, mockk(), mockk(relaxed = true))
 
         verify {
@@ -97,7 +95,8 @@ class SpeechProcessingIntentProcessorTest {
                 searchTermOrURL = "hello world",
                 newTab = true,
                 from = BrowserDirection.FromGlobal,
-                forceSearch = true
+                forceSearch = true,
+                engine = searchEngine
             )
         }
     }

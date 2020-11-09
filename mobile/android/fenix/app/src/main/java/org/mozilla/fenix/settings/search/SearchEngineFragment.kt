@@ -70,15 +70,11 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
                 isChecked = context.settings().shouldShowClipboardSuggestions
             }
 
-        val searchEngineListPreference =
-            requirePreference<SearchEngineListPreference>(R.string.pref_key_search_engine_list)
-
         val showVoiceSearchPreference =
             requirePreference<SwitchPreference>(R.string.pref_key_show_voice_search).apply {
                 isChecked = context.settings().shouldShowVoiceSearch
             }
 
-        searchEngineListPreference.reload(requireContext())
         searchSuggestionsPreference.onPreferenceChangeListener = SharedPreferenceUpdater()
         showSearchShortcuts.onPreferenceChangeListener = SharedPreferenceUpdater()
         showHistorySuggestions.onPreferenceChangeListener = SharedPreferenceUpdater()

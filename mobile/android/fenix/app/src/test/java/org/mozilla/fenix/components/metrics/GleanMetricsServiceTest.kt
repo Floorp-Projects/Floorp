@@ -7,6 +7,7 @@ package org.mozilla.fenix.components.metrics
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -35,7 +36,9 @@ class GleanMetricsServiceTest {
     @Before
     fun setup() {
         MockKAnnotations.init(this)
-        gleanService = GleanMetricsService(testContext, browsersCache, mozillaProductDetector)
+
+        val store = BrowserStore()
+        gleanService = GleanMetricsService(testContext, lazy { store }, browsersCache, mozillaProductDetector)
     }
 
     @Test

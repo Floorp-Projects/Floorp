@@ -13,15 +13,16 @@ import io.mockk.unmockkStatic
 import io.mockk.verifySequence
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
-import mozilla.components.browser.search.SearchEngine
-import mozilla.components.browser.search.provider.SearchEngineList
+import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.SearchState
+import mozilla.components.browser.state.store.BrowserStore
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.searchengine.FenixSearchEngineProvider
 
 @ExperimentalCoroutinesApi
 class ShortcutsSuggestionProviderTest {
@@ -52,33 +53,32 @@ class ShortcutsSuggestionProviderTest {
     @Test
     fun `returns suggestions from search engine provider`() = runBlockingTest {
         val engineOne = mockk<SearchEngine> {
-            every { identifier } returns "1"
+            every { id } returns "1"
             every { name } returns "EngineOne"
             every { icon } returns mockk()
         }
         val engineTwo = mockk<SearchEngine> {
-            every { identifier } returns "2"
+            every { id } returns "2"
             every { name } returns "EngineTwo"
             every { icon } returns mockk()
         }
-        val searchEngineProvider = mockk<FenixSearchEngineProvider> {
-            every { installedSearchEngines(context) } returns SearchEngineList(
-                list = listOf(engineOne, engineTwo),
-                default = null
+        val store = BrowserStore(BrowserState(
+            search = SearchState(
+                regionSearchEngines = listOf(engineOne, engineTwo)
             )
-        }
-        val provider = ShortcutsSuggestionProvider(searchEngineProvider, context, mockk(), mockk())
+        ))
+        val provider = ShortcutsSuggestionProvider(store, context, mockk(), mockk())
 
         val suggestions = provider.onInputChanged("")
         assertEquals(3, suggestions.size)
 
         assertEquals(provider, suggestions[0].provider)
-        assertEquals(engineOne.identifier, suggestions[0].id)
+        assertEquals(engineOne.id, suggestions[0].id)
         assertEquals(engineOne.icon, suggestions[0].icon)
         assertEquals(engineOne.name, suggestions[0].title)
 
         assertEquals(provider, suggestions[1].provider)
-        assertEquals(engineTwo.identifier, suggestions[1].id)
+        assertEquals(engineTwo.id, suggestions[1].id)
         assertEquals(engineTwo.icon, suggestions[1].icon)
         assertEquals(engineTwo.name, suggestions[1].title)
 
@@ -90,16 +90,16 @@ class ShortcutsSuggestionProviderTest {
     @Test
     fun `callbacks are triggered when suggestions are clicked`() = runBlockingTest {
         val engineOne = mockk<SearchEngine>(relaxed = true)
-        val searchEngineProvider = mockk<FenixSearchEngineProvider> {
-            every { installedSearchEngines(context) } returns SearchEngineList(
-                list = listOf(engineOne),
-                default = null
+        val store = BrowserStore(BrowserState(
+            search = SearchState(
+                regionSearchEngines = listOf(engineOne)
             )
-        }
+        ))
+
         val selectShortcutEngine = mockk<(SearchEngine) -> Unit>(relaxed = true)
         val selectShortcutEngineSettings = mockk<() -> Unit>(relaxed = true)
         val provider = ShortcutsSuggestionProvider(
-            searchEngineProvider,
+            store,
             context,
             selectShortcutEngine,
             selectShortcutEngineSettings

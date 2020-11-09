@@ -148,18 +148,22 @@ class ToolbarView(
             isInitialized = true
         }
 
-        val iconSize =
-            context.resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
+        val searchEngine = searchState.searchEngineSource.searchEngine
 
-        val scaledIcon = Bitmap.createScaledBitmap(
-            searchState.searchEngineSource.searchEngine.icon,
-            iconSize,
-            iconSize,
-            true
-        )
+        if (searchEngine != null) {
+            val iconSize =
+                context.resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
 
-        val icon = BitmapDrawable(context.resources, scaledIcon)
+            val scaledIcon = Bitmap.createScaledBitmap(
+                searchEngine.icon,
+                iconSize,
+                iconSize,
+                true
+            )
 
-        view.edit.setIcon(icon, searchState.searchEngineSource.searchEngine.name)
+            val icon = BitmapDrawable(context.resources, scaledIcon)
+
+            view.edit.setIcon(icon, searchEngine.name)
+        }
     }
 }

@@ -19,26 +19,34 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import kotlinx.android.synthetic.main.custom_search_engine.*
-import kotlinx.android.synthetic.main.fragment_add_search_engine.*
-import kotlinx.android.synthetic.main.search_engine_radio_button.view.*
+import kotlinx.android.synthetic.main.custom_search_engine.custom_search_engine_form
+import kotlinx.android.synthetic.main.custom_search_engine.custom_search_engine_name_field
+import kotlinx.android.synthetic.main.custom_search_engine.custom_search_engine_search_string_field
+import kotlinx.android.synthetic.main.custom_search_engine.custom_search_engines_learn_more
+import kotlinx.android.synthetic.main.custom_search_engine.edit_engine_name
+import kotlinx.android.synthetic.main.custom_search_engine.edit_search_string
+import kotlinx.android.synthetic.main.fragment_add_search_engine.search_engine_group
+import kotlinx.android.synthetic.main.search_engine_radio_button.view.engine_icon
+import kotlinx.android.synthetic.main.search_engine_radio_button.view.engine_text
+import kotlinx.android.synthetic.main.search_engine_radio_button.view.overflow_menu
+import kotlinx.android.synthetic.main.search_engine_radio_button.view.radio_button
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.icons.IconRequest
+import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.state.availableSearchEngines
+import mozilla.components.feature.search.ext.createSearchEngine
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
-import org.mozilla.fenix.perf.runBlockingIncrement
 import org.mozilla.fenix.settings.SupportUtils
-import java.util.Locale
 
 @SuppressWarnings("LargeClass", "TooManyFunctions")
 class AddSearchEngineFragment : Fragment(R.layout.fragment_add_search_engine),
@@ -51,14 +59,13 @@ class AddSearchEngineFragment : Fragment(R.layout.fragment_add_search_engine),
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
 
-        availableEngines = runBlockingIncrement {
-            requireContext()
-                .components
-                .search
-                .provider
-                .uninstalledSearchEngines(requireContext())
-                .list
-        }
+        availableEngines = requireContext()
+            .components
+            .core
+            .store
+            .state
+            .search
+            .availableSearchEngines
 
         selectedIndex = if (availableEngines.isEmpty()) CUSTOM_INDEX else FIRST_INDEX
     }
@@ -72,7 +79,7 @@ class AddSearchEngineFragment : Fragment(R.layout.fragment_add_search_engine),
         )
 
         val setupSearchEngineItem: (Int, SearchEngine) -> Unit = { index, engine ->
-            val engineId = engine.identifier
+            val engineId = engine.id
             val engineItem = makeButtonFromSearchEngine(
                 engine = engine,
                 layoutInflater = layoutInflater,
@@ -123,7 +130,8 @@ class AddSearchEngineFragment : Fragment(R.layout.fragment_add_search_engine),
                     CUSTOM_INDEX -> createCustomEngine()
                     else -> {
                         val engine = availableEngines[selectedIndex]
-                        installEngine(engine)
+                        requireComponents.useCases.searchUseCases.addSearchEngine(engine)
+                        findNavController().popBackStack()
                     }
                 }
 
@@ -141,9 +149,9 @@ class AddSearchEngineFragment : Fragment(R.layout.fragment_add_search_engine),
         val name = edit_engine_name.text?.toString()?.trim() ?: ""
         val searchString = edit_search_string.text?.toString() ?: ""
 
-        val hasError = checkForErrors(name, searchString)
-
-        if (hasError) { return }
+        if (checkForErrors(name, searchString)) {
+            return
+        }
 
         viewLifecycleOwner.lifecycleScope.launch(Main) {
             val result = withContext(IO) {
@@ -159,22 +167,14 @@ class AddSearchEngineFragment : Fragment(R.layout.fragment_add_search_engine),
                         .getString(R.string.search_add_custom_engine_error_cannot_reach, name)
                 }
                 SearchStringValidator.Result.Success -> {
-                    try {
-                        CustomSearchEngineStore.addSearchEngine(
-                            context = requireContext(),
-                            engineName = name,
-                            searchQuery = searchString
-                        )
-                    } catch (engineNameExists: CustomSearchEngineStore.EngineNameAlreadyExists) {
-                        custom_search_engine_name_field.error =
-                            String.format(
-                                resources.getString(
-                                    R.string.search_add_custom_engine_error_existing_name
-                                ), name
-                            )
-                        return@launch
-                    }
-                    requireComponents.search.provider.reload()
+                    val searchEngine = createSearchEngine(
+                        name,
+                        searchString.toSearchUrl(),
+                        requireComponents.core.icons.loadIcon(IconRequest(searchString)).await().bitmap
+                    )
+
+                    requireComponents.useCases.searchUseCases.addSearchEngine(searchEngine)
+
                     val successMessage = resources
                         .getString(R.string.search_add_custom_engine_success_message, name)
 
@@ -196,25 +196,10 @@ class AddSearchEngineFragment : Fragment(R.layout.fragment_add_search_engine),
     }
 
     fun checkForErrors(name: String, searchString: String): Boolean {
-        val existingIdentifiers = requireComponents
-                .search
-                .provider
-                .allSearchEngineIdentifiers()
-                .map { it.toLowerCase(Locale.ROOT) }
-
-        val hasError = when {
+        return when {
             name.isEmpty() -> {
                 custom_search_engine_name_field.error = resources
                     .getString(R.string.search_add_custom_engine_error_empty_name)
-                true
-            }
-            existingIdentifiers.contains(name.toLowerCase(Locale.ROOT)) -> {
-                custom_search_engine_name_field.error =
-                    String.format(
-                        resources.getString(
-                            R.string.search_add_custom_engine_error_existing_name
-                        ), name
-                    )
                 true
             }
             searchString.isEmpty() -> {
@@ -228,21 +213,6 @@ class AddSearchEngineFragment : Fragment(R.layout.fragment_add_search_engine),
                 true
             }
             else -> false
-        }
-
-        return hasError
-    }
-
-    private fun installEngine(engine: SearchEngine) {
-        viewLifecycleOwner.lifecycleScope.launch(Main) {
-            withContext(IO) {
-                requireContext().components.search.provider.installSearchEngine(
-                    requireContext(),
-                    engine
-                )
-            }
-
-            findNavController().popBackStack()
         }
     }
 
@@ -302,4 +272,8 @@ class AddSearchEngineFragment : Fragment(R.layout.fragment_add_search_engine),
         private const val CUSTOM_INDEX = -1
         private const val FIRST_INDEX = 0
     }
+}
+
+private fun String.toSearchUrl(): String {
+    return replace("%s", "{searchTerms}")
 }

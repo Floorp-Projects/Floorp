@@ -15,7 +15,6 @@ import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
-import android.os.StrictMode
 import android.speech.RecognizerIntent
 import android.text.style.StyleSpan
 import android.view.LayoutInflater
@@ -41,9 +40,12 @@ import kotlinx.android.synthetic.main.fragment_search_dialog.view.*
 import kotlinx.android.synthetic.main.search_suggestions_hint.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.qr.QrFeature
+import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -52,13 +54,12 @@ import mozilla.components.support.ktx.android.content.hasCamera
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.android.content.res.getSpanned
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
-import org.mozilla.fenix.components.searchengine.FenixSearchEngineProvider
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.isKeyboardVisible
@@ -67,7 +68,6 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.awesomebar.AwesomeBarView
 import org.mozilla.fenix.search.toolbar.ToolbarView
 import org.mozilla.fenix.settings.SupportUtils
-import org.mozilla.fenix.settings.registerOnSharedPreferenceChangeListener
 import org.mozilla.fenix.widget.VoiceSearchActivity
 
 typealias SearchDialogFragmentStore = SearchFragmentStore
@@ -143,7 +143,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             SearchDialogController(
                 activity = activity,
                 sessionManager = requireComponents.core.sessionManager,
-                store = store,
+                store = requireComponents.core.store,
+                fragmentStore = store,
                 navController = findNavController(),
                 settings = requireContext().settings(),
                 metrics = requireComponents.analytics.metrics,
@@ -169,9 +170,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             interactor,
             view.awesome_bar
         )
-
-        setShortcutsChangedListener(CustomSearchEngineStore.PREF_FILE_SEARCH_ENGINES)
-        setShortcutsChangedListener(FenixSearchEngineProvider.PREF_FILE_SEARCH_ENGINES)
 
         view.awesome_bar.setOnTouchListener { _, _ ->
             view.hideKeyboardAndSave()
@@ -202,6 +200,14 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     @SuppressWarnings("LongMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        consumeFlow(requireComponents.core.store) { flow ->
+            flow.map { state -> state.search }
+                .ifChanged()
+                .collect { search ->
+                    store.dispatch(SearchFragmentAction.UpdateSearchState(search))
+                }
+        }
 
         setupConstraints(view)
 
@@ -475,12 +481,14 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     }
 
     private fun addSearchButton(toolbarView: ToolbarView) {
+        val searchEngine = store.state.searchEngineSource.searchEngine
+
         toolbarView.view.addEditAction(
             BrowserToolbar.Button(
                 AppCompatResources.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
                 requireContext().getString(R.string.voice_search_content_description),
                 visible = {
-                    store.state.searchEngineSource.searchEngine.identifier.contains("google") &&
+                    searchEngine?.id?.contains("google") == true &&
                             isSpeechAvailable() &&
                             requireContext().settings().shouldShowVoiceSearch
                 },
@@ -515,17 +523,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
     private fun isSpeechAvailable(): Boolean = speechIntent.resolveActivity(requireContext().packageManager) != null
 
-    private fun setShortcutsChangedListener(preferenceFileName: String) {
-        requireComponents.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
-            requireContext().getSharedPreferences(
-                preferenceFileName,
-                Context.MODE_PRIVATE
-            ).registerOnSharedPreferenceChangeListener(viewLifecycleOwner) { _, _ ->
-                awesomeBarView.update(store.state)
-            }
-        }
-    }
-
     private fun updateClipboardSuggestion(searchState: SearchFragmentState, clipboardUrl: String?) {
         val shouldShowView = searchState.showClipboardSuggestions &&
                 searchState.query.isEmpty() &&
@@ -548,8 +545,11 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private fun updateToolbarContentDescription(searchState: SearchFragmentState) {
         val urlView = toolbarView.view
             .findViewById<InlineAutocompleteEditText>(R.id.mozac_browser_toolbar_edit_url_view)
-        toolbarView.view.contentDescription =
-            searchState.searchEngineSource.searchEngine.name + ", " + urlView.hint
+
+        searchState.searchEngineSource.searchEngine?.let { engine ->
+            toolbarView.view.contentDescription = engine.name + ", " + urlView.hint
+        }
+
         urlView?.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
     }
 

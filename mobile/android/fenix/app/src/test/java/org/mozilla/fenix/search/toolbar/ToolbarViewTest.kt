@@ -48,7 +48,8 @@ class ToolbarViewTest {
             every { name } returns "Search Engine"
             every { icon } returns testContext.getDrawable(R.drawable.ic_search)!!.toBitmap()
         }),
-        defaultEngineSource = mockk(relaxed = true),
+        defaultEngine = null,
+        showSearchShortcutsSetting = false,
         showSearchSuggestionsHint = false,
         showSearchSuggestions = false,
         showSearchShortcuts = false,

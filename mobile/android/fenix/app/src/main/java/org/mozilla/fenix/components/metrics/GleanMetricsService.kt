@@ -5,6 +5,9 @@
 package org.mozilla.fenix.components.metrics
 
 import android.content.Context
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.feature.search.ext.legacy
+import mozilla.components.feature.search.ext.waitForSelectedOrDefaultSearchEngine
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.private.NoExtraKeys
@@ -682,6 +685,7 @@ private val Event.wrapper: EventWrapper<*>?
 
 class GleanMetricsService(
     private val context: Context,
+    private val store: Lazy<BrowserStore>,
     private val browsersCache: BrowsersCache = BrowsersCache,
     private val mozillaProductDetector: MozillaProductDetector = MozillaProductDetector
 ) : MetricsService {
@@ -756,20 +760,18 @@ class GleanMetricsService(
             closeTabSetting.set(context.settings().getTabTimeoutPingString())
         }
 
-        SearchDefaultEngine.apply {
-            val defaultEngine = context
-                .components
-                .search
-                .searchEngineManager
-                .defaultSearchEngine ?: return@apply
+        store.value.waitForSelectedOrDefaultSearchEngine { searchEngine ->
+            if (searchEngine != null) {
+                SearchDefaultEngine.apply {
+                    code.set(searchEngine.id)
+                    name.set(searchEngine.name)
+                    submissionUrl.set(searchEngine.legacy().buildSearchUrl(""))
+                }
+            }
 
-            code.set(defaultEngine.identifier)
-            name.set(defaultEngine.name)
-            submissionUrl.set(defaultEngine.buildSearchUrl(""))
+            activationPing.checkAndSend()
+            installationPing.checkAndSend()
         }
-
-        activationPing.checkAndSend()
-        installationPing.checkAndSend()
     }
 
     private fun setPreferenceMetrics() {

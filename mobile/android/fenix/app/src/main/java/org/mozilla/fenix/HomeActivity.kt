@@ -37,7 +37,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.WebExtensionState
@@ -46,6 +46,7 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.contextmenu.DefaultSelectionActionDelegate
 import mozilla.components.feature.privatemode.notification.PrivateNotificationFeature
 import mozilla.components.feature.search.BrowserStoreSearchAdapter
+import mozilla.components.feature.search.ext.legacy
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
@@ -139,7 +140,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
     private val externalSourceIntentProcessors by lazy {
         listOf(
-            SpeechProcessingIntentProcessor(this, components.analytics.metrics),
+            SpeechProcessingIntentProcessor(this, components.core.store, components.analytics.metrics),
             StartSearchIntentProcessor(components.analytics.metrics),
             DeepLinkIntentProcessor(this, components.analytics.leanplumMetricsService),
             OpenBrowserIntentProcessor(this, ::getIntentSessionId),
@@ -737,23 +738,24 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             }
         } else components.useCases.sessionUseCases.loadUrl
 
-        val searchUseCase: (String) -> Unit = { searchTerms ->
+        // In situations where we want to perform a search but have no search engine (e.g. the user
+        // has removed all of them, or we couldn't load any) we will pass searchTermOrURL to Gecko
+        // and let it try to load whatever was entered.
+        if ((!forceSearch && searchTermOrURL.isUrl()) || engine == null) {
+            loadUrlUseCase.invoke(searchTermOrURL.toNormalizedUrl(), flags)
+        } else {
             if (newTab) {
                 components.useCases.searchUseCases.newTabSearch
                     .invoke(
-                        searchTerms,
+                        searchTermOrURL,
                         SessionState.Source.USER_ENTERED,
                         true,
                         mode.isPrivate,
-                        searchEngine = engine
+                        searchEngine = engine.legacy()
                     )
-            } else components.useCases.searchUseCases.defaultSearch.invoke(searchTerms, engine)
-        }
-
-        if (!forceSearch && searchTermOrURL.isUrl()) {
-            loadUrlUseCase.invoke(searchTermOrURL.toNormalizedUrl(), flags)
-        } else {
-            searchUseCase.invoke(searchTermOrURL)
+            } else {
+                components.useCases.searchUseCases.defaultSearch.invoke(searchTermOrURL, engine.legacy())
+            }
         }
 
         if (components.core.engine.profiler?.isProfilerActive() == true) {

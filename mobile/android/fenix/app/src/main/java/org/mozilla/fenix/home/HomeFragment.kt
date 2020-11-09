@@ -40,15 +40,26 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.fragment_home.*
-import kotlinx.android.synthetic.main.fragment_home.view.*
-import kotlinx.android.synthetic.main.no_collections_message.view.*
+import kotlinx.android.synthetic.main.fragment_home.privateBrowsingButton
+import kotlinx.android.synthetic.main.fragment_home.search_engine_icon
+import kotlinx.android.synthetic.main.fragment_home.toolbarLayout
+import kotlinx.android.synthetic.main.fragment_home.view.bottomBarShadow
+import kotlinx.android.synthetic.main.fragment_home.view.bottom_bar
+import kotlinx.android.synthetic.main.fragment_home.view.homeAppBar
+import kotlinx.android.synthetic.main.fragment_home.view.menuButton
+import kotlinx.android.synthetic.main.fragment_home.view.sessionControlRecyclerView
+import kotlinx.android.synthetic.main.fragment_home.view.tab_button
+import kotlinx.android.synthetic.main.fragment_home.view.toolbar
+import kotlinx.android.synthetic.main.fragment_home.view.toolbarLayout
+import kotlinx.android.synthetic.main.fragment_home.view.toolbar_wrapper
+import kotlinx.android.synthetic.main.no_collections_message.view.add_tabs_to_collections_button
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.menu.view.MenuButton
 import mozilla.components.browser.session.Session
@@ -58,6 +69,7 @@ import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
@@ -65,9 +77,11 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSitesConfig
 import mozilla.components.feature.top.sites.TopSitesFeature
+import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -162,6 +176,7 @@ class HomeFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         postponeEnterTransition()
         bundleArgs = args.toBundle()
         lifecycleScope.launch(IO) {
@@ -227,6 +242,7 @@ class HomeFragment : Fragment() {
                 settings = components.settings,
                 engine = components.core.engine,
                 metrics = components.analytics.metrics,
+                store = store,
                 sessionManager = sessionManager,
                 tabCollectionStorage = components.core.tabCollectionStorage,
                 addTabUseCase = components.useCases.tabsUseCases.addTab,
@@ -338,23 +354,7 @@ class HomeFragment : Fragment() {
             delay(ANIMATION_DELAY)
         }
 
-        viewLifecycleOwner.lifecycleScope.launch(IO) {
-            // This is necessary due to a bug in viewLifecycleOwner. See:
-            // https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/ext/Fragment.kt#L32-L56
-            // TODO remove when viewLifecycleOwner is fixed
-            val context = context ?: return@launch
-
-            val iconSize =
-                context.resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
-
-            val searchEngine = context.components.search.provider.getDefaultEngine(context)
-            val searchIcon = BitmapDrawable(context.resources, searchEngine.icon)
-            searchIcon.setBounds(0, 0, iconSize, iconSize)
-
-            withContext(Main) {
-                search_engine_icon?.setImageDrawable(searchIcon)
-            }
-        }
+        observeSearchEngineChanges()
 
         createHomeMenu(requireContext(), WeakReference(view.menuButton))
         val tabCounterMenu = TabCounterMenu(
@@ -446,6 +446,24 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun observeSearchEngineChanges() {
+        consumeFlow(store) { flow ->
+            flow.map { state -> state.search.selectedOrDefaultSearchEngine }
+                .ifChanged()
+                .collect { searchEngine ->
+                    if (searchEngine != null) {
+                        val iconSize =
+                            requireContext().resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
+                        val searchIcon = BitmapDrawable(requireContext().resources, searchEngine.icon)
+                        searchIcon.setBounds(0, 0, iconSize, iconSize)
+                        search_engine_icon?.setImageDrawable(searchIcon)
+                    } else {
+                        search_engine_icon.setImageDrawable(null)
+                    }
+                }
+        }
+    }
+
     private fun removeAllTabsAndShowSnackbar(sessionCode: String) {
         if (sessionCode == ALL_PRIVATE_TABS) {
             sessionManager.removePrivateSessions()
@@ -499,6 +517,7 @@ class HomeFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+
         _sessionControlInteractor = null
         sessionControlView = null
         bundleArgs.clear()
@@ -507,6 +526,7 @@ class HomeFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
+
         subscribeToTabCollections()
 
         val context = requireContext()

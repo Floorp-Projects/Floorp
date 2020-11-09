@@ -12,11 +12,12 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint
-import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
-import org.mozilla.fenix.ext.searchEngineManager
+import org.mozilla.fenix.ext.components
 import java.io.IOException
 import java.security.NoSuchAlgorithmException
 import java.security.spec.InvalidKeySpecException
@@ -26,11 +27,11 @@ import javax.crypto.spec.PBEKeySpec
 object MetricsUtils {
     fun createSearchEvent(
         engine: SearchEngine,
-        context: Context,
+        store: BrowserStore,
         searchAccessPoint: SearchAccessPoint
     ): Event.PerformedSearch? {
-        val isShortcut = engine != context.searchEngineManager.defaultSearchEngine
-        val isCustom = CustomSearchEngineStore.isCustomSearchEngine(context, engine.identifier)
+        val isShortcut = engine != store.state.search.selectedOrDefaultSearchEngine
+        val isCustom = engine.type == SearchEngine.Type.CUSTOM
 
         val engineSource =
             if (isShortcut) Event.PerformedSearch.EngineSource.Shortcut(engine, isCustom)

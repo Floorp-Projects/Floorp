@@ -5,7 +5,6 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
-import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
@@ -15,7 +14,7 @@ import mozilla.components.feature.downloads.DownloadsUseCases
 import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.pwa.WebAppUseCases
 import mozilla.components.feature.search.SearchUseCases
-import mozilla.components.browser.search.ext.toDefaultSearchEngineProvider
+import mozilla.components.feature.search.ext.toDefaultSearchEngineProvider
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.SettingsUseCases
 import mozilla.components.feature.session.TrackingProtectionUseCases
@@ -36,7 +35,6 @@ class UseCases(
     private val engine: Engine,
     private val sessionManager: SessionManager,
     private val store: BrowserStore,
-    private val searchEngineManager: SearchEngineManager,
     private val shortcutManager: WebAppShortcutManager,
     private val topSitesStorage: TopSitesStorage
 ) {
@@ -56,7 +54,7 @@ class UseCases(
     val searchUseCases by lazyMonitored {
         SearchUseCases(
             store,
-            searchEngineManager.toDefaultSearchEngineProvider(context),
+            store.toDefaultSearchEngineProvider(),
             sessionManager
         )
     }

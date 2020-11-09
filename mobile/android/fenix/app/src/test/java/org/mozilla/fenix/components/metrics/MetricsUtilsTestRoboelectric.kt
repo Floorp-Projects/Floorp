@@ -6,8 +6,8 @@ package org.mozilla.fenix.components.metrics
 
 import io.mockk.every
 import io.mockk.mockk
-import mozilla.components.browser.search.SearchEngine
-import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.store.BrowserStore
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,16 +22,16 @@ class MetricsUtilsTestRoboelectric {
 
     @Test
     fun createSearchEvent() {
-        val context = testContext
+        val store = BrowserStore()
         val engine: SearchEngine = mockk(relaxed = true)
 
-        every { engine.identifier } returns MetricsUtilsTest.ENGINE_SOURCE_IDENTIFIER
+        every { engine.id } returns MetricsUtilsTest.ENGINE_SOURCE_IDENTIFIER
 
         Assert.assertEquals(
             "${MetricsUtilsTest.ENGINE_SOURCE_IDENTIFIER}.suggestion",
             MetricsUtils.createSearchEvent(
                 engine,
-                context,
+                store,
                 Event.PerformedSearch.SearchAccessPoint.SUGGESTION
             )?.eventSource?.countLabel
         )
@@ -39,7 +39,7 @@ class MetricsUtilsTestRoboelectric {
             "${MetricsUtilsTest.ENGINE_SOURCE_IDENTIFIER}.action",
             MetricsUtils.createSearchEvent(
                 engine,
-                context,
+                store,
                 Event.PerformedSearch.SearchAccessPoint.ACTION
             )?.eventSource?.countLabel
         )
@@ -47,7 +47,7 @@ class MetricsUtilsTestRoboelectric {
             "${MetricsUtilsTest.ENGINE_SOURCE_IDENTIFIER}.widget",
             MetricsUtils.createSearchEvent(
                 engine,
-                context,
+                store,
                 Event.PerformedSearch.SearchAccessPoint.WIDGET
             )?.eventSource?.countLabel
         )
@@ -55,7 +55,7 @@ class MetricsUtilsTestRoboelectric {
             "${MetricsUtilsTest.ENGINE_SOURCE_IDENTIFIER}.shortcut",
             MetricsUtils.createSearchEvent(
                 engine,
-                context,
+                store,
                 Event.PerformedSearch.SearchAccessPoint.SHORTCUT
             )?.eventSource?.countLabel
         )

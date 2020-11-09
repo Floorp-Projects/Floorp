@@ -46,6 +46,8 @@ import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.readerview.ReaderViewMiddleware
 import mozilla.components.feature.recentlyclosed.RecentlyClosedMiddleware
+import mozilla.components.feature.search.middleware.SearchMiddleware
+import mozilla.components.feature.search.region.RegionMiddleware
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.top.sites.DefaultTopSitesStorage
 import mozilla.components.feature.top.sites.PinnedSiteStorage
@@ -57,14 +59,18 @@ import mozilla.components.lib.dataprotect.generateEncryptionKey
 import mozilla.components.service.digitalassetlinks.RelationChecker
 import mozilla.components.service.digitalassetlinks.local.StatementApi
 import mozilla.components.service.digitalassetlinks.local.StatementRelationChecker
+import mozilla.components.service.location.LocationService
+import mozilla.components.service.location.MozillaLocationService
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.AppRequestInterceptor
+import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.perf.StrictModeManager
 import org.mozilla.fenix.TelemetryMiddleware
+import org.mozilla.fenix.components.search.SearchMigration
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -153,6 +159,14 @@ class Core(
         SessionStorage(context, engine = engine)
     }
 
+    private val locationService: LocationService by lazyMonitored {
+        if (Config.channel.isDebug || BuildConfig.MLS_TOKEN.isEmpty()) {
+            LocationService.default()
+        } else {
+            MozillaLocationService(context, client, BuildConfig.MLS_TOKEN)
+        }
+    }
+
     /**
      * The [BrowserStore] holds the global [BrowserState].
      */
@@ -169,7 +183,13 @@ class Core(
                     metrics
                 ),
                 ThumbnailsMiddleware(thumbnailStorage),
-                UndoMiddleware(::lookupSessionManager, context.getUndoDelay())
+                UndoMiddleware(::lookupSessionManager, context.getUndoDelay()),
+                RegionMiddleware(context, locationService),
+                SearchMiddleware(
+                    context,
+                    additionalBundledSearchEngineIds = listOf("reddit", "youtube"),
+                    migration = SearchMigration(context)
+                )
             ) + EngineMiddleware.create(engine, ::findSessionById)
         ).also {
             it.dispatch(RecentlyClosedAction.InitializeRecentlyClosedState)

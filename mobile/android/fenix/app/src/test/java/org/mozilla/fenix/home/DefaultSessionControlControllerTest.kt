@@ -12,9 +12,11 @@ import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
-import mozilla.components.browser.search.SearchEngine
-import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.SearchState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
@@ -33,7 +35,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.searchEngineManager
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.settings.SupportUtils
@@ -67,16 +68,27 @@ class DefaultSessionControlControllerTest {
         wasSwiped: Boolean,
         handleSwipedItemDeletionCancel: () -> Unit
     ) -> Unit = mockk(relaxed = true)
-    private val searchEngine = mockk<SearchEngine>(relaxed = true)
-    private val searchEngineManager = mockk<SearchEngineManager>(relaxed = true)
     private val settings: Settings = mockk(relaxed = true)
     private val analytics: Analytics = mockk(relaxed = true)
     private val scope = TestCoroutineScope()
-
+    private val searchEngine = SearchEngine(
+        id = "test",
+        name = "Test Engine",
+        icon = mockk(relaxed = true),
+        type = SearchEngine.Type.BUNDLED,
+        resultUrls = listOf("https://example.org/?q={searchTerms}")
+    )
+    private lateinit var store: BrowserStore
     private lateinit var controller: DefaultSessionControlController
 
     @Before
     fun setup() {
+        store = BrowserStore(BrowserState(
+            search = SearchState(
+                regionSearchEngines = listOf(searchEngine)
+            )
+        ))
+
         every { fragmentStore.state } returns HomeFragmentState(
             collections = emptyList(),
             expandedCollections = emptySet(),
@@ -90,15 +102,13 @@ class DefaultSessionControlControllerTest {
             every { id } returns R.id.homeFragment
         }
         every { activity.components.settings } returns settings
-        every { activity.components.search.provider.getDefaultEngine(activity) } returns searchEngine
         every { activity.settings() } returns settings
-        every { activity.searchEngineManager } returns searchEngineManager
-        every { searchEngineManager.defaultSearchEngine } returns searchEngine
         every { activity.components.analytics } returns analytics
         every { analytics.metrics } returns metrics
 
         controller = DefaultSessionControlController(
             activity = activity,
+            store = store,
             settings = settings,
             engine = engine,
             metrics = metrics,

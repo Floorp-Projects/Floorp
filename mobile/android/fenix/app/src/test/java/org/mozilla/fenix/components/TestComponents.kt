@@ -16,14 +16,12 @@ class TestComponents(private val context: Context) : Components(context) {
     }
     override val services by lazy { Services(context, backgroundServices.accountManager) }
     override val core by lazy { TestCore(context, analytics.crashReporter) }
-    override val search by lazy { Search(context) }
     override val useCases by lazy {
         UseCases(
             context,
             core.engine,
             core.sessionManager,
             core.store,
-            search.searchEngineManager,
             core.webAppShortcutManager,
             core.topSitesStorage
         )

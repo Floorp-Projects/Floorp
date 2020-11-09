@@ -10,14 +10,17 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import mozilla.components.browser.search.SearchEngine
-import mozilla.components.browser.search.provider.SearchEngineList
+import mozilla.components.browser.state.search.RegionState
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.state.TabSessionState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -26,14 +29,12 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint
-import org.mozilla.fenix.components.searchengine.FenixSearchEngineProvider
 import org.mozilla.fenix.utils.Settings
 
 @ExperimentalCoroutinesApi
 class SearchFragmentStoreTest {
 
     @MockK private lateinit var searchEngine: SearchEngine
-    @MockK private lateinit var searchProvider: FenixSearchEngineProvider
     @MockK private lateinit var activity: HomeActivity
     @MockK(relaxed = true) private lateinit var components: Components
     @MockK(relaxed = true) private lateinit var settings: Settings
@@ -45,12 +46,6 @@ class SearchFragmentStoreTest {
             override var mode: BrowsingMode = BrowsingMode.Normal
         }
         every { components.settings } returns settings
-        every { components.search.provider } returns searchProvider
-        every { searchProvider.getDefaultEngine(activity) } returns searchEngine
-        every { searchProvider.installedSearchEngines(activity) } returns SearchEngineList(
-            list = listOf(mockk(), mockk()),
-            default = searchEngine
-        )
     }
 
     @Test
@@ -63,12 +58,13 @@ class SearchFragmentStoreTest {
             query = "",
             url = "",
             searchTerms = "",
-            searchEngineSource = SearchEngineSource.Default(searchEngine),
-            defaultEngineSource = SearchEngineSource.Default(searchEngine),
+            searchEngineSource = SearchEngineSource.None,
+            defaultEngine = null,
+            showSearchShortcutsSetting = true,
             showSearchSuggestions = false,
             showSearchSuggestionsHint = false,
-            showSearchShortcuts = true,
-            areShortcutsAvailable = true,
+            showSearchShortcuts = false,
+            areShortcutsAvailable = false,
             showClipboardSuggestions = false,
             showHistorySuggestions = false,
             showBookmarkSuggestions = false,
@@ -120,12 +116,13 @@ class SearchFragmentStoreTest {
                 query = "https://example.com",
                 url = "https://example.com",
                 searchTerms = "search terms",
-                searchEngineSource = SearchEngineSource.Default(searchEngine),
-                defaultEngineSource = SearchEngineSource.Default(searchEngine),
+                searchEngineSource = SearchEngineSource.None,
+                defaultEngine = null,
                 showSearchSuggestions = false,
+                showSearchShortcutsSetting = false,
                 showSearchSuggestionsHint = false,
                 showSearchShortcuts = false,
-                areShortcutsAvailable = true,
+                areShortcutsAvailable = false,
                 showClipboardSuggestions = false,
                 showHistorySuggestions = false,
                 showBookmarkSuggestions = false,
@@ -177,16 +174,6 @@ class SearchFragmentStoreTest {
     }
 
     @Test
-    fun hideSearchShortcutEnginePicker() = runBlocking {
-        val initialState = emptyDefaultState()
-        val store = SearchFragmentStore(initialState)
-
-        store.dispatch(SearchFragmentAction.UpdateShortcutsAvailability(false)).join()
-        assertNotSame(initialState, store.state)
-        assertEquals(false, store.state.showSearchShortcuts)
-    }
-
-    @Test
     fun showSearchSuggestions() = runBlocking {
         val initialState = emptyDefaultState()
         val store = SearchFragmentStore(initialState)
@@ -213,26 +200,132 @@ class SearchFragmentStoreTest {
     }
 
     @Test
-    fun selectNewDefaultEngine() = runBlocking {
-        val initialState = emptyDefaultState()
-        val store = SearchFragmentStore(initialState)
+    fun `Updating SearchFragmentState from SearchState`() = runBlocking {
+        val store = SearchFragmentStore(emptyDefaultState(
+            searchEngineSource = SearchEngineSource.None,
+            areShortcutsAvailable = false,
+            defaultEngine = null,
+            showSearchShortcutsSetting = true
+        ))
 
-        store.dispatch(SearchFragmentAction.SelectNewDefaultSearchEngine(searchEngine)).join()
-        assertNotSame(initialState, store.state)
-        assertEquals(SearchEngineSource.Default(searchEngine), store.state.searchEngineSource)
+        assertNull(store.state.defaultEngine)
+        assertFalse(store.state.areShortcutsAvailable)
+        assertFalse(store.state.showSearchShortcuts)
+        assertEquals(SearchEngineSource.None, store.state.searchEngineSource)
+
+        store.dispatch(
+            SearchFragmentAction.UpdateSearchState(
+                SearchState(
+                    region = RegionState("US", "US"),
+                    regionSearchEngines = listOf(
+                        SearchEngine("engine-a", "Engine A", mockk(), type = SearchEngine.Type.BUNDLED),
+                        SearchEngine("engine-b", "Engine B", mockk(), type = SearchEngine.Type.BUNDLED),
+                        SearchEngine("engine-c", "Engine C", mockk(), type = SearchEngine.Type.BUNDLED)
+                    ),
+                    customSearchEngines = listOf(
+                        SearchEngine("engine-d", "Engine D", mockk(), type = SearchEngine.Type.CUSTOM),
+                        SearchEngine("engine-e", "Engine E", mockk(), type = SearchEngine.Type.CUSTOM)
+                    ),
+                    additionalSearchEngines = listOf(
+                        SearchEngine("engine-f", "Engine F", mockk(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
+                    ),
+                    additionalAvailableSearchEngines = listOf(
+                        SearchEngine("engine-g", "Engine G", mockk(), type = SearchEngine.Type.BUNDLED_ADDITIONAL),
+                        SearchEngine("engine-h", "Engine H", mockk(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
+                    ),
+                    hiddenSearchEngines = listOf(
+                        SearchEngine("engine-i", "Engine I", mockk(), type = SearchEngine.Type.BUNDLED)
+                    ),
+                    regionDefaultSearchEngineId = "engine-b",
+                    userSelectedSearchEngineId = null,
+                    userSelectedSearchEngineName = null
+                )
+            )
+        ).join()
+
+        assertNotNull(store.state.defaultEngine)
+        assertEquals("Engine B", store.state.defaultEngine!!.name)
+
+        assertTrue(store.state.areShortcutsAvailable)
+        assertTrue(store.state.showSearchShortcuts)
+
+        assertTrue(store.state.searchEngineSource is SearchEngineSource.Default)
+        assertNotNull(store.state.searchEngineSource.searchEngine)
+        assertEquals("Engine B", store.state.searchEngineSource.searchEngine!!.name)
     }
 
-    private fun emptyDefaultState(): SearchFragmentState = SearchFragmentState(
+    @Test
+    fun `Updating SearchFragmentState from SearchState - shortcuts disabled`() = runBlocking {
+        val store = SearchFragmentStore(emptyDefaultState(
+            searchEngineSource = SearchEngineSource.None,
+            areShortcutsAvailable = false,
+            defaultEngine = null,
+            showSearchShortcutsSetting = false
+        ))
+
+        assertNull(store.state.defaultEngine)
+        assertFalse(store.state.areShortcutsAvailable)
+        assertFalse(store.state.showSearchShortcuts)
+        assertEquals(SearchEngineSource.None, store.state.searchEngineSource)
+
+        store.dispatch(
+            SearchFragmentAction.UpdateSearchState(
+                SearchState(
+                    region = RegionState("US", "US"),
+                    regionSearchEngines = listOf(
+                        SearchEngine("engine-a", "Engine A", mockk(), type = SearchEngine.Type.BUNDLED),
+                        SearchEngine("engine-b", "Engine B", mockk(), type = SearchEngine.Type.BUNDLED),
+                        SearchEngine("engine-c", "Engine C", mockk(), type = SearchEngine.Type.BUNDLED)
+                    ),
+                    customSearchEngines = listOf(
+                        SearchEngine("engine-d", "Engine D", mockk(), type = SearchEngine.Type.CUSTOM),
+                        SearchEngine("engine-e", "Engine E", mockk(), type = SearchEngine.Type.CUSTOM)
+                    ),
+                    additionalSearchEngines = listOf(
+                        SearchEngine("engine-f", "Engine F", mockk(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
+                    ),
+                    additionalAvailableSearchEngines = listOf(
+                        SearchEngine("engine-g", "Engine G", mockk(), type = SearchEngine.Type.BUNDLED_ADDITIONAL),
+                        SearchEngine("engine-h", "Engine H", mockk(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
+                    ),
+                    hiddenSearchEngines = listOf(
+                        SearchEngine("engine-i", "Engine I", mockk(), type = SearchEngine.Type.BUNDLED)
+                    ),
+                    regionDefaultSearchEngineId = "engine-b",
+                    userSelectedSearchEngineId = null,
+                    userSelectedSearchEngineName = null
+                )
+            )
+        ).join()
+
+        assertNotNull(store.state.defaultEngine)
+        assertEquals("Engine B", store.state.defaultEngine!!.name)
+
+        assertTrue(store.state.areShortcutsAvailable)
+        assertFalse(store.state.showSearchShortcuts)
+
+        assertTrue(store.state.searchEngineSource is SearchEngineSource.Default)
+        assertNotNull(store.state.searchEngineSource.searchEngine)
+        assertEquals("Engine B", store.state.searchEngineSource.searchEngine!!.name)
+    }
+
+    private fun emptyDefaultState(
+        searchEngineSource: SearchEngineSource = mockk(),
+        defaultEngine: SearchEngine? = mockk(),
+        areShortcutsAvailable: Boolean = true,
+        showSearchShortcutsSetting: Boolean = false
+    ): SearchFragmentState = SearchFragmentState(
         tabId = null,
         url = "",
         searchTerms = "",
         query = "",
-        searchEngineSource = mockk(),
-        defaultEngineSource = mockk(),
+        searchEngineSource = searchEngineSource,
+        defaultEngine = defaultEngine,
         showSearchSuggestionsHint = false,
+        showSearchShortcutsSetting = showSearchShortcutsSetting,
         showSearchSuggestions = false,
         showSearchShortcuts = false,
-        areShortcutsAvailable = true,
+        areShortcutsAvailable = areShortcutsAvailable,
         showClipboardSuggestions = false,
         showHistorySuggestions = false,
         showBookmarkSuggestions = false,

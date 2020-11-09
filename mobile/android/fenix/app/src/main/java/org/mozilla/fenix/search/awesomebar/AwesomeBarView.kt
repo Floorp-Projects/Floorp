@@ -10,8 +10,8 @@ import androidx.core.graphics.BlendModeCompat.SRC_IN
 import androidx.core.graphics.drawable.toBitmap
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.browser.search.DefaultSearchEngineProvider
-import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.awesomebar.provider.BookmarksStorageSuggestionProvider
@@ -20,9 +20,10 @@ import mozilla.components.feature.awesomebar.provider.SearchActionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.search.SearchUseCases
-import mozilla.components.browser.search.ext.toDefaultSearchEngineProvider
-import mozilla.components.feature.syncedtabs.DeviceIndicators
+import mozilla.components.feature.search.ext.legacy
+import mozilla.components.feature.search.ext.toDefaultSearchEngineProvider
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.syncedtabs.DeviceIndicators
 import mozilla.components.feature.syncedtabs.SyncedTabsStorageSuggestionProvider
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.android.content.getColorFromAttr
@@ -32,6 +33,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.search.SearchEngineSource
 import org.mozilla.fenix.search.SearchFragmentState
+import mozilla.components.browser.search.SearchEngine as LegacySearchEngine
 
 /**
  * View that contains and configures the BrowserAwesomeBar
@@ -65,7 +67,7 @@ class AwesomeBarView(
     private val searchUseCase = object : SearchUseCases.SearchUseCase {
         override fun invoke(
             searchTerms: String,
-            searchEngine: SearchEngine?,
+            searchEngine: mozilla.components.browser.search.SearchEngine?,
             parentSession: Session?
         ) {
             interactor.onSearchTermsTapped(searchTerms)
@@ -75,7 +77,7 @@ class AwesomeBarView(
     private val shortcutSearchUseCase = object : SearchUseCases.SearchUseCase {
         override fun invoke(
             searchTerms: String,
-            searchEngine: SearchEngine?,
+            searchEngine: mozilla.components.browser.search.SearchEngine?,
             parentSession: Session?
         ) {
             interactor.onSearchTermsTapped(searchTerms)
@@ -148,9 +150,7 @@ class AwesomeBarView(
         defaultSearchSuggestionProvider =
             SearchSuggestionProvider(
                 context = activity,
-                defaultSearchEngineProvider = components.search.searchEngineManager.toDefaultSearchEngineProvider(
-                    activity
-                ),
+                defaultSearchEngineProvider = components.core.store.toDefaultSearchEngineProvider(),
                 searchUseCase = searchUseCase,
                 fetchClient = components.core.client,
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
@@ -163,9 +163,7 @@ class AwesomeBarView(
 
         defaultSearchActionProvider =
             SearchActionProvider(
-                defaultSearchEngineProvider = components.search.searchEngineManager.toDefaultSearchEngineProvider(
-                    activity
-                ),
+                defaultSearchEngineProvider = components.core.store.toDefaultSearchEngineProvider(),
                 searchUseCase = searchUseCase,
                 icon = searchBitmap,
                 showDescription = false
@@ -173,7 +171,7 @@ class AwesomeBarView(
 
         shortcutsEnginePickerProvider =
             ShortcutsSuggestionProvider(
-                searchEngineProvider = components.search.provider,
+                store = components.core.store,
                 context = activity,
                 selectShortcutEngine = interactor::onSearchShortcutEngineSelected,
                 selectShortcutEngineSettings = interactor::onClickSearchEngineSettings
@@ -288,6 +286,7 @@ class AwesomeBarView(
             is SearchEngineSource.Shortcut -> getSuggestionProviderForEngine(
                 state.searchEngineSource.searchEngine
             )
+            is SearchEngineSource.None -> emptyList()
         }
     }
 
@@ -311,22 +310,20 @@ class AwesomeBarView(
                 BrowsingMode.Normal -> components.core.engine
                 BrowsingMode.Private -> null
             }
-            val searchEngine =
-                components.search.provider.installedSearchEngines(activity).list.find { it.name == engine.name }
-                    ?: components.search.provider.getDefaultEngine(activity)
 
             listOf(
                 SearchActionProvider(
                     defaultSearchEngineProvider = object : DefaultSearchEngineProvider {
-                        override fun getDefaultSearchEngine(): SearchEngine? = searchEngine
-                        override suspend fun retrieveDefaultSearchEngine(): SearchEngine? =
-                            searchEngine
+                        override fun getDefaultSearchEngine(): LegacySearchEngine? =
+                            engine.legacy()
+                        override suspend fun retrieveDefaultSearchEngine(): LegacySearchEngine? =
+                            engine.legacy()
                     },
                     searchUseCase = shortcutSearchUseCase,
                     icon = searchBitmap
                 ),
                 SearchSuggestionProvider(
-                    searchEngine,
+                    engine.legacy(),
                     shortcutSearchUseCase,
                     components.core.client,
                     limit = 3,

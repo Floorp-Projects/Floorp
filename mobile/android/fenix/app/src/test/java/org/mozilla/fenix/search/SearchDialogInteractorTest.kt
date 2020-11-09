@@ -8,8 +8,8 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
-import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.search.SearchEngine
 import org.junit.Before
 import org.junit.Test
 

@@ -38,7 +38,6 @@ class MigratingFenixApplication : FenixApplication() {
                 this.components.addonUpdater
             )
             .migrateTelemetryIdentifiers()
-            .migrateSearchEngine(this.components.search.searchEngineManager)
             .build()
     }
 
