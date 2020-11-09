@@ -29,6 +29,7 @@ loader.lazyRequireGetter(
     "isDirectShadowHostChild",
     "isMarkerPseudoElement",
     "isNativeAnonymous",
+    "isRemoteFrame",
     "isShadowHost",
     "isShadowRoot",
     "isTemplateElement",
@@ -719,7 +720,8 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       isAfterPseudoElement(rawNode) ||
       isShadowHost(rawNode) ||
       rawNode.nodeType != Node.ELEMENT_NODE ||
-      rawNode.children.length > 0
+      rawNode.children.length > 0 ||
+      isRemoteFrame(rawNode)
     ) {
       return undefined;
     }
