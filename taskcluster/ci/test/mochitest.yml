@@ -207,7 +207,19 @@ mochitest-devtools-chrome:
     schedules-component: mochitest-browser-chrome
     treeherder-symbol: M(dt)
     loopback-video: true
+    fission-run-on-projects:
+        by-test-platform:
+            linux.*64(-qr)?/debug: ['trunk']
+            linux.*64-shippable(-qr)?/opt: ['trunk']
+            windows10-64-shippable(-qr)?/opt: ['trunk']
+            default: []
     tier: default
+    fission-tier:
+        by-test-platform:
+            linux.*64(-qr)?/debug: 1
+            linux.*64-shippable(-qr)?/opt: 1
+            windows10-64-shippable(-qr)?/opt: 1
+            default: 2
     max-run-time:
         by-test-platform:
             windows10-64-ccov.*/.*: 10800
