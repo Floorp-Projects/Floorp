@@ -10,6 +10,8 @@
 #include "nsCSPUtils.h"
 #include "nsDocShell.h"
 #include "nsHttpChannel.h"
+#include "nsContentSecurityUtils.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsIChannel.h"
 #include "nsIConsoleReportCollector.h"
 #include "nsIContentSecurityPolicy.h"
@@ -27,6 +29,7 @@
 #include "nsIObserverService.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 /* static */
 void FramingChecker::ReportError(const char* aMessageTag,

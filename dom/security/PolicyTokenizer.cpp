@@ -6,8 +6,8 @@
 
 #include "PolicyTokenizer.h"
 
-static LogModule* GetPolicyTokenizerLog() {
-  static LazyLogModule gPolicyTokenizerPRLog("PolicyTokenizer");
+static mozilla::LogModule* GetPolicyTokenizerLog() {
+  static mozilla::LazyLogModule gPolicyTokenizerPRLog("PolicyTokenizer");
   return gPolicyTokenizerPRLog;
 }
 

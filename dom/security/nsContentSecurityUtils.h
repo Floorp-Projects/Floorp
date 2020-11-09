@@ -9,8 +9,15 @@
 #ifndef nsContentSecurityUtils_h___
 #define nsContentSecurityUtils_h___
 
+#include <utility>
+#include "mozilla/Maybe.h"
+#include "nsStringFwd.h"
+
+struct JSContext;
 class nsIChannel;
 class nsIHttpChannel;
+class nsIPrincipal;
+class NS_ConvertUTF8toUTF16;
 
 namespace mozilla {
 namespace dom {

@@ -11,6 +11,7 @@
 #include "mozIThirdPartyUtil.h"
 #include "nsMixedContentBlocker.h"
 #include "nsNetUtil.h"
+#include "mozilla/StaticPrefs_dom.h"
 
 // Helper function which maps an internal content policy type
 // to the corresponding destination for the context of SecFetch.
@@ -121,7 +122,7 @@ bool IsSameOrigin(nsIHttpChannel* aHTTPChannel) {
   bool isSameOrigin = false;
   nsresult rv = loadInfo->TriggeringPrincipal()->IsSameOrigin(
       channelURI, isPrivateWin, &isSameOrigin);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 
   // if the initial request is not same-origin, we can return here
   // because we already know it's not a same-origin request
@@ -137,7 +138,7 @@ bool IsSameOrigin(nsIHttpChannel* aHTTPChannel) {
     if (redirectPrincipal) {
       rv = redirectPrincipal->IsSameOrigin(channelURI, isPrivateWin,
                                            &isSameOrigin);
-      Unused << NS_WARN_IF(NS_FAILED(rv));
+      mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
       if (!isSameOrigin) {
         return false;
       }
@@ -160,13 +161,13 @@ bool IsSameSite(nsIChannel* aHTTPChannel) {
   nsAutoCString hostDomain;
   nsCOMPtr<nsILoadInfo> loadInfo = aHTTPChannel->LoadInfo();
   nsresult rv = loadInfo->TriggeringPrincipal()->GetBaseDomain(hostDomain);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 
   nsAutoCString channelDomain;
   nsCOMPtr<nsIURI> channelURI;
   NS_GetFinalChannelURI(aHTTPChannel, getter_AddRefs(channelURI));
   rv = thirdPartyUtil->GetBaseDomain(channelURI, channelDomain);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 
   // if the initial request is not same-site, or not https, we can
   // return here because we already know it's not a same-site request
@@ -222,17 +223,17 @@ bool IsUserTriggeredForSecFetchSite(nsIHttpChannel* aHTTPChannel) {
   return true;
 }
 
-void SecFetch::AddSecFetchDest(nsIHttpChannel* aHTTPChannel) {
+void mozilla::dom::SecFetch::AddSecFetchDest(nsIHttpChannel* aHTTPChannel) {
   nsCOMPtr<nsILoadInfo> loadInfo = aHTTPChannel->LoadInfo();
   nsContentPolicyType contentType = loadInfo->InternalContentPolicyType();
   nsCString dest = MapInternalContentPolicyTypeToDest(contentType);
 
   nsresult rv =
       aHTTPChannel->SetRequestHeader("Sec-Fetch-Dest"_ns, dest, false);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
-void SecFetch::AddSecFetchMode(nsIHttpChannel* aHTTPChannel) {
+void mozilla::dom::SecFetch::AddSecFetchMode(nsIHttpChannel* aHTTPChannel) {
   nsAutoCString mode("no-cors");
 
   nsCOMPtr<nsILoadInfo> loadInfo = aHTTPChannel->LoadInfo();
@@ -268,10 +269,10 @@ void SecFetch::AddSecFetchMode(nsIHttpChannel* aHTTPChannel) {
 
   nsresult rv =
       aHTTPChannel->SetRequestHeader("Sec-Fetch-Mode"_ns, mode, false);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
-void SecFetch::AddSecFetchSite(nsIHttpChannel* aHTTPChannel) {
+void mozilla::dom::SecFetch::AddSecFetchSite(nsIHttpChannel* aHTTPChannel) {
   nsAutoCString site("same-origin");
 
   bool isSameOrigin = IsSameOrigin(aHTTPChannel);
@@ -290,10 +291,10 @@ void SecFetch::AddSecFetchSite(nsIHttpChannel* aHTTPChannel) {
 
   nsresult rv =
       aHTTPChannel->SetRequestHeader("Sec-Fetch-Site"_ns, site, false);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
-void SecFetch::AddSecFetchUser(nsIHttpChannel* aHTTPChannel) {
+void mozilla::dom::SecFetch::AddSecFetchUser(nsIHttpChannel* aHTTPChannel) {
   nsCOMPtr<nsILoadInfo> loadInfo = aHTTPChannel->LoadInfo();
   nsContentPolicyType externalType = loadInfo->GetExternalContentPolicyType();
 
@@ -311,10 +312,10 @@ void SecFetch::AddSecFetchUser(nsIHttpChannel* aHTTPChannel) {
   nsAutoCString user("?1");
   nsresult rv =
       aHTTPChannel->SetRequestHeader("Sec-Fetch-User"_ns, user, false);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
-void SecFetch::AddSecFetchHeader(nsIHttpChannel* aHTTPChannel) {
+void mozilla::dom::SecFetch::AddSecFetchHeader(nsIHttpChannel* aHTTPChannel) {
   // if sec-fetch-* is prefed off, then there is nothing to do
   if (!StaticPrefs::dom_security_secFetch_enabled()) {
     return;
