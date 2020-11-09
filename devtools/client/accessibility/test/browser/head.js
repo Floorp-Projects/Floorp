@@ -3,6 +3,7 @@
 
 /* import-globals-from ../../../shared/test/shared-head.js */
 /* import-globals-from ../../../inspector/test/shared-head.js */
+/* import-globals-from ../../../shared/test/telemetry-test-helpers.js */
 
 /* global waitUntilState, gBrowser */
 /* exported addTestTab, checkTreeState, checkSidebarState, checkAuditState, selectRow,
