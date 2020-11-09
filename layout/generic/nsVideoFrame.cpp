@@ -684,7 +684,7 @@ nsSize nsVideoFrame::GetVideoIntrinsicSize() const {
     }
   }
 
-  return CSSPixel::ToAppUnits(kFallbackIntrinsicSizeInPixels);
+  return kFallbackIntrinsicSize;
 }
 
 IntrinsicSize nsVideoFrame::GetIntrinsicSize() {
