@@ -94,33 +94,6 @@ using mozilla::Telemetry::LABELS_DOM_SCRIPT_PRELOAD_RESULT;
 namespace mozilla {
 namespace dom {
 
-JSObject* GetElementCallback(JSContext* aCx, JS::HandleValue aValue) {
-  JS::RootedValue privateValue(aCx, aValue);
-  MOZ_ASSERT(!privateValue.isObjectOrNull() && !privateValue.isUndefined());
-  LoadedScript* script = static_cast<LoadedScript*>(privateValue.toPrivate());
-
-  if (!script->GetFetchOptions()) {
-    return nullptr;
-  }
-
-  nsCOMPtr<Element> domElement = script->GetFetchOptions()->mElement;
-  if (!domElement) {
-    return nullptr;
-  }
-
-  JSObject* globalObject =
-      domElement->OwnerDoc()->GetScopeObject()->GetGlobalJSObject();
-  JSAutoRealm ar(aCx, globalObject);
-
-  JS::Rooted<JS::Value> elementValue(aCx);
-  nsresult rv = nsContentUtils::WrapNative(aCx, domElement, &elementValue,
-                                           /* aAllowWrapping = */ true);
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-  return elementValue.toObjectOrNull();
-}
-
 LazyLogModule ScriptLoader::gCspPRLog("CSP");
 LazyLogModule ScriptLoader::gScriptLoaderLog("ScriptLoader");
 
