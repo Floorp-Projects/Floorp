@@ -206,7 +206,6 @@ void FontFace::InitializeSource(
 }
 
 void FontFace::GetFamily(nsString& aResult) {
-  mFontFaceSet->FlushUserFontSet();
   GetDesc(eCSSFontDesc_Family, aResult);
 }
 
@@ -218,19 +217,16 @@ void FontFace::SetFamily(const nsAString& aValue, ErrorResult& aRv) {
 }
 
 void FontFace::GetStyle(nsString& aResult) {
-  mFontFaceSet->FlushUserFontSet();
   GetDesc(eCSSFontDesc_Style, aResult);
 }
 
 void FontFace::SetStyle(const nsAString& aValue, ErrorResult& aRv) {
-  mFontFaceSet->FlushUserFontSet();
   if (SetDescriptor(eCSSFontDesc_Style, aValue, aRv)) {
     DescriptorUpdated();
   }
 }
 
 void FontFace::GetWeight(nsString& aResult) {
-  mFontFaceSet->FlushUserFontSet();
   GetDesc(eCSSFontDesc_Weight, aResult);
 }
 
@@ -242,7 +238,6 @@ void FontFace::SetWeight(const nsAString& aValue, ErrorResult& aRv) {
 }
 
 void FontFace::GetStretch(nsString& aResult) {
-  mFontFaceSet->FlushUserFontSet();
   GetDesc(eCSSFontDesc_Stretch, aResult);
 }
 
@@ -254,7 +249,6 @@ void FontFace::SetStretch(const nsAString& aValue, ErrorResult& aRv) {
 }
 
 void FontFace::GetUnicodeRange(nsString& aResult) {
-  mFontFaceSet->FlushUserFontSet();
   GetDesc(eCSSFontDesc_UnicodeRange, aResult);
 }
 
@@ -266,22 +260,17 @@ void FontFace::SetUnicodeRange(const nsAString& aValue, ErrorResult& aRv) {
 }
 
 void FontFace::GetVariant(nsString& aResult) {
-  mFontFaceSet->FlushUserFontSet();
-
   // XXX Just expose the font-variant descriptor as "normal" until we
   // support it properly (bug 1055385).
   aResult.AssignLiteral("normal");
 }
 
 void FontFace::SetVariant(const nsAString& aValue, ErrorResult& aRv) {
-  mFontFaceSet->FlushUserFontSet();
-
   // XXX Ignore assignments to variant until we support font-variant
   // descriptors (bug 1055385).
 }
 
 void FontFace::GetFeatureSettings(nsString& aResult) {
-  mFontFaceSet->FlushUserFontSet();
   GetDesc(eCSSFontDesc_FontFeatureSettings, aResult);
 }
 
@@ -293,7 +282,6 @@ void FontFace::SetFeatureSettings(const nsAString& aValue, ErrorResult& aRv) {
 }
 
 void FontFace::GetVariationSettings(nsString& aResult) {
-  mFontFaceSet->FlushUserFontSet();
   GetDesc(eCSSFontDesc_FontVariationSettings, aResult);
 }
 
@@ -305,12 +293,10 @@ void FontFace::SetVariationSettings(const nsAString& aValue, ErrorResult& aRv) {
 }
 
 void FontFace::GetDisplay(nsString& aResult) {
-  mFontFaceSet->FlushUserFontSet();
   GetDesc(eCSSFontDesc_Display, aResult);
 }
 
 void FontFace::SetDisplay(const nsAString& aValue, ErrorResult& aRv) {
-  mFontFaceSet->FlushUserFontSet();
   if (SetDescriptor(eCSSFontDesc_Display, aValue, aRv)) {
     DescriptorUpdated();
   }
@@ -394,8 +380,6 @@ void FontFace::DoLoad() {
 
 Promise* FontFace::GetLoaded(ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
-
-  mFontFaceSet->FlushUserFontSet();
 
   EnsurePromise();
 
