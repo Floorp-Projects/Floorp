@@ -141,7 +141,7 @@ Get a clean main branch with all of the changes from `upstream`::
 
 - Make sure all your changes are committed.
 
-- Push the changes upstream::
+- Push the changes upstream. (Normally pushing directly without review is frowned upon, but the `main` branch is protected from force pushes and release tagging requires the same permissions as pushing to `main`)::
 
   $ git push upstream main
 
@@ -149,8 +149,12 @@ Get a clean main branch with all of the changes from `upstream`::
 
 - Make the release on GitHub using [this link](https://github.com/mozilla/glean_parser/releases/new)
 
-- Enter the new version in the form `vX.Y.Z`.
+- Both the tag and the release title should be in the form `vX.Y.Z`.
 
 - Copy and paste the relevant part of the `HISTORY.rst` file into the description.
 
+- Tagging the release will trigger a CI workflow which will build the distribution of `glean_parser` and publish it to PyPI.
+
 The continuous integration system will then automatically deploy to PyPI.
+
+See also the [instructions for updating the version of `glean_parser` used by the Glean SDK](https://mozilla.github.io/glean/book/dev/upgrading-glean-parser.html).
