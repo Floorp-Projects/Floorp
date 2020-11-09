@@ -52,7 +52,7 @@ class Metric:
         disabled: bool = False,
         lifetime: str = "ping",
         send_in_pings: Optional[List[str]] = None,
-        unit: str = "",
+        unit: Optional[str] = None,
         gecko_datapoint: str = "",
         no_lint: Optional[List[str]] = None,
         data_sensitivity: Optional[List[str]] = None,
@@ -78,7 +78,8 @@ class Metric:
         if send_in_pings is None:
             send_in_pings = ["default"]
         self.send_in_pings = send_in_pings
-        self.unit = unit
+        if unit is not None:
+            self.unit = unit
         self.gecko_datapoint = gecko_datapoint
         if no_lint is None:
             no_lint = []
@@ -120,7 +121,7 @@ class Metric:
         category: str,
         name: str,
         metric_info: Dict[str, util.JSONType],
-        config: Dict[str, Any] = {},
+        config: Optional[Dict[str, Any]] = None,
         validated: bool = False,
     ):
         """
@@ -136,6 +137,9 @@ class Metric:
             jsonschema validation
         :return: A new Metric instance.
         """
+        if config is None:
+            config = {}
+
         metric_type = metric_info["type"]
         if not isinstance(metric_type, str):
             raise TypeError(f"Unknown metric type {metric_type}")

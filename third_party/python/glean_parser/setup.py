@@ -51,11 +51,12 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
     ],
     description="Parser tools for Mozilla's Glean telemetry",
     entry_points={
         "console_scripts": [
-            "glean_parser=glean_parser.__main__:main",
+            "glean_parser=glean_parser.__main__:main_wrapper",
         ],
     },
     install_requires=requirements,
