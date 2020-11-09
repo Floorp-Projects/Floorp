@@ -340,7 +340,11 @@ class DevToolsWorkerChild extends JSWindowActorChild {
     try {
       await onConnectToWorker;
     } catch (e) {
-      dbg.setDebuggerReady(true);
+      // onConnectToWorker can reject if the Worker Debugger is closed; so we only want to
+      // resume the debugger if it is not closed (otherwise it can cause crashes).
+      if (!dbg.isClosed) {
+        dbg.setDebuggerReady(true);
+      }
       return;
     }
 
