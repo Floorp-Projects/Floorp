@@ -56,18 +56,6 @@
     }                                                             \
   } while (false)
 
-#define REJECT_IF_RELATIVE_PATH(aPath, aJSPromise)                    \
-  do {                                                                \
-    if (!IsAbsolutePath(aPath)) {                                     \
-      (aJSPromise)                                                    \
-          ->MaybeRejectWithOperationError(nsPrintfCString(            \
-              "Refusing to work with path(%s) because only absolute " \
-              "file paths are permitted",                             \
-              NS_ConvertUTF16toUTF8(aPath).get()));                   \
-      return (aJSPromise).forget();                                   \
-    }                                                                 \
-  } while (false)
-
 #define REJECT_IF_INIT_PATH_FAILED(_file, _path, _promise)               \
   do {                                                                   \
     if (nsresult _rv = (_file)->InitWithPath((_path)); NS_FAILED(_rv)) { \
@@ -154,31 +142,6 @@ constexpr char PathSeparator = u'\\';
 #else
 constexpr char PathSeparator = u'/';
 #endif
-
-/* static */
-bool IOUtils::IsAbsolutePath(const nsAString& aPath) {
-  // NB: This impl is adapted from js::shell::IsAbsolutePath(JSLinearString*).
-  const size_t length = aPath.Length();
-
-#ifdef XP_WIN
-  // On Windows there are various forms of absolute paths (see
-  // http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247%28v=vs.85%29.aspx
-  // for details):
-  //
-  //   "\..."
-  //   "\\..."
-  //   "C:\..."
-  //
-  // The first two cases are handled by the common test below so we only need a
-  // specific test for the last one here.
-
-  if (length > 3 && mozilla::IsAsciiAlpha(aPath.CharAt(0)) &&
-      aPath.CharAt(1) == u':' && aPath.CharAt(2) == u'\\') {
-    return true;
-  }
-#endif
-  return length > 0 && aPath.CharAt(0) == PathSeparator;
-}
 
 // IOUtils implementation
 
@@ -453,11 +416,11 @@ already_AddRefed<Promise> IOUtils::GetChildren(GlobalObject& aGlobal,
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
 
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
   return RunOnBackgroundThread<nsTArray<nsString>>(promise, &GetChildrenSync,
-                                                   path);
+                                                   file.forget());
 }
 
 /* static */
@@ -1204,11 +1167,10 @@ Result<int64_t, IOUtils::IOError> IOUtils::TouchSync(
 
 /* static */
 Result<nsTArray<nsString>, IOUtils::IOError> IOUtils::GetChildrenSync(
-    const nsAString& aPath) {
+    already_AddRefed<nsIFile> aFile) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  RefPtr<nsLocalFile> file = new nsLocalFile();
-  MOZ_TRY(file->InitWithPath(aPath));
+  nsCOMPtr<nsIFile> file = aFile;
 
   RefPtr<nsIDirectoryEnumerator> iter;
   nsresult rv = file->GetDirectoryEntries(getter_AddRefs(iter));
@@ -1217,12 +1179,12 @@ Result<nsTArray<nsString>, IOUtils::IOError> IOUtils::GetChildrenSync(
     if (IsFileNotFound(rv)) {
       return Err(err.WithMessage(
           "Could not get children of file(%s) because it does not exist",
-          NS_ConvertUTF16toUTF8(aPath).get()));
+          file->HumanReadablePath().get()));
     }
     if (IsNotDirectory(rv)) {
       return Err(err.WithMessage(
           "Could not get children of file(%s) because it is not a directory",
-          NS_ConvertUTF16toUTF8(aPath).get()));
+          file->HumanReadablePath().get()));
     }
     return Err(err);
   }
@@ -1406,5 +1368,4 @@ IOUtils::InternalWriteAtomicOpts::FromBinding(
 
 #undef REJECT_IF_NULL_EVENT_TARGET
 #undef REJECT_IF_SHUTTING_DOWN
-#undef REJECT_IF_RELATIVE_PATH
 #undef REJECT_IF_INIT_PATH_FAILED
