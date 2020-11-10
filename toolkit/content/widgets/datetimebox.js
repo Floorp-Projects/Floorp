@@ -92,7 +92,7 @@ this.DateTimeInputBaseImplWidget = class {
     this.mIsRTL = false;
     let intlUtils = this.window.intlUtils;
     if (intlUtils) {
-      this.mIsRTL = intlUtils.getLocaleInfo(this.mLocales).direction === "rtl";
+      this.mIsRTL = intlUtils.isAppLocaleRTL();
     }
 
     if (this.mIsRTL) {

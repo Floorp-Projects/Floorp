@@ -118,7 +118,7 @@ var DateTimePickerPanel = class {
     // the region-less "pt" locale has shorter forms that are better here.
     locale = locale.replace(/^pt-PT/i, "pt");
 
-    const dir = Services.intl.getLocaleInfo(locale).direction;
+    const dir = Services.locale.isAppLocaleRTL ? "rtl" : "ltr";
 
     switch (this.type) {
       case "time": {
