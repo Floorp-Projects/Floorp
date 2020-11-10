@@ -41,30 +41,26 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPFromLauncher(
 #else
 
 static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
-    const wchar_t* aFullImagePath, HANDLE aChildProcess,
+    const wchar_t* aFullImagePath, nt::CrossExecTransferManager& aTransferMgr,
     const IMAGE_THUNK_DATA* aCachedNtdllThunk) {
-  nt::CrossExecTransferManager transferMgr(aChildProcess);
-  if (!transferMgr) {
-    return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
+  LauncherVoidResult transferResult =
+      freestanding::gSharedSection.TransferHandle(aTransferMgr);
+  if (transferResult.isErr()) {
+    return transferResult.propagateErr();
   }
 
-  freestanding::gK32.Init();
-  if (freestanding::gK32.IsInitialized()) {
-    Unused << freestanding::gK32.Transfer(transferMgr, &freestanding::gK32);
-  }
-
-  CrossProcessDllInterceptor intcpt(aChildProcess);
+  CrossProcessDllInterceptor intcpt(aTransferMgr.RemoteProcess());
   intcpt.Init(L"ntdll.dll");
 
   bool ok = freestanding::stub_NtMapViewOfSection.SetDetour(
-      transferMgr, intcpt, "NtMapViewOfSection",
+      aTransferMgr, intcpt, "NtMapViewOfSection",
       &freestanding::patched_NtMapViewOfSection);
   if (!ok) {
     return LAUNCHER_ERROR_FROM_DETOUR_ERROR(intcpt.GetLastDetourError());
   }
 
   ok = freestanding::stub_LdrLoadDll.SetDetour(
-      transferMgr, intcpt, "LdrLoadDll", &freestanding::patched_LdrLoadDll);
+      aTransferMgr, intcpt, "LdrLoadDll", &freestanding::patched_LdrLoadDll);
   if (!ok) {
     return LAUNCHER_ERROR_FROM_DETOUR_ERROR(intcpt.GetLastDetourError());
   }
@@ -80,12 +76,12 @@ static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
   // it onto the child process's IAT, thus enabling the child process's hook to
   // safely make its ntdll calls.
 
-  const nt::PEHeaders& ourExeImage = transferMgr.LocalPEHeaders();
+  const nt::PEHeaders& ourExeImage = aTransferMgr.LocalPEHeaders();
 
   // As part of our mitigation of binary tampering, copy our import directory
   // from the original in our executable file.
   LauncherVoidResult importDirRestored =
-      RestoreImportDirectory(aFullImagePath, transferMgr);
+      RestoreImportDirectory(aFullImagePath, aTransferMgr);
   if (importDirRestored.isErr()) {
     return importDirRestored;
   }
@@ -126,13 +122,13 @@ static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
     SIZE_T iatLength = ntdllThunks.value().LengthBytes();
 
     AutoVirtualProtect prot =
-        transferMgr.Protect(firstIatThunkDst, iatLength, PAGE_READWRITE);
+        aTransferMgr.Protect(firstIatThunkDst, iatLength, PAGE_READWRITE);
     if (!prot) {
       return LAUNCHER_ERROR_FROM_MOZ_WINDOWS_ERROR(prot.GetError());
     }
 
     LauncherVoidResult writeResult =
-        transferMgr.Transfer(firstIatThunkDst, firstIatThunkSrc, iatLength);
+        aTransferMgr.Transfer(firstIatThunkDst, firstIatThunkSrc, iatLength);
     if (writeResult.isErr()) {
       return writeResult.propagateErr();
     }
@@ -148,7 +144,7 @@ static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
   }
 
   LauncherVoidResult writeResult =
-      transferMgr.Transfer(&gBlocklistInitFlags, &newFlags, sizeof(newFlags));
+      aTransferMgr.Transfer(&gBlocklistInitFlags, &newFlags, sizeof(newFlags));
   if (writeResult.isErr()) {
     return writeResult.propagateErr();
   }
@@ -159,26 +155,44 @@ static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
 LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
     const wchar_t* aFullImagePath, HANDLE aChildProcess,
     const IMAGE_THUNK_DATA* aCachedNtdllThunk) {
+  nt::CrossExecTransferManager transferMgr(aChildProcess);
+  if (!transferMgr) {
+    return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
+  }
+
   // We come here when the browser process launches a sandbox process.
   // If the launcher process already failed to bootstrap the browser process,
   // we should not attempt to bootstrap a child process because it's likely
   // to fail again.  Instead, we only restore the import directory entry.
   if (!(gBlocklistInitFlags & eDllBlocklistInitFlagWasBootstrapped)) {
-    nt::CrossExecTransferManager transferMgr(aChildProcess);
-    if (!transferMgr) {
-      return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
-    }
-
     return RestoreImportDirectory(aFullImagePath, transferMgr);
   }
 
-  return InitializeDllBlocklistOOPInternal(aFullImagePath, aChildProcess,
+  return InitializeDllBlocklistOOPInternal(aFullImagePath, transferMgr,
                                            aCachedNtdllThunk);
 }
 
 LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPFromLauncher(
     const wchar_t* aFullImagePath, HANDLE aChildProcess) {
-  return InitializeDllBlocklistOOPInternal(aFullImagePath, aChildProcess,
+  nt::CrossExecTransferManager transferMgr(aChildProcess);
+  if (!transferMgr) {
+    return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
+  }
+
+  // The launcher process initializes a section object, whose handle is
+  // transferred to the browser process, and that transferred handle in
+  // the browser process is transferred to the sandbox processes.
+  LauncherVoidResultWithLineInfo result =
+      freestanding::gSharedSection.Init(transferMgr.LocalPEHeaders());
+  if (result.isErr()) {
+    return result.propagateErr();
+  }
+
+  auto clearInstance = MakeScopeExit([]() {
+    // After transfer, the launcher process does not need the object anymore.
+    freestanding::gSharedSection.Reset(nullptr);
+  });
+  return InitializeDllBlocklistOOPInternal(aFullImagePath, transferMgr,
                                            nullptr);
 }
 
