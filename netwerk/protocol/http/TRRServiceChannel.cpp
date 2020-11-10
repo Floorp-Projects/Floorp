@@ -396,8 +396,7 @@ nsresult TRRServiceChannel::BeginConnect() {
   mAllowAltSvc = XRE_IsParentProcess() && mAllowAltSvc;
   bool http2Allowed = !gHttpHandler->IsHttp2Excluded(connInfo);
   bool http3Allowed = !mUpgradeProtocolCallback && !mProxyInfo &&
-                      !(mCaps & NS_HTTP_BE_CONSERVATIVE) && !mBeConservative &&
-                      !gHttpHandler->IsHttp3Excluded(connInfo);
+                      !(mCaps & NS_HTTP_BE_CONSERVATIVE) && !mBeConservative;
 
   RefPtr<AltSvcMapping> mapping;
   if (!mConnectionInfo && mAllowAltSvc &&  // per channel
