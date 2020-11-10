@@ -176,19 +176,34 @@ struct Query {
 struct Buffer {
   char* buf = nullptr;
   size_t size = 0;
+  size_t capacity = 0;
 
   bool allocate(size_t new_size) {
-    if (new_size != size) {
-      char* new_buf = (char*)realloc(buf, new_size);
-      assert(new_buf);
-      if (new_buf) {
-        buf = new_buf;
-        size = new_size;
-        return true;
-      }
-      cleanup();
+    // If the size remains unchanged, don't allocate anything.
+    if (new_size == size) {
+      return false;
     }
-    return false;
+    // If the new size is within the existing capacity of the buffer, just
+    // reuse the existing buffer.
+    if (new_size <= capacity) {
+      size = new_size;
+      return true;
+    }
+    // Otherwise we need to reallocate the buffer to hold up to the requested
+    // larger size.
+    char* new_buf = (char*)realloc(buf, new_size);
+    assert(new_buf);
+    if (!new_buf) {
+      // If we fail, null out the buffer rather than leave around the old
+      // allocation state.
+      cleanup();
+      return false;
+    }
+    // The reallocation succeeded, so install the buffer.
+    buf = new_buf;
+    size = new_size;
+    capacity = new_size;
+    return true;
   }
 
   void cleanup() {
@@ -196,6 +211,7 @@ struct Buffer {
       free(buf);
       buf = nullptr;
       size = 0;
+      capacity = 0;
     }
   }
 
