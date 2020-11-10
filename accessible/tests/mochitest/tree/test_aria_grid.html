@@ -189,6 +189,30 @@
 
       testAccessibleTree("whitespaces-grid", accTree);
 
+      // grids that could contain text container accessibles but shouldn't.
+
+      accTree =
+        { TABLE: [
+          { ROW: [
+            { GRID_CELL: [
+              { TEXT_LEAF: [ ] },
+            ] },
+            { GRID_CELL: [
+              { TEXT_LEAF: [ ] },
+            ] },
+          ] },
+          { ROW: [
+            { GRID_CELL: [
+              { TEXT_LEAF: [ ] },
+            ] },
+            { GRID_CELL: [
+              { TEXT_LEAF: [ ] },
+            ] },
+          ] },
+        ] };
+
+      testAccessibleTree("gridWithPresentationalBlockElement", accTree);
+
       SimpleTest.finish();
     }
 
@@ -272,6 +296,23 @@
       <span role="gridcell" style="font-weight:bold;">test</span>
       <span role="gridcell">a user1</span>
     </div>
+  </div>
+
+  <div id="gridWithPresentationalBlockElement" role="grid">
+    <span style="display: block;">
+      <div role="row">
+        <div role="gridcell">Cell 1</div>
+        <div role="gridcell">Cell 2</div>
+      </div>
+    </span>
+    <span style="display: block;">
+      <div role="row">
+        <span style="display: block;">
+          <div role="gridcell">Cell 3</div>
+          <div role="gridcell">Cell 4</div>
+        </span>
+      </div>
+    </span>
   </div>
 </body>
 </html>
