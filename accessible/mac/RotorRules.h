@@ -112,3 +112,12 @@ class RotorHeadingLevelRule : public RotorRoleRule {
  private:
   int32_t mLevel;
 };
+
+class RotorLiveRegionRule : public RotorRule {
+ public:
+  explicit RotorLiveRegionRule(AccessibleOrProxy& aDirectDescendantsFrom)
+      : RotorRule(aDirectDescendantsFrom) {}
+  explicit RotorLiveRegionRule() : RotorRule() {}
+
+  uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+};
