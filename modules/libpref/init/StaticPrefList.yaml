@@ -257,11 +257,6 @@
   value: false
   mirror: always
 
-- name: apz.android.chrome_fling_physics.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 - name: apz.android.chrome_fling_physics.friction
   type: AtomicFloat
   value: 0.015f
