@@ -422,6 +422,13 @@ class BaseMarionetteArguments(ArgumentParser):
             " Pass in the debugger you want to use, eg pdb or ipdb.",
         )
         self.add_argument(
+            "--disable-actors",
+            action="store_true",
+            dest="disable_actors",
+            default=False,
+            help="Disable the usage of JSWindowActors in Marionette.",
+        )
+        self.add_argument(
             "--enable-fission",
             action="store_true",
             dest="enable_fission",
@@ -650,8 +657,9 @@ class BaseMarionetteTestRunner(object):
         verbose=0,
         emulator=False,
         headless=False,
-        enable_webrender=False,
+        disable_actors=False,
         enable_fission=False,
+        enable_webrender=False,
         **kwargs
     ):
         self._appName = None
@@ -696,6 +704,14 @@ class BaseMarionetteTestRunner(object):
         self.verbose = verbose
         self.headless = headless
         self.enable_webrender = enable_webrender
+
+        self.disable_actors = disable_actors
+        if self.disable_actors:
+            self.prefs.update(
+                {
+                    "marionette.actors.enabled": False,
+                }
+            )
 
         self.enable_fission = enable_fission
         if self.enable_fission:
@@ -1138,6 +1154,7 @@ class BaseMarionetteTestRunner(object):
                     "appname": self.appName,
                     "manage_instance": self.marionette.instance is not None,
                     "headless": self.headless,
+                    "actors": not self.disable_actors,
                     "webrender": self.enable_webrender,
                 }
             )
