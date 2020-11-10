@@ -1315,6 +1315,7 @@ class nsContextMenu {
 
     // Cache this because we fetch the data async
     let referrerInfo = this.contentData.referrerInfo;
+    let cookieJarSettings = this.contentData.cookieJarSettings;
 
     this.actor.saveVideoFrameAsImage(this.targetIdentifier).then(dataURL => {
       // FIXME can we switch this to a blob URL?
@@ -1328,6 +1329,7 @@ class nsContextMenu {
         "SaveImageTitle",
         null, // chosen data
         referrerInfo,
+        cookieJarSettings,
         null, // initiating doc
         false, // don't skip prompt for where to save
         null, // cache key
@@ -1626,6 +1628,7 @@ class nsContextMenu {
     let doc = this.ownerDoc;
     let isContentWindowPrivate = this.ownerDoc.isPrivate;
     let referrerInfo = this.contentData.referrerInfo;
+    let cookieJarSettings = this.contentData.cookieJarSettings;
     let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(this.browser);
     if (this.onCanvas) {
       // Bypass cache, since it's a data: URL.
@@ -1640,6 +1643,7 @@ class nsContextMenu {
           "SaveImageTitle",
           null, // chosen data
           referrerInfo,
+          cookieJarSettings,
           null, // initiating doc
           false, // don't skip prompt for where to save
           null, // cache key
@@ -1659,6 +1663,7 @@ class nsContextMenu {
         "SaveImageTitle",
         null, // chosen data
         referrerInfo,
+        cookieJarSettings,
         null, // initiating doc
         false, // don't skip prompt for where to save
         null, // cache key
@@ -1674,6 +1679,7 @@ class nsContextMenu {
         false,
         doc,
         referrerInfo,
+        cookieJarSettings,
         this.frameOuterWindowID,
         "",
         isContentWindowPrivate

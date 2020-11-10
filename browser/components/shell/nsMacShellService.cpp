@@ -8,6 +8,7 @@
 #include "nsIImageLoadingContent.h"
 #include "mozilla/dom/Document.h"
 #include "nsIContent.h"
+#include "nsICookieJarSettings.h"
 #include "nsIObserverService.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsMacShellService.h"
@@ -153,8 +154,11 @@ nsMacShellService::SetDesktopBackground(Element* aElement, int32_t aPosition,
 
   auto referrerInfo =
       mozilla::MakeRefPtr<mozilla::dom::ReferrerInfo>(*aElement);
+
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+      aElement->OwnerDoc()->CookieJarSettings();
   return wbp->SaveURI(imageURI, aElement->NodePrincipal(), 0, referrerInfo,
-                      nullptr, nullptr, mBackgroundFile,
+                      cookieJarSettings, nullptr, nullptr, mBackgroundFile,
                       nsIContentPolicy::TYPE_IMAGE, loadContext);
 }
 
