@@ -2085,6 +2085,27 @@ intl.ui.browserLanguage:
     record_in_processes: ["main"]
     bug_numbers: [1486507, 1553311, 1607501, 1672571]
 
+network.jar.channel:
+  noData:
+    objects: ["onStop"]
+    bug_numbers:
+      - 1675205
+    description: >
+      This event gets recorded whenever onStopRequest gets called with a
+      success code, but no onDataAvailable calls have been made. This indicates
+      an empty file in the JAR archive.
+    notification_emails:
+      - vgosu@mozilla.com
+      - zbraniecki@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    expiry_version: "93"
+    record_in_processes:
+      - main
+    extra_keys:
+      spec: The path of the file being loaded.
+
 security:
   evalUsage:
     objects: ["systemContext", "parentProcess"]
