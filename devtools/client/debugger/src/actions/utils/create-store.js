@@ -14,7 +14,6 @@
 import { createStore, applyMiddleware, type StoreCreator } from "redux";
 import { waitUntilService } from "./middleware/wait-service";
 import { log } from "./middleware/log";
-import { history } from "./middleware/history";
 import { promise } from "./middleware/promise";
 import { thunk } from "./middleware/thunk";
 import { timing } from "./middleware/timing";
@@ -59,10 +58,6 @@ const configureStore = (
     // should just be normal JSON objects.
     waitUntilService,
   ];
-
-  if (opts.history) {
-    middleware.push(history(opts.history));
-  }
 
   if (opts.middleware) {
     opts.middleware.forEach(fn => middleware.push(fn));
