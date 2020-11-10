@@ -170,7 +170,7 @@ addAccessibleTask(
     testRoleAndSubRole(accDoc, "ariaStatus", "AXGroup", "AXApplicationStatus");
     testRoleAndSubRole(accDoc, "switch", "AXCheckBox", "AXSwitch");
     testRoleAndSubRole(accDoc, "timer", null, "AXApplicationTimer");
-    testRoleAndSubRole(accDoc, "tooltip", null, "AXUserInterfaceTooltip");
+    testRoleAndSubRole(accDoc, "tooltip", "AXGroup", "AXUserInterfaceTooltip");
 
     // True HTML5 search field
     testRoleAndSubRole(accDoc, "htmlSearch", "AXTextField", "AXSearchField");
