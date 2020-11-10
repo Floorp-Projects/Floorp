@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/PGamepadTestChannelChild.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/WeakPtr.h"
 
 #ifndef mozilla_dom_GamepadTestChannelChild_h_
 #  define mozilla_dom_GamepadTestChannelChild_h_
@@ -13,13 +14,14 @@
 namespace mozilla {
 namespace dom {
 
+class GamepadServiceTest;
+
 class GamepadTestChannelChild final : public PGamepadTestChannelChild {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GamepadTestChannelChild)
 
-  static already_AddRefed<GamepadTestChannelChild> Create();
-
-  void AddPromise(const uint32_t& aID, Promise* aPromise);
+  static already_AddRefed<GamepadTestChannelChild> Create(
+      GamepadServiceTest* aGamepadServiceTest);
 
   GamepadTestChannelChild(const GamepadTestChannelChild&) = delete;
   GamepadTestChannelChild(GamepadTestChannelChild&&) = delete;
@@ -27,13 +29,13 @@ class GamepadTestChannelChild final : public PGamepadTestChannelChild {
   GamepadTestChannelChild& operator=(GamepadTestChannelChild&&) = delete;
 
  private:
-  GamepadTestChannelChild() = default;
+  explicit GamepadTestChannelChild(GamepadServiceTest* aGamepadServiceTest);
   ~GamepadTestChannelChild() = default;
 
   mozilla::ipc::IPCResult RecvReplyGamepadIndex(const uint32_t& aID,
                                                 const uint32_t& aIndex);
 
-  nsRefPtrHashtable<nsUint32HashKey, dom::Promise> mPromiseList;
+  WeakPtr<GamepadServiceTest> mGamepadServiceTest;
 
   friend class PGamepadTestChannelChild;
 };
