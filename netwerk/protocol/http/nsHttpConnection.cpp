@@ -704,8 +704,7 @@ npnComplete:
   if (ssl) {
     // Telemetry for tls failure rate with and without esni;
     bool esni = false;
-    rv = mSocketTransport->GetEsniUsed(&esni);
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(mSocketTransport->GetEsniUsed(&esni))) {
       Telemetry::Accumulate(
           Telemetry::ESNI_NOESNI_TLS_SUCCESS_RATE,
           (esni)
