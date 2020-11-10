@@ -1281,6 +1281,9 @@ BrowserGlue.prototype = {
     if (AppConstants.platform == "win") {
       JawsScreenReaderVersionCheck.init();
     }
+
+    // This value is to limit collecting Places telemetry once per session.
+    this._placesTelemetryGathered = false;
   },
 
   // cleanup (called on application shutdown)
@@ -1907,6 +1910,13 @@ BrowserGlue.prototype = {
     this._collectStartupConditionsTelemetry();
 
     this._collectFirstPartyIsolationTelemetry();
+
+    if (!this._placesTelemetryGathered) {
+      Cc["@mozilla.org/places/categoriesStarter;1"]
+        .getService(Ci.nsIObserver)
+        .observe(null, "gather-places-telemetry", null);
+      this._placesTelemetryGathered = true;
+    }
 
     // Set the default favicon size for UI views that use the page-icon protocol.
     PlacesUtils.favicons.setDefaultIconURIPreferredSize(
