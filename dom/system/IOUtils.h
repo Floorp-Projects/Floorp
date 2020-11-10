@@ -144,31 +144,6 @@ class IOUtils final {
                               const IOError& aError);
 
   /**
-   * Opens an existing file at |aPath|.
-   *
-   * @param path  The location of the file as an absolute path string.
-   * @param flags PRIO flags, excluding |PR_CREATE| and |PR_EXCL|.
-   *
-   * @return A pointer to the opened file descriptor, or |nullptr| on failure.
-   */
-  static UniquePtr<PRFileDesc, PR_CloseDelete> OpenExistingSync(
-      const nsAString& aPath, int32_t aFlags);
-
-  /**
-   * Creates a new file at |aPath|.
-   *
-   * @param aPath  The location of the file as an absolute path string.
-   * @param aFlags PRIO flags to be used in addition to |PR_CREATE| and
-   *               |PR_EXCL|.
-   * @param aMode  Optional file mode. Defaults to 0666 to allow the system
-   *               umask to compute the best mode for the new file.
-   *
-   * @return A pointer to the opened file descriptor, or |nullptr| on failure.
-   */
-  static UniquePtr<PRFileDesc, PR_CloseDelete> CreateFileSync(
-      const nsAString& aPath, int32_t aFlags, int32_t aMode = 0666);
-
-  /**
    * Attempts to read the entire file at |aPath| into a buffer.
    *
    * @param aFile       The location of the file.
@@ -198,11 +173,11 @@ class IOUtils final {
                                                 const bool aDecompress);
 
   /**
-   * Attempts to write the entirety of |aByteArray| to the file at |aPath|.
+   * Attempt to write the entirety of |aByteArray| to the file at |aPath|.
    * This may occur by writing to an intermediate destination and performing a
    * move, depending on |aOptions|.
    *
-   * @param aDestPath  The location of the file as an absolute path string.
+   * @param aFile  The location of the file.
    * @param aByteArray The data to write to the file.
    * @param aOptions   Options to modify the way the write is completed.
    *
@@ -210,25 +185,37 @@ class IOUtils final {
    *         failed or was incomplete.
    */
   static Result<uint32_t, IOError> WriteAtomicSync(
-      const nsAString& aDestPath, const Span<const uint8_t>& aByteArray,
-      const InternalWriteAtomicOpts& aOptions);
+      already_AddRefed<nsIFile> aFile, const Span<const uint8_t>& aByteArray,
+      InternalWriteAtomicOpts aOptions);
 
+  /**
+   * Attempt to write the entirety of |aUTF8String| to the file at |aFile|.
+   * This may occur by writing to an intermediate destination and performing a
+   * move, depending on |aOptions|.
+   *
+   * @param aFile The location of the file.
+   * @param aByteArray The data to write to the file.
+   * @param aOptions Options to modify the way the write is completed.
+   *
+   * @return The number of bytes written to the file, or an error if the write
+   *         failed or was incomplete.
+   */
   static Result<uint32_t, IOError> WriteAtomicUTF8Sync(
-      const nsAString& aDestPath, const nsCString& aUTF8String,
-      const InternalWriteAtomicOpts& aOptions);
+      already_AddRefed<nsIFile> aFile, const nsCString& aUTF8String,
+      InternalWriteAtomicOpts aOptions);
 
   /**
    * Attempts to write |aBytes| to the file pointed by |aFd|.
    *
    * @param aFd    An open PRFileDesc for the destination file to be
    *               overwritten.
+   * @param aFile  The location of the file.
    * @param aBytes The data to write to the file.
    *
    * @return The number of bytes written to the file, or an error if the write
    *         failed or was incomplete.
    */
-  static Result<uint32_t, IOError> WriteSync(PRFileDesc* aFd,
-                                             const nsACString& aPath,
+  static Result<uint32_t, IOError> WriteSync(PRFileDesc* aFd, nsIFile* aFile,
                                              const Span<const uint8_t>& aBytes);
 
   /**
@@ -417,26 +404,14 @@ struct IOUtils::InternalFileInfo {
  * used instead.
  */
 struct IOUtils::InternalWriteAtomicOpts {
-  Maybe<nsString> mBackupFile;
+  RefPtr<nsIFile> mBackupFile;
   bool mFlush;
   bool mNoOverwrite;
-  Maybe<nsString> mTmpPath;
+  RefPtr<nsIFile> mTmpFile;
   bool mCompress;
 
-  static inline InternalWriteAtomicOpts FromBinding(
-      const WriteAtomicOptions& aOptions) {
-    InternalWriteAtomicOpts opts;
-    opts.mFlush = aOptions.mFlush;
-    opts.mNoOverwrite = aOptions.mNoOverwrite;
-    if (aOptions.mBackupFile.WasPassed()) {
-      opts.mBackupFile.emplace(aOptions.mBackupFile.Value());
-    }
-    if (aOptions.mTmpPath.WasPassed()) {
-      opts.mTmpPath.emplace(aOptions.mTmpPath.Value());
-    }
-    opts.mCompress = aOptions.mCompress;
-    return opts;
-  }
+  static Result<InternalWriteAtomicOpts, IOUtils::IOError> FromBinding(
+      const WriteAtomicOptions& aOptions);
 };
 
 /**
