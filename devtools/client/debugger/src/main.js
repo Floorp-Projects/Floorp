@@ -10,7 +10,7 @@ import { teardownWorkers } from "./utils/bootstrap";
 import sourceQueue from "./utils/source-queue";
 
 function unmountRoot() {
-  const mount = document.querySelector("#mount .launchpad-root");
+  const mount = document.querySelector("#mount");
   ReactDOM.unmountComponentAtNode(mount);
 }
 

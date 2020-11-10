@@ -55,6 +55,7 @@ describe("Personality Provider", () => {
 
     sinon.spy(global, "BasePromiseWorker");
     sinon.spy(global.BasePromiseWorker.prototype, "post");
+
     baseURLStub = "https://baseattachmentsurl";
     global.fetch = async server => ({
       ok: true,
@@ -384,9 +385,26 @@ describe("Personality Provider", () => {
     });
   });
   describe("#calculateItemRelevanceScore", () => {
-    it("should return score for uninitialized provider", () => {
+    it("should return score for uninitialized provider", async () => {
       instance.initialized = false;
-      assert.equal(instance.calculateItemRelevanceScore({ item_score: 2 }), 2);
+      assert.equal(
+        await instance.calculateItemRelevanceScore({ item_score: 2 }),
+        2
+      );
+    });
+    it("should return score for initialized provider", async () => {
+      instance.initialized = true;
+
+      instance._personalityProviderWorker = {
+        post: (postName, [item]) => ({
+          rankingVector: { score: item.item_score },
+        }),
+      };
+
+      assert.equal(
+        await instance.calculateItemRelevanceScore({ item_score: 2 }),
+        2
+      );
     });
     it("should post calculateItemRelevanceScore to PersonalityProviderWorker", async () => {
       instance.initialized = true;

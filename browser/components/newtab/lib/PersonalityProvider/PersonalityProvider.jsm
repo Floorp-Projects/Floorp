@@ -353,13 +353,22 @@ this.PersonalityProvider = class PersonalityProvider {
     }
   }
 
-  calculateItemRelevanceScore(pocketItem) {
+  async calculateItemRelevanceScore(pocketItem) {
     if (!this.initialized) {
       return pocketItem.item_score || 1;
     }
-    return this.personalityProviderWorker.post("calculateItemRelevanceScore", [
-      pocketItem,
-    ]);
+    const itemRelevanceScore = await this.personalityProviderWorker.post(
+      "calculateItemRelevanceScore",
+      [pocketItem]
+    );
+    if (!itemRelevanceScore) {
+      return -1;
+    }
+    const { scorableItem, rankingVector } = itemRelevanceScore;
+    // Put the results on the item for debugging purposes.
+    pocketItem.scorableItem = scorableItem;
+    pocketItem.rankingVector = rankingVector;
+    return rankingVector.score;
   }
 
   /**

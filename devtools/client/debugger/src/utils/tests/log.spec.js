@@ -21,7 +21,7 @@ describe("log()", () => {
     prefs.logging = false;
   });
 
-  describe("when isDevelopment", () => {
+  describe("when logging pref is true", () => {
     it("prints arguments", () => {
       prefs.logging = true;
       log(logArgArray);

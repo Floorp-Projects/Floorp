@@ -257,18 +257,19 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
     }
 
     // Start or stop the touch simulator depending on the override flag
-    if (flag == Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED) {
+    // See BrowsingContext.webidl `TouchEventsOverride` enum for values.
+    if (flag == "enabled") {
       this.touchSimulator.start();
     } else {
       this.touchSimulator.stop();
     }
 
-    this.docShell.touchEventsOverride = flag;
+    this.docShell.browsingContext.touchEventsOverride = flag;
     return true;
   },
 
   getTouchEventsOverride() {
-    return this.docShell.touchEventsOverride;
+    return this.docShell.browsingContext.touchEventsOverride;
   },
 
   clearTouchEventsOverride() {

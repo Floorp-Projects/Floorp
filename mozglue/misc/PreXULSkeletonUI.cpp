@@ -15,8 +15,9 @@
 #include "mozilla/HelperMacros.h"
 #include "mozilla/glue/Debug.h"
 #include "mozilla/BaseProfilerMarkers.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Vector.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WindowsDpiAwareness.h"
 #include "mozilla/WindowsVersion.h"
 
@@ -142,10 +143,10 @@ static const wchar_t* sScreenYRegSuffix = L"|ScreenY";
 static const wchar_t* sWidthRegSuffix = L"|Width";
 static const wchar_t* sHeightRegSuffix = L"|Height";
 static const wchar_t* sMaximizedRegSuffix = L"|Maximized";
-static const wchar_t* sUrlbarHorizontalOffsetCSSRegSuffix =
-    L"|UrlbarHorizontalOffsetCSS";
-static const wchar_t* sUrlbarWidthCSSRegSuffix = L"|UrlbarWidthCSS";
+static const wchar_t* sUrlbarCSSRegSuffix = L"|UrlbarCSSSpan";
 static const wchar_t* sCssToDevPixelScalingRegSuffix = L"|CssToDevPixelScaling";
+static const wchar_t* sSearchbarRegSuffix = L"|SearchbarCSSSpan";
+static const wchar_t* sSpringsCSSRegSuffix = L"|SpringsCSSSpan";
 
 std::wstring GetRegValueName(const wchar_t* prefix, const wchar_t* suffix) {
   std::wstring result(prefix);
@@ -198,8 +199,9 @@ int CSSToDevPixels(int cssPixels, double scaling) {
   return CSSToDevPixels((double)cssPixels, scaling);
 }
 
-void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
-                    double urlbarWidthCSS) {
+void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
+                    CSSPixelSpan searchbarCSSSpan,
+                    const Vector<CSSPixelSpan>& springs) {
   // NOTE: we opt here to paint a pixel buffer for the application chrome by
   // hand, without using native UI library methods. Why do we do this?
   //
@@ -265,19 +267,34 @@ void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
   int tabPlaceholderBarHeight = CSSToDevPixels(8, sCSSToDevPixelScaling);
   int tabPlaceholderBarWidth = CSSToDevPixels(120, sCSSToDevPixelScaling);
 
-  int toolbarPlaceholderMarginTop = CSSToDevPixels(16, sCSSToDevPixelScaling);
   int toolbarPlaceholderMarginLeft = CSSToDevPixels(9, sCSSToDevPixelScaling);
   int toolbarPlaceholderMarginRight = CSSToDevPixels(11, sCSSToDevPixelScaling);
-  int toolbarPlaceholderWidth = CSSToDevPixels(90, sCSSToDevPixelScaling);
   int toolbarPlaceholderHeight = CSSToDevPixels(10, sCSSToDevPixelScaling);
+
+  int placeholderMargin = CSSToDevPixels(8, sCSSToDevPixelScaling);
+
+  // controlled by css variable urlbarMarginInline in urlbar-searchbar.inc.css
+  int urlbarMargin =
+      CSSToDevPixels(5, sCSSToDevPixelScaling) + horizontalOffset;
 
   int urlbarTextPlaceholderMarginTop =
       CSSToDevPixels(10, sCSSToDevPixelScaling);
   int urlbarTextPlaceholderMarginLeft =
       CSSToDevPixels(10, sCSSToDevPixelScaling);
   int urlbarTextPlaceHolderWidth = CSSToDevPixels(
-      std::min((int)urlbarWidthCSS - 10, 260), sCSSToDevPixelScaling);
+      std::min((int)(urlbarCSSSpan.end - urlbarCSSSpan.start) - 10, 260),
+      sCSSToDevPixelScaling);
   int urlbarTextPlaceholderHeight = CSSToDevPixels(10, sCSSToDevPixelScaling);
+
+  int searchbarTextPlaceholderWidth = CSSToDevPixels(62, sCSSToDevPixelScaling);
+
+  auto scopeExit = MakeScopeExit([&] {
+    delete sAnimatedRects;
+    sAnimatedRects = nullptr;
+    return;
+  });
+
+  Vector<ColorRect> rects;
 
   ColorRect topBorder = {};
   topBorder.color = 0x00000000;
@@ -285,6 +302,9 @@ void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
   topBorder.y = 0;
   topBorder.width = sWindowWidth;
   topBorder.height = topBorderHeight;
+  if (!rects.append(topBorder)) {
+    return;
+  }
 
   // The (traditionally dark blue on Windows) background of the tab bar.
   ColorRect tabBar = {};
@@ -293,6 +313,9 @@ void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
   tabBar.y = topBorder.height;
   tabBar.width = sWindowWidth;
   tabBar.height = tabBarHeight;
+  if (!rects.append(tabBar)) {
+    return;
+  }
 
   // The blue highlight at the top of the initial selected tab
   ColorRect tabLine = {};
@@ -301,6 +324,9 @@ void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
   tabLine.y = topBorder.height;
   tabLine.width = selectedTabWidth;
   tabLine.height = tabLineHeight;
+  if (!rects.append(tabLine)) {
+    return;
+  }
 
   // The initial selected tab
   ColorRect selectedTab = {};
@@ -309,6 +335,9 @@ void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
   selectedTab.y = tabLine.y + tabLineHeight;
   selectedTab.width = selectedTabWidth;
   selectedTab.height = tabBar.y + tabBar.height - selectedTab.y;
+  if (!rects.append(selectedTab)) {
+    return;
+  }
 
   // A placeholder rect representing text that will fill the selected tab title
   ColorRect tabTextPlaceholder = {};
@@ -317,6 +346,9 @@ void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
   tabTextPlaceholder.y = selectedTab.y + tabPlaceholderBarMarginTop;
   tabTextPlaceholder.width = tabPlaceholderBarWidth;
   tabTextPlaceholder.height = tabPlaceholderBarHeight;
+  if (!rects.append(tabTextPlaceholder)) {
+    return;
+  }
 
   // The toolbar background
   ColorRect toolbar = {};
@@ -325,27 +357,9 @@ void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
   toolbar.y = tabBar.y + tabBarHeight;
   toolbar.width = sWindowWidth;
   toolbar.height = toolbarHeight;
-
-  // A placeholder rect representing UI elements that will fill the left part
-  // of the toolbar
-  ColorRect leftToolbarPlaceholder = {};
-  leftToolbarPlaceholder.color = sToolbarForegroundColor;
-  leftToolbarPlaceholder.x =
-      toolbar.x + toolbarPlaceholderMarginLeft + horizontalOffset;
-  leftToolbarPlaceholder.y = toolbar.y + toolbarPlaceholderMarginTop;
-  leftToolbarPlaceholder.width = toolbarPlaceholderWidth;
-  leftToolbarPlaceholder.height = toolbarPlaceholderHeight;
-
-  // A placeholder rect representing UI elements that will fill the right part
-  // of the toolbar
-  ColorRect rightToolbarPlaceholder = {};
-  rightToolbarPlaceholder.color = sToolbarForegroundColor;
-  rightToolbarPlaceholder.x = sWindowWidth - horizontalOffset -
-                              toolbarPlaceholderMarginRight -
-                              toolbarPlaceholderWidth;
-  rightToolbarPlaceholder.y = toolbar.y + toolbarPlaceholderMarginTop;
-  rightToolbarPlaceholder.width = toolbarPlaceholderWidth;
-  rightToolbarPlaceholder.height = toolbarPlaceholderHeight;
+  if (!rects.append(toolbar)) {
+    return;
+  }
 
   // The single-pixel divider line below the toolbar
   ColorRect chromeContentDivider = {};
@@ -354,40 +368,142 @@ void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
   chromeContentDivider.y = toolbar.y + toolbar.height;
   chromeContentDivider.width = sWindowWidth;
   chromeContentDivider.height = 1;
+  if (!rects.append(chromeContentDivider)) {
+    return;
+  }
 
   // The urlbar
   ColorRect urlbar = {};
   urlbar.color = urlbarColor;
-  urlbar.x = CSSToDevPixels(urlbarHorizontalOffsetCSS, sCSSToDevPixelScaling) +
+  urlbar.x = CSSToDevPixels(urlbarCSSSpan.start, sCSSToDevPixelScaling) +
              horizontalOffset;
   urlbar.y = tabBar.y + tabBarHeight + urlbarTopOffset;
-  urlbar.width = CSSToDevPixels(urlbarWidthCSS, sCSSToDevPixelScaling);
+  urlbar.width = CSSToDevPixels((urlbarCSSSpan.end - urlbarCSSSpan.start),
+                                sCSSToDevPixelScaling);
   urlbar.height = urlbarHeight;
+  if (!rects.append(urlbar)) {
+    return;
+  }
 
   // The urlbar placeholder rect representating text that will fill the urlbar
-  // The placeholder rects should all be y-aligned.
   ColorRect urlbarTextPlaceholder = {};
   urlbarTextPlaceholder.color = sToolbarForegroundColor;
   urlbarTextPlaceholder.x = urlbar.x + urlbarTextPlaceholderMarginLeft;
-  // This is equivalent to rightToolbarPlaceholder.y and
-  // leftToolbarPlaceholder.y
   urlbarTextPlaceholder.y = urlbar.y + urlbarTextPlaceholderMarginTop;
   urlbarTextPlaceholder.width = urlbarTextPlaceHolderWidth;
   urlbarTextPlaceholder.height = urlbarTextPlaceholderHeight;
+  if (!rects.append(urlbarTextPlaceholder)) {
+    return;
+  }
 
-  ColorRect rects[] = {
-      topBorder,
-      tabBar,
-      tabLine,
-      selectedTab,
-      tabTextPlaceholder,
-      toolbar,
-      leftToolbarPlaceholder,
-      rightToolbarPlaceholder,
-      chromeContentDivider,
-      urlbar,
-      urlbarTextPlaceholder,
-  };
+  // The searchbar and placeholder text, if present
+  // This is y-aligned with the urlbar
+  bool hasSearchbar = searchbarCSSSpan.start != 0 && searchbarCSSSpan.end != 0;
+  ColorRect searchbarRect = {};
+  if (hasSearchbar == true) {
+    searchbarRect.color = urlbarColor;
+    searchbarRect.x =
+        CSSToDevPixels(searchbarCSSSpan.start, sCSSToDevPixelScaling) +
+        horizontalOffset;
+    searchbarRect.y = urlbar.y;
+    searchbarRect.width = CSSToDevPixels(
+        searchbarCSSSpan.end - searchbarCSSSpan.start, sCSSToDevPixelScaling);
+    searchbarRect.height = urlbarHeight;
+    if (!rects.append(searchbarRect)) {
+      return;
+    }
+
+    // The placeholder rect representating text that will fill the searchbar
+    // This uses the same margins as the urlbarTextPlaceholder
+    ColorRect searchbarTextPlaceholder = {};
+    searchbarTextPlaceholder.color = sToolbarForegroundColor;
+    searchbarTextPlaceholder.x =
+        searchbarRect.x + urlbarTextPlaceholderMarginLeft;
+    searchbarTextPlaceholder.y =
+        searchbarRect.y + urlbarTextPlaceholderMarginTop;
+    searchbarTextPlaceholder.width = searchbarTextPlaceholderWidth;
+    searchbarTextPlaceholder.height = urlbarTextPlaceholderHeight;
+    if (!rects.append(searchbarTextPlaceholder) ||
+        !sAnimatedRects->append(searchbarTextPlaceholder)) {
+      return;
+    }
+  }
+
+  // Determine where the placeholder rectangles should not go. This is
+  // anywhere occupied by a spring, urlbar, or searchbar
+  Vector<DevPixelSpan> noPlaceholderSpans;
+
+  DevPixelSpan urlbarSpan;
+  urlbarSpan.start = urlbar.x - urlbarMargin;
+  urlbarSpan.end = urlbar.width + urlbar.x + urlbarMargin;
+
+  DevPixelSpan searchbarSpan;
+  if (hasSearchbar) {
+    searchbarSpan.start = searchbarRect.x - urlbarMargin;
+    searchbarSpan.end = searchbarRect.width + searchbarRect.x + urlbarMargin;
+  }
+
+  DevPixelSpan marginLeftPlaceholder;
+  marginLeftPlaceholder.start = toolbarPlaceholderMarginLeft;
+  marginLeftPlaceholder.end = toolbarPlaceholderMarginLeft;
+  if (!noPlaceholderSpans.append(marginLeftPlaceholder)) {
+    return;
+  }
+
+  for (auto spring : springs) {
+    DevPixelSpan springDevPixels;
+    springDevPixels.start =
+        CSSToDevPixels(spring.start, sCSSToDevPixelScaling) + horizontalOffset;
+    springDevPixels.end =
+        CSSToDevPixels(spring.end, sCSSToDevPixelScaling) + horizontalOffset;
+    if (!noPlaceholderSpans.append(springDevPixels)) {
+      return;
+    }
+  }
+
+  DevPixelSpan marginRightPlaceholder;
+  marginRightPlaceholder.start = sWindowWidth - toolbarPlaceholderMarginRight;
+  marginRightPlaceholder.end = sWindowWidth - toolbarPlaceholderMarginRight;
+  if (!noPlaceholderSpans.append(marginRightPlaceholder)) {
+    return;
+  }
+
+  Vector<DevPixelSpan, 2> spansToAdd;
+  spansToAdd.infallibleAppend(urlbarSpan);
+  if (hasSearchbar) {
+    spansToAdd.infallibleAppend(searchbarSpan);
+  }
+
+  for (auto& toAdd : spansToAdd) {
+    for (auto& span : noPlaceholderSpans) {
+      if (span.start > toAdd.start) {
+        if (!noPlaceholderSpans.insert(&span, toAdd)) {
+          return;
+        }
+        break;
+      }
+    }
+  }
+
+  for (int i = 1; i < noPlaceholderSpans.length(); i++) {
+    int start = noPlaceholderSpans[i - 1].end + placeholderMargin;
+    int end = noPlaceholderSpans[i].start - placeholderMargin;
+    if (start >= end) {
+      continue;
+    }
+
+    // The placeholder rects should all be y-aligned.
+    ColorRect placeholderRect = {};
+    placeholderRect.color = sToolbarForegroundColor;
+    placeholderRect.x = start;
+    placeholderRect.y = urlbarTextPlaceholder.y;
+    placeholderRect.width = end - start;
+    placeholderRect.height = toolbarPlaceholderHeight;
+    if (!rects.append(placeholderRect) ||
+        !sAnimatedRects->append(placeholderRect)) {
+      return;
+    }
+  }
 
   sTotalChromeHeight = chromeContentDivider.y + chromeContentDivider.height;
   if (sTotalChromeHeight > sWindowHeight) {
@@ -396,23 +512,24 @@ void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
   }
 
   if (!sAnimatedRects->append(tabTextPlaceholder) ||
-      !sAnimatedRects->append(leftToolbarPlaceholder) ||
-      !sAnimatedRects->append(rightToolbarPlaceholder) ||
       !sAnimatedRects->append(urlbarTextPlaceholder)) {
-    delete sAnimatedRects;
-    sAnimatedRects = nullptr;
     return;
   }
 
   sPixelBuffer =
       (uint32_t*)calloc(sWindowWidth * sTotalChromeHeight, sizeof(uint32_t));
 
-  for (int i = 0; i < sizeof(rects) / sizeof(rects[0]); ++i) {
-    ColorRect rect = rects[i];
-    for (int y = rect.y; y < rect.y + rect.height; ++y) {
+  for (const auto& rect : rects) {
+    int startY = std::clamp(rect.y, 0u, (uint32_t)sTotalChromeHeight);
+    int endY =
+        std::clamp(rect.y + rect.height, 0u, (uint32_t)sTotalChromeHeight);
+    for (int y = startY; y < endY; ++y) {
+      int startX = std::clamp(rect.x, 0u, sWindowWidth);
+      int endX = std::clamp(rect.x + rect.width, 0u, sWindowWidth);
       uint32_t* lineStart = &sPixelBuffer[y * sWindowWidth];
-      uint32_t* dataStart = lineStart + rect.x;
-      std::fill_n(dataStart, rect.width, rect.color);
+      uint32_t* dataStart = lineStart + startX;
+      uint32_t* dataEnd = lineStart + endX;
+      std::fill(dataStart, dataEnd, rect.color);
     }
   }
 
@@ -436,6 +553,7 @@ void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
   HBRUSH brush = sCreateSolidBrush(sBackgroundColor);
   sFillRect(hdc, &rect, brush);
 
+  scopeExit.release();
   sReleaseDC(hWnd, hdc);
   sDeleteObject(brush);
 }
@@ -1018,30 +1136,6 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
   sMaximized = maximized != 0;
 
   dataLen = sizeof(double);
-  double urlbarHorizontalOffsetCSS;
-  result = ::RegGetValueW(
-      regKey, nullptr,
-      GetRegValueName(binPath.get(), sUrlbarHorizontalOffsetCSSRegSuffix)
-          .c_str(),
-      RRF_RT_REG_BINARY, nullptr,
-      reinterpret_cast<PBYTE>(&urlbarHorizontalOffsetCSS), &dataLen);
-  if (result != ERROR_SUCCESS || dataLen != sizeof(double)) {
-    printf_stderr("Error reading urlbarHorizontalOffsetCSS %lu\n",
-                  GetLastError());
-    return;
-  }
-
-  double urlbarWidthCSS;
-  result = ::RegGetValueW(
-      regKey, nullptr,
-      GetRegValueName(binPath.get(), sUrlbarWidthCSSRegSuffix).c_str(),
-      RRF_RT_REG_BINARY, nullptr, reinterpret_cast<PBYTE>(&urlbarWidthCSS),
-      &dataLen);
-  if (result != ERROR_SUCCESS || dataLen != sizeof(double)) {
-    printf_stderr("Error reading urlbarWidthCSS %lu\n", GetLastError());
-    return;
-  }
-
   result = ::RegGetValueW(
       regKey, nullptr,
       GetRegValueName(binPath.get(), sCssToDevPixelScalingRegSuffix).c_str(),
@@ -1057,6 +1151,74 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
   if (sMaximized) {
     showCmd = SW_SHOWMAXIMIZED;
     windowStyle |= WS_MAXIMIZE;
+  }
+
+  dataLen = 2 * sizeof(double);
+  auto buffer = MakeUniqueFallible<wchar_t[]>(2 * sizeof(double));
+  if (!buffer) {
+    return;
+  }
+  result = ::RegGetValueW(
+      regKey, nullptr,
+      GetRegValueName(binPath.get(), sUrlbarCSSRegSuffix).c_str(),
+      RRF_RT_REG_BINARY, nullptr, reinterpret_cast<PBYTE>(buffer.get()),
+      &dataLen);
+  if (result != ERROR_SUCCESS || dataLen % (2 * sizeof(double)) != 0) {
+    printf_stderr("Error reading urlbar %lu\n", GetLastError());
+    return;
+  }
+
+  double* asDoubles = reinterpret_cast<double*>(buffer.get());
+  CSSPixelSpan urlbar;
+  urlbar.start = *(asDoubles++);
+  urlbar.end = *(asDoubles++);
+
+  result = ::RegGetValueW(
+      regKey, nullptr,
+      GetRegValueName(binPath.get(), sSearchbarRegSuffix).c_str(),
+      RRF_RT_REG_BINARY, nullptr, reinterpret_cast<PBYTE>(buffer.get()),
+      &dataLen);
+  if (result != ERROR_SUCCESS || dataLen % (2 * sizeof(double)) != 0) {
+    printf_stderr("Error reading searchbar %lu\n", GetLastError());
+    return;
+  }
+
+  asDoubles = reinterpret_cast<double*>(buffer.get());
+  CSSPixelSpan searchbar;
+  searchbar.start = *(asDoubles++);
+  searchbar.end = *(asDoubles++);
+
+  result = ::RegQueryValueExW(
+      regKey, GetRegValueName(binPath.get(), sSpringsCSSRegSuffix).c_str(),
+      nullptr, nullptr, nullptr, &dataLen);
+  if (result != ERROR_SUCCESS || dataLen % (2 * sizeof(double)) != 0) {
+    printf_stderr("Error reading springsCSS %lu\n", GetLastError());
+    return;
+  }
+
+  buffer = MakeUniqueFallible<wchar_t[]>(dataLen);
+  if (!buffer) {
+    return;
+  }
+  result = ::RegGetValueW(
+      regKey, nullptr,
+      GetRegValueName(binPath.get(), sSpringsCSSRegSuffix).c_str(),
+      RRF_RT_REG_BINARY, nullptr, reinterpret_cast<PBYTE>(buffer.get()),
+      &dataLen);
+  if (result != ERROR_SUCCESS) {
+    printf_stderr("Error reading springsCSS %lu\n", GetLastError());
+    return;
+  }
+
+  Vector<CSSPixelSpan> springs;
+  asDoubles = reinterpret_cast<double*>(buffer.get());
+  for (int i = 0; i < dataLen / (2 * sizeof(double)); i++) {
+    CSSPixelSpan spring;
+    spring.start = *(asDoubles++);
+    spring.end = *(asDoubles++);
+    if (!springs.append(spring)) {
+      return;
+    }
   }
 
   sPreXULSkeletonUIWindow =
@@ -1099,8 +1261,7 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
   sSetWindowPos(sPreXULSkeletonUIWindow, 0, 0, 0, 0, 0,
                 SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOMOVE |
                     SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
-  DrawSkeletonUI(sPreXULSkeletonUIWindow, urlbarHorizontalOffsetCSS,
-                 urlbarWidthCSS);
+  DrawSkeletonUI(sPreXULSkeletonUIWindow, urlbar, searchbar, springs);
 
   if (sAnimatedRects) {
     sPreXULSKeletonUIAnimationThread = ::CreateThread(
@@ -1142,8 +1303,8 @@ HWND ConsumePreXULSkeletonUIHandle() {
 
 void PersistPreXULSkeletonUIValues(int screenX, int screenY, int width,
                                    int height, bool maximized,
-                                   double urlbarHorizontalOffsetCSS,
-                                   double urlbarWidthCSS,
+                                   CSSPixelSpan urlbar, CSSPixelSpan searchbar,
+                                   const Vector<CSSPixelSpan>& springs,
                                    double cssToDevPixelScaling) {
   if (!sPreXULSkeletonUIEnabled) {
     return;
@@ -1201,33 +1362,54 @@ void PersistPreXULSkeletonUIValues(int screenX, int screenY, int width,
 
   result = ::RegSetValueExW(
       regKey,
-      GetRegValueName(binPath.get(), sUrlbarHorizontalOffsetCSSRegSuffix)
-          .c_str(),
-      0, REG_BINARY, reinterpret_cast<PBYTE>(&urlbarHorizontalOffsetCSS),
-      sizeof(urlbarHorizontalOffsetCSS));
-  if (result != ERROR_SUCCESS) {
-    printf_stderr(
-        "Failed persisting urlbarHorizontalOffsetCSS to Windows registry\n");
-    return;
-  }
-
-  result = ::RegSetValueExW(
-      regKey, GetRegValueName(binPath.get(), sUrlbarWidthCSSRegSuffix).c_str(),
-      0, REG_BINARY, reinterpret_cast<PBYTE>(&urlbarWidthCSS),
-      sizeof(urlbarWidthCSS));
-  if (result != ERROR_SUCCESS) {
-    printf_stderr("Failed persisting urlbarWidthCSS to Windows registry\n");
-    return;
-  }
-
-  result = ::RegSetValueExW(
-      regKey,
       GetRegValueName(binPath.get(), sCssToDevPixelScalingRegSuffix).c_str(), 0,
       REG_BINARY, reinterpret_cast<PBYTE>(&cssToDevPixelScaling),
       sizeof(cssToDevPixelScaling));
   if (result != ERROR_SUCCESS) {
     printf_stderr(
         "Failed persisting cssToDevPixelScaling to Windows registry\n");
+    return;
+  }
+
+  double urlbarSpan[2];
+  urlbarSpan[0] = urlbar.start;
+  urlbarSpan[1] = urlbar.end;
+  result = ::RegSetValueExW(
+      regKey, GetRegValueName(binPath.get(), sUrlbarCSSRegSuffix).c_str(), 0,
+      REG_BINARY, reinterpret_cast<PBYTE>(urlbarSpan), sizeof(urlbarSpan));
+  if (result != ERROR_SUCCESS) {
+    printf_stderr("Failed persisting urlbar to Windows registry\n");
+    return;
+  }
+
+  double searchbarSpan[2];
+  searchbarSpan[0] = searchbar.start;
+  searchbarSpan[1] = searchbar.end;
+  result = ::RegSetValueExW(
+      regKey, GetRegValueName(binPath.get(), sSearchbarRegSuffix).c_str(), 0,
+      REG_BINARY, reinterpret_cast<PBYTE>(searchbarSpan),
+      sizeof(searchbarSpan));
+  if (result != ERROR_SUCCESS) {
+    printf_stderr("Failed persisting searchbar to Windows registry\n");
+    return;
+  }
+
+  Vector<double> springValues;
+  if (!springValues.reserve(springs.length() * 2)) {
+    return;
+  }
+
+  for (auto spring : springs) {
+    springValues.infallibleAppend(spring.start);
+    springValues.infallibleAppend(spring.end);
+  }
+
+  result = ::RegSetValueExW(
+      regKey, GetRegValueName(binPath.get(), sSpringsCSSRegSuffix).c_str(), 0,
+      REG_BINARY, reinterpret_cast<PBYTE>(springValues.begin()),
+      springValues.length() * sizeof(double));
+  if (result != ERROR_SUCCESS) {
+    printf_stderr("Failed persisting springsCSS to Windows registry\n");
     return;
   }
 }

@@ -6,6 +6,9 @@
 
 "use strict";
 
+// The test times out on slow platforms (e.g. linux ccov)
+requestLongerTimeout(2);
+
 // We create a very big page here in order to make the :screenshot command fail on
 // purpose.
 const TEST_URI = `data:text/html;charset=utf8,

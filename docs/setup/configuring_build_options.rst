@@ -208,6 +208,17 @@ applications. The full list of options can be obtained by running
 
 The following build options are very common:
 
+sccache
+^^^^^^^
+
+`SCCache <https://github.com/mozilla/sccache>`__ allows speeding up subsequent
+C / C++ builds by caching compilation results. Unlike
+`ccache <https://ccache.dev>`__, it also allows caching Rust artifacts, and
+supports `distributed compilation
+<https://github.com/mozilla/sccache/blob/master/docs/DistributedQuickstart.md>`__.
+
+In order to enable ``sccache`` for Firefox builds, you can use
+``ac_add_options --with-ccache=sccache``.
 
 Optimization
 ^^^^^^^^^^^^
@@ -300,10 +311,6 @@ Other Options
    This makes compiler warnings into errors which fail the build. This
    can be useful since certain warnings coincide with reviewbot lints
    which must be fixed before merging.
-``ac_add_options --with-ccache=/path/to/.mozbuild/sccache/sccache``
-   This enables sccache to speed up builds. This saves a considerable
-   amount of time directly after a clobber build, so pulling in new
-   updates and rebasing is less time-consuming.
 
 .. _Example_.mozconfig_Files:
 

@@ -150,10 +150,6 @@ typedef PlatformSpecificStateBase
  * If set to true, APZ will allow zooming out past the initial scale on
  * desktop. This is false by default to match Chrome's behaviour.
  *
- * \li\b apz.android.chrome_fling_physics.enabled
- * If set to true, APZ uses a fling physical model similar to Chrome's
- * on Android, rather than Android's StackScroller.
- *
  * \li\b apz.android.chrome_fling_physics.friction
  * A tunable parameter for Chrome fling physics on Android that governs
  * how quickly a fling animation slows down due to friction (and therefore

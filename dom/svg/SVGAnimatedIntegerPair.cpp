@@ -11,6 +11,7 @@
 #include "nsMathUtils.h"
 #include "SVGAttrTearoffTable.h"
 #include "SVGIntegerPairSMILType.h"
+#include "mozAutoDocUpdate.h"
 #include "mozilla/SMILValue.h"
 #include "mozilla/SVGContentUtils.h"
 
