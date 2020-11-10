@@ -1649,8 +1649,8 @@ javascript.gc:
       - jcoppeard@mozilla.com
     expires: never
 
-media:
-  audio_init_failure:
+media.audio:
+  init_failure:
     type: labeled_counter
     labels:
       - first
@@ -1661,7 +1661,37 @@ media:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1671714
     data_reviews:
-      - TODO
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671714#c10
+    notification_emails:
+      - padenot@mozilla.com
+      - kinetik@flim.org
+      - cchang@mozilla.com
+    expires: never
+
+  backend:
+    type: labeled_counter
+    labels:
+      - unknown
+      - audiounit
+      - audiounit_rust
+      - aaudio
+      - opensl
+      - wasapi
+      - winmm
+      - alsa
+      - jack
+      - oss
+      - pulse
+      - pulse_rust
+      - sndio
+      - sun
+    gecko_datapoint: MEDIA_AUDIO_BACKEND
+    description: >
+      The operating system audio backend
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671714
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671714#c10
     notification_emails:
       - padenot@mozilla.com
       - kinetik@flim.org

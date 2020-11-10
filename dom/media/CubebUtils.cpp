@@ -72,7 +72,9 @@ namespace mozilla {
 
 namespace {
 
+using Telemetry::LABELS_MEDIA_AUDIO_BACKEND;
 using Telemetry::LABELS_MEDIA_AUDIO_INIT_FAILURE;
+
 LazyLogModule gCubebLog("cubeb");
 
 void CubebLogCallback(const char* aFmt, ...) {
@@ -126,18 +128,22 @@ int sInCommunicationCount = 0;
 
 const char kBrandBundleURL[] = "chrome://branding/locale/brand.properties";
 
-const char* AUDIOSTREAM_BACKEND_ID_STR[] = {
-    "jack",   "pulse",      "alsa",        "audiounit", "audioqueue",
-    "wasapi", "winmm",      "directsound", "sndio",     "opensl",
-    "oss",    "audiotrack", "kai"};
-/* Index for failures to create an audio stream the first time. */
-const int CUBEB_BACKEND_INIT_FAILURE_FIRST =
-    ArrayLength(AUDIOSTREAM_BACKEND_ID_STR);
-/* Index for failures to create an audio stream after the first time */
-const int CUBEB_BACKEND_INIT_FAILURE_OTHER =
-    CUBEB_BACKEND_INIT_FAILURE_FIRST + 1;
-/* Index for an unknown backend. */
-const int CUBEB_BACKEND_UNKNOWN = CUBEB_BACKEND_INIT_FAILURE_FIRST + 2;
+std::unordered_map<std::string, LABELS_MEDIA_AUDIO_BACKEND>
+    kTelemetryBackendLabel = {
+        {"audiounit", LABELS_MEDIA_AUDIO_BACKEND::audiounit},
+        {"audiounit-rust", LABELS_MEDIA_AUDIO_BACKEND::audiounit_rust},
+        {"aaudio", LABELS_MEDIA_AUDIO_BACKEND::aaudio},
+        {"opensl", LABELS_MEDIA_AUDIO_BACKEND::opensl},
+        {"wasapi", LABELS_MEDIA_AUDIO_BACKEND::wasapi},
+        {"winmm", LABELS_MEDIA_AUDIO_BACKEND::winmm},
+        {"alsa", LABELS_MEDIA_AUDIO_BACKEND::alsa},
+        {"jack", LABELS_MEDIA_AUDIO_BACKEND::jack},
+        {"oss", LABELS_MEDIA_AUDIO_BACKEND::oss},
+        {"pulse", LABELS_MEDIA_AUDIO_BACKEND::pulse},
+        {"pulse-rust", LABELS_MEDIA_AUDIO_BACKEND::pulse_rust},
+        {"sndio", LABELS_MEDIA_AUDIO_BACKEND::sndio},
+        {"sun", LABELS_MEDIA_AUDIO_BACKEND::sun},
+};
 
 // Prefered samplerate, in Hz (characteristic of the hardware, mixer, platform,
 // and API used).
@@ -526,18 +532,13 @@ void ReportCubebBackendUsed() {
 
   sAudioStreamInitEverSucceeded = true;
 
-  bool foundBackend = false;
-  for (uint32_t i = 0; i < ArrayLength(AUDIOSTREAM_BACKEND_ID_STR); i++) {
-    if (!strcmp(cubeb_get_backend_id(sCubebContext),
-                AUDIOSTREAM_BACKEND_ID_STR[i])) {
-      Telemetry::Accumulate(Telemetry::AUDIOSTREAM_BACKEND_USED, i);
-      foundBackend = true;
-    }
+  LABELS_MEDIA_AUDIO_BACKEND label = LABELS_MEDIA_AUDIO_BACKEND::unknown;
+  auto backend =
+      kTelemetryBackendLabel.find(cubeb_get_backend_id(sCubebContext));
+  if (backend != kTelemetryBackendLabel.end()) {
+    label = backend->second;
   }
-  if (!foundBackend) {
-    Telemetry::Accumulate(Telemetry::AUDIOSTREAM_BACKEND_USED,
-                          CUBEB_BACKEND_UNKNOWN);
-  }
+  AccumulateCategorical(label);
 }
 
 void ReportCubebStreamInitFailure(bool aIsFirst) {
