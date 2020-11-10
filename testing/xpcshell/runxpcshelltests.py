@@ -1412,7 +1412,9 @@ class XPCShellTests(object):
             msg = process.stdout.readline()
             if "server listening" in msg:
                 searchObj = re.search(
-                    r"HTTP3 server listening on ports ([0-9]+), ([0-9]+) and ([0-9]+)", msg, 0
+                    r"HTTP3 server listening on ports ([0-9]+), ([0-9]+) and ([0-9]+)",
+                    msg,
+                    0,
                 )
                 if searchObj:
                     self.env["MOZHTTP3_PORT"] = searchObj.group(1)
