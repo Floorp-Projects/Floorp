@@ -41,6 +41,7 @@ class WebBrowserPersistRemoteDocument final
   WebBrowserPersistDocumentParent* mActor;
   Attrs mAttrs;
   nsCOMPtr<nsISHEntry> mSHEntry;
+  nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
   nsCOMPtr<nsIInputStream> mPostData;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
