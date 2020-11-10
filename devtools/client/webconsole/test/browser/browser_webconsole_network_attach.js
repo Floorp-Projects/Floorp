@@ -47,15 +47,9 @@ add_task(async function task() {
   info("Network message found.");
 
   const onReady = new Promise(resolve => {
-    let count = 0;
-    function onPayloadReady(updateCount) {
-      count += updateCount;
-      // Wait for all NETWORK_REQUEST updated events
-      // Otherwise we may still be having pending request
-      if (count == 7) {
-        hud.ui.off("network-request-payload-ready", onPayloadReady);
-        resolve();
-      }
+    function onPayloadReady() {
+      hud.ui.off("network-request-payload-ready", onPayloadReady);
+      resolve();
     }
     hud.ui.on("network-request-payload-ready", onPayloadReady);
   });
