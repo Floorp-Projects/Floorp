@@ -348,14 +348,14 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
-  // Process arguments.
-  REJECT_IF_RELATIVE_PATH(aSourcePath, promise);
-  REJECT_IF_RELATIVE_PATH(aDestPath, promise);
-  nsAutoString sourcePath(aSourcePath);
-  nsAutoString destPath(aDestPath);
+  nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise);
 
-  return RunOnBackgroundThread<Ok>(promise, &MoveSync, sourcePath, destPath,
-                                   aOptions.mNoOverwrite);
+  nsCOMPtr<nsIFile> destFile = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
+
+  return RunOnBackgroundThread<Ok>(promise, &MoveSync, sourceFile.forget(),
+                                   destFile.forget(), aOptions.mNoOverwrite);
 }
 
 /* static */
@@ -414,14 +414,15 @@ already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
-  // Process arguments.
-  REJECT_IF_RELATIVE_PATH(aSourcePath, promise);
-  REJECT_IF_RELATIVE_PATH(aDestPath, promise);
-  nsAutoString sourcePath(aSourcePath);
-  nsAutoString destPath(aDestPath);
+  nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise);
 
-  return RunOnBackgroundThread<Ok>(promise, &CopySync, sourcePath, destPath,
-                                   aOptions.mNoOverwrite, aOptions.mRecursive);
+  nsCOMPtr<nsIFile> destFile = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
+
+  return RunOnBackgroundThread<Ok>(promise, &CopySync, sourceFile.forget(),
+                                   destFile.forget(), aOptions.mNoOverwrite,
+                                   aOptions.mRecursive);
 }
 
 /* static */
@@ -726,13 +727,17 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicSync(
 
   // If backupFile was specified, perform the backup as a move.
   if (exists && backupFile) {
-    nsAutoStringN<256> destPath;
-    nsAutoStringN<256> backupPath;
+    // We copy `destFile` here to a new `nsIFile` because
+    // `nsIFile::MoveToFollowingLinks` will update the path of the file. If we
+    // did not do this, we would end up having `destFile` point to the same
+    // location as `backupFile`. Then, when we went to write to `destFile`, we
+    // would end up overwriting `backupFile` and never actually write to the
+    // file we were supposed to.
+    nsCOMPtr<nsIFile> toMove;
+    MOZ_ALWAYS_SUCCEEDS(destFile->Clone(getter_AddRefs(toMove)));
 
-    MOZ_ALWAYS_SUCCEEDS(destFile->GetPath(destPath));
-    MOZ_ALWAYS_SUCCEEDS(backupFile->GetPath(backupPath));
-
-    if (MoveSync(destPath, backupPath, aOptions.mNoOverwrite).isErr()) {
+    if (MoveSync(toMove.forget(), do_AddRef(backupFile), aOptions.mNoOverwrite)
+            .isErr()) {
       return Err(IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
                      .WithMessage("Failed to backup the source file(%s) to %s",
                                   destFile->HumanReadablePath().get(),
@@ -802,7 +807,10 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicSync(
     MOZ_ALWAYS_SUCCEEDS(destFile->GetPath(destPath));
     MOZ_ALWAYS_SUCCEEDS(writeFile->GetPath(writePath));
 
-    if (destPath != writePath && MoveSync(writePath, destPath, false).isErr()) {
+    // nsIFile::MoveToFollowingLinks will only update the path of the file if
+    // the move succeeds.
+    if (destPath != writePath &&
+        MoveSync(do_AddRef(writeFile), do_AddRef(destFile), false).isErr()) {
       return Err(IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
                      .WithMessage(
                          "Could not move temporary file(%s) to destination(%s)",
@@ -864,59 +872,55 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
 }
 
 /* static */
-Result<Ok, IOUtils::IOError> IOUtils::MoveSync(const nsAString& aSourcePath,
-                                               const nsAString& aDestPath,
-                                               bool aNoOverwrite) {
+Result<Ok, IOUtils::IOError> IOUtils::MoveSync(
+    already_AddRefed<nsIFile> aSourceFile, already_AddRefed<nsIFile> aDestFile,
+    bool aNoOverwrite) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  RefPtr<nsLocalFile> srcFile = new nsLocalFile();
-  MOZ_TRY(srcFile->InitWithPath(aSourcePath));  // Fails if not absolute.
+  nsCOMPtr<nsIFile> sourceFile = aSourceFile;
+  nsCOMPtr<nsIFile> destFile = aDestFile;
 
   // Ensure the source file exists before continuing. If it doesn't exist,
   // subsequent operations can fail in different ways on different platforms.
-  bool srcExists;
-  MOZ_TRY(srcFile->Exists(&srcExists));
+  bool srcExists = false;
+  MOZ_TRY(sourceFile->Exists(&srcExists));
   if (!srcExists) {
     return Err(
         IOError(NS_ERROR_FILE_NOT_FOUND)
             .WithMessage(
                 "Could not move source file(%s) because it does not exist",
-                NS_ConvertUTF16toUTF8(aSourcePath).get()));
+                sourceFile->HumanReadablePath().get()));
   }
 
-  RefPtr<nsLocalFile> destFile = new nsLocalFile();
-  MOZ_TRY(destFile->InitWithPath(aDestPath));  // Fails if not absolute.
-
-  return CopyOrMoveSync(&nsLocalFile::MoveTo, "move", srcFile, destFile,
-                        aNoOverwrite);
+  return CopyOrMoveSync(&nsIFile::MoveToFollowingLinks, "move", sourceFile,
+                        destFile, aNoOverwrite);
 }
 
 /* static */
-Result<Ok, IOUtils::IOError> IOUtils::CopySync(const nsAString& aSourcePath,
-                                               const nsAString& aDestPath,
-                                               bool aNoOverwrite,
-                                               bool aRecursive) {
+Result<Ok, IOUtils::IOError> IOUtils::CopySync(
+    already_AddRefed<nsIFile> aSourceFile, already_AddRefed<nsIFile> aDestFile,
+    bool aNoOverwrite, bool aRecursive) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  RefPtr<nsLocalFile> srcFile = new nsLocalFile();
-  MOZ_TRY(srcFile->InitWithPath(aSourcePath));  // Fails if not absolute.
+  nsCOMPtr<nsIFile> sourceFile = aSourceFile;
+  nsCOMPtr<nsIFile> destFile = aDestFile;
 
   // Ensure the source file exists before continuing. If it doesn't exist,
   // subsequent operations can fail in different ways on different platforms.
   bool srcExists;
-  MOZ_TRY(srcFile->Exists(&srcExists));
+  MOZ_TRY(sourceFile->Exists(&srcExists));
   if (!srcExists) {
     return Err(
         IOError(NS_ERROR_FILE_NOT_FOUND)
             .WithMessage(
                 "Could not copy source file(%s) because it does not exist",
-                NS_ConvertUTF16toUTF8(aSourcePath).get()));
+                sourceFile->HumanReadablePath().get()));
   }
 
   // If source is a directory, fail immediately unless the recursive option is
   // true.
   bool srcIsDir = false;
-  MOZ_TRY(srcFile->IsDirectory(&srcIsDir));
+  MOZ_TRY(sourceFile->IsDirectory(&srcIsDir));
   if (srcIsDir && !aRecursive) {
     return Err(
         IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
@@ -924,54 +928,35 @@ Result<Ok, IOUtils::IOError> IOUtils::CopySync(const nsAString& aSourcePath,
                 "Refused to copy source directory(%s) to the destination(%s)\n"
                 "Specify the `recursive: true` option to allow copying "
                 "directories",
-                NS_ConvertUTF16toUTF8(aSourcePath).get(),
-                NS_ConvertUTF16toUTF8(aDestPath).get()));
+                sourceFile->HumanReadablePath().get(),
+                destFile->HumanReadablePath().get()));
   }
 
-  RefPtr<nsLocalFile> destFile = new nsLocalFile();
-  MOZ_TRY(destFile->InitWithPath(aDestPath));  // Fails if not absolute.
-
-  return CopyOrMoveSync(&nsLocalFile::CopyTo, "copy", srcFile, destFile,
-                        aNoOverwrite);
+  return CopyOrMoveSync(&nsIFile::CopyToFollowingLinks, "copy", sourceFile,
+                        destFile, aNoOverwrite);
 }
 
 /* static */
 template <typename CopyOrMoveFn>
-Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(
-    CopyOrMoveFn aMethod, const char* aMethodName,
-    const RefPtr<nsLocalFile>& aSource, const RefPtr<nsLocalFile>& aDest,
-    bool aNoOverwrite) {
+Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(CopyOrMoveFn aMethod,
+                                                     const char* aMethodName,
+                                                     nsIFile* aSource,
+                                                     nsIFile* aDest,
+                                                     bool aNoOverwrite) {
   MOZ_ASSERT(!NS_IsMainThread());
-
-  // Normalize the file paths.
-  MOZ_TRY(aSource->Normalize());
-  nsresult rv = aDest->Normalize();
-  // Normalize can fail for a number of reasons, including if the file doesn't
-  // exist. It is expected that the file might not exist for a number of calls
-  // (e.g. if we want to copy or move a file to a new location).
-  if (NS_FAILED(rv) && !IsFileNotFound(rv)) {
-    // Deliberately ignore "not found" errors, but propagate all others.
-    return Err(IOError(rv));
-  }
-
-  nsAutoString src;
-  MOZ_TRY(aSource->GetPath(src));
-  auto sourcePath = NS_ConvertUTF16toUTF8(src);
-  nsAutoString dest;
-  MOZ_TRY(aDest->GetPath(dest));
-  auto destPath = NS_ConvertUTF16toUTF8(dest);
 
   // Case 1: Destination is an existing directory. Copy/move source into dest.
   bool destIsDir = false;
   bool destExists = true;
 
-  rv = aDest->IsDirectory(&destIsDir);
+  nsresult rv = aDest->IsDirectory(&destIsDir);
   if (NS_SUCCEEDED(rv) && destIsDir) {
     rv = (aSource->*aMethod)(aDest, u""_ns);
     if (NS_FAILED(rv)) {
       return Err(IOError(rv).WithMessage(
           "Could not %s source file(%s) to destination directory(%s)",
-          aMethodName, sourcePath.get(), destPath.get()));
+          aMethodName, aSource->HumanReadablePath().get(),
+          aDest->HumanReadablePath().get()));
     }
     return Ok();
   }
@@ -997,7 +982,8 @@ Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(
                 "destination already exists and overwrites are not allowed\n"
                 "Specify the `noOverwrite: false` option to mitigate this "
                 "error",
-                aMethodName, sourcePath.get(), destPath.get()));
+                aMethodName, aSource->HumanReadablePath().get(),
+                aDest->HumanReadablePath().get()));
   }
   if (destExists && !destIsDir) {
     // If the source file is a directory, but the target is a file, abort early.
@@ -1010,8 +996,9 @@ Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(
                      .WithMessage("Could not %s the source directory(%s) to "
                                   "the destination(%s) because the destination "
                                   "is not a directory",
-                                  aMethodName, sourcePath.get(),
-                                  destPath.get()));
+                                  aMethodName,
+                                  aSource->HumanReadablePath().get(),
+                                  aDest->HumanReadablePath().get()));
     }
   }
 
@@ -1020,12 +1007,13 @@ Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(
   MOZ_TRY(aDest->GetLeafName(destName));
   MOZ_TRY(aDest->GetParent(getter_AddRefs(destDir)));
 
-  // NB: if destDir doesn't exist, then |CopyTo| or |MoveTo| will create it.
+  // NB: if destDir doesn't exist, then |CopyToFollowingLinks| or
+  // |MoveToFollowingLinks| will create it.
   rv = (aSource->*aMethod)(destDir, destName);
   if (NS_FAILED(rv)) {
     return Err(IOError(rv).WithMessage(
         "Could not %s the source file(%s) to the destination(%s)", aMethodName,
-        sourcePath.get(), destPath.get()));
+        aSource->HumanReadablePath().get(), aDest->HumanReadablePath().get()));
   }
   return Ok();
 }
