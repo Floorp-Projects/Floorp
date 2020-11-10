@@ -59,8 +59,7 @@
   text-align: left;
 }
 
-:root[platform="mac"] .welcomebox .shortcutKey,
-.launchpad-root[platform="mac"] .welcomebox .shortcutKey {
+:root[platform="mac"] .welcomebox .shortcutKey {
   font-family: system-ui, -apple-system, sans-serif;
   font-weight: 500;
 }
