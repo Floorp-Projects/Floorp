@@ -200,26 +200,6 @@ LoadInfo::LoadInfo(
             mTopLevelPrincipal = innerWindow->GetPrincipal();
           }
         }
-
-        mDocumentHasLoaded = innerWindow->IsDocumentLoaded();
-
-        if (bc->IsFrame()) {
-          // For resources within iframes, we actually want the
-          // top-level document's flag, not the iframe document's.
-          mDocumentHasLoaded = false;
-          // FIXME: This is not Fission-compatible. The flag needs to be moved
-          // from the document to the WindowContext, and the check updated
-          // accordingly.
-          nsGlobalWindowOuter* topOuter =
-              innerWindow->GetInProcessScriptableTopInternal();
-          if (topOuter) {
-            nsGlobalWindowInner* topInner =
-                nsGlobalWindowInner::Cast(topOuter->GetCurrentInnerWindow());
-            if (topInner) {
-              mDocumentHasLoaded = topInner->IsDocumentLoaded();
-            }
-          }
-        }
       }
 
       // Let's inherit the cookie behavior and permission from the parent
@@ -460,11 +440,6 @@ LoadInfo::LoadInfo(dom::WindowGlobalParent* aParentWGP,
   // Let's inherit the cookie behavior and permission from the embedder
   // document.
   mCookieJarSettings = aParentWGP->CookieJarSettings();
-  if (parentBC->IsContentSubframe()) {
-    mDocumentHasLoaded = false;
-  } else {
-    mDocumentHasLoaded = aParentWGP->DocumentHasLoaded();
-  }
   if (topLevelWGP->BrowsingContext()->IsTop()) {
     if (mCookieJarSettings) {
       bool stopAtOurLevel = mCookieJarSettings->GetCookieBehavior() ==
@@ -473,11 +448,6 @@ LoadInfo::LoadInfo(dom::WindowGlobalParent* aParentWGP,
           topLevelWGP->OuterWindowId() != aParentWGP->OuterWindowId()) {
         mTopLevelPrincipal = topLevelWGP->DocumentPrincipal();
       }
-    }
-    if (parentBC->IsContentSubframe()) {
-      // For resources within iframes, we actually want the
-      // top-level document's flag, not the iframe document's.
-      mDocumentHasLoaded = topLevelWGP->DocumentHasLoaded();
     }
   }
 
@@ -605,7 +575,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       // redirect
       mServiceWorkerTaintingSynthesized(false),
       mDocumentHasUserInteracted(rhs.mDocumentHasUserInteracted),
-      mDocumentHasLoaded(rhs.mDocumentHasLoaded),
       mAllowListFutureDocumentsCreatedFromThisRedirectChain(
           rhs.mAllowListFutureDocumentsCreatedFromThisRedirectChain),
       mCspNonce(rhs.mCspNonce),
@@ -650,7 +619,6 @@ LoadInfo::LoadInfo(
     const nsTArray<nsCString>& aCorsUnsafeHeaders, bool aForcePreflight,
     bool aIsPreflight, bool aLoadTriggeredFromExternal,
     bool aServiceWorkerTaintingSynthesized, bool aDocumentHasUserInteracted,
-    bool aDocumentHasLoaded,
     bool aAllowListFutureDocumentsCreatedFromThisRedirectChain,
     const nsAString& aCspNonce, bool aSkipContentSniffing,
     uint32_t aHttpsOnlyStatus, bool aHasValidUserGestureActivation,
@@ -710,7 +678,6 @@ LoadInfo::LoadInfo(
       mLoadTriggeredFromExternal(aLoadTriggeredFromExternal),
       mServiceWorkerTaintingSynthesized(aServiceWorkerTaintingSynthesized),
       mDocumentHasUserInteracted(aDocumentHasUserInteracted),
-      mDocumentHasLoaded(aDocumentHasLoaded),
       mAllowListFutureDocumentsCreatedFromThisRedirectChain(
           aAllowListFutureDocumentsCreatedFromThisRedirectChain),
       mCspNonce(aCspNonce),
@@ -1540,19 +1507,6 @@ LoadInfo::GetDocumentHasUserInteracted(bool* aDocumentHasUserInteracted) {
 NS_IMETHODIMP
 LoadInfo::SetDocumentHasUserInteracted(bool aDocumentHasUserInteracted) {
   mDocumentHasUserInteracted = aDocumentHasUserInteracted;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetDocumentHasLoaded(bool* aDocumentHasLoaded) {
-  MOZ_ASSERT(aDocumentHasLoaded);
-  *aDocumentHasLoaded = mDocumentHasLoaded;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetDocumentHasLoaded(bool aDocumentHasLoaded) {
-  mDocumentHasLoaded = aDocumentHasLoaded;
   return NS_OK;
 }
 

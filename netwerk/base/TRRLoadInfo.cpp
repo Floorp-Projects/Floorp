@@ -477,16 +477,6 @@ TRRLoadInfo::SetDocumentHasUserInteracted(bool aDocumentHasUserInteracted) {
 }
 
 NS_IMETHODIMP
-TRRLoadInfo::GetDocumentHasLoaded(bool* aDocumentHasLoaded) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::SetDocumentHasLoaded(bool aDocumentHasLoaded) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 TRRLoadInfo::GetAllowListFutureDocumentsCreatedFromThisRedirectChain(
     bool* aValue) {
   return NS_ERROR_NOT_IMPLEMENTED;
