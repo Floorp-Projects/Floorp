@@ -2127,6 +2127,11 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
       InvalidateAfterBailout(cx, outerScript, "phi specialization failure");
       break;
 
+    case BailoutKind::TypePolicy:
+      // A conversion inserted by a type policy failed.
+      // TODO: invalidate and disable recompilation if this happens too often.
+      break;
+
     case BailoutKind::Inevitable:
     case BailoutKind::DuringVMCall:
     case BailoutKind::TooManyArguments:
