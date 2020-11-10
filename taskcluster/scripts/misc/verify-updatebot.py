@@ -62,6 +62,24 @@ revisions = subprocess.check_output(
 )
 revisions = revisions.decode("utf-8").split("\n")
 
+if not revisions:
+    msg = """
+Don't see any non-public revisions. This indicates that the mercurial
+repositories may not be operating in an expected way, and a script
+that performs security checks may fail to perform them properly.
+
+Sheriffs: This _does not_ mean the changesets involved need to be backed
+out. You can continue with your usual operation. However; if this occurs
+during a mercurial upgrade, or a refactring of how we treat try/autoland
+or the landing process, it means that we need to revisit the operation
+of this script.
+
+For now, we ask that you file a bug blocking 1618282 indicating the task
+failed so we can investigate the circumstances that caused it to fail.
+    """
+    print(msg)
+    sys.exit(-1)
+
 # ================================================================================================
 # Find all the Updatebot Revisions (there might be multiple updatebot
 #      landings in a single push some day!)
