@@ -80,6 +80,7 @@ async function test(context, commands) {
 module.exports = {
   test,
   owner: "Network Team",
+  component: "netwerk",
   name: "youtube-scroll",
   description: "Measures quality of the video being played.",
 };

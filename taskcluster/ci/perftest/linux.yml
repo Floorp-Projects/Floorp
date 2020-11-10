@@ -17,6 +17,8 @@ job-defaults:
     platform: linux64-shippable/opt
     require-build:
         linux64-shippable/opt: build-linux64-shippable/opt
+    scopes:
+        - secrets:get:project/releng/gecko/build/level-{level}/conditioned-profiles
 
 try-xpcshell:
     description: Run ./mach perftest on Linux
