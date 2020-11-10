@@ -81,15 +81,10 @@ export function teardownWorkers(): void {
 }
 
 export function bootstrapApp(store: any, panel: Panel): void {
-  const root = document.createElement("div");
-  root.className = "launchpad-root theme-body";
-  root.style.setProperty("flex", "1");
   const mount = document.querySelector("#mount");
   if (!mount) {
     return;
   }
-
-  mount.appendChild(root);
 
   const toolboxDoc = panel.panelWin.parent.document;
 
@@ -103,7 +98,7 @@ export function bootstrapApp(store: any, panel: Panel): void {
         React.createElement(App, { toolboxDoc })
       )
     ),
-    root
+    mount
   );
 }
 
