@@ -6034,7 +6034,15 @@ impl Renderer {
                 // what the device supports.
                 for tile in composite_state.opaque_tiles.iter().chain(composite_state.alpha_tiles.iter()) {
                     let tile_dirty_rect = tile.dirty_rect.translate(tile.rect.origin.to_vector());
-                    combined_dirty_rect = combined_dirty_rect.union(&tile_dirty_rect);
+                    let transformed_dirty_rect = if let Some(transform) = tile.transform {
+                        transform.outer_transformed_rect(&tile_dirty_rect)
+                    } else {
+                        Some(tile_dirty_rect)
+                    };
+
+                    if let Some(dirty_rect) = transformed_dirty_rect {
+                        combined_dirty_rect = combined_dirty_rect.union(&dirty_rect);
+                    }
                 }
 
                 let combined_dirty_rect = combined_dirty_rect.round();
