@@ -11,7 +11,6 @@ const _path = require("path");
 const mappings = {
   "./source-editor": "devtools/client/shared/sourceeditor/editor",
   "../editor/source-editor": "devtools/client/shared/sourceeditor/editor",
-  "./test-flag": "devtools/shared/flags",
   immutable: "devtools/client/shared/vendor/immutable",
   lodash: "devtools/client/shared/vendor/lodash",
   react: "devtools/client/shared/vendor/react",

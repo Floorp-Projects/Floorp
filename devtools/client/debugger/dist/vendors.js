@@ -4,14 +4,14 @@
  
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react-dom-factories"), require("devtools/client/shared/vendor/react"), require("devtools/shared/flags"), require("devtools/client/shared/vendor/react-dom"));
+		module.exports = factory(require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react-dom-factories"), require("devtools/client/shared/vendor/react"), require("devtools/client/shared/vendor/react-dom"));
 	else if(typeof define === 'function' && define.amd)
-		define(["devtools/client/shared/vendor/react-prop-types", "devtools/client/shared/vendor/react-dom-factories", "devtools/client/shared/vendor/react", "devtools/shared/flags", "devtools/client/shared/vendor/react-dom"], factory);
+		define(["devtools/client/shared/vendor/react-prop-types", "devtools/client/shared/vendor/react-dom-factories", "devtools/client/shared/vendor/react", "devtools/client/shared/vendor/react-dom"], factory);
 	else {
-		var a = typeof exports === 'object' ? factory(require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react-dom-factories"), require("devtools/client/shared/vendor/react"), require("devtools/shared/flags"), require("devtools/client/shared/vendor/react-dom")) : factory(root["devtools/client/shared/vendor/react-prop-types"], root["devtools/client/shared/vendor/react-dom-factories"], root["devtools/client/shared/vendor/react"], root["devtools/shared/flags"], root["devtools/client/shared/vendor/react-dom"]);
+		var a = typeof exports === 'object' ? factory(require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react-dom-factories"), require("devtools/client/shared/vendor/react"), require("devtools/client/shared/vendor/react-dom")) : factory(root["devtools/client/shared/vendor/react-prop-types"], root["devtools/client/shared/vendor/react-dom-factories"], root["devtools/client/shared/vendor/react"], root["devtools/client/shared/vendor/react-dom"]);
 		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
 	}
-})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_1__, __WEBPACK_EXTERNAL_MODULE_6__, __WEBPACK_EXTERNAL_MODULE_103__, __WEBPACK_EXTERNAL_MODULE_112__) {
+})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_1__, __WEBPACK_EXTERNAL_MODULE_6__, __WEBPACK_EXTERNAL_MODULE_112__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -90,13 +90,6 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_0__;
 /***/ (function(module, exports) {
 
 module.exports = __WEBPACK_EXTERNAL_MODULE_1__;
-
-/***/ }),
-
-/***/ 103:
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_103__;
 
 /***/ }),
 
@@ -850,8 +843,6 @@ process.umask = function() { return 0; };
 /* WEBPACK VAR INJECTION */(function(process) {/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-const flag = __webpack_require__(103);
-
 function isNode() {
   return process && process.release && process.release.name == "node";
 }
@@ -860,14 +851,9 @@ function isNodeTest() {
   return isNode() && "production" != "production";
 }
 
-function isTesting() {
-  return flag.testing;
-}
-
 module.exports = {
   isNode,
-  isNodeTest,
-  isTesting
+  isNodeTest
 };
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(607)))
 
