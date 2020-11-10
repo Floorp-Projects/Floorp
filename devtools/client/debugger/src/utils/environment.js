@@ -2,15 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function isNode() {
-  return process && process.release && process.release.name == "node";
+export function isNode() {
+  try {
+    return process.release.name == "node";
+  } catch (e) {
+    return false;
+  }
 }
 
-function isNodeTest() {
+export function isNodeTest() {
   return isNode() && process.env.NODE_ENV != "production";
 }
-
-module.exports = {
-  isNode,
-  isNodeTest,
-};
