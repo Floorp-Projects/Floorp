@@ -50,6 +50,10 @@ extern "C" {
 #    define STATUS_UNSUCCESSFUL ((NTSTATUS)0xC0000001L)
 #  endif  // !defined(STATUS_UNSUCCESSFUL)
 
+#  if !defined(STATUS_INFO_LENGTH_MISMATCH)
+#    define STATUS_INFO_LENGTH_MISMATCH ((NTSTATUS)0xC0000004L)
+#  endif
+
 enum SECTION_INHERIT { ViewShare = 1, ViewUnmap = 2 };
 
 NTSTATUS NTAPI NtMapViewOfSection(
@@ -285,6 +289,50 @@ struct MemorySectionNameBuf : public _MEMORY_SECTION_NAME {
   }
 
   operator PCUNICODE_STRING() const { return &mSectionFileName; }
+};
+
+class MemorySectionNameOnHeap {
+  UniquePtr<uint8_t[]> mBuffer;
+
+  MemorySectionNameOnHeap() = default;
+  explicit MemorySectionNameOnHeap(size_t aBufferLen)
+      : mBuffer(MakeUnique<uint8_t[]>(aBufferLen)) {}
+
+ public:
+  static MemorySectionNameOnHeap GetBackingFilePath(HANDLE aProcess,
+                                                    void* aSectionAddr) {
+    SIZE_T bufferLen = MAX_PATH * 2;
+    do {
+      MemorySectionNameOnHeap sectionName(bufferLen);
+
+      SIZE_T requiredBytes;
+      NTSTATUS ntStatus = ::NtQueryVirtualMemory(
+          aProcess, aSectionAddr, MemorySectionName, sectionName.mBuffer.get(),
+          bufferLen, &requiredBytes);
+      if (NT_SUCCESS(ntStatus)) {
+        return sectionName;
+      }
+
+      if (ntStatus != STATUS_INFO_LENGTH_MISMATCH ||
+          bufferLen >= requiredBytes) {
+        break;
+      }
+
+      bufferLen = requiredBytes;
+    } while (1);
+
+    return MemorySectionNameOnHeap();
+  }
+
+  // Allow move & Disallow copy
+  MemorySectionNameOnHeap(MemorySectionNameOnHeap&&) = default;
+  MemorySectionNameOnHeap& operator=(MemorySectionNameOnHeap&&) = default;
+  MemorySectionNameOnHeap(const MemorySectionNameOnHeap&) = delete;
+  MemorySectionNameOnHeap& operator=(const MemorySectionNameOnHeap&) = delete;
+
+  PCUNICODE_STRING AsUnicodeString() const {
+    return reinterpret_cast<PCUNICODE_STRING>(mBuffer.get());
+  }
 };
 
 inline bool FindCharInUnicodeString(const UNICODE_STRING& aStr, WCHAR aChar,
