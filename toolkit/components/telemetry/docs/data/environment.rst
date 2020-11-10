@@ -243,6 +243,9 @@ Structure:
               wrCompositor: { // native OS compositor (CA, DComp, etc.)
                 status: <string>
               }
+              wrSoftware: { // Software backend for WebRender, only computed when 'compositor' is 'webrender'
+                status: <string>
+              }
               openglCompositing: { // OpenGL compositing.
                 status: <string>
               }

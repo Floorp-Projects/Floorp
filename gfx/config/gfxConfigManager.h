@@ -21,6 +21,7 @@ class gfxConfigManager {
         mFeatureWrAngle(nullptr),
         mFeatureWrDComp(nullptr),
         mFeatureWrPartial(nullptr),
+        mFeatureWrSoftware(nullptr),
         mFeatureHwCompositing(nullptr),
         mFeatureD3D11HwAngle(nullptr),
         mFeatureGPUProcess(nullptr),
@@ -51,6 +52,7 @@ class gfxConfigManager {
  protected:
   void EmplaceUserPref(const char* aPrefName, Maybe<bool>& aValue);
   bool ConfigureWebRenderQualified();
+  void ConfigureWebRenderSoftware();
 
   nsCOMPtr<nsIGfxInfo> mGfxInfo;
 
@@ -60,6 +62,7 @@ class gfxConfigManager {
   FeatureState* mFeatureWrAngle;
   FeatureState* mFeatureWrDComp;
   FeatureState* mFeatureWrPartial;
+  FeatureState* mFeatureWrSoftware;
 
   FeatureState* mFeatureHwCompositing;
   FeatureState* mFeatureD3D11HwAngle;
