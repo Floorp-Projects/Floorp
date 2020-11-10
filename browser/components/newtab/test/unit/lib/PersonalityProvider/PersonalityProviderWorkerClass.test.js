@@ -411,20 +411,40 @@ describe("Personality Provider Worker Class", () => {
     });
   });
   describe("#calculateItemRelevanceScore", () => {
-    it("should return -1 for busted item", () => {
-      assert.equal(instance.calculateItemRelevanceScore({ title: "fail" }), -1);
+    it("should return null for busted item", () => {
+      assert.equal(
+        instance.calculateItemRelevanceScore({ title: "fail" }),
+        null
+      );
     });
-    it("should return -1 for a busted ranking", () => {
+    it("should return null for a busted ranking", () => {
       instance.interestVector = { title: "fail", score: 10 };
       assert.equal(
         instance.calculateItemRelevanceScore({ title: "some item", score: 6 }),
-        -1
+        null
       );
     });
     it("should return a score, and not change with interestVector", () => {
       instance.interestVector = { score: 10 };
-      assert.equal(instance.calculateItemRelevanceScore({ score: 2 }), 20);
+      assert.equal(
+        instance.calculateItemRelevanceScore({ score: 2 }).rankingVector.score,
+        20
+      );
       assert.deepEqual(instance.interestVector, { score: 10 });
+    });
+    it("should use defined personalization_models if available", () => {
+      instance.interestVector = { score: 10 };
+      const item = {
+        score: 2,
+        personalization_models: {
+          entertainment: 1,
+        },
+      };
+      assert.equal(
+        instance.calculateItemRelevanceScore(item).scorableItem.item_tags
+          .entertainment,
+        1
+      );
     });
   });
 });
