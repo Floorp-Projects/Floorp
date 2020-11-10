@@ -2146,9 +2146,13 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
       InvalidateAfterBailout(cx, outerScript, "bounds check failure");
       break;
 
+    case BailoutKind::TooManyArguments:
+      // A funapply or spread call had more than JIT_ARGS_LENGTH_MAX arguments.
+      // TODO: Invalidate and disable recompilation if this happens too often.
+      break;
+
     case BailoutKind::Inevitable:
     case BailoutKind::DuringVMCall:
-    case BailoutKind::TooManyArguments:
     case BailoutKind::DynamicNameNotFound:
     case BailoutKind::Overflow:
     case BailoutKind::Round:
@@ -2217,6 +2221,8 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
 
     case BailoutKind::ArgumentCheck:
       // Do nothing, bailout will resume before the argument monitor ICs.
+      // This is unreachable in Warp.
+      MOZ_ASSERT(!JitOptions.warpBuilder);
       break;
     case BailoutKind::BoundsCheck:
       HandleBoundsCheckFailure(cx, outerScript, innerScript);

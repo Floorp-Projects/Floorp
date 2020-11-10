@@ -1389,7 +1389,11 @@ using MVariadicInstruction = MVariadicT<MInstruction>;
 
 // Generates an LSnapshot without further effect.
 class MStart : public MNullaryInstruction {
-  MStart() : MNullaryInstruction(classOpcode) {}
+  MStart() : MNullaryInstruction(classOpcode) {
+    // The snapshot for this instruction covers bailouts that happen before
+    // the env chain is set. See BaselineStackBuilder::buildBaselineFrame.
+    setBailoutKind(BailoutKind::ArgumentCheck);
+  }
 
  public:
   INSTRUCTION_HEADER(Start)
@@ -2878,6 +2882,7 @@ class MApplyArgs : public MTernaryInstruction,
       : MTernaryInstruction(classOpcode, fun, argc, self), target_(target) {
     MOZ_ASSERT(argc->type() == MIRType::Int32);
     setResultType(MIRType::Value);
+    setBailoutKind(BailoutKind::TooManyArguments);
   }
 
  public:
@@ -2920,6 +2925,7 @@ class MApplyArray : public MTernaryInstruction,
       : MTernaryInstruction(classOpcode, fun, elements, self), target_(target) {
     MOZ_ASSERT(elements->type() == MIRType::Elements);
     setResultType(MIRType::Value);
+    setBailoutKind(BailoutKind::TooManyArguments);
   }
 
  public:
@@ -2964,6 +2970,7 @@ class MConstructArray
         target_(target) {
     MOZ_ASSERT(elements->type() == MIRType::Elements);
     setResultType(MIRType::Value);
+    setBailoutKind(BailoutKind::TooManyArguments);
   }
 
  public:
@@ -4975,7 +4982,11 @@ class MUrsh : public MShiftInstruction {
 
   MUrsh(MDefinition* left, MDefinition* right, MIRType type)
       : MShiftInstruction(classOpcode, left, right, type),
-        bailoutsDisabled_(false) {}
+        bailoutsDisabled_(false) {
+    // If this instruction bails out, we will set the HadOverflowBailout flag
+    // on the script, which will cause RangeAnalysis to be less aggressive.
+    setBailoutKind(BailoutKind::OverflowInvalidate);
+  }
 
  public:
   INSTRUCTION_HEADER(Ursh)
@@ -5634,6 +5645,9 @@ class MAdd : public MBinaryArithInstruction {
   MAdd(MDefinition* left, MDefinition* right, MIRType type)
       : MBinaryArithInstruction(classOpcode, left, right, type) {
     setCommutative();
+    // If this instruction bails out, we will set the HadOverflowBailout flag
+    // on the script, which will cause RangeAnalysis to be less aggressive.
+    setBailoutKind(BailoutKind::OverflowInvalidate);
   }
 
   MAdd(MDefinition* left, MDefinition* right, TruncateKind truncateKind)
@@ -5729,6 +5743,10 @@ class MMul : public MBinaryArithInstruction {
       setTruncateKind(Truncate);
     }
     MOZ_ASSERT_IF(mode != Integer, mode == Normal);
+    if (!JitOptions.warpBuilder) {
+      // Ion has special handling for baseline info bailouts.
+      setBailoutKind(BailoutKind::DoubleOutput);
+    }
   }
 
  public:
@@ -5817,7 +5835,12 @@ class MDiv : public MBinaryArithInstruction {
         canBeDivideByZero_(true),
         canBeNegativeDividend_(true),
         unsigned_(false),
-        trapOnError_(false) {}
+        trapOnError_(false) {
+    if (!JitOptions.warpBuilder) {
+      // Ion has special handling for baseline info bailouts.
+      setBailoutKind(BailoutKind::DoubleOutput);
+    }
+  }
 
  public:
   INSTRUCTION_HEADER(Div)
@@ -6013,7 +6036,12 @@ class MMod : public MBinaryArithInstruction {
         canBeNegativeDividend_(true),
         canBePowerOfTwoDivisor_(true),
         canBeDivideByZero_(true),
-        trapOnError_(false) {}
+        trapOnError_(false) {
+    if (!JitOptions.warpBuilder) {
+      // Ion has special handling for baseline info bailouts.
+      setBailoutKind(BailoutKind::DoubleOutput);
+    }
+  }
 
  public:
   INSTRUCTION_HEADER(Mod)
@@ -7980,6 +8008,10 @@ class MBoundsCheck
         fallible_(true) {
     setGuard();
     setMovable();
+    if (!JitOptions.warpBuilder) {
+      // Ion has special handling for non-hoisted bounds checks.
+      setBailoutKind(BailoutKind::BoundsCheck);
+    }
     MOZ_ASSERT(index->type() == MIRType::Int32);
     MOZ_ASSERT(length->type() == MIRType::Int32);
 
@@ -8034,6 +8066,10 @@ class MBoundsCheckLower : public MUnaryInstruction,
       : MUnaryInstruction(classOpcode, index), minimum_(0), fallible_(true) {
     setGuard();
     setMovable();
+    if (!JitOptions.warpBuilder) {
+      // Ion has special handling for non-hoisted bounds checks.
+      setBailoutKind(BailoutKind::BoundsCheck);
+    }
     MOZ_ASSERT(index->type() == MIRType::Int32);
   }
 
@@ -9237,6 +9273,10 @@ class MGetPropertyPolymorphic : public MUnaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Value);
+    if (!JitOptions.warpBuilder) {
+      // Ion has special handling for shape guard bailouts.
+      setBailoutKind(BailoutKind::ShapeGuard);
+    }
   }
 
  public:
@@ -9302,7 +9342,12 @@ class MSetPropertyPolymorphic
       : MBinaryInstruction(classOpcode, obj, value),
         receivers_(alloc),
         name_(name),
-        needsBarrier_(false) {}
+        needsBarrier_(false) {
+    if (!JitOptions.warpBuilder) {
+      // Ion has special handling for shape guard bailouts.
+      setBailoutKind(BailoutKind::ShapeGuard);
+    }
+  }
 
  public:
   INSTRUCTION_HEADER(SetPropertyPolymorphic)
@@ -9529,6 +9574,10 @@ class MGuardShape : public MUnaryInstruction, public SingleObjectPolicy::Data {
     setMovable();
     setResultType(MIRType::Object);
     setResultTypeSet(obj->resultTypeSet());
+    if (!JitOptions.warpBuilder) {
+      // Ion has special handling for shape guard bailouts.
+      setBailoutKind(BailoutKind::ShapeGuard);
+    }
   }
 
  public:
@@ -10046,6 +10095,10 @@ class MGuardNotOptimizedArguments : public MUnaryInstruction,
     setGuard();
     setResultType(MIRType::Value);
     // Note: don't setMovable() to not deoptimize lazy arguments unnecessarily.
+
+    // If this instruction bails out, we will disable the optimization to
+    // prevent bailout loops.
+    setBailoutKind(BailoutKind::NotOptimizedArgumentsGuard);
   }
 
  public:
@@ -10263,6 +10316,10 @@ class MGuardReceiverPolymorphic : public MUnaryInstruction,
     setMovable();
     setResultType(MIRType::Object);
     setResultTypeSet(obj->resultTypeSet());
+    if (!JitOptions.warpBuilder) {
+      // Ion has special handling for shape guard bailouts.
+      setBailoutKind(BailoutKind::ShapeGuard);
+    }
   }
 
  public:
@@ -10295,15 +10352,17 @@ class MGuardObjectGroup : public MUnaryInstruction,
   CompilerObjectGroup group_;
   bool bailOnEquality_;
 
-  MGuardObjectGroup(MDefinition* obj, ObjectGroup* group, bool bailOnEquality,
-                    BailoutKind bailoutKind)
+  MGuardObjectGroup(MDefinition* obj, ObjectGroup* group, bool bailOnEquality)
       : MUnaryInstruction(classOpcode, obj),
         group_(group),
         bailOnEquality_(bailOnEquality) {
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    setBailoutKind(bailoutKind);
+    if (!JitOptions.warpBuilder) {
+      // Ion has special handling for object identity bailouts.
+      setBailoutKind(BailoutKind::ObjectIdentityOrTypeGuard);
+    }
   }
 
  public:
@@ -10353,6 +10412,10 @@ class MGuardObjectIdentity : public MBinaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
+    if (!JitOptions.warpBuilder) {
+      // Ion has special handling for object identity bailouts.
+      setBailoutKind(BailoutKind::ObjectIdentityOrTypeGuard);
+    }
   }
 
  public:
@@ -12763,7 +12826,9 @@ class MAtomicTypedArrayElementBinop
 };
 
 class MDebugger : public MNullaryInstruction {
-  MDebugger() : MNullaryInstruction(classOpcode) {}
+  MDebugger() : MNullaryInstruction(classOpcode) {
+    setBailoutKind(BailoutKind::Debugger);
+  }
 
  public:
   INSTRUCTION_HEADER(Debugger)
