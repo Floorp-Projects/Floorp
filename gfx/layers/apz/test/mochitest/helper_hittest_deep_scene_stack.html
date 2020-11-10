@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Exercising the APZ/WR hit-test with a deep scene that produces many results</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+<style>
+body {
+    transform-style: preserve-3d;
+}
+
+div {
+    height: 100px;
+    background-color: rgba(0, 255, 0, 0.1);
+    transform: translateX(1px);
+}
+</style>
+</head>
+<body>
+<script>
+
+// Create a 1000-deep set of nested divs with some transparency and transforms.
+// This ensures that the WR hit-test will return all of the divs at the tested
+// point, rather than just the topmost one. We set a touch-action property on
+// this div so that we can ensure we're hit-testing at the right spot.
+var div = document.createElement('div');
+div.id = "innermost";
+div.style.touchAction = "pan-x pan-y";
+div.style.width = "2px";
+
+for (var i = 3; i < 1000; i++) {
+    var container = document.createElement('div');
+    container.style.width = i + "px";
+    container.appendChild(div);
+    div = container;
+}
+document.body.appendChild(div);
+
+async function test(testDriver) {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  // Hit-test at the deepest point of divs.
+  checkHitResult(hitTest(centerOf(document.getElementById("innermost"))),
+                 APZHitResultFlags.VISIBLE | APZHitResultFlags.PINCH_ZOOM_DISABLED | APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+                 utils.getViewId(document.scrollingElement),
+                 utils.getLayersId(),
+                 "innermost div");
+}
+
+
+waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
+
+</script>
+</body>
