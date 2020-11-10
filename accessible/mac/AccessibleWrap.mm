@@ -72,13 +72,25 @@ void AccessibleWrap::GetNativeInterface(void** aOutInterface) {
 Class AccessibleWrap::GetNativeType() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  if (IsXULTabpanels()) return [mozPaneAccessible class];
+  if (IsXULTabpanels()) {
+    return [mozPaneAccessible class];
+  }
 
-  if (IsTable()) return [mozTableAccessible class];
+  if (IsTable()) {
+    return [mozTableAccessible class];
+  }
 
-  if (IsTableRow()) return [mozTableRowAccessible class];
+  if (IsTableRow()) {
+    return [mozTableRowAccessible class];
+  }
 
-  if (IsTableCell()) return [mozTableCellAccessible class];
+  if (IsTableCell()) {
+    return [mozTableCellAccessible class];
+  }
+
+  if (IsDoc()) {
+    return [MOXWebAreaAccessible class];
+  }
 
   return GetTypeFromRole(Role());
 
@@ -231,9 +243,6 @@ Class a11y::GetTypeFromRole(roles::Role aRole) {
   switch (aRole) {
     case roles::COMBOBOX:
       return [mozPopupButtonAccessible class];
-
-    case roles::DOCUMENT:
-      return [MOXWebAreaAccessible class];
 
     case roles::PUSHBUTTON:
       return [mozButtonAccessible class];

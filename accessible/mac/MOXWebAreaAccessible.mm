@@ -27,6 +27,10 @@ using namespace mozilla::a11y;
 }
 
 - (NSString*)moxRoleDescription {
+  if ([[self moxSubrole] isEqualToString:@"AXLandmarkApplication"]) {
+    return utils::LocalizedString(u"application"_ns);
+  }
+
   return NSAccessibilityRoleDescription(NSAccessibilityGroupRole, nil);
 }
 
@@ -43,6 +47,11 @@ using namespace mozilla::a11y;
   // This is mostly for testing purposes to assert that this is the generated
   // root group.
   return @"root-group";
+}
+
+- (NSString*)moxSubrole {
+  // Steal the subrole internally mapped to the web area.
+  return [mParent moxSubrole];
 }
 
 - (id)moxHitTest:(NSPoint)point {
@@ -89,6 +98,20 @@ using namespace mozilla::a11y;
 @end
 
 @implementation MOXWebAreaAccessible
+
+- (NSString*)moxRole {
+  // The OS role is AXWebArea regardless of the gecko role
+  // (APPLICATION or DOCUMENT).
+  // If the web area has a role of APPLICATION, its root group will
+  // reflect that in a subrole/description.
+  return @"AXWebArea";
+}
+
+- (NSString*)moxRoleDescription {
+  // The role description is "HTML Content" regardless of the gecko role
+  // (APPLICATION or DOCUMENT)
+  return utils::LocalizedString(u"htmlContent"_ns);
+}
 
 - (NSURL*)moxURL {
   if ([self isExpired]) {
@@ -194,12 +217,23 @@ using namespace mozilla::a11y;
   return [super moxUnignoredChildren];
 }
 
+- (BOOL)moxBlockSelector:(SEL)selector {
+  if (selector == @selector(moxSubrole)) {
+    // Never expose a subrole for a web area.
+    return YES;
+  }
+
+  return [super moxBlockSelector:selector];
+}
+
 - (id)rootGroup {
   NSArray* children = [super moxUnignoredChildren];
-  if ([children count] == 1 &&
+  if (mRole != roles::APPLICATION && [children count] == 1 &&
       [[[children firstObject] moxUnignoredChildren] count] != 0) {
-    // We only need a root group if our document has multiple children or one
-    // child that is a leaf.
+    // We only need a root group if our document:
+    // (1) has multiple children, or
+    // (2) a one child that is a leaf, or
+    // (3) has a role of APPLICATION
     return nil;
   }
 
