@@ -124,14 +124,14 @@ StorageDBThread::StorageDBThread()
 
 // static
 StorageDBThread* StorageDBThread::Get() {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
 
   return sStorageThread;
 }
 
 // static
 StorageDBThread* StorageDBThread::GetOrCreate(const nsString& aProfilePath) {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
 
   if (sStorageThread || sStorageThreadDown) {
     // When sStorageThreadDown is at true, sStorageThread is null.
@@ -183,7 +183,7 @@ nsresult StorageDBThread::GetProfilePath(nsString& aProfilePath) {
 }
 
 nsresult StorageDBThread::Init(const nsString& aProfilePath) {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
 
   nsresult rv;
 
@@ -231,7 +231,7 @@ nsresult StorageDBThread::Init(const nsString& aProfilePath) {
 }
 
 nsresult StorageDBThread::Shutdown() {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
 
   sStorageThreadDown = true;
 
@@ -917,7 +917,7 @@ nsresult StorageDBThread::DBOperation::Perform(StorageDBThread* aThread) {
       }
 
       StatementCache* statements;
-      if (MOZ_UNLIKELY(IsOnBackgroundThread())) {
+      if (MOZ_UNLIKELY(::mozilla::ipc::IsOnBackgroundThread())) {
         statements = &aThread->mReaderStatements;
       } else {
         statements = &aThread->mWorkerStatements;
@@ -1487,7 +1487,7 @@ bool StorageDBThread::PendingOperations::IsOriginUpdatePending(
 
 nsresult StorageDBThread::InitHelper::SyncDispatchAndReturnProfilePath(
     nsAString& aProfilePath) {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
 
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
 
@@ -1542,7 +1542,7 @@ StorageDBThread::ShutdownRunnable::Run() {
     return NS_OK;
   }
 
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
 
   if (sStorageThread) {
     sStorageThread->Shutdown();
