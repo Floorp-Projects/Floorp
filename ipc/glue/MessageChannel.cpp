@@ -2787,11 +2787,14 @@ void MessageChannel::AddProfilerMarker(const IPC::Message& aMessage,
   mMonitor->AssertCurrentThreadOwns();
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_feature_active(ProfilerFeature::IPCMessages)) {
-    int32_t pid = mListener->OtherPid();
-    PROFILER_ADD_MARKER_WITH_PAYLOAD(
-        "IPC", IPC, IPCMarkerPayload,
-        (pid, aMessage.seqno(), aMessage.type(), mSide, aDirection,
-         MessagePhase::Endpoint, aMessage.is_sync(), TimeStamp::NowUnfuzzed()));
+    int32_t pid = mListener->OtherPidMaybeInvalid();
+    if (pid != kInvalidProcessId) {
+      PROFILER_ADD_MARKER_WITH_PAYLOAD(
+          "IPC", IPC, IPCMarkerPayload,
+          (pid, aMessage.seqno(), aMessage.type(), mSide, aDirection,
+           MessagePhase::Endpoint, aMessage.is_sync(),
+           TimeStamp::NowUnfuzzed()));
+    }
   }
 #endif
 }
