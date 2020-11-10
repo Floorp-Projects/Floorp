@@ -3355,9 +3355,18 @@ void BackgroundCursorChild<CursorType>::HandleResponse(
     nsTArray<ResponseType>&& aResponses) {
   AssertIsOnOwningThread();
 
-  if constexpr (CursorType == IDBCursorType::ObjectStore) {
+  if constexpr (CursorType == IDBCursorType::ObjectStore ||
+                CursorType == IDBCursorType::Index) {
     MOZ_ASSERT(mTransaction);
 
+    if (!mTransaction->Database()->GetOwnerGlobal()) {
+      // Ignore the response, since we have already been disconnected from the
+      // global.
+      return;
+    }
+  }
+
+  if constexpr (CursorType == IDBCursorType::ObjectStore) {
     HandleMultipleCursorResponses(
         std::move(aResponses), [this](const bool useAsCurrentResult,
                                       ObjectStoreCursorResponse&& response) {
@@ -3380,8 +3389,6 @@ void BackgroundCursorChild<CursorType>::HandleResponse(
         });
   }
   if constexpr (CursorType == IDBCursorType::Index) {
-    MOZ_ASSERT(mTransaction);
-
     HandleMultipleCursorResponses(
         std::move(aResponses),
         [this](const bool useAsCurrentResult, IndexCursorResponse&& response) {
