@@ -301,14 +301,14 @@ class IOUtils final {
                                                int32_t aMode = 0777);
 
   /**
-   * Attempts to stat a file at |aPath|.
+   * Attempts to stat a file at |aFile|.
    *
-   * @param aPath The location of the file as an absolute path string.
+   * @param aFile The location of the file.
    *
    * @return An |InternalFileInfo| struct if successful, or an error.
    */
   static Result<IOUtils::InternalFileInfo, IOError> StatSync(
-      const nsAString& aPath);
+      already_AddRefed<nsIFile> aFile);
 
   /**
    * Attempts to update the last modification time of the file at |aPath|.

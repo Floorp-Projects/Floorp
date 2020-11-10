@@ -398,10 +398,11 @@ already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  return RunOnBackgroundThread<InternalFileInfo>(promise, &StatSync, path);
+  return RunOnBackgroundThread<InternalFileInfo>(promise, &StatSync,
+                                                 file.forget());
 }
 
 /* static */
@@ -1109,16 +1110,15 @@ Result<Ok, IOUtils::IOError> IOUtils::MakeDirectorySync(
 }
 
 Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
-    const nsAString& aPath) {
+    already_AddRefed<nsIFile> aFile) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  RefPtr<nsLocalFile> file = new nsLocalFile();
-  MOZ_TRY(file->InitWithPath(aPath));
+  nsCOMPtr<nsIFile> file = aFile;
 
   InternalFileInfo info;
-  info.mPath = nsString(aPath);
+  MOZ_ALWAYS_SUCCEEDS(file->GetPath(info.mPath));
 
-  bool isRegular;
+  bool isRegular = false;
   // IsFile will stat and cache info in the file object. If the file doesn't
   // exist, or there is an access error, we'll discover it here.
   // Any subsequent errors are unexpected and will just be forwarded.
@@ -1128,7 +1128,7 @@ Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
     if (IsFileNotFound(rv)) {
       return Err(
           err.WithMessage("Could not stat file(%s) because it does not exist",
-                          NS_ConvertUTF16toUTF8(aPath).get()));
+                          file->HumanReadablePath().get()));
     }
     return Err(err);
   }
@@ -1136,13 +1136,9 @@ Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
   // Now we can populate the info object by querying the file.
   info.mType = FileType::Regular;
   if (!isRegular) {
-    bool isDir;
+    bool isDir = false;
     MOZ_TRY(file->IsDirectory(&isDir));
-    if (isDir) {
-      info.mType = FileType::Directory;
-    } else {
-      info.mType = FileType::Other;
-    }
+    info.mType = isDir ? FileType::Directory : FileType::Other;
   }
 
   int64_t size = -1;
