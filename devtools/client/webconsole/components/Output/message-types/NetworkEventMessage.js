@@ -80,16 +80,15 @@ function NetworkEventMessage({
     source,
     type,
     level,
-    url,
-    method,
+    request,
     isXHR,
     timeStamp,
     blockedReason,
-    httpVersion,
-    status,
-    statusText,
-    totalTime,
   } = message;
+
+  const { response = {}, totalTime } = networkMessageUpdate;
+
+  const { httpVersion, status, statusText } = response;
 
   const topLevelClasses = ["cm-s-mozilla"];
   if (isMessageNetworkError(message)) {
@@ -140,7 +139,7 @@ function NetworkEventMessage({
   const onToggle = (messageId, e) => {
     const shouldOpenLink = (isMacOS && e.metaKey) || (!isMacOS && e.ctrlKey);
     if (shouldOpenLink) {
-      serviceContainer.openLink(url, e);
+      serviceContainer.openLink(request.url, e);
       e.stopPropagation();
     } else if (open) {
       dispatch(actions.messageClose(messageId));
@@ -150,24 +149,27 @@ function NetworkEventMessage({
   };
 
   // Message body components.
-  const requestMethod = dom.span({ className: "method" }, method);
+  const method = dom.span({ className: "method" }, request.method);
   const xhr = isXHR
     ? dom.span({ className: "xhr" }, l10n.getStr("webConsoleXhrIndicator"))
     : null;
-  const requestUrl = dom.span({ className: "url", title: url }, url);
+  const requestUrl = dom.span(
+    { className: "url", title: request.url },
+    request.url
+  );
   const statusBody = statusInfo
     ? dom.a({ className: "status" }, statusInfo)
     : null;
 
-  const messageBody = [xhr, requestMethod, requestUrl, statusBody];
+  const messageBody = [xhr, method, requestUrl, statusBody];
 
   // API consumed by Net monitor UI components. Most of the method
   // are not needed in context of the Console panel (atm) and thus
   // let's just provide empty implementation.
   // Individual methods might be implemented step by step as needed.
   const connector = {
-    viewSourceInDebugger: (srcUrl, line, column) => {
-      serviceContainer.onViewSourceInDebugger({ url: srcUrl, line, column });
+    viewSourceInDebugger: (url, line, column) => {
+      serviceContainer.onViewSourceInDebugger({ url, line, column });
     },
     getLongString: grip => {
       return serviceContainer.getLongString(grip);
@@ -208,7 +210,6 @@ function NetworkEventMessage({
       })
     );
 
-  const request = { url, method };
   return Message({
     dispatch,
     messageId: id,

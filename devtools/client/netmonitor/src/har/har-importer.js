@@ -5,9 +5,6 @@
 "use strict";
 
 const { TIMING_KEYS } = require("devtools/client/netmonitor/src/constants");
-const {
-  getUrlDetails,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
 
 var guid = 0;
 
@@ -50,7 +47,6 @@ HarImporter.prototype = {
           startedMs: startedMs,
           method: entry.request.method,
           url: entry.request.url,
-          urlDetails: getUrlDetails(entry.request.url),
           isXHR: false,
           cause: {
             loadingDocumentUri: "",
