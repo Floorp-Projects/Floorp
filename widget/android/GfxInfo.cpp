@@ -579,9 +579,6 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       // On Nightly enable Webrender on all Adreno 5xx GPUs
       isUnblocked |= gpu.Find("Adreno (TM) 5", /*ignoreCase*/ true) >= 0;
 
-      // On Nightly enable Webrender on all Mali-Gxx GPUs
-      isUnblocked |= gpu.Find("Mali-G", /*ignoreCase*/ true) >= 0;
-
       // On Nightly enable Webrender on all Mali-Txxx GPUs
       isUnblocked |= gpu.Find("Mali-T", /*ignoreCase*/ true) >= 0;
 #endif
@@ -593,6 +590,9 @@ nsresult GfxInfo::GetFeatureStatusImpl(
 
       // Enable Webrender on all Adreno 6xx devices
       isUnblocked |= gpu.Find("Adreno (TM) 6", /*ignoreCase*/ true) >= 0;
+
+      // Enable Webrender on all Mali-Gxx GPUs
+      isUnblocked |= gpu.Find("Mali-G", /*ignoreCase*/ true) >= 0;
 
       if (!isUnblocked) {
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
