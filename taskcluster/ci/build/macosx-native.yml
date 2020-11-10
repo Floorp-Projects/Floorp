@@ -1,0 +1,49 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    index:
+        product: firefox
+    worker-type: b-osx-1015
+    worker:
+        max-run-time: 7200
+    run:
+        using: mozharness
+        actions: [get-secrets, build]
+        script: "mozharness/scripts/fx_desktop_build.py"
+
+macosx64-aarch64/opt:
+    description: "MacOS X Aarch64"
+    index:
+        job-name: macosx64-aarch64-opt
+    attributes:
+        skip-verify-test-packaging: true
+    treeherder:
+        platform: osx-aarch64/opt
+        symbol: B
+        tier: 1
+    worker:
+        env:
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+            PERFHERDER_EXTRA_OPTIONS: aarch64
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_macosx.py
+            - taskcluster_nightly.py
+        secrets: true
+        extra-config:
+            disable_package_metrics: true
+            stage_platform: macosx64
+            mozconfig_platform: macosx64-aarch64
+    run-on-projects: ['integration']
+    fetches:
+        toolchain:
+            - macosx64-cbindgen
+            - macosx64-dump-syms
+            - macosx64-nasm
+            - macosx64-node
+            - macosx64-rust-nightly
+    optimization:
+        skip-unless-expanded: null

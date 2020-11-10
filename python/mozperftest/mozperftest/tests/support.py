@@ -5,10 +5,12 @@ import shutil
 import os
 from pathlib import Path
 import sys
+import subprocess
 
 from mozperftest.metadata import Metadata
 from mozperftest.environment import MachEnvironment
 from mozperftest.hooks import Hooks
+from mozperftest import utils
 from mozperftest.script import ScriptInfo
 
 
@@ -46,6 +48,15 @@ def get_running_env(**kwargs):
     def get_binary_path(*args):
         return ""
 
+    def run_pip(args):
+        pip = Path(sys.executable).parent / "pip"
+        subprocess.check_call(
+            [str(pip)] + args,
+            stderr=subprocess.STDOUT,
+            cwd=config.topsrcdir,
+            universal_newlines=True,
+        )
+
     mach_cmd.get_binary_path = get_binary_path
     mach_cmd.topsrcdir = config.topsrcdir
     mach_cmd.topobjdir = config.topobjdir
@@ -56,6 +67,7 @@ def get_running_env(**kwargs):
     mach_cmd.virtualenv_manager = MagicMock()
     mach_cmd.virtualenv_manager.python_path = sys.executable
     mach_cmd.virtualenv_manager.bin_path = Path(sys.executable).parent
+    mach_cmd.virtualenv_manager._run_pip = run_pip
 
     mach_args = {
         "flavor": "desktop-browser",
@@ -89,3 +101,17 @@ def requests_content(chunks=None):
         return Resp()
 
     return _content
+
+
+@contextlib.contextmanager
+def running_on_try(on_try=True):
+    old = utils.ON_TRY
+    utils.ON_TRY = on_try
+    try:
+        if on_try:
+            with utils.temporary_env(MOZ_AUTOMATION="1"):
+                yield
+        else:
+            yield
+    finally:
+        utils.ON_TRY = old

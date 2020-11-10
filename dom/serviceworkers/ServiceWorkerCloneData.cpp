@@ -6,6 +6,7 @@
 
 #include "ServiceWorkerCloneData.h"
 
+#include "mozilla/dom/DOMTypes.h"
 #include "nsProxyRelease.h"
 
 namespace mozilla {

@@ -2425,7 +2425,7 @@ bool ServiceWorkerManager::IsAvailable(nsIPrincipal* aPrincipal, nsIURI* aURI,
 
     // https://w3c.github.io/ServiceWorker/#on-fetch-request-algorithm 17.1
     // try schedule a soft-update for non-subresource case.
-    registration->MaybeScheduleTimeCheckAndUpdate();
+    registration->MaybeScheduleUpdate();
     return false;
   }
   // Found a matching service worker which handles fetch events, return true.

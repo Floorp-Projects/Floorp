@@ -6,6 +6,7 @@
 
 #include "ServiceWorkerUpdateJob.h"
 
+#include "mozilla/Telemetry.h"
 #include "nsIScriptError.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"

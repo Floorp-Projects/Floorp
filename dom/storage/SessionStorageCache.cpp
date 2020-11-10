@@ -6,6 +6,8 @@
 
 #include "SessionStorageCache.h"
 
+#include "LocalStorageManager.h"
+#include "StorageIPC.h"
 #include "mozilla/dom/LSWriteOptimizer.h"
 #include "mozilla/dom/PBackgroundSessionStorageCache.h"
 

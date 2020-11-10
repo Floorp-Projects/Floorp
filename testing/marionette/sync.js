@@ -13,6 +13,7 @@ const EXPORTED_SYMBOLS = [
   "Sleep",
   "TimedPromise",
   "waitForEvent",
+  "waitForLoadEvent",
   "waitForMessage",
   "waitForObserverTopic",
 ];
@@ -26,8 +27,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
 
   error: "chrome://marionette/content/error.js",
+  EventDispatcher:
+    "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
   Log: "chrome://marionette/content/log.js",
+  registerEventsActor:
+    "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
   truncate: "chrome://marionette/content/format.js",
+  unregisterEventsActor:
+    "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
@@ -511,6 +518,45 @@ function waitForEvent(
       capture,
       wantsUntrusted
     );
+  });
+}
+
+/**
+ * Wait for a load event to be fired on a specific browsing context.
+ * The supported events are:
+ *   - beforeunload
+ *   - DOMContentLoaded
+ *   - hashchange
+ *   - pagehide
+ *   - pageshow
+ *   - popstate
+ *
+ * @param {string} eventName
+ *     The specific load event name to wait for.
+ * @param {function(): BrowsingContext} browsingContextFn
+ *     A function that returns the reference to the browsing context for which
+ *     the load event should be fired.
+ *
+ * @return {Promise.<Object>}
+ *     Promise which resolves when the load event has been fired
+ */
+function waitForLoadEvent(eventName, browsingContextFn) {
+  let onPageLoad;
+  return new Promise(resolve => {
+    onPageLoad = (_, data) => {
+      logger.trace(`Received event ${data.type} for ${data.documentURI}`);
+      if (
+        data.browsingContext === browsingContextFn() &&
+        data.type === eventName
+      ) {
+        EventDispatcher.off("page-load", onPageLoad);
+        resolve(data);
+      }
+    };
+    EventDispatcher.on("page-load", onPageLoad);
+    registerEventsActor();
+  }).finally(() => {
+    unregisterEventsActor();
   });
 }
 

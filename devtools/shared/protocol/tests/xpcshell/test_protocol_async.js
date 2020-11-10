@@ -9,8 +9,9 @@
  * complete.
  */
 
-var protocol = require("devtools/shared/protocol");
-var { Arg, RetVal } = protocol;
+const { waitForTick } = require("devtools/shared/DevToolsUtils");
+const protocol = require("devtools/shared/protocol");
+const { Arg, RetVal } = protocol;
 
 function simpleHello() {
   return {
@@ -35,12 +36,13 @@ const rootSpec = protocol.generateActorSpec({
       response: { value: RetVal("number") },
     },
     promiseThrow: {
+      request: { toWait: Arg(0, "number") },
       response: { value: RetVal("number") },
     },
   },
 });
 
-var RootActor = protocol.ActorClassWithSpec(rootSpec, {
+const RootActor = protocol.ActorClassWithSpec(rootSpec, {
   initialize: function(conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
     // Root actor owns itself.
@@ -55,37 +57,26 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
     return this.sequence++;
   },
 
-  promiseReturn: function(toWait) {
-    // Guarantee that this resolves after simpleReturn returns.
-    return new Promise(resolve => {
-      const sequence = this.sequence++;
+  // Guarantee that this resolves after simpleReturn returns.
+  promiseReturn: async function(toWait) {
+    const sequence = this.sequence++;
 
-      // Wait until the number of requests specified by toWait have
-      // happened, to test queuing.
-      const check = () => {
-        if (this.sequence - sequence < toWait) {
-          executeSoon(check);
-          return;
-        }
-        resolve(sequence);
-      };
-      executeSoon(check);
-    });
+    // Wait until the number of requests specified by toWait have
+    // happened, to test queuing.
+    while (this.sequence - sequence < toWait) {
+      await waitForTick();
+    }
+
+    return sequence;
   },
 
   simpleThrow: function() {
     throw new Error(this.sequence++);
   },
 
-  promiseThrow: function() {
-    // Guarantee that this resolves after simpleReturn returns.
-    return new Promise((resolve, reject) => {
-      let sequence = this.sequence++;
-      // This should be enough to force a failure if the code is broken.
-      do_timeout(150, () => {
-        reject(sequence++);
-      });
-    });
+  // Guarantee that this resolves after simpleReturn returns.
+  promiseThrow: function(toWait) {
+    return this.promiseReturn(toWait).then(Promise.reject);
   },
 });
 
@@ -155,13 +146,8 @@ add_task(async function() {
     )
   );
 
-  // While packets are sent in the correct order, rejection handlers
-  // registered in "Promise.jsm" may be invoked later than fulfillment
-  // handlers, meaning that we can't check the actual order with certainty.
-  const deferAfterRejection = defer();
-
   calls.push(
-    rootFront.promiseThrow().then(
+    rootFront.promiseThrow(2).then(
       () => {
         Assert.ok(false, "promiseThrow shouldn't succeed!");
       },
@@ -169,19 +155,16 @@ add_task(async function() {
         // Check right return order
         Assert.equal(sequence++, 4);
         Assert.ok(true, "simple throw should throw");
-        deferAfterRejection.resolve();
       }
     )
   );
 
   calls.push(
     rootFront.simpleReturn().then(ret => {
-      return deferAfterRejection.promise.then(function() {
-        // Check right return order
-        Assert.equal(sequence, 5);
-        // Check request handling order
-        Assert.equal(ret, sequence++);
-      });
+      // Check right return order
+      Assert.equal(sequence, 5);
+      // Check request handling order
+      Assert.equal(ret, sequence++);
     })
   );
 
@@ -189,23 +172,19 @@ add_task(async function() {
   // for another simpleReturn before completing
   calls.push(
     rootFront.promiseReturn(1).then(ret => {
-      return deferAfterRejection.promise.then(function() {
-        // Check right return order
-        Assert.equal(sequence, 6);
-        // Check request handling order
-        Assert.equal(ret, sequence++);
-      });
+      // Check right return order
+      Assert.equal(sequence, 6);
+      // Check request handling order
+      Assert.equal(ret, sequence++);
     })
   );
 
   calls.push(
     rootFront.simpleReturn().then(ret => {
-      return deferAfterRejection.promise.then(function() {
-        // Check right return order
-        Assert.equal(sequence, 7);
-        // Check request handling order
-        Assert.equal(ret, sequence++);
-      });
+      // Check right return order
+      Assert.equal(sequence, 7);
+      // Check request handling order
+      Assert.equal(ret, sequence++);
     })
   );
 

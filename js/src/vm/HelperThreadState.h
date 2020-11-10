@@ -158,7 +158,7 @@ class GlobalHelperThreadState {
   // This is used to get the HelperThreadTask that are currently running.
   HelperThreadTaskVector helperTasks_;
 
-  ParseTask* removeFinishedParseTask(ParseTaskKind kind,
+  ParseTask* removeFinishedParseTask(JSContext* cx, ParseTaskKind kind,
                                      JS::OffThreadToken* token);
 
  public:

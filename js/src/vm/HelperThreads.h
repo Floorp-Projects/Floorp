@@ -183,7 +183,14 @@ bool HasOffThreadIonCompile(JS::Realm* realm);
  */
 void WaitForOffThreadParses(JSRuntime* runtime);
 
-/* Cancel all scheduled, in progress or finished parses for runtime. */
+/*
+ * Cancel all scheduled, in progress or finished parses for runtime.
+ *
+ * Parse tasks which have completed but for which JS::FinishOffThreadScript (or
+ * equivalent) has not been called are removed from the system. This is only
+ * safe to do during shutdown, or if you know that the main thread isn't waiting
+ * for tasks to complete.
+ */
 void CancelOffThreadParses(JSRuntime* runtime);
 
 /*

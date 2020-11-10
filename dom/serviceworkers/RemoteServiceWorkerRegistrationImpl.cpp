@@ -7,6 +7,8 @@
 #include "RemoteServiceWorkerRegistrationImpl.h"
 
 #include "ServiceWorkerRegistrationChild.h"
+#include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/ipc/BackgroundChild.h"
 
 namespace mozilla {
 namespace dom {
@@ -109,8 +111,8 @@ void RemoteServiceWorkerRegistrationImpl::Unregister(
 RemoteServiceWorkerRegistrationImpl::RemoteServiceWorkerRegistrationImpl(
     const ServiceWorkerRegistrationDescriptor& aDescriptor)
     : mOuter(nullptr), mShutdown(false) {
-  PBackgroundChild* parentActor =
-      BackgroundChild::GetOrCreateForCurrentThread();
+  ::mozilla::ipc::PBackgroundChild* parentActor =
+      ::mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!parentActor)) {
     Shutdown();
     return;

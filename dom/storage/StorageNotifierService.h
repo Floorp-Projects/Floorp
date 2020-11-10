@@ -7,6 +7,11 @@
 #ifndef mozilla_dom_StorageNotifierService_h
 #define mozilla_dom_StorageNotifierService_h
 
+#include "nsISupportsImpl.h"
+#include "nsTObserverArray.h"
+
+class nsIEventTarget;
+class nsIPrincipal;
 class nsPIDOMWindowInner;
 
 namespace mozilla {
