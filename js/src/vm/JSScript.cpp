@@ -3802,7 +3802,6 @@ bool JSScript::fullyInitFromStencil(
   // Note: These flags should already be correct when the BaseScript was
   // allocated.
   MOZ_ASSERT(script->immutableFlags() == scriptStencil.immutableFlags);
-  script->resetImmutableFlags(scriptStencil.immutableFlags);
 
   // Derive initial mutable flags
   script->resetArgsUsageAnalysis();
