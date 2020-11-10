@@ -17,7 +17,6 @@
 #include "mozilla/TextUtils.h"
 #include "mozilla/dom/IOUtilsBinding.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
@@ -723,45 +722,60 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicSync(
     writeFile = destFile.forget();
   }
 
-  // The data to be written to file might be larger than can be
-  // written in any single call, so we must truncate the file and
-  // set the write mode to append to the file.
-  int32_t flags = PR_WRONLY | PR_TRUNCATE | PR_APPEND | PR_CREATE_FILE;
+  int32_t flags = PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE;
   if (aOptions.mFlush) {
     flags |= PR_SYNC;
   }
 
   // Try to perform the write and ensure that the file is closed before
   // continuing.
-  uint32_t result = 0;
+  uint32_t totalWritten = 0;
   {
     // Compress the byte array if required.
     nsTArray<uint8_t> compressed;
-    Span<const uint8_t> bytes;
+    Span<const char> bytes;
     if (aOptions.mCompress) {
       auto rv = MozLZ4::Compress(aByteArray);
       if (rv.isErr()) {
         return rv.propagateErr();
       }
       compressed = rv.unwrap();
-      bytes = Span(compressed);
+      bytes = Span(reinterpret_cast<const char*>(compressed.Elements()),
+                   compressed.Length());
     } else {
-      bytes = aByteArray;
+      bytes = Span(reinterpret_cast<const char*>(aByteArray.Elements()),
+                   aByteArray.Length());
     }
 
-    UniquePtr<PRFileDesc, PR_CloseDelete> fd;
-    if (nsresult rv =
-            writeFile->OpenNSPRFileDesc(flags, 0666, getter_Transfers(fd));
-        NS_FAILED(rv)) {
+    RefPtr<nsFileOutputStream> stream = new nsFileOutputStream();
+    if (nsresult rv = stream->Init(writeFile, flags, 0666, 0); NS_FAILED(rv)) {
       return Err(
           IOError(rv).WithMessage("Could not open the file at %s for writing",
                                   writeFile->HumanReadablePath().get()));
     }
-    auto rv = WriteSync(fd.get(), writeFile, bytes);
-    if (rv.isErr()) {
-      return rv.propagateErr();
+
+    // nsFileStream::Write uses PR_Write under the hood, which accepts a
+    // *int32_t* for the chunk size.
+    uint32_t chunkSize = INT32_MAX;
+    Span<const char> pendingBytes = bytes;
+
+    while (pendingBytes.Length() > 0) {
+      if (pendingBytes.Length() < chunkSize) {
+        chunkSize = pendingBytes.Length();
+      }
+
+      uint32_t bytesWritten = 0;
+      if (nsresult rv =
+              stream->Write(pendingBytes.Elements(), chunkSize, &bytesWritten);
+          NS_FAILED(rv)) {
+        return Err(IOError(rv).WithMessage(
+            "Could not write chunk (size = %" PRIu32
+            ") to file %s. The file may be corrupt.",
+            chunkSize, writeFile->HumanReadablePath().get()));
+      }
+      pendingBytes = pendingBytes.From(bytesWritten);
+      totalWritten += bytesWritten;
     }
-    result = rv.unwrap();
   }
 
   // If tmpFile was passed, destFile will be non-null. Check destFile against
@@ -786,7 +800,7 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicSync(
                          destFile->HumanReadablePath().get()));
     }
   }
-  return result;
+  return totalWritten;
 }
 
 /* static */
@@ -799,44 +813,6 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicUTF8Sync(
                  aUTF8String.Length());
 
   return WriteAtomicSync(std::move(aFile), utf8Bytes, std::move(aOptions));
-}
-
-/* static */
-Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
-    PRFileDesc* aFd, nsIFile* aFile, const Span<const uint8_t>& aBytes) {
-  // aBytes comes from a JavaScript TypedArray, which has UINT32_MAX max
-  // length.
-  MOZ_ASSERT(aBytes.Length() <= UINT32_MAX);
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  if (aBytes.Length() == 0) {
-    return 0;
-  }
-
-  uint32_t bytesWritten = 0;
-
-  // PR_Write can only write up to PR_INT32_MAX bytes at a time, but the data
-  // source might be as large as UINT32_MAX bytes.
-  uint32_t chunkSize = PR_INT32_MAX;
-  Span<const uint8_t> pendingBytes = aBytes;
-
-  while (pendingBytes.Length() > 0) {
-    if (pendingBytes.Length() < chunkSize) {
-      chunkSize = pendingBytes.Length();
-    }
-    int32_t rv = PR_Write(aFd, pendingBytes.Elements(), chunkSize);
-    if (rv < 0) {
-      return Err(IOError(NS_ERROR_FILE_CORRUPTED)
-                     .WithMessage("Could not write chunk(size=%" PRIu32
-                                  ") to %s\n"
-                                  "The file may be corrupt",
-                                  chunkSize, aFile->HumanReadablePath().get()));
-    }
-    bytesWritten += rv;
-    pendingBytes = pendingBytes.From(rv);
-  }
-
-  return bytesWritten;
 }
 
 /* static */
