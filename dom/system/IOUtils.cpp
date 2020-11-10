@@ -4,37 +4,37 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "IOUtils.h"
+
 #include <cstdint>
 
-#include "mozilla/dom/IOUtils.h"
 #include "ErrorList.h"
-#include "mozilla/dom/IOUtilsBinding.h"
-#include "mozilla/dom/Promise.h"
 #include "mozilla/Compression.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
+#include "mozilla/dom/IOUtilsBinding.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/Unused.h"
+#include "nsCOMPtr.h"
 #include "nsError.h"
+#include "nsFileStreams.h"
 #include "nsIDirectoryEnumerator.h"
-#include "nsPrintfCString.h"
-#include "nsTArray.h"
 #include "nsIFile.h"
 #include "nsIGlobalObject.h"
+#include "nsLocalFile.h"
+#include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
+#include "nsTArray.h"
 #include "nsThreadManager.h"
 #include "prerror.h"
 #include "prio.h"
-#include "private/pprio.h"
 #include "prtime.h"
 #include "prtypes.h"
-
-#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
-#  include <fcntl.h>
-#endif
 
 #define REJECT_IF_NULL_EVENT_TARGET(aEventTarget, aJSPromise)  \
   do {                                                         \
@@ -56,17 +56,15 @@
     }                                                             \
   } while (false)
 
-#define REJECT_IF_RELATIVE_PATH(aPath, aJSPromise)                    \
-  do {                                                                \
-    if (!IsAbsolutePath(aPath)) {                                     \
-      (aJSPromise)                                                    \
-          ->MaybeRejectWithOperationError(nsPrintfCString(            \
-              "Refusing to work with path(%s) because only absolute " \
-              "file paths are permitted",                             \
-              NS_ConvertUTF16toUTF8(aPath).get()));                   \
-      return (aJSPromise).forget();                                   \
-    }                                                                 \
-  } while (false)
+#define REJECT_IF_INIT_PATH_FAILED(_file, _path, _promise)               \
+  do {                                                                   \
+    if (nsresult _rv = (_file)->InitWithPath((_path)); NS_FAILED(_rv)) { \
+      (_promise)->MaybeRejectWithOperationError(                         \
+          FormatErrorMessage(_rv, "Could not parse path (%s)",           \
+                             NS_ConvertUTF16toUTF8(_path).get()));       \
+      return (_promise).forget();                                        \
+    }                                                                    \
+  } while (0)
 
 namespace mozilla {
 namespace dom {
@@ -128,22 +126,6 @@ static nsCString FormatErrorMessage(nsresult aError,
                          static_cast<uint32_t>(aError));
 }
 
-/**
- * Unwraps |aResult| into a |MozPromise|.
- *
- * If the result is an error, a new MozPromise is created and immediately
- * rejected with the unwrapped error. Otherwise, if the result is ok, a new
- * MozPromise is created and immediately resolved with the unwrapped result.
- */
-template <class PromiseT, class OkT, class ErrT>
-static RefPtr<PromiseT> ToMozPromise(Result<OkT, ErrT>& aResult,
-                                     const char* aCallSite) {
-  if (aResult.isErr()) {
-    return PromiseT::CreateAndReject(aResult.unwrapErr(), aCallSite);
-  }
-  return PromiseT::CreateAndResolve(aResult.unwrap(), aCallSite);
-}
-
 MOZ_MUST_USE inline bool ToJSValue(
     JSContext* aCx, const IOUtils::InternalFileInfo& aInternalFileInfo,
     JS::MutableHandle<JS::Value> aValue) {
@@ -160,31 +142,6 @@ constexpr char PathSeparator = u'\\';
 #else
 constexpr char PathSeparator = u'/';
 #endif
-
-/* static */
-bool IOUtils::IsAbsolutePath(const nsAString& aPath) {
-  // NB: This impl is adapted from js::shell::IsAbsolutePath(JSLinearString*).
-  const size_t length = aPath.Length();
-
-#ifdef XP_WIN
-  // On Windows there are various forms of absolute paths (see
-  // http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247%28v=vs.85%29.aspx
-  // for details):
-  //
-  //   "\..."
-  //   "\\..."
-  //   "C:\..."
-  //
-  // The first two cases are handled by the common test below so we only need a
-  // specific test for the last one here.
-
-  if (length > 3 && mozilla::IsAsciiAlpha(aPath.CharAt(0)) &&
-      aPath.CharAt(1) == u':' && aPath.CharAt(2) == u'\\') {
-    return true;
-  }
-#endif
-  return length > 0 && aPath.CharAt(0) == PathSeparator;
-}
 
 // IOUtils implementation
 
@@ -210,7 +167,7 @@ static RefPtr<MozPromiseT> InvokeToMozPromise(Fn aFunc, Args... aArgs) {
 template <typename OkT, typename Fn, typename... Args>
 already_AddRefed<Promise> IOUtils::RunOnBackgroundThread(
     RefPtr<Promise>& aPromise, Fn aFunc, Args... aArgs) {
-  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
+  nsCOMPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
   REJECT_IF_NULL_EVENT_TARGET(bg, aPromise);
 
   InvokeAsync(
@@ -251,9 +208,9 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
-  // Process arguments.
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
   Maybe<uint32_t> toRead = Nothing();
   if (!aOptions.mMaxBytes.IsNull()) {
     if (aOptions.mMaxBytes.Value() == 0) {
@@ -265,8 +222,8 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
     toRead.emplace(aOptions.mMaxBytes.Value());
   }
 
-  return RunOnBackgroundThread<nsTArray<uint8_t>>(promise, &ReadSync, path,
-                                                  toRead, aOptions.mDecompress);
+  return RunOnBackgroundThread<nsTArray<uint8_t>>(
+      promise, &ReadSync, file.forget(), toRead, aOptions.mDecompress);
 }
 
 /* static */
@@ -277,11 +234,10 @@ already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
 
-  // Process arguments.
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  return RunOnBackgroundThread<nsString>(promise, &ReadUTF8Sync, path,
+  return RunOnBackgroundThread<nsString>(promise, &ReadUTF8Sync, file.forget(),
                                          aOptions.mDecompress);
 }
 
@@ -294,8 +250,9 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
-  // Process arguments.
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
   aData.ComputeState();
   auto buf = Buffer<uint8_t>::CopyFrom(Span(aData.Data(), aData.Length()));
   if (buf.isNothing()) {
@@ -303,11 +260,15 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
         "Out of memory: Could not allocate buffer while writing to file");
     return promise.forget();
   }
-  nsAutoString destPath(aPath);
-  auto opts = InternalWriteAtomicOpts::FromBinding(aOptions);
 
-  return RunOnBackgroundThread<uint32_t>(promise, &WriteAtomicSync, destPath,
-                                         std::move(*buf), std::move(opts));
+  auto opts = InternalWriteAtomicOpts::FromBinding(aOptions);
+  if (opts.isErr()) {
+    RejectJSPromise(promise, opts.unwrapErr());
+    return promise.forget();
+  }
+
+  return RunOnBackgroundThread<uint32_t>(
+      promise, &WriteAtomicSync, file.forget(), std::move(*buf), opts.unwrap());
 }
 
 /* static */
@@ -319,20 +280,25 @@ already_AddRefed<Promise> IOUtils::WriteAtomicUTF8(
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
-  // Process arguments.
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
   nsCString utf8Str;
   if (!CopyUTF16toUTF8(aString, utf8Str, fallible)) {
     promise->MaybeRejectWithOperationError(
         "Out of memory: Could not allocate buffer while writing to file");
     return promise.forget();
   }
-  nsAutoString destPath(aPath);
+
   auto opts = InternalWriteAtomicOpts::FromBinding(aOptions);
+  if (opts.isErr()) {
+    RejectJSPromise(promise, opts.unwrapErr());
+    return promise.forget();
+  }
 
   return RunOnBackgroundThread<uint32_t>(promise, &WriteAtomicUTF8Sync,
-                                         destPath, std::move(utf8Str),
-                                         std::move(opts));
+                                         file.forget(), std::move(utf8Str),
+                                         opts.unwrap());
 }
 
 /* static */
@@ -345,14 +311,14 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
-  // Process arguments.
-  REJECT_IF_RELATIVE_PATH(aSourcePath, promise);
-  REJECT_IF_RELATIVE_PATH(aDestPath, promise);
-  nsAutoString sourcePath(aSourcePath);
-  nsAutoString destPath(aDestPath);
+  nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise);
 
-  return RunOnBackgroundThread<Ok>(promise, &MoveSync, sourcePath, destPath,
-                                   aOptions.mNoOverwrite);
+  nsCOMPtr<nsIFile> destFile = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
+
+  return RunOnBackgroundThread<Ok>(promise, &MoveSync, sourceFile.forget(),
+                                   destFile.forget(), aOptions.mNoOverwrite);
 }
 
 /* static */
@@ -364,10 +330,10 @@ already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  return RunOnBackgroundThread<Ok>(promise, &RemoveSync, path,
+  return RunOnBackgroundThread<Ok>(promise, &RemoveSync, file.forget(),
                                    aOptions.mIgnoreAbsent, aOptions.mRecursive);
 }
 
@@ -380,10 +346,10 @@ already_AddRefed<Promise> IOUtils::MakeDirectory(
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  return RunOnBackgroundThread<Ok>(promise, &CreateDirectorySync, path,
+  return RunOnBackgroundThread<Ok>(promise, &MakeDirectorySync, file.forget(),
                                    aOptions.mCreateAncestors,
                                    aOptions.mIgnoreExisting, 0777);
 }
@@ -395,10 +361,11 @@ already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  return RunOnBackgroundThread<InternalFileInfo>(promise, &StatSync, path);
+  return RunOnBackgroundThread<InternalFileInfo>(promise, &StatSync,
+                                                 file.forget());
 }
 
 /* static */
@@ -411,14 +378,15 @@ already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
-  // Process arguments.
-  REJECT_IF_RELATIVE_PATH(aSourcePath, promise);
-  REJECT_IF_RELATIVE_PATH(aDestPath, promise);
-  nsAutoString sourcePath(aSourcePath);
-  nsAutoString destPath(aDestPath);
+  nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise);
 
-  return RunOnBackgroundThread<Ok>(promise, &CopySync, sourcePath, destPath,
-                                   aOptions.mNoOverwrite, aOptions.mRecursive);
+  nsCOMPtr<nsIFile> destFile = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
+
+  return RunOnBackgroundThread<Ok>(promise, &CopySync, sourceFile.forget(),
+                                   destFile.forget(), aOptions.mNoOverwrite,
+                                   aOptions.mRecursive);
 }
 
 /* static */
@@ -429,15 +397,16 @@ already_AddRefed<Promise> IOUtils::Touch(
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
 
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
   Maybe<int64_t> newTime = Nothing();
   if (aModification.WasPassed()) {
     newTime = Some(aModification.Value());
   }
 
-  return RunOnBackgroundThread<int64_t>(promise, &TouchSync, path, newTime);
+  return RunOnBackgroundThread<int64_t>(promise, &TouchSync, file.forget(),
+                                        newTime);
 }
 
 /* static */
@@ -447,11 +416,11 @@ already_AddRefed<Promise> IOUtils::GetChildren(GlobalObject& aGlobal,
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
 
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
   return RunOnBackgroundThread<nsTArray<nsString>>(promise, &GetChildrenSync,
-                                                   path);
+                                                   file.forget());
 }
 
 /* static */
@@ -462,7 +431,7 @@ already_AddRefed<nsISerialEventTarget> IOUtils::GetBackgroundEventTarget() {
 
   auto lockedBackgroundEventTarget = sBackgroundEventTarget.Lock();
   if (!lockedBackgroundEventTarget.ref()) {
-    RefPtr<nsISerialEventTarget> et;
+    nsCOMPtr<nsISerialEventTarget> et;
     MOZ_ALWAYS_SUCCEEDS(NS_CreateBackgroundTaskQueue(
         "IOUtils::BackgroundIOThread", getter_AddRefs(et)));
     MOZ_ASSERT(et);
@@ -585,49 +554,12 @@ void IOUtils::RejectJSPromise(const RefPtr<Promise>& aPromise,
 }
 
 /* static */
-UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::OpenExistingSync(
-    const nsAString& aPath, int32_t aFlags) {
-  MOZ_ASSERT(!NS_IsMainThread());
-  // Ensure that CREATE_FILE and EXCL flags were not included, as we do not
-  // want to create a new file.
-  MOZ_ASSERT((aFlags & (PR_CREATE_FILE | PR_EXCL)) == 0);
-  // We open the file descriptor through an nsLocalFile to ensure that the paths
-  // are interpreted/encoded correctly on all platforms.
-  RefPtr<nsLocalFile> file = new nsLocalFile();
-  nsresult rv = file->InitWithPath(aPath);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  PRFileDesc* fd;
-  rv = file->OpenNSPRFileDesc(aFlags, /* mode */ 0, &fd);
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-  return UniquePtr<PRFileDesc, PR_CloseDelete>(fd);
-}
-
-/* static */
-UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::CreateFileSync(
-    const nsAString& aPath, int32_t aFlags, int32_t aMode) {
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  // We open the file descriptor through an nsLocalFile to ensure that the paths
-  // are interpreted/encoded correctly on all platforms.
-  RefPtr<nsLocalFile> file = new nsLocalFile();
-  nsresult rv = file->InitWithPath(aPath);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  PRFileDesc* fd;
-  rv = file->OpenNSPRFileDesc(aFlags | PR_CREATE_FILE | PR_EXCL, aMode, &fd);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  return UniquePtr<PRFileDesc, PR_CloseDelete>(fd);
-}
-
-/* static */
 Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
-    const nsAString& aPath, const Maybe<uint32_t>& aMaxBytes,
+    already_AddRefed<nsIFile> aFile, const Maybe<uint32_t>& aMaxBytes,
     const bool aDecompress) {
   MOZ_ASSERT(!NS_IsMainThread());
+
+  nsCOMPtr<nsIFile> file = aFile;
 
   if (aMaxBytes.isSome() && aDecompress) {
     return Err(
@@ -636,32 +568,36 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
                 "The `maxBytes` and `decompress` options are not compatible"));
   }
 
-  UniquePtr<PRFileDesc, PR_CloseDelete> fd = OpenExistingSync(aPath, PR_RDONLY);
-  if (!fd) {
-    return Err(IOError(NS_ERROR_FILE_NOT_FOUND)
-                   .WithMessage("Could not open the file at %s",
-                                NS_ConvertUTF16toUTF8(aPath).get()));
+  RefPtr<nsFileStream> stream = new nsFileStream();
+  if (nsresult rv =
+          stream->Init(file, PR_RDONLY | nsIFile::OS_READAHEAD, 0666, 0);
+      NS_FAILED(rv)) {
+    return Err(IOError(rv).WithMessage("Could not open the file at %s",
+                                       file->HumanReadablePath().get()));
   }
-  uint32_t bufSize;
+  int64_t bufSize = 0;
+
   if (aMaxBytes.isNothing()) {
     // Limitation: We cannot read files that are larger than the max size of a
     //             TypedArray (UINT32_MAX bytes). Reject if the file is too
     //             big to be read.
-    PRFileInfo64 info;
-    if (PR_FAILURE == PR_GetOpenFileInfo64(fd.get(), &info)) {
+
+    int64_t streamSize = -1;
+    if (nsresult rv = stream->GetSize(&streamSize); NS_FAILED(rv)) {
       return Err(IOError(NS_ERROR_FILE_ACCESS_DENIED)
                      .WithMessage("Could not get info for the file at %s",
-                                  NS_ConvertUTF16toUTF8(aPath).get()));
+                                  file->HumanReadablePath().get()));
     }
-    if (static_cast<uint64_t>(info.size) > UINT32_MAX) {
+    MOZ_RELEASE_ASSERT(streamSize >= 0);
+
+    if (streamSize > static_cast<int64_t>(UINT32_MAX)) {
       return Err(
           IOError(NS_ERROR_FILE_TOO_BIG)
               .WithMessage("Could not read the file at %s because it is too "
-                           "large(size=%" PRIu64 " bytes)",
-                           NS_ConvertUTF16toUTF8(aPath).get(),
-                           static_cast<uint64_t>(info.size)));
+                           "large(size=%" PRId64 " bytes)",
+                           file->HumanReadablePath().get(), streamSize));
     }
-    bufSize = static_cast<uint32_t>(info.size);
+    bufSize = static_cast<uint32_t>(streamSize);
   } else {
     bufSize = aMaxBytes.value();
   }
@@ -670,39 +606,30 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
   if (!buffer.SetCapacity(bufSize, fallible)) {
     return Err(IOError(NS_ERROR_OUT_OF_MEMORY)
                    .WithMessage("Could not allocate buffer to read file(%s)",
-                                NS_ConvertUTF16toUTF8(aPath).get()));
+                                file->HumanReadablePath().get()));
   }
 
-  // If possible, advise the operating system that we will be reading the file
-  // pointed to by |fd| sequentially, in full. This advice is not binding, it
-  // informs the OS about our expectations as an application.
-#if defined(HAVE_POSIX_FADVISE)
-  posix_fadvise(PR_FileDesc2NativeHandle(fd.get()), 0, 0,
-                POSIX_FADV_SEQUENTIAL);
-#endif
+  Span<char> toRead(reinterpret_cast<char*>(buffer.Elements()), bufSize);
 
   // Read the file from disk.
   uint32_t totalRead = 0;
   while (totalRead != bufSize) {
-    int32_t nRead =
-        PR_Read(fd.get(), buffer.Elements() + totalRead, bufSize - totalRead);
-    if (nRead == 0) {
+    uint32_t bytesRead = 0;
+    if (nsresult rv =
+            stream->Read(toRead.Elements(), bufSize - totalRead, &bytesRead);
+        NS_FAILED(rv)) {
+      return Err(IOError(rv).WithMessage(
+          "Encountered an unexpected error while reading file(%s)",
+          file->HumanReadablePath().get()));
+    }
+    if (bytesRead == 0) {
       break;
     }
-    if (nRead < 0) {
-      PRErrorCode errNo = PR_GetError();
-      const char* errName = PR_ErrorToName(errNo);
-      return Err(
-          IOError(NS_ERROR_UNEXPECTED)
-              .WithMessage(
-                  "Encountered an unexpected error while reading file(%s)"
-                  "(PRErrorCode: %s)",
-                  NS_ConvertUTF16toUTF8(aPath).get(), errName));
-    }
-    totalRead += nRead;
-    DebugOnly<bool> success = buffer.SetLength(totalRead, fallible);
-    MOZ_ASSERT(success);
+    totalRead += bytesRead;
+    toRead = toRead.From(bytesRead);
   }
+  DebugOnly<bool> success = buffer.SetLength(totalRead, fallible);
+  MOZ_ASSERT(success);
 
   // Decompress the file contents, if required.
   if (aDecompress) {
@@ -713,11 +640,12 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
 
 /* static */
 Result<nsString, IOUtils::IOError> IOUtils::ReadUTF8Sync(
-    const nsAString& aPath, const bool aDecompress) {
+    already_AddRefed<nsIFile> aFile, const bool aDecompress) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  return ReadSync(aPath, Nothing(), aDecompress)
-      .andThen([&aPath](const nsTArray<uint8_t>& bytes)
+  nsCOMPtr<nsIFile> file = aFile;
+  return ReadSync(do_AddRef(file), Nothing(), aDecompress)
+      .andThen([file](const nsTArray<uint8_t>& bytes)
                    -> Result<nsString, IOError> {
         auto utf8Span = Span(reinterpret_cast<const char*>(bytes.Elements()),
                              bytes.Length());
@@ -726,7 +654,7 @@ Result<nsString, IOUtils::IOError> IOUtils::ReadUTF8Sync(
               IOError(NS_ERROR_FILE_CORRUPTED)
                   .WithMessage(
                       "Could not read file(%s) because it is not UTF-8 encoded",
-                      NS_ConvertUTF16toUTF8(aPath).get()));
+                      file->HumanReadablePath().get()));
         }
 
         nsDependentCSubstring utf8Str(utf8Span.Elements(), utf8Span.Length());
@@ -736,7 +664,7 @@ Result<nsString, IOUtils::IOError> IOUtils::ReadUTF8Sync(
               IOError(NS_ERROR_OUT_OF_MEMORY)
                   .WithMessage("Could not allocate buffer to convert UTF-8 "
                                "contents of file at (%s) to UTF-16",
-                               NS_ConvertUTF16toUTF8(aPath).get()));
+                               file->HumanReadablePath().get()));
         }
 
         return utf16Str;
@@ -745,206 +673,198 @@ Result<nsString, IOUtils::IOError> IOUtils::ReadUTF8Sync(
 
 /* static */
 Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicSync(
-    const nsAString& aDestPath, const Span<const uint8_t>& aByteArray,
-    const IOUtils::InternalWriteAtomicOpts& aOptions) {
+    already_AddRefed<nsIFile> aFile, const Span<const uint8_t>& aByteArray,
+    IOUtils::InternalWriteAtomicOpts aOptions) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  // Check if the file exists and test it against the noOverwrite option.
-  const bool& noOverwrite = aOptions.mNoOverwrite;
-  bool exists = false;
-  {
-    UniquePtr<PRFileDesc, PR_CloseDelete> fd =
-        OpenExistingSync(aDestPath, PR_RDONLY);
-    exists = !!fd;
-  }
+  nsCOMPtr<nsIFile> destFile = aFile;
+  nsCOMPtr<nsIFile> backupFile = std::move(aOptions.mBackupFile);
+  nsCOMPtr<nsIFile> tempFile = std::move(aOptions.mTmpFile);
 
-  if (noOverwrite && exists) {
+  bool exists = false;
+  MOZ_TRY(destFile->Exists(&exists));
+
+  if (aOptions.mNoOverwrite && exists) {
     return Err(IOError(NS_ERROR_FILE_ALREADY_EXISTS)
                    .WithMessage("Refusing to overwrite the file at %s\n"
                                 "Specify `noOverwrite: false` to allow "
                                 "overwriting the destination",
-                                NS_ConvertUTF16toUTF8(aDestPath).get()));
+                                destFile->HumanReadablePath().get()));
   }
 
   // If backupFile was specified, perform the backup as a move.
-  if (exists && aOptions.mBackupFile.isSome() &&
-      MoveSync(aDestPath, aOptions.mBackupFile.value(), noOverwrite).isErr()) {
-    return Err(
-        IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
-            .WithMessage(
-                "Failed to backup the source file(%s) to %s",
-                NS_ConvertUTF16toUTF8(aDestPath).get(),
-                NS_ConvertUTF16toUTF8(aOptions.mBackupFile.value()).get()));
+  if (exists && backupFile) {
+    // We copy `destFile` here to a new `nsIFile` because
+    // `nsIFile::MoveToFollowingLinks` will update the path of the file. If we
+    // did not do this, we would end up having `destFile` point to the same
+    // location as `backupFile`. Then, when we went to write to `destFile`, we
+    // would end up overwriting `backupFile` and never actually write to the
+    // file we were supposed to.
+    nsCOMPtr<nsIFile> toMove;
+    MOZ_ALWAYS_SUCCEEDS(destFile->Clone(getter_AddRefs(toMove)));
+
+    if (MoveSync(toMove.forget(), do_AddRef(backupFile), aOptions.mNoOverwrite)
+            .isErr()) {
+      return Err(IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
+                     .WithMessage("Failed to backup the source file(%s) to %s",
+                                  destFile->HumanReadablePath().get(),
+                                  backupFile->HumanReadablePath().get()));
+    }
   }
 
-  // If tmpPath was specified, we will write to there first, then perform
-  // a move to ensure the file ends up at the final requested destination.
-  nsAutoString tmpPath;
-  if (aOptions.mTmpPath.isSome()) {
-    tmpPath = aOptions.mTmpPath.value();
+  // If tempFile was specified, we will write to there first, then perform a
+  // move to ensure the file ends up at the final requested destination.
+  nsCOMPtr<nsIFile> writeFile;
+
+  if (tempFile) {
+    writeFile = tempFile.forget();
   } else {
-    tmpPath = aDestPath;
+    writeFile = destFile.forget();
   }
-  // The data to be written to file might be larger than can be
-  // written in any single call, so we must truncate the file and
-  // set the write mode to append to the file.
-  int32_t flags = PR_WRONLY | PR_TRUNCATE | PR_APPEND;
+
+  int32_t flags = PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE;
   if (aOptions.mFlush) {
     flags |= PR_SYNC;
   }
 
   // Try to perform the write and ensure that the file is closed before
   // continuing.
-  uint32_t result = 0;
+  uint32_t totalWritten = 0;
   {
     // Compress the byte array if required.
     nsTArray<uint8_t> compressed;
-    Span<const uint8_t> bytes;
+    Span<const char> bytes;
     if (aOptions.mCompress) {
       auto rv = MozLZ4::Compress(aByteArray);
       if (rv.isErr()) {
         return rv.propagateErr();
       }
       compressed = rv.unwrap();
-      bytes = Span(compressed);
+      bytes = Span(reinterpret_cast<const char*>(compressed.Elements()),
+                   compressed.Length());
     } else {
-      bytes = aByteArray;
+      bytes = Span(reinterpret_cast<const char*>(aByteArray.Elements()),
+                   aByteArray.Length());
     }
 
-    // Then open the file and perform the write.
-    UniquePtr<PRFileDesc, PR_CloseDelete> fd = OpenExistingSync(tmpPath, flags);
-    if (!fd) {
-      fd = CreateFileSync(tmpPath, flags);
+    RefPtr<nsFileOutputStream> stream = new nsFileOutputStream();
+    if (nsresult rv = stream->Init(writeFile, flags, 0666, 0); NS_FAILED(rv)) {
+      return Err(
+          IOError(rv).WithMessage("Could not open the file at %s for writing",
+                                  writeFile->HumanReadablePath().get()));
     }
-    if (!fd) {
-      return Err(IOError(NS_ERROR_FILE_ACCESS_DENIED)
-                     .WithMessage("Could not open the file at %s for writing",
-                                  NS_ConvertUTF16toUTF8(tmpPath).get()));
+
+    // nsFileStream::Write uses PR_Write under the hood, which accepts a
+    // *int32_t* for the chunk size.
+    uint32_t chunkSize = INT32_MAX;
+    Span<const char> pendingBytes = bytes;
+
+    while (pendingBytes.Length() > 0) {
+      if (pendingBytes.Length() < chunkSize) {
+        chunkSize = pendingBytes.Length();
+      }
+
+      uint32_t bytesWritten = 0;
+      if (nsresult rv =
+              stream->Write(pendingBytes.Elements(), chunkSize, &bytesWritten);
+          NS_FAILED(rv)) {
+        return Err(IOError(rv).WithMessage(
+            "Could not write chunk (size = %" PRIu32
+            ") to file %s. The file may be corrupt.",
+            chunkSize, writeFile->HumanReadablePath().get()));
+      }
+      pendingBytes = pendingBytes.From(bytesWritten);
+      totalWritten += bytesWritten;
     }
-    auto rv = WriteSync(fd.get(), NS_ConvertUTF16toUTF8(tmpPath), bytes);
-    if (rv.isErr()) {
-      return rv.propagateErr();
-    }
-    result = rv.unwrap();
   }
 
-  // If tmpPath was specified and different from the destPath, then the
-  // operation is finished by performing a move.
-  if (aDestPath != tmpPath && MoveSync(tmpPath, aDestPath, false).isErr()) {
-    return Err(
-        IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
-            .WithMessage("Could not move temporary file(%s) to destination(%s)",
-                         NS_ConvertUTF16toUTF8(tmpPath).get(),
-                         NS_ConvertUTF16toUTF8(aDestPath).get()));
+  // If tmpFile was passed, destFile will be non-null. Check destFile against
+  // writeFile and if they differ, the operation is finished by performing a
+  // move.
+
+  if (destFile) {
+    nsAutoStringN<256> destPath;
+    nsAutoStringN<256> writePath;
+
+    MOZ_ALWAYS_SUCCEEDS(destFile->GetPath(destPath));
+    MOZ_ALWAYS_SUCCEEDS(writeFile->GetPath(writePath));
+
+    // nsIFile::MoveToFollowingLinks will only update the path of the file if
+    // the move succeeds.
+    if (destPath != writePath &&
+        MoveSync(do_AddRef(writeFile), do_AddRef(destFile), false).isErr()) {
+      return Err(IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
+                     .WithMessage(
+                         "Could not move temporary file(%s) to destination(%s)",
+                         writeFile->HumanReadablePath().get(),
+                         destFile->HumanReadablePath().get()));
+    }
   }
-  return result;
+  return totalWritten;
 }
 
 /* static */
 Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicUTF8Sync(
-    const nsAString& aDestPath, const nsCString& aUTF8String,
-    const InternalWriteAtomicOpts& aOptions) {
+    already_AddRefed<nsIFile> aFile, const nsCString& aUTF8String,
+    InternalWriteAtomicOpts aOptions) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   Span utf8Bytes(reinterpret_cast<const uint8_t*>(aUTF8String.get()),
                  aUTF8String.Length());
 
-  return WriteAtomicSync(aDestPath, utf8Bytes, aOptions);
+  return WriteAtomicSync(std::move(aFile), utf8Bytes, std::move(aOptions));
 }
 
 /* static */
-Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
-    PRFileDesc* aFd, const nsACString& aPath,
-    const Span<const uint8_t>& aBytes) {
-  // aBytes comes from a JavaScript TypedArray, which has UINT32_MAX max
-  // length.
-  MOZ_ASSERT(aBytes.Length() <= UINT32_MAX);
+Result<Ok, IOUtils::IOError> IOUtils::MoveSync(
+    already_AddRefed<nsIFile> aSourceFile, already_AddRefed<nsIFile> aDestFile,
+    bool aNoOverwrite) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  if (aBytes.Length() == 0) {
-    return 0;
-  }
-
-  uint32_t bytesWritten = 0;
-
-  // PR_Write can only write up to PR_INT32_MAX bytes at a time, but the data
-  // source might be as large as UINT32_MAX bytes.
-  uint32_t chunkSize = PR_INT32_MAX;
-  Span<const uint8_t> pendingBytes = aBytes;
-
-  while (pendingBytes.Length() > 0) {
-    if (pendingBytes.Length() < chunkSize) {
-      chunkSize = pendingBytes.Length();
-    }
-    int32_t rv = PR_Write(aFd, pendingBytes.Elements(), chunkSize);
-    if (rv < 0) {
-      return Err(IOError(NS_ERROR_FILE_CORRUPTED)
-                     .WithMessage("Could not write chunk(size=%" PRIu32
-                                  ") to %s\n"
-                                  "The file may be corrupt",
-                                  chunkSize, aPath.BeginReading()));
-    }
-    bytesWritten += rv;
-    pendingBytes = pendingBytes.From(rv);
-  }
-
-  return bytesWritten;
-}
-
-/* static */
-Result<Ok, IOUtils::IOError> IOUtils::MoveSync(const nsAString& aSourcePath,
-                                               const nsAString& aDestPath,
-                                               bool aNoOverwrite) {
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  RefPtr<nsLocalFile> srcFile = new nsLocalFile();
-  MOZ_TRY(srcFile->InitWithPath(aSourcePath));  // Fails if not absolute.
+  nsCOMPtr<nsIFile> sourceFile = aSourceFile;
+  nsCOMPtr<nsIFile> destFile = aDestFile;
 
   // Ensure the source file exists before continuing. If it doesn't exist,
   // subsequent operations can fail in different ways on different platforms.
-  bool srcExists;
-  MOZ_TRY(srcFile->Exists(&srcExists));
+  bool srcExists = false;
+  MOZ_TRY(sourceFile->Exists(&srcExists));
   if (!srcExists) {
     return Err(
         IOError(NS_ERROR_FILE_NOT_FOUND)
             .WithMessage(
                 "Could not move source file(%s) because it does not exist",
-                NS_ConvertUTF16toUTF8(aSourcePath).get()));
+                sourceFile->HumanReadablePath().get()));
   }
 
-  RefPtr<nsLocalFile> destFile = new nsLocalFile();
-  MOZ_TRY(destFile->InitWithPath(aDestPath));  // Fails if not absolute.
-
-  return CopyOrMoveSync(&nsLocalFile::MoveTo, "move", srcFile, destFile,
-                        aNoOverwrite);
+  return CopyOrMoveSync(&nsIFile::MoveToFollowingLinks, "move", sourceFile,
+                        destFile, aNoOverwrite);
 }
 
 /* static */
-Result<Ok, IOUtils::IOError> IOUtils::CopySync(const nsAString& aSourcePath,
-                                               const nsAString& aDestPath,
-                                               bool aNoOverwrite,
-                                               bool aRecursive) {
+Result<Ok, IOUtils::IOError> IOUtils::CopySync(
+    already_AddRefed<nsIFile> aSourceFile, already_AddRefed<nsIFile> aDestFile,
+    bool aNoOverwrite, bool aRecursive) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  RefPtr<nsLocalFile> srcFile = new nsLocalFile();
-  MOZ_TRY(srcFile->InitWithPath(aSourcePath));  // Fails if not absolute.
+  nsCOMPtr<nsIFile> sourceFile = aSourceFile;
+  nsCOMPtr<nsIFile> destFile = aDestFile;
 
   // Ensure the source file exists before continuing. If it doesn't exist,
   // subsequent operations can fail in different ways on different platforms.
   bool srcExists;
-  MOZ_TRY(srcFile->Exists(&srcExists));
+  MOZ_TRY(sourceFile->Exists(&srcExists));
   if (!srcExists) {
     return Err(
         IOError(NS_ERROR_FILE_NOT_FOUND)
             .WithMessage(
                 "Could not copy source file(%s) because it does not exist",
-                NS_ConvertUTF16toUTF8(aSourcePath).get()));
+                sourceFile->HumanReadablePath().get()));
   }
 
   // If source is a directory, fail immediately unless the recursive option is
   // true.
   bool srcIsDir = false;
-  MOZ_TRY(srcFile->IsDirectory(&srcIsDir));
+  MOZ_TRY(sourceFile->IsDirectory(&srcIsDir));
   if (srcIsDir && !aRecursive) {
     return Err(
         IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
@@ -952,54 +872,35 @@ Result<Ok, IOUtils::IOError> IOUtils::CopySync(const nsAString& aSourcePath,
                 "Refused to copy source directory(%s) to the destination(%s)\n"
                 "Specify the `recursive: true` option to allow copying "
                 "directories",
-                NS_ConvertUTF16toUTF8(aSourcePath).get(),
-                NS_ConvertUTF16toUTF8(aDestPath).get()));
+                sourceFile->HumanReadablePath().get(),
+                destFile->HumanReadablePath().get()));
   }
 
-  RefPtr<nsLocalFile> destFile = new nsLocalFile();
-  MOZ_TRY(destFile->InitWithPath(aDestPath));  // Fails if not absolute.
-
-  return CopyOrMoveSync(&nsLocalFile::CopyTo, "copy", srcFile, destFile,
-                        aNoOverwrite);
+  return CopyOrMoveSync(&nsIFile::CopyToFollowingLinks, "copy", sourceFile,
+                        destFile, aNoOverwrite);
 }
 
 /* static */
 template <typename CopyOrMoveFn>
-Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(
-    CopyOrMoveFn aMethod, const char* aMethodName,
-    const RefPtr<nsLocalFile>& aSource, const RefPtr<nsLocalFile>& aDest,
-    bool aNoOverwrite) {
+Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(CopyOrMoveFn aMethod,
+                                                     const char* aMethodName,
+                                                     nsIFile* aSource,
+                                                     nsIFile* aDest,
+                                                     bool aNoOverwrite) {
   MOZ_ASSERT(!NS_IsMainThread());
-
-  // Normalize the file paths.
-  MOZ_TRY(aSource->Normalize());
-  nsresult rv = aDest->Normalize();
-  // Normalize can fail for a number of reasons, including if the file doesn't
-  // exist. It is expected that the file might not exist for a number of calls
-  // (e.g. if we want to copy or move a file to a new location).
-  if (NS_FAILED(rv) && !IsFileNotFound(rv)) {
-    // Deliberately ignore "not found" errors, but propagate all others.
-    return Err(IOError(rv));
-  }
-
-  nsAutoString src;
-  MOZ_TRY(aSource->GetPath(src));
-  auto sourcePath = NS_ConvertUTF16toUTF8(src);
-  nsAutoString dest;
-  MOZ_TRY(aDest->GetPath(dest));
-  auto destPath = NS_ConvertUTF16toUTF8(dest);
 
   // Case 1: Destination is an existing directory. Copy/move source into dest.
   bool destIsDir = false;
   bool destExists = true;
 
-  rv = aDest->IsDirectory(&destIsDir);
+  nsresult rv = aDest->IsDirectory(&destIsDir);
   if (NS_SUCCEEDED(rv) && destIsDir) {
     rv = (aSource->*aMethod)(aDest, u""_ns);
     if (NS_FAILED(rv)) {
       return Err(IOError(rv).WithMessage(
           "Could not %s source file(%s) to destination directory(%s)",
-          aMethodName, sourcePath.get(), destPath.get()));
+          aMethodName, aSource->HumanReadablePath().get(),
+          aDest->HumanReadablePath().get()));
     }
     return Ok();
   }
@@ -1025,7 +926,8 @@ Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(
                 "destination already exists and overwrites are not allowed\n"
                 "Specify the `noOverwrite: false` option to mitigate this "
                 "error",
-                aMethodName, sourcePath.get(), destPath.get()));
+                aMethodName, aSource->HumanReadablePath().get(),
+                aDest->HumanReadablePath().get()));
   }
   if (destExists && !destIsDir) {
     // If the source file is a directory, but the target is a file, abort early.
@@ -1038,8 +940,9 @@ Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(
                      .WithMessage("Could not %s the source directory(%s) to "
                                   "the destination(%s) because the destination "
                                   "is not a directory",
-                                  aMethodName, sourcePath.get(),
-                                  destPath.get()));
+                                  aMethodName,
+                                  aSource->HumanReadablePath().get(),
+                                  aDest->HumanReadablePath().get()));
     }
   }
 
@@ -1048,24 +951,23 @@ Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(
   MOZ_TRY(aDest->GetLeafName(destName));
   MOZ_TRY(aDest->GetParent(getter_AddRefs(destDir)));
 
-  // NB: if destDir doesn't exist, then |CopyTo| or |MoveTo| will create it.
+  // NB: if destDir doesn't exist, then |CopyToFollowingLinks| or
+  // |MoveToFollowingLinks| will create it.
   rv = (aSource->*aMethod)(destDir, destName);
   if (NS_FAILED(rv)) {
     return Err(IOError(rv).WithMessage(
         "Could not %s the source file(%s) to the destination(%s)", aMethodName,
-        sourcePath.get(), destPath.get()));
+        aSource->HumanReadablePath().get(), aDest->HumanReadablePath().get()));
   }
   return Ok();
 }
 
 /* static */
-Result<Ok, IOUtils::IOError> IOUtils::RemoveSync(const nsAString& aPath,
-                                                 bool aIgnoreAbsent,
-                                                 bool aRecursive) {
+Result<Ok, IOUtils::IOError> IOUtils::RemoveSync(
+    already_AddRefed<nsIFile> aFile, bool aIgnoreAbsent, bool aRecursive) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  RefPtr<nsLocalFile> file = new nsLocalFile();
-  MOZ_TRY(file->InitWithPath(aPath));
+  nsCOMPtr<nsIFile> file = aFile;
 
   nsresult rv = file->Remove(aRecursive);
   if (aIgnoreAbsent && IsFileNotFound(rv)) {
@@ -1077,62 +979,60 @@ Result<Ok, IOUtils::IOError> IOUtils::RemoveSync(const nsAString& aPath,
       return Err(err.WithMessage(
           "Could not remove the file at %s because it does not exist.\n"
           "Specify the `ignoreAbsent: true` option to mitigate this error",
-          NS_ConvertUTF16toUTF8(aPath).get()));
+          file->HumanReadablePath().get()));
     }
     if (rv == NS_ERROR_FILE_DIR_NOT_EMPTY) {
       return Err(err.WithMessage(
           "Could not remove the non-empty directory at %s.\n"
           "Specify the `recursive: true` option to mitigate this error",
-          NS_ConvertUTF16toUTF8(aPath).get()));
+          file->HumanReadablePath().get()));
     }
     return Err(err.WithMessage("Could not remove the file at %s",
-                               NS_ConvertUTF16toUTF8(aPath).get()));
+                               file->HumanReadablePath().get()));
   }
   return Ok();
 }
 
 /* static */
-Result<Ok, IOUtils::IOError> IOUtils::CreateDirectorySync(
-    const nsAString& aPath, bool aCreateAncestors, bool aIgnoreExisting,
-    int32_t aMode) {
+Result<Ok, IOUtils::IOError> IOUtils::MakeDirectorySync(
+    already_AddRefed<nsIFile> aFile, bool aCreateAncestors,
+    bool aIgnoreExisting, int32_t aMode) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  RefPtr<nsLocalFile> targetFile = new nsLocalFile();
-  MOZ_TRY(targetFile->InitWithPath(aPath));
+  nsCOMPtr<nsIFile> file = aFile;
 
   // nsIFile::Create will create ancestor directories by default.
   // If the caller does not want this behaviour, then check and possibly
   // return an error.
   if (!aCreateAncestors) {
     nsCOMPtr<nsIFile> parent;
-    MOZ_TRY(targetFile->GetParent(getter_AddRefs(parent)));
-    bool parentExists;
+    MOZ_TRY(file->GetParent(getter_AddRefs(parent)));
+    bool parentExists = false;
     MOZ_TRY(parent->Exists(&parentExists));
     if (!parentExists) {
       return Err(IOError(NS_ERROR_FILE_NOT_FOUND)
                      .WithMessage("Could not create directory at %s because "
                                   "the path has missing "
                                   "ancestor components",
-                                  NS_ConvertUTF16toUTF8(aPath).get()));
+                                  file->HumanReadablePath().get()));
     }
   }
 
-  nsresult rv = targetFile->Create(nsIFile::DIRECTORY_TYPE, aMode);
+  nsresult rv = file->Create(nsIFile::DIRECTORY_TYPE, aMode);
   if (NS_FAILED(rv)) {
-    IOError err(rv);
     if (rv == NS_ERROR_FILE_ALREADY_EXISTS) {
       // NB: We may report a success only if the target is an existing
       // directory. We don't want to silence errors that occur if the target is
       // an existing file, since trying to create a directory where a regular
       // file exists may be indicative of a logic error.
       bool isDirectory;
-      MOZ_TRY(targetFile->IsDirectory(&isDirectory));
+      MOZ_TRY(file->IsDirectory(&isDirectory));
       if (!isDirectory) {
         return Err(IOError(NS_ERROR_FILE_NOT_DIRECTORY)
                        .WithMessage("Could not create directory because the "
                                     "target file(%s) exists "
                                     "and is not a directory",
-                                    NS_ConvertUTF16toUTF8(aPath).get()));
+                                    file->HumanReadablePath().get()));
       }
       // The directory exists.
       // The caller may suppress this error.
@@ -1140,29 +1040,28 @@ Result<Ok, IOUtils::IOError> IOUtils::CreateDirectorySync(
         return Ok();
       }
       // Otherwise, forward it.
-      return Err(err.WithMessage(
+      return Err(IOError(rv).WithMessage(
           "Could not create directory because it already exists at %s\n"
           "Specify the `ignoreExisting: true` option to mitigate this "
           "error",
-          NS_ConvertUTF16toUTF8(aPath).get()));
+          file->HumanReadablePath().get()));
     }
-    return Err(err.WithMessage("Could not create directory at %s",
-                               NS_ConvertUTF16toUTF8(aPath).get()));
+    return Err(IOError(rv).WithMessage("Could not create directory at %s",
+                                       file->HumanReadablePath().get()));
   }
   return Ok();
 }
 
 Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
-    const nsAString& aPath) {
+    already_AddRefed<nsIFile> aFile) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  RefPtr<nsLocalFile> file = new nsLocalFile();
-  MOZ_TRY(file->InitWithPath(aPath));
+  nsCOMPtr<nsIFile> file = aFile;
 
   InternalFileInfo info;
-  info.mPath = nsString(aPath);
+  MOZ_ALWAYS_SUCCEEDS(file->GetPath(info.mPath));
 
-  bool isRegular;
+  bool isRegular = false;
   // IsFile will stat and cache info in the file object. If the file doesn't
   // exist, or there is an access error, we'll discover it here.
   // Any subsequent errors are unexpected and will just be forwarded.
@@ -1172,7 +1071,7 @@ Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
     if (IsFileNotFound(rv)) {
       return Err(
           err.WithMessage("Could not stat file(%s) because it does not exist",
-                          NS_ConvertUTF16toUTF8(aPath).get()));
+                          file->HumanReadablePath().get()));
     }
     return Err(err);
   }
@@ -1180,13 +1079,9 @@ Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
   // Now we can populate the info object by querying the file.
   info.mType = FileType::Regular;
   if (!isRegular) {
-    bool isDir;
+    bool isDir = false;
     MOZ_TRY(file->IsDirectory(&isDir));
-    if (isDir) {
-      info.mType = FileType::Directory;
-    } else {
-      info.mType = FileType::Other;
-    }
+    info.mType = isDir ? FileType::Directory : FileType::Other;
   }
 
   int64_t size = -1;
@@ -1203,11 +1098,10 @@ Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
 
 /* static */
 Result<int64_t, IOUtils::IOError> IOUtils::TouchSync(
-    const nsAString& aPath, const Maybe<int64_t>& aNewModTime) {
+    already_AddRefed<nsIFile> aFile, const Maybe<int64_t>& aNewModTime) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  RefPtr<nsLocalFile> file = new nsLocalFile();
-  MOZ_TRY(file->InitWithPath(aPath));
+  nsCOMPtr<nsIFile> file = aFile;
 
   int64_t now = aNewModTime.valueOrFrom([]() {
     // NB: PR_Now reports time in microseconds since the Unix epoch
@@ -1232,7 +1126,8 @@ Result<int64_t, IOUtils::IOError> IOUtils::TouchSync(
             .WithMessage(
                 "Refusing to set the modification time of file(%s) to 0.\n"
                 "To use the current system time, call `touch` with no "
-                "arguments"));
+                "arguments",
+                file->HumanReadablePath().get()));
   }
 
   nsresult rv = file->SetLastModifiedTime(now);
@@ -1242,7 +1137,7 @@ Result<int64_t, IOUtils::IOError> IOUtils::TouchSync(
     if (IsFileNotFound(rv)) {
       return Err(
           err.WithMessage("Could not touch file(%s) because it does not exist",
-                          NS_ConvertUTF16toUTF8(aPath).get()));
+                          file->HumanReadablePath().get()));
     }
     return Err(err);
   }
@@ -1251,25 +1146,24 @@ Result<int64_t, IOUtils::IOError> IOUtils::TouchSync(
 
 /* static */
 Result<nsTArray<nsString>, IOUtils::IOError> IOUtils::GetChildrenSync(
-    const nsAString& aPath) {
+    already_AddRefed<nsIFile> aFile) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  RefPtr<nsLocalFile> file = new nsLocalFile();
-  MOZ_TRY(file->InitWithPath(aPath));
+  nsCOMPtr<nsIFile> file = aFile;
 
-  RefPtr<nsIDirectoryEnumerator> iter;
+  nsCOMPtr<nsIDirectoryEnumerator> iter;
   nsresult rv = file->GetDirectoryEntries(getter_AddRefs(iter));
   if (NS_FAILED(rv)) {
     IOError err(rv);
     if (IsFileNotFound(rv)) {
       return Err(err.WithMessage(
           "Could not get children of file(%s) because it does not exist",
-          NS_ConvertUTF16toUTF8(aPath).get()));
+          file->HumanReadablePath().get()));
     }
     if (IsNotDirectory(rv)) {
       return Err(err.WithMessage(
           "Could not get children of file(%s) because it is not a directory",
-          NS_ConvertUTF16toUTF8(aPath).get()));
+          file->HumanReadablePath().get()));
     }
     return Err(err);
   }
@@ -1416,9 +1310,41 @@ NS_IMETHODIMP IOUtilsShutdownBlocker::GetState(nsIPropertyBag** aState) {
   return NS_OK;
 }
 
+Result<IOUtils::InternalWriteAtomicOpts, IOUtils::IOError>
+IOUtils::InternalWriteAtomicOpts::FromBinding(
+    const WriteAtomicOptions& aOptions) {
+  InternalWriteAtomicOpts opts;
+  opts.mFlush = aOptions.mFlush;
+  opts.mNoOverwrite = aOptions.mNoOverwrite;
+
+  if (aOptions.mBackupFile.WasPassed()) {
+    opts.mBackupFile = new nsLocalFile();
+    if (nsresult rv =
+            opts.mBackupFile->InitWithPath(aOptions.mBackupFile.Value());
+        NS_FAILED(rv)) {
+      return Err(IOUtils::IOError(rv).WithMessage(
+          "Could not parse path of backupFile (%s)",
+          NS_ConvertUTF16toUTF8(aOptions.mBackupFile.Value()).get()));
+    }
+  }
+
+  if (aOptions.mTmpPath.WasPassed()) {
+    opts.mTmpFile = new nsLocalFile();
+    if (nsresult rv = opts.mTmpFile->InitWithPath(aOptions.mTmpPath.Value());
+        NS_FAILED(rv)) {
+      return Err(IOUtils::IOError(rv).WithMessage(
+          "Could not parse path of temp file (%s)",
+          NS_ConvertUTF16toUTF8(aOptions.mTmpPath.Value()).get()));
+    }
+  }
+
+  opts.mCompress = aOptions.mCompress;
+  return opts;
+}
+
 }  // namespace dom
 }  // namespace mozilla
 
 #undef REJECT_IF_NULL_EVENT_TARGET
 #undef REJECT_IF_SHUTTING_DOWN
-#undef REJECT_IF_RELATIVE_PATH
+#undef REJECT_IF_INIT_PATH_FAILED

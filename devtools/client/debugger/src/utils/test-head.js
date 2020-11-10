@@ -14,7 +14,6 @@ import sourceMaps from "devtools-source-map";
 import reducers from "../reducers";
 import actions from "../actions";
 import * as selectors from "../selectors";
-import { getHistory } from "../test/utils/history";
 import { parserWorker, evaluationsParser } from "../test/tests-setup";
 import configureStore from "../actions/utils/create-store";
 import sourceQueue from "../utils/source-queue";
@@ -54,7 +53,6 @@ function createStore(
 ): TestStore {
   const store: any = configureStore({
     log: false,
-    history: getHistory(),
     makeThunkArgs: args => {
       return {
         ...args,
@@ -299,6 +297,5 @@ export {
   makeSymbolDeclaration,
   waitForState,
   watchForState,
-  getHistory,
   waitATick,
 };

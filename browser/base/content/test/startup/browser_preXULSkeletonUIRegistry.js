@@ -84,9 +84,10 @@ add_task(async function testWritesSizeValuesOnChange() {
     "Height",
     "ScreenX",
     "ScreenY",
-    "UrlbarHorizontalOffsetCSS",
-    "UrlbarWidthCSS",
+    "UrlbarCSSSpan",
     "CssToDevPixelScaling",
+    "SpringsCSSSpan",
+    "SearchbarCSSSpan",
   ];
 
   // Remove all of the registry values to ensure old tests aren't giving us false

@@ -4,7 +4,8 @@
 
 // @flow
 
-import { isTesting } from "devtools-environment";
+// $FlowIgnore
+import flags from "devtools/shared/flags";
 import type { ThunkArgs } from "../../types";
 import { prefs } from "../../../utils/prefs";
 
@@ -100,7 +101,7 @@ export function log({ dispatch, getState }: ThunkArgs) {
     const asyncMsg = !action.status ? "" : `[${action.status}]`;
 
     if (prefs.logActions) {
-      if (isTesting()) {
+      if (flags.testing) {
         // $FlowIgnore
         dump(
           `[ACTION] ${action.type} ${asyncMsg} - ${serializeAction(action)}\n`

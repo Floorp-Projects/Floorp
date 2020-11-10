@@ -7,6 +7,7 @@
 #include "mozilla/dom/SVGFEConvolveMatrixElement.h"
 #include "mozilla/dom/SVGFEConvolveMatrixElementBinding.h"
 #include "mozilla/SVGFilterInstance.h"
+#include "mozilla/SVGUtils.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "DOMSVGAnimatedNumberList.h"

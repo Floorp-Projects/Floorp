@@ -4,14 +4,14 @@
  
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("devtools/shared/flags"));
+		module.exports = factory();
 	else if(typeof define === 'function' && define.amd)
-		define(["devtools/shared/flags"], factory);
+		define([], factory);
 	else {
-		var a = typeof exports === 'object' ? factory(require("devtools/shared/flags")) : factory(root["devtools/shared/flags"]);
+		var a = factory();
 		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
 	}
-})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_103__) {
+})(typeof self !== 'undefined' ? self : this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -78,13 +78,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ })
 /************************************************************************/
 /******/ ({
-
-/***/ 103:
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_103__;
-
-/***/ }),
 
 /***/ 560:
 /***/ (function(module, exports, __webpack_require__) {
@@ -880,53 +873,6 @@ module.exports = arrayMap;
 
 /***/ }),
 
-/***/ 642:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(process) {/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-const flag = __webpack_require__(103);
-
-function isBrowser() {
-  return typeof window == "object";
-}
-
-function isNode() {
-  return process && process.release && process.release.name == 'node';
-}
-
-function isDevelopment() {
-  if (!isNode() && isBrowser()) {
-    const href = window.location ? window.location.href : "";
-    return href.match(/^file:/) || href.match(/localhost:/);
-  }
-
-  return "production" != "production";
-}
-
-function isTesting() {
-  return flag.testing;
-}
-
-function isFirefoxPanel() {
-  return !isDevelopment();
-}
-
-function isFirefox() {
-  return /firefox/i.test(navigator.userAgent);
-}
-
-module.exports = {
-  isDevelopment,
-  isTesting,
-  isFirefoxPanel,
-  isFirefox
-};
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(607)))
-
-/***/ }),
-
 /***/ 701:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1033,13 +979,13 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = assert;
 
-var _devtoolsEnvironment = __webpack_require__(642);
+var _environment = __webpack_require__(968);
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 function assert(condition, message) {
-  if ((0, _devtoolsEnvironment.isDevelopment)() && !condition) {
+  if ((0, _environment.isNodeTest)() && !condition) {
     throw new Error(`Assertion failure: ${message}`);
   }
 }
@@ -1258,6 +1204,32 @@ function truncateLine(text, column) {
     value
   };
 }
+
+/***/ }),
+
+/***/ 968:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.isNode = isNode;
+exports.isNodeTest = isNodeTest;
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+function isNode() {
+  return process && process.release && process.release.name == "node";
+}
+
+function isNodeTest() {
+  return isNode() && "production" != "production";
+}
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(607)))
 
 /***/ })
 

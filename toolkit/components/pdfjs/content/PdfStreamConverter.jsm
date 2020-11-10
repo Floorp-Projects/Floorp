@@ -510,6 +510,9 @@ class ChromeActions {
           ] = true;
         }
         break;
+      case "tagged":
+        PdfJsTelemetry.onTagged(probeInfo.tagged);
+        break;
     }
   }
 

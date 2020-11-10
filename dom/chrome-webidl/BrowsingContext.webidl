@@ -41,6 +41,15 @@ enum DisplayMode {
   "fullscreen",
 };
 
+/**
+ * Allowed overrides of platform/pref default behaviour for touch events.
+ */
+enum TouchEventsOverride {
+  "disabled", // Force-disable touch events.
+  "enabled", // Force-enable touch events.
+  "none", // Don't override behaviour for touch events.
+};
+
 [Exposed=Window, ChromeOnly]
 interface BrowsingContext {
   static BrowsingContext? get(unsigned long long aId);
@@ -145,6 +154,12 @@ interface BrowsingContext {
   [SetterThrows] attribute unsigned long long browserId;
 
   [SetterThrows] attribute DisplayMode displayMode;
+
+  /**
+   * This allows chrome to override the default choice of whether touch events
+   * are available in a specific BrowsingContext and its descendents.
+   */
+  [SetterThrows] attribute TouchEventsOverride touchEventsOverride;
 
   /**
    * The nsID of the browsing context in the session history.

@@ -11,18 +11,17 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Buffer.h"
 #include "mozilla/DataMutex.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/Result.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/IOUtilsBinding.h"
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/MozPromise.h"
-#include "mozilla/Result.h"
-#include "nsStringFwd.h"
-#include "nsTArray.h"
 #include "nsIAsyncShutdown.h"
 #include "nsISerialEventTarget.h"
-#include "nsLocalFile.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
+#include "nsStringFwd.h"
+#include "nsTArray.h"
 #include "prio.h"
 
 namespace mozilla {
@@ -144,34 +143,9 @@ class IOUtils final {
                               const IOError& aError);
 
   /**
-   * Opens an existing file at |aPath|.
-   *
-   * @param path  The location of the file as an absolute path string.
-   * @param flags PRIO flags, excluding |PR_CREATE| and |PR_EXCL|.
-   *
-   * @return A pointer to the opened file descriptor, or |nullptr| on failure.
-   */
-  static UniquePtr<PRFileDesc, PR_CloseDelete> OpenExistingSync(
-      const nsAString& aPath, int32_t aFlags);
-
-  /**
-   * Creates a new file at |aPath|.
-   *
-   * @param aPath  The location of the file as an absolute path string.
-   * @param aFlags PRIO flags to be used in addition to |PR_CREATE| and
-   *               |PR_EXCL|.
-   * @param aMode  Optional file mode. Defaults to 0666 to allow the system
-   *               umask to compute the best mode for the new file.
-   *
-   * @return A pointer to the opened file descriptor, or |nullptr| on failure.
-   */
-  static UniquePtr<PRFileDesc, PR_CloseDelete> CreateFileSync(
-      const nsAString& aPath, int32_t aFlags, int32_t aMode = 0666);
-
-  /**
    * Attempts to read the entire file at |aPath| into a buffer.
    *
-   * @param aPath       The location of the file as an absolute path string.
+   * @param aFile       The location of the file.
    * @param aMaxBytes   If |Some|, then only read up this this number of bytes,
    *                    otherwise attempt to read the whole file.
    * @param aDecompress If true, decompress the bytes read from disk before
@@ -181,28 +155,28 @@ class IOUtils final {
    *         error.
    */
   static Result<nsTArray<uint8_t>, IOError> ReadSync(
-      const nsAString& aPath, const Maybe<uint32_t>& aMaxBytes,
+      already_AddRefed<nsIFile> aFile, const Maybe<uint32_t>& aMaxBytes,
       const bool aDecompress);
 
   /**
    * Attempts to read the entire file at |aPath| as a UTF-8 string.
    *
-   * @param aPath       The location of the file as an absolute path string.
+   * @param aFile       The location of the file.
    * @param aDecompress If true, decompress the bytes read from disk before
    *                    returning the result to the caller.
    *
    * @return The (decompressed) contents of the file re-encoded as a UTF-16
    *         string.
    */
-  static Result<nsString, IOError> ReadUTF8Sync(const nsAString& aPath,
+  static Result<nsString, IOError> ReadUTF8Sync(already_AddRefed<nsIFile> aFile,
                                                 const bool aDecompress);
 
   /**
-   * Attempts to write the entirety of |aByteArray| to the file at |aPath|.
+   * Attempt to write the entirety of |aByteArray| to the file at |aPath|.
    * This may occur by writing to an intermediate destination and performing a
    * move, depending on |aOptions|.
    *
-   * @param aDestPath  The location of the file as an absolute path string.
+   * @param aFile  The location of the file.
    * @param aByteArray The data to write to the file.
    * @param aOptions   Options to modify the way the write is completed.
    *
@@ -210,61 +184,70 @@ class IOUtils final {
    *         failed or was incomplete.
    */
   static Result<uint32_t, IOError> WriteAtomicSync(
-      const nsAString& aDestPath, const Span<const uint8_t>& aByteArray,
-      const InternalWriteAtomicOpts& aOptions);
+      already_AddRefed<nsIFile> aFile, const Span<const uint8_t>& aByteArray,
+      InternalWriteAtomicOpts aOptions);
 
+  /**
+   * Attempt to write the entirety of |aUTF8String| to the file at |aFile|.
+   * This may occur by writing to an intermediate destination and performing a
+   * move, depending on |aOptions|.
+   *
+   * @param aFile The location of the file.
+   * @param aByteArray The data to write to the file.
+   * @param aOptions Options to modify the way the write is completed.
+   *
+   * @return The number of bytes written to the file, or an error if the write
+   *         failed or was incomplete.
+   */
   static Result<uint32_t, IOError> WriteAtomicUTF8Sync(
-      const nsAString& aDestPath, const nsCString& aUTF8String,
-      const InternalWriteAtomicOpts& aOptions);
+      already_AddRefed<nsIFile> aFile, const nsCString& aUTF8String,
+      InternalWriteAtomicOpts aOptions);
 
   /**
    * Attempts to write |aBytes| to the file pointed by |aFd|.
    *
    * @param aFd    An open PRFileDesc for the destination file to be
    *               overwritten.
+   * @param aFile  The location of the file.
    * @param aBytes The data to write to the file.
    *
    * @return The number of bytes written to the file, or an error if the write
    *         failed or was incomplete.
    */
-  static Result<uint32_t, IOError> WriteSync(PRFileDesc* aFd,
-                                             const nsACString& aPath,
+  static Result<uint32_t, IOError> WriteSync(PRFileDesc* aFd, nsIFile* aFile,
                                              const Span<const uint8_t>& aBytes);
 
   /**
-   * Attempts to move the file located at |aSource| to |aDest|.
+   * Attempts to move the file located at |aSourceFile| to |aDestFile|.
    *
-   * @param aSource     The location of the file to move as an absolute path
-   *                    string.
-   * @param aDest       The destination for the file as an absolute path string.
+   * @param aSourceFile  The location of the file to move.
+   * @param aDestFile    The destination for the file.
    * @param noOverWrite If true, abort with an error if a file already exists at
-   *                    |aDest|. Otherwise, the file will be overwritten by the
-   *                    move.
+   *                    |aDestFile|. Otherwise, the file will be overwritten by
+   *                    the move.
    *
    * @return Ok if the file was moved successfully, or an error.
    */
-  static Result<Ok, IOError> MoveSync(const nsAString& aSourcePath,
-                                      const nsAString& aDestPath,
+  static Result<Ok, IOError> MoveSync(already_AddRefed<nsIFile> aSourceFile,
+                                      already_AddRefed<nsIFile> aDestFile,
                                       bool aNoOverwrite);
 
   /**
-   * Attempts to copy the file at |aSourcePath| to |aDestPath|.
+   * Attempts to copy the file at |aSourceFile| to |aDestFile|.
    *
-   * @param aSourcePath The location of the file to be copied as an absolute
-   *                    path string.
-   * @param aDestPath   The location that the file should be copied to, as an
-   *                    absolute path string.
+   * @param aSourceFile The location of the file to copy.
+   * @param aDestFile   The destination that the file will be copied to.
    *
    * @return Ok if the operation was successful, or an error.
    */
-  static Result<Ok, IOError> CopySync(const nsAString& aSourcePath,
-                                      const nsAString& aDestPath,
+  static Result<Ok, IOError> CopySync(already_AddRefed<nsIFile> aSourceFile,
+                                      already_AddRefed<nsIFile> aDestFile,
                                       bool aNoOverWrite, bool aRecursive);
 
   /**
    * Provides the implementation for |CopySync| and |MoveSync|.
    *
-   * @param aMethod      A pointer to one of |nsLocalFile::MoveTo| or |CopyTo|
+   * @param aMethod      A pointer to one of |nsIFile::MoveTo| or |CopyTo|
    *                     instance methods.
    * @param aMethodName  The name of the method to the performed. Either "move"
    *                     or "copy".
@@ -279,14 +262,13 @@ class IOUtils final {
   template <typename CopyOrMoveFn>
   static Result<Ok, IOError> CopyOrMoveSync(CopyOrMoveFn aMethod,
                                             const char* aMethodName,
-                                            const RefPtr<nsLocalFile>& aSource,
-                                            const RefPtr<nsLocalFile>& aDest,
+                                            nsIFile* aSource, nsIFile* aDest,
                                             bool aNoOverwrite);
 
   /**
-   * Attempts to remove the file located at |aPath|.
+   * Attempts to remove the file located at |aFile|.
    *
-   * @param aPath         The location of the file as an absolute path string.
+   * @param aFile         The location of the file.
    * @param aIgnoreAbsent If true, suppress errors due to an absent target file.
    * @param aRecursive    If true, attempt to recursively remove descendant
    *                      files. This option is safe to use even if the target
@@ -294,14 +276,13 @@ class IOUtils final {
    *
    * @return Ok if the file was removed successfully, or an error.
    */
-  static Result<Ok, IOError> RemoveSync(const nsAString& aPath,
+  static Result<Ok, IOError> RemoveSync(already_AddRefed<nsIFile> aFile,
                                         bool aIgnoreAbsent, bool aRecursive);
 
   /**
-   * Attempts to create a new directory at |aPath|.
+   * Attempts to create a new directory at |aFile|.
    *
-   * @param aPath             The location of the file as an absolute path
-   *                          string.
+   * @param aFile             The location of the directory to create.
    * @param aCreateAncestors  If true, create missing ancestor directories as
    *                          needed. Otherwise, report an error if the target
    *                          has non-existing ancestor directories.
@@ -314,43 +295,43 @@ class IOUtils final {
    *
    * @return Ok if the directory was created successfully, or an error.
    */
-  static Result<Ok, IOError> CreateDirectorySync(const nsAString& aPath,
-                                                 bool aCreateAncestors,
-                                                 bool aIgnoreExisting,
-                                                 int32_t aMode = 0777);
+  static Result<Ok, IOError> MakeDirectorySync(already_AddRefed<nsIFile> aFile,
+                                               bool aCreateAncestors,
+                                               bool aIgnoreExisting,
+                                               int32_t aMode = 0777);
 
   /**
-   * Attempts to stat a file at |aPath|.
+   * Attempts to stat a file at |aFile|.
    *
-   * @param aPath The location of the file as an absolute path string.
+   * @param aFile The location of the file.
    *
    * @return An |InternalFileInfo| struct if successful, or an error.
    */
   static Result<IOUtils::InternalFileInfo, IOError> StatSync(
-      const nsAString& aPath);
+      already_AddRefed<nsIFile> aFile);
 
   /**
-   * Attempts to update the last modification time of the file at |aPath|.
+   * Attempts to update the last modification time of the file at |aFile|.
    *
-   * @param aPath       The location of the file as an absolute path string.
+   * @param aFile       The location of the file.
    * @param aNewModTime Some value in milliseconds since Epoch. For the current
    *                    system time, use |Nothing|.
    *
    * @return Timestamp of the file if the operation was successful, or an error.
    */
-  static Result<int64_t, IOError> TouchSync(const nsAString& aPath,
+  static Result<int64_t, IOError> TouchSync(already_AddRefed<nsIFile> aFile,
                                             const Maybe<int64_t>& aNewModTime);
 
   /**
-   * Returns the immediate children of the file at |aPath|, if any.
+   * Returns the immediate children of the directory at |aFile|, if any.
    *
-   * @param aPath The location of the file as an absolute path string.
+   * @param aFile The location of the directory.
    *
-   * @return An array of absolute paths identifying the children of |aPath|.
+   * @return An array of absolute paths identifying the children of |aFile|.
    *         If there are no children, an empty array. Otherwise, an error.
    */
   static Result<nsTArray<nsString>, IOError> GetChildrenSync(
-      const nsAString& aPath);
+      already_AddRefed<nsIFile> aFile);
 };
 
 /**
@@ -373,7 +354,7 @@ class IOUtils::IOError {
     mMessage.emplace(nsCString(aMessage));
     return *this;
   }
-  IOError WithMessage(nsCString aMessage) {
+  IOError WithMessage(const nsCString& aMessage) {
     mMessage.emplace(aMessage);
     return *this;
   }
@@ -417,26 +398,14 @@ struct IOUtils::InternalFileInfo {
  * used instead.
  */
 struct IOUtils::InternalWriteAtomicOpts {
-  Maybe<nsString> mBackupFile;
+  RefPtr<nsIFile> mBackupFile;
   bool mFlush;
   bool mNoOverwrite;
-  Maybe<nsString> mTmpPath;
+  RefPtr<nsIFile> mTmpFile;
   bool mCompress;
 
-  static inline InternalWriteAtomicOpts FromBinding(
-      const WriteAtomicOptions& aOptions) {
-    InternalWriteAtomicOpts opts;
-    opts.mFlush = aOptions.mFlush;
-    opts.mNoOverwrite = aOptions.mNoOverwrite;
-    if (aOptions.mBackupFile.WasPassed()) {
-      opts.mBackupFile.emplace(aOptions.mBackupFile.Value());
-    }
-    if (aOptions.mTmpPath.WasPassed()) {
-      opts.mTmpPath.emplace(aOptions.mTmpPath.Value());
-    }
-    opts.mCompress = aOptions.mCompress;
-    return opts;
-  }
+  static Result<InternalWriteAtomicOpts, IOUtils::IOError> FromBinding(
+      const WriteAtomicOptions& aOptions);
 };
 
 /**

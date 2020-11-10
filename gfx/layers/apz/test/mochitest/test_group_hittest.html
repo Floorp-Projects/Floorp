@@ -44,10 +44,24 @@ var subtests = [
   {"file": "helper_hittest_hidden_inactive_scrollframe.html", "prefs": prefs},
 ];
 
+function addConditionalTests(tests) {
+  // Add some more tests only useful with WebRender. Note that we do this in
+  // function run after loading, because trying to read layerManagerType can
+  // throw an NS_ERROR_FAILURE if called too early.
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  var isWebRender = utils.layerManagerType == "WebRender";
+  if (isWebRender) {
+    tests = tests.concat([
+      {"file": "helper_hittest_deep_scene_stack.html", "prefs": prefs},
+    ]);
+  }
+  return tests;
+}
+
 if (isApzEnabled()) {
   SimpleTest.waitForExplicitFinish();
   window.onload = function() {
-    runSubtestsSeriallyInFreshWindows(subtests)
+    runSubtestsSeriallyInFreshWindows(addConditionalTests(subtests))
     .then(SimpleTest.finish, SimpleTest.finishWithFailure);
   };
 }

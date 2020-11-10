@@ -70,4 +70,22 @@ namespace PathUtils {
    */
   [Throws]
   UTF8String toFileURI(DOMString path);
+
+  /**
+   * The profile directory.
+   */
+  [Throws]
+  Promise<DOMString> getProfileDir();
+
+  /**
+   * The local-specific profile directory.
+   */
+  [Throws]
+  Promise<DOMString> getLocalProfileDir();
+
+  /**
+   * The temporary directory for the process.
+   */
+  [Throws]
+  Promise<DOMString> getTempDir();
 };

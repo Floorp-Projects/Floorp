@@ -12,7 +12,6 @@ import { connect } from "../../utils/connect";
 import classnames from "classnames";
 import { debounce } from "lodash";
 
-import { isFirefox } from "devtools-environment";
 import { getLineText } from "./../../utils/source";
 import { features } from "../../utils/prefs";
 import { getIndentation } from "../../utils/indentation";
@@ -226,17 +225,9 @@ class Editor extends PureComponent<Props, State> {
     const codeMirrorGutter = codeMirror.getGutterElement();
     codeMirrorGutter.addEventListener("mouseleave", toggleFoldMarkerVisibility);
     codeMirrorGutter.addEventListener("mouseenter", toggleFoldMarkerVisibility);
-
-    if (!isFirefox()) {
-      codeMirror.on("gutterContextMenu", (cm, line, eventName, event) =>
-        this.onGutterContextMenu(event)
-      );
-      codeMirror.on("contextmenu", (cm, event) => this.openMenu(event));
-    } else {
-      codeMirrorWrapper.addEventListener("contextmenu", event =>
-        this.openMenu(event)
-      );
-    }
+    codeMirrorWrapper.addEventListener("contextmenu", event =>
+      this.openMenu(event)
+    );
 
     codeMirror.on("scroll", this.onEditorScroll);
     this.onEditorScroll();

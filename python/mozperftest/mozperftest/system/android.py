@@ -17,7 +17,7 @@ _FENIX_NIGHTLY_BUILDS = (
     "mobile.v2.fenix.nightly.latest.{architecture}"
     "/artifacts/public/build/{architecture}/target.apk"
 )
-_GV_BUILDS = "gecko.v2.mozilla-central.nightly.latest.mobile.android-"
+_GV_BUILDS = "gecko.v2.mozilla-central.shippable.latest.mobile.android-"
 _REFBROW_BUILDS = (
     "mobile.v2.reference-browser.nightly.latest.{architecture}"
     "/artifacts/public/target.{architecture}.apk"

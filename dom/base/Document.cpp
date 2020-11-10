@@ -9905,11 +9905,8 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
       // value after setting it, above.
       if (maxWidth == nsViewportInfo::Auto && !mValidScaleFloat) {
         BrowsingContext* bc = GetBrowsingContext();
-        nsIDocShell* docShell = GetDocShell();
-        if (docShell &&
-            docShell->GetTouchEventsOverride() ==
-                nsIDocShell::TOUCHEVENTS_OVERRIDE_ENABLED &&
-            bc && bc->InRDMPane()) {
+        if (bc && bc->TouchEventsOverride() == TouchEventsOverride::Enabled &&
+            bc->InRDMPane()) {
           // If RDM and touch simulation are active, then use the simulated
           // screen width to accomodate for cases where the screen width is
           // larger than the desktop viewport default.

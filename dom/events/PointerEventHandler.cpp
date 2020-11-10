@@ -574,15 +574,9 @@ void PointerEventHandler::DispatchPointerFromMouseOrTouch(
       return;
     }
 
-    nsCOMPtr<nsIDocShell> docShell = doc->GetDocShell();
-    if (!docShell) {
-      return;
-    }
-
     BrowsingContext* bc = doc->GetBrowsingContext();
-    if (docShell->GetTouchEventsOverride() ==
-            nsIDocShell::TOUCHEVENTS_OVERRIDE_ENABLED &&
-        bc && bc->InRDMPane()) {
+    if (bc && bc->TouchEventsOverride() == TouchEventsOverride::Enabled &&
+        bc->InRDMPane()) {
       return;
     }
 

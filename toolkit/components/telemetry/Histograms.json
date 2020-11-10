@@ -9576,6 +9576,16 @@
     "labels": ["unknown", "forms", "javaScript", "smask", "shadingPattern", "font", "errorTilingPattern", "errorExtGState", "errorXObject", "errorFontLoadType3", "errorFontState", "errorFontMissing", "errorFontTranslate", "errorColorSpace", "errorOperatorList", "errorFontToUnicode", "errorFontLoadNative", "errorFontGetPath"],
     "description": "All errors that could trigger the fallback bar, even after the bar is shown."
   },
+  "PDF_VIEWER_TAGGED": {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "expires_in_version": "87",
+    "alert_emails": ["bdahl@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1673128],
+    "kind": "boolean",
+    "description": "If a PDF is tagged."
+  },
   "PLUGINS_NOTIFICATION_SHOWN": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

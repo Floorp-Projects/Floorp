@@ -2,15 +2,19 @@
 - http://creativecommons.org/publicdomain/zero/1.0/ -->
 <!doctype html>
 <html>
- <head>
+
+<head>
   <meta charset="utf-8">
   <title>PathUtils tests</title>
- </head>
- <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
- <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css">
- <script>
+</head>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+<script>
   "use strict";
 
+  const { AppConstants } = ChromeUtils.import(
+    "resource://gre/modules/AppConstants.jsm"
+  );
   const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
   const { Services } = ChromeUtils.import(
     "resource://gre/modules/Services.jsm"
@@ -221,7 +225,7 @@
       // symlink to `/var`, so we need to pre-normalize our temporary directory
       // or expected paths won't match.
       const tmpDir = PathUtils.join(
-        PathUtils.normalize(Services.dirsvc.get("TmpD", Ci.nsIFile).path),
+        PathUtils.normalize(await PathUtils.getTempDir()),
         "pathutils_test"
       );
 
@@ -317,7 +321,7 @@
     Assert.throws(
       () => PathUtils.toFileURI(""),
       EMPTY_PATH,
-      "Pathutils.toFileURI() does not support empty paths"
+      "PathUtils.toFileURI() does not support empty paths"
     );
 
     if (Services.appinfo.OS === "WINNT") {
@@ -358,7 +362,41 @@
       );
     }
   });
- </script>
- <body>
- </body>
+
+  add_task(async function test_getDirectories() {
+    const profile = await PathUtils.getProfileDir();
+    is(
+      profile,
+      Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+      "PathUtils.getProfileDir() should match dirsvc"
+    );
+
+    const localProfile = await PathUtils.getLocalProfileDir();
+    is(
+      localProfile,
+      Services.dirsvc.get("ProfLD", Ci.nsIFile).path,
+      "PathUtils.getLocalProfileDir() should match dirsvc"
+    );
+
+    // See: nsAppDirectoryServiceDefs.h
+    const tempDir = await PathUtils.getTempDir();
+    if (AppConstants.MOZ_SANDBOX) {
+      is(
+        tempDir,
+        Services.dirsvc.get("ContentTmpD", Ci.nsIFile).path,
+        "PathUtils.getTempDir() should match dirsvc"
+      );
+    } else {
+      is(
+        tempDir,
+        Services.dirsvc.get("TmpD", Ci.nsIFile).path,
+        "PathUtils.getTempDir() should match dirsvc"
+      );
+    }
+  });
+</script>
+
+<body>
+</body>
+
 </html>

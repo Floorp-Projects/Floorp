@@ -13,6 +13,7 @@
 
 #include "mozilla/dom/CryptoBuffer.h"
 #include "mozilla/dom/WebAuthenticationBinding.h"
+#include "ipc/IPCMessageUtils.h"
 
 namespace mozilla {
 namespace dom {

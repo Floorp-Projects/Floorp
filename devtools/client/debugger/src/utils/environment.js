@@ -2,17 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-let logs = [];
-export function getHistory(query: ?string = null): any {
-  if (!query) {
-    return logs;
+export function isNode() {
+  try {
+    return process.release.name == "node";
+  } catch (e) {
+    return false;
   }
-
-  return logs.filter(log => log.type === query);
 }
 
-export function clearHistory() {
-  logs = [];
+export function isNodeTest() {
+  return isNode() && process.env.NODE_ENV != "production";
 }

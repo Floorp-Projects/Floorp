@@ -859,7 +859,7 @@ class ResponsiveUI {
       );
 
       reloadNeeded = await this.responsiveFront.setTouchEventsOverride(
-        Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED
+        "enabled"
       );
 
       if (metaViewportEnabled) {

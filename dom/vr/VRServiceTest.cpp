@@ -6,6 +6,9 @@
 
 #include "mozilla/dom/VRServiceTest.h"
 #include "mozilla/dom/VRServiceTestBinding.h"
+#include "mozilla/dom/GamepadPoseState.h"
+#include "mozilla/dom/Promise.h"
+#include "VRManagerChild.h"
 #include "VRPuppetCommandBuffer.h"
 #include <type_traits>
 

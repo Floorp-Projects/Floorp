@@ -1638,21 +1638,11 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   MOZ_MUST_USE bool appendSourceDataForToString(JSContext* cx,
                                                 js::StringBuffer& buf);
 
-  void setToStringEnd(uint32_t toStringEnd) {
-    MOZ_ASSERT(extent_.toStringStart <= toStringEnd);
-    MOZ_ASSERT(extent_.toStringEnd >= extent_.sourceEnd);
-    extent_.toStringEnd = toStringEnd;
-  }
-
   uint32_t lineno() const { return extent_.lineno; }
   uint32_t column() const { return extent_.column; }
 
  public:
   ImmutableScriptFlags immutableFlags() const { return immutableFlags_; }
-
-  void resetImmutableFlags(ImmutableScriptFlags flags) {
-    immutableFlags_ = flags;
-  }
 
   // ImmutableFlags accessors.
   MOZ_MUST_USE bool hasFlag(ImmutableFlags flag) const {
@@ -1760,29 +1750,9 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
                          : GeneratorKind::NotGenerator;
   }
 
-  void setGeneratorKind(GeneratorKind kind) {
-    // A script only gets its generator kind set as part of initialization,
-    // so it can only transition from NotGenerator.
-    MOZ_ASSERT(!isGenerator());
-    if (kind == GeneratorKind::Generator) {
-      setFlag(ImmutableFlags::IsGenerator);
-    }
-  }
-
   FunctionAsyncKind asyncKind() const {
     return isAsync() ? FunctionAsyncKind::AsyncFunction
                      : FunctionAsyncKind::SyncFunction;
-  }
-
-  void setAsyncKind(FunctionAsyncKind kind) {
-    if (kind == FunctionAsyncKind::AsyncFunction) {
-      setFlag(ImmutableFlags::IsAsync);
-    }
-  }
-
-  frontend::ParseGoal parseGoal() const {
-    return hasModuleGoal() ? frontend::ParseGoal::Module
-                           : frontend::ParseGoal::Script;
   }
 
   bool hasEnclosingScript() const { return warmUpData_.isEnclosingScript(); }

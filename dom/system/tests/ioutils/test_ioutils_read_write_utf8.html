@@ -239,7 +239,7 @@
       info("Test writing a file at a relative destination");
       await Assert.rejects(
         IOUtils.writeAtomicUTF8(tmpFileName, "foo"),
-        /Refusing to work with path\(.*\) because only absolute file paths are permitted/,
+        /Could not parse path/,
         "IOUtils::writeAtomicUTF8 only works with absolute paths"
       );
     });
@@ -250,7 +250,7 @@
       info("Test reading a file at a relative destination");
       await Assert.rejects(
         IOUtils.readUTF8(tmpFileName),
-        /Refusing to work with path\(.*\) because only absolute file paths are permitted/,
+        /Could not parse path/,
         "IOUtils::readUTF8 only works with absolute paths"
       );
     });

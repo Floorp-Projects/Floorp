@@ -8,6 +8,7 @@
 #define mozilla_dom_XRInputSpace_h_
 
 #include "XRInputSpace.h"
+#include "mozilla/dom/XRSpace.h"
 
 namespace mozilla {
 namespace dom {

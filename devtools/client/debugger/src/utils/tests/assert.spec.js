@@ -14,7 +14,7 @@ describe("assert", () => {
     testAssertMessage = "Test assert.js Message";
   });
 
-  describe("when isDevelopment and the condition is truthy", () => {
+  describe("when condition is truthy", () => {
     it("does not throw an Error", () => {
       expect(() => {
         assert(true, testAssertMessage);
@@ -22,7 +22,7 @@ describe("assert", () => {
     });
   });
 
-  describe("when isDevelopment and the condition is falsy", () => {
+  describe("when condition is falsy", () => {
     it("throws an Error displaying the passed message", () => {
       expect(() => {
         assert(false, testAssertMessage);
@@ -30,7 +30,7 @@ describe("assert", () => {
     });
   });
 
-  describe("when not isDevelopment", () => {
+  describe("when not in Node test", () => {
     it("does not throw an Error", () => {
       process.env.NODE_ENV = "production";
       expect(() => assert(false, testAssertMessage)).not.toThrow();

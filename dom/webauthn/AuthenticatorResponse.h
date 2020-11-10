@@ -14,6 +14,8 @@
 #include "mozilla/dom/CryptoBuffer.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
+#include "nsCOMPtr.h"
+#include "nsPIDOMWindow.h"
 
 namespace mozilla {
 namespace dom {

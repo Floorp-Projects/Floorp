@@ -9,6 +9,7 @@
 
 #include <windows.h>
 #include "mozilla/Types.h"
+#include "mozilla/Vector.h"
 
 namespace mozilla {
 
@@ -21,14 +22,25 @@ static const DWORD kPreXULSkeletonUIWindowStyle =
     WS_MINIMIZEBOX | WS_SIZEBOX | WS_SYSMENU;
 static const DWORD kPreXULSkeletonUIWindowStyleEx = WS_EX_WINDOWEDGE;
 
+struct CSSPixelSpan {
+  double start;
+  double end;
+};
+
+struct DevPixelSpan {
+  int start;
+  int end;
+};
+
 MFBT_API void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
                                              char** argv);
 MFBT_API HWND ConsumePreXULSkeletonUIHandle();
 MFBT_API bool WasPreXULSkeletonUIMaximized();
 MFBT_API void PersistPreXULSkeletonUIValues(int screenX, int screenY, int width,
                                             int height, bool maximized,
-                                            double urlbarHorizontalOffsetCSS,
-                                            double urlbarWidthCSS,
+                                            CSSPixelSpan urlbar,
+                                            CSSPixelSpan searchbar,
+                                            const Vector<CSSPixelSpan>& springs,
                                             double cssToDevPixelScaling);
 MFBT_API bool GetPreXULSkeletonUIEnabled();
 MFBT_API void SetPreXULSkeletonUIEnabledIfAllowed(bool value);
