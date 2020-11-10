@@ -74,4 +74,12 @@ interface IntlUtils {
    */
   [Throws]
   LocaleInfo getLocaleInfo(sequence<DOMString> locales);
+
+  /**
+   * Helper function to determine if the current application locale is RTL.
+   *
+   * The result of this function can be overriden by this pref:
+   *  - `intl.l10n.pseudo`
+   */
+  boolean isAppLocaleRTL();
 };
