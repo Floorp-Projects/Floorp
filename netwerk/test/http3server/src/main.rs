@@ -304,24 +304,6 @@ impl HttpServer for Server {
     }
 }
 
-#[derive(Default)]
-struct NonRespondingServer {
-}
-
-impl ::std::fmt::Display for NonRespondingServer {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        write!(f, "NonRespondingServer")
-    }
-}
-
-impl HttpServer for NonRespondingServer {
-    fn process(&mut self, _dgram: Option<Datagram>) -> Output {
-        Output::None
-    }
-
-    fn process_events(&mut self) {}
-}
-
 fn emit_packet(socket: &UdpSocket, out_dgram: Datagram) {
     let sent = socket
         .send_to(&out_dgram, &out_dgram.destination())
@@ -386,12 +368,6 @@ fn read_dgram(
     }
 }
 
-enum ServerType {
-  Http3,
-  Http3Fail,
-  Http3NoResponse,
-}
-
 struct ServersRunner {
     hosts: Vec<SocketAddr>,
     poll: Poll,
@@ -416,21 +392,19 @@ impl ServersRunner {
     }
 
     pub fn init(&mut self) {
-        self.add_new_socket(0, ServerType::Http3);
-        self.add_new_socket(1, ServerType::Http3Fail);
-        self.add_new_socket(3, ServerType::Http3NoResponse);
+        self.add_new_socket(0, true);
+        self.add_new_socket(1, false);
         println!(
-            "HTTP3 server listening on ports {}, {} and {}",
+            "HTTP3 server listening on ports {} and {}",
             self.hosts[0].port(),
-            self.hosts[1].port(),
-            self.hosts[2].port()
+            self.hosts[1].port()
         );
         self.poll
             .register(&self.timer, TIMER_TOKEN, Ready::readable(), PollOpt::edge())
             .unwrap();
     }
 
-    fn add_new_socket(&mut self, count: usize, server_type: ServerType) -> u16 {
+    fn add_new_socket(&mut self, count: usize, http3: bool) -> u16 {
         let addr = "127.0.0.1:0".parse().unwrap();
 
         let socket = match UdpSocket::bind(&addr) {
@@ -462,49 +436,44 @@ impl ServersRunner {
 
         self.sockets.push(socket);
         self.servers
-            .insert(local_addr, (self.create_server(server_type), None));
+            .insert(local_addr, (self.create_server(http3), None));
         local_addr.port()
     }
 
-    fn create_server(&self, server_type: ServerType) -> Box<dyn HttpServer> {
+    fn create_server(&self, http3: bool) -> Box<dyn HttpServer> {
         let anti_replay = AntiReplay::new(Instant::now(), Duration::from_secs(10), 7, 14)
             .expect("unable to setup anti-replay");
         let cid_mgr = Rc::new(RefCell::new(FixedConnectionIdManager::new(10)));
 
-        match server_type {
-            ServerType::Http3 =>
-                Box::new(
-                    Http3TestServer::new(
-                        Http3Server::new(
-                            Instant::now(),
-                            &[" HTTP2 Test Cert"],
-                            PROTOCOLS,
-                            anti_replay,
-                            cid_mgr,
-                            QpackSettings {
-                                max_table_size_encoder: MAX_TABLE_SIZE,
-                                max_table_size_decoder: MAX_TABLE_SIZE,
-                                max_blocked_streams: MAX_BLOCKED_STREAMS,
-                            },
-                        ).expect("We cannot make a server!")
-                    )
-                ),
-            ServerType::Http3Fail =>
-                Box::new(
-                    Server::new(
+        if http3 {
+            Box::new(
+                Http3TestServer::new(
+                    Http3Server::new(
                         Instant::now(),
                         &[" HTTP2 Test Cert"],
                         PROTOCOLS,
                         anti_replay,
-                        Box::new(AllowZeroRtt {}),
                         cid_mgr,
-                    )
-                    .expect("We cannot make a server!"),
-                ),
-            ServerType::Http3NoResponse =>
-                Box::new(
-                    NonRespondingServer::default()
-                ),
+                        QpackSettings {
+                            max_table_size_encoder: MAX_TABLE_SIZE,
+                            max_table_size_decoder: MAX_TABLE_SIZE,
+                            max_blocked_streams: MAX_BLOCKED_STREAMS,
+                        },
+                    ).expect("We cannot make a server!")
+                )
+            )
+        } else {
+            Box::new(
+                Server::new(
+                    Instant::now(),
+                    &[" HTTP2 Test Cert"],
+                    PROTOCOLS,
+                    anti_replay,
+                    Box::new(AllowZeroRtt {}),
+                    cid_mgr,
+                )
+                .expect("We cannot make a server!"),
+            )
         }
     }
 
