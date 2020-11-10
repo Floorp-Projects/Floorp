@@ -76,11 +76,6 @@ ServiceWorkerInterceptController::ShouldPrepareForIntercept(
     return NS_OK;
   }
 
-  // Check if we're in a secure context
-  if (!nsContentUtils::ComputeIsSecureContext(aChannel)) {
-    return NS_OK;
-  }
-
   // Then check to see if we are allowed to control the window.
   // It is important to check for the availability of the service worker first
   // to avoid showing warnings about the use of third-party cookies in the UI
