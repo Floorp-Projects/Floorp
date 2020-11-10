@@ -233,10 +233,6 @@ namespace mozilla {
  */
 class URLParams final {
  public:
-  URLParams() = default;
-
-  ~URLParams() { DeleteAll(); }
-
   /**
    * \brief Parses a query string and calls a parameter handler for each
    * name/value pair. The parameter handler can stop processing early by
