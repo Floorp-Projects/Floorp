@@ -242,8 +242,31 @@ struct DllBlockInfoComparator {
 
 static BOOL WINAPI NoOp_DllMain(HINSTANCE, DWORD, LPVOID) { return TRUE; }
 
-static BlockAction DetermineBlockAction(const UNICODE_STRING& aLeafName,
-                                        void* aBaseAddress) {
+// Allowing a module to be loaded but detour the entrypoint to NoOp_DllMain
+// so that the module has no chance to interact with our code.  We need this
+// technique to safely block a module injected by IAT tampering because
+// blocking such a module makes a process fail to launch.
+static bool RedirectToNoOpEntryPoint(
+    const mozilla::nt::PEHeaders& aModule,
+    mozilla::freestanding::Kernel32ExportsSolver& aK32Exports) {
+  static RTL_RUN_ONCE sRunOnce = RTL_RUN_ONCE_INIT;
+  aK32Exports.Resolve(sRunOnce);
+  if (!aK32Exports.IsResolved()) {
+    return false;
+  }
+
+  mozilla::interceptor::WindowsDllEntryPointInterceptor interceptor(
+      aK32Exports);
+  if (!interceptor.Set(aModule, NoOp_DllMain)) {
+    return false;
+  }
+
+  return true;
+}
+
+static BlockAction DetermineBlockAction(
+    const UNICODE_STRING& aLeafName, void* aBaseAddress,
+    mozilla::freestanding::Kernel32ExportsSolver* aK32Exports) {
   if (mozilla::nt::Contains12DigitHexString(aLeafName) ||
       mozilla::nt::IsFileNameAtLeast16HexDigits(aLeafName)) {
     return BlockAction::Deny;
@@ -270,32 +293,8 @@ static BlockAction DetermineBlockAction(const UNICODE_STRING& aLeafName,
 
   gBlockSet.Add(entry.mName, version);
 
-  if (entry.mFlags & DllBlockInfo::REDIRECT_TO_NOOP_ENTRYPOINT) {
-    // For modules with REDIRECT_TO_NOOP_ENTRYPOINT, we allow a module to be
-    // loaded but detour the entrypoint to NoOp_DllMain so that the module has
-    // no chance to interact with our code.  We need this technique to safely
-    // block a module injected by IAT tampering because blocking such a module
-    // makes a process fail to launch.
-    // If we fail to detour a module's entrypoint, we reluctantly allow the
-    // module for free.
-
-    auto resultView = mozilla::freestanding::gSharedSection.GetView();
-    if (resultView.isErr()) {
-      return BlockAction::Allow;
-    }
-
-    static RTL_RUN_ONCE sRunOnce = RTL_RUN_ONCE_INIT;
-    resultView.inspect()->mK32Exports.Resolve(sRunOnce);
-    if (!resultView.inspect()->mK32Exports.IsResolved()) {
-      return BlockAction::Allow;
-    }
-
-    mozilla::interceptor::WindowsDllEntryPointInterceptor interceptor(
-        resultView.inspect()->mK32Exports);
-    if (!interceptor.Set(headers, NoOp_DllMain)) {
-      return BlockAction::Allow;
-    }
-
+  if ((entry.mFlags & DllBlockInfo::REDIRECT_TO_NOOP_ENTRYPOINT) &&
+      aK32Exports && RedirectToNoOpEntryPoint(headers, *aK32Exports)) {
     return BlockAction::NoOpEntryPoint;
   }
 
@@ -361,12 +360,44 @@ NTSTATUS NTAPI patched_NtMapViewOfSection(
     return STATUS_ACCESS_DENIED;
   }
 
+  bool isDependent = false;
+  auto resultView = mozilla::freestanding::gSharedSection.GetView();
+  if (resultView.isOk()) {
+    uint32_t arrayLen = resultView.inspect()->mModulePathArrayLength;
+    const uint32_t* array = resultView.inspect()->mModulePathArray;
+    size_t match;
+    isDependent = mozilla::BinarySearchIf(
+        array, 0, arrayLen,
+        [&sectionFileName, arrayBase = reinterpret_cast<const uint8_t*>(array)](
+            const uint32_t& aOffset) {
+          UNICODE_STRING str;
+          ::RtlInitUnicodeString(
+              &str, reinterpret_cast<const wchar_t*>(arrayBase + aOffset));
+          return static_cast<int>(
+              ::RtlCompareUnicodeString(sectionFileName, &str, TRUE));
+        },
+        &match);
+  }
+
   // Find the leaf name
   UNICODE_STRING leafOnStack;
   nt::GetLeafName(&leafOnStack, sectionFileName);
 
-  // Check blocklist
-  BlockAction blockAction = DetermineBlockAction(leafOnStack, *aBaseAddress);
+  BlockAction blockAction;
+  if (isDependent) {
+    // For a dependent module, try redirection instead of blocking it.
+    // If we fail, we reluctantly allow the module for free.
+    mozilla::nt::PEHeaders headers(*aBaseAddress);
+    blockAction =
+        RedirectToNoOpEntryPoint(headers, resultView.inspect()->mK32Exports)
+            ? BlockAction::NoOpEntryPoint
+            : BlockAction::Allow;
+  } else {
+    // Check blocklist
+    blockAction = DetermineBlockAction(
+        leafOnStack, *aBaseAddress,
+        resultView.isOk() ? &resultView.inspect()->mK32Exports : nullptr);
+  }
 
   if (blockAction == BlockAction::Allow) {
     if (nt::RtlGetProcessHeap()) {
