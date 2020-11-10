@@ -52,8 +52,6 @@
   --in-content-dialog-header-background: #f1f1f1;
   --in-content-sidebar-width: 240px;
 
-  --dialog-warning-text-color: var(--red-60);
-
   --panel-border-radius: 2px; /* This is overridden on Windows */
 
   --blue-40: #45a1ff;
@@ -80,7 +78,6 @@
   --green-80: #006504;
   --green-90: #003706;
   --orange-50: #ff9400;
-  --red-40: #ff4f5e;
   --red-50: #ff0039;
   --red-50-a30: rgba(255, 0, 57, 0.3);
   --red-60: #d70022;
@@ -144,8 +141,6 @@
     --in-content-tab-color: var(--in-content-page-color);
 
     --card-outline-color: var(--grey-60);
-
-    --dialog-warning-text-color: var(--red-40);
 
     scrollbar-color: rgba(249,249,250,.4) rgba(20,20,25,.3);
   }

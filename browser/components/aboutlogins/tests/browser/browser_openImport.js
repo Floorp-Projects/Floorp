@@ -5,22 +5,7 @@ let { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
-let { MockFilePicker } = SpecialPowers;
-
-function waitForFilePicker() {
-  return new Promise(resolve => {
-    MockFilePicker.showCallback = () => {
-      MockFilePicker.showCallback = null;
-      ok(true, "Saw the file picker");
-      resolve();
-    };
-  });
-}
-
 add_task(async function setup() {
-  MockFilePicker.init(window);
-  MockFilePicker.useAnyFile();
-  MockFilePicker.returnValue = MockFilePicker.returnOK;
   await TestUtils.waitForCondition(() => {
     Services.telemetry.clearEvents();
     let events = Services.telemetry.snapshotEvents(
@@ -36,7 +21,6 @@ add_task(async function setup() {
   });
   registerCleanupFunction(() => {
     BrowserTestUtils.removeTab(aboutLoginsTab);
-    MockFilePicker.cleanup();
   });
 });
 
@@ -63,24 +47,6 @@ add_task(async function test_open_import() {
   info("waiting for Import to get opened");
   let importWindow = await promiseImportWindow;
   ok(true, "Import opened");
-
-  let filePicker = waitForFilePicker();
-  info("waiting for Import file picker to get opened");
-  await filePicker;
-  ok(true, "Import file picker opened");
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    () => {
-      let confirmExportDialog = window.document.querySelector(
-        "import-summary-dialog"
-      );
-      return confirmExportDialog.shadowRoot.querySelector(
-        ".import-done-button"
-      );
-    },
-    {},
-    browser
-  );
 
   // First event is for opening about:logins
   await LoginTestUtils.telemetry.waitForEventCount(2);

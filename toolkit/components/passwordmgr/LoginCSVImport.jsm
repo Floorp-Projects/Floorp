@@ -147,7 +147,7 @@ class LoginCSVImport {
       );
     });
 
-    let summary = await LoginHelper.maybeImportLogins(loginsToImport);
+    await LoginHelper.maybeImportLogins(loginsToImport);
 
     // Record quantity, jank, and duration telemetry.
     try {
@@ -165,6 +165,5 @@ class LoginCSVImport {
     } catch (ex) {
       Cu.reportError(ex);
     }
-    return summary;
   }
 }
