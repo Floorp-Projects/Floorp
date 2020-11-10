@@ -323,15 +323,15 @@ class IOUtils final {
                                             const Maybe<int64_t>& aNewModTime);
 
   /**
-   * Returns the immediate children of the file at |aPath|, if any.
+   * Returns the immediate children of the directory at |aFile|, if any.
    *
-   * @param aPath The location of the file as an absolute path string.
+   * @param aFile The location of the directory.
    *
-   * @return An array of absolute paths identifying the children of |aPath|.
+   * @return An array of absolute paths identifying the children of |aFile|.
    *         If there are no children, an empty array. Otherwise, an error.
    */
   static Result<nsTArray<nsString>, IOError> GetChildrenSync(
-      const nsAString& aPath);
+      already_AddRefed<nsIFile> aFile);
 };
 
 /**
