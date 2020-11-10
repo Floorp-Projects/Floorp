@@ -187,9 +187,9 @@ class GLLibraryEGL final {
     WRAP(fGetDisplay(display_id));
   }
 
-  EGLDisplay fGetPlatformDisplayEXT(EGLenum platform, void* native_display,
-                                    const EGLint* attrib_list) const {
-    WRAP(fGetPlatformDisplayEXT(platform, native_display, attrib_list));
+  EGLDisplay fGetPlatformDisplay(EGLenum platform, void* native_display,
+                                 const EGLAttrib* attrib_list) const {
+    WRAP(fGetPlatformDisplay(platform, native_display, attrib_list));
   }
 
   EGLSurface fGetCurrentSurface(EGLint id) const {
@@ -460,9 +460,9 @@ class GLLibraryEGL final {
   struct {
     EGLCastToRelevantPtr(GLAPIENTRY* fGetProcAddress)(const char* procname);
     EGLDisplay(GLAPIENTRY* fGetDisplay)(void* display_id);
-    EGLDisplay(GLAPIENTRY* fGetPlatformDisplayEXT)(EGLenum platform,
-                                                   void* native_display,
-                                                   const EGLint* attrib_list);
+    EGLDisplay(GLAPIENTRY* fGetPlatformDisplay)(EGLenum platform,
+                                                void* native_display,
+                                                const EGLAttrib* attrib_list);
     EGLBoolean(GLAPIENTRY* fTerminate)(EGLDisplay dpy);
     EGLSurface(GLAPIENTRY* fGetCurrentSurface)(EGLint);
     EGLContext(GLAPIENTRY* fGetCurrentContext)(void);
