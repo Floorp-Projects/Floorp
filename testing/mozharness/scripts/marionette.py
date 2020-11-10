@@ -145,6 +145,15 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin, CodeCoverageM
                 },
             ],
             [
+                ["--disable-actors"],
+                {
+                    "action": "store_true",
+                    "dest": "disable_actors",
+                    "default": False,
+                    "help": "Disable the usage of JSWindowActors in Marionette.",
+                },
+            ],
+            [
                 ["--enable-webrender"],
                 {
                     "action": "store_true",
@@ -337,6 +346,9 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin, CodeCoverageM
 
         if self.config.get("app_arg"):
             config_fmt_args["app_arg"] = self.config["app_arg"]
+
+        if self.config["disable_actors"]:
+            cmd.append("--disable-actors")
 
         if self.config["enable_webrender"]:
             cmd.append("--enable-webrender")
