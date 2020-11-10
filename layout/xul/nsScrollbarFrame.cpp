@@ -349,7 +349,9 @@ nsresult nsScrollbarFrame::CreateAnonymousContent(
       nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollbarbutton, nullptr,
                                    kNameSpaceID_XUL, nsINode::ELEMENT_NODE);
 
-  {
+  bool createButtons = PresContext()->Theme()->ThemeSupportsScrollbarButtons();
+
+  if (createButtons) {
     AnonymousContentKey key;
     mUpTopButton =
         MakeScrollbarButton(sbbNodeInfo, vertical, /* aBottom */ false,
@@ -357,7 +359,7 @@ nsresult nsScrollbarFrame::CreateAnonymousContent(
     aElements.AppendElement(ContentInfo(mUpTopButton, key));
   }
 
-  {
+  if (createButtons) {
     AnonymousContentKey key;
     mDownTopButton =
         MakeScrollbarButton(sbbNodeInfo, vertical, /* aBottom */ false,
@@ -388,7 +390,7 @@ nsresult nsScrollbarFrame::CreateAnonymousContent(
     mSlider->AppendChildTo(mThumb, false);
   }
 
-  {
+  if (createButtons) {
     AnonymousContentKey key;
     mUpBottomButton =
         MakeScrollbarButton(sbbNodeInfo, vertical, /* aBottom */ true,
@@ -396,7 +398,7 @@ nsresult nsScrollbarFrame::CreateAnonymousContent(
     aElements.AppendElement(ContentInfo(mUpBottomButton, key));
   }
 
-  {
+  if (createButtons) {
     AnonymousContentKey key;
     mDownBottomButton =
         MakeScrollbarButton(sbbNodeInfo, vertical, /* aBottom */ true,
