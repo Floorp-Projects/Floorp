@@ -128,22 +128,6 @@ static nsCString FormatErrorMessage(nsresult aError,
                          static_cast<uint32_t>(aError));
 }
 
-/**
- * Unwraps |aResult| into a |MozPromise|.
- *
- * If the result is an error, a new MozPromise is created and immediately
- * rejected with the unwrapped error. Otherwise, if the result is ok, a new
- * MozPromise is created and immediately resolved with the unwrapped result.
- */
-template <class PromiseT, class OkT, class ErrT>
-static RefPtr<PromiseT> ToMozPromise(Result<OkT, ErrT>& aResult,
-                                     const char* aCallSite) {
-  if (aResult.isErr()) {
-    return PromiseT::CreateAndReject(aResult.unwrapErr(), aCallSite);
-  }
-  return PromiseT::CreateAndResolve(aResult.unwrap(), aCallSite);
-}
-
 MOZ_MUST_USE inline bool ToJSValue(
     JSContext* aCx, const IOUtils::InternalFileInfo& aInternalFileInfo,
     JS::MutableHandle<JS::Value> aValue) {
