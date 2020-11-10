@@ -606,7 +606,8 @@ def export_target(target_name) -> Set[str]:
     else:
         assert False, lib_type
 
-    lines.append(""); # EOF newline
+    lines.append("")
+    # EOF newline
 
     # Write it out
 
