@@ -434,15 +434,16 @@ already_AddRefed<Promise> IOUtils::Touch(
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
 
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
   Maybe<int64_t> newTime = Nothing();
   if (aModification.WasPassed()) {
     newTime = Some(aModification.Value());
   }
 
-  return RunOnBackgroundThread<int64_t>(promise, &TouchSync, path, newTime);
+  return RunOnBackgroundThread<int64_t>(promise, &TouchSync, file.forget(),
+                                        newTime);
 }
 
 /* static */
@@ -1155,11 +1156,10 @@ Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
 
 /* static */
 Result<int64_t, IOUtils::IOError> IOUtils::TouchSync(
-    const nsAString& aPath, const Maybe<int64_t>& aNewModTime) {
+    already_AddRefed<nsIFile> aFile, const Maybe<int64_t>& aNewModTime) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  RefPtr<nsLocalFile> file = new nsLocalFile();
-  MOZ_TRY(file->InitWithPath(aPath));
+  nsCOMPtr<nsIFile> file = aFile;
 
   int64_t now = aNewModTime.valueOrFrom([]() {
     // NB: PR_Now reports time in microseconds since the Unix epoch
@@ -1184,7 +1184,8 @@ Result<int64_t, IOUtils::IOError> IOUtils::TouchSync(
             .WithMessage(
                 "Refusing to set the modification time of file(%s) to 0.\n"
                 "To use the current system time, call `touch` with no "
-                "arguments"));
+                "arguments",
+                file->HumanReadablePath().get()));
   }
 
   nsresult rv = file->SetLastModifiedTime(now);
@@ -1194,7 +1195,7 @@ Result<int64_t, IOUtils::IOError> IOUtils::TouchSync(
     if (IsFileNotFound(rv)) {
       return Err(
           err.WithMessage("Could not touch file(%s) because it does not exist",
-                          NS_ConvertUTF16toUTF8(aPath).get()));
+                          file->HumanReadablePath().get()));
     }
     return Err(err);
   }

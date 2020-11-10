@@ -311,15 +311,15 @@ class IOUtils final {
       already_AddRefed<nsIFile> aFile);
 
   /**
-   * Attempts to update the last modification time of the file at |aPath|.
+   * Attempts to update the last modification time of the file at |aFile|.
    *
-   * @param aPath       The location of the file as an absolute path string.
+   * @param aFile       The location of the file.
    * @param aNewModTime Some value in milliseconds since Epoch. For the current
    *                    system time, use |Nothing|.
    *
    * @return Timestamp of the file if the operation was successful, or an error.
    */
-  static Result<int64_t, IOError> TouchSync(const nsAString& aPath,
+  static Result<int64_t, IOError> TouchSync(already_AddRefed<nsIFile> aFile,
                                             const Maybe<int64_t>& aNewModTime);
 
   /**
