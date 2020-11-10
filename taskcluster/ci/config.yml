@@ -563,6 +563,14 @@ workers:
             implementation: docker-worker
             os: linux
             worker-type: 't-linux-xlarge'
+        b-osx-1015:
+            provisioner: releng-hardware
+            implementation: generic-worker
+            os: macosx
+            worker-type:
+                by-level:
+                    '3': 'gecko-3-b-osx-1015'
+                    default: 'gecko-1-b-osx-1015'
         t-osx-1014-pgo:
             provisioner: releng-hardware
             implementation: generic-worker
