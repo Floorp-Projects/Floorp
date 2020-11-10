@@ -30,6 +30,9 @@ var gSearchResultsPane = {
   searchKeywords: new WeakMap(),
   inited: false,
 
+  // A (node -> boolean) map of subitems to be made visible or hidden.
+  subItems: new Map(),
+
   init() {
     if (this.inited) {
       return;
@@ -235,9 +238,10 @@ var gSearchResultsPane = {
     let subQuery = this.query && query.includes(this.query);
     this.query = query;
 
-    this.getFindSelection(window).removeAllRanges();
-    this.removeAllSearchTooltips();
-    this.removeAllSearchMenuitemIndicators();
+    // If there is a query, don't reshow the existing hidden subitems yet
+    // to avoid them flickering into view only to be hidden again by
+    // this next search.
+    this.removeAllSearchIndicators(window, !query.length);
 
     // Clear telemetry request if user types very frequently.
     if (this.telemetryTimer) {
@@ -312,6 +316,14 @@ var gSearchResultsPane = {
           resultsFound = true;
         } else {
           child.classList.add("visually-hidden");
+        }
+      }
+
+      // Hide any subitems that don't match the search term and show
+      // only those that do.
+      if (this.subItems.size) {
+        for (let [subItem, matches] of this.subItems) {
+          subItem.classList.toggle("visually-hidden", !matches);
         }
       }
 
@@ -522,17 +534,21 @@ var gSearchResultsPane = {
    */
   async searchChildNodeIfVisible(nodeObject, index, searchPhrase) {
     let result = false;
+    let child = nodeObject.childNodes[index];
     if (
-      !nodeObject.childNodes[index].hidden &&
+      !child.hidden &&
       nodeObject.getAttribute("data-hidden-from-search") !== "true"
     ) {
-      result = await this.searchWithinNode(
-        nodeObject.childNodes[index],
-        searchPhrase
-      );
+      result = await this.searchWithinNode(child, searchPhrase);
       // Creating tooltips for menulist element
       if (result && nodeObject.tagName === "menulist") {
         this.listSearchTooltips.add(nodeObject);
+      }
+
+      // If this is a node for an experimental feature option, add it to the list
+      // of subitems. The items that don't match the search term will be hidden.
+      if (child instanceof Element && child.classList.contains("featureGate")) {
+        this.subItems.set(child, result);
       }
     }
     return result;
@@ -646,6 +662,25 @@ var gSearchResultsPane = {
       "left",
       `calc(50% - ${tooltipRect.width / 2}px)`
     );
+  },
+
+  /**
+   * Remove all search indicators. This would be called when switching away from
+   * a search to another preference category.
+   */
+  removeAllSearchIndicators(window, showSubItems) {
+    this.getFindSelection(window).removeAllRanges();
+    this.removeAllSearchTooltips();
+    this.removeAllSearchMenuitemIndicators();
+
+    // Make any previously hidden subitems visible again for the next search.
+    if (showSubItems && this.subItems.size) {
+      for (let subItem of this.subItems.keys()) {
+        subItem.classList.remove("visually-hidden");
+      }
+    }
+
+    this.subItems.clear();
   },
 
   /**

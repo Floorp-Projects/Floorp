@@ -209,3 +209,56 @@ function waitForMutation(target, opts, cb) {
     observer.observe(target, opts);
   });
 }
+
+// Used to add sample experimental features for testing. To use, create
+// a DefinitionServer, then call addDefinition as needed.
+class DefinitionServer {
+  constructor(definitionOverrides = []) {
+    let { HttpServer } = ChromeUtils.import(
+      "resource://testing-common/httpd.js"
+    );
+
+    this.server = new HttpServer();
+    this.server.registerPathHandler("/definitions.json", this);
+    this.definitions = {};
+
+    for (const override of definitionOverrides) {
+      this.addDefinition(override);
+    }
+
+    this.server.start();
+    registerCleanupFunction(
+      () => new Promise(resolve => this.server.stop(resolve))
+    );
+  }
+
+  // for nsIHttpRequestHandler
+  handle(request, response) {
+    response.write(JSON.stringify(this.definitions));
+  }
+
+  get definitionsUrl() {
+    const { primaryScheme, primaryHost, primaryPort } = this.server.identity;
+    return `${primaryScheme}://${primaryHost}:${primaryPort}/definitions.json`;
+  }
+
+  addDefinition(overrides = {}) {
+    const definition = {
+      id: "test-feature",
+      // These l10n IDs are just random so we have some text to display
+      title: "experimental-features-media-avif",
+      description: "pane-experimental-description",
+      restartRequired: false,
+      type: "boolean",
+      preference: "test.feature",
+      defaultValue: false,
+      isPublic: false,
+      ...overrides,
+    };
+    // convert targeted values, used by fromId
+    definition.isPublic = { default: definition.isPublic };
+    definition.defaultValue = { default: definition.defaultValue };
+    this.definitions[definition.id] = definition;
+    return definition;
+  }
+}
