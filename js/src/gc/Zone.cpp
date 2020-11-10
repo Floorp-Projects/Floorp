@@ -235,6 +235,25 @@ void Zone::setNeedsIncrementalBarrier(bool needs) {
   needsIncrementalBarrier_ = needs;
 }
 
+void Zone::changeGCState(GCState prev, GCState next) {
+  MOZ_ASSERT(RuntimeHeapIsBusy());
+  MOZ_ASSERT(canCollect());
+  MOZ_ASSERT(gcState() == prev);
+
+  // This can be called when barriers have been temporarily disabled by
+  // AutoDisableBarriers. In that case, don't update needsIncrementalBarrier_
+  // and barriers will be re-enabled by ~AutoDisableBarriers() if necessary.
+  bool barriersDisabled = isGCMarking() && !needsIncrementalBarrier();
+
+  gcState_ = next;
+
+  // Update the barriers state when we transition between marking and
+  // non-marking states, unless barriers have been disabled.
+  if (!barriersDisabled) {
+    needsIncrementalBarrier_ = isGCMarking();
+  }
+}
+
 void Zone::beginSweepTypes() { types.beginSweep(); }
 
 template <class Pred>
