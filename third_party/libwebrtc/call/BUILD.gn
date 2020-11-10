@@ -197,7 +197,7 @@ rtc_library("bitrate_configurator") {
     ":rtp_interfaces",
 
     # For api/bitrate_constraints.h
-    "../api:libjingle_peerconnection_api",
+    #"../api:libjingle_peerconnection_api",
     "../api/transport:bitrate_settings",
     "../api/units:data_rate",
     "../rtc_base:checks",

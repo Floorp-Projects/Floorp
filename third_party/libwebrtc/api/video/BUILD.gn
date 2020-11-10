@@ -99,7 +99,7 @@ rtc_library("video_frame_i420") {
     "../../rtc_base:checks",
     "../../rtc_base/memory:aligned_malloc",
     "../../rtc_base/system:rtc_export",
-    "//third_party/libyuv",
+    #"//third_party/libyuv",
   ]
 }
 
@@ -117,7 +117,7 @@ rtc_library("video_frame_i010") {
     "../../rtc_base",
     "../../rtc_base:checks",
     "../../rtc_base/memory:aligned_malloc",
-    "//third_party/libyuv",
+    #"//third_party/libyuv",
   ]
 }
 
@@ -135,7 +135,7 @@ rtc_library("video_frame_nv12") {
     "../../rtc_base:checks",
     "../../rtc_base/memory:aligned_malloc",
     "../../rtc_base/system:rtc_export",
-    "//third_party/libyuv",
+    #"//third_party/libyuv",
   ]
 }
 

@@ -54,6 +54,10 @@ rtc_library("audio_encoder_opus") {
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
+
+  if (build_with_mozilla) {
+    include_dirs = [ "/media/libopus/include" ]
+  }
 }
 
 rtc_library("audio_decoder_opus") {
@@ -73,6 +77,10 @@ rtc_library("audio_decoder_opus") {
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
+
+  if (build_with_mozilla) {
+    include_dirs = [ "/media/libopus/include" ]
+  }
 }
 
 rtc_library("audio_encoder_multiopus") {
@@ -88,6 +96,10 @@ rtc_library("audio_encoder_multiopus") {
     "../opus:audio_encoder_opus_config",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+
+  if (build_with_mozilla) {
+    include_dirs = [ "/media/libopus/include" ]
+  }
 }
 
 rtc_library("audio_decoder_multiopus") {
@@ -109,4 +121,8 @@ rtc_library("audio_decoder_multiopus") {
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
+
+  if (build_with_mozilla) {
+    include_dirs = [ "/media/libopus/include" ]
+  }
 }

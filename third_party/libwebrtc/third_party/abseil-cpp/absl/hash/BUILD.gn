@@ -25,16 +25,18 @@ absl_source_set("hash") {
   ]
 }
 
-absl_source_set("hash_testing") {
-  testonly = true
-  public = [ "hash_testing.h" ]
-  deps = [
-    ":spy_hash_state",
-    "//third_party/abseil-cpp/absl/meta:type_traits",
-    "//third_party/abseil-cpp/absl/strings",
-    "//third_party/abseil-cpp/absl/types:variant",
-    "//third_party/googletest:gtest",
-  ]
+if (false) {
+  absl_source_set("hash_testing") {
+    testonly = true
+    public = [ "hash_testing.h" ]
+    deps = [
+      ":spy_hash_state",
+      "//third_party/abseil-cpp/absl/meta:type_traits",
+      "//third_party/abseil-cpp/absl/strings",
+      "//third_party/abseil-cpp/absl/types:variant",
+      "//third_party/googletest:gtest",
+    ]
+  }
 }
 
 absl_source_set("spy_hash_state") {

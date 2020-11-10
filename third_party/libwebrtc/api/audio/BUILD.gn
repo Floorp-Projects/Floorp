@@ -48,21 +48,23 @@ rtc_library("aec3_config") {
   ]
 }
 
-rtc_library("aec3_config_json") {
-  visibility = [ "*" ]
-  allow_poison = [ "rtc_json" ]
-  sources = [
-    "echo_canceller3_config_json.cc",
-    "echo_canceller3_config_json.h",
-  ]
-  deps = [
-    ":aec3_config",
-    "../../rtc_base:checks",
-    "../../rtc_base:rtc_base_approved",
-    "../../rtc_base:rtc_json",
-    "../../rtc_base/system:rtc_export",
-  ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+if (!build_with_mozilla) {
+  rtc_library("aec3_config_json") {
+    visibility = [ "*" ]
+    allow_poison = [ "rtc_json" ]
+    sources = [
+      "echo_canceller3_config_json.cc",
+      "echo_canceller3_config_json.h",
+    ]
+    deps = [
+      ":aec3_config",
+      "../../rtc_base:checks",
+      "../../rtc_base:rtc_base_approved",
+      "../../rtc_base:rtc_json",
+      "../../rtc_base/system:rtc_export",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+  }
 }
 
 rtc_library("aec3_factory") {

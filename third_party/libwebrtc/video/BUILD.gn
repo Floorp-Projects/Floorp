@@ -71,7 +71,7 @@ rtc_library("video") {
     "../api:array_view",
     "../api:fec_controller_api",
     "../api:frame_transformer_interface",
-    "../api:libjingle_peerconnection_api",
+    #"../api:libjingle_peerconnection_api",
     "../api:rtp_parameters",
     "../api:scoped_refptr",
     "../api:transport_api",
