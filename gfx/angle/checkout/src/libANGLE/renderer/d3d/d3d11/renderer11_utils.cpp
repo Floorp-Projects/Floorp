@@ -1304,9 +1304,9 @@ unsigned int GetReservedFragmentUniformVectors(D3D_FEATURE_LEVEL featureLevel)
     }
 }
 
-gl::Version GetMaximumClientVersion(D3D_FEATURE_LEVEL featureLevel)
+gl::Version GetMaximumClientVersion(const Renderer11DeviceCaps &caps)
 {
-    switch (featureLevel)
+    switch (caps.featureLevel)
     {
         case D3D_FEATURE_LEVEL_11_1:
         case D3D_FEATURE_LEVEL_11_0:
@@ -1315,6 +1315,11 @@ gl::Version GetMaximumClientVersion(D3D_FEATURE_LEVEL featureLevel)
             return gl::Version(3, 0);
 
         case D3D_FEATURE_LEVEL_10_0:
+            if (caps.allowES3OnFL10_0) {
+                    return gl::Version(3, 0);
+            } else {
+                    return gl::Version(2, 0);
+            }
         case D3D_FEATURE_LEVEL_9_3:
         case D3D_FEATURE_LEVEL_9_2:
         case D3D_FEATURE_LEVEL_9_1:
@@ -1397,7 +1402,7 @@ void GenerateCaps(ID3D11Device *device,
     for (GLenum internalFormat : allFormats)
     {
         gl::TextureCaps textureCaps = GenerateTextureFormatCaps(
-            GetMaximumClientVersion(featureLevel), internalFormat, device, renderer11DeviceCaps);
+            GetMaximumClientVersion(renderer11DeviceCaps), internalFormat, device, renderer11DeviceCaps);
         textureCapsMap->insert(internalFormat, textureCaps);
 
         if (gl::GetSizedInternalFormatInfo(internalFormat).compressed)
@@ -2413,6 +2418,7 @@ void InitializeFeatures(const Renderer11DeviceCaps &deviceCaps,
     features->getDimensionsIgnoresBaseLevel.enabled     = IsNvidia(adapterDesc.VendorId);
     features->skipVSConstantRegisterZero.enabled        = IsNvidia(adapterDesc.VendorId);
     features->forceAtomicValueResolution.enabled        = IsNvidia(adapterDesc.VendorId);
+    features->allowES3OnFL10_0.enabled                  = false;
 
     if (IsIntel(adapterDesc.VendorId))
     {
