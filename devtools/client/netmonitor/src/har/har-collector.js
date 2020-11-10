@@ -170,12 +170,7 @@ HarCollector.prototype = {
     for (const resource of resources) {
       trace.log("HarCollector.onNetworkEvent; ", resource);
 
-      const {
-        actor,
-        startedDateTime,
-        request: { method, url },
-        isXHR,
-      } = resource;
+      const { actor, startedDateTime, method, url, isXHR } = resource;
       const startTime = Date.parse(startedDateTime);
 
       if (this.firstRequestStart == -1) {
@@ -211,7 +206,7 @@ HarCollector.prototype = {
   },
 
   onResourceUpdated: function(updates) {
-    for (const { resource, update } of updates) {
+    for (const { resource } of updates) {
       // Skip events from unknown actors (not in the list).
       // It can happen when there are zombie requests received after
       // the target is closed or multiple tabs are attached through
@@ -221,84 +216,84 @@ HarCollector.prototype = {
         return;
       }
 
-      trace.log(
-        "HarCollector.onNetworkEventUpdate; " + update.updateType,
-        resource
-      );
-
       const includeResponseBodies = Services.prefs.getBoolPref(
         "devtools.netmonitor.har.includeResponseBodies"
       );
 
-      let request;
-      switch (update.updateType) {
-        case "requestHeaders":
-          request = this.getData(
-            resource.actor,
-            "getRequestHeaders",
-            this.onRequestHeaders
-          );
-          break;
-        case "requestCookies":
-          request = this.getData(
-            resource.actor,
-            "getRequestCookies",
-            this.onRequestCookies
-          );
-          break;
-        case "requestPostData":
-          request = this.getData(
-            resource.actor,
-            "getRequestPostData",
-            this.onRequestPostData
-          );
-          break;
-        case "responseHeaders":
-          request = this.getData(
-            resource.actor,
-            "getResponseHeaders",
-            this.onResponseHeaders
-          );
-          break;
-        case "responseCookies":
-          request = this.getData(
-            resource.actor,
-            "getResponseCookies",
-            this.onResponseCookies
-          );
-          break;
-        case "responseStart":
-          file.httpVersion = resource.response.httpVersion;
-          file.status = resource.response.status;
-          file.statusText = resource.response.statusText;
-          break;
-        case "responseContent":
-          file.contentSize = resource.contentSize;
-          file.mimeType = resource.mimeType;
-          file.transferredSize = resource.transferredSize;
+      [
+        {
+          type: "eventTimings",
+          method: "getEventTimings",
+          callbackName: "onEventTimings",
+        },
+        {
+          type: "requestHeaders",
+          method: "getRequestHeaders",
+          callbackName: "onRequestHeaders",
+        },
+        {
+          type: "requestPostData",
+          method: "getRequestPostData",
+          callbackName: "onRequestPostData",
+        },
+        {
+          type: "responseHeaders",
+          method: "getResponseHeaders",
+          callbackName: "onResponseHeaders",
+        },
+        { type: "responseStart" },
+        {
+          type: "responseContent",
+          method: "getResponseContent",
+          callbackName: "onResponseContent",
+        },
+        {
+          type: "requestCookies",
+          method: "getRequestCookies",
+          callbackName: "onRequestCookies",
+        },
+        {
+          type: "responseCookies",
+          method: "getResponseCookies",
+          callbackName: "onResponseCookies",
+        },
+      ].forEach(updateType => {
+        trace.log(
+          "HarCollector.onNetworkEventUpdate; " + updateType.type,
+          resource
+        );
 
-          if (includeResponseBodies) {
+        let request;
+        if (resource[`${updateType.type}Available`]) {
+          if (updateType.type == "responseStart") {
+            file.httpVersion = resource.httpVersion;
+            file.status = resource.status;
+            file.statusText = resource.statusText;
+          } else if (updateType.type == "responseContent") {
+            file.contentSize = resource.contentSize;
+            file.mimeType = resource.mimeType;
+            file.transferredSize = resource.transferredSize;
+            if (includeResponseBodies) {
+              request = this.getData(
+                resource.actor,
+                updateType.method,
+                this[updateType.callbackName]
+              );
+            }
+          } else {
             request = this.getData(
               resource.actor,
-              "getResponseContent",
-              this.onResponseContent
+              updateType.method,
+              this[updateType.callbackName]
             );
           }
-          break;
-        case "eventTimings":
-          request = this.getData(
-            resource.actor,
-            "getEventTimings",
-            this.onEventTimings
-          );
-          break;
-      }
+        }
 
-      if (request) {
-        this.requests.push(request);
-      }
-
-      this.resetPageLoadTimeout();
+        if (request) {
+          this.requests.push(request);
+        }
+        this.resetPageLoadTimeout();
+      });
     }
   },
 
