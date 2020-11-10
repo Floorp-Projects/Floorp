@@ -417,11 +417,13 @@ config("common_config") {
   }
 }
 
-config("common_objc") {
-  frameworks = [ "Foundation.framework" ]
+if (is_mac) {
+  config("common_objc") {
+    frameworks = [ "Foundation.framework" ]
 
-  if (rtc_use_metal_rendering) {
-    defines = [ "RTC_SUPPORTS_METAL" ]
+    if (rtc_use_metal_rendering) {
+      defines = [ "RTC_SUPPORTS_METAL" ]
+    }
   }
 }
 
@@ -440,29 +442,29 @@ if (!build_with_chromium) {
     defines = []
 
     deps = [
-      "api:create_peerconnection_factory",
-      "api:libjingle_peerconnection_api",
-      "api:rtc_error",
-      "api:transport_api",
-      "api/crypto",
-      "api/rtc_event_log:rtc_event_log_factory",
-      "api/task_queue",
-      "api/task_queue:default_task_queue_factory",
+      #"api:create_peerconnection_factory",
+      #"api:libjingle_peerconnection_api",
+      #"api:rtc_error",
+      #"api:transport_api",
+      #"api/crypto",
+      #"api/rtc_event_log:rtc_event_log_factory",
+      #"api/task_queue",
+      #"api/task_queue:default_task_queue_factory",
       "audio",
       "call",
       "common_audio",
       "common_video",
-      "logging:rtc_event_log_api",
+      #"logging:rtc_event_log_api",
       "media",
       "modules",
       "modules/video_capture:video_capture_internal_impl",
-      "p2p:rtc_p2p",
-      "pc:libjingle_peerconnection",
-      "pc:peerconnection",
-      "pc:rtc_pc",
-      "pc:rtc_pc_base",
+      #"p2p:rtc_p2p",
+      #"pc:libjingle_peerconnection",
+      #"pc:peerconnection",
+      #"pc:rtc_pc",
+      #"pc:rtc_pc_base",
       "rtc_base",
-      "sdk",
+      #"sdk",
       "video",
     ]
 
@@ -484,6 +486,7 @@ if (!build_with_chromium) {
       deps += [
         "api/video:video_frame",
         "api/video:video_rtp_headers",
+        "test:rtp_test_utils",
       ]
     } else {
       deps += [

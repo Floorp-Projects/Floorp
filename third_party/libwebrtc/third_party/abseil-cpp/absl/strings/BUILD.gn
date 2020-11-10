@@ -160,42 +160,44 @@ absl_source_set("pow10_helper") {
   deps = [ "//third_party/abseil-cpp/absl/base:config" ]
 }
 
-absl_source_set("ascii_test") {
-  testonly = true
-  sources = [ "ascii_test.cc" ]
-  deps = [
-    ":strings",
-    "//third_party/abseil-cpp/absl/base:core_headers",
-    "//third_party/googletest:gtest",
-  ]
-}
+if (false) {
+  absl_source_set("ascii_test") {
+    testonly = true
+    sources = [ "ascii_test.cc" ]
+    deps = [
+      ":strings",
+      "//third_party/abseil-cpp/absl/base:core_headers",
+      "//third_party/googletest:gtest",
+    ]
+  }
 
-absl_source_set("match_test") {
-  testonly = true
-  sources = [ "match_test.cc" ]
-  deps = [
-    ":strings",
-    "//third_party/googletest:gtest",
-  ]
-}
+  absl_source_set("match_test") {
+    testonly = true
+    sources = [ "match_test.cc" ]
+    deps = [
+      ":strings",
+      "//third_party/googletest:gtest",
+    ]
+  }
 
-absl_source_set("str_replace_test") {
-  testonly = true
-  sources = [ "str_replace_test.cc" ]
-  deps = [
-    ":strings",
-    "//third_party/googletest:gtest",
-  ]
-}
+  absl_source_set("str_replace_test") {
+    testonly = true
+    sources = [ "str_replace_test.cc" ]
+    deps = [
+      ":strings",
+      "//third_party/googletest:gtest",
+    ]
+  }
 
-absl_source_set("string_view_test") {
-  testonly = true
-  sources = [ "string_view_test.cc" ]
-  deps = [
-    ":strings",
-    "//third_party/abseil-cpp/absl/base:config",
-    "//third_party/abseil-cpp/absl/base:core_headers",
-    "//third_party/abseil-cpp/absl/base:dynamic_annotations",
-    "//third_party/googletest:gtest",
-  ]
+  absl_source_set("string_view_test") {
+    testonly = true
+    sources = [ "string_view_test.cc" ]
+    deps = [
+      ":strings",
+      "//third_party/abseil-cpp/absl/base:config",
+      "//third_party/abseil-cpp/absl/base:core_headers",
+      "//third_party/abseil-cpp/absl/base:dynamic_annotations",
+      "//third_party/googletest:gtest",
+    ]
+  }
 }

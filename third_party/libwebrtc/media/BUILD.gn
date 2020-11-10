@@ -92,7 +92,7 @@ rtc_library("rtc_media_base") {
     "../api/crypto:frame_decryptor_interface",
     "../api/crypto:frame_encryptor_interface",
     "../api/crypto:options",
-    "../api/transport:stun_types",
+    #"../api/transport:stun_types",
     "../api/transport/rtp:rtp_source",
     "../api/video:video_bitrate_allocation",
     "../api/video:video_bitrate_allocator_factory",
@@ -125,28 +125,28 @@ rtc_library("rtc_media_base") {
     "//third_party/abseil-cpp/absl/types:optional",
   ]
   sources = [
-    "base/adapted_video_track_source.cc",
-    "base/adapted_video_track_source.h",
-    "base/audio_source.h",
+    #"base/adapted_video_track_source.cc",
+    #"base/adapted_video_track_source.h",
+    #"base/audio_source.h",
     "base/codec.cc",
     "base/codec.h",
-    "base/delayable.h",
-    "base/media_channel.cc",
-    "base/media_channel.h",
+    #"base/delayable.h",
+    #"base/media_channel.cc",
+    #"base/media_channel.h",
     "base/media_constants.cc",
     "base/media_constants.h",
-    "base/media_engine.cc",
-    "base/media_engine.h",
-    "base/rid_description.cc",
-    "base/rid_description.h",
-    "base/rtp_data_engine.cc",
-    "base/rtp_data_engine.h",
-    "base/rtp_utils.cc",
-    "base/rtp_utils.h",
-    "base/stream_params.cc",
-    "base/stream_params.h",
-    "base/turn_utils.cc",
-    "base/turn_utils.h",
+    #"base/media_engine.cc",
+    #"base/media_engine.h",
+    #"base/rid_description.cc",
+    #"base/rid_description.h",
+    #"base/rtp_data_engine.cc",
+    #"base/rtp_data_engine.h",
+    #"base/rtp_utils.cc",
+    #"base/rtp_utils.h",
+    #"base/stream_params.cc",
+    #"base/stream_params.h",
+    #"base/turn_utils.cc",
+    #"base/turn_utils.h",
     "base/video_adapter.cc",
     "base/video_adapter.h",
     "base/video_broadcaster.cc",
@@ -244,18 +244,18 @@ rtc_library("rtc_internal_video_codecs") {
     "../modules/video_coding:webrtc_multiplex",
     "../modules/video_coding:webrtc_vp8",
     "../modules/video_coding:webrtc_vp9",
-    "../modules/video_coding/codecs/av1:libaom_av1_decoder",
-    "../modules/video_coding/codecs/av1:libaom_av1_encoder",
+    #"../modules/video_coding/codecs/av1:libaom_av1_decoder",
+    #"../modules/video_coding/codecs/av1:libaom_av1_encoder",
     "../rtc_base:checks",
     "../rtc_base:deprecation",
     "../rtc_base:rtc_base_approved",
     "../rtc_base/system:rtc_export",
-    "../test:fake_video_codecs",
+    #"../test:fake_video_codecs",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
   sources = [
-    "engine/fake_video_codec_factory.cc",
-    "engine/fake_video_codec_factory.h",
+    #"engine/fake_video_codec_factory.cc",
+    #"engine/fake_video_codec_factory.h",
     "engine/internal_decoder_factory.cc",
     "engine/internal_decoder_factory.h",
     "engine/internal_encoder_factory.cc",
@@ -278,7 +278,7 @@ rtc_library("rtc_audio_video") {
     ":rtc_constants",
     ":rtc_media_base",
     "../api:call_api",
-    "../api:libjingle_peerconnection_api",
+    #"../api:libjingle_peerconnection_api",
     "../api:media_stream_interface",
     "../api:rtp_parameters",
     "../api:scoped_refptr",
@@ -393,43 +393,45 @@ rtc_library("rtc_media_engine_defaults") {
   ]
 }
 
-rtc_library("rtc_data") {
-  defines = [
-    # "SCTP_DEBUG" # Uncomment for SCTP debugging.
-  ]
-  deps = [
-    ":rtc_media_base",
-    "../api:call_api",
-    "../api:transport_api",
-    "../p2p:rtc_p2p",
-    "../rtc_base",
-    "../rtc_base:rtc_base_approved",
-    "../rtc_base/synchronization:mutex",
-    "../rtc_base/third_party/sigslot",
-    "../system_wrappers",
-  ]
-  absl_deps = [
-    "//third_party/abseil-cpp/absl/algorithm:container",
-    "//third_party/abseil-cpp/absl/base:core_headers",
-    "//third_party/abseil-cpp/absl/types:optional",
-  ]
-
-  if (rtc_enable_sctp) {
-    sources = [
-      "sctp/sctp_transport.cc",
-      "sctp/sctp_transport.h",
-      "sctp/sctp_transport_internal.h",
+if (!build_with_mozilla) {
+  rtc_library("rtc_data") {
+    defines = [
+      # "SCTP_DEBUG" # Uncomment for SCTP debugging.
     ]
-  } else {
-    # libtool on mac does not like empty targets.
-    sources = [ "sctp/noop.cc" ]
-  }
-
-  if (rtc_enable_sctp && rtc_build_usrsctp) {
-    deps += [
-      "../api/transport:sctp_transport_factory_interface",
-      "//third_party/usrsctp",
+    deps = [
+      ":rtc_media_base",
+      "../api:call_api",
+      "../api:transport_api",
+      "../p2p:rtc_p2p",
+      "../rtc_base",
+      "../rtc_base:rtc_base_approved",
+      "../rtc_base/synchronization:mutex",
+      "../rtc_base/third_party/sigslot",
+      "../system_wrappers",
     ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/algorithm:container",
+      "//third_party/abseil-cpp/absl/base:core_headers",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
+
+    if (rtc_enable_sctp) {
+      sources = [
+        "sctp/sctp_transport.cc",
+        "sctp/sctp_transport.h",
+        "sctp/sctp_transport_internal.h",
+      ]
+    } else {
+      # libtool on mac does not like empty targets.
+      sources = [ "sctp/noop.cc" ]
+    }
+
+    if (rtc_enable_sctp && rtc_build_usrsctp) {
+      deps += [
+        "../api/transport:sctp_transport_factory_interface",
+        "//third_party/usrsctp",
+      ]
+    }
   }
 }
 
@@ -438,7 +440,7 @@ rtc_source_set("rtc_media") {
   allow_poison = [ "audio_codecs" ]  # TODO(bugs.webrtc.org/8396): Remove.
   deps = [
     ":rtc_audio_video",
-    ":rtc_data",
+    #":rtc_data",
   ]
 }
 

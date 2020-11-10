@@ -635,25 +635,27 @@ config("rtc_json_suppressions") {
   }
 }
 
-rtc_library("rtc_json") {
-  public_configs = [ ":rtc_json_suppressions" ]
-  poisonous = [ "rtc_json" ]
-  defines = []
-  sources = [
-    "strings/json.cc",
-    "strings/json.h",
-  ]
-  deps = [ ":stringutils" ]
-  all_dependent_configs = [ "//third_party/jsoncpp:jsoncpp_config" ]
-  if (rtc_build_json) {
-    public_deps =  # no-presubmit-check TODO(webrtc:8603)
-        [ "//third_party/jsoncpp" ]
-  } else {
-    include_dirs = [ "$rtc_jsoncpp_root" ]
+if (false) {
+  rtc_library("rtc_json") {
+    public_configs = [ ":rtc_json_suppressions" ]
+    poisonous = [ "rtc_json" ]
+    defines = []
+    sources = [
+      "strings/json.cc",
+      "strings/json.h",
+    ]
+    deps = [ ":stringutils" ]
+    all_dependent_configs = [ "//third_party/jsoncpp:jsoncpp_config" ]
+    if (rtc_build_json) {
+      public_deps =  # no-presubmit-check TODO(webrtc:8603)
+          [ "//third_party/jsoncpp" ]
+    } else {
+      include_dirs = [ "$rtc_jsoncpp_root" ]
 
-    # When defined changes the include path for json.h to where it is
-    # expected to be when building json outside of the standalone build.
-    defines += [ "WEBRTC_EXTERNAL_JSON" ]
+      # When defined changes the include path for json.h to where it is
+      # expected to be when building json outside of the standalone build.
+      defines += [ "WEBRTC_EXTERNAL_JSON" ]
+    }
   }
 }
 
@@ -832,110 +834,110 @@ rtc_library("rtc_base") {
   public_configs = []
 
   sources = [
-    "async_invoker.cc",
-    "async_invoker.h",
-    "async_invoker_inl.h",
-    "async_packet_socket.cc",
-    "async_packet_socket.h",
+    #"async_invoker.cc",
+    #"async_invoker.h",
+    #"async_invoker_inl.h",
+    #"async_packet_socket.cc",
+    #"async_packet_socket.h",
     "async_resolver_interface.cc",
     "async_resolver_interface.h",
     "async_socket.cc",
     "async_socket.h",
-    "async_tcp_socket.cc",
-    "async_tcp_socket.h",
-    "async_udp_socket.cc",
-    "async_udp_socket.h",
+    #"async_tcp_socket.cc",
+    #"async_tcp_socket.h",
+    #"async_udp_socket.cc",
+    #"async_udp_socket.h",
     "crc32.cc",
     "crc32.h",
     "crypt_string.cc",
     "crypt_string.h",
     "data_rate_limiter.cc",
     "data_rate_limiter.h",
-    "deprecated/signal_thread.cc",
-    "deprecated/signal_thread.h",
+    #"deprecated/signal_thread.cc",
+    #"deprecated/signal_thread.h",
     "dscp.h",
     "file_rotating_stream.cc",
     "file_rotating_stream.h",
-    "helpers.cc",
-    "helpers.h",
-    "http_common.cc",
-    "http_common.h",
+    #"helpers.cc",
+    #"helpers.h",
+    #"http_common.cc",
+    #"http_common.h",
     "ip_address.cc",
     "ip_address.h",
     "keep_ref_until_done.h",
-    "mdns_responder_interface.h",
-    "message_digest.cc",
-    "message_digest.h",
+    #"mdns_responder_interface.h",
+    #"message_digest.cc",
+    #"message_digest.h",
     "message_handler.cc",
     "message_handler.h",
-    "net_helper.cc",
-    "net_helper.h",
+    #"net_helper.cc",
+    #"net_helper.h",
     "net_helpers.cc",
     "net_helpers.h",
-    "network.cc",
-    "network.h",
+    #"network.cc",
+    #"network.h",
     "network_constants.cc",
     "network_constants.h",
-    "network_monitor.cc",
-    "network_monitor.h",
-    "network_monitor_factory.cc",
-    "network_monitor_factory.h",
+    #"network_monitor.cc",
+    #"network_monitor.h",
+    #"network_monitor_factory.cc",
+    #"network_monitor_factory.h",
     "network_route.cc",
     "network_route.h",
     "null_socket_server.cc",
     "null_socket_server.h",
-    "openssl.h",
-    "openssl_adapter.cc",
-    "openssl_adapter.h",
-    "openssl_certificate.cc",
-    "openssl_certificate.h",
-    "openssl_digest.cc",
-    "openssl_digest.h",
-    "openssl_identity.cc",
-    "openssl_identity.h",
-    "openssl_session_cache.cc",
-    "openssl_session_cache.h",
-    "openssl_stream_adapter.cc",
-    "openssl_stream_adapter.h",
-    "openssl_utility.cc",
-    "openssl_utility.h",
+    #"openssl.h",
+    #"openssl_adapter.cc",
+    #"openssl_adapter.h",
+    #"openssl_certificate.cc",
+    #"openssl_certificate.h",
+    #"openssl_digest.cc",
+    #"openssl_digest.h",
+    #"openssl_identity.cc",
+    #"openssl_identity.h",
+    #"openssl_session_cache.cc",
+    #"openssl_session_cache.h",
+    #"openssl_stream_adapter.cc",
+    #"openssl_stream_adapter.h",
+    #"openssl_utility.cc",
+    #"openssl_utility.h",
     "physical_socket_server.cc",
     "physical_socket_server.h",
-    "proxy_info.cc",
-    "proxy_info.h",
-    "rtc_certificate.cc",
-    "rtc_certificate.h",
-    "rtc_certificate_generator.cc",
-    "rtc_certificate_generator.h",
-    "signal_thread.h",
+    #"proxy_info.cc",
+    #"proxy_info.h",
+    #"rtc_certificate.cc",
+    #"rtc_certificate.h",
+    #"rtc_certificate_generator.cc",
+    #"rtc_certificate_generator.h",
+    #"signal_thread.h",
     "sigslot_repeater.h",
-    "socket.cc",
-    "socket.h",
-    "socket_adapters.cc",
-    "socket_adapters.h",
+    #"socket.cc",
+    #"socket.h",
+    #"socket_adapters.cc",
+    #"socket_adapters.h",
     "socket_address.cc",
     "socket_address.h",
-    "socket_address_pair.cc",
-    "socket_address_pair.h",
-    "socket_factory.h",
+    #"socket_address_pair.cc",
+    #"socket_address_pair.h",
+    #"socket_factory.h",
     "socket_server.h",
-    "ssl_adapter.cc",
-    "ssl_adapter.h",
-    "ssl_certificate.cc",
-    "ssl_certificate.h",
-    "ssl_fingerprint.cc",
-    "ssl_fingerprint.h",
-    "ssl_identity.cc",
-    "ssl_identity.h",
-    "ssl_stream_adapter.cc",
-    "ssl_stream_adapter.h",
+    #"ssl_adapter.cc",
+    #"ssl_adapter.h",
+    #"ssl_certificate.cc",
+    #"ssl_certificate.h",
+    #"ssl_fingerprint.cc",
+    #"ssl_fingerprint.h",
+    #"ssl_identity.cc",
+    #"ssl_identity.h",
+    #"ssl_stream_adapter.cc",
+    #"ssl_stream_adapter.h",
     "stream.cc",
     "stream.h",
     "thread.cc",
     "thread.h",
-    "thread_message.h",
-    "unique_id_generator.cc",
-    "unique_id_generator.h",
+    #"thread_message.h",
+    #"unique_id_generator.cc",
+    #"unique_id_generator.h",
   ]
 
   if (build_with_chromium) {
@@ -1020,12 +1022,12 @@ rtc_library("rtc_base") {
     defines += [ "_CRT_NONSTDC_NO_DEPRECATE" ]
   }
 
-  if (is_posix || is_fuchsia) {
-    sources += [
-      "ifaddrs_converter.cc",
-      "ifaddrs_converter.h",
-    ]
-  }
+  #if (is_posix || is_fuchsia) {
+  #  sources += [
+  #    "ifaddrs_converter.cc",
+  #    "ifaddrs_converter.h",
+  #  ]
+  #}
 
   if (is_nacl) {
     public_deps +=  # no-presubmit-check TODO(webrtc:8603)
@@ -1040,124 +1042,126 @@ rtc_source_set("gtest_prod") {
   sources = [ "gtest_prod_util.h" ]
 }
 
-rtc_library("gunit_helpers") {
-  testonly = true
-  sources = [
-    "gunit.cc",
-    "gunit.h",
-  ]
-  deps = [
-    ":logging",
-    ":rtc_base",
-    ":rtc_base_tests_utils",
-    ":stringutils",
-    "../test:test_support",
-  ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
-}
+if (rtc_include_tests) {
+  rtc_library("gunit_helpers") {
+    testonly = true
+    sources = [
+      "gunit.cc",
+      "gunit.h",
+    ]
+    deps = [
+      ":logging",
+      ":rtc_base",
+      ":rtc_base_tests_utils",
+      ":stringutils",
+      "../test:test_support",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+  }
 
-rtc_library("testclient") {
-  testonly = true
-  sources = [
-    "test_client.cc",
-    "test_client.h",
-  ]
-  deps = [
-    ":criticalsection",
-    ":gunit_helpers",
-    ":macromagic",
-    ":rtc_base",
-    ":rtc_base_tests_utils",
-    ":timeutils",
-    "synchronization:mutex",
-  ]
-}
+  rtc_library("testclient") {
+    testonly = true
+    sources = [
+      "test_client.cc",
+      "test_client.h",
+    ]
+    deps = [
+      ":criticalsection",
+      ":gunit_helpers",
+      ":macromagic",
+      ":rtc_base",
+      ":rtc_base_tests_utils",
+      ":timeutils",
+      "synchronization:mutex",
+    ]
+  }
 
-rtc_library("robo_caller_unittests") {
-  testonly = true
+  rtc_library("robo_caller_unittests") {
+    testonly = true
 
-  sources = [ "robo_caller_unittest.cc" ]
-  deps = [
-    ":gunit_helpers",
-    ":robo_caller",
-    ":rtc_base",
-    "../api:function_view",
-    "../test:test_support",
-  ]
-}
+    sources = [ "robo_caller_unittest.cc" ]
+    deps = [
+      ":gunit_helpers",
+      ":robo_caller",
+      ":rtc_base",
+      "../api:function_view",
+      "../test:test_support",
+    ]
+  }
 
-rtc_library("rtc_base_tests_utils") {
-  testonly = true
-  sources = [
-    "cpu_time.cc",
-    "cpu_time.h",
-    "fake_clock.cc",
-    "fake_clock.h",
-    "fake_mdns_responder.h",
-    "fake_network.h",
-    "fake_ssl_identity.cc",
-    "fake_ssl_identity.h",
-    "firewall_socket_server.cc",
-    "firewall_socket_server.h",
-    "memory_stream.cc",
-    "memory_stream.h",
-    "memory_usage.cc",
-    "memory_usage.h",
-    "nat_server.cc",
-    "nat_server.h",
-    "nat_socket_factory.cc",
-    "nat_socket_factory.h",
-    "nat_types.cc",
-    "nat_types.h",
-    "proxy_server.cc",
-    "proxy_server.h",
-    "server_socket_adapters.cc",
-    "server_socket_adapters.h",
-    "sigslot_tester.h",
-    "socket_stream.cc",
-    "socket_stream.h",
-    "test_base64.h",
-    "test_certificate_verifier.h",
-    "test_echo_server.cc",
-    "test_echo_server.h",
-    "test_utils.cc",
-    "test_utils.h",
-    "virtual_socket_server.cc",
-    "virtual_socket_server.h",
-  ]
-  deps = [
-    ":checks",
-    ":rtc_base",
-    "../api/units:time_delta",
-    "../api/units:timestamp",
-    "memory:fifo_buffer",
-    "synchronization:mutex",
-    "third_party/sigslot",
-  ]
-  absl_deps = [
-    "//third_party/abseil-cpp/absl/algorithm:container",
-    "//third_party/abseil-cpp/absl/memory",
-  ]
-}
+  rtc_library("rtc_base_tests_utils") {
+    testonly = true
+    sources = [
+      "cpu_time.cc",
+      "cpu_time.h",
+      "fake_clock.cc",
+      "fake_clock.h",
+      "fake_mdns_responder.h",
+      "fake_network.h",
+      "fake_ssl_identity.cc",
+      "fake_ssl_identity.h",
+      "firewall_socket_server.cc",
+      "firewall_socket_server.h",
+      "memory_stream.cc",
+      "memory_stream.h",
+      "memory_usage.cc",
+      "memory_usage.h",
+      "nat_server.cc",
+      "nat_server.h",
+      "nat_socket_factory.cc",
+      "nat_socket_factory.h",
+      "nat_types.cc",
+      "nat_types.h",
+      "proxy_server.cc",
+      "proxy_server.h",
+      "server_socket_adapters.cc",
+      "server_socket_adapters.h",
+      "sigslot_tester.h",
+      "socket_stream.cc",
+      "socket_stream.h",
+      "test_base64.h",
+      "test_certificate_verifier.h",
+      "test_echo_server.cc",
+      "test_echo_server.h",
+      "test_utils.cc",
+      "test_utils.h",
+      "virtual_socket_server.cc",
+      "virtual_socket_server.h",
+    ]
+    deps = [
+      ":checks",
+      ":rtc_base",
+      "../api/units:time_delta",
+      "../api/units:timestamp",
+      "memory:fifo_buffer",
+      "synchronization:mutex",
+      "third_party/sigslot",
+    ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/algorithm:container",
+      "//third_party/abseil-cpp/absl/memory",
+    ]
+  }
 
-rtc_library("task_queue_for_test") {
-  testonly = true
+  rtc_library("task_queue_for_test") {
+    testonly = true
 
-  sources = [
-    "task_queue_for_test.cc",
-    "task_queue_for_test.h",
-  ]
-  deps = [
-    ":checks",
-    ":macromagic",
-    ":rtc_base_approved",
-    ":rtc_event",
-    ":rtc_task_queue",
-    "../api/task_queue",
-    "../api/task_queue:default_task_queue_factory",
-    "task_utils:to_queued_task",
-  ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+    sources = [
+      "task_queue_for_test.cc",
+      "task_queue_for_test.h",
+    ]
+    deps = [
+      ":checks",
+      ":macromagic",
+      ":rtc_base_approved",
+      ":rtc_event",
+      ":rtc_task_queue",
+      "../api/task_queue",
+      "../api/task_queue:default_task_queue_factory",
+      "task_utils:to_queued_task",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+  }
 }
 
 if (rtc_include_tests) {

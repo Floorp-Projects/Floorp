@@ -828,7 +828,7 @@ rtc_library("webrtc_opus_wrapper") {
   if (rtc_build_opus) {
     public_deps = [ rtc_opus_dir ]  # no-presubmit-check TODO(webrtc:8603)
   } else if (build_with_mozilla) {
-    include_dirs = [ getenv("DIST") + "/include/opus" ]
+    include_dirs = [ "/media/libopus/include" ]
   }
 
   deps = [
@@ -1210,57 +1210,59 @@ if (rtc_enable_protobuf) {
 }
 
 # Allow to re-use some test classes from chromium.
-rtc_library("audio_coding_modules_tests_shared") {
-  testonly = true
-  visibility = []
-  visibility = [ "*" ]
+if (rtc_include_tests) {
+  rtc_library("audio_coding_modules_tests_shared") {
+    testonly = true
+    visibility = []
+    visibility = [ "*" ]
 
-  sources = [
-    "neteq/test/neteq_decoding_test.cc",
-    "neteq/test/neteq_decoding_test.h",
-    "neteq/test/result_sink.cc",
-    "neteq/test/result_sink.h",
-    "test/PCMFile.cc",
-    "test/PCMFile.h",
-    "test/TestStereo.cc",
-    "test/TestStereo.h",
-    "test/opus_test.cc",
-    "test/opus_test.h",
-  ]
+    sources = [
+      "neteq/test/neteq_decoding_test.cc",
+      "neteq/test/neteq_decoding_test.h",
+      "neteq/test/result_sink.cc",
+      "neteq/test/result_sink.h",
+      "test/PCMFile.cc",
+      "test/PCMFile.h",
+      "test/TestStereo.cc",
+      "test/TestStereo.h",
+      "test/opus_test.cc",
+      "test/opus_test.h",
+    ]
 
-  deps = [
-    ":audio_coding",
-    ":audio_coding_module_typedefs",
-    ":default_neteq_factory",
-    ":neteq_test_tools",
-    ":neteq_tools_minimal",
-    ":webrtc_opus_wrapper",
-    "..:module_api",
-    "../../api:rtp_headers",
-    "../../api/audio:audio_frame_api",
-    "../../api/audio_codecs:builtin_audio_decoder_factory",
-    "../../api/audio_codecs:builtin_audio_encoder_factory",
-    "../../api/neteq:neteq_api",
-    "../../rtc_base",
-    "../../rtc_base:checks",
-    "../../rtc_base:ignore_wundef",
-    "../../rtc_base:rtc_base_approved",
-    "../../rtc_base:stringutils",
-    "../../system_wrappers",
-    "../../test:fileutils",
-    "../../test:test_support",
-    "../rtp_rtcp:rtp_rtcp_format",
-    "//testing/gtest",
-  ]
-  absl_deps = [
-    "//third_party/abseil-cpp/absl/strings",
-    "//third_party/abseil-cpp/absl/types:optional",
-  ]
-  defines = audio_coding_defines
+    deps = [
+      ":audio_coding",
+      ":audio_coding_module_typedefs",
+      ":default_neteq_factory",
+      ":neteq_test_tools",
+      ":neteq_tools_minimal",
+      ":webrtc_opus_wrapper",
+      "..:module_api",
+      "../../api:rtp_headers",
+      "../../api/audio:audio_frame_api",
+      "../../api/audio_codecs:builtin_audio_decoder_factory",
+      "../../api/audio_codecs:builtin_audio_encoder_factory",
+      "../../api/neteq:neteq_api",
+      "../../rtc_base",
+      "../../rtc_base:checks",
+      "../../rtc_base:ignore_wundef",
+      "../../rtc_base:rtc_base_approved",
+      "../../rtc_base:stringutils",
+      "../../system_wrappers",
+      "../../test:fileutils",
+      "../../test:test_support",
+      "../rtp_rtcp:rtp_rtcp_format",
+      "//testing/gtest",
+    ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/strings",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
+    defines = audio_coding_defines
 
-  if (rtc_enable_protobuf) {
-    defines += [ "WEBRTC_NETEQ_UNITTEST_BITEXACT" ]
-    deps += [ ":neteq_unittest_proto" ]
+    if (rtc_enable_protobuf) {
+      defines += [ "WEBRTC_NETEQ_UNITTEST_BITEXACT" ]
+      deps += [ ":neteq_unittest_proto" ]
+    }
   }
 }
 

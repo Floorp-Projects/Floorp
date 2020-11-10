@@ -85,13 +85,15 @@ rtc_source_set("tick_timer") {
   ]
 }
 
-rtc_source_set("tick_timer_unittest") {
-  visibility = [ "*" ]
-  testonly = true
-  sources = [ "tick_timer_unittest.cc" ]
-  deps = [
-    ":tick_timer",
-    "../../test:test_support",
-    "//testing/gtest",
-  ]
+if (rtc_include_tests) {
+  rtc_source_set("tick_timer_unittest") {
+    visibility = [ "*" ]
+    testonly = true
+    sources = [ "tick_timer_unittest.cc" ]
+    deps = [
+      ":tick_timer",
+      "../../test:test_support",
+      "//testing/gtest",
+    ]
+  }
 }
