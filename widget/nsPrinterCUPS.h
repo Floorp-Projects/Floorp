@@ -129,6 +129,7 @@ class nsPrinterCUPS final : public nsPrinterBase {
   macro_("ColorModel", "Gray")                /* Generic */  \
       macro_("BRMonoColor", "Mono")           /* Brother */  \
       macro_("BRPrintQuality", "Black")       /* Brother */  \
+      macro_("CNIJGrayScale", "1")            /* Canon */    \
       macro_("INK", "MONO")                   /* Epson */    \
       macro_("HPColorMode", "GrayscalePrint") /* HP */       \
       macro_("ColorMode", "Mono")             /* Samsung */  \
