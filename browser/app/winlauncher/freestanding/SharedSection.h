@@ -25,12 +25,6 @@ class MOZ_TRIVIAL_CTOR_DTOR Kernel32ExportsSolver final
     Resolved,
   } mState;
 
-  struct FunctionOffsets {
-    uint32_t mFlushInstructionCache;
-    uint32_t mGetSystemInfo;
-    uint32_t mVirtualProtect;
-  } mOffsets;
-
   static ULONG NTAPI ResolveOnce(PRTL_RUN_ONCE aRunOnce, PVOID aParameter,
                                  PVOID*);
   void ResolveInternal();
@@ -48,11 +42,38 @@ class MOZ_TRIVIAL_CTOR_DTOR Kernel32ExportsSolver final
 
   void Init();
   void Resolve(RTL_RUN_ONCE& aRunOnce);
-  LauncherVoidResult Transfer(nt::CrossExecTransferManager& aTransferMgr,
-                              Kernel32ExportsSolver* aTargetAddress) const;
 };
 
-extern Kernel32ExportsSolver gK32;
+// This class manages a section which is created in the launcher process and
+// mapped in the browser process and the sandboxed processes as a copy-on-write
+// region.  The section's layout is represented as SharedSection::Layout.
+class MOZ_TRIVIAL_CTOR_DTOR SharedSection final {
+  // As we define a global variable of this class and use it in our blocklist
+  // which is excuted in a process's early stage.  If we have a complex dtor,
+  // the static initializer tries to register that dtor with onexit() of
+  // ucrtbase.dll which is not loaded yet, resulting in crash.  Thus, we have
+  // a raw handle and a pointer as a static variable and manually release them
+  // by calling Reset() where possible.
+  static HANDLE sSectionHandle;
+  static void* sWriteCopyView;
+
+ public:
+  struct Layout final {
+    Kernel32ExportsSolver mK32Exports;
+
+    Layout() = delete;  // disallow instantiation
+  };
+
+  static void Reset(HANDLE aNewSecionObject);
+  static LauncherVoidResult Init(const nt::PEHeaders& aPEHeaders);
+
+  static LauncherResult<Layout*> GetView();
+  static LauncherVoidResult TransferHandle(
+      nt::CrossExecTransferManager& aTransferMgr,
+      HANDLE* aDestinationAddress = &sSectionHandle);
+};
+
+extern SharedSection gSharedSection;
 
 }  // namespace freestanding
 }  // namespace mozilla

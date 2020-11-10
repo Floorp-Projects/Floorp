@@ -9,7 +9,7 @@
 namespace mozilla {
 namespace freestanding {
 
-Kernel32ExportsSolver gK32;
+SharedSection gSharedSection;
 
 bool Kernel32ExportsSolver::IsInitialized() const {
   return mState == State::Initialized || IsResolved();
@@ -33,11 +33,12 @@ bool Kernel32ExportsSolver::IsResolved() const {
     if (!rvaToFunction) {                                            \
       return;                                                        \
     }                                                                \
-    mOffsets.m##name = *rvaToFunction;                               \
+    m##name = reinterpret_cast<decltype(m##name)>(*rvaToFunction);   \
   } while (0)
 
-#define RESOLVE_FUNCTION(base, name) \
-  m##name = reinterpret_cast<decltype(m##name)>(base + mOffsets.m##name)
+#define RESOLVE_FUNCTION(base, name)             \
+  m##name = reinterpret_cast<decltype(m##name)>( \
+      base + reinterpret_cast<uintptr_t>(m##name))
 
 void Kernel32ExportsSolver::Init() {
   if (mState == State::Initialized || mState == State::Resolved) {
@@ -95,18 +96,67 @@ void Kernel32ExportsSolver::Resolve(RTL_RUN_ONCE& aRunOnce) {
   ::RtlRunOnceExecuteOnce(&aRunOnce, &ResolveOnce, this, nullptr);
 }
 
-LauncherVoidResult Kernel32ExportsSolver::Transfer(
-    nt::CrossExecTransferManager& aTransferMgr,
-    Kernel32ExportsSolver* aTargetAddress) const {
-  LauncherVoidResult writeResult = aTransferMgr.Transfer(
-      &aTargetAddress->mOffsets, &mOffsets, sizeof(mOffsets));
-  if (writeResult.isErr()) {
-    return writeResult.propagateErr();
+HANDLE SharedSection::sSectionHandle = nullptr;
+void* SharedSection::sWriteCopyView = nullptr;
+
+void SharedSection::Reset(HANDLE aNewSecionObject) {
+  if (sWriteCopyView) {
+    nt::AutoMappedView view(sWriteCopyView);
+    sWriteCopyView = nullptr;
   }
 
-  State stateInChild = State::Initialized;
-  return aTransferMgr.Transfer(&aTargetAddress->mState, &stateInChild,
-                               sizeof(stateInChild));
+  if (sSectionHandle) {
+    ::CloseHandle(sSectionHandle);
+  }
+  sSectionHandle = aNewSecionObject;
+}
+
+LauncherVoidResult SharedSection::Init(const nt::PEHeaders& aPEHeaders) {
+  HANDLE section =
+      ::CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0,
+                           sizeof(Kernel32ExportsSolver), nullptr);
+  if (!section) {
+    return LAUNCHER_ERROR_FROM_LAST();
+  }
+  Reset(section);
+
+  // The initial contents of the pages in a file mapping object backed by
+  // the operating system paging file are 0 (zero).  No need to zero it out
+  // ourselves.
+  // https://docs.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-createfilemappingw
+  nt::AutoMappedView writableView(sSectionHandle, PAGE_READWRITE);
+  if (!writableView) {
+    return LAUNCHER_ERROR_FROM_LAST();
+  }
+
+  SharedSection::Layout* view = writableView.as<SharedSection::Layout>();
+  view->mK32Exports.Init();
+
+  return Ok();
+}
+
+LauncherResult<SharedSection::Layout*> SharedSection::GetView() {
+  if (!sWriteCopyView) {
+    nt::AutoMappedView view(sSectionHandle, PAGE_WRITECOPY);
+    if (!view) {
+      return LAUNCHER_ERROR_FROM_LAST();
+    }
+    sWriteCopyView = view.release();
+  }
+  return reinterpret_cast<SharedSection::Layout*>(sWriteCopyView);
+}
+
+LauncherVoidResult SharedSection::TransferHandle(
+    nt::CrossExecTransferManager& aTransferMgr, HANDLE* aDestinationAddress) {
+  HANDLE remoteHandle;
+  if (!::DuplicateHandle(nt::kCurrentProcess, sSectionHandle,
+                         aTransferMgr.RemoteProcess(), &remoteHandle,
+                         GENERIC_READ, FALSE, 0)) {
+    return LAUNCHER_ERROR_FROM_LAST();
+  }
+
+  return aTransferMgr.Transfer(aDestinationAddress, &remoteHandle,
+                               sizeof(remoteHandle));
 }
 
 }  // namespace freestanding

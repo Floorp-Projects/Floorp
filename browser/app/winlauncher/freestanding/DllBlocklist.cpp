@@ -279,14 +279,19 @@ static BlockAction DetermineBlockAction(const UNICODE_STRING& aLeafName,
     // If we fail to detour a module's entrypoint, we reluctantly allow the
     // module for free.
 
+    auto resultView = mozilla::freestanding::gSharedSection.GetView();
+    if (resultView.isErr()) {
+      return BlockAction::Allow;
+    }
+
     static RTL_RUN_ONCE sRunOnce = RTL_RUN_ONCE_INIT;
-    mozilla::freestanding::gK32.Resolve(sRunOnce);
-    if (!mozilla::freestanding::gK32.IsResolved()) {
+    resultView.inspect()->mK32Exports.Resolve(sRunOnce);
+    if (!resultView.inspect()->mK32Exports.IsResolved()) {
       return BlockAction::Allow;
     }
 
     mozilla::interceptor::WindowsDllEntryPointInterceptor interceptor(
-        mozilla::freestanding::gK32);
+        resultView.inspect()->mK32Exports);
     if (!interceptor.Set(headers, NoOp_DllMain)) {
       return BlockAction::Allow;
     }
