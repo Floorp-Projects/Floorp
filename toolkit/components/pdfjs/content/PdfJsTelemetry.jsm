@@ -84,4 +84,8 @@ var PdfJsTelemetry = {
     );
     histogram.add(ms);
   },
+  onTagged(tagged) {
+    let histogram = Services.telemetry.getHistogramById("PDF_VIEWER_TAGGED");
+    histogram.add(tagged);
+  },
 };
