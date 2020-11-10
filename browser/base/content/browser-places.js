@@ -1556,15 +1556,19 @@ var BookmarkingUI = {
     );
   },
 
-  isOnNewTabPage({ currentURI, isNullPrincipal }) {
-    if (!NEWTAB_ENABLED && currentURI?.spec == "about:blank") {
-      return isNullPrincipal;
-    }
+  isOnNewTabPage({ currentURI }) {
     // Prevent loading AboutNewTab.jsm during startup path if it
     // is only the newTabURL getter we are interested in.
     let newTabURL = Cu.isModuleLoaded("resource:///modules/AboutNewTab.jsm")
       ? AboutNewTab.newTabURL
       : "about:newtab";
+    // Don't treat a custom "about:blank" new tab URL as the "New Tab Page"
+    // due to about:blank being used in different contexts and the
+    // difficulty in determining if the eventual page load is
+    // about:blank or if the about:blank load is just temporary.
+    if (newTabURL == "about:blank") {
+      newTabURL = "about:newtab";
+    }
     let newTabURLs = [newTabURL, "about:home"];
     if (PrivateBrowsingUtils.isWindowPrivate(window)) {
       newTabURLs.push("about:privatebrowsing");
