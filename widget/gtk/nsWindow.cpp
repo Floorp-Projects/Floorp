@@ -383,7 +383,9 @@ static void UpdateLastInputEventTime(void* aGdkEvent) {
 }
 
 void GetWindowOrigin(GdkWindow* aWindow, int* aX, int* aY) {
-  gdk_window_get_origin(aWindow, aX, aY);
+  if (aWindow) {
+    gdk_window_get_origin(aWindow, aX, aY);
+  }
 
   // TODO(bug 1655924): gdk_window_get_origin is can block waiting for the x
   // server for a long time, we would like to use the implementation below
