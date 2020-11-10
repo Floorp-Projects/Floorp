@@ -85,6 +85,13 @@ struct ParamTraits<mozilla::dom::DisplayMode>
                                       mozilla::dom::DisplayMode::Browser,
                                       mozilla::dom::DisplayMode::EndGuard_> {};
 
+// Allow serialization and deserialization of TouchEventsOverride over IPC
+template <>
+struct ParamTraits<mozilla::dom::TouchEventsOverride>
+    : public ContiguousEnumSerializer<
+          mozilla::dom::TouchEventsOverride,
+          mozilla::dom::TouchEventsOverride::Disabled,
+          mozilla::dom::TouchEventsOverride::EndGuard_> {};
 }  // namespace IPC
 
 namespace mozilla {
@@ -343,6 +350,8 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
   fields.mUseGlobalHistory = inherit ? inherit->GetUseGlobalHistory() : false;
 
   fields.mUseErrorPages = true;
+
+  fields.mTouchEventsOverrideInternal = TouchEventsOverride::None;
 
   RefPtr<BrowsingContext> context;
   if (XRE_IsParentProcess()) {
@@ -2193,6 +2202,13 @@ bool BrowsingContext::InactiveForSuspend() const {
   return !GetIsActive() && !GetHasMainMediaController();
 }
 
+bool BrowsingContext::CanSet(
+    FieldIndex<IDX_TouchEventsOverrideInternal>,
+    const enum TouchEventsOverride& aTouchEventsOverride,
+    ContentParent* aSource) {
+  return CheckOnlyOwningProcessCanSet(aSource);
+}
+
 bool BrowsingContext::CanSet(FieldIndex<IDX_DisplayMode>,
                              const enum DisplayMode& aDisplayMOde,
                              ContentParent* aSource) {
@@ -2317,6 +2333,46 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_UseErrorPages>,
                              const bool& aUseErrorPages,
                              ContentParent* aSource) {
   return CheckOnlyEmbedderCanSet(aSource);
+}
+
+mozilla::dom::TouchEventsOverride BrowsingContext::TouchEventsOverride() {
+  BrowsingContext* bc = this;
+  while (bc) {
+    mozilla::dom::TouchEventsOverride tev =
+        bc->GetTouchEventsOverrideInternal();
+    if (tev != mozilla::dom::TouchEventsOverride::None) {
+      return tev;
+    }
+
+    bc = bc->GetParent();
+  }
+
+  return mozilla::dom::TouchEventsOverride::None;
+}
+
+void BrowsingContext::SetTouchEventsOverride(
+    const enum TouchEventsOverride aTouchEventsOverride, ErrorResult& aRv) {
+  // Clear overrides from descendents first.
+  for (BrowsingContext* child : Children()) {
+    child->PreOrderWalk([](BrowsingContext* aContext) {
+      if (aContext->GetTouchEventsOverrideInternal() !=
+          mozilla::dom::TouchEventsOverride::None) {
+        // Ignore failed sets because the override of a discarded
+        // descendent shouldn't matter.
+        Unused << aContext->SetTouchEventsOverrideInternal(
+            mozilla::dom::TouchEventsOverride::None);
+      }
+    });
+  }
+
+  SetTouchEventsOverrideInternal(aTouchEventsOverride, aRv);
+}
+
+nsresult BrowsingContext::SetTouchEventsOverride(
+    const enum TouchEventsOverride aTouchEventsOverride) {
+  ErrorResult rv;
+  SetTouchEventsOverride(aTouchEventsOverride, rv);
+  return rv.StealNSResult();
 }
 
 // We map `watchedByDevTools` WebIDL attribute to `watchedByDevToolsInternal`

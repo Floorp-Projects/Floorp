@@ -635,7 +635,7 @@ async function testTouchEventsOverride(ui, expected) {
 
   const flag = await ui.responsiveFront.getTouchEventsOverride();
   is(
-    flag === Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED,
+    flag === "enabled",
     expected,
     `Touch events override should be ${expected ? "enabled" : "disabled"}`
   );
