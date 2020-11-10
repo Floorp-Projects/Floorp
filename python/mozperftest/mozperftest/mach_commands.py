@@ -254,6 +254,12 @@ class PerftestTests(MachCommandBase):
 
             tests = " ".join([_get_test(test) for test in tests])
 
+        # on macOS + try we skip the coverage
+        # because macOS workers prevent us from installing
+        # packages from PyPI
+        if sys.platform == "darwin" and ON_TRY:
+            run_coverage_check = False
+
         import pytest
 
         options = "-xs"

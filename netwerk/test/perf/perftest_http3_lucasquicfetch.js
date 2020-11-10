@@ -129,5 +129,6 @@ module.exports = {
   test,
   owner: "Network Team",
   name: "lq-fetch",
+  component: "netwerk",
   description: "Measures the amount of time it takes to load a set of images.",
 };

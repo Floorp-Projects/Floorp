@@ -20,5 +20,6 @@ module.exports = {
   test,
   owner: "Performance Team",
   name: "BBC Link",
+  component: "pageload",
   description: "Measures time to load BBC homepage",
 };
