@@ -3626,18 +3626,22 @@ function BrowserReloadWithFlags(reloadFlags) {
   for (let tab of gBrowser.selectedTabs) {
     let browser = tab.linkedBrowser;
     let url = browser.currentURI.spec;
+    // We need to cache the content principal here because the browser will be
+    // reconstructed when the remoteness changes and the content prinicpal will
+    // be cleared after reconstruction.
+    let principal = tab.linkedBrowser.contentPrincipal;
     if (gBrowser.updateBrowserRemotenessByURL(browser, url)) {
       // If the remoteness has changed, the new browser doesn't have any
       // information of what was loaded before, so we need to load the previous
       // URL again.
       if (tab.linkedPanel) {
-        loadBrowserURI(browser, url);
+        loadBrowserURI(browser, url, principal);
       } else {
         // Shift to fully loaded browser and make
         // sure load handler is instantiated.
         tab.addEventListener(
           "SSTabRestoring",
-          () => loadBrowserURI(browser, url),
+          () => loadBrowserURI(browser, url, principal),
           { once: true }
         );
         gBrowser._insertBrowser(tab);
@@ -3676,10 +3680,10 @@ function BrowserReloadWithFlags(reloadFlags) {
     }
   }
 
-  function loadBrowserURI(browser, url) {
+  function loadBrowserURI(browser, url, principal) {
     browser.loadURI(url, {
       flags: reloadFlags,
-      triggeringPrincipal: browser.contentPrincipal,
+      triggeringPrincipal: principal,
     });
   }
 
