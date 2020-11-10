@@ -222,9 +222,10 @@ ALL_PROCESSES += [
     # 360 Safeguard/360 Total Security causes a11y crashes, bug 1536227.
     DllBlocklistEntry("safemon64.dll", ALL_VERSIONS),
 
-    # Old versions of Digital Guardian, bug 1318858 and bug 1603974
-    RedirectToNoOpEntryPoint("dgapi.dll", (7, 5, 0, 0xffff)),
-    RedirectToNoOpEntryPoint("dgapi64.dll", (7, 5, 0, 0xffff)),
+    # Old versions of Digital Guardian, bug 1318858, bug 1603974,
+    # and bug 1672367
+    RedirectToNoOpEntryPoint("dgapi.dll", (7, 5, 0xffff, 0xffff)),
+    RedirectToNoOpEntryPoint("dgapi64.dll", (7, 5, 0xffff, 0xffff)),
 
     # Old versions of COMODO Internet Security, bug 1608048
     DllBlocklistEntry("IseGuard32.dll", (1, 6, 13835, 184)),
