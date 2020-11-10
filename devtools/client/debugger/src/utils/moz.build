@@ -23,6 +23,7 @@ CompiledModules(
     "dbg.js",
     "defer.js",
     "DevToolsUtils.js",
+    "environment.js",
     "expressions.js",
     "evaluation-result.js",
     "function.js",
