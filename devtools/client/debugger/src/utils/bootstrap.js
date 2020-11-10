@@ -10,7 +10,8 @@ import ReactDOM from "react-dom";
 const { Provider } = require("react-redux");
 
 import ToolboxProvider from "devtools/client/framework/store-provider";
-import { isTesting } from "devtools-environment";
+// $FlowIgnore
+import flags from "devtools/shared/flags";
 
 // $FlowIgnore
 const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
@@ -44,7 +45,7 @@ export function bootstrapStore(
 ): any {
   const debugJsModules = AppConstants.DEBUG_JS_MODULES == "1";
   const createStore = configureStore({
-    log: prefs.logging || isTesting(),
+    log: prefs.logging || flags.testing,
     timing: debugJsModules,
     makeThunkArgs: (args, state) => {
       return { ...args, client, ...workers, panel };
