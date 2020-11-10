@@ -381,8 +381,7 @@ bool WarpCacheIRTranspiler::emitGuardGroup(ObjOperandId objId,
   ObjectGroup* group = groupStubField(groupOffset);
 
   auto* ins = MGuardObjectGroup::New(alloc(), def, group,
-                                     /* bailOnEquality = */ false,
-                                     BailoutKind::ObjectIdentityOrTypeGuard);
+                                     /* bailOnEquality = */ false);
   add(ins);
 
   setOperand(objId, ins);
