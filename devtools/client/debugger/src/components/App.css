@@ -6,6 +6,18 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#mount {
+  height: 100%;
+}
+
 button {
   background: transparent;
   border: none;
@@ -86,25 +98,6 @@ button:focus {
 */
 .split-box > .splitter:last-child {
   display: none;
-}
-
-/* Launchpad Root */
-
-* {
-  box-sizing: border-box;
-}
-
-html,
-body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  width: 100%;
-}
-
-#mount {
-  display: flex;
-  height: 100%;
 }
 
 ::-webkit-scrollbar {
