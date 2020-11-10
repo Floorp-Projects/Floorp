@@ -293,11 +293,11 @@ static PointerCapabilities GetPointerCapabilities(const Document* aDocument,
              aID == LookAndFeel::IntID::AllPointerCapabilities);
   MOZ_ASSERT(aDocument);
 
-  if (nsIDocShell* docShell = aDocument->GetDocShell()) {
+  if (BrowsingContext* bc = aDocument->GetBrowsingContext()) {
     // The touch-events-override happens only for the Responsive Design Mode so
     // that we don't need to care about ResistFingerprinting.
-    if (docShell->GetTouchEventsOverride() ==
-        nsIDocShell::TOUCHEVENTS_OVERRIDE_ENABLED) {
+    if (bc->TouchEventsOverride() ==
+        mozilla::dom::TouchEventsOverride::Enabled) {
       return PointerCapabilities::Coarse;
     }
   }
