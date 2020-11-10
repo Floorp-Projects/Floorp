@@ -297,11 +297,15 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
         "Out of memory: Could not allocate buffer while writing to file");
     return promise.forget();
   }
-  nsAutoString destPath(aPath);
-  auto opts = InternalWriteAtomicOpts::FromBinding(aOptions);
 
-  return RunOnBackgroundThread<uint32_t>(promise, &WriteAtomicSync, destPath,
-                                         std::move(*buf), std::move(opts));
+  auto opts = InternalWriteAtomicOpts::FromBinding(aOptions);
+  if (opts.isErr()) {
+    RejectJSPromise(promise, opts.unwrapErr());
+    return promise.forget();
+  }
+
+  return RunOnBackgroundThread<uint32_t>(
+      promise, &WriteAtomicSync, file.forget(), std::move(*buf), opts.unwrap());
 }
 
 /* static */
@@ -313,20 +317,25 @@ already_AddRefed<Promise> IOUtils::WriteAtomicUTF8(
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
-  // Process arguments.
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
   nsCString utf8Str;
   if (!CopyUTF16toUTF8(aString, utf8Str, fallible)) {
     promise->MaybeRejectWithOperationError(
         "Out of memory: Could not allocate buffer while writing to file");
     return promise.forget();
   }
-  nsAutoString destPath(aPath);
+
   auto opts = InternalWriteAtomicOpts::FromBinding(aOptions);
+  if (opts.isErr()) {
+    RejectJSPromise(promise, opts.unwrapErr());
+    return promise.forget();
+  }
 
   return RunOnBackgroundThread<uint32_t>(promise, &WriteAtomicUTF8Sync,
-                                         destPath, std::move(utf8Str),
-                                         std::move(opts));
+                                         file.forget(), std::move(utf8Str),
+                                         opts.unwrap());
 }
 
 /* static */
@@ -579,45 +588,6 @@ void IOUtils::RejectJSPromise(const RefPtr<Promise>& aPromise,
 }
 
 /* static */
-UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::OpenExistingSync(
-    const nsAString& aPath, int32_t aFlags) {
-  MOZ_ASSERT(!NS_IsMainThread());
-  // Ensure that CREATE_FILE and EXCL flags were not included, as we do not
-  // want to create a new file.
-  MOZ_ASSERT((aFlags & (PR_CREATE_FILE | PR_EXCL)) == 0);
-  // We open the file descriptor through an nsLocalFile to ensure that the paths
-  // are interpreted/encoded correctly on all platforms.
-  RefPtr<nsLocalFile> file = new nsLocalFile();
-  nsresult rv = file->InitWithPath(aPath);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  PRFileDesc* fd;
-  rv = file->OpenNSPRFileDesc(aFlags, /* mode */ 0, &fd);
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-  return UniquePtr<PRFileDesc, PR_CloseDelete>(fd);
-}
-
-/* static */
-UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::CreateFileSync(
-    const nsAString& aPath, int32_t aFlags, int32_t aMode) {
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  // We open the file descriptor through an nsLocalFile to ensure that the paths
-  // are interpreted/encoded correctly on all platforms.
-  RefPtr<nsLocalFile> file = new nsLocalFile();
-  nsresult rv = file->InitWithPath(aPath);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  PRFileDesc* fd;
-  rv = file->OpenNSPRFileDesc(aFlags | PR_CREATE_FILE | PR_EXCL, aMode, &fd);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  return UniquePtr<PRFileDesc, PR_CloseDelete>(fd);
-}
-
-/* static */
 Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
     already_AddRefed<nsIFile> aFile, const Maybe<uint32_t>& aMaxBytes,
     const bool aDecompress) {
@@ -735,50 +705,55 @@ Result<nsString, IOUtils::IOError> IOUtils::ReadUTF8Sync(
 
 /* static */
 Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicSync(
-    const nsAString& aDestPath, const Span<const uint8_t>& aByteArray,
-    const IOUtils::InternalWriteAtomicOpts& aOptions) {
+    already_AddRefed<nsIFile> aFile, const Span<const uint8_t>& aByteArray,
+    IOUtils::InternalWriteAtomicOpts aOptions) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  // Check if the file exists and test it against the noOverwrite option.
-  const bool& noOverwrite = aOptions.mNoOverwrite;
-  bool exists = false;
-  {
-    UniquePtr<PRFileDesc, PR_CloseDelete> fd =
-        OpenExistingSync(aDestPath, PR_RDONLY);
-    exists = !!fd;
-  }
+  nsCOMPtr<nsIFile> destFile = aFile;
+  nsCOMPtr<nsIFile> backupFile = std::move(aOptions.mBackupFile);
+  nsCOMPtr<nsIFile> tempFile = std::move(aOptions.mTmpFile);
 
-  if (noOverwrite && exists) {
+  bool exists = false;
+  MOZ_TRY(destFile->Exists(&exists));
+
+  if (aOptions.mNoOverwrite && exists) {
     return Err(IOError(NS_ERROR_FILE_ALREADY_EXISTS)
                    .WithMessage("Refusing to overwrite the file at %s\n"
                                 "Specify `noOverwrite: false` to allow "
                                 "overwriting the destination",
-                                NS_ConvertUTF16toUTF8(aDestPath).get()));
+                                destFile->HumanReadablePath().get()));
   }
 
   // If backupFile was specified, perform the backup as a move.
-  if (exists && aOptions.mBackupFile.isSome() &&
-      MoveSync(aDestPath, aOptions.mBackupFile.value(), noOverwrite).isErr()) {
-    return Err(
-        IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
-            .WithMessage(
-                "Failed to backup the source file(%s) to %s",
-                NS_ConvertUTF16toUTF8(aDestPath).get(),
-                NS_ConvertUTF16toUTF8(aOptions.mBackupFile.value()).get()));
+  if (exists && backupFile) {
+    nsAutoStringN<256> destPath;
+    nsAutoStringN<256> backupPath;
+
+    MOZ_ALWAYS_SUCCEEDS(destFile->GetPath(destPath));
+    MOZ_ALWAYS_SUCCEEDS(backupFile->GetPath(backupPath));
+
+    if (MoveSync(destPath, backupPath, aOptions.mNoOverwrite).isErr()) {
+      return Err(IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
+                     .WithMessage("Failed to backup the source file(%s) to %s",
+                                  destFile->HumanReadablePath().get(),
+                                  backupFile->HumanReadablePath().get()));
+    }
   }
 
-  // If tmpPath was specified, we will write to there first, then perform
-  // a move to ensure the file ends up at the final requested destination.
-  nsAutoString tmpPath;
-  if (aOptions.mTmpPath.isSome()) {
-    tmpPath = aOptions.mTmpPath.value();
+  // If tempFile was specified, we will write to there first, then perform a
+  // move to ensure the file ends up at the final requested destination.
+  nsCOMPtr<nsIFile> writeFile;
+
+  if (tempFile) {
+    writeFile = tempFile.forget();
   } else {
-    tmpPath = aDestPath;
+    writeFile = destFile.forget();
   }
+
   // The data to be written to file might be larger than can be
   // written in any single call, so we must truncate the file and
   // set the write mode to append to the file.
-  int32_t flags = PR_WRONLY | PR_TRUNCATE | PR_APPEND;
+  int32_t flags = PR_WRONLY | PR_TRUNCATE | PR_APPEND | PR_CREATE_FILE;
   if (aOptions.mFlush) {
     flags |= PR_SYNC;
   }
@@ -801,51 +776,58 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicSync(
       bytes = aByteArray;
     }
 
-    // Then open the file and perform the write.
-    UniquePtr<PRFileDesc, PR_CloseDelete> fd = OpenExistingSync(tmpPath, flags);
-    if (!fd) {
-      fd = CreateFileSync(tmpPath, flags);
+    UniquePtr<PRFileDesc, PR_CloseDelete> fd;
+    if (nsresult rv =
+            writeFile->OpenNSPRFileDesc(flags, 0666, getter_Transfers(fd));
+        NS_FAILED(rv)) {
+      return Err(
+          IOError(rv).WithMessage("Could not open the file at %s for writing",
+                                  writeFile->HumanReadablePath().get()));
     }
-    if (!fd) {
-      return Err(IOError(NS_ERROR_FILE_ACCESS_DENIED)
-                     .WithMessage("Could not open the file at %s for writing",
-                                  NS_ConvertUTF16toUTF8(tmpPath).get()));
-    }
-    auto rv = WriteSync(fd.get(), NS_ConvertUTF16toUTF8(tmpPath), bytes);
+    auto rv = WriteSync(fd.get(), writeFile, bytes);
     if (rv.isErr()) {
       return rv.propagateErr();
     }
     result = rv.unwrap();
   }
 
-  // If tmpPath was specified and different from the destPath, then the
-  // operation is finished by performing a move.
-  if (aDestPath != tmpPath && MoveSync(tmpPath, aDestPath, false).isErr()) {
-    return Err(
-        IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
-            .WithMessage("Could not move temporary file(%s) to destination(%s)",
-                         NS_ConvertUTF16toUTF8(tmpPath).get(),
-                         NS_ConvertUTF16toUTF8(aDestPath).get()));
+  // If tmpFile was passed, destFile will be non-null. Check destFile against
+  // writeFile and if they differ, the operation is finished by performing a
+  // move.
+
+  if (destFile) {
+    nsAutoStringN<256> destPath;
+    nsAutoStringN<256> writePath;
+
+    MOZ_ALWAYS_SUCCEEDS(destFile->GetPath(destPath));
+    MOZ_ALWAYS_SUCCEEDS(writeFile->GetPath(writePath));
+
+    if (destPath != writePath && MoveSync(writePath, destPath, false).isErr()) {
+      return Err(IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
+                     .WithMessage(
+                         "Could not move temporary file(%s) to destination(%s)",
+                         writeFile->HumanReadablePath().get(),
+                         destFile->HumanReadablePath().get()));
+    }
   }
   return result;
 }
 
 /* static */
 Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicUTF8Sync(
-    const nsAString& aDestPath, const nsCString& aUTF8String,
-    const InternalWriteAtomicOpts& aOptions) {
+    already_AddRefed<nsIFile> aFile, const nsCString& aUTF8String,
+    InternalWriteAtomicOpts aOptions) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   Span utf8Bytes(reinterpret_cast<const uint8_t*>(aUTF8String.get()),
                  aUTF8String.Length());
 
-  return WriteAtomicSync(aDestPath, utf8Bytes, aOptions);
+  return WriteAtomicSync(std::move(aFile), utf8Bytes, std::move(aOptions));
 }
 
 /* static */
 Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
-    PRFileDesc* aFd, const nsACString& aPath,
-    const Span<const uint8_t>& aBytes) {
+    PRFileDesc* aFd, nsIFile* aFile, const Span<const uint8_t>& aBytes) {
   // aBytes comes from a JavaScript TypedArray, which has UINT32_MAX max
   // length.
   MOZ_ASSERT(aBytes.Length() <= UINT32_MAX);
@@ -872,7 +854,7 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
                      .WithMessage("Could not write chunk(size=%" PRIu32
                                   ") to %s\n"
                                   "The file may be corrupt",
-                                  chunkSize, aPath.BeginReading()));
+                                  chunkSize, aFile->HumanReadablePath().get()));
     }
     bytesWritten += rv;
     pendingBytes = pendingBytes.From(rv);
@@ -1096,7 +1078,7 @@ Result<Ok, IOUtils::IOError> IOUtils::CreateDirectorySync(
   if (!aCreateAncestors) {
     nsCOMPtr<nsIFile> parent;
     MOZ_TRY(targetFile->GetParent(getter_AddRefs(parent)));
-    bool parentExists;
+    bool parentExists = false;
     MOZ_TRY(parent->Exists(&parentExists));
     if (!parentExists) {
       return Err(IOError(NS_ERROR_FILE_NOT_FOUND)
@@ -1404,6 +1386,38 @@ NS_IMETHODIMP IOUtilsShutdownBlocker::BlockShutdown(
 
 NS_IMETHODIMP IOUtilsShutdownBlocker::GetState(nsIPropertyBag** aState) {
   return NS_OK;
+}
+
+Result<IOUtils::InternalWriteAtomicOpts, IOUtils::IOError>
+IOUtils::InternalWriteAtomicOpts::FromBinding(
+    const WriteAtomicOptions& aOptions) {
+  InternalWriteAtomicOpts opts;
+  opts.mFlush = aOptions.mFlush;
+  opts.mNoOverwrite = aOptions.mNoOverwrite;
+
+  if (aOptions.mBackupFile.WasPassed()) {
+    opts.mBackupFile = new nsLocalFile();
+    if (nsresult rv =
+            opts.mBackupFile->InitWithPath(aOptions.mBackupFile.Value());
+        NS_FAILED(rv)) {
+      return Err(IOUtils::IOError(rv).WithMessage(
+          "Could not parse path of backupFile (%s)",
+          NS_ConvertUTF16toUTF8(aOptions.mBackupFile.Value()).get()));
+    }
+  }
+
+  if (aOptions.mTmpPath.WasPassed()) {
+    opts.mTmpFile = new nsLocalFile();
+    if (nsresult rv = opts.mTmpFile->InitWithPath(aOptions.mTmpPath.Value());
+        NS_FAILED(rv)) {
+      return Err(IOUtils::IOError(rv).WithMessage(
+          "Could not parse path of temp file (%s)",
+          NS_ConvertUTF16toUTF8(aOptions.mTmpPath.Value()).get()));
+    }
+  }
+
+  opts.mCompress = aOptions.mCompress;
+  return opts;
 }
 
 }  // namespace dom

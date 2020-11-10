@@ -252,7 +252,7 @@
       info("Test writing a file at a relative destination");
       await Assert.rejects(
         IOUtils.writeAtomic(tmpFileName, bytes),
-        /Refusing to work with path\(.*\) because only absolute file paths are permitted/,
+        /Could not parse path/,
         "IOUtils::writeAtomic only works with absolute paths"
       );
     });
