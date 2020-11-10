@@ -78,6 +78,7 @@ class CompileInfo {
         hadOverflowBailout_(script->hadOverflowBailout()),
         hadSpeculativePhiBailout_(script->hadSpeculativePhiBailout()),
         hadLICMBailout_(script->hadLICMBailout()),
+        hadBoundsCheckBailout_(script->failedBoundsCheck()),
         mayReadFrameArgsDirectly_(script->mayReadFrameArgsDirectly()),
         isDerivedClassConstructor_(script->isDerivedClassConstructor()),
         inlineScriptTree_(inlineScriptTree) {
@@ -140,6 +141,7 @@ class CompileInfo {
         hadOverflowBailout_(false),
         hadSpeculativePhiBailout_(false),
         hadLICMBailout_(false),
+        hadBoundsCheckBailout_(false),
         mayReadFrameArgsDirectly_(false),
         inlineScriptTree_(nullptr),
         needsBodyEnvironmentObject_(false),
@@ -369,6 +371,7 @@ class CompileInfo {
   bool hadOverflowBailout() const { return hadOverflowBailout_; }
   bool hadSpeculativePhiBailout() const { return hadSpeculativePhiBailout_; }
   bool hadLICMBailout() const { return hadLICMBailout_; }
+  bool hadBoundsCheckBailout() const { return hadBoundsCheckBailout_; }
   bool mayReadFrameArgsDirectly() const { return mayReadFrameArgsDirectly_; }
 
   bool isDerivedClassConstructor() const { return isDerivedClassConstructor_; }
@@ -395,6 +398,7 @@ class CompileInfo {
   bool hadOverflowBailout_;
   bool hadSpeculativePhiBailout_;
   bool hadLICMBailout_;
+  bool hadBoundsCheckBailout_;
 
   bool mayReadFrameArgsDirectly_;
 
