@@ -4108,7 +4108,8 @@ void LinearSum::dump() const {
 }
 
 MDefinition* jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
-                                   const LinearSum& sum) {
+                                   const LinearSum& sum,
+                                   BailoutKind bailoutKind) {
   MDefinition* def = nullptr;
 
   for (size_t i = 0; i < sum.numTerms(); i++) {
@@ -4117,6 +4118,7 @@ MDefinition* jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
     if (term.scale == 1) {
       if (def) {
         def = MAdd::New(alloc, def, term.term, MIRType::Int32);
+        def->setBailoutKind(bailoutKind);
         block->insertAtEnd(def->toInstruction());
         def->computeRange(alloc);
       } else {
@@ -4129,6 +4131,7 @@ MDefinition* jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
         def->computeRange(alloc);
       }
       def = MSub::New(alloc, def, term.term, MIRType::Int32);
+      def->setBailoutKind(bailoutKind);
       block->insertAtEnd(def->toInstruction());
       def->computeRange(alloc);
     } else {
@@ -4136,10 +4139,12 @@ MDefinition* jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
       MConstant* factor = MConstant::New(alloc, Int32Value(term.scale));
       block->insertAtEnd(factor);
       MMul* mul = MMul::New(alloc, term.term, factor, MIRType::Int32);
+      mul->setBailoutKind(bailoutKind);
       block->insertAtEnd(mul);
       mul->computeRange(alloc);
       if (def) {
         def = MAdd::New(alloc, def, mul, MIRType::Int32);
+        def->setBailoutKind(bailoutKind);
         block->insertAtEnd(def->toInstruction());
         def->computeRange(alloc);
       } else {
