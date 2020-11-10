@@ -5,7 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-m4 = check_prog("M4", ("m4",))
+m4 = check_prog(
+    "M4",
+    (
+        "gm4",
+        "m4",
+    ),
+)
 
 
 @depends(mozconfig)
