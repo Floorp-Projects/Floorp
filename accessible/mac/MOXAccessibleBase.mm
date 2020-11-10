@@ -502,6 +502,10 @@ mozilla::LogModule* GetMacAccessibilityLog() {
   return nil;
 }
 
+- (BOOL)moxIsLiveRegion {
+  return NO;
+}
+
 #pragma mark -
 
 // objc-style description (from NSObject); not to be confused with the
