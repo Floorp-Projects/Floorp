@@ -677,7 +677,7 @@ class Raptor(
                 "raptor",
                 "tooltool-manifests",
                 "chrome-android",
-                "chrome85.manifest",
+                "chrome86.manifest",
             ),
             output_dir=tmpdir,
         )
