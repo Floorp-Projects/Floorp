@@ -280,10 +280,9 @@ class IOUtils final {
                                         bool aIgnoreAbsent, bool aRecursive);
 
   /**
-   * Attempts to create a new directory at |aPath|.
+   * Attempts to create a new directory at |aFile|.
    *
-   * @param aPath             The location of the file as an absolute path
-   *                          string.
+   * @param aFile             The location of the directory to create.
    * @param aCreateAncestors  If true, create missing ancestor directories as
    *                          needed. Otherwise, report an error if the target
    *                          has non-existing ancestor directories.
@@ -296,10 +295,10 @@ class IOUtils final {
    *
    * @return Ok if the directory was created successfully, or an error.
    */
-  static Result<Ok, IOError> CreateDirectorySync(const nsAString& aPath,
-                                                 bool aCreateAncestors,
-                                                 bool aIgnoreExisting,
-                                                 int32_t aMode = 0777);
+  static Result<Ok, IOError> MakeDirectorySync(already_AddRefed<nsIFile> aFile,
+                                               bool aCreateAncestors,
+                                               bool aIgnoreExisting,
+                                               int32_t aMode = 0777);
 
   /**
    * Attempts to stat a file at |aPath|.

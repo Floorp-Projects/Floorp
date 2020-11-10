@@ -383,10 +383,10 @@ already_AddRefed<Promise> IOUtils::MakeDirectory(
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  return RunOnBackgroundThread<Ok>(promise, &CreateDirectorySync, path,
+  return RunOnBackgroundThread<Ok>(promise, &MakeDirectorySync, file.forget(),
                                    aOptions.mCreateAncestors,
                                    aOptions.mIgnoreExisting, 0777);
 }
@@ -1050,20 +1050,19 @@ Result<Ok, IOUtils::IOError> IOUtils::RemoveSync(
 }
 
 /* static */
-Result<Ok, IOUtils::IOError> IOUtils::CreateDirectorySync(
-    const nsAString& aPath, bool aCreateAncestors, bool aIgnoreExisting,
-    int32_t aMode) {
+Result<Ok, IOUtils::IOError> IOUtils::MakeDirectorySync(
+    already_AddRefed<nsIFile> aFile, bool aCreateAncestors,
+    bool aIgnoreExisting, int32_t aMode) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  RefPtr<nsLocalFile> targetFile = new nsLocalFile();
-  MOZ_TRY(targetFile->InitWithPath(aPath));
+  nsCOMPtr<nsIFile> file = aFile;
 
   // nsIFile::Create will create ancestor directories by default.
   // If the caller does not want this behaviour, then check and possibly
   // return an error.
   if (!aCreateAncestors) {
     nsCOMPtr<nsIFile> parent;
-    MOZ_TRY(targetFile->GetParent(getter_AddRefs(parent)));
+    MOZ_TRY(file->GetParent(getter_AddRefs(parent)));
     bool parentExists = false;
     MOZ_TRY(parent->Exists(&parentExists));
     if (!parentExists) {
@@ -1071,26 +1070,25 @@ Result<Ok, IOUtils::IOError> IOUtils::CreateDirectorySync(
                      .WithMessage("Could not create directory at %s because "
                                   "the path has missing "
                                   "ancestor components",
-                                  NS_ConvertUTF16toUTF8(aPath).get()));
+                                  file->HumanReadablePath().get()));
     }
   }
 
-  nsresult rv = targetFile->Create(nsIFile::DIRECTORY_TYPE, aMode);
+  nsresult rv = file->Create(nsIFile::DIRECTORY_TYPE, aMode);
   if (NS_FAILED(rv)) {
-    IOError err(rv);
     if (rv == NS_ERROR_FILE_ALREADY_EXISTS) {
       // NB: We may report a success only if the target is an existing
       // directory. We don't want to silence errors that occur if the target is
       // an existing file, since trying to create a directory where a regular
       // file exists may be indicative of a logic error.
       bool isDirectory;
-      MOZ_TRY(targetFile->IsDirectory(&isDirectory));
+      MOZ_TRY(file->IsDirectory(&isDirectory));
       if (!isDirectory) {
         return Err(IOError(NS_ERROR_FILE_NOT_DIRECTORY)
                        .WithMessage("Could not create directory because the "
                                     "target file(%s) exists "
                                     "and is not a directory",
-                                    NS_ConvertUTF16toUTF8(aPath).get()));
+                                    file->HumanReadablePath().get()));
       }
       // The directory exists.
       // The caller may suppress this error.
@@ -1098,14 +1096,14 @@ Result<Ok, IOUtils::IOError> IOUtils::CreateDirectorySync(
         return Ok();
       }
       // Otherwise, forward it.
-      return Err(err.WithMessage(
+      return Err(IOError(rv).WithMessage(
           "Could not create directory because it already exists at %s\n"
           "Specify the `ignoreExisting: true` option to mitigate this "
           "error",
-          NS_ConvertUTF16toUTF8(aPath).get()));
+          file->HumanReadablePath().get()));
     }
-    return Err(err.WithMessage("Could not create directory at %s",
-                               NS_ConvertUTF16toUTF8(aPath).get()));
+    return Err(IOError(rv).WithMessage("Could not create directory at %s",
+                                       file->HumanReadablePath().get()));
   }
   return Ok();
 }
