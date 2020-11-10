@@ -15,6 +15,7 @@
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/SVGTests.h"
 #include "mozilla/dom/SVGUnitTypesBinding.h"
+#include "mozilla/dom/Element.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
@@ -69,7 +70,8 @@ static_assert(sizeof(void*) == sizeof(nullptr),
               "nullptr should be the correct size");
 
 nsresult NS_NewSVGElement(
-    Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo) {
+    mozilla::dom::Element** aResult,
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo) {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo(aNodeInfo);
   auto* nim = nodeInfo->NodeInfoManager();
   RefPtr<mozilla::dom::SVGElement> it =
