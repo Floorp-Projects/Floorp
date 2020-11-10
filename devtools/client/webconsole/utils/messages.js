@@ -7,6 +7,9 @@
 const Services = require("Services");
 const l10n = require("devtools/client/webconsole/utils/l10n");
 const {
+  getUrlDetails,
+} = require("devtools/client/netmonitor/src/utils/request-utils");
+const {
   ResourceWatcher,
 } = require("devtools/shared/resources/resource-watcher");
 
@@ -359,7 +362,24 @@ function transformCSSMessageResource(cssMessageResource) {
 }
 
 function transformNetworkEventResource(networkEventResource) {
-  return new NetworkEventMessage(networkEventResource);
+  return new NetworkEventMessage({
+    targetFront: networkEventResource.targetFront,
+    actor: networkEventResource.actor,
+    isXHR: networkEventResource.isXHR,
+    request: networkEventResource.request,
+    response: networkEventResource.response,
+    timeStamp: networkEventResource.timeStamp,
+    totalTime: networkEventResource.totalTime,
+    url: networkEventResource.request.url,
+    urlDetails: getUrlDetails(networkEventResource.request.url),
+    method: networkEventResource.request.method,
+    updates: networkEventResource.updates,
+    cause: networkEventResource.cause,
+    private: networkEventResource.private,
+    securityState: networkEventResource.securityState,
+    chromeContext: networkEventResource.chromeContext,
+    blockedReason: networkEventResource.blockedReason,
+  });
 }
 
 function transformEvaluationResultPacket(packet) {
@@ -770,8 +790,8 @@ function getNaturalOrder(messageA, messageB) {
 function isMessageNetworkError(message) {
   return (
     message.source === MESSAGE_SOURCE.NETWORK &&
-    message?.status &&
-    message?.status.toString().match(/^[4,5]\d\d$/)
+    message?.response?.status &&
+    message.response.status.toString().match(/^[4,5]\d\d$/)
   );
 }
 
