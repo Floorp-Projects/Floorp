@@ -712,6 +712,7 @@ def toolchain_search_path_for(host_or_target):
                 ["dump_syms"],
                 ["nasm"],
                 ["lucetc"],
+                ["sccache"],
             )
         ]
 
@@ -789,7 +790,9 @@ def ccache(value):
     return "ccache"
 
 
-ccache = check_prog("CCACHE", progs=(), input=ccache)
+ccache = check_prog(
+    "CCACHE", progs=(), input=ccache, paths=toolchain_search_path, allow_missing=True
+)
 
 option(env="CCACHE_PREFIX", nargs=1, help="Compiler prefix to use when using ccache")
 
