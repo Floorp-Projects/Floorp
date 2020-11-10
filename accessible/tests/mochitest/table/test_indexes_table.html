@@ -103,7 +103,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       testTableIndexes("tableinsane4", idxes);
 
       // ////////////////////////////////////////////////////////////////////////
-      // tableinsane5 (just a crazy table)
+      // tableinsane5 (just a strange table)
       idxes = [
         [ 0,  1,  2, -1, -1],
         [-1, -1, -1, -1, -1],
@@ -144,7 +144,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       // ////////////////////////////////////////////////////////////////////////
       // A table with all elements being display:block, including a row group.
       // This makes us fall back to the ARIAGridRowAccessible, and we must
-      // make sure the index is 0. Crazy example from Gmail.
+      // make sure the index is 0. Strange example from Gmail.
       idxes = [
         [0],
       ];
@@ -375,7 +375,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
   </table>
 
   <table border="1" id="tableinsane5">
-    <caption>just a crazy table</caption>
+    <caption>just a strange table</caption>
     <thead>
       <tr>
         <th>col1</th>
