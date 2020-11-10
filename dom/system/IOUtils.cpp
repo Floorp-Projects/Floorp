@@ -21,6 +21,7 @@
 #include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
+#include "nsFileStreams.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsIFile.h"
 #include "nsIGlobalObject.h"
@@ -568,33 +569,36 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
                 "The `maxBytes` and `decompress` options are not compatible"));
   }
 
-  UniquePtr<PRFileDesc, PR_CloseDelete> fd;
-  if (nsresult rv = file->OpenNSPRFileDesc(PR_RDONLY | nsIFile::OS_READAHEAD,
-                                           0666, getter_Transfers(fd));
+  RefPtr<nsFileStream> stream = new nsFileStream();
+  if (nsresult rv =
+          stream->Init(file, PR_RDONLY | nsIFile::OS_READAHEAD, 0666, 0);
       NS_FAILED(rv)) {
     return Err(IOError(rv).WithMessage("Could not open the file at %s",
                                        file->HumanReadablePath().get()));
   }
-  uint32_t bufSize;
+  int64_t bufSize = 0;
+
   if (aMaxBytes.isNothing()) {
     // Limitation: We cannot read files that are larger than the max size of a
     //             TypedArray (UINT32_MAX bytes). Reject if the file is too
     //             big to be read.
-    PRFileInfo64 info;
-    if (PR_FAILURE == PR_GetOpenFileInfo64(fd.get(), &info)) {
+
+    int64_t streamSize = -1;
+    if (nsresult rv = stream->GetSize(&streamSize); NS_FAILED(rv)) {
       return Err(IOError(NS_ERROR_FILE_ACCESS_DENIED)
                      .WithMessage("Could not get info for the file at %s",
                                   file->HumanReadablePath().get()));
     }
-    if (static_cast<uint64_t>(info.size) > UINT32_MAX) {
+    MOZ_RELEASE_ASSERT(streamSize >= 0);
+
+    if (streamSize > static_cast<int64_t>(UINT32_MAX)) {
       return Err(
           IOError(NS_ERROR_FILE_TOO_BIG)
               .WithMessage("Could not read the file at %s because it is too "
-                           "large(size=%" PRIu64 " bytes)",
-                           file->HumanReadablePath().get(),
-                           static_cast<uint64_t>(info.size)));
+                           "large(size=%" PRId64 " bytes)",
+                           file->HumanReadablePath().get(), streamSize));
     }
-    bufSize = static_cast<uint32_t>(info.size);
+    bufSize = static_cast<uint32_t>(streamSize);
   } else {
     bufSize = aMaxBytes.value();
   }
@@ -606,28 +610,27 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
                                 file->HumanReadablePath().get()));
   }
 
+  Span<char> toRead(reinterpret_cast<char*>(buffer.Elements()), bufSize);
+
   // Read the file from disk.
   uint32_t totalRead = 0;
   while (totalRead != bufSize) {
-    int32_t nRead =
-        PR_Read(fd.get(), buffer.Elements() + totalRead, bufSize - totalRead);
-    if (nRead == 0) {
+    uint32_t bytesRead = 0;
+    if (nsresult rv =
+            stream->Read(toRead.Elements(), bufSize - totalRead, &bytesRead);
+        NS_FAILED(rv)) {
+      return Err(IOError(rv).WithMessage(
+          "Encountered an unexpected error while reading file(%s)",
+          file->HumanReadablePath().get()));
+    }
+    if (bytesRead == 0) {
       break;
     }
-    if (nRead < 0) {
-      PRErrorCode errNo = PR_GetError();
-      const char* errName = PR_ErrorToName(errNo);
-      return Err(
-          IOError(NS_ERROR_UNEXPECTED)
-              .WithMessage(
-                  "Encountered an unexpected error while reading file(%s)"
-                  "(PRErrorCode: %s)",
-                  file->HumanReadablePath().get(), errName));
-    }
-    totalRead += nRead;
-    DebugOnly<bool> success = buffer.SetLength(totalRead, fallible);
-    MOZ_ASSERT(success);
+    totalRead += bytesRead;
+    toRead = toRead.From(bytesRead);
   }
+  DebugOnly<bool> success = buffer.SetLength(totalRead, fallible);
+  MOZ_ASSERT(success);
 
   // Decompress the file contents, if required.
   if (aDecompress) {
