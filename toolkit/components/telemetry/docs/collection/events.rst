@@ -287,8 +287,7 @@ registered via ``registerEvents``). These are :ref:`keyed scalars <scalars.keyed
 the keys are of the form ``category#method#object`` and the values are counts of the number of
 times ``recordEvent`` was called with that combination of ``category``, ``method``, and ``object``.
 
-These two scalars have a default maximum key limit of 500 per process. This limit is configurable
-via the ``toolkit.telemetry.maxEventSummaryKeys`` preference.
+These two scalars have a default maximum key limit of 500 per process.
 
 Example:
 
