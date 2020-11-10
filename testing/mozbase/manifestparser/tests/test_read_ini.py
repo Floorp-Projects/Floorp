@@ -123,7 +123,7 @@ def test_multiline_skip(parse_manifest):
 
     result = parse_manifest(manifest)[0][1]
     assert (
-        result["skip-if"]
+        result["skip-if"].replace("\r\n", "\n")
         == dedent(
             """
         os == "mac"

@@ -7,16 +7,20 @@
 #include "LocalStorageManager.h"
 #include "LocalStorage.h"
 #include "StorageDBThread.h"
+#include "StorageIPC.h"
 #include "StorageUtils.h"
 
 #include "nsIEffectiveTLDService.h"
 
+#include "nsPIDOMWindow.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "nsPrintfCString.h"
 #include "nsXULAppAPI.h"
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/LocalStorageCommon.h"
@@ -179,13 +183,13 @@ nsresult LocalStorageManager::GetStorageInternal(
     }
 
 #if !defined(MOZ_WIDGET_ANDROID)
-    PBackgroundChild* backgroundActor =
-        BackgroundChild::GetOrCreateForCurrentThread();
+    ::mozilla::ipc::PBackgroundChild* backgroundActor =
+        ::mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
     if (NS_WARN_IF(!backgroundActor)) {
       return NS_ERROR_FAILURE;
     }
 
-    PrincipalInfo principalInfo;
+    ::mozilla::ipc::PrincipalInfo principalInfo;
     rv = mozilla::ipc::PrincipalToPrincipalInfo(aStoragePrincipal,
                                                 &principalInfo);
     if (NS_WARN_IF(NS_FAILED(rv))) {

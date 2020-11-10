@@ -1237,12 +1237,6 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute boolean documentHasUserInteracted;
 
   /**
-    * This attribute represents whether the document to which this
-    * load belongs had finished loading when the load was initiated.
-    */
-  [infallible] attribute boolean documentHasLoaded;
-
-  /**
     * During a top-level document channel redirect from tracking to
     * non-tracking resources, our anti-tracking heuristic, grants the storage
     * access permission for a short amount of seconds (See

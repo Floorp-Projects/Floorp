@@ -185,6 +185,7 @@ async function test(context, commands) {
 module.exports = {
   test,
   owner: "Network Team",
+  component: "netwerk",
   name: "g-image",
   description: "Measures the number of images per second after a scroll.",
 };

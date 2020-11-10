@@ -18,7 +18,7 @@ pub mod test {
     /// A multi-line
     /// description
     pub static boolean_metric: Lazy<BooleanMetric> = Lazy::new(|| {
-        BooleanMetric::new(CommonMetricData {
+        BooleanMetric::new(1.into(), CommonMetricData {
             name: "boolean_metric".into(),
             category: "test".into(),
             send_in_pings: vec!["metrics".into()],
@@ -34,7 +34,7 @@ pub mod test {
     /// A multi-line
     /// description
     pub static labeled_boolean_metric: Lazy<LabeledMetric<BooleanMetric>> = Lazy::new(|| {
-        LabeledMetric::new(CommonMetricData {
+        LabeledMetric::new(2.into(), CommonMetricData {
             name: "labeled_boolean_metric".into(),
             category: "test".into(),
             send_in_pings: vec!["metrics".into()],
@@ -50,7 +50,7 @@ pub mod test {
     /// A multi-line
     /// description
     pub static labeled_boolean_metric_labels: Lazy<LabeledMetric<BooleanMetric>> = Lazy::new(|| {
-        LabeledMetric::new(CommonMetricData {
+        LabeledMetric::new(3.into(), CommonMetricData {
             name: "labeled_boolean_metric_labels".into(),
             category: "test".into(),
             send_in_pings: vec!["metrics".into()],
@@ -66,7 +66,7 @@ pub mod test {
     /// A multi-line
     /// description
     pub static counter_metric: Lazy<CounterMetric> = Lazy::new(|| {
-        CounterMetric::new(CommonMetricData {
+        CounterMetric::new(4.into(), CommonMetricData {
             name: "counter_metric".into(),
             category: "test".into(),
             send_in_pings: vec!["metrics".into()],
@@ -82,7 +82,7 @@ pub mod test {
     /// A multi-line
     /// description
     pub static labeled_counter_metric: Lazy<LabeledMetric<CounterMetric>> = Lazy::new(|| {
-        LabeledMetric::new(CommonMetricData {
+        LabeledMetric::new(5.into(), CommonMetricData {
             name: "labeled_counter_metric".into(),
             category: "test".into(),
             send_in_pings: vec!["metrics".into()],
@@ -98,7 +98,7 @@ pub mod test {
     /// A multi-line
     /// description
     pub static labeled_counter_metric_labels: Lazy<LabeledMetric<CounterMetric>> = Lazy::new(|| {
-        LabeledMetric::new(CommonMetricData {
+        LabeledMetric::new(6.into(), CommonMetricData {
             name: "labeled_counter_metric_labels".into(),
             category: "test".into(),
             send_in_pings: vec!["metrics".into()],
@@ -114,7 +114,7 @@ pub mod test {
     /// A multi-line
     /// description
     pub static string_metric: Lazy<StringMetric> = Lazy::new(|| {
-        StringMetric::new(CommonMetricData {
+        StringMetric::new(7.into(), CommonMetricData {
             name: "string_metric".into(),
             category: "test".into(),
             send_in_pings: vec!["metrics".into()],
@@ -130,7 +130,7 @@ pub mod test {
     /// A multi-line
     /// description
     pub static labeled_string_metric: Lazy<LabeledMetric<StringMetric>> = Lazy::new(|| {
-        LabeledMetric::new(CommonMetricData {
+        LabeledMetric::new(8.into(), CommonMetricData {
             name: "labeled_string_metric".into(),
             category: "test".into(),
             send_in_pings: vec!["metrics".into()],
@@ -146,7 +146,7 @@ pub mod test {
     /// A multi-line
     /// description
     pub static labeled_string_metric_labels: Lazy<LabeledMetric<StringMetric>> = Lazy::new(|| {
-        LabeledMetric::new(CommonMetricData {
+        LabeledMetric::new(9.into(), CommonMetricData {
             name: "labeled_string_metric_labels".into(),
             category: "test".into(),
             send_in_pings: vec!["metrics".into()],
@@ -162,7 +162,7 @@ pub mod test {
     /// A multi-line
     /// description
     pub static string_list_metric: Lazy<StringListMetric> = Lazy::new(|| {
-        StringListMetric::new(CommonMetricData {
+        StringListMetric::new(10.into(), CommonMetricData {
             name: "string_list_metric".into(),
             category: "test".into(),
             send_in_pings: vec!["metrics".into()],
@@ -178,7 +178,7 @@ pub mod test {
     /// A multi-line
     /// description
     pub static timespan_metric: Lazy<TimespanMetric> = Lazy::new(|| {
-        TimespanMetric::new(CommonMetricData {
+        TimespanMetric::new(11.into(), CommonMetricData {
             name: "timespan_metric".into(),
             category: "test".into(),
             send_in_pings: vec!["metrics".into()],
@@ -194,7 +194,7 @@ pub mod test {
     /// A multi-line
     /// description
     pub static timing_distribution_metric: Lazy<TimingDistributionMetric> = Lazy::new(|| {
-        TimingDistributionMetric::new(CommonMetricData {
+        TimingDistributionMetric::new(12.into(), CommonMetricData {
             name: "timing_distribution_metric".into(),
             category: "test".into(),
             send_in_pings: vec!["metrics".into()],
@@ -210,7 +210,7 @@ pub mod test {
     /// A multi-line
     /// description
     pub static memory_distribution_metric: Lazy<MemoryDistributionMetric> = Lazy::new(|| {
-        MemoryDistributionMetric::new(CommonMetricData {
+        MemoryDistributionMetric::new(13.into(), CommonMetricData {
             name: "memory_distribution_metric".into(),
             category: "test".into(),
             send_in_pings: vec!["metrics".into()],
@@ -226,7 +226,7 @@ pub mod test {
     /// A multi-line
     /// description
     pub static uuid_metric: Lazy<UuidMetric> = Lazy::new(|| {
-        UuidMetric::new(CommonMetricData {
+        UuidMetric::new(14.into(), CommonMetricData {
             name: "uuid_metric".into(),
             category: "test".into(),
             send_in_pings: vec!["metrics".into()],
@@ -242,7 +242,7 @@ pub mod test {
     /// A multi-line
     /// description
     pub static datetime_metric: Lazy<DatetimeMetric> = Lazy::new(|| {
-        DatetimeMetric::new(CommonMetricData {
+        DatetimeMetric::new(15.into(), CommonMetricData {
             name: "datetime_metric".into(),
             category: "test".into(),
             send_in_pings: vec!["metrics".into()],
@@ -258,7 +258,7 @@ pub mod test {
     /// A multi-line
     /// description
     pub static event_metric: Lazy<EventMetric<NoExtraKeys>> = Lazy::new(|| {
-        EventMetric::new(CommonMetricData {
+        EventMetric::new(16.into(), CommonMetricData {
             name: "event_metric".into(),
             category: "test".into(),
             send_in_pings: vec!["events".into()],
@@ -288,7 +288,7 @@ pub mod test {
     /// A multi-line
     /// description
     pub static event_metric_with_extra: Lazy<EventMetric<EventMetricWithExtraKeys>> = Lazy::new(|| {
-        EventMetric::new(CommonMetricData {
+        EventMetric::new(17.into(), CommonMetricData {
             name: "event_metric_with_extra".into(),
             category: "test".into(),
             send_in_pings: vec!["events".into()],
@@ -307,78 +307,78 @@ pub(crate) mod __glean_metric_maps {
     use crate::private::*;
     use once_cell::sync::Lazy;
 
-    pub static BOOLEAN_MAP: Lazy<HashMap<u32, &Lazy<BooleanMetric>>> = Lazy::new(|| {
+    pub static BOOLEAN_MAP: Lazy<HashMap<MetricId, &Lazy<BooleanMetric>>> = Lazy::new(|| {
         let mut map = HashMap::with_capacity(1);
-        map.insert(1, &super::test::boolean_metric);
+        map.insert(1.into(), &super::test::boolean_metric);
         map
     });
 
-    pub static LABELED_BOOLEAN_MAP: Lazy<HashMap<u32, &Lazy<LabeledMetric<BooleanMetric>>>> = Lazy::new(|| {
+    pub static LABELED_BOOLEAN_MAP: Lazy<HashMap<MetricId, &Lazy<LabeledMetric<BooleanMetric>>>> = Lazy::new(|| {
         let mut map = HashMap::with_capacity(2);
-        map.insert(2, &super::test::labeled_boolean_metric);
-        map.insert(3, &super::test::labeled_boolean_metric_labels);
+        map.insert(2.into(), &super::test::labeled_boolean_metric);
+        map.insert(3.into(), &super::test::labeled_boolean_metric_labels);
         map
     });
 
-    pub static COUNTER_MAP: Lazy<HashMap<u32, &Lazy<CounterMetric>>> = Lazy::new(|| {
+    pub static COUNTER_MAP: Lazy<HashMap<MetricId, &Lazy<CounterMetric>>> = Lazy::new(|| {
         let mut map = HashMap::with_capacity(1);
-        map.insert(4, &super::test::counter_metric);
+        map.insert(4.into(), &super::test::counter_metric);
         map
     });
 
-    pub static LABELED_COUNTER_MAP: Lazy<HashMap<u32, &Lazy<LabeledMetric<CounterMetric>>>> = Lazy::new(|| {
+    pub static LABELED_COUNTER_MAP: Lazy<HashMap<MetricId, &Lazy<LabeledMetric<CounterMetric>>>> = Lazy::new(|| {
         let mut map = HashMap::with_capacity(2);
-        map.insert(5, &super::test::labeled_counter_metric);
-        map.insert(6, &super::test::labeled_counter_metric_labels);
+        map.insert(5.into(), &super::test::labeled_counter_metric);
+        map.insert(6.into(), &super::test::labeled_counter_metric_labels);
         map
     });
 
-    pub static STRING_MAP: Lazy<HashMap<u32, &Lazy<StringMetric>>> = Lazy::new(|| {
+    pub static STRING_MAP: Lazy<HashMap<MetricId, &Lazy<StringMetric>>> = Lazy::new(|| {
         let mut map = HashMap::with_capacity(1);
-        map.insert(7, &super::test::string_metric);
+        map.insert(7.into(), &super::test::string_metric);
         map
     });
 
-    pub static LABELED_STRING_MAP: Lazy<HashMap<u32, &Lazy<LabeledMetric<StringMetric>>>> = Lazy::new(|| {
+    pub static LABELED_STRING_MAP: Lazy<HashMap<MetricId, &Lazy<LabeledMetric<StringMetric>>>> = Lazy::new(|| {
         let mut map = HashMap::with_capacity(2);
-        map.insert(8, &super::test::labeled_string_metric);
-        map.insert(9, &super::test::labeled_string_metric_labels);
+        map.insert(8.into(), &super::test::labeled_string_metric);
+        map.insert(9.into(), &super::test::labeled_string_metric_labels);
         map
     });
 
-    pub static STRING_LIST_MAP: Lazy<HashMap<u32, &Lazy<StringListMetric>>> = Lazy::new(|| {
+    pub static STRING_LIST_MAP: Lazy<HashMap<MetricId, &Lazy<StringListMetric>>> = Lazy::new(|| {
         let mut map = HashMap::with_capacity(1);
-        map.insert(10, &super::test::string_list_metric);
+        map.insert(10.into(), &super::test::string_list_metric);
         map
     });
 
-    pub static TIMESPAN_MAP: Lazy<HashMap<u32, &Lazy<TimespanMetric>>> = Lazy::new(|| {
+    pub static TIMESPAN_MAP: Lazy<HashMap<MetricId, &Lazy<TimespanMetric>>> = Lazy::new(|| {
         let mut map = HashMap::with_capacity(1);
-        map.insert(11, &super::test::timespan_metric);
+        map.insert(11.into(), &super::test::timespan_metric);
         map
     });
 
-    pub static TIMING_DISTRIBUTION_MAP: Lazy<HashMap<u32, &Lazy<TimingDistributionMetric>>> = Lazy::new(|| {
+    pub static TIMING_DISTRIBUTION_MAP: Lazy<HashMap<MetricId, &Lazy<TimingDistributionMetric>>> = Lazy::new(|| {
         let mut map = HashMap::with_capacity(1);
-        map.insert(12, &super::test::timing_distribution_metric);
+        map.insert(12.into(), &super::test::timing_distribution_metric);
         map
     });
 
-    pub static MEMORY_DISTRIBUTION_MAP: Lazy<HashMap<u32, &Lazy<MemoryDistributionMetric>>> = Lazy::new(|| {
+    pub static MEMORY_DISTRIBUTION_MAP: Lazy<HashMap<MetricId, &Lazy<MemoryDistributionMetric>>> = Lazy::new(|| {
         let mut map = HashMap::with_capacity(1);
-        map.insert(13, &super::test::memory_distribution_metric);
+        map.insert(13.into(), &super::test::memory_distribution_metric);
         map
     });
 
-    pub static UUID_MAP: Lazy<HashMap<u32, &Lazy<UuidMetric>>> = Lazy::new(|| {
+    pub static UUID_MAP: Lazy<HashMap<MetricId, &Lazy<UuidMetric>>> = Lazy::new(|| {
         let mut map = HashMap::with_capacity(1);
-        map.insert(14, &super::test::uuid_metric);
+        map.insert(14.into(), &super::test::uuid_metric);
         map
     });
 
-    pub static DATETIME_MAP: Lazy<HashMap<u32, &Lazy<DatetimeMetric>>> = Lazy::new(|| {
+    pub static DATETIME_MAP: Lazy<HashMap<MetricId, &Lazy<DatetimeMetric>>> = Lazy::new(|| {
         let mut map = HashMap::with_capacity(1);
-        map.insert(15, &super::test::datetime_metric);
+        map.insert(15.into(), &super::test::datetime_metric);
         map
     });
 

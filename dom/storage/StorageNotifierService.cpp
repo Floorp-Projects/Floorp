@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "StorageNotifierService.h"
+#include "StorageUtils.h"
+#include "mozilla/dom/StorageEvent.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
 

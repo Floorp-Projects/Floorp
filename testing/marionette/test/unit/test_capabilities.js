@@ -417,6 +417,7 @@ add_test(function test_Capabilities_ctor() {
 
   equal(false, caps.get("moz:accessibilityChecks"));
   ok(caps.has("moz:buildID"));
+  ok(caps.has("moz:debuggerAddress"));
   ok(caps.has("moz:processID"));
   ok(caps.has("moz:profile"));
   equal(false, caps.get("moz:useNonSpecCompliantPointerOrigin"));
@@ -450,6 +451,7 @@ add_test(function test_Capabilities_toJSON() {
 
   equal(caps.get("moz:accessibilityChecks"), json["moz:accessibilityChecks"]);
   equal(caps.get("moz:buildID"), json["moz:buildID"]);
+  equal(caps.get("moz:debuggerAddress"), json["moz:debuggerAddress"]);
   equal(caps.get("moz:processID"), json["moz:processID"]);
   equal(caps.get("moz:profile"), json["moz:profile"]);
   equal(
@@ -536,6 +538,14 @@ add_test(function test_Capabilities_fromJSON() {
     () => fromJSON({ "moz:accessibilityChecks": 1 }),
     /InvalidArgumentError/
   );
+
+  // capability is always populated with null if remote agent is not listening
+  caps = fromJSON({});
+  equal(null, caps.get("moz:debuggerAddress"));
+  caps = fromJSON({ "moz:debuggerAddress": "foo" });
+  equal(null, caps.get("moz:debuggerAddress"));
+  caps = fromJSON({ "moz:debuggerAddress": true });
+  equal(null, caps.get("moz:debuggerAddress"));
 
   caps = fromJSON({ "moz:useNonSpecCompliantPointerOrigin": false });
   equal(false, caps.get("moz:useNonSpecCompliantPointerOrigin"));

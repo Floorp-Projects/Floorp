@@ -1,0 +1,20 @@
+
+{
+          "groupBy": [],
+          "measurement": "rumSpeedIndex",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Float_value"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
