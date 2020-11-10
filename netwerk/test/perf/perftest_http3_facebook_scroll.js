@@ -160,6 +160,7 @@ async function test(context, commands) {
 module.exports = {
   test,
   owner: "Network Team",
+  component: "netwerk",
   name: "facebook-scroll",
   description: "Measures the number of requests per second after a scroll.",
 };

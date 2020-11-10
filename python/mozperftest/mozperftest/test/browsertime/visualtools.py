@@ -144,4 +144,6 @@ def get_dependencies():
         "https://files.pythonhosted.org/packages/" + SCIPY[get_plat()],
         "Pillow==%s" % _PILLOW_VERSION,
         "pyssim==%s" % _PYSSIM_VERSION,
+        "influxdb==5.3.0",
+        "grafana_api==1.0.3",
     )
