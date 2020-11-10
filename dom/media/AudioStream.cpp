@@ -282,6 +282,9 @@ nsresult AudioStream::Init(uint32_t aNumChannels,
 
   mSinkInfo = aSinkInfo;
 
+  // Hasn't started playing audio yet.
+  mPlaybackComplete = false;
+
   cubeb_stream_params params;
   params.rate = aRate;
   params.channels = mOutChannels;
@@ -359,22 +362,23 @@ void AudioStream::SetVolume(double aVolume) {
   }
 }
 
-nsresult AudioStream::Start() {
+Result<already_AddRefed<MediaSink::EndedPromise>, nsresult>
+AudioStream::Start() {
   TRACE();
   MonitorAutoLock mon(mMonitor);
   MOZ_ASSERT(mState == INITIALIZED);
   mState = STARTED;
-  auto r = InvokeCubeb(cubeb_stream_start);
-  if (r != CUBEB_OK) {
+  if (InvokeCubeb(cubeb_stream_start) != CUBEB_OK) {
     mState = ERRORED;
   }
   LOG("started, state %s", mState == STARTED
                                ? "STARTED"
                                : mState == DRAINED ? "DRAINED" : "ERRORED");
-  if (mState == STARTED || mState == DRAINED) {
-    return NS_OK;
+  if (mState != STARTED && mState != DRAINED) {
+    return Err(NS_ERROR_FAILURE);
   }
-  return NS_ERROR_FAILURE;
+  mPlaybackComplete = false;
+  return mEndedPromise.Ensure(__func__);
 }
 
 void AudioStream::Pause() {
@@ -434,6 +438,7 @@ void AudioStream::Shutdown() {
   }
 
   mState = SHUTDOWN;
+  mEndedPromise.ResolveIfExists(true, __func__);
 }
 
 #if defined(XP_WIN)
@@ -661,14 +666,19 @@ void AudioStream::StateCallback(cubeb_state aState) {
   MOZ_ASSERT(mState != SHUTDOWN, "No state callback after shutdown");
   LOG("StateCallback, mState=%d cubeb_state=%d", mState, aState);
   if (aState == CUBEB_STATE_DRAINED) {
+    LOG("Drained");
     mState = DRAINED;
-    mDataSource.Drained();
+    mPlaybackComplete = true;
+    mEndedPromise.ResolveIfExists(true, __func__);
   } else if (aState == CUBEB_STATE_ERROR) {
     LOGE("StateCallback() state %d cubeb error", mState);
     mState = ERRORED;
-    mDataSource.Errored();
+    mPlaybackComplete = true;
+    mEndedPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
   }
 }
+
+bool AudioStream::IsPlaybackCompleted() const { return mPlaybackComplete; }
 
 AudioClock::AudioClock()
     : mOutRate(0),
