@@ -128,11 +128,13 @@ public class AndroidGamepadManager {
     }
 
     @WrapForJNI(calledFrom = "ui")
-    private static native void onGamepadChange(int id, boolean added);
+    private static native int nativeAddGamepad();
     @WrapForJNI(calledFrom = "ui")
-    private static native void onButtonChange(int id, int button, boolean pressed, float value);
+    private static native void nativeRemoveGamepad(int aGamepadId);
     @WrapForJNI(calledFrom = "ui")
-    private static native void onAxisChange(int id, boolean[] valid, float[] values);
+    private static native void onButtonChange(int aGamepadId, int aButton, boolean aPressed, float aValue);
+    @WrapForJNI(calledFrom = "ui")
+    private static native void onAxisChange(int aGamepadId, boolean[] aValid, float[] aValues);
 
     private static boolean sStarted;
     private static final SparseArray<Gamepad> sGamepads = new SparseArray<>();
@@ -180,16 +182,6 @@ public class AndroidGamepadManager {
             sGamepads.clear();
             sStarted = false;
         }
-    }
-
-    @WrapForJNI
-    private static void onGamepadAdded(final int deviceId, final int serviceId) {
-        ThreadUtils.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                handleGamepadAdded(deviceId, serviceId);
-            }
-        });
     }
 
     /* package */ static void handleGamepadAdded(final int deviceId, final int serviceId) {
@@ -351,12 +343,18 @@ public class AndroidGamepadManager {
 
     private static void addGamepad(final InputDevice device) {
         sPendingGamepads.put(device.getId(), new ArrayList<KeyEvent>());
-        onGamepadChange(device.getId(), true);
+        final int gamepadId = nativeAddGamepad();
+        ThreadUtils.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                handleGamepadAdded(device.getId(), gamepadId);
+            }
+        });
     }
 
     private static void removeGamepad(final int deviceId) {
         Gamepad gamepad = sGamepads.get(deviceId);
-        onGamepadChange(gamepad.id, false);
+        nativeRemoveGamepad(gamepad.id);
         sGamepads.remove(deviceId);
     }
 
