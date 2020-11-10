@@ -11,10 +11,8 @@
 #include "mozilla/SVGUtils.h"
 #include "mozilla/dom/MutationEvent.h"
 #include "mozilla/dom/SVGUseElement.h"
-#include "SVGGeometryProperty.h"
 
 using namespace mozilla::dom;
-namespace SVGT = SVGGeometryProperty::Tags;
 
 //----------------------------------------------------------------------
 // Implementation
