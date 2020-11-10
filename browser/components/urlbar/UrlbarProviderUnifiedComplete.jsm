@@ -66,6 +66,7 @@ class ProviderUnifiedComplete extends UrlbarProvider {
     if (
       !queryContext.trimmedSearchString &&
       UrlbarPrefs.get("update2") &&
+      queryContext.searchMode?.engineName &&
       UrlbarPrefs.get("update2.emptySearchBehavior") < 2
     ) {
       return false;
