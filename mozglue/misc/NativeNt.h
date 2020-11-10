@@ -655,10 +655,8 @@ class MOZ_RAII PEHeaders final {
     return nullptr;
   }
 
-#if defined(MOZILLA_INTERNAL_API)
-  nsTHashtable<nsStringCaseInsensitiveHashKey> GenerateDependentModuleSet() {
-    nsTHashtable<nsStringCaseInsensitiveHashKey> dependentModuleSet;
-
+  template <typename CallbackT>
+  void EnumImportChunks(const CallbackT& aCallback) const {
     for (PIMAGE_IMPORT_DESCRIPTOR curImpDesc = GetImportDirectory();
          IsValid(curImpDesc); ++curImpDesc) {
       auto curName = mIsImportDirectoryTampered
@@ -668,9 +666,17 @@ class MOZ_RAII PEHeaders final {
         continue;
       }
 
-      dependentModuleSet.PutEntry(GetLeafName(NS_ConvertASCIItoUTF16(curName)));
+      aCallback(curName);
     }
+  }
 
+#if defined(MOZILLA_INTERNAL_API)
+  nsTHashtable<nsStringCaseInsensitiveHashKey> GenerateDependentModuleSet()
+      const {
+    nsTHashtable<nsStringCaseInsensitiveHashKey> dependentModuleSet;
+    EnumImportChunks([&dependentModuleSet](const char* aModule) {
+      dependentModuleSet.PutEntry(GetLeafName(NS_ConvertASCIItoUTF16(aModule)));
+    });
     return dependentModuleSet;
   }
 #endif  // defined(MOZILLA_INTERNAL_API)
@@ -1528,6 +1534,71 @@ class RtlAllocPolicy {
   void reportAllocOverflow() const {}
 
   [[nodiscard]] bool checkSimulatedOOM() const { return true; }
+};
+
+class AutoMappedView final {
+  void* mView;
+
+  void Unmap() {
+    if (!mView) {
+      return;
+    }
+
+#if defined(MOZILLA_INTERNAL_API)
+    ::UnmapViewOfFile(mView);
+#else
+    NTSTATUS status = ::NtUnmapViewOfSection(nt::kCurrentProcess, mView);
+    if (!NT_SUCCESS(status)) {
+      ::RtlSetLastWin32Error(::RtlNtStatusToDosError(status));
+    }
+#endif
+    mView = nullptr;
+  }
+
+ public:
+  explicit AutoMappedView(void* aView) : mView(aView) {}
+
+  AutoMappedView(HANDLE aSection, ULONG aProtectionFlags) : mView(nullptr) {
+#if defined(MOZILLA_INTERNAL_API)
+    mView = ::MapViewOfFile(aSection, aProtectionFlags, 0, 0, 0);
+#else
+    SIZE_T viewSize = 0;
+    NTSTATUS status = ::NtMapViewOfSection(aSection, nt::kCurrentProcess,
+                                           &mView, 0, 0, nullptr, &viewSize,
+                                           ViewUnmap, 0, aProtectionFlags);
+    if (!NT_SUCCESS(status)) {
+      ::RtlSetLastWin32Error(::RtlNtStatusToDosError(status));
+    }
+#endif
+  }
+  ~AutoMappedView() { Unmap(); }
+
+  // Allow move & Disallow copy
+  AutoMappedView(AutoMappedView&& aOther) : mView(aOther.mView) {
+    aOther.mView = nullptr;
+  }
+  AutoMappedView& operator=(AutoMappedView&& aOther) {
+    if (this != &aOther) {
+      Unmap();
+      mView = aOther.mView;
+      aOther.mView = nullptr;
+    }
+    return *this;
+  }
+  AutoMappedView(const AutoMappedView&) = delete;
+  AutoMappedView& operator=(const AutoMappedView&) = delete;
+
+  explicit operator bool() const { return !!mView; }
+  template <typename T>
+  T* as() {
+    return reinterpret_cast<T*>(mView);
+  }
+
+  void* release() {
+    void* p = mView;
+    mView = nullptr;
+    return p;
+  }
 };
 
 }  // namespace nt
