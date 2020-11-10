@@ -15,6 +15,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Unused.h"
 #include "nsTextFormatter.h"
+#include "mozilla/Telemetry.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/dom/AndroidWebAuthnTokenManager.h"
