@@ -97,7 +97,7 @@ void JSWindowActorChild::SendRawMessage(
 
 Document* JSWindowActorChild::GetDocument(ErrorResult& aRv) {
   if (!mManager) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    ThrowStateErrorForGetter("document", aRv);
     return nullptr;
   }
 
@@ -107,7 +107,7 @@ Document* JSWindowActorChild::GetDocument(ErrorResult& aRv) {
 
 BrowsingContext* JSWindowActorChild::GetBrowsingContext(ErrorResult& aRv) {
   if (!mManager) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    ThrowStateErrorForGetter("browsingContext", aRv);
     return nullptr;
   }
 
@@ -115,17 +115,18 @@ BrowsingContext* JSWindowActorChild::GetBrowsingContext(ErrorResult& aRv) {
 }
 
 nsIDocShell* JSWindowActorChild::GetDocShell(ErrorResult& aRv) {
-  if (BrowsingContext* bc = GetBrowsingContext(aRv)) {
-    return bc->GetDocShell();
+  if (!mManager) {
+    ThrowStateErrorForGetter("docShell", aRv);
+    return nullptr;
   }
 
-  return nullptr;
+  return mManager->BrowsingContext()->GetDocShell();
 }
 
 Nullable<WindowProxyHolder> JSWindowActorChild::GetContentWindow(
     ErrorResult& aRv) {
   if (!mManager) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    ThrowStateErrorForGetter("contentWindow", aRv);
     return nullptr;
   }
 

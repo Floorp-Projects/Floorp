@@ -148,6 +148,17 @@ void JSActor::SetName(const nsACString& aName) {
   mName = aName;
 }
 
+void JSActor::ThrowStateErrorForGetter(const char* aName, ErrorResult& aRv) const {
+  if (mName.IsEmpty()) {
+    aRv.ThrowInvalidStateError(nsPrintfCString(
+        "Cannot access property '%s' before actor is initialized", aName));
+  } else {
+    aRv.ThrowInvalidStateError(nsPrintfCString(
+        "Cannot access property '%s' after actor '%s' has been destroyed",
+        aName, mName.get()));
+  }
+}
+
 static Maybe<ipc::StructuredCloneData> TryClone(JSContext* aCx,
                                                 JS::Handle<JS::Value> aValue) {
   Maybe<ipc::StructuredCloneData> data{std::in_place};
