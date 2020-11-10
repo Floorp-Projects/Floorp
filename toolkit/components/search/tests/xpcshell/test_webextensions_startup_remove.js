@@ -40,7 +40,6 @@ add_task(async function test_removeAddonOnStartup() {
   await AddonTestUtils.promiseStartupManager();
   let promise = promiseAfterSettings();
   await Services.search.init();
-  await promise;
 
   let engine = Services.search.getEngineByName("Test Engine");
   let allEngines = await Services.search.getEngines();
@@ -48,6 +47,7 @@ add_task(async function test_removeAddonOnStartup() {
   Assert.ok(!!engine, "Should have installed the test engine");
 
   await Services.search.setDefault(engine);
+  await promise;
 
   await AddonTestUtils.promiseShutdownManager();
 
