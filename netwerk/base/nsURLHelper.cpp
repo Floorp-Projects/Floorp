@@ -1057,13 +1057,6 @@ bool URLParams::ParseNextInternal(const char*& aStart, const char* const aEnd,
   return true;
 }
 
-/**
- * Extracts the first form-urlencoded parameter named `aName` from `aInput`.
- * @param aRange The input to parse.
- * @param aName The name of the parameter to extract.
- * @param aValue The value of the extracted parameter, void if not found.
- * @return Whether the parameter was found in the form-urlencoded.
- */
 /* static */
 bool URLParams::Extract(const nsACString& aInput, const nsAString& aName,
                         nsAString& aValue) {

@@ -223,12 +223,33 @@ bool net_IsValidIPv4Addr(const nsACString& aAddr);
 bool net_IsValidIPv6Addr(const nsACString& aAddr);
 
 namespace mozilla {
+/**
+ * A class for handling form-urlencoded query strings.
+ *
+ * Manages an ordered list of name-value pairs, and allows conversion from and
+ * to the string representation.
+ *
+ * In addition, there are static functions for handling one-shot use cases.
+ */
 class URLParams final {
  public:
   URLParams() = default;
 
   ~URLParams() { DeleteAll(); }
 
+  /**
+   * \brief Parses a query string and calls a parameter handler for each
+   * name/value pair. The parameter handler can stop processing early by
+   * returning false.
+   *
+   * \param aInput the query string to parse
+   * \param aParamHandler the parameter handler as desribed above
+   * \tparam ParamHandler a function type compatible with signature
+   * bool(nsString, nsString)
+   *
+   * \return false if the parameter handler returned false for any parameter,
+   * true otherwise
+   */
   template <typename ParamHandler>
   static bool Parse(const nsACString& aInput, ParamHandler aParamHandler) {
     const char* start = aInput.BeginReading();
@@ -249,23 +270,54 @@ class URLParams final {
     return true;
   }
 
+  /**
+   * \brief Parses a query string and returns the value of a single parameter
+   * specified by name.
+   *
+   * If there are multiple parameters with the same name, the value of the first
+   * is returned.
+   *
+   * \param aInput the query string to parse
+   * \param aName the name of the parameter to extract
+   * \param[out] aValue will be assigned the parameter value, set to void if
+   * there is no match \return true iff there was a parameter with with name
+   * \paramref aName
+   */
   static bool Extract(const nsACString& aInput, const nsAString& aName,
                       nsAString& aValue);
 
+  /**
+   * \brief Resets the state of this instance and parses a new query string.
+   *
+   * \param aInput the query string to parse
+   */
   void ParseInput(const nsACString& aInput);
 
+  /**
+   * Serializes the current state to a query string.
+   */
   void Serialize(nsAString& aValue) const;
 
   void Get(const nsAString& aName, nsString& aRetval);
 
   void GetAll(const nsAString& aName, nsTArray<nsString>& aRetval);
 
+  /**
+   * \brief Sets the value of a given parameter.
+   *
+   * If one or more parameters of the name exist, the value of the first is
+   * replaced, and all further parameters of the name are deleted. Otherwise,
+   * the behaviour is the same as \ref Append.
+   */
   void Set(const nsAString& aName, const nsAString& aValue);
 
   void Append(const nsAString& aName, const nsAString& aValue);
 
   bool Has(const nsAString& aName);
 
+  /**
+   * \brief Deletes all parameters with the given name.
+   */
   void Delete(const nsAString& aName);
 
   void DeleteAll() { mParams.Clear(); }
@@ -282,6 +334,10 @@ class URLParams final {
     return mParams[aIndex].mValue;
   }
 
+  /**
+   * \brief Performs a stable sort of the parameters, maintaining the order of
+   * multiple parameters with the same name.
+   */
   void Sort();
 
  private:
