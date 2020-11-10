@@ -19,6 +19,8 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryComms.h"
 #include "private/pprio.h"
 #include "nsInputStreamPump.h"
 #include "nsThreadUtils.h"
@@ -1023,6 +1025,13 @@ nsJARChannel::OnStartRequest(nsIRequest* req) {
   return rv;
 }
 
+static void RecordEmptyFileEvent(const nsCString& aFileName) {
+  // Send Telemetry
+  Telemetry::EventID eventType =
+      Telemetry::EventID::NetworkJarChannel_Nodata_Onstop;
+  Telemetry::RecordEvent(eventType, mozilla::Some(aFileName), Nothing{});
+}
+
 NS_IMETHODIMP
 nsJARChannel::OnStopRequest(nsIRequest* req, nsresult status) {
   LOG(("nsJARChannel::OnStopRequest [this=%p %s status=%" PRIx32 "]\n", this,
@@ -1031,6 +1040,10 @@ nsJARChannel::OnStopRequest(nsIRequest* req, nsresult status) {
   if (NS_SUCCEEDED(mStatus)) mStatus = status;
 
   if (mListener) {
+    if (NS_SUCCEEDED(status) && !mOnDataCalled) {
+      RecordEmptyFileEvent(mSpec);
+    }
+
     mListener->OnStopRequest(this, status);
     mListener = nullptr;
   }
@@ -1061,6 +1074,7 @@ nsJARChannel::OnDataAvailable(nsIRequest* req, nsIInputStream* stream,
 
   nsresult rv;
 
+  mOnDataCalled = true;
   rv = mListener->OnDataAvailable(this, stream, offset, count);
 
   // simply report progress here instead of hooking ourselves up as a
