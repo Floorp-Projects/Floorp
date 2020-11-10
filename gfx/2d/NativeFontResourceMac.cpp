@@ -43,18 +43,26 @@ class NativeFontResourceMacReporter final : public nsIMemoryReporter {
                             nsISupports* aData, bool aAnonymize) override {
     auto fontMap = sWeakFontDataMap.Lock();
 
-    nsAutoCString path("explicit/gfx/native-font-resource-mac/");
+    nsAutoCString path("explicit/gfx/native-font-resource-mac/font(");
 
     unsigned int unknownFontIndex = 0;
     for (auto& i : *fontMap) {
       nsAutoCString subPath(path);
-      if (i.second.Length()) {
-        subPath.Append(i.second);
+
+      if (aAnonymize) {
+        subPath.AppendPrintf("<anonymized-%p>", this);
       } else {
-        subPath.AppendPrintf("Unknown(%d)", unknownFontIndex);
+        if (i.second.Length()) {
+          subPath.AppendLiteral("family=");
+          subPath.Append(i.second);
+        } else {
+          subPath.AppendPrintf("Unknown(%d)", unknownFontIndex);
+        }
       }
 
       size_t bytes = MallocSizeOf(i.first) + FONT_NAME_MAX;
+
+      subPath.Append(")");
 
       aHandleReport->Callback(""_ns, subPath, KIND_HEAP, UNITS_BYTES, bytes,
                               "Memory used by this native font."_ns, aData);
