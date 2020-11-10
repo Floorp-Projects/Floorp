@@ -354,7 +354,7 @@ class IOUtils::IOError {
     mMessage.emplace(nsCString(aMessage));
     return *this;
   }
-  IOError WithMessage(nsCString aMessage) {
+  IOError WithMessage(const nsCString& aMessage) {
     mMessage.emplace(aMessage);
     return *this;
   }
