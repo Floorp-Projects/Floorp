@@ -48,7 +48,7 @@ async function testLink(link, name) {
   is(
     win.document.getElementById("location").value,
     name,
-    "file name should match"
+    `file name should match (${link})`
   );
 
   await BrowserTestUtils.closeWindow(win);
@@ -91,8 +91,6 @@ async function runTest(url) {
   // htm vs html) on different OSes.
   let oggExtension = getMIMEInfoForType("application/ogg").primaryExtension;
   await testLink("link13", "no file extension." + oggExtension);
-  let htmlExtension = getMIMEInfoForType("text/html").primaryExtension;
-  await testLink("link14", "javascript." + htmlExtension);
 
   BrowserTestUtils.removeTab(tab);
 }
