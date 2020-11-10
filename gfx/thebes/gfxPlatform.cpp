@@ -2734,9 +2734,9 @@ void gfxPlatform::InitWebRenderConfig() {
         gfxConfig::IsEnabled(Feature::WEBRENDER));
   }
 
-  if (StaticPrefs::gfx_webrender_software_AtStartup()) {
-    gfxVars::SetUseSoftwareWebRender(gfxConfig::IsEnabled(Feature::WEBRENDER));
-  }
+  gfxVars::SetUseSoftwareWebRender(
+      gfxConfig::IsEnabled(Feature::WEBRENDER) &&
+      gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE));
 
   // gfxFeature is not usable in the GPU process, so we use gfxVars to transmit
   // this feature

@@ -166,8 +166,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS = 31;
   /* Is OpenGL threadsafe (starting in 83) */
   const long FEATURE_THREADSAFE_GL = 32;
+  /* Support running WebRender using the software backend, starting in 84. */
+  const long FEATURE_WEBRENDER_SOFTWARE = 33;
   /* the maximum feature value. */
-  const long FEATURE_MAX_VALUE = FEATURE_THREADSAFE_GL;
+  const long FEATURE_MAX_VALUE = FEATURE_WEBRENDER_SOFTWARE;
 
   /*
    * A set of return values from GetFeatureStatus

@@ -228,6 +228,9 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_THREADSAFE_GL:
       name = BLOCKLIST_PREF_BRANCH "gl.threadsafe";
       break;
+    case nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE:
+      name = BLOCKLIST_PREF_BRANCH "webrender.software";
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected nsIGfxInfo feature?!");
       break;
@@ -421,6 +424,8 @@ static int32_t BlocklistFeatureToGfxFeature(const nsAString& aFeature) {
     return nsIGfxInfo::FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS;
   else if (aFeature.EqualsLiteral("THREADSAFE_GL"))
     return nsIGfxInfo::FEATURE_THREADSAFE_GL;
+  else if (aFeature.EqualsLiteral("WEBRENDER_SOFTWARE"))
+    return nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE;
 
   // If we don't recognize the feature, it may be new, and something
   // this version doesn't understand.  So, nothing to do.  This is
@@ -1147,7 +1152,8 @@ bool GfxInfoBase::DoesDriverVendorMatch(const nsAString& aBlocklistVendor,
 }
 
 bool GfxInfoBase::IsFeatureAllowlisted(int32_t aFeature) const {
-  return aFeature == nsIGfxInfo::FEATURE_WEBRENDER;
+  return aFeature == nsIGfxInfo::FEATURE_WEBRENDER ||
+         aFeature == nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE;
 }
 
 nsresult GfxInfoBase::GetFeatureStatusImpl(
@@ -1281,6 +1287,7 @@ void GfxInfoBase::EvaluateDownloadedBlocklist(
                         nsIGfxInfo::FEATURE_D3D11_KEYED_MUTEX,
                         nsIGfxInfo::FEATURE_WEBRENDER,
                         nsIGfxInfo::FEATURE_WEBRENDER_COMPOSITOR,
+                        nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
                         nsIGfxInfo::FEATURE_DX_NV12,
                         nsIGfxInfo::FEATURE_DX_P010,
                         nsIGfxInfo::FEATURE_DX_P016,
@@ -1641,6 +1648,10 @@ void GfxInfoBase::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj) {
   gfx::FeatureState& wrCompositor =
       gfxConfig::GetFeature(gfx::Feature::WEBRENDER_COMPOSITOR);
   InitFeatureObject(aCx, aObj, "wrCompositor", wrCompositor, &obj);
+
+  gfx::FeatureState& wrSoftware =
+      gfxConfig::GetFeature(gfx::Feature::WEBRENDER_SOFTWARE);
+  InitFeatureObject(aCx, aObj, "wrSoftware", wrSoftware, &obj);
 
   gfx::FeatureState& openglCompositing =
       gfxConfig::GetFeature(gfx::Feature::OPENGL_COMPOSITING);
