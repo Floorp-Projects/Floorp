@@ -12,6 +12,7 @@
 #include "ServiceWorkerParent.h"
 #include "ServiceWorkerRegistrationChild.h"
 #include "ServiceWorkerRegistrationParent.h"
+#include "mozilla/dom/WorkerRef.h"
 
 namespace mozilla {
 namespace dom {

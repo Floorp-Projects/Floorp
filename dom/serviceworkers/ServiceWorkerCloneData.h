@@ -9,8 +9,17 @@
 
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 
+class nsISerialEventTarget;
+
 namespace mozilla {
+namespace ipc {
+    class PBackgroundChild;
+    class PBackgroundParent;
+} // namespace ipc
+
 namespace dom {
+
+class ClonedOrErrorMessageData;
 
 // Helper class used to pack structured clone data so that it can be
 // passed across thread and process boundaries.  Currently the raw

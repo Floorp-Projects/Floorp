@@ -52,4 +52,5 @@ dom/reporting/
 dom/res/
 dom/script/
 dom/security/
+dom/serviceworkers/
 dom/simpledb/

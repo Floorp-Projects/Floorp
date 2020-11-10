@@ -6,7 +6,10 @@
 
 #include "ServiceWorkerContainerProxy.h"
 
+#include "mozilla/dom/ServiceWorkerContainerParent.h"
+#include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/SchedulerGroup.h"
 
 namespace mozilla {
 namespace dom {
