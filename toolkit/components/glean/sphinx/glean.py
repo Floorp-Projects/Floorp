@@ -15,6 +15,16 @@ def setup(app):
     sys.path.append(glean_dir)
     from metrics_index import metrics_yamls, pings_yamls
 
+    # Import the custom version expiry code.
+    glean_parser_ext_dir = os.path.abspath(
+        Path(glean_dir) / "build_scripts" / "glean_parser_ext"
+    )
+    sys.path.append(glean_parser_ext_dir)
+    from run_glean_parser import get_parser_options
+
+    firefox_version = "4.0a1"  # TODO: bug 1676416 - Get the real app version.
+    parser_config = get_parser_options(firefox_version)
+
     input_files = [Path(os.path.join(manager.topsrcdir, x)) for x in metrics_yamls]
     input_files += [Path(os.path.join(manager.topsrcdir, x)) for x in pings_yamls]
 
@@ -22,7 +32,9 @@ def setup(app):
     from glean_parser import translate
 
     out_path = Path(os.path.join(manager.staging_dir, "metrics"))
-    translate.translate(input_files, "markdown", out_path, {"project_title": "Firefox"})
+    translate.translate(
+        input_files, "markdown", out_path, {"project_title": "Firefox"}, parser_config
+    )
 
     # Rename the generated docfile to index so Sphinx finds it
     os.rename(os.path.join(out_path, "metrics.md"), os.path.join(out_path, "index.md"))
