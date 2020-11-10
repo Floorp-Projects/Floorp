@@ -6,7 +6,6 @@
 
 /* import-globals-from ../../../content/customElements.js */
 /* import-globals-from aboutaddonsCommon.js */
-/* globals ProcessingInstruction */
 /* exported loadView */
 
 const { AddonManager } = ChromeUtils.import(
@@ -30,11 +29,6 @@ Object.defineProperty(this, "gIsInitializing", {
 });
 
 function initialize(event) {
-  // XXXbz this listener gets _all_ load events for all nodes in the
-  // document... but relies on not being called "too early".
-  if (event.target instanceof ProcessingInstruction) {
-    return;
-  }
   document.removeEventListener("load", initialize, true);
 
   if (!isDiscoverEnabled()) {
