@@ -168,7 +168,7 @@ static RefPtr<MozPromiseT> InvokeToMozPromise(Fn aFunc, Args... aArgs) {
 template <typename OkT, typename Fn, typename... Args>
 already_AddRefed<Promise> IOUtils::RunOnBackgroundThread(
     RefPtr<Promise>& aPromise, Fn aFunc, Args... aArgs) {
-  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
+  nsCOMPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
   REJECT_IF_NULL_EVENT_TARGET(bg, aPromise);
 
   InvokeAsync(
@@ -432,7 +432,7 @@ already_AddRefed<nsISerialEventTarget> IOUtils::GetBackgroundEventTarget() {
 
   auto lockedBackgroundEventTarget = sBackgroundEventTarget.Lock();
   if (!lockedBackgroundEventTarget.ref()) {
-    RefPtr<nsISerialEventTarget> et;
+    nsCOMPtr<nsISerialEventTarget> et;
     MOZ_ALWAYS_SUCCEEDS(NS_CreateBackgroundTaskQueue(
         "IOUtils::BackgroundIOThread", getter_AddRefs(et)));
     MOZ_ASSERT(et);
@@ -1175,7 +1175,7 @@ Result<nsTArray<nsString>, IOUtils::IOError> IOUtils::GetChildrenSync(
 
   nsCOMPtr<nsIFile> file = aFile;
 
-  RefPtr<nsIDirectoryEnumerator> iter;
+  nsCOMPtr<nsIDirectoryEnumerator> iter;
   nsresult rv = file->GetDirectoryEntries(getter_AddRefs(iter));
   if (NS_FAILED(rv)) {
     IOError err(rv);
