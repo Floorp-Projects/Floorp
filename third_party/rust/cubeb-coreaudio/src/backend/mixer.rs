@@ -212,6 +212,7 @@ impl Mixer {
         if output_channels.is_empty()
             || out_channel_count != output_channels.len()
             || all_silence == output_channels
+            || Self::non_silent_duplicate_channel_present(&output_channels)
         {
             cubeb_log!("Use invalid layout. Apply default layout instead");
             output_channels = get_default_channel_order(out_channel_count);
@@ -256,6 +257,19 @@ impl Mixer {
             self.buffer.as_ptr(),
             self.buffer.len() * mem::size_of::<u8>(),
         )
+    }
+
+    fn non_silent_duplicate_channel_present(channels: &[audio_mixer::Channel]) -> bool {
+        let mut bitmap: u32 = 0;
+        for channel in channels {
+            if channel != &Channel::Silence {
+                if (bitmap & channel.bitmask()) != 0 {
+                    return true;
+                }
+                bitmap |= channel.bitmask();
+            }
+        }
+        false
     }
 }
 
@@ -450,4 +464,27 @@ fn test_get_default_channel_order() {
             assert_eq!(&channels[CHANNEL_OERDER.len()..], silences.as_slice());
         }
     }
+}
+
+#[test]
+fn test_non_silent_duplicate_channels() {
+    let duplicate = [
+        Channel::FrontLeft,
+        Channel::Silence,
+        Channel::FrontRight,
+        Channel::FrontCenter,
+        Channel::Silence,
+        Channel::FrontRight,
+    ];
+    assert!(Mixer::non_silent_duplicate_channel_present(&duplicate));
+
+    let non_duplicate = [
+        Channel::FrontLeft,
+        Channel::Silence,
+        Channel::FrontRight,
+        Channel::FrontCenter,
+        Channel::Silence,
+        Channel::Silence,
+    ];
+    assert!(!Mixer::non_silent_duplicate_channel_present(&non_duplicate));
 }

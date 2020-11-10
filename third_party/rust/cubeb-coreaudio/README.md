@@ -13,6 +13,19 @@
 
 This is now the _Firefox_'s default audio backend on *Mac OS*.
 
+## Install
+
+### Install cubeb-coreaudio within cubeb
+
+Run the following command:
+```sh
+curl https://raw.githubusercontent.com/ChunMinChang/cubeb-coreaudio-rs/trailblazer/build-audiounit-rust-in-cubeb.sh | sh
+```
+
+### Other
+
+Just clone this repo
+
 ## Test
 
 Please run `sh run_tests.sh`.
