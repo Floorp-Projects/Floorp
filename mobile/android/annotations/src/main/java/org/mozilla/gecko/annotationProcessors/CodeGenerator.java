@@ -304,6 +304,63 @@ public class CodeGenerator {
         return def.append("}").toString();
     }
 
+    private static void appendParameterList(final StringBuilder builder, final Class<?> genScope, final Class<?> paramTypes[]) {
+        builder.append("(");
+
+        final int maxParamIndex = paramTypes.length - 1;
+
+        for (int i = 0; i < paramTypes.length; ++i) {
+            builder.append(Utils.getSimplifiedJavaClassName(genScope, paramTypes[i]));
+            if (i < maxParamIndex) {
+                builder.append(", ");
+            }
+        }
+
+        builder.append(")");
+    }
+
+    /**
+     * This method generates a comment for C++ headers containing a simplified form of a
+     * method's Java signature. This is entirely for informational purposes to assist
+     * developers with disambiguating arguments to the native wrappers.
+     */
+    private static String generateJavaStyleMethodSignatureHint(final Method method, final boolean isStatic) {
+        final StringBuilder builder = new StringBuilder("    // ");
+
+        if (isStatic) {
+            builder.append("static ");
+        }
+
+        final Class<?> declaringClass = method.getDeclaringClass();
+
+        builder.append(Utils.getSimplifiedJavaClassName(declaringClass, method.getReturnType()))
+               .append(" ")
+               .append(method.getName());
+
+        appendParameterList(builder, declaringClass, method.getParameterTypes());
+
+        builder.append("\n");
+        return builder.toString();
+    }
+
+    /**
+     * This method generates a comment for C++ headers containing a simplified form of a
+     * constructors's Java signature. This is entirely for informational purposes to assist
+     * developers with disambiguating arguments to the native wrappers.
+     */
+    private static String generateJavaStyleConstructorSignatureHint(final Constructor<?> constructor) {
+        final StringBuilder builder = new StringBuilder("    // ");
+
+        final Class<?> declaringClass = constructor.getDeclaringClass();
+
+        builder.append(declaringClass.getSimpleName());
+
+        appendParameterList(builder, declaringClass, constructor.getParameterTypes());
+
+        builder.append("\n");
+        return builder.toString();
+    }
+
     /**
      * Append the appropriate generated code to the buffers for the method provided.
      *
@@ -331,6 +388,8 @@ public class CodeGenerator {
         generateMember(info, method, uniqueName, returnType, argTypes);
 
         final boolean isStatic = Utils.isStatic(method);
+
+        header.append(generateJavaStyleMethodSignatureHint(method, isStatic));
 
         header.append(
                 "    " + generateDeclaration(info.wrapperName, argTypes,
@@ -372,6 +431,7 @@ public class CodeGenerator {
                      clsName + "::" + uniqueName);
         }
 
+        generateNativeSignatureHint(info, method, uniqueName, returnType, argTypes);
         generateMember(info, method, uniqueName, returnType, argTypes);
 
         final String traits = getTraitsName(uniqueName, /* includeScope */ true);
@@ -387,6 +447,33 @@ public class CodeGenerator {
                 "            mozilla::jni::NativeStub<" + traits + ", Impl>\n" +
                 "            ::template Wrap<&Impl::" + info.wrapperName + ">)");
         numNativesInits++;
+    }
+
+    private void generateNativeSignatureHint(AnnotationInfo info, Member member,
+                                             String uniqueName, Class<?> returnType, Class<?>[] argTypes) {
+        final StringBuilder hint = new StringBuilder("    // Suggested header signature for native method:\n    // ");
+
+        if (Utils.isStatic(member)) {
+            hint.append("static ");
+        }
+
+        hint.append(Utils.getNativeReturnTypeHint(returnType, info))
+            .append(" ")
+            .append(uniqueName)
+            .append("(");
+
+        final int maxParamIndex = argTypes.length - 1;
+
+        for (int i = 0; i < argTypes.length; ++i) {
+            hint.append(Utils.getNativeParameterTypeHint(argTypes[i], info));
+            if (i < maxParamIndex) {
+                hint.append(", ");
+            }
+        }
+
+        hint.append(");\n");
+
+        header.append(hint.toString());
     }
 
     private String getLiteral(Object val, AnnotationInfo info) {
@@ -528,6 +615,8 @@ public class CodeGenerator {
         }
 
         generateMember(info, method, uniqueName, returnType, argTypes);
+
+        header.append(generateJavaStyleConstructorSignatureHint(method));
 
         header.append(
                 "    " + generateDeclaration(wrapperName, argTypes,
