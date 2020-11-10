@@ -43,3 +43,18 @@ addAccessibleTask(
     is(fieldset.getAttributeValue("AXDescription"), "Fields");
   }
 );
+
+/**
+ * Test to see that list items don't get titled groups
+ */
+addAccessibleTask(
+  `<ul style="list-style: none;"><li id="unstyled-item">Hello</li></ul>
+   <ul><li id="styled-item">World</li></ul>`,
+  (browser, accDoc) => {
+    let unstyledItem = getNativeInterface(accDoc, "unstyled-item");
+    is(unstyledItem.getAttributeValue("AXTitle"), "");
+
+    let styledItem = getNativeInterface(accDoc, "unstyled-item");
+    is(styledItem.getAttributeValue("AXTitle"), "");
+  }
+);

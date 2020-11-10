@@ -87,3 +87,11 @@ using namespace mozilla::a11y;
 }
 
 @end
+
+@implementation MOXListItemAccessible
+
+- (NSString*)moxTitle {
+  return @"";
+}
+
+@end
