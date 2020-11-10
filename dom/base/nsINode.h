@@ -365,7 +365,6 @@ class nsINode : public mozilla::dom::EventTarget {
   // always safe to call no matter which object it was invoked on.
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const;
 
-  friend class mozilla::dom::MutationObservers;
   friend class nsNodeWeakReference;
   friend class nsNodeSupportsWeakRefTearoff;
   friend class AttrArray;
@@ -1107,6 +1106,10 @@ class nsINode : public mozilla::dom::EventTarget {
     if (s) {
       s->mMutationObservers.RemoveElement(aMutationObserver);
     }
+  }
+
+  nsAutoTObserverArray<nsIMutationObserver*, 1>* GetMutationObservers() {
+    return HasSlots() ? &GetExistingSlots()->mMutationObservers : nullptr;
   }
 
   /**
@@ -2121,10 +2124,6 @@ class nsINode : public mozilla::dom::EventTarget {
       MOZ_ASSERT(mSlots);
     }
     return GetExistingSlots();
-  }
-
-  nsAutoTObserverArray<nsIMutationObserver*, 1>* GetMutationObservers() {
-    return HasSlots() ? &GetExistingSlots()->mMutationObservers : nullptr;
   }
 
   /**

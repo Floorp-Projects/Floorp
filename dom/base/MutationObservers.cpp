@@ -63,59 +63,62 @@ enum class IsRemoveNotification {
     }                                                          \
   }
 
+static inline nsINode* ForEachAncestorObserver(
+    nsINode* aNode, FunctionRef<void(nsIMutationObserver*)> aFunc) {
+  nsINode* last;
+  nsINode* node = aNode;
+  do {
+    nsAutoTObserverArray<nsIMutationObserver*, 1>* observers =
+        node->GetMutationObservers();
+    if (observers && !observers->IsEmpty()) {
+      for (nsIMutationObserver* obs : observers->ForwardRange()) {
+        aFunc(obs);
+      }
+    }
+    last = node;
+    if (ShadowRoot* shadow = ShadowRoot::FromNode(node)) {
+      node = shadow->GetHost();
+    } else {
+      node = node->GetParentNode();
+    }
+  } while (node);
+  return last;
+}
+
 // This macro expects the ownerDocument of content_ to be in scope as
 // |Document* doc|
-#define IMPL_MUTATION_NOTIFICATION(func_, content_, params_, remove_)      \
-  PR_BEGIN_MACRO                                                           \
-  nsDOMMutationEnterLeave enterLeave(doc);                                 \
-  nsINode* node = content_;                                                \
-  COMPOSED_DOC_DECL                                                        \
-  NS_ASSERTION(node->OwnerDoc() == doc, "Bogus document");                 \
-  if ((remove_) == IsRemoveNotification::Yes) {                            \
-    NOTIFY_PRESSHELL_IF(node->GetComposedDoc(), func_, params_);           \
-  }                                                                        \
-  CALL_BINDING_MANAGER(func_, params_);                                    \
-  nsINode* last;                                                           \
-  do {                                                                     \
-    nsINode::nsSlots* slots = node->GetExistingSlots();                    \
-    if (slots && !slots->mMutationObservers.IsEmpty()) {                   \
-      NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(slots->mMutationObservers, func_, \
-                                         params_);                         \
-    }                                                                      \
-    last = node;                                                           \
-    if (ShadowRoot* shadow = ShadowRoot::FromNode(node)) {                 \
-      node = shadow->GetHost();                                            \
-    } else {                                                               \
-      node = node->GetParentNode();                                        \
-    }                                                                      \
-  } while (node);                                                          \
-  /* Whitelist NativeAnonymousChildListChange removal notifications from   \
-   * the assertion since it runs from UnbindFromTree, and thus we don't    \
-   * reach the document, but doesn't matter. */                            \
-  MOZ_ASSERT((last == doc) == wasInComposedDoc ||                          \
-             (remove_ == IsRemoveNotification::Yes &&                      \
-              !strcmp(#func_, "NativeAnonymousChildListChange")));         \
-  if ((remove_) == IsRemoveNotification::No) {                             \
-    NOTIFY_PRESSHELL_IF(last == doc, func_, params_);                      \
-  }                                                                        \
+#define IMPL_MUTATION_NOTIFICATION(func_, content_, params_, remove_)    \
+  PR_BEGIN_MACRO                                                         \
+  nsDOMMutationEnterLeave enterLeave(doc);                               \
+  nsINode* node = content_;                                              \
+  COMPOSED_DOC_DECL                                                      \
+  NS_ASSERTION(node->OwnerDoc() == doc, "Bogus document");               \
+  if ((remove_) == IsRemoveNotification::Yes) {                          \
+    NOTIFY_PRESSHELL_IF(node->GetComposedDoc(), func_, params_);         \
+  }                                                                      \
+  CALL_BINDING_MANAGER(func_, params_);                                  \
+  auto forEach = [&](auto* aObserver) { aObserver->func_ params_; };     \
+  nsINode* last = ForEachAncestorObserver(node, forEach);                \
+  /* Whitelist NativeAnonymousChildListChange removal notifications from \
+   * the assertion since it runs from UnbindFromTree, and thus we don't  \
+   * reach the document, but doesn't matter. */                          \
+  MOZ_ASSERT((last == doc) == wasInComposedDoc ||                        \
+             ((remove_) == IsRemoveNotification::Yes &&                  \
+              !strcmp(#func_, "NativeAnonymousChildListChange")));       \
+  if ((remove_) == IsRemoveNotification::No) {                           \
+    NOTIFY_PRESSHELL_IF(last == doc, func_, params_);                    \
+  }                                                                      \
   PR_END_MACRO
 
-#define IMPL_ANIMATION_NOTIFICATION(func_, content_, params_)               \
-  PR_BEGIN_MACRO                                                            \
-  nsDOMMutationEnterLeave enterLeave(doc);                                  \
-  nsINode* node = content_;                                                 \
-  do {                                                                      \
-    nsINode::nsSlots* slots = node->GetExistingSlots();                     \
-    if (slots && !slots->mMutationObservers.IsEmpty()) {                    \
-      NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS_WITH_QI(                           \
-          slots->mMutationObservers, nsIAnimationObserver, func_, params_); \
-    }                                                                       \
-    if (ShadowRoot* shadow = ShadowRoot::FromNode(node)) {                  \
-      node = shadow->GetHost();                                             \
-    } else {                                                                \
-      node = node->GetParentNode();                                         \
-    }                                                                       \
-  } while (node);                                                           \
+#define IMPL_ANIMATION_NOTIFICATION(func_, content_, params_)                \
+  PR_BEGIN_MACRO                                                             \
+  nsDOMMutationEnterLeave enterLeave(doc);                                   \
+  auto forEach = [&](nsIMutationObserver* aObserver) {                       \
+    if (nsCOMPtr<nsIAnimationObserver> obs = do_QueryInterface(aObserver)) { \
+      obs->func_ params_;                                                    \
+    }                                                                        \
+  };                                                                         \
+  ForEachAncestorObserver(content_, forEach);                                \
   PR_END_MACRO
 
 namespace mozilla {
