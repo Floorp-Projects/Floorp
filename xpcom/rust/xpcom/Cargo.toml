@@ -11,6 +11,3 @@ nserror = { path = "../nserror" }
 threadbound = "0.1"
 xpcom_macros = { path = "xpcom_macros" }
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
-
-[features]
-thread_sanitizer = []
