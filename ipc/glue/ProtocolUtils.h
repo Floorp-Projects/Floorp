@@ -513,9 +513,9 @@ class IToplevelProtocol : public IProtocol {
   already_AddRefed<nsISerialEventTarget> GetMessageEventTarget(
       const Message& aMsg);
 
- private:
   base::ProcessId OtherPidMaybeInvalid() const { return mOtherPid; }
 
+ private:
   int32_t NextId();
 
   template <class T>
