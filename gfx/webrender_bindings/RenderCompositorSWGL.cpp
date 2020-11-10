@@ -98,8 +98,7 @@ bool RenderCompositorSWGL::BeginFrame() {
   return true;
 }
 
-void RenderCompositorSWGL::CommitMappedBuffer(
-    const nsTArray<DeviceIntRect>* aDirtyRects) {
+void RenderCompositorSWGL::CommitMappedBuffer() {
   if (!mDT) {
     return;
   }
@@ -109,22 +108,13 @@ void RenderCompositorSWGL::CommitMappedBuffer(
     // If we're using a data surface, unmap it and draw it to the DT if there
     // are any supplied dirty rects.
     mSurface->Unmap();
-    if (aDirtyRects) {
-      if (aDirtyRects->IsEmpty()) {
-        gfx::Rect bounds(mSurface->GetRect());
-        mDT->DrawSurface(mSurface, bounds, bounds,
-                         gfx::DrawSurfaceOptions(gfx::SamplingFilter::POINT),
-                         gfx::DrawOptions(1.0f, gfx::CompositionOp::OP_SOURCE));
-      } else {
-        for (const DeviceIntRect& dirtyRect : *aDirtyRects) {
-          gfx::Rect bounds(dirtyRect.origin.x, dirtyRect.origin.y,
-                           dirtyRect.size.width, dirtyRect.size.height);
-          mDT->DrawSurface(
-              mSurface, bounds, bounds,
-              gfx::DrawSurfaceOptions(gfx::SamplingFilter::POINT),
-              gfx::DrawOptions(1.0f, gfx::CompositionOp::OP_SOURCE));
-        }
-      }
+    for (auto iter = mRegion.RectIter(); !iter.Done(); iter.Next()) {
+      const LayoutDeviceIntRect& dirtyRect = iter.Get();
+      gfx::Rect bounds(dirtyRect.x, dirtyRect.y, dirtyRect.width,
+                       dirtyRect.height);
+      mDT->DrawSurface(mSurface, bounds, bounds,
+                       gfx::DrawSurfaceOptions(gfx::SamplingFilter::POINT),
+                       gfx::DrawOptions(1.0f, gfx::CompositionOp::OP_SOURCE));
     }
   } else {
     // Otherwise, we had locked the DT directly. Just release the data.
@@ -139,8 +129,16 @@ void RenderCompositorSWGL::CancelFrame() { CommitMappedBuffer(); }
 
 RenderedFrameId RenderCompositorSWGL::EndFrame(
     const nsTArray<DeviceIntRect>& aDirtyRects) {
+  if (!aDirtyRects.IsEmpty()) {
+    mRegion.SetEmpty();
+    for (auto& rect : aDirtyRects) {
+      mRegion.OrWith(LayoutDeviceIntRect(rect.origin.x, rect.origin.y,
+                                         rect.size.width, rect.size.height));
+    }
+  }
+
   RenderedFrameId frameId = GetNextRenderFrameId();
-  CommitMappedBuffer(&aDirtyRects);
+  CommitMappedBuffer();
   return frameId;
 }
 
