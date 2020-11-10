@@ -9,7 +9,7 @@ import { findBestMatchExpression } from "../utils/ast";
 import { getGrip, getFront } from "../utils/evaluation-result";
 import { getExpressionFromCoords } from "../utils/editor/get-expression";
 import { isOriginal } from "../utils/source";
-import { isTesting } from "devtools-environment";
+import { isNodeTest } from "devtools-environment";
 
 import {
   getPreview,
@@ -150,7 +150,7 @@ export function setPreview(
     // The first time a popup is rendered, the mouse should be hovered
     // on the token. If it happens to be hovered on whitespace, it should
     // not render anything
-    if (!target.matches(":hover") && !isTesting()) {
+    if (!target.matches(":hover") && !isNodeTest()) {
       return;
     }
 

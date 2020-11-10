@@ -28,9 +28,6 @@ import {
 } from "../workers/search";
 import { clearDocuments } from "../utils/editor";
 
-import env from "devtools-environment/test-flag";
-env.testing = true;
-
 const rootPath = path.join(__dirname, "../../");
 
 Enzyme.configure({ adapter: new Adapter() });
