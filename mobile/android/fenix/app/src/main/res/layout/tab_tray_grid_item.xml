@@ -18,7 +18,6 @@ A FrameLayout here is an efficient way of having a views stack while allowing:
     android:layout_height="202dp"
     android:clipChildren="false"
     android:clipToPadding="false"
-    android:importantForAccessibility="no"
     android:padding="8dp">
 
     <com.google.android.material.card.MaterialCardView

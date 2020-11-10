@@ -8,6 +8,7 @@ import android.graphics.Rect
 import android.os.Build
 import android.view.TouchDelegate
 import android.view.View
+import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.Dimension
 import androidx.annotation.Dimension.DP
 import androidx.annotation.VisibleForTesting
@@ -30,6 +31,38 @@ fun View.removeTouchDelegate() {
     val parent = this.parent as View
     parent.post {
         parent.touchDelegate = null
+    }
+}
+
+/**
+ * Removes a child view from accessibility node info of an accessibility parent view.
+ * If the child does not exist in the node, calling this has no effect.
+ */
+fun View.removeChildFromAccessibilityNodeInfo(child: View) {
+    this.accessibilityDelegate = object : View.AccessibilityDelegate() {
+        override fun onInitializeAccessibilityNodeInfo(
+            host: View?,
+            info: AccessibilityNodeInfo?
+        ) {
+            super.onInitializeAccessibilityNodeInfo(host, info)
+            info?.removeChild(child)
+        }
+    }
+}
+
+/**
+ * Add a child view to the accessibility node info of a view that becomes it's accessibility parent.
+ * If the child already exists in the node, calling this has no effect.
+ */
+fun View.addChildToAccessibilityNodeInfo(child: View) {
+    this.accessibilityDelegate = object : View.AccessibilityDelegate() {
+        override fun onInitializeAccessibilityNodeInfo(
+            host: View?,
+            info: AccessibilityNodeInfo?
+        ) {
+            super.onInitializeAccessibilityNodeInfo(host, info)
+            info?.addChild(child)
+        }
     }
 }
 
