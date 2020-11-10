@@ -69,8 +69,7 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(
         );
       }
 
-      const constructor = require("devtools/server/actors/highlighters/" +
-        modulePath)[typeName];
+      const constructor = require(modulePath)[typeName];
       // The assumption is that custom highlighters either need the canvasframe
       // container to append their elements and thus a non-XUL window or they have
       // to define a static XULSupported flag that indicates that the highlighter
@@ -351,17 +350,38 @@ HighlighterEnvironment.prototype = {
   },
 };
 
-register("AccessibleHighlighter", "accessible");
-register("BoxModelHighlighter", "box-model");
-register("CssGridHighlighter", "css-grid");
-register("CssTransformHighlighter", "css-transform");
-register("EyeDropper", "eye-dropper");
-register("FlexboxHighlighter", "flexbox");
-register("FontsHighlighter", "fonts");
-register("GeometryEditorHighlighter", "geometry-editor");
-register("MeasuringToolHighlighter", "measuring-tool");
-register("PausedDebuggerOverlay", "paused-debugger");
-register("RulersHighlighter", "rulers");
-register("SelectorHighlighter", "selector");
-register("ShapesHighlighter", "shapes");
-register("TabbingOrderHighlighter", "tabbing-order");
+register(
+  "AccessibleHighlighter",
+  "devtools/server/actors/highlighters/accessible"
+);
+register(
+  "BoxModelHighlighter",
+  "devtools/server/actors/highlighters/box-model"
+);
+register("CssGridHighlighter", "devtools/server/actors/highlighters/css-grid");
+register(
+  "CssTransformHighlighter",
+  "devtools/server/actors/highlighters/css-transform"
+);
+register("EyeDropper", "devtools/server/actors/highlighters/eye-dropper");
+register("FlexboxHighlighter", "devtools/server/actors/highlighters/flexbox");
+register("FontsHighlighter", "devtools/server/actors/highlighters/fonts");
+register(
+  "GeometryEditorHighlighter",
+  "devtools/server/actors/highlighters/geometry-editor"
+);
+register(
+  "MeasuringToolHighlighter",
+  "devtools/server/actors/highlighters/measuring-tool"
+);
+register(
+  "PausedDebuggerOverlay",
+  "devtools/server/actors/highlighters/paused-debugger"
+);
+register("RulersHighlighter", "devtools/server/actors/highlighters/rulers");
+register("SelectorHighlighter", "devtools/server/actors/highlighters/selector");
+register("ShapesHighlighter", "devtools/server/actors/highlighters/shapes");
+register(
+  "TabbingOrderHighlighter",
+  "devtools/server/actors/highlighters/tabbing-order"
+);
