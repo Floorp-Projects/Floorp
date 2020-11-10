@@ -199,17 +199,6 @@
     "bug_numbers": [1172689, 1531034],
     "description": "Recorded when application reputation remote lookup is performed, `true` is recorded if the lookup times out."
   },
-  "AUDIOSTREAM_BACKEND_USED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["padenot@mozilla.com", "kinetik@flim.org"],
-    "bug_numbers": [1280630, 1444878],
-    "expires_in_version": "70",
-    "kind": "enumerated",
-    "n_values": 16,
-    "description": "The operating system audio back-end used when successfully opening an audio stream, or whether the failure occurred on the first try or not <https://searchfox.org/mozilla-central/search?q=AUDIOSTREAM_BACKEND_ID_STR>",
-    "releaseChannelCollection": "opt-out"
-  },
   "BACKGROUNDFILESAVER_THREAD_COUNT": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
@@ -9950,6 +9939,32 @@
       "other"
     ],
     "description": "Failure occurs when initializing the audio stream",
+    "bug_numbers": [1671714]
+  },
+  "MEDIA_AUDIO_BACKEND": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "geckoview_streaming"],
+    "alert_emails": ["padenot@mozilla.com", "kinetik@flim.org", "cchang@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": [
+      "unknown",
+      "audiounit",
+      "audiounit_rust",
+      "aaudio",
+      "opensl",
+      "wasapi",
+      "winmm",
+      "alsa",
+      "jack",
+      "oss",
+      "pulse",
+      "pulse_rust",
+      "sndio",
+      "sun"
+    ],
+    "description": "The operating system audio backend",
     "bug_numbers": [1671714]
   },
   "WEBRTC_DTLS_CIPHER": {
