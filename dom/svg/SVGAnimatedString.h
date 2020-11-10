@@ -9,7 +9,9 @@
 
 #include "nsError.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/SMILAttr.h"
 #include "mozilla/SVGAnimatedClassOrString.h"
+#include "mozilla/dom/SVGElement.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
