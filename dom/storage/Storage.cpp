@@ -8,6 +8,8 @@
 #include "StorageNotifierService.h"
 
 #include "mozilla/dom/StorageBinding.h"
+#include "mozilla/dom/StorageEvent.h"
+#include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StorageAccess.h"

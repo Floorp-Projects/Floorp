@@ -13,6 +13,8 @@
 #include "mozilla/BasePrincipal.h"
 #include "nsVariant.h"
 #include "mozilla/Tokenizer.h"
+#include "mozIStorageConnection.h"
+#include "mozStorageHelper.h"
 
 // Current version of the database schema
 #define CURRENT_SCHEMA_VERSION 2

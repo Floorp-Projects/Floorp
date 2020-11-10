@@ -16,7 +16,9 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PBackgroundSessionStorageCache.h"
 #include "mozilla/dom/PBackgroundSessionStorageManager.h"
+#include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "nsDataHashtable.h"
 #include "nsThreadUtils.h"
 
@@ -32,14 +34,14 @@ static StaticAutoPtr<
     sManagers;
 
 bool RecvShutdownBackgroundSessionStorageManagers() {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
 
   sManagers = nullptr;
   return true;
 }
 
 bool RecvRemoveBackgroundSessionStorageManager(uint64_t aTopContextId) {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
 
   if (sManagers) {
     sManagers->Remove(aTopContextId);
@@ -176,8 +178,8 @@ nsresult SessionStorageManager::EnsureManager() {
     return NS_OK;
   }
 
-  PBackgroundChild* backgroundActor =
-      BackgroundChild::GetOrCreateForCurrentThread();
+  ::mozilla::ipc::PBackgroundChild* backgroundActor =
+      ::mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!backgroundActor)) {
     return NS_ERROR_FAILURE;
   }
@@ -554,8 +556,8 @@ void BackgroundSessionStorageManager::RemoveManager(uint64_t aTopContextId) {
   MOZ_ASSERT(XRE_IsParentProcess());
   AssertIsOnMainThread();
 
-  PBackgroundChild* backgroundActor =
-      BackgroundChild::GetOrCreateForCurrentThread();
+  ::mozilla::ipc::PBackgroundChild* backgroundActor =
+      ::mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!backgroundActor)) {
     return;
   }
@@ -570,7 +572,7 @@ void BackgroundSessionStorageManager::RemoveManager(uint64_t aTopContextId) {
 BackgroundSessionStorageManager* BackgroundSessionStorageManager::GetOrCreate(
     uint64_t aTopContextId) {
   MOZ_ASSERT(XRE_IsParentProcess());
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
 
   if (!sManagers) {
     sManagers = new nsRefPtrHashtable<nsUint64HashKey,
@@ -579,8 +581,8 @@ BackgroundSessionStorageManager* BackgroundSessionStorageManager::GetOrCreate(
         "dom::BackgroundSessionStorageManager::GetOrCreate", [] {
           RunOnShutdown(
               [] {
-                PBackgroundChild* backgroundActor =
-                    BackgroundChild::GetOrCreateForCurrentThread();
+                ::mozilla::ipc::PBackgroundChild* backgroundActor = ::mozilla::
+                    ipc::BackgroundChild::GetOrCreateForCurrentThread();
                 if (NS_WARN_IF(!backgroundActor)) {
                   return;
                 }
@@ -602,7 +604,7 @@ BackgroundSessionStorageManager* BackgroundSessionStorageManager::GetOrCreate(
 
 BackgroundSessionStorageManager::BackgroundSessionStorageManager() {
   MOZ_ASSERT(XRE_IsParentProcess());
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
 }
 
 BackgroundSessionStorageManager::~BackgroundSessionStorageManager() = default;
@@ -612,7 +614,7 @@ void BackgroundSessionStorageManager::CopyDataToContentProcess(
     nsTArray<SSSetItemInfo>& aDefaultData,
     nsTArray<SSSetItemInfo>& aSessionData) {
   MOZ_ASSERT(XRE_IsParentProcess());
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
 
   auto* const originRecord =
       GetOriginRecord(aOriginAttrs, aOriginKey, false, nullptr);
@@ -631,7 +633,7 @@ void BackgroundSessionStorageManager::UpdateData(
     const nsTArray<SSWriteInfo>& aDefaultWriteInfos,
     const nsTArray<SSWriteInfo>& aSessionWriteInfos) {
   MOZ_ASSERT(XRE_IsParentProcess());
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
 
   auto* const originRecord =
       GetOriginRecord(aOriginAttrs, aOriginKey, true, nullptr);

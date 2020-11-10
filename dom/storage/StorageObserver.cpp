@@ -8,6 +8,7 @@
 
 #include "LocalStorageCache.h"
 #include "StorageDBThread.h"
+#include "StorageIPC.h"
 #include "StorageUtils.h"
 
 #include "mozilla/BasePrincipal.h"
@@ -21,6 +22,7 @@
 #include "nsXULAppAPI.h"
 #include "nsEscape.h"
 #include "nsNetCID.h"
+#include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "nsServiceManagerUtils.h"

@@ -6,11 +6,16 @@
 
 #include "StorageActivityService.h"
 
+#include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIMutableArray.h"
+#include "nsIObserverService.h"
 #include "nsIPrincipal.h"
 #include "nsSupportsPrimitives.h"
 #include "nsXPCOM.h"
@@ -163,7 +168,8 @@ void StorageActivityService::SendActivityToParent(nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!XRE_IsParentProcess());
 
-  PBackgroundChild* actor = BackgroundChild::GetOrCreateForCurrentThread();
+  ::mozilla::ipc::PBackgroundChild* actor =
+      ::mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!actor)) {
     return;
   }
