@@ -1012,9 +1012,16 @@ class BuildReader(object):
 
             key = None
             if isinstance(target, ast.Subscript):
-                assert isinstance(target.slice, ast.Index)
-                assert isinstance(target.slice.value, ast.Str)
-                key = target.slice.value.s
+                # We need to branch to deal with python version differences.
+                if isinstance(target.slice, ast.Constant):
+                    # Python >= 3.9
+                    assert isinstance(target.slice.value, str)
+                    key = target.slice.value
+                else:
+                    # Others
+                    assert isinstance(target.slice, ast.Index)
+                    assert isinstance(target.slice.value, ast.Str)
+                    key = target.slice.value.s
 
             return name, key
 
