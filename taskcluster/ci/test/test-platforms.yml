@@ -31,6 +31,7 @@ linux1804-64/opt:
         - awsy
         - desktop-screenshot-capture
         - linux1804-tests
+        - marionette-framescript
         - marionette-headless
         - mochitest-headless
         - mochitest-webgpu
@@ -51,6 +52,7 @@ linux1804-64-shippable/opt:
         - awsy
         - desktop-screenshot-capture
         - linux1804-tests
+        - marionette-framescript
         - marionette-headless
         - mochitest-headless
         - mochitest-webgpu
@@ -181,6 +183,7 @@ windows7-32/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
+        - marionette-framescript
         - windows-reftest-gpu
         - windows-talos
         - windows-tests
@@ -195,6 +198,7 @@ windows7-32-shippable/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
+        - marionette-framescript
         - windows-reftest-gpu
         - windows-talos
         - windows-tests
@@ -257,6 +261,7 @@ windows10-64/opt:
         - awsy
         - desktop-screenshot-capture
         - windows-talos
+        - marionette-framescript
         - marionette-gpu-tests
         - windows-tests
         - windows10-tests
@@ -285,6 +290,7 @@ windows10-64-shippable/opt:
         - awsy
         - desktop-screenshot-capture
         - windows-talos
+        - marionette-framescript
         - marionette-gpu-tests
         - windows-tests
         - windows10-tests
@@ -384,6 +390,7 @@ macosx1014-64-qr/opt:
     test-sets:
         - macosx1014-64-qr-tests
         - desktop-screenshot-capture
+        - marionette-framescript
         - web-platform-tests
         - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
@@ -393,18 +400,19 @@ macosx1014-64-shippable-qr/opt:
     test-sets:
         - macosx1014-64-qr-tests
         - macosx64-talos
-        - desktop-screenshot-capture
         - awsy
+        - browsertime
+        - desktop-screenshot-capture
+        - marionette-framescript
         - raptor-chrome
         - raptor-chromium
         - raptor-firefox
-        - browsertime
         - raptor-firefox-power
         - raptor-profiling
+        - talos-profiling
         - web-platform-tests
         - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
-        - talos-profiling
 
 macosx1014-64-devedition-qr/opt:
     build-platform: macosx64-devedition/opt

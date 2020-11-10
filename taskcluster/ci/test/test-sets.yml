@@ -199,6 +199,9 @@ mochitest-headless:
 mochitest-valgrind:
     - mochitest-valgrind
 
+marionette-framescript:
+    - marionette-framescript
+
 marionette-headless:
     - marionette-headless
 
