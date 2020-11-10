@@ -3769,11 +3769,7 @@ pub extern "C" fn wr_dump_display_list(
     unsafe {
         let gecko = CString::new("Gecko").unwrap();
         let sink = CString::new(sink.into_inner()).unwrap();
-        __android_log_write(
-            4, /* info */
-            gecko.as_ptr(),
-            sink.as_ptr(),
-        );
+        __android_log_write(4 /* info */, gecko.as_ptr(), sink.as_ptr());
     }
 
     #[cfg(not(target_os = "android"))]

@@ -553,8 +553,15 @@ pub extern "C" fn neqo_http3conn_event(
                 }
             }
             Http3ClientEvent::DataReadable { stream_id } => Http3Event::DataReadable { stream_id },
-            Http3ClientEvent::Reset { stream_id, error, local } =>
-                Http3Event::Reset { stream_id, error, local },
+            Http3ClientEvent::Reset {
+                stream_id,
+                error,
+                local,
+            } => Http3Event::Reset {
+                stream_id,
+                error,
+                local,
+            },
             Http3ClientEvent::PushPromise {
                 push_id,
                 request_stream_id,
@@ -589,7 +596,9 @@ pub extern "C" fn neqo_http3conn_event(
                 Http3Event::PushDataReadable { push_id }
             }
             Http3ClientEvent::PushCanceled { push_id } => Http3Event::PushCanceled { push_id },
-            Http3ClientEvent::PushReset { push_id, error } => Http3Event::PushReset { push_id, error },
+            Http3ClientEvent::PushReset { push_id, error } => {
+                Http3Event::PushReset { push_id, error }
+            }
             Http3ClientEvent::RequestsCreatable => Http3Event::RequestsCreatable,
             Http3ClientEvent::AuthenticationNeeded => Http3Event::AuthenticationNeeded,
             Http3ClientEvent::ZeroRttRejected => Http3Event::ZeroRttRejected,
