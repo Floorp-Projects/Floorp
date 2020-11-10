@@ -9,15 +9,12 @@
 
 #include "AsyncPanZoomAnimation.h"
 #include "AsyncPanZoomController.h"
-#include "mozilla/java/StackScrollerWrappers.h"
 
 namespace mozilla {
 namespace layers {
 
 class AndroidSpecificState : public PlatformSpecificStateBase {
  public:
-  AndroidSpecificState();
-
   virtual AndroidSpecificState* AsAndroidSpecificState() override {
     return this;
   }
@@ -29,40 +26,6 @@ class AndroidSpecificState : public PlatformSpecificStateBase {
       Axis* aAxis) override;
 
   static void InitializeGlobalState();
-
-  java::StackScroller::GlobalRef mOverScroller;
-  TimeStamp mLastFling;
-};
-
-class StackScrollerFlingAnimation : public AsyncPanZoomAnimation {
- public:
-  StackScrollerFlingAnimation(
-      AsyncPanZoomController& aApzc,
-      PlatformSpecificStateBase* aPlatformSpecificState,
-      const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
-      bool aFlingIsHandoff /* ignored */,
-      const RefPtr<const AsyncPanZoomController>& aScrolledApzc);
-  virtual bool DoSample(FrameMetrics& aFrameMetrics,
-                        const TimeDuration& aDelta) override;
-
- private:
-  void DeferHandleFlingOverscroll(ParentLayerPoint& aVelocity);
-  // Returns true if value is on or outside of axis bounds.
-  bool CheckBounds(Axis& aAxis, float aValue, float aDirection,
-                   float* aClamped);
-
-  AsyncPanZoomController& mApzc;
-  java::StackScroller::GlobalRef mOverScroller;
-  RefPtr<const OverscrollHandoffChain> mOverscrollHandoffChain;
-  RefPtr<const AsyncPanZoomController> mScrolledApzc;
-  bool mSentBounceX;
-  bool mSentBounceY;
-  long mFlingDuration;
-  ParentLayerPoint mStartOffset;
-  ParentLayerPoint mPreviousOffset;
-  // Unit vector in the direction of the fling.
-  ParentLayerPoint mFlingDirection;
-  ParentLayerPoint mPreviousVelocity;
 };
 
 }  // namespace layers
