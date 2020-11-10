@@ -325,6 +325,9 @@ Class a11y::GetTypeFromRole(roles::Role aRole) {
     case roles::LISTBOX:
       return [mozListboxAccessible class];
 
+    case roles::LISTITEM:
+      return [MOXListItemAccessible class];
+
     case roles::OPTION: {
       return [mozOptionAccessible class];
     }
