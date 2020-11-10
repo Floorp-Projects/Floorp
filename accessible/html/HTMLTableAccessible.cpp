@@ -537,7 +537,7 @@ Accessible* HTMLTableAccessible::CellAt(uint32_t aRowIdx, uint32_t aColIdx) {
     return CellInRowAt(cell, aColIdx);
   }
 
-  // XXX bug 576838: crazy tables (like table6 in tables/test_table2.html) may
+  // XXX bug 576838: bizarre tables (like table6 in tables/test_table2.html) may
   // return itself as a cell what makes Orca hang.
   return cell == this ? nullptr : cell;
 }

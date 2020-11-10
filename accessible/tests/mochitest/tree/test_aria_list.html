@@ -27,7 +27,7 @@
       testAccessibleTree("list", accTree);
 
       // ////////////////////////////////////////////////////////////////////////
-      // crazy list (mad mix of ARIA and HTML)
+      // strange list (mix of ARIA and HTML)
 
       accTree = { // div@role="list"
         role: ROLE_LIST,
@@ -55,7 +55,7 @@
         ],
       };
 
-      testAccessibleTree("crazy_list", accTree);
+      testAccessibleTree("strange_list", accTree);
 
       SimpleTest.finish();
     }
@@ -80,7 +80,7 @@
     <div role="listitem">item1</div>
   </div>
 
-  <div id="crazy_list" role="list">
+  <div id="strange_list" role="list">
     <ul role="presentation">
       <li>item1</li>
       <li role="listitem">item2</li>
