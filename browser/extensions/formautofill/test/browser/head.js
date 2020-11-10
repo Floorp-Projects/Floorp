@@ -6,6 +6,7 @@
             FTU_PREF, ENABLED_AUTOFILL_ADDRESSES_PREF, ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF, AUTOFILL_CREDITCARDS_AVAILABLE_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF,
             SUPPORTED_COUNTRIES_PREF,
             SYNC_USERNAME_PREF, SYNC_ADDRESSES_PREF, SYNC_CREDITCARDS_PREF, SYNC_CREDITCARDS_AVAILABLE_PREF, CREDITCARDS_USED_STATUS_PREF,
+            CREDITCARDS_SAVED_COUNT_PREF, CREDITCARDS_CANCEL_SAVE_COUNT_PREF, CREDITCARDS_DISMISS_COUNT_PREF,
             sleep, expectPopupOpen, openPopupOn, openPopupForSubframe, expectPopupClose, closePopup, closePopupForSubframe,
             clickDoorhangerButton, getAddresses, saveAddress, removeAddresses, saveCreditCard,
             getDisplayedPopupItems, getDoorhangerCheckbox, waitForPopupEnabled,
@@ -39,6 +40,12 @@ const CREDITCARD_FORM_IFRAME_URL =
 
 const FTU_PREF = "extensions.formautofill.firstTimeUse";
 const CREDITCARDS_USED_STATUS_PREF = "extensions.formautofill.creditCards.used";
+const CREDITCARDS_SAVED_COUNT_PREF =
+  "extensions.formautofill.creditCards.usage.saveCc";
+const CREDITCARDS_CANCEL_SAVE_COUNT_PREF =
+  "extensions.formautofill.creditCards.usage.cancelCcSave";
+const CREDITCARDS_DISMISS_COUNT_PREF =
+  "extensions.formautofill.creditCards.usage.dismissed";
 const ENABLED_AUTOFILL_ADDRESSES_PREF =
   "extensions.formautofill.addresses.enabled";
 const ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF =
