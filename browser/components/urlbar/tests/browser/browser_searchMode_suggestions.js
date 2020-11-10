@@ -287,6 +287,29 @@ add_task(async function emptySearch_behavior() {
     // the picked engine, history without redirects, and no heuristic.
     await checkResults([]);
     await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
+
+    // We should still show history for empty searches when not in search mode.
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: " ",
+    });
+    await checkResults([
+      {
+        heuristic: true,
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        searchParams: {
+          query: " ",
+          engine: defaultEngine.name,
+        },
+      },
+      {
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        url: `http://mochi.test/`,
+      },
+    ]);
     await UrlbarTestUtils.promisePopupClose(window);
     await SpecialPowers.popPrefEnv();
   });
@@ -304,6 +327,39 @@ add_task(async function emptySearch_behavior() {
     // For the empty search case, we expect to get the form history relative to
     // the picked engine, history without redirects, and no heuristic.
     await checkResults([...expectedFormHistoryResults]);
+    await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
+    await UrlbarTestUtils.promisePopupClose(window);
+    await SpecialPowers.popPrefEnv();
+  });
+
+  await PlacesUtils.history.clear();
+});
+
+add_task(async function emptySearch_local() {
+  await PlacesTestUtils.addVisits([`http://mochi.test/`]);
+
+  await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.update2.emptySearchBehavior", 0]],
+    });
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "",
+    });
+    await UrlbarTestUtils.enterSearchMode(window, {
+      source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+    });
+    Assert.equal(gURLBar.value, "", "Urlbar value should be cleared.");
+    // Even when emptySearchBehavior is 0, we still show the user's most frecent
+    // history for an empty search.
+    await checkResults([
+      {
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        url: `http://mochi.test/`,
+      },
+    ]);
     await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
     await UrlbarTestUtils.promisePopupClose(window);
     await SpecialPowers.popPrefEnv();
