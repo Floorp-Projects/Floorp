@@ -94,6 +94,7 @@ pub struct CompositeTile {
     pub clip_rect: DeviceRect,
     pub dirty_rect: DeviceRect,
     pub valid_rect: DeviceRect,
+    pub transform: Option<CompositorSurfaceTransform>,
     pub z_id: ZBufferId,
 }
 
@@ -569,6 +570,7 @@ impl CompositeState {
                 valid_rect: tile.device_valid_rect.translate(-device_rect.origin.to_vector()),
                 dirty_rect: tile.device_dirty_rect.translate(-device_rect.origin.to_vector()),
                 clip_rect: device_clip_rect,
+                transform: None,
                 z_id: tile.z_id,
             };
 
@@ -738,6 +740,7 @@ impl CompositeState {
                 valid_rect: external_surface.device_rect.translate(-external_surface.device_rect.origin.to_vector()),
                 dirty_rect: external_surface.device_rect.translate(-external_surface.device_rect.origin.to_vector()),
                 clip_rect,
+                transform: Some(external_surface.transform),
                 z_id: external_surface.z_id,
             };
 
