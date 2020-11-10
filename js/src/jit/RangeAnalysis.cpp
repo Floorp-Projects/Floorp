@@ -3057,6 +3057,7 @@ static void AdjustTruncatedInputs(TempAllocator& alloc,
       } else {
         op = MTruncateToInt32::New(alloc, truncated->getOperand(i));
       }
+      op->setBailoutKind(input->bailoutKind());
 
       if (truncated->isPhi()) {
         MBasicBlock* pred = block->getPredecessor(i);
