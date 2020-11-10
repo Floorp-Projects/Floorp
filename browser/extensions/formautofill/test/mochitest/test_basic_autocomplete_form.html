@@ -74,7 +74,9 @@ add_task(async function all_saved_fields_less_than_threshold() {
 
 // Form with both history and address storage.
 add_task(async function check_menu_when_both_existed() {
+  checkUsagePrefs(false, 0);
   await setupAddressStorage();
+  checkUsagePrefs(true, 0);
 
   await setInput("#organization", "");
   await notExpectPopup();

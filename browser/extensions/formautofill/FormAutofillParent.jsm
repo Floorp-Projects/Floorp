@@ -735,6 +735,7 @@ class FormAutofillParent extends JSWindowActorParent {
           telemetryObject,
           creditCard.flowId
         );
+        FormAutofillDoorhanger.incrementCcUsageCount("cancelCcSave");
         return;
       }
 
@@ -756,6 +757,8 @@ class FormAutofillParent extends JSWindowActorParent {
         log.warn("User canceled encryption login");
         return;
       }
+
+      FormAutofillDoorhanger.incrementCcUsageCount("saveCc");
 
       let changedGUIDs = [];
       if (creditCard.guid) {

@@ -75,6 +75,8 @@ add_task(async function test_form_will_submit_without_sub_keys() {
   let matching = await checkAddresses(TEST_ADDRESSES);
   ok(matching, "Address saved as expected");
 
+  checkUsagePrefs(true, Date.now()/1000);
+
   await loadPromise;
   isnot(window.submit_frame.location.href, "about:blank", "Check form submitted");
 });
