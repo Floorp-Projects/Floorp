@@ -62,7 +62,7 @@ rtc_library("common_video") {
     "../rtc_base/synchronization:mutex",
     "../rtc_base/system:rtc_export",
     "../system_wrappers:metrics",
-    "//third_party/libyuv",
+    #"//third_party/libyuv",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }

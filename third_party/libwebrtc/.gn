@@ -74,4 +74,6 @@ default_args = {
   enable_libaom = true
 
   gtest_enable_absl_printers = true
+
+  use_custom_libcxx = false
 }

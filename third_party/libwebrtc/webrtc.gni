@@ -83,7 +83,7 @@ declare_args() {
 
   # Used to specify an external OpenSSL include path when not compiling the
   # library that comes with WebRTC (i.e. rtc_build_ssl == 0).
-  rtc_ssl_root = ""
+  rtc_ssl_root = "unused"
 
   # Enable when an external authentication mechanism is used for performing
   # packet authentication for RTP packets instead of libsrtp.
@@ -100,13 +100,13 @@ declare_args() {
   rtc_enable_bwe_test_logging = false
 
   # Set this to false to skip building examples.
-  rtc_build_examples = true
+  rtc_build_examples = false
 
   # Set this to false to skip building tools.
-  rtc_build_tools = true
+  rtc_build_tools = false
 
   # Set this to false to skip building code that requires X11.
-  rtc_use_x11 = use_x11
+  rtc_use_x11 = is_desktop_linux
 
   # Set this to use PipeWire on the Wayland display server.
   # By default it's only enabled on desktop Linux (excludes ChromeOS) and
@@ -118,7 +118,7 @@ declare_args() {
   rtc_link_pipewire = true
 
   # Enable to use the Mozilla internal settings.
-  build_with_mozilla = false
+  build_with_mozilla = true
 
   # Experimental: enable use of Android AAudio which requires Android SDK 26 or above
   # and NDK r16 or above.

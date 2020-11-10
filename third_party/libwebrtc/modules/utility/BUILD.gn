@@ -40,15 +40,17 @@ rtc_library("utility") {
   ]
 }
 
-rtc_library("mock_process_thread") {
-  testonly = true
-  visibility = [ "*" ]
-  sources = [ "include/mock/mock_process_thread.h" ]
-  deps = [
-    ":utility",
-    "../../rtc_base:rtc_base_approved",
-    "../../test:test_support",
-  ]
+if (rtc_include_tests) {
+  rtc_library("mock_process_thread") {
+    testonly = true
+    visibility = [ "*" ]
+    sources = [ "include/mock/mock_process_thread.h" ]
+    deps = [
+      ":utility",
+      "../../rtc_base:rtc_base_approved",
+      "../../test:test_support",
+    ]
+  }
 }
 
 if (rtc_include_tests) {

@@ -273,21 +273,23 @@ if (rtc_enable_protobuf) {
   }
 }
 
-rtc_library("fake_rtc_event_log") {
-  testonly = true
-  sources = [
-    "rtc_event_log/fake_rtc_event_log.cc",
-    "rtc_event_log/fake_rtc_event_log.h",
-    "rtc_event_log/fake_rtc_event_log_factory.cc",
-    "rtc_event_log/fake_rtc_event_log_factory.h",
-  ]
+if (rtc_include_tests) {
+  rtc_library("fake_rtc_event_log") {
+    testonly = true
+    sources = [
+      "rtc_event_log/fake_rtc_event_log.cc",
+      "rtc_event_log/fake_rtc_event_log.h",
+      "rtc_event_log/fake_rtc_event_log_factory.cc",
+      "rtc_event_log/fake_rtc_event_log_factory.h",
+    ]
 
-  deps = [
-    ":ice_log",
-    "../api/rtc_event_log",
-    "../rtc_base",
-    "../rtc_base:checks",
-  ]
+    deps = [
+      ":ice_log",
+      "../api/rtc_event_log",
+      "../rtc_base",
+      "../rtc_base:checks",
+    ]
+  }
 }
 
 if (rtc_enable_protobuf) {
@@ -427,27 +429,29 @@ if (rtc_enable_protobuf) {
   }
 }
 
-rtc_library("ice_log") {
-  sources = [
-    "rtc_event_log/events/rtc_event_dtls_transport_state.cc",
-    "rtc_event_log/events/rtc_event_dtls_transport_state.h",
-    "rtc_event_log/events/rtc_event_dtls_writable_state.cc",
-    "rtc_event_log/events/rtc_event_dtls_writable_state.h",
-    "rtc_event_log/events/rtc_event_ice_candidate_pair.cc",
-    "rtc_event_log/events/rtc_event_ice_candidate_pair.h",
-    "rtc_event_log/events/rtc_event_ice_candidate_pair_config.cc",
-    "rtc_event_log/events/rtc_event_ice_candidate_pair_config.h",
-    "rtc_event_log/ice_logger.cc",
-    "rtc_event_log/ice_logger.h",
-  ]
+if (!build_with_mozilla) {
+  rtc_library("ice_log") {
+    sources = [
+      "rtc_event_log/events/rtc_event_dtls_transport_state.cc",
+      "rtc_event_log/events/rtc_event_dtls_transport_state.h",
+      "rtc_event_log/events/rtc_event_dtls_writable_state.cc",
+      "rtc_event_log/events/rtc_event_dtls_writable_state.h",
+      "rtc_event_log/events/rtc_event_ice_candidate_pair.cc",
+      "rtc_event_log/events/rtc_event_ice_candidate_pair.h",
+      "rtc_event_log/events/rtc_event_ice_candidate_pair_config.cc",
+      "rtc_event_log/events/rtc_event_ice_candidate_pair_config.h",
+      "rtc_event_log/ice_logger.cc",
+      "rtc_event_log/ice_logger.h",
+    ]
 
-  deps = [
-    "../api:libjingle_logging_api",
-    "../api:libjingle_peerconnection_api",  # For api/dtls_transport_interface.h
-    "../api/rtc_event_log",
-    "../rtc_base:rtc_base_approved",
-  ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
+    deps = [
+      "../api:libjingle_logging_api",
+      "../api:libjingle_peerconnection_api",  # For api/dtls_transport_interface.h
+      "../api/rtc_event_log",
+      "../rtc_base:rtc_base_approved",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
+  }
 }
 
 if (rtc_include_tests) {

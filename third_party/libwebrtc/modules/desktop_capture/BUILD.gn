@@ -8,12 +8,8 @@
 
 import("//build/config/linux/pkg_config.gni")
 import("//build/config/ui.gni")
-import("//tools/generate_stubs/rules.gni")
+#import("//tools/generate_stubs/rules.gni")
 import("../../webrtc.gni")
-
-if (build_with_mozilla) {
-  defines = [ "MULTI_MONITOR_SCREENSHARE" ]
-}
 
 use_desktop_capture_differ_sse2 = current_cpu == "x86" || current_cpu == "x64"
 
@@ -193,34 +189,33 @@ if (rtc_include_tests) {
 if (is_linux || is_chromeos) {
   if (rtc_use_pipewire) {
     defines = [ "WEBRTC_USE_PIPEWIRE" ]
-    pkg_config("gio") {
-      packages = [
-        "gio-2.0",
-        "gio-unix-2.0",
-      ]
-    }
+    #pkg_config("gio") {
+    #  packages = [
+    #    "gio-2.0",
+    #    "gio-unix-2.0",
+    #  ]
+    #}
 
     if (rtc_link_pipewire) {
-      pkg_config("pipewire") {
-        packages = [ "libpipewire-0.2" ]
-      }
+      #pkg_config("pipewire") {
+      #  packages = [ "libpipewire-0.2" ]
+      #}
     } else {
       # When libpipewire is not directly linked, use stubs to allow for dlopening of
       # the binary.
-      generate_stubs("pipewire_stubs") {
-        configs = [ "../../:common_config" ]
-        deps = [ "../../rtc_base" ]
-        extra_header = "linux/pipewire_stub_header.fragment"
-        logging_function = "RTC_LOG(LS_VERBOSE)"
-        logging_include = "rtc_base/logging.h"
-        output_name = "linux/pipewire_stubs"
-        path_from_source = "modules/desktop_capture/linux"
-        sigs = [ "linux/pipewire.sigs" ]
-      }
+      #generate_stubs("pipewire_stubs") {
+      #  configs = [ "../../:common_config" ]
+      #  deps = [ "../../rtc_base" ]
+      #  extra_header = "linux/pipewire_stub_header.fragment"
+      #  logging_function = "RTC_LOG(LS_VERBOSE)"
+      #  logging_include = "rtc_base/logging.h"
+      #  output_name = "linux/pipewire_stubs"
+      #  path_from_source = "modules/desktop_capture/linux"
+      #  sigs = [ "linux/pipewire.sigs" ]
+      #}
     }
 
     config("pipewire_config") {
-      defines = [ "WEBRTC_USE_PIPEWIRE" ]
       if (!rtc_link_pipewire) {
         defines += [ "WEBRTC_DLOPEN_PIPEWIRE" ]
       }
@@ -277,6 +272,9 @@ if (is_mac) {
 
 rtc_library("desktop_capture_generic") {
   defines = []
+  if (build_with_mozilla) {
+    defines += [ "MULTI_MONITOR_SCREENSHARE" ]
+  }
   public_configs = [ ":x11_config" ]
   visibility = [
     ":desktop_capture",
@@ -341,20 +339,6 @@ rtc_library("desktop_capture_generic") {
     ]
   }
 
-  if (build_with_mozilla) {
-    sources += [
-      "desktop_device_info.cc",
-      "desktop_device_info.h",
-    ]
-    if (is_win) {
-      sources += [
-        "app_capturer_win.cc",
-        "win/desktop_device_info_win.cc",
-        "win/win_shared.cc",
-      ]
-    }
-  }
-
   if (rtc_use_x11_extensions || rtc_use_pipewire) {
     include_dirs = [ "/third_party/libwebrtc/third_party/pipewire" ]
     sources += [
@@ -362,17 +346,6 @@ rtc_library("desktop_capture_generic") {
       "screen_capturer_linux.cc",
       "window_capturer_linux.cc",
     ]
-
-    if (build_with_mozilla && (is_linux || is_chromeos)) {
-      sources += [
-        "app_capturer_linux.cc",
-        "linux/app_capturer_x11.cc",
-        "linux/desktop_device_info_linux.cc",
-        "linux/desktop_device_info_linux.h",
-        "linux/shared_x_util.cc",
-        "linux/shared_x_util.h",
-      ]
-    }
   }
 
   if (rtc_use_x11_extensions) {
@@ -505,6 +478,11 @@ rtc_library("desktop_capture_generic") {
 
   if (build_with_mozilla) {
     deps += [ "../../rtc_base:rtc_base_approved" ]
+    include_dirs += [
+      "/media/libyuv",
+      "/media/libyuv/libyuv/include",
+      "/third_party/pipewire",
+    ]
   } else {
     deps += [ "//third_party/libyuv" ]
   }
@@ -524,14 +502,14 @@ rtc_library("desktop_capture_generic") {
     ]
 
     configs += [
-      ":pipewire_config",
-      ":gio",
+      #":pipewire_config",
+      #":gio",
     ]
 
     if (rtc_link_pipewire) {
-      configs += [ ":pipewire" ]
+      #configs += [ ":pipewire" ]
     } else {
-      deps += [ ":pipewire_stubs" ]
+      #deps += [ ":pipewire_stubs" ]
 
       if (!build_with_mozilla) {
         configs += [

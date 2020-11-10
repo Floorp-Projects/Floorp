@@ -575,41 +575,43 @@ if (rtc_include_tests) {
   }
 }
 
-rtc_library("audioproc_test_utils") {
-  visibility = [ "*" ]
-  testonly = true
-  sources = [
-    "test/audio_buffer_tools.cc",
-    "test/audio_buffer_tools.h",
-    "test/audio_processing_builder_for_testing.cc",
-    "test/audio_processing_builder_for_testing.h",
-    "test/bitexactness_tools.cc",
-    "test/bitexactness_tools.h",
-    "test/performance_timer.cc",
-    "test/performance_timer.h",
-    "test/simulator_buffers.cc",
-    "test/simulator_buffers.h",
-    "test/test_utils.cc",
-    "test/test_utils.h",
-  ]
+if (rtc_include_tests) {
+  rtc_library("audioproc_test_utils") {
+    visibility = [ "*" ]
+    testonly = true
+    sources = [
+      "test/audio_buffer_tools.cc",
+      "test/audio_buffer_tools.h",
+      "test/audio_processing_builder_for_testing.cc",
+      "test/audio_processing_builder_for_testing.h",
+      "test/bitexactness_tools.cc",
+      "test/bitexactness_tools.h",
+      "test/performance_timer.cc",
+      "test/performance_timer.h",
+      "test/simulator_buffers.cc",
+      "test/simulator_buffers.h",
+      "test/test_utils.cc",
+      "test/test_utils.h",
+    ]
 
-  configs += [ ":apm_debug_dump" ]
+    configs += [ ":apm_debug_dump" ]
 
-  deps = [
-    ":api",
-    ":audio_buffer",
-    ":audio_processing",
-    "../../api:array_view",
-    "../../api/audio:audio_frame_api",
-    "../../common_audio",
-    "../../rtc_base:checks",
-    "../../rtc_base:rtc_base_approved",
-    "../../rtc_base/system:arch",
-    "../../system_wrappers",
-    "../../test:fileutils",
-    "../../test:test_support",
-    "../audio_coding:neteq_input_audio_tools",
-    "//testing/gtest",
-  ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+    deps = [
+      ":api",
+      ":audio_buffer",
+      ":audio_processing",
+      "../../api:array_view",
+      "../../api/audio:audio_frame_api",
+      "../../common_audio",
+      "../../rtc_base:checks",
+      "../../rtc_base:rtc_base_approved",
+      "../../rtc_base/system:arch",
+      "../../system_wrappers",
+      "../../test:fileutils",
+      "../../test:test_support",
+      "../audio_coding:neteq_input_audio_tools",
+      "//testing/gtest",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  }
 }

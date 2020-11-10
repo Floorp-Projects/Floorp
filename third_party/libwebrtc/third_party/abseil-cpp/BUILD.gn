@@ -10,7 +10,7 @@ import("//build/config/c++/c++.gni")
 import("//build/config/sanitizers/sanitizers.gni")
 import("//build/toolchain/toolchain.gni")
 import("//build_overrides/build.gni")
-import("//testing/test.gni")
+#import("//testing/test.gni")
 import("//third_party/abseil-cpp/absl.gni")
 
 config("absl_component_build") {
@@ -178,7 +178,7 @@ config("absl_test_cflags_cc") {
   }
 }
 
-if (!is_component_build) {
+if (false) {
   test("absl_tests") {
     testonly = true
     deps = [

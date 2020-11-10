@@ -191,8 +191,8 @@ rtc_library("audio_device_impl") {
     "dummy/file_audio_device.cc",
     "dummy/file_audio_device.h",
     "include/fake_audio_device.h",
-    "include/test_audio_device.cc",
-    "include/test_audio_device.h",
+    #"include/test_audio_device.cc",
+    #"include/test_audio_device.h",
   ]
 
   if (build_with_mozilla) {
@@ -349,20 +349,22 @@ if (is_mac) {
   }
 }
 
-rtc_source_set("mock_audio_device") {
-  testonly = true
-  sources = [
-    "include/mock_audio_device.h",
-    "include/mock_audio_transport.h",
-    "mock_audio_device_buffer.h",
-  ]
-  deps = [
-    ":audio_device",
-    ":audio_device_buffer",
-    ":audio_device_impl",
-    "../../rtc_base:refcount",
-    "../../test:test_support",
-  ]
+if (rtc_include_tests) {
+  rtc_source_set("mock_audio_device") {
+    testonly = true
+    sources = [
+      "include/mock_audio_device.h",
+      "include/mock_audio_transport.h",
+      "mock_audio_device_buffer.h",
+    ]
+    deps = [
+      ":audio_device",
+      ":audio_device_buffer",
+      ":audio_device_impl",
+      "../../rtc_base:refcount",
+      "../../test:test_support",
+    ]
+  }
 }
 
 if (rtc_include_tests) {

@@ -75,15 +75,17 @@ absl_source_set("thread_pool") {
   visibility = [ "//third_party/abseil-cpp/absl/*" ]
 }
 
-absl_source_set("per_thread_sem_test_common") {
-  testonly = true
-  sources = [ "internal/per_thread_sem_test.cc" ]
-  deps = [
-    ":synchronization",
-    "//third_party/abseil-cpp/absl/base",
-    "//third_party/abseil-cpp/absl/base:config",
-    "//third_party/abseil-cpp/absl/strings",
-    "//third_party/abseil-cpp/absl/time",
-    "//third_party/googletest:gtest",
-  ]
+if (false) {
+  absl_source_set("per_thread_sem_test_common") {
+    testonly = true
+    sources = [ "internal/per_thread_sem_test.cc" ]
+    deps = [
+      ":synchronization",
+      "//third_party/abseil-cpp/absl/base",
+      "//third_party/abseil-cpp/absl/base:config",
+      "//third_party/abseil-cpp/absl/strings",
+      "//third_party/abseil-cpp/absl/time",
+      "//third_party/googletest:gtest",
+    ]
+  }
 }

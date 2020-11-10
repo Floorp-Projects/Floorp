@@ -98,18 +98,20 @@ rtc_source_set("sctp_transport_factory_interface") {
   sources = [ "sctp_transport_factory_interface.h" ]
 }
 
-rtc_source_set("stun_types") {
-  visibility = [ "*" ]
-  sources = [
-    "stun.cc",
-    "stun.h",
-  ]
+if (!build_with_mozilla) {
+  rtc_source_set("stun_types") {
+    visibility = [ "*" ]
+    sources = [
+      "stun.cc",
+      "stun.h",
+    ]
 
-  deps = [
-    "../../rtc_base:checks",
-    "../../rtc_base:rtc_base",
-    "../../rtc_base:rtc_base_approved",
-  ]
+    deps = [
+      "../../rtc_base:checks",
+      "../../rtc_base:rtc_base",
+      "../../rtc_base:rtc_base_approved",
+    ]
+  }
 }
 
 if (rtc_include_tests) {

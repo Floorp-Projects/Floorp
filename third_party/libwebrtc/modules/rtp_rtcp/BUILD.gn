@@ -252,7 +252,7 @@ rtc_library("rtp_rtcp") {
     "../../api:array_view",
     "../../api:frame_transformer_interface",
     "../../api:function_view",
-    "../../api:libjingle_peerconnection_api",
+    #"../../api:libjingle_peerconnection_api",
     "../../api:rtp_headers",
     "../../api:rtp_packet_info",
     "../../api:rtp_parameters",
@@ -381,24 +381,26 @@ rtc_library("fec_test_helper") {
   ]
 }
 
-rtc_library("mock_rtp_rtcp") {
-  testonly = true
-  public = [
-    "mocks/mock_recovered_packet_receiver.h",
-    "mocks/mock_rtcp_bandwidth_observer.h",
-    "mocks/mock_rtcp_rtt_stats.h",
-    "mocks/mock_rtp_rtcp.h",
-  ]
-  deps = [
-    ":rtp_rtcp",
-    ":rtp_rtcp_format",
-    "..:module_api",
-    "../../api/video:video_bitrate_allocation",
-    "../../rtc_base:checks",
-    "../../rtc_base:rtc_base_approved",
-    "../../test:test_support",
-  ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+if (rtc_include_tests) {
+  rtc_library("mock_rtp_rtcp") {
+    testonly = true
+    public = [
+      "mocks/mock_recovered_packet_receiver.h",
+      "mocks/mock_rtcp_bandwidth_observer.h",
+      "mocks/mock_rtcp_rtt_stats.h",
+      "mocks/mock_rtp_rtcp.h",
+    ]
+    deps = [
+      ":rtp_rtcp",
+      ":rtp_rtcp_format",
+      "..:module_api",
+      "../../api/video:video_bitrate_allocation",
+      "../../rtc_base:checks",
+      "../../rtc_base:rtc_base_approved",
+      "../../test:test_support",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  }
 }
 
 if (rtc_include_tests) {

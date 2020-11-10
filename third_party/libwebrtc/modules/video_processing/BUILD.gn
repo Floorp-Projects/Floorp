@@ -38,7 +38,7 @@ rtc_library("video_processing") {
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base/system:arch",
     "../../system_wrappers",
-    "//third_party/libyuv",
+    #"//third_party/libyuv",
   ]
   if (build_video_processing_sse2) {
     deps += [ ":video_processing_sse2" ]
