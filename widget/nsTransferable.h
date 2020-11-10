@@ -6,6 +6,7 @@
 #ifndef nsTransferable_h__
 #define nsTransferable_h__
 
+#include "nsICookieJarSettings.h"
 #include "nsIFormatConverter.h"
 #include "nsITransferable.h"
 #include "nsCOMPtr.h"
@@ -79,6 +80,7 @@ class nsTransferable : public nsITransferable {
   bool mPrivateData;
   nsCOMPtr<nsIPrincipal> mRequestingPrincipal;
   nsContentPolicyType mContentPolicyType;
+  nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
 #if DEBUG
   bool mInitialized;
 #endif
