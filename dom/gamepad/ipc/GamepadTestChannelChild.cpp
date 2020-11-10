@@ -8,26 +8,24 @@
 
 namespace mozilla::dom {
 
-already_AddRefed<GamepadTestChannelChild> GamepadTestChannelChild::Create() {
-  return RefPtr<GamepadTestChannelChild>(new GamepadTestChannelChild())
+already_AddRefed<GamepadTestChannelChild> GamepadTestChannelChild::Create(
+    GamepadServiceTest* aGamepadServiceTest) {
+  return RefPtr<GamepadTestChannelChild>(
+             new GamepadTestChannelChild(aGamepadServiceTest))
       .forget();
 }
 
-void GamepadTestChannelChild::AddPromise(const uint32_t& aID,
-                                         Promise* aPromise) {
-  MOZ_ASSERT(!mPromiseList.Get(aID, nullptr));
-  mPromiseList.Put(aID, RefPtr{aPromise});
-}
+GamepadTestChannelChild::GamepadTestChannelChild(
+    GamepadServiceTest* aGamepadServiceTest)
+    : mGamepadServiceTest(aGamepadServiceTest) {}
 
 mozilla::ipc::IPCResult GamepadTestChannelChild::RecvReplyGamepadIndex(
     const uint32_t& aID, const uint32_t& aIndex) {
-  RefPtr<Promise> p;
-  if (!mPromiseList.Get(aID, getter_AddRefs(p))) {
-    MOZ_CRASH("We should always have a promise.");
-  }
+  MOZ_RELEASE_ASSERT(
+      mGamepadServiceTest,
+      "Test channel should never outlive the owning GamepadServiceTest");
 
-  p->MaybeResolve(aIndex);
-  mPromiseList.Remove(aID);
+  mGamepadServiceTest->ReplyGamepadIndex(aID, aIndex);
   return IPC_OK();
 }
 

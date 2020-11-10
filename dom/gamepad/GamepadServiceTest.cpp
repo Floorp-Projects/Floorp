@@ -60,7 +60,9 @@ GamepadServiceTest::GamepadServiceTest(nsPIDOMWindowInner* aWindow)
       mShuttingDown(false),
       mChild(nullptr) {}
 
-GamepadServiceTest::~GamepadServiceTest() = default;
+GamepadServiceTest::~GamepadServiceTest() {
+  MOZ_ASSERT(mPromiseList.IsEmpty());
+}
 
 void GamepadServiceTest::InitPBackgroundActor() {
   MOZ_ASSERT(!mChild);
@@ -71,12 +73,23 @@ void GamepadServiceTest::InitPBackgroundActor() {
     MOZ_CRASH("Failed to create a PBackgroundChild actor!");
   }
 
-  mChild = GamepadTestChannelChild::Create();
+  mChild = GamepadTestChannelChild::Create(this);
   PGamepadTestChannelChild* initedChild =
       actor->SendPGamepadTestChannelConstructor(mChild.get());
   if (NS_WARN_IF(!initedChild)) {
     MOZ_CRASH("Failed to create a PBackgroundChild actor!");
   }
+}
+
+void GamepadServiceTest::ReplyGamepadIndex(uint32_t aPromiseId,
+                                           uint32_t aIndex) {
+  RefPtr<Promise> p;
+  if (!mPromiseList.Get(aPromiseId, getter_AddRefs(p))) {
+    MOZ_CRASH("We should always have a promise.");
+  }
+
+  p->MaybeResolve(aIndex);
+  mPromiseList.Remove(aPromiseId);
 }
 
 void GamepadServiceTest::DestroyPBackgroundActor() {
@@ -106,7 +119,9 @@ already_AddRefed<Promise> GamepadServiceTest::AddGamepad(
 
   uint32_t id = ++mEventNumber;
 
-  mChild->AddPromise(id, p);
+  MOZ_ASSERT(!mPromiseList.Get(id, nullptr));
+  mPromiseList.Put(id, RefPtr{p});
+
   mChild->SendGamepadTestEvent(id, e);
 
   return p.forget();
