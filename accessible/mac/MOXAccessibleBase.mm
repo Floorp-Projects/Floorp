@@ -179,6 +179,10 @@ mozilla::LogModule* GetMacAccessibilityLog() {
           value);
     } else if (![attribute isEqualToString:@"AXParent"] &&
                ![attribute isEqualToString:@"AXRole"] &&
+               ![attribute isEqualToString:@"AXSubrole"] &&
+               ![attribute isEqualToString:@"AXSize"] &&
+               ![attribute isEqualToString:@"AXPosition"] &&
+               ![attribute isEqualToString:@"AXRole"] &&
                ![attribute isEqualToString:@"AXChildren"]) {
       LOG(LogLevel::Debug, @"%@ attributeValue %@", self, attribute);
     }
@@ -222,6 +226,9 @@ mozilla::LogModule* GetMacAccessibilityLog() {
   if ([self isExpired]) {
     return;
   }
+
+  LOG(LogLevel::Debug, @"%@ setValueForattribute %@ = %@", self, attribute,
+      value);
 
   NSDictionary* setters = mac::AttributeSetters();
   if (setters[attribute]) {
@@ -273,6 +280,8 @@ mozilla::LogModule* GetMacAccessibilityLog() {
   if ([self isExpired]) {
     return;
   }
+
+  LOG(LogLevel::Debug, @"%@ performAction %@ ", self, action);
 
   NSDictionary* actions = mac::Actions();
   if (actions[action]) {
