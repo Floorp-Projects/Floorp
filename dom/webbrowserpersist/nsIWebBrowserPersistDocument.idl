@@ -15,6 +15,7 @@ interface nsIWebBrowserPersistResourceVisitor;
 interface nsIWebBrowserPersistWriteCompletion;
 interface nsIReferrerInfo;
 interface nsISHEntry;
+interface nsICookieJarSettings;
 
 webidl BrowsingContext;
 
@@ -67,6 +68,7 @@ interface nsIWebBrowserPersistDocument : nsISupports
   readonly attribute ACString characterSet;
   readonly attribute AString title;
   readonly attribute nsIReferrerInfo referrerInfo;
+  readonly attribute nsICookieJarSettings cookieJarSettings;
   readonly attribute AString contentDisposition;
   readonly attribute nsIInputStream postData;
   readonly attribute nsIPrincipal principal;
