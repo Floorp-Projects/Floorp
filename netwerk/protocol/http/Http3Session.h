@@ -46,7 +46,7 @@ class Http3Session final : public nsAHttpTransaction,
   NS_DECL_NSAHTTPSEGMENTWRITER
 
   Http3Session();
-  nsresult Init(const nsACString& aOrigin, const nsACString& aAlpnToken,
+  nsresult Init(const nsHttpConnectionInfo* aConnInfo,
                 nsISocketTransport* aSocketTransport,
                 HttpConnectionUDP* readerWriter);
 
@@ -206,6 +206,8 @@ class Http3Session final : public nsAHttpTransaction,
   // NS_NET_STATUS_CONNECTED_TO event will be created by the Http3Session.
   // We want to  propagate it to the first transaction.
   RefPtr<nsHttpTransaction> mFirstHttpTransaction;
+
+  RefPtr<nsHttpConnectionInfo> mConnInfo;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Http3Session, NS_HTTP3SESSION_IID);
