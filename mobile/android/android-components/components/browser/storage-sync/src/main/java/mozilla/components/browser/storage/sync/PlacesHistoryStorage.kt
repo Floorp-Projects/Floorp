@@ -9,6 +9,7 @@ import kotlinx.coroutines.withContext
 import mozilla.appservices.places.PlacesApi
 import mozilla.appservices.places.PlacesException
 import mozilla.appservices.places.VisitObservation
+import mozilla.appservices.places.FrecencyThresholdOption
 import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
@@ -102,7 +103,10 @@ open class PlacesHistoryStorage(
 
     override suspend fun getTopFrecentSites(numItems: Int): List<TopFrecentSiteInfo> {
         return withContext(readScope.coroutineContext) {
-            places.reader().getTopFrecentSiteInfos(numItems).map { it.into() }
+            places.reader().getTopFrecentSiteInfos(
+                numItems,
+                frecencyThreshold = FrecencyThresholdOption.NONE
+            ).map { it.into() }
         }
     }
 

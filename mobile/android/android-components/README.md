@@ -210,6 +210,8 @@ _Components and libraries to interact with backend services._
 
 * 🔵 [**Location**](components/service/location/README.md) - A library for accessing Mozilla's and other location services.
 
+* 🔴 [**Nimbus**](components/service/nimbus/README.md) - A wrapper for the Nimbus SDK.
+
 * 🔴 [**Pocket**](components/service/pocket/README.md) - A library for communicating with the Pocket API.
 
 ## Support

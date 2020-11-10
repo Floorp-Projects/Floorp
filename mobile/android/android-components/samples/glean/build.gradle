@@ -48,8 +48,10 @@ android {
 
 dependencies {
     implementation project(':service-glean')
-    implementation project(':service-experiments')
+    implementation project(':service-nimbus')
     implementation project(':support-base')
+    implementation project(':support-rusthttp')
+    implementation project(':support-rustlog')
     implementation project(':lib-fetch-httpurlconnection')
 
     implementation Dependencies.kotlin_stdlib

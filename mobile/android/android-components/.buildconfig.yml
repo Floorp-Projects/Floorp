@@ -296,6 +296,10 @@ projects:
     path: components/service/glean
     description: 'A client-side telemetry SDK for collecting metrics and sending them to the Mozilla telemetry service'
     publish: true
+  service-nimbus:
+    path: components/service/nimbus
+    description: 'A client-side experiment SDK'
+    publish: true
   service-pocket:
     path: components/service/pocket
     description: 'A library to communicate with the Pocket API'

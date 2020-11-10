@@ -11,7 +11,7 @@ The main concepts shown in the sample app are:
 * Usage of the `metrics.yaml` file.
 * Integration between Glean and the application's build process to generate the specific metrics API.
 * Usage of the generated specific metrics API.
-* Integration of the Experiments library.
+* Integration of the Nimbus experimentation library.
 
 ## License
 

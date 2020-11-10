@@ -9,7 +9,8 @@ import android.graphics.Color
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
-import mozilla.components.service.experiments.Experiments
+import mozilla.components.service.nimbus.Nimbus
+import org.mozilla.experiments.nimbus.EnrolledExperiment
 import org.mozilla.samples.glean.GleanMetrics.Test
 import org.mozilla.samples.glean.GleanMetrics.BrowserEngagement
 import org.mozilla.samples.glean.library.SamplesGleanLibrary
@@ -19,9 +20,10 @@ import org.mozilla.samples.glean.library.SamplesGleanLibrary
  */
 open class MainActivity : AppCompatActivity(), ExperimentUpdateReceiver.ExperimentUpdateListener {
 
-    // This BroadcastReceiver is not relevant to the Glean SDK, but is relevant to the experiments
-    // library.
+    // This BroadcastReceiver and list are not relevant to the Glean SDK, but is relevant to the
+    // Nimbus experiments library.
     private var experimentUpdateReceiver: ExperimentUpdateReceiver? = null
+    private var activeExperiments: List<EnrolledExperiment> = listOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,8 +61,23 @@ open class MainActivity : AppCompatActivity(), ExperimentUpdateReceiver.Experime
         SamplesGleanLibrary.recordMetric()
         SamplesGleanLibrary.recordExperiment()
 
-        // The following is not relevant to the Glean SDK, but to the experiments library.
+        // The following is not relevant to the Glean SDK, but to the Nimbus experiments library.
         // Set up the ExperimentUpdateReceiver to receive experiment updated Intents.
+        setupNimbusExperiments()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(experimentUpdateReceiver)
+    }
+
+    /** Begin Nimbus component specific functions */
+
+    /**
+     * This sets up the update receiver and sets the onClickListener for the "Update Experiments"
+     * button. This is not relevant to the Glean SDK, but to the Nimbus experiments library.
+     */
+    private fun setupNimbusExperiments() {
         experimentUpdateReceiver = ExperimentUpdateReceiver(this)
         val filter = IntentFilter()
         filter.addAction("org.mozilla.samples.glean.experiments.updated")
@@ -72,31 +89,33 @@ open class MainActivity : AppCompatActivity(), ExperimentUpdateReceiver.Experime
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        unregisterReceiver(experimentUpdateReceiver)
-    }
-
     /**
      * This function will be called by the ExperimentUpdateListener interface when the experiments
-     * are updated.  This is not relevant to the Glean SDK, but to the experiments library.
+     * are updated. This is not relevant to the Glean SDK, but to the Nimbus experiments library.
      */
     override fun onExperimentsUpdated() {
         textViewExperimentStatus.setBackgroundColor(Color.WHITE)
         textViewExperimentStatus.text = getString(R.string.experiment_not_active)
 
-        Experiments.withExperiment("test-color") {
-            val color = when (it) {
+        activeExperiments = Nimbus.getActiveExperiments()
+
+        if (activeExperiments.any { it.slug == "test-color" }) {
+            val color = when (Nimbus.getExperimentBranch("test-color")) {
                 "blue" -> Color.BLUE
                 "red" -> Color.RED
                 "control" -> Color.DKGRAY
                 else -> Color.WHITE
             }
+
             // Dispatch the UI work back to the appropriate thread
             this@MainActivity.runOnUiThread {
                 textViewExperimentStatus.setBackgroundColor(color)
-                textViewExperimentStatus.text = getString(R.string.experiment_active_branch, it)
+                textViewExperimentStatus.text = getString(
+                    R.string.experiment_active_branch,
+                    "Experiment Branch: ${Nimbus.getExperimentBranch("test-color")}")
             }
         }
     }
+
+    /** End Nimbus component functions */
 }
