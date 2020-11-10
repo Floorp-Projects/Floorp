@@ -291,7 +291,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
             getString(R.string.snackbar_deleted_undo),
             {
                 requireComponents.useCases.tabsUseCases.undo.invoke()
-                _tabTrayView?.scrollToTab(tab.id)
+                _tabTrayView?.scrollToSelectedBrowserTab(tab.id)
             },
             operation = { },
             elevation = ELEVATION,

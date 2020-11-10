@@ -157,9 +157,6 @@ class TabTrayView(
 
         val tabs = getTabs(isPrivate)
 
-        val selectedBrowserTabIndex = tabs
-            .indexOfFirst { it.id == view.context.components.core.store.state.selectedTabId }
-
         updateBottomSheetBehavior()
 
         setTopOffset(isInLandscape())
@@ -208,14 +205,14 @@ class TabTrayView(
                 }
                 if (!hasLoaded) {
                     hasLoaded = true
-                    scrollToTab(view.context.components.core.store.state.selectedTabId)
+                    scrollToSelectedBrowserTab()
                     if (view.context.settings().accessibilityServicesEnabled) {
                         lifecycleScope.launch {
                             delay(SELECTION_DELAY.toLong())
                             lifecycleScope.launch(Main) {
-                                layoutManager?.findViewByPosition(selectedBrowserTabIndex)
+                                layoutManager?.findViewByPosition(getSelectedBrowserTabViewIndex())
                                     ?.requestFocus()
-                                layoutManager?.findViewByPosition(selectedBrowserTabIndex)
+                                layoutManager?.findViewByPosition(getSelectedBrowserTabViewIndex())
                                     ?.sendAccessibilityEvent(
                                         AccessibilityEvent.TYPE_VIEW_FOCUSED
                                     )
@@ -367,7 +364,7 @@ class TabTrayView(
         toggleSaveToCollectionButton(isPrivateModeSelected)
 
         updateUINormalMode(view.context.components.core.store.state)
-        scrollToTab(view.context.components.core.store.state.selectedTabId)
+        scrollToSelectedBrowserTab()
 
         if (isPrivateModeSelected) {
             components.analytics.metrics.track(Event.TabsTrayPrivateModeTapped)
@@ -682,28 +679,39 @@ class TabTrayView(
         return interactor.onBackPressed()
     }
 
-    fun scrollToTab(sessionId: String?) {
+    fun scrollToSelectedBrowserTab(selectedTabId: String? = null) {
         view.tabsTray.apply {
-            val tabs = if (isPrivateModeSelected) {
-                view.context.components.core.store.state.privateTabs
-            } else {
-                view.context.components.core.store.state.normalTabs
-            }
-
-            val selectedBrowserTabIndex = tabs
-                .indexOfFirst { it.id == sessionId }
-
-            // We offset the tab index by the number of items in the other adapters.
-            // We add the offset, because the layoutManager is initialized with `reverseLayout`.
-            val recyclerViewIndex = selectedBrowserTabIndex +
-                collectionsButtonAdapter.itemCount +
-                syncedTabsController.adapter.itemCount
+            val recyclerViewIndex = getSelectedBrowserTabViewIndex(selectedTabId)
 
             layoutManager?.scrollToPosition(recyclerViewIndex)
             smoothScrollBy(
                 0,
                 - resources.getDimensionPixelSize(R.dimen.tab_tray_tab_item_height) / 2
             )
+        }
+    }
+
+    private fun getSelectedBrowserTabViewIndex(sessionId: String? = null): Int {
+        val tabs = if (isPrivateModeSelected) {
+            view.context.components.core.store.state.privateTabs
+        } else {
+            view.context.components.core.store.state.normalTabs
+        }
+
+        val selectedBrowserTabIndex = if (sessionId != null) {
+            tabs.indexOfFirst { it.id == sessionId }
+        } else {
+            tabs.indexOfFirst { it.id == view.context.components.core.store.state.selectedTabId }
+        }
+
+        // We offset the tab index by the number of items in the other adapters.
+        // We add the offset, because the layoutManager is initialized with `reverseLayout`.
+        return if (view.context.settings().listTabView) {
+            selectedBrowserTabIndex +
+                    collectionsButtonAdapter.itemCount +
+                    syncedTabsController.adapter.itemCount
+        } else {
+            selectedBrowserTabIndex
         }
     }
 
