@@ -2,6 +2,9 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+const ERROR_LINE_NUMBER = 41;
+const EXCEPTION_LINE_NUMBER = ERROR_LINE_NUMBER + 3;
+
 function maybeAsyncStack(offset, column) {
   if (
     Services.prefs.getBoolPref(
@@ -35,7 +38,7 @@ declTest("sendQuery Error", {
     is(error.name, "SyntaxError", "Error should have the correct name");
     is(
       error.stack,
-      "receiveMessage@resource://testing-common/TestWindowChild.jsm:35:31\n" +
+      `receiveMessage@resource://testing-common/TestWindowChild.jsm:${ERROR_LINE_NUMBER}:31\n` +
         asyncStack,
       "Error should have the correct stack"
     );
@@ -63,7 +66,7 @@ declTest("sendQuery Exception", {
     );
     is(
       error.stack,
-      "receiveMessage@resource://testing-common/TestWindowChild.jsm:38:22\n" +
+      `receiveMessage@resource://testing-common/TestWindowChild.jsm:${EXCEPTION_LINE_NUMBER}:22\n` +
         asyncStack,
       "Error should have the correct stack"
     );

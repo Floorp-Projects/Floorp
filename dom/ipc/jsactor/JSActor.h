@@ -82,6 +82,8 @@ class JSActor : public nsISupports, public nsWrapperCache {
 
   bool CanSend() const { return mCanSend; }
 
+  void ThrowStateErrorForGetter(const char* aName, ErrorResult& aRv) const;
+
   void StartDestroy();
   void AfterDestroy();
 
