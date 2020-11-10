@@ -457,10 +457,11 @@ async function submitForm(browser, action = "") {
     info("Submitting form to:" + form.action);
     form.submit();
 
+    let win = content;
     await ContentTaskUtils.waitForCondition(() => {
       return (
-        content.location.pathname == actionPathname &&
-        content.document.readyState == "complete"
+        win.location.pathname == actionPathname &&
+        win.document.readyState == "complete"
       );
     }, "Wait for form submission load");
   });

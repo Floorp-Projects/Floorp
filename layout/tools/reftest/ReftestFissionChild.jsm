@@ -138,7 +138,11 @@ class ReftestFissionChild extends JSWindowActorChild {
               }
             }
 
-            flushWindow(this.contentWindow);
+            // `contentWindow` will be null if the inner window for this actor
+            // has been navigated away from.
+            if (this.contentWindow) {
+              flushWindow(this.contentWindow);
+            }
 
             if (anyPendingPaintsGeneratedInDescendants &&
                 !this.contentWindow.windowUtils.isMozAfterPaintPending) {
