@@ -223,6 +223,8 @@ class nsITheme : public nsISupports {
    * Should we insert a dropmarker inside of combobox button?
    */
   virtual bool ThemeNeedsComboboxDropmarker() = 0;
+
+  virtual bool ThemeSupportsScrollbarButtons() { return true; }
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITheme, NS_ITHEME_IID)
