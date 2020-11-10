@@ -11,6 +11,90 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 loadScripts({ name: "attributes.js", dir: MOCHITESTS_DIR });
 
 /**
+ * Helper function to test table consistency.
+ */
+function testTableConsistency(table, expectedRowCount, expectedColumnCount) {
+  is(table.getAttributeValue("AXRole"), "AXTable", "Correct role for table");
+
+  let tableChildren = table.getAttributeValue("AXChildren");
+  // XXX: Should be expectedRowCount+ExpectedColumnCount+1 children, rows (incl headers) + cols + headers
+  // if we're trying to match Safari.
+  is(
+    tableChildren.length,
+    expectedRowCount + expectedColumnCount,
+    "Table has children = rows (4) + cols (3)"
+  );
+  for (let i = 0; i < tableChildren.length; i++) {
+    let currChild = tableChildren[i];
+    if (i < expectedRowCount) {
+      is(
+        currChild.getAttributeValue("AXRole"),
+        "AXRow",
+        "Correct role for row"
+      );
+    } else {
+      is(
+        currChild.getAttributeValue("AXRole"),
+        "AXColumn",
+        "Correct role for col"
+      );
+      is(
+        currChild.getAttributeValue("AXRoleDescription"),
+        "column",
+        "Correct role desc for col"
+      );
+    }
+  }
+
+  is(
+    table.getAttributeValue("AXColumnCount"),
+    expectedColumnCount,
+    "Table has correct column count."
+  );
+  is(
+    table.getAttributeValue("AXRowCount"),
+    expectedRowCount,
+    "Table has correct row count."
+  );
+
+  let cols = table.getAttributeValue("AXColumns");
+  is(cols.length, expectedColumnCount, "Table has col list of correct length");
+  for (let i = 0; i < cols.length; i++) {
+    let currCol = cols[i];
+    let currChildren = currCol.getAttributeValue("AXChildren");
+    is(
+      currChildren.length,
+      expectedRowCount,
+      "Column has correct number of cells"
+    );
+    for (let j = 0; j < currChildren.length; j++) {
+      let currChild = currChildren[j];
+      is(
+        currChild.getAttributeValue("AXRole"),
+        "AXCell",
+        "Column child is cell"
+      );
+    }
+  }
+
+  let rows = table.getAttributeValue("AXRows");
+  is(rows.length, expectedRowCount, "Table has row list of correct length");
+  for (let i = 0; i < rows.length; i++) {
+    let currRow = rows[i];
+    let currChildren = currRow.getAttributeValue("AXChildren");
+    is(
+      currChildren.length,
+      expectedColumnCount,
+      "Row has correct number of cells"
+    );
+    for (let j = 0; j < currChildren.length; j++) {
+      let currChild = currChildren[j];
+      is(currChild.getAttributeValue("AXRole"), "AXCell", "Row child is cell");
+    }
+  }
+}
+
+/**
  * Test table, columns, rows
  */
 addAccessibleTask(
@@ -24,76 +108,7 @@ addAccessibleTask(
   </table>`,
   async (browser, accDoc) => {
     let table = getNativeInterface(accDoc, "customers");
-    is(table.getAttributeValue("AXRole"), "AXTable", "Correct role for table");
-
-    let tableChildren = table.getAttributeValue("AXChildren");
-    // XXX: Should be 8 children, rows (incl headers) + cols + headers
-    // if we're trying to match Safari.
-    is(tableChildren.length, 7, "Table has children = rows (4) + cols (3)");
-    for (let i = 0; i < tableChildren.length; i++) {
-      let currChild = tableChildren[i];
-      if (i < 4) {
-        is(
-          currChild.getAttributeValue("AXRole"),
-          "AXRow",
-          "Correct role for row"
-        );
-      } else {
-        is(
-          currChild.getAttributeValue("AXRole"),
-          "AXColumn",
-          "Correct role for col"
-        );
-        is(
-          currChild.getAttributeValue("AXRoleDescription"),
-          "column",
-          "Correct role desc for col"
-        );
-      }
-    }
-
-    is(
-      table.getAttributeValue("AXColumnCount"),
-      3,
-      "Table has correct column count."
-    );
-    is(
-      table.getAttributeValue("AXRowCount"),
-      4,
-      "Table has correct row count."
-    );
-
-    let cols = table.getAttributeValue("AXColumns");
-    is(cols.length, 3, "Table has col list of correct length");
-    for (let i = 0; i < cols.length; i++) {
-      let currCol = cols[i];
-      let currChildren = currCol.getAttributeValue("AXChildren");
-      is(currChildren.length, 4, "Column has correct number of cells");
-      for (let j = 0; j < currChildren.length; j++) {
-        let currChild = currChildren[j];
-        is(
-          currChild.getAttributeValue("AXRole"),
-          "AXCell",
-          "Column child is cell"
-        );
-      }
-    }
-
-    let rows = table.getAttributeValue("AXRows");
-    is(rows.length, 4, "Table has row list of correct length");
-    for (let i = 0; i < rows.length; i++) {
-      let currRow = rows[i];
-      let currChildren = currRow.getAttributeValue("AXChildren");
-      is(currChildren.length, 3, "Row has correct number of cells");
-      for (let j = 0; j < currChildren.length; j++) {
-        let currChild = currChildren[j];
-        is(
-          currChild.getAttributeValue("AXRole"),
-          "AXCell",
-          "Row child is cell"
-        );
-      }
-    }
+    testTableConsistency(table, 4, 3);
 
     const rowText = [
       "Madrigal Electromotive GmbH",
@@ -112,7 +127,7 @@ addAccessibleTask(
     });
     await reorder;
 
-    cols = table.getAttributeValue("AXColumns");
+    let cols = table.getAttributeValue("AXColumns");
     is(cols.length, 3, "Table has col list of correct length");
     for (let i = 0; i < cols.length; i++) {
       let currCol = cols[i];
@@ -239,5 +254,28 @@ addAccessibleTask(
       1,
       "Layout table has single child (no additional columns)"
     );
+  }
+);
+
+addAccessibleTask(
+  `<div id="table" role="table">
+    <span style="display: block;">
+      <div role="row">
+        <div role="cell">Cell 1</div>
+        <div role="cell">Cell 2</div>
+      </div>
+    </span>
+    <span style="display: block;">
+      <div role="row">
+        <span style="display: block;">
+          <div role="cell">Cell 3</div>
+          <div role="cell">Cell 4</div>
+        </span>
+      </div>
+    </span>
+  </div>`,
+  async (browser, accDoc) => {
+    let table = getNativeInterface(accDoc, "table");
+    testTableConsistency(table, 2, 2);
   }
 );
