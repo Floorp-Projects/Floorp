@@ -360,10 +360,14 @@ async function unregisterServiceWorker(tab, expectedPageUrl) {
 async function waitForRegistrationReady(tab, expectedPageUrl) {
   await asyncWaitUntil(() =>
     SpecialPowers.spawn(tab.linkedBrowser, [expectedPageUrl], function(_url) {
-      const win = content.wrappedJSObject;
-      const isExpectedUrl = win.location.href === _url;
-      const hasRegistration = !!win.registration;
-      return isExpectedUrl && hasRegistration;
+      try {
+        const win = content.wrappedJSObject;
+        const isExpectedUrl = win.location.href === _url;
+        const hasRegistration = !!win.registration;
+        return isExpectedUrl && hasRegistration;
+      } catch (e) {
+        return false;
+      }
     })
   );
 }
