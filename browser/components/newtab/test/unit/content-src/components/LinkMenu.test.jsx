@@ -369,7 +369,7 @@ describe("<LinkMenu>", () => {
         pocket_id: FAKE_SITE.pocket_id,
         forceBlock: FAKE_SITE.bookmarkGuid,
       },
-      "newtab-menu-pin": { site: { url: FAKE_SITE.url }, index: FAKE_INDEX },
+      "newtab-menu-pin": { site: FAKE_SITE, index: FAKE_INDEX },
       "newtab-menu-unpin": { site: { url: FAKE_SITE.url } },
       "newtab-menu-save-to-pocket": {
         site: { url: FAKE_SITE.url, title: FAKE_SITE.title },
@@ -483,7 +483,7 @@ describe("<LinkMenu>", () => {
         });
     });
     it(`should pin a SPOC with all of the site details sent`, () => {
-      const pinSpocTopSite = "PinSpocTopSite";
+      const pinSpocTopSite = "PinTopSite";
       const { options: spocOptions } = shallow(
         <LinkMenu
           site={FAKE_SITE}

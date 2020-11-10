@@ -5088,35 +5088,13 @@ const LinkMenuOptions = {
       }
     })
   }),
-  PinSpocTopSite: (site, index) => ({
+  PinTopSite: (site, index) => ({
     id: "newtab-menu-pin",
     icon: "pin",
     action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].AlsoToMain({
       type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TOP_SITES_PIN,
       data: {
         site,
-        index
-      }
-    }),
-    userEvent: "PIN"
-  }),
-  PinTopSite: ({
-    url,
-    searchTopSite,
-    label
-  }, index) => ({
-    id: "newtab-menu-pin",
-    icon: "pin",
-    action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].AlsoToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TOP_SITES_PIN,
-      data: {
-        site: {
-          url,
-          ...(searchTopSite && {
-            searchTopSite,
-            label
-          })
-        },
         index
       }
     }),
@@ -9086,8 +9064,8 @@ __webpack_require__.r(__webpack_exports__);
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 const TOP_SITES_SOURCE = "TOP_SITES";
 const TOP_SITES_CONTEXT_MENU_OPTIONS = ["CheckPinTopSite", "EditTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "DeleteUrl"];
-const TOP_SITES_SPOC_CONTEXT_MENU_OPTIONS = ["PinSpocTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "ShowPrivacyInfo"];
-const TOP_SITES_SPONSORED_POSITION_CONTEXT_MENU_OPTIONS = ["PinSpocTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "AboutSponsored"]; // the special top site for search shortcut experiment can only have the option to unpin (which removes) the topsite
+const TOP_SITES_SPOC_CONTEXT_MENU_OPTIONS = ["PinTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "ShowPrivacyInfo"];
+const TOP_SITES_SPONSORED_POSITION_CONTEXT_MENU_OPTIONS = ["PinTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "AboutSponsored"]; // the special top site for search shortcut experiment can only have the option to unpin (which removes) the topsite
 
 const TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS = ["CheckPinTopSite", "Separator", "BlockUrl"]; // minimum size necessary to show a rich icon instead of a screenshot
 
@@ -9336,7 +9314,7 @@ class TopSiteLink extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompo
 
 
   _allowDrop(e) {
-    return !this.props.link.sponsored_position && e.dataTransfer.types.includes("text/topsite-index");
+    return (this.dragged || !this.props.link.sponsored_position) && e.dataTransfer.types.includes("text/topsite-index");
   }
 
   onDragEvent(event) {
@@ -9849,18 +9827,6 @@ class TopSiteList extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompo
 
       case "drop":
         if (index !== this.state.draggedIndex) {
-          // Adjust insertion index for sponsored sites since their position is
-          // fixed.
-          let topSites = this._getTopSites();
-
-          let adjustedIndex = index;
-
-          for (let i = 0; i < index; i++) {
-            if (topSites[i] && topSites[i].sponsored_position && i !== this.state.draggedIndex) {
-              adjustedIndex--;
-            }
-          }
-
           this.dropped = true;
           this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].AlsoToMain({
             type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TOP_SITES_INSERT,
@@ -9874,11 +9840,11 @@ class TopSiteList extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompo
                   searchTopSite: true
                 })
               },
-              index: adjustedIndex,
+              index,
               draggedFromIndex: this.state.draggedIndex
             }
           }));
-          this.userEvent("DROP", adjustedIndex);
+          this.userEvent("DROP", index);
         }
 
         break;
