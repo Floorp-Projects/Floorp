@@ -14,6 +14,12 @@ class TestWindowChild extends JSWindowActorChild {
   constructor() {
     super();
     this.sawActorCreated = false;
+
+    try {
+      void this.contentWindow;
+    } catch (e) {
+      this.uninitializedGetterError = e;
+    }
   }
 
   actorCreated() {

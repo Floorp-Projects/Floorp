@@ -17,6 +17,27 @@ declTest("destroy actor by iframe remove", {
       let actorChild = child.getActor("TestWindow");
       ok(actorChild, "JSWindowActorChild should have value.");
 
+      {
+        let error = actorChild.uninitializedGetterError;
+        const prop = "contentWindow";
+        Assert.ok(
+          error,
+          `Should get error accessing '${prop}' before actor initialization`
+        );
+        if (error) {
+          Assert.equal(
+            error.name,
+            "InvalidStateError",
+            "Error should be an InvalidStateError"
+          );
+          Assert.equal(
+            error.message,
+            `JSWindowActorChild.${prop} getter: Cannot access property '${prop}' before actor is initialized`,
+            "Error should have informative message"
+          );
+        }
+      }
+
       let didDestroyPromise = new Promise(resolve => {
         const TOPIC = "test-js-window-actor-diddestroy";
         Services.obs.addObserver(function obs(subject, topic, data) {
@@ -24,7 +45,10 @@ declTest("destroy actor by iframe remove", {
           is(subject, actorChild, "Should have this value");
 
           Services.obs.removeObserver(obs, TOPIC);
-          resolve();
+          // Make a trip through the event loop to ensure that the
+          // actor's manager has been cleared before running remaining
+          // checks.
+          Services.tm.dispatchToMainThread(resolve);
         }, TOPIC);
       });
 
@@ -37,6 +61,36 @@ declTest("destroy actor by iframe remove", {
         /InvalidStateError/,
         "Should throw if frame destroy."
       );
+
+      for (let prop of [
+        "document",
+        "browsingContext",
+        "docShell",
+        "contentWindow",
+      ]) {
+        let error;
+        try {
+          void actorChild[prop];
+        } catch (e) {
+          error = e;
+        }
+        Assert.ok(
+          error,
+          `Should get error accessing '${prop}' after actor destruction`
+        );
+        if (error) {
+          Assert.equal(
+            error.name,
+            "InvalidStateError",
+            "Error should be an InvalidStateError"
+          );
+          Assert.equal(
+            error.message,
+            `JSWindowActorChild.${prop} getter: Cannot access property '${prop}' after actor 'TestWindow' has been destroyed`,
+            "Error should have informative message"
+          );
+        }
+      }
     });
   },
 });
