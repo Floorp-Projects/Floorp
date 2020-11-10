@@ -4,14 +4,18 @@
 
 package mozilla.components.feature.top.sites
 
+import mozilla.components.concept.storage.FrecencyThresholdOption
+
 /**
  * Top sites configuration to specify the number of top sites to display and
  * whether or not to include top frecent sites in the top sites feature.
  *
  * @property totalSites A total number of sites that will be displayed.
- * @property includeFrecent If true, includes frecent top site results.
+ * @property frecencyConfig If [frecencyConfig] is specified, only visited sites with a frecency
+ * score above the given threshold will be returned. Otherwise, frecent top site results are
+ * not included.
  */
 data class TopSitesConfig(
     val totalSites: Int,
-    val includeFrecent: Boolean
+    val frecencyConfig: FrecencyThresholdOption?
 )

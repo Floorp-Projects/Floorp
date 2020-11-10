@@ -6,6 +6,7 @@ package mozilla.components.feature.session
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
+import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
@@ -97,7 +98,10 @@ class HistoryDelegateTest {
                 return emptyList()
             }
 
-            override suspend fun getTopFrecentSites(numItems: Int): List<TopFrecentSiteInfo> {
+            override suspend fun getTopFrecentSites(
+                numItems: Int,
+                frecencyThreshold: FrecencyThresholdOption
+            ): List<TopFrecentSiteInfo> {
                 fail()
                 return emptyList()
             }
@@ -144,6 +148,7 @@ class HistoryDelegateTest {
                 fail()
             }
         }
+
         val storage = TestHistoryStorage()
         val delegate = HistoryDelegate(lazy { storage })
 

@@ -11,6 +11,7 @@ import mozilla.appservices.places.PlacesException
 import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
 import mozilla.components.concept.storage.BookmarkNode
+import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.RedirectSource
@@ -156,15 +157,24 @@ class PlacesHistoryStorageTest {
             history.recordVisit(url, PageVisit(VisitType.LINK, RedirectSource.NOT_A_SOURCE))
         }
 
-        var infos = history.getTopFrecentSites(0)
+        var infos = history.getTopFrecentSites(0, frecencyThreshold = FrecencyThresholdOption.NONE)
         assertEquals(0, infos.size)
 
-        infos = history.getTopFrecentSites(3)
+        infos = history.getTopFrecentSites(0, frecencyThreshold = FrecencyThresholdOption.SKIP_ONE_TIME_PAGES)
+        assertEquals(0, infos.size)
+
+        infos = history.getTopFrecentSites(3, frecencyThreshold = FrecencyThresholdOption.NONE)
         assertEquals(3, infos.size)
         assertEquals("https://www.mozilla.com/foo/bar/baz", infos[0].url)
         assertEquals("https://www.example.com/123", infos[1].url)
+        assertEquals("https://news.ycombinator.com/", infos[2].url)
 
-        infos = history.getTopFrecentSites(5)
+        infos = history.getTopFrecentSites(3, frecencyThreshold = FrecencyThresholdOption.SKIP_ONE_TIME_PAGES)
+        assertEquals(2, infos.size)
+        assertEquals("https://www.mozilla.com/foo/bar/baz", infos[0].url)
+        assertEquals("https://www.example.com/123", infos[1].url)
+
+        infos = history.getTopFrecentSites(5, frecencyThreshold = FrecencyThresholdOption.NONE)
         assertEquals(5, infos.size)
         assertEquals("https://www.mozilla.com/foo/bar/baz", infos[0].url)
         assertEquals("https://www.example.com/123", infos[1].url)
@@ -172,13 +182,26 @@ class PlacesHistoryStorageTest {
         assertEquals("https://mozilla.com/a1/b2/c3", infos[3].url)
         assertEquals("https://www.example.com/12345", infos[4].url)
 
-        infos = history.getTopFrecentSites(100)
+        infos = history.getTopFrecentSites(5, frecencyThreshold = FrecencyThresholdOption.SKIP_ONE_TIME_PAGES)
+        assertEquals(2, infos.size)
+        assertEquals("https://www.mozilla.com/foo/bar/baz", infos[0].url)
+        assertEquals("https://www.example.com/123", infos[1].url)
+
+        infos = history.getTopFrecentSites(100, frecencyThreshold = FrecencyThresholdOption.NONE)
         assertEquals(5, infos.size)
         assertEquals("https://www.mozilla.com/foo/bar/baz", infos[0].url)
         assertEquals("https://www.example.com/123", infos[1].url)
         assertEquals("https://news.ycombinator.com/", infos[2].url)
         assertEquals("https://mozilla.com/a1/b2/c3", infos[3].url)
         assertEquals("https://www.example.com/12345", infos[4].url)
+
+        infos = history.getTopFrecentSites(100, frecencyThreshold = FrecencyThresholdOption.SKIP_ONE_TIME_PAGES)
+        assertEquals(2, infos.size)
+        assertEquals("https://www.mozilla.com/foo/bar/baz", infos[0].url)
+        assertEquals("https://www.example.com/123", infos[1].url)
+
+        infos = history.getTopFrecentSites(-4, frecencyThreshold = FrecencyThresholdOption.SKIP_ONE_TIME_PAGES)
+        assertEquals(0, infos.size)
     }
 
     @Test

@@ -9,20 +9,20 @@ import kotlinx.coroutines.withContext
 import mozilla.appservices.places.PlacesApi
 import mozilla.appservices.places.PlacesException
 import mozilla.appservices.places.VisitObservation
-import mozilla.appservices.places.FrecencyThresholdOption
+import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.PageVisit
-import mozilla.components.concept.storage.SearchResult
 import mozilla.components.concept.storage.RedirectSource
+import mozilla.components.concept.storage.SearchResult
 import mozilla.components.concept.storage.TopFrecentSiteInfo
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
-import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.segmentAwareDomainMatch
 import org.json.JSONObject
@@ -101,12 +101,17 @@ open class PlacesHistoryStorage(
         }
     }
 
-    override suspend fun getTopFrecentSites(numItems: Int): List<TopFrecentSiteInfo> {
+    override suspend fun getTopFrecentSites(
+        numItems: Int,
+        frecencyThreshold: FrecencyThresholdOption
+    ): List<TopFrecentSiteInfo> {
+        if (numItems <= 0) {
+            return emptyList()
+        }
+
         return withContext(readScope.coroutineContext) {
-            places.reader().getTopFrecentSiteInfos(
-                numItems,
-                frecencyThreshold = FrecencyThresholdOption.NONE
-            ).map { it.into() }
+            places.reader().getTopFrecentSiteInfos(numItems, frecencyThreshold.into())
+                .map { it.into() }
         }
     }
 

@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @file:Suppress("MatchingDeclarationName")
+
 package mozilla.components.browser.storage.sync
 
 import mozilla.appservices.places.BookmarkFolder
@@ -12,6 +13,7 @@ import mozilla.appservices.places.BookmarkTreeNode
 import mozilla.appservices.places.SyncAuthInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
+import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.concept.storage.TopFrecentSiteInfo
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
@@ -29,6 +31,15 @@ internal fun mozilla.components.concept.sync.SyncAuthInfo.into(): SyncAuthInfo {
         syncKey = this.syncKey,
         tokenserverURL = this.tokenServerUrl
     )
+}
+
+/**
+ * Conversion from a generic [FrecencyThresholdOption] into its richer comrade within the 'places' lib.
+ */
+internal fun FrecencyThresholdOption.into() = when (this) {
+    FrecencyThresholdOption.NONE -> mozilla.appservices.places.FrecencyThresholdOption.NONE
+    FrecencyThresholdOption.SKIP_ONE_TIME_PAGES ->
+        mozilla.appservices.places.FrecencyThresholdOption.SKIP_ONE_TIME_PAGES
 }
 
 /**

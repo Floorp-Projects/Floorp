@@ -5,12 +5,13 @@
 package mozilla.components.browser.storage.memory
 
 import androidx.annotation.VisibleForTesting
+import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
-import mozilla.components.concept.storage.SearchResult
 import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.RedirectSource
+import mozilla.components.concept.storage.SearchResult
 import mozilla.components.concept.storage.TopFrecentSiteInfo
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
@@ -94,7 +95,10 @@ class InMemoryHistoryStorage : HistoryStorage {
         return visits
     }
 
-    override suspend fun getTopFrecentSites(numItems: Int): List<TopFrecentSiteInfo> {
+    override suspend fun getTopFrecentSites(
+        numItems: Int,
+        frecencyThreshold: FrecencyThresholdOption
+    ): List<TopFrecentSiteInfo> {
         throw UnsupportedOperationException("getTopFrecentSites is not yet supported by the in-memory history storage")
     }
 

@@ -69,13 +69,18 @@ interface HistoryStorage : Storage {
     ): List<VisitInfo>
 
     /**
-     * Returns a list of the top frecent site infos limited by the given number of items
-     * sorted by most to least frecent.
+     * Returns a list of the top frecent site infos limited by the given number of items and
+     * frecency threshold sorted by most to least frecent.
      *
      * @param numItems the number of top frecent sites to return in the list.
+     * @param frecencyThreshold frecency threshold option for filtering visited sites based on
+     * their frecency score.
      * @return a list of the [TopFrecentSiteInfo], most frecent first.
      */
-    suspend fun getTopFrecentSites(numItems: Int): List<TopFrecentSiteInfo>
+    suspend fun getTopFrecentSites(
+        numItems: Int,
+        frecencyThreshold: FrecencyThresholdOption
+    ): List<TopFrecentSiteInfo>
 
     /**
      * Retrieves suggestions matching the [query].
@@ -146,8 +151,10 @@ data class PageVisit(
 enum class RedirectSource {
     // The page didn't redirect to another page.
     NOT_A_SOURCE,
+
     // The page temporarily redirected to another page.
     TEMPORARY,
+
     // The page permanently redirected to another page.
     PERMANENT,
 }
@@ -164,6 +171,17 @@ data class TopFrecentSiteInfo(
     val url: String,
     val title: String?
 )
+
+/**
+ * Frecency threshold options for fetching top frecent sites.
+ */
+enum class FrecencyThresholdOption {
+    /** Returns all visited pages. */
+    NONE,
+
+    /** Skip visited pages that were only visited once. */
+    SKIP_ONE_TIME_PAGES
+}
 
 /**
  * Information about a history visit.
@@ -187,8 +205,10 @@ data class VisitInfo(
 enum class VisitType(val type: Int) {
     // Internal visit type used for meta data updates. Doesn't represent an actual page visit.
     NOT_A_VISIT(-1),
+
     // User followed a link.
     LINK(1),
+
     // User typed a URL or selected it from the UI (autocomplete results, etc).
     TYPED(2),
     BOOKMARK(3),

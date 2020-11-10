@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.top.sites
 
+import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.support.base.observer.Observable
 
 /**
@@ -37,12 +38,17 @@ interface TopSitesStorage : Observable<TopSitesStorage.Observer> {
 
     /**
      * Return a unified list of top sites based on the given number of sites desired.
-     * If `includeFrecent` is true, fill in any missing top sites with frecent top site results.
+     * If `frecencyConfig` is specified, fill in any missing top sites with frecent top site results.
      *
      * @param totalSites A total number of sites that will be retrieve if possible.
-     * @param includeFrecent If true, includes frecent top site results.
+     * @param frecencyConfig If [frecencyConfig] is specified, only visited sites with a frecency
+     * score above the given threshold will be returned. Otherwise, frecent top site results are
+     * not included.
      */
-    suspend fun getTopSites(totalSites: Int, includeFrecent: Boolean): List<TopSite>
+    suspend fun getTopSites(
+        totalSites: Int,
+        frecencyConfig: FrecencyThresholdOption?
+    ): List<TopSite>
 
     /**
      * Return a count of top sites.
