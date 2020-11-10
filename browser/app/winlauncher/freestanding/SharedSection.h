@@ -47,6 +47,30 @@ class MOZ_TRIVIAL_CTOR_DTOR Kernel32ExportsSolver final
 // This class manages a section which is created in the launcher process and
 // mapped in the browser process and the sandboxed processes as a copy-on-write
 // region.  The section's layout is represented as SharedSection::Layout.
+//
+// (1) Kernel32's functions required for MMPolicyInProcessEarlyStage
+//     Formatted as Kernel32ExportsSolver.
+//
+// (2) Array of NT paths of the executable's dependent modules
+//     Array item is an offset to a string buffer of a module's
+//     NT path, relative to the beginning of the array.
+//     Array is case-insensitive sorted.
+//
+// +--------------------------------------------------------------+
+// | (1) | FlushInstructionCache                                  |
+// |     | GetSystemInfo                                          |
+// |     | VirtualProtect                                         |
+// |     | State [Uninitialized|Initialized|Resolved]             |
+// +--------------------------------------------------------------+
+// | (2) | The length of the offset array                         |
+// |     | Offset1 to String1                                     |
+// |     |   * Offset is relative to the beginning of the array   |
+// |     |   * String is an NT path in wchar_t                    |
+// |     | Offset2 to String2                                     |
+// |     | ...                                                    |
+// |     | OffsetN to StringN                                     |
+// |     | String1, 2, ..., N (null delimited strings)            |
+// +--------------------------------------------------------------+
 class MOZ_TRIVIAL_CTOR_DTOR SharedSection final {
   // As we define a global variable of this class and use it in our blocklist
   // which is excuted in a process's early stage.  If we have a complex dtor,
@@ -60,6 +84,8 @@ class MOZ_TRIVIAL_CTOR_DTOR SharedSection final {
  public:
   struct Layout final {
     Kernel32ExportsSolver mK32Exports;
+    uint32_t mModulePathArrayLength;
+    uint32_t mModulePathArray[1];
 
     Layout() = delete;  // disallow instantiation
   };

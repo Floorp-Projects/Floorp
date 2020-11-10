@@ -111,10 +111,63 @@ void SharedSection::Reset(HANDLE aNewSecionObject) {
   sSectionHandle = aNewSecionObject;
 }
 
+static void PackOffsetVector(const Vector<nt::MemorySectionNameOnHeap>& aSource,
+                             SharedSection::Layout& aDestination,
+                             size_t aStringBufferOffset) {
+  aDestination.mModulePathArrayLength = aSource.length();
+
+  uint32_t* curItem = aDestination.mModulePathArray;
+  uint8_t* const arrayBase = reinterpret_cast<uint8_t*>(curItem);
+  for (const auto& it : aSource) {
+    // Fill the current offset value
+    *(curItem++) = aStringBufferOffset;
+
+    // Fill a string and a null character
+    uint32_t lenInBytes = it.AsUnicodeString()->Length;
+    memcpy(arrayBase + aStringBufferOffset, it.AsUnicodeString()->Buffer,
+           lenInBytes);
+    memset(arrayBase + aStringBufferOffset + lenInBytes, 0, sizeof(WCHAR));
+
+    // Advance the offset
+    aStringBufferOffset += (lenInBytes + sizeof(WCHAR));
+  }
+
+  // Sort the offset array so that we can binary-search it
+  std::sort(aDestination.mModulePathArray,
+            aDestination.mModulePathArray + aSource.length(),
+            [arrayBase](uint32_t a, uint32_t b) {
+              auto s1 = reinterpret_cast<const wchar_t*>(arrayBase + a);
+              auto s2 = reinterpret_cast<const wchar_t*>(arrayBase + b);
+              return wcsicmp(s1, s2) < 0;
+            });
+}
+
 LauncherVoidResult SharedSection::Init(const nt::PEHeaders& aPEHeaders) {
-  HANDLE section =
-      ::CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0,
-                           sizeof(Kernel32ExportsSolver), nullptr);
+  size_t stringBufferSize = 0;
+  Vector<nt::MemorySectionNameOnHeap> modules;
+  aPEHeaders.EnumImportChunks(
+      [&stringBufferSize, &modules, &aPEHeaders](const char* aModule) {
+#if defined(DONT_SKIP_DEFAULT_DEPENDENT_MODULES)
+        Unused << aPEHeaders;
+#else
+        if (aPEHeaders.IsWithinImage(aModule)) {
+          return;
+        }
+#endif
+        HMODULE module = ::GetModuleHandleA(aModule);
+        nt::MemorySectionNameOnHeap ntPath =
+            nt::MemorySectionNameOnHeap::GetBackingFilePath(nt::kCurrentProcess,
+                                                            module);
+        stringBufferSize += (ntPath.AsUnicodeString()->Length + sizeof(WCHAR));
+        Unused << modules.emplaceBack(std::move(ntPath));
+      });
+
+  size_t arraySize = modules.length() * sizeof(Layout::mModulePathArray[0]);
+  size_t totalSize =
+      sizeof(Kernel32ExportsSolver) + arraySize + stringBufferSize;
+
+  HANDLE section = ::CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr,
+                                        PAGE_READWRITE, 0, totalSize, nullptr);
   if (!section) {
     return LAUNCHER_ERROR_FROM_LAST();
   }
@@ -131,6 +184,7 @@ LauncherVoidResult SharedSection::Init(const nt::PEHeaders& aPEHeaders) {
 
   SharedSection::Layout* view = writableView.as<SharedSection::Layout>();
   view->mK32Exports.Init();
+  PackOffsetVector(modules, *view, arraySize);
 
   return Ok();
 }
@@ -157,6 +211,23 @@ LauncherVoidResult SharedSection::TransferHandle(
 
   return aTransferMgr.Transfer(aDestinationAddress, &remoteHandle,
                                sizeof(remoteHandle));
+}
+
+extern "C" MOZ_EXPORT uint32_t GetDependentModulePaths(uint32_t** aOutArray) {
+  LauncherResult<SharedSection::Layout*> resultView = gSharedSection.GetView();
+  if (resultView.isErr()) {
+    if (aOutArray) {
+      *aOutArray = nullptr;
+    }
+    return 0;
+  }
+
+  if (aOutArray) {
+    // Return a valid address even if the array length is zero
+    // to distinguish it from an error case.
+    *aOutArray = resultView.inspect()->mModulePathArray;
+  }
+  return resultView.inspect()->mModulePathArrayLength;
 }
 
 }  // namespace freestanding
