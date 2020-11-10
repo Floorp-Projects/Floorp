@@ -245,6 +245,18 @@ FileDescriptorFile::MoveToNative(nsIFile* aNewParent,
 }
 
 NS_IMETHODIMP
+FileDescriptorFile::MoveToFollowingLinks(nsIFile* aNewParent,
+                                         const nsAString& aNewName) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+FileDescriptorFile::MoveToFollowingLinksNative(nsIFile* aNewParent,
+                                               const nsACString& aNewName) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 FileDescriptorFile::RenameTo(nsIFile* aNewParentDir,
                              const nsAString& aNewName) {
   return NS_ERROR_NOT_IMPLEMENTED;

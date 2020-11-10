@@ -1979,6 +1979,12 @@ nsLocalFile::MoveTo(nsIFile* aNewParentDir, const nsAString& aNewName) {
 }
 
 NS_IMETHODIMP
+nsLocalFile::MoveToFollowingLinks(nsIFile* aNewParentDir,
+                                  const nsAString& aNewName) {
+  return CopyMove(aNewParentDir, aNewName, Move | FollowSymlinks);
+}
+
+NS_IMETHODIMP
 nsLocalFile::RenameTo(nsIFile* aNewParentDir, const nsAString& aNewName) {
   // If we're not provided with a new parent, we're renaming inside one and
   // the same directory and can safely skip checking if the destination
@@ -3208,6 +3214,25 @@ nsLocalFile::MoveToNative(nsIFile* aNewParentDir, const nsACString& aNewName) {
   nsresult rv = NS_CopyNativeToUnicode(aNewName, tmp);
   if (NS_SUCCEEDED(rv)) {
     return MoveTo(aNewParentDir, tmp);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsLocalFile::MoveToFollowingLinksNative(nsIFile* aNewParentDir,
+                                        const nsACString& aNewName) {
+  // Check we are correctly initialized.
+  CHECK_mWorkingPath();
+
+  if (aNewName.IsEmpty()) {
+    return MoveToFollowingLinks(aNewParentDir, u""_ns);
+  }
+
+  nsAutoString tmp;
+  nsresult rv = NS_CopyNativeToUnicode(aNewName, tmp);
+  if (NS_SUCCEEDED(rv)) {
+    return MoveToFollowingLinks(aNewParentDir, tmp);
   }
 
   return rv;
