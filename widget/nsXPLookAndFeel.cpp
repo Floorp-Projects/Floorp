@@ -98,6 +98,7 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] = {
      6 /* fine and hover-capable pointer, i.e. mouse-type */},
     {"ui.allPointerCapabilities", IntID::AllPointerCapabilities, false,
      6 /* fine and hover-capable pointer, i.e. mouse-type */},
+    {"ui.scrollArrowStyle", IntID::ScrollArrowStyle, false, 0},
 };
 
 nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] = {
