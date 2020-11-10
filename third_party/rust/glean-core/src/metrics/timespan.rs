@@ -32,12 +32,8 @@ impl MetricType for TimespanMetric {
     }
 }
 
-// IMPORTANT:
-//
-// When changing this implementation, make sure all the operations are
-// also declared in the related trait in `../traits/`.
 impl TimespanMetric {
-    /// Creates a new timespan metric.
+    /// Create a new timespan metric.
     pub fn new(meta: CommonMetricData, time_unit: TimeUnit) -> Self {
         Self {
             meta,
@@ -46,7 +42,7 @@ impl TimespanMetric {
         }
     }
 
-    /// Starts tracking time for the provided metric.
+    /// Start tracking time for the provided metric.
     ///
     /// This records an error if it's already tracking time (i.e. start was already
     /// called with no corresponding `stop`): in that case the original
@@ -70,7 +66,7 @@ impl TimespanMetric {
         self.start_time = Some(start_time);
     }
 
-    /// Stops tracking time for the provided metric. Sets the metric to the elapsed time.
+    /// Stop tracking time for the provided metric. Sets the metric to the elapsed time.
     ///
     /// This will record an error if no `start` was called.
     pub fn set_stop(&mut self, glean: &Glean, stop_time: u64) {
@@ -97,12 +93,12 @@ impl TimespanMetric {
         self.set_raw(glean, duration, false);
     }
 
-    /// Aborts a previous `start` call. No error is recorded if no `start` was called.
+    /// Abort a previous `start` call. No error is recorded if no `start` was called.
     pub fn cancel(&mut self) {
         self.start_time = None;
     }
 
-    /// Explicitly sets the timespan value.
+    /// Explicitly set the timespan value.
     ///
     /// This API should only be used if your library or application requires recording
     /// times in a way that can not make use of `start`/`stop`/`cancel`.
@@ -111,7 +107,7 @@ impl TimespanMetric {
     /// timespan measurement. To be safe, `set_raw` should generally be followed by
     /// sending a custom ping containing the timespan.
     ///
-    /// # Arguments
+    /// ## Arguments
     ///
     /// * `elapsed` - The elapsed time to record.
     /// * `overwrite` - Whether or not to overwrite existing data.
@@ -162,7 +158,7 @@ impl TimespanMetric {
 
     /// **Test-only API (exported for FFI purposes).**
     ///
-    /// Gets the currently stored value as an integer.
+    /// Get the currently stored value as an integer.
     ///
     /// This doesn't clear the stored value.
     pub fn test_get_value(&self, glean: &Glean, storage_name: &str) -> Option<u64> {

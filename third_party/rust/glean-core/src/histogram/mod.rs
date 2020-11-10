@@ -85,12 +85,12 @@ pub trait Bucketing {
 }
 
 impl<B: Bucketing> Histogram<B> {
-    /// Gets the number of buckets in this histogram.
+    /// Get the number of buckets in this histogram.
     pub fn bucket_count(&self) -> usize {
         self.values.len()
     }
 
-    /// Adds a single value to this histogram.
+    /// Add a single value to this histogram.
     pub fn accumulate(&mut self, sample: u64) {
         let bucket_min = self.bucketing.sample_to_bucket_minimum(sample);
         let entry = self.values.entry(bucket_min).or_insert(0);
@@ -99,27 +99,27 @@ impl<B: Bucketing> Histogram<B> {
         self.count += 1;
     }
 
-    /// Gets the total sum of values recorded in this histogram.
+    /// Get the total sum of values recorded in this histogram.
     pub fn sum(&self) -> u64 {
         self.sum
     }
 
-    /// Gets the total count of values recorded in this histogram.
+    /// Get the total count of values recorded in this histogram.
     pub fn count(&self) -> u64 {
         self.count
     }
 
-    /// Gets the filled values.
+    /// Get the filled values.
     pub fn values(&self) -> &HashMap<u64, u64> {
         &self.values
     }
 
-    /// Checks if this histogram recorded any values.
+    /// Check if this histogram recorded any values.
     pub fn is_empty(&self) -> bool {
         self.count() == 0
     }
 
-    /// Gets a snapshot of all values from the first bucket until one past the last filled bucket,
+    /// Get a snapshot of all values from the first bucket until one past the last filled bucket,
     /// filling in empty buckets with 0.
     pub fn snapshot_values(&self) -> HashMap<u64, u64> {
         let mut res = self.values.clone();

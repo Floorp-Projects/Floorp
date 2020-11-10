@@ -1,5 +1,0 @@
-error[E0624]: associated function `f` is private
-  --> $DIR/not-visible.rs:17:20
-   |
-17 |     types::Struct::f();
-   |                    ^ private associated function
