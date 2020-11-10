@@ -461,10 +461,22 @@ class nsExternalAppHandler final : public nsIStreamListener,
   bool GetNeverAskFlagFromPref(const char* prefName, const char* aContentType);
 
   /**
-   * Helper routine to ensure that mTempFileExtension only contains an extension
+   * Helper routine that checks whether we should enforce an extension
+   * for this file.
+   */
+  bool ShouldForceExtension(const nsString& aFileExt);
+
+  /**
+   * Helper routine to ensure that mSuggestedFileName ends in the correct
+   * extension, in case the original extension contains invalid characters
+   * or if this download is for a mimetype where we enforce using a specific
+   * extension (image/, video/, and audio/ based mimetypes, and a few specific
+   * document types).
+   *
+   * It also ensure that mTempFileExtension only contains an extension
    * when it is different from mSuggestedFileName's extension.
    */
-  void EnsureTempFileExtension(const nsString& aFileExt);
+  void EnsureCorrectExtension(const nsString& aFileExt);
 
   typedef enum { kReadError, kWriteError, kLaunchError } ErrorType;
   /**

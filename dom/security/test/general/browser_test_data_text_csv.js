@@ -38,12 +38,6 @@ add_task(async function() {
   let win = await windowPromise;
 
   let expectedValue = "text/csv;foo,bar,foobar";
-  let mimeInfo = getMIMEInfoForType("text/csv");
-  try {
-    expectedValue = "." + mimeInfo.primaryExtension;
-  } catch (ex) {
-    /* fails on Windows, bug 1671930 */
-  }
   is(
     win.document.getElementById("location").value,
     expectedValue,
