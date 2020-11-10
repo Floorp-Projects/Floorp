@@ -16,75 +16,28 @@ add_task(async function test_with_different_pref_states() {
     ["browser.toolbars.bookmarks.visibility", "always"],
     ["browser.toolbars.bookmarks.visibility", "never"],
   ];
-  let newTabEnabledStates = [
-    ["browser.newtabpage.enabled", true],
-    ["browser.newtabpage.enabled", false],
-  ];
-
   for (let featureState of bookmarksFeatureStates) {
     for (let visibilityState of bookmarksToolbarVisibilityStates) {
-      for (let newTabEnabledState of newTabEnabledStates) {
-        await SpecialPowers.pushPrefEnv({
-          set: [featureState, visibilityState, newTabEnabledState],
+      await SpecialPowers.pushPrefEnv({
+        set: [featureState, visibilityState],
+      });
+
+      for (let privateWin of [true, false]) {
+        info(
+          `Testing with ${featureState} and ${visibilityState} in a ${
+            privateWin ? "private" : "non-private"
+          } window`
+        );
+        let win = await BrowserTestUtils.openNewBrowserWindow({
+          private: privateWin,
         });
+        is(
+          win.gBrowser.currentURI.spec,
+          privateWin ? "about:privatebrowsing" : "about:blank",
+          "Expecting about:privatebrowsing or about:blank as URI of new window"
+        );
 
-        for (let privateWin of [true, false]) {
-          info(
-            `Testing with ${featureState}, ${visibilityState}, and ${newTabEnabledState} in a ${
-              privateWin ? "private" : "non-private"
-            } window`
-          );
-          let win = await BrowserTestUtils.openNewBrowserWindow({
-            private: privateWin,
-          });
-          is(
-            win.gBrowser.currentURI.spec,
-            privateWin ? "about:privatebrowsing" : "about:blank",
-            "Expecting about:privatebrowsing or about:blank as URI of new window"
-          );
-
-          if (!privateWin) {
-            await waitForBookmarksToolbarVisibility({
-              win,
-              visible:
-                visibilityState[1] == "always" ||
-                (!newTabEnabledState[1] &&
-                  visibilityState[1] == "newtab" &&
-                  featureState[1]),
-              message:
-                "Toolbar should be visible only if visibilityState is 'always'. State: " +
-                visibilityState[1],
-            });
-            await BrowserTestUtils.openNewForegroundTab({
-              gBrowser: win.gBrowser,
-              opening: "about:newtab",
-              waitForLoad: false,
-            });
-          }
-
-          if (featureState[1]) {
-            await waitForBookmarksToolbarVisibility({
-              win,
-              visible:
-                visibilityState[1] == "newtab" ||
-                visibilityState[1] == "always",
-              message:
-                "Toolbar should be visible as long as visibilityState isn't set to 'never'. State: " +
-                visibilityState[1],
-            });
-          } else {
-            await waitForBookmarksToolbarVisibility({
-              win,
-              visible: visibilityState[1] == "always",
-              message:
-                "Toolbar should be visible only if visibilityState is 'always'. State: " +
-                visibilityState[1],
-            });
-          }
-          await BrowserTestUtils.openNewForegroundTab({
-            gBrowser: win.gBrowser,
-            opening: "http://example.com",
-          });
+        if (!privateWin) {
           await waitForBookmarksToolbarVisibility({
             win,
             visible: visibilityState[1] == "always",
@@ -92,8 +45,43 @@ add_task(async function test_with_different_pref_states() {
               "Toolbar should be visible only if visibilityState is 'always'. State: " +
               visibilityState[1],
           });
-          await BrowserTestUtils.closeWindow(win);
+          await BrowserTestUtils.openNewForegroundTab({
+            gBrowser: win.gBrowser,
+            opening: "about:newtab",
+            waitForLoad: false,
+          });
         }
+
+        if (featureState[1]) {
+          await waitForBookmarksToolbarVisibility({
+            win,
+            visible:
+              visibilityState[1] == "newtab" || visibilityState[1] == "always",
+            message:
+              "Toolbar should be visible as long as visibilityState isn't set to 'never'. State: " +
+              visibilityState[1],
+          });
+        } else {
+          await waitForBookmarksToolbarVisibility({
+            win,
+            visible: visibilityState[1] == "always",
+            message:
+              "Toolbar should be visible only if visibilityState is 'always'. State: " +
+              visibilityState[1],
+          });
+        }
+        await BrowserTestUtils.openNewForegroundTab({
+          gBrowser: win.gBrowser,
+          opening: "http://example.com",
+        });
+        await waitForBookmarksToolbarVisibility({
+          win,
+          visible: visibilityState[1] == "always",
+          message:
+            "Toolbar should be visible only if visibilityState is 'always'. State: " +
+            visibilityState[1],
+        });
+        await BrowserTestUtils.closeWindow(win);
       }
     }
   }
