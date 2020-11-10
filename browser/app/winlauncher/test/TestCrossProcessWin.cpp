@@ -6,7 +6,7 @@
 
 #define MOZ_USE_LAUNCHER_ERROR
 
-#include "freestanding/FunctionTableResolver.cpp"
+#include "freestanding/SharedSection.cpp"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/NativeNt.h"
 
