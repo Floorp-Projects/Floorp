@@ -569,6 +569,38 @@ static const nsDefaultMimeTypeEntry nonDecodableExtensions[] = {
     {APPLICATION_GZIP, "svgz"}};
 
 /**
+ * Mimetypes for which we enforce using a known extension.
+ *
+ * In addition to this list, we do this for all audio/, video/ and
+ * image/ mimetypes.
+ */
+static const char* forcedExtensionMimetypes[] = {
+    // OpenDocument formats
+    "application/vnd.oasis.opendocument.text",
+    "application/vnd.oasis.opendocument.presentation",
+    "application/vnd.oasis.opendocument.spreadsheet",
+    "application/vnd.oasis.opendocument.graphics",
+
+    // Legacy Microsoft Office
+    "application/msword", "application/vnd.ms-powerpoint",
+    "application/vnd.ms-excel",
+
+    // Office Open XML
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+
+    APPLICATION_PDF,
+
+    APPLICATION_OGG,
+
+    APPLICATION_ZIP,
+
+    APPLICATION_JSON, APPLICATION_WASM,
+
+    TEXT_CALENDAR, TEXT_CSS, TEXT_VCARD, TEXT_XML};
+
+/**
  * Primary extensions of types whose descriptions should be overwritten.
  * This extension is concatenated with "ExtHandlerDescription" to look up the
  * description in unknownContentType.properties.
@@ -1275,25 +1307,68 @@ nsExternalAppHandler::nsExternalAppHandler(
   mSuggestedFileName.CompressWhitespace();
   mTempFileExtension.CompressWhitespace();
 
-  // After removing trailing whitespaces from the name, if we have a
-  // temp file extension, replace the file extension with it if:
-  // - there is no extant file extension (or it only consists of ".")
-  // - the extant file extension contains invalid characters, or
-  // - the extant file extension is not known by the mimetype.
+  EnsureCorrectExtension(originalFileExt);
+
+  mBufferSize = Preferences::GetUint("network.buffer.cache.size", 4096);
+}
+
+nsExternalAppHandler::~nsExternalAppHandler() {
+  MOZ_ASSERT(!mSaver, "Saver should hold a reference to us until deleted");
+}
+
+bool nsExternalAppHandler::ShouldForceExtension(const nsString& aFileExt) {
+  nsAutoCString MIMEType;
+  if (!mMimeInfo || NS_FAILED(mMimeInfo->GetMIMEType(MIMEType))) {
+    return false;
+  }
+
+  bool canForce = StringBeginsWith(MIMEType, "image/"_ns) ||
+                  StringBeginsWith(MIMEType, "audio/"_ns) ||
+                  StringBeginsWith(MIMEType, "video/"_ns);
+
+  if (!canForce) {
+    for (const char* mime : forcedExtensionMimetypes) {
+      if (MIMEType.Equals(mime)) {
+        canForce = true;
+        break;
+      }
+    }
+    if (!canForce) {
+      return false;
+    }
+  }
+  // If we get here, we know for sure the mimetype allows us to overwrite the
+  // existing extension, if it's wrong. Return whether the extension is wrong:
+
   bool knownExtension = false;
-  // Note that originalFileExt is either empty or consists of an
-  // extension *including the dot* which we need to remove:
-  bool haveBogusExtension =
-      mMimeInfo && !originalFileExt.IsEmpty() &&
-      NS_SUCCEEDED(mMimeInfo->ExtensionExists(
-          Substring(NS_ConvertUTF16toUTF8(originalFileExt), 1),
-          &knownExtension)) &&
-      !knownExtension;
-  if (!mTempFileExtension.IsEmpty() &&
-      (originalFileExt.Length() == 0 || originalFileExt.EqualsLiteral(".") ||
-       originalFileExt.FindCharInSet(
-           KNOWN_PATH_SEPARATORS FILE_ILLEGAL_CHARACTERS) != kNotFound ||
-       haveBogusExtension)) {
+  // Note that aFileExt is either empty or consists of an extension
+  // *including the dot* which we remove for ExtensionExists().
+  return (
+      aFileExt.IsEmpty() || aFileExt.EqualsLiteral(".") ||
+      (NS_SUCCEEDED(mMimeInfo->ExtensionExists(
+           Substring(NS_ConvertUTF16toUTF8(aFileExt), 1), &knownExtension)) &&
+       !knownExtension));
+}
+
+void nsExternalAppHandler::EnsureCorrectExtension(const nsString& aFileExt) {
+  // If we don't have an extension (which will include the .),
+  // just short-circuit.
+  if (mTempFileExtension.Length() <= 1) {
+    return;
+  }
+
+  // After removing trailing whitespaces from the name, if we have a
+  // temp file extension, there are broadly 2 cases where we want to
+  // replace the extension.
+  // First, if the file extension contains invalid characters.
+  // Second, for document type mimetypes, if the extension is either
+  // missing or not valid for this mimetype.
+  bool replaceExtension =
+      (aFileExt.FindCharInSet(KNOWN_PATH_SEPARATORS FILE_ILLEGAL_CHARACTERS) !=
+       kNotFound) ||
+      ShouldForceExtension(aFileExt);
+
+  if (replaceExtension) {
     int32_t pos = mSuggestedFileName.RFindChar('.');
     if (pos != kNotFound) {
       mSuggestedFileName =
@@ -1301,18 +1376,16 @@ nsExternalAppHandler::nsExternalAppHandler(
     } else {
       mSuggestedFileName.Append(mTempFileExtension);
     }
-    originalFileExt = mTempFileExtension;
   }
 
-  // Make sure later we won't append mTempFileExtension if it's identical to
-  // the currently used file extension.
-  EnsureTempFileExtension(originalFileExt);
-
-  mBufferSize = Preferences::GetUint("network.buffer.cache.size", 4096);
-}
-
-nsExternalAppHandler::~nsExternalAppHandler() {
-  MOZ_ASSERT(!mSaver, "Saver should hold a reference to us until deleted");
+  /*
+   * Ensure we don't double-append the file extension if it matches:
+   */
+  if (replaceExtension ||
+      aFileExt.Equals(mTempFileExtension, nsCaseInsensitiveStringComparator)) {
+    // Matches -> mTempFileExtension can be empty
+    mTempFileExtension.Truncate();
+  }
 }
 
 void nsExternalAppHandler::DidDivertRequest(nsIRequest* request) {
@@ -1386,33 +1459,6 @@ void nsExternalAppHandler::RetargetLoadNotifications(nsIRequest* request) {
   nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(aChannel);
   if (pbChannel) {
     pbChannel->SetPrivate(isPrivate);
-  }
-}
-
-/**
- * Make mTempFileExtension contain an extension exactly when its previous value
- * is different from mSuggestedFileName's extension, so that it can be appended
- * to mSuggestedFileName and form a valid, useful leaf name.
- * This is required so that the (renamed) temporary file has the correct
- * extension after downloading to make sure the OS will launch the application
- * corresponding to the MIME type (which was used to calculate
- * mTempFileExtension).  This prevents a cgi-script named foobar.exe that
- * returns application/zip from being named foobar.exe and executed as an
- * executable file. It also blocks content that a web site might provide with a
- * content-disposition header indicating filename="foobar.exe" from being
- * downloaded to a file with extension .exe and executed.
- */
-void nsExternalAppHandler::EnsureTempFileExtension(const nsString& aFileExt) {
-  // Make sure there is a mTempFileExtension (not "" or ".").
-  // Remember that mTempFileExtension will always have the leading "."
-  // (the check for empty is just to be safe).
-  if (mTempFileExtension.Length() > 1) {
-    // Now, compare fileExt to mTempFileExtension.
-    if (aFileExt.Equals(mTempFileExtension,
-                        nsCaseInsensitiveStringComparator)) {
-      // Matches -> mTempFileExtension can be empty
-      mTempFileExtension.Truncate();
-    }
   }
 }
 
