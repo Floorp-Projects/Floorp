@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_SessionStorageObserver_h
 #define mozilla_dom_SessionStorageObserver_h
 
+#include "nsISupportsImpl.h"
+
 namespace mozilla {
 namespace dom {
 

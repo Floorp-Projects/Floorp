@@ -6,6 +6,7 @@
 
 #include "PartitionedLocalStorage.h"
 #include "SessionStorageCache.h"
+#include "nsContentUtils.h"
 
 #include "mozilla/dom/StorageBinding.h"
 

@@ -1917,26 +1917,18 @@ static void LeaveParseTaskZone(JSRuntime* rt, ParseTask* task) {
 }
 
 ParseTask* GlobalHelperThreadState::removeFinishedParseTask(
-    ParseTaskKind kind, JS::OffThreadToken* token) {
+    JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token) {
   // The token is really a ParseTask* which should be in the finished list.
-  // Remove its entry.
   auto task = static_cast<ParseTask*>(token);
-  MOZ_ASSERT(task->kind == kind);
 
+  // The token was passed in from the browser. Check that the pointer is likely
+  // a valid parse task of the expected kind.
+  MOZ_RELEASE_ASSERT(task->runtime == cx->runtime());
+  MOZ_RELEASE_ASSERT(task->kind == kind);
+
+  // Remove the task from the finished list.
   AutoLockHelperThreadState lock;
-
-#ifdef DEBUG
-  auto& finished = parseFinishedList(lock);
-  bool found = false;
-  for (auto t : finished) {
-    if (t == task) {
-      found = true;
-      break;
-    }
-  }
-  MOZ_ASSERT(found);
-#endif
-
+  MOZ_ASSERT(parseFinishedList(lock).contains(task));
   task->remove();
   return task;
 }
@@ -1946,8 +1938,8 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
   MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_ASSERT(cx->realm());
 
-  Rooted<UniquePtr<ParseTask>> parseTask(cx,
-                                         removeFinishedParseTask(kind, token));
+  Rooted<UniquePtr<ParseTask>> parseTask(
+      cx, removeFinishedParseTask(cx, kind, token));
 
   if (parseTask->options.useOffThreadParseGlobal) {
     // Make sure we have all the constructors we need for the prototype

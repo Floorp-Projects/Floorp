@@ -29,3 +29,5 @@ fi
 if [ -z "$CXX" ]; then
     export CXX=clang++
 fi
+
+export DUMP_SYMS="$MOZ_FETCHES_DIR/dump_syms/dump_syms"

@@ -20,9 +20,8 @@ Registrar.commands_by_category = {"testing": set()}
 
 from mozperftest.environment import MachEnvironment  # noqa
 from mozperftest.mach_commands import Perftest, PerftestTests  # noqa
-from mozperftest import utils  # noqa
-from mozperftest.tests.support import EXAMPLE_TEST, EXAMPLE_TESTS_DIR, ROOT  # noqa
-from mozperftest.utils import temporary_env, silence, ON_TRY  # noqa
+from mozperftest.tests.support import EXAMPLE_TEST, ROOT, running_on_try  # noqa
+from mozperftest.utils import temporary_env, silence  # noqa
 
 
 ITERATION_HOOKS = Path(__file__).parent / "data" / "hooks_iteration.py"
@@ -43,20 +42,6 @@ class _TestMachEnvironment(MachEnvironment):
 
     def __exit__(self, type, value, traceback):
         pass
-
-
-@contextmanager
-def running_on_try(on_try=True):
-    old = utils.ON_TRY
-    utils.ON_TRY = on_try
-    try:
-        if on_try:
-            with temporary_env(MOZ_AUTOMATION="1"):
-                yield
-        else:
-            yield
-    finally:
-        utils.ON_TRY = old
 
 
 @contextmanager

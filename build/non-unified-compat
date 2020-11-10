@@ -52,4 +52,7 @@ dom/reporting/
 dom/res/
 dom/script/
 dom/security/
+dom/serviceworkers/
 dom/simpledb/
+dom/smil/
+dom/storage/

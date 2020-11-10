@@ -8,6 +8,7 @@
 #define mozilla_dom_StorageActivityService_h
 
 #include "nsDataHashtable.h"
+#include "nsIObserver.h"
 #include "nsIStorageActivityService.h"
 #include "nsITimer.h"
 #include "nsWeakReference.h"

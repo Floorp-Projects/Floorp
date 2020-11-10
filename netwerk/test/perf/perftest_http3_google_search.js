@@ -67,6 +67,7 @@ async function test(context, commands) {
 module.exports = {
   test,
   owner: "Network Team",
+  component: "netwerk",
   name: "g-search",
   description: "User-journey live site test for google search",
 };

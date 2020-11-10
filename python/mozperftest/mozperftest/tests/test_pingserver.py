@@ -3,13 +3,17 @@ import mozunit
 import json
 import requests
 from pathlib import Path
+import sys
 
 from mozperftest.tests.support import get_running_env
 from mozperftest.system.pingserver import PingServer
-from mozperftest.utils import temp_dir
+from mozperftest.utils import temp_dir, ON_TRY
 
 
 def test_ping_server():
+    if ON_TRY and sys.platform == "darwin":
+        # macos slave in the CI are restricted
+        return
     ping_data = {"some": "data"}
     with temp_dir() as output:
         args = {"verbose": True, "output": output}

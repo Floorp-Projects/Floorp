@@ -7,6 +7,9 @@
 #ifndef moz_dom_ServiceWorkerContainerProxy_h
 #define moz_dom_ServiceWorkerContainerProxy_h
 
+#include "mozilla/dom/ServiceWorkerUtils.h"
+#include "mozilla/RefPtr.h"
+
 namespace mozilla {
 namespace dom {
 

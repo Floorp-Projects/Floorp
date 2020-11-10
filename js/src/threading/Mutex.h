@@ -75,7 +75,8 @@ class Mutex {
 
 #ifdef DEBUG
  public:
-  bool isHeld() const;
+  // This is not threadsafe if the check fails, and should only be used to
+  // assert that the current thread holds the mutex.
   bool ownedByCurrentThread() const;
 
  private:

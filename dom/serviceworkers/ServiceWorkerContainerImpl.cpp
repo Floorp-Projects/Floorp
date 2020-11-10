@@ -6,7 +6,10 @@
 
 #include "ServiceWorkerContainerImpl.h"
 
+#include "ServiceWorkerManager.h"
 #include "ServiceWorkerRegistration.h"
+
+#include "mozilla/dom/DOMMozPromiseRequestHolder.h"
 
 namespace mozilla {
 namespace dom {
