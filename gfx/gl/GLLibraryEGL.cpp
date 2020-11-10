@@ -146,13 +146,13 @@ static std::shared_ptr<EglDisplay> GetAndInitDisplay(GLLibraryEGL& egl,
 
 static std::shared_ptr<EglDisplay> GetAndInitWARPDisplay(GLLibraryEGL& egl,
                                                          void* displayType) {
-  const EGLint attrib_list[] = {LOCAL_EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE,
-                                LOCAL_EGL_PLATFORM_ANGLE_DEVICE_TYPE_WARP_ANGLE,
-                                // Requires:
-                                LOCAL_EGL_PLATFORM_ANGLE_TYPE_ANGLE,
-                                LOCAL_EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
-                                LOCAL_EGL_NONE};
-  const EGLDisplay display = egl.fGetPlatformDisplayEXT(
+  const EGLAttrib attrib_list[] = {LOCAL_EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE,
+                                   LOCAL_EGL_PLATFORM_ANGLE_DEVICE_TYPE_WARP_ANGLE,
+                                   // Requires:
+                                   LOCAL_EGL_PLATFORM_ANGLE_TYPE_ANGLE,
+                                   LOCAL_EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
+                                   LOCAL_EGL_NONE};
+  const EGLDisplay display = egl.fGetPlatformDisplay(
       LOCAL_EGL_PLATFORM_ANGLE_ANGLE, displayType, attrib_list);
 
   if (display == EGL_NO_DISPLAY) {
@@ -176,9 +176,9 @@ std::shared_ptr<EglDisplay> GLLibraryEGL::CreateDisplay(
     return nullptr;
   }
   // Create an EGLDisplay using the EGLDevice
-  const EGLint attrib_list[] = {LOCAL_EGL_NONE};
-  const auto display = fGetPlatformDisplayEXT(LOCAL_EGL_PLATFORM_DEVICE_EXT,
-                                              eglDevice, attrib_list);
+  const EGLAttrib attrib_list[] = {LOCAL_EGL_NONE};
+  const auto display = fGetPlatformDisplay(LOCAL_EGL_PLATFORM_DEVICE_EXT,
+                                           eglDevice, attrib_list);
   if (!display) {
     gfxCriticalNote << "Failed to get EGLDisplay of D3D11Device";
     return nullptr;
@@ -493,7 +493,7 @@ bool GLLibraryEGL::Init(nsACString* const out_failureId) {
 
   if (mIsANGLE) {
     MOZ_ASSERT(IsExtensionSupported(EGLLibExtension::ANGLE_platform_angle_d3d));
-    const SymLoadStruct angleSymbols[] = {SYMBOL(GetPlatformDisplayEXT),
+    const SymLoadStruct angleSymbols[] = {SYMBOL(GetPlatformDisplay),
                                           END_OF_SYMBOLS};
     if (!fnLoadSymbols(angleSymbols)) {
       gfxCriticalError() << "Failed to load ANGLE symbols!";
