@@ -135,6 +135,8 @@ let Player = {
       videoRef,
     });
 
+    PictureInPicture.weakPipToWin.set(this.actor, window);
+
     for (let eventType of this.WINDOW_EVENTS) {
       addEventListener(eventType, this);
     }
@@ -182,7 +184,7 @@ let Player = {
 
   uninit() {
     this.resizeDebouncer.disarm();
-    PictureInPicture.unload(window);
+    PictureInPicture.unload(window, this.actor);
   },
 
   handleEvent(event) {
@@ -256,7 +258,7 @@ let Player = {
       }
 
       case "oop-browser-crashed": {
-        PictureInPicture.closePipWindow({ reason: "browser-crash" });
+        this.closePipWindow({ reason: "browser-crash" });
         break;
       }
 
@@ -269,6 +271,16 @@ let Player = {
         this.uninit();
         break;
       }
+    }
+  },
+
+  closePipWindow(closeData) {
+    const { reason } = closeData;
+
+    if (PictureInPicture.isMultiPipEnabled) {
+      PictureInPicture.closeSinglePipWindow({ reason, actorRef: this.actor });
+    } else {
+      PictureInPicture.closeAllPipWindows({ reason });
     }
   },
 
@@ -296,7 +308,7 @@ let Player = {
 
       case "close": {
         this.actor.sendAsyncMessage("PictureInPicture:Pause");
-        PictureInPicture.closePipWindow({ reason: "close-button" });
+        this.closePipWindow({ reason: "close-button" });
         break;
       }
 
@@ -313,7 +325,7 @@ let Player = {
       }
 
       case "unpip": {
-        PictureInPicture.focusTabAndClosePip();
+        PictureInPicture.focusTabAndClosePip(window, this.actor);
         break;
       }
     }
@@ -350,7 +362,7 @@ let Player = {
   },
 
   onCommand(event) {
-    PictureInPicture.closePipWindow({ reason: "player-shortcut" });
+    this.closePipWindow({ reason: "player-shortcut" });
   },
 
   get controls() {
