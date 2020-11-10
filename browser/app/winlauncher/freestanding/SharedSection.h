@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_freestanding_FunctionTableResolver_h
-#define mozilla_freestanding_FunctionTableResolver_h
+#ifndef mozilla_freestanding_SharedSection_h
+#define mozilla_freestanding_SharedSection_h
 
 #include "mozilla/NativeNt.h"
 #include "mozilla/interceptor/MMPolicies.h"
@@ -57,4 +57,4 @@ extern Kernel32ExportsSolver gK32;
 }  // namespace freestanding
 }  // namespace mozilla
 
-#endif  // mozilla_freestanding_FunctionTableResolver_h
+#endif  // mozilla_freestanding_SharedSection_h

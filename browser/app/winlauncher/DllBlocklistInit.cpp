@@ -18,7 +18,7 @@
 
 #include "DllBlocklistInit.h"
 #include "freestanding/DllBlocklist.h"
-#include "freestanding/FunctionTableResolver.h"
+#include "freestanding/SharedSection.h"
 
 namespace mozilla {
 

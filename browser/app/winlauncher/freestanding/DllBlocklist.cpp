@@ -12,9 +12,9 @@
 #include "mozilla/WindowsDllBlocklist.h"
 
 #include "DllBlocklist.h"
-#include "FunctionTableResolver.h"
 #include "LoaderPrivateAPI.h"
 #include "ModuleLoadFrame.h"
+#include "SharedSection.h"
 
 // clang-format off
 #define MOZ_LITERAL_UNICODE_STRING(s)                                        \
