@@ -6,6 +6,7 @@
 
 #include "ServiceWorkerInfo.h"
 
+#include "ServiceWorkerUtils.h"
 #include "ServiceWorkerPrivate.h"
 #include "ServiceWorkerScriptCache.h"
 #include "mozilla/dom/ClientIPCTypes.h"

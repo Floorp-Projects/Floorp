@@ -47,6 +47,7 @@
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/Services.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Unused.h"

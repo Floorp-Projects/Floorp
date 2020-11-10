@@ -24,6 +24,7 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StorageAccess.h"
+#include "nsGlobalWindowInner.h"
 
 #ifdef XP_WIN
 #  undef PostMessage

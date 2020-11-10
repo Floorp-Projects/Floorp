@@ -7,6 +7,7 @@
 #include "ServiceWorkerRegistrationImpl.h"
 
 #include "ipc/ErrorIPCUtils.h"
+#include "mozilla/dom/DOMMozPromiseRequestHolder.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/PushManagerBinding.h"
