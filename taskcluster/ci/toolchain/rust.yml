@@ -146,6 +146,17 @@ win64-rust-1.47:
         ]
         toolchain-alias: win64-rust
 
+macosx64-rust-nightly:
+    treeherder:
+        symbol: TM(rust-nightly)
+    run:
+        arguments: [
+            '--channel', 'nightly-2020-11-09',
+            '--host', 'x86_64-apple-darwin',
+            '--target', 'x86_64-apple-darwin',
+            '--target', 'aarch64-apple-darwin',
+        ]
+
 mingw32-rust-1.47:
     treeherder:
         symbol: TMW(rust)
