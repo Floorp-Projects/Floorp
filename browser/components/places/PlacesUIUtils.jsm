@@ -1462,6 +1462,15 @@ var PlacesUIUtils = {
     let { unfiledGuid, toolbarGuid } = PlacesUtils.bookmarks;
     return this._2020h2bookmarks ? toolbarGuid : unfiledGuid;
   },
+
+  get defaultParentGuid() {
+    if (!PlacesUIUtils._2020h2bookmarks) {
+      return PlacesUtils.bookmarks.unfiledGuid;
+    }
+    // Defined via a lazy pref getter below, see the comment there about the
+    // reason for this (temporary) setup.
+    return this._defaultParentGuid;
+  },
 };
 
 // These are lazy getters to avoid importing PlacesUtils immediately.
@@ -1518,16 +1527,21 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+/**
+ * This value should be accessed through the defaultParentGuid getter,
+ * which will only access this pref if the browser.toolbars.bookmarks.2h2020
+ * pref is true. We can't put that check directly in the pref transformation
+ * callback below, because then the resulting value doesn't update if the
+ * 2h2020 pref updates, breaking tests and potentially real-world behaviour
+ * if the 2h2020 pref is flipped at runtime.
+ */
 XPCOMUtils.defineLazyPreferenceGetter(
   PlacesUIUtils,
-  "defaultParentGuid",
+  "_defaultParentGuid",
   "browser.bookmarks.defaultLocation",
   "", // Avoid eagerly loading PlacesUtils.
   null,
   prefValue => {
-    if (!PlacesUIUtils._2020h2bookmarks) {
-      return PlacesUtils.bookmarks.unfiledGuid;
-    }
     if (!prefValue) {
       return PlacesUIUtils._nonPrefDefaultParentGuid;
     }
