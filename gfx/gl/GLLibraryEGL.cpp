@@ -175,8 +175,11 @@ std::shared_ptr<EglDisplay> GLLibraryEGL::CreateDisplay(
     gfxCriticalNote << "Failed to get EGLDeviceEXT of D3D11Device";
     return nullptr;
   }
+  const char* features[] = {"allowES3OnFL10_0", nullptr};
   // Create an EGLDisplay using the EGLDevice
-  const EGLAttrib attrib_list[] = {LOCAL_EGL_NONE};
+  const EGLAttrib attrib_list[] = {LOCAL_EGL_FEATURE_OVERRIDES_ENABLED_ANGLE,
+                                   reinterpret_cast<EGLAttrib>(features),
+                                   LOCAL_EGL_NONE};
   const auto display = fGetPlatformDisplay(LOCAL_EGL_PLATFORM_DEVICE_EXT,
                                            eglDevice, attrib_list);
   if (!display) {
