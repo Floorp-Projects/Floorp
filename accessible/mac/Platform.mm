@@ -85,7 +85,8 @@ void ProxyEvent(ProxyAccessible* aProxy, uint32_t aEventType) {
       aEventType != nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE &&
       aEventType != nsIAccessibleEvent::EVENT_REORDER &&
       aEventType != nsIAccessibleEvent::EVENT_LIVE_REGION_ADDED &&
-      aEventType != nsIAccessibleEvent::EVENT_LIVE_REGION_REMOVED)
+      aEventType != nsIAccessibleEvent::EVENT_LIVE_REGION_REMOVED &&
+      aEventType != nsIAccessibleEvent::EVENT_NAME_CHANGE)
     return;
 
   mozAccessible* wrapper = GetNativeFromGeckoAccessible(aProxy);
