@@ -11,18 +11,18 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Buffer.h"
 #include "mozilla/DataMutex.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/Result.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/IOUtilsBinding.h"
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/MozPromise.h"
-#include "mozilla/Result.h"
-#include "nsStringFwd.h"
-#include "nsTArray.h"
 #include "nsIAsyncShutdown.h"
 #include "nsISerialEventTarget.h"
 #include "nsLocalFile.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
+#include "nsStringFwd.h"
+#include "nsTArray.h"
 #include "prio.h"
 
 namespace mozilla {
@@ -171,7 +171,7 @@ class IOUtils final {
   /**
    * Attempts to read the entire file at |aPath| into a buffer.
    *
-   * @param aPath       The location of the file as an absolute path string.
+   * @param aFile       The location of the file.
    * @param aMaxBytes   If |Some|, then only read up this this number of bytes,
    *                    otherwise attempt to read the whole file.
    * @param aDecompress If true, decompress the bytes read from disk before
@@ -181,20 +181,20 @@ class IOUtils final {
    *         error.
    */
   static Result<nsTArray<uint8_t>, IOError> ReadSync(
-      const nsAString& aPath, const Maybe<uint32_t>& aMaxBytes,
+      already_AddRefed<nsIFile> aFile, const Maybe<uint32_t>& aMaxBytes,
       const bool aDecompress);
 
   /**
    * Attempts to read the entire file at |aPath| as a UTF-8 string.
    *
-   * @param aPath       The location of the file as an absolute path string.
+   * @param aFile       The location of the file.
    * @param aDecompress If true, decompress the bytes read from disk before
    *                    returning the result to the caller.
    *
    * @return The (decompressed) contents of the file re-encoded as a UTF-16
    *         string.
    */
-  static Result<nsString, IOError> ReadUTF8Sync(const nsAString& aPath,
+  static Result<nsString, IOError> ReadUTF8Sync(already_AddRefed<nsIFile> aFile,
                                                 const bool aDecompress);
 
   /**

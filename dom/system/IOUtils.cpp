@@ -4,37 +4,37 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "IOUtils.h"
+
 #include <cstdint>
 
-#include "mozilla/dom/IOUtils.h"
 #include "ErrorList.h"
-#include "mozilla/dom/IOUtilsBinding.h"
-#include "mozilla/dom/Promise.h"
 #include "mozilla/Compression.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
+#include "mozilla/dom/IOUtilsBinding.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/UniquePtrExtensions.h"
+#include "mozilla/Unused.h"
+#include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsIDirectoryEnumerator.h"
-#include "nsPrintfCString.h"
-#include "nsTArray.h"
 #include "nsIFile.h"
 #include "nsIGlobalObject.h"
+#include "nsLocalFile.h"
+#include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
+#include "nsTArray.h"
 #include "nsThreadManager.h"
 #include "prerror.h"
 #include "prio.h"
-#include "private/pprio.h"
 #include "prtime.h"
 #include "prtypes.h"
-
-#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
-#  include <fcntl.h>
-#endif
 
 #define REJECT_IF_NULL_EVENT_TARGET(aEventTarget, aJSPromise)  \
   do {                                                         \
@@ -67,6 +67,16 @@
       return (aJSPromise).forget();                                   \
     }                                                                 \
   } while (false)
+
+#define REJECT_IF_INIT_PATH_FAILED(_file, _path, _promise)               \
+  do {                                                                   \
+    if (nsresult _rv = (_file)->InitWithPath((_path)); NS_FAILED(_rv)) { \
+      (_promise)->MaybeRejectWithOperationError(                         \
+          FormatErrorMessage(_rv, "Could not parse path (%s)",           \
+                             NS_ConvertUTF16toUTF8(_path).get()));       \
+      return (_promise).forget();                                        \
+    }                                                                    \
+  } while (0)
 
 namespace mozilla {
 namespace dom {
@@ -235,9 +245,9 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
-  // Process arguments.
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
   Maybe<uint32_t> toRead = Nothing();
   if (!aOptions.mMaxBytes.IsNull()) {
     if (aOptions.mMaxBytes.Value() == 0) {
@@ -249,8 +259,8 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
     toRead.emplace(aOptions.mMaxBytes.Value());
   }
 
-  return RunOnBackgroundThread<nsTArray<uint8_t>>(promise, &ReadSync, path,
-                                                  toRead, aOptions.mDecompress);
+  return RunOnBackgroundThread<nsTArray<uint8_t>>(
+      promise, &ReadSync, file.forget(), toRead, aOptions.mDecompress);
 }
 
 /* static */
@@ -261,11 +271,10 @@ already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
 
-  // Process arguments.
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  return RunOnBackgroundThread<nsString>(promise, &ReadUTF8Sync, path,
+  return RunOnBackgroundThread<nsString>(promise, &ReadUTF8Sync, file.forget(),
                                          aOptions.mDecompress);
 }
 
@@ -278,8 +287,9 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
-  // Process arguments.
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
   aData.ComputeState();
   auto buf = Buffer<uint8_t>::CopyFrom(Span(aData.Data(), aData.Length()));
   if (buf.isNothing()) {
@@ -609,9 +619,11 @@ UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::CreateFileSync(
 
 /* static */
 Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
-    const nsAString& aPath, const Maybe<uint32_t>& aMaxBytes,
+    already_AddRefed<nsIFile> aFile, const Maybe<uint32_t>& aMaxBytes,
     const bool aDecompress) {
   MOZ_ASSERT(!NS_IsMainThread());
+
+  nsCOMPtr<nsIFile> file = aFile;
 
   if (aMaxBytes.isSome() && aDecompress) {
     return Err(
@@ -620,11 +632,12 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
                 "The `maxBytes` and `decompress` options are not compatible"));
   }
 
-  UniquePtr<PRFileDesc, PR_CloseDelete> fd = OpenExistingSync(aPath, PR_RDONLY);
-  if (!fd) {
-    return Err(IOError(NS_ERROR_FILE_NOT_FOUND)
-                   .WithMessage("Could not open the file at %s",
-                                NS_ConvertUTF16toUTF8(aPath).get()));
+  UniquePtr<PRFileDesc, PR_CloseDelete> fd;
+  if (nsresult rv = file->OpenNSPRFileDesc(PR_RDONLY | nsIFile::OS_READAHEAD,
+                                           0666, getter_Transfers(fd));
+      NS_FAILED(rv)) {
+    return Err(IOError(rv).WithMessage("Could not open the file at %s",
+                                       file->HumanReadablePath().get()));
   }
   uint32_t bufSize;
   if (aMaxBytes.isNothing()) {
@@ -635,14 +648,14 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
     if (PR_FAILURE == PR_GetOpenFileInfo64(fd.get(), &info)) {
       return Err(IOError(NS_ERROR_FILE_ACCESS_DENIED)
                      .WithMessage("Could not get info for the file at %s",
-                                  NS_ConvertUTF16toUTF8(aPath).get()));
+                                  file->HumanReadablePath().get()));
     }
     if (static_cast<uint64_t>(info.size) > UINT32_MAX) {
       return Err(
           IOError(NS_ERROR_FILE_TOO_BIG)
               .WithMessage("Could not read the file at %s because it is too "
                            "large(size=%" PRIu64 " bytes)",
-                           NS_ConvertUTF16toUTF8(aPath).get(),
+                           file->HumanReadablePath().get(),
                            static_cast<uint64_t>(info.size)));
     }
     bufSize = static_cast<uint32_t>(info.size);
@@ -654,16 +667,8 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
   if (!buffer.SetCapacity(bufSize, fallible)) {
     return Err(IOError(NS_ERROR_OUT_OF_MEMORY)
                    .WithMessage("Could not allocate buffer to read file(%s)",
-                                NS_ConvertUTF16toUTF8(aPath).get()));
+                                file->HumanReadablePath().get()));
   }
-
-  // If possible, advise the operating system that we will be reading the file
-  // pointed to by |fd| sequentially, in full. This advice is not binding, it
-  // informs the OS about our expectations as an application.
-#if defined(HAVE_POSIX_FADVISE)
-  posix_fadvise(PR_FileDesc2NativeHandle(fd.get()), 0, 0,
-                POSIX_FADV_SEQUENTIAL);
-#endif
 
   // Read the file from disk.
   uint32_t totalRead = 0;
@@ -681,7 +686,7 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
               .WithMessage(
                   "Encountered an unexpected error while reading file(%s)"
                   "(PRErrorCode: %s)",
-                  NS_ConvertUTF16toUTF8(aPath).get(), errName));
+                  file->HumanReadablePath().get(), errName));
     }
     totalRead += nRead;
     DebugOnly<bool> success = buffer.SetLength(totalRead, fallible);
@@ -697,11 +702,12 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
 
 /* static */
 Result<nsString, IOUtils::IOError> IOUtils::ReadUTF8Sync(
-    const nsAString& aPath, const bool aDecompress) {
+    already_AddRefed<nsIFile> aFile, const bool aDecompress) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  return ReadSync(aPath, Nothing(), aDecompress)
-      .andThen([&aPath](const nsTArray<uint8_t>& bytes)
+  nsCOMPtr<nsIFile> file = aFile;
+  return ReadSync(do_AddRef(file), Nothing(), aDecompress)
+      .andThen([file](const nsTArray<uint8_t>& bytes)
                    -> Result<nsString, IOError> {
         auto utf8Span = Span(reinterpret_cast<const char*>(bytes.Elements()),
                              bytes.Length());
@@ -710,7 +716,7 @@ Result<nsString, IOUtils::IOError> IOUtils::ReadUTF8Sync(
               IOError(NS_ERROR_FILE_CORRUPTED)
                   .WithMessage(
                       "Could not read file(%s) because it is not UTF-8 encoded",
-                      NS_ConvertUTF16toUTF8(aPath).get()));
+                      file->HumanReadablePath().get()));
         }
 
         nsDependentCSubstring utf8Str(utf8Span.Elements(), utf8Span.Length());
@@ -720,7 +726,7 @@ Result<nsString, IOUtils::IOError> IOUtils::ReadUTF8Sync(
               IOError(NS_ERROR_OUT_OF_MEMORY)
                   .WithMessage("Could not allocate buffer to convert UTF-8 "
                                "contents of file at (%s) to UTF-16",
-                               NS_ConvertUTF16toUTF8(aPath).get()));
+                               file->HumanReadablePath().get()));
         }
 
         return utf16Str;
@@ -1406,3 +1412,4 @@ NS_IMETHODIMP IOUtilsShutdownBlocker::GetState(nsIPropertyBag** aState) {
 #undef REJECT_IF_NULL_EVENT_TARGET
 #undef REJECT_IF_SHUTTING_DOWN
 #undef REJECT_IF_RELATIVE_PATH
+#undef REJECT_IF_INIT_PATH_FAILED

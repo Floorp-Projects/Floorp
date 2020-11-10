@@ -263,7 +263,7 @@
       info("Test reading a file at a relative destination");
       await Assert.rejects(
         IOUtils.read(tmpFileName),
-        /Refusing to work with path\(.*\) because only absolute file paths are permitted/,
+        /Could not parse path/,
         "IOUtils::writeAtomic only works with absolute paths"
       );
     });
