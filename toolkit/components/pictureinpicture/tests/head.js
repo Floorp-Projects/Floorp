@@ -143,6 +143,27 @@ async function assertShowingMessage(browser, videoID, expected) {
 }
 
 /**
+ * Tests if a video is currently being cloned for a given content browser. Provides a
+ * good indicator for answering if this video is currently open in PiP.
+ *
+ * @param {Browser} browser
+ *   The content browser that the video lives in
+ * @param {string} videoId
+ *   The id associated with the video
+ *
+ * @returns {bool}
+ *   Whether the video is currently being cloned (And is most likely open in PiP)
+ */
+function assertVideoIsBeingCloned(browser, videoId) {
+  return SpecialPowers.spawn(browser, [videoId], async videoID => {
+    let video = content.document.getElementById(videoID);
+    await ContentTaskUtils.waitForCondition(() => {
+      return video.isCloningElementVisually;
+    }, "Video is being cloned visually.");
+  });
+}
+
+/**
  * Ensures that each of the videos loaded inside of a document in a
  * <browser> have reached the HAVE_ENOUGH_DATA readyState.
  *
@@ -660,12 +681,7 @@ async function testToggleHelper(
     let win = await domWindowOpened;
     ok(win, "A Picture-in-Picture window opened.");
 
-    await SpecialPowers.spawn(browser, [videoID], async videoID => {
-      let video = content.document.getElementById(videoID);
-      await ContentTaskUtils.waitForCondition(() => {
-        return video.isCloningElementVisually;
-      }, "Video is being cloned visually.");
-    });
+    await assertVideoIsBeingCloned(browser, videoID);
 
     await BrowserTestUtils.closeWindow(win);
 
