@@ -70,6 +70,11 @@ enum class BailoutKind : uint8_t {
   // HadSpeculativePhiBailout flag on the script.
   SpeculativePhi,
 
+  // A conversion inserted by a type policy. If this instruction bails out,
+  // we expect to throw an error. If this happens too frequently, we will
+  // invalidate the current Warp script and disable recompilation.
+  TypePolicy,
+
   // Normal bailouts, that don't need to be handled specially when restarting
   // in baseline.
 
@@ -274,6 +279,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "TranspiledCacheIR";
     case BailoutKind::SpeculativePhi:
       return "SpeculativePhi";
+    case BailoutKind::TypePolicy:
+      return "TypePolicy";
 
     // Normal bailouts.
     case BailoutKind::Inevitable:
