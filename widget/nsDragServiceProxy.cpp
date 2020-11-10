@@ -8,6 +8,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
@@ -47,6 +48,11 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
     csp = mSourceDocument->GetCsp();
   }
 
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+  cookieJarSettings = mSourceDocument->CookieJarSettings();
+  net::CookieJarSettingsArgs csArgs;
+  net::CookieJarSettings::Cast(cookieJarSettings)->Serialize(csArgs);
+
   LayoutDeviceIntRect dragRect;
   if (mHasImage || mSelection) {
     nsPresContext* pc;
@@ -74,7 +80,7 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
 
         mozilla::Unused << child->SendInvokeDragSession(
             dataTransfers, aActionType, Some(std::move(surfaceData)), stride,
-            dataSurface->GetFormat(), dragRect, principal, csp);
+            dataSurface->GetFormat(), dragRect, principal, csp, csArgs);
         StartDragSession();
         return NS_OK;
       }
@@ -83,7 +89,7 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
 
   mozilla::Unused << child->SendInvokeDragSession(
       dataTransfers, aActionType, Nothing(), 0, static_cast<SurfaceFormat>(0),
-      dragRect, principal, csp);
+      dragRect, principal, csp, csArgs);
   StartDragSession();
   return NS_OK;
 }

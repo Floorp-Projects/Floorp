@@ -4,6 +4,7 @@
 
 #include "nsContentAreaDragDrop.h"
 #include "RemoteDragStartData.h"
+#include "nsICookieJarSettings.h"
 #include "nsVariant.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
@@ -19,18 +20,21 @@ RemoteDragStartData::~RemoteDragStartData() = default;
 RemoteDragStartData::RemoteDragStartData(
     BrowserParent* aBrowserParent, nsTArray<IPCDataTransfer>&& aDataTransfer,
     const LayoutDeviceIntRect& aRect, nsIPrincipal* aPrincipal,
-    nsIContentSecurityPolicy* aCsp)
+    nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings)
     : mBrowserParent(aBrowserParent),
       mDataTransfer(std::move(aDataTransfer)),
       mRect(aRect),
       mPrincipal(aPrincipal),
-      mCsp(aCsp) {}
+      mCsp(aCsp),
+      mCookieJarSettings(aCookieJarSettings) {}
 
-void RemoteDragStartData::AddInitialDnDDataTo(DataTransfer* aDataTransfer,
-                                              nsIPrincipal** aPrincipal,
-                                              nsIContentSecurityPolicy** aCsp) {
+void RemoteDragStartData::AddInitialDnDDataTo(
+    DataTransfer* aDataTransfer, nsIPrincipal** aPrincipal,
+    nsIContentSecurityPolicy** aCsp,
+    nsICookieJarSettings** aCookieJarSettings) {
   NS_IF_ADDREF(*aPrincipal = mPrincipal);
   NS_IF_ADDREF(*aCsp = mCsp);
+  NS_IF_ADDREF(*aCookieJarSettings = mCookieJarSettings);
 
   for (uint32_t i = 0; i < mDataTransfer.Length(); ++i) {
     nsTArray<IPCDataTransferItem>& itemArray = mDataTransfer[i].items();
