@@ -235,6 +235,134 @@ with only_when(target_is_osx):
     set_config("MACOS_PRIVATE_FRAMEWORKS_DIR", macos_private_frameworks)
 
 
+# Compiler wrappers
+# ==============================================================
+option(
+    "--with-compiler-wrapper",
+    env="COMPILER_WRAPPER",
+    nargs=1,
+    help="Enable compiling with wrappers such as distcc and ccache",
+)
+
+option("--with-ccache", env="CCACHE", nargs="?", help="Enable compiling with ccache")
+
+
+@depends_if("--with-ccache")
+def ccache(value):
+    if len(value):
+        return value
+    # If --with-ccache was given without an explicit value, we default to
+    # 'ccache'.
+    return "ccache"
+
+
+ccache = check_prog("CCACHE", progs=(), input=ccache)
+
+option(env="CCACHE_PREFIX", nargs=1, help="Compiler prefix to use when using ccache")
+
+ccache_prefix = depends_if("CCACHE_PREFIX")(lambda prefix: prefix[0])
+set_config("CCACHE_PREFIX", ccache_prefix)
+
+# Distinguish ccache from sccache.
+
+
+@depends_if(ccache)
+def ccache_is_sccache(ccache):
+    return check_cmd_output(ccache, "--version").startswith("sccache")
+
+
+@depends(ccache, ccache_is_sccache)
+def using_ccache(ccache, ccache_is_sccache):
+    return ccache and not ccache_is_sccache
+
+
+@depends_if(ccache, ccache_is_sccache)
+def using_sccache(ccache, ccache_is_sccache):
+    return ccache and ccache_is_sccache
+
+
+option(env="RUSTC_WRAPPER", nargs=1, help="Wrap rust compilation with given tool")
+
+
+@depends(ccache, ccache_is_sccache, "RUSTC_WRAPPER")
+@imports(_from="textwrap", _import="dedent")
+@imports("os")
+def check_sccache_version(ccache, ccache_is_sccache, rustc_wrapper):
+    sccache_min_version = Version("0.2.13")
+
+    def check_version(path):
+        out = check_cmd_output(path, "--version")
+        version = Version(out.rstrip().split()[-1])
+        if version < sccache_min_version:
+            die(
+                dedent(
+                    """\
+            sccache %s or later is required. sccache in use at %s has
+            version %s.
+
+            Please upgrade or acquire a new version with |./mach bootstrap|.
+            """
+                ),
+                sccache_min_version,
+                path,
+                version,
+            )
+
+    if ccache and ccache_is_sccache:
+        check_version(ccache)
+
+    if rustc_wrapper and (
+        os.path.splitext(os.path.basename(rustc_wrapper[0]))[0].lower() == "sccache"
+    ):
+        check_version(rustc_wrapper[0])
+
+
+set_config("MOZ_USING_CCACHE", using_ccache)
+set_config("MOZ_USING_SCCACHE", using_sccache)
+
+option(env="SCCACHE_VERBOSE_STATS", help="Print verbose sccache stats after build")
+
+
+@depends(using_sccache, "SCCACHE_VERBOSE_STATS")
+def sccache_verbose_stats(using_sccache, verbose_stats):
+    return using_sccache and bool(verbose_stats)
+
+
+set_config("SCCACHE_VERBOSE_STATS", sccache_verbose_stats)
+
+
+@depends("--with-compiler-wrapper", ccache)
+@imports(_from="mozbuild.shellutil", _import="split", _as="shell_split")
+def compiler_wrapper(wrapper, ccache):
+    if wrapper:
+        raw_wrapper = wrapper[0]
+        wrapper = shell_split(raw_wrapper)
+        wrapper_program = find_program(wrapper[0])
+        if not wrapper_program:
+            die(
+                "Cannot find `%s` from the given compiler wrapper `%s`",
+                wrapper[0],
+                raw_wrapper,
+            )
+        wrapper[0] = wrapper_program
+
+    if ccache:
+        if wrapper:
+            return tuple([ccache] + wrapper)
+        else:
+            return (ccache,)
+    elif wrapper:
+        return tuple(wrapper)
+
+
+@depends_if(compiler_wrapper)
+def using_compiler_wrapper(compiler_wrapper):
+    return True
+
+
+set_config("MOZ_USING_COMPILER_WRAPPER", using_compiler_wrapper)
+
+
 # GC rooting and hazard analysis.
 # ==============================================================
 option(env="MOZ_HAZARD", help="Build for the GC rooting hazard analysis")
@@ -712,7 +840,6 @@ def toolchain_search_path_for(host_or_target):
                 ["dump_syms"],
                 ["nasm"],
                 ["lucetc"],
-                ["sccache"],
             )
         ]
 
@@ -767,134 +894,6 @@ def altered_path(toolchain_search_path, host_toolchain_search_path):
 
 
 set_config("PATH", altered_path)
-
-
-# Compiler wrappers
-# ==============================================================
-option(
-    "--with-compiler-wrapper",
-    env="COMPILER_WRAPPER",
-    nargs=1,
-    help="Enable compiling with wrappers such as distcc and ccache",
-)
-
-option("--with-ccache", env="CCACHE", nargs="?", help="Enable compiling with ccache")
-
-
-@depends_if("--with-ccache")
-def ccache(value):
-    if len(value):
-        return value
-    # If --with-ccache was given without an explicit value, we default to
-    # 'ccache'.
-    return "ccache"
-
-
-ccache = check_prog("CCACHE", progs=(), input=ccache, paths=toolchain_search_path)
-
-option(env="CCACHE_PREFIX", nargs=1, help="Compiler prefix to use when using ccache")
-
-ccache_prefix = depends_if("CCACHE_PREFIX")(lambda prefix: prefix[0])
-set_config("CCACHE_PREFIX", ccache_prefix)
-
-# Distinguish ccache from sccache.
-
-
-@depends_if(ccache)
-def ccache_is_sccache(ccache):
-    return check_cmd_output(ccache, "--version").startswith("sccache")
-
-
-@depends(ccache, ccache_is_sccache)
-def using_ccache(ccache, ccache_is_sccache):
-    return ccache and not ccache_is_sccache
-
-
-@depends_if(ccache, ccache_is_sccache)
-def using_sccache(ccache, ccache_is_sccache):
-    return ccache and ccache_is_sccache
-
-
-option(env="RUSTC_WRAPPER", nargs=1, help="Wrap rust compilation with given tool")
-
-
-@depends(ccache, ccache_is_sccache, "RUSTC_WRAPPER")
-@imports(_from="textwrap", _import="dedent")
-@imports("os")
-def check_sccache_version(ccache, ccache_is_sccache, rustc_wrapper):
-    sccache_min_version = Version("0.2.13")
-
-    def check_version(path):
-        out = check_cmd_output(path, "--version")
-        version = Version(out.rstrip().split()[-1])
-        if version < sccache_min_version:
-            die(
-                dedent(
-                    """\
-            sccache %s or later is required. sccache in use at %s has
-            version %s.
-
-            Please upgrade or acquire a new version with |./mach bootstrap|.
-            """
-                ),
-                sccache_min_version,
-                path,
-                version,
-            )
-
-    if ccache and ccache_is_sccache:
-        check_version(ccache)
-
-    if rustc_wrapper and (
-        os.path.splitext(os.path.basename(rustc_wrapper[0]))[0].lower() == "sccache"
-    ):
-        check_version(rustc_wrapper[0])
-
-
-set_config("MOZ_USING_CCACHE", using_ccache)
-set_config("MOZ_USING_SCCACHE", using_sccache)
-
-option(env="SCCACHE_VERBOSE_STATS", help="Print verbose sccache stats after build")
-
-
-@depends(using_sccache, "SCCACHE_VERBOSE_STATS")
-def sccache_verbose_stats(using_sccache, verbose_stats):
-    return using_sccache and bool(verbose_stats)
-
-
-set_config("SCCACHE_VERBOSE_STATS", sccache_verbose_stats)
-
-
-@depends("--with-compiler-wrapper", ccache)
-@imports(_from="mozbuild.shellutil", _import="split", _as="shell_split")
-def compiler_wrapper(wrapper, ccache):
-    if wrapper:
-        raw_wrapper = wrapper[0]
-        wrapper = shell_split(raw_wrapper)
-        wrapper_program = find_program(wrapper[0])
-        if not wrapper_program:
-            die(
-                "Cannot find `%s` from the given compiler wrapper `%s`",
-                wrapper[0],
-                raw_wrapper,
-            )
-        wrapper[0] = wrapper_program
-
-    if ccache:
-        if wrapper:
-            return tuple([ccache] + wrapper)
-        else:
-            return (ccache,)
-    elif wrapper:
-        return tuple(wrapper)
-
-
-@depends_if(compiler_wrapper)
-def using_compiler_wrapper(compiler_wrapper):
-    return True
-
-
-set_config("MOZ_USING_COMPILER_WRAPPER", using_compiler_wrapper)
 
 
 @template
