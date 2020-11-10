@@ -296,29 +296,8 @@ function getCleanedPacket(key, packet) {
     res.actor = existingPacket.actor;
   }
 
-  if (res?.request?.headersSize && existingPacket?.request?.headersSize) {
-    res.request.headersSize = existingPacket.request.headersSize;
-  }
-
-  if (res?.response?.headersSize && existingPacket?.response?.headersSize) {
-    res.response.headersSize = existingPacket.response.headersSize;
-  }
-  if (res?.response?.bodySize && existingPacket?.response?.bodySize) {
-    res.response.bodySize = existingPacket.response.bodySize;
-  }
-  if (
-    res?.response?.transferredSize &&
-    existingPacket?.response?.transferredSize
-  ) {
-    res.response.transferredSize = existingPacket.response.transferredSize;
-  }
-
-  if (res?.response?.waitingTime && existingPacket?.response?.waitingTime) {
-    res.response.waitingTime = existingPacket.response.waitingTime;
-  }
-
-  if (res.updates && Array.isArray(res.updates)) {
-    res.updates.sort();
+  if (res.waitingTime && existingPacket.waitingTime) {
+    res.waitingTime = existingPacket.waitingTime;
   }
 
   if (res.helperResult) {
