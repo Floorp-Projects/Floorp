@@ -103,7 +103,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   void RemoveDispatchedAsBlocking();
 
   void DisableSpdy() override;
-  void DisableHttp3() override;
+  void DisableHttp3();
 
   nsHttpTransaction* QueryHttpTransaction() override { return this; }
 

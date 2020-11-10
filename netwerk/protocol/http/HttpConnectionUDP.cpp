@@ -115,7 +115,8 @@ nsresult HttpConnectionUDP::Init(
 
   MOZ_ASSERT(mConnInfo->IsHttp3());
   mHttp3Session = new Http3Session();
-  nsresult rv = mHttp3Session->Init(mConnInfo, mSocketTransport, this);
+  nsresult rv = mHttp3Session->Init(
+      mConnInfo->GetOrigin(), mConnInfo->GetNPNToken(), mSocketTransport, this);
   if (NS_FAILED(rv)) {
     LOG(
         ("HttpConnectionUDP::Init mHttp3Session->Init failed "
