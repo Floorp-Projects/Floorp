@@ -7,6 +7,7 @@
 #include "IntlUtils.h"
 
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/intl/LocaleService.h"
 #include "mozIMozIntl.h"
 #include "nsContentUtils.h"
 
@@ -127,6 +128,12 @@ void IntlUtils::GetLocaleInfo(const Sequence<nsString>& aLocales,
   if (!aResult.Init(cx, retVal)) {
     aError.Throw(NS_ERROR_FAILURE);
   }
+}
+
+bool IntlUtils::IsAppLocaleRTL() {
+  MOZ_ASSERT(nsContentUtils::IsCallerChrome() ||
+             nsContentUtils::IsCallerUAWidget());
+  return intl::LocaleService::GetInstance()->IsAppLocaleRTL();
 }
 
 }  // namespace mozilla::dom
