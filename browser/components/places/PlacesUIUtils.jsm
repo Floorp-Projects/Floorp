@@ -1408,6 +1408,9 @@ var PlacesUIUtils = {
   },
 
   async maybeAddImportButton() {
+    if (!Services.policies.isAllowed("profileImport")) {
+      return;
+    }
     let numberOfBookmarks = await PlacesUtils.withConnectionWrapper(
       "PlacesUIUtils: maybeAddImportButton",
       async db => {
