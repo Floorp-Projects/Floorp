@@ -7,7 +7,7 @@
 // $FlowIgnore
 const { PrefsHelper } = require("devtools/client/shared/prefs");
 
-import { isDevelopment } from "devtools-environment";
+import { isNode } from "devtools-environment";
 import Services from "devtools-services";
 
 // Schema version to bump when the async store format has changed incompatibly
@@ -15,7 +15,7 @@ import Services from "devtools-services";
 const prefsSchemaVersion = 11;
 const { pref } = Services;
 
-if (isDevelopment()) {
+if (isNode()) {
   pref("devtools.browsertoolbox.fission", false);
   pref("devtools.debugger.logging", false);
   pref("devtools.debugger.alphabetize-outline", false);

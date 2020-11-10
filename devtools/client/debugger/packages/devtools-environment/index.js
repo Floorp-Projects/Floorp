@@ -4,39 +4,20 @@
 
 const flag = require("./test-flag");
 
-function isBrowser() {
-  return typeof window == "object";
-}
-
 function isNode() {
-  return process && process.release && process.release.name == 'node'
+  return process && process.release && process.release.name == "node";
 }
 
-function isDevelopment() {
-  if (!isNode() && isBrowser()) {
-    const href = window.location ? window.location.href : "";
-    return href.match(/^file:/) || href.match(/localhost:/);
-  }
-
-  return process.env.NODE_ENV != "production";
+function isNodeTest() {
+  return isNode() && process.env.NODE_ENV != "production";
 }
 
 function isTesting() {
   return flag.testing;
 }
 
-function isFirefoxPanel() {
-  return !isDevelopment();
-}
-
-function isFirefox() {
-  return /firefox/i.test(navigator.userAgent);
-}
-
-
 module.exports = {
-  isDevelopment,
+  isNode,
+  isNodeTest,
   isTesting,
-  isFirefoxPanel,
-  isFirefox
-}
+};

@@ -852,40 +852,22 @@ process.umask = function() { return 0; };
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 const flag = __webpack_require__(103);
 
-function isBrowser() {
-  return typeof window == "object";
-}
-
 function isNode() {
-  return process && process.release && process.release.name == 'node';
+  return process && process.release && process.release.name == "node";
 }
 
-function isDevelopment() {
-  if (!isNode() && isBrowser()) {
-    const href = window.location ? window.location.href : "";
-    return href.match(/^file:/) || href.match(/localhost:/);
-  }
-
-  return "production" != "production";
+function isNodeTest() {
+  return isNode() && "production" != "production";
 }
 
 function isTesting() {
   return flag.testing;
 }
 
-function isFirefoxPanel() {
-  return !isDevelopment();
-}
-
-function isFirefox() {
-  return /firefox/i.test(navigator.userAgent);
-}
-
 module.exports = {
-  isDevelopment,
-  isTesting,
-  isFirefoxPanel,
-  isFirefox
+  isNode,
+  isNodeTest,
+  isTesting
 };
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(607)))
 
