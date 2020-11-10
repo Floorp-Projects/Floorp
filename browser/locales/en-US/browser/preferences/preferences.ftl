@@ -63,6 +63,10 @@ pane-experimental-subtitle = Proceed with Caution
 pane-experimental-search-results-header = { -brand-short-name } Experiments: Proceed with Caution
 pane-experimental-description = Changing advanced configuration preferences can impact { -brand-short-name } performance or security.
 
+pane-experimental-reset =
+  .label = Restore Defaults
+  .accesskey = R
+
 help-button-label = { -brand-short-name } Support
 addons-button-label = Extensions & Themes
 

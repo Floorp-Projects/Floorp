@@ -52,6 +52,21 @@ var gExperimentalPane = {
     this._observedPrefs = [];
   },
 
+  // Reset the features to their default values
+  async resetAllFeatures() {
+    let features = await gExperimentalPane.getFeatures();
+    for (let feature of features) {
+      Services.prefs.setBoolPref(feature.preference, feature.defaultValue);
+    }
+  },
+
+  async getFeatures() {
+    let searchParams = new URLSearchParams(document.documentURIObject.query);
+    let definitionsUrl = searchParams.get("definitionsUrl");
+    let features = await FeatureGate.all(definitionsUrl);
+    return features.filter(f => f.isPublic);
+  },
+
   async _sortFeatures(features) {
     // Sort the features alphabetically by their title
     let titles = await document.l10n.formatMessages(
@@ -71,10 +86,7 @@ var gExperimentalPane = {
     }
     this.inited = true;
 
-    let searchParams = new URLSearchParams(document.documentURIObject.query);
-    let definitionsUrl = searchParams.get("definitionsUrl");
-    let features = await FeatureGate.all(definitionsUrl);
-    features = features.filter(f => f.isPublic);
+    let features = await this.getFeatures();
     let shouldHide = !features.length;
     document.getElementById("category-experimental").hidden = shouldHide;
     // Cache the visibility so we can show it quicker in subsequent loads.
@@ -96,6 +108,12 @@ var gExperimentalPane = {
     }
 
     features = await this._sortFeatures(features);
+
+    setEventListener(
+      "experimentalCategory-reset",
+      "command",
+      gExperimentalPane.resetAllFeatures
+    );
 
     window.addEventListener("unload", () => this.removePrefObservers());
     this._template = document.getElementById("template-featureGate");
