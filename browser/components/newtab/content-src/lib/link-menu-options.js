@@ -188,28 +188,13 @@ export const LinkMenuOptions = {
       data: { url: site.url },
     }),
   }),
-  PinSpocTopSite: (site, index) => ({
+  PinTopSite: (site, index) => ({
     id: "newtab-menu-pin",
     icon: "pin",
     action: ac.AlsoToMain({
       type: at.TOP_SITES_PIN,
       data: {
         site,
-        index,
-      },
-    }),
-    userEvent: "PIN",
-  }),
-  PinTopSite: ({ url, searchTopSite, label }, index) => ({
-    id: "newtab-menu-pin",
-    icon: "pin",
-    action: ac.AlsoToMain({
-      type: at.TOP_SITES_PIN,
-      data: {
-        site: {
-          url,
-          ...(searchTopSite && { searchTopSite, label }),
-        },
         index,
       },
     }),

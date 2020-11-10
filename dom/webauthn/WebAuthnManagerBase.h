@@ -8,11 +8,15 @@
 #define mozilla_dom_WebAuthnManagerBase_h
 
 #include "nsIDOMEventListener.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsCOMPtr.h"
 
 /*
  * A base class used by WebAuthn and U2F implementations, providing shared
  * functionality and requiring an interface used by the IPC child actors.
  */
+
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {

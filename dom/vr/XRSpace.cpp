@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/XRSpace.h"
 #include "mozilla/dom/XRRigidTransform.h"
+#include "VRDisplayClient.h"
 
 namespace mozilla {
 namespace dom {

@@ -10,15 +10,13 @@ import ReactDOM from "react-dom";
 const { Provider } = require("react-redux");
 
 import ToolboxProvider from "devtools/client/framework/store-provider";
-import { isFirefoxPanel, isDevelopment, isTesting } from "devtools-environment";
+// $FlowIgnore
+import flags from "devtools/shared/flags";
 
 // $FlowIgnore
 const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
 
-import SourceMaps, {
-  startSourceMapWorker,
-  stopSourceMapWorker,
-} from "devtools-source-map";
+import SourceMaps from "devtools-source-map";
 import * as search from "../workers/search";
 import * as prettyPrint from "../workers/pretty-print";
 import { ParserDispatcher } from "../workers/parser";
@@ -47,8 +45,8 @@ export function bootstrapStore(
 ): any {
   const debugJsModules = AppConstants.DEBUG_JS_MODULES == "1";
   const createStore = configureStore({
-    log: prefs.logging || isTesting(),
-    timing: debugJsModules || isDevelopment(),
+    log: prefs.logging || flags.testing,
+    timing: debugJsModules,
     makeThunkArgs: (args, state) => {
       return { ...args, client, ...workers, panel };
     },
@@ -66,18 +64,7 @@ export function bootstrapStore(
 }
 
 export function bootstrapWorkers(panelWorkers: Workers): Object {
-  const workerPath = isDevelopment()
-    ? "assets/build"
-    : "resource://devtools/client/debugger/dist";
-
-  if (isDevelopment()) {
-    // When used in Firefox, the toolbox manages the source map worker.
-    startSourceMapWorker(
-      `${workerPath}/source-map-worker.js`,
-      // This is relative to the worker itself.
-      "./source-map-worker-assets/"
-    );
-  }
+  const workerPath = "resource://devtools/client/debugger/dist";
 
   prettyPrint.start(`${workerPath}/pretty-print-worker.js`);
   parser = new ParserDispatcher();
@@ -88,25 +75,16 @@ export function bootstrapWorkers(panelWorkers: Workers): Object {
 }
 
 export function teardownWorkers(): void {
-  if (!isFirefoxPanel()) {
-    // When used in Firefox, the toolbox manages the source map worker.
-    stopSourceMapWorker();
-  }
   prettyPrint.stop();
   parser.stop();
   search.stop();
 }
 
 export function bootstrapApp(store: any, panel: Panel): void {
-  const root = document.createElement("div");
-  root.className = "launchpad-root theme-body";
-  root.style.setProperty("flex", "1");
   const mount = document.querySelector("#mount");
   if (!mount) {
     return;
   }
-
-  mount.appendChild(root);
 
   const toolboxDoc = panel.panelWin.parent.document;
 
@@ -120,7 +98,7 @@ export function bootstrapApp(store: any, panel: Panel): void {
         React.createElement(App, { toolboxDoc })
       )
     ),
-    root
+    mount
   );
 }
 

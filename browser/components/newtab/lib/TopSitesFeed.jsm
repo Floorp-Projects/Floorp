@@ -740,6 +740,8 @@ this.TopSitesFeed = class TopSitesFeed {
       }
     }
 
+    this._linksWithDefaults = withPinned;
+
     return withPinned;
   }
 
@@ -995,7 +997,8 @@ this.TopSitesFeed = class TopSitesFeed {
    * Handle a pin action of a site to a position.
    */
   async pin(action) {
-    const { site, index } = action.data;
+    let { site, index } = action.data;
+    index = this._adjustPinIndexForSponsoredLinks(site, index);
     // If valid index provided, pin at that position
     if (index >= 0) {
       await this._pinSiteAt(site, index);
@@ -1034,9 +1037,34 @@ this.TopSitesFeed = class TopSitesFeed {
   }
 
   /**
+   * Reduces the given pinning index by the number of preceding sponsored
+   * sites, to accomodate for sponsored sites pushing pinned ones to the side,
+   * effectively increasing their index again.
+   */
+  _adjustPinIndexForSponsoredLinks(site, index) {
+    if (!this._linksWithDefaults) {
+      return index;
+    }
+    // Adjust insertion index for sponsored sites since their position is
+    // fixed.
+    let adjustedIndex = index;
+    for (let i = 0; i < index; i++) {
+      if (
+        this._linksWithDefaults[i]?.sponsored_position &&
+        this._linksWithDefaults[i]?.url !== site.url
+      ) {
+        adjustedIndex--;
+      }
+    }
+    return adjustedIndex;
+  }
+
+  /**
    * Insert a site to pin at a position shifting over any other pinned sites.
    */
-  _insertPin(site, index, draggedFromIndex) {
+  _insertPin(site, originalIndex, draggedFromIndex) {
+    let index = this._adjustPinIndexForSponsoredLinks(site, originalIndex);
+
     // Don't insert any pins past the end of the visible top sites. Otherwise,
     // we can end up with a bunch of pinned sites that can never be unpinned again
     // from the UI.

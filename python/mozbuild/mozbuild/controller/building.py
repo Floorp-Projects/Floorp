@@ -1161,7 +1161,8 @@ class BuildDriver(MozbuildObject):
             mozbuild_metrics.debug.set(get_substs_flag("MOZ_DEBUG"))
             mozbuild_metrics.opt.set(get_substs_flag("MOZ_OPTIMIZE"))
             mozbuild_metrics.ccache.set(get_substs_flag("CCACHE"))
-            mozbuild_metrics.sccache.set(get_substs_flag("MOZ_USING_SCCACHE"))
+            using_sccache = get_substs_flag("MOZ_USING_SCCACHE")
+            mozbuild_metrics.sccache.set(using_sccache)
             mozbuild_metrics.icecream.set(get_substs_flag("CXX_IS_ICECREAM"))
             mozbuild_metrics.project.set(substs.get("MOZ_BUILD_APP", ""))
 
@@ -1444,11 +1445,13 @@ class BuildDriver(MozbuildObject):
             output.on_line(
                 "We know it took a while, but your build finally finished successfully!"
             )
-            output.on_line(
-                "If you are building Firefox often, SCCache can save you a lot "
-                "of time. You can learn more here: "
-                "https://github.com/mozilla/sccache"
-            )
+            if not using_sccache:
+                output.on_line(
+                    "If you are building Firefox often, SCCache can save you a lot "
+                    "of time. You can learn more here: "
+                    "https://firefox-source-docs.mozilla.org/setup/"
+                    "configuring_build_options.html#sccache"
+                )
         else:
             output.on_line("Your build was successful!")
 

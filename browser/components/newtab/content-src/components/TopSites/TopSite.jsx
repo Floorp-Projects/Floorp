@@ -35,7 +35,7 @@ export class TopSiteLink extends React.PureComponent {
    */
   _allowDrop(e) {
     return (
-      !this.props.link.sponsored_position &&
+      (this.dragged || !this.props.link.sponsored_position) &&
       e.dataTransfer.types.includes("text/topsite-index")
     );
   }
@@ -574,20 +574,6 @@ export class TopSiteList extends React.PureComponent {
         break;
       case "drop":
         if (index !== this.state.draggedIndex) {
-          // Adjust insertion index for sponsored sites since their position is
-          // fixed.
-          let topSites = this._getTopSites();
-          let adjustedIndex = index;
-          for (let i = 0; i < index; i++) {
-            if (
-              topSites[i] &&
-              topSites[i].sponsored_position &&
-              i !== this.state.draggedIndex
-            ) {
-              adjustedIndex--;
-            }
-          }
-
           this.dropped = true;
           this.props.dispatch(
             ac.AlsoToMain({
@@ -603,12 +589,12 @@ export class TopSiteList extends React.PureComponent {
                     searchTopSite: true,
                   }),
                 },
-                index: adjustedIndex,
+                index,
                 draggedFromIndex: this.state.draggedIndex,
               },
             })
           );
-          this.userEvent("DROP", adjustedIndex);
+          this.userEvent("DROP", index);
         }
         break;
     }

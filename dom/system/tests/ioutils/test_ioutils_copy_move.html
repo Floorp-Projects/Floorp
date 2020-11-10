@@ -30,7 +30,7 @@
       info("Test moving a file to a relative destination");
       await Assert.rejects(
         IOUtils.move(tmpFileName, dest),
-        /Refusing to work with path\(.*\) because only absolute file paths are permitted/,
+        /Could not parse path/,
         "IOUtils::move only works with absolute paths"
       );
       ok(

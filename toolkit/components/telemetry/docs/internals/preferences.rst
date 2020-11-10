@@ -138,11 +138,6 @@ Preferences
 
   Enable the :doc:`../data/update-ping` on browser updates.
 
-``toolkit.telemetry.maxEventSummaryKeys``
-
-  Set the maximum number of keys per process of the :ref:`Event Summary <events.event-summary>`
-  :ref:`keyed scalars <scalars.keyed-scalars>`. Default is 500. Change requires restart.
-
 ``toolkit.telemetry.eventping.minimumFrequency``
 
   The minimum frequency at which an :doc:`../data/event-ping` will be sent.

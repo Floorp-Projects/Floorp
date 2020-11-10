@@ -11,15 +11,15 @@
 
 namespace mozilla {
 
-static SVGAttrTearoffTable<SVGAnimatedClassOrString, DOMSVGAnimatedString>
+static SVGAttrTearoffTable<SVGAnimatedClassOrString, dom::DOMSVGAnimatedString>
     sSVGAnimatedClassOrStringTearoffTable;
 
-already_AddRefed<DOMSVGAnimatedString>
+already_AddRefed<dom::DOMSVGAnimatedString>
 SVGAnimatedClassOrString::ToDOMAnimatedString(SVGElement* aSVGElement) {
-  RefPtr<DOMSVGAnimatedString> domAnimatedString =
+  RefPtr<dom::DOMSVGAnimatedString> domAnimatedString =
       sSVGAnimatedClassOrStringTearoffTable.GetTearoff(this);
   if (!domAnimatedString) {
-    domAnimatedString = new DOMSVGAnimatedString(this, aSVGElement);
+    domAnimatedString = new dom::DOMSVGAnimatedString(this, aSVGElement);
     sSVGAnimatedClassOrStringTearoffTable.AddTearoff(this, domAnimatedString);
   }
 

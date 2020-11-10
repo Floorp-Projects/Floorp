@@ -4,8 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Fired by TelemetryController when async telemetry data should be collected.
-const TOPIC_GATHER_TELEMETRY = "gather-telemetry";
+// Fired by BrowserGlue._onFirstWindowLoaded when async telemetry data should
+// be collected.
+const TOPIC_GATHER_TELEMETRY = "gather-places-telemetry";
 
 // Seconds between maintenance runs.
 const MAINTENANCE_INTERVAL_SECONDS = 7 * 86400;
@@ -42,7 +43,10 @@ PlacesCategoriesStarter.prototype = {
         }
         break;
       case TOPIC_GATHER_TELEMETRY:
-        PlacesDBUtils.telemetry();
+        // Collect Places telemetry on the first idle.
+        Services.tm.idleDispatchToMainThread(() => {
+          PlacesDBUtils.telemetry();
+        });
         break;
       case "idle-daily":
         // Once a week run places.sqlite maintenance tasks.

@@ -6,6 +6,12 @@
 
 SPHINX_TREES["/toolkit/components/glean"] = "docs"
 
+# Must be defined unconditionally since the tasks on TC don't know MOZ_GLEAN.
+# (and the tests don't depend on MOZ_GLEAN to run).
+PYTHON_UNITTEST_MANIFESTS += [
+    "pytest/python.ini",
+]
+
 if CONFIG["MOZ_GLEAN"]:
     # Needed so that we can include IPC things.
     include("/ipc/chromium/chromium-config.mozbuild")
@@ -43,10 +49,6 @@ if CONFIG["MOZ_GLEAN"]:
     ]
 
     XPCSHELL_TESTS_MANIFESTS += ["xpcshell/xpcshell.ini"]
-
-    PYTHON_UNITTEST_MANIFESTS += [
-        "pytest/python.ini",
-    ]
 
     # Provides us the list of dependent metrics|pings.yaml.
     include("metrics_index.py")

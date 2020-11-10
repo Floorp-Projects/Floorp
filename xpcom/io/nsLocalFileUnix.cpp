@@ -1059,6 +1059,12 @@ nsLocalFile::MoveToNative(nsIFile* aNewParent, const nsACString& aNewName) {
 }
 
 NS_IMETHODIMP
+nsLocalFile::MoveToFollowingLinksNative(nsIFile* aNewParent,
+                                        const nsACString& aNewName) {
+  return MoveToNative(aNewParent, aNewName);
+}
+
+NS_IMETHODIMP
 nsLocalFile::Remove(bool aRecursive) {
   CHECK_mPath();
   ENSURE_STAT_CACHE();
@@ -2120,6 +2126,11 @@ nsresult nsLocalFile::CopyToFollowingLinks(nsIFile* aNewParentDir,
 nsresult nsLocalFile::MoveTo(nsIFile* aNewParentDir,
                              const nsAString& aNewName) {
   SET_UCS_2ARGS_2(MoveToNative, aNewParentDir, aNewName);
+}
+NS_IMETHODIMP
+nsLocalFile::MoveToFollowingLinks(nsIFile* aNewParentDir,
+                                  const nsAString& aNewName) {
+  SET_UCS_2ARGS_2(MoveToFollowingLinksNative, aNewParentDir, aNewName);
 }
 
 NS_IMETHODIMP

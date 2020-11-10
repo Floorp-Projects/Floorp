@@ -131,8 +131,7 @@ add_task(async function test_event_summary_limit() {
   Telemetry.clearEvents();
   Telemetry.clearScalars();
 
-  const limit = 50;
-  Services.prefs.setIntPref("toolkit.telemetry.maxEventSummaryKeys", limit);
+  const limit = 500; // matches kMaxEventSummaryKeys in TelemetryScalar.cpp.
   let objects = [];
   for (let i = 0; i < limit + 1; i++) {
     objects.push("object" + i);

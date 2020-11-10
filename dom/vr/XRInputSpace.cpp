@@ -5,6 +5,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "XRInputSpace.h"
+#include "VRDisplayClient.h"
+#include "mozilla/dom/GamepadPoseState.h"
 
 namespace mozilla {
 namespace dom {

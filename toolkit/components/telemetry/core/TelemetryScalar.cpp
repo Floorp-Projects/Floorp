@@ -101,6 +101,7 @@ namespace TelemetryIPCAccumulator = mozilla::TelemetryIPCAccumulator;
 namespace {
 
 const uint32_t kMaximumNumberOfKeys = 100;
+const uint32_t kMaxEventSummaryKeys = 500;
 const uint32_t kMaximumKeyStringLength = 72;
 const uint32_t kMaximumStringValueLength = 50;
 // The category and scalar name maximum lengths are used by the dynamic
@@ -3527,11 +3528,8 @@ void TelemetryScalar::SummarizeEvent(const nsCString& aUniqueEventName,
     return;
   }
 
-  static uint32_t sMaxEventSummaryKeys =
-      Preferences::GetUint("toolkit.telemetry.maxEventSummaryKeys", 500);
-
   // Set this each time as it may have been cleared and recreated between calls
-  scalar->SetMaximumNumberOfKeys(sMaxEventSummaryKeys);
+  scalar->SetMaximumNumberOfKeys(kMaxEventSummaryKeys);
 
   scalar->AddValue(lock, NS_ConvertASCIItoUTF16(aUniqueEventName), 1);
 }

@@ -15,6 +15,12 @@ using namespace mozilla::a11y;
   MOXRootGroup* mRootGroup;
 }
 // overrides
+- (NSString*)moxRole;
+
+// overrides
+- (NSString*)moxRoleDescription;
+
+// overrides
 - (NSURL*)moxURL;
 
 // override
@@ -28,6 +34,9 @@ using namespace mozilla::a11y;
 
 // override
 - (NSArray*)moxUnignoredChildren;
+
+// override
+- (BOOL)moxBlockSelector:(SEL)selector;
 
 // override
 - (void)handleAccessibleEvent:(uint32_t)eventType;
@@ -62,6 +71,9 @@ using namespace mozilla::a11y;
 
 // override
 - (NSString*)moxIdentifier;
+
+// override
+- (NSString*)moxSubrole;
 
 // override
 - (id)moxHitTest:(NSPoint)point;

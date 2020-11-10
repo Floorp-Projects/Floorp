@@ -8,6 +8,7 @@
 #define mozilla_dom_XRNativeOriginViewer_h_
 
 #include "gfxVR.h"
+#include "XRNativeOrigin.h"
 
 namespace mozilla {
 namespace gfx {
