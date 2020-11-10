@@ -372,7 +372,15 @@ def test_manifest_basic_args(mock_runner, manifest, monkeypatch):
     assert kwargs["exists"] is False
     assert kwargs["disabled"] is True
     assert kwargs["appname"] == "fake_app"
+    assert kwargs["actors"] is True
     assert "mozinfo_key" in kwargs and kwargs["mozinfo_key"] == "mozinfo_val"
+
+
+def test_manifest_actors_disabled(mock_runner, manifest, monkeypatch):
+    kwargs = get_kwargs_passed_to_manifest(
+        mock_runner, manifest, monkeypatch, disable_actors=True
+    )
+    assert kwargs["actors"] is False
 
 
 @pytest.mark.parametrize("test_tags", (None, ["tag", "tag2"]))
