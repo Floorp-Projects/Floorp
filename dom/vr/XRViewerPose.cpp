@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/XRViewerPose.h"
+#include "mozilla/dom/XRView.h"
 
 namespace mozilla {
 namespace dom {

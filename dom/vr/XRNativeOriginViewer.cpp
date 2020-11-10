@@ -5,11 +5,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "XRNativeOriginViewer.h"
+#include "VRDisplayClient.h"
 
 namespace mozilla {
 namespace dom {
 
-XRNativeOriginViewer::XRNativeOriginViewer(VRDisplayClient* aDisplay)
+XRNativeOriginViewer::XRNativeOriginViewer(gfx::VRDisplayClient* aDisplay)
     : mDisplay(aDisplay) {
   MOZ_ASSERT(aDisplay);
 }

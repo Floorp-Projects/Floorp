@@ -5,11 +5,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "XRNativeOriginLocal.h"
+#include "VRDisplayClient.h"
 
 namespace mozilla {
 namespace dom {
 
-XRNativeOriginLocal::XRNativeOriginLocal(VRDisplayClient* aDisplay)
+XRNativeOriginLocal::XRNativeOriginLocal(gfx::VRDisplayClient* aDisplay)
     : mDisplay(aDisplay), mInitialPositionValid(false) {
   MOZ_ASSERT(aDisplay);
 }
@@ -19,8 +20,9 @@ gfx::PointDouble3D XRNativeOriginLocal::GetPosition() {
   if (!mInitialPositionValid) {
     const gfx::VRHMDSensorState& sensorState = mDisplay->GetSensorState();
     gfx::PointDouble3D origin;
-    if (sensorState.flags & VRDisplayCapabilityFlags::Cap_Position ||
-        sensorState.flags & VRDisplayCapabilityFlags::Cap_PositionEmulated) {
+    if (sensorState.flags & gfx::VRDisplayCapabilityFlags::Cap_Position ||
+        sensorState.flags &
+            gfx::VRDisplayCapabilityFlags::Cap_PositionEmulated) {
       mInitialPosition.x = sensorState.pose.position[0];
       mInitialPosition.y = sensorState.pose.position[1];
       mInitialPosition.z = sensorState.pose.position[2];

@@ -9,6 +9,7 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/WebXRBinding.h"
+#include "mozilla/dom/XRRigidTransform.h"
 
 #include "gfxVR.h"
 

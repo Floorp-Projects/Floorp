@@ -9,6 +9,7 @@
 #include "XRNativeOriginViewer.h"
 #include "XRNativeOriginTracker.h"
 #include "XRInputSpace.h"
+#include "VRDisplayClient.h"
 
 #include "mozilla/dom/Gamepad.h"
 #include "mozilla/dom/GamepadManager.h"
@@ -23,60 +24,60 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(XRInputSource, Release)
 
 // Follow the controller profile ids from
 // https://github.com/immersive-web/webxr-input-profiles.
-nsTArray<nsString> GetInputSourceProfile(VRControllerType aType) {
+nsTArray<nsString> GetInputSourceProfile(gfx::VRControllerType aType) {
   nsTArray<nsString> profile;
   nsString id;
 
   switch (aType) {
-    case VRControllerType::HTCVive:
+    case gfx::VRControllerType::HTCVive:
       id.AssignLiteral("htc-vive");
       profile.AppendElement(id);
       id.AssignLiteral("generic-trigger-squeeze-touchpad");
       profile.AppendElement(id);
       break;
-    case VRControllerType::HTCViveCosmos:
+    case gfx::VRControllerType::HTCViveCosmos:
       id.AssignLiteral("htc-vive-cosmos");
       profile.AppendElement(id);
       id.AssignLiteral("generic-trigger-squeeze-thumbstick");
       profile.AppendElement(id);
       break;
-    case VRControllerType::HTCViveFocus:
+    case gfx::VRControllerType::HTCViveFocus:
       id.AssignLiteral("htc-vive-focus");
       profile.AppendElement(id);
       id.AssignLiteral("generic-trigger-touchpad");
       profile.AppendElement(id);
       break;
-    case VRControllerType::HTCViveFocusPlus:
+    case gfx::VRControllerType::HTCViveFocusPlus:
       id.AssignLiteral("htc-vive-focus-plus");
       profile.AppendElement(id);
       id.AssignLiteral("generic-trigger-squeeze-touchpad");
       profile.AppendElement(id);
       break;
-    case VRControllerType::MSMR:
+    case gfx::VRControllerType::MSMR:
       id.AssignLiteral("microsoft-mixed-reality");
       profile.AppendElement(id);
       id.AssignLiteral("generic-trigger-squeeze-touchpad-thumbstick");
       profile.AppendElement(id);
       break;
-    case VRControllerType::ValveIndex:
+    case gfx::VRControllerType::ValveIndex:
       id.AssignLiteral("valve-index");
       profile.AppendElement(id);
       id.AssignLiteral("generic-trigger-squeeze-touchpad-thumbstick");
       profile.AppendElement(id);
       break;
-    case VRControllerType::OculusGo:
+    case gfx::VRControllerType::OculusGo:
       id.AssignLiteral("oculus-go");
       profile.AppendElement(id);
       id.AssignLiteral("generic-trigger-touchpad");
       profile.AppendElement(id);
       break;
-    case VRControllerType::OculusTouch:
+    case gfx::VRControllerType::OculusTouch:
       id.AssignLiteral("oculus-touch");
       profile.AppendElement(id);
       id.AssignLiteral("generic-trigger-squeeze-thumbstick");
       profile.AppendElement(id);
       break;
-    case VRControllerType::OculusTouch2:
+    case gfx::VRControllerType::OculusTouch2:
       id.AssignLiteral("oculus-touch-v2");
       profile.AppendElement(id);
       id.AssignLiteral("oculus-touch");
@@ -84,19 +85,19 @@ nsTArray<nsString> GetInputSourceProfile(VRControllerType aType) {
       id.AssignLiteral("generic-trigger-squeeze-thumbstick");
       profile.AppendElement(id);
       break;
-    case VRControllerType::PicoGaze:
+    case gfx::VRControllerType::PicoGaze:
       id.AssignLiteral("pico-gaze");
       profile.AppendElement(id);
       id.AssignLiteral("generic-button");
       profile.AppendElement(id);
       break;
-    case VRControllerType::PicoG2:
+    case gfx::VRControllerType::PicoG2:
       id.AssignLiteral("pico-g2");
       profile.AppendElement(id);
       id.AssignLiteral("generic-trigger-touchpad");
       profile.AppendElement(id);
       break;
-    case VRControllerType::PicoNeo2:
+    case gfx::VRControllerType::PicoNeo2:
       id.AssignLiteral("pico-neo2");
       profile.AppendElement(id);
       id.AssignLiteral("generic-trigger-squeeze-thumbstick");
@@ -197,7 +198,7 @@ void XRInputSource::Setup(XRSession* aSession, uint32_t aIndex) {
                                      nativeOriginTargetRay, aIndex);
 
   const uint32_t gamepadId =
-      displayInfo.mDisplayID * kVRControllerMaxCount + aIndex;
+      displayInfo.mDisplayID * gfx::kVRControllerMaxCount + aIndex;
   const uint32_t hashKey = GamepadManager::GetGamepadIndexWithServiceType(
       gamepadId, GamepadServiceType::VR);
   mGamepad =
