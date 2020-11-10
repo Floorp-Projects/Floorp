@@ -15,6 +15,7 @@ interface nsIChannel;
 interface nsILoadContext;
 interface nsIPrincipal;
 interface nsIReferrerInfo;
+interface nsICookieJarSettings;
 
 /**
  * Interface for persisting DOM documents and URIs to local or remote storage.
@@ -118,6 +119,8 @@ interface nsIWebBrowserPersist : nsICancelable
    * @param aCacheKey  The necko cache key integer.
    * @param aReferrerInfo  The referrer info for compute and send referrer via
    *                   HTTP Referer header.
+   * @param aCookieJarSettings The cookieJarSettings for the HTTP channel which
+   *                   is saving the URI.
    * @param aPostData  Post data to pass with an HTTP request or
    *                   <CODE>nullptr</CODE>.
    * @param aExtraHeaders Additional headers to supply with an HTTP request
@@ -141,6 +144,7 @@ interface nsIWebBrowserPersist : nsICancelable
   void saveURI(in nsIURI aURI, in nsIPrincipal aTriggeringPrincipal,
       in unsigned long aCacheKey,
       in nsIReferrerInfo aReferrerInfo,
+      in nsICookieJarSettings aCookieJarSettings,
       in nsIInputStream aPostData,
       in string aExtraHeaders, in nsISupports aFile,
       in nsContentPolicyType aContentPolicyType,
@@ -155,6 +159,7 @@ interface nsIWebBrowserPersist : nsICancelable
   void savePrivacyAwareURI(in nsIURI aURI,
       in nsIPrincipal aTriggeringPrincipal, in unsigned long aCacheKey,
       in nsIReferrerInfo aReferrerInfo,
+      in nsICookieJarSettings aCookieJarSettings,
       in nsIInputStream aPostData,
       in string aExtraHeaders, in nsISupports aFile,
       in nsContentPolicyType aContentPolicyType,
