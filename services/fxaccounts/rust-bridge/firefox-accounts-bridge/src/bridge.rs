@@ -120,7 +120,11 @@ impl Bridge {
         )
     );
 
-    punt!(begin_oauth_flow, scopes: &ThinVec<nsCString>, entry_point: &nsACString);
+    punt!(
+        begin_oauth_flow,
+        scopes: &ThinVec<nsCString>,
+        entry_point: &nsACString
+    );
 
     xpcom_method!(
         complete_oauth_flow => CompleteOAuthFlow(

@@ -95,9 +95,7 @@ impl HttpServer for Http3TestServer {
                         ),
                     ];
 
-                    let path_hdr = headers
-                        .iter()
-                        .find(|(k, _)| k == ":path");
+                    let path_hdr = headers.iter().find(|(k, _)| k == ":path");
                     match path_hdr {
                         Some((_, path)) if !path.is_empty() => {
                             qtrace!("Serve request {}", path);
@@ -134,9 +132,7 @@ impl HttpServer for Http3TestServer {
                                     .stream_reset(Error::HttpRequestRejected.code())
                                     .unwrap();
                             } else if path == "/.well-known/http-opportunistic" {
-                                let host_hdr = headers
-                                    .iter()
-                                    .find(|(k, _)| k == ":authority");
+                                let host_hdr = headers.iter().find(|(k, _)| k == ":authority");
                                 match host_hdr {
                                     Some((_, host)) if !host.is_empty() => {
                                         let mut content = b"[\"http://".to_vec();
@@ -248,24 +244,21 @@ impl HttpServer for Http3TestServer {
                     }
                     if fin {
                         if let Some(r) = self.posts.remove(&format!("{}", request)) {
-                          let default_ret = b"Hello World".to_vec();
-                          request
-                              .set_response(
-                                  &[
-                                       (String::from(":status"), String::from("200")),
-                                       (
-                                           String::from("Cache-Control"),
-                                           String::from("no-cache"),
-                                       ),
-                                       (String::from("x-data-received-length"), r.to_string()),
-                                       (
-                                           String::from("content-length"),
-                                           default_ret.len().to_string(),
-                                       ),
-                                   ],
-                                   &default_ret,
-                              )
-                              .unwrap();
+                            let default_ret = b"Hello World".to_vec();
+                            request
+                                .set_response(
+                                    &[
+                                        (String::from(":status"), String::from("200")),
+                                        (String::from("Cache-Control"), String::from("no-cache")),
+                                        (String::from("x-data-received-length"), r.to_string()),
+                                        (
+                                            String::from("content-length"),
+                                            default_ret.len().to_string(),
+                                        ),
+                                    ],
+                                    &default_ret,
+                                )
+                                .unwrap();
                         }
                     }
                 }
@@ -446,22 +439,21 @@ impl ServersRunner {
         let cid_mgr = Rc::new(RefCell::new(FixedConnectionIdManager::new(10)));
 
         if http3 {
-            Box::new(
-                Http3TestServer::new(
-                    Http3Server::new(
-                        Instant::now(),
-                        &[" HTTP2 Test Cert"],
-                        PROTOCOLS,
-                        anti_replay,
-                        cid_mgr,
-                        QpackSettings {
-                            max_table_size_encoder: MAX_TABLE_SIZE,
-                            max_table_size_decoder: MAX_TABLE_SIZE,
-                            max_blocked_streams: MAX_BLOCKED_STREAMS,
-                        },
-                    ).expect("We cannot make a server!")
+            Box::new(Http3TestServer::new(
+                Http3Server::new(
+                    Instant::now(),
+                    &[" HTTP2 Test Cert"],
+                    PROTOCOLS,
+                    anti_replay,
+                    cid_mgr,
+                    QpackSettings {
+                        max_table_size_encoder: MAX_TABLE_SIZE,
+                        max_table_size_decoder: MAX_TABLE_SIZE,
+                        max_blocked_streams: MAX_BLOCKED_STREAMS,
+                    },
                 )
-            )
+                .expect("We cannot make a server!"),
+            ))
         } else {
             Box::new(
                 Server::new(
