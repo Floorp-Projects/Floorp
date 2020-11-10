@@ -155,25 +155,29 @@ nsresult AudioSinkWrapper::Start(const TimeUnit& aStartTime,
   mPlayStartTime = TimeStamp::Now();
   mAudioEnded = IsAudioSourceEnded(aInfo);
 
-  if (!mAudioEnded) {
-    mAudioSink.reset(mCreator->Create());
-    Result<already_AddRefed<MediaSink::EndedPromise>, nsresult> rv =
-        mAudioSink->Start(mParams);
-    if (rv.isErr()) {
-      mEndedPromise =
-          MediaSink::EndedPromise::CreateAndReject(rv.unwrapErr(), __func__);
-      return rv.unwrapErr();
-    }
-    mEndedPromise = rv.unwrap();
-    mEndedPromise
-        ->Then(mOwnerThread.get(), __func__, this,
-               &AudioSinkWrapper::OnAudioEnded, &AudioSinkWrapper::OnAudioEnded)
-        ->Track(mAudioSinkEndedPromise);
-  } else {
-    if (aInfo.HasAudio()) {
-      mEndedPromise = MediaSink::EndedPromise::CreateAndResolve(true, __func__);
-    }
+  if (mAudioEnded) {
+    // Resolve promise if we start playback at the end position of the audio.
+    mEndedPromise =
+        aInfo.HasAudio()
+            ? MediaSink::EndedPromise::CreateAndResolve(true, __func__)
+            : nullptr;
+    return NS_OK;
   }
+
+  mAudioSink.reset(mCreator->Create());
+  Result<already_AddRefed<MediaSink::EndedPromise>, nsresult> rv =
+      mAudioSink->Start(mParams);
+  if (rv.isErr()) {
+    mEndedPromise =
+        MediaSink::EndedPromise::CreateAndReject(rv.unwrapErr(), __func__);
+    return rv.unwrapErr();
+  }
+
+  mEndedPromise = rv.unwrap();
+  mEndedPromise
+      ->Then(mOwnerThread.get(), __func__, this,
+             &AudioSinkWrapper::OnAudioEnded, &AudioSinkWrapper::OnAudioEnded)
+      ->Track(mAudioSinkEndedPromise);
   return NS_OK;
 }
 
