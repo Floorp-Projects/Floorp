@@ -31,7 +31,7 @@
       testAccessibleTree("grid", accTree);
 
       // ////////////////////////////////////////////////////////////////////////
-      // crazy grids (mad mix of ARIA and HTML tables)
+      // strange grids (mix of ARIA and HTML tables)
 
       accTree = {
         role: ROLE_TABLE,
@@ -64,7 +64,7 @@
           },
         ],
       };
-      testAccessibleTree("crazy_grid1", accTree);
+      testAccessibleTree("strange_grid1", accTree);
 
       accTree = {
         role: ROLE_TABLE,
@@ -92,7 +92,7 @@
           },
         ],
       };
-      testAccessibleTree("crazy_grid2", accTree);
+      testAccessibleTree("strange_grid2", accTree);
 
       accTree = {
         role: ROLE_TABLE,
@@ -119,7 +119,7 @@
           },
         ],
       };
-      testAccessibleTree("crazy_grid3", accTree);
+      testAccessibleTree("strange_grid3", accTree);
 
       accTree = {
         role: ROLE_TABLE,
@@ -167,7 +167,7 @@
         ],
       };
 
-      testAccessibleTree("crazy_grid4", accTree);
+      testAccessibleTree("strange_grid4", accTree);
 
       // ////////////////////////////////////////////////////////////////////////
       // grids that could contain whitespace accessibles but shouldn't.
@@ -216,7 +216,7 @@
     </div>
   </div>
 
-  <div id="crazy_grid1" role="grid">
+  <div id="strange_grid1" role="grid">
     <div role="row">
       <table role="presentation">
         <caption>caption</caption>
@@ -228,7 +228,7 @@
     </div>
   </div>
 
-  <div id="crazy_grid2" role="grid">
+  <div id="strange_grid2" role="grid">
     <table role="presentation">
       <tr role="row">
         <td id="implicit_gridcell">cell1</td>
@@ -237,7 +237,7 @@
     </table>
   </div>
 
-  <div id="crazy_grid3" role="grid">
+  <div id="strange_grid3" role="grid">
     <div role="row">
       <div role="gridcell">
         <table role="presentation">
@@ -249,7 +249,7 @@
     </div>
   </div>
 
-  <div id="crazy_grid4" role="grid">
+  <div id="strange_grid4" role="grid">
     <div role="row">
       <div role="gridcell">
         <table>

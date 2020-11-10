@@ -483,8 +483,8 @@ already_AddRefed<Accessible> nsAccessibilityService::CreatePluginAccessible(
 #  elif MOZ_ACCESSIBILITY_ATK
     if (!AtkSocketAccessible::gCanEmbed) return nullptr;
 
-    // Note this calls into the plugin, so crazy things may happen and aFrame
-    // may go away.
+    // Note this calls into the plugin, so unexpected things may happen and
+    // aFrame may go away.
     nsCString plugId;
     nsresult rv = pluginInstance->GetValueFromPlugin(
         NPPVpluginNativeAccessibleAtkPlugId, &plugId);
