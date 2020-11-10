@@ -9,10 +9,8 @@ use crate::punt::{
 use atomic_refcell::AtomicRefCell;
 use fxa_client::{
     device::{
-        Capability as FxaDeviceCapability,
-        CommandFetchReason,
-        PushSubscription as FxaPushSubscription,
-        Type as FxaDeviceType,
+        Capability as FxaDeviceCapability, CommandFetchReason,
+        PushSubscription as FxaPushSubscription, Type as FxaDeviceType,
     },
     FirefoxAccount,
 };
@@ -391,7 +389,8 @@ impl PuntTask {
             Punt::ToJson => fxa.to_json().map(PuntResult::String),
             Punt::BeginOAuthFlow(scopes, entry_point) => {
                 let scopes: Vec<&str> = scopes.iter().map(AsRef::as_ref).collect();
-                fxa.begin_oauth_flow(&scopes, &entry_point, None).map(PuntResult::String)
+                fxa.begin_oauth_flow(&scopes, &entry_point, None)
+                    .map(PuntResult::String)
             }
             Punt::CompleteOAuthFlow(code, state) => fxa
                 .complete_oauth_flow(&code, &state)
@@ -451,7 +450,9 @@ impl PuntTask {
             Punt::HandlePushMessage(payload) => fxa
                 .handle_push_message(&payload)
                 .map(PuntResult::json_stringify),
-            Punt::PollDeviceCommands => fxa.poll_device_commands(CommandFetchReason::Poll).map(PuntResult::json_stringify),
+            Punt::PollDeviceCommands => fxa
+                .poll_device_commands(CommandFetchReason::Poll)
+                .map(PuntResult::json_stringify),
             Punt::SendSingleTab(target_id, title, url) => fxa
                 .send_tab(&target_id, &title, &url)
                 .map(|_| PuntResult::Null),

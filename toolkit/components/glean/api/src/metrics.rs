@@ -30,17 +30,14 @@ pub(crate) mod __glean_metric_maps {
     pub static TIMESPAN_MAP: Lazy<HashMap<MetricId, &Lazy<TimespanMetric>>> =
         Lazy::new(HashMap::new);
 
-    pub static COUNTER_MAP: Lazy<HashMap<MetricId, &Lazy<CounterMetric>>> =
-        Lazy::new(HashMap::new);
+    pub static COUNTER_MAP: Lazy<HashMap<MetricId, &Lazy<CounterMetric>>> = Lazy::new(HashMap::new);
 
-    pub static BOOLEAN_MAP: Lazy<HashMap<MetricId, &Lazy<BooleanMetric>>> =
-        Lazy::new(HashMap::new);
+    pub static BOOLEAN_MAP: Lazy<HashMap<MetricId, &Lazy<BooleanMetric>>> = Lazy::new(HashMap::new);
 
     pub static DATETIME_MAP: Lazy<HashMap<MetricId, &Lazy<DatetimeMetric>>> =
         Lazy::new(HashMap::new);
 
-    pub static STRING_MAP: Lazy<HashMap<MetricId, &Lazy<StringMetric>>> =
-        Lazy::new(HashMap::new);
+    pub static STRING_MAP: Lazy<HashMap<MetricId, &Lazy<StringMetric>>> = Lazy::new(HashMap::new);
 
     pub static MEMORY_DISTRIBUTION_MAP: Lazy<HashMap<MetricId, &Lazy<MemoryDistributionMetric>>> =
         Lazy::new(HashMap::new);
