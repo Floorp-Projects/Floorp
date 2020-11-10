@@ -59,7 +59,7 @@ class RenderCompositorSWGL : public RenderCompositor {
 
   void ClearMappedBuffer();
 
-  void CommitMappedBuffer(const nsTArray<DeviceIntRect>* aDirtyRects = nullptr);
+  void CommitMappedBuffer();
 };
 
 }  // namespace wr
