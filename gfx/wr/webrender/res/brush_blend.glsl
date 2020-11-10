@@ -31,8 +31,6 @@
 varying vec2 v_uv;
 varying vec2 v_local_pos;
 
-flat varying vec4 v_flood_color;
-
 // Normalized bounds of the source image in the texture, adjusted to avoid
 // sampling artifacts.
 flat varying vec4 v_uv_sample_bounds;
@@ -151,7 +149,7 @@ void brush_vs(
     } else if (v_op == FILTER_COMPONENT_TRANSFER) {
         v_table_address = prim_user_data.z;
     } else if (v_op == FILTER_FLOOD) {
-        v_flood_color = fetch_from_gpu_cache_1(prim_user_data.z);
+        v_color_offset = fetch_from_gpu_cache_1(prim_user_data.z);
     }
 }
 #endif
@@ -283,8 +281,8 @@ Fragment brush_fs() {
             break;
         }
         case FILTER_FLOOD:
-            color = v_flood_color.rgb;
-            alpha = v_flood_color.a;
+            color = v_color_offset.rgb;
+            alpha = v_color_offset.a;
             break;
         default:
             // Color matrix type filters (sepia, hue-rotate, etc...)
