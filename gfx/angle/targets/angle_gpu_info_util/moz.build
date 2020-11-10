@@ -4,33 +4,38 @@ include("../../moz.build.common")
 
 DEFINES["ANGLE_ENABLE_D3D11"] = True
 DEFINES["ANGLE_ENABLE_D3D9"] = True
-# DEFINES['ANGLE_IS_64_BIT_CPU'] = True
-# DEFINES['CERT_CHAIN_PARA_HAS_EXTRA_FIELDS'] = True
-DEFINES["CR_CLANG_REVISION"] = '"n332890-c2443155-1"'
+# DEFINES["ANGLE_IS_64_BIT_CPU"] = True
+# DEFINES["CERT_CHAIN_PARA_HAS_EXTRA_FIELDS"] = True
+# DEFINES["CHROMIUM_BUILD"] = True
+DEFINES["CR_CLANG_REVISION"] = '"357692-1"'
 DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
-# DEFINES['NDEBUG'] = True
+# DEFINES["FULL_SAFE_BROWSING"] = True
+# DEFINES["NDEBUG"] = True
 DEFINES["NOMINMAX"] = True
+# DEFINES["NO_TCMALLOC"] = True
 DEFINES["NTDDI_VERSION"] = "NTDDI_WIN10_RS2"
-# DEFINES['NVALGRIND'] = True
-# DEFINES['PSAPI_VERSION'] = '2'
+# DEFINES["NVALGRIND"] = True
+# DEFINES["PSAPI_VERSION"] = "2"
+# DEFINES["SAFE_BROWSING_CSD"] = True
+# DEFINES["SAFE_BROWSING_DB_LOCAL"] = True
 DEFINES["UNICODE"] = True
-# DEFINES['USE_AURA'] = '1'
-# DEFINES['WIN32'] = True
-# DEFINES['WIN32_LEAN_AND_MEAN'] = True
-# DEFINES['WINAPI_FAMILY'] = 'WINAPI_FAMILY_DESKTOP_APP'
+# DEFINES["USE_AURA"] = "1"
+# DEFINES["WIN32"] = True
+# DEFINES["WIN32_LEAN_AND_MEAN"] = True
+# DEFINES["WINAPI_FAMILY"] = "WINAPI_FAMILY_DESKTOP_APP"
 DEFINES["WINVER"] = "0x0A00"
 DEFINES["_ATL_NO_OPENGL"] = True
 DEFINES["_CRT_RAND_S"] = True
 DEFINES["_CRT_SECURE_NO_DEPRECATE"] = True
 DEFINES["_HAS_EXCEPTIONS"] = "0"
-# DEFINES['_HAS_NODISCARD'] = True
+# DEFINES["_HAS_NODISCARD"] = True
 DEFINES["_SCL_SECURE_NO_DEPRECATE"] = True
 DEFINES["_SECURE_ATL"] = True
 DEFINES["_UNICODE"] = True
-# DEFINES['_USING_V110_SDK71_'] = True
-# DEFINES['_WIN32_WINNT'] = '0x0A00'
-# DEFINES['_WINDOWS'] = True
-# DEFINES['__STD_C'] = True
+# DEFINES["_USING_V110_SDK71_"] = True
+# DEFINES["_WIN32_WINNT"] = "0x0A00"
+# DEFINES["_WINDOWS"] = True
+# DEFINES["__STD_C"] = True
 
 LOCAL_INCLUDES += [
     "../../checkout/include/",
@@ -40,112 +45,105 @@ LOCAL_INCLUDES += [
 ]
 
 # CXXFLAGS += [
-#    '-D__DATE__=',
-#    '-D__TIME__=',
-#    '-D__TIMESTAMP__=',
-#    '-fcolor-diagnostics',
-#    '-fcomplete-member-pointers',
-#    '-fcrash-diagnostics-dir=../tools/clang/crashreports',
-#    '-fdebug-compilation-dir',
-#    '-fmerge-all-constants',
-#    '-fmsc-version=1916',
-#    '-fno-standalone-debug',
-#    '-gcodeview-ghash',
-#    '-instcombine-lower-dbg-declare=0',
-#    '-m64',
-#    '-mllvm',
-#    '-no-canonical-prefixes',
-#    '-Wextra-semi',
-#    '-Wheader-hygiene',
-#    '-Wimplicit-fallthrough',
-#    '-Wno-bitwise-conditional-parentheses',
-#    '-Wno-builtin-assume-aligned-alignment',
-#    '-Wno-builtin-macro-redefined',
-#    '-Wno-c++11-narrowing',
-#    '-Wno-deprecated-copy',
-#    '-Wno-final-dtor-non-final-class',
-#    '-Wno-ignored-pragma-optimize',
-#    '-Wno-implicit-int-float-conversion',
-#    '-Wno-missing-field-initializers',
-#    '-Wno-nonportable-include-path',
-#    '-Wno-sizeof-array-div',
-#    '-Wno-undefined-var-template',
-#    '-Wno-unneeded-internal-declaration',
-#    '-Wno-unused-parameter',
-#    '-Wnon-virtual-dtor',
-#    '-Wstring-conversion',
-#    '-Wtautological-overlap-compare',
-#    '-Wthread-safety',
-#    '-Wunneeded-internal-declaration',
-#    '-Xclang',
-#    '.',
-#    '/bigobj',
-#    '/Brepro',
-#    '/FS',
-#    '/GR-',
-#    '/guard:cf,nochecks',
-#    '/Gw',
-#    '/Gy',
-#    '/MT',
-#    '/O1',
-#    '/Ob2',
-#    '/Oi',
-#    '/Oy-',
-#    '/TP',
-#    '/utf-8',
-#    '/W4',
-#    '/wd4091',
-#    '/wd4100',
-#    '/wd4121',
-#    '/wd4127',
-#    '/wd4200',
-#    '/wd4201',
-#    '/wd4204',
-#    '/wd4221',
-#    '/wd4244',
-#    '/wd4245',
-#    '/wd4251',
-#    '/wd4267',
-#    '/wd4275',
-#    '/wd4305',
-#    '/wd4312',
-#    '/wd4324',
-#    '/wd4351',
-#    '/wd4355',
-#    '/wd4389',
-#    '/wd4456',
-#    '/wd4457',
-#    '/wd4458',
-#    '/wd4459',
-#    '/wd4503',
-#    '/wd4505',
-#    '/wd4510',
-#    '/wd4512',
-#    '/wd4577',
-#    '/wd4589',
-#    '/wd4610',
-#    '/wd4611',
-#    '/wd4661',
-#    '/wd4701',
-#    '/wd4702',
-#    '/wd4703',
-#    '/wd4706',
-#    '/wd4715',
-#    '/wd4838',
-#    '/wd4995',
-#    '/wd4996',
-#    '/we4244',
-#    '/we4456',
-#    '/we4458',
-#    '/we4715',
-#    '/we4800',
-#    '/we4838',
-#    '/WX',
-#    '/X',
-#    '/Z7',
-#    '/Zc:inline',
-#    '/Zc:sizedDealloc-',
-#    '/Zc:twoPhase',
+#     "-D__DATE__=",
+#     "-D__TIME__=",
+#     "-D__TIMESTAMP__=",
+#     "-fcolor-diagnostics",
+#     "-fcomplete-member-pointers",
+#     "-fcrash-diagnostics-dir=../tools/clang/crashreports",
+#     "-fdebug-compilation-dir",
+#     "-fmerge-all-constants",
+#     "-fmsc-version=1911",
+#     "-fno-standalone-debug",
+#     "-gcodeview-ghash",
+#     "-instcombine-lower-dbg-declare=0",
+#     "-m64",
+#     "-mllvm",
+#     "-no-canonical-prefixes",
+#     "-Wextra-semi",
+#     "-Wheader-hygiene",
+#     "-Wimplicit-fallthrough",
+#     "-Wno-builtin-macro-redefined",
+#     "-Wno-c++11-narrowing",
+#     "-Wno-ignored-pragma-optimize",
+#     "-Wno-missing-field-initializers",
+#     "-Wno-nonportable-include-path",
+#     "-Wno-undefined-var-template",
+#     "-Wno-unneeded-internal-declaration",
+#     "-Wno-unused-parameter",
+#     "-Wnon-virtual-dtor",
+#     "-Wstring-conversion",
+#     "-Wtautological-overlap-compare",
+#     "-Wthread-safety",
+#     "-Wunneeded-internal-declaration",
+#     "-Xclang",
+#     ".",
+#     "/bigobj",
+#     "/Brepro",
+#     "/FS",
+#     "/GR-",
+#     "/guard:cf,nochecks",
+#     "/Gw",
+#     "/Gy",
+#     "/MT",
+#     "/O1",
+#     "/Ob2",
+#     "/Oi",
+#     "/Oy-",
+#     "/TP",
+#     "/utf-8",
+#     "/W4",
+#     "/wd4091",
+#     "/wd4100",
+#     "/wd4121",
+#     "/wd4127",
+#     "/wd4200",
+#     "/wd4201",
+#     "/wd4204",
+#     "/wd4221",
+#     "/wd4244",
+#     "/wd4245",
+#     "/wd4251",
+#     "/wd4267",
+#     "/wd4275",
+#     "/wd4305",
+#     "/wd4312",
+#     "/wd4324",
+#     "/wd4351",
+#     "/wd4355",
+#     "/wd4389",
+#     "/wd4456",
+#     "/wd4457",
+#     "/wd4458",
+#     "/wd4459",
+#     "/wd4503",
+#     "/wd4505",
+#     "/wd4510",
+#     "/wd4512",
+#     "/wd4577",
+#     "/wd4589",
+#     "/wd4610",
+#     "/wd4611",
+#     "/wd4661",
+#     "/wd4701",
+#     "/wd4702",
+#     "/wd4703",
+#     "/wd4706",
+#     "/wd4715",
+#     "/wd4838",
+#     "/wd4995",
+#     "/wd4996",
+#     "/we4244",
+#     "/we4456",
+#     "/we4458",
+#     "/we4715",
+#     "/we4800",
+#     "/we4838",
+#     "/WX",
+#     "/X",
+#     "/Z7",
+#     "/Zc:inline",
+#     "/Zc:sizedDealloc-",
 # ]
 
 SOURCES += [
@@ -171,19 +169,18 @@ OS_LIBS += [
 ]
 
 # LDFLAGS += [
-#    '--color-diagnostics',
-#    '/DEBUG:GHASH',
-#    '/FIXED:NO',
-#    '/INCREMENTAL:NO',
-#    '/lldignoreenv',
-#    '/OPT:ICF',
-#    '/OPT:NOLLDTAILMERGE',
-#    '/OPT:REF',
-#    '/pdbaltpath:%_PDB%',
-#    '/PDBSourcePath:C:/dev/angle/out',
-#    '/PROFILE',
-#    '/TIMESTAMP:1575176400',
-#    '/WX',
+#     "--color-diagnostics",
+#     "/DEBUG:GHASH",
+#     "/FIXED:NO",
+#     "/INCREMENTAL:NO",
+#     "/OPT:ICF",
+#     "/OPT:NOLLDTAILMERGE",
+#     "/OPT:REF",
+#     "/pdbaltpath:%_PDB%",
+#     "/PDBSourcePath:C:/dev/angle/out",
+#     "/PROFILE",
+#     "/TIMESTAMP:1554613200",
+#     "/WX",
 # ]
 
 Library("angle_gpu_info_util")
