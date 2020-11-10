@@ -13,6 +13,7 @@
 
 #include "nsDebug.h"
 #include "nsIPrincipal.h"
+#include "nsISHEntry.h"
 
 namespace mozilla {
 

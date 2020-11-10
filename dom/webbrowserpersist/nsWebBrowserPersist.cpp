@@ -57,6 +57,14 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Printf.h"
 #include "ReferrerInfo.h"
+#include "nsIURIMutator.h"
+#include "mozilla/WebBrowserPersistDocumentParent.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/PContentParent.h"
+#include "mozilla/dom/BrowserParent.h"
+#include "nsIDocumentEncoder.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
