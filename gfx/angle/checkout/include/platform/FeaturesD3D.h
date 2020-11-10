@@ -224,6 +224,10 @@ struct FeaturesD3D : FeatureSetBase
         "allow_clear_for_robust_resource_init", FeatureCategory::D3DWorkarounds,
         "Some drivers corrupt texture data when clearing for robust resource initialization.",
         &members, "http://crbug.com/941620"};
+
+    Feature allowES3OnFL10_0 = {
+        "allowES3OnFL10_0", FeatureCategory::D3DWorkarounds,
+        "Allow ES3 on 10.0 devices", &members};
 };
 
 inline FeaturesD3D::FeaturesD3D()  = default;
