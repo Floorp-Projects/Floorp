@@ -14,7 +14,6 @@
 #include "AccessibleOrProxy.h"
 #include "DocAccessibleParent.h"
 #include "mozTableAccessible.h"
-#include "MOXWebAreaAccessible.h"
 
 #include "nsAppShell.h"
 
@@ -55,8 +54,6 @@ void ProxyCreated(ProxyAccessible* aProxy, uint32_t) {
     type = [mozTableRowAccessible class];
   } else if (aProxy->IsTableCell()) {
     type = [mozTableCellAccessible class];
-  } else if (aProxy->IsDoc()) {
-    type = [MOXWebAreaAccessible class];
   } else {
     type = GetTypeFromRole(aProxy->Role());
   }
