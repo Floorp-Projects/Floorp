@@ -42,7 +42,6 @@ class BaseMediaMgrError {
     NotAllowedError,
     NotFoundError,
     NotReadableError,
-    NotSupportedError,
     OverconstrainedError,
     SecurityError,
     TypeError,
