@@ -179,6 +179,9 @@ class PerformanceResourceTiming : public PerformanceEntry {
 
   // The same initial requested URI as the `name` attribute.
   nsCOMPtr<nsIURI> mOriginalURI;
+
+ private:
+  mutable Maybe<DOMHighResTimeStamp> mCachedStartTime;
 };
 
 }  // namespace dom
