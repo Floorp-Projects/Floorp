@@ -48,16 +48,19 @@ DOMHighResTimeStamp PerformanceResourceTiming::StartTime() const {
   // Ignore zero values.  The RedirectStart and WorkerStart values
   // can come from earlier redirected channels prior to the AsyncOpen
   // time being recorded.
-  DOMHighResTimeStamp redirect =
-      mTimingData->RedirectStartHighRes(mPerformance);
-  redirect = redirect ? redirect : DBL_MAX;
+  if (mCachedStartTime.isNothing()) {
+    DOMHighResTimeStamp redirect =
+        mTimingData->RedirectStartHighRes(mPerformance);
+    redirect = redirect ? redirect : DBL_MAX;
 
-  DOMHighResTimeStamp worker = mTimingData->WorkerStartHighRes(mPerformance);
-  worker = worker ? worker : DBL_MAX;
+    DOMHighResTimeStamp worker = mTimingData->WorkerStartHighRes(mPerformance);
+    worker = worker ? worker : DBL_MAX;
 
-  DOMHighResTimeStamp asyncOpen = mTimingData->AsyncOpenHighRes(mPerformance);
+    DOMHighResTimeStamp asyncOpen = mTimingData->AsyncOpenHighRes(mPerformance);
 
-  return std::min(asyncOpen, std::min(redirect, worker));
+    mCachedStartTime.emplace(std::min(asyncOpen, std::min(redirect, worker)));
+  }
+  return mCachedStartTime.value();
 }
 
 JSObject* PerformanceResourceTiming::WrapObject(
