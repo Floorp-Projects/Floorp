@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ServiceWorkerUpdaterChild.h"
+#include "ServiceWorkerUtils.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
