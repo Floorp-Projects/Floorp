@@ -45,3 +45,5 @@ macosx64-aarch64/opt:
             - macosx64-nasm
             - macosx64-node
             - macosx64-rust-nightly
+    optimization:
+        skip-unless-expanded: null
