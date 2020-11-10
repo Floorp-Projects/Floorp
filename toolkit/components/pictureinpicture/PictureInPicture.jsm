@@ -16,6 +16,10 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
 const PLAYER_URI = "chrome://global/content/pictureinpicture/player.xhtml";
 var PLAYER_FEATURES =
   "chrome,titlebar=yes,alwaysontop,lockaspectratio,resizable";
@@ -25,6 +29,8 @@ if (!AppConstants.MOZ_WIDGET_GTK) {
 }
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
 const PIP_ENABLED_PREF = "media.videocontrols.picture-in-picture.enabled";
+const MULTI_PIP_ENABLED_PREF =
+  "media.videocontrols.picture-in-picture.allow-multiple";
 const TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.enabled";
 
@@ -78,7 +84,7 @@ class PictureInPictureParent extends JSWindowActorParent {
     switch (aMessage.name) {
       case "PictureInPicture:Resize": {
         let videoData = aMessage.data;
-        PictureInPicture.resizePictureInPictureWindow(videoData);
+        PictureInPicture.resizePictureInPictureWindow(videoData, this);
         break;
       }
       case "PictureInPicture:Close": {
@@ -86,32 +92,37 @@ class PictureInPictureParent extends JSWindowActorParent {
          * Content has requested that its Picture in Picture window go away.
          */
         let reason = aMessage.data.reason;
-        PictureInPicture.closePipWindow({ reason });
+
+        if (PictureInPicture.isMultiPipEnabled) {
+          PictureInPicture.closeSinglePipWindow({ reason, actorRef: this });
+        } else {
+          PictureInPicture.closeAllPipWindows({ reason });
+        }
         break;
       }
       case "PictureInPicture:Playing": {
-        let player = PictureInPicture.getWeakPipPlayer();
+        let player = PictureInPicture.getWeakPipPlayer(this);
         if (player) {
           player.setIsPlayingState(true);
         }
         break;
       }
       case "PictureInPicture:Paused": {
-        let player = PictureInPicture.getWeakPipPlayer();
+        let player = PictureInPicture.getWeakPipPlayer(this);
         if (player) {
           player.setIsPlayingState(false);
         }
         break;
       }
       case "PictureInPicture:Muting": {
-        let player = PictureInPicture.getWeakPipPlayer();
+        let player = PictureInPicture.getWeakPipPlayer(this);
         if (player) {
           player.setIsMutedState(true);
         }
         break;
       }
       case "PictureInPicture:Unmuting": {
-        let player = PictureInPicture.getWeakPipPlayer();
+        let player = PictureInPicture.getWeakPipPlayer(this);
         if (player) {
           player.setIsMutedState(false);
         }
@@ -127,32 +138,27 @@ class PictureInPictureParent extends JSWindowActorParent {
  */
 
 var PictureInPicture = {
+  // Maps PictureInPictureParent actors to their corresponding PiP player windows
+  weakPipToWin: new WeakMap(),
+
+  // Maps PiP player windows to their originating content's browser
+  weakWinToBrowser: new WeakMap(),
+
   /**
    * Returns the player window if one exists and if it hasn't yet been closed.
+   *
+   * @param pipActorRef (PictureInPictureParent)
+   * 	Reference to the calling PictureInPictureParent actor
    *
    * @return {DOM Window} the player window if it exists and is not in the
    * process of being closed. Returns null otherwise.
    */
-  getWeakPipPlayer() {
-    let weakRef = this._weakPipPlayer;
-    if (weakRef) {
-      let playerWin;
-
-      // Bug 800957 - Accessing weakrefs at the wrong time can cause us to
-      // throw NS_ERROR_XPC_BAD_CONVERT_NATIVE
-      try {
-        playerWin = weakRef.get();
-      } catch (e) {
-        return null;
-      }
-
-      if (!playerWin || playerWin.closed) {
-        return null;
-      }
-
-      return playerWin;
+  getWeakPipPlayer(pipActorRef) {
+    let playerWin = this.weakPipToWin.get(pipActorRef);
+    if (!playerWin || playerWin.closed) {
+      return null;
     }
-    return null;
+    return playerWin;
   },
 
   /**
@@ -172,28 +178,102 @@ var PictureInPicture = {
     actor.sendAsyncMessage("PictureInPicture:KeyToggle");
   },
 
-  async focusTabAndClosePip() {
-    let gBrowser = this.browser.ownerGlobal.gBrowser;
-    let tab = gBrowser.getTabForBrowser(this.browser);
+  async focusTabAndClosePip(window, pipActor) {
+    let browser = this.weakWinToBrowser.get(window);
+    if (!browser) {
+      return;
+    }
+
+    let gBrowser = browser.ownerGlobal.gBrowser;
+    let tab = gBrowser.getTabForBrowser(browser);
+
     gBrowser.selectedTab = tab;
-    await this.closePipWindow({ reason: "unpip" });
+    await this.closeSinglePipWindow({ reason: "unpip", actorRef: pipActor });
   },
 
   /**
    * Remove attribute which enables pip icon in tab
+   *
+   * @param window {Window}
+   *   A PictureInPicture player's window, used to resolve the player's
+   *   associated originating content browser
    */
-  clearPipTabIcon() {
-    let win = this.browser.ownerGlobal;
-    let tab = win.gBrowser.getTabForBrowser(this.browser);
+  clearPipTabIcon(window) {
+    const browser = this.weakWinToBrowser.get(window);
+    if (!browser) {
+      return;
+    }
+
+    // see if no other pip windows are open for this content browser
+    for (let win of Services.wm.getEnumerator(WINDOW_TYPE)) {
+      if (
+        win !== window &&
+        this.weakWinToBrowser.has(win) &&
+        this.weakWinToBrowser.get(win) === browser
+      ) {
+        return;
+      }
+    }
+
+    let gBrowser = browser.ownerGlobal.gBrowser;
+    let tab = gBrowser.getTabForBrowser(browser);
     if (tab) {
       tab.removeAttribute("pictureinpicture");
     }
   },
 
   /**
-   * Find and close any pre-existing Picture in Picture windows.
+   * Closes and waits for passed PiP player window to finish closing.
+   *
+   * @param pipWin {Window}
+   *   Player window to close
    */
-  async closePipWindow({ reason }) {
+  async closePipWindow(pipWin) {
+    if (pipWin.closed) {
+      return;
+    }
+    let closedPromise = new Promise(resolve => {
+      pipWin.addEventListener("unload", resolve, { once: true });
+    });
+    pipWin.close();
+    await closedPromise;
+  },
+
+  /**
+   * Closes a single PiP window. Used exclusively in conjunction with support
+   * for multiple PiP windows
+   *
+   * @param {Object} closeData
+   *   Additional data required to complete a close operation on a PiP window
+   * @param {PictureInPictureParent} closeData.actorRef
+   *   The PictureInPictureParent actor associated with the PiP window being closed
+   * @param {string} closeData.reason
+   *   The reason for closing this PiP window
+   */
+  async closeSinglePipWindow(closeData) {
+    const { reason, actorRef } = closeData;
+    const win = this.getWeakPipPlayer(actorRef);
+    if (!win) {
+      return;
+    }
+
+    await this.closePipWindow(win);
+    gCloseReasons.set(win, reason);
+  },
+
+  /**
+   * Find and close any pre-existing Picture in Picture windows. Used exclusively
+   * when multiple PiP window support is turned off. All windows can be closed because it
+   * is assumed that only 1 window is open when it is called.
+   *
+   * @param {Object} closeData
+   *   Additional data required to complete a close operation on a PiP window
+   * @param {string} closeData.reason
+   *   The reason why this PiP is being closed
+   */
+  async closeAllPipWindows(closeData) {
+    const { reason } = closeData;
+
     // This uses an enumerator, but there really should only be one of
     // these things.
     for (let win of Services.wm.getEnumerator(WINDOW_TYPE)) {
@@ -231,14 +311,20 @@ var PictureInPicture = {
    *   the player component inside it has finished loading.
    */
   async handlePictureInPictureRequest(wgp, videoData) {
-    // If there's a pre-existing PiP window, close it first.
-    await this.closePipWindow({ reason: "new-pip" });
+    if (!this.isMultiPipEnabled) {
+      // If there's a pre-existing PiP window, close it first if multiple
+      // pips are disabled
+      await this.closeAllPipWindows({ reason: "new-pip" });
+    }
 
     let browser = wgp.browsingContext.top.embedderElement;
     let parentWin = browser.ownerGlobal;
-    this.browser = browser;
-    let win = await this.openPipWindow(parentWin, videoData);
-    this._weakPipPlayer = Cu.getWeakReference(win);
+
+    let actorRef = browser.browsingContext.currentWindowGlobal.getActor(
+      "PictureInPicture"
+    );
+
+    let win = await this.openPipWindow(parentWin, videoData, actorRef);
     win.setIsPlayingState(videoData.playing);
     win.setIsMutedState(videoData.isMuted);
 
@@ -248,6 +334,8 @@ var PictureInPicture = {
 
     win.setupPlayer(gNextWindowID.toString(), wgp, videoData.videoRef);
     gNextWindowID++;
+
+    this.weakWinToBrowser.set(win, browser);
 
     Services.prefs.setBoolPref(
       "media.videocontrols.picture-in-picture.video-toggle.has-used",
@@ -273,9 +361,7 @@ var PictureInPicture = {
     );
     // Saves the location of the Picture in Picture window
     this.savePosition(window);
-    this.clearPipTabIcon();
-    delete this._weakPipPlayer;
-    delete this.browser;
+    this.clearPipTabIcon(window);
   },
 
   /**
@@ -295,11 +381,18 @@ var PictureInPicture = {
    *   videoWidth (int):
    *     The preferred width of the video.
    *
+   * @param actorReference (PictureInPictureParent)
+   * 	Reference to the calling PictureInPictureParent
+   *
    * @returns Promise
    *   Resolves once the window has opened and loaded the player component.
    */
-  async openPipWindow(parentWin, videoData) {
-    let { top, left, width, height } = this.fitToScreen(parentWin, videoData);
+  async openPipWindow(parentWin, videoData, actorReference) {
+    let { top, left, width, height } = this.fitToScreen(
+      parentWin,
+      videoData,
+      actorReference
+    );
 
     let features =
       `${PLAYER_FEATURES},top=${top},left=${left},` +
@@ -352,6 +445,9 @@ var PictureInPicture = {
    *   videoWidth (int):
    *     The preferred width of the video.
    *
+   * @param actorReference (PictureInPictureParent)
+   * 	Reference to calling PictureInPictureParent actor
+   *
    * @returns (object)
    *   The size and position for the player window.
    *
@@ -367,12 +463,13 @@ var PictureInPicture = {
    *   height (int):
    *     The height of the player window.
    */
-  fitToScreen(windowOrPlayer, videoData) {
+  fitToScreen(windowOrPlayer, videoData, actorReference) {
     let { videoHeight, videoWidth } = videoData;
 
     // if current PiP window is being resized, the underlying video is changing,
     // then save the location and size for opening the new window
-    let isPlayerWindow = windowOrPlayer == this.getWeakPipPlayer();
+    let isPlayerWindow =
+      windowOrPlayer == this.getWeakPipPlayer(actorReference);
     if (isPlayerWindow) {
       this.savePosition(windowOrPlayer);
     }
@@ -526,14 +623,18 @@ var PictureInPicture = {
     return { top, left, width, height };
   },
 
-  resizePictureInPictureWindow(videoData) {
-    let win = this.getWeakPipPlayer();
+  resizePictureInPictureWindow(videoData, actorRef) {
+    let win = this.getWeakPipPlayer(actorRef);
 
     if (!win) {
       return;
     }
 
-    let { top, left, width, height } = this.fitToScreen(win, videoData);
+    let { top, left, width, height } = this.fitToScreen(
+      win,
+      videoData,
+      actorRef
+    );
     win.resizeTo(width, height);
     win.moveTo(left, top);
   },
@@ -712,3 +813,10 @@ var PictureInPicture = {
     return { top, left, width, height };
   },
 };
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  PictureInPicture,
+  "isMultiPipEnabled",
+  MULTI_PIP_ENABLED_PREF,
+  false
+);
