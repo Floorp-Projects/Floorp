@@ -266,9 +266,9 @@ class IOUtils final {
                                             bool aNoOverwrite);
 
   /**
-   * Attempts to remove the file located at |aPath|.
+   * Attempts to remove the file located at |aFile|.
    *
-   * @param aPath         The location of the file as an absolute path string.
+   * @param aFile         The location of the file.
    * @param aIgnoreAbsent If true, suppress errors due to an absent target file.
    * @param aRecursive    If true, attempt to recursively remove descendant
    *                      files. This option is safe to use even if the target
@@ -276,7 +276,7 @@ class IOUtils final {
    *
    * @return Ok if the file was removed successfully, or an error.
    */
-  static Result<Ok, IOError> RemoveSync(const nsAString& aPath,
+  static Result<Ok, IOError> RemoveSync(already_AddRefed<nsIFile> aFile,
                                         bool aIgnoreAbsent, bool aRecursive);
 
   /**
