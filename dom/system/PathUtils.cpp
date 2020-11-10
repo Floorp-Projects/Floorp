@@ -6,13 +6,24 @@
 
 #include "PathUtils.h"
 
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Result.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/Span.h"
 #include "mozilla/dom/DOMParser.h"
 #include "mozilla/dom/PathUtilsBinding.h"
+#include "mozilla/dom/Promise.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsCOMPtr.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsIFile.h"
+#include "nsIGlobalObject.h"
 #include "nsLocalFile.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
@@ -50,6 +61,9 @@ static void ThrowError(ErrorResult& aErr, const nsresult aResult,
       break;
   }
 }
+
+StaticDataMutex<Maybe<PathUtils::DirectoryCache>> PathUtils::sDirCache{
+    "sDirCache"};
 
 /**
  * Return the leaf name, including leading path separators in the case of
@@ -236,6 +250,212 @@ void PathUtils::ToFileURI(const GlobalObject&, const nsAString& aPath,
     ThrowError(aErr, rv, "Could not retrieve URI spec"_ns);
     return;
   }
+}
+
+already_AddRefed<Promise> PathUtils::GetProfileDir(const GlobalObject& aGlobal,
+                                                   ErrorResult& aErr) {
+  auto guard = sDirCache.Lock();
+  return DirectoryCache::Ensure(guard.ref())
+      .GetDirectory(aGlobal, aErr, DirectoryCache::Directory::Profile);
+}
+
+already_AddRefed<Promise> PathUtils::GetLocalProfileDir(
+    const GlobalObject& aGlobal, ErrorResult& aErr) {
+  auto guard = sDirCache.Lock();
+  return DirectoryCache::Ensure(guard.ref())
+      .GetDirectory(aGlobal, aErr, DirectoryCache::Directory::LocalProfile);
+}
+
+already_AddRefed<Promise> PathUtils::GetTempDir(const GlobalObject& aGlobal,
+                                                ErrorResult& aErr) {
+  auto guard = sDirCache.Lock();
+  return DirectoryCache::Ensure(guard.ref())
+      .GetDirectory(aGlobal, aErr, DirectoryCache::Directory::Temp);
+}
+
+PathUtils::DirectoryCache::DirectoryCache() {
+  mProfileDir.SetIsVoid(true);
+  mLocalProfileDir.SetIsVoid(true);
+  mTempDir.SetIsVoid(true);
+}
+
+PathUtils::DirectoryCache& PathUtils::DirectoryCache::Ensure(
+    Maybe<PathUtils::DirectoryCache>& aCache) {
+  if (aCache.isNothing()) {
+    aCache.emplace();
+
+    RunOnShutdown([]() {
+      auto cache = PathUtils::sDirCache.Lock();
+      cache->reset();
+    });
+  }
+
+  return aCache.ref();
+}
+
+already_AddRefed<Promise> PathUtils::DirectoryCache::GetDirectory(
+    const GlobalObject& aGlobal, ErrorResult& aErr,
+    const Directory aRequestedDir) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  RefPtr<Promise> promise = Promise::Create(global, aErr);
+  if (aErr.Failed()) {
+    return nullptr;
+  }
+
+  if (RefPtr<PopulateDirectoriesPromise> p =
+          PopulateDirectories(aRequestedDir)) {
+    p->Then(
+        GetCurrentSerialEventTarget(), __func__,
+        [promise, aRequestedDir](const Ok&) {
+          auto cache = PathUtils::sDirCache.Lock();
+          cache.ref()->ResolveWithDirectory(promise, aRequestedDir);
+        },
+        [promise](const nsresult& aRv) { promise->MaybeReject(aRv); });
+  } else {
+    ResolveWithDirectory(promise, aRequestedDir);
+  }
+
+  return promise.forget();
+}
+
+void PathUtils::DirectoryCache::ResolveWithDirectory(
+    Promise* aPromise, const Directory aRequestedDir) {
+  switch (aRequestedDir) {
+    case Directory::Profile:
+      MOZ_RELEASE_ASSERT(!mProfileDir.IsVoid());
+      aPromise->MaybeResolve(mProfileDir);
+      break;
+
+    case Directory::LocalProfile:
+      MOZ_RELEASE_ASSERT(!mLocalProfileDir.IsVoid());
+      aPromise->MaybeResolve(mProfileDir);
+      break;
+
+    case Directory::Temp:
+      MOZ_RELEASE_ASSERT(!mTempDir.IsVoid());
+      aPromise->MaybeResolve(mTempDir);
+      break;
+
+    default:
+      MOZ_ASSERT_UNREACHABLE();
+  }
+}
+
+already_AddRefed<PathUtils::DirectoryCache::PopulateDirectoriesPromise>
+PathUtils::DirectoryCache::PopulateDirectories(
+    const PathUtils::DirectoryCache::Directory aRequestedDir) {
+  // If we have already resolved the requested directory, we can return
+  // immediately.
+  if ((aRequestedDir == Directory::Temp && !mTempDir.IsVoid()) ||
+      (aRequestedDir == Directory::Profile && !mProfileDir.IsVoid()) ||
+      (aRequestedDir == Directory::LocalProfile &&
+       !mLocalProfileDir.IsVoid())) {
+    // We cannot have a state where mProfileDir is not populated but
+    // mLocalProfileDir is.
+    if (mProfileDir.IsVoid()) {
+      MOZ_RELEASE_ASSERT(mLocalProfileDir.IsVoid());
+    }
+    return nullptr;
+  }
+
+  // We have already fired off a request to populate the entry, so we can return
+  // the corresponding promise immediately. caller will queue a Thenable onto
+  // that promise to resolve/reject the request.
+  if (!mAllDirsPromise.IsEmpty()) {
+    return mAllDirsPromise.Ensure(__func__);
+  }
+  if (aRequestedDir != Directory::Temp && !mProfileDirsPromise.IsEmpty()) {
+    return mProfileDirsPromise.Ensure(__func__);
+  }
+
+  RefPtr<PopulateDirectoriesPromise> promise;
+  if (aRequestedDir == Directory::Temp) {
+    promise = mAllDirsPromise.Ensure(__func__);
+  } else {
+    promise = mProfileDirsPromise.Ensure(__func__);
+  }
+
+  if (NS_IsMainThread()) {
+    nsresult rv = PopulateDirectoriesImpl(aRequestedDir);
+    ResolvePopulateDirectoriesPromise(rv, aRequestedDir);
+  } else {
+    nsCOMPtr<nsIRunnable> runnable =
+        NS_NewRunnableFunction(__func__, [aRequestedDir]() {
+          auto cache = PathUtils::sDirCache.Lock();
+          nsresult rv = cache.ref()->PopulateDirectoriesImpl(aRequestedDir);
+          cache.ref()->ResolvePopulateDirectoriesPromise(rv, aRequestedDir);
+        });
+    NS_DispatchToMainThread(runnable.forget());
+  }
+
+  return promise.forget();
+}
+
+void PathUtils::DirectoryCache::ResolvePopulateDirectoriesPromise(
+    nsresult aRv, const PathUtils::DirectoryCache::Directory aRequestedDir) {
+  if (NS_SUCCEEDED(aRv)) {
+    if (aRequestedDir == Directory::Temp) {
+      mAllDirsPromise.Resolve(Ok{}, __func__);
+    } else {
+      mProfileDirsPromise.Resolve(Ok{}, __func__);
+    }
+  } else {
+    if (aRequestedDir == Directory::Temp) {
+      mAllDirsPromise.Reject(aRv, __func__);
+    } else {
+      mProfileDirsPromise.Reject(aRv, __func__);
+    }
+  }
+}
+
+nsresult PathUtils::DirectoryCache::PopulateDirectoriesImpl(
+    const PathUtils::DirectoryCache::Directory aRequestedDir) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIFile> path;
+
+  // We only populate the temporary directory entry when specifically requested
+  // because the nsDirectoryService will do main thread IO to create the
+  // directory if it hasn't been created yet.
+  //
+  // Additionally, we cannot have second request to populate any of these
+  // directories if the first request succeeded, so assert that the
+  // corresponding fields are void.
+  if (aRequestedDir == Directory::Temp) {
+    MOZ_RELEASE_ASSERT(mTempDir.IsVoid());
+
+    MOZ_TRY(NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
+                                   getter_AddRefs(path)));
+    MOZ_TRY(path->GetPath(mTempDir));
+  } else if (aRequestedDir == Directory::Profile) {
+    MOZ_RELEASE_ASSERT(mProfileDir.IsVoid());
+    MOZ_RELEASE_ASSERT(mLocalProfileDir.IsVoid());
+  } else {
+    MOZ_RELEASE_ASSERT(aRequestedDir == Directory::LocalProfile);
+    MOZ_RELEASE_ASSERT(mProfileDir.IsVoid());
+    MOZ_RELEASE_ASSERT(mLocalProfileDir.IsVoid());
+  }
+
+  if (mProfileDir.IsVoid()) {
+    MOZ_RELEASE_ASSERT(mLocalProfileDir.IsVoid());
+
+    nsString profileDir;
+    nsString localProfileDir;
+
+    MOZ_TRY(NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                   getter_AddRefs(path)));
+    MOZ_TRY(path->GetPath(profileDir));
+
+    MOZ_TRY(NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR,
+                                   getter_AddRefs(path)));
+    MOZ_TRY(path->GetPath(localProfileDir));
+
+    // We either set both of these or neither.
+    mProfileDir = std::move(profileDir);
+    mLocalProfileDir = std::move(localProfileDir);
+  }
+
+  return NS_OK;
 }
 
 }  // namespace dom
