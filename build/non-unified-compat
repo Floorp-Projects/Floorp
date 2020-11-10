@@ -62,3 +62,4 @@ dom/tests/
 dom/u2f/
 dom/url/
 dom/vr/
+dom/webauthn/

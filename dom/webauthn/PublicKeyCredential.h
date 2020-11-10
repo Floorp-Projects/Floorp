@@ -14,6 +14,7 @@
 #include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
+#include "mozilla/dom/CryptoBuffer.h"
 
 namespace mozilla {
 namespace dom {

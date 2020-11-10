@@ -5,9 +5,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/WebAuthnUtil.h"
+#include "mozilla/dom/WebAuthnCBORUtil.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsNetUtil.h"
 #include "mozpkix/pkixutil.h"
+#include "nsHTMLDocument.h"
+#include "nsICryptoHash.h"
+#include "hasht.h"
 
 namespace mozilla {
 namespace dom {
