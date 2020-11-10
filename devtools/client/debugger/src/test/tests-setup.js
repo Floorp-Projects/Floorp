@@ -27,7 +27,6 @@ import {
   stop as stopSearchWorker,
 } from "../workers/search";
 import { clearDocuments } from "../utils/editor";
-import { clearHistory } from "./utils/history";
 
 import env from "devtools-environment/test-flag";
 env.testing = true;
@@ -73,7 +72,6 @@ afterEach(() => {});
 beforeEach(async () => {
   parserWorker.clear();
   evaluationsParser.clear();
-  clearHistory();
   clearDocuments();
   prefs.projectDirectoryRoot = "";
   prefs.projectDirectoryRootName = "";

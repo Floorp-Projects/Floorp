@@ -7,7 +7,6 @@ DIRS += []
 
 CompiledModules(
     "context.js",
-    "history.js",
     "log.js",
     "promise.js",
     "thunk.js",

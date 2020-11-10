@@ -47,7 +47,7 @@
 // $FlowIgnore
 const Telemetry = require("devtools/client/shared/telemetry");
 
-import { isFirefoxPanel } from "devtools-environment";
+import { isNode } from "devtools-environment";
 
 const telemetry = new Telemetry();
 
@@ -73,7 +73,7 @@ export function recordEvent(eventName: string, fields: {} = {}): void {
   });
   /* eslint-enable camelcase */
 
-  if (!isFirefoxPanel() && window.dbg) {
+  if (isNode()) {
     const { events } = window.dbg._telemetry;
     if (!events[eventName]) {
       events[eventName] = [];
