@@ -222,9 +222,7 @@ async function gotoPref(aCategory) {
   if (category != "paneSearchResults") {
     gSearchResultsPane.query = null;
     gSearchResultsPane.searchInput.value = "";
-    gSearchResultsPane.getFindSelection(window).removeAllRanges();
-    gSearchResultsPane.removeAllSearchTooltips();
-    gSearchResultsPane.removeAllSearchMenuitemIndicators();
+    gSearchResultsPane.removeAllSearchIndicators(window, true);
   } else if (!gSearchResultsPane.searchInput.value) {
     // Something tried to send us to the search results pane without
     // a query string. Default to the General pane instead.
