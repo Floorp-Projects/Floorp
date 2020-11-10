@@ -397,6 +397,7 @@ Renderer11::Renderer11(egl::Display *display)
     mRenderer11DeviceCaps.supportsConstantBufferOffsets          = false;
     mRenderer11DeviceCaps.supportsVpRtIndexWriteFromVertexShader = false;
     mRenderer11DeviceCaps.supportsDXGI1_2                        = false;
+    mRenderer11DeviceCaps.allowES3OnFL10_0                       = false;
     mRenderer11DeviceCaps.B5G6R5support                          = 0;
     mRenderer11DeviceCaps.B4G4R4A4support                        = 0;
     mRenderer11DeviceCaps.B5G5R5A1support                        = 0;
@@ -893,6 +894,11 @@ void Renderer11::populateRenderer11DeviceCaps()
         PopulateFormatDeviceCaps(mDevice, DXGI_FORMAT_B5G6R5_UNORM,
                                  &mRenderer11DeviceCaps.B5G6R5support,
                                  &mRenderer11DeviceCaps.B5G6R5maxSamples);
+    }
+
+    if (getFeatures().allowES3OnFL10_0.enabled)
+    {
+        mRenderer11DeviceCaps.allowES3OnFL10_0 = true;
     }
 
     PopulateFormatDeviceCaps(mDevice, DXGI_FORMAT_B4G4R4A4_UNORM,
@@ -3481,7 +3487,7 @@ angle::Result Renderer11::blitRenderbufferRect(const gl::Context *context,
 
 bool Renderer11::isES3Capable() const
 {
-    return (d3d11_gl::GetMaximumClientVersion(mRenderer11DeviceCaps.featureLevel).major > 2);
+    return (d3d11_gl::GetMaximumClientVersion(mRenderer11DeviceCaps).major > 2);
 }
 
 RendererClass Renderer11::getRendererClass() const
@@ -3699,7 +3705,7 @@ angle::Result Renderer11::getScratchMemoryBuffer(Context11 *context11,
 
 gl::Version Renderer11::getMaxSupportedESVersion() const
 {
-    return d3d11_gl::GetMaximumClientVersion(mRenderer11DeviceCaps.featureLevel);
+    return d3d11_gl::GetMaximumClientVersion(mRenderer11DeviceCaps);
 }
 
 gl::Version Renderer11::getMaxConformantESVersion() const

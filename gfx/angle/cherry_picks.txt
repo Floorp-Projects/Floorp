@@ -1,3 +1,11 @@
+commit 3a998d51928fb5856be5299fc189434d2da2e946
+Author: Jeff Muizelaar <jrmuizel@gmail.com>
+Date:   Mon Nov 9 17:09:12 2020 -0500
+
+    Bug 1620075. Add a feature flag to allow ES3 on 10.0 devices. (#26)
+    
+    This lets us run WebRender on devices that only support D3D 10.0
+
 commit cf6c1604e64084b97bc42d271a0abd9abcfc97a8
 Author: Geoff Lang <geofflang@chromium.org>
 Date:   Wed May 13 18:50:51 2020 -0400
