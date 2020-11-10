@@ -18,7 +18,6 @@
 #include "mozilla/dom/TypedArray.h"
 #include "nsIAsyncShutdown.h"
 #include "nsISerialEventTarget.h"
-#include "nsLocalFile.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
@@ -219,39 +218,36 @@ class IOUtils final {
                                              const Span<const uint8_t>& aBytes);
 
   /**
-   * Attempts to move the file located at |aSource| to |aDest|.
+   * Attempts to move the file located at |aSourceFile| to |aDestFile|.
    *
-   * @param aSource     The location of the file to move as an absolute path
-   *                    string.
-   * @param aDest       The destination for the file as an absolute path string.
+   * @param aSourceFile  The location of the file to move.
+   * @param aDestFile    The destination for the file.
    * @param noOverWrite If true, abort with an error if a file already exists at
-   *                    |aDest|. Otherwise, the file will be overwritten by the
-   *                    move.
+   *                    |aDestFile|. Otherwise, the file will be overwritten by
+   *                    the move.
    *
    * @return Ok if the file was moved successfully, or an error.
    */
-  static Result<Ok, IOError> MoveSync(const nsAString& aSourcePath,
-                                      const nsAString& aDestPath,
+  static Result<Ok, IOError> MoveSync(already_AddRefed<nsIFile> aSourceFile,
+                                      already_AddRefed<nsIFile> aDestFile,
                                       bool aNoOverwrite);
 
   /**
-   * Attempts to copy the file at |aSourcePath| to |aDestPath|.
+   * Attempts to copy the file at |aSourceFile| to |aDestFile|.
    *
-   * @param aSourcePath The location of the file to be copied as an absolute
-   *                    path string.
-   * @param aDestPath   The location that the file should be copied to, as an
-   *                    absolute path string.
+   * @param aSourceFile The location of the file to copy.
+   * @param aDestFile   The destination that the file will be copied to.
    *
    * @return Ok if the operation was successful, or an error.
    */
-  static Result<Ok, IOError> CopySync(const nsAString& aSourcePath,
-                                      const nsAString& aDestPath,
+  static Result<Ok, IOError> CopySync(already_AddRefed<nsIFile> aSourceFile,
+                                      already_AddRefed<nsIFile> aDestFile,
                                       bool aNoOverWrite, bool aRecursive);
 
   /**
    * Provides the implementation for |CopySync| and |MoveSync|.
    *
-   * @param aMethod      A pointer to one of |nsLocalFile::MoveTo| or |CopyTo|
+   * @param aMethod      A pointer to one of |nsIFile::MoveTo| or |CopyTo|
    *                     instance methods.
    * @param aMethodName  The name of the method to the performed. Either "move"
    *                     or "copy".
@@ -266,8 +262,7 @@ class IOUtils final {
   template <typename CopyOrMoveFn>
   static Result<Ok, IOError> CopyOrMoveSync(CopyOrMoveFn aMethod,
                                             const char* aMethodName,
-                                            const RefPtr<nsLocalFile>& aSource,
-                                            const RefPtr<nsLocalFile>& aDest,
+                                            nsIFile* aSource, nsIFile* aDest,
                                             bool aNoOverwrite);
 
   /**
