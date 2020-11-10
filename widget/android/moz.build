@@ -73,7 +73,6 @@ classes_with_WrapForJNI = [
     "SessionKeyInfo",
     "SessionTextInput",
     "SpeechSynthesisService",
-    "StackScroller",
     "SurfaceAllocator",
     "SurfaceTextureListener",
     "TelemetryUtils",
