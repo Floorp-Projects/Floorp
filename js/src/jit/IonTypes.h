@@ -80,6 +80,11 @@ enum class BailoutKind : uint8_t {
   // and mark the LICMBailout flag on the script.
   LICM,
 
+  // An instruction created or hoisted by tryHoistBoundsCheck.
+  // If this instruction bails out, we will invalidate the current Warp script
+  // and mark the HoistBoundsCheckBailout flag on the script.
+  HoistBoundsCheck,
+
   // Normal bailouts, that don't need to be handled specially when restarting
   // in baseline.
 
@@ -288,6 +293,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "TypePolicy";
     case BailoutKind::LICM:
       return "LICM";
+    case BailoutKind::HoistBoundsCheck:
+      return "HoistBoundsCheck";
 
     // Normal bailouts.
     case BailoutKind::Inevitable:
