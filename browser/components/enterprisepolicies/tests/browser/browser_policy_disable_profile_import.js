@@ -81,3 +81,11 @@ add_task(async function test_help_menu() {
     );
   }
 });
+
+add_task(async function test_import_button() {
+  await PlacesUIUtils.maybeAddImportButton();
+  ok(
+    !document.getElementById("import-button"),
+    "Import button should be hidden."
+  );
+});
