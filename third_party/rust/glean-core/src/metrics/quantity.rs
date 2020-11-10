@@ -27,19 +27,15 @@ impl MetricType for QuantityMetric {
     }
 }
 
-// IMPORTANT:
-//
-// When changing this implementation, make sure all the operations are
-// also declared in the related trait in `../traits/`.
 impl QuantityMetric {
-    /// Creates a new quantity metric.
+    /// Create a new quantity metric.
     pub fn new(meta: CommonMetricData) -> Self {
         Self { meta }
     }
 
-    /// Sets the value. Must be non-negative.
+    /// Set the value. Must be non-negative.
     ///
-    /// # Arguments
+    /// ## Arguments
     ///
     /// * `glean` - The Glean instance this metric belongs to.
     /// * `value` - The value. Must be non-negative.
@@ -70,7 +66,7 @@ impl QuantityMetric {
 
     /// **Test-only API (exported for FFI purposes).**
     ///
-    /// Gets the currently stored value as an integer.
+    /// Get the currently stored value as an integer.
     ///
     /// This doesn't clear the stored value.
     pub fn test_get_value(&self, glean: &Glean, storage_name: &str) -> Option<i64> {

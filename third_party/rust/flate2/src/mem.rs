@@ -209,7 +209,7 @@ impl Compress {
     ///
     /// This constructor is only available when the `zlib` feature is used.
     /// Other backends currently do not support custom window bits.
-    #[cfg(feature = "any_zlib")]
+    #[cfg(feature = "zlib")]
     pub fn new_with_window_bits(
         level: Compression,
         zlib_header: bool,
@@ -235,7 +235,7 @@ impl Compress {
     /// Specifies the compression dictionary to use.
     ///
     /// Returns the Adler-32 checksum of the dictionary.
-    #[cfg(feature = "any_zlib")]
+    #[cfg(feature = "zlib")]
     pub fn set_dictionary(&mut self, dictionary: &[u8]) -> Result<u32, CompressError> {
         let stream = &mut *self.inner.inner.stream_wrapper;
         let rc = unsafe {
@@ -267,7 +267,7 @@ impl Compress {
     /// the compression of the available input data before changing the
     /// compression level. Flushing the stream before calling this method
     /// ensures that the function will succeed on the first call.
-    #[cfg(feature = "any_zlib")]
+    #[cfg(feature = "zlib")]
     pub fn set_level(&mut self, level: Compression) -> Result<(), CompressError> {
         use libc::c_int;
         let stream = &mut *self.inner.inner.stream_wrapper;
@@ -353,7 +353,7 @@ impl Decompress {
     ///
     /// This constructor is only available when the `zlib` feature is used.
     /// Other backends currently do not support custom window bits.
-    #[cfg(feature = "any_zlib")]
+    #[cfg(feature = "zlib")]
     pub fn new_with_window_bits(zlib_header: bool, window_bits: u8) -> Decompress {
         Decompress {
             inner: Inflate::make(zlib_header, window_bits),
@@ -439,7 +439,7 @@ impl Decompress {
     }
 
     /// Specifies the decompression dictionary to use.
-    #[cfg(feature = "any_zlib")]
+    #[cfg(feature = "zlib")]
     pub fn set_dictionary(&mut self, dictionary: &[u8]) -> Result<u32, DecompressError> {
         let stream = &mut *self.inner.inner.stream_wrapper;
         let rc = unsafe {
@@ -470,7 +470,11 @@ impl Decompress {
     }
 }
 
-impl Error for DecompressError {}
+impl Error for DecompressError {
+    fn description(&self) -> &str {
+        "deflate decompression error"
+    }
+}
 
 impl From<DecompressError> for io::Error {
     fn from(data: DecompressError) -> io::Error {
@@ -480,11 +484,15 @@ impl From<DecompressError> for io::Error {
 
 impl fmt::Display for DecompressError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "deflate decompression error")
+        self.description().fmt(f)
     }
 }
 
-impl Error for CompressError {}
+impl Error for CompressError {
+    fn description(&self) -> &str {
+        "deflate compression error"
+    }
+}
 
 impl From<CompressError> for io::Error {
     fn from(data: CompressError) -> io::Error {
@@ -494,7 +502,7 @@ impl From<CompressError> for io::Error {
 
 impl fmt::Display for CompressError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "deflate decompression error")
+        self.description().fmt(f)
     }
 }
 
@@ -505,7 +513,7 @@ mod tests {
     use crate::write;
     use crate::{Compression, Decompress, FlushDecompress};
 
-    #[cfg(feature = "any_zlib")]
+    #[cfg(feature = "zlib")]
     use crate::{Compress, FlushCompress};
 
     #[test]
@@ -566,7 +574,7 @@ mod tests {
         assert!(dst.starts_with(string));
     }
 
-    #[cfg(feature = "any_zlib")]
+    #[cfg(feature = "zlib")]
     #[test]
     fn set_dictionary_with_zlib_header() {
         let string = "hello, hello!".as_bytes();
@@ -615,7 +623,7 @@ mod tests {
         assert_eq!(&decoded[..decoder.total_out() as usize], string);
     }
 
-    #[cfg(feature = "any_zlib")]
+    #[cfg(feature = "zlib")]
     #[test]
     fn set_dictionary_raw() {
         let string = "hello, hello!".as_bytes();

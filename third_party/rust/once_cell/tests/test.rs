@@ -186,16 +186,6 @@ mod unsync {
         });
         eprintln!("use after free: {:?}", dangling_ref.get().unwrap());
     }
-
-    #[test]
-    // https://github.com/rust-lang/rust/issues/34761#issuecomment-256320669
-    fn arrrrrrrrrrrrrrrrrrrrrr() {
-        let cell = OnceCell::new();
-        {
-            let s = String::new();
-            cell.set(&s).unwrap();
-        }
-    }
 }
 
 #[cfg(feature = "std")]
@@ -581,15 +571,5 @@ mod sync {
         })
         .unwrap();
         assert_eq!(cell.get(), Some(&"hello".to_string()));
-    }
-
-    #[test]
-    // https://github.com/rust-lang/rust/issues/34761#issuecomment-256320669
-    fn arrrrrrrrrrrrrrrrrrrrrr() {
-        let cell = OnceCell::new();
-        {
-            let s = String::new();
-            cell.set(&s).unwrap();
-        }
     }
 }

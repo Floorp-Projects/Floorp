@@ -265,10 +265,10 @@ impl<R: BufRead + Write> Write for GzEncoder<R> {
 
 /// A gzip streaming decoder
 ///
-/// This structure consumes a [`BufRead`] interface, reading compressed data
-/// from the underlying reader, and emitting uncompressed data.
+/// This structure exposes a [`ReadBuf`] interface that will consume compressed
+/// data from the underlying reader and emit uncompressed data.
 ///
-/// [`BufRead`]: https://doc.rust-lang.org/std/io/trait.BufRead.html
+/// [`ReadBuf`]: https://doc.rust-lang.org/std/io/trait.BufRead.html
 ///
 /// # Examples
 ///
