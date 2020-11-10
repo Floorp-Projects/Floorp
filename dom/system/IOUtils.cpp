@@ -367,10 +367,10 @@ already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
 
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  return RunOnBackgroundThread<Ok>(promise, &RemoveSync, path,
+  return RunOnBackgroundThread<Ok>(promise, &RemoveSync, file.forget(),
                                    aOptions.mIgnoreAbsent, aOptions.mRecursive);
 }
 
@@ -1019,13 +1019,11 @@ Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(CopyOrMoveFn aMethod,
 }
 
 /* static */
-Result<Ok, IOUtils::IOError> IOUtils::RemoveSync(const nsAString& aPath,
-                                                 bool aIgnoreAbsent,
-                                                 bool aRecursive) {
+Result<Ok, IOUtils::IOError> IOUtils::RemoveSync(
+    already_AddRefed<nsIFile> aFile, bool aIgnoreAbsent, bool aRecursive) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  RefPtr<nsLocalFile> file = new nsLocalFile();
-  MOZ_TRY(file->InitWithPath(aPath));
+  nsCOMPtr<nsIFile> file = aFile;
 
   nsresult rv = file->Remove(aRecursive);
   if (aIgnoreAbsent && IsFileNotFound(rv)) {
@@ -1037,16 +1035,16 @@ Result<Ok, IOUtils::IOError> IOUtils::RemoveSync(const nsAString& aPath,
       return Err(err.WithMessage(
           "Could not remove the file at %s because it does not exist.\n"
           "Specify the `ignoreAbsent: true` option to mitigate this error",
-          NS_ConvertUTF16toUTF8(aPath).get()));
+          file->HumanReadablePath().get()));
     }
     if (rv == NS_ERROR_FILE_DIR_NOT_EMPTY) {
       return Err(err.WithMessage(
           "Could not remove the non-empty directory at %s.\n"
           "Specify the `recursive: true` option to mitigate this error",
-          NS_ConvertUTF16toUTF8(aPath).get()));
+          file->HumanReadablePath().get()));
     }
     return Err(err.WithMessage("Could not remove the file at %s",
-                               NS_ConvertUTF16toUTF8(aPath).get()));
+                               file->HumanReadablePath().get()));
   }
   return Ok();
 }
