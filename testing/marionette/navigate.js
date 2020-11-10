@@ -382,7 +382,7 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
     );
     chromeWindow.removeEventListener("TabClose", onUnload);
     chromeWindow.removeEventListener("unload", onUnload);
-    driver.dialogObserver.remove(onDialogOpened);
+    driver.dialogObserver?.remove(onDialogOpened);
     unloadTimer?.cancel();
 
     if (MarionettePrefs.useActors) {

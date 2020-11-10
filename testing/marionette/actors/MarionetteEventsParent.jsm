@@ -17,7 +17,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
+  Log: "chrome://marionette/content/log.js",
 });
+
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 // Singleton to allow forwarding events to registered listeners.
 const EventDispatcher = {
@@ -46,29 +49,38 @@ class MarionetteEventsParent extends JSWindowActorParent {
  * Register Events actors to listen for page load events via EventDispatcher.
  */
 function registerEventsActor() {
-  // Register the JSWindowActor pair for events as used by Marionette
-  ChromeUtils.registerWindowActor("MarionetteEvents", {
-    kind: "JSWindowActor",
-    parent: {
-      moduleURI:
-        "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
-    },
-    child: {
-      moduleURI: "chrome://marionette/content/actors/MarionetteEventsChild.jsm",
-      events: {
-        beforeunload: { capture: true },
-        DOMContentLoaded: { mozSystemGroup: true },
-        hashchange: { mozSystemGroup: true },
-        pagehide: { mozSystemGroup: true },
-        pageshow: { mozSystemGroup: true },
-        // popstate doesn't bubble, as such use capturing phase
-        popstate: { capture: true, mozSystemGroup: true },
+  try {
+    // Register the JSWindowActor pair for events as used by Marionette
+    ChromeUtils.registerWindowActor("MarionetteEvents", {
+      kind: "JSWindowActor",
+      parent: {
+        moduleURI:
+          "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
       },
-    },
+      child: {
+        moduleURI:
+          "chrome://marionette/content/actors/MarionetteEventsChild.jsm",
+        events: {
+          beforeunload: { capture: true },
+          DOMContentLoaded: { mozSystemGroup: true },
+          hashchange: { mozSystemGroup: true },
+          pagehide: { mozSystemGroup: true },
+          pageshow: { mozSystemGroup: true },
+          // popstate doesn't bubble, as such use capturing phase
+          popstate: { capture: true, mozSystemGroup: true },
+        },
+      },
 
-    allFrames: true,
-    includeChrome: true,
-  });
+      allFrames: true,
+      includeChrome: true,
+    });
+  } catch (e) {
+    if (e.name === "NotSupportedError") {
+      logger.warn(`MarionetteEvents actor is already registered!`);
+    } else {
+      throw e;
+    }
+  }
 }
 
 function unregisterEventsActor() {
