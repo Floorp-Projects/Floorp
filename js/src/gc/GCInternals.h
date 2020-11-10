@@ -169,6 +169,18 @@ class MOZ_RAII AutoEmptyNurseryAndPrepareForTracing : private AutoFinishGC,
         AutoTraceSession(cx->runtime()) {}
 };
 
+/*
+ * Temporarily disable incremental barriers.
+ */
+class AutoDisableBarriers {
+ public:
+  explicit AutoDisableBarriers(GCRuntime* gc);
+  ~AutoDisableBarriers();
+
+ private:
+  GCRuntime* gc;
+};
+
 GCAbortReason IsIncrementalGCUnsafe(JSRuntime* rt);
 
 #ifdef JS_GC_ZEAL
