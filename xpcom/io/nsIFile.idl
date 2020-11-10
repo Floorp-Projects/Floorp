@@ -188,6 +188,18 @@ interface nsIFile : nsISupports
     [noscript] void moveToNative(in nsIFile newParentDir, in ACString newName);
 
     /**
+     *  moveToFollowingLinks[Native]
+     *
+     *  This function is identical to moveTo with the exception that,
+     *  as the name implies, it follows symbolic links.  The XP_UNIX
+     *  implementation always follows symbolic links when moving.  For
+     *  the |MoveToFollowingLinks| method, the newName ust be in the native
+     *  filesystem charset.
+     */
+    void moveToFollowingLinks(in nsIFile newParentDir, in AString newName);
+    [noscript] void moveToFollowingLinksNative(in nsIFile newParentDir, in ACString newName);
+
+    /**
      *  renameTo
      *
      *  This method is identical to moveTo except that if this file or directory
