@@ -35,6 +35,7 @@ class nsNativeBasicThemeGTK : public nsNativeBasicTheme {
                          nsIFrame* aFrame, const ComputedStyle& aStyle,
                          const EventStates& aDocumentState, uint32_t aDpiRatio,
                          bool aIsRoot) override;
+  bool ThemeSupportsScrollbarButtons() override { return false; }
 
  protected:
   virtual ~nsNativeBasicThemeGTK() = default;
