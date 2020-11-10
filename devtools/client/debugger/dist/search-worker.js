@@ -873,28 +873,6 @@ module.exports = arrayMap;
 
 /***/ }),
 
-/***/ 642:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(process) {/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function isNode() {
-  return process && process.release && process.release.name == "node";
-}
-
-function isNodeTest() {
-  return isNode() && "production" != "production";
-}
-
-module.exports = {
-  isNode,
-  isNodeTest
-};
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(607)))
-
-/***/ }),
-
 /***/ 701:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1001,13 +979,13 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = assert;
 
-var _devtoolsEnvironment = __webpack_require__(642);
+var _environment = __webpack_require__(968);
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 function assert(condition, message) {
-  if ((0, _devtoolsEnvironment.isNodeTest)() && !condition) {
+  if ((0, _environment.isNodeTest)() && !condition) {
     throw new Error(`Assertion failure: ${message}`);
   }
 }
@@ -1226,6 +1204,32 @@ function truncateLine(text, column) {
     value
   };
 }
+
+/***/ }),
+
+/***/ 968:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.isNode = isNode;
+exports.isNodeTest = isNodeTest;
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+function isNode() {
+  return process && process.release && process.release.name == "node";
+}
+
+function isNodeTest() {
+  return isNode() && "production" != "production";
+}
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(607)))
 
 /***/ })
 

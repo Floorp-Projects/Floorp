@@ -1108,7 +1108,16 @@
       "../node_modules/babel-loader/lib/index.js??ref--1!../packages/devtools-utils/src/network-request.js": 956,
       "../node_modules/extract-text-webpack-plugin/dist/loader.js??ref--3-0!../node_modules/css-loader/index.js??ref--3-1!../node_modules/react-aria-components/src/tabs/tab.css": 957,
       "../node_modules/extract-text-webpack-plugin/dist/loader.js??ref--3-0!../node_modules/css-loader/index.js??ref--3-1!../node_modules/react-aria-components/src/tabs/tab-list.css": 958,
-      "../node_modules/extract-text-webpack-plugin/dist/loader.js??ref--3-0!../node_modules/css-loader/index.js??ref--3-1!../packages/devtools-splitter/src/SplitBox.css": 959
+      "../node_modules/extract-text-webpack-plugin/dist/loader.js??ref--3-0!../node_modules/css-loader/index.js??ref--3-1!../packages/devtools-splitter/src/SplitBox.css": 959,
+      "../node_modules/babel-loader/lib/index.js??ref--1!../../../shared/DevToolsUtils.js": 960,
+      "../node_modules/babel-loader/lib/index.js??ref--1!utils/utils.js": 961,
+      "../node_modules/timers-browserify/main.js": 962,
+      "../node_modules/setimmediate/setImmediate.js": 963,
+      "../node_modules/babel-loader/lib/index.js??ref--1!../../../shared/flags.js": 964,
+      "../node_modules/babel-loader/lib/index.js??ref--1!../../../shared/platform/stack.js": 965,
+      "../node_modules/babel-loader/lib/index.js??ref--1!../../../shared/ThreadSafeDevToolsUtils.js": 966,
+      "../node_modules/babel-loader/lib/index.js??ref--1!../../../shared/webconsole/network-helper.js": 967,
+      "../node_modules/babel-loader/lib/index.js??ref--1!utils/environment.js": 968
     },
     "usedIds": {
       "0": 0,
@@ -2070,7 +2079,16 @@
       "956": 956,
       "957": 957,
       "958": 958,
-      "959": 959
+      "959": 959,
+      "960": 960,
+      "961": 961,
+      "962": 962,
+      "963": 963,
+      "964": 964,
+      "965": 965,
+      "966": 966,
+      "967": 967,
+      "968": 968
     }
   },
   "chunks": {

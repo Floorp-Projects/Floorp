@@ -9,7 +9,7 @@ import { findBestMatchExpression } from "../utils/ast";
 import { getGrip, getFront } from "../utils/evaluation-result";
 import { getExpressionFromCoords } from "../utils/editor/get-expression";
 import { isOriginal } from "../utils/source";
-import { isNodeTest } from "devtools-environment";
+import { isNodeTest } from "../utils/environment";
 
 import {
   getPreview,
