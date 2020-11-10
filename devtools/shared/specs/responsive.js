@@ -57,7 +57,7 @@ const responsiveSpec = generateActorSpec({
 
     setTouchEventsOverride: {
       request: {
-        flag: Arg(0, "number"),
+        flag: Arg(0, "string"),
       },
       response: {
         valueChanged: RetVal("boolean"),
@@ -67,7 +67,7 @@ const responsiveSpec = generateActorSpec({
     getTouchEventsOverride: {
       request: {},
       response: {
-        flag: RetVal("number"),
+        flag: RetVal("string"),
       },
     },
 

@@ -8306,8 +8306,8 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
   nsIDocShell* docShell = presContext->GetDocShell();
   BrowsingContext* bc = docShell ? docShell->GetBrowsingContext() : nullptr;
   bool isTouchEventsEnabled =
-      docShell && docShell->GetTouchEventsOverride() ==
-                      nsIDocShell::TOUCHEVENTS_OVERRIDE_ENABLED;
+      bc &&
+      bc->TouchEventsOverride() == mozilla::dom::TouchEventsOverride::Enabled;
 
   if (bc && bc->InRDMPane() && isTouchEventsEnabled) {
     metadata.SetIsRDMTouchSimulationActive(true);

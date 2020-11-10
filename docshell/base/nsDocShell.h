@@ -1239,10 +1239,6 @@ class nsDocShell final : public nsDocLoader,
   // has been called without a matching NotifyRunToCompletionStop.
   uint32_t mJSRunToCompletionDepth;
 
-  // Whether or not touch events are overridden. Possible values are defined
-  // as constants in the nsIDocShell.idl file.
-  TouchEventsOverride mTouchEventsOverride;
-
   // Whether or not handling of the <meta name="viewport"> tag is overridden.
   // Possible values are defined as constants in nsIDocShell.idl.
   MetaViewportOverride mMetaViewportOverride;
