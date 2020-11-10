@@ -895,24 +895,21 @@ bool net_IsValidIPv6Addr(const nsACString& aAddr) {
 }
 
 namespace mozilla {
-bool URLParams::Has(const nsAString& aName) {
-  for (uint32_t i = 0, len = mParams.Length(); i < len; ++i) {
-    if (mParams[i].mKey.Equals(aName)) {
-      return true;
-    }
-  }
+static auto MakeNameMatcher(const nsAString& aName) {
+  return [&aName](const auto& param) { return param.mKey.Equals(aName); };
+}
 
-  return false;
+bool URLParams::Has(const nsAString& aName) {
+  return std::any_of(mParams.cbegin(), mParams.cend(), MakeNameMatcher(aName));
 }
 
 void URLParams::Get(const nsAString& aName, nsString& aRetval) {
   SetDOMStringToNull(aRetval);
 
-  for (uint32_t i = 0, len = mParams.Length(); i < len; ++i) {
-    if (mParams[i].mKey.Equals(aName)) {
-      aRetval.Assign(mParams[i].mValue);
-      break;
-    }
+  const auto end = mParams.cend();
+  const auto it = std::find_if(mParams.cbegin(), end, MakeNameMatcher(aName));
+  if (it != end) {
+    aRetval.Assign(it->mValue);
   }
 }
 
