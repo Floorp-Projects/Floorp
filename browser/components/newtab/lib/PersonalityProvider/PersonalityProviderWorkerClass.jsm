@@ -236,12 +236,26 @@ const PersonalityProviderWorker = class PersonalityProviderWorker {
    * is populated.
    */
   calculateItemRelevanceScore(pocketItem) {
-    let scorableItem = this.recipeExecutor.executeRecipe(
-      pocketItem,
-      this.interestConfig.item_to_rank_builder
-    );
-    if (scorableItem === null) {
-      return -1;
+    const { personalization_models } = pocketItem;
+    let scorableItem;
+
+    // If the server provides some models, we can just use them,
+    // and skip generating them.
+    if (personalization_models && Object.keys(personalization_models).length) {
+      scorableItem = {
+        id: pocketItem.id,
+        item_tags: personalization_models,
+        item_score: pocketItem.item_score,
+        item_sort_id: 1,
+      };
+    } else {
+      scorableItem = this.recipeExecutor.executeRecipe(
+        pocketItem,
+        this.interestConfig.item_to_rank_builder
+      );
+      if (scorableItem === null) {
+        return null;
+      }
     }
 
     // We're doing a deep copy on an object.
@@ -257,8 +271,9 @@ const PersonalityProviderWorker = class PersonalityProviderWorker {
     );
 
     if (rankingVector === null) {
-      return -1;
+      return null;
     }
-    return rankingVector.score;
+
+    return { scorableItem, rankingVector };
   }
 };

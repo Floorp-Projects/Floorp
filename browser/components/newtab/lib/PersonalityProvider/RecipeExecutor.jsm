@@ -626,7 +626,7 @@ const RecipeExecutor = class RecipeExecutor {
    * or 1/-1).
    *
    * Config:
-   *   field            Field containing either a mpa of strings to numbers or
+   *   field            Field containing either a map of strings to numbers or
    *                      an array of numbers to  convert.
    *   threshold        OPTIONAL (DEFAULT: 0) Values above this will be replaced
    *                      with 1.0. Those below will be converted to 0.
