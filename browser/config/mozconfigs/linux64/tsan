@@ -18,9 +18,6 @@ export MOZ_PKG_SPECIAL=tsan
 # Disable telemetry
 ac_add_options MOZ_TELEMETRY_REPORTING=
 
-# Ensure Rust also gets the necessary instrumentation
-export RUSTFLAGS="-Zsanitizer=thread"
-
 # rustfmt is currently missing in Rust nightly
 unset RUSTFMT
 
