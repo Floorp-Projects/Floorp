@@ -63,7 +63,6 @@ AudioSink::AudioSink(AbstractThread* aThread,
       mMonitor("AudioSink"),
       mWritten(0),
       mErrored(false),
-      mPlaybackComplete(false),
       mOwnerThread(aThread),
       mProcessedQueueLength(0),
       mFramesParsed(0),
@@ -77,8 +76,8 @@ AudioSink::AudioSink(AbstractThread* aThread,
 
 AudioSink::~AudioSink() = default;
 
-nsresult AudioSink::Init(const PlaybackParams& aParams,
-                         RefPtr<MediaSink::EndedPromise>& aEndedPromise) {
+Result<already_AddRefed<MediaSink::EndedPromise>, nsresult> AudioSink::Start(
+    const PlaybackParams& aParams) {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
   mAudioQueueListener = mAudioQueue.PushEvent().Connect(
@@ -91,12 +90,11 @@ nsresult AudioSink::Init(const PlaybackParams& aParams,
   // To ensure at least one audio packet will be popped from AudioQueue and
   // ready to be played.
   NotifyAudioNeeded();
-  aEndedPromise = mEndedPromise.Ensure(__func__);
   nsresult rv = InitializeAudioStream(aParams);
   if (NS_FAILED(rv)) {
-    mEndedPromise.Reject(rv, __func__);
+    return Err(rv);
   }
-  return rv;
+  return mAudioStream->Start();
 }
 
 TimeUnit AudioSink::GetPosition() {
@@ -144,7 +142,6 @@ void AudioSink::Shutdown() {
   }
   mProcessedQueue.Reset();
   mProcessedQueue.Finish();
-  mEndedPromise.ResolveIfExists(true, __func__);
 }
 
 void AudioSink::SetVolume(double aVolume) {
@@ -168,7 +165,8 @@ void AudioSink::SetPreservesPitch(bool aPreservesPitch) {
 }
 
 void AudioSink::SetPlaying(bool aPlaying) {
-  if (!mAudioStream || mPlaying == aPlaying || mPlaybackComplete) {
+  if (!mAudioStream || mAudioStream->IsPlaybackCompleted() ||
+      mPlaying == aPlaying) {
     return;
   }
   // pause/resume AudioStream as necessary.
@@ -204,7 +202,7 @@ nsresult AudioSink::InitializeAudioStream(const PlaybackParams& aParams) {
   mAudioStream->SetVolume(aParams.mVolume);
   mAudioStream->SetPlaybackRate(aParams.mPlaybackRate);
   mAudioStream->SetPreservesPitch(aParams.mPreservesPitch);
-  return mAudioStream->Start();
+  return NS_OK;
 }
 
 TimeUnit AudioSink::GetEndTime() const {
@@ -303,18 +301,6 @@ UniquePtr<AudioStream::Chunk> AudioSink::PopFrames(uint32_t aFrames) {
 bool AudioSink::Ended() const {
   // Return true when error encountered so AudioStream can start draining.
   return mProcessedQueue.IsFinished() || mErrored;
-}
-
-void AudioSink::Drained() {
-  SINK_LOG("Drained");
-  mPlaybackComplete = true;
-  mEndedPromise.ResolveIfExists(true, __func__);
-}
-
-void AudioSink::Errored() {
-  SINK_LOG("Errored");
-  mPlaybackComplete = true;
-  mEndedPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
 }
 
 void AudioSink::CheckIsAudible(const AudioData* aData) {
@@ -532,7 +518,7 @@ void AudioSink::GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {
   aInfo.mAudioSinkWrapper.mAudioSink.mWritten = mWritten;
   aInfo.mAudioSinkWrapper.mAudioSink.mHasErrored = bool(mErrored);
   aInfo.mAudioSinkWrapper.mAudioSink.mPlaybackComplete =
-      bool(mPlaybackComplete);
+      mAudioStream ? mAudioStream->IsPlaybackCompleted() : false;
 }
 
 }  // namespace mozilla

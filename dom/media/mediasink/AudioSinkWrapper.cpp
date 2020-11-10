@@ -7,6 +7,7 @@
 #include "AudioSinkWrapper.h"
 #include "AudioSink.h"
 #include "VideoUtils.h"
+#include "mozilla/Result.h"
 #include "nsPrintfCString.h"
 
 namespace mozilla {
@@ -154,10 +155,16 @@ nsresult AudioSinkWrapper::Start(const TimeUnit& aStartTime,
   mPlayStartTime = TimeStamp::Now();
   mAudioEnded = IsAudioSourceEnded(aInfo);
 
-  nsresult rv = NS_OK;
   if (!mAudioEnded) {
     mAudioSink.reset(mCreator->Create());
-    rv = mAudioSink->Init(mParams, mEndedPromise);
+    Result<already_AddRefed<MediaSink::EndedPromise>, nsresult> rv =
+        mAudioSink->Start(mParams);
+    if (rv.isErr()) {
+      mEndedPromise =
+          MediaSink::EndedPromise::CreateAndReject(rv.unwrapErr(), __func__);
+      return rv.unwrapErr();
+    }
+    mEndedPromise = rv.unwrap();
     mEndedPromise
         ->Then(mOwnerThread.get(), __func__, this,
                &AudioSinkWrapper::OnAudioEnded, &AudioSinkWrapper::OnAudioEnded)
@@ -167,7 +174,7 @@ nsresult AudioSinkWrapper::Start(const TimeUnit& aStartTime,
       mEndedPromise = MediaSink::EndedPromise::CreateAndResolve(true, __func__);
     }
   }
-  return rv;
+  return NS_OK;
 }
 
 bool AudioSinkWrapper::IsAudioSourceEnded(const MediaInfo& aInfo) const {
