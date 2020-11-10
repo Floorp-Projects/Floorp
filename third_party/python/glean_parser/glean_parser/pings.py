@@ -73,9 +73,3 @@ class Ping:
         d = self.__dict__.copy()
         del d["name"]
         return d
-
-    def identifier(self) -> str:
-        """
-        Used for the "generated from ..." comment in the output.
-        """
-        return self.name

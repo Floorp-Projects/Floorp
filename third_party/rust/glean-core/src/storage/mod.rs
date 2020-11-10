@@ -40,18 +40,18 @@ fn snapshot_labeled_metrics(
 }
 
 impl StorageManager {
-    /// Snapshots the given store and optionally clear it.
+    /// Snapshot the given store and optionally clear it.
     ///
-    /// # Arguments
+    /// ## Arguments
     ///
     /// * `storage` - the database to read from.
     /// * `store_name` - the store to snapshot.
     /// * `clear_store` - whether to clear the data after snapshotting.
     ///
-    /// # Returns
+    /// ## Return value
     ///
-    /// The stored data in a string encoded as JSON.
-    /// If no data for the store exists, `None` is returned.
+    /// Returns the stored data in a string encoded as JSON.
+    /// Returns `None` if no data for the store exists.
     pub fn snapshot(
         &self,
         storage: &Database,
@@ -62,18 +62,18 @@ impl StorageManager {
             .map(|data| ::serde_json::to_string_pretty(&data).unwrap())
     }
 
-    /// Snapshots the given store and optionally clear it.
+    /// Snapshot the given store and optionally clear it.
     ///
-    /// # Arguments
+    /// ## Arguments
     ///
     /// * `storage` - the database to read from.
     /// * `store_name` - the store to snapshot.
     /// * `clear_store` - whether to clear the data after snapshotting.
     ///
-    /// # Returns
+    /// ## Return value
     ///
-    /// A JSON representation of the stored data.
-    /// If no data for the store exists, `None` is returned.
+    /// Returns a JSON representation of the stored data.
+    /// Returns `None` if no data for the store exists.
     pub fn snapshot_as_json(
         &self,
         storage: &Database,
@@ -111,19 +111,19 @@ impl StorageManager {
         }
     }
 
-    /// Gets the current value of a single metric identified by name.
+    /// Get the current value of a single metric identified by name.
     ///
     /// This look for a value in stores for all lifetimes.
     ///
-    /// # Arguments
+    /// ## Arguments:
     ///
     /// * `storage` - The database to get data from.
     /// * `store_name` - The store name to look into.
     /// * `metric_id` - The full metric identifier.
     ///
-    /// # Returns
+    /// ## Return value:
     ///
-    /// The decoded metric or `None` if no data is found.
+    /// Returns the decoded metric or `None` if no data is found.
     pub fn snapshot_metric(
         &self,
         storage: &Database,
@@ -146,16 +146,16 @@ impl StorageManager {
         snapshot
     }
 
-    ///  Snapshots the experiments.
+    ///  Snapshot the experiments.
     ///
-    /// # Arguments
+    /// ## Arguments:
     ///
     /// * `storage` - The database to get data from.
     /// * `store_name` - The store name to look into.
     ///
-    /// # Returns
+    /// ## Return value
     ///
-    /// A JSON representation of the experiment data, in the following format:
+    /// Returns a JSON representation of the experiment data, in the following format:
     ///
     /// ```json
     /// {
@@ -169,7 +169,7 @@ impl StorageManager {
     /// }
     /// ```
     ///
-    /// If no data for the store exists, `None` is returned.
+    /// Returns `None` if no data for experiments exists.
     pub fn snapshot_experiments_as_json(
         &self,
         storage: &Database,
@@ -207,7 +207,7 @@ mod test {
     fn test_experiments_json_serialization() {
         let t = tempfile::tempdir().unwrap();
         let name = t.path().display().to_string();
-        let glean = Glean::with_options(&name, "org.mozilla.glean", true);
+        let glean = Glean::with_options(&name, "org.mozilla.glean", true).unwrap();
 
         let extra: HashMap<String, String> = [("test-key".into(), "test-value".into())]
             .iter()
@@ -236,7 +236,7 @@ mod test {
     fn test_experiments_json_serialization_empty() {
         let t = tempfile::tempdir().unwrap();
         let name = t.path().display().to_string();
-        let glean = Glean::with_options(&name, "org.mozilla.glean", true);
+        let glean = Glean::with_options(&name, "org.mozilla.glean", true).unwrap();
 
         let metric = ExperimentMetric::new(&glean, "some-experiment".to_string());
 

@@ -35,12 +35,10 @@ pub struct RecordedExperimentData {
 }
 
 impl RecordedExperimentData {
-    /// Gets the recorded experiment data as a JSON value.
-    ///
-    /// For JSON, we don't want to include `{"extra": null}` -- we just want to skip
-    /// `extra` entirely. Unfortunately, we can't use a serde field annotation for this,
-    /// since that would break bincode serialization, which doesn't support skipping
-    /// fields. Therefore, we use a custom serialization function just for JSON here.
+    // For JSON, we don't want to include {"extra": null} -- we just want to skip
+    // extra entirely. Unfortunately, we can't use a serde field annotation for this,
+    // since that would break bincode serialization, which doesn't support skipping
+    // fields. Therefore, we use a custom serialization function just for JSON here.
     pub fn as_json(&self) -> JsonValue {
         let mut value = JsonMap::new();
         value.insert("branch".to_string(), json!(self.branch));
@@ -71,9 +69,9 @@ impl MetricType for ExperimentMetric {
 }
 
 impl ExperimentMetric {
-    /// Creates a new experiment metric.
+    /// Create a new experiment metric.
     ///
-    /// # Arguments
+    /// ## Arguments
     ///
     /// * `id` - the id of the experiment. Please note that this will be
     ///          truncated to `MAX_EXPERIMENTS_IDS_LEN`, if needed.
@@ -118,9 +116,9 @@ impl ExperimentMetric {
         new_experiment
     }
 
-    /// Records an experiment as active.
+    /// Record an experiment as active.
     ///
-    /// # Arguments
+    /// ## Arguments
     ///
     /// * `glean` - The Glean instance this metric belongs to.
     /// * `branch` -  the active branch of the experiment. Please note that this will be
@@ -150,7 +148,7 @@ impl ExperimentMetric {
         };
 
         // Apply limits to extras
-        let truncated_extras = extra.map(|extra| {
+        let truncated_extras = extra.and_then(|extra| {
             if extra.len() > MAX_EXPERIMENTS_EXTRAS_SIZE {
                 let msg = format!(
                     "Extra hash map length {} exceeds maximum of {}",
@@ -185,7 +183,7 @@ impl ExperimentMetric {
 
                 temp_map.insert(truncated_key, truncated_value);
             }
-            temp_map
+            Some(temp_map)
         });
 
         let value = Metric::Experiment(RecordedExperimentData {
@@ -195,9 +193,9 @@ impl ExperimentMetric {
         glean.storage().record(glean, &self.meta, &value)
     }
 
-    /// Records an experiment as inactive.
+    /// Record an experiment as inactive.
     ///
-    /// # Arguments
+    /// ## Arguments
     ///
     /// * `glean` - The Glean instance this metric belongs to.
     pub fn set_inactive(&self, glean: &Glean) {
@@ -216,7 +214,7 @@ impl ExperimentMetric {
 
     /// **Test-only API (exported for FFI purposes).**
     ///
-    /// Gets the currently stored experiment data as a JSON representation of
+    /// Get the currently stored experiment data as a JSON representation of
     /// the RecordedExperimentData.
     ///
     /// This doesn't clear the stored value.
