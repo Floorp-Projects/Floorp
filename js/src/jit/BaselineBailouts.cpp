@@ -2151,6 +2151,11 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
       // TODO: Invalidate and disable recompilation if this happens too often.
       break;
 
+    case BailoutKind::GenericIon:
+      // A bailout that Ion did not assign a more specific bailout kind.
+      MOZ_ASSERT(!JitOptions.warpBuilder);
+      break;
+
     case BailoutKind::Inevitable:
     case BailoutKind::DuringVMCall:
     case BailoutKind::DynamicNameNotFound:
