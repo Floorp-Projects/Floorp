@@ -13,6 +13,8 @@
 
 const wchar_t kChildArg[] = L"--child";
 
+#if !defined(__MINGW32__)
+// MinGW includes an old winternl.h that defines FILE_BASIC_INFORMATION.
 typedef struct FILE_BASIC_INFORMATION {
   LARGE_INTEGER CreationTime;
   LARGE_INTEGER LastAccessTime;
@@ -20,6 +22,8 @@ typedef struct FILE_BASIC_INFORMATION {
   LARGE_INTEGER ChangeTime;
   ULONG FileAttributes;
 } FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
+#endif  // !defined(__MINGW32__)
+
 extern "C" NTSTATUS NTAPI
 NtQueryAttributesFile(POBJECT_ATTRIBUTES aObjectAttributes,
                       PFILE_BASIC_INFORMATION aFileInformation);
