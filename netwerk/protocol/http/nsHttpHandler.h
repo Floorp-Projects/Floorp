@@ -855,7 +855,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   void ExcludeHttp2(const nsHttpConnectionInfo* ci);
   [[nodiscard]] bool IsHttp2Excluded(const nsHttpConnectionInfo* ci);
   void ExcludeHttp3(const nsHttpConnectionInfo* ci);
-  [[nodiscard]] bool IsHttp3Excluded(const nsACString& aRoutedHost);
+  [[nodiscard]] bool IsHttp3Excluded(const nsHttpConnectionInfo* ci);
 
  private:
   nsTHashtable<nsCStringHashKey> mExcludedHttp2Origins;
