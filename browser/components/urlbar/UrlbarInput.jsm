@@ -2399,6 +2399,8 @@ class UrlbarInput {
     // area when the current tab is re-selected.
     if (!params.avoidBrowserFocus) {
       browser.focus();
+      // Make sure the domain name stays visible for spoof protection and usability.
+      this.selectionStart = this.selectionEnd = 0;
     }
 
     if (openUILinkWhere != "current") {
@@ -2417,9 +2419,6 @@ class UrlbarInput {
         this.handleRevert();
       }
     }
-
-    // Make sure the domain name stays visible for spoof protection and usability.
-    this.selectionStart = this.selectionEnd = 0;
 
     this.view.close();
   }
@@ -3125,6 +3124,8 @@ class UrlbarInput {
         // Ensure the selected browser didn't change in the meanwhile.
         if (this.window.gBrowser.selectedBrowser === loadingBrowser) {
           loadingBrowser.focus();
+          // Make sure the domain name stays visible for spoof protection and usability.
+          this.selectionStart = this.selectionEnd = 0;
         }
       } catch (ex) {
         // Not all the Enter actions in the urlbar will cause a navigation, then it
