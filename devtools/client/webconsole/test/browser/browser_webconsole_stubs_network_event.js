@@ -40,15 +40,7 @@ add_task(async function() {
 
   let failed = false;
   for (const [key, packet] of generatedStubs) {
-    // packet.updates are handle by the webconsole front, and can be updated after
-    // we cleaned the packet, so the order isn't guaranteed. Let's sort the array
-    // here so the test doesn't fail.
     const existingPacket = existingStubs.stubPackets.get(key);
-    if (packet.updates && existingPacket.updates) {
-      packet.updates.sort();
-      existingPacket.updates.sort();
-    }
-
     const packetStr = JSON.stringify(packet, null, 2);
     const existingPacketStr = JSON.stringify(existingPacket, null, 2);
     is(packetStr, existingPacketStr, `"${key}" packet has expected value`);
@@ -67,7 +59,6 @@ async function generateNetworkEventStubs() {
   const tab = await addTab(TEST_URI);
   const resourceWatcher = await createResourceWatcherForTab(tab);
   const stacktraces = new Map();
-
   let addNetworkStub = function() {};
   let addNetworkUpdateStub = function() {};
 
@@ -110,7 +101,6 @@ async function generateNetworkEventStubs() {
   );
 
   for (const [key, code] of getCommands()) {
-    const noExpectedUpdates = 7;
     const networkEventDone = new Promise(resolve => {
       addNetworkStub = resource => {
         stubs.set(key, getCleanedPacket(key, getOrderedResource(resource)));
@@ -118,25 +108,17 @@ async function generateNetworkEventStubs() {
       };
     });
     const networkEventUpdateDone = new Promise(resolve => {
-      let updateCount = 0;
       addNetworkUpdateStub = resource => {
         const updateKey = `${key} update`;
-        // make sure all the updates have been happened
-        if (updateCount >= noExpectedUpdates) {
-          // make sure the network event stub contains all the updates
-          stubs.set(key, getCleanedPacket(key, getOrderedResource(resource)));
-          stubs.set(
-            updateKey,
-            // We cannot ensure the form of the resource, some properties
-            // might be in another order than in the original resource.
-            // Hand-picking only what we need should prevent this.
-            getCleanedPacket(updateKey, getOrderedResource(resource))
-          );
-
-          resolve();
-        } else {
-          updateCount++;
-        }
+        stubs.set(key, getCleanedPacket(key, getOrderedResource(resource)));
+        stubs.set(
+          updateKey,
+          // We cannot ensure the form of the resource, some properties
+          // might be in another order than in the original resource.
+          // Hand-picking only what we need should prevent this.
+          getCleanedPacket(updateKey, getOrderedResource(resource))
+        );
+        resolve();
       };
     });
 
@@ -169,15 +151,23 @@ async function generateNetworkEventStubs() {
 function getOrderedResource(resource) {
   return {
     resourceType: resource.resourceType,
-    _type: resource._type,
     timeStamp: resource.timeStamp,
-    node: resource.node,
     actor: resource.actor,
     startedDateTime: resource.startedDateTime,
-    request: resource.request,
+    method: resource.method,
+    url: resource.url,
     isXHR: resource.isXHR,
     cause: resource.cause,
-    response: resource.response,
+    httpVersion: resource.httpVersion,
+    status: resource.status,
+    statusText: resource.statusText,
+    headersSize: resource.headersSize,
+    remoteAddress: resource.remoteAddress,
+    remotePort: resource.remotePort,
+    mimeType: resource.mimeType,
+    waitingTime: resource.waitingTime,
+    contentSize: resource.contentSize,
+    transferredSize: resource.transferredSize,
     timings: resource.timings,
     private: resource.private,
     fromCache: resource.fromCache,
@@ -185,10 +175,11 @@ function getOrderedResource(resource) {
     isThirdPartyTrackingResource: resource.isThirdPartyTrackingResource,
     referrerPolicy: resource.referrerPolicy,
     blockedReason: resource.blockedReason,
+    blockingExtension: resource.blockingExtension,
     channelId: resource.channelId,
-    updates: resource.updates,
     totalTime: resource.totalTime,
     securityState: resource.securityState,
+    responseCache: resource.responseCache,
     isRacing: resource.isRacing,
   };
 }
