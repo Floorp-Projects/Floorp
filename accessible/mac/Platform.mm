@@ -77,16 +77,14 @@ void ProxyDestroyed(ProxyAccessible* aProxy) {
 }
 
 void ProxyEvent(ProxyAccessible* aProxy, uint32_t aEventType) {
-  // Ignore event that we don't escape below, they aren't yet supported.
+  // ignore everything but focus-changed, value-changed, caret,
+  // selection, and document load complete events for now.
   if (aEventType != nsIAccessibleEvent::EVENT_FOCUS &&
       aEventType != nsIAccessibleEvent::EVENT_VALUE_CHANGE &&
       aEventType != nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE &&
       aEventType != nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED &&
       aEventType != nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE &&
-      aEventType != nsIAccessibleEvent::EVENT_REORDER &&
-      aEventType != nsIAccessibleEvent::EVENT_LIVE_REGION_ADDED &&
-      aEventType != nsIAccessibleEvent::EVENT_LIVE_REGION_REMOVED &&
-      aEventType != nsIAccessibleEvent::EVENT_NAME_CHANGE)
+      aEventType != nsIAccessibleEvent::EVENT_REORDER)
     return;
 
   mozAccessible* wrapper = GetNativeFromGeckoAccessible(aProxy);
