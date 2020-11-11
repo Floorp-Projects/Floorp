@@ -49,15 +49,17 @@ class RenderCompositorD3D11SWGL : public RenderCompositor {
   layers::WebRenderCompositor CompositorType() const override {
     return layers::WebRenderCompositor::D3D11;
   }
-  RenderCompositorD3D11SWGL* AsRenderCompositorD3D11SWGL() { return this; }
+  RenderCompositorD3D11SWGL* AsRenderCompositorD3D11SWGL() override {
+    return this;
+  }
 
   // Interface for wr::Compositor
   CompositorCapabilities GetCompositorCapabilities() override;
 
   bool ShouldUseNativeCompositor() override { return true; }
 
-  void CompositorBeginFrame() {}
-  void CompositorEndFrame();
+  void CompositorBeginFrame() override {}
+  void CompositorEndFrame() override;
   void Bind(wr::NativeTileId aId, wr::DeviceIntPoint* aOffset, uint32_t* aFboId,
             wr::DeviceIntRect aDirtyRect,
             wr::DeviceIntRect aValidRect) override;
@@ -78,7 +80,7 @@ class RenderCompositorD3D11SWGL : public RenderCompositor {
                   const wr::CompositorSurfaceTransform& aTransform,
                   wr::DeviceIntRect aClipRect,
                   wr::ImageRendering aImageRendering) override;
-  void EnableNativeCompositor(bool aEnable) {}
+  void EnableNativeCompositor(bool aEnable) override {}
   void DeInit() override {}
 
   bool MaybeReadback(const gfx::IntSize& aReadbackSize,
