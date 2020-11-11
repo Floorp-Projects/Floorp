@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"></meta>
+  <title>WebSocket test - big blob on content side</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="websocket_helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+// Test steps:
+// 1. Create a websocket and send 8 chunks of 1MB random data.
+// 2. Store the hash of each chunk (1MB of random data).
+// 3. Websocket server returns the same data back.
+// 4. Calculate the hash again and check the hash is the same as the stored one.
+
+function genRandomPayload() {
+  const count = 128;
+  const chunkSize = 64 * 1024;
+  let buffer = new Uint8Array(chunkSize * count);
+  let offset = 0;
+  for (let i = 0; i < count; i++) {
+    let data = new Uint8Array(chunkSize);
+    crypto.getRandomValues(data);
+    buffer.set(data, offset);
+    offset += chunkSize;
+  }
+
+  return buffer;
+}
+
+function genRandomFile() {
+  return new File([genRandomPayload()], "payload.bin", {
+    type: 'application/octet-stream'
+  });
+}
+
+async function toHexString(buffer) {
+  let hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+  let hashBytes = new Uint8Array(hashBuffer);
+  let toHex = b => b.toString(16).padStart(2, "0");
+  return Array.from(hashBytes, toHex).join("");
+}
+
+let message_count = 0;
+let sentHashArray = [];
+async function sendFile(file, ws) {
+  const oneMiB = 1 * 1024 * 1024;
+
+  let offset = 0;
+  while (offset < file.size) {
+    let blob = file.slice(offset, offset + oneMiB);
+    let buffer = await blob.arrayBuffer();
+    let hash = await toHexString(buffer);
+    sentHashArray.push(hash);
+    ws.send(buffer);
+    offset += blob.size;
+    message_count++;
+  }
+}
+
+var ws = CreateTestWS("wss://example.com/tests/dom/websocket/tests/file_websocket_bigBlob");
+is(ws.readyState, 0, "Initial readyState is 0");
+ws.binaryType = "blob";
+
+ws.onopen = function() {
+  is(ws.readyState, 1, "Open readyState is 1");
+  let file = genRandomFile();
+  sendFile(file, ws);
+}
+
+let receivedBlobs = [];
+ws.onmessage = function(e) {
+  ok(e.data instanceof Blob, "We should be receiving a Blob");
+  receivedBlobs.push(e.data);
+  message_count--;
+  if (message_count == 0) {
+    ws.close();
+  }
+}
+
+async function checkContent() {
+  is(receivedBlobs.length, sentHashArray.length, "length should be the same");
+  for (let index = 0; index < receivedBlobs.length; index++) {
+    let buffer = await receivedBlobs[index].arrayBuffer();
+    let hash = await toHexString(buffer);
+    is(hash, sentHashArray[index], "hash should be equal");
+  }
+}
+
+ws.onclose = function(e) {
+  is(ws.readyState, 3, "Close readyState is 3");
+  checkContent().then(() => {
+    SimpleTest.finish();
+  });
+}
+
+SimpleTest.requestFlakyTimeout("The web socket tests are really fragile, but avoiding timeouts might be hard, since it's testing stuff on the network. " +
+                               "Expect all sorts of flakiness in this test...");
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>
