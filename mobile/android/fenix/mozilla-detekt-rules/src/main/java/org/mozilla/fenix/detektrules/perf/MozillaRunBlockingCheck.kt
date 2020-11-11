@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.detektrules
+package org.mozilla.fenix.detektrules.perf
 
 import io.gitlab.arturbosch.detekt.api.*
 import org.jetbrains.kotlin.psi.*
@@ -18,8 +18,6 @@ private const val VIOLATION_MSG = "Please use `org.mozilla.fenix.perf.runBlockin
  * A check to prevent us from working around mechanisms we implemented in
  * @see org.mozilla.fenix.perf.RunBlockingCounter.runBlockingIncrement to count how many runBlocking
  * are used.
- *
- * IF YOU UPDATE THIS FILE NAME, UPDATE CODE OWNERS.
  */
 class MozillaRunBlockingCheck(config: Config) : Rule(config) {
 

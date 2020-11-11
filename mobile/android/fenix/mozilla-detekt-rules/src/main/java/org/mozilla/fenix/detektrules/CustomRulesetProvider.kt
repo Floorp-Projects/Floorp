@@ -7,6 +7,9 @@ package org.mozilla.fenix.detektrules
 import io.gitlab.arturbosch.detekt.api.Config
 import io.gitlab.arturbosch.detekt.api.RuleSet
 import io.gitlab.arturbosch.detekt.api.RuleSetProvider
+import org.mozilla.fenix.detektrules.perf.MozillaBannedPropertyAccess
+import org.mozilla.fenix.detektrules.perf.MozillaStrictModeSuppression
+import org.mozilla.fenix.detektrules.perf.MozillaRunBlockingCheck
 import org.mozilla.fenix.detektrules.perf.MozillaUseLazyMonitored
 
 class CustomRulesetProvider : RuleSetProvider {

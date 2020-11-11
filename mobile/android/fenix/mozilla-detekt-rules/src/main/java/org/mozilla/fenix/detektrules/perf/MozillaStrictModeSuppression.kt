@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.detektrules
+package org.mozilla.fenix.detektrules.perf
 
 import io.gitlab.arturbosch.detekt.api.CodeSmell
 import io.gitlab.arturbosch.detekt.api.Config
@@ -19,8 +19,6 @@ private const val VIOLATION_MSG = "Please use `components.strictMode.resetAfter`
 
 /**
  * A check to prevent us from working around mechanisms we implemented to prevent suppressing StrictMode.
- *
- * IF YOU UPDATE THIS FILE NAME, UPDATE CODE OWNERS.
  */
 class MozillaStrictModeSuppression(config: Config) : Rule(config) {
     override val issue = Issue(
