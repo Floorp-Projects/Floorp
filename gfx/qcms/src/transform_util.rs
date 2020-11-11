@@ -107,7 +107,7 @@ unsafe extern "C" fn lut_interp_linear_precache_output(
     let mut value: u32 = input_value * (length - 1) as libc::c_uint;
     /* equivalent to ceil(value/PRECACHE_OUTPUT_MAX) */
     let mut upper: u32 =
-        (value + PRECACHE_OUTPUT_MAX as libc::c_uint - 1) / (8192 - 1) as libc::c_uint;
+        (value + PRECACHE_OUTPUT_MAX as libc::c_uint - 1) / PRECACHE_OUTPUT_MAX as libc::c_uint;
     /* equivalent to floor(value/PRECACHE_OUTPUT_MAX) */
     let mut lower: u32 = value / PRECACHE_OUTPUT_MAX as libc::c_uint;
     /* interp is the distance from upper to value scaled to 0..PRECACHE_OUTPUT_MAX */
@@ -411,7 +411,7 @@ pub unsafe extern "C" fn compute_precache_linear(mut output: *mut u8) {
     let mut v: u32 = 0;
     while v < PRECACHE_OUTPUT_SIZE as u32 {
         //XXX: round?
-        *output.offset(v as isize) = (v / (8192 / 256) as libc::c_uint) as u8;
+        *output.offset(v as isize) = (v / (PRECACHE_OUTPUT_SIZE / 256) as libc::c_uint) as u8;
         v = v + 1
     }
 }
