@@ -423,32 +423,13 @@ class WebConsoleUI {
   }
 
   _onResourceUpdated(updates) {
-    const messages = [];
-    for (const { resource } of updates) {
-      if (
-        resource.resourceType == this.hud.resourceWatcher.TYPES.NETWORK_EVENT
-      ) {
-        // network-message-updated will emit when all the update message arrives.
-        // Since we can't ensure the order of the network update, we check
-        // that message.updates has all we need.
-        // Note that 'requestPostData' is sent only for POST requests, so we need
-        // to count with that.
-        const NUMBER_OF_NETWORK_UPDATE = 8;
-
-        let expectedLength = NUMBER_OF_NETWORK_UPDATE;
-        if (resource.updates.includes("responseCache")) {
-          expectedLength++;
-        }
-        if (resource.updates.includes("requestPostData")) {
-          expectedLength++;
-        }
-
-        if (resource.updates.length === expectedLength) {
-          messages.push(resource);
-        }
-      }
-    }
-    this.wrapper.dispatchMessagesUpdate(messages);
+    const messageUpdates = updates
+      .filter(
+        ({ resource }) =>
+          resource.resourceType == this.hud.resourceWatcher.TYPES.NETWORK_EVENT
+      )
+      .map(({ resource }) => resource);
+    this.wrapper.dispatchMessagesUpdate(messageUpdates);
   }
 
   /**
