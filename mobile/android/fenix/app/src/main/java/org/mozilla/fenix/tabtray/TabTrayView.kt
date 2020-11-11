@@ -56,6 +56,7 @@ import org.mozilla.fenix.tabtray.SaveToCollectionsButtonAdapter.MultiselectModeC
 import org.mozilla.fenix.tabtray.TabTrayDialogFragmentState.Mode
 import java.text.NumberFormat
 import kotlin.math.max
+import kotlin.math.roundToInt
 import mozilla.components.browser.storage.sync.Tab as SyncTab
 
 /**
@@ -582,7 +583,7 @@ class TabTrayView(
         }
 
         counter_text.text = updateTabCounter(browserState.normalTabs.size)
-        updateTabCounterContentDescription(browserState.normalTabs.size)
+        updateTabTrayViewAccessibility(browserState.normalTabs.size)
 
         adjustNewTabButtonsForNormalMode()
     }
@@ -665,7 +666,7 @@ class TabTrayView(
         }
     }
 
-    private fun updateTabCounterContentDescription(count: Int) {
+    private fun updateTabTrayViewAccessibility(count: Int) {
         view.tab_layout.getTabAt(0)?.contentDescription = if (count == 1) {
             view.context?.getString(R.string.open_tab_tray_single)
         } else {
@@ -678,13 +679,16 @@ class TabTrayView(
                 info: AccessibilityNodeInfo?
             ) {
                 super.onInitializeAccessibilityNodeInfo(host, info)
-                info?.let {
-                    info.collectionInfo = CollectionInfo.obtain(
-                        tabsAdapter.tabCount,
-                        1,
-                        false
-                    )
-                }
+                val isListTabView = view.context.settings().listTabView
+
+                val columnCount = if (isListTabView) 1 else getNumberOfGridColumns(view.context)
+                val rowCount = count.toDouble().div(columnCount).roundToInt()
+
+                info?.collectionInfo = CollectionInfo.obtain(
+                    rowCount,
+                    columnCount,
+                    false
+                )
             }
         }
     }
