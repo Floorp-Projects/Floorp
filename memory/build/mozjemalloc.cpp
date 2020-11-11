@@ -868,7 +868,7 @@ struct arena_bin_t {
   //    48   4 KiB     64   4 KiB     80   4 KiB     96   4 KiB
   //   112   4 KiB    128   8 KiB    144   4 KiB    160   8 KiB
   //   176   4 KiB    192   4 KiB    208   8 KiB    224   4 KiB
-  //   240   4 KiB    256  16 KiB    272   4 KiB    288   4 KiB
+  //   240   8 KiB    256  16 KiB    272   8 KiB    288   4 KiB
   //   304  12 KiB    320  12 KiB    336   4 KiB    352   8 KiB
   //   368   4 KiB    384   8 KiB    400  20 KiB    416  16 KiB
   //   432  12 KiB    448   4 KiB    464  16 KiB    480   8 KiB
