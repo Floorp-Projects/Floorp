@@ -653,6 +653,7 @@ void nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
+  BrowsingContext* bc = window->GetBrowsingContext();
 
   if (MOZ_LOG_TEST(gFocusLog, LogLevel::Debug)) {
     LOGFOCUS(("Window %p Raised [Currently: %p %p]", aWindow,
@@ -688,25 +689,22 @@ void nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
     if (mActiveWindow) {
       WindowLowered(mActiveWindow);
     }
-  } else {
-    BrowsingContext* bc = window->GetBrowsingContext();
-    if (bc == bc->Top()) {
-      BrowsingContext* active = GetActiveBrowsingContext();
-      if (active == bc && !mActiveBrowsingContextInContentSetFromOtherProcess) {
-        // EnsureCurrentWidgetFocused() should not be necessary with
-        // PuppetWidget.
-        return;
-      }
+  } else if (bc->IsTop()) {
+    BrowsingContext* active = GetActiveBrowsingContext();
+    if (active == bc && !mActiveBrowsingContextInContentSetFromOtherProcess) {
+      // EnsureCurrentWidgetFocused() should not be necessary with
+      // PuppetWidget.
+      return;
+    }
 
-      if (active && active != bc) {
-        if (active->IsInProcess()) {
-          WindowLowered(active->GetDOMWindow());
-        }
-        // No else, because trying to lower other-process windows
-        // from here can result in the BrowsingContext no longer
-        // existing in the parent process by the time it deserializes
-        // the IPC message.
+    if (active && active != bc) {
+      if (active->IsInProcess()) {
+        WindowLowered(active->GetDOMWindow());
       }
+      // No else, because trying to lower other-process windows
+      // from here can result in the BrowsingContext no longer
+      // existing in the parent process by the time it deserializes
+      // the IPC message.
     }
   }
 
@@ -720,11 +718,8 @@ void nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
   // set this as the active window
   if (XRE_IsParentProcess()) {
     mActiveWindow = window;
-  } else {
-    BrowsingContext* bc = window->GetBrowsingContext();
-    if (bc == bc->Top()) {
-      SetActiveBrowsingContextInContent(bc);
-    }
+  } else if (bc->IsTop()) {
+    SetActiveBrowsingContextInContent(bc);
   }
 
   // ensure that the window is enabled and visible
@@ -770,8 +765,9 @@ void nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
   }
 
   nsCOMPtr<nsIAppWindow> appWin(do_GetInterface(baseWindow));
-  Focus(currentWindow, currentFocus, 0, true, false, appWin != nullptr, true,
-        focusInOtherContentProcess);
+  Focus(currentWindow, currentFocus, 0,
+        currentWindow->GetBrowsingContext() != GetFocusedBrowsingContext(),
+        false, appWin != nullptr, true, focusInOtherContentProcess);
 }
 
 void nsFocusManager::WindowLowered(mozIDOMWindowProxy* aWindow) {

@@ -5129,6 +5129,9 @@ void nsGlobalWindowOuter::FocusOuter(CallerType aCallerType) {
   }
   if (parent) {
     if (!parent->IsInProcess()) {
+      if (isActive) {
+        fm->WindowRaised(this);
+      }
       ContentChild* contentChild = ContentChild::GetSingleton();
       MOZ_ASSERT(contentChild);
       contentChild->SendFinalizeFocusOuter(bc, canFocus, aCallerType);
