@@ -15,36 +15,10 @@ registerCleanupFunction(async () => {
   dump("cleanup done\n");
 });
 
-let Http3FailedListener = function() {};
-
-Http3FailedListener.prototype = {
-  onStartRequest: function testOnStartRequest(request) {},
-
-  onDataAvailable: function testOnDataAvailable(request, stream, off, cnt) {
-    this.amount += cnt;
-    read_stream(stream, cnt);
-  },
-
-  onStopRequest: function testOnStopRequest(request, status) {
-    if (Components.isSuccessCode(status)) {
-      // This is still HTTP2 connection
-      let httpVersion = "";
-      try {
-        httpVersion = request.protocolVersion;
-      } catch (e) {}
-      Assert.equal(httpVersion, "h2");
-      this.finish(false);
-    } else {
-      Assert.equal(status, Cr.NS_ERROR_NET_PARTIAL_TRANSFER);
-      this.finish(true);
-    }
-  },
-};
-
 function chanPromise(chan, listener) {
   return new Promise(resolve => {
-    function finish(result) {
-      resolve(result);
+    function finish() {
+      resolve();
     }
     listener.finish = finish;
     chan.asyncOpen(listener);
@@ -60,31 +34,21 @@ function makeChan() {
   return chan;
 }
 
-function altsvcSetupPromise(chan, listener) {
-  return new Promise(resolve => {
-    function finish(result) {
-      resolve(result);
-    }
-    listener.finish = finish;
-    chan.asyncOpen(listener);
-  });
-}
-
-add_task(async function test_fatal_error() {
+add_task(async function test_setup() {
   let env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
   );
 
   let h2Port = env.get("MOZHTTP2_PORT");
   Assert.notEqual(h2Port, null);
-
-  let h3Port = env.get("MOZHTTP3_PORT_FAILED");
+  let h3Port = env.get("MOZHTTP3_PORT_NO_RESPONSE");
   Assert.notEqual(h3Port, null);
   Assert.notEqual(h3Port, "");
 
   Services.prefs.setBoolPref("network.http.http3.enabled", true);
   Services.prefs.setCharPref("network.dns.localDomains", "foo.example.com");
   Services.prefs.setBoolPref("network.dns.disableIPv6", true);
+  // Set AltSvc to point to not existing HTTP3 server on port 443
   Services.prefs.setCharPref(
     "network.http.http3.alt-svc-mapping-for-testing",
     "foo.example.com;h3-27=:" + h3Port
@@ -99,17 +63,20 @@ add_task(async function test_fatal_error() {
 });
 
 add_task(async function test_fatal_stream_error() {
-  let result = false;
+  let result = 1;
   // We need to loop here because we need to wait for AltSvc storage to
   // to be started.
+  // We also do not have a way to verify that HTTP3 has been tried, because
+  // the fallback is automatic, so try a couple of times.
   do {
     // We need to close HTTP2 connections, otherwise our connection pooling
     // will dispatch the request over already existing HTTP2 connection.
     Services.obs.notifyObservers(null, "net:prune-all-connections");
     let chan = makeChan();
-    let listener = new Http3FailedListener();
-    result = await altsvcSetupPromise(chan, listener);
-  } while (result === false);
+    let listener = new CheckOnlyHttp2Listener();
+    await altsvcSetupPromise(chan, listener);
+    result++;
+  } while (result < 5);
 });
 
 let CheckOnlyHttp2Listener = function() {};
@@ -128,7 +95,14 @@ CheckOnlyHttp2Listener.prototype = {
       httpVersion = request.protocolVersion;
     } catch (e) {}
     Assert.equal(httpVersion, "h2");
-    this.finish(false);
+
+    let routed = "NA";
+    try {
+      routed = request.getRequestHeader("Alt-Used");
+    } catch (e) {}
+    dump("routed is " + routed + "\n");
+    Assert.ok(routed === "0" || routed === "NA");
+    this.finish();
   },
 };
 
