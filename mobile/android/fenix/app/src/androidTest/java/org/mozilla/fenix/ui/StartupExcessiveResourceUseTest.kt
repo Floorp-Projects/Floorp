@@ -7,7 +7,9 @@ package org.mozilla.fenix.ui
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.children
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import kotlinx.android.synthetic.main.activity_home.*
@@ -24,6 +26,7 @@ private const val EXPECTED_SUPPRESSION_COUNT = 11
 private const val EXPECTED_RUNBLOCKING_COUNT = 2
 private const val EXPECTED_COMPONENT_INIT_COUNT = 42
 private const val EXPECTED_VIEW_HIERARCHY_DEPTH = 12
+private const val EXPECTED_RECYCLER_VIEW_CONSTRAINT_LAYOUT_CHILDREN = 4
 
 private val failureMsgStrictMode = getErrorMessage(
     shortName = "StrictMode suppression",
@@ -43,6 +46,13 @@ private val failureMsgComponentInit = getErrorMessage(
 private val failureMsgViewHierarchyDepth = getErrorMessage(
     shortName = "view hierarchy depth",
     implications = "having a deep view hierarchy can slow down measure/layout performance?"
+) + "Please note that we're not sure if this is a useful metric to assert: with your feedback, " +
+    "we'll find out over time if it is or is not."
+
+private val failureMsgRecyclerViewConstraintLayoutChildren = getErrorMessage(
+    shortName = "ConstraintLayout being a common direct descendant of a RecyclerView",
+    implications = "ConstraintLayouts are slow to inflate and are primarily used to flatten deep " +
+        "view hierarchies so can be under-performant as a common RecyclerView child?"
 ) + "Please note that we're not sure if this is a useful metric to assert: with your feedback, " +
     "we'll find out over time if it is or is not."
 
@@ -79,12 +89,20 @@ class StartupExcessiveResourceUseTest {
         val actualSuppresionCount = activityTestRule.activity.components.strictMode.suppressionCount.get().toInt()
         val actualRunBlocking = RunBlockingCounter.count.get()
         val actualComponentInitCount = ComponentInitCount.count.get()
-        val actualViewHierarchyDepth = countAndLogViewHierarchyDepth(activityTestRule.activity.rootContainer, 1)
+
+        val rootView = activityTestRule.activity.rootContainer
+        val actualViewHierarchyDepth = countAndLogViewHierarchyDepth(rootView, 1)
+        val actualRecyclerViewConstraintLayoutChildren = countRecyclerViewConstraintLayoutChildren(rootView, null)
 
         assertEquals(failureMsgStrictMode, EXPECTED_SUPPRESSION_COUNT, actualSuppresionCount)
         assertEquals(failureMsgRunBlocking, EXPECTED_RUNBLOCKING_COUNT, actualRunBlocking)
         assertEquals(failureMsgComponentInit, EXPECTED_COMPONENT_INIT_COUNT, actualComponentInitCount)
         assertEquals(failureMsgViewHierarchyDepth, EXPECTED_VIEW_HIERARCHY_DEPTH, actualViewHierarchyDepth)
+        assertEquals(
+            failureMsgRecyclerViewConstraintLayoutChildren,
+            EXPECTED_RECYCLER_VIEW_CONSTRAINT_LAYOUT_CHILDREN,
+            actualRecyclerViewConstraintLayoutChildren
+        )
     }
 }
 
@@ -98,6 +116,20 @@ private fun countAndLogViewHierarchyDepth(view: View, level: Int): Int {
     } else {
         val maxDepth = view.children.map { countAndLogViewHierarchyDepth(it, level + 1) }.maxOrNull()
         maxDepth ?: level
+    }
+}
+
+private fun countRecyclerViewConstraintLayoutChildren(view: View, parent: View?): Int {
+    val viewValue = if (parent is RecyclerView && view is ConstraintLayout) {
+        1
+    } else {
+        0
+    }
+
+    return if (view !is ViewGroup) {
+        viewValue
+    } else {
+        viewValue + view.children.sumBy { countRecyclerViewConstraintLayoutChildren(it, view) }
     }
 }
 
