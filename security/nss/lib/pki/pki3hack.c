@@ -866,9 +866,9 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc, PRBool forced
     CERT_LockCertTempPerm(cc);
     cc->istemp = PR_FALSE; /* CERT_NewTemp will override this */
     cc->isperm = PR_TRUE;  /* by default */
-    CERT_UnlockCertTempPerm(cc);
     /* pointer back */
     cc->nssCertificate = c;
+    CERT_UnlockCertTempPerm(cc);
     if (trust) {
         /* force the cert type to be recomputed to include trust info */
         PRUint32 nsCertType = cert_ComputeCertType(cc);
@@ -919,7 +919,10 @@ stan_GetCERTCertificate(NSSCertificate *c, PRBool forceUpdate)
         nss_SetError(NSS_ERROR_INTERNAL_ERROR);
         goto loser;
     }
-    if (!cc->nssCertificate || forceUpdate) {
+    CERT_LockCertTempPerm(cc);
+    NSSCertificate *nssCert = cc->nssCertificate;
+    CERT_UnlockCertTempPerm(cc);
+    if (!nssCert || forceUpdate) {
         fill_CERTCertificateFields(c, cc, forceUpdate);
     } else if (CERT_GetCertTrust(cc, &certTrust) != SECSuccess) {
         CERTCertTrust *trust;
@@ -1018,7 +1021,9 @@ STAN_GetNSSCertificate(CERTCertificate *cc)
     nssCryptokiInstance *instance;
     nssPKIObject *pkiob;
     NSSArena *arena;
+    CERT_LockCertTempPerm(cc);
     c = cc->nssCertificate;
+    CERT_UnlockCertTempPerm(cc);
     if (c) {
         return c;
     }
@@ -1083,7 +1088,9 @@ STAN_GetNSSCertificate(CERTCertificate *cc)
         nssPKIObject_AddInstance(&c->object, instance);
     }
     c->decoding = create_decoded_pkix_cert_from_nss3cert(NULL, cc);
+    CERT_LockCertTempPerm(cc);
     cc->nssCertificate = c;
+    CERT_UnlockCertTempPerm(cc);
     return c;
 }
 
