@@ -339,13 +339,13 @@
     "PASS"
   ],
   "Emulation Page.viewport should support touch emulation (emulation.spec.ts)": [
-    "FAIL"
+    "PASS"
   ],
   "Emulation Page.viewport should be detectable by Modernizr (emulation.spec.ts)": [
-    "FAIL"
+    "PASS"
   ],
   "Emulation Page.viewport should detect touch when applying viewport with touches (emulation.spec.ts)": [
-    "FAIL"
+    "PASS"
   ],
   "Emulation Page.viewport should support landscape emulation (emulation.spec.ts)": [
     "FAIL"
