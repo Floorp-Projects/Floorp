@@ -2597,6 +2597,197 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
 #endif
 }
 
+void CodeGenerator::visitWasmBinarySimd128WithConstant(
+    LWasmBinarySimd128WithConstant* ins) {
+#ifdef ENABLE_WASM_SIMD
+  FloatRegister lhsDest = ToFloatRegister(ins->lhsDest());
+  const SimdConstant& rhs = ins->rhs();
+
+  MOZ_ASSERT(ToFloatRegister(ins->output()) == lhsDest);
+
+  switch (ins->simdOp()) {
+    case wasm::SimdOp::I8x16Add:
+      masm.addInt8x16(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8Add:
+      masm.addInt16x8(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I32x4Add:
+      masm.addInt32x4(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I64x2Add:
+      masm.addInt64x2(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I8x16Sub:
+      masm.subInt8x16(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8Sub:
+      masm.subInt16x8(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I32x4Sub:
+      masm.subInt32x4(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I64x2Sub:
+      masm.subInt64x2(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8Mul:
+      masm.mulInt16x8(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I32x4Mul:
+      masm.mulInt32x4(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I8x16AddSaturateS:
+      masm.addSatInt8x16(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I8x16AddSaturateU:
+      masm.unsignedAddSatInt8x16(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8AddSaturateS:
+      masm.addSatInt16x8(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8AddSaturateU:
+      masm.unsignedAddSatInt16x8(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I8x16SubSaturateS:
+      masm.subSatInt8x16(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I8x16SubSaturateU:
+      masm.unsignedSubSatInt8x16(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8SubSaturateS:
+      masm.subSatInt16x8(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8SubSaturateU:
+      masm.unsignedSubSatInt16x8(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I8x16MinS:
+      masm.minInt8x16(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I8x16MinU:
+      masm.unsignedMinInt8x16(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8MinS:
+      masm.minInt16x8(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8MinU:
+      masm.unsignedMinInt16x8(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I32x4MinS:
+      masm.minInt32x4(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I32x4MinU:
+      masm.unsignedMinInt32x4(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I8x16MaxS:
+      masm.maxInt8x16(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I8x16MaxU:
+      masm.unsignedMaxInt8x16(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8MaxS:
+      masm.maxInt16x8(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8MaxU:
+      masm.unsignedMaxInt16x8(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I32x4MaxS:
+      masm.maxInt32x4(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I32x4MaxU:
+      masm.unsignedMaxInt32x4(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::V128And:
+      masm.bitwiseAndSimd128(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::V128Or:
+      masm.bitwiseOrSimd128(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::V128Xor:
+      masm.bitwiseXorSimd128(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I8x16Eq:
+      masm.compareInt8x16(Assembler::Equal, rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I8x16Ne:
+      masm.compareInt8x16(Assembler::NotEqual, rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I8x16GtS:
+      masm.compareInt8x16(Assembler::GreaterThan, rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I8x16LeS:
+      masm.compareInt8x16(Assembler::LessThanOrEqual, rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8Eq:
+      masm.compareInt16x8(Assembler::Equal, rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8Ne:
+      masm.compareInt16x8(Assembler::NotEqual, rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8GtS:
+      masm.compareInt16x8(Assembler::GreaterThan, rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8LeS:
+      masm.compareInt16x8(Assembler::LessThanOrEqual, rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I32x4Eq:
+      masm.compareInt32x4(Assembler::Equal, rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I32x4Ne:
+      masm.compareInt32x4(Assembler::NotEqual, rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I32x4GtS:
+      masm.compareInt32x4(Assembler::GreaterThan, rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I32x4LeS:
+      masm.compareInt32x4(Assembler::LessThanOrEqual, rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I32x4DotSI16x8:
+      masm.widenDotInt16x8(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::F32x4Add:
+      masm.addFloat32x4(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::F64x2Add:
+      masm.addFloat64x2(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::F32x4Sub:
+      masm.subFloat32x4(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::F64x2Sub:
+      masm.subFloat64x2(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::F32x4Div:
+      masm.divFloat32x4(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::F64x2Div:
+      masm.divFloat64x2(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::F32x4Mul:
+      masm.mulFloat32x4(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::F64x2Mul:
+      masm.mulFloat64x2(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I8x16NarrowSI16x8:
+      masm.narrowInt16x8(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I8x16NarrowUI16x8:
+      masm.unsignedNarrowInt16x8(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8NarrowSI32x4:
+      masm.narrowInt32x4(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I16x8NarrowUI32x4:
+      masm.unsignedNarrowInt32x4(rhs, lhsDest);
+      break;
+    default:
+      MOZ_CRASH("Binary SimdOp with constant not implemented");
+  }
+#else
+  MOZ_CRASH("No SIMD");
+#endif
+}
+
 void CodeGenerator::visitWasmVariableShiftSimd128(
     LWasmVariableShiftSimd128* ins) {
 #ifdef ENABLE_WASM_SIMD
