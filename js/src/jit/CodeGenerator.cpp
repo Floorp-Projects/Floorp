@@ -2151,9 +2151,9 @@ static void UpdateRegExpStatics(MacroAssembler& masm, Register regexp,
       Imm32(1),
       Address(staticsReg, RegExpStatics::offsetOfPendingLazyEvaluation()));
 
-  masm.loadPtr(Address(regexp, NativeObject::getFixedSlotOffset(
-                                   RegExpObject::PRIVATE_SLOT)),
-               temp1);
+  masm.unboxNonDouble(Address(regexp, NativeObject::getFixedSlotOffset(
+                                          RegExpObject::SHARED_SLOT)),
+                      temp1, JSVAL_TYPE_PRIVATE_GCTHING);
   masm.loadPtr(Address(temp1, RegExpShared::offsetOfSource()), temp2);
   masm.storePtr(temp2, lazySourceAddress);
   masm.load32(Address(temp1, RegExpShared::offsetOfFlags()), temp2);
@@ -2255,10 +2255,10 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
 
   // Load the RegExpShared.
   Register regexpReg = temp1;
-  masm.loadPtr(Address(regexp, NativeObject::getFixedSlotOffset(
-                                   RegExpObject::PRIVATE_SLOT)),
-               regexpReg);
-  masm.branchPtr(Assembler::Equal, regexpReg, ImmWord(0), failure);
+  Address sharedSlot = Address(
+      regexp, NativeObject::getFixedSlotOffset(RegExpObject::SHARED_SLOT));
+  masm.branchTestUndefined(Assembler::Equal, sharedSlot, failure);
+  masm.unboxNonDouble(sharedSlot, regexpReg, JSVAL_TYPE_PRIVATE_GCTHING);
 
   // Handle Atom matches
   Label notAtom, checkSuccess;
@@ -2751,9 +2751,9 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
   // If a regexp has named captures, fall back to the OOL stub, which
   // will end up calling CreateRegExpMatchResults.
   Register shared = temp2;
-  masm.loadPtr(Address(regexp, NativeObject::getFixedSlotOffset(
-                                   RegExpObject::PRIVATE_SLOT)),
-               shared);
+  masm.unboxNonDouble(Address(regexp, NativeObject::getFixedSlotOffset(
+                                          RegExpObject::SHARED_SLOT)),
+                      shared, JSVAL_TYPE_PRIVATE_GCTHING);
   masm.branchPtr(Assembler::NotEqual,
                  Address(shared, RegExpShared::offsetOfGroupsTemplate()),
                  ImmWord(0), &oolEntry);

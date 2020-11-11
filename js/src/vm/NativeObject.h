@@ -1549,39 +1549,40 @@ class NativeObject : public JSObject {
    */
   inline uint8_t* fixedData(size_t nslots) const;
 
-  inline void privatePreWriteBarrier(void** oldval);
-
-  void privatePostWriteBarrier(void** pprivate) {
-    gc::Cell** cellp = reinterpret_cast<gc::Cell**>(pprivate);
-    MOZ_ASSERT(cellp);
-    MOZ_ASSERT(*cellp);
-    gc::StoreBuffer* storeBuffer = (*cellp)->storeBuffer();
-    if (storeBuffer) {
-      storeBuffer->putCell(reinterpret_cast<JSObject**>(cellp));
-    }
-  }
+  inline void privatePreWriteBarrier(HeapSlot* pprivate);
 
   /* Private data accessors. */
 
-  inline void*& privateRef(
-      uint32_t nfixed) const { /* XXX should be private, not protected! */
+ private:
+  HeapSlot& privateRef(uint32_t nfixed) const {
     /*
-     * The private pointer of an object can hold any word sized value.
-     * Private pointers are stored immediately after the last fixed slot of
-     * the object.
+     * The private field of an object is used to hold a pointer by storing it as
+     * a PrivateValue(). Private fields are stored immediately after the last
+     * fixed slot of the object.
      */
     MOZ_ASSERT(isNumFixedSlots(nfixed));
     MOZ_ASSERT(hasPrivate());
-    HeapSlot* end = &fixedSlots()[nfixed];
-    return *reinterpret_cast<void**>(end);
+    return fixedSlots()[nfixed];
   }
 
+ public:
   bool hasPrivate() const { return getClass()->hasPrivate(); }
-  void* getPrivate() const { return privateRef(numFixedSlots()); }
-  void setPrivate(void* data) {
-    void** pprivate = &privateRef(numFixedSlots());
+
+  void* getPrivate() const { return getPrivate(numFixedSlots()); }
+  void* getPrivate(uint32_t nfixed) const {
+    return privateRef(nfixed).toPrivate();
+  }
+
+  void initPrivate(void* data) {
+    uint32_t nfixed = numFixedSlots();
+    privateRef(nfixed).unbarrieredSet(PrivateValue(data));
+  }
+
+  void setPrivate(void* data) { setPrivate(numFixedSlots(), data); }
+  void setPrivate(uint32_t nfixed, void* data) {
+    HeapSlot* pprivate = &privateRef(nfixed);
     privatePreWriteBarrier(pprivate);
-    *pprivate = data;
+    setPrivateUnbarriered(nfixed, data);
   }
 
   void setPrivateGCThing(gc::Cell* cell) {
@@ -1590,23 +1591,19 @@ class NativeObject : public JSObject {
       JS::AssertCellIsNotGray(cell);
     }
 #endif
-    void** pprivate = &privateRef(numFixedSlots());
+    uint32_t nfixed = numFixedSlots();
+    HeapSlot* pprivate = &privateRef(nfixed);
+    Cell* prev = static_cast<gc::Cell*>(pprivate->toPrivate());
     privatePreWriteBarrier(pprivate);
-    *pprivate = reinterpret_cast<void*>(cell);
-    privatePostWriteBarrier(pprivate);
+    setPrivateUnbarriered(nfixed, cell);
+    gc::PostWriteBarrierCell(this, prev, cell);
   }
 
   void setPrivateUnbarriered(void* data) {
-    void** pprivate = &privateRef(numFixedSlots());
-    *pprivate = data;
+    setPrivateUnbarriered(numFixedSlots(), data);
   }
-  void initPrivate(void* data) { privateRef(numFixedSlots()) = data; }
-
-  /* Access private data for an object with a known number of fixed slots. */
-  inline void* getPrivate(uint32_t nfixed) const { return privateRef(nfixed); }
   void setPrivateUnbarriered(uint32_t nfixed, void* data) {
-    void** pprivate = &privateRef(nfixed);
-    *pprivate = data;
+    privateRef(nfixed).unbarrieredSet(PrivateValue(data));
   }
 
   /* Return the allocKind we would use if we were to tenure this object. */
@@ -1647,9 +1644,9 @@ class NativeObject : public JSObject {
   static size_t offsetOfSlots() { return offsetof(NativeObject, slots_); }
 };
 
-inline void NativeObject::privatePreWriteBarrier(void** oldval) {
+inline void NativeObject::privatePreWriteBarrier(HeapSlot* pprivate) {
   JS::shadow::Zone* shadowZone = this->shadowZoneFromAnyThread();
-  if (shadowZone->needsIncrementalBarrier() && *oldval &&
+  if (shadowZone->needsIncrementalBarrier() && pprivate->get().toPrivate() &&
       getClass()->hasTrace()) {
     getClass()->doTrace(shadowZone->barrierTracer(), this);
   }

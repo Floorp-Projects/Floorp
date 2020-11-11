@@ -62,8 +62,8 @@ class RegExpObject : public NativeObject {
                               NewObjectKind newKind);
 
  public:
-  static const unsigned RESERVED_SLOTS = 3;
-  static const unsigned PRIVATE_SLOT = 3;
+  static const unsigned SHARED_SLOT = 3;
+  static const unsigned RESERVED_SLOTS = 4;
 
   static const JSClass class_;
   static const JSClass protoClass_;
@@ -159,25 +159,18 @@ class RegExpObject : public NativeObject {
 
   static RegExpShared* getShared(JSContext* cx, Handle<RegExpObject*> regexp);
 
-  bool hasShared() const { return !!sharedRef(); }
+  bool hasShared() const { return !getFixedSlot(SHARED_SLOT).isUndefined(); }
 
   RegExpShared* getShared() const {
-    MOZ_ASSERT(hasShared());
-    return sharedRef();
+    return static_cast<RegExpShared*>(getFixedSlot(SHARED_SLOT).toGCThing());
   }
 
-  void setShared(RegExpShared& shared) {
-    MOZ_ASSERT(!hasShared());
-    sharedRef().init(&shared);
+  void setShared(RegExpShared* shared) {
+    MOZ_ASSERT(shared);
+    setFixedSlot(SHARED_SLOT, PrivateGCThingValue(shared));
   }
 
-  HeapPtrRegExpShared& sharedRef() const {
-    auto& ref = NativeObject::privateRef(PRIVATE_SLOT);
-    return reinterpret_cast<HeapPtrRegExpShared&>(ref);
-  }
-
-  static void trace(JSTracer* trc, JSObject* obj);
-  void trace(JSTracer* trc);
+  void clearShared() { setFixedSlot(SHARED_SLOT, UndefinedValue()); }
 
   void initIgnoringLastIndex(JSAtom* source, JS::RegExpFlags flags);
 
