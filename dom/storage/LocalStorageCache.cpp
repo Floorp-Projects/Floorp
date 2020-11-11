@@ -170,7 +170,8 @@ void LocalStorageCache::NotifyObservers(const LocalStorage* aStorage,
 }
 
 inline bool LocalStorageCache::Persist(const LocalStorage* aStorage) const {
-  return mPersistent && !aStorage->IsSessionScopedOrLess();
+  return mPersistent &&
+         (aStorage->IsPrivateBrowsing() || !aStorage->IsSessionScopedOrLess());
 }
 
 const nsCString LocalStorageCache::Origin() const {
