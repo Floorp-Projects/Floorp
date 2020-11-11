@@ -36,6 +36,10 @@
 #  include "mozilla/java/GeckoProcessManagerWrappers.h"
 #  include "mozilla/java/GeckoProcessTypeWrappers.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
+#if defined(XP_MACOSX)
+#  include "nsMacUtilsImpl.h"
+#  include "base/process_util.h"
+#endif  // defined(XP_MACOSX)
 
 using mozilla::ipc::GeckoChildProcessHost;
 
@@ -63,6 +67,9 @@ GMPParent::GMPParent()
       mGMPContentChildCount(0),
       mChildPid(0),
       mHoldingSelfRef(false),
+#if defined(XP_MACOSX) && defined(__aarch64__)
+      mChildLaunchArch(base::PROCESS_ARCH_INVALID),
+#endif
       mMainThread(GetMainThreadSerialEventTarget()) {
   MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
   GMP_PARENT_LOG_DEBUG("GMPParent ctor id=%u", mPluginId);
@@ -91,7 +98,41 @@ void GMPParent::CloneFrom(const GMPParent* aOther) {
     mCapabilities.AppendElement(cap);
   }
   mAdapter = aOther->mAdapter;
+
+#if defined(XP_MACOSX) && defined(__aarch64__)
+  mChildLaunchArch = aOther->mChildLaunchArch;
+#endif
 }
+
+#if defined(XP_MACOSX)
+nsresult GMPParent::GetPluginFileArch(nsIFile* aPluginDir,
+                                      nsAutoString& aLeafName,
+                                      uint32_t& aArchSet) {
+  // Build up the plugin filename
+  nsAutoString baseName;
+  baseName = Substring(aLeafName, 4, aLeafName.Length() - 1);
+  nsAutoString pluginFileName = u"lib"_ns + baseName + u".dylib"_ns;
+  GMP_PARENT_LOG_DEBUG("%s: pluginFileName: %s", __FUNCTION__,
+                       NS_LossyConvertUTF16toASCII(pluginFileName).get());
+
+  // Create an nsIFile representing the plugin
+  nsCOMPtr<nsIFile> pluginFile;
+  nsresult rv = aPluginDir->Clone(getter_AddRefs(pluginFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+  pluginFile->AppendRelativePath(pluginFileName);
+
+  // Get the full plugin path
+  nsCString pluginPath;
+  rv = pluginFile->GetNativePath(pluginPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+  GMP_PARENT_LOG_DEBUG("%s: pluginPath: %s", __FUNCTION__, pluginPath.get());
+
+  rv = nsMacUtilsImpl::GetArchitecturesForBinary(pluginPath.get(), &aArchSet);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+#endif  // defined(XP_MACOSX)
 
 RefPtr<GenericPromise> GMPParent::Init(GeckoMediaPluginServiceParent* aService,
                                        nsIFile* aPluginDir) {
@@ -120,6 +161,74 @@ RefPtr<GenericPromise> GMPParent::Init(GeckoMediaPluginServiceParent* aService,
   MOZ_ASSERT(parentLeafName.Length() > 4);
   mName = Substring(parentLeafName, 4);
 
+#if defined(XP_MACOSX)
+  uint32_t pluginArch = 0;
+  rv = GetPluginFileArch(aPluginDir, parentLeafName, pluginArch);
+  if (NS_FAILED(rv)) {
+    GMP_PARENT_LOG_DEBUG("%s: Plugin arch error: %d", __FUNCTION__, rv);
+  } else {
+    GMP_PARENT_LOG_DEBUG("%s: Plugin arch: 0x%x", __FUNCTION__, pluginArch);
+  }
+
+  uint32_t x86 = base::PROCESS_ARCH_X86_64 | base::PROCESS_ARCH_I386;
+#  if defined(__aarch64__)
+  // When executing in an ARM64 process, if the library is x86 or x64,
+  // set |mChildLaunchArch| to x64 and allow the library to be used as long
+  // as this process is a universal binary.
+  if (pluginArch & x86) {
+    bool isWidevine = parentLeafName.Find("widevine") != kNotFound;
+    bool isWidevineAllowed =
+        Preferences::GetBool("media.gmp-widevinecdm.allow-x64-plugin-on-arm64");
+    bool isH264 = parentLeafName.Find("openh264") != kNotFound;
+    bool isH264Allowed =
+        Preferences::GetBool("media.gmp-gmpopenh264.allow-x64-plugin-on-arm64");
+
+    // Only allow x64 child GMP processes for Widevine and OpenH264
+    if (!isWidevine && !isH264) {
+      return GenericPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED,
+                                             __func__);
+    }
+    // And only if prefs permit it.
+    if ((isWidevine && !isWidevineAllowed) || (isH264 && !isH264Allowed)) {
+      return GenericPromise::CreateAndReject(NS_ERROR_PLUGIN_DISABLED,
+                                             __func__);
+    }
+
+    // We have an x64 library. Get the bundle architecture to determine
+    // if we are a universal binary and hence if we can launch an x64
+    // child process to host this plugin.
+    uint32_t bundleArch = base::PROCESS_ARCH_INVALID;
+    rv = nsMacUtilsImpl::GetArchitecturesForBundle(&bundleArch);
+    if (NS_FAILED(rv)) {
+      // If we fail here, continue as if this is not a univeral binary.
+      GMP_PARENT_LOG_DEBUG("%s: Bundle arch error: %d", __FUNCTION__, rv);
+    } else {
+      GMP_PARENT_LOG_DEBUG("%s: Bundle arch: 0x%x", __FUNCTION__, bundleArch);
+    }
+
+    bool isUniversalBinary = (bundleArch & base::PROCESS_ARCH_X86_64) &&
+                             (bundleArch & base::PROCESS_ARCH_ARM_64);
+    if (isUniversalBinary) {
+      mChildLaunchArch = base::PROCESS_ARCH_X86_64;
+    } else {
+      return GenericPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED,
+                                             __func__);
+    }
+  }
+#  else
+  // When executing in a non-ARM process, if the library is not x86 or x64,
+  // remove it and return an error. This prevents a child process crash due
+  // to loading an incompatible library and forces a new plugin version to be
+  // downloaded when the check is next performed. This could occur if a profile
+  // is moved from an ARM64 system to an x64 system.
+  if ((pluginArch & x86) == 0) {
+    GMP_PARENT_LOG_DEBUG("%s: Removing plugin directory", __FUNCTION__);
+    aPluginDir->Remove(true);
+    return GenericPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
+  }
+#  endif  // defined(__aarch64__)
+#endif    // defined(XP_MACOSX)
+
   return ReadGMPMetaData();
 }
 
@@ -146,6 +255,11 @@ nsresult GMPParent::LoadProcess() {
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
     mProcess->SetRequiresWindowServer(mAdapter.EqualsLiteral("chromium"));
 #endif
+
+#if defined(XP_MACOSX) && defined(__aarch64__)
+    mProcess->SetLaunchArchitecture(mChildLaunchArch);
+#endif
+
     if (!mProcess->Launch(30 * 1000)) {
       GMP_PARENT_LOG_DEBUG("%s: Failed to launch new child process",
                            __FUNCTION__);

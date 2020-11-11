@@ -625,12 +625,14 @@ set_define("MOZ_OMX", openmax)
 @depends(target)
 def eme_choices(target):
     if (
-        target.kernel in ("Darwin", "WINNT", "Linux")
+        target.kernel in ("WINNT", "Linux")
         and target.os != "Android"
         and target.cpu in ("x86", "x86_64")
     ):
         return ("widevine",)
     if target.kernel == "WINNT" and target.cpu == "aarch64":
+        return ("widevine",)
+    if target.os in ("OSX"):
         return ("widevine",)
 
 

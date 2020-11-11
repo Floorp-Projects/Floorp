@@ -66,6 +66,19 @@ bool LaunchApp(const std::vector<std::string>& argv, const LaunchOptions& option
   auto spawnattr_guard =
       mozilla::MakeScopeExit([&spawnattr] { posix_spawnattr_destroy(&spawnattr); });
 
+#if defined(XP_MACOSX) && defined(__aarch64__)
+  if (options.arch == PROCESS_ARCH_X86_64) {
+    cpu_type_t cpu_pref = CPU_TYPE_X86_64;
+    size_t count = 1;
+    size_t ocount = 0;
+    int rv;
+    rv = posix_spawnattr_setbinpref_np(&spawnattr, count, &cpu_pref, &ocount);
+    if ((rv != 0) || (ocount != count)) {
+      return false;
+    }
+  }
+#endif
+
   // Prevent the child process from inheriting any file descriptors
   // that aren't named in `file_actions`.  (This is an Apple-specific
   // extension to posix_spawn.)

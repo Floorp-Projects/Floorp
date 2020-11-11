@@ -175,6 +175,11 @@ class GMPParent final
   void ResolveGetContentParentPromises();
   void RejectGetContentParentPromises();
 
+#if defined(XP_MACOSX)
+  nsresult GetPluginFileArch(nsIFile* aPluginDir, nsAutoString& aLeafName,
+                             uint32_t& aArchSet);
+#endif
+
   GMPState mState;
   nsCOMPtr<nsIFile> mDirectory;  // plugin directory on disk
   nsString mName;  // base name of plugin on disk, UTF-16 because used for paths
@@ -213,6 +218,11 @@ class GMPParent final
   // its reference to us, we stay alive long enough for the child process
   // to terminate gracefully.
   bool mHoldingSelfRef;
+
+#if defined(XP_MACOSX) && defined(__aarch64__)
+  // The child process architecture to use.
+  uint32_t mChildLaunchArch;
+#endif
 
   const nsCOMPtr<nsISerialEventTarget> mMainThread;
 };
