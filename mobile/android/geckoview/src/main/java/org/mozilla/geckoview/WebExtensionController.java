@@ -5,8 +5,6 @@ import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
-
-import android.os.Build;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -19,11 +17,9 @@ import org.mozilla.gecko.util.GeckoBundle;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 import static org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_POSTPONED;
@@ -36,8 +32,8 @@ public class WebExtensionController {
     private PromptDelegate mPromptDelegate;
     private final WebExtension.Listener<WebExtension.TabDelegate> mListener;
 
-    // Map [ (extensionId, nativeApp, session) -> message ]
-    private final MultiMap<MessageRecipient, Message> mPendingMessages;
+    // Map [ extensionId -> Message ]
+    private final MultiMap<String, Message> mPendingMessages;
     private final MultiMap<String, Message> mPendingNewTab;
 
     private static class Message {
@@ -128,26 +124,8 @@ public class WebExtensionController {
         }
     }
 
-    /* package */ void releasePendingMessages(final WebExtension extension, final String nativeApp,
-                                              final GeckoSession session) {
-        Log.i(LOGTAG, "releasePendingMessages:"
-                + " extension=" + extension.id
-                + " nativeApp=" + nativeApp
-                + " session=" + session);
-        final List<Message> messages = mPendingMessages.remove(
-                new MessageRecipient(nativeApp, extension.id, session));
-        if (messages == null) {
-            return;
-        }
-
-        for (final Message message : messages) {
-            WebExtensionController.this.handleMessage(message.event, message.bundle,
-                    message.callback, message.session);
-        }
-    }
-
     private class DelegateController implements WebExtension.DelegateController {
-        private final WebExtension mExtension;
+        private WebExtension mExtension;
 
         public DelegateController(final WebExtension extension) {
             mExtension = extension;
@@ -157,6 +135,17 @@ public class WebExtensionController {
         public void onMessageDelegate(final String nativeApp,
                                       final WebExtension.MessageDelegate delegate) {
             mListener.setMessageDelegate(mExtension, delegate, nativeApp);
+
+            if (delegate == null) {
+                return;
+            }
+
+            for (final Message message : mPendingMessages.get(mExtension.id)) {
+                WebExtensionController.this.handleMessage(message.event, message.bundle,
+                        message.callback, message.session);
+            }
+
+            mPendingMessages.remove(mExtension.id);
         }
 
         @Override
@@ -1123,45 +1112,12 @@ public class WebExtensionController {
             delegate = mListener.getMessageDelegate(sender.webExtension, nativeApp);
         }
 
+        if (delegate == null) {
+            callback.sendError("Native app not found or this WebExtension does not have permissions.");
+            return null;
+        }
+
         return delegate;
-    }
-
-    private static class MessageRecipient {
-        final public String webExtensionId;
-        final public String nativeApp;
-        final public GeckoSession session;
-
-        public MessageRecipient(final String webExtensionId, final String nativeApp,
-                                final GeckoSession session) {
-            this.webExtensionId = webExtensionId;
-            this.nativeApp = nativeApp;
-            this.session = session;
-        }
-
-        private static boolean equals(final Object a, final Object b) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                return Objects.equals(a, b);
-            }
-
-            return (a == b) || (a != null && a.equals(b));
-        }
-
-        @Override
-        public boolean equals(final Object other) {
-            if (!(other instanceof MessageRecipient)) {
-                return false;
-            }
-
-            final MessageRecipient o = (MessageRecipient) other;
-            return equals(webExtensionId, o.webExtensionId) &&
-                    equals(nativeApp, o.nativeApp) &&
-                    equals(session, o.session);
-        }
-
-        @Override
-        public int hashCode() {
-            return Arrays.hashCode(new Object[] { webExtensionId, nativeApp, session });
-        }
     }
 
     private void connect(final String nativeApp, final long portId, final Message message,
@@ -1176,9 +1132,7 @@ public class WebExtensionController {
         final WebExtension.MessageDelegate delegate = getDelegate(nativeApp, sender,
                 message.callback);
         if (delegate == null) {
-            mPendingMessages.add(
-                    new MessageRecipient(nativeApp, sender.webExtension.id, sender.session),
-                    message);
+            mPendingMessages.add(sender.webExtension.id, message);
             return;
         }
 
@@ -1201,9 +1155,7 @@ public class WebExtensionController {
         final WebExtension.MessageDelegate delegate = getDelegate(nativeApp, sender,
                 callback);
         if (delegate == null) {
-            mPendingMessages.add(
-                    new MessageRecipient(nativeApp, sender.webExtension.id, sender.session),
-                    message);
+            mPendingMessages.add(sender.webExtension.id, message);
             return;
         }
 
