@@ -9,11 +9,17 @@
  */
 addAccessibleTask(
   `
-  <div id="polite">Polite region</div>
+  <div id="polite" aria-relevant="removals">Polite region</div>
   <div id="assertive" aria-live="assertive">Assertive region</div>
   `,
   async (browser, accDoc) => {
-    let liveRegionAdded = waitForEvent(EVENT_LIVE_REGION_ADDED, "polite");
+    let politeRegion = getNativeInterface(accDoc, "polite");
+    ok(
+      !politeRegion.attributeNames.includes("AXARIALive"),
+      "region is not live"
+    );
+
+    let liveRegionAdded = waitForMacEvent("AXLiveRegionCreated", "polite");
     await SpecialPowers.spawn(browser, [], () => {
       content.document
         .getElementById("polite")
@@ -23,6 +29,33 @@ addAccessibleTask(
         .setAttribute("aria-live", "polite");
     });
     await liveRegionAdded;
+    is(
+      politeRegion.getAttributeValue("AXARIALive"),
+      "polite",
+      "region is now live"
+    );
+    ok(politeRegion.getAttributeValue("AXARIAAtomic"), "region is atomic");
+    is(
+      politeRegion.getAttributeValue("AXARIARelevant"),
+      "removals",
+      "region has defined aria-relevant"
+    );
+
+    let assertiveRegion = getNativeInterface(accDoc, "assertive");
+    is(
+      assertiveRegion.getAttributeValue("AXARIALive"),
+      "assertive",
+      "region is assertive"
+    );
+    ok(
+      !assertiveRegion.getAttributeValue("AXARIAAtomic"),
+      "region is not atomic"
+    );
+    is(
+      assertiveRegion.getAttributeValue("AXARIARelevant"),
+      "additions text",
+      "region has default aria-relevant"
+    );
 
     let liveRegionRemoved = waitForEvent(
       EVENT_LIVE_REGION_REMOVED,
@@ -32,8 +65,9 @@ addAccessibleTask(
       content.document.getElementById("assertive").removeAttribute("aria-live");
     });
     await liveRegionRemoved;
+    ok(!assertiveRegion.getAttributeValue("AXARIALive"), "region is not live");
 
-    liveRegionAdded = waitForEvent(EVENT_LIVE_REGION_ADDED, "new-region");
+    liveRegionAdded = waitForMacEvent("AXLiveRegionCreated", "new-region");
     await SpecialPowers.spawn(browser, [], () => {
       let newRegionElm = content.document.createElement("div");
       newRegionElm.id = "new-region";
@@ -42,12 +76,19 @@ addAccessibleTask(
     });
     await liveRegionAdded;
 
+    let newRegion = getNativeInterface(accDoc, "new-region");
+    is(
+      newRegion.getAttributeValue("AXARIALive"),
+      "assertive",
+      "region is assertive"
+    );
+
     let loadComplete = Promise.all([
       waitForMacEvent("AXLoadComplete"),
-      waitForEvent(EVENT_LIVE_REGION_ADDED, "region-1"),
-      waitForEvent(EVENT_LIVE_REGION_ADDED, "region-2"),
-      waitForEvent(EVENT_LIVE_REGION_ADDED, "status"),
-      waitForEvent(EVENT_LIVE_REGION_ADDED, "output"),
+      waitForMacEvent("AXLiveRegionCreated", "region-1"),
+      waitForMacEvent("AXLiveRegionCreated", "region-2"),
+      waitForMacEvent("AXLiveRegionCreated", "status"),
+      waitForMacEvent("AXLiveRegionCreated", "output"),
     ]);
 
     await SpecialPowers.spawn(browser, [], () => {
