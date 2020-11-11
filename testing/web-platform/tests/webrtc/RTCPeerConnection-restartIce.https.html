@@ -127,19 +127,47 @@ promise_test(async t => {
   t.add_cleanup(() => pc1.close());
   t.add_cleanup(() => pc2.close());
 
-  pc1.onicecandidate = e => pc2.addIceCandidate(e.candidate);
-  pc2.onicecandidate = e => pc1.addIceCandidate(e.candidate);
+  pc1.onicecandidate = e => {
+    if (e.candidate) {
+      pc2.addIceCandidate({
+        candidate: e.candidate.candidate,
+        sdpMid: e.candidate.sdpMid
+      });
+    }
+  }
+  pc2.onicecandidate = e => {
+    if (e.candidate) {
+      pc1.addIceCandidate({
+        candidate: e.candidate.candidate,
+        sdpMid: e.candidate.sdpMid
+      });
+    }
+  }
 
+  // See the explanation below about Chrome's onnegotiationneeded firing
+  // too early.
+  const negotiationNeededPromise1 =
+      new Promise(r => pc1.onnegotiationneeded = r);
   pc1.addTransceiver("video");
   pc1.addTransceiver("audio");
+  await negotiationNeededPromise1;
   await exchangeOfferAnswerEndOnFirst(pc1, pc2);
 
   const [videoTc, audioTc] = pc1.getTransceivers();
   const [videoTp, audioTp] =
       pc1.getTransceivers().map(tc => tc.sender.transport);
   assert_equals(pc1.getTransceivers().length, 2, 'transceiver count');
-  await new Promise(r => videoTc.sender.transport.onstatechange =
-      () => videoTc.sender.transport.state == "connected" && r());
+
+  // On Chrome, it is possible (likely, even) that videoTc.sender.transport.state
+  // will be 'connected' by the time we get here.  We'll race 2 promises here:
+  // 1. Resolve after onstatechange is called with connected state.
+  // 2. If already connected, resolve immediately.
+  await Promise.race([
+    new Promise(r => videoTc.sender.transport.onstatechange =
+      () => videoTc.sender.transport.state == "connected" && r()),
+    new Promise(r => videoTc.sender.transport.state == "connected" && r())
+  ]);
+  assert_equals(videoTc.sender.transport.state, "connected");
 
   await exchangeOfferAnswerEndOnFirst(pc1, pc2);
   assert_equals(videoTp, pc1.getTransceivers()[0].sender.transport,
@@ -147,8 +175,10 @@ promise_test(async t => {
   assert_equals(audioTp, pc1.getTransceivers()[1].sender.transport,
                 'offer/answer retains dtls transport');
 
+  const negotiationNeededPromise2 =
+      new Promise(r => pc1.onnegotiationneeded = r);
   pc1.restartIce();
-  await new Promise(r => pc1.onnegotiationneeded = r);
+  await negotiationNeededPromise2;
   await exchangeOfferAnswerEndOnFirst(pc1, pc2);
 
   const [newVideoTp, newAudioTp] =
