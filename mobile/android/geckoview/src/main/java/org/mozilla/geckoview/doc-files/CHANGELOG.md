@@ -21,6 +21,8 @@ exclude: true
   includes the `version` that we expect to remove the member and an `id` that
   can be used to group annotation notices in tooling.
   ([bug 1671460]({{bugzilla}}1671460))
+- ⚠️  Removed deprecated [`ContentBlockingController.ExceptionList`] abd
+  [`ContentBlockingController.restoreExceptionList`]. ([bug 1674500]({{bugzilla}}1674500))
 
 [84.1]: {{javadoc_uri}}/DeprecationSchedule.html
 
@@ -847,4 +849,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 642c42359bac29b766e9788dd78e90244290f953
+[api-version]: 2e4e0b4fb29ca63851687ac1020d9d51589476ce
