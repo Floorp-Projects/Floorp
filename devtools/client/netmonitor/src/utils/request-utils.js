@@ -585,25 +585,26 @@ async function getMessagePayload(payload, getLongString) {
 
 /**
  * This helper function is used for additional processing of
- * incoming network update packets. It makes sure the only valid
- * update properties and the values are correct.
- * It's used by Network and Console panel reducers.
- * @param {object} update
- *        The new update payload
- * @param {object} request
- *        The current request in the state
+ * incoming network update packets. It's used by Network and
+ * Console panel reducers.
  */
 function processNetworkUpdates(update) {
-  const newRequest = {};
+  const result = {};
   for (const [key, value] of Object.entries(update)) {
     if (UPDATE_PROPS.includes(key)) {
-      newRequest[key] = value;
-      if (key == "requestPostData") {
-        newRequest.requestHeadersFromUploadStream = value.uploadHeaders;
+      result[key] = value;
+
+      switch (key) {
+        case "totalTime":
+          result.totalTime = update.totalTime;
+          break;
+        case "requestPostData":
+          result.requestHeadersFromUploadStream = value.uploadHeaders;
+          break;
       }
     }
   }
-  return newRequest;
+  return result;
 }
 
 /**
