@@ -23,20 +23,6 @@ class DocAccessibleWrap : public DocAccessible {
   virtual void Shutdown() override;
 
   virtual ~DocAccessibleWrap();
-
-  virtual void AttributeChanged(dom::Element* aElement, int32_t aNameSpaceID,
-                                nsAtom* aAttribute, int32_t aModType,
-                                const nsAttrValue* aOldValue) override;
-
-  void QueueNewLiveRegion(Accessible* aAccessible);
-
-  void ProcessNewLiveRegions();
-
- protected:
-  virtual void DoInitialUpdate() override;
-
- private:
-  AccessibleHashtable mNewLiveRegions;
 };
 
 }  // namespace a11y
