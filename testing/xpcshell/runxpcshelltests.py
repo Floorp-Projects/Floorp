@@ -1412,11 +1412,14 @@ class XPCShellTests(object):
             msg = process.stdout.readline()
             if "server listening" in msg:
                 searchObj = re.search(
-                    r"HTTP3 server listening on ports ([0-9]+) and ([0-9]+)", msg, 0
+                    r"HTTP3 server listening on ports ([0-9]+), ([0-9]+) and ([0-9]+)",
+                    msg,
+                    0,
                 )
                 if searchObj:
                     self.env["MOZHTTP3_PORT"] = searchObj.group(1)
                     self.env["MOZHTTP3_PORT_FAILED"] = searchObj.group(2)
+                    self.env["MOZHTTP3_PORT_NO_RESPONSE"] = searchObj.group(3)
         except OSError as e:
             # This occurs if the subprocess couldn't be started
             self.log.error("Could not run the http3 server: %s" % (str(e)))
