@@ -997,7 +997,20 @@ nsresult StorageDBThread::DBOperation::Perform(StorageDBThread* aThread) {
 
       mozStorageStatementScoper scope(stmt);
 
-      rv = stmt->BindUTF8StringByName("usageOrigin"_ns, mUsage->OriginScope());
+      // The database schema is built around cleverly reversing domain names
+      // (the "originKey") so that we can efficiently group usage by eTLD+1.
+      // "foo.example.org" has an eTLD+1 of ".example.org". They reverse to
+      // "gro.elpmaxe.oof" and "gro.elpmaxe." respectively, noting that the
+      // reversed eTLD+1 is a prefix of its reversed sub-domain. To this end,
+      // we can calculate all of the usage for an eTLD+1 by summing up all the
+      // rows which have the reversed eTLD+1 as a prefix. In SQL we can
+      // accomplish this using LIKE which provides for case-insensitive
+      // matching with "_" as a single-character wildcard match and "%" any
+      // sequence of zero or more characters. So by suffixing the reversed
+      // eTLD+1 and using "%" we get our case-insensitive (domain names are
+      // case-insensitive) matching.
+      rv = stmt->BindUTF8StringByName("usageOrigin"_ns,
+                                      mUsage->OriginScope() + "%"_ns);
       NS_ENSURE_SUCCESS(rv, rv);
 
       bool exists;
