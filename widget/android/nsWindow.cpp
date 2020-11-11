@@ -360,9 +360,10 @@ class NPZCSupport final
         WheelDeltaAdjustmentStrategy::eNone);
 
     APZEventResult result = controller->InputBridge()->ReceiveInputEvent(input);
-    int32_t ret = (result.mHandledByRootApzc == Some(true))
-                      ? INPUT_RESULT_HANDLED
-                      : INPUT_RESULT_HANDLED_CONTENT;
+    int32_t ret =
+        (result.mHandledResult == Some(APZHandledResult::HandledByRoot))
+            ? INPUT_RESULT_HANDLED
+            : INPUT_RESULT_HANDLED_CONTENT;
 
     if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
       return ret;
@@ -502,9 +503,10 @@ class NPZCSupport final
         nsWindow::GetEventTimeStamp(aTime), nsWindow::GetModifiers(aMetaState));
 
     APZEventResult result = controller->InputBridge()->ReceiveInputEvent(input);
-    int32_t ret = (result.mHandledByRootApzc == Some(true))
-                      ? INPUT_RESULT_HANDLED
-                      : INPUT_RESULT_HANDLED_CONTENT;
+    int32_t ret =
+        (result.mHandledResult == Some(APZHandledResult::HandledByRoot))
+            ? INPUT_RESULT_HANDLED
+            : INPUT_RESULT_HANDLED_CONTENT;
 
     if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
       return ret;
@@ -702,9 +704,10 @@ class NPZCSupport final
     }
 
     APZEventResult result = controller->InputBridge()->ReceiveInputEvent(input);
-    int32_t handled = (result.mHandledByRootApzc == Some(true))
-                          ? INPUT_RESULT_HANDLED
-                          : INPUT_RESULT_HANDLED_CONTENT;
+    int32_t handled =
+        (result.mHandledResult == Some(APZHandledResult::HandledByRoot))
+            ? INPUT_RESULT_HANDLED
+            : INPUT_RESULT_HANDLED_CONTENT;
 
     if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
       if (returnResult) {
@@ -725,7 +728,7 @@ class NPZCSupport final
       return;
     }
 
-    if (result.mHandledByRootApzc != Nothing()) {
+    if (result.mHandledResult != Nothing()) {
       // We know conclusively that the root APZ handled this or not and
       // don't need to do any more work.
       switch (result.mStatus) {
