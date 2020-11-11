@@ -60,8 +60,6 @@ class LocalStorage final : public Storage, public nsSupportsWeakReference {
 
   void Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) override;
 
-  bool IsPrivate() const { return mIsPrivate; }
-
   void ApplyEvent(StorageEvent* aStorageEvent);
 
  private:
