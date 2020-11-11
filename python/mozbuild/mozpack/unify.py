@@ -20,7 +20,6 @@ import os
 import re
 import subprocess
 import buildconfig
-from collections import OrderedDict
 
 # Regular expressions for unifying install.rdf
 FIND_TARGET_PLATFORM = re.compile(
@@ -127,31 +126,28 @@ class UnifiedFinder(BaseFinder):
         """
         UnifiedFinder.find() implementation.
         """
-        files1 = OrderedDict()
-        for p, f in self._finder1.find(path):
-            files1[p] = f
-        files2 = set()
-        for p, f in self._finder2.find(path):
-            files2.add(p)
-            if p in files1:
-                if may_unify_binary(files1[p]) and may_unify_binary(f):
-                    yield p, UnifiedExecutableFile(files1[p], f)
-                else:
-                    err = errors.count
-                    unified = self.unify_file(p, files1[p], f)
-                    if unified:
-                        yield p, unified
-                    elif err == errors.count:
-                        self._report_difference(p, files1[p], f)
-            else:
-                errors.error("File missing in %s: %s" % (self._finder1.base, p))
-        for p in [p for p in files1 if p not in files2]:
-            errors.error("File missing in %s: %s" % (self._finder2.base, p))
+        files1 = {p: f for p, f in self._finder1.find(path)}
+        files2 = {p: f for p, f in self._finder2.find(path)}
+        all_paths = set(files1) | set(files2)
+        for p in sorted(all_paths):
+            err = errors.count
+            unified = self.unify_file(p, files1.get(p), files2.get(p))
+            if unified:
+                yield p, unified
+            elif err == errors.count:  # No errors have already been reported.
+                self._report_difference(p, files1.get(p), files2.get(p))
 
     def _report_difference(self, path, file1, file2):
         """
         Report differences between files in both trees.
         """
+        if not file1:
+            errors.error("File missing in %s: %s" % (self._finder1.base, path))
+            return
+        if not file2:
+            errors.error("File missing in %s: %s" % (self._finder2.base, path))
+            return
+
         errors.error(
             "Can't unify %s: file differs between %s and %s"
             % (path, self._finder1.base, self._finder2.base)
@@ -178,9 +174,19 @@ class UnifiedFinder(BaseFinder):
 
     def unify_file(self, path, file1, file2):
         """
-        Given two BaseFiles and the path they were found at, check whether
-        their content match and return the first BaseFile if they do.
+        Given two BaseFiles and the path they were found at, return a
+        unified version of the files. If the files match, the first BaseFile
+        may be returned.
+        If the files don't match or one of them is `None`, the method returns
+        `None`.
+        Subclasses may decide to unify by using one of the files in that case.
         """
+        if not file1 or not file2:
+            return None
+
+        if may_unify_binary(file1) and may_unify_binary(file2):
+            return UnifiedExecutableFile(file1, file2)
+
         content1 = file1.open().readlines()
         content2 = file2.open().readlines()
         if content1 == content2:
@@ -211,7 +217,7 @@ class UnifiedBuildFinder(UnifiedFinder):
         Otherwise defer to UnifiedFinder.unify_file.
         """
         basename = mozpath.basename(path)
-        if basename == "buildconfig.html":
+        if file1 and file2 and basename == "buildconfig.html":
             content1 = file1.open().readlines()
             content2 = file2.open().readlines()
             # Copy everything from the first file up to the end of its <body>,
@@ -224,7 +230,7 @@ class UnifiedBuildFinder(UnifiedFinder):
                     + content2[content2.index(b"<h1>Build Configuration</h1>\n") + 1 :]
                 )
             )
-        elif basename == "install.rdf":
+        elif file1 and file2 and basename == "install.rdf":
             # install.rdf files often have em:targetPlatform (either as
             # attribute or as tag) that will differ between platforms. The
             # unified install.rdf should contain both em:targetPlatforms if
