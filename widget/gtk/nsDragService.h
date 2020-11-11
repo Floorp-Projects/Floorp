@@ -12,6 +12,7 @@
 #include "nsIObserver.h"
 #include <gtk/gtk.h>
 
+class nsICookieJarSettings;
 class nsWindow;
 class nsWaylandDragContext;
 
@@ -41,8 +42,9 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   // nsIDragService
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD InvokeDragSession(
       nsINode* aDOMNode, nsIPrincipal* aPrincipal,
-      nsIContentSecurityPolicy* aCsp, nsIArray* anArrayTransferables,
-      uint32_t aActionType, nsContentPolicyType aContentPolicyType) override;
+      nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings,
+      nsIArray* anArrayTransferables, uint32_t aActionType,
+      nsContentPolicyType aContentPolicyType) override;
   NS_IMETHOD StartDragSession() override;
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD EndDragSession(bool aDoneDrag,
                                                uint32_t aKeyModifiers) override;

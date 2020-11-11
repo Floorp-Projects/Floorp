@@ -13,6 +13,8 @@ webidl DragEvent;
 webidl Node;
 webidl Selection;
 
+interface nsICookieJarSettings;
+
 %{C++
 #include "mozilla/EventForwards.h"
 
@@ -57,6 +59,7 @@ interface nsIDragService : nsISupports
   void invokeDragSession (in Node aDOMNode,
                           in nsIPrincipal aPrincipal,
                           in nsIContentSecurityPolicy aCsp,
+                          in nsICookieJarSettings aCookieJarSettings,
                           in nsIArray aTransferables,
                           in unsigned long aActionType,
                           [optional] in nsContentPolicyType aContentPolicyType);
@@ -92,6 +95,7 @@ interface nsIDragService : nsISupports
   void invokeDragSessionWithImage(in Node aDOMNode,
                                   in nsIPrincipal aPrincipal,
                                   in nsIContentSecurityPolicy aCsp,
+                                  in nsICookieJarSettings aCookieJarSettings,
                                   in nsIArray aTransferableArray,
                                   in unsigned long aActionType,
                                   in Node aImage,
@@ -107,6 +111,7 @@ interface nsIDragService : nsISupports
   void invokeDragSessionWithRemoteImage(in Node aDOMNode,
                                         in nsIPrincipal aPrincipal,
                                         in nsIContentSecurityPolicy aCsp,
+                                        in nsICookieJarSettings aCookieJarSettings,
                                         in nsIArray aTransferableArray,
                                         in unsigned long aActionType,
                                         in RemoteDragStartDataPtr aDragStartData,
@@ -124,6 +129,7 @@ interface nsIDragService : nsISupports
   void invokeDragSessionWithSelection(in Selection aSelection,
                                       in nsIPrincipal aPrincipal,
                                       in nsIContentSecurityPolicy aCsp,
+                                      in nsICookieJarSettings aCookieJarSettings,
                                       in nsIArray aTransferableArray,
                                       in unsigned long aActionType,
                                       in DragEvent aDragEvent,
