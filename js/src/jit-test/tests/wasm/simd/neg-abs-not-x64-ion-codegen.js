@@ -33,4 +33,7 @@ codegenTestX64_v128_v128(
      ['f64x2.neg', `66 0f ef 05 .. 00 00 00   pxorx ${RIPR}, %xmm0`],
      ['f32x4.abs', `66 0f db 05 .. 00 00 00   pandx ${RIPR}, %xmm0`],
      ['f64x2.abs', `66 0f db 05 .. 00 00 00   pandx ${RIPR}, %xmm0`],
-     ['v128.not', `66 0f ef 05 .. 00 00 00   pxorx ${RIPR}, %xmm0`]] );
+     ['v128.not', `
+66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
+66 41 0f ef c7            pxor %xmm15, %xmm0
+`]] );

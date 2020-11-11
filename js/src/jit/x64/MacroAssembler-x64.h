@@ -69,6 +69,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
 
   void bindOffsets(const MacroAssemblerX86Shared::UsesVector&);
 
+  void vpRiprOpSimd128(const SimdConstant& v, FloatRegister reg,
+                       JmpSrc (X86Encoding::BaseAssemblerX64::*op)(
+                           X86Encoding::XMMRegisterID id));
+
  public:
   using MacroAssemblerX86Shared::load32;
   using MacroAssemblerX86Shared::store16;
@@ -932,6 +936,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   void vpandSimd128(const SimdConstant& v, FloatRegister srcDest);
   void vpxorSimd128(const SimdConstant& v, FloatRegister srcDest);
   void vpshufbSimd128(const SimdConstant& v, FloatRegister srcDest);
+  void vptestSimd128(const SimdConstant& v, FloatRegister src);
 
   void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {
     loadPtr(Address(WasmTlsReg,

@@ -2392,7 +2392,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(x86_shared, arm64);
 
   inline void bitwiseAndSimd128(const SimdConstant& rhs, FloatRegister lhsDest)
-      DEFINED_ON(x64, x86);
+      DEFINED_ON(x86_shared);
 
   inline void bitwiseOrSimd128(FloatRegister rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared, arm64);
@@ -2401,7 +2401,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(x86_shared, arm64);
 
   inline void bitwiseXorSimd128(const SimdConstant& rhs, FloatRegister lhsDest)
-      DEFINED_ON(x64, x86);
+      DEFINED_ON(x86_shared);
 
   inline void bitwiseNotSimd128(FloatRegister src, FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);

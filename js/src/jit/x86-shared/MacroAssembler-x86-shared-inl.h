@@ -1771,17 +1771,29 @@ void MacroAssembler::unsignedRightShiftInt64x2(Imm32 count, FloatRegister src,
 
 void MacroAssembler::bitwiseAndSimd128(FloatRegister rhs,
                                        FloatRegister lhsDest) {
-  MacroAssemblerX86Shared::bitwiseAndSimdInt(lhsDest, Operand(rhs), lhsDest);
+  vpand(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::bitwiseAndSimd128(const SimdConstant& rhs,
+                                       FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpand,
+                &MacroAssembler::vpandSimd128);
 }
 
 void MacroAssembler::bitwiseOrSimd128(FloatRegister rhs,
                                       FloatRegister lhsDest) {
-  MacroAssemblerX86Shared::bitwiseOrSimdInt(lhsDest, Operand(rhs), lhsDest);
+  vpor(Operand(rhs), lhsDest, lhsDest);
 }
 
 void MacroAssembler::bitwiseXorSimd128(FloatRegister rhs,
                                        FloatRegister lhsDest) {
-  MacroAssemblerX86Shared::bitwiseXorSimdInt(lhsDest, Operand(rhs), lhsDest);
+  vpxor(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::bitwiseXorSimd128(const SimdConstant& rhs,
+                                       FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpxor,
+                &MacroAssembler::vpxorSimd128);
 }
 
 void MacroAssembler::bitwiseNotSimd128(FloatRegister src, FloatRegister dest) {
@@ -1793,7 +1805,7 @@ void MacroAssembler::bitwiseNotSimd128(FloatRegister src, FloatRegister dest) {
 
 void MacroAssembler::bitwiseNotAndSimd128(FloatRegister rhs,
                                           FloatRegister lhsDest) {
-  MacroAssemblerX86Shared::bitwiseAndNotSimdInt(lhsDest, Operand(rhs), lhsDest);
+  vpandn(Operand(rhs), lhsDest, lhsDest);
 }
 
 // Bitwise select

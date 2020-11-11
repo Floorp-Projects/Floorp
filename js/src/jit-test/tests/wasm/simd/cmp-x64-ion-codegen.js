@@ -12,34 +12,36 @@ codegenTestX64_v128xv128_v128(
      ['i32x4.gt_s', `66 0f 66 c1               pcmpgtd %xmm1, %xmm0`],
      ['i8x16.le_s', `
 66 0f 64 c1               pcmpgtb %xmm1, %xmm0
-66 0f ef 05 .. 00 00 00   pxorx ${RIPR}, %xmm0
+66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
+66 41 0f ef c7            pxor %xmm15, %xmm0
 `],
-     ['i16x8.le_s',
-`
+     ['i16x8.le_s', `
 66 0f 65 c1               pcmpgtw %xmm1, %xmm0
-66 0f ef 05 .. 00 00 00   pxorx ${RIPR}, %xmm0
+66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
+66 41 0f ef c7            pxor %xmm15, %xmm0
 `],
-     ['i32x4.le_s',
-`
+     ['i32x4.le_s', `
 66 0f 66 c1               pcmpgtd %xmm1, %xmm0
-66 0f ef 05 .. 00 00 00   pxorx ${RIPR}, %xmm0
+66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
+66 41 0f ef c7            pxor %xmm15, %xmm0
 `],
      ['i8x16.eq', `66 0f 74 c1               pcmpeqb %xmm1, %xmm0`],
      ['i16x8.eq', `66 0f 75 c1               pcmpeqw %xmm1, %xmm0`],
      ['i32x4.eq', `66 0f 76 c1               pcmpeqd %xmm1, %xmm0`],
      ['i8x16.ne', `
 66 0f 74 c1               pcmpeqb %xmm1, %xmm0
-66 0f ef 05 .. 00 00 00   pxorx ${RIPR}, %xmm0
+66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
+66 41 0f ef c7            pxor %xmm15, %xmm0
 `],
-     ['i16x8.ne',
-`
+     ['i16x8.ne', `
 66 0f 75 c1               pcmpeqw %xmm1, %xmm0
-66 0f ef 05 .. 00 00 00   pxorx ${RIPR}, %xmm0
+66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
+66 41 0f ef c7            pxor %xmm15, %xmm0
 `],
-     ['i32x4.ne',
-`
+     ['i32x4.ne', `
 66 0f 76 c1               pcmpeqd %xmm1, %xmm0
-66 0f ef 05 .. 00 00 00   pxorx ${RIPR}, %xmm0
+66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
+66 41 0f ef c7            pxor %xmm15, %xmm0
 `],
      ['f32x4.eq', `0f c2 c1 00               cmpps \\$0x00, %xmm1, %xmm0`],
      ['f32x4.ne', `0f c2 c1 04               cmpps \\$0x04, %xmm1, %xmm0`],
@@ -53,20 +55,21 @@ codegenTestX64_v128xv128_v128(
 // Inputs (xmm1, xmm0) because the operation reverses its arguments.
 
 codegenTestX64_v128xv128_v128_reversed(
-    [['i8x16.ge_s',
-`
+    [['i8x16.ge_s', `
 66 0f 64 c1               pcmpgtb %xmm1, %xmm0
-66 0f ef 05 .. 00 00 00   pxorx ${RIPR}, %xmm0
+66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
+66 41 0f ef c7            pxor %xmm15, %xmm0
 `],
      ['i16x8.ge_s',
 `
 66 0f 65 c1               pcmpgtw %xmm1, %xmm0
-66 0f ef 05 .. 00 00 00   pxorx ${RIPR}, %xmm0
+66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
+66 41 0f ef c7            pxor %xmm15, %xmm0
 `],
-     ['i32x4.ge_s',
-`
+     ['i32x4.ge_s', `
 66 0f 66 c1               pcmpgtd %xmm1, %xmm0
-66 0f ef 05 .. 00 00 00   pxorx ${RIPR}, %xmm0
+66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
+66 41 0f ef c7            pxor %xmm15, %xmm0
 `],
      ['i8x16.lt_s', `66 0f 64 c1               pcmpgtb %xmm1, %xmm0`],
      ['i16x8.lt_s', `66 0f 65 c1               pcmpgtw %xmm1, %xmm0`],

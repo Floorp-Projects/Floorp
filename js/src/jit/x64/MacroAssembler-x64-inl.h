@@ -788,16 +788,6 @@ void MacroAssembler::splatX2(Register64 src, FloatRegister dest) {
   vpinsrq(1, src.reg, dest, dest);
 }
 
-void MacroAssembler::bitwiseAndSimd128(const SimdConstant& rhs,
-                                       FloatRegister lhsDest) {
-  vpandSimd128(rhs, lhsDest);
-}
-
-void MacroAssembler::bitwiseXorSimd128(const SimdConstant& rhs,
-                                       FloatRegister lhsDest) {
-  vpxorSimd128(rhs, lhsDest);
-}
-
 // ========================================================================
 // Truncate floating point.
 
