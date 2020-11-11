@@ -346,7 +346,7 @@ StorageObserver::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_OK;
     }
 
-    Notify("private-browsing-data-cleared");
+    Notify("private-browsing-data-cleared", u"{ \"privateBrowsingId\": 1 }"_ns);
 
     return NS_OK;
   }

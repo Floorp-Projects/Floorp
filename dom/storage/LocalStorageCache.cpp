@@ -26,15 +26,11 @@ namespace dom {
 namespace {
 
 const uint32_t kDefaultSet = 0;
-const uint32_t kPrivateSet = 1;
-const uint32_t kSessionSet = 2;
+const uint32_t kSessionSet = 1;
 
-inline uint32_t GetDataSetIndex(bool aPrivate, bool aSessionOnly) {
-  if (aPrivate) {
-    return kPrivateSet;
-  }
-
-  if (aSessionOnly) {
+inline uint32_t GetDataSetIndex(bool aPrivateBrowsing,
+                                bool aSessionScopedOrLess) {
+  if (!aPrivateBrowsing && aSessionScopedOrLess) {
     return kSessionSet;
   }
 
@@ -42,7 +38,8 @@ inline uint32_t GetDataSetIndex(bool aPrivate, bool aSessionOnly) {
 }
 
 inline uint32_t GetDataSetIndex(const LocalStorage* aStorage) {
-  return GetDataSetIndex(aStorage->IsPrivate(), aStorage->IsSessionOnly());
+  return GetDataSetIndex(aStorage->IsPrivateBrowsing(),
+                         aStorage->IsSessionScopedOrLess());
 }
 
 }  // namespace
@@ -172,7 +169,7 @@ void LocalStorageCache::NotifyObservers(const LocalStorage* aStorage,
 }
 
 inline bool LocalStorageCache::Persist(const LocalStorage* aStorage) const {
-  return mPersistent && !aStorage->IsSessionOnly() && !aStorage->IsPrivate();
+  return mPersistent && !aStorage->IsSessionScopedOrLess();
 }
 
 const nsCString LocalStorageCache::Origin() const {
@@ -509,11 +506,6 @@ void LocalStorageCache::UnloadItems(uint32_t aUnloadFlags) {
     ProcessUsageDelta(kDefaultSet, -mData[kDefaultSet].mOriginQuotaUsage);
   }
 
-  if (aUnloadFlags & kUnloadPrivate) {
-    mData[kPrivateSet].mKeys.Clear();
-    ProcessUsageDelta(kPrivateSet, -mData[kPrivateSet].mOriginQuotaUsage);
-  }
-
   if (aUnloadFlags & kUnloadSession) {
     mData[kSessionSet].mKeys.Clear();
     ProcessUsageDelta(kSessionSet, -mData[kSessionSet].mOriginQuotaUsage);
@@ -573,7 +565,7 @@ void LocalStorageCache::LoadWait() {
 
 StorageUsage::StorageUsage(const nsACString& aOriginScope)
     : mOriginScope(aOriginScope) {
-  mUsage[kDefaultSet] = mUsage[kPrivateSet] = mUsage[kSessionSet] = 0LL;
+  mUsage[kDefaultSet] = mUsage[kSessionSet] = 0LL;
 }
 
 namespace {

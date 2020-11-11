@@ -36,16 +36,19 @@ Storage::Storage(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
     : mWindow(aWindow),
       mPrincipal(aPrincipal),
       mStoragePrincipal(aStoragePrincipal),
-      mIsSessionOnly(false) {
+      mPrivateBrowsing(false),
+      mSessionScopedOrLess(false) {
   MOZ_ASSERT(aPrincipal);
 
   if (mPrincipal->IsSystemPrincipal()) {
-    mIsSessionOnly = false;
+    mPrivateBrowsing = false;
+    mSessionScopedOrLess = false;
   } else if (mWindow) {
     uint32_t rejectedReason = 0;
     StorageAccess access = StorageAllowedForWindow(mWindow, &rejectedReason);
 
-    mIsSessionOnly = access <= StorageAccess::eSessionScoped;
+    mPrivateBrowsing = access == StorageAccess::ePrivateBrowsing;
+    mSessionScopedOrLess = access <= StorageAccess::eSessionScoped;
   }
 }
 

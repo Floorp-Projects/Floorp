@@ -15,9 +15,10 @@
 #include "nsIPrincipal.h"
 #include "nsPIDOMWindow.h"
 
-#define DATASET                                          \
-  IsSessionOnly() ? SessionStorageCache::eSessionSetType \
-                  : SessionStorageCache::eDefaultSetType
+#define DATASET                                    \
+  (!IsPrivateBrowsing() && IsSessionScopedOrLess() \
+       ? SessionStorageCache::eSessionSetType      \
+       : SessionStorageCache::eDefaultSetType)
 
 namespace mozilla {
 namespace dom {

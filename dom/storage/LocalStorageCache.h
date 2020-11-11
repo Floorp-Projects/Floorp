@@ -163,8 +163,8 @@ class LocalStorageCache : public LocalStorageCacheBridge {
   };
 
  public:
-  // Number of data sets we keep: default, private, session
-  static const uint32_t kDataSetCount = 3;
+  // Number of data sets we keep: default, session
+  static const uint32_t kDataSetCount = 2;
 
  private:
   // API to clear the cache data, this is invoked by chrome operations
@@ -172,10 +172,8 @@ class LocalStorageCache : public LocalStorageCacheBridge {
   friend class LocalStorageManager;
 
   static const uint32_t kUnloadDefault = 1 << 0;
-  static const uint32_t kUnloadPrivate = 1 << 1;
-  static const uint32_t kUnloadSession = 1 << 2;
-  static const uint32_t kUnloadComplete =
-      kUnloadDefault | kUnloadPrivate | kUnloadSession;
+  static const uint32_t kUnloadSession = 1 << 1;
+  static const uint32_t kUnloadComplete = kUnloadDefault | kUnloadSession;
 
 #ifdef DOM_STORAGE_TESTS
   static const uint32_t kTestReload = 1 << 15;
