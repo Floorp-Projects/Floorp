@@ -2132,6 +2132,13 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
       // TODO: invalidate and disable recompilation if this happens too often.
       break;
 
+    case BailoutKind::LICM:
+      // An instruction hoisted by LICM bailed out.
+      MOZ_ASSERT(!outerScript->hadLICMBailout());
+      outerScript->setHadLICMBailout();
+      InvalidateAfterBailout(cx, outerScript, "LICM failure");
+      break;
+
     case BailoutKind::Inevitable:
     case BailoutKind::DuringVMCall:
     case BailoutKind::TooManyArguments:
