@@ -44,6 +44,9 @@ internal object ContentStateReducer {
             is ContentAction.UpdateLoadingStateAction -> updateContentState(state, action.sessionId) {
                 it.copy(loading = action.loading)
             }
+            is ContentAction.UpdateRefreshCanceledStateAction -> updateContentState(state, action.sessionId) {
+                it.copy(refreshCanceled = action.refreshCanceled)
+            }
             is ContentAction.UpdateSearchTermsAction -> updateContentState(state, action.sessionId) {
                 it.copy(searchTerms = action.searchTerms)
             }

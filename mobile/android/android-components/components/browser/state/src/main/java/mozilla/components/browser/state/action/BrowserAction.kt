@@ -293,6 +293,12 @@ sealed class ContentAction : BrowserAction() {
         ContentAction()
 
     /**
+     * Updates the refreshCanceled state of the [ContentState] with the given [sessionId].
+     */
+    data class UpdateRefreshCanceledStateAction(val sessionId: String, val refreshCanceled: Boolean) :
+            ContentAction()
+
+    /**
      * Updates the search terms of the [ContentState] with the given [sessionId].
      */
     data class UpdateSearchTermsAction(val sessionId: String, val searchTerms: String) :

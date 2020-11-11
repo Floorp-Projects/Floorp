@@ -148,6 +148,28 @@ class ContentActionTest {
     }
 
     @Test
+    fun `UpdateRefreshCanceledStateAction updates refreshCanceled state`() {
+        assertFalse(tab.content.refreshCanceled)
+        assertFalse(otherTab.content.refreshCanceled)
+
+        store.dispatch(ContentAction.UpdateRefreshCanceledStateAction(tab.id, true)).joinBlocking()
+
+        assertTrue(tab.content.refreshCanceled)
+        assertFalse(otherTab.content.refreshCanceled)
+
+        store.dispatch(ContentAction.UpdateRefreshCanceledStateAction(tab.id, false)).joinBlocking()
+
+        assertFalse(tab.content.refreshCanceled)
+        assertFalse(otherTab.content.refreshCanceled)
+
+        store.dispatch(ContentAction.UpdateRefreshCanceledStateAction(tab.id, true)).joinBlocking()
+        store.dispatch(ContentAction.UpdateRefreshCanceledStateAction(otherTab.id, true)).joinBlocking()
+
+        assertTrue(tab.content.refreshCanceled)
+        assertTrue(otherTab.content.refreshCanceled)
+    }
+
+    @Test
     fun `UpdateTitleAction updates title`() {
         val newTitle = "This is a title"
 

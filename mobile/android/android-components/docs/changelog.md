@@ -12,6 +12,8 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **feature-sitepermissions**
+  * 🚒 Bug fixed [issue #8943](https://github.com/mozilla-mobile/android-components/issues/8943) Refactor `SwipeRefreshFeature` to not use `EngineSession.Observer`, this result in multiple site permissions bugs getting fixed see [fenix#8987](https://github.com/mozilla-mobile/fenix/issues/8987) and [fenix#16411](https://github.com/mozilla-mobile/fenix/issues/16411).
 
 # 66.0.0
 

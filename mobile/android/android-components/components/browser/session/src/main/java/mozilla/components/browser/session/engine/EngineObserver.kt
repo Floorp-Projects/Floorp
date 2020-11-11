@@ -140,6 +140,7 @@ internal class EngineObserver(
         session.loading = loading
         if (loading) {
             store?.dispatch(ContentAction.ClearFindResultsAction(session.id))
+            store?.dispatch(ContentAction.UpdateRefreshCanceledStateAction(session.id, false))
 
             session.trackersBlocked = emptyList()
             session.trackersLoaded = emptyList()
@@ -282,6 +283,10 @@ internal class EngineObserver(
             session.id,
             promptRequest
         ))
+    }
+
+    override fun onRepostPromptCancelled() {
+        store?.dispatch(ContentAction.UpdateRefreshCanceledStateAction(session.id, true))
     }
 
     override fun onWindowRequest(windowRequest: WindowRequest) {

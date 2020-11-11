@@ -10,31 +10,46 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
+import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.reset
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class SwipeRefreshFeatureTest {
 
+    private val testDispatcher = TestCoroutineDispatcher()
+    private lateinit var store: BrowserStore
     private lateinit var refreshFeature: SwipeRefreshFeature
     private val mockLayout = mock<SwipeRefreshLayout>()
     private val useCase = mock<SessionUseCases.ReloadUrlUseCase>()
 
     @Before
     fun setup() {
-        val store = BrowserStore(BrowserState(
+        Dispatchers.setMain(testDispatcher)
+        store = BrowserStore(BrowserState(
             tabs = listOf(
                 createTab("https://www.mozilla.org", id = "A"),
                 createTab("https://www.firefox.com", id = "B")
@@ -43,6 +58,13 @@ class SwipeRefreshFeatureTest {
         ))
 
         refreshFeature = SwipeRefreshFeature(store, useCase, mockLayout)
+    }
+
+    @After
+    @ExperimentalCoroutinesApi
+    fun tearDown() {
+        Dispatchers.resetMain()
+        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test
@@ -73,21 +95,42 @@ class SwipeRefreshFeatureTest {
     }
 
     @Test
-    fun `onRepostPromptCancelled should dismiss the refresh indicator`() {
-        mockLayout.isRefreshing = true
+    fun `feature MUST reset refreshCanceled after is used`() {
+        refreshFeature.start()
 
-        refreshFeature.onRepostPromptCancelled()
+        val selectedTab = store.state.findCustomTabOrSelectedTab()!!
 
-        verify(mockLayout).isRefreshing = false
+        store.dispatch(ContentAction.UpdateRefreshCanceledStateAction(selectedTab.id, true)).joinBlocking()
+        testDispatcher.advanceUntilIdle()
+        store.waitUntilIdle()
+
+        assertFalse(selectedTab.content.refreshCanceled)
     }
 
     @Test
-    fun `onLoadingStateChanged should update the SwipeRefreshLayout`() {
-        refreshFeature.onLoadingStateChanged(false)
-        verify(mockLayout).isRefreshing = false
+    fun `feature clears the swipeRefreshLayout#isRefreshing when tab fishes loading or a refreshCanceled`() {
+        refreshFeature.start()
+        testDispatcher.advanceUntilIdle()
+        store.waitUntilIdle()
 
-        refreshFeature.onLoadingStateChanged(true)
-        verify(mockLayout).isRefreshing = false
+        val selectedTab = store.state.findCustomTabOrSelectedTab()!!
+
+        // Ignoring the first event from the initial state.
+        reset(mockLayout)
+
+        store.dispatch(ContentAction.UpdateRefreshCanceledStateAction(selectedTab.id, true)).joinBlocking()
+        testDispatcher.advanceUntilIdle()
+        store.waitUntilIdle()
+
+        verify(mockLayout, times(2)).isRefreshing = false
+
+        // To trigger to an event we have to change loading from its previous value (false to true).
+        // As if we dispatch with loading = false, none event will be trigger.
+        store.dispatch(ContentAction.UpdateLoadingStateAction(selectedTab.id, true)).joinBlocking()
+        store.dispatch(ContentAction.UpdateLoadingStateAction(selectedTab.id, false)).joinBlocking()
+        testDispatcher.advanceUntilIdle()
+
+        verify(mockLayout, times(3)).isRefreshing = false
     }
 
     private open class DummyEngineView(context: Context) : FrameLayout(context), EngineView {

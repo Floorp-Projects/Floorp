@@ -46,6 +46,10 @@ import mozilla.components.concept.engine.window.WindowRequest
  * @property loadRequest last [LoadRequestState] if this session.
  * @property permissionRequestsList Holds unprocessed content requests.
  * @property appPermissionRequestsList Holds unprocessed app requests.
+ * @property refreshCanceled Indicates if an intent of refreshing was canceled.
+ * True if a page refresh was cancelled by the user, defaults to false. Note that this is not about
+ * stopping an ongoing page load but useful in cases like swipe-to-refresh which allow users to
+ * cancel or abort before a page is refreshed.
  */
 data class ContentState(
     val url: String,
@@ -73,5 +77,6 @@ data class ContentState(
     val permissionRequestsList: List<PermissionRequest> = emptyList(),
     val appPermissionRequestsList: List<PermissionRequest> = emptyList(),
     val pictureInPictureEnabled: Boolean = false,
-    val loadRequest: LoadRequestState? = null
+    val loadRequest: LoadRequestState? = null,
+    val refreshCanceled: Boolean = false
 )

@@ -432,6 +432,33 @@ class EngineObserverTest {
     }
 
     @Test
+    fun engineObserverClearsRefreshCanceledIfNewPageStartsLoading() {
+        val session = Session("https://www.mozilla.org", id = "test-id")
+        val store: BrowserStore = mock()
+        val observer = EngineObserver(session, store)
+
+        observer.onRepostPromptCancelled()
+
+        verify(store).dispatch(ContentAction.UpdateRefreshCanceledStateAction("test-id", true))
+
+        reset(store)
+
+        observer.onLoadingStateChange(true)
+
+        verify(store).dispatch(ContentAction.UpdateRefreshCanceledStateAction("test-id", false))
+    }
+
+    @Test
+    fun engineObserverHandlesOnRepostPromptCancelled() {
+        val session = Session("")
+        val store: BrowserStore = mock()
+        val observer = EngineObserver(session, store)
+
+        observer.onRepostPromptCancelled()
+        verify(store).dispatch(ContentAction.UpdateRefreshCanceledStateAction(session.id, true))
+    }
+
+    @Test
     fun engineObserverNotifiesFullscreenMode() {
         val session = Session("https://www.mozilla.org", id = "test-id")
         val store: BrowserStore = mock()
