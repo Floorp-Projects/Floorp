@@ -58,19 +58,16 @@ codegenTestX64_v128xv128_v128_reversed(
     [['i8x16.ge_s', `
 66 0f 64 c1               pcmpgtb %xmm1, %xmm0
 66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
-66 41 0f ef c7            pxor %xmm15, %xmm0
-`],
+66 41 0f ef c7            pxor %xmm15, %xmm0`],
      ['i16x8.ge_s',
 `
 66 0f 65 c1               pcmpgtw %xmm1, %xmm0
 66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
-66 41 0f ef c7            pxor %xmm15, %xmm0
-`],
+66 41 0f ef c7            pxor %xmm15, %xmm0`],
      ['i32x4.ge_s', `
 66 0f 66 c1               pcmpgtd %xmm1, %xmm0
 66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
-66 41 0f ef c7            pxor %xmm15, %xmm0
-`],
+66 41 0f ef c7            pxor %xmm15, %xmm0`],
      ['i8x16.lt_s', `66 0f 64 c1               pcmpgtb %xmm1, %xmm0`],
      ['i16x8.lt_s', `66 0f 65 c1               pcmpgtw %xmm1, %xmm0`],
      ['i32x4.lt_s', `66 0f 66 c1               pcmpgtd %xmm1, %xmm0`],
