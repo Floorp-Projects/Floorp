@@ -32,6 +32,8 @@ add_task(async function() {
 
   // clear the browser console.
   await clearOutput(hud);
+  await waitForTick();
+  await safeCloseBrowserConsole();
 });
 
 async function testMessages(hud) {
