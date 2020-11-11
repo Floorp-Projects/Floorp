@@ -27,7 +27,7 @@ from mozpack.unify import UnifiedBuildFinder
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Merge two builds of a Gecko-based application into a Unified build"
+        description="Merge two builds of a Gecko-based application into a Universal build"
     )
     parser.add_argument("app1", help="Directory containing the application")
     parser.add_argument("app2", help="Directory containing the application to merge")
@@ -39,7 +39,7 @@ def main():
         help="Extra files not to be considered as resources",
     )
 
-    options = parser.parse_args(sys.argv[1:])
+    options = parser.parse_args()
 
     buildconfig.substs["OS_ARCH"] = "Darwin"
     buildconfig.substs["LIPO"] = os.environ.get("LIPO")
