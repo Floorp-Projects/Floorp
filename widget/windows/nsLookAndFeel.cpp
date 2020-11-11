@@ -634,7 +634,7 @@ LookAndFeelFont nsLookAndFeel::GetLookAndFeelFontInternal(
     const LOGFONTW& aLogFont, bool aUseShellDlg) {
   LookAndFeelFont result{};
 
-  result.haveFont = false;
+  result.haveFont() = false;
 
   // Get scaling factor from physical to logical pixels
   double pixelScale = 1.0 / WinUtils::SystemScaleFactor();
@@ -675,17 +675,20 @@ LookAndFeelFont nsLookAndFeel::GetLookAndFeelFontInternal(
     pixelHeight = 12;
   }
 
-  result.haveFont = true;
+  result.haveFont() = true;
 
   if (aUseShellDlg) {
-    result.fontName = u"MS Shell Dlg 2"_ns;
+    result.name() = u"MS Shell Dlg 2"_ns;
   } else {
-    result.fontName = aLogFont.lfFaceName;
+    result.name() = aLogFont.lfFaceName;
   }
 
-  result.pixelHeight = pixelHeight;
-  result.italic = !!aLogFont.lfItalic;
-  result.bold = (aLogFont.lfWeight == FW_BOLD);
+  result.size() = pixelHeight;
+  result.italic() = !!aLogFont.lfItalic;
+  // FIXME: Other weights?
+  result.weight() = ((aLogFont.lfWeight == FW_BOLD) ? FontWeight::Bold()
+                                                    : FontWeight::Normal())
+                        .ToFloat();
 
   return result;
 }
@@ -697,7 +700,7 @@ LookAndFeelFont nsLookAndFeel::GetLookAndFeelFont(LookAndFeel::FontID anID) {
 
   LookAndFeelFont result{};
 
-  result.haveFont = false;
+  result.haveFont() = false;
 
   // FontID::Icon is handled differently than the others
   if (anID == LookAndFeel::FontID::Icon) {
@@ -754,20 +757,19 @@ bool nsLookAndFeel::GetSysFont(LookAndFeel::FontID anID, nsString& aFontName,
                                gfxFontStyle& aFontStyle) {
   LookAndFeelFont font = GetLookAndFeelFont(anID);
 
-  if (!font.haveFont) {
+  if (!font.haveFont()) {
     return false;
   }
 
-  aFontName = std::move(font.fontName);
+  aFontName = std::move(font.name());
 
-  aFontStyle.size = font.pixelHeight;
+  aFontStyle.size = font.size();
 
   // FIXME: What about oblique?
   aFontStyle.style =
-      font.italic ? FontSlantStyle::Italic() : FontSlantStyle::Normal();
+      font.italic() ? FontSlantStyle::Italic() : FontSlantStyle::Normal();
 
-  // FIXME: Other weights?
-  aFontStyle.weight = font.bold ? FontWeight::Bold() : FontWeight::Normal();
+  aFontStyle.weight = FontWeight(font.weight());
 
   // FIXME: Set aFontStyle->stretch correctly!
   aFontStyle.stretch = FontStretch::Normal();
@@ -813,21 +815,21 @@ LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
   LookAndFeelCache cache = nsXPLookAndFeel::GetCacheImpl();
 
   LookAndFeelInt lafInt;
-  lafInt.id = IntID::UseAccessibilityTheme;
-  lafInt.value = GetInt(IntID::UseAccessibilityTheme);
-  cache.mInts.AppendElement(lafInt);
+  lafInt.id() = IntID::UseAccessibilityTheme;
+  lafInt.value() = GetInt(IntID::UseAccessibilityTheme);
+  cache.mInts().AppendElement(lafInt);
 
-  lafInt.id = IntID::WindowsDefaultTheme;
-  lafInt.value = GetInt(IntID::WindowsDefaultTheme);
-  cache.mInts.AppendElement(lafInt);
+  lafInt.id() = IntID::WindowsDefaultTheme;
+  lafInt.value() = GetInt(IntID::WindowsDefaultTheme);
+  cache.mInts().AppendElement(lafInt);
 
-  lafInt.id = IntID::WindowsThemeIdentifier;
-  lafInt.value = GetInt(IntID::WindowsThemeIdentifier);
-  cache.mInts.AppendElement(lafInt);
+  lafInt.id() = IntID::WindowsThemeIdentifier;
+  lafInt.value() = GetInt(IntID::WindowsThemeIdentifier);
+  cache.mInts().AppendElement(lafInt);
 
   for (size_t i = size_t(LookAndFeel::FontID::MINIMUM);
        i <= size_t(LookAndFeel::FontID::MAXIMUM); ++i) {
-    cache.mFonts.AppendElement(GetLookAndFeelFont(LookAndFeel::FontID(i)));
+    cache.mFonts().AppendElement(GetLookAndFeelFont(LookAndFeel::FontID(i)));
   }
 
   return cache;
@@ -835,18 +837,18 @@ LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
 
 void nsLookAndFeel::SetCacheImpl(const LookAndFeelCache& aCache) {
   MOZ_ASSERT(XRE_IsContentProcess());
-  MOZ_RELEASE_ASSERT(aCache.mFonts.Length() == mFontCache.length());
+  MOZ_RELEASE_ASSERT(aCache.mFonts().Length() == mFontCache.length());
 
-  for (auto entry : aCache.mInts) {
-    switch (entry.id) {
+  for (auto entry : aCache.mInts()) {
+    switch (entry.id()) {
       case IntID::UseAccessibilityTheme:
-        mUseAccessibilityTheme = entry.value;
+        mUseAccessibilityTheme = entry.value();
         break;
       case IntID::WindowsDefaultTheme:
-        mUseDefaultTheme = entry.value;
+        mUseDefaultTheme = entry.value();
         break;
       case IntID::WindowsThemeIdentifier:
-        mNativeThemeId = entry.value;
+        mNativeThemeId = entry.value();
         break;
       default:
         MOZ_ASSERT_UNREACHABLE("Bogus Int ID in cache");
@@ -855,7 +857,7 @@ void nsLookAndFeel::SetCacheImpl(const LookAndFeelCache& aCache) {
   }
 
   size_t i = mFontCache.minIndex();
-  for (const auto& font : aCache.mFonts) {
+  for (const auto& font : aCache.mFonts()) {
     mFontCache[i] = font;
     ++i;
   }

@@ -468,7 +468,7 @@ void nsXPLookAndFeel::Init() {
     LookAndFeel::SetCache(cc->BorrowLookAndFeelCache());
     // This is only ever used once during initialization, and can be cleared
     // now.
-    cc->BorrowLookAndFeelCache().Clear();
+    cc->BorrowLookAndFeelCache() = LookAndFeelCache{};
   }
 }
 
@@ -1009,7 +1009,9 @@ void nsXPLookAndFeel::RefreshImpl() {
   }
 }
 
-LookAndFeelCache nsXPLookAndFeel::GetCacheImpl() { return LookAndFeelCache{}; }
+widget::LookAndFeelCache nsXPLookAndFeel::GetCacheImpl() {
+  return LookAndFeelCache{};
+}
 
 static bool sRecordedLookAndFeelTelemetry = false;
 
@@ -1097,12 +1099,12 @@ void LookAndFeel::Refresh() { nsLookAndFeel::GetInstance()->RefreshImpl(); }
 void LookAndFeel::NativeInit() { nsLookAndFeel::GetInstance()->NativeInit(); }
 
 // static
-LookAndFeelCache LookAndFeel::GetCache() {
+widget::LookAndFeelCache LookAndFeel::GetCache() {
   return nsLookAndFeel::GetInstance()->GetCacheImpl();
 }
 
 // static
-void LookAndFeel::SetCache(const LookAndFeelCache& aCache) {
+void LookAndFeel::SetCache(const widget::LookAndFeelCache& aCache) {
   nsLookAndFeel::GetInstance()->SetCacheImpl(aCache);
 }
 

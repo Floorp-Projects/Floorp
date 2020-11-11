@@ -9,29 +9,9 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/widget/ThemeChangeKind.h"
 #include "nsIWidget.h"
+#include "nsStyleConsts.h"
 
 namespace IPC {
-
-template <>
-struct ParamTraits<LookAndFeelInt> {
-  typedef LookAndFeelInt paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, static_cast<int32_t>(aParam.id));
-    WriteParam(aMsg, aParam.value);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    int32_t id, value;
-    if (ReadParam(aMsg, aIter, &id) && ReadParam(aMsg, aIter, &value)) {
-      aResult->id = static_cast<mozilla::LookAndFeel::IntID>(id);
-      aResult->value = value;
-      return true;
-    }
-    return false;
-  }
-};
 
 template <>
 struct ParamTraits<mozilla::widget::ThemeChangeKind>
@@ -40,78 +20,34 @@ struct ParamTraits<mozilla::widget::ThemeChangeKind>
 };
 
 template <>
-struct ParamTraits<LookAndFeelFont> {
-  typedef LookAndFeelFont paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.haveFont);
-    WriteParam(aMsg, aParam.fontName);
-    WriteParam(aMsg, aParam.pixelHeight);
-    WriteParam(aMsg, aParam.italic);
-    WriteParam(aMsg, aParam.bold);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->haveFont) &&
-           ReadParam(aMsg, aIter, &aResult->fontName) &&
-           ReadParam(aMsg, aIter, &aResult->pixelHeight) &&
-           ReadParam(aMsg, aIter, &aResult->italic) &&
-           ReadParam(aMsg, aIter, &aResult->bold);
-  }
+struct ParamTraits<mozilla::LookAndFeel::IntID>
+    : ContiguousEnumSerializer<mozilla::LookAndFeel::IntID,
+                               mozilla::LookAndFeel::IntID::CaretBlinkTime,
+                               mozilla::LookAndFeel::IntID::End> {
+  using IdType = std::underlying_type_t<mozilla::LookAndFeel::IntID>;
+  static_assert(static_cast<IdType>(
+                    mozilla::LookAndFeel::IntID::CaretBlinkTime) == IdType(0));
 };
 
 template <>
-struct ParamTraits<LookAndFeelColor> {
-  using paramType = LookAndFeelColor;
-  using idType = std::underlying_type<mozilla::LookAndFeel::ColorID>::type;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, static_cast<idType>(aParam.id));
-    WriteParam(aMsg, aParam.color);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    idType id;
-    nscolor color;
-    if (ReadParam(aMsg, aIter, &id) && ReadParam(aMsg, aIter, &color)) {
-      aResult->id = static_cast<mozilla::LookAndFeel::ColorID>(id);
-      aResult->color = color;
-      return true;
-    }
-    return false;
-  }
-};
-
-template <>
-struct ParamTraits<LookAndFeelCache> {
-  typedef LookAndFeelCache paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mInts);
-    WriteParam(aMsg, aParam.mFonts);
-    WriteParam(aMsg, aParam.mColors);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mInts) &&
-           ReadParam(aMsg, aIter, &aResult->mFonts) &&
-           ReadParam(aMsg, aIter, &aResult->mColors);
-  }
+struct ParamTraits<mozilla::LookAndFeel::ColorID>
+    : ContiguousEnumSerializer<mozilla::LookAndFeel::ColorID,
+                               mozilla::LookAndFeel::ColorID::WindowBackground,
+                               mozilla::LookAndFeel::ColorID::End> {
+  using IdType = std::underlying_type_t<mozilla::LookAndFeel::ColorID>;
+  static_assert(
+      static_cast<IdType>(mozilla::LookAndFeel::ColorID::WindowBackground) ==
+      IdType(0));
 };
 
 template <>
 struct ParamTraits<nsTransparencyMode>
-    : public ContiguousEnumSerializerInclusive<nsTransparencyMode,
-                                               eTransparencyOpaque,
-                                               eTransparencyBorderlessGlass> {};
+    : ContiguousEnumSerializerInclusive<nsTransparencyMode, eTransparencyOpaque,
+                                        eTransparencyBorderlessGlass> {};
 
 template <>
 struct ParamTraits<nsCursor>
-    : public ContiguousEnumSerializer<nsCursor, eCursor_standard,
-                                      eCursorCount> {};
+    : ContiguousEnumSerializer<nsCursor, eCursor_standard, eCursorCount> {};
 
 }  // namespace IPC
 

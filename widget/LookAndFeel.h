@@ -18,9 +18,11 @@
 
 struct gfxFontStyle;
 
-struct LookAndFeelCache;
-
 namespace mozilla {
+
+namespace widget {
+class LookAndFeelCache;
+}  // namespace widget
 
 enum class StyleSystemColor : uint8_t;
 
@@ -331,6 +333,11 @@ class LookAndFeel {
      * 3 and 5.
      */
     GTKCSDMaximizeButtonPosition,
+
+    /*
+     * Not an ID; used to define the range of valid IDs.  Must be last.
+     */
+    End,
   };
 
   /**
@@ -546,41 +553,12 @@ class LookAndFeel {
    * If the implementation is caching values, these accessors allow the
    * cache to be exported and imported.
    */
-  static LookAndFeelCache GetCache();
-  static void SetCache(const LookAndFeelCache& aCache);
+  static widget::LookAndFeelCache GetCache();
+  static void SetCache(const widget::LookAndFeelCache& aCache);
   static void NotifyChangedAllWindows(widget::ThemeChangeKind);
 };
 
 }  // namespace mozilla
-
-struct LookAndFeelInt {
-  mozilla::LookAndFeel::IntID id;
-  int32_t value;
-};
-
-struct LookAndFeelFont {
-  bool haveFont;
-  nsString fontName;
-  float pixelHeight;
-  bool italic;
-  bool bold;
-};
-
-struct LookAndFeelColor {
-  mozilla::LookAndFeel::ColorID id;
-  nscolor color;
-};
-
-struct LookAndFeelCache {
-  void Clear() {
-    mInts.Clear();
-    mFonts.Clear();
-    mColors.Clear();
-  }
-  nsTArray<LookAndFeelInt> mInts;
-  nsTArray<LookAndFeelFont> mFonts;
-  nsTArray<LookAndFeelColor> mColors;
-};
 
 // On the Mac, GetColor(ColorID::TextSelectForeground, color) returns this
 // constant to specify that the foreground color should not be changed

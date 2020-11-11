@@ -268,12 +268,13 @@ void nsLookAndFeel::RefreshImpl() {
   mInitialized = false;
 }
 
-LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
+widget::LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
   LookAndFeelCache cache = nsXPLookAndFeel::GetCacheImpl();
 
   constexpr IntID kIntIdsToCache[] = {IntID::SystemUsesDarkTheme,
                                       IntID::PrefersReducedMotion,
                                       IntID::UseAccessibilityTheme};
+
   constexpr ColorID kColorIdsToCache[] = {
       ColorID::ThemedScrollbar,
       ColorID::ThemedScrollbarInactive,
@@ -283,52 +284,52 @@ LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
       ColorID::ThemedScrollbarThumbInactive};
 
   for (IntID id : kIntIdsToCache) {
-    cache.mInts.AppendElement(LookAndFeelInt{.id = id, .value = GetInt(id)});
+    cache.mInts().AppendElement(LookAndFeelInt(id, GetInt(id)));
   }
+
   for (ColorID id : kColorIdsToCache) {
-    cache.mColors.AppendElement(
-        LookAndFeelColor{.id = id, .color = GetColor(id)});
+    cache.mColors().AppendElement(LookAndFeelColor(id, GetColor(id)));
   }
 
   return cache;
 }
 
 void nsLookAndFeel::SetCacheImpl(const LookAndFeelCache& aCache) {
-  for (const auto& entry : aCache.mInts) {
-    switch (entry.id) {
+  for (const auto& entry : aCache.mInts()) {
+    switch (entry.id()) {
       case IntID::SystemUsesDarkTheme:
-        mSystemUsesDarkTheme = entry.value;
+        mSystemUsesDarkTheme = entry.value();
         break;
       case IntID::PrefersReducedMotion:
-        mPrefersReducedMotion = entry.value;
+        mPrefersReducedMotion = entry.value();
         break;
       case IntID::UseAccessibilityTheme:
-        mHighContrast = entry.value;
+        mHighContrast = entry.value();
         break;
       default:
         MOZ_ASSERT_UNREACHABLE("Bogus Int ID in cache");
         break;
     }
   }
-  for (const auto& entry : aCache.mColors) {
-    switch (entry.id) {
+  for (const auto& entry : aCache.mColors()) {
+    switch (entry.id()) {
       case ColorID::ThemedScrollbar:
-        mThemedScrollbar = entry.color;
+        mThemedScrollbar = entry.color();
         break;
       case ColorID::ThemedScrollbarInactive:
-        mThemedScrollbarInactive = entry.color;
+        mThemedScrollbarInactive = entry.color();
         break;
       case ColorID::ThemedScrollbarThumb:
-        mThemedScrollbarThumb = entry.color;
+        mThemedScrollbarThumb = entry.color();
         break;
       case ColorID::ThemedScrollbarThumbHover:
-        mThemedScrollbarThumbHover = entry.color;
+        mThemedScrollbarThumbHover = entry.color();
         break;
       case ColorID::ThemedScrollbarThumbActive:
-        mThemedScrollbarThumbActive = entry.color;
+        mThemedScrollbarThumbActive = entry.color();
         break;
       case ColorID::ThemedScrollbarThumbInactive:
-        mThemedScrollbarThumbInactive = entry.color;
+        mThemedScrollbarThumbInactive = entry.color();
         break;
       default:
         MOZ_ASSERT_UNREACHABLE("Bogus Color ID in cache");

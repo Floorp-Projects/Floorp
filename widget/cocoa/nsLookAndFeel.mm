@@ -642,49 +642,49 @@ bool nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName, gfxFontStyle& a
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
-LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
+mozilla::widget::LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
   LookAndFeelCache cache = nsXPLookAndFeel::GetCacheImpl();
 
   LookAndFeelInt useOverlayScrollbars;
-  useOverlayScrollbars.id = IntID::UseOverlayScrollbars;
-  useOverlayScrollbars.value = GetInt(IntID::UseOverlayScrollbars);
-  cache.mInts.AppendElement(useOverlayScrollbars);
+  useOverlayScrollbars.id() = IntID::UseOverlayScrollbars;
+  useOverlayScrollbars.value() = GetInt(IntID::UseOverlayScrollbars);
+  cache.mInts().AppendElement(useOverlayScrollbars);
 
   LookAndFeelInt allowOverlayScrollbarsOverlap;
-  allowOverlayScrollbarsOverlap.id = IntID::AllowOverlayScrollbarsOverlap;
-  allowOverlayScrollbarsOverlap.value = GetInt(IntID::AllowOverlayScrollbarsOverlap);
-  cache.mInts.AppendElement(allowOverlayScrollbarsOverlap);
+  allowOverlayScrollbarsOverlap.id() = IntID::AllowOverlayScrollbarsOverlap;
+  allowOverlayScrollbarsOverlap.value() = GetInt(IntID::AllowOverlayScrollbarsOverlap);
+  cache.mInts().AppendElement(allowOverlayScrollbarsOverlap);
 
   LookAndFeelInt prefersReducedMotion;
-  prefersReducedMotion.id = IntID::PrefersReducedMotion;
-  prefersReducedMotion.value = GetInt(IntID::PrefersReducedMotion);
-  cache.mInts.AppendElement(prefersReducedMotion);
+  prefersReducedMotion.id() = IntID::PrefersReducedMotion;
+  prefersReducedMotion.value() = GetInt(IntID::PrefersReducedMotion);
+  cache.mInts().AppendElement(prefersReducedMotion);
 
   LookAndFeelInt systemUsesDarkTheme;
-  systemUsesDarkTheme.id = IntID::SystemUsesDarkTheme;
-  systemUsesDarkTheme.value = GetInt(IntID::SystemUsesDarkTheme);
-  cache.mInts.AppendElement(systemUsesDarkTheme);
+  systemUsesDarkTheme.id() = IntID::SystemUsesDarkTheme;
+  systemUsesDarkTheme.value() = GetInt(IntID::SystemUsesDarkTheme);
+  cache.mInts().AppendElement(systemUsesDarkTheme);
 
   return cache;
 }
 
 void nsLookAndFeel::SetCacheImpl(const LookAndFeelCache& aCache) {
-  for (auto entry : aCache.mInts) {
-    switch (entry.id) {
+  for (auto entry : aCache.mInts()) {
+    switch (entry.id()) {
       case IntID::UseOverlayScrollbars:
-        mUseOverlayScrollbars = entry.value;
+        mUseOverlayScrollbars = entry.value();
         mUseOverlayScrollbarsCached = true;
         break;
       case IntID::AllowOverlayScrollbarsOverlap:
-        mAllowOverlayScrollbarsOverlap = entry.value;
+        mAllowOverlayScrollbarsOverlap = entry.value();
         mAllowOverlayScrollbarsOverlapCached = true;
         break;
       case IntID::SystemUsesDarkTheme:
-        mSystemUsesDarkTheme = entry.value;
+        mSystemUsesDarkTheme = entry.value();
         mSystemUsesDarkThemeCached = true;
         break;
       case IntID::PrefersReducedMotion:
-        mPrefersReducedMotion = entry.value;
+        mPrefersReducedMotion = entry.value();
         mPrefersReducedMotionCached = true;
         break;
       default:
