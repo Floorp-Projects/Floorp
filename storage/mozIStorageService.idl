@@ -78,6 +78,14 @@ interface mozIStorageService : nsISupports {
    * @param aStorageKey a string key identifying the type of storage
    * requested.  Valid values include: "memory".
    *
+   * @param aName an optional string identifying the name of the database.
+   * If omitted, a filename of ":memory:" will be used which results in a
+   * private in-memory database specific to this connection, making it
+   * impossible to clone the in-memory database. If you want to be able to
+   * clone the connection (or otherwise connect to the in-memory database from
+   * a connection), then you must pick a name that's sufficiently unique within
+   * the process to not collide with other mozStorage users.
+   *
    * @see openDatabase for restrictions on how database connections may be
    * used. For the profile database, you should only access it from the main
    * thread since other callers may also have connections.
@@ -87,7 +95,8 @@ interface mozIStorageService : nsISupports {
    *
    * @throws NS_ERROR_INVALID_ARG if aStorageKey is invalid.
    */
-  mozIStorageConnection openSpecialDatabase(in string aStorageKey);
+  mozIStorageConnection openSpecialDatabase(in ACString aStorageKey,
+                                            [optional] in ACString aName);
 
   /**
    * Open a connection to the specified file.
@@ -192,6 +201,6 @@ interface mozIStorageService : nsISupports {
 
 %{C++
 
-#define MOZ_STORAGE_MEMORY_STORAGE_KEY    "memory"
+constexpr auto kMozStorageMemoryStorageKey = "memory"_ns;
 
 %}

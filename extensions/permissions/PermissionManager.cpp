@@ -752,7 +752,9 @@ nsresult PermissionManager::OpenDatabase(nsIFile* aPermissionsFile) {
   }
   // cache a connection to the hosts database
   if (mMemoryOnlyDB) {
-    rv = storage->OpenSpecialDatabase("memory", getter_AddRefs(data->mDBConn));
+    rv =
+        storage->OpenSpecialDatabase(kMozStorageMemoryStorageKey, VoidCString(),
+                                     getter_AddRefs(data->mDBConn));
   } else {
     rv = storage->OpenDatabase(aPermissionsFile, getter_AddRefs(data->mDBConn));
   }
