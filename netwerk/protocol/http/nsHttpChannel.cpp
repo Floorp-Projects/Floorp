@@ -6672,7 +6672,7 @@ nsresult nsHttpChannel::BeginConnect() {
   }
   bool http3Allowed = !mUpgradeProtocolCallback && !mProxyInfo &&
                       !(mCaps & NS_HTTP_BE_CONSERVATIVE) && !mBeConservative &&
-                      !gHttpHandler->IsHttp3Excluded(connInfo) && mAllowHttp3;
+                      mAllowHttp3;
 
   // No need to lookup HTTPSSVC record if we already have one.
   mUseHTTPSSVC =
