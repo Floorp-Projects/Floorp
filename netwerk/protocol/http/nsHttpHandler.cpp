@@ -2851,15 +2851,15 @@ void nsHttpHandler::ExcludeHttp3(const nsHttpConnectionInfo* ci) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   mConnMgr->ExcludeHttp3(ci);
-  if (!mExcludedHttp3Origins.Contains(ci->GetRoutedHost())) {
+  if (!mExcludedHttp3Origins.Contains(ci->GetOrigin())) {
     MutexAutoLock lock(mHttpExclusionLock);
-    mExcludedHttp3Origins.PutEntry(ci->GetRoutedHost());
+    mExcludedHttp3Origins.PutEntry(ci->GetOrigin());
   }
 }
 
-bool nsHttpHandler::IsHttp3Excluded(const nsACString& aRoutedHost) {
+bool nsHttpHandler::IsHttp3Excluded(const nsHttpConnectionInfo* ci) {
   MutexAutoLock lock(mHttpExclusionLock);
-  return mExcludedHttp3Origins.Contains(aRoutedHost);
+  return mExcludedHttp3Origins.Contains(ci->GetOrigin());
 }
 
 HttpTrafficAnalyzer* nsHttpHandler::GetHttpTrafficAnalyzer() {
