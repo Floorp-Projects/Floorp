@@ -1,3 +1,3 @@
-// |jit-test| --wasm-compiler=cranelift; skip-if: !wasmCompilersPresent().match("cranelift") || wasmCraneliftDisabledByFeatures()
+// |jit-test| --wasm-compiler=optimizing; skip-if: !wasmCompilersPresent().match("cranelift") || wasmCraneliftDisabledByFeatures()
 
 assertEq(wasmCompileMode(), "cranelift");

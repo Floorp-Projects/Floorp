@@ -110,8 +110,7 @@ extern bool enableAsmJS;
 extern bool enableWasm;
 extern bool enableSharedMemory;
 extern bool enableWasmBaseline;
-extern bool enableWasmIon;
-extern bool enableWasmCranelift;
+extern bool enableWasmOptimizing;
 extern bool enableWasmReftypes;
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
 extern bool enableWasmFunctionReferences;

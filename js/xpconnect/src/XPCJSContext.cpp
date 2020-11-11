@@ -964,13 +964,10 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   bool useWasm = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm");
   bool useWasmTrustedPrincipals =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_trustedprincipals");
-  bool useWasmIon = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_ionjit");
+  bool useWasmOptimizing =
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_optimizingjit");
   bool useWasmBaseline =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_baselinejit");
-#ifdef ENABLE_WASM_CRANELIFT
-  bool useWasmCranelift =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_cranelift");
-#endif
   bool useWasmReftypes =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_reftypes");
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
@@ -1050,12 +1047,13 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
 #endif
       .setWasm(useWasm)
       .setWasmForTrustedPrinciples(useWasmTrustedPrincipals)
-      .setWasmIon(useWasmIon)
+#ifdef ENABLE_WASM_CRANELIFT
+      .setWasmCranelift(useWasmOptimizing)
+#else
+      .setWasmIon(useWasmOptimizing)
+#endif
       .setWasmBaseline(useWasmBaseline)
       .setWasmReftypes(useWasmReftypes)
-#ifdef ENABLE_WASM_CRANELIFT
-      .setWasmCranelift(useWasmCranelift)
-#endif
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
       .setWasmFunctionReferences(useWasmFunctionReferences)
 #endif

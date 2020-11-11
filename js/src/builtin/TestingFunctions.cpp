@@ -885,18 +885,21 @@ static bool WasmCompilersPresent(JSContext* cx, unsigned argc, Value* vp) {
   if (wasm::BaselinePlatformSupport()) {
     strcat(buf, "baseline");
   }
-  if (wasm::IonPlatformSupport()) {
-    if (*buf) {
-      strcat(buf, ",");
-    }
-    strcat(buf, "ion");
-  }
+#ifdef ENABLE_WASM_CRANELIFT
   if (wasm::CraneliftPlatformSupport()) {
     if (*buf) {
       strcat(buf, ",");
     }
     strcat(buf, "cranelift");
   }
+#else
+  if (wasm::IonPlatformSupport()) {
+    if (*buf) {
+      strcat(buf, ",");
+    }
+    strcat(buf, "ion");
+  }
+#endif
 
   JSString* result = JS_NewStringCopyZ(cx, buf);
   if (!result) {

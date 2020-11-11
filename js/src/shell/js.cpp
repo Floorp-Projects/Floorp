@@ -501,8 +501,7 @@ bool shell::enableAsmJS = false;
 bool shell::enableWasm = false;
 bool shell::enableSharedMemory = SHARED_MEMORY_DEFAULT;
 bool shell::enableWasmBaseline = false;
-bool shell::enableWasmIon = false;
-bool shell::enableWasmCranelift = false;
+bool shell::enableWasmOptimizing = false;
 bool shell::enableWasmReftypes = true;
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
 bool shell::enableWasmFunctionReferences = false;
@@ -4882,25 +4881,16 @@ static bool SetJitCompilerOption(JSContext* cx, unsigned argc, Value* vp) {
   // Actual compiler availability is dynamic and depends on other conditions,
   // such as other options set and whether a debugger is present.
   if ((opt == JSJITCOMPILER_WASM_JIT_BASELINE ||
-       opt == JSJITCOMPILER_WASM_JIT_ION ||
-       opt == JSJITCOMPILER_WASM_JIT_CRANELIFT) &&
+       opt == JSJITCOMPILER_WASM_JIT_OPTIMIZING) &&
       number == 0) {
-    uint32_t baseline, ion;
+    uint32_t baseline, optimizing;
     MOZ_ALWAYS_TRUE(JS_GetGlobalJitCompilerOption(
         cx, JSJITCOMPILER_WASM_JIT_BASELINE, &baseline));
-    MOZ_ALWAYS_TRUE(
-        JS_GetGlobalJitCompilerOption(cx, JSJITCOMPILER_WASM_JIT_ION, &ion));
-#ifdef ENABLE_WASM_CRANELIFT
-    uint32_t cranelift;
     MOZ_ALWAYS_TRUE(JS_GetGlobalJitCompilerOption(
-        cx, JSJITCOMPILER_WASM_JIT_CRANELIFT, &cranelift));
-#else
-    uint32_t cranelift = 0;
-#endif
-    if (baseline + ion + cranelift == 1) {
+        cx, JSJITCOMPILER_WASM_JIT_OPTIMIZING, &optimizing));
+    if (baseline + optimizing == 1) {
       if ((opt == JSJITCOMPILER_WASM_JIT_BASELINE && baseline) ||
-          (opt == JSJITCOMPILER_WASM_JIT_ION && ion) ||
-          (opt == JSJITCOMPILER_WASM_JIT_CRANELIFT && cranelift)) {
+          (opt == JSJITCOMPILER_WASM_JIT_OPTIMIZING && optimizing)) {
         JS_ReportErrorASCII(
             cx,
             "Disabling all the Wasm compilers at runtime is not supported.");
@@ -10388,47 +10378,39 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
 static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableAsmJS = !op.getBoolOption("no-asmjs");
 
-  // Default values for wasm.
-#ifdef JS_CODEGEN_ARM64
-  bool* enableDefaultOptimizing = &enableWasmCranelift;
-#else
-  bool* enableDefaultOptimizing = &enableWasmIon;
-#endif
   enableWasm = true;
   enableWasmBaseline = true;
-  *enableDefaultOptimizing = true;
+  enableWasmOptimizing = true;
 
   if (const char* str = op.getStringOption("wasm-compiler")) {
     if (strcmp(str, "none") == 0) {
       enableWasm = false;
     } else if (strcmp(str, "baseline") == 0) {
       MOZ_ASSERT(enableWasmBaseline);
-      enableWasmIon = false;
-      enableWasmCranelift = false;
+      enableWasmOptimizing = false;
     } else if (strcmp(str, "optimizing") == 0 ||
                strcmp(str, "optimized") == 0) {
       enableWasmBaseline = false;
-      MOZ_ASSERT(*enableDefaultOptimizing);
-    } else if (strcmp(str, "ion") == 0) {
-      enableWasmBaseline = false;
-      enableWasmIon = true;
-      enableWasmCranelift = false;
-    } else if (strcmp(str, "cranelift") == 0) {
-      enableWasmBaseline = false;
-      enableWasmIon = false;
-      enableWasmCranelift = true;
+      MOZ_ASSERT(enableWasmOptimizing);
     } else if (strcmp(str, "baseline+optimizing") == 0 ||
                strcmp(str, "baseline+optimized") == 0) {
       MOZ_ASSERT(enableWasmBaseline);
-      MOZ_ASSERT(*enableDefaultOptimizing);
-    } else if (strcmp(str, "baseline+ion") == 0) {
-      MOZ_ASSERT(enableWasmBaseline);
-      enableWasmIon = true;
-      enableWasmCranelift = false;
+      MOZ_ASSERT(enableWasmOptimizing);
+#ifdef ENABLE_WASM_CRANELIFT
+    } else if (strcmp(str, "cranelift") == 0) {
+      enableWasmBaseline = false;
+      enableWasmOptimizing = true;
     } else if (strcmp(str, "baseline+cranelift") == 0) {
       MOZ_ASSERT(enableWasmBaseline);
-      enableWasmIon = false;
-      enableWasmCranelift = true;
+      enableWasmOptimizing = true;
+#else
+    } else if (strcmp(str, "ion") == 0) {
+      enableWasmBaseline = false;
+      enableWasmOptimizing = true;
+    } else if (strcmp(str, "baseline+ion") == 0) {
+      MOZ_ASSERT(enableWasmBaseline);
+      enableWasmOptimizing = true;
+#endif
     } else {
       return OptionFailure("wasm-compiler", str);
     }
@@ -10473,11 +10455,12 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setWasm(enableWasm)
       .setWasmForTrustedPrinciples(enableWasm)
       .setWasmBaseline(enableWasmBaseline)
-      .setWasmIon(enableWasmIon)
-      .setWasmReftypes(enableWasmReftypes)
 #ifdef ENABLE_WASM_CRANELIFT
-      .setWasmCranelift(enableWasmCranelift)
+      .setWasmCranelift(enableWasmOptimizing)
+#else
+      .setWasmIon(enableWasmOptimizing)
 #endif
+      .setWasmReftypes(enableWasmReftypes)
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
       .setWasmFunctionReferences(enableWasmFunctionReferences)
 #endif
@@ -10867,9 +10850,10 @@ static void SetWorkerContextOptions(JSContext* cx) {
       .setAsmJS(enableAsmJS)
       .setWasm(enableWasm)
       .setWasmBaseline(enableWasmBaseline)
-      .setWasmIon(enableWasmIon)
 #ifdef ENABLE_WASM_CRANELIFT
-      .setWasmCranelift(enableWasmCranelift)
+      .setWasmCranelift(enableWasmOptimizing)
+#else
+      .setWasmIon(enableWasmOptimizing)
 #endif
 #ifdef ENABLE_WASM_GC
       .setWasmGc(enableWasmGc)
