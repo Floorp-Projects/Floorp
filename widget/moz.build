@@ -338,9 +338,9 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk" and CONFIG["MOZ_X11"]:
     ]
 else:
     IPDL_SOURCES = [
+        "generic/PCompositorWidget.ipdl",
+        "generic/PlatformWidgetTypes.ipdlh",
         "headless/HeadlessWidgetTypes.ipdlh",
-        "PCompositorWidget.ipdl",
-        "PlatformWidgetTypes.ipdlh",
     ]
 
 LOCAL_INCLUDES += [
