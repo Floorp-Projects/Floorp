@@ -74,7 +74,6 @@ function saveURL(
     aFilePickerTitleKey,
     null,
     aReferrerInfo,
-    null,
     aSourceDocument,
     aSkipPrompt,
     null,
@@ -113,7 +112,6 @@ function saveBrowser(aBrowser, aSkipPrompt, aBrowsingContext = null) {
         null, // file picker title key
         null, // chosen file data
         document.referrerInfo,
-        document.cookieJarSettings,
         document,
         aSkipPrompt,
         document.cacheKey
@@ -216,9 +214,6 @@ XPCOMUtils.defineConstant(this, "kSaveAsType_Text", kSaveAsType_Text);
  *        prompted for a target filename.
  * @param aReferrerInfo
  *        the referrerInfo object to use, or null if no referrer should be sent.
- * @param aCookieJarSettings
- *        the cookieJarSettings object to use. This will be used for the channel
- *        used to save.
  * @param aInitiatingDocument [optional]
  *        The document from which the save was initiated.
  *        If this is omitted then aIsContentWindowPrivate has to be provided.
@@ -247,7 +242,6 @@ function internalSave(
   aFilePickerTitleKey,
   aChosenData,
   aReferrerInfo,
-  aCookieJarSettings,
   aInitiatingDocument,
   aSkipPrompt,
   aCacheKey,
@@ -362,7 +356,6 @@ function internalSave(
       sourcePostData: aDocument ? getPostData(aDocument) : null,
       bypassCache: aShouldBypassCache,
       contentPolicyType,
-      cookieJarSettings: aCookieJarSettings,
       isPrivate,
     };
 
@@ -394,8 +387,6 @@ function internalSave(
  * @param persistArgs.contentPolicyType
  *        The type of content we're saving. Will be used to determine what
  *        content is accepted, enforce sniffing restrictions, etc.
- * @param persistArgs.cookieJarSettings
- *        The nsICookieJarSettings that we need to use.
  * @param persistArgs.targetContentType
  *        Required and used only when persistArgs.sourceDocument is present,
  *        determines the final content type of the saved file, or null to use
@@ -479,7 +470,6 @@ function internalPersist(persistArgs) {
       persistArgs.sourcePrincipal,
       persistArgs.sourceCacheKey,
       persistArgs.sourceReferrerInfo,
-      persistArgs.cookieJarSettings,
       persistArgs.sourcePostData,
       null,
       targetFileURL,

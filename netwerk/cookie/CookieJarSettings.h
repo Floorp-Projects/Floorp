@@ -11,15 +11,6 @@
 #include "nsDataHashtable.h"
 #include "nsTArray.h"
 
-#define COOKIEJARSETTINGS_CONTRACTID "@mozilla.org/cookieJarSettings;1"
-// 4ce234f1-52e8-47a9-8c8d-b02f815733c7
-#define COOKIEJARSETTINGS_CID                        \
-  {                                                  \
-    0x4ce234f1, 0x52e8, 0x47a9, {                    \
-      0x8c, 0x8d, 0xb0, 0x2f, 0x81, 0x57, 0x33, 0xc7 \
-    }                                                \
-  }
-
 class nsIPermission;
 
 namespace mozilla {
@@ -120,7 +111,6 @@ class CookieJarSettings final : public nsICookieJarSettings {
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICOOKIEJARSETTINGS
-  NS_DECL_NSISERIALIZABLE
 
   static already_AddRefed<nsICookieJarSettings> GetBlockingAll();
 

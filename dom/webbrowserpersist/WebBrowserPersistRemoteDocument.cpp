@@ -10,7 +10,6 @@
 #include "WebBrowserPersistSerializeParent.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ipc/BackgroundUtils.h"
-#include "mozilla/net/CookieJarSettings.h"
 
 #include "nsDebug.h"
 #include "nsIPrincipal.h"
@@ -30,9 +29,6 @@ WebBrowserPersistRemoteDocument ::WebBrowserPersistRemoteDocument(
   } else {
     NS_WARNING("Failed to obtain principal!");
   }
-
-  net::CookieJarSettings::Deserialize(mAttrs.cookieJarSettings(),
-                                      getter_AddRefs(mCookieJarSettings));
 }
 
 WebBrowserPersistRemoteDocument::~WebBrowserPersistRemoteDocument() {
@@ -93,14 +89,6 @@ WebBrowserPersistRemoteDocument::GetReferrerInfo(
     nsIReferrerInfo** aReferrerInfo) {
   *aReferrerInfo = mAttrs.referrerInfo();
   NS_IF_ADDREF(*aReferrerInfo);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-WebBrowserPersistRemoteDocument::GetCookieJarSettings(
-    nsICookieJarSettings** aCookieJarSettings) {
-  nsCOMPtr<nsICookieJarSettings> cookieJarSettings = mCookieJarSettings;
-  cookieJarSettings.forget(aCookieJarSettings);
   return NS_OK;
 }
 

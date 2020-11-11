@@ -58,7 +58,6 @@
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
 #include "mozilla/dom/Document.h"
-#include "nsICookieJarSettings.h"
 #include "nsIFrame.h"
 #include "nsFrameLoaderOwner.h"
 #include "nsIWidget.h"
@@ -1982,7 +1981,6 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
   nsCOMPtr<nsIContent> eventContent, targetContent;
   nsCOMPtr<nsIPrincipal> principal;
   nsCOMPtr<nsIContentSecurityPolicy> csp;
-  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
   bool allowEmptyDataTransfer = false;
   mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(eventContent));
   if (eventContent) {
@@ -2008,7 +2006,7 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
         window, eventContent, dataTransfer, &allowEmptyDataTransfer,
         getter_AddRefs(selection), getter_AddRefs(remoteDragStartData),
         getter_AddRefs(targetContent), getter_AddRefs(principal),
-        getter_AddRefs(csp), getter_AddRefs(cookieJarSettings));
+        getter_AddRefs(csp));
   }
 
   // Stop tracking the drag gesture now. This should stop us from
@@ -2072,10 +2070,9 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
   }
 
   if (status != nsEventStatus_eConsumeNoDefault) {
-    bool dragStarted = DoDefaultDragStart(aPresContext, event, dataTransfer,
-                                          allowEmptyDataTransfer, targetContent,
-                                          selection, remoteDragStartData,
-                                          principal, csp, cookieJarSettings);
+    bool dragStarted = DoDefaultDragStart(
+        aPresContext, event, dataTransfer, allowEmptyDataTransfer,
+        targetContent, selection, remoteDragStartData, principal, csp);
     if (dragStarted) {
       sActiveESM = nullptr;
       MaybeFirePointerCancel(aEvent);
@@ -2096,8 +2093,7 @@ void EventStateManager::DetermineDragTargetAndDefaultData(
     DataTransfer* aDataTransfer, bool* aAllowEmptyDataTransfer,
     Selection** aSelection, RemoteDragStartData** aRemoteDragStartData,
     nsIContent** aTargetNode, nsIPrincipal** aPrincipal,
-    nsIContentSecurityPolicy** aCsp,
-    nsICookieJarSettings** aCookieJarSettings) {
+    nsIContentSecurityPolicy** aCsp) {
   *aTargetNode = nullptr;
   *aAllowEmptyDataTransfer = false;
   nsCOMPtr<nsIContent> dragDataNode;
@@ -2113,7 +2109,7 @@ void EventStateManager::DetermineDragTargetAndDefaultData(
       // A child process started a drag so use any data it assigned for the dnd
       // session.
       mGestureDownDragStartData->AddInitialDnDDataTo(aDataTransfer, aPrincipal,
-                                                     aCsp, aCookieJarSettings);
+                                                     aCsp);
       mGestureDownDragStartData.forget(aRemoteDragStartData);
       *aAllowEmptyDataTransfer = true;
     }
@@ -2130,8 +2126,7 @@ void EventStateManager::DetermineDragTargetAndDefaultData(
     bool wasAlt = (mGestureModifiers & MODIFIER_ALT) != 0;
     nsresult rv = nsContentAreaDragDrop::GetDragData(
         aWindow, mGestureDownContent, aSelectionTarget, wasAlt, aDataTransfer,
-        &canDrag, aSelection, getter_AddRefs(dragDataNode), aPrincipal, aCsp,
-        aCookieJarSettings);
+        &canDrag, aSelection, getter_AddRefs(dragDataNode), aPrincipal, aCsp);
     if (NS_FAILED(rv) || !canDrag) {
       return;
     }
@@ -2198,7 +2193,7 @@ bool EventStateManager::DoDefaultDragStart(
     DataTransfer* aDataTransfer, bool aAllowEmptyDataTransfer,
     nsIContent* aDragTarget, Selection* aSelection,
     RemoteDragStartData* aDragStartData, nsIPrincipal* aPrincipal,
-    nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings) {
+    nsIContentSecurityPolicy* aCsp) {
   nsCOMPtr<nsIDragService> dragService =
       do_GetService("@mozilla.org/widget/dragservice;1");
   if (!dragService) return false;
@@ -2289,18 +2284,17 @@ bool EventStateManager::DoDefaultDragStart(
   // use InvokeDragSessionWithImage if a custom image was set or something
   // other than a selection is being dragged.
   if (!dragImage && aSelection) {
-    dragService->InvokeDragSessionWithSelection(aSelection, aPrincipal, aCsp,
-                                                aCookieJarSettings, transArray,
-                                                action, event, dataTransfer);
+    dragService->InvokeDragSessionWithSelection(
+        aSelection, aPrincipal, aCsp, transArray, action, event, dataTransfer);
   } else if (aDragStartData) {
     MOZ_ASSERT(XRE_IsParentProcess());
     dragService->InvokeDragSessionWithRemoteImage(
-        dragTarget, aPrincipal, aCsp, aCookieJarSettings, transArray, action,
-        aDragStartData, event, dataTransfer);
+        dragTarget, aPrincipal, aCsp, transArray, action, aDragStartData, event,
+        dataTransfer);
   } else {
     dragService->InvokeDragSessionWithImage(
-        dragTarget, aPrincipal, aCsp, aCookieJarSettings, transArray, action,
-        dragImage, imageX, imageY, event, dataTransfer);
+        dragTarget, aPrincipal, aCsp, transArray, action, dragImage, imageX,
+        imageY, event, dataTransfer);
   }
 
   return true;
