@@ -12,6 +12,9 @@ const {
 const TEST_URL = URL_ROOT_SSL + "early_console_document.html";
 
 add_task(async function() {
+  // Enable Multiprocess Browser Toolbox (it's still disabled for non-Nightly builds).
+  await pushPref("devtools.browsertoolbox.fission", true);
+
   const {
     client,
     resourceWatcher,
