@@ -272,6 +272,33 @@ void MacroAssemblerX86Shared::compareInt8x16(FloatRegister lhs, Operand rhs,
   }
 }
 
+void MacroAssemblerX86Shared::compareInt8x16(Assembler::Condition cond,
+                                             const SimdConstant& rhs,
+                                             FloatRegister lhsDest) {
+  bool complement = false;
+  switch (cond) {
+    case Assembler::Condition::NotEqual:
+      complement = true;
+      [[fallthrough]];
+    case Assembler::Condition::Equal:
+      binarySimd128(rhs, lhsDest, &MacroAssembler::vpcmpeqb,
+                    &MacroAssembler::vpcmpeqbSimd128);
+      break;
+    case Assembler::Condition::LessThanOrEqual:
+      complement = true;
+      [[fallthrough]];
+    case Assembler::Condition::GreaterThan:
+      binarySimd128(rhs, lhsDest, &MacroAssembler::vpcmpgtb,
+                    &MacroAssembler::vpcmpgtbSimd128);
+      break;
+    default:
+      MOZ_CRASH("unexpected condition op");
+  }
+  if (complement) {
+    asMasm().bitwiseXorSimd128(SimdConstant::SplatX16(-1), lhsDest);
+  }
+}
+
 void MacroAssemblerX86Shared::unsignedCompareInt8x16(
     FloatRegister lhs, Operand rhs, Assembler::Condition cond,
     FloatRegister output, FloatRegister tmp1, FloatRegister tmp2) {
@@ -405,6 +432,33 @@ void MacroAssemblerX86Shared::compareInt16x8(FloatRegister lhs, Operand rhs,
   }
 }
 
+void MacroAssemblerX86Shared::compareInt16x8(Assembler::Condition cond,
+                                             const SimdConstant& rhs,
+                                             FloatRegister lhsDest) {
+  bool complement = false;
+  switch (cond) {
+    case Assembler::Condition::NotEqual:
+      complement = true;
+      [[fallthrough]];
+    case Assembler::Condition::Equal:
+      binarySimd128(rhs, lhsDest, &MacroAssembler::vpcmpeqw,
+                    &MacroAssembler::vpcmpeqwSimd128);
+      break;
+    case Assembler::Condition::LessThanOrEqual:
+      complement = true;
+      [[fallthrough]];
+    case Assembler::Condition::GreaterThan:
+      binarySimd128(rhs, lhsDest, &MacroAssembler::vpcmpgtw,
+                    &MacroAssembler::vpcmpgtwSimd128);
+      break;
+    default:
+      MOZ_CRASH("unexpected condition op");
+  }
+  if (complement) {
+    asMasm().bitwiseXorSimd128(SimdConstant::SplatX16(-1), lhsDest);
+  }
+}
+
 void MacroAssemblerX86Shared::unsignedCompareInt16x8(
     FloatRegister lhs, Operand rhs, Assembler::Condition cond,
     FloatRegister output, FloatRegister tmp1, FloatRegister tmp2) {
@@ -514,6 +568,33 @@ void MacroAssemblerX86Shared::compareInt32x4(FloatRegister lhs, Operand rhs,
       break;
     default:
       MOZ_CRASH("unexpected condition op");
+  }
+}
+
+void MacroAssemblerX86Shared::compareInt32x4(Assembler::Condition cond,
+                                             const SimdConstant& rhs,
+                                             FloatRegister lhsDest) {
+  bool complement = false;
+  switch (cond) {
+    case Assembler::Condition::NotEqual:
+      complement = true;
+      [[fallthrough]];
+    case Assembler::Condition::Equal:
+      binarySimd128(rhs, lhsDest, &MacroAssembler::vpcmpeqd,
+                    &MacroAssembler::vpcmpeqdSimd128);
+      break;
+    case Assembler::Condition::LessThanOrEqual:
+      complement = true;
+      [[fallthrough]];
+    case Assembler::Condition::GreaterThan:
+      binarySimd128(rhs, lhsDest, &MacroAssembler::vpcmpgtd,
+                    &MacroAssembler::vpcmpgtdSimd128);
+      break;
+    default:
+      MOZ_CRASH("unexpected condition op");
+  }
+  if (complement) {
+    asMasm().bitwiseXorSimd128(SimdConstant::SplatX16(-1), lhsDest);
   }
 }
 
