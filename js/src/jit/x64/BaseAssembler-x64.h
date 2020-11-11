@@ -915,6 +915,10 @@ class BaseAssemblerX64 : public BaseAssembler {
     return twoByteRipOpSimd("vpxor", VEX_PD, OP2_PXORDQ_VdqWdq, invalid_xmm,
                             dst);
   }
+  MOZ_MUST_USE JmpSrc vptest_ripr(XMMRegisterID lhs) {
+    return threeByteRipOpSimd("vptest", VEX_PD, OP3_PTEST_VdVd, ESCAPE_38,
+                              invalid_xmm, lhs);
+  }
   MOZ_MUST_USE JmpSrc vpshufb_ripr(XMMRegisterID dst) {
     return threeByteRipOpSimd("vpshufb", VEX_PD, OP3_PSHUFB_VdqWdq, ESCAPE_38,
                               invalid_xmm, dst);

@@ -69,6 +69,12 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
 
   void setupABICall(uint32_t args);
 
+  void vpPatchOpSimd128(const SimdConstant& v, FloatRegister reg,
+                        void (X86Encoding::BaseAssemblerX86::*op)(
+                            const void* address,
+                            X86Encoding::XMMRegisterID srcId,
+                            X86Encoding::XMMRegisterID destId));
+
  public:
   using MacroAssemblerX86Shared::call;
   using MacroAssemblerX86Shared::load32;
@@ -878,6 +884,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
   void vpandSimd128(const SimdConstant& v, FloatRegister srcDest);
   void vpxorSimd128(const SimdConstant& v, FloatRegister srcDest);
   void vpshufbSimd128(const SimdConstant& v, FloatRegister srcDest);
+  void vptestSimd128(const SimdConstant& v, FloatRegister src);
 
   Condition testInt32Truthy(bool truthy, const ValueOperand& operand) {
     test32(operand.payloadReg(), operand.payloadReg());
