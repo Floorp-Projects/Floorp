@@ -1394,16 +1394,40 @@ void MacroAssembler::addInt8x16(FloatRegister rhs, FloatRegister lhsDest) {
   vpaddb(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::addInt8x16(const SimdConstant& rhs,
+                                FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpaddb,
+                &MacroAssembler::vpaddbSimd128);
+}
+
 void MacroAssembler::addInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
   vpaddw(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::addInt16x8(const SimdConstant& rhs,
+                                FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpaddw,
+                &MacroAssembler::vpaddwSimd128);
 }
 
 void MacroAssembler::addInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
   vpaddd(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::addInt32x4(const SimdConstant& rhs,
+                                FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpaddd,
+                &MacroAssembler::vpadddSimd128);
+}
+
 void MacroAssembler::addInt64x2(FloatRegister rhs, FloatRegister lhsDest) {
   vpaddq(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::addInt64x2(const SimdConstant& rhs,
+                                FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpaddq,
+                &MacroAssembler::vpaddqSimd128);
 }
 
 // Integer subtract
@@ -1412,16 +1436,40 @@ void MacroAssembler::subInt8x16(FloatRegister rhs, FloatRegister lhsDest) {
   vpsubb(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::subInt8x16(const SimdConstant& rhs,
+                                FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpsubb,
+                &MacroAssembler::vpsubbSimd128);
+}
+
 void MacroAssembler::subInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
   vpsubw(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::subInt16x8(const SimdConstant& rhs,
+                                FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpsubw,
+                &MacroAssembler::vpsubwSimd128);
 }
 
 void MacroAssembler::subInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
   vpsubd(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::subInt32x4(const SimdConstant& rhs,
+                                FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpsubd,
+                &MacroAssembler::vpsubdSimd128);
+}
+
 void MacroAssembler::subInt64x2(FloatRegister rhs, FloatRegister lhsDest) {
   vpsubq(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::subInt64x2(const SimdConstant& rhs,
+                                FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpsubq,
+                &MacroAssembler::vpsubqSimd128);
 }
 
 // Integer multiply
@@ -1430,8 +1478,20 @@ void MacroAssembler::mulInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
   vpmullw(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::mulInt16x8(const SimdConstant& rhs,
+                                FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpmullw,
+                &MacroAssembler::vpmullwSimd128);
+}
+
 void MacroAssembler::mulInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
   vpmulld(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::mulInt32x4(const SimdConstant& rhs,
+                                FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpmulld,
+                &MacroAssembler::vpmulldSimd128);
 }
 
 void MacroAssembler::mulInt64x2(FloatRegister rhs, FloatRegister lhsDest,
@@ -1504,18 +1564,42 @@ void MacroAssembler::addSatInt8x16(FloatRegister rhs, FloatRegister lhsDest) {
   vpaddsb(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::addSatInt8x16(const SimdConstant& rhs,
+                                   FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpaddsb,
+                &MacroAssembler::vpaddsbSimd128);
+}
+
 void MacroAssembler::unsignedAddSatInt8x16(FloatRegister rhs,
                                            FloatRegister lhsDest) {
   vpaddusb(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::unsignedAddSatInt8x16(const SimdConstant& rhs,
+                                           FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpaddusb,
+                &MacroAssembler::vpaddusbSimd128);
 }
 
 void MacroAssembler::addSatInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
   vpaddsw(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::addSatInt16x8(const SimdConstant& rhs,
+                                   FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpaddsw,
+                &MacroAssembler::vpaddswSimd128);
+}
+
 void MacroAssembler::unsignedAddSatInt16x8(FloatRegister rhs,
                                            FloatRegister lhsDest) {
   vpaddusw(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::unsignedAddSatInt16x8(const SimdConstant& rhs,
+                                           FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpaddusw,
+                &MacroAssembler::vpadduswSimd128);
 }
 
 // Saturating integer subtract
@@ -1524,18 +1608,42 @@ void MacroAssembler::subSatInt8x16(FloatRegister rhs, FloatRegister lhsDest) {
   vpsubsb(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::subSatInt8x16(const SimdConstant& rhs,
+                                   FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpsubsb,
+                &MacroAssembler::vpsubsbSimd128);
+}
+
 void MacroAssembler::unsignedSubSatInt8x16(FloatRegister rhs,
                                            FloatRegister lhsDest) {
   vpsubusb(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::unsignedSubSatInt8x16(const SimdConstant& rhs,
+                                           FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpsubusb,
+                &MacroAssembler::vpsubusbSimd128);
 }
 
 void MacroAssembler::subSatInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
   vpsubsw(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::subSatInt16x8(const SimdConstant& rhs,
+                                   FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpsubsw,
+                &MacroAssembler::vpsubswSimd128);
+}
+
 void MacroAssembler::unsignedSubSatInt16x8(FloatRegister rhs,
                                            FloatRegister lhsDest) {
   vpsubusw(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::unsignedSubSatInt16x8(const SimdConstant& rhs,
+                                           FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpsubusw,
+                &MacroAssembler::vpsubuswSimd128);
 }
 
 // Lane-wise integer minimum
@@ -1544,13 +1652,31 @@ void MacroAssembler::minInt8x16(FloatRegister rhs, FloatRegister lhsDest) {
   vpminsb(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::minInt8x16(const SimdConstant& rhs,
+                                FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpminsb,
+                &MacroAssembler::vpminsbSimd128);
+}
+
 void MacroAssembler::unsignedMinInt8x16(FloatRegister rhs,
                                         FloatRegister lhsDest) {
   vpminub(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::unsignedMinInt8x16(const SimdConstant& rhs,
+                                        FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpminub,
+                &MacroAssembler::vpminubSimd128);
+}
+
 void MacroAssembler::minInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
   vpminsw(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::minInt16x8(const SimdConstant& rhs,
+                                FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpminsw,
+                &MacroAssembler::vpminswSimd128);
 }
 
 void MacroAssembler::unsignedMinInt16x8(FloatRegister rhs,
@@ -1558,13 +1684,31 @@ void MacroAssembler::unsignedMinInt16x8(FloatRegister rhs,
   vpminuw(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::unsignedMinInt16x8(const SimdConstant& rhs,
+                                        FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpminuw,
+                &MacroAssembler::vpminuwSimd128);
+}
+
 void MacroAssembler::minInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
   vpminsd(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::minInt32x4(const SimdConstant& rhs,
+                                FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpminsd,
+                &MacroAssembler::vpminsdSimd128);
 }
 
 void MacroAssembler::unsignedMinInt32x4(FloatRegister rhs,
                                         FloatRegister lhsDest) {
   vpminud(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::unsignedMinInt32x4(const SimdConstant& rhs,
+                                        FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpminud,
+                &MacroAssembler::vpminudSimd128);
 }
 
 // Lane-wise integer maximum
@@ -1573,13 +1717,31 @@ void MacroAssembler::maxInt8x16(FloatRegister rhs, FloatRegister lhsDest) {
   vpmaxsb(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::maxInt8x16(const SimdConstant& rhs,
+                                FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpmaxsb,
+                &MacroAssembler::vpmaxsbSimd128);
+}
+
 void MacroAssembler::unsignedMaxInt8x16(FloatRegister rhs,
                                         FloatRegister lhsDest) {
   vpmaxub(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::unsignedMaxInt8x16(const SimdConstant& rhs,
+                                        FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpmaxub,
+                &MacroAssembler::vpmaxubSimd128);
+}
+
 void MacroAssembler::maxInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
   vpmaxsw(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::maxInt16x8(const SimdConstant& rhs,
+                                FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpmaxsw,
+                &MacroAssembler::vpmaxswSimd128);
 }
 
 void MacroAssembler::unsignedMaxInt16x8(FloatRegister rhs,
@@ -1587,13 +1749,31 @@ void MacroAssembler::unsignedMaxInt16x8(FloatRegister rhs,
   vpmaxuw(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::unsignedMaxInt16x8(const SimdConstant& rhs,
+                                        FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpmaxuw,
+                &MacroAssembler::vpmaxuwSimd128);
+}
+
 void MacroAssembler::maxInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
   vpmaxsd(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::maxInt32x4(const SimdConstant& rhs,
+                                FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpmaxsd,
+                &MacroAssembler::vpmaxsdSimd128);
 }
 
 void MacroAssembler::unsignedMaxInt32x4(FloatRegister rhs,
                                         FloatRegister lhsDest) {
   vpmaxud(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::unsignedMaxInt32x4(const SimdConstant& rhs,
+                                        FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpmaxud,
+                &MacroAssembler::vpmaxudSimd128);
 }
 
 // Lane-wise integer rounding average
@@ -1785,6 +1965,12 @@ void MacroAssembler::bitwiseOrSimd128(FloatRegister rhs,
   vpor(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::bitwiseOrSimd128(const SimdConstant& rhs,
+                                      FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpor,
+                &MacroAssembler::vporSimd128);
+}
+
 void MacroAssembler::bitwiseXorSimd128(FloatRegister rhs,
                                        FloatRegister lhsDest) {
   vpxor(Operand(rhs), lhsDest, lhsDest);
@@ -1825,6 +2011,14 @@ void MacroAssembler::compareInt8x16(Assembler::Condition cond,
   MacroAssemblerX86Shared::compareInt8x16(lhsDest, Operand(rhs), cond, lhsDest);
 }
 
+void MacroAssembler::compareInt8x16(Assembler::Condition cond,
+                                    const SimdConstant& rhs,
+                                    FloatRegister lhsDest) {
+  MOZ_ASSERT(cond != Assembler::Condition::LessThan &&
+             cond != Assembler::Condition::GreaterThanOrEqual);
+  MacroAssemblerX86Shared::compareInt8x16(cond, rhs, lhsDest);
+}
+
 void MacroAssembler::unsignedCompareInt8x16(Assembler::Condition cond,
                                             FloatRegister rhs,
                                             FloatRegister lhsDest,
@@ -1839,6 +2033,14 @@ void MacroAssembler::compareInt16x8(Assembler::Condition cond,
   MacroAssemblerX86Shared::compareInt16x8(lhsDest, Operand(rhs), cond, lhsDest);
 }
 
+void MacroAssembler::compareInt16x8(Assembler::Condition cond,
+                                    const SimdConstant& rhs,
+                                    FloatRegister lhsDest) {
+  MOZ_ASSERT(cond != Assembler::Condition::LessThan &&
+             cond != Assembler::Condition::GreaterThanOrEqual);
+  MacroAssemblerX86Shared::compareInt16x8(cond, rhs, lhsDest);
+}
+
 void MacroAssembler::unsignedCompareInt16x8(Assembler::Condition cond,
                                             FloatRegister rhs,
                                             FloatRegister lhsDest,
@@ -1851,6 +2053,14 @@ void MacroAssembler::unsignedCompareInt16x8(Assembler::Condition cond,
 void MacroAssembler::compareInt32x4(Assembler::Condition cond,
                                     FloatRegister rhs, FloatRegister lhsDest) {
   MacroAssemblerX86Shared::compareInt32x4(lhsDest, Operand(rhs), cond, lhsDest);
+}
+
+void MacroAssembler::compareInt32x4(Assembler::Condition cond,
+                                    const SimdConstant& rhs,
+                                    FloatRegister lhsDest) {
+  MOZ_ASSERT(cond != Assembler::Condition::LessThan &&
+             cond != Assembler::Condition::GreaterThanOrEqual);
+  MacroAssemblerX86Shared::compareInt32x4(cond, rhs, lhsDest);
 }
 
 void MacroAssembler::unsignedCompareInt32x4(Assembler::Condition cond,
@@ -2015,6 +2225,12 @@ void MacroAssembler::widenDotInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
   vpmaddwd(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::widenDotInt16x8(const SimdConstant& rhs,
+                                     FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpmaddwd,
+                &MacroAssembler::vpmaddwdSimd128);
+}
+
 // Rounding
 
 void MacroAssembler::ceilFloat32x4(FloatRegister src, FloatRegister dest) {
@@ -2055,8 +2271,20 @@ void MacroAssembler::addFloat32x4(FloatRegister rhs, FloatRegister lhsDest) {
   vaddps(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::addFloat32x4(const SimdConstant& rhs,
+                                  FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vaddps,
+                &MacroAssembler::vaddpsSimd128);
+}
+
 void MacroAssembler::addFloat64x2(FloatRegister rhs, FloatRegister lhsDest) {
   vaddpd(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::addFloat64x2(const SimdConstant& rhs,
+                                  FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vaddpd,
+                &MacroAssembler::vaddpdSimd128);
 }
 
 // Floating subtract
@@ -2065,8 +2293,20 @@ void MacroAssembler::subFloat32x4(FloatRegister rhs, FloatRegister lhsDest) {
   vsubps(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::subFloat32x4(const SimdConstant& rhs,
+                                  FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vsubps,
+                &MacroAssembler::vsubpsSimd128);
+}
+
 void MacroAssembler::subFloat64x2(FloatRegister rhs, FloatRegister lhsDest) {
   AssemblerX86Shared::vsubpd(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::subFloat64x2(const SimdConstant& rhs,
+                                  FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vsubpd,
+                &MacroAssembler::vsubpdSimd128);
 }
 
 // Floating division
@@ -2075,8 +2315,20 @@ void MacroAssembler::divFloat32x4(FloatRegister rhs, FloatRegister lhsDest) {
   vdivps(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::divFloat32x4(const SimdConstant& rhs,
+                                  FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vdivps,
+                &MacroAssembler::vdivpsSimd128);
+}
+
 void MacroAssembler::divFloat64x2(FloatRegister rhs, FloatRegister lhsDest) {
   vdivpd(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::divFloat64x2(const SimdConstant& rhs,
+                                  FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vdivpd,
+                &MacroAssembler::vdivpdSimd128);
 }
 
 // Floating Multiply
@@ -2085,8 +2337,20 @@ void MacroAssembler::mulFloat32x4(FloatRegister rhs, FloatRegister lhsDest) {
   vmulps(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::mulFloat32x4(const SimdConstant& rhs,
+                                  FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vmulps,
+                &MacroAssembler::vmulpsSimd128);
+}
+
 void MacroAssembler::mulFloat64x2(FloatRegister rhs, FloatRegister lhsDest) {
   vmulpd(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::mulFloat64x2(const SimdConstant& rhs,
+                                  FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vmulpd,
+                &MacroAssembler::vmulpdSimd128);
 }
 
 // Floating square root
@@ -2130,18 +2394,42 @@ void MacroAssembler::narrowInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
   vpacksswb(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::narrowInt16x8(const SimdConstant& rhs,
+                                   FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpacksswb,
+                &MacroAssembler::vpacksswbSimd128);
+}
+
 void MacroAssembler::unsignedNarrowInt16x8(FloatRegister rhs,
                                            FloatRegister lhsDest) {
   vpackuswb(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::unsignedNarrowInt16x8(const SimdConstant& rhs,
+                                           FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpackuswb,
+                &MacroAssembler::vpackuswbSimd128);
 }
 
 void MacroAssembler::narrowInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
   vpackssdw(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::narrowInt32x4(const SimdConstant& rhs,
+                                   FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpackssdw,
+                &MacroAssembler::vpackssdwSimd128);
+}
+
 void MacroAssembler::unsignedNarrowInt32x4(FloatRegister rhs,
                                            FloatRegister lhsDest) {
   vpackusdw(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::unsignedNarrowInt32x4(const SimdConstant& rhs,
+                                           FloatRegister lhsDest) {
+  binarySimd128(rhs, lhsDest, &MacroAssembler::vpackusdw,
+                &MacroAssembler::vpackusdwSimd128);
 }
 
 // Integer to integer widening

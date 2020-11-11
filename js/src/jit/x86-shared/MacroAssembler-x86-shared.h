@@ -390,7 +390,6 @@ class MacroAssemblerX86Shared : public Assembler {
                                                    FloatRegister),
                      void (MacroAssembler::*constOp)(const SimdConstant&,
                                                      FloatRegister));
-
   // SIMD methods, defined in MacroAssembler-x86-shared-SIMD.cpp.
 
   void unsignedConvertInt32x4ToFloat32x4(FloatRegister src, FloatRegister dest);
@@ -430,16 +429,22 @@ class MacroAssemblerX86Shared : public Assembler {
 
   void compareInt8x16(FloatRegister lhs, Operand rhs, Assembler::Condition cond,
                       FloatRegister output);
+  void compareInt8x16(Assembler::Condition cond, const SimdConstant& rhs,
+                      FloatRegister lhsDest);
   void unsignedCompareInt8x16(FloatRegister lhs, Operand rhs,
                               Assembler::Condition cond, FloatRegister output,
                               FloatRegister tmp1, FloatRegister tmp2);
   void compareInt16x8(FloatRegister lhs, Operand rhs, Assembler::Condition cond,
                       FloatRegister output);
+  void compareInt16x8(Assembler::Condition cond, const SimdConstant& rhs,
+                      FloatRegister lhsDest);
   void unsignedCompareInt16x8(FloatRegister lhs, Operand rhs,
                               Assembler::Condition cond, FloatRegister output,
                               FloatRegister tmp1, FloatRegister tmp2);
   void compareInt32x4(FloatRegister lhs, Operand rhs, Assembler::Condition cond,
                       FloatRegister output);
+  void compareInt32x4(Assembler::Condition cond, const SimdConstant& rhs,
+                      FloatRegister lhsDest);
   void unsignedCompareInt32x4(FloatRegister lhs, Operand rhs,
                               Assembler::Condition cond, FloatRegister output,
                               FloatRegister tmp1, FloatRegister tmp2);
