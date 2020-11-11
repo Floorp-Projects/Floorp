@@ -181,6 +181,18 @@ add_task(async function searchOnEnterSoon() {
     "The input field in urlbar still has focus"
   );
 
+  // Check the caret position.
+  Assert.equal(
+    gURLBar.selectionStart,
+    gURLBar.value.length,
+    "The selectionStart indicates at ending of the value"
+  );
+  Assert.equal(
+    gURLBar.selectionEnd,
+    gURLBar.value.length,
+    "The selectionEnd indicates at ending of the value"
+  );
+
   // Keyup both key as soon as beforeUnload event happens.
   EventUtils.synthesizeKey("x", { type: "keyup" });
   EventUtils.synthesizeKey("KEY_Enter", { type: "keyup" });
@@ -194,6 +206,18 @@ add_task(async function searchOnEnterSoon() {
   // Check whether keyup event is not captured before unload event happens.
   const result = await onResult;
   is(result, "unload", "Keyup event is not captured.");
+
+  // Check the caret position again.
+  Assert.equal(
+    gURLBar.selectionStart,
+    0,
+    "The selectionStart indicates at beginning of the value"
+  );
+  Assert.equal(
+    gURLBar.selectionEnd,
+    0,
+    "The selectionEnd indicates at beginning of the value"
+  );
 
   // Cleanup.
   await onLoad;
