@@ -732,9 +732,7 @@ class NPZCSupport final
           break;
         case nsEventStatus_eConsumeDoDefault:
           returnResult->Complete(java::sdk::Integer::ValueOf(
-              (result.mHandledResult == Some(APZHandledResult::HandledByRoot))
-                  ? INPUT_RESULT_HANDLED
-                  : INPUT_RESULT_HANDLED_CONTENT));
+              ConvertAPZHandledResult(result.mHandledResult.value())));
           break;
         default:
           MOZ_ASSERT_UNREACHABLE("Unexpected nsEventStatus");
