@@ -256,6 +256,9 @@ class LocalStorageCache : public LocalStorageCacheBridge {
   // Result of load from the database.  Valid after mLoaded flag has been set.
   nsresult mLoadResult;
 
+  // Expected to be only 0 or 1.
+  uint32_t mPrivateBrowsingId;
+
   // Init() method has been called
   bool mInitialized : 1;
 
