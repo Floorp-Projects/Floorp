@@ -79,6 +79,89 @@ public class ContentBlockingController {
     }
 
     /**
+     * ExceptionList represents a content blocking exception list exported
+     * from Gecko. It can be used to persist the list or to inspect the URIs
+     * present in the list.
+     */
+    @Deprecated
+    @DeprecationSchedule(version = 85, id = "exception-list")
+    @AnyThread
+    public class ExceptionList {
+        private final @NonNull GeckoBundle mBundle;
+
+        /* package */ ExceptionList(final @NonNull GeckoBundle bundle) {
+            mBundle = new GeckoBundle(bundle);
+        }
+
+        /**
+         * Returns the URIs currently on the content blocking exception list.
+         *
+         * @return A string array containing the URIs.
+         */
+        public @NonNull String[] getUris() {
+            return mBundle.getStringArray("uris");
+        }
+
+        /**
+         * Returns a string representation of the content blocking exception list.
+         * May be null if the JSON to string conversion fails for any reason.
+         *
+         * @return A string representing the exception list.
+         */
+        @Override
+        public @Nullable String toString() {
+            String res;
+            try {
+                res = mBundle.toJSONObject().toString();
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "Could not convert session state to string.");
+                res = null;
+            }
+
+            return res;
+        }
+
+        /**
+         * Returns a JSONObject representation of the content blocking exception list.
+         *
+         * @return A JSONObject representing the exception list.
+         *
+         * @throws JSONException if conversion to JSONObject fails.
+         */
+        public @NonNull JSONObject toJson() throws JSONException {
+            return mBundle.toJSONObject();
+        }
+
+        /**
+         * Creates a new exception list from a string. The string should be valid
+         * output from {@link #toString}.
+         *
+         * @param savedList A string representation of a saved exception list.
+         *
+         * @throws JSONException if the string representation no longer represents valid JSON.
+         */
+        public ExceptionList(final @NonNull String savedList) throws JSONException {
+            mBundle = GeckoBundle.fromJSONObject(new JSONObject(savedList));
+        }
+
+        /**
+         * Creates a new exception list from a JSONObject. The JSONObject should be valid
+         * output from {@link #toJson}.
+         *
+         * @param savedList A JSONObject representation of a saved exception list.
+         *
+         * @throws JSONException if the JSONObject cannot be converted for any reason.
+         */
+        public ExceptionList(final @NonNull JSONObject savedList) throws JSONException {
+            mBundle = GeckoBundle.fromJSONObject(savedList);
+        }
+
+        /* package */ GeckoBundle getBundle() {
+            return mBundle;
+        }
+    }
+
+    /**
      * Add a content blocking exception for the site currently loaded by the supplied
      * {@link GeckoSession}.
      *
@@ -176,6 +259,18 @@ public class ContentBlockingController {
         };
         EventDispatcher.getInstance().dispatch("ContentBlocking:SaveList", null, result);
         return result;
+    }
+
+    /**
+     * Restore the supplied {@link ExceptionList}, overwriting the existing exception list.
+     *
+     * @param list An {@link ExceptionList} originally created by {@link #saveExceptionList}.
+     */
+    @Deprecated
+    @DeprecationSchedule(version = 85, id = "exception-list")
+    @UiThread
+    public void restoreExceptionList(final @NonNull ExceptionList list) {
+        EventDispatcher.getInstance().dispatch("ContentBlocking:RestoreList", list.getBundle());
     }
 
     /**
