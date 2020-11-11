@@ -892,6 +892,103 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
   defineReuseInput(lir, ins, LWasmBinarySimd128::LhsDest);
 }
 
+bool MWasmBinarySimd128::specializeForConstantRhs() {
+  // The order follows MacroAssembler.h, generally
+  switch (simdOp()) {
+    // Operations implemented by a single native instruction where it is
+    // plausible that the rhs (after commutation if available) could be a
+    // constant.
+    //
+    // Swizzle is not here because it was handled earlier in the pipeline.
+    //
+    // Integer compares >= and < are not here because they are not supported in
+    // the hardware.
+    //
+    // Floating compares are not here because our patching machinery can't
+    // handle them yet.
+    //
+    // Floating-point min and max (including pmin and pmax) are not here because
+    // they are not straightforward to implement.
+    case wasm::SimdOp::I8x16Add:
+    case wasm::SimdOp::I16x8Add:
+    case wasm::SimdOp::I32x4Add:
+    case wasm::SimdOp::I64x2Add:
+    case wasm::SimdOp::I8x16Sub:
+    case wasm::SimdOp::I16x8Sub:
+    case wasm::SimdOp::I32x4Sub:
+    case wasm::SimdOp::I64x2Sub:
+    case wasm::SimdOp::I16x8Mul:
+    case wasm::SimdOp::I32x4Mul:
+    case wasm::SimdOp::I8x16AddSaturateS:
+    case wasm::SimdOp::I8x16AddSaturateU:
+    case wasm::SimdOp::I16x8AddSaturateS:
+    case wasm::SimdOp::I16x8AddSaturateU:
+    case wasm::SimdOp::I8x16SubSaturateS:
+    case wasm::SimdOp::I8x16SubSaturateU:
+    case wasm::SimdOp::I16x8SubSaturateS:
+    case wasm::SimdOp::I16x8SubSaturateU:
+    case wasm::SimdOp::I8x16MinS:
+    case wasm::SimdOp::I8x16MinU:
+    case wasm::SimdOp::I16x8MinS:
+    case wasm::SimdOp::I16x8MinU:
+    case wasm::SimdOp::I32x4MinS:
+    case wasm::SimdOp::I32x4MinU:
+    case wasm::SimdOp::I8x16MaxS:
+    case wasm::SimdOp::I8x16MaxU:
+    case wasm::SimdOp::I16x8MaxS:
+    case wasm::SimdOp::I16x8MaxU:
+    case wasm::SimdOp::I32x4MaxS:
+    case wasm::SimdOp::I32x4MaxU:
+    case wasm::SimdOp::V128And:
+    case wasm::SimdOp::V128Or:
+    case wasm::SimdOp::V128Xor:
+    case wasm::SimdOp::I8x16Eq:
+    case wasm::SimdOp::I8x16Ne:
+    case wasm::SimdOp::I8x16GtS:
+    case wasm::SimdOp::I8x16LeS:
+    case wasm::SimdOp::I16x8Eq:
+    case wasm::SimdOp::I16x8Ne:
+    case wasm::SimdOp::I16x8GtS:
+    case wasm::SimdOp::I16x8LeS:
+    case wasm::SimdOp::I32x4Eq:
+    case wasm::SimdOp::I32x4Ne:
+    case wasm::SimdOp::I32x4GtS:
+    case wasm::SimdOp::I32x4LeS:
+    case wasm::SimdOp::I32x4DotSI16x8:
+    case wasm::SimdOp::F32x4Add:
+    case wasm::SimdOp::F64x2Add:
+    case wasm::SimdOp::F32x4Sub:
+    case wasm::SimdOp::F64x2Sub:
+    case wasm::SimdOp::F32x4Div:
+    case wasm::SimdOp::F64x2Div:
+    case wasm::SimdOp::F32x4Mul:
+    case wasm::SimdOp::F64x2Mul:
+    case wasm::SimdOp::I8x16NarrowSI16x8:
+    case wasm::SimdOp::I8x16NarrowUI16x8:
+    case wasm::SimdOp::I16x8NarrowSI32x4:
+    case wasm::SimdOp::I16x8NarrowUI32x4:
+      return true;
+    default:
+      return false;
+  }
+}
+
+void LIRGenerator::visitWasmBinarySimd128WithConstant(
+    MWasmBinarySimd128WithConstant* ins) {
+  MDefinition* lhs = ins->lhs();
+
+  MOZ_ASSERT(lhs->type() == MIRType::Simd128);
+  MOZ_ASSERT(ins->type() == MIRType::Simd128);
+
+  // Always beneficial to reuse the lhs register here, see discussion in
+  // visitWasmBinarySimd128() and also code in specializeForConstantRhs().
+
+  LAllocation lhsDestAlloc = useRegisterAtStart(lhs);
+  auto* lir =
+      new (alloc()) LWasmBinarySimd128WithConstant(lhsDestAlloc, ins->rhs());
+  defineReuseInput(lir, ins, LWasmBinarySimd128WithConstant::LhsDest);
+}
+
 void LIRGenerator::visitWasmShiftSimd128(MWasmShiftSimd128* ins) {
   MDefinition* lhs = ins->lhs();
   MDefinition* rhs = ins->rhs();
