@@ -1148,8 +1148,11 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
     }
 
     /* need to get the cert as a stan cert */
-    if (cert->nssCertificate) {
-        c = cert->nssCertificate;
+    CERT_LockCertTempPerm(cert);
+    NSSCertificate *nssCert = cert->nssCertificate;
+    CERT_UnlockCertTempPerm(cert);
+    if (nssCert) {
+        c = nssCert;
     } else {
         c = STAN_GetNSSCertificate(cert);
         if (c == NULL) {
