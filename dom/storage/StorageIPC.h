@@ -100,11 +100,11 @@ class StorageDBChild final : public PBackgroundStorageChild {
   virtual ~StorageDBChild();
 
  public:
-  explicit StorageDBChild(LocalStorageManager* aManager);
+  StorageDBChild(LocalStorageManager* aManager, uint32_t aPrivateBrowsingId);
 
-  static StorageDBChild* Get();
+  static StorageDBChild* Get(uint32_t aPrivateBrowsingId);
 
-  static StorageDBChild* GetOrCreate();
+  static StorageDBChild* GetOrCreate(uint32_t aPrivateBrowsingId);
 
   NS_INLINE_DECL_REFCOUNTING(StorageDBChild);
 
@@ -177,6 +177,9 @@ class StorageDBChild final : public PBackgroundStorageChild {
   // List of caches waiting for preload.  This ensures the contract that
   // AsyncPreload call references the cache for time of the preload.
   nsTHashtable<nsRefPtrHashKey<LocalStorageCacheBridge>> mLoadingCaches;
+
+  // Expected to be only 0 or 1.
+  const uint32_t mPrivateBrowsingId;
 
   // Status of the remote database
   nsresult mStatus;
@@ -332,7 +335,7 @@ class StorageDBParent final : public PBackgroundStorageParent {
   virtual ~StorageDBParent();
 
  public:
-  explicit StorageDBParent(const nsString& aProfilePath);
+  StorageDBParent(const nsString& aProfilePath, uint32_t aPrivateBrowsingId);
 
   void Init();
 
@@ -469,6 +472,9 @@ class StorageDBParent final : public PBackgroundStorageParent {
   // Populated for the same process actors, empty for other process actors.
   nsString mProfilePath;
 
+  // Expected to be only 0 or 1.
+  const uint32_t mPrivateBrowsingId;
+
   ThreadSafeAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
 
@@ -574,10 +580,11 @@ bool DeallocPBackgroundLocalStorageCacheParent(
     PBackgroundLocalStorageCacheParent* aActor);
 
 PBackgroundStorageParent* AllocPBackgroundStorageParent(
-    const nsString& aProfilePath);
+    const nsString& aProfilePath, const uint32_t& aPrivateBrowsingId);
 
 mozilla::ipc::IPCResult RecvPBackgroundStorageConstructor(
-    PBackgroundStorageParent* aActor, const nsString& aProfilePath);
+    PBackgroundStorageParent* aActor, const nsString& aProfilePath,
+    const uint32_t& aPrivateBrowsingId);
 
 bool DeallocPBackgroundStorageParent(PBackgroundStorageParent* aActor);
 

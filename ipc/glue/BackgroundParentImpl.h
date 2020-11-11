@@ -130,10 +130,12 @@ class BackgroundParentImpl : public PBackgroundParent,
       PBackgroundLocalStorageCacheParent* aActor) override;
 
   PBackgroundStorageParent* AllocPBackgroundStorageParent(
-      const nsString& aProfilePath) override;
+      const nsString& aProfilePath,
+      const uint32_t& aPrivateBrowsingId) override;
 
   mozilla::ipc::IPCResult RecvPBackgroundStorageConstructor(
-      PBackgroundStorageParent* aActor, const nsString& aProfilePath) override;
+      PBackgroundStorageParent* aActor, const nsString& aProfilePath,
+      const uint32_t& aPrivateBrowsingId) override;
 
   bool DeallocPBackgroundStorageParent(
       PBackgroundStorageParent* aActor) override;

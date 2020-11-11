@@ -175,7 +175,7 @@ parent:
 
   async PBackgroundSessionStorageManager(uint64_t aTopContextId);
 
-  async PBackgroundStorage(nsString profilePath);
+  async PBackgroundStorage(nsString profilePath, uint32_t privateBrowsingId);
 
   async PVsync();
 

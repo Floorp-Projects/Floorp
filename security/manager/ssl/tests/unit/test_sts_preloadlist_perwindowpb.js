@@ -24,6 +24,8 @@ function cleanup() {
 }
 
 function run_test() {
+  do_get_profile();
+
   registerCleanupFunction(cleanup);
   Services.obs.addObserver(gObserver, "last-pb-context-exited");
 
