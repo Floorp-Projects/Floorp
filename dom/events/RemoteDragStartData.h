@@ -11,8 +11,6 @@
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 
-class nsICookieJarSettings;
-
 namespace mozilla {
 namespace dom {
 
@@ -30,8 +28,7 @@ class RemoteDragStartData {
   RemoteDragStartData(BrowserParent* aBrowserParent,
                       nsTArray<IPCDataTransfer>&& aDataTransfer,
                       const LayoutDeviceIntRect& aRect,
-                      nsIPrincipal* aPrincipal, nsIContentSecurityPolicy* aCsp,
-                      nsICookieJarSettings* aCookieJarSettings);
+                      nsIPrincipal* aPrincipal, nsIContentSecurityPolicy* aCsp);
 
   void SetVisualization(
       already_AddRefed<gfx::DataSourceSurface> aVisualization) {
@@ -48,8 +45,7 @@ class RemoteDragStartData {
 
   void AddInitialDnDDataTo(DataTransfer* aDataTransfer,
                            nsIPrincipal** aPrincipal,
-                           nsIContentSecurityPolicy** aCsp,
-                           nsICookieJarSettings** aCookieJarSettings);
+                           nsIContentSecurityPolicy** aCsp);
 
  private:
   virtual ~RemoteDragStartData();
@@ -59,7 +55,6 @@ class RemoteDragStartData {
   const LayoutDeviceIntRect mRect;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIContentSecurityPolicy> mCsp;
-  nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
   RefPtr<mozilla::gfx::SourceSurface> mVisualization;
 };
 

@@ -815,50 +815,6 @@ var E10SUtils = {
   },
 
   /**
-   * Serialize cookieJarSettings.
-   *
-   * @param {nsICookieJarSettings} cookieJarSettings The cookieJarSettings to
-   *   serialize.
-   * @return {String} The base64 encoded cookieJarSettings data.
-   */
-  serializeCookieJarSettings(cookieJarSettings) {
-    let serialized = null;
-    if (cookieJarSettings) {
-      try {
-        serialized = serializationHelper.serializeToString(cookieJarSettings);
-      } catch (e) {
-        this.log().error(
-          `Failed to serialize cookieJarSettings '${cookieJarSettings}' ${e}`
-        );
-      }
-    }
-    return serialized;
-  },
-
-  /**
-   * Deserialize a base64 encoded cookieJarSettings
-   *
-   * @param {String} cookieJarSettings_b64 A base64 encoded serialized cookieJarSettings.
-   * @return {nsICookieJarSettings} A deserialized cookieJarSettings.
-   */
-  deserializeCookieJarSettings(cookieJarSettings_b64) {
-    let deserialized = null;
-    if (cookieJarSettings_b64) {
-      try {
-        deserialized = serializationHelper.deserializeObject(
-          cookieJarSettings_b64
-        );
-        deserialized.QueryInterface(Ci.nsICookieJarSettings);
-      } catch (e) {
-        this.log().error(
-          `Failed to deserialize cookieJarSettings_b64 '${cookieJarSettings_b64}' ${e}`
-        );
-      }
-    }
-    return deserialized;
-  },
-
-  /**
    * Returns whether or not a URI is supposed to load in a particular
    * browser given its current remote type.
    *

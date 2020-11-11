@@ -179,10 +179,6 @@ class WindowGlobalParent final : public WindowContext,
 
   nsICookieJarSettings* CookieJarSettings() { return mCookieJarSettings; }
 
-  nsICookieJarSettings* GetCookieJarSettings() const {
-    return mCookieJarSettings;
-  }
-
   bool DocumentHasLoaded() { return mDocumentHasLoaded; }
 
   bool DocumentHasUserInteracted() { return mDocumentHasUserInteracted; }

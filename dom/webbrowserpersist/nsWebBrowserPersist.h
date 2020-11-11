@@ -60,7 +60,6 @@ class nsWebBrowserPersist final : public nsIInterfaceRequestor,
   nsresult SaveURIInternal(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal,
                            nsContentPolicyType aContentPolicyType,
                            uint32_t aCacheKey, nsIReferrerInfo* aReferrerInfo,
-                           nsICookieJarSettings* aCookieJarSettings,
                            nsIInputStream* aPostData, const char* aExtraHeaders,
                            nsIURI* aFile, bool aCalcFileExt, bool aIsPrivate);
   nsresult SaveChannelInternal(nsIChannel* aChannel, nsIURI* aFile,
