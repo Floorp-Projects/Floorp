@@ -52,6 +52,16 @@ struct kinfo_proc;
 
 namespace base {
 
+enum ProcessArchitecture {
+  PROCESS_ARCH_INVALID = 0x0,
+  PROCESS_ARCH_I386 = 0x1,
+  PROCESS_ARCH_X86_64 = 0x2,
+  PROCESS_ARCH_PPC = 0x4,
+  PROCESS_ARCH_PPC_64 = 0x8,
+  PROCESS_ARCH_ARM = 0x10,
+  PROCESS_ARCH_ARM_64 = 0x20
+};
+
 // A minimalistic but hopefully cross-platform set of exit codes.
 // Do not change the enumeration values or you will break third-party
 // installers.
@@ -131,6 +141,13 @@ struct LaunchOptions {
   // If non-null, the fork delegate will be called instead of fork().
   // It is not required to call pthread_atfork hooks.
   mozilla::UniquePtr<ForkDelegate> fork_delegate = nullptr;
+#endif
+
+#if defined(OS_MACOSX) && defined(__aarch64__)
+  // The architecture to launch when launching a "universal" binary.
+  // Note: the implementation only supports launching x64 child
+  // processes from arm64 parent processes.
+  uint32_t arch = PROCESS_ARCH_INVALID;
 #endif
 };
 
