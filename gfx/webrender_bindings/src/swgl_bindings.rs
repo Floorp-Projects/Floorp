@@ -4,8 +4,9 @@
 
 use bindings::{GeckoProfilerThreadListener, WrCompositor};
 use gleam::{gl, gl::GLenum, gl::Gl};
-use std::cell::{Cell, RefCell};
+use std::cell::{Cell, UnsafeCell};
 use std::collections::{hash_map::HashMap, VecDeque};
+use std::ops::{Deref, DerefMut};
 use std::os::raw::c_void;
 use std::ptr;
 use std::rc::Rc;
@@ -132,7 +133,7 @@ pub struct SwTile {
     /// Whether the tile's contents has been invalidated
     invalid: Cell<bool>,
     /// Graph node for job dependencies of this tile
-    graph_node: Arc<SwCompositeGraphNode>,
+    graph_node: SwCompositeGraphNodeRef,
 }
 
 impl SwTile {
@@ -507,61 +508,107 @@ impl SwCompositeJob {
     }
 }
 
+/// A reference to a SwCompositeGraph node that can be passed from the render
+/// thread to the SwComposite thread. Consistency of mutation is ensured in
+/// SwCompositeGraphNode via use of Atomic operations that prevent more than
+/// one thread from mutating SwCompositeGraphNode at once. This avoids using
+/// messy and not-thread-safe RefCells or expensive Mutexes inside the graph
+/// node and at least signals to the compiler that potentially unsafe coercions
+/// are occurring.
+#[derive(Clone)]
+struct SwCompositeGraphNodeRef(Arc<UnsafeCell<SwCompositeGraphNode>>);
+
+impl SwCompositeGraphNodeRef {
+    fn new(graph_node: SwCompositeGraphNode) -> Self {
+        SwCompositeGraphNodeRef(Arc::new(UnsafeCell::new(graph_node)))
+    }
+
+    fn get(&self) -> &SwCompositeGraphNode {
+        unsafe { &*self.0.get() }
+    }
+
+    fn get_mut(&self) -> &mut SwCompositeGraphNode {
+        unsafe { &mut *self.0.get() }
+    }
+}
+
+unsafe impl Send for SwCompositeGraphNodeRef {}
+
+impl Deref for SwCompositeGraphNodeRef {
+    type Target = SwCompositeGraphNode;
+
+    fn deref(&self) -> &Self::Target {
+        self.get()
+    }
+}
+
+impl DerefMut for SwCompositeGraphNodeRef {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.get_mut()
+    }
+}
+
 /// Dependency graph of composite jobs to be completed. Keeps a list of child jobs that are dependent on the completion of this job.
 /// Also keeps track of the number of parent jobs that this job is dependent upon before it can be processed. Once there are no more
 /// in-flight parent jobs that it depends on, the graph node is finally added to the job queue for processing.
 struct SwCompositeGraphNode {
     /// Job to be queued for this graph node once ready.
-    job: RefCell<Option<SwCompositeJob>>,
+    job: Option<SwCompositeJob>,
     /// The maximum number of available bands associated with this job.
-    max_bands: Cell<u8>,
-    /// The number of remaining bands associated with this job.
+    max_bands: u8,
+    /// The number of remaining bands associated with this job. When this is
+    /// non-zero and the node has no more parents left, then the node is being
+    /// actively used by the composite thread to process jobs. Once it hits
+    /// zero, the owning thread (which brought it to zero) can safely retire
+    /// the node as no other thread is using it.
     remaining_bands: AtomicU8,
     /// The number of bands that have been taken for processing.
     band_index: AtomicU8,
-    /// Count of parents this graph node depends on.
+    /// Count of parents this graph node depends on. While this is non-zero the
+    /// node must ensure that it is only being actively mutated by the render
+    /// thread and otherwise never being accessed by the render thread.
     parents: AtomicU32,
     /// Graph nodes of child jobs that are dependent on this job
-    children: RefCell<Vec<Arc<SwCompositeGraphNode>>>,
+    children: Vec<SwCompositeGraphNodeRef>,
 }
 
 unsafe impl Sync for SwCompositeGraphNode {}
 
 impl SwCompositeGraphNode {
-    fn new() -> Arc<SwCompositeGraphNode> {
-        Arc::new(SwCompositeGraphNode {
-            job: RefCell::new(None),
-            max_bands: Cell::new(0),
+    fn new() -> SwCompositeGraphNodeRef {
+        SwCompositeGraphNodeRef::new(SwCompositeGraphNode {
+            job: None,
+            max_bands: 0,
             remaining_bands: AtomicU8::new(0),
             band_index: AtomicU8::new(0),
             parents: AtomicU32::new(0),
-            children: RefCell::new(Vec::new()),
+            children: Vec::new(),
         })
     }
 
     /// Reset the node's state for a new frame
-    fn reset(&self) {
-        self.job.replace(None);
-        self.max_bands.set(0);
+    fn reset(&mut self) {
+        self.job = None;
+        self.max_bands = 0;
         self.remaining_bands.store(0, Ordering::SeqCst);
         self.band_index.store(0, Ordering::SeqCst);
         // Initialize parents to 1 as sentinel dependency for uninitialized job
         // to avoid queuing unitialized job as unblocked child dependency.
         self.parents.store(1, Ordering::SeqCst);
-        self.children.borrow_mut().clear();
+        self.children.clear();
     }
 
     /// Add a dependent child node to dependency list. Update its parent count.
-    fn add_child(&self, child: Arc<SwCompositeGraphNode>) {
+    fn add_child(&mut self, child: SwCompositeGraphNodeRef) {
         child.parents.fetch_add(1, Ordering::SeqCst);
-        self.children.borrow_mut().push(child);
+        self.children.push(child);
     }
 
     /// Install a job for this node. Return whether or not the job has any unprocessed parents
     /// that would block immediate composition.
-    fn set_job(&self, job: SwCompositeJob, num_bands: u8) -> bool {
-        self.job.replace(Some(job));
-        self.max_bands.set(num_bands);
+    fn set_job(&mut self, job: SwCompositeJob, num_bands: u8) -> bool {
+        self.job = Some(job);
+        self.max_bands = num_bands;
         self.remaining_bands.store(num_bands, Ordering::SeqCst);
         // Subtract off the sentinel parent dependency now that job is initialized and check
         // whether there are any remaining parent dependencies to see if this job is ready.
@@ -570,37 +617,33 @@ impl SwCompositeGraphNode {
 
     fn take_band(&self) -> (u8, bool) {
         let band_index = self.band_index.fetch_add(1, Ordering::SeqCst);
-        (band_index, band_index + 1 >= self.max_bands.get())
+        (band_index, band_index + 1 >= self.max_bands)
     }
 
     /// Try to take the job from this node for processing and then process it within the current band.
     fn process_job(&self, band_index: u8) {
-        unsafe {
-            // Borrow the job unguarded so that we don't update the borrow count which would be unsafe.
-            // The job itself will never be modified while it is in use, so this is actually safe.
-            if let Ok(Some(ref job)) = self.job.try_borrow_unguarded() {
-                job.process(band_index);
-            }
+        if let Some(ref job) = self.job {
+            job.process(band_index);
         }
     }
 
     /// After processing a band, check all child dependencies and remove this parent from
     /// their dependency counts. If applicable, queue the new child bands for composition.
-    fn unblock_children(&self, thread: &SwCompositeThread) {
+    fn unblock_children(&mut self, thread: &SwCompositeThread) {
         if self.remaining_bands.fetch_sub(1, Ordering::SeqCst) > 1 {
             return;
         }
         // Clear the job to release any locked resources.
-        self.job.replace(None);
+        self.job = None;
         let mut lock = None;
-        for child in self.children.borrow().iter() {
+        for child in self.children.drain(..) {
             // Remove the child's parent dependency on this node. If there are no more
             // parent dependencies left, send the child job bands for composition.
             if child.parents.fetch_sub(1, Ordering::SeqCst) <= 1 {
                 if lock.is_none() {
                     lock = Some(thread.lock());
                 }
-                thread.send_job(lock.as_mut().unwrap(), child.clone(), false);
+                thread.send_job(lock.as_mut().unwrap(), child, false);
             }
         }
     }
@@ -611,7 +654,7 @@ impl SwCompositeGraphNode {
 /// the job count.
 struct SwCompositeThread {
     /// Queue of available composite jobs
-    jobs: Mutex<VecDeque<Arc<SwCompositeGraphNode>>>,
+    jobs: Mutex<SwCompositeJobQueue>,
     /// Count of unprocessed jobs still in the queue
     job_count: AtomicIsize,
     /// Condition signaled when there are jobs available to process.
@@ -624,7 +667,10 @@ struct SwCompositeThread {
 /// and the rendering thread so that both ends can access the job queue.
 unsafe impl Sync for SwCompositeThread {}
 
-type SwCompositeJobQueue = VecDeque<Arc<SwCompositeGraphNode>>;
+/// A FIFO queue of composite jobs to be processed.
+type SwCompositeJobQueue = VecDeque<SwCompositeGraphNodeRef>;
+
+/// Locked access to the composite job queue.
 type SwCompositeThreadLock<'a> = MutexGuard<'a, SwCompositeJobQueue>;
 
 impl SwCompositeThread {
@@ -632,7 +678,7 @@ impl SwCompositeThread {
     /// to do the composition.
     fn new() -> Arc<SwCompositeThread> {
         let info = Arc::new(SwCompositeThread {
-            jobs: Mutex::new(VecDeque::new()),
+            jobs: Mutex::new(SwCompositeJobQueue::new()),
             job_count: AtomicIsize::new(0),
             jobs_available: Condvar::new(),
             jobs_completed: Condvar::new(),
@@ -666,7 +712,7 @@ impl SwCompositeThread {
     /// Process a job contained in a dependency graph node received from the job queue.
     /// Any child dependencies will be unblocked as appropriate after processing. The
     /// job count will be updated to reflect this.
-    fn process_job(&self, graph_node: Arc<SwCompositeGraphNode>, band: u8) {
+    fn process_job(&self, mut graph_node: SwCompositeGraphNodeRef, band: u8) {
         // Do the actual processing of the job contained in this node.
         graph_node.process_job(band);
         // Unblock any child dependencies now that this job has been processed.
@@ -685,7 +731,7 @@ impl SwCompositeThread {
         opaque: bool,
         flip_y: bool,
         filter: ImageRendering,
-        graph_node: &Arc<SwCompositeGraphNode>,
+        mut graph_node: SwCompositeGraphNodeRef,
         job_queue: &mut SwCompositeJobQueue,
     ) {
         // For jobs that would span a sufficiently large destination rectangle, split
@@ -707,7 +753,7 @@ impl SwCompositeThread {
         };
         self.job_count.fetch_add(num_bands as isize, Ordering::SeqCst);
         if graph_node.set_job(job, num_bands) {
-            self.send_job(job_queue, graph_node.clone(), true);
+            self.send_job(job_queue, graph_node, true);
         }
     }
 
@@ -726,7 +772,7 @@ impl SwCompositeThread {
     /// Send a job to the composite thread by adding it to the job queue.
     /// Optionally signal that this job has been added in case the queue
     /// was empty and the SwComposite thread is waiting for jobs.
-    fn send_job(&self, queue: &mut SwCompositeJobQueue, job: Arc<SwCompositeGraphNode>, signal: bool) {
+    fn send_job(&self, queue: &mut SwCompositeJobQueue, job: SwCompositeGraphNodeRef, signal: bool) {
         if signal && queue.is_empty() {
             self.jobs_available.notify_all();
         }
@@ -735,7 +781,7 @@ impl SwCompositeThread {
 
     /// Take a job from the queue. Optionally block waiting for jobs to become
     /// available if this is called from the SwComposite thread.
-    fn take_job(&self, wait: bool) -> Option<(Arc<SwCompositeGraphNode>, u8)> {
+    fn take_job(&self, wait: bool) -> Option<(SwCompositeGraphNodeRef, u8)> {
         // Lock the job queue while checking for available jobs. The lock
         // won't be held while the job is processed later outside of this
         // function so that other threads can pull from the queue meanwhile.
@@ -955,7 +1001,7 @@ impl SwCompositor {
                         }
                         // Regardless of whether this tile is deferred, if it has dependency
                         // overlaps, then record that it is potentially a dependency parent.
-                        tile.graph_node.add_child(overlap_tile.graph_node.clone());
+                        tile.graph_node.get_mut().add_child(overlap_tile.graph_node.clone());
                     }
                 }
             }
@@ -1019,7 +1065,7 @@ impl SwCompositor {
                     surface.is_opaque,
                     flip_y,
                     filter,
-                    &tile.graph_node,
+                    tile.graph_node.clone(),
                     job_queue,
                 );
             }
