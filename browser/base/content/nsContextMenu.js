@@ -60,6 +60,9 @@ function openContextMenu(aMessage, aBrowser, aActor) {
     parentAllowsMixedContent: data.parentAllowsMixedContent,
     userContextId: data.userContextId,
     webExtContextData: data.webExtContextData,
+    cookieJarSettings: E10SUtils.deserializeCookieJarSettings(
+      data.cookieJarSettings
+    ),
   };
 
   let popup = browser.ownerDocument.getElementById("contentAreaContextMenu");
