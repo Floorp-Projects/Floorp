@@ -581,15 +581,17 @@ nsNSSCertificate::GetSerialNumber(nsAString& _serialNumber) {
 nsresult nsNSSCertificate::GetCertificateHash(nsAString& aFingerprint,
                                               SECOidTag aHashAlg) {
   aFingerprint.Truncate();
-  Digest digest;
-  nsresult rv =
-      digest.DigestBuf(aHashAlg, mCert->derCert.data, mCert->derCert.len);
+  nsTArray<uint8_t> digestArray;
+  nsresult rv = Digest::DigestBuf(aHashAlg, mCert->derCert.data,
+                                  mCert->derCert.len, digestArray);
   if (NS_FAILED(rv)) {
     return rv;
   }
+  SECItem digestItem = {siBuffer, digestArray.Elements(),
+                        static_cast<unsigned int>(digestArray.Length())};
 
-  UniquePORTString fpStr(CERT_Hexify(const_cast<SECItem*>(&digest.get()),
-                                     true /* use colon delimiters */));
+  UniquePORTString fpStr(
+      CERT_Hexify(&digestItem, true /* use colon delimiters */));
   if (!fpStr) {
     return NS_ERROR_FAILURE;
   }
@@ -647,15 +649,15 @@ nsNSSCertificate::GetSha256SubjectPublicKeyInfoDigest(
     return NS_ERROR_INVALID_ARG;
   }
   pkix::Input derPublicKey = cert.GetSubjectPublicKeyInfo();
-  Digest digest;
-  nsresult rv = digest.DigestBuf(SEC_OID_SHA256, derPublicKey.UnsafeGetData(),
-                                 derPublicKey.GetLength());
+  nsTArray<uint8_t> digestArray;
+  nsresult rv = Digest::DigestBuf(SEC_OID_SHA256, derPublicKey.UnsafeGetData(),
+                                 derPublicKey.GetLength(), digestArray);
   if (NS_FAILED(rv)) {
     return rv;
   }
   rv = Base64Encode(nsDependentCSubstring(
-                        BitwiseCast<char*, unsigned char*>(digest.get().data),
-                        digest.get().len),
+                        BitwiseCast<char*, uint8_t*>(digestArray.Elements()),
+                        digestArray.Length()),
                     aSha256SPKIDigest);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

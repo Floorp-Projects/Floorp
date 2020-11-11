@@ -77,9 +77,10 @@ struct DigestWithAlgorithm {
 };
 
 // The digest must have a lifetime greater than or equal to the returned string.
-inline nsDependentCSubstring DigestToDependentString(const Digest& digest) {
-  return nsDependentCSubstring(
-      BitwiseCast<char*, unsigned char*>(digest.get().data), digest.get().len);
+inline nsDependentCSubstring DigestToDependentString(
+    nsTArray<uint8_t>& digest) {
+  return nsDependentCSubstring(BitwiseCast<char*, uint8_t*>(digest.Elements()),
+                               digest.Length());
 }
 
 // Reads a maximum of 8MB from a stream into the supplied buffer.
@@ -142,7 +143,7 @@ nsresult FindAndLoadOneEntry(
     /*out*/ nsACString& filename,
     /*out*/ SECItem& buf,
     /*optional, in*/ SECOidTag digestAlgorithm = SEC_OID_SHA1,
-    /*optional, out*/ Digest* bufDigest = nullptr) {
+    /*optional, out*/ nsTArray<uint8_t>* bufDigest = nullptr) {
   nsCOMPtr<nsIUTF8StringEnumerator> files;
   nsresult rv = zip->FindEntries(searchPattern, getter_AddRefs(files));
   if (NS_FAILED(rv) || !files) {
@@ -176,7 +177,8 @@ nsresult FindAndLoadOneEntry(
   }
 
   if (bufDigest) {
-    rv = bufDigest->DigestBuf(digestAlgorithm, buf.data, buf.len - 1);
+    rv = Digest::DigestBuf(digestAlgorithm,
+                           Span<uint8_t>{buf.data, buf.len - 1}, *bufDigest);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -210,13 +212,9 @@ nsresult VerifyStreamContentDigest(
     return NS_ERROR_SIGNED_JAR_ENTRY_TOO_LARGE;
   }
 
-  UniquePK11Context digestContext(
-      PK11_CreateDigestContext(digestFromManifest.mAlgorithm));
-  if (!digestContext) {
-    return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
-  }
+  Digest digest;
 
-  rv = MapSECStatus(PK11_DigestBegin(digestContext.get()));
+  rv = digest.Begin(digestFromManifest.mAlgorithm);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint64_t totalBytesRead = 0;
@@ -235,7 +233,7 @@ nsresult VerifyStreamContentDigest(
       return NS_ERROR_SIGNED_JAR_ENTRY_TOO_LARGE;
     }
 
-    rv = MapSECStatus(PK11_DigestOp(digestContext.get(), buf.data, bytesRead));
+    rv = digest.Update(buf.data, bytesRead);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -246,11 +244,11 @@ nsresult VerifyStreamContentDigest(
   }
 
   // Verify that the digests match.
-  Digest digest;
-  rv = digest.End(digestFromManifest.mAlgorithm, digestContext);
+  nsTArray<uint8_t> outArray;
+  rv = digest.End(outArray);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsDependentCSubstring digestStr(DigestToDependentString(digest));
+  nsDependentCSubstring digestStr(DigestToDependentString(outArray));
   if (!digestStr.Equals(digestFromManifest.mDigest)) {
     return NS_ERROR_SIGNED_JAR_MODIFIED_ENTRY;
   }
@@ -749,13 +747,13 @@ Span<const uint8_t> GetPKCS7SignerCert(
 }
 
 nsresult VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
-                         const SECItem& detachedSHA1Digest,
-                         const SECItem& detachedSHA256Digest,
+                         nsTArray<uint8_t>& detachedSHA1Digest,
+                         nsTArray<uint8_t>& detachedSHA256Digest,
                          /*out*/ SECOidTag& digestAlgorithm,
                          /*out*/ nsTArray<uint8_t>& signerCert) {
-  if (NS_WARN_IF(!buffer.data || buffer.len == 0 || !detachedSHA1Digest.data ||
-                 detachedSHA1Digest.len == 0 || !detachedSHA256Digest.data ||
-                 detachedSHA256Digest.len == 0)) {
+  if (NS_WARN_IF(!buffer.data || buffer.len == 0 ||
+                 detachedSHA1Digest.Length() == 0 ||
+                 detachedSHA256Digest.Length() == 0)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -799,16 +797,20 @@ nsresult VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
 
   NSSCMSSignerInfo* signerInfo =
       GetSignerInfoForDigestAlgorithm(signedData, SEC_OID_SHA256);
-  const SECItem* detachedDigest = &detachedSHA256Digest;
+  nsTArray<uint8_t>* tmpDetachedDigest = &detachedSHA256Digest;
   digestAlgorithm = SEC_OID_SHA256;
   if (!signerInfo) {
     signerInfo = GetSignerInfoForDigestAlgorithm(signedData, SEC_OID_SHA1);
     if (!signerInfo) {
       return NS_ERROR_CMS_VERIFY_NOT_SIGNED;
     }
-    detachedDigest = &detachedSHA1Digest;
+    tmpDetachedDigest = &detachedSHA1Digest;
     digestAlgorithm = SEC_OID_SHA1;
   }
+
+  const SECItem detachedDigest = {
+      siBuffer, tmpDetachedDigest->Elements(),
+      static_cast<unsigned int>(tmpDetachedDigest->Length())};
 
   // Get the certificate that issued the PKCS7 signature.
   Span<const uint8_t> signerCertSpan =
@@ -853,7 +855,7 @@ nsresult VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
     return mozilla::psm::GetXPCOMFromNSSError(SEC_ERROR_PKCS7_BAD_SIGNATURE);
   }
   return MapSECStatus(NSS_CMSSignerInfo_Verify(
-      signerInfo, const_cast<SECItem*>(detachedDigest), &pkcs7DataOid));
+      signerInfo, const_cast<SECItem*>(&detachedDigest), &pkcs7DataOid));
 }
 
 class CoseVerificationContext {
@@ -1187,15 +1189,16 @@ nsresult VerifyPK7Signature(
 
   // Calculate both the SHA-1 and SHA-256 hashes of the signature file - we
   // don't know what algorithm the PKCS#7 signature used.
-  Digest sfCalculatedSHA1Digest;
-  rv = sfCalculatedSHA1Digest.DigestBuf(SEC_OID_SHA1, sfBuffer.data,
-                                        sfBuffer.len - 1);
+  nsTArray<uint8_t> sfCalculatedSHA1Digest;
+  rv = Digest::DigestBuf(SEC_OID_SHA1, sfBuffer.data, sfBuffer.len - 1,
+                         sfCalculatedSHA1Digest);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Digest sfCalculatedSHA256Digest;
-  rv = sfCalculatedSHA256Digest.DigestBuf(SEC_OID_SHA256, sfBuffer.data,
-                                          sfBuffer.len - 1);
+
+  nsTArray<uint8_t> sfCalculatedSHA256Digest;
+  rv = Digest::DigestBuf(SEC_OID_SHA256, sfBuffer.data, sfBuffer.len - 1,
+                         sfCalculatedSHA256Digest);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1204,9 +1207,8 @@ nsresult VerifyPK7Signature(
   // If we get here, the signature has to verify even if PKCS#7 is not required.
   sigBuffer.type = siBuffer;
   SECOidTag digestToUse;
-  rv =
-      VerifySignature(aTrustedRoot, sigBuffer, sfCalculatedSHA1Digest.get(),
-                      sfCalculatedSHA256Digest.get(), digestToUse, aSignerCert);
+  rv = VerifySignature(aTrustedRoot, sigBuffer, sfCalculatedSHA1Digest,
+                       sfCalculatedSHA256Digest, digestToUse, aSignerCert);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1225,17 +1227,18 @@ nsresult VerifyPK7Signature(
 
   // Read PK7 manifest (MF) file.
   ScopedAutoSECItem manifestBuffer;
-  Digest mfCalculatedDigest;
+  nsTArray<uint8_t> digestArray;
   nsAutoCString mfFilename;
   rv = FindAndLoadOneEntry(aZip, nsLiteralCString(JAR_MF_SEARCH_STRING),
                            mfFilename, manifestBuffer, digestToUse,
-                           &mfCalculatedDigest);
+                           &digestArray);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   nsDependentCSubstring calculatedDigest(
-      DigestToDependentString(mfCalculatedDigest));
+      BitwiseCast<char*, uint8_t*>(digestArray.Elements()),
+      digestArray.Length());
   if (!mfDigest.Equals(calculatedDigest)) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
   }

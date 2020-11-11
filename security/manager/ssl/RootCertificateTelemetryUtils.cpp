@@ -47,10 +47,10 @@ class BinaryHashSearchArrayComparator {
 // storage (Enterprise Root).
 // See also the constants in RootCertificateTelemetryUtils.h.
 int32_t RootCABinNumber(Span<const uint8_t> cert) {
-  Digest digest;
+  nsTArray<uint8_t> digestArray;
 
   // Compute SHA256 hash of the certificate
-  nsresult rv = digest.DigestBuf(SEC_OID_SHA256, cert.data(), cert.size());
+  nsresult rv = Digest::DigestBuf(SEC_OID_SHA256, cert, digestArray);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return ROOT_CERTIFICATE_HASH_FAILURE;
   }
@@ -58,16 +58,15 @@ int32_t RootCABinNumber(Span<const uint8_t> cert) {
   // Compare against list of stored hashes
   size_t idx;
 
-  MOZ_LOG(
-      gPublicKeyPinningTelemetryLog, LogLevel::Debug,
-      ("pkpinTelem: First bytes %02x %02x %02x %02x\n", digest.get().data[0],
-       digest.get().data[1], digest.get().data[2], digest.get().data[3]));
+  MOZ_LOG(gPublicKeyPinningTelemetryLog, LogLevel::Debug,
+          ("pkpinTelem: First bytes %02x %02x %02x %02x\n",
+           digestArray.ElementAt(0), digestArray.ElementAt(1),
+           digestArray.ElementAt(2), digestArray.ElementAt(3)));
 
-  if (mozilla::BinarySearchIf(
-          ROOT_TABLE, 0, ArrayLength(ROOT_TABLE),
-          BinaryHashSearchArrayComparator(
-              static_cast<uint8_t*>(digest.get().data), digest.get().len),
-          &idx)) {
+  if (mozilla::BinarySearchIf(ROOT_TABLE, 0, ArrayLength(ROOT_TABLE),
+                              BinaryHashSearchArrayComparator(
+                                  digestArray.Elements(), digestArray.Length()),
+                              &idx)) {
     MOZ_LOG(gPublicKeyPinningTelemetryLog, LogLevel::Debug,
             ("pkpinTelem: Telemetry index was %zu, bin is %d\n", idx,
              ROOT_TABLE[idx].binNumber));

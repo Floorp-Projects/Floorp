@@ -102,8 +102,7 @@ BackgroundFileSaver::BackgroundFileSaver()
       mSha256Enabled(false),
       mSignatureInfoEnabled(false),
       mActualTarget(nullptr),
-      mActualTargetKeepPartial(false),
-      mDigestContext(nullptr) {
+      mActualTargetKeepPartial(false) {
   LOG(("Created BackgroundFileSaver [this = %p]", this));
 }
 
@@ -518,16 +517,15 @@ nsresult BackgroundFileSaver::ProcessStateChange() {
     }
   }
 
-  // Create the digest context if requested and NSS hasn't been shut down.
-  if (sha256Enabled && !mDigestContext) {
-    mDigestContext =
-        UniquePK11Context(PK11_CreateDigestContext(SEC_OID_SHA256));
-    NS_ENSURE_TRUE(mDigestContext, NS_ERROR_OUT_OF_MEMORY);
+  // Create the digest if requested and NSS hasn't been shut down.
+  if (sha256Enabled && mDigest.isNothing()) {
+    mDigest.emplace(Digest());
+    mDigest->Begin(SEC_OID_SHA256);
   }
 
   // When we are requested to append to an existing file, we should read the
   // existing data and ensure we include it as part of the final hash.
-  if (mDigestContext && append && !isContinuation) {
+  if (mDigest.isSome() && append && !isContinuation) {
     nsCOMPtr<nsIInputStream> inputStream;
     rv = NS_NewLocalFileInputStream(getter_AddRefs(inputStream), mActualTarget,
                                     PR_RDONLY | nsIFile::OS_READAHEAD);
@@ -545,9 +543,8 @@ nsresult BackgroundFileSaver::ProcessStateChange() {
           break;
         }
 
-        nsresult rv = MapSECStatus(
-            PK11_DigestOp(mDigestContext.get(),
-                          BitwiseCast<unsigned char*, char*>(buffer), count));
+        nsresult rv =
+            mDigest->Update(BitwiseCast<unsigned char*, char*>(buffer), count);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
@@ -582,14 +579,14 @@ nsresult BackgroundFileSaver::ProcessStateChange() {
   NS_ENSURE_SUCCESS(rv, rv);
   outputStream = bufferedStream;
 
-  // Wrap the output stream so that it feeds the digest context if needed.
-  if (mDigestContext) {
-    // Constructing the DigestOutputStream cannot fail. Passing mDigestContext
+  // Wrap the output stream so that it feeds the digest if needed.
+  if (mDigest.isSome()) {
+    // Constructing the DigestOutputStream cannot fail. Passing mDigest
     // to DigestOutputStream is safe, because BackgroundFileSaver always
     // outlives the outputStream. BackgroundFileSaver is reference-counted
-    // before the call to AsyncCopy, and mDigestContext is never destroyed
+    // before the call to AsyncCopy, and mDigest is never destroyed
     // before AsyncCopyCallback.
-    outputStream = new DigestOutputStream(outputStream, mDigestContext.get());
+    outputStream = new DigestOutputStream(outputStream, mDigest.ref());
   }
 
   // Start copying our input to the target file.  No errors can be raised past
@@ -675,13 +672,13 @@ bool BackgroundFileSaver::CheckCompletion() {
   }
 
   // Finish computing the hash
-  if (!failed && mDigestContext) {
-    Digest d;
-    rv = d.End(SEC_OID_SHA256, mDigestContext);
+  if (!failed && mDigest.isSome()) {
+    nsTArray<uint8_t> outArray;
+    rv = mDigest->End(outArray);
     if (NS_SUCCEEDED(rv)) {
       MutexAutoLock lock(mLock);
       mSha256 = nsDependentCSubstring(
-          BitwiseCast<char*, unsigned char*>(d.get().data), d.get().len);
+          BitwiseCast<char*, uint8_t*>(outArray.Elements()), outArray.Length());
     }
   }
 
@@ -1077,9 +1074,8 @@ nsresult BackgroundFileSaverStreamListener::NotifySuspendOrResume() {
 NS_IMPL_ISUPPORTS(DigestOutputStream, nsIOutputStream)
 
 DigestOutputStream::DigestOutputStream(nsIOutputStream* aStream,
-                                       PK11Context* aContext)
-    : mOutputStream(aStream), mDigestContext(aContext) {
-  MOZ_ASSERT(mDigestContext, "Can't have null digest context");
+                                       Digest& aDigest)
+    : mOutputStream(aStream), mDigest(aDigest) {
   MOZ_ASSERT(mOutputStream, "Can't have null output stream");
 }
 
@@ -1091,9 +1087,8 @@ DigestOutputStream::Flush() { return mOutputStream->Flush(); }
 
 NS_IMETHODIMP
 DigestOutputStream::Write(const char* aBuf, uint32_t aCount, uint32_t* retval) {
-  nsresult rv = MapSECStatus(PK11_DigestOp(
-      mDigestContext, BitwiseCast<const unsigned char*, const char*>(aBuf),
-      aCount));
+  nsresult rv = mDigest.Update(
+      BitwiseCast<const unsigned char*, const char*>(aBuf), aCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return mOutputStream->Write(aBuf, aCount, retval);
