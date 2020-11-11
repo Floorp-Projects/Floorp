@@ -1402,7 +1402,7 @@ void nsPresContext::ThemeChangedInternal() {
     if (XRE_IsParentProcess()) {
       nsTArray<ContentParent*> cp;
       ContentParent::GetAll(cp);
-      LookAndFeelCache lnfCache = LookAndFeel::GetCache();
+      widget::LookAndFeelCache lnfCache = LookAndFeel::GetCache();
       for (ContentParent* c : cp) {
         Unused << c->SendThemeChanged(lnfCache, kind);
       }

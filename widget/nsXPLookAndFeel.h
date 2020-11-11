@@ -8,6 +8,7 @@
 
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/ServoStyleConsts.h"
+#include "mozilla/widget/LookAndFeelTypes.h"
 #include "nsTArray.h"
 
 class nsLookAndFeel;
@@ -71,6 +72,11 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
   virtual bool GetEchoPasswordImpl() { return false; }
 
   virtual uint32_t GetPasswordMaskDelayImpl() { return 600; }
+
+  using LookAndFeelCache = mozilla::widget::LookAndFeelCache;
+  using LookAndFeelInt = mozilla::widget::LookAndFeelInt;
+  using LookAndFeelFont = mozilla::widget::LookAndFeelFont;
+  using LookAndFeelColor = mozilla::widget::LookAndFeelColor;
 
   virtual LookAndFeelCache GetCacheImpl();
   virtual void SetCacheImpl(const LookAndFeelCache& aCache) {}
