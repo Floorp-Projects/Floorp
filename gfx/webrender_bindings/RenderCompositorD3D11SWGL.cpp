@@ -221,14 +221,23 @@ bool RenderCompositorD3D11SWGL::MapTile(wr::NativeTileId aId,
   mCurrentTileDirty = IntRect(aDirtyRect.origin.x, aDirtyRect.origin.y,
                               aDirtyRect.size.width, aDirtyRect.size.height);
 
-  DataSourceSurface::MappedSurface map;
-  if (!mCurrentTile.mSurface->Map(DataSourceSurface::READ_WRITE, &map)) {
-    return false;
-  }
+  RefPtr<ID3D11DeviceContext> context;
+  mCompositor->GetDevice()->GetImmediateContext(getter_AddRefs(context));
 
-  *aData =
-      map.mData + aValidRect.origin.y * map.mStride + aValidRect.origin.x * 4;
-  *aStride = map.mStride;
+  D3D11_MAPPED_SUBRESOURCE mappedSubresource;
+  DebugOnly<HRESULT> hr = context->Map(mCurrentTile.mStagingTexture, 0,
+                                       D3D11_MAP_WRITE, 0, &mappedSubresource);
+  MOZ_ASSERT(SUCCEEDED(hr));
+
+  // aData is expected to contain a pointer to the first pixel within the valid
+  // rect, so take the mapped resource's data (which covers the full tile size)
+  // and offset it by the top/left of the valid rect.
+  *aData = (uint8_t*)mappedSubresource.pData +
+           aValidRect.origin.y * mappedSubresource.RowPitch +
+           aValidRect.origin.x * 4;
+  *aStride = mappedSubresource.RowPitch;
+
+  // Store the new valid rect, so that we can composite only those pixels
   layerCursor->second.mValidRect =
       gfx::Rect(aValidRect.origin.x, aValidRect.origin.y, aValidRect.size.width,
                 aValidRect.size.height);
@@ -236,9 +245,22 @@ bool RenderCompositorD3D11SWGL::MapTile(wr::NativeTileId aId,
 }
 
 void RenderCompositorD3D11SWGL::UnmapTile() {
-  mCurrentTile.mSurface->Unmap();
-  nsIntRegion dirty(mCurrentTileDirty);
-  mCurrentTile.mTexture->Update(mCurrentTile.mSurface, &dirty);
+  RefPtr<ID3D11DeviceContext> context;
+  mCompositor->GetDevice()->GetImmediateContext(getter_AddRefs(context));
+
+  context->Unmap(mCurrentTile.mStagingTexture, 0);
+
+  D3D11_BOX box;
+  box.front = 0;
+  box.back = 1;
+  box.left = mCurrentTileDirty.X();
+  box.top = mCurrentTileDirty.Y();
+  box.right = mCurrentTileDirty.XMost();
+  box.bottom = mCurrentTileDirty.YMost();
+
+  context->CopySubresourceRegion(mCurrentTile.mTexture->GetD3D11Texture(), 0,
+                                 mCurrentTileDirty.x, mCurrentTileDirty.y, 0,
+                                 mCurrentTile.mStagingTexture, 0, &box);
 }
 
 void RenderCompositorD3D11SWGL::CreateSurface(wr::NativeSurfaceId aId,
@@ -270,13 +292,32 @@ void RenderCompositorD3D11SWGL::CreateTile(wr::NativeSurfaceId aId, int32_t aX,
   Surface& surface = surfaceCursor->second;
   MOZ_RELEASE_ASSERT(!surface.mIsExternal);
 
-  RefPtr<DataTextureSourceD3D11> source =
-      new DataTextureSourceD3D11(gfx::SurfaceFormat::B8G8R8A8, mCompositor,
-                                 layers::TextureFlags::NO_FLAGS);
-  RefPtr<DataSourceSurface> surf = Factory::CreateDataSourceSurface(
-      IntSize(surface.mTileSize.width, surface.mTileSize.height),
-      SurfaceFormat::B8G8R8A8);
-  surface.mTiles.insert({TileKey(aX, aY), Tile{source, surf}});
+  CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM,
+                             surface.mTileSize.width, surface.mTileSize.height,
+                             1, 1);
+
+  RefPtr<ID3D11Texture2D> texture;
+  DebugOnly<HRESULT> hr = mCompositor->GetDevice()->CreateTexture2D(
+      &desc, nullptr, getter_AddRefs(texture));
+  MOZ_ASSERT(SUCCEEDED(hr));
+
+  RefPtr<DataTextureSourceD3D11> source = new DataTextureSourceD3D11(
+      mCompositor->GetDevice(), gfx::SurfaceFormat::B8G8R8A8, texture);
+
+  // We need to pad our tile textures by 16 bytes since SWGL can read up
+  // to 3 pixels past the end. We don't control the allocation size, so
+  // add an extra row instead.
+  desc.Height += 1;
+
+  desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+  desc.Usage = D3D11_USAGE_STAGING;
+
+  RefPtr<ID3D11Texture2D> cpuTexture;
+  hr = mCompositor->GetDevice()->CreateTexture2D(&desc, nullptr,
+                                                 getter_AddRefs(cpuTexture));
+  MOZ_ASSERT(SUCCEEDED(hr));
+
+  surface.mTiles.insert({TileKey(aX, aY), Tile{source, cpuTexture}});
 }
 
 void RenderCompositorD3D11SWGL::DestroyTile(wr::NativeSurfaceId aId, int32_t aX,
