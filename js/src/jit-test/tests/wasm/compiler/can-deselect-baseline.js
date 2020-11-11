@@ -1,3 +1,3 @@
-// |jit-test| skip-if: !wasmCompilersPresent().match("ion") || wasmIonDisabledByFeatures(); --wasm-compiler=ion
+// |jit-test| skip-if: !wasmCompilersPresent().match("ion") || wasmIonDisabledByFeatures(); --wasm-compiler=optimizing
 
 assertEq(wasmCompileMode(), "ion");
