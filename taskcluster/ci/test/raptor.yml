@@ -427,26 +427,26 @@ raptor-wasm-misc-baseline-firefox-profiling:
         fetch:
             - wasm-misc
 
-raptor-wasm-misc-ion-firefox:
-    description: "Raptor WASM Misc on Firefox with ION Monkey"
+raptor-wasm-misc-optimizing-firefox:
+    description: "Raptor WASM Misc on Firefox with optimizing JIT"
     variants: ["fission"]
-    try-name: raptor-wasm-misc-ion-firefox
+    try-name: raptor-wasm-misc-optimizing-firefox
     treeherder-symbol: Rap(wm-i)
     mozharness:
         extra-options:
-            - --test=raptor-wasm-misc-ion
+            - --test=raptor-wasm-misc-optimizing
     fetches:
         fetch:
             - wasm-misc
 
-raptor-wasm-misc-ion-firefox-profiling:
-    description: "Raptor WASM Misc on Firefox with ION Monkey and Gecko Profiling"
-    try-name: raptor-wasm-misc-ion-firefox-profiling
+raptor-wasm-misc-optimizing-firefox-profiling:
+    description: "Raptor WASM Misc on Firefox with optimizing JIT and Gecko Profiling"
+    try-name: raptor-wasm-misc-optimizing-firefox-profiling
     treeherder-symbol: Rap-Prof(wm-i)
     max-run-time: 900
     mozharness:
         extra-options:
-            - --test=raptor-wasm-misc-ion
+            - --test=raptor-wasm-misc-optimizing
             - --gecko-profile
     fetches:
         fetch:
@@ -530,10 +530,10 @@ raptor-wasm-godot-baseline-firefox-profiling:
             - --test=raptor-wasm-godot-baseline
             - --gecko-profile
 
-raptor-wasm-godot-ion-firefox:
-    description: "Raptor WASM godot on Firefox with ION Monkey"
+raptor-wasm-godot-optimizing-firefox:
+    description: "Raptor WASM godot on Firefox with optimizing JIT"
     variants: ["fission"]
-    try-name: raptor-wasm-godot-ion-firefox
+    try-name: raptor-wasm-godot-optimizing-firefox
     treeherder-symbol: Rap(godot-i)
     max-run-time:
         by-test-platform:
@@ -542,16 +542,16 @@ raptor-wasm-godot-ion-firefox:
             default: 1500
     mozharness:
         extra-options:
-            - --test=raptor-wasm-godot-ion
+            - --test=raptor-wasm-godot-optimizing
 
-raptor-wasm-godot-ion-firefox-profiling:
-    description: "Raptor WASM godot on Firefox with ION Monkey and Gecko Profiling"
-    try-name: raptor-wasm-godot-ion-firefox-profiling
+raptor-wasm-godot-optimizing-firefox-profiling:
+    description: "Raptor WASM godot on Firefox with optimizing JIT and Gecko Profiling"
+    try-name: raptor-wasm-godot-optimizing-firefox-profiling
     treeherder-symbol: Rap-Prof(godot-i)
     max-run-time: 900
     mozharness:
         extra-options:
-            - --test=raptor-wasm-godot-ion
+            - --test=raptor-wasm-godot-optimizing
             - --gecko-profile
 
 raptor-youtube-playback-v9-power-firefox:
