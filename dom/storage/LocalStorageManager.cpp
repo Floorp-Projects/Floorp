@@ -366,7 +366,7 @@ nsresult LocalStorageManager::Observe(const char* aTopic,
 
   // Clear all private-browsing caches
   if (!strcmp(aTopic, "private-browsing-data-cleared")) {
-    ClearCaches(LocalStorageCache::kUnloadPrivate, pattern, ""_ns);
+    ClearCaches(LocalStorageCache::kUnloadComplete, pattern, ""_ns);
     return NS_OK;
   }
 
