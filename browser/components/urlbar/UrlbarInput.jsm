@@ -791,6 +791,7 @@ class UrlbarInput {
         }
 
         if (
+          !this.searchMode &&
           result.heuristic &&
           // If we asked the DNS earlier, avoid the post-facto check.
           !UrlbarPrefs.get("browser.fixup.dns_first_for_single_words") &&

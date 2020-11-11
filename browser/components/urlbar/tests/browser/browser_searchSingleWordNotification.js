@@ -42,6 +42,7 @@ function promiseNotification(aBrowser, value, expected, input) {
 
 async function runURLBarSearchTest({
   valueToOpen,
+  enterSearchMode,
   expectSearch,
   expectNotification,
   expectDNSResolve,
@@ -53,6 +54,10 @@ async function runURLBarSearchTest({
   const setValueFns = [
     value => {
       aWindow.gURLBar.value = value;
+      if (enterSearchMode) {
+        // Ensure to open the panel.
+        UrlbarTestUtils.fireInputEvent(aWindow);
+      }
     },
     value => {
       return UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -64,6 +69,13 @@ async function runURLBarSearchTest({
 
   for (let i = 0; i < setValueFns.length; ++i) {
     await setValueFns[i](valueToOpen);
+    if (enterSearchMode) {
+      if (!expectSearch) {
+        throw new Error("Must execute a search in search mode");
+      }
+      await UrlbarTestUtils.enterSearchMode(aWindow);
+    }
+
     let expectedURI;
     if (!expectSearch) {
       expectedURI = "http://" + valueToOpen + "/";
@@ -81,15 +93,15 @@ async function runURLBarSearchTest({
     );
     EventUtils.synthesizeKey("VK_RETURN", {}, aWindow);
 
-    await Promise.all([
-      docLoadPromise,
-      promiseNotification(
+    if (!enterSearchMode) {
+      await promiseNotification(
         aWindow.gBrowser,
         "keyword-uri-fixup",
         expectNotification,
         valueToOpen
-      ),
-    ]);
+      );
+    }
+    await docLoadPromise;
 
     if (expectNotification) {
       let notificationBox = aWindow.gBrowser.getNotificationBox(
@@ -316,6 +328,26 @@ add_task(async function test_navigate_invalid_url() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await runURLBarSearchTest({
     valueToOpen: "mozilla is awesome",
+    expectSearch: true,
+    expectNotification: false,
+    expectDNSResolve: false,
+  });
+  gBrowser.removeTab(tab);
+});
+
+add_task(async function test_search_mode() {
+  info("When in search mode we should never query the DNS");
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.search.suggest.enabled", false]],
+  });
+  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(
+    gBrowser,
+    "about:blank"
+  ));
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await runURLBarSearchTest({
+    enterSearchMode: true,
+    valueToOpen: "mozilla",
     expectSearch: true,
     expectNotification: false,
     expectDNSResolve: false,
