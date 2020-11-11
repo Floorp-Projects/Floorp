@@ -75,6 +75,11 @@ enum class BailoutKind : uint8_t {
   // invalidate the current Warp script and disable recompilation.
   TypePolicy,
 
+  // An instruction hoisted by LICM.
+  // If this instruction bails out, we will invalidate the current Warp script
+  // and mark the LICMBailout flag on the script.
+  LICM,
+
   // Normal bailouts, that don't need to be handled specially when restarting
   // in baseline.
 
@@ -281,6 +286,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "SpeculativePhi";
     case BailoutKind::TypePolicy:
       return "TypePolicy";
+    case BailoutKind::LICM:
+      return "LICM";
 
     // Normal bailouts.
     case BailoutKind::Inevitable:
