@@ -42,7 +42,12 @@
 # Therefore, we make the Perfomance team code owners of this file.
 /.github/CODEOWNERS @mozilla-mobile/Performance
 
-/app/src/*/java/org/mozilla/fenix/perf/** @mozilla-mobile/Performance
+# Own /perf/ src directories which typically includes perf code architecture
+# or code that monitors for perf regressions. This is our main way to own code
+# because it's simpler and less fragile than listing many specific files to own.
+/**/src/**/perf/** @mozilla-mobile/Performance
+
+# Possible regressions throughout the app
 *.pro @mozilla-mobile/Performance
 *proguard* @mozilla-mobile/Performance
 
