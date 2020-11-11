@@ -41,6 +41,8 @@ using namespace mozilla::a11y;
 - (BOOL)providesLabelNotTitle;
 
 - (nsStaticAtom*)ARIARole;
+
+- (void)maybePostLiveRegionChanged;
 @end
 
 @implementation mozAccessible
@@ -938,11 +940,20 @@ struct RoleDescrComparator {
   return NO;
 }
 
+- (void)maybePostLiveRegionChanged {
+  for (id element = self; [element conformsToProtocol:@protocol(MOXAccessible)];
+       element = [element moxUnignoredParent]) {
+    if ([element moxIsLiveRegion]) {
+      [element moxPostNotification:@"AXLiveRegionChanged"];
+      return;
+    }
+  }
+}
+
 - (void)handleAccessibleTextChangeEvent:(NSString*)change
                                inserted:(BOOL)isInserted
                             inContainer:(const AccessibleOrProxy&)container
                                      at:(int32_t)start {
-  // XXX: Eventually live region handling will go here.
 }
 
 - (void)handleAccessibleEvent:(uint32_t)eventType {
@@ -996,6 +1007,10 @@ struct RoleDescrComparator {
       break;
     case nsIAccessibleEvent::EVENT_LIVE_REGION_REMOVED:
       mIsLiveRegion = false;
+      break;
+    case nsIAccessibleEvent::EVENT_REORDER:
+    case nsIAccessibleEvent::EVENT_NAME_CHANGE:
+      [self maybePostLiveRegionChanged];
       break;
   }
 }
