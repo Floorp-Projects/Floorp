@@ -13,10 +13,6 @@ const { ContentProcessDomain } = ChromeUtils.import(
 class Emulation extends ContentProcessDomain {
   // commands
 
-  setDeviceMetricsOverride() {}
-
-  setTouchEmulationEnabled() {}
-
   /**
    * Internal methods: the following methods are not part of CDP;
    * note the _ prefix.

@@ -94,6 +94,32 @@ class Emulation extends Domain {
   }
 
   /**
+   * Enables touch on platforms which do not support them.
+   *
+   * @param {Object} options
+   * @param {boolean} options.enabled
+   *     Whether the touch event emulation should be enabled.
+   * @param {number=} options.maxTouchPoints [not yet supported]
+   *     Maximum touch points supported. Defaults to one.
+   */
+  async setTouchEmulationEnabled(options = {}) {
+    const { enabled } = options;
+
+    if (typeof enabled != "boolean") {
+      throw new TypeError(
+        "Invalid parameters (enabled: boolean value expected)"
+      );
+    }
+
+    const { browsingContext } = this.session.target;
+    if (enabled) {
+      browsingContext.touchEventsOverride = "enabled";
+    } else {
+      browsingContext.touchEventsOverride = "none";
+    }
+  }
+
+  /**
    * Allows overriding user agent with the given string.
    *
    * @param {Object} options
