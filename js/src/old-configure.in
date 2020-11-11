@@ -627,6 +627,11 @@ case "$target" in
         fi
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib"
         MOZ_DEBUG_LDFLAGS='-DEBUG'
+        if test "$HOST_OS_ARCH" != "WINNT"; then
+          # %_PDB% is a special signal to emit only the PDB basename. This
+          # avoids problems in Windows tools that don't like forward-slashes.
+          MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -PDBALTPATH:%_PDB%"
+        fi
         MOZ_OPTIMIZE_FLAGS="-O2"
         MOZ_FIX_LINK_PATHS=
         LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE"
