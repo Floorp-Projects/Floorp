@@ -1359,7 +1359,7 @@ function passSearchFilters(message, filters) {
     // Look for a match in location.
     isTextInFrame(matchStr, message.frame) ||
     // Look for a match in net events.
-    isTextInNetEvent(matchStr, message) ||
+    isTextInNetEvent(matchStr, message.request) ||
     // Look for a match in stack-trace.
     isTextInStackTrace(matchStr, message.stacktrace) ||
     // Look for a match in messageText.
@@ -1445,10 +1445,12 @@ function isTextInParameter(matchStr, parameter) {
 /**
  * Returns true if given text is included in provided net event grip.
  */
-function isTextInNetEvent(matchStr, { method, url } = {}) {
-  if (!method && !url) {
+function isTextInNetEvent(matchStr, request) {
+  if (!request) {
     return false;
   }
+
+  const { method, url } = request;
   return matchStr(method) || matchStr(url);
 }
 
