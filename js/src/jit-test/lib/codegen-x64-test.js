@@ -10,12 +10,6 @@
 // replace any space string with \s+.  Lines are separated by newlines and leading
 // and trailing spaces are currently stripped.
 //
-// Lines in expected-pattern starting with '*' are not prefixed by an address during
-// preprocessing.
-//
-// Lines in expected-pattern that end with a space (lines that are split do) must use \s
-// to represent that space.
-//
 // The testers additionally take an optional options bag with the following optional
 // entries:
 //  no_prefix: if true, do not add a prefix string (normally the end of the prologue)
@@ -27,10 +21,14 @@
 var SPACEDEBUG = false;
 
 // Any hex string
-var HEXES = `[0-9a-fA-F]+`;
+var HEX = '[0-9a-fA-F]'
+var HEXES = `${HEX}+`;
 
-// RIP-relative address
+// RIP-relative address following the instruction mnemonic
 var RIPR = `0x${HEXES}`;
+
+// RIP-relative address in the binary encoding
+var RIPRADDR = `${HEX}{2} ${HEX}{2} ${HEX}{2} ${HEX}{2}`;
 
 // End of prologue
 var x64_prefix = `48 8b ec                  mov %rsp, %rbp`
@@ -61,6 +59,19 @@ function codegenTestX64_v128xLITERAL_v128(inputs, options = {}) {
         codegenTestX64_adhoc(wrap(options, `
     (func (export "f") (param v128) (result v128)
       (${op} (local.get 0) ${literal}))`),
+                              'f',
+                              expected,
+                              options)
+    }
+}
+
+// literal OP v128 -> v128
+// inputs: [[complete-opname, lhs-literal, expected-pattern], ...]
+function codegenTestX64_LITERALxv128_v128(inputs, options = {}) {
+    for ( let [op, literal, expected] of inputs ) {
+        codegenTestX64_adhoc(wrap(options, `
+    (func (export "f") (param v128) (result v128)
+      (${op} ${literal} (local.get 0)))`),
                               'f',
                               expected,
                               options)
@@ -169,7 +180,7 @@ function fixlines(s) {
     return s.split(/\n+/)
         .map(strip)
         .filter(x => x.length > 0)
-        .map(x => x.charAt(0) == '*' ? x.substring(1) : (HEXES + ' ' + x))
+        .map(x => HEXES + ' ' + x)
         .map(spaces)
         .join('\n');
 }

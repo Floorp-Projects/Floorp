@@ -17,8 +17,7 @@ if (!getBuildConfiguration().windows) {
     codegenTestX64_PTYPE_v128(
         [['v128.load32_splat', 'i32', `
 f3 41 0f 10 04 3f         movssl \\(%r15,%rdi,1\\), %xmm0
-0f c6 c0 00               shufps \\$0x00, %xmm0, %xmm0
-`],
+0f c6 c0 00               shufps \\$0x00, %xmm0, %xmm0`],
          ['v128.load64_splat', 'i32', `f2 41 0f 12 04 3f         movddupq \\(%r15,%rdi,1\\), %xmm0`],
          ['v128.load8x8_s',    'i32', `66 41 0f 38 20 04 3f      pmovsxbwq \\(%r15,%rdi,1\\), %xmm0`],
          ['v128.load8x8_u',    'i32', `66 41 0f 38 30 04 3f      pmovzxbwq \\(%r15,%rdi,1\\), %xmm0`],
