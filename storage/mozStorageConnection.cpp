@@ -660,16 +660,26 @@ void Connection::RecordQueryStatus(int srv) {
   }
 }
 
-nsresult Connection::initialize() {
+nsresult Connection::initialize(const nsACString& aStorageKey,
+                                const nsACString& aName) {
+  MOZ_ASSERT(aStorageKey.Equals(kMozStorageMemoryStorageKey));
   NS_ASSERTION(!connectionReady(),
                "Initialize called on already opened database!");
   MOZ_ASSERT(!mIgnoreLockingMode, "Can't ignore locking on an in-memory db.");
   AUTO_PROFILER_LABEL("Connection::initialize", OTHER);
 
-  mTelemetryFilename.AssignLiteral(":memory:");
+  mStorageKey = aStorageKey;
+  mName = aName;
 
   // in memory database requested, sqlite uses a magic file name
-  int srv = ::sqlite3_open_v2(":memory:", &mDBConn, mFlags,
+
+  const nsAutoCString path = mName.IsEmpty()
+                                 ? nsAutoCString(":memory:"_ns)
+                                 : "file:"_ns + mName + "?mode=memory"_ns;
+
+  mTelemetryFilename.AssignLiteral(":memory:");
+
+  int srv = ::sqlite3_open_v2(path.get(), &mDBConn, mFlags,
                               GetTelemetryVFSName(true));
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
@@ -903,7 +913,9 @@ nsresult Connection::initializeInternal() {
 
 nsresult Connection::initializeOnAsyncThread(nsIFile* aStorageFile) {
   MOZ_ASSERT(threadOpenedOn != NS_GetCurrentThread());
-  nsresult rv = aStorageFile ? initialize(aStorageFile) : initialize();
+  nsresult rv = aStorageFile
+                    ? initialize(aStorageFile)
+                    : initialize(kMozStorageMemoryStorageKey, VoidCString());
   if (NS_FAILED(rv)) {
     // Shutdown the async thread, since initialization failed.
     MutexAutoLock lockedScope(sharedAsyncExecutionMutex);
@@ -1568,8 +1580,14 @@ Connection::AsyncClone(bool aReadOnly,
 }
 
 nsresult Connection::initializeClone(Connection* aClone, bool aReadOnly) {
-  nsresult rv = mFileURL ? aClone->initialize(mFileURL, mTelemetryFilename)
-                         : aClone->initialize(mDatabaseFile);
+  nsresult rv;
+  if (!mStorageKey.IsEmpty()) {
+    rv = aClone->initialize(mStorageKey, mName);
+  } else if (mFileURL) {
+    rv = aClone->initialize(mFileURL, mTelemetryFilename);
+  } else {
+    rv = aClone->initialize(mDatabaseFile);
+  }
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1703,7 +1721,6 @@ Connection::Clone(bool aReadOnly, mozIStorageConnection** _connection) {
   if (NS_FAILED(rv)) {
     return rv;
   }
-  if (!mDatabaseFile) return NS_ERROR_UNEXPECTED;
 
   int flags = mFlags;
   if (aReadOnly) {
