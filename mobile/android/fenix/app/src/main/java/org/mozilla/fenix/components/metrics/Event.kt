@@ -495,7 +495,8 @@ sealed class Event {
                 "mozac.feature.contextmenu.save_image" to "save_image",
                 "mozac.feature.contextmenu.share_link" to "share_link",
                 "mozac.feature.contextmenu.copy_link" to "copy_link",
-                "mozac.feature.contextmenu.copy_image_location" to "copy_image_location"
+                "mozac.feature.contextmenu.copy_image_location" to "copy_image_location",
+                "mozac.feature.contextmenu.share_image" to "share_image"
             )
         }
     }
