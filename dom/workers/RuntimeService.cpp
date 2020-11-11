@@ -268,11 +268,12 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
       .setWasmForTrustedPrinciples(
           GetWorkerPref<bool>("wasm_trustedprincipals"_ns))
       .setWasmBaseline(GetWorkerPref<bool>("wasm_baselinejit"_ns))
-      .setWasmIon(GetWorkerPref<bool>("wasm_ionjit"_ns))
-      .setWasmReftypes(GetWorkerPref<bool>("wasm_reftypes"_ns))
 #ifdef ENABLE_WASM_CRANELIFT
-      .setWasmCranelift(GetWorkerPref<bool>("wasm_cranelift"_ns))
+      .setWasmCranelift(GetWorkerPref<bool>("wasm_optimizingjit"_ns))
+#else
+      .setWasmIon(GetWorkerPref<bool>("wasm_optimizingjit"_ns))
 #endif
+      .setWasmReftypes(GetWorkerPref<bool>("wasm_reftypes"_ns))
 #ifdef ENABLE_WASM_MULTI_VALUE
       .setWasmMultiValue(GetWorkerPref<bool>("wasm_multi_value"_ns))
 #endif
