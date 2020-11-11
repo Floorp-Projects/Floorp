@@ -687,6 +687,12 @@ impl SwCompositeThread {
         let thread_name = "SwComposite";
         thread::Builder::new()
             .name(thread_name.into())
+            // The composite thread only calls into SWGL to composite, and we
+            // have potentially many composite threads for different windows,
+            // so using the default stack size is excessive. A reasonably small
+            // stack size should be more than enough for SWGL and reduce memory
+            // overhead.
+            .stack_size(32 * 1024)
             .spawn(move || {
                 let thread_listener = GeckoProfilerThreadListener::new();
                 thread_listener.thread_started(thread_name);
