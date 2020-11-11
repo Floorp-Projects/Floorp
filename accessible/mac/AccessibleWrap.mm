@@ -259,6 +259,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
     case nsIAccessibleEvent::EVENT_SELECTION_REMOVE:
     case nsIAccessibleEvent::EVENT_LIVE_REGION_ADDED:
     case nsIAccessibleEvent::EVENT_LIVE_REGION_REMOVED:
+    case nsIAccessibleEvent::EVENT_NAME_CHANGE:
       [nativeAcc handleAccessibleEvent:eventType];
       break;
 
