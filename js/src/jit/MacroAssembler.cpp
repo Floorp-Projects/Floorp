@@ -1027,6 +1027,18 @@ static void FindStartOfUninitializedAndUndefinedSlots(
   }
 }
 
+template <typename Src>
+inline void MacroAssembler::storeObjPrivate(Src ptr, const Address& address) {
+  // The private pointer is stored as a PrivateValue in a JS::Value, so on 32
+  // bit systems we also need to zero the top word.
+#ifdef JS_PUNBOX64
+  storePtr(ptr, address);
+#else
+  storePtr(ptr, LowWord(address));
+  store32(Imm32(0), HighWord(address));
+#endif
+}
+
 void MacroAssembler::initTypedArraySlots(Register obj, Register temp,
                                          Register lengthReg,
                                          LiveRegisterSet liveRegs, Label* fail,
@@ -1057,7 +1069,7 @@ void MacroAssembler::initTypedArraySlots(Register obj, Register temp,
 
     // Store data elements inside the remaining JSObject slots.
     computeEffectiveAddress(Address(obj, dataOffset), temp);
-    storePtr(temp, Address(obj, dataSlotOffset));
+    storeObjPrivate(temp, Address(obj, dataSlotOffset));
 
     // Write enough zero pointers into fixed data to zero every
     // element.  (This zeroes past the end of a byte count that's
@@ -1237,13 +1249,7 @@ void MacroAssembler::initGCThing(Register obj, Register temp,
       if (ntemplate.hasPrivate() && !ntemplate.isTypedArrayObject()) {
         uint32_t nfixed = ntemplate.numFixedSlots();
         Address privateSlot(obj, NativeObject::getPrivateDataOffset(nfixed));
-        if (ntemplate.isRegExpObject()) {
-          // RegExpObject stores a GC thing (RegExpShared*) in its
-          // private slot, so we have to use ImmGCPtr.
-          storePtr(ImmGCPtr(ntemplate.regExpShared()), privateSlot);
-        } else {
-          storePtr(ImmPtr(ntemplate.getPrivate()), privateSlot);
-        }
+        storeObjPrivate(ImmPtr(ntemplate.getPrivate()), privateSlot);
       }
     }
   } else {

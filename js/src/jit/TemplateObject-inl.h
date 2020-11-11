@@ -121,8 +121,7 @@ inline bool NativeTemplateObject::hasPrivate() const {
 inline gc::Cell* NativeTemplateObject::regExpShared() const {
   RegExpObject* regexp = &obj_->as<RegExpObject>();
   MOZ_ASSERT(regexp->hasShared());
-  MOZ_ASSERT(regexp->getPrivate() == regexp->sharedRef().get());
-  return regexp->sharedRef().get();
+  return regexp->getShared();
 }
 
 inline void* NativeTemplateObject::getPrivate() const {

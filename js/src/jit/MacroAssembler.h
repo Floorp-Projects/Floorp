@@ -3443,6 +3443,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void storeObjShape(Shape* shape, Register obj,
                             EmitPreBarrier emitPreBarrier);
 
+  template <typename T>
+  void storeObjPrivate(T src, const Address& address);
+
   void loadObjPrivate(Register obj, uint32_t nfixed, Register dest) {
     loadPtr(Address(obj, NativeObject::getPrivateDataOffset(nfixed)), dest);
   }
