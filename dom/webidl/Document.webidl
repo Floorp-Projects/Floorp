@@ -23,6 +23,7 @@ interface URI;
 interface nsIDocShell;
 interface nsILoadGroup;
 interface nsIReferrerInfo;
+interface nsICookieJarSettings;
 interface nsIPermissionDelegateHandler;
 interface XULCommandDispatcher;
 
@@ -399,6 +400,10 @@ partial interface Document {
   // as when inheriting the document/storage principal.
   [ChromeOnly]
   readonly attribute Principal partitionedPrincipal;
+
+  // The cookieJarSettings of this document
+  [ChromeOnly]
+  readonly attribute nsICookieJarSettings cookieJarSettings;
 
   // The principal to use for the content blocking allow list
   [ChromeOnly]
