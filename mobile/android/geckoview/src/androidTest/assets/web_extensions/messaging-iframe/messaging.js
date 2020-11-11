@@ -1,7 +1,4 @@
-browser.runtime
-  .sendNativeMessage("badNativeApi", "errorerrorerror")
-  // This message should not be handled
-  .catch(runTest);
+browser.runtime.sendNativeMessage("badNativeApi", "errorerrorerror");
 
 async function runTest() {
   await browser.runtime.sendNativeMessage(
@@ -10,3 +7,5 @@ async function runTest() {
   );
   browser.runtime.connectNative("browser");
 }
+
+runTest();

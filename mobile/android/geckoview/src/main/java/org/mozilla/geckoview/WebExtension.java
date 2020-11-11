@@ -901,6 +901,11 @@ public class WebExtension {
                                        final WebExtension.MessageDelegate delegate,
                                        final String nativeApp) {
             mMessageDelegates.put(new Sender(webExtension.id, nativeApp), delegate);
+
+            if (runtime != null && delegate != null) {
+                runtime.getWebExtensionController()
+                        .releasePendingMessages(webExtension, nativeApp, mSession);
+            }
         }
 
         public WebExtension.MessageDelegate getMessageDelegate(final WebExtension webExtension,
