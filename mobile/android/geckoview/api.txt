@@ -431,7 +431,6 @@ package org.mozilla.geckoview {
     method @NonNull @UiThread public GeckoResult<List<ContentBlockingController.LogEntry>> getLog(@NonNull GeckoSession);
     method @UiThread public void removeException(@NonNull GeckoSession);
     method @AnyThread public void removeException(@NonNull ContentBlockingController.ContentBlockingException);
-    method @Deprecated @DeprecationSchedule(version=85,id="exception-list") @UiThread public void restoreExceptionList(@NonNull ContentBlockingController.ExceptionList);
     method @AnyThread public void restoreExceptionList(@NonNull List<ContentBlockingController.ContentBlockingException>);
     method @NonNull @UiThread public GeckoResult<List<ContentBlockingController.ContentBlockingException>> saveExceptionList();
   }
@@ -465,13 +464,6 @@ package org.mozilla.geckoview {
     field public static final int LOADED_SOCIALTRACKING_CONTENT = 131072;
     field public static final int REPLACED_TRACKING_CONTENT = 16;
     field @Deprecated @DeprecationSchedule(version=86,id="unsafe-content") public static final int REPLACED_UNSAFE_CONTENT = 16;
-  }
-
-  @Deprecated @DeprecationSchedule(version=85,id="exception-list") @AnyThread public class ContentBlockingController.ExceptionList {
-    ctor public ExceptionList(@NonNull String);
-    ctor public ExceptionList(@NonNull JSONObject);
-    method @NonNull public String[] getUris();
-    method @NonNull public JSONObject toJson();
   }
 
   @AnyThread public static class ContentBlockingController.LogEntry {
