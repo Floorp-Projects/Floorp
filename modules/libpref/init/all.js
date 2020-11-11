@@ -940,6 +940,14 @@ pref("print.print_footerleft", "&PT");
 pref("print.print_footercenter", "");
 pref("print.print_footerright", "&D");
 
+// A list of comma separated key:value pairs, so:
+//
+//   key1:value1,key2:value2
+//
+// Which allows testing extra CUPS-related printer settings for monochrome
+// printing.
+pref("print.cups.monochrome.extra_settings", "");
+
 // xxxbsmedberg: more toolkit prefs
 
 // Save the Printings after each print job
