@@ -87,7 +87,12 @@ class UnifiedExecutableFile(BaseFile):
                 tmpfiles.append(f)
                 e.copy(f, skip_if_older=False)
             lipo = buildconfig.substs.get("LIPO") or "lipo"
-            subprocess.call([lipo, "-create"] + tmpfiles + ["-output", dest])
+            subprocess.check_call([lipo, "-create"] + tmpfiles + ["-output", dest])
+        except Exception as e:
+            errors.error(
+                "Failed to unify %s and %s: %s"
+                % (self._executables[0].path, self._executables[1].path, str(e))
+            )
         finally:
             for f in tmpfiles:
                 os.unlink(f)
