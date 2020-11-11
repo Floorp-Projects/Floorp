@@ -3245,9 +3245,7 @@ void CodeGenerator::visitWasmReduceAndBranchSimd128(
       break;
     }
     case wasm::SimdOp::I16x8Bitmask: {
-      ScratchSimd128Scope tmp(masm);
-      masm.loadConstantSimd128Int(SimdConstant::SplatX8(0x8000), tmp);
-      masm.vptest(tmp, src);
+      masm.bitwiseTestSimd128(SimdConstant::SplatX8(0x8000), src);
       emitBranch(Assembler::NotEqual, ins->ifTrue(), ins->ifFalse());
       break;
     }

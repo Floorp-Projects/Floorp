@@ -2831,6 +2831,10 @@ class BaseAssembler : public GenericAssembler {
   void vpandn_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst) {
     twoByteOpSimd("vpandn", VEX_PD, OP2_PANDNDQ_VdqWdq, address, src0, dst);
   }
+  void vptest_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst) {
+    threeByteOpSimd("vptest", VEX_PD, OP3_PTEST_VdVd, ESCAPE_38, address, src0,
+                    dst);
+  }
 
   void vpshufd_irr(uint32_t mask, XMMRegisterID src, XMMRegisterID dst) {
     twoByteOpImmSimd("vpshufd", VEX_PD, OP2_PSHUFD_VdqWdqIb, mask, src,

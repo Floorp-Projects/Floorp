@@ -157,6 +157,28 @@ MacroAssemblerX86Shared::SimdData* MacroAssemblerX86Shared::getSimdData(
   return getConstant<SimdData, SimdMap>(v, simdMap_, simds_);
 }
 
+void MacroAssemblerX86Shared::binarySimd128(
+    const SimdConstant& rhs, FloatRegister lhsDest,
+    void (MacroAssembler::*regOp)(const Operand&, FloatRegister, FloatRegister),
+    void (MacroAssembler::*constOp)(const SimdConstant&, FloatRegister)) {
+  ScratchSimd128Scope scratch(asMasm());
+  if (maybeInlineSimd128Int(rhs, scratch)) {
+    (asMasm().*regOp)(Operand(scratch), lhsDest, lhsDest);
+  } else {
+    (asMasm().*constOp)(rhs, lhsDest);
+  }
+}
+
+void MacroAssemblerX86Shared::bitwiseTestSimd128(const SimdConstant& rhs,
+                                                 FloatRegister lhs) {
+  ScratchSimd128Scope scratch(asMasm());
+  if (maybeInlineSimd128Int(rhs, scratch)) {
+    vptest(scratch, lhs);
+  } else {
+    asMasm().vptestSimd128(rhs, lhs);
+  }
+}
+
 void MacroAssemblerX86Shared::minMaxDouble(FloatRegister first,
                                            FloatRegister second, bool canBeNaN,
                                            bool isMax) {

@@ -76,34 +76,37 @@ void MacroAssemblerX86::loadConstantSimd128Float(const SimdConstant& v,
   propagateOOM(f4->uses.append(CodeOffset(masm.size())));
 }
 
-void MacroAssemblerX86::vpandSimd128(const SimdConstant& v,
-                                     FloatRegister srcDest) {
+void MacroAssemblerX86::vpPatchOpSimd128(
+    const SimdConstant& v, FloatRegister reg,
+    void (X86Encoding::BaseAssemblerX86::*op)(
+        const void* address, X86Encoding::XMMRegisterID srcId,
+        X86Encoding::XMMRegisterID destId)) {
   SimdData* val = getSimdData(v);
   if (!val) {
     return;
   }
-  masm.vpand_mr(nullptr, srcDest.encoding(), srcDest.encoding());
+  (masm.*op)(nullptr, reg.encoding(), reg.encoding());
   propagateOOM(val->uses.append(CodeOffset(masm.size())));
+}
+
+void MacroAssemblerX86::vpandSimd128(const SimdConstant& v,
+                                     FloatRegister srcDest) {
+  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpand_mr);
 }
 
 void MacroAssemblerX86::vpxorSimd128(const SimdConstant& v,
                                      FloatRegister srcDest) {
-  SimdData* val = getSimdData(v);
-  if (!val) {
-    return;
-  }
-  masm.vpxor_mr(nullptr, srcDest.encoding(), srcDest.encoding());
-  propagateOOM(val->uses.append(CodeOffset(masm.size())));
+  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpxor_mr);
 }
 
 void MacroAssemblerX86::vpshufbSimd128(const SimdConstant& v,
                                        FloatRegister srcDest) {
-  SimdData* val = getSimdData(v);
-  if (!val) {
-    return;
-  }
-  masm.vpshufb_mr(nullptr, srcDest.encoding(), srcDest.encoding());
-  propagateOOM(val->uses.append(CodeOffset(masm.size())));
+  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpshufb_mr);
+}
+
+void MacroAssemblerX86::vptestSimd128(const SimdConstant& v,
+                                      FloatRegister src) {
+  vpPatchOpSimd128(v, src, &X86Encoding::BaseAssemblerX86::vptest_mr);
 }
 
 void MacroAssemblerX86::finish() {

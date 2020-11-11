@@ -51,17 +51,24 @@ void MacroAssemblerX64::loadConstantFloat32(float f, FloatRegister dest) {
   propagateOOM(flt->uses.append(CodeOffset(j.offset())));
 }
 
+void MacroAssemblerX64::vpRiprOpSimd128(
+    const SimdConstant& v, FloatRegister reg,
+    JmpSrc (X86Encoding::BaseAssemblerX64::*op)(
+        X86Encoding::XMMRegisterID id)) {
+  SimdData* val = getSimdData(v);
+  if (!val) {
+    return;
+  }
+  JmpSrc j = (masm.*op)(reg.encoding());
+  propagateOOM(val->uses.append(CodeOffset(j.offset())));
+}
+
 void MacroAssemblerX64::loadConstantSimd128Int(const SimdConstant& v,
                                                FloatRegister dest) {
   if (maybeInlineSimd128Int(v, dest)) {
     return;
   }
-  SimdData* val = getSimdData(v);
-  if (!val) {
-    return;
-  }
-  JmpSrc j = masm.vmovdqa_ripr(dest.encoding());
-  propagateOOM(val->uses.append(CodeOffset(j.offset())));
+  vpRiprOpSimd128(v, dest, &X86Encoding::BaseAssemblerX64::vmovdqa_ripr);
 }
 
 void MacroAssemblerX64::loadConstantSimd128Float(const SimdConstant& v,
@@ -69,42 +76,27 @@ void MacroAssemblerX64::loadConstantSimd128Float(const SimdConstant& v,
   if (maybeInlineSimd128Float(v, dest)) {
     return;
   }
-  SimdData* val = getSimdData(v);
-  if (!val) {
-    return;
-  }
-  JmpSrc j = masm.vmovaps_ripr(dest.encoding());
-  propagateOOM(val->uses.append(CodeOffset(j.offset())));
+  vpRiprOpSimd128(v, dest, &X86Encoding::BaseAssemblerX64::vmovaps_ripr);
 }
 
 void MacroAssemblerX64::vpandSimd128(const SimdConstant& v,
                                      FloatRegister srcDest) {
-  SimdData* val = getSimdData(v);
-  if (!val) {
-    return;
-  }
-  JmpSrc j = masm.vpand_ripr(srcDest.encoding());
-  propagateOOM(val->uses.append(CodeOffset(j.offset())));
+  vpRiprOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX64::vpand_ripr);
 }
 
 void MacroAssemblerX64::vpxorSimd128(const SimdConstant& v,
                                      FloatRegister srcDest) {
-  SimdData* val = getSimdData(v);
-  if (!val) {
-    return;
-  }
-  JmpSrc j = masm.vpxor_ripr(srcDest.encoding());
-  propagateOOM(val->uses.append(CodeOffset(j.offset())));
+  vpRiprOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX64::vpxor_ripr);
 }
 
 void MacroAssemblerX64::vpshufbSimd128(const SimdConstant& v,
                                        FloatRegister srcDest) {
-  SimdData* val = getSimdData(v);
-  if (!val) {
-    return;
-  }
-  JmpSrc j = masm.vpshufb_ripr(srcDest.encoding());
-  propagateOOM(val->uses.append(CodeOffset(j.offset())));
+  vpRiprOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX64::vpshufb_ripr);
+}
+
+void MacroAssemblerX64::vptestSimd128(const SimdConstant& v,
+                                      FloatRegister src) {
+  vpRiprOpSimd128(v, src, &X86Encoding::BaseAssemblerX64::vptest_ripr);
 }
 
 void MacroAssemblerX64::bindOffsets(
