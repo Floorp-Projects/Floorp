@@ -282,10 +282,9 @@ void MacroAssemblerX86Shared::unsignedCompareInt8x16(
 
   MOZ_ASSERT(lhs == output);
   MOZ_ASSERT(lhs != tmp1 && lhs != tmp2);
-  MOZ_ASSERT_IF(rhs.kind() == Operand::FPREG,
-                ToSimdFloatRegister(rhs) != lhs &&
-                    ToSimdFloatRegister(rhs) != tmp1 &&
-                    ToSimdFloatRegister(rhs) != tmp2);
+  MOZ_ASSERT_IF(
+      rhs.kind() == Operand::FPREG,
+      ToSimdFloatRegister(rhs) != tmp1 && ToSimdFloatRegister(rhs) != tmp2);
 
   bool complement = false;
   switch (cond) {
@@ -406,6 +405,10 @@ void MacroAssemblerX86Shared::unsignedCompareInt16x8(
   // See comments at unsignedCompareInt8x16.
 
   MOZ_ASSERT(lhs == output);
+  MOZ_ASSERT(lhs != tmp1 && lhs != tmp2);
+  MOZ_ASSERT_IF(
+      rhs.kind() == Operand::FPREG,
+      ToSimdFloatRegister(rhs) != tmp1 && ToSimdFloatRegister(rhs) != tmp2);
 
   bool complement = false;
   switch (cond) {
@@ -513,6 +516,10 @@ void MacroAssemblerX86Shared::unsignedCompareInt32x4(
   // to compute the flags.
 
   MOZ_ASSERT(lhs == output);
+  MOZ_ASSERT(lhs != tmp1 && lhs != tmp2);
+  MOZ_ASSERT_IF(
+      rhs.kind() == Operand::FPREG,
+      ToSimdFloatRegister(rhs) != tmp1 && ToSimdFloatRegister(rhs) != tmp2);
 
   bool complement = false;
   switch (cond) {
