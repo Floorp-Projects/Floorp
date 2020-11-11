@@ -85,6 +85,10 @@ enum class BailoutKind : uint8_t {
   // and mark the HoistBoundsCheckBailout flag on the script.
   HoistBoundsCheck,
 
+  // A bailout that Ion did not assign a more specific bailout kind.
+  // In general, this corresponds to TranspiledCacheIR in Warp.
+  GenericIon,
+
   // Normal bailouts, that don't need to be handled specially when restarting
   // in baseline.
 
@@ -295,6 +299,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "LICM";
     case BailoutKind::HoistBoundsCheck:
       return "HoistBoundsCheck";
+    case BailoutKind::GenericIon:
+      return "GenericIon";
 
     // Normal bailouts.
     case BailoutKind::Inevitable:
