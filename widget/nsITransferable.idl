@@ -9,6 +9,7 @@
 #include "nsIFormatConverter.idl"
 #include "nsIContentPolicy.idl"
 
+interface nsICookieJarSettings;
 interface nsIPrincipal;
 
 %{ C++
@@ -195,4 +196,9 @@ interface nsITransferable : nsISupports
   [notxpcom, nostdcall] attribute nsIPrincipal requestingPrincipal;
   [notxpcom, nostdcall] attribute nsContentPolicyType contentPolicyType;
 
+  /**
+   * The cookieJarSettings of the source dom node this transferable was created
+   * from.
+   */
+  [notxpcom, nostdcall] attribute nsICookieJarSettings cookieJarSettings;
 };

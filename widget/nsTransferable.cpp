@@ -516,3 +516,16 @@ void nsTransferable::SetContentPolicyType(
 
   mContentPolicyType = aContentPolicyType;
 }
+
+nsICookieJarSettings* nsTransferable::GetCookieJarSettings() {
+  MOZ_ASSERT(mInitialized);
+
+  return mCookieJarSettings;
+}
+
+void nsTransferable::SetCookieJarSettings(
+    nsICookieJarSettings* aCookieJarSettings) {
+  MOZ_ASSERT(mInitialized);
+
+  mCookieJarSettings = aCookieJarSettings;
+}
