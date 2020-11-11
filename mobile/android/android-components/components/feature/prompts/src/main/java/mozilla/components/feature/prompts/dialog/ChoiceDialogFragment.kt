@@ -78,9 +78,12 @@ internal class ChoiceDialogFragment : PromptDialogFragment() {
 
     @SuppressLint("InflateParams")
     internal fun createDialogContentView(inflater: LayoutInflater): View {
+        val index = choices.indexOfFirst { it.selected }
         val view = inflater.inflate(R.layout.mozac_feature_choice_dialogs, null)
         view.findViewById<RecyclerView>(R.id.recyclerView).apply {
-            layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
+            layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false).also {
+                it.scrollToPosition(index)
+            }
             adapter = ChoiceAdapter(this@ChoiceDialogFragment, inflater)
         }
         return view

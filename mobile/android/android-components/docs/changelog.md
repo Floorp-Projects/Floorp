@@ -17,6 +17,7 @@ permalink: /changelog/
 
 * **feature-prompts**
   * 🚒 Bug fixed [issue #8967](https://github.com/mozilla-mobile/android-components/issues/8967) Crash when trying to upload a file see [fenix#16537](https://github.com/mozilla-mobile/fenix/issues/16537), for more information.
+  * 🚒 Bug fixed [issue #8953](https://github.com/mozilla-mobile/android-components/issues/8953) - Scroll to selected prompt choice if one exists.
 
 # 66.0.0
 
@@ -31,10 +32,10 @@ permalink: /changelog/
     * ⚠️ **This is a breaking change** because the public API changes with the removal of the class.
 
 * **feature-downloads**
-  * 🚒 Bug fixed [issue #8904](https://github.com/mozilla-mobile/android-components/issues/8904) Fix resuming downloads in nightly/beta more details see the [Fenix issue](https://github.com/mozilla-mobile/fenix/issues/9354).
+  * 🚒 Bug fixed [issue #8904](https://github.com/mozilla-mobile/android-components/issues/8904) - Fix resuming downloads in nightly/beta more details see the [Fenix issue](https://github.com/mozilla-mobile/fenix/issues/9354).
 
 * **feature-search**
- * * ⚠️ **This is a breaking change**: `SearchUseCases` no longer requires a `Context` parameter in the constructor. 
+  * ⚠️ **This is a breaking change**: `SearchUseCases` no longer requires a `Context` parameter in the constructor.
 
 * **feature-sitepermissions**
   * ⚠️ **This is a breaking change**: The `SitePermissionsFeature`'s constructor does not requires a `sessionManager` parameter anymore pass a `store` instead.

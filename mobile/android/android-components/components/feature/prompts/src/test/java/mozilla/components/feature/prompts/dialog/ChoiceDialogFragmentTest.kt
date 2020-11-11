@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.prompt.Choice
@@ -467,6 +468,29 @@ class ChoiceDialogFragmentTest {
             itemView.performClick()
             verify(mockFeature).onConfirm("sessionId", choiceGroup1)
         }
+    }
+
+    @Test
+    fun `scroll to selected item`() {
+        // array of 20 choices; 10th one is selected
+        val choices = Array(20) { index ->
+            if (index == 10) {
+                item.copy(selected = true, label = "selected")
+            } else {
+                item.copy(label = "item$index")
+            }
+        }
+        val fragment = newInstance(choices, "sessionId", SINGLE_CHOICE_DIALOG_TYPE)
+        val inflater = LayoutInflater.from(testContext)
+        val dialog = fragment.createDialogContentView(inflater)
+        val recyclerView = dialog.findViewById<RecyclerView>(R.id.recyclerView)
+        val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+        // these two lines are a bit of a hack to get the layout manager to draw the view.
+        recyclerView.measure(0, 0)
+        recyclerView.layout(0, 0, 100, 250)
+
+        val selectedItemIndex = layoutManager.findLastCompletelyVisibleItemPosition()
+        assertEquals(10, selectedItemIndex)
     }
 
     @Test
