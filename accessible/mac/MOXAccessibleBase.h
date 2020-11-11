@@ -123,8 +123,6 @@ inline id<mozAccessible> GetObjectOrRepresentedView(id<mozAccessible> aObject) {
 // override
 - (id<MOXTextMarkerSupport>)moxTextMarkerDelegate;
 
-- (BOOL)moxIsLiveRegion;
-
 #pragma mark -
 
 - (NSString*)description;
