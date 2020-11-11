@@ -30,8 +30,20 @@ class MarionetteEventsChild extends JSWindowActorChild {
     );
   }
 
-  handleEvent(event) {
-    switch (event.type) {
+  handleEvent({ target, type }) {
+    // Ignore invalid combinations of load events and document's readyState.
+    if (
+      (type === "DOMContentLoaded" && target.readyState != "interactive") ||
+      (type === "pageshow" && target.readyState != "complete")
+    ) {
+      logger.warn(
+        `Ignoring event '${type}' because document has an invalid ` +
+          `readyState of '${target.readyState}'.`
+      );
+      return;
+    }
+
+    switch (type) {
       case "beforeunload":
       case "DOMContentLoaded":
       case "hashchange":
@@ -40,9 +52,10 @@ class MarionetteEventsChild extends JSWindowActorChild {
       case "popstate":
         this.sendAsyncMessage("MarionetteEventsChild:PageLoadEvent", {
           browsingContext: this.browsingContext,
-          documentURI: event.target.documentURI,
-          readyState: event.target.readyState,
-          type: event.type,
+          documentURI: target.documentURI,
+          readyState: target.readyState,
+          type,
+          windowId: this.innerWindowId,
         });
         break;
     }
