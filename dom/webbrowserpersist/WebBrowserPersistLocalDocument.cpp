@@ -141,14 +141,6 @@ WebBrowserPersistLocalDocument::GetReferrerInfo(
 }
 
 NS_IMETHODIMP
-WebBrowserPersistLocalDocument::GetCookieJarSettings(
-    nsICookieJarSettings** aCookieJarSettings) {
-  *aCookieJarSettings = mDocument->CookieJarSettings();
-  NS_ADDREF(*aCookieJarSettings);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 WebBrowserPersistLocalDocument::GetContentDisposition(nsAString& aCD) {
   nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow();
   if (NS_WARN_IF(!window)) {

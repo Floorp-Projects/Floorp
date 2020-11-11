@@ -218,7 +218,6 @@ var gViewSourceUtils = {
           characterSet: browser.characterSet,
           contentType: browser.documentContentType,
           title: browser.contentTitle,
-          cookieJarSettings: browser.cookieJarSettings,
         };
         data.isPrivate = PrivateBrowsingUtils.isBrowserPrivate(browser);
       }
@@ -237,7 +236,6 @@ var gViewSourceUtils = {
 
         var path;
         var contentType = data.doc ? data.doc.contentType : null;
-        var cookieJarSettings = data.doc ? data.doc.cookieJarSettings : null;
         if (uri.scheme == "file") {
           // it's a local file; we can open it directly
           path = uri.QueryInterface(Ci.nsIFileURL).file.path;
@@ -273,7 +271,6 @@ var gViewSourceUtils = {
             principal,
             null,
             null,
-            cookieJarSettings,
             null,
             null,
             file,

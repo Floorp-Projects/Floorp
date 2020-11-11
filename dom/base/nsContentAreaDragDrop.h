@@ -12,7 +12,6 @@
 #include "nsITransferable.h"
 #include "nsIContentSecurityPolicy.h"
 
-class nsICookieJarSettings;
 class nsPIDOMWindowOuter;
 class nsITransferable;
 class nsIContent;
@@ -51,8 +50,6 @@ class nsContentAreaDragDrop {
    *                    it's from browser chrome or OS
    * aCSP       - [out] set to the CSP of the Drag, or null if
    *                    it's from browser chrome or OS
-   * aCookieJarSettings - [out] set to the cookieJarSetting of the Drag, or null
-   *                            if it's from browser chrome or OS
    */
   static nsresult GetDragData(nsPIDOMWindowOuter* aWindow, nsIContent* aTarget,
                               nsIContent* aSelectionTargetNode,
@@ -61,8 +58,7 @@ class nsContentAreaDragDrop {
                               bool* aCanDrag,
                               mozilla::dom::Selection** aSelection,
                               nsIContent** aDragNode, nsIPrincipal** aPrincipal,
-                              nsIContentSecurityPolicy** aCsp,
-                              nsICookieJarSettings** aCookieJarSettings);
+                              nsIContentSecurityPolicy** aCsp);
 };
 
 // this is used to save images to disk lazily when the image data is asked for
@@ -77,7 +73,6 @@ class nsContentAreaDragDropDataProvider : public nsIFlavorDataProvider {
 
   nsresult SaveURIToFile(nsIURI* inSourceURI,
                          nsIPrincipal* inTriggeringPrincipal,
-                         nsICookieJarSettings* inCookieJarSettings,
                          nsIFile* inDestFile, nsContentPolicyType inPolicyType,
                          bool isPrivate);
 };

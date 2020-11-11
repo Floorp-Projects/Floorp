@@ -34,7 +34,6 @@
 #include "nsIURL.h"
 #include "nsIURIMutator.h"
 #include "mozilla/dom/Document.h"
-#include "nsICookieJarSettings.h"
 #include "nsIPrincipal.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsEscape.h"
@@ -65,8 +64,7 @@ class MOZ_STACK_CLASS DragDataProducer {
                    nsIContent* aSelectionTargetNode, bool aIsAltKeyPressed);
   nsresult Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
                    Selection** aSelection, nsIContent** aDragNode,
-                   nsIPrincipal** aPrincipal, nsIContentSecurityPolicy** aCsp,
-                   nsICookieJarSettings** aCookieJarSettings);
+                   nsIPrincipal** aPrincipal, nsIContentSecurityPolicy** aCsp);
 
  private:
   void AddString(DataTransfer* aDataTransfer, const nsAString& aFlavor,
@@ -112,8 +110,7 @@ nsresult nsContentAreaDragDrop::GetDragData(
     nsIContent* aSelectionTargetNode, bool aIsAltKeyPressed,
     DataTransfer* aDataTransfer, bool* aCanDrag, Selection** aSelection,
     nsIContent** aDragNode, nsIPrincipal** aPrincipal,
-    nsIContentSecurityPolicy** aCsp,
-    nsICookieJarSettings** aCookieJarSettings) {
+    nsIContentSecurityPolicy** aCsp) {
   NS_ENSURE_TRUE(aSelectionTargetNode, NS_ERROR_INVALID_ARG);
 
   *aCanDrag = true;
@@ -121,7 +118,7 @@ nsresult nsContentAreaDragDrop::GetDragData(
   DragDataProducer provider(aWindow, aTarget, aSelectionTargetNode,
                             aIsAltKeyPressed);
   return provider.Produce(aDataTransfer, aCanDrag, aSelection, aDragNode,
-                          aPrincipal, aCsp, aCookieJarSettings);
+                          aPrincipal, aCsp);
 }
 
 NS_IMPL_ISUPPORTS(nsContentAreaDragDropDataProvider, nsIFlavorDataProvider)
@@ -131,8 +128,8 @@ NS_IMPL_ISUPPORTS(nsContentAreaDragDropDataProvider, nsIFlavorDataProvider)
 // into the file system
 nsresult nsContentAreaDragDropDataProvider::SaveURIToFile(
     nsIURI* inSourceURI, nsIPrincipal* inTriggeringPrincipal,
-    nsICookieJarSettings* inCookieJarSettings, nsIFile* inDestFile,
-    nsContentPolicyType inContentPolicyType, bool isPrivate) {
+    nsIFile* inDestFile, nsContentPolicyType inContentPolicyType,
+    bool isPrivate) {
   nsCOMPtr<nsIURL> sourceURL = do_QueryInterface(inSourceURI);
   if (!sourceURL) {
     return NS_ERROR_NO_INTERFACE;
@@ -151,9 +148,9 @@ nsresult nsContentAreaDragDropDataProvider::SaveURIToFile(
       nsIWebBrowserPersist::PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION);
 
   // referrer policy can be anything since the referrer is nullptr
-  return persist->SavePrivacyAwareURI(
-      inSourceURI, inTriggeringPrincipal, 0, nullptr, inCookieJarSettings,
-      nullptr, nullptr, inDestFile, inContentPolicyType, isPrivate);
+  return persist->SavePrivacyAwareURI(inSourceURI, inTriggeringPrincipal, 0,
+                                      nullptr, nullptr, nullptr, inDestFile,
+                                      inContentPolicyType, isPrivate);
 }
 
 /*
@@ -319,10 +316,8 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable* aTransferable,
     nsCOMPtr<nsIPrincipal> principal = aTransferable->GetRequestingPrincipal();
     nsContentPolicyType contentPolicyType =
         aTransferable->GetContentPolicyType();
-    nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
-        aTransferable->GetCookieJarSettings();
-    rv = SaveURIToFile(sourceURI, principal, cookieJarSettings, file,
-                       contentPolicyType, isPrivate);
+    rv =
+        SaveURIToFile(sourceURI, principal, file, contentPolicyType, isPrivate);
     // send back an nsIFile
     if (NS_SUCCEEDED(rv)) {
       CallQueryInterface(file, aData);
@@ -500,8 +495,7 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
                                    Selection** aSelection,
                                    nsIContent** aDragNode,
                                    nsIPrincipal** aPrincipal,
-                                   nsIContentSecurityPolicy** aCsp,
-                                   nsICookieJarSettings** aCookieJarSettings) {
+                                   nsIContentSecurityPolicy** aCsp) {
   MOZ_ASSERT(aCanDrag && aSelection && aDataTransfer && aDragNode,
              "null pointer passed to Produce");
   NS_ASSERTION(mWindow, "window not set");
@@ -732,11 +726,6 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
     nsCOMPtr<nsIContentSecurityPolicy> csp = doc->GetCsp();
     if (csp) {
       NS_IF_ADDREF(*aCsp = csp);
-    }
-
-    nsCOMPtr<nsICookieJarSettings> cookieJarSettings = doc->CookieJarSettings();
-    if (cookieJarSettings) {
-      NS_IF_ADDREF(*aCookieJarSettings = cookieJarSettings);
     }
 
     // if we have selected text, use it in preference to the node

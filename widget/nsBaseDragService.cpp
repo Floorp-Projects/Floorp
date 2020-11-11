@@ -243,8 +243,7 @@ NS_IMETHODIMP nsBaseDragService::SetDragEndPointForTests(int32_t aScreenX,
 NS_IMETHODIMP
 nsBaseDragService::InvokeDragSession(
     nsINode* aDOMNode, nsIPrincipal* aPrincipal, nsIContentSecurityPolicy* aCsp,
-    nsICookieJarSettings* aCookieJarSettings, nsIArray* aTransferableArray,
-    uint32_t aActionType,
+    nsIArray* aTransferableArray, uint32_t aActionType,
     nsContentPolicyType aContentPolicyType = nsIContentPolicy::TYPE_OTHER) {
   AUTO_PROFILER_LABEL("nsBaseDragService::InvokeDragSession", OTHER);
 
@@ -301,7 +300,6 @@ nsBaseDragService::InvokeDragSession(
       trans->Init(nullptr);
       trans->SetRequestingPrincipal(mSourceNode->NodePrincipal());
       trans->SetContentPolicyType(mContentPolicyType);
-      trans->SetCookieJarSettings(aCookieJarSettings);
       mutableArray->AppendElement(trans);
     }
   } else {
@@ -312,7 +310,6 @@ nsBaseDragService::InvokeDragSession(
         // Set the requestingPrincipal on the transferable.
         trans->SetRequestingPrincipal(mSourceNode->NodePrincipal());
         trans->SetContentPolicyType(mContentPolicyType);
-        trans->SetCookieJarSettings(aCookieJarSettings);
       }
     }
   }
@@ -332,9 +329,9 @@ nsBaseDragService::InvokeDragSession(
 NS_IMETHODIMP
 nsBaseDragService::InvokeDragSessionWithImage(
     nsINode* aDOMNode, nsIPrincipal* aPrincipal, nsIContentSecurityPolicy* aCsp,
-    nsICookieJarSettings* aCookieJarSettings, nsIArray* aTransferableArray,
-    uint32_t aActionType, nsINode* aImage, int32_t aImageX, int32_t aImageY,
-    DragEvent* aDragEvent, DataTransfer* aDataTransfer) {
+    nsIArray* aTransferableArray, uint32_t aActionType, nsINode* aImage,
+    int32_t aImageX, int32_t aImageY, DragEvent* aDragEvent,
+    DataTransfer* aDataTransfer) {
   NS_ENSURE_TRUE(aDragEvent, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(aDataTransfer, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
@@ -372,9 +369,9 @@ nsBaseDragService::InvokeDragSessionWithImage(
   }
 #endif
 
-  nsresult rv = InvokeDragSession(
-      aDOMNode, aPrincipal, aCsp, aCookieJarSettings, aTransferableArray,
-      aActionType, nsIContentPolicy::TYPE_INTERNAL_IMAGE);
+  nsresult rv =
+      InvokeDragSession(aDOMNode, aPrincipal, aCsp, aTransferableArray,
+                        aActionType, nsIContentPolicy::TYPE_INTERNAL_IMAGE);
   mRegion = Nothing();
   return rv;
 }
@@ -382,9 +379,9 @@ nsBaseDragService::InvokeDragSessionWithImage(
 NS_IMETHODIMP
 nsBaseDragService::InvokeDragSessionWithRemoteImage(
     nsINode* aDOMNode, nsIPrincipal* aPrincipal, nsIContentSecurityPolicy* aCsp,
-    nsICookieJarSettings* aCookieJarSettings, nsIArray* aTransferableArray,
-    uint32_t aActionType, RemoteDragStartData* aDragStartData,
-    DragEvent* aDragEvent, DataTransfer* aDataTransfer) {
+    nsIArray* aTransferableArray, uint32_t aActionType,
+    RemoteDragStartData* aDragStartData, DragEvent* aDragEvent,
+    DataTransfer* aDataTransfer) {
   NS_ENSURE_TRUE(aDragEvent, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(aDataTransfer, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
@@ -403,9 +400,9 @@ nsBaseDragService::InvokeDragSessionWithRemoteImage(
   mScreenPosition.y = aDragEvent->ScreenY(CallerType::System);
   mInputSource = aDragEvent->MozInputSource();
 
-  nsresult rv = InvokeDragSession(
-      aDOMNode, aPrincipal, aCsp, aCookieJarSettings, aTransferableArray,
-      aActionType, nsIContentPolicy::TYPE_INTERNAL_IMAGE);
+  nsresult rv =
+      InvokeDragSession(aDOMNode, aPrincipal, aCsp, aTransferableArray,
+                        aActionType, nsIContentPolicy::TYPE_INTERNAL_IMAGE);
   mRegion = Nothing();
   return rv;
 }
@@ -413,9 +410,8 @@ nsBaseDragService::InvokeDragSessionWithRemoteImage(
 NS_IMETHODIMP
 nsBaseDragService::InvokeDragSessionWithSelection(
     Selection* aSelection, nsIPrincipal* aPrincipal,
-    nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings,
-    nsIArray* aTransferableArray, uint32_t aActionType, DragEvent* aDragEvent,
-    DataTransfer* aDataTransfer) {
+    nsIContentSecurityPolicy* aCsp, nsIArray* aTransferableArray,
+    uint32_t aActionType, DragEvent* aDragEvent, DataTransfer* aDataTransfer) {
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(aDragEvent, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
@@ -440,9 +436,8 @@ nsBaseDragService::InvokeDragSessionWithSelection(
   // endpoints of the selection
   nsCOMPtr<nsINode> node = aSelection->GetFocusNode();
 
-  return InvokeDragSession(node, aPrincipal, aCsp, aCookieJarSettings,
-                           aTransferableArray, aActionType,
-                           nsIContentPolicy::TYPE_OTHER);
+  return InvokeDragSession(node, aPrincipal, aCsp, aTransferableArray,
+                           aActionType, nsIContentPolicy::TYPE_OTHER);
 }
 
 //-------------------------------------------------------------------------
