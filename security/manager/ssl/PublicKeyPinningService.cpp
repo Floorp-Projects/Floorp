@@ -36,15 +36,16 @@ static nsresult GetBase64HashSPKI(const BackCert& cert,
   Input derPublicKey = cert.GetSubjectPublicKeyInfo();
 
   hashSPKIDigest.Truncate();
-  Digest digest;
-  nsresult nsrv = digest.DigestBuf(SEC_OID_SHA256, derPublicKey.UnsafeGetData(),
-                                   derPublicKey.GetLength());
+  nsTArray<uint8_t> digestArray;
+  nsresult nsrv =
+      Digest::DigestBuf(SEC_OID_SHA256, derPublicKey.UnsafeGetData(),
+                        derPublicKey.GetLength(), digestArray);
   if (NS_FAILED(nsrv)) {
     return nsrv;
   }
   return Base64Encode(nsDependentCSubstring(
-                          BitwiseCast<char*, unsigned char*>(digest.get().data),
-                          digest.get().len),
+                          BitwiseCast<char*, uint8_t*>(digestArray.Elements()),
+                          digestArray.Length()),
                       hashSPKIDigest);
 }
 
