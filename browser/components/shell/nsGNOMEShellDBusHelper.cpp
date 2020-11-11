@@ -29,7 +29,7 @@ static bool GetGnomeSearchTitle(const char* aSearchedTerm,
   }
 
   AutoTArray<nsString, 1> formatStrings;
-  CopyASCIItoUTF16(nsCString(aSearchedTerm), *formatStrings.AppendElement());
+  CopyUTF8toUTF16(nsCString(aSearchedTerm), *formatStrings.AppendElement());
 
   nsAutoString gnomeSearchTitle;
   bundle->FormatStringFromName("gnomeSearchProviderSearch", formatStrings,
@@ -41,7 +41,7 @@ static bool GetGnomeSearchTitle(const char* aSearchedTerm,
 static const char* introspect_template =
     "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection "
     "1.0//EN\"\n"
-    "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\";>\n"
+    "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n"
     "<node>\n"
     " <interface name=\"org.freedesktop.DBus.Introspectable\">\n"
     "   <method name=\"Introspect\">\n"
