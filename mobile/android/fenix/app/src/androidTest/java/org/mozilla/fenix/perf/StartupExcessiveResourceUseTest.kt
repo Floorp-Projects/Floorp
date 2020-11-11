@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.ui
+package org.mozilla.fenix.perf
 
 import android.util.Log
 import android.view.View
@@ -16,10 +16,8 @@ import kotlinx.android.synthetic.main.activity_home.*
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.perf.RunBlockingCounter
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.HomeActivityTestRule
-import org.mozilla.fenix.perf.ComponentInitCount
 
 // BEFORE INCREASING THESE VALUES, PLEASE CONSULT WITH THE PERF TEAM.
 private const val EXPECTED_SUPPRESSION_COUNT = 11
@@ -69,9 +67,7 @@ private val failureMsgRecyclerViewConstraintLayoutChildren = getErrorMessage(
  * RunBlocking is mostly used to return values to a thread from a coroutine. However, if that
  * coroutine takes too long, it can lead that thread to block every other operations.
  *
- * The perf team is code owners for this file so they should be notified when the count is modified.
- *
- * IF YOU UPDATE THE TEST NAME, UPDATE CODE OWNERS.
+ * The perf team is code owners for this package so they should be notified when the counts are modified.
  */
 class StartupExcessiveResourceUseTest {
     @get:Rule

@@ -51,7 +51,6 @@
 *StrictMode*kt @mozilla-mobile/Performance
 *ConstraintLayoutPerfDetector* @mozilla-mobile/Performance
 *MozillaRunBlockingCheck.kt @mozilla-mobile/Performance
-*StartupExcessiveResourceUseTest.kt @mozilla-mobile/Performance
 
 # We want to be aware of new features behind flags as well as features
 # about to be enabled.
