@@ -43,6 +43,9 @@ class nsMacUtilsImpl final : public nsIMacUtils {
   static void EnableTCSMIfAvailable();
   static bool IsTCSMAvailable();
   static uint32_t GetPhysicalCPUCount();
+  static nsresult GetArchitecturesForBundle(uint32_t* aArchMask);
+  static nsresult GetArchitecturesForBinary(const char* aPath,
+                                            uint32_t* aArchMask);
 
  private:
   ~nsMacUtilsImpl() {}
@@ -61,6 +64,10 @@ class nsMacUtilsImpl final : public nsIMacUtils {
   // Utility method to call ClearOnShutdown() on the main thread
   static nsresult ClearCachedAppPathOnShutdown();
 #endif
+
+  // The cached machine architectures of the .app bundle which can
+  // be multiple architectures for universal binaries.
+  static std::atomic<uint32_t> sBundleArchMaskAtomic;
 
   enum TCSMStatus { TCSM_Unknown = 0, TCSM_Available, TCSM_Unavailable };
   static mozilla::Atomic<nsMacUtilsImpl::TCSMStatus> sTCSMStatus;

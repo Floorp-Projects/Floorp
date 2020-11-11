@@ -7,6 +7,7 @@
 #include "nsMacUtilsImpl.h"
 
 #include "base/command_line.h"
+#include "base/process_util.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/ContentChild.h"
 #include "nsDirectoryServiceDefs.h"
@@ -35,10 +36,15 @@ StaticAutoPtr<nsCString> nsMacUtilsImpl::sCachedAppPath;
 StaticMutex nsMacUtilsImpl::sCachedAppPathMutex;
 #endif
 
+std::atomic<uint32_t> nsMacUtilsImpl::sBundleArchMaskAtomic = 0;
+
 // Info.plist key associated with the developer repo path
 #define MAC_DEV_REPO_KEY "MozillaDeveloperRepoPath"
 // Info.plist key associated with the developer repo object directory
 #define MAC_DEV_OBJ_KEY "MozillaDeveloperObjPath"
+
+// Workaround this constant not being available in the macOS SDK
+#define kCFBundleExecutableArchitectureARM64 0x0100000c
 
 // Initialize with Unknown until we've checked if TCSM is available to set
 Atomic<nsMacUtilsImpl::TCSMStatus> nsMacUtilsImpl::sTCSMStatus(TCSM_Unknown);
@@ -49,72 +55,45 @@ nsresult nsMacUtilsImpl::GetArchString(nsAString& aArchString) {
     return NS_OK;
   }
 
-  aArchString.Truncate();
-
-  bool foundPPC = false, foundX86 = false, foundPPC64 = false,
-       foundX86_64 = false;
-
-  CFBundleRef mainBundle = ::CFBundleGetMainBundle();
-  if (!mainBundle) {
-    return NS_ERROR_FAILURE;
-  }
-
-  CFArrayRef archList = ::CFBundleCopyExecutableArchitectures(mainBundle);
-  if (!archList) {
-    return NS_ERROR_FAILURE;
-  }
-
-  CFIndex archCount = ::CFArrayGetCount(archList);
-  for (CFIndex i = 0; i < archCount; i++) {
-    CFNumberRef arch =
-        static_cast<CFNumberRef>(::CFArrayGetValueAtIndex(archList, i));
-
-    int archInt = 0;
-    if (!::CFNumberGetValue(arch, kCFNumberIntType, &archInt)) {
-      ::CFRelease(archList);
-      return NS_ERROR_FAILURE;
-    }
-
-    if (archInt == kCFBundleExecutableArchitecturePPC) {
-      foundPPC = true;
-    } else if (archInt == kCFBundleExecutableArchitectureI386) {
-      foundX86 = true;
-    } else if (archInt == kCFBundleExecutableArchitecturePPC64) {
-      foundPPC64 = true;
-    } else if (archInt == kCFBundleExecutableArchitectureX86_64) {
-      foundX86_64 = true;
-    }
-  }
-
-  ::CFRelease(archList);
+  uint32_t archMask = base::PROCESS_ARCH_INVALID;
+  nsresult rv = GetArchitecturesForBundle(&archMask);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // The order in the string must always be the same so
   // don't do this in the loop.
-  if (foundPPC) {
+  if (archMask & base::PROCESS_ARCH_PPC) {
     mBinaryArchs.AppendLiteral("ppc");
   }
 
-  if (foundX86) {
+  if (archMask & base::PROCESS_ARCH_I386) {
     if (!mBinaryArchs.IsEmpty()) {
       mBinaryArchs.Append('-');
     }
     mBinaryArchs.AppendLiteral("i386");
   }
 
-  if (foundPPC64) {
+  if (archMask & base::PROCESS_ARCH_PPC_64) {
     if (!mBinaryArchs.IsEmpty()) {
       mBinaryArchs.Append('-');
     }
     mBinaryArchs.AppendLiteral("ppc64");
   }
 
-  if (foundX86_64) {
+  if (archMask & base::PROCESS_ARCH_X86_64) {
     if (!mBinaryArchs.IsEmpty()) {
       mBinaryArchs.Append('-');
     }
     mBinaryArchs.AppendLiteral("x86_64");
   }
 
+  if (archMask & base::PROCESS_ARCH_ARM_64) {
+    if (!mBinaryArchs.IsEmpty()) {
+      mBinaryArchs.Append('-');
+    }
+    mBinaryArchs.AppendLiteral("arm64");
+  }
+
+  aArchString.Truncate();
   aArchString.Assign(mBinaryArchs);
 
   return (aArchString.IsEmpty() ? NS_ERROR_FAILURE : NS_OK);
@@ -441,4 +420,104 @@ nsresult nsMacUtilsImpl::GetObjDir(nsIFile** aObjDir) {
 #endif
   return GetDirFromBundlePlist(NS_LITERAL_STRING_FROM_CSTRING(MAC_DEV_OBJ_KEY),
                                aObjDir);
+}
+
+/* static */
+nsresult nsMacUtilsImpl::GetArchitecturesForBundle(uint32_t* aArchMask) {
+  MOZ_ASSERT(aArchMask);
+
+  *aArchMask = sBundleArchMaskAtomic;
+  if (*aArchMask != 0) {
+    return NS_OK;
+  }
+
+  CFBundleRef mainBundle = ::CFBundleGetMainBundle();
+  if (!mainBundle) {
+    return NS_ERROR_FAILURE;
+  }
+
+  CFArrayRef archList = ::CFBundleCopyExecutableArchitectures(mainBundle);
+  if (!archList) {
+    return NS_ERROR_FAILURE;
+  }
+
+  CFIndex archCount = ::CFArrayGetCount(archList);
+  for (CFIndex i = 0; i < archCount; i++) {
+    CFNumberRef arch =
+        static_cast<CFNumberRef>(::CFArrayGetValueAtIndex(archList, i));
+
+    int archInt = 0;
+    if (!::CFNumberGetValue(arch, kCFNumberIntType, &archInt)) {
+      ::CFRelease(archList);
+      return NS_ERROR_FAILURE;
+    }
+
+    if (archInt == kCFBundleExecutableArchitecturePPC) {
+      *aArchMask |= base::PROCESS_ARCH_PPC;
+    } else if (archInt == kCFBundleExecutableArchitectureI386) {
+      *aArchMask |= base::PROCESS_ARCH_I386;
+    } else if (archInt == kCFBundleExecutableArchitecturePPC64) {
+      *aArchMask |= base::PROCESS_ARCH_PPC_64;
+    } else if (archInt == kCFBundleExecutableArchitectureX86_64) {
+      *aArchMask |= base::PROCESS_ARCH_X86_64;
+    } else if (archInt == kCFBundleExecutableArchitectureARM64) {
+      *aArchMask |= base::PROCESS_ARCH_ARM_64;
+    }
+  }
+
+  ::CFRelease(archList);
+
+  sBundleArchMaskAtomic = *aArchMask;
+
+  return NS_OK;
+}
+
+/* static */
+nsresult nsMacUtilsImpl::GetArchitecturesForBinary(const char* aPath,
+                                                   uint32_t* aArchMask) {
+  MOZ_ASSERT(aArchMask);
+
+  *aArchMask = 0;
+
+  CFURLRef url = ::CFURLCreateFromFileSystemRepresentation(
+      kCFAllocatorDefault, (const UInt8*)aPath, strlen(aPath), false);
+  if (!url) {
+    return NS_ERROR_FAILURE;
+  }
+
+  CFArrayRef archs = ::CFBundleCopyExecutableArchitecturesForURL(url);
+  if (!archs) {
+    CFRelease(url);
+    return NS_ERROR_FAILURE;
+  }
+
+  CFIndex archCount = ::CFArrayGetCount(archs);
+  for (CFIndex i = 0; i < archCount; i++) {
+    CFNumberRef currentArch =
+        static_cast<CFNumberRef>(::CFArrayGetValueAtIndex(archs, i));
+    int currentArchInt = 0;
+    if (!::CFNumberGetValue(currentArch, kCFNumberIntType, &currentArchInt)) {
+      continue;
+    }
+    switch (currentArchInt) {
+      case kCFBundleExecutableArchitectureX86_64:
+        *aArchMask |= base::PROCESS_ARCH_X86_64;
+        break;
+      case kCFBundleExecutableArchitectureARM64:
+        *aArchMask |= base::PROCESS_ARCH_ARM_64;
+        break;
+      default:
+        break;
+    }
+  }
+
+  CFRelease(url);
+  CFRelease(archs);
+
+  // We expect x86 or ARM64 or both.
+  if (*aArchMask == 0) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
 }
