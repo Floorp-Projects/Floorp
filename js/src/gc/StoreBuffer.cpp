@@ -228,3 +228,16 @@ void StoreBuffer::WholeCellBuffer::clear() {
 
 template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::ValueEdge>;
 template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::SlotsEdge>;
+
+void js::gc::PostWriteBarrierCell(Cell* cell, Cell* prev, Cell* next) {
+  if (!next || !cell->isTenured()) {
+    return;
+  }
+
+  StoreBuffer* buffer = next->storeBuffer();
+  if (!buffer || (prev && prev->storeBuffer())) {
+    return;
+  }
+
+  buffer->putWholeCell(cell);
+}

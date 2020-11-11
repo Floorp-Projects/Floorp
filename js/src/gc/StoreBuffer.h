@@ -648,7 +648,7 @@ MOZ_ALWAYS_INLINE void PostWriteBarrierImpl(void* cellp, T* prev, T* next) {
   MOZ_ASSERT(cellp);
 
   // If the target needs an entry, add it.
-  js::gc::StoreBuffer* buffer;
+  StoreBuffer* buffer;
   if (next && (buffer = next->storeBuffer())) {
     // If we know that the prev has already inserted an entry, we can skip
     // doing the lookup to add the new entry. Note that we cannot safely
@@ -673,14 +673,17 @@ MOZ_ALWAYS_INLINE void PostWriteBarrier(T** vp, T* prev, T* next) {
   static_assert(std::is_base_of_v<Cell, T>);
   static_assert(!std::is_same_v<Cell, T> && !std::is_same_v<TenuredCell, T>);
 
-  if constexpr (!std::is_base_of_v<gc::TenuredCell, T>) {
-    using BaseT = typename gc::BaseGCType<T>::type;
-    gc::PostWriteBarrierImpl<BaseT>(vp, prev, next);
+  if constexpr (!std::is_base_of_v<TenuredCell, T>) {
+    using BaseT = typename BaseGCType<T>::type;
+    PostWriteBarrierImpl<BaseT>(vp, prev, next);
     return;
   }
 
   MOZ_ASSERT(!IsInsideNursery(next));
 }
+
+// Used when we don't have a specific edge to put in the store buffer.
+void PostWriteBarrierCell(Cell* cell, Cell* prev, Cell* next);
 
 } /* namespace gc */
 } /* namespace js */
