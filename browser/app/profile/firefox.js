@@ -1382,7 +1382,7 @@ pref("browser.newtabpage.activity-stream.discoverystream.region-stories-block", 
 // List of locales that get stories, regardless of region-stories-config.
 pref("browser.newtabpage.activity-stream.discoverystream.locale-list-config", "");
 // List of regions that get stories by default.
-pref("browser.newtabpage.activity-stream.discoverystream.region-stories-config", "US,DE,CA,GB,IE,CH,AT,BE");
+pref("browser.newtabpage.activity-stream.discoverystream.region-stories-config", "US,DE,CA,GB,IE,CH,AT,BE,IN");
 
 // List of regions that get spocs by default.
 pref("browser.newtabpage.activity-stream.discoverystream.region-spocs-config", "US,CA,DE,GB");
