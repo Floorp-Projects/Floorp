@@ -4,7 +4,6 @@
 
 from mozpack.files import (
     BaseFinder,
-    JarFinder,
     ExecutableFile,
     BaseFile,
     GeneratedFile,
@@ -12,7 +11,6 @@ from mozpack.files import (
 from mozpack.executables import (
     MACHO_SIGNATURES,
 )
-from mozpack.mozjar import JarReader
 from mozpack.errors import errors
 from mozbuild.util import hexdump
 from tempfile import mkstemp
@@ -245,17 +243,4 @@ class UnifiedBuildFinder(UnifiedFinder):
                     content1,
                 )
             )
-        elif path.endswith(".xpi"):
-            finder1 = JarFinder(
-                os.path.join(self._finder1.base, path), JarReader(fileobj=file1.open())
-            )
-            finder2 = JarFinder(
-                os.path.join(self._finder2.base, path), JarReader(fileobj=file2.open())
-            )
-            unifier = UnifiedFinder(finder1, finder2, sorted=self._sorted)
-            err = errors.count
-            all(unifier.find(""))
-            if err == errors.count:
-                return file1
-            return None
         return UnifiedFinder.unify_file(self, path, file1, file2)
