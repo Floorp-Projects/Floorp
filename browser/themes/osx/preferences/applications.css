@@ -36,7 +36,7 @@
 
 .actionsMenu::part(icon) {
   margin-top: 2px;
-  margin-inline: 2px 8px;
+  margin-inline: 0px 8px;
 }
 
 .actionsMenu > menupopup > menuitem > .menu-iconic-left {
