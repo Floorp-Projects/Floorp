@@ -295,6 +295,11 @@ NSPrintInfo* nsPrintSettingsX::CreateOrCopyPrintInfo(bool aWithScaling) {
     for (const auto& setting : kKnownMonochromeSettings) {
       [printSettings setObject:setting.mValue forKey:setting.mName];
     }
+    auto applySetting = [&](const nsACString& aKey, const nsACString& aValue) {
+      [printSettings setObject:nsCocoaUtils::ToNSString(aValue)
+                        forKey:nsCocoaUtils::ToNSString(aKey)];
+    };
+    nsPrinterCUPS::ForEachExtraMonochromeSetting(applySetting);
   }
 
   return printInfo;
