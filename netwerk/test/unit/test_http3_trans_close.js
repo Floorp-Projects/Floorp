@@ -7,7 +7,7 @@ registerCleanupFunction(async () => {
 });
 
 add_task(async function setup() {
-  await http3_setup_tests();
+  await http3_setup_tests(false);
 });
 
 let Http3Listener = function() {};
