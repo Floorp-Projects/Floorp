@@ -307,6 +307,7 @@ function promiseNewDownload(aSourceUrl) {
  *          isPrivate: Boolean indicating whether the download originated from a
  *                     private window.
  *          referrerInfo: referrerInfo for the download source.
+ *          cookieJarSettings: cookieJarSettings for the download source.
  *          targetFile: nsIFile for the target, or null to use a temporary file.
  *          outPersist: Receives a reference to the created nsIWebBrowserPersist
  *                      instance.
@@ -397,6 +398,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
 
         let isPrivate = aOptions && aOptions.isPrivate;
         let referrerInfo = aOptions ? aOptions.referrerInfo : null;
+        let cookieJarSettings = aOptions ? aOptions.cookieJarSettings : null;
         // Initialize the components so they reference each other.  This will cause
         // the Download object to be created and added to the public downloads.
         transfer.init(
@@ -418,6 +420,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
           Services.scriptSecurityManager.getSystemPrincipal(),
           0,
           referrerInfo,
+          cookieJarSettings,
           null,
           null,
           targetFile,
