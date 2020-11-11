@@ -2563,18 +2563,20 @@ nsNSSComponent::IsCertContentSigningRoot(const nsTArray<uint8_t>& cert,
                                          bool* result) {
   NS_ENSURE_ARG_POINTER(result);
   *result = false;
-
   if (cert.Length() > std::numeric_limits<uint32_t>::max()) {
     return NS_ERROR_INVALID_ARG;
   }
-  Digest digest;
-  nsresult rv =
-      digest.DigestBuf(SEC_OID_SHA256, cert.Elements(), cert.Length());
+  nsTArray<uint8_t> digestArray;
+  nsresult rv = Digest::DigestBuf(SEC_OID_SHA256, cert.Elements(),
+                                  cert.Length(), digestArray);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  UniquePORTString fingerprintCString(CERT_Hexify(
-      const_cast<SECItem*>(&digest.get()), true /* use colon delimiters */));
+  SECItem digestItem = {siBuffer, digestArray.Elements(),
+                        static_cast<unsigned int>(digestArray.Length())};
+
+  UniquePORTString fingerprintCString(
+      CERT_Hexify(&digestItem, true /* use colon delimiters */));
   if (!fingerprintCString) {
     return NS_ERROR_FAILURE;
   }
