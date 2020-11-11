@@ -625,7 +625,7 @@ unsafe extern "C" fn qcms_transform_data_gray_template_precache<I: GrayFormat, F
 
         let mut linear: f32 = *input_gamma_table_gray.offset(device as isize);
         /* we could round here... */
-        let mut gray: u16 = (linear * (8192 - 1) as f32) as u16;
+        let mut gray: u16 = (linear * PRECACHE_OUTPUT_MAX as f32) as u16;
         *dest.offset(F::kRIndex as isize) = (output_table_r).data[gray as usize];
         *dest.offset(F::kGIndex as isize) = (output_table_g).data[gray as usize];
         *dest.offset(F::kBIndex as isize) = (output_table_b).data[gray as usize];
@@ -719,9 +719,9 @@ unsafe extern "C" fn qcms_transform_data_template_lut_precache<F: Format>(
         out_linear_b = clamp_float(out_linear_b);
         /* we could round here... */
 
-        let mut r: u16 = (out_linear_r * (8192 - 1) as f32) as u16;
-        let mut g: u16 = (out_linear_g * (8192 - 1) as f32) as u16;
-        let mut b: u16 = (out_linear_b * (8192 - 1) as f32) as u16;
+        let mut r: u16 = (out_linear_r * PRECACHE_OUTPUT_MAX as f32) as u16;
+        let mut g: u16 = (out_linear_g * PRECACHE_OUTPUT_MAX as f32) as u16;
+        let mut b: u16 = (out_linear_b * PRECACHE_OUTPUT_MAX as f32) as u16;
         *dest.offset(F::kRIndex as isize) = (output_table_r).data[r as usize];
         *dest.offset(F::kGIndex as isize) = (output_table_g).data[g as usize];
         *dest.offset(F::kBIndex as isize) = (output_table_b).data[b as usize];
