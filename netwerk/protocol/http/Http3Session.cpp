@@ -73,8 +73,7 @@ Http3Session::Http3Session()
       gHttpHandler->ConnMgr()->CurrentTopLevelOuterContentWindowId();
 }
 
-nsresult Http3Session::Init(const nsACString& aOrigin,
-                            const nsACString& aAlpnToken,
+nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
                             nsISocketTransport* aSocketTransport,
                             HttpConnectionUDP* readerWriter) {
   LOG3(("Http3Session::Init %p", this));
@@ -83,7 +82,7 @@ nsresult Http3Session::Init(const nsACString& aOrigin,
   MOZ_ASSERT(aSocketTransport);
   MOZ_ASSERT(readerWriter);
 
-  mAlpnToken = aAlpnToken;
+  mConnInfo = aConnInfo->Clone();
   mSocketTransport = aSocketTransport;
 
   nsCOMPtr<nsISupports> info;
@@ -137,14 +136,14 @@ nsresult Http3Session::Init(const nsACString& aOrigin,
   LOG3(
       ("Http3Session::Init origin=%s, alpn=%s, selfAddr=%s, peerAddr=%s,"
        " qpack table size=%u, max blocked streams=%u [this=%p]",
-       PromiseFlatCString(aOrigin).get(), PromiseFlatCString(aAlpnToken).get(),
-       selfAddrStr.get(), peerAddrStr.get(),
-       gHttpHandler->DefaultQpackTableSize(),
+       PromiseFlatCString(mConnInfo->GetOrigin()).get(),
+       PromiseFlatCString(mConnInfo->GetNPNToken()).get(), selfAddrStr.get(),
+       peerAddrStr.get(), gHttpHandler->DefaultQpackTableSize(),
        gHttpHandler->DefaultHttp3MaxBlockedStreams(), this));
 
   nsresult rv = NeqoHttp3Conn::Init(
-      aOrigin, aAlpnToken, selfAddrStr, peerAddrStr,
-      gHttpHandler->DefaultQpackTableSize(),
+      mConnInfo->GetOrigin(), mConnInfo->GetNPNToken(), selfAddrStr,
+      peerAddrStr, gHttpHandler->DefaultQpackTableSize(),
       gHttpHandler->DefaultHttp3MaxBlockedStreams(),
       gHttpHandler->Http3QlogDir(), getter_AddRefs(mHttp3Connection));
   if (NS_FAILED(rv)) {
@@ -187,6 +186,10 @@ nsresult Http3Session::Init(const nsACString& aOrigin,
 void Http3Session::Shutdown() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
+  if (mBeforeConnectedError || (mError == NS_ERROR_NET_HTTP3_PROTOCOL_ERROR)) {
+    gHttpHandler->ExcludeHttp3(mConnInfo);
+  }
+
   for (auto iter = mStreamTransactionHash.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<Http3Stream> stream = iter.Data();
 
@@ -195,10 +198,12 @@ void Http3Session::Shutdown() {
       // The transaction restart code path will remove AltSvc mapping and the
       // direct path will be used.
       MOZ_ASSERT(NS_FAILED(mError));
-      stream->Close(mError);
+      stream->Close(NS_ERROR_NET_RESET);
     } else if (!stream->HasStreamId()) {
-      // Connection has not been started yet. We can restart it.
-      stream->Transaction()->DoNotRemoveAltSvc();
+      if (NS_SUCCEEDED(mError)) {
+        // Connection has not been started yet. We can restart it.
+        stream->Transaction()->DoNotRemoveAltSvc();
+      }
       stream->Close(NS_ERROR_NET_RESET);
     } else if (stream->RecvdData()) {
       stream->Close(NS_ERROR_NET_PARTIAL_TRANSFER);
@@ -836,7 +841,8 @@ void Http3Session::ResetRecvd(uint64_t aStreamId, uint64_t aError) {
   if (aError == HTTP3_APP_ERROR_VERSION_FALLBACK) {
     // We will restart the request and the alt-svc will be removed
     // automatically.
-    // Also disable spdy we want http/1.1.
+    // Also disable http3 we want http1.1.
+    stream->Transaction()->DisableHttp3();
     stream->Transaction()->DisableSpdy();
     CloseStream(stream, NS_ERROR_NET_RESET);
   } else if (aError == HTTP3_APP_ERROR_REQUEST_REJECTED) {
@@ -1474,11 +1480,11 @@ bool Http3Session::RealJoinConnection(const nsACString& hostname, int32_t port,
 
   bool joinedReturn = false;
   if (justKidding) {
-    rv = sslSocketControl->TestJoinConnection(mAlpnToken, hostname, port,
-                                              &isJoined);
+    rv = sslSocketControl->TestJoinConnection(mConnInfo->GetNPNToken(),
+                                              hostname, port, &isJoined);
   } else {
-    rv =
-        sslSocketControl->JoinConnection(mAlpnToken, hostname, port, &isJoined);
+    rv = sslSocketControl->JoinConnection(mConnInfo->GetNPNToken(), hostname,
+                                          port, &isJoined);
   }
   if (NS_SUCCEEDED(rv) && isJoined) {
     joinedReturn = true;
