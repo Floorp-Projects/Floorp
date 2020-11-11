@@ -28,20 +28,20 @@
     <string name="mozac_feature_downloads_open_not_supported1">%1$s ᱨᱮᱫ ᱠᱚ ᱠᱷᱩᱞᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱪᱮᱫ ᱦᱚᱸ ᱮᱯᱯ ᱵᱟᱝ ᱧᱟᱢ ᱞᱟᱱᱟ</string>
 
     <!-- Button that pauses the download when pressed -->
-    <string name="mozac_feature_downloads_button_pause">ᱛᱷᱩᱠᱩᱢ ᱢᱮᱸ</string>
+    <string name="mozac_feature_downloads_button_pause">ᱛᱷᱩᱠᱩᱢ ᱢᱮ</string>
     <!-- Button that resumes the download when pressed -->
     <string name="mozac_feature_downloads_button_resume">ᱫᱩᱦᱲᱟᱹ ᱮᱦᱚᱵᱽ</string>
     <!-- Button that cancels the download when pressed -->
     <string name="mozac_feature_downloads_button_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
     <!-- Button that opens the downloaded file when pressed -->
-    <string name="mozac_feature_downloads_button_open">ᱡᱷᱚᱡ ᱢᱮᱸ</string>
+    <string name="mozac_feature_downloads_button_open">ᱡᱷᱚᱡ ᱢᱮ</string>
     <!-- Button that restarts the download after a failed attempt -->
-    <string name="mozac_feature_downloads_button_try_again">ᱫᱚᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮᱸ</string>
+    <string name="mozac_feature_downloads_button_try_again">ᱫᱚᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮ</string>
 
     <!-- Content description for close button -->
-    <string name="mozac_feature_downloads_button_close">ᱵᱚᱸᱫᱚᱭ ᱢᱮᱸ</string>
+    <string name="mozac_feature_downloads_button_close">ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
     <!-- Title for the third party download app chooser dialog -->
-    <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">ᱠᱟᱹᱢᱤ ᱠᱚ ᱪᱟᱵᱟᱭ ᱢᱮᱸ</string>
+    <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">ᱠᱟᱹᱢᱤ ᱠᱚ ᱪᱟᱵᱟᱭ ᱢᱮ</string>
     <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">%1$s ᱵᱟᱝ ᱠᱷᱩᱞᱟᱹ ᱫᱟᱲᱮᱞᱟᱱᱟ</string>
 </resources>

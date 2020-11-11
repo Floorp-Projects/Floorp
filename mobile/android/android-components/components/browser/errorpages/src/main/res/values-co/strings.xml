@@ -216,7 +216,7 @@
     <string name="mozac_browser_errorpages_file_not_found_title">U schedariu ùn esiste micca</string>
     <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[¶
       <ul>¶
-        <li>Forse l’elementu hè statu rinuminatu, cacciatu o dispiazzatu ?</li>¶
+        <li>Forse l’elementu hè statu rinumatu, cacciatu o dispiazzatu ?</li>¶
         <li>Ci hè un sbagliu d’ortugrafia, di maiuscula o un altru sbagliu di tipografia ?</li>¶
         <li>Avete abbastanza permessi d’accessu per st’elementu ?</li>¶
       </ul>¶
