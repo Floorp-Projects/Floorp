@@ -42,6 +42,8 @@ const EVENT_VIRTUALCURSOR_CHANGED =
 const EVENT_ALERT = nsIAccessibleEvent.EVENT_ALERT;
 const EVENT_TEXT_SELECTION_CHANGED =
   nsIAccessibleEvent.EVENT_TEXT_SELECTION_CHANGED;
+const EVENT_LIVE_REGION_ADDED = nsIAccessibleEvent.EVENT_LIVE_REGION_ADDED;
+const EVENT_LIVE_REGION_REMOVED = nsIAccessibleEvent.EVENT_LIVE_REGION_REMOVED;
 
 const EventsLogger = {
   enabled: false,
