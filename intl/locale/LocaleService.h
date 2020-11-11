@@ -179,7 +179,9 @@ class LocaleService final : public mozILocaleService,
 
   void InitPackagedLocales();
 
-  virtual ~LocaleService();
+  void RemoveObservers();
+
+  virtual ~LocaleService() = default;
 
   nsAutoCStringN<16> mDefaultLocale;
   nsTArray<nsCString> mAppLocales;

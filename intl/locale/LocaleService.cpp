@@ -147,20 +147,24 @@ LocaleService* LocaleService::GetInstance() {
           mozilla::services::GetObserverService();
       if (obs) {
         obs->AddObserver(sInstance, INTL_SYSTEM_LOCALES_CHANGED, true);
+        obs->AddObserver(sInstance, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
       }
     }
-    ClearOnShutdown(&sInstance, ShutdownPhase::Shutdown);
+    // DOM might use ICUUtils and LocaleService during UnbindFromTree by
+    // final cycle collection.
+    ClearOnShutdown(&sInstance, ShutdownPhase::ShutdownPostLastCycleCollection);
   }
   return sInstance;
 }
 
-LocaleService::~LocaleService() {
+void LocaleService::RemoveObservers() {
   if (mIsServer) {
     Preferences::RemoveObservers(this, kObservedPrefs);
 
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->RemoveObserver(this, INTL_SYSTEM_LOCALES_CHANGED);
+      obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     }
   }
 }
@@ -270,6 +274,8 @@ LocaleService::Observe(nsISupports* aSubject, const char* aTopic,
   if (!strcmp(aTopic, INTL_SYSTEM_LOCALES_CHANGED)) {
     RequestedLocalesChanged();
     WebExposedLocalesChanged();
+  } else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    RemoveObservers();
   } else {
     NS_ConvertUTF16toUTF8 pref(aData);
     // At the moment the only thing we're observing are settings indicating

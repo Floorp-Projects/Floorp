@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+function runTest() {
+  let win = window.open("1667493_1.html");
+  win.finish = function() {
+    document.documentElement.removeAttribute("class");
+  };
+}
+</script>
+<body onload="runTest()">
+</body>
+</html>
