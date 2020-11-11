@@ -1740,6 +1740,12 @@ DebuggerProgressListener.prototype = {
     }
 
     const window = evt.target.defaultView;
+    if (!window) {
+      // Some old UIs might emit unrelated events called pageshow/pagehide on
+      // elements which are not documents. Bail in this case. See Bug 1669666.
+      return;
+    }
+
     const innerID = getWindowID(window);
 
     // This handler is called for two events: "DOMWindowCreated" and "pageshow".
@@ -1780,6 +1786,12 @@ DebuggerProgressListener.prototype = {
     }
 
     const window = evt.target.defaultView;
+    if (!window) {
+      // Some old UIs might emit unrelated events called pageshow/pagehide on
+      // elements which are not documents. Bail in this case. See Bug 1669666.
+      return;
+    }
+
     this._targetActor._windowDestroyed(window, null, true);
     this._knownWindowIDs.delete(getWindowID(window));
   }, "DebuggerProgressListener.prototype.onWindowHidden"),
