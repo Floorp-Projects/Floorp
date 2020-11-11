@@ -401,22 +401,18 @@ nsICollation* Service::getLocaleCollation() {
 //// mozIStorageService
 
 NS_IMETHODIMP
-Service::OpenSpecialDatabase(const char* aStorageKey,
+Service::OpenSpecialDatabase(const nsACString& aStorageKey,
+                             const nsACString& aName,
                              mozIStorageConnection** _connection) {
-  nsresult rv;
-
-  nsCOMPtr<nsIFile> storageFile;
-  if (::strcmp(aStorageKey, "memory") == 0) {
-    // just fall through with nullptr storageFile, this will cause the storage
-    // connection to use a memory DB.
-  } else {
+  if (!aStorageKey.Equals(kMozStorageMemoryStorageKey)) {
     return NS_ERROR_INVALID_ARG;
   }
 
   RefPtr<Connection> msc =
-      new Connection(this, SQLITE_OPEN_READWRITE, Connection::SYNCHRONOUS);
+      new Connection(this, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
+                     Connection::SYNCHRONOUS);
 
-  rv = storageFile ? msc->initialize(storageFile) : msc->initialize();
+  nsresult rv = msc->initialize(aStorageKey, aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   msc.forget(_connection);
@@ -550,7 +546,7 @@ Service::OpenAsyncDatabase(nsIVariant* aDatabaseStore,
     // Sometimes, however, it's a special database name.
     nsAutoCString keyString;
     rv = aDatabaseStore->GetAsACString(keyString);
-    if (NS_FAILED(rv) || !keyString.EqualsLiteral("memory")) {
+    if (NS_FAILED(rv) || !keyString.Equals(kMozStorageMemoryStorageKey)) {
       return NS_ERROR_INVALID_ARG;
     }
 

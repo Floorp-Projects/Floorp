@@ -85,7 +85,7 @@ class Connection final : public mozIStorageConnection,
   /**
    * Creates the connection to an in-memory database.
    */
-  nsresult initialize();
+  nsresult initialize(const nsACString& aStorageKey, const nsACString& aName);
 
   /**
    * Creates the connection to the database.
@@ -380,6 +380,8 @@ class Connection final : public mozIStorageConnection,
   nsresult ensureOperationSupported(ConnectionOperation aOperationType);
 
   sqlite3* mDBConn;
+  nsCString mStorageKey;
+  nsCString mName;
   nsCOMPtr<nsIFileURL> mFileURL;
   nsCOMPtr<nsIFile> mDatabaseFile;
 
