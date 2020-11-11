@@ -14,6 +14,7 @@
 #include "WebBrowserPersistResourcesChild.h"
 #include "WebBrowserPersistSerializeChild.h"
 #include "mozilla/StaticPrefs_fission.h"
+#include "mozilla/net/CookieJarSettings.h"
 
 namespace mozilla {
 
@@ -39,6 +40,7 @@ void WebBrowserPersistDocumentChild::Start(
 
   nsCOMPtr<nsIPrincipal> principal;
   nsCOMPtr<nsIReferrerInfo> referrerInfo;
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
   WebBrowserPersistDocumentAttrs attrs;
   nsCOMPtr<nsIInputStream> postDataStream;
 #define ENSURE(e)          \
@@ -66,6 +68,10 @@ void WebBrowserPersistDocumentChild::Start(
 
   ENSURE(aDocument->GetReferrerInfo(getter_AddRefs(referrerInfo)));
   attrs.referrerInfo() = referrerInfo;
+
+  ENSURE(aDocument->GetCookieJarSettings(getter_AddRefs(cookieJarSettings)));
+  net::CookieJarSettings::Cast(cookieJarSettings)
+      ->Serialize(attrs.cookieJarSettings());
 
   ENSURE(aDocument->GetPostData(getter_AddRefs(postDataStream)));
 #undef ENSURE
