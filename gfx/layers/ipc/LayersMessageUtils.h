@@ -562,6 +562,13 @@ struct ParamTraits<nsEventStatus>
                                       nsEventStatus_eSentinel> {};
 
 template <>
+struct ParamTraits<mozilla::layers::APZHandledResult>
+    : public ContiguousEnumSerializer<
+          mozilla::layers::APZHandledResult,
+          mozilla::layers::APZHandledResult::Unhandled,
+          mozilla::layers::APZHandledResult::Last> {};
+
+template <>
 struct ParamTraits<mozilla::layers::APZEventResult> {
   typedef mozilla::layers::APZEventResult paramType;
 
@@ -569,7 +576,7 @@ struct ParamTraits<mozilla::layers::APZEventResult> {
     WriteParam(aMsg, aParam.mStatus);
     WriteParam(aMsg, aParam.mTargetGuid);
     WriteParam(aMsg, aParam.mInputBlockId);
-    WriteParam(aMsg, aParam.mHandledByRootApzc);
+    WriteParam(aMsg, aParam.mHandledResult);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
@@ -577,7 +584,7 @@ struct ParamTraits<mozilla::layers::APZEventResult> {
     return (ReadParam(aMsg, aIter, &aResult->mStatus) &&
             ReadParam(aMsg, aIter, &aResult->mTargetGuid) &&
             ReadParam(aMsg, aIter, &aResult->mInputBlockId) &&
-            ReadParam(aMsg, aIter, &aResult->mHandledByRootApzc));
+            ReadParam(aMsg, aIter, &aResult->mHandledResult));
   }
 };
 
