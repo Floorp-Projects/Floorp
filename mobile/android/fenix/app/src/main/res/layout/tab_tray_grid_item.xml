@@ -88,6 +88,7 @@ A FrameLayout here is an efficient way of having a views stack while allowing:
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/mozac_browser_tabstray_card"
+                style="@style/Widget.MaterialComponents.CardView"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/tab_tray_grid_item_thumbnail_height"
                 android:backgroundTint="?tabTrayThumbnailItemBackground"
