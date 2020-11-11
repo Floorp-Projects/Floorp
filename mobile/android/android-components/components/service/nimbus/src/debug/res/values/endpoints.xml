@@ -3,5 +3,5 @@
     <string name="nimbus_dev_endpoint" translatable="false">https://kinto.dev.mozaws.net</string>
     <string name="nimbus_staging_endpoint" translatable="false">https://settings.stage.mozaws.net</string>
     <string name="nimbus_production_endpoint" translatable="false">https://firefox.settings.services.mozilla.com</string>
-    <string name="nimbus_default_endpoint" translatable="false">https://kinto.dev.mozaws.net</string>
+    <string name="nimbus_default_endpoint" translatable="false">https://settings.stage.mozaws.net</string>
 </resources>
