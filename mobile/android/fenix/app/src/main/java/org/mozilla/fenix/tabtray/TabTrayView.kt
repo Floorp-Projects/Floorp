@@ -226,7 +226,7 @@ class TabTrayView(
         tabTrayItemMenu =
             TabTrayItemMenu(
                 context = view.context,
-                shouldShowSaveToCollection = { checkOpenTabs.invoke() && view.tab_layout.selectedTabPosition == 0 },
+                shouldShowSelectTabs = { checkOpenTabs.invoke() && view.tab_layout.selectedTabPosition == 0 },
                 hasOpenTabs = checkOpenTabs
             ) {
                 when (it) {
@@ -234,7 +234,7 @@ class TabTrayView(
                         isPrivateModeSelected
                     )
                     is TabTrayItemMenu.Item.OpenTabSettings -> interactor.onTabSettingsClicked()
-                    is TabTrayItemMenu.Item.SaveToCollection -> interactor.onEnterMultiselect()
+                    is TabTrayItemMenu.Item.SelectTabs -> interactor.onEnterMultiselect()
                     is TabTrayItemMenu.Item.CloseAllTabs -> interactor.onCloseAllTabsClicked(
                         isPrivateModeSelected
                     )

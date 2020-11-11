@@ -6,7 +6,6 @@ package org.mozilla.fenix.tabtray
 
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
@@ -14,6 +13,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.prompt.ShareData
@@ -25,6 +25,8 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.TabCollectionStorage
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.home.HomeFragment
 import mozilla.components.browser.storage.sync.Tab as SyncTab
 
@@ -58,19 +60,27 @@ interface TabTrayController {
 /**
  * Default behavior of [TabTrayController]. Other implementations are possible.
  *
+ * @param activity [Activity] the current activity.
  * @param profiler [Profiler] used for profiling.
  * @param sessionManager [HomeActivity] used for retrieving a list of sessions.
+ * @param browserStore [BrowserStore] holds the global [BrowserState].
  * @param browsingModeManager [HomeActivity] used for registering browsing mode.
- * @param navController [NavController] used for navigation.
+ * @param tabCollectionStorage [TabCollectionStorage] storage for saving collections.
+ * @param ioScope [CoroutineScope] with an IO dispatcher used for structured concurrency.
+ * @param metrics reference to the configured [MetricController] to record telemetry events.
+ * @param tabsUseCases [TabsUseCases] use cases related to the tabs feature.
+ * @param navController - [NavController] used for navigation.
  * @param dismissTabTray callback allowing to request this entire Fragment to be dismissed.
- * @param tabTrayDialogFragmentStore [TabTrayDialogFragmentStore] holding the State for all Views displayed
- * in this Controller's Fragment.
  * @param dismissTabTrayAndNavigateHome callback allowing showing an undo snackbar after tab deletion.
- * @param selectTabUseCase [TabsUseCases.SelectTabUseCase] callback allowing for selecting a tab.
  * @param registerCollectionStorageObserver callback allowing for registering the [TabCollectionStorage.Observer]
  * when needed.
+ * @param tabTrayDialogFragmentStore [TabTrayDialogFragmentStore] holding the State for all Views displayed
+ * in this Controller's Fragment.
+ * @param selectTabUseCase [TabsUseCases.SelectTabUseCase] callback allowing for selecting a tab.
  * @param showChooseCollectionDialog callback allowing saving a list of sessions to an existing collection.
  * @param showAddNewCollectionDialog callback allowing for saving a list of sessions to a new collection.
+ * @param showUndoSnackbarForTabs callback allowing for showing an undo snackbar for removed tabs.
+ * @param showBookmarksSnackbar callback allowing for showing a snackbar with action to view bookmarks.
  */
 @Suppress("TooManyFunctions")
 class DefaultTabTrayController(
@@ -81,7 +91,8 @@ class DefaultTabTrayController(
     private val browsingModeManager: BrowsingModeManager,
     private val tabCollectionStorage: TabCollectionStorage,
     private val bookmarksStorage: BookmarksStorage,
-    private val scope: CoroutineScope,
+    private val ioScope: CoroutineScope,
+    private val metrics: MetricController,
     private val tabsUseCases: TabsUseCases,
     private val navController: NavController,
     private val dismissTabTray: () -> Unit,
@@ -115,6 +126,8 @@ class DefaultTabTrayController(
     }
 
     override fun handleSaveToCollectionClicked(selectedTabs: Set<Tab>) {
+        metrics.track(Event.TabsTraySaveToCollectionPressed)
+
         val sessionList = selectedTabs.map {
             sessionManager.findSessionById(it.id) ?: return
         }
@@ -155,7 +168,7 @@ class DefaultTabTrayController(
 
     override fun handleBookmarkSelectedTabs(selectedTabs: Set<Tab>) {
         selectedTabs.forEach {
-            scope.launch(IO) {
+            ioScope.launch {
                 val shouldAddBookmark = bookmarksStorage.getBookmarksWithUrl(it.url)
                     .firstOrNull { it.url == it.url } == null
                 if (shouldAddBookmark) {

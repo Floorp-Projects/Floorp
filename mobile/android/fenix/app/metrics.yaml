@@ -2200,8 +2200,7 @@ tabs_tray:
   save_to_collection:
     type: event
     description: |
-      A user tapped the save to collection button in the
-      three dot menu within the tabs tray
+      A user tapped the save to collection button in the tabs tray
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:

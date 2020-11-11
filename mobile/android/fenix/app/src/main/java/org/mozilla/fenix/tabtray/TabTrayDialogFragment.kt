@@ -30,6 +30,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.selector.findTab
@@ -199,7 +200,8 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
                     sessionManager = activity.components.core.sessionManager,
                     browserStore = activity.components.core.store,
                     tabsUseCases = activity.components.useCases.tabsUseCases,
-                    scope = lifecycleScope,
+                    ioScope = lifecycleScope + Dispatchers.IO,
+                    metrics = activity.components.analytics.metrics,
                     browsingModeManager = activity.browsingModeManager,
                     tabCollectionStorage = activity.components.core.tabCollectionStorage,
                     bookmarksStorage = activity.components.core.bookmarksStorage,

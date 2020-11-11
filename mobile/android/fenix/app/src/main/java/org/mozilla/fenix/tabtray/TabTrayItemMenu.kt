@@ -13,7 +13,7 @@ import org.mozilla.fenix.ext.components
 
 class TabTrayItemMenu(
     private val context: Context,
-    private val shouldShowSaveToCollection: () -> Boolean,
+    private val shouldShowSelectTabs: () -> Boolean,
     private val hasOpenTabs: () -> Boolean,
     private val onItemTapped: (Item) -> Unit = {}
 ) {
@@ -21,7 +21,7 @@ class TabTrayItemMenu(
     sealed class Item {
         object ShareAllTabs : Item()
         object OpenTabSettings : Item()
-        object SaveToCollection : Item()
+        object SelectTabs : Item()
         object CloseAllTabs : Item()
         object OpenRecentlyClosed : Item()
     }
@@ -31,12 +31,11 @@ class TabTrayItemMenu(
     private val menuItems by lazy {
         listOf(
             SimpleBrowserMenuItem(
-                context.getString(R.string.tab_tray_menu_item_save),
+                context.getString(R.string.tabs_tray_select_tabs),
                 textColorResource = R.color.primary_text_normal_theme
             ) {
-                context.components.analytics.metrics.track(Event.TabsTraySaveToCollectionPressed)
-                onItemTapped.invoke(Item.SaveToCollection)
-            }.apply { visible = shouldShowSaveToCollection },
+                onItemTapped.invoke(Item.SelectTabs)
+            }.apply { visible = shouldShowSelectTabs },
 
             SimpleBrowserMenuItem(
                 context.getString(R.string.tab_tray_menu_item_share),

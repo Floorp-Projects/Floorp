@@ -38,6 +38,8 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.TabCollectionStorage
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.sessionsOfType
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -70,6 +72,7 @@ class DefaultTabTrayControllerTest {
     private val tabsUseCases: TabsUseCases = mockk(relaxed = true)
     private val showUndoSnackbarForTabs: (() -> Unit) = mockk(relaxed = true)
     private val showBookmarksSavedSnackbar: (() -> Unit) = mockk(relaxed = true)
+    private val metrics: MetricController = mockk(relaxed = true)
 
     private lateinit var controller: DefaultTabTrayController
 
@@ -109,7 +112,8 @@ class DefaultTabTrayControllerTest {
             browsingModeManager = browsingModeManager,
             tabCollectionStorage = tabCollectionStorage,
             bookmarksStorage = bookmarksStorage,
-            scope = TestCoroutineScope(),
+            ioScope = TestCoroutineScope(),
+            metrics = metrics,
             navController = navController,
             tabsUseCases = tabsUseCases,
             dismissTabTray = dismissTabTray,
@@ -268,6 +272,7 @@ class DefaultTabTrayControllerTest {
 
         controller.handleSaveToCollectionClicked(setOf(tab))
         verify {
+            metrics.track(Event.TabsTraySaveToCollectionPressed)
             registerCollectionStorageObserver()
             showChooseCollectionDialog(listOf(session))
         }
