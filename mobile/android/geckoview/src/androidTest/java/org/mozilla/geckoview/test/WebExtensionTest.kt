@@ -11,6 +11,7 @@ import org.hamcrest.core.StringEndsWith.endsWith
 import org.hamcrest.core.IsEqual.equalTo
 import org.json.JSONObject
 import org.junit.Assert.*
+import org.junit.Assume.assumeThat
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -45,6 +46,8 @@ class WebExtensionTest : BaseSessionTest() {
                 "resource://android/assets/web_extensions/openoptionspage-1/"
         private const val OPENOPTIONSPAGE_2_BACKGROUND: String =
                 "resource://android/assets/web_extensions/openoptionspage-2/"
+        private const val EXTENSION_PAGE_RESTORE: String =
+                "resource://android/assets/web_extensions/extension-page-restore/"
     }
 
     private val controller
@@ -766,6 +769,94 @@ class WebExtensionTest : BaseSessionTest() {
 
         newTabSession.close()
         newPrivateSession.close()
+    }
+
+    // Verifies that the following messages are received from an extension page loaded in the session
+    // - HELLO_FROM_PAGE_1 from nativeApp browser1
+    // - HELLO_FROM_PAGE_2 from nativeApp browser2
+    // - connection request from browser1
+    // - HELLO_FROM_PORT from the port opened at the above step
+    private fun testExtensionMessages(extension: WebExtension, session: GeckoSession) {
+        val messageResult2 = GeckoResult<String>()
+        session.webExtensionController.setMessageDelegate(
+                extension, object : WebExtension.MessageDelegate {
+            override fun onMessage(nativeApp: String, message: Any,
+                                   sender: WebExtension.MessageSender): GeckoResult<Any>? {
+                messageResult2.complete(message as String);
+                return null
+            }
+        }, "browser2")
+
+        val message2 = sessionRule.waitForResult(messageResult2)
+        assertThat("Message is received correctly", message2,
+                equalTo("HELLO_FROM_PAGE_2"))
+
+        val messageResult1 = GeckoResult<String>()
+        val portResult = GeckoResult<WebExtension.Port>()
+        session.webExtensionController.setMessageDelegate(
+                extension, object : WebExtension.MessageDelegate {
+            override fun onMessage(nativeApp: String, message: Any,
+                                   sender: WebExtension.MessageSender): GeckoResult<Any>? {
+                messageResult1.complete(message as String);
+                return null
+            }
+
+            override fun onConnect(port: WebExtension.Port) {
+                portResult.complete(port)
+            }
+        }, "browser1")
+
+        val message1 = sessionRule.waitForResult(messageResult1)
+        assertThat("Message is received correctly", message1,
+                equalTo("HELLO_FROM_PAGE_1"))
+
+        val port = sessionRule.waitForResult(portResult)
+        val portMessageResult = GeckoResult<String>()
+        port.setDelegate(object : WebExtension.PortDelegate {
+            override fun onPortMessage(message: Any, port: WebExtension.Port) {
+                portMessageResult.complete(message as String)
+            }
+        })
+
+        val portMessage = sessionRule.waitForResult(portMessageResult)
+        assertThat("Message is received correctly", portMessage,
+                equalTo("HELLO_FROM_PORT"))
+    }
+
+    // This test:
+    // - loads an extension that tries to send some messages when loading tab.html
+    // - verifies that the messages are received when loading the tab normally
+    // - verifies that the messages are received when restoring the tab in a fresh session
+    @Test
+    fun testRestoringExtensionPagePreservesMessages() {
+        // TODO: Bug 1648158
+        assumeThat(sessionRule.env.isFission, equalTo(false))
+
+        val extension = sessionRule.waitForResult(
+                controller.installBuiltIn(EXTENSION_PAGE_RESTORE))
+
+        sessionRule.session.loadUri("${extension.metaData.baseUrl}tab.html")
+        sessionRule.waitForPageStop()
+
+        var savedState : GeckoSession.SessionState? = null
+        sessionRule.waitUntilCalled(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count=1)
+            override fun onSessionStateChange(session: GeckoSession, state: GeckoSession.SessionState) {
+                savedState = state
+            }
+        })
+
+        // Test that messages are received in the main session
+        testExtensionMessages(extension, sessionRule.session)
+
+        val newSession = sessionRule.createOpenSession()
+        newSession.restoreState(savedState!!)
+        newSession.waitForPageStop()
+
+        // Test that messages are received in a restored state
+        testExtensionMessages(extension, newSession)
+
+        sessionRule.waitForResult(controller.uninstall(extension))
     }
 
     // This test
