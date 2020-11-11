@@ -144,18 +144,18 @@ raptor-fetch-firefox:
     - raptor-unity-webgl-firefox
     - raptor-wasm-misc-firefox
     - raptor-wasm-misc-baseline-firefox
-    - raptor-wasm-misc-ion-firefox
+    - raptor-wasm-misc-optimizing-firefox
     - raptor-wasm-godot-baseline-firefox
-    - raptor-wasm-godot-ion-firefox
+    - raptor-wasm-godot-optimizing-firefox
     - raptor-assorted-dom-firefox
 
 raptor-fetch-profiling:
     - raptor-unity-webgl-firefox-profiling
     - raptor-wasm-misc-firefox-profiling
     - raptor-wasm-misc-baseline-firefox-profiling
-    - raptor-wasm-misc-ion-firefox-profiling
+    - raptor-wasm-misc-optimizing-firefox-profiling
     - raptor-wasm-godot-baseline-firefox-profiling
-    - raptor-wasm-godot-ion-firefox-profiling
+    - raptor-wasm-godot-optimizing-firefox-profiling
     - raptor-assorted-dom-firefox-profiling
 
 raptor-fetch-chromium:
