@@ -5154,6 +5154,31 @@ MDefinition* MWasmBinarySimd128::foldsTo(TempAllocator& alloc) {
     return MWasmShuffleSimd128::New(alloc, lhs(), zero,
                                     SimdConstant::CreateX16(shuffleMask));
   }
+
+  // Specialize var OP const / const OP var when possible.
+  //
+  // As the LIR layer can't directly handle v128 constants as part of its normal
+  // machinery we specialize some nodes here if they have single-use v128
+  // constant arguments.  The purpose is to generate code that inlines the
+  // constant in the instruction stream, using either a rip-relative load+op or
+  // quickly-synthesized constant in a scratch on x64.  There is a general
+  // assumption here that that is better than generating the constant into an
+  // allocatable register, since that register value could not be reused. (This
+  // ignores the possibility that the constant load could be hoisted).
+
+  if (lhs()->isWasmFloatConstant() != rhs()->isWasmFloatConstant() &&
+      specializeForConstantRhs()) {
+    if (isCommutative() && lhs()->isWasmFloatConstant() && lhs()->hasOneUse()) {
+      return MWasmBinarySimd128WithConstant::New(
+          alloc, rhs(), lhs()->toWasmFloatConstant()->toSimd128(), simdOp());
+    }
+
+    if (rhs()->isWasmFloatConstant() && rhs()->hasOneUse()) {
+      return MWasmBinarySimd128WithConstant::New(
+          alloc, lhs(), rhs()->toWasmFloatConstant()->toSimd128(), simdOp());
+    }
+  }
+
   return this;
 }
 

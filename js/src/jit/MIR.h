@@ -14322,7 +14322,47 @@ class MWasmBinarySimd128 : public MBinaryInstruction,
 
   wasm::SimdOp simdOp() const { return simdOp_; }
 
+  // Platform-dependent specialization.
+  bool specializeForConstantRhs();
+
   ALLOW_CLONE(MWasmBinarySimd128)
+};
+
+// (v128, const) -> v128 effect-free operations.
+class MWasmBinarySimd128WithConstant : public MUnaryInstruction,
+                                       public NoTypePolicy::Data {
+  SimdConstant rhs_;
+  wasm::SimdOp simdOp_;
+
+  MWasmBinarySimd128WithConstant(MDefinition* lhs, const SimdConstant& rhs,
+                                 wasm::SimdOp simdOp)
+      : MUnaryInstruction(classOpcode, lhs), rhs_(rhs), simdOp_(simdOp) {
+    setMovable();
+    setResultType(MIRType::Simd128);
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmBinarySimd128WithConstant)
+
+  static MWasmBinarySimd128WithConstant* New(TempAllocator& alloc,
+                                             MDefinition* lhs,
+                                             const SimdConstant& rhs,
+                                             wasm::SimdOp simdOp) {
+    return new (alloc) MWasmBinarySimd128WithConstant(lhs, rhs, simdOp);
+  }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  bool congruentTo(const MDefinition* ins) const override {
+    return ins->toWasmBinarySimd128WithConstant()->simdOp() == simdOp_ &&
+           congruentIfOperandsEqual(ins) &&
+           rhs_.bitwiseEqual(ins->toWasmBinarySimd128WithConstant()->rhs());
+  }
+
+  wasm::SimdOp simdOp() const { return simdOp_; }
+  MDefinition* lhs() const { return input(); }
+  const SimdConstant& rhs() const { return rhs_; }
+
+  ALLOW_CLONE(MWasmBinarySimd128WithConstant)
 };
 
 // (v128, i32) -> v128 effect-free shift operations.

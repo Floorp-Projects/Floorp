@@ -315,6 +315,13 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128*) {
   MOZ_CRASH("SIMD not enabled");
 }
 
+bool MWasmBinarySimd128::specializeForConstantRhs() { return false; }
+
+void LIRGenerator::visitWasmBinarySimd128WithConstant(
+    MWasmBinarySimd128WithConstant*) {
+  MOZ_CRASH("SIMD not enabled");
+}
+
 void LIRGenerator::visitWasmShiftSimd128(MWasmShiftSimd128*) {
   MOZ_CRASH("SIMD not enabled");
 }

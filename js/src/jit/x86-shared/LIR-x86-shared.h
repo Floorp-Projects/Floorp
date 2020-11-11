@@ -363,6 +363,29 @@ class LWasmBinarySimd128 : public LInstructionHelper<1, 2, 2> {
   const LAllocation* lhsDest() { return getOperand(LhsDest); }
   const LAllocation* rhs() { return getOperand(Rhs); }
   wasm::SimdOp simdOp() const { return op_; }
+
+  static bool SpecializeForConstantRhs(wasm::SimdOp op);
+};
+
+class LWasmBinarySimd128WithConstant : public LInstructionHelper<1, 1, 0> {
+  SimdConstant rhs_;
+
+ public:
+  LIR_HEADER(WasmBinarySimd128WithConstant)
+
+  static constexpr uint32_t LhsDest = 0;
+
+  LWasmBinarySimd128WithConstant(const LAllocation& lhsDest,
+                                 const SimdConstant& rhs)
+      : LInstructionHelper(classOpcode), rhs_(rhs) {
+    setOperand(LhsDest, lhsDest);
+  }
+
+  const LAllocation* lhsDest() { return getOperand(LhsDest); }
+  const SimdConstant& rhs() { return rhs_; }
+  wasm::SimdOp simdOp() const {
+    return mir_->toWasmBinarySimd128WithConstant()->simdOp();
+  }
 };
 
 // (v128, i32) -> v128 effect-free variable-width shift operations
