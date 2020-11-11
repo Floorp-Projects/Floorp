@@ -134,7 +134,7 @@ bool nsPrinterCUPS::SupportsMonochrome() const {
 }
 
 bool nsPrinterCUPS::SupportsColor() const {
-  // CUPS 2.1 (particularly as used in Ubuntu 16) is known to have innaccurate
+  // CUPS 2.1 (particularly as used in Ubuntu 16) is known to have inaccurate
   // results for CUPS_PRINT_COLOR_MODE.
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=1660658#c15
   if (!IsCUPSVersionAtLeast(2, 2, 0)) {
@@ -355,4 +355,30 @@ void nsPrinterCUPS::TryEnsurePrinterInfo(CUPSPrinterInfo& aInOutPrinterInfo,
   FetchCUPSVersionForPrinter(mShim, mPrinter, aInOutPrinterInfo.mCUPSMajor,
                              aInOutPrinterInfo.mCUPSMinor,
                              aInOutPrinterInfo.mCUPSPatch);
+}
+
+void nsPrinterCUPS::ForEachExtraMonochromeSetting(
+    FunctionRef<void(const nsACString&, const nsACString&)> aCallback) {
+  nsAutoCString pref;
+  Preferences::GetCString("print.cups.monochrome.extra_settings", pref);
+  if (pref.IsEmpty()) {
+    return;
+  }
+
+  for (const auto& pair : pref.Split(',')) {
+    auto splitter = pair.Split(':');
+    auto end = splitter.end();
+
+    auto key = splitter.begin();
+    if (key == end) {
+      continue;
+    }
+
+    auto value = ++splitter.begin();
+    if (value == end) {
+      continue;
+    }
+
+    aCallback(*key, *value);
+  }
 }
