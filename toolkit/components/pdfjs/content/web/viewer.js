@@ -48,8 +48,8 @@ var _app_options = __webpack_require__(1);
 
 var _app = __webpack_require__(3);
 
-const pdfjsVersion = '2.7.232';
-const pdfjsBuild = '3e52098e2';
+const pdfjsVersion = '2.7.262';
+const pdfjsBuild = '85de01e34';
 window.PDFViewerApplication = _app.PDFViewerApplication;
 window.PDFViewerApplicationOptions = _app_options.AppOptions;
 ;
@@ -787,7 +787,8 @@ const PDFViewerApplication = {
       renderInteractiveForms: _app_options.AppOptions.get("renderInteractiveForms"),
       enablePrintAutoRotate: _app_options.AppOptions.get("enablePrintAutoRotate"),
       useOnlyCssZoom: _app_options.AppOptions.get("useOnlyCssZoom"),
-      maxCanvasPixels: _app_options.AppOptions.get("maxCanvasPixels")
+      maxCanvasPixels: _app_options.AppOptions.get("maxCanvasPixels"),
+      enableScripting: _app_options.AppOptions.get("enableScripting")
     });
     pdfRenderingQueue.setViewer(this.pdfViewer);
     pdfLinkService.setViewer(this.pdfViewer);
@@ -1501,13 +1502,13 @@ const PDFViewerApplication = {
 
         this._idleCallbacks.add(callback);
       }
+
+      this._initializeJavaScript(pdfDocument);
     });
 
     this._initializePageLabels(pdfDocument);
 
     this._initializeMetadata(pdfDocument);
-
-    this._initializeJavaScript(pdfDocument);
   },
 
   async _initializeJavaScript(pdfDocument) {
@@ -1522,27 +1523,53 @@ const PDFViewerApplication = {
     }
 
     const scripting = this.externalServices.scripting;
-    window.addEventListener("updateFromSandbox", function (event) {
+    const {
+      info,
+      metadata,
+      contentDispositionFilename
+    } = await pdfDocument.getMetadata();
+    window.addEventListener("updateFromSandbox", event => {
       const detail = event.detail;
       const id = detail.id;
 
       if (!id) {
         switch (detail.command) {
-          case "println":
-            console.log(detail.value);
+          case "alert":
+            window.alert(detail.value);
             break;
 
           case "clear":
             console.clear();
             break;
 
-          case "alert":
-            window.alert(detail.value);
-            break;
-
           case "error":
             console.error(detail.value);
             break;
+
+          case "layout":
+            this.pdfViewer.spreadMode = apiPageLayoutToSpreadMode(detail.value);
+            return;
+
+          case "page-num":
+            this.pdfViewer.currentPageNumber = detail.value + 1;
+            return;
+
+          case "print":
+            this.triggerPrinting();
+            return;
+
+          case "println":
+            console.log(detail.value);
+            break;
+
+          case "zoom":
+            if (typeof detail.value === "string") {
+              this.pdfViewer.currentScaleValue = detail.value;
+            } else {
+              this.pdfViewer.currentScale = detail.value;
+            }
+
+            return;
         }
 
         return;
@@ -1567,10 +1594,22 @@ const PDFViewerApplication = {
     });
     const dispatchEventName = (0, _ui_utils.generateRandomStringForSandbox)(objects);
     const calculationOrder = [];
+    const {
+      length
+    } = await pdfDocument.getDownloadInfo();
+    const filename = contentDispositionFilename || (0, _ui_utils.getPDFFileNameFromURL)(this.url);
     scripting.createSandbox({
       objects,
       dispatchEventName,
-      calculationOrder
+      calculationOrder,
+      docInfo: { ...info,
+        baseURL: this.baseUrl,
+        filesize: length,
+        filename,
+        metadata,
+        numPages: pdfDocument.numPages,
+        URL: this.url
+      }
     });
   },
 
@@ -1692,7 +1731,7 @@ const PDFViewerApplication = {
           return false;
         }
 
-        generatorId = generator.replace(/[ .\-]/g, "_");
+        generatorId = generator.replace(/[ .-]/g, "_");
         return true;
       });
     }
@@ -2563,7 +2602,7 @@ function webViewerPageNumberChanged(evt) {
   const pdfViewer = PDFViewerApplication.pdfViewer;
 
   if (evt.value !== "") {
-    pdfViewer.currentPageLabel = evt.value;
+    PDFViewerApplication.pdfLinkService.goToPage(evt.value);
   }
 
   if (evt.value !== pdfViewer.currentPageNumber.toString() && evt.value !== pdfViewer.currentPageLabel) {
@@ -3453,7 +3492,13 @@ function backtrackBeforeAllVisibleElements(index, views, top) {
   return index;
 }
 
-function getVisibleElements(scrollEl, views, sortByVisibility = false, horizontal = false, rtl = false) {
+function getVisibleElements({
+  scrollEl,
+  views,
+  sortByVisibility = false,
+  horizontal = false,
+  rtl = false
+}) {
   const top = scrollEl.scrollTop,
         bottom = top + scrollEl.clientHeight;
   const left = scrollEl.scrollLeft,
@@ -3474,7 +3519,7 @@ function getVisibleElements(scrollEl, views, sortByVisibility = false, horizonta
 
   const visible = [],
         numViews = views.length;
-  let firstVisibleElementInd = numViews === 0 ? 0 : binarySearchFirstItem(views, horizontal ? isElementNextAfterViewHorizontally : isElementBottomAfterViewTop);
+  let firstVisibleElementInd = binarySearchFirstItem(views, horizontal ? isElementNextAfterViewHorizontally : isElementBottomAfterViewTop);
 
   if (firstVisibleElementInd > 0 && firstVisibleElementInd < numViews && !horizontal) {
     firstVisibleElementInd = backtrackBeforeAllVisibleElements(firstVisibleElementInd, views, top);
@@ -3563,8 +3608,8 @@ function getPDFFileNameFromURL(url, defaultFilename = "document.pdf") {
     return defaultFilename;
   }
 
-  const reURI = /^(?:(?:[^:]+:)?\/\/[^\/]+)?([^?#]*)(\?[^#]*)?(#.*)?$/;
-  const reFilename = /[^\/?#=]+\.pdf\b(?!.*\.pdf\b)/i;
+  const reURI = /^(?:(?:[^:]+:)?\/\/[^/]+)?([^?#]*)(\?[^#]*)?(#.*)?$/;
+  const reFilename = /[^/?#=]+\.pdf\b(?!.*\.pdf\b)/i;
   const splitURI = reURI.exec(url);
   let suggestedFilename = reFilename.exec(splitURI[1]) || reFilename.exec(splitURI[2]) || reFilename.exec(splitURI[3]);
 
@@ -3902,7 +3947,7 @@ function getActiveOrFocusedElement() {
 
 function generateRandomStringForSandbox(objects) {
   const allObjects = Object.values(objects).flat(2);
-  const actions = allObjects.map(obj => Object.values(obj.actions)).flat(2);
+  const actions = allObjects.filter(obj => !!obj.actions).map(obj => Object.values(obj.actions)).flat(2);
 
   while (true) {
     const name = new Uint8Array(64);
@@ -6727,7 +6772,7 @@ class PDFHistory {
       return;
     }
 
-    if (this._destination && this._destination.page === pageNumber) {
+    if (this._destination?.page === pageNumber) {
       return;
     }
 
@@ -6805,7 +6850,7 @@ class PDFHistory {
 
     let newUrl;
 
-    if (this._updateUrl && destination && destination.hash) {
+    if (this._updateUrl && destination?.hash) {
       const baseUrl = document.location.href.split("#")[0];
 
       if (!baseUrl.startsWith("file://")) {
@@ -6878,7 +6923,7 @@ class PDFHistory {
 
         const [perfEntry] = performance.getEntriesByType("navigation");
 
-        if (!perfEntry || perfEntry.type !== "reload") {
+        if (perfEntry?.type !== "reload") {
           return false;
         }
       } else {
@@ -6903,7 +6948,7 @@ class PDFHistory {
       this._updateViewareaTimeout = null;
     }
 
-    if (removeTemporary && destination && destination.temporary) {
+    if (removeTemporary && destination?.temporary) {
       delete destination.temporary;
     }
 
@@ -7440,6 +7485,10 @@ class PDFLinkService {
   }
 
   async goToDestination(dest) {
+    if (!this.pdfDocument) {
+      return;
+    }
+
     let namedDest, explicitDest;
 
     if (typeof dest === "string") {
@@ -7458,9 +7507,15 @@ class PDFLinkService {
     this._goToDestinationHelper(dest, namedDest, explicitDest);
   }
 
-  goToPage(pageNumber) {
+  goToPage(val) {
+    if (!this.pdfDocument) {
+      return;
+    }
+
+    const pageNumber = typeof val === "string" && this.pdfViewer.pageLabelToPageNumber(val) || val | 0;
+
     if (!(Number.isInteger(pageNumber) && pageNumber > 0 && pageNumber <= this.pagesCount)) {
-      console.error(`PDFLinkService.goToPage: "${pageNumber}" is not a valid page number.`);
+      console.error(`PDFLinkService.goToPage: "${val}" is not a valid page.`);
       return;
     }
 
@@ -7495,6 +7550,10 @@ class PDFLinkService {
   }
 
   setHash(hash) {
+    if (!this.pdfDocument) {
+      return;
+    }
+
     let pageNumber, dest;
 
     if (hash.includes("=")) {
@@ -7750,7 +7809,7 @@ class SimpleLinkService {
 
   async goToDestination(dest) {}
 
-  goToPage(pageNumber) {}
+  goToPage(val) {}
 
   getDestinationHash(dest) {
     return "#";
@@ -8528,7 +8587,10 @@ class PDFThumbnailViewer {
   }
 
   _getVisibleThumbs() {
-    return (0, _ui_utils.getVisibleElements)(this.container, this._thumbnails);
+    return (0, _ui_utils.getVisibleElements)({
+      scrollEl: this.container,
+      views: this._thumbnails
+    });
   }
 
   scrollThumbnailIntoView(pageNumber) {
@@ -9339,7 +9401,7 @@ class BaseViewer {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    const viewerVersion = '2.7.232';
+    const viewerVersion = '2.7.262';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -9362,6 +9424,7 @@ class BaseViewer {
     this.useOnlyCssZoom = options.useOnlyCssZoom || false;
     this.maxCanvasPixels = options.maxCanvasPixels;
     this.l10n = options.l10n || _ui_utils.NullL10n;
+    this.enableScripting = options.enableScripting || false;
     this.defaultRenderingQueue = !options.renderingQueue;
 
     if (this.defaultRenderingQueue) {
@@ -9651,7 +9714,8 @@ class BaseViewer {
           enableWebGL: this.enableWebGL,
           useOnlyCssZoom: this.useOnlyCssZoom,
           maxCanvasPixels: this.maxCanvasPixels,
-          l10n: this.l10n
+          l10n: this.l10n,
+          enableScripting: this.enableScripting
         });
 
         this._pages.push(pageView);
@@ -9909,6 +9973,20 @@ class BaseViewer {
     });
   }
 
+  pageLabelToPageNumber(label) {
+    if (!this._pageLabels) {
+      return null;
+    }
+
+    const i = this._pageLabels.indexOf(label);
+
+    if (i < 0) {
+      return null;
+    }
+
+    return i + 1;
+  }
+
   scrollPageIntoView({
     pageNumber,
     destArray = null,
@@ -10140,7 +10218,13 @@ class BaseViewer {
   }
 
   _getVisiblePages() {
-    return (0, _ui_utils.getVisibleElements)(this.container, this._pages, true, this._isScrollModeHorizontal, this._isScrollModeHorizontal && this._isContainerRtl);
+    return (0, _ui_utils.getVisibleElements)({
+      scrollEl: this.container,
+      views: this._pages,
+      sortByVisibility: true,
+      horizontal: this._isScrollModeHorizontal,
+      rtl: this._isScrollModeHorizontal && this._isContainerRtl
+    });
   }
 
   isPageVisible(pageNumber) {
@@ -10230,7 +10314,7 @@ class BaseViewer {
     });
   }
 
-  createAnnotationLayerBuilder(pageDiv, pdfPage, annotationStorage = null, imageResourcesPath = "", renderInteractiveForms = false, l10n = _ui_utils.NullL10n) {
+  createAnnotationLayerBuilder(pageDiv, pdfPage, annotationStorage = null, imageResourcesPath = "", renderInteractiveForms = false, l10n = _ui_utils.NullL10n, enableScripting = false) {
     return new _annotation_layer_builder.AnnotationLayerBuilder({
       pageDiv,
       pdfPage,
@@ -10239,7 +10323,9 @@ class BaseViewer {
       renderInteractiveForms,
       linkService: this.linkService,
       downloadManager: this.downloadManager,
-      l10n
+      l10n,
+      enableScripting,
+      hasJSActionsPromise: enableScripting ? this.pdfDocument.hasJSActions() : Promise.resolve(false)
     });
   }
 
@@ -10457,7 +10543,9 @@ class AnnotationLayerBuilder {
     annotationStorage = null,
     imageResourcesPath = "",
     renderInteractiveForms = true,
-    l10n = _ui_utils.NullL10n
+    l10n = _ui_utils.NullL10n,
+    enableScripting = false,
+    hasJSActionsPromise = null
   }) {
     this.pageDiv = pageDiv;
     this.pdfPage = pdfPage;
@@ -10467,14 +10555,16 @@ class AnnotationLayerBuilder {
     this.renderInteractiveForms = renderInteractiveForms;
     this.l10n = l10n;
     this.annotationStorage = annotationStorage;
+    this.enableScripting = enableScripting;
+    this._hasJSActionsPromise = hasJSActionsPromise;
     this.div = null;
     this._cancelled = false;
   }
 
   render(viewport, intent = "display") {
-    return this.pdfPage.getAnnotations({
+    return Promise.all([this.pdfPage.getAnnotations({
       intent
-    }).then(annotations => {
+    }), this._hasJSActionsPromise]).then(([annotations, hasJSActions = false]) => {
       if (this._cancelled) {
         return;
       }
@@ -10494,7 +10584,9 @@ class AnnotationLayerBuilder {
         renderInteractiveForms: this.renderInteractiveForms,
         linkService: this.linkService,
         downloadManager: this.downloadManager,
-        annotationStorage: this.annotationStorage
+        annotationStorage: this.annotationStorage,
+        enableScripting: this.enableScripting,
+        hasJSActions
       };
 
       if (this.div) {
@@ -10529,7 +10621,7 @@ class AnnotationLayerBuilder {
 exports.AnnotationLayerBuilder = AnnotationLayerBuilder;
 
 class DefaultAnnotationLayerFactory {
-  createAnnotationLayerBuilder(pageDiv, pdfPage, annotationStorage = null, imageResourcesPath = "", renderInteractiveForms = true, l10n = _ui_utils.NullL10n) {
+  createAnnotationLayerBuilder(pageDiv, pdfPage, annotationStorage = null, imageResourcesPath = "", renderInteractiveForms = true, l10n = _ui_utils.NullL10n, enableScripting = false, hasJSActionsPromise = null) {
     return new AnnotationLayerBuilder({
       pageDiv,
       pdfPage,
@@ -10537,7 +10629,9 @@ class DefaultAnnotationLayerFactory {
       renderInteractiveForms,
       linkService: new _pdf_link_service.SimpleLinkService(),
       l10n,
-      annotationStorage
+      annotationStorage,
+      enableScripting,
+      hasJSActionsPromise
     });
   }
 
@@ -10593,6 +10687,7 @@ class PDFPageView {
     this.renderer = options.renderer || _ui_utils.RendererType.CANVAS;
     this.enableWebGL = options.enableWebGL || false;
     this.l10n = options.l10n || _ui_utils.NullL10n;
+    this.enableScripting = options.enableScripting || false;
     this.paintTask = null;
     this.paintedViewportMap = new WeakMap();
     this.renderingState = _pdf_rendering_queue.RenderingStates.INITIAL;
@@ -10996,7 +11091,7 @@ class PDFPageView {
 
     if (this.annotationLayerFactory) {
       if (!this.annotationLayer) {
-        this.annotationLayer = this.annotationLayerFactory.createAnnotationLayerBuilder(div, pdfPage, this._annotationStorage, this.imageResourcesPath, this.renderInteractiveForms, this.l10n);
+        this.annotationLayer = this.annotationLayerFactory.createAnnotationLayerBuilder(div, pdfPage, this._annotationStorage, this.imageResourcesPath, this.renderInteractiveForms, this.l10n, this.enableScripting);
       }
 
       this._renderAnnotationLayer();

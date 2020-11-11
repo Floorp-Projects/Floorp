@@ -50,8 +50,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.7.232';
-const pdfjsBuild = '3e52098e2';
+const pdfjsVersion = '2.7.262';
+const pdfjsBuild = '85de01e34';
 
 /***/ }),
 /* 1 */
@@ -145,7 +145,7 @@ class WorkerMessageHandler {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.7.232';
+    const workerVersion = '2.7.262';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -464,6 +464,9 @@ class WorkerMessageHandler {
     });
     handler.on("GetFieldObjects", function (data) {
       return pdfManager.ensureDoc("fieldObjects");
+    });
+    handler.on("HasJSActions", function (data) {
+      return pdfManager.ensureDoc("hasJSActions");
     });
     handler.on("GetCalculationOrderIds", function (data) {
       return pdfManager.ensureDoc("calculationOrderIds");
@@ -1440,7 +1443,7 @@ function stringToPDFString(str) {
 }
 
 function escapeString(str) {
-  return str.replace(/([\(\)\\\n\r])/g, match => {
+  return str.replace(/([()\\\n\r])/g, match => {
     if (match === "\n") {
       return "\\n";
     } else if (match === "\r") {
@@ -1906,8 +1909,8 @@ var Ref = function RefClosure() {
 exports.Ref = Ref;
 
 class RefSet {
-  constructor() {
-    this._set = new Set();
+  constructor(parent = null) {
+    this._set = new Set(parent && parent._set);
   }
 
   has(ref) {
@@ -1920,6 +1923,16 @@ class RefSet {
 
   remove(ref) {
     this._set.delete(ref.toString());
+  }
+
+  forEach(callback) {
+    for (const ref of this._set.values()) {
+      callback(ref);
+    }
+  }
+
+  clear() {
+    this._set.clear();
   }
 
 }
@@ -3086,7 +3099,8 @@ class Page {
     globalIdFactory,
     fontCache,
     builtInCMapCache,
-    globalImageCache
+    globalImageCache,
+    nonBlendModesSet
   }) {
     this.pdfManager = pdfManager;
     this.pageIndex = pageIndex;
@@ -3096,6 +3110,7 @@ class Page {
     this.fontCache = fontCache;
     this.builtInCMapCache = builtInCMapCache;
     this.globalImageCache = globalImageCache;
+    this.nonBlendModesSet = nonBlendModesSet;
     this.evaluatorOptions = pdfManager.evaluatorOptions;
     this.resourcesPromise = null;
     const idCounters = {
@@ -3293,7 +3308,7 @@ class Page {
     const pageListPromise = dataPromises.then(([contentStream]) => {
       const opList = new _operator_list.OperatorList(intent, sink);
       handler.send("StartRenderPage", {
-        transparency: partialEvaluator.hasBlendModes(this.resources),
+        transparency: partialEvaluator.hasBlendModes(this.resources, this.nonBlendModesSet),
         pageIndex: this.pageIndex,
         intent
       });
@@ -3822,7 +3837,8 @@ class PDFDocument {
         globalIdFactory: this._globalIdFactory,
         fontCache: catalog.fontCache,
         builtInCMapCache: catalog.builtInCMapCache,
-        globalImageCache: catalog.globalImageCache
+        globalImageCache: catalog.globalImageCache,
+        nonBlendModesSet: catalog.nonBlendModesSet
       });
     });
   }
@@ -3903,6 +3919,12 @@ class PDFDocument {
     return (0, _util.shadow)(this, "fieldObjects", Promise.all(allPromises).then(() => allFields));
   }
 
+  get hasJSActions() {
+    return (0, _util.shadow)(this, "hasJSActions", this.fieldObjects.then(fieldObjects => {
+      return fieldObjects !== null && Object.values(fieldObjects).some(fieldObject => fieldObject.some(object => object.actions !== null));
+    }));
+  }
+
   get calculationOrderIds() {
     const acroForm = this.catalog.acroForm;
 
@@ -3967,6 +3989,7 @@ class Catalog {
     this.builtInCMapCache = new Map();
     this.globalImageCache = new _image_utils.GlobalImageCache();
     this.pageKidsCountCache = new _primitives.RefSetCache();
+    this.nonBlendModesSet = new _primitives.RefSet();
   }
 
   get version() {
@@ -4916,6 +4939,7 @@ class Catalog {
     (0, _primitives.clearPrimitiveCaches)();
     this.globalImageCache.clear(manuallyTriggered);
     this.pageKidsCountCache.clear();
+    this.nonBlendModesSet.clear();
     const promises = [];
     this.fontCache.forEach(function (promise) {
       promises.push(promise);
@@ -19935,6 +19959,12 @@ class WidgetAnnotation extends Annotation {
       getArray: true
     });
     data.fieldValue = this._decodeFormValue(fieldValue);
+    const defaultFieldValue = (0, _core_utils.getInheritableProperty)({
+      dict,
+      key: "DV",
+      getArray: true
+    });
+    data.defaultFieldValue = this._decodeFormValue(defaultFieldValue);
     data.alternativeText = (0, _util.stringToPDFString)(dict.get("TU") || "");
     data.defaultAppearance = (0, _core_utils.getInheritableProperty)({
       dict,
@@ -20507,6 +20537,7 @@ class TextWidgetAnnotation extends WidgetAnnotation {
     return {
       id: this.data.id,
       value: this.data.fieldValue,
+      defaultValue: this.data.defaultFieldValue,
       multiline: this.data.multiLine,
       password: this.hasFieldFlag(_util.AnnotationFieldFlag.PASSWORD),
       charLimit: this.data.maxLen,
@@ -20820,6 +20851,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     return {
       id: this.data.id,
       value,
+      defaultValue: this.data.defaultFieldValue,
       editable: !this.data.readOnly,
       name: this.data.fieldName,
       rect: this.data.rect,
@@ -20879,6 +20911,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
     return {
       id: this.data.id,
       value,
+      defaultValue: this.data.defaultFieldValue,
       editable: !this.data.readOnly,
       name: this.data.fieldName,
       rect: this.data.rect,
@@ -20951,6 +20984,14 @@ class PopupAnnotation extends Annotation {
     this.data.parentType = (0, _primitives.isName)(parentSubtype) ? parentSubtype.name : null;
     const rawParent = parameters.dict.getRaw("Parent");
     this.data.parentId = (0, _primitives.isRef)(rawParent) ? rawParent.toString() : null;
+    const parentRect = parentItem.getArray("Rect");
+
+    if (Array.isArray(parentRect) && parentRect.length === 4) {
+      this.data.parentRect = _util.Util.normalizeRect(parentRect);
+    } else {
+      this.data.parentRect = [0, 0, 0, 0];
+    }
+
     const rt = parentItem.get("RT");
 
     if ((0, _primitives.isName)(rt, _util.AnnotationReplyType.GROUP)) {
@@ -22933,12 +22974,16 @@ class PartialEvaluator {
     return newEvaluator;
   }
 
-  hasBlendModes(resources) {
+  hasBlendModes(resources, nonBlendModesSet) {
     if (!(resources instanceof _primitives.Dict)) {
       return false;
     }
 
-    const processed = new _primitives.RefSet();
+    if (resources.objId && nonBlendModesSet.has(resources.objId)) {
+      return false;
+    }
+
+    const processed = new _primitives.RefSet(nonBlendModesSet);
 
     if (resources.objId) {
       processed.put(resources.objId);
@@ -23050,6 +23095,9 @@ class PartialEvaluator {
       }
     }
 
+    processed.forEach(ref => {
+      nonBlendModesSet.put(ref);
+    });
     return false;
   }
 
