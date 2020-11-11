@@ -90,6 +90,7 @@
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Tornar enviar las donadas a aqueste site ?</string>
+    <string name="mozac_feature_prompt_repost_message">L’actualizacion d’aquesta pagina poiriá menar a la duplicacion d’accions recentas coma enviar un pagament o publicar un comentari dos còps.</string>
     <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
     <string name="mozac_feature_prompt_repost_positive_button_text">Tornar enviar</string>
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
