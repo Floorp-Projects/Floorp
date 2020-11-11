@@ -6,6 +6,7 @@ package org.mozilla.fenix.lintrules
 
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.detector.api.Issue
+import org.mozilla.fenix.lintrules.perf.ConstraintLayoutPerfDetector
 
 /**
  * Registry which provides a list of our custom lint checks to be performed on an Android project.
