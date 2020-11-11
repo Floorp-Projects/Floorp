@@ -48,7 +48,7 @@ class DownloadFragmentTest {
                 "3",
                 "3.pdf",
                 downloadedFile3.path,
-                "null",
+                "0",
                 null,
                 DownloadState.Status.COMPLETED
             ),
@@ -56,7 +56,7 @@ class DownloadFragmentTest {
                 "2",
                 "2.pdf",
                 downloadedFile2.path,
-                "null",
+                "0",
                 null,
                 DownloadState.Status.COMPLETED
             ),
@@ -64,7 +64,7 @@ class DownloadFragmentTest {
                 "1",
                 "1.pdf",
                 downloadedFile1.path,
-                "null",
+                "0",
                 null,
                 DownloadState.Status.COMPLETED
             )
@@ -103,5 +103,44 @@ class DownloadFragmentTest {
         downloadedFile1.delete()
         downloadedFile2.delete()
         downloadedFile3.delete()
+    }
+
+    @Test
+    fun `downloads with null content length don't crash`() {
+        val downloadedFile0 = File(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+            "1.pdf"
+        )
+
+        downloadedFile0.createNewFile()
+
+        val fragment = DownloadFragment()
+
+        val expectedList = listOf(
+            DownloadItem(
+                "1",
+                "1.pdf",
+                downloadedFile0.path,
+                "0",
+                null,
+                DownloadState.Status.COMPLETED
+            )
+        )
+
+        val state: BrowserState = mockk(relaxed = true)
+
+        every { state.downloads } returns mapOf(
+            "1" to DownloadState(
+                id = "1",
+                createdTime = 1,
+                url = "url",
+                fileName = "1.pdf",
+                contentLength = null,
+                status = DownloadState.Status.COMPLETED
+            )
+        )
+
+        val list = fragment.provideDownloads(state)
+        assertEquals(expectedList[0].size, list[0].size)
     }
 }

@@ -91,7 +91,7 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
                     it.id,
                     it.fileName,
                     it.filePath,
-                    it.contentLength.toString(),
+                    it.contentLength?.toString() ?: "0",
                     it.contentType,
                     it.status
                 )
