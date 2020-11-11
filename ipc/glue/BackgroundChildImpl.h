@@ -107,7 +107,8 @@ class BackgroundChildImpl : public PBackgroundChild,
       PBackgroundLocalStorageCacheChild* aActor) override;
 
   virtual PBackgroundStorageChild* AllocPBackgroundStorageChild(
-      const nsString& aProfilePath) override;
+      const nsString& aProfilePath,
+      const uint32_t& aPrivateBrowsingId) override;
 
   virtual bool DeallocPBackgroundStorageChild(
       PBackgroundStorageChild* aActor) override;

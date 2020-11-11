@@ -284,7 +284,7 @@ bool BackgroundChildImpl::DeallocPBackgroundLSSimpleRequestChild(
 
 BackgroundChildImpl::PBackgroundStorageChild*
 BackgroundChildImpl::AllocPBackgroundStorageChild(
-    const nsString& aProfilePath) {
+    const nsString& aProfilePath, const uint32_t& aPrivateBrowsingId) {
   MOZ_CRASH("PBackgroundStorageChild actors should be manually constructed!");
 }
 

@@ -50,7 +50,8 @@ class StorageObserver : public nsIObserver, public nsSupportsWeakReference {
               const nsAString& aOriginAttributesPattern = u""_ns,
               const nsACString& aOriginScope = ""_ns);
 
-  void NoteBackgroundThread(nsIEventTarget* aBackgroundThread);
+  void NoteBackgroundThread(uint32_t aPrivateBrowsingId,
+                            nsIEventTarget* aBackgroundThread);
 
  private:
   virtual ~StorageObserver() = default;
@@ -61,7 +62,7 @@ class StorageObserver : public nsIObserver, public nsSupportsWeakReference {
 
   static StorageObserver* sSelf;
 
-  nsCOMPtr<nsIEventTarget> mBackgroundThread;
+  nsCOMPtr<nsIEventTarget> mBackgroundThread[2];
 
   // Weak references
   nsTObserverArray<StorageObserverSink*> mSinks;

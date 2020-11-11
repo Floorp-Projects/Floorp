@@ -292,12 +292,16 @@ class StorageDBThread final {
   class NoteBackgroundThreadRunnable;
 
   class ShutdownRunnable : public Runnable {
+    // Expected to be only 0 or 1.
+    const uint32_t mPrivateBrowsingId;
     // Only touched on the main thread.
     bool& mDone;
 
    public:
-    explicit ShutdownRunnable(bool& aDone)
-        : Runnable("dom::StorageDBThread::ShutdownRunnable"), mDone(aDone) {
+    explicit ShutdownRunnable(const uint32_t aPrivateBrowsingId, bool& aDone)
+        : Runnable("dom::StorageDBThread::ShutdownRunnable"),
+          mPrivateBrowsingId(aPrivateBrowsingId),
+          mDone(aDone) {
       MOZ_ASSERT(NS_IsMainThread());
     }
 
@@ -308,12 +312,13 @@ class StorageDBThread final {
   };
 
  public:
-  StorageDBThread();
+  explicit StorageDBThread(uint32_t aPrivateBrowsingId);
   virtual ~StorageDBThread() = default;
 
-  static StorageDBThread* Get();
+  static StorageDBThread* Get(uint32_t aPrivateBrowsingId);
 
-  static StorageDBThread* GetOrCreate(const nsString& aProfilePath);
+  static StorageDBThread* GetOrCreate(const nsString& aProfilePath,
+                                      uint32_t aPrivateBrowsingId);
 
   static nsresult GetProfilePath(nsString& aProfilePath);
 
@@ -428,6 +433,9 @@ class StorageDBThread final {
 
   // Collector of pending update operations
   PendingOperations mPendingTasks;
+
+  // Expected to be only 0 or 1.
+  const uint32_t mPrivateBrowsingId;
 
   // Counter of calls for thread priority rising.
   int32_t mPriorityCounter;

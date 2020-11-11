@@ -61,7 +61,9 @@ LocalStorageManager::LocalStorageManager() : mCaches(8) {
     // Do this only on the child process.  The thread IPC bridge
     // is also used to communicate chrome observer notifications.
     // Note: must be called after we set sSelf
-    StorageDBChild::GetOrCreate();
+    for (const uint32_t id : {0, 1}) {
+      StorageDBChild::GetOrCreate(id);
+    }
   }
 }
 
@@ -100,7 +102,7 @@ LocalStorageCache* LocalStorageManager::GetCache(
 }
 
 already_AddRefed<StorageUsage> LocalStorageManager::GetOriginUsage(
-    const nsACString& aOriginNoSuffix) {
+    const nsACString& aOriginNoSuffix, const uint32_t aPrivateBrowsingId) {
   RefPtr<StorageUsage> usage;
   if (mUsages.Get(aOriginNoSuffix, &usage)) {
     return usage.forget();
@@ -108,7 +110,8 @@ already_AddRefed<StorageUsage> LocalStorageManager::GetOriginUsage(
 
   usage = new StorageUsage(aOriginNoSuffix);
 
-  StorageDBChild* storageChild = StorageDBChild::GetOrCreate();
+  StorageDBChild* storageChild =
+      StorageDBChild::GetOrCreate(aPrivateBrowsingId);
   if (storageChild) {
     storageChild->AsyncGetUsage(usage);
   }
@@ -167,9 +170,12 @@ nsresult LocalStorageManager::GetStorageInternal(
     }
 
     if (aCreateMode == CreateMode::CreateIfShouldPreload) {
+      const uint32_t privateBrowsingId =
+          aStoragePrincipal->GetPrivateBrowsingId();
+
       // This is a demand to just preload the cache, if the scope has
       // no data stored, bypass creation and preload of the cache.
-      StorageDBChild* db = StorageDBChild::Get();
+      StorageDBChild* db = StorageDBChild::Get(privateBrowsingId);
       if (db) {
         if (!db->ShouldPreloadOrigin(LocalStorageManager::CreateOrigin(
                 originAttrSuffix, originKey))) {
