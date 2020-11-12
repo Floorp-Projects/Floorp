@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 let gCUITestUtils = new CustomizableUITestUtils(window);
-SearchTestUtils.init(Assert, registerCleanupFunction);
+SearchTestUtils.init(this);
 
 var gHttpServer = null;
 var gRequests = [];
