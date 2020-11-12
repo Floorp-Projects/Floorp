@@ -83,20 +83,16 @@ class MachCommands(MachCommandBase):
         return os.path.join(self.tools_dir, "gcc")
 
     @property
-    def work_dir(self):
-        return os.path.join(self.topsrcdir, "analysis")
-
-    def ensure_work_dir(self):
-        dir = self.work_dir
-        try:
-            os.mkdir(dir)
-        except OSError:
-            pass
-        return dir
-
-    @property
     def script_dir(self):
         return os.path.join(self.topsrcdir, "js/src/devtools/rootAnalysis")
+
+    def work_dir(self, application):
+        return os.path.join(self.topsrcdir, "haz-" + application)
+
+    def ensure_work_dir(self, application):
+        dir = self.work_dir(application)
+        os.makedirs(dir, exist_ok=True)
+        return dir
 
     @Command(
         "hazards",
@@ -161,9 +157,9 @@ class MachCommands(MachCommandBase):
         # Transmit the mozconfig location to build subprocesses.
         os.environ["MOZCONFIG"] = mozconfig_path
 
-        # Record the location of the JS shell in the analysis work dir.
-        self.write_json_file(
-            "shell.json", {"js": os.path.join(mozconfig["topobjdir"], "dist/bin/js")}
+        # Set a default objdir for the shell, for developer builds.
+        os.environ.setdefault(
+            "MOZ_OBJDIR", os.path.join(self.topsrcdir, "obj-haz-shell")
         )
 
         return self._mach_context.commands.dispatch(
@@ -174,12 +170,12 @@ class MachCommands(MachCommandBase):
         """Verify that the objdir and work dir are for the expected application"""
 
         try:
-            work_dir_app = self.read_json_file("app.json")["application"]
+            work_dir = self.work_dir(requested_app)
+            filename = os.path.join(work_dir, "app.json")
+            work_dir_app = self.read_json_file(filename)["application"]
             if work_dir_app != requested_app:
                 raise FailedCommandError(
-                    "work dir {} is for the wrong app {}".format(
-                        self.work_dir, work_dir_app
-                    )
+                    "work dir {} is for the wrong app {}".format(work_dir, work_dir_app)
                 )
         except IOError:
             # work dir has not been created or initialized yet, so we're good.
@@ -198,19 +194,16 @@ class MachCommands(MachCommandBase):
         except (OSError, IOError):
             pass
 
-    def write_json_file(self, filename, data):
-        work = self.ensure_work_dir()
-        with open(os.path.join(work, filename), "wt") as fh:
-            json.dump(data, fh)
-
     def read_json_file(self, filename):
-        with open(os.path.join(self.work_dir, filename)) as fh:
+        with open(filename) as fh:
             return json.load(fh)
 
-    def ensure_shell(self):
+    def ensure_shell(self, objdir):
         try:
-            return self.read_json_file("shell.json")["js"]
-        except OSError:
+            binaries = self.read_json_file(os.path.join(objdir, "binaries.json"))
+            info = [b for b in binaries["programs"] if b["program"] == "js"][0]
+            return os.path.join(objdir, info["install_target"], "js")
+        except (OSError, KeyError):
             raise FailedCommandError(
                 "must build the JS shell with `mach hazards build-shell` first"
             )
@@ -223,14 +216,23 @@ class MachCommands(MachCommandBase):
     @CommandArgument(
         "--application", default="browser", help="Build the given application."
     )
-    def gather_hazard_data(self, application=None):
+    @CommandArgument(
+        "--shell-objdir",
+        default="",
+        help="objdir containing the optimized JS shell for running the analysis.",
+    )
+    def gather_hazard_data(self, application, shell_objdir):
         """Gather analysis information by compiling the tree"""
-        shell_path = self.ensure_shell()
-        objdir = os.path.join(self.topsrcdir, "obj-analyzed")
+        if shell_objdir == "":
+            shell_objdir = os.path.join(self.topsrcdir, "obj-haz-shell")
+        shell_path = self.ensure_shell(shell_objdir)
+        objdir = os.path.join(self.topsrcdir, "obj-analyzed-" + application)
         self.check_application(application, objdir)
-        self.write_json_file("app.json", {"application": application})
+        work_dir = self.ensure_work_dir(application)
+        with open(os.path.join(work_dir, "app.json"), "wt") as fh:
+            json.dump({"application": application}, fh)
 
-        with open(os.path.join(self.work_dir, "defaults.py"), "wt") as fh:
+        with open(os.path.join(work_dir, "defaults.py"), "wt") as fh:
             data = textwrap.dedent(
                 """\
                 js = "{js}"
@@ -263,7 +265,7 @@ class MachCommands(MachCommandBase):
             "--buildcommand=" + buildscript,
         ]
 
-        return self.run_process(args=args, cwd=self.work_dir, pass_thru=True)
+        return self.run_process(args=args, cwd=work_dir, pass_thru=True)
 
     @inherit_command_args("build")
     @SubCommand("hazards", "compile", description=argparse.SUPPRESS)
@@ -291,7 +293,6 @@ class MachCommands(MachCommandBase):
             )
 
         app = kwargs.pop("application")
-        self.check_application(app)
         default_mozconfig = "js/src/devtools/rootAnalysis/mozconfig.%s" % app
         mozconfig_path = (
             kwargs.pop("mozconfig", None) or env.get("MOZCONFIG") or default_mozconfig
@@ -304,6 +305,7 @@ class MachCommands(MachCommandBase):
         # want to build the default browser application.)
         loader = MozconfigLoader(self.topsrcdir)
         mozconfig = loader.read_mozconfig(mozconfig_path)
+        self.check_application(app, mozconfig["topobjdir"])
         configure_args = mozconfig["configure_args"]
         if "--enable-application=%s" % app not in configure_args:
             raise Exception("mozconfig %s builds wrong project" % mozconfig_path)
@@ -325,6 +327,9 @@ class MachCommands(MachCommandBase):
         )
         env["LD_LIBRARY_PATH"] = "{}/lib64".format(self.gcc_dir)
 
+        if "haz_objdir" in kwargs:
+            env["MOZ_OBJDIR"] = kwargs.pop("haz_objdir")
+
         return self._mach_context.commands.dispatch(
             "build", self._mach_context, **kwargs
         )
@@ -332,7 +337,12 @@ class MachCommands(MachCommandBase):
     @SubCommand(
         "hazards", "analyze", description="Analyzed gathered data for rooting hazards"
     )
-    def analyze(self):
+    @CommandArgument(
+        "--application",
+        default="browser",
+        help="Analyze the output for the given application.",
+    )
+    def analyze(self, application):
         """Analyzed gathered data for rooting hazards"""
         args = [
             os.path.join(self.script_dir, "analyze.py"),
@@ -340,4 +350,6 @@ class MachCommands(MachCommandBase):
             "-v",
         ]
 
-        return self.run_process(args=args, cwd=self.work_dir, pass_thru=True)
+        return self.run_process(
+            args=args, cwd=self.work_dir(application), pass_thru=True
+        )
