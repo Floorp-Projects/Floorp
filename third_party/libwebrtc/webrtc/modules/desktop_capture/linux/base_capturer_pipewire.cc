@@ -224,11 +224,13 @@ BaseCapturerPipeWire::~BaseCapturerPipeWire() {
 
   if (cancellable_) {
     g_cancellable_cancel(cancellable_);
-    g_clear_object(&cancellable_);
+    g_object_unref(cancellable_);
+    cancellable_ = nullptr;
   }
 
   if (proxy_) {
-    g_clear_object(&proxy_);
+    g_object_unref(proxy_);
+    proxy_ = nullptr;
   }
 }
 
