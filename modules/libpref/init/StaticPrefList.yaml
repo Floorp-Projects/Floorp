@@ -8668,6 +8668,14 @@
   value: 15
   mirror: always
 
+# When the TRR confirmation is set to CONFIRM_FAILED due to many failures in
+# a row, we set a timer to retry. This has an exponential backoff up to
+# 64 seconds.
+- name: network.trr.retry-timeout-ms
+  type: RelaxedAtomicUint32
+  value: 125
+  mirror: always
+
 # Retry with no TRR when the response contained only 0.0.0.0 or ::
 - name: network.trr.fallback-on-zero-response
   type: RelaxedAtomicBool

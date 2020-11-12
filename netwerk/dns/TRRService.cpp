@@ -57,7 +57,7 @@ TRRService::TRRService()
       mCaptiveIsPassed(false),
       mTRRBLStorage("DataMutex::TRRBlocklist"),
       mConfirmationState(CONFIRM_INIT),
-      mRetryConfirmInterval(1000),
+      mRetryConfirmInterval(125),
       mTRRFailures(0),
       mParentalControlEnabled(false) {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
@@ -904,7 +904,7 @@ AHostResolver::LookupStatus TRRService::CompleteLookup(
                               TRRService::AutoDetectedKey(),
                               (mConfirmationState == CONFIRM_OK));
       }
-      mRetryConfirmInterval = 1000;
+      mRetryConfirmInterval = StaticPrefs::network_trr_retry_timeout_ms();
     }
     return LOOKUP_OK;
   }
