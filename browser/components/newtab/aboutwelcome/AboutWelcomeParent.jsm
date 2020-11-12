@@ -22,6 +22,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AboutWelcomeTelemetry:
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm",
   AttributionCode: "resource:///modules/AttributionCode.jsm",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
+  Region: "resource://gre/modules/Region.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -141,6 +143,42 @@ class AboutWelcomeObserver {
   }
 }
 
+class RegionHomeObserver {
+  observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case Region.REGION_TOPIC:
+        if (aData === Region.REGION_UPDATED) {
+          Services.obs.removeObserver(this, Region.REGION_TOPIC);
+          this.regionHomeDeferred.resolve(Region.home);
+          this.regionHomeDeferred = null;
+        }
+        break;
+    }
+  }
+
+  promiseRegionHome() {
+    // Add observer and create promise that should be resolved
+    // with region or rejected inside didDestroy if user exits
+    // before region is available
+    if (!this.regionHomeDeferred) {
+      Services.obs.addObserver(this, Region.REGION_TOPIC);
+      this.regionHomeDeferred = PromiseUtils.defer();
+    }
+    return this.regionHomeDeferred.promise;
+  }
+
+  stop() {
+    if (this.regionHomeDeferred) {
+      Services.obs.removeObserver(this, Region.REGION_TOPIC);
+      // Reject unresolved deferred promise on exit
+      this.regionHomeDeferred.reject(
+        new Error("Unresolved region home promise")
+      );
+      this.regionHomeDeferred = null;
+    }
+  }
+}
+
 class AboutWelcomeParent extends JSWindowActorParent {
   constructor() {
     super();
@@ -151,6 +189,7 @@ class AboutWelcomeParent extends JSWindowActorParent {
     if (this.AboutWelcomeObserver) {
       this.AboutWelcomeObserver.stop();
     }
+    this.RegionHomeObserver?.stop();
 
     Telemetry.sendTelemetry({
       event: "SESSION_END",
@@ -222,7 +261,14 @@ class AboutWelcomeParent extends JSWindowActorParent {
           key => LIGHT_WEIGHT_THEMES[key] === activeTheme?.id
         );
         return themeShortName?.toLowerCase();
-
+      case "AWPage:GET_REGION":
+        if (Region.home !== null) {
+          return Region.home;
+        }
+        if (!this.RegionHomeObserver) {
+          this.RegionHomeObserver = new RegionHomeObserver(this);
+        }
+        return this.RegionHomeObserver.promiseRegionHome();
       case "AWPage:WAIT_FOR_MIGRATION_CLOSE":
         return new Promise(resolve =>
           Services.ww.registerNotification(function observer(subject, topic) {
