@@ -126,7 +126,7 @@ class SearchRobot {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         private lateinit var sessionLoadedIdlingResource: SessionLoadedIdlingResource
 
-        fun dismiss(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+        fun dismissSearchBar(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
             mDevice.waitForIdle()
             mDevice.pressBack()
             HomeScreenRobot().interact()

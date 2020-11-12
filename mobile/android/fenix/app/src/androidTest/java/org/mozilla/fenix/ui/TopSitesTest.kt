@@ -59,7 +59,7 @@ class TopSitesTest {
             verifySnackBarText("Added to top sites!")
         }.openTabDrawer {
         }.openNewTab {
-        }.dismiss {
+        }.dismissSearchBar {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)
         }
@@ -78,14 +78,14 @@ class TopSitesTest {
             verifySnackBarText("Added to top sites!")
         }.openTabDrawer {
         }.openNewTab {
-        }.dismiss {
+        }.dismissSearchBar {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)
         }.openTopSiteTabWithTitle(title = defaultWebPageTitle) {
             verifyUrl(defaultWebPage.url.toString().replace("http://", ""))
         }.openTabDrawer {
         }.openNewTab {
-        }.dismiss {
+        }.dismissSearchBar {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)
         }.openContextMenuOnTopSitesWithTitle(defaultWebPageTitle) {
@@ -109,7 +109,7 @@ class TopSitesTest {
             verifySnackBarText("Added to top sites!")
         }.openTabDrawer {
         }.openNewTab {
-        }.dismiss {
+        }.dismissSearchBar {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)
         }.openContextMenuOnTopSitesWithTitle(defaultWebPageTitle) {
@@ -133,7 +133,7 @@ class TopSitesTest {
             verifySnackBarText("Added to top sites!")
         }.openTabDrawer {
         }.openNewTab {
-        }.dismiss {
+        }.dismissSearchBar {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)
         }.openContextMenuOnTopSitesWithTitle(defaultWebPageTitle) {
@@ -157,7 +157,7 @@ class TopSitesTest {
             verifySnackBarText("Added to top sites!")
         }.openTabDrawer {
         }.openNewTab {
-        }.dismiss {
+        }.dismissSearchBar {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)
         }.openContextMenuOnTopSitesWithTitle(defaultWebPageTitle) {

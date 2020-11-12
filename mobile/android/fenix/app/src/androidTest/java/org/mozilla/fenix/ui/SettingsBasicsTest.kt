@@ -204,7 +204,7 @@ class SettingsBasicsTest {
             checkTextSizeOnWebsite(textSizePercentage, fenixApp.components)
         }.openTabDrawer {
         }.openNewTab {
-        }.dismiss {
+        }.dismissSearchBar {
         }.openThreeDotMenu {
         }.openSettings {
         }.openAccessibilitySubMenu {

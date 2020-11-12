@@ -87,6 +87,8 @@ class HistoryRobot {
 
     class Transition {
         fun goBackToBrowser(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            mDevice.pressBack()
+
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }

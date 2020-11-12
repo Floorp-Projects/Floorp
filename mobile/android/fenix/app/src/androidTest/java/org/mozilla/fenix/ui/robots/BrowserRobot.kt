@@ -155,8 +155,6 @@ class BrowserRobot {
 
     fun verifyMenuButton() = assertMenuButton()
 
-    fun verifyBlueDot() = assertBlueDot()
-
     fun verifyNavURLBarItems() {
         verifyEnhancedTrackingOptions()
         pressBack()
@@ -453,10 +451,3 @@ private fun mediaPlayerPlayButton() =
             .className("android.widget.Button")
             .text("Play")
     )
-
-private fun assertBlueDot() {
-    onView(withId(R.id.notification_dot))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
-
-private fun addOnsReportSiteIssue() = onView(withText("Report Site Issue"))

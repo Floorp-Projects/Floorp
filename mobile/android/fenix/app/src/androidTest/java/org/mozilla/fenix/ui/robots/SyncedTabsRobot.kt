@@ -8,7 +8,6 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
-import androidx.test.espresso.matcher.ViewMatchers.withResourceName
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.platform.app.InstrumentationRegistry
@@ -22,9 +21,7 @@ import org.mozilla.fenix.helpers.click
  */
 class SyncedTabsRobot {
 
-    fun verifyNavigationToolBarHeader() = assertNavigationToolBarHeader()
-
-    fun verifySyncedTabsStatus() = assertSyncedTabsStatus()
+    fun verifySyncedTabsMenuHeader() = assertSyncedTabsMenuHeader()
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())!!
@@ -41,12 +38,7 @@ class SyncedTabsRobot {
 private fun goBackButton() =
     onView(allOf(withContentDescription("Navigate up")))
 
-private fun assertNavigationToolBarHeader() {
+private fun assertSyncedTabsMenuHeader() {
     onView(withText(R.string.synced_tabs))
-        .check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
-}
-
-private fun assertSyncedTabsStatus() {
-    onView(withResourceName("sync_tabs_status"))
         .check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
 }

@@ -188,7 +188,7 @@ class TabbedBrowsingTest {
         }.openTabDrawer {
             verifyExistingOpenTabs("Test_Page_1")
         }.openNewTab {
-        }.dismiss { }
+        }.dismissSearchBar { }
     }
 
     @Test
@@ -312,7 +312,7 @@ class TabbedBrowsingTest {
             verifyExistingOpenTabs(defaultWebPage.title)
             verifyCloseTabsButton(defaultWebPage.title)
         }.openNewTab {
-        }.dismiss { }
+        }.dismissSearchBar { }
     }
 
     @Test

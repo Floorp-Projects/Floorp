@@ -69,13 +69,13 @@ class ThreeDotMenuMainTest {
             verifyHelpUrl()
         }.openTabDrawer {
         }.openNewTab {
-        }.dismiss {
+        }.dismissSearchBar {
         }.openThreeDotMenu {
         }.openWhatsNew {
             verifyWhatsNewURL()
         }.openTabDrawer {
         }.openNewTab {
-        }.dismiss { }
+        }.dismissSearchBar { }
 
         homeScreen {
         }.openThreeDotMenu {
