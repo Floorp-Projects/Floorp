@@ -62,7 +62,7 @@ add_task(async function testSoundIndicatorShouldDisappearAfterTabNavigation() {
   await waitForTabSoundIndicatorAppears(tab);
 
   info(`sound indicator should disappear after navigating tab to blank page`);
-  await BrowserTestUtils.loadURI(tab.linkedBrowser, "about:blank");
+  BrowserTestUtils.loadURI(tab.linkedBrowser, "about:blank");
   await waitForTabSoundIndicatorDisappears(tab);
 
   info("remove tab");

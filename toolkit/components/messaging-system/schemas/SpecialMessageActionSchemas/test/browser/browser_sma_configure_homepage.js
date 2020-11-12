@@ -126,7 +126,7 @@ add_task(async function test_CONFIGURE_HOMEPAGE_home_redirect() {
   let browser = gBrowser.selectedBrowser;
   // Wait for any other navigation events from previous tests
   await BrowserTestUtils.browserLoaded(browser, false, "about:home");
-  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:config");
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:config");
   await BrowserTestUtils.browserLoaded(browser, false, "about:config");
 
   await SMATestUtils.executeAndValidateAction(action);

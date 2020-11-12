@@ -58,7 +58,7 @@ add_task(async function() {
     newWin.gBrowser.selectedBrowser,
     true /* includeSubFrames */
   );
-  await BrowserTestUtils.loadURI(newWin.gBrowser.selectedBrowser, pageUrl);
+  BrowserTestUtils.loadURI(newWin.gBrowser.selectedBrowser, pageUrl);
   await browserLoadedPromise;
 
   newWin.gBrowser.selectedBrowser.focus();

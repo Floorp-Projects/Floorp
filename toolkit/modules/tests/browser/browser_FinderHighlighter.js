@@ -300,7 +300,7 @@ add_task(async function testHideOnLocationChange() {
     insertCalls: [0, 0],
     removeCalls: [1, 2],
   });
-  await BrowserTestUtils.loadURI(browser, url);
+  BrowserTestUtils.loadURI(browser, url);
   await promise;
 
   BrowserTestUtils.removeTab(tab);
