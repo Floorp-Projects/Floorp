@@ -40,7 +40,7 @@ class DAV1DDecoder : public MediaDataDecoder,
 
   Dav1dContext* mContext = nullptr;
 
-  const VideoInfo& mInfo;
+  const VideoInfo mInfo;
   const RefPtr<TaskQueue> mTaskQueue;
   const RefPtr<layers::ImageContainer> mImageContainer;
   const RefPtr<layers::KnowsCompositor> mImageAllocator;
