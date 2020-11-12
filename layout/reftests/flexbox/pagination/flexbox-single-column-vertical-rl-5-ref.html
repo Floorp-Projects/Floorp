@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <meta charset="utf-8">
+  <title>CSS Flexbox Test Reference: Fragmentation of block-size:auto single-line column flex container in a zero block-size multicol</title>
+  <link rel="author" title="Daniel Holbert" href="mailto:dholbert@mozilla.com">
+  <link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
+  <link rel="author" title="Mozilla" href="http://www.mozilla.org/">
+
+  <style>
+  html {
+    writing-mode: vertical-rl;
+  }
+  .multicol {
+    column-count: 2;
+    block-size: 0;
+    border: 1px solid black;
+    margin-block-end: 30px; /* Just to separate each sub-testcase visually. */
+  }
+
+  .flexContainer {
+    display: block;
+    padding: 1px;
+  }
+
+  .boxDecorationBreak {
+    padding: 5px;
+    box-decoration-break: clone;
+  }
+
+  </style>
+
+  <body>
+    <!-- Basic one with padding on the flex container.-->
+    <div class="multicol">
+      <div class="flexContainer">
+        <div>abc</div><div>def</div>
+      </div>
+    </div>
+
+    <!-- Larger padding and box-decoration-break:clone on the flex container.-->
+    <div class="multicol">
+      <div class="flexContainer boxDecorationBreak">
+        <div>abc</div><div>def</div>
+      </div>
+    </div>
+  </body>
+</html>
