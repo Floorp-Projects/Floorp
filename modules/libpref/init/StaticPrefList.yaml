@@ -8665,7 +8665,7 @@
 # After this many failed TRR requests in a row, consider TRR borked
 - name: network.trr.max-fails
   type: RelaxedAtomicUint32
-  value: 5
+  value: 15
   mirror: always
 
 # Retry with no TRR when the response contained only 0.0.0.0 or ::
