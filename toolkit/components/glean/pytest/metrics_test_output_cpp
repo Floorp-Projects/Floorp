@@ -39,8 +39,10 @@ namespace test {
      */
     constexpr impl::TimespanMetric timespan_metric(11);
 
+}
+namespace test_nested {
     /**
-     * generated from test.uuid_metric
+     * generated from test.nested.uuid_metric
      *
      * A multi-line
      * description
