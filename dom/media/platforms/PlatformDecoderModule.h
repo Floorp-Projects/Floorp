@@ -79,6 +79,36 @@ struct VideoFrameRate {
 
 }  // namespace media
 
+struct CreateDecoderParams;
+struct CreateDecoderParamsForAsync {
+  using Option = media::Option;
+  using OptionSet = media::OptionSet;
+  explicit CreateDecoderParamsForAsync(const CreateDecoderParams& aParams);
+  CreateDecoderParamsForAsync(CreateDecoderParamsForAsync&& aParams);
+
+  const VideoInfo& VideoConfig() const {
+    MOZ_ASSERT(mConfig->IsVideo());
+    return *mConfig->GetAsVideoInfo();
+  }
+
+  const AudioInfo& AudioConfig() const {
+    MOZ_ASSERT(mConfig->IsAudio());
+    return *mConfig->GetAsAudioInfo();
+  }
+
+  UniquePtr<TrackInfo> mConfig;
+  const RefPtr<layers::ImageContainer> mImageContainer;
+  const RefPtr<layers::KnowsCompositor> mKnowsCompositor;
+  const RefPtr<GMPCrashHelper> mCrashHelper;
+  const media::UseNullDecoder mUseNullDecoder;
+  const media::NoWrapper mNoWrapper;
+  const TrackInfo::TrackType mType = TrackInfo::kUndefinedTrack;
+  std::function<MediaEventProducer<TrackInfo::TrackType>*()>
+      mOnWaitingForKeyEvent;
+  const OptionSet mOptions = OptionSet(Option::Default);
+  const media::VideoFrameRate mRate;
+};
+
 struct MOZ_STACK_CLASS CreateDecoderParams final {
   using Option = media::Option;
   using OptionSet = media::OptionSet;
@@ -87,6 +117,19 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
   using VideoFrameRate = media::VideoFrameRate;
 
   explicit CreateDecoderParams(const TrackInfo& aConfig) : mConfig(aConfig) {}
+  CreateDecoderParams(const CreateDecoderParams& aParams) = default;
+
+  MOZ_IMPLICIT CreateDecoderParams(const CreateDecoderParamsForAsync& aParams)
+      : mConfig(*aParams.mConfig.get()),
+        mImageContainer(aParams.mImageContainer),
+        mKnowsCompositor(aParams.mKnowsCompositor),
+        mCrashHelper(aParams.mCrashHelper),
+        mUseNullDecoder(aParams.mUseNullDecoder),
+        mNoWrapper(aParams.mNoWrapper),
+        mType(aParams.mType),
+        mOnWaitingForKeyEvent(aParams.mOnWaitingForKeyEvent),
+        mOptions(aParams.mOptions),
+        mRate(aParams.mRate) {}
 
   template <typename T1, typename... Ts>
   CreateDecoderParams(const TrackInfo& aConfig, T1&& a1, Ts&&... args)
@@ -117,11 +160,14 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
     return layers::LayersBackend::LAYERS_NONE;
   }
 
+  // CreateDecoderParams is a MOZ_STACK_CLASS, it is only used to
+  // simplify the passing of arguments to Create*Decoder.
+  // It is safe to use references and raw pointers.
   const TrackInfo& mConfig;
   layers::ImageContainer* mImageContainer = nullptr;
   MediaResult* mError = nullptr;
-  RefPtr<layers::KnowsCompositor> mKnowsCompositor;
-  RefPtr<GMPCrashHelper> mCrashHelper;
+  layers::KnowsCompositor* mKnowsCompositor = nullptr;
+  GMPCrashHelper* mCrashHelper = nullptr;
   media::UseNullDecoder mUseNullDecoder;
   media::NoWrapper mNoWrapper;
   TrackInfo::TrackType mType = TrackInfo::kUndefinedTrack;
@@ -156,6 +202,19 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
   void Set(const std::function<MediaEventProducer<TrackInfo::TrackType>*()>&
                aOnWaitingForKey) {
     mOnWaitingForKeyEvent = aOnWaitingForKey;
+  }
+  void Set(const CreateDecoderParams& aParams) {
+    // Set all but mTrackInfo;
+    mImageContainer = aParams.mImageContainer;
+    mError = aParams.mError;
+    mKnowsCompositor = aParams.mKnowsCompositor;
+    mCrashHelper = aParams.mCrashHelper;
+    mUseNullDecoder = aParams.mUseNullDecoder;
+    mNoWrapper = aParams.mNoWrapper;
+    mType = aParams.mType;
+    mOnWaitingForKeyEvent = aParams.mOnWaitingForKeyEvent;
+    mOptions = aParams.mOptions;
+    mRate = aParams.mRate;
   }
   template <typename T1, typename T2, typename... Ts>
   void Set(T1&& a1, T2&& a2, Ts&&... args) {

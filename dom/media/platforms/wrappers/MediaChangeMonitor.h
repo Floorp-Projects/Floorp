@@ -92,8 +92,6 @@ class MediaChangeMonitor : public MediaDataDecoder,
 
   RefPtr<PlatformDecoderModule> mPDM;
   VideoInfo mCurrentConfig;
-  RefPtr<layers::KnowsCompositor> mKnowsCompositor;
-  RefPtr<layers::ImageContainer> mImageContainer;
   nsCOMPtr<nsISerialEventTarget> mThread;
   RefPtr<MediaDataDecoder> mDecoder;
   MozPromiseRequestHolder<InitPromise> mInitPromiseRequest;
@@ -107,20 +105,14 @@ class MediaChangeMonitor : public MediaDataDecoder,
   RefPtr<ShutdownPromise> mShutdownPromise;
   MozPromiseHolder<FlushPromise> mFlushPromise;
 
-  RefPtr<GMPCrashHelper> mGMPCrashHelper;
   MediaResult mLastError;
   bool mNeedKeyframe = true;
-  const bool mErrorIfNoInitializationData;
-  const TrackInfo::TrackType mType;
-  std::function<MediaEventProducer<TrackInfo::TrackType>*()>
-      mOnWaitingForKeyEvent;
-  const CreateDecoderParams::OptionSet mDecoderOptions;
-  const CreateDecoderParams::VideoFrameRate mRate;
   Maybe<bool> mCanRecycleDecoder;
   Maybe<MediaDataDecoder::ConversionRequired> mConversionRequired;
   // Used for debugging purposes only
   Atomic<bool> mInConstructor;
   bool mDecoderInitialized = false;
+  const CreateDecoderParamsForAsync mParams;
 };
 
 }  // namespace mozilla

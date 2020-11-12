@@ -248,25 +248,17 @@ MediaChangeMonitor::MediaChangeMonitor(PlatformDecoderModule* aPDM,
                                        const CreateDecoderParams& aParams)
     : mPDM(aPDM),
       mCurrentConfig(aParams.VideoConfig()),
-      mKnowsCompositor(aParams.mKnowsCompositor),
-      mImageContainer(aParams.mImageContainer),
       mDecoder(nullptr),
-      mGMPCrashHelper(aParams.mCrashHelper),
       mLastError(NS_OK),
-      mErrorIfNoInitializationData(aParams.mOptions.contains(
-          CreateDecoderParams::Option::ErrorIfNoInitializationData)),
-      mType(aParams.mType),
-      mOnWaitingForKeyEvent(aParams.mOnWaitingForKeyEvent),
-      mDecoderOptions(aParams.mOptions),
-      mRate(aParams.mRate) {
+      mParams(aParams) {
   mInConstructor = true;
   if (VPXDecoder::IsVPX(mCurrentConfig.mMimeType)) {
     mChangeMonitor = MakeUnique<VPXChangeMonitor>(mCurrentConfig);
   } else {
     MOZ_ASSERT(MP4Decoder::IsH264(mCurrentConfig.mMimeType));
     mChangeMonitor = MakeUnique<H264ChangeMonitor>(
-        mCurrentConfig,
-        mDecoderOptions.contains(CreateDecoderParams::Option::FullH264Parsing));
+        mCurrentConfig, mParams.mOptions.contains(
+                            CreateDecoderParams::Option::FullH264Parsing));
   }
   mLastError = CreateDecoder();
   mInConstructor = false;
@@ -314,7 +306,8 @@ RefPtr<MediaDataDecoder::DecodePromise> MediaChangeMonitor::Decode(
 
   if (rv == NS_ERROR_NOT_INITIALIZED) {
     // We are missing the required init data to create the decoder.
-    if (mErrorIfNoInitializationData) {
+    if (mParams.mOptions.contains(
+            CreateDecoderParams::Option::ErrorIfNoInitializationData)) {
       // This frame can't be decoded and should be treated as an error.
       return DecodePromise::CreateAndReject(rv, __func__);
     }
@@ -466,18 +459,14 @@ MediaResult MediaChangeMonitor::CreateDecoder() {
   mCurrentConfig = *mChangeMonitor->Config().GetAsVideoInfo();
 
   MediaResult error = NS_OK;
-  mDecoder = mPDM->CreateVideoDecoder(
-      {mCurrentConfig, mImageContainer, mKnowsCompositor, mGMPCrashHelper,
-       mType, mOnWaitingForKeyEvent, mDecoderOptions, mRate, &error});
+  mDecoder = mPDM->CreateVideoDecoder({mCurrentConfig, mParams, &error});
 
   if (!mDecoder) {
     // We failed to create a decoder with the existing PDM; attempt once again
     // with a PDMFactory.
     RefPtr<PDMFactory> factory = new PDMFactory();
-    mDecoder = factory->CreateDecoder(
-        {mCurrentConfig, mImageContainer, mKnowsCompositor, mGMPCrashHelper,
-         mType, mOnWaitingForKeyEvent, mDecoderOptions, mRate, &error,
-         CreateDecoderParams::NoWrapper(true)});
+    mDecoder = factory->CreateDecoder({mCurrentConfig, mParams, &error,
+                                       CreateDecoderParams::NoWrapper(true)});
 
     if (!mDecoder) {
       if (NS_FAILED(error)) {

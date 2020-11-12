@@ -6,9 +6,26 @@
 
 #include "PlatformDecoderModule.h"
 
+#include "ImageContainer.h"
 #include "nsPrintfCString.h"
 
 namespace mozilla {
+
+CreateDecoderParamsForAsync::CreateDecoderParamsForAsync(
+    const CreateDecoderParams& aParams)
+    : mConfig(aParams.mConfig.Clone()),
+      mImageContainer(aParams.mImageContainer),
+      mKnowsCompositor(aParams.mKnowsCompositor),
+      mCrashHelper(aParams.mCrashHelper),
+      mUseNullDecoder(aParams.mUseNullDecoder),
+      mNoWrapper(aParams.mNoWrapper),
+      mType(aParams.mType),
+      mOnWaitingForKeyEvent(aParams.mOnWaitingForKeyEvent),
+      mOptions(aParams.mOptions),
+      mRate(aParams.mRate) {}
+
+CreateDecoderParamsForAsync::CreateDecoderParamsForAsync(
+    CreateDecoderParamsForAsync&& aParams) = default;
 
 RefPtr<PlatformDecoderModule::CreateDecoderPromise>
 PlatformDecoderModule::AsyncCreateDecoder(const CreateDecoderParams& aParams) {
