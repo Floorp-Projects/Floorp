@@ -407,8 +407,9 @@ float4 ComputeBlendSourceColor(const VS_BLEND_OUTPUT aVertex)
       return YCbCrShader(tmp);
     } else if (iBlendConfig.x == PS_LAYER_NV12) {
       return NV12Shader(tmp);
+    } else {
+      return SolidColorShader(tmp);
     }
-    return SolidColorShader(tmp);
   } else if (iBlendConfig.y == PS_MASK) {
     VS_MASK_OUTPUT tmp;
     tmp.vPosition = aVertex.vPosition;
@@ -423,11 +424,12 @@ float4 ComputeBlendSourceColor(const VS_BLEND_OUTPUT aVertex)
       return YCbCrShaderMask(tmp);
     } else if (iBlendConfig.x == PS_LAYER_NV12) {
       return NV12ShaderMask(tmp);
+    } else {
+      return SolidColorShaderMask(tmp);
     }
-    return SolidColorShaderMask(tmp);
+  } else {
+    return float4(0.0, 0.0, 0.0, 1.0);
   }
-
-  return float4(0.0, 0.0, 0.0, 1.0);
 }
 
 float3 ChooseBlendFunc(float3 dest, float3 src)
