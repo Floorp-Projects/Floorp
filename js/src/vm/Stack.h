@@ -899,7 +899,8 @@ class GenericArgsBase
 template <MaybeConstruct Construct, size_t N>
 class FixedArgsBase
     : public std::conditional_t<Construct, AnyConstructArgs, AnyInvokeArgs> {
-  static_assert(N <= ARGS_LENGTH_MAX, "o/~ too many args o/~");
+  // Add +1 here to avoid noisy warning on gcc when N=0 (0 <= unsigned).
+  static_assert(N + 1 <= ARGS_LENGTH_MAX + 1, "o/~ too many args o/~");
 
  protected:
   JS::RootedValueArray<2 + N + uint32_t(Construct)> v_;
