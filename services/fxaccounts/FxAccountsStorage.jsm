@@ -19,7 +19,6 @@ const {
   FXA_PWDMGR_SECURE_FIELDS,
   log,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
@@ -38,7 +37,7 @@ function FxAccountsStorageManagerCanStoreField(fieldName) {
 var FxAccountsStorageManager = function(options = {}) {
   this.options = {
     filename: options.filename || DEFAULT_STORAGE_FILENAME,
-    baseDir: options.baseDir || OS.Constants.Path.profileDir,
+    baseDir: options.baseDir || Services.dirsvc.get("ProfD", Ci.nsIFile).path,
   };
   this.plainStorage = new JSONStorage(this.options);
   // Tests may want to pretend secure storage isn't available.
@@ -284,7 +283,7 @@ FxAccountsStorageManager.prototype = {
     } catch (err) {
       // File hasn't been created yet.  That will be done
       // when write is called.
-      if (!(err instanceof OS.File.Error) || !err.becauseNoSuchFile) {
+      if (!err.name == "NotFoundError") {
         log.error("Failed to read plain storage", err);
       }
       // either way, we return null.
@@ -462,7 +461,7 @@ FxAccountsStorageManager.prototype = {
  */
 function JSONStorage(options) {
   this.baseDir = options.baseDir;
-  this.path = OS.Path.join(options.baseDir, options.filename);
+  this.path = PathUtils.join(options.baseDir, options.filename);
 }
 
 JSONStorage.prototype = {
@@ -472,7 +471,7 @@ JSONStorage.prototype = {
       contents ? Object.keys(contents.accountData) : "null"
     );
     let start = Date.now();
-    return OS.File.makeDir(this.baseDir, { ignoreExisting: true })
+    return IOUtils.makeDirectory(this.baseDir, { ignoreExisting: true })
       .then(CommonUtils.writeJSON.bind(null, contents, this.path))
       .then(result => {
         log.trace(
