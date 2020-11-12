@@ -84,6 +84,7 @@ void IdleTaskRunner::SetBudget(int64_t aBudget) {
 
 void IdleTaskRunner::SetTimer(uint32_t aDelay, nsIEventTarget* aTarget) {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aTarget->IsOnCurrentThread());
   // aTarget is always the main thread event target provided from
   // NS_DispatchToCurrentThreadQueue(). We ignore aTarget here to ensure that
   // CollectorRunner always run specifically the main thread.
