@@ -308,6 +308,12 @@ build kinds where the full crashsymbols should be enabled, set this attribute
 to True. The full symbol packages will then be generated and uploaded on
 release branches and on try.
 
+skip-upload-crashsymbols
+========================
+Shippable/nightly builds are normally required to set enable-full-crashsymbols,
+but in some limited corner cases (universal builds), that is not wanted, because
+the symbols are uploaded independently already.
+
 cron
 ====
 Indicates that a task is meant to be run via cron tasks, and should not be run
