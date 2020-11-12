@@ -35,7 +35,7 @@ add_task(async function test() {
 
   async function testTabTitle(aWindow, url, insidePB, expected_title) {
     let tab = await BrowserTestUtils.openNewForegroundTab(aWindow.gBrowser);
-    await BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+    BrowserTestUtils.loadURI(tab.linkedBrowser, url);
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
     await BrowserTestUtils.waitForCondition(() => {

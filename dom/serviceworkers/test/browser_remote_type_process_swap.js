@@ -36,7 +36,7 @@ const CROSS_ORIGIN_REDIRECT_URL = `${TEST_ROOT}redirect.sjs?${CROSS_ORIGIN_URL}`
 
 async function loadURI(aXULBrowser, aURI) {
   const browserLoadedPromise = BrowserTestUtils.browserLoaded(aXULBrowser);
-  await BrowserTestUtils.loadURI(aXULBrowser, aURI);
+  BrowserTestUtils.loadURI(aXULBrowser, aURI);
 
   return browserLoadedPromise;
 }

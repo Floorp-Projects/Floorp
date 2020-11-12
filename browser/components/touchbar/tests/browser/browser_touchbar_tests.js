@@ -97,7 +97,7 @@ add_task(async function updateMainButtonInFullscreen() {
     "chrome://browser/skin/search-glass.svg",
     "OpenLocation should be displaying the search glass icon."
   );
-  await BrowserTestUtils.loadURI(
+  BrowserTestUtils.loadURI(
     gBrowser.selectedBrowser,
     TEST_PATH + "video_test.html"
   );

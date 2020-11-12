@@ -157,13 +157,9 @@ add_task(async function save_worthy_tabs_nonremote_final() {
   ok(browser.isRemoteBrowser, "browser is remote");
 
   // Replace about:blank with a non-remote entry.
-  await BrowserTestUtils.loadURI(browser, "about:robots");
+  BrowserTestUtils.loadURI(browser, "about:robots");
+  await BrowserTestUtils.browserLoaded(browser);
   ok(!browser.isRemoteBrowser, "browser is not remote anymore");
-
-  // Switching remoteness caused a SessionRestore to begin, moving over history
-  // and initiating the load in the target process. Wait for the full restore
-  // and load to complete before trying to close the tab.
-  await promiseTabRestored(tab);
 
   // Remove the tab before the update arrives.
   let promise = promiseRemoveTabAndSessionState(tab);

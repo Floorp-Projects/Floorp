@@ -83,7 +83,7 @@ async function navigateTo(uri, browser, animationInspector, inspector) {
   const previousAnimationsFront = animationInspector.animationsFront;
   const onReloaded = inspector.once("reloaded");
   const onUpdated = inspector.once("inspector-updated");
-  await BrowserTestUtils.loadURI(browser, uri);
+  BrowserTestUtils.loadURI(browser, uri);
   await waitUntil(
     () => previousAnimationsFront !== animationInspector.animationsFront
   );

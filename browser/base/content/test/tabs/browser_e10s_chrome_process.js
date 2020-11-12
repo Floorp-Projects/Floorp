@@ -36,14 +36,7 @@ function makeTest(
       false,
       endURL
     );
-    let expectSyncChange = await transitionTask(browser, endURL);
-    if (expectSyncChange) {
-      is(
-        browser.isRemoteBrowser,
-        endProcessIsRemote,
-        "Should have switched to the right process synchronously"
-      );
-    }
+    await transitionTask(browser, endURL);
     await docLoadedPromise;
 
     is(browser.currentURI.spec, endURL, "Should have made it to the final URL");
@@ -121,21 +114,17 @@ var TRANSITIONS = [
   // Loads the new page by calling browser.loadURI directly
   async function loadURI(browser, uri) {
     info("Calling browser.loadURI");
-    await BrowserTestUtils.loadURI(browser, uri);
-    return true;
+    BrowserTestUtils.loadURI(browser, uri);
   },
 
   // Loads the new page by finding a link with the right href in the document and
   // clicking it
   function clickLink(browser, uri) {
     info("Clicking link");
-
     SpecialPowers.spawn(browser, [uri], function frame_script(frameUri) {
       let link = content.document.querySelector("a[href='" + frameUri + "']");
       link.click();
     });
-
-    return false;
   },
 ];
 

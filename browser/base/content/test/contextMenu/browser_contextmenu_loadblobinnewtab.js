@@ -20,7 +20,7 @@ async function rightClickOpenInNewTabAndReturnContent(selector) {
     false,
     RESOURCE_LINK
   );
-  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, RESOURCE_LINK);
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, RESOURCE_LINK);
   await loaded;
 
   const generatedBlobURL = await ContentTask.spawn(
@@ -97,7 +97,7 @@ async function openInNewTabAndReturnContent(selector) {
     false,
     RESOURCE_LINK
   );
-  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, RESOURCE_LINK);
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, RESOURCE_LINK);
   await loaded;
 
   const generatedBlobURL = await ContentTask.spawn(

@@ -21,7 +21,7 @@ add_task(async function() {
   const onBrowserLoaded = BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser
   );
-  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI_REPLACED);
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI_REPLACED);
   await onBrowserLoaded;
 
   const toolbox = await openToolboxForTab(gBrowser.selectedTab, "webconsole");

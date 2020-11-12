@@ -13,7 +13,7 @@ add_task(async function test() {
     false,
     BASE_URI
   );
-  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, BASE_URI);
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, BASE_URI);
   await loaded;
 
   let blobURL;
@@ -42,7 +42,7 @@ add_task(async function test() {
     false,
     BASE_URI
   );
-  await BrowserTestUtils.loadURI(privateTab, BASE_URI);
+  BrowserTestUtils.loadURI(privateTab, BASE_URI);
   await privateTabLoaded;
 
   await SpecialPowers.spawn(privateTab, [blobURL], function(url) {
