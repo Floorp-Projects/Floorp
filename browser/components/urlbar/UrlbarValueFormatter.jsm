@@ -57,10 +57,6 @@ class UrlbarValueFormatter {
     if (!this.window.gBrowserInit.delayedStartupFinished) {
       return;
     }
-    // If this window is being torn down, stop here
-    if (!this.window.docShell) {
-      return;
-    }
     if (!Services.search.isInitialized) {
       let instance = (this._updateInstance = {});
       await Services.search.init();
@@ -68,6 +64,11 @@ class UrlbarValueFormatter {
         return;
       }
       delete this._updateInstance;
+    }
+
+    // If this window is being torn down, stop here
+    if (!this.window.docShell) {
+      return;
     }
 
     // Cleanup that must be done in any case, even if there's no value.
