@@ -93,7 +93,6 @@
 #include "SmoothMsdScrollAnimation.h"
 #include "SmoothScrollAnimation.h"
 #include "WheelScrollAnimation.h"
-#include "KeyboardScrollAnimation.h"
 #if defined(MOZ_WIDGET_ANDROID)
 #  include "AndroidAPZ.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
@@ -2030,8 +2029,9 @@ nsEventStatus AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent) {
 
     nsPoint initialPosition =
         CSSPoint::ToAppUnits(Metrics().GetVisualScrollOffset());
-    StartAnimation(new KeyboardScrollAnimation(*this, initialPosition,
-                                               aEvent.mAction.mType));
+    StartAnimation(new SmoothScrollAnimation(
+        *this, initialPosition,
+        SmoothScrollAnimation::GetScrollOriginForAction(aEvent.mAction.mType)));
   }
 
   // Convert velocity from ParentLayerPoints/ms to ParentLayerPoints/s and then
@@ -2040,7 +2040,7 @@ nsEventStatus AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent) {
       ParentLayerPoint(mX.GetVelocity() * 1000.0f, mY.GetVelocity() * 1000.0f) /
       Metrics().GetZoom());
 
-  KeyboardScrollAnimation* animation = mAnimation->AsKeyboardScrollAnimation();
+  SmoothScrollAnimation* animation = mAnimation->AsSmoothScrollAnimation();
   MOZ_ASSERT(animation);
 
   animation->UpdateDestination(aEvent.mTimeStamp,
@@ -3451,7 +3451,7 @@ Maybe<CSSPoint> AsyncPanZoomController::GetCurrentAnimationDestination(
     return Some(mAnimation->AsSmoothMsdScrollAnimation()->GetDestination());
   }
   if (mState == KEYBOARD_SCROLL) {
-    return Some(mAnimation->AsKeyboardScrollAnimation()->GetDestination());
+    return Some(mAnimation->AsSmoothScrollAnimation()->GetDestination());
   }
 
   return Nothing();
