@@ -31,7 +31,7 @@ const { ExtensionTestUtils } = ChromeUtils.import(
   "resource://testing-common/ExtensionXPCShellUtils.jsm"
 );
 
-SearchTestUtils.init(Assert, registerCleanupFunction);
+SearchTestUtils.init(this);
 
 const SETTINGS_FILENAME = "search.json.mozlz4";
 

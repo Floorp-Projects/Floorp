@@ -2,14 +2,19 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   CustomizableUITestUtils:
     "resource://testing-common/CustomizableUITestUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
 });
 
 let gCUITestUtils = new CustomizableUITestUtils(window);
+
+AddonTestUtils.initMochitest(this);
+SearchTestUtils.init(this);
 
 /**
  * Recursively compare two objects and check that every property of expectedObj has the same value
