@@ -443,18 +443,6 @@ void nsContentPermissionUtils::NotifyRemoveContentPermissionRequestChild(
   ContentPermissionRequestChildMap().erase(it);
 }
 
-NS_IMPL_ISUPPORTS(nsContentPermissionRequester, nsIContentPermissionRequester)
-
-nsContentPermissionRequester::nsContentPermissionRequester(
-    nsPIDOMWindowInner* aWindow)
-    : mWindow(do_GetWeakReference(aWindow)),
-      mListener(new VisibilityChangeListener(aWindow)) {}
-
-nsContentPermissionRequester::~nsContentPermissionRequester() {
-  mListener->RemoveListener();
-  mListener = nullptr;
-}
-
 static nsIPrincipal* GetTopLevelPrincipal(nsPIDOMWindowInner* aWindow) {
   MOZ_ASSERT(aWindow);
 
@@ -491,7 +479,6 @@ ContentPermissionRequestBase::ContentPermissionRequestBase(
     : mPrincipal(aPrincipal),
       mTopLevelPrincipal(aWindow ? ::GetTopLevelPrincipal(aWindow) : nullptr),
       mWindow(aWindow),
-      mRequester(aWindow ? new nsContentPermissionRequester(aWindow) : nullptr),
       mPrefName(aPrefName),
       mType(aType),
       mIsHandlingUserInput(false),
@@ -566,16 +553,6 @@ NS_IMETHODIMP
 ContentPermissionRequestBase::GetIsHandlingUserInput(
     bool* aIsHandlingUserInput) {
   *aIsHandlingUserInput = mIsHandlingUserInput;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ContentPermissionRequestBase::GetRequester(
-    nsIContentPermissionRequester** aRequester) {
-  NS_ENSURE_ARG_POINTER(aRequester);
-
-  nsCOMPtr<nsIContentPermissionRequester> requester = mRequester;
-  requester.forget(aRequester);
   return NS_OK;
 }
 
@@ -743,24 +720,6 @@ nsresult TranslateChoices(
 
 }  // namespace mozilla::dom
 
-NS_IMPL_ISUPPORTS(
-    nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy,
-    nsIContentPermissionRequester)
-
-void nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy ::
-    NotifyVisibilityResult(const bool& aIsVisible) {
-  if (mWaitGettingResult) {
-    MOZ_ASSERT(mGetCallback);
-    mWaitGettingResult = false;
-    mGetCallback->NotifyVisibility(aIsVisible);
-    return;
-  }
-
-  if (mOnChangeCallback) {
-    mOnChangeCallback->NotifyVisibility(aIsVisible);
-  }
-}
-
 nsContentPermissionRequestProxy::nsContentPermissionRequestProxy(
     ContentPermissionRequestParent* parent)
     : mParent(parent) {
@@ -772,7 +731,6 @@ nsContentPermissionRequestProxy::~nsContentPermissionRequestProxy() = default;
 nsresult nsContentPermissionRequestProxy::Init(
     const nsTArray<PermissionRequest>& requests) {
   mPermissionRequests = requests.Clone();
-  mRequester = new nsContentPermissionRequesterProxy();
 
   nsCOMPtr<nsIContentPermissionPrompt> prompt =
       do_GetService(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
@@ -785,7 +743,6 @@ nsresult nsContentPermissionRequestProxy::Init(
 }
 
 void nsContentPermissionRequestProxy::OnParentDestroyed() {
-  mRequester = nullptr;
   mParent = nullptr;
 }
 
@@ -921,22 +878,6 @@ nsContentPermissionRequestProxy::Allow(JS::HandleValue aChoices) {
   }
 
   Unused << mParent->SendNotifyResult(true, choices);
-  return NS_OK;
-}
-
-void nsContentPermissionRequestProxy::NotifyVisibility(const bool& aIsVisible) {
-  MOZ_ASSERT(mRequester);
-
-  mRequester->NotifyVisibilityResult(aIsVisible);
-}
-
-NS_IMETHODIMP
-nsContentPermissionRequestProxy::GetRequester(
-    nsIContentPermissionRequester** aRequester) {
-  NS_ENSURE_ARG_POINTER(aRequester);
-
-  RefPtr<nsContentPermissionRequesterProxy> requester = mRequester;
-  requester.forget(aRequester);
   return NS_OK;
 }
 
