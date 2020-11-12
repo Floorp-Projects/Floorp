@@ -35,6 +35,7 @@ py2:
         - config/create_rc.py
         - config/create_res.py
         - config/printconfigsetting.py
+        - python/mozbuild/mozbuild/action/unify_symbols.py
         - python/mozbuild/mozbuild/action/unify_tests.py
         - python/mozbuild/mozbuild/html_build_viewer.py
         - python/mozbuild/mozpack/unify.py
