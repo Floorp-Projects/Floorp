@@ -10,8 +10,10 @@ const FPI_PREF = "privacy.firstparty.isolate";
 const COOKIE_BEHAVIOR_PREF = "network.cookie.cookieBehavior";
 const COOKIE_BEHAVIOR_VALUE = 5;
 
-async function testStrings(mvpUIEnabed) {
-  await SpecialPowers.pushPrefEnv({ set: [[MVP_UI_PREF, mvpUIEnabed]] });
+async function testStrings(mvpUIEnabled) {
+  info(`Running testStrings with MVP UI pref set to ${MVP_UI_PREF}`);
+
+  SpecialPowers.pushPrefEnv({ set: [[MVP_UI_PREF, mvpUIEnabled]] });
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
 
   let doc = gBrowser.contentDocument;
@@ -21,21 +23,33 @@ async function testStrings(mvpUIEnabed) {
     ".extra-information-label.cross-site-cookies-option"
   );
   for (let elt of elts) {
-    is(elt.hidden, !mvpUIEnabed, "The correct element is visible");
+    is(
+      elt.hidden,
+      !mvpUIEnabled,
+      `The new cross-site cookies info label is ${
+        mvpUIEnabled ? "visible" : "hidden"
+      }`
+    );
   }
 
   elts = doc.querySelectorAll(
     ".extra-information-label.third-party-tracking-cookies-plus-isolate-option"
   );
   for (let elt of elts) {
-    is(elt.hidden, mvpUIEnabed, `The old element ${elt.id} is hidden`);
+    is(
+      elt.hidden,
+      mvpUIEnabled,
+      `The old third party cookies info label is ${
+        mvpUIEnabled ? "hidden" : "visible"
+      }`
+    );
   }
 
   // Check the learn more strings
   elts = doc.querySelectorAll(
     ".tail-with-learn-more.content-blocking-warning-description"
   );
-  let expectedStringID = mvpUIEnabed
+  let expectedStringID = mvpUIEnabled
     ? "content-blocking-and-isolating-etp-warning-description-2"
     : "content-blocking-and-isolating-etp-warning-description";
   for (let elt of elts) {
@@ -50,7 +64,7 @@ async function testStrings(mvpUIEnabed) {
   // Check the cookie blocking mode menu option string
   let elt = doc.querySelector("#isolateCookiesSocialMedia");
   let id = doc.l10n.getAttributes(elt).id;
-  expectedStringID = mvpUIEnabed
+  expectedStringID = mvpUIEnabled
     ? "sitedata-option-block-cross-site-cookies-including-social-media"
     : "sitedata-option-block-cross-site-and-social-media-trackers-plus-isolate";
   is(
@@ -72,8 +86,8 @@ async function testStrings(mvpUIEnabed) {
   warningElt = doc.getElementById("fpiIncompatibilityWarning");
   is(
     warningElt.hidden,
-    !mvpUIEnabed,
-    `The FPI warning is ${mvpUIEnabed ? "visible" : "hidden"}`
+    !mvpUIEnabled,
+    `The FPI warning is ${mvpUIEnabled ? "visible" : "hidden"}`
   );
   await SpecialPowers.popPrefEnv();
 
