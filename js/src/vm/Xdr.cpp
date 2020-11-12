@@ -302,16 +302,37 @@ static XDRResult AtomTable(XDRState<mode>* xdr) {
 }
 
 template <XDRMode mode>
-static XDRResult ParserAtomTable(XDRState<mode>* xdr) {
+static XDRResult ParserAtomTable(XDRState<mode>* xdr,
+                                 frontend::CompilationStencil& stencil) {
   if (mode == XDR_ENCODE) {
+    uint32_t atomCount = 0;
+    for (const auto& entry : stencil.parserAtomData) {
+      if (entry->isUsedByStencil()) {
+        atomCount++;
+      }
+    }
+
+    MOZ_TRY(XDRAtomCount(xdr, &atomCount));
+
+    if (!xdr->parserAtomMap().reserve(atomCount)) {
+      return xdr->fail(JS::TranscodeResult_Throw);
+    }
+
+    uint32_t index = 0;
+
+    for (const auto& entry : stencil.parserAtomData) {
+      if (entry->isUsedByStencil()) {
+        const frontend::ParserAtom* atom = entry->asAtom();
+        MOZ_TRY(XDRParserAtomData(xdr, &atom));
+
+        xdr->parserAtomMap().putNewInfallible(atom, index);
+        index++;
+      }
+    }
+
     return Ok();
   }
 
-  // If we are incrementally encoding, the atom table will be built up over the
-  // course of the encoding. In XDRIncrementalStencilEncoder::finishChunk, we
-  // will write the number of atoms into the finished chunk, then append the
-  // completed atom table.
-  // If we are decoding, then we read the length and decode the atom table now.
   uint32_t atomCount;
   MOZ_TRY(XDRAtomCount(xdr, &atomCount));
   MOZ_ASSERT(!xdr->hasAtomTable());
@@ -430,13 +451,10 @@ XDRResult XDRState<mode>::codeStencil(
   }
 
   if (mode == XDR_ENCODE) {
-    switchToAtomBuf();
-  }
-  MOZ_TRY(ParserAtomTable(this));
-
-  if (mode == XDR_ENCODE) {
     switchToMainBuf();
   }
+  MOZ_TRY(ParserAtomTable(this, compilationInfo.stencil));
+
   MOZ_ASSERT(isMainBuf());
   MOZ_TRY(XDRCompilationStencil(this, compilationInfo.stencil));
   MOZ_TRY(finishChunk());
@@ -458,13 +476,10 @@ XDRResult XDRState<mode>::codeFunctionStencil(
   }
 
   if (mode == XDR_ENCODE) {
-    switchToAtomBuf();
-  }
-  MOZ_TRY(ParserAtomTable(this));
-
-  if (mode == XDR_ENCODE) {
     switchToMainBuf();
   }
+  MOZ_TRY(ParserAtomTable(this, stencil));
+
   MOZ_TRY(XDRCompilationStencil(this, stencil));
   MOZ_TRY(finishChunk());
 
@@ -700,16 +715,12 @@ XDRResult XDRIncrementalEncoder::linearize(JS::TranscodeBuffer& buffer) {
 XDRResult XDRIncrementalStencilEncoder::finishChunk() {
   switchToFinishedChunkBuf();
 
-  MOZ_TRY(XDRAtomCount(this, &natoms_));
   MOZ_TRY(codeBytes(atoms_.begin(), atoms_.length()));
   MOZ_TRY(codeBytes(slices_.begin(), slices_.length()));
 
   switchToMainBuf();
 
-  natoms_ = 0;
-
   atoms_.clear();
-  atomBuf_.cursor_ = 0;
   slices_.clear();
   mainBuf.cursor_ = 0;
 
