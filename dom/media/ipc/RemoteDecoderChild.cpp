@@ -91,13 +91,15 @@ RefPtr<MediaDataDecoder::InitPromise> RemoteDecoderChild::Init() {
             mIsHardwareAccelerated = initResponse.hardware();
             mHardwareAcceleratedReason = initResponse.hardwareReason();
             mConversion = initResponse.conversion();
+            // Either the promise has not yet been resolved or the handler has
+            // been disconnected and we can't get here.
             mInitPromise.Resolve(initResponse.type(), __func__);
           },
           [self](const mozilla::ipc::ResponseRejectReason& aReason) {
             self->mInitPromiseRequest.Complete();
             self->HandleRejectionError(
                 aReason, [self](const MediaResult& aError) {
-                  self->mInitPromise.Reject(aError, __func__);
+                  self->mInitPromise.RejectIfExists(aError, __func__);
                 });
           })
       ->Track(mInitPromiseRequest);
