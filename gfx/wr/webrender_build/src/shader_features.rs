@@ -65,8 +65,9 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
 
     // Clip shaders
     shaders.insert("cs_clip_rectangle", vec![String::new(), "FAST_PATH".to_string()]);
-    shaders.insert("cs_clip_image", vec!["TEXTURE_2D".to_string()]);
-    shaders.insert("cs_clip_box_shadow", vec!["TEXTURE_2D".to_string()]);
+    for name in &["cs_clip_image", "cs_clip_box_shadow"] {
+        shaders.insert(name, vec![String::new()]);
+    }
 
     // Cache shaders
     shaders.insert("cs_blur", vec!["ALPHA_TARGET".to_string(), "COLOR_TARGET".to_string()]);
@@ -185,7 +186,7 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
     }
     let mut text_features: Vec<String> = Vec::new();
     for text_type in &text_types {
-        let mut list = base_prim_features.with("TEXTURE_2D");
+        let mut list = base_prim_features.clone();
         if !text_type.is_empty() {
             list.add(text_type);
         }

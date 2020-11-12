@@ -707,10 +707,10 @@ void BufferTextureHost::PushResourceUpdates(
                     ? &wr::TransactionBuilder::AddExternalImage
                     : &wr::TransactionBuilder::UpdateExternalImage;
 
-  auto imageType = UseExternalTextures() || gfx::gfxVars::UseSoftwareWebRender()
-                       ? wr::ExternalImageType::TextureHandle(
-                             wr::ImageBufferKind::TextureRect)
-                       : wr::ExternalImageType::Buffer();
+  auto imageType =
+      UseExternalTextures() || gfx::gfxVars::UseSoftwareWebRender()
+          ? wr::ExternalImageType::TextureHandle(wr::TextureTarget::Rect)
+          : wr::ExternalImageType::Buffer();
 
   if (GetFormat() != gfx::SurfaceFormat::YUV) {
     MOZ_ASSERT(aImageKeys.length() == 1);

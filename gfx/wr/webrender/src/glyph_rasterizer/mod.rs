@@ -1153,7 +1153,7 @@ mod test_glyph_rasterizer {
         let mut glyph_rasterizer = GlyphRasterizer::new(workers).unwrap();
         let mut glyph_cache = GlyphCache::new();
         let mut gpu_cache = GpuCache::new_for_testing();
-        let mut texture_cache = TextureCache::new_for_testing(2048, FORMAT);
+        let mut texture_cache = TextureCache::new_for_testing(2048, 1024, FORMAT);
         let mut render_task_cache = RenderTaskCache::new();
         let mut render_task_tree = RenderTaskGraph::new(FrameId::INVALID, &RenderTaskGraphCounters::new());
         let mut font_file =
@@ -1205,7 +1205,7 @@ mod test_glyph_rasterizer {
 
         glyph_rasterizer.resolve_glyphs(
             &mut glyph_cache,
-            &mut TextureCache::new_for_testing(4096, FORMAT),
+            &mut TextureCache::new_for_testing(4096, 1024, FORMAT),
             &mut gpu_cache,
             &mut render_task_cache,
             &mut render_task_tree,
