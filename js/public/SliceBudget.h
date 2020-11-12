@@ -65,11 +65,6 @@ class JS_PUBLIC_API SliceBudget {
   /* Instantiate as SliceBudget(WorkBudget(n)). */
   explicit SliceBudget(WorkBudget work);
 
-  explicit SliceBudget(mozilla::TimeDuration time)
-  : SliceBudget(TimeBudget(time.ToMilliseconds()))
-  {}
-
-
   void makeUnlimited() {
     MOZ_ASSERT(unlimitedDeadline);
     deadline = unlimitedDeadline;

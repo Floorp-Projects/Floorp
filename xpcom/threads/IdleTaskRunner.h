@@ -14,10 +14,11 @@
 
 namespace mozilla {
 
-// A general purpose repeating callback runner (it can be configured to a
-// one-time runner, too.) If it is running repeatedly, one has to either
-// explicitly Cancel() the runner or have MayStopProcessing() callback return
-// true to completely remove the runner.
+// A general purpose repeating callback runner (it can be configured
+// to a one-time runner, too.) If it is running repeatedly,
+// one has to either explicitly Cancel() the runner or have
+// MayContinueProcessing() callback return false to completely remove
+// the runner.
 class IdleTaskRunner final : public IdleRunnable {
  public:
   // Return true if some meaningful work was done.
@@ -38,8 +39,6 @@ class IdleTaskRunner final : public IdleRunnable {
 
   void SetDeadline(mozilla::TimeStamp aDeadline) override;
   void SetTimer(uint32_t aDelay, nsIEventTarget* aTarget) override;
-
-  void SetBudget(int64_t aBudget);
 
   nsresult Cancel() override;
   void Schedule(bool aAllowIdleDispatch);
