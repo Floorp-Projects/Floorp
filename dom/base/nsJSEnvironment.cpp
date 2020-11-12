@@ -1540,8 +1540,9 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
 // static
 bool InterSliceGCRunnerFired(TimeStamp aDeadline, void* aData) {
   MOZ_ASSERT(sScheduler.mActiveIntersliceGCBudget);
-  TimeDuration budget = sScheduler.ComputeInterSliceGCBudget(aDeadline);
   TimeStamp startTimeStamp = TimeStamp::Now();
+  TimeDuration budget =
+      sScheduler.ComputeInterSliceGCBudget(aDeadline, startTimeStamp);
   TimeDuration duration = sGCUnnotifiedTotalTime;
   uintptr_t reason = reinterpret_cast<uintptr_t>(aData);
   nsJSContext::GarbageCollectNow(
