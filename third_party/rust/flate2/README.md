@@ -3,11 +3,11 @@
 [![Crates.io](https://img.shields.io/crates/v/flate2.svg?maxAge=2592000)](https://crates.io/crates/flate2)
 [![Documentation](https://docs.rs/flate2/badge.svg)](https://docs.rs/flate2)
 
-A streaming compression/decompression library DEFALTE-based streams in Rust.
+A streaming compression/decompression library DEFLATE-based streams in Rust.
 
-This crate by default implemented as a wrapper around the `miniz_oxide` crate, a
-port of `miniz.c` to Rust. This crate can also optionally use the zlib library
-or `miniz.c` itself.
+This crate by default uses the `miniz_oxide` crate, a port of `miniz.c` to pure
+Rust. This crate also supports other [backends](#Backends), such as the widely
+available zlib library or the high-performance zlib-ng library.
 
 Supported formats:
 
@@ -19,20 +19,6 @@ Supported formats:
 # Cargo.toml
 [dependencies]
 flate2 = "1.0"
-```
-
-Using zlib instead of the Rust backend:
-
-```toml
-[dependencies]
-flate2 = { version = "1.0", features = ["zlib"], default-features = false }
-```
-
-Using `miniz.c`:
-
-```toml
-[dependencies]
-flate2 = { version = "1.0", features = ["miniz-sys"], default-features = false }
 ```
 
 ## Compression
@@ -63,6 +49,43 @@ fn main() {
     println!("{}", s);
 }
 ```
+
+## Backends
+
+The default `miniz_oxide` backend has the advantage of being pure Rust, but if
+you're already using zlib with another C library, for example, you can use that
+for Rust code as well:
+
+```toml
+[dependencies]
+flate2 = { version = "1.0.17", features = ["zlib"], default-features = false }
+```
+
+This supports either the high-performance zlib-ng backend (in zlib-compat mode)
+or the use of a shared system zlib library. To explicitly opt into the fast
+zlib-ng backend, use:
+
+```toml
+[dependencies]
+flate2 = { version = "1.0.17", features = ["zlib-ng-compat"], default-features = false }
+```
+
+Note that if any crate in your dependency graph explicitly requests stock zlib,
+or uses libz-sys directly without `default-features = false`, you'll get stock
+zlib rather than zlib-ng. See [the libz-sys
+README](https://github.com/rust-lang/libz-sys/blob/main/README.md) for details.
+
+For compatibility with previous versions of `flate2`, the cloudflare optimized
+version of zlib is available, via the `cloudflare_zlib` feature. It's not as
+fast as zlib-ng, but it's faster than stock zlib. It requires a x86-64 CPU with
+SSE 4.2 or ARM64 with NEON & CRC. It does not support 32-bit CPUs at all and is
+incompatible with mingw. For more information check the [crate
+documentation](https://crates.io/crates/cloudflare-zlib-sys). Note that
+`cloudflare_zlib` will cause breakage if any other crate in your crate graph
+uses another version of zlib/libz.
+
+For compatibility with previous versions of `flate2`, the C version of `miniz.c`
+is still available, using the feature `miniz-sys`.
 
 # License
 
