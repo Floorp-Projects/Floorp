@@ -6,6 +6,7 @@
 const CB_STRICT_FEATURES_PREF = "browser.contentblocking.features.strict";
 const CB_STRICT_FEATURES_VALUE = "tp,tpPrivate,cookieBehavior5,cm,fp,stp";
 const MVP_UI_PREF = "browser.contentblocking.state-partitioning.mvp.ui.enabled";
+const FPI_PREF = "privacy.firstparty.isolate";
 const COOKIE_BEHAVIOR_PREF = "network.cookie.cookieBehavior";
 const COOKIE_BEHAVIOR_VALUE = 5;
 
@@ -58,12 +59,33 @@ async function testStrings(mvpUIEnabed) {
     "The correct string is in use for the cookie blocking option"
   );
 
+  // Check the FPI warning is hidden with FPI off
+  let warningElt = doc.getElementById("fpiIncompatibilityWarning");
+  is(warningElt.hidden, true, "The FPI warning is hidden");
+
+  gBrowser.removeCurrentTab();
+
+  // Check the FPI warning is shown only if MVP UI is enabled when FPI is on
+  await SpecialPowers.pushPrefEnv({ set: [[FPI_PREF, true]] });
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  doc = gBrowser.contentDocument;
+  warningElt = doc.getElementById("fpiIncompatibilityWarning");
+  is(
+    warningElt.hidden,
+    !mvpUIEnabed,
+    `The FPI warning is ${mvpUIEnabed ? "visible" : "hidden"}`
+  );
+  await SpecialPowers.popPrefEnv();
+
   gBrowser.removeCurrentTab();
 }
 
 add_task(async function runTests() {
   await SpecialPowers.pushPrefEnv({
-    set: [[CB_STRICT_FEATURES_PREF, CB_STRICT_FEATURES_VALUE]],
+    set: [
+      [CB_STRICT_FEATURES_PREF, CB_STRICT_FEATURES_VALUE],
+      [FPI_PREF, false],
+    ],
   });
   let defaults = Services.prefs.getDefaultBranch("");
   let originalCookieBehavior = defaults.getIntPref(COOKIE_BEHAVIOR_PREF);

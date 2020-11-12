@@ -4,6 +4,10 @@
 
 /* Permissions */
 
+#trackingGroup {
+  --section-highlight-background-color: rgba(69, 161, 255, 0.2);
+}
+
 .content-blocking-icon,
 .permission-icon,
 .content-blocking-checkbox {
@@ -60,9 +64,20 @@
 .arrowhead,
 .content-blocking-info-image,
 .reload-tabs-button,
-.content-blocking-warning-image {
+.content-blocking-warning-image,
+.fpi-warning-icon {
   -moz-context-properties: fill;
   fill: currentColor;
+}
+
+.fpi-warning-icon {
+  /* The target size for this icon is 14px, but to be consistent with the
+     other icons and alignment in the page we use a 20px size with 3px padding */
+  width: 20px;
+  height: 20px;
+  padding: 3px;
+  margin-inline-end: 10px; /* Aligns text with other sections */
+  margin-block-start: 3px;
 }
 
 .content-blocking-icon[disabled] {
@@ -109,10 +124,6 @@
   margin-top: 10px;
 }
 
-#contentBlockingCategories {
-  margin-top: 16px;
-}
-
 #trackingProtectionShield {
   list-style-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg");
   -moz-context-properties: fill, fill-opacity;
@@ -123,10 +134,23 @@
   margin-inline-end: 10px;
 }
 
-.content-blocking-category {
+.content-blocking-category,
+#fpiIncompatibilityWarning {
   border-radius: 4px;
   margin: 3px 0;
   padding: 9px;
+}
+
+#fpiIncompatibilityWarning {
+  background-color: var(--section-highlight-background-color);
+}
+
+#fpiIncompatibilityWarning,
+#contentBlockingCategories {
+  margin-top: 16px;
+}
+
+.content-blocking-category {
   border: 1px solid var(--in-content-border-color);
   background-color: rgba(215, 215, 219, 0.2);
 }
@@ -243,7 +267,7 @@
 
 .content-blocking-category.selected {
   border: 1px solid #45A1FF;
-  background-color: rgba(69, 161, 255, 0.2);
+  background-color: var(--section-highlight-background-color);
 }
 
 .content-blocking-warning-title,
@@ -283,7 +307,7 @@
 }
 
 .content-blocking-warning {
-  background-color: rgba(69, 161, 255, 0.2);
+  background-color: var(--section-highlight-background-color);
   border-radius: 4px;
   padding: 10px 0;
   margin: 10px 0;
