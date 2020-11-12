@@ -6,10 +6,12 @@ package org.mozilla.fenix.settings
 
 import android.os.Bundle
 import android.view.View
+import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.utils.view.addToRadioGroup
 
@@ -49,6 +51,10 @@ class TabsSettingsFragment : PreferenceFragmentCompat() {
         radioOneMonth = requirePreference(R.string.pref_key_close_tabs_after_one_month)
 
         setupRadioGroups()
+
+        requirePreference<PreferenceCategory>(R.string.pref_key_tab_view_category).apply {
+            isVisible = context.settings().showGridViewInTabsSettings
+        }
     }
 
     private fun setupRadioGroups() {
