@@ -327,28 +327,44 @@ class Core(
 
         strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
             if (!context.settings().defaultTopSitesAdded) {
-                defaultTopSites.add(
-                    Pair(
-                        context.getString(R.string.default_top_site_google),
-                        SupportUtils.GOOGLE_URL
-                    )
-                )
-
-                if (LocaleManager.getSelectedLocale(context).language == "en") {
+                if (Config.channel.isMozillaOnline) {
                     defaultTopSites.add(
                         Pair(
-                            context.getString(R.string.pocket_pinned_top_articles),
-                            SupportUtils.POCKET_TRENDING_URL
+                            context.getString(R.string.default_top_site_baidu),
+                            SupportUtils.BAIDU_URL
+                        )
+                    )
+
+                    defaultTopSites.add(
+                        Pair(
+                            context.getString(R.string.default_top_site_jd),
+                            SupportUtils.JD_URL
+                        )
+                    )
+                } else {
+                    defaultTopSites.add(
+                        Pair(
+                            context.getString(R.string.default_top_site_google),
+                            SupportUtils.GOOGLE_URL
+                        )
+                    )
+
+                    if (LocaleManager.getSelectedLocale(context).language == "en") {
+                        defaultTopSites.add(
+                            Pair(
+                                context.getString(R.string.pocket_pinned_top_articles),
+                                SupportUtils.POCKET_TRENDING_URL
+                            )
+                        )
+                    }
+
+                    defaultTopSites.add(
+                        Pair(
+                            context.getString(R.string.default_top_site_wikipedia),
+                            SupportUtils.WIKIPEDIA_URL
                         )
                     )
                 }
-
-                defaultTopSites.add(
-                    Pair(
-                        context.getString(R.string.default_top_site_wikipedia),
-                        SupportUtils.WIKIPEDIA_URL
-                    )
-                )
 
                 context.settings().defaultTopSitesAdded = true
             }

@@ -23,6 +23,11 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">您的隐私标签页将显示于此。</string>
 
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">百度</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">京东</string>
+
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">打开了 1 个标签页，点击即可切换。</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->

@@ -72,6 +72,12 @@ class TopSiteItemViewHolder(
             SupportUtils.POCKET_TRENDING_URL -> {
                 favicon_image.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_pocket))
             }
+            SupportUtils.BAIDU_URL -> {
+                favicon_image.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_baidu))
+            }
+            SupportUtils.JD_URL -> {
+                favicon_image.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_jd))
+            }
             else -> {
                 itemView.context.components.core.icons.loadIntoView(favicon_image, topSite.url)
             }
