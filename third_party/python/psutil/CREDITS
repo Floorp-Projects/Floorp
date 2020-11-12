@@ -1,0 +1,666 @@
+Intro
+=====
+
+I would like to recognize some of the people who have been instrumental in the
+development of psutil. I'm sure I'm forgetting somebody (feel free to email me)
+but here is a short list. It's modeled after the Linux CREDITS file where the
+fields are: name (N), e-mail (E), website (W), country (C), description (D),
+(I) issues. Issue tracker is at https://github.com/giampaolo/psutil/issues).
+A big thanks to all of you.
+
+- Giampaolo
+
+Author
+======
+
+N: Giampaolo Rodola
+C: Italy
+E: g.rodola@gmail.com
+W: http://grodola.blogspot.com/
+
+Experts
+=======
+
+Github usernames of people to CC on github when in need of help.
+
+- NetBSD:
+    - 0-wiz-0, Thomas Klausner
+    - ryoqun, Ryo Onodera
+- OpenBSD:
+    - landryb, Landry Breuil
+- FreeBSD:
+    - glebius, Gleb Smirnoff (#1013)
+    - sunpoet, Po-Chuan Hsieh (pkg maintainer, #1105)
+    - kostikbel, Konstantin Belousov (#1105)
+- macOS:
+    - whitlockjc, Jeremy Whitlock
+- Windows:
+    - mrjefftang, Jeff Tang
+    - wj32, Wen Jia Liu
+    - fbenkstein, Frank Benkstein
+- SunOS:
+    - wiggin15, Arnon Yaari
+    - alxchk, Oleksii Shevchuk
+- AIX:
+    - wiggin15, Arnon Yaari (maintainer)
+
+Top contributors
+================
+
+N: Jay Loden
+C: NJ, USA
+E: jloden@gmail.com
+D: original co-author, initial design/bootstrap and occasional bug fixes
+W: http://www.jayloden.com
+
+N: Arnon Yaari (wiggin15)
+W: https://github.com/wiggin15
+D: AIX implementation, expert on multiple fronts
+I: 517, 607, 610, 1131, 1123, 1130, 1154, 1164, 1174, 1177, 1210, 1214, 1408,
+   1329, 1276, 1494, 1528.
+
+N: Alex Manuskin
+W: https://github.com/amanusk
+D: FreeBSD cpu_freq(), OSX temperatures, support for Linux temperatures.
+I: 1284, 1345, 1350, 1352, 1472, 1481, 1487.
+
+N: Jeff Tang
+W: https://github.com/mrjefftang
+I: 340, 529, 616, 653, 654, 648, 641
+
+N: Jeremy Whitlock
+E: jcscoobyrs@gmail.com
+D: great help with macOS C development.
+I: 125, 150, 174, 206
+
+N: Landry Breuil
+W: https://github.com/landryb
+D: OpenBSD implementation.
+I: 615
+
+N: Justin Venus
+E: justin.venus@gmail.com
+D: Solaris support
+I: 18
+
+N: Thomas Klausner
+W: https://github.com/0-wiz-0
+D: NetBSD implementation (co-author).
+I: 557
+
+N: Ryo Onodera
+W: https://github.com/ryoon
+D: NetBSD implementation (co-author).
+I: 557
+
+Contributors
+============
+
+N: wj32
+E: wj32.64@gmail.com
+D: process username() and get_connections() on Windows
+I: 114, 115
+
+N: Yan Raber
+C: Bologna, Italy
+E: yanraber@gmail.com
+D: help on Windows development (initial version of Process.username())
+
+N: Dave Daeschler
+C: USA
+E: david.daeschler@gmail.com
+W: http://daviddaeschler.com
+D: some contributions to initial design/bootstrap plus occasional bug fixing
+I: 522, 536
+
+N: cjgohlke
+E: cjgohlke@gmail.com
+D: Windows 64 bit support
+I: 107
+
+N: Frank Benkstein
+D: process environ()
+W: https://github.com/fbenkstein
+I: 732, 733
+
+N: Mozilla Foundation
+D: sample code for process USS memory.
+
+N: EccoTheFlintstone
+W: https://github.com/EccoTheFlintstone
+I: 1368, 1348
+
+----
+
+N: Jeffery Kline
+E: jeffery.kline@gmail.com
+I: 130
+
+N: Grabriel Monnerat
+E: gabrielmonnerat@gmail.com
+I: 146
+
+N: Philip Roberts
+E: philip.roberts@gmail.com
+I: 168
+
+N: jcscoobyrs
+E: jcscoobyrs@gmail.com
+I: 125
+
+N: Sandro Tosi
+E: sandro.tosi@gmail.com
+I: 200, 201
+
+N: Andrew Colin
+E: andrew.colin@gmail.com
+I: 248
+
+N: Amoser
+E: amoser@google.com
+I: 266, 267, 340
+
+N: Matthew Grant
+E: matthewgrant5@gmail.com
+I: 271
+
+N: oweidner
+E: oweidner@cct.lsu.edu
+I: 275
+
+N: Tarek Ziade
+E: ziade.tarek
+I: 281
+
+N: Luca Cipriani
+C: Turin, Italy
+E: luca.opensource@gmail.com
+I: 278
+
+N: Maciej Lach,
+E: maciej.lach@gmail.com
+I: 294
+
+N: James Pye
+E: james.pye@gmail.com
+I: 305, 306
+
+N: Stanchev Emil
+E: stanchev.emil
+I: 314
+
+N: Kim Gräsman
+E: kim.grasman@gmail.com
+D: ...also kindly donated some money.
+I: 316
+
+N: Riccardo Murri
+C: Italy
+I: 318
+
+N: Florent Xicluna
+E: florent.xicluna@gmail.com
+I: 319
+
+N: Michal Spondr
+E: michal.spondr
+I: 313
+
+N: Jean Sebastien
+E: dumbboules@gmail.com
+I: 344
+
+N: Rob Smith
+W: http://www.kormoc.com/
+I: 341
+
+N: Youngsik Kim
+W: https://plus.google.com/101320747613749824490/
+I: 317
+
+N: Gregory Szorc
+W: https://plus.google.com/116873264322260110710/posts
+I: 323
+
+N: André Oriani
+E: aoriani@gmail.com
+I: 361
+
+N: clackwell
+E: clackwell@gmail.com
+I: 356
+
+N: m.malycha
+E: m.malycha@gmail.com
+I: 351
+
+N: John Baldwin
+E: jhb@FreeBSD.org
+I: 370
+
+N: Jan Beich
+E: jbeich@tormail.org
+I: 325
+
+N: floppymaster
+E: floppymaster@gmail.com
+I: 380
+
+N: Arfrever.FTA
+E: Arfrever.FTA@gmail.com
+I: 369, 404
+
+N: danudey
+E: danudey@gmail.com
+I: 386
+
+N: Adrien Fallou
+I: 224
+
+N: Gisle Vanem
+E: gisle.vanem@gmail.com
+I: 411
+
+N: thepyr0
+E: thepyr0@gmail.com
+I: 414
+
+N: John Pankov
+E: john.pankov@gmail.com
+I: 435
+
+N: Matt Good
+W: http://matt-good.net/
+I: 438
+
+N: Ulrich Klank
+E: ulrich.klank@scitics.de
+I: 448
+
+N: Josiah Carlson
+E: josiah.carlson@gmail.com
+I: 451, 452
+
+N: Raymond Hettinger
+D: namedtuple and lru_cache backward compatible implementations.
+
+N: Jason Kirtland
+D: backward compatible implementation of collections.defaultdict.
+
+M: Ken Seeho
+D: @cached_property decorator
+
+N: crusaderky
+E: crusaderky@gmail.com
+I: 470, 477
+
+E: alex@mroja.net
+I: 471
+
+N: Gautam Singh
+E: gautam.singh@gmail.com
+I: 466
+
+E: lhn@hupfeldtit.dk
+I: 476, 479
+
+N: Francois Charron
+E: francois.charron.1@gmail.com
+I: 474
+
+N: Naveed Roudsari
+E: naveed.roudsari@gmail.com
+I: 421
+
+N: Alexander Grothe
+E: Alexander.Grothe@gmail.com
+I: 497
+
+N: Szigeti Gabor Niif
+E: szigeti.gabor.niif@gmail.com
+I: 446
+
+N: msabramo
+E: msabramo@gmail.com
+I: 492
+
+N: Yaolong Huang
+E: airekans@gmail.com
+W: http://airekans.github.io/
+I: 530
+
+N: Anders Chrigström
+W: https://github.com/anders-chrigstrom
+I: 496
+
+N: spacewander
+W: https://github.com/spacewander
+E: spacewanderlzx@gmail.com
+I: 561, 603
+
+N: Sylvain Mouquet
+E: sylvain.mouquet@gmail.com
+I: 565
+
+N: karthikrev
+I: 568
+
+N: Bruno Binet
+E: bruno.binet@gmail.com
+I: 572
+
+N: Gabi Davar
+C: Israel
+W: https://github.com/mindw
+I: 578, 581, 587
+
+N: spacewanderlzx
+C: Guangzhou,China
+E: spacewanderlzx@gmail.com
+I: 555
+
+N: Fabian Groffen
+I: 611, 618
+
+N: desbma
+W: https://github.com/desbma
+C: France
+I: 628
+
+N: John Burnett
+W: http://www.johnburnett.com/
+C: Irvine, CA, US
+I: 614
+
+N: Árni Már Jónsson
+E: Reykjavik, Iceland
+E: https://github.com/arnimarj
+I: 634
+
+N: Bart van Kleef
+W: https://github.com/bkleef
+I: 664
+
+N: Steven Winfield
+W: https://github.com/stevenwinfield
+I: 672
+
+N: sk6249
+W: https://github.com/sk6249
+I: 670
+
+N: maozguttman
+W: https://github.com/maozguttman
+I: 659
+
+N: dasumin
+W: https://github.com/dasumin
+I: 541
+
+N: Mike Sarahan
+W: https://github.com/msarahan
+I: 688
+
+N: Syohei YOSHIDA
+W: https://github.com/syohex
+I: 730
+
+N: Visa Hankala
+E: visa@openbsd.org
+I: 741
+
+N: Sebastian-Gabriel Brestin
+C: Romania
+E: sebastianbrestin@gmail.com
+I: 704
+
+N: Timmy Konick
+W: https://github.com/tijko
+I: 751
+
+N: mpderbec
+W: https://github.com/mpderbec
+I: 660
+
+N: wxwright
+W: https://github.com/wxwright
+I: 776
+
+N: Farhan Khan
+E: khanzf@gmail.com
+I: 823
+
+N: Jake Omann
+E: https://github.com/jomann09
+I: 816, 775
+
+N: Jeremy Humble
+W: https://github.com/jhumble
+I: 863
+
+N: Ilya Georgievsky
+W: https://github.com/xBeAsTx
+I: 870
+
+N: Yago Jesus
+W: https://github.com/YJesus
+I: 798
+
+N: Andre Caron
+C: Montreal, QC, Canada
+E: andre.l.caron@gmail.com
+W: https://github.com/AndreLouisCaron
+I: 880
+
+N: ewedlund
+W: https://github.com/ewedlund
+I: 874
+
+N: Arcadiy Ivanov
+W: https://github.com/arcivanov
+I: 919
+
+N: Max Bélanger
+W: https://github.com/maxbelanger
+I: 936, 1133
+
+N: Pierre Fersing
+C: France
+E: pierre.fersing@bleemeo.com
+I: 950
+
+N: Thiago Borges Abdnur
+W: https://github.com/bolaum
+I: 959
+
+N: Nicolas Hennion
+W: https://github.com/nicolargo
+I: 974
+
+N: Baruch Siach
+W: https://github.com/baruchsiach
+I: 872
+
+N: Danek Duvall
+W: https://github.com/dhduvall
+I: 1002
+
+N: Alexander Hasselhuhn
+C: Germany
+W: https://github.com/alexanha
+
+N: Himanshu Shekhar
+W: https://github.com/himanshub16
+I: 1036
+
+N: Yannick Gingras
+W: https://github.com/ygingras
+I: 1057
+
+N: Gleb Smirnoff
+W: https://github.com/glebius
+D: good help with FreeBSD
+I: 1042, 1079, 1070
+
+N: Oleksii Shevchuk
+W: https://github.com/alxchk
+I: 1077, 1093, 1091, 1220, 1346
+
+N: Prodesire
+W: https://github.com/Prodesire
+I: 1138
+
+N: Sebastian Saip
+W: https://github.com/ssaip
+I: 1141
+
+N: Jakub Bacic
+W: https://github.com/jakub-bacic
+I: 1127
+
+N: Akos Kiss
+W: https://github.com/akosthekiss
+I: 1150
+
+N: Adrian Page
+W: https://github.com/adpag
+I: 1159, 1160, 1161
+
+N: Matthew Long
+W: https://github.com/matray
+I: 1167
+
+N: janderbrain
+W: https://github.com/janderbrain
+I: 1169
+
+N: Dan Vinakovsky
+W: https://github.com/hexaclock
+I: 1216
+
+N: stswandering
+W: https://github.com/stswandering
+I: 1243
+
+N: Georg Sauthoff
+W: https://github.com/gsauthof
+I: 1193, 1194
+
+N: Maxime Mouial
+W: https://github.com/hush-hush
+I: 1239
+
+N: Denis Krienbühl
+W: https://github.com/href
+I: 1260
+
+N: Jean-Luc Migot
+W: https://github.com/jmigot-tehtris
+I: 1258, 1289
+
+N: Nikhil Marathe
+W: https://github.com/nikhilm
+I: 1278
+
+N: Sylvain Duchesne
+W: https://github.com/sylvainduchesne
+I: 1294
+
+N: Lawrence Ye
+W: https://github.com/LEAFERx
+I: 1321
+
+N: Ilya Yanok
+W: https://github.com/yanok
+I: 1332
+
+N: Jaime Fullaondo
+W: https://github.com/truthbk
+D: AIX support
+I: 1320
+
+N: Koen Kooi
+W: https://github.com/koenkooi
+I: 1360
+
+N: Ghislain Le Meur
+W: https://github.com/gigi206
+D: idea for Process.parents()
+I: 1379
+
+N: Benjamin Drung
+D: make tests invariant to LANG setting
+W: https://github.com/bdrung
+I: 1462
+
+N: Xiaoling Bao
+I: 1223
+
+N: Cedric Lamoriniere
+W: https://github.com/clamoriniere
+I: 1470
+
+N: Daniel Beer
+W: https://github.com/dbeer1
+I: 1471
+
+N: Samer Masterson
+W: https://github.com/samertm
+I: 1480
+
+N: Ammar Askar
+E: ammar@ammaraskar.com
+W: http://ammaraskar.com/
+I: 604, 1484
+
+N: agnewee
+W: https://github.com/Agnewee
+C: China
+I: 1491
+
+N: Kamil Rytarowski
+W: https://github.com/krytarowski
+C: Poland
+I: 1526, 1530
+
+N: Athos Ribeiro
+W: https://github.com/athos-ribeiro
+I: 1585
+
+N: Erwan Le Pape
+W: https://github.com/erwan-le-pape
+I: 1570
+
+N: Étienne Servais
+W: https://github.com/vser1
+I: 1607, 1637
+
+N: Bernát Gábor
+W: https://github.com/gaborbernat
+I: 1565
+
+N: Nathan Houghton
+W: https://github.com/n1000
+I: 1619
+
+N: Riccardo Schirone
+W: https://github.com/ret2libc
+C: Milano, Italy
+I: 1616
+
+N: Po-Chuan Hsieh
+W: https://github.com/sunpoet
+C: Taiwan
+I: 1646
+
+N: Javad Karabi
+W: https://github.com/karabijavad
+I: 1648
+
+N: Mike Hommey
+W: https://github.com/glandium
+I: 1665
+
+N: Anselm Kruis
+W: https://github.com/akruis
+I: 1695

@@ -207,20 +207,6 @@ jobs:
                 sha256: 9727dcb3d6b655e4f2a92110f5db076a490aa50b739804be239905ecff3aacc8
             patch: gdb-jessie.diff
 
-    deb8-python-psutil:
-        description: "python-psutil rebuild for python 3.6 in Debian jessie"
-        treeherder:
-            symbol: Deb8(python-psutil)
-        run:
-            using: debian-package
-            dsc:
-                url: http://snapshot.debian.org/archive/debian/20150815T034233Z/pool/main/p/python-psutil/python-psutil_2.2.1-3.dsc
-                sha256: b47d1fc92094dfd5525cff7d0af5855f7c5335ade9de4c0e738ed490aa5bee7c
-            packages:
-                - deb8-dh-python
-                - deb8-python3.6
-                - deb8-python3-defaults
-
     deb8-python-zstandard:
         description: "python-zstandard for Debian jessie"
         treeherder:
