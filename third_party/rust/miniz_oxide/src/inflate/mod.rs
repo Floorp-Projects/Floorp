@@ -1,7 +1,10 @@
 //! This module contains functionality for decompression.
 
-use std::io::Cursor;
-use std::usize;
+use crate::alloc::boxed::Box;
+use crate::alloc::vec;
+use crate::alloc::vec::Vec;
+use ::core::cmp::min;
+use ::core::usize;
 
 pub mod core;
 mod output_buffer;
@@ -59,7 +62,7 @@ impl TINFLStatus {
 /// Returns a status and an integer representing where the decompressor failed on failure.
 #[inline]
 pub fn decompress_to_vec(input: &[u8]) -> Result<Vec<u8>, TINFLStatus> {
-    decompress_to_vec_inner(input, 0)
+    decompress_to_vec_inner(input, 0, usize::max_value())
 }
 
 /// Decompress the deflate-encoded data (with a zlib wrapper) in `input` to a vector.
@@ -67,25 +70,53 @@ pub fn decompress_to_vec(input: &[u8]) -> Result<Vec<u8>, TINFLStatus> {
 /// Returns a status and an integer representing where the decompressor failed on failure.
 #[inline]
 pub fn decompress_to_vec_zlib(input: &[u8]) -> Result<Vec<u8>, TINFLStatus> {
-    decompress_to_vec_inner(input, inflate_flags::TINFL_FLAG_PARSE_ZLIB_HEADER)
+    decompress_to_vec_inner(
+        input,
+        inflate_flags::TINFL_FLAG_PARSE_ZLIB_HEADER,
+        usize::max_value(),
+    )
 }
 
-fn decompress_to_vec_inner(input: &[u8], flags: u32) -> Result<Vec<u8>, TINFLStatus> {
+/// Decompress the deflate-encoded data in `input` to a vector.
+/// The vector is grown to at most `max_size` bytes; if the data does not fit in that size,
+/// `TINFLStatus::HasMoreOutput` error is returned.
+///
+/// Returns a status and an integer representing where the decompressor failed on failure.
+#[inline]
+pub fn decompress_to_vec_with_limit(input: &[u8], max_size: usize) -> Result<Vec<u8>, TINFLStatus> {
+    decompress_to_vec_inner(input, 0, max_size)
+}
+
+/// Decompress the deflate-encoded data (with a zlib wrapper) in `input` to a vector.
+/// The vector is grown to at most `max_size` bytes; if the data does not fit in that size,
+/// `TINFLStatus::HasMoreOutput` error is returned.
+///
+/// Returns a status and an integer representing where the decompressor failed on failure.
+#[inline]
+pub fn decompress_to_vec_zlib_with_limit(
+    input: &[u8],
+    max_size: usize,
+) -> Result<Vec<u8>, TINFLStatus> {
+    decompress_to_vec_inner(input, inflate_flags::TINFL_FLAG_PARSE_ZLIB_HEADER, max_size)
+}
+
+fn decompress_to_vec_inner(
+    input: &[u8],
+    flags: u32,
+    max_output_size: usize,
+) -> Result<Vec<u8>, TINFLStatus> {
     let flags = flags | inflate_flags::TINFL_FLAG_USING_NON_WRAPPING_OUTPUT_BUF;
-    let mut ret: Vec<u8> = vec![0; input.len() * 2];
+    let mut ret: Vec<u8> = vec![0; min(input.len().saturating_mul(2), max_output_size)];
 
     let mut decomp = Box::<DecompressorOxide>::default();
 
     let mut in_pos = 0;
     let mut out_pos = 0;
     loop {
-        let (status, in_consumed, out_consumed) = {
-            // Wrap the whole output slice so we know we have enough of the
-            // decompressed data for matches.
-            let mut c = Cursor::new(ret.as_mut_slice());
-            c.set_position(out_pos as u64);
-            decompress(&mut decomp, &input[in_pos..], &mut c, flags)
-        };
+        // Wrap the whole output slice so we know we have enough of the
+        // decompressed data for matches.
+        let (status, in_consumed, out_consumed) =
+            decompress(&mut decomp, &input[in_pos..], &mut ret, out_pos, flags);
         in_pos += in_consumed;
         out_pos += out_consumed;
 
@@ -96,8 +127,15 @@ fn decompress_to_vec_inner(input: &[u8], flags: u32) -> Result<Vec<u8>, TINFLSta
             }
 
             TINFLStatus::HasMoreOutput => {
-                // We need more space so resize the buffer.
-                ret.resize(ret.len() + out_pos, 0);
+                // We need more space, so check if we can resize the buffer and do it.
+                let new_len = ret
+                    .len()
+                    .checked_add(out_pos)
+                    .ok_or(TINFLStatus::HasMoreOutput)?;
+                if new_len > max_output_size {
+                    return Err(TINFLStatus::HasMoreOutput);
+                };
+                ret.resize(new_len, 0);
             }
 
             _ => return Err(status),
@@ -107,14 +145,30 @@ fn decompress_to_vec_inner(input: &[u8], flags: u32) -> Result<Vec<u8>, TINFLSta
 
 #[cfg(test)]
 mod test {
-    use super::decompress_to_vec_zlib;
+    use super::TINFLStatus;
+    use super::{decompress_to_vec_zlib, decompress_to_vec_zlib_with_limit};
+    const encoded: [u8; 20] = [
+        120, 156, 243, 72, 205, 201, 201, 215, 81, 168, 202, 201, 76, 82, 4, 0, 27, 101, 4, 19,
+    ];
 
     #[test]
     fn decompress_vec() {
-        let encoded = [
-            120, 156, 243, 72, 205, 201, 201, 215, 81, 168, 202, 201, 76, 82, 4, 0, 27, 101, 4, 19,
-        ];
         let res = decompress_to_vec_zlib(&encoded[..]).unwrap();
         assert_eq!(res.as_slice(), &b"Hello, zlib!"[..]);
+    }
+
+    #[test]
+    fn decompress_vec_with_high_limit() {
+        let res = decompress_to_vec_zlib_with_limit(&encoded[..], 100_000).unwrap();
+        assert_eq!(res.as_slice(), &b"Hello, zlib!"[..]);
+    }
+
+    #[test]
+    fn fail_to_decompress_with_limit() {
+        let res = decompress_to_vec_zlib_with_limit(&encoded[..], 8);
+        match res {
+            Err(TINFLStatus::HasMoreOutput) => (), // expected result
+            _ => panic!("Decompression output size limit was not enforced"),
+        }
     }
 }
