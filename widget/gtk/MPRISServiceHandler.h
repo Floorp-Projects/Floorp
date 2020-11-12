@@ -75,6 +75,7 @@ class MPRISServiceHandler final : public dom::MediaControlKeySource {
   GVariant* GetPlaybackStatus() const;
 
   const char* Identity() const;
+  const char* DesktopEntry() const;
   bool PressKey(dom::MediaControlKey aKey) const;
 
   void SetMediaMetadata(const dom::MediaMetadataBase& aMetadata) override;
@@ -100,6 +101,7 @@ class MPRISServiceHandler final : public dom::MediaControlKeySource {
   GDBusConnection* mConnection = nullptr;
   bool mInitialized = false;
   nsAutoCString mIdentity;
+  nsAutoCString mDesktopEntry;
 
   nsCString mMimeType;
 

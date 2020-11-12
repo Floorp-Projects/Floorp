@@ -78,6 +78,7 @@ static void HandleMethodCall(GDBusConnection* aConnection, const gchar* aSender,
 
 enum class Property : uint8_t {
   eIdentity,
+  eDesktopEntry,
   eHasTrackList,
   eCanRaise,
   eCanQuit,
@@ -115,6 +116,7 @@ static inline Maybe<Property> GetProperty(const gchar* aPropertyName) {
   const std::unordered_map<std::string, Property> map = {
       // org.mpris.MediaPlayer2 properties
       {"Identity", Property::eIdentity},
+      {"DesktopEntry", Property::eDesktopEntry},
       {"HasTrackList", Property::eHasTrackList},
       {"CanRaise", Property::eCanRaise},
       {"CanQuit", Property::eCanQuit},
@@ -163,6 +165,8 @@ static GVariant* HandleGetProperty(GDBusConnection* aConnection,
       return handler->GetMetadataAsGVariant();
     case Property::eIdentity:
       return g_variant_new_string(handler->Identity());
+    case Property::eDesktopEntry:
+      return g_variant_new_string(handler->DesktopEntry());
     case Property::eHasTrackList:
     case Property::eCanQuit:
     case Property::eCanSeek:
@@ -355,23 +359,30 @@ bool MPRISServiceHandler::IsOpened() const { return mInitialized; }
 
 void MPRISServiceHandler::InitIdentity() {
   nsresult rv;
-  nsAutoCString appName;
   nsCOMPtr<nsIXULAppInfo> appInfo =
       do_GetService("@mozilla.org/xre/app-info;1", &rv);
 
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   rv = appInfo->GetVendor(mIdentity);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
-  rv = appInfo->GetName(appName);
+  rv = appInfo->GetName(mDesktopEntry);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   mIdentity.Append(' ');
-  mIdentity.Append(appName);
+  mIdentity.Append(mDesktopEntry);
+
+  // Compute the desktop entry name like nsAppRunner does for g_set_prgname
+  ToLowerCase(mDesktopEntry);
 }
 
 const char* MPRISServiceHandler::Identity() const {
   MOZ_ASSERT(mInitialized);
   return mIdentity.get();
+}
+
+const char* MPRISServiceHandler::DesktopEntry() const {
+  MOZ_ASSERT(mInitialized);
+  return mDesktopEntry.get();
 }
 
 bool MPRISServiceHandler::PressKey(mozilla::dom::MediaControlKey aKey) const {
