@@ -490,7 +490,8 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
                                ToTimingStructArgs(mTransaction->Timings()),
                                proxyConnectResponseCode, dataForSniffer,
                                optionalAltSvcUsed, !!mDataBridgeParent,
-                               mTransaction->TakeRestartedState(), stage);
+                               mTransaction->TakeRestartedState(), stage,
+                               mTransaction->GetSupportsHTTP3());
   return NS_OK;
 }
 
