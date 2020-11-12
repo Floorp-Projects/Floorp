@@ -1573,6 +1573,7 @@ dependencies = [
  "chrono",
  "crossbeam-channel",
  "ffi-support",
+ "glean",
  "glean-core",
  "log",
  "nsstring",
@@ -1597,6 +1598,7 @@ version = "0.1.0"
 dependencies = [
  "cstr",
  "fog",
+ "glean",
  "glean-core",
  "log",
  "nserror",
@@ -2105,6 +2107,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "glean"
+version = "33.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3a923bbc7c67c1699fe237a027af35e5040d022dcde3856536aea072f08b40d"
+dependencies = [
+ "crossbeam-channel",
+ "glean-core",
+ "inherent",
+ "log",
+ "once_cell",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "glean-core"
 version = "33.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2430,6 +2448,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1cdb29978cc5797bd8dcc8e5bf7de604891df2a8dc576973d71a281e916db2ff"
 dependencies = [
  "adler32",
+]
+
+[[package]]
+name = "inherent"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2db418475edf9eb55fec92b7527be6d9a7b880bff6651cb0c0345af57f1cadf"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
