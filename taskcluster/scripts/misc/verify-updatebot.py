@@ -16,7 +16,9 @@ More simply: If this job fails, any patches by Updatebot SHOULD NOT land
 from __future__ import absolute_import, print_function
 
 import re
+import os
 import sys
+import requests
 import subprocess
 
 RE_BUG = re.compile("Bug (\d+)")
@@ -49,18 +51,32 @@ class Revision:
 # ================================================================================================
 # Find all commits we are hopefully landing in this push
 
-
-revisions = subprocess.check_output(
-    [
-        "hg",
-        "log",
-        "--template",
-        "{node} | {author} | {desc|firstline}\n",
-        "-r",
-        "!public()",
-    ]
+assert os.environ.get("GECKO_HEAD_REV"), "No revision head in the environment"
+assert os.environ.get("GECKO_HEAD_REPOSITORY"), "No repository in the environment"
+url = "%s/json-pushes?changeset=%s&version=2" % (
+    os.environ.get("GECKO_HEAD_REPOSITORY"),
+    os.environ.get("GECKO_HEAD_REV"),
 )
-revisions = revisions.decode("utf-8").split("\n")
+response = requests.get(url)
+revisions_json = response.json()
+
+assert len(revisions_json["pushes"]) >= 1, "Did not see a push in the autoland API"
+pushid = list(revisions_json["pushes"].keys())[0]
+rev_ids = revisions_json["pushes"][pushid]["changesets"]
+
+revisions = []
+for rev_id in rev_ids:
+    rev_detail = subprocess.check_output(
+        [
+            "hg",
+            "log",
+            "--template",
+            "{node} | {author} | {desc|firstline}\n",
+            "-r",
+            rev_id,
+        ]
+    )
+    revisions.append(rev_detail.decode("utf-8"))
 
 if not revisions:
     msg = """
