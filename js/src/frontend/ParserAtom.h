@@ -59,6 +59,110 @@ enum class WellKnownAtomId : uint32_t {
 enum class StaticParserString1 : uint8_t;
 enum class StaticParserString2 : uint16_t;
 
+class ParserAtom;
+using ParserAtomIndex = TypedIndex<ParserAtom>;
+
+// ParserAtomIndex, WellKnownAtomId, StaticParserString1, StaticParserString2,
+// or null.
+//
+// 0x0000_0000  Null atom
+//
+// 0x1YYY_YYYY  28-bit ParserAtom
+//
+// 0x2000_YYYY  Well-known atom ID
+// 0x2001_YYYY  Static length-1 atom
+// 0x2002_YYYY  Static length-2 atom
+class TaggedParserAtomIndex {
+  uint32_t data_;
+
+  static constexpr size_t IndexBit = 28;
+  static constexpr size_t IndexMask = BitMask(IndexBit);
+
+  static constexpr size_t TagShift = IndexBit;
+  static constexpr size_t TagBit = 4;
+  static constexpr size_t TagMask = BitMask(TagBit) << TagShift;
+
+  static constexpr size_t SmallIndexBit = 16;
+  static constexpr size_t SmallIndexMask = BitMask(SmallIndexBit);
+
+  static constexpr size_t SubTagShift = SmallIndexBit;
+  static constexpr size_t SubTagBit = 2;
+  static constexpr size_t SubTagMask = BitMask(SubTagBit) << SubTagShift;
+
+  static constexpr uint32_t NullTag = 0 << TagShift;
+  static constexpr uint32_t ParserAtomIndexTag = 1 << TagShift;
+  static constexpr uint32_t WellKnownTag = 2 << TagShift;
+
+  static constexpr uint32_t WellKnownSubTag = 0 << SubTagShift;
+  static constexpr uint32_t Static1SubTag = 1 << SubTagShift;
+  static constexpr uint32_t Static2SubTag = 2 << SubTagShift;
+
+ public:
+  static constexpr uint32_t IndexLimit = Bit(IndexBit);
+  static constexpr uint32_t SmallIndexLimit = Bit(SmallIndexBit);
+
+  TaggedParserAtomIndex() : data_(NullTag) {}
+
+  explicit constexpr TaggedParserAtomIndex(ParserAtomIndex index)
+      : data_(index.index | ParserAtomIndexTag) {
+    MOZ_ASSERT(index.index < IndexLimit);
+  }
+  explicit constexpr TaggedParserAtomIndex(WellKnownAtomId index)
+      : data_(uint32_t(index) | WellKnownTag | WellKnownSubTag) {
+    MOZ_ASSERT(uint32_t(index) < SmallIndexLimit);
+
+    // Static1/Static2 string shouldn't use WellKnownAtomId.
+#define CHECK_(_, name, _2) MOZ_ASSERT(index != WellKnownAtomId::name);
+    FOR_EACH_NON_EMPTY_TINY_PROPERTYNAME(CHECK_)
+#undef CHECK_
+  }
+  explicit constexpr TaggedParserAtomIndex(StaticParserString1 index)
+      : data_(uint32_t(index) | WellKnownTag | Static1SubTag) {}
+  explicit constexpr TaggedParserAtomIndex(StaticParserString2 index)
+      : data_(uint32_t(index) | WellKnownTag | Static2SubTag) {}
+
+  bool isParserAtomIndex() const {
+    return (data_ & TagMask) == ParserAtomIndexTag;
+  }
+  bool isWellKnownAtomId() const {
+    return (data_ & (TagMask | SubTagMask)) == (WellKnownTag | WellKnownSubTag);
+  }
+  bool isStaticParserString1() const {
+    return (data_ & (TagMask | SubTagMask)) == (WellKnownTag | Static1SubTag);
+  }
+  bool isStaticParserString2() const {
+    return (data_ & (TagMask | SubTagMask)) == (WellKnownTag | Static2SubTag);
+  }
+  bool isNull() const {
+    bool result = !data_;
+    MOZ_ASSERT_IF(result, (data_ & TagMask) == NullTag);
+    return result;
+  }
+
+  ParserAtomIndex toParserAtomIndex() const {
+    MOZ_ASSERT(isParserAtomIndex());
+    return ParserAtomIndex(data_ & IndexMask);
+  }
+  WellKnownAtomId toWellKnownAtomId() const {
+    MOZ_ASSERT(isWellKnownAtomId());
+    return WellKnownAtomId(data_ & SmallIndexMask);
+  }
+  StaticParserString1 toStaticParserString1() const {
+    MOZ_ASSERT(isStaticParserString1());
+    return StaticParserString1(data_ & SmallIndexMask);
+  }
+  StaticParserString2 toStaticParserString2() const {
+    MOZ_ASSERT(isStaticParserString2());
+    return StaticParserString2(data_ & SmallIndexMask);
+  }
+
+  uint32_t* rawData() { return &data_; }
+
+  bool operator==(const TaggedParserAtomIndex& rhs) const {
+    return data_ == rhs.data_;
+  }
+};
+
 /**
  * A ParserAtomEntry is an in-parser representation of an interned atomic
  * string.  It mostly mirrors the information carried by a JSAtom*.
@@ -486,7 +590,6 @@ class WellKnownParserAtoms_ROM {
   }
 };
 
-using ParserAtomIndex = TypedIndex<ParserAtom>;
 using ParserAtomVector = Vector<ParserAtomEntry*, 0, js::SystemAllocPolicy>;
 
 /**
