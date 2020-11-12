@@ -574,6 +574,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
                 feature = SitePermissionsFeature(
                     context = context,
                     storage = context.components.core.permissionStorage.permissionsStorage,
+                    sessionManager = sessionManager,
                     fragmentManager = parentFragmentManager,
                     promptsStyling = SitePermissionsFeature.PromptsStyling(
                         gravity = getAppropriateLayoutGravity(),
@@ -590,8 +591,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
                             it
                         )
                     },
-                    store = store
-                ),
+                customTabId = customTabSessionId,
+                store = store),
                 owner = this,
                 view = view
             )
