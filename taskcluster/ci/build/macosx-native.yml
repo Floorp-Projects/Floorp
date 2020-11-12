@@ -13,14 +13,16 @@ job-defaults:
         actions: [get-secrets, build]
         script: "mozharness/scripts/fx_desktop_build.py"
 
-macosx64-aarch64/opt:
+macosx64-aarch64-shippable/opt:
     description: "MacOS X Aarch64"
     index:
         job-name: macosx64-aarch64-opt
+        type: shippable
     attributes:
+        enable-full-crashsymbols: true
         skip-verify-test-packaging: true
     treeherder:
-        platform: osx-aarch64/opt
+        platform: osx-aarch64-shippable/opt
         symbol: B
         tier: 1
     worker:
@@ -37,7 +39,7 @@ macosx64-aarch64/opt:
             disable_package_metrics: true
             stage_platform: macosx64
             mozconfig_platform: macosx64-aarch64
-    run-on-projects: ['integration']
+    run-on-projects: ['release']
     fetches:
         toolchain:
             - macosx64-cbindgen
