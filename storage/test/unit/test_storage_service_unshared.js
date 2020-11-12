@@ -4,6 +4,17 @@
 
 // This file tests the openUnsharedDatabase function of mozIStorageService.
 
+function test_openUnsharedDatabase_null_file() {
+  try {
+    Services.storage.openUnsharedDatabase(null);
+    do_throw("We should not get here!");
+  } catch (e) {
+    print(e);
+    print("e.result is " + e.result);
+    Assert.equal(Cr.NS_ERROR_INVALID_ARG, e.result);
+  }
+}
+
 function test_openUnsharedDatabase_file_DNE() {
   // the file should be created after calling
   var db = getTestDB();
@@ -21,6 +32,7 @@ function test_openUnsharedDatabase_file_exists() {
 }
 
 var tests = [
+  test_openUnsharedDatabase_null_file,
   test_openUnsharedDatabase_file_DNE,
   test_openUnsharedDatabase_file_exists,
 ];
