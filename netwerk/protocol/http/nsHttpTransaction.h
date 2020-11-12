@@ -93,6 +93,12 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   // Sets mPendingTime to the current time stamp or to a null time stamp (if now
   // is false)
   void SetPendingTime(bool now = true) {
+    if (!now && !mPendingTime.IsNull()) {
+      // Remember how long it took. We will use this vaule to record
+      // TRANSACTION_WAIT_TIME_HTTP2_SUP_HTTP3 telemetry, but we need to wait
+      // for the response headers.
+      mPendingDurationTime = TimeStamp::Now() - mPendingTime;
+    }
     mPendingTime = now ? TimeStamp::Now() : TimeStamp();
   }
   const TimeStamp GetPendingTime() { return mPendingTime; }
@@ -401,6 +407,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   // The time when the transaction was submitted to the Connection Manager
   TimeStamp mPendingTime;
+  TimeDuration mPendingDurationTime;
 
   uint64_t mTopLevelOuterContentWindowId;
 
@@ -508,6 +515,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   };
 
   nsDataHashtable<nsUint32HashKey, uint32_t> mEchRetryCounterMap;
+
+  bool mSupportsHTTP3 = false;
 };
 
 }  // namespace net
