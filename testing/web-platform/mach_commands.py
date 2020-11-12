@@ -226,6 +226,48 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
                 dest.write(src.read())
 
 
+class WebPlatformTestsServeRunner(MozbuildObject):
+    def run(self, **kwargs):
+        sys.path.insert(
+            0,
+            os.path.abspath(os.path.join(os.path.dirname(__file__), "tests", "tools")),
+        )
+        from serve import serve
+        from wptrunner import wptcommandline
+        import manifestupdate
+
+        import logging
+
+        logger = logging.getLogger("web-platform-tests")
+
+        src_root = self.topsrcdir
+        obj_root = self.topobjdir
+        src_wpt_dir = os.path.join(src_root, "testing", "web-platform")
+
+        config_path = manifestupdate.generate_config(
+            logger,
+            src_root,
+            src_wpt_dir,
+            os.path.join(obj_root, "_tests", "web-platform"),
+            False,
+        )
+
+        test_paths = wptcommandline.get_test_paths(
+            wptcommandline.config.read(config_path)
+        )
+
+        def get_route_builder(*args, **kwargs):
+            route_builder = serve.get_route_builder(*args, **kwargs)
+
+            for url_base, paths in iteritems(test_paths):
+                if url_base != "/":
+                    route_builder.add_mount_point(url_base, paths["tests_path"])
+
+            return route_builder
+
+        return 0 if serve.run(route_builder=get_route_builder, **kwargs) else 1
+
+
 class WebPlatformTestsUpdater(MozbuildObject):
     """Update web platform tests."""
 
@@ -505,15 +547,14 @@ class MachCommands(MachCommandBase):
         description="Run the wpt server",
         parser=create_parser_serve,
     )
-    def wpt_manifest_serve(self, **params):
+    def wpt_serve(self, **params):
         self.setup()
         import logging
 
         logger = logging.getLogger("web-platform-tests")
         logger.addHandler(logging.StreamHandler(sys.stdout))
-        import serve
-
-        return 0 if serve.serve.run(**params) else 1
+        wpt_serve = self._spawn(WebPlatformTestsServeRunner)
+        return wpt_serve.run(**params)
 
     @Command(
         "wpt-metadata-summary",
