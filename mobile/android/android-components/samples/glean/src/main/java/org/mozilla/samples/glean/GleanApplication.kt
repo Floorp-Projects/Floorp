@@ -22,6 +22,12 @@ import org.mozilla.samples.glean.GleanMetrics.Pings
 
 class GleanApplication : Application() {
 
+    companion object {
+        val nimbus: Nimbus by lazy {
+            Nimbus()
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
 
@@ -58,7 +64,7 @@ class GleanApplication : Application() {
     private fun initNimbus() {
         RustLog.enable()
         RustHttpConfig.setClient(lazy { HttpURLConnectionClient() })
-        Nimbus.init(this) {
+        nimbus.initialize(this) {
             val intent = Intent()
             intent.action = "org.mozilla.samples.glean.experiments.updated"
             sendBroadcast(intent)

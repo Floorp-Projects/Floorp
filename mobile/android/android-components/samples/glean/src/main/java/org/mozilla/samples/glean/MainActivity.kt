@@ -9,10 +9,9 @@ import android.graphics.Color
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
-import mozilla.components.service.nimbus.Nimbus
 import org.mozilla.experiments.nimbus.EnrolledExperiment
-import org.mozilla.samples.glean.GleanMetrics.Test
 import org.mozilla.samples.glean.GleanMetrics.BrowserEngagement
+import org.mozilla.samples.glean.GleanMetrics.Test
 import org.mozilla.samples.glean.library.SamplesGleanLibrary
 
 /**
@@ -97,10 +96,10 @@ open class MainActivity : AppCompatActivity(), ExperimentUpdateReceiver.Experime
         textViewExperimentStatus.setBackgroundColor(Color.WHITE)
         textViewExperimentStatus.text = getString(R.string.experiment_not_active)
 
-        activeExperiments = Nimbus.getActiveExperiments()
-
+        val nimbus = GleanApplication.nimbus
+        activeExperiments = nimbus.getActiveExperiments()
         if (activeExperiments.any { it.slug == "test-color" }) {
-            val color = when (Nimbus.getExperimentBranch("test-color")) {
+            val color = when (nimbus.getExperimentBranch("test-color")) {
                 "blue" -> Color.BLUE
                 "red" -> Color.RED
                 "control" -> Color.DKGRAY
@@ -112,7 +111,7 @@ open class MainActivity : AppCompatActivity(), ExperimentUpdateReceiver.Experime
                 textViewExperimentStatus.setBackgroundColor(color)
                 textViewExperimentStatus.text = getString(
                     R.string.experiment_active_branch,
-                    "Experiment Branch: ${Nimbus.getExperimentBranch("test-color")}")
+                    "Experiment Branch: ${nimbus.getExperimentBranch("test-color")}")
             }
         }
     }

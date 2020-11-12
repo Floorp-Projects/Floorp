@@ -20,6 +20,7 @@ import org.mozilla.experiments.nimbus.AppContext
 import org.mozilla.experiments.nimbus.AvailableRandomizationUnits
 import org.mozilla.experiments.nimbus.EnrolledExperiment
 import org.mozilla.experiments.nimbus.NimbusClient
+import org.mozilla.experiments.nimbus.NimbusClientInterface
 import org.mozilla.experiments.nimbus.RemoteSettingsConfig
 import java.io.File
 import java.util.Locale
@@ -28,7 +29,7 @@ import java.util.concurrent.Executors
 /**
  * This is the main experiments API, which is exposed through the global [Nimbus] object.
  */
-internal interface NimbusApi {
+interface NimbusApi {
     /**
      * Get the list of currently enrolled experiments
      *
@@ -58,38 +59,33 @@ internal interface NimbusApi {
     fun optOut(experimentId: String)
 
     /**
-     * Set global opt-in/out for all experiments
-     *
-     * @param active Set `true` to enable experiment enrollment or `false` to unenroll from all
+     * Control the opt out for all experiments at once. This is likely a user action.
      */
-    fun setGlobalUserParticipation(active: Boolean)
-
-    /**
-     * Get current global opt-in/out state for all experiments
-     *
-     * @return the current state of the global participation, or null if not initialized
-     */
-    fun getGlobalUserParticipation(): Boolean?
+    var globalUserParticipation: Boolean
 }
+
+private const val LOG_TAG = "service/Nimbus"
+private const val EXPERIMENT_BUCKET_NAME = "main"
+private const val EXPERIMENT_COLLECTION_NAME = "nimbus-mobile-experiments"
+private const val NIMBUS_DATA_DIR: String = "nimbus_data"
 
 /**
  * A singleton implementation of the [NimbusApi] interface backed by the Nimbus SDK.
  */
-object Nimbus : NimbusApi {
-    private const val LOG_TAG = "service/Nimbus"
-    private const val EXPERIMENT_BUCKET_NAME = "main"
-    private const val EXPERIMENT_COLLECTION_NAME = "nimbus-mobile-experiments"
-    private const val NIMBUS_DATA_DIR: String = "nimbus_data"
-
+class Nimbus : NimbusApi {
     // Using a single threaded executor here to enforce synchronization where needed.
     private val scope: CoroutineScope =
         CoroutineScope(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
 
-    private lateinit var nimbus: NimbusClient
+    private lateinit var nimbus: NimbusClientInterface
     private lateinit var dataDir: File
     private var onExperimentUpdated: ((List<EnrolledExperiment>) -> Unit)? = null
 
     private var isInitialized = false
+
+    override var globalUserParticipation: Boolean
+        get() = nimbus.getGlobalUserParticipation()
+        set(active) = nimbus.setGlobalUserParticipation(active)
 
     /**
      * Initialize the Nimbus SDK library.
@@ -108,7 +104,7 @@ object Nimbus : NimbusApi {
      * callback will be supplied with the list of active experiments (if any) for which the client
      * is enrolled.
      */
-    fun init(
+    fun initialize(
         context: Context,
         onExperimentUpdated: ((activeExperiments: List<EnrolledExperiment>) -> Unit)? = null
     ) {
@@ -121,28 +117,28 @@ object Nimbus : NimbusApi {
 
         this.onExperimentUpdated = onExperimentUpdated
 
+        // Build Nimbus AppContext object to pass into initialize
+        val experimentContext = buildExperimentContext(context)
+
+        // Build a File object to represent the data directory for Nimbus data
+        dataDir = File(context.applicationInfo.dataDir, NIMBUS_DATA_DIR)
+
+        // Initialize Nimbus
+        nimbus = NimbusClient(
+            experimentContext,
+            dataDir.path,
+            RemoteSettingsConfig(
+                serverUrl = context.resources.getString(R.string.nimbus_default_endpoint),
+                bucketName = EXPERIMENT_BUCKET_NAME,
+                collectionName = EXPERIMENT_COLLECTION_NAME
+            ),
+            // The "dummy" field here is required for obscure reasons when generating code on desktop,
+            // so we just automatically set it to a dummy value.
+            AvailableRandomizationUnits(clientId = null, dummy = 0)
+        )
+
         // Do initialization off of the main thread
         scope.launch {
-            // Build Nimbus AppContext object to pass into initialize
-            val experimentContext = buildExperimentContext(context)
-
-            // Build a File object to represent the data directory for Nimbus data
-            dataDir = File(context.applicationInfo.dataDir, NIMBUS_DATA_DIR)
-
-            // Initialize Nimbus
-            nimbus = NimbusClient(
-                experimentContext,
-                dataDir.path,
-                RemoteSettingsConfig(
-                    serverUrl = context.resources.getString(R.string.nimbus_default_endpoint),
-                    bucketName = EXPERIMENT_BUCKET_NAME,
-                    collectionName = EXPERIMENT_COLLECTION_NAME
-                ),
-                // The "dummy" field here is required for obscure reasons when generating code on desktop,
-                // so we just automatically set it to a dummy value.
-                AvailableRandomizationUnits(clientId = null, dummy = 0)
-            )
-
             // Get experiments
             val activeExperiments = nimbus.getActiveExperiments()
 
@@ -172,16 +168,6 @@ object Nimbus : NimbusApi {
     override fun optOut(experimentId: String) {
         if (!isInitialized) return
         nimbus.optOut(experimentId)
-    }
-
-    override fun setGlobalUserParticipation(active: Boolean) {
-        if (!isInitialized) return
-        nimbus.setGlobalUserParticipation(active)
-    }
-
-    override fun getGlobalUserParticipation(): Boolean? {
-        if (!isInitialized) return null
-        return nimbus.getGlobalUserParticipation()
     }
 
     // This function shouldn't be exposed to the public API, but is meant for testing purposes to
