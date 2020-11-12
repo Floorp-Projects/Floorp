@@ -13,6 +13,7 @@
 #include "ContentChild.h"
 #include "GeckoProfiler.h"
 #include "HandlerServiceChild.h"
+#include "nsXPLookAndFeel.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/BenchmarkStorageChild.h"
@@ -620,6 +621,16 @@ mozilla::ipc::IPCResult ContentChild::RecvSetXPCOMProcessAttributes(
   return IPC_OK();
 }
 
+class nsGtkNativeInitRunnable : public Runnable {
+ public:
+  nsGtkNativeInitRunnable() : Runnable("nsGtkNativeInitRunnable") {}
+
+  NS_IMETHOD Run() override {
+    LookAndFeel::NativeInit();
+    return NS_OK;
+  }
+};
+
 bool ContentChild::Init(MessageLoop* aIOLoop, base::ProcessId aParentPid,
                         const char* aParentBuildID,
                         UniquePtr<IPC::Channel> aChannel, uint64_t aChildID,
@@ -1218,6 +1229,14 @@ void ContentChild::InitXPCOM(
   // Do this as early as possible to get the parent process to initialize the
   // background thread since we'll likely need database information very soon.
   BackgroundChild::Startup();
+
+#ifdef MOZ_WIDGET_GTK
+  // LookAndFeel::NativeInit takes a long time to run on Linux, here we schedule
+  // it as soon as possible after BackgroundChild::Startup to give
+  // it chance to run ahead of ConstructBrowser
+  nsCOMPtr<nsIRunnable> event = new nsGtkNativeInitRunnable();
+  NS_DispatchToMainThreadQueue(event.forget(), EventQueuePriority::Idle);
+#endif
 
 #if defined(XP_WIN)
   // DLL services untrusted modules processing depends on
