@@ -93,12 +93,20 @@ struct ScopeContext {
 };
 
 struct CompilationAtomCache {
+ private:
   // Atoms lowered into or converted from CompilationStencil.parserAtomData.
   //
   // This field is here instead of in CompilationGCOutput because atoms lowered
   // from JSAtom is part of input (enclosing scope bindings, lazy function name,
   // etc), and having 2 vectors in both input/output is error prone.
-  JS::GCVector<JSAtom*, 0, js::SystemAllocPolicy> atoms;
+  JS::GCVector<JSAtom*, 0, js::SystemAllocPolicy> atoms_;
+
+ public:
+  JSAtom* getExistingAtomAt(ParserAtomIndex index) const;
+  JSAtom* getAtomAt(ParserAtomIndex index) const;
+  bool hasAtomAt(ParserAtomIndex index) const;
+  bool setAtomAt(JSContext* cx, ParserAtomIndex index, JSAtom* atom);
+  bool allocate(JSContext* cx, size_t length);
 
   void trace(JSTracer* trc);
 } JS_HAZ_GC_POINTER;
@@ -252,6 +260,8 @@ struct CompilationStencil {
       asmJS;
 
   // List of parser atoms for this compilation.
+  // This may contain nullptr entries when round-tripping with XDR if the atom
+  // was generated in original parse but not used by stencil.
   ParserAtomVector parserAtomData;
 
   // Parameterized chunk size to use for LifoAlloc.
