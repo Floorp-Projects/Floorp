@@ -28,7 +28,6 @@ ChromeUtils.defineModuleGetter(
   "CommonUtils",
   "resource://services-common/utils.js"
 );
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "CryptoHash", () => {
   return Components.Constructor(
@@ -38,12 +37,14 @@ XPCOMUtils.defineLazyGetter(this, "CryptoHash", () => {
   );
 });
 
-XPCOMUtils.defineLazyGetter(this, "gDatareportingPath", () => {
-  return OS.Path.join(OS.Constants.Path.profileDir, "datareporting");
+XPCOMUtils.defineLazyGetter(this, "gDatareportingPath", async () => {
+  let profileDir = await PathUtils.getProfileDir();
+  return PathUtils.join(profileDir, "datareporting");
 });
 
-XPCOMUtils.defineLazyGetter(this, "gStateFilePath", () => {
-  return OS.Path.join(gDatareportingPath, "state.json");
+XPCOMUtils.defineLazyGetter(this, "gStateFilePath", async () => {
+  let path = await gDatareportingPath;
+  return PathUtils.join(path, "state.json");
 });
 
 const PREF_CACHED_CLIENTID = "toolkit.telemetry.cachedClientID";
@@ -209,7 +210,7 @@ var ClientIDImpl = {
     let hasCurrentClientID = false;
     let hasCurrentEcosystemClientID = false;
     try {
-      let state = await CommonUtils.readJSON(gStateFilePath);
+      let state = await CommonUtils.readJSON(await gStateFilePath);
       if (AppConstants.platform == "android" && state && "wasCanary" in state) {
         this._wasCanary = state.wasCanary;
       }
@@ -267,8 +268,8 @@ var ClientIDImpl = {
     if (AppConstants.platform == "android" && this._wasCanary) {
       obj.wasCanary = true;
     }
-    await OS.File.makeDir(gDatareportingPath);
-    await CommonUtils.writeJSON(obj, gStateFilePath);
+    await IOUtils.makeDirectory(await gDatareportingPath);
+    await CommonUtils.writeJSON(obj, await gStateFilePath);
     this._saveClientIdsTask = null;
   },
 
@@ -412,7 +413,7 @@ var ClientIDImpl = {
     await this._saveClientIdsTask;
 
     // Remove the client id from disk
-    await OS.File.remove(gStateFilePath, { ignoreAbsent: true });
+    await IOUtils.remove(await gStateFilePath);
   },
 
   async removeClientIDs() {
