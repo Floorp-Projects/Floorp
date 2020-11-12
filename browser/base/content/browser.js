@@ -1537,32 +1537,31 @@ function _loadURI(browser, uri, params = {}) {
     throw new Error("Cannot load with mismatched userContextId");
   }
 
-  let {
-    uriObject,
-    requiredRemoteType,
-    mustChangeProcess,
-    newFrameloader,
-  } = E10SUtils.shouldLoadURIInBrowser(
-    browser,
-    uri,
-    gMultiProcessBrowser,
-    gFissionBrowser,
-    loadFlags
-  );
-  if (uriObject && handleUriInChrome(browser, uriObject)) {
-    // If we've handled the URI in Chrome then just return here.
-    return;
-  }
-  if (newFrameloader) {
-    // If a new frameloader is needed for process reselection because this used
-    // to be a preloaded browser, clear the preloaded state now.
-    browser.removeAttribute("preloadedState");
+  // Attempt to perform URI fixup to see if we can handle this URI in chrome.
+  try {
+    let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_NONE;
+    if (loadFlags & Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
+      fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+    }
+    if (loadFlags & Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS) {
+      fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS;
+    }
+    if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
+      fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
+    }
+
+    let uriObject = Services.uriFixup.getFixupURIInfo(uri, fixupFlags)
+      .preferredURI;
+    if (uriObject && handleUriInChrome(browser, uriObject)) {
+      // If we've handled the URI in Chrome, then just return here.
+      return;
+    }
+  } catch (e) {
+    // getFixupURIInfo may throw. Gracefully recover and try to load the URI normally.
   }
 
-  // !requiredRemoteType means we're loading in the parent/this process.
-  if (!requiredRemoteType) {
-    browser.isNavigating = true;
-  }
+  // XXX(nika): Is `browser.isNavigating` necessary anymore?
+  browser.isNavigating = true;
   let loadURIOptions = {
     triggeringPrincipal,
     csp,
@@ -1572,71 +1571,10 @@ function _loadURI(browser, uri, params = {}) {
     hasValidUserGestureActivation,
   };
   try {
-    if (!mustChangeProcess) {
-      browser.webNavigation.loadURI(uri, loadURIOptions);
-    } else {
-      // Check if the current browser is allowed to unload.
-      let { permitUnload } = browser.permitUnload();
-      if (!permitUnload) {
-        return;
-      }
-
-      if (postData) {
-        postData = serializeInputStream(postData);
-      }
-
-      let loadParams = {
-        uri,
-        triggeringPrincipal: triggeringPrincipal
-          ? E10SUtils.serializePrincipal(triggeringPrincipal)
-          : null,
-        flags: loadFlags,
-        referrerInfo: E10SUtils.serializeReferrerInfo(referrerInfo),
-        remoteType: requiredRemoteType,
-        postData,
-        newFrameloader,
-        csp: csp ? gSerializationHelper.serializeToString(csp) : null,
-      };
-
-      if (userContextId) {
-        loadParams.userContextId = userContextId;
-      }
-
-      if (browser.webNavigation.maybeCancelContentJSExecution) {
-        let cancelContentJSEpoch = browser.webNavigation.maybeCancelContentJSExecution(
-          Ci.nsIRemoteTab.NAVIGATE_URL,
-          { uri: uriObject }
-        );
-        loadParams.cancelContentJSEpoch = cancelContentJSEpoch;
-      }
-      LoadInOtherProcess(browser, loadParams);
-    }
-  } catch (e) {
-    // If anything goes wrong when switching remoteness, just switch remoteness
-    // manually and load the URI.
-    // We might lose history that way but at least the browser loaded a page.
-    // This might be necessary if SessionStore wasn't initialized yet i.e.
-    // when the homepage is a non-remote page.
-    if (mustChangeProcess) {
-      Cu.reportError(e);
-      gBrowser.updateBrowserRemotenessByURL(browser, uri);
-
-      browser.webNavigation.loadURI(uri, loadURIOptions);
-    } else {
-      throw e;
-    }
+    browser.webNavigation.loadURI(uri, loadURIOptions);
   } finally {
-    if (!requiredRemoteType) {
-      browser.isNavigating = false;
-    }
+    browser.isNavigating = false;
   }
-}
-
-// Starts a new load in the browser first switching the browser to the correct
-// process
-function LoadInOtherProcess(browser, loadOptions, historyIndex = -1) {
-  let tab = gBrowser.getTabForBrowser(browser);
-  SessionStore.navigateAndRestore(tab, loadOptions, historyIndex);
 }
 
 let _resolveDelayedStartup;
