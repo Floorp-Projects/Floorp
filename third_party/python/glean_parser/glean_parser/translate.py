@@ -12,7 +12,7 @@ from pathlib import Path
 import os
 import shutil
 import tempfile
-from typing import Any, Callable, Dict, Iterable, List
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from . import lint
 from . import parser
@@ -40,8 +40,11 @@ class Outputter:
     def __init__(
         self,
         output_func: Callable[[metrics.ObjectTree, Path, Dict[str, Any]], None],
-        clear_patterns: List[str] = [],
+        clear_patterns: Optional[List[str]] = None,
     ):
+        if clear_patterns is None:
+            clear_patterns = []
+
         self.output_func = output_func
         self.clear_patterns = clear_patterns
 
@@ -49,7 +52,7 @@ class Outputter:
 OUTPUTTERS = {
     "csharp": Outputter(csharp.output_csharp, ["*.cs"]),
     "kotlin": Outputter(kotlin.output_kotlin, ["*.kt"]),
-    "markdown": Outputter(markdown.output_markdown),
+    "markdown": Outputter(markdown.output_markdown, []),
     "swift": Outputter(swift.output_swift, ["*.swift"]),
 }
 
@@ -58,9 +61,9 @@ def translate_metrics(
     input_filepaths: Iterable[Path],
     output_dir: Path,
     translation_func: Callable[[metrics.ObjectTree, Path, Dict[str, Any]], None],
-    clear_patterns: List[str] = [],
-    options: Dict[str, Any] = {},
-    parser_config: Dict[str, Any] = {},
+    clear_patterns: Optional[List[str]] = None,
+    options: Optional[Dict[str, Any]] = None,
+    parser_config: Optional[Dict[str, Any]] = None,
 ):
     """
     Translate the files in `input_filepaths` by running the metrics through a
@@ -85,6 +88,15 @@ def translate_metrics(
     :param parser_config: A dictionary of options that change parsing behavior.
         See `parser.parse_metrics` for more info.
     """
+    if clear_patterns is None:
+        clear_patterns = []
+
+    if options is None:
+        options = {}
+
+    if parser_config is None:
+        parser_config = {}
+
     input_filepaths = util.ensure_list(input_filepaths)
 
     if lint.glinter(input_filepaths, parser_config):
@@ -128,8 +140,8 @@ def translate(
     input_filepaths: Iterable[Path],
     output_format: str,
     output_dir: Path,
-    options: Dict[str, Any] = {},
-    parser_config: Dict[str, Any] = {},
+    options: Optional[Dict[str, Any]] = None,
+    parser_config: Optional[Dict[str, Any]] = None,
 ):
     """
     Translate the files in `input_filepaths` to the given `output_format` and
@@ -143,6 +155,12 @@ def translate(
     :param parser_config: A dictionary of options that change parsing behavior.
         See `parser.parse_metrics` for more info.
     """
+    if options is None:
+        options = {}
+
+    if parser_config is None:
+        parser_config = {}
+
     format_desc = OUTPUTTERS.get(output_format, None)
 
     if format_desc is None:
