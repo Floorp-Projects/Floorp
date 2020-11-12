@@ -63,30 +63,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "updateDebounce",
-  "browser.region.update.debounce",
-  60 * 60 * 24
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "lastUpdated",
-  "browser.region.update.updated",
-  0
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
   "localGeocodingEnabled",
   "browser.region.local-geocoding",
   false
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "timerManager",
-  "@mozilla.org/updates/timer-manager;1",
-  "nsIUpdateTimerManager"
 );
 
 const log = console.createInstance({
@@ -96,7 +75,6 @@ const log = console.createInstance({
 
 const REGION_PREF = "browser.search.region";
 const COLLECTION_ID = "regions";
-const GEOLOCATION_TOPIC = "geolocation-position-events";
 
 // Prefix for all the region updating related preferences.
 const UPDATE_PREFIX = "browser.region.update";
@@ -107,11 +85,6 @@ const UPDATE_PREFIX = "browser.region.update";
 const UPDATE_INTERVAL = 60 * 60 * 24 * 14;
 
 const MAX_RETRIES = 3;
-
-// If the user never uses geolocation, schedule a periodic
-// update to check the current location (in seconds).
-const UPDATE_CHECK_NAME = "region-update-timer";
-const UPDATE_CHECK_INTERVAL = 60 * 60 * 24 * 7;
 
 /**
  * This module keeps track of the users current region (country).
@@ -130,8 +103,6 @@ class RegionDetector {
   // Keep track of how many times we have tried to fetch
   // the users region during failure.
   _retryCount = 0;
-  // Let tests wait for init to complete.
-  _initPromise = null;
   // Topic for Observer events fired by Region.jsm.
   REGION_TOPIC = "browser-region";
   // Verb for event fired when we update the region.
@@ -148,26 +119,16 @@ class RegionDetector {
    * Read currently stored region data and if needed trigger background
    * region detection.
    */
-  async init() {
-    if (this._initPromise) {
-      return this._initPromise;
-    }
-    if (cacheBustEnabled) {
-      timerManager.registerTimer(
-        UPDATE_CHECK_NAME,
-        () => this._updateTimer(),
-        UPDATE_CHECK_INTERVAL
-      );
-    }
-    let promises = [];
+  init() {
     this._home = Services.prefs.getCharPref(REGION_PREF, null);
-    if (!this._home) {
-      promises.push(this._idleDispatch(() => this._fetchRegion()));
+    if (cacheBustEnabled || !this._home) {
+      Services.tm.idleDispatchToMainThread(this._fetchRegion.bind(this));
     }
     if (localGeocodingEnabled) {
-      promises.push(this._idleDispatch(() => this._setupRemoteSettings()));
+      Services.tm.idleDispatchToMainThread(
+        this._setupRemoteSettings.bind(this)
+      );
     }
-    return (this._initPromise = Promise.all(promises));
   }
 
   /**
@@ -311,10 +272,7 @@ class RegionDetector {
     log.info("Setting current region:", region);
     this._current = region;
 
-    let now = Math.round(Date.now() / 1000);
     let prefs = Services.prefs;
-    prefs.setIntPref(`${UPDATE_PREFIX}.updated`, now);
-
     // Interval is in seconds.
     let interval = prefs.getIntPref(
       `${UPDATE_PREFIX}.interval`,
@@ -331,11 +289,14 @@ class RegionDetector {
       // considered home, then keep track of when we first
       // seen the new location.
       prefs.setCharPref(`${UPDATE_PREFIX}.region`, region);
-      prefs.setIntPref(`${UPDATE_PREFIX}.first-seen`, now);
+      prefs.setIntPref(
+        `${UPDATE_PREFIX}.first-seen`,
+        Math.round(Date.now() / 1000)
+      );
     } else if (region != this._home && region == seenRegion) {
       // If we have been in the new region for longer than
       // a specified time period, then set that as the new home.
-      if (now >= firstSeen + interval) {
+      if (Math.round(Date.now() / 1000) >= firstSeen + interval) {
         this._setHomeRegion(region);
       }
     } else {
@@ -425,9 +386,6 @@ class RegionDetector {
     this._rsClient = RemoteSettings(COLLECTION_ID);
     this._rsClient.on("sync", this._onRegionFilesSync.bind(this));
     await this._ensureRegionFilesDownloaded();
-    // Start listening to geolocation events only after
-    // we know the maps are downloded.
-    Services.obs.addObserver(this, GEOLOCATION_TOPIC);
   }
 
   /**
@@ -780,60 +738,6 @@ class RegionDetector {
     });
   }
 
-  /**
-   * If the user is using geolocation then we will see frequent updates
-   * debounce those so we aren't processing them constantly.
-   *
-   * @returns {bool}
-   *   Whether we should continue the update check.
-   */
-  _needsUpdateCheck() {
-    let sinceUpdate = Math.round(Date.now() / 1000) - lastUpdated;
-    let needsUpdate = sinceUpdate >= updateDebounce;
-    if (!needsUpdate) {
-      log.info(`Ignoring update check, last seen ${sinceUpdate} seconds ago`);
-    }
-    return needsUpdate;
-  }
-
-  /**
-   * Dispatch a promise returning function to the main thread and
-   * resolve when it is completed.
-   */
-  _idleDispatch(fun) {
-    return new Promise(resolve => {
-      Services.tm.idleDispatchToMainThread(fun().then(resolve));
-    });
-  }
-
-  /**
-   * timerManager will call this periodically to update the region
-   * in case the user never users geolocation.
-   */
-  async _updateTimer() {
-    if (this._needsUpdateCheck()) {
-      await this._fetchRegion();
-    }
-  }
-
-  /**
-   * Called when we see geolocation updates.
-   * in case the user never users geolocation.
-   *
-   * @param {Object} location
-   *   A location object containing lat + lng coordinates.
-   *
-   */
-  async _seenLocation(location) {
-    log.info(`Got location update: ${location.lat}:${location.lng}`);
-    if (this._needsUpdateCheck()) {
-      let region = await this._geoCode(location);
-      if (region) {
-        this._setCurrentRegion(region);
-      }
-    }
-  }
-
   onChange(accessPoints) {
     log.info("onChange called");
     if (!accessPoints || !this._wifiDataPromise) {
@@ -850,27 +754,6 @@ class RegionDetector {
       this._wifiDataPromise(data);
       this._wifiDataPromise = null;
     }
-  }
-
-  observe(aSubject, aTopic, aData) {
-    log.info(`Observed ${aTopic}`);
-    switch (aTopic) {
-      case GEOLOCATION_TOPIC:
-        // aSubject from GeoLocation.cpp will be a GeoPosition
-        // DOM Object, but from tests we will receive a
-        // wrappedJSObject so handle both here.
-        let coords = aSubject.coords || aSubject.wrappedJSObject.coords;
-        this._seenLocation({
-          lat: coords.latitude,
-          lng: coords.longitude,
-        });
-        break;
-    }
-  }
-
-  // For tests to create blank new instances.
-  newInstance() {
-    return new RegionDetector();
   }
 }
 
