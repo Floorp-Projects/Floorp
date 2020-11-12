@@ -208,6 +208,7 @@ class MachCommands(MachCommandBase):
                 "must build the JS shell with `mach hazards build-shell` first"
             )
 
+    @inherit_command_args("build")
     @SubCommand(
         "hazards",
         "gather",
