@@ -193,13 +193,11 @@ class TabTrayView(
             tabsAdapter.tabTrayInteractor = interactor
             tabsAdapter.onTabsUpdated = {
                 if (view.context.settings().gridTabView) {
+                    concatAdapter.addAdapter(syncedTabsController.adapter)
                     concatAdapter.addAdapter(collectionsButtonAdapter)
-                    concatAdapter.addAdapter(syncedTabsController.adapter)
                 } else {
-                    // Put the 'Add to collections' button after the tabs have loaded.
-                    concatAdapter.addAdapter(0, collectionsButtonAdapter)
-                    // Put the Synced Tabs adapter at the end.
                     concatAdapter.addAdapter(syncedTabsController.adapter)
+                    concatAdapter.addAdapter(collectionsButtonAdapter)
                 }
 
                 if (hasAccessibilityEnabled) {
@@ -442,10 +440,7 @@ class TabTrayView(
 
     private fun setupListTabView() {
         view.tabsTray.apply {
-            layoutManager = LinearLayoutManager(container.context).apply {
-                reverseLayout = true
-                stackFromEnd = true
-            }
+            layoutManager = LinearLayoutManager(container.context)
         }
     }
 
@@ -730,18 +725,10 @@ class TabTrayView(
             view.context.components.core.store.state.normalTabs
         }
 
-        val selectedBrowserTabIndex = if (sessionId != null) {
+        return if (sessionId != null) {
             tabs.indexOfFirst { it.id == sessionId }
         } else {
             tabs.indexOfFirst { it.id == view.context.components.core.store.state.selectedTabId }
-        }
-
-        // We offset the tab index by the number of items in the other adapters.
-        // We add the offset, because the layoutManager is initialized with `reverseLayout`.
-        return if (view.context.settings().listTabView) {
-            selectedBrowserTabIndex + collectionsButtonAdapter.itemCount + syncedTabsController.adapter.itemCount
-        } else {
-            selectedBrowserTabIndex
         }
     }
 
