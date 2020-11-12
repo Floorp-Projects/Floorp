@@ -217,9 +217,7 @@ HWND RenderCompositorANGLE::GetCompositorHwnd() {
 
   if (XRE_IsGPUProcess()) {
     hwnd = mWidget->AsWindows()->GetCompositorHwnd();
-  }
-#ifdef NIGHTLY_BUILD
-  else if (
+  } else if (
       StaticPrefs::
           gfx_webrender_enabled_no_gpu_process_with_angle_win_AtStartup()) {
     MOZ_ASSERT(XRE_IsParentProcess());
@@ -227,7 +225,6 @@ HWND RenderCompositorANGLE::GetCompositorHwnd() {
     // When GPU process does not exist, we do not need to use compositor window.
     hwnd = mWidget->AsWindows()->GetHwnd();
   }
-#endif
 
   return hwnd;
 }
