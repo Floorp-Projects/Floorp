@@ -352,14 +352,11 @@ class PlatformDecoderModule {
 
   // Creates a Video decoder. The layers backend is passed in so that
   // decoders can determine whether hardware accelerated decoding can be used.
-  // Asynchronous decoding of video should be done in runnables dispatched
-  // to aVideoTaskQueue. If the task queue isn't needed, the decoder should
-  // not hold a reference to it.
   // On Windows the task queue's threads in have MSCOM initialized with
   // COINIT_MULTITHREADED.
   // Returns nullptr if the decoder can't be created.
-  // It is safe to store a reference to aConfig.
-  // This is called on the decode task queue.
+  // It is not safe to store a reference to aParams or aParams.mConfig as the
+  // object isn't guaranteed to live after the call.
   // CreateVideoDecoder may need to make additional checks if the
   // CreateDecoderParams argument is actually supported and return nullptr if
   // not to allow for fallback PDMs to be tried.
@@ -367,14 +364,11 @@ class PlatformDecoderModule {
       const CreateDecoderParams& aParams) = 0;
 
   // Creates an Audio decoder with the specified properties.
-  // Asynchronous decoding of audio should be done in runnables dispatched to
-  // aAudioTaskQueue. If the task queue isn't needed, the decoder should
-  // not hold a reference to it.
   // Returns nullptr if the decoder can't be created.
   // On Windows the task queue's threads in have MSCOM initialized with
   // COINIT_MULTITHREADED.
-  // It is safe to store a reference to aConfig.
-  // This is called on the decode task queue.
+  // It is not safe to store a reference to aParams or aParams.mConfig as the
+  // object isn't guaranteed to live after the call.
   // CreateAudioDecoder may need to make additional checks if the
   // CreateDecoderParams argument is actually supported and return nullptr if
   // not to allow for fallback PDMs to be tried.
@@ -401,10 +395,7 @@ DDLoggedTypeDeclName(MediaDataDecoder);
 // Don't block inside these functions, unless it's explicitly noted that you
 // should (like in Flush()).
 //
-// Decoding is done asynchronously. Any async work can be done on the
-// TaskQueue passed into the PlatformDecoderModules's Create*Decoder()
-// function. This may not be necessary for platforms with async APIs
-// for decoding.
+// Decoding is done asynchronously.
 class MediaDataDecoder : public DecoderDoctorLifeLogger<MediaDataDecoder> {
  protected:
   virtual ~MediaDataDecoder() = default;
@@ -421,7 +412,7 @@ class MediaDataDecoder : public DecoderDoctorLifeLogger<MediaDataDecoder> {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDataDecoder)
 
   // Initialize the decoder. The decoder should be ready to decode once
-  // promise resolves. The decoder should do any initialization here, rather
+  // the promise resolves. The decoder should do any initialization here, rather
   // than in its constructor or PlatformDecoderModule::Create*Decoder(),
   // so that if the MediaFormatReader needs to shutdown during initialization,
   // it can call Shutdown() to cancel this operation. Any initialization

@@ -31,7 +31,7 @@ class WaveDataDecoder : public MediaDataDecoder,
   }
 
  private:
-  const AudioInfo& mInfo;
+  const AudioInfo mInfo;
   nsCOMPtr<nsISerialEventTarget> mThread;
 };
 
