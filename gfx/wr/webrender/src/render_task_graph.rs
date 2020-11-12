@@ -9,7 +9,7 @@ use crate::internal_types::{CacheTextureId, FastHashMap, SavedTargetIndex};
 use crate::render_backend::FrameId;
 use crate::render_target::{RenderTarget, RenderTargetKind, RenderTargetList, ColorRenderTarget};
 use crate::render_target::{PictureCacheTarget, TextureCacheRenderTarget, AlphaRenderTarget};
-use crate::render_task::{BlitSource, RenderTask, RenderTaskKind, RenderTaskAddress, RenderTaskData};
+use crate::render_task::{BlitSource, RenderTask, RenderTaskKind, RenderTaskData};
 use crate::render_task::{RenderTaskLocation};
 use crate::util::{VecHelper, Allocation};
 use std::{cmp, usize, f32, i32, u32};
@@ -35,8 +35,6 @@ pub struct RenderTaskGraph {
 /// render tasks.
 pub struct RenderTaskAllocation<'a> {
     alloc: Allocation<'a, RenderTask>,
-    #[cfg(debug_assertions)]
-    frame_id: FrameId,
 }
 
 impl<'l> RenderTaskAllocation<'l> {
@@ -44,8 +42,6 @@ impl<'l> RenderTaskAllocation<'l> {
     pub fn init(self, value: RenderTask) -> RenderTaskId {
         RenderTaskId {
             index: self.alloc.init(value) as u32,
-            #[cfg(debug_assertions)]
-            frame_id: self.frame_id,
         }
     }
 }
@@ -75,8 +71,6 @@ impl RenderTaskGraph {
     pub fn add(&mut self) -> RenderTaskAllocation {
         RenderTaskAllocation {
             alloc: self.tasks.alloc(),
-            #[cfg(debug_assertions)]
-            frame_id: self.frame_id,
         }
     }
 
@@ -214,8 +208,6 @@ impl RenderTaskGraph {
             let pass_index = offset + (max_depth - task_max_depths[task_index]) as usize;
             let task_id = RenderTaskId {
                 index: task_index as u32,
-                #[cfg(debug_assertions)]
-                frame_id: self.frame_id,
             };
             let task = &self.tasks[task_index];
             passes[pass_index as usize].add_render_task(
@@ -316,8 +308,6 @@ impl RenderTaskGraph {
 
                 let child_task_id = RenderTaskId {
                     index: child_task_index as u32,
-                    #[cfg(debug_assertions)]
-                    frame_id: self.frame_id,
                 };
 
                 let mut blit = RenderTask::new_blit(
@@ -333,8 +323,6 @@ impl RenderTaskGraph {
 
                 let blit_id = RenderTaskId {
                     index: self.tasks.len() as u32,
-                    #[cfg(debug_assertions)]
-                    frame_id: self.frame_id,
                 };
 
                 self.tasks.alloc().init(blit);
@@ -345,12 +333,6 @@ impl RenderTaskGraph {
                 task_redirects[child_task_index] = Some(blit_id);
             }
         }
-    }
-
-    pub fn get_task_address(&self, id: RenderTaskId) -> RenderTaskAddress {
-        #[cfg(all(debug_assertions, not(feature = "replay")))]
-        debug_assert_eq!(self.frame_id, id.frame_id);
-        RenderTaskAddress(id.index as u16)
     }
 
     pub fn write_task_data(&mut self) {
@@ -375,16 +357,12 @@ impl RenderTaskGraph {
 impl std::ops::Index<RenderTaskId> for RenderTaskGraph {
     type Output = RenderTask;
     fn index(&self, id: RenderTaskId) -> &RenderTask {
-        #[cfg(all(debug_assertions, not(feature = "replay")))]
-        debug_assert_eq!(self.frame_id, id.frame_id);
         &self.tasks[id.index as usize]
     }
 }
 
 impl std::ops::IndexMut<RenderTaskId> for RenderTaskGraph {
     fn index_mut(&mut self, id: RenderTaskId) -> &mut RenderTask {
-        #[cfg(all(debug_assertions, not(feature = "replay")))]
-        debug_assert_eq!(self.frame_id, id.frame_id);
         &mut self.tasks[id.index as usize]
     }
 }
@@ -394,10 +372,6 @@ impl std::ops::IndexMut<RenderTaskId> for RenderTaskGraph {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTaskId {
     pub index: u32,
-
-    #[cfg(debug_assertions)]
-    #[cfg_attr(feature = "replay", serde(default = "FrameId::first"))]
-    frame_id: FrameId,
 }
 
 #[derive(Debug)]
@@ -420,8 +394,6 @@ impl RenderTaskGraphCounters {
 impl RenderTaskId {
     pub const INVALID: RenderTaskId = RenderTaskId {
         index: u32::MAX,
-        #[cfg(debug_assertions)]
-        frame_id: FrameId::INVALID,
     };
 }
 
