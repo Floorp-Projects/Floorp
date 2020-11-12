@@ -307,3 +307,27 @@ uint16_t RotorHeadingLevelRule::Match(const AccessibleOrProxy& aAccOrProxy) {
 
   return result;
 }
+
+// Outline Rule
+
+OutlineRule::OutlineRule() : RotorRule(){};
+
+uint16_t OutlineRule::Match(const AccessibleOrProxy& aAccOrProxy) {
+  uint16_t result = RotorRule::Match(aAccOrProxy);
+
+  // if a match was found in the base-class's Match function,
+  // it is valid to consider that match again here.
+  if (result & nsIAccessibleTraversalRule::FILTER_MATCH) {
+    if (aAccOrProxy.Role() == roles::OUTLINE) {
+      // if the match is an outline, we ignore all children here
+      // and unmatch the outline itself
+      result &= ~nsIAccessibleTraversalRule::FILTER_MATCH;
+      result |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
+    } else if (aAccOrProxy.Role() != roles::OUTLINEITEM) {
+      // if the match is not an outline item, we unmatch here
+      result &= ~nsIAccessibleTraversalRule::FILTER_MATCH;
+    }
+  }
+
+  return result;
+}

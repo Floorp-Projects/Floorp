@@ -113,3 +113,41 @@
 - (NSArray*)moxColumnHeaderUIElements;
 
 @end
+
+@interface mozOutlineAccessible : mozAccessible
+
+// override
+- (NSArray*)moxRows;
+
+// override
+- (NSArray*)moxColumns;
+
+// override
+- (NSArray*)moxSelectedRows;
+
+@end
+
+@interface mozOutlineRowAccessible : mozTableRowAccessible
+
+// override
+- (BOOL)isLayoutTablePart;
+
+// override
+- (NSNumber*)moxDisclosing;
+
+// override
+- (id)moxDisclosedByRow;
+
+// override
+- (NSNumber*)moxDisclosureLevel;
+
+// override
+- (NSArray*)moxDisclosedRows;
+
+// override
+- (NSNumber*)moxIndex;
+
+// override
+- (NSString*)moxLabel;
+
+@end

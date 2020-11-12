@@ -8,11 +8,14 @@
 #import "mozTableAccessible.h"
 #import "nsCocoaUtils.h"
 #import "MacUtils.h"
+#import "RotorRules.h"
 
 #include "AccIterator.h"
 #include "Accessible.h"
 #include "TableAccessible.h"
 #include "TableCellAccessible.h"
+#include "Pivot.h"
+#include "Relation.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -127,6 +130,9 @@ using namespace mozilla::a11y;
 - (BOOL)isLayoutTablePart {
   if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
     while (acc) {
+      if (acc->Role() == roles::TREE_TABLE) {
+        return false;
+      }
       if (acc->IsTable()) {
         return acc->AsTable()->IsProbablyLayoutTable();
       }
@@ -137,6 +143,9 @@ using namespace mozilla::a11y;
 
   if (ProxyAccessible* proxy = mGeckoAccessible.AsProxy()) {
     while (proxy) {
+      if (proxy->Role() == roles::TREE_TABLE) {
+        return false;
+      }
       if (proxy->IsTable()) {
         return proxy->TableIsProbablyForLayout();
       }
@@ -376,6 +385,177 @@ using namespace mozilla::a11y;
     proxy->ColHeaderCells(&headerCells);
     return utils::ConvertToNSArray(headerCells);
   }
+}
+
+@end
+
+@implementation mozOutlineAccessible
+
+- (NSArray*)moxRows {
+  // Create a new array with the list of outline rows. We
+  // use pivot here to do a deep traversal of all rows nested
+  // in this outline, not just those which are direct
+  // children, since that's what VO expects.
+  NSMutableArray* allRows = [[NSMutableArray alloc] init];
+  Pivot p = Pivot(mGeckoAccessible);
+  OutlineRule rule = OutlineRule();
+  AccessibleOrProxy firstChild = mGeckoAccessible.FirstChild();
+  AccessibleOrProxy match = p.Next(firstChild, rule, true);
+  while (!match.IsNull()) {
+    [allRows addObject:GetNativeFromGeckoAccessible(match)];
+    match = p.Next(match, rule);
+  }
+  return allRows;
+}
+
+- (NSArray*)moxColumns {
+  // Webkit says we shouldn't do anything here
+  return @[];
+}
+
+- (NSArray*)moxSelectedRows {
+  NSMutableArray* selectedRows = [[NSMutableArray alloc] init];
+  NSArray* allRows = [self moxRows];
+  for (mozAccessible* row in allRows) {
+    if ([row stateWithMask:states::SELECTED] != 0) {
+      [selectedRows addObject:row];
+    }
+  }
+
+  return selectedRows;
+}
+
+@end
+
+@implementation mozOutlineRowAccessible
+
+- (BOOL)isLayoutTablePart {
+  return NO;
+}
+
+- (NSNumber*)moxDisclosing {
+  return @([self stateWithMask:states::EXPANDED] != 0);
+}
+
+- (id)moxDisclosedByRow {
+  // According to webkit: this attr corresponds to the row
+  // that contains this row. It should be the same as the
+  // first parent that is a treeitem. If the parent is the tree
+  // itself, this should be nil. This is tricky for xul trees because
+  // all rows are direct children of the outline; they use
+  // relations to expose their heirarchy structure.
+
+  mozAccessible* disclosingRow = nil;
+  // first we check the relations to see if we're in a xul tree
+  // with weird row semantics
+  if (mGeckoAccessible.IsAccessible()) {
+    Relation rel = mGeckoAccessible.AsAccessible()->RelationByType(
+        RelationType::NODE_CHILD_OF);
+    Accessible* maybeParent = rel.Next();
+    disclosingRow =
+        maybeParent ? GetNativeFromGeckoAccessible(maybeParent) : nil;
+  } else {
+    nsTArray<ProxyAccessible*> accs =
+        mGeckoAccessible.AsProxy()->RelationByType(RelationType::NODE_CHILD_OF);
+    disclosingRow =
+        accs.Length() > 0 ? GetNativeFromGeckoAccessible(accs[0]) : nil;
+  }
+
+  if (disclosingRow) {
+    // if we find a row from our relation check,
+    // verify it isn't the outline itself and return
+    // appropriately
+    if ([[disclosingRow moxRole] isEqualToString:@"AXOutline"]) {
+      return nil;
+    }
+
+    return disclosingRow;
+  }
+  mozAccessible* parent = (mozAccessible*)[self moxUnignoredParent];
+  // otherwise, its likely we're in an aria tree, so we can use
+  // these role and subrole checks
+  if ([[parent moxRole] isEqualToString:@"AXOutline"]) {
+    return nil;
+  }
+
+  if ([[parent moxSubrole] isEqualToString:@"AXOutlineRow"]) {
+    disclosingRow = parent;
+  }
+
+  return nil;
+}
+
+- (NSNumber*)moxDisclosureLevel {
+  GroupPos groupPos;
+  if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
+    groupPos = acc->GroupPosition();
+  } else if (ProxyAccessible* proxy = mGeckoAccessible.AsProxy()) {
+    groupPos = proxy->GroupPosition();
+  }
+
+  return @(groupPos.level);
+}
+
+- (NSArray*)moxDisclosedRows {
+  // According to webkit: this attr corresponds to the rows
+  // that are considered inside this row. Again, this is weird for
+  // xul trees so we have to use relations first and then fall-back
+  // to the children filter for non-xul outlines.
+
+  NSMutableArray* disclosedRows = [[NSMutableArray alloc] init];
+  // first we check the relations to see if we're in a xul tree
+  // with weird row semantics
+  if (mGeckoAccessible.IsAccessible()) {
+    Relation rel = mGeckoAccessible.AsAccessible()->RelationByType(
+        RelationType::NODE_PARENT_OF);
+    Accessible* acc = nullptr;
+    while ((acc = rel.Next())) {
+      [disclosedRows addObject:GetNativeFromGeckoAccessible(acc)];
+    }
+  } else {
+    nsTArray<ProxyAccessible*> accs =
+        mGeckoAccessible.AsProxy()->RelationByType(
+            RelationType::NODE_PARENT_OF);
+    disclosedRows = utils::ConvertToNSArray(accs);
+  }
+
+  if (disclosedRows) {
+    // if we find rows from our relation check, return them here
+    return disclosedRows;
+  }
+
+  // otherwise, filter our children for outline rows
+  return [[self moxChildren]
+      filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(
+                                                   mozAccessible* child,
+                                                   NSDictionary* bindings) {
+        return [child isKindOfClass:[mozOutlineRowAccessible class]];
+      }]];
+}
+
+- (NSNumber*)moxIndex {
+  mozAccessible* parent = (mozAccessible*)[self moxUnignoredParent];
+  while (parent) {
+    if ([[parent moxRole] isEqualToString:@"AXOutline"]) {
+      break;
+    }
+    parent = (mozAccessible*)[parent moxUnignoredParent];
+  }
+
+  NSUInteger index =
+      [[(mozOutlineAccessible*)parent moxRows] indexOfObjectIdenticalTo:self];
+  return index == NSNotFound ? nil : @(index);
+}
+
+- (NSString*)moxLabel {
+  nsAutoString title;
+  if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
+    acc->Name(title);
+  } else {
+    mGeckoAccessible.AsProxy()->Name(title);
+  }
+  // remove listmarker for clean label
+  return nsCocoaUtils::ToNSString(Substring(title, 1, title.Length()));
 }
 
 @end
