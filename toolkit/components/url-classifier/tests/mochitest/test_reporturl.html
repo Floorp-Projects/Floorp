@@ -95,7 +95,7 @@ function testOnWindow(aTestData, aCallback, aTestCreater) {
 
 var createBlockedIframe = function(aWindow, aBrowser, aTopUrl, aUrl) {
   (async function() {
-    await BrowserTestUtils.loadURI(aBrowser, aTopUrl);
+    BrowserTestUtils.loadURI(aBrowser, aTopUrl);
     await BrowserTestUtils.browserLoaded(aBrowser);
 
     await SpecialPowers.spawn(aBrowser, [aUrl], async function(url) {
@@ -119,7 +119,7 @@ var createBlockedIframe = function(aWindow, aBrowser, aTopUrl, aUrl) {
 
 var createBlockedPage = function(aWindow, aBrowser, aTopUrl, aUrl) {
   (async function() {
-    await BrowserTestUtils.loadURI(aBrowser, aTopUrl);
+    BrowserTestUtils.loadURI(aBrowser, aTopUrl);
     await BrowserTestUtils.waitForContentEvent(aBrowser, "DOMContentLoaded");
 
     let doc = aWindow.gBrowser.contentDocument;
