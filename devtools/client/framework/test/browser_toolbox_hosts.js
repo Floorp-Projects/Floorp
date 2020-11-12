@@ -27,22 +27,35 @@ add_task(async function runTest() {
 // See Bug 1581093 for an example of issue specific to private windows.
 add_task(async function runPrivateWindowTest() {
   info("Create a private window + tab and open the toolbox");
-  const privateWindow = await BrowserTestUtils.openNewBrowserWindow({
+  await runHostTestsFromSeparateWindow({
     private: true,
   });
-  const privateBrowser = privateWindow.gBrowser;
-  privateBrowser.selectedTab = BrowserTestUtils.addTab(privateBrowser, URL);
+});
 
-  const tab = privateBrowser.selectedTab;
+// We run the same host switching tests in a non-fission window.
+// See Bug 1650963 for an example of issue specific to private windows.
+add_task(async function runNonFissionWindowTest() {
+  info("Create a non-fission window + tab and open the toolbox");
+  await runHostTestsFromSeparateWindow({
+    fission: false,
+  });
+});
+
+async function runHostTestsFromSeparateWindow(options) {
+  const win = await BrowserTestUtils.openNewBrowserWindow(options);
+  const browser = win.gBrowser;
+  browser.selectedTab = BrowserTestUtils.addTab(browser, URL);
+
+  const tab = browser.selectedTab;
   target = await TargetFactory.forTab(tab);
   toolbox = await gDevTools.showToolbox(target, "webconsole");
 
-  await runHostTests(privateBrowser);
+  await runHostTests(browser);
   await toolbox.destroy();
 
   toolbox = target = null;
-  await BrowserTestUtils.closeWindow(privateWindow);
-});
+  await BrowserTestUtils.closeWindow(win);
+}
 
 async function runHostTests(browser) {
   await testBottomHost(browser);
