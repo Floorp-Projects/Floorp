@@ -221,9 +221,9 @@ add_task(async function badImage() {
   );
   ok(!!expectedEngine, "Sanity check: engine should be in expected state");
   ok(
-    expectedEngine.iconData === null,
-    "Sanity check: icon array buffer of engine in expected state " +
-      "should be null: " +
+    expectedEngine.iconData ===
+      "chrome://browser/skin/search-engine-placeholder.png",
+    "Sanity check: icon of engine in expected state should be the placeholder: " +
       expectedEngine.iconData
   );
   checkMsg(finalCurrentStateMsg, {
@@ -492,7 +492,9 @@ async function constructEngineObj(engine) {
 
 function iconDataFromURI(uri) {
   if (!uri) {
-    return Promise.resolve(null);
+    return Promise.resolve(
+      "chrome://browser/skin/search-engine-placeholder.png"
+    );
   }
 
   if (!uri.startsWith("data:")) {
@@ -505,7 +507,7 @@ function iconDataFromURI(uri) {
     xhr.open("GET", uri, true);
     xhr.responseType = "arraybuffer";
     xhr.onerror = () => {
-      resolve(null);
+      resolve("chrome://browser/skin/search-engine-placeholder.png");
     };
     xhr.onload = () => {
       arrayBufferIconTested = true;
@@ -514,7 +516,7 @@ function iconDataFromURI(uri) {
     try {
       xhr.send();
     } catch (err) {
-      resolve(null);
+      resolve("chrome://browser/skin/search-engine-placeholder.png");
     }
   });
 }
