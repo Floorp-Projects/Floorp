@@ -3,13 +3,13 @@ layout: page
 title: Changelog
 permalink: /changelog/
 ---
-# 66.0.0-SNAPSHOT (In Development)
+# 66.0.0
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v65.0.0...master)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v65.0.0...v66.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/127?closed=1)
-* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
-* [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
-* [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v66.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v66.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v66.0.0/.config.yml)
 
 * **accounts-push**
   * 🚒 Bug fixed [issue #8745](https://github.com/mozilla-mobile/android-components/issues/8745) - Remove OneTimeFxaPushReset from FxaPushSupportFeature
