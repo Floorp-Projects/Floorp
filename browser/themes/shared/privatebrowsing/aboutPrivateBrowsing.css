@@ -103,6 +103,8 @@ p {
   opacity: 1;
   transition: opacity 500ms;
   width: 100%;
+  -moz-context-properties: fill;
+  fill: rgba(12, 12, 13, 0.4);
 }
 
 .search-handoff-button.focused {
