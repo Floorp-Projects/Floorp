@@ -77,8 +77,10 @@ def guess_mozinfo_from_task(task):
         info["processor"] = "x86_64"
 
     # guess toolkit
-    if info["os"] in ("android", "windows"):
-        info["toolkit"] = info["os"]
+    if info["os"] == "android":
+        info["toolkit"] = "android"
+    elif info["os"] == "win":
+        info["toolkit"] = "windows"
     elif info["os"] == "mac":
         info["toolkit"] = "cocoa"
     else:
