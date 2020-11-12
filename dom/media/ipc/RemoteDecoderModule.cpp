@@ -5,11 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "RemoteDecoderModule.h"
 
-#include "mozilla/StaticPrefs_media.h"
-#include "mozilla/SyncRunnable.h"
-#include "mozilla/dom/ContentChild.h"  // for launching RDD w/ ContentChild
-#include "mozilla/layers/SynchronousTask.h"
-
 #ifdef MOZ_AV1
 #  include "AOMDecoder.h"
 #endif
@@ -63,8 +58,6 @@ bool RemoteDecoderModule::Supports(
 
 RefPtr<RemoteDecoderModule::CreateDecoderPromise>
 RemoteDecoderModule::AsyncCreateDecoder(const CreateDecoderParams& aParams) {
-  RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded(mLocation);
-
   if (aParams.mConfig.IsAudio()) {
     // OpusDataDecoder will check this option to provide the same info
     // that IsDefaultPlaybackDeviceMono provides.  We want to avoid calls
