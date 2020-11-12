@@ -1720,6 +1720,27 @@ f527acfab80d736b0186ac3014a9d10fadf021ef # cinnabar
 # 08a0e1e4864c9dfeff34aa3528a550aa84a8994d - Sylvestre Ledru - Bug 1617369 - Reformat recent rust changes with rustfmt r=emilio
 6b1bce83bc5b896c814d08319fcb99db8aa0d1f1 # cinnabar
 7f26dcf1b6d119a4664c3bff9749523f1e400068 # gecko-dev
+# 7558c8821a074b6f7c1e7d9314976e6b66176e5c - Ricky Stewart - Bug 1654103: Standardize on Black for Python code in `mozilla-central`. r=remote-protocol-reviewers,marionette-reviewers,webdriver-reviewers,perftest-reviewers,devtools-backward-compat-reviewers,jgilbert,preferences-reviewers,sylvestre,maja_zf,webcompat-reviewers,denschub,ntim,whimboo,sparky
+c51be04f3639e229800c5debe98aac091cd96599 # cinnabar
+50762dacab8f3a0f17509f6faeb799bf1e3a0ed1 # gecko-dev
+# 94ec15429e21553241fb9addd2c15478068e72b6 - Ricky Stewart - Bug 1672023 - Remove excluded files from `black.yml` r=sylvestre,perftest-reviewers,geckoview-reviewers,agi
+a91aa733227898f49edc1378cc2a6d1d8f2e5f37 # cinnabar
+8b352f18432df719402f8d2722db96059cfef929 # gecko-dev
+# 4c9ab7d458520998d627f08ad60ed00dc44ef6e5 - Dorel Luca - Backed out changeset 94ec15429e21 (bug 1672023) for Backout conflicts with Bug 1654103. CLOSED TREE
+26b78260efcfec28e3f2ccd976e757c3f1e234b3 # cinnabar
+26941cf2f5f73874e132ef70b2a9cc4d119d07c3 # gecko-dev
+# 2309e130ea8d75bd6fb4a5fc056e503fae7f886c - Dorel Luca - Backed out changeset 7558c8821a07 (bug 1654103) for multiple failures. CLOSED TREE
+24a72f1077239e6c5545fb6164023d26fdad5564 # cinnabar
+1ff59cb7a3371196038030a5e456979d210f784d # gecko-dev
+# e7834b600201aea4e55b53bb3b2af1f70545779b - Ricky Stewart - Bug 1654103: Standardize on Black for Python code in `mozilla-central`. r=remote-protocol-reviewers,marionette-reviewers,webdriver-reviewers,perftest-reviewers,devtools-backward-compat-reviewers,jgilbert,preferences-reviewers,sylvestre,maja_zf,webcompat-reviewers,denschub,ntim,whimboo,sparky
+f8d6abe0fee9b7386ff05019b5c5e6d0989e87bb # cinnabar
+c0cea3b0faaaa8d8109576a4e7c7a2c8bf49ef56 # gecko-dev
+# ff3fb0b4a5121abae41a70ef854a9de397c80397 - Ricky Stewart - Bug 1672023 - Remove excluded files from `black.yml` r=sylvestre,perftest-reviewers,geckoview-reviewers,agi
+4e0ddeb12ac0bc70ca3ccd9994dc1789f6cd3033 # cinnabar
+fe80718d675f89a85d7ae905e79b31459ad96aa1 # gecko-dev
+# 9006d6f3cb29754037aa0b5ef4c9b2ae67006459 - Bogdan Tara - Backed out 10 changesets (bug 1654103, bug 1672023, bug 1518999) for PanZoomControllerTest.touchEventForResult gv-junit failures CLOSED TREE
+2cffac047b8251c230ce01836ec389133d7c366d # cinnabar
+da1098d4aada13ba65e312f24561ca5a751947e4 # gecko-dev
 # 994ae8e4833c90447d91f0e26a718573cff5a514 - Ricky Stewart - Bug 1654103: Standardize on Black for Python code in `mozilla-central`.
 72edd6842030e7c21bd0be5a563864f51e01bdf7 # cinnabar
 02a7b4ebdf98983f97b3a2007798356b0c39c1c4 # gecko-dev

@@ -340,5 +340,12 @@ fa3daa92292dde4bf9405c56e43a464e53c349a2 - Sylvestre Ledru - Bug 1519636 - Ride 
 6d386a2162b90d72529adbc283391fc4732eff32 - Csoregi Natalia - Backed out changeset 4ad80127f89f (bug 1519636) for bustage on MarkupMap.h and nsAccessibilityService.cpp. CLOSED TREE
 020c8c871c0d3b3920fe95935cfef06501976c0f - Sylvestre Ledru - Bug 1552795 - Remove all trailing whitespaces in idl files r=Ehsan
 c7e91f614eb78c4447a623f1c88a66421113ab07 - Victor Porof - Bug 1563300 - Add a js-format git commit hook, r=sylvestre, CLOSED TREE
+7558c8821a074b6f7c1e7d9314976e6b66176e5c - Ricky Stewart - Bug 1654103: Standardize on Black for Python code in `mozilla-central`. r=remote-protocol-reviewers,marionette-reviewers,webdriver-reviewers,perftest-reviewers,devtools-backward-compat-reviewers,jgilbert,preferences-reviewers,sylvestre,maja_zf,webcompat-reviewers,denschub,ntim,whimboo,sparky
+94ec15429e21553241fb9addd2c15478068e72b6 - Ricky Stewart - Bug 1672023 - Remove excluded files from `black.yml` r=sylvestre,perftest-reviewers,geckoview-reviewers,agi
+4c9ab7d458520998d627f08ad60ed00dc44ef6e5 - Dorel Luca - Backed out changeset 94ec15429e21 (bug 1672023) for Backout conflicts with Bug 1654103. CLOSED TREE
+2309e130ea8d75bd6fb4a5fc056e503fae7f886c - Dorel Luca - Backed out changeset 7558c8821a07 (bug 1654103) for multiple failures. CLOSED TREE
+e7834b600201aea4e55b53bb3b2af1f70545779b - Ricky Stewart - Bug 1654103: Standardize on Black for Python code in `mozilla-central`. r=remote-protocol-reviewers,marionette-reviewers,webdriver-reviewers,perftest-reviewers,devtools-backward-compat-reviewers,jgilbert,preferences-reviewers,sylvestre,maja_zf,webcompat-reviewers,denschub,ntim,whimboo,sparky
+ff3fb0b4a5121abae41a70ef854a9de397c80397 - Ricky Stewart - Bug 1672023 - Remove excluded files from `black.yml` r=sylvestre,perftest-reviewers,geckoview-reviewers,agi
+9006d6f3cb29754037aa0b5ef4c9b2ae67006459 - Bogdan Tara - Backed out 10 changesets (bug 1654103, bug 1672023, bug 1518999) for PanZoomControllerTest.touchEventForResult gv-junit failures CLOSED TREE
 994ae8e4833c90447d91f0e26a718573cff5a514 - Ricky Stewart - Bug 1654103: Standardize on Black for Python code in `mozilla-central`.
 e46822faf5d85ea1ca89fc153aaf5a83ce0418b5 - Ricky Stewart - Bug 1672023 - Remove excluded files from `black.yml`
