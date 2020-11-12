@@ -89,12 +89,10 @@ class ServoCSSParser {
    * Parse a animation timing function.
    *
    * @param aValue The specified value.
-   * @param aUrl The parser url extra data.
    * @param aResult The output timing function. (output)
    * @return Whether the value was successfully parsed.
    */
-  static bool ParseEasing(const nsAString& aValue, URLExtraData* aUrl,
-                          nsTimingFunction& aResult);
+  static bool ParseEasing(const nsAString& aValue, nsTimingFunction& aResult);
 
   /**
    * Parse a specified transform list into a gfx matrix.
