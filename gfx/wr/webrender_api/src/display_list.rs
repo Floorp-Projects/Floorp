@@ -1071,7 +1071,9 @@ impl DisplayListBuilder {
 
         let mut index: usize = 0;
         {
-            let mut iter = temp.iter();
+            let mut cache = DisplayItemCache::new();
+            cache.update(&temp);
+            let mut iter = temp.iter_with_cache(&cache);
             while let Some(item) = iter.next_raw() {
                 if index >= range.start.unwrap_or(0) && range.end.map_or(true, |e| index < e) {
                     writeln!(sink, "{}{:?}", "  ".repeat(indent), item.item()).unwrap();
