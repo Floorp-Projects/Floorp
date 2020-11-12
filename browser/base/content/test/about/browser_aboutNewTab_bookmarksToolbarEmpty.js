@@ -72,6 +72,7 @@ add_task(async function bookmarks_toolbar_not_shown_when_empty() {
       opening: "about:newtab",
       waitForLoad: false,
     });
+    let emptyMessage = document.getElementById("personal-toolbar-empty");
 
     // 1: Test that the toolbar is shown in a newly opened foreground about:newtab
     if (featureEnabled) {
@@ -79,6 +80,7 @@ add_task(async function bookmarks_toolbar_not_shown_when_empty() {
         visible: true,
         message: "Toolbar should be visible on newtab if enabled",
       });
+      ok(emptyMessage.hidden, "Empty message is hidden with toolbar populated");
     }
 
     // 2: Toolbar should get hidden when switching tab to example.com
@@ -96,11 +98,14 @@ add_task(async function bookmarks_toolbar_not_shown_when_empty() {
     );
     CustomizableUI.removeWidgetFromArea("import-button");
     await BrowserTestUtils.switchTab(gBrowser, newtab);
-    await waitForBookmarksToolbarVisibility({
-      visible: false,
-      message:
-        "Toolbar is not visible when there are no items in the toolbar area",
-    });
+    if (featureEnabled) {
+      await waitForBookmarksToolbarVisibility({
+        visible: true,
+        message:
+          "Toolbar is visible when there are no items in the toolbar area",
+      });
+      ok(!emptyMessage.hidden, "Empty message is shown with toolbar empty");
+    }
 
     // 4: Put personal-bookmarks back in the toolbar and confirm the toolbar is visible now
     CustomizableUI.addWidgetToArea(
@@ -115,6 +120,7 @@ add_task(async function bookmarks_toolbar_not_shown_when_empty() {
         message:
           "Toolbar should be visible with Bookmarks Toolbar Items restored",
       });
+      ok(emptyMessage.hidden, "Empty message is hidden with toolbar populated");
     }
 
     // 5: Remove all the bookmarks in the toolbar and confirm that the toolbar
@@ -122,19 +128,20 @@ add_task(async function bookmarks_toolbar_not_shown_when_empty() {
     await PlacesUtils.bookmarks.remove(bookmarks);
     await BrowserTestUtils.switchTab(gBrowser, example);
     await BrowserTestUtils.switchTab(gBrowser, newtab);
-    await waitForBookmarksToolbarVisibility({
-      visible: false,
-      message:
-        "Toolbar is not visible when there are no items or nested bookmarks in the toolbar area",
-    });
+    if (featureEnabled) {
+      await waitForBookmarksToolbarVisibility({
+        visible: true,
+        message:
+          "Toolbar is visible when there are no items or nested bookmarks in the toolbar area",
+      });
+      ok(!emptyMessage.hidden, "Empty message is shown with toolbar empty");
+    }
 
     // 6: Add a toolbarbutton and make sure that the toolbar appears when the button is visible
-    let button = document.createElementNS(
-      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-      "toolbarbutton"
+    CustomizableUI.addWidgetToArea(
+      "characterencoding-button",
+      CustomizableUI.AREA_BOOKMARKS
     );
-    let toolbar = document.getElementById("PersonalToolbar");
-    button = toolbar.appendChild(button);
     await BrowserTestUtils.switchTab(gBrowser, example);
     await BrowserTestUtils.switchTab(gBrowser, newtab);
     if (featureEnabled) {
@@ -143,16 +150,8 @@ add_task(async function bookmarks_toolbar_not_shown_when_empty() {
         message:
           "Toolbar is visible when there is a visible button in the toolbar",
       });
+      ok(emptyMessage.hidden, "Empty message is hidden with button in toolbar");
     }
-    button.hidden = true;
-    await BrowserTestUtils.switchTab(gBrowser, example);
-    await BrowserTestUtils.switchTab(gBrowser, newtab);
-    await waitForBookmarksToolbarVisibility({
-      visible: false,
-      message:
-        "Toolbar is hidden when there are no visible buttons in the toolbar",
-    });
-    button.remove();
 
     await BrowserTestUtils.removeTab(newtab);
     await BrowserTestUtils.removeTab(example);
