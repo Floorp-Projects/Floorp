@@ -73,7 +73,6 @@ UNIFIED_SOURCES += [
     "nsWidgetFactory.mm",
     "nsWindowMap.mm",
     "OSXNotificationCenter.mm",
-    "ProcInfo.mm",
     "ScreenHelperCocoa.mm",
     "SwipeTracker.mm",
     "TextInputHandler.mm",
