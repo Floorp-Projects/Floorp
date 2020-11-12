@@ -37,22 +37,14 @@ if check_commit_msg "--dep"; then
 fi
 
 function build_js_shell () {
-    # Must unset MOZ_OBJDIR and MOZCONFIG here to prevent the build system from
-    # inferring that the analysis output directory is the current objdir. We
-    # need a separate objdir here to build the opt JS shell to use to run the
+    # Must unset/override MOZ_OBJDIR and MOZCONFIG here to prevent the build
+    # system from inferring that the analysis output directory is the current
+    # objdir. We need a separate objdir for the opt JS shell to use to run the
     # analysis.
     (
-    unset MOZ_OBJDIR
     unset MOZCONFIG
-    cp -P $JS_SRCDIR/configure.in $JS_SRCDIR/configure
-    chmod +x $JS_SRCDIR/configure
-    if [[ -z "$HAZ_DEP" ]]; then
-        [ -d $HAZARD_SHELL_OBJDIR ] && rm -rf $HAZARD_SHELL_OBJDIR
-    fi
-    mkdir -p $HAZARD_SHELL_OBJDIR || true
-    cd $HAZARD_SHELL_OBJDIR
-    $JS_SRCDIR/configure --enable-optimize --disable-debug --enable-ctypes --enable-nspr-build --without-intl-api
-    make -j$(nproc)
+    export MOZ_OBJDIR="$HAZARD_SHELL_OBJDIR"
+    $GECKO_PATH/mach hazards build-shell
     ) # Restore MOZ_OBJDIR and MOZCONFIG
 }
 
