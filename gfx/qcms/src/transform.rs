@@ -1211,7 +1211,7 @@ pub unsafe extern "C" fn qcms_profile_precache_output_transform(mut profile: *mu
         let mut output_table_r = precache_create();
         if compute_precache(
             (*profile).redTRC.as_deref().unwrap(),
-            Arc::get_mut(&mut output_table_r).unwrap().data.as_mut_ptr(),
+            &mut Arc::get_mut(&mut output_table_r).unwrap().data,
         ) {
             (*profile).output_table_r = Some(output_table_r);
         }
@@ -1220,7 +1220,7 @@ pub unsafe extern "C" fn qcms_profile_precache_output_transform(mut profile: *mu
         let mut output_table_g = precache_create();
         if compute_precache(
             (*profile).greenTRC.as_deref().unwrap(),
-            Arc::get_mut(&mut output_table_g).unwrap().data.as_mut_ptr(),
+            &mut Arc::get_mut(&mut output_table_g).unwrap().data,
         ) {
             (*profile).output_table_g = Some(output_table_g);
         }
@@ -1229,7 +1229,7 @@ pub unsafe extern "C" fn qcms_profile_precache_output_transform(mut profile: *mu
         let mut output_table_b = precache_create();
         if compute_precache(
             (*profile).blueTRC.as_deref().unwrap(),
-            Arc::get_mut(&mut output_table_b).unwrap().data.as_mut_ptr(),
+            &mut Arc::get_mut(&mut output_table_b).unwrap().data,
         ) {
             (*profile).output_table_b = Some(output_table_b);
         }

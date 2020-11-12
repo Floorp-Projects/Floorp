@@ -415,7 +415,10 @@ pub unsafe extern "C" fn compute_precache_linear(mut output: *mut u8) {
     }
 }
 #[no_mangle]
-pub unsafe extern "C" fn compute_precache(mut trc: &curveType, mut output: *mut u8) -> bool {
+pub unsafe extern "C" fn compute_precache(
+    mut trc: &curveType,
+    mut output: &mut [u8; PRECACHE_OUTPUT_SIZE],
+) -> bool {
     match trc {
         curveType::Parametric(params) => {
             let mut gamma_table = Vec::with_capacity(256);
@@ -436,14 +439,14 @@ pub unsafe extern "C" fn compute_precache(mut trc: &curveType, mut output: *mut 
                 inverted_size = 256
             }
             let mut inverted = invert_lut(&gamma_table_uint, inverted_size);
-            compute_precache_lut(output, inverted.as_mut_ptr(), inverted_size);
+            compute_precache_lut(output.as_mut_ptr(), inverted.as_mut_ptr(), inverted_size);
         }
         curveType::Curve(data) => {
             if data.len() == 0 {
-                compute_precache_linear(output);
+                compute_precache_linear(output.as_mut_ptr());
             } else if data.len() == 1 {
                 compute_precache_pow(
-                    output,
+                    output.as_mut_ptr(),
                     (1.0f64 / u8Fixed8Number_to_float(data[0]) as f64) as f32,
                 );
             } else {
@@ -456,7 +459,11 @@ pub unsafe extern "C" fn compute_precache(mut trc: &curveType, mut output: *mut 
                     inverted_size_0 = 256
                 } //XXX turn this conversion into a function
                 let mut inverted_0 = invert_lut(data, inverted_size_0);
-                compute_precache_lut(output, inverted_0.as_mut_ptr(), inverted_size_0);
+                compute_precache_lut(
+                    output.as_mut_ptr(),
+                    inverted_0.as_mut_ptr(),
+                    inverted_size_0,
+                );
             }
         }
     }
