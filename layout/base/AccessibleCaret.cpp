@@ -302,7 +302,10 @@ void AccessibleCaret::SetCaretElementStyle(const nsRect& aRect,
   styleStr.AppendLiteral("px; margin-left: ");
   styleStr.AppendFloat(StaticPrefs::layout_accessiblecaret_margin_left() /
                        aZoomLevel);
-  styleStr.AppendLiteral("px");
+  styleStr.AppendLiteral("px; transition-duration: ");
+  styleStr.AppendFloat(
+      StaticPrefs::layout_accessiblecaret_transition_duration());
+  styleStr.AppendLiteral("ms");
 
   CaretElement().SetAttr(kNameSpaceID_None, nsGkAtoms::style, styleStr, true);
   AC_LOG("%s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(styleStr).get());
