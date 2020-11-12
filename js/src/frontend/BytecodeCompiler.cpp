@@ -1207,7 +1207,7 @@ void CompilationInput::trace(JSTracer* trc) {
   TraceNullableRoot(trc, &enclosingScope, "compilation-input-enclosing-scope");
 }
 
-void CompilationAtomCache::trace(JSTracer* trc) { atoms.trace(trc); }
+void CompilationAtomCache::trace(JSTracer* trc) { atoms_.trace(trc); }
 
 void CompilationInfo::trace(JSTracer* trc) { input.trace(trc); }
 
