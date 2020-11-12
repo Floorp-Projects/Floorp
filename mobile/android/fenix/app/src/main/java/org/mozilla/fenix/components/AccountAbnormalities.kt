@@ -16,7 +16,7 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.base.log.logger.Logger
-import org.mozilla.fenix.StrictModeManager
+import org.mozilla.fenix.perf.StrictModeManager
 import kotlin.coroutines.CoroutineContext
 
 /**

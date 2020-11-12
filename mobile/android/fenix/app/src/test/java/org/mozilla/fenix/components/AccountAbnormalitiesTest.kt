@@ -17,7 +17,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.StrictModeManager
+import org.mozilla.fenix.perf.StrictModeManager
 import org.mozilla.fenix.helpers.TestStrictModeManager
 import kotlin.coroutines.CoroutineContext
 

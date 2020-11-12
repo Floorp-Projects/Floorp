@@ -19,7 +19,7 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tab.collections.TabCollectionStorage
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
-import org.mozilla.fenix.StrictModeManager
+import org.mozilla.fenix.perf.StrictModeManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder

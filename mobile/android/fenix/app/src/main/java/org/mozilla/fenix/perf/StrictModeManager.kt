@@ -7,7 +7,7 @@
 // methods so we suppress the check.
 @file:Suppress("MozillaStrictModeSuppression")
 
-package org.mozilla.fenix
+package org.mozilla.fenix.perf
 
 import android.os.Build
 import android.os.Looper
@@ -17,8 +17,8 @@ import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import mozilla.components.support.ktx.android.os.resetAfter
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.components.Components
-import org.mozilla.fenix.perf.Performance
 import org.mozilla.fenix.utils.Mockable
 import java.util.concurrent.atomic.AtomicLong
 

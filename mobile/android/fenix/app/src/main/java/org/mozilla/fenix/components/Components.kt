@@ -19,7 +19,7 @@ import mozilla.components.support.migration.state.MigrationStore
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.StrictModeManager
+import org.mozilla.fenix.perf.StrictModeManager
 import org.mozilla.fenix.components.metrics.AppStartupTelemetry
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.perf.lazyMonitored

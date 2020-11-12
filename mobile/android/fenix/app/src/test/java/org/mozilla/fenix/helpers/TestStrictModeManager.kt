@@ -6,7 +6,7 @@ package org.mozilla.fenix.helpers
 
 import android.os.StrictMode
 import io.mockk.mockk
-import org.mozilla.fenix.StrictModeManager
+import org.mozilla.fenix.perf.StrictModeManager
 
 /**
  * A test version of [StrictModeManager]. This class is difficult to mock because of [resetAfter]

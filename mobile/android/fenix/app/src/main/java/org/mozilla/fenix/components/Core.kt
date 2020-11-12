@@ -63,7 +63,7 @@ import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.StrictModeManager
+import org.mozilla.fenix.perf.StrictModeManager
 import org.mozilla.fenix.TelemetryMiddleware
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
