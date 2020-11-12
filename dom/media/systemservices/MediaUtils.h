@@ -111,35 +111,43 @@ class RefcountableBase {
 template <typename T>
 class Refcountable : public T, public RefcountableBase {
  public:
-  NS_METHOD_(MozExternalRefCountType) AddRef() {
-    return RefcountableBase::AddRef();
-  }
-
-  NS_METHOD_(MozExternalRefCountType) Release() {
-    return RefcountableBase::Release();
-  }
-
-  Refcountable<T>& operator=(T&& aOther) {
+  Refcountable& operator=(T&& aOther) {
     T::operator=(std::move(aOther));
     return *this;
   }
 
-  Refcountable<T>& operator=(T& aOther) {
+  Refcountable& operator=(T& aOther) {
     T::operator=(aOther);
     return *this;
   }
-
- private:
-  ~Refcountable<T>() = default;
 };
 
 template <typename T>
-class Refcountable<UniquePtr<T>> : public UniquePtr<T> {
+class Refcountable<UniquePtr<T>> : public UniquePtr<T>,
+                                   public RefcountableBase {
  public:
-  explicit Refcountable<UniquePtr<T>>(T* aPtr) : UniquePtr<T>(aPtr) {}
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Refcountable<T>)
+  explicit Refcountable(T* aPtr) : UniquePtr<T>(aPtr) {}
+};
+
+template <>
+class Refcountable<bool> : public RefcountableBase {
+ public:
+  explicit Refcountable(bool aValue) : mValue(aValue) {}
+
+  Refcountable& operator=(bool aOther) {
+    mValue = aOther;
+    return *this;
+  }
+
+  Refcountable& operator=(const Refcountable& aOther) {
+    mValue = aOther.mValue;
+    return *this;
+  }
+
+  explicit operator bool() const { return mValue; }
+
  private:
-  ~Refcountable<UniquePtr<T>>() = default;
+  bool mValue;
 };
 
 /* Async shutdown helpers
