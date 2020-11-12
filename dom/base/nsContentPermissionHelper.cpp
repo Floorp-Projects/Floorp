@@ -455,29 +455,6 @@ nsContentPermissionRequester::~nsContentPermissionRequester() {
   mListener = nullptr;
 }
 
-NS_IMETHODIMP
-nsContentPermissionRequester::SetOnVisibilityChange(
-    nsIContentPermissionRequestCallback* aCallback) {
-  mListener->SetCallback(aCallback);
-
-  if (!aCallback) {
-    mListener->RemoveListener();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContentPermissionRequester::GetOnVisibilityChange(
-    nsIContentPermissionRequestCallback** aCallback) {
-  NS_ENSURE_ARG_POINTER(aCallback);
-
-  nsCOMPtr<nsIContentPermissionRequestCallback> callback =
-      mListener->GetCallback();
-  callback.forget(aCallback);
-  return NS_OK;
-}
-
 static nsIPrincipal* GetTopLevelPrincipal(nsPIDOMWindowInner* aWindow) {
   MOZ_ASSERT(aWindow);
 
@@ -769,23 +746,6 @@ nsresult TranslateChoices(
 NS_IMPL_ISUPPORTS(
     nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy,
     nsIContentPermissionRequester)
-
-NS_IMETHODIMP
-nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy ::
-    SetOnVisibilityChange(nsIContentPermissionRequestCallback* aCallback) {
-  mOnChangeCallback = aCallback;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy ::
-    GetOnVisibilityChange(nsIContentPermissionRequestCallback** aCallback) {
-  NS_ENSURE_ARG_POINTER(aCallback);
-
-  nsCOMPtr<nsIContentPermissionRequestCallback> callback = mOnChangeCallback;
-  callback.forget(aCallback);
-  return NS_OK;
-}
 
 void nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy ::
     NotifyVisibilityResult(const bool& aIsVisible) {

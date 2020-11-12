@@ -44,10 +44,6 @@ interface nsIContentPermissionRequestCallback : nsISupports {
  */
 [scriptable, uuid(f8577124-6a5f-486f-ae04-c5bcae911eb5)]
 interface nsIContentPermissionRequester : nsISupports {
-  /**
-   * The callback to get the notification of visibility change.
-   */
-  attribute nsIContentPermissionRequestCallback onVisibilityChange;
 };
 
 /**
