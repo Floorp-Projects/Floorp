@@ -14,11 +14,11 @@
 #include "DecryptThroughputLimit.h"
 #include "GMPDecoderModule.h"
 #include "GMPService.h"
+#include "GMPVideoDecoder.h"
+#include "MP4Decoder.h"
 #include "MediaInfo.h"
 #include "PDMFactory.h"
 #include "mozilla/CDMProxy.h"
-#include "GMPVideoDecoder.h"
-#include "MP4Decoder.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/UniquePtr.h"
@@ -74,7 +74,8 @@ class EMEDecryptor : public MediaDataDecoder,
  public:
   EMEDecryptor(MediaDataDecoder* aDecoder, CDMProxy* aProxy,
                TrackInfo::TrackType aType,
-               MediaEventProducer<TrackInfo::TrackType>* aOnWaitingForKey,
+               const std::function<MediaEventProducer<TrackInfo::TrackType>*()>&
+                   aOnWaitingForKey,
                UniquePtr<ADTSSampleConverter> aConverter = nullptr)
       : mDecoder(aDecoder),
         mProxy(aProxy),
