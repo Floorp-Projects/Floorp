@@ -24,6 +24,7 @@ import mozilla.components.feature.readerview.view.ReaderViewControlsView
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
 import mozilla.components.support.webextensions.WebExtensionController
 import org.json.JSONObject
@@ -216,20 +217,8 @@ class ReaderViewFeature(
 
     private fun ensureExtensionInstalled() {
         val feature = WeakReference(this)
-        val store = WeakReference(store)
         extensionController.install(engine, onSuccess = {
-            // If we open directly into a restored reader page on startup it's
-            // currently possible that we miss the "onPortConnected" message.
-            // These messages should be queued and delivered once a handler is
-            // present, but are currently flushed by the first native app that
-            // connects, which may be a different port / app:
-            // https://bugzilla.mozilla.org/show_bug.cgi?id=1675644
-            // This attempts to work around the problem until the fix lands.
             feature.get()?.connectReaderViewContentScript()
-            val selectedTab = store.get()?.state?.selectedTab
-            if (selectedTab?.readerState?.active == true) {
-                selectedTab.engineState.engineSession?.reload()
-            }
         })
     }
 
@@ -272,9 +261,8 @@ class ReaderViewFeature(
                 val baseUrl = message.getString(BASE_URL_RESPONSE_MESSAGE_KEY)
                 store.dispatch(ReaderAction.UpdateReaderBaseUrlAction(sessionId, baseUrl))
 
-                config.get()?.let { config ->
-                    port.postMessage(createShowReaderMessage(config))
-                }
+                port.postMessage(createShowReaderMessage(config.get()))
+
                 val activeUrl = message.getString(ACTIVE_URL_RESPONSE_MESSAGE_KEY)
                 store.dispatch(ReaderAction.UpdateReaderActiveUrlAction(sessionId, activeUrl))
             }
@@ -283,6 +271,8 @@ class ReaderViewFeature(
 
     @VisibleForTesting
     companion object {
+        private val logger = Logger("ReaderView")
+
         internal const val READER_VIEW_EXTENSION_ID = "readerview@mozac.org"
         // Name of the port connected to all pages for checking whether or not
         // a page is readerable (see readerview_content.js).
@@ -317,22 +307,29 @@ class ReaderViewFeature(
         internal const val FONT_SIZE_KEY = "mozac-readerview-fontsize"
         internal const val FONT_SIZE_DEFAULT = 3
 
-        private fun createCheckReaderStateMessage(): JSONObject {
+        internal fun createCheckReaderStateMessage(): JSONObject {
             return JSONObject().put(ACTION_MESSAGE_KEY, ACTION_CHECK_READER_STATE)
         }
 
-        private fun createShowReaderMessage(config: ReaderViewConfig): JSONObject {
+        internal fun createShowReaderMessage(config: ReaderViewConfig?): JSONObject {
+            if (config == null) {
+                logger.warn("No config provided. Falling back to default values.")
+            }
+
+            val fontSize = config?.fontSize ?: FONT_SIZE_DEFAULT
+            val fontType = config?.fontType ?: FontType.SERIF
+            val colorScheme = config?.colorScheme ?: ColorScheme.LIGHT
             val configJson = JSONObject()
-                .put(ACTION_VALUE_SHOW_FONT_SIZE, config.fontSize)
-                .put(ACTION_VALUE_SHOW_FONT_TYPE, config.fontType.name.toLowerCase(Locale.ROOT))
-                .put(ACTION_VALUE_SHOW_COLOR_SCHEME, config.colorScheme.name.toLowerCase(Locale.ROOT))
+                .put(ACTION_VALUE_SHOW_FONT_SIZE, fontSize)
+                .put(ACTION_VALUE_SHOW_FONT_TYPE, fontType.value.toLowerCase(Locale.ROOT))
+                .put(ACTION_VALUE_SHOW_COLOR_SCHEME, colorScheme.name.toLowerCase(Locale.ROOT))
 
             return JSONObject()
                 .put(ACTION_MESSAGE_KEY, ACTION_SHOW)
                 .put(ACTION_VALUE, configJson)
         }
 
-        private fun createHideReaderMessage(): JSONObject {
+        internal fun createHideReaderMessage(): JSONObject {
             return JSONObject().put(ACTION_MESSAGE_KEY, ACTION_HIDE)
         }
     }

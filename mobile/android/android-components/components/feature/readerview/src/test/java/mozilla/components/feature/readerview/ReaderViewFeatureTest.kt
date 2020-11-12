@@ -22,6 +22,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Port
 import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.feature.readerview.ReaderViewFeature.Companion.FONT_SIZE_DEFAULT
 import mozilla.components.feature.readerview.ReaderViewFeature.Companion.READER_VIEW_ACTIVE_CONTENT_PORT
 import mozilla.components.feature.readerview.ReaderViewFeature.Companion.READER_VIEW_CONTENT_PORT
 import mozilla.components.feature.readerview.ReaderViewFeature.Companion.READER_VIEW_EXTENSION_ID
@@ -53,6 +54,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import java.util.Locale
 
 @RunWith(AndroidJUnit4::class)
 class ReaderViewFeatureTest {
@@ -263,6 +265,19 @@ class ReaderViewFeatureTest {
         readerViewFeature.showReaderView()
         verify(port).postMessage(message.capture())
         assertEquals(ReaderViewFeature.ACTION_SHOW, message.value[ReaderViewFeature.ACTION_MESSAGE_KEY])
+    }
+
+    @Test
+    fun `default values used for showing reader view if no config is present`() {
+        val message = ReaderViewFeature.createShowReaderMessage(null)
+        assertEquals(ReaderViewFeature.ACTION_SHOW, message[ReaderViewFeature.ACTION_MESSAGE_KEY])
+        val config = message[ReaderViewFeature.ACTION_VALUE] as JSONObject?
+        assertNotNull(config)
+        assertEquals(FONT_SIZE_DEFAULT, config!![ReaderViewFeature.ACTION_VALUE_SHOW_FONT_SIZE])
+        assertEquals(ReaderViewFeature.FontType.SERIF.value.toLowerCase(Locale.ROOT),
+            config[ReaderViewFeature.ACTION_VALUE_SHOW_FONT_TYPE])
+        assertEquals(ReaderViewFeature.ColorScheme.LIGHT.name.toLowerCase(Locale.ROOT),
+            config[ReaderViewFeature.ACTION_VALUE_SHOW_COLOR_SCHEME])
     }
 
     @Test
@@ -537,38 +552,6 @@ class ReaderViewFeatureTest {
         verify(port, times(2)).postMessage(message.capture())
         assertEquals(ReaderViewFeature.ACTION_CHECK_READER_STATE, message.allValues[0][ReaderViewFeature.ACTION_MESSAGE_KEY])
         assertEquals(ReaderViewFeature.ACTION_SHOW, message.allValues[1][ReaderViewFeature.ACTION_MESSAGE_KEY])
-    }
-
-    @Test
-    fun `extension page is reloaded if install finishes after initial load`() {
-        val engine: Engine = mock()
-        val engineSession: EngineSession = mock()
-        val tab = createTab(
-            url = "https://www.mozilla.org",
-            id = "test-tab",
-            readerState = ReaderState(active = true),
-            engineSession = engineSession
-        )
-        val store = spy(BrowserStore(
-            initialState = BrowserState(
-                tabs = listOf(tab),
-                selectedTabId = tab.id)
-            )
-        )
-        val readerViewFeature = ReaderViewFeature(testContext, engine, store, mock())
-        readerViewFeature.start()
-
-        val onSuccess = argumentCaptor<((WebExtension) -> Unit)>()
-        val onError = argumentCaptor<((String, Throwable) -> Unit)>()
-        verify(engine, times(1)).installWebExtension(
-            eq(ReaderViewFeature.READER_VIEW_EXTENSION_ID),
-            eq(ReaderViewFeature.READER_VIEW_EXTENSION_URL),
-            onSuccess.capture(),
-            onError.capture()
-        )
-
-        onSuccess.value.invoke(mock())
-        verify(engineSession).reload()
     }
 
     private fun prepareFeatureForTest(
