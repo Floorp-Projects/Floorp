@@ -211,6 +211,23 @@
 // AXIdentifier
 - (NSString* _Nullable)moxIdentifier;
 
+// Outline Attributes
+
+// AXDisclosing
+- (NSNumber* _Nullable)moxDisclosing;
+
+// AXDisclosedByRow
+- (id _Nullable)moxDisclosedByRow;
+
+// AXDisclosureLevel
+- (NSNumber* _Nullable)moxDisclosureLevel;
+
+// AXDisclosedRows
+- (NSArray* _Nullable)moxDisclosedRows;
+
+// AXSelectedRows
+- (NSArray* _Nullable)moxSelectedRows;
+
 // Math Attributes
 
 // AXMathRootRadicand

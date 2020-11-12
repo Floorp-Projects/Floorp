@@ -112,3 +112,14 @@ class RotorHeadingLevelRule : public RotorRoleRule {
  private:
   int32_t mLevel;
 };
+
+/**
+ * This rule matches all accessibles with roles::OUTLINEITEM. If
+ * outlines are nested, it ignores the nested subtree and returns
+ * only items which are descendants of the primary outline.
+ */
+class OutlineRule : public RotorRule {
+ public:
+  explicit OutlineRule();
+  uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+};
