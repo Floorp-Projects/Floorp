@@ -355,6 +355,10 @@ toolbar[customizing] #whats-new-menu-button {
   position: relative;
 }
 
+#personal-toolbar-empty-description {
+  -moz-window-dragging: no-drag;
+}
+
 #personal-bookmarks {
   -moz-window-dragging: inherit;
 }

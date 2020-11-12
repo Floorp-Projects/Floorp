@@ -304,10 +304,14 @@ toolbar .toolbarbutton-1:-moz-focusring {
 
 /* ::::: bookmark buttons ::::: */
 
+#personal-toolbar-empty-description,
 toolbarbutton.bookmark-item:not(.subviewbutton) {
-  max-width: 13em;
   margin: 0 2px;
   padding: 4px;
+}
+
+toolbarbutton.bookmark-item:not(.subviewbutton) {
+  max-width: 13em;
   appearance: none;
 }
 
