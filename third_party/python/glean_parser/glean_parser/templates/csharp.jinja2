@@ -11,7 +11,7 @@ Jinja2 template is not. Please file bugs! #}
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 {% macro obj_declaration(obj, suffix='', access='', lazy=False) %}
 {{ access }} {% if lazy %} Lazy<{{ obj|type_name }}>{%- else %} {{ obj|type_name }}{% endif %} {{ obj.name|camelize }}{{ suffix }}
-{%- if lazy %} = new Lazy<{{ obj|type_name }}>(() => {%- else %} ={% endif %}
+{%- if lazy %} = new Lazy<{{ obj|type_name }}>(() => {%- else %} = // generated from {{ obj.identifier() }}{% endif %}
 
             new {{ obj|type_name }}(
                 {% for arg_name in extra_args if obj[arg_name] is defined %}
@@ -57,7 +57,7 @@ namespace {{ namespace }}
     {% for obj in objs.values() %}
         {% if obj.labeled %}
         {{ obj_declaration(obj, 'Label', 'private ') }}
-        private readonly Lazy<LabeledMetricType<{{ obj|type_name }}>> {{ obj.name|camelize }}Lazy = new Lazy<LabeledMetricType<{{ obj|type_name }}>>(() => new LabeledMetricType<{{ obj|type_name }}>(
+        private readonly Lazy<LabeledMetricType<{{ obj|type_name }}>> {{ obj.name|camelize }}Lazy = new Lazy<LabeledMetricType<{{ obj|type_name }}>>(() => new LabeledMetricType<{{ obj|type_name }}>( // generated from {{ obj.identifier() }}
                 category: {{ obj.category|csharp }},
                 name: {{ obj.name|csharp }},
                 submetric: {{ category_name|Camelize }}.{{ obj.name|camelize }}Label,
@@ -82,7 +82,7 @@ namespace {{ namespace }}
         /// <summary>
         /// {{ obj.description|wordwrap() | replace('\n', '\n        /// ') }}
         /// </summary>
-        internal {{ obj|type_name }} {{ obj.name|camelize }} => {{ obj.name|camelize }}Lazy.Value;
+        internal {{ obj|type_name }} {{ obj.name|camelize }} => {{ obj.name|camelize }}Lazy.Value; // generated from {{ obj.identifier() }}
 
         {% else %}
         {# Finally handle pings. #}
