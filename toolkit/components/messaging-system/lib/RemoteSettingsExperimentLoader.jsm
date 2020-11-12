@@ -43,6 +43,7 @@ XPCOMUtils.defineLazyServiceGetter(
 
 const COLLECTION_ID = "nimbus-desktop-experiments";
 const ENABLED_PREF = "messaging-system.rsexperimentloader.enabled";
+const STUDIES_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 
 const TIMER_NAME = "rs-experiment-loader-timer";
 const TIMER_LAST_UPDATE_PREF = `app.update.lastUpdateTime.${TIMER_NAME}`;
@@ -73,6 +74,14 @@ class _RemoteSettingsExperimentLoader {
 
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
+      "studiesEnabled",
+      STUDIES_OPT_OUT_PREF,
+      false,
+      this.onEnabledPrefChange.bind(this)
+    );
+
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
       "intervalInSeconds",
       RUN_INTERVAL_PREF,
       21600,
@@ -81,7 +90,7 @@ class _RemoteSettingsExperimentLoader {
   }
 
   async init() {
-    if (this._initialized || !this.enabled) {
+    if (this._initialized || !this.enabled || !this.studiesEnabled) {
       return;
     }
 
@@ -179,10 +188,18 @@ class _RemoteSettingsExperimentLoader {
     this._updating = false;
   }
 
+  /**
+   * Handles feature status based on feature pref and STUDIES_OPT_OUT_PREF.
+   * Changing any of them to false will turn off any recipe fetching and
+   * processing.
+   */
   onEnabledPrefChange(prefName, oldValue, newValue) {
     if (this._initialized && !newValue) {
       this.uninit();
-    } else if (!this._initialized && newValue) {
+    } else if (!this._initialized && newValue && this.enabled) {
+      // If the feature pref is turned on then turn on recipe processing.
+      // If the opt in pref is turned on then turn on recipe processing only if
+      // the feature pref is also enabled.
       this.init();
     }
   }
