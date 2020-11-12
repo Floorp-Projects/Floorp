@@ -95,13 +95,9 @@ static StaticRefPtr<IdleTaskRunner> sCCRunner;
 static nsITimer* sFullGCTimer;
 static StaticRefPtr<IdleTaskRunner> sInterSliceGCRunner;
 
-static TimeStamp sCurrentGCStartTime;
-
 static JS::GCSliceCallback sPrevGCSliceCallback;
 
 static bool sIncrementalCC = false;
-
-static TimeStamp sFirstCollectionTime;
 
 static bool sIsInitialized;
 static bool sShuttingDown;
@@ -270,6 +266,7 @@ void FindExceptionStackForConsoleReport(nsPIDOMWindowInner* win,
 } /* namespace xpc */
 
 static TimeDuration GetCollectionTimeDelta() {
+  static TimeStamp sFirstCollectionTime;
   TimeStamp now = TimeStamp::Now();
   if (sFirstCollectionTime) {
     return now - sFirstCollectionTime;
@@ -1905,6 +1902,8 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
                                const JS::GCDescription& aDesc) {
   NS_ASSERTION(NS_IsMainThread(), "GCs must run on the main thread");
 
+  static TimeStamp sCurrentGCStartTime;
+
   switch (aProgress) {
     case JS::GC_CYCLE_BEGIN: {
       // Prevent cycle collections and shrinking during incremental GC.
@@ -1948,14 +1947,11 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
         }
       } else {
         nsJSContext::KillFullGCTimer();
+        sScheduler.SetNeedsFullGC(false);
       }
 
       if (sScheduler.IsCCNeeded(nsCycleCollector_suspectedCount())) {
         nsCycleCollector_dispatchDeferredDeletion();
-      }
-
-      if (!aDesc.isZone_) {
-        sScheduler.SetNeedsFullGC(false);
       }
 
       Telemetry::Accumulate(Telemetry::GC_IN_PROGRESS_MS,
