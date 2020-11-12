@@ -470,6 +470,9 @@ class MediaDataDecoder : public DecoderDoctorLifeLogger<MediaDataDecoder> {
   // completed shutdown. The reader calls Flush() before calling Shutdown(). The
   // reader will delete the decoder once the promise is resolved.
   // The ShutdownPromise must only ever be resolved.
+  // Shutdown() may not be called if init hasn't been called first. It is
+  // possible under some circumstances for the decoder to be deleted without
+  // Init having been called first.
   virtual RefPtr<ShutdownPromise> Shutdown() = 0;
 
   // Called from the state machine task queue or main thread. Decoder needs to

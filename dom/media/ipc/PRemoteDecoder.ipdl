@@ -56,6 +56,8 @@ async protocol PRemoteDecoder
 {
   manager PRemoteDecoderManager;
 parent:
+  async Construct() returns (MediaResult result);
+
   async Init() returns (InitResultIPDL result);
 
   // Each output may include a SurfaceDescriptorGPUVideo that represents the decoded

@@ -211,16 +211,21 @@ AllocationWrapper::CreateDecoder(const CreateDecoderParams& aParams,
                                 nsPrintfCString("error creating %s decoder",
                                                 TrackTypeToStr(params.mType)));
                 RefPtr<PDMFactory> pdm = new PDMFactory();
-                RefPtr<MediaDataDecoder> decoder =
-                    pdm->CreateDecoder({params, &result});
-                if (decoder) {
-                  RefPtr<AllocationWrapper> wrapper =
-                      new AllocationWrapper(decoder.forget(), aToken.forget());
-                  return AllocateDecoderPromise::CreateAndResolve(wrapper,
-                                                                  __func__);
-                }
-                return AllocateDecoderPromise::CreateAndReject(result,
-                                                               __func__);
+                RefPtr<PlatformDecoderModule::CreateDecoderPromise> p =
+                    pdm->CreateDecoder(params)->Then(
+                        GetCurrentSerialEventTarget(), __func__,
+                        [aToken](RefPtr<MediaDataDecoder>&& aDecoder) mutable {
+                          RefPtr<AllocationWrapper> wrapper =
+                              new AllocationWrapper(aDecoder.forget(),
+                                                    aToken.forget());
+                          return AllocateDecoderPromise::CreateAndResolve(
+                              wrapper, __func__);
+                        },
+                        [](const MediaResult& aError) {
+                          return AllocateDecoderPromise::CreateAndReject(
+                              aError, __func__);
+                        });
+                return p;
               },
               []() {
                 return AllocateDecoderPromise::CreateAndReject(

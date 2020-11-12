@@ -123,25 +123,21 @@ MediaResult RemoteVideoDecoderChild::InitIPDL(
   }
 
   mIPDLSelfRef = this;
-  bool success = false;
-  nsCString errorDescription;
   VideoDecoderInfoIPDL decoderInfo(aVideoInfo, aFramerate);
   Unused << manager->SendPRemoteDecoderConstructor(this, decoderInfo, aOptions,
-                                                   ToMaybe(aIdentifier),
-                                                   &success, &errorDescription);
+                                                   ToMaybe(aIdentifier));
 
-  return success ? MediaResult(NS_OK)
-                 : MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, errorDescription);
+  return NS_OK;
 }
 
 RemoteVideoDecoderParent::RemoteVideoDecoderParent(
     RemoteDecoderManagerParent* aParent, const VideoInfo& aVideoInfo,
     float aFramerate, const CreateDecoderParams::OptionSet& aOptions,
     const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
-    nsISerialEventTarget* aManagerThread, TaskQueue* aDecodeTaskQueue,
-    bool* aSuccess, nsCString* aErrorDescription)
-    : RemoteDecoderParent(aParent, aManagerThread, aDecodeTaskQueue),
-      mVideoInfo(aVideoInfo) {
+    nsISerialEventTarget* aManagerThread, TaskQueue* aDecodeTaskQueue)
+    : RemoteDecoderParent(aParent, aOptions, aManagerThread, aDecodeTaskQueue),
+      mVideoInfo(aVideoInfo),
+      mFramerate(aFramerate) {
   if (aIdentifier) {
     // Check to see if we have a direct PVideoBridge connection to the
     // destination process specified in aIdentifier, and create a
@@ -150,34 +146,37 @@ RemoteVideoDecoderParent::RemoteVideoDecoderParent(
     mKnowsCompositor =
         KnowsCompositorVideo::TryCreateForIdentifier(*aIdentifier);
   }
+}
 
-  // It is possible for CreateDecoder() below to fail. In that case, we need to
-  // free the ImageContainer to avoid it leaking.
+IPCResult RemoteVideoDecoderParent::RecvConstruct(
+    ConstructResolver&& aResolver) {
   auto imageContainer = MakeRefPtr<layers::ImageContainer>();
   if (mKnowsCompositor && XRE_IsRDDProcess()) {
     // Ensure to allocate recycle allocator
     imageContainer->EnsureRecycleAllocatorForRDD(mKnowsCompositor);
   }
-  MediaResult error(NS_OK);
   auto params = CreateDecoderParams{
       mVideoInfo,     mKnowsCompositor,
-      imageContainer, CreateDecoderParams::VideoFrameRate(aFramerate),
-      aOptions,       CreateDecoderParams::NoWrapper(true),
-      &error};
+      imageContainer, CreateDecoderParams::VideoFrameRate(mFramerate),
+      mOptions,       CreateDecoderParams::NoWrapper(true),
+  };
 
-  auto& factory = aParent->EnsurePDMFactory();
-  RefPtr<MediaDataDecoder> decoder = factory.CreateDecoder(params);
-
-  if (NS_FAILED(error)) {
-    MOZ_ASSERT(aErrorDescription);
-    *aErrorDescription = error.Description();
-  }
-
-  if (decoder) {
-    mDecoder = new MediaDataDecoderProxy(decoder.forget(),
-                                         do_AddRef(mDecodeTaskQueue.get()));
-  }
-  *aSuccess = !!mDecoder;
+  mParent->EnsurePDMFactory().CreateDecoder(params)->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [resolver = std::move(aResolver), self = RefPtr{this}](
+          PlatformDecoderModule::CreateDecoderPromise::ResolveOrRejectValue&&
+              aValue) {
+        if (aValue.IsReject()) {
+          resolver(aValue.RejectValue());
+          return;
+        }
+        MOZ_ASSERT(aValue.ResolveValue());
+        self->mDecoder =
+            new MediaDataDecoderProxy(aValue.ResolveValue().forget(),
+                                      do_AddRef(self->mDecodeTaskQueue.get()));
+        resolver(NS_OK);
+      });
+  return IPC_OK();
 }
 
 MediaResult RemoteVideoDecoderParent::ProcessDecodedData(

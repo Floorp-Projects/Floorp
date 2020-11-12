@@ -28,6 +28,7 @@
 #include "mozilla/TaskQueue.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "nsIXULRuntime.h"  // for BrowserTabsRemoteAutostart
+#include "nsPrintfCString.h"
 
 #ifdef XP_WIN
 #  include "WMFDecoderModule.h"
@@ -288,43 +289,59 @@ void PDMFactory::EnsureInit() {
   SyncRunnable::DispatchToThread(mainTarget, runnable);
 }
 
-already_AddRefed<MediaDataDecoder> PDMFactory::CreateDecoder(
+RefPtr<PlatformDecoderModule::CreateDecoderPromise> PDMFactory::CreateDecoder(
     const CreateDecoderParams& aParams) {
-  RefPtr<MediaDataDecoder> decoder;
-  const TrackInfo& config = aParams.mConfig;
   if (aParams.mUseNullDecoder.mUse) {
     MOZ_ASSERT(mNullPDM);
-    decoder = CreateDecoderWithPDM(mNullPDM, aParams);
-  } else {
-    bool isEncrypted = mEMEPDM && config.mCrypto.IsEncrypted();
+    return CreateDecoderWithPDM(mNullPDM, aParams);
+  }
+  bool isEncrypted = mEMEPDM && aParams.mConfig.mCrypto.IsEncrypted();
 
-    if (isEncrypted) {
-      decoder = CreateDecoderWithPDM(mEMEPDM, aParams);
-    } else {
-      for (auto& current : mCurrentPDMs) {
-        if (!current->Supports(SupportDecoderParams(aParams),
-                               nullptr /* diagnostic */)) {
-          continue;
-        }
-        decoder = CreateDecoderWithPDM(current, aParams);
-        if (decoder) {
-          break;
-        }
-      }
-    }
+  if (isEncrypted) {
+    return CreateDecoderWithPDM(mEMEPDM, aParams);
   }
-  if (!decoder) {
-    NS_WARNING("Unable to create a decoder, no platform found.");
-    return nullptr;
-  }
-  return decoder.forget();
+
+  return CheckAndMaybeCreateDecoder(CreateDecoderParamsForAsync(aParams), 0);
 }
 
-already_AddRefed<MediaDataDecoder> PDMFactory::CreateDecoderWithPDM(
-    PlatformDecoderModule* aPDM, const CreateDecoderParams& aParams) {
+RefPtr<PlatformDecoderModule::CreateDecoderPromise>
+PDMFactory::CheckAndMaybeCreateDecoder(CreateDecoderParamsForAsync&& aParams,
+                                       uint32_t aIndex) {
+  uint32_t i = aIndex;
+  auto params = SupportDecoderParams(aParams);
+  for (; i < mCurrentPDMs.Length(); i++) {
+    if (!mCurrentPDMs[i]->Supports(params, nullptr /* diagnostic */)) {
+      continue;
+    }
+    RefPtr<PlatformDecoderModule::CreateDecoderPromise> p =
+        CreateDecoderWithPDM(mCurrentPDMs[i], aParams)
+            ->Then(
+                GetCurrentSerialEventTarget(), __func__,
+                [](RefPtr<MediaDataDecoder>&& aDecoder) {
+                  return PlatformDecoderModule::CreateDecoderPromise::
+                      CreateAndResolve(std::move(aDecoder), __func__);
+                },
+                [self = RefPtr{this}, i, params = std::move(aParams)](
+                    const MediaResult& aError) mutable {
+                  // Try the next PDM.
+                  return self->CheckAndMaybeCreateDecoder(std::move(params),
+                                                          i + 1);
+                });
+    return p;
+  }
+  return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                  nsPrintfCString("Error no decoder found for %s",
+                                  aParams.mConfig->mMimeType.get())
+                      .get()),
+      __func__);
+}
+
+RefPtr<PlatformDecoderModule::CreateDecoderPromise>
+PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
+                                 const CreateDecoderParams& aParams) {
   MOZ_ASSERT(aPDM);
-  RefPtr<MediaDataDecoder> m;
-  MediaResult* result = aParams.mError;
+  MediaResult result = NS_OK;
 
   SupportChecker supportChecker;
   const TrackInfo& config = aParams.mConfig;
@@ -334,52 +351,51 @@ already_AddRefed<MediaDataDecoder> PDMFactory::CreateDecoderWithPDM(
   if (checkResult.mReason != SupportChecker::Reason::kSupported) {
     if (checkResult.mReason ==
         SupportChecker::Reason::kVideoFormatNotSupported) {
-      if (result) {
-        *result = checkResult.mMediaResult;
-      }
+      result = checkResult.mMediaResult;
     } else if (checkResult.mReason ==
                SupportChecker::Reason::kAudioFormatNotSupported) {
-      if (result) {
-        *result = checkResult.mMediaResult;
-      }
+      result = checkResult.mMediaResult;
     }
-    return nullptr;
+    return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
+        result, __func__);
   }
 
   if (config.IsAudio()) {
-    m = aPDM->CreateAudioDecoder(aParams);
-    if (m && !aParams.mNoWrapper.mDontUseWrapper) {
-      m = new AudioTrimmer(m.forget(), aParams);
-    }
-    return m.forget();
+    RefPtr<PlatformDecoderModule::CreateDecoderPromise> p;
+    p = aPDM->AsyncCreateDecoder(aParams)->Then(
+        GetCurrentSerialEventTarget(), __func__,
+        [params = CreateDecoderParamsForAsync(aParams)](
+            RefPtr<MediaDataDecoder>&& aDecoder) {
+          RefPtr<MediaDataDecoder> decoder = std::move(aDecoder);
+          if (!params.mNoWrapper.mDontUseWrapper) {
+            decoder =
+                new AudioTrimmer(decoder.forget(), CreateDecoderParams(params));
+          }
+          return PlatformDecoderModule::CreateDecoderPromise::CreateAndResolve(
+              decoder, __func__);
+        },
+        [](const MediaResult& aError) {
+          return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
+              aError, __func__);
+        });
+    return p;
   }
 
   if (!config.IsVideo()) {
-    *result = MediaResult(
-        NS_ERROR_DOM_MEDIA_FATAL_ERR,
-        RESULT_DETAIL("Decoder configuration error, expected audio or video."));
-    return nullptr;
+    return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
+        MediaResult(
+            NS_ERROR_DOM_MEDIA_FATAL_ERR,
+            RESULT_DETAIL(
+                "Decoder configuration error, expected audio or video.")),
+        __func__);
   }
 
   if ((MP4Decoder::IsH264(config.mMimeType) ||
        VPXDecoder::IsVPX(config.mMimeType)) &&
       !aParams.mUseNullDecoder.mUse && !aParams.mNoWrapper.mDontUseWrapper) {
-    RefPtr<MediaChangeMonitor> h = new MediaChangeMonitor(aPDM, aParams);
-    const MediaResult result = h->GetLastError();
-    if (NS_SUCCEEDED(result) || result == NS_ERROR_NOT_INITIALIZED) {
-      // The MediaChangeMonitor either successfully created the wrapped decoder,
-      // or there wasn't enough initialization data to do so (such as what can
-      // happen with AVC3). Otherwise, there was some problem, for example WMF
-      // DLLs were missing.
-      m = std::move(h);
-    } else if (aParams.mError) {
-      *aParams.mError = result;
-    }
-  } else {
-    m = aPDM->CreateVideoDecoder(aParams);
+    return MediaChangeMonitor::Create(aPDM, aParams);
   }
-
-  return m.forget();
+  return aPDM->AsyncCreateDecoder(aParams);
 }
 
 bool PDMFactory::SupportsMimeType(
