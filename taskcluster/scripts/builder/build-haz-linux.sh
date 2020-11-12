@@ -67,6 +67,9 @@ export CPPFLAGS="$CPPFLAGS -Wno-attributes -Wno-ignored-attributes"
 export HAZARD_SHELL_OBJDIR # This will be picked up by the mozconfig.
 $GECKO_PATH/mach hazards build-shell
 
+# Run a self-test
+$GECKO_PATH/mach hazards self-test --shell-objdir="$HAZARD_SHELL_OBJDIR"
+
 # Artifacts folder is outside of the cache.
 mkdir -p "$HOME"/artifacts/ || true
 

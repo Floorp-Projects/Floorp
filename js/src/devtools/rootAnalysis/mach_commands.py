@@ -360,3 +360,31 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
 
         work_dir = self.work_dir(application, work_dir)
         return self.run_process(args=args, cwd=work_dir, pass_thru=True)
+
+    @SubCommand(
+        "hazards",
+        "self-test",
+        description="Run a self-test to verify hazards are detected",
+    )
+    @CommandArgument(
+        "--shell-objdir",
+        default=None,
+        help="objdir containing the optimized JS shell for running the analysis.",
+    )
+    def self_test(self, shell_objdir):
+        """Analyzed gathered data for rooting hazards"""
+        shell = self.ensure_shell(shell_objdir)
+        args = [
+            os.path.join(self.script_dir, "run-test.py"),
+            "-v",
+            "--js",
+            shell,
+            "--sixgill",
+            os.path.join(self.tools_dir, "sixgill"),
+            "--gccdir",
+            self.gcc_dir,
+        ]
+
+        self.setup_env_for_tools(os.environ)
+        os.environ["LD_LIBRARY_PATH"] += ":" + os.path.dirname(shell)
+        return self.run_process(args=args, pass_thru=True)
