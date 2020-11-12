@@ -793,25 +793,6 @@ already_AddRefed<TextEditor> nsTextControlFrame::GetTextEditor() {
 nsresult nsTextControlFrame::SetSelectionInternal(
     nsINode* aStartNode, uint32_t aStartOffset, nsINode* aEndNode,
     uint32_t aEndOffset, nsITextControlFrame::SelectionDirection aDirection) {
-  // Create a new range to represent the new selection.
-  // Note that we use a new range to avoid having to do
-  // isIncreasing checks to avoid possible errors.
-
-  // Be careful to use internal nsRange methods which do not check to make sure
-  // we have access to the node.
-  // XXXbz nsRange::SetStartAndEnd takes int32_t (and ranges generally work on
-  // int32_t), but we're passing uint32_t.  The good news is that at this point
-  // our endpoints should really be within our length, so not really that big.
-  // And if they _are_ that big, SetStartAndEnd() will simply error out, which
-  // is not too bad for a case we don't expect to happen.
-  ErrorResult error;
-  RefPtr<nsRange> range =
-      nsRange::Create(aStartNode, aStartOffset, aEndNode, aEndOffset, error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-  MOZ_ASSERT(range);
-
   // Get the selection, clear it and add the new range to it!
   TextControlElement* textControlElement =
       TextControlElement::FromNode(GetContent());
@@ -831,16 +812,10 @@ nsresult nsTextControlFrame::SetSelectionInternal(
     direction = (aDirection == eBackward) ? eDirPrevious : eDirNext;
   }
 
-  selection->RemoveAllRanges(error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-
-  selection->AddRangeAndSelectFramesAndNotifyListeners(
-      *range, error);  // NOTE: can destroy the world
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
+  ErrorResult error;
+  selection->SetStartAndEndInLimiter(*aStartNode, aStartOffset, *aEndNode,
+                                     aEndOffset, error);
+  MOZ_TRY(error.StealNSResult());
 
   selection->SetDirection(direction);
   return NS_OK;
