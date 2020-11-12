@@ -1,12 +1,12 @@
 #!/bin/bash -ex
 
 function usage() {
-    echo "Usage: $0 [--project <shell|browser>] <workspace-dir> flags..."
+    echo "Usage: $0 [--project <js|browser>] <workspace-dir> flags..."
     echo "flags are treated the same way as a commit message would be"
     echo "(as in, they are scanned for directives just like a try: ... line)"
 }
 
-PROJECT=shell
+PROJECT=js
 WORKSPACE=
 while [[ $# -gt 0 ]]; do
     if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
@@ -27,12 +27,7 @@ done
 
 SCRIPT_FLAGS=$*
 
-if [[ "$PROJECT" = shell ]]; then
-    APPLICATION=js
-else
-    APPLICATION=$PROJECT
-fi
-ANALYSIS_DIR="$WORKSPACE/haz-$APPLICATION"
+ANALYSIS_DIR="$WORKSPACE/haz-$PROJECT"
 
 # Ensure all the scripts in this dir are on the path....
 DIRNAME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
