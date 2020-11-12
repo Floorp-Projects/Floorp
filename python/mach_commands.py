@@ -31,7 +31,6 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
-from mach.util import UserError
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -54,15 +53,8 @@ class MachCommands(MachCommandBase):
         default=False,
         help="Use ipython instead of the default Python REPL.",
     )
-    @CommandArgument(
-        "--requirements",
-        default=None,
-        help="Install this requirements file before running Python",
-    )
     @CommandArgument("args", nargs=argparse.REMAINDER)
-    def python(
-        self, no_virtualenv, no_activate, exec_file, ipython, requirements, args
-    ):
+    def python(self, no_virtualenv, no_activate, exec_file, ipython, args):
         # Avoid logging the command
         self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
 
@@ -70,9 +62,6 @@ class MachCommands(MachCommandBase):
         append_env = {
             "PYTHONDONTWRITEBYTECODE": str("1"),
         }
-
-        if requirements and no_virtualenv:
-            raise UserError("Cannot pass both --requirements and --no-virtualenv.")
 
         if no_virtualenv:
             from mach_bootstrap import mach_sys_path
@@ -84,10 +73,6 @@ class MachCommands(MachCommandBase):
             if not no_activate:
                 self.virtualenv_manager.activate()
             python_path = self.virtualenv_manager.python_path
-            if requirements:
-                self.virtualenv_manager.install_pip_requirements(
-                    requirements, require_hashes=False
-                )
 
         if exec_file:
             exec(open(exec_file).read())

@@ -90,6 +90,12 @@ parser/html/java/translator.jar
 # Local Gradle configuration properties.
 /local.properties
 
+# Python virtualenv artifacts.
+third_party/python/psutil/**/*.so
+third_party/python/psutil/**/*.pyd
+third_party/python/psutil/build/
+third_party/python/psutil/tmp/
+
 # Ignore chrome.manifest files from the devtools loader
 devtools/client/chrome.manifest
 devtools/shared/chrome.manifest
