@@ -902,25 +902,14 @@ XDRResult XDRParserAtom(XDRState<mode>* xdr, const ParserAtom** atomp) {
       atomIndex = uint32_t((*atomp)->toStaticParserString2());
       tag = ParserAtomTag::Static2;
     } else {
+      MOZ_ASSERT((*atomp)->isNotInstantiated() || (*atomp)->isAtomIndex());
+      MOZ_ASSERT((*atomp)->isUsedByStencil());
+
       // Either AtomIndexKind::NotInstantiated or AtomIndexKind::AtomIndex.
-
-      // Atom contents are encoded in a separate buffer, which is joined to the
-      // final result in XDRIncrementalEncoder::linearize. References to atoms
-      // are encoded as indices into the atom stream.
-      XDRParserAtomMap::AddPtr p = xdr->parserAtomMap().lookupForAdd(*atomp);
-      if (p) {
-        atomIndex = p->value();
-      } else {
-        xdr->switchToAtomBuf();
-        MOZ_TRY(XDRParserAtomData(xdr, atomp));
-        xdr->switchToMainBuf();
-
-        atomIndex = xdr->natoms();
-        xdr->natoms() += 1;
-        if (!xdr->parserAtomMap().add(p, *atomp, atomIndex)) {
-          return xdr->fail(JS::TranscodeResult_Throw);
-        }
-      }
+      // References to atoms are encoded as indices into the atom stream.
+      XDRParserAtomMap::Ptr p = xdr->parserAtomMap().lookup(*atomp);
+      MOZ_ASSERT(p);
+      atomIndex = p->value();
       tag = ParserAtomTag::Normal;
     }
     MOZ_TRY(XDRParserAtomTaggedIndex(xdr, &tag, &atomIndex));
