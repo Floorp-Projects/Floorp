@@ -590,28 +590,16 @@ class XDRIncrementalEncoderBase : public XDREncoder {
  protected:
   JS::TranscodeBuffer slices_;
 
-  // Atom buffer.
-  JS::TranscodeBuffer atoms_;
-  XDRBuffer<XDR_ENCODE> atomBuf_;
-
   // Header buffer.
   JS::TranscodeBuffer header_;
   XDRBuffer<XDR_ENCODE> headerBuf_;
 
-  uint32_t natoms_ = 0;
-
  public:
   explicit XDRIncrementalEncoderBase(JSContext* cx)
-      : XDREncoder(cx, slices_, 0),
-        atomBuf_(cx, atoms_, 0),
-        headerBuf_(cx, header_, 0) {}
-
-  uint32_t& natoms() override { return natoms_; }
+      : XDREncoder(cx, slices_, 0), headerBuf_(cx, header_, 0) {}
 
   bool isMainBuf() override { return buf == &mainBuf; }
 
-  // Switch from streaming into the main buffer into the atom buffer.
-  void switchToAtomBuf() override { buf = &atomBuf_; }
   // Switch to streaming into the main buffer.
   void switchToMainBuf() override { buf = &mainBuf; }
   // Switch to streaming into the header buffer.
@@ -680,6 +668,12 @@ class XDRIncrementalEncoder : public XDRIncrementalEncoderBase {
       HashMap<AutoXDRTree::Key, SlicesNode, DefaultHasher<AutoXDRTree::Key>,
               SystemAllocPolicy>;
 
+  // Atom buffer.
+  JS::TranscodeBuffer atoms_;
+  XDRBuffer<XDR_ENCODE> atomBuf_;
+
+  uint32_t natoms_ = 0;
+
   // Last opened XDR-tree on the stack.
   AutoXDRTree* scope_;
   // Node corresponding to the opened scope.
@@ -695,12 +689,18 @@ class XDRIncrementalEncoder : public XDRIncrementalEncoderBase {
  public:
   explicit XDRIncrementalEncoder(JSContext* cx)
       : XDRIncrementalEncoderBase(cx),
+        atomBuf_(cx, atoms_, 0),
         scope_(nullptr),
         node_(nullptr),
         atomMap_(cx),
         oom_(false) {}
 
   virtual ~XDRIncrementalEncoder() = default;
+
+  uint32_t& natoms() override { return natoms_; }
+
+  // Switch from streaming into the main buffer into the atom buffer.
+  void switchToAtomBuf() override { buf = &atomBuf_; }
 
   bool hasAtomMap() const override { return true; }
   XDRAtomMap& atomMap() override { return atomMap_; }
@@ -738,9 +738,6 @@ class XDRIncrementalStencilEncoder : public XDRIncrementalEncoderBase {
   // Reset for each chunk.
   XDRParserAtomMap parserAtomMap_;
 
-  JS::TranscodeBuffer finishedChunk_;
-  XDRBuffer<XDR_ENCODE> finishedChunkBuf_;
-
   using FunctionKey = uint64_t;
   static FunctionKey toFunctionKey(const SourceExtent& extent);
 
@@ -753,15 +750,12 @@ class XDRIncrementalStencilEncoder : public XDRIncrementalEncoderBase {
   explicit XDRIncrementalStencilEncoder(JSContext* cx)
       : XDRIncrementalEncoderBase(cx),
         parserAtomMap_(cx),
-        finishedChunkBuf_(cx, finishedChunk_, 0),
         encodedFunctions_(cx) {}
 
   virtual ~XDRIncrementalStencilEncoder() = default;
 
   XDRResultT<bool> checkAlreadyCoded(
       const frontend::CompilationStencil& stencil) override;
-
-  void switchToFinishedChunkBuf() { buf = &finishedChunkBuf_; }
 
   bool isForStencil() const override { return true; }
 

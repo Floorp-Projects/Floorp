@@ -475,9 +475,6 @@ XDRResult XDRState<mode>::codeFunctionStencil(
     return Ok();
   }
 
-  if (mode == XDR_ENCODE) {
-    switchToMainBuf();
-  }
   MOZ_TRY(ParserAtomTable(this, stencil));
 
   MOZ_TRY(XDRCompilationStencil(this, stencil));
@@ -713,17 +710,6 @@ XDRResult XDRIncrementalEncoder::linearize(JS::TranscodeBuffer& buffer) {
 }
 
 XDRResult XDRIncrementalStencilEncoder::finishChunk() {
-  switchToFinishedChunkBuf();
-
-  MOZ_TRY(codeBytes(atoms_.begin(), atoms_.length()));
-  MOZ_TRY(codeBytes(slices_.begin(), slices_.length()));
-
-  switchToMainBuf();
-
-  atoms_.clear();
-  slices_.clear();
-  mainBuf.cursor_ = 0;
-
   parserAtomMap_.clear();
 
   return Ok();
@@ -737,15 +723,14 @@ XDRResult XDRIncrementalStencilEncoder::linearize(JS::TranscodeBuffer& buffer) {
 
   switchToMainBuf();
 
-  size_t totalLength =
-      buffer.length() + header_.length() + finishedChunk_.length();
+  size_t totalLength = buffer.length() + header_.length() + slices_.length();
   if (!buffer.reserve(totalLength)) {
     ReportOutOfMemory(cx());
     return fail(JS::TranscodeResult_Throw);
   }
 
   buffer.infallibleAppend(header_.begin(), header_.length());
-  buffer.infallibleAppend(finishedChunk_.begin(), finishedChunk_.length());
+  buffer.infallibleAppend(slices_.begin(), slices_.length());
 
   return Ok();
 }
