@@ -704,13 +704,6 @@ void CompositorBridgeParent::ScheduleRenderOnCompositorThread() {
                         this, &CompositorBridgeParent::ScheduleComposition));
 }
 
-void CompositorBridgeParent::InvalidateOnCompositorThread() {
-  MOZ_ASSERT(CompositorThread());
-  CompositorThread()->Dispatch(
-      NewRunnableMethod("layers::CompositorBridgeParent::Invalidate", this,
-                        &CompositorBridgeParent::Invalidate));
-}
-
 void CompositorBridgeParent::PauseComposition() {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread(),
              "PauseComposition() can only be called on the compositor thread");
@@ -795,53 +788,6 @@ void CompositorBridgeParent::ResumeCompositionAndResize(int x, int y, int width,
                                                         int height) {
   SetEGLSurfaceRect(x, y, width, height);
   ResumeComposition();
-}
-
-/*
- * This will execute a pause synchronously, waiting to make sure that the
- * compositor really is paused.
- */
-void CompositorBridgeParent::SchedulePauseOnCompositorThread() {
-  MonitorAutoLock lock(mPauseCompositionMonitor);
-
-  MOZ_ASSERT(CompositorThread());
-  CompositorThread()->Dispatch(
-      NewRunnableMethod("layers::CompositorBridgeParent::PauseComposition",
-                        this, &CompositorBridgeParent::PauseComposition));
-
-  // Wait until the pause has actually been processed by the compositor thread
-  lock.Wait();
-}
-
-bool CompositorBridgeParent::ScheduleResumeOnCompositorThread() {
-  MonitorAutoLock lock(mResumeCompositionMonitor);
-
-  MOZ_ASSERT(CompositorThread());
-  CompositorThread()->Dispatch(
-      NewRunnableMethod("layers::CompositorBridgeParent::ResumeComposition",
-                        this, &CompositorBridgeParent::ResumeComposition));
-
-  // Wait until the resume has actually been processed by the compositor thread
-  lock.Wait();
-
-  return !mPaused;
-}
-
-bool CompositorBridgeParent::ScheduleResumeOnCompositorThread(int x, int y,
-                                                              int width,
-                                                              int height) {
-  MonitorAutoLock lock(mResumeCompositionMonitor);
-
-  MOZ_ASSERT(CompositorThread());
-  CompositorThread()->Dispatch(NewRunnableMethod<int, int, int, int>(
-      "layers::CompositorBridgeParent::ResumeCompositionAndResize", this,
-      &CompositorBridgeParent::ResumeCompositionAndResize, x, y, width,
-      height));
-
-  // Wait until the resume has actually been processed by the compositor thread
-  lock.Wait();
-
-  return !mPaused;
 }
 
 void CompositorBridgeParent::UpdatePaintTime(LayerTransactionParent* aLayerTree,
