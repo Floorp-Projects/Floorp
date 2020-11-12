@@ -231,6 +231,25 @@ class FilePickerTest {
     }
 
     @Test
+    fun `onActivityResult will not process any PromptRequest that is not a File request`() {
+        var wasConfirmed = false
+        var wasDismissed = false
+        val onConfirm: (Boolean) -> Unit = { wasConfirmed = true }
+        val onDismiss = { wasDismissed = true }
+        val invalidRequest = PromptRequest.Alert("", "", false, onDismiss, onConfirm)
+        val spiedFilePicker = spy(filePicker)
+        val selected = prepareSelectedSession(invalidRequest)
+        val intent = Intent()
+
+        spiedFilePicker.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
+
+        assertFalse(wasConfirmed)
+        assertFalse(wasDismissed)
+        verify(store, never()).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
+        verify(spiedFilePicker, never()).handleFilePickerIntentResult(intent, request)
+    }
+
+    @Test
     fun `onRequestPermissionsResult with FILE_PICKER_REQUEST and PERMISSION_GRANTED will call onPermissionsGranted`() {
         stubContext()
         filePicker = spy(filePicker)

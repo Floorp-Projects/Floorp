@@ -15,6 +15,7 @@ import android.provider.MediaStore.EXTRA_OUTPUT
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.fragment.app.Fragment
+import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.File
@@ -22,6 +23,7 @@ import mozilla.components.feature.prompts.PromptContainer
 import mozilla.components.feature.prompts.consumePromptFrom
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.android.net.isUnderPrivateAppDirectory
 
@@ -38,6 +40,8 @@ internal class FilePicker(
     private var sessionId: String? = null,
     override val onNeedToRequestPermissions: OnNeedToRequestPermissions
 ) : PermissionsFeature {
+
+    private val logger = Logger("FilePicker")
 
     /**
      * The image capture intent doesn't return the URI where the image is saved,
@@ -107,10 +111,9 @@ internal class FilePicker(
      * @param intent The result of the request.
      */
     fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
-        if (requestCode == FILE_PICKER_ACTIVITY_REQUEST_CODE) {
+        val request = getActivePromptRequest() ?: return
+        if (requestCode == FILE_PICKER_ACTIVITY_REQUEST_CODE && request is File) {
             store.consumePromptFrom(sessionId) {
-                val request = it as File
-
                 if (resultCode == RESULT_OK) {
                     handleFilePickerIntentResult(intent, request)
                 } else {
@@ -118,7 +121,13 @@ internal class FilePicker(
                 }
             }
         }
+        if (request !is File) {
+            logger.error("Invalid PromptRequest expected File but $request was provided")
+        }
     }
+
+    private fun getActivePromptRequest(): PromptRequest? =
+            store.state.findTabOrCustomTabOrSelectedTab(sessionId)?.content?.promptRequest
 
     /**
      * Notifies the feature that the permissions request was completed. It will then

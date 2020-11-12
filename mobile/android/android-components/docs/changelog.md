@@ -15,6 +15,9 @@ permalink: /changelog/
 * **feature-sitepermissions**
   * 🚒 Bug fixed [issue #8943](https://github.com/mozilla-mobile/android-components/issues/8943) Refactor `SwipeRefreshFeature` to not use `EngineSession.Observer`, this result in multiple site permissions bugs getting fixed see [fenix#8987](https://github.com/mozilla-mobile/fenix/issues/8987) and [fenix#16411](https://github.com/mozilla-mobile/fenix/issues/16411).
 
+* **feature-prompts**
+  * 🚒 Bug fixed [issue #8967](https://github.com/mozilla-mobile/android-components/issues/8967) Crash when trying to upload a file see [fenix#16537](https://github.com/mozilla-mobile/fenix/issues/16537), for more information.
+
 # 66.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v65.0.0...v66.0.0)
