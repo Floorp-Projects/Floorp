@@ -226,8 +226,6 @@ class Browsertime(Perftest):
             "--skipHar",
             "--pageLoadStrategy",
             "none",
-            "--webdriverPageload",
-            "true",
             "--firefox.disableBrowsertimeExtension",
             "true",
             "--pageCompleteCheckStartWait",
@@ -269,8 +267,6 @@ class Browsertime(Perftest):
                     [
                         "--firefox.windowRecorder",
                         "false",
-                        "--xvfbParams.display",
-                        "0",
                     ]
                 )
                 LOG.info(

@@ -36,7 +36,6 @@ job-defaults:
                     - raptor/linux_config.py
         extra-options:
             - --browsertime
-            - --browsertime-no-ffwindowrecorder
     fission-run-on-projects: []
 
 browsertime-tp6:
