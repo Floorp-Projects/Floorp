@@ -177,6 +177,17 @@ android {
 
     testOptions {
         unitTests.returnDefaultValues = true
+
+        unitTests.all {
+            // We keep running into memory issues when running our tests. With this config we
+            // reserve more memory and also create a new process after every 80 test classes. This
+            // is a band-aid solution and eventually we should try to find and fix the leaks
+            // instead. :)
+            maxParallelForks = 2
+            forkEvery = 80
+            maxHeapSize = "2048m"
+            minHeapSize = "1024m"
+        }
     }
 }
 
