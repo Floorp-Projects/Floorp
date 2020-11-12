@@ -105,7 +105,7 @@ impl LocalExternalImageHandler {
     pub fn add_image(&mut self,
         device: &webrender::Device,
         desc: ImageDescriptor,
-        target: TextureTarget,
+        target: ImageBufferKind,
         image_data: ImageData,
     ) -> ImageData {
         let (image_id, channel_idx) = match image_data {
@@ -754,13 +754,13 @@ impl YamlFrameReader {
             // ensure it gets created as such
             let external_target = match item["external-target"].as_str() {
                 Some(ref s) => match &s[..] {
-                    "2d" => TextureTarget::Default,
-                    "array" => TextureTarget::Array,
-                    "rect" => TextureTarget::Rect,
+                    "2d" => ImageBufferKind::Texture2D,
+                    "array" => ImageBufferKind::Texture2DArray,
+                    "rect" => ImageBufferKind::TextureRect,
                     _ => panic!("Unsupported external texture target."),
                 }
                 None => {
-                    TextureTarget::Default
+                    ImageBufferKind::Texture2D
                 }
             };
 
