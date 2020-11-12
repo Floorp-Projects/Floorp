@@ -57,7 +57,7 @@ pub fn clamp_float(mut a: f32) -> f32 {
     However, that version will let NaNs pass through which is undesirable
     for most consumers.
     */
-    if a as f64 > 1.0f64 {
+    if a > 1. {
         return 1.;
     } else if a >= 0. {
         return a;
@@ -249,8 +249,7 @@ pub fn build_input_gamma_table(mut TRC: Option<&curveType>) -> Option<Vec<f32>> 
 
     return Some(gamma_table);
 }
-#[no_mangle]
-pub unsafe extern "C" fn build_colorant_matrix(mut p: &qcms_profile) -> matrix {
+pub fn build_colorant_matrix(mut p: &qcms_profile) -> matrix {
     let mut result: matrix = matrix {
         m: [[0.; 3]; 3],
         invalid: false,
