@@ -30,6 +30,9 @@ permalink: /changelog/
 * **feature-addons**
   * `AddonManager.getAddons()` now accepts a new (optional) `allowCache` parameter to configure whether or not a cached response may be returned. This is useful in case a UI flow needs the most up-to-date addons list, or to support "refresh" functionality. By default, cached responses are allowed.
 
+* **service-nimbus**
+  * Added new Nimbus rapid experiment library component. This is a Rust based component that is delivered to A-C through the appservices megazord. See the [nimbus-sdk repo](https://github.com/mozilla/nimbus-sdk) for more info.
+
 # 65.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v64.0.0...v65.0.0)

@@ -1,4 +1,4 @@
-# [Android Components](../../../README.md) > Service > Experiments
+# [Android Components](../../../README.md) > Service > Nimbus
 
 A wrapper for the Nimbus SDK.
 
@@ -18,9 +18,15 @@ implementation "org.mozilla.components:service-nimbus:{latest-version}"
 
 ### Initializing the Experiments library
 
+**TODO**
+
 ### Updating of experiments
 
+**TODO**
+
 ### Checking if a user is part of an experiment
+
+**TODO**
 
 ## Testing Nimbus
 
