@@ -266,6 +266,8 @@ add_task(async function test_datepicker_keyboard_open() {
     "waiting for open"
   );
 
+  let valueSet = helper.promisePickerValueSet();
+
   // NOTE: After the click, the first input field (the month one) is focused,
   // so down arrow will change the selected month.
   //
@@ -273,14 +275,13 @@ add_task(async function test_datepicker_keyboard_open() {
   // DATE_FORMAT and other bits around do the same).
   BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
 
-  // It'd be good to use something else than waitForCondition for this but
-  // there's no exposed event atm when the value changes from the child.
-  await BrowserTestUtils.waitForCondition(() => {
-    return (
-      helper.getElement(MONTH_YEAR).textContent ==
-      DATE_FORMAT(new Date(prevMonth))
-    );
-  }, "Should update date when updating months");
+  await valueSet;
+
+  is(
+    helper.getElement(MONTH_YEAR).textContent,
+    DATE_FORMAT(new Date(prevMonth)),
+    "Should update date when updating months"
+  );
 
   await helper.tearDown();
 });
