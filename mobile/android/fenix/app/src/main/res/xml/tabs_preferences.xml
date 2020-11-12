@@ -5,12 +5,10 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <androidx.preference.PreferenceCategory
-        android:key="@string/pref_key_tab_view_category"
         android:layout="@layout/preference_cat_style"
         android:title="@string/preferences_tab_view"
         app:allowDividerAbove="false"
-        app:iconSpaceReserved="false"
-        app:isPreferenceVisible="false">
+        app:iconSpaceReserved="false">
         <org.mozilla.fenix.settings.RadioButtonPreference
             android:defaultValue="true"
             android:key="@string/pref_key_tab_view_list"

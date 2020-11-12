@@ -22,11 +22,6 @@ object FeatureFlags {
     val syncedTabsInTabsTray = Config.channel.isNightlyOrDebug
 
     /**
-     * Shows the grid view settings for the tabs tray.
-     */
-    val showGridViewInTabsSettings = Config.channel.isNightlyOrDebug
-
-    /**
      * Enables downloads with external download managers.
      */
     const val externalDownloadManager = true
