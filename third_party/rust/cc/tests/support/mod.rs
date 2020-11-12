@@ -8,7 +8,7 @@ use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 
 use cc;
-use tempdir::TempDir;
+use tempfile::{Builder, TempDir};
 
 pub struct Test {
     pub td: TempDir,
@@ -22,12 +22,24 @@ pub struct Execution {
 
 impl Test {
     pub fn new() -> Test {
+        // This is ugly: `sccache` needs to introspect the compiler it is
+        // executing, as it adjusts its behavior depending on the
+        // language/compiler. This crate's test driver uses mock compilers that
+        // are obviously not supported by sccache, so the tests fail if
+        // RUSTC_WRAPPER is set. rust doesn't build test dependencies with
+        // the `test` feature enabled, so we can't conditionally disable the
+        // usage of `sccache` if running in a test environment, at least not
+        // without setting an environment variable here and testing for it
+        // there. Explicitly deasserting RUSTC_WRAPPER here seems to be the
+        // lesser of the two evils.
+        env::remove_var("RUSTC_WRAPPER");
+
         let mut gcc = PathBuf::from(env::current_exe().unwrap());
         gcc.pop();
         if gcc.ends_with("deps") {
             gcc.pop();
         }
-        let td = TempDir::new_in(&gcc, "gcc-test").unwrap();
+        let td = Builder::new().prefix("gcc-test").tempdir_in(&gcc).unwrap();
         gcc.push(format!("gcc-shim{}", env::consts::EXE_SUFFIX));
         Test {
             td: td,
