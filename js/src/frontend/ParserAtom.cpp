@@ -311,7 +311,7 @@ ParserAtomsTable::ParserAtomsTable(JSRuntime* rt, LifoAlloc& alloc,
       entries_(entries) {}
 
 JS::Result<const ParserAtom*, OOM> ParserAtomsTable::addEntry(
-    JSContext* cx, EntryMap::AddPtr& addPtr, ParserAtomEntry* entry) {
+    JSContext* cx, EntrySet::AddPtr& addPtr, ParserAtomEntry* entry) {
   MOZ_ASSERT(!addPtr);
   ParserAtomIndex index = ParserAtomIndex(entries_.length());
   if (size_t(index) >= TaggedParserAtomIndex::IndexLimit) {
@@ -322,7 +322,7 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::addEntry(
     return RaiseParserAtomsOOMError(cx);
   }
   entry->setParserAtomIndex(index);
-  if (!entryMap_.add(addPtr, entry, index)) {
+  if (!entrySet_.add(addPtr, entry)) {
     return RaiseParserAtomsOOMError(cx);
   }
   return entry->asAtom();
@@ -330,7 +330,7 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::addEntry(
 
 template <typename AtomCharT, typename SeqCharT>
 JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internChar16Seq(
-    JSContext* cx, EntryMap::AddPtr& addPtr, HashNumber hash,
+    JSContext* cx, EntrySet::AddPtr& addPtr, HashNumber hash,
     InflatedChar16Sequence<SeqCharT> seq, uint32_t length) {
   MOZ_ASSERT(!addPtr);
 
@@ -364,9 +364,9 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internLatin1(
   }
 
   // Check for existing atom.
-  auto addPtr = entryMap_.lookupForAdd(lookup);
+  auto addPtr = entrySet_.lookupForAdd(lookup);
   if (addPtr) {
-    return addPtr->key()->asAtom();
+    return (*addPtr)->asAtom();
   }
 
   return internChar16Seq<Latin1Char>(cx, addPtr, lookup.hash(), seq, length);
@@ -467,9 +467,9 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internUtf8(
   InflatedChar16Sequence<mozilla::Utf8Unit> seq(utf8Ptr, nbyte);
   SpecificParserAtomLookup<mozilla::Utf8Unit> lookup(seq);
   MOZ_ASSERT(wellKnownTable_.lookupChar16Seq(lookup) == nullptr);
-  EntryMap::AddPtr addPtr = entryMap_.lookupForAdd(lookup);
+  EntrySet::AddPtr addPtr = entrySet_.lookupForAdd(lookup);
   if (addPtr) {
-    return addPtr->key()->asAtom();
+    return (*addPtr)->asAtom();
   }
 
   // Compute length in code-points.
@@ -503,9 +503,9 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internChar16(
   }
 
   // Check for existing atom.
-  EntryMap::AddPtr addPtr = entryMap_.lookupForAdd(lookup);
+  EntrySet::AddPtr addPtr = entrySet_.lookupForAdd(lookup);
   if (addPtr) {
-    return addPtr->key()->asAtom();
+    return (*addPtr)->asAtom();
   }
 
   // Compute the target encoding.
@@ -597,9 +597,9 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::concatAtoms(
   SpecificParserAtomLookup<const ParserAtom*> lookup(seq);
 
   // Check for existing atom.
-  auto addPtr = entryMap_.lookupForAdd(lookup);
+  auto addPtr = entrySet_.lookupForAdd(lookup);
   if (addPtr) {
-    return addPtr->key()->asAtom();
+    return (*addPtr)->asAtom();
   }
 
   // Otherwise, add new entry.

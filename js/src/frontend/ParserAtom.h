@@ -657,9 +657,9 @@ class ParserAtomsTable {
   LifoAlloc& alloc_;
 
   // The ParserAtomEntry are owned by the LifoAlloc.
-  using EntryMap = HashMap<ParserAtomEntry*, ParserAtomIndex,
-                           ParserAtomLookupHasher, js::SystemAllocPolicy>;
-  EntryMap entryMap_;
+  using EntrySet = HashSet<const ParserAtomEntry*, ParserAtomLookupHasher,
+                           js::SystemAllocPolicy>;
+  EntrySet entrySet_;
   ParserAtomVector& entries_;
 
  public:
@@ -670,16 +670,14 @@ class ParserAtomsTable {
   // Internal APIs for interning to the table after well-known atoms cases have
   // been tested.
   JS::Result<const ParserAtom*, OOM> addEntry(JSContext* cx,
-                                              EntryMap::AddPtr& addPtr,
+                                              EntrySet::AddPtr& addPtr,
                                               ParserAtomEntry* entry);
   template <typename AtomCharT, typename SeqCharT>
   JS::Result<const ParserAtom*, OOM> internChar16Seq(
-      JSContext* cx, EntryMap::AddPtr& addPtr, HashNumber hash,
+      JSContext* cx, EntrySet::AddPtr& addPtr, HashNumber hash,
       InflatedChar16Sequence<SeqCharT> seq, uint32_t length);
 
  public:
-  bool empty() const { return entryMap_.empty(); }
-
   JS::Result<const ParserAtom*, OOM> internAscii(JSContext* cx,
                                                  const char* asciiPtr,
                                                  uint32_t length);
