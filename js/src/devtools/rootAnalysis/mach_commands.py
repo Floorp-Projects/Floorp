@@ -181,39 +181,14 @@ class MachCommands(MachCommandBase):
             "build", self._mach_context, **kwargs
         )
 
-    def check_application(self, requested_app, objdir=None):
-        """Verify that the objdir and work dir are for the expected application"""
-
-        try:
-            work_dir = self.work_dir(requested_app)
-            filename = os.path.join(work_dir, "app.json")
-            work_dir_app = self.read_json_file(filename)["application"]
-            if work_dir_app != requested_app:
-                raise FailedCommandError(
-                    "work dir {} is for the wrong app {}".format(work_dir, work_dir_app)
-                )
-        except IOError:
-            # work dir has not been created or initialized yet, so we're good.
-            pass
-
-        try:
-            if not objdir:
-                objdir = self.topobjdir
-            mozinfo = self.read_json_file(os.path.join(objdir, "mozinfo.json"))
-            if mozinfo.get("buildapp") != requested_app:
-                raise FailedCommandError(
-                    "objdir {} is for the wrong app {}, clobber required".format(
-                        objdir, mozinfo.get("buildapp")
-                    )
-                )
-        except (OSError, IOError):
-            pass
-
     def read_json_file(self, filename):
         with open(filename) as fh:
             return json.load(fh)
 
     def ensure_shell(self, objdir):
+        if objdir is None:
+            objdir = os.path.join(self.topsrcdir, "obj-haz-shell")
+
         try:
             binaries = self.read_json_file(os.path.join(objdir, "binaries.json"))
             info = [b for b in binaries["programs"] if b["program"] == "js"][0]
@@ -235,26 +210,25 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
         "--application", default="browser", help="Build the given application."
     )
     @CommandArgument(
-        "--shell-objdir",
-        default="",
-        help="objdir containing the optimized JS shell for running the analysis.",
+        "--haz-objdir", default=None, help="Write object files to this directory."
     )
-    def gather_hazard_data(self, application, shell_objdir):
+    @CommandArgument(
+        "--work-dir", default=None, help="Directory for output and working files."
+    )
+    def gather_hazard_data(self, **kwargs):
         """Gather analysis information by compiling the tree"""
-        if shell_objdir == "":
-            shell_objdir = os.path.join(self.topsrcdir, "obj-haz-shell")
-        shell_path = self.ensure_shell(shell_objdir)
-        objdir = os.path.join(self.topsrcdir, "obj-analyzed-" + application)
-        self.check_application(application, objdir)
-        with open(os.path.join(work_dir, "app.json"), "wt") as fh:
-            json.dump({"application": application}, fh)
+        application = kwargs["application"]
+        objdir = kwargs["haz_objdir"]
+        if objdir is None:
+            objdir = os.environ.get("HAZ_OBJDIR")
+        if objdir is None:
+            objdir = os.path.join(self.topsrcdir, "obj-analyzed-" + application)
 
         work_dir = self.work_dir(application, kwargs["work_dir"])
         self.ensure_dir_exists(work_dir)
         with open(os.path.join(work_dir, "defaults.py"), "wt") as fh:
             data = textwrap.dedent(
                 """\
-                js = "{js}"
                 analysis_scriptdir = "{script_dir}"
                 objdir = "{objdir}"
                 source = "{srcdir}"
@@ -263,7 +237,6 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
                 gcc_bin = "{gcc_dir}/bin"
             """
             ).format(
-                js=shell_path,
                 script_dir=self.script_dir,
                 objdir=objdir,
                 srcdir=self.topsrcdir,
@@ -272,8 +245,12 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
             )
             fh.write(data)
 
-        buildscript = "{srcdir}/mach hazards compile --application={app}".format(
-            srcdir=self.topsrcdir, app=application
+        buildscript = " ".join(
+            [
+                self.topsrcdir + "/mach hazards compile",
+                "--application=" + application,
+                "--haz-objdir=" + objdir,
+            ]
         )
         args = [
             os.path.join(self.script_dir, "analyze.py"),
@@ -296,6 +273,11 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
     )
     @CommandArgument(
         "--application", default="browser", help="Build the given application."
+    )
+    @CommandArgument(
+        "--haz-objdir",
+        default=os.environ.get("HAZ_OBJDIR"),
+        help="Write object files to this directory.",
     )
     def inner_compile(self, **kwargs):
         """Build a source tree and gather analysis information while running
@@ -324,7 +306,6 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
         # want to build the default browser application.)
         loader = MozconfigLoader(self.topsrcdir)
         mozconfig = loader.read_mozconfig(mozconfig_path)
-        self.check_application(app, mozconfig["topobjdir"])
         configure_args = mozconfig["configure_args"]
         if "--enable-application=%s" % app not in configure_args:
             raise Exception("mozconfig %s builds wrong project" % mozconfig_path)
@@ -354,14 +335,28 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
         default="browser",
         help="Analyze the output for the given application.",
     )
-    def analyze(self, application):
+    @CommandArgument(
+        "--shell-objdir",
+        default=None,
+        help="objdir containing the optimized JS shell for running the analysis.",
+    )
+    @CommandArgument(
+        "--work-dir", default=None, help="Directory for output and working files."
+    )
+    def analyze(self, application, shell_objdir, work_dir):
         """Analyzed gathered data for rooting hazards"""
+
+        shell = self.ensure_shell(shell_objdir)
         args = [
             os.path.join(self.script_dir, "analyze.py"),
+            "--js",
+            shell,
             "gcTypes",
             "-v",
         ]
 
-        return self.run_process(
-            args=args, cwd=self.work_dir(application), pass_thru=True
-        )
+        self.setup_env_for_tools(os.environ)
+        os.environ["LD_LIBRARY_PATH"] += ":" + os.path.dirname(shell)
+
+        work_dir = self.work_dir(application, work_dir)
+        return self.run_process(args=args, cwd=work_dir, pass_thru=True)
