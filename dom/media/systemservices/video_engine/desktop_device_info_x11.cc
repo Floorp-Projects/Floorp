@@ -13,37 +13,34 @@
 
 namespace webrtc {
 
-DesktopDeviceInfo * DesktopDeviceInfoImpl::Create() {
-  DesktopDeviceInfoX11 * pDesktopDeviceInfo = new DesktopDeviceInfoX11();
-  if (pDesktopDeviceInfo && pDesktopDeviceInfo->Init() != 0){
+DesktopDeviceInfo* DesktopDeviceInfoImpl::Create() {
+  DesktopDeviceInfoX11* pDesktopDeviceInfo = new DesktopDeviceInfoX11();
+  if (pDesktopDeviceInfo && pDesktopDeviceInfo->Init() != 0) {
     delete pDesktopDeviceInfo;
     pDesktopDeviceInfo = NULL;
   }
   return pDesktopDeviceInfo;
 }
 
-DesktopDeviceInfoX11::DesktopDeviceInfoX11() {
-}
+DesktopDeviceInfoX11::DesktopDeviceInfoX11() {}
 
-DesktopDeviceInfoX11::~DesktopDeviceInfoX11() {
-}
+DesktopDeviceInfoX11::~DesktopDeviceInfoX11() {}
 
-void DesktopDeviceInfoX11::MultiMonitorScreenshare()
-{
+void DesktopDeviceInfoX11::MultiMonitorScreenshare() {
   DesktopDisplayDevice* desktop_device_info = new DesktopDisplayDevice;
   if (desktop_device_info) {
     desktop_device_info->setScreenId(webrtc::kFullDesktopScreenId);
     desktop_device_info->setDeviceName("Primary Monitor");
 
     char idStr[64];
-    snprintf(idStr, sizeof(idStr), "%" PRIdPTR, desktop_device_info->getScreenId());
+    snprintf(idStr, sizeof(idStr), "%" PRIdPTR,
+             desktop_device_info->getScreenId());
     desktop_device_info->setUniqueIdName(idStr);
-    desktop_display_list_[desktop_device_info->getScreenId()] = desktop_device_info;
+    desktop_display_list_[desktop_device_info->getScreenId()] =
+        desktop_device_info;
   }
 }
 
-void DesktopDeviceInfoX11::InitializeScreenList() {
-  MultiMonitorScreenshare();
-}
+void DesktopDeviceInfoX11::InitializeScreenList() { MultiMonitorScreenshare(); }
 
-} //namespace webrtc
+}  // namespace webrtc

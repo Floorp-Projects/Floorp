@@ -15,17 +15,17 @@
 namespace webrtc {
 
 class DesktopDeviceInfoX11 : public DesktopDeviceInfoImpl {
-public:
+ public:
   DesktopDeviceInfoX11();
   ~DesktopDeviceInfoX11();
 
-protected:
-  //DesktopDeviceInfo Interfaces
+ protected:
+  // DesktopDeviceInfo Interfaces
   virtual void InitializeScreenList() override;
 
-private:
+ private:
   void MultiMonitorScreenshare();
 };
 
-}// namespace webrtc
-#endif //WEBRTC_MODULES_DESKTOP_CAPTURE_X11_DEVICE_INFO_H_
+}  // namespace webrtc
+#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_X11_DEVICE_INFO_H_
