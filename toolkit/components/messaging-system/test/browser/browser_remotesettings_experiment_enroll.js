@@ -20,7 +20,10 @@ let rsClient;
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["messaging-system.log", "all"]],
+    set: [
+      ["messaging-system.log", "all"],
+      ["app.shield.optoutstudies.enabled", true],
+    ],
   });
   rsClient = RemoteSettings("nimbus-desktop-experiments");
 
@@ -74,4 +77,35 @@ add_task(async function test_experimentEnrollment() {
   });
 
   Assert.ok(!experiment.active, "Experiment is no longer active");
+});
+
+add_task(async function test_experimentEnrollment_startup() {
+  // Studies pref can turn the feature off but if the feature pref is off
+  // then it stays off.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["messaging-system.rsexperimentloader.enabled", false],
+      ["app.shield.optoutstudies.enabled", false],
+    ],
+  });
+
+  Assert.ok(!RemoteSettingsExperimentLoader.enabled, "Should be disabled");
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["app.shield.optoutstudies.enabled", true]],
+  });
+
+  Assert.ok(
+    !RemoteSettingsExperimentLoader.enabled,
+    "Should still be disabled (feature pref is off)"
+  );
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["messaging-system.rsexperimentloader.enabled", true]],
+  });
+
+  Assert.ok(
+    RemoteSettingsExperimentLoader.enabled,
+    "Should finally be enabled"
+  );
 });

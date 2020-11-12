@@ -17,6 +17,7 @@ const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
 
 const ENABLED_PREF = "messaging-system.rsexperimentloader.enabled";
 const RUN_INTERVAL_PREF = "app.normandy.run_interval_seconds";
+const STUDIES_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 
 add_task(async function test_real_exp_manager() {
   equal(
@@ -63,6 +64,34 @@ add_task(async function test_init() {
     `should not initialize if ${ENABLED_PREF} pref is false`
   );
 
+  Services.prefs.setBoolPref(ENABLED_PREF, true);
+  await loader.init();
+  ok(loader.setTimer.calledOnce, "should call .setTimer");
+  ok(loader.updateRecipes.calledOnce, "should call .updateRecipes");
+});
+
+add_task(async function test_init_with_opt_in() {
+  const loader = ExperimentFakes.rsLoader();
+  sinon.stub(loader, "setTimer");
+  sinon.stub(loader, "updateRecipes").resolves();
+
+  Services.prefs.setBoolPref(STUDIES_OPT_OUT_PREF, false);
+  await loader.init();
+  equal(
+    loader.setTimer.callCount,
+    0,
+    `should not initialize if ${STUDIES_OPT_OUT_PREF} pref is false`
+  );
+
+  Services.prefs.setBoolPref(ENABLED_PREF, false);
+  await loader.init();
+  equal(
+    loader.setTimer.callCount,
+    0,
+    `should not initialize if ${ENABLED_PREF} pref is false`
+  );
+
+  Services.prefs.setBoolPref(STUDIES_OPT_OUT_PREF, true);
   Services.prefs.setBoolPref(ENABLED_PREF, true);
   await loader.init();
   ok(loader.setTimer.calledOnce, "should call .setTimer");

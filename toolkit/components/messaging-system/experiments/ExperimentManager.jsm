@@ -15,6 +15,7 @@ const EXPORTED_SYMBOLS = ["ExperimentManager", "_ExperimentManager"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
@@ -41,6 +42,7 @@ const EVENT_TELEMETRY_STUDY_TYPE = "preference_study";
 const TELEMETRY_EXPERIMENT_TYPE_PREFIX = "normandy-";
 // Also included in telemetry
 const DEFAULT_EXPERIMENT_TYPE = "messaging_experiment";
+const STUDIES_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 
 /**
  * A module for processes Experiment recipes, choosing and storing enrollment state,
@@ -51,6 +53,8 @@ class _ExperimentManager {
     this.id = id;
     this.store = store || new ExperimentStore();
     this.sessions = new Map();
+
+    Services.prefs.addObserver(STUDIES_OPT_OUT_PREF, this);
   }
 
   /**
@@ -294,6 +298,18 @@ class _ExperimentManager {
     });
 
     log.debug(`Experiment unenrolled: ${slug}`);
+  }
+
+  /**
+   * Unenroll from all active studies if user opts out.
+   */
+  observe(aSubject, aTopic, aPrefName) {
+    if (Services.prefs.getBoolPref(STUDIES_OPT_OUT_PREF)) {
+      return;
+    }
+    for (const { slug } of this.store.getAllActive()) {
+      this.unenroll(slug, "studies-opt-out");
+    }
   }
 
   /**
