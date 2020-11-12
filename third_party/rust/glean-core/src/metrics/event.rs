@@ -36,8 +36,12 @@ impl MetricType for EventMetric {
     }
 }
 
+// IMPORTANT:
+//
+// When changing this implementation, make sure all the operations are
+// also declared in the related trait in `../traits/`.
 impl EventMetric {
-    /// Create a new event metric.
+    /// Creates a new event metric.
     pub fn new(meta: CommonMetricData, allowed_extra_keys: Vec<String>) -> Self {
         Self {
             meta,
@@ -45,9 +49,9 @@ impl EventMetric {
         }
     }
 
-    /// Record an event.
+    /// Records an event.
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
     /// * `glean` - The Glean instance this metric belongs to.
     /// * `timestamp` - A monotonically increasing timestamp, in milliseconds.
@@ -104,7 +108,7 @@ impl EventMetric {
 
     /// **Test-only API (exported for FFI purposes).**
     ///
-    /// Test whether there are currently stored events for this event metric.
+    /// Tests whether there are currently stored events for this event metric.
     ///
     /// This doesn't clear the stored value.
     pub fn test_has_value(&self, glean: &Glean, store_name: &str) -> bool {
@@ -122,7 +126,7 @@ impl EventMetric {
 
     /// **Test-only API (exported for FFI purposes).**
     ///
-    /// Get the currently stored events for this event metric as a JSON-encoded string.
+    /// Gets the currently stored events for this event metric as a JSON-encoded string.
     ///
     /// This doesn't clear the stored value.
     pub fn test_get_value_as_json_string(&self, glean: &Glean, store_name: &str) -> String {

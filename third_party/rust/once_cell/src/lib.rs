@@ -1,237 +1,285 @@
-/*!
-# Overview
-
-`once_cell` provides two new cell-like types, [`unsync::OnceCell`] and [`sync::OnceCell`]. A `OnceCell`
-might store arbitrary non-`Copy` types, can be assigned to at most once and provides direct access
-to the stored contents. In a nutshell, the API looks *roughly* like this:
-
-```rust,ignore
-impl<T> OnceCell<T> {
-    fn new() -> OnceCell<T> { ... }
-    fn set(&self, value: T) -> Result<(), T> { ... }
-    fn get(&self) -> Option<&T> { ... }
-}
-```
-
-Note that, like with [`RefCell`] and [`Mutex`], the `set` method requires only a shared reference.
-Because of the single assignment restriction `get` can return a `&T` instead of `Ref<T>`
-or `MutexGuard<T>`.
-
-The `sync` flavor is thread-safe (that is, implements the [`Sync`] trait), while the `unsync` one is not.
-
-[`unsync::OnceCell`]: unsync/struct.OnceCell.html
-[`sync::OnceCell`]: sync/struct.ONceCell.html
-[`RefCell`]: https://doc.rust-lang.org/std/cell/struct.RefCell.html
-[`Mutex`]: https://doc.rust-lang.org/std/sync/struct.Mutex.html
-[`Sync`]: https://doc.rust-lang.org/std/marker/trait.Sync.html
-
-# Patterns
-
-`OnceCell` might be useful for a variety of patterns.
-
-## Safe Initialization of global data
-
-```rust
-use std::{env, io};
-
-use once_cell::sync::OnceCell;
-
-#[derive(Debug)]
-pub struct Logger {
-    // ...
-}
-static INSTANCE: OnceCell<Logger> = OnceCell::new();
-
-impl Logger {
-    pub fn global() -> &'static Logger {
-        INSTANCE.get().expect("logger is not initialized")
-    }
-
-    fn from_cli(args: env::Args) -> Result<Logger, std::io::Error> {
-       // ...
-#      Ok(Logger {})
-    }
-}
-
-fn main() {
-    let logger = Logger::from_cli(env::args()).unwrap();
-    INSTANCE.set(logger).unwrap();
-    // use `Logger::global()` from now on
-}
-```
-
-## Lazy initialized global data
-
-This is essentially the `lazy_static!` macro, but without a macro.
-
-```rust
-use std::{sync::Mutex, collections::HashMap};
-
-use once_cell::sync::OnceCell;
-
-fn global_data() -> &'static Mutex<HashMap<i32, String>> {
-    static INSTANCE: OnceCell<Mutex<HashMap<i32, String>>> = OnceCell::new();
-    INSTANCE.get_or_init(|| {
-        let mut m = HashMap::new();
-        m.insert(13, "Spica".to_string());
-        m.insert(74, "Hoyten".to_string());
-        Mutex::new(m)
-    })
-}
-```
-
-There are also the [`sync::Lazy`] and [`unsync::Lazy`] convenience types to streamline this pattern:
-
-```rust
-use std::{sync::Mutex, collections::HashMap};
-use once_cell::sync::Lazy;
-
-static GLOBAL_DATA: Lazy<Mutex<HashMap<i32, String>>> = Lazy::new(|| {
-    let mut m = HashMap::new();
-    m.insert(13, "Spica".to_string());
-    m.insert(74, "Hoyten".to_string());
-    Mutex::new(m)
-});
-
-fn main() {
-    println!("{:?}", GLOBAL_DATA.lock().unwrap());
-}
-```
-
-[`sync::Lazy`]: sync/struct.Lazy.html
-[`unsync::Lazy`]: unsync/struct.Lazy.html
-
-## General purpose lazy evaluation
-
-Unlike `lazy_static!`, `Lazy` works with local variables.
-
-```rust
-use once_cell::unsync::Lazy;
-
-fn main() {
-    let ctx = vec![1, 2, 3];
-    let thunk = Lazy::new(|| {
-        ctx.iter().sum::<i32>()
-    });
-    assert_eq!(*thunk, 6);
-}
-```
-
-If you need a lazy field in a struct, you probably should use `OnceCell`
-directly, because that will allow you to access `self` during initialization.
-
-```rust
-use std::{fs, path::PathBuf};
-
-use once_cell::unsync::OnceCell;
-
-struct Ctx {
-    config_path: PathBuf,
-    config: OnceCell<String>,
-}
-
-impl Ctx {
-    pub fn get_config(&self) -> Result<&str, std::io::Error> {
-        let cfg = self.config.get_or_try_init(|| {
-            fs::read_to_string(&self.config_path)
-        })?;
-        Ok(cfg.as_str())
-    }
-}
-```
-
-## Building block
-
-Naturally, it is  possible to build other abstractions on top of `OnceCell`.
-For example, this is a `regex!` macro which takes a string literal and returns an
-*expression* that evaluates to a `&'static Regex`:
-
-```
-macro_rules! regex {
-    ($re:literal $(,)?) => {{
-        static RE: once_cell::sync::OnceCell<regex::Regex> = once_cell::sync::OnceCell::new();
-        RE.get_or_init(|| regex::Regex::new($re).unwrap())
-    }};
-}
-```
-
-This macro can be useful to avoid the "compile regex on every loop iteration" problem.
-
-# Comparison with std
-
-|`!Sync` types         | Access Mode            | Drawbacks                                     |
-|----------------------|------------------------|-----------------------------------------------|
-|`Cell<T>`             | `T`                    | requires `T: Copy` for `get`                  |
-|`RefCell<T>`          | `RefMut<T>` / `Ref<T>` | may panic at runtime                          |
-|`unsync::OnceCell<T>` | `&T`                   | assignable only once                          |
-
-|`Sync` types          | Access Mode            | Drawbacks                                     |
-|----------------------|------------------------|-----------------------------------------------|
-|`AtomicT`             | `T`                    | works only with certain `Copy` types          |
-|`Mutex<T>`            | `MutexGuard<T>`        | may deadlock at runtime, may block the thread |
-|`sync::OnceCell<T>`   | `&T`                   | assignable only once, may block the thread    |
-
-Technically, calling `get_or_init` will also cause a panic or a deadlock if it recursively calls
-itself. However, because the assignment can happen only once, such cases should be more rare than
-equivalents with `RefCell` and `Mutex`.
-
-# Minimum Supported `rustc` Version
-
-This crate's minimum supported `rustc` version is `1.31.1` (or `1.36.0` with the
-`parking_lot` feature enabled).
-
-If only the `std` feature is enabled, MSRV will be updated conservatively.
-When using other features, like `parking_lot`, MSRV might be updated more frequently, up to the latest stable.
-In both cases, increasing MSRV is *not* considered a semver-breaking change.
-
-# Implementation details
-
-The implementation is based on the [`lazy_static`](https://github.com/rust-lang-nursery/lazy-static.rs/)
-and [`lazy_cell`](https://github.com/indiv0/lazycell/) crates and [`std::sync::Once`]. In some sense,
-`once_cell` just streamlines and unifies those APIs.
-
-To implement a sync flavor of `OnceCell`, this crates uses either a custom re-implementation of
-`std::sync::Once` or `parking_lot::Mutex`. This is controlled by the `parking_lot` feature, which
-is enabled by default. Performance is the same for both cases, but the `parking_lot` based `OnceCell<T>`
-is smaller by up to 16 bytes.
-
-This crate uses `unsafe`.
-
-[`std::sync::Once`]: https://doc.rust-lang.org/std/sync/struct.Once.html
-
-# F.A.Q.
-
-**Should I use lazy_static or once_cell?**
-
-To the first approximation, `once_cell` is both more flexible and more convenient than `lazy_static`
-and should be preferred.
-
-Unlike `once_cell`, `lazy_static` supports spinlock-based implementation of blocking which works with
-`#![no_std]`.
-
-`lazy_static` has received significantly more real world testing, but `once_cell` is also a widely
-used crate.
-
-**Should I use the sync or unsync flavor?**
-
-Because Rust compiler checks thread safety for you, it's impossible to accidentally use `unsync` where
-`sync` is required. So, use `unsync` in single-threaded code and `sync` in multi-threaded. It's easy
-to switch between the two if code becomes multi-threaded later.
-
-At the moment, `unsync` has an additional benefit that reentrant initialization causes a panic, which
-might be easier to debug than a deadlock.
-
-# Related crates
-
-* [double-checked-cell](https://github.com/niklasf/double-checked-cell)
-* [lazy-init](https://crates.io/crates/lazy-init)
-* [lazycell](https://crates.io/crates/lazycell)
-* [mitochondria](https://crates.io/crates/mitochondria)
-* [lazy_static](https://crates.io/crates/lazy_static)
-
-*/
+//! # Overview
+//!
+//! `once_cell` provides two new cell-like types, [`unsync::OnceCell`] and [`sync::OnceCell`]. A `OnceCell`
+//! might store arbitrary non-`Copy` types, can be assigned to at most once and provides direct access
+//! to the stored contents. The core API looks *roughly* like this (and there's much more inside, read on!):
+//!
+//! ```rust,ignore
+//! impl<T> OnceCell<T> {
+//!     fn new() -> OnceCell<T> { ... }
+//!     fn set(&self, value: T) -> Result<(), T> { ... }
+//!     fn get(&self) -> Option<&T> { ... }
+//! }
+//! ```
+//!
+//! Note that, like with [`RefCell`] and [`Mutex`], the `set` method requires only a shared reference.
+//! Because of the single assignment restriction `get` can return a `&T` instead of `Ref<T>`
+//! or `MutexGuard<T>`.
+//!
+//! The `sync` flavor is thread-safe (that is, implements the [`Sync`] trait), while the `unsync` one is not.
+//!
+//! [`unsync::OnceCell`]: unsync/struct.OnceCell.html
+//! [`sync::OnceCell`]: sync/struct.OnceCell.html
+//! [`RefCell`]: https://doc.rust-lang.org/std/cell/struct.RefCell.html
+//! [`Mutex`]: https://doc.rust-lang.org/std/sync/struct.Mutex.html
+//! [`Sync`]: https://doc.rust-lang.org/std/marker/trait.Sync.html
+//!
+//! # Patterns
+//!
+//! `OnceCell` might be useful for a variety of patterns.
+//!
+//! ## Safe Initialization of global data
+//!
+//! ```rust
+//! use std::{env, io};
+//!
+//! use once_cell::sync::OnceCell;
+//!
+//! #[derive(Debug)]
+//! pub struct Logger {
+//!     // ...
+//! }
+//! static INSTANCE: OnceCell<Logger> = OnceCell::new();
+//!
+//! impl Logger {
+//!     pub fn global() -> &'static Logger {
+//!         INSTANCE.get().expect("logger is not initialized")
+//!     }
+//!
+//!     fn from_cli(args: env::Args) -> Result<Logger, std::io::Error> {
+//!        // ...
+//! #      Ok(Logger {})
+//!     }
+//! }
+//!
+//! fn main() {
+//!     let logger = Logger::from_cli(env::args()).unwrap();
+//!     INSTANCE.set(logger).unwrap();
+//!     // use `Logger::global()` from now on
+//! }
+//! ```
+//!
+//! ## Lazy initialized global data
+//!
+//! This is essentially the `lazy_static!` macro, but without a macro.
+//!
+//! ```rust
+//! use std::{sync::Mutex, collections::HashMap};
+//!
+//! use once_cell::sync::OnceCell;
+//!
+//! fn global_data() -> &'static Mutex<HashMap<i32, String>> {
+//!     static INSTANCE: OnceCell<Mutex<HashMap<i32, String>>> = OnceCell::new();
+//!     INSTANCE.get_or_init(|| {
+//!         let mut m = HashMap::new();
+//!         m.insert(13, "Spica".to_string());
+//!         m.insert(74, "Hoyten".to_string());
+//!         Mutex::new(m)
+//!     })
+//! }
+//! ```
+//!
+//! There are also the [`sync::Lazy`] and [`unsync::Lazy`] convenience types to streamline this pattern:
+//!
+//! ```rust
+//! use std::{sync::Mutex, collections::HashMap};
+//! use once_cell::sync::Lazy;
+//!
+//! static GLOBAL_DATA: Lazy<Mutex<HashMap<i32, String>>> = Lazy::new(|| {
+//!     let mut m = HashMap::new();
+//!     m.insert(13, "Spica".to_string());
+//!     m.insert(74, "Hoyten".to_string());
+//!     Mutex::new(m)
+//! });
+//!
+//! fn main() {
+//!     println!("{:?}", GLOBAL_DATA.lock().unwrap());
+//! }
+//! ```
+//!
+//! [`sync::Lazy`]: sync/struct.Lazy.html
+//! [`unsync::Lazy`]: unsync/struct.Lazy.html
+//!
+//! ## General purpose lazy evaluation
+//!
+//! Unlike `lazy_static!`, `Lazy` works with local variables.
+//!
+//! ```rust
+//! use once_cell::unsync::Lazy;
+//!
+//! fn main() {
+//!     let ctx = vec![1, 2, 3];
+//!     let thunk = Lazy::new(|| {
+//!         ctx.iter().sum::<i32>()
+//!     });
+//!     assert_eq!(*thunk, 6);
+//! }
+//! ```
+//!
+//! If you need a lazy field in a struct, you probably should use `OnceCell`
+//! directly, because that will allow you to access `self` during initialization.
+//!
+//! ```rust
+//! use std::{fs, path::PathBuf};
+//!
+//! use once_cell::unsync::OnceCell;
+//!
+//! struct Ctx {
+//!     config_path: PathBuf,
+//!     config: OnceCell<String>,
+//! }
+//!
+//! impl Ctx {
+//!     pub fn get_config(&self) -> Result<&str, std::io::Error> {
+//!         let cfg = self.config.get_or_try_init(|| {
+//!             fs::read_to_string(&self.config_path)
+//!         })?;
+//!         Ok(cfg.as_str())
+//!     }
+//! }
+//! ```
+//!
+//! ## Building block
+//!
+//! Naturally, it is  possible to build other abstractions on top of `OnceCell`.
+//! For example, this is a `regex!` macro which takes a string literal and returns an
+//! *expression* that evaluates to a `&'static Regex`:
+//!
+//! ```
+//! macro_rules! regex {
+//!     ($re:literal $(,)?) => {{
+//!         static RE: once_cell::sync::OnceCell<regex::Regex> = once_cell::sync::OnceCell::new();
+//!         RE.get_or_init(|| regex::Regex::new($re).unwrap())
+//!     }};
+//! }
+//! ```
+//!
+//! This macro can be useful to avoid the "compile regex on every loop iteration" problem.
+//!
+//! Another pattern would be a `LateInit` type for delayed initialization:
+//!
+//!
+//! ```
+//! use once_cell::sync::OnceCell;
+//!
+//! #[derive(Debug)]
+//! pub struct LateInit<T> { cell: OnceCell<T> }
+//!
+//! impl<T> LateInit<T> {
+//!     pub fn init(&self, value: T) {
+//!         assert!(self.cell.set(value).is_ok())
+//!     }
+//! }
+//!
+//! impl<T> Default for LateInit<T> {
+//!     fn default() -> Self { LateInit { cell: OnceCell::default() } }
+//! }
+//!
+//! impl<T> std::ops::Deref for LateInit<T> {
+//!     type Target = T;
+//!     fn deref(&self) -> &T {
+//!         self.cell.get().unwrap()
+//!     }
+//! }
+//!
+//! #[derive(Default, Debug)]
+//! struct A<'a> {
+//!     b: LateInit<&'a B<'a>>,
+//! }
+//!
+//! #[derive(Default, Debug)]
+//! struct B<'a> {
+//!     a: LateInit<&'a A<'a>>
+//! }
+//!
+//! fn build_cycle() {
+//!     let a = A::default();
+//!     let b = B::default();
+//!     a.b.init(&b);
+//!     b.a.init(&a);
+//!     println!("{:?}", a.b.a.b.a);
+//! }
+//! ```
+//!
+//! # Comparison with std
+//!
+//! |`!Sync` types         | Access Mode            | Drawbacks                                     |
+//! |----------------------|------------------------|-----------------------------------------------|
+//! |`Cell<T>`             | `T`                    | requires `T: Copy` for `get`                  |
+//! |`RefCell<T>`          | `RefMut<T>` / `Ref<T>` | may panic at runtime                          |
+//! |`unsync::OnceCell<T>` | `&T`                   | assignable only once                          |
+//!
+//! |`Sync` types          | Access Mode            | Drawbacks                                     |
+//! |----------------------|------------------------|-----------------------------------------------|
+//! |`AtomicT`             | `T`                    | works only with certain `Copy` types          |
+//! |`Mutex<T>`            | `MutexGuard<T>`        | may deadlock at runtime, may block the thread |
+//! |`sync::OnceCell<T>`   | `&T`                   | assignable only once, may block the thread    |
+//!
+//! Technically, calling `get_or_init` will also cause a panic or a deadlock if it recursively calls
+//! itself. However, because the assignment can happen only once, such cases should be more rare than
+//! equivalents with `RefCell` and `Mutex`.
+//!
+//! # Minimum Supported `rustc` Version
+//!
+//! This crate's minimum supported `rustc` version is `1.36.0`.
+//!
+//! If only the `std` feature is enabled, MSRV will be updated conservatively.
+//! When using other features, like `parking_lot`, MSRV might be updated more frequently, up to the latest stable.
+//! In both cases, increasing MSRV is *not* considered a semver-breaking change.
+//!
+//! # Implementation details
+//!
+//! The implementation is based on the [`lazy_static`](https://github.com/rust-lang-nursery/lazy-static.rs/)
+//! and [`lazy_cell`](https://github.com/indiv0/lazycell/) crates and [`std::sync::Once`]. In some sense,
+//! `once_cell` just streamlines and unifies those APIs.
+//!
+//! To implement a sync flavor of `OnceCell`, this crates uses either a custom re-implementation of
+//! `std::sync::Once` or `parking_lot::Mutex`. This is controlled by the `parking_lot` feature, which
+//! is enabled by default. Performance is the same for both cases, but the `parking_lot` based `OnceCell<T>`
+//! is smaller by up to 16 bytes.
+//!
+//! This crate uses `unsafe`.
+//!
+//! [`std::sync::Once`]: https://doc.rust-lang.org/std/sync/struct.Once.html
+//!
+//! # F.A.Q.
+//!
+//! **Should I use lazy_static or once_cell?**
+//!
+//! To the first approximation, `once_cell` is both more flexible and more convenient than `lazy_static`
+//! and should be preferred.
+//!
+//! Unlike `once_cell`, `lazy_static` supports spinlock-based implementation of blocking which works with
+//! `#![no_std]`.
+//!
+//! `lazy_static` has received significantly more real world testing, but `once_cell` is also a widely
+//! used crate.
+//!
+//! **Should I use the sync or unsync flavor?**
+//!
+//! Because Rust compiler checks thread safety for you, it's impossible to accidentally use `unsync` where
+//! `sync` is required. So, use `unsync` in single-threaded code and `sync` in multi-threaded. It's easy
+//! to switch between the two if code becomes multi-threaded later.
+//!
+//! At the moment, `unsync` has an additional benefit that reentrant initialization causes a panic, which
+//! might be easier to debug than a deadlock.
+//!
+//! # Related crates
+//!
+//! * [double-checked-cell](https://github.com/niklasf/double-checked-cell)
+//! * [lazy-init](https://crates.io/crates/lazy-init)
+//! * [lazycell](https://crates.io/crates/lazycell)
+//! * [mitochondria](https://crates.io/crates/mitochondria)
+//! * [lazy_static](https://crates.io/crates/lazy_static)
+//!
+//! Most of this crate's functionality is available in `std` in nightly Rust.
+//! See the [tracking issue](https://github.com/rust-lang/rust/issues/74465).
 
 #![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(feature = "unstable")]
+#[cfg(feature = "alloc")]
+extern crate alloc;
 
 #[cfg(feature = "std")]
 #[cfg(feature = "parking_lot")]
@@ -994,3 +1042,6 @@ pub mod sync {
     /// ```
     fn _dummy() {}
 }
+
+#[cfg(feature = "unstable")]
+pub mod race;
