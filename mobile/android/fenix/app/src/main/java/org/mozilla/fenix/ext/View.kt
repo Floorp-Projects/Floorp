@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("TooManyFunctions")
+
 package org.mozilla.fenix.ext
 
 import android.graphics.Rect
@@ -96,17 +98,41 @@ fun View.updateAccessibilityCollectionItemInfo(
 }
 
 /**
+ * Updates the a11y collection info for a list.
+ */
+fun View.updateAccessibilityCollectionInfo(
+    rowCount: Int,
+    columnCount: Int
+) {
+    this.accessibilityDelegate = object : View.AccessibilityDelegate() {
+        override fun onInitializeAccessibilityNodeInfo(
+            host: View?,
+            info: AccessibilityNodeInfo?
+        ) {
+            super.onInitializeAccessibilityNodeInfo(host, info)
+            info?.collectionInfo = AccessibilityNodeInfo.CollectionInfo.obtain(
+                rowCount,
+                columnCount,
+                false
+            )
+        }
+    }
+}
+
+/**
  * Fills a [Rect] with data about a view's location in the screen.
  *
  * @see View.getLocationOnScreen
  * @see View.getRectWithViewLocation for a version of this that is relative to a window
-*/
+ */
 fun View.getRectWithScreenLocation(): Rect {
     val locationOnScreen = IntArray(2).apply { getLocationOnScreen(this) }
-    return Rect(locationOnScreen[0],
+    return Rect(
+        locationOnScreen[0],
         locationOnScreen[1],
         locationOnScreen[0] + width,
-        locationOnScreen[1] + height)
+        locationOnScreen[1] + height
+    )
 }
 
 /**

@@ -9,8 +9,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
-import android.view.accessibility.AccessibilityNodeInfo
-import android.view.accessibility.AccessibilityNodeInfo.CollectionInfo
 import androidx.annotation.IdRes
 import androidx.cardview.widget.CardView
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -52,6 +50,7 @@ import org.mozilla.fenix.components.toolbar.TabCounter.Companion.MAX_VISIBLE_TAB
 import org.mozilla.fenix.components.toolbar.TabCounter.Companion.SO_MANY_TABS_OPEN
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.updateAccessibilityCollectionInfo
 import org.mozilla.fenix.tabtray.SaveToCollectionsButtonAdapter.MultiselectModeChange
 import org.mozilla.fenix.tabtray.TabTrayDialogFragmentState.Mode
 import java.text.NumberFormat
@@ -673,24 +672,11 @@ class TabTrayView(
             String.format(view.context.getString(R.string.open_tab_tray_plural), count.toString())
         }
 
-        view.tabsTray.accessibilityDelegate = object : View.AccessibilityDelegate() {
-            override fun onInitializeAccessibilityNodeInfo(
-                host: View?,
-                info: AccessibilityNodeInfo?
-            ) {
-                super.onInitializeAccessibilityNodeInfo(host, info)
-                val isListTabView = view.context.settings().listTabView
+        val isListTabView = view.context.settings().listTabView
+        val columnCount = if (isListTabView) 1 else getNumberOfGridColumns(view.context)
+        val rowCount = count.toDouble().div(columnCount).roundToInt()
 
-                val columnCount = if (isListTabView) 1 else getNumberOfGridColumns(view.context)
-                val rowCount = count.toDouble().div(columnCount).roundToInt()
-
-                info?.collectionInfo = CollectionInfo.obtain(
-                    rowCount,
-                    columnCount,
-                    false
-                )
-            }
-        }
+        view.tabsTray.updateAccessibilityCollectionInfo(rowCount, columnCount)
     }
 
     private fun updateTabCounter(count: Int): String {
