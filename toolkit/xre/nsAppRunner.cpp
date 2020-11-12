@@ -1958,17 +1958,7 @@ static void ReflectSkeletonUIPrefToRegistry(const char* aPref, void* aData) {
   if (shouldBeEnabled && Preferences::HasUserValue(kPrefThemeId)) {
     nsCString themeId;
     Preferences::GetCString(kPrefThemeId, themeId);
-    if (themeId.EqualsLiteral("default-theme@mozilla.org")) {
-      SetPreXULSkeletonUIThemeId(ThemeMode::Default);
-    } else if (themeId.EqualsLiteral("firefox-compact-dark@mozilla.org")) {
-      SetPreXULSkeletonUIThemeId(ThemeMode::Dark);
-    } else if (themeId.EqualsLiteral("firefox-compact-light@mozilla.org")) {
-      SetPreXULSkeletonUIThemeId(ThemeMode::Light);
-    } else {
-      shouldBeEnabled = false;
-    }
-  } else if (shouldBeEnabled) {
-    SetPreXULSkeletonUIThemeId(ThemeMode::Default);
+    shouldBeEnabled = themeId.EqualsLiteral("default-theme@mozilla.org");
   }
 
   if (GetPreXULSkeletonUIEnabled() != shouldBeEnabled) {
