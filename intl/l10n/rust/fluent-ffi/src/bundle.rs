@@ -28,7 +28,7 @@ fn transform_accented(s: &str) -> Cow<str> {
 }
 
 fn transform_bidi(s: &str) -> Cow<str> {
-    transform_dom(s, true, false)
+    transform_dom(s, false, false)
 }
 
 fn format_numbers(num: &FluentValue, intls: &IntlLangMemoizer) -> Option<String> {
