@@ -561,12 +561,7 @@ pref("browser.tabs.delayHidingAudioPlayingIconMS", 3000);
 // for about: pages. This pref name did not age well: we will have multiple
 // types of privileged content processes, each with different privileges.
 // types of privleged content processes, each with different privleges.
-#if defined(MOZ_CODE_COVERAGE) && defined(XP_LINUX)
-  // Disabled on Linux ccov builds due to bug 1621269.
-  pref("browser.tabs.remote.separatePrivilegedContentProcess", false);
-#else
-  pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
-#endif
+pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
 
 #if defined(NIGHTLY_BUILD) && !defined(MOZ_ASAN)
   // This pref will cause assertions when a remoteType triggers a process switch
