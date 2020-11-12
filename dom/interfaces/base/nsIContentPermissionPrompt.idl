@@ -39,14 +39,6 @@ interface nsIContentPermissionRequestCallback : nsISupports {
 };
 
 /**
- *  Interface provides the way to get the visibility and
- *  the notification.
- */
-[scriptable, uuid(f8577124-6a5f-486f-ae04-c5bcae911eb5)]
-interface nsIContentPermissionRequester : nsISupports {
-};
-
-/**
  * Interface allows access to a content to request
  * permission to perform a privileged operation such as
  * geolocation.
@@ -81,11 +73,6 @@ interface nsIContentPermissionRequest : nsISupports {
   readonly attribute boolean isHandlingUserInput;
 
   readonly attribute boolean maybeUnsafePermissionDelegate;
-  /**
-   *  The requester to get the required information of
-   *  the window.
-   */
-  readonly attribute nsIContentPermissionRequester requester;
 
   /*
    * Get delegate principal of the permission request. This will return nullptr,

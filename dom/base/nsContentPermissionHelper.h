@@ -90,21 +90,6 @@ class nsContentPermissionUtils {
       PContentPermissionRequestChild* aChild);
 };
 
-class nsContentPermissionRequester final
-    : public nsIContentPermissionRequester {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICONTENTPERMISSIONREQUESTER
-
-  explicit nsContentPermissionRequester(nsPIDOMWindowInner* aWindow);
-
- private:
-  virtual ~nsContentPermissionRequester();
-
-  nsWeakPtr mWindow;
-  RefPtr<VisibilityChangeListener> mListener;
-};
-
 nsresult TranslateChoices(
     JS::HandleValue aChoices,
     const nsTArray<PermissionRequest>& aPermissionRequests,
@@ -125,7 +110,6 @@ class ContentPermissionRequestBase : public nsIContentPermissionRequest {
   NS_IMETHOD GetIsHandlingUserInput(bool* aIsHandlingUserInput) override;
   NS_IMETHOD GetMaybeUnsafePermissionDelegate(
       bool* aMaybeUnsafePermissionDelegate) override;
-  NS_IMETHOD GetRequester(nsIContentPermissionRequester** aRequester) override;
   // Overrides for Allow() and Cancel() aren't provided by this class.
   // That is the responsibility of the subclasses.
 
@@ -158,7 +142,6 @@ class ContentPermissionRequestBase : public nsIContentPermissionRequest {
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIPrincipal> mTopLevelPrincipal;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
-  nsCOMPtr<nsIContentPermissionRequester> mRequester;
   RefPtr<PermissionDelegateHandler> mPermissionHandler;
   nsCString mPrefName;
   nsCString mType;
@@ -186,23 +169,6 @@ class nsContentPermissionRequestProxy : public nsIContentPermissionRequest {
   void NotifyVisibility(const bool& aIsVisible);
 
  private:
-  class nsContentPermissionRequesterProxy final
-      : public nsIContentPermissionRequester {
-   public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSICONTENTPERMISSIONREQUESTER
-
-    explicit nsContentPermissionRequesterProxy() : mWaitGettingResult(false) {}
-
-    void NotifyVisibilityResult(const bool& aIsVisible);
-
-   private:
-    virtual ~nsContentPermissionRequesterProxy() = default;
-
-    bool mWaitGettingResult;
-    nsCOMPtr<nsIContentPermissionRequestCallback> mGetCallback;
-    nsCOMPtr<nsIContentPermissionRequestCallback> mOnChangeCallback;
-  };
 
   virtual ~nsContentPermissionRequestProxy();
 
@@ -210,7 +176,6 @@ class nsContentPermissionRequestProxy : public nsIContentPermissionRequest {
   // this proxy.
   ContentPermissionRequestParent* mParent;
   nsTArray<mozilla::dom::PermissionRequest> mPermissionRequests;
-  RefPtr<nsContentPermissionRequesterProxy> mRequester;
 };
 
 /**
