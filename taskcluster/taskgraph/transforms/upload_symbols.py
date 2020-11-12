@@ -33,6 +33,7 @@ def check_nightlies(config, tasks):
             config.params["project"] in RELEASE_PROJECTS
             and dep.attributes.get("shippable")
             and not dep.attributes.get("enable-full-crashsymbols")
+            and not dep.attributes.get("skip-upload-crashsymbols")
         ):
             raise Exception(
                 "Shippable job %s should have enable-full-crashsymbols attribute "
@@ -51,7 +52,9 @@ def fill_template(config, tasks):
         task["label"] = dep.label + "-upload-symbols"
 
         # Skip tasks where we don't have the full crashsymbols enabled
-        if not dep.attributes.get("enable-full-crashsymbols"):
+        if not dep.attributes.get("enable-full-crashsymbols") or dep.attributes.get(
+            "skip-upload-crashsymbols"
+        ):
             logger.debug("Skipping upload symbols task for %s", task["label"])
             continue
 
