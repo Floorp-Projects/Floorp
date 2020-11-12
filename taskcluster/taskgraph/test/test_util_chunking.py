@@ -182,10 +182,18 @@ def test_guess_mozinfo_from_task(params, exception, mock_task_definition):
         with pytest.raises(exception):
             result = chunking.guess_mozinfo_from_task(task)
     else:
+        expected_toolkits = {
+            "android": "android",
+            "linux": "gtk",
+            "mac": "cocoa",
+            "win": "windows",
+        }
         result = chunking.guess_mozinfo_from_task(task)
 
         assert result["bits"] == (32 if "32" in task["test-platform"] else 64)
         assert result["os"] in ("android", "linux", "mac", "win")
+        assert result["os"] in task["build-attributes"]["build_platform"]
+        assert result["toolkit"] == expected_toolkits[result["os"]]
 
         # Ensure the outcome of special build variants being present match what
         # guess_mozinfo_from_task method returns for these attributes.
