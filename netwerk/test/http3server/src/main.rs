@@ -8,8 +8,8 @@
 
 use neqo_common::{event::Provider, qdebug, qinfo, qtrace, Datagram};
 use neqo_crypto::{init_db, AllowZeroRtt, AntiReplay};
-use neqo_http3::{hframe::HFrame, Error, HFrameReader, Http3Server, Http3ServerEvent};
-use neqo_qpack::{QPackDecoder, QpackSettings};
+use neqo_http3::{Error, Http3Server, Http3ServerEvent};
+use neqo_qpack::QpackSettings;
 use neqo_transport::server::Server;
 use neqo_transport::{ConnectionEvent, FixedConnectionIdManager, Output};
 use std::env;
@@ -40,18 +40,6 @@ const HTTP_RESPONSE_WITH_WRONG_FRAME: &[u8] = &[
     0x01, 0x06, 0x00, 0x00, 0xd9, 0x54, 0x01, 0x37, // headers
     0x0, 0x3, 0x61, 0x62, 0x63, // the first data frame
     0x3, 0x1, 0x5, // a cancel push frame that is not allowed
-];
-
-const HTTP_RESPONSE_WRONG_FRAME_FIRST: &[u8] = &[
-    0x3, 0x1, 0x5, // a cancel push frame that is not allowed
-    0x01, 0x06, 0x00, 0x00, 0xd9, 0x54, 0x01, 0x37, // headers
-    0x0, 0x3, 0x61, 0x62, 0x63, // the first data frame
-    0x0, 0x4, 0x61, 0x62, 0x63, 0x64, // the second data frame
-];
-
-const HTTP_RESPONSE_SUCCESS: &[u8] = &[
-    0x01, 0x06, 0x00, 0x00, 0xd9, 0x54, 0x01, 0x33, // headers
-    0x0, 0x3, 0x61, 0x62, 0x63, // a data frame
 ];
 
 trait HttpServer: Display {
@@ -296,43 +284,10 @@ impl HttpServer for Server {
                 match event {
                     ConnectionEvent::RecvStreamReadable { stream_id } => {
                         if stream_id % 4 == 0 {
-                            let mut frame_reader = HFrameReader::new();
-                            let (frame, _) = frame_reader
-                                .receive(&mut *acr.borrow_mut(), stream_id)
-                                .unwrap();
-                            if let Some(HFrame::Headers { header_block }) = frame {
-                                let mut decoder = QPackDecoder::new(QpackSettings {
-                                    max_table_size_encoder: MAX_TABLE_SIZE,
-                                    max_table_size_decoder: MAX_TABLE_SIZE,
-                                    max_blocked_streams: MAX_BLOCKED_STREAMS,
-                                });
-                                let headers = decoder
-                                    .decode_header_block(&header_block, stream_id)
-                                    .expect("Decoding should succeed")
-                                    .unwrap();
-                                let (_, path) = headers.iter().find(|(k, _)| k == ":path").unwrap();
-
-                                // The following 2 reponses will both trigger a connection error,
-                                // but on a different code path.
-                                if path == "/wrong_frame_after_data" {
-                                    acr.borrow_mut()
-                                        .stream_send(stream_id, HTTP_RESPONSE_WITH_WRONG_FRAME)
-                                        .expect("Write should succeed");
-                                } else if path == "/wrong_frame_before_header" {
-                                    acr.borrow_mut()
-                                        .stream_send(stream_id, HTTP_RESPONSE_WRONG_FRAME_FIRST)
-                                        .expect("Write should succeed");
-                                } else if path == "/no_response" {
-                                    // Do not respond. This needs to be followed by a response that will
-                                    // cause a protocol error, otherwise the test will hang.
-                                } else {
-                                    acr.borrow_mut()
-                                        .stream_send(stream_id, HTTP_RESPONSE_SUCCESS)
-                                        .expect("Write should succeed");
-                                    acr.borrow_mut().stream_close_send(stream_id).unwrap();
-                                }
-                                self.add_to_waiting(acr.clone());
-                            }
+                            // We are only interesting in request streams
+                            acr.borrow_mut()
+                                .stream_send(stream_id, HTTP_RESPONSE_WITH_WRONG_FRAME)
+                                .expect("Read should succeed");
                         }
                     }
                     _ => {}

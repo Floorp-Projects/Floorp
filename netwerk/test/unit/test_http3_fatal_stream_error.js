@@ -95,7 +95,7 @@ add_task(async function test_fatal_error() {
   );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 
-  httpsUri = "https://foo.example.com:" + h2Port + "/wrong_frame_after_data";
+  httpsUri = "https://foo.example.com:" + h2Port + "/";
 });
 
 add_task(async function test_fatal_stream_error() {
