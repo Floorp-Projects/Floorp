@@ -483,10 +483,6 @@ NetworkGeolocationProvider.prototype = {
 
     let compareUrl = Services.urlFormatter.formatURL(this._wifiCompareURL);
     let compare = await this.makeRequest(compareUrl, wifiData);
-    if (!compare.location) {
-      LOG("Backup location service didnt report location");
-      return;
-    }
     let distance = LocationHelper.distance(result.location, compare.location);
     LOG(
       `compare reported reported: ${compare.location.lng}:${compare.location.lat}`
