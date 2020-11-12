@@ -7,21 +7,21 @@
 #if !defined(MediaFormatReader_h_)
 #  define MediaFormatReader_h_
 
+#  include "FrameStatistics.h"
+#  include "MediaDataDemuxer.h"
+#  include "MediaEventSource.h"
+#  include "MediaMetadataManager.h"
+#  include "MediaPromiseDefs.h"
+#  include "PDMFactory.h"
+#  include "SeekTarget.h"
 #  include "mozilla/Atomics.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/Mutex.h"
 #  include "mozilla/StateMirroring.h"
 #  include "mozilla/StaticPrefs_media.h"
 #  include "mozilla/TaskQueue.h"
+#  include "mozilla/ThreadSafeWeakPtr.h"
 #  include "mozilla/dom/MediaDebugInfoBinding.h"
-
-#  include "FrameStatistics.h"
-#  include "MediaEventSource.h"
-#  include "MediaDataDemuxer.h"
-#  include "MediaMetadataManager.h"
-#  include "MediaPromiseDefs.h"
-#  include "PDMFactory.h"
-#  include "SeekTarget.h"
 
 namespace mozilla {
 
@@ -70,13 +70,16 @@ struct MOZ_STACK_CLASS MediaFormatReaderInit {
 DDLoggedTypeDeclName(MediaFormatReader);
 
 class MediaFormatReader final
-    : public DecoderDoctorLifeLogger<MediaFormatReader> {
+    : public SupportsThreadSafeWeakPtr<MediaFormatReader>,
+      public DecoderDoctorLifeLogger<MediaFormatReader> {
   static const bool IsExclusive = true;
   typedef TrackInfo::TrackType TrackType;
   typedef MozPromise<bool, MediaResult, IsExclusive> NotifyDataArrivedPromise;
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaFormatReader)
 
  public:
+  MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(MediaFormatReader)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(MediaFormatReader)
+
   using TrackSet = EnumSet<TrackInfo::TrackType>;
   using MetadataPromise = MozPromise<MetadataHolder, MediaResult, IsExclusive>;
 
@@ -95,6 +98,7 @@ class MediaFormatReader final
       MozPromise<MediaData::Type, WaitForDataRejectValue, IsExclusive>;
 
   MediaFormatReader(MediaFormatReaderInit& aInit, MediaDataDemuxer* aDemuxer);
+  virtual ~MediaFormatReader();
 
   // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
   // on failure.
@@ -236,8 +240,6 @@ class MediaFormatReader final
   }
 
  private:
-  ~MediaFormatReader();
-
   bool HasVideo() const { return mVideo.mTrackDemuxer; }
   bool HasAudio() const { return mAudio.mTrackDemuxer; }
 
