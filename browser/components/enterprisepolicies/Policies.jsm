@@ -2320,7 +2320,11 @@ function installAddonFromURL(url, extensionID, addon) {
           )} - {url}`
         );
       },
-      onInstallEnded: () => {
+      /* eslint-disable-next-line no-shadow */
+      onInstallEnded: (install, addon) => {
+        if (addon.type == "theme") {
+          addon.enable();
+        }
         install.removeListener(listener);
         log.debug(`Installation succeeded - ${url}`);
       },
