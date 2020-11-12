@@ -105,14 +105,8 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
 
   // Mapping into from ParserAtoms to JSAtoms.
   enum class AtomIndexKind : uint8_t {
-    // Not yet instantiated, and not yet marked as used by stencil data.
-    NotInstantiatedAndNotMarked,
-    // Not yet instantiated, and already marked as used by stencil data.
-    // While creating stencil, not-instantiated atom is marked while storing
-    // into stencil field.
-    // While XDR decoding, all not-instantiated atoms are marked while decoding,
-    // given they should be used.
-    NotInstantiatedAndMarked,
+    // Not yet instantiated
+    NotInstantiated,
     // Index into CompilationAtomCache
     AtomIndex,
     // WellKnownAtomId to index into cx->names() set
@@ -123,10 +117,13 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
     Static2,
   };
   uint32_t atomIndex_ = 0;
-  AtomIndexKind atomIndexKind_ = AtomIndexKind::NotInstantiatedAndNotMarked;
+  AtomIndexKind atomIndexKind_ = AtomIndexKind::NotInstantiated;
 
   // Encoding type.
   bool hasTwoByteChars_ = false;
+
+  // Other flags.
+  bool usedByStencil_ = false;
 
   // End of fields.
 
@@ -203,19 +200,16 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   HashNumber hash() const { return hash_; }
   uint32_t length() const { return length_; }
 
-  bool isNotInstantiatedAndNotMarked() const {
-    return atomIndexKind_ == AtomIndexKind::NotInstantiatedAndNotMarked;
-  }
-  bool isNotInstantiatedAndMarked() const {
-    return atomIndexKind_ == AtomIndexKind::NotInstantiatedAndMarked;
+  bool isNotInstantiated() const {
+    return atomIndexKind_ == AtomIndexKind::NotInstantiated;
   }
 
+  bool isUsedByStencil() const { return usedByStencil_; }
   void markUsedByStencil() const {
-    if (isNotInstantiatedAndNotMarked()) {
+    if ((isNotInstantiated() || isAtomIndex())) {
       // Use const method + const_cast here to avoid marking static strings'
       // field mutable.
-      const_cast<ParserAtomEntry*>(this)->atomIndexKind_ =
-          AtomIndexKind::NotInstantiatedAndMarked;
+      const_cast<ParserAtomEntry*>(this)->usedByStencil_ = true;
     }
   }
 
@@ -283,7 +277,7 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   JSAtom* toExistingJSAtom(JSContext* cx,
                            CompilationAtomCache& atomCache) const;
 
-  // Convert NotInstantiatedAndMarked entry to a js-atom.
+  // Convert NotInstantiated and usedByStencil entry to a js-atom.
   JSAtom* instantiate(JSContext* cx, CompilationAtomCache& atomCache) const;
 
   // Convert this entry to a number.
@@ -551,7 +545,7 @@ class WellKnownParserAtoms {
   }
 };
 
-// The number of atoms with either NotInstantiatedAndMarked or AtomIndex kind,
+// The number of atoms with either usedByStencil or AtomIndex,
 // that requires space in CompilationAtomCache.atoms during instantiation.
 size_t RequiredNonStaticAtomCount(const ParserAtomVector& entries);
 

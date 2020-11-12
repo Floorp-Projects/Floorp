@@ -230,10 +230,7 @@ JSAtom* ParserAtomEntry::toJSAtom(JSContext* cx,
     case AtomIndexKind::Static2:
       return cx->staticStrings().getLength2FromIndex(atomIndex_);
 
-    case AtomIndexKind::NotInstantiatedAndNotMarked:
-    case AtomIndexKind::NotInstantiatedAndMarked:
-      // NOTE: toJSAtom can be called on not-marked atom, outside of
-      //       stencil instantiation.
+    case AtomIndexKind::NotInstantiated:
       break;
   }
 
@@ -257,8 +254,7 @@ JSAtom* ParserAtomEntry::toExistingJSAtom(
     case AtomIndexKind::Static2:
       return cx->staticStrings().getLength2FromIndex(atomIndex_);
 
-    case AtomIndexKind::NotInstantiatedAndNotMarked:
-    case AtomIndexKind::NotInstantiatedAndMarked:
+    case AtomIndexKind::NotInstantiated:
       MOZ_CRASH("ParserAtom should already be instantiated");
   }
 
@@ -267,9 +263,7 @@ JSAtom* ParserAtomEntry::toExistingJSAtom(
 
 JSAtom* ParserAtomEntry::instantiate(JSContext* cx,
                                      CompilationAtomCache& atomCache) const {
-  // NOTE: toJSAtom can be called on not-marked atom, outside of
-  //       stencil instantiation.
-  MOZ_ASSERT(isNotInstantiatedAndNotMarked() || isNotInstantiatedAndMarked());
+  MOZ_ASSERT(isNotInstantiated());
 
   JSAtom* atom;
   if (hasLatin1Chars()) {
@@ -545,7 +539,7 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internJSAtom(
     id = result.unwrap();
   }
 
-  if (id->isNotInstantiatedAndNotMarked() || id->isNotInstantiatedAndMarked()) {
+  if (id->isNotInstantiated()) {
     MOZ_ASSERT(id->equalsJSAtom(atom));
 
     auto index = AtomIndex(compilationInfo.input.atomCache.atoms.length());
@@ -644,7 +638,7 @@ const ParserAtom* ParserAtomVectorBuilder::getStatic2(
 size_t RequiredNonStaticAtomCount(const ParserAtomVector& entries) {
   size_t count = 0;
   for (const auto& entry : entries) {
-    if (entry->isNotInstantiatedAndMarked() || entry->isAtomIndex()) {
+    if (entry->isUsedByStencil() || entry->isAtomIndex()) {
       count++;
     }
   }
@@ -654,7 +648,7 @@ size_t RequiredNonStaticAtomCount(const ParserAtomVector& entries) {
 bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomVector& entries,
                             CompilationAtomCache& atomCache) {
   for (const auto& entry : entries) {
-    if (entry->isNotInstantiatedAndMarked()) {
+    if (entry->isUsedByStencil() && entry->isNotInstantiated()) {
       if (!entry->instantiate(cx, atomCache)) {
         return false;
       }
@@ -908,7 +902,7 @@ XDRResult XDRParserAtom(XDRState<mode>* xdr, const ParserAtom** atomp) {
       atomIndex = uint32_t((*atomp)->toStaticParserString2());
       tag = ParserAtomTag::Static2;
     } else {
-      // Either AtomIndexKind::NotInstantiated* or AtomIndexKind::AtomIndex.
+      // Either AtomIndexKind::NotInstantiated or AtomIndexKind::AtomIndex.
 
       // Atom contents are encoded in a separate buffer, which is joined to the
       // final result in XDRIncrementalEncoder::linearize. References to atoms
