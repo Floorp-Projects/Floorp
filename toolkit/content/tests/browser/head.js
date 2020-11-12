@@ -214,6 +214,13 @@ class DateTimeTestHelper {
     await readyPromise;
   }
 
+  promisePickerValueSet() {
+    return BrowserTestUtils.waitForEvent(
+      this.frame.contentDocument,
+      "PickerValueWasSet"
+    );
+  }
+
   /**
    * Find an element on the picker.
    *
