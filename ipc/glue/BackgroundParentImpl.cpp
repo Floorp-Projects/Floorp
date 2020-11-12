@@ -1314,13 +1314,16 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvPEndpointForReportConstructor(
 
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvEnsureRDDProcessAndCreateBridge(
-    nsresult* aRv, Endpoint<PRemoteDecoderManagerChild>* aEndpoint) {
+    EnsureRDDProcessAndCreateBridgeResolver&& aResolver) {
   RDDProcessManager* rdd = RDDProcessManager::Get();
-  if (rdd && rdd->EnsureRDDProcessAndCreateBridge(OtherPid(), aEndpoint)) {
-    *aRv = NS_OK;
-  } else {
-    *aRv = NS_ERROR_NOT_AVAILABLE;
-  }
+  Endpoint<PRemoteDecoderManagerChild> endpoint;
+  nsresult rv =
+      rdd && rdd->EnsureRDDProcessAndCreateBridge(OtherPid(), &endpoint)
+          ? NS_OK
+          : NS_ERROR_NOT_AVAILABLE;
+  aResolver(
+      Tuple<const nsresult&, Endpoint<mozilla::PRemoteDecoderManagerChild>&&>(
+          rv, std::move(endpoint)));
 
   return IPC_OK();
 }
