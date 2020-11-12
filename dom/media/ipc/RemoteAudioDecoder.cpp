@@ -54,39 +54,40 @@ MediaResult RemoteAudioDecoderChild::InitIPDL(
   }
 
   mIPDLSelfRef = this;
-  bool success = false;
-  nsCString errorDescription;
-  Unused << manager->SendPRemoteDecoderConstructor(
-      this, aAudioInfo, aOptions, Nothing(), &success, &errorDescription);
-  return success ? MediaResult(NS_OK)
-                 : MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, errorDescription);
+  Unused << manager->SendPRemoteDecoderConstructor(this, aAudioInfo, aOptions,
+                                                   Nothing());
+  return NS_OK;
 }
 
 RemoteAudioDecoderParent::RemoteAudioDecoderParent(
     RemoteDecoderManagerParent* aParent, const AudioInfo& aAudioInfo,
     const CreateDecoderParams::OptionSet& aOptions,
-    nsISerialEventTarget* aManagerThread, TaskQueue* aDecodeTaskQueue,
-    bool* aSuccess, nsCString* aErrorDescription)
-    : RemoteDecoderParent(aParent, aManagerThread, aDecodeTaskQueue),
-      mAudioInfo(aAudioInfo) {
-  MediaResult error(NS_OK);
-  auto params = CreateDecoderParams{
-      mAudioInfo, aOptions, CreateDecoderParams::NoWrapper(true), &error};
+    nsISerialEventTarget* aManagerThread, TaskQueue* aDecodeTaskQueue)
+    : RemoteDecoderParent(aParent, aOptions, aManagerThread, aDecodeTaskQueue),
+      mAudioInfo(aAudioInfo) {}
 
-  auto& factory = aParent->EnsurePDMFactory();
-  RefPtr<MediaDataDecoder> decoder = factory.CreateDecoder(params);
+IPCResult RemoteAudioDecoderParent::RecvConstruct(
+    ConstructResolver&& aResolver) {
+  auto params = CreateDecoderParams{mAudioInfo, mOptions,
+                                    CreateDecoderParams::NoWrapper(true)};
 
-  if (NS_FAILED(error)) {
-    MOZ_ASSERT(aErrorDescription);
-    *aErrorDescription = error.Description();
-  }
+  mParent->EnsurePDMFactory().CreateDecoder(params)->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [resolver = std::move(aResolver), self = RefPtr{this}](
+          PlatformDecoderModule::CreateDecoderPromise::ResolveOrRejectValue&&
+              aValue) {
+        if (aValue.IsReject()) {
+          resolver(aValue.RejectValue());
+          return;
+        }
+        MOZ_ASSERT(aValue.ResolveValue());
+        self->mDecoder =
+            new MediaDataDecoderProxy(aValue.ResolveValue().forget(),
+                                      do_AddRef(self->mDecodeTaskQueue.get()));
+        resolver(NS_OK);
+      });
 
-  if (decoder) {
-    mDecoder = new MediaDataDecoderProxy(decoder.forget(),
-                                         do_AddRef(mDecodeTaskQueue.get()));
-  }
-
-  *aSuccess = !!mDecoder;
+  return IPC_OK();
 }
 
 MediaResult RemoteAudioDecoderParent::ProcessDecodedData(

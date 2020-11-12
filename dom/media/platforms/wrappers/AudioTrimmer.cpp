@@ -56,8 +56,8 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::Drain() {
 }
 
 RefPtr<ShutdownPromise> AudioTrimmer::Shutdown() {
-  MOZ_ASSERT(mThread->IsOnCurrentThread(),
-             "We're not on the thread we were first initialized on");
+  // mThread may not be set if Init hasn't been called first.
+  MOZ_ASSERT(!mThread || mThread->IsOnCurrentThread());
   return mDecoder->Shutdown();
 }
 

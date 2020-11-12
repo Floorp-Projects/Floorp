@@ -236,6 +236,15 @@ class MediaFormatReader::DecoderFactory {
     auto& data = aTrack == TrackInfo::kAudioTrack ? mAudio : mVideo;
     data.mPolicy->Cancel();
     data.mTokenRequest.DisconnectIfExists();
+    if (data.mDecoderRequest.Exists()) {
+      // We haven't completed creation of the decoder, and it hasn't been
+      // initialised yet.
+      // We can simply disconnect the promise without worrying about having to
+      // shut it down .
+      data.mDecoderRequest.Disconnect();
+      // Free the token to leave room for a new decoder.
+      data.mToken = nullptr;
+    }
     data.mInitRequest.DisconnectIfExists();
     if (data.mDecoder) {
       mOwner->mShutdownPromisePool->ShutdownDecoder(data.mDecoder.forget());
@@ -245,7 +254,13 @@ class MediaFormatReader::DecoderFactory {
   }
 
  private:
-  enum class Stage : int8_t { None, WaitForToken, CreateDecoder, WaitForInit };
+  enum class Stage : int8_t {
+    None,
+    WaitForToken,
+    CreateDecoder,
+    CreatingDecoder,
+    WaitForInit
+  };
 
   struct Data {
     Data(DecoderData& aOwnerData, TrackType aTrack, TaskQueue* aThread)
@@ -259,11 +274,13 @@ class MediaFormatReader::DecoderFactory {
     RefPtr<Token> mToken;
     RefPtr<MediaDataDecoder> mDecoder;
     MozPromiseRequestHolder<TokenPromise> mTokenRequest;
+    MozPromiseRequestHolder<PlatformDecoderModule::CreateDecoderPromise>
+        mDecoderRequest;
     MozPromiseRequestHolder<InitPromise> mInitRequest;
   } mAudio, mVideo;
 
   void RunStage(Data& aData);
-  MediaResult DoCreateDecoder(Data& aData);
+  void DoCreateDecoder(Data& aData);
   void DoInitDecoder(Data& aData);
 
   // guaranteed to be valid by the owner.
@@ -309,26 +326,14 @@ void MediaFormatReader::DecoderFactory::RunStage(Data& aData) {
       MOZ_ASSERT(!aData.mDecoder);
       MOZ_ASSERT(!aData.mInitRequest.Exists());
 
-      MediaResult rv = DoCreateDecoder(aData);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Error constructing decoders");
-        aData.mToken = nullptr;
-        aData.mStage = Stage::None;
-        aData.mOwnerData.mDescription = rv.Description();
-        DDLOGEX2("MediaFormatReader::DecoderFactory", this, DDLogCategory::Log,
-                 "create_decoder_error", rv);
-        mOwner->NotifyError(aData.mTrack, rv);
-        return;
-      }
+      DoCreateDecoder(aData);
+      aData.mStage = Stage::CreatingDecoder;
+      break;
+    }
 
-      aData.mDecoder =
-          new AllocationWrapper(aData.mDecoder.forget(), aData.mToken.forget());
-      DecoderDoctorLogger::LinkParentAndChild(
-          aData.mDecoder.get(), "decoder", "MediaFormatReader::DecoderFactory",
-          this);
-
-      DoInitDecoder(aData);
-      aData.mStage = Stage::WaitForInit;
+    case Stage::CreatingDecoder: {
+      MOZ_ASSERT(!aData.mDecoder);
+      MOZ_ASSERT(aData.mDecoderRequest.Exists());
       break;
     }
 
@@ -340,7 +345,7 @@ void MediaFormatReader::DecoderFactory::RunStage(Data& aData) {
   }
 }
 
-MediaResult MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData) {
+void MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData) {
   AUTO_PROFILER_LABEL("DecoderFactory::DoCreateDecoder", MEDIA_PLAYBACK);
   auto& ownerData = aData.mOwnerData;
   auto& decoder = mOwner->GetDecoderData(aData.mTrack);
@@ -355,29 +360,17 @@ MediaResult MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData) {
     }
   }
 
-  // result may not be updated by PDMFactory::CreateDecoder, as such it must be
-  // initialized to a fatal error by default.
-  MediaResult result =
-      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                  nsPrintfCString("error creating %s decoder",
-                                  TrackTypeToStr(aData.mTrack)));
-
+  RefPtr<PlatformDecoderModule::CreateDecoderPromise> p;
   auto onWaitingForKeyEvent = [owner = RefPtr<MediaFormatReader>(mOwner)]() {
     return &owner->OnTrackWaitingForKeyProducer();
   };
 
   switch (aData.mTrack) {
     case TrackInfo::kAudioTrack: {
-      RefPtr<MediaDataDecoder> decoder = platform->CreateDecoder(
+      p = platform->CreateDecoder(
           {*ownerData.GetCurrentInfo()->GetAsAudioInfo(), mOwner->mCrashHelper,
            CreateDecoderParams::UseNullDecoder(ownerData.mIsNullDecode),
-           &result, TrackInfo::kAudioTrack, std::move(onWaitingForKeyEvent)});
-      if (!decoder) {
-        aData.mDecoder = nullptr;
-        break;
-      }
-      aData.mDecoder = new MediaDataDecoderProxy(
-          decoder.forget(), do_AddRef(ownerData.mTaskQueue.get()));
+           TrackInfo::kAudioTrack, std::move(onWaitingForKeyEvent)});
       break;
     }
 
@@ -387,36 +380,49 @@ MediaResult MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData) {
       using Option = CreateDecoderParams::Option;
       using OptionSet = CreateDecoderParams::OptionSet;
 
-      RefPtr<MediaDataDecoder> decoder = platform->CreateDecoder(
+      p = platform->CreateDecoder(
           {*ownerData.GetCurrentInfo()->GetAsVideoInfo(),
            mOwner->mKnowsCompositor, mOwner->GetImageContainer(),
            mOwner->mCrashHelper,
            CreateDecoderParams::UseNullDecoder(ownerData.mIsNullDecode),
-           &result, TrackType::kVideoTrack, std::move(onWaitingForKeyEvent),
+           TrackType::kVideoTrack, std::move(onWaitingForKeyEvent),
            CreateDecoderParams::VideoFrameRate(ownerData.mMeanRate.Mean()),
            OptionSet(ownerData.mHardwareDecodingDisabled
                          ? Option::HardwareDecoderNotAllowed
                          : Option::Default)});
-      if (!decoder) {
-        aData.mDecoder = nullptr;
-        break;
-      }
-      aData.mDecoder = new MediaDataDecoderProxy(
-          decoder.forget(), do_AddRef(ownerData.mTaskQueue.get()));
       break;
     }
 
     default:
-      break;
+      p = PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
+          NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
+  p->Then(
+       mOwner->OwnerThread(), __func__,
+       [this, &aData, &ownerData](RefPtr<MediaDataDecoder>&& aDecoder) {
+         aData.mDecoderRequest.Complete();
+         aData.mDecoder = new MediaDataDecoderProxy(
+             aDecoder.forget(), do_AddRef(ownerData.mTaskQueue.get()));
+         aData.mDecoder = new AllocationWrapper(aData.mDecoder.forget(),
+                                                aData.mToken.forget());
+         DecoderDoctorLogger::LinkParentAndChild(
+             aData.mDecoder.get(), "decoder",
+             "MediaFormatReader::DecoderFactory", this);
 
-  if (aData.mDecoder) {
-    return NS_OK;
-  }
-
-  MOZ_RELEASE_ASSERT(NS_FAILED(result), "PDM returned an invalid error code");
-
-  return result;
+         DoInitDecoder(aData);
+         aData.mStage = Stage::WaitForInit;
+       },
+       [this, &aData](const MediaResult& aError) {
+         aData.mDecoderRequest.Complete();
+         NS_WARNING("Error constructing decoders");
+         aData.mToken = nullptr;
+         aData.mStage = Stage::None;
+         aData.mOwnerData.mDescription = aError.Description();
+         DDLOGEX2("MediaFormatReader::DecoderFactory", this, DDLogCategory::Log,
+                  "create_decoder_error", aError);
+         mOwner->NotifyError(aData.mTrack, aError);
+       })
+      ->Track(aData.mDecoderRequest);
 }
 
 void MediaFormatReader::DecoderFactory::DoInitDecoder(Data& aData) {
