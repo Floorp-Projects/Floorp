@@ -901,12 +901,12 @@ class LayerViewSupport final
   already_AddRefed<DataSourceSurface> FlipScreenPixels(
       Shmem& aMem, const ScreenIntSize& aInSize, const ScreenRect& aInRegion,
       const IntSize& aOutSize) {
-    RefPtr<DataSourceSurface> image =
+    RefPtr<gfx::DataSourceSurface> image =
         gfx::Factory::CreateWrappingDataSourceSurface(
             aMem.get<uint8_t>(),
             StrideForFormatAndWidth(SurfaceFormat::B8G8R8A8, aInSize.width),
             IntSize(aInSize.width, aInSize.height), SurfaceFormat::B8G8R8A8);
-    RefPtr<DrawTarget> drawTarget =
+    RefPtr<gfx::DrawTarget> drawTarget =
         gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
             aOutSize, SurfaceFormat::B8G8R8A8);
     if (!drawTarget) {
@@ -922,8 +922,8 @@ class LayerViewSupport final
     gfx::Rect destRect(0, 0, aOutSize.width, aOutSize.height);
     drawTarget->DrawSurface(image, destRect, srcRect);
 
-    RefPtr<SourceSurface> snapshot = drawTarget->Snapshot();
-    RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
+    RefPtr<gfx::SourceSurface> snapshot = drawTarget->Snapshot();
+    RefPtr<gfx::DataSourceSurface> data = snapshot->GetDataSurface();
     return data.forget();
   }
 
