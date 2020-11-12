@@ -176,7 +176,7 @@ triggered. Known values include the following:
 * `"DOM_WINDOW_UTILS"`
 * `"COMPONENT_UTILS"`
 * `"MEM_PRESSURE"`
-* `"CC_WAITING"`
+* `"CC_FINISHED"`
 * `"CC_FORCED"`
 * `"LOAD_END"`
 * `"PAGE_HIDE"`
