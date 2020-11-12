@@ -42,26 +42,15 @@ class MarionetteCommandsParent extends JSWindowActorParent {
         this._resolveDialogOpened({ data: null });
       }
     });
+
+    this.topWindow = this.browsingContext.top.embedderElement?.ownerGlobal;
+    this.topWindow?.addEventListener("TabClose", _onTabClose);
   }
 
   dialogOpenedPromise() {
     return new Promise(resolve => {
       this._resolveDialogOpened = resolve;
     });
-  }
-
-  async receiveMessage(msg) {
-    const { name, data } = msg;
-
-    let rv;
-
-    switch (name) {
-      case "MarionetteCommandsChild:ElementIdCacheAdd":
-        rv = elementIdCache.add(data).toJSON();
-        break;
-    }
-
-    return rv;
   }
 
   async sendQuery(name, data) {
@@ -80,6 +69,10 @@ class MarionetteCommandsParent extends JSWindowActorParent {
     } else {
       return evaluate.fromJSON(result.data, elementIdCache);
     }
+  }
+
+  didDestroy() {
+    this.topWindow?.removeEventListener("TabClose", _onTabClose);
   }
 
   // Proxying methods for WebDriver commands
@@ -288,6 +281,10 @@ class MarionetteCommandsParent extends JSWindowActorParent {
  */
 function clearElementIdCache() {
   elementIdCache.clear();
+}
+
+function _onTabClose(event) {
+  elementIdCache.clear(event.target.linkedBrowser.browsingContext);
 }
 
 /**
