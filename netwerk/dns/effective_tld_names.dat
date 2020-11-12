@@ -7111,7 +7111,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-11-03T17:59:28Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-11-11T18:03:13Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -10074,7 +10074,7 @@ travelers
 // travelersinsurance : 2015-03-26 Travelers TLD, LLC
 travelersinsurance
 
-// trust : 2014-10-16 NCC Group Domain Services, Inc.
+// trust : 2014-10-16 UNR Corp.
 trust
 
 // trv : 2015-03-26 Travelers TLD, LLC
@@ -10862,6 +10862,10 @@ bnr.la
 // Blackbaud, Inc. : https://www.blackbaud.com
 // Submitted by Paul Crowder <paul.crowder@blackbaud.com>
 blackbaudcdn.net
+
+// Blatech : http://www.blatech.net
+// Submitted by Luke Bratch <luke@bratch.co.uk>
+of.je
 
 // Boomla : https://boomla.com
 // Submitted by Tibor Halter <thalter@boomla.com>
@@ -13348,7 +13352,7 @@ wafflecell.com
 // Submitted by Fajar Sodik <official@wapblog.id>
 idnblogger.com
 indowapblog.com
-bloghp.id
+bloger.id
 wblog.id
 wbq.me
 fastblog.net
