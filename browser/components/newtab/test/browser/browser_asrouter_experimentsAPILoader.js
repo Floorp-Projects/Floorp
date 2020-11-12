@@ -138,6 +138,7 @@ add_task(async function test_loading_experimentsAPI() {
   // Force the WNPanel provider cache to 0 by modifying updateCycleInMs
   await SpecialPowers.pushPrefEnv({
     set: [
+      ["app.shield.optoutstudies.enabled", true],
       [
         "browser.newtabpage.activity-stream.asrouter.providers.messaging-experiments",
         `{"id":"messaging-experiments","enabled":true,"type":"remote-experiments","messageGroups":["cfr","whats-new-panel","moments-page","snippets","cfr-fxa"],"updateCycleInMs":0}`,
