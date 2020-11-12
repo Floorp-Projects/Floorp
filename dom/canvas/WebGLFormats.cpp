@@ -74,10 +74,11 @@ static inline V* FindOrNull(const std::map<K, V*>& dest, const K2& key) {
 }
 
 // Returns a pointer to the in-place value for `key`.
-template <typename K, typename V, typename K2>
-static inline V* FindPtrOrNull(std::map<K, V>& dest, const K2& key) {
-  auto itr = dest.find(key);
-  if (itr == dest.end()) return nullptr;
+template <typename C, typename K2>
+static inline auto FindPtrOrNull(C& container, const K2& key) {
+  auto itr = container.find(key);
+  using R = decltype(&(itr->second));
+  if (itr == container.end()) return R{nullptr};
 
   return &(itr->second);
 }

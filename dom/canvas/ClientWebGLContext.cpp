@@ -3873,6 +3873,33 @@ Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext&,
                                             ErrorResult* const out_error);
 }  // namespace webgl
 
+void webgl::TexUnpackBlobDesc::Shrink(const webgl::PackingInfo& pi) {
+  if (cpuData) {
+    uint8_t bpp = 0;
+    if (!GetBytesPerPixel(pi, &bpp)) return;
+
+    MOZ_ASSERT(unpacking.mUnpackRowLength);
+    MOZ_ASSERT(unpacking.mUnpackAlignment);
+
+    const auto fullRowsNeeded = unpacking.FullRowsNeeded(size);
+    const auto bytesPerRowUnaligned =
+        CheckedInt<size_t>(unpacking.mUnpackRowLength) * bpp;
+    const auto bytesPerRowStride =
+        RoundUpToMultipleOf(bytesPerRowUnaligned, unpacking.mUnpackAlignment);
+
+    // Instead of trying to be careful about the last row, just use a foolproof
+    // upper-bound.
+    const auto totalRows =
+        fullRowsNeeded + 1;  // fullRows + the last not-full row.
+    const auto bytesNeededUpperBound = totalRows * bytesPerRowStride;
+
+    if (bytesNeededUpperBound.isValid()) {
+      cpuData->Shrink(bytesNeededUpperBound.value());
+    }
+    return;
+  }
+}
+
 void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
                                   GLint level, GLenum respecFormat,
                                   const ivec3& offset, const ivec3& isize,
@@ -4007,6 +4034,7 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
 
   // -
 
+  desc->Shrink(pi);
   Run<RPROC(TexImage)>(static_cast<uint32_t>(level), respecFormat,
                        CastUvec3(offset), pi, std::move(*desc));
 }
@@ -4014,7 +4042,7 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
 void ClientWebGLContext::CompressedTexImage(bool sub, uint8_t funcDims,
                                             GLenum imageTarget, GLint level,
                                             GLenum format, const ivec3& offset,
-                                            const ivec3& size, GLint border,
+                                            const ivec3& isize, GLint border,
                                             const TexImageSource& src,
                                             GLsizei pboImageSize) const {
   const FuncScope funcScope(*this, "compressedTex(Sub)Image[23]D");
@@ -4045,9 +4073,12 @@ void ClientWebGLContext::CompressedTexImage(bool sub, uint8_t funcDims,
     MOZ_CRASH("impossible");
   }
 
+  // We don't need to shrink `range` because valid calls require `range` to
+  // match requirements exactly.
+
   Run<RPROC(CompressedTexImage)>(
       sub, imageTarget, static_cast<uint32_t>(level), format, CastUvec3(offset),
-      CastUvec3(size), range, static_cast<uint32_t>(pboImageSize), pboOffset);
+      CastUvec3(isize), range, static_cast<uint32_t>(pboImageSize), pboOffset);
 }
 
 void ClientWebGLContext::CopyTexImage(uint8_t funcDims, GLenum imageTarget,
