@@ -585,12 +585,6 @@ add_task(async function test_close_clone_fails() {
   });
 });
 
-add_task(async function test_memory_clone_fails() {
-  let db = Services.storage.openSpecialDatabase("memory");
-  db.close();
-  expectError(Cr.NS_ERROR_NOT_INITIALIZED, () => db.clone());
-});
-
 add_task(async function test_clone_copies_functions() {
   const FUNC_NAME = "test_func";
   let calls = ["openDatabase", "openUnsharedDatabase"];
