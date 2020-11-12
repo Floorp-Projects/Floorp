@@ -30,6 +30,8 @@ ChromeUtils.defineModuleGetter(
 
 const MAX_LOCAL_SUGGESTIONS = 3;
 const MAX_SUGGESTIONS = 6;
+const SEARCH_ENGINE_PLACEHOLDER_ICON =
+  "chrome://browser/skin/search-engine-placeholder.png";
 
 // Set of all ContentSearch actors, used to broadcast messages to all of them.
 let gContentSearchActors = new Set();
@@ -343,12 +345,9 @@ let ContentSearch = {
     let pref = Services.prefs.getStringPref("browser.search.hiddenOneOffs");
     let hiddenList = pref ? pref.split(",") : [];
     for (let engine of await Services.search.getVisibleEngines()) {
-      let uri = engine.getIconURLBySize(16, 16);
-      let iconData = await this._maybeConvertURIToArrayBuffer(uri);
-
       state.engines.push({
         name: engine.name,
-        iconData,
+        iconData: await this._getEngineIconURL(engine),
         hidden: hiddenList.includes(engine.name),
         isAppProvided: engine.isAppProvided,
       });
@@ -527,18 +526,21 @@ let ContentSearch = {
   async _currentEngineObj(usePrivate) {
     let engine =
       Services.search[usePrivate ? "defaultPrivateEngine" : "defaultEngine"];
-    let favicon = engine.getIconURLBySize(16, 16);
     let obj = {
       name: engine.name,
-      iconData: await this._maybeConvertURIToArrayBuffer(favicon),
+      iconData: await this._getEngineIconURL(engine),
       isAppProvided: engine.isAppProvided,
     };
     return obj;
   },
 
-  _maybeConvertURIToArrayBuffer(uri) {
-    if (!uri) {
-      return Promise.resolve(null);
+  /**
+   * Converts the engine's icon into an appropriate URL for display at
+   */
+  async _getEngineIconURL(engine) {
+    let url = engine.getIconURLBySize(16, 16);
+    if (!url) {
+      return SEARCH_ENGINE_PLACEHOLDER_ICON;
     }
 
     // The uri received here can be of two types
@@ -548,25 +550,25 @@ let ContentSearch = {
     // If the URI is not a data: URI, there's no point in converting
     // it to an arraybuffer (which is used to optimize passing the data
     // accross processes): we can just pass the original URI, which is cheaper.
-    if (!uri.startsWith("data:")) {
-      return Promise.resolve(uri);
+    if (!url.startsWith("data:")) {
+      return url;
     }
 
     return new Promise(resolve => {
       let xhr = new XMLHttpRequest();
-      xhr.open("GET", uri, true);
+      xhr.open("GET", url, true);
       xhr.responseType = "arraybuffer";
       xhr.onload = () => {
         resolve(xhr.response);
       };
       xhr.onerror = xhr.onabort = xhr.ontimeout = () => {
-        resolve(null);
+        resolve(SEARCH_ENGINE_PLACEHOLDER_ICON);
       };
       try {
         // This throws if the URI is erroneously encoded.
         xhr.send();
       } catch (err) {
-        resolve(null);
+        resolve(SEARCH_ENGINE_PLACEHOLDER_ICON);
       }
     });
   },

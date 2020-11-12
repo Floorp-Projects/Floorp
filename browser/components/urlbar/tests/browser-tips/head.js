@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyGetter(this, "SearchTestUtils", () => {
   const { SearchTestUtils: module } = ChromeUtils.import(
     "resource://testing-common/SearchTestUtils.jsm"
   );
-  module.init(Assert, registerCleanupFunction);
+  module.init(this);
   return module;
 });
 
