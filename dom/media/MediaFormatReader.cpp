@@ -362,13 +362,16 @@ MediaResult MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData) {
                   nsPrintfCString("error creating %s decoder",
                                   TrackTypeToStr(aData.mTrack)));
 
+  auto onWaitingForKeyEvent = [owner = RefPtr<MediaFormatReader>(mOwner)]() {
+    return &owner->OnTrackWaitingForKeyProducer();
+  };
+
   switch (aData.mTrack) {
     case TrackInfo::kAudioTrack: {
       RefPtr<MediaDataDecoder> decoder = platform->CreateDecoder(
           {*ownerData.GetCurrentInfo()->GetAsAudioInfo(), mOwner->mCrashHelper,
            CreateDecoderParams::UseNullDecoder(ownerData.mIsNullDecode),
-           &result, TrackInfo::kAudioTrack,
-           &mOwner->OnTrackWaitingForKeyProducer()});
+           &result, TrackInfo::kAudioTrack, std::move(onWaitingForKeyEvent)});
       if (!decoder) {
         aData.mDecoder = nullptr;
         break;
@@ -389,8 +392,7 @@ MediaResult MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData) {
            mOwner->mKnowsCompositor, mOwner->GetImageContainer(),
            mOwner->mCrashHelper,
            CreateDecoderParams::UseNullDecoder(ownerData.mIsNullDecode),
-           &result, TrackType::kVideoTrack,
-           &mOwner->OnTrackWaitingForKeyProducer(),
+           &result, TrackType::kVideoTrack, std::move(onWaitingForKeyEvent),
            CreateDecoderParams::VideoFrameRate(ownerData.mMeanRate.Mean()),
            OptionSet(ownerData.mHardwareDecodingDisabled
                          ? Option::HardwareDecoderNotAllowed

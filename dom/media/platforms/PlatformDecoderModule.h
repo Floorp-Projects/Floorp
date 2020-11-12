@@ -125,7 +125,8 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
   media::UseNullDecoder mUseNullDecoder;
   media::NoWrapper mNoWrapper;
   TrackInfo::TrackType mType = TrackInfo::kUndefinedTrack;
-  MediaEventProducer<TrackInfo::TrackType>* mOnWaitingForKeyEvent = nullptr;
+  std::function<MediaEventProducer<TrackInfo::TrackType>*()>
+      mOnWaitingForKeyEvent;
   OptionSet mOptions = OptionSet(Option::Default);
   media::VideoFrameRate mRate;
 
@@ -148,7 +149,12 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
     }
   }
   void Set(TrackInfo::TrackType aType) { mType = aType; }
-  void Set(MediaEventProducer<TrackInfo::TrackType>* aOnWaitingForKey) {
+  void Set(std::function<MediaEventProducer<TrackInfo::TrackType>*()>&&
+               aOnWaitingForKey) {
+    mOnWaitingForKeyEvent = std::move(aOnWaitingForKey);
+  }
+  void Set(const std::function<MediaEventProducer<TrackInfo::TrackType>*()>&
+               aOnWaitingForKey) {
     mOnWaitingForKeyEvent = aOnWaitingForKey;
   }
   template <typename T1, typename T2, typename... Ts>
