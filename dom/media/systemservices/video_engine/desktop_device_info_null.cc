@@ -7,18 +7,18 @@
 namespace webrtc {
 
 class DesktopDeviceInfoNull : public DesktopDeviceInfoImpl {
-public:
+ public:
   DesktopDeviceInfoNull();
   ~DesktopDeviceInfoNull();
 
-protected:
+ protected:
   virtual void InitializeScreenList();
   virtual void InitializeApplicationList();
   virtual void InitializeTabList();
 };
 
-DesktopDeviceInfo * DesktopDeviceInfoImpl::Create() {
-  DesktopDeviceInfoNull * pDesktopDeviceInfo = new DesktopDeviceInfoNull();
+DesktopDeviceInfo* DesktopDeviceInfoImpl::Create() {
+  DesktopDeviceInfoNull* pDesktopDeviceInfo = new DesktopDeviceInfoNull();
   if (pDesktopDeviceInfo && pDesktopDeviceInfo->Init() != 0) {
     delete pDesktopDeviceInfo;
     pDesktopDeviceInfo = NULL;
@@ -26,18 +26,12 @@ DesktopDeviceInfo * DesktopDeviceInfoImpl::Create() {
   return pDesktopDeviceInfo;
 }
 
-DesktopDeviceInfoNull::DesktopDeviceInfoNull() {
-}
+DesktopDeviceInfoNull::DesktopDeviceInfoNull() {}
 
-DesktopDeviceInfoNull::~DesktopDeviceInfoNull() {
-}
+DesktopDeviceInfoNull::~DesktopDeviceInfoNull() {}
 
-void
-DesktopDeviceInfoNull::InitializeScreenList() {
-}
+void DesktopDeviceInfoNull::InitializeScreenList() {}
 
-void
-DesktopDeviceInfoNull::InitializeApplicationList() {
-}
+void DesktopDeviceInfoNull::InitializeApplicationList() {}
 
-} //namespace webrtc
+}  // namespace webrtc

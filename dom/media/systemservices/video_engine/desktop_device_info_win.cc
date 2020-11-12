@@ -10,43 +10,47 @@
 #include <VersionHelpers.h>
 
 // Duplicating declaration so that it always resolves in decltype use
-// typedef BOOL (WINAPI *QueryFullProcessImageNameProc)(HANDLE hProcess, DWORD dwFlags, LPTSTR lpExeName, PDWORD lpdwSize);
-WINBASEAPI BOOL WINAPI QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags, LPWSTR lpExeName, PDWORD lpdwSize);
+// typedef BOOL (WINAPI *QueryFullProcessImageNameProc)(HANDLE hProcess, DWORD
+// dwFlags, LPTSTR lpExeName, PDWORD lpdwSize);
+WINBASEAPI BOOL WINAPI QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags,
+                                                 LPWSTR lpExeName,
+                                                 PDWORD lpdwSize);
 
 // Duplicating declaration so that it always resolves in decltype use
-// typedoef DWORD (WINAPI *GetProcessImageFileNameProc)(HANDLE hProcess, LPTSTR lpImageFileName, DWORD nSize);
-DWORD WINAPI GetProcessImageFileName(HANDLE hProcess, LPTSTR lpImageFileName, DWORD nSize);
+// typedoef DWORD (WINAPI *GetProcessImageFileNameProc)(HANDLE hProcess, LPTSTR
+// lpImageFileName, DWORD nSize);
+DWORD WINAPI GetProcessImageFileName(HANDLE hProcess, LPTSTR lpImageFileName,
+                                     DWORD nSize);
 
 namespace webrtc {
 
 // static
-DesktopDeviceInfo * DesktopDeviceInfoImpl::Create() {
-  DesktopDeviceInfoWin * pDesktopDeviceInfo = new DesktopDeviceInfoWin();
-  if(pDesktopDeviceInfo && pDesktopDeviceInfo->Init() != 0){
+DesktopDeviceInfo* DesktopDeviceInfoImpl::Create() {
+  DesktopDeviceInfoWin* pDesktopDeviceInfo = new DesktopDeviceInfoWin();
+  if (pDesktopDeviceInfo && pDesktopDeviceInfo->Init() != 0) {
     delete pDesktopDeviceInfo;
     pDesktopDeviceInfo = nullptr;
   }
   return pDesktopDeviceInfo;
 }
 
-DesktopDeviceInfoWin::DesktopDeviceInfoWin() {
-}
+DesktopDeviceInfoWin::DesktopDeviceInfoWin() {}
 
-DesktopDeviceInfoWin::~DesktopDeviceInfoWin() {
-}
+DesktopDeviceInfoWin::~DesktopDeviceInfoWin() {}
 
-void DesktopDeviceInfoWin::MultiMonitorScreenshare()
-{
+void DesktopDeviceInfoWin::MultiMonitorScreenshare() {
 #if !defined(MULTI_MONITOR_SCREENSHARE)
   DesktopDisplayDevice* desktop_device_info = new DesktopDisplayDevice;
   if (desktop_device_info) {
     desktop_device_info->setScreenId(webrtc::kFullDesktopScreenId);
     desktop_device_info->setDeviceName("Primary Monitor");
 
-     char idStr[64];
-    _snprintf_s(idStr, sizeof(idStr), sizeof(idStr) - 1, "%" PRIdPTR, desktop_device_info->getScreenId());
+    char idStr[64];
+    _snprintf_s(idStr, sizeof(idStr), sizeof(idStr) - 1, "%" PRIdPTR,
+                desktop_device_info->getScreenId());
     desktop_device_info->setUniqueIdName(idStr);
-    desktop_display_list_[desktop_device_info->getScreenId()] = desktop_device_info;
+    desktop_display_list_[desktop_device_info->getScreenId()] =
+        desktop_device_info;
   }
 #else
   DesktopCapturer::SourceList screens;
@@ -61,21 +65,22 @@ void DesktopDeviceInfoWin::MultiMonitorScreenshare()
         desktop_device_info->setDeviceName("Primary Monitor");
       } else {
         char nameStr[64];
-        _snprintf_s(nameStr, sizeof(nameStr), sizeof(nameStr) - 1, "Screen %" PRIdPTR, i + 1);
+        _snprintf_s(nameStr, sizeof(nameStr), sizeof(nameStr) - 1,
+                    "Screen %" PRIdPTR, i + 1);
         desktop_device_info->setDeviceName(nameStr);
       }
 
       char idStr[64];
-      _snprintf_s(idStr, sizeof(idStr), sizeof(idStr) - 1, "%" PRIdPTR, desktop_device_info->getScreenId());
+      _snprintf_s(idStr, sizeof(idStr), sizeof(idStr) - 1, "%" PRIdPTR,
+                  desktop_device_info->getScreenId());
       desktop_device_info->setUniqueIdName(idStr);
-      desktop_display_list_[desktop_device_info->getScreenId()] = desktop_device_info;
+      desktop_display_list_[desktop_device_info->getScreenId()] =
+          desktop_device_info;
     }
   }
 #endif
 }
 
-void DesktopDeviceInfoWin::InitializeScreenList() {
-  MultiMonitorScreenshare();
-}
+void DesktopDeviceInfoWin::InitializeScreenList() { MultiMonitorScreenshare(); }
 
-} // namespace webrtc
+}  // namespace webrtc
