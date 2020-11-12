@@ -1473,6 +1473,11 @@ var BookmarkingUI = {
     return (this.stringbundleset = document.getElementById("stringbundleset"));
   },
 
+  get toolbar() {
+    delete this.toolbar;
+    return (this.toolbar = document.getElementById("PersonalToolbar"));
+  },
+
   STATUS_UPDATING: -1,
   STATUS_UNSTARRED: 0,
   STATUS_STARRED: 1,
@@ -1525,10 +1530,7 @@ var BookmarkingUI = {
       "BMB_viewBookmarksSidebar",
       SidebarUI.currentID == "viewBookmarksSidebar"
     );
-    this.selectLabel(
-      "BMB_viewBookmarksToolbar",
-      !document.getElementById("PersonalToolbar").collapsed
-    );
+    this.selectLabel("BMB_viewBookmarksToolbar", !this.toolbar.collapsed);
   },
 
   selectLabel(elementId, visible) {
@@ -1540,17 +1542,16 @@ var BookmarkingUI = {
   },
 
   toggleBookmarksToolbar(reason) {
-    let toolbar = document.getElementById("PersonalToolbar");
-    let newState = toolbar.collapsed ? "always" : "never";
+    let newState = this.toolbar.collapsed ? "always" : "never";
     Services.prefs.setCharPref(
       "browser.toolbars.bookmarks.visibility",
       // See firefox.js for possible values
       newState
     );
 
-    CustomizableUI.setToolbarVisibility("PersonalToolbar", newState, false);
+    CustomizableUI.setToolbarVisibility(this.toolbar.id, newState, false);
     BrowserUsageTelemetry.recordToolbarVisibility(
-      "PersonalToolbar",
+      this.toolbar.id,
       newState,
       reason
     );
@@ -1655,8 +1656,7 @@ var BookmarkingUI = {
       return true;
     }
 
-    let bookmarksToolbar = document.getElementById("PersonalToolbar");
-    return !!bookmarksToolbar.querySelector(
+    return !!this.toolbar.querySelector(
       `#PersonalToolbar > toolbarbutton:not([hidden]),
        #PersonalToolbar > toolbaritem:not([hidden]):not(#personal-bookmarks)`
     );
@@ -1734,8 +1734,7 @@ var BookmarkingUI = {
       // the toolbar isn't set to Never. We don't have to worry about
       // hiding when leaving customize mode since the toolbar will
       // hide itself on location change.
-      let toolbar = document.getElementById("PersonalToolbar");
-      setToolbarVisibility(toolbar, isVisible, false);
+      setToolbarVisibility(this.toolbar, isVisible, false);
     }
   },
 
@@ -2129,10 +2128,7 @@ var BookmarkingUI = {
       "panelMenu_viewBookmarksSidebar",
       SidebarUI.currentID == "viewBookmarksSidebar"
     );
-    this.selectLabel(
-      "panelMenu_viewBookmarksToolbar",
-      !document.getElementById("PersonalToolbar").collapsed
-    );
+    this.selectLabel("panelMenu_viewBookmarksToolbar", !this.toolbar.collapsed);
     PanelUI.showSubView("PanelUI-bookmarkingTools", triggerNode);
   },
 
