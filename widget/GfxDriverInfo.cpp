@@ -766,6 +766,7 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       // R700
       APPEND_RANGE(0x9440, 0x949f);
       APPEND_RANGE(0x94a0, 0x94b9);
+      APPEND_RANGE(0x9540, 0x955f);
 #endif
 
       break;
