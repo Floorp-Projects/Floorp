@@ -34,7 +34,6 @@ namespace layers {
 class ImageContainer;
 }  // namespace layers
 
-class GpuDecoderModule;
 class MediaDataDecoder;
 class RemoteDecoderModule;
 class CDMProxy;
@@ -275,7 +274,6 @@ class PlatformDecoderModule {
 
   friend class MediaChangeMonitor;
   friend class PDMFactory;
-  friend class GpuDecoderModule;
   friend class EMEDecoderModule;
   friend class RemoteDecoderModule;
 

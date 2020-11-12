@@ -6,7 +6,6 @@
 #include "RemoteDecoderManagerChild.h"
 
 #include "RemoteAudioDecoder.h"
-#include "RemoteDecoderChild.h"
 #include "RemoteMediaDataDecoder.h"
 #include "RemoteVideoDecoder.h"
 #include "VideoUtils.h"
@@ -70,10 +69,10 @@ void RemoteDecoderManagerChild::Init() {
 
   auto remoteDecoderManagerThread = sRemoteDecoderManagerChildThread.Lock();
   if (!*remoteDecoderManagerThread) {
-    // We can't use a MediaThreadType::CONTROLLER as the GpuDecoderModule and
-    // RemoteDecoderModule runs on it and dispatch synchronous tasks to the
-    // manager thread, should more than 4 concurrent videos being instantiated
-    // at the same time, we could end up in a deadlock.
+    // We can't use a MediaThreadType::SUPERVISOR as the RemoteDecoderModule
+    // runs on it and dispatch synchronous tasks to the manager thread, should
+    // more than 4 concurrent videos being instantiated at the same time, we
+    // could end up in a deadlock.
     RefPtr<nsIThread> childThread;
     nsresult rv = NS_NewNamedThread(
         "RemVidChild", getter_AddRefs(childThread),
