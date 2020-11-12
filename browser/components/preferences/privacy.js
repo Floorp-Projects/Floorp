@@ -287,6 +287,9 @@ function setUpContentBlockingWarnings() {
         "content-blocking-and-isolating-etp-warning-description-2"
       );
     }
+    document.getElementById(
+      "fpiIncompatibilityWarning"
+    ).hidden = !gIsFirstPartyIsolated;
   }
 
   let links = document.querySelectorAll(".contentBlockWarningLink");

@@ -1121,6 +1121,8 @@ content-blocking-section-top-level-description = Trackers follow you around onli
 
 content-blocking-learn-more = Learn more
 
+content-blocking-fpi-incompatibility-warning = You are using First Party Isolation (FPI), which overrides some of { -brand-short-name }’s cookie settings. 
+
 ## These strings are used to define the different levels of
 ## Enhanced Tracking Protection.
 
