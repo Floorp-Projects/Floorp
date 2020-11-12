@@ -207,6 +207,7 @@ test:
       - https://example.com
     memory_unit: kilobyte
 
+test.nested:
   uuid_metric:
     type: uuid
     expires: never
