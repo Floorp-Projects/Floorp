@@ -292,7 +292,7 @@ class PromptParent extends JSWindowActorParent {
       PromptUtils.propBagToObject(bag, args);
     } finally {
       if (browser) {
-        browser.leaveModalState();
+        browser.maybeLeaveModalState();
         PromptUtils.fireDialogEvent(win, "DOMModalDialogClosed", browser);
       }
     }
