@@ -2171,15 +2171,6 @@ void nsHttpChannel::ProcessAltService() {
         this, originAttributes);
   }
 
-  if (!altSvc.IsEmpty()) {
-    for (uint32_t i = 0; i < kHttp3VersionCount; i++) {
-      if (PL_strstr(altSvc.get(), kHttp3Versions[i].get())) {
-        mSupportsHTTP3 = true;
-        break;
-      }
-    }
-  }
-
   AltSvcMapping::ProcessHeader(
       altSvc, scheme, originHost, originPort, mUsername, GetTopWindowOrigin(),
       mPrivateBrowsing, IsIsolated(), callbacks, proxyInfo,
@@ -7486,6 +7477,7 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
     // all of the response headers have been acquired, so we can take
     // ownership of them from the transaction.
     mResponseHead = mTransaction->TakeResponseHead();
+    mSupportsHTTP3 = mTransaction->GetSupportsHTTP3();
     // the response head may be null if the transaction was cancelled.  in
     // which case we just need to call OnStartRequest/OnStopRequest.
     if (mResponseHead) return ProcessResponse();
