@@ -8,7 +8,7 @@
 
 ac_add_options --enable-application=browser
 ac_add_options --enable-js-shell
-mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-analyzed
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-analyzed-browser
 
 # The configuration options are chosen to compile the most code
 # (--enable-debug, --enable-tests) in the trickiest way possible

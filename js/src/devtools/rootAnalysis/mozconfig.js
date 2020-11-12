@@ -8,7 +8,7 @@
 
 ac_add_options --enable-application=js
 ac_add_options --enable-js-shell
-mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-analyzed
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-analyzed-js
 
 # The configuration options are chosen to compile the most code
 # (--enable-debug, --enable-tests) in the trickiest way possible
@@ -16,6 +16,11 @@ mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-analyzed
 ac_add_options --enable-debug
 ac_add_options --enable-tests
 ac_add_options --enable-optimize
+
+# Also compile NSPR to see through its part of the control flow graph (not
+# currently needed, but also helps with weird problems finding the right
+# headers.)
+ac_add_options --enable-nspr-build
 
 # Wrap all compiler invocations in order to enable the plugin and send
 # information to a common database.

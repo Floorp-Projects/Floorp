@@ -16,10 +16,6 @@ MOZ_AUTOMATION_UPLOAD=0
 
 ac_add_options --enable-js-shell
 
-# The objdir must be at a known location so its path can be stripped from the
-# filenames stored by the analysis
-mk_add_options MOZ_OBJDIR=obj-analyzed
-
 export CBINDGEN="${MOZ_FETCHES_DIR}/cbindgen/cbindgen"
 
 # The configuration options are chosen to compile the most code

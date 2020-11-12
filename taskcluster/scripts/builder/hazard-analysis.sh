@@ -94,6 +94,8 @@ function run_analysis () {
     fi
 
     (
+        cd "$JS_SRCDIR"
+        autoconf2.13
         cd "$analysis_dir"
         $PYTHON "$ANALYSIS_SRCDIR/analyze.py" -v --buildcommand="$GECKO_PATH/taskcluster/scripts/builder/hazard-${build_type}.sh"
     )
