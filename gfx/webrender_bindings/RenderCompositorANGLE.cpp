@@ -521,7 +521,7 @@ RenderedFrameId RenderCompositorANGLE::EndFrame(
     // See Bug 1595027
     MOZ_ASSERT_IF(mUsePartialPresent && mUseAlpha, mFullRender);
 
-    if (mUsePartialPresent && !mUseAlpha) {
+    if (mUsePartialPresent && !mUseAlpha && mSwapChain1) {
       // Clear full render flag.
       mFullRender = false;
       // If there is no diry rect, we skip SwapChain present.
