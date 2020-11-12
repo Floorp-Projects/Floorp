@@ -36,10 +36,10 @@
 
 use api::{BlobImageHandler, ColorF, ColorU, MixBlendMode};
 use api::{DocumentId, Epoch, ExternalImageHandler, ExternalImageId};
-use api::{ExternalImageSource, ExternalImageType, FontRenderMode, ImageFormat};
+use api::{ExternalImageSource, ExternalImageType, ExternalImageType::TextureHandle, FontRenderMode, ImageFormat};
 use api::{PipelineId, ImageRendering, Checkpoint, NotificationRequest};
 use api::{VoidPtrToSizeFn, PremultipliedColorF};
-use api::{RenderNotifier, ImageBufferKind, SharedFontInstanceMap};
+use api::{RenderNotifier, TextureTarget, SharedFontInstanceMap};
 #[cfg(feature = "replay")]
 use api::ExternalImage;
 use api::units::*;
@@ -1096,6 +1096,28 @@ pub struct GraphicsApiInfo {
     pub version: String,
 }
 
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum ImageBufferKind {
+    Texture2D = 0,
+    TextureRect = 1,
+    TextureExternal = 2,
+    Texture2DArray = 3,
+}
+
+//TODO: those types are the same, so let's merge them
+impl From<TextureTarget> for ImageBufferKind {
+    fn from(target: TextureTarget) -> Self {
+        match target {
+            TextureTarget::Default => ImageBufferKind::Texture2D,
+            TextureTarget::Rect => ImageBufferKind::TextureRect,
+            TextureTarget::Array => ImageBufferKind::Texture2DArray,
+            TextureTarget::External => ImageBufferKind::TextureExternal,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct GpuProfile {
     pub frame_id: GpuFrameId,
@@ -1205,7 +1227,7 @@ impl TextureResolver {
     fn new(device: &mut Device) -> TextureResolver {
         let dummy_cache_texture = device
             .create_texture(
-                ImageBufferKind::Texture2DArray,
+                TextureTarget::Array,
                 ImageFormat::RGBA8,
                 1,
                 1,
@@ -1626,7 +1648,7 @@ impl GpuCacheTexture {
             _ => Some(RenderTargetInfo { has_depth: false }),
         };
         let mut texture = device.create_texture(
-            ImageBufferKind::Texture2D,
+            TextureTarget::Default,
             ImageFormat::RGBAF32,
             new_size.width,
             new_size.height,
@@ -1916,7 +1938,7 @@ impl<T> VertexDataTexture<T> {
             }
 
             let texture = device.create_texture(
-                ImageBufferKind::Texture2D,
+                TextureTarget::Default,
                 self.format,
                 MAX_VERTEX_TEXTURE_WIDTH as i32,
                 // Ensure height is at least two to work around
@@ -2431,6 +2453,7 @@ impl Renderer {
             return Err(RendererError::MaxTextureSize);
         }
         let max_texture_size = device.max_texture_size();
+        let max_texture_layers = device.max_texture_layers();
 
         device.begin_frame();
 
@@ -2508,7 +2531,7 @@ impl Renderer {
             ];
 
             let texture = device.create_texture(
-                ImageBufferKind::Texture2D,
+                TextureTarget::Default,
                 ImageFormat::R8,
                 8,
                 8,
@@ -2747,6 +2770,7 @@ impl Renderer {
 
             let texture_cache = TextureCache::new(
                 max_texture_size,
+                max_texture_layers,
                 picture_tile_size,
                 color_cache_formats,
                 swizzle_settings,
@@ -3957,18 +3981,20 @@ impl Renderer {
             for allocation in update_list.allocations {
                 match allocation.kind {
                     TextureCacheAllocationKind::Alloc(_) => add_event_marker(c_str!("TextureCacheAlloc")),
+                    TextureCacheAllocationKind::Realloc(_) => add_event_marker(c_str!("TextureCacheRealloc")),
                     TextureCacheAllocationKind::Reset(_) => add_event_marker(c_str!("TextureCacheReset")),
                     TextureCacheAllocationKind::Free => add_event_marker(c_str!("TextureCacheFree")),
                 };
                 let old = match allocation.kind {
                     TextureCacheAllocationKind::Alloc(ref info) |
+                    TextureCacheAllocationKind::Realloc(ref info) |
                     TextureCacheAllocationKind::Reset(ref info) => {
                         // Create a new native texture, as requested by the texture cache.
                         //
                         // Ensure no PBO is bound when creating the texture storage,
                         // or GL will attempt to read data from there.
                         let mut texture = self.device.create_texture(
-                            info.target,
+                            TextureTarget::Array,
                             info.format,
                             info.width,
                             info.height,
@@ -4010,6 +4036,12 @@ impl Renderer {
                 match allocation.kind {
                     TextureCacheAllocationKind::Alloc(_) => {
                         assert!(old.is_none(), "Renderer and backend disagree!");
+                    }
+                    TextureCacheAllocationKind::Realloc(_) => {
+                        self.device.blit_renderable_texture(
+                            self.texture_resolver.texture_cache_map.get_mut(&allocation.id).unwrap(),
+                            old.as_ref().unwrap(),
+                        );
                     }
                     TextureCacheAllocationKind::Reset(_) |
                     TextureCacheAllocationKind::Free => {
@@ -4130,7 +4162,7 @@ impl Renderer {
                                 allocator.extend(new_slice, BATCH_UPLOAD_TEXTURE_SIZE, rect.size);
 
                                 let staging_texture = device.create_texture(
-                                    ImageBufferKind::Texture2D,
+                                    TextureTarget::Default,
                                     texture.get_format(),
                                     BATCH_UPLOAD_TEXTURE_SIZE.width,
                                     BATCH_UPLOAD_TEXTURE_SIZE.height,
@@ -4481,7 +4513,22 @@ impl Renderer {
         let _timer = self.gpu_profiler.start_timer(GPU_TAG_SCALE);
 
         for (source, instances) in scalings {
-            let buffer_kind = source.image_buffer_kind();
+            let target = match *source {
+                TextureSource::External(external_image) => {
+                    match external_image.image_type {
+                        TextureHandle(texture_target) => {
+                            texture_target
+                        },
+                        _ => {
+                            TextureTarget::Array
+                        }
+                    }
+                },
+                _ => {
+                    TextureTarget::Array
+                }
+            };
+            let buffer_kind = ImageBufferKind::from(target);
 
             self.shaders
                 .borrow_mut()
@@ -5077,7 +5124,7 @@ impl Renderer {
                             tile.z_id,
                         ),
                         BatchTextures::color(TextureSource::Dummy),
-                        (CompositeSurfaceFormat::Rgba, ImageBufferKind::Texture2D),
+                        (CompositeSurfaceFormat::Rgba, ImageBufferKind::Texture2DArray),
                     )
                 }
                 CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::TextureCache { texture, layer } } => {
@@ -6111,7 +6158,7 @@ impl Renderer {
         } else {
             self.profile.inc(profiler::CREATED_TARGETS);
             self.device.create_texture(
-                ImageBufferKind::Texture2DArray,
+                TextureTarget::Array,
                 list.format,
                 dimensions.width,
                 dimensions.height,
@@ -6755,7 +6802,7 @@ impl Renderer {
 
         if self.zoom_debug_texture.is_none() {
             let texture = self.device.create_texture(
-                ImageBufferKind::Texture2D,
+                TextureTarget::Default,
                 ImageFormat::BGRA8,
                 source_rect.size.width,
                 source_rect.size.height,
@@ -7592,7 +7639,7 @@ impl Renderer {
 
     #[cfg(feature = "replay")]
     fn load_texture(
-        target: ImageBufferKind,
+        target: TextureTarget,
         plain: &PlainTexture,
         rt_info: Option<RenderTargetInfo>,
         root: &PathBuf,
@@ -7855,7 +7902,7 @@ impl Renderer {
             for (id, texture) in renderer.textures {
                 info!("\t{}", texture.data);
                 let t = Self::load_texture(
-                    ImageBufferKind::Texture2DArray,
+                    TextureTarget::Array,
                     &texture,
                     Some(RenderTargetInfo { has_depth: texture.has_depth }),
                     &root,
@@ -7869,7 +7916,7 @@ impl Renderer {
                 self.device.delete_texture(t);
             }
             let (t, gpu_cache_data) = Self::load_texture(
-                ImageBufferKind::Texture2D,
+                TextureTarget::Default,
                 &renderer.gpu_cache,
                 Some(RenderTargetInfo { has_depth: false }),
                 &root,

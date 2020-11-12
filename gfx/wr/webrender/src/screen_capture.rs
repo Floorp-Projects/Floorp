@@ -6,7 +6,7 @@
 
 use std::collections::HashMap;
 
-use api::{ImageFormat, ImageBufferKind};
+use api::{ImageFormat, TextureTarget};
 use api::units::*;
 use gleam::gl::GlType;
 
@@ -248,7 +248,7 @@ impl AsyncScreenshotGrabber {
         // texture is the wrong size, then create a new one.
         if level == self.scaling_textures.len() || self.scaling_textures[level].get_dimensions() != texture_size {
             let texture = device.create_texture(
-                ImageBufferKind::Texture2D,
+                TextureTarget::Default,
                 image_format,
                 texture_size.width,
                 texture_size.height,

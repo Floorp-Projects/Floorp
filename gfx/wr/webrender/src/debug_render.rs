@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorU, ColorF, ImageFormat, ImageBufferKind};
+use api::{ColorU, ColorF, ImageFormat, TextureTarget};
 use api::units::*;
 use crate::debug_font_data;
 use crate::device::{Device, Program, Texture, TextureSlot, VertexDescriptor, ShaderError, VAO};
@@ -140,7 +140,7 @@ impl DebugRenderer {
         let tri_vao = device.create_vao(&DESC_COLOR);
 
         let font_texture = device.create_texture(
-            ImageBufferKind::Texture2DArray,
+            TextureTarget::Array,
             ImageFormat::R8,
             debug_font_data::BMP_WIDTH,
             debug_font_data::BMP_HEIGHT,
