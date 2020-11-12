@@ -373,6 +373,9 @@ def emit_code(fd, pref_list_filename):
     if buildconfig.substs.get("MOZ_DEBUG"):
         pp.context["DEBUG"] = "1"
 
+    if buildconfig.substs.get("CPU_ARCH") == "aarch64":
+        pp.context["MOZ_AARCH64"] = True
+
     pp.out = StringIO()
     pp.do_filter("substitution")
     pp.do_include(pref_list_filename)
