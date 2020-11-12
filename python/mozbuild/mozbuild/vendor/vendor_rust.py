@@ -240,6 +240,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             "fuchsia-zircon-sys",
             "fuchsia-cprng",
             "glsl",
+            "instant",
         ]
     }
 
