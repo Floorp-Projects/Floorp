@@ -321,6 +321,10 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::addEntry(
     JSContext* cx, EntryMap::AddPtr& addPtr, ParserAtomEntry* entry) {
   MOZ_ASSERT(!addPtr);
   ParserAtomIndex index = ParserAtomIndex(entries_.length());
+  if (size_t(index) >= TaggedParserAtomIndex::IndexLimit) {
+    ReportAllocationOverflow(cx);
+    return mozilla::Err(PARSER_ATOMS_OOM);
+  }
   if (!entries_.append(entry)) {
     return RaiseParserAtomsOOMError(cx);
   }
@@ -382,6 +386,10 @@ ParserAtomVectorBuilder::ParserAtomVectorBuilder(JSRuntime* rt,
       entries_(entries) {}
 
 bool ParserAtomVectorBuilder::reserve(JSContext* cx, size_t count) {
+  if (count >= TaggedParserAtomIndex::IndexLimit) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
   if (!entries_.reserve(count)) {
     ReportOutOfMemory(cx);
     return false;
