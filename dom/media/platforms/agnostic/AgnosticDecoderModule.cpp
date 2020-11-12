@@ -124,7 +124,7 @@ bool AgnosticDecoderModule::Supports(
 
 already_AddRefed<MediaDataDecoder> AgnosticDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
-  if (!Supports(SupportDecoderParams(aParams), aParams.mDiagnostics)) {
+  if (!Supports(SupportDecoderParams(aParams), nullptr /* diagnostic */)) {
     return nullptr;
   }
   RefPtr<MediaDataDecoder> m;
@@ -155,7 +155,7 @@ already_AddRefed<MediaDataDecoder> AgnosticDecoderModule::CreateVideoDecoder(
 
 already_AddRefed<MediaDataDecoder> AgnosticDecoderModule::CreateAudioDecoder(
     const CreateDecoderParams& aParams) {
-  if (!Supports(SupportDecoderParams(aParams), aParams.mDiagnostics)) {
+  if (!Supports(SupportDecoderParams(aParams), nullptr /* diagnostic */)) {
     return nullptr;
   }
   RefPtr<MediaDataDecoder> m;

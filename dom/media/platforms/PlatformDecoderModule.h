@@ -119,7 +119,6 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
   }
 
   const TrackInfo& mConfig;
-  DecoderDoctorDiagnostics* mDiagnostics = nullptr;
   layers::ImageContainer* mImageContainer = nullptr;
   MediaResult* mError = nullptr;
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
@@ -132,9 +131,6 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
   media::VideoFrameRate mRate;
 
  private:
-  void Set(DecoderDoctorDiagnostics* aDiagnostics) {
-    mDiagnostics = aDiagnostics;
-  }
   void Set(layers::ImageContainer* aImageContainer) {
     mImageContainer = aImageContainer;
   }
@@ -174,7 +170,6 @@ struct MOZ_STACK_CLASS SupportDecoderParams final {
 
   explicit SupportDecoderParams(const CreateDecoderParams& aParams)
       : mConfig(aParams.mConfig),
-        mDiagnostics(aParams.mDiagnostics),
         mError(aParams.mError),
         mKnowsCompositor(aParams.mKnowsCompositor),
         mUseNullDecoder(aParams.mUseNullDecoder),

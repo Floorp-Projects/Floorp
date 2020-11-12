@@ -198,7 +198,6 @@ AllocationWrapper::CreateDecoder(const CreateDecoderParams& aParams,
   // aParams.mConfig is guaranteed to stay alive during the lifetime of the
   // MediaDataDecoder, so keeping a pointer to the object is safe.
   const TrackInfo* config = &aParams.mConfig;
-  DecoderDoctorDiagnostics* diagnostics = aParams.mDiagnostics;
   RefPtr<layers::ImageContainer> imageContainer = aParams.mImageContainer;
   RefPtr<layers::KnowsCompositor> knowsCompositor = aParams.mKnowsCompositor;
   RefPtr<GMPCrashHelper> crashHelper = aParams.mCrashHelper;
@@ -226,7 +225,6 @@ AllocationWrapper::CreateDecoder(const CreateDecoderParams& aParams,
                                                 TrackTypeToStr(type)));
                 RefPtr<PDMFactory> pdm = new PDMFactory();
                 CreateDecoderParams params{*config,
-                                           diagnostics,
                                            imageContainer,
                                            &result,
                                            knowsCompositor,
