@@ -133,6 +133,8 @@ class DefaultToolbarMenu(
             }
         )
 
+        registerForIsBookmarkedUpdates()
+
         val bookmark = BrowserMenuItemToolbar.TwoStateButton(
             primaryImageResource = R.drawable.ic_bookmark_filled,
             primaryContentDescription = context.getString(R.string.browser_menu_edit_bookmark),
