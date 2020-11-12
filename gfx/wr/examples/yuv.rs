@@ -114,7 +114,7 @@ impl Example for App {
                 id: ExternalImageId(0),
                 channel_index: 0,
                 image_type: ExternalImageType::TextureHandle(
-                    ImageBufferKind::Texture2D,
+                    TextureTarget::Default,
                 ),
             }),
             None,
@@ -126,7 +126,7 @@ impl Example for App {
                 id: ExternalImageId(1),
                 channel_index: 0,
                 image_type: ExternalImageType::TextureHandle(
-                    ImageBufferKind::Texture2D,
+                    TextureTarget::Default,
                 ),
             }),
             None,
@@ -138,7 +138,7 @@ impl Example for App {
                 id: ExternalImageId(2),
                 channel_index: 0,
                 image_type: ExternalImageType::TextureHandle(
-                    ImageBufferKind::Texture2D,
+                    TextureTarget::Default,
                 ),
             }),
             None,
@@ -150,7 +150,7 @@ impl Example for App {
                 id: ExternalImageId(3),
                 channel_index: 0,
                 image_type: ExternalImageType::TextureHandle(
-                    ImageBufferKind::Texture2D,
+                    TextureTarget::Default,
                 ),
             }),
             None,
