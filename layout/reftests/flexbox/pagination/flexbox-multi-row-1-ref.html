@@ -9,13 +9,13 @@
 
   <style>
   .multicol {
-    height: 50px;
-    width: 200px;
+    block-size: 50px;
+    inline-size: 200px;
     column-width: 60px;
     column-fill: auto;
     column-gap: 10px;
     border: 5px solid orange;
-    margin-bottom: 5px; /* Just to separate each sub-testcase visually. */
+    margin-block-end: 5px; /* Just to separate each sub-testcase visually. */
   }
   .flexContainer {
     background: gray;
@@ -23,41 +23,41 @@
     border: 0 solid lightgray;
   }
   .border-padding {
-    border-width: 10px 0;
-    padding: 5px 0;
+    border-block-width: 10px;
+    padding-block: 5px;
   }
   .line {
-    width: 60px;
-    height: 50px;
+    inline-size: 60px;
+    block-size: 50px;
   }
 
   header, nav, article, footer {
-    width: 30px;
+    inline-size: 30px;
   }
   .with-gap header, .with-gap nav, .with-gap article, .with-gap footer {
-    width: 25px;
+    inline-size: 25px;
   }
 
   /* Note: flex items are in visual order as "CMYK": cyan, magenta, yellow, black. */
   header {
     background: cyan;
-    height: 50px;
+    block-size: 50px;
     float: left;
   }
   nav {
     background: magenta;
-    height: 25px;
+    block-size: 25px;
     float: right;
   }
   article {
     background: yellow;
-    height: 40px;
+    block-size: 40px;
     float: left;
-    margin-top: 5px;
+    margin-block-start: 5px;
   }
   footer {
     background: black;
-    height: 50px;
+    block-size: 50px;
     float: right;
   }
   </style>
@@ -71,9 +71,9 @@
       </div>
     </div>
 
-    <!-- Test a container with margin-top. -->
+    <!-- Test a container with margin-block-start. -->
     <div class="multicol">
-      <div class="flexContainer" style="margin-top: 25px">
+      <div class="flexContainer" style="margin-block-start: 25px">
         <div class="line"><header></header><nav></nav></div>
         <div class="line"><article></article><footer></footer></div>
       </div>
@@ -81,7 +81,7 @@
 
     <!-- Test a container not at the top of the column/page. -->
     <div class="multicol">
-      <div style="height: 25px"></div>
+      <div style="block-size: 25px"></div>
       <div class="flexContainer">
         <div class="line"><header></header><nav></nav></div>
         <div class="line"><article></article><footer></footer></div>
@@ -100,7 +100,7 @@
     <div class="multicol">
       <div class="flexContainer border-padding with-gap">
         <div class="line"><header></header><nav></nav></div>
-        <div style="height: 20px"><!-- row-gap --></div>
+        <div style="block-size: 20px"><!-- row-gap --></div>
         <div class="line"><article></article><footer></footer></div>
       </div>
     </div>

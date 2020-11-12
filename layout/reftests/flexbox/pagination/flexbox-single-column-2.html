@@ -3,22 +3,22 @@
      http://creativecommons.org/publicdomain/zero/1.0/ -->
 <html>
   <meta charset="utf-8">
-  <title>CSS Flexbox Test: Fragmentation of fixed height single-line column flex container with fixed height flex items</title>
+  <title>CSS Flexbox Test: Fragmentation of fixed block-size single-line column flex container with fixed block-size flex items</title>
   <link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
   <link rel="author" title="Mozilla" href="http://www.mozilla.org/">
   <link rel="help" href="https://drafts.csswg.org/css-flexbox-1/#pagination">
   <link rel="match" href="flexbox-single-column-2-ref.html">
-  <meta name="assert" content="This test verifies fragmentation of fixed height flex items in a fixed height single-line column flex container, with various combinations of margin/border/padding, alignments, and row-gap. The height of the flex container is made shorter than its flex items.">
+  <meta name="assert" content="This test verifies fragmentation of fixed block-size flex items in a fixed block-size single-line column flex container, with various combinations of margin/border/padding, alignments, and row-gap. The block-size of the flex container is made shorter than its flex items.">
 
   <style>
   .multicol {
-    height: 50px;
-    width: 190px;
+    block-size: 50px;
+    inline-size: 190px;
     column-width: 40px;
     column-fill: auto;
     column-gap: 10px;
     border: 5px solid orange;
-    margin-bottom: 5px; /* Just to separate each sub-testcase visually. */
+    margin-block-end: 5px; /* Just to separate each sub-testcase visually. */
   }
   .flexContainer {
     display: flex;
@@ -27,12 +27,12 @@
     background: gray;
     /* border-width is 0 by default; some sub-testcases will increase it. */
     border: 0 solid lightgray;
-    /* Height is deliberately made shorter than all its flex items. */
-    height: 85px;
+    /* Block-size is deliberately made shorter than all its flex items. */
+    block-size: 85px;
   }
   .border-padding {
-    border-width: 10px 0;
-    padding: 5px 0;
+    border-block-width: 10px;
+    padding-block: 5px;
   }
 
   /* Note: flex items are in visual order as "CMYK": cyan, magenta, yellow, black. */
@@ -41,24 +41,24 @@
   }
   header {
     background: cyan;
-    height: 50px;
+    block-size: 50px;
   }
   nav, article, footer {
-    width: 30px;
+    inline-size: 30px;
   }
   nav {
     background: magenta;
-    height: 25px;
+    block-size: 25px;
     align-self: flex-start;
   }
   article {
     background: yellow;
-    height: 25px;
+    block-size: 25px;
     align-self: center;
   }
   footer {
     background: black;
-    height: 50px;
+    block-size: 50px;
     align-self: flex-end;
   }
   </style>
@@ -71,16 +71,16 @@
       </div>
     </div>
 
-    <!-- Test a container with margin-top. -->
+    <!-- Test a container with margin-block-start. -->
     <div class="multicol">
-      <div class="flexContainer" style="margin-top: 25px">
+      <div class="flexContainer" style="margin-block-start: 25px">
         <header></header><nav></nav><article></article><footer></footer>
       </div>
     </div>
 
     <!-- Test a container not at the top of the column/page. -->
     <div class="multicol">
-      <div style="height: 25px"></div>
+      <div style="block-size: 25px"></div>
       <div class="flexContainer">
         <header></header><nav></nav><article></article><footer></footer>
       </div>
