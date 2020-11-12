@@ -37,7 +37,7 @@
 /components/browser/errorpages/             @mozilla-mobile/act
 /components/browser/icons/                  @pocmo
 /components/browser/menu/                   @mozilla-mobile/act
-/components/browser/menu2/                  @mozilla-mobile/act
+/components/browser/menu2/                  @jonalmeida
 /components/browser/search/                 @boek @pocmo
 /components/browser/session/                @pocmo @csadilek
 /components/browser/state/                  @pocmo @csadilek
