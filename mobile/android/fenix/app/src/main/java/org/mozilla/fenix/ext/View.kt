@@ -67,6 +67,35 @@ fun View.addChildToAccessibilityNodeInfo(child: View) {
 }
 
 /**
+ * Updates the a11y collection item info for an item in a list.
+ */
+fun View.updateAccessibilityCollectionItemInfo(
+    rowIndex: Int,
+    columnIndex: Int,
+    isSelected: Boolean,
+    rowSpan: Int = 1,
+    columnSpan: Int = 1
+) {
+    this.accessibilityDelegate = object : View.AccessibilityDelegate() {
+        override fun onInitializeAccessibilityNodeInfo(
+            host: View?,
+            info: AccessibilityNodeInfo?
+        ) {
+            super.onInitializeAccessibilityNodeInfo(host, info)
+            info?.collectionItemInfo =
+                AccessibilityNodeInfo.CollectionItemInfo.obtain(
+                    rowIndex,
+                    rowSpan,
+                    columnIndex,
+                    columnSpan,
+                    false,
+                    isSelected
+                )
+        }
+    }
+}
+
+/**
  * Fills a [Rect] with data about a view's location in the screen.
  *
  * @see View.getLocationOnScreen

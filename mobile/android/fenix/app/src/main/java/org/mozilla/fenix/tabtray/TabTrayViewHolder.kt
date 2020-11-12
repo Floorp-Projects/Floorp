@@ -5,7 +5,6 @@
 package org.mozilla.fenix.tabtray
 
 import android.view.View
-import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
@@ -217,31 +216,6 @@ class TabTrayViewHolder(
             )
         }
         imageLoader.loadIntoView(thumbnailView, ImageLoadRequest(id, thumbnailSize))
-    }
-
-    internal fun updateAccessibilityCollectionItemInfo(
-        item: View,
-        rowIndex: Int,
-        columnIndex: Int,
-        isSelected: Boolean
-    ) {
-        item.accessibilityDelegate = object : View.AccessibilityDelegate() {
-            override fun onInitializeAccessibilityNodeInfo(
-                host: View?,
-                info: AccessibilityNodeInfo?
-            ) {
-                super.onInitializeAccessibilityNodeInfo(host, info)
-                info?.collectionItemInfo =
-                    AccessibilityNodeInfo.CollectionItemInfo.obtain(
-                        rowIndex,
-                        1,
-                        columnIndex,
-                        1,
-                        false,
-                        isSelected
-                    )
-            }
-        }
     }
 
     companion object {

@@ -22,6 +22,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.updateAccessibilityCollectionItemInfo
 
 class FenixTabsAdapter(
     private val context: Context,
@@ -88,8 +89,7 @@ class FenixTabsAdapter(
             columnIndex = itemIndex % columnsCount
         }
 
-        (holder as TabTrayViewHolder).updateAccessibilityCollectionItemInfo(
-            holder.itemView,
+        holder.itemView.updateAccessibilityCollectionItemInfo(
             rowIndex,
             columnIndex,
             selectedItems.contains(holder.tab)
