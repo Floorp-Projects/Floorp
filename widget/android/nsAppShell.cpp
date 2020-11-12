@@ -60,6 +60,7 @@
 #include "AndroidAlerts.h"
 #include "AndroidUiThread.h"
 #include "GeckoBatteryManager.h"
+#include "GeckoEditableSupport.h"
 #include "GeckoNetworkManager.h"
 #include "GeckoProcessManager.h"
 #include "GeckoScreenOrientation.h"
