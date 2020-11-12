@@ -45,6 +45,12 @@ fn render_task_sanity_check(size: &DeviceIntSize) {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTaskAddress(pub u16);
 
+impl Into<RenderTaskAddress> for RenderTaskId {
+    fn into(self) -> RenderTaskAddress {
+        RenderTaskAddress(self.index as u16)
+    }
+}
+
 /// Identifies the output buffer location for a given `RenderTask`.
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]

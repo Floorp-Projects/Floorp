@@ -396,7 +396,7 @@ impl RenderTarget for ColorRenderTarget {
                         ctx.break_advanced_blend_batches,
                         ctx.batch_lookback_count,
                         *task_id,
-                        render_tasks.get_task_address(*task_id),
+                        (*task_id).into(),
                         PrimitiveVisibilityMask::all(),
                         prealloc_batch_count,
                     );
@@ -459,16 +459,16 @@ impl RenderTarget for ColorRenderTarget {
                 add_blur_instances(
                     &mut self.vertical_blurs,
                     BlurDirection::Vertical,
-                    render_tasks.get_task_address(task_id),
-                    render_tasks.get_task_address(task.children[0]),
+                    task_id.into(),
+                    task.children[0].into(),
                 );
             }
             RenderTaskKind::HorizontalBlur(..) => {
                 add_blur_instances(
                     &mut self.horizontal_blurs,
                     BlurDirection::Horizontal,
-                    render_tasks.get_task_address(task_id),
-                    render_tasks.get_task_address(task.children[0]),
+                    task_id.into(),
+                    task.children[0].into(),
                 );
             }
             RenderTaskKind::Picture(..) => {
@@ -646,16 +646,16 @@ impl RenderTarget for AlphaRenderTarget {
                 add_blur_instances(
                     &mut self.vertical_blurs,
                     BlurDirection::Vertical,
-                    render_tasks.get_task_address(task_id),
-                    render_tasks.get_task_address(task.children[0]),
+                    task_id.into(),
+                    task.children[0].into(),
                 );
             }
             RenderTaskKind::HorizontalBlur(..) => {
                 add_blur_instances(
                     &mut self.horizontal_blurs,
                     BlurDirection::Horizontal,
-                    render_tasks.get_task_address(task_id),
-                    render_tasks.get_task_address(task.children[0]),
+                    task_id.into(),
+                    task.children[0].into(),
                 );
             }
             RenderTaskKind::CacheMask(ref task_info) => {
@@ -761,9 +761,9 @@ impl TextureCacheRenderTarget {
         render_tasks: &mut RenderTaskGraph,
     ) {
         profile_scope!("add_task");
-        let task_address = render_tasks.get_task_address(task_id);
-        let src_task_address = render_tasks[task_id].children.get(0).map(|src_task_id| {
-            render_tasks.get_task_address(*src_task_id)
+        let task_address = task_id.into();
+        let src_task_address = render_tasks[task_id].children.get(0).map(|&src_task_id| {
+            src_task_id.into()
         });
 
         let task = &mut render_tasks[task_id];
@@ -1018,9 +1018,9 @@ fn add_svg_filter_instances(
     };
 
     let instance = SvgFilterInstance {
-        task_address: render_tasks.get_task_address(task_id),
-        input_1_task_address: input_1_task.map(|id| render_tasks.get_task_address(id)).unwrap_or(RenderTaskAddress(0)),
-        input_2_task_address: input_2_task.map(|id| render_tasks.get_task_address(id)).unwrap_or(RenderTaskAddress(0)),
+        task_address: task_id.into(),
+        input_1_task_address: input_1_task.map(|id| id.into()).unwrap_or(RenderTaskAddress(0)),
+        input_2_task_address: input_2_task.map(|id| id.into()).unwrap_or(RenderTaskAddress(0)),
         kind,
         input_count,
         generic_int,
