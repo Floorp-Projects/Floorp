@@ -18,7 +18,7 @@ import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.perf.StrictModeManager
-import org.mozilla.fenix.helpers.TestStrictModeManager
+import org.mozilla.fenix.helpers.perf.TestStrictModeManager
 import kotlin.coroutines.CoroutineContext
 
 @RunWith(FenixRobolectricTestRunner::class)

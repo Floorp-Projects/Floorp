@@ -6,7 +6,7 @@ package org.mozilla.fenix.components
 
 import android.content.Context
 import io.mockk.mockk
-import org.mozilla.fenix.helpers.TestStrictModeManager
+import org.mozilla.fenix.helpers.perf.TestStrictModeManager
 import org.mozilla.fenix.utils.ClipboardHandler
 import org.mozilla.fenix.utils.Settings
 
