@@ -31,6 +31,7 @@
 #include "nsObjCExceptions.h"
 
 #import <Cocoa/Cocoa.h>
+#include <sys/sysctl.h>
 
 /*static*/ int32_t nsCocoaFeatures::mOSVersion = 0;
 

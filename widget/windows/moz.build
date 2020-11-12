@@ -87,7 +87,6 @@ UNIFIED_SOURCES += [
     "nsWindowDbg.cpp",
     "nsWindowGfx.cpp",
     "nsWinGesture.cpp",
-    "ProcInfo.cpp",
     "RemoteBackbuffer.cpp",
     "ScreenHelperWin.cpp",
     "SystemStatusBar.cpp",

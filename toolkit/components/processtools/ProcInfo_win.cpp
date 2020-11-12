@@ -7,6 +7,8 @@
 #include "mozilla/ProcInfo.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "nsMemoryReporterManager.h"
+#include "nsNetCID.h"
+#include "nsWindowsHelpers.h"
 #include <windows.h>
 #include <psapi.h>
 #include <tlhelp32.h>

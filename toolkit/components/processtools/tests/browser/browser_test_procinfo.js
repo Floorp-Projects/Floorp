@@ -2,8 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const ROOT_URL = "http://example.com/browser/widget/tests/browser";
-const DUMMY_URL = ROOT_URL + "/dummy.html";
+const DUMMY_URL =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "http://example.com"
+  ) + "/dummy.html";
+
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
