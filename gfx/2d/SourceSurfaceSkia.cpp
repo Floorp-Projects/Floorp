@@ -168,7 +168,7 @@ void SourceSurfaceSkia::Unmap() {
 
 void SourceSurfaceSkia::DrawTargetWillChange() {
   MutexAutoLock lock(mChangeMutex);
-  if (mDrawTarget) {
+  if (mDrawTarget.exchange(nullptr)) {
     // Raster snapshots do not use Skia's internal copy-on-write mechanism,
     // so we need to do an explicit copy here.
     // GPU snapshots, for which peekPixels is false, will already be dealt
@@ -181,7 +181,6 @@ void SourceSurfaceSkia::DrawTargetWillChange() {
         gfxCriticalError() << "Failed copying Skia raster snapshot";
       }
     }
-    mDrawTarget = nullptr;
   }
 }
 
