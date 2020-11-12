@@ -321,7 +321,7 @@ void AnimationEffect::GetComputedTimingAsDict(
 void AnimationEffect::UpdateTiming(const OptionalEffectTiming& aTiming,
                                    ErrorResult& aRv) {
   TimingParams timing =
-      TimingParams::MergeOptionalEffectTiming(mTiming, aTiming, mDocument, aRv);
+      TimingParams::MergeOptionalEffectTiming(mTiming, aTiming, aRv);
   if (aRv.Failed()) {
     return;
   }

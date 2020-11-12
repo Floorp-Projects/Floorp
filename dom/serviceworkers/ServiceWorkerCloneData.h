@@ -13,9 +13,9 @@ class nsISerialEventTarget;
 
 namespace mozilla {
 namespace ipc {
-    class PBackgroundChild;
-    class PBackgroundParent;
-} // namespace ipc
+class PBackgroundChild;
+class PBackgroundParent;
+}  // namespace ipc
 
 namespace dom {
 
