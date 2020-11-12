@@ -45,8 +45,6 @@ using XDRResult = XDRResultT<mozilla::Ok>;
 using XDRAtomTable = JS::GCVector<PreBarriered<JSAtom*>>;
 using XDRAtomMap = JS::GCHashMap<PreBarriered<JSAtom*>, uint32_t>;
 
-using XDRParserAtomMap = HashMap<const frontend::ParserAtom*, uint32_t>;
-
 class XDRBufferBase {
  public:
   explicit XDRBufferBase(JSContext* cx, size_t cursor = 0)
@@ -262,10 +260,6 @@ class XDRState : public XDRCoderBase {
 
   virtual bool hasAtomMap() const { return false; }
   virtual XDRAtomMap& atomMap() { MOZ_CRASH("does not have atomMap"); }
-  virtual XDRParserAtomMap& parserAtomMap() {
-    // This accessor is only used when encoding stencils.
-    MOZ_CRASH("does not have parserAtomMap");
-  }
   virtual uint32_t& natoms() { MOZ_CRASH("does not have atomMap."); }
 
   // The number of chunks (CompilationStencils) in the buffer.
@@ -287,7 +281,6 @@ class XDRState : public XDRCoderBase {
     MOZ_CRASH("cannot switch to header buffer.");
   }
 
-  virtual XDRResult finishChunk() { return Ok(); }
   virtual XDRResult codeDelazificationStencils(
       frontend::CompilationInfoVector& compilationInfos) {
     MOZ_CRASH("cannot code delazification stencils.");
@@ -734,10 +727,6 @@ class XDRIncrementalStencilEncoder : public XDRIncrementalEncoderBase {
   //   b. atoms
   //   c. CompilationStencil
 
-  // Map from atoms to their index in the atom buffer
-  // Reset for each chunk.
-  XDRParserAtomMap parserAtomMap_;
-
   using FunctionKey = uint64_t;
   static FunctionKey toFunctionKey(const SourceExtent& extent);
 
@@ -748,9 +737,7 @@ class XDRIncrementalStencilEncoder : public XDRIncrementalEncoderBase {
 
  public:
   explicit XDRIncrementalStencilEncoder(JSContext* cx)
-      : XDRIncrementalEncoderBase(cx),
-        parserAtomMap_(cx),
-        encodedFunctions_(cx) {}
+      : XDRIncrementalEncoderBase(cx), encodedFunctions_(cx) {}
 
   virtual ~XDRIncrementalStencilEncoder() = default;
 
@@ -758,11 +745,6 @@ class XDRIncrementalStencilEncoder : public XDRIncrementalEncoderBase {
       const frontend::CompilationStencil& stencil) override;
 
   bool isForStencil() const override { return true; }
-
-  bool hasAtomMap() const override { return true; }
-  XDRParserAtomMap& parserAtomMap() override { return parserAtomMap_; }
-
-  XDRResult finishChunk() override;
 
   XDRResult linearize(JS::TranscodeBuffer& buffer) override;
 
@@ -783,8 +765,9 @@ XDRResult XDRParserAtom(XDRState<mode>* xdr,
                         const frontend::ParserAtom** atomp);
 
 template <XDRMode mode>
-XDRResult XDRParserAtomData(XDRState<mode>* xdr,
-                            const frontend::ParserAtom** atomp);
+XDRResult XDRParserAtomDataAt(XDRState<mode>* xdr,
+                              const frontend::ParserAtom** atomp,
+                              frontend::ParserAtomIndex index);
 
 template <XDRMode mode>
 XDRResult XDRParserAtomOrNull(XDRState<mode>* xdr,

@@ -35,10 +35,6 @@ class ParserAtomsTable;
 
 mozilla::GenericErrorResult<OOM> RaiseParserAtomsOOMError(JSContext* cx);
 
-// An index into CompilationAtomCache.
-// This is local to the current compilation.
-using AtomIndex = TypedIndex<JSAtom*>;
-
 // An index to map WellKnownParserAtoms to cx->names().
 // This is consistent across multiple compilation.
 //
@@ -209,10 +205,8 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
 
   // Mapping into from ParserAtoms to JSAtoms.
   enum class AtomIndexKind : uint8_t {
-    // Not yet instantiated
-    NotInstantiated,
-    // Index into CompilationAtomCache
-    AtomIndex,
+    // Index into CompilationStencil.parserAtomData.
+    ParserAtomIndex,
     // WellKnownAtomId to index into cx->names() set
     WellKnown,
     // Index into StaticStrings length-1 set
@@ -221,12 +215,12 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
     Static2,
   };
   uint32_t atomIndex_ = 0;
-  AtomIndexKind atomIndexKind_ = AtomIndexKind::NotInstantiated;
+  AtomIndexKind atomIndexKind_ = AtomIndexKind::ParserAtomIndex;
 
   // Encoding type.
   bool hasTwoByteChars_ = false;
 
-  // Other flags.
+  // Mutable flags.
   bool usedByStencil_ = false;
 
   // End of fields.
@@ -304,13 +298,9 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   HashNumber hash() const { return hash_; }
   uint32_t length() const { return length_; }
 
-  bool isNotInstantiated() const {
-    return atomIndexKind_ == AtomIndexKind::NotInstantiated;
-  }
-
   bool isUsedByStencil() const { return usedByStencil_; }
   void markUsedByStencil() const {
-    if ((isNotInstantiated() || isAtomIndex())) {
+    if (isParserAtomIndex()) {
       // Use const method + const_cast here to avoid marking static strings'
       // field mutable.
       const_cast<ParserAtomEntry*>(this)->usedByStencil_ = true;
@@ -322,6 +312,10 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   template <typename CharT>
   bool equalsSeq(HashNumber hash, InflatedChar16Sequence<CharT> seq) const;
 
+  ParserAtomIndex toParserAtomIndex() const {
+    MOZ_ASSERT(isParserAtomIndex());
+    return ParserAtomIndex(atomIndex_);
+  }
   WellKnownAtomId toWellKnownAtomId() const {
     MOZ_ASSERT(isWellKnownAtomId());
     return WellKnownAtomId(atomIndex_);
@@ -335,8 +329,8 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
     return StaticParserString2(atomIndex_);
   }
 
-  bool isAtomIndex() const {
-    return atomIndexKind_ == AtomIndexKind::AtomIndex;
+  bool isParserAtomIndex() const {
+    return atomIndexKind_ == AtomIndexKind::ParserAtomIndex;
   }
   bool isWellKnownAtomId() const {
     return atomIndexKind_ == AtomIndexKind::WellKnown;
@@ -348,11 +342,12 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
     return atomIndexKind_ == AtomIndexKind::Static2;
   }
 
- private:
-  void setAtomIndex(AtomIndex index) {
+  void setParserAtomIndex(ParserAtomIndex index) {
     atomIndex_ = index;
-    atomIndexKind_ = AtomIndexKind::AtomIndex;
+    atomIndexKind_ = AtomIndexKind::ParserAtomIndex;
   }
+
+ private:
   constexpr void setWellKnownAtomId(WellKnownAtomId atomId) {
     atomIndex_ = static_cast<uint32_t>(atomId);
     atomIndexKind_ = AtomIndexKind::WellKnown;
@@ -648,10 +643,6 @@ class WellKnownParserAtoms {
   }
 };
 
-// The number of atoms with either usedByStencil or AtomIndex,
-// that requires space in CompilationAtomCache.atoms during instantiation.
-size_t RequiredNonStaticAtomCount(const ParserAtomVector& entries);
-
 bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomVector& entries,
                             CompilationAtomCache& atomCache);
 
@@ -723,22 +714,23 @@ class ParserAtomVectorBuilder {
   ParserAtomVectorBuilder(JSRuntime* rt, LifoAlloc& alloc,
                           ParserAtomVector& entries);
 
-  bool reserve(JSContext* cx, size_t count);
+  bool resize(JSContext* cx, size_t count);
   size_t length() const { return entries_.length(); }
   ParserAtom* get(size_t index) { return entries_[index]->asAtom(); }
 
-  JS::Result<const ParserAtom*, OOM> internLatin1(
+  JS::Result<const ParserAtom*, OOM> internLatin1At(
       JSContext* cx, const JS::Latin1Char* latin1Ptr, HashNumber hash,
-      uint32_t length);
+      uint32_t length, ParserAtomIndex index);
 
-  JS::Result<const ParserAtom*, OOM> internChar16(
+  JS::Result<const ParserAtom*, OOM> internChar16At(
       JSContext* cx, const LittleEndianChars twoByteLE, HashNumber hash,
-      uint32_t length);
+      uint32_t length, ParserAtomIndex index);
 
  private:
   template <typename CharT, typename SeqCharT, typename InputCharsT>
-  JS::Result<const ParserAtom*, OOM> intern(JSContext* cx, InputCharsT chars,
-                                            HashNumber hash, uint32_t length);
+  JS::Result<const ParserAtom*, OOM> internAt(JSContext* cx, InputCharsT chars,
+                                              HashNumber hash, uint32_t length,
+                                              ParserAtomIndex index);
 
  public:
   const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;

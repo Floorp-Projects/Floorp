@@ -799,9 +799,7 @@ bool CompilationInfoVector::instantiateStencilsAfterPreparation(
 }
 
 bool CompilationInfo::prepareInputAndStencilForInstantiate(JSContext* cx) {
-  if (!input.atomCache.atoms.reserve(
-          RequiredNonStaticAtomCount(stencil.parserAtomData))) {
-    ReportOutOfMemory(cx);
+  if (!input.atomCache.allocate(cx, stencil.parserAtomData.length())) {
     return false;
   }
 
@@ -1582,4 +1580,52 @@ mozilla::Span<ScriptThingVariant> js::frontend::NewScriptThingSpanUninitialized(
   }
 
   return mozilla::Span<ScriptThingVariant>(stencilThings, ngcthings);
+}
+
+JSAtom* CompilationAtomCache::getExistingAtomAt(ParserAtomIndex index) const {
+  return atoms_[index];
+}
+
+JSAtom* CompilationAtomCache::getAtomAt(ParserAtomIndex index) const {
+  if (size_t(index) >= atoms_.length()) {
+    return nullptr;
+  }
+  return atoms_[index];
+}
+
+bool CompilationAtomCache::hasAtomAt(ParserAtomIndex index) const {
+  if (size_t(index) >= atoms_.length()) {
+    return false;
+  }
+  return !!atoms_[index];
+}
+
+bool CompilationAtomCache::setAtomAt(JSContext* cx, ParserAtomIndex index,
+                                     JSAtom* atom) {
+  if (size_t(index) < atoms_.length()) {
+    atoms_[index] = atom;
+    return true;
+  }
+
+  if (!atoms_.resize(size_t(index) + 1)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  atoms_[index] = atom;
+  return true;
+}
+
+bool CompilationAtomCache::allocate(JSContext* cx, size_t length) {
+  MOZ_ASSERT(length >= atoms_.length());
+  if (length == atoms_.length()) {
+    return true;
+  }
+
+  if (!atoms_.resize(length)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  return true;
 }
