@@ -17,6 +17,7 @@ const server = AddonTestUtils.createHttpServer({ hosts: ["example.com"] });
 const BASE_URL = `http://example.com/data`;
 
 let addonID = "policytest2@mozilla.com";
+let themeID = "policytheme@mozilla.com";
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
@@ -218,4 +219,37 @@ add_task(async function test_extensionsettings_string() {
     "extensions.webextensions.restrictedDomains"
   );
   equal(newRestrictedDomains, restrictedDomains + ",example.com,example.org");
+});
+
+add_task(async function test_theme() {
+  let themeFile = AddonTestUtils.createTempWebExtensionFile({
+    manifest: {
+      applications: {
+        gecko: {
+          id: themeID,
+        },
+      },
+      theme: {},
+    },
+  });
+
+  server.registerFile("/data/policy_theme.xpi", themeFile);
+
+  await Promise.all([
+    AddonTestUtils.promiseInstallEvent("onInstallEnded"),
+    setupPolicyEngineWithJson({
+      policies: {
+        ExtensionSettings: {
+          "policytheme@mozilla.com": {
+            installation_mode: "normal_installed",
+            install_url: BASE_URL + "/policy_theme.xpi",
+          },
+        },
+      },
+    }),
+  ]);
+  let currentTheme = Services.prefs.getCharPref("extensions.activeThemeID");
+  equal(currentTheme, themeID, "Theme should be active");
+  let addon = await AddonManager.getAddonByID(themeID);
+  await addon.uninstall();
 });
