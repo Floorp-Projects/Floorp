@@ -10,7 +10,9 @@ apt-get install -y --force-yes --no-install-recommends \
     python \
     sudo \
     python3 \
-    python3-yaml
+    python3-yaml \
+    python-psutil \
+    python3-psutil
 
 BUILD=/root/build
 mkdir "$BUILD"
