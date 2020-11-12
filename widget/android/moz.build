@@ -143,7 +143,6 @@ UNIFIED_SOURCES += [
     "nsWindow.cpp",
     "ProcInfo.cpp",
     "ScreenHelperAndroid.cpp",
-    "WebAuthnTokenManager.cpp",
     "WebExecutorSupport.cpp",
 ]
 
