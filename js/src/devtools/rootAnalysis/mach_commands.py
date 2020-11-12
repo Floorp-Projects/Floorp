@@ -163,7 +163,9 @@ class MachCommands(MachCommandBase):
         # Validate the mozconfig settings in case the user overrode the default.
         configure_args = mozconfig["configure_args"]
         if "--enable-ctypes" not in configure_args:
-            raise FailedCommandError("ctypes required in hazard JS shell")
+            raise FailedCommandError(
+                "ctypes required in hazard JS shell, mozconfig=" + mozconfig_path
+            )
 
         # Transmit the mozconfig location to build subprocesses.
         os.environ["MOZCONFIG"] = mozconfig_path
@@ -218,7 +220,9 @@ class MachCommands(MachCommandBase):
             return os.path.join(objdir, info["install_target"], "js")
         except (OSError, KeyError):
             raise FailedCommandError(
-                "must build the JS shell with `mach hazards build-shell` first"
+                """\
+no shell found in %s -- must build the JS shell with `mach hazards build-shell` first"""
+                % objdir
             )
 
     @inherit_command_args("build")
