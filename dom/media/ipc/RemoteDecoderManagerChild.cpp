@@ -247,6 +247,13 @@ RemoteDecoderManagerChild::CreateVideoDecoder(
   }
 
   MOZ_ASSERT(aLocation != RemoteDecodeIn::Unspecified);
+
+  if (!aParams.mKnowsCompositor && aLocation == RemoteDecodeIn::GpuProcess) {
+    // We don't have an image bridge; don't attempt to decode in the GPU
+    // process.
+    return nullptr;
+  }
+
   RefPtr<RemoteVideoDecoderChild> child;
   MediaResult result(NS_ERROR_DOM_MEDIA_CANCELED);
 
