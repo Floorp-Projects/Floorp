@@ -554,8 +554,12 @@ using namespace mozilla::a11y;
   } else {
     mGeckoAccessible.AsProxy()->Name(title);
   }
-  // remove listmarker for clean label
-  return nsCocoaUtils::ToNSString(Substring(title, 1, title.Length()));
+  // XXX: When parsing outlines built with ul/lu's, we
+  // include the bullet in this description even
+  // though webkit doesn't. Not all outlines are built with
+  // ul/lu's so we can't strip the first character here.
+
+  return nsCocoaUtils::ToNSString(title);
 }
 
 @end
