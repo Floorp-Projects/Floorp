@@ -70,9 +70,10 @@ interface TabTrayInteractor {
     fun onModeRequested(): TabTrayDialogFragmentState.Mode
 
     /**
-     * Called when user clicks on the "set it up" prompt for automatically closing tabs
+     * Called when user clicks on the action button prompt in the info banner CFR for
+     * automatically closing tabs or changing the layout of open tabs.
      */
-    fun onSetUpAutoCloseTabsClicked()
+    fun onGoToTabsSettings()
 
     /**
      * Called when a tab should be opened in the browser.
@@ -173,7 +174,7 @@ class TabTrayFragmentInteractor(private val controller: TabTrayController) : Tab
         controller.handleEnterMultiselect()
     }
 
-    override fun onSetUpAutoCloseTabsClicked() {
-        controller.handleSetUpAutoCloseTabsClicked()
+    override fun onGoToTabsSettings() {
+        controller.handleGoToTabsSettingClicked()
     }
 }

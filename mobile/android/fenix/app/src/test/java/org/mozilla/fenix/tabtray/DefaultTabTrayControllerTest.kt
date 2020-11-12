@@ -315,7 +315,7 @@ class DefaultTabTrayControllerTest {
 
     @Test
     fun handleSetUpAutoCloseTabsClicked() {
-        controller.handleSetUpAutoCloseTabsClicked()
+        controller.handleGoToTabsSettingClicked()
         val directions = TabTrayDialogFragmentDirections.actionGlobalTabSettingsFragment()
 
         verify {

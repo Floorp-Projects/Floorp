@@ -270,7 +270,29 @@ class TabTrayView(
 
         adjustNewTabButtonsForNormalMode()
 
+        @Suppress("ComplexCondition")
         if (
+            view.context.settings().showGridViewInTabsSettings &&
+            view.context.settings().shouldShowGridViewBanner &&
+            view.context.settings().canShowCfr &&
+            tabs.size >= TAB_COUNT_SHOW_CFR
+        ) {
+            InfoBanner(
+                context = view.context,
+                message = view.context.getString(R.string.tab_tray_grid_view_banner_message),
+                dismissText = view.context.getString(R.string.tab_tray_grid_view_banner_negative_button_text),
+                actionText = view.context.getString(R.string.tab_tray_grid_view_banner_positive_button_text),
+                container = view.infoBanner,
+                dismissByHiding = true,
+                dismissAction = { view.context.settings().shouldShowGridViewBanner = false }
+            ) {
+                interactor.onGoToTabsSettings()
+                view.context.settings().shouldShowGridViewBanner = false
+            }.apply {
+                view.infoBanner.visibility = View.VISIBLE
+                showBanner()
+            }
+        } else if (
             view.context.settings().shouldShowAutoCloseTabsBanner &&
             view.context.settings().canShowCfr &&
             tabs.size >= TAB_COUNT_SHOW_CFR
@@ -284,7 +306,7 @@ class TabTrayView(
                 dismissByHiding = true,
                 dismissAction = { view.context.settings().shouldShowAutoCloseTabsBanner = false }
             ) {
-                interactor.onSetUpAutoCloseTabsClicked()
+                interactor.onGoToTabsSettings()
                 view.context.settings().shouldShowAutoCloseTabsBanner = false
             }.apply {
                 view.infoBanner.visibility = View.VISIBLE
@@ -713,7 +735,7 @@ class TabTrayView(
             layoutManager?.scrollToPosition(recyclerViewIndex)
             smoothScrollBy(
                 0,
-                - resources.getDimensionPixelSize(R.dimen.tab_tray_tab_item_height) / 2
+                -resources.getDimensionPixelSize(R.dimen.tab_tray_tab_item_height) / 2
             )
         }
     }

@@ -135,8 +135,8 @@ class TabTrayFragmentInteractorTest {
     }
 
     @Test
-    fun onSetUpAutoCloseTabsClicked() {
-        interactor.onSetUpAutoCloseTabsClicked()
-        verify { controller.handleSetUpAutoCloseTabsClicked() }
+    fun onGoToTabsSettingClicked() {
+        interactor.onGoToTabsSettings()
+        verify { controller.handleGoToTabsSettingClicked() }
     }
 }
