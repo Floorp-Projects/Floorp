@@ -3,42 +3,42 @@
      http://creativecommons.org/publicdomain/zero/1.0/ -->
 <html>
   <meta charset="utf-8">
-  <title>CSS Flexbox Test Reference: Fragmentation of a fixed height single-line column flex container and a fixed height flex item that has overflows</title>
+  <title>CSS Flexbox Test Reference: Fragmentation of a fixed block-size single-line column flex container and a fixed block-size flex item that has overflows</title>
   <link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
   <link rel="author" title="Mozilla" href="http://www.mozilla.org/">
 
   <style>
   .multicol {
-    height: 50px;
-    width: 190px;
+    block-size: 50px;
+    inline-size: 190px;
     column-width: 40px;
     column-fill: auto;
     column-gap: 10px;
     border: 5px solid orange;
-    margin-bottom: 5px; /* Just to separate each sub-testcase visually. */
+    margin-block-end: 5px; /* Just to separate each sub-testcase visually. */
   }
   .flexContainer {
     display: block;
     background: gray;
     /* border-width is 0 by default; some sub-testcases will increase it. */
     border: 0 solid lightgray;
-    /* Height is deliberately made shorter than its flex items. */
-    height: 40px;
+    /* Block-size is deliberately made shorter than its flex items. */
+    block-size: 40px;
   }
   .border-padding {
-    border-width: 10px 0;
-    padding: 5px 0;
+    border-block-width: 10px;
+    padding-block: 5px;
   }
 
   article {
-    width: 30px;
-    /* Height is deliberately made shorter than its <div> child. */
-    height: 70px;
+    inline-size: 30px;
+    /* Block-size is deliberately made shorter than its <div> child. */
+    block-size: 70px;
     background: cyan;
   }
   article > div {
-    width: 20px;
-    height: 140px;
+    inline-size: 20px;
+    block-size: 140px;
     background: magenta;
   }
   </style>
@@ -51,16 +51,16 @@
       </div>
     </div>
 
-    <!-- Test a container with margin-top. -->
+    <!-- Test a container with margin-block-start. -->
     <div class="multicol">
-      <div class="flexContainer" style="margin-top: 25px">
+      <div class="flexContainer" style="margin-block-start: 25px">
         <article><div></div></article>
       </div>
     </div>
 
     <!-- Test a container not at the top of the column/page. -->
     <div class="multicol">
-      <div style="height: 25px"></div>
+      <div style="block-size: 25px"></div>
       <div class="flexContainer">
         <article><div></div></article>
       </div>
