@@ -5,17 +5,12 @@
 /* import-globals-from head_channels.js */
 /* import-globals-from head_cookies.js */
 
-async function http3_setup_tests(failed) {
+async function http3_setup_tests() {
   let env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
   );
 
-  let h3Port;
-  if (!failed) {
-    h3Port = env.get("MOZHTTP3_PORT");
-  } else {
-    h3Port = env.get("MOZHTTP3_PORT_FAILED");
-  }
+  let h3Port = env.get("MOZHTTP3_PORT");
   Assert.notEqual(h3Port, null);
   Assert.notEqual(h3Port, "");
   let h3Route = "foo.example.com:" + h3Port;
