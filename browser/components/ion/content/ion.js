@@ -25,6 +25,10 @@ const { TelemetryController } = ChromeUtils.import(
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+let parserUtils = Cc["@mozilla.org/parserutils;1"].getService(
+  Ci.nsIParserUtils
+);
+
 const PREF_ION_ID = "toolkit.telemetry.pioneerId";
 const PREF_ION_NEW_STUDIES_AVAILABLE =
   "toolkit.telemetry.pioneer-new-studies-available";
@@ -34,8 +38,8 @@ const PREF_ION_COMPLETED_STUDIES =
 /**
  * Remote Settings keys for general content, and available studies.
  */
-const CONTENT_COLLECTION_KEY = "pioneer-content-v1";
-const STUDY_ADDON_COLLECTION_KEY = "pioneer-study-addons-v1";
+const CONTENT_COLLECTION_KEY = "pioneer-content-v2";
+const STUDY_ADDON_COLLECTION_KEY = "pioneer-study-addons-v2";
 
 const STUDY_LEAVE_REASONS = {
   USER_ABANDONED: "user-abandoned",
@@ -45,6 +49,28 @@ const STUDY_LEAVE_REASONS = {
 const PREF_TEST_CACHED_CONTENT = "toolkit.pioneer.testCachedContent";
 const PREF_TEST_CACHED_ADDONS = "toolkit.pioneer.testCachedAddons";
 const PREF_TEST_ADDONS = "toolkit.pioneer.testAddons";
+
+/**
+ * Use the in-tree HTML Sanitizer to ensure that HTML from remote-settings is safe to use.
+ * Note that RS does use content-signing, we're doing this extra step as an in-depth security measure.
+ *
+ * @param {string} htmlString - unsanitized HTML (content-signed by remote-settings)
+ * @returns {DocumentFragment} - sanitized DocumentFragment
+ */
+function sanitizeHtml(htmlString) {
+  const content = document.createElement("div");
+  const contentFragment = parserUtils.parseFragment(
+    htmlString,
+    Ci.nsIParserUtils.SanitizerDropForms |
+      Ci.nsIParserUtils.SanitizerAllowStyle |
+      Ci.nsIParserUtils.SanitizerLogRemovals,
+    false,
+    Services.io.newURI("about:ion"),
+    content
+  );
+
+  return contentFragment;
+}
 
 function showEnrollmentStatus() {
   const ionId = Services.prefs.getStringPref(PREF_ION_ID, null);
@@ -170,7 +196,6 @@ async function showAvailableStudies(cachedAddons) {
       let addon;
       let install;
       if (Cu.isInAutomation) {
-        console.debug(defaultAddon);
         install = {
           install: async () => {
             if (
@@ -264,15 +289,13 @@ async function showAvailableStudies(cachedAddons) {
         `[id=${joinOrLeave}-study-consent]`
       );
 
-      // Clears out any existing children with a single #text node.
+      // Clears out any existing children with a single #text node
       consentText.textContent = "";
-      for (const line of cachedAddon[`${joinOrLeave}StudyConsent`].split(
-        "\n"
-      )) {
-        const li = document.createElement("li");
-        li.textContent = line;
-        consentText.appendChild(li);
-      }
+
+      const contentFragment = sanitizeHtml(
+        cachedAddon[`${joinOrLeave}StudyConsent`]
+      );
+      consentText.appendChild(contentFragment);
 
       dialog.showModal();
       dialog.scrollTop = 0;
@@ -284,25 +307,11 @@ async function showAvailableStudies(cachedAddons) {
 
     const studyDesc = document.createElement("div");
     studyDesc.setAttribute("class", "card-description");
+
+    const contentFragment = sanitizeHtml(cachedAddon.description);
+    studyDesc.appendChild(contentFragment);
+
     study.appendChild(studyDesc);
-
-    const shortDesc = document.createElement("p");
-    shortDesc.textContent = cachedAddon.description;
-    studyDesc.appendChild(shortDesc);
-
-    const privacyPolicyLink = document.createElement("a");
-    privacyPolicyLink.href = cachedAddon.privacyPolicy.spec;
-    privacyPolicyLink.textContent = "privacy policy";
-
-    const privacyPolicy = document.createElement("p");
-    const privacyPolicyStart = document.createElement("span");
-    privacyPolicyStart.textContent = "You can always find the ";
-    privacyPolicy.append(privacyPolicyStart);
-    privacyPolicy.append(privacyPolicyLink);
-    const privacyPolicyEnd = document.createElement("span");
-    privacyPolicyEnd.textContent = " at our website.";
-    privacyPolicy.append(privacyPolicyEnd);
-    studyDesc.appendChild(privacyPolicy);
 
     const studyDataCollected = document.createElement("div");
     studyDataCollected.setAttribute("class", "card-data-collected");
@@ -602,38 +611,26 @@ function removeBadge() {
 
 // Updates Ion HTML page contents from RemoteSettings.
 function updateContents(contents) {
-  for (const section of ["title", "joinIonConsent", "leaveIonConsent"]) {
+  for (const section of [
+    "title",
+    "summary",
+    "details",
+    "data",
+    "joinIonConsent",
+    "leaveIonConsent",
+  ]) {
     if (contents && section in contents) {
       // Generate a corresponding dom-id style ID for a camel-case domId style JS attribute.
       // Dynamically set the tag type based on which section is getting updated.
-      let tagType = "li";
-      if (section === "title") {
-        tagType = "p";
-      }
-
       const domId = section
         .split(/(?=[A-Z])/)
         .join("-")
         .toLowerCase();
       // Clears out any existing children with a single #text node.
       document.getElementById(domId).textContent = "";
-      for (const line of contents[section].split("\n")) {
-        const entry = document.createElement(tagType);
-        entry.textContent = line;
-        document.getElementById(domId).appendChild(entry);
-      }
-    }
-  }
-  if ("privacyPolicy" in contents) {
-    const privacyPolicyLinks = document.getElementsByClassName(
-      "privacy-policy"
-    );
 
-    for (const privacyPolicyLink of privacyPolicyLinks) {
-      const privacyPolicyFormattedLink = Services.urlFormatter.formatURL(
-        contents.privacyPolicy
-      );
-      privacyPolicyLink.href = privacyPolicyFormattedLink;
+      const contentFragment = sanitizeHtml(contents[section]);
+      document.getElementById(domId).appendChild(contentFragment);
     }
   }
 }

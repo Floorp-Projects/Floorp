@@ -33,12 +33,14 @@ const PREF_TEST_ADDONS = "toolkit.pioneer.testAddons";
 
 const CACHED_CONTENT = [
   {
-    title: "test title\ntest title line 2",
-    summary: "test summary\ntest summary line 2",
-    details: "1. test details\n2. test details line 2\n3. test details line 3",
-    joinIonConsent: "test join consent\njoin consent line 2",
-    leaveIonConsent: "test leave consent\ntest leave consent line 2",
-    privacyPolicy: "http://localhost",
+    title: "<b>test title</b><p>test title line 2</p>",
+    summary: "<p>test summary</p>test summary line 2",
+    details:
+      "<ol><li>test details</li><li>test details line 2</li><li>test details line</li></ol>",
+    data: "<b>test data</b>",
+    joinIonConsent: "<p>test join consent</p><p>join consent line 2</p>",
+    leaveIonConsent:
+      "<p>test leave consent</p><p>test leave consent line 2</p>",
   },
 ];
 
@@ -73,8 +75,8 @@ const CACHED_ADDONS = [
     },
     isDefault: false,
     studyEnded: true,
-    joinStudyConsent: "test123",
-    leaveStudyConsent: "test345",
+    joinStudyConsent: "<b>test123</b>",
+    leaveStudyConsent: `<a href="test345">test345</a>`,
   },
   {
     addon_id: "ion-v2-default-example@mozilla.org",
@@ -557,8 +559,8 @@ add_task(async function testAboutPage() {
         await joinDialogOpen;
 
         ok(
-          content.document.getElementById("join-study-consent").textContent ==
-            cachedAddon.joinStudyConsent,
+          content.document.getElementById("join-study-consent").innerHTML ==
+            `${cachedAddon.joinStudyConsent}`,
           "Join consent text matches remote settings data."
         );
 
@@ -625,8 +627,8 @@ add_task(async function testAboutPage() {
         await leaveDialogOpen;
 
         ok(
-          content.document.getElementById("leave-study-consent").textContent ==
-            cachedAddon.leaveStudyConsent,
+          content.document.getElementById("leave-study-consent").innerHTML ==
+            `${cachedAddon.leaveStudyConsent}`,
           "Leave consent text matches remote settings data."
         );
 
@@ -965,10 +967,71 @@ add_task(async function testContentReplacement() {
     },
     async function taskFn(browser) {
       // Check that text was updated from Remote Settings.
+      console.log("debug:", content.document.getElementById("title").innerHTML);
       ok(
-        content.document.getElementById("title").textContent ==
-          "test titletest title line 2",
+        content.document.getElementById("title").innerHTML ==
+          "<b>test title</b><p>test title line 2</p>",
         "Title was replaced correctly."
+      );
+      ok(
+        content.document.getElementById("summary").innerHTML ==
+          "<p>test summary</p>test summary line 2",
+        "Summary was replaced correctly."
+      );
+      ok(
+        content.document.getElementById("details").innerHTML ==
+          "<ol><li>test details</li><li>test details line 2</li><li>test details line</li></ol>",
+        "Details was replaced correctly."
+      );
+      ok(
+        content.document.getElementById("data").innerHTML == "<b>test data</b>",
+        "Data was replaced correctly."
+      );
+      ok(
+        content.document.getElementById("join-ion-consent").innerHTML ==
+          "<p>test join consent</p><p>join consent line 2</p>",
+        "Join consent was replaced correctly."
+      );
+      ok(
+        content.document.getElementById("leave-ion-consent").innerHTML ==
+          "<p>test leave consent</p><p>test leave consent line 2</p>",
+        "Leave consent was replaced correctly."
+      );
+    }
+  );
+});
+
+add_task(async function testBadContentReplacement() {
+  const cachedContent = JSON.stringify([
+    {
+      joinIonConsent: "<script>alert('failed')</script>",
+      leaveIonConsent: `<a href="blob:blah">blob</a>`,
+    },
+  ]);
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [PREF_TEST_CACHED_CONTENT, cachedContent],
+      [PREF_TEST_ADDONS, "[]"],
+    ],
+    clear: [[PREF_ION_ID, ""]],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:ion",
+      gBrowser,
+    },
+    async function taskFn(browser) {
+      // Check that text was updated from Remote Settings.
+      ok(
+        content.document.getElementById("join-ion-consent").innerHTML == "",
+        "Script tags are skipped."
+      );
+      ok(
+        content.document.getElementById("leave-ion-consent").innerHTML ==
+          "<a>blob</a>",
+        "Bad HREFs are stripped."
       );
     }
   );
