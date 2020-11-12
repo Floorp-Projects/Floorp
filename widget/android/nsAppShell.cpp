@@ -72,6 +72,7 @@
 #include "Telemetry.h"
 #include "WebExecutorSupport.h"
 #include "Base64UtilsSupport.h"
+#include "WebAuthnTokenManager.h"
 
 #ifdef DEBUG_ANDROID_EVENTS
 #  define EVLOG(args...) ALOG(args)
