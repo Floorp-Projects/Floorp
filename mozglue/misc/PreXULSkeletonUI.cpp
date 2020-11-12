@@ -86,10 +86,8 @@ static int sNonClientHorizontalMargins = 0;
 static uint32_t sDpi = 0;
 
 // Color values needed by the animation loop
-static uint32_t sAnimationColor;
+static uint32_t sBackgroundColor;
 static uint32_t sToolbarForegroundColor;
-
-static ThemeMode sTheme = ThemeMode::Invalid;
 
 typedef BOOL(WINAPI* EnableNonClientDpiScalingProc)(HWND);
 static EnableNonClientDpiScalingProc sEnableNonClientDpiScaling = NULL;
@@ -149,7 +147,6 @@ static const wchar_t* sUrlbarCSSRegSuffix = L"|UrlbarCSSSpan";
 static const wchar_t* sCssToDevPixelScalingRegSuffix = L"|CssToDevPixelScaling";
 static const wchar_t* sSearchbarRegSuffix = L"|SearchbarCSSSpan";
 static const wchar_t* sSpringsCSSRegSuffix = L"|SpringsCSSSpan";
-static const wchar_t* sThemeRegSuffix = L"|Theme";
 
 std::wstring GetRegValueName(const wchar_t* prefix, const wchar_t* suffix) {
   std::wstring result(prefix);
@@ -204,8 +201,7 @@ int CSSToDevPixels(int cssPixels, double scaling) {
 
 void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
                     CSSPixelSpan searchbarCSSSpan,
-                    const Vector<CSSPixelSpan>& springs,
-                    const ThemeColors& currentTheme) {
+                    const Vector<CSSPixelSpan>& springs) {
   // NOTE: we opt here to paint a pixel buffer for the application chrome by
   // hand, without using native UI library methods. Why do we do this?
   //
@@ -227,8 +223,22 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   // manipulating raw pixels should not be *too* hard to maintain and
   // understand so long as it is only painting such simple shapes.
 
-  sAnimationColor = currentTheme.animationColor;
-  sToolbarForegroundColor = currentTheme.toolbarForegroundColor;
+  // NOTE: these could be constants, but eventually they won't be, and they will
+  // need to be set here.
+  // --toolbar-non-lwt-bgcolor in browser.css
+  sBackgroundColor = 0xf9f9fa;
+  // We define this, but it will need to differ based on theme
+  sToolbarForegroundColor = 0xe5e5e5;
+
+  // found in browser-aero.css ":root[tabsintitlebar]:not(:-moz-lwtheme)"
+  // (set to "hsl(235,33%,19%)")
+  uint32_t tabBarColor = 0x202340;
+  // --chrome-content-separator-color in browser.css
+  uint32_t chromeContentDividerColor = 0xe2e1e3;
+  // controlled by css variable --tab-line-color
+  uint32_t tabLineColor = 0x0a75d3;
+  // controlled by css variable --toolbar-color
+  uint32_t urlbarColor = 0xffffff;
 
   int chromeHorMargin = CSSToDevPixels(2, sCSSToDevPixelScaling);
   int verticalOffset = sMaximized ? sNonClientVerticalMargins : 0;
@@ -298,7 +308,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
 
   // The (traditionally dark blue on Windows) background of the tab bar.
   ColorRect tabBar = {};
-  tabBar.color = currentTheme.tabBarColor;
+  tabBar.color = tabBarColor;
   tabBar.x = 0;
   tabBar.y = topBorder.height;
   tabBar.width = sWindowWidth;
@@ -309,7 +319,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
 
   // The blue highlight at the top of the initial selected tab
   ColorRect tabLine = {};
-  tabLine.color = currentTheme.tabLineColor;
+  tabLine.color = tabLineColor;
   tabLine.x = titlebarSpacerWidth;
   tabLine.y = topBorder.height;
   tabLine.width = selectedTabWidth;
@@ -320,7 +330,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
 
   // The initial selected tab
   ColorRect selectedTab = {};
-  selectedTab.color = currentTheme.backgroundColor;
+  selectedTab.color = sBackgroundColor;
   selectedTab.x = titlebarSpacerWidth;
   selectedTab.y = tabLine.y + tabLineHeight;
   selectedTab.width = selectedTabWidth;
@@ -342,7 +352,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
 
   // The toolbar background
   ColorRect toolbar = {};
-  toolbar.color = currentTheme.backgroundColor;
+  toolbar.color = sBackgroundColor;
   toolbar.x = 0;
   toolbar.y = tabBar.y + tabBarHeight;
   toolbar.width = sWindowWidth;
@@ -353,7 +363,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
 
   // The single-pixel divider line below the toolbar
   ColorRect chromeContentDivider = {};
-  chromeContentDivider.color = currentTheme.chromeContentDividerColor;
+  chromeContentDivider.color = chromeContentDividerColor;
   chromeContentDivider.x = 0;
   chromeContentDivider.y = toolbar.y + toolbar.height;
   chromeContentDivider.width = sWindowWidth;
@@ -364,7 +374,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
 
   // The urlbar
   ColorRect urlbar = {};
-  urlbar.color = currentTheme.urlbarColor;
+  urlbar.color = urlbarColor;
   urlbar.x = CSSToDevPixels(urlbarCSSSpan.start, sCSSToDevPixelScaling) +
              horizontalOffset;
   urlbar.y = tabBar.y + tabBarHeight + urlbarTopOffset;
@@ -391,7 +401,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   bool hasSearchbar = searchbarCSSSpan.start != 0 && searchbarCSSSpan.end != 0;
   ColorRect searchbarRect = {};
   if (hasSearchbar == true) {
-    searchbarRect.color = currentTheme.urlbarColor;
+    searchbarRect.color = urlbarColor;
     searchbarRect.x =
         CSSToDevPixels(searchbarCSSSpan.start, sCSSToDevPixelScaling) +
         horizontalOffset;
@@ -540,7 +550,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
 
   // Then, we just fill the rest with FillRect
   RECT rect = {0, sTotalChromeHeight, (LONG)sWindowWidth, (LONG)sWindowHeight};
-  HBRUSH brush = sCreateSolidBrush(currentTheme.backgroundColor);
+  HBRUSH brush = sCreateSolidBrush(sBackgroundColor);
   sFillRect(hdc, &rect, brush);
 
   scopeExit.release();
@@ -574,7 +584,7 @@ DWORD WINAPI AnimateSkeletonUI(void* aUnused) {
   int animationWidth = CSSToDevPixels(80, sCSSToDevPixelScaling);
   UniquePtr<uint32_t[]> animationLookup =
       MakeUnique<uint32_t[]>(animationWidth);
-  uint32_t animationColor = sAnimationColor;
+  uint32_t animationColor = sBackgroundColor;
   NormalizedRGB rgbBlend = UintToRGB(animationColor);
 
   // Build the first half of the lookup table
@@ -750,86 +760,6 @@ LRESULT WINAPI PreXULSkeletonUIProc(HWND hWnd, UINT msg, WPARAM wParam,
   }
 
   return ::DefWindowProcW(hWnd, msg, wParam, lParam);
-}
-
-bool IsSystemDarkThemeEnabled() {
-  DWORD result;
-  HKEY themeKey;
-  DWORD dataLen = sizeof(uint32_t);
-  LPCWSTR keyName =
-      L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
-
-  result = ::RegOpenKeyExW(HKEY_CURRENT_USER, keyName, 0, KEY_READ, &themeKey);
-  if (result != ERROR_SUCCESS) {
-    return false;
-  }
-  AutoCloseRegKey closeKey(themeKey);
-
-  uint32_t lightThemeEnabled;
-  result = ::RegGetValueW(
-      themeKey, nullptr, L"AppsUseLightTheme", RRF_RT_REG_DWORD, nullptr,
-      reinterpret_cast<PBYTE>(&lightThemeEnabled), &dataLen);
-  if (result != ERROR_SUCCESS) {
-    return false;
-  }
-  return !lightThemeEnabled;
-}
-
-ThemeColors GetTheme(ThemeMode themeId) {
-  ThemeColors theme = {};
-  switch (themeId) {
-    case ThemeMode::Dark:
-      // Dark theme or default theme when in dark mode
-
-      // controlled by css variable --toolbar-bgcolor
-      theme.backgroundColor = 0x323234;
-      theme.toolbarForegroundColor = 0x6a6a6b;
-      // controlled by css variable --lwt-accent-color
-      theme.tabBarColor = 0x0c0c0d;
-      // controlled by --toolbar-non-lwt-textcolor in browser.css
-      theme.chromeContentDividerColor = 0x0c0c0d;
-      // controlled by css variable --tab-line-color
-      theme.tabLineColor = 0x0a84ff;
-      // controlled by css variable --lwt-toolbar-field-background-colo
-      theme.urlbarColor = 0x474749;
-      theme.animationColor = theme.urlbarColor;
-      return theme;
-    case ThemeMode::Light:
-      // Light theme
-
-      // controlled by --toolbar-bgcolor
-      theme.backgroundColor = 0xf5f6f7;
-      theme.toolbarForegroundColor = 0xd9dadb;
-      // controlled by css variable --lwt-accent-color
-      theme.tabBarColor = 0xe3e4e6;
-      // --chrome-content-separator-color in browser.css
-      theme.chromeContentDividerColor = 0x9e9fa1;
-      // controlled by css variable --tab-line-color
-      theme.tabLineColor = 0x0a84ff;
-      // by css variable --lwt-toolbar-field-background-color
-      theme.urlbarColor = 0xffffff;
-      theme.animationColor = theme.backgroundColor;
-      return theme;
-    case ThemeMode::Default:
-    default:
-      // Default theme when not in dark mode
-      MOZ_ASSERT(themeId == ThemeMode::Default);
-
-      // --toolbar-non-lwt-bgcolor in browser.css
-      theme.backgroundColor = 0xf9f9fa;
-      theme.toolbarForegroundColor = 0xe5e5e5;
-      // found in browser-aero.css ":root[tabsintitlebar]:not(:-moz-lwtheme)"
-      // (set to "hsl(235,33%,19%)")
-      theme.tabBarColor = 0x202340;
-      // --chrome-content-separator-color in browser.css
-      theme.chromeContentDividerColor = 0xe2e1e3;
-      // controlled by css variable --tab-line-color
-      theme.tabLineColor = 0x0a84ff;
-      // controlled by css variable --toolbar-color
-      theme.urlbarColor = 0xffffff;
-      theme.animationColor = theme.backgroundColor;
-      return theme;
-  }
 }
 
 bool OpenPreXULSkeletonUIRegKey(HKEY& key) {
@@ -1291,23 +1221,6 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
     }
   }
 
-  dataLen = sizeof(uint32_t);
-  uint32_t theme;
-  result = ::RegGetValueW(
-      regKey, nullptr, GetRegValueName(binPath.get(), sThemeRegSuffix).c_str(),
-      RRF_RT_REG_DWORD, nullptr, reinterpret_cast<PBYTE>(&theme), &dataLen);
-  if (result != ERROR_SUCCESS) {
-    printf_stderr("Error reading theme %lu\n", GetLastError());
-    return;
-  }
-  ThemeMode themeMode = static_cast<ThemeMode>(theme);
-  if (themeMode == ThemeMode::Default) {
-    if (IsSystemDarkThemeEnabled() == true) {
-      themeMode = ThemeMode::Dark;
-    }
-  }
-  ThemeColors currentTheme = GetTheme(themeMode);
-
   sPreXULSkeletonUIWindow =
       sCreateWindowExW(kPreXULSkeletonUIWindowStyleEx, L"MozillaWindowClass",
                        L"", windowStyle, screenX, screenY, windowWidth,
@@ -1348,8 +1261,8 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
   sSetWindowPos(sPreXULSkeletonUIWindow, 0, 0, 0, 0, 0,
                 SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOMOVE |
                     SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
-  DrawSkeletonUI(sPreXULSkeletonUIWindow, urlbar, searchbar, springs,
-                 currentTheme);
+  DrawSkeletonUI(sPreXULSkeletonUIWindow, urlbar, searchbar, springs);
+
   if (sAnimatedRects) {
     sPreXULSKeletonUIAnimationThread = ::CreateThread(
         nullptr, 256 * 1024, AnimateSkeletonUI, nullptr, 0, nullptr);
@@ -1535,35 +1448,6 @@ MFBT_API void SetPreXULSkeletonUIEnabledIfAllowed(bool value) {
   }
 
   sPreXULSkeletonUIEnabled = value;
-}
-
-MFBT_API void SetPreXULSkeletonUIThemeId(ThemeMode theme) {
-  if (!sPreXULSkeletonUIEnabled) {
-    return;
-  }
-
-  if (theme == sTheme) {
-    return;
-  }
-
-  HKEY regKey;
-  if (!OpenPreXULSkeletonUIRegKey(regKey)) {
-    return;
-  }
-  AutoCloseRegKey closeKey(regKey);
-
-  UniquePtr<wchar_t[]> binPath = GetBinaryPath();
-  uint32_t themeId = (uint32_t)theme;
-  LSTATUS result;
-  result = ::RegSetValueExW(
-      regKey, GetRegValueName(binPath.get(), sThemeRegSuffix).c_str(), 0,
-      REG_DWORD, reinterpret_cast<PBYTE>(&themeId), sizeof(themeId));
-  if (result != ERROR_SUCCESS) {
-    printf_stderr("Failed persisting theme to Windows registry\n");
-    sTheme = ThemeMode::Invalid;
-    return;
-  }
-  sTheme = static_cast<ThemeMode>(themeId);
 }
 
 MFBT_API void PollPreXULSkeletonUIEvents() {
