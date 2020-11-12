@@ -5823,6 +5823,11 @@
   value: -18.5f
   mirror: always
 
+- name: layout.accessiblecaret.transition-duration
+  type: float
+  value: 250.0f
+  mirror: always
+
 # Simulate long tap events to select words. Mainly used in manual testing
 # with mouse.
 - name: layout.accessiblecaret.use_long_tap_injector
