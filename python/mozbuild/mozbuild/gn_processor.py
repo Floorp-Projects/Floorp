@@ -239,7 +239,7 @@ def process_gn_config(
             ext = mozpath.splitext(f)[-1]
             extensions.add(ext)
             src = "%s/%s" % (project_relsrcdir, f)
-            if ext == ".h":
+            if ext == ".h" or ext == ".inc":
                 continue
             elif ext == ".def":
                 context_attrs["SYMBOLS_FILE"] = src
