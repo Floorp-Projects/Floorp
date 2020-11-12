@@ -11,18 +11,18 @@
 namespace webrtc {
 
 class DesktopDeviceInfoMac : public DesktopDeviceInfoImpl {
-public:
+ public:
   DesktopDeviceInfoMac();
   ~DesktopDeviceInfoMac();
 
-protected:
-  //DesktopDeviceInfo Interfaces
+ protected:
+  // DesktopDeviceInfo Interfaces
   virtual void InitializeScreenList() override;
 
-private:
+ private:
   void MultiMonitorScreenshare();
 };
 
-}// namespace webrtc
+}  // namespace webrtc
 
-#endif //WEBRTC_MODULES_DESKTOP_CAPTURE_MAC_DEVICE_INFO_H_
+#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_MAC_DEVICE_INFO_H_

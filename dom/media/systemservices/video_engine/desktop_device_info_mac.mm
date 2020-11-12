@@ -15,24 +15,20 @@ namespace webrtc {
 // Helper type to track the number of window instances for a given process
 typedef std::map<ProcessId, uint32_t> AppWindowCountMap;
 
-
-DesktopDeviceInfo * DesktopDeviceInfoImpl::Create() {
-  DesktopDeviceInfoMac * pDesktopDeviceInfo = new DesktopDeviceInfoMac();
-  if (pDesktopDeviceInfo && pDesktopDeviceInfo->Init() != 0){
+DesktopDeviceInfo* DesktopDeviceInfoImpl::Create() {
+  DesktopDeviceInfoMac* pDesktopDeviceInfo = new DesktopDeviceInfoMac();
+  if (pDesktopDeviceInfo && pDesktopDeviceInfo->Init() != 0) {
     delete pDesktopDeviceInfo;
     pDesktopDeviceInfo = NULL;
   }
   return pDesktopDeviceInfo;
 }
 
-DesktopDeviceInfoMac::DesktopDeviceInfoMac() {
-}
+DesktopDeviceInfoMac::DesktopDeviceInfoMac() {}
 
-DesktopDeviceInfoMac::~DesktopDeviceInfoMac() {
-}
+DesktopDeviceInfoMac::~DesktopDeviceInfoMac() {}
 
-void DesktopDeviceInfoMac::MultiMonitorScreenshare()
-{
+void DesktopDeviceInfoMac::MultiMonitorScreenshare() {
 #if !defined(MULTI_MONITOR_SCREENSHARE)
   DesktopDisplayDevice* desktop_device_info = new DesktopDisplayDevice;
   if (desktop_device_info) {
@@ -71,8 +67,6 @@ void DesktopDeviceInfoMac::MultiMonitorScreenshare()
 #endif
 }
 
-void DesktopDeviceInfoMac::InitializeScreenList() {
-  MultiMonitorScreenshare();
-}
+void DesktopDeviceInfoMac::InitializeScreenList() { MultiMonitorScreenshare(); }
 
-} //namespace webrtc
+}  // namespace webrtc
