@@ -2,19 +2,15 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const TEST_PAGE_BASENAME = "contentSearchUI.html";
-const TEST_CONTENT_SCRIPT_BASENAME = "contentSearchUI.js";
-const TEST_ENGINE_PREFIX = "browser_searchSuggestionEngine";
-const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
-const TEST_ENGINE_2_BASENAME = "searchSuggestionEngine2.xml";
+const TEST_ENGINE1_NAME = "searchSuggestionEngine1";
+const TEST_ENGINE2_NAME = "searchSuggestionEngine2";
 
 const TEST_MSG = "ContentSearchUIControllerTest";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  ContentSearch: "resource:///actors/ContentSearchParent.jsm",
   FormHistoryTestUtils: "resource://testing-common/FormHistoryTestUtils.jsm",
-  SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
 });
-
-SearchTestUtils.init(Assert, registerCleanupFunction);
 
 requestLongerTimeout(2);
 
@@ -198,8 +194,64 @@ async function msg(type, data = null) {
   return getCurrentState();
 }
 
+/**
+ * Focusses the in-content search bar.
+ *
+ * @returns {Promise}
+ *   A promise that is resolved once the focus is complete.
+ */
+function focusContentSearchBar() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    content.gController.input.focus();
+  });
+}
+
+let extension1;
+let extension2;
+let currentEngineName;
+
+add_task(async function setup() {
+  let originalOnMessageSearch = ContentSearch._onMessageSearch;
+  let originalOnMessageManageEngines = ContentSearch._onMessageManageEngines;
+
+  ContentSearch._onMessageSearch = () => {};
+  ContentSearch._onMessageManageEngines = () => {};
+
+  currentEngineName = (await Services.search.getDefault()).name;
+  let currentEngines = await Services.search.getVisibleEngines();
+
+  extension1 = await SearchTestUtils.installSearchExtension({
+    id: TEST_ENGINE1_NAME,
+    name: TEST_ENGINE1_NAME,
+    suggest_url:
+      "https://example.com/browser/browser/components/search/test/browser/searchSuggestionEngine.sjs",
+    suggest_url_get_params: "query={searchTerms}",
+  });
+  extension2 = await SearchTestUtils.installSearchExtension({
+    id: TEST_ENGINE2_NAME,
+    name: TEST_ENGINE2_NAME,
+    suggest_url:
+      "https://example.com/browser/browser/components/search/test/browser/searchSuggestionEngine.sjs",
+    suggest_url_get_params: "query={searchTerms}",
+  });
+
+  let engine1 = Services.search.getEngineByName(TEST_ENGINE1_NAME);
+
+  await Services.search.setDefault(engine1);
+  for (let engine of currentEngines) {
+    await Services.search.removeEngine(engine);
+  }
+
+  registerCleanupFunction(async () => {
+    ContentSearch._onMessageSearch = originalOnMessageSearch;
+    ContentSearch._onMessageManageEngines = originalOnMessageManageEngines;
+  });
+
+  await promiseTab();
+});
+
 add_task(async function emptyInput() {
-  await setUp();
+  await focusContentSearchBar();
 
   let state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
@@ -211,7 +263,7 @@ add_task(async function emptyInput() {
 });
 
 add_task(async function blur() {
-  await setUp();
+  await focusContentSearchBar();
 
   let state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
@@ -226,7 +278,7 @@ add_task(async function blur() {
 });
 
 add_task(async function upDownKeys() {
-  await setUp();
+  await focusContentSearchBar();
 
   let state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
@@ -267,7 +319,7 @@ add_task(async function upDownKeys() {
 });
 
 add_task(async function rightLeftKeys() {
-  await setUp();
+  await focusContentSearchBar();
 
   let state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
@@ -318,7 +370,7 @@ add_task(async function rightLeftKeys() {
 });
 
 add_task(async function tabKey() {
-  await setUp();
+  await focusContentSearchBar();
   await msg("key", { key: "x", waitForSuggestions: true });
 
   let state = await msg("key", "VK_TAB");
@@ -333,7 +385,7 @@ add_task(async function tabKey() {
   state = await msg("key", { key: "VK_TAB", modifiers: { shiftKey: true } });
   checkState(state, "x", [], -1);
 
-  await setUp();
+  await focusContentSearchBar();
 
   await msg("key", { key: "VK_DOWN", waitForSuggestions: true });
 
@@ -342,7 +394,7 @@ add_task(async function tabKey() {
   }
   checkState(state, "x", [], -1);
 
-  await setUp();
+  await focusContentSearchBar();
 
   await msg("key", { key: "VK_DOWN", waitForSuggestions: true });
   state = await msg("key", "VK_DOWN");
@@ -376,7 +428,7 @@ add_task(async function tabKey() {
 });
 
 add_task(async function cycleSuggestions() {
-  await setUp();
+  await focusContentSearchBar();
   await msg("key", { key: "x", waitForSuggestions: true });
 
   let cycle = async function(aSelectedButtonIndex) {
@@ -426,7 +478,7 @@ add_task(async function cycleSuggestions() {
 });
 
 add_task(async function cycleOneOffs() {
-  await setUp();
+  await focusContentSearchBar();
   await msg("key", { key: "x", waitForSuggestions: true });
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
@@ -488,7 +540,7 @@ add_task(async function cycleOneOffs() {
 });
 
 add_task(async function mouse() {
-  await setUp();
+  await focusContentSearchBar();
 
   let state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
@@ -509,7 +561,7 @@ add_task(async function mouse() {
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
   await msg("reset");
-  await setUp();
+  await focusContentSearchBar();
 
   state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
@@ -527,7 +579,7 @@ add_task(async function mouse() {
 });
 
 add_task(async function formHistory() {
-  await setUp();
+  await focusContentSearchBar();
 
   // Type an X and add it to form history.
   let state = await msg("key", { key: "x", waitForSuggestions: true });
@@ -602,7 +654,7 @@ add_task(async function formHistory() {
 });
 
 add_task(async function cycleEngines() {
-  await setUp();
+  await focusContentSearchBar();
   await msg("key", { key: "VK_DOWN", waitForSuggestions: true });
 
   let promiseEngineChange = function(newEngineName) {
@@ -619,13 +671,11 @@ add_task(async function cycleEngines() {
     });
   };
 
-  let p = promiseEngineChange(
-    TEST_ENGINE_PREFIX + " " + TEST_ENGINE_2_BASENAME
-  );
+  let p = promiseEngineChange(TEST_ENGINE2_NAME);
   await msg("key", { key: "VK_DOWN", modifiers: { accelKey: true } });
   await p;
 
-  p = promiseEngineChange(TEST_ENGINE_PREFIX + " " + TEST_ENGINE_BASENAME);
+  p = promiseEngineChange(TEST_ENGINE1_NAME);
   await msg("key", { key: "VK_UP", modifiers: { accelKey: true } });
   await p;
 
@@ -633,7 +683,7 @@ add_task(async function cycleEngines() {
 });
 
 add_task(async function search() {
-  await setUp();
+  await focusContentSearchBar();
 
   let modifiers = {};
   ["altKey", "ctrlKey", "metaKey", "shiftKey"].forEach(
@@ -646,7 +696,7 @@ add_task(async function search() {
   await msg("key", { key: "VK_RETURN", modifiers });
   let mesg = await p;
   let eventData = {
-    engineName: TEST_ENGINE_PREFIX + " " + TEST_ENGINE_BASENAME,
+    engineName: TEST_ENGINE1_NAME,
     searchString: "x",
     healthReportKey: "test",
     searchPurpose: "test",
@@ -655,7 +705,7 @@ add_task(async function search() {
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
   await promiseTab();
-  await setUp();
+  await focusContentSearchBar();
 
   // Test typing a query, then selecting a suggestion and pressing enter.
   p = waitForSearch();
@@ -665,7 +715,7 @@ add_task(async function search() {
   await msg("key", { key: "VK_RETURN", modifiers });
   mesg = await p;
   eventData.searchString = "xfoo";
-  eventData.engineName = TEST_ENGINE_PREFIX + " " + TEST_ENGINE_BASENAME;
+  eventData.engineName = TEST_ENGINE1_NAME;
   eventData.selection = {
     index: 1,
     kind: "key",
@@ -673,7 +723,7 @@ add_task(async function search() {
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
   await promiseTab();
-  await setUp();
+  await focusContentSearchBar();
 
   // Test typing a query, then selecting a one-off button and pressing enter.
   p = waitForSearch();
@@ -684,11 +734,11 @@ add_task(async function search() {
   mesg = await p;
   delete eventData.selection;
   eventData.searchString = "x";
-  eventData.engineName = TEST_ENGINE_PREFIX + " " + TEST_ENGINE_2_BASENAME;
+  eventData.engineName = TEST_ENGINE2_NAME;
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
   await promiseTab();
-  await setUp();
+  await focusContentSearchBar();
 
   // Test typing a query and clicking the search engine header.
   p = waitForSearch();
@@ -698,11 +748,11 @@ add_task(async function search() {
   await msg("click", { eltIdx: -1, modifiers });
   mesg = await p;
   eventData.originalEvent = modifiers;
-  eventData.engineName = TEST_ENGINE_PREFIX + " " + TEST_ENGINE_BASENAME;
+  eventData.engineName = TEST_ENGINE1_NAME;
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
   await promiseTab();
-  await setUp();
+  await focusContentSearchBar();
 
   // Test typing a query and then clicking a suggestion.
   await msg("key", { key: "x", waitForSuggestions: true });
@@ -718,7 +768,7 @@ add_task(async function search() {
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
   await promiseTab();
-  await setUp();
+  await focusContentSearchBar();
 
   // Test typing a query and then clicking a one-off button.
   await msg("key", { key: "x", waitForSuggestions: true });
@@ -727,12 +777,12 @@ add_task(async function search() {
   await msg("click", { eltIdx: 3, modifiers });
   mesg = await p;
   eventData.searchString = "x";
-  eventData.engineName = TEST_ENGINE_PREFIX + " " + TEST_ENGINE_2_BASENAME;
+  eventData.engineName = TEST_ENGINE2_NAME;
   delete eventData.selection;
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
   await promiseTab();
-  await setUp();
+  await focusContentSearchBar();
 
   // Test selecting a suggestion, then clicking a one-off without deselecting the
   // suggestion, using the keyboard.
@@ -752,7 +802,7 @@ add_task(async function search() {
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
   await promiseTab();
-  await setUp();
+  await focusContentSearchBar();
 
   // Test searching when using IME composition.
   let state = await msg("startComposition", { data: "" });
@@ -778,12 +828,12 @@ add_task(async function search() {
   mesg = await p;
   eventData.searchString = "x";
   eventData.originalEvent = modifiers;
-  eventData.engineName = TEST_ENGINE_PREFIX + " " + TEST_ENGINE_BASENAME;
+  eventData.engineName = TEST_ENGINE1_NAME;
   delete eventData.selection;
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
   await promiseTab();
-  await setUp();
+  await focusContentSearchBar();
 
   state = await msg("startComposition", { data: "" });
   checkState(state, "", [], -1);
@@ -841,7 +891,7 @@ add_task(async function search() {
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
   await promiseTab();
-  await setUp();
+  await focusContentSearchBar();
 
   // Remove form history entries.
   // Wait for Satchel.
@@ -871,12 +921,12 @@ add_task(async function search() {
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
   await promiseTab();
-  await setUp();
+  await focusContentSearchBar();
   await msg("reset");
 });
 
 add_task(async function settings() {
-  await setUp();
+  await focusContentSearchBar();
   await msg("key", { key: "VK_DOWN", waitForSuggestions: true });
   await msg("key", "VK_UP");
   let p = waitForSearchSettings();
@@ -886,30 +936,16 @@ add_task(async function settings() {
   await msg("reset");
 });
 
-var gDidInitialSetUp = false;
-
-async function setUp(aNoEngine) {
-  if (!gDidInitialSetUp) {
-    let { ContentSearch } = ChromeUtils.import(
-      "resource:///actors/ContentSearchParent.jsm"
-    );
-    let originalOnMessageSearch = ContentSearch._onMessageSearch;
-    let originalOnMessageManageEngines = ContentSearch._onMessageManageEngines;
-    ContentSearch._onMessageSearch = () => {};
-    ContentSearch._onMessageManageEngines = () => {};
-    registerCleanupFunction(() => {
-      ContentSearch._onMessageSearch = originalOnMessageSearch;
-      ContentSearch._onMessageManageEngines = originalOnMessageManageEngines;
-    });
-    await setUpEngines();
-    await promiseTab();
-    gDidInitialSetUp = true;
-  }
-
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    content.gController.input.focus();
-  });
-}
+add_task(async function cleanup() {
+  // Extensions must be unloaded before registerCleanupFunction runs, so
+  // unload them here.
+  Services.search.restoreDefaultEngines();
+  await Services.search.setDefault(
+    Services.search.getEngineByName(currentEngineName)
+  );
+  await extension1.unload();
+  await extension2.unload();
+});
 
 function checkState(
   actualState,
@@ -968,10 +1004,9 @@ async function promiseTab() {
   openTrustedLinkIn(pageURL, "current");
   await loadedPromise;
 
-  const engineName = TEST_ENGINE_PREFIX + " " + TEST_ENGINE_BASENAME;
   await SpecialPowers.spawn(
     window.gBrowser.selectedBrowser,
-    [engineName],
+    [TEST_ENGINE1_NAME],
     engineNameChild => {
       Services.search.defaultEngine = Services.search.getEngineByName(
         engineNameChild
@@ -998,28 +1033,4 @@ async function promiseTab() {
       });
     }
   );
-}
-
-async function setUpEngines() {
-  info("Removing default search engines");
-  let currentEngineName = (await Services.search.getDefault()).name;
-  let currentEngines = await Services.search.getVisibleEngines();
-  info("Adding test search engines");
-  let rootDir = getRootDirectory(gTestPath);
-  let engine1 = await SearchTestUtils.promiseNewSearchEngine(
-    rootDir + TEST_ENGINE_BASENAME
-  );
-  await SearchTestUtils.promiseNewSearchEngine(
-    rootDir + TEST_ENGINE_2_BASENAME
-  );
-  await Services.search.setDefault(engine1);
-  for (let engine of currentEngines) {
-    await Services.search.removeEngine(engine);
-  }
-  registerCleanupFunction(async () => {
-    Services.search.restoreDefaultEngines();
-    await Services.search.setDefault(
-      Services.search.getEngineByName(currentEngineName)
-    );
-  });
 }
