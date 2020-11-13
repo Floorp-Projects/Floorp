@@ -33,15 +33,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
         }
 
         // eslint-disable-next-line no-undef
-        addMessageListener("requestedIndex", () => {
-          doSend("requestedIndex", () => {
-            let win = Services.wm.getMostRecentWindow("navigator:browser");
-            let shistory = win.gBrowser.selectedBrowser.browsingContext.sessionHistory;
-            return shistory.requestedIndex;
-          })
-        });
-
-        // eslint-disable-next-line no-undef
         addMessageListener("evictAllContentViewers", _ => {
           doSend("evictAllContentViewers", () => {
             let win = Services.wm.getMostRecentWindow("navigator:browser");
@@ -50,14 +41,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
           })
         });
       });
-    }
-
-    async function getSHRequestedIndex() {
-      let p = chromeScript.promiseOneMessage("requestedIndex");
-      chromeScript.sendAsyncMessage("requestedIndex");
-      let result = await p;
-      ok(result.success, "Got requested index from parent");
-      return result.value;
     }
 
     async function evictAllContentViewers() {
@@ -74,7 +57,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
         "file_bug462076_2.html",         // Dynamic frames when handling onload
         "file_bug462076_3.html",         // Dynamic frames after onload
         // "file_static_and_dynamic_1.html",// Static and dynamic frames and forward-back
-        "file_bug1300461.html",
         "file_bug1326251.html",
         "file_bug1379762-1.html",
       ];
