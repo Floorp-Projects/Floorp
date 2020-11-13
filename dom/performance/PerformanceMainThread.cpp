@@ -154,6 +154,12 @@ void PerformanceMainThread::AddEntry(nsIHttpChannel* channel,
   AddRawEntry(std::move(performanceTimingData), initiatorType, entryName);
 }
 
+void PerformanceMainThread::AddEntry(const nsString& entryName,
+                                     const nsString& initiatorType,
+                                     UniquePtr<PerformanceTimingData>&& aData) {
+  AddRawEntry(std::move(aData), initiatorType, entryName);
+}
+
 void PerformanceMainThread::AddRawEntry(UniquePtr<PerformanceTimingData> aData,
                                         const nsAString& aInitiatorType,
                                         const nsAString& aEntryName) {

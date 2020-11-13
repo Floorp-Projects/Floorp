@@ -1097,6 +1097,10 @@ class ContentParent final
       const nsCString& aCategory, const bool& aIsFromPrivateWindow,
       const uint64_t& aInnerWindowId, const bool& aIsFromChromeContext);
 
+  mozilla::ipc::IPCResult RecvReportFrameTimingData(
+      uint64_t innerWindowId, const nsString& entryName,
+      const nsString& initiatorType, UniquePtr<PerformanceTimingData>&& aData);
+
   mozilla::ipc::IPCResult RecvScriptErrorWithStack(
       const nsString& aMessage, const nsString& aSourceName,
       const nsString& aSourceLine, const uint32_t& aLineNumber,

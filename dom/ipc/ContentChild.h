@@ -763,6 +763,10 @@ class ContentChild final : public PContentChild,
       const nsCString& aCategory, const bool& aFromPrivateWindow,
       const uint64_t& aInnerWindowId, const bool& aFromChromeContext);
 
+  mozilla::ipc::IPCResult RecvReportFrameTimingData(
+      uint64_t innerWindowId, const nsString& entryName,
+      const nsString& initiatorType, UniquePtr<PerformanceTimingData>&& aData);
+
   mozilla::ipc::IPCResult RecvLoadURI(
       const MaybeDiscarded<BrowsingContext>& aContext,
       nsDocShellLoadState* aLoadState, bool aSetNavigating,
