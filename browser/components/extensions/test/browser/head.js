@@ -269,8 +269,8 @@ async function promiseContentDimensions(browser) {
 
   let dims = await promisePossiblyInaccurateContentDimensions(browser);
   while (
-    browser.clientWidth !== dims.window.innerWidth ||
-    browser.clientHeight !== dims.window.innerHeight
+    browser.clientWidth !== Math.round(dims.window.innerWidth) ||
+    browser.clientHeight !== Math.round(dims.window.innerHeight)
   ) {
     await delay(50);
     dims = await promisePossiblyInaccurateContentDimensions(browser);
