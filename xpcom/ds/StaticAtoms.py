@@ -2294,6 +2294,7 @@ STATIC_ATOMS = [
     Atom("aria_rowindextext", "aria-rowindextext"),
     Atom("aria_rowspan", "aria-rowspan"),
     Atom("aria_valuetext", "aria-valuetext"),
+    Atom("assertive", "assertive"),
     Atom("auto_generated", "auto-generated"),
     Atom("banner", "banner"),
     Atom("checkable", "checkable"),
