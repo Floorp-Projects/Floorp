@@ -59,7 +59,8 @@ UniquePtr<gfxFont> gfxGDIFont::CopyWithAntialiasOption(
 
 bool gfxGDIFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
                            uint32_t aOffset, uint32_t aLength, Script aScript,
-                           bool aVertical, RoundingFlags aRounding,
+                           nsAtom* aLanguage, bool aVertical,
+                           RoundingFlags aRounding,
                            gfxShapedText* aShapedText) {
   if (!mIsValid) {
     NS_WARNING("invalid font! expect incorrect text rendering");
@@ -67,7 +68,7 @@ bool gfxGDIFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
   }
 
   return gfxFont::ShapeText(aDrawTarget, aText, aOffset, aLength, aScript,
-                            aVertical, aRounding, aShapedText);
+                            aLanguage, aVertical, aRounding, aShapedText);
 }
 
 const gfxFont::Metrics& gfxGDIFont::GetHorizontalMetrics() { return *mMetrics; }

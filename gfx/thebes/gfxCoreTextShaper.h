@@ -19,7 +19,7 @@ class gfxCoreTextShaper : public gfxFontShaper {
   virtual ~gfxCoreTextShaper();
 
   bool ShapeText(DrawTarget* aDrawTarget, const char16_t* aText, uint32_t aOffset, uint32_t aLength,
-                 Script aScript, bool aVertical, RoundingFlags aRounding,
+                 Script aScript, nsAtom* aLanguage, bool aVertical, RoundingFlags aRounding,
                  gfxShapedText* aShapedText) override;
 
   // clean up static objects that may have been cached

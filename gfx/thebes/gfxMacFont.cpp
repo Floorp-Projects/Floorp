@@ -142,7 +142,8 @@ gfxMacFont::~gfxMacFont() {
 
 bool gfxMacFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
                            uint32_t aOffset, uint32_t aLength, Script aScript,
-                           bool aVertical, RoundingFlags aRounding,
+                           nsAtom* aLanguage, bool aVertical,
+                           RoundingFlags aRounding,
                            gfxShapedText* aShapedText) {
   if (!mIsValid) {
     NS_WARNING("invalid font! expect incorrect text rendering");
@@ -158,7 +159,7 @@ bool gfxMacFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
       mCoreTextShaper = MakeUnique<gfxCoreTextShaper>(this);
     }
     if (mCoreTextShaper->ShapeText(aDrawTarget, aText, aOffset, aLength,
-                                   aScript, aVertical, aRounding,
+                                   aScript, aLanguage, aVertical, aRounding,
                                    aShapedText)) {
       PostShapingFixup(aDrawTarget, aText, aOffset, aLength, aVertical,
                        aShapedText);
@@ -181,7 +182,7 @@ bool gfxMacFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
   }
 
   return gfxFont::ShapeText(aDrawTarget, aText, aOffset, aLength, aScript,
-                            aVertical, aRounding, aShapedText);
+                            aLanguage, aVertical, aRounding, aShapedText);
 }
 
 gfxFont::RunMetrics gfxMacFont::Measure(const gfxTextRun* aTextRun,

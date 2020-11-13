@@ -308,6 +308,7 @@ class gfxGDIFontList final : public gfxPlatformFontList {
                           nsTArray<FamilyAndGeneric>* aOutput,
                           FindFamiliesFlags aFlags,
                           gfxFontStyle* aStyle = nullptr,
+                          nsAtom* aLanguage = nullptr,
                           gfxFloat aDevToCssSize = 1.0) override;
 
   virtual gfxFontEntry* LookupLocalFont(const nsACString& aFontName,
@@ -328,7 +329,8 @@ class gfxGDIFontList final : public gfxPlatformFontList {
                                       FontListSizes* aSizes) const;
 
  protected:
-  FontFamily GetDefaultFontForPlatform(const gfxFontStyle* aStyle) override;
+  FontFamily GetDefaultFontForPlatform(const gfxFontStyle* aStyle,
+                                       nsAtom* aLanguage = nullptr) override;
 
  private:
   friend class gfxWindowsPlatform;

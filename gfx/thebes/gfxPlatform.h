@@ -393,7 +393,8 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
    * Create a gfxFontGroup based on the given family list and style.
    */
   gfxFontGroup* CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
-                                const gfxFontStyle* aStyle,
+                                const gfxFontStyle* aStyle, nsAtom* aLanguage,
+                                bool aExplicitLanguage,
                                 gfxTextPerfMetrics* aTextPerf,
                                 FontMatchingStats* aFontMatchingStats,
                                 gfxUserFontSet* aUserFontSet,
