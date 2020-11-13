@@ -261,7 +261,6 @@ class GfxConfigManager : public ::testing::Test, public gfxConfigManager {
     mFeatureGPUProcess->EnableByDefault();
 
     mWrCompositorEnabled.emplace(true);
-    mWrQualified = true;
     mWrPartialPresent = true;
     mWrForceAngle = true;
     mWrDCompWinEnabled = true;
@@ -385,10 +384,10 @@ TEST_F(GfxConfigManager, WebRenderEnabledWithDisableHwCompositingNoWr) {
 
 TEST_F(GfxConfigManager, WebRenderDisabledWithDisableHwCompositingNoWr) {
   mDisableHwCompositingNoWr = true;
-  mWrQualified = false;
+  mMockGfxInfo->mStatusWr = nsIGfxInfo::FEATURE_DENIED;
   ConfigureWebRender();
 
-  EXPECT_TRUE(mFeatures.mWrQualified.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrQualified.IsEnabled());
   EXPECT_FALSE(mFeatures.mWr.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrCompositor.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrAngle.IsEnabled());
@@ -402,24 +401,8 @@ TEST_F(GfxConfigManager, WebRenderDisabledWithDisableHwCompositingNoWr) {
 
 TEST_F(GfxConfigManager, WebRenderDisabledWithAllowSoftwareGPUProcess) {
   mDisableHwCompositingNoWr = true;
-  mWrQualified = false;
+  mMockGfxInfo->mStatusWr = nsIGfxInfo::FEATURE_DENIED;
   mGPUProcessAllowSoftware = true;
-  ConfigureWebRender();
-
-  EXPECT_TRUE(mFeatures.mWrQualified.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWr.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrCompositor.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrAngle.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrDComp.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrPartial.IsEnabled());
-  EXPECT_FALSE(mFeatures.mHwCompositing.IsEnabled());
-  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
-  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrSoftware.IsEnabled());
-}
-
-TEST_F(GfxConfigManager, WebRenderQualifiedOverrideDisabled) {
-  mWrQualifiedOverride.emplace(false);
   ConfigureWebRender();
 
   EXPECT_FALSE(mFeatures.mWrQualified.IsEnabled());
@@ -428,7 +411,7 @@ TEST_F(GfxConfigManager, WebRenderQualifiedOverrideDisabled) {
   EXPECT_FALSE(mFeatures.mWrAngle.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrDComp.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrPartial.IsEnabled());
-  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
+  EXPECT_FALSE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrSoftware.IsEnabled());
@@ -581,41 +564,6 @@ TEST_F(GfxConfigManager, WebRenderQualifiedAndBlocklistAllowQualified) {
 }
 
 TEST_F(GfxConfigManager, WebRenderQualifiedAndBlocklistAllowAlways) {
-  mIsNightly = false;
-  mMockGfxInfo->mStatusWr = nsIGfxInfo::FEATURE_ALLOW_ALWAYS;
-  ConfigureWebRender();
-
-  EXPECT_TRUE(mFeatures.mWrQualified.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWr.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrCompositor.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrAngle.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrDComp.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
-  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
-  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
-  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrSoftware.IsEnabled());
-}
-
-TEST_F(GfxConfigManager, WebRenderNotQualifiedAndBlocklistAllowQualified) {
-  mWrQualified = false;
-  mMockGfxInfo->mStatusWr = nsIGfxInfo::FEATURE_ALLOW_QUALIFIED;
-  ConfigureWebRender();
-
-  EXPECT_TRUE(mFeatures.mWrQualified.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWr.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrCompositor.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrAngle.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrDComp.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrPartial.IsEnabled());
-  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
-  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
-  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrSoftware.IsEnabled());
-}
-
-TEST_F(GfxConfigManager, WebRenderNotQualifiedAndBlocklistAllowAlways) {
-  mWrQualified = false;
   mIsNightly = false;
   mMockGfxInfo->mStatusWr = nsIGfxInfo::FEATURE_ALLOW_ALWAYS;
   ConfigureWebRender();
@@ -814,7 +762,7 @@ TEST_F(GfxConfigManager, WebRenderSofwareAndQualified) {
 TEST_F(GfxConfigManager, WebRenderSofwareAndNotQualified) {
   // Enabling software in gfxInfo when we're not qualified
   // results in WR software being enabled instead.
-  mWrQualifiedOverride.emplace(false);
+  mMockGfxInfo->mStatusWr = nsIGfxInfo::FEATURE_DENIED;
   mMockGfxInfo->mStatusWrSoftware = nsIGfxInfo::FEATURE_ALLOW_ALWAYS;
   ConfigureWebRender();
 

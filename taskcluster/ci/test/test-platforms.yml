@@ -227,11 +227,6 @@ windows7-32-qr/opt:
         - web-platform-tests
 
 # win64
-windows10-64-ccov/opt:
-    build-platform: win64-ccov/opt
-    test-sets:
-        - marionette-gpu-tests  # fails on -qr because one test requires WR disabled
-
 windows10-64-ccov-qr/opt:
     build-platform: win64-ccov/opt
     test-sets:
@@ -249,7 +244,6 @@ windows10-64-ccov-qr/opt:
 windows10-64/debug:
     build-platform: win64/debug
     test-sets:
-        - marionette-gpu-tests
         - mochitest-webgpu
         - windows-tests
         - windows10-tests
@@ -262,7 +256,6 @@ windows10-64/opt:
         - desktop-screenshot-capture
         - windows-talos
         - marionette-framescript
-        - marionette-gpu-tests
         - windows-tests
         - windows10-tests
         - web-platform-tests
@@ -291,7 +284,6 @@ windows10-64-shippable/opt:
         - desktop-screenshot-capture
         - windows-talos
         - marionette-framescript
-        - marionette-gpu-tests
         - windows-tests
         - windows10-tests
         - web-platform-tests
@@ -309,7 +301,6 @@ windows10-64-devedition/opt:
     build-platform: win64-devedition/opt
     test-sets:
         - desktop-screenshot-capture
-        - marionette-gpu-tests
         - windows-tests
         - windows10-tests
         - web-platform-tests
