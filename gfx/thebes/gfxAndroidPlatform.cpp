@@ -17,6 +17,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_webgl.h"
+#include "mozilla/widget/AndroidVsync.h"
 
 #include "gfx2DGlue.h"
 #include "gfxFT2FontList.h"
@@ -32,8 +33,6 @@
 #include "ft2build.h"
 #include FT_FREETYPE_H
 #include FT_MODULE_H
-
-#include "mozilla/java/VsyncSourceNatives.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -292,80 +291,57 @@ bool gfxAndroidPlatform::RequiresLinearZoom() {
 
 class AndroidVsyncSource final : public VsyncSource {
  public:
-  class JavaVsyncSupport final
-      : public java::VsyncSource::Natives<JavaVsyncSupport> {
+  class Display final : public VsyncSource::Display,
+                        public widget::AndroidVsync::Observer {
    public:
-    using Base = java::VsyncSource::Natives<JavaVsyncSupport>;
-    using Base::DisposeNative;
-
-    static void NotifyVsync(int64_t aFrameTimeNanos) {
-      // Convert aFrameTimeNanos to a TimeStamp. The value converts trivially to
-      // the internal ticks representation of TimeStamp_posix; both use the
-      // monotonic clock and are in nanoseconds.
-      TimeStamp nativeTime = TimeStamp::FromSystemTime(aFrameTimeNanos);
-
-      // Use the timebase from the frame callback as the vsync time, unless it
-      // is in the future.
-      TimeStamp now = TimeStamp::Now();
-      TimeStamp vsyncTime = nativeTime < now ? nativeTime : now;
-
-      Display& display = GetDisplayInstance();
-      TimeStamp outputTime = vsyncTime + display.GetVsyncRate();
-      display.NotifyVsync(vsyncTime, outputTime);
-    }
-  };
-
-  class Display final : public VsyncSource::Display {
-   public:
-    Display()
-        : mJavaVsync(java::VsyncSource::INSTANCE()), mObservingVsync(false) {
-      JavaVsyncSupport::Init();  // To register native methods.
-
-      float fps = mJavaVsync->GetRefreshRate();
-      mVsyncDuration = TimeDuration::FromMilliseconds(1000.0 / fps);
-    }
-
+    Display() : mAndroidVsync(widget::AndroidVsync::GetInstance()) {}
     ~Display() { DisableVsync(); }
 
     bool IsVsyncEnabled() override {
       MOZ_ASSERT(NS_IsMainThread());
-      MOZ_ASSERT(mJavaVsync);
-
       return mObservingVsync;
     }
 
     void EnableVsync() override {
       MOZ_ASSERT(NS_IsMainThread());
-      MOZ_ASSERT(mJavaVsync);
 
       if (mObservingVsync) {
         return;
       }
-      mObservingVsync = mJavaVsync->ObserveVsync(true);
-      MOZ_ASSERT(mObservingVsync);
+      mAndroidVsync->RegisterObserver(this, widget::AndroidVsync::RENDER);
+      mObservingVsync = true;
     }
 
     void DisableVsync() override {
       MOZ_ASSERT(NS_IsMainThread());
-      MOZ_ASSERT(mJavaVsync);
 
       if (!mObservingVsync) {
         return;
       }
-      mObservingVsync = mJavaVsync->ObserveVsync(false);
-      MOZ_ASSERT(!mObservingVsync);
+      mAndroidVsync->UnregisterObserver(this, widget::AndroidVsync::RENDER);
+      mObservingVsync = false;
     }
 
-    TimeDuration GetVsyncRate() override { return mVsyncDuration; }
+    TimeDuration GetVsyncRate() override {
+      return mAndroidVsync->GetVsyncRate();
+    }
 
-    void Shutdown() override {
-      DisableVsync();
-      mJavaVsync = nullptr;
+    void Shutdown() override { DisableVsync(); }
+
+    // Override for the widget::AndroidVsync::Observer method
+    void OnVsync(const TimeStamp& aTimeStamp) override {
+      // Use the timebase from the frame callback as the vsync time, unless it
+      // is in the future.
+      TimeStamp now = TimeStamp::Now();
+      TimeStamp vsyncTime = aTimeStamp < now ? aTimeStamp : now;
+      TimeStamp outputTime = vsyncTime + GetVsyncRate();
+
+      NotifyVsync(vsyncTime, outputTime);
     }
 
    private:
-    java::VsyncSource::GlobalRef mJavaVsync;
-    bool mObservingVsync;
+    RefPtr<widget::AndroidVsync> mAndroidVsync;
+    bool mObservingVsync = false;
     TimeDuration mVsyncDuration;
   };
 
