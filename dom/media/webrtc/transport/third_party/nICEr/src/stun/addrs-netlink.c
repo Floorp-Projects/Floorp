@@ -94,7 +94,7 @@ static int get_siocgifflags(nr_local_addr *addr) {
 }
 
 static int set_sockaddr(nr_local_addr *addr, struct ifaddrmsg* msg, struct rtattr* rta) {
-  assert(rta->rta_type == IFA_ADDRESS);
+  assert(rta->rta_type == IFA_ADDRESS || rta->rta_type == IFA_LOCAL);
   void *data = RTA_DATA(rta);
   size_t len = RTA_PAYLOAD(rta);
   if (msg->ifa_family == AF_INET) {
@@ -235,15 +235,27 @@ stun_getaddrs_filtered(nr_local_addr addrs[], int maxaddrs, int *count)
                 (struct ifaddrmsg*)NLMSG_DATA(header);
             struct rtattr* rta = IFA_RTA(address_msg);
             ssize_t payload_len = IFA_PAYLOAD(header);
+            bool found = false;
             while (RTA_OK(rta, payload_len)) {
-              if (rta->rta_type == IFA_ADDRESS) {
+              // This is a bit convoluted. IFA_ADDRESS and IFA_LOCAL are the
+              // same thing except when using a POINTTOPOINT interface, in
+              // which case IFA_LOCAL is the local address, and IFA_ADDRESS is
+              // the remote address. In a reasonable world, that would mean we
+              // could just use IFA_LOCAL all the time. Sadly, IFA_LOCAL is not
+              // always set (IPv6 in particular). So, we have to be on the
+              // lookout for both, and prefer IFA_LOCAL when present.
+              if (rta->rta_type == IFA_ADDRESS || rta->rta_type == IFA_LOCAL) {
                 int family = address_msg->ifa_family;
                 if ((family == AF_INET || family == AF_INET6) &&
-                    !stun_ifaddr_is_disallowed_v6(address_msg->ifa_flags)) {
-                  if (stun_convert_netlink(&addrs[*count], address_msg, rta)) {
-                    assert(0);
-                  } else {
-                    ++(*count);
+                    !stun_ifaddr_is_disallowed_v6(address_msg->ifa_flags) &&
+                    !stun_convert_netlink(&addrs[*count], address_msg, rta)) {
+                  found = true;
+                  if (rta->rta_type == IFA_LOCAL) {
+                    // IFA_LOCAL is what we really want; if we find it we're
+                    // done. If this is IFA_ADDRESS instead, we do not proceed
+                    // yet, and allow a subsequent IFA_LOCAL to overwrite what
+                    // we just put in |addrs|.
+                    break;
                   }
                 }
               }
@@ -251,6 +263,10 @@ stun_getaddrs_filtered(nr_local_addr addrs[], int maxaddrs, int *count)
                * to remember how many nr_local_addr we've converted for this
                * ifaddrmsg, and set the label on all of them. */
               rta = RTA_NEXT(rta, payload_len);
+            }
+
+            if (found) {
+              ++(*count);
             }
             break;
           }
