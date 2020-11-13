@@ -39,13 +39,13 @@ async function testResumeRunningAudioContext() {
   });
 
   info(`- wait for 'sound-playing' icon showing -`);
-  await waitForTabPlayingEvent(tab, true);
+  await waitForTabSoundIndicatorAppears(tab);
 
   info(`- resume AudioContext -`);
   await SpecialPowers.spawn(browser, [], resumeAudioContext);
 
   info(`- 'sound-playing' icon should still exist -`);
-  await waitForTabPlayingEvent(tab, true);
+  await waitForTabSoundIndicatorAppears(tab);
 
   info(`- remove tab -`);
   await BrowserTestUtils.removeTab(tab);

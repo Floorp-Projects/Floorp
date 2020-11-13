@@ -5,16 +5,7 @@ if (!gMultiProcessBrowser) {
   PromiseTestUtils.expectUncaughtRejection(/is no longer, usable/);
 }
 
-const PAGE =
-  "https://example.com/browser/toolkit/content/tests/browser/file_webAudio.html";
-
-async function click_icon(tab) {
-  let icon = tab.soundPlayingIcon;
-
-  await hover_icon(icon, document.getElementById("tabbrowser-tab-tooltip"));
-  EventUtils.synthesizeMouseAtCenter(icon, { button: 0 });
-  leave_icon(icon);
-}
+const PAGE = GetTestWebBasedURL("file_webAudio.html");
 
 function start_webAudio() {
   var startButton = content.document.getElementById("start");
@@ -35,7 +26,6 @@ function stop_webAudio() {
 }
 
 add_task(async function setup_test_preference() {
-  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
   await SpecialPowers.pushPrefEnv({
     set: [
       ["media.useAudioChannelService.testing", true],
@@ -54,11 +44,11 @@ add_task(async function mute_web_audio() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- tab should be audible -");
-  await waitForTabPlayingEvent(tab, true);
+  await waitForTabSoundIndicatorAppears(tab);
 
   info("- mute browser -");
   ok(!tab.linkedBrowser.audioMuted, "Audio should not be muted by default");
-  await click_icon(tab);
+  await clickIcon(tab.soundPlayingIcon);
   ok(tab.linkedBrowser.audioMuted, "Audio should be muted now");
 
   info("- stop web audip -");
@@ -69,11 +59,11 @@ add_task(async function mute_web_audio() {
 
   info("- unmute browser -");
   ok(tab.linkedBrowser.audioMuted, "Audio should be muted now");
-  await click_icon(tab);
+  await clickIcon(tab.soundPlayingIcon);
   ok(!tab.linkedBrowser.audioMuted, "Audio should be unmuted now");
 
   info("- tab should be audible -");
-  await waitForTabPlayingEvent(tab, true);
+  await waitForTabSoundIndicatorAppears(tab);
 
   info("- remove tab -");
   BrowserTestUtils.removeTab(tab);
