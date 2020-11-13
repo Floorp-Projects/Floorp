@@ -14,10 +14,6 @@ NS_IMPL_CYCLE_COLLECTION(WebGPUChild)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGPUChild, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGPUChild, Release)
 
-ffi::WGPUByteBuf* ToFFI(ipc::ByteBuf* x) {
-  return reinterpret_cast<ffi::WGPUByteBuf*>(x);
-}
-
 static ffi::WGPUClient* initialize() {
   ffi::WGPUInfrastructure infra = ffi::wgpu_client_new();
   return infra.client;
@@ -376,21 +372,30 @@ RawId WebGPUChild::DeviceCreateShaderModule(
 }
 
 RawId WebGPUChild::DeviceCreateComputePipeline(
-    RawId aSelfId, const dom::GPUComputePipelineDescriptor& aDesc) {
+    RawId aSelfId, const dom::GPUComputePipelineDescriptor& aDesc,
+    nsTArray<RawId>* const aImplicitBindGroupLayoutIds) {
   ffi::WGPUComputePipelineDescriptor desc = {};
   nsCString label, entryPoint;
   if (aDesc.mLabel.WasPassed()) {
     LossyCopyUTF16toASCII(aDesc.mLabel.Value(), label);
     desc.label = label.get();
   }
-  desc.layout = aDesc.mLayout->mId;
+  if (aDesc.mLayout.WasPassed()) {
+    desc.layout = aDesc.mLayout.Value().mId;
+  }
   desc.compute_stage.module = aDesc.mComputeStage.mModule->mId;
   LossyCopyUTF16toASCII(aDesc.mComputeStage.mEntryPoint, entryPoint);
   desc.compute_stage.entry_point = entryPoint.get();
 
   ByteBuf bb;
-  RawId id = ffi::wgpu_client_create_compute_pipeline(mClient, aSelfId, &desc,
-                                                      ToFFI(&bb));
+  RawId implicit_bgl_ids[WGPUMAX_BIND_GROUPS] = {};
+  RawId id = ffi::wgpu_client_create_compute_pipeline(
+      mClient, aSelfId, &desc, ToFFI(&bb), implicit_bgl_ids);
+
+  for (const auto& cur : implicit_bgl_ids) {
+    if (!cur) break;
+    aImplicitBindGroupLayoutIds->AppendElement(cur);
+  }
   if (!SendDeviceAction(aSelfId, std::move(bb))) {
     MOZ_CRASH("IPC failure");
   }
@@ -457,7 +462,8 @@ static ffi::WGPUDepthStencilStateDescriptor ConvertDepthStencilDescriptor(
 }
 
 RawId WebGPUChild::DeviceCreateRenderPipeline(
-    RawId aSelfId, const dom::GPURenderPipelineDescriptor& aDesc) {
+    RawId aSelfId, const dom::GPURenderPipelineDescriptor& aDesc,
+    nsTArray<RawId>* const aImplicitBindGroupLayoutIds) {
   ffi::WGPURenderPipelineDescriptor desc = {};
   nsCString label, vsEntry, fsEntry;
   ffi::WGPUProgrammableStageDescriptor vertexStage = {};
@@ -467,7 +473,10 @@ RawId WebGPUChild::DeviceCreateRenderPipeline(
     LossyCopyUTF16toASCII(aDesc.mLabel.Value(), label);
     desc.label = label.get();
   }
-  desc.layout = aDesc.mLayout->mId;
+  if (aDesc.mLayout.WasPassed()) {
+    desc.layout = aDesc.mLayout.Value().mId;
+  }
+
   vertexStage.module = aDesc.mVertexStage.mModule->mId;
   LossyCopyUTF16toASCII(aDesc.mVertexStage.mEntryPoint, vsEntry);
   vertexStage.entry_point = vsEntry.get();
@@ -537,12 +546,24 @@ RawId WebGPUChild::DeviceCreateRenderPipeline(
   desc.alpha_to_coverage_enabled = aDesc.mAlphaToCoverageEnabled;
 
   ByteBuf bb;
-  RawId id = ffi::wgpu_client_create_render_pipeline(mClient, aSelfId, &desc,
-                                                     ToFFI(&bb));
+  RawId implicit_bgl_ids[WGPUMAX_BIND_GROUPS] = {};
+  RawId id = ffi::wgpu_client_create_render_pipeline(
+      mClient, aSelfId, &desc, ToFFI(&bb), implicit_bgl_ids);
+
+  for (const auto& cur : implicit_bgl_ids) {
+    if (!cur) break;
+    aImplicitBindGroupLayoutIds->AppendElement(cur);
+  }
   if (!SendDeviceAction(aSelfId, std::move(bb))) {
     MOZ_CRASH("IPC failure");
   }
   return id;
+}
+
+ipc::IPCResult WebGPUChild::RecvDropAction(const ipc::ByteBuf& aByteBuf) {
+  const auto* byteBuf = ToFFI(&aByteBuf);
+  ffi::wgpu_client_drop_action(mClient, byteBuf);
+  return IPC_OK();
 }
 
 ipc::IPCResult WebGPUChild::RecvFreeAdapter(RawId id) {

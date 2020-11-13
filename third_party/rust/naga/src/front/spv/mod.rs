@@ -29,7 +29,7 @@ use crate::{
 };
 
 use num_traits::cast::FromPrimitive;
-use std::{convert::TryInto, num::NonZeroU32};
+use std::{convert::TryInto, num::NonZeroU32, path::PathBuf};
 
 pub const SUPPORTED_CAPABILITIES: &[spirv::Capability] = &[
     spirv::Capability::Shader,
@@ -304,6 +304,11 @@ pub struct Assignment {
     value: Handle<crate::Expression>,
 }
 
+#[derive(Clone, Debug, Default)]
+pub struct Options {
+    pub flow_graph_dump_prefix: Option<PathBuf>,
+}
+
 pub struct Parser<I> {
     data: I,
     state: ModuleState,
@@ -325,10 +330,11 @@ pub struct Parser<I> {
     lookup_function: FastHashMap<spirv::Word, Handle<crate::Function>>,
     lookup_entry_point: FastHashMap<spirv::Word, EntryPoint>,
     deferred_function_calls: Vec<DeferredFunctionCall>,
+    options: Options,
 }
 
 impl<I: Iterator<Item = u32>> Parser<I> {
-    pub fn new(data: I) -> Self {
+    pub fn new(data: I, options: &Options) -> Self {
         Parser {
             data,
             state: ModuleState::Empty,
@@ -349,6 +355,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             lookup_function: FastHashMap::default(),
             lookup_entry_point: FastHashMap::default(),
             deferred_function_calls: Vec::new(),
+            options: options.clone(),
         }
     }
 
@@ -547,8 +554,8 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     let init = if inst.wc > 4 {
                         inst.expect(5)?;
                         let init_id = self.next()?;
-                        let lexp = self.lookup_expression.lookup(init_id)?;
-                        Some(lexp.handle)
+                        let lconst = self.lookup_constant.lookup(init_id)?;
+                        Some(lconst.handle)
                     } else {
                         None
                     };
@@ -852,6 +859,38 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         },
                     );
                 }
+                // Bitwise instructions
+                Op::Not => {
+                    inst.expect(4)?;
+                    self.parse_expr_unary_op(expressions, crate::UnaryOperator::Not)?;
+                }
+                Op::BitwiseOr => {
+                    inst.expect(5)?;
+                    self.parse_expr_binary_op(expressions, crate::BinaryOperator::InclusiveOr)?;
+                }
+                Op::BitwiseXor => {
+                    inst.expect(5)?;
+                    self.parse_expr_binary_op(expressions, crate::BinaryOperator::ExclusiveOr)?;
+                }
+                Op::BitwiseAnd => {
+                    inst.expect(5)?;
+                    self.parse_expr_binary_op(expressions, crate::BinaryOperator::And)?;
+                }
+                Op::ShiftRightLogical => {
+                    inst.expect(5)?;
+                    //TODO: convert input and result to usigned
+                    self.parse_expr_binary_op(expressions, crate::BinaryOperator::ShiftRight)?;
+                }
+                Op::ShiftRightArithmetic => {
+                    inst.expect(5)?;
+                    //TODO: convert input and result to signed
+                    self.parse_expr_binary_op(expressions, crate::BinaryOperator::ShiftRight)?;
+                }
+                Op::ShiftLeftLogical => {
+                    inst.expect(5)?;
+                    self.parse_expr_binary_op(expressions, crate::BinaryOperator::ShiftLeft)?;
+                }
+                // Sampling
                 Op::SampledImage => {
                     inst.expect(5)?;
                     let _result_type_id = self.next()?;
@@ -1028,6 +1067,31 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         },
                     );
                 }
+                Op::Select => {
+                    inst.expect(6)?;
+                    let result_type_id = self.next()?;
+                    let result_id = self.next()?;
+                    let condition = self.next()?;
+                    let o1_id = self.next()?;
+                    let o2_id = self.next()?;
+
+                    let cond_lexp = self.lookup_expression.lookup(condition)?;
+                    let o1_lexp = self.lookup_expression.lookup(o1_id)?;
+                    let o2_lexp = self.lookup_expression.lookup(o2_id)?;
+
+                    let expr = crate::Expression::Select {
+                        condition: cond_lexp.handle,
+                        accept: o1_lexp.handle,
+                        reject: o2_lexp.handle,
+                    };
+                    self.lookup_expression.insert(
+                        result_id,
+                        LookupExpression {
+                            handle: expressions.append(expr),
+                            type_id: result_type_id,
+                        },
+                    );
+                }
                 Op::VectorShuffle => {
                     inst.expect_at_least(5)?;
                     let result_type_id = self.next()?;
@@ -1092,11 +1156,10 @@ impl<I: Iterator<Item = u32>> Parser<I> {
 
                     let value_lexp = self.lookup_expression.lookup(value_id)?;
                     let ty_lookup = self.lookup_type.lookup(result_type_id)?;
-                    let kind = match type_arena[ty_lookup.handle].inner {
-                        crate::TypeInner::Scalar { kind, .. }
-                        | crate::TypeInner::Vector { kind, .. } => kind,
-                        _ => return Err(Error::InvalidAsType(ty_lookup.handle)),
-                    };
+                    let kind = type_arena[ty_lookup.handle]
+                        .inner
+                        .scalar_kind()
+                        .ok_or(Error::InvalidAsType(ty_lookup.handle))?;
 
                     let expr = crate::Expression::As {
                         expr: value_lexp.handle,
@@ -1219,6 +1282,10 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         Some(spirv::GLOp::Length) => {
                             inst.expect(base_wc + 1)?;
                             "length"
+                        }
+                        Some(spirv::GLOp::Distance) => {
+                            inst.expect(base_wc + 2)?;
+                            "distance"
                         }
                         Some(spirv::GLOp::Cross) => {
                             inst.expect(base_wc + 2)?;
@@ -1477,7 +1544,9 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     };
                     *comparison = true;
                 }
-                _ => panic!("Unexpected comparison type {:?}", ty),
+                _ => {
+                    return Err(Error::UnexpectedComparisonType(handle));
+                }
             }
         }
 
@@ -1906,12 +1975,13 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         inst.expect(4)?;
         let id = self.next()?;
         let type_id = self.next()?;
-        let length = self.next()?;
+        let length_id = self.next()?;
+        let length_const = self.lookup_constant.lookup(length_id)?;
 
         let decor = self.future_decor.remove(&id);
         let inner = crate::TypeInner::Array {
             base: self.lookup_type.lookup(type_id)?.handle,
-            size: crate::ArraySize::Static(length),
+            size: crate::ArraySize::Constant(length_const.handle),
             stride: decor.as_ref().and_then(|dec| dec.array_stride),
         };
         self.lookup_type.insert(
@@ -2030,10 +2100,10 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         let format = self.next()?;
 
         let base_handle = self.lookup_type.lookup(sample_type_id)?.handle;
-        let kind = match module.types[base_handle].inner {
-            crate::TypeInner::Scalar { kind, .. } | crate::TypeInner::Vector { kind, .. } => kind,
-            _ => return Err(Error::InvalidImageBaseType(base_handle)),
-        };
+        let kind = module.types[base_handle]
+            .inner
+            .scalar_kind()
+            .ok_or(Error::InvalidImageBaseType(base_handle))?;
 
         let class = if format != 0 {
             crate::ImageClass::Storage(map_image_format(format)?)
@@ -2231,28 +2301,52 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         let type_id = self.next()?;
         let id = self.next()?;
         let storage_class = self.next()?;
-        if inst.wc != 4 {
+        let init = if inst.wc > 4 {
             inst.expect(5)?;
-            let _init = self.next()?; //TODO
-        }
+            let init_id = self.next()?;
+            let lconst = self.lookup_constant.lookup(init_id)?;
+            Some(lconst.handle)
+        } else {
+            None
+        };
         let lookup_type = self.lookup_type.lookup(type_id)?;
         let dec = self
             .future_decor
             .remove(&id)
             .ok_or(Error::InvalidBinding(id))?;
-        let class = map_storage_class(storage_class)?;
+
+        let class = {
+            use spirv::StorageClass as Sc;
+            match Sc::from_u32(storage_class) {
+                Some(Sc::Function) => crate::StorageClass::Function,
+                Some(Sc::Input) => crate::StorageClass::Input,
+                Some(Sc::Output) => crate::StorageClass::Output,
+                Some(Sc::Private) => crate::StorageClass::Private,
+                Some(Sc::UniformConstant) => crate::StorageClass::Handle,
+                Some(Sc::StorageBuffer) => crate::StorageClass::Storage,
+                Some(Sc::Uniform) => {
+                    if self
+                        .lookup_storage_buffer_types
+                        .contains(&lookup_type.handle)
+                    {
+                        crate::StorageClass::Storage
+                    } else {
+                        crate::StorageClass::Uniform
+                    }
+                }
+                Some(Sc::Workgroup) => crate::StorageClass::WorkGroup,
+                Some(Sc::PushConstant) => crate::StorageClass::PushConstant,
+                _ => return Err(Error::UnsupportedStorageClass(storage_class)),
+            }
+        };
+
         let binding = match (class, &module.types[lookup_type.handle].inner) {
             (crate::StorageClass::Input, &crate::TypeInner::Struct { .. })
             | (crate::StorageClass::Output, &crate::TypeInner::Struct { .. }) => None,
             _ => Some(dec.get_binding().ok_or(Error::InvalidBinding(id))?),
         };
         let is_storage = match module.types[lookup_type.handle].inner {
-            crate::TypeInner::Struct { .. } => match class {
-                crate::StorageClass::StorageBuffer => true,
-                _ => self
-                    .lookup_storage_buffer_types
-                    .contains(&lookup_type.handle),
-            },
+            crate::TypeInner::Struct { .. } => class == crate::StorageClass::Storage,
             crate::TypeInner::Image {
                 class: crate::ImageClass::Storage(_),
                 ..
@@ -2278,6 +2372,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             class,
             binding,
             ty: lookup_type.handle,
+            init,
             interpolation: dec.interpolation,
             storage_access,
         };
@@ -2292,7 +2387,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
     }
 }
 
-pub fn parse_u8_slice(data: &[u8]) -> Result<crate::Module, Error> {
+pub fn parse_u8_slice(data: &[u8], options: &Options) -> Result<crate::Module, Error> {
     if data.len() % 4 != 0 {
         return Err(Error::IncompleteData);
     }
@@ -2300,7 +2395,7 @@ pub fn parse_u8_slice(data: &[u8]) -> Result<crate::Module, Error> {
     let words = data
         .chunks(4)
         .map(|c| u32::from_le_bytes(c.try_into().unwrap()));
-    Parser::new(words).parse()
+    Parser::new(words, options).parse()
 }
 
 #[cfg(test)]
@@ -2316,6 +2411,6 @@ mod test {
             0x0e, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, // GLSL450.
             0x01, 0x00, 0x00, 0x00,
         ];
-        let _ = super::parse_u8_slice(&bin).unwrap();
+        let _ = super::parse_u8_slice(&bin, &Default::default()).unwrap();
     }
 }

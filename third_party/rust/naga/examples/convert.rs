@@ -2,7 +2,15 @@ use serde::{Deserialize, Serialize};
 use std::{env, fs, path::Path};
 
 #[derive(Hash, PartialEq, Eq, Serialize, Deserialize)]
+enum Stage {
+    Vertex,
+    Fragment,
+    Compute,
+}
+
+#[derive(Hash, PartialEq, Eq, Serialize, Deserialize)]
 struct BindSource {
+    stage: Stage,
     group: u32,
     binding: u32,
 }
@@ -21,6 +29,8 @@ struct BindTarget {
 
 #[derive(Default, Serialize, Deserialize)]
 struct Parameters {
+    #[serde(default)]
+    spv_flow_dump_prefix: String,
     metal_bindings: naga::FastHashMap<BindSource, BindTarget>,
 }
 
@@ -33,6 +43,13 @@ fn main() {
         println!("Call with <input> <output>");
         return;
     }
+
+    let param_path = std::path::PathBuf::from(&args[1]).with_extension("param.ron");
+    let params = match fs::read_to_string(param_path) {
+        Ok(string) => ron::de::from_str(&string).unwrap(),
+        Err(_) => Parameters::default(),
+    };
+
     let module = match Path::new(&args[1])
         .extension()
         .expect("Input has no extension?")
@@ -41,8 +58,15 @@ fn main() {
     {
         #[cfg(feature = "spv-in")]
         "spv" => {
+            let options = naga::front::spv::Options {
+                flow_graph_dump_prefix: if params.spv_flow_dump_prefix.is_empty() {
+                    None
+                } else {
+                    Some(params.spv_flow_dump_prefix.into())
+                },
+            };
             let input = fs::read(&args[1]).unwrap();
-            naga::front::spv::parse_u8_slice(&input).unwrap()
+            naga::front::spv::parse_u8_slice(&input, &options).unwrap()
         }
         #[cfg(feature = "wgsl-in")]
         "wgsl" => {
@@ -52,17 +76,35 @@ fn main() {
         #[cfg(feature = "glsl-in")]
         "vert" => {
             let input = fs::read_to_string(&args[1]).unwrap();
-            naga::front::glsl::parse_str(&input, "main", naga::ShaderStage::Vertex).unwrap()
+            naga::front::glsl::parse_str(
+                &input,
+                "main",
+                naga::ShaderStage::Vertex,
+                Default::default(),
+            )
+            .unwrap()
         }
         #[cfg(feature = "glsl-in")]
         "frag" => {
             let input = fs::read_to_string(&args[1]).unwrap();
-            naga::front::glsl::parse_str(&input, "main", naga::ShaderStage::Fragment).unwrap()
+            naga::front::glsl::parse_str(
+                &input,
+                "main",
+                naga::ShaderStage::Fragment,
+                Default::default(),
+            )
+            .unwrap()
         }
         #[cfg(feature = "glsl-in")]
         "comp" => {
             let input = fs::read_to_string(&args[1]).unwrap();
-            naga::front::glsl::parse_str(&input, "main", naga::ShaderStage::Compute).unwrap()
+            naga::front::glsl::parse_str(
+                &input,
+                "main",
+                naga::ShaderStage::Compute,
+                Default::default(),
+            )
+            .unwrap()
         }
         #[cfg(feature = "deserialize")]
         "ron" => {
@@ -83,12 +125,6 @@ fn main() {
         return;
     }
 
-    let param_path = std::path::PathBuf::from(&args[1]).with_extension("param.ron");
-    let params = match fs::read_to_string(param_path) {
-        Ok(string) => ron::de::from_str(&string).unwrap(),
-        Err(_) => Parameters::default(),
-    };
-
     match Path::new(&args[2])
         .extension()
         .expect("Output has no extension?")
@@ -102,6 +138,11 @@ fn main() {
             for (key, value) in params.metal_bindings {
                 binding_map.insert(
                     msl::BindSource {
+                        stage: match key.stage {
+                            Stage::Vertex => naga::ShaderStage::Vertex,
+                            Stage::Fragment => naga::ShaderStage::Fragment,
+                            Stage::Compute => naga::ShaderStage::Compute,
+                        },
                         group: key.group,
                         binding: key.binding,
                     },
@@ -114,9 +155,11 @@ fn main() {
                 );
             }
             let options = msl::Options {
-                binding_map: &binding_map,
+                lang_version: (1, 0),
+                spirv_cross_compatibility: false,
+                binding_map,
             };
-            let msl = msl::write_string(&module, options).unwrap();
+            let msl = msl::write_string(&module, &options).unwrap();
             fs::write(&args[2], msl).unwrap();
         }
         #[cfg(feature = "spv-out")]
@@ -198,7 +241,10 @@ fn main() {
         }
         other => {
             let _ = params;
-            panic!("Unknown output extension: {}", other);
+            panic!(
+                "Unknown output extension: {}, forgot to enable a feature?",
+                other
+            );
         }
     }
 }

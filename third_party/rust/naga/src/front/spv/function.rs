@@ -69,7 +69,7 @@ impl<I: Iterator<Item = u32>> super::Parser<I> {
             }
             crate::Function {
                 name: self.future_decor.remove(&fun_id).and_then(|dec| dec.name),
-                parameter_types: Vec::with_capacity(ft.parameter_type_ids.len()),
+                arguments: Vec::with_capacity(ft.parameter_type_ids.len()),
                 return_type: if self.lookup_void_type.contains(&result_type) {
                     None
                 } else {
@@ -83,7 +83,7 @@ impl<I: Iterator<Item = u32>> super::Parser<I> {
         };
 
         // read parameters
-        for i in 0..fun.parameter_types.capacity() {
+        for i in 0..fun.arguments.capacity() {
             match self.next_inst()? {
                 Instruction {
                     op: spirv::Op::FunctionParameter,
@@ -93,7 +93,7 @@ impl<I: Iterator<Item = u32>> super::Parser<I> {
                     let id = self.next()?;
                     let handle = fun
                         .expressions
-                        .append(crate::Expression::FunctionParameter(i as u32));
+                        .append(crate::Expression::FunctionArgument(i as u32));
                     self.lookup_expression
                         .insert(id, LookupExpression { type_id, handle });
                     //Note: we redo the lookup in order to work around `self` borrowing
@@ -104,10 +104,11 @@ impl<I: Iterator<Item = u32>> super::Parser<I> {
                             .lookup(fun_type)?
                             .parameter_type_ids[i]
                     {
-                        return Err(Error::WrongFunctionParameterType(type_id));
+                        return Err(Error::WrongFunctionArgumentType(type_id));
                     }
                     let ty = self.lookup_type.lookup(type_id)?.handle;
-                    fun.parameter_types.push(ty);
+                    fun.arguments
+                        .push(crate::FunctionArgument { name: None, ty });
                 }
                 Instruction { op, .. } => return Err(Error::InvalidParameter(op)),
             }
@@ -174,6 +175,17 @@ impl<I: Iterator<Item = u32>> super::Parser<I> {
                 DeferredSource::Function(handle)
             }
         };
+
+        if let Some(ref prefix) = self.options.flow_graph_dump_prefix {
+            let dump = flow_graph.to_graphviz().unwrap_or_default();
+            let suffix = match source {
+                DeferredSource::EntryPoint(stage, ref name) => {
+                    format!("flow.{:?}-{}.dot", stage, name)
+                }
+                DeferredSource::Function(handle) => format!("flow.Fun-{}.dot", handle.index()),
+            };
+            let _ = std::fs::write(prefix.join(suffix), dump);
+        }
 
         for (expr_handle, dst_id) in local_function_calls {
             self.deferred_function_calls.push(DeferredFunctionCall {

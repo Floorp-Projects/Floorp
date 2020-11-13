@@ -1,11 +1,8 @@
 use std::{cmp::Ordering, fmt, hash, marker::PhantomData, num::NonZeroU32};
 
 /// An unique index in the arena array that a handle points to.
-///
-/// This type is independent of `spv::Word`. `spv::Word` is used in data
-/// representation. It holds a SPIR-V and refers to that instruction. In
-/// structured representation, we use Handle to refer to an SPIR-V instruction.
-/// `Index` is an implementation detail to `Handle`.
+/// The "non-zero" part ensures that an `Option<Handle<T>>` has
+/// the same size and representation as `Handle<T>`.
 type Index = NonZeroU32;
 
 /// A strongly typed reference to a SPIR-V element.
@@ -166,6 +163,10 @@ impl<T> Arena<T> {
         T: PartialEq,
     {
         self.fetch_if_or_append(value, T::eq)
+    }
+
+    pub fn try_get(&self, handle: Handle<T>) -> Option<&T> {
+        self.data.get(handle.index.get() as usize - 1)
     }
 
     /// Get a mutable reference to an element in the arena.
