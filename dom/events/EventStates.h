@@ -287,10 +287,7 @@ class EventStates {
 #define NS_EVENT_STATE_AUTOFILL NS_DEFINE_EVENT_STATE_MACRO(50)
 // Element is filled with preview data by Autofill feature.
 #define NS_EVENT_STATE_AUTOFILL_PREVIEW NS_DEFINE_EVENT_STATE_MACRO(51)
-// Element matches the :focus-visible pseudo-class.
-//
-// TODO(emilio): We should eventually unify this and FOCUSRING.
-#define NS_EVENT_STATE_FOCUS_VISIBLE NS_DEFINE_EVENT_STATE_MACRO(52)
+// There's a free bit here.
 // Modal <dialog> element
 #define NS_EVENT_STATE_MODAL_DIALOG NS_DEFINE_EVENT_STATE_MACRO(53)
 // Inert subtrees
@@ -331,8 +328,8 @@ class EventStates {
    NS_EVENT_STATE_DRAGOVER | NS_EVENT_STATE_FOCUS | NS_EVENT_STATE_FOCUSRING | \
    NS_EVENT_STATE_FOCUS_WITHIN | NS_EVENT_STATE_FULLSCREEN |                   \
    NS_EVENT_STATE_HOVER | NS_EVENT_STATE_URLTARGET |                           \
-   NS_EVENT_STATE_FOCUS_VISIBLE | NS_EVENT_STATE_MODAL_DIALOG |                \
-   NS_EVENT_STATE_MOZINERT | NS_EVENT_STATE_TOPMOST_MODAL_DIALOG)
+   NS_EVENT_STATE_MODAL_DIALOG | NS_EVENT_STATE_MOZINERT |                     \
+   NS_EVENT_STATE_TOPMOST_MODAL_DIALOG)
 
 #define INTRINSIC_STATES (~EXTERNALLY_MANAGED_STATES)
 
