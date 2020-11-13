@@ -41,15 +41,12 @@ pub enum TargetShader {
 
 /// The size of each region in shared cache texture arrays.
 pub const TEXTURE_REGION_DIMENSIONS: i32 = 512;
+pub const GLYPH_TEXTURE_REGION_DIMENSIONS: i32 = 128;
 
 const PICTURE_TEXTURE_SLICE_COUNT: usize = 8;
 
 /// The chosen image format for picture tiles.
 const PICTURE_TILE_FORMAT: ImageFormat = ImageFormat::RGBA8;
-
-/// The number of pixels in a region. Derived from the above.
-const TEXTURE_REGION_PIXELS: usize =
-    (TEXTURE_REGION_DIMENSIONS as usize) * (TEXTURE_REGION_DIMENSIONS as usize);
 
 /// Items in the texture cache can either be standalone textures,
 /// or a sub-rect inside the shared cache.
@@ -279,7 +276,7 @@ impl SharedTextures {
                 color_formats.clone(),
                 TextureFilter::Linear,
                 2048,
-                TEXTURE_REGION_DIMENSIONS
+                GLYPH_TEXTURE_REGION_DIMENSIONS,
             ),
             // Used for image-rendering: crisp. This is mostly favicons, which
             // are small. Some other images use it too, but those tend to be
@@ -304,7 +301,7 @@ impl SharedTextures {
 
     /// Returns a mutable borrow for the shared texture array matching the parameters.
     fn select(
-        &mut self, external_format: ImageFormat, filter: TextureFilter, shader: TargetShader,
+        &mut self, size: DeviceIntSize, external_format: ImageFormat, filter: TextureFilter, shader: TargetShader,
     ) -> &mut TextureUnits {
         match external_format {
             ImageFormat::R8 => {
@@ -317,8 +314,11 @@ impl SharedTextures {
             }
             ImageFormat::RGBA8 |
             ImageFormat::BGRA8 => {
+                let max = size.width.max(size.height);
                 match (filter, shader) {
-                    (TextureFilter::Linear, TargetShader::Text) => &mut self.color8_glyphs,
+                    (TextureFilter::Linear, TargetShader::Text) if max <= GLYPH_TEXTURE_REGION_DIMENSIONS => {
+                        &mut self.color8_glyphs
+                    }
                     (TextureFilter::Linear, _) => &mut self.color8_linear,
                     (TextureFilter::Nearest, _) => &mut self.color8_nearest,
                     _ => panic!("Unexpexcted filter {:?}", filter),
@@ -992,7 +992,12 @@ impl TextureCache {
             }
             EntryDetails::Cache { origin, region_index, .. } => {
                 // Free the block in the given region.
-                let texture_array = self.shared_textures.select(entry.input_format, entry.filter, entry.shader);
+                let texture_array = self.shared_textures.select(
+                    entry.size,
+                    entry.input_format,
+                    entry.filter,
+                    entry.shader,
+                );
                 let unit = texture_array.units
                     .iter_mut()
                     .find(|unit| unit.texture_id == entry.texture_id)
@@ -1025,6 +1030,7 @@ impl TextureCache {
     ) -> CacheEntry {
         // Mutably borrow the correct texture.
         let texture_array = self.shared_textures.select(
+            params.descriptor.size,
             params.descriptor.format,
             params.filter,
             params.shader,
@@ -1464,7 +1470,7 @@ impl TextureUnits {
     fn size_in_bytes(&self) -> usize {
         let bpp = self.formats.internal.bytes_per_pixel() as usize;
         let num_regions: usize = self.units.iter().map(|u| u.regions.len()).sum();
-        num_regions * TEXTURE_REGION_PIXELS * bpp
+        num_regions * (self.region_size * self.region_size) as usize * bpp
     }
 
     fn clear(&mut self, updates: &mut TextureUpdateList) {
