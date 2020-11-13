@@ -123,6 +123,8 @@ LocalStorageCache::Release(void) {
 void LocalStorageCache::Init(LocalStorageManager* aManager, bool aPersistent,
                              nsIPrincipal* aPrincipal,
                              const nsACString& aQuotaOriginScope) {
+  MOZ_ASSERT(!aQuotaOriginScope.IsEmpty());
+
   if (mInitialized) {
     return;
   }
@@ -131,11 +133,7 @@ void LocalStorageCache::Init(LocalStorageManager* aManager, bool aPersistent,
   aPrincipal->OriginAttributesRef().CreateSuffix(mOriginSuffix);
   mPrivateBrowsingId = aPrincipal->GetPrivateBrowsingId();
   mPersistent = aPersistent;
-  if (aQuotaOriginScope.IsEmpty()) {
-    mQuotaOriginScope = Origin();
-  } else {
-    mQuotaOriginScope = aQuotaOriginScope;
-  }
+  mQuotaOriginScope = aQuotaOriginScope;
 
   if (mPersistent) {
     mManager = aManager;

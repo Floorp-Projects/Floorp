@@ -25,6 +25,7 @@ namespace {
 struct OriginKeyTest {
   const char* mSpec;
   const char* mOriginKey;
+  const char* mQuotaKey;
 };
 
 already_AddRefed<nsIPrincipal> GetContentPrincipal(const char* aSpec) {
@@ -42,16 +43,28 @@ already_AddRefed<nsIPrincipal> GetContentPrincipal(const char* aSpec) {
   return principal.forget();
 }
 
-void CheckGeneratedOriginKey(nsIPrincipal* aPrincipal, const char* aOriginKey) {
+void CheckGeneratedOriginKey(nsIPrincipal* aPrincipal, const char* aOriginKey,
+                             const char* aQuotaKey) {
   nsCString originAttrSuffix;
   nsCString originKey;
-  nsresult rv = aPrincipal->GetStorageOriginKey(originKey);
+  nsCString quotaKey;
+
   aPrincipal->OriginAttributesRef().CreateSuffix(originAttrSuffix);
+
+  nsresult rv = aPrincipal->GetStorageOriginKey(originKey);
   if (aOriginKey) {
-    ASSERT_EQ(rv, NS_OK) << "GenerateOriginKey should not fail";
+    ASSERT_EQ(rv, NS_OK) << "GetStorageOriginKey should not fail";
     EXPECT_TRUE(originKey == nsDependentCString(aOriginKey));
   } else {
-    ASSERT_NE(rv, NS_OK) << "GenerateOriginKey should fail";
+    ASSERT_NE(rv, NS_OK) << "GetStorageOriginKey should fail";
+  }
+
+  rv = aPrincipal->GetLocalStorageQuotaKey(quotaKey);
+  if (aQuotaKey) {
+    ASSERT_EQ(rv, NS_OK) << "GetLocalStorageQuotaKey should not fail";
+    EXPECT_TRUE(quotaKey == nsDependentCString(aQuotaKey));
+  } else {
+    ASSERT_NE(rv, NS_OK) << "GetLocalStorageQuotaKey should fail";
   }
 
   PrincipalInfo principalInfo;
@@ -83,30 +96,37 @@ TEST(LocalStorage, OriginKey)
   ASSERT_TRUE(principal)
   << "GetSystemPrincipal() should not fail";
 
-  CheckGeneratedOriginKey(principal, nullptr);
+  CheckGeneratedOriginKey(principal, nullptr, nullptr);
 
   // Check the null principal.
   principal = NullPrincipal::CreateWithoutOriginAttributes();
   ASSERT_TRUE(principal)
   << "CreateWithoutOriginAttributes() should not fail";
 
-  CheckGeneratedOriginKey(principal, nullptr);
+  CheckGeneratedOriginKey(principal, nullptr, nullptr);
 
   // Check content principals.
   static const OriginKeyTest tests[] = {
-      {"http://www.mozilla.org", "gro.allizom.www.:http:80"},
-      {"https://www.mozilla.org", "gro.allizom.www.:https:443"},
-      {"http://www.mozilla.org:32400", "gro.allizom.www.:http:32400"},
-      {"file:///Users/Joe/Sites/", "/setiS/eoJ/sresU/.:file"},
-      {"file:///Users/Joe/Sites/#foo", "/setiS/eoJ/sresU/.:file"},
-      {"file:///Users/Joe/Sites/?foo", "/setiS/eoJ/sresU/.:file"},
-      {"file:///Users/Joe/Sites", "/eoJ/sresU/.:file"},
-      {"file:///Users/Joe/Sites#foo", "/eoJ/sresU/.:file"},
-      {"file:///Users/Joe/Sites?foo", "/eoJ/sresU/.:file"},
+      {"http://localhost", "tsohlacol.:http:80", ":tsohlacol."},
+      {"http://www.mozilla.org", "gro.allizom.www.:http:80", ":gro.allizom."},
+      {"https://www.mozilla.org", "gro.allizom.www.:https:443",
+       ":gro.allizom."},
+      {"http://www.mozilla.org:32400", "gro.allizom.www.:http:32400",
+       ":gro.allizom."},
+      {"file:///Users/Joe/Sites/", "/setiS/eoJ/sresU/.:file",
+       ":/setiS/eoJ/sresU/."},
+      {"file:///Users/Joe/Sites/#foo", "/setiS/eoJ/sresU/.:file",
+       ":/setiS/eoJ/sresU/."},
+      {"file:///Users/Joe/Sites/?foo", "/setiS/eoJ/sresU/.:file",
+       ":/setiS/eoJ/sresU/."},
+      {"file:///Users/Joe/Sites", "/eoJ/sresU/.:file", ":/eoJ/sresU/."},
+      {"file:///Users/Joe/Sites#foo", "/eoJ/sresU/.:file", ":/eoJ/sresU/."},
+      {"file:///Users/Joe/Sites?foo", "/eoJ/sresU/.:file", ":/eoJ/sresU/."},
       {"moz-extension://53711a8f-65ed-e742-9671-1f02e267c0bc/"
        "_generated_background_page.html",
-       "cb0c762e20f1-1769-247e-de56-f8a11735.:moz-extension"},
-      {"http://[::1]:8/test.html", "1::.:http:8"},
+       "cb0c762e20f1-1769-247e-de56-f8a11735.:moz-extension",
+       ":cb0c762e20f1-1769-247e-de56-f8a11735."},
+      {"http://[::1]:8/test.html", "1::.:http:8", ":1::."},
   };
 
   for (const auto& test : tests) {
@@ -114,6 +134,6 @@ TEST(LocalStorage, OriginKey)
     ASSERT_TRUE(principal)
     << "GetContentPrincipal() should not fail";
 
-    CheckGeneratedOriginKey(principal, test.mOriginKey);
+    CheckGeneratedOriginKey(principal, test.mOriginKey, test.mQuotaKey);
   }
 }
