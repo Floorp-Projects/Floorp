@@ -28,6 +28,7 @@ EXPORTS += [
 
 classes_with_WrapForJNI = [
     "AndroidGamepadManager",
+    "AndroidVsync",
     "Base64Utils",
     "Clipboard",
     "CodecProxy",
@@ -76,7 +77,6 @@ classes_with_WrapForJNI = [
     "SurfaceAllocator",
     "SurfaceTextureListener",
     "TelemetryUtils",
-    "VsyncSource",
     "WebAuthnTokenManager",
     "WebMessage",
     "WebNotification",
@@ -103,6 +103,7 @@ EXPORTS.mozilla.widget += [
     "AndroidCompositorWidget.h",
     "AndroidUiThread.h",
     "AndroidView.h",
+    "AndroidVsync.h",
     "EventDispatcher.h",
     "GeckoViewSupport.h",
     "nsWindow.h",
@@ -125,6 +126,7 @@ UNIFIED_SOURCES += [
     "AndroidCompositorWidget.cpp",
     "AndroidContentController.cpp",
     "AndroidUiThread.cpp",
+    "AndroidVsync.cpp",
     "EventDispatcher.cpp",
     "GeckoEditableSupport.cpp",
     "GeckoProcessManager.cpp",
