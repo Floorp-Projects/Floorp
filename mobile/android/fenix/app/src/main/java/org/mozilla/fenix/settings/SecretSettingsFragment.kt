@@ -25,12 +25,6 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.secret_settings_preferences, rootKey)
 
-        requirePreference<SwitchPreference>(R.string.pref_key_show_grid_view_tabs_settings).apply {
-            isVisible = FeatureFlags.showGridViewInTabsSettings
-            isChecked = context.settings().showGridViewInTabsSettings
-            onPreferenceChangeListener = SharedPreferenceUpdater()
-        }
-
         requirePreference<SwitchPreference>(R.string.pref_key_synced_tabs_tabs_tray).apply {
             isVisible = FeatureFlags.syncedTabsInTabsTray
             isChecked = context.settings().syncedTabsInTabsTray

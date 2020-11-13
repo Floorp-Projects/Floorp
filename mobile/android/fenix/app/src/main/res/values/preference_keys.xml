@@ -220,7 +220,6 @@
     <string name="pref_key_show_collections_placeholder_home" translatable="false">pref_key_show_collections_home</string>
 
     <!-- Tabs Settings -->
-    <string name="pref_key_tab_view_category" translatable="false">pref_key_tab_view_category</string>
     <string name="pref_key_tab_view_list" translatable="false">pref_key_tab_view_list</string>
     <string name="pref_key_tab_view_grid" translatable="false">pref_key_tab_view_grid</string>
     <string name="pref_key_tabs" translatable="false">pref_key_tabs</string>
@@ -228,7 +227,6 @@
     <string name="pref_key_close_tabs_after_one_day" translatable="false">pref_key_close_tabs_after_one_day</string>
     <string name="pref_key_close_tabs_after_one_week" translatable="false">pref_key_close_tabs_after_one_week</string>
     <string name="pref_key_close_tabs_after_one_month" translatable="false">pref_key_close_tabs_after_one_month</string>
-    <string name="pref_key_show_grid_view_tabs_settings" translatable="false">pref_key_show_grid_view_tabs_settings</string>
 
     <string name="pref_key_camera_permissions_needed" translatable="false">pref_key_camera_permissions_needed</string>
 

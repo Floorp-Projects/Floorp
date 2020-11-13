@@ -272,7 +272,6 @@ class TabTrayView(
 
         @Suppress("ComplexCondition")
         if (
-            view.context.settings().showGridViewInTabsSettings &&
             view.context.settings().shouldShowGridViewBanner &&
             view.context.settings().canShowCfr &&
             tabs.size >= TAB_COUNT_SHOW_CFR

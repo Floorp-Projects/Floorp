@@ -123,12 +123,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     val canShowCfr: Boolean
         get() = (System.currentTimeMillis() - lastCfrShownTimeInMillis) > THREE_DAYS_MS
 
-    var showGridViewInTabsSettings by featureFlagPreference(
-        appContext.getPreferenceKey(R.string.pref_key_show_grid_view_tabs_settings),
-        default = Config.channel.isNightlyOrDebug,
-        featureFlag = FeatureFlags.showGridViewInTabsSettings
-    )
-
     var syncedTabsInTabsTray by featureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_synced_tabs_tabs_tray),
         default = false,
