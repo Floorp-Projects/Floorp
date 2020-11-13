@@ -42,7 +42,7 @@ class VorbisDataDecoder : public MediaDataDecoder,
  private:
   nsresult DecodeHeader(const unsigned char* aData, size_t aLength);
 
-  const AudioInfo& mInfo;
+  const AudioInfo mInfo;
   nsCOMPtr<nsISerialEventTarget> mThread;
 
   // Vorbis decoder state

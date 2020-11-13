@@ -50,7 +50,7 @@ class AOMDecoder : public MediaDataDecoder,
   // AOM decoder state
   aom_codec_ctx_t mCodec;
 
-  const VideoInfo& mInfo;
+  const VideoInfo mInfo;
 };
 
 }  // namespace mozilla
