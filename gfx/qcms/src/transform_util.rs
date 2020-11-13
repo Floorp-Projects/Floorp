@@ -395,22 +395,22 @@ unsafe extern "C" fn compute_precache_pow(mut output: *mut u8, mut gamma: f32) {
 }
 #[no_mangle]
 pub unsafe extern "C" fn compute_precache_lut(
-    mut output: *mut u8,
+    mut output: &mut [u8; PRECACHE_OUTPUT_SIZE],
     mut table: *mut u16,
     mut length: i32,
 ) {
     let mut v: u32 = 0;
     while v < PRECACHE_OUTPUT_SIZE as u32 {
-        *output.offset(v as isize) = lut_interp_linear_precache_output(v, table, length);
+        output[v as usize] = lut_interp_linear_precache_output(v, table, length);
         v = v + 1
     }
 }
 #[no_mangle]
-pub unsafe extern "C" fn compute_precache_linear(mut output: *mut u8) {
+pub unsafe extern "C" fn compute_precache_linear(mut output: &mut [u8; PRECACHE_OUTPUT_SIZE]) {
     let mut v: u32 = 0;
     while v < PRECACHE_OUTPUT_SIZE as u32 {
         //XXX: round?
-        *output.offset(v as isize) = (v / (PRECACHE_OUTPUT_SIZE / 256) as libc::c_uint) as u8;
+        output[v as usize] = (v / (PRECACHE_OUTPUT_SIZE / 256) as libc::c_uint) as u8;
         v = v + 1
     }
 }
@@ -439,11 +439,11 @@ pub unsafe extern "C" fn compute_precache(
                 inverted_size = 256
             }
             let mut inverted = invert_lut(&gamma_table_uint, inverted_size);
-            compute_precache_lut(output.as_mut_ptr(), inverted.as_mut_ptr(), inverted_size);
+            compute_precache_lut(output, inverted.as_mut_ptr(), inverted_size);
         }
         curveType::Curve(data) => {
             if data.len() == 0 {
-                compute_precache_linear(output.as_mut_ptr());
+                compute_precache_linear(output);
             } else if data.len() == 1 {
                 compute_precache_pow(
                     output.as_mut_ptr(),
@@ -459,11 +459,7 @@ pub unsafe extern "C" fn compute_precache(
                     inverted_size_0 = 256
                 } //XXX turn this conversion into a function
                 let mut inverted_0 = invert_lut(data, inverted_size_0);
-                compute_precache_lut(
-                    output.as_mut_ptr(),
-                    inverted_0.as_mut_ptr(),
-                    inverted_size_0,
-                );
+                compute_precache_lut(output, inverted_0.as_mut_ptr(), inverted_size_0);
             }
         }
     }
