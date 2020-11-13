@@ -84,8 +84,7 @@ const gfx::IntRect AnimationState::UpdateStateInternal(
         ret.SizeTo(aSize);
       }
       mCompositedFrameInvalid = false;
-    } else if (aResult.Type() == MatchType::NOT_FOUND ||
-               aResult.Type() == MatchType::PENDING) {
+    } else {
       if (mHasRequestedDecode) {
         MOZ_ASSERT(StaticPrefs::image_mem_animated_discardable_AtStartup());
         mCompositedFrameInvalid = true;
