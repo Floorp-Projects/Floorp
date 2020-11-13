@@ -47,7 +47,10 @@ class RemoteDataDecoder : public MediaDataDecoder,
   void ReturnDecodedData();
   void DrainComplete();
   void Error(const MediaResult& aError);
-  void AssertOnThread() const { MOZ_ASSERT(mThread->IsOnCurrentThread()); }
+  void AssertOnThread() const {
+    // mThread may not be set if Init hasn't been called first.
+    MOZ_ASSERT(!mThread || mThread->IsOnCurrentThread());
+  }
 
   enum class State { DRAINED, DRAINABLE, DRAINING, SHUTDOWN };
   void SetState(State aState) {

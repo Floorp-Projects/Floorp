@@ -24,12 +24,14 @@ class RemoteDecoderParent : public ShmemRecycleAllocator<RemoteDecoderParent>,
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteDecoderParent)
 
   RemoteDecoderParent(RemoteDecoderManagerParent* aParent,
+                      const CreateDecoderParams::OptionSet& aOptions,
                       nsISerialEventTarget* aManagerThread,
                       TaskQueue* aDecodeTaskQueue);
 
   void Destroy();
 
   // PRemoteDecoderParent
+  virtual IPCResult RecvConstruct(ConstructResolver&& aResolver) = 0;
   IPCResult RecvInit(InitResolver&& aResolver);
   IPCResult RecvDecode(ArrayOfRemoteMediaRawData* aData,
                        DecodeResolver&& aResolver);
@@ -49,6 +51,7 @@ class RemoteDecoderParent : public ShmemRecycleAllocator<RemoteDecoderParent>,
                                          DecodedOutputIPDL& aDecodedData) = 0;
 
   const RefPtr<RemoteDecoderManagerParent> mParent;
+  const CreateDecoderParams::OptionSet mOptions;
   const RefPtr<TaskQueue> mDecodeTaskQueue;
   RefPtr<MediaDataDecoder> mDecoder;
 

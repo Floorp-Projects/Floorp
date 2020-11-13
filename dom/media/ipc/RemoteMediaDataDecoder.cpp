@@ -14,8 +14,21 @@ RemoteMediaDataDecoder::RemoteMediaDataDecoder(RemoteDecoderChild* aChild)
     : mChild(aChild) {}
 
 RemoteMediaDataDecoder::~RemoteMediaDataDecoder() {
-  /* Shutdown method should have been called. */
-  MOZ_ASSERT(!mChild);
+  if (mChild) {
+    // Shutdown didn't get called. This can happen if the creation of the
+    // decoder got interrupted while pending.
+    nsCOMPtr<nsISerialEventTarget> thread =
+        RemoteDecoderManagerChild::GetManagerThread();
+    MOZ_ASSERT(thread);
+    thread->Dispatch(NS_NewRunnableFunction(
+        "RemoteMediaDataDecoderShutdown", [child = std::move(mChild), thread] {
+          child->Shutdown()->Then(
+              thread, __func__,
+              [child](const ShutdownPromise::ResolveOrRejectValue& aValue) {
+                child->DestroyIPDL();
+              });
+        }));
+  }
 }
 
 RefPtr<MediaDataDecoder::InitPromise> RemoteMediaDataDecoder::Init() {

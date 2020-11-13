@@ -11,6 +11,8 @@
 
 namespace mozilla {
 
+class RemoteDecoderChild;
+
 enum class RemoteDecodeIn {
   Unspecified,
   RddProcess,
@@ -35,9 +37,9 @@ class RemoteDecoderManagerChild final
   static bool Supports(RemoteDecodeIn aLocation,
                        const SupportDecoderParams& aParams,
                        DecoderDoctorDiagnostics* aDiagnostics);
-  static already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
+  static RefPtr<PlatformDecoderModule::CreateDecoderPromise> CreateAudioDecoder(
       const CreateDecoderParams& aParams);
-  static already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
+  static RefPtr<PlatformDecoderModule::CreateDecoderPromise> CreateVideoDecoder(
       const CreateDecoderParams& aParams, RemoteDecodeIn aLocation);
 
   // Can be called from any thread.
@@ -91,13 +93,14 @@ class RemoteDecoderManagerChild final
   PRemoteDecoderChild* AllocPRemoteDecoderChild(
       const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
       const CreateDecoderParams::OptionSet& aOptions,
-      const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
-      bool* aSuccess, nsCString* aErrorDescription);
+      const Maybe<layers::TextureFactoryIdentifier>& aIdentifier);
   bool DeallocPRemoteDecoderChild(PRemoteDecoderChild* actor);
 
  private:
   explicit RemoteDecoderManagerChild(RemoteDecodeIn aLocation);
   ~RemoteDecoderManagerChild() = default;
+  static RefPtr<PlatformDecoderModule::CreateDecoderPromise> Construct(
+      RefPtr<RemoteDecoderChild>&& aChild);
 
   static void OpenForRDDProcess(
       Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
