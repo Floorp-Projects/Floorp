@@ -58,6 +58,7 @@ jobs:
             - deb8-mercurial
             - deb8-python3.6
             - deb8-python3-defaults
+            - deb8-python-psutil
             - deb8-python-zstandard
             - deb8-xz-utils
     deb8-toolchain-build:
