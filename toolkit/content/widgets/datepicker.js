@@ -315,7 +315,6 @@ function DatePicker(context) {
         day,
       });
       this._update({ noSmoothScroll: true });
-      document.dispatchEvent(new CustomEvent("PickerValueWasSet"));
     },
   };
 
