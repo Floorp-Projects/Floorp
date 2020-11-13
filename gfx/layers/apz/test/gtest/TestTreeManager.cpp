@@ -243,11 +243,12 @@ TEST_F(APZCTreeManagerTester, Bug1551582) {
 
   // Simulate the main thread scrolling to the end of the scroll range.
   ModifyFrameMetrics(root, [](ScrollMetadata& aSm, FrameMetrics& aMetrics) {
+    ScrollGeneration gen = ScrollGeneration::New();
     aMetrics.SetLayoutScrollOffset(CSSPoint(300, 300));
-    aMetrics.SetScrollGeneration(1);
+    aMetrics.SetScrollGeneration(gen);
     nsTArray<ScrollPositionUpdate> scrollUpdates;
     scrollUpdates.AppendElement(ScrollPositionUpdate::NewScroll(
-        1, ScrollOrigin::Other, CSSPoint::ToAppUnits(CSSPoint(300, 300))));
+        gen, ScrollOrigin::Other, CSSPoint::ToAppUnits(CSSPoint(300, 300))));
     aSm.SetScrollUpdates(scrollUpdates);
   });
   UpdateHitTestingTree();
@@ -278,11 +279,12 @@ TEST_F(APZCTreeManagerTester, Bug1557424) {
 
   // Simulate the main thread scrolling to the end of the scroll range.
   ModifyFrameMetrics(root, [](ScrollMetadata& aSm, FrameMetrics& aMetrics) {
+    ScrollGeneration gen = ScrollGeneration::New();
     aMetrics.SetLayoutScrollOffset(CSSPoint(300, 300));
-    aMetrics.SetScrollGeneration(1);
+    aMetrics.SetScrollGeneration(gen);
     nsTArray<ScrollPositionUpdate> scrollUpdates;
     scrollUpdates.AppendElement(ScrollPositionUpdate::NewScroll(
-        1, ScrollOrigin::Other, CSSPoint::ToAppUnits(CSSPoint(300, 300))));
+        gen, ScrollOrigin::Other, CSSPoint::ToAppUnits(CSSPoint(300, 300))));
     aSm.SetScrollUpdates(scrollUpdates);
   });
   UpdateHitTestingTree();
