@@ -24,6 +24,7 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Tokenizer.h"
 #include "nsEscape.h"
+#include "nsDOMString.h"
 #include "mozilla/net/rust_helper.h"
 
 using namespace mozilla;
