@@ -118,3 +118,47 @@ addAccessibleTask(
     );
   }
 );
+
+/**
+ * Test live region changes
+ */
+addAccessibleTask(
+  `
+  <div id="live" aria-live="polite">
+  The time is <span id="time">4:55pm</span>
+  <p id="p" style="display: none">Georgia on my mind</p>
+  <button id="button" aria-label="Start"></button>
+  </div>
+  `,
+  async (browser, accDoc) => {
+    let liveRegionChanged = waitForMacEvent("AXLiveRegionChanged", "live");
+    await SpecialPowers.spawn(browser, [], () => {
+      content.document.getElementById("time").textContent = "4:56pm";
+    });
+    await liveRegionChanged;
+    ok(true, "changed textContent");
+
+    liveRegionChanged = waitForMacEvent("AXLiveRegionChanged", "live");
+    await SpecialPowers.spawn(browser, [], () => {
+      content.document.getElementById("p").style.display = "block";
+    });
+    await liveRegionChanged;
+    ok(true, "changed display style to block");
+
+    liveRegionChanged = waitForMacEvent("AXLiveRegionChanged", "live");
+    await SpecialPowers.spawn(browser, [], () => {
+      content.document.getElementById("p").style.display = "none";
+    });
+    await liveRegionChanged;
+    ok(true, "changed display style to none");
+
+    liveRegionChanged = waitForMacEvent("AXLiveRegionChanged", "live");
+    await SpecialPowers.spawn(browser, [], () => {
+      content.document
+        .getElementById("button")
+        .setAttribute("aria-label", "Stop");
+    });
+    await liveRegionChanged;
+    ok(true, "changed aria-label");
+  }
+);
