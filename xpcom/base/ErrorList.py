@@ -1086,7 +1086,6 @@ with modules["STORAGE"]:
 with modules["DOM_FILE"]:
     errors["NS_ERROR_DOM_FILE_NOT_FOUND_ERR"] = FAILURE(0)
     errors["NS_ERROR_DOM_FILE_NOT_READABLE_ERR"] = FAILURE(1)
-    errors["NS_ERROR_DOM_FILE_ABORT_ERR"] = FAILURE(2)
 
 
 # =======================================================================
