@@ -32,7 +32,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/menu_multi_select"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_hollow_share"
+        app:srcCompat="@drawable/ic_share_filled"
         app:tint="@color/contrast_text_normal_theme" />
 
     <ImageButton
