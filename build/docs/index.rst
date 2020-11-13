@@ -27,6 +27,7 @@ Important Concepts
    defining-xpcom-components
    toolchains
    locales
+   unified-builds
    rust
    sparse
    Support for projects building with GN <gn>
