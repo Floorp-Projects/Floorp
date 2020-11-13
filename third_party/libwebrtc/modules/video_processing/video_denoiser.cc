@@ -14,7 +14,7 @@
 #include <string.h>
 
 #include "api/video/i420_buffer.h"
-#include "third_party/libyuv/include/libyuv/planar_functions.h"
+#include "libyuv/include/libyuv/planar_functions.h"
 
 namespace webrtc {
 
