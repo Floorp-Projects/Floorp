@@ -34,6 +34,11 @@ ChromeUtils.defineModuleGetter(
   "AboutReaderParent",
   "resource:///actors/AboutReaderParent.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "pktTelemetry",
+  "chrome://pocket/content/pktTelemetry.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["SaveToPocket"];
 
@@ -109,6 +114,20 @@ var PocketPageAction = {
           },
           onLocationChange(browserWindow) {
             PocketPageAction.updateUrlbarNodeState(browserWindow);
+          },
+          onPinToUrlbarToggled() {
+            if (!this.pinnedToUrlbar) {
+              const payload = pktTelemetry.createPingPayload({
+                events: [
+                  {
+                    action: "unpin",
+                    source: "save_button",
+                  },
+                ],
+              });
+              // Send unpin event ping.
+              pktTelemetry.sendStructuredIngestionEvent(payload);
+            }
           },
         })
       );
