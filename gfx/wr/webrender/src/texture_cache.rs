@@ -1573,16 +1573,17 @@ impl TextureUnits {
         use svg_fmt::*;
 
         let num_arrays = self.units.len() as f32;
-        let num_regions = self.regions_per_texture() as f32;
         let region_size = self.region_size as f32;
 
         let text_spacing = 15.0;
-        let array_spacing = 60.0;
-        let unit_spacing = 10.0;
-        let unit_size = 100.0;
+        let array_spacing = 30.0;
+        let unit_spacing = 5.0;
+        let unit_size = 200.0 * (self.region_size as f32 / 512.0);
+        let regions_per_row = (self.size / self.region_size) as usize;
+        let texture_size = text_spacing + array_spacing + (unit_size + unit_spacing) * regions_per_row as f32;
 
-        let svg_w = array_spacing * 2.0 + num_regions * (unit_size + unit_spacing);
-        let svg_h = unit_spacing * 2.0 + num_arrays * (text_spacing * 2.0 + array_spacing + unit_size);
+        let svg_w = array_spacing * 2.0 + regions_per_row as f32 * (unit_size + unit_spacing);
+        let svg_h = array_spacing + num_arrays * (texture_size + array_spacing);
 
         writeln!(output, "{}", BeginSvg { w: svg_w, h: svg_h })?;
 
@@ -1594,24 +1595,14 @@ impl TextureUnits {
                 .fill(rgb(50, 50, 50))
         )?;
 
-        let mut x = array_spacing;
         let mut y = array_spacing;
         for unit in &self.units {
-            writeln!(output, "    {}", text(x, y, format!("{:?}", unit.texture_id)).color(rgb(230, 230, 230)))?;
-            for region in &unit.regions {
+            writeln!(output, "    {}", text(array_spacing, y, format!("{:?}", unit.texture_id)).color(rgb(230, 230, 230)))?;
+            for (idx, region) in unit.regions.iter().enumerate() {
                 let slab_size = region.slab_size;
+                let x = array_spacing + (idx % regions_per_row) as f32 * (unit_size + unit_spacing);
 
-                let y = y + text_spacing;
-
-                let region_text = if slab_size.width == 0 {
-                    "(empty)".to_string()
-                } else {
-                    format!("{}x{}", slab_size.width, slab_size.height)
-                };
-
-                writeln!(output, "    {}", text(x, y, region_text).color(rgb(230, 230, 230)))?;
-
-                let y = y + text_spacing;
+                let y = y + text_spacing + (idx / regions_per_row) as f32 * (unit_size + unit_spacing);
 
                 let texture_background = if region.is_empty() { rgb(30, 30, 30) } else { rgb(40, 40, 130) };
                 writeln!(output, "    {}", rectangle(x, y, unit_size, unit_size).inflate(1.0, 1.0).fill(rgb(10, 10, 10)))?;
@@ -1628,11 +1619,15 @@ impl TextureUnits {
                     writeln!(output, "    {}", rectangle(sx, sy, sw, sh).inflate(-0.5, -0.5).fill(rgb(30, 30, 30)))?;
                 }
 
-                x += unit_spacing + unit_size;
+                if slab_size.width != 0 {
+                    let region_text = format!("{}x{}", slab_size.width, slab_size.height);
+                    let tx = x + 1.0;
+                    let ty = y + unit_size - 1.0;
+                    writeln!(output, "    {}", text(tx, ty, region_text).color(rgb(230, 230, 230)))?;
+                }
             }
 
-            y += array_spacing + unit_size;
-            x = array_spacing;
+            y += array_spacing + texture_size;
         }
 
         writeln!(output, "{}", EndSvg)
