@@ -29,6 +29,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   interaction: "chrome://marionette/content/interaction.js",
   legacyaction: "chrome://marionette/content/legacyaction.js",
   Log: "chrome://marionette/content/log.js",
+  MarionettePrefs: "chrome://marionette/content/prefs.js",
   pprint: "chrome://marionette/content/format.js",
   proxy: "chrome://marionette/content/proxy.js",
   sandbox: "chrome://marionette/content/evaluate.js",
@@ -146,7 +147,9 @@ let sendKeysToElementFn = dispatch(sendKeysToElement);
 let setBrowsingContextIdFn = dispatch(setBrowsingContextId);
 
 function startListeners() {
-  eventDispatcher.enable();
+  if (!MarionettePrefs.useActors) {
+    eventDispatcher.enable();
+  }
 
   addMessageListener("Marionette:actionChain", actionChainFn);
   addMessageListener("Marionette:clearElement", clearElementFn);
@@ -189,7 +192,9 @@ function startListeners() {
 }
 
 function deregister() {
-  eventDispatcher.disable();
+  if (!MarionettePrefs.useActors) {
+    eventDispatcher.disable();
+  }
 
   removeMessageListener("Marionette:actionChain", actionChainFn);
   removeMessageListener("Marionette:clearElement", clearElementFn);
