@@ -659,7 +659,11 @@ pub extern "C" fn neqo_http3conn_read_response_data(
         Ok((amount, fin_recvd)) => {
             *read = u32::try_from(amount).unwrap();
             *fin = fin_recvd;
-            NS_OK
+            if (amount == 0) && !fin_recvd {
+                NS_BASE_STREAM_WOULD_BLOCK
+            } else {
+                NS_OK
+            }
         }
         Err(Http3Error::InvalidStreamId)
         | Err(Http3Error::TransportError(TransportError::NoMoreData)) => NS_ERROR_INVALID_ARG,
