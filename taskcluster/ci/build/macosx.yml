@@ -299,6 +299,9 @@ macosx64-shippable/opt:
             - artifact: host/bin/mbsdiff
               extract: false
               dest: ../artifacts/host/bin
+            - artifact: target.txt
+              extract: false
+              dest: ../artifacts
             - artifact: target_info.txt
               extract: false
               dest: ../artifacts
