@@ -1066,6 +1066,49 @@ class FxaAccountManagerTest {
     }
 
     @Test
+    fun `repeated unfinished authentication attempts succeed`() = runBlocking {
+        val mockAccount: OAuthAccount = mock()
+        val constellation: DeviceConstellation = mock()
+        `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
+        val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
+        val accountStorage = mock<AccountStorage>()
+        val accountObserver: AccountObserver = mock()
+        val manager = prepareHappyAuthenticationFlow(mockAccount, profile, accountStorage, accountObserver, this.coroutineContext)
+
+        // We start off as logged-out, but the event won't be called (initial default state is assumed).
+        verify(accountObserver, never()).onLoggedOut()
+        verify(accountObserver, never()).onAuthenticated(any(), any())
+
+        // Begin auth for the first time.
+        reset(accountObserver)
+        assertEquals("auth://url", manager.beginAuthentication(pairingUrl = "auth://pairing"))
+        assertNull(manager.authenticatedAccount())
+        assertNull(manager.accountProfile())
+
+        // Now, try to begin again before finishing the first one.
+        assertEquals("auth://url", manager.beginAuthentication(pairingUrl = "auth://pairing"))
+        assertNull(manager.authenticatedAccount())
+        assertNull(manager.accountProfile())
+
+        // The rest should "just work".
+        `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
+        `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
+        `when`(constellation.finalizeDevice(any(), any())).thenReturn(ServiceResult.Ok)
+
+        assertTrue(manager.finishAuthentication(FxaAuthData(AuthType.Signin, "dummyCode", EXPECTED_AUTH_STATE)))
+
+        verify(accountStorage, times(1)).read()
+        verify(accountStorage, never()).clear()
+
+        verify(accountObserver, times(1)).onAuthenticated(mockAccount, AuthType.Signin)
+        verify(accountObserver, times(1)).onProfileUpdated(profile)
+        verify(accountObserver, never()).onLoggedOut()
+
+        assertEquals(mockAccount, manager.authenticatedAccount())
+        assertEquals(profile, manager.accountProfile())
+    }
+
+    @Test
     fun `unhappy authentication flow`() = runBlocking {
         val accountStorage = mock<AccountStorage>()
         val mockAccount: OAuthAccount = mock()

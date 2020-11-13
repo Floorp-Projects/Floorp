@@ -59,6 +59,8 @@ internal sealed class Event {
         object FailedToCompleteAuthRestore : Progress()
         object FailedToCompleteAuth : Progress()
 
+        object CancelAuth : Progress()
+
         object FailedToRecoverFromAuthenticationProblem : Progress()
         object RecoveredFromAuthenticationProblem : Progress()
 
@@ -110,6 +112,7 @@ internal fun State.next(event: Event): State? = when (this) {
         ProgressState.BeginningAuthentication -> when (event) {
             is Event.Progress.AuthData -> State.Active(ProgressState.CompletingAuthentication)
             Event.Progress.FailedToBeginAuth -> State.Idle(AccountState.NotAuthenticated)
+            Event.Progress.CancelAuth -> State.Idle(AccountState.NotAuthenticated)
             else -> null
         }
         ProgressState.CompletingAuthentication -> when (event) {

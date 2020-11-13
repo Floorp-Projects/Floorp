@@ -44,6 +44,7 @@ class StateKtTest {
                 }
                 ProgressState.BeginningAuthentication -> when (event) {
                     Event.Progress.FailedToBeginAuth -> State.Idle(AccountState.NotAuthenticated)
+                    Event.Progress.CancelAuth -> State.Idle(AccountState.NotAuthenticated)
                     is Event.Progress.AuthData -> State.Active(ProgressState.CompletingAuthentication)
                     else -> null
                 }
@@ -79,6 +80,7 @@ class StateKtTest {
             "Start" -> Event.Account.Start
             "BeginPairingFlow" -> Event.Account.BeginPairingFlow("http://some.pairing.url.com")
             "BeginEmailFlow" -> Event.Account.BeginEmailFlow
+            "CancelAuth" -> Event.Progress.CancelAuth
             "AuthenticationError" -> Event.Account.AuthenticationError("fxa op")
             "MigrateFromAccount" -> Event.Account.MigrateFromAccount(mock(), true)
             "RetryMigration" -> Event.Account.RetryMigration

@@ -389,6 +389,12 @@ open class FxaAccountManager(
      * @return An authentication url which is to be presented to the user.
      */
     suspend fun beginAuthentication(pairingUrl: String? = null): String? {
+        // It's possible that at this point authentication is considered to be "in-progress".
+        // For example, if user started authentication flow, but cancelled it (closing a custom tab)
+        // without finishing.
+        // In a clean scenario (no prior auth attempts), this event will be ignored by the state machine.
+        processQueue(Event.Progress.CancelAuth)
+
         val event = if (pairingUrl != null) {
             Event.Account.BeginPairingFlow(pairingUrl)
         } else {
