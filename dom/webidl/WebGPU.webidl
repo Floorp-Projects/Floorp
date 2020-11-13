@@ -100,7 +100,6 @@ interface GPUAdapter {
 GPUAdapter includes GPUObjectBase;
 
 dictionary GPUExtensions {
-    boolean anisotropicFiltering = false;
 };
 
 dictionary GPULimits {
@@ -412,7 +411,8 @@ GPUSampler includes GPUObjectBase;
 enum GPUTextureComponentType {
     "float",
     "sint",
-    "uint"
+    "uint",
+    "depth-comparison"
 };
 
 // ****************************************************************************
@@ -659,7 +659,11 @@ GPUShaderModule includes GPUObjectBase;
 
 // Common stuff for ComputePipeline and RenderPipeline
 dictionary GPUPipelineDescriptorBase : GPUObjectDescriptorBase {
-    required GPUPipelineLayout layout;
+    GPUPipelineLayout layout;
+};
+
+interface mixin GPUPipelineBase {
+    GPUBindGroupLayout getBindGroupLayout(unsigned long index);
 };
 
 dictionary GPUProgrammableStageDescriptor {
@@ -677,6 +681,7 @@ dictionary GPUComputePipelineDescriptor : GPUPipelineDescriptorBase {
 interface GPUComputePipeline {
 };
 GPUComputePipeline includes GPUObjectBase;
+GPUComputePipeline includes GPUPipelineBase;
 
 // GPURenderPipeline
 enum GPUPrimitiveTopology {
@@ -727,6 +732,7 @@ dictionary GPURenderPipelineDescriptor : GPUPipelineDescriptorBase {
 interface GPURenderPipeline {
 };
 GPURenderPipeline includes GPUObjectBase;
+GPURenderPipeline includes GPUPipelineBase;
 
 // ****************************************************************************
 // COMMAND RECORDING (Command buffer and all relevant structures)

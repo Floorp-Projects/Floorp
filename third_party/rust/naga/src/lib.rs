@@ -4,7 +4,11 @@
 //!
 //! To improve performance and reduce memory usage, most structures are stored
 //! in an [`Arena`], and can be retrieved using the corresponding [`Handle`].
-#![allow(clippy::new_without_default, clippy::unneeded_field_pattern)]
+#![allow(
+    clippy::new_without_default,
+    clippy::unneeded_field_pattern,
+    clippy::match_like_matches_macro
+)]
 #![deny(clippy::panic)]
 
 mod arena;
@@ -57,7 +61,7 @@ pub struct Header {
 /// For more, see:
 ///   - https://www.khronos.org/opengl/wiki/Early_Fragment_Test#Explicit_specification
 ///   - https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/sm5-attributes-earlydepthstencil
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub struct EarlyDepthTest {
@@ -73,7 +77,7 @@ pub struct EarlyDepthTest {
 /// For more, see:
 ///   - https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_conservative_depth.txt
 ///   - https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-semantics#system-value-semantics
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum ConservativeDepth {
@@ -88,7 +92,7 @@ pub enum ConservativeDepth {
 }
 
 /// Stage of the programmable pipeline.
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 #[allow(missing_docs)] // The names are self evident
@@ -99,23 +103,33 @@ pub enum ShaderStage {
 }
 
 /// Class of storage for variables.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 #[allow(missing_docs)] // The names are self evident
 pub enum StorageClass {
-    Constant,
+    /// Function locals.
     Function,
+    /// Pipeline input, per invocation.
     Input,
+    /// Pipeline output, per invocation, mutable.
     Output,
+    /// Private data, per invocation, mutable.
     Private,
-    StorageBuffer,
-    Uniform,
+    /// Workgroup shared data, mutable.
     WorkGroup,
+    /// Uniform buffer data.
+    Uniform,
+    /// Storage buffer data, potentially mutable.
+    Storage,
+    /// Opaque handles, such as samplers and images.
+    Handle,
+    /// Push constants.
+    PushConstant,
 }
 
 /// Built-in inputs and outputs.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum BuiltIn {
@@ -144,7 +158,7 @@ pub type Bytes = u8;
 
 /// Number of components in a vector.
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Hash, Eq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum VectorSize {
@@ -158,7 +172,7 @@ pub enum VectorSize {
 
 /// Primitive type for a scalar.
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Hash, Eq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum ScalarKind {
@@ -174,18 +188,18 @@ pub enum ScalarKind {
 
 /// Size of an array.
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum ArraySize {
-    /// The array size is known at compilation.
-    Static(u32),
+    /// The array size is constant.
+    Constant(Handle<Constant>),
     /// The array size can change at runtime.
     Dynamic,
 }
 
 /// Describes where a struct member is placed.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum MemberOrigin {
@@ -198,7 +212,7 @@ pub enum MemberOrigin {
 }
 
 /// The interpolation qualifier of a binding or struct field.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum Interpolation {
@@ -233,7 +247,7 @@ pub struct StructMember {
 }
 
 /// The number of dimensions an image has.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum ImageDimension {
@@ -260,7 +274,7 @@ bitflags::bitflags! {
 }
 
 // Storage image format.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum StorageFormat {
@@ -310,7 +324,7 @@ pub enum StorageFormat {
 }
 
 /// Sub-class of the image type.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum ImageClass {
@@ -392,8 +406,7 @@ pub struct Constant {
 }
 
 /// Additional information, dependendent on the kind of constant.
-// Clone is used only for error reporting and is not intended for end users
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum ConstantInner {
@@ -442,6 +455,8 @@ pub struct GlobalVariable {
     pub binding: Option<Binding>,
     /// The type of this variable.
     pub ty: Handle<Type>,
+    /// Initial value for this variable.
+    pub init: Option<Handle<Constant>>,
     /// The interpolation qualifier, if any.
     /// If the this `GlobalVariable` is a vertex output
     /// or fragment input, `None` corresponds to the
@@ -461,11 +476,11 @@ pub struct LocalVariable {
     /// The type of this variable.
     pub ty: Handle<Type>,
     /// Initial value for this variable.
-    pub init: Option<Handle<Expression>>,
+    pub init: Option<Handle<Constant>>,
 }
 
 /// Operation that can be applied on a single value.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum UnaryOperator {
@@ -474,7 +489,7 @@ pub enum UnaryOperator {
 }
 
 /// Operation that can be applied on two values.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum BinaryOperator {
@@ -494,13 +509,13 @@ pub enum BinaryOperator {
     InclusiveOr,
     LogicalAnd,
     LogicalOr,
-    ShiftLeftLogical,
-    ShiftRightLogical,
-    ShiftRightArithmetic,
+    ShiftLeft,
+    /// Right shift carries the sign of signed integers only.
+    ShiftRight,
 }
 
 /// Built-in shader function.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum IntrinsicFunction {
@@ -513,7 +528,7 @@ pub enum IntrinsicFunction {
 }
 
 /// Axis on which to compute a derivative.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum DerivativeAxis {
@@ -569,7 +584,7 @@ pub enum Expression {
         components: Vec<Handle<Expression>>,
     },
     /// Reference a function parameter, by its index.
-    FunctionParameter(u32),
+    FunctionArgument(u32),
     /// Reference a global variable.
     GlobalVariable(Handle<GlobalVariable>),
     /// Reference a local variable.
@@ -603,6 +618,13 @@ pub enum Expression {
         op: BinaryOperator,
         left: Handle<Expression>,
         right: Handle<Expression>,
+    },
+    /// Select between two values based on a condition.
+    Select {
+        /// Boolean expression
+        condition: Handle<Expression>,
+        accept: Handle<Expression>,
+        reject: Handle<Expression>,
     },
     /// Call an intrinsic function.
     Intrinsic {
@@ -687,6 +709,17 @@ pub enum Statement {
     },
 }
 
+/// A function argument.
+#[derive(Debug)]
+#[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "deserialize", derive(Deserialize))]
+pub struct FunctionArgument {
+    /// Name of the argument, if any.
+    pub name: Option<String>,
+    /// Type of the argument.
+    pub ty: Handle<Type>,
+}
+
 /// A function defined in the module.
 #[derive(Debug)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
@@ -694,9 +727,8 @@ pub enum Statement {
 pub struct Function {
     /// Name of the function, if any.
     pub name: Option<String>,
-    //pub control: spirv::FunctionControl,
-    /// The types of the parameters of this function.
-    pub parameter_types: Vec<Handle<Type>>,
+    /// Information about function argument.
+    pub arguments: Vec<FunctionArgument>,
     /// The return type of this function, if any.
     pub return_type: Option<Handle<Type>>,
     /// Vector of global variable usages.

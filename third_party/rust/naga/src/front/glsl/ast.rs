@@ -42,8 +42,8 @@ impl Program {
     pub fn binary_expr(
         &mut self,
         op: BinaryOperator,
-        left: ExpressionRule,
-        right: ExpressionRule,
+        left: &ExpressionRule,
+        right: &ExpressionRule,
     ) -> ExpressionRule {
         ExpressionRule::from_expression(self.context.expressions.append(Expression::Binary {
             op,
@@ -57,13 +57,13 @@ impl Program {
         handle: Handle<crate::Expression>,
     ) -> Result<&crate::TypeInner, ErrorKind> {
         let functions = Arena::new(); //TODO
-        let parameter_types: Vec<Handle<Type>> = vec![]; //TODO
+        let arguments = Vec::new(); //TODO
         let resolve_ctx = ResolveContext {
             constants: &self.module.constants,
             global_vars: &self.module.global_variables,
             local_vars: &self.context.local_variables,
             functions: &functions,
-            parameter_types: &parameter_types,
+            arguments: &arguments,
         };
         match self.context.typifier.grow(
             handle,
@@ -138,6 +138,7 @@ impl Context {
 pub struct ExpressionRule {
     pub expression: Handle<Expression>,
     pub statements: Vec<Statement>,
+    pub sampler: Option<Handle<Expression>>,
 }
 
 impl ExpressionRule {
@@ -145,6 +146,7 @@ impl ExpressionRule {
         ExpressionRule {
             expression,
             statements: vec![],
+            sampler: None,
         }
     }
 }
@@ -166,12 +168,11 @@ pub struct VarDeclaration {
 #[derive(Debug)]
 pub enum FunctionCallKind {
     TypeConstructor(Handle<Type>),
-    Function(Handle<Expression>),
+    Function(String),
 }
 
 #[derive(Debug)]
 pub struct FunctionCall {
     pub kind: FunctionCallKind,
-    pub args: Vec<Handle<Expression>>,
-    pub statements: Vec<Statement>,
+    pub args: Vec<ExpressionRule>,
 }

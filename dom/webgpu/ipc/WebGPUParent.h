@@ -70,6 +70,9 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvTextureAction(RawId aSelf, const ipc::ByteBuf& aByteBuf);
   ipc::IPCResult RecvCommandEncoderAction(RawId aSelf,
                                           const ipc::ByteBuf& aByteBuf);
+  ipc::IPCResult RecvBumpImplicitBindGroupLayout(RawId pipelineId,
+                                                 bool isCompute,
+                                                 uint32_t index);
 
   ipc::IPCResult RecvShutdown();
 

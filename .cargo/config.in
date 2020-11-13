@@ -50,7 +50,7 @@ rev = "0917fe780032a6bbb23d71be545f9c1834128d75"
 [source."https://github.com/gfx-rs/naga"]
 git = "https://github.com/gfx-rs/naga"
 replace-with = "vendored-sources"
-rev = "aa35110471ee7915e1f4e1de61ea41f2f32f92c4"
+rev = "4d4e1cd4cbfad2b81264a7239a336b6ec1346611"
 
 [source."https://github.com/djg/cubeb-pulse-rs"]
 git = "https://github.com/djg/cubeb-pulse-rs"

@@ -15,13 +15,17 @@ namespace webgpu {
 class Device;
 
 class RenderPipeline final : public ObjectBase, public ChildOf<Device> {
+  const nsTArray<RawId> mImplicitBindGroupLayoutIds;
+
  public:
   GPU_DECL_CYCLE_COLLECTION(RenderPipeline)
   GPU_DECL_JS_WRAP(RenderPipeline)
 
-  RenderPipeline(Device* const aParent, RawId aId);
-
   const RawId mId;
+
+  RenderPipeline(Device* const aParent, RawId aId,
+                 nsTArray<RawId>&& aImplicitBindGroupLayoutIds);
+  already_AddRefed<BindGroupLayout> GetBindGroupLayout(uint32_t index) const;
 
  private:
   virtual ~RenderPipeline();
