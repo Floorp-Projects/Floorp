@@ -8,7 +8,6 @@
 
 #include <functional>
 
-#include "IRemoteDecoderChild.h"
 #include "mozilla/PRemoteDecoderChild.h"
 #include "mozilla/ShmemRecycleAllocator.h"
 
@@ -19,27 +18,29 @@ using mozilla::MediaDataDecoder;
 using mozilla::ipc::IPCResult;
 
 class RemoteDecoderChild : public ShmemRecycleAllocator<RemoteDecoderChild>,
-                           public PRemoteDecoderChild,
-                           public IRemoteDecoderChild {
+                           public PRemoteDecoderChild {
   friend class PRemoteDecoderChild;
 
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteDecoderChild);
+
   explicit RemoteDecoderChild(bool aRecreatedOnCrash = false);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  // IRemoteDecoderChild
-  RefPtr<MediaDataDecoder::InitPromise> Init() override;
+  // This interface closely mirrors the MediaDataDecoder plus a bit
+  // (DestroyIPDL) to allow proxying to a remote decoder in RemoteDecoderModule.
+  RefPtr<MediaDataDecoder::InitPromise> Init();
   RefPtr<MediaDataDecoder::DecodePromise> Decode(
-      const nsTArray<RefPtr<MediaRawData>>& aSamples) override;
-  RefPtr<MediaDataDecoder::DecodePromise> Drain() override;
-  RefPtr<MediaDataDecoder::FlushPromise> Flush() override;
-  RefPtr<mozilla::ShutdownPromise> Shutdown() override;
-  bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
-  nsCString GetDescriptionName() const override;
-  void SetSeekThreshold(const media::TimeUnit& aTime) override;
-  MediaDataDecoder::ConversionRequired NeedsConversion() const override;
-  void DestroyIPDL() override;
+      const nsTArray<RefPtr<MediaRawData>>& aSamples);
+  RefPtr<MediaDataDecoder::DecodePromise> Drain();
+  RefPtr<MediaDataDecoder::FlushPromise> Flush();
+  RefPtr<mozilla::ShutdownPromise> Shutdown();
+  bool IsHardwareAccelerated(nsACString& aFailureReason) const;
+  nsCString GetDescriptionName() const;
+  void SetSeekThreshold(const media::TimeUnit& aTime);
+  MediaDataDecoder::ConversionRequired NeedsConversion() const;
+  void DestroyIPDL();
 
   // Called from IPDL when our actor has been destroyed
   void IPDLActorDestroyed();
@@ -47,7 +48,7 @@ class RemoteDecoderChild : public ShmemRecycleAllocator<RemoteDecoderChild>,
   RemoteDecoderManagerChild* GetManager();
 
  protected:
-  virtual ~RemoteDecoderChild() = default;
+  virtual ~RemoteDecoderChild();
   void AssertOnManagerThread() const;
 
   virtual MediaResult ProcessOutput(DecodedOutputIPDL&& aDecodedData) = 0;
