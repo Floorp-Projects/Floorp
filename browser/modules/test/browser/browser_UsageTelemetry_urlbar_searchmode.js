@@ -91,7 +91,7 @@ add_task(async function setup() {
       ["browser.urlbar.update2.oneOffsRefresh", true],
       // Disable tab-to-search onboarding results for general tests. They are
       // enabled in tests that specifically address onboarding.
-      ["browser.urlbar.tabToSearch.onboard.maxShown", 0],
+      ["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0],
     ],
   });
 
@@ -463,7 +463,7 @@ add_task(async function test_tabtosearch() {
     set: [
       ["browser.urlbar.update2.tabToComplete", true],
       // Do not show the onboarding result for this subtest.
-      ["browser.urlbar.tabToSearch.onboard.maxShown", 0],
+      ["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0],
     ],
   });
   await PlacesTestUtils.addVisits([`http://${engineDomain}/`]);
@@ -523,11 +523,9 @@ add_task(async function test_tabtosearch_onboard() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.update2.tabToComplete", true],
-      ["browser.urlbar.tabToSearch.onboard.maxShown", 10],
+      ["browser.urlbar.tabToSearch.onboard.interactionsLeft", 3],
     ],
   });
-  UrlbarPrefs.set("tipShownCount.tabToSearch", 0);
-  UrlbarProviderTabToSearch.onboardingResultsThisSession = 0;
   await PlacesTestUtils.addVisits([`http://${engineDomain}/`]);
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
@@ -587,10 +585,10 @@ add_task(async function test_tabtosearch_onboard() {
   await loadPromise;
   assertSearchModeScalars("tabtosearch_onboard", "other", 0);
 
-  BrowserTestUtils.removeTab(tab);
+  UrlbarPrefs.set("tabToSearch.onboard.interactionsLeft", 3);
+  delete UrlbarProviderTabToSearch.onboardingInteractionAtTime;
 
-  UrlbarProviderTabToSearch.onboardingResultCountThisSession = 0;
-  UrlbarPrefs.set("tipShownCount.tabToSearch", 0);
+  BrowserTestUtils.removeTab(tab);
   await PlacesUtils.history.clear();
   await SpecialPowers.popPrefEnv();
 });

@@ -27,7 +27,7 @@ add_task(async function setup() {
       ["browser.urlbar.update2.tabToComplete", true],
       // Disable onboarding results for general tests. They are enabled in tests
       // that specifically address onboarding.
-      ["browser.urlbar.tabToSearch.onboard.maxShown", 0],
+      ["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0],
     ],
   });
   let testEngine = await Services.search.addEngineWithDetails(
@@ -41,12 +41,7 @@ add_task(async function setup() {
     await PlacesTestUtils.addVisits([`https://${TEST_ENGINE_DOMAIN}/`]);
   }
 
-  UrlbarProviderTabToSearch.onboardingResultCountThisSession = 0;
-  await UrlbarPrefs.set("tipShownCount.tabToSearch", 0);
-
   registerCleanupFunction(async () => {
-    UrlbarProviderTabToSearch.onboardingResultCountThisSession = 0;
-    await UrlbarPrefs.set("tipShownCount.tabToSearch", 0);
     await PlacesUtils.history.clear();
     await Services.search.removeEngine(testEngine);
   });
@@ -332,7 +327,7 @@ add_task(async function tab_key_race() {
 // properties.
 add_task(async function onboard() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.tabToSearch.onboard.maxShown", 10]],
+    set: [["browser.urlbar.tabToSearch.onboard.interactionsLeft", 3]],
   });
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -432,40 +427,138 @@ add_task(async function onboard() {
   });
   await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
-  UrlbarProviderTabToSearch.onboardingResultCountThisSession = 0;
-  await UrlbarPrefs.set("tipShownCount.tabToSearch", 0);
+  UrlbarPrefs.set("tabToSearch.onboard.interactionsLeft", 3);
+  delete UrlbarProviderTabToSearch.onboardingInteractionAtTime;
   await SpecialPowers.popPrefEnv();
 });
 
-// Tests that we show the onboarding result at most
-// `browser.urlbar.tabToSearch.onboard.maxShown` times.
+// Tests that we show the onboarding result until the user interacts with it
+// `browser.urlbar.tabToSearch.onboard.interactionsLeft` times.
 add_task(async function onboard_limit() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      // Set maxShown lower than maxShownPerSession so we hit it first.
-      ["browser.urlbar.tabToSearch.onboard.maxShown", 2],
-      ["browser.urlbar.tabToSearch.onboard.maxShownPerSession", 3],
-    ],
+    set: [["browser.urlbar.tabToSearch.onboard.interactionsLeft", 3]],
   });
 
-  let limit = UrlbarPrefs.get("tabToSearch.onboard.maxShown");
-  for (let i = 0; i < limit; i++) {
+  Assert.equal(
+    UrlbarPrefs.get("tabToSearch.onboard.interactionsLeft"),
+    3,
+    "Sanity check: interactionsLeft is 3."
+  );
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: TEST_ENGINE_DOMAIN.slice(0, 4),
+  });
+  let onboardingResult = (
+    await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1)
+  ).result;
+  Assert.equal(
+    onboardingResult.payload.dynamicType,
+    DYNAMIC_RESULT_TYPE,
+    "The second result is an onboarding result."
+  );
+  await EventUtils.synthesizeKey("KEY_ArrowDown");
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: TEST_ENGINE_NAME,
+    entry: "tabtosearch_onboard",
+    isPreview: true,
+  });
+  Assert.equal(UrlbarPrefs.get("tabToSearch.onboard.interactionsLeft"), 2);
+  await UrlbarTestUtils.exitSearchMode(window);
+
+  // We don't increment the counter if we showed the onboarding result less than
+  // 5 minutes ago.
+  for (let i = 0; i < 5; i++) {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: TEST_ENGINE_DOMAIN.slice(0, 4),
     });
-    let onboardingResult = (
+    onboardingResult = (
       await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1)
     ).result;
     Assert.equal(
       onboardingResult.payload.dynamicType,
       DYNAMIC_RESULT_TYPE,
-      "The second result is a tab-to-search onboarding result."
+      "The second result is an onboarding result."
     );
-    await UrlbarTestUtils.promisePopupClose(window);
+    await EventUtils.synthesizeKey("KEY_ArrowDown");
+    await UrlbarTestUtils.assertSearchMode(window, {
+      engineName: TEST_ENGINE_NAME,
+      entry: "tabtosearch_onboard",
+      isPreview: true,
+    });
+    Assert.equal(
+      UrlbarPrefs.get("tabToSearch.onboard.interactionsLeft"),
+      2,
+      "We shouldn't decrement interactionsLeft if an onboarding result was just shown."
+    );
+    await UrlbarTestUtils.exitSearchMode(window);
   }
 
-  // We should have exhausted our limit.
+  // If the user doesn't interact with the result, we don't increment the
+  // counter.
+  for (let i = 0; i < 5; i++) {
+    delete UrlbarProviderTabToSearch.onboardingInteractionAtTime;
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: TEST_ENGINE_DOMAIN.slice(0, 4),
+    });
+    let tabToSearchResult = (
+      await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1)
+    ).result;
+    Assert.equal(
+      tabToSearchResult.providerName,
+      "TabToSearch",
+      "The second result is a tab-to-search result."
+    );
+    Assert.equal(
+      tabToSearchResult.type,
+      UrlbarUtils.RESULT_TYPE.DYNAMIC,
+      "The tab-to-search result is an onboarding result."
+    );
+    Assert.equal(
+      UrlbarPrefs.get("tabToSearch.onboard.interactionsLeft"),
+      2,
+      "We shouldn't decrement interactionsLeft if the user doesn't interact with onboarding."
+    );
+  }
+
+  // Test that we increment the counter if the user interacts with the result
+  // and it's been 5+ minutes since they last interacted with it.
+  for (let i = 1; i >= 0; i--) {
+    delete UrlbarProviderTabToSearch.onboardingInteractionAtTime;
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: TEST_ENGINE_DOMAIN.slice(0, 4),
+    });
+    let tabToSearchResult = (
+      await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1)
+    ).result;
+    Assert.equal(
+      tabToSearchResult.providerName,
+      "TabToSearch",
+      "The second result is a tab-to-search result."
+    );
+    Assert.equal(
+      onboardingResult.payload.dynamicType,
+      DYNAMIC_RESULT_TYPE,
+      "The second result is an onboarding result."
+    );
+    await EventUtils.synthesizeKey("KEY_ArrowDown");
+    await UrlbarTestUtils.assertSearchMode(window, {
+      engineName: TEST_ENGINE_NAME,
+      entry: "tabtosearch_onboard",
+      isPreview: true,
+    });
+    Assert.equal(
+      UrlbarPrefs.get("tabToSearch.onboard.interactionsLeft"),
+      i,
+      "We decremented interactionsLeft."
+    );
+    await UrlbarTestUtils.exitSearchMode(window);
+  }
+
+  delete UrlbarProviderTabToSearch.onboardingInteractionAtTime;
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: TEST_ENGINE_DOMAIN.slice(0, 4),
@@ -481,65 +574,12 @@ add_task(async function onboard_limit() {
   Assert.notEqual(
     tabToSearchResult.type,
     UrlbarUtils.RESULT_TYPE.DYNAMIC,
-    "The tab-to-search result is not an onboarding result."
+    "Now that interactionsLeft is 0, we don't show onboarding results."
   );
 
   await UrlbarTestUtils.promisePopupClose(window);
-  UrlbarProviderTabToSearch.onboardingResultCountThisSession = 0;
-  await UrlbarPrefs.set("tipShownCount.tabToSearch", 0);
-  await SpecialPowers.popPrefEnv();
-});
-
-// Tests that we show the onboarding result at most
-// `browser.urlbar.tabToSearch.onboard.maxShownPerSession` times per session.
-add_task(async function onboard_sessionlimit() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.tabToSearch.onboard.maxShown", 10],
-      ["browser.urlbar.tabToSearch.onboard.maxShownPerSession", 2],
-    ],
-  });
-
-  let sessionLimit = UrlbarPrefs.get("tabToSearch.onboard.maxShownPerSession");
-
-  for (let i = 0; i < sessionLimit; i++) {
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: TEST_ENGINE_DOMAIN.slice(0, 4),
-    });
-    let onboardingResult = (
-      await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1)
-    ).result;
-    Assert.equal(
-      onboardingResult.payload.dynamicType,
-      DYNAMIC_RESULT_TYPE,
-      "The second result is a tab-to-search onboarding result."
-    );
-    await UrlbarTestUtils.promisePopupClose(window);
-  }
-
-  // We should have exhausted our per-session limit.
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: TEST_ENGINE_DOMAIN.slice(0, 4),
-  });
-  let tabToSearchResult = (
-    await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1)
-  ).result;
-  Assert.equal(
-    tabToSearchResult.providerName,
-    "TabToSearch",
-    "The second result is a tab-to-search result."
-  );
-  Assert.notEqual(
-    tabToSearchResult.type,
-    UrlbarUtils.RESULT_TYPE.DYNAMIC,
-    "The tab-to-search result is not an onboarding result."
-  );
-
-  await UrlbarTestUtils.promisePopupClose(window);
-  UrlbarProviderTabToSearch.onboardingResultCountThisSession = 0;
-  await UrlbarPrefs.set("tipShownCount.tabToSearch", 0);
+  UrlbarPrefs.set("tabToSearch.onboard.interactionsLeft", 3);
+  delete UrlbarProviderTabToSearch.onboardingInteractionAtTime;
   await SpecialPowers.popPrefEnv();
 });
 
@@ -548,7 +588,7 @@ add_task(async function onboard_sessionlimit() {
 // that ensures only one normal tab-to-search result is shown in this scenario.
 add_task(async function onboard_multipleEnginesForHostname() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.tabToSearch.onboard.maxShown", 10]],
+    set: [["browser.urlbar.tabToSearch.onboard.interactionsLeft", 3]],
   });
 
   let testEngineMaps = await Services.search.addEngineWithDetails(
@@ -591,121 +631,8 @@ add_task(async function onboard_multipleEnginesForHostname() {
   );
   await Services.search.removeEngine(testEngineMaps);
   await UrlbarTestUtils.promisePopupClose(window);
-  UrlbarProviderTabToSearch.onboardingResultCountThisSession = 0;
-  await UrlbarPrefs.set("tipShownCount.tabToSearch", 0);
-  await SpecialPowers.popPrefEnv();
-});
-
-// Tests that we stop showing onboarding results after one is interacted with if
-// the tabToSearch.onboard.oneInteraction pref is set to true.
-add_task(async function onboard_oneInteraction_true() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.tabToSearch.onboard.maxShown", 10],
-      ["browser.urlbar.tabToSearch.onboard.oneInteraction", true],
-    ],
-  });
-
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: TEST_ENGINE_DOMAIN.slice(0, 4),
-  });
-
-  EventUtils.synthesizeKey("KEY_Tab");
-  await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: TEST_ENGINE_NAME,
-    entry: "tabtosearch_onboard",
-    isPreview: true,
-  });
-  let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
-  EventUtils.synthesizeKey("KEY_Enter");
-  await searchPromise;
-  await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: TEST_ENGINE_NAME,
-    // Implicit check that we selected an onboarding result.
-    entry: "tabtosearch_onboard",
-  });
-  await UrlbarTestUtils.exitSearchMode(window);
-  await UrlbarTestUtils.promisePopupClose(window);
-  UrlbarProviderTabToSearch.onboardingResultCountThisSession = 0;
-
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: TEST_ENGINE_DOMAIN.slice(0, 4),
-  });
-
-  let result = (await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1))
-    .result;
-  Assert.equal(
-    result.providerName,
-    "TabToSearch",
-    "The second result is a tab-to-search result."
-  );
-  Assert.notEqual(
-    result.type,
-    UrlbarUtils.RESULT_TYPE.DYNAMIC,
-    "The tab-to-search result was not an onboarding result."
-  );
-
-  await UrlbarTestUtils.promisePopupClose(window);
-  UrlbarProviderTabToSearch.onboardingResultCountThisSession = 0;
-  await UrlbarPrefs.set("tipShownCount.tabToSearch", 0);
-  await SpecialPowers.popPrefEnv();
-});
-
-// Tests that we continue showing onboarding results after one is interacted
-// with if the tabToSearch.onboard.oneInteraction pref is set to false.
-add_task(async function onboard_oneInteraction_false() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.tabToSearch.onboard.maxShown", 10],
-      ["browser.urlbar.tabToSearch.onboard.oneInteraction", false],
-    ],
-  });
-
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: TEST_ENGINE_DOMAIN.slice(0, 4),
-  });
-
-  EventUtils.synthesizeKey("KEY_Tab");
-  await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: TEST_ENGINE_NAME,
-    entry: "tabtosearch_onboard",
-    isPreview: true,
-  });
-  let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
-  EventUtils.synthesizeKey("KEY_Enter");
-  await searchPromise;
-  await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: TEST_ENGINE_NAME,
-    // Implicit check that we selected an onboarding result.
-    entry: "tabtosearch_onboard",
-  });
-  await UrlbarTestUtils.exitSearchMode(window);
-  await UrlbarTestUtils.promisePopupClose(window);
-
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: TEST_ENGINE_DOMAIN.slice(0, 4),
-  });
-
-  let result = (await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1))
-    .result;
-  Assert.equal(
-    result.providerName,
-    "TabToSearch",
-    "The second result is a tab-to-search result."
-  );
-  Assert.equal(
-    result.type,
-    UrlbarUtils.RESULT_TYPE.DYNAMIC,
-    "The tab-to-search result is an onboarding result."
-  );
-
-  await UrlbarTestUtils.promisePopupClose(window);
-  UrlbarProviderTabToSearch.onboardingResultCountThisSession = 0;
-  await UrlbarPrefs.set("tipShownCount.tabToSearch", 0);
+  UrlbarPrefs.set("tabToSearch.onboard.interactionsLeft", 3);
+  delete UrlbarProviderTabToSearch.onboardingInteractionAtTime;
   await SpecialPowers.popPrefEnv();
 });
 

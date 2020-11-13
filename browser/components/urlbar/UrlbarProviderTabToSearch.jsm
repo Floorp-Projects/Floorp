@@ -101,8 +101,6 @@ function initializeDynamicResult() {
 class ProviderTabToSearch extends UrlbarProvider {
   constructor() {
     super();
-    // Expose this variable so tests can set it.
-    this.onboardingResultCountThisSession = 0;
   }
 
   /**
@@ -204,6 +202,44 @@ class ProviderTabToSearch extends UrlbarProvider {
   }
 
   /**
+   * Called when a result from the provider is selected. "Selected" refers to
+   * the user highlighing the result with the arrow keys/Tab, before it is
+   * picked. onSelection is also called when a user clicks a result. In the
+   * event of a click, onSelection is called just before pickResult.
+   *
+   * @param {UrlbarResult} result
+   *   The result that was selected.
+   * @param {Element} element
+   *   The element in the result's view that was selected.
+   */
+  onSelection(result, element) {
+    // We keep track of the number of times the user interacts with
+    // tab-to-search onboarding results so we stop showing them after
+    // `tabToSearch.onboard.interactionsLeft` interactions.
+    // Also do not increment the counter if the result was interacted with less
+    // than 5 minutes ago. This is a guard against the user running up the
+    // counter by interacting with the same result repeatedly.
+    if (
+      result.payload.dynamicType &&
+      (!this.onboardingInteractionAtTime ||
+        this.onboardingInteractionAtTime < Date.now() - 1000 * 60 * 5)
+    ) {
+      let interactionsLeft = UrlbarPrefs.get(
+        "tabToSearch.onboard.interactionsLeft"
+      );
+
+      if (interactionsLeft > 0) {
+        UrlbarPrefs.set(
+          "tabToSearch.onboard.interactionsLeft",
+          --interactionsLeft
+        );
+      }
+
+      this.onboardingInteractionAtTime = Date.now();
+    }
+  }
+
+  /**
    * Defines whether the view should defer user selection events while waiting
    * for the first result from this provider.
    * @returns {boolean} Whether the provider wants to defer user selection
@@ -238,7 +274,10 @@ class ProviderTabToSearch extends UrlbarProvider {
     let engines = await UrlbarSearchUtils.enginesForDomainPrefix(searchStr, {
       matchAllDomainLevels: true,
     });
-    let onboardingShownCount = UrlbarPrefs.get("tipShownCount.tabToSearch");
+
+    const onboardingInteractionsLeft = UrlbarPrefs.get(
+      "tabToSearch.onboard.interactionsLeft"
+    );
     let showedOnboarding = false;
     for (let engine of engines) {
       // Set the domain without public suffix as url, it will be used by
@@ -246,12 +285,7 @@ class ProviderTabToSearch extends UrlbarProvider {
       let url = engine.getResultDomain();
       url = url.substr(0, url.length - engine.searchUrlPublicSuffix.length);
       let result;
-      if (
-        onboardingShownCount <
-          UrlbarPrefs.get("tabToSearch.onboard.maxShown") &&
-        this.onboardingResultCountThisSession <
-          UrlbarPrefs.get("tabToSearch.onboard.maxShownPerSession")
-      ) {
+      if (onboardingInteractionsLeft > 0) {
         result = new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.DYNAMIC,
           UrlbarUtils.RESULT_SOURCE.SEARCH,
@@ -284,11 +318,9 @@ class ProviderTabToSearch extends UrlbarProvider {
     }
 
     // The muxer ensures we show at most one tab-to-search result per query.
-    // Thus, we increment these counters just once, even if we sent multiple
+    // Thus, we increment this telemetry just once, even if we sent multiple
     // results to the muxer.
     if (showedOnboarding) {
-      this.onboardingResultCountThisSession++;
-      UrlbarPrefs.set("tipShownCount.tabToSearch", ++onboardingShownCount);
       Services.telemetry.keyedScalarAdd(
         "urlbar.tips",
         "tabtosearch_onboard-shown",
