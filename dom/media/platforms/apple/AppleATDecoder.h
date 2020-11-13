@@ -35,7 +35,7 @@ class AppleATDecoder : public MediaDataDecoder,
   }
 
   // Callbacks also need access to the config.
-  const AudioInfo& mConfig;
+  const AudioInfo mConfig;
 
   // Use to extract magic cookie for HE-AAC detection.
   nsTArray<uint8_t> mMagicCookie;

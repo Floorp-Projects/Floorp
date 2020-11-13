@@ -209,7 +209,7 @@ class VPXDecoder : public MediaDataDecoder,
   // VPx alpha decoder state
   vpx_codec_ctx_t mVPXAlpha;
 
-  const VideoInfo& mInfo;
+  const VideoInfo mInfo;
 
   const Codec mCodec;
   const bool mLowLatency;
