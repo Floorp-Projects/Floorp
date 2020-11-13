@@ -146,6 +146,32 @@ class SearchUtils {
     return tokenAliasEngines;
   }
 
+  /**
+   * @param {nsISearchEngine} engine
+   * @returns {string}
+   *   The root domain of a search engine. e.g. If `engine` has the domain
+   *   www.subdomain.rootdomain.com, `rootdomain` is returned. Returns the
+   *   engine's domain if the engine's URL does not have a valid TLD.
+   */
+  getRootDomainFromEngine(engine) {
+    let domain = engine.getResultDomain();
+    let suffix = engine.searchUrlPublicSuffix;
+    if (!suffix) {
+      if (domain.endsWith(".test")) {
+        suffix = "test";
+      } else {
+        return domain;
+      }
+    }
+    domain = domain.substr(
+      0,
+      // -1 to remove the trailing dot.
+      domain.length - suffix.length - 1
+    );
+    let domainParts = domain.split(".");
+    return domainParts.pop();
+  }
+
   getDefaultEngine(isPrivate = false) {
     return this.separatePrivateDefaultUIEnabled &&
       this.separatePrivateDefault &&
