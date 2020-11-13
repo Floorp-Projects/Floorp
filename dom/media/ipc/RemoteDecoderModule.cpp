@@ -46,7 +46,6 @@ bool RemoteDecoderModule::SupportsMimeType(
 bool RemoteDecoderModule::Supports(
     const SupportDecoderParams& aParams,
     DecoderDoctorDiagnostics* aDiagnostics) const {
-
   bool supports =
       RemoteDecoderManagerChild::Supports(mLocation, aParams, aDiagnostics);
   MOZ_LOG(sPDMLog, LogLevel::Debug,
