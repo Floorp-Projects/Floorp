@@ -4,11 +4,7 @@
 
 "use strict";
 
-var {
-  findPlaceholders,
-  getPath,
-  describeTemplate,
-} = require("devtools/shared/protocol/utils");
+var { findPlaceholders, getPath } = require("devtools/shared/protocol/utils");
 var { types } = require("devtools/shared/protocol/types");
 
 /**
@@ -76,10 +72,6 @@ Response.prototype = {
     const v = getPath(packet, this.path);
     return this.retVal.read(v, ctx);
   },
-
-  describe: function() {
-    return describeTemplate(this.template);
-  },
 };
 
 exports.Response = Response;
@@ -104,12 +96,6 @@ RetVal.prototype = {
 
   read: function(v, ctx) {
     return this.type.read(v, ctx);
-  },
-
-  describe: function() {
-    return {
-      _retval: this.type.name,
-    };
   },
 };
 

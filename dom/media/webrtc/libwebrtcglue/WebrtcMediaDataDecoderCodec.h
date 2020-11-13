@@ -29,7 +29,7 @@ class TaskQueue;
 
 class WebrtcMediaDataDecoder : public WebrtcVideoDecoder {
  public:
-  WebrtcMediaDataDecoder();
+  explicit WebrtcMediaDataDecoder(nsACString& aCodecMimeType);
 
   // Implement VideoDecoder interface.
   uint64_t PluginID() const override { return 0; }
@@ -66,6 +66,7 @@ class WebrtcMediaDataDecoder : public WebrtcVideoDecoder {
 
   MediaResult mError = NS_OK;
   MediaDataDecoder::DecodedData mResults;
+  const nsCString mCodecType;
 };
 
 }  // namespace mozilla

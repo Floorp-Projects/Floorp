@@ -33,7 +33,6 @@ static bool IsOnGMPThread() {
 GMPVideoDecoderParams::GMPVideoDecoderParams(const CreateDecoderParams& aParams)
     : mConfig(aParams.VideoConfig()),
       mImageContainer(aParams.mImageContainer),
-      mLayersBackend(aParams.GetLayersBackend()),
       mCrashHelper(aParams.mCrashHelper) {}
 
 void GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {

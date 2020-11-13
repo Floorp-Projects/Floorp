@@ -17,28 +17,6 @@ var generateActorSpec = function(actorDesc) {
     methods: [],
   };
 
-  // Find method and form specifications attached to properties.
-  for (const name of Object.getOwnPropertyNames(actorDesc)) {
-    const desc = Object.getOwnPropertyDescriptor(actorDesc, name);
-    if (!desc.value) {
-      continue;
-    }
-
-    if (desc.value._methodSpec) {
-      const methodSpec = desc.value._methodSpec;
-      const spec = {};
-      spec.name = methodSpec.name || name;
-      spec.request = new Request(
-        Object.assign({ type: spec.name }, methodSpec.request || undefined)
-      );
-      spec.response = new Response(methodSpec.response || undefined);
-      spec.release = methodSpec.release;
-      spec.oneway = methodSpec.oneway;
-
-      actorSpec.methods.push(spec);
-    }
-  }
-
   // Find additional method specifications
   if (actorDesc.methods) {
     for (const name in actorDesc.methods) {

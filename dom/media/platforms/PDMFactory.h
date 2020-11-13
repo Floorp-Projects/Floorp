@@ -32,11 +32,8 @@ class PDMFactory final {
   static already_AddRefed<PDMFactory> PDMFactoryForGpu();
 
   // Factory method that creates the appropriate PlatformDecoderModule for
-  // the platform we're running on. Caller is responsible for deleting this
-  // instance. It's expected that there will be multiple
-  // PlatformDecoderModules alive at the same time.
-  // This is called on the decode task queue.
-  already_AddRefed<MediaDataDecoder> CreateDecoder(
+  // the platform we're running on.
+  RefPtr<PlatformDecoderModule::CreateDecoderPromise> CreateDecoder(
       const CreateDecoderParams& aParams);
 
   bool SupportsMimeType(const nsACString& aMimeType,
@@ -107,8 +104,11 @@ class PDMFactory final {
       const SupportDecoderParams& aParams,
       DecoderDoctorDiagnostics* aDiagnostics) const;
 
-  already_AddRefed<MediaDataDecoder> CreateDecoderWithPDM(
+  RefPtr<PlatformDecoderModule::CreateDecoderPromise> CreateDecoderWithPDM(
       PlatformDecoderModule* aPDM, const CreateDecoderParams& aParams);
+  RefPtr<PlatformDecoderModule::CreateDecoderPromise>
+  CheckAndMaybeCreateDecoder(CreateDecoderParamsForAsync&& aParams,
+                             uint32_t aIndex);
 
   nsTArray<RefPtr<PlatformDecoderModule>> mCurrentPDMs;
   RefPtr<PlatformDecoderModule> mEMEPDM;

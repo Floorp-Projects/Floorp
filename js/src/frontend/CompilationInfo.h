@@ -462,17 +462,18 @@ struct CompilationInfo {
 struct CompilationInfoVector {
  private:
   using FunctionKey = uint64_t;
-  using FunctionMap = HashMap<FunctionKey, FunctionIndex>;
+  using FunctionIndexVector = Vector<FunctionIndex, 0, js::SystemAllocPolicy>;
 
   static FunctionKey toFunctionKey(const SourceExtent& extent) {
     return (FunctionKey)extent.sourceStart << 32 | extent.sourceEnd;
   }
 
-  MOZ_MUST_USE bool buildDelazificationStencilMap(FunctionMap& functionMap);
+  MOZ_MUST_USE bool buildDelazificationIndices(JSContext* cx);
 
  public:
   frontend::CompilationInfo initial;
   GCVector<frontend::CompilationInfo, 0, js::SystemAllocPolicy> delazifications;
+  FunctionIndexVector delazificationIndices;
 
   CompilationInfoVector(JSContext* cx,
                         const JS::ReadOnlyCompileOptions& options)

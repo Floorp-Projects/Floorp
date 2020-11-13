@@ -4,19 +4,6 @@
 
 "use strict";
 
-function describeTemplate(template) {
-  return JSON.parse(
-    JSON.stringify(template, (key, value) => {
-      if (value.describe) {
-        return value.describe();
-      }
-      return value;
-    })
-  );
-}
-
-exports.describeTemplate = describeTemplate;
-
 /**
  * Find Placeholders in the template and save them along with their
  * paths.
@@ -55,25 +42,3 @@ function getPath(obj, path) {
   return obj;
 }
 exports.getPath = getPath;
-
-/**
- * Tags a prtotype method as an actor method implementation.
- *
- * @param function fn
- *    The implementation function, will be returned.
- * @param spec
- *    The method specification, with the following (optional) properties:
- *      request (object): a request template.
- *      response (object): a response template.
- *      oneway (bool): 'true' if no response should be sent.
- */
-exports.method = function(fn, spec = {}) {
-  fn._methodSpec = Object.freeze(spec);
-  if (spec.request) {
-    Object.freeze(spec.request);
-  }
-  if (spec.response) {
-    Object.freeze(spec.response);
-  }
-  return fn;
-};

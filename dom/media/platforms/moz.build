@@ -39,6 +39,7 @@ UNIFIED_SOURCES += [
     "AllocationPolicy.cpp",
     "PDMFactory.cpp",
     "PEMFactory.cpp",
+    "PlatformDecoderModule.cpp",
     "wrappers/AudioTrimmer.cpp",
     "wrappers/MediaChangeMonitor.cpp",
     "wrappers/MediaDataDecoderProxy.cpp",

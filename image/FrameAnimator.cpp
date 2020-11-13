@@ -54,9 +54,20 @@ const gfx::IntRect AnimationState::UpdateStateInternal(
 
     // If we can seek to the current animation frame we consider it decoded.
     // Animated images are never fully decoded unless very short.
-    mIsCurrentlyDecoded =
-        bool(aResult.Surface()) &&
-        NS_SUCCEEDED(aResult.Surface().Seek(mCurrentAnimationFrameIndex));
+    // Note that we use GetFrame instead of Seek here. The difference is that
+    // Seek eventually calls AnimationFrameBuffer::Get with aForDisplay == true,
+    // whereas GetFrame calls AnimationFrameBuffer::Get with aForDisplay ==
+    // false. The aForDisplay can change whether those functions succeed or not
+    // (only for the first frame). Since this is not for display we want to pass
+    // aForDisplay == false, but also for consistency with
+    // RequestRefresh/AdvanceFrame, because we want our state to be in sync with
+    // those functions. The user of Seek (GetCompositedFrame) doesn't need to be
+    // in sync with our state.
+    RefPtr<imgFrame> currentFrame =
+        bool(aResult.Surface())
+            ? aResult.Surface().GetFrame(mCurrentAnimationFrameIndex)
+            : nullptr;
+    mIsCurrentlyDecoded = !!currentFrame;
   }
 
   gfx::IntRect ret;
