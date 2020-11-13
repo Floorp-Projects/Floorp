@@ -24,9 +24,9 @@ add_task(async function task() {
   const currentTab = gBrowser.selectedTab;
   const target = await TargetFactory.forTab(currentTab);
   const toolbox = gDevTools.getToolbox(target);
+  const panel = toolbox.getCurrentPanel().panelWin;
 
-  const monitor = toolbox.getCurrentPanel();
-  const netReady = monitor.panelWin.api.once("NetMonitor:PayloadReady");
+  const netReady = panel.api.once("NetMonitor:PayloadReady");
 
   // Fire an XHR POST request.
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
@@ -46,19 +46,7 @@ add_task(async function task() {
   const urlNode = messageNode.querySelector(".url");
   info("Network message found.");
 
-  const onReady = new Promise(resolve => {
-    let count = 0;
-    function onPayloadReady(updateCount) {
-      count += updateCount;
-      // Wait for all NETWORK_REQUEST updated events
-      // Otherwise we may still be having pending request
-      if (count == 7) {
-        hud.ui.off("network-request-payload-ready", onPayloadReady);
-        resolve();
-      }
-    }
-    hud.ui.on("network-request-payload-ready", onPayloadReady);
-  });
+  const onReady = hud.ui.once("network-request-payload-ready");
 
   // Expand network log
   urlNode.click();
@@ -66,6 +54,7 @@ add_task(async function task() {
   await onReady;
 
   info("network-request-payload-ready received");
+
   await testNetworkMessage(messageNode);
   await waitForLazyRequests(toolbox);
 });
