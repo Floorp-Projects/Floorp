@@ -26,18 +26,11 @@ class RemoteDecoderModule : public PlatformDecoderModule {
   bool Supports(const SupportDecoderParams& aParams,
                 DecoderDoctorDiagnostics* aDiagnostics) const override;
 
-  RefPtr<CreateDecoderPromise> AsyncCreateDecoder(
+  already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
       const CreateDecoderParams& aParams) override;
 
-  already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
-      const CreateDecoderParams& aParams) override {
-    MOZ_CRASH("Not available");
-  }
-
   already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
-      const CreateDecoderParams& aParams) override {
-    MOZ_CRASH("Not available");
-  }
+      const CreateDecoderParams& aParams) override;
 
  private:
   explicit RemoteDecoderModule(RemoteDecodeIn aLocation);

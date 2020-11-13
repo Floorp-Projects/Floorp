@@ -5,7 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SamplesWaitingForKey.h"
-
 #include "MediaData.h"
 #include "MediaEventSource.h"
 #include "mozilla/CDMCaps.h"
@@ -16,12 +15,11 @@ namespace mozilla {
 
 SamplesWaitingForKey::SamplesWaitingForKey(
     CDMProxy* aProxy, TrackInfo::TrackType aType,
-    const std::function<MediaEventProducer<TrackInfo::TrackType>*()>&
-        aOnWaitingForKeyEvent)
+    MediaEventProducer<TrackInfo::TrackType>* aOnWaitingForKey)
     : mMutex("SamplesWaitingForKey"),
       mProxy(aProxy),
       mType(aType),
-      mOnWaitingForKeyEvent(aOnWaitingForKeyEvent) {}
+      mOnWaitingForKeyEvent(aOnWaitingForKey) {}
 
 SamplesWaitingForKey::~SamplesWaitingForKey() { Flush(); }
 
@@ -42,8 +40,8 @@ SamplesWaitingForKey::WaitIfKeyNotUsable(MediaRawData* aSample) {
     MutexAutoLock lock(mMutex);
     mSamples.AppendElement(std::move(entry));
   }
-  if (mOnWaitingForKeyEvent && mOnWaitingForKeyEvent()) {
-    mOnWaitingForKeyEvent()->Notify(mType);
+  if (mOnWaitingForKeyEvent) {
+    mOnWaitingForKeyEvent->Notify(mType);
   }
   caps->NotifyWhenKeyIdUsable(aSample->mCrypto.mKeyId, this);
   return p;

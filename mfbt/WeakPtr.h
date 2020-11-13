@@ -294,8 +294,6 @@ class WeakPtr {
 #endif
   }
 
-  explicit WeakPtr(const RefPtr<T>& aOther) : WeakPtr(aOther.get()) {}
-
   // Ensure that mRef is dereferenceable in the uninitialized state.
   WeakPtr() : mRef(new WeakReference(nullptr)) {}
 
