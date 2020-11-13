@@ -255,6 +255,7 @@ impl SharedTextures {
                 TextureFilter::Linear,
                 1024,
                 TEXTURE_REGION_DIMENSIONS,
+                SlabSizes::Default,
             ),
             // Used for experimental hdr yuv texture support, but not used in
             // production Firefox.
@@ -263,13 +264,15 @@ impl SharedTextures {
                 TextureFilter::Linear,
                 TEXTURE_REGION_DIMENSIONS,
                 TEXTURE_REGION_DIMENSIONS,
+                SlabSizes::Default,
             ),
             // The primary cache for images, etc.
             color8_linear: TextureUnits::new(
                 color_formats.clone(),
                 TextureFilter::Linear,
                 2048,
-                TEXTURE_REGION_DIMENSIONS
+                TEXTURE_REGION_DIMENSIONS,
+                SlabSizes::Default,
             ),
             // The cache for glyphs (separate to help with batching).
             color8_glyphs: TextureUnits::new(
@@ -277,6 +280,7 @@ impl SharedTextures {
                 TextureFilter::Linear,
                 2048,
                 GLYPH_TEXTURE_REGION_DIMENSIONS,
+                SlabSizes::Glyphs,
             ),
             // Used for image-rendering: crisp. This is mostly favicons, which
             // are small. Some other images use it too, but those tend to be
@@ -286,6 +290,7 @@ impl SharedTextures {
                 TextureFilter::Nearest,
                 TEXTURE_REGION_DIMENSIONS,
                 TEXTURE_REGION_DIMENSIONS,
+                SlabSizes::Default,
             ),
         }
     }
@@ -1233,6 +1238,98 @@ impl TextureCache {
     }
 }
 
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+enum SlabSizes {
+    Default,
+    Glyphs,
+}
+
+impl SlabSizes {
+    fn get(&self, requested_size: DeviceIntSize) -> SlabSize {
+        match *self {
+            SlabSizes::Default => Self::default_slab_size(requested_size),
+            SlabSizes::Glyphs => Self::glyphs_slab_size(requested_size),
+        }
+    }
+
+    fn default_slab_size(size: DeviceIntSize) -> SlabSize {
+        fn quantize_dimension(size: i32) -> i32 {
+            match size {
+                0 => unreachable!(),
+                1..=16 => 16,
+                17..=32 => 32,
+                33..=64 => 64,
+                65..=128 => 128,
+                129..=256 => 256,
+                257..=512 => 512,
+                _ => panic!("Invalid dimensions for cache!"),
+            }
+        }
+
+
+        let x_size = quantize_dimension(size.width);
+        let y_size = quantize_dimension(size.height);
+
+        let (width, height) = match (x_size, y_size) {
+            // Special cased rectangular slab pages.
+            (512, 0..=64) => (512, 64),
+            (512, 128) => (512, 128),
+            (512, 256) => (512, 256),
+            (0..=64, 512) => (64, 512),
+            (128, 512) => (128, 512),
+            (256, 512) => (256, 512),
+
+            // If none of those fit, use a square slab size.
+            (x_size, y_size) => {
+                let square_size = cmp::max(x_size, y_size);
+                (square_size, square_size)
+            }
+        };
+
+        SlabSize {
+            width,
+            height,
+        }
+    }
+
+    fn glyphs_slab_size(size: DeviceIntSize) -> SlabSize {
+        fn quantize_dimension(size: i32) -> i32 {
+            match size {
+                0 => unreachable!(),
+                1..=8 => 8,
+                9..=16 => 16,
+                17..=32 => 32,
+                33..=64 => 64,
+                65..=128 => 128,
+                _ => panic!("Invalid dimensions for cache!"),
+            }
+        }
+
+
+        let x_size = quantize_dimension(size.width);
+        let y_size = quantize_dimension(size.height);
+
+        let (width, height) = match (x_size, y_size) {
+            // Special cased rectangular slab pages.
+            (8, 16) => (8, 16),
+            (16, 32) => (16, 32),
+
+            // If none of those fit, use a square slab size.
+            (x_size, y_size) => {
+                let square_size = cmp::max(x_size, y_size);
+                (square_size, square_size)
+            }
+        };
+
+        SlabSize {
+            width,
+            height,
+        }
+    }
+}
+
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Copy, Clone, PartialEq)]
@@ -1360,58 +1457,17 @@ struct TextureUnit {
 }
 
 impl TextureUnit {
-    fn slab_size(&self, size: DeviceIntSize) -> SlabSize {
-        fn quantize_dimension(size: i32) -> i32 {
-            match size {
-                0 => unreachable!(),
-                1..=16 => 16,
-                17..=32 => 32,
-                33..=64 => 64,
-                65..=128 => 128,
-                129..=256 => 256,
-                257..=512 => 512,
-                _ => panic!("Invalid dimensions for cache!"),
-            }
-        }
-
-
-        let x_size = quantize_dimension(size.width);
-        let y_size = quantize_dimension(size.height);
-
-        let (width, height) = match (x_size, y_size) {
-            // Special cased rectangular slab pages.
-            (512, 0..=64) => (512, 64),
-            (512, 128) => (512, 128),
-            (512, 256) => (512, 256),
-            (0..=64, 512) => (64, 512),
-            (128, 512) => (128, 512),
-            (256, 512) => (256, 512),
-
-            // If none of those fit, use a square slab size.
-            (x_size, y_size) => {
-                let square_size = cmp::max(x_size, y_size);
-                (square_size, square_size)
-            }
-        };
-
-        SlabSize {
-            width,
-            height,
-        }
-    }
-
     fn is_empty(&self) -> bool {
         self.empty_regions == self.regions.len()
     }
 
     // Returns the region index and allocated rect.
-    fn allocate(&mut self, size: DeviceIntSize) -> Option<(usize, DeviceIntRect)> {
+    fn allocate(&mut self, slab_size: SlabSize) -> Option<(usize, DeviceIntRect)> {
         // Keep track of the location of an empty region,
         // in case we need to select a new empty region
         // after the loop.
         let mut empty_region_index = None;
 
-        let slab_size = self.slab_size(size);
         let allocated_size = size2(slab_size.width, slab_size.height);
 
         // Run through the existing regions of this size, and see if
@@ -1460,6 +1516,7 @@ struct TextureUnits {
     units: SmallVec<[TextureUnit; 1]>,
     size: i32,
     region_size: i32,
+    slab_sizes: SlabSizes,
 }
 
 impl TextureUnits {
@@ -1468,6 +1525,7 @@ impl TextureUnits {
         filter: TextureFilter,
         size: i32,
         region_size: i32,
+        slab_sizes: SlabSizes,
     ) -> Self {
         TextureUnits {
             formats,
@@ -1475,6 +1533,7 @@ impl TextureUnits {
             units: SmallVec::new(),
             size,
             region_size,
+            slab_sizes,
         }
     }
 
@@ -1521,8 +1580,9 @@ impl TextureUnits {
         next_id: &mut CacheTextureId,
     ) -> (CacheTextureId, usize, DeviceIntRect) {
         let mut allocation = None;
+        let slab_size = self.slab_sizes.get(requested_size);
         for unit in &mut self.units {
-            if let Some((region, rect)) = unit.allocate(requested_size) {
+            if let Some((region, rect)) = unit.allocate(slab_size) {
                 allocation = Some((unit.texture_id, region, rect));
             }
         }
@@ -1548,7 +1608,7 @@ impl TextureUnits {
             let unit_index = self.add_texture(texture_id);
 
             let (region_index, rect) = self.units[unit_index]
-                .allocate(requested_size)
+                .allocate(slab_size)
                 .unwrap();
 
             (texture_id, region_index, rect)
