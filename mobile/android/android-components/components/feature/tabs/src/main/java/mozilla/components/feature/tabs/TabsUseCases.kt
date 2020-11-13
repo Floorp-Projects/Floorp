@@ -139,7 +139,7 @@ class TabsUseCases(
          */
         @Suppress("LongParameterList")
         operator fun invoke(
-            url: String,
+            url: String = "about:blank",
             selectTab: Boolean = true,
             startLoading: Boolean = true,
             parentId: String? = null,
@@ -192,7 +192,7 @@ class TabsUseCases(
          */
         @Suppress("LongParameterList")
         operator fun invoke(
-            url: String,
+            url: String = "about:blank",
             selectTab: Boolean = true,
             startLoading: Boolean = true,
             parentId: String? = null,

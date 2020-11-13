@@ -72,7 +72,7 @@ class WindowFeatureTest {
 
         store.dispatch(ContentAction.UpdateWindowRequestAction(tabId, windowRequest)).joinBlocking()
         testDispatcher.advanceUntilIdle()
-        verify(addTabUseCase).invoke(url = windowRequest.url, selectTab = true, parentId = tabId)
+        verify(addTabUseCase).invoke(url = "about:blank", selectTab = true, parentId = tabId)
         verify(store).dispatch(ContentAction.ConsumeWindowRequestAction(tabId))
     }
 
@@ -88,7 +88,7 @@ class WindowFeatureTest {
         store.dispatch(TabListAction.SelectTabAction(privateTabId)).joinBlocking()
         store.dispatch(ContentAction.UpdateWindowRequestAction(privateTabId, windowRequest)).joinBlocking()
         testDispatcher.advanceUntilIdle()
-        verify(addPrivateTabUseCase).invoke(url = windowRequest.url, selectTab = true, parentId = privateTabId)
+        verify(addPrivateTabUseCase).invoke(url = "about:blank", selectTab = true, parentId = privateTabId)
         verify(store).dispatch(ContentAction.ConsumeWindowRequestAction(privateTabId))
     }
 

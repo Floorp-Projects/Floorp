@@ -46,14 +46,12 @@ class WindowFeature(
                         WindowRequest.Type.OPEN -> consumeWindowRequest(state.id) {
                             if (state.content.private) {
                                 tabsUseCases.addPrivateTab(
-                                    url = windowRequest.url,
                                     selectTab = true,
                                     parentId = state.id,
                                     engineSession = windowRequest.prepare()
                                 )
                             } else {
                                 tabsUseCases.addTab(
-                                    url = windowRequest.url,
                                     selectTab = true,
                                     parentId = state.id,
                                     engineSession = windowRequest.prepare()
