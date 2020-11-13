@@ -8,7 +8,6 @@
 #include "mozilla/StaticPrefs_page_load.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ipc/IdleSchedulerParent.h"
-#include "nsIPropertyBag2.h"
 #include "nsSystemInfo.h"
 #include "nsThreadUtils.h"
 #include "nsITimer.h"
@@ -42,16 +41,10 @@ IdleSchedulerParent::IdleSchedulerParent() {
           // Always pretend that there is at least one core for child processes.
           // If there are multiple logical cores, reserve one for the parent
           // process and for the non-main threads.
-          nsCOMPtr<nsIPropertyBag2> infoService =
-              do_GetService(NS_SYSTEMINFO_CONTRACTID);
-          if (infoService) {
-            int32_t cpus;
-            nsresult rv =
-                infoService->GetPropertyAsInt32(u"cpucount"_ns, &cpus);
-            if (NS_SUCCEEDED(rv) && cpus > 1) {
-              sCPUsForChildProcesses = cpus - 1;
-            }
-
+          ProcessInfo processInfo = {};
+          if (NS_SUCCEEDED(CollectProcessInfo(processInfo)) &&
+              processInfo.cpuCount > 1) {
+            sCPUsForChildProcesses = processInfo.cpuCount - 1;
             // We have a new cpu count, reschedule idle scheduler.
             nsCOMPtr<nsIRunnable> runnable =
                 NS_NewRunnableFunction("IdleSchedulerParent::Schedule", []() {
@@ -65,7 +58,7 @@ IdleSchedulerParent::IdleSchedulerParent() {
             thread->Dispatch(runnable, NS_DISPATCH_NORMAL);
           }
         });
-    NS_DispatchToMainThread(runnable);
+    NS_DispatchBackgroundTask(runnable.forget(), NS_DISPATCH_EVENT_MAY_BLOCK);
   }
 }
 
