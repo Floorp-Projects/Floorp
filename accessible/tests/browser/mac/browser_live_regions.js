@@ -99,22 +99,22 @@ addAccessibleTask(
         <div id="status" role="status"></div>
         <output id="output"></output>`;
     });
-    await loadComplete;
+    let webArea = (await loadComplete)[0];
 
-    liveRegionRemoved = waitForEvent(EVENT_LIVE_REGION_REMOVED, "status");
-    await SpecialPowers.spawn(browser, [], () => {
-      content.document
-        .getElementById("status")
-        .setAttribute("aria-live", "off");
-    });
-    await liveRegionRemoved;
-
-    liveRegionRemoved = waitForEvent(EVENT_LIVE_REGION_REMOVED, "output");
-    await SpecialPowers.spawn(browser, [], () => {
-      content.document
-        .getElementById("output")
-        .setAttribute("aria-live", "off");
-    });
-    await liveRegionRemoved;
+    is(webArea.getAttributeValue("AXRole"), "AXWebArea", "web area yeah");
+    const searchPred = {
+      AXSearchKey: "AXLiveRegionSearchKey",
+      AXResultsLimit: -1,
+      AXDirection: "AXDirectionNext",
+    };
+    const liveRegions = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    Assert.deepEqual(
+      liveRegions.map(r => r.getAttributeValue("AXDOMIdentifier")),
+      ["region-1", "region-2", "status", "output"],
+      "SearchPredicate returned all live regions"
+    );
   }
 );
