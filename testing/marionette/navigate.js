@@ -279,7 +279,6 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
     switch (data.type) {
       case "beforeunload":
         seenBeforeUnload = true;
-        seenUnload = false;
         break;
 
       case "pagehide":
