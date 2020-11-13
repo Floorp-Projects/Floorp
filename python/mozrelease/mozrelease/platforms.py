@@ -16,11 +16,9 @@ update_platform_map = {
     "linux-i686": ["Linux_x86-gcc3"],
     "linux-x86_64": ["Linux_x86_64-gcc3"],
     "mac": [
-        "Darwin_x86_64-gcc3-u-i386-x86_64",  # The main platofrm
+        "Darwin_x86_64-gcc3-u-i386-x86_64",
         "Darwin_x86-gcc3-u-i386-x86_64",
-        # We don"t ship builds with these build targets, but some users
-        # modify their builds in a way that has them report like these.
-        # See bug 1071576 for details.
+        "Darwin_aarch64-gcc3",
         "Darwin_x86-gcc3",
         "Darwin_x86_64-gcc3",
     ],
