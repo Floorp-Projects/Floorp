@@ -1,7 +1,7 @@
-const SILENT_PAGE =
-  "https://example.com/browser/toolkit/content/tests/browser/file_silentAudioTrack.html";
-const ALMOST_SILENT_PAGE =
-  "https://example.com/browser/toolkit/content/tests/browser/file_almostSilentAudioTrack.html";
+const SILENT_PAGE = GetTestWebBasedURL("file_silentAudioTrack.html");
+const ALMOST_SILENT_PAGE = GetTestWebBasedURL(
+  "file_almostSilentAudioTrack.html"
+);
 
 function check_audio_playing_state(isPlaying) {
   let autoPlay = content.document.getElementById("autoplay");
@@ -37,7 +37,7 @@ add_task(async function should_not_show_sound_indicator_for_silent_video() {
   );
 
   info("- tab should not have sound indicator before playing silent video -");
-  await waitForTabPlayingEvent(tab, false);
+  await waitForTabSoundIndicatorDisappears(tab);
 
   info("- loading autoplay silent video -");
   BrowserTestUtils.loadURI(tab.linkedBrowser, SILENT_PAGE);
@@ -49,7 +49,7 @@ add_task(async function should_not_show_sound_indicator_for_silent_video() {
   );
 
   info("- tab should not have sound indicator after playing silent video -");
-  await waitForTabPlayingEvent(tab, false);
+  await waitForTabSoundIndicatorDisappears(tab);
 
   info("- remove tab -");
   BrowserTestUtils.removeTab(tab);
@@ -66,7 +66,7 @@ add_task(
     info(
       "- tab should not have sound indicator before playing almost silent video -"
     );
-    await waitForTabPlayingEvent(tab, false);
+    await waitForTabSoundIndicatorDisappears(tab);
 
     info("- loading autoplay almost silent video -");
     BrowserTestUtils.loadURI(tab.linkedBrowser, ALMOST_SILENT_PAGE);
@@ -80,7 +80,7 @@ add_task(
     info(
       "- tab should not have sound indicator after playing almost silent video -"
     );
-    await waitForTabPlayingEvent(tab, false);
+    await waitForTabSoundIndicatorDisappears(tab);
 
     info("- remove tab -");
     BrowserTestUtils.removeTab(tab);

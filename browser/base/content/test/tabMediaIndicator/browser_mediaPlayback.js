@@ -1,7 +1,5 @@
-const PAGE =
-  "https://example.com/browser/toolkit/content/tests/browser/file_mediaPlayback.html";
-const FRAME =
-  "https://example.com/browser/toolkit/content/tests/browser/file_mediaPlaybackFrame.html";
+const PAGE = GetTestWebBasedURL("file_mediaPlayback.html");
+const FRAME = GetTestWebBasedURL("file_mediaPlaybackFrame.html");
 
 function wait_for_event(browser, event) {
   return BrowserTestUtils.waitForEvent(browser, event, false, event => {
