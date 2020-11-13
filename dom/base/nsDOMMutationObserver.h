@@ -875,4 +875,22 @@ inline nsDOMMutationObserver* nsMutationReceiverBase::Observer() {
                  : static_cast<nsDOMMutationObserver*>(mObserver);
 }
 
+class MOZ_RAII nsDOMMutationEnterLeave {
+ public:
+  explicit nsDOMMutationEnterLeave(mozilla::dom::Document* aDoc)
+      : mNeeded(aDoc->MayHaveDOMMutationObservers()) {
+    if (mNeeded) {
+      nsDOMMutationObserver::EnterMutationHandling();
+    }
+  }
+  ~nsDOMMutationEnterLeave() {
+    if (mNeeded) {
+      nsDOMMutationObserver::LeaveMutationHandling();
+    }
+  }
+
+ private:
+  const bool mNeeded;
+};
+
 #endif

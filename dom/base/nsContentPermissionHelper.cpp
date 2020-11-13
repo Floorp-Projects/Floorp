@@ -455,50 +455,6 @@ nsContentPermissionRequester::~nsContentPermissionRequester() {
   mListener = nullptr;
 }
 
-NS_IMETHODIMP
-nsContentPermissionRequester::GetVisibility(
-    nsIContentPermissionRequestCallback* aCallback) {
-  NS_ENSURE_ARG_POINTER(aCallback);
-
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(mWindow);
-  if (!window) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIDocShell> docshell = window->GetDocShell();
-  if (!docshell) {
-    return NS_ERROR_FAILURE;
-  }
-
-  bool isActive = false;
-  docshell->GetIsActive(&isActive);
-  aCallback->NotifyVisibility(isActive);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContentPermissionRequester::SetOnVisibilityChange(
-    nsIContentPermissionRequestCallback* aCallback) {
-  mListener->SetCallback(aCallback);
-
-  if (!aCallback) {
-    mListener->RemoveListener();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContentPermissionRequester::GetOnVisibilityChange(
-    nsIContentPermissionRequestCallback** aCallback) {
-  NS_ENSURE_ARG_POINTER(aCallback);
-
-  nsCOMPtr<nsIContentPermissionRequestCallback> callback =
-      mListener->GetCallback();
-  callback.forget(aCallback);
-  return NS_OK;
-}
-
 static nsIPrincipal* GetTopLevelPrincipal(nsPIDOMWindowInner* aWindow) {
   MOZ_ASSERT(aWindow);
 
@@ -791,34 +747,6 @@ NS_IMPL_ISUPPORTS(
     nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy,
     nsIContentPermissionRequester)
 
-NS_IMETHODIMP
-nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy ::
-    GetVisibility(nsIContentPermissionRequestCallback* aCallback) {
-  NS_ENSURE_ARG_POINTER(aCallback);
-
-  mGetCallback = aCallback;
-  mWaitGettingResult = true;
-  Unused << mParent->SendGetVisibility();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy ::
-    SetOnVisibilityChange(nsIContentPermissionRequestCallback* aCallback) {
-  mOnChangeCallback = aCallback;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy ::
-    GetOnVisibilityChange(nsIContentPermissionRequestCallback** aCallback) {
-  NS_ENSURE_ARG_POINTER(aCallback);
-
-  nsCOMPtr<nsIContentPermissionRequestCallback> callback = mOnChangeCallback;
-  callback.forget(aCallback);
-  return NS_OK;
-}
-
 void nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy ::
     NotifyVisibilityResult(const bool& aIsVisible) {
   if (mWaitGettingResult) {
@@ -844,7 +772,7 @@ nsContentPermissionRequestProxy::~nsContentPermissionRequestProxy() = default;
 nsresult nsContentPermissionRequestProxy::Init(
     const nsTArray<PermissionRequest>& requests) {
   mPermissionRequests = requests.Clone();
-  mRequester = new nsContentPermissionRequesterProxy(mParent);
+  mRequester = new nsContentPermissionRequesterProxy();
 
   nsCOMPtr<nsIContentPermissionPrompt> prompt =
       do_GetService(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
@@ -1078,18 +1006,6 @@ mozilla::ipc::IPCResult RemotePermissionRequest::RecvNotifyResult(
   } else {
     DoCancel();
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult RemotePermissionRequest::RecvGetVisibility() {
-  nsCOMPtr<nsIDocShell> docshell = mWindow->GetDocShell();
-  if (!docshell) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  bool isActive = false;
-  docshell->GetIsActive(&isActive);
-  Unused << SendNotifyVisibility(isActive);
   return IPC_OK();
 }
 

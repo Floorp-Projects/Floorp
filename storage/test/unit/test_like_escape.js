@@ -22,30 +22,41 @@ function setup() {
 }
 
 function test_escape_for_like_ascii() {
-  var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?1 ESCAPE '/'");
-  var paramForLike = stmt.escapeStringForLIKE("oo/bar_baz%20chees", "/");
-  // verify that we escaped / _ and %
-  Assert.equal(paramForLike, "oo//bar/_baz/%20chees");
-  // prepend and append with % for "contains"
-  stmt.bindByIndex(0, "%" + paramForLike + "%");
-  stmt.executeStep();
-  Assert.equal("foo/bar_baz%20cheese", stmt.getString(0));
-  stmt.finalize();
+  const paramForLike = "oo/bar_baz%20chees";
+  const escapeChar = "/";
+
+  for (const utf8 of [false, true]) {
+    var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?1 ESCAPE '/'");
+    var paramForLikeEscaped = utf8
+      ? stmt.escapeUTF8StringForLIKE(paramForLike, escapeChar)
+      : stmt.escapeStringForLIKE(paramForLike, escapeChar);
+    // verify that we escaped / _ and %
+    Assert.equal(paramForLikeEscaped, "oo//bar/_baz/%20chees");
+    // prepend and append with % for "contains"
+    stmt.bindByIndex(0, "%" + paramForLikeEscaped + "%");
+    stmt.executeStep();
+    Assert.equal("foo/bar_baz%20cheese", stmt.getString(0));
+    stmt.finalize();
+  }
 }
 
 function test_escape_for_like_non_ascii() {
-  var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?1 ESCAPE '/'");
-  var paramForLike = stmt.escapeStringForLIKE(
-    "oo%20" + LATIN1_AE + "/_ba",
-    "/"
-  );
-  // verify that we escaped / _ and %
-  Assert.equal(paramForLike, "oo/%20" + LATIN1_AE + "///_ba");
-  // prepend and append with % for "contains"
-  stmt.bindByIndex(0, "%" + paramForLike + "%");
-  stmt.executeStep();
-  Assert.equal("foo%20" + LATIN1_ae + "/_bar", stmt.getString(0));
-  stmt.finalize();
+  const paramForLike = "oo%20" + LATIN1_AE + "/_ba";
+  const escapeChar = "/";
+
+  for (const utf8 of [false, true]) {
+    var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?1 ESCAPE '/'");
+    var paramForLikeEscaped = utf8
+      ? stmt.escapeUTF8StringForLIKE(paramForLike, escapeChar)
+      : stmt.escapeStringForLIKE(paramForLike, escapeChar);
+    // verify that we escaped / _ and %
+    Assert.equal(paramForLikeEscaped, "oo/%20" + LATIN1_AE + "///_ba");
+    // prepend and append with % for "contains"
+    stmt.bindByIndex(0, "%" + paramForLikeEscaped + "%");
+    stmt.executeStep();
+    Assert.equal("foo%20" + LATIN1_ae + "/_bar", stmt.getString(0));
+    stmt.finalize();
+  }
 }
 
 var tests = [test_escape_for_like_ascii, test_escape_for_like_non_ascii];

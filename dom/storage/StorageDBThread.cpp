@@ -565,8 +565,11 @@ nsresult StorageDBThread::OpenAndUpdateDatabase() {
   rv = OpenDatabaseConnection();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = TryJournalMode();
-  NS_ENSURE_SUCCESS(rv, rv);
+  // SQLite doesn't support WAL journals for in-memory databases.
+  if (mPrivateBrowsingId == 0) {
+    rv = TryJournalMode();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
@@ -992,7 +995,8 @@ nsresult StorageDBThread::DBOperation::Perform(StorageDBThread* aThread) {
       nsCOMPtr<mozIStorageStatement> stmt =
           aThread->mWorkerStatements.GetCachedStatement(
               "SELECT SUM(LENGTH(key) + LENGTH(value)) FROM webappsstore2 "
-              "WHERE (originAttributes || ':' || originKey) LIKE :usageOrigin");
+              "WHERE (originAttributes || ':' || originKey) LIKE :usageOrigin "
+              "ESCAPE '\\'");
       NS_ENSURE_STATE(stmt);
 
       mozStorageStatementScoper scope(stmt);
@@ -1008,9 +1012,16 @@ nsresult StorageDBThread::DBOperation::Perform(StorageDBThread* aThread) {
       // matching with "_" as a single-character wildcard match and "%" any
       // sequence of zero or more characters. So by suffixing the reversed
       // eTLD+1 and using "%" we get our case-insensitive (domain names are
-      // case-insensitive) matching.
+      // case-insensitive) matching. Note that although legal domain names
+      // don't include "_" or "%", file origins can include them, so we need
+      // to escape our OriginScope for correctness.
+      nsAutoCString originScopeEscaped;
+      rv = stmt->EscapeUTF8StringForLIKE(mUsage->OriginScope(), '\\',
+                                         originScopeEscaped);
+      NS_ENSURE_SUCCESS(rv, rv);
+
       rv = stmt->BindUTF8StringByName("usageOrigin"_ns,
-                                      mUsage->OriginScope() + "%"_ns);
+                                      originScopeEscaped + "%"_ns);
       NS_ENSURE_SUCCESS(rv, rv);
 
       bool exists;

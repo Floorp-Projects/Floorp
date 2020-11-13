@@ -16,6 +16,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/Telemetry.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsITimedChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIRequestObserver.h"
@@ -840,6 +841,23 @@ void nsLoadGroup::TelemetryReportChannel(nsITimedChannel* aTimedChannel,
   rv = aTimedChannel->GetResponseEnd(&responseEnd);
   if (NS_FAILED(rv)) return;
 
+  bool useHttp3 = false;
+  bool supportHttp3 = false;
+  nsCOMPtr<nsIHttpChannelInternal> httpChannel =
+      do_QueryInterface(aTimedChannel);
+  if (httpChannel) {
+    uint32_t major;
+    uint32_t minor;
+    if (NS_SUCCEEDED(httpChannel->GetResponseVersion(&major, &minor))) {
+      useHttp3 = major == 3;
+      if (major == 2) {
+        if (NS_FAILED(httpChannel->GetSupportsHTTP3(&supportHttp3))) {
+          supportHttp3 = false;
+        }
+      }
+    }
+  }
+
 #define HTTP_REQUEST_HISTOGRAMS(prefix)                                        \
   if (!domainLookupStart.IsNull()) {                                           \
     Telemetry::AccumulateTimeDelta(Telemetry::HTTP_##prefix##_DNS_ISSUE_TIME,  \
@@ -912,6 +930,44 @@ void nsLoadGroup::TelemetryReportChannel(nsITimedChannel* aTimedChannel,
   } else {
     HTTP_REQUEST_HISTOGRAMS(SUB)
   }
+
+  if ((useHttp3 || supportHttp3) && cacheReadStart.IsNull() &&
+      cacheReadEnd.IsNull()) {
+    nsCString key = (useHttp3) ? ((aDefaultRequest) ? "uses_http3_page"_ns
+                                                    : "uses_http3_sub"_ns)
+                               : ((aDefaultRequest) ? "supports_http3_page"_ns
+                                                    : "supports_http3_sub"_ns);
+
+    if (!secureConnectionStart.IsNull() && !connectEnd.IsNull()) {
+      Telemetry::AccumulateTimeDelta(Telemetry::HTTP3_TLS_HANDSHAKE, key,
+                                     secureConnectionStart, connectEnd);
+    }
+
+    if (supportHttp3 && !connectStart.IsNull() && !connectEnd.IsNull()) {
+      Telemetry::AccumulateTimeDelta(Telemetry::SUP_HTTP3_TCP_CONNECTION, key,
+                                     connectStart, connectEnd);
+    }
+
+    if (!requestStart.IsNull() && !responseEnd.IsNull()) {
+      Telemetry::AccumulateTimeDelta(Telemetry::HTTP3_OPEN_TO_FIRST_SENT, key,
+                                     asyncOpen, requestStart);
+
+      Telemetry::AccumulateTimeDelta(
+          Telemetry::HTTP3_FIRST_SENT_TO_LAST_RECEIVED, key, requestStart,
+          responseEnd);
+
+      if (!responseStart.IsNull()) {
+        Telemetry::AccumulateTimeDelta(Telemetry::HTTP3_OPEN_TO_FIRST_RECEIVED,
+                                       key, asyncOpen, responseStart);
+      }
+
+      if (!responseEnd.IsNull()) {
+        Telemetry::AccumulateTimeDelta(Telemetry::HTTP3_COMPLETE_LOAD, key,
+                                       asyncOpen, responseEnd);
+      }
+    }
+  }
+
 #undef HTTP_REQUEST_HISTOGRAMS
 }
 

@@ -128,7 +128,7 @@ fn long_string_values_are_truncated() {
     // Ensure the error has been recorded.
     assert_eq!(
         Ok(1),
-        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue, None)
+        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidOverflow, None)
     );
 
     metric.set(&glean, vec![test_string.clone()]);
@@ -142,7 +142,7 @@ fn long_string_values_are_truncated() {
     // Ensure the error has been recorded.
     assert_eq!(
         Ok(2),
-        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue, None)
+        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidOverflow, None)
     );
 }
 

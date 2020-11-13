@@ -878,7 +878,7 @@ pub fn build_render_pass(
                         ctx.break_advanced_blend_batches,
                         ctx.batch_lookback_count,
                         task_id,
-                        render_tasks.get_task_address(task_id),
+                        task_id.into(),
                         vis_mask,
                         0,
                     ));

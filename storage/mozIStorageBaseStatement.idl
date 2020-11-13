@@ -116,4 +116,10 @@ interface mozIStorageBaseStatement : mozIStorageBindingParams {
    *         into "foo//bar/_baz/%20cheese" (if the escape char is '/').
    */
   AString escapeStringForLIKE(in AString aValue, in wchar aEscapeChar);
+
+  /**
+   * The same as above, but for UTF8 strings.
+   */
+  AUTF8String escapeUTF8StringForLIKE(in AUTF8String aValue,
+                                      in char aEscapeChar);
 };

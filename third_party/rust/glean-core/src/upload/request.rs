@@ -11,6 +11,7 @@ use flate2::{read::GzDecoder, write::GzEncoder, Compression};
 use serde_json::{self, Value as JsonValue};
 use std::io::prelude::*;
 
+use crate::error::{ErrorKind, Result};
 use crate::system;
 
 /// A representation for request headers.
@@ -60,11 +61,12 @@ pub struct Builder {
     path: Option<String>,
     body: Option<Vec<u8>>,
     headers: HeaderMap,
+    body_max_size: usize,
 }
 
 impl Builder {
     /// Creates a new builder for a PingRequest.
-    pub fn new(language_binding_name: &str) -> Self {
+    pub fn new(language_binding_name: &str, body_max_size: usize) -> Self {
         let mut headers = HashMap::new();
         headers.insert("Date".to_string(), create_date_header_value(Utc::now()));
         headers.insert(
@@ -86,6 +88,7 @@ impl Builder {
             path: None,
             body: None,
             headers,
+            body_max_size,
         }
     }
 
@@ -149,25 +152,31 @@ impl Builder {
         self
     }
 
-    /// Consume the builder and create a PingRequest.
+    /// Consumes the builder and create a PingRequest.
     ///
     /// # Panics
     ///
     /// This method will panic if any of the required fields are missing:
     /// `document_id`, `path` and `body`.
-    pub fn build(self) -> PingRequest {
-        PingRequest {
+    pub fn build(self) -> Result<PingRequest> {
+        let body = self
+            .body
+            .expect("body must be set before attempting to build PingRequest");
+
+        if body.len() > self.body_max_size {
+            return Err(ErrorKind::PingBodyOverflow(body.len()).into());
+        }
+
+        Ok(PingRequest {
             document_id: self
                 .document_id
                 .expect("document_id must be set before attempting to build PingRequest"),
             path: self
                 .path
                 .expect("path must be set before attempting to build PingRequest"),
-            body: self
-                .body
-                .expect("body must be set before attempting to build PingRequest"),
+            body,
             headers: self.headers,
-        }
+        })
     }
 }
 
@@ -190,12 +199,13 @@ pub struct PingRequest {
 impl PingRequest {
     /// Creates a new builder-style structure to help build a PingRequest.
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
     /// * `language_binding_name` - The name of the language used by the binding that instantiated this Glean instance.
     ///                             This is used to build the User-Agent header value.
-    pub fn builder(language_binding_name: &str) -> Builder {
-        Builder::new(language_binding_name)
+    /// * `body_max_size` - The maximum size in bytes the compressed ping body may have to be eligible for upload.
+    pub fn builder(language_binding_name: &str, body_max_size: usize) -> Builder {
+        Builder::new(language_binding_name, body_max_size)
     }
 
     /// Verifies if current request is for a deletion-request ping.
@@ -208,7 +218,7 @@ impl PingRequest {
             .unwrap_or(false)
     }
 
-    /// Decompress and pretty-format the ping payload
+    /// Decompresses and pretty-format the ping payload
     ///
     /// Should be used for logging when required.
     /// This decompresses the payload in memory.
@@ -245,11 +255,12 @@ mod test {
 
     #[test]
     fn correctly_builds_ping_request() {
-        let request = PingRequest::builder(/* language_binding_name */ "Rust")
+        let request = PingRequest::builder(/* language_binding_name */ "Rust", 1024 * 1024)
             .document_id("woop")
             .path("/random/path/doesnt/matter")
             .body("{}")
-            .build();
+            .build()
+            .unwrap();
 
         assert_eq!(request.document_id, "woop");
         assert_eq!(request.path, "/random/path/doesnt/matter");
@@ -261,5 +272,20 @@ mod test {
         assert!(request.headers.contains_key("X-Client-Type"));
         assert!(request.headers.contains_key("X-Client-Version"));
         assert!(request.headers.contains_key("Content-Length"));
+    }
+
+    #[test]
+    fn errors_when_request_body_exceeds_max_size() {
+        // Create a new builder with an arbitrarily small value,
+        // se we can test that the builder errors when body max size exceeds the expected.
+        let request = Builder::new(
+            /* language_binding_name */ "Rust", /* body_max_size */ 1,
+        )
+        .document_id("woop")
+        .path("/random/path/doesnt/matter")
+        .body("{}")
+        .build();
+
+        assert!(request.is_err());
     }
 }

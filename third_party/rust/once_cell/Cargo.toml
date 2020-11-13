@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "once_cell"
-version = "1.4.0"
+version = "1.5.2"
 authors = ["Aleksey Kladov <aleksey.kladov@gmail.com>"]
 exclude = ["*.png", "*.svg", "/Cargo.lock.min", "/.travis.yml", "/run-miri-tests.sh", "rustfmt.toml"]
 description = "Single assignment cells and lazy values."
@@ -23,6 +23,8 @@ keywords = ["lazy", "static"]
 categories = ["rust-patterns", "memory-management"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/matklad/once_cell"
+[package.metadata.docs.rs]
+all-features = true
 
 [[example]]
 name = "bench"
@@ -52,7 +54,7 @@ required-features = ["std"]
 name = "test_synchronization"
 required-features = ["std"]
 [dependencies.parking_lot]
-version = "0.10.0"
+version = "0.11"
 optional = true
 default_features = false
 [dev-dependencies.crossbeam-utils]
@@ -65,5 +67,7 @@ version = "1.0.0"
 version = "1.2.0"
 
 [features]
+alloc = []
 default = ["std"]
-std = []
+std = ["alloc"]
+unstable = []

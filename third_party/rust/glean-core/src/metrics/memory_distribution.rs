@@ -51,15 +51,19 @@ impl MetricType for MemoryDistributionMetric {
     }
 }
 
+// IMPORTANT:
+//
+// When changing this implementation, make sure all the operations are
+// also declared in the related trait in `../traits/`.
 impl MemoryDistributionMetric {
-    /// Create a new memory distribution metric.
+    /// Creates a new memory distribution metric.
     pub fn new(meta: CommonMetricData, memory_unit: MemoryUnit) -> Self {
         Self { meta, memory_unit }
     }
 
     /// Accumulates the provided sample in the metric.
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
     /// * `sample` - The sample to be recorded by the metric. The sample is assumed to be in the
     ///   configured memory unit of the metric.
@@ -109,7 +113,7 @@ impl MemoryDistributionMetric {
     /// method was called on is using [MemoryUnit.Kilobyte], then `samples` are assumed
     /// to be in that unit).
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
     /// * `samples` - The vector holding the samples to be recorded by the metric.
     ///
@@ -120,6 +124,10 @@ impl MemoryDistributionMetric {
     /// Values bigger than 1 Terabyte (2<sup>40</sup> bytes) are truncated
     /// and an `ErrorType::InvalidValue` error is recorded.
     pub fn accumulate_samples_signed(&self, glean: &Glean, samples: Vec<i64>) {
+        if !self.should_record(glean) {
+            return;
+        }
+
         let mut num_negative_samples = 0;
         let mut num_too_log_samples = 0;
 
@@ -174,7 +182,7 @@ impl MemoryDistributionMetric {
 
     /// **Test-only API (exported for FFI purposes).**
     ///
-    /// Get the currently stored value as an integer.
+    /// Gets the currently stored value as an integer.
     ///
     /// This doesn't clear the stored value.
     pub fn test_get_value(&self, glean: &Glean, storage_name: &str) -> Option<DistributionData> {
@@ -190,7 +198,7 @@ impl MemoryDistributionMetric {
 
     /// **Test-only API (exported for FFI purposes).**
     ///
-    /// Get the currently-stored histogram as a JSON String of the serialized value.
+    /// Gets the currently-stored histogram as a JSON String of the serialized value.
     ///
     /// This doesn't clear the stored value.
     pub fn test_get_value_as_json_string(

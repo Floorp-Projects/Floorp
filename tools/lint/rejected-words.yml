@@ -44,6 +44,7 @@ avoid-blacklist-and-whitelist:
         - browser/base/content/test/static/browser_misused_characters_in_strings.js
         - browser/base/content/test/static/browser_parsable_css.js
         - browser/base/content/test/static/browser_parsable_script.js
+        - browser/base/content/test/tabMediaIndicator/browser_mute_webAudio.js
         - browser/base/content/test/tabs/browser_new_file_whitelisted_http_tab.js
         - browser/components/downloads/content/contentAreaDownloadsView.xhtml
         - browser/components/enterprisepolicies/helpers/WebsiteFilter.jsm
@@ -400,7 +401,6 @@ avoid-blacklist-and-whitelist:
         - toolkit/content/aboutUrlClassifier.js
         - toolkit/content/aboutUrlClassifier.xhtml
         - toolkit/content/tests/browser/browser_delay_autoplay_webAudio.js
-        - toolkit/content/tests/browser/browser_mute_webAudio.js
         - toolkit/crashreporter/client/ping.cpp
         - toolkit/crashreporter/CrashAnnotations.cpp
         - toolkit/crashreporter/generate_crash_reporter_sources.py

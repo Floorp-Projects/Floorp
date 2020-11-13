@@ -298,12 +298,14 @@ def _makePromise(returns, side, resolver=False):
     )
 
 
-def _makeResolver(returns, side):
+def _resolveType(returns, side):
     if len(returns) > 1:
-        resolvetype = _tuple([d.moveType(side) for d in returns])
-    else:
-        resolvetype = returns[0].moveType(side)
-    return TypeFunction([Decl(resolvetype, "")])
+        return _tuple([d.moveType(side) for d in returns])
+    return returns[0].moveType(side)
+
+
+def _makeResolver(returns, side):
+    return TypeFunction([Decl(_resolveType(returns, side), "")])
 
 
 def _cxxArrayType(basetype, const=False, ref=False):
@@ -3646,10 +3648,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         else:
             inherits.append(Inherit(p.managerInterfaceType(), viz="public"))
 
-        if hasAsyncReturns:
-            inherits.append(Inherit(Type("SupportsWeakPtr"), viz="public"))
-            self.hdrfile.addthing(CppDirective("include", '"mozilla/WeakPtr.h"'))
-
         if ptype.isToplevel() and self.side == "parent":
             self.hdrfile.addthings(
                 [_makeForwardDeclForQClass("nsIFile", []), Whitespace.NL]
@@ -5054,106 +5052,76 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         if not md.decl.type.isAsync() or not md.hasReply():
             return []
 
-        sendok = ExprVar("sendok__")
-        seqno = ExprVar("seqno__")
-        resolve = ExprVar("resolve__")
-        resolvertype = Type(md.resolverName())
-        failifsendok = StmtIf(ExprNot(sendok))
-        failifsendok.addifstmt(_printWarningMessage("Error sending reply"))
-        sendmsg = self.setMessageFlags(md, self.replyvar, seqno=seqno) + [
-            self.logMessage(md, self.replyvar, "Sending reply "),
-            StmtDecl(
-                Decl(Type.BOOL, sendok.name),
-                init=ExprCall(ExprVar("ChannelSend"), args=[self.replyvar]),
-            ),
-            failifsendok,
-        ]
         selfvar = ExprVar("self__")
-        ifactorisdead = StmtIf(ExprNot(selfvar))
-        ifactorisdead.addifstmts(
-            [
-                _printWarningMessage("Not resolving response because actor is dead."),
-                StmtReturn(),
-            ]
-        )
-        resolverfn = ExprLambda(
-            [ExprVar.THIS, selfvar, routingId, seqno], [Decl(Type.AUTORVAL, "aParam")]
-        )
-        resolverfn.addstmts(
-            [ifactorisdead]
-            + [StmtDecl(Decl(Type.BOOL, resolve.name), init=ExprLiteral.TRUE)]
-        )
-        fwdparam = ExprCode("std::forward<decltype(aParam)>(aParam)")
-        if len(md.returns) > 1:
-            resolverfn.addstmts(
-                [
-                    StmtDecl(Decl(p.bareType(self.side), p.var().name), initargs=[])
-                    for p in md.returns
-                ]
-                + [
-                    StmtExpr(
-                        ExprAssn(
-                            ExprCall(
-                                ExprVar("Tie"), args=[p.var() for p in md.returns]
-                            ),
-                            fwdparam,
-                        )
-                    )
-                ]
-            )
-        else:
-            resolverfn.addstmts(
-                [
-                    StmtDecl(
-                        Decl(
-                            md.returns[0].bareType(self.side), md.returns[0].var().name
-                        ),
-                        init=fwdparam,
-                    )
-                ]
-            )
-        resolverfn.addstmts(
-            [
-                StmtDecl(
-                    Decl(Type("IPC::Message", ptr=True), self.replyvar.name),
-                    init=ExprCall(ExprVar(md.pqReplyCtorFunc()), args=[routingId]),
-                )
-            ]
-            + [
-                _ParamTraits.checkedWrite(
-                    None,
-                    resolve,
-                    self.replyvar,
-                    sentinelKey=resolve.name,
-                    actor=selfvar,
-                )
-            ]
-            + [
-                _ParamTraits.checkedWrite(
-                    r.ipdltype,
-                    ExprMove(r.var()),
-                    self.replyvar,
-                    sentinelKey=r.name,
-                    actor=selfvar,
-                )
-                for r in md.returns
-            ]
-        )
-        resolverfn.addstmts(sendmsg)
-
-        makeresolver = [
-            Whitespace.NL,
-            StmtDecl(
-                Decl(Type.INT32, seqno.name),
-                init=ExprCall(ExprSelect(self.msgvar, ".", "seqno")),
+        serializeParams = [
+            StmtCode("bool resolve__ = true;\n"),
+            _ParamTraits.checkedWrite(
+                None,
+                ExprVar("resolve__"),
+                self.replyvar,
+                sentinelKey="resolve__",
+                actor=selfvar,
             ),
-            StmtDecl(
-                Decl(Type("WeakPtr", T=ExprVar(self.clsname)), selfvar.name),
-                init=ExprVar.THIS,
-            ),
-            StmtDecl(Decl(resolvertype, "resolver"), init=resolverfn),
         ]
-        return makeresolver
+
+        def paramValue(idx):
+            assert idx < len(md.returns)
+            if len(md.returns) > 1:
+                return ExprCode("mozilla::Get<${idx}>(aParam)", idx=idx)
+            return ExprVar("aParam")
+
+        serializeParams += [
+            _ParamTraits.checkedWrite(
+                p.ipdltype,
+                paramValue(idx),
+                self.replyvar,
+                sentinelKey=p.name,
+                actor=selfvar,
+            )
+            for idx, p in enumerate(md.returns)
+        ]
+
+        return [
+            StmtCode(
+                """
+                int32_t seqno__ = ${msgvar}.seqno();
+                RefPtr<mozilla::ipc::ActorLifecycleProxy> proxy__ =
+                    GetLifecycleProxy();
+
+                ${resolvertype} resolver = [proxy__, seqno__, ${routingId}](${resolveType} aParam) {
+                    if (!proxy__->Get()) {
+                        NS_WARNING("Not resolving response because actor is dead.");
+                        return;
+                    }
+                    ${actortype} self__ = static_cast<${actortype}>(proxy__->Get());
+
+                    IPC::Message* ${replyvar} = ${replyCtor}(${routingId});
+                    ${replyvar}->set_seqno(seqno__);
+
+                    $*{serializeParams}
+                    ${logSendingReply}
+                    bool sendok__ = self__->ChannelSend(${replyvar});
+                    if (!sendok__) {
+                        NS_WARNING("Error sending reply");
+                    }
+                };
+                """,
+                msgvar=self.msgvar,
+                resolvertype=Type(md.resolverName()),
+                routingId=routingId,
+                resolveType=_resolveType(md.returns, self.side),
+                actortype=_cxxBareType(ActorType(self.protocol.decl.type), self.side),
+                replyvar=self.replyvar,
+                replyCtor=ExprVar(md.pqReplyCtorFunc()),
+                serializeParams=serializeParams,
+                logSendingReply=self.logMessage(
+                    md,
+                    self.replyvar,
+                    "Sending reply ",
+                    actor=selfvar,
+                ),
+            )
+        ]
 
     def makeReply(self, md, errfn, routingId):
         if routingId is None:

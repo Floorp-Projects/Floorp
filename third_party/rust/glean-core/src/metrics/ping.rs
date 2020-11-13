@@ -21,11 +21,15 @@ pub struct PingType {
     pub reason_codes: Vec<String>,
 }
 
+// IMPORTANT:
+//
+// When changing this implementation, make sure all the operations are
+// also declared in the related trait in `../traits/`.
 impl PingType {
-    /// Create a new ping type for the given name, whether to include the client ID and whether to
+    /// Creates a new ping type for the given name, whether to include the client ID and whether to
     /// send this ping empty.
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
     /// * `name` - The name of the ping.
     /// * `include_client_id` - Whether to include the client ID in the assembled ping when submitting.
@@ -45,15 +49,15 @@ impl PingType {
         }
     }
 
-    /// Submit the ping for eventual uploading
+    /// Submits the ping for eventual uploading
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
     /// * `glean` - the Glean instance to use to send the ping.
     /// * `reason` - the reason the ping was triggered. Included in the
     ///   `ping_info.reason` part of the payload.
     ///
-    /// ## Return value
+    /// # Returns
     ///
     /// See [`Glean#submit_ping`](../struct.Glean.html#method.submit_ping) for details.
     pub fn submit(&self, glean: &Glean, reason: Option<&str>) -> Result<bool> {

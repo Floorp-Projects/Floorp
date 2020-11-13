@@ -5,16 +5,53 @@
 use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
 use std::fs;
+use std::num::NonZeroU64;
+use std::path::Path;
 use std::str;
 use std::sync::RwLock;
 
-use rkv::{Rkv, SingleStore, StoreOptions};
+use rkv::StoreOptions;
+
+// Select the LMDB-powered storage backend when the feature is not activated.
+#[cfg(not(feature = "rkv-safe-mode"))]
+mod backend {
+    use std::path::Path;
+
+    /// cbindgen:ignore
+    pub type Rkv = rkv::Rkv<rkv::backend::LmdbEnvironment>;
+    /// cbindgen:ignore
+    pub type SingleStore = rkv::SingleStore<rkv::backend::LmdbDatabase>;
+    /// cbindgen:ignore
+    pub type Writer<'t> = rkv::Writer<rkv::backend::LmdbRwTransaction<'t>>;
+
+    pub fn rkv_new(path: &Path) -> Result<Rkv, rkv::StoreError> {
+        Rkv::new::<rkv::backend::Lmdb>(path)
+    }
+}
+
+// Select the "safe mode" storage backend when the feature is activated.
+#[cfg(feature = "rkv-safe-mode")]
+mod backend {
+    use std::path::Path;
+
+    /// cbindgen:ignore
+    pub type Rkv = rkv::Rkv<rkv::backend::SafeModeEnvironment>;
+    /// cbindgen:ignore
+    pub type SingleStore = rkv::SingleStore<rkv::backend::SafeModeDatabase>;
+    /// cbindgen:ignore
+    pub type Writer<'t> = rkv::Writer<rkv::backend::SafeModeRwTransaction<'t>>;
+
+    pub fn rkv_new(path: &Path) -> Result<Rkv, rkv::StoreError> {
+        Rkv::new::<rkv::backend::SafeMode>(path)
+    }
+}
 
 use crate::metrics::Metric;
 use crate::CommonMetricData;
 use crate::Glean;
 use crate::Lifetime;
 use crate::Result;
+use backend::*;
 
 pub struct Database {
     /// Handle to the database environment.
@@ -32,6 +69,9 @@ pub struct Database {
     /// we will save metrics with 'ping' lifetime data in a map temporarily
     /// so as to persist them to disk using rkv in bulk on demand.
     ping_lifetime_data: Option<RwLock<BTreeMap<String, Metric>>>,
+
+    // Initial file size when opening the database.
+    file_size: Option<NonZeroU64>,
 }
 
 impl std::fmt::Debug for Database {
@@ -46,8 +86,26 @@ impl std::fmt::Debug for Database {
     }
 }
 
+/// Get the file size of a file in the given path and file.
+///
+/// # Arguments
+///
+/// - `path` - The path
+///
+/// # Returns
+///
+/// Returns the non-zero file size in bytes,
+/// or `None` on error or if the size is `0`.
+fn file_size(path: &Path) -> Option<NonZeroU64> {
+    log::trace!("Getting file size for path: {}", path.display());
+    fs::metadata(path)
+        .ok()
+        .map(|stat| stat.len())
+        .and_then(NonZeroU64::new)
+}
+
 impl Database {
-    /// Initialize the data store.
+    /// Initializes the data store.
     ///
     /// This opens the underlying rkv store and creates
     /// the underlying directory structure.
@@ -55,7 +113,18 @@ impl Database {
     /// It also loads any Lifetime::Ping data that might be
     /// persisted, in case `delay_ping_lifetime_io` is set.
     pub fn new(data_path: &str, delay_ping_lifetime_io: bool) -> Result<Self> {
-        let rkv = Self::open_rkv(data_path)?;
+        let path = Path::new(data_path).join("db");
+        log::debug!("Database path: {:?}", path.display());
+
+        // FIXME(bug 1670634): This is probably more knowledge
+        // than we should have about the database internals.
+        // We could instead iterate over the directory and sum up the file sizes.
+        #[cfg(not(feature = "rkv-safe-mode"))]
+        let file_size = file_size(&path.join("data.mdb"));
+        #[cfg(feature = "rkv-safe-mode")]
+        let file_size = file_size(&path.join("data.safe.bin"));
+
+        let rkv = Self::open_rkv(&path)?;
         let user_store = rkv.open_single(Lifetime::User.as_str(), StoreOptions::create())?;
         let ping_store = rkv.open_single(Lifetime::Ping.as_str(), StoreOptions::create())?;
         let application_store =
@@ -72,11 +141,17 @@ impl Database {
             ping_store,
             application_store,
             ping_lifetime_data,
+            file_size,
         };
 
         db.load_ping_lifetime_data();
 
         Ok(db)
+    }
+
+    /// Get the initial database file size.
+    pub fn file_size(&self) -> Option<NonZeroU64> {
+        self.file_size
     }
 
     fn get_store(&self, lifetime: Lifetime) -> &SingleStore {
@@ -88,12 +163,10 @@ impl Database {
     }
 
     /// Creates the storage directories and inits rkv.
-    fn open_rkv(path: &str) -> Result<Rkv> {
-        let path = std::path::Path::new(path).join("db");
-        log::debug!("Database path: {:?}", path.display());
+    fn open_rkv(path: &Path) -> Result<Rkv> {
         fs::create_dir_all(&path)?;
 
-        let rkv = Rkv::new(&path)?;
+        let rkv = rkv_new(&path)?;
         log::info!("Database initialized");
         Ok(rkv)
     }
@@ -102,15 +175,14 @@ impl Database {
     /// Such location is built using the storage name and the metric
     /// key/name (if available).
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
     /// * `storage_name` - the name of the storage to store/fetch data from.
     /// * `metric_key` - the optional metric key/name.
     ///
-    /// ## Return value
+    /// # Returns
     ///
-    /// Returns a String representing the location, in the database, data must
-    /// be written or read from.
+    /// A string representing the location in the database.
     fn get_storage_key(storage_name: &str, metric_key: Option<&str>) -> String {
         match metric_key {
             Some(k) => format!("{}#{}", storage_name, k),
@@ -137,7 +209,7 @@ impl Database {
                     Ok(metric_id) => metric_id.to_string(),
                     _ => continue,
                 };
-                let metric: Metric = match value.expect("Value missing in iteration") {
+                let metric: Metric = match value {
                     rkv::Value::Blob(blob) => unwrap_or!(bincode::deserialize(blob), continue),
                     _ => continue,
                 };
@@ -147,26 +219,26 @@ impl Database {
         }
     }
 
-    /// Iterates with the provided transaction function over the requested data
-    /// from the given storage.
+    /// Iterates with the provided transaction function
+    /// over the requested data from the given storage.
     ///
     /// * If the storage is unavailable, the transaction function is never invoked.
     /// * If the read data cannot be deserialized it will be silently skipped.
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
-    /// * `lifetime`: The metric lifetime to iterate over.
-    /// * `storage_name`: The storage name to iterate over.
-    /// * `metric_key`: The metric key to iterate over. All metrics iterated over
+    /// * `lifetime` - The metric lifetime to iterate over.
+    /// * `storage_name` - The storage name to iterate over.
+    /// * `metric_key` - The metric key to iterate over. All metrics iterated over
     ///   will have this prefix. For example, if `metric_key` is of the form `{category}.`,
     ///   it will iterate over all metrics in the given category. If the `metric_key` is of the
     ///   form `{category}.{name}/`, the iterator will iterate over all specific metrics for
     ///   a given labeled metric. If not provided, the entire storage for the given lifetime
     ///   will be iterated over.
-    /// * `transaction_fn`: Called for each entry being iterated over. It is
+    /// * `transaction_fn` - Called for each entry being iterated over. It is
     ///   passed two arguments: `(metric_id: &[u8], metric: &Metric)`.
     ///
-    /// ## Panics
+    /// # Panics
     ///
     /// This function will **not** panic on database errors.
     pub fn iter_store_from<F>(
@@ -210,7 +282,7 @@ impl Database {
             }
 
             let metric_id = &metric_id[len..];
-            let metric: Metric = match value.expect("Value missing in iteration") {
+            let metric: Metric = match value {
                 rkv::Value::Blob(blob) => unwrap_or!(bincode::deserialize(blob), continue),
                 _ => continue,
             };
@@ -218,17 +290,17 @@ impl Database {
         }
     }
 
-    /// Determine if the storage has the given metric.
+    /// Determines if the storage has the given metric.
     ///
     /// If data cannot be read it is assumed that the storage does not have the metric.
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
-    /// * `lifetime`: The lifetime of the metric.
-    /// * `storage_name`: The storage name to look in.
-    /// * `metric_identifier`: The metric identifier.
+    /// * `lifetime` - The lifetime of the metric.
+    /// * `storage_name` - The storage name to look in.
+    /// * `metric_identifier` - The metric identifier.
     ///
-    /// ## Panics
+    /// # Panics
     ///
     /// This function will **not** panic on database errors.
     pub fn has_metric(
@@ -257,16 +329,16 @@ impl Database {
             .is_some()
     }
 
-    /// Write to the specified storage with the provided transaction function.
+    /// Writes to the specified storage with the provided transaction function.
     ///
     /// If the storage is unavailable, it will return an error.
     ///
-    /// ## Panics
+    /// # Panics
     ///
     /// * This function will **not** panic on database errors.
-    pub fn write_with_store<F>(&self, store_name: Lifetime, mut transaction_fn: F) -> Result<()>
+    fn write_with_store<F>(&self, store_name: Lifetime, mut transaction_fn: F) -> Result<()>
     where
-        F: FnMut(rkv::Writer, &SingleStore) -> Result<()>,
+        F: FnMut(Writer, &SingleStore) -> Result<()>,
     {
         let writer = self.rkv.write().unwrap();
         let store = self.get_store(store_name);
@@ -275,6 +347,11 @@ impl Database {
 
     /// Records a metric in the underlying storage system.
     pub fn record(&self, glean: &Glean, data: &CommonMetricData, value: &Metric) {
+        // If upload is disabled we don't want to record.
+        if !glean.is_upload_enabled() {
+            return;
+        }
+
         let name = data.identifier(glean);
 
         for ping_name in data.storage_names() {
@@ -286,15 +363,15 @@ impl Database {
 
     /// Records a metric in the underlying storage system, for a single lifetime.
     ///
-    /// ## Return value
+    /// # Returns
     ///
     /// If the storage is unavailable or the write fails, no data will be stored and an error will be returned.
     ///
     /// Otherwise `Ok(())` is returned.
     ///
-    /// ## Panics
+    /// # Panics
     ///
-    /// * This function will **not** panic on database errors.
+    /// This function will **not** panic on database errors.
     fn record_per_lifetime(
         &self,
         lifetime: Lifetime,
@@ -326,12 +403,17 @@ impl Database {
         Ok(())
     }
 
-    /// Records the provided value, with the given lifetime, after
-    /// applying a transformation function.
+    /// Records the provided value, with the given lifetime,
+    /// after applying a transformation function.
     pub fn record_with<F>(&self, glean: &Glean, data: &CommonMetricData, mut transform: F)
     where
         F: FnMut(Option<Metric>) -> Metric,
     {
+        // If upload is disabled we don't want to record.
+        if !glean.is_upload_enabled() {
+            return;
+        }
+
         let name = data.identifier(glean);
         for ping_name in data.storage_names() {
             if let Err(e) =
@@ -342,19 +424,19 @@ impl Database {
         }
     }
 
-    /// Records a metric in the underlying storage system, after applying the
-    /// given transformation function, for a single lifetime.
+    /// Records a metric in the underlying storage system,
+    /// after applying the given transformation function, for a single lifetime.
     ///
-    /// ## Return value
+    /// # Returns
     ///
     /// If the storage is unavailable or the write fails, no data will be stored and an error will be returned.
     ///
     /// Otherwise `Ok(())` is returned.
     ///
-    /// ## Panics
+    /// # Panics
     ///
-    /// * This function will **not** panic on database errors.
-    pub fn record_per_lifetime_with<F>(
+    /// This function will **not** panic on database errors.
+    fn record_per_lifetime_with<F>(
         &self,
         lifetime: Lifetime,
         storage_name: &str,
@@ -411,7 +493,7 @@ impl Database {
 
     /// Clears a storage (only Ping Lifetime).
     ///
-    /// ## Return value
+    /// # Returns
     ///
     /// * If the storage is unavailable an error is returned.
     /// * If any individual delete fails, an error is returned, but other deletions might have
@@ -419,9 +501,9 @@ impl Database {
     ///
     /// Otherwise `Ok(())` is returned.
     ///
-    /// ## Panics
+    /// # Panics
     ///
-    /// * This function will **not** panic on database errors.
+    /// This function will **not** panic on database errors.
     pub fn clear_ping_lifetime_storage(&self, storage_name: &str) -> Result<()> {
         // Lifetime::Ping data will be saved to `ping_lifetime_data`
         // in case `delay_ping_lifetime_io` is set to true
@@ -461,22 +543,22 @@ impl Database {
 
     /// Removes a single metric from the storage.
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
     /// * `lifetime` - the lifetime of the storage in which to look for the metric.
     /// * `storage_name` - the name of the storage to store/fetch data from.
     /// * `metric_id` - the metric category + name.
     ///
-    /// ## Return value
+    /// # Returns
     ///
     /// * If the storage is unavailable an error is returned.
     /// * If the metric could not be deleted, an error is returned.
     ///
     /// Otherwise `Ok(())` is returned.
     ///
-    /// ## Panics
+    /// # Panics
     ///
-    /// * This function will **not** panic on database errors.
+    /// This function will **not** panic on database errors.
     pub fn remove_single_metric(
         &self,
         lifetime: Lifetime,
@@ -514,7 +596,7 @@ impl Database {
     ///
     /// Errors are logged.
     ///
-    /// ## Panics
+    /// # Panics
     ///
     /// * This function will **not** panic on database errors.
     pub fn clear_lifetime(&self, lifetime: Lifetime) {
@@ -532,7 +614,7 @@ impl Database {
     ///
     /// Errors are logged.
     ///
-    /// ## Panics
+    /// # Panics
     ///
     /// * This function will **not** panic on database errors.
     pub fn clear_all(&self) {
@@ -548,11 +630,11 @@ impl Database {
         }
     }
 
-    /// Persist ping_lifetime_data to disk.
+    /// Persists ping_lifetime_data to disk.
     ///
     /// Does nothing in case there is nothing to persist.
     ///
-    /// ## Panics
+    /// # Panics
     ///
     /// * This function will **not** panic on database errors.
     pub fn persist_ping_lifetime_data(&self) -> Result<()> {
@@ -581,6 +663,8 @@ impl Database {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::tests::new_glean;
+    use crate::CommonMetricData;
     use std::collections::HashMap;
     use tempfile::tempdir;
 
@@ -1026,5 +1110,96 @@ mod test {
                 .unwrap_or(None)
                 .is_some());
         }
+    }
+
+    #[test]
+    fn doesnt_record_when_upload_is_disabled() {
+        let (mut glean, dir) = new_glean(None);
+
+        // Init the database in a temporary directory.
+        let str_dir = dir.path().display().to_string();
+
+        let test_storage = "test-storage";
+        let test_data = CommonMetricData::new("category", "name", test_storage);
+        let test_metric_id = test_data.identifier(&glean);
+
+        // Attempt to record metric with the record and record_with functions,
+        // this should work since upload is enabled.
+        let db = Database::new(&str_dir, true).unwrap();
+        db.record(&glean, &test_data, &Metric::String("record".to_owned()));
+        db.iter_store_from(
+            Lifetime::Ping,
+            test_storage,
+            None,
+            &mut |metric_id: &[u8], metric: &Metric| {
+                assert_eq!(
+                    String::from_utf8_lossy(metric_id).into_owned(),
+                    test_metric_id
+                );
+                match metric {
+                    Metric::String(v) => assert_eq!("record", *v),
+                    _ => panic!("Unexpected data found"),
+                }
+            },
+        );
+
+        db.record_with(&glean, &test_data, |_| {
+            Metric::String("record_with".to_owned())
+        });
+        db.iter_store_from(
+            Lifetime::Ping,
+            test_storage,
+            None,
+            &mut |metric_id: &[u8], metric: &Metric| {
+                assert_eq!(
+                    String::from_utf8_lossy(metric_id).into_owned(),
+                    test_metric_id
+                );
+                match metric {
+                    Metric::String(v) => assert_eq!("record_with", *v),
+                    _ => panic!("Unexpected data found"),
+                }
+            },
+        );
+
+        // Disable upload
+        glean.set_upload_enabled(false);
+
+        // Attempt to record metric with the record and record_with functions,
+        // this should work since upload is now **disabled**.
+        db.record(&glean, &test_data, &Metric::String("record_nop".to_owned()));
+        db.iter_store_from(
+            Lifetime::Ping,
+            test_storage,
+            None,
+            &mut |metric_id: &[u8], metric: &Metric| {
+                assert_eq!(
+                    String::from_utf8_lossy(metric_id).into_owned(),
+                    test_metric_id
+                );
+                match metric {
+                    Metric::String(v) => assert_eq!("record_with", *v),
+                    _ => panic!("Unexpected data found"),
+                }
+            },
+        );
+        db.record_with(&glean, &test_data, |_| {
+            Metric::String("record_with_nop".to_owned())
+        });
+        db.iter_store_from(
+            Lifetime::Ping,
+            test_storage,
+            None,
+            &mut |metric_id: &[u8], metric: &Metric| {
+                assert_eq!(
+                    String::from_utf8_lossy(metric_id).into_owned(),
+                    test_metric_id
+                );
+                match metric {
+                    Metric::String(v) => assert_eq!("record_with", *v),
+                    _ => panic!("Unexpected data found"),
+                }
+            },
+        );
     }
 }

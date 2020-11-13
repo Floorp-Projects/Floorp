@@ -242,11 +242,6 @@ addAccessibleTask(
     is(outChildren[1].getAttributeValue("AXSubrole"), "AXOutlineRow");
 
     const outRows = outline.getAttributeValue("AXRows");
-    for (let i = 0; i < outRows.length; i++) {
-      console.log(i);
-      console.log(outRows[i].getAttributeValue("AXDescription"));
-      console.log("\n");
-    }
     is(outRows.length, 9, "Outline has nine rows");
     is(
       outRows[0].getAttributeValue("AXDisclosing"),
@@ -371,6 +366,39 @@ addAccessibleTask(
       outRows[7].getAttributeValue("AXDisclosureLevel"),
       3,
       "Row is level three"
+    );
+  }
+);
+
+// Test outline that isn't built with li/uls gets correct desc
+addAccessibleTask(
+  `
+  <div role="tree" id="tree" tabindex="0" aria-label="My drive" aria-activedescendant="myfiles">
+    <div id="myfiles" role="treeitem" aria-label="My files" aria-selected="true" aria-expanded="false">My files</div>
+    <div role="treeitem" aria-label="Shared items" aria-selected="false" aria-expanded="false">Shared items</div>
+  </div>
+  `,
+  async (browser, accDoc) => {
+    const tree = getNativeInterface(accDoc, "tree");
+    is(tree.getAttributeValue("AXRole"), "AXOutline", "Correct role for tree");
+
+    const treeItems = tree.getAttributeValue("AXChildren");
+    is(treeItems.length, 2, "Outline has two direct children");
+    is(treeItems[0].getAttributeValue("AXSubrole"), "AXOutlineRow");
+    is(treeItems[1].getAttributeValue("AXSubrole"), "AXOutlineRow");
+
+    const outRows = tree.getAttributeValue("AXRows");
+    is(outRows.length, 2, "Outline has two rows");
+
+    is(
+      outRows[0].getAttributeValue("AXDescription"),
+      "My files",
+      "files labelled correctly"
+    );
+    is(
+      outRows[1].getAttributeValue("AXDescription"),
+      "Shared items",
+      "shared items labelled correctly"
     );
   }
 );

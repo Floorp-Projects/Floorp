@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AlphaType, ClipMode, ExternalImageType, ImageRendering};
+use api::{AlphaType, ClipMode, ExternalImageType, ImageRendering, ImageBufferKind};
 use api::{FontInstanceFlags, YuvColorSpace, YuvFormat, ColorDepth, ColorRange, PremultipliedColorF};
 use api::units::*;
 use crate::clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItemKind, ClipStore};
@@ -26,7 +26,7 @@ use crate::prim_store::image::ImageSource;
 use crate::render_target::RenderTargetContext;
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraph};
 use crate::render_task::RenderTaskAddress;
-use crate::renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
+use crate::renderer::{BlendMode, ShaderColorMode};
 use crate::renderer::{BLOCKS_PER_UV_RECT, MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::{CacheItem, GlyphFetchResult, ImageProperties, ImageRequest, ResourceCache};
 use crate::space::SpaceMapper;
@@ -788,7 +788,6 @@ impl BatchBuilder {
         batch_features: BatchFeatures,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        render_tasks: &RenderTaskGraph,
         prim_headers: &mut PrimitiveHeaders,
     ) {
         let batch_params = BrushBatchParameters::shared(
@@ -828,7 +827,6 @@ impl BatchBuilder {
             prim_header_index,
             bounding_rect,
             transform_kind,
-            render_tasks,
             z_id,
             prim_info.clip_task_index,
             prim_vis_mask,
@@ -914,7 +912,6 @@ impl BatchBuilder {
 
         let clip_task_address = ctx.get_prim_clip_task_address(
             prim_info.clip_task_index,
-            render_tasks,
         );
 
         if is_chased {
@@ -992,6 +989,9 @@ impl BatchBuilder {
                     );
                 }
 
+                // TODO: it would be less error-prone to get this info from the texture cache.
+                let image_buffer_kind = ImageBufferKind::Texture2D;
+
                 let non_segmented_blend_mode = if !common_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex
@@ -1009,7 +1009,7 @@ impl BatchBuilder {
                 };
 
                 let batch_params = BrushBatchParameters::instanced(
-                    BrushBatchKind::Image(ImageBufferKind::Texture2DArray),
+                    BrushBatchKind::Image(image_buffer_kind),
                     ImageBrushData {
                         color_mode: ShaderColorMode::Image,
                         alpha_type: AlphaType::PremultipliedAlpha,
@@ -1036,7 +1036,6 @@ impl BatchBuilder {
                     prim_header_index,
                     bounding_rect,
                     transform_kind,
-                    render_tasks,
                     z_id,
                     prim_info.clip_task_index,
                     prim_vis_mask,
@@ -1388,7 +1387,6 @@ impl BatchBuilder {
                             // Get clip task, if set, for the picture primitive.
                             let child_clip_task_address = ctx.get_prim_clip_task_address(
                                 child_prim_info.clip_task_index,
-                                render_tasks,
                             );
 
                             let prim_header = PrimitiveHeader {
@@ -1857,8 +1855,8 @@ impl BatchBuilder {
                                     BlendMode::PremultipliedAlpha,
                                     BatchTextures::no_texture(),
                                 );
-                                let backdrop_task_address = render_tasks.get_task_address(backdrop_id);
-                                let source_task_address = render_tasks.get_task_address(cache_task_id);
+                                let backdrop_task_address: RenderTaskAddress = backdrop_id.into();
+                                let source_task_address: RenderTaskAddress = cache_task_id.into();
                                 let prim_header_index = prim_headers.push(&prim_header, z_id, [
                                     mode as u32 as i32,
                                     backdrop_task_address.0 as i32,
@@ -1948,7 +1946,6 @@ impl BatchBuilder {
                                     prim_header_index,
                                     bounding_rect,
                                     transform_kind,
-                                    render_tasks,
                                     z_id,
                                     prim_info.clip_task_index,
                                     prim_vis_mask,
@@ -2076,7 +2073,6 @@ impl BatchBuilder {
                     prim_header_index,
                     bounding_rect,
                     transform_kind,
-                    render_tasks,
                     z_id,
                     prim_info.clip_task_index,
                     prim_vis_mask,
@@ -2134,7 +2130,6 @@ impl BatchBuilder {
                     prim_header_index,
                     bounding_rect,
                     transform_kind,
-                    render_tasks,
                     z_id,
                     prim_info.clip_task_index,
                     prim_vis_mask,
@@ -2151,7 +2146,6 @@ impl BatchBuilder {
                                           batch_features,
                                           ctx,
                                           gpu_cache,
-                                          render_tasks,
                                           prim_headers);
                     return;
                 }
@@ -2258,7 +2252,6 @@ impl BatchBuilder {
                     prim_header_index,
                     bounding_rect,
                     transform_kind,
-                    render_tasks,
                     z_id,
                     prim_info.clip_task_index,
                     prim_vis_mask,
@@ -2275,7 +2268,6 @@ impl BatchBuilder {
                                           batch_features,
                                           ctx,
                                           gpu_cache,
-                                          render_tasks,
                                           prim_headers);
                     return;
                 }
@@ -2379,7 +2371,6 @@ impl BatchBuilder {
                         prim_header_index,
                         bounding_rect,
                         transform_kind,
-                        render_tasks,
                         z_id,
                         prim_info.clip_task_index,
                         prim_vis_mask,
@@ -2563,7 +2554,6 @@ impl BatchBuilder {
                         prim_header_index,
                         bounding_rect,
                         transform_kind,
-                        render_tasks,
                         z_id,
                         prim_info.clip_task_index,
                         prim_vis_mask,
@@ -2644,7 +2634,6 @@ impl BatchBuilder {
                         prim_header_index,
                         bounding_rect,
                         transform_kind,
-                        render_tasks,
                         z_id,
                         prim_info.clip_task_index,
                         prim_vis_mask,
@@ -2725,7 +2714,6 @@ impl BatchBuilder {
                         prim_header_index,
                         bounding_rect,
                         transform_kind,
-                        render_tasks,
                         z_id,
                         prim_info.clip_task_index,
                         prim_vis_mask,
@@ -2824,7 +2812,6 @@ impl BatchBuilder {
         features: BatchFeatures,
         bounding_rect: &PictureRect,
         transform_kind: TransformedRectKind,
-        render_tasks: &RenderTaskGraph,
         z_id: ZBufferId,
         prim_opacity: PrimitiveOpacity,
         clip_task_index: ClipTaskIndex,
@@ -2838,7 +2825,6 @@ impl BatchBuilder {
         let clip_task_address = match ctx.get_clip_task_address(
             clip_task_index,
             segment_index,
-            render_tasks,
         ) {
             Some(clip_task_address) => clip_task_address,
             None => return,
@@ -2883,7 +2869,6 @@ impl BatchBuilder {
         prim_header_index: PrimitiveHeaderIndex,
         bounding_rect: &PictureRect,
         transform_kind: TransformedRectKind,
-        render_tasks: &RenderTaskGraph,
         z_id: ZBufferId,
         clip_task_index: ClipTaskIndex,
         prim_vis_mask: PrimitiveVisibilityMask,
@@ -2909,7 +2894,6 @@ impl BatchBuilder {
                         features,
                         bounding_rect,
                         transform_kind,
-                        render_tasks,
                         z_id,
                         prim_opacity,
                         clip_task_index,
@@ -2935,7 +2919,6 @@ impl BatchBuilder {
                         features,
                         bounding_rect,
                         transform_kind,
-                        render_tasks,
                         z_id,
                         prim_opacity,
                         clip_task_index,
@@ -2954,7 +2937,6 @@ impl BatchBuilder {
                 };
                 let clip_task_address = ctx.get_prim_clip_task_address(
                     clip_task_index,
-                    render_tasks,
                 ).unwrap();
                 self.add_brush_instance_to_batches(
                     batch_key,
@@ -3574,6 +3556,7 @@ pub fn get_buffer_kind(texture: TextureSource) -> ImageBufferKind {
                 }
             }
         }
+        TextureSource::TextureCache(..) => ImageBufferKind::Texture2D,
         _ => ImageBufferKind::Texture2DArray,
     }
 }
@@ -3587,11 +3570,10 @@ impl<'a, 'rc> RenderTargetContext<'a, 'rc> {
         &self,
         clip_task_index: ClipTaskIndex,
         offset: i32,
-        render_tasks: &RenderTaskGraph,
     ) -> Option<RenderTaskAddress> {
         let address = match self.scratch.clip_mask_instances[clip_task_index.0 as usize + offset as usize] {
             ClipMaskKind::Mask(task_id) => {
-                render_tasks.get_task_address(task_id)
+                task_id.into()
             }
             ClipMaskKind::None => {
                 OPAQUE_TASK_ADDRESS
@@ -3609,12 +3591,10 @@ impl<'a, 'rc> RenderTargetContext<'a, 'rc> {
     fn get_prim_clip_task_address(
         &self,
         clip_task_index: ClipTaskIndex,
-        render_tasks: &RenderTaskGraph,
     ) -> Option<RenderTaskAddress> {
         self.get_clip_task_address(
             clip_task_index,
             0,
-            render_tasks,
         )
     }
 }
