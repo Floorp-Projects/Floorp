@@ -42,10 +42,11 @@ using namespace mozilla::gfx;
 
 bool gfxFT2Font::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
                            uint32_t aOffset, uint32_t aLength, Script aScript,
-                           bool aVertical, RoundingFlags aRounding,
+                           nsAtom* aLanguage, bool aVertical,
+                           RoundingFlags aRounding,
                            gfxShapedText* aShapedText) {
   if (!gfxFont::ShapeText(aDrawTarget, aText, aOffset, aLength, aScript,
-                          aVertical, aRounding, aShapedText)) {
+                          aLanguage, aVertical, aRounding, aShapedText)) {
     // harfbuzz must have failed(?!), just render raw glyphs
     AddRange(aText, aOffset, aLength, aShapedText);
     PostShapingFixup(aDrawTarget, aText, aOffset, aLength, aVertical,

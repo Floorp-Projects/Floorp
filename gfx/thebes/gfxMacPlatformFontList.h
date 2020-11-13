@@ -146,6 +146,7 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
                           nsTArray<FamilyAndGeneric>* aOutput,
                           FindFamiliesFlags aFlags,
                           gfxFontStyle* aStyle = nullptr,
+                          nsAtom* aLanguage = nullptr,
                           gfxFloat aDevToCssSize = 1.0) override;
 
   // lookup the system font for a particular system font type and set
@@ -163,7 +164,8 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
   void ReadSystemFontList(nsTArray<FontFamilyListEntry>* aList);
 
  protected:
-  FontFamily GetDefaultFontForPlatform(const gfxFontStyle* aStyle) override;
+  FontFamily GetDefaultFontForPlatform(const gfxFontStyle* aStyle,
+                                       nsAtom* aLanguage = nullptr) override;
 
  private:
   friend class gfxPlatformMac;

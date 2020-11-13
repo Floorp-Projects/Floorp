@@ -214,7 +214,8 @@ class gfxFT2FontList final : public gfxPlatformFontList {
 
   void FindFontsInDir(const nsCString& aDir, FontNameCache* aFNC);
 
-  FontFamily GetDefaultFontForPlatform(const gfxFontStyle* aStyle) override;
+  FontFamily GetDefaultFontForPlatform(const gfxFontStyle* aStyle,
+                                       nsAtom* aLanguage = nullptr) override;
 
   nsTHashtable<nsCStringHashKey> mSkipSpaceLookupCheckFamilies;
 

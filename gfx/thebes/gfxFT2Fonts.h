@@ -63,7 +63,7 @@ class gfxFT2Font : public gfxFT2FontBase {
 
   bool ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
                  uint32_t aOffset, uint32_t aLength, Script aScript,
-                 bool aVertical, RoundingFlags aRounding,
+                 nsAtom* aLanguage, bool aVertical, RoundingFlags aRounding,
                  gfxShapedText* aShapedText) override;
 
   void FillGlyphDataForChar(FT_Face face, uint32_t ch, CachedGlyphData* gd);

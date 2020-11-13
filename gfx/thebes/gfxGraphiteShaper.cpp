@@ -131,7 +131,8 @@ static inline size_t CountUnicodes(const char16_t* aText, uint32_t aLength) {
 bool gfxGraphiteShaper::ShapeText(DrawTarget* aDrawTarget,
                                   const char16_t* aText, uint32_t aOffset,
                                   uint32_t aLength, Script aScript,
-                                  bool aVertical, RoundingFlags aRounding,
+                                  nsAtom* aLanguage, bool aVertical,
+                                  RoundingFlags aRounding,
                                   gfxShapedText* aShapedText) {
   const gfxFontStyle* style = mFont->GetStyle();
   auto t_mGrFace = rlbox::from_opaque(mGrFace);
@@ -191,9 +192,9 @@ bool gfxGraphiteShaper::ShapeText(DrawTarget* aDrawTarget,
     grLang = MakeGraphiteLangTag(style->languageOverride);
   } else if (entry->mLanguageOverride) {
     grLang = MakeGraphiteLangTag(entry->mLanguageOverride);
-  } else if (style->explicitLanguage) {
+  } else if (aLanguage) {
     nsAutoCString langString;
-    style->language->ToUTF8String(langString);
+    aLanguage->ToUTF8String(langString);
     grLang = GetGraphiteTagForLang(langString);
   }
   tainted_gr<gr_feature_val*> grFeatures =

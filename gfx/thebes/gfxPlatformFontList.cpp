@@ -1138,7 +1138,7 @@ gfxFontFamily* gfxPlatformFontList::CheckFamily(gfxFontFamily* aFamily) {
 bool gfxPlatformFontList::FindAndAddFamilies(
     StyleGenericFontFamily aGeneric, const nsACString& aFamily,
     nsTArray<FamilyAndGeneric>* aOutput, FindFamiliesFlags aFlags,
-    gfxFontStyle* aStyle, gfxFloat aDevToCssSize) {
+    gfxFontStyle* aStyle, nsAtom* aLanguage, gfxFloat aDevToCssSize) {
   nsAutoCString key;
   GenerateFontListKey(aFamily, key);
 
@@ -1283,13 +1283,13 @@ bool gfxPlatformFontList::FindAndAddFamilies(
 
 fontlist::Family* gfxPlatformFontList::FindSharedFamily(
     const nsACString& aFamily, FindFamiliesFlags aFlags, gfxFontStyle* aStyle,
-    gfxFloat aDevToCss) {
+    nsAtom* aLanguage, gfxFloat aDevToCss) {
   if (!SharedFontList()) {
     return nullptr;
   }
   AutoTArray<FamilyAndGeneric, 1> families;
   if (!FindAndAddFamilies(StyleGenericFontFamily::None, aFamily, &families,
-                          aFlags, aStyle, aDevToCss) ||
+                          aFlags, aStyle, aLanguage, aDevToCss) ||
       !families[0].mFamily.mIsShared) {
     return nullptr;
   }
@@ -1595,12 +1595,9 @@ void gfxPlatformFontList::GetFontFamiliesFromGenericFamilies(
     PrefFontList* aGenericFamilies) {
   // lookup and add platform fonts uniquely
   for (const nsCString& genericFamily : aGenericNameFamilies) {
-    gfxFontStyle style;
-    style.language = aLangGroup;
-    style.systemFont = false;
     AutoTArray<FamilyAndGeneric, 10> families;
     FindAndAddFamilies(aGenericType, genericFamily, &families,
-                       FindFamiliesFlags(0), &style);
+                       FindFamiliesFlags(0), nullptr, aLangGroup);
     for (const FamilyAndGeneric& f : families) {
       if (!aGenericFamilies->Contains(f.mFamily)) {
         aGenericFamilies->AppendElement(f.mFamily);
