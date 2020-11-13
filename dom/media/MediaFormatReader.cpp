@@ -361,9 +361,12 @@ void MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData) {
   }
 
   RefPtr<PlatformDecoderModule::CreateDecoderPromise> p;
-  auto onWaitingForKeyEvent = [owner = RefPtr<MediaFormatReader>(mOwner)]() {
-    return &owner->OnTrackWaitingForKeyProducer();
-  };
+  MediaFormatReader* owner = mOwner;
+  auto onWaitingForKeyEvent =
+      [owner = ThreadSafeWeakPtr<MediaFormatReader>(owner)]() {
+        RefPtr<MediaFormatReader> mfr(owner);
+        return mfr ? &mfr->OnTrackWaitingForKeyProducer() : nullptr;
+      };
 
   switch (aData.mTrack) {
     case TrackInfo::kAudioTrack: {
