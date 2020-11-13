@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <title>Test for Bug 1155730</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1155730">Mozilla Bug 1155730</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+  <script type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.requestFlakyTimeout("untriaged");
+
+    var testWindow;
+    function runTest() {
+        testWindow = window.open("file_scrollRestoration.html", "", "width=360,height=480");
+        testWindow.onunload = function() { }; // to prevent bfcache
+    }
+
+    async function case3WaitForBlank() {
+      let loaded = SimpleTest.promiseWaitForCondition(() => {
+        return testWindow.location.href == "about:blank";
+      });
+      await loaded;
+      SpecialPowers.wrap(testWindow).history.back();
+    }
+
+    function finishTest() {
+      testWindow.close();
+      SimpleTest.finish();
+    }
+
+  </script>
+</pre>
+</body>
+</html>
