@@ -222,8 +222,13 @@ class MultiTouchInput : public InputData {
   MultiTouchInput(MultiTouchType aType, uint32_t aTime, TimeStamp aTimeStamp,
                   Modifiers aModifiers);
   MultiTouchInput();
+  MultiTouchInput(MultiTouchInput&&) = default;
   MultiTouchInput(const MultiTouchInput& aOther);
   explicit MultiTouchInput(const WidgetTouchEvent& aTouchEvent);
+
+  MultiTouchInput& operator=(MultiTouchInput&&) = default;
+  MultiTouchInput& operator=(const MultiTouchInput&) = default;
+
   void Translate(const ScreenPoint& aTranslation);
 
   WidgetTouchEvent ToWidgetTouchEvent(nsIWidget* aWidget) const;
