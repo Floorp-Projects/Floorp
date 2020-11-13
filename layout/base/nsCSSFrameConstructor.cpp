@@ -680,11 +680,14 @@ class MOZ_STACK_CLASS nsFrameConstructorState {
   // using this state.
   nsFrameState mAdditionalStateBits;
 
-  // When working with the transform and filter properties, we want to hook
-  // the abs-pos and fixed-pos lists together, since such
-  // elements are fixed-pos containing blocks.  This flag determines
-  // whether or not we want to wire the fixed-pos and abs-pos lists
-  // together.
+  // When working with transform / filter properties, we want to hook the
+  // abs-pos and fixed-pos lists together, since such elements are fixed-pos
+  // containing blocks.
+  //
+  // Similarly when restricting absolute positioning (for e.g. mathml).
+  //
+  // This flag determines whether or not we want to wire the fixed-pos and
+  // abs-pos lists together.
   bool mFixedPosIsAbsPos;
 
   // A boolean to indicate whether we have a "pending" popupgroup.  That is, we
@@ -892,6 +895,8 @@ void nsFrameConstructorState::ProcessFrameInsertionsForAllLists() {
 void nsFrameConstructorState::PushAbsoluteContainingBlock(
     nsContainerFrame* aNewAbsoluteContainingBlock, nsIFrame* aPositionedFrame,
     nsFrameConstructorSaveState& aSaveState) {
+  MOZ_ASSERT(!!aNewAbsoluteContainingBlock == !!aPositionedFrame,
+             "We should have both or none");
   aSaveState.mList = &mAbsoluteList;
   aSaveState.mSavedList = mAbsoluteList;
   aSaveState.mChildListID = nsIFrame::kAbsoluteList;
@@ -908,10 +913,11 @@ void nsFrameConstructorState::PushAbsoluteContainingBlock(
   mAbsoluteList = AbsoluteFrameList(aNewAbsoluteContainingBlock);
 
   /* See if we're wiring the fixed-pos and abs-pos lists together.  This happens
-   * iff we're a transformed element.
+   * if we're a transformed/filtered/etc element, or if we force a null abspos
+   * containing block (for mathml for example).
    */
   mFixedPosIsAbsPos =
-      aPositionedFrame && aPositionedFrame->IsFixedPosContainingBlock();
+      !aPositionedFrame || aPositionedFrame->IsFixedPosContainingBlock();
 
   if (aNewAbsoluteContainingBlock) {
     aNewAbsoluteContainingBlock->MarkAsAbsoluteContainingBlock();
