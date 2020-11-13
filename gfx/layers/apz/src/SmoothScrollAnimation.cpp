@@ -25,5 +25,22 @@ SmoothScrollAnimation* SmoothScrollAnimation::AsSmoothScrollAnimation() {
 
 ScrollOrigin SmoothScrollAnimation::GetScrollOrigin() const { return mOrigin; }
 
+ScrollOrigin SmoothScrollAnimation::GetScrollOriginForAction(
+    KeyboardScrollAction::KeyboardScrollActionType aAction) {
+  switch (aAction) {
+    case KeyboardScrollAction::eScrollCharacter:
+    case KeyboardScrollAction::eScrollLine: {
+      return ScrollOrigin::Lines;
+    }
+    case KeyboardScrollAction::eScrollPage:
+      return ScrollOrigin::Pages;
+    case KeyboardScrollAction::eScrollComplete:
+      return ScrollOrigin::Other;
+    default:
+      MOZ_ASSERT(false, "Unknown keyboard scroll action type");
+      return ScrollOrigin::Other;
+  }
+}
+
 }  // namespace layers
 }  // namespace mozilla
