@@ -28,25 +28,13 @@ function getNativeInterface(accDoc, id) {
 }
 
 function waitForMacEventWithInfo(notificationType, filter) {
-  let filterFunc = (macIface, data) => {
-    if (!filter) {
-      return true;
-    }
-
-    if (typeof filter == "function") {
-      return filter(macIface, data);
-    }
-
-    return macIface.getAttributeValue("AXDOMIdentifier") == filter;
-  };
-
   return new Promise(resolve => {
     let eventObserver = {
       observe(subject, topic, data) {
         let macEvent = subject.QueryInterface(Ci.nsIAccessibleMacEvent);
         if (
           data === notificationType &&
-          filterFunc(macEvent.macIface, macEvent.data)
+          (!filter || filter(macEvent.macIface, macEvent.data))
         ) {
           Services.obs.removeObserver(this, "accessible-mac-event");
           resolve(macEvent);
