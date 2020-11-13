@@ -5,11 +5,7 @@
 "use strict";
 
 const { extend } = require("devtools/shared/extend");
-var {
-  findPlaceholders,
-  describeTemplate,
-  getPath,
-} = require("devtools/shared/protocol/utils");
+var { findPlaceholders, getPath } = require("devtools/shared/protocol/utils");
 var { types } = require("devtools/shared/protocol/types");
 
 /**
@@ -75,10 +71,6 @@ Request.prototype = {
     }
     return fnArgs;
   },
-
-  describe: function() {
-    return describeTemplate(this.template);
-  },
 };
 
 exports.Request = Request;
@@ -119,13 +111,6 @@ Arg.prototype = {
 
   read: function(v, ctx, outArgs) {
     outArgs[this.index] = this.type.read(v, ctx);
-  },
-
-  describe: function() {
-    return {
-      _arg: this.index,
-      type: this.type.name,
-    };
   },
 };
 
@@ -172,13 +157,6 @@ Option.prototype = extend(Arg.prototype, {
       return;
     }
     outArgs[this.index][name] = this.type.read(v, ctx);
-  },
-
-  describe: function() {
-    return {
-      _option: this.index,
-      type: this.type.name,
-    };
   },
 });
 
