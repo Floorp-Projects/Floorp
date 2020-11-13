@@ -141,8 +141,7 @@
         innerStaticFrame = staticFrame.contentDocument.getElementById("staticFrame");
         opener.is(innerStaticFrame.contentDocument.location.href, BASE_URL + "frame1.html", "innerStaticFrame location");
         opener.ok(!staticFrame.contentDocument.getElementById("dynamicFrame"), "innerDynamicFrame should not exist");
-        opener.nextTest();
-        window.close();
+        opener.finishTest();
       },
     ];
 
@@ -177,13 +176,6 @@
 
     function test() {
       if (opener) {
-        // Disable the subtest for now since it relies on the bfcache.
-        if (opener.SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-          opener.nextTest();
-          window.close();
-          return;
-        }
-
         // Ensure the tests are not executed in onload hander.
         setTimeout(testSteps[opener.testCount++], 0);
       }
