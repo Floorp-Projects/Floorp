@@ -843,6 +843,7 @@ class TestProvider extends UrlbarProvider {
     priority = 0,
     addTimeout = 0,
     onCancel = null,
+    onSelection = null,
   } = {}) {
     super();
     this._results = results;
@@ -851,6 +852,7 @@ class TestProvider extends UrlbarProvider {
     this._priority = priority;
     this._addTimeout = addTimeout;
     this._onCancel = onCancel;
+    this._onSelection = onSelection;
   }
   get name() {
     return "TestProvider" + this._name;
@@ -881,6 +883,12 @@ class TestProvider extends UrlbarProvider {
   cancelQuery(context) {
     if (this._onCancel) {
       this._onCancel();
+    }
+  }
+
+  onSelection(result, element) {
+    if (this._onSelection) {
+      this._onSelection(result, element);
     }
   }
 }

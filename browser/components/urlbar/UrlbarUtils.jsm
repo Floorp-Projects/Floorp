@@ -1616,6 +1616,21 @@ class UrlbarProvider {
   onEngagement(isPrivate, state) {}
 
   /**
+   * Called when a result from the provider is selected. "Selected" refers to
+   * the user highlighing the result with the arrow keys/Tab, before it is
+   * picked. onSelection is also called when a user clicks a result. In the
+   * event of a click, onSelection is called just before pickResult. Note that
+   * this is called when heuristic results are pre-selected.
+   *
+   * @param {UrlbarResult} result
+   *   The result that was selected.
+   * @param {Element} element
+   *   The element in the result's view that was selected.
+   * @abstract
+   */
+  onSelection(result, element) {}
+
+  /**
    * This is called only for dynamic result types, when the urlbar view updates
    * the view of one of the results of the provider.  It should return an object
    * describing the view update that looks like this:
