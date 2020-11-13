@@ -42,6 +42,10 @@ rtc_library("video_capture_module") {
     #"//third_party/libyuv",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+  include_dirs = [
+    "/media/libyuv",
+    "/media/libyuv/libyuv/include",
+  ]
 }
 
 if (!build_with_chromium) {
