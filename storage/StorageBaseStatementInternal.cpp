@@ -184,22 +184,39 @@ StorageBaseStatementInternal::ExecuteAsync(
                                          mNativeConnection, aCallback, _stmt);
 }
 
-NS_IMETHODIMP
-StorageBaseStatementInternal::EscapeStringForLIKE(const nsAString& aValue,
-                                                  const char16_t aEscapeChar,
-                                                  nsAString& _escapedString) {
-  const char16_t MATCH_ALL('%');
-  const char16_t MATCH_ONE('_');
+template <typename T>
+void EscapeStringForLIKEInternal(const T& aValue,
+                                 const typename T::char_type aEscapeChar,
+                                 T& aResult) {
+  const typename T::char_type MATCH_ALL('%');
+  const typename T::char_type MATCH_ONE('_');
 
-  _escapedString.Truncate(0);
+  aResult.Truncate(0);
 
   for (uint32_t i = 0; i < aValue.Length(); i++) {
     if (aValue[i] == aEscapeChar || aValue[i] == MATCH_ALL ||
         aValue[i] == MATCH_ONE) {
-      _escapedString += aEscapeChar;
+      aResult += aEscapeChar;
     }
-    _escapedString += aValue[i];
+    aResult += aValue[i];
   }
+}
+
+NS_IMETHODIMP
+StorageBaseStatementInternal::EscapeStringForLIKE(const nsAString& aValue,
+                                                  const char16_t aEscapeChar,
+                                                  nsAString& _escapedString) {
+  EscapeStringForLIKEInternal(aValue, aEscapeChar, _escapedString);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StorageBaseStatementInternal::EscapeUTF8StringForLIKE(
+    const nsACString& aValue, const char aEscapeChar,
+    nsACString& _escapedString) {
+  EscapeStringForLIKEInternal(aValue, aEscapeChar, _escapedString);
+
   return NS_OK;
 }
 
