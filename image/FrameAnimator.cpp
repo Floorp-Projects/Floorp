@@ -341,6 +341,10 @@ void FrameAnimator::ResetAnimation(AnimationState& aState) {
   }
 
   result.Surface().Reset();
+
+  // Calling Reset on the surface of the animation can cause discarding surface
+  // providers to throw out all their frames so refresh our state.
+  aState.UpdateStateInternal(result, mSize);
 }
 
 RefreshResult FrameAnimator::RequestRefresh(AnimationState& aState,
