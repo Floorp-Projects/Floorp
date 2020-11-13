@@ -220,8 +220,8 @@ class PromiseJobRunnable final : public MicroTaskRunnable {
   }
 
   virtual bool Suppressed() override {
-    nsIGlobalObject* global =
-        xpc::NativeGlobal(mCallback->CallbackPreserveColor());
+    JSObject* callback = mCallback->CallbackPreserveColor();
+    nsIGlobalObject* global = callback ? xpc::NativeGlobal(callback) : nullptr;
     return global && global->IsInSyncOperation();
   }
 
