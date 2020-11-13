@@ -5,7 +5,6 @@
 "use strict";
 
 const {
-  getUrlDetails,
   processNetworkUpdates,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
 const {
@@ -152,11 +151,12 @@ function requestsReducer(state = Requests(), action) {
 
 function addRequest(state, action) {
   const nextState = { ...state };
-
+  // The target front is not used and cannot be serialized by redux
+  // eslint-disable-next-line no-unused-vars
+  const { targetFront, ...requestData } = action.data;
   const newRequest = {
     id: action.id,
-    ...action.data,
-    urlDetails: getUrlDetails(action.data.url),
+    ...requestData,
   };
 
   nextState.requests = [...state.requests, newRequest];

@@ -325,12 +325,12 @@ class FirefoxConnector {
   }
 
   navigate() {
-    if (this.dataProvider.isPayloadQueueEmpty()) {
+    if (!this.dataProvider.hasPendingRequests()) {
       this.onReloaded();
       return;
     }
     const listener = () => {
-      if (this.dataProvider && !this.dataProvider.isPayloadQueueEmpty()) {
+      if (this.dataProvider && this.dataProvider.hasPendingRequests()) {
         return;
       }
       if (this.owner) {

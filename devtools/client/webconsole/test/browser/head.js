@@ -1704,7 +1704,12 @@ function toggleLayout(hud) {
 async function waitForLazyRequests(toolbox) {
   const { wrapper } = toolbox.getCurrentPanel().hud.ui;
   return waitUntil(() => {
-    return !wrapper.networkDataProvider.lazyRequestData.size;
+    return (
+      !wrapper.networkDataProvider.lazyRequestData.size &&
+      // Make sure that batched request updates are all complete
+      // as they trigger late lazy data requests.
+      !wrapper.queuedRequestUpdates.length
+    );
   });
 }
 
