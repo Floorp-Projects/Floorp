@@ -10,60 +10,44 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const tests = [];
 
-tests.push({
-  distribution: "acer-001",
-  test: engines =>
-    hasParams(engines, "Bing", "searchbar", "pc=MOZD") &&
-    hasDefault(engines, "Bing") &&
-    hasEnginesFirst(engines, ["Bing"]),
-});
+// Bing should be default everywhere for Acer
+for (let [locale, region] of [
+  ["en-US", "US"],
+  ["pl", "PL"],
+  ["be", "BY"],
+  ["ru", "RU"],
+  ["zh-CN", "CN"],
+]) {
+  tests.push({
+    distribution: "acer-001",
+    locale,
+    region,
+    test: engines =>
+      hasParams(engines, "Bing", "searchbar", "pc=MOZD") &&
+      hasDefault(engines, "Bing") &&
+      hasEnginesFirst(engines, ["Bing"]),
+  });
 
-tests.push({
-  distribution: "acer-002",
-  test: engines =>
-    hasParams(engines, "Bing", "searchbar", "pc=MOZD") &&
-    hasDefault(engines, "Bing") &&
-    hasEnginesFirst(engines, ["Bing"]),
-});
+  tests.push({
+    distribution: "acer-002",
+    locale,
+    region,
+    test: engines =>
+      hasParams(engines, "Bing", "searchbar", "pc=MOZD") &&
+      hasDefault(engines, "Bing") &&
+      hasEnginesFirst(engines, ["Bing"]),
+  });
 
-tests.push({
-  distribution: "acer-g-003",
-  test: engines =>
-    hasParams(engines, "Bing", "searchbar", "pc=MOZE") &&
-    hasDefault(engines, "Bing") &&
-    hasEnginesFirst(engines, ["Bing"]),
-});
-
-// Test a couple of locale/regions on Acer where Bing isn't normally present.
-tests.push({
-  locale: "pl",
-  region: "PL",
-  distribution: "acer-001",
-  test: engines =>
-    hasParams(engines, "Bing", "searchbar", "pc=MOZD") &&
-    hasDefault(engines, "Bing") &&
-    hasEnginesFirst(engines, ["Bing"]),
-});
-
-tests.push({
-  locale: "ru",
-  region: "RU",
-  distribution: "acer-002",
-  test: engines =>
-    hasParams(engines, "Bing", "searchbar", "pc=MOZD") &&
-    hasDefault(engines, "Bing") &&
-    hasEnginesFirst(engines, ["Bing"]),
-});
-
-tests.push({
-  locale: "ru",
-  region: "RU",
-  distribution: "acer-g-003",
-  test: engines =>
-    hasParams(engines, "Bing", "searchbar", "pc=MOZE") &&
-    hasDefault(engines, "Bing") &&
-    hasEnginesFirst(engines, ["Bing"]),
-});
+  tests.push({
+    distribution: "acer-g-003",
+    locale,
+    region,
+    test: engines =>
+      hasParams(engines, "Bing", "searchbar", "pc=MOZE") &&
+      hasDefault(engines, "Bing") &&
+      hasEnginesFirst(engines, ["Bing"]),
+  });
+}
 
 for (let canonicalId of ["canonical", "canonical-001", "canonical-002"]) {
   tests.push({
