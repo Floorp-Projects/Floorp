@@ -695,8 +695,9 @@ add_task(async function testExtensionControlledHomepageUninstalledAddon() {
     },
   };
   let jsonFileName = "extension-settings.json";
-  let storePath = OS.Path.join(OS.Constants.Path.profileDir, jsonFileName);
-  await OS.File.writeAtomic(storePath, JSON.stringify(storeData));
+  let storePath = PathUtils.join(await PathUtils.getProfileDir(), jsonFileName);
+
+  await IOUtils.writeAtomicUTF8(storePath, JSON.stringify(storeData));
 
   // Reload the ExtensionSettingsStore so it will read the file on disk. Don't
   // finalize the current store since it will overwrite our file.
@@ -712,7 +713,7 @@ add_task(async function testExtensionControlledHomepageUninstalledAddon() {
   await checkHomepageEnabled();
 
   // Remove the bad store file that we used.
-  await OS.File.remove(storePath);
+  await IOUtils.remove(storePath);
 
   // Reload the ExtensionSettingsStore again so it clears the data we added.
   // Don't finalize the current store since it will write out the bad data.

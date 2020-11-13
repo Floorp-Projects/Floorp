@@ -3264,16 +3264,12 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   ValType globalType;
   if (StringEqualsLiteral(typeLinearStr, "i32")) {
     globalType = ValType::I32;
-  } else if (args.length() == 1 && StringEqualsLiteral(typeLinearStr, "i64")) {
-    // For the time being, i64 is allowed only if there is not an
-    // initializing value.
+  } else if (StringEqualsLiteral(typeLinearStr, "i64")) {
     globalType = ValType::I64;
   } else if (StringEqualsLiteral(typeLinearStr, "f32")) {
     globalType = ValType::F32;
   } else if (StringEqualsLiteral(typeLinearStr, "f64")) {
     globalType = ValType::F64;
-  } else if (StringEqualsLiteral(typeLinearStr, "i64")) {
-    globalType = ValType::I64;
 #ifdef ENABLE_WASM_SIMD
   } else if (SimdAvailable(cx) && StringEqualsLiteral(typeLinearStr, "v128")) {
     globalType = ValType::V128;

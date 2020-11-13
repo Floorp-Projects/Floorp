@@ -7,7 +7,16 @@ import enum
 from pathlib import Path
 import re
 import sys
-from typing import Any, Callable, Dict, Generator, List, Iterable, Tuple, Union  # noqa
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    List,
+    Iterable,
+    Optional,
+    Tuple,
+)  # noqa
 
 
 from . import metrics
@@ -96,7 +105,7 @@ def check_common_prefix(
 
 
 def check_unit_in_name(
-    metric: metrics.Metric, parser_config: Dict[str, Any] = {}
+    metric: metrics.Metric, parser_config: Dict[str, Any]
 ) -> LintGenerator:
     """
     The metric name ends in a unit.
@@ -189,7 +198,7 @@ def check_category_generic(
 
 
 def check_bug_number(
-    metric: metrics.Metric, parser_config: Dict[str, Any] = {}
+    metric: metrics.Metric, parser_config: Dict[str, Any]
 ) -> LintGenerator:
     number_bugs = [str(bug) for bug in metric.bugs if isinstance(bug, int)]
 
@@ -202,7 +211,7 @@ def check_bug_number(
 
 
 def check_valid_in_baseline(
-    metric: metrics.Metric, parser_config: Dict[str, Any] = {}
+    metric: metrics.Metric, parser_config: Dict[str, Any]
 ) -> LintGenerator:
     allow_reserved = parser_config.get("allow_reserved", False)
 
@@ -214,7 +223,7 @@ def check_valid_in_baseline(
 
 
 def check_misspelled_pings(
-    metric: metrics.Metric, parser_config: Dict[str, Any] = {}
+    metric: metrics.Metric, parser_config: Dict[str, Any]
 ) -> LintGenerator:
     for ping in metric.send_in_pings:
         for builtin in pings.RESERVED_PING_NAMES:
@@ -224,7 +233,7 @@ def check_misspelled_pings(
 
 
 def check_user_lifetime_expiration(
-    metric: metrics.Metric, parser_config: Dict[str, Any] = {}
+    metric: metrics.Metric, parser_config: Dict[str, Any]
 ) -> LintGenerator:
 
     if metric.lifetime == metrics.Lifetime.user and metric.expires != "never":
@@ -236,7 +245,7 @@ def check_user_lifetime_expiration(
 
 
 def check_expired_date(
-    metric: metrics.Metric, parser_config: Dict[str, Any] = {}
+    metric: metrics.Metric, parser_config: Dict[str, Any]
 ) -> LintGenerator:
     try:
         metric.validate_expires()
@@ -245,7 +254,7 @@ def check_expired_date(
 
 
 def check_expired_metric(
-    metric: metrics.Metric, parser_config: Dict[str, Any] = {}
+    metric: metrics.Metric, parser_config: Dict[str, Any]
 ) -> LintGenerator:
     if metric.is_expired():
         yield ("Metric has expired. Please consider removing it.")
@@ -291,7 +300,9 @@ class GlinterNit:
 
 
 def lint_metrics(
-    objs: metrics.ObjectTree, parser_config: Dict[str, Any] = {}, file=sys.stderr
+    objs: metrics.ObjectTree,
+    parser_config: Optional[Dict[str, Any]] = None,
+    file=sys.stderr,
 ) -> List[GlinterNit]:
     """
     Performs glinter checks on a set of metrics objects.
@@ -300,6 +311,9 @@ def lint_metrics(
     :param file: The stream to write errors to.
     :returns: List of nits.
     """
+    if parser_config is None:
+        parser_config = {}
+
     nits: List[GlinterNit] = []
     for (category_name, category) in sorted(list(objs.items())):
         if category_name == "pings":
@@ -322,7 +336,7 @@ def lint_metrics(
                 for msg in cat_check_func(category_name, category_metrics.values())
             )
 
-        for (metric_name, metric) in sorted(list(category_metrics.items())):
+        for (_metric_name, metric) in sorted(list(category_metrics.items())):
             for (check_name, (check_func, check_type)) in INDIVIDUAL_CHECKS.items():
                 new_nits = list(check_func(metric, parser_config))
                 if len(new_nits):
@@ -354,7 +368,11 @@ def lint_metrics(
     return nits
 
 
-def lint_yaml_files(input_filepaths: Iterable[Path], file=sys.stderr) -> List:
+def lint_yaml_files(
+    input_filepaths: Iterable[Path],
+    file=sys.stderr,
+    parser_config: Dict[str, Any] = None,
+) -> List:
     """
     Performs glinter YAML lint on a set of files.
 
@@ -363,10 +381,16 @@ def lint_yaml_files(input_filepaths: Iterable[Path], file=sys.stderr) -> List:
     :returns: List of nits.
     """
 
+    if parser_config is None:
+        parser_config = {}
+
     # Generic type since the actual type comes from yamllint, which we don't
     # control.
     nits: List = []
     for path in input_filepaths:
+        if not path.is_file() and parser_config.get("allow_missing_files", False):
+            continue
+
         # yamllint needs both the file content and the path.
         file_content = None
         with path.open("r", encoding="utf-8") as fd:
@@ -386,7 +410,9 @@ def lint_yaml_files(input_filepaths: Iterable[Path], file=sys.stderr) -> List:
 
 
 def glinter(
-    input_filepaths: Iterable[Path], parser_config: Dict[str, Any] = {}, file=sys.stderr
+    input_filepaths: Iterable[Path],
+    parser_config: Optional[Dict[str, Any]] = None,
+    file=sys.stderr,
 ) -> int:
     """
     Commandline helper for glinter.
@@ -397,7 +423,10 @@ def glinter(
     :param file: The stream to write the errors to.
     :return: Non-zero if there were any glinter errors.
     """
-    if lint_yaml_files(input_filepaths, file=file):
+    if parser_config is None:
+        parser_config = {}
+
+    if lint_yaml_files(input_filepaths, file=file, parser_config=parser_config):
         return 1
 
     objs = parser.parse_objects(input_filepaths, parser_config)

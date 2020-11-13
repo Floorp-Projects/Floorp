@@ -32,6 +32,18 @@ struct DevPixelSpan {
   int end;
 };
 
+enum class ThemeMode : uint32_t { Invalid, Default, Dark, Light };
+
+struct ThemeColors {
+  uint32_t backgroundColor;
+  uint32_t toolbarForegroundColor;
+  uint32_t tabBarColor;
+  uint32_t chromeContentDividerColor;
+  uint32_t tabLineColor;
+  uint32_t urlbarColor;
+  uint32_t animationColor;
+};
+
 MFBT_API void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
                                              char** argv);
 MFBT_API HWND ConsumePreXULSkeletonUIHandle();
@@ -45,6 +57,7 @@ MFBT_API void PersistPreXULSkeletonUIValues(int screenX, int screenY, int width,
 MFBT_API bool GetPreXULSkeletonUIEnabled();
 MFBT_API void SetPreXULSkeletonUIEnabledIfAllowed(bool value);
 MFBT_API void PollPreXULSkeletonUIEvents();
+MFBT_API void SetPreXULSkeletonUIThemeId(ThemeMode theme);
 
 }  // namespace mozilla
 

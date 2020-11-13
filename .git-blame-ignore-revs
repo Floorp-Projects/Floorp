@@ -856,6 +856,144 @@ afb520e82a88987cbb7ba9666cbc24f6473255cc # gecko-dev
 # 10d5143647cfda21649cf254adcb21d116524c5d - Sylvestre Ledru - Bug 1489454 - Remove all trailing whitespaces (again) r=Ehsan
 b8543d174a16b7247f5de49ccfb55bd3b679b0c2 # cinnabar
 aa37bde79bb4cccec902e118ceeae32526bf3c1f # gecko-dev
+# 10d90fa56710390d54d44f25d05054e62e08af03 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/builtin, part 1. r=anba
+c41acde79808f03755336848965131678634dc85 # cinnabar
+87fd9cfafc20cbbfc06548fc24cfec9a1870610c # gecko-dev
+# 422abc78931ce85a2950b6b2e554981f5354d5c1 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/builtin, part 2. r=jorendorff
+1e317d5a90cb57d05364cdf4fcf8bbb23397d348 # cinnabar
+49add130b66b4a23c3608bc8081dff573f03a319 # gecko-dev
+# 506e668e28645f38b226ea203aed38b5b5f0b0e5 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/builtin, part 3. r=evilpie
+263a82e96d545bbbf2757c3d28710d70a474358a # cinnabar
+e4fdfe59485644f16d48f4d51d3da8b0e0c497aa # gecko-dev
+# 3fa402809570cf52220fd946081de01d7d117174 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/builtin/intl. r=jorendorff
+510afab44ff9e644889ef77627cb27055f60dfc5 # cinnabar
+83fddc286519e2b694dfce3d6eda389d2b20cbbb # gecko-dev
+# 6c382d4ab0d0deb714f15300afea2c52dff94e47 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/frontend, part 1. r=Yoric
+f763621f8f75f644f35719085f8de9d5f58f026b # cinnabar
+abfdb3755683ac6872f74180a4d81a0f57a40afc # gecko-dev
+# f758714e4ed9a93b2db83be95fb669f53658a58b - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/frontend, part 2. r=arai
+7b1cfd2f75e21d8895e82f83058ab22c14d35425 # cinnabar
+a1fe41d1fe1b8356e019935433af17c9a351d727 # gecko-dev
+# 719bd7da3367b47f19800b1761ecbd5d97a49fa2 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/frontend, part 3. r=arai
+194d77249d1019a113c8c2d221dfa56f7c3c9227 # cinnabar
+00d085e8e7ed2d4c54369100f219263dd6b5ac84 # gecko-dev
+# 9f7beee7269b10833e0ca8446195cc354dac63c3 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/frontend, part 4. r=jorendorff
+0a12af94e9df7de9b9631cdf532a90c669098ed9 # cinnabar
+30819202972a99ccaa0dac17f9be539d59ffda9a # gecko-dev
+# 3ba56e06507e0c78c679261c3d0424decb3f7b29 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/gc, part 1. r=sfink
+853dbaf41cec847177067906f7df1b839db0b63c # cinnabar
+c4600c73ca9a904d79b31c10beaf21f53a9c046b # gecko-dev
+# d27cd3305320b12ad93f0837090a0913d0f31e76 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/gc, part 2. r=jonco
+bd701e90f0665b8a57646028a282b06249a7c602 # cinnabar
+cc2932b2cc876c1177bf0da3eb1af982ad33356d # gecko-dev
+# 68e5c74b6e90baf1212846920435dbe0ae17f346 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/gc, part 3. r=jorendorff
+9af52fd55db34b2a150b3ae95ac1db3b280bab26 # cinnabar
+f4059955f755f209cab7a482f26d585379ce6109 # gecko-dev
+# 5150b70229209c5d020eef82819f5b8d5aebda0e - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/gc, part 4. r=sfink
+c3bfbf81e01f505fdc4e2bb8ab757e226d331daf # cinnabar
+75ce27e2a1f2a8b8b2a9166b10c82f8da8e32fdc # gecko-dev
+# bc503aa87b272bdcef98a35c9759e25a15031241 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/proxy. r=evilpie
+5bce1ead253ac0fbce289333515344b9950e8a9a # cinnabar
+a35f4bcc40e6e8972b9ebbf7e54f1f78d3b523ac # gecko-dev
+# 847f8ad07bd59db3f23243baf924dfe8682297d6 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/util. r=anba
+992dd7fe7a9ab9931afb18a6946bfb60620e2d5f # cinnabar
+b5680387949c9b2e2c0b1183e1f66a1c57bb1a62 # gecko-dev
+# 062a7185253dd2c253c5a3a2e9f177be37483252 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/threading. r=khyperia
+a912058789341807eb79b93c9d33209969e2f07f # cinnabar
+ef8a7283769a01a7f0f900a6967140ae419f502a # gecko-dev
+# 48c78757dc15531f94c8fd67dd70bc467e74543e - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 1. r=tcampbell
+44a9a6f702494f9bb09128184af0520b1aa934cd # cinnabar
+567b7fa6464908329b964c7aea808ac5f2378b9b # gecko-dev
+# 9f1df06ee3066e30ca84e270e37087f632969ca6 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 2. r=mgaudet
+8ea64a2037641a746744e19de73e04dcb92115f3 # cinnabar
+9795462b0332a067e95e8279c93b9ae640c5132d # gecko-dev
+# 236cf9e1bd84919f1f7603d579c667a14a1ffd92 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 3. r=nbp
+8019492f133ecb2ce6d31b89168f38377468108c # cinnabar
+c0820042edede6a1b473616eedb9bbfe74c4c6d8 # gecko-dev
+# 78d8957d12e298347c2cebe535ae565763ba361f - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 4. r=luke
+692ed3edf55bdd0feada279dc20244caae7beaf3 # cinnabar
+24c7ee16090183001dc6be9e8282c7028a018b72 # gecko-dev
+# f24489d307bedccd634b994043138d14bfc90d04 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 5. r=bbouvier
+30e7db9d251f78efe55e5cd9e6b24d26781cfccf # cinnabar
+6f9df7f3959c9453ee5d6be984c01befecf78fd8 # gecko-dev
+# b5b33a78679f204f9284dc126ca96c2c619acf71 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 6. r=jorendorff
+8a05d0b4ef511ac7cf2e016f57cce1291e942356 # cinnabar
+143fc0eb5429f8cfd9a006b409e1e3dbc2326484 # gecko-dev
+# 3810b18e5e79dc6a5204a2df01bfaafc40f0573e - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 7. r=jorendorff
+eafc0144130b26077147d3b148f0952840961011 # cinnabar
+8f0240d2d4f77b1260aea53605500b741ecbe06e # gecko-dev
+# bde61aedfb5c51a2a761037be694df136ede49cd - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 8. r=sfink
+3065d22e344fdb0ebc35a33f68ab8b67e81df373 # cinnabar
+673c78483c4b26d3d3eca7c88ff1ae53693a47ac # gecko-dev
+# 045f3d6c75024958390a18753f3698f9d177ec61 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 9. r=khyperia
+bde6f1d7a1bdd140997a0203c2bed845df2084bd # cinnabar
+028b2fe50ec55d5356ed42b605caf00ac796e334 # gecko-dev
+# 6b3a95df3c123910eeab97cb7cd7cbf0884bd413 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 10. r=lth
+9c17bb9e1a54a7d2ccb6fc10417eded49fdd53f7 # cinnabar
+e0f3b60f0ebd12c55c4e8fe498b4d7207fce7a45 # gecko-dev
+# 219721735c51630107ce70c295c26b88bb87ab3a - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 11. r=tcampbell
+a1476db76ec77599b7c05e50c07664df868de966 # cinnabar
+83b65ddc57b0f634121fbeb744616522a6e61a64 # gecko-dev
+# 710ba7b57cd3b7febccd5f390081f614ebe2df3c - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/vm, part 12. r=bbouvier
+ca8a87bab2ece7e21d4804ef9f912673d73e5864 # cinnabar
+408417dc41534d02d81c5cd01ee10ec5a25f6e6d # gecko-dev
+# 9a67686aabe8131742f00bdcf6919b5a2cc48f9a - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/wasm, part 1. r=bbouvier
+0402619df3dff2d9a1f1042de74de47313f73964 # cinnabar
+454914989e256770dffa85d458c4d4d62ed1e16c # gecko-dev
+# ed9bb62ebea140a50e38c08e663b0550a1c3c5da - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/wasm, part 2. r=lth
+1097cd66f526459baf6ef8b97aa0f64000c4727e # cinnabar
+d8b0f9131315795c86416caa70ef15ebcf181b4a # gecko-dev
+# ab68962c6c3ffb885da31f617301cb63b6fa73af - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/wasm, part 3. r=luke
+141eec133a1f5fb6a5eb29eae0924a147db93070 # cinnabar
+9f36b27569493443d8a9fe2f39893dc77b33c7e9 # gecko-dev
+# 20142eb6afd6c14610943833a5e7bdbceb4dfb8a - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/wasm, part 4. r=luke
+7005d0acdf71a64e47e3ee41c1f7e32876cfdb73 # cinnabar
+880273a48556a60292b1ac86ab54459b4e93ceb8 # gecko-dev
+# e3a9c003c9c5d3d6484fa88ba07bdd7c0ff183d5 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/wasm, part 5. r=bbouvier
+e6eee1f918ef3599e46a00fb2e3768df72f3fae5 # cinnabar
+1f6e5f662c2e25b26bed01e21d270a3837894a25 # gecko-dev
+# 817b7142d4d965f9ab591a33268e2a59d29e4aed - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/jit, part 1. r=tcampbell
+508299042dad5003f0dffe9d6f116850c9749c61 # cinnabar
+6687723eb70e34868de04d54033af160522969b2 # gecko-dev
+# 6a52f517bdb44b42b677c7c50a67d9306b3ed935 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/jit, part 2. r=mgaudet
+d1e685d044c8fca37a8d43de5756785b3a656ef4 # cinnabar
+050dae31d56078d1aefb26d46bac745d01e76687 # gecko-dev
+# 19ae9ff093caf9f9071277549c5aac056db90587 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/jit, part 3. r=nbp
+3cbd3d56eb335503e75aa0b60fdb98d0fc49df04 # cinnabar
+8ea27917d04209baf22ba34424e1a7eb03b555c7 # gecko-dev
+# bc2538bb2e9d925b17f45e1570cb6441ab6f8e3d - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/jit, part 4. r=bbouvier
+4ece55ae7439abd851cb1bfaed17b1ffd01f9c2a # cinnabar
+b8be6d2660acfc4b9f3876b543cb0d053394a6d9 # gecko-dev
+# 8fd55df51b25f080dcbf749bd9127f7fea3b36f4 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/jit, part 5. r=tcampbell
+ba023df7fbb92fedc02a25c8533ed3069fc5ebb0 # cinnabar
+6f1da9c980346d15d1f48824291fbe9fade5d523 # gecko-dev
+# a946ea065650ac0422ad82c272496ff6290f5410 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/jit, part 6. r=evilpie
+70bb821ec3c99cc9d2ba89c477d80b54be408f3a # cinnabar
+08d5c21a3fb65ea70f888d2ae598719579eddd3a # gecko-dev
+# fead9919a173160ff1d66715cd34e17ac0d11bce - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/jit, part 7. r=jandem
+990bd0b32bfe0af0af336b9f48c2298866387a38 # cinnabar
+3d374e57a9db84da89011c35c5c90589018bafa3 # gecko-dev
+# e620cff42c301ca3ee5e50856c185bad2695c39b - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/jit, part 8. r=jandem
+5327992dab5ad666442c9d395718a4c1548c589c # cinnabar
+840e24b445ecf65b80a63da3085a57e2cddef550 # gecko-dev
+# c56540cb6e028b2eb724d6316b5b47c9adcee0e1 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/shell. r=jandem
+29b1224fe8ef4253182f3b4ad0496b92d465aaac # cinnabar
+28eb0626a17403b176fa26926098c085eb3f6d0b # gecko-dev
+# a6baf63a4fd58b89dd1aad32a840aeb1288cb5f1 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/src/js*. r=jandem
+94fa5a0b50427f8781183a16c2fba2687c397ed3 # cinnabar
+670c162df38c900555ac978d0b4fe127a237f94f # gecko-dev
+# f2bedf1fe932f1bb3277a4db1e11fbb02b3242d8 - Jan de Mooij - Bug 1488698 - Always use braces for if/for/while statements in js/public. r=jandem
+9cd3054445b0a33973f96dd7ca9ceee46ead9295 # cinnabar
+ab644b087f3dcb920bef3ef031a9d88d819f453e # gecko-dev
+# cab441a582e82e1875fd9271b78f3b5e8462376d - Jan de Mooij - Bug 1490589 - Add braces for if-statements in make_unicode.py. r=arai
+6405c10911d23d46162756480df72b72dbc8724f # cinnabar
+816b6b6516c3ad86944e24fdd80fb319bdbb9ff3 # gecko-dev
+# 91fc6c048c077c12a9326cb6825ea9e12158764d - Jan de Mooij - Bug 1490594 - Always use braces for if/for/while statements in jsapi-tests. r=luke
+47b588c2e9bdb05f966064b284f2127e55090268 # cinnabar
+eabefc7394c64a6996df8b03815814a2896344bb # gecko-dev
+# ec5fe5d123b1baac235d978858c5226f7c8d9ed0 - Jan de Mooij - Bug 1490594 - Always use braces for if/for/while statements in jsapi-tests. r=luke
+85768612d1bb1629ad44105b136ddc8ceb6b7d19 # cinnabar
+df77c423a5d18e3a997563b47c50a3c0b55f68e9 # gecko-dev
 # ea73513d7c2555142333f4667a37788023f92f2a - Mark Banner - Bug 1489980 - Editor ESLint for editor/ - Initial setup adding configs for tests. r=masayuki
 44a478c9f2df808c2f72f682869aacf562cc62e0 # cinnabar
 3720c020c0c84345fe7d76923bd05fb64eaa1f3a # gecko-dev
@@ -865,6 +1003,36 @@ d5e3a6a9e5c07a45fde5dc5bae33673615e13455 # gecko-dev
 # 0d8eb8a0c2b4ad081ffad8ecf172b82d16c38d01 - Mark Banner - Bug 1489980 - Enable ESLint for editor/ - Manual fixes. r=masayuki
 475e2a9c818bdbad9946dda3ecc3ffcfc15e560a # cinnabar
 e824d800fb547242e168c8f12be8c5fa5cfc120d # gecko-dev
+# 7bbf9560f451422023e71284069254309eb9ca78 - Jan de Mooij - Bug 1490993 part 1 - Always use braces for if/for/while statements in js/src/jit/x64. r=mgaudet
+7865f48fc78ee80ec4edacbdd213219a83becb25 # cinnabar
+ea80c8629f4b334929d7109a8cdd80daefcb39dd # gecko-dev
+# 3c10148fb9a8056c216f1c3f1fba8d6fec35a9c8 - Jan de Mooij - Bug 1490993 part 2 - Always use braces for if/for/while statements in js/src/jit/x86. r=tcampbell
+44ef4ab655da65b6691278b22f8c4d1182581ba6 # cinnabar
+92beda17be976a7108e62c3324d39c3011479293 # gecko-dev
+# e6cce3b04ab699ce80f5b90321308f66eb43d562 - Jan de Mooij - Bug 1490993 part 3 - Always use braces for if/for/while statements in js/src/jit/x86-shared. r=nbp
+a7e3a882e9f308a01c9fde47a3925b6ebf8b80dd # cinnabar
+7c02dd463269ec8d0958b0ad4a7836c506c1189f # gecko-dev
+# 63a03fced45b169986a591310bd6572594a10fa0 - Jan de Mooij - Bug 1490993 part 4 - Always use braces for if/for/while statements in js/src/jit/arm. r=tcampbell
+c83df309c6f55cf78af30a6b1ec6dee5852238f5 # cinnabar
+dd59f602e2b97bbb0fe73ba95057725d2d5d37ef # gecko-dev
+# 371ea54455859baa1f9a5dd2d70772e04d6829bd - Jan de Mooij - Bug 1490993 part 5 - Always use braces for if/for/while statements in js/src/jit/arm64. r=luke
+e1a46ea06d169f4ecf4b2bb9c792bfa590b1a48b # cinnabar
+f75dda188ab0ab5b689f798653a7a0c0feea5cf7 # gecko-dev
+# 0667570cb938dd973aaef61ccd31f0a74ce57a9b - Jan de Mooij - Bug 1490993 part 6 - Always use braces for if/for/while statements in js/src/jit/{mips32,mips64,mips-shared}. r=tcampbell
+896960aa1c65e74e9e8da244ec98fa66c1d00d3e # cinnabar
+a493a8cfe853d78c3b0c902ab4a69e36848b63f4 # gecko-dev
+# 765542d6237ecf99af924f61485d7fe19f4f722c - Tooru Fujisawa <arai_a@mac.com> - Bug 1490548 - Always use braces for if/for/while statements in BinAST auto-generated code r=Yoric
+5eed8696724393673b7f7d3fc920a6f439de99aa # cinnabar
+9bc0d5d15d945aff731a60942893ed1079b38407 # gecko-dev
+# a2f6f03530301e5fa6357815265f782400c612d9 - Jan de Mooij - Bug 1492416 - Always use braces for if/for/while statements in js/src/ds. r=arai
+d9c9de62d8efc091cb3e3acb61bf627b85637c26 # cinnabar
+0143ee21c0f84a697c0f71ff8cd9799120b58449 # gecko-dev
+# 146575efb1c65085c56ee57d7cdc1de54c0f600b - Jan de Mooij - Bug 1496033 - Add missing {} in js/src. r=bbouvier
+27c6e55f56fe42ae55077eee6147805c8048c547 # cinnabar
+05cdba23d9bf753f243cc8342bc7bfab4880709b # gecko-dev
+# b60cb229416c3a4d2744611cf89051f574ced95e - Jan de Mooij - Bug 1489242 - Add {} to example code in comments. r=jorendorff
+a7ba6fc3c543b1cd42d4006ffed4340a0977496a # cinnabar
+0811112d770e8e12dcb81fc79068c90a16a793e3 # gecko-dev
 # b4d7770b8661338c878166beca941eeb830f6041 - Paul Adenot - Bug 1497254 - clang-format MediaEngineWebRTCAudio.{cpp,h} and MediaEnginePrefs.h. r=pehrsons
 03412b0f475fa8911d0abcf700c820152fb76984 # cinnabar
 3c9ac6a32de8d50b0a15a57d20b8d4889f1a57e6 # gecko-dev

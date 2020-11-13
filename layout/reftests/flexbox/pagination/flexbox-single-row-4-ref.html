@@ -3,7 +3,7 @@
      http://creativecommons.org/publicdomain/zero/1.0/ -->
 <html>
   <meta charset="utf-8">
-  <title>CSS Flexbox Test Reference: Fragmentation of height:auto single-line row flex container in a zero height multicol</title>
+  <title>CSS Flexbox Test Reference: Fragmentation of block-size:auto single-line row flex container in a zero block-size multicol</title>
   <link rel="author" title="Daniel Holbert" href="mailto:dholbert@mozilla.com">
   <link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
   <link rel="author" title="Mozilla" href="http://www.mozilla.org/">
@@ -11,9 +11,9 @@
   <style>
   .multicol {
     column-count: 2;
-    height: 0;
+    block-size: 0;
     border: 1px solid black;
-    margin-bottom: 30px; /* Just to separate each sub-testcase visually. */
+    margin-block-end: 30px; /* Just to separate each sub-testcase visually. */
   }
 
   .flexContainer {

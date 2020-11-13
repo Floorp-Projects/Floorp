@@ -18,7 +18,6 @@ parent:
   async Destroy();
 
 child:
-  async GetVisibility();
   async NotifyResult(bool allow, PermissionChoice[] choices);
   async __delete__();
 };

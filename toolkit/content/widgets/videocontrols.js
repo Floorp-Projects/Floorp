@@ -3031,6 +3031,8 @@ this.NoControlsDesktopImplWidget = class {
           }
           case "durationchange":
           // Intentional fall-through
+          case "emptied":
+          // Intentional fall-through
           case "loadedmetadata": {
             this.updatePictureInPictureToggleDisplay();
             break;
@@ -3092,6 +3094,7 @@ this.NoControlsDesktopImplWidget = class {
           capture: true,
         });
 
+        this.video.addEventListener("emptied", this);
         this.video.addEventListener("loadedmetadata", this);
         this.video.addEventListener("durationchange", this);
         this.videocontrols.addEventListener("resizevideocontrols", this);
@@ -3102,6 +3105,7 @@ this.NoControlsDesktopImplWidget = class {
           capture: true,
         });
 
+        this.video.removeEventListener("emptied", this);
         this.video.removeEventListener("loadedmetadata", this);
         this.video.removeEventListener("durationchange", this);
         this.videocontrols.removeEventListener("resizevideocontrols", this);

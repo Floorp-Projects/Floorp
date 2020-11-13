@@ -3,35 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // This file tests the functions of mozIStorageService except for
+// openSpecialDatabase, which is tested by test_storage_service_special.js and
 // openUnsharedDatabase, which is tested by test_storage_service_unshared.js.
 
 const BACKUP_FILE_NAME = "test_storage.sqlite.backup";
 
-function test_openSpecialDatabase_invalid_arg() {
-  try {
-    Services.storage.openSpecialDatabase("abcd");
-    do_throw("We should not get here!");
-  } catch (e) {
-    print(e);
-    print("e.result is " + e.result);
-    Assert.equal(Cr.NS_ERROR_INVALID_ARG, e.result);
-  }
-}
-
 function test_openDatabase_null_file() {
   try {
     Services.storage.openDatabase(null);
-    do_throw("We should not get here!");
-  } catch (e) {
-    print(e);
-    print("e.result is " + e.result);
-    Assert.equal(Cr.NS_ERROR_INVALID_ARG, e.result);
-  }
-}
-
-function test_openUnsharedDatabase_null_file() {
-  try {
-    Services.storage.openUnsharedDatabase(null);
     do_throw("We should not get here!");
   } catch (e) {
     print(e);
@@ -256,9 +235,7 @@ function test_read_baddb() {
 }
 
 var tests = [
-  test_openSpecialDatabase_invalid_arg,
   test_openDatabase_null_file,
-  test_openUnsharedDatabase_null_file,
   test_openDatabase_file_DNE,
   test_openDatabase_file_exists,
   test_corrupt_db_throws_with_openDatabase,

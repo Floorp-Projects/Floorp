@@ -41,8 +41,12 @@ impl MetricType for CustomDistributionMetric {
     }
 }
 
+// IMPORTANT:
+//
+// When changing this implementation, make sure all the operations are
+// also declared in the related trait in `../traits/`.
 impl CustomDistributionMetric {
-    /// Create a new memory distribution metric.
+    /// Creates a new memory distribution metric.
     pub fn new(
         meta: CommonMetricData,
         range_min: u64,
@@ -66,7 +70,7 @@ impl CustomDistributionMetric {
     /// will take care of filtering and reporting errors for any provided negative
     /// sample.
     ///
-    /// ## Arguments
+    /// # Arguments
     ///
     /// - `samples` - The vector holding the samples to be recorded by the metric.
     ///
@@ -75,6 +79,10 @@ impl CustomDistributionMetric {
     /// Discards any negative value in `samples` and report an `ErrorType::InvalidValue`
     /// for each of them.
     pub fn accumulate_samples_signed(&self, glean: &Glean, samples: Vec<i64>) {
+        if !self.should_record(glean) {
+            return;
+        }
+
         let mut num_negative_samples = 0;
 
         // Generic accumulation function to handle the different histogram types and count negative
@@ -146,7 +154,7 @@ impl CustomDistributionMetric {
 
     /// **Test-only API (exported for FFI purposes).**
     ///
-    /// Get the currently stored histogram.
+    /// Gets the currently stored histogram.
     ///
     /// This doesn't clear the stored value.
     pub fn test_get_value(&self, glean: &Glean, storage_name: &str) -> Option<DistributionData> {
@@ -164,7 +172,7 @@ impl CustomDistributionMetric {
 
     /// **Test-only API (exported for FFI purposes).**
     ///
-    /// Get the currently stored histogram as a JSON String of the serialized value.
+    /// Gets the currently stored histogram as a JSON String of the serialized value.
     ///
     /// This doesn't clear the stored value.
     pub fn test_get_value_as_json_string(

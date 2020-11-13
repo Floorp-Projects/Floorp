@@ -4124,16 +4124,13 @@ pub unsafe extern "C" fn Servo_ParseProperty(
 #[no_mangle]
 pub extern "C" fn Servo_ParseEasing(
     easing: &nsAString,
-    data: *mut URLExtraData,
     output: &mut nsTimingFunction,
 ) -> bool {
     use style::properties::longhands::transition_timing_function;
 
-    // FIXME Dummy URL data would work fine here.
-    let url_data = unsafe { UrlExtraData::from_ptr_ref(&data) };
     let context = ParserContext::new(
         Origin::Author,
-        url_data,
+        unsafe { dummy_url_data() },
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,

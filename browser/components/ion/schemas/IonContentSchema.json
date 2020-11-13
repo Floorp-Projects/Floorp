@@ -7,8 +7,7 @@
     "summary",
     "details",
     "joinIonConsent",
-    "leaveIonConsent",
-    "privacyPolicy"
+    "leaveIonConsent"
   ],
   "properties": {
     "title": {
@@ -34,11 +33,6 @@
     "leaveIonConsent": {
       "$id": "#root/leaveIonConsent",
       "title": "LeaveIonconsent",
-      "type": "string"
-    },
-    "privacyPolicy": {
-      "$id": "#root/privacyPolicy",
-      "title": "Privacypolicy",
       "type": "string"
     }
   }

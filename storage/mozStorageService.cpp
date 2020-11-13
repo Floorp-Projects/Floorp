@@ -408,9 +408,13 @@ Service::OpenSpecialDatabase(const nsACString& aStorageKey,
     return NS_ERROR_INVALID_ARG;
   }
 
-  RefPtr<Connection> msc =
-      new Connection(this, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
-                     Connection::SYNCHRONOUS);
+  int flags = SQLITE_OPEN_READWRITE;
+
+  if (!aName.IsEmpty()) {
+    flags |= SQLITE_OPEN_URI;
+  }
+
+  RefPtr<Connection> msc = new Connection(this, flags, Connection::SYNCHRONOUS);
 
   nsresult rv = msc->initialize(aStorageKey, aName);
   NS_ENSURE_SUCCESS(rv, rv);

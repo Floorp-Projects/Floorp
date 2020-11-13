@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import
 
+import copy
 import mozinfo
 import os
 import sys
@@ -23,11 +24,15 @@ class GeckoRuntimeRunner(BaseRunner):
         BaseRunner.__init__(self, **runner_args)
 
         self.binary = binary
-        self.cmdargs = cmdargs or []
+        self.cmdargs = copy.copy(cmdargs) or []
 
-        if mozinfo.isWin and (
-            isinstance(self.app_ctx, FirefoxContext)
-            or isinstance(self.app_ctx, DefaultContext)
+        if (
+            mozinfo.isWin
+            and (
+                isinstance(self.app_ctx, FirefoxContext)
+                or isinstance(self.app_ctx, DefaultContext)
+            )
+            and "--wait-for-browser" not in self.cmdargs
         ):
             # The launcher process is present in this configuration. Always
             # pass this flag so that we can wait for the browser to complete

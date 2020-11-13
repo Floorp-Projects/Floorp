@@ -192,16 +192,13 @@ class nsContentPermissionRequestProxy : public nsIContentPermissionRequest {
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONTENTPERMISSIONREQUESTER
 
-    explicit nsContentPermissionRequesterProxy(
-        ContentPermissionRequestParent* aParent)
-        : mParent(aParent), mWaitGettingResult(false) {}
+    explicit nsContentPermissionRequesterProxy() : mWaitGettingResult(false) {}
 
     void NotifyVisibilityResult(const bool& aIsVisible);
 
    private:
     virtual ~nsContentPermissionRequesterProxy() = default;
 
-    ContentPermissionRequestParent* mParent;
     bool mWaitGettingResult;
     nsCOMPtr<nsIContentPermissionRequestCallback> mGetCallback;
     nsCOMPtr<nsIContentPermissionRequestCallback> mOnChangeCallback;

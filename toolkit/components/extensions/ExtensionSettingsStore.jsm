@@ -42,7 +42,6 @@
 
 var EXPORTED_SYMBOLS = ["ExtensionSettingsStore"];
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(
@@ -69,7 +68,7 @@ const SETTING_PRECEDENCE_ORDER = undefined;
 
 const JSON_FILE_NAME = "extension-settings.json";
 const JSON_FILE_VERSION = 2;
-const STORE_PATH = OS.Path.join(
+const STORE_PATH = PathUtils.join(
   Services.dirsvc.get("ProfD", Ci.nsIFile).path,
   JSON_FILE_NAME
 );

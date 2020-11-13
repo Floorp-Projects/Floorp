@@ -388,7 +388,7 @@ const MultiStageAboutWelcome = props => {
   const [region, setRegion] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(null);
   Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
     (async () => {
-      setRegion((await window.AWWaitForRegionChange()));
+      setRegion((await window.AWGetRegion()));
     })();
   }, []); // Get the active theme so the rendering code can make it selected
   // by default.

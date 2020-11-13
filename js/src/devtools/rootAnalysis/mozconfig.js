@@ -2,32 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This mozconfig is used when compiling the JS shell for the rooting hazard
-# analysis on a local desktop (not used in automation). See
-# https://wiki.mozilla.org/Javascript:SpiderMonkey:ExactStackRooting
+# This mozconfig is used when analyzing the source code of the js/src tree for
+# GC rooting hazards. See
+# <https://wiki.mozilla.org/Javascript:SpiderMonkey:ExactStackRooting>.
 
 ac_add_options --enable-application=js
-ac_add_options --enable-js-shell
-mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-analyzed
 
-# The configuration options are chosen to compile the most code
-# (--enable-debug, --enable-tests) in the trickiest way possible
-# (--enable-optimize) to maximize the chance of seeing tricky static orderings.
-ac_add_options --enable-debug
-ac_add_options --enable-tests
-ac_add_options --enable-optimize
+# Also compile NSPR to see through its part of the control flow graph (not
+# currently needed, but also helps with weird problems finding the right
+# headers.)
+ac_add_options --enable-nspr-build
 
-# Wrap all compiler invocations in order to enable the plugin and send
-# information to a common database.
-ac_add_options --with-compiler-wrapper=$MOZBUILD_STATE_PATH/hazard-tools/sixgill/usr/libexec/sixgill/scripts/wrap_gcc/basecc
-
-# Stuff that gets in the way.
-ac_add_options --without-ccache
-ac_add_options --disable-replace-malloc
-
-# -Wattributes is very verbose due to attributes being ignored on template
-# instantiations. -Wignored-attributes is very verbose due to attributes being
-# ignored on template parameters.
-CFLAGS="$CFLAGS -Wno-attributes -Wno-ignored-attributes"
-CPPFLAGS="$CPPFLAGS -Wno-attributes -Wno-ignored-attributes"
-CXXFLAGS="$CXXFLAGS -Wno-attributes -Wno-ignored-attributes"
+. $topsrcdir/js/src/devtools/rootAnalysis/mozconfig.common

@@ -829,21 +829,6 @@ bool nsComputedDOMStyle::NeedsToFlushStyle(nsCSSPropertyID aPropID) const {
   return false;
 }
 
-static nsIFrame* StyleFrame(nsIFrame* aOuterFrame) {
-  MOZ_ASSERT(aOuterFrame);
-  if (!aOuterFrame->IsTableWrapperFrame()) {
-    return aOuterFrame;
-  }
-  // If the frame is a table wrapper frame then we should get the style from the
-  // inner table frame.
-  nsIFrame* inner = aOuterFrame->PrincipalChildList().FirstChild();
-  NS_ASSERTION(inner, "table wrapper must have an inner");
-  NS_ASSERTION(!inner->GetNextSibling(),
-               "table wrapper frames should have just one child, the inner "
-               "table");
-  return inner;
-}
-
 static bool IsNonReplacedInline(nsIFrame* aFrame) {
   // FIXME: this should be IsInlineInsideStyle() since width/height
   // doesn't apply to ruby boxes.
@@ -889,7 +874,7 @@ bool nsComputedDOMStyle::NeedsToFlushLayout(nsCSSPropertyID aPropID) const {
   if (!outerFrame) {
     return false;
   }
-  nsIFrame* frame = StyleFrame(outerFrame);
+  nsIFrame* frame = nsLayoutUtils::GetStyleFrame(outerFrame);
   auto* style = frame->Style();
   if (nsCSSProps::PropHasFlags(aPropID, CSSPropFlags::IsLogical)) {
     aPropID = Servo_ResolveLogicalProperty(aPropID, style);
@@ -1060,7 +1045,7 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(nsCSSPropertyID aPropID) {
     mOuterFrame = GetOuterFrame();
     mInnerFrame = mOuterFrame;
     if (mOuterFrame) {
-      mInnerFrame = StyleFrame(mOuterFrame);
+      mInnerFrame = nsLayoutUtils::GetStyleFrame(mOuterFrame);
       SetFrameComputedStyle(mInnerFrame->Style(), currentGeneration);
       NS_ASSERTION(mComputedStyle, "Frame without style?");
     }

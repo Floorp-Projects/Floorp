@@ -228,7 +228,6 @@ function LightweightThemeConsumer(aDocument) {
   );
   this._update(LightweightThemeManager.themeData);
 
-  this._win.addEventListener("resolutionchange", this);
   this._win.addEventListener("unload", this, { once: true });
 }
 
@@ -255,13 +254,9 @@ LightweightThemeConsumer.prototype = {
     }
 
     switch (aEvent.type) {
-      case "resolutionchange":
-        this._update(this._lastData);
-        break;
       case "unload":
         Services.obs.removeObserver(this, "lightweight-theme-styling-update");
         Services.ppmm.sharedData.delete(`theme/${this._winId}`);
-        this._win.removeEventListener("resolutionchange", this);
         this._win = this._doc = null;
         if (this.darkThemeMediaQuery) {
           this.darkThemeMediaQuery.removeListener(this);

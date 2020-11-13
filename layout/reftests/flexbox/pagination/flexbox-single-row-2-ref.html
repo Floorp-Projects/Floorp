@@ -9,60 +9,60 @@
 
   <style>
   .multicol {
-    height: 50px;
-    width: 320px;
+    block-size: 50px;
+    inline-size: 320px;
     column-count: 3;
     column-fill: auto;
     column-gap: 10px;
     border: 5px solid orange;
-    margin-bottom: 5px; /* Just to separate each sub-testcase visually. */
+    margin-block-end: 5px; /* Just to separate each sub-testcase visually. */
   }
   .flexContainer {
     background: gray;
     /* border-width is 0 by default; some sub-testcases will increase it. */
     border: 0 solid lightgray;
-    height: 80px;
+    block-size: 80px;
     position: relative;
   }
   .border-padding {
-    border-width: 10px 0;
-    padding: 5px 0;
+    border-block-width: 10px;
+    padding-block: 5px;
   }
   .gap {
-    width: 4px;
-    height: 100%;
+    inline-size: 4px;
+    block-size: 100%;
   }
 
   /* Note: flex items are in visual order as "CMYK": cyan, magenta, yellow, black. */
   header, nav, article, footer {
-    width: 25px;
+    inline-size: 25px;
   }
   header {
     background: cyan;
-    height: 100px;
+    block-size: 100px;
     position: absolute;
-    top: 0px;
+    inset-block-start: 0px;
   }
   nav {
     background: magenta;
-    height: 25px;
+    block-size: 25px;
     position: absolute;
-    top: 0px;
-    left: 25px;
+    inset-block-start: 0px;
+    inset-inline-start: 25px;
   }
   article {
     background: yellow;
-    height: 50px;
+    block-size: 50px;
     position: absolute;
-    top: 15px;
-    left: 50px;
+    inset-block-start: 15px;
+    inset-inline-start: 50px;
   }
   footer {
     background: black;
-    height: 75px;
+    block-size: 75px;
     position: absolute;
-    top: 5px;
-    left: 75px;
+    inset-block-start: 5px;
+    inset-inline-start: 75px;
   }
   </style>
 
@@ -74,16 +74,16 @@
       </div>
     </div>
 
-    <!-- Test a container with margin-top. -->
+    <!-- Test a container with margin-block-start. -->
     <div class="multicol">
-      <div class="flexContainer" style="margin-top: 25px">
+      <div class="flexContainer" style="margin-block-start: 25px">
         <header></header><nav></nav><article></article><footer></footer>
       </div>
     </div>
 
     <!-- Test a container not at the top of the column/page. -->
     <div class="multicol">
-      <div style="height: 25px"></div>
+      <div style="block-size: 25px"></div>
       <div class="flexContainer">
         <header></header><nav></nav><article></article><footer></footer>
       </div>
@@ -93,18 +93,18 @@
     <div class="multicol">
       <div class="flexContainer border-padding">
         <!-- Adjust top to simulate padding. -->
-        <header style="top: 5px"></header><nav style="top: 5px"></nav>
-        <article style="top: 20px"></article><footer style="top: 10px"></footer>
+        <header style="inset-block-start: 5px"></header><nav style="inset-block-start: 5px"></nav>
+        <article style="inset-block-start: 20px"></article><footer style="inset-block-start: 10px"></footer>
       </div>
     </div>
 
     <!-- Test a container with border, padding, and column-gap. -->
     <div class="multicol">
       <div class="flexContainer border-padding">
-        <header style="width: 22px; top: 5px"></header>
-        <nav style="width: 22px; top: 5px; left: 26px"></nav>
-        <article style="width: 22px; top: 20px; left: 52px;"></article>
-        <footer style="width: 22px; top: 10px; left: 78px;"></footer>
+        <header style="inline-size: 22px; inset-block-start: 5px"></header>
+        <nav style="inline-size: 22px; inset-block-start: 5px; inset-inline-start: 26px"></nav>
+        <article style="inline-size: 22px; inset-block-start: 20px; inset-inline-start: 52px;"></article>
+        <footer style="inline-size: 22px; inset-block-start: 10px; inset-inline-start: 78px;"></footer>
       </div>
     </div>
   </body>
