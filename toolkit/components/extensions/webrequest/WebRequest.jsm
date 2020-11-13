@@ -1060,7 +1060,7 @@ HttpObserverManager = {
       }
 
       if (kind === "onBeforeSendHeaders" && this.listeners.onSendHeaders.size) {
-        await this.runChannelListener(channel, "onSendHeaders");
+        this.runChannelListener(channel, "onSendHeaders");
       } else if (kind !== "onErrorOccurred") {
         channel.errorCheck();
       }
