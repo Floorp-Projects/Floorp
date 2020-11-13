@@ -170,15 +170,15 @@ nsresult AudioSinkWrapper::Start(const TimeUnit& aStartTime,
   if (rv.isErr()) {
     mEndedPromise =
         MediaSink::EndedPromise::CreateAndReject(rv.unwrapErr(), __func__);
-    return rv.unwrapErr();
+  } else {
+    mEndedPromise = rv.unwrap();
   }
 
-  mEndedPromise = rv.unwrap();
   mEndedPromise
       ->Then(mOwnerThread.get(), __func__, this,
              &AudioSinkWrapper::OnAudioEnded, &AudioSinkWrapper::OnAudioEnded)
       ->Track(mAudioSinkEndedPromise);
-  return NS_OK;
+  return rv.isErr() ? rv.unwrapErr() : NS_OK;
 }
 
 bool AudioSinkWrapper::IsAudioSourceEnded(const MediaInfo& aInfo) const {
