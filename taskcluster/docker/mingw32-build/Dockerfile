@@ -27,7 +27,6 @@ RUN apt-get update && \
       libucl1 \
       libxml2 \
       patch \
-      python3-dev \
       p7zip-full \
       scons \
       tar \
