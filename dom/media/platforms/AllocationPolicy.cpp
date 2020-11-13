@@ -195,13 +195,27 @@ RefPtr<ShutdownPromise> AllocationWrapper::Shutdown() {
 /* static */ RefPtr<AllocationWrapper::AllocateDecoderPromise>
 AllocationWrapper::CreateDecoder(const CreateDecoderParams& aParams,
                                  AllocPolicy* aPolicy) {
+  // aParams.mConfig is guaranteed to stay alive during the lifetime of the
+  // MediaDataDecoder, so keeping a pointer to the object is safe.
+  const TrackInfo* config = &aParams.mConfig;
+  DecoderDoctorDiagnostics* diagnostics = aParams.mDiagnostics;
+  RefPtr<layers::ImageContainer> imageContainer = aParams.mImageContainer;
+  RefPtr<layers::KnowsCompositor> knowsCompositor = aParams.mKnowsCompositor;
+  RefPtr<GMPCrashHelper> crashHelper = aParams.mCrashHelper;
+  CreateDecoderParams::UseNullDecoder useNullDecoder = aParams.mUseNullDecoder;
+  CreateDecoderParams::NoWrapper noWrapper = aParams.mNoWrapper;
+  TrackInfo::TrackType type = aParams.mType;
+  MediaEventProducer<TrackInfo::TrackType>* onWaitingForKeyEvent =
+      aParams.mOnWaitingForKeyEvent;
+  CreateDecoderParams::OptionSet options = aParams.mOptions;
+  CreateDecoderParams::VideoFrameRate rate = aParams.mRate;
+
   RefPtr<AllocateDecoderPromise> p =
       (aPolicy ? aPolicy : GlobalAllocPolicy::Instance(aParams.mType))
           ->Alloc()
           ->Then(
               GetCurrentSerialEventTarget(), __func__,
-              [params =
-                   CreateDecoderParamsForAsync(aParams)](RefPtr<Token> aToken) {
+              [=](RefPtr<Token> aToken) {
                 // result may not always be updated by
                 // PDMFactory::CreateDecoder either when the creation
                 // succeeded or failed, as such it must be initialized to a
@@ -209,23 +223,29 @@ AllocationWrapper::CreateDecoder(const CreateDecoderParams& aParams,
                 MediaResult result =
                     MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                 nsPrintfCString("error creating %s decoder",
-                                                TrackTypeToStr(params.mType)));
+                                                TrackTypeToStr(type)));
                 RefPtr<PDMFactory> pdm = new PDMFactory();
-                RefPtr<PlatformDecoderModule::CreateDecoderPromise> p =
-                    pdm->CreateDecoder(params)->Then(
-                        GetCurrentSerialEventTarget(), __func__,
-                        [aToken](RefPtr<MediaDataDecoder>&& aDecoder) mutable {
-                          RefPtr<AllocationWrapper> wrapper =
-                              new AllocationWrapper(aDecoder.forget(),
-                                                    aToken.forget());
-                          return AllocateDecoderPromise::CreateAndResolve(
-                              wrapper, __func__);
-                        },
-                        [](const MediaResult& aError) {
-                          return AllocateDecoderPromise::CreateAndReject(
-                              aError, __func__);
-                        });
-                return p;
+                CreateDecoderParams params{*config,
+                                           diagnostics,
+                                           imageContainer,
+                                           &result,
+                                           knowsCompositor,
+                                           crashHelper,
+                                           useNullDecoder,
+                                           noWrapper,
+                                           type,
+                                           onWaitingForKeyEvent,
+                                           options,
+                                           rate};
+                RefPtr<MediaDataDecoder> decoder = pdm->CreateDecoder(params);
+                if (decoder) {
+                  RefPtr<AllocationWrapper> wrapper =
+                      new AllocationWrapper(decoder.forget(), aToken.forget());
+                  return AllocateDecoderPromise::CreateAndResolve(wrapper,
+                                                                  __func__);
+                }
+                return AllocateDecoderPromise::CreateAndReject(result,
+                                                               __func__);
               },
               []() {
                 return AllocateDecoderPromise::CreateAndReject(

@@ -761,7 +761,7 @@ bool BackgroundParentImpl::DeallocPCamerasParent(
 }
 
 auto BackgroundParentImpl::AllocPUDPSocketParent(
-    const Maybe<PrincipalInfo>& /* unused */, const nsCString& /* unused */)
+    const Maybe<PrincipalInfo>& /* unused */, const nsCString & /* unused */)
     -> PUDPSocketParent* {
   RefPtr<UDPSocketParent> p = new UDPSocketParent(this);
 
@@ -1314,27 +1314,14 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvPEndpointForReportConstructor(
 
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvEnsureRDDProcessAndCreateBridge(
-    EnsureRDDProcessAndCreateBridgeResolver&& aResolver) {
+    nsresult* aRv, Endpoint<PRemoteDecoderManagerChild>* aEndpoint) {
   RDDProcessManager* rdd = RDDProcessManager::Get();
-  using Type =
-      Tuple<const nsresult&, Endpoint<mozilla::PRemoteDecoderManagerChild>&&>;
-  if (!rdd) {
-    aResolver(
-        Type(NS_ERROR_NOT_AVAILABLE, Endpoint<PRemoteDecoderManagerChild>()));
+  if (rdd && rdd->EnsureRDDProcessAndCreateBridge(OtherPid(), aEndpoint)) {
+    *aRv = NS_OK;
   } else {
-    rdd->EnsureRDDProcessAndCreateBridge(OtherPid())
-        ->Then(GetCurrentSerialEventTarget(), __func__,
-               [resolver = std::move(aResolver)](
-                   mozilla::RDDProcessManager::EnsureRDDPromise::
-                       ResolveOrRejectValue&& aValue) mutable {
-                 if (aValue.IsReject()) {
-                   resolver(Type(aValue.RejectValue(),
-                                 Endpoint<PRemoteDecoderManagerChild>()));
-                   return;
-                 }
-                 resolver(Type(NS_OK, std::move(aValue.ResolveValue())));
-               });
+    *aRv = NS_ERROR_NOT_AVAILABLE;
   }
+
   return IPC_OK();
 }
 

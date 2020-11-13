@@ -42,6 +42,7 @@ VorbisDataDecoder::VorbisDataDecoder(const CreateDecoderParams& aParams)
 }
 
 VorbisDataDecoder::~VorbisDataDecoder() {
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
   vorbis_block_clear(&mVorbisBlock);
   vorbis_dsp_clear(&mVorbisDsp);
   vorbis_info_clear(&mVorbisInfo);
@@ -49,8 +50,7 @@ VorbisDataDecoder::~VorbisDataDecoder() {
 }
 
 RefPtr<ShutdownPromise> VorbisDataDecoder::Shutdown() {
-  // mThread may not be set if Init hasn't been called first.
-  MOZ_ASSERT(!mThread || mThread->IsOnCurrentThread());
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
   return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 

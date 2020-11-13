@@ -14,11 +14,11 @@
 #include "DecryptThroughputLimit.h"
 #include "GMPDecoderModule.h"
 #include "GMPService.h"
-#include "GMPVideoDecoder.h"
-#include "MP4Decoder.h"
 #include "MediaInfo.h"
 #include "PDMFactory.h"
 #include "mozilla/CDMProxy.h"
+#include "GMPVideoDecoder.h"
+#include "MP4Decoder.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/UniquePtr.h"
@@ -74,8 +74,7 @@ class EMEDecryptor : public MediaDataDecoder,
  public:
   EMEDecryptor(MediaDataDecoder* aDecoder, CDMProxy* aProxy,
                TrackInfo::TrackType aType,
-               const std::function<MediaEventProducer<TrackInfo::TrackType>*()>&
-                   aOnWaitingForKey,
+               MediaEventProducer<TrackInfo::TrackType>* aOnWaitingForKey,
                UniquePtr<ADTSSampleConverter> aConverter = nullptr)
       : mDecoder(aDecoder),
         mProxy(aProxy),
@@ -243,8 +242,7 @@ class EMEDecryptor : public MediaDataDecoder,
   }
 
   RefPtr<ShutdownPromise> Shutdown() override {
-    // mThread may not be set if Init hasn't been called first.
-    MOZ_ASSERT(!mThread || mThread->IsOnCurrentThread());
+    MOZ_ASSERT(mThread->IsOnCurrentThread());
     MOZ_ASSERT(!mIsShutdown);
     mIsShutdown = true;
     mSamplesWaitingForKey->BreakCycles();
@@ -376,47 +374,37 @@ static already_AddRefed<MediaDataDecoderProxy> CreateDecoderWrapper(
   return decoder.forget();
 }
 
-RefPtr<EMEDecoderModule::CreateDecoderPromise>
-EMEDecoderModule::AsyncCreateDecoder(const CreateDecoderParams& aParams) {
+already_AddRefed<MediaDataDecoder> EMEDecoderModule::CreateVideoDecoder(
+    const CreateDecoderParams& aParams) {
   MOZ_ASSERT(aParams.mConfig.mCrypto.IsEncrypted());
-  MOZ_ASSERT(mPDM);
 
-  if (aParams.mConfig.IsVideo()) {
-    if (StaticPrefs::media_eme_video_blank()) {
-      EME_LOG(
-          "EMEDecoderModule::CreateVideoDecoder() creating a blank decoder.");
-      RefPtr<PlatformDecoderModule> m(BlankDecoderModule::Create());
-      RefPtr<MediaDataDecoder> decoder = m->CreateVideoDecoder(aParams);
-      return EMEDecoderModule::CreateDecoderPromise::CreateAndResolve(decoder,
-                                                                      __func__);
-    }
-
-    if (SupportsMimeType(aParams.mConfig.mMimeType, nullptr)) {
-      // GMP decodes. Assume that means it can decrypt too.
-      return EMEDecoderModule::CreateDecoderPromise::CreateAndResolve(
-          CreateDecoderWrapper(mProxy, aParams), __func__);
-    }
-
-    RefPtr<EMEDecoderModule::CreateDecoderPromise> p =
-        mPDM->CreateDecoder(aParams)->Then(
-            GetCurrentSerialEventTarget(), __func__,
-            [self = RefPtr{this},
-             params = CreateDecoderParamsForAsync(aParams)](
-                RefPtr<MediaDataDecoder>&& aDecoder) {
-              RefPtr<MediaDataDecoder> emeDecoder(
-                  new EMEDecryptor(aDecoder, self->mProxy, params.mType,
-                                   params.mOnWaitingForKeyEvent));
-              return EMEDecoderModule::CreateDecoderPromise::CreateAndResolve(
-                  emeDecoder, __func__);
-            },
-            [](const MediaResult& aError) {
-              return EMEDecoderModule::CreateDecoderPromise::CreateAndReject(
-                  aError, __func__);
-            });
-    return p;
+  if (StaticPrefs::media_eme_video_blank()) {
+    EME_LOG("EMEDecoderModule::CreateVideoDecoder() creating a blank decoder.");
+    RefPtr<PlatformDecoderModule> m(BlankDecoderModule::Create());
+    return m->CreateVideoDecoder(aParams);
   }
 
-  MOZ_ASSERT(aParams.mConfig.IsAudio());
+  if (SupportsMimeType(aParams.mConfig.mMimeType, nullptr)) {
+    // GMP decodes. Assume that means it can decrypt too.
+    RefPtr<MediaDataDecoderProxy> wrapper =
+        CreateDecoderWrapper(mProxy, aParams);
+    return wrapper.forget();
+  }
+
+  MOZ_ASSERT(mPDM);
+  RefPtr<MediaDataDecoder> decoder(mPDM->CreateDecoder(aParams));
+  if (!decoder) {
+    return nullptr;
+  }
+
+  RefPtr<MediaDataDecoder> emeDecoder(new EMEDecryptor(
+      decoder, mProxy, aParams.mType, aParams.mOnWaitingForKeyEvent));
+  return emeDecoder.forget();
+}
+
+already_AddRefed<MediaDataDecoder> EMEDecoderModule::CreateAudioDecoder(
+    const CreateDecoderParams& aParams) {
+  MOZ_ASSERT(aParams.mConfig.mCrypto.IsEncrypted());
 
   // We don't support using the GMP to decode audio.
   MOZ_ASSERT(!SupportsMimeType(aParams.mConfig.mMimeType, nullptr));
@@ -425,9 +413,7 @@ EMEDecoderModule::AsyncCreateDecoder(const CreateDecoderParams& aParams) {
   if (StaticPrefs::media_eme_audio_blank()) {
     EME_LOG("EMEDecoderModule::CreateAudioDecoder() creating a blank decoder.");
     RefPtr<PlatformDecoderModule> m(BlankDecoderModule::Create());
-    RefPtr<MediaDataDecoder> decoder = m->CreateAudioDecoder(aParams);
-    return EMEDecoderModule::CreateDecoderPromise::CreateAndResolve(decoder,
-                                                                    __func__);
+    return m->CreateAudioDecoder(aParams);
   }
 
   UniquePtr<ADTSSampleConverter> converter = nullptr;
@@ -437,23 +423,15 @@ EMEDecoderModule::AsyncCreateDecoder(const CreateDecoderParams& aParams) {
     converter = MakeUnique<ADTSSampleConverter>(aParams.AudioConfig());
   }
 
-  RefPtr<EMEDecoderModule::CreateDecoderPromise> p =
-      mPDM->CreateDecoder(aParams)->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [self = RefPtr{this}, params = CreateDecoderParamsForAsync(aParams),
-           converter = std::move(converter)](
-              RefPtr<MediaDataDecoder>&& aDecoder) mutable {
-            RefPtr<MediaDataDecoder> emeDecoder(new EMEDecryptor(
-                aDecoder, self->mProxy, params.mType,
-                params.mOnWaitingForKeyEvent, std::move(converter)));
-            return EMEDecoderModule::CreateDecoderPromise::CreateAndResolve(
-                emeDecoder, __func__);
-          },
-          [](const MediaResult& aError) {
-            return EMEDecoderModule::CreateDecoderPromise::CreateAndReject(
-                aError, __func__);
-          });
-  return p;
+  RefPtr<MediaDataDecoder> decoder(mPDM->CreateDecoder(aParams));
+  if (!decoder) {
+    return nullptr;
+  }
+
+  RefPtr<MediaDataDecoder> emeDecoder(
+      new EMEDecryptor(decoder, mProxy, aParams.mType,
+                       aParams.mOnWaitingForKeyEvent, std::move(converter)));
+  return emeDecoder.forget();
 }
 
 bool EMEDecoderModule::SupportsMimeType(

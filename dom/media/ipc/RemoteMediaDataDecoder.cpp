@@ -5,30 +5,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "RemoteMediaDataDecoder.h"
 
-#include "RemoteDecoderChild.h"
+#include "base/thread.h"
+
+#include "IRemoteDecoderChild.h"
 #include "RemoteDecoderManagerChild.h"
 
 namespace mozilla {
 
-RemoteMediaDataDecoder::RemoteMediaDataDecoder(RemoteDecoderChild* aChild)
+RemoteMediaDataDecoder::RemoteMediaDataDecoder(IRemoteDecoderChild* aChild)
     : mChild(aChild) {}
 
 RemoteMediaDataDecoder::~RemoteMediaDataDecoder() {
-  if (mChild) {
-    // Shutdown didn't get called. This can happen if the creation of the
-    // decoder got interrupted while pending.
-    nsCOMPtr<nsISerialEventTarget> thread =
-        RemoteDecoderManagerChild::GetManagerThread();
-    MOZ_ASSERT(thread);
-    thread->Dispatch(NS_NewRunnableFunction(
-        "RemoteMediaDataDecoderShutdown", [child = std::move(mChild), thread] {
-          child->Shutdown()->Then(
-              thread, __func__,
-              [child](const ShutdownPromise::ResolveOrRejectValue& aValue) {
-                child->DestroyIPDL();
-              });
-        }));
-  }
+  /* Shutdown method should have been called. */
+  MOZ_ASSERT(!mChild);
 }
 
 RefPtr<MediaDataDecoder::InitPromise> RemoteMediaDataDecoder::Init() {

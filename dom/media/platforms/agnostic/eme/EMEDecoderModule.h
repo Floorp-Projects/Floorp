@@ -21,20 +21,13 @@ class EMEDecoderModule : public PlatformDecoderModule {
   EMEDecoderModule(CDMProxy* aProxy, PDMFactory* aPDM);
 
  protected:
-  RefPtr<CreateDecoderPromise> AsyncCreateDecoder(
+  // Decode thread.
+  already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
       const CreateDecoderParams& aParams) override;
 
   // Decode thread.
-  already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
-      const CreateDecoderParams& aParams) override {
-    MOZ_CRASH("Not used");
-  }
-
-  // Decode thread.
   already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
-      const CreateDecoderParams& aParams) override {
-    MOZ_CRASH("Not used");
-  }
+      const CreateDecoderParams& aParams) override;
 
   bool SupportsMimeType(const nsACString& aMimeType,
                         DecoderDoctorDiagnostics* aDiagnostics) const override;

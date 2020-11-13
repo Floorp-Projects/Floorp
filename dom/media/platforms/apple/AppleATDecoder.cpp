@@ -91,15 +91,13 @@ RefPtr<MediaDataDecoder::DecodePromise> AppleATDecoder::Drain() {
 }
 
 RefPtr<ShutdownPromise> AppleATDecoder::Shutdown() {
-  // mThread may not be set if Init hasn't been called first.
-  MOZ_ASSERT(!mThread || mThread->IsOnCurrentThread());
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
   ProcessShutdown();
   return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
 void AppleATDecoder::ProcessShutdown() {
-  // mThread may not be set if Init hasn't been called first.
-  MOZ_ASSERT(!mThread || mThread->IsOnCurrentThread());
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
 
   if (mStream) {
     OSStatus rv = AudioFileStreamClose(mStream);

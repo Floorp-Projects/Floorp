@@ -195,8 +195,7 @@ RefPtr<MediaDataDecoder::DecodePromise> OmxDataDecoder::Drain() {
 
 RefPtr<ShutdownPromise> OmxDataDecoder::Shutdown() {
   LOG("");
-  // mThread may not be set if Init hasn't been called first.
-  MOZ_ASSERT(!mThread || mThread->IsOnCurrentThread());
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
 
   mShuttingDown = true;
 
