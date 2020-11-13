@@ -7,7 +7,6 @@
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
-#include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIURI.h"
@@ -17,8 +16,6 @@ static const char kSourceChar = ':';
 static const char kSanitizedChar = '+';
 
 namespace mozilla {
-
-using dom::URLParams;
 
 static void MakeTopLevelInfo(const nsACString& aScheme, const nsACString& aHost,
                              int32_t aPort, bool aUseSite,
@@ -272,91 +269,6 @@ void OriginAttributes::CreateAnonymizedSuffix(nsACString& aStr) const {
   attrs.CreateSuffix(aStr);
 }
 
-namespace {
-
-class MOZ_STACK_CLASS PopulateFromSuffixIterator final
-    : public URLParams::ForEachIterator {
- public:
-  explicit PopulateFromSuffixIterator(OriginAttributes* aOriginAttributes)
-      : mOriginAttributes(aOriginAttributes) {
-    MOZ_ASSERT(aOriginAttributes);
-    // If a non-default mPrivateBrowsingId is passed and is not present in the
-    // suffix, then it will retain the id when it should be default according
-    // to the suffix. Set to default before iterating to fix this.
-    mOriginAttributes->mPrivateBrowsingId =
-        nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID;
-  }
-
-  bool URLParamsIterator(const nsAString& aName,
-                         const nsAString& aValue) override {
-    if (aName.EqualsLiteral("inBrowser")) {
-      if (!aValue.EqualsLiteral("1")) {
-        return false;
-      }
-
-      mOriginAttributes->mInIsolatedMozBrowser = true;
-      return true;
-    }
-
-    if (aName.EqualsLiteral("addonId") || aName.EqualsLiteral("appId")) {
-      // No longer supported. Silently ignore so that legacy origin strings
-      // don't cause failures.
-      return true;
-    }
-
-    if (aName.EqualsLiteral("userContextId")) {
-      nsresult rv;
-      int64_t val = aValue.ToInteger64(&rv);
-      NS_ENSURE_SUCCESS(rv, false);
-      NS_ENSURE_TRUE(val <= UINT32_MAX, false);
-      mOriginAttributes->mUserContextId = static_cast<uint32_t>(val);
-
-      return true;
-    }
-
-    if (aName.EqualsLiteral("privateBrowsingId")) {
-      nsresult rv;
-      int64_t val = aValue.ToInteger64(&rv);
-      NS_ENSURE_SUCCESS(rv, false);
-      NS_ENSURE_TRUE(val >= 0 && val <= UINT32_MAX, false);
-      mOriginAttributes->mPrivateBrowsingId = static_cast<uint32_t>(val);
-
-      return true;
-    }
-
-    if (aName.EqualsLiteral("firstPartyDomain")) {
-      MOZ_RELEASE_ASSERT(mOriginAttributes->mFirstPartyDomain.IsEmpty());
-      nsAutoString firstPartyDomain(aValue);
-      firstPartyDomain.ReplaceChar(kSanitizedChar, kSourceChar);
-      mOriginAttributes->mFirstPartyDomain.Assign(firstPartyDomain);
-      return true;
-    }
-
-    if (aName.EqualsLiteral("geckoViewUserContextId")) {
-      MOZ_RELEASE_ASSERT(
-          mOriginAttributes->mGeckoViewSessionContextId.IsEmpty());
-      mOriginAttributes->mGeckoViewSessionContextId.Assign(aValue);
-      return true;
-    }
-
-    if (aName.EqualsLiteral("partitionKey")) {
-      MOZ_RELEASE_ASSERT(mOriginAttributes->mPartitionKey.IsEmpty());
-      nsAutoString partitionKey(aValue);
-      partitionKey.ReplaceChar(kSanitizedChar, kSourceChar);
-      mOriginAttributes->mPartitionKey.Assign(partitionKey);
-      return true;
-    }
-
-    // No other attributes are supported.
-    return false;
-  }
-
- private:
-  OriginAttributes* mOriginAttributes;
-};
-
-}  // namespace
-
 bool OriginAttributes::PopulateFromSuffix(const nsACString& aStr) {
   if (aStr.IsEmpty()) {
     return true;
@@ -366,8 +278,74 @@ bool OriginAttributes::PopulateFromSuffix(const nsACString& aStr) {
     return false;
   }
 
-  PopulateFromSuffixIterator iterator(this);
-  return URLParams::Parse(Substring(aStr, 1, aStr.Length() - 1), iterator);
+  // If a non-default mPrivateBrowsingId is passed and is not present in the
+  // suffix, then it will retain the id when it should be default according
+  // to the suffix. Set to default before iterating to fix this.
+  mPrivateBrowsingId = nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID;
+
+  return URLParams::Parse(
+      Substring(aStr, 1, aStr.Length() - 1),
+      [this](const nsAString& aName, const nsAString& aValue) {
+        if (aName.EqualsLiteral("inBrowser")) {
+          if (!aValue.EqualsLiteral("1")) {
+            return false;
+          }
+
+          mInIsolatedMozBrowser = true;
+          return true;
+        }
+
+        if (aName.EqualsLiteral("addonId") || aName.EqualsLiteral("appId")) {
+          // No longer supported. Silently ignore so that legacy origin strings
+          // don't cause failures.
+          return true;
+        }
+
+        if (aName.EqualsLiteral("userContextId")) {
+          nsresult rv;
+          int64_t val = aValue.ToInteger64(&rv);
+          NS_ENSURE_SUCCESS(rv, false);
+          NS_ENSURE_TRUE(val <= UINT32_MAX, false);
+          mUserContextId = static_cast<uint32_t>(val);
+
+          return true;
+        }
+
+        if (aName.EqualsLiteral("privateBrowsingId")) {
+          nsresult rv;
+          int64_t val = aValue.ToInteger64(&rv);
+          NS_ENSURE_SUCCESS(rv, false);
+          NS_ENSURE_TRUE(val >= 0 && val <= UINT32_MAX, false);
+          mPrivateBrowsingId = static_cast<uint32_t>(val);
+
+          return true;
+        }
+
+        if (aName.EqualsLiteral("firstPartyDomain")) {
+          MOZ_RELEASE_ASSERT(mFirstPartyDomain.IsEmpty());
+          nsAutoString firstPartyDomain(aValue);
+          firstPartyDomain.ReplaceChar(kSanitizedChar, kSourceChar);
+          mFirstPartyDomain.Assign(firstPartyDomain);
+          return true;
+        }
+
+        if (aName.EqualsLiteral("geckoViewUserContextId")) {
+          MOZ_RELEASE_ASSERT(mGeckoViewSessionContextId.IsEmpty());
+          mGeckoViewSessionContextId.Assign(aValue);
+          return true;
+        }
+
+        if (aName.EqualsLiteral("partitionKey")) {
+          MOZ_RELEASE_ASSERT(mPartitionKey.IsEmpty());
+          nsAutoString partitionKey(aValue);
+          partitionKey.ReplaceChar(kSanitizedChar, kSourceChar);
+          mPartitionKey.Assign(partitionKey);
+          return true;
+        }
+
+        // No other attributes are supported.
+        return false;
+      });
 }
 
 bool OriginAttributes::PopulateFromOrigin(const nsACString& aOrigin,

@@ -63,14 +63,12 @@ static FontUsageKind StyleFontUsage(nsIFrame* aFrame, ComputedStyle* aStyle,
   if (FontIsUsed(aStyle)) {
     usage |= FontUsageKind::Frame;
     if (aStyle->DependsOnSelfFontMetrics()) {
-      MOZ_ASSERT(aPresContext->UsesExChUnits());
       usage |= FontUsageKind::FontMetrics;
     }
   }
 
   if (aStyle->DependsOnInheritedFontMetrics() &&
       !(usage & FontUsageKind::FontMetrics)) {
-    MOZ_ASSERT(aPresContext->UsesExChUnits());
     ComputedStyle* parentStyle = nullptr;
     if (aIsExtraStyle) {
       parentStyle = aFrame->Style();

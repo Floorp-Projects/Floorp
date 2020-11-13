@@ -3,9 +3,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaDataCodec.h"
+
+#include "PDMFactory.h"
+#include "WebrtcGmpVideoCodec.h"
 #include "WebrtcMediaDataDecoderCodec.h"
 #include "WebrtcMediaDataEncoderCodec.h"
-#include "WebrtcGmpVideoCodec.h"
 #include "mozilla/StaticPrefs_media.h"
 
 namespace mozilla {
@@ -39,7 +41,27 @@ WebrtcVideoDecoder* MediaDataCodec::CreateDecoder(
     default:
       return nullptr;
   }
-  return new WebrtcMediaDataDecoder();
+
+  nsAutoCString codec;
+  switch (aCodecType) {
+    case webrtc::VideoCodecType::kVideoCodecVP8:
+      codec = "video/vp8";
+      break;
+    case webrtc::VideoCodecType::kVideoCodecVP9:
+      codec = "video/vp9";
+      break;
+    case webrtc::VideoCodecType::kVideoCodecH264:
+      codec = "video/avc";
+      break;
+    default:
+      return nullptr;
+  }
+  RefPtr<PDMFactory> pdm = new PDMFactory();
+  if (!pdm->SupportsMimeType(codec, nullptr /* dddoctor */)) {
+    return nullptr;
+  }
+
+  return new WebrtcMediaDataDecoder(codec);
 }
 
 }  // namespace mozilla

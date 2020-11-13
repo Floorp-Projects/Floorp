@@ -7,6 +7,8 @@
 #ifndef SamplesWaitingForKey_h_
 #define SamplesWaitingForKey_h_
 
+#include <functional>
+
 #include "MediaInfo.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/Mutex.h"
@@ -32,7 +34,8 @@ class SamplesWaitingForKey {
 
   SamplesWaitingForKey(
       CDMProxy* aProxy, TrackInfo::TrackType aType,
-      MediaEventProducer<TrackInfo::TrackType>* aOnWaitingForKey);
+      const std::function<MediaEventProducer<TrackInfo::TrackType>*()>&
+          aOnWaitingForKeyEvent);
 
   // Returns a promise that will be resolved if or when a key for decoding the
   // sample becomes usable.
@@ -56,7 +59,8 @@ class SamplesWaitingForKey {
   };
   nsTArray<SampleEntry> mSamples;
   const TrackInfo::TrackType mType;
-  MediaEventProducer<TrackInfo::TrackType>* const mOnWaitingForKeyEvent;
+  const std::function<MediaEventProducer<TrackInfo::TrackType>*()>
+      mOnWaitingForKeyEvent;
 };
 
 }  // namespace mozilla
