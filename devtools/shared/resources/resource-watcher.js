@@ -847,4 +847,6 @@ const ResourceTransformers = {
     .ROOT_NODE]: require("devtools/shared/resources/transformers/root-node"),
   [ResourceWatcher.TYPES
     .SESSION_STORAGE]: require("devtools/shared/resources/transformers/storage-session-storage.js"),
+  [ResourceWatcher.TYPES
+    .NETWORK_EVENT]: require("devtools/shared/resources/transformers/network-events"),
 };
