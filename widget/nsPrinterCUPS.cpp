@@ -115,8 +115,7 @@ const char* nsPrinterCUPS::LocalizeMediaName(http_t& aConnection,
                                              cups_size_t& aMedia) const {
   // The returned string is owned by mPrinterInfo.
   // https://www.cups.org/doc/cupspm.html#cupsLocalizeDestMedia
-  auto printerInfoLock = mPrinterInfoMutex.Lock();
-  TryEnsurePrinterInfo(*printerInfoLock);
+  auto printerInfoLock = TryEnsurePrinterInfo();
   cups_dinfo_t* const printerInfo = printerInfoLock->mPrinterInfo;
   return mShim.cupsLocalizeDestMedia(&aConnection, mPrinter, printerInfo,
                                      CUPS_MEDIA_FLAGS_DEFAULT, &aMedia);
@@ -164,8 +163,7 @@ nsPrinterBase::PrinterInfo nsPrinterCUPS::CreatePrinterInfo() const {
 }
 
 bool nsPrinterCUPS::Supports(const char* aOption, const char* aValue) const {
-  auto printerInfoLock = mPrinterInfoMutex.Lock();
-  TryEnsurePrinterInfo(*printerInfoLock);
+  auto printerInfoLock = TryEnsurePrinterInfo();
   cups_dinfo_t* const printerInfo = printerInfoLock->mPrinterInfo;
   return mShim.cupsCheckDestSupported(CUPS_HTTP_DEFAULT, mPrinter, printerInfo,
                                       aOption, aValue);
@@ -174,8 +172,7 @@ bool nsPrinterCUPS::Supports(const char* aOption, const char* aValue) const {
 bool nsPrinterCUPS::IsCUPSVersionAtLeast(uint64_t aCUPSMajor,
                                          uint64_t aCUPSMinor,
                                          uint64_t aCUPSPatch) const {
-  auto printerInfoLock = mPrinterInfoMutex.Lock();
-  TryEnsurePrinterInfo(*printerInfoLock);
+  auto printerInfoLock = TryEnsurePrinterInfo();
   // Compare major version.
   if (printerInfoLock->mCUPSMajor > aCUPSMajor) {
     return true;
@@ -226,8 +223,7 @@ PrintSettingsInitializer nsPrinterCUPS::DefaultSettings(
     Connection& aConnection) const {
   nsString printerName;
   GetPrinterName(printerName);
-  auto printerInfoLock = mPrinterInfoMutex.Lock();
-  TryEnsurePrinterInfo(*printerInfoLock);
+  auto printerInfoLock = TryEnsurePrinterInfo();
   cups_dinfo_t* const printerInfo = printerInfoLock->mPrinterInfo;
 
   cups_size_t media;
@@ -286,8 +282,7 @@ PrintSettingsInitializer nsPrinterCUPS::DefaultSettings(
 nsTArray<mozilla::PaperInfo> nsPrinterCUPS::PaperList(
     Connection& aConnection) const {
   http_t* const connection = aConnection.GetConnection(mPrinter);
-  auto printerInfoLock = mPrinterInfoMutex.Lock();
-  TryEnsurePrinterInfo(*printerInfoLock, connection);
+  auto printerInfoLock = TryEnsurePrinterInfo(connection);
   cups_dinfo_t* const printerInfo = printerInfoLock->mPrinterInfo;
 
   if (!printerInfo) {
@@ -326,35 +321,31 @@ nsTArray<mozilla::PaperInfo> nsPrinterCUPS::PaperList(
   return paperList;
 }
 
-void nsPrinterCUPS::TryEnsurePrinterInfo(CUPSPrinterInfo& aInOutPrinterInfo,
-                                         http_t* const aConnection) const {
-  if (aInOutPrinterInfo.mPrinterInfo) {
-    return;
+nsPrinterCUPS::PrinterInfoLock nsPrinterCUPS::TryEnsurePrinterInfo(
+    http_t* const aConnection) const {
+  PrinterInfoLock lock = mPrinterInfoMutex.Lock();
+  if (lock->mPrinterInfo ||
+      (aConnection == CUPS_HTTP_DEFAULT ? lock->mTriedInitWithDefault
+                                        : lock->mTriedInitWithConnection)) {
+    return lock;
   }
 
   if (aConnection == CUPS_HTTP_DEFAULT) {
-    if (aInOutPrinterInfo.mTriedInitWithDefault) {
-      return;
-    }
-    aInOutPrinterInfo.mTriedInitWithDefault = true;
+    lock->mTriedInitWithDefault = true;
   } else {
-    if (aInOutPrinterInfo.mTriedInitWithConnection) {
-      return;
-    }
-    aInOutPrinterInfo.mTriedInitWithConnection = true;
+    lock->mTriedInitWithConnection = true;
   }
 
   // All CUPS calls that take the printer info do null-checks internally, so we
   // can fetch this info and only worry about the result of the later CUPS
   // functions.
-  aInOutPrinterInfo.mPrinterInfo =
-      mShim.cupsCopyDestInfo(aConnection, mPrinter);
+  lock->mPrinterInfo = mShim.cupsCopyDestInfo(aConnection, mPrinter);
 
   // Even if we failed to fetch printer info, it is still possible we can talk
   // to the print server and get its CUPS version.
-  FetchCUPSVersionForPrinter(mShim, mPrinter, aInOutPrinterInfo.mCUPSMajor,
-                             aInOutPrinterInfo.mCUPSMinor,
-                             aInOutPrinterInfo.mCUPSPatch);
+  FetchCUPSVersionForPrinter(mShim, mPrinter, lock->mCUPSMajor,
+                             lock->mCUPSMinor, lock->mCUPSPatch);
+  return lock;
 }
 
 void nsPrinterCUPS::ForEachExtraMonochromeSetting(
