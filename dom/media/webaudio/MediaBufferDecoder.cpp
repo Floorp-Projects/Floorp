@@ -123,7 +123,8 @@ class MediaDecodeTask final : public Runnable {
 
   void Decode();
 
-  MediaResult CreateDecoder(const AudioInfo& info);
+  void OnCreateDecoderCompleted(RefPtr<MediaDataDecoder> aDecoder);
+  MOZ_CAN_RUN_SCRIPT void OnCreateDecoderFailed(const MediaResult& aError);
 
   MOZ_CAN_RUN_SCRIPT void OnInitDemuxerCompleted();
   MOZ_CAN_RUN_SCRIPT void OnInitDemuxerFailed(const MediaResult& aError);
@@ -269,12 +270,28 @@ void MediaDecodeTask::OnInitDemuxerCompleted() {
     }
   }
 
-  if (NS_FAILED(CreateDecoder(*mMediaInfo.mAudio.GetAsAudioInfo()))) {
-    LOG("MediaDecodeTask: Could not create a decoder.");
-    ReportFailureOnMainThread(WebAudioDecodeJob::UnknownContent);
-    return;
-  }
+  RefPtr<PDMFactory> pdm = new PDMFactory();
+  pdm->CreateDecoder(
+         {*mMediaInfo.mAudio.GetAsAudioInfo(), TrackInfo::kAudioTrack})
+      ->Then(PSupervisorTaskQueue(), __func__, this,
+             &MediaDecodeTask::OnCreateDecoderCompleted,
+             &MediaDecodeTask::OnCreateDecoderFailed);
+}
+
+void MediaDecodeTask::OnCreateDecoderCompleted(
+    RefPtr<MediaDataDecoder> aDecoder) {
+  MOZ_ASSERT(OnPSupervisorTaskQueue());
+
+  mDecoder = new MediaDataDecoderProxy(aDecoder.forget(),
+                                       do_AddRef(mPDecoderTaskQueue.get()));
   InitDecoder();
+}
+
+void MediaDecodeTask::OnCreateDecoderFailed(const MediaResult& aError) {
+  MOZ_ASSERT(OnPSupervisorTaskQueue());
+
+  LOG("MediaDecodeTask: Could not create a decoder.");
+  ReportFailureOnMainThread(WebAudioDecodeJob::UnknownContent);
 }
 
 void MediaDecodeTask::OnInitDemuxerFailed(const MediaResult& aError) {
@@ -282,30 +299,6 @@ void MediaDecodeTask::OnInitDemuxerFailed(const MediaResult& aError) {
 
   LOG("MediaDecodeTask: Could not initialize the demuxer.");
   ReportFailureOnMainThread(WebAudioDecodeJob::InvalidContent);
-}
-
-MediaResult MediaDecodeTask::CreateDecoder(const AudioInfo& info) {
-  MOZ_ASSERT(OnPSupervisorTaskQueue());
-
-  RefPtr<PDMFactory> pdm = new PDMFactory();
-  // result may not be updated by PDMFactory::CreateDecoder, as such it must be
-  // initialized to a fatal error by default.
-  MediaResult result =
-      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                  nsPrintfCString("error creating %s decoder",
-                                  TrackTypeToStr(TrackInfo::kAudioTrack)));
-  RefPtr<MediaDataDecoder> decoder =
-      pdm->CreateDecoder({info, &result, TrackInfo::kAudioTrack});
-
-  if (decoder) {
-    mDecoder = new MediaDataDecoderProxy(decoder.forget(),
-                                         do_AddRef(mPDecoderTaskQueue.get()));
-    return NS_OK;
-  }
-
-  MOZ_RELEASE_ASSERT(NS_FAILED(result), "PDM returned an invalid error code");
-
-  return result;
 }
 
 void MediaDecodeTask::InitDecoder() {

@@ -30,17 +30,15 @@ CreateDecoderParamsForAsync::CreateDecoderParamsForAsync(
 RefPtr<PlatformDecoderModule::CreateDecoderPromise>
 PlatformDecoderModule::AsyncCreateDecoder(const CreateDecoderParams& aParams) {
   RefPtr<MediaDataDecoder> decoder;
-  if (aParams.mError) {
-    *aParams.mError = NS_OK;
-  }
+  MediaResult result = NS_OK;
   if (aParams.mConfig.IsAudio()) {
-    decoder = CreateAudioDecoder(aParams);
+    decoder = CreateAudioDecoder(CreateDecoderParams{aParams, &result});
   } else if (aParams.mConfig.IsVideo()) {
-    decoder = CreateAudioDecoder(aParams);
+    decoder = CreateVideoDecoder(CreateDecoderParams{aParams, &result});
   }
   if (!decoder) {
-    if (aParams.mError && NS_FAILED(*aParams.mError)) {
-      return CreateDecoderPromise::CreateAndReject(*aParams.mError, __func__);
+    if (NS_FAILED(result)) {
+      return CreateDecoderPromise::CreateAndReject(result, __func__);
     }
     return CreateDecoderPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
@@ -49,22 +47,7 @@ PlatformDecoderModule::AsyncCreateDecoder(const CreateDecoderParams& aParams) {
                         .get()),
         __func__);
   }
-  RefPtr<CreateDecoderPromise> p = decoder->Init()->Then(
-      GetCurrentSerialEventTarget(), __func__,
-      [decoder](MediaDataDecoder::InitPromise::ResolveOrRejectValue&& aValue) {
-        RefPtr<CreateDecoderPromise> p;
-        if (aValue.IsReject()) {
-          p = decoder->Shutdown()->Then(
-              GetCurrentSerialEventTarget(), __func__,
-              [reject = aValue.RejectValue()]() {
-                return CreateDecoderPromise::CreateAndReject(reject, __func__);
-              });
-        } else {
-          p = CreateDecoderPromise::CreateAndResolve(decoder, __func__);
-        }
-        return p;
-      });
-  return p;
+  return CreateDecoderPromise::CreateAndResolve(decoder, __func__);
 }
 
 }  // namespace mozilla

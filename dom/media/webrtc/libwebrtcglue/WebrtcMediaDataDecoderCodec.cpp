@@ -15,38 +15,24 @@
 
 namespace mozilla {
 
-WebrtcMediaDataDecoder::WebrtcMediaDataDecoder()
+WebrtcMediaDataDecoder::WebrtcMediaDataDecoder(nsACString& aCodecMimeType)
     : mThreadPool(GetMediaThreadPool(MediaThreadType::SUPERVISOR)),
       mTaskQueue(new TaskQueue(do_AddRef(mThreadPool),
                                "WebrtcMediaDataDecoder::mTaskQueue")),
       mImageContainer(layers::LayerManager::CreateImageContainer(
           layers::ImageContainer::ASYNCHRONOUS)),
       mFactory(new PDMFactory()),
-      mTrackType(TrackInfo::kUndefinedTrack) {}
+      mTrackType(TrackInfo::kUndefinedTrack),
+      mCodecType(aCodecMimeType) {}
 
 WebrtcMediaDataDecoder::~WebrtcMediaDataDecoder() {}
 
 int32_t WebrtcMediaDataDecoder::InitDecode(
     const webrtc::VideoCodec* aCodecSettings, int32_t aNumberOfCores) {
   nsCString codec;
-  switch (aCodecSettings->codecType) {
-    case webrtc::VideoCodecType::kVideoCodecVP8:
-      codec = "video/vp8";
-      break;
-    case webrtc::VideoCodecType::kVideoCodecVP9:
-      codec = "video/vp9";
-      break;
-    case webrtc::VideoCodecType::kVideoCodecH264:
-      codec = "video/avc";
-      break;
-    default:
-      return WEBRTC_VIDEO_CODEC_ERROR;
-  }
-
   mTrackType = TrackInfo::kVideoTrack;
-
   mInfo = VideoInfo(aCodecSettings->width, aCodecSettings->height);
-  mInfo.mMimeType = codec;
+  mInfo.mMimeType = mCodecType;
 
   return CreateDecoder();
 }
@@ -156,13 +142,35 @@ int32_t WebrtcMediaDataDecoder::CreateDecoder() {
     Release();
   }
 
-  RefPtr<MediaDataDecoder> decoder = mFactory->CreateDecoder(
-      {mInfo,
-       CreateDecoderParams::OptionSet(
-           CreateDecoderParams::Option::LowLatency,
-           CreateDecoderParams::Option::FullH264Parsing,
-           CreateDecoderParams::Option::ErrorIfNoInitializationData),
-       mTrackType, mImageContainer, knowsCompositor});
+  RefPtr<TaskQueue> tq =
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+                    "webrtc decode TaskQueue");
+  RefPtr<MediaDataDecoder> decoder;
+
+  media::Await(do_AddRef(mThreadPool), InvokeAsync(tq, __func__, [&] {
+                 RefPtr<GenericPromise> p =
+                     mFactory
+                         ->CreateDecoder(
+                             {mInfo,
+                              CreateDecoderParams::OptionSet(
+                                  CreateDecoderParams::Option::LowLatency,
+                                  CreateDecoderParams::Option::FullH264Parsing,
+                                  CreateDecoderParams::Option::
+                                      ErrorIfNoInitializationData),
+                              mTrackType, mImageContainer, knowsCompositor})
+                         ->Then(
+                             tq, __func__,
+                             [&](RefPtr<MediaDataDecoder>&& aDecoder) {
+                               decoder = std::move(aDecoder);
+                               return GenericPromise::CreateAndResolve(
+                                   true, __func__);
+                             },
+                             [](const MediaResult& aResult) {
+                               return GenericPromise::CreateAndReject(
+                                   NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
+                             });
+                 return p;
+               }));
 
   if (!decoder) {
     return WEBRTC_VIDEO_CODEC_ERROR;
@@ -170,11 +178,7 @@ int32_t WebrtcMediaDataDecoder::CreateDecoder() {
 
   // We need to wrap our decoder in a MediaDataDecoderProxy so that it always
   // run on an nsISerialEventTarget (which the webrtc code doesn't do)
-  mDecoder = new MediaDataDecoderProxy(
-      decoder.forget(),
-      MakeAndAddRef<TaskQueue>(
-          GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-          "webrtc decode TaskQueue"));
+  mDecoder = new MediaDataDecoderProxy(decoder.forget(), tq.forget());
 
   media::Await(
       do_AddRef(mThreadPool), mDecoder->Init(),

@@ -61,27 +61,23 @@ bool RemoteDecoderModule::Supports(
   return supports;
 }
 
-already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateAudioDecoder(
-    const CreateDecoderParams& aParams) {
+RefPtr<RemoteDecoderModule::CreateDecoderPromise>
+RemoteDecoderModule::AsyncCreateDecoder(const CreateDecoderParams& aParams) {
   RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded(mLocation);
 
-  // OpusDataDecoder will check this option to provide the same info
-  // that IsDefaultPlaybackDeviceMono provides.  We want to avoid calls
-  // to IsDefaultPlaybackDeviceMono on RDD because initializing audio
-  // backends on RDD will be blocked by the sandbox.
-  if (OpusDataDecoder::IsOpus(aParams.mConfig.mMimeType) &&
-      IsDefaultPlaybackDeviceMono()) {
-    CreateDecoderParams params = aParams;
-    params.mOptions += CreateDecoderParams::Option::DefaultPlaybackDeviceMono;
-    return RemoteDecoderManagerChild::CreateAudioDecoder(params);
+  if (aParams.mConfig.IsAudio()) {
+    // OpusDataDecoder will check this option to provide the same info
+    // that IsDefaultPlaybackDeviceMono provides.  We want to avoid calls
+    // to IsDefaultPlaybackDeviceMono on RDD because initializing audio
+    // backends on RDD will be blocked by the sandbox.
+    if (OpusDataDecoder::IsOpus(aParams.mConfig.mMimeType) &&
+        IsDefaultPlaybackDeviceMono()) {
+      CreateDecoderParams params = aParams;
+      params.mOptions += CreateDecoderParams::Option::DefaultPlaybackDeviceMono;
+      return RemoteDecoderManagerChild::CreateAudioDecoder(params);
+    }
+    return RemoteDecoderManagerChild::CreateAudioDecoder(aParams);
   }
-
-  return RemoteDecoderManagerChild::CreateAudioDecoder(aParams);
-}
-
-already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateVideoDecoder(
-    const CreateDecoderParams& aParams) {
-  RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded(mLocation);
   return RemoteDecoderManagerChild::CreateVideoDecoder(aParams, mLocation);
 }
 

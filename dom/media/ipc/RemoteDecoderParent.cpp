@@ -10,11 +10,13 @@
 
 namespace mozilla {
 
-RemoteDecoderParent::RemoteDecoderParent(RemoteDecoderManagerParent* aParent,
-                                         nsISerialEventTarget* aManagerThread,
-                                         TaskQueue* aDecodeTaskQueue)
+RemoteDecoderParent::RemoteDecoderParent(
+    RemoteDecoderManagerParent* aParent,
+    const CreateDecoderParams::OptionSet& aOptions,
+    nsISerialEventTarget* aManagerThread, TaskQueue* aDecodeTaskQueue)
     : ShmemRecycleAllocator(this),
       mParent(aParent),
+      mOptions(aOptions),
       mDecodeTaskQueue(aDecodeTaskQueue),
       mManagerThread(aManagerThread) {
   MOZ_COUNT_CTOR(RemoteDecoderParent);

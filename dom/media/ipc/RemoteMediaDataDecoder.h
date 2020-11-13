@@ -26,7 +26,7 @@ class RemoteMediaDataDecoder
     : public MediaDataDecoder,
       public DecoderDoctorLifeLogger<RemoteMediaDataDecoder> {
  public:
-  friend class RemoteDecoderManagerChild;
+  explicit RemoteMediaDataDecoder(RemoteDecoderChild* aChild);
 
   // MediaDataDecoder
   RefPtr<InitPromise> Init() override;
@@ -43,7 +43,6 @@ class RemoteMediaDataDecoder
   ConversionRequired NeedsConversion() const override;
 
  private:
-  explicit RemoteMediaDataDecoder(RemoteDecoderChild* aChild);
   ~RemoteMediaDataDecoder();
 
   // Only ever written to from the reader task queue (during the constructor and
