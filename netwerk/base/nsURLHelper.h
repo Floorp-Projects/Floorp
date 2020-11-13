@@ -7,6 +7,7 @@
 #define nsURLHelper_h__
 
 #include "nsString.h"
+#include "nsTArray.h"
 
 class nsIFile;
 class nsIURLParser;
@@ -220,5 +221,68 @@ bool net_IsValidIPv4Addr(const nsACString& aAddr);
  * Checks whether the IPv6 address is valid according to RFC 3986 section 3.2.2.
  */
 bool net_IsValidIPv6Addr(const nsACString& aAddr);
+
+namespace mozilla {
+class URLParams final {
+ public:
+  URLParams() = default;
+
+  ~URLParams() { DeleteAll(); }
+
+  class ForEachIterator {
+   public:
+    virtual bool URLParamsIterator(const nsAString& aName,
+                                   const nsAString& aValue) = 0;
+  };
+
+  static bool Parse(const nsACString& aInput, ForEachIterator& aIterator);
+
+  static bool Extract(const nsACString& aInput, const nsAString& aName,
+                      nsAString& aValue);
+
+  void ParseInput(const nsACString& aInput);
+
+  void Serialize(nsAString& aValue) const;
+
+  void Get(const nsAString& aName, nsString& aRetval);
+
+  void GetAll(const nsAString& aName, nsTArray<nsString>& aRetval);
+
+  void Set(const nsAString& aName, const nsAString& aValue);
+
+  void Append(const nsAString& aName, const nsAString& aValue);
+
+  bool Has(const nsAString& aName);
+
+  void Delete(const nsAString& aName);
+
+  void DeleteAll() { mParams.Clear(); }
+
+  uint32_t Length() const { return mParams.Length(); }
+
+  const nsAString& GetKeyAtIndex(uint32_t aIndex) const {
+    MOZ_ASSERT(aIndex < mParams.Length());
+    return mParams[aIndex].mKey;
+  }
+
+  const nsAString& GetValueAtIndex(uint32_t aIndex) const {
+    MOZ_ASSERT(aIndex < mParams.Length());
+    return mParams[aIndex].mValue;
+  }
+
+  nsresult Sort();
+
+ private:
+  static void DecodeString(const nsACString& aInput, nsAString& aOutput);
+  static void ConvertString(const nsACString& aInput, nsAString& aOutput);
+
+  struct Param {
+    nsString mKey;
+    nsString mValue;
+  };
+
+  nsTArray<Param> mParams;
+};
+}  // namespace mozilla
 
 #endif  // !nsURLHelper_h__

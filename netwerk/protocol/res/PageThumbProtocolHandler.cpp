@@ -7,7 +7,6 @@
 #include "PageThumbProtocolHandler.h"
 
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/ipc/URIParams.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
@@ -28,6 +27,7 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsNetUtil.h"
+#include "nsURLHelper.h"
 #include "prio.h"
 #include "SimpleChannel.h"
 
@@ -416,7 +416,7 @@ nsresult PageThumbProtocolHandler::GetThumbnailPath(const nsACString& aPath,
   // Extract URL from query string.
   nsAutoString url;
   bool found =
-      dom::URLParams::Extract(Substring(aPath, queryIndex + 1), u"url"_ns, url);
+      URLParams::Extract(Substring(aPath, queryIndex + 1), u"url"_ns, url);
   if (!found || url.IsVoid()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
