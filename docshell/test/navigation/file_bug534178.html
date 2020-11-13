@@ -13,8 +13,7 @@
         }
         document.body.textContent = isOK ? "PASSED" : "FAILED";
         opener.ok(isOK, "Duplicate session history entries should have been removed!");
-        opener.nextTest();
-        window.close();
+        opener.finishTest();
       }
       function ifrload() {
         setTimeout(testDone, 0);
