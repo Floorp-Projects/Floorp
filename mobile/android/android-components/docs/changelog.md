@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * 🚒 Bug fixed [issue #8464](https://github.com/mozilla-mobile/android-components/issues/8464) - Crash when confirming a prompt that was already confirmed
+
 * **feature-app-links**
     * Added handling of PackageItemInfo.packageName NullPointerException on some Xiaomi and TCL devices
 

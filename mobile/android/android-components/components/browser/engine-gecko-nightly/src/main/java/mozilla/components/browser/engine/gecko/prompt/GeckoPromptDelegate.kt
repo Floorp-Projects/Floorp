@@ -82,7 +82,9 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
         val onConfirmSave: (Login) -> Unit = { login ->
-            geckoResult.complete(prompt.confirm(Autocomplete.LoginSelectOption(login.toLoginEntry())))
+            if (!prompt.isComplete) {
+                geckoResult.complete(prompt.confirm(Autocomplete.LoginSelectOption(login.toLoginEntry())))
+            }
         }
         val onDismiss: () -> Unit = {
             prompt.dismissSafely(geckoResult)
@@ -107,7 +109,9 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
         val onConfirmSelect: (Login) -> Unit = { login ->
-            geckoResult.complete(prompt.confirm(Autocomplete.LoginSelectOption(login.toLoginEntry())))
+            if (!prompt.isComplete) {
+                geckoResult.complete(prompt.confirm(Autocomplete.LoginSelectOption(login.toLoginEntry())))
+            }
         }
         val onDismiss: () -> Unit = {
             prompt.dismissSafely(geckoResult)
@@ -139,11 +143,15 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         val geckoResult = GeckoResult<PromptResponse>()
         val choices = convertToChoices(geckoPrompt.choices)
         val onConfirmSingleChoice: (Choice) -> Unit = { selectedChoice ->
-            geckoResult.complete(geckoPrompt.confirm(selectedChoice.id))
+            if (!geckoPrompt.isComplete) {
+                geckoResult.complete(geckoPrompt.confirm(selectedChoice.id))
+            }
         }
         val onConfirmMultipleSelection: (Array<Choice>) -> Unit = { selectedChoices ->
-            val ids = selectedChoices.toIdsArray()
-            geckoResult.complete(geckoPrompt.confirm(ids))
+            if (!geckoPrompt.isComplete) {
+                val ids = selectedChoices.toIdsArray()
+                geckoResult.complete(geckoPrompt.confirm(ids))
+            }
         }
 
         val promptRequest = when (geckoPrompt.type) {
@@ -210,12 +218,15 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             val filesUris = uris.map {
                 it.toFileUri(context)
             }.toTypedArray()
-
-            geckoResult.complete(prompt.confirm(context, filesUris))
+            if (!prompt.isComplete) {
+                geckoResult.complete(prompt.confirm(context, filesUris))
+            }
         }
 
         val onSelectSingle: (Context, Uri) -> Unit = { context, uri ->
-            geckoResult.complete(prompt.confirm(context, uri.toFileUri(context)))
+            if (!prompt.isComplete) {
+                geckoResult.complete(prompt.confirm(context, uri.toFileUri(context)))
+            }
         }
 
         val onDismiss: () -> Unit = {
@@ -237,12 +248,17 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         return geckoResult
     }
 
+    @Suppress("ComplexMethod")
     override fun onDateTimePrompt(
         session: GeckoSession,
         prompt: PromptDelegate.DateTimePrompt
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
-        val onConfirm: (String) -> Unit = { geckoResult.complete(prompt.confirm(it)) }
+        val onConfirm: (String) -> Unit = {
+            if (!prompt.isComplete) {
+                geckoResult.complete(prompt.confirm(it))
+            }
+        }
         val onClear: () -> Unit = {
             onConfirm("")
         }
@@ -291,10 +307,12 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
         val onConfirm: (String, String) -> Unit =
             { user, pass ->
-                if (onlyShowPassword) {
-                    geckoResult.complete(geckoPrompt.confirm(pass))
-                } else {
-                    geckoResult.complete(geckoPrompt.confirm(user, pass))
+                if (!geckoPrompt.isComplete) {
+                    if (onlyShowPassword) {
+                        geckoResult.complete(geckoPrompt.confirm(pass))
+                    } else {
+                        geckoResult.complete(geckoPrompt.confirm(user, pass))
+                    }
                 }
             }
 
@@ -339,7 +357,9 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                     false,
                     onDismiss
                 ) { _, valueInput ->
-                    geckoResult.complete(prompt.confirm(valueInput))
+                    if (!prompt.isComplete) {
+                        geckoResult.complete(prompt.confirm(valueInput))
+                    }
                 })
         }
 
@@ -351,7 +371,11 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         prompt: PromptDelegate.ColorPrompt
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
-        val onConfirm: (String) -> Unit = { geckoResult.complete(prompt.confirm(it)) }
+        val onConfirm: (String) -> Unit = {
+            if (!prompt.isComplete) {
+                geckoResult.complete(prompt.confirm(it))
+            }
+        }
         val onDismiss: () -> Unit = { prompt.dismissSafely(geckoResult) }
 
         val defaultColor = prompt.defaultValue ?: ""
@@ -369,8 +393,16 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         prompt: PromptDelegate.PopupPrompt
     ): GeckoResult<PromptResponse> {
         val geckoResult = GeckoResult<PromptResponse>()
-        val onAllow: () -> Unit = { geckoResult.complete(prompt.confirm(AllowOrDeny.ALLOW)) }
-        val onDeny: () -> Unit = { geckoResult.complete(prompt.confirm(AllowOrDeny.DENY)) }
+        val onAllow: () -> Unit = {
+            if (!prompt.isComplete) {
+                geckoResult.complete(prompt.confirm(AllowOrDeny.ALLOW))
+            }
+        }
+        val onDeny: () -> Unit = {
+            if (!prompt.isComplete) {
+                geckoResult.complete(prompt.confirm(AllowOrDeny.DENY))
+            }
+        }
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(
@@ -386,8 +418,16 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
         val title = geckoPrompt.title ?: ""
-        val onAllow: () -> Unit = { geckoResult.complete(geckoPrompt.confirm(AllowOrDeny.ALLOW)) }
-        val onDeny: () -> Unit = { geckoResult.complete(geckoPrompt.confirm(AllowOrDeny.DENY)) }
+        val onAllow: () -> Unit = {
+            if (!geckoPrompt.isComplete) {
+                geckoResult.complete(geckoPrompt.confirm(AllowOrDeny.ALLOW))
+            }
+        }
+        val onDeny: () -> Unit = {
+            if (!geckoPrompt.isComplete) {
+                geckoResult.complete(geckoPrompt.confirm(AllowOrDeny.DENY))
+            }
+        }
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(PromptRequest.BeforeUnload(title, onAllow, onDeny))
@@ -401,8 +441,16 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         prompt: PromptDelegate.SharePrompt
     ): GeckoResult<PromptResponse> {
         val geckoResult = GeckoResult<PromptResponse>()
-        val onSuccess = { geckoResult.complete(prompt.confirm(GECKO_PROMPT_SHARE_RESULT.SUCCESS)) }
-        val onFailure = { geckoResult.complete(prompt.confirm(GECKO_PROMPT_SHARE_RESULT.FAILURE)) }
+        val onSuccess = {
+            if (!prompt.isComplete) {
+                geckoResult.complete(prompt.confirm(GECKO_PROMPT_SHARE_RESULT.SUCCESS))
+            }
+        }
+        val onFailure = {
+            if (!prompt.isComplete) {
+                geckoResult.complete(prompt.confirm(GECKO_PROMPT_SHARE_RESULT.FAILURE))
+            }
+        }
         val onDismiss = { prompt.dismissSafely(geckoResult) }
 
         geckoEngineSession.notifyObservers {
@@ -431,10 +479,14 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         val message = prompt.message ?: ""
 
         val onConfirmPositiveButton: (Boolean) -> Unit = {
-            geckoResult.complete(prompt.confirm(PromptDelegate.ButtonPrompt.Type.POSITIVE))
+            if (!prompt.isComplete) {
+                geckoResult.complete(prompt.confirm(PromptDelegate.ButtonPrompt.Type.POSITIVE))
+            }
         }
         val onConfirmNegativeButton: (Boolean) -> Unit = {
-            geckoResult.complete(prompt.confirm(PromptDelegate.ButtonPrompt.Type.NEGATIVE))
+            if (!prompt.isComplete) {
+                geckoResult.complete(prompt.confirm(PromptDelegate.ButtonPrompt.Type.NEGATIVE))
+            }
         }
 
         val onDismiss: (Boolean) -> Unit = { prompt.dismissSafely(geckoResult) }

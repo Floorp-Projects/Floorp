@@ -99,6 +99,11 @@ class GeckoPromptDelegateTest {
 
         request.onConfirm(request.choices.first())
         assertTrue(confirmWasCalled)
+
+        confirmWasCalled = false
+        request.onConfirm(request.choices.first())
+
+        assertFalse(confirmWasCalled)
     }
 
     @Test
@@ -131,6 +136,11 @@ class GeckoPromptDelegateTest {
 
         (promptRequestSingleChoice as MultipleChoice).onConfirm(arrayOf())
         assertTrue(confirmWasCalled)
+
+        confirmWasCalled = false
+        (promptRequestSingleChoice as MultipleChoice).onConfirm(arrayOf())
+
+        assertFalse(confirmWasCalled)
     }
 
     @Test
@@ -238,6 +248,11 @@ class GeckoPromptDelegateTest {
         (dateRequest as PromptRequest.TimeSelection).onConfirm(Date())
         assertTrue(confirmCalled)
         assertEquals((dateRequest as PromptRequest.TimeSelection).title, "title")
+
+        confirmCalled = false
+        (dateRequest as PromptRequest.TimeSelection).onConfirm(Date())
+
+        assertFalse(confirmCalled)
 
         geckoPrompt = GeckoDateTimePrompt("title", DATE, "", "", "")
         geckoResult = promptDelegate.onDateTimePrompt(mock(), geckoPrompt)
@@ -591,6 +606,11 @@ class GeckoPromptDelegateTest {
         filePickerRequest.onSingleFileSelected(context, mockUri)
         assertTrue(onSingleFileSelectedWasCalled)
 
+        onSingleFileSelectedWasCalled = false
+        filePickerRequest.onSingleFileSelected(context, mockUri)
+
+        assertFalse(onSingleFileSelectedWasCalled)
+
         geckoPrompt = GeckoFilePrompt(type = GECKO_PROMPT_FILE_TYPE.MULTIPLE, capture = ANY)
         geckoResult = promptDelegate.onFilePrompt(mock(), geckoPrompt)
         geckoResult!!.accept {
@@ -599,6 +619,11 @@ class GeckoPromptDelegateTest {
 
         filePickerRequest.onMultipleFilesSelected(context, arrayOf(mockUri))
         assertTrue(onMultipleFilesSelectedWasCalled)
+
+        onMultipleFilesSelectedWasCalled = false
+        filePickerRequest.onMultipleFilesSelected(context, arrayOf(mockUri))
+
+        assertFalse(onMultipleFilesSelectedWasCalled)
 
         geckoPrompt = GeckoFilePrompt(type = GECKO_PROMPT_FILE_TYPE.SINGLE, capture = NONE)
         geckoResult = promptDelegate.onFilePrompt(mock(), geckoPrompt)
@@ -662,6 +687,12 @@ class GeckoPromptDelegateTest {
 
         loginSaveRequest.onConfirm(login)
         assertTrue(onLoginSaved)
+
+        onLoginSaved = false
+
+        loginSaveRequest.onConfirm(login)
+
+        assertFalse(onLoginSaved)
     }
 
     @Test
@@ -710,6 +741,11 @@ class GeckoPromptDelegateTest {
 
         loginSelectRequest.onConfirm(login)
         assertTrue(onLoginSelected)
+
+        onLoginSelected = false
+        loginSelectRequest.onConfirm(login)
+
+        assertFalse(onLoginSelected)
     }
 
     fun createLogin(
@@ -767,6 +803,11 @@ class GeckoPromptDelegateTest {
 
         authRequest.onConfirm("", "")
         assertTrue(onConfirmWasCalled)
+
+        onConfirmWasCalled = false
+        authRequest.onConfirm("", "")
+
+        assertFalse(onConfirmWasCalled)
 
         geckoResult =
             promptDelegate.onAuthPrompt(mock(), GeckoAuthPrompt(authOptions = mock()))
@@ -846,6 +887,11 @@ class GeckoPromptDelegateTest {
 
             onConfirm("#f6b73c")
             assertTrue(onConfirmWasCalled)
+
+            onConfirmWasCalled = false
+            onConfirm("#f6b73c")
+
+            assertFalse(onConfirmWasCalled)
         }
 
         geckoResult = promptDelegate.onColorPrompt(mock(), GeckoColorPrompt())
@@ -897,6 +943,11 @@ class GeckoPromptDelegateTest {
 
         request.onConfirm(true, "newInput")
         assertTrue(confirmWasCalled)
+
+        confirmWasCalled = false
+        request.onConfirm(true, "newInput")
+
+        assertFalse(confirmWasCalled)
     }
 
     @Test
@@ -925,6 +976,11 @@ class GeckoPromptDelegateTest {
 
             onAllow()
             assertTrue(onAllowWasCalled)
+
+            onAllowWasCalled = false
+            onAllow()
+
+            assertFalse(onAllowWasCalled)
         }
 
         geckoPrompt = GeckoPopupPrompt()
@@ -935,6 +991,11 @@ class GeckoPromptDelegateTest {
 
         request!!.onDeny()
         assertTrue(onDenyWasCalled)
+
+        onDenyWasCalled = false
+        request!!.onDeny()
+
+        assertFalse(onDenyWasCalled)
     }
 
     @Test
@@ -964,6 +1025,11 @@ class GeckoPromptDelegateTest {
 
             onLeave()
             assertTrue(onAllowWasCalled)
+
+            onAllowWasCalled = false
+            onLeave()
+
+            assertFalse(onAllowWasCalled)
         }
 
         geckoPrompt = GeckoBeforeUnloadPrompt()
@@ -974,6 +1040,11 @@ class GeckoPromptDelegateTest {
 
         request!!.onStay()
         assertTrue(onDenyWasCalled)
+
+        onDenyWasCalled = false
+        request!!.onStay()
+
+        assertFalse(onDenyWasCalled)
     }
 
     @Test
@@ -1005,6 +1076,11 @@ class GeckoPromptDelegateTest {
 
             onSuccess()
             assertTrue(onSuccessWasCalled)
+
+            onSuccessWasCalled = false
+            onSuccess()
+
+            assertFalse(onSuccessWasCalled)
         }
 
         geckoPrompt = GeckoSharePrompt()
@@ -1015,6 +1091,11 @@ class GeckoPromptDelegateTest {
 
         request!!.onFailure()
         assertTrue(onFailureWasCalled)
+
+        onFailureWasCalled = false
+        request!!.onFailure()
+
+        assertFalse(onFailureWasCalled)
 
         geckoPrompt = GeckoSharePrompt()
         geckoResult = promptDelegate.onSharePrompt(mock(), geckoPrompt)
@@ -1056,6 +1137,11 @@ class GeckoPromptDelegateTest {
 
             onConfirmPositiveButton(false)
             assertTrue(onPositiveButtonWasCalled)
+
+            onPositiveButtonWasCalled = false
+            onConfirmPositiveButton(false)
+
+            assertFalse(onPositiveButtonWasCalled)
         }
 
         geckoResult = promptDelegate.onButtonPrompt(mock(), GeckoPromptPrompt())
@@ -1073,6 +1159,11 @@ class GeckoPromptDelegateTest {
 
         request.onConfirmNegativeButton(false)
         assertTrue(onNegativeButtonWasCalled)
+
+        onNegativeButtonWasCalled = false
+        request.onConfirmNegativeButton(false)
+
+        assertFalse(onNegativeButtonWasCalled)
 
         geckoResult = promptDelegate.onButtonPrompt(mock(), GeckoPromptPrompt())
         geckoResult!!.accept {
@@ -1105,12 +1196,22 @@ class GeckoPromptDelegateTest {
         request.onConfirm()
         assertTrue(onPositiveButtonWasCalled)
 
+        onPositiveButtonWasCalled = false
+        request.onConfirm()
+
+        assertFalse(onPositiveButtonWasCalled)
+
         geckoResult = promptDelegate.onRepostConfirmPrompt(mock(), GeckoRepostPrompt())
         geckoResult!!.accept {
             onNegativeButtonWasCalled = true
         }
         request.onDismiss()
         assertTrue(onNegativeButtonWasCalled)
+
+        onNegativeButtonWasCalled = false
+        request.onDismiss()
+
+        assertFalse(onNegativeButtonWasCalled)
     }
 
     @Test
