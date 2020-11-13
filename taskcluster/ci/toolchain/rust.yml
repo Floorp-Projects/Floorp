@@ -146,6 +146,17 @@ win64-rust-1.47:
         ]
         toolchain-alias: win64-rust
 
+macosx64-rust-1.47:
+    treeherder:
+        symbol: TM(rust)
+    run:
+        arguments: [
+            '--channel', '1.47.0',
+            '--host', 'x86_64-apple-darwin',
+            '--target', 'x86_64-apple-darwin',
+        ]
+        toolchain-alias: macosx64-rust
+
 macosx64-rust-nightly:
     treeherder:
         symbol: TM(rust-nightly)
