@@ -7,7 +7,6 @@
 #include "MediaChangeMonitor.h"
 
 #include "AnnexB.h"
-#include "DecoderDoctorDiagnostics.h"
 #include "H264.h"
 #include "ImageContainer.h"
 #include "MP4Decoder.h"
@@ -269,7 +268,7 @@ MediaChangeMonitor::MediaChangeMonitor(PlatformDecoderModule* aPDM,
         mCurrentConfig,
         mDecoderOptions.contains(CreateDecoderParams::Option::FullH264Parsing));
   }
-  mLastError = CreateDecoder(aParams.mDiagnostics);
+  mLastError = CreateDecoder();
   mInConstructor = false;
 }
 
@@ -455,8 +454,7 @@ void MediaChangeMonitor::SetSeekThreshold(const media::TimeUnit& aTime) {
   }
 }
 
-MediaResult MediaChangeMonitor::CreateDecoder(
-    DecoderDoctorDiagnostics* aDiagnostics) {
+MediaResult MediaChangeMonitor::CreateDecoder() {
   // This is the only one of two methods to run outside the init thread when
   // called from the constructor.
   MOZ_ASSERT(mInConstructor || (mThread && mThread->IsOnCurrentThread()));
@@ -469,18 +467,17 @@ MediaResult MediaChangeMonitor::CreateDecoder(
 
   MediaResult error = NS_OK;
   mDecoder = mPDM->CreateVideoDecoder(
-      {mCurrentConfig, aDiagnostics, mImageContainer, mKnowsCompositor,
-       mGMPCrashHelper, mType, mOnWaitingForKeyEvent, mDecoderOptions, mRate,
-       &error});
+      {mCurrentConfig, mImageContainer, mKnowsCompositor, mGMPCrashHelper,
+       mType, mOnWaitingForKeyEvent, mDecoderOptions, mRate, &error});
 
   if (!mDecoder) {
     // We failed to create a decoder with the existing PDM; attempt once again
     // with a PDMFactory.
     RefPtr<PDMFactory> factory = new PDMFactory();
     mDecoder = factory->CreateDecoder(
-        {mCurrentConfig, aDiagnostics, mImageContainer, mKnowsCompositor,
-         mGMPCrashHelper, mType, mOnWaitingForKeyEvent, mDecoderOptions, mRate,
-         &error, CreateDecoderParams::NoWrapper(true)});
+        {mCurrentConfig, mImageContainer, mKnowsCompositor, mGMPCrashHelper,
+         mType, mOnWaitingForKeyEvent, mDecoderOptions, mRate, &error,
+         CreateDecoderParams::NoWrapper(true)});
 
     if (!mDecoder) {
       if (NS_FAILED(error)) {
@@ -506,7 +503,7 @@ MediaResult MediaChangeMonitor::CreateDecoderAndInit(MediaRawData* aSample) {
     return rv;
   }
 
-  rv = CreateDecoder(/* DecoderDoctorDiagnostics* */ nullptr);
+  rv = CreateDecoder();
 
   if (NS_SUCCEEDED(rv)) {
     RefPtr<MediaChangeMonitor> self = this;

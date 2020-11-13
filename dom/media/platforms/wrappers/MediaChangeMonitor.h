@@ -14,8 +14,6 @@
 
 namespace mozilla {
 
-class DecoderDoctorDiagnostics;
-
 DDLoggedTypeDeclNameAndBase(MediaChangeMonitor, MediaDataDecoder);
 
 // MediaChangeMonitor is a MediaDataDecoder wrapper used to ensure that
@@ -83,7 +81,7 @@ class MediaChangeMonitor : public MediaDataDecoder,
   // Will create the required MediaDataDecoder if need AVCC and we have a SPS
   // NAL. Returns NS_ERROR_FAILURE if error is permanent and can't be recovered
   // and will set mError accordingly.
-  MediaResult CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics);
+  MediaResult CreateDecoder();
   MediaResult CreateDecoderAndInit(MediaRawData* aSample);
   MediaResult CheckForChange(MediaRawData* aSample);
 
