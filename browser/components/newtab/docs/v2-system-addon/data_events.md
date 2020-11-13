@@ -723,11 +723,11 @@ This reports the user's interaction with those Pocket tiles.
 }
 ```
 
-## On Save Recs pings
+## Save to Pocket button pings
 
 Right now the save to Pocket button, while technically outside of newtab, has some similarities with the newtab telemetry.
 
-These pings record user interaction with the recs we display in the doorhanger after you save a page using the Pocket button next to the address bar. This is not telemetry for the address bar save to Pocket button itself, just for the similar recs displayed in the doorhanger.
+These pings record user interaction with the save to Pocket button.
 
 ### Click/impression ping
 
@@ -737,7 +737,8 @@ These pings record user interaction with the recs we display in the doorhanger a
   "version": "83.0a1",
   "release_channel": "default",
   "model": "",
-  "events": [{"action":"click|impression","position":0}],
+  "events": [{"action":"click|impression|unpin","position":0,"source":"save_button|on_save_recs|learn_more|sign_up_1|sign_up_2|log_in"}],
+  "pocket_logged_in_state": true|false,
   "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
   "profile_creation_date": 18550
 }

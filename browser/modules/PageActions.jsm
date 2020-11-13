@@ -569,6 +569,7 @@ function Action(options) {
     onShowingInPanel: false,
     onSubviewPlaced: false,
     onSubviewShowing: false,
+    onPinToUrlbarToggled: false,
     panelFluentID: false,
     pinnedToUrlbar: false,
     tooltip: false,
@@ -699,6 +700,7 @@ Action.prototype = {
     if (this.pinnedToUrlbar != shown) {
       this._pinnedToUrlbar = shown;
       PageActions.onActionToggledPinnedToUrlbar(this);
+      this.onPinToUrlbarToggled();
     }
     return this.pinnedToUrlbar;
   },
@@ -1078,6 +1080,14 @@ Action.prototype = {
   onSubviewShowing(panelViewNode) {
     if (this._onSubviewShowing) {
       this._onSubviewShowing(panelViewNode);
+    }
+  },
+  /**
+   * Call this when an icon in the url is pinned or unpinned.
+   */
+  onPinToUrlbarToggled() {
+    if (this._onPinToUrlbarToggled) {
+      this._onPinToUrlbarToggled();
     }
   },
 
