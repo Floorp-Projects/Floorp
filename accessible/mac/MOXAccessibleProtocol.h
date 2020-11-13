@@ -57,6 +57,9 @@
 // Return text delegate if it exists.
 - (id<MOXTextMarkerSupport> _Nullable)moxTextMarkerDelegate;
 
+// Return true if this accessible is a live region
+- (BOOL)moxIsLiveRegion;
+
 @optional
 
 #pragma mark - AttributeGetters
@@ -280,6 +283,15 @@
 
 // AXEditableAncestor
 - (id _Nullable)moxEditableAncestor;
+
+// AXARIAAtomic
+- (NSNumber* _Nullable)moxARIAAtomic;
+
+// AXARIALive
+- (NSString* _Nullable)moxARIALive;
+
+// AXARIARelevant
+- (NSString* _Nullable)moxARIARelevant;
 
 // AXMozDebugDescription
 - (NSString* _Nullable)moxMozDebugDescription;
