@@ -10,8 +10,12 @@ const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
-const { TelemetryStorage } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryStorage.jsm"
+const { TelemetryArchiveTesting } = ChromeUtils.import(
+  "resource://testing-common/TelemetryArchiveTesting.jsm"
+);
+
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
 );
 
 // All tests run privileged unless otherwise specified not to.
@@ -721,6 +725,9 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
   });
 
   add_task(async function test_telemetry_submit_ping() {
+    let archiveTester = new TelemetryArchiveTesting.Checker();
+    await archiveTester.promiseInit();
+
     await run({
       backgroundScript: async () => {
         await browser.telemetry.submitPing("webext-test", {}, {});
@@ -729,9 +736,10 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
       doneSignal: "submit_ping",
     });
 
-    let pings = await TelemetryArchive.promiseArchivedPingList();
-    equal(pings.length, 1);
-    equal(pings[0].type, "webext-test");
+    await TestUtils.waitForCondition(
+      () => archiveTester.promiseFindPing("webext-test", []),
+      "Failed to find the webext-test ping"
+    );
   });
 
   add_task(async function test_telemetry_submit_encrypted_ping() {
@@ -813,10 +821,12 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
       telemetry: telemetryManifestEntries,
     });
 
-    // Wait for any pending pings to settle.
-    await TelemetryStorage.testClearPendingPings();
+    let pings;
+    await TestUtils.waitForCondition(async function() {
+      pings = await TelemetryArchive.promiseArchivedPingList();
+      return pings.length >= 3;
+    }, "Wait until we have at least 3 pings in the telemetry archive");
 
-    let pings = await TelemetryArchive.promiseArchivedPingList();
     equal(pings.length, 3);
     equal(pings[1].type, "encrypted-webext-ping");
     equal(pings[2].type, "encrypted-webext-ping");
