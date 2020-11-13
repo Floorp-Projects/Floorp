@@ -357,11 +357,9 @@ browser-window-close-button =
 
 ## Bookmarks toolbar items
 
-browser-import-button2 =
+browser-import-button =
     .label = Import bookmarks…
-    .tooltiptext = Import bookmarks from another browser to { -brand-short-name }.
-
-bookmarks-toolbar-empty-message = For quick access, place your bookmarks here on the bookmarks toolbar. <a data-l10n-name="manage-bookmarks">Manage bookmarks…</a>
+    .tooltiptext = Copy bookmarks from another browser to { -brand-short-name }.
 
 ## WebRTC Pop-up notifications
 
