@@ -3382,6 +3382,12 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
   virtual void SetDamage(const nsIntRegion& aDamageRegion) {}
 
   /**
+   * Get the buffer age. If it returns 0, that indicates the buffer state is
+   * unknown and the entire frame should be redrawn.
+   */
+  virtual GLint GetBufferAge() const { return 0; }
+
+  /**
    * Defines a two-dimensional texture image for context target surface
    */
   virtual bool BindTexImage() { return false; }
