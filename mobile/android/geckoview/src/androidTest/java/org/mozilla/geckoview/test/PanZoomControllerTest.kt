@@ -449,4 +449,31 @@ class PanZoomControllerTest : BaseSessionTest() {
                       value, equalTo(PanZoomController.INPUT_RESULT_HANDLED_CONTENT))
         }
     }
+
+    private fun fling() {
+        val downTime = SystemClock.uptimeMillis();
+        val down = MotionEvent.obtain(
+                downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN, 50f, 90f, 0)
+
+        mainSession.panZoomController.onTouchEventForResult(down)
+        var move = MotionEvent.obtain(
+                downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_MOVE, 50f, 70f, 0)
+        mainSession.panZoomController.onTouchEvent(move)
+        move = MotionEvent.obtain(
+                downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_MOVE, 50f, 30f, 0)
+        mainSession.panZoomController.onTouchEvent(move)
+
+        val up = MotionEvent.obtain(
+                downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, 50f, 10f, 0)
+        mainSession.panZoomController.onTouchEvent(up)
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test
+    fun dontCrashDuringFastFling() {
+        setupDocument(TOUCHSTART_HTML_PATH)
+
+        fling()
+        fling()
+    }
 }
