@@ -13,8 +13,7 @@
           window.location.reload(true);
         } else {
           opener.ok(true, "Did run history.push");
-          opener.nextTest();
-          window.close();
+          opener.finishTest();
         }
       }
 
