@@ -12,7 +12,6 @@ var {
   getFront,
   createRootFront,
 } = require("devtools/shared/protocol/types");
-var { method } = require("devtools/shared/protocol/utils");
 var { Front } = require("devtools/shared/protocol/Front");
 var {
   FrontClassWithSpec,
@@ -36,4 +35,3 @@ exports.RetVal = RetVal;
 exports.registerFront = registerFront;
 exports.getFront = getFront;
 exports.createRootFront = createRootFront;
-exports.method = method;

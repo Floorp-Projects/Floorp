@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { method } = require("devtools/shared/protocol");
-
 /**
  * A SourceLocation represents a location in a source.
  *
@@ -106,28 +104,13 @@ function expectState(expectedState, methodFunc, activity) {
 exports.expectState = expectState;
 
 /**
- * Proxies a call from an actor to an underlying module, stored
- * as `bridge` on the actor. This allows a module to be defined in one
- * place, usable by other modules/actors on the server, but a separate
- * module defining the actor/RDP definition.
- *
- * @see Framerate implementation: devtools/server/performance/framerate.js
- * @see Framerate actor definition: devtools/server/actors/framerate.js
- */
-function actorBridge(methodName, definition = {}) {
-  return method(function() {
-    return this.bridge[methodName].apply(this.bridge, arguments);
-  }, definition);
-}
-exports.actorBridge = actorBridge;
-
-/**
- * Like `actorBridge`, but without a spec definition, for when the actor is
- * created with `ActorClassWithSpec` rather than vanilla `ActorClass`.
+ * Autobind method from a `bridge` property set on some actors where the
+ * implementation is delegated to a separate class, and where `bridge` points
+ * to an instance of this class.
  */
 function actorBridgeWithSpec(methodName) {
-  return method(function() {
+  return function() {
     return this.bridge[methodName].apply(this.bridge, arguments);
-  });
+  };
 }
 exports.actorBridgeWithSpec = actorBridgeWithSpec;
