@@ -26,7 +26,7 @@ internal abstract class CrashDatabase : RoomDatabase() {
         fun get(context: Context): CrashDatabase {
             instance?.let { return it }
 
-            return Room.databaseBuilder(context, CrashDatabase::class.java, "crashes")
+            return Room.databaseBuilder(context.applicationContext, CrashDatabase::class.java, "crashes")
                 // We are allowing main thread queries here since we need to write to disk blocking
                 // in a crash event before the process gets shutdown. At this point the app already
                 // crashed and temporarily blocking the UI thread is not that problematic anymore.
