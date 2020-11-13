@@ -172,10 +172,11 @@ RefPtr<GenericPromise> GMPParent::Init(GeckoMediaPluginServiceParent* aService,
 
   uint32_t x86 = base::PROCESS_ARCH_X86_64 | base::PROCESS_ARCH_I386;
 #  if defined(__aarch64__)
+  uint32_t arm64 = base::PROCESS_ARCH_ARM_64;
   // When executing in an ARM64 process, if the library is x86 or x64,
   // set |mChildLaunchArch| to x64 and allow the library to be used as long
   // as this process is a universal binary.
-  if (pluginArch & x86) {
+  if (!(pluginArch & arm64) && (pluginArch & x86)) {
     bool isWidevine = parentLeafName.Find("widevine") != kNotFound;
     bool isWidevineAllowed =
         Preferences::GetBool("media.gmp-widevinecdm.allow-x64-plugin-on-arm64");
