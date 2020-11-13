@@ -180,6 +180,8 @@ class gfxWindowsPlatform final : public gfxPlatform {
   }
   inline DWRITE_MEASURING_MODE DWriteMeasuringMode() { return mMeasuringMode; }
 
+  // Note that this may return nullptr, if we encountered an error initializing
+  // the default rendering params.
   IDWriteRenderingParams* GetRenderingParams(TextRenderingMode aRenderMode) {
     return mRenderingParams[aRenderMode];
   }
