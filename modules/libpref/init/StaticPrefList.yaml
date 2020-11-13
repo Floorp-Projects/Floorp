@@ -4463,11 +4463,7 @@
 #ifdef XP_WIN
 - name: gfx.webrender.enabled-no-gpu-process-with-angle-win
   type: bool
-#ifdef NIGHTLY_BUILD
-  value: true
-#else
-  value: false
-#endif
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: once
 #endif
 
