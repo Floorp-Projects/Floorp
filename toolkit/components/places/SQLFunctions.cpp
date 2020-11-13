@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/storage.h"
-#include "mozilla/dom/URLSearchParams.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsWhitespaceTokenizer.h"
@@ -19,6 +18,7 @@
 #include "nsNavHistory.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Utf8.h"
+#include "nsURLHelper.h"
 #include "nsVariant.h"
 
 // Maximum number of chars to search through.

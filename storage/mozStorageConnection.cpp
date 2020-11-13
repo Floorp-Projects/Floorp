@@ -42,10 +42,9 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Printf.h"
 #include "nsProxyRelease.h"
-#include <algorithm>
+#include "nsURLHelper.h"
 
-// XXX Remove the dependency on dom/url after Bug 1673682
-#include "mozilla/dom/URLSearchParams.h"
+#include <algorithm>
 
 #define MIN_AVAILABLE_BYTES_PER_CHUNKED_GROWTH 524288000  // 500 MiB
 
@@ -771,7 +770,7 @@ nsresult Connection::initialize(nsIFile* aDatabaseFile) {
 
 static bool HasKeyParam(const nsACString& aQuery) {
   class MOZ_STACK_CLASS ParamsIterator final
-      : public dom::URLParams::ForEachIterator {
+      : public URLParams::ForEachIterator {
    public:
     bool URLParamsIterator(const nsAString& aName,
                            const nsAString& aValue) override {
@@ -779,7 +778,7 @@ static bool HasKeyParam(const nsACString& aQuery) {
     }
   } paramsIterator;
 
-  return dom::URLParams::Parse(aQuery, paramsIterator);
+  return URLParams::Parse(aQuery, paramsIterator);
 }
 
 nsresult Connection::initialize(nsIFileURL* aFileURL,

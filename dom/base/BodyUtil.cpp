@@ -17,6 +17,7 @@
 #include "nsReadableUtils.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
+#include "nsURLHelper.h"
 
 #include "js/ArrayBuffer.h"  // JS::NewArrayBufferWithContents
 #include "js/JSON.h"
@@ -27,7 +28,6 @@
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/URLSearchParams.h"
 
 namespace mozilla::dom {
 

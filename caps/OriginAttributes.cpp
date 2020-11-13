@@ -7,7 +7,6 @@
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
-#include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIURI.h"
@@ -17,8 +16,6 @@ static const char kSourceChar = ':';
 static const char kSanitizedChar = '+';
 
 namespace mozilla {
-
-using dom::URLParams;
 
 static void MakeTopLevelInfo(const nsACString& aScheme, const nsACString& aHost,
                              int32_t aPort, bool aUseSite,
