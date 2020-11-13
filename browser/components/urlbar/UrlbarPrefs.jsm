@@ -154,29 +154,15 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // active window.
   ["switchTabs.adoptIntoActiveWindow", false],
 
-  // If true, we stop showing tab-to-search onboarding results after one is
-  // interacted with.
-  ["tabToSearch.onboard.oneInteraction", true],
-
-  // The maximum number of times we show the larger tip-style tab-to-search
-  // result.
-  // Temporarily set to a high value due to bug 1675611. See bug 1675622.
-  ["tabToSearch.onboard.maxShown", 60],
-
-  // The maximum number of times per session we show the larger tip-style
-  // tab-to-search result.
-  // Temporarily set to a high value due to bug 1675611. See bug 1675622.
-  ["tabToSearch.onboard.maxShownPerSession", 20],
+  // The number of remaining times the user can interact with tab-to-search
+  // onboarding results before we stop showing them.
+  ["tabToSearch.onboard.interactionsLeft", 3],
 
   // The number of times the user has been shown the onboarding search tip.
   ["tipShownCount.searchTip_onboard", 0],
 
   // The number of times the user has been shown the redirect search tip.
   ["tipShownCount.searchTip_redirect", 0],
-
-  // The number of times the user has been shown the tab-to-search onboarding
-  // tip.
-  ["tipShownCount.tabToSearch", 0],
 
   // Remove redundant portions from URLs.
   ["trimURLs", true],

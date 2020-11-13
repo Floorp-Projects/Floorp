@@ -18,14 +18,19 @@ add_task(async function init() {
   Services.prefs.setBoolPref("browser.urlbar.update2.tabToComplete", true);
   // Disable tab-to-search onboarding results. Those are covered in
   // browser/components/urlbar/tests/browser/browser_tabToSearch.js.
-  Services.prefs.setIntPref("browser.urlbar.tabToSearch.onboard.maxShown", 0);
+  Services.prefs.setIntPref(
+    "browser.urlbar.tabToSearch.onboard.interactionsLeft",
+    0
+  );
   testEngine = await Services.search.addEngineWithDetails("Test", {
     template: "https://example.com/?search={searchTerms}",
   });
 
   registerCleanupFunction(async () => {
     await Services.search.removeEngine(testEngine);
-    Services.prefs.clearUserPref("browser.urlbar.tabToSearch.onboard.maxShown");
+    Services.prefs.clearUserPref(
+      "browser.urlbar.tabToSearch.onboard.interactionsLeft"
+    );
     Services.prefs.clearUserPref("browser.urlbar.update2.tabToComplete");
     Services.prefs.clearUserPref("browser.urlbar.update2");
     Services.prefs.clearUserPref("browser.search.suggest.enabled");
