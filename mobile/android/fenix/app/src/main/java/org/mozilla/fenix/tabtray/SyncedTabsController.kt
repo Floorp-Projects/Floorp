@@ -21,6 +21,7 @@ import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.sync.ListenerDelegate
 import org.mozilla.fenix.sync.SyncedTabsAdapter
 import org.mozilla.fenix.sync.ext.toAdapterList
@@ -50,7 +51,11 @@ class SyncedTabsController(
                 .collect { mode ->
                     when (mode) {
                         is TabTrayDialogFragmentState.Mode.Normal -> {
-                            concatAdapter.addAdapter(0, adapter)
+                            if (view.context.settings().gridTabView) {
+                                concatAdapter.addAdapter(adapter)
+                            } else {
+                                concatAdapter.addAdapter(0, adapter)
+                            }
                         }
                         is TabTrayDialogFragmentState.Mode.MultiSelect -> {
                             concatAdapter.removeAdapter(adapter)
