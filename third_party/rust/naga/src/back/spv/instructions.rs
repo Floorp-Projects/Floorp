@@ -235,6 +235,13 @@ pub(super) fn instruction_type_sampler(id: Word) -> Instruction {
     instruction
 }
 
+pub(super) fn instruction_type_sampled_image(id: Word, image_type_id: Word) -> Instruction {
+    let mut instruction = Instruction::new(Op::TypeSampledImage);
+    instruction.set_result(id);
+    instruction.add_operand(image_type_id);
+    instruction
+}
+
 pub(super) fn instruction_type_array(
     id: Word,
     element_type_id: Word,
@@ -399,6 +406,24 @@ pub(super) fn instruction_store(
     instruction
 }
 
+pub(super) fn instruction_access_chain(
+    result_type_id: Word,
+    id: Word,
+    base_id: Word,
+    index_ids: &[Word],
+) -> Instruction {
+    let mut instruction = Instruction::new(Op::AccessChain);
+    instruction.set_type(result_type_id);
+    instruction.set_result(id);
+    instruction.add_operand(base_id);
+
+    for index_id in index_ids {
+        instruction.add_operand(*index_id);
+    }
+
+    instruction
+}
+
 //
 // Function Instructions
 //
@@ -449,6 +474,33 @@ pub(super) fn instruction_function_call(
 //
 // Image Instructions
 //
+pub(super) fn instruction_sampled_image(
+    result_type_id: Word,
+    id: Word,
+    image: Word,
+    sampler: Word,
+) -> Instruction {
+    let mut instruction = Instruction::new(Op::SampledImage);
+    instruction.set_type(result_type_id);
+    instruction.set_result(id);
+    instruction.add_operand(image);
+    instruction.add_operand(sampler);
+    instruction
+}
+
+pub(super) fn instruction_image_sample_implicit_lod(
+    result_type_id: Word,
+    id: Word,
+    sampled_image: Word,
+    coordinates: Word,
+) -> Instruction {
+    let mut instruction = Instruction::new(Op::ImageSampleImplicitLod);
+    instruction.set_type(result_type_id);
+    instruction.set_result(id);
+    instruction.add_operand(sampled_image);
+    instruction.add_operand(coordinates);
+    instruction
+}
 
 //
 // Conversion Instructions

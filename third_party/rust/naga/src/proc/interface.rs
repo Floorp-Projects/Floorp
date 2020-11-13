@@ -2,6 +2,7 @@ use crate::arena::{Arena, Handle};
 
 pub struct Interface<'a, T> {
     pub expressions: &'a Arena<crate::Expression>,
+    pub local_variables: &'a Arena<crate::LocalVariable>,
     pub visitor: T,
 }
 
@@ -36,7 +37,7 @@ where
                     self.traverse_expr(comp);
                 }
             }
-            E::FunctionParameter(_) | E::GlobalVariable(_) | E::LocalVariable(_) => {}
+            E::FunctionArgument(_) | E::GlobalVariable(_) | E::LocalVariable(_) => {}
             E::Load { pointer } => {
                 self.traverse_expr(pointer);
             }
@@ -77,6 +78,15 @@ where
             E::Binary { left, right, .. } => {
                 self.traverse_expr(left);
                 self.traverse_expr(right);
+            }
+            E::Select {
+                condition,
+                accept,
+                reject,
+            } => {
+                self.traverse_expr(condition);
+                self.traverse_expr(accept);
+                self.traverse_expr(reject);
             }
             E::Intrinsic { argument, .. } => {
                 self.traverse_expr(argument);
@@ -201,6 +211,7 @@ impl crate::Function {
 
         let mut io = Interface {
             expressions: &self.expressions,
+            local_variables: &self.local_variables,
             visitor: GlobalUseVisitor(&mut self.global_usage),
         };
         io.traverse(&self.body);
@@ -218,9 +229,10 @@ mod tests {
     fn global_use_scan() {
         let test_global = GlobalVariable {
             name: None,
-            class: StorageClass::Constant,
+            class: StorageClass::Uniform,
             binding: None,
             ty: Handle::new(std::num::NonZeroU32::new(1).unwrap()),
+            init: None,
             interpolation: None,
             storage_access: StorageAccess::empty(),
         };
@@ -256,7 +268,7 @@ mod tests {
 
         let mut function = crate::Function {
             name: None,
-            parameter_types: Vec::new(),
+            arguments: Vec::new(),
             return_type: None,
             local_variables: Arena::new(),
             expressions,

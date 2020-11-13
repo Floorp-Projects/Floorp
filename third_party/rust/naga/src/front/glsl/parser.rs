@@ -6,9 +6,9 @@ pomelo! {
     %include {
         use super::super::{error::ErrorKind, token::*, ast::*};
         use crate::{proc::Typifier, Arena, BinaryOperator, Binding, Block, Constant,
-            ConstantInner, EntryPoint, Expression, Function, GlobalVariable, Handle, Interpolation,
-            LocalVariable, MemberOrigin, ScalarKind, Statement, StorageAccess,
-            StorageClass, StructMember, Type, TypeInner};
+            ConstantInner, EntryPoint, Expression, FallThrough, FastHashMap, Function, GlobalVariable, Handle, Interpolation,
+            LocalVariable, MemberOrigin, SampleLevel, ScalarKind, Statement, StorageAccess,
+            StorageClass, StructMember, Type, TypeInner, UnaryOperator};
     }
     %token #[derive(Debug)] #[cfg_attr(test, derive(PartialEq))] pub enum Token {};
     %parser pub struct Parser<'a> {};
@@ -55,6 +55,13 @@ pomelo! {
     %type expression_statement Statement;
     %type declaration_statement Statement;
     %type jump_statement Statement;
+    %type iteration_statement Statement;
+    %type selection_statement Statement;
+    %type switch_statement_list Vec<(Option<i32>, Block, Option<FallThrough>)>;
+    %type switch_statement (Option<i32>, Block, Option<FallThrough>);
+    %type for_init_statement Statement;
+    %type for_rest_statement (Option<ExpressionRule>, Option<ExpressionRule>);
+    %type condition_opt Option<ExpressionRule>;
 
     // expressions
     %type unary_expression ExpressionRule;
@@ -90,7 +97,7 @@ pomelo! {
 
     %type initializer ExpressionRule;
 
-    // decalartions
+    // declarations
     %type declaration VarDeclaration;
     %type init_declarator_list VarDeclaration;
     %type single_declaration VarDeclaration;
@@ -114,6 +121,9 @@ pomelo! {
     %type struct_declarator String;
 
     %type TypeName Type;
+
+    // precedence
+    %right Else;
 
     root ::= version_pragma translation_unit;
     version_pragma ::= Version IntConstant(V) Identifier?(P) {
@@ -140,9 +150,7 @@ pomelo! {
         let var = extra.lookup_variable(&v.1)?;
         match var {
             Some(expression) => {
-                ExpressionRule::from_expression(
-                    expression
-                )
+                ExpressionRule::from_expression(expression)
             },
             None => {
                 return Err(ErrorKind::UnknownVariable(v.0, v.1));
@@ -220,7 +228,7 @@ pomelo! {
     postfix_expression ::= postfix_expression(e) Dot Identifier(i) /* FieldSelection in spec */ {
         //TODO: how will this work as l-value?
         let expression = extra.field_selection(e.expression, &*i.1, i.0)?;
-        ExpressionRule { expression, statements: e.statements }
+        ExpressionRule { expression, statements: e.statements, sampler: None }
     }
     postfix_expression ::= postfix_expression(pe) IncOp {
         //TODO
@@ -234,17 +242,49 @@ pomelo! {
     integer_expression ::= expression;
 
     function_call ::= function_call_or_method(fc) {
-        if let FunctionCallKind::TypeConstructor(ty) = fc.kind {
-            let h = extra.context.expressions.append(Expression::Compose{
-                ty,
-                components: fc.args,
-            });
-            ExpressionRule{
-                expression: h,
-                statements: fc.statements,
+        match fc.kind {
+            FunctionCallKind::TypeConstructor(ty) => {
+                let h = extra.context.expressions.append(Expression::Compose {
+                    ty,
+                    components: fc.args.iter().map(|a| a.expression).collect(),
+                });
+                ExpressionRule {
+                    expression: h,
+                    statements: fc.args.into_iter().map(|a| a.statements).flatten().collect(),
+                    sampler: None
+                }
             }
-        } else {
-            return Err(ErrorKind::NotImplemented("Function call"));
+            FunctionCallKind::Function(name) => {
+                match name.as_str() {
+                    "sampler2D" => {
+                        //TODO: check args len
+                        ExpressionRule{
+                            expression: fc.args[0].expression,
+                            sampler: Some(fc.args[1].expression),
+                            statements: fc.args.into_iter().map(|a| a.statements).flatten().collect(),
+                        }
+                    }
+                    "texture" => {
+                        //TODO: check args len
+                        if let Some(sampler) = fc.args[0].sampler {
+                            ExpressionRule{
+                                expression: extra.context.expressions.append(Expression::ImageSample {
+                                    image: fc.args[0].expression,
+                                    sampler,
+                                    coordinate: fc.args[1].expression,
+                                    level: SampleLevel::Auto,
+                                    depth_ref: None,
+                                }),
+                                sampler: None,
+                                statements: fc.args.into_iter().map(|a| a.statements).flatten().collect(),
+                            }
+                        } else {
+                            return Err(ErrorKind::SemanticError("Bad call to texture"));
+                        }
+                    }
+                    _ => { return Err(ErrorKind::NotImplemented("Function call")); }
+                }
+            }
         }
     }
     function_call_or_method ::= function_call_generic;
@@ -259,26 +299,22 @@ pomelo! {
     }
     function_call_header_no_parameters ::= function_call_header;
     function_call_header_with_parameters ::= function_call_header(mut h) assignment_expression(ae) {
-        h.args.push(ae.expression);
-        h.statements.extend(ae.statements);
+        h.args.push(ae);
         h
     }
     function_call_header_with_parameters ::= function_call_header_with_parameters(mut h) Comma assignment_expression(ae) {
-        h.args.push(ae.expression);
-        h.statements.extend(ae.statements);
+        h.args.push(ae);
         h
     }
     function_call_header ::= function_identifier(i) LeftParen {
         FunctionCall {
             kind: i,
             args: vec![],
-            statements: vec![],
         }
     }
 
     // Grammar Note: Constructors look like functions, but lexical analysis recognized most of them as
     // keywords. They are now recognized through “type_specifier”.
-    // Methods (.length), subroutine array calls, and identifiers are recognized through postfix_expression.
     function_identifier ::= type_specifier(t) {
         if let Some(ty) = t {
             FunctionCallKind::TypeConstructor(ty)
@@ -286,9 +322,18 @@ pomelo! {
             return Err(ErrorKind::NotImplemented("bad type ctor"))
         }
     }
-    function_identifier ::= postfix_expression(e) {
-        FunctionCallKind::Function(e.expression)
+
+    //TODO
+    // Methods (.length), subroutine array calls, and identifiers are recognized through postfix_expression.
+    // function_identifier ::= postfix_expression(e) {
+    //     FunctionCallKind::Function(e.expression)
+    // }
+
+    // Simplification of above
+    function_identifier ::= Identifier(i) {
+        FunctionCallKind::Function(i.1)
     }
+
 
     unary_expression ::= postfix_expression;
 
@@ -311,74 +356,76 @@ pomelo! {
     unary_operator ::= Tilde;
     multiplicative_expression ::= unary_expression;
     multiplicative_expression ::= multiplicative_expression(left) Star unary_expression(right) {
-        extra.binary_expr(BinaryOperator::Multiply, left, right)
+        extra.binary_expr(BinaryOperator::Multiply, &left, &right)
     }
     multiplicative_expression ::= multiplicative_expression(left) Slash unary_expression(right) {
-        extra.binary_expr(BinaryOperator::Divide, left, right)
+        extra.binary_expr(BinaryOperator::Divide, &left, &right)
     }
     multiplicative_expression ::= multiplicative_expression(left) Percent unary_expression(right) {
-        extra.binary_expr(BinaryOperator::Modulo, left, right)
+        extra.binary_expr(BinaryOperator::Modulo, &left, &right)
     }
     additive_expression ::= multiplicative_expression;
     additive_expression ::= additive_expression(left) Plus multiplicative_expression(right) {
-        extra.binary_expr(BinaryOperator::Add, left, right)
+        extra.binary_expr(BinaryOperator::Add, &left, &right)
     }
     additive_expression ::= additive_expression(left) Dash multiplicative_expression(right) {
-        extra.binary_expr(BinaryOperator::Subtract, left, right)
+        extra.binary_expr(BinaryOperator::Subtract, &left, &right)
     }
     shift_expression ::= additive_expression;
     shift_expression ::= shift_expression(left) LeftOp additive_expression(right) {
-        extra.binary_expr(BinaryOperator::ShiftLeftLogical, left, right)
+        extra.binary_expr(BinaryOperator::ShiftLeft, &left, &right)
     }
     shift_expression ::= shift_expression(left) RightOp additive_expression(right) {
-        //TODO: when to use ShiftRightArithmetic
-        extra.binary_expr(BinaryOperator::ShiftRightLogical, left, right)
+        extra.binary_expr(BinaryOperator::ShiftRight, &left, &right)
     }
     relational_expression ::= shift_expression;
     relational_expression ::= relational_expression(left) LeftAngle shift_expression(right) {
-        extra.binary_expr(BinaryOperator::Less, left, right)
+        extra.binary_expr(BinaryOperator::Less, &left, &right)
     }
     relational_expression ::= relational_expression(left) RightAngle shift_expression(right) {
-        extra.binary_expr(BinaryOperator::Greater, left, right)
+        extra.binary_expr(BinaryOperator::Greater, &left, &right)
     }
     relational_expression ::= relational_expression(left) LeOp shift_expression(right) {
-        extra.binary_expr(BinaryOperator::LessEqual, left, right)
+        extra.binary_expr(BinaryOperator::LessEqual, &left, &right)
     }
     relational_expression ::= relational_expression(left) GeOp shift_expression(right) {
-        extra.binary_expr(BinaryOperator::GreaterEqual, left, right)
+        extra.binary_expr(BinaryOperator::GreaterEqual, &left, &right)
     }
     equality_expression ::= relational_expression;
     equality_expression ::= equality_expression(left) EqOp relational_expression(right) {
-        extra.binary_expr(BinaryOperator::Equal, left, right)
+        extra.binary_expr(BinaryOperator::Equal, &left, &right)
     }
     equality_expression ::= equality_expression(left) NeOp relational_expression(right) {
-        extra.binary_expr(BinaryOperator::NotEqual, left, right)
+        extra.binary_expr(BinaryOperator::NotEqual, &left, &right)
     }
     and_expression ::= equality_expression;
     and_expression ::= and_expression(left) Ampersand equality_expression(right) {
-        extra.binary_expr(BinaryOperator::And, left, right)
+        extra.binary_expr(BinaryOperator::And, &left, &right)
     }
     exclusive_or_expression ::= and_expression;
     exclusive_or_expression ::= exclusive_or_expression(left) Caret and_expression(right) {
-        extra.binary_expr(BinaryOperator::ExclusiveOr, left, right)
+        extra.binary_expr(BinaryOperator::ExclusiveOr, &left, &right)
     }
     inclusive_or_expression ::= exclusive_or_expression;
     inclusive_or_expression ::= inclusive_or_expression(left) VerticalBar exclusive_or_expression(right) {
-        extra.binary_expr(BinaryOperator::InclusiveOr, left, right)
+        extra.binary_expr(BinaryOperator::InclusiveOr, &left, &right)
     }
     logical_and_expression ::= inclusive_or_expression;
     logical_and_expression ::= logical_and_expression(left) AndOp inclusive_or_expression(right) {
-        extra.binary_expr(BinaryOperator::LogicalAnd, left, right)
+        extra.binary_expr(BinaryOperator::LogicalAnd, &left, &right)
     }
     logical_xor_expression ::= logical_and_expression;
     logical_xor_expression ::= logical_xor_expression(left) XorOp logical_and_expression(right) {
-        return Err(ErrorKind::NotImplemented("logical xor"))
-        //TODO: naga doesn't have BinaryOperator::LogicalXor
-        // extra.context.expressions.append(Expression::Binary{op: BinaryOperator::LogicalXor, left, right})
+        let exp1 = extra.binary_expr(BinaryOperator::LogicalOr, &left, &right);
+        let exp2 = {
+            let tmp = extra.binary_expr(BinaryOperator::LogicalAnd, &left, &right).expression;
+            ExpressionRule::from_expression(extra.context.expressions.append(Expression::Unary { op: UnaryOperator::Not, expr: tmp }))
+        };
+        extra.binary_expr(BinaryOperator::LogicalAnd, &exp1, &exp2)
     }
     logical_or_expression ::= logical_xor_expression;
     logical_or_expression ::= logical_or_expression(left) OrOp logical_xor_expression(right) {
-        extra.binary_expr(BinaryOperator::LogicalOr, left, right)
+        extra.binary_expr(BinaryOperator::LogicalOr, &left, &right)
     }
 
     conditional_expression ::= logical_or_expression;
@@ -389,17 +436,29 @@ pomelo! {
 
     assignment_expression ::= conditional_expression;
     assignment_expression ::= unary_expression(mut pointer) assignment_operator(op) assignment_expression(value) {
+        pointer.statements.extend(value.statements);
         match op {
             BinaryOperator::Equal => {
-                pointer.statements.extend(value.statements);
                 pointer.statements.push(Statement::Store{
                     pointer: pointer.expression,
                     value: value.expression
                 });
                 pointer
             },
-            //TODO: op != Equal
-            _ => {return Err(ErrorKind::NotImplemented("assign op"))}
+            _ => {
+                let h = extra.context.expressions.append(
+                    Expression::Binary{
+                        op,
+                        left: pointer.expression,
+                        right: value.expression,
+                    }
+                );
+                pointer.statements.push(Statement::Store{
+                    pointer: pointer.expression,
+                    value: h,
+                });
+                pointer
+            }
         }
     }
 
@@ -422,10 +481,10 @@ pomelo! {
         BinaryOperator::Subtract
     }
     assignment_operator ::= LeftAssign {
-        BinaryOperator::ShiftLeftLogical
+        BinaryOperator::ShiftLeft
     }
     assignment_operator ::= RightAssign {
-        BinaryOperator::ShiftRightLogical
+        BinaryOperator::ShiftRight
     }
     assignment_operator ::= AndAssign {
         BinaryOperator::And
@@ -440,9 +499,10 @@ pomelo! {
     expression ::= assignment_expression;
     expression ::= expression(e) Comma assignment_expression(mut ae) {
         ae.statements.extend(e.statements);
-        ExpressionRule{
+        ExpressionRule {
             expression: e.expression,
             statements: ae.statements,
+            sampler: None,
         }
     }
 
@@ -462,7 +522,7 @@ pomelo! {
 
     declaration ::= type_qualifier(t) Identifier(i) LeftBrace
         struct_declaration_list(sdl) RightBrace Semicolon {
-        VarDeclaration{
+        VarDeclaration {
             type_qualifiers: t,
             ids_initializers: vec![(None, None)],
             ty: extra.module.types.fetch_or_append(Type{
@@ -476,7 +536,7 @@ pomelo! {
 
     declaration ::= type_qualifier(t) Identifier(i1) LeftBrace
         struct_declaration_list(sdl) RightBrace Identifier(i2) Semicolon {
-        VarDeclaration{
+        VarDeclaration {
             type_qualifiers: t,
             ids_initializers: vec![(Some(i2.1), None)],
             ty: extra.module.types.fetch_or_append(Type{
@@ -506,7 +566,7 @@ pomelo! {
     single_declaration ::= fully_specified_type(t) {
         let ty = t.1.ok_or(ErrorKind::SemanticError("Empty type for declaration"))?;
 
-        VarDeclaration{
+        VarDeclaration {
             type_qualifiers: t.0,
             ids_initializers: vec![],
             ty,
@@ -515,7 +575,7 @@ pomelo! {
     single_declaration ::= fully_specified_type(t) Identifier(i) {
         let ty = t.1.ok_or(ErrorKind::SemanticError("Empty type for declaration"))?;
 
-        VarDeclaration{
+        VarDeclaration {
             type_qualifiers: t.0,
             ids_initializers: vec![(Some(i.1), None)],
             ty,
@@ -526,7 +586,7 @@ pomelo! {
     single_declaration ::= fully_specified_type(t) Identifier(i) Equal initializer(init) {
         let ty = t.1.ok_or(ErrorKind::SemanticError("Empty type for declaration"))?;
 
-        VarDeclaration{
+        VarDeclaration {
             type_qualifiers: t.0,
             ids_initializers: vec![(Some(i.1), Some(init))],
             ty,
@@ -597,9 +657,7 @@ pomelo! {
     // single_type_qualifier ::= invariant_qualifier;
     // single_type_qualifier ::= precise_qualifier;
 
-    storage_qualifier ::= Const {
-        StorageClass::Constant
-    }
+    // storage_qualifier ::= Const
     // storage_qualifier ::= InOut;
     storage_qualifier ::= In {
         StorageClass::Input
@@ -658,7 +716,7 @@ pomelo! {
 
     struct_declaration ::= type_specifier(t) struct_declarator_list(sdl) Semicolon {
         if let Some(ty) = t {
-            sdl.iter().map(|name| StructMember{
+            sdl.iter().map(|name| StructMember {
                 name: Some(name.clone()),
                 origin: MemberOrigin::Empty,
                 ty,
@@ -702,18 +760,33 @@ pomelo! {
                     return Err(ErrorKind::VariableAlreadyDeclared(id))
                 }
             }
+            let mut init_exp: Option<Handle<Expression>> = None;
             let localVar = extra.context.local_variables.append(
                 LocalVariable {
                     name: Some(id.clone()),
                     ty: d.ty,
                     init: initializer.map(|i| {
                         statements.extend(i.statements);
-                        i.expression
-                    }),
+                        if let Expression::Constant(constant) = extra.context.expressions[i.expression] {
+                            Some(constant)
+                        } else {
+                            init_exp = Some(i.expression);
+                            None
+                        }
+                    }).flatten(),
                 }
             );
             let exp = extra.context.expressions.append(Expression::LocalVariable(localVar));
             extra.context.add_local_var(id, exp);
+
+            if let Some(value) = init_exp {
+                statements.push(
+                    Statement::Store {
+                        pointer: exp,
+                        value,
+                    }
+                );
+            }
         }
         match statements.len() {
             1 => statements.remove(0),
@@ -727,14 +800,138 @@ pomelo! {
     }
     statement ::= simple_statement;
 
-    // Grammar Note: labeled statements for SWITCH only; 'goto' is not supported.
     simple_statement ::= declaration_statement;
     simple_statement ::= expression_statement;
-    //simple_statement ::= selection_statement;
-    //simple_statement ::= switch_statement;
-    //simple_statement ::= case_label;
-    //simple_statement ::= iteration_statement;
+    simple_statement ::= selection_statement;
     simple_statement ::= jump_statement;
+    simple_statement ::= iteration_statement;
+
+
+    selection_statement ::= If LeftParen expression(e) RightParen statement(s1) Else statement(s2) {
+        Statement::If {
+            condition: e.expression,
+            accept: vec![s1],
+            reject: vec![s2],
+        }
+    }
+
+    selection_statement ::= If LeftParen expression(e) RightParen statement(s) [Else] {
+        Statement::If {
+            condition: e.expression,
+            accept: vec![s],
+            reject: vec![],
+        }
+    }
+
+    selection_statement ::= Switch LeftParen expression(e) RightParen LeftBrace switch_statement_list(ls) RightBrace {
+        let mut default = Vec::new();
+        let mut cases = FastHashMap::default();
+        for (v, s, ft) in ls {
+            if let Some(v) = v {
+                cases.insert(v, (s, ft));
+            } else {
+                default.extend_from_slice(&s);
+            }
+        }
+        Statement::Switch {
+            selector: e.expression,
+            cases,
+            default,
+        }
+    }
+
+    switch_statement_list ::= {
+        vec![]
+    }
+    switch_statement_list ::= switch_statement_list(mut ssl) switch_statement((v, sl, ft)) {
+        ssl.push((v, sl, ft));
+        ssl
+    }
+    switch_statement ::= Case IntConstant(v) Colon statement_list(sl) {
+        let fallthrough = match sl.last() {
+            Some(Statement::Break) => None,
+            _ => Some(FallThrough),
+        };
+        (Some(v.1 as i32), sl, fallthrough)
+    }
+    switch_statement ::= Default Colon statement_list(sl) {
+        let fallthrough = match sl.last() {
+            Some(Statement::Break) => Some(FallThrough),
+            _ => None,
+        };
+        (None, sl, fallthrough)
+    }
+
+    iteration_statement ::= While LeftParen expression(e) RightParen compound_statement_no_new_scope(sl) {
+        let mut body = Vec::with_capacity(sl.len() + 1);
+        body.push(
+            Statement::If {
+                condition: e.expression,
+                accept: vec![Statement::Break],
+                reject: vec![],
+            }
+        );
+        body.extend_from_slice(&sl);
+        Statement::Loop {
+            body,
+            continuing: vec![],
+        }
+    }
+
+    iteration_statement ::= Do compound_statement(sl) While LeftParen expression(e) RightParen  {
+        let mut body = sl;
+        body.push(
+            Statement::If {
+                condition: e.expression,
+                accept: vec![Statement::Break],
+                reject: vec![],
+            }
+        );
+        Statement::Loop {
+            body,
+            continuing: vec![],
+        }
+    }
+
+    iteration_statement ::= For LeftParen for_init_statement(s_init) for_rest_statement((cond_e, loop_e)) RightParen compound_statement_no_new_scope(sl) {
+        let mut body = Vec::with_capacity(sl.len() + 2);
+        if let Some(cond_e) = cond_e {
+            body.push(
+                Statement::If {
+                    condition: cond_e.expression,
+                    accept: vec![Statement::Break],
+                    reject: vec![],
+                }
+            );
+        }
+        body.extend_from_slice(&sl);
+        if let Some(loop_e) = loop_e {
+            body.extend_from_slice(&loop_e.statements);
+        }
+        Statement::Block(vec![
+            s_init,
+            Statement::Loop {
+                body,
+                continuing: vec![],
+            }
+        ])
+    }
+
+    for_init_statement ::= expression_statement;
+    for_init_statement ::= declaration_statement;
+    for_rest_statement ::= condition_opt(c) Semicolon {
+        (c, None)
+    }
+    for_rest_statement ::= condition_opt(c) Semicolon expression(e) {
+        (c, Some(e))
+    }
+
+    condition_opt ::= {
+        None
+    }
+    condition_opt ::= conditional_expression(c) {
+        Some(c)
+    }
 
     compound_statement ::= LeftBrace RightBrace {
         vec![]
@@ -810,7 +1007,7 @@ pomelo! {
     function_header ::= fully_specified_type(t) Identifier(n) LeftParen {
         Function {
             name: Some(n.1),
-            parameter_types: vec![],
+            arguments: vec![],
             return_type: t.1,
             global_usage: vec![],
             local_variables: Arena::<LocalVariable>::new(),
@@ -826,7 +1023,7 @@ pomelo! {
         Statement::Break
     }
     jump_statement ::= Return Semicolon {
-        Statement::Return{ value: None }
+        Statement::Return { value: None }
     }
     jump_statement ::= Return expression(mut e) Semicolon {
         let ret = Statement::Return{ value: Some(e.expression) };
@@ -884,6 +1081,7 @@ pomelo! {
                     class,
                     binding: binding.clone(),
                     ty: d.ty,
+                    init: None,
                     interpolation,
                     storage_access: StorageAccess::empty(), //TODO
                 },
@@ -894,12 +1092,17 @@ pomelo! {
         }
     }
 
-    function_definition ::= function_prototype(mut f) compound_statement_no_new_scope(cs) {
+    function_definition ::= function_prototype(mut f) compound_statement_no_new_scope(mut cs) {
         std::mem::swap(&mut f.expressions, &mut extra.context.expressions);
         std::mem::swap(&mut f.local_variables, &mut extra.context.local_variables);
         extra.context.clear_scopes();
         extra.context.lookup_global_var_exps.clear();
         extra.context.typifier = Typifier::new();
+        // make sure function ends with return
+        match cs.last() {
+            Some(Statement::Return {..}) => {}
+            _ => {cs.push(Statement::Return { value:None });}
+        }
         f.body = cs;
         f.fill_global_use(&extra.module.global_variables);
         f

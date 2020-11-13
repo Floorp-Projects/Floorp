@@ -173,6 +173,8 @@ ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
 ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
     RawId aSelfId, const dom::GPUDeviceDescriptor& aDesc, RawId aNewId) {
   ffi::WGPUDeviceDescriptor desc = {};
+  desc.shader_validation = true;  // required for implicit pipeline layouts
+
   if (aDesc.mLimits.WasPassed()) {
     const auto& lim = aDesc.mLimits.Value();
     desc.limits.max_bind_groups = lim.mMaxBindGroups;
@@ -194,7 +196,7 @@ ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
   } else {
     ffi::wgpu_server_fill_default_limits(&desc.limits);
   }
-  // TODO: fill up the descriptor
+
   ffi::wgpu_server_adapter_request_device(mContext, aSelfId, &desc, aNewId);
   return IPC_OK();
 }
@@ -591,22 +593,40 @@ ipc::IPCResult WebGPUParent::RecvShutdown() {
 
 ipc::IPCResult WebGPUParent::RecvDeviceAction(RawId aSelf,
                                               const ipc::ByteBuf& aByteBuf) {
-  ffi::wgpu_server_device_action(
-      mContext, aSelf, reinterpret_cast<const ffi::WGPUByteBuf*>(&aByteBuf));
+  ipc::ByteBuf byteBuf;
+  ffi::wgpu_server_device_action(mContext, aSelf, ToFFI(&aByteBuf),
+                                 ToFFI(&byteBuf));
+
+  if (byteBuf.mData) {
+    if (!SendDropAction(std::move(byteBuf))) {
+      NS_WARNING("Unable to set a drop action!");
+    }
+  }
   return IPC_OK();
 }
 
 ipc::IPCResult WebGPUParent::RecvTextureAction(RawId aSelf,
                                                const ipc::ByteBuf& aByteBuf) {
-  ffi::wgpu_server_texture_action(
-      mContext, aSelf, reinterpret_cast<const ffi::WGPUByteBuf*>(&aByteBuf));
+  ffi::wgpu_server_texture_action(mContext, aSelf, ToFFI(&aByteBuf));
   return IPC_OK();
 }
 
 ipc::IPCResult WebGPUParent::RecvCommandEncoderAction(
     RawId aSelf, const ipc::ByteBuf& aByteBuf) {
-  ffi::wgpu_server_command_encoder_action(
-      mContext, aSelf, reinterpret_cast<const ffi::WGPUByteBuf*>(&aByteBuf));
+  ffi::wgpu_server_command_encoder_action(mContext, aSelf, ToFFI(&aByteBuf));
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvBumpImplicitBindGroupLayout(RawId pipelineId,
+                                                             bool isCompute,
+                                                             uint32_t index) {
+  if (isCompute) {
+    ffi::wgpu_server_compute_pipeline_get_bind_group_layout(mContext,
+                                                            pipelineId, index);
+  } else {
+    ffi::wgpu_server_render_pipeline_get_bind_group_layout(mContext, pipelineId,
+                                                           index);
+  }
   return IPC_OK();
 }
 

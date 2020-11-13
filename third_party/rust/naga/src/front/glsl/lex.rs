@@ -1,5 +1,5 @@
 use super::parser::Token;
-use super::{token::TokenMetadata, types::parse_type};
+use super::{preprocess::LinePreProcessor, token::TokenMetadata, types::parse_type};
 use std::{iter::Enumerate, str::Lines};
 
 fn _consume_str<'a>(input: &'a str, what: &str) -> Option<&'a str> {
@@ -23,6 +23,7 @@ pub struct Lexer<'a> {
     line: usize,
     offset: usize,
     inside_comment: bool,
+    pub pp: LinePreProcessor,
 }
 
 impl<'a> Lexer<'a> {
@@ -139,6 +140,16 @@ impl<'a> Lexer<'a> {
                     "break" => Some(Token::Break(meta)),
                     "return" => Some(Token::Return(meta)),
                     "discard" => Some(Token::Discard(meta)),
+                    // selection statements
+                    "if" => Some(Token::If(meta)),
+                    "else" => Some(Token::Else(meta)),
+                    "switch" => Some(Token::Switch(meta)),
+                    "case" => Some(Token::Case(meta)),
+                    "default" => Some(Token::Default(meta)),
+                    // iteration statements
+                    "while" => Some(Token::While(meta)),
+                    "do" => Some(Token::Do(meta)),
+                    "for" => Some(Token::For(meta)),
                     // types
                     "void" => Some(Token::Void(meta)),
                     word => {
@@ -283,25 +294,42 @@ impl<'a> Lexer<'a> {
     }
 
     pub fn new(input: &'a str) -> Self {
-        let mut lines = input.lines().enumerate();
-        let (line, input) = lines.next().unwrap_or((0, ""));
-        let mut input = String::from(input);
-
-        while input.ends_with('\\') {
-            if let Some((_, next)) = lines.next() {
-                input.pop();
-                input.push_str(next);
-            } else {
-                break;
-            }
-        }
-
-        Lexer {
-            lines,
-            input,
-            line,
+        let mut lexer = Lexer {
+            lines: input.lines().enumerate(),
+            input: "".to_string(),
+            line: 0,
             offset: 0,
             inside_comment: false,
+            pp: LinePreProcessor::new(),
+        };
+        lexer.next_line();
+        lexer
+    }
+
+    fn next_line(&mut self) -> bool {
+        if let Some((line, input)) = self.lines.next() {
+            let mut input = String::from(input);
+
+            while input.ends_with('\\') {
+                if let Some((_, next)) = self.lines.next() {
+                    input.pop();
+                    input.push_str(next);
+                } else {
+                    break;
+                }
+            }
+
+            if let Ok(processed) = self.pp.process_line(&input) {
+                self.input = processed.unwrap_or_default();
+                self.line = line;
+                self.offset = 0;
+                true
+            } else {
+                //TODO: handle preprocessor error
+                false
+            }
+        } else {
+            false
         }
     }
 
@@ -331,22 +359,9 @@ impl<'a> Lexer<'a> {
                 self.next()
             }
         } else {
-            let (line, input) = self.lines.next()?;
-
-            let mut input = String::from(input);
-
-            while input.ends_with('\\') {
-                if let Some((_, next)) = self.lines.next() {
-                    input.pop();
-                    input.push_str(next);
-                } else {
-                    break;
-                }
+            if !self.next_line() {
+                return None;
             }
-
-            self.input = input;
-            self.line = line;
-            self.offset = 0;
             self.next()
         }
     }

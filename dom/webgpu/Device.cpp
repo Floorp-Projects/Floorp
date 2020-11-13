@@ -194,15 +194,21 @@ already_AddRefed<ShaderModule> Device::CreateShaderModule(
 
 already_AddRefed<ComputePipeline> Device::CreateComputePipeline(
     const dom::GPUComputePipelineDescriptor& aDesc) {
-  RawId id = mBridge->DeviceCreateComputePipeline(mId, aDesc);
-  RefPtr<ComputePipeline> object = new ComputePipeline(this, id);
+  nsTArray<RawId> implicitBindGroupLayoutIds;
+  RawId id = mBridge->DeviceCreateComputePipeline(mId, aDesc,
+                                                  &implicitBindGroupLayoutIds);
+  RefPtr<ComputePipeline> object =
+      new ComputePipeline(this, id, std::move(implicitBindGroupLayoutIds));
   return object.forget();
 }
 
 already_AddRefed<RenderPipeline> Device::CreateRenderPipeline(
     const dom::GPURenderPipelineDescriptor& aDesc) {
-  RawId id = mBridge->DeviceCreateRenderPipeline(mId, aDesc);
-  RefPtr<RenderPipeline> object = new RenderPipeline(this, id);
+  nsTArray<RawId> implicitBindGroupLayoutIds;
+  RawId id = mBridge->DeviceCreateRenderPipeline(mId, aDesc,
+                                                 &implicitBindGroupLayoutIds);
+  RefPtr<RenderPipeline> object =
+      new RenderPipeline(this, id, std::move(implicitBindGroupLayoutIds));
   return object.forget();
 }
 

@@ -36,6 +36,7 @@ parent:
   async DeviceAction(RawId selfId, ByteBuf buf);
   async TextureAction(RawId selfId, ByteBuf buf);
   async CommandEncoderAction(RawId selfId, ByteBuf buf);
+  async BumpImplicitBindGroupLayout(RawId pipelineId, bool isCompute, uint32_t index);
 
   async InstanceRequestAdapter(GPURequestAdapterOptions options, RawId[] ids) returns (RawId adapterId);
   async AdapterRequestDevice(RawId selfId, GPUDeviceDescriptor desc, RawId newId);
@@ -69,6 +70,7 @@ parent:
   async Shutdown();
 
 child:
+  async DropAction(ByteBuf buf);
   async FreeAdapter(RawId id);
   async FreeDevice(RawId id);
   async FreePipelineLayout(RawId id);

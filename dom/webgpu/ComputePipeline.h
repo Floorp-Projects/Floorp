@@ -12,16 +12,21 @@
 namespace mozilla {
 namespace webgpu {
 
+class BindGroupLayout;
 class Device;
 
 class ComputePipeline final : public ObjectBase, public ChildOf<Device> {
+  const nsTArray<RawId> mImplicitBindGroupLayoutIds;
+
  public:
   GPU_DECL_CYCLE_COLLECTION(ComputePipeline)
   GPU_DECL_JS_WRAP(ComputePipeline)
 
-  ComputePipeline(Device* const aParent, RawId aId);
-
   const RawId mId;
+
+  ComputePipeline(Device* const aParent, RawId aId,
+                  nsTArray<RawId>&& aImplicitBindGroupLayoutIds);
+  already_AddRefed<BindGroupLayout> GetBindGroupLayout(uint32_t index) const;
 
  private:
   ~ComputePipeline();

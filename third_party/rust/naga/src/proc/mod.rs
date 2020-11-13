@@ -1,10 +1,12 @@
 //! Module processing functionality.
 
 mod interface;
+mod namer;
 mod typifier;
 mod validator;
 
 pub use interface::{Interface, Visitor};
+pub use namer::{EntryPointIndex, NameKey, Namer};
 pub use typifier::{check_constant_type, ResolveContext, ResolveError, Typifier};
 pub use validator::{ValidationError, Validator};
 
@@ -44,6 +46,18 @@ impl From<super::StorageFormat> for super::ScalarKind {
             Sf::Rgba32Uint => Sk::Uint,
             Sf::Rgba32Sint => Sk::Sint,
             Sf::Rgba32Float => Sk::Float,
+        }
+    }
+}
+
+impl crate::TypeInner {
+    pub fn scalar_kind(&self) -> Option<super::ScalarKind> {
+        match *self {
+            super::TypeInner::Scalar { kind, .. } | super::TypeInner::Vector { kind, .. } => {
+                Some(kind)
+            }
+            super::TypeInner::Matrix { .. } => Some(super::ScalarKind::Float),
+            _ => None,
         }
     }
 }

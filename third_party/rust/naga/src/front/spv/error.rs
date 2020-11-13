@@ -46,9 +46,11 @@ pub enum Error {
     InvalidAsType(Handle<crate::Type>),
     InconsistentComparisonSampling(Handle<crate::Type>),
     WrongFunctionResultType(spirv::Word),
-    WrongFunctionParameterType(spirv::Word),
+    WrongFunctionArgumentType(spirv::Word),
     MissingDecoration(spirv::Decoration),
     BadString,
     IncompleteData,
     InvalidTerminator,
+    InvalidEdgeClassification,
+    UnexpectedComparisonType(Handle<crate::Type>),
 }

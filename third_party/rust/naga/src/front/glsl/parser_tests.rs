@@ -78,3 +78,105 @@ fn version() {
         "(450, Core)"
     );
 }
+
+#[test]
+fn control_flow() {
+    let _program = parse_program(
+        r#"
+        #  version 450
+        void main() {
+            if (true) {
+                return 1;
+            } else {
+                return 2;
+            }
+        }
+        "#,
+        ShaderStage::Vertex,
+    )
+    .unwrap();
+
+    let _program = parse_program(
+        r#"
+        #  version 450
+        void main() {
+            if (true) {
+                return 1;
+            }
+        }
+        "#,
+        ShaderStage::Vertex,
+    )
+    .unwrap();
+
+    let _program = parse_program(
+        r#"
+        #  version 450
+        void main() {
+            int x;
+            int y = 3;
+            switch (5) {
+                case 2:
+                    x = 2;
+                case 5:
+                    x = 5;
+                    y = 2;
+                    break;
+                default:
+                    x = 0;
+            }
+        }
+        "#,
+        ShaderStage::Vertex,
+    )
+    .unwrap();
+    let _program = parse_program(
+        r#"
+        #  version 450
+        void main() {
+            int x = 0;
+            while(x < 5) {
+                x = x + 1;
+            }
+            do {
+                x = x - 1;
+            } while(x >= 4)
+        }
+        "#,
+        ShaderStage::Vertex,
+    )
+    .unwrap();
+
+    let _program = parse_program(
+        r#"
+        #  version 450
+        void main() {
+            int x = 0;
+            for(int i = 0; i < 10;) {
+                x = x + 2;
+            }
+            return x;
+        }
+        "#,
+        ShaderStage::Vertex,
+    )
+    .unwrap();
+}
+
+#[test]
+fn textures() {
+    let _program = parse_program(
+        r#"
+        #version 450
+        layout(location = 0) in vec2 v_uv;
+        layout(location = 0) out vec4 o_color;
+        layout(set = 1, binding = 1) uniform texture2D tex;
+        layout(set = 1, binding = 2) uniform sampler tex_sampler;
+        void main() {
+            o_color = texture(sampler2D(tex, tex_sampler), v_uv);
+        }
+        "#,
+        ShaderStage::Fragment,
+    )
+    .unwrap();
+}

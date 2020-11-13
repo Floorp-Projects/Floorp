@@ -29,6 +29,7 @@ impl Clone for Resolution {
                     columns,
                     width,
                 },
+                #[allow(clippy::panic)]
                 _ => panic!("Unepxected clone type: {:?}", v),
             }),
         }
@@ -50,6 +51,14 @@ pub enum ResolveError {
     FunctionReturnsVoid,
     #[error("Type is not found in the given immutable arena")]
     TypeNotFound,
+    #[error("Incompatible operand: {op} {operand}")]
+    IncompatibleOperand { op: String, operand: String },
+    #[error("Incompatible operands: {left} {op} {right}")]
+    IncompatibleOperands {
+        op: String,
+        left: String,
+        right: String,
+    },
 }
 
 pub struct ResolveContext<'a> {
@@ -57,7 +66,7 @@ pub struct ResolveContext<'a> {
     pub global_vars: &'a Arena<crate::GlobalVariable>,
     pub local_vars: &'a Arena<crate::LocalVariable>,
     pub functions: &'a Arena<crate::Function>,
-    pub parameter_types: &'a [Handle<crate::Type>],
+    pub arguments: &'a [crate::FunctionArgument],
 }
 
 impl Typifier {
@@ -79,6 +88,16 @@ impl Typifier {
         match self.resolutions[expr_handle.index()] {
             Resolution::Handle(ty_handle) => &types[ty_handle].inner,
             Resolution::Value(ref inner) => inner,
+        }
+    }
+
+    pub fn get_handle(
+        &self,
+        expr_handle: Handle<crate::Expression>,
+    ) -> Option<Handle<crate::Type>> {
+        match self.resolutions[expr_handle.index()] {
+            Resolution::Handle(ty_handle) => Some(ty_handle),
+            Resolution::Value(_) => None,
         }
     }
 
@@ -105,7 +124,12 @@ impl Typifier {
                     kind: crate::ScalarKind::Float,
                     width,
                 }),
-                ref other => panic!("Can't access into {:?}", other),
+                ref other => {
+                    return Err(ResolveError::IncompatibleOperand {
+                        op: "access".to_string(),
+                        operand: format!("{:?}", other),
+                    })
+                }
             },
             crate::Expression::AccessIndex { base, index } => match *self.get(base, types) {
                 crate::TypeInner::Vector { size, kind, width } => {
@@ -135,12 +159,17 @@ impl Typifier {
                         .ok_or(ResolveError::InvalidAccessIndex)?;
                     Resolution::Handle(member.ty)
                 }
-                ref other => panic!("Can't access into {:?}", other),
+                ref other => {
+                    return Err(ResolveError::IncompatibleOperand {
+                        op: "access index".to_string(),
+                        operand: format!("{:?}", other),
+                    })
+                }
             },
             crate::Expression::Constant(h) => Resolution::Handle(ctx.constants[h].ty),
             crate::Expression::Compose { ty, .. } => Resolution::Handle(ty),
-            crate::Expression::FunctionParameter(index) => {
-                Resolution::Handle(ctx.parameter_types[index as usize])
+            crate::Expression::FunctionArgument(index) => {
+                Resolution::Handle(ctx.arguments[index as usize].ty)
             }
             crate::Expression::GlobalVariable(h) => Resolution::Handle(ctx.global_vars[h].ty),
             crate::Expression::LocalVariable(h) => Resolution::Handle(ctx.local_vars[h].ty),
@@ -192,7 +221,13 @@ impl Typifier {
                                 kind: crate::ScalarKind::Float,
                                 width,
                             }),
-                            _ => panic!("Incompatible arguments {:?} x {:?}", ty_left, ty_right),
+                            _ => {
+                                return Err(ResolveError::IncompatibleOperands {
+                                    op: "x".to_string(),
+                                    left: format!("{:?}", ty_left),
+                                    right: format!("{:?}", ty_right),
+                                })
+                            }
                         }
                     }
                 }
@@ -207,12 +242,10 @@ impl Typifier {
                 crate::BinaryOperator::And
                 | crate::BinaryOperator::ExclusiveOr
                 | crate::BinaryOperator::InclusiveOr
-                | crate::BinaryOperator::ShiftLeftLogical
-                | crate::BinaryOperator::ShiftRightLogical
-                | crate::BinaryOperator::ShiftRightArithmetic => {
-                    self.resolutions[left.index()].clone()
-                }
+                | crate::BinaryOperator::ShiftLeft
+                | crate::BinaryOperator::ShiftRight => self.resolutions[left.index()].clone(),
             },
+            crate::Expression::Select { accept, .. } => self.resolutions[accept.index()].clone(),
             crate::Expression::Intrinsic { .. } => unimplemented!(),
             crate::Expression::Transpose(expr) => match *self.get(expr, types) {
                 crate::TypeInner::Matrix {
@@ -224,7 +257,12 @@ impl Typifier {
                     rows: columns,
                     width,
                 }),
-                ref other => panic!("incompatible transpose of {:?}", other),
+                ref other => {
+                    return Err(ResolveError::IncompatibleOperand {
+                        op: "transpose".to_string(),
+                        operand: format!("{:?}", other),
+                    })
+                }
             },
             crate::Expression::DotProduct(left_expr, _) => match *self.get(left_expr, types) {
                 crate::TypeInner::Vector {
@@ -232,7 +270,12 @@ impl Typifier {
                     size: _,
                     width,
                 } => Resolution::Value(crate::TypeInner::Scalar { kind, width }),
-                ref other => panic!("incompatible dot of {:?}", other),
+                ref other => {
+                    return Err(ResolveError::IncompatibleOperand {
+                        op: "dot product".to_string(),
+                        operand: format!("{:?}", other),
+                    })
+                }
             },
             crate::Expression::CrossProduct(_, _) => unimplemented!(),
             crate::Expression::As {
@@ -248,7 +291,12 @@ impl Typifier {
                     size,
                     width,
                 } => Resolution::Value(crate::TypeInner::Vector { kind, size, width }),
-                ref other => panic!("incompatible as of {:?}", other),
+                ref other => {
+                    return Err(ResolveError::IncompatibleOperand {
+                        op: "as".to_string(),
+                        operand: format!("{:?}", other),
+                    })
+                }
             },
             crate::Expression::Derivative { .. } => unimplemented!(),
             crate::Expression::Call {
@@ -260,13 +308,23 @@ impl Typifier {
                     | crate::TypeInner::Scalar { kind, width } => {
                         Resolution::Value(crate::TypeInner::Scalar { kind, width })
                     }
-                    ref other => panic!("Unexpected argument {:?} on {}", other, name),
+                    ref other => {
+                        return Err(ResolveError::IncompatibleOperand {
+                            op: name.clone(),
+                            operand: format!("{:?}", other),
+                        })
+                    }
                 },
                 "dot" => match *self.get(arguments[0], types) {
                     crate::TypeInner::Vector { kind, width, .. } => {
                         Resolution::Value(crate::TypeInner::Scalar { kind, width })
                     }
-                    ref other => panic!("Unexpected argument {:?} on {}", other, name),
+                    ref other => {
+                        return Err(ResolveError::IncompatibleOperand {
+                            op: name.clone(),
+                            operand: format!("{:?}", other),
+                        })
+                    }
                 },
                 //Note: `cross` is here too, we still need to figure out what to do with it
                 "abs" | "atan2" | "cos" | "sin" | "floor" | "inverse" | "normalize" | "min"

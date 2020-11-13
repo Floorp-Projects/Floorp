@@ -13,8 +13,11 @@ namespace webgpu {
 GPU_IMPL_CYCLE_COLLECTION(ComputePipeline, mParent)
 GPU_IMPL_JS_WRAP(ComputePipeline)
 
-ComputePipeline::ComputePipeline(Device* const aParent, RawId aId)
-    : ChildOf(aParent), mId(aId) {}
+ComputePipeline::ComputePipeline(Device* const aParent, RawId aId,
+                                 nsTArray<RawId>&& aImplicitBindGroupLayoutIds)
+    : ChildOf(aParent),
+      mImplicitBindGroupLayoutIds(std::move(aImplicitBindGroupLayoutIds)),
+      mId(aId) {}
 
 ComputePipeline::~ComputePipeline() { Cleanup(); }
 
@@ -26,6 +29,13 @@ void ComputePipeline::Cleanup() {
       bridge->SendComputePipelineDestroy(mId);
     }
   }
+}
+
+already_AddRefed<BindGroupLayout> ComputePipeline::GetBindGroupLayout(
+    uint32_t index) const {
+  RefPtr<BindGroupLayout> object =
+      new BindGroupLayout(mParent, mImplicitBindGroupLayoutIds[index]);
+  return object.forget();
 }
 
 }  // namespace webgpu
