@@ -21,7 +21,6 @@
 
 class nsPIDOMWindowInner;
 class nsContentPermissionRequestProxy;
-class VisibilityChangeListener;
 
 // Forward declare IPC::Principal here which is defined in
 // PermissionMessageUtils.h. Include this file will transitively includes
@@ -166,10 +165,7 @@ class nsContentPermissionRequestProxy : public nsIContentPermissionRequest {
 
   void OnParentDestroyed();
 
-  void NotifyVisibility(const bool& aIsVisible);
-
  private:
-
   virtual ~nsContentPermissionRequestProxy();
 
   // Non-owning pointer to the ContentPermissionRequestParent object which owns
@@ -182,11 +178,9 @@ class nsContentPermissionRequestProxy : public nsIContentPermissionRequest {
  * RemotePermissionRequest will send a prompt ipdl request to b2g process.
  */
 class RemotePermissionRequest final
-    : public nsIContentPermissionRequestCallback,
-      public mozilla::dom::PContentPermissionRequestChild {
+    : public mozilla::dom::PContentPermissionRequestChild {
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICONTENTPERMISSIONREQUESTCALLBACK
+  NS_INLINE_DECL_REFCOUNTING(RemotePermissionRequest)
 
   RemotePermissionRequest(nsIContentPermissionRequest* aRequest,
                           nsPIDOMWindowInner* aWindow);
@@ -196,8 +190,6 @@ class RemotePermissionRequest final
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvNotifyResult(
       const bool& aAllow, nsTArray<PermissionChoice>&& aChoices);
-
-  mozilla::ipc::IPCResult RecvGetVisibility();
 
   void IPDLAddRef() {
     mIPCOpen = true;
@@ -225,7 +217,6 @@ class RemotePermissionRequest final
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   bool mIPCOpen;
   bool mDestroyed;
-  RefPtr<VisibilityChangeListener> mListener;
 };
 
 #endif  // nsContentPermissionHelper_h

@@ -28,17 +28,6 @@ interface nsIContentPermissionType : nsISupports {
 };
 
 /**
- *  Interface provides the callback type.
- */
-[scriptable, uuid(5fb5bb60-7069-11e4-9803-0800200c9a66)]
-interface nsIContentPermissionRequestCallback : nsISupports {
-  /**
-   * The callback of the visibility result.
-   */
-  void notifyVisibility(in boolean isVisible);
-};
-
-/**
  * Interface allows access to a content to request
  * permission to perform a privileged operation such as
  * geolocation.
