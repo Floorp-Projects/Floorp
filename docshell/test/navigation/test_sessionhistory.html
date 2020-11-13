@@ -74,7 +74,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
         "file_bug462076_2.html",         // Dynamic frames when handling onload
         "file_bug462076_3.html",         // Dynamic frames after onload
         // "file_static_and_dynamic_1.html",// Static and dynamic frames and forward-back
-        "file_scrollRestoration.html",
         "file_bug1300461.html",
         "file_bug1326251.html",
         "file_bug1379762-1.html",
@@ -99,14 +98,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
         }
         SimpleTest.finish();
       }
-    }
-
-    async function case3WaitForBlank() {
-      let loaded = SimpleTest.promiseWaitForCondition(() => {
-        return testWindow.location.href == "about:blank";
-      });
-      await loaded;
-      SpecialPowers.wrap(testWindow).history.back();
     }
 
     function nextTest() {
