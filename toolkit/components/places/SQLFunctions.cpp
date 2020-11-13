@@ -239,28 +239,6 @@ getSharedUTF8String(mozIStorageValueArray* aValues, uint32_t aIndex) {
   return nsDependentCString(str, len);
 }
 
-class MOZ_STACK_CLASS GetQueryParamIterator final
-    : public URLParams::ForEachIterator {
- public:
-  explicit GetQueryParamIterator(const nsCString& aParamName,
-                                 nsVariant* aResult)
-      : mParamName(aParamName), mResult(aResult) {}
-
-  bool URLParamsIterator(const nsAString& aName,
-                         const nsAString& aValue) override {
-    NS_ConvertUTF16toUTF8 name(aName);
-    if (!mParamName.Equals(name)) {
-      return true;
-    }
-    mResult->SetAsAString(aValue);
-    return false;
-  }
-
- private:
-  const nsCString& mParamName;
-  nsVariant* mResult;
-};
-
 /**
  * Gets the length of the prefix in a URI spec.  "Prefix" is defined to be the
  * scheme, colon, and, if present, two slashes.
@@ -1003,8 +981,16 @@ GetQueryParamFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
 
   RefPtr<nsVariant> result = new nsVariant();
   if (!queryString.IsEmpty() && !paramName.IsEmpty()) {
-    GetQueryParamIterator iterator(paramName, result);
-    URLParams::Parse(queryString, iterator);
+    URLParams::Parse(
+        queryString,
+        [&paramName, &result](const nsAString& aName, const nsAString& aValue) {
+          NS_ConvertUTF16toUTF8 name(aName);
+          if (!paramName.Equals(name)) {
+            return true;
+          }
+          result->SetAsAString(aValue);
+          return false;
+        });
   }
 
   result.forget(_result);

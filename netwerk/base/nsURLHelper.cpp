@@ -1022,76 +1022,43 @@ void URLParams::DecodeString(const nsACString& aInput, nsAString& aOutput) {
 }
 
 /* static */
-bool URLParams::Parse(const nsACString& aInput, ForEachIterator& aIterator) {
-  const auto* start = aInput.BeginReading();
-  const auto* const end = aInput.EndReading();
-  const auto* iter = start;
+bool URLParams::ParseNextInternal(const char*& aStart, const char* const aEnd,
+                                  nsAString* aOutDecodedName,
+                                  nsAString* aOutDecodedValue) {
+  nsDependentCSubstring string;
 
-  while (start != end) {
-    nsDependentCSubstring string;
-
-    iter = std::find(iter, end, '&');
-    if (iter != end) {
-      string.Rebind(start, iter);
-      start = ++iter;
-    } else {
-      string.Rebind(start, end);
-      start = end;
-    }
-
-    if (string.IsEmpty()) {
-      continue;
-    }
-
-    const auto* const eqStart = string.BeginReading();
-    const auto* const eqEnd = string.EndReading();
-    const auto* eqIter = eqStart;
-
-    nsDependentCSubstring name;
-    nsDependentCSubstring value;
-
-    eqIter = std::find(eqIter, eqEnd, '=');
-    if (eqIter != eqEnd) {
-      name.Rebind(eqStart, eqIter);
-
-      ++eqIter;
-      value.Rebind(eqIter, eqEnd);
-    } else {
-      name.Rebind(string, 0);
-    }
-
-    nsAutoString decodedName;
-    DecodeString(name, decodedName);
-
-    nsAutoString decodedValue;
-    DecodeString(value, decodedValue);
-
-    if (!aIterator.URLParamsIterator(decodedName, decodedValue)) {
-      return false;
-    }
+  const char* const iter = std::find(aStart, aEnd, '&');
+  if (iter != aEnd) {
+    string.Rebind(aStart, iter);
+    aStart = iter + 1;
+  } else {
+    string.Rebind(aStart, aEnd);
+    aStart = aEnd;
   }
+
+  if (string.IsEmpty()) {
+    return false;
+  }
+
+  const auto* const eqStart = string.BeginReading();
+  const auto* const eqEnd = string.EndReading();
+  const auto* const eqIter = std::find(eqStart, eqEnd, '=');
+
+  nsDependentCSubstring name;
+  nsDependentCSubstring value;
+
+  if (eqIter != eqEnd) {
+    name.Rebind(eqStart, eqIter);
+    value.Rebind(eqIter + 1, eqEnd);
+  } else {
+    name.Rebind(string, 0);
+  }
+
+  DecodeString(name, *aOutDecodedName);
+  DecodeString(value, *aOutDecodedValue);
+
   return true;
 }
-
-class MOZ_STACK_CLASS ExtractURLParam final
-    : public URLParams::ForEachIterator {
- public:
-  explicit ExtractURLParam(const nsAString& aName, nsAString& aValue)
-      : mName(aName), mValue(aValue) {}
-
-  bool URLParamsIterator(const nsAString& aName,
-                         const nsAString& aValue) override {
-    if (mName == aName) {
-      mValue = aValue;
-      return false;
-    }
-    return true;
-  }
-
- private:
-  const nsAString& mName;
-  nsAString& mValue;
-};
 
 /**
  * Extracts the first form-urlencoded parameter named `aName` from `aInput`.
@@ -1104,33 +1071,24 @@ class MOZ_STACK_CLASS ExtractURLParam final
 bool URLParams::Extract(const nsACString& aInput, const nsAString& aName,
                         nsAString& aValue) {
   aValue.SetIsVoid(true);
-  ExtractURLParam iterator(aName, aValue);
-  return !URLParams::Parse(aInput, iterator);
+  return !URLParams::Parse(
+      aInput, [&aName, &aValue](const nsAString& name, nsString&& value) {
+        if (aName == name) {
+          aValue = std::move(value);
+          return false;
+        }
+        return true;
+      });
 }
-
-class MOZ_STACK_CLASS PopulateIterator final
-    : public URLParams::ForEachIterator {
- public:
-  explicit PopulateIterator(URLParams* aParams) : mParams(aParams) {
-    MOZ_ASSERT(aParams);
-  }
-
-  bool URLParamsIterator(const nsAString& aName,
-                         const nsAString& aValue) override {
-    mParams->Append(aName, aValue);
-    return true;
-  }
-
- private:
-  URLParams* mParams;
-};
 
 void URLParams::ParseInput(const nsACString& aInput) {
   // Remove all the existing data before parsing a new input.
   DeleteAll();
 
-  PopulateIterator iter(this);
-  URLParams::Parse(aInput, iter);
+  URLParams::Parse(aInput, [this](nsString&& name, nsString&& value) {
+    mParams.AppendElement(Param{std::move(name), std::move(value)});
+    return true;
+  });
 }
 
 namespace {
