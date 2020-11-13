@@ -639,6 +639,8 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
                 NS_DispatchToCurrentThreadQueue(vsyncEvent.forget(), slowRate,
                                                 EventQueuePriority::Idle);
               }
+              // Pretend that RefreshDriver did run on time.
+              mVsyncRefreshDriverTimer->mLastFireTime = TimeStamp::Now();
               return;
             }
           }
