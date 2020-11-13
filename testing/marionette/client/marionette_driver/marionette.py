@@ -1183,7 +1183,7 @@ class Marionette(object):
             exc_type, value, tb = sys.exc_info()
             if self.instance and self.instance.runner.is_running():
                 self.instance.close()
-            reraise(exc_type, exctype(value.message), tb)
+            reraise(exc_type, exc_type(value.message), tb)
 
         self.session_id = resp["sessionId"]
         self.session = resp["capabilities"]
