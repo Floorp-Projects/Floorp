@@ -227,6 +227,38 @@ add_task(async function test_serps_are_equivalent() {
   Assert.ok(UrlbarSearchUtils.serpsAreEquivalent(url1, url2, ["abc", "foo"]));
 });
 
+add_task(async function test_get_root_domain_from_engine() {
+  let engine = await Services.search.addEngineWithDetails("TestEngine2", {
+    template: "http://example.com",
+  });
+  Assert.equal(UrlbarSearchUtils.getRootDomainFromEngine(engine), "example");
+  await Services.search.removeEngine(engine);
+
+  engine = await Services.search.addEngineWithDetails("TestEngine", {
+    template: "http://www.subdomain.othersubdomain.example.com",
+  });
+  Assert.equal(UrlbarSearchUtils.getRootDomainFromEngine(engine), "example");
+  await Services.search.removeEngine(engine);
+
+  // We let engines with URL ending in .test through even though its not a valid
+  // TLD.
+  engine = await Services.search.addEngineWithDetails("TestMalformed", {
+    template: `http://mochi.test/?search={searchTerms}`,
+  });
+  Assert.equal(UrlbarSearchUtils.getRootDomainFromEngine(engine), "mochi");
+  await Services.search.removeEngine(engine);
+
+  // We return the domain for engines with a malformed URL.
+  engine = await Services.search.addEngineWithDetails("TestMalformed", {
+    template: `http://subdomain.foobar/?search={searchTerms}`,
+  });
+  Assert.equal(
+    UrlbarSearchUtils.getRootDomainFromEngine(engine),
+    "subdomain.foobar"
+  );
+  await Services.search.removeEngine(engine);
+});
+
 function promiseSearchTopic(expectedVerb) {
   return new Promise(resolve => {
     Services.obs.addObserver(function observe(subject, topic, verb) {
