@@ -37,7 +37,7 @@ templates['ho2_sharebutton'] = template({"compiler":[6,">= 2.0.0-beta.1"],"main"
     return "<div class=\"pkt_ext_detail pkt_ext_saved_sendtomobile\">\n    <button id=\"pkt_ext_sendtomobile_button\" class=\"pkt_ext_button\">\n        <span class=\"pkt_ext_save_title_wrapper pkt_ext_mobile_icon\">\n            <span class=\"pkt_ext_logo_action_copy\">Send to your phone</span>\n        </span>\n    </button>\n</div>\n";
 },"useData":true});
 templates['variant_a'] = template({"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
-    return "<div class=\"los_variant_wrapper\">\n  <div class=\"los_variant_top\">\n    <h1>Click this [v] button to save articles, videos, and links to Pocket.</h1>\n    <p>Enjoy everything you save, on any device.</p>\n    <a href=\"#TODO\">Learn more ›</a>\n  </div>\n\n  <div class=\"los_variant_bottom\">\n    <a class=\"los_variant_button\" href=\"#TODO\">Get Pocket for free</a>\n    <p class=\"los_variant_sub\">Already a Pocket user? <a href=\"#TODO\">Log in.</a></p>\n  </div>\n</div>\n";
+    return "<div class=\"los_variant_wrapper\">\n  <div class=\"los_variant_top\">\n    <h1>Click this [v] button to save articles, videos, and links to Pocket.</h1>\n    <p>Enjoy everything you save, on any device.</p>\n    <a class=\"pkt_ext_learnmore\" href=\"#TODO\">Learn more ›</a>\n  </div>\n\n  <div class=\"los_variant_bottom\">\n    <a class=\"los_variant_button\" href=\"#TODO\">Get Pocket for free</a>\n    <p class=\"los_variant_sub\">Already a Pocket user? <a href=\"#TODO\">Log in.</a></p>\n  </div>\n</div>\n";
 },"useData":true});
 templates['variant_b'] = template({"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
     return "<div class=\"los_variant_wrapper\">\n  <div class=\"los_variant_top\">\n    <h1>Here's your save button for the internet.</h1>\n    <a href=\"#TODO\">Learn more ›</a>\n  </div>\n\n  <div class=\"los_variant_bottom\">\n    <a class=\"los_variant_button\" href=\"#TODO\">Get Pocket for free</a>\n    <p class=\"los_variant_sub\">Already a Pocket user? <a href=\"#TODO\">Log in.</a></p>\n  </div>\n</div>\n";
@@ -128,7 +128,7 @@ templates['signup_shell'] = template({"1":function(depth0,helpers,partials,data)
     + alias3(((helper = (helper = helpers.signupfirefox || (depth0 != null ? depth0.signupfirefox : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"signupfirefox","hash":{},"data":data}) : helper)))
     + "</span></a></p>\n	<p class=\"alreadyhave\">"
     + alias3(((helper = (helper = helpers.alreadyhaveacct || (depth0 != null ? depth0.alreadyhaveacct : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"alreadyhaveacct","hash":{},"data":data}) : helper)))
-    + " <a href=\"https://"
+    + " <a class=\"pkt_ext_login\" href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/login?ep=3&src=extension&s=ffi&t=login&v="
     + alias3(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"variant","hash":{},"data":data}) : helper)))
@@ -158,7 +158,7 @@ templates['signup_shell'] = template({"1":function(depth0,helpers,partials,data)
     + alias3(((helper = (helper = helpers.signupemail || (depth0 != null ? depth0.signupemail : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"signupemail","hash":{},"data":data}) : helper)))
     + "</a></p>\n			<p class=\"alreadyhave\">"
     + alias3(((helper = (helper = helpers.alreadyhaveacct || (depth0 != null ? depth0.alreadyhaveacct : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"alreadyhaveacct","hash":{},"data":data}) : helper)))
-    + " <a href=\"https://"
+    + " <a class=\"pkt_ext_login\" href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/login?ep=3&tv=panel_control&src=extension&s=ffi&t=login&v="
     + alias3(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"variant","hash":{},"data":data}) : helper)))
@@ -174,7 +174,7 @@ templates['signup_shell'] = template({"1":function(depth0,helpers,partials,data)
     + alias3(((helper = (helper = helpers.tryitnow || (depth0 != null ? depth0.tryitnow : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"tryitnow","hash":{},"data":data}) : helper)))
     + "</span></a></p>\n			<p class=\"alreadyhave tryitnowspace\">"
     + alias3(((helper = (helper = helpers.alreadyhaveacct || (depth0 != null ? depth0.alreadyhaveacct : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"alreadyhaveacct","hash":{},"data":data}) : helper)))
-    + " <a href=\"https://"
+    + " <a class=\"pkt_ext_login\" href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/login?ep=3&s=ffi&tv=panel_tryit&src=extension&t=login&v="
     + alias3(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"variant","hash":{},"data":data}) : helper)))
@@ -237,7 +237,7 @@ templates['signupstoryboard_shell'] = template({"1":function(depth0,helpers,part
     + alias3(((helper = (helper = helpers.signupfirefox || (depth0 != null ? depth0.signupfirefox : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"signupfirefox","hash":{},"data":data}) : helper)))
     + "</span></a></p>\n	<p class=\"alreadyhave\">"
     + alias3(((helper = (helper = helpers.alreadyhaveacct || (depth0 != null ? depth0.alreadyhaveacct : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"alreadyhaveacct","hash":{},"data":data}) : helper)))
-    + " <a href=\"https://"
+    + " <a class=\"pkt_ext_login\" href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/login?ep=3&src=extension&s=ffi&t=login&v="
     + alias3(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"variant","hash":{},"data":data}) : helper)))
@@ -267,7 +267,7 @@ templates['signupstoryboard_shell'] = template({"1":function(depth0,helpers,part
     + alias3(((helper = (helper = helpers.signupemail || (depth0 != null ? depth0.signupemail : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"signupemail","hash":{},"data":data}) : helper)))
     + "</a></p>\n			<p class=\"alreadyhave\">"
     + alias3(((helper = (helper = helpers.alreadyhaveacct || (depth0 != null ? depth0.alreadyhaveacct : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"alreadyhaveacct","hash":{},"data":data}) : helper)))
-    + " <a href=\"https://"
+    + " <a class=\"pkt_ext_login\" href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/login?ep=3&tv=panel_control&src=extension&s=ffi&t=login&v="
     + alias3(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"variant","hash":{},"data":data}) : helper)))
@@ -283,7 +283,7 @@ templates['signupstoryboard_shell'] = template({"1":function(depth0,helpers,part
     + alias3(((helper = (helper = helpers.tryitnow || (depth0 != null ? depth0.tryitnow : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"tryitnow","hash":{},"data":data}) : helper)))
     + "</span></a></p>\n			<p class=\"alreadyhave tryitnowspace\">"
     + alias3(((helper = (helper = helpers.alreadyhaveacct || (depth0 != null ? depth0.alreadyhaveacct : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"alreadyhaveacct","hash":{},"data":data}) : helper)))
-    + " <a href=\"https://"
+    + " <a class=\"pkt_ext_login\" href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/login?ep=3&s=ffi&tv=panel_tryit&src=extension&t=login&v="
     + alias3(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"variant","hash":{},"data":data}) : helper)))
