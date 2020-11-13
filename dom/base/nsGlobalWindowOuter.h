@@ -685,20 +685,20 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   }
 
  public:
-  int32_t GetInnerWidthOuter(mozilla::ErrorResult& aError);
+  double GetInnerWidthOuter(mozilla::ErrorResult& aError);
 
  protected:
-  nsresult GetInnerWidth(int32_t* aWidth) override;
-  void SetInnerWidthOuter(int32_t aInnerWidth,
+  nsresult GetInnerWidth(double* aWidth) override;
+  void SetInnerWidthOuter(double aInnerWidth,
                           mozilla::dom::CallerType aCallerType,
                           mozilla::ErrorResult& aError);
 
  public:
-  int32_t GetInnerHeightOuter(mozilla::ErrorResult& aError);
+  double GetInnerHeightOuter(mozilla::ErrorResult& aError);
 
  protected:
-  nsresult GetInnerHeight(int32_t* aHeight) override;
-  void SetInnerHeightOuter(int32_t aInnerHeight,
+  nsresult GetInnerHeight(double* aHeight) override;
+  void SetInnerHeightOuter(double aInnerHeight,
                            mozilla::dom::CallerType aCallerType,
                            mozilla::ErrorResult& aError);
   int32_t GetScreenXOuter(mozilla::dom::CallerType aCallerType,
@@ -852,7 +852,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   int32_t GetScrollBoundaryOuter(mozilla::Side aSide);
 
   // Outer windows only.
-  nsresult GetInnerSize(mozilla::CSSIntSize& aSize);
+  nsresult GetInnerSize(mozilla::CSSSize& aSize);
   nsIntSize GetOuterSize(mozilla::dom::CallerType aCallerType,
                          mozilla::ErrorResult& aError);
   void SetOuterSize(int32_t aLengthCSSPixels, bool aIsWidth,

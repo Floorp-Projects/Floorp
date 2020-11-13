@@ -1901,6 +1901,12 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+# Whether innerWidth / innerHeight return rounded or fractional sizes.
+- name: dom.innerSize.rounded
+  type: bool
+  value: @IS_NOT_NIGHTLY_BUILD@
+  mirror: always
+
 # Whether we conform to Input Events Level 1 or Input Events Level 2.
 # true:  conforming to Level 1
 # false: conforming to Level 2

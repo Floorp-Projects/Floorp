@@ -297,9 +297,16 @@ nsresult nsScreen::GetWindowInnerRect(nsRect& aRect) {
   if (!win) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = win->GetInnerWidth(&aRect.width);
+  double width;
+  double height;
+  nsresult rv = win->GetInnerWidth(&width);
   NS_ENSURE_SUCCESS(rv, rv);
-  return win->GetInnerHeight(&aRect.height);
+  rv = win->GetInnerHeight(&height);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // FIXME(emilio): This is an nsRect but should really be a CSSIntRect, these
+  // are CSS pixels!
+  aRect.SizeTo(std::round(width), std::round(height));
+  return NS_OK;
 }
 
 bool nsScreen::ShouldResistFingerprinting() const {

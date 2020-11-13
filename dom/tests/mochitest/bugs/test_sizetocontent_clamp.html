@@ -42,6 +42,7 @@ function test() {
 
   SimpleTest.waitForFocus(function() {
     w.onresize = function() {
+      info(`got resize: ${w.innerWidth} ${w.innerHeight}`);
 
       if (w.innerWidth > 300 - epsilon || isExecuted) {
         return;
