@@ -97,14 +97,13 @@ pub fn lut_interp_linear16(mut input_value: u16, mut table: &[u16]) -> u16 {
 }
 /* same as above but takes an input_value from 0..PRECACHE_OUTPUT_MAX
  * and returns a uint8_t value representing a range from 0..1 */
-unsafe extern "C" fn lut_interp_linear_precache_output(
+fn lut_interp_linear_precache_output(
     mut input_value: u32,
-    mut table: *const u16,
-    mut length: i32,
+    mut table: &[u16]
 ) -> u8 {
     /* Start scaling input_value to the length of the array: PRECACHE_OUTPUT_MAX*(length-1).
      * We'll divide out the PRECACHE_OUTPUT_MAX next */
-    let mut value: u32 = input_value * (length - 1) as libc::c_uint;
+    let mut value: u32 = input_value * (table.len() - 1) as libc::c_uint;
     /* equivalent to ceil(value/PRECACHE_OUTPUT_MAX) */
     let mut upper: u32 =
         (value + PRECACHE_OUTPUT_MAX as libc::c_uint - 1) / PRECACHE_OUTPUT_MAX as libc::c_uint;
@@ -113,10 +112,9 @@ unsafe extern "C" fn lut_interp_linear_precache_output(
     /* interp is the distance from upper to value scaled to 0..PRECACHE_OUTPUT_MAX */
     let mut interp: u32 = value % PRECACHE_OUTPUT_MAX as libc::c_uint;
     /* the table values range from 0..65535 */
-    value = *table.offset(upper as isize) as libc::c_uint * interp
-        + *table.offset(lower as isize) as libc::c_uint
-            * (PRECACHE_OUTPUT_MAX as libc::c_uint - interp); // 0..(65535*PRECACHE_OUTPUT_MAX)
-                                                              /* round and scale */
+    value = table[upper as usize] as libc::c_uint * interp
+        + table[lower as usize] as libc::c_uint * (PRECACHE_OUTPUT_MAX as libc::c_uint - interp); // 0..(65535*PRECACHE_OUTPUT_MAX)
+                                                                                                 /* round and scale */
     value = value + (PRECACHE_OUTPUT_MAX * 65535 / 255 / 2) as libc::c_uint; // scale to 0..255
     value = value / (PRECACHE_OUTPUT_MAX * 65535 / 255) as libc::c_uint;
     return value as u8;
@@ -384,29 +382,26 @@ fn invert_lut(mut table: &[u16], mut out_length: i32) -> Vec<u16> {
     }
     return output;
 }
-unsafe extern "C" fn compute_precache_pow(mut output: *mut u8, mut gamma: f32) {
+fn compute_precache_pow(output: &mut [u8; PRECACHE_OUTPUT_SIZE], mut gamma: f32) {
     let mut v: u32 = 0;
     while v < PRECACHE_OUTPUT_SIZE as u32 {
         //XXX: don't do integer/float conversion... and round?
-        *output.offset(v as isize) =
+        output[v as usize] =
             (255.0f64 * (v as f64 / PRECACHE_OUTPUT_MAX as f64).powf(gamma as f64)) as u8;
         v = v + 1
     }
 }
-#[no_mangle]
-pub unsafe extern "C" fn compute_precache_lut(
+pub fn compute_precache_lut(
     mut output: &mut [u8; PRECACHE_OUTPUT_SIZE],
-    mut table: *mut u16,
-    mut length: i32,
+    mut table: &[u16],
 ) {
     let mut v: u32 = 0;
     while v < PRECACHE_OUTPUT_SIZE as u32 {
-        output[v as usize] = lut_interp_linear_precache_output(v, table, length);
+        output[v as usize] = lut_interp_linear_precache_output(v, table);
         v = v + 1
     }
 }
-#[no_mangle]
-pub unsafe extern "C" fn compute_precache_linear(mut output: &mut [u8; PRECACHE_OUTPUT_SIZE]) {
+pub fn compute_precache_linear(mut output: &mut[u8; PRECACHE_OUTPUT_SIZE]) {
     let mut v: u32 = 0;
     while v < PRECACHE_OUTPUT_SIZE as u32 {
         //XXX: round?
@@ -414,11 +409,7 @@ pub unsafe extern "C" fn compute_precache_linear(mut output: &mut [u8; PRECACHE_
         v = v + 1
     }
 }
-#[no_mangle]
-pub unsafe extern "C" fn compute_precache(
-    mut trc: &curveType,
-    mut output: &mut [u8; PRECACHE_OUTPUT_SIZE],
-) -> bool {
+pub fn compute_precache(mut trc: &curveType, mut output: &mut [u8; PRECACHE_OUTPUT_SIZE]) -> bool {
     match trc {
         curveType::Parametric(params) => {
             let mut gamma_table = Vec::with_capacity(256);
@@ -439,14 +430,14 @@ pub unsafe extern "C" fn compute_precache(
                 inverted_size = 256
             }
             let mut inverted = invert_lut(&gamma_table_uint, inverted_size);
-            compute_precache_lut(output, inverted.as_mut_ptr(), inverted_size);
+            compute_precache_lut(output, &inverted);
         }
         curveType::Curve(data) => {
             if data.len() == 0 {
                 compute_precache_linear(output);
             } else if data.len() == 1 {
                 compute_precache_pow(
-                    output.as_mut_ptr(),
+                    output,
                     (1.0f64 / u8Fixed8Number_to_float(data[0]) as f64) as f32,
                 );
             } else {
@@ -459,7 +450,7 @@ pub unsafe extern "C" fn compute_precache(
                     inverted_size_0 = 256
                 } //XXX turn this conversion into a function
                 let mut inverted_0 = invert_lut(data, inverted_size_0);
-                compute_precache_lut(output, inverted_0.as_mut_ptr(), inverted_size_0);
+                compute_precache_lut(output, &inverted_0);
             }
         }
     }
