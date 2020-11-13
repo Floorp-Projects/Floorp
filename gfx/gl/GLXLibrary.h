@@ -154,6 +154,10 @@ class GLXLibrary final {
                              int interval) const
       VOID_WRAP(fSwapIntervalEXT(dpy, drawable, interval))
 
+          int fQueryDrawable(Display* dpy, GLXDrawable drawable, int attribute,
+                             unsigned int* value) const
+      WRAP(fQueryDrawable(dpy, drawable, attribute, value))
+
 #undef WRAP
 #undef VOID_WRAP
 #undef BEFORE_CALL
@@ -176,6 +180,10 @@ class GLXLibrary final {
   bool SupportsTextureFromPixmap(gfxASurface* aSurface);
   bool SupportsVideoSync();
   bool SupportsSwapControl() const { return bool(mSymbols.fSwapIntervalEXT); }
+  bool SupportsBufferAge() const {
+    MOZ_ASSERT(mInitialized);
+    return mHasBufferAge;
+  }
   bool IsATI() { return mIsATI; }
   bool IsMesa() { return mClientIsMesa; }
 
@@ -214,6 +222,7 @@ class GLXLibrary final {
     int(GLAPIENTRY* fGetVideoSyncSGI)(unsigned int*);
     int(GLAPIENTRY* fWaitVideoSyncSGI)(int, int, unsigned int*);
     void(GLAPIENTRY* fSwapIntervalEXT)(Display*, GLXDrawable, int);
+    int(GLAPIENTRY* fQueryDrawable)(Display*, GLXDrawable, int, unsigned int*);
   } mSymbols = {};
 
 #ifdef DEBUG
@@ -229,6 +238,7 @@ class GLXLibrary final {
   bool mHasVideoMemoryPurge = false;
   bool mHasCreateContextAttribs = false;
   bool mHasVideoSync = false;
+  bool mHasBufferAge = false;
   bool mIsATI = false;
   bool mIsNVIDIA = false;
   bool mClientIsMesa = false;
