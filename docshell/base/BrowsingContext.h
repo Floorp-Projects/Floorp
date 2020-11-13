@@ -407,8 +407,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   already_AddRefed<BrowsingContext> GetOnePermittedSandboxedNavigator() const {
     return Get(GetOnePermittedSandboxedNavigatorId());
   }
-  MOZ_MUST_USE nsresult
-  SetOnePermittedSandboxedNavigator(BrowsingContext* aNavigator) {
+  [[nodiscard]] nsresult SetOnePermittedSandboxedNavigator(
+      BrowsingContext* aNavigator) {
     if (GetOnePermittedSandboxedNavigatorId()) {
       MOZ_ASSERT(false,
                  "One Permitted Sandboxed Navigator should only be set once.");
@@ -503,8 +503,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   }
 
   // ScreenOrientation related APIs
-  MOZ_MUST_USE nsresult SetCurrentOrientation(OrientationType aType,
-                                              float aAngle) {
+  [[nodiscard]] nsresult SetCurrentOrientation(OrientationType aType,
+                                               float aAngle) {
     Transaction txn;
     txn.SetCurrentOrientationType(aType);
     txn.SetCurrentOrientationAngle(aAngle);
@@ -619,7 +619,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   void StartDelayedAutoplayMediaComponents();
 
-  MOZ_MUST_USE nsresult ResetGVAutoplayRequestStatus();
+  [[nodiscard]] nsresult ResetGVAutoplayRequestStatus();
 
   /**
    * Information required to initialize a BrowsingContext in another process.
