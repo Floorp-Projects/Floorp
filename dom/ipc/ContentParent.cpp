@@ -4504,6 +4504,23 @@ mozilla::ipc::IPCResult ContentParent::RecvConsoleMessage(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvReportFrameTimingData(
+    uint64_t aInnerWindowId, const nsString& entryName,
+    const nsString& initiatorType, UniquePtr<PerformanceTimingData>&& aData) {
+  RefPtr<WindowGlobalParent> parent =
+      WindowGlobalParent::GetByInnerWindowId(aInnerWindowId);
+  if (!parent || !parent->GetContentParent()) {
+    return IPC_OK();
+  }
+
+  MOZ_ASSERT(parent->GetContentParent() != this,
+             "No need to bounce around if in the same process");
+
+  Unused << parent->GetContentParent()->SendReportFrameTimingData(
+      aInnerWindowId, entryName, initiatorType, std::move(aData));
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvScriptError(
     const nsString& aMessage, const nsString& aSourceName,
     const nsString& aSourceLine, const uint32_t& aLineNumber,

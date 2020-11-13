@@ -34,6 +34,9 @@ class PerformanceMainThread final : public Performance,
 
   virtual void AddEntry(nsIHttpChannel* channel,
                         nsITimedChannel* timedChannel) override;
+  virtual void AddEntry(const nsString& entryName,
+                        const nsString& initiatorType,
+                        UniquePtr<PerformanceTimingData>&& aData) override;
 
   void AddRawEntry(UniquePtr<PerformanceTimingData>,
                    const nsAString& aInitiatorType,
