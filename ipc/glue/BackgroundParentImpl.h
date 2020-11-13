@@ -392,7 +392,7 @@ class BackgroundParentImpl : public PBackgroundParent,
       const PrincipalInfo& aPrincipalInfo) override;
 
   mozilla::ipc::IPCResult RecvEnsureRDDProcessAndCreateBridge(
-      EnsureRDDProcessAndCreateBridgeResolver&& aResolver) override;
+      nsresult* aRv, Endpoint<PRemoteDecoderManagerChild>* aEndpoint) override;
 
   bool DeallocPEndpointForReportParent(
       PEndpointForReportParent* aActor) override;

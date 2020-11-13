@@ -39,6 +39,7 @@ OpusDataDecoder::OpusDataDecoder(const CreateDecoderParams& aParams)
           CreateDecoderParams::Option::DefaultPlaybackDeviceMono)) {}
 
 OpusDataDecoder::~OpusDataDecoder() {
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
   if (mOpusDecoder) {
     opus_multistream_decoder_destroy(mOpusDecoder);
     mOpusDecoder = nullptr;
@@ -46,8 +47,7 @@ OpusDataDecoder::~OpusDataDecoder() {
 }
 
 RefPtr<ShutdownPromise> OpusDataDecoder::Shutdown() {
-  // mThread may not be set if Init hasn't been called first.
-  MOZ_ASSERT(!mThread || mThread->IsOnCurrentThread());
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
   return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
