@@ -68,30 +68,26 @@ class ScrollPositionUpdate {
 
   // Create a ScrollPositionUpdate for a newly created (or reconstructed)
   // scrollframe.
-  static ScrollPositionUpdate NewScrollframe(
-      const ScrollGeneration& aGeneration, nsPoint aInitialPosition);
+  static ScrollPositionUpdate NewScrollframe(nsPoint aInitialPosition);
   // Create a ScrollPositionUpdate for a new absolute/instant scroll, to
   // the given destination.
-  static ScrollPositionUpdate NewScroll(const ScrollGeneration& aGeneration,
-                                        ScrollOrigin aOrigin,
+  static ScrollPositionUpdate NewScroll(ScrollOrigin aOrigin,
                                         nsPoint aDestination);
   // Create a ScrollPositionUpdate for a new relative/instant scroll, with
   // the given source/destination.
-  static ScrollPositionUpdate NewRelativeScroll(
-      const ScrollGeneration& aGeneration, nsPoint aSource,
-      nsPoint aDestination);
+  static ScrollPositionUpdate NewRelativeScroll(nsPoint aSource,
+                                                nsPoint aDestination);
   // Create a ScrollPositionUpdate for a new absolute/smooth scroll, which
   // animates smoothly to the given destination from whatever the current
   // scroll position is in the receiver.
-  static ScrollPositionUpdate NewSmoothScroll(
-      const ScrollGeneration& aGeneration, ScrollOrigin aOrigin,
-      nsPoint aDestination);
+  static ScrollPositionUpdate NewSmoothScroll(ScrollOrigin aOrigin,
+                                              nsPoint aDestination);
   // Create a ScrollPositionUpdate for a new pure-relative scroll. The
   // aMode parameter controls whether or not this is a smooth animation or
   // instantaneous scroll.
-  static ScrollPositionUpdate NewPureRelativeScroll(
-      const ScrollGeneration& aGeneration, ScrollOrigin aOrigin,
-      ScrollMode aMode, const nsPoint& aDelta);
+  static ScrollPositionUpdate NewPureRelativeScroll(ScrollOrigin aOrigin,
+                                                    ScrollMode aMode,
+                                                    const nsPoint& aDelta);
 
   bool operator==(const ScrollPositionUpdate& aOther) const;
 
