@@ -40,6 +40,8 @@ class IdleTaskRunner final : public IdleRunnable {
   void SetDeadline(mozilla::TimeStamp aDeadline) override;
   void SetTimer(uint32_t aDelay, nsIEventTarget* aTarget) override;
 
+  void SetBudget(int64_t aBudget);
+
   nsresult Cancel() override;
   void Schedule(bool aAllowIdleDispatch);
 
