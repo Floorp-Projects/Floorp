@@ -404,6 +404,10 @@ struct ParamTraits<mozilla::layers::LayerClip> {
 };
 
 template <>
+struct ParamTraits<mozilla::ScrollGeneration>
+    : PlainOldDataSerializer<mozilla::ScrollGeneration> {};
+
+template <>
 struct ParamTraits<mozilla::ScrollPositionUpdate>
     : PlainOldDataSerializer<mozilla::ScrollPositionUpdate> {};
 

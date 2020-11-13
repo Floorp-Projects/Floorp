@@ -50,7 +50,6 @@ struct RepaintRequest {
         mDevPixelsPerCSSPixel(1),
         mScrollOffset(0, 0),
         mZoom(),
-        mScrollGeneration(0),
         mDisplayPortMargins(0, 0, 0, 0),
         mPresShellId(-1),
         mLayoutViewport(0, 0, 0, 0),
@@ -172,7 +171,7 @@ struct RepaintRequest {
 
   bool GetScrollOffsetUpdated() const { return mScrollUpdateType != eNone; }
 
-  uint32_t GetScrollGeneration() const { return mScrollGeneration; }
+  ScrollGeneration GetScrollGeneration() const { return mScrollGeneration; }
 
   ScrollableLayerGuid::ViewID GetScrollId() const { return mScrollId; }
 
@@ -259,7 +258,7 @@ struct RepaintRequest {
   CSSToParentLayerScale2D mZoom;
 
   // The scroll generation counter used to acknowledge the scroll offset update.
-  uint32_t mScrollGeneration;
+  ScrollGeneration mScrollGeneration;
 
   // A display port expressed as layer margins that apply to the rect of what
   // is drawn of the scrollable element.

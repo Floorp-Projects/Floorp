@@ -38,14 +38,13 @@ std::ostream& operator<<(std::ostream& aStream, const ScrollGeneration& aGen) {
 }
 
 ScrollPositionUpdate::ScrollPositionUpdate()
-    : mScrollGeneration(0),
-      mType(ScrollUpdateType::Absolute),
+    : mType(ScrollUpdateType::Absolute),
       mScrollMode(ScrollMode::Normal),
       mScrollOrigin(ScrollOrigin::None) {}
 
 /*static*/
 ScrollPositionUpdate ScrollPositionUpdate::NewScrollframe(
-    uint32_t aGeneration, nsPoint aInitialPosition) {
+    const ScrollGeneration& aGeneration, nsPoint aInitialPosition) {
   ScrollPositionUpdate ret;
   ret.mScrollGeneration = aGeneration;
   ret.mScrollMode = ScrollMode::Instant;
@@ -54,9 +53,9 @@ ScrollPositionUpdate ScrollPositionUpdate::NewScrollframe(
 }
 
 /*static*/
-ScrollPositionUpdate ScrollPositionUpdate::NewScroll(uint32_t aGeneration,
-                                                     ScrollOrigin aOrigin,
-                                                     nsPoint aDestination) {
+ScrollPositionUpdate ScrollPositionUpdate::NewScroll(
+    const ScrollGeneration& aGeneration, ScrollOrigin aOrigin,
+    nsPoint aDestination) {
   MOZ_ASSERT(aOrigin != ScrollOrigin::NotSpecified);
   MOZ_ASSERT(aOrigin != ScrollOrigin::None);
 
@@ -71,7 +70,8 @@ ScrollPositionUpdate ScrollPositionUpdate::NewScroll(uint32_t aGeneration,
 
 /*static*/
 ScrollPositionUpdate ScrollPositionUpdate::NewRelativeScroll(
-    uint32_t aGeneration, nsPoint aSource, nsPoint aDestination) {
+    const ScrollGeneration& aGeneration, nsPoint aSource,
+    nsPoint aDestination) {
   ScrollPositionUpdate ret;
   ret.mScrollGeneration = aGeneration;
   ret.mType = ScrollUpdateType::Relative;
@@ -84,7 +84,8 @@ ScrollPositionUpdate ScrollPositionUpdate::NewRelativeScroll(
 
 /*static*/
 ScrollPositionUpdate ScrollPositionUpdate::NewSmoothScroll(
-    uint32_t aGeneration, ScrollOrigin aOrigin, nsPoint aDestination) {
+    const ScrollGeneration& aGeneration, ScrollOrigin aOrigin,
+    nsPoint aDestination) {
   MOZ_ASSERT(aOrigin != ScrollOrigin::NotSpecified);
   MOZ_ASSERT(aOrigin != ScrollOrigin::None);
 
@@ -99,7 +100,7 @@ ScrollPositionUpdate ScrollPositionUpdate::NewSmoothScroll(
 
 /*static*/
 ScrollPositionUpdate ScrollPositionUpdate::NewPureRelativeScroll(
-    uint32_t aGeneration, ScrollOrigin aOrigin, ScrollMode aMode,
+    const ScrollGeneration& aGeneration, ScrollOrigin aOrigin, ScrollMode aMode,
     const nsPoint& aDelta) {
   MOZ_ASSERT(aOrigin != ScrollOrigin::NotSpecified);
   MOZ_ASSERT(aOrigin != ScrollOrigin::None);
@@ -120,7 +121,7 @@ bool ScrollPositionUpdate::operator==(
   return mScrollGeneration == aOther.mScrollGeneration;
 }
 
-uint32_t ScrollPositionUpdate::GetGeneration() const {
+ScrollGeneration ScrollPositionUpdate::GetGeneration() const {
   return mScrollGeneration;
 }
 

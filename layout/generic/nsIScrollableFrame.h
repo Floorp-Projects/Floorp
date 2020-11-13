@@ -443,10 +443,10 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
       IncludeApzAnimation = IncludeApzAnimation::Yes) = 0;
 
   /**
-   * Returns the current generation counter for the scroll. This counter
+   * Returns the current generation counter for the scrollframe. This counter
    * increments every time the scroll position is set.
    */
-  virtual uint32_t CurrentScrollGeneration() = 0;
+  virtual mozilla::ScrollGeneration CurrentScrollGeneration() = 0;
   /**
    * LastScrollDestination returns the destination of the most recently
    * requested smooth scroll animation.
@@ -469,8 +469,9 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * generation counter matches. It also resets whether there's an ongoing apz
    * animation.
    */
-  virtual void ResetScrollInfoIfNeeded(uint32_t aGeneration,
-                                       bool aApzAnimationInProgress) = 0;
+  virtual void ResetScrollInfoIfNeeded(
+      const mozilla::ScrollGeneration& aGeneration,
+      bool aApzAnimationInProgress) = 0;
   /**
    * Determine whether it is desirable to be able to asynchronously scroll this
    * scroll frame.
