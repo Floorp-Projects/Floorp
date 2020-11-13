@@ -9,6 +9,7 @@ import json
 import math
 import os
 import platform
+import shutil
 import subprocess
 import sys
 import uuid
@@ -196,6 +197,13 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         print("Python 2.7 or Python 3.5+ is required to run mach.")
         print("You are running Python", platform.python_version())
         sys.exit(1)
+
+    # This directory was deleted in bug 1666345, but there may be some ignored
+    # files here. We can safely just delete it for the user so they don't have
+    # to clean the repo themselves.
+    deleted_dir = os.path.join(topsrcdir, "third_party", "python", "psutil")
+    if os.path.exists(deleted_dir):
+        shutil.rmtree(deleted_dir)
 
     # Global build system and mach state is stored in a central directory. By
     # default, this is ~/.mozbuild. However, it can be defined via an
@@ -503,7 +511,8 @@ def _finalize_telemetry_glean(telemetry, is_bootstrap, success):
 
     has_psutil, logical_cores, physical_cores, memory_total = get_psutil_stats()
     if has_psutil:
-        # psutil may not be available if a successful build hasn't occurred yet.
+        # psutil may not be available (we allow `mach create-mach-environment`
+        # to fail to install it).
         system_metrics.logical_cores.add(logical_cores)
         system_metrics.physical_cores.add(physical_cores)
         if memory_total is not None:
