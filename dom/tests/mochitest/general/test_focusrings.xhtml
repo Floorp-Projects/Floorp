@@ -18,6 +18,8 @@
 
 SimpleTest.waitForExplicitFinish();
 
+const kFocusVisibleEnabled = SpecialPowers.getBoolPref("layout.css.focus-visible.enabled");
+
 function snapShot(element) {
   var rect = element.getBoundingClientRect();
   adjustedRect = { left: rect.left - 6, top: rect.top - 6,
@@ -68,12 +70,12 @@ function runTest()
   is(getComputedStyle($("l1"), "").outlineWidth, "0px", "appearance on previous list after focus() with :focus");
 
   synthesizeMouse($("l1"), 4, 4, { });
-  checkFocus($("l1"), expectedVisible, "appearance on list after mouse focus with :moz-focusring");
+  checkFocus($("l1"), expectedVisible && !kFocusVisibleEnabled, "appearance on list after mouse focus with :moz-focusring");
   synthesizeMouse($("l2"), 4, 4, { });
   checkFocus($("l2"), true, "appearance on list after mouse focus with :focus");
 
   synthesizeMouse($("b1"), 4, 4, { });
-  checkFocus($("b1"), !isMac && expectedVisible, "appearance on button after mouse focus with :moz-focusring");
+  checkFocus($("b1"), !isMac && expectedVisible && !kFocusVisibleEnabled, "appearance on button after mouse focus with :moz-focusring");
   if (navigator.platform.includes("Mac")) {
     ok(compareSnapshots(snapShot($("b1")), snapShot($("b2")), false)[0], "focus after mouse shows no ring");
   }
@@ -138,12 +140,28 @@ function testHTMLElements(list, isMac, expectedNoRingsOnWin)
 
     var shouldFocus = !isMac || (elem.className == "canfocus");
     var ringSize = (shouldFocus ? (expectedNoRingsOnWin ? 2 : 1) : 0) + "px";
+
+    var expectedMatchWithMouse = shouldFocus && !expectedNoRingsOnWin;
+    var mouseRingSize = ringSize;
+    if (shouldFocus && kFocusVisibleEnabled) {
+      var textControl = (function() {
+        if (elem.localName == "textarea")
+          return true;
+        if (elem.localName == "input")
+          return elem.type == "text" || elem.type == "password";
+        return false;
+      }());
+      expectedMatchWithMouse = textControl;
+      mouseRingSize = textControl ? "1px" : "2px";
+    }
+
     if (elem.localName == "a")
-      ringSize = "0px";
+      mouseRingSize = ringSize = "0px";
 
     synthesizeMouse(elem, 8, 8, { }, childwin);
     is(childdoc.activeElement, shouldFocus ? elem : childdoc.body, "mouse click on " + list[e]);
-    is(childwin.getComputedStyle(elem).outlineWidth, ringSize, "mouse click on " + list[e] + " ring");
+    is(childwin.getComputedStyle(elem).outlineWidth, mouseRingSize, "mouse click on " + list[e] + " ring");
+    is(elem.matches(":-moz-focusring"), expectedMatchWithMouse, "mouse click on " + list[e] + " selector");
 
     if (childdoc.activeElement)
       childdoc.activeElement.blur();
