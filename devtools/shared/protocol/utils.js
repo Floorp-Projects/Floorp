@@ -4,19 +4,6 @@
 
 "use strict";
 
-function describeTemplate(template) {
-  return JSON.parse(
-    JSON.stringify(template, (key, value) => {
-      if (value.describe) {
-        return value.describe();
-      }
-      return value;
-    })
-  );
-}
-
-exports.describeTemplate = describeTemplate;
-
 /**
  * Find Placeholders in the template and save them along with their
  * paths.
