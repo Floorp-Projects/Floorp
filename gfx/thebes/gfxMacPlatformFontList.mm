@@ -1215,7 +1215,7 @@ void gfxMacPlatformFontList::InitSystemFontNames() {
   if (mUseSizeSensitiveSystemFont) {
     NSFont* displaySys = [NSFont systemFontOfSize:128.0];
     NSString* displayFamilyName = GetRealFamilyName(displaySys);
-    if ([displayFamilyName isEqualToString: textFamilyName]) {
+    if ([displayFamilyName isEqualToString:textFamilyName]) {
       mUseSizeSensitiveSystemFont = false;
     } else {
       nsCocoaUtils::GetStringForNSString(displayFamilyName, familyName);
@@ -1374,7 +1374,8 @@ gfxFontEntry* gfxMacPlatformFontList::PlatformGlobalFontFallback(const uint32_t 
   return fontEntry;
 }
 
-FontFamily gfxMacPlatformFontList::GetDefaultFontForPlatform(const gfxFontStyle* aStyle) {
+FontFamily gfxMacPlatformFontList::GetDefaultFontForPlatform(const gfxFontStyle* aStyle,
+                                                             nsAtom* aLanguage) {
   nsAutoreleasePool localPool;
 
   NSString* defaultFamily = [[NSFont userFontOfSize:aStyle->size] familyName];
@@ -1459,7 +1460,7 @@ bool gfxMacPlatformFontList::FindAndAddFamilies(mozilla::StyleGenericFontFamily 
                                                 const nsACString& aFamily,
                                                 nsTArray<FamilyAndGeneric>* aOutput,
                                                 FindFamiliesFlags aFlags, gfxFontStyle* aStyle,
-                                                gfxFloat aDevToCssSize) {
+                                                nsAtom* aLanguage, gfxFloat aDevToCssSize) {
   if (aFamily.EqualsLiteral(kSystemFont_system)) {
     // Search for special system font name, -apple-system. This is not done via
     // the shared fontlist on Catalina or later, because the hidden system font
@@ -1467,12 +1468,13 @@ bool gfxMacPlatformFontList::FindAndAddFamilies(mozilla::StyleGenericFontFamily 
     // this family.
     const nsCString& systemFontFamilyName =
         mUseSizeSensitiveSystemFont && aStyle &&
-        (aStyle->size * aDevToCssSize) >= kTextDisplayCrossover
-            ? mSystemDisplayFontFamilyName : mSystemTextFontFamilyName;
+                (aStyle->size * aDevToCssSize) >= kTextDisplayCrossover
+            ? mSystemDisplayFontFamilyName
+            : mSystemTextFontFamilyName;
     if (SharedFontList() && !nsCocoaFeatures::OnCatalinaOrLater()) {
       FindFamiliesFlags flags = aFlags | FindFamiliesFlags::eSearchHiddenFamilies;
-      return gfxPlatformFontList::FindAndAddFamilies(aGeneric, systemFontFamilyName, aOutput,
-                                                     flags, aStyle, aDevToCssSize);
+      return gfxPlatformFontList::FindAndAddFamilies(aGeneric, systemFontFamilyName, aOutput, flags,
+                                                     aStyle, aLanguage, aDevToCssSize);
     } else {
       if (auto* fam = FindSystemFontFamily(systemFontFamilyName)) {
         aOutput->AppendElement(fam);
@@ -1483,7 +1485,7 @@ bool gfxMacPlatformFontList::FindAndAddFamilies(mozilla::StyleGenericFontFamily 
   }
 
   return gfxPlatformFontList::FindAndAddFamilies(aGeneric, aFamily, aOutput, aFlags, aStyle,
-                                                 aDevToCssSize);
+                                                 aLanguage, aDevToCssSize);
 }
 
 void gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,

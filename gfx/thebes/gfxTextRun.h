@@ -932,7 +932,8 @@ class gfxFontGroup final : public gfxTextRunFactory {
   Shutdown();  // platform must call this to release the languageAtomService
 
   gfxFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
-               const gfxFontStyle* aStyle, gfxTextPerfMetrics* aTextPerf,
+               const gfxFontStyle* aStyle, nsAtom* aLanguage,
+               bool aExplicitLanguage, gfxTextPerfMetrics* aTextPerf,
                FontMatchingStats* aFontMatchingStats,
                gfxUserFontSet* aUserFontSet, gfxFloat aDevToCssSize);
 
@@ -1091,6 +1092,8 @@ class gfxFontGroup final : public gfxTextRunFactory {
       BuildFontList();
     }
   }
+
+  nsAtom* Language() const { return mLanguage.get(); }
 
  protected:
   friend class mozilla::PostTraversalTask;
@@ -1377,6 +1380,8 @@ class gfxFontGroup final : public gfxTextRunFactory {
   RefPtr<gfxFont> mDefaultFont;
   gfxFontStyle mStyle;
 
+  RefPtr<nsAtom> mLanguage;
+
   gfxFloat mUnderlineOffset;
   gfxFloat mHyphenWidth;
   gfxFloat mDevToCssSize;
@@ -1404,6 +1409,8 @@ class gfxFontGroup final : public gfxTextRunFactory {
   bool mSkipDrawing;  // hide text while waiting for a font
                       // download to complete (or fallback
                       // timer to fire)
+
+  bool mExplicitLanguage;  // Does mLanguage come from an explicit attribute?
 
   uint32_t mFontListGeneration = 0;  // platform font list generation for this
                                      // fontgroup

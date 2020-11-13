@@ -3997,6 +3997,9 @@ gfxFontGroup* CanvasRenderingContext2D::GetCurrentFontStyle() {
     bool fontUpdated = SetFontInternal(kDefaultFontStyle, err);
     if (err.Failed() || !fontUpdated) {
       err.SuppressException();
+      // XXX Should we get a default lang from the prescontext or something?
+      nsAtom* language = nsGkAtoms::x_western;
+      bool explicitLanguage = false;
       gfxFontStyle style;
       style.size = kDefaultFontSize;
       gfxTextPerfMetrics* tp = nullptr;
@@ -4009,8 +4012,8 @@ gfxFontGroup* CanvasRenderingContext2D::GetCurrentFontStyle() {
       GetAppUnitsValues(&perDevPixel, &perCSSPixel);
       gfxFloat devToCssSize = gfxFloat(perDevPixel) / gfxFloat(perCSSPixel);
       CurrentState().fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(
-          FontFamilyList(StyleGenericFontFamily::SansSerif), &style, tp,
-          fontStats, nullptr, devToCssSize);
+          FontFamilyList(StyleGenericFontFamily::SansSerif), &style, language,
+          explicitLanguage, tp, fontStats, nullptr, devToCssSize);
       if (CurrentState().fontGroup) {
         CurrentState().font = kDefaultFontStyle;
       } else {

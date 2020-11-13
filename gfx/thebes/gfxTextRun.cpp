@@ -1546,7 +1546,8 @@ void gfxTextRun::SetSpaceGlyph(gfxFont* aFont, DrawTarget* aDrawTarget,
       aFont->GetRoundOffsetsToPixels(aDrawTarget);
   gfxShapedWord* sw = aFont->GetShapedWord(
       aDrawTarget, &space, 1, gfxShapedWord::HashMix(0, ' '), Script::LATIN,
-      vertical, mAppUnitsPerDevUnit, flags, roundingFlags, nullptr);
+      /* aLanguage = */ nullptr, vertical, mAppUnitsPerDevUnit, flags,
+      roundingFlags, nullptr);
   if (sw) {
     const GlyphRun* prevRun = TrailingGlyphRun();
     bool isCJK = prevRun && prevRun->mFont == aFont &&
@@ -1733,8 +1734,10 @@ void gfxTextRun::Dump(FILE* out) {
 #  undef APPEND_FLAGS
 #  undef APPEND_FLAG
 
-  fprintf(out, "gfxTextRun@%p (length %u) [%s] [%s]\n", this, mLength,
-          flagsString.get(), flags2String.get());
+  nsAutoCString lang;
+  mFontGroup->Language()->ToUTF8String(lang);
+  fprintf(out, "gfxTextRun@%p (length %u) [%s] [%s] [%s]\n", this, mLength,
+          flagsString.get(), flags2String.get(), lang.get());
 
   uint32_t numGlyphRuns;
   const GlyphRun* glyphRuns = GetGlyphRuns(&numGlyphRuns);
@@ -1744,12 +1747,9 @@ void gfxTextRun::Dump(FILE* out) {
     const gfxFontStyle* style = font->GetStyle();
     nsAutoString styleString;
     nsStyleUtil::AppendFontSlantStyle(style->style, styleString);
-    nsAutoCString lang;
-    style->language->ToUTF8String(lang);
-    fprintf(out, "    [%d] offset=%d %s %f/%g/%s/%s\n", i,
+    fprintf(out, "    [%d] offset=%d %s %f/%g/%s\n", i,
             glyphRuns[i].mCharacterOffset, font->GetName().get(), style->size,
-            style->weight.ToFloat(), NS_ConvertUTF16toUTF8(styleString).get(),
-            lang.get());
+            style->weight.ToFloat(), NS_ConvertUTF16toUTF8(styleString).get());
   }
 
   fprintf(out, "  Glyphs:\n");
@@ -1828,12 +1828,14 @@ void gfxTextRun::Dump(FILE* out) {
 #endif
 
 gfxFontGroup::gfxFontGroup(const FontFamilyList& aFontFamilyList,
-                           const gfxFontStyle* aStyle,
+                           const gfxFontStyle* aStyle, nsAtom* aLanguage,
+                           bool aExplicitLanguage,
                            gfxTextPerfMetrics* aTextPerf,
                            FontMatchingStats* aFontMatchingStats,
                            gfxUserFontSet* aUserFontSet, gfxFloat aDevToCssSize)
     : mFamilyList(aFontFamilyList),
       mStyle(*aStyle),
+      mLanguage(aLanguage),
       mUnderlineOffset(UNDERLINE_OFFSET_NOT_SET),
       mHyphenWidth(-1),
       mDevToCssSize(aDevToCssSize),
@@ -1841,9 +1843,10 @@ gfxFontGroup::gfxFontGroup(const FontFamilyList& aFontFamilyList,
       mTextPerf(aTextPerf),
       mFontMatchingStats(aFontMatchingStats),
       mLastPrefLang(eFontPrefLang_Western),
-      mPageLang(gfxPlatformFontList::GetFontPrefLangFor(aStyle->language)),
+      mPageLang(gfxPlatformFontList::GetFontPrefLangFor(aLanguage)),
       mLastPrefFirstFont(false),
-      mSkipDrawing(false) {
+      mSkipDrawing(false),
+      mExplicitLanguage(aExplicitLanguage) {
   // We don't use SetUserFontSet() here, as we want to unconditionally call
   // BuildFontList() rather than only do UpdateUserFonts() if it changed.
   mCurrGeneration = GetGeneration();
@@ -1869,7 +1872,7 @@ void gfxFontGroup::BuildFontList() {
         MOZ_ASSERT_UNREACHABLE("broken FontFamilyName, no atom!");
       }
     } else {
-      pfl->AddGenericFonts(name.mGeneric, mStyle.language, fonts);
+      pfl->AddGenericFonts(name.mGeneric, mLanguage, fonts);
       if (mTextPerf) {
         mTextPerf->current.genericLookups++;
       }
@@ -1913,8 +1916,7 @@ void gfxFontGroup::BuildFontList() {
   // if necessary, append default generic onto the end
   if (mFamilyList.GetDefaultFontType() != StyleGenericFontFamily::None &&
       !mFamilyList.HasDefaultGeneric()) {
-    pfl->AddGenericFonts(mFamilyList.GetDefaultFontType(), mStyle.language,
-                         fonts);
+    pfl->AddGenericFonts(mFamilyList.GetDefaultFontType(), mLanguage, fonts);
     if (mTextPerf) {
       mTextPerf->current.genericLookups++;
     }
@@ -1953,7 +1955,7 @@ void gfxFontGroup::AddPlatformFont(const nsACString& aName, bool aQuotedName,
       StyleGenericFontFamily::None, aName, &aFamilyList,
       aQuotedName ? gfxPlatformFontList::FindFamiliesFlags::eQuotedFamilyName
                   : gfxPlatformFontList::FindFamiliesFlags(0),
-      &mStyle, mDevToCssSize);
+      &mStyle, mLanguage.get(), mDevToCssSize);
 }
 
 void gfxFontGroup::AddFamilyToFontList(gfxFontFamily* aFamily,
@@ -2541,7 +2543,7 @@ void gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
     if (sizeof(T) == sizeof(uint8_t) && !transformedString) {
       if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Warning))) {
         nsAutoCString lang;
-        mStyle.language->ToUTF8String(lang);
+        mLanguage->ToUTF8String(lang);
         nsAutoCString families;
         mFamilyList.ToString(families);
         nsAutoCString str((const char*)aString, aLength);
@@ -2588,7 +2590,7 @@ void gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
       while (scriptRuns.Next(runStart, runLimit, runScript)) {
         if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Warning))) {
           nsAutoCString lang;
-          mStyle.language->ToUTF8String(lang);
+          mLanguage->ToUTF8String(lang);
           nsAutoCString families;
           mFamilyList.ToString(families);
           nsAutoString styleString;
@@ -2708,7 +2710,7 @@ void gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
                             (matchedLength > 0), range.orientation, isCJK);
       if (!matchedFont->SplitAndInitTextRun(
               aDrawTarget, aTextRun, aString + runStart, aOffset + runStart,
-              matchedLength, aRunScript, range.orientation)) {
+              matchedLength, aRunScript, mLanguage, range.orientation)) {
         // glyph layout failed! treat as missing glyphs
         matchedFont = nullptr;
       }
@@ -2743,7 +2745,7 @@ void gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
                               (matchedLength > 0), range.orientation, isCJK);
         if (!subSuperFont->SplitAndInitTextRun(
                 aDrawTarget, aTextRun, aString + runStart, aOffset + runStart,
-                matchedLength, aRunScript, range.orientation)) {
+                matchedLength, aRunScript, mLanguage, range.orientation)) {
           // glyph layout failed! treat as missing glyphs
           matchedFont = nullptr;
         }
@@ -2755,7 +2757,8 @@ void gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
         if (!matchedFont->InitFakeSmallCapsRun(
                 aDrawTarget, aTextRun, aString + runStart, aOffset + runStart,
                 matchedLength, range.matchType, range.orientation, aRunScript,
-                syntheticLower, syntheticUpper)) {
+                mExplicitLanguage ? mLanguage.get() : nullptr, syntheticLower,
+                syntheticUpper)) {
           matchedFont = nullptr;
         }
       } else {
@@ -2777,7 +2780,7 @@ void gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
                               (matchedLength > 0), range.orientation, isCJK);
         if (!matchedFont->SplitAndInitTextRun(
                 aDrawTarget, aTextRun, aString + runStart, aOffset + runStart,
-                matchedLength, aRunScript, range.orientation)) {
+                matchedLength, aRunScript, mLanguage, range.orientation)) {
           // glyph layout failed! treat as missing glyphs
           matchedFont = nullptr;
         }
@@ -3522,7 +3525,7 @@ void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
 
   if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Debug))) {
     nsAutoCString lang;
-    mStyle.language->ToUTF8String(lang);
+    mLanguage->ToUTF8String(lang);
     nsAutoCString families;
     mFamilyList.ToString(families);
 

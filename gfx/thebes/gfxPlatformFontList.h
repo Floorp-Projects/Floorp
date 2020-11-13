@@ -253,6 +253,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
                                   nsTArray<FamilyAndGeneric>* aOutput,
                                   FindFamiliesFlags aFlags,
                                   gfxFontStyle* aStyle = nullptr,
+                                  nsAtom* aLanguage = nullptr,
                                   gfxFloat aDevToCssSize = 1.0);
 
   gfxFontEntry* FindFontForFamily(const nsACString& aFamily,
@@ -585,18 +586,21 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   mozilla::fontlist::Family* FindSharedFamily(
       const nsACString& aFamily,
       FindFamiliesFlags aFlags = FindFamiliesFlags(0),
-      gfxFontStyle* aStyle = nullptr, gfxFloat aDevToCssSize = 1.0);
+      gfxFontStyle* aStyle = nullptr, nsAtom* aLanguage = nullptr,
+      gfxFloat aDevToCssSize = 1.0);
 
   gfxFontFamily* FindUnsharedFamily(
       const nsACString& aFamily,
       FindFamiliesFlags aFlags = FindFamiliesFlags(0),
-      gfxFontStyle* aStyle = nullptr, gfxFloat aDevToCssSize = 1.0) {
+      gfxFontStyle* aStyle = nullptr, nsAtom* aLanguage = nullptr,
+      gfxFloat aDevToCssSize = 1.0) {
     if (SharedFontList()) {
       return nullptr;
     }
     AutoTArray<FamilyAndGeneric, 1> families;
     if (FindAndAddFamilies(mozilla::StyleGenericFontFamily::None, aFamily,
-                           &families, aFlags, aStyle, aDevToCssSize)) {
+                           &families, aFlags, aStyle, aLanguage,
+                           aDevToCssSize)) {
       return families[0].mFamily.mUnshared;
     }
     return nullptr;
@@ -605,13 +609,14 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   FontFamily FindFamily(const nsACString& aFamily,
                         FindFamiliesFlags aFlags = FindFamiliesFlags(0),
                         gfxFontStyle* aStyle = nullptr,
+                        nsAtom* aLanguage = nullptr,
                         gfxFloat aDevToCssSize = 1.0) {
     if (SharedFontList()) {
       return FontFamily(
-          FindSharedFamily(aFamily, aFlags, aStyle, aDevToCssSize));
+          FindSharedFamily(aFamily, aFlags, aStyle, aLanguage, aDevToCssSize));
     }
     return FontFamily(
-        FindUnsharedFamily(aFamily, aFlags, aStyle, aDevToCssSize));
+        FindUnsharedFamily(aFamily, aFlags, aStyle, aLanguage, aDevToCssSize));
   }
 
   // Lookup family name in global family list without substitutions or
@@ -766,7 +771,8 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
       const FontEntryTable& aTable, mozilla::MallocSizeOf aMallocSizeOf);
 
   // Platform-specific helper for GetDefaultFont(...).
-  virtual FontFamily GetDefaultFontForPlatform(const gfxFontStyle* aStyle) = 0;
+  virtual FontFamily GetDefaultFontForPlatform(const gfxFontStyle* aStyle,
+                                               nsAtom* aLanguage = nullptr) = 0;
 
   // Protects mFontFamilies.
   mozilla::Mutex mFontFamiliesMutex;

@@ -1355,7 +1355,8 @@ void gfxHarfBuzzShaper::InitializeVertical() {
 bool gfxHarfBuzzShaper::ShapeText(DrawTarget* aDrawTarget,
                                   const char16_t* aText, uint32_t aOffset,
                                   uint32_t aLength, Script aScript,
-                                  bool aVertical, RoundingFlags aRounding,
+                                  nsAtom* aLanguage, bool aVertical,
+                                  RoundingFlags aRounding,
                                   gfxShapedText* aShapedText) {
   mUseVerticalPresentationForms = false;
 
@@ -1415,9 +1416,9 @@ bool gfxHarfBuzzShaper::ShapeText(DrawTarget* aDrawTarget,
     language = hb_ot_tag_to_language(style->languageOverride);
   } else if (entry->mLanguageOverride) {
     language = hb_ot_tag_to_language(entry->mLanguageOverride);
-  } else if (style->explicitLanguage) {
+  } else if (aLanguage) {
     nsCString langString;
-    style->language->ToUTF8String(langString);
+    aLanguage->ToUTF8String(langString);
     language = hb_language_from_string(langString.get(), langString.Length());
   } else {
     language = hb_ot_tag_to_language(HB_OT_TAG_DEFAULT_LANGUAGE);

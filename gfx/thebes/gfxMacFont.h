@@ -63,7 +63,7 @@ class gfxMacFont : public gfxFont {
 
   // override to prefer CoreText shaping with fonts that depend on AAT
   bool ShapeText(DrawTarget* aDrawTarget, const char16_t* aText, uint32_t aOffset, uint32_t aLength,
-                 Script aScript, bool aVertical, RoundingFlags aRounding,
+                 Script aScript, nsAtom* aLanguage, bool aVertical, RoundingFlags aRounding,
                  gfxShapedText* aShapedText) override;
 
   void InitMetrics();

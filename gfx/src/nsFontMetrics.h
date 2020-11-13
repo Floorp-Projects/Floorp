@@ -235,6 +235,8 @@ class nsFontMetrics final {
     return mTextOrientation;
   }
 
+  bool ExplicitLanguage() const { return mExplicitLanguage; }
+
   gfxFontGroup* GetThebesFontGroup() const { return mFontGroup; }
   gfxUserFontSet* GetUserFontSet() const;
 
@@ -256,6 +258,11 @@ class nsFontMetrics final {
   // have been initialized. This determines which line metrics (ascent and
   // descent) they will return.
   FontOrientation mOrientation;
+
+  // Whether mLanguage comes from explicit markup (in which case it should be
+  // used to tailor effects like case-conversion) or is an inferred/default
+  // value.
+  bool mExplicitLanguage;
 
   // These fields may be set by clients to control the behavior of methods
   // like GetWidth and DrawString according to the writing mode, direction

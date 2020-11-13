@@ -1737,8 +1737,8 @@ searchDone:
   return fe;
 }
 
-FontFamily gfxFT2FontList::GetDefaultFontForPlatform(
-    const gfxFontStyle* aStyle) {
+FontFamily gfxFT2FontList::GetDefaultFontForPlatform(const gfxFontStyle* aStyle,
+                                                     nsAtom* aLanguage) {
   FontFamily ff;
 #if defined(MOZ_WIDGET_ANDROID)
   ff = FindFamily("Roboto"_ns);

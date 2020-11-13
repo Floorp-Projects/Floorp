@@ -873,7 +873,7 @@ gfxDWriteFontList::gfxDWriteFontList() : mForceGDIClassicMaxFontSize(0.0) {
 //   Arial to avoid this.
 
 FontFamily gfxDWriteFontList::GetDefaultFontForPlatform(
-    const gfxFontStyle* aStyle) {
+    const gfxFontStyle* aStyle, nsAtom* aLanguage) {
   // try Arial first
   FontFamily ff;
   ff = FindFamily("Arial"_ns);
@@ -1870,12 +1870,10 @@ void gfxDWriteFontList::GetDirectWriteSubstitutes() {
   }
 }
 
-bool gfxDWriteFontList::FindAndAddFamilies(StyleGenericFontFamily aGeneric,
-                                           const nsACString& aFamily,
-                                           nsTArray<FamilyAndGeneric>* aOutput,
-                                           FindFamiliesFlags aFlags,
-                                           gfxFontStyle* aStyle,
-                                           gfxFloat aDevToCssSize) {
+bool gfxDWriteFontList::FindAndAddFamilies(
+    StyleGenericFontFamily aGeneric, const nsACString& aFamily,
+    nsTArray<FamilyAndGeneric>* aOutput, FindFamiliesFlags aFlags,
+    gfxFontStyle* aStyle, nsAtom* aLanguage, gfxFloat aDevToCssSize) {
   nsAutoCString keyName(aFamily);
   BuildKeyNameFromFontName(keyName);
 
@@ -1896,8 +1894,8 @@ bool gfxDWriteFontList::FindAndAddFamilies(StyleGenericFontFamily aGeneric,
     return false;
   }
 
-  return gfxPlatformFontList::FindAndAddFamilies(aGeneric, keyName, aOutput,
-                                                 aFlags, aStyle, aDevToCssSize);
+  return gfxPlatformFontList::FindAndAddFamilies(
+      aGeneric, keyName, aOutput, aFlags, aStyle, aLanguage, aDevToCssSize);
 }
 
 void gfxDWriteFontList::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,

@@ -1856,11 +1856,11 @@ void gfxFcPlatformFontList::GetFontList(nsAtom* aLangGroup,
 }
 
 FontFamily gfxFcPlatformFontList::GetDefaultFontForPlatform(
-    const gfxFontStyle* aStyle) {
+    const gfxFontStyle* aStyle, nsAtom* aLanguage) {
   // Get the default font by using a fake name to retrieve the first
   // scalable font that fontconfig suggests for the given language.
-  PrefFontList* prefFonts =
-      FindGenericFamilies("-moz-default"_ns, aStyle->language);
+  PrefFontList* prefFonts = FindGenericFamilies(
+      "-moz-default"_ns, aLanguage ? aLanguage : nsGkAtoms::x_western);
   NS_ASSERTION(prefFonts, "null list of generic fonts");
   if (prefFonts && !prefFonts->IsEmpty()) {
     return (*prefFonts)[0];
@@ -1906,10 +1906,9 @@ gfxFontEntry* gfxFcPlatformFontList::MakePlatformFont(
 bool gfxFcPlatformFontList::FindAndAddFamilies(
     StyleGenericFontFamily aGeneric, const nsACString& aFamily,
     nsTArray<FamilyAndGeneric>* aOutput, FindFamiliesFlags aFlags,
-    gfxFontStyle* aStyle, gfxFloat aDevToCssSize) {
+    gfxFontStyle* aStyle, nsAtom* aLanguage, gfxFloat aDevToCssSize) {
   nsAutoCString familyName(aFamily);
   ToLowerCase(familyName);
-  nsAtom* language = (aStyle ? aStyle->language.get() : nullptr);
 
   if (!(aFlags & FindFamiliesFlags::eQuotedFamilyName)) {
     // deprecated generic names are explicitly converted to standard generics
@@ -1926,7 +1925,7 @@ bool gfxFcPlatformFontList::FindAndAddFamilies(
     // fontconfig generics? use fontconfig to determine the family for lang
     if (isDeprecatedGeneric ||
         mozilla::FontFamilyName::Convert(familyName).IsGeneric()) {
-      PrefFontList* prefFonts = FindGenericFamilies(familyName, language);
+      PrefFontList* prefFonts = FindGenericFamilies(familyName, aLanguage);
       if (prefFonts && !prefFonts->IsEmpty()) {
         aOutput->AppendElements(*prefFonts);
         return true;
@@ -1986,7 +1985,7 @@ bool gfxFcPlatformFontList::FindAndAddFamilies(
     }
     gfxPlatformFontList::FindAndAddFamilies(
         aGeneric, nsDependentCString(ToCharPtr(substName)), &cachedFamilies,
-        aFlags);
+        aFlags, aStyle, aLanguage);
   }
 
   // Cache the resulting list, so we don't have to do this again.
