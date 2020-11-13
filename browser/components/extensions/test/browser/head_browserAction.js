@@ -106,7 +106,10 @@ async function testPopupSize(
     });
 
     let win = dims.window;
-    is(win.innerHeight, innerHeight, "Window height should not change");
+    ok(
+      Math.abs(win.innerHeight - innerHeight) <= 1,
+      `Window height should not change (${win.innerHeight} ~= ${innerHeight})`
+    );
     ok(
       win.innerWidth > innerWidth,
       `Window width should increase (${win.innerWidth} > ${innerWidth})`
