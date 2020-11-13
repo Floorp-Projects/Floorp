@@ -50,7 +50,7 @@ add_task(async function testSilentAudioContext() {
   // reason of no showing sound indicator is because of silent web audio, or
   // because the indicator is just not showing yet.
   await new Promise(r => setTimeout(r, 1000));
-  await waitForTabPlayingEvent(tab, false);
+  await waitForTabSoundIndicatorDisappears(tab);
 
   info(`- remove tab -`);
   await BrowserTestUtils.removeTab(tab);
