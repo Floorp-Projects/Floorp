@@ -90,6 +90,8 @@ class GLContextEGL final : public GLContext {
 
   virtual void SetDamage(const nsIntRegion& aDamageRegion) override;
 
+  GLint GetBufferAge() const override;
+
   virtual void GetWSIInfo(nsCString* const out) const override;
 
   // hold a reference to the given surface
@@ -100,7 +102,6 @@ class GLContextEGL final : public GLContext {
 
   bool HasExtBufferAge() const;
   bool HasKhrPartialUpdate() const;
-  EGLint GetBufferAge() const;
 
   bool BindTex2DOffscreen(GLContext* aOffscreen);
   void UnbindTex2DOffscreen(GLContext* aOffscreen);
