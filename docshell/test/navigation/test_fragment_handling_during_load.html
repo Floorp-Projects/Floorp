@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <title>Test for fragment navigation during load</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=978408">Mozilla Bug 978408</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+  <script type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    var testWindow;
+    function runTest() {
+      testWindow = window.open("file_fragment_handling_during_load.html", "", "width=360,height=480");
+      testWindow.onunload = function() { }; // to prevent bfcache
+    }
+
+    function finishTest() {
+      testWindow.close();
+      SimpleTest.finish();
+    }
+
+  </script>
+</pre>
+</body>
+</html>
