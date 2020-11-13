@@ -6,12 +6,12 @@
 
 #include "URLDecorationStripper.h"
 
-#include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/Preferences.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsEffectiveTLDService.h"
 #include "nsIURI.h"
 #include "nsIURIMutator.h"
+#include "nsURLHelper.h"
 
 namespace {
 static const char* kPrefName =
@@ -47,8 +47,7 @@ nsresult URLDecorationStripper::StripTrackingIdentifiers(nsIURI* aURI,
       }
 
       nsAutoString value;
-      if (dom::URLParams::Extract(Substring(path, queryBegins + 1), token,
-                                  value) &&
+      if (URLParams::Extract(Substring(path, queryBegins + 1), token, value) &&
           !value.IsVoid()) {
         // Tracking identifier found in the URL!
         return StripToRegistrableDomain(aURI, aOutSpec);

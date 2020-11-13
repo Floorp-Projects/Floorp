@@ -51,7 +51,7 @@ class TheoraDecoder : public MediaDataDecoder,
   th_dec_ctx* mTheoraDecoderContext;
   int mPacketCount;
 
-  const VideoInfo& mInfo;
+  const VideoInfo mInfo;
 };
 
 }  // namespace mozilla

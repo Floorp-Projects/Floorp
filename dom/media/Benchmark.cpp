@@ -247,20 +247,21 @@ void BenchmarkPlayback::InitDecoder(UniquePtr<TrackInfo>&& aInfo) {
 
   RefPtr<PDMFactory> platform = new PDMFactory();
   mInfo = std::move(aInfo);
-  RefPtr<MediaDataDecoder> decoder =
-      platform->CreateDecoder(CreateDecoderParams{*mInfo});
-
-  if (!decoder) {
-    Error(MediaResult(NS_ERROR_FAILURE, "Failed to create decoder"));
-    return;
-  }
-  mDecoder = new MediaDataDecoderProxy(decoder.forget(),
-                                       do_AddRef(mDecoderTaskQueue.get()));
   RefPtr<Benchmark> ref(mGlobalState);
-  mDecoder->Init()->Then(
-      Thread(), __func__,
-      [this, ref](TrackInfo::TrackType aTrackType) { InputExhausted(); },
-      [this, ref](const MediaResult& aError) { Error(aError); });
+  platform->CreateDecoder(CreateDecoderParams{*mInfo})
+      ->Then(
+          Thread(), __func__,
+          [this, ref](RefPtr<MediaDataDecoder>&& aDecoder) {
+            mDecoder = new MediaDataDecoderProxy(
+                aDecoder.forget(), do_AddRef(mDecoderTaskQueue.get()));
+            mDecoder->Init()->Then(
+                Thread(), __func__,
+                [this, ref](TrackInfo::TrackType aTrackType) {
+                  InputExhausted();
+                },
+                [this, ref](const MediaResult& aError) { Error(aError); });
+          },
+          [this, ref](const MediaResult& aError) { Error(aError); });
 }
 
 void BenchmarkPlayback::FinalizeShutdown() {

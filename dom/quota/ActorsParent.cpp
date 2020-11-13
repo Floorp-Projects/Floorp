@@ -70,7 +70,6 @@
 #include "mozilla/dom/StorageActivityService.h"
 #include "mozilla/dom/StorageDBUpdater.h"
 #include "mozilla/dom/StorageTypeBinding.h"
-#include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/cache/QuotaClient.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/dom/ipc/IdType.h"
@@ -141,6 +140,7 @@
 #include "nsTPromiseFlatString.h"
 #include "nsTStringRepr.h"
 #include "nsThreadUtils.h"
+#include "nsURLHelper.h"
 #include "nsXPCOM.h"
 #include "nsXPCOMCID.h"
 #include "nsXULAppAPI.h"
@@ -11572,27 +11572,19 @@ Result<bool, nsresult> UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveAppsData(
   //         https+++developer.cdn.mozilla.net^inBrowser=1
   //       instead of just removing them.
 
-  class MOZ_STACK_CLASS ParamsIterator final
-      : public URLParams::ForEachIterator {
-   public:
-    bool URLParamsIterator(const nsAString& aName,
-                           const nsAString& aValue) override {
-      if (aName.EqualsLiteral("appId")) {
-        return false;
-      }
-
-      return true;
-    }
-  };
-
   const nsCString& originalSuffix = aOriginProps.mOriginalSuffix;
   if (!originalSuffix.IsEmpty()) {
     MOZ_ASSERT(originalSuffix[0] == '^');
 
-    ParamsIterator iterator;
     if (!URLParams::Parse(
             Substring(originalSuffix, 1, originalSuffix.Length() - 1),
-            iterator)) {
+            [](const nsAString& aName, const nsAString& aValue) {
+              if (aName.EqualsLiteral("appId")) {
+                return false;
+              }
+
+              return true;
+            })) {
       QM_TRY(RemoveObsoleteOrigin(aOriginProps));
 
       return true;

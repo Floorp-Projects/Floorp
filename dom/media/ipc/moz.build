@@ -13,7 +13,6 @@ IPDL_SOURCES += [
 ]
 
 EXPORTS.mozilla += [
-    "IRemoteDecoderChild.h",
     "RDDChild.h",
     "RDDParent.h",
     "RDDProcessHost.h",

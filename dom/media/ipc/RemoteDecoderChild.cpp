@@ -19,6 +19,8 @@ RemoteDecoderChild::RemoteDecoderChild(bool aRecreatedOnCrash)
       "Must be created on the manager thread");
 }
 
+RemoteDecoderChild::~RemoteDecoderChild() = default;
+
 void RemoteDecoderChild::HandleRejectionError(
     const ipc::ResponseRejectReason& aReason,
     std::function<void(const MediaResult&)>&& aCallback) {

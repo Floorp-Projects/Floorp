@@ -11,8 +11,7 @@
 
 namespace mozilla {
 
-class GpuDecoderModule;
-class IRemoteDecoderChild;
+class RemoteDecoderChild;
 class RemoteDecoderManagerChild;
 class RemoteMediaDataDecoder;
 
@@ -27,8 +26,7 @@ class RemoteMediaDataDecoder
     : public MediaDataDecoder,
       public DecoderDoctorLifeLogger<RemoteMediaDataDecoder> {
  public:
-  friend class GpuDecoderModule;
-  friend class RemoteDecoderManagerChild;
+  explicit RemoteMediaDataDecoder(RemoteDecoderChild* aChild);
 
   // MediaDataDecoder
   RefPtr<InitPromise> Init() override;
@@ -45,13 +43,12 @@ class RemoteMediaDataDecoder
   ConversionRequired NeedsConversion() const override;
 
  private:
-  explicit RemoteMediaDataDecoder(IRemoteDecoderChild* aChild);
   ~RemoteMediaDataDecoder();
 
   // Only ever written to from the reader task queue (during the constructor and
   // destructor when we can guarantee no other threads are accessing it). Only
   // read from the manager thread.
-  RefPtr<IRemoteDecoderChild> mChild;
+  RefPtr<RemoteDecoderChild> mChild;
   // Only ever written/modified during decoder initialisation.
   // As such can be accessed from any threads after that.
   nsCString mDescription = "RemoteMediaDataDecoder"_ns;

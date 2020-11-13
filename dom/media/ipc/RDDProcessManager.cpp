@@ -99,44 +99,49 @@ void RDDProcessManager::OnPreferenceChange(const char16_t* aData) {
   }
 }
 
-bool RDDProcessManager::EnsureRDDProcessAndCreateBridge(
-    base::ProcessId aOtherProcess,
-    mozilla::ipc::Endpoint<PRemoteDecoderManagerChild>*
-        aOutRemoteDecoderManager) {
-  bool success = false;
+auto RDDProcessManager::EnsureRDDProcessAndCreateBridge(
+    base::ProcessId aOtherProcess) -> RefPtr<EnsureRDDPromise> {
+  return InvokeAsync(GetMainThreadSerialEventTarget(), __func__,
+                     [aOtherProcess, this]() -> RefPtr<EnsureRDDPromise> {
+                       if (!Get()) {
+                         // Shutdown?
+                         return EnsureRDDPromise::CreateAndReject(
+                             NS_ERROR_NOT_AVAILABLE, __func__);
+                       }
+                       if (mProcess) {
+                         ipc::Endpoint<PRemoteDecoderManagerChild> endpoint;
+                         if (!CreateContentBridge(aOtherProcess, &endpoint)) {
+                           return EnsureRDDPromise::CreateAndReject(
+                               NS_ERROR_NOT_AVAILABLE, __func__);
+                         }
+                         return EnsureRDDPromise::CreateAndResolve(
+                             std::move(endpoint), __func__);
+                       }
 
-  RefPtr<Runnable> task =
-      NS_NewRunnableFunction("RDDProcessManager::RDDProcessManager", [&]() {
-        if (mProcess) {
-          success =
-              CreateContentBridge(aOtherProcess, aOutRemoteDecoderManager);
-          return;
-        }
+                       mNumProcessAttempts++;
 
-        mNumProcessAttempts++;
+                       std::vector<std::string> extraArgs;
+                       nsCString parentBuildID(mozilla::PlatformBuildID());
+                       extraArgs.push_back("-parentBuildID");
+                       extraArgs.push_back(parentBuildID.get());
 
-        std::vector<std::string> extraArgs;
-        nsCString parentBuildID(mozilla::PlatformBuildID());
-        extraArgs.push_back("-parentBuildID");
-        extraArgs.push_back(parentBuildID.get());
-
-        // The subprocess is launched asynchronously, so we wait for a callback
-        // to acquire the IPDL actor.
-        mProcess = new RDDProcessHost(this);
-        if (!mProcess->Launch(extraArgs)) {
-          DestroyProcess();
-          return;
-        }
-        if (!EnsureRDDReady()) {
-          return;
-        }
-
-        success = CreateVideoBridge() &&
-                  CreateContentBridge(aOtherProcess, aOutRemoteDecoderManager);
-      });
-  SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(), task);
-
-  return success;
+                       // The subprocess is launched asynchronously, so we wait
+                       // for a callback to acquire the IPDL actor.
+                       mProcess = new RDDProcessHost(this);
+                       if (!mProcess->Launch(extraArgs)) {
+                         DestroyProcess();
+                         return EnsureRDDPromise::CreateAndReject(
+                             NS_ERROR_NOT_AVAILABLE, __func__);
+                       }
+                       ipc::Endpoint<PRemoteDecoderManagerChild> endpoint;
+                       if (!EnsureRDDReady() || !CreateVideoBridge() ||
+                           !CreateContentBridge(aOtherProcess, &endpoint)) {
+                         return EnsureRDDPromise::CreateAndReject(
+                             NS_ERROR_NOT_AVAILABLE, __func__);
+                       }
+                       return EnsureRDDPromise::CreateAndResolve(
+                           std::move(endpoint), __func__);
+                     });
 }
 
 bool RDDProcessManager::IsRDDProcessLaunching() {
@@ -237,27 +242,23 @@ void RDDProcessManager::DestroyProcess() {
 bool RDDProcessManager::CreateContentBridge(
     base::ProcessId aOtherProcess,
     ipc::Endpoint<PRemoteDecoderManagerChild>* aOutRemoteDecoderManager) {
-  bool success = false;
-  RefPtr<Runnable> task =
-      NS_NewRunnableFunction("RDDProcessManager::RDDProcessManager", [&]() {
-        ipc::Endpoint<PRemoteDecoderManagerParent> parentPipe;
-        ipc::Endpoint<PRemoteDecoderManagerChild> childPipe;
+  MOZ_ASSERT(NS_IsMainThread());
 
-        nsresult rv = PRemoteDecoderManager::CreateEndpoints(
-            mRDDChild->OtherPid(), aOtherProcess, &parentPipe, &childPipe);
-        if (NS_FAILED(rv)) {
-          MOZ_LOG(sPDMLog, LogLevel::Debug,
-                  ("Could not create content remote decoder: %d", int(rv)));
-          return;
-        }
+  ipc::Endpoint<PRemoteDecoderManagerParent> parentPipe;
+  ipc::Endpoint<PRemoteDecoderManagerChild> childPipe;
 
-        mRDDChild->SendNewContentRemoteDecoderManager(std::move(parentPipe));
+  nsresult rv = PRemoteDecoderManager::CreateEndpoints(
+      mRDDChild->OtherPid(), aOtherProcess, &parentPipe, &childPipe);
+  if (NS_FAILED(rv)) {
+    MOZ_LOG(sPDMLog, LogLevel::Debug,
+            ("Could not create content remote decoder: %d", int(rv)));
+    return false;
+  }
 
-        *aOutRemoteDecoderManager = std::move(childPipe);
-        success = true;
-      });
-  SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(), task);
-  return success;
+  mRDDChild->SendNewContentRemoteDecoderManager(std::move(parentPipe));
+
+  *aOutRemoteDecoderManager = std::move(childPipe);
+  return true;
 }
 
 bool RDDProcessManager::CreateVideoBridge() {
