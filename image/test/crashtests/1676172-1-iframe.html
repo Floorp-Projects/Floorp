@@ -1,0 +1,13 @@
+<html>
+<head>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const image = document.createElementNS('http://www.w3.org/1999/xhtml', 'img')
+        var extra = document.location.search.substr(1);
+        image.setAttribute('src', '1676172-1.gif' + '?' + extra)
+        document.documentElement.appendChild(image)
+        setTimeout('location.reload()', 400)
+      })
+    </script>
+</head>
+</html>
