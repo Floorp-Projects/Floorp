@@ -229,13 +229,25 @@ class URLParams final {
 
   ~URLParams() { DeleteAll(); }
 
-  class ForEachIterator {
-   public:
-    virtual bool URLParamsIterator(const nsAString& aName,
-                                   const nsAString& aValue) = 0;
-  };
+  template <typename ParamHandler>
+  static bool Parse(const nsACString& aInput, ParamHandler aParamHandler) {
+    const char* start = aInput.BeginReading();
+    const char* const end = aInput.EndReading();
 
-  static bool Parse(const nsACString& aInput, ForEachIterator& aIterator);
+    while (start != end) {
+      nsAutoString decodedName;
+      nsAutoString decodedValue;
+
+      if (!ParseNextInternal(start, end, &decodedName, &decodedValue)) {
+        continue;
+      }
+
+      if (!aParamHandler(std::move(decodedName), std::move(decodedValue))) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   static bool Extract(const nsACString& aInput, const nsAString& aName,
                       nsAString& aValue);
@@ -275,6 +287,9 @@ class URLParams final {
  private:
   static void DecodeString(const nsACString& aInput, nsAString& aOutput);
   static void ConvertString(const nsACString& aInput, nsAString& aOutput);
+  static bool ParseNextInternal(const char*& aStart, const char* aEnd,
+                                nsAString* aOutDecodedName,
+                                nsAString* aOutDecodedValue);
 
   struct Param {
     nsString mKey;
