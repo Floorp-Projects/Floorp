@@ -440,6 +440,10 @@ button > hbox > label {
   margin-block: 0;
 }
 
+.addon-with-favicon .menu-iconic-icon {
+  margin-inline-start: 0;
+}
+
 /* Search Pane */
 
 #engineList {

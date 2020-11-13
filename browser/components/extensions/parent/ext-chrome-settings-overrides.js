@@ -57,6 +57,8 @@ XPCOMUtils.defineLazyGetter(this, "homepagePopup", () => {
     descriptionMessageId: "homepageControlled.message",
     learnMoreMessageId: "homepageControlled.learnMore",
     learnMoreLink: "extension-home",
+    preferencesLocation: "home-homeOverride",
+    preferencesEntrypoint: "addon-manage-home-override",
     async beforeDisableAddon(popup, win) {
       // Disabling an add-on should remove the tabs that it has open, but we want
       // to open the new homepage in this tab (which might get closed).

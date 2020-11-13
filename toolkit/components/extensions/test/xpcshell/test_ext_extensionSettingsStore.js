@@ -1009,3 +1009,81 @@ add_task(async function test_exceptions() {
     "addSetting rejects with a callback that is not a function."
   );
 });
+
+add_task(async function test_get_all_settings() {
+  await promiseStartupManager();
+
+  let testExtensions = [
+    ExtensionTestUtils.loadExtension({
+      useAddonManager: "temporary",
+      manifest: {
+        applications: { gecko: { id: "@first" } },
+      },
+    }),
+    ExtensionTestUtils.loadExtension({
+      useAddonManager: "temporary",
+      manifest: {
+        applications: { gecko: { id: "@second" } },
+      },
+    }),
+  ];
+
+  for (let extension of testExtensions) {
+    await extension.startup();
+  }
+
+  await ExtensionSettingsStore.initialize();
+
+  let items = ExtensionSettingsStore.getAllSettings("foo", "bar");
+  equal(items.length, 0, "There are no addons controlling this setting yet");
+
+  await ExtensionSettingsStore.addSetting(
+    "@first",
+    "foo",
+    "bar",
+    "set",
+    () => "not set"
+  );
+
+  items = ExtensionSettingsStore.getAllSettings("foo", "bar");
+  equal(items.length, 1, "The add-on setting has 1 addon trying to control it");
+
+  await ExtensionSettingsStore.addSetting(
+    "@second",
+    "foo",
+    "bar",
+    "setting",
+    () => "not set"
+  );
+
+  let item = ExtensionSettingsStore.getSetting("foo", "bar");
+  equal(item.id, "@second", "The second add-on is in control");
+  equal(item.value, "setting", "The second value is set");
+
+  items = ExtensionSettingsStore.getAllSettings("foo", "bar");
+  equal(
+    items.length,
+    2,
+    "The add-on setting has 2 addons trying to control it"
+  );
+
+  await ExtensionSettingsStore.removeSetting("@first", "foo", "bar");
+
+  items = ExtensionSettingsStore.getAllSettings("foo", "bar");
+  equal(items.length, 1, "There is only 1 addon controlling this setting");
+
+  await ExtensionSettingsStore.removeSetting("@second", "foo", "bar");
+
+  items = ExtensionSettingsStore.getAllSettings("foo", "bar");
+  equal(
+    items.length,
+    0,
+    "There is no longer any addon controlling this setting"
+  );
+
+  for (let extension of testExtensions) {
+    await extension.unload();
+  }
+
+  await promiseShutdownManager();
+});
