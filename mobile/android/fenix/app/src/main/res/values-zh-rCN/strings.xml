@@ -23,11 +23,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">您的隐私标签页将显示于此。</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">百度</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">京东</string>
-
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">打开了 1 个标签页，点击即可切换。</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -1193,7 +1188,7 @@
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">严格</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">拦截更多跟踪器、广告和弹窗。页面加载速度更快，但是某些功能可能无法正常工作。</string>
+    <string name="onboarding_tracking_protection_strict_button_description_2">拦截更多跟踪器和弹窗。页面加载速度更快，但是某些功能可能无法正常工作。</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1289,7 +1284,7 @@
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">严格</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">拦截更多跟踪器、广告和弹窗。页面加载速度更快，但是某些功能可能无法正常工作。</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_2">拦截更多跟踪器和弹窗。页面加载速度更快，但是某些功能可能无法正常工作。</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">严格跟踪保护会拦截的内容</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1331,7 +1326,7 @@
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">跨网站跟踪性 Cookie</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">拦截广告网络和分析公司用于跨网站收集浏览数据的 Cookie。</string>
+    <string name="etp_cookies_description">拦截网络分析公司用于跨网站收集浏览数据的 Cookie。</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">加密货币挖矿程序</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

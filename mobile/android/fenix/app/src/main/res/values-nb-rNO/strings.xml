@@ -1656,6 +1656,8 @@
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Navn</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Navn på mest besøkte</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->

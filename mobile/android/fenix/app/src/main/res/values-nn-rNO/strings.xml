@@ -564,6 +564,13 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Lat att manuelt</string>
 
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Lat att etter ein dag</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Lat att etter ei veke</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Lat att etter ein månad</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Opne faner</string>
@@ -633,7 +640,9 @@
 
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Samlingsnamn</string>
-    <!-- Text for the menu button to remove a top site -->
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Byt namn</string>
+	<!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">Fjern</string>
 
     <!-- Text for the menu button to delete a top site from history -->
@@ -686,12 +695,25 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Ingen historikk her</string>
 
+    <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Slett nedlastingar</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">Er du sikker på at du vil rydde vekk nedlastingane dine?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
+    <string name="download_delete_multiple_items_snackbar">Nedlastingar sletta</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">Ingen nedlastingar her</string>
 
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d valde</string>
+
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Opne</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="download_delete_item">Slett</string>
 
 
     <!-- Crashes -->
@@ -1625,6 +1647,16 @@
 
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Vis mest besøkte nettstadar</string>
+
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Namn</string>
+
+    <!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Namn på mest besøkte</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">OK</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Avbryt</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Fjern</string>

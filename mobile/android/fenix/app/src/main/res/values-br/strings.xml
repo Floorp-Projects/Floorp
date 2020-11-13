@@ -66,14 +66,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Ket, trugarez</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Kit buanocʼh war Firefox. Ouzhpennit ur widjet war ho skramm degemer.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">Ouzhpennañ ur widjet</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">Ket bremañ</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string name="open_in_app_cfr_info_message">Gallout a rit lakaat Firefox da zigeriñ an ereoù ent emgefreek en arloadoù all.</string>
@@ -208,7 +200,6 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Gouzout hirocʼh</string>
 
-    <!-- Search Widget -->
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Klask</string>
     <!-- Text preview for larger sized widgets -->
@@ -335,6 +326,13 @@
 
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Rebuzadurioù</string>
+
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">Mat eo</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Nullañ</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Anv an dastumad</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -518,6 +516,12 @@
     <string name="recently_closed_empty_message">N’eus ivinell nevez serret ebet amañ</string>
 
     <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Ivinelloù</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Roll</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Grid</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Serriñ an ivinelloù</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -528,6 +532,15 @@
     <string name="close_tabs_after_one_week">Goude ur sizhunvezh</string>
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Goude ur mizvezh</string>
+
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Serriñ an dornlevr</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Serriñ goude un devezh</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Serriñ goude ur sizhun</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Serriñ goude ur miz</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -595,8 +608,12 @@
     <string name="collection_rename">Adenvel an dastumad</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Digeriñ an ivinelloù</string>
-    <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">Dilemel</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Anv an dastumad</string>
+	<!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Adenvel</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Dilemel</string>
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Dilemel eus ar roll istor</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
@@ -632,6 +649,8 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Dilemel %1$d elfenn</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Hiziv</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Ar 24 eurvezh diwezhañ</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -644,11 +663,22 @@
     <string name="history_empty_message">Roll istor ebet amañ</string>
 
     <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Goullonderiñ roll ar pellgargadurioù</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
+    <string name="download_delete_multiple_items_snackbar">Pellgargadurioù dilammet</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">Pellgargadur ebet amañ</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d diuzet</string>
+
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Digeriñ</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="download_delete_item">Dilemel</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -769,6 +799,8 @@
     <string name="preference_phone_feature_location">Lecʼhiadur</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Rebuzadur</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Stokadur padus</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Goulenn an aotre</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -1564,6 +1596,13 @@
 
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Diskouez al lec’hiennoù gweladennet ar muiañ</string>
+
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Anv</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">Mat eo</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Nullañ</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Dilemel</string>

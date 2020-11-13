@@ -70,14 +70,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Non, gracies</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Accedi aína a Firefox col amiestu d\'un widget a la pantalla d\'aniciu.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">Amestalu</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">Agora non</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string name="open_in_app_cfr_info_message">Pues afitar que Firefox abra automáticamente enllaces nes aplicaciones.</string>
@@ -575,7 +567,7 @@
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Abrir lo qu\'heba</string>
     <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">Desaniciar</string>
+	<string name="remove_top_site">Desaniciar</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Desaniciar del historial</string>
@@ -622,8 +614,13 @@
     <string name="history_empty_message">Nun hai nada</string>
 
     <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Desaniciar les descargues</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">¿De xuru que quies llimpiar les descargues?</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">Equí nun hai descargues</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -1518,6 +1515,11 @@
 
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Amosar los sitios más visitaos</string>
+
+    <!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">Aceutar</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Encaboxar</string>
 
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->

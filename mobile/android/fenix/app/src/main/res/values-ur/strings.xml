@@ -68,14 +68,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">نہیں شکریہ</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Firefox تیزی سے کھولیں۔ اپنے ہوم اسکرین پر ایک ویجیٹ جوڑیں۔</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">ویجیٹ شامل کریں</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">ابھی نہیں</string>
-
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">سیٹنگز پر جائیں</string>
     <!-- Text for the negative action button -->
@@ -202,7 +194,6 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">مزید سیکھیں</string>
 
-    <!-- Search Widget -->
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">تلاش کریں</string>
     <!-- Text preview for larger sized widgets -->
@@ -321,6 +312,11 @@
 
     <!-- Preference for notifications -->
     <string name="preferences_notifications">اعلانات</string>
+
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">ٹھیک ہے</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">منسوخ کریں</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -485,9 +481,24 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">بند کریں</string>
 
-    <!-- Tab Management -->
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d ٹیب</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d ٹیب</string>
+
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">ٹیب بند کریں</string>
+
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">دستی</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">ایک دن کے بعد</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">ایک ہفتہ کے بعد</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">ایک مہینے کے بعد</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -508,6 +519,8 @@
     <string name="tab_tray_menu_item_save">مجموعہ میں محفوظ کریں</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">تمام ٹیبز شیئر کریں</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">ٹیب کی سیٹنگز</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">تمام ٹیب بند کریں</string>
     <!-- Shortcut action to open new tab -->
@@ -552,7 +565,7 @@
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">ٹیب کھولیں</string>
     <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">ہٹائیں</string>
+	<string name="remove_top_site">ہٹائیں</string>
 
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (نجی موڈ)</string>
@@ -588,6 +601,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">%1$d آئٹمز کو حذف کریں</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">آج</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">کل</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">آخری 24 گھنٹے</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -599,9 +616,13 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">یہاں کوئی سابقات نہیں ہے</string>
 
-    <!-- Downloads -->
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">یہاں کوئی ڈاؤن لوڈ نہیں</string>
+
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d منتخب کیا گیا</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->

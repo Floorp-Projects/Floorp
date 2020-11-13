@@ -9,9 +9,19 @@
     <string name="content_description_menu">Iba pang pagpipilian</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_private_browsing_button">Paganahin ang private browsing</string>
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d ang napili</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">Magdagdag ng bagong koleksyon</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
     <string name="tab_tray_add_new_collection_name">Pangalan</string>
 
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">Pumili ng koleksyon</string>
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">Napiling %1$s</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">Hindi napiling %1$s</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Napili</string>
 
@@ -59,10 +69,14 @@
     <string name="browser_menu_back">Bumalik</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
     <string name="browser_menu_forward">Sumulong</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">i-Refresh</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Tumigil</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
     <string name="browser_menu_bookmark">Bookmark</string>
+    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
+    <string name="browser_menu_edit_bookmark">i-Edit ang Bookmark</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Mga Add-on</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -75,8 +89,12 @@
     <string name="browser_menu_library">Library</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Desktop site</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Idagdag sa Home screen</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">i-Install</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Mga naka-sync na tab</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">i-Resync</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -85,18 +103,42 @@
     <string name="browser_menu_private_tab">Pribadong tab</string>
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">Bagong tab</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">i-Save sa koleksyon</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Ibahagi</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
     <string name="menu_share_with">Ibahagi sa…</string>
 
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">Buksan sa %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">POWERED BY %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">Powered by %1$s</string>
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">Reader view</string>
+    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
+    <string name="browser_menu_read_appearance">Itsura</string>
+
     <!-- Content description for search icon -->
     <string name="a11y_search_icon_content_description">Hanapin</string>
 
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">i-Scan</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">Search engine</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">Payagan</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">Huwag Payagan</string>
+
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">Alamin</string>
 
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Maghanap</string>
@@ -106,10 +148,27 @@
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Mga Setting</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Pangkalahatan</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Tungkol sa</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Hanapin</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">Address bar</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Tulong</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">Tungkol sa %1$s</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">Mga Password</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">Accessibility</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">Account</string>
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">mag-Sign in</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Toolbar</string>
     <!-- Preference for changing default theme to dark or light mode -->
@@ -120,6 +179,62 @@
     <string name="preferences_account_default_name">Firefox Account</string>
     <!-- Preference for language -->
     <string name="preferences_language">Wika</string>
+
+
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">OK</string>
+
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Mga Bookmark</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">mag-Sign out</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Ngalan ng device</string>
+
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">Telemetry</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Mga eksperimento</string>
+
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">Buksan ang Camera</string>
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">Kanselahin</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Itaas</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Ilalim</string>
+
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Madilim</string>
+
+    <!-- Option in Library to open Screenshots page -->
+    <string name="library_screenshots">Mga Screenshot</string>
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">Mga Download</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">Mga Bookmark</string>
+    <!-- Menu Item Label for Search in Library -->
+    <string name="library_search">Hanapin</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">Mga Setting</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">Isara</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Mga Tab</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Grid</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">Magdagdag ng Tab</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Bagong Tab</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">Burahin</string>
 
 
     </resources>

@@ -72,14 +72,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Nie, ďakujem</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Prejdite do Firefoxu rýchlejšie. Pridajte si na domovskú obrazovku miniaplikáciu.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">Pridať miniaplikáciu</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">Teraz nie</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string name="open_in_app_cfr_info_message">Firefox môžete nastaviť tak, aby automaticky otváral odkazy v tejto aplikácii.</string>
@@ -146,6 +138,8 @@
     <string name="browser_menu_install_on_homescreen">Nainštalovať</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Synchronizované karty</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Synchronizovať znova</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Hľadať na stránke</string>
     <!-- Browser menu button that creates a private tab -->
@@ -216,6 +210,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">Ďalšie informácie</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Otvoriť novú kartu vo Firefoxe</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Hľadať</string>
     <!-- Text preview for larger sized widgets -->
@@ -346,12 +342,20 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Upozornenia</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Vlastná kolekcia doplnkov</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">OK</string>
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">Zrušiť</string>
     <!-- Hint displayed on input field for custom collection name -->
     <string name="customize_addon_collection_hint">Názov kolekcie</string>
+
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Vlastník kolekcie (ID používateľa)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Kolekcia doplnkov bola upravená. Aplikácia sa ukončuje a zmeny budú použité…</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -526,6 +530,15 @@
     <!-- Recently closed tabs screen message when there are no recently closed tabs -->
     <string name="recently_closed_empty_message">Nemáte žiadne nedávno zatvorené karty</string>
 
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Karty</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Zobrazenie kariet</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Zoznam</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Mriežka</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Zavrieť karty</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -536,6 +549,15 @@
     <string name="close_tabs_after_one_week">Po týždni</string>
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Po mesiaci</string>
+
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Zavrieť ručne</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Zavrieť po jednom dni</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Zavrieť po jednom týždni</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Zavrieť po jednom mesiaci</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -604,8 +626,12 @@
     <string name="collection_open_tabs">Otvoriť karty</string>
 
 
-    <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">Odstrániť</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Názov kolekcie</string>
+	<!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Premenovať</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Odstrániť</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Odstrániť z histórie</string>
@@ -643,6 +669,10 @@
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Počet položiek na odstránenie: %1$d</string>
 
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Dnes</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Včera</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Posledných 24 hodín</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -655,11 +685,23 @@
     <string name="history_empty_message">Nemáte žiadnu históriu prehliadania</string>
 
     <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Vymazať zoznam prevzatých súborov</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">Naozaj chcete vymazať svoju históriu preberania?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
+    <string name="download_delete_multiple_items_snackbar">História bola vymazaná</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">Žiadne prevzaté súbory</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">Počet vybraných položiek: %1$d</string>
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Otvoriť</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="download_delete_item">Odstrániť</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -780,6 +822,8 @@
     <string name="preference_phone_feature_location">Poloha</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Upozornenia</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Trvalé úložisko</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Vždy sa spýtať</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -1569,12 +1613,24 @@
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Zobraziť najnavštevovanejšie stránky</string>
 
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Názov</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Názov top stránky</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">OK</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Zrušiť</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Odstrániť</string>
 
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Využite %s naplno.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Kliknutím zobrazíte viac podrobností</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Zbierajte veci, na ktorých vám záleží</string>

@@ -220,7 +220,7 @@
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">ᱥᱟᱫᱷᱟᱨᱚᱬ</string>
     <!-- Preference category for general settings -->
-    <string name="preferences_category_general">ᱥᱟᱫᱷᱟᱨᱚᱱ</string>
+    <string name="preferences_category_general">ᱥᱟᱫᱷᱟᱨᱚᱬ</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">ᱵᱟᱵᱚᱛ</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -287,7 +287,7 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">ᱠᱩᱥᱤᱭᱟᱜ ᱛᱮᱭᱟᱨ</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">ᱵᱩᱠᱢᱟᱨᱠ, ᱦᱤᱛᱟᱹᱞ ᱟᱨ ᱵᱟᱹᱲᱛᱤ ᱠᱚ ᱟᱢᱟᱜ Firefox ᱠᱷᱟᱛᱟ ᱥᱟᱣ ᱛᱮ ᱥᱭᱸᱠ ᱢᱮᱸ</string>
+    <string name="preferences_sign_in_description">ᱵᱩᱠᱢᱟᱨᱠ, ᱦᱤᱛᱟᱹᱞ ᱟᱨ ᱵᱟᱹᱲᱛᱤ ᱠᱚ ᱟᱢᱟᱜ Firefox ᱠᱷᱟᱛᱟ ᱥᱟᱶ ᱛᱮ ᱥᱭᱸᱠ ᱢᱮᱸ</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox ᱠᱷᱟᱛᱟ</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -303,7 +303,7 @@
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">ᱵᱟᱲᱦᱟᱣᱟᱜ ᱦᱟᱹᱛᱤᱭᱟᱹᱨ</string>
     <!-- Preference for developers -->
-    <string name="preferences_remote_debugging">ᱥᱟᱸᱜᱤᱧ ᱫᱚᱥ ᱥᱟᱦᱟᱭ USB ᱥᱟᱣ ᱛᱮ</string>
+    <string name="preferences_remote_debugging">ᱥᱟᱸᱜᱤᱧ ᱫᱚᱥ ᱥᱟᱦᱟᱭ USB ᱥᱟᱶ ᱛᱮ</string>
     <!-- Preference title for switch preference to show search engines -->
     <string name="preferences_show_search_engines">ᱥᱮᱸᱫᱽᱨᱟ ᱤᱱᱡᱤᱱ ᱠᱚ ᱩᱫᱩᱜ ᱢᱮᱸ</string>
     <!-- Preference title for switch preference to show search suggestions -->
@@ -554,6 +554,16 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">ᱢᱤᱫ ᱪᱟᱸᱫᱚ ᱛᱟᱭᱚᱢ</string>
 
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">ᱱᱤᱡᱮ ᱛᱮ ᱵᱚᱸᱫᱽ ᱢᱮᱸ
+</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">ᱢᱤᱫᱽ ᱫᱤᱱ ᱯᱚᱨᱮ ᱵᱚᱸᱫᱚᱭ ᱢᱮᱸ</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">ᱢᱤᱫᱽ ᱦᱟᱴ ᱯᱚᱨᱮ ᱵᱚᱸᱫ ᱢᱮᱸ</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">ᱢᱤᱫ ᱪᱟᱸᱫᱚ ᱯᱚᱨᱮ ᱵᱚᱸᱫᱽ ᱢᱮᱸ</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">ᱡᱷᱤᱜ ᱴᱮᱵ ᱠᱚ</string>
@@ -621,7 +631,9 @@
     <string name="collection_open_tabs">ᱡᱷᱤᱜ ᱴᱮᱵ ᱠᱚ</string>
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">ᱛᱩᱢᱟᱹᱞ ᱧᱩᱛᱩᱢ</string>
-    <!-- Text for the menu button to remove a top site -->
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">ᱨᱤᱱᱮᱢ</string>
+	<!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">ᱚᱪᱚᱜ ᱢᱮᱸ</string>
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">ᱦᱤᱛᱟᱹᱞ ᱠᱷᱚᱱ ᱢᱮᱸᱴᱟᱣ ᱢᱮᱸ</string>
@@ -672,11 +684,24 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">ᱱᱚᱲᱮ ᱦᱤᱛᱟᱹᱞ ᱵᱚᱱᱩ-ᱟ</string>
 
+    <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">ᱰᱟᱩᱱᱞᱳᱰ ᱠᱚ ᱢᱮᱴᱟᱣ ᱢᱮᱸ</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">ᱟᱢ ᱡᱷᱚᱛᱚ ᱞᱮᱠᱷᱟ ᱛᱮ ᱟᱢᱟᱜ ᱰᱟᱩᱱᱞᱳᱰ ᱠᱚ ᱢᱮᱴᱟᱣ ᱥᱟᱱᱟᱢ ᱠᱟᱱᱟ ᱥᱮ?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
+    <string name="download_delete_multiple_items_snackbar">ᱰᱟᱩᱱᱞᱳᱰ ᱠᱚ ᱢᱮᱴᱟᱣ ᱮᱱᱟ</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">ᱱᱚᱰᱮ ᱰᱟᱩᱱᱞᱚᱰ ᱠᱚ ᱵᱚᱱᱩᱜ-ᱟ</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d ᱵᱟᱪᱷᱟᱣᱮᱱᱟ</string>
+
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">ᱠᱷᱩᱞᱟᱹ</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="download_delete_item">ᱢᱮᱸᱴᱟᱣ ᱢᱮᱸ</string>
 
 
     <!-- Crashes -->
@@ -1065,6 +1090,10 @@
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly ᱩᱪᱟᱹᱰ ᱟᱠᱟᱱᱟ</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">
+        ᱱᱚᱶᱟ ᱮᱯᱯ ᱫᱚ ᱟᱨ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱟᱹᱯᱰᱮᱴ ᱵᱟᱭ ᱧᱟᱢᱟᱭ ᱾ ᱱᱟᱶᱟ Nightly ᱵᱮᱵᱷᱟᱨ ᱢᱮᱸ ᱟᱨ ᱮᱯᱯ ᱵᱮᱵᱷᱟᱨ ᱵᱚᱸᱫᱽᱚᱭ ᱢᱮᱸ ᱾
+        \n\nᱵᱩᱻᱠᱢᱟᱨᱠ, ᱞᱚᱜᱤᱱ ᱟᱨ ᱱᱟᱜᱟᱢ ᱠᱚ ᱚᱞᱜᱟ ᱮᱯᱯ ᱛᱮ ᱩᱪᱟᱹᱲ ᱞᱟᱹᱜᱤᱫᱽ ᱱᱟᱶᱟ Firefox ᱠᱷᱟᱛᱟ ᱛᱮᱭᱟᱨ ᱢᱮᱸ ᱾</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_not_installed">ᱱᱟᱶᱟ Nightly ᱧᱟᱢ ᱢᱮᱸ</string>
 
@@ -1106,6 +1135,9 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱰᱤᱜᱟᱹᱣᱮᱱᱟ</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_2">ᱟᱡ ᱛᱮᱭᱟᱜ ᱱᱤᱥᱚᱱ</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description_2">ᱯᱨᱭᱣᱮᱥᱭ ᱟᱨ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱥᱟᱡᱟᱣ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ, ᱢᱟᱞᱣᱮᱨ ᱟᱨ ᱠᱚᱢᱯᱟᱭ ᱠᱚ ᱮᱢᱟᱱ ᱵᱞᱚᱠ ᱠᱚᱣᱟ ᱠᱚ ᱚᱠᱚᱭ ᱫᱚ ᱟᱢ ᱯᱟᱧᱡᱟ ᱠᱟᱫ ᱢᱮᱭᱟ ᱾</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">ᱵᱮᱥᱟᱜ (ᱢᱩᱞ ᱯᱷᱮᱲᱟᱛ)</string>
     <!-- text for standard blocking option button description -->
@@ -1183,6 +1215,8 @@
     <string name="sign_in_create_account_text"><![CDATA[ᱠᱷᱟᱛᱟ ᱵᱟᱹᱱᱩᱜᱼᱟ? <u>ᱢᱤᱫᱴᱟᱹᱝ ᱛᱮᱭᱟᱨ ᱢᱮᱸ</u> ᱰᱥᱫᱷᱚᱱ ᱠᱚ ᱵᱷᱤᱛᱨᱭ ᱨᱮ Firefox ᱥᱭᱸᱠ ᱞᱟᱹᱜᱤᱫ ᱾]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox ᱟᱢᱟᱜ ᱠᱷᱟᱛᱟ ᱥᱟᱞᱟᱜ ᱟᱭᱩᱨ ᱢᱤᱫ ᱵᱚᱸᱫᱭ ᱟᱭ, ᱦᱮᱞᱮ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱠᱷᱚᱱ ᱪᱮᱫ ᱦᱚᱸ ᱵᱟᱭ ᱢᱮᱸᱴᱟᱣᱟᱭ ᱾</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s ᱫᱚ ᱟᱢᱟᱜ ᱠᱷᱟᱛᱟ ᱥᱟᱞᱟᱜ ᱥᱭᱸᱠ ᱵᱚᱸᱫᱽᱚᱭ ᱟ , ᱦᱮᱞᱮ ᱟᱢᱟᱜ ᱚᱠᱟ ᱵᱨᱟᱩᱡᱤᱸᱝ ᱰᱟᱴᱟ ᱦᱚᱸ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱵᱟᱭ ᱢᱮᱴᱟᱣᱜᱼᱟ ᱾</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">ᱡᱚᱱᱚᱲᱟᱣ ᱚᱪᱚᱜ</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1197,6 +1231,8 @@
     <string name="preference_enhanced_tracking_protection">ᱵᱟᱲᱦᱟᱣᱟᱠᱟᱱ ᱯᱟᱸᱡᱟ ᱨᱚᱯᱷᱟ</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">ᱯᱟᱸᱡᱟ ᱵᱮᱜᱚᱨ ᱵᱨᱟᱩᱡ ᱢᱮᱸ</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">ᱟᱢᱟᱜᱽ ᱰᱟᱴᱟ ᱟᱢ ᱴᱷᱮᱱ ᱜᱮ ᱫᱚᱦᱚᱭ ᱢᱮᱸ ᱾ %s ᱫᱚ ᱟᱭᱢ ᱟᱭᱢᱟ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱴᱷᱮᱱ ᱠᱷᱚᱱ ᱚᱱᱞᱟᱭᱤᱱ ᱨᱩᱠᱷᱤᱭᱟᱹᱭ ᱢᱮᱟᱭ ᱾</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮᱸ</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -1245,20 +1281,32 @@
     <string name="enhanced_tracking_protection_allowed">ᱢᱟᱹᱱᱡᱩᱨ</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">ᱥᱟᱸᱣᱛᱟ ᱢᱤᱰᱤᱭᱟ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">ᱵᱨᱟᱩᱡᱤᱝ ᱠᱟᱹᱢᱤ ᱠᱚ ᱮᱢᱟᱱ ᱥᱚᱥᱤᱭᱟᱹᱢ ᱢᱮᱰᱤᱭᱟ ᱱᱮᱴᱣᱟᱨᱠ ᱨᱮ ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱠᱚ ᱣᱮᱵᱽ ᱨᱮ ᱞᱤᱢᱤᱴ ᱛᱟᱢᱟᱭ ᱾ </string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">ᱠᱨᱚᱥᱼᱥᱟᱭᱤᱴ ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱠᱩᱠᱤ ᱠᱚ</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">ᱮᱰ ᱱᱮᱴᱣᱳᱨᱠ ᱠᱚ ᱟᱨ ᱮᱱᱟᱞᱭᱴᱤᱠ ᱠᱚᱢᱯᱟᱱᱤ ᱠᱚ ᱮᱢᱟᱱ ᱠᱩᱻᱠᱤᱡ ᱠᱚ, ᱚᱠᱟ ᱫᱚ ᱟᱭᱢᱟ ᱵᱨᱟᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱠᱚ ᱠᱚᱢᱯᱟᱭᱤᱞ ᱞᱟᱹᱜᱤᱫᱽ ᱵᱮᱵᱷᱟᱨᱚᱜᱼᱟ ᱚᱱᱟ ᱠᱚ ᱵᱞᱚᱠ ᱟᱭ ᱾</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">ᱠᱨᱭᱯᱴᱚᱢᱟᱭᱱᱟᱹᱨ ᱠᱚ</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">ᱢᱟᱭᱤᱱ ᱰᱤᱡᱤᱴᱟᱞ ᱯᱩᱭᱥᱟᱹ ᱛᱮ ᱟᱢᱟᱜᱽ ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱢᱤᱞᱟᱠᱭᱩᱞᱟᱹᱥ ᱥᱠᱨᱤᱯᱼᱴ ᱠᱚ ᱟᱫᱮᱨ ᱵᱟᱹᱰ ᱜᱮᱭᱟ ᱾</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">ᱠᱟᱹᱴᱩᱵᱪᱷᱟᱯᱟ ᱟᱜ ᱠᱚ</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱠᱟᱹᱢᱤ ᱠᱚ ᱞᱟᱹᱜᱤᱫᱽ ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱱᱟᱶᱟ ᱰᱟᱴᱟ ᱠᱚ ᱮᱢᱟᱱ ᱡᱟᱣᱨᱟ ᱠᱚ ᱵᱚᱸᱫᱚᱭᱟ ᱾</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱡᱤᱱᱤᱥ</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">ᱵᱟᱦᱨᱮ ᱮᱰ, ᱣᱤᱰᱤᱭᱚ, ᱟᱨ ᱚᱞᱜᱟ ᱡᱤᱱᱤᱥ ᱠᱚ ᱮᱢᱟᱱ ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱠᱳᱰ ᱠᱚ ᱞᱟᱹᱜᱤᱫᱽ ᱵᱟᱭ ᱞᱟᱫᱮ ᱪᱷᱚᱭ ᱟ ᱾ ᱚᱞᱜᱟ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱠᱟᱹᱢᱤ ᱠᱚ ᱨᱮᱭᱟᱜ ᱫᱷᱚᱸᱜ ᱠᱚᱫᱚᱞ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱭ ᱾</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">ᱡᱟᱷᱟᱸ ᱥᱚᱢᱚᱭ ᱨᱮᱜᱮ ᱥᱤᱸᱞᱰ ᱵᱮᱸᱜᱚᱱᱤ ᱛᱟᱦᱮᱸᱱᱟ, %s ᱫᱚ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱥᱟᱭᱤᱴ ᱠᱚᱨᱮ ᱵᱞᱚᱠ ᱠᱚᱣᱟᱭ ᱾ ᱡᱟᱹᱥᱛᱤ ᱵᱟᱲᱟᱭ ᱞᱟᱹᱜᱤᱫ ᱴᱤᱯᱟᱹᱣ ᱯᱮ ᱾</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱛ ᱯᱨᱚᱴᱮᱠᱥᱚᱱ ᱠᱚ ᱪᱚᱞᱩ ᱢᱮᱸᱱᱟᱜ-ᱟ</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
     <string name="etp_panel_off">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱛ ᱯᱨᱚᱴᱮᱠᱥᱚᱱ ᱠᱚ ᱵᱚᱸᱫᱚ ᱢᱮᱸᱱᱟᱜ-ᱟ</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
-    <string name="enhanced_tracking_protection_exceptions">ᱱᱚᱶᱟ ᱠᱚ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱛ ᱵᱟᱲᱦᱟᱣᱟᱠᱟᱱ ᱯᱟᱸᱡᱟ ᱨᱚᱯᱷᱟ ᱵᱚᱸᱫᱚ ᱢᱮᱸᱱᱟ-ᱟ</string>
+    <string name="enhanced_tracking_protection_exceptions">ᱱᱚᱶᱟ ᱠᱚ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱛ ᱵᱟᱲᱦᱟᱣᱟᱠᱟᱱ ᱯᱟᱸᱡᱟ ᱨᱚᱯᱷᱟ ᱵᱚᱸᱫᱚ ᱢᱮᱸᱱᱟᱜ-ᱟ</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">ᱯᱟᱹᱪᱷᱞᱟᱹᱥᱮᱱ ᱪᱟᱞᱟᱜ ᱢᱮᱸ</string>
@@ -1267,7 +1315,7 @@
     <!-- About page link text to open open source licenses screen -->
     <string name="about_open_source_licenses">ᱢᱩᱞ ᱠᱷᱩᱞᱟᱹ ᱞᱟᱭᱵᱨᱮᱨᱤ ᱟᱞᱮ ᱵᱮᱵᱷᱟᱨ ᱮᱫᱟ</string>
     <!-- About page link text to open what's new link -->
-    <string name="about_whats_new">%s ᱨᱮ ᱪᱮᱫ ᱱᱟᱶᱟ ᱢᱮᱸᱱᱟ-ᱟ</string>
+    <string name="about_whats_new">%s ᱨᱮ ᱪᱮᱫ ᱱᱟᱶᱟ ᱢᱮᱸᱱᱟᱜᱼᱟ</string>
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS ᱯᱩᱛᱷᱤ ᱚᱲᱟᱜ</string>
@@ -1578,6 +1626,15 @@
     <string name="top_sites_max_limit_confirmation_button">ᱴᱷᱤᱠ, ᱵᱟᱰᱟᱭ ᱠᱮᱜᱼᱟᱹᱧ</string>
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">ᱡᱟᱹᱥᱛᱤ ᱦᱤᱨᱤ ᱟᱠᱟᱱ ᱥᱟᱭᱤᱴ ᱫᱮᱠᱷᱟᱣᱢᱮᱸ</string>
+
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">ᱧᱩᱛᱩᱢ</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">ᱴᱳᱯ ᱥᱟᱭᱤᱴ ᱧᱩᱛᱩᱢ</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">ᱴᱷᱤᱠ</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">ᱚᱪᱟᱜ</string>

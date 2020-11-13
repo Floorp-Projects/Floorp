@@ -493,6 +493,9 @@
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
     <string name="preference_gestures_swipe_toolbar_switch_tabs">Podrsaj orodno vrstico vstran za preklop med zavihki</string>
 
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Podrsaj orodno vrstico navzgor za odpiranje zavihkov</string>
+
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
     <string name="library_sessions">Seje</string>
@@ -558,6 +561,12 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Po enem mesecu</string>
 
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Zapri ročno</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Zapri po enem dnevu</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Zapri po enem tednu</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Zapri po enem mesecu</string>
 
@@ -686,8 +695,13 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Ni zgodovine</string>
 
+    <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Izbriši prenose</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">Ste prepričani, da želite počistiti vaše prenose?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
+    <string name="download_delete_multiple_items_snackbar">Prenosi izbrisani</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">Ni prenosov</string>
     <!-- History multi select title in app bar
