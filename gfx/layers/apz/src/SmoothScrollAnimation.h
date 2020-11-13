@@ -9,7 +9,6 @@
 
 #include "GenericScrollAnimation.h"
 #include "mozilla/ScrollOrigin.h"
-#include "mozilla/layers/KeyboardScrollAction.h"
 
 namespace mozilla {
 namespace layers {
@@ -24,8 +23,6 @@ class SmoothScrollAnimation : public GenericScrollAnimation {
 
   SmoothScrollAnimation* AsSmoothScrollAnimation() override;
   ScrollOrigin GetScrollOrigin() const;
-  static ScrollOrigin GetScrollOriginForAction(
-      KeyboardScrollAction::KeyboardScrollActionType aAction);
 
  private:
   ScrollOrigin mOrigin;
