@@ -3231,11 +3231,11 @@ void nsGlobalWindowInner::SetName(const nsAString& aName,
   FORWARD_TO_OUTER_OR_THROW(SetNameOuter, (aName, aError), aError, );
 }
 
-int32_t nsGlobalWindowInner::GetInnerWidth(CallerType aCallerType,
-                                           ErrorResult& aError) {
+double nsGlobalWindowInner::GetInnerWidth(CallerType aCallerType,
+                                          ErrorResult& aError) {
   // We ignore aCallerType; we only have that argument because some other things
   // called by GetReplaceableWindowCoord need it.  If this ever changes, fix
-  //   nsresult nsGlobalWindowInner::GetInnerWidth(int32_t* aInnerWidth)
+  //   nsresult nsGlobalWindowInner::GetInnerWidth(double* aInnerWidth)
   // to actually take a useful CallerType and pass it in here.
   FORWARD_TO_OUTER_OR_THROW(GetInnerWidthOuter, (aError), aError, 0);
 }
@@ -3248,7 +3248,7 @@ void nsGlobalWindowInner::GetInnerWidth(JSContext* aCx,
                             aCallerType, aError);
 }
 
-nsresult nsGlobalWindowInner::GetInnerWidth(int32_t* aInnerWidth) {
+nsresult nsGlobalWindowInner::GetInnerWidth(double* aInnerWidth) {
   ErrorResult rv;
   // Callee doesn't care about the caller type, but play it safe.
   *aInnerWidth = GetInnerWidth(CallerType::NonSystem, rv);
@@ -3256,7 +3256,7 @@ nsresult nsGlobalWindowInner::GetInnerWidth(int32_t* aInnerWidth) {
   return rv.StealNSResult();
 }
 
-void nsGlobalWindowInner::SetInnerWidth(int32_t aInnerWidth,
+void nsGlobalWindowInner::SetInnerWidth(double aInnerWidth,
                                         CallerType aCallerType,
                                         ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(SetInnerWidthOuter,
@@ -3271,11 +3271,11 @@ void nsGlobalWindowInner::SetInnerWidth(JSContext* aCx,
                             "innerWidth", aCallerType, aError);
 }
 
-int32_t nsGlobalWindowInner::GetInnerHeight(CallerType aCallerType,
-                                            ErrorResult& aError) {
+double nsGlobalWindowInner::GetInnerHeight(CallerType aCallerType,
+                                           ErrorResult& aError) {
   // We ignore aCallerType; we only have that argument because some other things
   // called by GetReplaceableWindowCoord need it.  If this ever changes, fix
-  //   nsresult nsGlobalWindowInner::GetInnerHeight(int32_t* aInnerWidth)
+  //   nsresult nsGlobalWindowInner::GetInnerHeight(double* aInnerWidth)
   // to actually take a useful CallerType and pass it in here.
   FORWARD_TO_OUTER_OR_THROW(GetInnerHeightOuter, (aError), aError, 0);
 }
@@ -3288,7 +3288,7 @@ void nsGlobalWindowInner::GetInnerHeight(JSContext* aCx,
                             aCallerType, aError);
 }
 
-nsresult nsGlobalWindowInner::GetInnerHeight(int32_t* aInnerHeight) {
+nsresult nsGlobalWindowInner::GetInnerHeight(double* aInnerHeight) {
   ErrorResult rv;
   // Callee doesn't care about the caller type, but play it safe.
   *aInnerHeight = GetInnerHeight(CallerType::NonSystem, rv);
@@ -3296,7 +3296,7 @@ nsresult nsGlobalWindowInner::GetInnerHeight(int32_t* aInnerHeight) {
   return rv.StealNSResult();
 }
 
-void nsGlobalWindowInner::SetInnerHeight(int32_t aInnerHeight,
+void nsGlobalWindowInner::SetInnerHeight(double aInnerHeight,
                                          CallerType aCallerType,
                                          ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(SetInnerHeightOuter,
@@ -7135,18 +7135,20 @@ void nsGlobalWindowInner::RedefineProperty(JSContext* aCx,
   }
 }
 
+template <typename T>
 void nsGlobalWindowInner::GetReplaceableWindowCoord(
-    JSContext* aCx, nsGlobalWindowInner::WindowCoordGetter aGetter,
+    JSContext* aCx, nsGlobalWindowInner::WindowCoordGetter<T> aGetter,
     JS::MutableHandle<JS::Value> aRetval, CallerType aCallerType,
     ErrorResult& aError) {
-  int32_t coord = (this->*aGetter)(aCallerType, aError);
+  T coord = (this->*aGetter)(aCallerType, aError);
   if (!aError.Failed() && !ToJSValue(aCx, coord, aRetval)) {
     aError.Throw(NS_ERROR_FAILURE);
   }
 }
 
+template <typename T>
 void nsGlobalWindowInner::SetReplaceableWindowCoord(
-    JSContext* aCx, nsGlobalWindowInner::WindowCoordSetter aSetter,
+    JSContext* aCx, nsGlobalWindowInner::WindowCoordSetter<T> aSetter,
     JS::Handle<JS::Value> aValue, const char* aPropName, CallerType aCallerType,
     ErrorResult& aError) {
   /*
@@ -7160,8 +7162,8 @@ void nsGlobalWindowInner::SetReplaceableWindowCoord(
     return;
   }
 
-  int32_t value;
-  if (!ValueToPrimitive<int32_t, eDefault>(aCx, aValue, aPropName, &value)) {
+  T value;
+  if (!ValueToPrimitive<T, eDefault>(aCx, aValue, aPropName, &value)) {
     aError.Throw(NS_ERROR_UNEXPECTED);
     return;
   }
@@ -7205,13 +7207,14 @@ void nsGlobalWindowInner::SetReplaceableWindowCoord(
         winHeight = NSToIntRound(winHeight / scale);
 
         // Acquire content window size.
-        CSSIntSize contentSize;
+        CSSSize contentSize;
         outer->GetInnerSize(contentSize);
 
         screenMgr->ScreenForRect(winLeft, winTop, winWidth, winHeight,
                                  getter_AddRefs(screen));
 
         if (screen) {
+          int32_t roundedValue = std::round(value);
           int32_t* targetContentWidth = nullptr;
           int32_t* targetContentHeight = nullptr;
           int32_t screenWidth = 0;
@@ -7234,18 +7237,19 @@ void nsGlobalWindowInner::SetReplaceableWindowCoord(
 
           if (innerWidthSpecified || outerWidthSpecified) {
             inputWidth = value;
-            targetContentWidth = &value;
+            targetContentWidth = &roundedValue;
             targetContentHeight = &unused;
           } else if (innerHeightSpecified || outerHeightSpecified) {
             inputHeight = value;
             targetContentWidth = &unused;
-            targetContentHeight = &value;
+            targetContentHeight = &roundedValue;
           }
 
           nsContentUtils::CalcRoundedWindowSizeForResistingFingerprinting(
               chromeWidth, chromeHeight, screenWidth, screenHeight, inputWidth,
               inputHeight, outerWidthSpecified, outerHeightSpecified,
               targetContentWidth, targetContentHeight);
+          value = T(roundedValue);
         }
       }
     }
