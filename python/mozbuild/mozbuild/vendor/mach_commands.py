@@ -153,6 +153,12 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         "Some extra files like docs and tests will automatically be excluded.",
     )
     @CommandArgument(
+        "--with-windows-wheel",
+        action="store_true",
+        help="Vendor a wheel for Windows along with the source package",
+        default=False,
+    )
+    @CommandArgument(
         "--keep-extra-files",
         action="store_true",
         default=False,
