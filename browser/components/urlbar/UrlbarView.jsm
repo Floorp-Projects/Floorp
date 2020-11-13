@@ -1593,6 +1593,11 @@ class UrlbarView {
     } else {
       this.input.setResultForCurrentValue(result);
     }
+
+    let provider = UrlbarProvidersManager.getProvider(result?.providerName);
+    if (provider) {
+      provider.tryMethod("onSelection", result, item);
+    }
   }
 
   /**
