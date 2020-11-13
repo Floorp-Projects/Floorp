@@ -144,9 +144,6 @@ pip install virtualenv==15.2.0
 pip install zstandard==0.13.0
 pip3 install zstandard==0.13.0
 
-pip install psutil==5.7.0
-pip3 install psutil==5.7.0
-
 # Build a list of packages to purge from the image.
 apt_packages=()
 apt_packages+=('*cheese*')
