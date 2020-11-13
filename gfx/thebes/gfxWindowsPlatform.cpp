@@ -1153,20 +1153,25 @@ void gfxWindowsPlatform::SetupClearTypeParams() {
     }
 
     RefPtr<IDWriteRenderingParams> defaultRenderingParams;
-    Factory::GetDWriteFactory()->CreateRenderingParams(
+    HRESULT hr = Factory::GetDWriteFactory()->CreateRenderingParams(
         getter_AddRefs(defaultRenderingParams));
+    if (FAILED(hr)) {
+      gfxWarning() << "Failed to create default rendering params";
+    }
     // For EnhancedContrast, we override the default if the user has not set it
     // in the registry (by using the ClearType Tuner).
     if (contrast < 0.0 || contrast > 10.0) {
-      HKEY hKey;
-      LONG res = RegOpenKeyExW(DISPLAY1_REGISTRY_KEY, 0, KEY_READ, &hKey);
-      if (res == ERROR_SUCCESS) {
-        res = RegQueryValueExW(hKey, ENHANCED_CONTRAST_VALUE_NAME, nullptr,
-                               nullptr, nullptr, nullptr);
+      if (defaultRenderingParams) {
+        HKEY hKey;
+        LONG res = RegOpenKeyExW(DISPLAY1_REGISTRY_KEY, 0, KEY_READ, &hKey);
         if (res == ERROR_SUCCESS) {
-          contrast = defaultRenderingParams->GetEnhancedContrast();
+          res = RegQueryValueExW(hKey, ENHANCED_CONTRAST_VALUE_NAME, nullptr,
+                                 nullptr, nullptr, nullptr);
+          if (res == ERROR_SUCCESS) {
+            contrast = defaultRenderingParams->GetEnhancedContrast();
+          }
+          RegCloseKey(hKey);
         }
-        RegCloseKey(hKey);
       }
 
       if (contrast < 0.0 || contrast > 10.0) {
@@ -1177,11 +1182,13 @@ void gfxWindowsPlatform::SetupClearTypeParams() {
     // For parameters that have not been explicitly set,
     // we copy values from default params (or our overridden value for contrast)
     if (gamma < 1.0 || gamma > 2.2) {
-      gamma = defaultRenderingParams->GetGamma();
+      gamma = defaultRenderingParams ? defaultRenderingParams->GetGamma() : 2.2;
     }
 
     if (level < 0.0 || level > 1.0) {
-      level = defaultRenderingParams->GetClearTypeLevel();
+      level = defaultRenderingParams
+                  ? defaultRenderingParams->GetClearTypeLevel()
+                  : 1.0;
     }
 
     DWRITE_PIXEL_GEOMETRY dwriteGeometry =
@@ -1190,19 +1197,23 @@ void gfxWindowsPlatform::SetupClearTypeParams() {
 
     if (dwriteGeometry < DWRITE_PIXEL_GEOMETRY_FLAT ||
         dwriteGeometry > DWRITE_PIXEL_GEOMETRY_BGR) {
-      dwriteGeometry = defaultRenderingParams->GetPixelGeometry();
+      dwriteGeometry = defaultRenderingParams
+                           ? defaultRenderingParams->GetPixelGeometry()
+                           : DWRITE_PIXEL_GEOMETRY_FLAT;
     }
 
     Factory::SetBGRSubpixelOrder(dwriteGeometry == DWRITE_PIXEL_GEOMETRY_BGR);
 
     if (renderMode < DWRITE_RENDERING_MODE_DEFAULT ||
         renderMode > DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC) {
-      renderMode = defaultRenderingParams->GetRenderingMode();
+      renderMode = defaultRenderingParams
+                       ? defaultRenderingParams->GetRenderingMode()
+                       : DWRITE_RENDERING_MODE_DEFAULT;
     }
 
     mRenderingParams[TEXT_RENDERING_NO_CLEARTYPE] = defaultRenderingParams;
 
-    HRESULT hr = Factory::GetDWriteFactory()->CreateCustomRenderingParams(
+    hr = Factory::GetDWriteFactory()->CreateCustomRenderingParams(
         gamma, contrast, level, dwriteGeometry, renderMode,
         getter_AddRefs(mRenderingParams[TEXT_RENDERING_NORMAL]));
     if (FAILED(hr) || !mRenderingParams[TEXT_RENDERING_NORMAL]) {

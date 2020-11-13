@@ -724,6 +724,7 @@ void DrawTargetD2D1::FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
 
   ScaledFontDWrite* font = static_cast<ScaledFontDWrite*>(aFont);
 
+  // May be null, if we failed to initialize the default rendering params.
   IDWriteRenderingParams* params = font->mParams;
 
   AntialiasMode aaMode = font->GetDefaultAAMode();
@@ -767,6 +768,10 @@ void DrawTargetD2D1::FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
   mDC->SetTextAntialiasMode(d2dAAMode);
 
   if (params != mTextRenderingParams) {
+    // According to
+    // https://docs.microsoft.com/en-us/windows/win32/api/d2d1/nf-d2d1-id2d1rendertarget-settextrenderingparams
+    // it's OK to pass null for params here; it will just "clear current text
+    // rendering options".
     mDC->SetTextRenderingParams(params);
     mTextRenderingParams = params;
   }
