@@ -44,23 +44,22 @@ ScrollPositionUpdate::ScrollPositionUpdate()
 
 /*static*/
 ScrollPositionUpdate ScrollPositionUpdate::NewScrollframe(
-    const ScrollGeneration& aGeneration, nsPoint aInitialPosition) {
+    nsPoint aInitialPosition) {
   ScrollPositionUpdate ret;
-  ret.mScrollGeneration = aGeneration;
+  ret.mScrollGeneration = ScrollGeneration::New();
   ret.mScrollMode = ScrollMode::Instant;
   ret.mDestination = CSSPoint::FromAppUnits(aInitialPosition);
   return ret;
 }
 
 /*static*/
-ScrollPositionUpdate ScrollPositionUpdate::NewScroll(
-    const ScrollGeneration& aGeneration, ScrollOrigin aOrigin,
-    nsPoint aDestination) {
+ScrollPositionUpdate ScrollPositionUpdate::NewScroll(ScrollOrigin aOrigin,
+                                                     nsPoint aDestination) {
   MOZ_ASSERT(aOrigin != ScrollOrigin::NotSpecified);
   MOZ_ASSERT(aOrigin != ScrollOrigin::None);
 
   ScrollPositionUpdate ret;
-  ret.mScrollGeneration = aGeneration;
+  ret.mScrollGeneration = ScrollGeneration::New();
   ret.mType = ScrollUpdateType::Absolute;
   ret.mScrollMode = ScrollMode::Instant;
   ret.mScrollOrigin = aOrigin;
@@ -70,10 +69,9 @@ ScrollPositionUpdate ScrollPositionUpdate::NewScroll(
 
 /*static*/
 ScrollPositionUpdate ScrollPositionUpdate::NewRelativeScroll(
-    const ScrollGeneration& aGeneration, nsPoint aSource,
-    nsPoint aDestination) {
+    nsPoint aSource, nsPoint aDestination) {
   ScrollPositionUpdate ret;
-  ret.mScrollGeneration = aGeneration;
+  ret.mScrollGeneration = ScrollGeneration::New();
   ret.mType = ScrollUpdateType::Relative;
   ret.mScrollMode = ScrollMode::Instant;
   ret.mScrollOrigin = ScrollOrigin::Relative;
@@ -84,13 +82,12 @@ ScrollPositionUpdate ScrollPositionUpdate::NewRelativeScroll(
 
 /*static*/
 ScrollPositionUpdate ScrollPositionUpdate::NewSmoothScroll(
-    const ScrollGeneration& aGeneration, ScrollOrigin aOrigin,
-    nsPoint aDestination) {
+    ScrollOrigin aOrigin, nsPoint aDestination) {
   MOZ_ASSERT(aOrigin != ScrollOrigin::NotSpecified);
   MOZ_ASSERT(aOrigin != ScrollOrigin::None);
 
   ScrollPositionUpdate ret;
-  ret.mScrollGeneration = aGeneration;
+  ret.mScrollGeneration = ScrollGeneration::New();
   ret.mType = ScrollUpdateType::Absolute;
   ret.mScrollMode = ScrollMode::SmoothMsd;
   ret.mScrollOrigin = aOrigin;
@@ -100,13 +97,12 @@ ScrollPositionUpdate ScrollPositionUpdate::NewSmoothScroll(
 
 /*static*/
 ScrollPositionUpdate ScrollPositionUpdate::NewPureRelativeScroll(
-    const ScrollGeneration& aGeneration, ScrollOrigin aOrigin, ScrollMode aMode,
-    const nsPoint& aDelta) {
+    ScrollOrigin aOrigin, ScrollMode aMode, const nsPoint& aDelta) {
   MOZ_ASSERT(aOrigin != ScrollOrigin::NotSpecified);
   MOZ_ASSERT(aOrigin != ScrollOrigin::None);
 
   ScrollPositionUpdate ret;
-  ret.mScrollGeneration = aGeneration;
+  ret.mScrollGeneration = ScrollGeneration::New();
   ret.mType = ScrollUpdateType::PureRelative;
   ret.mScrollMode = aMode;
   ret.mScrollOrigin = aOrigin;
