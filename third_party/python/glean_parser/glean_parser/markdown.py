@@ -42,7 +42,9 @@ def extra_info(obj: Union[metrics.Metric, pings.Ping]) -> List[Tuple[str, str]]:
     return extra_info
 
 
-def ping_desc(ping_name: str, custom_pings_cache: Dict[str, pings.Ping] = {}) -> str:
+def ping_desc(
+    ping_name: str, custom_pings_cache: Optional[Dict[str, pings.Ping]] = None
+) -> str:
     """
     Return a text description of the ping. If a custom_pings_cache
     is available, look in there for non-reserved ping names description.
@@ -56,7 +58,7 @@ def ping_desc(ping_name: str, custom_pings_cache: Dict[str, pings.Ping] = {}) ->
         )
     elif ping_name == "all-pings":
         desc = "These metrics are sent in every ping."
-    elif ping_name in custom_pings_cache:
+    elif custom_pings_cache is not None and ping_name in custom_pings_cache:
         desc = custom_pings_cache[ping_name].description
 
     return desc
@@ -87,8 +89,10 @@ def ping_docs(ping_name: str) -> str:
     return f"https://mozilla.github.io/glean/book/user/pings/{ping_name}.html"
 
 
-def if_empty(ping_name: str, custom_pings_cache: Dict[str, pings.Ping] = {}) -> bool:
-    if ping_name in custom_pings_cache:
+def if_empty(
+    ping_name: str, custom_pings_cache: Optional[Dict[str, pings.Ping]] = None
+) -> bool:
+    if custom_pings_cache is not None and ping_name in custom_pings_cache:
         return custom_pings_cache[ping_name].send_if_empty
     else:
         return False
@@ -109,27 +113,27 @@ def ping_reasons(
 
 
 def ping_data_reviews(
-    ping_name: str, custom_pings_cache: Dict[str, pings.Ping] = {}
+    ping_name: str, custom_pings_cache: Optional[Dict[str, pings.Ping]] = None
 ) -> Optional[List[str]]:
-    if ping_name in custom_pings_cache:
+    if custom_pings_cache is not None and ping_name in custom_pings_cache:
         return custom_pings_cache[ping_name].data_reviews
     else:
         return None
 
 
 def ping_bugs(
-    ping_name: str, custom_pings_cache: Dict[str, pings.Ping] = {}
+    ping_name: str, custom_pings_cache: Optional[Dict[str, pings.Ping]] = None
 ) -> Optional[List[str]]:
-    if ping_name in custom_pings_cache:
+    if custom_pings_cache is not None and ping_name in custom_pings_cache:
         return custom_pings_cache[ping_name].bugs
     else:
         return None
 
 
 def ping_include_client_id(
-    ping_name: str, custom_pings_cache: Dict[str, pings.Ping] = {}
+    ping_name: str, custom_pings_cache: Optional[Dict[str, pings.Ping]] = None
 ) -> bool:
-    if ping_name in custom_pings_cache:
+    if custom_pings_cache is not None and ping_name in custom_pings_cache:
         return custom_pings_cache[ping_name].include_client_id
     else:
         return False
@@ -145,7 +149,7 @@ def data_sensitivity_numbers(
 
 
 def output_markdown(
-    objs: metrics.ObjectTree, output_dir: Path, options: Dict[str, Any] = {}
+    objs: metrics.ObjectTree, output_dir: Path, options: Optional[Dict[str, Any]] = None
 ) -> None:
     """
     Given a tree of objects, output Markdown docs to `output_dir`.
@@ -159,6 +163,8 @@ def output_markdown(
     :param options: options dictionary, with the following optional key:
         - `project_title`: The projects title.
     """
+    if options is None:
+        options = {}
 
     # Build a dictionary that associates pings with their metrics.
     #
@@ -177,7 +183,7 @@ def output_markdown(
     # This also builds a dictionary of custom pings, if available.
     custom_pings_cache: Dict[str, pings.Ping] = defaultdict()
     metrics_by_pings: Dict[str, List[metrics.Metric]] = defaultdict(list)
-    for category_key, category_val in objs.items():
+    for _category_key, category_val in objs.items():
         for obj in category_val.values():
             # Filter out custom pings. We will need them for extracting
             # the description

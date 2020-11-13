@@ -39,7 +39,7 @@ application will now have the C files `foo.c` and `bar.c` compiled into a file
 named libfoo.a. You can call the functions in Rust by declaring functions in
 your Rust code like so:
 
-```
+```rust,no_run
 extern {
     fn foo_function();
     fn bar_function();
@@ -150,6 +150,7 @@ fn main() {
 When using C++ library compilation switch, the `CXX` and `CXXFLAGS` env
 variables are used instead of `CC` and `CFLAGS` and the C++ standard library is
 linked to the crate target.
+Remember that C++ does name mangling so `extern "C"` might be required to enable rust linker to find your functions.
 
 ## CUDA C++ support
 

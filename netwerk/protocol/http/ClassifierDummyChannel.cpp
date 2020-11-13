@@ -765,5 +765,11 @@ NS_IMETHODIMP ClassifierDummyChannel::SetWaitForHTTPSSVCRecord() {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+ClassifierDummyChannel::GetSupportsHTTP3(bool* aSupportsHTTP3) {
+  *aSupportsHTTP3 = false;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 }  // namespace net
 }  // namespace mozilla

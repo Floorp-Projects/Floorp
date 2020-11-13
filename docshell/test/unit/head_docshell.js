@@ -43,7 +43,7 @@ const SEARCH_CONFIG = [
 ];
 
 async function setupSearchService() {
-  SearchTestUtils.init(Assert, registerCleanupFunction);
+  SearchTestUtils.init(this);
 
   Services.prefs.setBoolPref("browser.search.modernConfig", true);
   AddonTestUtils.init(this);

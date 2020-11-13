@@ -54,7 +54,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const int32_t& aProxyConnectResponseCode,
       nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
       const bool& aDataToChildProcess, const bool& aRestarted,
-      Maybe<uint32_t>&& aHTTPSSVCReceivedStage);
+      Maybe<uint32_t>&& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3);
   mozilla::ipc::IPCResult RecvOnTransportStatus(
       const nsresult& aStatus, const int64_t& aProgress,
       const int64_t& aProgressMax,
@@ -91,16 +91,14 @@ class HttpTransactionParent final : public PHttpTransactionParent,
 
   void GetStructFromInfo(nsHttpConnectionInfo* aInfo,
                          HttpConnectionInfoCloneArgs& aArgs);
-  void DoOnStartRequest(const nsresult& aStatus,
-                        const Maybe<nsHttpResponseHead>& aResponseHead,
-                        const nsCString& aSecurityInfoSerialization,
-                        const bool& aProxyConnectFailed,
-                        const TimingStructArgs& aTimings,
-                        const int32_t& aProxyConnectResponseCode,
-                        nsTArray<uint8_t>&& aDataForSniffer,
-                        const Maybe<nsCString>& aAltSvcUsed,
-                        const bool& aDataToChildProcess, const bool& aRestarted,
-                        Maybe<uint32_t>&& aHTTPSSVCReceivedStage);
+  void DoOnStartRequest(
+      const nsresult& aStatus, const Maybe<nsHttpResponseHead>& aResponseHead,
+      const nsCString& aSecurityInfoSerialization,
+      const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
+      const int32_t& aProxyConnectResponseCode,
+      nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
+      const bool& aDataToChildProcess, const bool& aRestarted,
+      Maybe<uint32_t>&& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3);
   void DoOnDataAvailable(const nsCString& aData, const uint64_t& aOffset,
                          const uint32_t& aCount);
   void DoOnStopRequest(
@@ -158,6 +156,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   std::function<void()> mCallOnResume;
   Maybe<uint32_t> mHTTPSSVCReceivedStage;
   RefPtr<nsHttpConnectionInfo> mConnInfo;
+  bool mSupportsHTTP3 = false;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionParent,

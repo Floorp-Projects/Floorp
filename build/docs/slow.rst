@@ -98,7 +98,7 @@ Anyway, the build system spawns thousands of new processes during a
 build. Parts of the build that rely on rapid spawning of new processes
 are slow on Windows as a result. This is most pronounced when running
 *configure*. The configure file is a giant shell script and shell
-scripts rely heavily on new processes. This is why configure on Windows
+scripts rely heavily on new processes. This is why configure
 can run over a minute slower on Windows.
 
 Another reason Windows builds are slower is because Windows lacks proper

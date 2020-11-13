@@ -102,26 +102,26 @@ pub trait ExternalImageHandler {
 
 /// Specifies the type of texture target in driver terms.
 #[repr(u8)]
-#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, Serialize, Deserialize)]
-pub enum TextureTarget {
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, Serialize, Deserialize)]
+pub enum ImageBufferKind {
     /// Standard texture. This maps to GL_TEXTURE_2D in OpenGL.
-    Default = 0,
-    /// Array texture. This maps to GL_TEXTURE_2D_ARRAY in OpenGL. See
-    /// https://www.khronos.org/opengl/wiki/Array_Texture for background
-    /// on Array textures.
-    Array = 1,
+    Texture2D = 0,
     /// Rectangle texture. This maps to GL_TEXTURE_RECTANGLE in OpenGL. This
     /// is similar to a standard texture, with a few subtle differences
     /// (no mipmaps, non-power-of-two dimensions, different coordinate space)
     /// that make it useful for representing the kinds of textures we use
     /// in WebRender. See https://www.khronos.org/opengl/wiki/Rectangle_Texture
     /// for background on Rectangle textures.
-    Rect = 2,
+    TextureRect = 1,
     /// External texture. This maps to GL_TEXTURE_EXTERNAL_OES in OpenGL, which
     /// is an extension. This is used for image formats that OpenGL doesn't
     /// understand, particularly YUV. See
     /// https://www.khronos.org/registry/OpenGL/extensions/OES/OES_EGL_image_external.txt
-    External = 3,
+    TextureExternal = 2,
+    /// Array texture. This maps to GL_TEXTURE_2D_ARRAY in OpenGL. See
+    /// https://www.khronos.org/opengl/wiki/Array_Texture for background
+    /// on Array textures.
+    Texture2DArray = 3,
 }
 
 /// Storage format identifier for externally-managed images.
@@ -129,7 +129,7 @@ pub enum TextureTarget {
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq, Serialize, Deserialize)]
 pub enum ExternalImageType {
     /// The image is texture-backed.
-    TextureHandle(TextureTarget),
+    TextureHandle(ImageBufferKind),
     /// The image is heap-allocated by the embedding.
     Buffer,
 }

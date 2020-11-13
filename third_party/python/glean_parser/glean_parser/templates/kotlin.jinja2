@@ -13,7 +13,7 @@ Jinja2 template is not. Please file bugs! #}
 {% if (access != "private ") -%}
 @get:JvmName("{{ obj.name|camelize }}{{ suffix }}")
 {% endif -%}
-{{ access }}val {{ obj.name|camelize }}{{ suffix }}: {{ obj|type_name }}{% if lazy %} by lazy { {%- else %} ={% endif %}
+{{ access }}val {{ obj.name|camelize }}{{ suffix }}: {{ obj|type_name }}{% if lazy %} by lazy { {%- else %} ={% endif %} // generated from {{ obj.identifier() }}
 
         {{ obj|type_name }}(
             {% for arg_name in extra_args if obj[arg_name] is defined %}
@@ -60,7 +60,7 @@ internal object {{ category_name|Camelize }} {
     /**
      * {{ obj.description|wordwrap() | replace('\n', '\n        * ') }}
      */
-    val {{ obj.name|camelize }}: LabeledMetricType<{{ obj|type_name }}> by lazy {
+    val {{ obj.name|camelize }}: LabeledMetricType<{{ obj|type_name }}> by lazy { // generated from {{ obj.identifier() }}
         LabeledMetricType(
             category = {{ obj.category|kotlin }},
             name = {{ obj.name|kotlin }},

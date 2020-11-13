@@ -442,20 +442,20 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnStartRequest(
     const int32_t& aProxyConnectResponseCode,
     nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
     const bool& aDataToChildProcess, const bool& aRestarted,
-    Maybe<uint32_t>&& aHTTPSSVCReceivedStage) {
+    Maybe<uint32_t>&& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3) {
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this,
-      [self = UnsafePtr<HttpTransactionParent>(this), aStatus, aResponseHead,
-       aSecurityInfoSerialization, aProxyConnectFailed, aTimings,
-       aProxyConnectResponseCode,
-       aDataForSniffer = CopyableTArray{std::move(aDataForSniffer)},
-       aAltSvcUsed, aDataToChildProcess, aRestarted,
-       aHTTPSSVCReceivedStage{std::move(aHTTPSSVCReceivedStage)}]() mutable {
+      this, [self = UnsafePtr<HttpTransactionParent>(this), aStatus,
+             aResponseHead, aSecurityInfoSerialization, aProxyConnectFailed,
+             aTimings, aProxyConnectResponseCode,
+             aDataForSniffer = CopyableTArray{std::move(aDataForSniffer)},
+             aAltSvcUsed, aDataToChildProcess, aRestarted,
+             aHTTPSSVCReceivedStage{std::move(aHTTPSSVCReceivedStage)},
+             aSupportsHttp3]() mutable {
         self->DoOnStartRequest(
             aStatus, aResponseHead, aSecurityInfoSerialization,
             aProxyConnectFailed, aTimings, aProxyConnectResponseCode,
             std::move(aDataForSniffer), aAltSvcUsed, aDataToChildProcess,
-            aRestarted, std::move(aHTTPSSVCReceivedStage));
+            aRestarted, std::move(aHTTPSSVCReceivedStage), aSupportsHttp3);
       }));
   return IPC_OK();
 }
@@ -485,7 +485,7 @@ void HttpTransactionParent::DoOnStartRequest(
     const int32_t& aProxyConnectResponseCode,
     nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
     const bool& aDataToChildProcess, const bool& aRestarted,
-    Maybe<uint32_t>&& aHTTPSSVCReceivedStage) {
+    Maybe<uint32_t>&& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3) {
   LOG(("HttpTransactionParent::DoOnStartRequest [this=%p aStatus=%" PRIx32
        "]\n",
        this, static_cast<uint32_t>(aStatus)));
@@ -499,6 +499,7 @@ void HttpTransactionParent::DoOnStartRequest(
   mStatus = aStatus;
   mDataSentToChildProcess = aDataToChildProcess;
   mHTTPSSVCReceivedStage = std::move(aHTTPSSVCReceivedStage);
+  mSupportsHTTP3 = aSupportsHttp3;
 
   if (!aSecurityInfoSerialization.IsEmpty()) {
     NS_DeserializeObject(aSecurityInfoSerialization,
@@ -895,6 +896,8 @@ void HttpTransactionParent::HandleAsyncAbort() {
 
   DoNotifyListener();
 }
+
+bool HttpTransactionParent::GetSupportsHTTP3() { return mSupportsHTTP3; }
 
 }  // namespace net
 }  // namespace mozilla

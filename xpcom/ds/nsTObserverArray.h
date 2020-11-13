@@ -569,7 +569,7 @@ inline void ImplCycleCollectionTraverse(
 // Note that this macro only works if the array holds pointers to XPCOM objects.
 #define NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(array_, func_, params_) \
   do {                                                                   \
-    for (RefPtr obs_ : array_.ForwardRange()) {                          \
+    for (RefPtr obs_ : (array_).ForwardRange()) {                        \
       obs_->func_ params_;                                               \
     }                                                                    \
   } while (0)
@@ -577,20 +577,9 @@ inline void ImplCycleCollectionTraverse(
 // Note that this macro only works if the array holds pointers to XPCOM objects.
 #define NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(array_, func_, params_) \
   do {                                                             \
-    for (auto* obs_ : array_.ForwardRange()) {                     \
+    for (auto* obs_ : (array_).ForwardRange()) {                   \
       obs_->func_ params_;                                         \
     }                                                              \
-  } while (0)
-
-#define NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS_WITH_QI(array_, obstype_, func_, \
-                                                   params_)                 \
-  do {                                                                      \
-    for (auto* obsbase_ : array_.ForwardRange()) {                          \
-      nsCOMPtr<obstype_> obs_ = do_QueryInterface(obsbase_);                \
-      if (obs_) {                                                           \
-        obs_->func_ params_;                                                \
-      }                                                                     \
-    }                                                                       \
   } while (0)
 
 #endif  // nsTObserverArray_h___

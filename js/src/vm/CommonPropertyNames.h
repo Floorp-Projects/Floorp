@@ -12,18 +12,21 @@
 // The following common atoms are reserved by the js::StaticStrigs /
 // WellKnownParserAtoms::lookupTiny mechanisms. We still use a named reference
 // for the parser and VM to use.
-#define FOR_EACH_TINY_PROPERTYNAME(MACRO) \
-  MACRO(as, as, "as")                     \
-  MACRO(by, by, "by")                     \
-  MACRO(comma, comma, ",")                \
-  MACRO(do, do_, "do")                    \
-  MACRO(empty, empty, "")                 \
-  MACRO(futexOK, futexOK, "ok")           \
-  MACRO(if, if_, "if")                    \
-  MACRO(in, in, "in")                     \
-  MACRO(js, js, "js")                     \
-  MACRO(of, of, "of")                     \
+#define FOR_EACH_NON_EMPTY_TINY_PROPERTYNAME(MACRO) \
+  MACRO(as, as, "as")                               \
+  MACRO(by, by, "by")                               \
+  MACRO(comma, comma, ",")                          \
+  MACRO(do, do_, "do")                              \
+  MACRO(futexOK, futexOK, "ok")                     \
+  MACRO(if, if_, "if")                              \
+  MACRO(in, in, "in")                               \
+  MACRO(js, js, "js")                               \
+  MACRO(of, of, "of")                               \
   MACRO(star, star, "*")
+
+#define FOR_EACH_TINY_PROPERTYNAME(MACRO) \
+  MACRO(empty, empty, "")                 \
+  FOR_EACH_NON_EMPTY_TINY_PROPERTYNAME(MACRO)
 
 #define FOR_EACH_NONTINY_COMMON_PROPERTYNAME(MACRO)                            \
   MACRO(abort, abort, "abort")                                                 \

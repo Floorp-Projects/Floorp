@@ -2094,6 +2094,84 @@
     "n_buckets": 50,
     "description": "HTTP subitem channel: Overall load time - network (ms) [cache2]"
   },
+  "HTTP3_TLS_HANDSHAKE": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "never",
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "bug_numbers": [1675500],
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "keyed": true,
+    "description": "HTTP channel (keys: uses_http3_page, uses_http3_sub, supports_http3_page, supports_http3_sub): After TCP SYN to Ready for HTTP (ms)"
+  },
+  "SUP_HTTP3_TCP_CONNECTION": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "bug_numbers": [1675500],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "keyed": true,
+    "description": "HTTP channel(keys: supports_http3_page, supports_http3_sub): TCP SYN to Ready for HTTP (ms)"
+  },
+  "HTTP3_OPEN_TO_FIRST_SENT": {
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "bug_numbers": [1675500],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "keyed": true,
+    "description": "HTTP channel(keys: uses_http3_page, uses_http3_sub, supports_http3_page, supports_http3_sub): Open -> first byte of request sent (ms)"
+  },
+  "HTTP3_FIRST_SENT_TO_LAST_RECEIVED": {
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "bug_numbers": [1675500],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "keyed": true,
+    "description": "HTTP channel (keys: uses_http3_page, uses_http3_sub, supports_http3_page, supports_http3_sub): First byte of request sent -> last byte of response received (ms)"
+  },
+  "HTTP3_OPEN_TO_FIRST_RECEIVED": {
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "bug_numbers": [1675500],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "keyed": true,
+    "description": "HTTP channel (keys: uses_http3_page, uses_http3_sub, supports_http3_page, supports_http3_sub): Open -> first byte of reply received (ms)"
+  },
+  "HTTP3_COMPLETE_LOAD": {
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "bug_numbers": [1675500],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "keyed": true,
+    "description": "HTTP channel (keys: uses_http3_page, uses_http3_sub, supports_http3_page, supports_http3_sub): Overall load time - network (ms)"
+  },
   "HTTP_PROXY_TYPE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
@@ -3313,6 +3391,18 @@
     "high": 5000,
     "n_buckets": 100,
     "description": "Time from submission to dispatch of HTTP/3 transaction (ms)"
+  },
+  "TRANSACTION_WAIT_TIME_HTTP2_SUP_HTTP3": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "bug_numbers": [1675500],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "description": "Time from submission to dispatch of HTTP2 transaction that has received a respone from a server that addretizes HTTP3 support (ms)"
   },
   "HTTP_SAW_QUIC_ALT_PROTOCOL_2": {
     "record_in_processes": ["main", "content"],
