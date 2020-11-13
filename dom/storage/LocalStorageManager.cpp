@@ -123,16 +123,13 @@ already_AddRefed<StorageUsage> LocalStorageManager::GetOriginUsage(
 
 already_AddRefed<LocalStorageCache> LocalStorageManager::PutCache(
     const nsACString& aOriginSuffix, const nsACString& aOriginNoSuffix,
-    nsIPrincipal* aPrincipal) {
+    const nsACString& aQuotaKey, nsIPrincipal* aPrincipal) {
   CacheOriginHashtable* table = mCaches.LookupOrAdd(aOriginSuffix);
   LocalStorageCacheHashKey* entry = table->PutEntry(aOriginNoSuffix);
   RefPtr<LocalStorageCache> cache = entry->cache();
 
-  nsAutoCString quotaOrigin;
-  aPrincipal->GetLocalStorageQuotaKey(quotaOrigin);
-
   // Lifetime handled by the cache, do persist
-  cache->Init(this, true, aPrincipal, quotaOrigin);
+  cache->Init(this, true, aPrincipal, aQuotaKey);
   return cache.forget();
 }
 
@@ -153,10 +150,17 @@ nsresult LocalStorageManager::GetStorageInternal(
     bool aPrivate, Storage** aRetval) {
   nsAutoCString originAttrSuffix;
   nsAutoCString originKey;
+  nsAutoCString quotaKey;
+
+  aStoragePrincipal->OriginAttributesRef().CreateSuffix(originAttrSuffix);
 
   nsresult rv = aStoragePrincipal->GetStorageOriginKey(originKey);
-  aStoragePrincipal->OriginAttributesRef().CreateSuffix(originAttrSuffix);
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  rv = aStoragePrincipal->GetLocalStorageQuotaKey(quotaKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -203,7 +207,7 @@ nsresult LocalStorageManager::GetStorageInternal(
     }
 
     uint32_t privateBrowsingId;
-    rv = aPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
+    rv = aStoragePrincipal->GetPrivateBrowsingId(&privateBrowsingId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -211,7 +215,7 @@ nsresult LocalStorageManager::GetStorageInternal(
 
     // There is always a single instance of a cache per scope
     // in a single instance of a DOM storage manager.
-    cache = PutCache(originAttrSuffix, originKey, aStoragePrincipal);
+    cache = PutCache(originAttrSuffix, originKey, quotaKey, aStoragePrincipal);
 
 #if !defined(MOZ_WIDGET_ANDROID)
     LocalStorageCacheChild* actor = new LocalStorageCacheChild(cache);
