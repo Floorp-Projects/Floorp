@@ -768,19 +768,6 @@ nsresult Connection::initialize(nsIFile* aDatabaseFile) {
   return NS_OK;
 }
 
-static bool HasKeyParam(const nsACString& aQuery) {
-  class MOZ_STACK_CLASS ParamsIterator final
-      : public URLParams::ForEachIterator {
-   public:
-    bool URLParamsIterator(const nsAString& aName,
-                           const nsAString& aValue) override {
-      return aName.EqualsLiteral("key");
-    }
-  } paramsIterator;
-
-  return URLParams::Parse(aQuery, paramsIterator);
-}
-
 nsresult Connection::initialize(nsIFileURL* aFileURL,
                                 const nsACString& aTelemetryFilename) {
   NS_ASSERTION(aFileURL, "Passed null file URL!");
@@ -812,8 +799,13 @@ nsresult Connection::initialize(nsIFileURL* aFileURL,
   nsAutoCString query;
   rv = aFileURL->GetQuery(query);
   NS_ENSURE_SUCCESS(rv, rv);
-  const char* const vfs = HasKeyParam(query) ? GetObfuscatingVFSName()
-                                             : GetTelemetryVFSName(exclusive);
+  const char* const vfs =
+      URLParams::Parse(query,
+                       [](const nsAString& aName, const nsAString& aValue) {
+                         return aName.EqualsLiteral("key");
+                       })
+          ? GetObfuscatingVFSName()
+          : GetTelemetryVFSName(exclusive);
   int srv = ::sqlite3_open_v2(spec.get(), &mDBConn, mFlags, vfs);
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
