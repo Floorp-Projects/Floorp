@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <math.h>
 #include <limits.h>
+#include <cmath>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -18,17 +19,40 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "mozilla/Unused.h"
 #include "mozilla/WindowsDpiAwareness.h"
 #include "mozilla/WindowsVersion.h"
 
 namespace mozilla {
 
+// ColorRect defines an optionally-rounded, optionally-bordered rectangle of a
+// particular color that we will draw.
 struct ColorRect {
   uint32_t color;
+  uint32_t borderColor;
   uint32_t x;
   uint32_t y;
   uint32_t width;
   uint32_t height;
+  uint32_t borderWidth;
+  uint32_t borderRadius;
+};
+
+// DrawRect is mostly the same as ColorRect, but exists as an implementation
+// detail to simplify drawing borders. We draw borders as a strokeOnly rect
+// underneath an inner rect of a particular color. We also need to keep
+// track of the backgroundColor for rounding rects, in order to correctly
+// anti-alias.
+struct DrawRect {
+  uint32_t color;
+  uint32_t backgroundColor;
+  uint32_t x;
+  uint32_t y;
+  uint32_t width;
+  uint32_t height;
+  uint32_t borderRadius;
+  uint32_t borderWidth;
+  bool strokeOnly;
 };
 
 struct NormalizedRGB {
@@ -202,6 +226,288 @@ int CSSToDevPixels(int cssPixels, double scaling) {
   return CSSToDevPixels((double)cssPixels, scaling);
 }
 
+int CSSToDevPixelsFloor(double cssPixels, double scaling) {
+  return floor(cssPixels * scaling);
+}
+
+// Some things appear to floor to device pixels rather than rounding. A good
+// example of this is border widths.
+int CSSToDevPixelsFloor(int cssPixels, double scaling) {
+  return CSSToDevPixelsFloor((double)cssPixels, scaling);
+}
+
+double SignedDistanceToCircle(double x, double y, double radius) {
+  return sqrt(x * x + y * y) - radius;
+}
+
+// For more details, see
+// https://searchfox.org/mozilla-central/rev/a5d9abfda1e26b1207db9549549ab0bdd73f735d/gfx/wr/webrender/res/shared.glsl#141-187
+// which was a reference for this function.
+double DistanceAntiAlias(double signedDistance) {
+  // Distance assumed to be in device pixels. We use an aa range of 0.5 for
+  // reasons detailed in the linked code above.
+  const double aaRange = 0.5;
+  double dist = 0.5 * signedDistance / aaRange;
+  if (dist <= -0.5 + std::numeric_limits<double>::epsilon()) return 1.0;
+  if (dist >= 0.5 - std::numeric_limits<double>::epsilon()) return 0.0;
+  return 0.5 + dist * (0.8431027 * dist * dist - 1.14453603);
+}
+
+void RasterizeRoundedRectTopAndBottom(const DrawRect& rect) {
+  if (rect.height <= 2 * rect.borderRadius) {
+    MOZ_ASSERT(false, "Skeleton UI rect height too small for border radius.");
+    return;
+  }
+  if (rect.width <= 2 * rect.borderRadius) {
+    MOZ_ASSERT(false, "Skeleton UI rect width too small for border radius.");
+    return;
+  }
+
+  NormalizedRGB rgbBase = UintToRGB(rect.backgroundColor);
+  NormalizedRGB rgbBlend = UintToRGB(rect.color);
+
+  for (int rowIndex = 0; rowIndex < rect.borderRadius; ++rowIndex) {
+    int yTop = rect.y + rect.borderRadius - 1 - rowIndex;
+    int yBottom = rect.y + rect.height - rect.borderRadius + rowIndex;
+
+    uint32_t* lineStartTop = &sPixelBuffer[yTop * sWindowWidth];
+    uint32_t* innermostPixelTopLeft =
+        lineStartTop + rect.x + rect.borderRadius - 1;
+    uint32_t* innermostPixelTopRight =
+        lineStartTop + rect.x + rect.width - rect.borderRadius;
+    uint32_t* lineStartBottom = &sPixelBuffer[yBottom * sWindowWidth];
+    uint32_t* innermostPixelBottomLeft =
+        lineStartBottom + rect.x + rect.borderRadius - 1;
+    uint32_t* innermostPixelBottomRight =
+        lineStartBottom + rect.x + rect.width - rect.borderRadius;
+
+    // Add 0.5 to x and y to get the pixel center.
+    double pixelY = (double)rowIndex + 0.5;
+    for (int columnIndex = 0; columnIndex < rect.borderRadius; ++columnIndex) {
+      double pixelX = (double)columnIndex + 0.5;
+      double distance =
+          SignedDistanceToCircle(pixelX, pixelY, (double)rect.borderRadius);
+      double alpha = DistanceAntiAlias(distance);
+      NormalizedRGB rgb = Lerp(rgbBase, rgbBlend, alpha);
+      uint32_t color = RGBToUint(rgb);
+
+      innermostPixelTopLeft[-columnIndex] = color;
+      innermostPixelTopRight[columnIndex] = color;
+      innermostPixelBottomLeft[-columnIndex] = color;
+      innermostPixelBottomRight[columnIndex] = color;
+    }
+
+    std::fill(innermostPixelTopLeft + 1, innermostPixelTopRight, rect.color);
+    std::fill(innermostPixelBottomLeft + 1, innermostPixelBottomRight,
+              rect.color);
+  }
+}
+
+void RasterizeAnimatedRoundedRectTopAndBottom(
+    const ColorRect& colorRect, const uint32_t* animationLookup,
+    int priorUpdateAreaMin, int priorUpdateAreaMax, int currentUpdateAreaMin,
+    int currentUpdateAreaMax, int animationMin) {
+  // We iterate through logical pixel rows here, from inside to outside, which
+  // for the top of the rounded rect means from bottom to top, and for the
+  // bottom of the rect means top to bottom. We paint pixels from left to
+  // right on the top and bottom rows at the same time for the entire animation
+  // window. (If the animation window does not overlap any rounded corners,
+  // however, we won't be called at all)
+  for (int rowIndex = 0; rowIndex < colorRect.borderRadius; ++rowIndex) {
+    int yTop = colorRect.y + colorRect.borderRadius - 1 - rowIndex;
+    int yBottom =
+        colorRect.y + colorRect.height - colorRect.borderRadius + rowIndex;
+
+    uint32_t* lineStartTop = &sPixelBuffer[yTop * sWindowWidth];
+    uint32_t* lineStartBottom = &sPixelBuffer[yBottom * sWindowWidth];
+
+    // Add 0.5 to x and y to get the pixel center.
+    double pixelY = (double)rowIndex + 0.5;
+    for (int x = priorUpdateAreaMin; x < currentUpdateAreaMax; ++x) {
+      // The column index is the distance from the innermost pixel, which
+      // is different depending on whether we're on the left or right
+      // side of the rect. It will always be the max here, and if it's
+      // negative that just means we're outside the rounded area.
+      int columnIndex =
+          std::max((int)colorRect.x + (int)colorRect.borderRadius - x - 1,
+                   x - ((int)colorRect.x + (int)colorRect.width -
+                        (int)colorRect.borderRadius));
+
+      double alpha = 1.0;
+      if (columnIndex >= 0) {
+        double pixelX = (double)columnIndex + 0.5;
+        double distance = SignedDistanceToCircle(
+            pixelX, pixelY, (double)colorRect.borderRadius);
+        alpha = DistanceAntiAlias(distance);
+      }
+      // We don't do alpha blending for the antialiased pixels at the
+      // shape's border. It is not noticeable in the animation.
+      if (alpha > 1.0 - std::numeric_limits<double>::epsilon()) {
+        // Overwrite the tail end of last frame's animation with the
+        // rect's normal, unanimated color.
+        uint32_t color = x < priorUpdateAreaMax
+                             ? colorRect.color
+                             : animationLookup[x - animationMin];
+        lineStartTop[x] = color;
+        lineStartBottom[x] = color;
+      }
+    }
+  }
+}
+
+void RasterizeColorRect(const ColorRect& colorRect) {
+  // We sometimes split our rect into two, to simplify drawing borders. If we
+  // have a border, we draw a stroke-only rect first, and then draw the smaller
+  // inner rect on top of it.
+  Vector<DrawRect, 2> drawRects;
+  Unused << drawRects.reserve(2);
+  if (colorRect.borderWidth == 0) {
+    DrawRect rect = {};
+    rect.color = colorRect.color;
+    rect.backgroundColor =
+        sPixelBuffer[colorRect.y * sWindowWidth + colorRect.x];
+    rect.x = colorRect.x;
+    rect.y = colorRect.y;
+    rect.width = colorRect.width;
+    rect.height = colorRect.height;
+    rect.borderRadius = colorRect.borderRadius;
+    rect.strokeOnly = false;
+    drawRects.infallibleAppend(rect);
+  } else {
+    DrawRect borderRect = {};
+    borderRect.color = colorRect.borderColor;
+    borderRect.backgroundColor =
+        sPixelBuffer[colorRect.y * sWindowWidth + colorRect.x];
+    borderRect.x = colorRect.x;
+    borderRect.y = colorRect.y;
+    borderRect.width = colorRect.width;
+    borderRect.height = colorRect.height;
+    borderRect.borderRadius = colorRect.borderRadius;
+    borderRect.borderWidth = colorRect.borderWidth;
+    borderRect.strokeOnly = true;
+    drawRects.infallibleAppend(borderRect);
+
+    DrawRect baseRect = {};
+    baseRect.color = colorRect.color;
+    baseRect.backgroundColor = borderRect.color;
+    baseRect.x = colorRect.x + colorRect.borderWidth;
+    baseRect.y = colorRect.y + colorRect.borderWidth;
+    baseRect.width = colorRect.width - 2 * colorRect.borderWidth;
+    baseRect.height = colorRect.height - 2 * colorRect.borderWidth;
+    baseRect.borderRadius =
+        std::max(0, (int)colorRect.borderRadius - (int)colorRect.borderWidth);
+    baseRect.borderWidth = 0;
+    baseRect.strokeOnly = false;
+    drawRects.infallibleAppend(baseRect);
+  }
+
+  for (const DrawRect& rect : drawRects) {
+    // For rounded rectangles, the first thing we do is draw the top and
+    // bottom of the rectangle, with the more complicated logic below. After
+    // that we can just draw the vertically centered part of the rect like
+    // normal.
+    RasterizeRoundedRectTopAndBottom(rect);
+
+    // We then draw the flat, central portion of the rect (which in the case of
+    // non-rounded rects, is just the entire thing.)
+    int solidRectStartY = std::clamp(rect.y + rect.borderRadius, 0u,
+                                     (uint32_t)sTotalChromeHeight);
+    int solidRectEndY = std::clamp(rect.y + rect.height - rect.borderRadius, 0u,
+                                   (uint32_t)sTotalChromeHeight);
+    for (int y = solidRectStartY; y < solidRectEndY; ++y) {
+      // For strokeOnly rects (used to draw borders), we just draw the left
+      // and right side here. Looping down a column of pixels is not the most
+      // cache-friendly thing, but it shouldn't be a big deal given the height
+      // of the urlbar.
+      // Also, if borderRadius is less than borderWidth, we need to ensure
+      // that we fully draw the top and bottom lines, so we make sure to check
+      // that we're inside the middle range range before excluding pixels.
+      if (rect.strokeOnly && y - rect.y > rect.borderWidth &&
+          rect.y + rect.height - y > rect.borderWidth) {
+        int startXLeft = std::clamp(rect.x, 0u, sWindowWidth);
+        int endXLeft = std::clamp(rect.x + rect.borderWidth, 0u, sWindowWidth);
+        int startXRight = std::clamp(rect.x + rect.width - rect.borderWidth, 0u,
+                                     sWindowWidth);
+        int endXRight = std::clamp(rect.x + rect.width, 0u, sWindowWidth);
+
+        uint32_t* lineStart = &sPixelBuffer[y * sWindowWidth];
+        uint32_t* dataStartLeft = lineStart + startXLeft;
+        uint32_t* dataEndLeft = lineStart + endXLeft;
+        uint32_t* dataStartRight = lineStart + startXRight;
+        uint32_t* dataEndRight = lineStart + endXRight;
+        std::fill(dataStartLeft, dataEndLeft, rect.color);
+        std::fill(dataStartRight, dataEndRight, rect.color);
+      } else {
+        int startX = std::clamp(rect.x, 0u, sWindowWidth);
+        int endX = std::clamp(rect.x + rect.width, 0u, sWindowWidth);
+        uint32_t* lineStart = &sPixelBuffer[y * sWindowWidth];
+        uint32_t* dataStart = lineStart + startX;
+        uint32_t* dataEnd = lineStart + endX;
+        std::fill(dataStart, dataEnd, rect.color);
+      }
+    }
+  }
+}
+
+// Paints the pixels to sPixelBuffer for the skeleton UI animation (a light
+// gradient which moves from left to right across the grey placeholder rects).
+// Takes in the rect to draw, together with a lookup table for the gradient,
+// and the bounds of the previous and current frame of the animation.
+bool RasterizeAnimatedRect(const ColorRect& colorRect,
+                           const uint32_t* animationLookup,
+                           int priorAnimationMin, int animationMin,
+                           int animationMax) {
+  int rectMin = colorRect.x;
+  int rectMax = colorRect.x + colorRect.width;
+  bool animationWindowOverlaps =
+      rectMax >= priorAnimationMin && rectMin < animationMax;
+
+  int priorUpdateAreaMin = std::max(rectMin, priorAnimationMin);
+  int priorUpdateAreaMax = std::min(rectMax, animationMin);
+  int currentUpdateAreaMin = std::max(rectMin, animationMin);
+  int currentUpdateAreaMax = std::min(rectMax, animationMax);
+
+  if (!animationWindowOverlaps) {
+    return false;
+  }
+
+  bool animationWindowOverlapsBorderRadius =
+      rectMin + colorRect.borderRadius > priorAnimationMin ||
+      rectMax - colorRect.borderRadius <= animationMax;
+
+  // If we don't overlap the left or right side of the rounded rectangle,
+  // just pretend it's not rounded. This is a small optimization but
+  // there's no point in doing all of this rounded rectangle checking if
+  // we aren't even overlapping
+  int borderRadius =
+      animationWindowOverlapsBorderRadius ? colorRect.borderRadius : 0;
+
+  if (borderRadius > 0) {
+    // Similarly to how we draw the rounded rects in DrawSkeletonUI, we
+    // first draw the rounded top and bottom, and then we draw the center
+    // rect.
+    RasterizeAnimatedRoundedRectTopAndBottom(
+        colorRect, animationLookup, priorUpdateAreaMin, priorUpdateAreaMax,
+        currentUpdateAreaMin, currentUpdateAreaMax, animationMin);
+  }
+
+  for (int y = colorRect.y + borderRadius;
+       y < colorRect.y + colorRect.height - borderRadius; ++y) {
+    uint32_t* lineStart = &sPixelBuffer[y * sWindowWidth];
+    // Overwrite the tail end of last frame's animation with the rect's
+    // normal, unanimated color.
+    for (int x = priorUpdateAreaMin; x < priorUpdateAreaMax; ++x) {
+      lineStart[x] = colorRect.color;
+    }
+    // Then apply the animated color
+    for (int x = currentUpdateAreaMin; x < currentUpdateAreaMax; ++x) {
+      lineStart[x] = animationLookup[x - animationMin];
+    }
+  }
+
+  return true;
+}
+
 void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
                     CSSPixelSpan searchbarCSSSpan,
                     const Vector<CSSPixelSpan>& springs,
@@ -251,6 +557,8 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   // found in urlbar-searchbar.inc.css, "#urlbar[breakout]"
   int urlbarTopOffset = CSSToDevPixels(5, sCSSToDevPixelScaling);
   int urlbarHeight = CSSToDevPixels(30, sCSSToDevPixelScaling);
+  // found in browser-aero.css, "#navigator-toolbox::after" border-bottom
+  int chromeContentDividerHeight = CSSToDevPixels(1, sCSSToDevPixelScaling);
 
   int tabPlaceholderBarMarginTop = CSSToDevPixels(13, sCSSToDevPixelScaling);
   int tabPlaceholderBarMarginLeft = CSSToDevPixels(10, sCSSToDevPixelScaling);
@@ -296,6 +604,13 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
     return;
   }
 
+  int placeholderBorderRadius = CSSToDevPixels(2, sCSSToDevPixelScaling);
+  // found in browser.css "--toolbarbutton-border-radius"
+  int urlbarBorderRadius = CSSToDevPixels(2, sCSSToDevPixelScaling);
+  // found in urlbar-searchbar.inc.css "#urlbar-background"
+  int urlbarBorderWidth = CSSToDevPixelsFloor(1, sCSSToDevPixelScaling);
+  int urlbarBorderColor = 0xbebebe;
+
   // The (traditionally dark blue on Windows) background of the tab bar.
   ColorRect tabBar = {};
   tabBar.color = currentTheme.tabBarColor;
@@ -336,6 +651,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   tabTextPlaceholder.y = selectedTab.y + tabPlaceholderBarMarginTop;
   tabTextPlaceholder.width = tabPlaceholderBarWidth;
   tabTextPlaceholder.height = tabPlaceholderBarHeight;
+  tabTextPlaceholder.borderRadius = placeholderBorderRadius;
   if (!rects.append(tabTextPlaceholder)) {
     return;
   }
@@ -357,7 +673,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   chromeContentDivider.x = 0;
   chromeContentDivider.y = toolbar.y + toolbar.height;
   chromeContentDivider.width = sWindowWidth;
-  chromeContentDivider.height = 1;
+  chromeContentDivider.height = chromeContentDividerHeight;
   if (!rects.append(chromeContentDivider)) {
     return;
   }
@@ -371,6 +687,9 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   urlbar.width = CSSToDevPixels((urlbarCSSSpan.end - urlbarCSSSpan.start),
                                 sCSSToDevPixelScaling);
   urlbar.height = urlbarHeight;
+  urlbar.borderRadius = urlbarBorderRadius;
+  urlbar.borderWidth = urlbarBorderWidth;
+  urlbar.borderColor = urlbarBorderColor;
   if (!rects.append(urlbar)) {
     return;
   }
@@ -382,6 +701,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   urlbarTextPlaceholder.y = urlbar.y + urlbarTextPlaceholderMarginTop;
   urlbarTextPlaceholder.width = urlbarTextPlaceHolderWidth;
   urlbarTextPlaceholder.height = urlbarTextPlaceholderHeight;
+  urlbarTextPlaceholder.borderRadius = placeholderBorderRadius;
   if (!rects.append(urlbarTextPlaceholder)) {
     return;
   }
@@ -399,6 +719,9 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
     searchbarRect.width = CSSToDevPixels(
         searchbarCSSSpan.end - searchbarCSSSpan.start, sCSSToDevPixelScaling);
     searchbarRect.height = urlbarHeight;
+    searchbarRect.borderRadius = urlbarBorderRadius;
+    searchbarRect.borderWidth = urlbarBorderWidth;
+    searchbarRect.borderColor = urlbarBorderColor;
     if (!rects.append(searchbarRect)) {
       return;
     }
@@ -459,6 +782,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   }
 
   Vector<DevPixelSpan, 2> spansToAdd;
+  Unused << spansToAdd.reserve(2);
   spansToAdd.infallibleAppend(urlbarSpan);
   if (hasSearchbar) {
     spansToAdd.infallibleAppend(searchbarSpan);
@@ -478,7 +802,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   for (int i = 1; i < noPlaceholderSpans.length(); i++) {
     int start = noPlaceholderSpans[i - 1].end + placeholderMargin;
     int end = noPlaceholderSpans[i].start - placeholderMargin;
-    if (start >= end) {
+    if (start + 2 * placeholderBorderRadius >= end) {
       continue;
     }
 
@@ -489,6 +813,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
     placeholderRect.y = urlbarTextPlaceholder.y;
     placeholderRect.width = end - start;
     placeholderRect.height = toolbarPlaceholderHeight;
+    placeholderRect.borderRadius = placeholderBorderRadius;
     if (!rects.append(placeholderRect) ||
         !sAnimatedRects->append(placeholderRect)) {
       return;
@@ -510,17 +835,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
       (uint32_t*)calloc(sWindowWidth * sTotalChromeHeight, sizeof(uint32_t));
 
   for (const auto& rect : rects) {
-    int startY = std::clamp(rect.y, 0u, (uint32_t)sTotalChromeHeight);
-    int endY =
-        std::clamp(rect.y + rect.height, 0u, (uint32_t)sTotalChromeHeight);
-    for (int y = startY; y < endY; ++y) {
-      int startX = std::clamp(rect.x, 0u, sWindowWidth);
-      int endX = std::clamp(rect.x + rect.width, 0u, sWindowWidth);
-      uint32_t* lineStart = &sPixelBuffer[y * sWindowWidth];
-      uint32_t* dataStart = lineStart + startX;
-      uint32_t* dataEnd = lineStart + endX;
-      std::fill(dataStart, dataEnd, rect.color);
-    }
+    RasterizeColorRect(rect);
   }
 
   HDC hdc = sGetWindowDC(hWnd);
@@ -646,31 +961,10 @@ DWORD WINAPI AnimateSkeletonUI(void* aUnused) {
     // to avoid drawing when we don't need to.
     bool updatedAnything = false;
     for (ColorRect rect : *sAnimatedRects) {
-      int rectMin = rect.x;
-      int rectMax = rect.x + rect.width;
-      bool animationWindowOverlaps =
-          rectMax >= priorAnimationMin && rectMin < animationMax;
-
-      int priorUpdateAreaMin = std::max(rectMin, priorAnimationMin);
-      int currentUpdateAreaMin = std::max(rectMin, animationMin);
-      int priorUpdateAreaMax = std::min(rectMax, animationMin);
-      int currentUpdateAreaMax = std::min(rectMax, animationMax);
-
-      if (animationWindowOverlaps) {
-        updatedAnything = true;
-        for (int y = rect.y; y < rect.y + rect.height; ++y) {
-          uint32_t* lineStart = &sPixelBuffer[y * sWindowWidth];
-          // Overwrite the tail end of last frame's animation with the rect's
-          // normal, unanimated color.
-          for (int x = priorUpdateAreaMin; x < priorUpdateAreaMax; ++x) {
-            lineStart[x] = rect.color;
-          }
-          // Then apply the animated color
-          for (int x = currentUpdateAreaMin; x < currentUpdateAreaMax; ++x) {
-            lineStart[x] = animationLookup[x - animationMin];
-          }
-        }
-      }
+      bool hadUpdates =
+          RasterizeAnimatedRect(rect, animationLookup.get(), priorAnimationMin,
+                                animationMin, animationMax);
+      updatedAnything = updatedAnything || hadUpdates;
     }
 
     if (updatedAnything) {
