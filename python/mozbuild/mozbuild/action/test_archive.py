@@ -139,7 +139,6 @@ ARCHIVE_FILES = {
             "base": "",
             "manifests": [
                 "testing/marionette/harness/marionette_harness/tests/unit-tests.ini",
-                "gfx/tests/marionette/manifest.ini",
             ],
             # We also need the manifests and harness_unit tests
             "pattern": "testing/marionette/harness/marionette_harness/tests/**",
