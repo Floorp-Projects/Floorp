@@ -46,6 +46,10 @@ rtc_library("video_processing") {
   if (rtc_build_with_neon) {
     deps += [ ":video_processing_neon" ]
   }
+  include_dirs = [
+    "/media/libyuv",
+    "/media/libyuv/libyuv/include",
+  ]
 }
 
 rtc_source_set("denoiser_filter") {

@@ -21,7 +21,7 @@
 #include "rtc_base/ref_counted_object.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
-#include "third_party/libyuv/include/libyuv.h"
+#include "libyuv/include/libyuv.h"
 
 namespace webrtc {
 namespace videocapturemodule {

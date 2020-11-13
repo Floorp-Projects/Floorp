@@ -65,6 +65,10 @@ rtc_library("common_video") {
     #"//third_party/libyuv",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  include_dirs = [
+    "/media/libyuv",
+    "/media/libyuv/libyuv/include",
+  ]
 }
 
 rtc_source_set("frame_counts") {

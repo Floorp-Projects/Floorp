@@ -409,6 +409,10 @@ rtc_library("webrtc_h264") {
       deps += [ "../../media:rtc_media_base" ]
     }
   }
+  include_dirs = [
+    "/media/libyuv",
+    "/media/libyuv/libyuv/include",
+  ]
 }
 
 rtc_library("webrtc_multiplex") {
@@ -485,6 +489,10 @@ rtc_library("webrtc_vp8") {
   if (rtc_build_libvpx) {
     deps += [ rtc_libvpx_dir ]
   }
+  include_dirs = [
+    "/media/libyuv",
+    "/media/libyuv/libyuv/include",
+  ]
 }
 
 rtc_library("webrtc_vp8_temporal_layers") {
@@ -710,6 +718,10 @@ if (rtc_include_tests) {
       #"//third_party/libyuv",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+    include_dirs = [
+      "/media/libyuv",
+      "/media/libyuv/libyuv/include",
+    ]
   }
 
   video_coding_modules_tests_resources = []
@@ -864,6 +876,10 @@ if (rtc_include_tests) {
       #"//third_party/libyuv",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+    include_dirs = [
+      "/media/libyuv",
+      "/media/libyuv/libyuv/include",
+    ]
 
     data = video_coding_modules_tests_resources
 
