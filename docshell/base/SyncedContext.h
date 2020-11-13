@@ -57,7 +57,7 @@ class Transaction {
   // If the target has been discarded, changes will be ignored.
   //
   // NOTE: This method mutates `this`, clearing the modified field set.
-  MOZ_MUST_USE nsresult Commit(Context* aOwner);
+  [[nodiscard]] nsresult Commit(Context* aOwner);
 
   // Called from `ContentParent` in response to a transaction from content.
   mozilla::ipc::IPCResult CommitFromIPC(const MaybeDiscarded<Context>& aOwner,
@@ -218,7 +218,7 @@ using FieldSetterType = typename GetFieldSetterType<T>::SetterArg;
 #define MOZ_DECL_SYNCED_CONTEXT_FIELD_GETSET(name, type)                       \
   const type& Get##name() const { return mFields.template Get<IDX_##name>(); } \
                                                                                \
-  MOZ_MUST_USE nsresult Set##name(                                             \
+  [[nodiscard]] nsresult Set##name(                                            \
       ::mozilla::dom::syncedcontext::FieldSetterType<type> aValue) {           \
     Transaction txn;                                                           \
     txn.template Set<IDX_##name>(std::move(aValue));                           \
