@@ -29,6 +29,30 @@ enum class ScrollUpdateType {
   PureRelative,
 };
 
+struct ScrollGeneration {
+ private:
+  // Private constructor; use New() to get a new instance.
+  explicit ScrollGeneration(uint64_t aValue);
+
+ public:
+  // Dummy constructor, needed for IPDL purposes. Not intended for manual use.
+  ScrollGeneration();
+
+  // Returns a new ScrollGeneration with a unique value.
+  static ScrollGeneration New();
+
+  bool operator<(const ScrollGeneration& aOther) const;
+  bool operator==(const ScrollGeneration& aOther) const;
+  bool operator!=(const ScrollGeneration& aOther) const;
+
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const ScrollGeneration& aGen);
+
+ private:
+  static uint64_t sCounter;
+  uint64_t mValue;
+};
+
 /**
  * This class represents an update to the scroll position that is initiated by
  * something on the main thread. A list of these classes is accumulated by
