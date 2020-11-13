@@ -1,5 +1,4 @@
-// |jit-test| --no-warp
-
+// |jit-test| --no-ion
 // Warp has COW arrays disabled (bug 1626854). Re-evaluate after that bug has
 // been fixed.
 
