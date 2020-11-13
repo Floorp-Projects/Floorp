@@ -481,10 +481,11 @@ bool StructuredCloneHolder::ReadString(JSStructuredCloneReader* aReader,
 
 /* static */
 bool StructuredCloneHolder::WriteString(JSStructuredCloneWriter* aWriter,
-                                        const nsString& aString) {
+                                        const nsAString& aString) {
   size_t charSize = sizeof(nsString::char_type);
   return JS_WriteUint32Pair(aWriter, aString.Length(), 0) &&
-         JS_WriteBytes(aWriter, aString.get(), aString.Length() * charSize);
+         JS_WriteBytes(aWriter, aString.BeginReading(),
+                       aString.Length() * charSize);
 }
 
 namespace {
