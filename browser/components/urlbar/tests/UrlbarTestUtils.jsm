@@ -23,6 +23,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
@@ -509,11 +510,12 @@ var UrlbarTestUtils = {
           let engine = Services.search.getEngineByName(
             expectedSearchMode.engineName
           );
-          let engineHost = engine.getResultDomain();
+          let engineRootDomain = UrlbarSearchUtils.getRootDomainFromEngine(
+            engine
+          );
           let resultUrl = new URL(result.url);
-          // Use `includes` to allow results from engine subdomains.
           this.Assert.ok(
-            resultUrl.host.includes(engineHost),
+            resultUrl.hostname.includes(engineRootDomain),
             "Search mode result matches engine host."
           );
         }
