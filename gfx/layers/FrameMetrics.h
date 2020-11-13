@@ -91,7 +91,6 @@ struct FrameMetrics {
         mDevPixelsPerCSSPixel(1),
         mScrollOffset(0, 0),
         mZoom(),
-        mScrollGeneration(0),
         mRootCompositionSize(0, 0),
         mPresShellId(-1),
         mLayoutViewport(0, 0, 0, 0),
@@ -348,11 +347,11 @@ struct FrameMetrics {
 
   const CSSToParentLayerScale2D& GetZoom() const { return mZoom; }
 
-  void SetScrollGeneration(uint32_t aScrollGeneration) {
+  void SetScrollGeneration(const ScrollGeneration& aScrollGeneration) {
     mScrollGeneration = aScrollGeneration;
   }
 
-  uint32_t GetScrollGeneration() const { return mScrollGeneration; }
+  ScrollGeneration GetScrollGeneration() const { return mScrollGeneration; }
 
   ViewID GetScrollId() const { return mScrollId; }
 
@@ -558,7 +557,7 @@ struct FrameMetrics {
   CSSToParentLayerScale2D mZoom;
 
   // The scroll generation counter used to acknowledge the scroll offset update.
-  uint32_t mScrollGeneration;
+  ScrollGeneration mScrollGeneration;
 
   // The size of the root scrollable's composition bounds, but in local CSS
   // pixels.

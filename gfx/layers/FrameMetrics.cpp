@@ -36,12 +36,10 @@ std::ostream& operator<<(std::ostream& aStream, const FrameMetrics& aMetrics) {
                  .get()
           << " cr=" << aMetrics.GetCumulativeResolution()
           << " z=" << aMetrics.GetZoom()
-          << " er=" << aMetrics.GetExtraResolution()
-          << nsPrintfCString(")] [u=(%d %" PRIu32 ")",
-                             aMetrics.GetVisualScrollUpdateType(),
-                             aMetrics.GetScrollGeneration())
-                 .get()
-          << "] scrollId=" << aMetrics.GetScrollId();
+          << " er=" << aMetrics.GetExtraResolution() << " )] [u=("
+          << (int)aMetrics.GetVisualScrollUpdateType() << " "
+          << aMetrics.GetScrollGeneration()
+          << ")] scrollId=" << aMetrics.GetScrollId();
   if (aMetrics.IsRootContent()) {
     aStream << " [rcd]";
   }

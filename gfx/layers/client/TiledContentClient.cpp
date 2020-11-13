@@ -190,8 +190,8 @@ bool SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
     const nsTArray<ScrollPositionUpdate>& scrollUpdates =
         aLayer.Metadata().GetScrollUpdates();
     bool scrollUpdatePending = !scrollUpdates.IsEmpty() &&
-                               scrollUpdates.LastElement().GetGeneration() >
-                                   compositorMetrics.GetScrollGeneration();
+                               compositorMetrics.GetScrollGeneration() <
+                                   scrollUpdates.LastElement().GetGeneration();
     // If scrollUpdatePending is true, then that means the content-side
     // metrics has a new scroll offset that is going to be forced into the
     // compositor but it hasn't gotten there yet.
