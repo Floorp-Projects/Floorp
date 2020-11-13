@@ -92,7 +92,6 @@ ChromeUtils.defineModuleGetter(
   "JSONFile",
   "resource://gre/modules/JSONFile.jsm"
 );
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
   this,
   "LogManager",
@@ -148,7 +147,10 @@ const PreferenceBranchType = {
 let gStorePromise;
 function ensureStorage() {
   if (gStorePromise === undefined) {
-    const path = OS.Path.join(OS.Constants.Path.profileDir, EXPERIMENT_FILE);
+    const path = PathUtils.join(
+      Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+      EXPERIMENT_FILE
+    );
     const storage = new JSONFile({ path });
     gStorePromise = storage.load().then(() => {
       return storage;
