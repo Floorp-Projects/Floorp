@@ -140,6 +140,8 @@ class StorageBaseStatementInternal : public nsISupports {
                           mozIStoragePendingStatement** _stmt);
   NS_IMETHOD EscapeStringForLIKE(const nsAString& aValue, char16_t aEscapeChar,
                                  nsAString& _escapedString);
+  NS_IMETHOD EscapeUTF8StringForLIKE(const nsACString& aValue, char aEscapeChar,
+                                     nsACString& _escapedString);
 
   // Needs access to internalAsyncFinalize
   friend class AsyncStatementFinalizer;
@@ -182,6 +184,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(StorageBaseStatementInternal,
   MIX_IMPL(_class, _optionalGuard, EscapeStringForLIKE,                 \
            (const nsAString& aValue, char16_t aEscapeChar,              \
             nsAString& _escapedString),                                 \
+           (aValue, aEscapeChar, _escapedString))                       \
+  MIX_IMPL(_class, _optionalGuard, EscapeUTF8StringForLIKE,             \
+           (const nsACString& aValue, char aEscapeChar,                 \
+            nsACString& _escapedString),                                \
            (aValue, aEscapeChar, _escapedString))
 
 /**
