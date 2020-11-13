@@ -3553,7 +3553,7 @@ nsIntSize nsGlobalWindowOuter::CSSToDevIntPixelsForBaseWindow(
                           static_cast<float>(aCSSSize.height * scale * zoom));
 }
 
-nsresult nsGlobalWindowOuter::GetInnerSize(CSSIntSize& aSize) {
+nsresult nsGlobalWindowOuter::GetInnerSize(CSSSize& aSize) {
   EnsureSizeAndPositionUpToDate();
 
   NS_ENSURE_STATE(mDocShell);
@@ -3562,7 +3562,7 @@ nsresult nsGlobalWindowOuter::GetInnerSize(CSSIntSize& aSize) {
   PresShell* presShell = mDocShell->GetPresShell();
 
   if (!presContext || !presShell) {
-    aSize = CSSIntSize(0, 0);
+    aSize = {};
     return NS_OK;
   }
 
@@ -3580,22 +3580,27 @@ nsresult nsGlobalWindowOuter::GetInnerSize(CSSIntSize& aSize) {
         nsLayoutUtils::ExpandHeightForViewportUnits(presContext, viewportSize);
   }
 
-  aSize = CSSIntRect::FromAppUnitsRounded(viewportSize);
+  aSize = CSSPixel::FromAppUnits(viewportSize);
+
+  if (StaticPrefs::dom_innerSize_rounded()) {
+    aSize.width = std::roundf(aSize.width);
+    aSize.height = std::roundf(aSize.height);
+  }
 
   return NS_OK;
 }
 
-int32_t nsGlobalWindowOuter::GetInnerWidthOuter(ErrorResult& aError) {
-  CSSIntSize size;
+double nsGlobalWindowOuter::GetInnerWidthOuter(ErrorResult& aError) {
+  CSSSize size;
   aError = GetInnerSize(size);
   return size.width;
 }
 
-nsresult nsGlobalWindowOuter::GetInnerWidth(int32_t* aInnerWidth) {
+nsresult nsGlobalWindowOuter::GetInnerWidth(double* aInnerWidth) {
   FORWARD_TO_INNER(GetInnerWidth, (aInnerWidth), NS_ERROR_UNEXPECTED);
 }
 
-void nsGlobalWindowOuter::SetInnerWidthOuter(int32_t aInnerWidth,
+void nsGlobalWindowOuter::SetInnerWidthOuter(double aInnerWidth,
                                              CallerType aCallerType,
                                              ErrorResult& aError) {
   if (!mDocShell) {
@@ -3603,7 +3608,10 @@ void nsGlobalWindowOuter::SetInnerWidthOuter(int32_t aInnerWidth,
     return;
   }
 
-  CheckSecurityWidthAndHeight(&aInnerWidth, nullptr, aCallerType);
+  // We only allow setting integers, for now.
+  int32_t value = std::round(ToZeroIfNonfinite(aInnerWidth));
+
+  CheckSecurityWidthAndHeight(&value, nullptr, aCallerType);
   RefPtr<PresShell> presShell = mDocShell->GetPresShell();
 
   // Setting inner width should set the CSS viewport. If the CSS viewport
@@ -3616,8 +3624,7 @@ void nsGlobalWindowOuter::SetInnerWidthOuter(int32_t aInnerWidth,
 
     nsRect shellArea = presContext->GetVisibleArea();
     height = shellArea.Height();
-    SetCSSViewportWidthAndHeight(
-        nsPresContext::CSSPixelsToAppUnits(aInnerWidth), height);
+    SetCSSViewportWidthAndHeight(CSSPixel::ToAppUnits(value), height);
     return;
   }
 
@@ -3628,20 +3635,20 @@ void nsGlobalWindowOuter::SetInnerWidthOuter(int32_t aInnerWidth,
   nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
   docShellAsWin->GetSize(&unused, &height);
   aError = SetDocShellWidthAndHeight(
-      CSSToDevIntPixelsForBaseWindow(aInnerWidth, docShellAsWin), height);
+      CSSToDevIntPixelsForBaseWindow(value, docShellAsWin), height);
 }
 
-int32_t nsGlobalWindowOuter::GetInnerHeightOuter(ErrorResult& aError) {
-  CSSIntSize size;
+double nsGlobalWindowOuter::GetInnerHeightOuter(ErrorResult& aError) {
+  CSSSize size;
   aError = GetInnerSize(size);
   return size.height;
 }
 
-nsresult nsGlobalWindowOuter::GetInnerHeight(int32_t* aInnerHeight) {
+nsresult nsGlobalWindowOuter::GetInnerHeight(double* aInnerHeight) {
   FORWARD_TO_INNER(GetInnerHeight, (aInnerHeight), NS_ERROR_UNEXPECTED);
 }
 
-void nsGlobalWindowOuter::SetInnerHeightOuter(int32_t aInnerHeight,
+void nsGlobalWindowOuter::SetInnerHeightOuter(double aInnerHeight,
                                               CallerType aCallerType,
                                               ErrorResult& aError) {
   if (!mDocShell) {
@@ -3649,7 +3656,8 @@ void nsGlobalWindowOuter::SetInnerHeightOuter(int32_t aInnerHeight,
     return;
   }
 
-  CheckSecurityWidthAndHeight(nullptr, &aInnerHeight, aCallerType);
+  int32_t value = std::round(ToZeroIfNonfinite(aInnerHeight));
+  CheckSecurityWidthAndHeight(nullptr, &value, aCallerType);
   RefPtr<PresShell> presShell = mDocShell->GetPresShell();
 
   // Setting inner height should set the CSS viewport. If the CSS viewport
@@ -3662,8 +3670,7 @@ void nsGlobalWindowOuter::SetInnerHeightOuter(int32_t aInnerHeight,
 
     nsRect shellArea = presContext->GetVisibleArea();
     width = shellArea.Width();
-    SetCSSViewportWidthAndHeight(
-        width, nsPresContext::CSSPixelsToAppUnits(aInnerHeight));
+    SetCSSViewportWidthAndHeight(width, CSSPixel::ToAppUnits(value));
     return;
   }
 
@@ -3674,15 +3681,15 @@ void nsGlobalWindowOuter::SetInnerHeightOuter(int32_t aInnerHeight,
   nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
   docShellAsWin->GetSize(&width, &height);
   aError = SetDocShellWidthAndHeight(
-      width, CSSToDevIntPixelsForBaseWindow(aInnerHeight, docShellAsWin));
+      width, CSSToDevIntPixelsForBaseWindow(value, docShellAsWin));
 }
 
 nsIntSize nsGlobalWindowOuter::GetOuterSize(CallerType aCallerType,
                                             ErrorResult& aError) {
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
-    CSSIntSize size;
+    CSSSize size;
     aError = GetInnerSize(size);
-    return nsIntSize(size.width, size.height);
+    return nsIntSize::Round(size.width, size.height);
   }
 
   // Windows showing documents in RDM panes and any subframes within them
@@ -5435,10 +5442,10 @@ void nsGlobalWindowOuter::MoveToOuter(int32_t aXPos, int32_t aYPos,
       do_GetService("@mozilla.org/gfx/screenmanager;1");
   nsCOMPtr<nsIScreen> screen;
   if (screenMgr) {
-    CSSIntSize size;
+    CSSSize size;
     GetInnerSize(size);
-    screenMgr->ScreenForRect(aXPos, aYPos, size.width, size.height,
-                             getter_AddRefs(screen));
+    screenMgr->ScreenForRect(aXPos, aYPos, std::round(size.width),
+                             std::round(size.height), getter_AddRefs(screen));
   }
 
   if (screen) {

@@ -968,33 +968,36 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   // Implementation guts for our writable IDL attributes that are really
   // supposed to be readonly replaceable.
-  typedef int32_t (nsGlobalWindowInner::*WindowCoordGetter)(
+  template <typename T>
+  using WindowCoordGetter = T (nsGlobalWindowInner::*)(
       mozilla::dom::CallerType aCallerType, mozilla::ErrorResult&);
-  typedef void (nsGlobalWindowInner::*WindowCoordSetter)(
-      int32_t, mozilla::dom::CallerType aCallerType, mozilla::ErrorResult&);
-  void GetReplaceableWindowCoord(JSContext* aCx, WindowCoordGetter aGetter,
+  template <typename T>
+  using WindowCoordSetter = void (nsGlobalWindowInner::*)(
+      T, mozilla::dom::CallerType aCallerType, mozilla::ErrorResult&);
+
+  template <typename T>
+  void GetReplaceableWindowCoord(JSContext* aCx, WindowCoordGetter<T> aGetter,
                                  JS::MutableHandle<JS::Value> aRetval,
                                  mozilla::dom::CallerType aCallerType,
                                  mozilla::ErrorResult& aError);
-  void SetReplaceableWindowCoord(JSContext* aCx, WindowCoordSetter aSetter,
+
+  template <typename T>
+  void SetReplaceableWindowCoord(JSContext* aCx, WindowCoordSetter<T> aSetter,
                                  JS::Handle<JS::Value> aValue,
                                  const char* aPropName,
                                  mozilla::dom::CallerType aCallerType,
                                  mozilla::ErrorResult& aError);
   // And the implementations of WindowCoordGetter/WindowCoordSetter.
  protected:
-  int32_t GetInnerWidth(mozilla::dom::CallerType aCallerType,
-                        mozilla::ErrorResult& aError);
-  nsresult GetInnerWidth(int32_t* aWidth) override;
-  void SetInnerWidth(int32_t aInnerWidth, mozilla::dom::CallerType aCallerType,
+  double GetInnerWidth(mozilla::dom::CallerType aCallerType,
+                       mozilla::ErrorResult& aError);
+  nsresult GetInnerWidth(double* aWidth) override;
+  void SetInnerWidth(double aInnerWidth, mozilla::dom::CallerType aCallerType,
                      mozilla::ErrorResult& aError);
-
- protected:
-  int32_t GetInnerHeight(mozilla::dom::CallerType aCallerType,
-                         mozilla::ErrorResult& aError);
-  nsresult GetInnerHeight(int32_t* aHeight) override;
-  void SetInnerHeight(int32_t aInnerHeight,
-                      mozilla::dom::CallerType aCallerType,
+  double GetInnerHeight(mozilla::dom::CallerType aCallerType,
+                        mozilla::ErrorResult& aError);
+  nsresult GetInnerHeight(double* aHeight) override;
+  void SetInnerHeight(double aInnerHeight, mozilla::dom::CallerType aCallerType,
                       mozilla::ErrorResult& aError);
   int32_t GetScreenX(mozilla::dom::CallerType aCallerType,
                      mozilla::ErrorResult& aError);

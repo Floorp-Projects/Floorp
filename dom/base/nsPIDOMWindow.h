@@ -557,8 +557,8 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
 
   virtual nsresult GetControllers(nsIControllers** aControllers) = 0;
 
-  virtual nsresult GetInnerWidth(int32_t* aWidth) = 0;
-  virtual nsresult GetInnerHeight(int32_t* aHeight) = 0;
+  virtual nsresult GetInnerWidth(double* aWidth) = 0;
+  virtual nsresult GetInnerHeight(double* aHeight) = 0;
 
   virtual already_AddRefed<nsICSSDeclaration> GetComputedStyle(
       mozilla::dom::Element& aElt, const nsAString& aPseudoElt,
@@ -1036,8 +1036,8 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
                               nsISupports* aExtraArgument,
                               mozilla::dom::BrowsingContext** _retval) = 0;
 
-  virtual nsresult GetInnerWidth(int32_t* aWidth) = 0;
-  virtual nsresult GetInnerHeight(int32_t* aHeight) = 0;
+  virtual nsresult GetInnerWidth(double* aWidth) = 0;
+  virtual nsresult GetInnerHeight(double* aHeight) = 0;
 
   virtual mozilla::dom::Element* GetFrameElement() = 0;
 
