@@ -72,7 +72,8 @@ for (let canonicalId of ["canonical", "canonical-001", "canonical-002"]) {
     distribution: canonicalId,
     test: engines =>
       hasParams(engines, "Google", "searchbar", "client=ubuntu") &&
-      hasParams(engines, "Google", "searchbar", "channel=fs"),
+      hasParams(engines, "Google", "searchbar", "channel=fs") &&
+      hasTelemetryId(engines, "Google", "google-canonical"),
   });
 
   tests.push({
@@ -81,7 +82,8 @@ for (let canonicalId of ["canonical", "canonical-001", "canonical-002"]) {
     distribution: canonicalId,
     test: engines =>
       hasParams(engines, "Google", "searchbar", "client=ubuntu") &&
-      hasParams(engines, "Google", "searchbar", "channel=fs"),
+      hasParams(engines, "Google", "searchbar", "channel=fs") &&
+      hasTelemetryId(engines, "Google", "google-canonical"),
   });
 
   tests.push({
@@ -438,7 +440,8 @@ for (const locale of ["en-US", "en-GB", "fr", "de"]) {
     test: engines =>
       hasParams(engines, "Google", "searchbar", "client=firefox-b-oem1") &&
       hasDefault(engines, "Google") &&
-      hasEnginesFirst(engines, ["Google"]),
+      hasEnginesFirst(engines, ["Google"]) &&
+      hasTelemetryId(engines, "Google", "google-sweetlabs"),
   });
 
   tests.push({
@@ -447,7 +450,8 @@ for (const locale of ["en-US", "en-GB", "fr", "de"]) {
     test: engines =>
       hasParams(engines, "Google", "searchbar", "client=firefox-b-oem1") &&
       hasDefault(engines, "Google") &&
-      hasEnginesFirst(engines, ["Google"]),
+      hasEnginesFirst(engines, ["Google"]) &&
+      hasTelemetryId(engines, "Google", "google-sweetlabs"),
   });
 
   tests.push({
@@ -456,7 +460,8 @@ for (const locale of ["en-US", "en-GB", "fr", "de"]) {
     test: engines =>
       hasParams(engines, "Google", "searchbar", "client=firefox-b-oem2") &&
       hasDefault(engines, "Google") &&
-      hasEnginesFirst(engines, ["Google"]),
+      hasEnginesFirst(engines, ["Google"]) &&
+      hasTelemetryId(engines, "Google", "google-sweetlabs"),
   });
 
   tests.push({
@@ -465,7 +470,8 @@ for (const locale of ["en-US", "en-GB", "fr", "de"]) {
     test: engines =>
       hasParams(engines, "Google", "searchbar", "client=firefox-b-oem2") &&
       hasDefault(engines, "Google") &&
-      hasEnginesFirst(engines, ["Google"]),
+      hasEnginesFirst(engines, ["Google"]) &&
+      hasTelemetryId(engines, "Google", "google-sweetlabs"),
   });
 }
 
@@ -705,6 +711,18 @@ function hasParams(engines, engineName, purpose, param) {
 
   let result = queries.includes(param);
   Assert.ok(result, `expect ${submission.uri.query} to include ${param}`);
+  return true;
+}
+
+function hasTelemetryId(engines, engineName, telemetryId) {
+  let engine = engines.find(e => e._name === engineName);
+  Assert.ok(engine, `Should be able to find ${engineName}`);
+
+  Assert.equal(
+    engine.telemetryId,
+    telemetryId,
+    "Should have the correct telemetryId"
+  );
   return true;
 }
 
