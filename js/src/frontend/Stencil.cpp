@@ -725,20 +725,40 @@ bool CompilationInfo::instantiateStencilsAfterPreparation(
   return true;
 }
 
-bool CompilationInfoVector::buildDelazificationStencilMap(
-    FunctionMap& functionMap) {
-  // Stantdlone-functions are not supported by XDR.
+bool CompilationInfoVector::buildDelazificationIndices(JSContext* cx) {
+  // Standalone-functions are not supported by XDR.
   MOZ_ASSERT(!initial.stencil.scriptData[0].isFunction());
 
-  if (!functionMap.reserve(initial.stencil.scriptData.length() - 1)) {
+  // If no delazifications, we are done.
+  if (delazifications.empty()) {
+    return true;
+  }
+
+  if (!delazificationIndices.resize(delazifications.length())) {
+    ReportOutOfMemory(cx);
     return false;
   }
 
+  HashMap<FunctionKey, size_t> keyToIndex(cx);
+  if (!keyToIndex.reserve(delazifications.length())) {
+    return false;
+  }
+
+  for (size_t i = 0; i < delazifications.length(); i++) {
+    const auto& delazification = delazifications[i];
+    auto key = toFunctionKey(delazification.stencil.scriptData[0].extent);
+    keyToIndex.putNewInfallible(key, i);
+  }
+
+  MOZ_ASSERT(keyToIndex.count() == delazifications.length());
+
   for (size_t i = 1; i < initial.stencil.scriptData.length(); i++) {
-    if (!functionMap.put(toFunctionKey(initial.stencil.scriptData[i].extent),
-                         FunctionIndex(i))) {
-      return false;
+    auto key = toFunctionKey(initial.stencil.scriptData[i].extent);
+    auto ptr = keyToIndex.lookup(key);
+    if (!ptr) {
+      continue;
     }
+    delazificationIndices[ptr->value()] = FunctionIndex(i);
   }
 
   return true;
@@ -759,22 +779,11 @@ bool CompilationInfoVector::instantiateStencilsAfterPreparation(
     return false;
   }
 
-  // If no delazifications, we are done.
-  if (delazifications.empty()) {
-    return true;
-  }
+  for (size_t i = 0; i < delazifications.length(); i++) {
+    auto& delazification = delazifications[i];
+    auto index = delazificationIndices[i];
 
-  FunctionMap functionMap(cx);
-  if (!buildDelazificationStencilMap(functionMap)) {
-    return false;
-  }
-
-  for (auto& delazification : delazifications) {
-    auto p = functionMap.lookup(
-        toFunctionKey(delazification.stencil.scriptData[0].extent));
-    MOZ_ASSERT(p);
-
-    JSFunction* fun = gcOutput.functions[p->value()];
+    JSFunction* fun = gcOutput.functions[index];
     MOZ_ASSERT(fun);
 
     BaseScript* lazy = fun->baseScript();
@@ -843,6 +852,10 @@ bool CompilationInfoVector::prepareForInstantiate(
     if (!delazification.prepareInputAndStencilForInstantiate(cx)) {
       return false;
     }
+  }
+
+  if (!buildDelazificationIndices(cx)) {
+    return false;
   }
 
   return true;
