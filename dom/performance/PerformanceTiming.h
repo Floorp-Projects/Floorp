@@ -16,6 +16,9 @@
 #include "nsWrapperCache.h"
 #include "Performance.h"
 #include "nsITimedChannel.h"
+#include "mozilla/ipc/IPDLParamTraits.h"
+#include "ipc/IPCMessageUtils.h"
+#include "mozilla/net/nsServerTiming.h"
 
 class nsIHttpChannel;
 
@@ -26,8 +29,11 @@ class PerformanceTiming;
 
 class PerformanceTimingData final {
   friend class PerformanceTiming;
+  friend struct mozilla::ipc::IPDLParamTraits<
+      mozilla::dom::PerformanceTimingData>;
 
  public:
+  PerformanceTimingData() = default;  // For deserialization
   // This can return null.
   static PerformanceTimingData* Create(nsITimedChannel* aChannel,
                                        nsIHttpChannel* aHttpChannel,
@@ -181,28 +187,28 @@ class PerformanceTimingData final {
   // There are only 2 possible values: (1) logicaly equal to navigationStart
   // TimeStamp (results are absolute timstamps - wallclock); (2) "0" (results
   // are relative to the navigation start).
-  DOMHighResTimeStamp mZeroTime;
+  DOMHighResTimeStamp mZeroTime = 0;
 
-  DOMHighResTimeStamp mFetchStart;
+  DOMHighResTimeStamp mFetchStart = 0;
 
-  uint64_t mEncodedBodySize;
-  uint64_t mTransferSize;
-  uint64_t mDecodedBodySize;
+  uint64_t mEncodedBodySize = 0;
+  uint64_t mTransferSize = 0;
+  uint64_t mDecodedBodySize = 0;
 
-  uint8_t mRedirectCount;
+  uint8_t mRedirectCount = 0;
 
-  bool mAllRedirectsSameOrigin;
+  bool mAllRedirectsSameOrigin = false;
 
   // If the resourceTiming object should have non-zero redirectStart and
   // redirectEnd attributes. It is false if there were no redirects, or if any
   // of the responses didn't pass the timing-allow-check
-  bool mReportCrossOriginRedirect;
+  bool mReportCrossOriginRedirect = false;
 
-  bool mSecureConnection;
+  bool mSecureConnection = false;
 
-  bool mTimingAllowed;
+  bool mTimingAllowed = false;
 
-  bool mInitialized;
+  bool mInitialized = false;
 };
 
 // Script "performance.timing" object
@@ -406,6 +412,183 @@ class PerformanceTiming final : public nsWrapperCache {
 };
 
 }  // namespace dom
+}  // namespace mozilla
+
+namespace mozilla {
+namespace ipc {
+
+template <>
+struct IPDLParamTraits<mozilla::dom::PerformanceTimingData> {
+  typedef mozilla::dom::PerformanceTimingData paramType;
+  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+                    const paramType& aParam) {
+    WriteIPDLParam(aMsg, aActor, aParam.mServerTiming);
+    WriteIPDLParam(aMsg, aActor, aParam.mNextHopProtocol);
+    WriteIPDLParam(aMsg, aActor, aParam.mAsyncOpen);
+    WriteIPDLParam(aMsg, aActor, aParam.mRedirectStart);
+    WriteIPDLParam(aMsg, aActor, aParam.mRedirectEnd);
+    WriteIPDLParam(aMsg, aActor, aParam.mDomainLookupStart);
+    WriteIPDLParam(aMsg, aActor, aParam.mDomainLookupEnd);
+    WriteIPDLParam(aMsg, aActor, aParam.mConnectStart);
+    WriteIPDLParam(aMsg, aActor, aParam.mSecureConnectionStart);
+    WriteIPDLParam(aMsg, aActor, aParam.mConnectEnd);
+    WriteIPDLParam(aMsg, aActor, aParam.mRequestStart);
+    WriteIPDLParam(aMsg, aActor, aParam.mResponseStart);
+    WriteIPDLParam(aMsg, aActor, aParam.mCacheReadStart);
+    WriteIPDLParam(aMsg, aActor, aParam.mResponseEnd);
+    WriteIPDLParam(aMsg, aActor, aParam.mCacheReadEnd);
+    WriteIPDLParam(aMsg, aActor, aParam.mWorkerStart);
+    WriteIPDLParam(aMsg, aActor, aParam.mWorkerRequestStart);
+    WriteIPDLParam(aMsg, aActor, aParam.mWorkerResponseEnd);
+    WriteIPDLParam(aMsg, aActor, aParam.mZeroTime);
+    WriteIPDLParam(aMsg, aActor, aParam.mFetchStart);
+    WriteIPDLParam(aMsg, aActor, aParam.mEncodedBodySize);
+    WriteIPDLParam(aMsg, aActor, aParam.mTransferSize);
+    WriteIPDLParam(aMsg, aActor, aParam.mDecodedBodySize);
+    WriteIPDLParam(aMsg, aActor, aParam.mRedirectCount);
+    WriteIPDLParam(aMsg, aActor, aParam.mAllRedirectsSameOrigin);
+    WriteIPDLParam(aMsg, aActor, aParam.mReportCrossOriginRedirect);
+    WriteIPDLParam(aMsg, aActor, aParam.mSecureConnection);
+    WriteIPDLParam(aMsg, aActor, aParam.mTimingAllowed);
+    WriteIPDLParam(aMsg, aActor, aParam.mInitialized);
+  }
+
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, paramType* aResult) {
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mServerTiming)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mNextHopProtocol)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mAsyncOpen)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRedirectStart)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRedirectEnd)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mDomainLookupStart)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mDomainLookupEnd)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mConnectStart)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSecureConnectionStart)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mConnectEnd)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRequestStart)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mResponseStart)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mCacheReadStart)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mResponseEnd)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mCacheReadEnd)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mWorkerStart)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mWorkerRequestStart)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mWorkerResponseEnd)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mZeroTime)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mFetchStart)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mEncodedBodySize)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mTransferSize)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mDecodedBodySize)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRedirectCount)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor,
+                       &aResult->mAllRedirectsSameOrigin)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor,
+                       &aResult->mReportCrossOriginRedirect)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSecureConnection)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mTimingAllowed)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mInitialized)) {
+      return false;
+    }
+    return true;
+  }
+};
+
+template <>
+struct IPDLParamTraits<nsCOMPtr<nsIServerTiming>> {
+  typedef nsCOMPtr<nsIServerTiming> paramType;
+  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+                    const paramType& aParam) {
+    nsAutoCString name;
+    Unused << aParam->GetName(name);
+    double duration = 0;
+    Unused << aParam->GetDuration(&duration);
+    nsAutoCString description;
+    Unused << aParam->GetDescription(description);
+    WriteIPDLParam(aMsg, aActor, name);
+    WriteIPDLParam(aMsg, aActor, duration);
+    WriteIPDLParam(aMsg, aActor, description);
+  }
+
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, paramType* aResult) {
+    nsAutoCString name;
+    double duration;
+    nsAutoCString description;
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &name)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &duration)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &description)) {
+      return false;
+    }
+
+    RefPtr<nsServerTiming> timing = new nsServerTiming();
+    timing->SetName(name);
+    timing->SetDuration(duration);
+    timing->SetDescription(description);
+    *aResult = timing;
+    return true;
+  }
+};
+
+}  // namespace ipc
 }  // namespace mozilla
 
 #endif  // mozilla_dom_PerformanceTiming_h

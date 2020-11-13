@@ -196,6 +196,7 @@
 #include "base/task.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/PCycleCollectWithLogsChild.h"
+#include "mozilla/dom/PerformanceStorage.h"
 #include "nsChromeRegistryContent.h"
 #include "nsFrameMessageManager.h"
 #include "nsIScriptSecurityManager.h"
@@ -4075,6 +4076,24 @@ mozilla::ipc::IPCResult ContentChild::RecvScriptError(
   rv = consoleService->LogMessage(scriptError);
   NS_ENSURE_SUCCESS(rv, IPC_FAIL(this, "Failed to log script error"));
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvReportFrameTimingData(
+    uint64_t innerWindowId, const nsString& entryName,
+    const nsString& initiatorType, UniquePtr<PerformanceTimingData>&& aData) {
+  auto* innerWindow = nsGlobalWindowInner::GetInnerWindowWithId(innerWindowId);
+  if (!innerWindow) {
+    return IPC_OK();
+  }
+
+  mozilla::dom::Performance* performance = innerWindow->GetPerformance();
+  if (!performance) {
+    return IPC_OK();
+  }
+
+  performance->AsPerformanceStorage()->AddEntry(entryName, initiatorType,
+                                                std::move(aData));
   return IPC_OK();
 }
 

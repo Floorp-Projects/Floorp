@@ -88,6 +88,7 @@
 #include "mozilla/RemoteLazyInputStreamChild.h"
 #include "mozilla/RemoteLazyInputStreamUtils.h"
 #include "mozilla/net/SFVService.h"
+#include "mozilla/dom/ContentChild.h"
 
 namespace mozilla {
 namespace net {
@@ -4831,10 +4832,37 @@ mozilla::dom::PerformanceStorage* HttpBaseChannel::GetPerformanceStorage() {
 }
 
 void HttpBaseChannel::MaybeReportTimingData() {
+  if (XRE_IsE10sParentProcess()) {
+    return;
+  }
+
   mozilla::dom::PerformanceStorage* documentPerformance =
       GetPerformanceStorage();
   if (documentPerformance) {
     documentPerformance->AddEntry(this, this);
+    return;
+  }
+
+  if (!nsGlobalWindowInner::GetInnerWindowWithId(
+          mLoadInfo->GetInnerWindowID())) {
+    // The inner window is in a different process.
+    dom::ContentChild* child = dom::ContentChild::GetSingleton();
+
+    if (!child) {
+      return;
+    }
+    nsAutoString initiatorType;
+    nsAutoString entryName;
+
+    UniquePtr<dom::PerformanceTimingData> performanceTimingData(
+        dom::PerformanceTimingData::Create(this, this, 0, initiatorType,
+                                           entryName));
+    if (!performanceTimingData) {
+      return;
+    }
+    child->SendReportFrameTimingData(mLoadInfo->GetInnerWindowID(), entryName,
+                                     initiatorType,
+                                     std::move(performanceTimingData));
   }
 }
 

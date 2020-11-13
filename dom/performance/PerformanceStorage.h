@@ -23,6 +23,9 @@ class PerformanceStorage {
 
   virtual void AddEntry(nsIHttpChannel* aChannel,
                         nsITimedChannel* aTimedChannel) = 0;
+  virtual void AddEntry(const nsString& entryName,
+                        const nsString& initiatorType,
+                        UniquePtr<PerformanceTimingData>&& aData) = 0;
 
  protected:
   virtual ~PerformanceStorage() = default;
