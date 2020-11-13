@@ -308,6 +308,18 @@ uint16_t RotorHeadingLevelRule::Match(const AccessibleOrProxy& aAccOrProxy) {
   return result;
 }
 
+uint16_t RotorLiveRegionRule::Match(const AccessibleOrProxy& aAccOrProxy) {
+  uint16_t result = RotorRule::Match(aAccOrProxy);
+
+  if ((result & nsIAccessibleTraversalRule::FILTER_MATCH)) {
+    mozAccessible* nativeMatch = GetNativeFromGeckoAccessible(aAccOrProxy);
+    if (![nativeMatch moxIsLiveRegion]) {
+      result &= ~nsIAccessibleTraversalRule::FILTER_MATCH;
+    }
+  }
+  return result;
+}
+
 // Outline Rule
 
 OutlineRule::OutlineRule() : RotorRule(){};
