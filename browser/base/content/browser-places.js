@@ -2287,19 +2287,21 @@ var BookmarkingUI = {
   },
 
   async maybeShowOtherBookmarksFolder() {
+    // otherBookmarks may be null if personal-bookmarks is in the palette.
+    let otherBookmarks = document.getElementById("OtherBookmarks");
+
     // Only show the "Other Bookmarks" folder in the toolbar if pref is enabled.
-    if (!gBookmarksToolbar2h2020) {
+    if (!gBookmarksToolbar2h2020 || !otherBookmarks) {
       return;
     }
 
     let unfiledGuid = PlacesUtils.bookmarks.unfiledGuid;
     let numberOfBookmarks = PlacesUtils.getChildCountForFolder(unfiledGuid);
-    let otherBookmarks = document.getElementById("OtherBookmarks");
     let placement = CustomizableUI.getPlacementOfWidget("personal-bookmarks");
 
     if (
       numberOfBookmarks > 0 &&
-      placement.area == CustomizableUI.AREA_BOOKMARKS
+      placement?.area == CustomizableUI.AREA_BOOKMARKS
     ) {
       let otherBookmarksPopup = document.getElementById("OtherBookmarksPopup");
       let result = PlacesUtils.getFolderContents(unfiledGuid);
