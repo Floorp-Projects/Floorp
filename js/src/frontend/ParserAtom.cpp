@@ -629,6 +629,16 @@ const ParserAtom* WellKnownParserAtoms::getWellKnown(
   return (&abort)[int32_t(atomId)];
 }
 
+/* static */
+const ParserAtom* WellKnownParserAtoms::getStatic1(StaticParserString1 s) {
+  return WellKnownParserAtoms::rom_.length1Table[size_t(s)].asAtom();
+}
+
+/* static */
+const ParserAtom* WellKnownParserAtoms::getStatic2(StaticParserString2 s) {
+  return WellKnownParserAtoms::rom_.length2Table[size_t(s)].asAtom();
+}
+
 const ParserAtom* ParserAtomVectorBuilder::getWellKnown(
     WellKnownAtomId atomId) const {
   return wellKnownTable_.getWellKnown(atomId);
@@ -636,12 +646,24 @@ const ParserAtom* ParserAtomVectorBuilder::getWellKnown(
 
 const ParserAtom* ParserAtomVectorBuilder::getStatic1(
     StaticParserString1 s) const {
-  return WellKnownParserAtoms::rom_.length1Table[size_t(s)].asAtom();
+  return WellKnownParserAtoms::getStatic1(s);
 }
 
 const ParserAtom* ParserAtomVectorBuilder::getStatic2(
     StaticParserString2 s) const {
-  return WellKnownParserAtoms::rom_.length2Table[size_t(s)].asAtom();
+  return WellKnownParserAtoms::getStatic2(s);
+}
+
+const ParserAtom* ParserAtomsTable::getWellKnown(WellKnownAtomId atomId) const {
+  return wellKnownTable_.getWellKnown(atomId);
+}
+
+const ParserAtom* ParserAtomsTable::getStatic1(StaticParserString1 s) const {
+  return WellKnownParserAtoms::getStatic1(s);
+}
+
+const ParserAtom* ParserAtomsTable::getStatic2(StaticParserString2 s) const {
+  return WellKnownParserAtoms::getStatic2(s);
 }
 
 bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomVector& entries,

@@ -643,6 +643,8 @@ class WellKnownParserAtoms {
   }
 
   const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;
+  static const ParserAtom* getStatic1(StaticParserString1 s);
+  static const ParserAtom* getStatic2(StaticParserString2 s);
 };
 
 bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomVector& entries,
@@ -699,6 +701,10 @@ class ParserAtomsTable {
 
   JS::Result<const ParserAtom*, OOM> concatAtoms(
       JSContext* cx, mozilla::Range<const ParserAtom*> atoms);
+
+  const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;
+  const ParserAtom* getStatic1(StaticParserString1 s) const;
+  const ParserAtom* getStatic2(StaticParserString2 s) const;
 };
 
 // Lightweight version of ParserAtomsTable.
