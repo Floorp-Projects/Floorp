@@ -71,6 +71,7 @@ using ParserAtomIndex = TypedIndex<ParserAtom>;
 class TaggedParserAtomIndex {
   uint32_t data_;
 
+ public:
   static constexpr size_t IndexBit = 28;
   static constexpr size_t IndexMask = BitMask(IndexBit);
 
@@ -78,6 +79,13 @@ class TaggedParserAtomIndex {
   static constexpr size_t TagBit = 4;
   static constexpr size_t TagMask = BitMask(TagBit) << TagShift;
 
+  enum class Kind : uint32_t {
+    Null = 0,
+    ParserAtomIndex,
+    WellKnown,
+  };
+
+ private:
   static constexpr size_t SmallIndexBit = 16;
   static constexpr size_t SmallIndexMask = BitMask(SmallIndexBit);
 
@@ -85,10 +93,14 @@ class TaggedParserAtomIndex {
   static constexpr size_t SubTagBit = 2;
   static constexpr size_t SubTagMask = BitMask(SubTagBit) << SubTagShift;
 
-  static constexpr uint32_t NullTag = 0 << TagShift;
-  static constexpr uint32_t ParserAtomIndexTag = 1 << TagShift;
-  static constexpr uint32_t WellKnownTag = 2 << TagShift;
+ public:
+  static constexpr uint32_t NullTag = uint32_t(Kind::Null) << TagShift;
+  static constexpr uint32_t ParserAtomIndexTag = uint32_t(Kind::ParserAtomIndex)
+                                                 << TagShift;
+  static constexpr uint32_t WellKnownTag = uint32_t(Kind::WellKnown)
+                                           << TagShift;
 
+ private:
   static constexpr uint32_t WellKnownSubTag = 0 << SubTagShift;
   static constexpr uint32_t Static1SubTag = 1 << SubTagShift;
   static constexpr uint32_t Static2SubTag = 2 << SubTagShift;
@@ -97,6 +109,10 @@ class TaggedParserAtomIndex {
   static constexpr uint32_t IndexLimit = Bit(IndexBit);
   static constexpr uint32_t SmallIndexLimit = Bit(SmallIndexBit);
 
+ private:
+  explicit TaggedParserAtomIndex(uint32_t data) : data_(data) {}
+
+ public:
   constexpr TaggedParserAtomIndex() : data_(NullTag) {}
 
   explicit constexpr TaggedParserAtomIndex(ParserAtomIndex index)
@@ -121,6 +137,10 @@ class TaggedParserAtomIndex {
     return TaggedParserAtomIndex(StaticParserString1('*'));
   }
   static TaggedParserAtomIndex null() { return TaggedParserAtomIndex(); }
+
+  static TaggedParserAtomIndex fromRaw(uint32_t data) {
+    return TaggedParserAtomIndex(data);
+  }
 
   bool isParserAtomIndex() const {
     return (data_ & TagMask) == ParserAtomIndexTag;
