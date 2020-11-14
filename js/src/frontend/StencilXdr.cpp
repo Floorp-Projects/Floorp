@@ -873,7 +873,7 @@ template <XDRMode mode>
     flags = stencil.flags_.value();
   }
 
-  MOZ_TRY(XDRParserAtom(xdr, &stencil.atom_));
+  MOZ_TRY(XDRTaggedParserAtomIndex(xdr, &stencil.atom_));
   MOZ_TRY(xdr->codeUint8(&flags));
 
   if (mode == XDR_DECODE) {

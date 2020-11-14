@@ -89,13 +89,13 @@ FunctionFlags InitialFunctionFlags(FunctionSyntaxKind kind,
 class RegExpStencil {
   friend class StencilXDR;
 
-  const ParserAtom* atom_;
+  TaggedParserAtomIndex atom_;
   JS::RegExpFlags flags_;
 
  public:
   RegExpStencil() = default;
 
-  RegExpStencil(const ParserAtom* atom, JS::RegExpFlags flags)
+  RegExpStencil(TaggedParserAtomIndex atom, JS::RegExpFlags flags)
       : atom_(atom), flags_(flags) {}
 
   RegExpObject* createRegExp(JSContext* cx,
@@ -103,12 +103,14 @@ class RegExpStencil {
 
   // This is used by `Reflect.parse` when we need the RegExpObject but are not
   // doing a complete instantiation of the CompilationStencil.
-  RegExpObject* createRegExpAndEnsureAtom(
-      JSContext* cx, CompilationAtomCache& atomCache) const;
+  RegExpObject* createRegExpAndEnsureAtom(JSContext* cx,
+                                          CompilationAtomCache& atomCache,
+                                          CompilationStencil& stencil) const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
-  void dump(JSONPrinter& json);
+  void dump(JSONPrinter& json, CompilationStencil* compilationStencil);
+  void dumpFields(JSONPrinter& json, CompilationStencil* compilationStencil);
 #endif
 };
 
