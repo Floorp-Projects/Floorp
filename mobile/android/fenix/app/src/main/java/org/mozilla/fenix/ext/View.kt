@@ -37,33 +37,16 @@ fun View.removeTouchDelegate() {
 }
 
 /**
- * Removes a child view from accessibility node info of an accessibility parent view.
- * If the child does not exist in the node, calling this has no effect.
+ * Sets the new a11y parent.
  */
-fun View.removeChildFromAccessibilityNodeInfo(child: View) {
+fun View.setNewAccessibilityParent(newParent: View) {
     this.accessibilityDelegate = object : View.AccessibilityDelegate() {
         override fun onInitializeAccessibilityNodeInfo(
             host: View?,
             info: AccessibilityNodeInfo?
         ) {
             super.onInitializeAccessibilityNodeInfo(host, info)
-            info?.removeChild(child)
-        }
-    }
-}
-
-/**
- * Add a child view to the accessibility node info of a view that becomes it's accessibility parent.
- * If the child already exists in the node, calling this has no effect.
- */
-fun View.addChildToAccessibilityNodeInfo(child: View) {
-    this.accessibilityDelegate = object : View.AccessibilityDelegate() {
-        override fun onInitializeAccessibilityNodeInfo(
-            host: View?,
-            info: AccessibilityNodeInfo?
-        ) {
-            super.onInitializeAccessibilityNodeInfo(host, info)
-            info?.addChild(child)
+            info?.setParent(newParent)
         }
     }
 }

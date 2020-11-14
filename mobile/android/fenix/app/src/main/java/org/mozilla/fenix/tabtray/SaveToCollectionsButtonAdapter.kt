@@ -13,8 +13,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.addChildToAccessibilityNodeInfo
-import org.mozilla.fenix.ext.removeChildFromAccessibilityNodeInfo
+import org.mozilla.fenix.ext.setNewAccessibilityParent
 import org.mozilla.fenix.tabtray.SaveToCollectionsButtonAdapter.Item
 import org.mozilla.fenix.tabtray.SaveToCollectionsButtonAdapter.ViewHolder
 
@@ -45,9 +44,8 @@ class SaveToCollectionsButtonAdapter(
             ) {
                 super.onInitializeAccessibilityNodeInfo(host, info)
                 info?.collectionItemInfo = null
-                (holder.itemView.parentForAccessibility as View).apply {
-                    removeChildFromAccessibilityNodeInfo(holder.itemView)
-                    (this.parentForAccessibility as View).addChildToAccessibilityNodeInfo(holder.itemView)
+                (holder.itemView.parentForAccessibility.parentForAccessibility as? View)?.let {
+                    holder.itemView.setNewAccessibilityParent(it)
                 }
             }
         }
