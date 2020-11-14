@@ -219,6 +219,30 @@ add_task(async function testDeletingMenuItems() {
   await closeMenuPopup("#OtherBookmarksPopup");
 });
 
+add_task(async function no_errors_when_bookmarks_placed_in_palette() {
+  CustomizableUI.removeWidgetFromArea("personal-bookmarks");
+
+  let consoleErrors = 0;
+
+  let errorListener = {
+    observe(error) {
+      ok(false, error.message);
+      consoleErrors++;
+    },
+  };
+  Services.console.registerListener(errorListener);
+
+  let bookmarks = await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.unfiledGuid,
+    children: bookmarksInfo,
+  });
+  is(consoleErrors, 0, "There should be no console errors");
+
+  Services.console.unregisterListener(errorListener);
+  await PlacesUtils.bookmarks.remove(bookmarks);
+  CustomizableUI.reset();
+});
+
 /**
  * Tests whether or not the "Other Bookmarks" folder is visible.
  */
