@@ -9,17 +9,10 @@ import android.app.KeyguardManager
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
-import android.os.Build.VERSION.SDK_INT
-import android.os.Build.VERSION_CODES.M
 import android.os.Bundle
 import android.provider.Settings.ACTION_SECURITY_SETTINGS
-import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AlertDialog
-import androidx.biometric.BiometricManager
-import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
-import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
-import androidx.biometric.BiometricPrompt
-import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -29,6 +22,7 @@ import androidx.preference.SwitchPreference
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.R
 import org.mozilla.fenix.addons.runIfFragmentIsAttached
 import org.mozilla.fenix.components.metrics.Event
@@ -38,32 +32,14 @@ import org.mozilla.fenix.ext.secure
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
+import org.mozilla.fenix.settings.logins.biometric.BiometricPromptFeature
 import org.mozilla.fenix.settings.logins.SyncLoginsPreferenceView
 import org.mozilla.fenix.settings.requirePreference
 
 @Suppress("TooManyFunctions")
 class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
 
-    private lateinit var biometricPrompt: BiometricPrompt
-    private lateinit var promptInfo: BiometricPrompt.PromptInfo
-
-    private val biometricPromptCallback = object : BiometricPrompt.AuthenticationCallback() {
-
-        override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-            Log.e(LOG_TAG, "onAuthenticationError $errString")
-            togglePrefsEnabledWhileAuthenticating(enabled = true)
-        }
-
-        override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-            Log.d(LOG_TAG, "onAuthenticationSucceeded")
-            navigateToSavedLogins()
-        }
-
-        override fun onAuthenticationFailed() {
-            Log.e(LOG_TAG, "onAuthenticationFailed")
-            togglePrefsEnabledWhileAuthenticating(enabled = true)
-        }
-    }
+    private val biometricPromptFeature = ViewBoundFeatureWrapper<BiometricPromptFeature>()
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.logins_preferences, rootKey)
@@ -91,17 +67,19 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        val executor = ContextCompat.getMainExecutor(requireContext())
-
-        biometricPrompt = BiometricPrompt(this, executor, biometricPromptCallback)
-
-        promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(getString(R.string.logins_biometric_prompt_message))
-            .setAllowedAuthenticators(BIOMETRIC_WEAK or DEVICE_CREDENTIAL)
-            .build()
+        biometricPromptFeature.set(
+            feature = BiometricPromptFeature(
+                context = requireContext(),
+                fragment = this,
+                onAuthFailure = { togglePrefsEnabledWhileAuthenticating(true) },
+                onAuthSuccess = ::navigateToSavedLogins
+            ),
+            owner = this,
+            view = view
+        )
     }
 
     override fun onResume() {
@@ -150,28 +128,15 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
             navController = findNavController()
         )
 
-        togglePrefsEnabledWhileAuthenticating(enabled = true)
-    }
-
-    private fun canUseBiometricPrompt(context: Context): Boolean {
-        return if (SDK_INT >= M) {
-            val manager = BiometricManager.from(context)
-            val canAuthenticate = manager.canAuthenticate(BIOMETRIC_WEAK)
-
-            val hardwareUnavailable = canAuthenticate == BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE ||
-                canAuthenticate == BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE
-            val biometricsEnrolled = canAuthenticate == BiometricManager.BIOMETRIC_SUCCESS
-
-            !hardwareUnavailable && biometricsEnrolled
-        } else {
-            false
-        }
+        togglePrefsEnabledWhileAuthenticating(true)
     }
 
     private fun verifyCredentialsOrShowSetupWarning(context: Context) {
         // Use the BiometricPrompt first
-        if (canUseBiometricPrompt(context)) {
-            biometricPrompt.authenticate(promptInfo)
+        if (BiometricPromptFeature.canUseFeature(context)) {
+            togglePrefsEnabledWhileAuthenticating(false)
+            biometricPromptFeature.get()
+                ?.requestAuthentication(getString(R.string.logins_biometric_prompt_message))
             return
         }
 
@@ -249,7 +214,6 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
 
     companion object {
         const val SHORT_DELAY_MS = 100L
-        private const val LOG_TAG = "LoginsFragment"
         const val PIN_REQUEST = 303
     }
 }
