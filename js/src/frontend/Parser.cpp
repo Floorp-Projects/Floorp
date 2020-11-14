@@ -1749,7 +1749,8 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   StencilModuleMetadata& moduleMetadata =
       this->compilationInfo_.stencil.moduleMetadata;
   for (auto entry : moduleMetadata.localExportEntries) {
-    const ParserAtom* nameId = entry.localName;
+    const ParserAtom* nameId =
+        this->compilationInfo_.stencil.getParserAtomAt(cx_, entry.localName);
     MOZ_ASSERT(nameId);
 
     DeclaredNamePtr p = modulepc.varScope().lookupDeclaredName(nameId);
