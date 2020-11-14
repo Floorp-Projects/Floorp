@@ -24,7 +24,7 @@
 #include "frontend/ParserAtom.h"        // ParserAtomsTable
 #include "frontend/smoosh_generated.h"  // CVec, Smoosh*, smoosh_*
 #include "frontend/SourceNotes.h"       // SrcNote
-#include "frontend/Stencil.h"  // ScopeStencil, RegExpIndex, FunctionIndex, NullScriptThing
+#include "frontend/Stencil.h"      // ScopeStencil, RegExpIndex, FunctionIndex
 #include "frontend/TokenStream.h"  // TokenStreamAnyChars
 #include "irregexp/RegExpAPI.h"    // irregexp::CheckPatternSyntax
 #include "js/CharacterEncoding.h"  // JS::UTF8Chars, UTF8CharsToNewTwoByteCharsZ
@@ -372,7 +372,7 @@ bool ConvertGCThings(JSContext* cx, const SmooshResult& result,
     return true;
   }
 
-  mozilla::Span<ScriptThingVariant> stencilThings =
+  mozilla::Span<TaggedScriptThingIndex> stencilThings =
       NewScriptThingSpanUninitialized(cx, stencilAlloc, ngcthings);
   if (stencilThings.empty()) {
     return false;
@@ -386,23 +386,23 @@ bool ConvertGCThings(JSContext* cx, const SmooshResult& result,
 
     switch (item.tag) {
       case SmooshGCThing::Tag::Null: {
-        new (raw) ScriptThingVariant(NullScriptThing());
+        new (raw) TaggedScriptThingIndex();
         break;
       }
       case SmooshGCThing::Tag::Atom: {
-        new (raw) ScriptThingVariant(allAtoms[item.AsAtom()]->toIndex());
+        new (raw) TaggedScriptThingIndex(allAtoms[item.AsAtom()]->toIndex());
         break;
       }
       case SmooshGCThing::Tag::Function: {
-        new (raw) ScriptThingVariant(FunctionIndex(item.AsFunction()));
+        new (raw) TaggedScriptThingIndex(FunctionIndex(item.AsFunction()));
         break;
       }
       case SmooshGCThing::Tag::Scope: {
-        new (raw) ScriptThingVariant(ScopeIndex(item.AsScope()));
+        new (raw) TaggedScriptThingIndex(ScopeIndex(item.AsScope()));
         break;
       }
       case SmooshGCThing::Tag::RegExp: {
-        new (raw) ScriptThingVariant(RegExpIndex(item.AsRegExp()));
+        new (raw) TaggedScriptThingIndex(RegExpIndex(item.AsRegExp()));
         break;
       }
     }

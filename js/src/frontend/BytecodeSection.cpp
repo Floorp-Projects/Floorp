@@ -25,15 +25,15 @@ bool GCThingList::append(FunctionBox* funbox, GCThingIndex* index) {
   // Append the function to the vector and return the index in *index.
   *index = GCThingIndex(vector.length());
 
-  if (!vector.append(mozilla::AsVariant(funbox->index()))) {
+  if (!vector.emplaceBack(funbox->index())) {
     return false;
   }
   return true;
 }
 
 AbstractScopePtr GCThingList::getScope(size_t index) const {
-  const ScriptThingVariant& elem = vector[index];
-  if (elem.is<EmptyGlobalScopeType>()) {
+  const TaggedScriptThingIndex& elem = vector[index];
+  if (elem.isEmptyGlobalScope()) {
     // The empty enclosing scope should be stored by
     // CompilationInput::initForSelfHostingGlobal.
     MOZ_ASSERT(compilationInfo.input.enclosingScope);
@@ -41,103 +41,82 @@ AbstractScopePtr GCThingList::getScope(size_t index) const {
         !compilationInfo.input.enclosingScope->as<GlobalScope>().hasBindings());
     return AbstractScopePtr(compilationInfo.input.enclosingScope);
   }
-  return AbstractScopePtr(compilationInfo, elem.as<ScopeIndex>());
+  return AbstractScopePtr(compilationInfo, elem.toScope());
 }
 
 mozilla::Maybe<ScopeIndex> GCThingList::getScopeIndex(size_t index) const {
-  const ScriptThingVariant& elem = vector[index];
-  if (elem.is<EmptyGlobalScopeType>()) {
+  const TaggedScriptThingIndex& elem = vector[index];
+  if (elem.isEmptyGlobalScope()) {
     return mozilla::Nothing();
   }
-  return mozilla::Some(vector[index].as<ScopeIndex>());
+  return mozilla::Some(vector[index].toScope());
 }
 
 bool js::frontend::EmitScriptThingsVector(
     JSContext* cx, CompilationInfo& compilationInfo,
     CompilationGCOutput& gcOutput,
-    mozilla::Span<const ScriptThingVariant> things,
+    mozilla::Span<const TaggedScriptThingIndex> things,
     mozilla::Span<JS::GCCellPtr> output) {
   MOZ_ASSERT(things.size() <= INDEX_LIMIT);
   MOZ_ASSERT(things.size() == output.size());
 
-  struct Matcher {
-    JSContext* cx;
-    CompilationAtomCache& atomCache;
-    CompilationStencil& stencil;
-    CompilationGCOutput& gcOutput;
-    uint32_t i;
-    mozilla::Span<JS::GCCellPtr>& output;
-
-    bool operator()(const TaggedParserAtomIndex& data) {
-      JSAtom* atom = atomCache.getExistingAtomAt(cx, data);
-      MOZ_ASSERT(atom);
-      output[i] = JS::GCCellPtr(atom);
-      return true;
-    }
-
-    bool operator()(const NullScriptThing& data) {
-      output[i] = JS::GCCellPtr(nullptr);
-      return true;
-    }
-
-    bool operator()(const BigIntIndex& index) {
-      BigIntStencil& data = stencil.bigIntData[index];
-      BigInt* bi = data.createBigInt(cx);
-      if (!bi) {
-        return false;
-      }
-      output[i] = JS::GCCellPtr(bi);
-      return true;
-    }
-
-    bool operator()(const RegExpIndex& rindex) {
-      RegExpStencil& data = stencil.regExpData[rindex];
-      RegExpObject* regexp = data.createRegExp(cx, atomCache);
-      if (!regexp) {
-        return false;
-      }
-      output[i] = JS::GCCellPtr(regexp);
-      return true;
-    }
-
-    bool operator()(const ObjLiteralIndex& index) {
-      ObjLiteralStencil& data = stencil.objLiteralData[index];
-      JSObject* obj = data.create(cx, atomCache);
-      if (!obj) {
-        return false;
-      }
-      output[i] = JS::GCCellPtr(obj);
-      return true;
-    }
-
-    bool operator()(const ScopeIndex& index) {
-      output[i] = JS::GCCellPtr(gcOutput.scopes[index]);
-      return true;
-    }
-
-    bool operator()(const FunctionIndex& index) {
-      output[i] = JS::GCCellPtr(gcOutput.functions[index]);
-      return true;
-    }
-
-    bool operator()(const EmptyGlobalScopeType& emptyGlobalScope) {
-      Scope* scope = &cx->global()->emptyGlobalScope();
-      output[i] = JS::GCCellPtr(scope);
-      return true;
-    }
-  };
+  auto& atomCache = compilationInfo.input.atomCache;
+  auto& stencil = compilationInfo.stencil;
 
   for (uint32_t i = 0; i < things.size(); i++) {
-    Matcher m{cx,
-              compilationInfo.input.atomCache,
-              compilationInfo.stencil,
-              gcOutput,
-              i,
-              output};
-    if (!things[i].match(m)) {
-      return false;
+    const auto& thing = things[i];
+    switch (thing.tag()) {
+      case TaggedScriptThingIndex::Kind::ParserAtomIndex:
+      case TaggedScriptThingIndex::Kind::WellKnown: {
+        JSAtom* atom = atomCache.getExistingAtomAt(cx, thing.toAtom());
+        MOZ_ASSERT(atom);
+        output[i] = JS::GCCellPtr(atom);
+        break;
+      }
+      case TaggedScriptThingIndex::Kind::Null:
+        output[i] = JS::GCCellPtr(nullptr);
+        break;
+      case TaggedScriptThingIndex::Kind::BigInt: {
+        BigIntStencil& data = stencil.bigIntData[thing.toBigInt()];
+        BigInt* bi = data.createBigInt(cx);
+        if (!bi) {
+          return false;
+        }
+        output[i] = JS::GCCellPtr(bi);
+        break;
+      }
+      case TaggedScriptThingIndex::Kind::ObjLiteral: {
+        ObjLiteralStencil& data = stencil.objLiteralData[thing.toObjLiteral()];
+        JSObject* obj = data.create(cx, atomCache);
+        if (!obj) {
+          return false;
+        }
+        output[i] = JS::GCCellPtr(obj);
+        break;
+      }
+      case TaggedScriptThingIndex::Kind::RegExp: {
+        RegExpStencil& data = stencil.regExpData[thing.toRegExp()];
+        RegExpObject* regexp = data.createRegExp(cx, atomCache);
+        if (!regexp) {
+          return false;
+        }
+        output[i] = JS::GCCellPtr(regexp);
+        break;
+      }
+      case TaggedScriptThingIndex::Kind::Scope:
+        output[i] = JS::GCCellPtr(gcOutput.scopes[thing.toScope()]);
+        break;
+      case TaggedScriptThingIndex::Kind::Function:
+        output[i] = JS::GCCellPtr(gcOutput.functions[thing.toFunction()]);
+        break;
+      case TaggedScriptThingIndex::Kind::EmptyGlobalScope: {
+        Scope* scope = &cx->global()->emptyGlobalScope();
+        output[i] = JS::GCCellPtr(scope);
+        break;
+      }
     }
   }
+
   return true;
 }
 

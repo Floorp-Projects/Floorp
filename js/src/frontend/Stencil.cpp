@@ -1494,47 +1494,37 @@ static void DumpFunctionFlagsItems(js::JSONPrinter& json,
 
 static void DumpScriptThing(js::JSONPrinter& json,
                             CompilationStencil* compilationStencil,
-                            ScriptThingVariant& thing) {
-  struct Matcher {
-    js::JSONPrinter& json;
-    CompilationStencil* compilationStencil;
-
-    void operator()(TaggedParserAtomIndex& data) {
+                            TaggedScriptThingIndex& thing) {
+  switch (thing.tag()) {
+    case TaggedScriptThingIndex::Kind::ParserAtomIndex:
+    case TaggedScriptThingIndex::Kind::WellKnown:
       json.beginObject();
-      json.property("type", "ScriptAtom");
-      DumpTaggedParserAtomIndex(json, data, compilationStencil);
+      json.property("type", "Atom");
+      DumpTaggedParserAtomIndex(json, thing.toAtom(), compilationStencil);
       json.endObject();
-    }
-
-    void operator()(NullScriptThing& data) { json.nullValue(); }
-
-    void operator()(BigIntIndex& index) {
-      json.value("BigIntIndex(%zu)", size_t(index));
-    }
-
-    void operator()(RegExpIndex& index) {
-      json.value("RegExpIndex(%zu)", size_t(index));
-    }
-
-    void operator()(ObjLiteralIndex& index) {
-      json.value("ObjLiteralIndex(%zu)", size_t(index));
-    }
-
-    void operator()(ScopeIndex& index) {
-      json.value("ScopeIndex(%zu)", size_t(index));
-    }
-
-    void operator()(FunctionIndex& index) {
-      json.value("FunctionIndex(%zu)", size_t(index));
-    }
-
-    void operator()(EmptyGlobalScopeType& emptyGlobalScope) {
+      break;
+    case TaggedScriptThingIndex::Kind::Null:
+      json.nullValue();
+      break;
+    case TaggedScriptThingIndex::Kind::BigInt:
+      json.value("BigIntIndex(%zu)", size_t(thing.toBigInt()));
+      break;
+    case TaggedScriptThingIndex::Kind::ObjLiteral:
+      json.value("ObjLiteralIndex(%zu)", size_t(thing.toObjLiteral()));
+      break;
+    case TaggedScriptThingIndex::Kind::RegExp:
+      json.value("RegExpIndex(%zu)", size_t(thing.toRegExp()));
+      break;
+    case TaggedScriptThingIndex::Kind::Scope:
+      json.value("ScopeIndex(%zu)", size_t(thing.toScope()));
+      break;
+    case TaggedScriptThingIndex::Kind::Function:
+      json.value("FunctionIndex(%zu)", size_t(thing.toFunction()));
+      break;
+    case TaggedScriptThingIndex::Kind::EmptyGlobalScope:
       json.value("EmptyGlobalScope");
-    }
-  };
-
-  Matcher m{json, compilationStencil};
-  thing.match(m);
+      break;
+  }
 }
 
 void ScriptStencil::dump() {
@@ -1663,18 +1653,19 @@ void CompilationStencil::dump(js::JSONPrinter& json) {
 
 #endif  // defined(DEBUG) || defined(JS_JITSPEW)
 
-mozilla::Span<ScriptThingVariant> js::frontend::NewScriptThingSpanUninitialized(
-    JSContext* cx, LifoAlloc& alloc, uint32_t ngcthings) {
+mozilla::Span<TaggedScriptThingIndex>
+js::frontend::NewScriptThingSpanUninitialized(JSContext* cx, LifoAlloc& alloc,
+                                              uint32_t ngcthings) {
   MOZ_ASSERT(ngcthings > 0);
 
-  ScriptThingVariant* stencilThings =
-      alloc.newArrayUninitialized<ScriptThingVariant>(ngcthings);
+  TaggedScriptThingIndex* stencilThings =
+      alloc.newArrayUninitialized<TaggedScriptThingIndex>(ngcthings);
   if (!stencilThings) {
     js::ReportOutOfMemory(cx);
-    return mozilla::Span<ScriptThingVariant>();
+    return mozilla::Span<TaggedScriptThingIndex>();
   }
 
-  return mozilla::Span<ScriptThingVariant>(stencilThings, ngcthings);
+  return mozilla::Span<TaggedScriptThingIndex>(stencilThings, ngcthings);
 }
 
 JSAtom* CompilationAtomCache::getExistingAtomAt(ParserAtomIndex index) const {

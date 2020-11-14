@@ -45,9 +45,9 @@ namespace frontend {
 class FunctionBox;
 
 struct MOZ_STACK_CLASS GCThingList {
-  // The BCE accumulates ScriptThingVariant items so use a vector type. We
+  // The BCE accumulates TaggedScriptThingIndex items so use a vector type. We
   // reserve some stack slots to avoid allocating for most small scripts.
-  using ScriptThingsStackVector = Vector<ScriptThingVariant, 8>;
+  using ScriptThingsStackVector = Vector<TaggedScriptThingIndex, 8>;
 
   CompilationInfo& compilationInfo;
   ScriptThingsStackVector vector;
@@ -61,14 +61,14 @@ struct MOZ_STACK_CLASS GCThingList {
   MOZ_MUST_USE bool append(const ParserAtom* atom, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
     atom->markUsedByStencil();
-    if (!vector.append(mozilla::AsVariant(atom->toIndex()))) {
+    if (!vector.emplaceBack(atom->toIndex())) {
       return false;
     }
     return true;
   }
   MOZ_MUST_USE bool append(ScopeIndex scope, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
-    if (!vector.append(mozilla::AsVariant(scope))) {
+    if (!vector.emplaceBack(scope)) {
       return false;
     }
     if (!firstScopeIndex) {
@@ -78,21 +78,21 @@ struct MOZ_STACK_CLASS GCThingList {
   }
   MOZ_MUST_USE bool append(BigIntLiteral* literal, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
-    if (!vector.append(mozilla::AsVariant(literal->index()))) {
+    if (!vector.emplaceBack(literal->index())) {
       return false;
     }
     return true;
   }
   MOZ_MUST_USE bool append(RegExpLiteral* literal, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
-    if (!vector.append(mozilla::AsVariant(literal->index()))) {
+    if (!vector.emplaceBack(literal->index())) {
       return false;
     }
     return true;
   }
   MOZ_MUST_USE bool append(ObjLiteralIndex objlit, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
-    if (!vector.append(mozilla::AsVariant(objlit))) {
+    if (!vector.emplaceBack(objlit)) {
       return false;
     }
     return true;
@@ -102,7 +102,7 @@ struct MOZ_STACK_CLASS GCThingList {
   MOZ_MUST_USE bool appendEmptyGlobalScope(GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
     EmptyGlobalScopeType emptyGlobalScope;
-    if (!vector.append(mozilla::AsVariant(emptyGlobalScope))) {
+    if (!vector.emplaceBack(emptyGlobalScope)) {
       return false;
     }
     if (!firstScopeIndex) {
@@ -130,7 +130,7 @@ struct MOZ_STACK_CLASS GCThingList {
 MOZ_MUST_USE bool EmitScriptThingsVector(
     JSContext* cx, CompilationInfo& compilationInfo,
     CompilationGCOutput& gcOutput,
-    mozilla::Span<const ScriptThingVariant> things,
+    mozilla::Span<const TaggedScriptThingIndex> things,
     mozilla::Span<JS::GCCellPtr> output);
 
 struct CGTryNoteList {
