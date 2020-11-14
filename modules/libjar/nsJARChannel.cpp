@@ -19,6 +19,8 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryComms.h"
 #include "private/pprio.h"
 #include "nsInputStreamPump.h"
 #include "nsThreadUtils.h"
@@ -1023,6 +1025,38 @@ nsJARChannel::OnStartRequest(nsIRequest* req) {
   return rv;
 }
 
+static void RecordEmptyFileEvent(const nsCString& aFileName) {
+  // Send Telemetry
+
+  // The event can only hold 80 characters.
+  // We only save the file name and path inside the jar.
+  auto findFilenameStart = [](const nsCString& aFileName) -> uint32_t {
+    int32_t pos = aFileName.Find("!/");
+    if (pos == kNotFound) {
+      MOZ_ASSERT(false, "This should not happen");
+      return 0;
+    }
+    int32_t from = aFileName.RFindChar('/', pos);
+    if (from == kNotFound) {
+      MOZ_ASSERT(false, "This should not happen");
+      return 0;
+    }
+    // Skip over the slash
+    from++;
+    return from;
+  };
+
+  // If for some reason we are unable to extract the filename we report the
+  // entire string, or 80 characters of it, to make sure we don't miss any
+  // events.
+  uint32_t from = findFilenameStart(aFileName);
+
+  Telemetry::EventID eventType =
+      Telemetry::EventID::NetworkJarChannel_Nodata_Onstop;
+  Telemetry::RecordEvent(eventType, mozilla::Some(Substring(aFileName, from)),
+                         Nothing{});
+}
+
 NS_IMETHODIMP
 nsJARChannel::OnStopRequest(nsIRequest* req, nsresult status) {
   LOG(("nsJARChannel::OnStopRequest [this=%p %s status=%" PRIx32 "]\n", this,
@@ -1031,6 +1065,10 @@ nsJARChannel::OnStopRequest(nsIRequest* req, nsresult status) {
   if (NS_SUCCEEDED(mStatus)) mStatus = status;
 
   if (mListener) {
+    if (NS_SUCCEEDED(status) && !mOnDataCalled) {
+      RecordEmptyFileEvent(mSpec);
+    }
+
     mListener->OnStopRequest(this, status);
     mListener = nullptr;
   }
@@ -1061,6 +1099,7 @@ nsJARChannel::OnDataAvailable(nsIRequest* req, nsIInputStream* stream,
 
   nsresult rv;
 
+  mOnDataCalled = true;
   rv = mListener->OnDataAvailable(this, stream, offset, count);
 
   // simply report progress here instead of hooking ourselves up as a
