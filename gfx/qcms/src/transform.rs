@@ -1187,7 +1187,7 @@ fn compute_whitepoint_adaption(mut X: f32, mut Y: f32, mut Z: f32) -> matrix {
     );
 }
 #[no_mangle]
-pub unsafe extern "C" fn qcms_profile_precache_output_transform(mut profile: *mut qcms_profile) {
+pub extern "C" fn qcms_profile_precache_output_transform(mut profile: &mut qcms_profile) {
     /* we only support precaching on rgb profiles */
     if (*profile).color_space != 0x52474220 {
         return;
