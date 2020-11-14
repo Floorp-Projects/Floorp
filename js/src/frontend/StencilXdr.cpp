@@ -657,10 +657,10 @@ static XDRResult XDRStencilModuleEntryVector(
     MOZ_TRY(xdr->codeUint32(&entry.lineno));
     MOZ_TRY(xdr->codeUint32(&entry.column));
 
-    MOZ_TRY(XDRParserAtomOrNull(xdr, &entry.specifier));
-    MOZ_TRY(XDRParserAtomOrNull(xdr, &entry.localName));
-    MOZ_TRY(XDRParserAtomOrNull(xdr, &entry.importName));
-    MOZ_TRY(XDRParserAtomOrNull(xdr, &entry.exportName));
+    MOZ_TRY(XDRTaggedParserAtomIndex(xdr, &entry.specifier));
+    MOZ_TRY(XDRTaggedParserAtomIndex(xdr, &entry.localName));
+    MOZ_TRY(XDRTaggedParserAtomIndex(xdr, &entry.importName));
+    MOZ_TRY(XDRTaggedParserAtomIndex(xdr, &entry.exportName));
   }
 
   return Ok();

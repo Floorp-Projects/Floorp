@@ -117,6 +117,11 @@ class TaggedParserAtomIndex {
   explicit constexpr TaggedParserAtomIndex(StaticParserString2 index)
       : data_(uint32_t(index) | WellKnownTag | Static2SubTag) {}
 
+  static TaggedParserAtomIndex star() {
+    return TaggedParserAtomIndex(StaticParserString1('*'));
+  }
+  static TaggedParserAtomIndex null() { return TaggedParserAtomIndex(); }
+
   bool isParserAtomIndex() const {
     return (data_ & TagMask) == ParserAtomIndexTag;
   }
