@@ -103,6 +103,8 @@ struct CompilationAtomCache {
 
  public:
   JSAtom* getExistingAtomAt(ParserAtomIndex index) const;
+  JSAtom* getExistingAtomAt(JSContext* cx,
+                            TaggedParserAtomIndex taggedIndex) const;
   JSAtom* getAtomAt(ParserAtomIndex index) const;
   bool hasAtomAt(ParserAtomIndex index) const;
   bool setAtomAt(JSContext* cx, ParserAtomIndex index, JSAtom* atom);

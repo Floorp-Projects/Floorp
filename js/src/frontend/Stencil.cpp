@@ -1599,6 +1599,28 @@ JSAtom* CompilationAtomCache::getExistingAtomAt(ParserAtomIndex index) const {
   return atoms_[index];
 }
 
+JSAtom* CompilationAtomCache::getExistingAtomAt(
+    JSContext* cx, TaggedParserAtomIndex taggedIndex) const {
+  if (taggedIndex.isParserAtomIndex()) {
+    auto index = taggedIndex.toParserAtomIndex();
+    return getExistingAtomAt(index);
+  }
+
+  if (taggedIndex.isWellKnownAtomId()) {
+    auto index = taggedIndex.toWellKnownAtomId();
+    return GetWellKnownAtom(cx, index);
+  }
+
+  if (taggedIndex.isStaticParserString1()) {
+    auto index = taggedIndex.toStaticParserString1();
+    return cx->staticStrings().getUnit(char16_t(index));
+  }
+
+  MOZ_ASSERT(taggedIndex.isStaticParserString2());
+  auto index = taggedIndex.toStaticParserString2();
+  return cx->staticStrings().getLength2FromIndex(size_t(index));
+}
+
 JSAtom* CompilationAtomCache::getAtomAt(ParserAtomIndex index) const {
   if (size_t(index) >= atoms_.length()) {
     return nullptr;
