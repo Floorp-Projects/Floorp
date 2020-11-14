@@ -97,7 +97,7 @@ class TaggedParserAtomIndex {
   static constexpr uint32_t IndexLimit = Bit(IndexBit);
   static constexpr uint32_t SmallIndexLimit = Bit(SmallIndexBit);
 
-  TaggedParserAtomIndex() : data_(NullTag) {}
+  constexpr TaggedParserAtomIndex() : data_(NullTag) {}
 
   explicit constexpr TaggedParserAtomIndex(ParserAtomIndex index)
       : data_(index.index | ParserAtomIndexTag) {
@@ -203,19 +203,7 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   // The length of the buffer in chars_.
   uint32_t length_ = 0;
 
-  // Mapping into from ParserAtoms to JSAtoms.
-  enum class AtomIndexKind : uint8_t {
-    // Index into CompilationStencil.parserAtomData.
-    ParserAtomIndex,
-    // WellKnownAtomId to index into cx->names() set
-    WellKnown,
-    // Index into StaticStrings length-1 set
-    Static1,
-    // Index into StaticStrings length-2 set
-    Static2,
-  };
-  uint32_t atomIndex_ = 0;
-  AtomIndexKind atomIndexKind_ = AtomIndexKind::ParserAtomIndex;
+  TaggedParserAtomIndex index_;
 
   // Encoding type.
   bool hasTwoByteChars_ = false;
@@ -312,53 +300,39 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   template <typename CharT>
   bool equalsSeq(HashNumber hash, InflatedChar16Sequence<CharT> seq) const;
 
+  TaggedParserAtomIndex toIndex() const { return index_; }
+
   ParserAtomIndex toParserAtomIndex() const {
-    MOZ_ASSERT(isParserAtomIndex());
-    return ParserAtomIndex(atomIndex_);
+    return index_.toParserAtomIndex();
   }
   WellKnownAtomId toWellKnownAtomId() const {
-    MOZ_ASSERT(isWellKnownAtomId());
-    return WellKnownAtomId(atomIndex_);
+    return index_.toWellKnownAtomId();
   }
   StaticParserString1 toStaticParserString1() const {
-    MOZ_ASSERT(isStaticParserString1());
-    return StaticParserString1(atomIndex_);
+    return index_.toStaticParserString1();
   }
   StaticParserString2 toStaticParserString2() const {
-    MOZ_ASSERT(isStaticParserString2());
-    return StaticParserString2(atomIndex_);
+    return index_.toStaticParserString2();
   }
 
-  bool isParserAtomIndex() const {
-    return atomIndexKind_ == AtomIndexKind::ParserAtomIndex;
-  }
-  bool isWellKnownAtomId() const {
-    return atomIndexKind_ == AtomIndexKind::WellKnown;
-  }
-  bool isStaticParserString1() const {
-    return atomIndexKind_ == AtomIndexKind::Static1;
-  }
-  bool isStaticParserString2() const {
-    return atomIndexKind_ == AtomIndexKind::Static2;
-  }
+  bool isParserAtomIndex() const { return index_.isParserAtomIndex(); }
+  bool isWellKnownAtomId() const { return index_.isWellKnownAtomId(); }
+  bool isStaticParserString1() const { return index_.isStaticParserString1(); }
+  bool isStaticParserString2() const { return index_.isStaticParserString2(); }
 
   void setParserAtomIndex(ParserAtomIndex index) {
-    atomIndex_ = index;
-    atomIndexKind_ = AtomIndexKind::ParserAtomIndex;
+    index_ = TaggedParserAtomIndex(index);
   }
 
  private:
   constexpr void setWellKnownAtomId(WellKnownAtomId atomId) {
-    atomIndex_ = static_cast<uint32_t>(atomId);
-    atomIndexKind_ = AtomIndexKind::WellKnown;
+    index_ = TaggedParserAtomIndex(atomId);
   }
   constexpr void setStaticParserString1(StaticParserString1 s) {
-    atomIndex_ = static_cast<uint32_t>(s);
-    atomIndexKind_ = AtomIndexKind::Static1;
+    index_ = TaggedParserAtomIndex(s);
   }
   constexpr void setStaticParserString2(StaticParserString2 s) {
-    atomIndex_ = static_cast<uint32_t>(s);
-    atomIndexKind_ = AtomIndexKind::Static2;
+    index_ = TaggedParserAtomIndex(s);
   }
   constexpr void setHashAndLength(HashNumber hash, uint32_t length,
                                   bool hasTwoByteChars = false) {
