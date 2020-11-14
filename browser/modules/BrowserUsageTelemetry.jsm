@@ -64,6 +64,8 @@ const UNIQUE_DOMAINS_COUNT_SCALAR_NAME =
 const TOTAL_URI_COUNT_SCALAR_NAME = "browser.engagement.total_uri_count";
 const UNFILTERED_URI_COUNT_SCALAR_NAME =
   "browser.engagement.unfiltered_uri_count";
+const TOTAL_URI_COUNT_NORMAL_AND_PRIVATE_MODE_SCALAR_NAME =
+  "browser.engagement.total_uri_count_normal_and_private_mode";
 
 // A list of known search origins.
 const KNOWN_SEARCH_SOURCES = [
@@ -338,6 +340,12 @@ let URICountListener = {
     ) {
       SearchTelemetry.updateTrackingStatus(browser, uriSpec);
     }
+
+    // Update total URI count, including when in private mode.
+    Services.telemetry.scalarAdd(
+      TOTAL_URI_COUNT_NORMAL_AND_PRIVATE_MODE_SCALAR_NAME,
+      1
+    );
 
     if (!shouldCountURI) {
       return;
