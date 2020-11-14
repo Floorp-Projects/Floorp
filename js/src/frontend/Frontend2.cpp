@@ -380,7 +380,7 @@ bool ConvertGCThings(JSContext* cx, const SmooshResult& result,
         break;
       }
       case SmooshGCThing::Tag::Atom: {
-        new (raw) ScriptThingVariant(allAtoms[item.AsAtom()]);
+        new (raw) ScriptThingVariant(allAtoms[item.AsAtom()]->toIndex());
         break;
       }
       case SmooshGCThing::Tag::Function: {

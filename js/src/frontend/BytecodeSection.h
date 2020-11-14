@@ -61,7 +61,7 @@ struct MOZ_STACK_CLASS GCThingList {
   MOZ_MUST_USE bool append(const ParserAtom* atom, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
     atom->markUsedByStencil();
-    if (!vector.append(mozilla::AsVariant(std::move(atom)))) {
+    if (!vector.append(mozilla::AsVariant(atom->toIndex()))) {
       return false;
     }
     return true;

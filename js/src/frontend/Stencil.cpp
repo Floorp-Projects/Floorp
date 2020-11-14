@@ -1492,17 +1492,17 @@ static void DumpFunctionFlagsItems(js::JSONPrinter& json,
   }
 }
 
-static void DumpScriptThing(js::JSONPrinter& json, ScriptThingVariant& thing) {
+static void DumpScriptThing(js::JSONPrinter& json,
+                            CompilationStencil* compilationStencil,
+                            ScriptThingVariant& thing) {
   struct Matcher {
     js::JSONPrinter& json;
+    CompilationStencil* compilationStencil;
 
-    void operator()(ScriptAtom& data) {
+    void operator()(TaggedParserAtomIndex& data) {
       json.beginObject();
       json.property("type", "ScriptAtom");
-      const ParserAtom* atom = data;
-      GenericPrinter& out = json.beginStringProperty("value");
-      atom->dumpCharsNoQuote(out);
-      json.endStringProperty();
+      DumpTaggedParserAtomIndex(json, data, compilationStencil);
       json.endObject();
     }
 
@@ -1533,7 +1533,7 @@ static void DumpScriptThing(js::JSONPrinter& json, ScriptThingVariant& thing) {
     }
   };
 
-  Matcher m{json};
+  Matcher m{json, compilationStencil};
   thing.match(m);
 }
 
@@ -1565,7 +1565,7 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
 
   json.beginListProperty("gcThings");
   for (auto& thing : gcThings) {
-    DumpScriptThing(json, thing);
+    DumpScriptThing(json, compilationStencil, thing);
   }
   json.endList();
 
