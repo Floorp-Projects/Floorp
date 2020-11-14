@@ -932,9 +932,9 @@ CompilationState::CompilationState(JSContext* cx,
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
 
-void DumpTaggedParserAtomIndex(js::JSONPrinter& json,
-                               TaggedParserAtomIndex taggedIndex,
-                               CompilationStencil* compilationStencil) {
+void frontend::DumpTaggedParserAtomIndex(
+    js::JSONPrinter& json, TaggedParserAtomIndex taggedIndex,
+    CompilationStencil* compilationStencil) {
   if (taggedIndex.isParserAtomIndex()) {
     json.property("tag", "AtomIndex");
     auto index = taggedIndex.toParserAtomIndex();
@@ -1642,7 +1642,7 @@ void CompilationStencil::dump(js::JSONPrinter& json) {
 
   json.beginListProperty("objLiteralData");
   for (auto& data : objLiteralData) {
-    data.dump(json);
+    data.dump(json, this);
   }
   json.endList();
 
