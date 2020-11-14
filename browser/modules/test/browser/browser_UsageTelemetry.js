@@ -9,6 +9,8 @@ const WINDOW_OPEN_COUNT = "browser.engagement.window_open_event_count";
 const TOTAL_URI_COUNT = "browser.engagement.total_uri_count";
 const UNIQUE_DOMAINS_COUNT = "browser.engagement.unique_domains_count";
 const UNFILTERED_URI_COUNT = "browser.engagement.unfiltered_uri_count";
+const TOTAL_URI_COUNT_NORMAL_AND_PRIVATE_MODE =
+  "browser.engagement.total_uri_count_normal_and_private_mode";
 
 const TELEMETRY_SUBSESSION_TOPIC = "internal-telemetry-after-subsession-split";
 
@@ -88,6 +90,12 @@ let checkScalars = countsObject => {
     countsObject.totalUnfilteredURIs,
     "The unfiltered URI count must match the expected value."
   );
+  TelemetryTestUtils.assertScalar(
+    scalars,
+    TOTAL_URI_COUNT_NORMAL_AND_PRIVATE_MODE,
+    countsObject.totalURIsNormalAndPrivateMode,
+    "The total URI count for both normal and private mode must match the expected value."
+  );
 };
 
 add_task(async function test_tabsAndWindows() {
@@ -101,6 +109,7 @@ add_task(async function test_tabsAndWindows() {
   let expectedMaxWins = 0;
   let expectedMaxTabsPinned = 0;
   let expectedTabPinned = 0;
+  let expectedTotalURIs = 0;
 
   // Add a new tab and check that the count is right.
   openedTabs.push(
@@ -121,11 +130,12 @@ add_task(async function test_tabsAndWindows() {
     tabOpenCount: expectedTabOpenCount,
     maxWindows: expectedMaxWins,
     windowsOpenCount: expectedWinOpenCount,
-    totalURIs: 0,
+    totalURIs: expectedTotalURIs,
     domainCount: 0,
     totalUnfilteredURIs: 0,
     maxTabsPinned: expectedMaxTabsPinned,
     tabPinnedCount: expectedTabPinned,
+    totalURIsNormalAndPrivateMode: expectedTotalURIs,
   });
 
   // Add two new tabs in the same window.
@@ -150,11 +160,12 @@ add_task(async function test_tabsAndWindows() {
     tabOpenCount: expectedTabOpenCount,
     maxWindows: expectedMaxWins,
     windowsOpenCount: expectedWinOpenCount,
-    totalURIs: 0,
+    totalURIs: expectedTotalURIs,
     domainCount: 0,
     totalUnfilteredURIs: 0,
     maxTabsPinned: expectedMaxTabsPinned,
     tabPinnedCount: expectedTabPinned,
+    totalURIsNormalAndPrivateMode: expectedTotalURIs,
   });
 
   // Add a new window and then some tabs in it. An empty new windows counts as a tab.
@@ -181,11 +192,12 @@ add_task(async function test_tabsAndWindows() {
     tabOpenCount: expectedTabOpenCount,
     maxWindows: expectedMaxWins,
     windowsOpenCount: expectedWinOpenCount,
-    totalURIs: 0,
+    totalURIs: expectedTotalURIs,
     domainCount: 0,
     totalUnfilteredURIs: 0,
     maxTabsPinned: expectedMaxTabsPinned,
     tabPinnedCount: expectedTabPinned,
+    totalURIsNormalAndPrivateMode: expectedTotalURIs,
   });
 
   // Remove all the extra windows and tabs.
@@ -200,11 +212,12 @@ add_task(async function test_tabsAndWindows() {
     tabOpenCount: expectedTabOpenCount,
     maxWindows: expectedMaxWins,
     windowsOpenCount: expectedWinOpenCount,
-    totalURIs: 0,
+    totalURIs: expectedTotalURIs,
     domainCount: 0,
     totalUnfilteredURIs: 0,
     maxTabsPinned: expectedMaxTabsPinned,
     tabPinnedCount: expectedTabPinned,
+    totalURIsNormalAndPrivateMode: expectedTotalURIs,
   });
 });
 
@@ -231,16 +244,19 @@ add_task(async function test_subsessionSplit() {
   // Check that the scalars have the right values. We expect 2 unfiltered URI loads
   // (about:mozilla and www.example.com, but no about:blank) and 1 URI totalURIs
   // (only www.example.com).
+  let expectedTotalURIs = 1;
+
   checkScalars({
     maxTabs: 5,
     tabOpenCount: 4,
     maxWindows: 2,
     windowsOpenCount: 1,
-    totalURIs: 1,
+    totalURIs: expectedTotalURIs,
     domainCount: 1,
     totalUnfilteredURIs: 2,
     maxTabsPinned: 0,
     tabPinnedCount: 0,
+    totalURIsNormalAndPrivateMode: expectedTotalURIs,
   });
 
   // Remove a tab.
@@ -254,16 +270,19 @@ add_task(async function test_subsessionSplit() {
   // After a subsession split, only the MAX_CONCURRENT_* scalars must be available
   // and have the correct value. No tabs, windows or URIs were opened so other scalars
   // must not be reported.
+  expectedTotalURIs = 0;
+
   checkScalars({
     maxTabs: 4,
     tabOpenCount: 0,
     maxWindows: 2,
     windowsOpenCount: 0,
-    totalURIs: 0,
+    totalURIs: expectedTotalURIs,
     domainCount: 0,
     totalUnfilteredURIs: 0,
     maxTabsPinned: 0,
     tabPinnedCount: 0,
+    totalURIsNormalAndPrivateMode: expectedTotalURIs,
   });
 
   // Remove all the extra windows and tabs.
