@@ -2330,7 +2330,9 @@ void gfxPlatformFontList::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
   aSizes->mFontListSize +=
       mFontEntries.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto iter = mFontEntries.ConstIter(); !iter.Done(); iter.Next()) {
-    iter.Data()->AddSizeOfIncludingThis(aMallocSizeOf, aSizes);
+    if (iter.Data()) {
+      iter.Data()->AddSizeOfIncludingThis(aMallocSizeOf, aSizes);
+    }
   }
 
   if (SharedFontList()) {
