@@ -16,12 +16,6 @@ using namespace js;
 using namespace js::frontend;
 
 template <XDRMode mode>
-static XDRResult XDRTaggedScriptThingIndex(XDRState<mode>* xdr,
-                                           TaggedScriptThingIndex& thing) {
-  return xdr->codeUint32(thing.rawData());
-}
-
-template <XDRMode mode>
 /* static */ XDRResult StencilXDR::Script(XDRState<mode>* xdr,
                                           ScriptStencil& stencil) {
   enum class XdrFlags : uint8_t {
@@ -156,9 +150,17 @@ template <XDRMode mode>
     }
   }
 
-  for (TaggedScriptThingIndex& thing : stencil.gcThings) {
-    MOZ_TRY(XDRTaggedScriptThingIndex(xdr, thing));
-  }
+#ifdef __cpp_lib_has_unique_object_representations
+  // We check endianess before decoding so if structures are fully packed, we
+  // may transcode them directly as raw bytes.
+  static_assert(
+      std::has_unique_object_representations<TaggedScriptThingIndex>(),
+      "TaggedScriptThingIndex structure must be fully packed");
+#endif
+
+  MOZ_TRY(xdr->codeBytes(
+      const_cast<TaggedScriptThingIndex*>(stencil.gcThings.data()),
+      sizeof(TaggedScriptThingIndex) * xdrFields.numGcThings));
 
   if (xdrFlags & (1 << uint8_t(XdrFlags::HasSharedData))) {
     MOZ_TRY(StencilXDR::SharedData<mode>(xdr, stencil.sharedData));
