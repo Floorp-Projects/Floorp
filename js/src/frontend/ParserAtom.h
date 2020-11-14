@@ -641,6 +641,8 @@ class WellKnownParserAtoms {
   const ParserAtom* lookupTiny(CharsT chars, size_t length) const {
     return rom_.lookupTiny(chars, length);
   }
+
+  const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;
 };
 
 bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomVector& entries,
