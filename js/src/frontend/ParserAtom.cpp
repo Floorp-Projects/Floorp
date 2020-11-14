@@ -654,6 +654,38 @@ const ParserAtom* ParserAtomVectorBuilder::getStatic2(
   return WellKnownParserAtoms::getStatic2(s);
 }
 
+const ParserAtom* ParserAtomVectorBuilder::getParserAtom(
+    ParserAtomIndex index) const {
+  return entries_[index]->asAtom();
+}
+
+template <class T>
+const ParserAtom* GetParserAtom(T self, TaggedParserAtomIndex index) {
+  if (index.isParserAtomIndex()) {
+    return self->getParserAtom(index.toParserAtomIndex());
+  }
+
+  if (index.isWellKnownAtomId()) {
+    return self->getWellKnown(index.toWellKnownAtomId());
+  }
+
+  if (index.isStaticParserString1()) {
+    return self->getStatic1(index.toStaticParserString1());
+  }
+
+  if (index.isStaticParserString2()) {
+    return self->getStatic2(index.toStaticParserString2());
+  }
+
+  MOZ_ASSERT(index.isNull());
+  return nullptr;
+}
+
+const ParserAtom* ParserAtomVectorBuilder::getParserAtom(
+    TaggedParserAtomIndex index) const {
+  return GetParserAtom(this, index);
+}
+
 const ParserAtom* ParserAtomsTable::getWellKnown(WellKnownAtomId atomId) const {
   return wellKnownTable_.getWellKnown(atomId);
 }
@@ -664,6 +696,15 @@ const ParserAtom* ParserAtomsTable::getStatic1(StaticParserString1 s) const {
 
 const ParserAtom* ParserAtomsTable::getStatic2(StaticParserString2 s) const {
   return WellKnownParserAtoms::getStatic2(s);
+}
+
+const ParserAtom* ParserAtomsTable::getParserAtom(ParserAtomIndex index) const {
+  return entries_[index]->asAtom();
+}
+
+const ParserAtom* ParserAtomsTable::getParserAtom(
+    TaggedParserAtomIndex index) const {
+  return GetParserAtom(this, index);
 }
 
 bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomVector& entries,

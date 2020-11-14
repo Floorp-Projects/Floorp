@@ -705,6 +705,8 @@ class ParserAtomsTable {
   const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;
   const ParserAtom* getStatic1(StaticParserString1 s) const;
   const ParserAtom* getStatic2(StaticParserString2 s) const;
+  const ParserAtom* getParserAtom(ParserAtomIndex index) const;
+  const ParserAtom* getParserAtom(TaggedParserAtomIndex index) const;
 };
 
 // Lightweight version of ParserAtomsTable.
@@ -742,6 +744,8 @@ class ParserAtomVectorBuilder {
   const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;
   const ParserAtom* getStatic1(StaticParserString1 s) const;
   const ParserAtom* getStatic2(StaticParserString2 s) const;
+  const ParserAtom* getParserAtom(ParserAtomIndex index) const;
+  const ParserAtom* getParserAtom(TaggedParserAtomIndex index) const;
 };
 
 template <typename CharT>
