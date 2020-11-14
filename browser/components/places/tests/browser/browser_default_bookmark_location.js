@@ -180,7 +180,10 @@ add_task(async function test_change_location_panel() {
   );
 
   // Wait for the pref to change
-  let prefChangedPromise = TestUtils.waitForPrefChange(LOCATION_PREF);
+  let prefChangedPromise;
+  if (gBookmarksToolbar2h2020) {
+    prefChangedPromise = TestUtils.waitForPrefChange(LOCATION_PREF);
+  }
 
   // Click the choose item.
   EventUtils.synthesizeMouseAtCenter(
