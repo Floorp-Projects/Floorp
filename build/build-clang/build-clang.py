@@ -636,9 +636,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if not os.path.exists("llvm/LLVMBuild.txt"):
+    if not os.path.exists("llvm/README.txt"):
         raise Exception(
-            "The script must be run from the root directory of the " "llvm-project tree"
+            "The script must be run from the root directory of the llvm-project tree"
         )
     source_dir = os.getcwd()
     build_dir = source_dir + "/build"
