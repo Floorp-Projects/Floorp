@@ -1644,22 +1644,51 @@ var BookmarkingUI = {
     return menu;
   },
 
-  bookmarksToolbarHasVisibleChildren() {
+  updateEmptyToolbarMessage() {
+    let hasVisibleChildren = !!this.toolbar.querySelector(
+      `#PersonalToolbar > toolbarpaletteitem > toolbarbutton:not([hidden]),
+       #PersonalToolbar > toolbarpaletteitem > toolbaritem:not([hidden]):not(#personal-bookmarks),
+       #PersonalToolbar > toolbarbutton:not([hidden]),
+       #PersonalToolbar > toolbaritem:not([hidden]):not(#personal-bookmarks)`
+    );
+
+    let toolbarBookmarkCount = 0;
+    // Prevent loading PlacesUtil.jsm during startup.
+    if (Cu.isModuleLoaded("resource://gre/modules/PlacesUtils.jsm")) {
+      toolbarBookmarkCount = PlacesUtils.getChildCountForFolder(
+        PlacesUtils.bookmarks.toolbarGuid
+      );
+    } else {
+      const kPlacesInitComplete = "places-init-complete";
+      let observer = {
+        observe() {
+          Services.obs.removeObserver(observer, kPlacesInitComplete);
+          BookmarkingUI.updateEmptyToolbarMessage();
+        },
+      };
+      Services.obs.addObserver(observer, kPlacesInitComplete);
+    }
+
     let bookmarksToolbarItemsPlacement = CustomizableUI.getPlacementOfWidget(
       "personal-bookmarks"
     );
+    hasVisibleChildren ||=
+      bookmarksToolbarItemsPlacement?.area == CustomizableUI.AREA_BOOKMARKS &&
+      (this._isCustomizing || !!toolbarBookmarkCount);
 
+    document.getElementById(
+      "personal-toolbar-empty"
+    ).hidden = hasVisibleChildren;
+  },
+
+  openLibraryIfLinkClicked(event) {
     if (
-      bookmarksToolbarItemsPlacement.area == CustomizableUI.AREA_BOOKMARKS &&
-      PlacesUtils.getChildCountForFolder(PlacesUtils.bookmarks.toolbarGuid)
+      ((event.type == "click" && event.button == 0) ||
+        (event.type == "keydown" && event.keyCode == KeyEvent.DOM_VK_RETURN)) &&
+      event.target.localName == "a"
     ) {
-      return true;
+      PlacesCommandHook.showPlacesOrganizer("BookmarksToolbar");
     }
-
-    return !!this.toolbar.querySelector(
-      `#PersonalToolbar > toolbarbutton:not([hidden]),
-       #PersonalToolbar > toolbaritem:not([hidden]):not(#personal-bookmarks)`
-    );
   },
 
   attachPlacesView(event, node) {
@@ -1721,6 +1750,8 @@ var BookmarkingUI = {
       this._uninitView();
       this._isCustomizing = true;
 
+      this.updateEmptyToolbarMessage();
+
       if (!gBookmarksToolbar2h2020) {
         return;
       }
@@ -1738,15 +1769,21 @@ var BookmarkingUI = {
     }
   },
 
-  onWidgetAdded: function BUI_widgetAdded(aWidgetId) {
+  onWidgetAdded: function BUI_widgetAdded(aWidgetId, aArea) {
     if (aWidgetId == this.BOOKMARK_BUTTON_ID) {
       this._onWidgetWasMoved();
     }
+    if (aArea == CustomizableUI.AREA_BOOKMARKS) {
+      this.updateEmptyToolbarMessage();
+    }
   },
 
-  onWidgetRemoved: function BUI_widgetRemoved(aWidgetId) {
+  onWidgetRemoved: function BUI_widgetRemoved(aWidgetId, aOldArea) {
     if (aWidgetId == this.BOOKMARK_BUTTON_ID) {
       this._onWidgetWasMoved();
+    }
+    if (aOldArea == CustomizableUI.AREA_BOOKMARKS) {
+      this.updateEmptyToolbarMessage();
     }
   },
 
@@ -1773,12 +1810,13 @@ var BookmarkingUI = {
   onCustomizeEnd: function BUI_customizeEnd(aWindow) {
     if (aWindow == window) {
       this._isCustomizing = false;
+      this.updateEmptyToolbarMessage();
     }
   },
 
   init() {
     CustomizableUI.addListener(this);
-
+    this.updateEmptyToolbarMessage();
     this.star.addEventListener("mouseover", this, { once: true });
   },
 
@@ -2218,6 +2256,7 @@ var BookmarkingUI = {
       if (ev.parentGuid === PlacesUtils.bookmarks.unfiledGuid) {
         this.maybeShowOtherBookmarksFolder();
       }
+      this.updateEmptyToolbarMessage();
     }
   },
 
@@ -2269,9 +2308,15 @@ var BookmarkingUI = {
     let hasMovedToOrOutOfOtherBookmarks =
       newParentGuid === PlacesUtils.bookmarks.unfiledGuid ||
       oldParentGuid === PlacesUtils.bookmarks.unfiledGuid;
-
     if (hasMovedToOrOutOfOtherBookmarks) {
       this.maybeShowOtherBookmarksFolder();
+    }
+
+    let hasMovedToOrOutOfToolbar =
+      newParentGuid === PlacesUtils.bookmarks.toolbarGuid ||
+      oldParentGuid === PlacesUtils.bookmarks.toolbarGuid;
+    if (hasMovedToOrOutOfToolbar) {
+      this.updateEmptyToolbarMessage();
     }
   },
 
