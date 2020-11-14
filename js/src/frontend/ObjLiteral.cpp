@@ -35,7 +35,7 @@ static void InterpretObjLiteralValue(JSContext* cx,
       return;
     case ObjLiteralOpcode::ConstAtom: {
       uint32_t index = insn.getAtomIndex();
-      JSAtom* jsatom = atoms[index]->toExistingJSAtom(cx, atomCache);
+      JSAtom* jsatom = atomCache.getExistingAtomAt(cx, atoms[index]);
       MOZ_ASSERT(jsatom);
       *valOut = StringValue(jsatom);
       return;
@@ -78,8 +78,8 @@ static JSObject* InterpretObjLiteralObj(
     if (insn.getKey().isArrayIndex()) {
       propId = INT_TO_JSID(insn.getKey().getArrayIndex());
     } else {
-      const frontend::ParserAtom* atom = atoms[insn.getKey().getAtomIndex()];
-      JSAtom* jsatom = atom->toExistingJSAtom(cx, atomCache);
+      JSAtom* jsatom =
+          atomCache.getExistingAtomAt(cx, atoms[insn.getKey().getAtomIndex()]);
       MOZ_ASSERT(jsatom);
       propId = AtomToId(jsatom);
     }
@@ -252,27 +252,25 @@ void ObjLiteralWriter::dumpFields(js::JSONPrinter& json) {
 void ObjLiteralStencil::dump() {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
-  dump(json);
+  dump(json, nullptr);
 }
 
-void ObjLiteralStencil::dump(js::JSONPrinter& json) {
+void ObjLiteralStencil::dump(js::JSONPrinter& json,
+                             frontend::CompilationStencil* compilationStencil) {
   json.beginObject();
-  dumpFields(json);
+  dumpFields(json, compilationStencil);
   json.endObject();
 }
 
-void ObjLiteralStencil::dumpFields(js::JSONPrinter& json) {
+void ObjLiteralStencil::dumpFields(
+    js::JSONPrinter& json, frontend::CompilationStencil* compilationStencil) {
   writer_.dumpFields(json);
 
   json.beginListProperty("atoms");
   for (auto& atom : atoms_) {
-    if (atom) {
-      GenericPrinter& out = json.beginString();
-      atom->dumpCharsNoQuote(out);
-      json.endString();
-    } else {
-      json.nullValue();
-    }
+    json.beginObject();
+    frontend::DumpTaggedParserAtomIndex(json, atom, compilationStencil);
+    json.endObject();
   }
   json.endList();
 }
