@@ -5737,6 +5737,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
                                   FieldPlacement::Instance);
       if (!memberInitializers) {
         ReportAllocationOverflow(cx);
+        return false;
       }
       funbox->setMemberInitializers(*memberInitializers);
     }
