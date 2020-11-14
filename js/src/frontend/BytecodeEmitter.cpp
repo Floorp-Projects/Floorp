@@ -1661,6 +1661,10 @@ bool BytecodeEmitter::iteratorResultShape(GCThingIndex* shape) {
   ObjLiteralFlags flags{ObjLiteralFlag::NoValues};
 
   ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
+  if (uint32_t(objIndex) >= TaggedScriptThingIndex::IndexLimit) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
   if (!compilationInfo.stencil.objLiteralData.emplaceBack()) {
     js::ReportOutOfMemory(cx);
     return false;
@@ -4626,6 +4630,10 @@ bool BytecodeEmitter::emitCallSiteObjectArray(ListNode* cookedOrRaw,
   }
 
   ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
+  if (uint32_t(objIndex) >= TaggedScriptThingIndex::IndexLimit) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
   if (!compilationInfo.stencil.objLiteralData.emplaceBack()) {
     js::ReportOutOfMemory(cx);
     return false;
@@ -8839,6 +8847,10 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
                                                  ObjLiteralFlags flags) {
   ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
+  if (uint32_t(objIndex) >= TaggedScriptThingIndex::IndexLimit) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
   if (!compilationInfo.stencil.objLiteralData.emplaceBack()) {
     js::ReportOutOfMemory(cx);
     return false;
@@ -8911,6 +8923,10 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
   ObjLiteralFlags flags{ObjLiteralFlag::NoValues};
 
   ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
+  if (uint32_t(objIndex) >= TaggedScriptThingIndex::IndexLimit) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
   if (!compilationInfo.stencil.objLiteralData.emplaceBack()) {
     js::ReportOutOfMemory(cx);
     return false;
@@ -8964,6 +8980,10 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
 
 bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead, bool isCow) {
   ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
+  if (uint32_t(objIndex) >= TaggedScriptThingIndex::IndexLimit) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
   if (!compilationInfo.stencil.objLiteralData.emplaceBack()) {
     js::ReportOutOfMemory(cx);
     return false;
