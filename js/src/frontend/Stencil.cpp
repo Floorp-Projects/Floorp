@@ -1008,15 +1008,23 @@ void DumpTaggedParserAtomIndex(js::JSONPrinter& json,
 void RegExpStencil::dump() {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
-  dump(json);
+  dump(json, nullptr);
 }
 
-void RegExpStencil::dump(js::JSONPrinter& json) {
-  GenericPrinter& out = json.beginString();
+void RegExpStencil::dump(js::JSONPrinter& json,
+                         CompilationStencil* compilationStencil) {
+  json.beginObject();
+  dumpFields(json, compilationStencil);
+  json.endObject();
+}
 
-  out.put("/");
-  atom_->dumpCharsNoQuote(out);
-  out.put("/");
+void RegExpStencil::dumpFields(js::JSONPrinter& json,
+                               CompilationStencil* compilationStencil) {
+  json.beginObjectProperty("pattern");
+  DumpTaggedParserAtomIndex(json, atom_, compilationStencil);
+  json.endObject();
+
+  GenericPrinter& out = json.beginStringProperty("flags");
 
   if (flags_.global()) {
     out.put("g");
@@ -1037,7 +1045,7 @@ void RegExpStencil::dump(js::JSONPrinter& json) {
     out.put("y");
   }
 
-  json.endString();
+  json.endStringProperty();
 }
 
 void BigIntStencil::dump() {
@@ -1619,7 +1627,7 @@ void CompilationStencil::dump(js::JSONPrinter& json) {
 
   json.beginListProperty("regExpData");
   for (auto& data : regExpData) {
-    data.dump(json);
+    data.dump(json, this);
   }
   json.endList();
 
