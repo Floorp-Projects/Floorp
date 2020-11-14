@@ -259,7 +259,10 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
 
   FunctionIndex index =
       FunctionIndex(compilationInfo_.stencil.scriptData.length());
-
+  if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
+    ReportAllocationOverflow(cx_);
+    return nullptr;
+  }
   if (!compilationInfo_.stencil.scriptData.emplaceBack()) {
     js::ReportOutOfMemory(cx_);
     return nullptr;
@@ -10302,6 +10305,10 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
   atom->markUsedByStencil();
 
   RegExpIndex index(this->getCompilationInfo().stencil.regExpData.length());
+  if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
+    ReportAllocationOverflow(cx_);
+    return nullptr;
+  }
   if (!this->getCompilationInfo().stencil.regExpData.emplaceBack(
           atom->toIndex(), flags)) {
     js::ReportOutOfMemory(cx_);
@@ -10351,6 +10358,10 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
   const auto& chars = tokenStream.getCharBuffer();
 
   BigIntIndex index(this->getCompilationInfo().stencil.bigIntData.length());
+  if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
+    ReportAllocationOverflow(cx_);
+    return null();
+  }
   if (!this->getCompilationInfo().stencil.bigIntData.emplaceBack()) {
     js::ReportOutOfMemory(cx_);
     return null();

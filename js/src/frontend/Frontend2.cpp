@@ -117,6 +117,11 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
                          CompilationInfo& compilationInfo) {
   LifoAlloc& alloc = compilationInfo.stencil.alloc;
 
+  if (result.scopes.len > TaggedScriptThingIndex::IndexLimit) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
+
   for (size_t i = 0; i < result.scopes.len; i++) {
     SmooshScopeData& scopeData = result.scopes.data[i];
     ScopeIndex index;
@@ -250,6 +255,11 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
 bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
                        CompilationInfo& compilationInfo,
                        CompilationState& compilationState) {
+  if (result.regexps.len > TaggedScriptThingIndex::IndexLimit) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
+
   for (size_t i = 0; i < result.regexps.len; i++) {
     SmooshRegExpItem& item = result.regexps.data[i];
     auto s = smoosh_get_slice_at(result, item.pattern);
@@ -576,6 +586,11 @@ bool Smoosh::compileGlobalScriptToStencil(JSContext* cx,
   }
 
   if (!ConvertRegExpData(cx, result, compilationInfo, compilationState)) {
+    return false;
+  }
+
+  if (result.scripts.len > TaggedScriptThingIndex::IndexLimit) {
+    ReportAllocationOverflow(cx);
     return false;
   }
 
