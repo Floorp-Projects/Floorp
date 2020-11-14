@@ -197,8 +197,31 @@ browser.engagement:
       - 1529232
     description: >
       The count of the total non-unique http(s) URIs visited in a subsession, including
-      page reloads, after the session has been restored. This does not include background
-      page requests and URIs from embedded pages or private browsing.
+      page reloads, after the session has been restored. URIs on minimized or background
+      tabs may also be counted towards this. Private browsing is not included in this
+      count.
+    expires: never
+    kind: uint
+    notification_emails:
+      - rweiss@mozilla.com
+      - loines@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - 'main'
+      - 'account-ecosystem'
+
+  total_uri_count_normal_and_private_mode:
+    bug_numbers:
+      - 1535169
+    description: >
+      The count of the total non-unique http(s) URIs visited in a subsession, including
+      page reloads, after the session has been restored. URIs on minimized or background
+      tabs may also be counted towards this. Private browsing is included in this count.
     expires: never
     kind: uint
     notification_emails:

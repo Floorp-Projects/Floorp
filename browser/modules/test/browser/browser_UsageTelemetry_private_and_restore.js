@@ -11,6 +11,8 @@ const WINDOW_OPEN_COUNT = "browser.engagement.window_open_event_count";
 const TOTAL_URI_COUNT = "browser.engagement.total_uri_count";
 const UNFILTERED_URI_COUNT = "browser.engagement.unfiltered_uri_count";
 const UNIQUE_DOMAINS_COUNT = "browser.engagement.unique_domains_count";
+const TOTAL_URI_COUNT_NORMAL_AND_PRIVATE_MODE =
+  "browser.engagement.total_uri_count_normal_and_private_mode";
 
 function promiseBrowserStateRestored() {
   return new Promise(resolve => {
@@ -72,6 +74,11 @@ add_task(async function test_privateMode() {
     scalars[MAX_CONCURRENT_WINDOWS],
     2,
     "The maximum window count must match the expected value."
+  );
+  is(
+    scalars[TOTAL_URI_COUNT_NORMAL_AND_PRIVATE_MODE],
+    1,
+    "We should include URIs in private mode as part of the actual total URI count."
   );
 
   // Clean up.
