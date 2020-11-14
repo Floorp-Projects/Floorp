@@ -767,6 +767,8 @@ inline bool ParserAtomEntry::equalsSeq(
   return !seq.hasMore();
 }
 
+JSAtom* GetWellKnownAtom(JSContext* cx, WellKnownAtomId atomId);
+
 } /* namespace frontend */
 } /* namespace js */
 

@@ -111,7 +111,7 @@ namespace frontend {
 
 static JS::OOM PARSER_ATOMS_OOM;
 
-static JSAtom* GetWellKnownAtom(JSContext* cx, WellKnownAtomId atomId) {
+JSAtom* GetWellKnownAtom(JSContext* cx, WellKnownAtomId atomId) {
 #define ASSERT_OFFSET_(idpart, id, text)       \
   static_assert(offsetof(JSAtomState, id) ==   \
                 int32_t(WellKnownAtomId::id) * \

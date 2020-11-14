@@ -287,6 +287,9 @@ struct CompilationStencil {
     alloc.steal(&other.alloc);
   }
 
+  const ParserAtom* getParserAtomAt(JSContext* cx,
+                                    TaggedParserAtomIndex taggedIndex) const;
+
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
   void dump(js::JSONPrinter& json);
