@@ -2005,11 +2005,11 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
     void* raw = &(*cursor++);
     new (raw) ScriptThingVariant(index);
   }
-  for (const ScriptAtom& binding : pc_->closedOverBindingsForLazy()) {
+  for (const ParserAtom* binding : pc_->closedOverBindingsForLazy()) {
     void* raw = &(*cursor++);
     if (binding) {
       binding->markUsedByStencil();
-      new (raw) ScriptThingVariant(binding);
+      new (raw) ScriptThingVariant(binding->toIndex());
     } else {
       new (raw) ScriptThingVariant(NullScriptThing());
     }
