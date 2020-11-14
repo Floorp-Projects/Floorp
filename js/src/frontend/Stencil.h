@@ -424,6 +424,128 @@ class StencilModuleMetadata {
 // convert to a nullptr.
 class NullScriptThing {};
 
+// Things pointed by this index all end up being baked into GC things as part
+// of stencil instantiation.
+//
+// 0x0000_0000  Null
+// 0x1YYY_YYYY  28-bit ParserAtom
+// 0x2YYY_YYYY  Well-known/static atom (See TaggedParserAtomIndex)
+// 0x3YYY_YYYY  28-bit BigInt
+// 0x4YYY_YYYY  28-bit ObjLiteral
+// 0x5YYY_YYYY  28-bit RegExp
+// 0x6YYY_YYYY  28-bit Scope
+// 0x7YYY_YYYY  28-bit Function
+// 0x8000_0000  EmptyGlobalScope
+class TaggedScriptThingIndex {
+  uint32_t data_;
+
+  static constexpr size_t IndexBit = TaggedParserAtomIndex::IndexBit;
+  static constexpr size_t IndexMask = TaggedParserAtomIndex::IndexMask;
+
+  static constexpr size_t TagShift = TaggedParserAtomIndex::TagShift;
+  static constexpr size_t TagBit = TaggedParserAtomIndex::TagBit;
+  static constexpr size_t TagMask = TaggedParserAtomIndex::TagMask;
+
+ public:
+  enum class Kind : uint32_t {
+    Null = uint32_t(TaggedParserAtomIndex::Kind::Null),
+    ParserAtomIndex = uint32_t(TaggedParserAtomIndex::Kind::ParserAtomIndex),
+    WellKnown = uint32_t(TaggedParserAtomIndex::Kind::WellKnown),
+    BigInt,
+    ObjLiteral,
+    RegExp,
+    Scope,
+    Function,
+    EmptyGlobalScope,
+  };
+
+ private:
+  static constexpr uint32_t NullTag = uint32_t(Kind::Null) << TagShift;
+  static_assert(NullTag == TaggedParserAtomIndex::NullTag);
+  static constexpr uint32_t ParserAtomIndexTag = uint32_t(Kind::ParserAtomIndex)
+                                                 << TagShift;
+  static_assert(ParserAtomIndexTag ==
+                TaggedParserAtomIndex::ParserAtomIndexTag);
+  static constexpr uint32_t WellKnownTag = uint32_t(Kind::WellKnown)
+                                           << TagShift;
+  static_assert(WellKnownTag == TaggedParserAtomIndex::WellKnownTag);
+
+  static constexpr uint32_t BigIntTag = uint32_t(Kind::BigInt) << TagShift;
+  static constexpr uint32_t ObjLiteralTag = uint32_t(Kind::ObjLiteral)
+                                            << TagShift;
+  static constexpr uint32_t RegExpTag = uint32_t(Kind::RegExp) << TagShift;
+  static constexpr uint32_t ScopeTag = uint32_t(Kind::Scope) << TagShift;
+  static constexpr uint32_t FunctionTag = uint32_t(Kind::Function) << TagShift;
+  static constexpr uint32_t EmptyGlobalScopeTag =
+      uint32_t(Kind::EmptyGlobalScope) << TagShift;
+
+ public:
+  static constexpr uint32_t IndexLimit = Bit(IndexBit);
+
+  TaggedScriptThingIndex() : data_(NullTag) {}
+
+  explicit TaggedScriptThingIndex(TaggedParserAtomIndex index)
+      : data_(*index.rawData()) {}
+  explicit TaggedScriptThingIndex(BigIntIndex index)
+      : data_(uint32_t(index) | BigIntTag) {
+    MOZ_ASSERT(uint32_t(index) < IndexLimit);
+  }
+  explicit TaggedScriptThingIndex(ObjLiteralIndex index)
+      : data_(uint32_t(index) | ObjLiteralTag) {
+    MOZ_ASSERT(uint32_t(index) < IndexLimit);
+  }
+  explicit TaggedScriptThingIndex(RegExpIndex index)
+      : data_(uint32_t(index) | RegExpTag) {
+    MOZ_ASSERT(uint32_t(index) < IndexLimit);
+  }
+  explicit TaggedScriptThingIndex(ScopeIndex index)
+      : data_(uint32_t(index) | ScopeTag) {
+    MOZ_ASSERT(uint32_t(index) < IndexLimit);
+  }
+  explicit TaggedScriptThingIndex(FunctionIndex index)
+      : data_(uint32_t(index) | FunctionTag) {
+    MOZ_ASSERT(uint32_t(index) < IndexLimit);
+  }
+  explicit TaggedScriptThingIndex(EmptyGlobalScopeType t)
+      : data_(EmptyGlobalScopeTag) {}
+
+  bool isAtom() const {
+    return (data_ & TagMask) == ParserAtomIndexTag ||
+           (data_ & TagMask) == WellKnownTag;
+  }
+  bool isNull() const {
+    bool result = !data_;
+    MOZ_ASSERT_IF(result, (data_ & TagMask) == NullTag);
+    return result;
+  }
+  bool isBigInt() const { return (data_ & TagMask) == BigIntTag; }
+  bool isObjLiteral() const { return (data_ & TagMask) == ObjLiteralTag; }
+  bool isRegExp() const { return (data_ & TagMask) == RegExpTag; }
+  bool isScope() const { return (data_ & TagMask) == ScopeTag; }
+  bool isFunction() const { return (data_ & TagMask) == FunctionTag; }
+  bool isEmptyGlobalScope() const {
+    return (data_ & TagMask) == EmptyGlobalScopeTag;
+  }
+
+  TaggedParserAtomIndex toAtom() const {
+    MOZ_ASSERT(isAtom());
+    return TaggedParserAtomIndex::fromRaw(data_);
+  }
+  BigIntIndex toBigInt() const { return BigIntIndex(data_ & IndexMask); }
+  ObjLiteralIndex toObjLiteral() const {
+    return ObjLiteralIndex(data_ & IndexMask);
+  }
+  RegExpIndex toRegExp() const { return RegExpIndex(data_ & IndexMask); }
+  ScopeIndex toScope() const { return ScopeIndex(data_ & IndexMask); }
+  FunctionIndex toFunction() const { return FunctionIndex(data_ & IndexMask); }
+
+  uint32_t* rawData() { return &data_; }
+
+  bool operator==(const TaggedScriptThingIndex& rhs) const {
+    return data_ == rhs.data_;
+  }
+};
+
 // These types all end up being baked into GC things as part of stencil
 // instantiation.
 using ScriptThingVariant =
