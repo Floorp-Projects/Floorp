@@ -609,7 +609,7 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::concatAtoms(
                                                catLen);
 }
 
-const ParserAtom* ParserAtomVectorBuilder::getWellKnown(
+const ParserAtom* WellKnownParserAtoms::getWellKnown(
     WellKnownAtomId atomId) const {
 #define ASSERT_OFFSET_(idpart, id, text)              \
   static_assert(offsetof(WellKnownParserAtoms, id) == \
@@ -626,7 +626,12 @@ const ParserAtom* ParserAtomVectorBuilder::getWellKnown(
   static_assert(int32_t(WellKnownAtomId::abort) == 0,
                 "Unexpected order of WellKnownAtom");
 
-  return (&wellKnownTable_.abort)[int32_t(atomId)];
+  return (&abort)[int32_t(atomId)];
+}
+
+const ParserAtom* ParserAtomVectorBuilder::getWellKnown(
+    WellKnownAtomId atomId) const {
+  return wellKnownTable_.getWellKnown(atomId);
 }
 
 const ParserAtom* ParserAtomVectorBuilder::getStatic1(
