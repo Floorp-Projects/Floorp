@@ -332,10 +332,10 @@ class StencilModuleEntry {
   // localName    | null          | required    | required | nullptr    |
   // importName   | null          | required    | nullptr  | required   |
   // exportName   | null          | null        | required | optional   |
-  const ParserAtom* specifier = nullptr;
-  const ParserAtom* localName = nullptr;
-  const ParserAtom* importName = nullptr;
-  const ParserAtom* exportName = nullptr;
+  TaggedParserAtomIndex specifier;
+  TaggedParserAtomIndex localName;
+  TaggedParserAtomIndex importName;
+  TaggedParserAtomIndex exportName;
 
   // Location used for error messages. If this is for a module request entry
   // then it is the module specifier string, otherwise the import/export spec
@@ -352,56 +352,45 @@ class StencilModuleEntry {
   // For XDR only.
   StencilModuleEntry() = default;
 
-  static StencilModuleEntry moduleRequest(const ParserAtom* specifier,
+  static StencilModuleEntry moduleRequest(TaggedParserAtomIndex specifier,
                                           uint32_t lineno, uint32_t column) {
-    MOZ_ASSERT(specifier);
+    MOZ_ASSERT(!!specifier);
     StencilModuleEntry entry(lineno, column);
-    specifier->markUsedByStencil();
     entry.specifier = specifier;
     return entry;
   }
 
-  static StencilModuleEntry importEntry(const ParserAtom* specifier,
-                                        const ParserAtom* localName,
-                                        const ParserAtom* importName,
+  static StencilModuleEntry importEntry(TaggedParserAtomIndex specifier,
+                                        TaggedParserAtomIndex localName,
+                                        TaggedParserAtomIndex importName,
                                         uint32_t lineno, uint32_t column) {
     MOZ_ASSERT(specifier && localName && importName);
     StencilModuleEntry entry(lineno, column);
-    specifier->markUsedByStencil();
     entry.specifier = specifier;
-    localName->markUsedByStencil();
     entry.localName = localName;
-    importName->markUsedByStencil();
     entry.importName = importName;
     return entry;
   }
 
-  static StencilModuleEntry exportAsEntry(const ParserAtom* localName,
-                                          const ParserAtom* exportName,
+  static StencilModuleEntry exportAsEntry(TaggedParserAtomIndex localName,
+                                          TaggedParserAtomIndex exportName,
                                           uint32_t lineno, uint32_t column) {
     MOZ_ASSERT(localName && exportName);
     StencilModuleEntry entry(lineno, column);
-    localName->markUsedByStencil();
     entry.localName = localName;
-    exportName->markUsedByStencil();
     entry.exportName = exportName;
     return entry;
   }
 
-  static StencilModuleEntry exportFromEntry(const ParserAtom* specifier,
-                                            const ParserAtom* importName,
-                                            const ParserAtom* exportName,
+  static StencilModuleEntry exportFromEntry(TaggedParserAtomIndex specifier,
+                                            TaggedParserAtomIndex importName,
+                                            TaggedParserAtomIndex exportName,
                                             uint32_t lineno, uint32_t column) {
     // NOTE: The `export * from "mod";` syntax generates nullptr exportName.
     MOZ_ASSERT(specifier && importName);
     StencilModuleEntry entry(lineno, column);
-    specifier->markUsedByStencil();
     entry.specifier = specifier;
-    importName->markUsedByStencil();
     entry.importName = importName;
-    if (exportName) {
-      exportName->markUsedByStencil();
-    }
     entry.exportName = exportName;
     return entry;
   }
@@ -426,8 +415,8 @@ class StencilModuleMetadata {
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
-  void dump(JSONPrinter& json);
-  void dumpFields(JSONPrinter& json);
+  void dump(JSONPrinter& json, CompilationStencil* compilationStencil);
+  void dumpFields(JSONPrinter& json, CompilationStencil* compilationStencil);
 #endif
 };
 

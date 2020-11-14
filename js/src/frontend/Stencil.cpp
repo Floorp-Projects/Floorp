@@ -1238,28 +1238,29 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
 }
 
 static void DumpModuleEntryVectorItems(
-    js::JSONPrinter& json, const StencilModuleMetadata::EntryVector& entries) {
+    js::JSONPrinter& json, const StencilModuleMetadata::EntryVector& entries,
+    CompilationStencil* compilationStencil) {
   for (const auto& entry : entries) {
     json.beginObject();
     if (entry.specifier) {
-      GenericPrinter& out = json.beginStringProperty("specifier");
-      entry.specifier->dumpCharsNoQuote(out);
-      json.endStringProperty();
+      json.beginObjectProperty("specifier");
+      DumpTaggedParserAtomIndex(json, entry.specifier, compilationStencil);
+      json.endObject();
     }
     if (entry.localName) {
-      GenericPrinter& out = json.beginStringProperty("localName");
-      entry.localName->dumpCharsNoQuote(out);
-      json.endStringProperty();
+      json.beginObjectProperty("localName");
+      DumpTaggedParserAtomIndex(json, entry.localName, compilationStencil);
+      json.endObject();
     }
     if (entry.importName) {
-      GenericPrinter& out = json.beginStringProperty("importName");
-      entry.importName->dumpCharsNoQuote(out);
-      json.endStringProperty();
+      json.beginObjectProperty("importName");
+      DumpTaggedParserAtomIndex(json, entry.importName, compilationStencil);
+      json.endObject();
     }
     if (entry.exportName) {
-      GenericPrinter& out = json.beginStringProperty("exportName");
-      entry.exportName->dumpCharsNoQuote(out);
-      json.endStringProperty();
+      json.beginObjectProperty("exportName");
+      DumpTaggedParserAtomIndex(json, entry.exportName, compilationStencil);
+      json.endObject();
     }
     json.endObject();
   }
@@ -1268,34 +1269,36 @@ static void DumpModuleEntryVectorItems(
 void StencilModuleMetadata::dump() {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
-  dump(json);
+  dump(json, nullptr);
 }
 
-void StencilModuleMetadata::dump(js::JSONPrinter& json) {
+void StencilModuleMetadata::dump(js::JSONPrinter& json,
+                                 CompilationStencil* compilationStencil) {
   json.beginObject();
-  dumpFields(json);
+  dumpFields(json, compilationStencil);
   json.endObject();
 }
 
-void StencilModuleMetadata::dumpFields(js::JSONPrinter& json) {
+void StencilModuleMetadata::dumpFields(js::JSONPrinter& json,
+                                       CompilationStencil* compilationStencil) {
   json.beginListProperty("requestedModules");
-  DumpModuleEntryVectorItems(json, requestedModules);
+  DumpModuleEntryVectorItems(json, requestedModules, compilationStencil);
   json.endList();
 
   json.beginListProperty("importEntries");
-  DumpModuleEntryVectorItems(json, importEntries);
+  DumpModuleEntryVectorItems(json, importEntries, compilationStencil);
   json.endList();
 
   json.beginListProperty("localExportEntries");
-  DumpModuleEntryVectorItems(json, localExportEntries);
+  DumpModuleEntryVectorItems(json, localExportEntries, compilationStencil);
   json.endList();
 
   json.beginListProperty("indirectExportEntries");
-  DumpModuleEntryVectorItems(json, indirectExportEntries);
+  DumpModuleEntryVectorItems(json, indirectExportEntries, compilationStencil);
   json.endList();
 
   json.beginListProperty("starExportEntries");
-  DumpModuleEntryVectorItems(json, starExportEntries);
+  DumpModuleEntryVectorItems(json, starExportEntries, compilationStencil);
   json.endList();
 
   json.beginListProperty("functionDecls");
@@ -1651,7 +1654,7 @@ void CompilationStencil::dump(js::JSONPrinter& json) {
 
   if (scriptData[CompilationInfo::TopLevelIndex].isModule()) {
     json.beginObjectProperty("moduleMetadata");
-    moduleMetadata.dumpFields(json);
+    moduleMetadata.dumpFields(json, this);
     json.endObject();
   }
 

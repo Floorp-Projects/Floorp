@@ -154,6 +154,11 @@ class EitherParser : public BCEParserHandle {
     ParserSharedBase& base = parser.match(detail::ParserSharedBaseMatcher());
     return base.liftParserAtomToJSAtom(parserAtom);
   }
+
+  CompilationInfo& getCompilationInfo() {
+    ParserSharedBase& base = parser.match(detail::ParserSharedBaseMatcher());
+    return base.getCompilationInfo();
+  }
 };
 
 } /* namespace frontend */
