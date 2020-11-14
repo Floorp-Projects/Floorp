@@ -32,7 +32,7 @@ extern crate libc;
    // Firefox calls this on the display profile to increase performance.
    // Skip with low probability to increase coverage.
    if (size % 15) != 0 {
-     qcms_profile_precache_output_transform(dst_profile);
+     qcms_profile_precache_output_transform(&mut *dst_profile);
    }
  
    let transform =

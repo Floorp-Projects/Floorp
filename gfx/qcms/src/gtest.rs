@@ -181,7 +181,7 @@ mod test {
         };
         let D65 = unsafe { qcms_white_point_sRGB() };
         let other = unsafe { qcms_profile_create_rgb_with_gamma(D65, Rec709Primaries, 2.2) };
-        unsafe { qcms_profile_precache_output_transform(other) };
+        unsafe { qcms_profile_precache_output_transform(&mut *other) };
 
         let transform = unsafe {
             qcms_transform_create(
@@ -214,7 +214,7 @@ mod test {
     fn gray_alpha() {
         let sRGB_profile = unsafe { crate::iccread::qcms_profile_sRGB() };
         let other = unsafe { qcms_profile_create_gray_with_gamma(2.2) };
-        unsafe { qcms_profile_precache_output_transform(other) };
+        unsafe { qcms_profile_precache_output_transform(&mut *other) };
 
         let transform = unsafe {
             qcms_transform_create(
@@ -302,7 +302,7 @@ mod test {
         let srgb_profile = unsafe { qcms_profile_sRGB() };
         assert_ne!(srgb_profile, std::ptr::null_mut());
 
-        unsafe { qcms_profile_precache_output_transform(srgb_profile) };
+        unsafe { qcms_profile_precache_output_transform(&mut *srgb_profile) };
 
         let intent = unsafe { qcms_profile_get_rendering_intent(profile) };
         let transform = unsafe {
@@ -687,7 +687,7 @@ mod test {
         }
 
         unsafe fn PrecacheOutput(&mut self) {
-            qcms_profile_precache_output_transform(self.out_profile);
+            qcms_profile_precache_output_transform(&mut *self.out_profile);
             self.precache = true;
         }
         unsafe fn TransformPrecache(&mut self) {
