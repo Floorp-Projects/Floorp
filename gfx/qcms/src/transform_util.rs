@@ -118,19 +118,14 @@ fn lut_interp_linear_precache_output(mut input_value: u32, mut table: &[u16]) ->
 }
 /* value must be a value between 0 and 1 */
 //XXX: is the above a good restriction to have?
-#[no_mangle]
-pub unsafe extern "C" fn lut_interp_linear_float(
-    mut value: f32,
-    mut table: *const f32,
-    mut length: i32,
-) -> f32 {
-    value = value * (length - 1) as f32;
+pub fn lut_interp_linear_float(mut value: f32, mut table: &[f32]) -> f32 {
+    value = value * (table.len() - 1) as f32;
 
     let mut upper: i32 = value.ceil() as i32;
     let mut lower: i32 = value.floor() as i32;
     //XXX: can we be more performant here?
-    value = (*table.offset(upper as isize) as f64 * (1.0f64 - (upper as f32 - value) as f64)
-        + (*table.offset(lower as isize) * (upper as f32 - value)) as f64) as f32;
+    value = (table[upper as usize] as f64 * (1.0f64 - (upper as f32 - value) as f64)
+        + (table[lower as usize] * (upper as f32 - value)) as f64) as f32;
     /* scale the value */
     return value;
 }
