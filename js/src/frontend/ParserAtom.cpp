@@ -215,52 +215,49 @@ bool ParserAtomEntry::isIndex(uint32_t* indexp) const {
 
 JSAtom* ParserAtomEntry::toJSAtom(JSContext* cx,
                                   CompilationAtomCache& atomCache) const {
-  switch (atomIndexKind_) {
-    case AtomIndexKind::ParserAtomIndex: {
-      JSAtom* atom = atomCache.getAtomAt(toParserAtomIndex());
-      if (atom) {
-        return atom;
-      }
-      break;
+  if (isParserAtomIndex()) {
+    JSAtom* atom = atomCache.getAtomAt(toParserAtomIndex());
+    if (atom) {
+      return atom;
     }
 
-    case AtomIndexKind::WellKnown:
-      return GetWellKnownAtom(cx, WellKnownAtomId(atomIndex_));
-
-    case AtomIndexKind::Static1: {
-      char16_t ch = static_cast<char16_t>(atomIndex_);
-      return cx->staticStrings().getUnit(ch);
-    }
-
-    case AtomIndexKind::Static2:
-      return cx->staticStrings().getLength2FromIndex(atomIndex_);
+    return instantiate(cx, atomCache);
   }
 
-  return instantiate(cx, atomCache);
+  if (isWellKnownAtomId()) {
+    return GetWellKnownAtom(cx, toWellKnownAtomId());
+  }
+
+  if (isStaticParserString1()) {
+    char16_t ch = static_cast<char16_t>(toStaticParserString1());
+    return cx->staticStrings().getUnit(ch);
+  }
+
+  MOZ_ASSERT(isStaticParserString2());
+  size_t s = static_cast<size_t>(toStaticParserString2());
+  return cx->staticStrings().getLength2FromIndex(s);
 }
 
 JSAtom* ParserAtomEntry::toExistingJSAtom(
     JSContext* cx, CompilationAtomCache& atomCache) const {
-  switch (atomIndexKind_) {
-    case AtomIndexKind::ParserAtomIndex: {
-      JSAtom* atom = atomCache.getExistingAtomAt(toParserAtomIndex());
-      MOZ_ASSERT(atom);
-      return atom;
-    }
-
-    case AtomIndexKind::WellKnown:
-      return GetWellKnownAtom(cx, WellKnownAtomId(atomIndex_));
-
-    case AtomIndexKind::Static1: {
-      char16_t ch = static_cast<char16_t>(atomIndex_);
-      return cx->staticStrings().getUnit(ch);
-    }
-
-    case AtomIndexKind::Static2:
-      return cx->staticStrings().getLength2FromIndex(atomIndex_);
+  if (isParserAtomIndex()) {
+    JSAtom* atom = atomCache.getExistingAtomAt(toParserAtomIndex());
+    MOZ_ASSERT(atom);
+    return atom;
   }
 
-  return nullptr;
+  if (isWellKnownAtomId()) {
+    return GetWellKnownAtom(cx, toWellKnownAtomId());
+  }
+
+  if (isStaticParserString1()) {
+    char16_t ch = static_cast<char16_t>(toStaticParserString1());
+    return cx->staticStrings().getUnit(ch);
+  }
+
+  MOZ_ASSERT(isStaticParserString2());
+  size_t s = static_cast<size_t>(toStaticParserString2());
+  return cx->staticStrings().getLength2FromIndex(s);
 }
 
 JSAtom* ParserAtomEntry::instantiate(JSContext* cx,
