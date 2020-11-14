@@ -1989,7 +1989,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   }
 
   // Allocate the `stencilThings` array without initializing it yet.
-  mozilla::Span<ScriptThingVariant> stencilThings =
+  mozilla::Span<TaggedScriptThingIndex> stencilThings =
       NewScriptThingSpanUninitialized(cx_, compilationInfo_.stencil.alloc,
                                       ngcthings.value());
   if (stencilThings.empty()) {
@@ -2006,15 +2006,15 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   auto cursor = stencilThings.begin();
   for (const FunctionIndex& index : pc_->innerFunctionIndexesForLazy) {
     void* raw = &(*cursor++);
-    new (raw) ScriptThingVariant(index);
+    new (raw) TaggedScriptThingIndex(index);
   }
   for (const ParserAtom* binding : pc_->closedOverBindingsForLazy()) {
     void* raw = &(*cursor++);
     if (binding) {
       binding->markUsedByStencil();
-      new (raw) ScriptThingVariant(binding->toIndex());
+      new (raw) TaggedScriptThingIndex(binding->toIndex());
     } else {
-      new (raw) ScriptThingVariant(NullScriptThing());
+      new (raw) TaggedScriptThingIndex();
     }
   }
   MOZ_ASSERT(cursor == stencilThings.end());

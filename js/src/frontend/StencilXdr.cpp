@@ -15,118 +15,10 @@
 using namespace js;
 using namespace js::frontend;
 
-struct ScriptThingVariantIndexMatcher {
-  template <typename T>
-  uint32_t operator()(TypedIndex<T>& index) {
-    return index;
-  }
-
-  template <typename T>
-  uint32_t operator()(T&) {
-    return UINT32_MAX;
-  }
-};
-
 template <XDRMode mode>
-static XDRResult XDRScriptThingVariant(XDRState<mode>* xdr,
-                                       ScriptThingVariant& thing) {
-  enum class ScriptThingKind {
-    ScriptAtom,            // Index.
-    NullScriptThing,       // nothing.
-    BigIntIndex,           // Index.
-    ObjLiteralIndex,       // Index.
-    RegExpIndex,           // Index.
-    ScopeIndex,            // Index.
-    FunctionIndex,         // Index.
-    EmptyGlobalScopeType,  // Nothing
-  } kind;
-
-  uint32_t index = UINT32_MAX;
-
-  struct KindMatcher {
-    ScriptThingKind operator()(TaggedParserAtomIndex& index) {
-      return ScriptThingKind::ScriptAtom;
-    }
-    ScriptThingKind operator()(NullScriptThing&) {
-      return ScriptThingKind::NullScriptThing;
-    }
-    ScriptThingKind operator()(BigIntIndex& index) {
-      return ScriptThingKind::BigIntIndex;
-    }
-    ScriptThingKind operator()(ObjLiteralIndex& index) {
-      return ScriptThingKind::ObjLiteralIndex;
-    }
-    ScriptThingKind operator()(RegExpIndex& index) {
-      return ScriptThingKind::RegExpIndex;
-    }
-    ScriptThingKind operator()(ScopeIndex& index) {
-      return ScriptThingKind::ScopeIndex;
-    }
-    ScriptThingKind operator()(FunctionIndex& index) {
-      return ScriptThingKind::FunctionIndex;
-    }
-    ScriptThingKind operator()(EmptyGlobalScopeType&) {
-      return ScriptThingKind::EmptyGlobalScopeType;
-    }
-  };
-
-  if (mode == XDR_ENCODE) {
-    kind = thing.match(KindMatcher());
-    index = thing.match(ScriptThingVariantIndexMatcher());
-  }
-
-  MOZ_TRY(xdr->codeEnum32(&kind));
-
-  TaggedParserAtomIndex atom;
-  if (kind == ScriptThingKind::ScriptAtom) {
-    MOZ_ASSERT(index == UINT32_MAX);
-    if (mode == XDR_ENCODE) {
-      atom = thing.as<TaggedParserAtomIndex>();
-    }
-    MOZ_TRY(XDRTaggedParserAtomIndex(xdr, &atom));
-  } else if (kind == ScriptThingKind::BigIntIndex ||
-             kind == ScriptThingKind::ObjLiteralIndex ||
-             kind == ScriptThingKind::RegExpIndex ||
-             kind == ScriptThingKind::ScopeIndex ||
-             kind == ScriptThingKind::FunctionIndex) {
-    MOZ_TRY(xdr->codeUint32(&index));
-  } else {
-    MOZ_ASSERT(kind == ScriptThingKind::NullScriptThing ||
-               kind == ScriptThingKind::EmptyGlobalScopeType);
-  }
-
-  if (mode == XDR_DECODE) {
-    switch (kind) {
-      case ScriptThingKind::ScriptAtom:
-        // `atom` is initialized above if `kind` == TaggedParserAtomIndex
-        MOZ_ASSERT(atom);
-        thing.emplace<TaggedParserAtomIndex>(atom);
-        break;
-      case ScriptThingKind::NullScriptThing:
-        thing.emplace<NullScriptThing>();
-        break;
-      case ScriptThingKind::EmptyGlobalScopeType:
-        thing.emplace<EmptyGlobalScopeType>();
-        break;
-      case ScriptThingKind::BigIntIndex:
-        thing.emplace<BigIntIndex>(index);
-        break;
-      case ScriptThingKind::ObjLiteralIndex:
-        thing.emplace<ObjLiteralIndex>(index);
-        break;
-      case ScriptThingKind::RegExpIndex:
-        thing.emplace<RegExpIndex>(index);
-        break;
-      case ScriptThingKind::ScopeIndex:
-        thing.emplace<ScopeIndex>(index);
-        break;
-      case ScriptThingKind::FunctionIndex:
-        thing.emplace<FunctionIndex>(index);
-        break;
-    }
-  }
-
-  return Ok();
+static XDRResult XDRTaggedScriptThingIndex(XDRState<mode>* xdr,
+                                           TaggedScriptThingIndex& thing) {
+  return xdr->codeUint32(thing.rawData());
 }
 
 template <XDRMode mode>
@@ -233,15 +125,13 @@ template <XDRMode mode>
 
     MOZ_ASSERT(stencil.gcThings.empty());
     if (xdrFields.numGcThings > 0) {
-      // Allocated ScriptThingVariant array and initialize to safe value.
-      mozilla::Span<ScriptThingVariant> stencilThings =
+      // Allocated TaggedScriptThingIndex array and initialize to safe value.
+      mozilla::Span<TaggedScriptThingIndex> stencilThings =
           NewScriptThingSpanUninitialized(xdr->cx(), xdr->stencilAlloc(),
                                           xdrFields.numGcThings);
       if (stencilThings.empty()) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
-      std::uninitialized_fill(stencilThings.begin(), stencilThings.end(),
-                              NullScriptThing());
       stencil.gcThings = stencilThings;
     }
 
@@ -266,8 +156,8 @@ template <XDRMode mode>
     }
   }
 
-  for (ScriptThingVariant& thing : stencil.gcThings) {
-    MOZ_TRY(XDRScriptThingVariant(xdr, thing));
+  for (TaggedScriptThingIndex& thing : stencil.gcThings) {
+    MOZ_TRY(XDRTaggedScriptThingIndex(xdr, thing));
   }
 
   if (xdrFlags & (1 << uint8_t(XdrFlags::HasSharedData))) {
