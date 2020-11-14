@@ -13,6 +13,7 @@ import org.mozilla.fenix.ext.components
 
 class TabTrayItemMenu(
     private val context: Context,
+    private val shouldShowShareAllTabs: () -> Boolean,
     private val shouldShowSelectTabs: () -> Boolean,
     private val hasOpenTabs: () -> Boolean,
     private val onItemTapped: (Item) -> Unit = {}
@@ -43,7 +44,7 @@ class TabTrayItemMenu(
             ) {
                 context.components.analytics.metrics.track(Event.TabsTrayShareAllTabsPressed)
                 onItemTapped.invoke(Item.ShareAllTabs)
-            }.apply { visible = hasOpenTabs },
+            }.apply { visible = { shouldShowShareAllTabs() && hasOpenTabs() } },
 
             SimpleBrowserMenuItem(
                 context.getString(R.string.tab_tray_menu_tab_settings),

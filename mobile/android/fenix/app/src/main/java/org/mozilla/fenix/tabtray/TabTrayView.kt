@@ -226,6 +226,7 @@ class TabTrayView(
         tabTrayItemMenu =
             TabTrayItemMenu(
                 context = view.context,
+                shouldShowShareAllTabs = { checkOpenTabs.invoke() && view.tab_layout.selectedTabPosition == 0 },
                 shouldShowSelectTabs = { checkOpenTabs.invoke() && view.tab_layout.selectedTabPosition == 0 },
                 hasOpenTabs = checkOpenTabs
             ) {

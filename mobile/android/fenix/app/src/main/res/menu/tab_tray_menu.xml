@@ -8,7 +8,7 @@
     <!-- Save to collection -->
     <item
         android:id="@+id/tab_tray_select_to_save_menu_item"
-        android:title="@string/tab_tray_menu_item_save"
+        android:title="@string/tab_tray_menu_select"
         app:showAsAction="never" />
 
     <!-- Share-->
