@@ -275,7 +275,7 @@ template <XDRMode mode>
   }
 
   if (xdrFlags & (1 << uint8_t(XdrFlags::HasFunctionAtom))) {
-    MOZ_TRY(XDRParserAtom(xdr, &stencil.functionAtom));
+    MOZ_TRY(XDRTaggedParserAtomIndex(xdr, &stencil.functionAtom));
   }
 
   return Ok();

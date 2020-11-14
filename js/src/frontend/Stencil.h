@@ -18,6 +18,7 @@
 #include "frontend/AbstractScopePtr.h"    // AbstractScopePtr, ScopeIndex
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ObjLiteral.h"          // ObjLiteralStencil
+#include "frontend/ParserAtom.h"          // TaggedParserAtomIndex
 #include "frontend/TypedIndex.h"          // TypedIndex
 #include "js/RegExpFlags.h"               // JS::RegExpFlags
 #include "js/RootingAPI.h"                // Handle
@@ -474,7 +475,7 @@ class ScriptStencil {
 
   // The explicit or implicit name of the function. The FunctionFlags indicate
   // the kind of name.
-  const ParserAtom* functionAtom = nullptr;
+  TaggedParserAtomIndex functionAtom;
 
   // See: `FunctionFlags`.
   FunctionFlags functionFlags = {};
@@ -532,8 +533,8 @@ class ScriptStencil {
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
-  void dump(JSONPrinter& json);
-  void dumpFields(JSONPrinter& json);
+  void dump(JSONPrinter& json, CompilationStencil* compilationStencil);
+  void dumpFields(JSONPrinter& json, CompilationStencil* compilationStencil);
 #endif
 };
 

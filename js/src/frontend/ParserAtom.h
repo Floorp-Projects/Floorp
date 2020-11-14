@@ -157,6 +157,8 @@ class TaggedParserAtomIndex {
   bool operator==(const TaggedParserAtomIndex& rhs) const {
     return data_ == rhs.data_;
   }
+
+  explicit operator bool() const { return !isNull(); }
 };
 
 /**

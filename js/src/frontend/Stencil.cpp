@@ -200,8 +200,8 @@ static JSFunction* CreateFunction(JSContext* cx,
 
   RootedAtom displayAtom(cx);
   if (script.functionAtom) {
-    displayAtom.set(script.functionAtom->toExistingJSAtom(
-        cx, compilationInfo.input.atomCache));
+    displayAtom.set(compilationInfo.input.atomCache.getExistingAtomAt(
+        cx, script.functionAtom));
     MOZ_ASSERT(displayAtom);
   }
   RootedFunction fun(
@@ -373,8 +373,8 @@ static bool SetTypeAndNameForExposedFunctions(JSContext* cx,
       JSAtom* funcAtom = nullptr;
       if (scriptStencil.functionFlags.hasInferredName() ||
           scriptStencil.functionFlags.hasGuessedAtom()) {
-        funcAtom = scriptStencil.functionAtom->toExistingJSAtom(
-            cx, compilationInfo.input.atomCache);
+        funcAtom = compilationInfo.input.atomCache.getExistingAtomAt(
+            cx, scriptStencil.functionAtom);
         MOZ_ASSERT(funcAtom);
       }
       if (scriptStencil.functionFlags.hasInferredName()) {
@@ -932,6 +932,79 @@ CompilationState::CompilationState(JSContext* cx,
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
 
+void DumpTaggedParserAtomIndex(js::JSONPrinter& json,
+                               TaggedParserAtomIndex taggedIndex,
+                               CompilationStencil* compilationStencil) {
+  if (taggedIndex.isParserAtomIndex()) {
+    json.property("tag", "AtomIndex");
+    auto index = taggedIndex.toParserAtomIndex();
+    if (compilationStencil && compilationStencil->parserAtomData[index]) {
+      GenericPrinter& out = json.beginStringProperty("atom");
+      compilationStencil->parserAtomData[index]->dumpCharsNoQuote(out);
+      json.endString();
+    } else {
+      json.property("index", size_t(index));
+    }
+    return;
+  }
+
+  if (taggedIndex.isWellKnownAtomId()) {
+    json.property("tag", "WellKnown");
+    auto index = taggedIndex.toWellKnownAtomId();
+    switch (index) {
+      case WellKnownAtomId::empty:
+        json.property("atom", "");
+        break;
+
+#  define CASE_(_, name, _2)                                  \
+    case WellKnownAtomId::name: {                             \
+      GenericPrinter& out = json.beginStringProperty("atom"); \
+      WellKnownParserAtoms::rom_.name.dumpCharsNoQuote(out);  \
+      json.endString();                                       \
+      break;                                                  \
+    }
+        FOR_EACH_NONTINY_COMMON_PROPERTYNAME(CASE_)
+#  undef CASE_
+
+#  define CASE_(name, _)                                      \
+    case WellKnownAtomId::name: {                             \
+      GenericPrinter& out = json.beginStringProperty("atom"); \
+      WellKnownParserAtoms::rom_.name.dumpCharsNoQuote(out);  \
+      json.endString();                                       \
+      break;                                                  \
+    }
+        JS_FOR_EACH_PROTOTYPE(CASE_)
+#  undef CASE_
+
+      default:
+        // This includes tiny WellKnownAtomId atoms, which is invalid.
+        json.property("index", size_t(index));
+        break;
+    }
+    return;
+  }
+
+  if (taggedIndex.isStaticParserString1()) {
+    json.property("tag", "Static1");
+    auto index = taggedIndex.toStaticParserString1();
+    GenericPrinter& out = json.beginStringProperty("atom");
+    WellKnownParserAtoms::getStatic1(index)->dumpCharsNoQuote(out);
+    json.endString();
+    return;
+  }
+
+  if (taggedIndex.isStaticParserString2()) {
+    json.property("tag", "Static2");
+    auto index = taggedIndex.toStaticParserString2();
+    GenericPrinter& out = json.beginStringProperty("atom");
+    WellKnownParserAtoms::getStatic2(index)->dumpCharsNoQuote(out);
+    json.endString();
+  }
+
+  MOZ_ASSERT(taggedIndex.isNull());
+  json.property("tag", "null");
+}
+
 void RegExpStencil::dump() {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
@@ -1456,16 +1529,18 @@ static void DumpScriptThing(js::JSONPrinter& json, ScriptThingVariant& thing) {
 void ScriptStencil::dump() {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
-  dump(json);
+  dump(json, nullptr);
 }
 
-void ScriptStencil::dump(js::JSONPrinter& json) {
+void ScriptStencil::dump(js::JSONPrinter& json,
+                         CompilationStencil* compilationStencil) {
   json.beginObject();
-  dumpFields(json);
+  dumpFields(json, compilationStencil);
   json.endObject();
 }
 
-void ScriptStencil::dumpFields(js::JSONPrinter& json) {
+void ScriptStencil::dumpFields(js::JSONPrinter& json,
+                               CompilationStencil* compilationStencil) {
   json.beginListProperty("immutableFlags");
   DumpImmutableScriptFlags(json, immutableFlags);
   json.endList();
@@ -1500,13 +1575,9 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json) {
   json.endObject();
 
   if (isFunction()) {
-    if (functionAtom) {
-      GenericPrinter& out = json.beginStringProperty("functionAtom");
-      functionAtom->dumpCharsNoQuote(out);
-      json.endStringProperty();
-    } else {
-      json.nullProperty("functionAtom");
-    }
+    json.beginObjectProperty("functionAtom");
+    DumpTaggedParserAtomIndex(json, functionAtom, compilationStencil);
+    json.endObject();
 
     json.beginListProperty("functionFlags");
     DumpFunctionFlagsItems(json, functionFlags);
@@ -1542,7 +1613,7 @@ void CompilationStencil::dump(js::JSONPrinter& json) {
 
   json.beginListProperty("scriptData");
   for (auto& data : scriptData) {
-    data.dump(json);
+    data.dump(json, this);
   }
   json.endList();
 
