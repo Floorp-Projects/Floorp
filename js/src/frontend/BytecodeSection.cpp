@@ -68,8 +68,8 @@ bool js::frontend::EmitScriptThingsVector(
     uint32_t i;
     mozilla::Span<JS::GCCellPtr>& output;
 
-    bool operator()(const ScriptAtom& data) {
-      JSAtom* atom = data->toExistingJSAtom(cx, atomCache);
+    bool operator()(const TaggedParserAtomIndex& data) {
+      JSAtom* atom = atomCache.getExistingAtomAt(cx, data);
       MOZ_ASSERT(atom);
       output[i] = JS::GCCellPtr(atom);
       return true;
