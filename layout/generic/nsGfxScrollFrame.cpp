@@ -7752,10 +7752,9 @@ void ScrollFrameHelper::AsyncScrollbarDragRejected() {
 
 void ScrollFrameHelper::ApzSmoothScrollTo(const nsPoint& aDestination,
                                           ScrollOrigin aOrigin) {
-  if (mApzSmoothScrollDestination == Some(aDestination) &&
-      mScrollGeneration == sScrollGenerationCounter) {
+  if (mApzSmoothScrollDestination == Some(aDestination)) {
     // If we already sent APZ a smooth-scroll request to this
-    // destination with this generation (i.e. it was the last request
+    // destination (i.e. it was the last request
     // we sent), then don't send another one because it is redundant.
     // This is to avoid a scenario where pages do repeated scrollBy
     // calls, incrementing the generation counter, and blocking APZ from
@@ -7765,10 +7764,6 @@ void ScrollFrameHelper::ApzSmoothScrollTo(const nsPoint& aDestination,
     // mApzSmoothScrollDestination will get reset to Nothing() and so
     // we shouldn't have the problem where this check discards a
     // legitimate smooth-scroll.
-    // Note: if there are two separate scrollframes both getting smooth
-    // scrolled at the same time, sScrollGenerationCounter can get
-    // incremented and this early-exit won't get taken. Bug 1231177 is
-    // on file for this.
     return;
   }
 
