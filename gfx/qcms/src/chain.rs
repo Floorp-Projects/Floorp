@@ -323,21 +323,9 @@ unsafe extern "C" fn qcms_transform_module_clut(
         let fresh20 = src;
         src = src.offset(1);
         let mut device_b: f32 = *fresh20;
-        let mut linear_r: f32 = lut_interp_linear_float(
-            device_r,
-            input_clut_table_r.as_ptr(),
-            (*transform).input_clut_table_length as i32,
-        );
-        let mut linear_g: f32 = lut_interp_linear_float(
-            device_g,
-            input_clut_table_g.as_ptr(),
-            (*transform).input_clut_table_length as i32,
-        );
-        let mut linear_b: f32 = lut_interp_linear_float(
-            device_b,
-            input_clut_table_b.as_ptr(),
-            (*transform).input_clut_table_length as i32,
-        );
+        let mut linear_r: f32 = lut_interp_linear_float(device_r, &input_clut_table_r);
+        let mut linear_g: f32 = lut_interp_linear_float(device_g, &input_clut_table_g);
+        let mut linear_b: f32 = lut_interp_linear_float(device_b, &input_clut_table_b);
         let mut x: i32 = (linear_r * ((*transform).grid_size as i32 - 1) as f32).floor() as i32;
         let mut y: i32 = (linear_g * ((*transform).grid_size as i32 - 1) as f32).floor() as i32;
         let mut z: i32 = (linear_b * ((*transform).grid_size as i32 - 1) as f32).floor() as i32;
@@ -373,18 +361,24 @@ unsafe extern "C" fn qcms_transform_module_clut(
         let mut clut_b: f32 = lerp(b_y1, b_y2, z_d);
         let mut pcs_r: f32 = lut_interp_linear_float(
             clut_r,
-            (*transform).output_clut_table_r,
-            (*transform).output_clut_table_length as i32,
+            std::slice::from_raw_parts(
+                (*transform).output_clut_table_r,
+                (*transform).output_clut_table_length as usize,
+            ),
         );
         let mut pcs_g: f32 = lut_interp_linear_float(
             clut_g,
-            (*transform).output_clut_table_g,
-            (*transform).output_clut_table_length as i32,
+            std::slice::from_raw_parts(
+                (*transform).output_clut_table_g,
+                (*transform).output_clut_table_length as usize,
+            ),
         );
         let mut pcs_b: f32 = lut_interp_linear_float(
             clut_b,
-            (*transform).output_clut_table_b,
-            (*transform).output_clut_table_length as i32,
+            std::slice::from_raw_parts(
+                (*transform).output_clut_table_b,
+                (*transform).output_clut_table_length as usize,
+            ),
         );
         let fresh21 = dest;
         dest = dest.offset(1);
@@ -547,9 +541,9 @@ unsafe extern "C" fn qcms_transform_module_gamma_table(
         let fresh26 = src;
         src = src.offset(1);
         let mut in_b: f32 = *fresh26;
-        out_r = lut_interp_linear_float(in_r, input_clut_table_r.as_ptr(), 256);
-        out_g = lut_interp_linear_float(in_g, input_clut_table_g.as_ptr(), 256);
-        out_b = lut_interp_linear_float(in_b, input_clut_table_b.as_ptr(), 256);
+        out_r = lut_interp_linear_float(in_r, input_clut_table_r);
+        out_g = lut_interp_linear_float(in_g, input_clut_table_g);
+        out_b = lut_interp_linear_float(in_b, input_clut_table_b);
         let fresh27 = dest;
         dest = dest.offset(1);
         *fresh27 = clamp_float(out_r);
