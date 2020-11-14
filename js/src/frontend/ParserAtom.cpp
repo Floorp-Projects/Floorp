@@ -818,8 +818,8 @@ bool WellKnownParserAtoms::init(JSContext* cx) {
 namespace js {
 
 template <XDRMode mode>
-static XDRResult XDRTaggedParserAtomIndex(XDRState<mode>* xdr,
-                                          TaggedParserAtomIndex* taggedIndex) {
+XDRResult XDRTaggedParserAtomIndex(XDRState<mode>* xdr,
+                                   TaggedParserAtomIndex* taggedIndex) {
   MOZ_TRY(xdr->codeUint32(taggedIndex->rawData()));
 
   if (mode == XDR_ENCODE) {
@@ -860,6 +860,11 @@ static XDRResult XDRTaggedParserAtomIndex(XDRState<mode>* xdr,
 
   return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
 }
+
+template XDRResult XDRTaggedParserAtomIndex(XDRState<XDR_ENCODE>* xdr,
+                                            TaggedParserAtomIndex* taggedIndex);
+template XDRResult XDRTaggedParserAtomIndex(XDRState<XDR_DECODE>* xdr,
+                                            TaggedParserAtomIndex* taggedIndex);
 
 template <XDRMode mode>
 XDRResult XDRParserAtomDataAt(XDRState<mode>* xdr, const ParserAtom** atomp,
