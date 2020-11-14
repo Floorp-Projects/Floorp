@@ -527,6 +527,12 @@ class ScriptStencil {
 #endif
 };
 
+#if defined(DEBUG) || defined(JS_JITSPEW)
+void DumpTaggedParserAtomIndex(js::JSONPrinter& json,
+                               TaggedParserAtomIndex taggedIndex,
+                               CompilationStencil* compilationStencil);
+#endif
+
 } /* namespace frontend */
 } /* namespace js */
 
