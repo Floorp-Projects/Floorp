@@ -1664,3 +1664,26 @@ bool CompilationAtomCache::allocate(JSContext* cx, size_t length) {
 
   return true;
 }
+
+const ParserAtom* CompilationStencil::getParserAtomAt(
+    JSContext* cx, TaggedParserAtomIndex taggedIndex) const {
+  if (taggedIndex.isParserAtomIndex()) {
+    auto index = taggedIndex.toParserAtomIndex();
+    MOZ_ASSERT(index < parserAtomData.length());
+    return parserAtomData[index]->asAtom();
+  }
+
+  if (taggedIndex.isWellKnownAtomId()) {
+    auto index = taggedIndex.toWellKnownAtomId();
+    return cx->runtime()->commonParserNames->getWellKnown(index);
+  }
+
+  if (taggedIndex.isStaticParserString1()) {
+    auto index = taggedIndex.toStaticParserString1();
+    return WellKnownParserAtoms::getStatic1(index);
+  }
+
+  MOZ_ASSERT(taggedIndex.isStaticParserString2());
+  auto index = taggedIndex.toStaticParserString2();
+  return WellKnownParserAtoms::getStatic2(index);
+}
