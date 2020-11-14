@@ -507,7 +507,7 @@ struct CompilationInfoVector {
 };
 
 // Allocate an uninitialized script-things array using the Stencil's allocator.
-mozilla::Span<ScriptThingVariant> NewScriptThingSpanUninitialized(
+mozilla::Span<TaggedScriptThingIndex> NewScriptThingSpanUninitialized(
     JSContext* cx, LifoAlloc& alloc, uint32_t ngcthings);
 
 }  // namespace frontend

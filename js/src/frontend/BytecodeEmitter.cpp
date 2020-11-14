@@ -11278,8 +11278,8 @@ bool BytecodeEmitter::intoScriptStencil(ScriptStencil* script) {
   auto& things = perScriptData().gcThingList().objects();
   size_t ngcthings = things.length();
 
-  // Copy the ScriptThingVariant data from the emitter to the stencil.
-  mozilla::Span<ScriptThingVariant> stencilThings =
+  // Copy the TaggedScriptThingIndex data from the emitter to the stencil.
+  mozilla::Span<TaggedScriptThingIndex> stencilThings =
       NewScriptThingSpanUninitialized(cx, compilationInfo.stencil.alloc,
                                       ngcthings);
   if (stencilThings.empty()) {
