@@ -698,7 +698,6 @@ class ParserAtomVectorBuilder {
 
   bool resize(JSContext* cx, size_t count);
   size_t length() const { return entries_.length(); }
-  ParserAtom* get(size_t index) { return entries_[index]->asAtom(); }
 
   JS::Result<const ParserAtom*, OOM> internLatin1At(
       JSContext* cx, const JS::Latin1Char* latin1Ptr, HashNumber hash,

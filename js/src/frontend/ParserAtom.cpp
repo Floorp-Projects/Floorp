@@ -817,59 +817,48 @@ bool WellKnownParserAtoms::init(JSContext* cx) {
 // XDR code.
 namespace js {
 
-enum class ParserAtomTag : uint32_t {
-  Normal = 0,
-  WellKnown,
-  Static1,
-  Static2,
-};
-
 template <XDRMode mode>
-static XDRResult XDRParserAtomTaggedIndex(XDRState<mode>* xdr,
-                                          ParserAtomTag* tag, uint32_t* index) {
-  // We encode 2 bit (tag) + 32 bit (index) data in the following format:
-  //
-  // index = 0bAABB'CCDD'EEFF'GGHH'IIJJ'KKLL'MMNN'OOPP
-  // tag = 0bTT
-  //
-  // if index < 0b0011'1111'1111'1111'1111'1111'1111'1111:
-  //   single uint32_t = 0bBBCC'DDEE'FFGG'HHII'JJKK'LLMM'NNOO'PPTT
-  // else:
-  //   two uint32_t    = 0b1111'1111'1111'1111'1111'1111'1111'11TT,
-  //                     0bAABB'CCDD'EEFF'GGHH'IIJJ'KKLL'MMNN'OOPP
-
-  constexpr uint32_t TagShift = 2;
-  constexpr uint32_t TagMask = 0b0011;
-  constexpr uint32_t TwoUnitPattern = UINT32_MAX ^ TagMask;
-  constexpr uint32_t CodeLimit = TwoUnitPattern >> TagShift;
-
-  MOZ_ASSERT((uint32_t(*tag) & TagMask) == uint32_t(*tag));
+static XDRResult XDRTaggedParserAtomIndex(XDRState<mode>* xdr,
+                                          TaggedParserAtomIndex* taggedIndex) {
+  MOZ_TRY(xdr->codeUint32(taggedIndex->rawData()));
 
   if (mode == XDR_ENCODE) {
-    if (*index < CodeLimit) {
-      uint32_t data = (*index) << TagShift | uint32_t(*tag);
-      return xdr->codeUint32(&data);
+    return Ok();
+  }
+
+  if (taggedIndex->isParserAtomIndex()) {
+    auto index = taggedIndex->toParserAtomIndex();
+    if (size_t(index) >= xdr->frontendAtoms().length()) {
+      return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
     }
-
-    uint32_t data = TwoUnitPattern | uint32_t(*tag);
-    MOZ_TRY(xdr->codeUint32(&data));
-    return xdr->codeUint32(index);
+    return Ok();
   }
 
-  MOZ_ASSERT(mode == XDR_DECODE);
-
-  uint32_t data;
-  MOZ_TRY(xdr->codeUint32(&data));
-
-  *tag = ParserAtomTag(data & TagMask);
-
-  if ((data & TwoUnitPattern) == TwoUnitPattern) {
-    MOZ_TRY(xdr->codeUint32(index));
-  } else {
-    *index = data >> TagShift;
+  if (taggedIndex->isWellKnownAtomId()) {
+    auto index = taggedIndex->toWellKnownAtomId();
+    if (size_t(index) >= uint32_t(WellKnownAtomId::Limit)) {
+      return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+    }
+    return Ok();
   }
 
-  return Ok();
+  if (taggedIndex->isStaticParserString1()) {
+    auto index = taggedIndex->toStaticParserString1();
+    if (size_t(index) >= WellKnownParserAtoms_ROM::ASCII_STATIC_LIMIT) {
+      return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+    }
+    return Ok();
+  }
+
+  if (taggedIndex->isStaticParserString2()) {
+    auto index = taggedIndex->toStaticParserString2();
+    if (size_t(index) >= WellKnownParserAtoms_ROM::NUM_LENGTH2_ENTRIES) {
+      return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+    }
+    return Ok();
+  }
+
+  return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
 }
 
 template <XDRMode mode>
@@ -955,57 +944,14 @@ template XDRResult XDRParserAtomDataAt(XDRState<XDR_DECODE>* xdr,
 
 template <XDRMode mode>
 XDRResult XDRParserAtom(XDRState<mode>* xdr, const ParserAtom** atomp) {
+  TaggedParserAtomIndex taggedIndex;
   if (mode == XDR_ENCODE) {
-    uint32_t atomIndex;
-    ParserAtomTag tag = ParserAtomTag::Normal;
-    if ((*atomp)->isWellKnownAtomId()) {
-      atomIndex = uint32_t((*atomp)->toWellKnownAtomId());
-      tag = ParserAtomTag::WellKnown;
-    } else if ((*atomp)->isStaticParserString1()) {
-      atomIndex = uint32_t((*atomp)->toStaticParserString1());
-      tag = ParserAtomTag::Static1;
-    } else if ((*atomp)->isStaticParserString2()) {
-      atomIndex = uint32_t((*atomp)->toStaticParserString2());
-      tag = ParserAtomTag::Static2;
-    } else {
-      atomIndex = uint32_t((*atomp)->toParserAtomIndex());
-      tag = ParserAtomTag::Normal;
-    }
-    MOZ_TRY(XDRParserAtomTaggedIndex(xdr, &tag, &atomIndex));
-    return Ok();
+    taggedIndex = (*atomp)->toIndex();
   }
-
-  MOZ_ASSERT(mode == XDR_DECODE && xdr->hasAtomTable());
-
-  uint32_t atomIndex = 0;
-  ParserAtomTag tag = ParserAtomTag::Normal;
-  MOZ_TRY(XDRParserAtomTaggedIndex(xdr, &tag, &atomIndex));
-
-  switch (tag) {
-    case ParserAtomTag::Normal:
-      if (atomIndex >= xdr->frontendAtoms().length()) {
-        return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
-      }
-      *atomp = xdr->frontendAtoms().get(atomIndex);
-      break;
-    case ParserAtomTag::WellKnown:
-      if (atomIndex >= uint32_t(WellKnownAtomId::Limit)) {
-        return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
-      }
-      *atomp = xdr->frontendAtoms().getWellKnown(WellKnownAtomId(atomIndex));
-      break;
-    case ParserAtomTag::Static1:
-      if (atomIndex >= WellKnownParserAtoms_ROM::ASCII_STATIC_LIMIT) {
-        return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
-      }
-      *atomp = xdr->frontendAtoms().getStatic1(StaticParserString1(atomIndex));
-      break;
-    case ParserAtomTag::Static2:
-      if (atomIndex >= WellKnownParserAtoms_ROM::NUM_LENGTH2_ENTRIES) {
-        return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
-      }
-      *atomp = xdr->frontendAtoms().getStatic2(StaticParserString2(atomIndex));
-      break;
+  MOZ_TRY(XDRTaggedParserAtomIndex(xdr, &taggedIndex));
+  if (mode == XDR_DECODE) {
+    MOZ_ASSERT(xdr->hasAtomTable());
+    *atomp = xdr->frontendAtoms().getParserAtom(taggedIndex);
   }
 
   return Ok();
