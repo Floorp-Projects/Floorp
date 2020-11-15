@@ -13,7 +13,7 @@ const { TestUtils } = ChromeUtils.import(
 /**
  * #getExperiment
  */
-add_task(async function test_getExperiment_slug() {
+add_task(async function test_getExperiment_fromChild_slug() {
   const sandbox = sinon.createSandbox();
   const manager = ExperimentFakes.manager();
   const expected = ExperimentFakes.experiment("foo");
@@ -30,10 +30,57 @@ add_task(async function test_getExperiment_slug() {
     "Wait for child to sync"
   );
 
-  Assert.deepEqual(
-    ExperimentAPI.getExperiment({ slug: "foo" }),
-    expected,
+  Assert.equal(
+    ExperimentAPI.getExperiment({ slug: "foo" }).slug,
+    expected.slug,
     "should return an experiment by slug"
+  );
+
+  sandbox.restore();
+});
+
+add_task(async function test_getExperiment_fromParent_slug() {
+  const sandbox = sinon.createSandbox();
+  const manager = ExperimentFakes.manager();
+  const expected = ExperimentFakes.experiment("foo");
+
+  await manager.onStartup();
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+  await ExperimentAPI.ready();
+
+  manager.store.addExperiment(expected);
+
+  Assert.equal(
+    ExperimentAPI.getExperiment({ slug: "foo" }).slug,
+    expected.slug,
+    "should return an experiment by slug"
+  );
+
+  sandbox.restore();
+});
+
+add_task(async function test_getExperimentMetaData() {
+  const sandbox = sinon.createSandbox();
+  const manager = ExperimentFakes.manager();
+  const expected = ExperimentFakes.experiment("foo");
+
+  await manager.onStartup();
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+  await ExperimentAPI.ready();
+
+  manager.store.addExperiment(expected);
+
+  let metadata = ExperimentAPI.getExperimentMetaData({ slug: expected.slug });
+
+  Assert.equal(
+    Object.keys(metadata.branch).length,
+    1,
+    "Should only expose one property"
+  );
+  Assert.equal(
+    metadata.branch.slug,
+    expected.branch.slug,
+    "Should have the slug prop"
   );
 
   sandbox.restore();
@@ -62,10 +109,10 @@ add_task(async function test_getExperiment_feature() {
     "Wait for child to sync"
   );
 
-  Assert.deepEqual(
-    ExperimentAPI.getExperiment({ featureId: "cfr" }),
-    expected,
-    "should return an experiment by slug"
+  Assert.equal(
+    ExperimentAPI.getExperiment({ featureId: "cfr" }).slug,
+    expected.slug,
+    "should return an experiment by featureId"
   );
 
   sandbox.restore();
@@ -98,13 +145,19 @@ add_task(async function test_getValue() {
   );
 
   Assert.deepEqual(
-    ExperimentAPI.getFeatureValue("aboutwelcome"),
+    ExperimentAPI.getFeatureValue({ featureId: "aboutwelcome" }),
     feature.value,
-    "should return an experiment value by slug"
+    "should return a Branch by feature"
+  );
+
+  Assert.deepEqual(
+    ExperimentAPI.getFeatureBranch({ featureId: "aboutwelcome" }),
+    expected.branch,
+    "should return an experiment branch by feature"
   );
 
   Assert.equal(
-    ExperimentAPI.getFeatureValue("doesnotexist"),
+    ExperimentAPI.getFeatureBranch({ featureId: "doesnotexist" }),
     undefined,
     "should return undefined if the experiment is not found"
   );

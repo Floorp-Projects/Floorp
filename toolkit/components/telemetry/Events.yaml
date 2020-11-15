@@ -726,6 +726,28 @@ normandy:
     extra_keys:
       enrollmentId: A unique ID for this enrollment that will be included in all related Telemetry.
 
+  expose:
+    objects: [
+      "feature_study",
+    ]
+    methods: ["expose"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    description: >
+      This records an event at the moment the user is exposed to an experiment
+      treatment. The event is triggered either by the code checking that a
+      certain experiment feature is enabled or when that feature value is used.
+      This is different from enrollment or experiment activation because it
+      registers when a user actually gets exposed to the experiment feature.
+    bug_numbers: [1675104]
+    notification_emails: ["ujet@mozilla.com"]
+    expiry_version: "never"
+    extra_keys:
+      branchSlug: The slug for the branch the user is enrolled in.
+      featureId: The type of experiment variant the user was enrolled into.
+
 pwmgr:
   open_management:
     objects: ["aboutprotections", "autocomplete", "capturedoorhanger", "contextmenu", "direct", "fxamenu", "mainmenu", "pageinfo", "preferences", "snippet"]

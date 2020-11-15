@@ -173,7 +173,10 @@ add_task(async function test_loading_experimentsAPI() {
   // Wait to load the messages from the messaging-experiments provider
   await ASRouter.loadMessagesFromAllProviders();
 
-  Assert.ok(ASRouter.state.messages.find(m => m.id === "xman_test_message"));
+  Assert.ok(
+    ASRouter.state.messages.find(m => m.id === "xman_test_message"),
+    "Experiment message found in ASRouter state"
+  );
 
   await client.db.clear();
   await SpecialPowers.popPrefEnv();
