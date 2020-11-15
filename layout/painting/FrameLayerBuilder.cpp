@@ -5044,8 +5044,8 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
         nsDisplayScrollInfoLayer* scrollItem =
             static_cast<nsDisplayScrollInfoLayer*>(item);
         newLayerEntry->mOpaqueForAnimatedGeometryRootParent = false;
-        newLayerEntry->mBaseScrollMetadata =
-            scrollItem->ComputeScrollMetadata(ownLayer->Manager(), mParameters);
+        newLayerEntry->mBaseScrollMetadata = scrollItem->ComputeScrollMetadata(
+            mBuilder, ownLayer->Manager(), mParameters);
       }
 
       /**

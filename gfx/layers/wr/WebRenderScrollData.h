@@ -24,6 +24,7 @@
 #include "mozilla/Maybe.h"
 #include "nsTArrayForwardDeclare.h"
 
+class nsDisplayListBuilder;
 class nsDisplayItem;
 
 namespace mozilla {
@@ -211,9 +212,12 @@ class WebRenderLayerScrollData final {
 class WebRenderScrollData final {
  public:
   WebRenderScrollData();
-  explicit WebRenderScrollData(WebRenderLayerManager* aManager);
+  explicit WebRenderScrollData(WebRenderLayerManager* aManager,
+                               nsDisplayListBuilder* aBuilder);
 
   WebRenderLayerManager* GetManager() const;
+
+  nsDisplayListBuilder* GetBuilder() const;
 
   // Add the given ScrollMetadata if it doesn't already exist. Return an index
   // that can be used to look up the metadata later.
@@ -258,6 +262,11 @@ class WebRenderScrollData final {
   // valid, because the WebRenderLayerManager that created |this| will
   // outlive |this|.
   WebRenderLayerManager* MOZ_NON_OWNING_REF mManager;
+
+  // Pointer to the display list builder; if this is non-null, it will always be
+  // valid, because the nsDisplayListBuilder that created the layer manager will
+  // outlive |this|.
+  nsDisplayListBuilder* MOZ_NON_OWNING_REF mBuilder;
 
   // Internal data structure used to maintain uniqueness of mScrollMetadatas.
   // This is not serialized/deserialized over IPC, but it is rebuilt on the

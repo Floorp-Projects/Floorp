@@ -6308,7 +6308,7 @@ class nsDisplayScrollInfoLayer : public nsDisplayWrapList {
 
   void WriteDebugInfo(std::stringstream& aStream) override;
   mozilla::UniquePtr<ScrollMetadata> ComputeScrollMetadata(
-      LayerManager* aLayerManager,
+      nsDisplayListBuilder* aBuilder, LayerManager* aLayerManager,
       const ContainerLayerParameters& aContainerParameters);
   bool UpdateScrollData(
       mozilla::layers::WebRenderScrollData* aData,

@@ -7177,7 +7177,7 @@ LayerState nsDisplayScrollInfoLayer::GetLayerState(
 }
 
 UniquePtr<ScrollMetadata> nsDisplayScrollInfoLayer::ComputeScrollMetadata(
-    LayerManager* aLayerManager,
+    nsDisplayListBuilder* aBuilder, LayerManager* aLayerManager,
     const ContainerLayerParameters& aContainerParameters) {
   ScrollMetadata metadata = nsLayoutUtils::ComputeScrollMetadata(
       mScrolledFrame, mScrollFrame, mScrollFrame->GetContent(),
@@ -7186,7 +7186,7 @@ UniquePtr<ScrollMetadata> nsDisplayScrollInfoLayer::ComputeScrollMetadata(
   metadata.GetMetrics().SetIsScrollInfoLayer(true);
   nsIScrollableFrame* scrollableFrame = mScrollFrame->GetScrollTargetFrame();
   if (scrollableFrame) {
-    scrollableFrame->NotifyApzTransaction();
+    aBuilder->AddScrollFrameToNotify(scrollableFrame);
   }
 
   return UniquePtr<ScrollMetadata>(new ScrollMetadata(metadata));
@@ -7196,8 +7196,8 @@ bool nsDisplayScrollInfoLayer::UpdateScrollData(
     mozilla::layers::WebRenderScrollData* aData,
     mozilla::layers::WebRenderLayerScrollData* aLayerData) {
   if (aLayerData) {
-    UniquePtr<ScrollMetadata> metadata =
-        ComputeScrollMetadata(aData->GetManager(), ContainerLayerParameters());
+    UniquePtr<ScrollMetadata> metadata = ComputeScrollMetadata(
+        aData->GetBuilder(), aData->GetManager(), ContainerLayerParameters());
     MOZ_ASSERT(aData);
     MOZ_ASSERT(metadata);
     aLayerData->AppendScrollMetadata(*aData, *metadata);
