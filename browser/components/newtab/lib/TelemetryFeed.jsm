@@ -319,18 +319,19 @@ this.TelemetryFeed = class TelemetryFeed {
   /**
    *  Check if it is in the CFR experiment cohort by querying against the
    *  experiment manager of Messaging System
+   *
+   *  @return {bool}
    */
   get isInCFRCohort() {
     try {
-      const experimentData = ExperimentAPI.getExperiment({
+      const experimentData = ExperimentAPI.getExperimentMetaData({
         featureId: "cfr",
       });
       if (experimentData && experimentData.slug) {
         return true;
       }
-    } catch (e) {
-      return false;
-    }
+    } catch (e) {}
+
     return false;
   }
 

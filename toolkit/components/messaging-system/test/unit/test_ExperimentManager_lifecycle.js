@@ -12,6 +12,9 @@ const { ExperimentFakes } = ChromeUtils.import(
 const { Sampling } = ChromeUtils.import(
   "resource://gre/modules/components-utils/Sampling.jsm"
 );
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 
 /**
  * onStartup()
@@ -214,5 +217,38 @@ add_task(async function test_onFinalize_unenroll() {
     manager.sessions.has("test"),
     false,
     "should clear sessions[test]"
+  );
+});
+
+add_task(async function test_onExposureEvent() {
+  const manager = ExperimentFakes.manager();
+  const fooExperiment = ExperimentFakes.experiment("foo");
+
+  await manager.onStartup();
+  manager.store.addExperiment(fooExperiment);
+
+  let updateEv = new Promise(resolve =>
+    manager.store.on(`update:${fooExperiment.slug}`, resolve)
+  );
+
+  manager.store._emitExperimentExposure({
+    branchSlug: fooExperiment.branch.slug,
+    experimentSlug: fooExperiment.slug,
+    featureId: "cfr",
+  });
+
+  await updateEv;
+
+  Assert.equal(
+    manager.store.get(fooExperiment.slug).exposurePingSent,
+    true,
+    "Experiment state updated"
+  );
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "telemetry.event_counts",
+    "normandy#expose#feature_study",
+    1
   );
 });

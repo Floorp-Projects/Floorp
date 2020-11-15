@@ -354,7 +354,10 @@ const MessageLoaderUtils = {
     for (const featureId of provider.messageGroups) {
       let experimentData;
       try {
-        experimentData = ExperimentAPI.getExperiment({ featureId });
+        experimentData = ExperimentAPI.getExperiment({
+          featureId,
+          sendExposurePing: false,
+        });
         // Not enrolled in any experiment for this feature, we can skip
         if (!experimentData) {
           continue;
@@ -367,8 +370,16 @@ const MessageLoaderUtils = {
       // If the feature is not enabled there is no message to send back.
       // Other branches might be enabled so we check those as well in case we
       // need to send a reach ping.
-      if (ExperimentAPI.isFeatureEnabled(featureId, false)) {
-        experiments.push(ExperimentAPI.getFeatureValue(featureId));
+      let featureData = experimentData.branch.feature;
+      if (featureData.enabled) {
+        experiments.push({
+          forExposureEvent: {
+            sent: experimentData.exposurePingSent,
+            experimentSlug: experimentData.slug,
+            branchSlug: experimentData.branch.slug,
+          },
+          ...featureData.value,
+        });
       }
 
       if (!REACH_EVENT_GROUPS.includes(featureId)) {
@@ -1812,6 +1823,18 @@ class _ASRouter {
         nonReachMessages.push(message);
       }
     }
+
+    // Exposure events only apply to messages that come from the
+    // messaging-experiments provider
+    if (nonReachMessages.length && nonReachMessages[0].forExposureEvent) {
+      ExperimentAPI.recordExposureEvent(
+        // Any message processed by ASRouter will report the exposure event
+        // as `cfr`
+        "cfr",
+        nonReachMessages[0].forExposureEvent
+      );
+    }
+
     return this.sendMessage(
       nonReachMessages[0] || null,
       trigger,

@@ -286,6 +286,7 @@ describe("ASRouter", () => {
             },
           },
         }),
+        recordExposureEvent: sandbox.stub(),
         getAllBranches: sandbox.stub().resolves([
           {
             branch: {
@@ -299,8 +300,6 @@ describe("ASRouter", () => {
           },
         ]),
         ready: sandbox.stub().resolves(),
-        getFeatureValue: sandbox.stub().returns(null),
-        isFeatureEnabled: sandbox.stub().returns(false),
       },
       SpecialMessageActions: {
         handleAction: sandbox.stub(),
@@ -2099,6 +2098,38 @@ describe("ASRouter", () => {
       });
       assert.notCalled(Services.telemetry.recordEvent);
     });
+    it("should record the Exposure event if found any", async () => {
+      let messages = [
+        {
+          id: "foo1",
+          forExposureEvent: {
+            sent: false,
+            experimentSlug: "foo",
+            branchSlug: "bar",
+          },
+          experimentSlug: "exp01",
+          branchSlug: "branch01",
+          template: "simple_template",
+          trigger: { id: "foo" },
+          content: { title: "Foo1", body: "Foo123-1" },
+        },
+      ];
+      sandbox.stub(Router, "handleMessageRequest").resolves(messages);
+      sandbox.spy(Services.telemetry, "recordEvent");
+
+      await Router.sendTriggerMessage({
+        tabId: 0,
+        browser: {},
+        id: "foo",
+      });
+
+      assert.calledOnce(global.ExperimentAPI.recordExposureEvent);
+      assert.calledWithExactly(
+        global.ExperimentAPI.recordExposureEvent,
+        "cfr",
+        messages[0].forExposureEvent
+      );
+    });
   });
 
   describe("_getBundledMessages", () => {
@@ -2814,6 +2845,7 @@ describe("ASRouter", () => {
       assert.calledOnce(global.ExperimentAPI.getExperiment);
       assert.calledWithExactly(global.ExperimentAPI.getExperiment, {
         featureId: "asrouter",
+        sendExposurePing: false,
       });
     });
     it("should handle the case of no experiments in the ExperimentAPI", async () => {
@@ -2858,24 +2890,9 @@ describe("ASRouter", () => {
       };
 
       global.ExperimentAPI.getExperiment.returns(enrollment);
-      global.ExperimentAPI.isFeatureEnabled.returns(
-        enrollment.branch.feature.enabled
-      );
-      global.ExperimentAPI.getFeatureValue.returns(
-        enrollment.branch.feature.value
-      );
 
       const result = await MessageLoaderUtils.loadMessagesForProvider(args);
 
-      assert.calledWithExactly(
-        global.ExperimentAPI.isFeatureEnabled,
-        "asrouter",
-        false
-      );
-      assert.calledWithExactly(
-        global.ExperimentAPI.getFeatureValue,
-        "asrouter"
-      );
       assert.lengthOf(result.messages, 1);
     });
     it("should skip disabled features and not load the messages", async () => {
@@ -2895,22 +2912,9 @@ describe("ASRouter", () => {
       };
 
       global.ExperimentAPI.getExperiment.returns(enrollment);
-      global.ExperimentAPI.isFeatureEnabled.returns(
-        enrollment.branch.feature.enabled
-      );
-      global.ExperimentAPI.getFeatureValue.returns(
-        enrollment.branch.feature.value
-      );
 
       const result = await MessageLoaderUtils.loadMessagesForProvider(args);
 
-      assert.calledOnce(global.ExperimentAPI.isFeatureEnabled);
-      assert.notCalled(global.ExperimentAPI.getFeatureValue);
-      assert.calledWithExactly(
-        global.ExperimentAPI.isFeatureEnabled,
-        "asrouter",
-        false
-      );
       assert.lengthOf(result.messages, 0);
     });
     it("should fetch messages from the ExperimentAPI", async () => {
@@ -2944,12 +2948,6 @@ describe("ASRouter", () => {
       };
 
       global.ExperimentAPI.getExperiment.returns(enrollment);
-      global.ExperimentAPI.isFeatureEnabled.returns(
-        enrollment.branch.feature.enabled
-      );
-      global.ExperimentAPI.getFeatureValue.returns(
-        enrollment.branch.feature.value
-      );
       global.ExperimentAPI.getAllBranches.resolves([
         enrollment.branch,
         {
