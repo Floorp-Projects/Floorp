@@ -965,9 +965,9 @@ class HTMLInputElement final : public TextControlElement,
   virtual void ResultForDialogSubmit(nsAString& aResult) override;
 
   /**
-   * Dispatch a select event. Returns true if the event was not cancelled.
+   * Dispatch a select event.
    */
-  bool DispatchSelectEvent(nsPresContext* aPresContext);
+  void DispatchSelectEvent(nsPresContext* aPresContext);
 
   void SelectAll(nsPresContext* aPresContext);
   bool IsImage() const {
