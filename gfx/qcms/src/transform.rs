@@ -37,7 +37,7 @@ use crate::{
     },
 };
 use crate::{
-    iccread::{curveType, qcms_CIE_xyY, qcms_CIE_xyYTRIPLE, qcms_profile},
+    iccread::{curveType, qcms_CIE_xyY, qcms_CIE_xyYTRIPLE, qcms_profile, RGB_SIGNATURE},
     qcms_intent, s15Fixed16Number,
     transform_util::clamp_float,
 };
@@ -1189,7 +1189,7 @@ fn compute_whitepoint_adaption(mut X: f32, mut Y: f32, mut Z: f32) -> matrix {
 #[no_mangle]
 pub extern "C" fn qcms_profile_precache_output_transform(mut profile: &mut qcms_profile) {
     /* we only support precaching on rgb profiles */
-    if (*profile).color_space != 0x52474220 {
+    if (*profile).color_space != RGB_SIGNATURE {
         return;
     }
     if qcms_supports_iccv4.load(Ordering::Relaxed) {
@@ -1393,7 +1393,7 @@ pub unsafe extern "C" fn qcms_transform_create(
             return 0 as *mut qcms_transform;
         }
     }
-    if (*in_0).color_space == 0x52474220 {
+    if (*in_0).color_space == RGB_SIGNATURE {
         if precache {
             if cfg!(any(target_arch = "x86", target_arch = "x86_64")) && qcms_supports_avx {
                 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
