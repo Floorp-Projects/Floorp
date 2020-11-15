@@ -64,23 +64,14 @@ pub struct ArrayAllocationTracker {
 }
 
 impl ArrayAllocationTracker {
-    pub fn new(initial_size: Option<DeviceIntSize>) -> Self {
-        let mut allocator = ArrayAllocationTracker {
+    pub fn new() -> Self {
+        ArrayAllocationTracker {
             bins: [
                 Vec::new(),
                 Vec::new(),
                 Vec::new(),
             ],
-        };
-
-        if let Some(initial_size) = initial_size {
-            allocator.push(
-                FreeRectSlice(0),
-                initial_size.into(),
-            );
         }
-
-        allocator
     }
 
     fn push(&mut self, slice: FreeRectSlice, rect: DeviceIntRect) {
@@ -222,7 +213,7 @@ fn random_fill(count: usize, texture_size: i32) -> f32 {
         DeviceIntSize::new(texture_size, texture_size),
     );
     let mut rng = thread_rng();
-    let mut allocator = ArrayAllocationTracker::new(None);
+    let mut allocator = ArrayAllocationTracker::new();
 
     // check for empty allocation
     assert_eq!(
