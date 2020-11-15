@@ -54,7 +54,7 @@ use crate::{
 };
 
 use ::libc::{self, free, malloc};
-use std::sync::Arc;
+use std::sync::{atomic::AtomicBool, Arc};
 use std::{ptr::null_mut, sync::atomic::Ordering};
 
 pub const PRECACHE_OUTPUT_SIZE: usize = 8192;
@@ -1395,7 +1395,9 @@ pub unsafe extern "C" fn qcms_transform_create(
     }
     if (*in_0).color_space == RGB_SIGNATURE {
         if precache {
-            if cfg!(any(target_arch = "x86", target_arch = "x86_64")) && qcms_supports_avx {
+            if cfg!(any(target_arch = "x86", target_arch = "x86_64"))
+                && qcms_supports_avx.load(Ordering::Relaxed)
+            {
                 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
                 {
                     if in_type == QCMS_DATA_RGB_8 {
@@ -1421,7 +1423,8 @@ pub unsafe extern "C" fn qcms_transform_create(
                         (*transform).transform_fn = Some(qcms_transform_data_bgra_out_lut_sse2)
                     }
                 }
-            } else if cfg!(any(target_arch = "arm", target_arch = "aarch64")) && qcms_supports_neon
+            } else if cfg!(any(target_arch = "arm", target_arch = "aarch64"))
+                && qcms_supports_neon.load(Ordering::Relaxed)
             {
                 #[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
                 {
@@ -1558,15 +1561,14 @@ pub unsafe extern "C" fn qcms_transform_data(
 pub unsafe extern "C" fn qcms_enable_iccv4() {
     qcms_supports_iccv4.store(true, Ordering::Relaxed);
 }
-#[no_mangle]
-pub static mut qcms_supports_avx: bool = false;
-#[no_mangle]
-pub static mut qcms_supports_neon: bool = false;
+pub static qcms_supports_avx: AtomicBool = AtomicBool::new(false);
+pub static qcms_supports_neon: AtomicBool = AtomicBool::new(false);
+
 #[no_mangle]
 pub unsafe extern "C" fn qcms_enable_avx() {
-    qcms_supports_avx = true;
+    qcms_supports_avx.store(true, Ordering::Relaxed);
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_enable_neon() {
-    qcms_supports_neon = true;
+    qcms_supports_neon.store(true, Ordering::Relaxed);
 }
