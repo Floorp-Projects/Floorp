@@ -149,23 +149,18 @@ void HTMLTextAreaElement::Select() {
     return;
   }
 
-  nsEventStatus status = nsEventStatus_eIgnore;
   WidgetGUIEvent event(true, eFormSelect, nullptr);
   // XXXbz HTMLInputElement guards against this reentering; shouldn't we?
-  EventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext, &event,
-                            nullptr, &status);
+  EventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext,
+                            &event);
 
-  // If the DOM event was not canceled (e.g. by a JS event handler
-  // returning false)
-  if (status == nsEventStatus_eIgnore) {
-    if (fm) {
-      fm->SetFocus(this, nsIFocusManager::FLAG_NOSCROLL);
+  if (fm) {
+    fm->SetFocus(this, nsIFocusManager::FLAG_NOSCROLL);
 
-      // ensure that the element is actually focused
-      if (this == fm->GetFocusedElement()) {
-        // Now Select all the text!
-        SelectAll(presContext);
-      }
+    // ensure that the element is actually focused
+    if (this == fm->GetFocusedElement()) {
+      // Now Select all the text!
+      SelectAll(presContext);
     }
   }
 }
