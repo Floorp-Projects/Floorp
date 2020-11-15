@@ -1107,33 +1107,14 @@ fn precache_create() -> Arc<precache_output> {
     Arc::new(precache_output::default())
 }
 
-unsafe extern "C" fn transform_alloc() -> *mut qcms_transform {
-    Box::into_raw(Box::new(Default::default()))
-}
-unsafe extern "C" fn transform_free(mut t: *mut qcms_transform) {
-    drop(Box::from_raw(t))
-}
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_release(mut t: *mut qcms_transform) {
-    /* ensure we only free the gamma tables once even if there are
-     * multiple references to the same data */
-    (*t).output_table_r = None;
-    (*t).output_table_g = None;
-    (*t).output_table_b = None;
-
-    (*t).input_gamma_table_r = None;
-    (*t).input_gamma_table_g = None;
-    (*t).input_gamma_table_b = None;
-
-    (*t).input_gamma_table_gray = None;
-    (*t).output_gamma_lut_r = None;
-    (*t).output_gamma_lut_g = None;
-    (*t).output_gamma_lut_b = None;
+    let t = Box::from_raw(t);
     /* r_clut points to beginning of buffer allocated in qcms_transform_precacheLUT_float */
     if !(*t).r_clut.is_null() {
         free((*t).r_clut as *mut libc::c_void);
     }
-    transform_free(t);
+    drop(t)
 }
 
 fn sse_version_available() -> i32 {
