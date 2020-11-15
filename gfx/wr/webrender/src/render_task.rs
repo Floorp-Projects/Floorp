@@ -129,7 +129,6 @@ pub struct CacheMaskTask {
     pub root_spatial_node_index: SpatialNodeIndex,
     pub clip_node_range: ClipNodeRange,
     pub device_pixel_scale: DevicePixelScale,
-    pub clear_to_one: bool,
 }
 
 #[derive(Debug)]
@@ -139,7 +138,6 @@ pub struct ClipRegionTask {
     pub local_pos: LayoutPoint,
     pub device_pixel_scale: DevicePixelScale,
     pub clip_data: ClipData,
-    pub clear_to_one: bool,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -311,6 +309,20 @@ impl RenderTaskKind {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum ClearMode {
+    // Applicable to color and alpha targets.
+    Zero,
+    One,
+    /// This task doesn't care what it is cleared to - it will completely overwrite it.
+    DontCare,
+
+    // Applicable to color targets only.
+    Transparent,
+}
+
 /// In order to avoid duplicating the down-scaling and blur passes when a picture has several blurs,
 /// we use a local (primitive-level) cache of the render tasks generated for a single shadowed primitive
 /// in a single frame.
@@ -349,6 +361,7 @@ pub struct RenderTask {
     pub location: RenderTaskLocation,
     pub children: TaskDependencies,
     pub kind: RenderTaskKind,
+    pub clear_mode: ClearMode,
     pub saved_index: Option<SavedTargetIndex>,
 }
 
@@ -358,6 +371,7 @@ impl RenderTask {
         size: DeviceIntSize,
         children: TaskDependencies,
         kind: RenderTaskKind,
+        clear_mode: ClearMode,
     ) -> Self {
         render_task_sanity_check(&size);
 
@@ -365,6 +379,7 @@ impl RenderTask {
             location: RenderTaskLocation::Dynamic(None, size),
             children,
             kind,
+            clear_mode,
             saved_index: None,
         }
     }
@@ -379,6 +394,7 @@ impl RenderTask {
             location,
             children,
             kind: RenderTaskKind::Test(target),
+            clear_mode: ClearMode::Transparent,
             saved_index: None,
         }
     }
@@ -422,6 +438,7 @@ impl RenderTask {
                 scissor_rect,
                 valid_rect,
             }),
+            clear_mode: ClearMode::Transparent,
             saved_index: None,
         }
     }
@@ -442,6 +459,7 @@ impl RenderTask {
                 start_point,
                 end_point,
             }),
+            ClearMode::DontCare,
         )
     }
 
@@ -450,6 +468,7 @@ impl RenderTask {
             size,
             TaskDependencies::new(),
             RenderTaskKind::Readback,
+            ClearMode::Transparent,
         )
     }
 
@@ -482,6 +501,7 @@ impl RenderTask {
                 source,
                 padding,
             }),
+            ClearMode::Transparent,
         )
     }
 
@@ -501,6 +521,7 @@ impl RenderTask {
                 wavy_line_thickness,
                 local_size,
             }),
+            ClearMode::Transparent,
         )
     }
 
@@ -572,6 +593,7 @@ impl RenderTask {
                                 mask_task_id,
                                 render_tasks,
                                 RenderTargetKind::Alpha,
+                                ClearMode::Zero,
                                 None,
                                 cache_size,
                             )
@@ -596,6 +618,12 @@ impl RenderTask {
         // If we have a potentially tiled clip mask, clear the mask area first. Otherwise,
         // the first (primary) clip mask will overwrite all the clip mask pixels with
         // blending disabled to set to the initial value.
+        let clear_mode = if needs_clear {
+            ClearMode::One
+        } else {
+            ClearMode::DontCare
+        };
+
         render_tasks.add().init(
             RenderTask::with_dynamic_location(
                 outer_rect.size.to_i32(),
@@ -605,8 +633,8 @@ impl RenderTask {
                     clip_node_range,
                     root_spatial_node_index,
                     device_pixel_scale,
-                    clear_to_one: needs_clear,
                 }),
+                clear_mode,
             )
         )
     }
@@ -618,6 +646,12 @@ impl RenderTask {
         device_pixel_scale: DevicePixelScale,
         fb_config: &FrameBuilderConfig,
     ) -> Self {
+        let clear_mode = if fb_config.gpu_supports_fast_clears {
+            ClearMode::One
+        } else {
+            ClearMode::DontCare
+        };
+
         RenderTask::with_dynamic_location(
             size,
             TaskDependencies::new(),
@@ -625,8 +659,8 @@ impl RenderTask {
                 local_pos,
                 device_pixel_scale,
                 clip_data,
-                clear_to_one: fb_config.gpu_supports_fast_clears,
             }),
+            clear_mode,
         )
     }
 
@@ -672,6 +706,7 @@ impl RenderTask {
         src_task_id: RenderTaskId,
         render_tasks: &mut RenderTaskGraph,
         target_kind: RenderTargetKind,
+        clear_mode: ClearMode,
         mut blur_cache: Option<&mut BlurTaskCache>,
         blur_region: DeviceIntSize,
     ) -> RenderTaskId {
@@ -737,6 +772,7 @@ impl RenderTask {
                     blur_region,
                     uv_rect_kind,
                 }),
+                clear_mode,
             ));
 
             render_tasks.add().init(RenderTask::with_dynamic_location(
@@ -749,6 +785,7 @@ impl RenderTask {
                     blur_region,
                     uv_rect_kind,
                 }),
+                clear_mode,
             ))
         });
 
@@ -769,6 +806,7 @@ impl RenderTask {
             RenderTaskKind::Border(BorderTask {
                 instances,
             }),
+            ClearMode::Transparent,
         )
     }
 
@@ -809,6 +847,7 @@ impl RenderTask {
                     uv_rect_kind,
                     padding,
                 }),
+                ClearMode::DontCare,
             )
         )
     }
@@ -942,6 +981,7 @@ impl RenderTask {
                         )),
                         render_tasks,
                         RenderTargetKind::Color,
+                        ClearMode::Transparent,
                         None,
                         content_size,
                     )
@@ -1010,6 +1050,7 @@ impl RenderTask {
                         offset_task_id,
                         render_tasks,
                         RenderTargetKind::Color,
+                        ClearMode::Transparent,
                         None,
                         content_size,
                     );
@@ -1126,6 +1167,7 @@ impl RenderTask {
                 uv_rect_kind,
                 info,
             }),
+            ClearMode::Transparent,
         )
     }
 
@@ -1505,6 +1547,7 @@ impl RenderTask {
             }
         }
 
+        pt.add_item(format!("clear to: {:?}", self.clear_mode));
         pt.add_item(format!("dimensions: {:?}", self.location.size()));
 
         for &child_id in &self.children {

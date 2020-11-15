@@ -4119,7 +4119,7 @@ impl Renderer {
 
                     if use_batch_upload {
                         let (allocator, buffers) = batch_upload_buffers.entry(texture.get_format())
-                            .or_insert_with(|| (ArrayAllocationTracker::new(None), Vec::new()));
+                            .or_insert_with(|| (ArrayAllocationTracker::new(), Vec::new()));
 
                         // Allocate a region within the staging buffer for this update. If there is
                         // no room in an existing buffer then allocate another texture and buffer.
