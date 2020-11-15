@@ -1168,6 +1168,7 @@ impl ResourceCache {
     pub fn block_until_all_resources_added(
         &mut self,
         gpu_cache: &mut GpuCache,
+        render_tasks: &mut RenderTaskGraph,
         profile: &mut TransactionProfile,
     ) {
         profile_scope!("block_until_all_resources_added");
@@ -1179,6 +1180,8 @@ impl ResourceCache {
             &mut self.cached_glyphs,
             &mut self.texture_cache,
             gpu_cache,
+            &mut self.cached_render_tasks,
+            render_tasks,
             profile,
         );
 
