@@ -63,7 +63,7 @@ void WebRenderLayerScrollData::Initialize(
       Maybe<ScrollMetadata> metadata =
           asr->mScrollableFrame->ComputeScrollMetadata(
               aOwner.GetManager(), aItem->ReferenceFrame(), Nothing(), nullptr);
-      asr->mScrollableFrame->NotifyApzTransaction();
+      aOwner.GetBuilder()->AddScrollFrameToNotify(asr->mScrollableFrame);
       if (metadata) {
         MOZ_ASSERT(metadata->GetMetrics().GetScrollId() == scrollId);
         mScrollIds.AppendElement(aOwner.AddMetadata(metadata.ref()));
@@ -163,11 +163,19 @@ void WebRenderLayerScrollData::Dump(std::ostream& aOut,
 WebRenderScrollData::WebRenderScrollData()
     : mManager(nullptr), mIsFirstPaint(false), mPaintSequenceNumber(0) {}
 
-WebRenderScrollData::WebRenderScrollData(WebRenderLayerManager* aManager)
-    : mManager(aManager), mIsFirstPaint(false), mPaintSequenceNumber(0) {}
+WebRenderScrollData::WebRenderScrollData(WebRenderLayerManager* aManager,
+                                         nsDisplayListBuilder* aBuilder)
+    : mManager(aManager),
+      mBuilder(aBuilder),
+      mIsFirstPaint(false),
+      mPaintSequenceNumber(0) {}
 
 WebRenderLayerManager* WebRenderScrollData::GetManager() const {
   return mManager;
+}
+
+nsDisplayListBuilder* WebRenderScrollData::GetBuilder() const {
+  return mBuilder;
 }
 
 size_t WebRenderScrollData::AddMetadata(const ScrollMetadata& aMetadata) {
