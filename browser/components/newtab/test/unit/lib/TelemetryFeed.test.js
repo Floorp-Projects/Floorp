@@ -37,7 +37,7 @@ describe("TelemetryFeed", () => {
   let fakeHomePageUrl;
   let fakeHomePage;
   let fakeExtensionSettingsStore;
-  let ExperimentAPI = { getExperiment: () => {} };
+  let ExperimentAPI = { getExperimentMetaData: () => {} };
   class PingCentre {
     sendPing() {}
     uninit() {}
@@ -815,7 +815,7 @@ describe("TelemetryFeed", () => {
           return "release";
         },
       });
-      sandbox.stub(ExperimentAPI, "getExperiment").returns({
+      sandbox.stub(ExperimentAPI, "getExperimentMetaData").returns({
         slug: "SOME-CFR-EXP",
       });
       const data = {
@@ -888,7 +888,7 @@ describe("TelemetryFeed", () => {
           return "release";
         },
       });
-      sandbox.stub(ExperimentAPI, "getExperiment").returns({
+      sandbox.stub(ExperimentAPI, "getExperimentMetaData").returns({
         slug: "SOME-CFR-EXP",
       });
       const data = {
@@ -1885,19 +1885,19 @@ describe("TelemetryFeed", () => {
     it("should return false if there is no CFR experiment registered", () => {
       assert.ok(!instance.isInCFRCohort);
     });
-    it("should return false if getExperiment throws", () => {
-      sandbox.stub(ExperimentAPI, "getExperiment").throws();
+    it("should return false if getExperimentMetaData throws", () => {
+      sandbox.stub(ExperimentAPI, "getExperimentMetaData").throws();
 
       assert.ok(!instance.isInCFRCohort);
     });
     it("should return true if there is a CFR experiment registered", () => {
-      sandbox.stub(ExperimentAPI, "getExperiment").returns({
+      sandbox.stub(ExperimentAPI, "getExperimentMetaData").returns({
         slug: "SOME-CFR-EXP",
       });
 
       assert.ok(instance.isInCFRCohort);
       assert.propertyVal(
-        ExperimentAPI.getExperiment.firstCall.args[0],
+        ExperimentAPI.getExperimentMetaData.firstCall.args[0],
         "featureId",
         "cfr"
       );

@@ -39,41 +39,98 @@ const ExperimentAPI = {
 
   /**
    * Returns an experiment, including all its metadata
+   * Sends exposure ping
    *
    * @param {{slug?: string, featureId?: string}} options slug = An experiment identifier
    * or feature = a stable identifier for a type of experiment
-   * @returns {Enrollment|undefined} A matching experiment if one is found.
+   * @returns {{slug: string, active: bool, exposurePingSent: bool}} A matching experiment if one is found.
    */
-  getExperiment({ slug, featureId } = {}) {
-    if (slug) {
-      return this._store.get(slug);
-    } else if (featureId) {
-      return this._store.getExperimentForFeature(featureId);
+  getExperiment({ slug, featureId, sendExposurePing } = {}) {
+    if (!slug && !featureId) {
+      throw new Error(
+        "getExperiment(options) must include a slug or a feature."
+      );
     }
-    throw new Error("getExperiment(options) must include a slug or a feature.");
+    let experimentData;
+    if (slug) {
+      experimentData = this._store.get(slug);
+    } else if (featureId) {
+      experimentData = this._store.getExperimentForFeature(featureId);
+    }
+    if (experimentData) {
+      return {
+        slug: experimentData.slug,
+        active: experimentData.active,
+        exposurePingSent: experimentData.exposurePingSent,
+        branch: this.getFeatureBranch({ featureId, sendExposurePing }),
+      };
+    }
+
+    return null;
+  },
+
+  /**
+   * Return experiment slug its status and the enrolled branch slug
+   * Does NOT send exposure ping because you only have access to the slugs
+   */
+  getExperimentMetaData({ slug, featureId }) {
+    if (!slug && !featureId) {
+      throw new Error(
+        "getExperiment(options) must include a slug or a feature."
+      );
+    }
+
+    let experimentData;
+    if (slug) {
+      experimentData = this._store.get(slug);
+    } else if (featureId) {
+      experimentData = this._store.getExperimentForFeature(featureId);
+    }
+    if (experimentData) {
+      return {
+        slug: experimentData.slug,
+        active: experimentData.active,
+        exposurePingSent: experimentData.exposurePingSent,
+        branch: { slug: experimentData.branch.slug },
+      };
+    }
+
+    return null;
   },
 
   /**
    * Lookup feature in active experiments and return status.
+   * Sends exposure ping
    * @param {string} featureId Feature to lookup
    * @param {boolean} defaultValue
    * @returns {boolean}
    */
   isFeatureEnabled(featureId, defaultValue) {
-    const featureConfig = this._store.getFeature(featureId);
-    if (featureConfig && featureConfig.enabled !== undefined) {
-      return featureConfig.enabled;
+    const branch = this.getFeatureBranch({ featureId });
+    if (branch?.feature.enabled !== undefined) {
+      return branch.feature.enabled;
     }
     return defaultValue;
   },
 
   /**
    * Lookup feature in active experiments and return value.
-   * @param {string} featureId Feature name to lookup
-   * @returns {FeatureConfig.value}
+   * By default, this will send an exposure event.
+   * @param {{featureId: string, sendExposurePing: boolean}} options
+   * @returns {obj} The feature value
    */
-  getFeatureValue(featureId) {
-    return this._store.getFeature(featureId)?.value;
+  getFeatureValue(options) {
+    return this._store.activateBranch(options)?.feature.value;
+  },
+
+  /**
+   * Lookup feature in active experiments and returns the entire branch.
+   * By default, this will send an exposure event.
+   * @param {{featureId: string, sendExposurePing: boolean}} options
+   * @returns {Branch}
+   */
+  getFeatureBranch(options) {
+    return this._store.activateBranch(options);
   },
 
   /**
@@ -171,6 +228,25 @@ const ExperimentAPI = {
 
     const recipe = await this.getRecipe(slug);
     return recipe?.branches;
+  },
+
+  recordExposureEvent(name, { sent, experimentSlug, branchSlug }) {
+    if (!IS_MAIN_PROCESS) {
+      Cu.reportError("Need to call from Parent process");
+      return false;
+    }
+    if (sent) {
+      return false;
+    }
+
+    // Notify listener to record that the ping was sent
+    this._store._emitExperimentExposure({
+      featureId: name,
+      experimentSlug,
+      branchSlug,
+    });
+
+    return true;
   },
 };
 

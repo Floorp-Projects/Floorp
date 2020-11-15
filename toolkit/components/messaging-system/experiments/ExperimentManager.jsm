@@ -26,6 +26,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   FirstStartup: "resource://gre/modules/FirstStartup.jsm",
+  Services: "resource://gre/modules/Services.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -43,6 +44,8 @@ const TELEMETRY_EXPERIMENT_TYPE_PREFIX = "normandy-";
 // Also included in telemetry
 const DEFAULT_EXPERIMENT_TYPE = "messaging_experiment";
 const STUDIES_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
+const EXPOSURE_EVENT_CATEGORY = "normandy";
+const EXPOSURE_EVENT_METHOD = "expose";
 
 /**
  * A module for processes Experiment recipes, choosing and storing enrollment state,
@@ -53,7 +56,7 @@ class _ExperimentManager {
     this.id = id;
     this.store = store || new ExperimentStore();
     this.sessions = new Map();
-
+    this._onExposureEvent = this._onExposureEvent.bind(this);
     Services.prefs.addObserver(STUDIES_OPT_OUT_PREF, this);
   }
 
@@ -85,6 +88,7 @@ class _ExperimentManager {
    */
   async onStartup() {
     await this.store.init();
+    this.store.on("exposure", this._onExposureEvent);
     const restoredExperiments = this.store.getAllActive();
 
     for (const experiment of restoredExperiments) {
@@ -224,6 +228,8 @@ class _ExperimentManager {
       slug,
       branch,
       active: true,
+      // Sent first time feature value is used
+      exposurePingSent: false,
       enrollmentId,
       experimentType,
       source,
@@ -335,6 +341,32 @@ class _ExperimentManager {
       branch: branch.slug,
       enrollmentId: enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
     });
+  }
+
+  async _onExposureEvent(event, experimentData) {
+    await this.store.ready();
+    this.store.updateExperiment(experimentData.experimentSlug, {
+      exposurePingSent: true,
+    });
+    // featureId is not validated and might be rejected by recordEvent if not
+    // properly defined in Events.yaml. Saving experiment state regardless of
+    // the result, no use retrying.
+    try {
+      Services.telemetry.recordEvent(
+        EXPOSURE_EVENT_CATEGORY,
+        EXPOSURE_EVENT_METHOD,
+        "feature_study",
+        experimentData.experimentSlug,
+        {
+          branchSlug: experimentData.branchSlug,
+          featureId: experimentData.featureId,
+        }
+      );
+    } catch (e) {
+      Cu.reportError(e);
+    }
+
+    log.debug(`Experiment exposure: ${experimentData.experimentSlug}`);
   }
 
   /**
