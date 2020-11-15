@@ -218,8 +218,6 @@ impl GlyphRasterizer {
         glyph_cache: &mut GlyphCache,
         texture_cache: &mut TextureCache,
         gpu_cache: &mut GpuCache,
-        _: &mut RenderTaskCache,
-        _: &mut RenderTaskGraph,
         profile: &mut TransactionProfile,
     ) {
         profile.start_time(profiler::GLYPH_RESOLVE_TIME);
@@ -1207,8 +1205,6 @@ mod test_glyph_rasterizer {
             &mut glyph_cache,
             &mut TextureCache::new_for_testing(4096, FORMAT),
             &mut gpu_cache,
-            &mut render_task_cache,
-            &mut render_task_tree,
             &mut TransactionProfile::new(),
         );
     }
@@ -1292,8 +1288,6 @@ mod test_glyph_rasterizer {
             &mut glyph_cache,
             &mut TextureCache::new_for_testing(4096, FORMAT),
             &mut gpu_cache,
-            &mut render_task_cache,
-            &mut render_task_tree,
             &mut TransactionProfile::new(),
         );
     }
