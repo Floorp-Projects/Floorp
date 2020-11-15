@@ -1902,9 +1902,16 @@
   mirror: always
 
 # Whether innerWidth / innerHeight return rounded or fractional sizes.
+#
+# NOTE(emilio): Fractional sizes are not web-compatible, see the regressions
+# from bug 1676843, but we want to expose the fractional sizes (probably in
+# another API) one way or another, see [1], so we're keeping the code for the
+# time being.
+#
+# [1]: https://github.com/w3c/csswg-drafts/issues/5260
 - name: dom.innerSize.rounded
   type: bool
-  value: @IS_NOT_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether we conform to Input Events Level 1 or Input Events Level 2.
