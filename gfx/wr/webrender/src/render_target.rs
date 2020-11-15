@@ -190,7 +190,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
             max_dynamic_size: DeviceIntSize::new(0, 0),
             targets: Vec::new(),
             saved_index: None,
-            alloc_tracker: ArrayAllocationTracker::new(),
+            alloc_tracker: ArrayAllocationTracker::new(None),
             gpu_supports_fast_clears,
         }
     }
