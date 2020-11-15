@@ -218,8 +218,6 @@ impl GlyphRasterizer {
         glyph_cache: &mut GlyphCache,
         texture_cache: &mut TextureCache,
         gpu_cache: &mut GpuCache,
-        _: &mut RenderTaskCache,
-        _: &mut RenderTaskGraph,
         profile: &mut TransactionProfile,
     ) {
         profile.start_time(profiler::GLYPH_RESOLVE_TIME);
