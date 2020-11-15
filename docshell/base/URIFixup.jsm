@@ -133,7 +133,7 @@ XPCOMUtils.defineLazyGetter(this, "newLinesRegex", () => /[\r\n]/g);
 XPCOMUtils.defineLazyGetter(
   this,
   "possibleProtocolRegex",
-  () => /^([a-z][a-z0-9.+\t-]*):/i
+  () => /^([a-z][a-z0-9.+\t-]*)(:|;)?(\/\/)?/i
 );
 
 // Regex used to match IPs. Note that these are not made to validate IPs, but
@@ -272,7 +272,14 @@ URIFixup.prototype = {
 
     let info = new URIFixupInfo(uriString);
 
-    let scheme = extractScheme(uriString);
+    const {
+      scheme,
+      fixedSchemeUriString,
+      fixupChangedProtocol,
+    } = extractScheme(uriString, fixupFlags);
+    uriString = fixedSchemeUriString;
+    info.fixupChangedProtocol = fixupChangedProtocol;
+
     if (scheme == "view-source") {
       let { preferredURI, postData } = fixupViewSource(uriString, fixupFlags);
       info.preferredURI = info.fixedURI = preferredURI;
@@ -291,34 +298,7 @@ URIFixup.prototype = {
       }
     }
 
-    // Fix up common scheme typos.
-    // TODO: Use levenshtein distance here?
-    let isCommonProtocol = COMMON_PROTOCOLS.includes(scheme);
-    if (
-      fixupSchemeTypos &&
-      fixupFlags & FIXUP_FLAG_FIX_SCHEME_TYPOS &&
-      scheme &&
-      !isCommonProtocol
-    ) {
-      info.fixupChangedProtocol = [
-        ["ttp", "http"],
-        ["htp", "http"],
-        ["ttps", "https"],
-        ["tps", "https"],
-        ["ps", "https"],
-        ["htps", "https"],
-        ["ile", "file"],
-        ["le", "file"],
-      ].some(([typo, fixed]) => {
-        if (uriString.startsWith(typo + ":")) {
-          scheme = fixed;
-          uriString = scheme + uriString.substring(typo.length);
-          isCommonProtocol = true;
-          return true;
-        }
-        return false;
-      });
-    }
+    const isCommonProtocol = COMMON_PROTOCOLS.includes(scheme);
 
     let canHandleProtocol =
       scheme &&
@@ -936,12 +916,73 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext) {
 
 /**
  * Mimics the logic in Services.io.extractScheme, but avoids crossing XPConnect.
+ * This also tries to fixup the scheme if it was clearly mistyped.
  * @param {string} uriString the string to examine
- * @returns {string} a scheme or empty string if one could not be identified
+ * @param {integer} fixupFlags The original fixup flags
+ * @returns {object}
+ *          scheme: a typo fixed scheme or empty string if one could not be identified
+ *          fixedSchemeUriString: uri string with a typo fixed scheme
+ *          fixupChangedProtocol: true if the scheme is fixed up
  */
-function extractScheme(uriString) {
-  let matches = uriString.match(possibleProtocolRegex);
-  return matches ? matches[1].replace("\t", "").toLowerCase() : "";
+function extractScheme(uriString, fixupFlags = FIXUP_FLAG_NONE) {
+  const matches = uriString.match(possibleProtocolRegex);
+  const hasColon = matches?.[2] === ":";
+  const hasSlash2 = matches?.[3] === "//";
+
+  const isFixupSchemeTypos =
+    fixupSchemeTypos && fixupFlags & FIXUP_FLAG_FIX_SCHEME_TYPOS;
+
+  if (
+    !matches ||
+    (!hasColon && !hasSlash2) ||
+    (!hasColon && !isFixupSchemeTypos)
+  ) {
+    return {
+      scheme: "",
+      fixedSchemeUriString: uriString,
+      fixupChangedProtocol: false,
+    };
+  }
+
+  let scheme = matches[1].replace("\t", "").toLowerCase();
+  let fixedSchemeUriString = uriString;
+
+  if (isFixupSchemeTypos && hasSlash2) {
+    // Fix up typos for string that user would have intented as protocol.
+    const afterProtocol = uriString.substring(matches[0].length);
+    fixedSchemeUriString = `${scheme}://${afterProtocol}`;
+  }
+
+  let fixupChangedProtocol = false;
+
+  if (isFixupSchemeTypos) {
+    // Fix up common scheme typos.
+    // TODO: Use levenshtein distance here?
+    fixupChangedProtocol = [
+      ["ttp", "http"],
+      ["htp", "http"],
+      ["ttps", "https"],
+      ["tps", "https"],
+      ["ps", "https"],
+      ["htps", "https"],
+      ["ile", "file"],
+      ["le", "file"],
+    ].some(([typo, fixed]) => {
+      if (scheme === typo) {
+        scheme = fixed;
+        fixedSchemeUriString =
+          scheme + fixedSchemeUriString.substring(typo.length);
+        return true;
+      }
+      return false;
+    });
+  }
+
+  return {
+    scheme,
+    fixedSchemeUriString,
+    fixupChangedProtocol,
+  };
 }
 
 /**
@@ -965,7 +1006,7 @@ function fixupViewSource(uriString, fixupFlags) {
   let innerURIString = uriString.substring(12).trim();
 
   // Prevent recursion.
-  let innerScheme = extractScheme(innerURIString);
+  const { scheme: innerScheme } = extractScheme(innerURIString);
   if (innerScheme == "view-source") {
     throw new Components.Exception(
       "Prevent view-source recursion",
