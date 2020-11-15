@@ -84,7 +84,7 @@ FakeSpeechRecognitionService::Observe(nsISupports* aSubject, const char* aTopic,
     mRecognition->DispatchError(
         SpeechRecognition::EVENT_RECOGNITIONSERVICE_ERROR,
         SpeechRecognitionErrorCode::Network,  // TODO different codes?
-        u"RECOGNITIONSERVICE_ERROR test event"_ns);
+        "RECOGNITIONSERVICE_ERROR test event");
 
   } else if (eventName.EqualsLiteral("EVENT_RECOGNITIONSERVICE_FINAL_RESULT")) {
     RefPtr<SpeechEvent> event = new SpeechEvent(

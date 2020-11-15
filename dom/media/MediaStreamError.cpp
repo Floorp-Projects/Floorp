@@ -10,7 +10,7 @@
 
 namespace mozilla {
 
-BaseMediaMgrError::BaseMediaMgrError(Name aName, const nsAString& aMessage,
+BaseMediaMgrError::BaseMediaMgrError(Name aName, const nsACString& aMessage,
                                      const nsAString& aConstraint)
     : mMessage(aMessage), mConstraint(aConstraint), mName(aName) {
 #define MAP_MEDIAERR(name, msg) \
@@ -66,7 +66,7 @@ JSObject* MediaStreamError::WrapObject(JSContext* aCx,
 void MediaStreamError::GetName(nsAString& aName) const { aName = mNameString; }
 
 void MediaStreamError::GetMessage(nsAString& aMessage) const {
-  aMessage = mMessage;
+  CopyUTF8toUTF16(mMessage, aMessage);
 }
 
 void MediaStreamError::GetConstraint(nsAString& aConstraint) const {

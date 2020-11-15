@@ -49,21 +49,27 @@ class BaseMediaMgrError {
   };
 
  protected:
-  BaseMediaMgrError(Name aName, const nsAString& aMessage,
+  BaseMediaMgrError(Name aName, const nsACString& aMessage,
                     const nsAString& aConstraint);
 
  public:
   nsString mNameString;
-  nsString mMessage;
+  nsCString mMessage;
   const nsString mConstraint;
   const Name mName;
 };
 
 class MediaMgrError final : public nsISupports, public BaseMediaMgrError {
  public:
-  explicit MediaMgrError(Name aName, const nsAString& aMessage = u""_ns,
+  // aMessage should be valid UTF-8, but invalid UTF-8 byte sequences are
+  // replaced with the REPLACEMENT CHARACTER on conversion to UTF-16.
+  explicit MediaMgrError(Name aName, const nsACString& aMessage = ""_ns,
                          const nsAString& aConstraint = u""_ns)
       : BaseMediaMgrError(aName, aMessage, aConstraint) {}
+  template <int N>
+  explicit MediaMgrError(Name aName, const char (&aMessage)[N],
+                         const nsAString& aConstraint = u""_ns)
+      : BaseMediaMgrError(aName, nsLiteralCString(aMessage), aConstraint) {}
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
