@@ -471,10 +471,6 @@ class PermissionManager final : public nsIPermissionManager,
   template <class T>
   nsresult RemovePermissionEntries(T aCondition);
 
-  template <class T>
-  nsresult GetPermissionEntries(T aCondition,
-                                nsTArray<RefPtr<nsIPermission>>& aResult);
-
   // This method must be called before doing any operation to be sure that the
   // DB reading has been completed. This method is also in charge to complete
   // the migrations if needed.
