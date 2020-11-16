@@ -70,7 +70,7 @@ class JSWindowActorProtocol final : public JSActorProtocol,
   void AddObservers();
   void RemoveObservers();
   bool Matches(BrowsingContext* aBrowsingContext, nsIURI* aURI,
-               const nsACString& aRemoteType);
+               const nsACString& aRemoteType, ErrorResult& aRv);
 
  private:
   explicit JSWindowActorProtocol(const nsACString& aName) : mName(aName) {}

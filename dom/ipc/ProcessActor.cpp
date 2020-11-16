@@ -27,10 +27,11 @@ already_AddRefed<JSActorProtocol> ProcessActor::MatchingJSActorProtocol(
     return nullptr;
   }
 
-  if (!proto->Matches(GetRemoteType())) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+  if (!proto->Matches(GetRemoteType(), aRv)) {
+    MOZ_ASSERT(aRv.Failed());
     return nullptr;
   }
+  MOZ_ASSERT(!aRv.Failed());
   return proto.forget();
 }
 
