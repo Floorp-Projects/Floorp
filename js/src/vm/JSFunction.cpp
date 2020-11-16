@@ -662,10 +662,7 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
     // delazification of a script will apply types to inner functions at that
     // time.
     if (enclosingScope) {
-      bool singleton = (xdrFlags & HasSingletonType);
-      if (!JSFunction::setTypeForScriptedFunction(cx, fun, singleton)) {
-        return xdr->fail(JS::TranscodeResult_Throw);
-      }
+      MOZ_RELEASE_ASSERT(!IsTypeInferenceEnabled());
     }
   }
 
@@ -2251,9 +2248,7 @@ JSFunction* js::CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
   if (fun->staticPrototype() == clone->staticPrototype()) {
     clone->setGroup(fun->group());
   } else if (setTypeForFunction) {
-    if (!JSFunction::setTypeForScriptedFunction(cx, clone)) {
-      return nullptr;
-    }
+    MOZ_RELEASE_ASSERT(!IsTypeInferenceEnabled());
   }
   return clone;
 }

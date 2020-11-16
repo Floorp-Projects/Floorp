@@ -1760,44 +1760,6 @@ class TypeConstraintClearDefiniteSingle : public TypeConstraint {
 };
 
 /////////////////////////////////////////////////////////////////////
-// Interface functions
-/////////////////////////////////////////////////////////////////////
-
-/* static */
-bool JSFunction::setTypeForScriptedFunction(JSContext* cx, HandleFunction fun,
-                                            bool singleton /* = false */) {
-  if (!IsTypeInferenceEnabled()) {
-    return true;
-  }
-
-  // Note: Delazifying our parent may fail with a recoverable OOM. This can
-  //       result in the current function being initialized twice. Check if
-  //       group was already initialized.
-  if (fun->isSingleton() || fun->group()->maybeInterpretedFunction()) {
-    return true;
-  }
-
-  if (singleton) {
-    if (!setSingleton(cx, fun)) {
-      return false;
-    }
-  } else {
-    RootedObject funProto(cx, fun->staticPrototype());
-    Rooted<TaggedProto> taggedProto(cx, TaggedProto(funProto));
-    ObjectGroup* group = ObjectGroupRealm::makeGroup(
-        cx, fun->realm(), &JSFunction::class_, taggedProto);
-    if (!group) {
-      return false;
-    }
-
-    fun->setGroup(group);
-    group->setInterpretedFunction(fun);
-  }
-
-  return true;
-}
-
-/////////////////////////////////////////////////////////////////////
 // PreliminaryObjectArray
 /////////////////////////////////////////////////////////////////////
 
