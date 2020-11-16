@@ -219,7 +219,7 @@ nsresult HeadlessLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       break;
     case IntID::TouchEnabled:
     case IntID::MacGraphiteTheme:
-    case IntID::MacYosemiteTheme:
+    case IntID::MacBigSurTheme:
       aResult = 0;
       res = NS_ERROR_NOT_IMPLEMENTED;
       break;

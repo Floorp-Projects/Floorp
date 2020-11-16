@@ -397,10 +397,10 @@ void nsMediaFeatures::InitSystemMetrics() {
         (nsStaticAtom*)nsGkAtoms::_moz_mac_graphite_theme);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::IntID::MacYosemiteTheme, &metricResult);
+  rv = LookAndFeel::GetInt(LookAndFeel::IntID::MacBigSurTheme, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
-        (nsStaticAtom*)nsGkAtoms::_moz_mac_yosemite_theme);
+        (nsStaticAtom*)nsGkAtoms::_moz_mac_big_sur_theme);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::IntID::WindowsAccentColorInTitlebar,
