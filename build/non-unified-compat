@@ -66,3 +66,4 @@ dom/webauthn/
 dom/webbrowserpersist/
 dom/webidl/
 dom/webshare/
+dom/websocket/
