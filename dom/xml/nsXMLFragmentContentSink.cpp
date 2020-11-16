@@ -17,6 +17,7 @@
 #include "mozilla/dom/NodeInfo.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsError.h"
+#include "nsIDocShell.h"
 #include "nsIScriptError.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
