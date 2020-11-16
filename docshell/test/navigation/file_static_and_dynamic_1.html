@@ -17,8 +17,7 @@
         var staticFrame = document.getElementById("staticframe");
         opener.ok(String(staticFrame.contentWindow.location).includes(staticFrame.src),
                   "Wrong document loaded!");
-        opener.nextTest();
-        window.close();
+        opener.finishTest();
       }
     }
     </script>
