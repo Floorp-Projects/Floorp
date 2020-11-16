@@ -241,9 +241,6 @@ FunctionBox::FunctionBox(JSContext* cx, SourceExtent extent,
       hasDestructuringArgs(false),
       hasDuplicateParameters(false),
       hasExprBody_(false),
-      usesApply(false),
-      usesThis(false),
-      usesReturn(false),
       isFunctionFieldCopiedToStencil(false) {
   setFlag(ImmutableFlags::IsGenerator,
           generatorKind == GeneratorKind::Generator);
@@ -408,8 +405,6 @@ void FunctionBox::finishScriptFlags() {
 
   using ImmutableFlags = ImmutableScriptFlagsEnum;
   immutableFlags_.setFlag(ImmutableFlags::HasMappedArgsObj, hasMappedArgsObj());
-  immutableFlags_.setFlag(ImmutableFlags::IsLikelyConstructorWrapper,
-                          isLikelyConstructorWrapper());
 }
 
 void FunctionBox::copyScriptFields(ScriptStencil& script) {
