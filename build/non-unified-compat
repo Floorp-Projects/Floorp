@@ -72,3 +72,4 @@ dom/workers/
 dom/worklet/
 dom/xhr/
 dom/xml/
+dom/xslt/
