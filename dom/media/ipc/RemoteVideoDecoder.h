@@ -41,7 +41,7 @@ class RemoteVideoDecoderChild : public RemoteDecoderChild {
   MOZ_IS_CLASS_INIT MediaResult
   InitIPDL(const VideoInfo& aVideoInfo, float aFramerate,
            const CreateDecoderParams::OptionSet& aOptions,
-           const layers::TextureFactoryIdentifier* aIdentifier);
+           mozilla::Maybe<layers::TextureFactoryIdentifier> aIdentifier);
 
   MediaResult ProcessOutput(DecodedOutputIPDL&& aDecodedData) override;
 

@@ -439,7 +439,7 @@ void RemoteRotatedBuffer::Unlock() {
   }
 }
 
-void RemoteRotatedBuffer::SyncWithObject(SyncObjectClient* aSyncObject) {
+void RemoteRotatedBuffer::SyncWithObject(RefPtr<SyncObjectClient> aSyncObject) {
   mClient->SyncWithObject(aSyncObject);
   if (mClientOnWhite) {
     mClientOnWhite->SyncWithObject(aSyncObject);
