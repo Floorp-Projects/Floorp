@@ -445,8 +445,12 @@
 }
 
 .los_variant_bottom {
-    text-align: center;
+    text-align: start;
     padding: 26px 22px;
+}
+
+.los_variant_a .los_variant_bottom {
+    text-align: center;
 }
 
 .los_variant_bottom .los_variant_button {
@@ -458,9 +462,22 @@
     color: #FFFFFF;
     border-radius: 4px;
     background: #0060DF;
-    display: block;
+    display: inline-block;
     padding: 8px 16px;
     margin-bottom: 16px
+}
+
+.los_variant_a .los_variant_bottom .los_variant_button {
+    display: block;
+}
+
+.los_variant_bottom .los_variant_button:hover {
+    color: #fff;
+}
+
+.los_variant_c .los_variant_bottom {
+    border-top: 1px solid #D7D7DB;
+    margin-top: 20px;
 }
 
 .los_variant_bottom .los_variant_sub {
@@ -475,16 +492,43 @@
     color: #0060DF;
 }
 
+.los_variant_top a {
+    font-size: 15px;
+}
+
 .los_variant_a .los_variant_top {
-    background-color: #e8f7f6;
+    background: #e8f7f6 url(../img/variant_a.png) bottom right no-repeat;
+    background-size: contain;
+    padding-block: 6px 24px;
+    padding-inline: 24px 102px;
+    height: 260px;
+}
+
+.los_variant_a .los_variant_top p {
+    margin-bottom: 0;
 }
 
 .los_variant_b .los_variant_top {
-    background-color: #DCEAFF;
+    background: #DCEAFF url(../img/variant_b.png) bottom right no-repeat;
+    background-size: 80%;
+    padding: 24px 24px 160px;
+}
+
+.los_variant_top:dir(rtl) {
+     background-position-x: left;
+}
+
+.los_variant_b .los_variant_top a {
+    font-size: 15px;
+    line-height: 18px;
+    text-decoration-line: underline;
+    color: #0C0C0D;
 }
 
 .los_variant_c .los_variant_top {
-    background-color: #ffffff;
+    background: #fff url(../img/variant_c.png) bottom right no-repeat;
+    background-size: contain;
+    padding: 24px 24px 160px;
 }
 
 .los_variant h1 {
