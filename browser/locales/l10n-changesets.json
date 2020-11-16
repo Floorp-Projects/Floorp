@@ -1065,7 +1065,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "f13ae87a4970bbd3dcde138dc4b4f4b12e84547a"
+        "revision": "596dc732c2cc5d719fddd422dd4e1fce8eb39155"
     },
     "mk": {
         "pin": false,
