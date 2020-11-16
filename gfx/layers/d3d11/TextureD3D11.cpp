@@ -341,7 +341,7 @@ void D3D11TextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.hasSynchronization = mHasSynchronization;
 }
 
-void D3D11TextureData::SyncWithObject(SyncObjectClient* aSyncObject) {
+void D3D11TextureData::SyncWithObject(RefPtr<SyncObjectClient> aSyncObject) {
   if (!aSyncObject || mHasSynchronization) {
     // When we have per texture synchronization we sync using the keyed mutex.
     return;
@@ -349,7 +349,7 @@ void D3D11TextureData::SyncWithObject(SyncObjectClient* aSyncObject) {
 
   MOZ_ASSERT(aSyncObject->GetSyncType() == SyncObjectClient::SyncType::D3D11);
   SyncObjectD3D11Client* sync =
-      static_cast<SyncObjectD3D11Client*>(aSyncObject);
+      static_cast<SyncObjectD3D11Client*>(aSyncObject.get());
   sync->RegisterTexture(mTexture);
 }
 

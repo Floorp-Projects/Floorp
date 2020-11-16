@@ -10,11 +10,12 @@
 #include "mozilla/layers/LayersTypes.h"  // for LayersBackend
 #include "mozilla/layers/CompositorTypes.h"
 #include "nsExpirationTracker.h"
+#include "mozilla/DataMutex.h"
+#include "mozilla/layers/SyncObject.h"
 
 namespace mozilla {
 namespace layers {
 
-class SyncObjectClient;
 class TextureForwarder;
 class LayersIPCActor;
 class ImageBridgeChild;
@@ -61,7 +62,10 @@ class KnowsCompositor {
   void IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier);
 
   // The sync object for the global content device.
-  SyncObjectClient* GetSyncObject() { return mSyncObject; }
+  RefPtr<SyncObjectClient> GetSyncObject() {
+    auto lock = mData.Lock();
+    return lock.ref().mSyncObject;
+  }
 
   /// And by "thread-safe" here we merely mean "okay to hold strong references
   /// to from multiple threads". Not all methods actually are thread-safe.
@@ -72,7 +76,8 @@ class KnowsCompositor {
   }
 
   int32_t GetMaxTextureSize() const {
-    return mTextureFactoryIdentifier.mMaxTextureSize;
+    auto lock = mData.Lock();
+    return lock.ref().mTextureFactoryIdentifier.mMaxTextureSize;
   }
 
   /**
@@ -81,53 +86,67 @@ class KnowsCompositor {
    * be queried once and will not change until Gecko is restarted.
    */
   LayersBackend GetCompositorBackendType() const {
-    return mTextureFactoryIdentifier.mParentBackend;
+    auto lock = mData.Lock();
+    return lock.ref().mTextureFactoryIdentifier.mParentBackend;
   }
 
   bool SupportsTextureBlitting() const {
-    return mTextureFactoryIdentifier.mSupportsTextureBlitting;
+    auto lock = mData.Lock();
+    return lock.ref().mTextureFactoryIdentifier.mSupportsTextureBlitting;
   }
 
   bool SupportsPartialUploads() const {
-    return mTextureFactoryIdentifier.mSupportsPartialUploads;
+    auto lock = mData.Lock();
+    return lock.ref().mTextureFactoryIdentifier.mSupportsPartialUploads;
   }
 
   bool SupportsComponentAlpha() const {
-    return mTextureFactoryIdentifier.mSupportsComponentAlpha;
+    auto lock = mData.Lock();
+    return lock.ref().mTextureFactoryIdentifier.mSupportsComponentAlpha;
   }
 
   bool SupportsTextureDirectMapping() const {
-    return mTextureFactoryIdentifier.mSupportsTextureDirectMapping;
+    auto lock = mData.Lock();
+    return lock.ref().mTextureFactoryIdentifier.mSupportsTextureDirectMapping;
   }
 
   bool SupportsD3D11() const {
-    return GetCompositorBackendType() == layers::LayersBackend::LAYERS_D3D11 ||
-           (GetCompositorBackendType() == layers::LayersBackend::LAYERS_WR &&
-            (GetCompositorUseANGLE() ||
-             mTextureFactoryIdentifier.mWebRenderCompositor ==
+    auto lock = mData.Lock();
+    return lock.ref().mTextureFactoryIdentifier.mParentBackend ==
+               layers::LayersBackend::LAYERS_D3D11 ||
+           (lock.ref().mTextureFactoryIdentifier.mParentBackend ==
+                layers::LayersBackend::LAYERS_WR &&
+            (lock.ref().mTextureFactoryIdentifier.mCompositorUseANGLE ||
+             lock.ref().mTextureFactoryIdentifier.mWebRenderCompositor ==
                  layers::WebRenderCompositor::D3D11));
   }
 
   bool GetCompositorUseANGLE() const {
-    return mTextureFactoryIdentifier.mCompositorUseANGLE;
+    auto lock = mData.Lock();
+    return lock.ref().mTextureFactoryIdentifier.mCompositorUseANGLE;
   }
 
   bool GetCompositorUseDComp() const {
-    return mTextureFactoryIdentifier.mCompositorUseDComp;
+    auto lock = mData.Lock();
+    return lock.ref().mTextureFactoryIdentifier.mCompositorUseDComp;
   }
 
   bool GetUseCompositorWnd() const {
-    return mTextureFactoryIdentifier.mUseCompositorWnd;
+    auto lock = mData.Lock();
+    return lock.ref().mTextureFactoryIdentifier.mUseCompositorWnd;
   }
 
   bool UsingSoftwareWebRender() const {
-    return GetCompositorBackendType() == layers::LayersBackend::LAYERS_WR &&
-           mTextureFactoryIdentifier.mWebRenderBackend ==
+    auto lock = mData.Lock();
+    return lock.ref().mTextureFactoryIdentifier.mParentBackend ==
+               layers::LayersBackend::LAYERS_WR &&
+           lock.ref().mTextureFactoryIdentifier.mWebRenderBackend ==
                WebRenderBackend::SOFTWARE;
   }
 
-  const TextureFactoryIdentifier& GetTextureFactoryIdentifier() const {
-    return mTextureFactoryIdentifier;
+  TextureFactoryIdentifier GetTextureFactoryIdentifier() const {
+    auto lock = mData.Lock();
+    return lock.ref().mTextureFactoryIdentifier;
   }
 
   bool DeviceCanReset() const {
@@ -157,8 +176,11 @@ class KnowsCompositor {
   }
 
  protected:
-  TextureFactoryIdentifier mTextureFactoryIdentifier;
-  RefPtr<SyncObjectClient> mSyncObject;
+  struct SharedData {
+    TextureFactoryIdentifier mTextureFactoryIdentifier;
+    RefPtr<SyncObjectClient> mSyncObject;
+  };
+  mutable DataMutex<SharedData> mData;
 
   const int32_t mSerial;
   static mozilla::Atomic<int32_t> sSerialCounter;
