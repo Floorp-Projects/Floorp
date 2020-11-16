@@ -1726,10 +1726,6 @@ void MLimitedTruncate::computeRange(TempAllocator& alloc) {
   setRange(output);
 }
 
-void MFilterTypeSet::computeRange(TempAllocator& alloc) {
-  setRange(new (alloc) Range(getOperand(0)));
-}
-
 static Range* GetArrayBufferViewRange(TempAllocator& alloc, Scalar::Type type) {
   switch (type) {
     case Scalar::Uint8Clamped:

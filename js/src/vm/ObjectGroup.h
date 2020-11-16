@@ -360,8 +360,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   inline bool shouldPreTenure(const AutoSweepObjectGroup& sweep);
   inline bool shouldPreTenureDontCheckGeneration();
 
-  gc::InitialHeap initialHeap(CompilerConstraintList* constraints);
-
   inline bool canPreTenure(const AutoSweepObjectGroup& sweep);
   inline bool fromAllocationSite(const AutoSweepObjectGroup& sweep);
   inline void setShouldPreTenure(const AutoSweepObjectGroup& sweep,

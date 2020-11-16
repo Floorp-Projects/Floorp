@@ -314,65 +314,6 @@ bool SameValuePolicy::adjustInputs(TempAllocator& alloc,
   return BoxInputsPolicy::staticAdjustInputs(alloc, def);
 }
 
-bool TypeBarrierPolicy::adjustInputs(TempAllocator& alloc,
-                                     MInstruction* def) const {
-  MTypeBarrier* ins = def->toTypeBarrier();
-  MIRType inputType = ins->getOperand(0)->type();
-  MIRType outputType = ins->type();
-
-  // Input and output type are already in accordance.
-  if (inputType == outputType) {
-    return true;
-  }
-
-  // Output is a value, currently box the input.
-  if (outputType == MIRType::Value) {
-    // XXX: Possible optimization: decrease resultTypeSet to only include
-    // the inputType. This will remove the need for boxing.
-    MOZ_ASSERT(inputType != MIRType::Value);
-    ins->replaceOperand(0, BoxAt(alloc, ins, ins->getOperand(0)));
-    return true;
-  }
-
-  // Box input if needed.
-  if (inputType != MIRType::Value) {
-    MOZ_ASSERT(ins->alwaysBails());
-    ins->replaceOperand(0, BoxAt(alloc, ins, ins->getOperand(0)));
-  }
-
-  // We can't unbox a value to null/undefined/lazyargs. So keep output
-  // also a value.
-  // Note: Using setResultType shouldn't be done in TypePolicies,
-  //       Here it is fine, since the type barrier has no uses.
-  if (IsNullOrUndefined(outputType) ||
-      outputType == MIRType::MagicOptimizedArguments) {
-    MOZ_ASSERT(!ins->hasDefUses());
-    ins->setResultType(MIRType::Value);
-    return true;
-  }
-
-  // Unbox / propagate the right type.
-  MUnbox::Mode mode = MUnbox::TypeBarrier;
-  MInstruction* replace =
-      MUnbox::New(alloc, ins->getOperand(0), ins->type(), mode);
-  if (!ins->isMovable()) {
-    replace->setNotMovable();
-  }
-
-  ins->block()->insertBefore(ins, replace);
-  ins->replaceOperand(0, replace);
-  if (!replace->typePolicy()->adjustInputs(alloc, replace)) {
-    return false;
-  }
-
-  // The TypeBarrier is equivalent to removing branches with unexpected
-  // types.  The unexpected types would have changed Range Analysis
-  // predictions.  As such, we need to prevent destructive optimizations.
-  ins->block()->flagOperandsOfPrunedBranches(replace);
-
-  return true;
-}
-
 bool TestPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   MDefinition* op = ins->getOperand(0);
   switch (op->type()) {
@@ -1120,88 +1061,6 @@ bool ClampPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   return true;
 }
 
-bool FilterTypeSetPolicy::adjustInputs(TempAllocator& alloc,
-                                       MInstruction* ins) const {
-  MOZ_ASSERT(ins->numOperands() == 1);
-  MIRType inputType = ins->getOperand(0)->type();
-  MIRType outputType = ins->type();
-
-  // Special case when output is a Float32, but input isn't.
-  if (outputType == MIRType::Float32 && inputType != MIRType::Float32) {
-    // Create a MToFloat32 to add between the MFilterTypeSet and
-    // its uses.
-    MInstruction* replace = MToFloat32::New(alloc, ins);
-    ins->justReplaceAllUsesWithExcept(replace);
-    ins->block()->insertAfter(ins, replace);
-
-    // Reset the type to not MIRType::Float32
-    // Note: setResultType shouldn't happen in TypePolicies,
-    //       Here it is fine, since there is just one use we just
-    //       added ourself. And the resulting type after MToFloat32
-    //       equals the original type.
-    ins->setResultType(ins->resultTypeSet()->getKnownMIRType());
-    outputType = ins->type();
-
-    // Do the type analysis
-    if (!replace->typePolicy()->adjustInputs(alloc, replace)) {
-      return false;
-    }
-
-    // Fall through to let the MFilterTypeSet adjust its input based
-    // on its new type.
-  }
-
-  // Input and output type are already in accordance.
-  if (inputType == outputType) {
-    return true;
-  }
-
-  // Output is a value, box the input.
-  if (outputType == MIRType::Value) {
-    MOZ_ASSERT(inputType != MIRType::Value);
-    ins->replaceOperand(0, BoxAt(alloc, ins, ins->getOperand(0)));
-    return true;
-  }
-
-  // The outputType should be a subset of the inputType else we are in code
-  // that has never executed yet. Bail to see the new type (if that hasn't
-  // happened yet).
-  if (inputType != MIRType::Value) {
-    MBail* bail = MBail::New(alloc);
-    ins->block()->insertBefore(ins, bail);
-    bail->setDependency(ins->dependency());
-    ins->setDependency(bail);
-    ins->replaceOperand(0, BoxAt(alloc, ins, ins->getOperand(0)));
-  }
-
-  // We can't unbox a value to null/undefined/lazyargs. So keep output
-  // also a value.
-  // Note: Using setResultType shouldn't be done in TypePolicies,
-  //       Here it is fine, since the type barrier has no uses.
-  if (IsNullOrUndefined(outputType) ||
-      outputType == MIRType::MagicOptimizedArguments) {
-    MOZ_ASSERT(!ins->hasDefUses());
-    ins->setResultType(MIRType::Value);
-    return true;
-  }
-
-  // Unbox / propagate the right type.
-  MUnbox::Mode mode = MUnbox::Infallible;
-  MInstruction* replace =
-      MUnbox::New(alloc, ins->getOperand(0), ins->type(), mode);
-
-  ins->block()->insertBefore(ins, replace);
-  ins->replaceOperand(0, replace);
-  if (!replace->typePolicy()->adjustInputs(alloc, replace)) {
-    return false;
-  }
-
-  // Carry over the dependency the MFilterTypeSet had.
-  replace->setDependency(ins->dependency());
-
-  return true;
-}
-
 bool TypedArrayIndexPolicy::adjustInputs(TempAllocator& alloc,
                                          MInstruction* ins) const {
   MOZ_ASSERT(ins->isTypedArrayIndexToInt32());
@@ -1227,7 +1086,6 @@ bool TypedArrayIndexPolicy::adjustInputs(TempAllocator& alloc,
   _(CallSetElementPolicy)       \
   _(ClampPolicy)                \
   _(ComparePolicy)              \
-  _(FilterTypeSetPolicy)        \
   _(PowPolicy)                  \
   _(SameValuePolicy)            \
   _(SignPolicy)                 \
@@ -1240,7 +1098,6 @@ bool TypedArrayIndexPolicy::adjustInputs(TempAllocator& alloc,
   _(ToBigIntPolicy)             \
   _(ToStringPolicy)             \
   _(ToInt64Policy)              \
-  _(TypeBarrierPolicy)          \
   _(TypedArrayIndexPolicy)
 
 #define TEMPLATE_TYPE_POLICY_LIST(_)                                          \

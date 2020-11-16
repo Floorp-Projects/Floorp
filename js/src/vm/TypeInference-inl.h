@@ -333,11 +333,6 @@ static inline const char* TypeIdString(jsid id) {
 #endif
 }
 
-TemporaryTypeSet::TemporaryTypeSet(LifoAlloc* alloc, jit::MIRType type)
-    : TemporaryTypeSet(alloc, PrimitiveOrAnyObjectType(type)) {
-  MOZ_ASSERT(type != jit::MIRType::Value);
-}
-
 // New script properties analyses overview.
 //
 // When constructing objects using 'new' on a script, we attempt to determine

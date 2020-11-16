@@ -529,16 +529,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   static inline void MonitorArgType(JSContext* cx, JSScript* script,
                                     unsigned arg, const js::Value& value);
 
-  /*
-   * Freeze all the stack type sets in a script, for a compilation. Returns
-   * copies of the type sets which will be checked against the actual ones
-   * under FinishCompilation, to detect any type changes.
-   */
-  static bool FreezeTypeSets(CompilerConstraintList* constraints,
-                             JSScript* script, TemporaryTypeSet** pThisTypes,
-                             TemporaryTypeSet** pArgTypes,
-                             TemporaryTypeSet** pBytecodeTypes);
-
   static void Destroy(Zone* zone, JitScript* script);
 
   static constexpr Offset offsetOfICEntries() { return sizeof(JitScript); }
