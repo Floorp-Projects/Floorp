@@ -34,6 +34,7 @@
 #include "nsIDNSRecord.h"
 #include "nsIDNSByTypeRecord.h"
 #include "nsICancelable.h"
+#include "NetworkDataCountLayer.h"
 #include "QuicSocketControl.h"
 #include "TCPFastOpenLayer.h"
 #include <algorithm>
@@ -1608,6 +1609,16 @@ nsresult nsSocketTransport::InitiateSocket() {
       SOCKET_LOG(
           ("nsSocketTransport::InitiateSocket TCP Fast Open "
            "started [this=%p]\n",
+           this));
+    }
+  }
+
+  if (Telemetry::CanRecordPrereleaseData() ||
+      Telemetry::CanRecordReleaseData()) {
+    if (NS_FAILED(AttachNetworkDataCountLayer(fd))) {
+      SOCKET_LOG(
+          ("nsSocketTransport::InitiateSocket "
+           "AttachNetworkDataCountLayer failed [this=%p]\n",
            this));
     }
   }
