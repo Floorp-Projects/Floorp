@@ -70,3 +70,4 @@ dom/webshare/
 dom/websocket/
 dom/workers/
 dom/worklet/
+dom/xhr/
