@@ -7,6 +7,7 @@
 #include "SharedWorkerManager.h"
 #include "SharedWorkerParent.h"
 #include "SharedWorkerService.h"
+#include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/PSharedWorker.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -61,7 +62,7 @@ SharedWorkerManager::~SharedWorkerManager() {
 bool SharedWorkerManager::MaybeCreateRemoteWorker(
     const RemoteWorkerData& aData, uint64_t aWindowID,
     UniqueMessagePortId& aPortIdentifier, base::ProcessId aProcessId) {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
 
   if (!mRemoteWorkerController) {
     mRemoteWorkerController =
@@ -108,7 +109,7 @@ SharedWorkerManager::MatchOnMainThread(
 }
 
 void SharedWorkerManager::AddActor(SharedWorkerParent* aParent) {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(!mActors.Contains(aParent));
 
@@ -121,7 +122,7 @@ void SharedWorkerManager::AddActor(SharedWorkerParent* aParent) {
 }
 
 void SharedWorkerManager::RemoveActor(SharedWorkerParent* aParent) {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(mActors.Contains(aParent));
 
@@ -141,7 +142,7 @@ void SharedWorkerManager::RemoveActor(SharedWorkerParent* aParent) {
 }
 
 void SharedWorkerManager::Terminate() {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
   MOZ_ASSERT(mActors.IsEmpty());
   MOZ_ASSERT(mHolders.IsEmpty());
 
@@ -150,7 +151,7 @@ void SharedWorkerManager::Terminate() {
 }
 
 void SharedWorkerManager::UpdateSuspend() {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
   MOZ_ASSERT(mRemoteWorkerController);
 
   uint32_t suspended = 0;
@@ -178,7 +179,7 @@ void SharedWorkerManager::UpdateSuspend() {
 }
 
 void SharedWorkerManager::UpdateFrozen() {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
   MOZ_ASSERT(mRemoteWorkerController);
 
   uint32_t frozen = 0;
@@ -208,7 +209,7 @@ void SharedWorkerManager::UpdateFrozen() {
 bool SharedWorkerManager::IsSecureContext() const { return mIsSecureContext; }
 
 void SharedWorkerManager::CreationFailed() {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
 
   for (SharedWorkerParent* actor : mActors) {
     Unused << actor->SendError(NS_ERROR_FAILURE);
@@ -216,12 +217,12 @@ void SharedWorkerManager::CreationFailed() {
 }
 
 void SharedWorkerManager::CreationSucceeded() {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
   // Nothing to do here.
 }
 
 void SharedWorkerManager::ErrorReceived(const ErrorValue& aValue) {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
 
   for (SharedWorkerParent* actor : mActors) {
     Unused << actor->SendError(aValue);
@@ -229,7 +230,7 @@ void SharedWorkerManager::ErrorReceived(const ErrorValue& aValue) {
 }
 
 void SharedWorkerManager::Terminated() {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
 
   for (SharedWorkerParent* actor : mActors) {
     Unused << actor->SendTerminate();

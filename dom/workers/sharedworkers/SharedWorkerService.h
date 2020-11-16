@@ -11,6 +11,8 @@
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 
+class nsIEventTarget;
+
 namespace mozilla {
 
 namespace ipc {
