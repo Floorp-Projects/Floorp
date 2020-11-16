@@ -44,13 +44,14 @@ class InlineScriptTree {
         children_(nullptr),
         nextCallee_(nullptr) {}
 
-  static InlineScriptTree* New(TempAllocator* allocator,
-                               InlineScriptTree* caller, jsbytecode* callerPc,
-                               JSScript* script);
+  static inline InlineScriptTree* New(TempAllocator* allocator,
+                                      InlineScriptTree* caller,
+                                      jsbytecode* callerPc, JSScript* script);
 
-  InlineScriptTree* addCallee(TempAllocator* allocator, jsbytecode* callerPc,
-                              JSScript* calleeScript);
-  void removeCallee(InlineScriptTree* callee);
+  inline InlineScriptTree* addCallee(TempAllocator* allocator,
+                                     jsbytecode* callerPc,
+                                     JSScript* calleeScript);
+  inline void removeCallee(InlineScriptTree* callee);
 
   InlineScriptTree* caller() const { return caller_; }
 

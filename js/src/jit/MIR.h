@@ -82,7 +82,6 @@ class MDefinitionVisitorDefaultNoop {
 };
 
 class CompactBufferWriter;
-class IonBuilder;
 class Range;
 
 template <typename T>
@@ -14696,47 +14695,6 @@ MConstant* MDefinition::maybeConstantValue() {
 }
 
 // Helper functions used to decide how to build MIR.
-
-bool ElementAccessIsDenseNative(CompilerConstraintList* constraints,
-                                MDefinition* obj, MDefinition* id);
-bool ElementAccessIsTypedArray(CompilerConstraintList* constraints,
-                               MDefinition* obj, MDefinition* id,
-                               Scalar::Type* arrayType);
-bool ElementAccessIsPacked(CompilerConstraintList* constraints,
-                           MDefinition* obj);
-bool ElementAccessMightBeCopyOnWrite(CompilerConstraintList* constraints,
-                                     MDefinition* obj);
-bool ElementAccessMightBeNonExtensible(CompilerConstraintList* constraints,
-                                       MDefinition* obj);
-AbortReasonOr<bool> ElementAccessHasExtraIndexedProperty(IonBuilder* builder,
-                                                         MDefinition* obj);
-MIRType DenseNativeElementType(CompilerConstraintList* constraints,
-                               MDefinition* obj);
-BarrierKind PropertyReadNeedsTypeBarrier(
-    JSContext* propertycx, TempAllocator& alloc,
-    CompilerConstraintList* constraints, TypeSet::ObjectKey* key,
-    PropertyName* name, TemporaryTypeSet* observed, bool updateObserved);
-BarrierKind PropertyReadNeedsTypeBarrier(JSContext* propertycx,
-                                         TempAllocator& alloc,
-                                         CompilerConstraintList* constraints,
-                                         MDefinition* obj, PropertyName* name,
-                                         TemporaryTypeSet* observed);
-AbortReasonOr<BarrierKind> PropertyReadOnPrototypeNeedsTypeBarrier(
-    IonBuilder* builder, MDefinition* obj, PropertyName* name,
-    TemporaryTypeSet* observed);
-bool PropertyReadIsIdempotent(CompilerConstraintList* constraints,
-                              MDefinition* obj, PropertyName* name);
-bool CanWriteProperty(TempAllocator& alloc, CompilerConstraintList* constraints,
-                      HeapTypeSetKey property, MDefinition* value,
-                      MIRType implicitType = MIRType::None);
-bool PropertyWriteNeedsTypeBarrier(TempAllocator& alloc,
-                                   CompilerConstraintList* constraints,
-                                   MBasicBlock* current, MDefinition** pobj,
-                                   PropertyName* name, MDefinition** pvalue,
-                                   bool canModify,
-                                   MIRType implicitType = MIRType::None);
-AbortReasonOr<bool> TypeCanHaveExtraIndexedProperties(IonBuilder* builder,
-                                                      TemporaryTypeSet* types);
 
 inline MIRType MIRTypeForArrayBufferViewRead(Scalar::Type arrayType,
                                              bool observedDouble) {

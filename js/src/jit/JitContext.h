@@ -62,6 +62,7 @@ class JitContext {
 #ifdef DEBUG
   // Whether this thread is actively Ion compiling (does not include Wasm or
   // IonBuilder).
+  // TODO(no-TI): fix IonBuilder references in comments.
   bool inIonBackend_ = false;
 
   // Whether this thread is actively Ion compiling in a context where a minor
