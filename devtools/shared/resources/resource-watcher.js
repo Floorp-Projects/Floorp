@@ -22,7 +22,6 @@ class ResourceWatcher {
 
   constructor(targetList) {
     this.targetList = targetList;
-    this.descriptorFront = targetList.descriptorFront;
 
     this._onTargetAvailable = this._onTargetAvailable.bind(this);
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
@@ -43,6 +42,10 @@ class ResourceWatcher {
 
     this._notifyWatchers = this._notifyWatchers.bind(this);
     this._throttledNotifyWatchers = throttle(this._notifyWatchers, 100);
+  }
+
+  get watcher() {
+    return this.targetList.watcher;
   }
 
   /**
@@ -103,27 +106,23 @@ class ResourceWatcher {
       );
     }
 
-    // Cache the Watcher once for all, the first time we call `watch()`.
-    // This `watcher` attribute may be then used in any function of the ResourceWatcher after this.
-    if (!this.watcher) {
-      const supportsWatcher = this.descriptorFront?.traits?.watcher;
-      if (supportsWatcher) {
-        this.watcher = await this.descriptorFront.getWatcher();
-        // Resources watched from the parent process will be emitted on the Watcher Actor.
-        // So that we also have to listen for this event on it, in addition to all targets.
-        this.watcher.on(
-          "resource-available-form",
-          this._onResourceAvailable.bind(this, { watcherFront: this.watcher })
-        );
-        this.watcher.on(
-          "resource-updated-form",
-          this._onResourceUpdated.bind(this, { watcherFront: this.watcher })
-        );
-        this.watcher.on(
-          "resource-destroyed-form",
-          this._onResourceDestroyed.bind(this, { watcherFront: this.watcher })
-        );
-      }
+    // Bug 1675763: Watcher actor is not available in all situations yet.
+    if (!this._listenerRegistered && this.watcher) {
+      this._listenerRegistered = true;
+      // Resources watched from the parent process will be emitted on the Watcher Actor.
+      // So that we also have to listen for this event on it, in addition to all targets.
+      this.watcher.on(
+        "resource-available-form",
+        this._onResourceAvailable.bind(this, { watcherFront: this.watcher })
+      );
+      this.watcher.on(
+        "resource-updated-form",
+        this._onResourceUpdated.bind(this, { watcherFront: this.watcher })
+      );
+      this.watcher.on(
+        "resource-destroyed-form",
+        this._onResourceDestroyed.bind(this, { watcherFront: this.watcher })
+      );
     }
 
     // First ensuring enabling listening to targets.
