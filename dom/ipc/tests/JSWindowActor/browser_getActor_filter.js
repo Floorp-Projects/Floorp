@@ -12,7 +12,7 @@ declTest("getActor with mismatch", {
     ok(parent, "WindowGlobalParent should have value.");
     Assert.throws(
       () => parent.getActor("TestWindow"),
-      /NS_ERROR_NOT_AVAILABLE/,
+      /NotSupportedError/,
       "Should throw if it doesn't match."
     );
 
@@ -22,7 +22,7 @@ declTest("getActor with mismatch", {
 
       Assert.throws(
         () => child.getActor("TestWindow"),
-        /NS_ERROR_NOT_AVAILABLE/,
+        /NotSupportedError/,
         "Should throw if it doesn't match."
       );
     });
@@ -86,7 +86,7 @@ declTest("getActor with iframe mismatch", {
         let child = content.windowGlobalChild;
         Assert.throws(
           () => child.getActor("TestWindow"),
-          /NS_ERROR_NOT_AVAILABLE/,
+          /NotSupportedError/,
           "Should throw if it doesn't match."
         );
       });
@@ -145,7 +145,7 @@ declTest("getActor with remoteType mismatch", {
     let parent = browser.browsingContext.currentWindowGlobal;
     Assert.throws(
       () => parent.getActor("TestWindow"),
-      /NS_ERROR_NOT_AVAILABLE/,
+      /NotSupportedError/,
       "Should throw if its remoteTypes don't match."
     );
 
@@ -154,7 +154,7 @@ declTest("getActor with remoteType mismatch", {
       ok(child, "WindowGlobalChild should have value.");
       Assert.throws(
         () => child.getActor("TestWindow"),
-        /NS_ERROR_NOT_AVAILABLE/,
+        /NotSupportedError/,
         "Should throw if its remoteTypes don't match."
       );
     });
@@ -185,7 +185,7 @@ declTest("getActor with iframe messageManagerGroups mismatch", {
     let parent = browser.browsingContext.currentWindowGlobal;
     Assert.throws(
       () => parent.getActor("TestWindow"),
-      /NS_ERROR_NOT_AVAILABLE/,
+      /NotSupportedError/,
       "Should throw if its messageManagerGroups doesn't match."
     );
 
@@ -194,7 +194,7 @@ declTest("getActor with iframe messageManagerGroups mismatch", {
       ok(child, "WindowGlobalChild should have value.");
       Assert.throws(
         () => child.getActor("TestWindow"),
-        /NS_ERROR_NOT_AVAILABLE/,
+        /NotSupportedError/,
         "Should throw if its messageManagerGroups doesn't match."
       );
     });
@@ -213,7 +213,7 @@ declTest("getActor without allFrames", {
       let child = frame.contentWindow.windowGlobalChild;
       Assert.throws(
         () => child.getActor("TestWindow"),
-        /NS_ERROR_NOT_AVAILABLE/,
+        /NotSupportedError/,
         "Should throw if allFrames is false."
       );
     });
