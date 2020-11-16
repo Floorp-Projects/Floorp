@@ -50,8 +50,7 @@ auto MediaStreamTrackSource::ApplyConstraints(
     const dom::MediaTrackConstraints& aConstraints, CallerType aCallerType)
     -> RefPtr<ApplyConstraintsPromise> {
   return ApplyConstraintsPromise::CreateAndReject(
-      MakeRefPtr<MediaMgrError>(MediaMgrError::Name::OverconstrainedError,
-                                u""_ns),
+      MakeRefPtr<MediaMgrError>(MediaMgrError::Name::OverconstrainedError, ""),
       __func__);
 }
 
