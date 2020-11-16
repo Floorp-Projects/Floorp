@@ -190,6 +190,7 @@ fuzzy-if(skiaContent&&winWidget,0-126,0-336) random-if(/^Windows\x20NT\x206\.1/.
 
 # vertical text
 fuzzy-if(skiaContent,0-1,0-80) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-vertical-dx.svg textpath-vertical-dx-ref.svg # Bug 1392106
+fuzzy-if(skiaContent,0-1,0-80) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-vertical-x.svg textpath-vertical-x-ref.svg # Bug 1392106
 
 # selection
 needs-focus == deselectAll.svg deselectAll-ref.svg
