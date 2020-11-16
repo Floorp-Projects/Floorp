@@ -29,7 +29,7 @@ _executable_extension = {
 _architectures = {
     r"linux\b.*": "x86",
     r"linux64\b.*": "x86_64",
-    r"macosx64\b.*": "x86_64",
+    r"macosx64\b.*": "macos-x86_64-aarch64",
     r"win32\b.*": "x86",
     r"win64\b(?!-aarch64).*": "x86_64",
     r"win64-aarch64\b.*": "aarch64",
