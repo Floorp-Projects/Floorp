@@ -12,7 +12,6 @@
 
 #include <memory>
 
-
 namespace webrtc {
 
 ScreenCapturerPipeWire::ScreenCapturerPipeWire()
