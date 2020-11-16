@@ -370,17 +370,14 @@ class MOZ_RAII AsyncInvoker final : public WaitPolicy<AsyncInterface> {
    *                 performance penalty associated with that.
    */
   explicit AsyncInvoker(SyncInterface* aSyncObj,
-                        const Maybe<bool>& aIsProxy = Nothing())
-      : mSyncObj(ResolveIsProxy(aSyncObj, aIsProxy) ? nullptr : aSyncObj) {
+                        const Maybe<bool>& aIsProxy = Nothing()) {
     MOZ_ASSERT(aSyncObj);
 
-    if (mSyncObj) {
-      return;
-    }
-
     RefPtr<ICallFactory> callFactory;
-    if (FAILED(aSyncObj->QueryInterface(IID_ICallFactory,
+    if ((aIsProxy.isSome() && !aIsProxy.value()) ||
+        FAILED(aSyncObj->QueryInterface(IID_ICallFactory,
                                         getter_AddRefs(callFactory)))) {
+      mSyncObj = aSyncObj;
       return;
     }
 
@@ -434,13 +431,6 @@ class MOZ_RAII AsyncInvoker final : public WaitPolicy<AsyncInterface> {
   AsyncInvoker(AsyncInvoker&& aOther) = delete;
   AsyncInvoker& operator=(const AsyncInvoker& aOther) = delete;
   AsyncInvoker& operator=(AsyncInvoker&& aOther) = delete;
-
- private:
-  static bool ResolveIsProxy(SyncInterface* aSyncObj,
-                             const Maybe<bool>& aIsProxy) {
-    MOZ_ASSERT(aSyncObj);
-    return aIsProxy.isSome() ? aIsProxy.value() : IsProxy(aSyncObj);
-  }
 
  private:
   RefPtr<SyncInterface> mSyncObj;
