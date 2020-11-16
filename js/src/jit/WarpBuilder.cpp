@@ -191,8 +191,7 @@ bool WarpBuilder::startNewOsrPreHeaderBlock(BytecodeLocation loopHead) {
 
   if (info().funMaybeLazy()) {
     // Initialize |this| parameter.
-    MParameter* thisv =
-        MParameter::New(alloc(), MParameter::THIS_SLOT, nullptr);
+    MParameter* thisv = MParameter::New(alloc(), MParameter::THIS_SLOT);
     osrBlock->add(thisv);
     osrBlock->initSlot(info().thisSlot(), thisv);
 
@@ -209,7 +208,7 @@ bool WarpBuilder::startNewOsrPreHeaderBlock(BytecodeLocation loopHead) {
       uint32_t slot = info().argSlotUnchecked(i);
       MInstruction* osrv;
       if (!needsArgsObj || !info().argsObjAliasesFormals()) {
-        osrv = MParameter::New(alloc().fallible(), i, nullptr);
+        osrv = MParameter::New(alloc().fallible(), i);
       } else if (script_->formalIsAliased(i)) {
         osrv = MConstant::New(alloc().fallible(), UndefinedValue());
       } else {
@@ -444,14 +443,13 @@ bool WarpBuilder::buildPrologue() {
 
   if (info().funMaybeLazy()) {
     // Initialize |this|.
-    MParameter* param =
-        MParameter::New(alloc(), MParameter::THIS_SLOT, nullptr);
+    MParameter* param = MParameter::New(alloc(), MParameter::THIS_SLOT);
     current->add(param);
     current->initSlot(info().thisSlot(), param);
 
     // Initialize arguments.
     for (uint32_t i = 0; i < info().nargs(); i++) {
-      MParameter* param = MParameter::New(alloc().fallible(), i, nullptr);
+      MParameter* param = MParameter::New(alloc().fallible(), i);
       if (!param) {
         return false;
       }

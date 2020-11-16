@@ -225,7 +225,6 @@ using ObjectGroupFlags = uint32_t;
 
 class StackTypeSet;
 class HeapTypeSet;
-class TemporaryTypeSet;
 
 /*
  * [SMDOC] Type-Inference TypeSet
@@ -296,7 +295,6 @@ class TypeSet {
     bool hasFlags(CompilerConstraintList* constraints, ObjectGroupFlags flags);
     bool hasStableClassAndProto(CompilerConstraintList* constraints);
     void watchStateChangeForTypedArrayData(CompilerConstraintList* constraints);
-    HeapTypeSetKey property(jsid id);
     void ensureTrackedProperty(JSContext* cx, jsid id);
 
     ObjectGroup* maybeGroup();
@@ -437,23 +435,6 @@ class TypeSet {
     return (flags >> TYPE_FLAG_DEFINITE_SHIFT) - 1;
   }
 
-  // Join two type sets into a new set. The result should not be modified
-  // further.
-  static TemporaryTypeSet* unionSets(TypeSet* a, TypeSet* b, LifoAlloc* alloc);
-
-  // Return the intersection of the 2 TypeSets. The result should not be
-  // modified further.
-  static TemporaryTypeSet* intersectSets(TemporaryTypeSet* a,
-                                         TemporaryTypeSet* b, LifoAlloc* alloc);
-
-  /*
-   * Returns a copy of TypeSet a excluding/removing the types in TypeSet b.
-   * TypeSet b can only contain primitives or be any object. No support for
-   * specific objects. The result should not be modified further.
-   */
-  static TemporaryTypeSet* removeSet(TemporaryTypeSet* a, TemporaryTypeSet* b,
-                                     LifoAlloc* alloc);
-
   /* Add a type to this set using the specified allocator. */
   void addType(Type type, LifoAlloc* alloc);
 
@@ -525,21 +506,6 @@ class TypeSet {
 
   /* Forward all types in this set to the specified constraint. */
   bool addTypesToConstraint(JSContext* cx, TypeConstraint* constraint);
-
-  // Clone a type set into an arbitrary allocator.
-  TemporaryTypeSet* clone(LifoAlloc* alloc) const;
-
-  // |*result| is not even partly initialized when this function is called:
-  // this function placement-new's its contents into existence.
-  bool cloneIntoUninitialized(LifoAlloc* alloc, TemporaryTypeSet* result) const;
-
-  // Create a new TemporaryTypeSet where undefined and/or null has been filtered
-  // out.
-  TemporaryTypeSet* filter(LifoAlloc* alloc, bool filterUndefined,
-                           bool filterNull) const;
-  // Create a new TemporaryTypeSet where the type has been set to object.
-  TemporaryTypeSet* cloneObjectsOnly(LifoAlloc* alloc);
-  TemporaryTypeSet* cloneWithoutObjects(LifoAlloc* alloc);
 
   JS::Compartment* maybeCompartment();
 
@@ -739,194 +705,6 @@ class HeapTypeSet : public ConstraintTypeSet {
 };
 
 enum class DOMObjectKind : uint8_t { Proxy, Native, Unknown };
-
-class TemporaryTypeSet : public TypeSet {
- public:
-  TemporaryTypeSet() { MOZ_ASSERT(!jit::JitOptions.warpBuilder); }
-  TemporaryTypeSet(LifoAlloc* alloc, Type type);
-
-  TemporaryTypeSet(uint32_t flags, ObjectKey** objectSet) {
-    MOZ_ASSERT(!jit::JitOptions.warpBuilder);
-    this->flags = flags;
-    this->objectSet = objectSet;
-  }
-
-  inline TemporaryTypeSet(LifoAlloc* alloc, jit::MIRType type);
-
-  /*
-   * Constraints for JIT compilation.
-   *
-   * Methods for JIT compilation. These must be used when a script is
-   * currently being compiled (see AutoEnterCompilation) and will add
-   * constraints ensuring that if the return value change in the future due
-   * to new type information, the script's jitcode will be discarded.
-   */
-
-  /* Get any type tag which all values in this set must have. */
-  jit::MIRType getKnownMIRType();
-
-  /* Whether this value may be an object. */
-  bool maybeObject() { return unknownObject() || baseObjectCount() > 0; }
-
-  /*
-   * Whether this typeset represents a potentially sentineled object value:
-   * the value may be an object or null or undefined.
-   * Returns false if the value cannot ever be an object.
-   */
-  bool objectOrSentinel() {
-    TypeFlags flags =
-        TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL | TYPE_FLAG_ANYOBJECT;
-    if (baseFlags() & (~flags & TYPE_FLAG_BASE_MASK)) {
-      return false;
-    }
-
-    return hasAnyFlag(TYPE_FLAG_ANYOBJECT) || baseObjectCount() > 0;
-  }
-
-  /* Whether the type set contains objects with any of a set of flags. */
-  bool hasObjectFlags(CompilerConstraintList* constraints,
-                      ObjectGroupFlags flags);
-
-  /* Get the class shared by all objects in this set, or nullptr. */
-  const JSClass* getKnownClass(CompilerConstraintList* constraints);
-
-  /*
-   * Get the realm shared by all objects in this set, or nullptr. Returns
-   * nullptr if the set contains proxies (because cross-compartment wrappers
-   * don't have a single realm associated with them).
-   */
-  JS::Realm* getKnownRealm(CompilerConstraintList* constraints);
-
-  /* Result returned from forAllClasses */
-  enum ForAllResult {
-    EMPTY = 1,  // Set empty
-    ALL_TRUE,   // Set not empty and predicate returned true for all classes
-    ALL_FALSE,  // Set not empty and predicate returned false for all classes
-    MIXED,      // Set not empty and predicate returned false for some classes
-                // and true for others, or set contains an unknown or non-object
-                // type
-  };
-
-  /* Apply func to the members of the set and return an appropriate result.
-   * The iteration may end early if the result becomes known early.
-   */
-  ForAllResult forAllClasses(CompilerConstraintList* constraints,
-                             bool (*func)(const JSClass* clasp));
-
-  /*
-   * Returns true if all objects in this set have the same prototype, and
-   * assigns this object to *proto. The proto can be nullptr.
-   */
-  bool getCommonPrototype(CompilerConstraintList* constraints,
-                          JSObject** proto);
-
-  /* Whether the buffer mapped by a TypedArray is shared memory or not */
-  enum TypedArraySharedness {
-    UnknownSharedness = 1,  // We can't determine sharedness
-    KnownShared,            // We know for sure the buffer is shared
-    KnownUnshared           // We know for sure the buffer is unshared
-  };
-
-  /*
-   * Get the typed array type of all objects in this set, or
-   * Scalar::MaxTypedArrayViewType. If there is such a common type and
-   * sharedness is not nullptr then *sharedness is set to what we know about the
-   * sharedness of the memory.
-   */
-  Scalar::Type getTypedArrayType(CompilerConstraintList* constraints,
-                                 TypedArraySharedness* sharedness = nullptr);
-
-  // Whether all objects have JSCLASS_IS_DOMJSCLASS set.
-  bool isDOMClass(CompilerConstraintList* constraints, DOMObjectKind* kind);
-
-  // Whether clasp->isCallable() is true for one or more objects in this set.
-  bool maybeCallable(CompilerConstraintList* constraints);
-
-  // Whether clasp->emulatesUndefined() is true for one or more objects in
-  // this set.
-  bool maybeEmulatesUndefined(CompilerConstraintList* constraints);
-
-  // Get the single value which can appear in this type set, otherwise
-  // nullptr.
-  JSObject* maybeSingleton();
-  ObjectKey* maybeSingleObject();
-
-  // Whether any objects in the type set needs a barrier on id.
-  bool propertyNeedsBarrier(CompilerConstraintList* constraints, jsid id);
-
-  // Whether this set contains all types in other, except (possibly) the
-  // specified type.
-  bool filtersType(const TemporaryTypeSet* other, Type type) const;
-
-  enum DoubleConversion {
-    /* All types in the set should use eager double conversion. */
-    AlwaysConvertToDoubles,
-
-    /* Some types in the set should use eager double conversion. */
-    MaybeConvertToDoubles,
-
-    /* No types should use eager double conversion. */
-    DontConvertToDoubles,
-
-    /* Some types should use eager double conversion, others cannot. */
-    AmbiguousDoubleConversion
-  };
-
-  /*
-   * Whether known double optimizations are possible for element accesses on
-   * objects in this type set.
-   */
-  DoubleConversion convertDoubleElements(CompilerConstraintList* constraints);
-
- private:
-  void getTypedArraySharedness(CompilerConstraintList* constraints,
-                               TypedArraySharedness* sharedness);
-};
-
-// Representation of a heap type property which may or may not be instantiated.
-// Heap properties for singleton types are instantiated lazily as they are used
-// by the compiler, but this is only done on the main thread. If we are
-// compiling off thread and use a property which has not yet been instantiated,
-// it will be treated as empty and non-configured and will be instantiated when
-// rejoining to the main thread. If it is in fact not empty, the compilation
-// will fail; to avoid this, we try to instantiate singleton property types
-// during generation of baseline caches.
-class HeapTypeSetKey {
-  friend class TypeSet::ObjectKey;
-
-  // Object and property being accessed.
-  TypeSet::ObjectKey* object_;
-  jsid id_;
-
-  // If instantiated, the underlying heap type set.
-  HeapTypeSet* maybeTypes_;
-
- public:
-  HeapTypeSetKey() : object_(nullptr), id_(JSID_EMPTY), maybeTypes_(nullptr) {}
-
-  TypeSet::ObjectKey* object() const { return object_; }
-  jsid id() const { return id_; }
-
-  HeapTypeSet* maybeTypes() const {
-    if (maybeTypes_) {
-      maybeTypes_->checkMagic();
-    }
-    return maybeTypes_;
-  }
-
-  bool instantiate(JSContext* cx);
-
-  void freeze(CompilerConstraintList* constraints);
-  jit::MIRType knownMIRType(CompilerConstraintList* constraints);
-  bool nonData(CompilerConstraintList* constraints);
-  bool nonWritable(CompilerConstraintList* constraints);
-  bool isOwnProperty(CompilerConstraintList* constraints,
-                     bool allowEmptyTypesForGlobal = false);
-  JSObject* singleton(CompilerConstraintList* constraints);
-  bool needsBarrier(CompilerConstraintList* constraints);
-  bool constant(CompilerConstraintList* constraints, Value* valOut);
-  bool couldBeConstant(CompilerConstraintList* constraints);
-};
 
 } /* namespace js */
 
