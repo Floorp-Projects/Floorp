@@ -2385,7 +2385,8 @@ bool js::LookupOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id,
       }
 
       if (index.inspect()) {
-        if (index.inspect().value() < obj->as<TypedArrayObject>().length().get()) {
+        if (index.inspect().value() <
+            obj->as<TypedArrayObject>().length().get()) {
           propp->setTypedArrayElement(index.inspect().value());
         } else {
           propp->setNotFound();
