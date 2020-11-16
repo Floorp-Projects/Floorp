@@ -10,9 +10,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.view.NestedScrollingChild
 import androidx.core.view.NestedScrollingChildHelper
 import androidx.core.view.ViewCompat
-import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.EngineView
-import mozilla.components.support.ktx.android.view.toScope
 import org.mozilla.geckoview.GeckoView
 import org.mozilla.geckoview.PanZoomController.INPUT_RESULT_HANDLED
 import org.mozilla.geckoview.PanZoomController.INPUT_RESULT_UNHANDLED
@@ -44,8 +42,6 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
 
     @VisibleForTesting
     internal var childHelper: NestedScrollingChildHelper = NestedScrollingChildHelper(this)
-
-    private val coroutineScope = toScope()
 
     /**
      * Integer indicating how user's MotionEvent was handled.
@@ -119,12 +115,13 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
 
     @VisibleForTesting
     internal fun updateInputResult(event: MotionEvent) {
-        coroutineScope.launch {
-            super.onTouchEventForResult(event).await()?.let {
-                inputResult = it
+        super.onTouchEventForResult(event)
+            .accept {
+                // This should never be null.
+                // Prefer to crash and investigate after rather than not knowing about problems with this.
+                inputResult = it!!
                 startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL)
             }
-        }
     }
 
     override fun setNestedScrollingEnabled(enabled: Boolean) {
