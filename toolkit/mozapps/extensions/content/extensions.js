@@ -94,19 +94,13 @@ async function recordViewTelemetry(param) {
     addon = await AddonManager.getAddonByID(id);
   }
 
-  AMTelemetry.recordViewEvent({ view: getCurrentViewName(), addon, type });
-}
-
-function getCurrentViewName() {
-  let view = gViewController.currentViewObj;
-  let entries = Object.entries(gViewController.viewObjects);
-  let viewIndex = entries.findIndex(([name, viewObj]) => {
-    return viewObj == view;
+  let { currentViewId } = gViewController;
+  let viewType = gViewController.parseViewId(currentViewId)?.type;
+  AMTelemetry.recordViewEvent({
+    view: viewType || "other",
+    addon,
+    type,
   });
-  if (viewIndex != -1) {
-    return entries[viewIndex][0];
-  }
-  return "other";
 }
 
 // Used by external callers to load a specific view into the manager
