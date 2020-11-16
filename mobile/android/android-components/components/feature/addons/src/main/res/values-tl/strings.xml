@@ -11,8 +11,43 @@
     <!-- When an add-on requires access to more than 4 sites, for example the add-on requires access for 5 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
      then we will show another collapsed entry saying "Access your data on 1 other site". This entry it's for the singular case, when the add-on is only accessing one extra site. -->
     <string name="mozac_feature_addons_permissions_one_extra_site_description" tools:ignore="PluralsCandidate">i-Access ang data para sa 1</string>
+    <!-- When an add-on requires access to more than 4 sites, for example the add-on requires access for 6 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
+     then we will show another collapsed entry saying "Access your data on 2 other sites". This entry it's for the plural case, when the add-on is accessing more than one extra site.
+     %1$d will be replaced by an integer indicating the number of additional hosts for which this web extension is requesting permission. -->
+    <string name="mozac_feature_addons_permissions_extra_sites_description" tools:ignore="PluralsCandidate">Tignan ang iyong mga data %1$d sa ibang mga site</string>
+    <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 5 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
+      then we will show another collapsed entry saying "Access your data on 1 other domain". This entry it's for the singular case, when the add-on is only accessing one extra domain. -->
+    <string name="mozac_feature_addons_permissions_one_extra_domain_description" tools:ignore="PluralsCandidate">Tignan ang iyong data 1 sa ibang domain</string>
+    <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 6 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
+     then we will show another collapsed entry saying "Access your data on 2 other domains". This entry it's for the plural case, when the add-on is accessing more than one extra domain.
+     %1$d will be replaced by an integer indicating the number of additional domains for which this web extension is requesting permission. -->
+    <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">Tignan ang iyong mga data %1$d sa ibang mga domain</string>
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">Tignan ang tab ng browser</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">Mag-lagay ng walang limitasyong data ng client-side</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">Tignan ang aktibidad ng iyong browser habang nag-lalakbay</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">Basahin at baguhin ang mga bookmark</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">Basahin at baguhin ang mga settings ng browser</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">Alisin ang browsing history, cookies, at mga data na kaugnay</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">Kunin ang data mula sa clipboard</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">Mag-lagay ng data sa clipboard</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">I-download, basahin at baguhin ang download history browser</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">Buksan ang mga files na na-download sa iyong device</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">Basahin ang sulat sa lahat ng tab na naka-bukas</string>
     <!-- Description for geolocation permission. -->
     <string name="mozac_feature_addons_permissions_geolocation_description">I-access ang iyong lokasyon</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">Tignan ang browsing history</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Bersyon</string>
     <!-- The authors of an add-on. -->
