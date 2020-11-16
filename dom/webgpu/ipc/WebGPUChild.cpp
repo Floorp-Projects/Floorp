@@ -6,7 +6,6 @@
 #include "WebGPUChild.h"
 #include "mozilla/dom/WebGPUBinding.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
-#include "Sampler.h"
 
 namespace mozilla {
 namespace webgpu {

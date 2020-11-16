@@ -11,9 +11,6 @@
 #include "ComputePassEncoder.h"
 #include "Device.h"
 #include "RenderPassEncoder.h"
-#include "mozilla/dom/HTMLCanvasElement.h"
-#include "mozilla/webgpu/ffi/wgpu.h"
-#include "ipc/WebGPUChild.h"
 
 namespace mozilla {
 namespace webgpu {

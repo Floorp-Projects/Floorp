@@ -9,7 +9,6 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PFetchEventOpProxyParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
-#include "mozilla/SchedulerGroup.h"
 #include "mozilla/Unused.h"
 #include "nsProxyRelease.h"
 

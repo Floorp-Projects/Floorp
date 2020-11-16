@@ -5,7 +5,6 @@
 
 #include "mozilla/dom/WebGPUBinding.h"
 #include "BindGroup.h"
-#include "ipc/WebGPUChild.h"
 
 #include "Device.h"
 

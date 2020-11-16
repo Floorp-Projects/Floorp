@@ -8,13 +8,10 @@
 
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
-#include "ipc/WebGPUTypes.h"
-#include "nsTArray.h"
 
 namespace mozilla {
 namespace webgpu {
 
-class BindGroupLayout;
 class Device;
 
 class RenderPipeline final : public ObjectBase, public ChildOf<Device> {

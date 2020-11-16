@@ -16,7 +16,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/FetchEventOpParent.h"
-#include "mozilla/dom/RemoteWorkerParent.h"
 #include "mozilla/dom/ServiceWorkerOpPromise.h"
 #include "mozilla/ipc/BackgroundParent.h"
 

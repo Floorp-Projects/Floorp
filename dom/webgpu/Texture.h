@@ -8,8 +8,6 @@
 
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
-#include "ipc/WebGPUTypes.h"
-#include "mozilla/WeakPtr.h"
 
 namespace mozilla {
 namespace dom {
