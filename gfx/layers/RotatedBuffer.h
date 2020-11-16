@@ -316,7 +316,7 @@ class RemoteRotatedBuffer : public RotatedBuffer {
     return mClientOnWhite;
   }
 
-  void SyncWithObject(SyncObjectClient* aSyncObject);
+  void SyncWithObject(RefPtr<SyncObjectClient> aSyncObject);
   void Clear();
 
  private:
