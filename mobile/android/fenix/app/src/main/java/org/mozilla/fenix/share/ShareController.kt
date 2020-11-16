@@ -16,10 +16,11 @@ import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavController
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.sync.Device
@@ -74,6 +75,7 @@ class DefaultShareController(
     private val navController: NavController,
     private val recentAppsStorage: RecentAppsStorage,
     private val viewLifecycleScope: CoroutineScope,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val dismiss: (ShareController.Result) -> Unit
 ) : ShareController {
 
@@ -88,7 +90,7 @@ class DefaultShareController(
     }
 
     override fun handleShareToApp(app: AppShareOption) {
-        viewLifecycleScope.launch(Dispatchers.IO) {
+        viewLifecycleScope.launch(dispatcher) {
             recentAppsStorage.updateRecentApp(app.activityName)
         }
 
