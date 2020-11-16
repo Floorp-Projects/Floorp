@@ -498,6 +498,8 @@ static const char kEventTypeNames[][40] = {
     "text value change",                // EVENT_TEXT_VALUE_CHANGE
     "scrolling",                        // EVENT_SCROLLING
     "announcement",                     // EVENT_ANNOUNCEMENT
+    "live region added",                // EVENT_LIVE_REGION_ADDED
+    "live region removed",              // EVENT_LIVE_REGION_REMOVED
 };
 
 #endif
