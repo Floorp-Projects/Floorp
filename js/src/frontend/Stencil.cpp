@@ -1353,9 +1353,6 @@ static void DumpImmutableScriptFlags(js::JSONPrinter& json,
         case ImmutableScriptFlagsEnum::HasMappedArgsObj:
           json.value("HasMappedArgsObj");
           break;
-        case ImmutableScriptFlagsEnum::IsLikelyConstructorWrapper:
-          json.value("IsLikelyConstructorWrapper");
-          break;
         default:
           json.value("Unknown(%x)", i);
           break;
