@@ -643,7 +643,7 @@ impl SwCompositeGraphNode {
                 if lock.is_none() {
                     lock = Some(thread.lock());
                 }
-                thread.send_job(lock.as_mut().unwrap(), child, false);
+                thread.send_job(lock.as_mut().unwrap(), child);
             }
         }
     }
@@ -759,7 +759,7 @@ impl SwCompositeThread {
         };
         self.job_count.fetch_add(num_bands as isize, Ordering::SeqCst);
         if graph_node.set_job(job, num_bands) {
-            self.send_job(job_queue, graph_node, true);
+            self.send_job(job_queue, graph_node);
         }
     }
 
@@ -776,10 +776,10 @@ impl SwCompositeThread {
     }
 
     /// Send a job to the composite thread by adding it to the job queue.
-    /// Optionally signal that this job has been added in case the queue
-    /// was empty and the SwComposite thread is waiting for jobs.
-    fn send_job(&self, queue: &mut SwCompositeJobQueue, job: SwCompositeGraphNodeRef, signal: bool) {
-        if signal && queue.is_empty() {
+    /// Signal that this job has been added in case the queue was empty and the
+    /// SwComposite thread is waiting for jobs.
+    fn send_job(&self, queue: &mut SwCompositeJobQueue, job: SwCompositeGraphNodeRef) {
+        if queue.is_empty() {
             self.jobs_available.notify_all();
         }
         queue.push_back(job);
