@@ -177,15 +177,6 @@ type = "boolean"
 bug-numbers = [1643027]
 is-public = true
 
-[js-warp]
-title = "experimental-features-js-warp"
-description = "experimental-features-js-warp-description"
-restart-required = true
-preference = "javascript.options.warp"
-type = "boolean"
-bug-numbers = [1613592]
-is-public = true
-
 [fission]
 title = "experimental-features-fission"
 description = "experimental-features-fission-description"
