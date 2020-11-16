@@ -16,6 +16,7 @@
 #include "mozilla/RemoteLazyInputStreamUtils.h"
 #include "mozilla/RemoteLazyInputStreamStorage.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/dom/FetchEventOpParent.h"
 #include "mozilla/dom/FetchEventOpProxyParent.h"
 #include "mozilla/dom/MessagePortParent.h"
 #include "mozilla/dom/RemoteWorkerTypes.h"

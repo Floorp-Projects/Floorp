@@ -68,3 +68,4 @@ dom/webgpu/
 dom/webidl/
 dom/webshare/
 dom/websocket/
+dom/workers/
