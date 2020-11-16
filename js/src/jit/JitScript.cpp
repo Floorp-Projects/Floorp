@@ -434,13 +434,6 @@ static bool ComputeBinarySearchMid(ICEntries entries, uint32_t pcOffset,
         if (entryOffset < pcOffset) {
           return 1;
         }
-        if (entry.isForPrologue()) {
-          // Prologue ICEntries are used for function argument type checks.
-          // Ignore these entries and return 1 because these entries appear in
-          // the ICEntry list before the other ICEntry (if any) at offset 0.
-          MOZ_ASSERT(entryOffset == 0);
-          return 1;
-        }
         return 0;
       },
       loc);
@@ -458,7 +451,6 @@ ICEntry* ICScript::maybeICEntryFromPCOffset(uint32_t pcOffset) {
   MOZ_ASSERT(mid < numICEntries());
 
   ICEntry& entry = icEntry(mid);
-  MOZ_ASSERT(!entry.isForPrologue());
   MOZ_ASSERT(entry.pcOffset() == pcOffset);
   return &entry;
 }
@@ -479,7 +471,7 @@ ICEntry* ICScript::maybeICEntryFromPCOffset(uint32_t pcOffset,
     ICEntry* lastEntry = &icEntry(numICEntries() - 1);
     ICEntry* curEntry = prevLookedUpEntry;
     while (curEntry >= firstEntry && curEntry <= lastEntry) {
-      if (curEntry->pcOffset() == pcOffset && !curEntry->isForPrologue()) {
+      if (curEntry->pcOffset() == pcOffset) {
         return curEntry;
       }
       curEntry++;
@@ -503,7 +495,7 @@ ICEntry* ICScript::interpreterICEntryFromPCOffset(uint32_t pcOffset) {
   // pcOffset does not necessarily have an ICEntry, so we want to return the
   // first ICEntry for which the following is true:
   //
-  //    !entry.isForPrologue() && entry.pcOffset() >= pcOffset
+  //    entry.pcOffset() >= pcOffset
   //
   // Fortunately, ComputeBinarySearchMid returns exactly this entry.
 
@@ -512,7 +504,6 @@ ICEntry* ICScript::interpreterICEntryFromPCOffset(uint32_t pcOffset) {
 
   if (mid < numICEntries()) {
     ICEntry& entry = icEntry(mid);
-    MOZ_ASSERT(!entry.isForPrologue());
     MOZ_ASSERT(entry.pcOffset() >= pcOffset);
     return &entry;
   }
@@ -551,39 +542,25 @@ void ICScript::purgeOptimizedStubs(Zone* zone) {
       lastStub = lastStub->next();
     }
 
-    if (lastStub->isFallback()) {
-      // Unlink all stubs allocated in the optimized space.
-      ICStub* stub = entry.firstStub();
-      ICStub* prev = nullptr;
+    MOZ_ASSERT(lastStub->isFallback());
 
-      while (stub->next()) {
-        if (!stub->allocatedInFallbackSpace()) {
-          // Note: this is called when discarding JIT code, after invalidating
-          // all Warp code, so we don't need to check for that here.
-          lastStub->toFallbackStub()->clearUsedByTranspiler();
-          lastStub->toFallbackStub()->unlinkStubDontInvalidateWarp(zone, prev,
-                                                                   stub);
-          stub = stub->next();
-          continue;
-        }
+    // Unlink all stubs allocated in the optimized space.
+    ICStub* stub = entry.firstStub();
+    ICStub* prev = nullptr;
 
-        prev = stub;
+    while (stub->next()) {
+      if (!stub->allocatedInFallbackSpace()) {
+        // Note: this is called when discarding JIT code, after invalidating
+        // all Warp code, so we don't need to check for that here.
+        lastStub->toFallbackStub()->clearUsedByTranspiler();
+        lastStub->toFallbackStub()->unlinkStubDontInvalidateWarp(zone, prev,
+                                                                 stub);
         stub = stub->next();
+        continue;
       }
 
-      if (lastStub->isMonitoredFallback()) {
-        // Monitor stubs can't make calls, so are always in the
-        // optimized stub space.
-        ICTypeMonitor_Fallback* lastMonStub =
-            lastStub->toMonitoredFallbackStub()->maybeFallbackMonitorStub();
-        if (lastMonStub) {
-          lastMonStub->resetMonitorStubChain(zone);
-        }
-      }
-    } else if (lastStub->isTypeMonitor_Fallback()) {
-      lastStub->toTypeMonitor_Fallback()->resetMonitorStubChain(zone);
-    } else {
-      MOZ_CRASH("Unknown fallback stub");
+      prev = stub;
+      stub = stub->next();
     }
   }
 

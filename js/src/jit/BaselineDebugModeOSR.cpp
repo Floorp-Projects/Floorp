@@ -179,8 +179,6 @@ static const char* RetAddrEntryKindToString(RetAddrEntry::Kind kind) {
   switch (kind) {
     case RetAddrEntry::Kind::IC:
       return "IC";
-    case RetAddrEntry::Kind::PrologueIC:
-      return "prologue IC";
     case RetAddrEntry::Kind::CallVM:
       return "callVM";
     case RetAddrEntry::Kind::StackCheck:
@@ -354,7 +352,6 @@ static void PatchBaselineFramesForDebugMode(
                                    pc);
             break;
           }
-          case RetAddrEntry::Kind::PrologueIC:
           case RetAddrEntry::Kind::NonOpCallVM:
           case RetAddrEntry::Kind::Invalid:
             // These cannot trigger BaselineDebugModeOSR.
