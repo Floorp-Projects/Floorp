@@ -140,21 +140,15 @@ async function postFrom(start, target) {
   );
 }
 
-async function loadAndGetProcessID(browser, target, expectedProcessSwitch) {
+async function loadAndGetProcessID(browser, target) {
   info(`Performing GET load: ${target}`);
   await performLoad(
     browser,
     {
       maybeErrorPage: true,
     },
-    async () => {
+    () => {
       BrowserTestUtils.loadURI(browser, target);
-      if (expectedProcessSwitch) {
-        await BrowserTestUtils.waitForEvent(
-          gBrowser.getTabForBrowser(browser),
-          "SSTabRestored"
-        );
-      }
     }
   );
 
@@ -187,11 +181,7 @@ async function testLoadAndRedirect(
 
       info(`firstProcessID: ${firstProcessID}`);
 
-      let secondProcessID = await loadAndGetProcessID(
-        browser,
-        target,
-        expectedProcessSwitch
-      );
+      let secondProcessID = await loadAndGetProcessID(browser, target);
 
       info(`secondProcessID: ${secondProcessID}`);
       Assert.equal(firstProcessID != secondProcessID, expectedProcessSwitch);
@@ -200,11 +190,7 @@ async function testLoadAndRedirect(
         return;
       }
 
-      let thirdProcessID = await loadAndGetProcessID(
-        browser,
-        add307(target),
-        expectedProcessSwitch
-      );
+      let thirdProcessID = await loadAndGetProcessID(browser, add307(target));
 
       info(`thirdProcessID: ${thirdProcessID}`);
       Assert.equal(firstProcessID != thirdProcessID, expectedProcessSwitch);
