@@ -125,6 +125,11 @@ notification[type="critical"] > hbox > .messageImage {
   margin-inline-end: 16px;
 }
 
+.messageCloseButton:-moz-focusring > .toolbarbutton-icon {
+  outline: var(--toolbarbutton-focus-outline, 2px solid currentColor);
+  -moz-outline-radius: var(--toolbarbutton-border-radius, 4px);
+}
+
 .notification-button {
   appearance: none;
   border: 1px solid transparent;
@@ -149,10 +154,20 @@ notification[type="critical"] > hbox > .messageImage {
   background-color: var(--notification-button-background-active);
 }
 
+.notification-button:-moz-focusring {
+  outline: var(--toolbarbutton-focus-outline, 2px solid currentColor);
+  -moz-outline-radius: var(--toolbarbutton-border-radius, 4px);
+}
+
 .notification-button.primary {
   background-color: var(--notification-primary-button-background);
   /* Override button.css hover & active styles */
   color: var(--notification-primary-button-text) !important;
+}
+
+.notification-button.primary:-moz-focusring {
+  outline: 4px solid rgba(0, 96, 223, 0.5);
+  outline-offset: -1px;
 }
 
 .notification-button.primary:not([disabled]):hover {
