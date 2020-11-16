@@ -261,7 +261,7 @@ var Sanitizer = {
    *           specify a specific range.
    *           If timespan is not ignored, and range is not set, sanitize() will
    *           use the value of the timespan pref to determine a range.
-   *         - range (default: null)
+   *         - range (default: null): array-tuple of [from, to] timestamps
    *         - privateStateForNewWindow (default: "non-private"): when clearing
    *           open windows, defines the private state for the newly opened window.
    */
@@ -340,7 +340,7 @@ var Sanitizer = {
 
   // When making any changes to the sanitize implementations here,
   // please check whether the changes are applicable to Android
-  // (mobile/android/modules/Sanitizer.jsm) as well.
+  // (mobile/android/modules/geckoview/GeckoViewStorageController.jsm) as well.
 
   items: {
     cache: {
@@ -380,9 +380,24 @@ var Sanitizer = {
           range,
           Ci.nsIClearDataService.CLEAR_HISTORY |
             Ci.nsIClearDataService.CLEAR_SESSION_HISTORY |
-            Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS |
             Ci.nsIClearDataService.CLEAR_CONTENT_BLOCKING_RECORDS
         );
+
+        // storageAccessAPI permissions record every site that the user
+        // interacted with and thus mirror history quite closely. It makes
+        // sense to clear them when we clear history. However, since their absence
+        // indicates that we can purge cookies and site data for tracking origins without
+        // user interaction, we need to ensure that we only delete those permissions that
+        // do not have any existing storage.
+        let principalsCollector = new PrincipalsCollector();
+        let principals = await principalsCollector.getAllPrincipals();
+        await new Promise(resolve => {
+          Services.clearData.deleteUserInteractionForClearingHistory(
+            principals,
+            range ? range[0] : 0,
+            resolve
+          );
+        });
         TelemetryStopwatch.finish("FX_SANITIZE_HISTORY", refObj);
       },
     },
