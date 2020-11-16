@@ -247,17 +247,6 @@ class RecompileInfo {
 // single IonScript doesn't require an allocation.
 typedef Vector<RecompileInfo, 1, SystemAllocPolicy> RecompileInfoVector;
 
-// Generate the type constraints for the compilation. Sets |isValidOut| based on
-// whether the type constraints still hold.
-bool FinishCompilation(JSContext* cx, HandleScript script,
-                       CompilerConstraintList* constraints,
-                       IonCompilationId compilationId, bool* isValidOut);
-
-// Update the actual types in any scripts queried by constraints with any
-// speculative types added during the definite properties analysis.
-void FinishDefinitePropertiesAnalysis(JSContext* cx,
-                                      CompilerConstraintList* constraints);
-
 struct AutoEnterAnalysis;
 
 class TypeZone {

@@ -722,55 +722,13 @@ static bool BlockComputesConstant(MBasicBlock* block, MDefinition* value,
 //
 // 1) phi(a, a)
 //     can get replaced by a
-//
-// 2) phi(filtertypeset(a, type1), filtertypeset(a, type1))
-//     equals filtertypeset(a, type1)
-//
-// 3) phi(a, filtertypeset(a, type1))
-//     equals filtertypeset(a, type1 union type(a))
-//     equals filtertypeset(a, type(a))
-//     equals a
-//
-// 4) phi(filtertypeset(a, type1), filtertypeset(a, type2))
-//    equals filtertypeset(a, type1 union type2)
-//
-//    This is the special case. We can only replace this with 'a' iif
-//    type(a) == type1 union type2. Since optimizations could have
-//    happened based on a more specific phi type.
 static bool IsPhiRedudantFilter(MPhi* phi) {
-  // Handle (1) and (2)
+  // TODO(no-TI): clean up.
   if (phi->operandIfRedundant()) {
     return true;
   }
 
-  // Handle (3)
-  bool onlyFilters = false;
-  MDefinition* a = phi->getOperand(0);
-  if (a->isFilterTypeSet()) {
-    a = a->toFilterTypeSet()->input();
-    onlyFilters = true;
-  }
-
-  for (size_t i = 1; i < phi->numOperands(); i++) {
-    MDefinition* operand = phi->getOperand(i);
-    if (operand == a) {
-      onlyFilters = false;
-      continue;
-    }
-    if (operand->isFilterTypeSet() &&
-        operand->toFilterTypeSet()->input() == a) {
-      continue;
-    }
-    return false;
-  }
-  if (!onlyFilters) {
-    return true;
-  }
-
-  // Handle (4)
-  MOZ_ASSERT(onlyFilters);
-  return EqualTypes(a->type(), a->resultTypeSet(), phi->type(),
-                    phi->resultTypeSet());
+  return false;
 }
 
 // Determine whether phiBlock/testBlock simply compute a phi and perform a
@@ -1000,9 +958,6 @@ static bool MaybeFoldConditionBlock(MIRGraph& graph,
 
     if (!redundant) {
       redundant = (*iter)->getOperand(0);
-      if (redundant->isFilterTypeSet()) {
-        redundant = redundant->toFilterTypeSet()->input();
-      }
     }
 
     (*iter)->replaceAllUsesWith(redundant);
@@ -1200,8 +1155,7 @@ bool jit::EliminateDeadResumePointOperands(MIRGenerator* mir, MIRGraph& graph) {
       // parameter passing might be live. Rewriting uses of these terms
       // in resume points may affect the interpreter's behavior. Rather
       // than doing a more sophisticated analysis, just ignore these.
-      if (ins->isUnbox() || ins->isParameter() || ins->isTypeBarrier() ||
-          ins->isBoxNonStrictThis() || ins->isFilterTypeSet()) {
+      if (ins->isUnbox() || ins->isParameter() || ins->isBoxNonStrictThis()) {
         continue;
       }
 
@@ -1703,12 +1657,7 @@ MIRType TypeAnalyzer::guessPhiType(MPhi* phi,
       }
     }
 
-    // Ignore operands which we've never observed, unless this caused a
-    // bailout in a previous compilation of this script.
-    if (in->resultTypeSet() && in->resultTypeSet()->empty()) {
-      *hasInputsWithEmptyTypes = true;
-      continue;
-    }
+    // TODO(no-TI): remove hasInputsWithEmptyTypes.
 
     // See shouldSpecializeOsrPhis comment. This is the first step mentioned
     // there.
@@ -3539,202 +3488,13 @@ static bool TryEliminateBoundsCheck(BoundsCheckMap& checks, size_t blockIndex,
   return true;
 }
 
-static void TryEliminateTypeBarrierFromTest(MTypeBarrier* barrier,
-                                            bool filtersNull,
-                                            bool filtersUndefined, MTest* test,
-                                            BranchDirection direction,
-                                            bool* eliminated) {
-  MOZ_ASSERT(filtersNull || filtersUndefined);
-
-  // Watch for code patterns similar to 'if (x.f) { ... = x.f }'.  If x.f
-  // is either an object or null/undefined, there will be a type barrier on
-  // the latter read as the null/undefined value is never realized there.
-  // The type barrier can be eliminated, however, by looking at tests
-  // performed on the result of the first operation that filter out all
-  // types that have been seen in the first access but not the second.
-
-  // A test 'if (x.f)' filters both null and undefined.
-
-  // Disregard the possible unbox added before the Typebarrier for checking.
-  MDefinition* input = barrier->input();
-  MUnbox* inputUnbox = nullptr;
-  if (input->isUnbox() && input->toUnbox()->mode() != MUnbox::Fallible) {
-    inputUnbox = input->toUnbox();
-    input = inputUnbox->input();
-  }
-
-  MDefinition* subject = nullptr;
-  bool removeUndefined;
-  bool removeNull;
-  test->filtersUndefinedOrNull(direction == TRUE_BRANCH, &subject,
-                               &removeUndefined, &removeNull);
-
-  // The Test doesn't filter undefined nor null.
-  if (!subject) {
-    return;
-  }
-
-  // Make sure the subject equals the input to the TypeBarrier.
-  if (subject != input) {
-    return;
-  }
-
-  // When the TypeBarrier filters undefined, the test must at least also do,
-  // this, before the TypeBarrier can get removed.
-  if (!removeUndefined && filtersUndefined) {
-    return;
-  }
-
-  // When the TypeBarrier filters null, the test must at least also do,
-  // this, before the TypeBarrier can get removed.
-  if (!removeNull && filtersNull) {
-    return;
-  }
-
-  // Eliminate the TypeBarrier. The possible TypeBarrier unboxing is kept,
-  // but made infallible.
-  *eliminated = true;
-  if (inputUnbox) {
-    inputUnbox->makeInfallible();
-  }
-  barrier->replaceAllUsesWith(barrier->input());
-}
-
-static bool TryEliminateTypeBarrier(MTypeBarrier* barrier, bool* eliminated) {
-  MOZ_ASSERT(!*eliminated);
-
-  const TemporaryTypeSet* barrierTypes = barrier->resultTypeSet();
-  const TemporaryTypeSet* inputTypes = barrier->input()->resultTypeSet();
-
-  // Disregard the possible unbox added before the Typebarrier.
-  if (barrier->input()->isUnbox() &&
-      barrier->input()->toUnbox()->mode() != MUnbox::Fallible) {
-    inputTypes = barrier->input()->toUnbox()->input()->resultTypeSet();
-  }
-
-  if (!barrierTypes || !inputTypes) {
-    return true;
-  }
-
-  bool filtersNull = barrierTypes->filtersType(inputTypes, TypeSet::NullType());
-  bool filtersUndefined =
-      barrierTypes->filtersType(inputTypes, TypeSet::UndefinedType());
-
-  if (!filtersNull && !filtersUndefined) {
-    return true;
-  }
-
-  MBasicBlock* block = barrier->block();
-  while (true) {
-    BranchDirection direction;
-    MTest* test = block->immediateDominatorBranch(&direction);
-
-    if (test) {
-      TryEliminateTypeBarrierFromTest(barrier, filtersNull, filtersUndefined,
-                                      test, direction, eliminated);
-    }
-
-    MBasicBlock* previous = block->immediateDominator();
-    if (previous == block) {
-      break;
-    }
-    block = previous;
-  }
-
-  return true;
-}
-
 static bool TryOptimizeLoadObjectOrNull(MDefinition* def,
                                         MDefinitionVector* peliminateList) {
   if (def->type() != MIRType::Value) {
     return true;
   }
 
-  // Check if this definition can only produce object or null values.
-  TemporaryTypeSet* types = def->resultTypeSet();
-  if (!types) {
-    return true;
-  }
-  if (types->baseFlags() & ~(TYPE_FLAG_NULL | TYPE_FLAG_ANYOBJECT)) {
-    return true;
-  }
-
-  MDefinitionVector eliminateList(def->block()->graph().alloc());
-
-  for (MUseDefIterator iter(def); iter; ++iter) {
-    MDefinition* ndef = iter.def();
-    switch (ndef->op()) {
-      case MDefinition::Opcode::Compare:
-        if (ndef->toCompare()->compareType() != MCompare::Compare_Null) {
-          return true;
-        }
-        break;
-      case MDefinition::Opcode::Test:
-        break;
-      case MDefinition::Opcode::PostWriteBarrier:
-        break;
-      case MDefinition::Opcode::StoreFixedSlot:
-        break;
-      case MDefinition::Opcode::StoreDynamicSlot:
-        break;
-      case MDefinition::Opcode::ToObjectOrNull:
-        if (!eliminateList.append(ndef->toToObjectOrNull())) {
-          return false;
-        }
-        break;
-      case MDefinition::Opcode::Unbox:
-        if (ndef->type() != MIRType::Object) {
-          return true;
-        }
-        break;
-      case MDefinition::Opcode::TypeBarrier:
-        // For now, only handle type barriers which are not consumed
-        // anywhere and only test that the value is null.
-        if (ndef->hasUses() ||
-            ndef->resultTypeSet()->getKnownMIRType() != MIRType::Null) {
-          return true;
-        }
-        break;
-      default:
-        return true;
-    }
-  }
-
-  // On punboxing systems we are better off leaving the value boxed if it
-  // is only stored back to the heap.
-#ifdef JS_PUNBOX64
-  bool foundUse = false;
-  for (MUseDefIterator iter(def); iter; ++iter) {
-    MDefinition* ndef = iter.def();
-    if (!ndef->isStoreFixedSlot() && !ndef->isStoreDynamicSlot()) {
-      foundUse = true;
-      break;
-    }
-  }
-  if (!foundUse) {
-    return true;
-  }
-#endif  // JS_PUNBOX64
-
-  def->setResultType(MIRType::ObjectOrNull);
-
-  // Fixup the result type of MTypeBarrier uses.
-  for (MUseDefIterator iter(def); iter; ++iter) {
-    MDefinition* ndef = iter.def();
-    if (ndef->isTypeBarrier()) {
-      ndef->setResultType(MIRType::ObjectOrNull);
-    }
-  }
-
-  // Eliminate MToObjectOrNull instruction uses.
-  for (size_t i = 0; i < eliminateList.length(); i++) {
-    MDefinition* ndef = eliminateList[i];
-    ndef->replaceAllUsesWith(def);
-    if (!peliminateList->append(ndef)) {
-      return false;
-    }
-  }
-
+  // TODO(no-TI): remove more code.
   return true;
 }
 
@@ -3802,11 +3562,6 @@ bool jit::EliminateRedundantChecks(MIRGraph& graph) {
         case MDefinition::Opcode::BoundsCheck:
           if (!TryEliminateBoundsCheck(checks, index, def->toBoundsCheck(),
                                        &eliminated)) {
-            return false;
-          }
-          break;
-        case MDefinition::Opcode::TypeBarrier:
-          if (!TryEliminateTypeBarrier(def->toTypeBarrier(), &eliminated)) {
             return false;
           }
           break;

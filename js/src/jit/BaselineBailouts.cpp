@@ -616,6 +616,7 @@ bool BaselineStackBuilder::buildBaselineFrame() {
     // the function's initial environment.  This will be fixed up
     // later if needed in |FinishBailoutToBaseline|, which calls
     // |EnsureHasEnvironmentObjects|.
+    // TODO(no-TI): remove ArgumentCheck kind.
     JitSpew(JitSpew_BaselineBailouts,
             "      BailoutKind::ArgumentCheck! Using function's environment");
     envChain = fun_->environment();
