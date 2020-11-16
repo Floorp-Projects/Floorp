@@ -183,7 +183,7 @@ function MockFilePickerInstance(window) {
 MockFilePickerInstance.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIFilePicker"]),
   init(aParent, aTitle, aMode) {
-    this.mode = aMode;
+    MockFilePicker.mode = aMode;
     this.filterIndex = MockFilePicker.filterIndex;
     this.parent = aParent;
   },
