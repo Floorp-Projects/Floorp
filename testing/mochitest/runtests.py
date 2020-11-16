@@ -2138,7 +2138,11 @@ toolbar#nav-bar {
             prefs["testing.browserTestHarness.timeout"] = 90
 
         # tsan builds need even more time
-        if mozinfo.info["tsan"] and options.flavor == 'browser' and options.timeout is None:
+        if (
+            mozinfo.info["tsan"]
+            and options.flavor == "browser"
+            and options.timeout is None
+        ):
             self.log.info("Increasing default timeout to 120 seconds")
             prefs["testing.browserTestHarness.timeout"] = 120
 
