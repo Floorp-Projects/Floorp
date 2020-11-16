@@ -183,7 +183,8 @@ XMLHttpRequestStringSnapshotReaderHelper::
         XMLHttpRequestStringSnapshot& aSnapshot)
     : mBuffer(aSnapshot.mBuffer), mLock(aSnapshot.mBuffer->mMutex) {}
 
-XMLHttpRequestStringSnapshotReaderHelper::~XMLHttpRequestStringSnapshotReaderHelper() = default;
+XMLHttpRequestStringSnapshotReaderHelper::
+    ~XMLHttpRequestStringSnapshotReaderHelper() = default;
 
 const char16_t* XMLHttpRequestStringSnapshotReaderHelper::Buffer() const {
   return mBuffer->UnsafeData().BeginReading();

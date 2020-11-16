@@ -61,7 +61,6 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   [[nodiscard]] nsresult CancelTransactions(nsHttpConnectionInfo*,
                                             nsresult reason);
 
-
   //-------------------------------------------------------------------------
   // NOTE: functions below may be called only on the socket thread.
   //-------------------------------------------------------------------------
@@ -130,11 +129,10 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
                                bool aFetchHTTPSRR);
 
   HttpConnectionBase* GetH2orH3ActiveConn(ConnectionEntry* ent, bool aNoHttp2,
-      bool aNoHttp3);
+                                          bool aNoHttp3);
 
   void IncreaseNumHalfOpenConns();
   void DecreaseNumHalfOpenConns();
-
 
   // Wen a new idle connection has been added, this function is called to
   // increment mNumIdleConns and update PruneDeadConnections timer.
@@ -271,8 +269,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   void RecvdConnect();
 
   ConnectionEntry* GetOrCreateConnectionEntry(nsHttpConnectionInfo*,
-                                              bool allowWildCard,
-                                              bool aNoHttp2,
+                                              bool allowWildCard, bool aNoHttp2,
                                               bool aNoHttp3);
 
   [[nodiscard]] nsresult MakeNewConnection(
@@ -283,8 +280,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   nsClassHashtable<nsCStringHashKey, nsTArray<nsWeakPtr>> mCoalescingHash;
 
   HttpConnectionBase* FindCoalescableConnection(ConnectionEntry* ent,
-                                                bool justKidding,
-                                                bool aNoHttp2,
+                                                bool justKidding, bool aNoHttp2,
                                                 bool aNoHttp3);
   HttpConnectionBase* FindCoalescableConnectionByHashKey(ConnectionEntry* ent,
                                                          const nsCString& key,
@@ -296,7 +292,8 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
 
   void ProcessSpdyPendingQ(ConnectionEntry* ent);
   void DispatchSpdyPendingQ(nsTArray<RefPtr<PendingTransactionInfo>>& pendingQ,
-      ConnectionEntry* ent, HttpConnectionBase* connH2, HttpConnectionBase* connH3);
+                            ConnectionEntry* ent, HttpConnectionBase* connH2,
+                            HttpConnectionBase* connH3);
   // used to marshall events to the socket transport thread.
   [[nodiscard]] nsresult PostEvent(nsConnEventHandler handler,
                                    int32_t iparam = 0,

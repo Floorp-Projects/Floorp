@@ -552,8 +552,9 @@ TokenStreamCharsBase<Unit>::TokenStreamCharsBase(JSContext* cx,
     : TokenStreamCharsShared(cx, pasrerAtoms),
       sourceUnits(units, length, startOffset) {}
 
-bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(
-    CharBuffer& charBuffer, const char16_t* cur, const char16_t* end) {
+bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(CharBuffer& charBuffer,
+                                                        const char16_t* cur,
+                                                        const char16_t* end) {
   MOZ_ASSERT(charBuffer.length() == 0);
 
   while (cur < end) {
@@ -574,8 +575,9 @@ bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(
   return true;
 }
 
-bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(
-    CharBuffer& charBuffer, const Utf8Unit* cur, const Utf8Unit* end) {
+bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(CharBuffer& charBuffer,
+                                                        const Utf8Unit* cur,
+                                                        const Utf8Unit* end) {
   MOZ_ASSERT(charBuffer.length() == 0);
 
   while (cur < end) {

@@ -637,8 +637,8 @@ nsresult nsHttpConnectionMgr::RemoveIdleConnection(nsHttpConnection* conn) {
 }
 
 HttpConnectionBase* nsHttpConnectionMgr::FindCoalescableConnectionByHashKey(
-    ConnectionEntry* ent, const nsCString& key, bool justKidding,
-    bool aNoHttp2, bool aNoHttp3) {
+    ConnectionEntry* ent, const nsCString& key, bool justKidding, bool aNoHttp2,
+    bool aNoHttp3) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(!aNoHttp2 || !aNoHttp3);
   MOZ_ASSERT(ent->mConnInfo);
@@ -736,8 +736,8 @@ HttpConnectionBase* nsHttpConnectionMgr::FindCoalescableConnection(
   // First try and look it up by origin frame
   nsCString newKey;
   BuildOriginFrameHashKey(newKey, ci, ci->GetOrigin(), ci->OriginPort());
-  HttpConnectionBase* conn =
-      FindCoalescableConnectionByHashKey(ent, newKey, justKidding, aNoHttp2, aNoHttp3);
+  HttpConnectionBase* conn = FindCoalescableConnectionByHashKey(
+      ent, newKey, justKidding, aNoHttp2, aNoHttp3);
   if (conn) {
     LOG(("FindCoalescableConnection(%s) match conn %p on frame key %s\n",
          ci->HashKey().get(), conn, newKey.get()));
@@ -1294,8 +1294,7 @@ nsresult nsHttpConnectionMgr::TryDispatchTransaction(
   // essentially pipelining without head of line blocking
 
   RefPtr<HttpConnectionBase> conn = GetH2orH3ActiveConn(
-      ent,
-      (!gHttpHandler->IsSpdyEnabled() || (caps & NS_HTTP_DISALLOW_SPDY)),
+      ent, (!gHttpHandler->IsSpdyEnabled() || (caps & NS_HTTP_DISALLOW_SPDY)),
       (!gHttpHandler->IsHttp3Enabled() || (caps & NS_HTTP_DISALLOW_HTTP3)));
   if (conn) {
     if (trans->IsWebsocketUpgrade() && !conn->CanAcceptWebsocket()) {
@@ -1752,7 +1751,8 @@ void nsHttpConnectionMgr::DispatchSpdyPendingQ(
   uint32_t index;
   // Dispatch all the transactions we can
   for (index = 0; index < pendingQ.Length() &&
-       ((connH3 && connH3->CanDirectlyActivate()) || (connH2 && connH2->CanDirectlyActivate()));
+                  ((connH3 && connH3->CanDirectlyActivate()) ||
+                   (connH2 && connH2->CanDirectlyActivate()));
        ++index) {
     PendingTransactionInfo* pendingTransInfo = pendingQ[index];
 
@@ -1767,7 +1767,8 @@ void nsHttpConnectionMgr::DispatchSpdyPendingQ(
     if (!(pendingTransInfo->Transaction()->Caps() & NS_HTTP_DISALLOW_HTTP3) &&
         connH3 && connH3->CanDirectlyActivate()) {
       conn = connH3;
-    } else if (!(pendingTransInfo->Transaction()->Caps() & NS_HTTP_DISALLOW_SPDY) &&
+    } else if (!(pendingTransInfo->Transaction()->Caps() &
+                 NS_HTTP_DISALLOW_SPDY) &&
                connH2 && connH2->CanDirectlyActivate()) {
       conn = connH2;
     } else {
@@ -2287,7 +2288,8 @@ void nsHttpConnectionMgr::OnMsgReclaimConnection(HttpConnectionBase* conn) {
     // this can happen if the connection is made outside of the
     // connection manager and is being "reclaimed" for use with
     // future transactions. HTTP/2 tunnels work like this.
-    ent = GetOrCreateConnectionEntry(conn->ConnectionInfo(), true, false, false);
+    ent =
+        GetOrCreateConnectionEntry(conn->ConnectionInfo(), true, false, false);
     LOG(
         ("nsHttpConnectionMgr::OnMsgReclaimConnection conn %p "
          "forced new hash entry %s\n",
@@ -3236,7 +3238,8 @@ ConnectionEntry* nsHttpConnectionMgr::GetOrCreateConnectionEntry(
   anonInvertedCI->SetAnonymous(!specificCI->GetAnonymous());
   ConnectionEntry* invertedEnt = mCT.GetWeak(anonInvertedCI->HashKey());
   if (invertedEnt) {
-    HttpConnectionBase* h2orh3conn = GetH2orH3ActiveConn(invertedEnt, aNoHttp2, aNoHttp3);
+    HttpConnectionBase* h2orh3conn =
+        GetH2orH3ActiveConn(invertedEnt, aNoHttp2, aNoHttp3);
     if (h2orh3conn && h2orh3conn->IsExperienced() &&
         h2orh3conn->NoClientCertAuth()) {
       MOZ_ASSERT(h2orh3conn->UsingSpdy() || h2orh3conn->UsingHttp3());
@@ -3435,7 +3438,8 @@ void nsHttpConnectionMgr::MoveToWildCardConnEntry(
     return;
   }
 
-  ConnectionEntry* wcEnt = GetOrCreateConnectionEntry(wildCardCI, true, false, false);
+  ConnectionEntry* wcEnt =
+      GetOrCreateConnectionEntry(wildCardCI, true, false, false);
   if (wcEnt == ent) {
     // nothing to do!
     return;
