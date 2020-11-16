@@ -121,7 +121,6 @@ namespace jit {
   _(DoSpreadCallFallback, js::jit::DoSpreadCallFallback)                       \
   _(DoStringToInt64, js::jit::DoStringToInt64)                                 \
   _(DoTrialInlining, js::jit::DoTrialInlining)                                 \
-  _(DoTypeUpdateFallback, js::jit::DoTypeUpdateFallback)                       \
   _(EnterWith, js::jit::EnterWith)                                             \
   _(FinalSuspend, js::jit::FinalSuspend)                                       \
   _(FinishBoundFunctionInit, JSFunction::finishBoundFunctionInit)              \
@@ -307,7 +306,6 @@ namespace jit {
   _(DoSetPropFallback, js::jit::DoSetPropFallback, 1)                       \
   _(DoToBoolFallback, js::jit::DoToBoolFallback, 0)                         \
   _(DoToPropertyKeyFallback, js::jit::DoToPropertyKeyFallback, 0)           \
-  _(DoTypeMonitorFallback, js::jit::DoTypeMonitorFallback, 0)               \
   _(DoTypeOfFallback, js::jit::DoTypeOfFallback, 0)                         \
   _(DoUnaryArithFallback, js::jit::DoUnaryArithFallback, 1)
 

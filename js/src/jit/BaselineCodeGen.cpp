@@ -561,7 +561,7 @@ bool BaselineCompilerCodeGen::emitNextIC() {
   } while (entry->pcOffset() < pcOffset);
 
   MOZ_RELEASE_ASSERT(entry->pcOffset() == pcOffset);
-  MOZ_ASSERT_IF(!entry->isForPrologue(), BytecodeOpHasIC(JSOp(*handler.pc())));
+  MOZ_ASSERT(BytecodeOpHasIC(JSOp(*handler.pc())));
 
   // Load stub pointer into ICStubReg.
   if (JitOptions.warpBuilder) {
@@ -576,10 +576,7 @@ bool BaselineCompilerCodeGen::emitNextIC() {
   CodeOffset returnOffset;
   EmitCallIC(masm, &returnOffset);
 
-  RetAddrEntry::Kind kind = entry->isForPrologue()
-                                ? RetAddrEntry::Kind::PrologueIC
-                                : RetAddrEntry::Kind::IC;
-
+  RetAddrEntry::Kind kind = RetAddrEntry::Kind::IC;
   if (!handler.retAddrEntries().emplaceBack(pcOffset, kind, returnOffset)) {
     ReportOutOfMemory(cx);
     return false;
@@ -3687,13 +3684,6 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_GetAliasedVar() {
   emitGetAliasedVar(R0);
 
-  if (IsTypeInferenceEnabled() && handler.maybeIonCompileable()) {
-    // No need to monitor types if we know Ion can't compile this script.
-    if (!emitNextIC()) {
-      return false;
-    }
-  }
-
   frame.push(R0);
   return true;
 }
@@ -3907,13 +3897,6 @@ bool BaselineCompilerCodeGen::emit_GetImport() {
     }
   }
 
-  if (IsTypeInferenceEnabled() && handler.maybeIonCompileable()) {
-    // No need to monitor types if we know Ion can't compile this script.
-    if (!emitNextIC()) {
-      return false;
-    }
-  }
-
   frame.push(R0);
   return true;
 }
@@ -3933,11 +3916,6 @@ bool BaselineInterpreterCodeGen::emit_GetImport() {
   using Fn = bool (*)(JSContext*, HandleObject, HandleScript, jsbytecode*,
                       MutableHandleValue);
   if (!callVM<Fn, GetImportOperation>()) {
-    return false;
-  }
-
-  // Enter the type monitor IC.
-  if (IsTypeInferenceEnabled() && !emitNextIC()) {
     return false;
   }
 

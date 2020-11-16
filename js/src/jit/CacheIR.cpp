@@ -446,6 +446,7 @@ AttachDecision GetPropIRGenerator::tryAttachIdempotentStub() {
   // effects and produce a result which the MIR in the calling code is able
   // to handle, since we do not have a pc to explicitly monitor the result.
 
+  // TODO(no-TI): remove idempotent ICs.
   MOZ_ASSERT(idempotent());
 
   RootedObject obj(cx_, &val_.toObject());
@@ -1018,10 +1019,6 @@ static void EmitReadSlotReturn(CacheIRWriter& writer, JSObject*,
     }
     writer.typeMonitorResult();
   } else {
-    // Normally for this op, the result would have to be monitored by TI.
-    // However, since this stub ALWAYS returns UndefinedValue(), and we can be
-    // sure that undefined is already registered with the type-set, this can be
-    // avoided.
     writer.returnFromIC();
   }
 }
@@ -1830,8 +1827,6 @@ AttachDecision GetPropIRGenerator::tryAttachObjectLength(HandleObject obj,
   }
 
   if (obj->is<ArrayObject>()) {
-    // Make sure int32 is added to the TypeSet before we attach a stub, so
-    // the stub can return int32 values without monitoring the result.
     if (obj->as<ArrayObject>().length() > INT32_MAX) {
       return AttachDecision::NoAction;
     }
@@ -1969,17 +1964,11 @@ AttachDecision GetPropIRGenerator::tryAttachFunction(HandleObject obj,
   writer.guardClass(objId, GuardClassKind::JSFunction);
   if (isLength) {
     writer.loadFunctionLengthResult(objId);
-
-    // Doesn't need to be monitored, because it always returns an int32.
     writer.returnFromIC();
-
     trackAttached("FunctionLength");
   } else {
     writer.loadFunctionNameResult(objId);
-
-    // Doesn't need to be monitored, because it always returns a string.
     writer.returnFromIC();
-
     trackAttached("FunctionName");
   }
   return AttachDecision::Attach;
@@ -5138,8 +5127,7 @@ CallIRGenerator::CallIRGenerator(JSContext* cx, HandleScript script,
       thisval_(thisval),
       newTarget_(newTarget),
       args_(args),
-      typeCheckInfo_(cx, /* needsTypeBarrier = */ true),
-      cacheIRStubKind_(BaselineCacheIRStubKind::Regular) {}
+      typeCheckInfo_(cx, /* needsTypeBarrier = */ true) {}
 
 void CallIRGenerator::emitNativeCalleeGuard(HandleFunction callee) {
   // Note: we rely on GuardSpecificFunction to also guard against the same
@@ -5256,8 +5244,6 @@ AttachDecision CallIRGenerator::tryAttachArrayPush(HandleFunction callee) {
   // Set the type-check info, and the stub kind to Updated
   typeCheckInfo_.set(thisobj->group(), JSID_VOID);
 
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Updated;
-
   trackAttached("ArrayPush");
   return AttachDecision::Attach;
 }
@@ -5309,7 +5295,6 @@ AttachDecision CallIRGenerator::tryAttachArrayPopShift(HandleFunction callee,
   }
 
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("ArrayPopShift");
   return AttachDecision::Attach;
@@ -5359,13 +5344,6 @@ AttachDecision CallIRGenerator::tryAttachArrayJoin(HandleFunction callee) {
   writer.arrayJoinResult(thisObjId, sepId);
 
   writer.returnFromIC();
-
-  // The result of this stub does not need to be monitored because it will
-  // always return a string.  We will add String to the stack typeset when
-  // attaching this stub.
-
-  // Set the stub kind to Regular
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("ArrayJoin");
   return AttachDecision::Attach;
@@ -5443,7 +5421,6 @@ AttachDecision CallIRGenerator::tryAttachArraySlice(HandleFunction callee) {
   }
 
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("ArraySlice");
   return AttachDecision::Attach;
@@ -5464,11 +5441,7 @@ AttachDecision CallIRGenerator::tryAttachArrayIsArray(HandleFunction callee) {
   // Check if the argument is an Array and return result.
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   writer.isArrayResult(argId);
-
-  // This stub does not need to be monitored, because it always
-  // returns a boolean.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("ArrayIsArray");
   return AttachDecision::Attach;
@@ -5541,11 +5514,7 @@ AttachDecision CallIRGenerator::tryAttachDataViewGet(HandleFunction callee,
 
   writer.loadDataViewValueResult(objId, int32OffsetId, boolLittleEndianId, type,
                                  allowDoubleForUint32);
-
-  // This stub does not need to be monitored, because it returns the same type
-  // as this call.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("DataViewGet");
   return AttachDecision::Attach;
@@ -5617,10 +5586,7 @@ AttachDecision CallIRGenerator::tryAttachDataViewSet(HandleFunction callee,
 
   writer.storeDataViewValueResult(objId, int32OffsetId, numericValueId,
                                   boolLittleEndianId, type);
-
-  // This stub doesn't need type monitoring, it always returns |undefined|.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("DataViewSet");
   return AttachDecision::Attach;
@@ -5674,7 +5640,6 @@ AttachDecision CallIRGenerator::tryAttachUnsafeGetReservedSlot(
 
   // For simplicity just monitor all stubs.
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("UnsafeGetReservedSlot");
   return AttachDecision::Attach;
@@ -5714,7 +5679,6 @@ AttachDecision CallIRGenerator::tryAttachUnsafeSetReservedSlot(
 
   // This stub always returns undefined.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("UnsafeSetReservedSlot");
   return AttachDecision::Attach;
@@ -5742,11 +5706,6 @@ AttachDecision CallIRGenerator::tryAttachIsSuspendedGenerator(
   // false for values that are not generator objects.
   writer.callIsSuspendedGeneratorResult(valId);
   writer.returnFromIC();
-
-  // This stub does not need to be monitored, because it always
-  // returns Boolean. The stack typeset will be updated when we
-  // attach the stub.
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("IsSuspendedGenerator");
   return AttachDecision::Attach;
@@ -5782,7 +5741,6 @@ AttachDecision CallIRGenerator::tryAttachToObject(HandleFunction callee,
 
   // Monitor the returned object.
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   if (native == InlinableNative::IntrinsicToObject) {
     trackAttached("ToObject");
@@ -5816,11 +5774,7 @@ AttachDecision CallIRGenerator::tryAttachToInteger(HandleFunction callee) {
 
   // Return the int32.
   writer.loadInt32Result(int32Id);
-
-  // This stub does not need to be monitored, because it always
-  // returns an int32.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("ToInteger");
   return AttachDecision::Attach;
@@ -5847,11 +5801,7 @@ AttachDecision CallIRGenerator::tryAttachToLength(HandleFunction callee) {
   bool isMax = true;
   Int32OperandId maxId = writer.int32MinMax(isMax, int32ArgId, zeroId);
   writer.loadInt32Result(maxId);
-
-  // This stub does not need to be monitored, because it always returns an
-  // int32.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("ToLength");
   return AttachDecision::Attach;
@@ -5869,11 +5819,7 @@ AttachDecision CallIRGenerator::tryAttachIsObject(HandleFunction callee) {
   // Type check the argument and return result.
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   writer.isObjectResult(argId);
-
-  // This stub does not need to be monitored, because it always
-  // returns a boolean.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("IsObject");
   return AttachDecision::Attach;
@@ -5893,11 +5839,7 @@ AttachDecision CallIRGenerator::tryAttachIsPackedArray(HandleFunction callee) {
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   ObjOperandId objArgId = writer.guardToObject(argId);
   writer.isPackedArrayResult(objArgId);
-
-  // This stub does not need to be monitored, because it always
-  // returns a boolean.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("IsPackedArray");
   return AttachDecision::Attach;
@@ -5915,11 +5857,7 @@ AttachDecision CallIRGenerator::tryAttachIsCallable(HandleFunction callee) {
   // Check if the argument is callable and return result.
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   writer.isCallableResult(argId);
-
-  // This stub does not need to be monitored, because it always
-  // returns a boolean.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("IsCallable");
   return AttachDecision::Attach;
@@ -5945,11 +5883,7 @@ AttachDecision CallIRGenerator::tryAttachIsConstructor(HandleFunction callee) {
 
   // Check if the argument is a constructor and return result.
   writer.isConstructorResult(objId);
-
-  // This stub does not need to be monitored, because it always
-  // returns a boolean.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("IsConstructor");
   return AttachDecision::Attach;
@@ -5974,10 +5908,7 @@ AttachDecision CallIRGenerator::tryAttachIsCrossRealmArrayConstructor(
   ObjOperandId objId = writer.guardToObject(argId);
   writer.guardIsNotProxy(objId);
   writer.isCrossRealmArrayConstructorResult(objId);
-
-  // This stub does not need to be monitored, it always returns a boolean.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("IsCrossRealmArrayConstructor");
   return AttachDecision::Attach;
@@ -6012,7 +5943,6 @@ AttachDecision CallIRGenerator::tryAttachGuardToClass(HandleFunction callee,
 
   // Monitor the returned object.
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("GuardToClass");
   return AttachDecision::Attach;
@@ -6044,10 +5974,7 @@ AttachDecision CallIRGenerator::tryAttachHasClass(HandleFunction callee,
   }
 
   writer.hasClassResult(objId, clasp);
-
-  // Return without type monitoring, because this always returns a boolean.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("HasClass");
   return AttachDecision::Attach;
@@ -6085,7 +6012,6 @@ AttachDecision CallIRGenerator::tryAttachRegExpMatcherSearcherTester(
     case InlinableNative::RegExpMatcher:
       writer.callRegExpMatcherResult(reId, inputId, lastIndexId);
       writer.typeMonitorResult();
-      cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
       trackAttached("RegExpMatcher");
       break;
 
@@ -6093,7 +6019,6 @@ AttachDecision CallIRGenerator::tryAttachRegExpMatcherSearcherTester(
       // No type monitoring because this always returns an int32.
       writer.callRegExpSearcherResult(reId, inputId, lastIndexId);
       writer.returnFromIC();
-      cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
       trackAttached("RegExpSearcher");
       break;
 
@@ -6101,7 +6026,6 @@ AttachDecision CallIRGenerator::tryAttachRegExpMatcherSearcherTester(
       // No type monitoring because this always returns an int32.
       writer.callRegExpTesterResult(reId, inputId, lastIndexId);
       writer.returnFromIC();
-      cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
       trackAttached("RegExpTester");
       break;
 
@@ -6127,10 +6051,7 @@ AttachDecision CallIRGenerator::tryAttachRegExpPrototypeOptimizable(
   ObjOperandId protoId = writer.guardToObject(arg0Id);
 
   writer.regExpPrototypeOptimizableResult(protoId);
-
-  // No type monitoring because this always returns a boolean.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("RegExpPrototypeOptimizable");
   return AttachDecision::Attach;
@@ -6155,10 +6076,7 @@ AttachDecision CallIRGenerator::tryAttachRegExpInstanceOptimizable(
   ObjOperandId protoId = writer.guardToObject(arg1Id);
 
   writer.regExpInstanceOptimizableResult(regexpId, protoId);
-
-  // No type monitoring because this always returns a boolean.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("RegExpInstanceOptimizable");
   return AttachDecision::Attach;
@@ -6179,10 +6097,7 @@ AttachDecision CallIRGenerator::tryAttachGetFirstDollarIndex(
   StringOperandId strId = writer.guardToString(arg0Id);
 
   writer.getFirstDollarIndexResult(strId);
-
-  // No type monitoring because this always returns an int32.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("GetFirstDollarIndex");
   return AttachDecision::Attach;
@@ -6211,10 +6126,7 @@ AttachDecision CallIRGenerator::tryAttachSubstringKernel(
   Int32OperandId lengthId = writer.guardToInt32(arg2Id);
 
   writer.callSubstringKernelResult(strId, beginId, lengthId);
-
-  // No type monitoring because this always returns a string.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("SubstringKernel");
   return AttachDecision::Attach;
@@ -6245,10 +6157,7 @@ AttachDecision CallIRGenerator::tryAttachObjectHasPrototype(
 
   writer.guardProto(objId, proto);
   writer.loadBooleanResult(true);
-
-  // No type monitoring because this always returns a boolean.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("ObjectHasPrototype");
   return AttachDecision::Attach;
@@ -6273,11 +6182,7 @@ AttachDecision CallIRGenerator::tryAttachString(HandleFunction callee) {
 
   // Return the string.
   writer.loadStringResult(strId);
-
-  // This stub does not need to be monitored, because it always
-  // returns a string.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("String");
   return AttachDecision::Attach;
@@ -6319,7 +6224,6 @@ AttachDecision CallIRGenerator::tryAttachStringConstructor(
 
   writer.newStringObjectResult(templateObj, strId);
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("StringConstructor");
   return AttachDecision::Attach;
@@ -6350,10 +6254,7 @@ AttachDecision CallIRGenerator::tryAttachStringToStringValueOf(
 
   // Return the string
   writer.loadStringResult(strId);
-
-  // This stub doesn't need to be monitored, because it always returns a string.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("StringToStringValueOf");
   return AttachDecision::Attach;
@@ -6382,10 +6283,7 @@ AttachDecision CallIRGenerator::tryAttachStringReplaceString(
   StringOperandId replacementId = writer.guardToString(arg2Id);
 
   writer.stringReplaceStringResult(strId, patternId, replacementId);
-
-  // No type monitoring because this always returns a string.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("StringReplaceString");
   return AttachDecision::Attach;
@@ -6416,9 +6314,7 @@ AttachDecision CallIRGenerator::tryAttachStringSplitString(
   StringOperandId separatorId = writer.guardToString(arg1Id);
 
   writer.stringSplitStringResult(strId, separatorId, group);
-
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("StringSplitString");
   return AttachDecision::Attach;
@@ -6460,11 +6356,6 @@ AttachDecision CallIRGenerator::tryAttachStringChar(HandleFunction callee,
 
   writer.returnFromIC();
 
-  // This stub does not need to be monitored, because it always
-  // returns a string for charAt or int32_t for charCodeAt.
-  // The stack typeset will be updated when we attach the stub.
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
-
   if (kind == StringChar::CodeAt) {
     trackAttached("StringCharCodeAt");
   } else {
@@ -6502,11 +6393,7 @@ AttachDecision CallIRGenerator::tryAttachStringFromCharCode(
 
   // Return string created from code.
   writer.stringFromCharCodeResult(codeId);
-
-  // This stub does not need to be monitored, because it always
-  // returns a string.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("StringFromCharCode");
   return AttachDecision::Attach;
@@ -6537,10 +6424,7 @@ AttachDecision CallIRGenerator::tryAttachStringFromCodePoint(
 
   // Return string created from code point.
   writer.stringFromCodePointResult(codeId);
-
-  // This stub doesn't need to be monitored, because it always returns a string.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("StringFromCodePoint");
   return AttachDecision::Attach;
@@ -6571,10 +6455,7 @@ AttachDecision CallIRGenerator::tryAttachStringToLowerCase(
 
   // Return string converted to lower-case.
   writer.stringToLowerCaseResult(strId);
-
-  // This stub doesn't need to be monitored, because it always returns a string.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("StringToLowerCase");
   return AttachDecision::Attach;
@@ -6605,10 +6486,7 @@ AttachDecision CallIRGenerator::tryAttachStringToUpperCase(
 
   // Return string converted to upper-case.
   writer.stringToUpperCaseResult(strId);
-
-  // This stub doesn't need to be monitored, because it always returns a string.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("StringToUpperCase");
   return AttachDecision::Attach;
@@ -6634,7 +6512,6 @@ AttachDecision CallIRGenerator::tryAttachMathRandom(HandleFunction callee) {
   writer.mathRandomResult(rng);
 
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("MathRandom");
   return AttachDecision::Attach;
@@ -6668,11 +6545,7 @@ AttachDecision CallIRGenerator::tryAttachMathAbs(HandleFunction callee) {
     writer.mathAbsNumberResult(numberId);
   }
 
-  // The INT_MIN case and implementation details of the C++ abs
-  // make this a bit tricky. We probably can just remove monitoring
-  // in the future completely, so do the easy thing right now.
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("MathAbs");
   return AttachDecision::Attach;
@@ -6701,10 +6574,7 @@ AttachDecision CallIRGenerator::tryAttachMathClz32(HandleFunction callee) {
     int32Id = writer.truncateDoubleToUInt32(numId);
   }
   writer.mathClz32Result(int32Id);
-
-  // Math.clz32 always returns an int32 so we don't need type monitoring.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("MathClz32");
   return AttachDecision::Attach;
@@ -6742,10 +6612,7 @@ AttachDecision CallIRGenerator::tryAttachMathSign(HandleFunction callee) {
     }
   }
 
-  // The stub's return type matches the current return value so we don't need
-  // type monitoring.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("MathSign");
   return AttachDecision::Attach;
@@ -6778,10 +6645,7 @@ AttachDecision CallIRGenerator::tryAttachMathImul(HandleFunction callee) {
     int32Arg1Id = writer.truncateDoubleToUInt32(numArg1Id);
   }
   writer.mathImulResult(int32Arg0Id, int32Arg1Id);
-
-  // Math.imul always returns int32 so we don't need type monitoring.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("MathImul");
   return AttachDecision::Attach;
@@ -6815,7 +6679,6 @@ AttachDecision CallIRGenerator::tryAttachMathFloor(HandleFunction callee) {
   }
 
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("MathFloor");
   return AttachDecision::Attach;
@@ -6849,7 +6712,6 @@ AttachDecision CallIRGenerator::tryAttachMathCeil(HandleFunction callee) {
   }
 
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("MathCeil");
   return AttachDecision::Attach;
@@ -6883,7 +6745,6 @@ AttachDecision CallIRGenerator::tryAttachMathTrunc(HandleFunction callee) {
   }
 
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("MathTrunc");
   return AttachDecision::Attach;
@@ -6917,7 +6778,6 @@ AttachDecision CallIRGenerator::tryAttachMathRound(HandleFunction callee) {
   }
 
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("MathRound");
   return AttachDecision::Attach;
@@ -6942,7 +6802,6 @@ AttachDecision CallIRGenerator::tryAttachMathSqrt(HandleFunction callee) {
 
   // Math.sqrt always returns a double so we don't need type monitoring.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("MathSqrt");
   return AttachDecision::Attach;
@@ -6964,10 +6823,7 @@ AttachDecision CallIRGenerator::tryAttachMathFRound(HandleFunction callee) {
       writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   NumberOperandId numberId = writer.guardIsNumber(argumentId);
   writer.mathFRoundNumberResult(numberId);
-
-  // Math.fround always returns a double so we don't need type monitoring.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("MathFRound");
   return AttachDecision::Attach;
@@ -7023,7 +6879,6 @@ AttachDecision CallIRGenerator::tryAttachMathPow(HandleFunction callee) {
   }
 
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("MathPow");
   return AttachDecision::Attach;
@@ -7079,9 +6934,7 @@ AttachDecision CallIRGenerator::tryAttachMathHypot(HandleFunction callee) {
       MOZ_CRASH("Unexpected number of arguments to hypot function.");
   }
 
-  // Math.hypot always returns a double so we don't need type monitoring.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("MathHypot");
   return AttachDecision::Attach;
@@ -7106,10 +6959,7 @@ AttachDecision CallIRGenerator::tryAttachMathATan2(HandleFunction callee) {
   NumberOperandId xNumberId = writer.guardIsNumber(xId);
 
   writer.mathAtan2NumberResult(yNumberId, xNumberId);
-
-  // Math.atan2 always returns a double so we don't need type monitoring.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("MathAtan2");
   return AttachDecision::Attach;
@@ -7160,7 +7010,6 @@ AttachDecision CallIRGenerator::tryAttachMathMinMax(HandleFunction callee,
   }
 
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached(isMax ? "MathMax" : "MathMin");
   return AttachDecision::Attach;
@@ -7187,10 +7036,7 @@ AttachDecision CallIRGenerator::tryAttachMathFunction(HandleFunction callee,
       writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   NumberOperandId numberId = writer.guardIsNumber(argumentId);
   writer.mathFunctionNumberResult(numberId, fun);
-
-  // These functions always return a double so we don't need type monitoring.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("MathFunction");
   return AttachDecision::Attach;
@@ -7238,10 +7084,7 @@ AttachDecision CallIRGenerator::tryAttachNumberToString(HandleFunction callee) {
 
   // Return the string.
   writer.loadStringResult(strId);
-
-  // This stub doesn't need to be monitored, because it always returns a string.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("NumberToString");
   return AttachDecision::Attach;
@@ -7269,9 +7112,7 @@ AttachDecision CallIRGenerator::tryAttachReflectGetPrototypeOf(
   ObjOperandId objId = writer.guardToObject(argumentId);
 
   writer.reflectGetPrototypeOfResult(objId);
-
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("ReflectGetPrototypeOf");
   return AttachDecision::Attach;
@@ -7376,11 +7217,7 @@ AttachDecision CallIRGenerator::tryAttachAtomicsCompareExchange(
 
   writer.atomicsCompareExchangeResult(objId, int32IndexId, int32ExpectedId,
                                       int32ReplacementId, typedArray->type());
-
-  // This stub doesn't need to be monitored, because it always returns an int32
-  // or, for uint32, a double.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("AtomicsCompareExchange");
   return AttachDecision::Attach;
@@ -7457,11 +7294,7 @@ AttachDecision CallIRGenerator::tryAttachAtomicsExchange(
 
   writer.atomicsExchangeResult(objId, int32IndexId, int32ValueId,
                                typedArray->type());
-
-  // This stub doesn't need to be monitored, because it always returns an int32
-  // or, for uint32, a double.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("AtomicsExchange");
   return AttachDecision::Attach;
@@ -7479,11 +7312,7 @@ AttachDecision CallIRGenerator::tryAttachAtomicsAdd(HandleFunction callee) {
 
   writer.atomicsAddResult(objId, int32IndexId, int32ValueId,
                           typedArray->type());
-
-  // This stub doesn't need to be monitored, because it always returns an int32
-  // or, for uint32, a double.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("AtomicsAdd");
   return AttachDecision::Attach;
@@ -7501,11 +7330,7 @@ AttachDecision CallIRGenerator::tryAttachAtomicsSub(HandleFunction callee) {
 
   writer.atomicsSubResult(objId, int32IndexId, int32ValueId,
                           typedArray->type());
-
-  // This stub doesn't need to be monitored, because it always returns an int32
-  // or, for uint32, a double.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("AtomicsSub");
   return AttachDecision::Attach;
@@ -7523,11 +7348,7 @@ AttachDecision CallIRGenerator::tryAttachAtomicsAnd(HandleFunction callee) {
 
   writer.atomicsAndResult(objId, int32IndexId, int32ValueId,
                           typedArray->type());
-
-  // This stub doesn't need to be monitored, because it always returns an int32
-  // or, for uint32, a double.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("AtomicsAnd");
   return AttachDecision::Attach;
@@ -7544,11 +7365,7 @@ AttachDecision CallIRGenerator::tryAttachAtomicsOr(HandleFunction callee) {
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
 
   writer.atomicsOrResult(objId, int32IndexId, int32ValueId, typedArray->type());
-
-  // This stub doesn't need to be monitored, because it always returns an int32
-  // or, for uint32, a double.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("AtomicsOr");
   return AttachDecision::Attach;
@@ -7566,11 +7383,7 @@ AttachDecision CallIRGenerator::tryAttachAtomicsXor(HandleFunction callee) {
 
   writer.atomicsXorResult(objId, int32IndexId, int32ValueId,
                           typedArray->type());
-
-  // This stub doesn't need to be monitored, because it always returns an int32
-  // or, for uint32, a double.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("AtomicsXor");
   return AttachDecision::Attach;
@@ -7615,11 +7428,7 @@ AttachDecision CallIRGenerator::tryAttachAtomicsLoad(HandleFunction callee) {
   Int32OperandId int32IndexId = writer.guardToInt32Index(indexId);
 
   writer.atomicsLoadResult(objId, int32IndexId, typedArray->type());
-
-  // This stub doesn't need to be monitored, because it always returns an int32
-  // or, for uint32, a double.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("AtomicsLoad");
   return AttachDecision::Attach;
@@ -7687,11 +7496,7 @@ AttachDecision CallIRGenerator::tryAttachAtomicsStore(HandleFunction callee) {
 
   writer.atomicsStoreResult(objId, int32IndexId, int32ValueId,
                             typedArray->type());
-
-  // This stub doesn't need to be monitored, because it always returns an int32
-  // or the result is not observed.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("AtomicsStore");
   return AttachDecision::Attach;
@@ -7720,10 +7525,7 @@ AttachDecision CallIRGenerator::tryAttachAtomicsIsLockFree(
   Int32OperandId int32ValueId = writer.guardToInt32(valueId);
 
   writer.atomicsIsLockFreeResult(int32ValueId);
-
-  // This stub doesn't need to be monitored, because it always returns a bool.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("AtomicsIsLockFree");
   return AttachDecision::Attach;
@@ -7750,9 +7552,7 @@ AttachDecision CallIRGenerator::tryAttachBoolean(HandleFunction callee) {
     writer.loadValueTruthyResult(valId);
   }
 
-  // This stub doesn't need to be monitored, because it always returns a bool.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("Boolean");
   return AttachDecision::Attach;
@@ -7772,10 +7572,7 @@ AttachDecision CallIRGenerator::tryAttachBailout(HandleFunction callee) {
 
   writer.bailout();
   writer.loadUndefinedResult();
-
-  // This stub doesn't need to be monitored, it always returns undefined.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("Bailout");
   return AttachDecision::Attach;
@@ -7797,10 +7594,7 @@ AttachDecision CallIRGenerator::tryAttachAssertFloat32(HandleFunction callee) {
 
   // NOP when not in IonMonkey.
   writer.loadUndefinedResult();
-
-  // This stub doesn't need to be monitored, it always returns undefined.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("AssertFloat32");
   return AttachDecision::Attach;
@@ -7826,10 +7620,7 @@ AttachDecision CallIRGenerator::tryAttachAssertRecoveredOnBailout(
   ValOperandId valId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
 
   writer.assertRecoveredOnBailoutResult(valId, mustBeRecovered);
-
-  // This stub doesn't need to be monitored, it always returns undefined.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("AssertRecoveredOnBailout");
   return AttachDecision::Attach;
@@ -7927,10 +7718,7 @@ AttachDecision CallIRGenerator::tryAttachObjectIs(HandleFunction callee) {
     }
   }
 
-  // This stub does not need to be monitored, because it always returns a
-  // boolean.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("ObjectIs");
   return AttachDecision::Attach;
@@ -7962,11 +7750,7 @@ AttachDecision CallIRGenerator::tryAttachObjectIsPrototypeOf(
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
 
   writer.loadInstanceOfObjectResult(argId, thisObjId);
-
-  // This stub does not need to be monitored, because it always returns a
-  // boolean.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("ObjectIsPrototypeOf");
   return AttachDecision::Attach;
@@ -8029,7 +7813,6 @@ AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   }
 
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   if (isScripted) {
     trackAttached("Scripted fun_call");
@@ -8054,10 +7837,7 @@ AttachDecision CallIRGenerator::tryAttachIsTypedArray(HandleFunction callee,
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   ObjOperandId objArgId = writer.guardToObject(argId);
   writer.isTypedArrayResult(objArgId, isPossiblyWrapped);
-
-  // This stub does not need to be monitored because it always returns a bool.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached(isPossiblyWrapped ? "IsPossiblyWrappedTypedArray"
                                   : "IsTypedArray");
@@ -8078,10 +7858,7 @@ AttachDecision CallIRGenerator::tryAttachIsTypedArrayConstructor(
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   ObjOperandId objArgId = writer.guardToObject(argId);
   writer.isTypedArrayConstructorResult(objArgId);
-
-  // This stub does not need to be monitored because it always returns a bool.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("IsTypedArrayConstructor");
   return AttachDecision::Attach;
@@ -8102,10 +7879,7 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayByteOffset(
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   ObjOperandId objArgId = writer.guardToObject(argId);
   writer.typedArrayByteOffsetResult(objArgId);
-
-  // This stub does not need to be monitored because it always returns int32.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("TypedArrayByteOffset");
   return AttachDecision::Attach;
@@ -8126,10 +7900,7 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayElementShift(
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   ObjOperandId objArgId = writer.guardToObject(argId);
   writer.typedArrayElementShiftResult(objArgId);
-
-  // This stub does not need to be monitored because it always returns int32.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("TypedArrayElementShift");
   return AttachDecision::Attach;
@@ -8164,10 +7935,7 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayLength(
   // Note: the "getter" argument is a hint for IonBuilder. Just pass |callee|,
   // the field isn't used for this intrinsic call.
   writer.loadTypedArrayLengthResult(objArgId, callee);
-
-  // This stub does not need to be monitored because it always returns int32.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("TypedArrayLength");
   return AttachDecision::Attach;
@@ -8200,10 +7968,7 @@ AttachDecision CallIRGenerator::tryAttachArrayBufferByteLength(
   }
 
   writer.loadArrayBufferByteLengthInt32Result(objArgId);
-
-  // This stub does not need to be monitored because it always returns int32.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("ArrayBufferByteLength");
   return AttachDecision::Attach;
@@ -8220,10 +7985,7 @@ AttachDecision CallIRGenerator::tryAttachIsConstructing(HandleFunction callee) {
   // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
 
   writer.frameIsConstructingResult();
-
-  // This stub does not need to be monitored, it always returns a boolean.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("IsConstructing");
   return AttachDecision::Attach;
@@ -8253,10 +8015,7 @@ AttachDecision CallIRGenerator::tryAttachGetNextMapSetEntryForIterator(
   ObjOperandId objResultArrId = writer.guardToObject(resultArrId);
 
   writer.getNextMapSetEntryForIteratorResult(objIterId, objResultArrId, isMap);
-
-  // This stub does not need to be monitored, it always returns a boolean.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("GetNextMapSetEntryForIterator");
   return AttachDecision::Attach;
@@ -8290,10 +8049,7 @@ AttachDecision CallIRGenerator::tryAttachFinishBoundFunctionInit(
 
   writer.finishBoundFunctionInitResult(objBoundId, objTargetId,
                                        int32ArgCountId);
-
-  // This stub does not need to be monitored, it always returns |undefined|.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("FinishBoundFunctionInit");
   return AttachDecision::Attach;
@@ -8321,7 +8077,6 @@ AttachDecision CallIRGenerator::tryAttachNewArrayIterator(
   }
   writer.newArrayIteratorResult(templateObj);
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("NewArrayIterator");
   return AttachDecision::Attach;
@@ -8349,7 +8104,6 @@ AttachDecision CallIRGenerator::tryAttachNewStringIterator(
   }
   writer.newStringIteratorResult(templateObj);
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("NewStringIterator");
   return AttachDecision::Attach;
@@ -8377,7 +8131,6 @@ AttachDecision CallIRGenerator::tryAttachNewRegExpStringIterator(
   }
   writer.newRegExpStringIteratorResult(templateObj);
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("NewRegExpStringIterator");
   return AttachDecision::Attach;
@@ -8412,10 +8165,7 @@ AttachDecision CallIRGenerator::tryAttachArrayIteratorPrototypeOptimizable(
   // Ensure that proto[slot] == nextFun.
   writer.guardDynamicSlotIsSpecificObject(protoId, nextId, slot);
   writer.loadBooleanResult(true);
-
-  // This stub does not need to be monitored, it always returns a boolean.
   writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("ArrayIteratorPrototypeOptimizable");
   return AttachDecision::Attach;
@@ -8459,7 +8209,6 @@ AttachDecision CallIRGenerator::tryAttachObjectCreate(HandleFunction callee) {
 
   writer.objectCreateResult(templateObj);
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("ObjectCreate");
   return AttachDecision::Attach;
@@ -8521,7 +8270,6 @@ AttachDecision CallIRGenerator::tryAttachArrayConstructor(
   }
 
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("ArrayConstructor");
   return AttachDecision::Attach;
@@ -8624,7 +8372,6 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayConstructor(
   }
 
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("TypedArrayConstructor");
   return AttachDecision::Attach;
@@ -8717,7 +8464,6 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   }
 
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   if (isScripted) {
     trackAttached("Scripted fun_apply");
@@ -8845,7 +8591,6 @@ AttachDecision CallIRGenerator::tryAttachWasmCall(HandleFunction calleeFunc) {
                           inst.object());
   writer.typeMonitorResult();
 
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
   trackAttached("WasmCall");
 
   return AttachDecision::Attach;
@@ -9413,7 +9158,6 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
   writer.callScriptedFunction(calleeObjId, argcId, flags);
   writer.typeMonitorResult();
 
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
   if (isSpecialized) {
     trackAttached("Call scripted func");
   } else {
@@ -9594,7 +9338,6 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   }
 
   writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   if (templateObj) {
     MOZ_ASSERT(isSpecialized);
@@ -9644,7 +9387,6 @@ AttachDecision CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
   writer.callClassHook(calleeObjId, argcId, hook, flags);
   writer.typeMonitorResult();
 
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
   trackAttached("Call native func");
 
   return AttachDecision::Attach;
