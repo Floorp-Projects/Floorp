@@ -12,7 +12,7 @@ from mozbuild.util import memoize
 
 from taskgraph import files_changed
 from taskgraph.optimize import register_strategy, OptimizationStrategy
-from taskgraph.util.taskcluster import find_task_id
+from taskgraph.util.taskcluster import find_task_id, status_task
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,9 @@ class IndexSearch(OptimizationStrategy):
         for index_path in index_paths:
             try:
                 task_id = find_task_id(index_path)
-                return task_id
+                status = status_task(task_id)
+                if status not in ("exception", "failed"):
+                    return task_id
             except KeyError:
                 # 404 will end up here and go on to the next index path
                 pass
