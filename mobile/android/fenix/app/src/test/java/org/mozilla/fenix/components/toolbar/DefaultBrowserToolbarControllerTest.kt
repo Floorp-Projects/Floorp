@@ -22,6 +22,7 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.top.sites.TopSitesUseCases
+import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -240,7 +241,7 @@ class DefaultBrowserToolbarControllerTest {
     @Test
     fun handleToolbarNewTabPress() {
         val browsingModeManager = SimpleBrowsingModeManager(BrowsingMode.Private)
-        val item = TabCounterMenu.Item.NewTab(BrowsingMode.Normal)
+        val item = TabCounterMenu.Item.NewTab
 
         every { activity.browsingModeManager } returns browsingModeManager
         every { navController.navigate(BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = true)) } just Runs
@@ -254,7 +255,7 @@ class DefaultBrowserToolbarControllerTest {
     @Test
     fun handleToolbarNewPrivateTabPress() {
         val browsingModeManager = SimpleBrowsingModeManager(BrowsingMode.Normal)
-        val item = TabCounterMenu.Item.NewTab(BrowsingMode.Private)
+        val item = TabCounterMenu.Item.NewPrivateTab
 
         every { activity.browsingModeManager } returns browsingModeManager
         every { navController.navigate(BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = true)) } just Runs

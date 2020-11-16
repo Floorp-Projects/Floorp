@@ -68,7 +68,7 @@ class AwesomeBarView(
         override fun invoke(
             searchTerms: String,
             searchEngine: mozilla.components.browser.search.SearchEngine?,
-            parentSession: Session?
+            parentSessionId: String?
         ) {
             interactor.onSearchTermsTapped(searchTerms)
         }
@@ -78,7 +78,7 @@ class AwesomeBarView(
         override fun invoke(
             searchTerms: String,
             searchEngine: mozilla.components.browser.search.SearchEngine?,
-            parentSession: Session?
+            parentSessionId: String?
         ) {
             interactor.onSearchTermsTapped(searchTerms)
         }

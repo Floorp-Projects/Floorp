@@ -31,7 +31,7 @@
             android:layout_weight="1"
             android:background="@drawable/home_search_background" />
 
-        <org.mozilla.fenix.components.toolbar.TabCounter
+        <mozilla.components.ui.tabcounter.TabCounter
             android:id="@+id/tab_button"
             android:layout_width="48dp"
             android:layout_height="48dp"

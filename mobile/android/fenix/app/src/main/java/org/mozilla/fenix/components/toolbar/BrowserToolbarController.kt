@@ -9,10 +9,12 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.support.ktx.kotlin.isUrl
+import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
 import org.mozilla.fenix.browser.BrowserFragmentDirections
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
@@ -104,6 +106,9 @@ class DefaultBrowserToolbarController(
     override fun handleTabCounterItemInteraction(item: TabCounterMenu.Item) {
         when (item) {
             is TabCounterMenu.Item.CloseTab -> {
+                metrics.track(
+                    Event.TabCounterMenuItemTapped(Event.TabCounterMenuItemTapped.Item.CLOSE_TAB)
+                )
                 sessionManager.selectedSession?.let {
                     // When closing the last tab we must show the undo snackbar in the home fragment
                     if (sessionManager.sessionsOfType(it.private).count() == 1) {
@@ -120,8 +125,24 @@ class DefaultBrowserToolbarController(
                 }
             }
             is TabCounterMenu.Item.NewTab -> {
-                activity.browsingModeManager.mode = item.mode
-                navController.navigate(BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = true))
+                metrics.track(
+                    Event.TabCounterMenuItemTapped(Event.TabCounterMenuItemTapped.Item.NEW_TAB)
+                )
+                activity.browsingModeManager.mode = BrowsingMode.Normal
+                navController.navigate(
+                    BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = true)
+                )
+            }
+            is TabCounterMenu.Item.NewPrivateTab -> {
+                metrics.track(
+                    Event.TabCounterMenuItemTapped(
+                        Event.TabCounterMenuItemTapped.Item.NEW_PRIVATE_TAB
+                    )
+                )
+                activity.browsingModeManager.mode = BrowsingMode.Private
+                navController.navigate(
+                    BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = true)
+                )
             }
         }
     }

@@ -4,6 +4,7 @@ import io.mockk.MockKAnnotations
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.mockk
 import io.mockk.verify
+import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.junit.Before
 import org.junit.Test
 

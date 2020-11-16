@@ -7,50 +7,31 @@ package org.mozilla.fenix.components.toolbar
 import android.content.Context
 import androidx.appcompat.view.ContextThemeWrapper
 import io.mockk.mockk
-import io.mockk.verifyAll
+import io.mockk.verify
 import mozilla.components.concept.menu.candidate.DividerMenuCandidate
-import mozilla.components.concept.menu.candidate.DrawableMenuIcon
 import mozilla.components.concept.menu.candidate.TextMenuCandidate
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
 class TabCounterMenuTest {
 
     private lateinit var context: Context
-    private lateinit var metrics: MetricController
     private lateinit var onItemTapped: (TabCounterMenu.Item) -> Unit
-    private lateinit var menu: TabCounterMenu
+    private lateinit var menu: FenixTabCounterMenu
 
     @Before
     fun setup() {
         context = ContextThemeWrapper(testContext, R.style.NormalTheme)
-        metrics = mockk(relaxed = true)
         onItemTapped = mockk(relaxed = true)
-        menu = TabCounterMenu(context, metrics, onItemTapped)
-    }
-
-    @Test
-    fun `all items use primary text color styling`() {
-        val items = menu.menuItems(ToolbarPosition.BOTTOM)
-        assertEquals(4, items.size)
-
-        val textItems = items.mapNotNull { it as? TextMenuCandidate }
-        assertEquals(3, textItems.size)
-
-        val primaryTextColor = context.getColor(R.color.primary_text_normal_theme)
-        for (item in textItems) {
-            assertEquals(primaryTextColor, item.textStyle.color)
-            assertEquals(primaryTextColor, (item.start as DrawableMenuIcon).tint)
-        }
+        menu = FenixTabCounterMenu(context, onItemTapped)
     }
 
     @Test
@@ -62,10 +43,7 @@ class TabCounterMenuTest {
         assertEquals("New tab", item.text)
         item.onClick()
 
-        verifyAll {
-            metrics.track(Event.TabCounterMenuItemTapped(Event.TabCounterMenuItemTapped.Item.NEW_TAB))
-            onItemTapped(TabCounterMenu.Item.NewTab(BrowsingMode.Normal))
-        }
+        verify { onItemTapped(TabCounterMenu.Item.NewTab) }
     }
 
     @Test
@@ -77,10 +55,7 @@ class TabCounterMenuTest {
         assertEquals("New private tab", item.text)
         item.onClick()
 
-        verifyAll {
-            metrics.track(Event.TabCounterMenuItemTapped(Event.TabCounterMenuItemTapped.Item.NEW_PRIVATE_TAB))
-            onItemTapped(TabCounterMenu.Item.NewTab(BrowsingMode.Private))
-        }
+        verify { onItemTapped(TabCounterMenu.Item.NewPrivateTab) }
     }
 
     @Test

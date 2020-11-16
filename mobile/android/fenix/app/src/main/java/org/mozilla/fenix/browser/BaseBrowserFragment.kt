@@ -572,7 +572,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
                         useCase.invoke(request.query)
                         requireActivity().startActivity(openInFenixIntent)
                     } else {
-                        useCase.invoke(request.query, parentSession = parentSession)
+                        useCase.invoke(request.query, parentSessionId = parentSession?.id)
                     }
                 },
                 owner = this,

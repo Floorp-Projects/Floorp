@@ -41,9 +41,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.fragment_home.privateBrowsingButton
-import kotlinx.android.synthetic.main.fragment_home.search_engine_icon
-import kotlinx.android.synthetic.main.fragment_home.toolbarLayout
+import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.bottomBarShadow
 import kotlinx.android.synthetic.main.fragment_home.view.bottom_bar
 import kotlinx.android.synthetic.main.fragment_home.view.homeAppBar
@@ -81,6 +79,7 @@ import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -94,7 +93,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.tips.FenixTipManager
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.components.tips.providers.MasterPasswordTipProvider
-import org.mozilla.fenix.components.toolbar.TabCounterMenu
+import org.mozilla.fenix.components.toolbar.FenixTabCounterMenu
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideToolbar
@@ -351,23 +350,7 @@ class HomeFragment : Fragment() {
         observeSearchEngineChanges()
 
         createHomeMenu(requireContext(), WeakReference(view.menuButton))
-        val tabCounterMenu = TabCounterMenu(
-            view.context,
-            metrics = view.context.components.analytics.metrics
-        ) {
-            if (it is TabCounterMenu.Item.NewTab) {
-                (activity as HomeActivity).browsingModeManager.mode = it.mode
-            }
-        }
-        val inverseBrowsingMode = when ((activity as HomeActivity).browsingModeManager.mode) {
-            BrowsingMode.Normal -> BrowsingMode.Private
-            BrowsingMode.Private -> BrowsingMode.Normal
-        }
-        tabCounterMenu.updateMenu(showOnly = inverseBrowsingMode)
-        view.tab_button.setOnLongClickListener {
-            tabCounterMenu.menuController.show(anchor = it)
-            true
-        }
+        createTabCounterMenu(view)
 
         view.menuButton.setColorFilter(
             ContextCompat.getColor(
@@ -460,6 +443,40 @@ class HomeFragment : Fragment() {
                         search_engine_icon.setImageDrawable(null)
                     }
                 }
+        }
+    }
+
+    private fun createTabCounterMenu(view: View) {
+        val browsingModeManager = (activity as HomeActivity).browsingModeManager
+        val mode = browsingModeManager.mode
+
+        val onItemTapped: (TabCounterMenu.Item) -> Unit = {
+            if (it is TabCounterMenu.Item.NewTab) {
+                browsingModeManager.mode = BrowsingMode.Normal
+            } else if (it is TabCounterMenu.Item.NewPrivateTab) {
+                browsingModeManager.mode = BrowsingMode.Private
+            }
+        }
+
+        val tabCounterMenu = FenixTabCounterMenu(
+            view.context,
+            onItemTapped,
+            iconColor = if (mode == BrowsingMode.Private) {
+                ContextCompat.getColor(requireContext(), R.color.primary_text_private_theme)
+            } else {
+                null
+            }
+        )
+
+        val inverseBrowsingMode = when (mode) {
+            BrowsingMode.Normal -> BrowsingMode.Private
+            BrowsingMode.Private -> BrowsingMode.Normal
+        }
+
+        tabCounterMenu.updateMenu(showOnly = inverseBrowsingMode)
+        view.tab_button.setOnLongClickListener {
+            tabCounterMenu.menuController.show(anchor = it)
+            true
         }
     }
 
@@ -960,8 +977,11 @@ class HomeFragment : Fragment() {
         )
     }
 
+    // TODO use [FenixTabCounterToolbarButton] instead of [TabCounter]:
+    // https://github.com/mozilla-mobile/fenix/issues/16792
     private fun updateTabCounter(browserState: BrowserState) {
         val tabCount = if (browsingModeManager.mode.isPrivate) {
+            view?.tab_button?.setColor(ContextCompat.getColor(requireContext(), R.color.primary_text_private_theme))
             browserState.privateTabs.size
         } else {
             browserState.normalTabs.size

@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.components.toolbar
 
+import mozilla.components.ui.tabcounter.TabCounterMenu
+
 open class BrowserInteractor(
     private val browserToolbarController: BrowserToolbarController,
     private val menuController: BrowserToolbarMenuController

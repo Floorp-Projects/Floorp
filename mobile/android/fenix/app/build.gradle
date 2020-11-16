@@ -487,6 +487,7 @@ dependencies {
     implementation Deps.mozilla_ui_icons
     implementation Deps.mozilla_lib_publicsuffixlist
     implementation Deps.mozilla_ui_widgets
+    implementation Deps.mozilla_ui_tabcounter
 
     implementation Deps.mozilla_lib_crash
     implementation Deps.mozilla_lib_push_firebase

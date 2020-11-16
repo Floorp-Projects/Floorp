@@ -42,12 +42,12 @@ import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.feature.syncedtabs.SyncedTabsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.util.dpToPx
+import mozilla.components.ui.tabcounter.TabCounter.Companion.INFINITE_CHAR_PADDING_BOTTOM
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.InfoBanner
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.toolbar.TabCounter.Companion.INFINITE_CHAR_PADDING_BOTTOM
-import org.mozilla.fenix.components.toolbar.TabCounter.Companion.MAX_VISIBLE_TABS
-import org.mozilla.fenix.components.toolbar.TabCounter.Companion.SO_MANY_TABS_OPEN
+import mozilla.components.ui.tabcounter.TabCounter.Companion.MAX_VISIBLE_TABS
+import mozilla.components.ui.tabcounter.TabCounter.Companion.SO_MANY_TABS_OPEN
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.updateAccessibilityCollectionInfo
@@ -62,7 +62,7 @@ import mozilla.components.browser.storage.sync.Tab as SyncTab
 /**
  * View that contains and configures the BrowserAwesomeBar
  */
-@Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
+@Suppress("LongParameterList", "TooManyFunctions", "LargeClass", "ForbiddenComment")
 class TabTrayView(
     private val container: ViewGroup,
     private val tabsAdapter: FenixTabsAdapter,
@@ -697,7 +697,7 @@ class TabTrayView(
             view.resources.getDimensionPixelSize(R.dimen.tab_tray_top_offset)
         }
 
-        behavior.setExpandedOffset(topOffset)
+        behavior.expandedOffset = topOffset
     }
 
     fun dismissMenu() {

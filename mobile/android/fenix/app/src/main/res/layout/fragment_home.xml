@@ -145,7 +145,7 @@
             app:barrierDirection="start"
             app:constraint_referenced_ids="tab_button" />
 
-        <org.mozilla.fenix.components.toolbar.TabCounter
+        <mozilla.components.ui.tabcounter.TabCounter
             android:id="@+id/tab_button"
             android:layout_width="48dp"
             android:layout_height="48dp"

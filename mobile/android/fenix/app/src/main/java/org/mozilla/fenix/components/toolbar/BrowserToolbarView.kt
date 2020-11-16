@@ -29,6 +29,7 @@ import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.support.utils.URLStringUtils
+import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customtabs.CustomTabToolbarIntegration
 import org.mozilla.fenix.customtabs.CustomTabToolbarMenu
@@ -265,10 +266,6 @@ class BrowserToolbarView(
                 }
             }
         }
-    }
-
-    companion object {
-        private const val TOOLBAR_ELEVATION = 16
     }
 
     @Suppress("ComplexCondition")

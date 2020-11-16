@@ -23,7 +23,6 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.engine.EngineMiddleware
 import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.session.undo.UndoMiddleware
-import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.action.RestoreCompleteAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
@@ -40,8 +39,8 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.downloads.DownloadMiddleware
 import mozilla.components.feature.logins.exceptions.LoginExceptionStorage
-import mozilla.components.feature.media.RecordingDevicesNotificationFeature
 import mozilla.components.feature.media.middleware.MediaMiddleware
+import mozilla.components.feature.media.middleware.RecordingDevicesMiddleware
 import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.readerview.ReaderViewMiddleware
@@ -198,11 +197,10 @@ class Core(
                     context,
                     additionalBundledSearchEngineIds = listOf("reddit", "youtube"),
                     migration = SearchMigration(context)
-                )
+                ),
+                RecordingDevicesMiddleware(context)
             ) + EngineMiddleware.create(engine, ::findSessionById)
-        ).also {
-            it.dispatch(RecentlyClosedAction.InitializeRecentlyClosedState)
-        }
+        )
     }
 
     private fun lookupSessionManager(): SessionManager {
@@ -241,10 +239,6 @@ class Core(
 
             // Install the "cookies" WebExtension and tracks user interaction with SERPs.
             searchTelemetry.install(engine, store)
-
-            // Show an ongoing notification when recording devices (camera, microphone) are used by web content
-            RecordingDevicesNotificationFeature(context, sessionManager)
-                .enable()
 
             // Restore the previous state.
             GlobalScope.launch(Dispatchers.Main) {

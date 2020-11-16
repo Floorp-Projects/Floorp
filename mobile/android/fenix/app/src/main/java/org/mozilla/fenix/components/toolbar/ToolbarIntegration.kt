@@ -7,13 +7,17 @@ package org.mozilla.fenix.components.toolbar
 import android.content.Context
 import android.content.res.Configuration
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
+import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryStorage
+import mozilla.components.feature.tabs.toolbar.TabCounterToolbarButton
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarPresenter
@@ -35,9 +39,10 @@ abstract class ToolbarIntegration(
     renderStyle: ToolbarFeature.RenderStyle
 ) : LifecycleAwareFeature {
 
+    val store = context.components.core.store
     private val toolbarPresenter: ToolbarPresenter = ToolbarPresenter(
         toolbar,
-        context.components.core.store,
+        store,
         sessionId,
         ToolbarFeature.UrlRenderConfiguration(
             PublicSuffixList(context),
@@ -139,16 +144,40 @@ class DefaultToolbarIntegration(
             )!!
         )
 
-        val tabsAction = TabCounterToolbarButton(
-            lifecycleOwner,
+        val tabCounterMenu = FenixTabCounterMenu(
+            context = context,
             onItemTapped = {
                 interactor.onTabCounterMenuItemTapped(it)
             },
+            iconColor =
+                if (isPrivate) {
+                    ContextCompat.getColor(context, R.color.primary_text_private_theme)
+                } else {
+                    null
+                }
+        ).also {
+            it.updateMenu(context.settings().toolbarPosition)
+        }
+
+        val tabsAction = TabCounterToolbarButton(
+            lifecycleOwner = lifecycleOwner,
             showTabs = {
                 toolbar.hideKeyboard()
                 interactor.onTabCounterClicked()
-            }
+            },
+            store = store,
+            menu = tabCounterMenu,
+            privateColor = ContextCompat.getColor(context, R.color.primary_text_private_theme)
         )
+
+        val tabCount = if (isPrivate) {
+            store.state.privateTabs.size
+        } else {
+            store.state.normalTabs.size
+        }
+
+        tabsAction.updateCount(tabCount)
+
         toolbar.addBrowserAction(tabsAction)
 
         val engineForSpeculativeConnects = if (!isPrivate) engine else null

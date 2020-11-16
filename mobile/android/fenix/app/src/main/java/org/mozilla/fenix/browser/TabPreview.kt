@@ -13,8 +13,8 @@ import android.widget.FrameLayout
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.updateLayoutParams
-import kotlinx.android.synthetic.main.mozac_ui_tabcounter_layout.view.*
 import kotlinx.android.synthetic.main.tab_preview.view.*
+import kotlinx.android.synthetic.main.tabs_tray_tab_counter.view.*
 import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
 import mozilla.components.concept.base.images.ImageLoadRequest
 import org.mozilla.fenix.R
