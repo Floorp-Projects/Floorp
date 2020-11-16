@@ -9,6 +9,7 @@
 #include "jsapi.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/StructuredCloneTags.h"
+#include "mozilla/dom/workerinternals/JSSettings.h"
 
 namespace mozilla {
 namespace dom {
