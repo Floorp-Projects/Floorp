@@ -514,8 +514,8 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
     case IntID::MacGraphiteTheme:
       aResult = [NSColor currentControlTint] == NSGraphiteControlTint;
       break;
-    case IntID::MacYosemiteTheme:
-      aResult = 1;
+    case IntID::MacBigSurTheme:
+      aResult = nsCocoaFeatures::OnBigSurOrLater();
       break;
     case IntID::AlertNotificationOrigin:
       aResult = NS_ALERT_TOP;
