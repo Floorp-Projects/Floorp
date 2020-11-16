@@ -3,9 +3,9 @@
 	<p class="pkt_ext_tagline">{{tagline}}</p>
 	{{#if showlearnmore}}
 		{{#if controlvariant}}
-			<p class="pkt_ext_learnmorecontainer"><a class="pkt_ext_learnmore" href="https://{{pockethost}}/firefox_learnmore?s=ffi&t=learnmore&tv=panel_control&v={{variant}}" target="_blank">{{learnmore}}</a></p>
+			<p class="pkt_ext_learnmorecontainer"><a class="pkt_ext_learnmore" href="https://{{pockethost}}/firefox_learnmore?utm_campaign=logged_out_save_test&utm_source=control&s=ffi&t=learnmore&tv=panel_control&v={{variant}}" target="_blank">{{learnmore}}</a></p>
 		{{else}}
-			<p class="pkt_ext_learnmorecontainer"><a class="pkt_ext_learnmore" href="https://{{pockethost}}/firefox_learnmore?s=ffi&t=learnmore&tv=panel_tryit&v={{variant}}" target="_blank">{{learnmore}}</a></p>
+			<p class="pkt_ext_learnmorecontainer"><a class="pkt_ext_learnmore" href="https://{{pockethost}}/firefox_learnmore?utm_campaign=logged_out_save_test&utm_source=control&s=ffi&t=learnmore&tv=panel_tryit&v={{variant}}" target="_blank">{{learnmore}}</a></p>
 		{{/if}}
 	{{else}}
 	<p class="pkt_ext_learnmorecontainer"><a class="pkt_ext_learnmore pkt_ext_learnmoreinactive" href="#">{{learnmore}}</a></p>
@@ -15,17 +15,17 @@
 <div class="pkt_ext_signupdetail pkt_ext_signupdetail_hero">
 	{{#if fxasignedin}}
 	<h4>{{signuptosave}}</h4>
-	<p class="btn-container"><a href="https://{{pockethost}}/ff_signup?s=ffi&t=signupff&v={{variant}}" target="_blank" class="btn signup-btn-firefox"><span class="logo"></span><span class="text">{{signupfirefox}}</span></a></p>
-	<p class="alreadyhave">{{alreadyhaveacct}} <a class="pkt_ext_login" href="https://{{pockethost}}/login?ep=3&src=extension&s=ffi&t=login&v={{variant}}" target="_blank">{{loginnow}}</a>.</p>
+	<p class="btn-container"><a href="https://{{pockethost}}/ff_signup?utm_campaign=logged_out_save_test&utm_source=control&s=ffi&t=signupff&v={{variant}}" target="_blank" class="btn signup-btn-firefox"><span class="logo"></span><span class="text">{{signupfirefox}}</span></a></p>
+	<p class="alreadyhave">{{alreadyhaveacct}} <a class="pkt_ext_login" href="https://{{pockethost}}/login?utm_campaign=logged_out_save_test&utm_source=control&ep=3&src=extension&s=ffi&t=login&v={{variant}}" target="_blank">{{loginnow}}</a>.</p>
 	{{else}}
 		{{#if controlvariant}}
 			<h4>{{signuptosave}}</h4>
-			<p class="btn-container"><a href="https://{{pockethost}}/ff_signup?s=ffi&tv=panel_control&t=signupff&v={{variant}}" target="_blank" class="btn signup-btn-firefox"><span class="logo"></span><span class="text">{{signupfirefox}}</span></a></p>
-			<p class="btn-container"><a href="https://{{pockethost}}/signup?force=email&tv=panel_control&src=extension&s=ffi&t=signupemail&v={{variant}}" target="_blank" class="btn btn-secondary signup-btn-email signup-btn-initstate">{{signupemail}}</a></p>
-			<p class="alreadyhave">{{alreadyhaveacct}} <a class="pkt_ext_login" href="https://{{pockethost}}/login?ep=3&tv=panel_control&src=extension&s=ffi&t=login&v={{variant}}" target="_blank">{{loginnow}}</a>.</p>
+			<p class="btn-container"><a href="https://{{pockethost}}/ff_signup?utm_campaign=logged_out_save_test&utm_source=control&s=ffi&tv=panel_control&t=signupff&v={{variant}}" target="_blank" class="btn signup-btn-firefox"><span class="logo"></span><span class="text">{{signupfirefox}}</span></a></p>
+			<p class="btn-container"><a href="https://{{pockethost}}/signup?utm_campaign=logged_out_save_test&utm_source=control&force=email&tv=panel_control&src=extension&s=ffi&t=signupemail&v={{variant}}" target="_blank" class="btn btn-secondary signup-btn-email signup-btn-initstate">{{signupemail}}</a></p>
+			<p class="alreadyhave">{{alreadyhaveacct}} <a class="pkt_ext_login" href="https://{{pockethost}}/login?utm_campaign=logged_out_save_test&utm_source=control&ep=3&tv=panel_control&src=extension&s=ffi&t=login&v={{variant}}" target="_blank">{{loginnow}}</a>.</p>
 		{{else}}
-			<p class="btn-container"><a href="https://{{pockethost}}/firefox_tryitnow?s=ffi&tv=panel_tryit&t=tryitnow" target="_blank" class="btn signup-btn-tryitnow"><span class="text">{{tryitnow}}</span></a></p>
-			<p class="alreadyhave tryitnowspace">{{alreadyhaveacct}} <a class="pkt_ext_login" href="https://{{pockethost}}/login?ep=3&s=ffi&tv=panel_tryit&src=extension&t=login&v={{variant}}" target="_blank">{{loginnow}}</a>.</p>
+			<p class="btn-container"><a href="https://{{pockethost}}/firefox_tryitnow?utm_campaign=logged_out_save_test&utm_source=control&s=ffi&tv=panel_tryit&t=tryitnow" target="_blank" class="btn signup-btn-tryitnow"><span class="text">{{tryitnow}}</span></a></p>
+			<p class="alreadyhave tryitnowspace">{{alreadyhaveacct}} <a class="pkt_ext_login" href="https://{{pockethost}}/login?utm_campaign=logged_out_save_test&utm_source=control&ep=3&s=ffi&tv=panel_tryit&src=extension&t=login&v={{variant}}" target="_blank">{{loginnow}}</a>.</p>
 			<p class="pkt_ext_tos">{{{tos}}}</p>
 		{{/if}}
 	{{/if}}
