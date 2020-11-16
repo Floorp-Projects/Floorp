@@ -70,7 +70,7 @@ class D3D11TextureData final : public TextureData {
                              LayersBackend aLayersBackend, TextureFlags aFlags,
                              TextureAllocationFlags aAllocFlags) const override;
 
-  void SyncWithObject(SyncObjectClient* aSyncObject) override;
+  void SyncWithObject(RefPtr<SyncObjectClient> aSyncObject) override;
 
   ID3D11Texture2D* GetD3D11Texture() const { return mTexture; }
 

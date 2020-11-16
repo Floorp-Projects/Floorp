@@ -253,8 +253,8 @@ RemoteDecoderManagerChild::CreateVideoDecoder(
         MediaResult result = child->InitIPDL(
             params.VideoConfig(), params.mRate.mValue, params.mOptions,
             params.mKnowsCompositor
-                ? &params.mKnowsCompositor->GetTextureFactoryIdentifier()
-                : nullptr);
+                ? Some(params.mKnowsCompositor->GetTextureFactoryIdentifier())
+                : Nothing());
         if (NS_FAILED(result)) {
           return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
               result, __func__);

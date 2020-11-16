@@ -93,7 +93,7 @@ MediaResult RemoteVideoDecoderChild::ProcessOutput(
 MediaResult RemoteVideoDecoderChild::InitIPDL(
     const VideoInfo& aVideoInfo, float aFramerate,
     const CreateDecoderParams::OptionSet& aOptions,
-    const layers::TextureFactoryIdentifier* aIdentifier) {
+    Maybe<layers::TextureFactoryIdentifier> aIdentifier) {
   MOZ_ASSERT_IF(mLocation == RemoteDecodeIn::GpuProcess, aIdentifier);
 
   RefPtr<RemoteDecoderManagerChild> manager =
@@ -125,7 +125,7 @@ MediaResult RemoteVideoDecoderChild::InitIPDL(
   mIPDLSelfRef = this;
   VideoDecoderInfoIPDL decoderInfo(aVideoInfo, aFramerate);
   Unused << manager->SendPRemoteDecoderConstructor(this, decoderInfo, aOptions,
-                                                   ToMaybe(aIdentifier));
+                                                   aIdentifier);
 
   return NS_OK;
 }
