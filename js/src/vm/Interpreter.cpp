@@ -469,11 +469,6 @@ bool js::RunScript(JSContext* cx, RunState& state) {
       break;
   }
 
-  if (state.isInvoke()) {
-    InvokeState& invoke = *state.asInvoke();
-    TypeMonitorCall(cx, invoke.args(), invoke.constructing());
-  }
-
   bool ok = Interpret(cx, state);
 
   return ok;
@@ -1865,23 +1860,10 @@ static MOZ_ALWAYS_INLINE bool GreaterThanOrEqualOperation(
 
 static MOZ_ALWAYS_INLINE bool SetObjectElementOperation(
     JSContext* cx, HandleObject obj, HandleId id, HandleValue value,
-    HandleValue receiver, bool strict, JSScript* script = nullptr,
-    jsbytecode* pc = nullptr) {
+    HandleValue receiver, bool strict) {
   // receiver != obj happens only at super[expr], where we expect to find the
   // property. People probably aren't building hashtables with |super|
   // anyway.
-  JitScript::MonitorAssign(cx, obj, id);
-
-  if (obj->isNative() && JSID_IS_INT(id)) {
-    uint32_t length = obj->as<NativeObject>().getDenseInitializedLength();
-    int32_t i = JSID_TO_INT(id);
-    if ((uint32_t)i >= length) {
-      // Annotate script if provided with information (e.g. baseline)
-      if (script && script->hasJitScript() && IsSetElemPC(pc)) {
-        script->jitScript()->noteHasDenseAdd(script->pcToOffset(pc));
-      }
-    }
-  }
 
   // Set the HadElementsAccess flag on the object if needed. This flag is
   // used to do more eager dictionary-mode conversion for objects that are
@@ -2370,7 +2352,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
             ADVANCE_AND_DISPATCH(JSOpLength_Resume);
           }
 
-          JitScript::MonitorBytecodeType(cx, script, REGS.pc, REGS.sp[-1]);
           MOZ_ASSERT(GetBytecodeLength(REGS.pc) == JSOpLength_Call);
           ADVANCE_AND_DISPATCH(JSOpLength_Call);
         }
@@ -3017,8 +2998,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       if (!GetPropertyOperation(cx, REGS.fp(), script, REGS.pc, lval, lval)) {
         goto error;
       }
-
-      JitScript::MonitorBytecodeType(cx, script, REGS.pc, lval);
       cx->debugOnlyCheck(lval);
     }
     END_CASE(GetProp)
@@ -3032,7 +3011,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         goto error;
       }
 
-      JitScript::MonitorBytecodeType(cx, script, REGS.pc, rref);
       cx->debugOnlyCheck(rref);
 
       REGS.sp--;
@@ -3046,8 +3024,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       if (!GetNameBoundInEnvironment(cx, env, id, rval)) {
         goto error;
       }
-
-      JitScript::MonitorBytecodeType(cx, script, REGS.pc, rval);
       cx->debugOnlyCheck(rval);
     }
     END_CASE(GetBoundName)
@@ -3144,7 +3120,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         }
       }
 
-      JitScript::MonitorBytecodeType(cx, script, REGS.pc, res);
       REGS.sp--;
     }
     END_CASE(GetElem)
@@ -3164,7 +3139,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         goto error;
       }
 
-      JitScript::MonitorBytecodeType(cx, script, REGS.pc, res);
       REGS.sp -= 2;
     }
     END_CASE(GetElemSuper)
@@ -3231,7 +3205,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       }
 
       REGS.sp = args.spAfterCall();
-      JitScript::MonitorBytecodeType(cx, script, REGS.pc, REGS.sp[-1]);
     }
     END_CASE(Eval)
 
@@ -3339,7 +3312,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
           }
         }
         Value* newsp = args.spAfterCall();
-        JitScript::MonitorBytecodeType(cx, script, REGS.pc, newsp[-1]);
         REGS.sp = newsp;
         ADVANCE_AND_DISPATCH(JSOpLength_Call);
       }
@@ -3374,8 +3346,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
             goto error;
           }
         }
-
-        TypeMonitorCall(cx, args, construct);
 
         {
           InvokeState state(cx, args, construct);
@@ -3477,7 +3447,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       }
 
       PUSH_COPY(rval);
-      JitScript::MonitorBytecodeType(cx, script, REGS.pc, rval);
       static_assert(JSOpLength_GetName == JSOpLength_GetGName,
                     "We're sharing the END_CASE so the lengths better match");
     }
@@ -3500,7 +3469,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       }
 
       PUSH_COPY(rval);
-      JitScript::MonitorBytecodeType(cx, script, REGS.pc, rval);
     }
     END_CASE(GetIntrinsic)
 
@@ -5058,18 +5026,6 @@ bool js::SetObjectElementWithReceiver(JSContext* cx, HandleObject obj,
   return SetObjectElementOperation(cx, obj, id, value, receiver, strict);
 }
 
-bool js::SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index,
-                          HandleValue value, HandleValue receiver, bool strict,
-                          HandleScript script, jsbytecode* pc) {
-  MOZ_ASSERT(pc);
-  RootedId id(cx);
-  if (!ToPropertyKey(cx, index, &id)) {
-    return false;
-  }
-  return SetObjectElementOperation(cx, obj, id, value, receiver, strict, script,
-                                   pc);
-}
-
 bool js::InitElementArray(JSContext* cx, jsbytecode* pc, HandleArrayObject arr,
                           uint32_t index, HandleValue value) {
   return InitArrayElemOperation(cx, pc, arr, index, value);
@@ -5361,7 +5317,6 @@ bool js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
     }
   }
 
-  JitScript::MonitorBytecodeType(cx, script, pc, res);
   return true;
 }
 

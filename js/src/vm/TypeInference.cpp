@@ -1132,14 +1132,6 @@ void js::PrintTypes(JSContext* cx, Compartment* comp, bool force) {
     return;
   }
 
-  RootedScript script(cx);
-  for (auto base = zone->cellIter<BaseScript>(); !base.done(); base.next()) {
-    if (JitScript* jitScript = base->maybeJitScript()) {
-      script = base->asJSScript();
-      jitScript->printTypes(cx, script);
-    }
-  }
-
   for (auto group = zone->cellIter<ObjectGroup>(); !group.done();
        group.next()) {
     AutoSweepObjectGroup sweep(group);
@@ -1767,172 +1759,9 @@ class TypeConstraintClearDefiniteSingle : public TypeConstraint {
   Compartment* maybeCompartment() override { return group->compartment(); }
 };
 
-bool js::AddClearDefiniteFunctionUsesInScript(JSContext* cx, ObjectGroup* group,
-                                              JSScript* script,
-                                              JSScript* calleeScript) {
-  // Look for any uses of the specified calleeScript in type sets for
-  // |script|, and add constraints to ensure that if the type sets' contents
-  // change then the definite properties are cleared from the type.
-  // This ensures that the inlining performed when the definite properties
-  // analysis was done is stable. We only need to look at type sets which
-  // contain a single object, as IonBuilder does not inline polymorphic sites
-  // during the definite properties analysis.
-
-  TypeSet::ObjectKey* calleeKey =
-      TypeSet::ObjectType(calleeScript->function()).objectKey();
-
-  AutoSweepJitScript sweep(script);
-  JitScript* jitScript = script->jitScript();
-  unsigned count = jitScript->numTypeSets();
-  StackTypeSet* typeArray = jitScript->typeArray(sweep);
-
-  for (unsigned i = 0; i < count; i++) {
-    StackTypeSet* types = &typeArray[i];
-    if (!types->unknownObject() && types->getObjectCount() == 1) {
-      if (calleeKey != types->getObject(0)) {
-        // Also check if the object is the Function.call or
-        // Function.apply native. IonBuilder uses the presence of these
-        // functions during inlining.
-        JSObject* singleton = types->getSingleton(0);
-        if (!singleton || !singleton->is<JSFunction>()) {
-          continue;
-        }
-        JSFunction* fun = &singleton->as<JSFunction>();
-        if (!fun->isNative()) {
-          continue;
-        }
-        if (fun->native() != fun_call && fun->native() != fun_apply) {
-          continue;
-        }
-      }
-      // This is a type set that might have been used when inlining
-      // |calleeScript| into |script|.
-      if (!types->addConstraint(
-              cx, cx->typeLifoAlloc().new_<TypeConstraintClearDefiniteSingle>(
-                      group))) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
-
 /////////////////////////////////////////////////////////////////////
 // Interface functions
 /////////////////////////////////////////////////////////////////////
-
-void js::TypeMonitorCallSlow(JSContext* cx, JSObject* callee,
-                             const CallArgs& args, bool constructing) {
-  unsigned nargs = callee->as<JSFunction>().nargs();
-  JSScript* script = callee->as<JSFunction>().nonLazyScript();
-
-  if (!constructing) {
-    JitScript::MonitorThisType(cx, script, args.thisv());
-  }
-
-  /*
-   * Add constraints going up to the minimum of the actual and formal count.
-   * If there are more actuals than formals the later values can only be
-   * accessed through the arguments object, which is monitored.
-   */
-  unsigned arg = 0;
-  for (; arg < args.length() && arg < nargs; arg++) {
-    JitScript::MonitorArgType(cx, script, arg, args[arg]);
-  }
-
-  /* Watch for fewer actuals than formals to the call. */
-  for (; arg < nargs; arg++) {
-    JitScript::MonitorArgType(cx, script, arg, UndefinedValue());
-  }
-}
-
-/* static */
-void JitScript::MonitorBytecodeType(JSContext* cx, JSScript* script,
-                                    jsbytecode* pc, TypeSet::Type type) {
-  if (!IsTypeInferenceEnabled()) {
-    return;
-  }
-  cx->check(script, type);
-
-  AutoEnterAnalysis enter(cx);
-
-  AutoSweepJitScript sweep(script);
-  StackTypeSet* types = script->jitScript()->bytecodeTypes(sweep, script, pc);
-  if (types->hasType(type)) {
-    return;
-  }
-
-  InferSpew(ISpewOps, "bytecodeType: %p %05zu: %s", script,
-            script->pcToOffset(pc), TypeSet::TypeString(type).get());
-  types->addType(sweep, cx, type);
-}
-
-/* static */
-void JitScript::MonitorBytecodeTypeSlow(JSContext* cx, JSScript* script,
-                                        jsbytecode* pc, StackTypeSet* types,
-                                        TypeSet::Type type) {
-  if (!IsTypeInferenceEnabled()) {
-    return;
-  }
-  cx->check(script, type);
-
-  AutoEnterAnalysis enter(cx);
-
-  AutoSweepJitScript sweep(script);
-
-  MOZ_ASSERT(types == script->jitScript()->bytecodeTypes(sweep, script, pc));
-  MOZ_ASSERT(!types->hasType(type));
-
-  InferSpew(ISpewOps, "bytecodeType: %p %05zu: %s", script,
-            script->pcToOffset(pc), TypeSet::TypeString(type).get());
-  types->addType(sweep, cx, type);
-}
-
-/* static */
-void JitScript::MonitorMagicValueBytecodeType(JSContext* cx, JSScript* script,
-                                              jsbytecode* pc,
-                                              const js::Value& rval) {
-  MOZ_ASSERT(IsTypeInferenceEnabled());
-  MOZ_ASSERT(rval.isMagic());
-
-  // It's possible that we arrived here from bailing out of Ion, and that
-  // Ion proved that the value is dead and optimized out. In such cases,
-  // do nothing.
-  if (rval.whyMagic() == JS_OPTIMIZED_OUT) {
-    return;
-  }
-
-  // Ops like GetAliasedVar can return the magic TDZ value.
-  MOZ_ASSERT(rval.whyMagic() == JS_UNINITIALIZED_LEXICAL);
-  MOZ_ASSERT(JSOp(*GetNextPc(pc)) == JSOp::CheckThis ||
-             JSOp(*GetNextPc(pc)) == JSOp::CheckThisReinit ||
-             JSOp(*GetNextPc(pc)) == JSOp::CheckReturn ||
-             JSOp(*GetNextPc(pc)) == JSOp::CheckAliasedLexical);
-
-  MonitorBytecodeType(cx, script, pc, TypeSet::UnknownType());
-}
-
-/* static */
-void JitScript::MonitorBytecodeType(JSContext* cx, JSScript* script,
-                                    jsbytecode* pc, const js::Value& rval) {
-  MOZ_ASSERT(BytecodeOpHasTypeSet(JSOp(*pc)));
-
-  if (!IsTypeInferenceEnabled()) {
-    return;
-  }
-
-  if (!script->hasJitScript()) {
-    return;
-  }
-
-  if (MOZ_UNLIKELY(rval.isMagic())) {
-    MonitorMagicValueBytecodeType(cx, script, pc, rval);
-    return;
-  }
-
-  MonitorBytecodeType(cx, script, pc, TypeSet::GetValueType(rval));
-}
 
 /* static */
 bool JSFunction::setTypeForScriptedFunction(JSContext* cx, HandleFunction fun,
@@ -2227,14 +2056,6 @@ bool DPAConstraintInfo::finishConstraints(JSContext* cx, ObjectGroup* group) {
             cx,
             cx->typeLifoAlloc().new_<TypeConstraintClearDefiniteGetterSetter>(
                 group))) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-  }
-
-  for (const InliningConstraint& constraint : inliningConstraints_) {
-    if (!AddClearDefiniteFunctionUsesInScript(cx, group, constraint.caller,
-                                              constraint.callee)) {
       ReportOutOfMemory(cx);
       return false;
     }
@@ -2958,15 +2779,6 @@ void JitScript::sweepTypes(const js::AutoSweepJitScript& sweep, Zone* zone) {
       dest++;
     }
     inlinedCompilations.shrinkTo(dest);
-  }
-
-  if (IsTypeInferenceEnabled()) {
-    // Remove constraints and references to dead objects from stack type sets.
-    unsigned num = numTypeSets();
-    StackTypeSet* arr = typeArray(sweep);
-    for (unsigned i = 0; i < num; i++) {
-      arr[i].sweep(sweep, zone);
-    }
   }
 
   if (types.hadOOMSweepingTypes()) {

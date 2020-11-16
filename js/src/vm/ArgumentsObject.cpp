@@ -506,19 +506,10 @@ static bool MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
   MOZ_ASSERT(!(attrs & JSPROP_READONLY));
   attrs &= (JSPROP_ENUMERATE | JSPROP_PERMANENT); /* only valid attributes */
 
-  RootedFunction callee(cx, &argsobj->callee());
-  RootedScript script(cx, JSFunction::getOrCreateScript(cx, callee));
-  if (!script) {
-    return false;
-  }
-
   if (JSID_IS_INT(id)) {
     unsigned arg = unsigned(JSID_TO_INT(id));
     if (arg < argsobj->initialLength() && !argsobj->isElementDeleted(arg)) {
       argsobj->setElement(cx, arg, v);
-      if (arg < script->function()->nargs()) {
-        jit::JitScript::MonitorArgType(cx, script, arg, v);
-      }
       return result.succeed();
     }
   } else {
@@ -726,15 +717,7 @@ bool MappedArgumentsObject::obj_defineProperty(JSContext* cx, HandleObject obj,
       }
     } else {
       if (desc.hasValue()) {
-        RootedFunction callee(cx, &argsobj->callee());
-        RootedScript script(cx, JSFunction::getOrCreateScript(cx, callee));
-        if (!script) {
-          return false;
-        }
         argsobj->setElement(cx, arg, desc.value());
-        if (arg < script->function()->nargs()) {
-          jit::JitScript::MonitorArgType(cx, script, arg, desc.value());
-        }
       }
       if (desc.hasWritable() && !desc.writable()) {
         if (!argsobj->markElementDeleted(cx, arg)) {
