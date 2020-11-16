@@ -1141,21 +1141,21 @@ void BrowserParent::HandleAccessKey(const WidgetKeyboardEvent& aEvent,
   }
 }
 
-void BrowserParent::Activate() {
+void BrowserParent::Activate(uint64_t aActionId) {
   LOGBROWSERFOCUS(("Activate %p", this));
   if (!mIsDestroyed) {
     SetTopLevelWebFocus(this);  // Intentionally inside "if"
-    Unused << SendActivate();
+    Unused << SendActivate(aActionId);
   }
 }
 
-void BrowserParent::Deactivate(bool aWindowLowering) {
+void BrowserParent::Deactivate(bool aWindowLowering, uint64_t aActionId) {
   LOGBROWSERFOCUS(("Deactivate %p", this));
   if (!aWindowLowering) {
     UnsetTopLevelWebFocus(this);  // Intentionally outside the next "if"
   }
   if (!mIsDestroyed) {
-    Unused << SendDeactivate();
+    Unused << SendDeactivate(aActionId);
   }
 }
 

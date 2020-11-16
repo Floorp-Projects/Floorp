@@ -49,9 +49,9 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
 
   void NavigateByKey(bool aForward, bool aForDocumentNavigation);
 
-  void Activate();
+  void Activate(uint64_t aActionId);
 
-  void Deactivate(bool aWindowLowering);
+  void Deactivate(bool aWindowLowering, uint64_t aActionId);
 
   void SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
 

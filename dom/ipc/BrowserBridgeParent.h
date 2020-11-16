@@ -80,9 +80,10 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
 
   mozilla::ipc::IPCResult RecvWillChangeProcess();
 
-  mozilla::ipc::IPCResult RecvActivate();
+  mozilla::ipc::IPCResult RecvActivate(uint64_t aActionId);
 
-  mozilla::ipc::IPCResult RecvDeactivate(const bool& aWindowLowering);
+  mozilla::ipc::IPCResult RecvDeactivate(const bool& aWindowLowering,
+                                         uint64_t aActionId);
 
   mozilla::ipc::IPCResult RecvSetIsUnderHiddenEmbedderElement(
       const bool& aIsUnderHiddenEmbedderElement);

@@ -104,9 +104,9 @@ parent:
   /**
    * Sending an activate message moves focus to the iframe.
    */
-  async Activate();
+  async Activate(uint64_t aActionId);
 
-  async Deactivate(bool aWindowLowering);
+  async Deactivate(bool aWindowLowering, uint64_t aActionId);
 
   async SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
 
