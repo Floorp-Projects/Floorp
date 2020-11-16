@@ -9,8 +9,6 @@
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/dom/WebGPUBinding.h"
 #include "Device.h"
-#include "CommandEncoder.h"
-#include "BindGroup.h"
 
 #include "Adapter.h"
 #include "Buffer.h"

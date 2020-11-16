@@ -6,10 +6,8 @@
 #include "mozilla/dom/WebGPUBinding.h"
 #include "Buffer.h"
 
-#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ipc/Shmem.h"
-#include "ipc/WebGPUChild.h"
 #include "js/RootingAPI.h"
 #include "nsContentUtils.h"
 #include "nsWrapperCache.h"

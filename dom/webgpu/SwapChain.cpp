@@ -5,8 +5,6 @@
 
 #include "SwapChain.h"
 #include "Texture.h"
-#include "mozilla/dom/WebGPUBinding.h"
-#include "ipc/WebGPUChild.h"
 
 namespace mozilla {
 namespace webgpu {

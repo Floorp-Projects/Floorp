@@ -12,7 +12,6 @@
 #include "ObjectModel.h"
 
 namespace mozilla {
-class ErrorResult;
 namespace dom {
 class Promise;
 struct GPURequestAdapterOptions;

@@ -5,7 +5,6 @@
 
 #include "mozilla/dom/WebGPUBinding.h"
 #include "CommandBuffer.h"
-#include "ipc/WebGPUChild.h"
 
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "Device.h"

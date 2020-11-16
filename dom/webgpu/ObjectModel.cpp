@@ -9,7 +9,6 @@
 #include "Device.h"
 #include "CommandEncoder.h"
 #include "Instance.h"
-#include "Texture.h"
 
 namespace mozilla {
 namespace webgpu {
