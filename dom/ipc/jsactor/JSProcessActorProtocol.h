@@ -54,7 +54,7 @@ class JSProcessActorProtocol final : public JSActorProtocol,
 
   void AddObservers();
   void RemoveObservers();
-  bool Matches(const nsACString& aRemoteType);
+  bool Matches(const nsACString& aRemoteType, ErrorResult& aRv);
 
  private:
   explicit JSProcessActorProtocol(const nsACString& aName) : mName(aName) {}

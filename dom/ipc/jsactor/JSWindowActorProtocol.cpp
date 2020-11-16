@@ -339,31 +339,45 @@ bool JSWindowActorProtocol::MessageManagerGroupMatches(
 }
 
 bool JSWindowActorProtocol::Matches(BrowsingContext* aBrowsingContext,
-                                    nsIURI* aURI,
-                                    const nsACString& aRemoteType) {
+                                    nsIURI* aURI, const nsACString& aRemoteType,
+                                    ErrorResult& aRv) {
   MOZ_ASSERT(aBrowsingContext, "DocShell without a BrowsingContext!");
   MOZ_ASSERT(aURI, "Must have URI!");
 
   if (!mAllFrames && aBrowsingContext->GetParent()) {
+    aRv.ThrowNotSupportedError(nsPrintfCString(
+        "Window protocol '%s' doesn't match subframes", mName.get()));
     return false;
   }
 
   if (!mIncludeChrome && !aBrowsingContext->IsContent()) {
+    aRv.ThrowNotSupportedError(nsPrintfCString(
+        "Window protocol '%s' doesn't match chrome browsing contexts",
+        mName.get()));
     return false;
   }
 
   if (!mRemoteTypes.IsEmpty() &&
       !RemoteTypePrefixMatches(RemoteTypePrefix(aRemoteType))) {
+    aRv.ThrowNotSupportedError(
+        nsPrintfCString("Window protocol '%s' doesn't match remote type '%s'",
+                        mName.get(), PromiseFlatCString(aRemoteType).get()));
     return false;
   }
 
   if (!mMessageManagerGroups.IsEmpty() &&
       !MessageManagerGroupMatches(aBrowsingContext)) {
+    aRv.ThrowNotSupportedError(nsPrintfCString(
+        "Window protocol '%s' doesn't match message manager group",
+        mName.get()));
     return false;
   }
 
   if (extensions::MatchPatternSet* uriMatcher = GetURIMatcher()) {
     if (!uriMatcher->Matches(aURI)) {
+      aRv.ThrowNotSupportedError(nsPrintfCString(
+          "Window protocol '%s' doesn't match uri %s", mName.get(),
+          nsContentUtils::TruncatedURLForDisplay(aURI).get()));
       return false;
     }
   }

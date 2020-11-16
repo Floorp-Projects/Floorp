@@ -31,7 +31,7 @@ declTest("getActor with remoteType mismatch", {
     let parent = browser.browsingContext.currentWindowGlobal.domProcess;
     Assert.throws(
       () => parent.getActor("TestProcessActor"),
-      /NS_ERROR_NOT_AVAILABLE/,
+      /NotSupportedError/,
       "Should throw if its remoteTypes don't match."
     );
 
@@ -40,7 +40,7 @@ declTest("getActor with remoteType mismatch", {
       ok(child, "DOMProcessChild should have value.");
       Assert.throws(
         () => child.getActor("TestProcessActor"),
-        /NS_ERROR_NOT_AVAILABLE/,
+        /NotSupportedError/,
         "Should throw if its remoteTypes don't match."
       );
     });
