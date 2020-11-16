@@ -7,6 +7,7 @@
 #include "WorkletGlobalScope.h"
 #include "mozilla/dom/WorkletGlobalScopeBinding.h"
 #include "mozilla/dom/WorkletImpl.h"
+#include "mozilla/dom/WorkletThread.h"
 #include "mozilla/dom/Console.h"
 #include "nsJSUtils.h"
 
