@@ -998,7 +998,7 @@ fuzzy(0-92,0-430) == chrome://reftest/content/bugs/421203-2.xhtml 421203-1-ref.h
 == 421436-1b.html 421436-1-ref.html
 fuzzy-if(skiaContent,0-1,0-40) == 421632-1.html 421632-1-ref.html
 != 421710-1.html about:blank
-fails-if(Android) fuzzy-if(webrender,63-64,1024-1024) fails-if(usesRepeatResampling&&!(webrender&&winWidget)) == 421885-1.xml 421885-1-ref.xml
+fails-if(Android) fuzzy-if(webrender,63-65,1024-1024) fails-if(usesRepeatResampling&&!(webrender&&winWidget)) == 421885-1.xml 421885-1-ref.xml
 == 421955-1.html 421955-1-ref.html
 == 422249-1.html 422249-1-ref.html
 == 422394-1.html 422394-1-ref.html
