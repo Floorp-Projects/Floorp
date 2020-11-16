@@ -4369,7 +4369,8 @@ static JSScript* CopyScriptImpl(JSContext* cx, HandleScript src,
                                 HandleObject functionOrGlobal,
                                 HandleScriptSourceObject sourceObject,
                                 MutableHandle<GCVector<Scope*>> scopes) {
-  if (src->treatAsRunOnce() && !src->isFunction()) {
+  if (src->treatAsRunOnce()) {
+    MOZ_ASSERT(!src->isFunction());
     JS_ReportErrorASCII(cx, "No cloning toplevel run-once scripts");
     return nullptr;
   }

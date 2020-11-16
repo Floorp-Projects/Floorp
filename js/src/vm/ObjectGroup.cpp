@@ -239,7 +239,7 @@ bool ObjectGroup::useSingletonForAllocationSite(JSScript* script,
     return false;
   }
 
-  if (script->function() && !script->treatAsRunOnce()) {
+  if (script->function()) {
     return false;
   }
 
