@@ -234,7 +234,6 @@ FunctionBox::FunctionBox(JSContext* cx, SourceExtent extent,
       funcDataIndex_(index),
       flags_(FunctionFlags::clearMutableflags(flags)),
       emitBytecode(false),
-      isStandalone_(false),
       wasEmitted_(false),
       isAnnexB(false),
       useAsm(false),
@@ -435,7 +434,6 @@ void FunctionBox::copyFunctionFields(ScriptStencil& script) {
   script.functionFlags = flags_;
   script.nargs = nargs_;
   script.lazyFunctionEnclosingScopeIndex_ = enclosingScopeIndex_;
-  script.isStandaloneFunction = isStandalone_;
   script.wasFunctionEmitted = wasEmitted_;
 
   isFunctionFieldCopiedToStencil = true;
