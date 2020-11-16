@@ -52,14 +52,14 @@ class FirefoxConnector {
     return this.toolbox.targetList.targetFront;
   }
 
-  get hasResourceWatcherSupport() {
-    return this.toolbox.resourceWatcher.hasResourceWatcherSupport(
+  get hasWatcherSupport() {
+    return this.toolbox.resourceWatcher.hasWatcherSupport(
       this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT
     );
   }
 
-  get currentWatcherFront() {
-    return this.toolbox.resourceWatcher.watcherFront;
+  get currentWatcher() {
+    return this.toolbox.resourceWatcher.watcher;
   }
 
   /**
@@ -413,8 +413,8 @@ class FirefoxConnector {
    * Get the list of blocked URLs
    */
   async getBlockedUrls() {
-    if (this.hasResourceWatcherSupport && this.currentWatcherFront) {
-      const network = await this.currentWatcherFront.getNetworkActor();
+    if (this.hasWatcherSupport && this.currentWatcher) {
+      const network = await this.currentWatcher.getNetworkActor();
       return network.getBlockedUrls();
     }
     if (!this.webConsoleFront.traits.blockedUrls) {
@@ -429,8 +429,8 @@ class FirefoxConnector {
    * @param {object} urls An array of URL strings
    */
   async setBlockedUrls(urls) {
-    if (this.this.hasResourceWatcherSupport && this.currentWatcherFront) {
-      const network = await this.currentWatcherFront.getNetworkActor();
+    if (this.hasWatcherSupport && this.currentWatcher) {
+      const network = await this.currentWatcher.getNetworkActor();
       return network.setBlockedUrls(urls);
     }
     return this.webConsoleFront.setBlockedUrls(urls);

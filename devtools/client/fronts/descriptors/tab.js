@@ -210,6 +210,15 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
     return this._targetFrontPromise;
   }
 
+  getCachedWatcher() {
+    for (const child of this.poolChildren()) {
+      if (child.typeName == "watcher") {
+        return child;
+      }
+    }
+    return null;
+  }
+
   /**
    * Handle tabs events.
    */

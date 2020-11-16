@@ -134,7 +134,7 @@ function TargetMixin(parentClass) {
      *
      * @return {TargetMixin} the parent target.
      */
-    getWatcherFront() {
+    getWatcher() {
       // Starting with FF77, all additional frame targets are spawn by the WatcherActor and are managed by it.
       if (this.parentFront.typeName == "watcher") {
         return this.parentFront;
@@ -161,15 +161,13 @@ function TargetMixin(parentClass) {
      */
     async getParentTarget() {
       // Starting with FF77, we support frames watching via watchTargets for Tab and Process descriptors.
-      const watcherFront = await this.getWatcherFront();
-      if (watcherFront) {
+      const watcher = await this.getWatcher();
+      if (watcher) {
         // Safety check, in theory all watcher should support frames.
-        if (watcherFront.traits.frame) {
+        if (watcher.traits.frame) {
           // Retrieve the Watcher, which manage all the targets and should already have a reference to
           // to the parent target.
-          return watcherFront.getParentBrowsingContextTarget(
-            this.browsingContextID
-          );
+          return watcher.getParentBrowsingContextTarget(this.browsingContextID);
         }
         return null;
       }
@@ -195,11 +193,11 @@ function TargetMixin(parentClass) {
     async getBrowsingContextTarget(browsingContextID) {
       // Tab and Process Descriptors expose a Watcher, which is creating the
       // targets and should be used to fetch any.
-      const watcherFront = await this.getWatcherFront();
-      if (watcherFront) {
+      const watcher = await this.getWatcher();
+      if (watcher) {
         // Safety check, in theory all watcher should support frames.
-        if (watcherFront.traits.frame) {
-          return watcherFront.getBrowsingContextTarget(browsingContextID);
+        if (watcher.traits.frame) {
+          return watcher.getBrowsingContextTarget(browsingContextID);
         }
         return null;
       }
