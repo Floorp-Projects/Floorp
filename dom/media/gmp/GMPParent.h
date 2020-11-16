@@ -175,6 +175,18 @@ class GMPParent final
   void ResolveGetContentParentPromises();
   void RejectGetContentParentPromises();
 
+#if defined(XP_MACOSX) && defined(__aarch64__)
+  // We pre-translate XUL and our plugin file to avoid x64 child process
+  // startup delays caused by translation for instances when the child
+  // process binary translations have not already been cached. i.e., the
+  // first time we launch an x64 child process after installation or
+  // update. Measured by binary size of a recent XUL and Widevine plugin,
+  // this makes up 94% of the translation needed. Re-translating the
+  // same binary does not cause translation to occur again.
+  void PreTranslateBins();
+  void PreTranslateBinsWorker();
+#endif
+
 #if defined(XP_MACOSX)
   nsresult GetPluginFileArch(nsIFile* aPluginDir, nsAutoString& aLeafName,
                              uint32_t& aArchSet);
@@ -222,6 +234,7 @@ class GMPParent final
 #if defined(XP_MACOSX) && defined(__aarch64__)
   // The child process architecture to use.
   uint32_t mChildLaunchArch;
+  nsCString mPluginFilePath;
 #endif
 
   const nsCOMPtr<nsISerialEventTarget> mMainThread;
