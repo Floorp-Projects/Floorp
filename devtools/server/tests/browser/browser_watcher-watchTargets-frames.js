@@ -61,7 +61,7 @@ async function testWatchAllFrames(mainRoot) {
 
   const parentProcessTarget = await processDescriptor.getTarget();
   is(
-    await parentProcessTarget.getWatcherFront(),
+    await parentProcessTarget.getWatcher(),
     watcher,
     "Parent process target getWatcher returns the same watcher"
   );
@@ -91,7 +91,7 @@ async function testWatchOneTabFrames(tabTarget) {
   const watcher = await tabDescriptor.getWatcher();
 
   is(
-    await tabTarget.getWatcherFront(),
+    await tabTarget.getWatcher(),
     watcher,
     "Tab target getWatcher returns the same watcher"
   );
@@ -138,7 +138,7 @@ async function assertTabIFrames(watcher, targets, tabTarget) {
       "The iframe target BrowsingContextID is correct"
     );
     is(
-      await existingIframeTarget.getWatcherFront(),
+      await existingIframeTarget.getWatcher(),
       watcher,
       "Iframe target getWatcher returns the same watcher"
     );
