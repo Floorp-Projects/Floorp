@@ -126,6 +126,12 @@ auto RDDProcessManager::EnsureRDDProcessAndCreateBridge(
               });
         }
 
+        if (mNumProcessAttempts &&
+            !StaticPrefs::media_rdd_retryonfailure_enabled()) {
+          // We failed to start the RDD process earlier, abort now.
+          return EnsureRDDPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
+                                                   __func__);
+        }
         // Launch the RDD process.
         std::vector<std::string> extraArgs;
         nsCString parentBuildID(mozilla::PlatformBuildID());
@@ -161,13 +167,16 @@ auto RDDProcessManager::EnsureRDDProcessAndCreateBridge(
 
               if (!CreateVideoBridge() ||
                   !CreateContentBridge(aOtherProcess, &endpoint)) {
+                mNumProcessAttempts++;
                 return EnsureRDDPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
                                                          __func__);
               }
+              mNumProcessAttempts = 0;
               return EnsureRDDPromise::CreateAndResolve(std::move(endpoint),
                                                         __func__);
             },
             [this](nsresult aError) {
+              mNumProcessAttempts++;
               DestroyProcess();
               return EnsureRDDPromise::CreateAndReject(aError, __func__);
             });
