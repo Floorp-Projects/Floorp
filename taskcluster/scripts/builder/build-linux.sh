@@ -114,10 +114,7 @@ fi
 
 cd /builds/worker
 
-$GECKO_PATH/mach python \
-  --requirements $GECKO_PATH/taskcluster/scripts/builder/requirements.txt \
-  -- \
-  $GECKO_PATH/testing/${MOZHARNESS_SCRIPT} \
+$GECKO_PATH/mach python $GECKO_PATH/testing/${MOZHARNESS_SCRIPT} \
   ${config_path_cmds} \
   ${config_cmds} \
   $debug_flag \
