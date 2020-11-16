@@ -83,17 +83,6 @@ interface nsIPermissionManager : nsISupports
   Array<nsIPermission> getAllWithTypePrefix(in ACString prefix);
 
   /**
-   * Get all custom permissions of a specific type and that were modified after
-   * the specified date. This will return an array of all permissions which are
-   * not set to default.
-   *
-   * @param type    a case-sensitive ASCII string, identifying the permission.
-   * @param since   a unix timestamp representing the number of milliseconds from
-   *                Jan 1, 1970 00:00:00 UTC.
-   */
-  Array<nsIPermission> getAllByTypeSince(in ACString type, in int64_t since);
-
-  /**
    * Add permission information for a given principal.
    * It is internally calling the other add() method using the nsIURI from the
    * principal.

@@ -2243,14 +2243,17 @@ nsresult PermissionManager::CommonTestPermissionInternal(
   return NS_OK;
 }
 
-// Helper function to filter permissions using a condition function.
-template <class T>
-nsresult PermissionManager::GetPermissionEntries(
-    T aCondition, nsTArray<RefPtr<nsIPermission>>& aResult) {
+NS_IMETHODIMP PermissionManager::GetAll(
+    nsTArray<RefPtr<nsIPermission>>& aResult) {
+  return GetAllWithTypePrefix(""_ns, aResult);
+}
+
+NS_IMETHODIMP PermissionManager::GetAllWithTypePrefix(
+    const nsACString& aPrefix, nsTArray<RefPtr<nsIPermission>>& aResult) {
   aResult.Clear();
   if (XRE_IsContentProcess()) {
     NS_WARNING(
-        "Iterating over all permissions is not available in the "
+        "PermissionManager's getAllWithTypePrefix is not available in the "
         "content process, as not all permissions may be available.");
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -2274,7 +2277,8 @@ nsresult PermissionManager::GetPermissionEntries(
         continue;
       }
 
-      if (!aCondition(permEntry)) {
+      if (!aPrefix.IsEmpty() &&
+          !StringBeginsWith(mTypeArray[permEntry.mType], aPrefix)) {
         continue;
       }
 
@@ -2299,32 +2303,6 @@ nsresult PermissionManager::GetPermissionEntries(
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP PermissionManager::GetAll(
-    nsTArray<RefPtr<nsIPermission>>& aResult) {
-  return GetPermissionEntries(
-      [](const PermissionEntry& aPermEntry) { return true; }, aResult);
-}
-
-NS_IMETHODIMP PermissionManager::GetAllByTypeSince(
-    const nsACString& aPrefix, int64_t aSince,
-    nsTArray<RefPtr<nsIPermission>>& aResult) {
-  return GetPermissionEntries(
-      [&](const PermissionEntry& aPermEntry) {
-        return mTypeArray[aPermEntry.mType].Equals(aPrefix) &&
-               aSince <= aPermEntry.mModificationTime;
-      },
-      aResult);
-}
-
-NS_IMETHODIMP PermissionManager::GetAllWithTypePrefix(
-    const nsACString& aPrefix, nsTArray<RefPtr<nsIPermission>>& aResult) {
-  return GetPermissionEntries(
-      [&](const PermissionEntry& aPermEntry) {
-        return StringBeginsWith(mTypeArray[aPermEntry.mType], aPrefix);
-      },
-      aResult);
 }
 
 NS_IMETHODIMP
