@@ -161,14 +161,7 @@ PlainObject* js::CreateThisForFunctionWithProto(
     res = NewBuiltinClassInstanceWithKind<PlainObject>(cx, newKind);
   }
 
-  if (res) {
-    MOZ_ASSERT(res->nonCCWRealm() == callee->realm());
-    JSScript* script = JSFunction::getOrCreateScript(cx, callee);
-    if (!script) {
-      return nullptr;
-    }
-    jit::JitScript::MonitorThisType(cx, script, TypeSet::ObjectType(res));
-  }
+  MOZ_ASSERT_IF(res, res->nonCCWRealm() == callee->realm());
 
   return res;
 }
@@ -192,10 +185,6 @@ PlainObject* js::CreateThisForFunction(JSContext* cx,
 
     /* Reshape the singleton before passing it as the 'this' value. */
     NativeObject::clear(cx, nobj);
-
-    JSScript* calleeScript = callee->nonLazyScript();
-    jit::JitScript::MonitorThisType(cx, calleeScript,
-                                    TypeSet::ObjectType(nobj));
 
     return nobj;
   }

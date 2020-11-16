@@ -543,83 +543,8 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
 
   JitScript* jitScript = script->jitScript();
 
-  // Ensure the argument types are included in the argument TypeSets stored in
-  // the JitScript. This is necessary for Ion, because the import will use
-  // the skip-arg-checks entry point. When the JitScript is discarded the import
-  // is patched back.
-  if (IsTypeInferenceEnabled()) {
-    AutoSweepJitScript sweep(script);
-
-    StackTypeSet* thisTypes = jitScript->thisTypes(sweep, script);
-    if (!thisTypes->hasType(TypeSet::UndefinedType())) {
-      return true;
-    }
-
-    const ValTypeVector& importArgs = fi.funcType().args();
-
-    size_t numKnownArgs = std::min(importArgs.length(), importFun->nargs());
-    for (uint32_t i = 0; i < numKnownArgs; i++) {
-      StackTypeSet* argTypes = jitScript->argTypes(sweep, script, i);
-      switch (importArgs[i].kind()) {
-        case ValType::I32:
-          if (!argTypes->hasType(TypeSet::Int32Type())) {
-            return true;
-          }
-          break;
-        case ValType::I64:
-          if (!argTypes->hasType(TypeSet::BigIntType())) {
-            return true;
-          }
-          break;
-        case ValType::V128:
-          MOZ_CRASH("Not needed per spec");
-        case ValType::F32:
-          if (!argTypes->hasType(TypeSet::DoubleType())) {
-            return true;
-          }
-          break;
-        case ValType::F64:
-          if (!argTypes->hasType(TypeSet::DoubleType())) {
-            return true;
-          }
-          break;
-        case ValType::Ref:
-          switch (importArgs[i].refTypeKind()) {
-            case RefType::Extern:
-              // We don't know what type the value will be, so we can't really
-              // check whether the callee will accept it.  It doesn't make much
-              // sense to see if the callee accepts all of the types an AnyRef
-              // might represent because most callees will not have been exposed
-              // to all those types and so we'll never pass the test.  Instead,
-              // we must use the callee's arg-type-checking entry point, and not
-              // check anything here.  See FuncType::jitExitRequiresArgCheck().
-              break;
-            case RefType::Func:
-              // We handle FuncRef as we do AnyRef: by checking the type
-              // dynamically in the callee.  Code in the stubs layer must box up
-              // the FuncRef as a Value.
-              break;
-            case RefType::Eq:
-            case RefType::TypeIndex:
-              // Guarded by temporarilyUnsupportedReftypeForExit()
-              MOZ_CRASH("case guarded above");
-          }
-          break;
-      }
-    }
-
-    // These arguments will be filled with undefined at runtime by the
-    // arguments rectifier: check that the imported function can handle
-    // undefined there.
-    for (uint32_t i = importArgs.length(); i < importFun->nargs(); i++) {
-      StackTypeSet* argTypes = jitScript->argTypes(sweep, script, i);
-      if (!argTypes->hasType(TypeSet::UndefinedType())) {
-        return true;
-      }
-    }
-  }
-
   // Let's optimize it!
+  // TODO(no-TI): remove addDependentWasmImport.
   if (!jitScript->addDependentWasmImport(cx, *this, funcImportIndex)) {
     return false;
   }

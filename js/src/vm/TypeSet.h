@@ -223,7 +223,6 @@ enum : uint32_t {
 };
 using ObjectGroupFlags = uint32_t;
 
-class StackTypeSet;
 class HeapTypeSet;
 
 /*
@@ -675,10 +674,6 @@ class ConstraintTypeSet : public TypeSet {
 
   inline void sweep(const AutoSweepBase& sweep, JS::Zone* zone);
   inline void trace(JS::Zone* zone, JSTracer* trc);
-};
-
-class StackTypeSet : public ConstraintTypeSet {
- public:
 };
 
 class HeapTypeSet : public ConstraintTypeSet {

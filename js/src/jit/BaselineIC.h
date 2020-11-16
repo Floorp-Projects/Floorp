@@ -35,8 +35,6 @@ class JS_PUBLIC_API JSTracer;
 
 namespace js {
 
-class StackTypeSet;
-
 MOZ_COLD void ReportOutOfMemory(JSContext* cx);
 
 namespace jit {

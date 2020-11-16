@@ -40,40 +40,13 @@ using namespace js::jit;
 
 using mozilla::CheckedInt;
 
-/* static */
-size_t JitScript::NumTypeSets(JSScript* script) {
-  // We rely on |num| not overflowing below.
-  static_assert(JSScript::MaxBytecodeTypeSets == UINT16_MAX,
-                "JSScript typesets should have safe range to avoid overflow");
-  static_assert(JSFunction::NArgsBits == 16,
-                "JSFunction nargs should have safe range to avoid overflow");
-
-  if (!IsTypeInferenceEnabled()) {
-    return 0;
-  }
-
-  size_t num = script->numBytecodeTypeSets() + 1 /* this */;
-  if (JSFunction* fun = script->function()) {
-    num += fun->nargs();
-  }
-
-  return num;
-}
-
-JitScript::JitScript(JSScript* script, Offset typeSetOffset,
-                     Offset bytecodeTypeMapOffset, Offset endOffset,
+JitScript::JitScript(JSScript* script, Offset endOffset,
                      const char* profileString)
     : profileString_(profileString),
-      typeSetOffset_(typeSetOffset),
-      bytecodeTypeMapOffset_(bytecodeTypeMapOffset),
       endOffset_(endOffset),
-      icScript_(script->getWarmUpCount(), typeSetOffset - offsetOfICScript(),
+      icScript_(script->getWarmUpCount(), endOffset - offsetOfICScript(),
                 /*depth=*/0) {
   setTypesGeneration(script->zone()->types.generation);
-
-  if (IsTypeInferenceEnabled()) {
-    initElements<StackTypeSet>(typeSetOffset, numTypeSets());
-  }
 
   // Ensure the baselineScript_ and ionScript_ fields match the BaselineDisabled
   // and IonDisabled script flags.
@@ -116,13 +89,9 @@ bool JSScript::createJitScript(JSContext* cx) {
     }
   }
 
-  size_t numTypeSets = JitScript::NumTypeSets(this);
-
   static_assert(sizeof(JitScript) % sizeof(uintptr_t) == 0,
                 "Trailing arrays must be aligned properly");
   static_assert(sizeof(ICEntry) % sizeof(uintptr_t) == 0,
-                "Trailing arrays must be aligned properly");
-  static_assert(sizeof(StackTypeSet) % sizeof(uintptr_t) == 0,
                 "Trailing arrays must be aligned properly");
 
   static_assert(
@@ -132,10 +101,6 @@ bool JSScript::createJitScript(JSContext* cx) {
   // Calculate allocation size.
   CheckedInt<uint32_t> allocSize = sizeof(JitScript);
   allocSize += CheckedInt<uint32_t>(numICEntries()) * sizeof(ICEntry);
-  if (IsTypeInferenceEnabled()) {
-    allocSize += CheckedInt<uint32_t>(numTypeSets) * sizeof(StackTypeSet);
-    allocSize += CheckedInt<uint32_t>(numBytecodeTypeSets()) * sizeof(uint32_t);
-  }
   if (!allocSize.isValid()) {
     ReportAllocationOverflow(cx);
     return false;
@@ -147,17 +112,11 @@ bool JSScript::createJitScript(JSContext* cx) {
     return false;
   }
 
-  uint32_t typeSetOffset = sizeof(JitScript) + numICEntries() * sizeof(ICEntry);
-  uint32_t bytecodeTypeMapOffset =
-      typeSetOffset + numTypeSets * sizeof(StackTypeSet);
   UniquePtr<JitScript> jitScript(
-      new (raw) JitScript(this, typeSetOffset, bytecodeTypeMapOffset,
-                          allocSize.value(), profileString));
+      new (raw) JitScript(this, allocSize.value(), profileString));
 
-  // Sanity check the length computations.
+  // Sanity check the length computation.
   MOZ_ASSERT(jitScript->numICEntries() == numICEntries());
-  MOZ_ASSERT_IF(IsTypeInferenceEnabled(),
-                jitScript->numTypeSets() == numTypeSets);
 
   // We need to call prepareForDestruction on JitScript before we |delete| it.
   auto prepareForDestruction = mozilla::MakeScopeExit(
@@ -167,10 +126,6 @@ bool JSScript::createJitScript(JSContext* cx) {
     return false;
   }
 
-  if (IsTypeInferenceEnabled()) {
-    jitScript->initBytecodeTypeMap(this);
-  }
-
   prepareForDestruction.release();
   warmUpData_.initJitScript(jitScript.release());
   AddCellMemory(this, allocSize.value(), MemoryUse::JitScript);
@@ -178,27 +133,6 @@ bool JSScript::createJitScript(JSContext* cx) {
   // We have a JitScript so we can set the script's jitCodeRaw pointer to the
   // Baseline Interpreter code.
   updateJitCodeRaw(cx->runtime());
-
-#ifdef DEBUG
-  if (IsTypeInferenceEnabled()) {
-    AutoSweepJitScript sweep(this);
-    StackTypeSet* typeArray = this->jitScript()->typeArrayDontCheckGeneration();
-    for (unsigned i = 0; i < numBytecodeTypeSets(); i++) {
-      InferSpew(ISpewOps, "typeSet: %sT%p%s bytecode%u %p",
-                InferSpewColor(&typeArray[i]), &typeArray[i],
-                InferSpewColorReset(), i, this);
-    }
-    StackTypeSet* thisTypes = this->jitScript()->thisTypes(sweep, this);
-    InferSpew(ISpewOps, "typeSet: %sT%p%s this %p", InferSpewColor(thisTypes),
-              thisTypes, InferSpewColorReset(), this);
-    unsigned nargs = function() ? function()->nargs() : 0;
-    for (unsigned i = 0; i < nargs; i++) {
-      StackTypeSet* types = this->jitScript()->argTypes(sweep, this, i);
-      InferSpew(ISpewOps, "typeSet: %sT%p%s arg%u %p", InferSpewColor(types),
-                types, InferSpewColorReset(), i, this);
-    }
-  }
-#endif
 
   return true;
 }
@@ -346,64 +280,6 @@ void JitScript::ensureProfileString(JSContext* cx, JSScript* script) {
     oomUnsafe.crash("Failed to allocate profile string");
   }
 }
-
-#ifdef DEBUG
-void JitScript::printTypes(JSContext* cx, HandleScript script) {
-  AutoSweepJitScript sweep(script);
-  MOZ_ASSERT(script->jitScript() == this);
-
-  AutoEnterAnalysis enter(nullptr, script->zone());
-  Fprinter out(stderr);
-
-  if (script->function()) {
-    fprintf(stderr, "Function");
-  } else if (script->isForEval()) {
-    fprintf(stderr, "Eval");
-  } else {
-    fprintf(stderr, "Main");
-  }
-  fprintf(stderr, " %#" PRIxPTR " %s:%u ", uintptr_t(script.get()),
-          script->filename(), script->lineno());
-
-  if (script->function()) {
-    if (JSAtom* name = script->function()->explicitName()) {
-      name->dumpCharsNoNewline(out);
-    }
-  }
-
-  fprintf(stderr, "\n    this:");
-  thisTypes(sweep, script)->print();
-
-  for (uint32_t i = 0; script->function() && i < script->function()->nargs();
-       i++) {
-    fprintf(stderr, "\n    arg%u:", i);
-    argTypes(sweep, script, i)->print();
-  }
-  fprintf(stderr, "\n");
-
-  for (BytecodeLocation it : AllBytecodesIterable(script)) {
-    {
-      fprintf(stderr, "%p:", script.get());
-      Sprinter sprinter(cx);
-      if (!sprinter.init()) {
-        return;
-      }
-      Disassemble1(cx, script, it.toRawBytecode(), it.bytecodeToOffset(script),
-                   true, &sprinter);
-      fprintf(stderr, "%s", sprinter.string());
-    }
-
-    if (it.opHasTypeSet()) {
-      StackTypeSet* types = bytecodeTypes(sweep, script, it.toRawBytecode());
-      fprintf(stderr, "  typeset %u:", uint32_t(types - typeArray(sweep)));
-      types->print();
-      fprintf(stderr, "\n");
-    }
-  }
-
-  fprintf(stderr, "\n");
-}
-#endif /* DEBUG */
 
 /* static */
 void JitScript::Destroy(Zone* zone, JitScript* script) {
@@ -575,24 +451,6 @@ void ICScript::purgeOptimizedStubs(Zone* zone) {
     }
   }
 #endif
-}
-
-void JitScript::noteAccessedGetter(uint32_t pcOffset) {
-  ICEntry& entry = icEntryFromPCOffset(pcOffset);
-  ICFallbackStub* stub = entry.fallbackStub();
-
-  if (stub->isGetProp_Fallback()) {
-    stub->toGetProp_Fallback()->noteAccessedGetter();
-  }
-}
-
-void JitScript::noteHasDenseAdd(uint32_t pcOffset) {
-  ICEntry& entry = icEntryFromPCOffset(pcOffset);
-  ICFallbackStub* stub = entry.fallbackStub();
-
-  if (stub->isSetElem_Fallback()) {
-    stub->toSetElem_Fallback()->noteHasDenseAdd();
-  }
 }
 
 void JitScript::unlinkDependentWasmImports() {
@@ -842,29 +700,6 @@ void jit::MarkActiveJitScripts(Zone* zone) {
       MarkActiveJitScripts(cx, iter);
     }
   }
-}
-
-void JitScript::initBytecodeTypeMap(JSScript* script) {
-  MOZ_ASSERT(IsTypeInferenceEnabled());
-  MOZ_ASSERT(jit::IsBaselineInterpreterEnabled());
-  MOZ_ASSERT(numICEntries() == script->numICEntries());
-
-  // Index of the next bytecode type map entry to initialize.
-  uint32_t typeMapIndex = 0;
-  uint32_t* const typeMap = bytecodeTypeMap();
-
-  // For JOF_TYPESET ops: initialize bytecode type map entries.
-  for (BytecodeLocation loc : js::AllBytecodesIterable(script)) {
-    JSOp op = loc.getOp();
-    // Note: if the script is very large there will be more JOF_TYPESET ops
-    // than bytecode type sets. See JSScript::MaxBytecodeTypeSets.
-    if (BytecodeOpHasTypeSet(op) &&
-        typeMapIndex < JSScript::MaxBytecodeTypeSets) {
-      typeMap[typeMapIndex] = loc.bytecodeToOffset(script);
-      typeMapIndex++;
-    }
-  }
-  MOZ_ASSERT(typeMapIndex == script->numBytecodeTypeSets());
 }
 
 InliningRoot* JitScript::getOrCreateInliningRoot(JSContext* cx,
