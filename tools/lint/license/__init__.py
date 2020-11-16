@@ -84,9 +84,7 @@ def is_test(f):
         # For the unit tests
         return False
     return (
-        "/tests/" in f
-        or "/test/" in f
-        or "/test_" in f
+        "/test" in f
         or "/gtest" in f
         or "/crashtest" in f
         or "/mochitest" in f

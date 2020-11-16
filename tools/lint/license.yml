@@ -26,8 +26,6 @@ license:
         - gradle.properties
         # might not work with license
         - gradle/wrapper/gradle-wrapper.properties
-        # tests
-        - js/src/devtools/rootAnalysis/t/
         - mobile/android/components/extensions
         - mobile/android/geckoview/src/main/AndroidManifest.xml
         - mobile/android/geckoview/src/main/res/drawable/ic_generic_file.xml
@@ -50,7 +48,6 @@ license:
         - security/mac/hardenedruntime/production.entitlements.xml
         - servo/components/hashglobe/src/alloc.rs
         - servo/components/hashglobe/src/shim.rs
-        - testing/marionette/harness/marionette_harness/www/
         - toolkit/components/reputationservice/chromium/chrome/common/safe_browsing/csd.pb.cc
         - toolkit/components/reputationservice/chromium/chrome/common/safe_browsing/csd.pb.h
         - toolkit/mozapps/update/updater/crctable.h
