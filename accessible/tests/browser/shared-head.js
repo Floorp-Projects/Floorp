@@ -431,7 +431,11 @@ function accessibleTask(doc, task, options = {}) {
     gIsRemoteIframe = options.remoteIframe;
     gIsIframe = options.iframe || gIsRemoteIframe;
     let url;
-    if (doc.endsWith("html") && !gIsIframe) {
+    if (options.chrome && doc.endsWith("html")) {
+      // Load with a chrome:// URL so this loads as a chrome document in the
+      // parent process.
+      url = `${CURRENT_DIR}${doc}`;
+    } else if (doc.endsWith("html") && !gIsIframe) {
       url = `${CURRENT_CONTENT_DIR}${doc}`;
     } else {
       url = snippetToURL(doc, options);
@@ -445,10 +449,13 @@ function accessibleTask(doc, task, options = {}) {
       }
     });
 
-    const onContentDocLoad = waitForEvent(
-      EVENT_DOCUMENT_LOAD_COMPLETE,
-      DEFAULT_CONTENT_DOC_BODY_ID
-    );
+    let onContentDocLoad;
+    if (!options.chrome) {
+      onContentDocLoad = waitForEvent(
+        EVENT_DOCUMENT_LOAD_COMPLETE,
+        DEFAULT_CONTENT_DOC_BODY_ID
+      );
+    }
 
     let onIframeDocLoad;
     if (options.remoteIframe && !options.skipFissionDocLoad) {
@@ -476,11 +483,29 @@ function accessibleTask(doc, task, options = {}) {
         await SimpleTest.promiseFocus(browser);
         await loadContentScripts(browser, "Common.jsm");
 
-        if (Services.appinfo.browserTabsRemoteAutostart) {
+        if (options.chrome) {
+          ok(!browser.isRemoteBrowser, "Not remote browser");
+        } else if (Services.appinfo.browserTabsRemoteAutostart) {
           ok(browser.isRemoteBrowser, "Actually remote browser");
         }
 
-        const { accessible: docAccessible } = await onContentDocLoad;
+        let docAccessible;
+        if (options.chrome) {
+          // Chrome documents don't fire DOCUMENT_LOAD_COMPLETE. Instead, wait
+          // until we can get the DocAccessible and it doesn't have the busy
+          // state.
+          await BrowserTestUtils.waitForCondition(() => {
+            docAccessible = getAccessible(browser.contentWindow.document);
+            if (!docAccessible) {
+              return false;
+            }
+            const state = {};
+            docAccessible.getState(state, {});
+            return !(state.value & STATE_BUSY);
+          });
+        } else {
+          ({ accessible: docAccessible } = await onContentDocLoad);
+        }
         let iframeDocAccessible;
         if (gIsIframe) {
           if (!options.skipFissionDocLoad) {
@@ -515,6 +540,12 @@ function accessibleTask(doc, task, options = {}) {
  *         - {Boolean} topLevel
  *           Flag to run the test with content in the top level content process.
  *           Default is true.
+ *         - {Boolean} chrome
+ *           Flag to run the test with content as a chrome document in the
+ *           parent process. Default is false. This is only valid if url is a
+ *           relative URL to a XUL document, not a markup snippet. topLevel
+ *           should usually be set to false in this case, since XUL documents
+ *           don't work in the content process.
  *         - {Boolean} iframe
  *           Flag to run the test with content wrapped in an iframe. Default is
  *           false.
@@ -533,11 +564,28 @@ function accessibleTask(doc, task, options = {}) {
  *           a set of attributes to be applied to a iframe content document body
  */
 function addAccessibleTask(doc, task, options = {}) {
-  const { topLevel = true, iframe = false, remoteIframe = false } = options;
+  const {
+    topLevel = true,
+    chrome = false,
+    iframe = false,
+    remoteIframe = false,
+  } = options;
   if (topLevel) {
     add_task(
       accessibleTask(doc, task, {
         ...options,
+        chrome: false,
+        iframe: false,
+        remoteIframe: false,
+      })
+    );
+  }
+
+  if (chrome) {
+    add_task(
+      accessibleTask(doc, task, {
+        ...options,
+        topLevel: false,
         iframe: false,
         remoteIframe: false,
       })
@@ -549,6 +597,7 @@ function addAccessibleTask(doc, task, options = {}) {
       accessibleTask(doc, task, {
         ...options,
         topLevel: false,
+        chrome: false,
         remoteIframe: false,
       })
     );
@@ -559,6 +608,7 @@ function addAccessibleTask(doc, task, options = {}) {
       accessibleTask(doc, task, {
         ...options,
         topLevel: false,
+        chrome: false,
         iframe: false,
       })
     );
