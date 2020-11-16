@@ -395,11 +395,6 @@ class FunctionBox : public SharedContext {
   // Arrow function with expression body like: `() => 1`.
   bool hasExprBody_ : 1;
 
-  // Analysis for use in heuristics.
-  bool usesApply : 1;   // Contains an f.apply() call
-  bool usesThis : 1;    // Contains 'this'
-  bool usesReturn : 1;  // Contains a 'return' statement
-
   // Tracks if function-related fields are already copied to ScriptStencil.
   // If this field is true, modification to those fields should be synced with
   // ScriptStencil by copyUpdated* methods.
@@ -472,7 +467,6 @@ class FunctionBox : public SharedContext {
   IMMUTABLE_FLAG_GETTER_SETTER(argumentsHasVarBinding, ArgumentsHasVarBinding)
   // AlwaysNeedsArgsObj: custom logic below.
   // HasMappedArgsObj: custom logic below.
-  // IsLikelyConstructorWrapper: custom logic below.
 
   bool needsCallObjectRegardlessOfBindings() const {
     // Always create a CallObject if:
@@ -486,10 +480,6 @@ class FunctionBox : public SharedContext {
   bool needsExtraBodyVarEnvironmentRegardlessOfBindings() const {
     MOZ_ASSERT(hasParameterExprs);
     return funHasExtensibleScope();
-  }
-
-  bool isLikelyConstructorWrapper() const {
-    return argumentsHasVarBinding() && usesApply && usesThis && !usesReturn;
   }
 
   GeneratorKind generatorKind() const {
