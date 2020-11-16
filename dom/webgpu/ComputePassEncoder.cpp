@@ -7,6 +7,7 @@
 #include "ComputePassEncoder.h"
 #include "BindGroup.h"
 #include "ComputePipeline.h"
+#include "CommandEncoder.h"
 
 #include "mozilla/webgpu/ffi/wgpu.h"
 

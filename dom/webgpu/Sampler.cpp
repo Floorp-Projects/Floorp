@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/WebGPUBinding.h"
 #include "Sampler.h"
+#include "ipc/WebGPUChild.h"
 
 #include "Device.h"
 
