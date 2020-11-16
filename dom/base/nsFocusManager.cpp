@@ -743,9 +743,6 @@ void nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow,
     baseWindow->SetVisibility(true);
   }
 
-  // If this is a parent or single process window, send the activate event.
-  // Events for child process windows will be sent when ParentActivated
-  // is called.
   if (XRE_IsParentProcess()) {
     // Unsetting top-level focus upon lowering was inhibited to accommodate
     // ATOK, so we need to do it here.
@@ -830,9 +827,6 @@ void nsFocusManager::WindowLowered(mozIDOMWindowProxy* aWindow,
     }
   }
 
-  // If this is a parent or single process window, send the deactivate event.
-  // Events for child process windows will be sent when ParentActivated
-  // is called.
   if (XRE_IsParentProcess()) {
     ActivateOrDeactivate(window, false);
   }
@@ -964,10 +958,11 @@ void nsFocusManager::WindowShown(mozIDOMWindowProxy* aWindow,
     }
   }
 
-  if (nsIDocShell* docShell = window->GetDocShell()) {
-    if (nsCOMPtr<nsIBrowserChild> child = docShell->GetBrowserChild()) {
-      bool active = static_cast<BrowserChild*>(child.get())->ParentIsActive();
-      ActivateOrDeactivate(window, active);
+  if (XRE_IsParentProcess()) {
+    if (BrowsingContext* bc = window->GetBrowsingContext()) {
+      if (bc->IsTop()) {
+        bc->SetIsActiveBrowserWindow(bc->GetIsActiveBrowserWindow());
+      }
     }
   }
 
@@ -1177,16 +1172,6 @@ nsresult nsFocusManager::FocusPlugin(Element* aPlugin) {
   return NS_OK;
 }
 
-void nsFocusManager::ParentActivated(mozIDOMWindowProxy* aWindow,
-                                     bool aActive) {
-  nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
-  if (!window) {
-    return;
-  }
-
-  ActivateOrDeactivate(window, aActive);
-}
-
 nsFocusManager::BlurredElementInfo::BlurredElementInfo(Element& aElement)
     : mElement(aElement),
       mHadRing(aElement.State().HasState(NS_EVENT_STATE_FOCUSRING)) {}
@@ -1346,29 +1331,32 @@ void nsFocusManager::EnsureCurrentWidgetFocused(CallerType aCallerType) {
 
 void nsFocusManager::ActivateOrDeactivate(nsPIDOMWindowOuter* aWindow,
                                           bool aActive) {
+  MOZ_ASSERT(XRE_IsParentProcess());
   if (!aWindow) {
     return;
   }
 
-  // Inform the DOM window that it has activated or deactivated, so that
-  // the active attribute is updated on the window.
-  aWindow->ActivateOrDeactivate(aActive);
+  if (BrowsingContext* bc = aWindow->GetBrowsingContext()) {
+    MOZ_ASSERT(bc->IsTop());
 
-  // Send the activate event.
+    RefPtr<CanonicalBrowsingContext> chromeTop =
+        bc->Canonical()->TopCrossChromeBoundary();
+    MOZ_ASSERT(bc == chromeTop);
+
+    chromeTop->SetIsActiveBrowserWindow(aActive);
+    chromeTop->CallOnAllTopDescendants(
+        [aActive](CanonicalBrowsingContext* aBrowsingContext) -> CallState {
+          aBrowsingContext->SetIsActiveBrowserWindow(aActive);
+          return CallState::Continue;
+        });
+  }
+
   if (aWindow->GetExtantDoc()) {
     nsContentUtils::DispatchEventOnlyToChrome(
         aWindow->GetExtantDoc(), aWindow->GetCurrentInnerWindow(),
         aActive ? u"activate"_ns : u"deactivate"_ns, CanBubble::eYes,
         Cancelable::eYes, nullptr);
   }
-
-  // Look for any remote child frames, iterate over them and send the activation
-  // notification.
-  nsContentUtils::CallOnAllRemoteChildren(
-      aWindow, [&aActive](BrowserParent* aBrowserParent) -> CallState {
-        Unused << aBrowserParent->SendParentActivated(aActive);
-        return CallState::Continue;
-      });
 }
 
 // Retrieves innerWindowId of the window of the last focused element to

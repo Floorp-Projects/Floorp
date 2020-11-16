@@ -263,12 +263,18 @@ CanonicalBrowsingContext::GetParentCrossChromeBoundary() {
   return nullptr;
 }
 
-Nullable<WindowProxyHolder> CanonicalBrowsingContext::GetTopChromeWindow() {
+already_AddRefed<CanonicalBrowsingContext>
+CanonicalBrowsingContext::TopCrossChromeBoundary() {
   RefPtr<CanonicalBrowsingContext> bc(this);
   while (RefPtr<CanonicalBrowsingContext> parent =
              bc->GetParentCrossChromeBoundary()) {
     bc = parent.forget();
   }
+  return bc.forget();
+}
+
+Nullable<WindowProxyHolder> CanonicalBrowsingContext::GetTopChromeWindow() {
+  RefPtr<CanonicalBrowsingContext> bc = TopCrossChromeBoundary();
   if (bc->IsChrome()) {
     return WindowProxyHolder(bc.forget());
   }
@@ -426,6 +432,34 @@ CanonicalBrowsingContext::ReplaceLoadingSessionHistoryEntryForLoad(
   }
 
   return MakeUnique<LoadingSessionHistoryInfo>(newEntry, aInfo->mLoadId);
+}
+
+void CanonicalBrowsingContext::CallOnAllTopDescendants(
+    const std::function<mozilla::CallState(CanonicalBrowsingContext*)>&
+        aCallback) {
+#ifdef DEBUG
+  RefPtr<CanonicalBrowsingContext> parent = GetParentCrossChromeBoundary();
+  MOZ_ASSERT(!parent, "Should only call on top chrome BC");
+#endif
+
+  nsTArray<RefPtr<BrowsingContextGroup>> groups;
+  BrowsingContextGroup::GetAllGroups(groups);
+  for (auto& browsingContextGroup : groups) {
+    for (auto& bc : browsingContextGroup->Toplevels()) {
+      if (bc == this) {
+        // Cannot be a descendent of myself so skip.
+        continue;
+      }
+
+      RefPtr<CanonicalBrowsingContext> top =
+          bc->Canonical()->TopCrossChromeBoundary();
+      if (top == this) {
+        if (aCallback(bc->Canonical()) == CallState::Stop) {
+          return;
+        }
+      }
+    }
+  }
 }
 
 void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,

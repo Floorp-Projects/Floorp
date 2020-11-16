@@ -542,6 +542,23 @@ void BrowsingContext::CleanUpDanglingRemoteOuterWindowProxies(
   js::RemapRemoteWindowProxies(aCx, &cb, aOuter);
 }
 
+bool BrowsingContext::GetIsActiveBrowserWindow() {
+  if (!XRE_IsParentProcess()) {
+    return Top()->GetIsActiveBrowserWindowInternal();
+  }
+
+  // chrome:// urls loaded in the parent won't receive
+  // their own activation so we defer to the top chrome
+  // Browsing Context when in the parent process.
+  RefPtr<CanonicalBrowsingContext> chromeTop =
+      Canonical()->TopCrossChromeBoundary();
+  return chromeTop->GetIsActiveBrowserWindowInternal();
+}
+
+void BrowsingContext::SetIsActiveBrowserWindow(bool aActive) {
+  Unused << SetIsActiveBrowserWindowInternal(aActive);
+}
+
 bool BrowsingContext::FullscreenAllowed() const {
   for (auto* current = this; current; current = current->GetParent()) {
     if (!current->GetFullscreenAllowedByOwner()) {
@@ -2304,6 +2321,24 @@ bool BrowsingContext::CheckOnlyOwningProcessCanSet(ContentParent* aSource) {
   }
 
   return true;
+}
+
+bool BrowsingContext::CanSet(FieldIndex<IDX_IsActiveBrowserWindowInternal>,
+                             const bool& aValue, ContentParent* aSource) {
+  // Should only be set in the parent process.
+  return XRE_IsParentProcess() && !aSource && IsTop();
+}
+
+void BrowsingContext::DidSet(FieldIndex<IDX_IsActiveBrowserWindowInternal>,
+                             bool aOldValue) {
+  // The browser window containing this context has changed
+  // activation state so update window inactive document states
+  // for all in-process documents.
+  PreOrderWalk([](BrowsingContext* aContext) {
+    if (Document* doc = aContext->GetExtantDocument()) {
+      doc->UpdateDocumentStates(NS_DOCUMENT_STATE_WINDOW_INACTIVE, true);
+    }
+  });
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_AllowContentRetargeting>,
