@@ -72,7 +72,6 @@
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/SerializedStackHolder.h"
 #include "mozilla/dom/SRILogHelper.h"
 #include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/dom/ServiceWorkerManager.h"

@@ -9,7 +9,6 @@
 #include "WorkerRef.h"
 #include "mozilla/dom/SecurityPolicyViolationEvent.h"
 #include "mozilla/dom/SecurityPolicyViolationEventBinding.h"
-#include "mozilla/dom/WorkerRunnable.h"
 
 using namespace mozilla::dom;
 

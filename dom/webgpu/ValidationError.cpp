@@ -5,7 +5,6 @@
 
 #include "ValidationError.h"
 #include "Device.h"
-#include "mozilla/dom/WebGPUBinding.h"
 
 namespace mozilla {
 namespace webgpu {

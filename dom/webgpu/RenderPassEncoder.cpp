@@ -8,7 +8,6 @@
 #include "BindGroup.h"
 #include "CommandEncoder.h"
 #include "RenderPipeline.h"
-#include "mozilla/webgpu/ffi/wgpu.h"
 
 namespace mozilla {
 namespace webgpu {
