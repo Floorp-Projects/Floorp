@@ -821,7 +821,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LoginBreaches: "resource:///modules/LoginBreaches.jsm",
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
   Normandy: "resource://normandy/Normandy.jsm",
-  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   OsEnvironment: "resource://gre/modules/OsEnvironment.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
@@ -1134,14 +1133,6 @@ BrowserGlue.prototype = {
           if (this._placesBrowserInitComplete) {
             Services.obs.notifyObservers(null, "places-browser-init-complete");
           }
-        } else if (data == "migrateMatchBucketsPrefForUI66") {
-          this._migrateMatchBucketsPrefForUI66().then(() => {
-            Services.obs.notifyObservers(
-              null,
-              "browser-glue-test",
-              "migrateMatchBucketsPrefForUI66-done"
-            );
-          });
         } else if (data == "add-breaches-sync-handler") {
           this._addBreachesSyncHandler();
         }
@@ -1230,9 +1221,6 @@ BrowserGlue.prototype = {
         DownloadsViewableInternally.register();
 
         break;
-      case "shield-init-complete":
-        this._shieldInitComplete = true;
-        break;
     }
   },
 
@@ -1269,7 +1257,6 @@ BrowserGlue.prototype = {
     os.addObserver(this, "xpi-signature-changed");
     os.addObserver(this, "sync-ui-state:update");
     os.addObserver(this, "handlersvc-store-initialized");
-    os.addObserver(this, "shield-init-complete");
 
     ActorManagerParent.addJSProcessActors(JSPROCESSACTORS);
     ActorManagerParent.addJSWindowActors(JSWINDOWACTORS);
@@ -1343,7 +1330,6 @@ BrowserGlue.prototype = {
     os.removeObserver(this, "flash-plugin-hang");
     os.removeObserver(this, "xpi-signature-changed");
     os.removeObserver(this, "sync-ui-state:update");
-    os.removeObserver(this, "shield-init-complete");
 
     Services.prefs.removeObserver(
       "privacy.trackingprotection",
@@ -3346,132 +3332,6 @@ BrowserGlue.prototype = {
 
     let xulStore = Services.xulStore;
 
-    if (currentUIVersion < 52) {
-      // Keep old devtools log persistence behavior after splitting netmonitor and
-      // webconsole prefs (bug 1307881).
-      if (Services.prefs.getBoolPref("devtools.webconsole.persistlog", false)) {
-        Services.prefs.setBoolPref("devtools.netmonitor.persistlog", true);
-      }
-    }
-
-    // Update user customizations that will interfere with the Safe Browsing V2
-    // to V4 migration (bug 1395419).
-    if (currentUIVersion < 53) {
-      const MALWARE_PREF = "urlclassifier.malwareTable";
-      if (Services.prefs.prefHasUserValue(MALWARE_PREF)) {
-        let malwareList = Services.prefs.getCharPref(MALWARE_PREF);
-        if (malwareList.includes("goog-malware-shavar")) {
-          malwareList.replace("goog-malware-shavar", "goog-malware-proto");
-          Services.prefs.setCharPref(MALWARE_PREF, malwareList);
-        }
-      }
-    }
-
-    if (currentUIVersion < 55) {
-      Services.prefs.clearUserPref("browser.customizemode.tip0.shown");
-    }
-
-    if (currentUIVersion < 56) {
-      // Prior to the end of the Firefox 57 cycle, the sidebarcommand being present
-      // or not was the only thing that distinguished whether the sidebar was open.
-      // Now, the sidebarcommand always indicates the last opened sidebar, and we
-      // correctly persist the checked attribute to indicate whether or not the
-      // sidebar was open. We should set the checked attribute in case it wasn't:
-      if (xulStore.getValue(BROWSER_DOCURL, "sidebar-box", "sidebarcommand")) {
-        xulStore.setValue(BROWSER_DOCURL, "sidebar-box", "checked", "true");
-      }
-    }
-
-    if (currentUIVersion < 58) {
-      // With Firefox 57, we are doing a one time reset of the geo prefs due to bug 1413652
-      Services.prefs.clearUserPref("browser.search.countryCode");
-      Services.prefs.clearUserPref("browser.search.region");
-      Services.prefs.clearUserPref("browser.search.isUS");
-    }
-
-    if (currentUIVersion < 59) {
-      let searchInitializedPromise = new Promise(resolve => {
-        if (Services.search.isInitialized) {
-          resolve();
-        }
-        const SEARCH_SERVICE_TOPIC = "browser-search-service";
-        Services.obs.addObserver(function observer(subject, topic, data) {
-          if (data != "init-complete") {
-            return;
-          }
-          Services.obs.removeObserver(observer, SEARCH_SERVICE_TOPIC);
-          resolve();
-        }, SEARCH_SERVICE_TOPIC);
-      });
-      searchInitializedPromise.then(() => {
-        let currentEngine = Services.search.defaultEngine.wrappedJSObject;
-        // Only reset the current engine if it wasn't set by a WebExtension
-        // and it is not one of the default engines.
-        // If the original default is not a default, the user has a weird
-        // configuration probably involving langpacks, it's not worth
-        // attempting to reset their settings.
-        if (
-          currentEngine._extensionID ||
-          currentEngine.isAppProvided ||
-          !Services.search.originalDefaultEngine.isAppProvided
-        ) {
-          return;
-        }
-
-        if (!currentEngine._loadPath.startsWith("[https]")) {
-          Services.search.resetToOriginalDefaultEngine();
-        }
-      });
-
-      // Migrate the old requested locales prefs to use the new model
-      const SELECTED_LOCALE_PREF = "general.useragent.locale";
-      const MATCHOS_LOCALE_PREF = "intl.locale.matchOS";
-
-      if (
-        Services.prefs.prefHasUserValue(MATCHOS_LOCALE_PREF) ||
-        Services.prefs.prefHasUserValue(SELECTED_LOCALE_PREF)
-      ) {
-        if (Services.prefs.getBoolPref(MATCHOS_LOCALE_PREF, false)) {
-          Services.locale.requestedLocales = [];
-        } else {
-          let locale = Services.prefs.getComplexValue(
-            SELECTED_LOCALE_PREF,
-            Ci.nsIPrefLocalizedString
-          );
-          if (locale) {
-            try {
-              Services.locale.requestedLocales = [locale.data];
-            } catch (e) {
-              /* Don't panic if the value is not a valid locale code. */
-            }
-          }
-        }
-        Services.prefs.clearUserPref(SELECTED_LOCALE_PREF);
-        Services.prefs.clearUserPref(MATCHOS_LOCALE_PREF);
-      }
-    }
-
-    if (currentUIVersion < 61) {
-      // Remove persisted toolbarset from navigator toolbox
-      xulStore.removeValue(BROWSER_DOCURL, "navigator-toolbox", "toolbarset");
-    }
-
-    if (currentUIVersion < 62) {
-      // Remove iconsize and mode from all the toolbars
-      let toolbars = [
-        "navigator-toolbox",
-        "nav-bar",
-        "PersonalToolbar",
-        "TabsToolbar",
-        "toolbar-menubar",
-      ];
-      for (let resourceName of ["mode", "iconsize"]) {
-        for (let toolbarId of toolbars) {
-          xulStore.removeValue(BROWSER_DOCURL, toolbarId, resourceName);
-        }
-      }
-    }
-
     if (currentUIVersion < 64) {
       OS.File.remove(
         OS.Path.join(OS.Constants.Path.profileDir, "directoryLinks.json"),
@@ -3510,12 +3370,6 @@ BrowserGlue.prototype = {
           }
         }
       });
-    }
-
-    if (currentUIVersion < 66) {
-      // Set whether search suggestions or history/bookmarks results come first
-      // in the urlbar results, and uninstall a related Shield study.
-      this._migrateMatchBucketsPrefForUI66();
     }
 
     if (currentUIVersion < 67) {
@@ -4021,93 +3875,6 @@ BrowserGlue.prototype = {
         }
       }
     );
-  },
-
-  async _migrateMatchBucketsPrefForUI66() {
-    // This does two related things.
-    //
-    // (1) Profiles created on or after Firefox 57's release date were eligible
-    // for a Shield study that changed the browser.urlbar.matchBuckets pref in
-    // order to show search suggestions above history/bookmarks in the urlbar
-    // popup.  This uninstalls that study.  (It's actually slightly more
-    // complex.  The study set the pref to several possible values, but the
-    // overwhelming number of profiles in the study got search suggestions
-    // first, followed by history/bookmarks.)
-    //
-    // (2) This also ensures that (a) new users see search suggestions above
-    // history/bookmarks, thereby effectively making the study permanent, and
-    // (b) old users (including those in the study) continue to see whatever
-    // they were seeing before.  This works together with UnifiedComplete.js.
-    // By default, the browser.urlbar.matchBuckets pref does not exist, and
-    // UnifiedComplete.js internally hardcodes a default value for it.  Before
-    // Firefox 60, the hardcoded default was to show history/bookmarks first.
-    // After 60, it's to show search suggestions first.
-
-    // Wait for Shield init to complete.
-    await new Promise(resolve => {
-      if (this._shieldInitComplete) {
-        resolve();
-        return;
-      }
-      let topic = "shield-init-complete";
-      Services.obs.addObserver(function obs() {
-        Services.obs.removeObserver(obs, topic);
-        resolve();
-      }, topic);
-    });
-
-    // Now get the pref's value.  If the study is active, the value will have
-    // just been set (on the default branch) as part of Shield's init.  The pref
-    // should not exist otherwise (normally).
-    let prefName = "browser.urlbar.matchBuckets";
-    let prefValue = Services.prefs.getCharPref(prefName, "");
-
-    // Get the study (aka experiment).  It may not be installed.
-    let experiment = null;
-    let experimentName = "pref-flip-search-composition-57-release-1413565";
-    let { PreferenceExperiments } = ChromeUtils.import(
-      "resource://normandy/lib/PreferenceExperiments.jsm"
-    );
-    try {
-      experiment = await PreferenceExperiments.get(experimentName);
-    } catch (e) {}
-
-    // Uninstall the study, resetting the pref to its state before the study.
-    if (experiment && !experiment.expired) {
-      await PreferenceExperiments.stop(experimentName, {
-        resetValue: true,
-        reason: "external:search-ui-migration",
-      });
-    }
-
-    // At this point, normally the pref should not exist.  If it does, then it
-    // either has a user value, or something unexpectedly set its value on the
-    // default branch.  Either way, preserve that value.
-    if (Services.prefs.getCharPref(prefName, "")) {
-      return;
-    }
-
-    // The new default is "suggestion:4,general:5" (show search suggestions
-    // before history/bookmarks), but we implement that by leaving the pref
-    // undefined, and UnifiedComplete.js hardcodes that value internally.  So if
-    // the pref was "suggestion:4,general:5" (modulo whitespace), we're done.
-    if (prefValue) {
-      let buckets = PlacesUtils.convertMatchBucketsStringToArray(prefValue);
-      if (
-        ObjectUtils.deepEqual(buckets, [
-          ["suggestion", 4],
-          ["general", 5],
-        ])
-      ) {
-        return;
-      }
-    }
-
-    // Set the pref on the user branch.  If the pref had a value, then preserve
-    // it.  Otherwise, set the previous default value, which was to show history
-    // and bookmarks before search suggestions.
-    prefValue = prefValue || "general:5,suggestion:Infinity";
-    Services.prefs.setCharPref(prefName, prefValue);
   },
 
   /**
