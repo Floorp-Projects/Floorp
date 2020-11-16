@@ -226,3 +226,30 @@ TEST_F(APZCFlingAccelerationTester,
                          {0, -8, 0, -30, -60, -87, -104, -111});
   CHECK_VELOCITY(Down, 13.0, 23.0);
 }
+
+TEST_F(APZCFlingAccelerationTester, ShouldNotAccelerateAfterCanceledWithTap) {
+  // First, build up a lot of speed.
+  ExecutePanGesture100Hz(ScreenIntPoint{569, 710},
+                         {11, 2, 107, 18, 148, 57, 133, 159, 21});
+  ExecuteWait(TimeDuration::FromMilliseconds(154));
+  ExecutePanGesture100Hz(ScreenIntPoint{581, 650},
+                         {12, 68, 0, 162, 78, 140, 167});
+  ExecuteWait(TimeDuration::FromMilliseconds(123));
+  ExecutePanGesture100Hz(ScreenIntPoint{568, 723}, {11, 0, 79, 91, 131, 171});
+  ExecuteWait(TimeDuration::FromMilliseconds(123));
+  ExecutePanGesture100Hz(ScreenIntPoint{598, 678},
+                         {8, 55, 22, 87, 117, 220, 54});
+  ExecuteWait(TimeDuration::FromMilliseconds(134));
+  ExecutePanGesture100Hz(ScreenIntPoint{585, 854}, {45, 137, 107, 102, 79});
+  ExecuteWait(TimeDuration::FromMilliseconds(246));
+
+  // Then, interrupt with a tap.
+  ExecutePanGesture100Hz(ScreenIntPoint{566, 812}, {0, 0, 0, 0});
+  ExecuteWait(TimeDuration::FromMilliseconds(869));
+
+  // Then do a regular fling.
+  ExecutePanGesture100Hz(ScreenIntPoint{599, 819},
+                         {0, 0, 8, 35, 8, 38, 29, 37});
+
+  CHECK_VELOCITY(Up, 2.8, 4.2);
+}
