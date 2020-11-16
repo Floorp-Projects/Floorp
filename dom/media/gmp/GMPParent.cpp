@@ -130,6 +130,10 @@ nsresult GMPParent::GetPluginFileArch(nsIFile* aPluginDir,
   rv = nsMacUtilsImpl::GetArchitecturesForBinary(pluginPath.get(), &aArchSet);
   NS_ENSURE_SUCCESS(rv, rv);
 
+#  if defined(__aarch64__)
+  mPluginFilePath = pluginPath;
+#  endif
+
   return NS_OK;
 }
 #endif  // defined(XP_MACOSX)
@@ -211,6 +215,7 @@ RefPtr<GenericPromise> GMPParent::Init(GeckoMediaPluginServiceParent* aService,
                              (bundleArch & base::PROCESS_ARCH_ARM_64);
     if (isUniversalBinary) {
       mChildLaunchArch = base::PROCESS_ARCH_X86_64;
+      PreTranslateBins();
     } else {
       return GenericPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED,
                                              __func__);
@@ -1026,6 +1031,27 @@ bool GMPParent::EnsureProcessLoaded(base::ProcessId* aID) {
 void GMPParent::IncrementGMPContentChildCount() { ++mGMPContentChildCount; }
 
 nsString GMPParent::GetPluginBaseName() const { return u"gmp-"_ns + mName; }
+
+#if defined(XP_MACOSX) && defined(__aarch64__)
+void GMPParent::PreTranslateBins() {
+  nsCOMPtr<nsIRunnable> event = mozilla::NewRunnableMethod(
+      "RosettaTranslation", this, &GMPParent::PreTranslateBinsWorker);
+
+  DebugOnly<nsresult> rv =
+      NS_DispatchBackgroundTask(event.forget(), NS_DISPATCH_EVENT_MAY_BLOCK);
+
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+}
+
+void GMPParent::PreTranslateBinsWorker() {
+  int rv = nsMacUtilsImpl::PreTranslateXUL();
+  GMP_PARENT_LOG_DEBUG("%s: XUL translation result: %d", __FUNCTION__, rv);
+
+  rv = nsMacUtilsImpl::PreTranslateBinary(mPluginFilePath);
+  GMP_PARENT_LOG_DEBUG("%s: %s translation result: %d", __FUNCTION__,
+                       mPluginFilePath.get(), rv);
+}
+#endif
 
 }  // namespace mozilla::gmp
 
