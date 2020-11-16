@@ -336,52 +336,6 @@ static bool InstantiateScopes(JSContext* cx, CompilationInfo& compilationInfo,
   return true;
 }
 
-// Anonymous functions may have either an "inferred" or a "guessed" name
-// assigned to them. This name isn't known until the enclosing function is
-// compiled so we must update it here.
-static bool SetNameForExposedFunctions(JSContext* cx,
-                                       CompilationInfo& compilationInfo,
-                                       CompilationGCOutput& gcOutput) {
-  Rooted<JSFunction*> fun(cx);
-  for (auto item : compilationInfo.functionScriptStencils(gcOutput)) {
-    auto& scriptStencil = item.script;
-    fun = item.function;
-    if (!scriptStencil.functionFlags.hasBaseScript()) {
-      continue;
-    }
-
-    // If the function was not referenced by enclosing script's bytecode, we do
-    // not generate a BaseScript for it. For example, `(function(){});`.
-    //
-    // NOTE: This flag is false for standalone functions, but they already set
-    //       the function name when creating it.
-    if (!scriptStencil.wasFunctionEmitted) {
-      continue;
-    }
-
-    // Inferred and Guessed names are computed by BytecodeEmitter and so may
-    // need to be applied to existing JSFunctions during delazification.
-    if (fun->displayAtom() == nullptr) {
-      JSAtom* funcAtom = nullptr;
-      if (scriptStencil.functionFlags.hasInferredName() ||
-          scriptStencil.functionFlags.hasGuessedAtom()) {
-        funcAtom = compilationInfo.input.atomCache.getExistingAtomAt(
-            cx, scriptStencil.functionAtom);
-        MOZ_ASSERT(funcAtom);
-      }
-      if (scriptStencil.functionFlags.hasInferredName()) {
-        fun->setInferredName(funcAtom);
-      }
-
-      if (scriptStencil.functionFlags.hasGuessedAtom()) {
-        fun->setGuessedAtom(funcAtom);
-      }
-    }
-  }
-
-  return true;
-}
-
 // Instantiate js::BaseScripts from ScriptStencils for inner functions of the
 // compilation. Note that standalone functions and functions being delazified
 // are handled below with other top-levels.
@@ -505,7 +459,8 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInfo& compilationInfo,
 // to update it with information determined by the BytecodeEmitter. This applies
 // to both initial and delazification parses. The functions being update may or
 // may not have bytecode at this point.
-static void UpdateEmittedInnerFunctions(CompilationInfo& compilationInfo,
+static void UpdateEmittedInnerFunctions(JSContext* cx,
+                                        CompilationInfo& compilationInfo,
                                         CompilationGCOutput& gcOutput) {
   for (auto item : compilationInfo.functionScriptStencils(gcOutput)) {
     auto& scriptStencil = item.script;
@@ -528,6 +483,24 @@ static void UpdateEmittedInnerFunctions(CompilationInfo& compilationInfo,
 
       if (scriptStencil.memberInitializers) {
         script->setMemberInitializers(*scriptStencil.memberInitializers);
+      }
+
+      // Inferred and Guessed names are computed by BytecodeEmitter and so may
+      // need to be applied to existing JSFunctions during delazification.
+      if (fun->displayAtom() == nullptr) {
+        JSAtom* funcAtom = nullptr;
+        if (scriptStencil.functionFlags.hasInferredName() ||
+            scriptStencil.functionFlags.hasGuessedAtom()) {
+          funcAtom = compilationInfo.input.atomCache.getExistingAtomAt(
+              cx, scriptStencil.functionAtom);
+          MOZ_ASSERT(funcAtom);
+        }
+        if (scriptStencil.functionFlags.hasInferredName()) {
+          fun->setInferredName(funcAtom);
+        }
+        if (scriptStencil.functionFlags.hasGuessedAtom()) {
+          fun->setGuessedAtom(funcAtom);
+        }
       }
     }
   }
@@ -583,7 +556,7 @@ static void AssertDelazificationFieldsMatch(CompilationInfo& compilationInfo,
     MOZ_ASSERT(script->extent().lineno == scriptStencil.extent.lineno);
     MOZ_ASSERT(script->extent().column == scriptStencil.extent.column);
 
-    // Names are updated by SetNameForExposedFunctions.
+    // Names are updated by UpdateInnerFunctions.
     constexpr uint16_t HAS_INFERRED_NAME =
         uint16_t(FunctionFlags::Flags::HAS_INFERRED_NAME);
     constexpr uint16_t HAS_GUESSED_ATOM =
@@ -686,10 +659,6 @@ bool CompilationInfo::instantiateStencilsAfterPreparation(
 
   MOZ_RELEASE_ASSERT(!IsTypeInferenceEnabled());
 
-  if (!SetNameForExposedFunctions(cx, *this, gcOutput)) {
-    return false;
-  }
-
   if (!input.lazy) {
     if (!InstantiateScriptStencils(cx, *this, gcOutput)) {
       return false;
@@ -702,7 +671,7 @@ bool CompilationInfo::instantiateStencilsAfterPreparation(
 
   // Must be infallible from here forward.
 
-  UpdateEmittedInnerFunctions(*this, gcOutput);
+  UpdateEmittedInnerFunctions(cx, *this, gcOutput);
 
   if (!input.lazy) {
     LinkEnclosingLazyScript(*this, gcOutput);
