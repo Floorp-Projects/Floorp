@@ -283,7 +283,6 @@ void JitScript::ensureProfileString(JSContext* cx, JSScript* script) {
 
 /* static */
 void JitScript::Destroy(Zone* zone, JitScript* script) {
-  script->unlinkDependentWasmImports();
   script->prepareForDestruction(zone);
 
   js_delete(script);
@@ -451,42 +450,6 @@ void ICScript::purgeOptimizedStubs(Zone* zone) {
     }
   }
 #endif
-}
-
-void JitScript::unlinkDependentWasmImports() {
-  // Remove any links from wasm::Instances that contain optimized FFI calls into
-  // this JitScript.
-  if (dependentWasmImports_) {
-    for (DependentWasmImport& dep : *dependentWasmImports_) {
-      dep.instance->deoptimizeImportExit(dep.importIndex);
-    }
-    dependentWasmImports_.reset();
-  }
-}
-
-bool JitScript::addDependentWasmImport(JSContext* cx, wasm::Instance& instance,
-                                       uint32_t idx) {
-  if (!dependentWasmImports_) {
-    dependentWasmImports_ = cx->make_unique<Vector<DependentWasmImport>>(cx);
-    if (!dependentWasmImports_) {
-      return false;
-    }
-  }
-  return dependentWasmImports_->emplaceBack(instance, idx);
-}
-
-void JitScript::removeDependentWasmImport(wasm::Instance& instance,
-                                          uint32_t idx) {
-  if (!dependentWasmImports_) {
-    return;
-  }
-
-  for (DependentWasmImport& dep : *dependentWasmImports_) {
-    if (dep.instance == &instance && dep.importIndex == idx) {
-      dependentWasmImports_->erase(&dep);
-      break;
-    }
-  }
 }
 
 JitScript::CachedIonData::CachedIonData(EnvironmentObject* templateEnv,

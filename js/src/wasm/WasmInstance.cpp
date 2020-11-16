@@ -541,16 +541,9 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
     return true;
   }
 
-  JitScript* jitScript = script->jitScript();
-
   // Let's optimize it!
-  // TODO(no-TI): remove addDependentWasmImport.
-  if (!jitScript->addDependentWasmImport(cx, *this, funcImportIndex)) {
-    return false;
-  }
 
   import.code = jitExitCode;
-  import.jitScript = jitScript;
   return true;
 }
 
@@ -1390,17 +1383,14 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
       import.realm = f->realm();
       import.code = calleeInstance.codeBase(calleeTier) +
                     codeRange.funcUncheckedCallEntry();
-      import.jitScript = nullptr;
     } else if (void* thunk = MaybeGetBuiltinThunk(f, fi.funcType())) {
       import.tls = tlsData();
       import.realm = f->realm();
       import.code = thunk;
-      import.jitScript = nullptr;
     } else {
       import.tls = tlsData();
       import.realm = f->realm();
       import.code = codeBase(callerTier) + fi.interpExitCodeOffset();
-      import.jitScript = nullptr;
     }
   }
 
@@ -1530,16 +1520,6 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
 
 Instance::~Instance() {
   realm_->wasm.unregisterInstance(*this);
-
-  const FuncImportVector& funcImports =
-      metadata(code().stableTier()).funcImports;
-
-  for (unsigned i = 0; i < funcImports.length(); i++) {
-    FuncImportTls& import = funcImportTls(funcImports[i]);
-    if (import.jitScript) {
-      import.jitScript->removeDependentWasmImport(*this, i);
-    }
-  }
 
   if (!metadata().funcTypeIds.empty()) {
     ExclusiveData<FuncTypeIdSet>::Guard lockedFuncTypeIdSet =
@@ -2186,14 +2166,6 @@ void Instance::onMovingGrowTable(const Table* theTable) {
       table.functionBase = tables_[i]->functionBase();
     }
   }
-}
-
-void Instance::deoptimizeImportExit(uint32_t funcImportIndex) {
-  Tier t = code().bestTier();
-  const FuncImport& fi = metadata(t).funcImports[funcImportIndex];
-  FuncImportTls& import = funcImportTls(fi);
-  import.code = codeBase(t) + fi.interpExitCodeOffset();
-  import.jitScript = nullptr;
 }
 
 JSString* Instance::createDisplayURL(JSContext* cx) {

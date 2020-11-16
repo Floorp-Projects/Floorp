@@ -22,16 +22,6 @@ class JS_PUBLIC_API JSScript;
 namespace js {
 namespace jit {
 
-// Describes a single wasm::ImportExit which jumps (via an import with
-// the given index) directly to a JitScript.
-struct DependentWasmImport {
-  wasm::Instance* instance;
-  size_t importIndex;
-
-  DependentWasmImport(wasm::Instance& instance, size_t importIndex)
-      : instance(&instance), importIndex(importIndex) {}
-};
-
 // Information about a script's bytecode, used by IonBuilder. This is cached
 // in JitScript.
 struct IonBytecodeInfo {
@@ -245,11 +235,8 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
 
   // Like JSScript::jitCodeRaw_ but when the script has an IonScript this can
   // point to a separate entry point that skips the argument type checks.
+  // TODO(no-TI): remove.
   uint8_t* jitCodeSkipArgCheck_ = nullptr;
-
-  // If non-null, the list of wasm::Modules that contain an optimized call
-  // directly to this script.
-  js::UniquePtr<Vector<DependentWasmImport>> dependentWasmImports_;
 
   // Profile string used by the profiler for Baseline Interpreter frames.
   const char* profileString_ = nullptr;
@@ -488,12 +475,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   ICEntry& icEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntry) {
     return icScript_.icEntryFromPCOffset(pcOffset, prevLookedUpEntry);
   }
-
-  MOZ_MUST_USE bool addDependentWasmImport(JSContext* cx,
-                                           wasm::Instance& instance,
-                                           uint32_t idx);
-  void removeDependentWasmImport(wasm::Instance& instance, uint32_t idx);
-  void unlinkDependentWasmImports();
 
   size_t allocBytes() const { return endOffset(); }
 
