@@ -206,7 +206,7 @@ Inspector.prototype = {
     // stylesheet resources before instanciating the inspector front since pageStyle
     // actor should refer the watcher.
     if (
-      this.toolbox.resourceWatcher.hasWatcherSupport(
+      this.toolbox.resourceWatcher.hasResourceWatcherSupport(
         this.toolbox.resourceWatcher.TYPES.STYLESHEET
       )
     ) {

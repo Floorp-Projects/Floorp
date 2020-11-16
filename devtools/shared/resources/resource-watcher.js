@@ -290,7 +290,7 @@ class ResourceWatcher {
         // ...request existing resource and new one to come from this one target
         // *but* only do that for backward compat, where we don't have the watcher API
         // (See bug 1626647)
-        if (this.hasWatcherSupport(resourceType)) {
+        if (this.hasResourceWatcherSupport(resourceType)) {
           continue;
         }
         await this._watchResourcesForTarget(targetFront, resourceType);
@@ -611,7 +611,7 @@ class ResourceWatcher {
     );
   }
 
-  hasWatcherSupport(resourceType) {
+  hasResourceWatcherSupport(resourceType) {
     return this.watcher?.traits?.resources?.[resourceType];
   }
 
@@ -642,7 +642,7 @@ class ResourceWatcher {
 
     // If the server supports the Watcher API and the Watcher supports
     // this resource type, use this API
-    if (this.hasWatcherSupport(resourceType)) {
+    if (this.hasResourceWatcherSupport(resourceType)) {
       await this.watcher.watchResources([resourceType]);
       return;
     }
@@ -721,7 +721,7 @@ class ResourceWatcher {
 
     // If the server supports the Watcher API and the Watcher supports
     // this resource type, use this API
-    if (this.hasWatcherSupport(resourceType)) {
+    if (this.hasResourceWatcherSupport(resourceType)) {
       this.watcher.unwatchResources([resourceType]);
       return;
     }
