@@ -5,11 +5,7 @@
 <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 <body>
 <script>
-
 SimpleTest.waitForExplicitFinish();
-const Cc = SpecialPowers.Cc;
-const Cr = SpecialPowers.Cr;
-SpecialPowers.setBoolPref("canvas.focusring.enabled", true);
 </script>
 
 <p>Canvas test: drawFocusIfNeeded</p>
@@ -59,8 +55,13 @@ function test_drawFocusIfNeeded_canvas() {
 <script>
 
 async function runTests() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["canvas.focusring.enabled", true],
+      ["browser.display.always_show_rings_after_key_focus", true],
+    ]
+  });
   await SimpleTest.promiseFocus();
-  SpecialPowers.setBoolPref("browser.display.always_show_rings_after_key_focus", true);
   synthesizeKey("KEY_Tab"); // Trigger keyboard navigation so outlines are shown.
   synthesizeKey("KEY_Tab", { shiftKey: true }); // And now undo the focus move.
   try {
@@ -70,7 +71,6 @@ async function runTests() {
     throw e;
   }
 
- SpecialPowers.setBoolPref("canvas.focusring.enabled", false);
  SimpleTest.finish();
 }
 
