@@ -42,6 +42,24 @@ var data = [
     fixed: "file:///this/is/a/test.html",
   },
   {
+    // Replace ';' with ':'.
+    wrong: "http;//www.example.com/",
+    fixed: "http://www.example.com/",
+    noPrefValue: "http://http;//www.example.com/",
+  },
+  {
+    // Missing ':'.
+    wrong: "https//www.example.com/",
+    fixed: "https://www.example.com/",
+    noPrefValue: "http://https//www.example.com/",
+  },
+  {
+    // Missing ':' for file scheme.
+    wrong: "file///this/is/a/test.html",
+    fixed: "file:///this/is/a/test.html",
+    noPrefValue: "http://file///this/is/a/test.html",
+  },
+  {
     // Valid should not be changed.
     wrong: "https://example.com/this/is/a/test.html",
     fixed: "https://example.com/this/is/a/test.html",
@@ -86,7 +104,7 @@ add_task(function test_false_pref_keeps_typos() {
       item.wrong,
       Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS
     );
-    Assert.equal(preferredURI.spec, item.wrong);
+    Assert.equal(preferredURI.spec, item.noPrefValue || item.wrong);
   }
 });
 

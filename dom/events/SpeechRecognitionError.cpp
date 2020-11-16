@@ -24,15 +24,20 @@ already_AddRefed<SpeechRecognitionError> SpeechRecognitionError::Constructor(
       new SpeechRecognitionError(t, nullptr, nullptr);
   bool trusted = e->Init(t);
   e->InitSpeechRecognitionError(aType, aParam.mBubbles, aParam.mCancelable,
-                                aParam.mError, aParam.mMessage);
+                                aParam.mError,
+                                NS_ConvertUTF16toUTF8(aParam.mMessage));
   e->SetTrusted(trusted);
   e->SetComposed(aParam.mComposed);
   return e.forget();
 }
 
+void SpeechRecognitionError::GetMessage(nsAString& aString) {
+  CopyUTF8toUTF16(mMessage, aString);
+}
+
 void SpeechRecognitionError::InitSpeechRecognitionError(
     const nsAString& aType, bool aCanBubble, bool aCancelable,
-    SpeechRecognitionErrorCode aError, const nsAString& aMessage) {
+    SpeechRecognitionErrorCode aError, const nsACString& aMessage) {
   Event::InitEvent(aType, aCanBubble, aCancelable);
   mError = aError;
   mMessage = aMessage;

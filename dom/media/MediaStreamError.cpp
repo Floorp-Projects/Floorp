@@ -6,11 +6,12 @@
 
 #include "MediaStreamError.h"
 #include "mozilla/dom/MediaStreamErrorBinding.h"
+#include "mozilla/dom/Promise.h"
 #include "nsContentUtils.h"
 
 namespace mozilla {
 
-BaseMediaMgrError::BaseMediaMgrError(Name aName, const nsAString& aMessage,
+BaseMediaMgrError::BaseMediaMgrError(Name aName, const nsACString& aMessage,
                                      const nsAString& aConstraint)
     : mMessage(aMessage), mConstraint(aConstraint), mName(aName) {
 #define MAP_MEDIAERR(name, msg) \
@@ -28,7 +29,6 @@ BaseMediaMgrError::BaseMediaMgrError(Name aName, const nsAString& aMessage,
                    "or the platform in the current context."),
       MAP_MEDIAERR(NotFoundError, "The object can not be found here."),
       MAP_MEDIAERR(NotReadableError, "The I/O read operation failed."),
-      MAP_MEDIAERR(NotSupportedError, "The operation is not supported."),
       MAP_MEDIAERR(OverconstrainedError, "Constraints could be not satisfied."),
       MAP_MEDIAERR(SecurityError, "The operation is insecure."),
       MAP_MEDIAERR(TypeError, ""),
@@ -47,12 +47,42 @@ BaseMediaMgrError::BaseMediaMgrError(Name aName, const nsAString& aMessage,
 
 NS_IMPL_ISUPPORTS0(MediaMgrError)
 
-namespace dom {
+void MediaMgrError::Reject(dom::Promise* aPromise) {
+  switch (mName) {
+    case Name::AbortError:
+      aPromise->MaybeRejectWithAbortError(mMessage);
+      return;
+    case Name::InvalidStateError:
+      aPromise->MaybeRejectWithInvalidStateError(mMessage);
+      return;
+    case Name::NotAllowedError:
+      aPromise->MaybeRejectWithNotAllowedError(mMessage);
+      return;
+    case Name::NotFoundError:
+      aPromise->MaybeRejectWithNotFoundError(mMessage);
+      return;
+    case Name::NotReadableError:
+      aPromise->MaybeRejectWithNotReadableError(mMessage);
+      return;
+    case Name::OverconstrainedError: {
+      // TODO: Add OverconstrainedError type.
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1453013
+      nsCOMPtr<nsPIDOMWindowInner> window =
+          do_QueryInterface(aPromise->GetGlobalObject());
+      aPromise->MaybeReject(MakeRefPtr<dom::MediaStreamError>(window, *this));
+      return;
+    }
+    case Name::SecurityError:
+      aPromise->MaybeRejectWithSecurityError(mMessage);
+      return;
+    case Name::TypeError:
+      aPromise->MaybeRejectWithTypeError(mMessage);
+      return;
+      // -Wswitch ensures all cases are covered so don't add default:.
+  }
+}
 
-MediaStreamError::MediaStreamError(nsPIDOMWindowInner* aParent, Name aName,
-                                   const nsAString& aMessage,
-                                   const nsAString& aConstraint)
-    : BaseMediaMgrError(aName, aMessage, aConstraint), mParent(aParent) {}
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MediaStreamError, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MediaStreamError)
@@ -71,7 +101,7 @@ JSObject* MediaStreamError::WrapObject(JSContext* aCx,
 void MediaStreamError::GetName(nsAString& aName) const { aName = mNameString; }
 
 void MediaStreamError::GetMessage(nsAString& aMessage) const {
-  aMessage = mMessage;
+  CopyUTF8toUTF16(mMessage, aMessage);
 }
 
 void MediaStreamError::GetConstraint(nsAString& aConstraint) const {

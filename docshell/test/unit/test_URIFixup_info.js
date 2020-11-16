@@ -635,6 +635,30 @@ var testcases = [
     fixedURI: "http://pserver:8080/",
     protocolChange: true,
   },
+  {
+    input: "http;mozilla",
+    fixedURI: "http://http;mozilla/",
+    alternateURI: "http://www.http;mozilla.com/",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByDNSForSingleWordHosts: true,
+  },
+  {
+    input: "http//mozilla.org",
+    fixedURI: "http://mozilla.org/",
+    shouldRunTest: flags =>
+      flags & Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS,
+  },
+  {
+    input: "http//mozilla.org",
+    fixedURI: "http://http//mozilla.org",
+    alternateURI: "http://www.http.com//mozilla.org",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByDNSForSingleWordHosts: true,
+    shouldRunTest: flags =>
+      !(flags & Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS),
+  },
 ];
 
 if (AppConstants.platform == "win") {
@@ -752,6 +776,7 @@ async function do_single_test_run() {
     protocolChange: expectProtocolChange,
     inWhitelist: inWhitelist,
     affectedByDNSForSingleWordHosts: affectedByDNSForSingleWordHosts,
+    shouldRunTest,
   } of relevantTests) {
     // Explicitly force these into a boolean
     expectKeywordLookup = !!expectKeywordLookup;
@@ -773,6 +798,10 @@ async function do_single_test_run() {
           (gSingleWordDNSLookup ? "yes" : "no") +
           ")"
       );
+
+      if (shouldRunTest && !shouldRunTest(flags)) {
+        continue;
+      }
 
       let URIInfo;
       try {

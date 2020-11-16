@@ -356,7 +356,17 @@
 
       await Assert.rejects(
         IOUtils.read(tmpFileName, { decompress: true }),
-        /Could not decompress file because it has an invalid LZ4 header \(wrong magic number: .*\)/,
+        (actual) => {
+          is(actual.constructor, DOMException,
+             "rejection reason constructor for decompress with bad header");
+          is(actual.name, "NotReadableError",
+             "rejection error name for decompress with bad header");
+          ok(/Could not decompress file because it has an invalid LZ4 header \(wrong magic number: .*\)/
+             .test(actual.message),
+             "rejection error message for decompress with bad header. Got "
+             + actual.message);
+          return true;
+        },
         "IOUtils::read fails to decompress LZ4 data with a bad header"
       );
 

@@ -134,10 +134,17 @@ class SpeechRecognition final : public DOMEventTargetHelper,
   };
 
   void NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack) override;
-
+  // aMessage should be valid UTF-8, but invalid UTF-8 byte sequences are
+  // replaced with the REPLACEMENT CHARACTER on conversion to UTF-16.
   void DispatchError(EventType aErrorType,
                      SpeechRecognitionErrorCode aErrorCode,
-                     const nsAString& aMessage);
+                     const nsACString& aMessage);
+  template <int N>
+  void DispatchError(EventType aErrorType,
+                     SpeechRecognitionErrorCode aErrorCode,
+                     const char (&aMessage)[N]) {
+    DispatchError(aErrorType, aErrorCode, nsLiteralCString(aMessage));
+  }
   uint32_t FillSamplesBuffer(const int16_t* aSamples, uint32_t aSampleCount);
   uint32_t SplitSamplesBuffer(const int16_t* aSamplesBuffer,
                               uint32_t aSampleCount,

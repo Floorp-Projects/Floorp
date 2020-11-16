@@ -157,6 +157,7 @@ already_AddRefed<Exception> CreateException(nsresult aRv,
   switch (NS_ERROR_GET_MODULE(aRv)) {
     case NS_ERROR_MODULE_DOM:
     case NS_ERROR_MODULE_SVG:
+    case NS_ERROR_MODULE_DOM_FILE:
     case NS_ERROR_MODULE_DOM_XPATH:
     case NS_ERROR_MODULE_DOM_INDEXEDDB:
     case NS_ERROR_MODULE_DOM_FILEHANDLE:
