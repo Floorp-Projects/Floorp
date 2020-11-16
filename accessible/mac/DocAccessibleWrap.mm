@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DocAccessibleWrap.h"
+#include "DocAccessible-inl.h"
 
 #import "mozAccessible.h"
 #import "MOXTextMarkerDelegate.h"
@@ -23,3 +24,80 @@ void DocAccessibleWrap::Shutdown() {
 }
 
 DocAccessibleWrap::~DocAccessibleWrap() {}
+
+void DocAccessibleWrap::AttributeChanged(dom::Element* aElement,
+                                         int32_t aNameSpaceID,
+                                         nsAtom* aAttribute, int32_t aModType,
+                                         const nsAttrValue* aOldValue) {
+  DocAccessible::AttributeChanged(aElement, aNameSpaceID, aAttribute, aModType,
+                                  aOldValue);
+  if (aAttribute == nsGkAtoms::aria_live) {
+    Accessible* accessible =
+        mContent != aElement ? GetAccessible(aElement) : this;
+    if (!accessible) {
+      return;
+    }
+
+    static const dom::Element::AttrValuesArray sLiveRegionValues[] = {
+        nsGkAtoms::OFF, nsGkAtoms::polite, nsGkAtoms::assertive, nullptr};
+    int32_t attrValue =
+        aElement->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::aria_live,
+                                  sLiveRegionValues, eIgnoreCase);
+    if (attrValue > 0) {
+      if (!aOldValue || aOldValue->IsEmptyString() ||
+          aOldValue->Equals(nsGkAtoms::OFF, eIgnoreCase)) {
+        // This element just got an active aria-live attribute value
+        FireDelayedEvent(nsIAccessibleEvent::EVENT_LIVE_REGION_ADDED,
+                         accessible);
+      }
+    } else {
+      if (aOldValue && (aOldValue->Equals(nsGkAtoms::polite, eIgnoreCase) ||
+                        aOldValue->Equals(nsGkAtoms::assertive, eIgnoreCase))) {
+        // This element lost an active live region
+        FireDelayedEvent(nsIAccessibleEvent::EVENT_LIVE_REGION_REMOVED,
+                         accessible);
+      } else if (attrValue == 0) {
+        // aria-live="off", check if its a role-based live region that
+        // needs to be removed.
+        if (const nsRoleMapEntry* roleMap = accessible->ARIARoleMap()) {
+          // aria role defines it as a live region. It's live!
+          if (roleMap->liveAttRule == ePoliteLiveAttr) {
+            FireDelayedEvent(nsIAccessibleEvent::EVENT_LIVE_REGION_REMOVED,
+                             accessible);
+          }
+        } else if (nsStaticAtom* value = GetAccService()->MarkupAttribute(
+                       aElement, nsGkAtoms::live)) {
+          // HTML element defines it as a live region. It's live!
+          if (value == nsGkAtoms::polite || value == nsGkAtoms::assertive) {
+            FireDelayedEvent(nsIAccessibleEvent::EVENT_LIVE_REGION_REMOVED,
+                             accessible);
+          }
+        }
+      }
+    }
+  }
+}
+
+void DocAccessibleWrap::QueueNewLiveRegion(Accessible* aAccessible) {
+  if (!aAccessible) {
+    return;
+  }
+
+  mNewLiveRegions.PutEntry(aAccessible->UniqueID());
+}
+
+void DocAccessibleWrap::ProcessNewLiveRegions() {
+  for (auto iter = mNewLiveRegions.Iter(); !iter.Done(); iter.Next()) {
+    if (Accessible* liveRegion =
+            GetAccessibleByUniqueID(const_cast<void*>(iter.Get()->GetKey()))) {
+      FireDelayedEvent(nsIAccessibleEvent::EVENT_LIVE_REGION_ADDED, liveRegion);
+    }
+  }
+
+  mNewLiveRegions.Clear();
+}
+
+void DocAccessibleWrap::DoInitialUpdate() {
+  DocAccessible::DoInitialUpdate();
+  ProcessNewLiveRegions();
+}
