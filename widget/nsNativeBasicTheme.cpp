@@ -143,6 +143,8 @@ void nsNativeBasicTheme::PaintRoundedFocusRect(DrawTarget* aDrawTarget,
                                                uint32_t aDpiRatio,
                                                CSSCoord aRadius,
                                                CSSCoord aOffset) {
+  // NOTE(emilio): If the widths or offsets here change, make sure to tweak the
+  // GetWidgetOverflow path for FocusOutline.
   Rect focusRect(aRect);
   RefPtr<Path> roundedRect;
   CSSCoord offset = aOffset * aDpiRatio;
@@ -1275,6 +1277,9 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
     case StyleAppearance::Button:
       PaintButton(aFrame, dt, devPxRect, eventState, dpiRatio);
       break;
+    case StyleAppearance::FocusOutline:
+      PaintRoundedFocusRect(dt, devPxRect, dpiRatio, 0.0f, 0.0f);
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE(
           "Should not get here with a widget type we don't support.");
@@ -1386,10 +1391,12 @@ bool nsNativeBasicTheme::GetWidgetOverflow(nsDeviceContext* aContext,
                                            nsIFrame* aFrame,
                                            StyleAppearance aAppearance,
                                            nsRect* aOverflowRect) {
-  // TODO(bug 1620360): This should return non-zero for
-  // StyleAppearance::FocusOutline, if we implement outline-style: auto.
   nsIntMargin overflow;
   switch (aAppearance) {
+    case StyleAppearance::FocusOutline:
+      // 2px * each of the segments + 1 px for the separation between them.
+      overflow.SizeTo(5, 5, 5, 5);
+      break;
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:
     case StyleAppearance::Range:
@@ -1534,6 +1541,7 @@ bool nsNativeBasicTheme::ThemeSupportsWidget(nsPresContext* aPresContext,
   switch (aAppearance) {
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:
+    case StyleAppearance::FocusOutline:
     case StyleAppearance::Textarea:
     case StyleAppearance::Textfield:
     case StyleAppearance::Range:
