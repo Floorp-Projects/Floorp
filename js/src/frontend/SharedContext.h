@@ -384,10 +384,6 @@ class FunctionBox : public SharedContext {
   // function already is referenced by the bytecode.
   bool wasEmitted_ : 1;
 
-  // This function should be marked as a singleton. It is expected to be defined
-  // at most once. This is a heuristic only and does not affect correctness.
-  bool isSingleton_ : 1;
-
   // Need to emit a synthesized Annex B assignment
   bool isAnnexB : 1;
 
@@ -461,14 +457,6 @@ class FunctionBox : public SharedContext {
     wasEmitted_ = wasEmitted;
     if (isFunctionFieldCopiedToStencil) {
       copyUpdatedWasEmitted();
-    }
-  }
-
-  bool isSingleton() const { return isSingleton_; }
-  void setIsSingleton(bool isSingleton) {
-    isSingleton_ = isSingleton;
-    if (isFunctionFieldCopiedToStencil) {
-      copyUpdatedIsSingleton();
     }
   }
 
@@ -606,28 +594,12 @@ class FunctionBox : public SharedContext {
     setFlag(ImmutableFlags::IsFieldInitializer);
   }
 
-  void setTreatAsRunOnce(bool treatAsRunOnce) {
-    immutableFlags_.setFlag(ImmutableFlags::TreatAsRunOnce, treatAsRunOnce);
-    if (isScriptFieldCopiedToStencil) {
-      copyUpdatedImmutableFlags();
-    }
-  }
-
   bool hasSimpleParameterList() const {
     return !hasRest() && !hasParameterExprs && !hasDestructuringArgs;
   }
 
   bool hasMappedArgsObj() const {
     return !strict() && hasSimpleParameterList();
-  }
-
-  bool shouldSuppressRunOnce() const {
-    // These heuristics suppress the run-once optimization if we expect that
-    // script-cloning will have more impact than TI type-precision would gain.
-    //
-    // See also: Bug 864218
-    return explicitName() || argumentsHasVarBinding() || isGenerator() ||
-           isAsync();
   }
 
   // Return whether this or an enclosing function is being parsed and
@@ -695,8 +667,6 @@ class FunctionBox : public SharedContext {
   void copyScriptFields(ScriptStencil& script);
   void copyFunctionFields(ScriptStencil& script);
 
-  // * setTreatAsRunOnce can be called to a lazy function, while emitting
-  //   enclosing script
   // * setCtorFunctionHasThisBinding can be called to a class constructor
   //   with a lazy function, while parsing enclosing class
   void copyUpdatedImmutableFlags();
@@ -722,10 +692,6 @@ class FunctionBox : public SharedContext {
   // * setWasEmitted can be called to a lazy function, while emitting
   //   enclosing script
   void copyUpdatedWasEmitted();
-
-  // * setIsSingleton can be called to a lazy function, while emitting
-  //   enclosing script
-  void copyUpdatedIsSingleton();
 };
 
 #undef FLAG_GETTER_SETTER

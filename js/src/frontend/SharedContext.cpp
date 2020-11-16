@@ -236,7 +236,6 @@ FunctionBox::FunctionBox(JSContext* cx, SourceExtent extent,
       emitBytecode(false),
       isStandalone_(false),
       wasEmitted_(false),
-      isSingleton_(false),
       isAnnexB(false),
       useAsm(false),
       hasParameterExprs(false),
@@ -438,7 +437,6 @@ void FunctionBox::copyFunctionFields(ScriptStencil& script) {
   script.lazyFunctionEnclosingScopeIndex_ = enclosingScopeIndex_;
   script.isStandaloneFunction = isStandalone_;
   script.wasFunctionEmitted = wasEmitted_;
-  script.isSingletonFunction = isSingleton_;
 
   isFunctionFieldCopiedToStencil = true;
 }
@@ -475,11 +473,6 @@ void FunctionBox::copyUpdatedAtomAndFlags() {
 void FunctionBox::copyUpdatedWasEmitted() {
   ScriptStencil& script = functionStencil();
   script.wasFunctionEmitted = wasEmitted_;
-}
-
-void FunctionBox::copyUpdatedIsSingleton() {
-  ScriptStencil& script = functionStencil();
-  script.isSingletonFunction = isSingleton_;
 }
 
 }  // namespace frontend
