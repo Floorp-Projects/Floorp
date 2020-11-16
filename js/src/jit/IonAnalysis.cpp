@@ -10,12 +10,10 @@
 #include <utility>  // for ::std::pair
 
 #include "jit/AliasAnalysis.h"
-#include "jit/BaselineInspector.h"
 #include "jit/BaselineJIT.h"
 #include "jit/CompileInfo.h"
 #include "jit/InlineScriptTree.h"
 #include "jit/Ion.h"
-#include "jit/IonBuilder.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/LIR.h"
 #include "jit/Lowering.h"
@@ -28,6 +26,7 @@
 #include "vm/SelfHosting.h"
 #include "vm/TypeInference.h"
 
+#include "jit/InlineScriptTree-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
 #include "vm/BytecodeUtil-inl.h"
 #include "vm/JSObject-inl.h"
@@ -4162,362 +4161,11 @@ MDefinition* jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
   return def;
 }
 
-static bool AnalyzePoppedThis(JSContext* cx, DPAConstraintInfo& constraintInfo,
-                              ObjectGroup* group, MDefinition* thisValue,
-                              MInstruction* ins, bool definitelyExecuted,
-                              HandlePlainObject baseobj,
-                              Vector<TypeNewScriptInitializer>* initializerList,
-                              Vector<PropertyName*>* accessedProperties,
-                              bool* phandled) {
-  // Determine the effect that a use of the |this| value when calling |new|
-  // on a script has on the properties definitely held by the new object.
-
-  if (ins->isCallSetProperty()) {
-    MCallSetProperty* setprop = ins->toCallSetProperty();
-
-    if (setprop->object() != thisValue) {
-      return true;
-    }
-
-    if (setprop->name() == cx->names().prototype ||
-        setprop->name() == cx->names().proto ||
-        setprop->name() == cx->names().constructor) {
-      return true;
-    }
-
-    // Ignore assignments to properties that were already written to.
-    if (baseobj->lookup(cx, NameToId(setprop->name()))) {
-      *phandled = true;
-      return true;
-    }
-
-    // Don't add definite properties for properties that were already
-    // read in the constructor.
-    for (size_t i = 0; i < accessedProperties->length(); i++) {
-      if ((*accessedProperties)[i] == setprop->name()) {
-        return true;
-      }
-    }
-
-    // Assignments to new properties must always execute.
-    if (!definitelyExecuted) {
-      return true;
-    }
-
-    RootedId id(cx, NameToId(setprop->name()));
-    bool added = false;
-    if (!AddClearDefiniteGetterSetterForPrototypeChain(cx, constraintInfo,
-                                                       group, id, &added)) {
-      return false;
-    }
-    if (!added) {
-      // The prototype chain already contains a getter/setter for this
-      // property, or type information is too imprecise.
-      return true;
-    }
-
-    // Add the property to the object, being careful not to update type
-    // information.
-    DebugOnly<unsigned> slotSpan = baseobj->slotSpan();
-    MOZ_ASSERT(!baseobj->containsPure(id));
-    if (!NativeObject::addDataProperty(cx, baseobj, id, SHAPE_INVALID_SLOT,
-                                       JSPROP_ENUMERATE)) {
-      return false;
-    }
-    MOZ_ASSERT(baseobj->slotSpan() != slotSpan);
-    MOZ_ASSERT(!baseobj->inDictionaryMode());
-
-    Vector<MResumePoint*> callerResumePoints(cx);
-    for (MResumePoint* rp = ins->block()->callerResumePoint(); rp;
-         rp = rp->block()->callerResumePoint()) {
-      if (!callerResumePoints.append(rp)) {
-        return false;
-      }
-    }
-
-    for (int i = callerResumePoints.length() - 1; i >= 0; i--) {
-      MResumePoint* rp = callerResumePoints[i];
-      JSScript* script = rp->block()->info().script();
-      TypeNewScriptInitializer entry(TypeNewScriptInitializer::SETPROP_FRAME,
-                                     script->pcToOffset(rp->pc()));
-      if (!initializerList->append(entry)) {
-        return false;
-      }
-    }
-
-    JSScript* script = ins->block()->info().script();
-    TypeNewScriptInitializer entry(
-        TypeNewScriptInitializer::SETPROP,
-        script->pcToOffset(setprop->resumePoint()->pc()));
-    if (!initializerList->append(entry)) {
-      return false;
-    }
-
-    *phandled = true;
-    return true;
-  }
-
-  if (ins->isCallGetProperty()) {
-    MCallGetProperty* get = ins->toCallGetProperty();
-
-    /*
-     * Properties can be read from the 'this' object if the following hold:
-     *
-     * - The read is not on a getter along the prototype chain, which
-     *   could cause 'this' to escape.
-     *
-     * - The accessed property is either already a definite property or
-     *   is not later added as one. Since the definite properties are
-     *   added to the object at the point of its creation, reading a
-     *   definite property before it is assigned could incorrectly hit.
-     */
-    RootedId id(cx, NameToId(get->name()));
-    if (!baseobj->lookup(cx, id) && !accessedProperties->append(get->name())) {
-      return false;
-    }
-
-    bool added = false;
-    if (!AddClearDefiniteGetterSetterForPrototypeChain(cx, constraintInfo,
-                                                       group, id, &added)) {
-      return false;
-    }
-    if (!added) {
-      // The |this| value can escape if any property reads it does go
-      // through a getter.
-      return true;
-    }
-
-    *phandled = true;
-    return true;
-  }
-
-  if (ins->isPostWriteBarrier()) {
-    *phandled = true;
-    return true;
-  }
-
-  return true;
-}
-
-static int CmpInstructions(const void* a, const void* b) {
-  return (*static_cast<MInstruction* const*>(a))->id() -
-         (*static_cast<MInstruction* const*>(b))->id();
-}
-
 bool jit::AnalyzeNewScriptDefiniteProperties(
     JSContext* cx, DPAConstraintInfo& constraintInfo, HandleFunction fun,
     ObjectGroup* group, HandlePlainObject baseobj,
     Vector<TypeNewScriptInitializer>* initializerList) {
-  MOZ_ASSERT(cx->zone()->types.activeAnalysis);
-
-  // When invoking 'new' on the specified script, try to find some properties
-  // which will definitely be added to the created object before it has a
-  // chance to escape and be accessed elsewhere.
-
-  RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
-  if (!script) {
-    return false;
-  }
-
-  if (!jit::IsIonEnabled(cx) || !jit::IsBaselineJitEnabled(cx) ||
-      !CanBaselineInterpretScript(script)) {
-    return true;
-  }
-
-  static const uint32_t MAX_SCRIPT_SIZE = 2000;
-  if (script->length() > MAX_SCRIPT_SIZE) {
-    return true;
-  }
-
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
-  TraceLoggerEvent event(TraceLogger_AnnotateScripts, script);
-  AutoTraceLog logScript(logger, event);
-  AutoTraceLog logCompile(logger, TraceLogger_IonAnalysis);
-
-  Vector<PropertyName*> accessedProperties(cx);
-
-  LifoAlloc alloc(TempAllocator::PreferredLifoChunkSize);
-  TempAllocator temp(&alloc);
-  JitContext jctx(cx, &temp);
-
-  if (!jit::CanLikelyAllocateMoreExecutableMemory()) {
-    return true;
-  }
-
-  if (!cx->realm()->ensureJitRealmExists(cx)) {
-    return false;
-  }
-
-  AutoKeepJitScripts keepJitScript(cx);
-  if (!script->ensureHasJitScript(cx, keepJitScript)) {
-    return false;
-  }
-
-  JitScript::MonitorThisType(cx, script, TypeSet::ObjectType(group));
-
-  MIRGraph graph(&temp);
-  InlineScriptTree* inlineScriptTree =
-      InlineScriptTree::New(&temp, nullptr, nullptr, script);
-  if (!inlineScriptTree) {
-    return false;
-  }
-
-  CompileInfo info(CompileRuntime::get(cx->runtime()), script, fun,
-                   /* osrPc = */ nullptr, Analysis_DefiniteProperties,
-                   script->needsArgsObj(), inlineScriptTree);
-
-  const OptimizationInfo* optimizationInfo =
-      IonOptimizations.get(OptimizationLevel::Full);
-
-  CompilerConstraintList* constraints = NewCompilerConstraintList(temp);
-  if (!constraints) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  BaselineInspector inspector(script);
-  const JitCompileOptions options(cx);
-
-  MIRGenerator mirGen(CompileRealm::get(cx->realm()), options, &temp, &graph,
-                      &info, optimizationInfo);
-  IonBuilder builder(cx, mirGen, &info, constraints, &inspector,
-                     /* baselineFrame = */ nullptr);
-
-  AbortReasonOr<Ok> buildResult = builder.build();
-  if (buildResult.isErr()) {
-    AbortReason reason = buildResult.unwrapErr();
-    if (cx->isThrowingOverRecursed() || cx->isThrowingOutOfMemory()) {
-      return false;
-    }
-    if (reason == AbortReason::Alloc) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-    MOZ_ASSERT(!cx->isExceptionPending());
-    return true;
-  }
-
-  FinishDefinitePropertiesAnalysis(cx, constraints);
-
-  if (!SplitCriticalEdges(graph)) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  RenumberBlocks(graph);
-
-  if (!BuildDominatorTree(graph)) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  if (!EliminatePhis(&mirGen, graph, AggressiveObservability)) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  MDefinition* thisValue = graph.entryBlock()->getSlot(info.thisSlot());
-
-  // Get a list of instructions using the |this| value in the order they
-  // appear in the graph.
-  Vector<MInstruction*, 4> instructions(cx);
-
-  for (MUseDefIterator uses(thisValue); uses; uses++) {
-    MDefinition* use = uses.def();
-
-    // Don't track |this| through assignments to phis.
-    if (!use->isInstruction()) {
-      return true;
-    }
-
-    if (!instructions.append(use->toInstruction())) {
-      return false;
-    }
-  }
-
-  // Sort the instructions to visit in increasing order.
-  qsort(instructions.begin(), instructions.length(), sizeof(MInstruction*),
-        CmpInstructions);
-
-  // Find all exit blocks in the graph.
-  Vector<MBasicBlock*> exitBlocks(cx);
-  for (MBasicBlockIterator block(graph.begin()); block != graph.end();
-       block++) {
-    if (!block->numSuccessors() && !exitBlocks.append(*block)) {
-      return false;
-    }
-  }
-
-  // id of the last block which added a new property.
-  size_t lastAddedBlock = 0;
-
-  for (size_t i = 0; i < instructions.length(); i++) {
-    MInstruction* ins = instructions[i];
-
-    // Track whether the use of |this| is in unconditional code, i.e.
-    // the block dominates all graph exits.
-    bool definitelyExecuted = true;
-    for (size_t i = 0; i < exitBlocks.length(); i++) {
-      for (MBasicBlock* exit = exitBlocks[i]; exit != ins->block();
-           exit = exit->immediateDominator()) {
-        if (exit == exit->immediateDominator()) {
-          definitelyExecuted = false;
-          break;
-        }
-      }
-    }
-
-    // Also check to see if the instruction is inside a loop body. Even if
-    // an access will always execute in the script, if it executes multiple
-    // times then we can get confused when rolling back objects while
-    // clearing the new script information.
-    if (ins->block()->loopDepth() != 0) {
-      definitelyExecuted = false;
-    }
-
-    bool handled = false;
-    size_t slotSpan = baseobj->slotSpan();
-    if (!AnalyzePoppedThis(cx, constraintInfo, group, thisValue, ins,
-                           definitelyExecuted, baseobj, initializerList,
-                           &accessedProperties, &handled)) {
-      return false;
-    }
-    if (!handled) {
-      break;
-    }
-
-    if (slotSpan != baseobj->slotSpan()) {
-      MOZ_ASSERT(ins->block()->id() >= lastAddedBlock);
-      lastAddedBlock = ins->block()->id();
-    }
-  }
-
-  if (baseobj->slotSpan() != 0) {
-    // We found some definite properties, but their correctness is still
-    // contingent on the correct frames being inlined. Add constraints to
-    // invalidate the definite properties if additional functions could be
-    // called at the inline frame sites.
-    for (MBasicBlockIterator block(graph.begin()); block != graph.end();
-         block++) {
-      // Inlining decisions made after the last new property was added to
-      // the object don't need to be frozen.
-      if (block->id() > lastAddedBlock) {
-        break;
-      }
-      if (MResumePoint* rp = block->callerResumePoint()) {
-        if (block->numPredecessors() == 1 &&
-            block->getPredecessor(0) == rp->block()) {
-          JSScript* caller = rp->block()->info().script();
-          JSScript* callee = block->info().script();
-          if (!constraintInfo.addInliningConstraint(caller, callee)) {
-            return false;
-          }
-        }
-      }
-    }
-  }
-
-  return true;
+  MOZ_CRASH("TODO(no-TI): delete");
 }
 
 static bool ArgumentsUseCanBeLazy(JSContext* cx, JSScript* script,
@@ -4662,7 +4310,7 @@ bool jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg) {
   MIRGenerator mirGen(CompileRealm::get(cx->realm()), options, &temp, &graph,
                       &info, optimizationInfo);
 
-  if (JitOptions.warpBuilder) {
+  {
     WarpOracle oracle(cx, mirGen, script);
 
     AbortReasonOr<WarpSnapshot*> result = oracle.createSnapshot();
@@ -4684,30 +4332,6 @@ bool jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg) {
     if (!builder.build()) {
       ReportOutOfMemory(cx);
       return false;
-    }
-  } else {
-    CompilerConstraintList* constraints = NewCompilerConstraintList(temp);
-    if (!constraints) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-
-    BaselineInspector inspector(script);
-    IonBuilder builder(nullptr, mirGen, &info, constraints, &inspector,
-                       /* baselineFrame = */ nullptr);
-
-    AbortReasonOr<Ok> buildResult = builder.build();
-    if (buildResult.isErr()) {
-      AbortReason reason = buildResult.unwrapErr();
-      if (cx->isThrowingOverRecursed() || cx->isThrowingOutOfMemory()) {
-        return false;
-      }
-      if (reason == AbortReason::Alloc) {
-        ReportOutOfMemory(cx);
-        return false;
-      }
-      MOZ_ASSERT(!cx->isExceptionPending());
-      return true;
     }
   }
 

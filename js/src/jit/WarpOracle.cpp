@@ -28,6 +28,7 @@
 #include "vm/Instrumentation.h"
 #include "vm/Opcodes.h"
 
+#include "jit/InlineScriptTree-inl.h"
 #include "vm/BytecodeIterator-inl.h"
 #include "vm/BytecodeLocation-inl.h"
 #include "vm/EnvironmentObject-inl.h"
