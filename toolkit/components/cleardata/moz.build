@@ -15,9 +15,8 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = "toolkit_cleardata"
 
 EXTRA_JS_MODULES += [
-    'ClearDataService.jsm',
-    'PrincipalsCollector.jsm',
-    'ServiceWorkerCleanUp.jsm',
+    "ClearDataService.jsm",
+    "ServiceWorkerCleanUp.jsm",
 ]
 
 XPCOM_MANIFESTS += [

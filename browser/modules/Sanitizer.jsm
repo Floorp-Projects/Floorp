@@ -14,10 +14,22 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",
-  PrincipalsCollector: "resource://gre/modules/PrincipalsCollector.jsm",
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.jsm",
 });
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "quotaManagerService",
+  "@mozilla.org/dom/quota-manager-service;1",
+  "nsIQuotaManagerService"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "serviceWorkerManager",
+  "@mozilla.org/serviceworkers/manager;1",
+  "nsIServiceWorkerManager"
+);
 
 var logConsole;
 function log(msg) {
@@ -261,7 +273,7 @@ var Sanitizer = {
    *           specify a specific range.
    *           If timespan is not ignored, and range is not set, sanitize() will
    *           use the value of the timespan pref to determine a range.
-   *         - range (default: null): array-tuple of [from, to] timestamps
+   *         - range (default: null)
    *         - privateStateForNewWindow (default: "non-private"): when clearing
    *           open windows, defines the private state for the newly opened window.
    */
@@ -340,7 +352,7 @@ var Sanitizer = {
 
   // When making any changes to the sanitize implementations here,
   // please check whether the changes are applicable to Android
-  // (mobile/android/modules/geckoview/GeckoViewStorageController.jsm) as well.
+  // (mobile/android/modules/Sanitizer.jsm) as well.
 
   items: {
     cache: {
@@ -380,24 +392,9 @@ var Sanitizer = {
           range,
           Ci.nsIClearDataService.CLEAR_HISTORY |
             Ci.nsIClearDataService.CLEAR_SESSION_HISTORY |
+            Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS |
             Ci.nsIClearDataService.CLEAR_CONTENT_BLOCKING_RECORDS
         );
-
-        // storageAccessAPI permissions record every site that the user
-        // interacted with and thus mirror history quite closely. It makes
-        // sense to clear them when we clear history. However, since their absence
-        // indicates that we can purge cookies and site data for tracking origins without
-        // user interaction, we need to ensure that we only delete those permissions that
-        // do not have any existing storage.
-        let principalsCollector = new PrincipalsCollector();
-        let principals = await principalsCollector.getAllPrincipals();
-        await new Promise(resolve => {
-          Services.clearData.deleteUserInteractionForClearingHistory(
-            principals,
-            range ? range[0] : 0,
-            resolve
-          );
-        });
         TelemetryStopwatch.finish("FX_SANITIZE_HISTORY", refObj);
       },
     },
@@ -749,6 +746,90 @@ async function sanitizeInternal(items, aItemsToClear, progress, options = {}) {
   progress = {};
   if (seenError) {
     throw new Error("Error sanitizing");
+  }
+}
+
+// This is an helper that retrieves the principals with site data just once
+// and only when needed.
+class PrincipalsCollector {
+  constructor() {
+    this.principals = null;
+  }
+
+  async getAllPrincipals(progress) {
+    if (this.principals == null) {
+      // Here is the list of principals with site data.
+      this.principals = await this.getAllPrincipalsInternal(progress);
+    }
+
+    return this.principals;
+  }
+
+  async getAllPrincipalsInternal(progress) {
+    progress.step = "principals-quota-manager";
+    let principals = await new Promise(resolve => {
+      quotaManagerService.listOrigins().callback = request => {
+        progress.step = "principals-quota-manager-listOrigins";
+        if (request.resultCode != Cr.NS_OK) {
+          // We are probably shutting down. We don't want to propagate the
+          // error, rejecting the promise.
+          resolve([]);
+          return;
+        }
+
+        let list = [];
+        for (const origin of request.result) {
+          let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+            origin
+          );
+          if (isSupportedPrincipal(principal)) {
+            list.push(principal);
+          }
+        }
+
+        progress.step = "principals-quota-manager-completed";
+        resolve(list);
+      };
+    }).catch(ex => {
+      Cu.reportError("QuotaManagerService promise failed: " + ex);
+      return [];
+    });
+
+    progress.step = "principals-service-workers";
+    let serviceWorkers = serviceWorkerManager.getAllRegistrations();
+    for (let i = 0; i < serviceWorkers.length; i++) {
+      let sw = serviceWorkers.queryElementAt(
+        i,
+        Ci.nsIServiceWorkerRegistrationInfo
+      );
+      // We don't need to check the scheme. SW are just exposed to http/https URLs.
+      principals.push(sw.principal);
+    }
+
+    // Let's take the list of unique hosts+OA from cookies.
+    progress.step = "principals-cookies";
+    let cookies = Services.cookies.cookies;
+    let hosts = new Set();
+    for (let cookie of cookies) {
+      hosts.add(
+        cookie.rawHost +
+          ChromeUtils.originAttributesToSuffix(cookie.originAttributes)
+      );
+    }
+
+    progress.step = "principals-host-cookie";
+    hosts.forEach(host => {
+      // Cookies and permissions are handled by origin/host. Doesn't matter if we
+      // use http: or https: schema here.
+      principals.push(
+        Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+          "https://" + host
+        )
+      );
+    });
+
+    progress.step = "total-principals:" + principals.length;
+    return principals;
   }
 }
 
