@@ -999,6 +999,7 @@ void frontend::DumpTaggedParserAtomIndex(
     GenericPrinter& out = json.beginStringProperty("atom");
     WellKnownParserAtoms::getStatic2(index)->dumpCharsNoQuote(out);
     json.endString();
+    return;
   }
 
   MOZ_ASSERT(taggedIndex.isNull());
