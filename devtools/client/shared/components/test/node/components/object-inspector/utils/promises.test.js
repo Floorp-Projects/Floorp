@@ -31,24 +31,24 @@ describe("promises utils function", () => {
   });
 
   it("makeNodesForPromiseProperties", () => {
-    const promise = {
+    const item = {
       path: "root",
       contents: {
         value: {
           actor: "server2.conn2.child1/obj36",
-          promiseState: {
-            state: "rejected",
-            reason: {
-              type: "3",
-            },
-          },
           class: "Promise",
           type: "object",
         },
       },
     };
+    const promiseState = {
+      state: "rejected",
+      reason: {
+        type: "3",
+      },
+    };
 
-    const properties = makeNodesForPromiseProperties(promise);
+    const properties = makeNodesForPromiseProperties({promiseState}, item);
     expect(properties).toMatchSnapshot();
   });
 });
