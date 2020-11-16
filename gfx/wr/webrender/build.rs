@@ -92,6 +92,7 @@ struct ShaderOptimizationOutput {
 struct ShaderOptimizationError {
     shader: ShaderOptimizationInput,
     message: String,
+    code: String,
 }
 
 fn write_optimized_shaders(shader_dir: &Path, shader_file: &mut File, out_dir: &str) -> Result<(), std::io::Error> {
@@ -161,6 +162,7 @@ fn write_optimized_shaders(shader_dir: &Path, shader_file: &mut File, out_dir: &
             return Err(ShaderOptimizationError {
                 shader: shader.clone(),
                 message: vert.get_log().to_string(),
+                code: String::new(), //TODO: vert_src
             });
         }
         let frag = glslopt_ctx.optimize(glslopt::ShaderType::Fragment, frag_src);
@@ -168,6 +170,7 @@ fn write_optimized_shaders(shader_dir: &Path, shader_file: &mut File, out_dir: &
             return Err(ShaderOptimizationError {
                 shader: shader.clone(),
                 message: frag.get_log().to_string(),
+                code: String::new(), //TODO: frag_src
             });
         }
 
@@ -230,6 +233,7 @@ fn write_optimized_shaders(shader_dir: &Path, shader_file: &mut File, out_dir: &
         }
         Err(err) => match err {
             build_parallel::Error::BuildError(err) => {
+                eprintln!("Failed code:\n{}", err.code);
                 panic!("Error optimizing shader {:?}: {}", err.shader, err.message)
             }
             _ => panic!("Error optimizing shaders."),

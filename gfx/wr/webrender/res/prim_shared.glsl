@@ -44,9 +44,6 @@ varying vec4 vClipMaskUv;
 uniform HIGHP_SAMPLER_FLOAT sampler2D sPrimitiveHeadersF;
 uniform HIGHP_SAMPLER_FLOAT isampler2D sPrimitiveHeadersI;
 
-// Instanced attributes
-PER_INSTANCE in ivec4 aData;
-
 #define VECS_PER_PRIM_HEADER_F 2U
 #define VECS_PER_PRIM_HEADER_I 2U
 
@@ -61,16 +58,32 @@ struct Instance
     int brush_kind;
 };
 
+#ifdef WR_FEATURE_STORAGE_BUFFER
+layout(std140, binding = 0) readonly buffer bInstances {
+    ivec4 bInstanceData[];
+};
+ivec4 raw_instance_data() {
+    return bInstanceData[gl_VertexID / 4];
+}
+#else
+// Instanced attributes
+PER_INSTANCE in ivec4 aData;
+ivec4 raw_instance_data() {
+    return aData;
+}
+#endif // STORAGE_BUFFER
+
 Instance decode_instance_attributes() {
     Instance instance;
+    ivec4 data = raw_instance_data();
 
-    instance.prim_header_address = aData.x;
-    instance.picture_task_address = aData.y >> 16;
-    instance.clip_address = aData.y & 0xffff;
-    instance.segment_index = aData.z & 0xffff;
-    instance.flags = aData.z >> 16;
-    instance.resource_address = aData.w & 0xffffff;
-    instance.brush_kind = aData.w >> 24;
+    instance.prim_header_address = data.x;
+    instance.picture_task_address = data.y >> 16;
+    instance.clip_address = data.y & 0xffff;
+    instance.segment_index = data.z & 0xffff;
+    instance.flags = data.z >> 16;
+    instance.resource_address = data.w & 0xffffff;
+    instance.brush_kind = data.w >> 24;
 
     return instance;
 }
