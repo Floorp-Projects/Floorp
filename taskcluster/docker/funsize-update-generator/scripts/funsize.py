@@ -48,6 +48,8 @@ BCJ_OPTIONS = {
     "x86": ["--x86"],
     "x86_64": ["--x86"],
     "aarch64": [],
+    # macOS Universal Builds
+    "macos-x86_64-aarch64": [],
 }
 
 
