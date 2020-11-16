@@ -594,10 +594,6 @@ class ScriptStencil {
   // successfully.)
   mozilla::Maybe<ScopeIndex> lazyFunctionEnclosingScopeIndex_;
 
-  // This function is a standalone function that is not syntactically part of
-  // another script. Eg. Created by `new Function("")`.
-  bool isStandaloneFunction : 1;
-
   // This is set by the BytecodeEmitter of the enclosing script when a reference
   // to this function is generated.
   bool wasFunctionEmitted : 1;
@@ -610,10 +606,7 @@ class ScriptStencil {
 
   // End of fields.
 
-  ScriptStencil()
-      : isStandaloneFunction(false),
-        wasFunctionEmitted(false),
-        allowRelazify(false) {}
+  ScriptStencil() : wasFunctionEmitted(false), allowRelazify(false) {}
 
   bool isFunction() const {
     bool result = functionFlags.toRaw() != 0x0000;

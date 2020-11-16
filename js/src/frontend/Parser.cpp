@@ -2158,7 +2158,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   }
 
   // Function is not syntactically part of another script.
-  funbox->setIsStandalone(true);
+  MOZ_ASSERT(funbox->index() == CompilationInfo::TopLevelIndex);
 
   funbox->initStandalone(this->compilationState_.scopeContext, flags,
                          syntaxKind);

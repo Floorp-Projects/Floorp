@@ -375,10 +375,6 @@ class FunctionBox : public SharedContext {
   // compilation.
   bool emitBytecode : 1;
 
-  // This function is a standalone function that is not syntactically part of
-  // another script. Eg. Created by `new Function("")`.
-  bool isStandalone_ : 1;
-
   // This is set by the BytecodeEmitter of the enclosing script when a reference
   // to this function is generated. This is also used to determine a hoisted
   // function already is referenced by the bytecode.
@@ -445,12 +441,6 @@ class FunctionBox : public SharedContext {
                                      FunctionSyntaxKind kind);
 
   void setEnclosingScopeForInnerLazyFunction(ScopeIndex scopeIndex);
-
-  bool isStandalone() const { return isStandalone_; }
-  void setIsStandalone(bool isStandalone) {
-    MOZ_ASSERT(!isFunctionFieldCopiedToStencil);
-    isStandalone_ = isStandalone;
-  }
 
   bool wasEmitted() const { return wasEmitted_; }
   void setWasEmitted(bool wasEmitted) {

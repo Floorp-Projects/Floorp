@@ -352,8 +352,10 @@ static bool SetNameForExposedFunctions(JSContext* cx,
 
     // If the function was not referenced by enclosing script's bytecode, we do
     // not generate a BaseScript for it. For example, `(function(){});`.
-    if (!scriptStencil.wasFunctionEmitted &&
-        !scriptStencil.isStandaloneFunction) {
+    //
+    // NOTE: This flag is false for standalone functions, but they already set
+    //       the function name when creating it.
+    if (!scriptStencil.wasFunctionEmitted) {
       continue;
     }
 
@@ -1579,8 +1581,8 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
       json.property("lazyFunctionEnclosingScopeIndex", "Nothing");
     }
 
-    json.boolProperty("isStandaloneFunction", isStandaloneFunction);
     json.boolProperty("wasFunctionEmitted", wasFunctionEmitted);
+    json.boolProperty("allowRelazify", allowRelazify);
   }
 }
 
