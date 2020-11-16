@@ -366,8 +366,6 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
 
   void setResumeAddr(void* resumeAddr) { header_->resumeAddr = resumeAddr; }
 
-  void setMonitorPC(jsbytecode* pc) { header_->monitorPC = pc; }
-
   void setFrameSizeOfInnerMostFrame(uint32_t size) {
     header_->frameSizeOfInnerMostFrame = size;
   }
@@ -1147,16 +1145,6 @@ bool BaselineStackBuilder::buildStubFrame(uint32_t frameSize,
     return false;
   }
 
-  // Ensure we have a TypeMonitor fallback stub so we don't crash in JIT code
-  // when we try to enter it. See callers of offsetOfFallbackMonitorStub.
-  if (BytecodeOpHasTypeSet(op_) && IsTypeInferenceEnabled()) {
-    ICFallbackStub* fallbackStub = icEntry.fallbackStub();
-    if (!fallbackStub->toMonitoredFallbackStub()->getFallbackMonitorStub(
-            cx_, script_)) {
-      return false;
-    }
-  }
-
   // Push return address into ICCall_Scripted stub, immediately after the call.
   void* baselineCallReturnAddr = getStubReturnAddress();
   MOZ_ASSERT(baselineCallReturnAddr);
@@ -1313,11 +1301,6 @@ bool BaselineStackBuilder::finishLastFrame() {
     blFrame()->setInterpreterFields(script_, throwPC);
     resumeAddr = baselineInterp.interpretOpAddr().value;
   } else {
-    // If the opcode is monitored we should monitor the top stack value when
-    // we finish the bailout in FinishBailoutToBaseline.
-    if (resumeAfter() && BytecodeOpHasTypeSet(op_)) {
-      setMonitorPC(pc_);
-    }
     jsbytecode* resumePC = getResumePC();
     blFrame()->setInterpreterFields(script_, resumePC);
     resumeAddr = baselineInterp.interpretOpAddr().value;
@@ -1963,29 +1946,6 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
   // Ensure the frame has a call object if it needs one.
   if (!EnsureHasEnvironmentObjects(cx, topFrame)) {
     return false;
-  }
-
-  // Monitor the top stack value if we are resuming after a JOF_TYPESET op.
-  if (jsbytecode* monitorPC = bailoutInfo->monitorPC) {
-    MOZ_ASSERT(BytecodeOpHasTypeSet(JSOp(*monitorPC)));
-    MOZ_ASSERT(GetNextPc(monitorPC) == topFrame->interpreterPC());
-
-    RootedScript script(cx, topFrame->script());
-    uint32_t monitorOffset = script->pcToOffset(monitorPC);
-    ICEntry& icEntry = script->jitScript()->icEntryFromPCOffset(monitorOffset);
-    ICFallbackStub* fallbackStub = icEntry.fallbackStub();
-
-    // Not every monitored op has a monitored fallback stub, e.g.
-    // JSOp::NewObject, which always returns the same type for a
-    // particular script/pc location.
-    if (fallbackStub->isMonitoredFallback()) {
-      ICMonitoredFallbackStub* stub = fallbackStub->toMonitoredFallbackStub();
-      uint32_t frameSize = bailoutInfo->frameSizeOfInnerMostFrame;
-      RootedValue val(cx, topFrame->topStackValue(frameSize));
-      if (!TypeMonitorResult(cx, stub, topFrame, script, monitorPC, val)) {
-        return false;
-      }
-    }
   }
 
   // Create arguments objects for bailed out frames, to maintain the invariant

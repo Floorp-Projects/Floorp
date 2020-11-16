@@ -3490,8 +3490,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       if (!GetImportOperation(cx, envChain, script, REGS.pc, rval)) {
         goto error;
       }
-
-      JitScript::MonitorBytecodeType(cx, script, REGS.pc, rval);
     }
     END_CASE(GetImport)
 
@@ -3659,7 +3657,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       }
 #endif
       PUSH_COPY(val);
-      JitScript::MonitorBytecodeType(cx, script, REGS.pc, REGS.sp[-1]);
     }
     END_CASE(GetAliasedVar)
 
