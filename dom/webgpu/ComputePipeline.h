@@ -8,6 +8,8 @@
 
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
+#include "ipc/WebGPUTypes.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace webgpu {
