@@ -105,6 +105,15 @@ constexpr size_t kGuidRegFormatCharLenInclNul = 39;
 bool IsClassThreadAwareInprocServer(REFCLSID aClsid);
 
 void GUIDToString(REFGUID aGuid, nsAString& aOutString);
+
+/**
+ * Converts an IID to a human-readable string for the purposes of diagnostic
+ * tools such as the profiler. For some special cases, we output a friendly
+ * string that describes the purpose of the interface. If no such description
+ * exists, we simply fall back to outputting the IID as a string formatted by
+ * GUIDToString().
+ */
+void DiagnosticNameForIID(REFIID aIid, nsACString& aOutString);
 #else
 void GUIDToString(REFGUID aGuid,
                   wchar_t (&aOutBuf)[kGuidRegFormatCharLenInclNul]);
