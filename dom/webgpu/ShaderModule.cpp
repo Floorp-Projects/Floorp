@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/WebGPUBinding.h"
 #include "ShaderModule.h"
+#include "ipc/WebGPUChild.h"
 
 #include "Device.h"
 
