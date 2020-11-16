@@ -64,6 +64,7 @@
 #include "nsVariant.h"
 #include "nsIScriptError.h"
 #include "nsICachingChannel.h"
+#include "nsICookieJarSettings.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"

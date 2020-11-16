@@ -164,6 +164,8 @@ XMLHttpRequestStringWriterHelper::XMLHttpRequestStringWriterHelper(
     XMLHttpRequestString& aString)
     : mBuffer(aString.mBuffer), mLock(aString.mBuffer->mMutex) {}
 
+XMLHttpRequestStringWriterHelper::~XMLHttpRequestStringWriterHelper() = default;
+
 uint32_t XMLHttpRequestStringWriterHelper::Length() const {
   return mBuffer->UnsafeLength();
 }
@@ -180,6 +182,8 @@ XMLHttpRequestStringSnapshotReaderHelper::
     XMLHttpRequestStringSnapshotReaderHelper(
         XMLHttpRequestStringSnapshot& aSnapshot)
     : mBuffer(aSnapshot.mBuffer), mLock(aSnapshot.mBuffer->mMutex) {}
+
+XMLHttpRequestStringSnapshotReaderHelper::~XMLHttpRequestStringSnapshotReaderHelper() = default;
 
 const char16_t* XMLHttpRequestStringSnapshotReaderHelper::Buffer() const {
   return mBuffer->UnsafeData().BeginReading();
