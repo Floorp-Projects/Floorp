@@ -12,6 +12,7 @@
 #include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
+#include "ipc/WebGPUChild.h"
 
 namespace mozilla {
 namespace webgpu {
