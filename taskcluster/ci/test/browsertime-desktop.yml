@@ -36,6 +36,7 @@ job-defaults:
                     - raptor/linux_config.py
         extra-options:
             - --browsertime
+            - --no-conditioned-profile
     fission-run-on-projects: []
 
 browsertime-tp6:
