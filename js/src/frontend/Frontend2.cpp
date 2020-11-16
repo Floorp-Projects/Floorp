@@ -480,7 +480,6 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
     }
     script.isStandaloneFunction = smooshScript.is_standalone_function;
     script.wasFunctionEmitted = smooshScript.was_function_emitted;
-    script.isSingletonFunction = smooshScript.is_singleton_function;
   }
 
   if (!ConvertGCThings(cx, result, smooshScript, compilationInfo.stencil.alloc,

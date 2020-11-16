@@ -135,9 +135,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // Script contains finally block.
   bool hasTryFinally = false;
 
-  // True while emitting a lambda which is only expected to run once.
-  bool emittingRunOnceLambda = false;
-
   enum EmitterMode {
     Normal,
 
@@ -272,10 +269,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   bool isInLoop();
   MOZ_MUST_USE bool checkSingletonContext();
-
-  // Check whether our function is in a run-once context (a toplevel
-  // run-one script or a run-once lambda).
-  MOZ_MUST_USE bool checkRunOnceContext();
 
   bool needsImplicitThis();
 

@@ -602,10 +602,6 @@ class ScriptStencil {
   // to this function is generated.
   bool wasFunctionEmitted : 1;
 
-  // This function should be marked as a singleton. It is expected to be defined
-  // at most once. This is a heuristic only and does not affect correctness.
-  bool isSingletonFunction : 1;
-
   // If this is for the root of delazification, this represents
   // MutableScriptFlagsEnum::AllowRelazify value of the script *after*
   // delazification.
@@ -617,7 +613,6 @@ class ScriptStencil {
   ScriptStencil()
       : isStandaloneFunction(false),
         wasFunctionEmitted(false),
-        isSingletonFunction(false),
         allowRelazify(false) {}
 
   bool isFunction() const {
