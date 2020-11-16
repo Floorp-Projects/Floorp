@@ -29,6 +29,19 @@ pull_request_rules:
       merge:
         method: rebase
         strict: smart
+  - name: Release automation
+    conditions:
+      - base~=releases/.*
+      - author=st3fan
+      - status-success=complete-pr
+      - files~=(.buildconfig.yml|Gecko.kt)
+    actions:
+      review:
+        type: APPROVE
+        message: 🚢
+      merge:
+        method: rebase
+        strict: smart
   - name: Needs landing - Rebase
     conditions:
       - status-success=complete-pr
