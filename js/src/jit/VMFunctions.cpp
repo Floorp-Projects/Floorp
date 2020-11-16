@@ -908,6 +908,7 @@ template bool StringsCompare<ComparisonKind::GreaterThanOrEqual>(
 bool ArrayPopDense(JSContext* cx, HandleObject obj, MutableHandleValue rval) {
   MOZ_ASSERT(obj->is<ArrayObject>());
 
+  // TODO(no-TI): remove AutoDetectInvalidation.
   AutoDetectInvalidation adi(cx, rval);
 
   JS::RootedValueArray<2> argv(cx);
@@ -917,14 +918,7 @@ bool ArrayPopDense(JSContext* cx, HandleObject obj, MutableHandleValue rval) {
     return false;
   }
 
-  // If the result is |undefined|, the array was probably empty and we
-  // have to monitor the return value.
   rval.set(argv[0]);
-  if (rval.isUndefined()) {
-    jsbytecode* pc;
-    JSScript* script = cx->currentScript(&pc);
-    JitScript::MonitorBytecodeType(cx, script, pc, rval);
-  }
   return true;
 }
 
@@ -987,14 +981,7 @@ bool ArrayShiftDense(JSContext* cx, HandleObject obj, MutableHandleValue rval) {
     return false;
   }
 
-  // If the result is |undefined|, the array was probably empty and we
-  // have to monitor the return value.
   rval.set(argv[0]);
-  if (rval.isUndefined()) {
-    jsbytecode* pc;
-    JSScript* script = cx->currentScript(&pc);
-    JitScript::MonitorBytecodeType(cx, script, pc, rval);
-  }
   return true;
 }
 
@@ -1155,22 +1142,7 @@ bool OperatorInI(JSContext* cx, int32_t index, HandleObject obj, bool* out) {
 
 bool GetIntrinsicValue(JSContext* cx, HandlePropertyName name,
                        MutableHandleValue rval) {
-  if (!GlobalObject::getIntrinsicValue(cx, cx->global(), name, rval)) {
-    return false;
-  }
-
-  // This function is called when we try to compile a cold getintrinsic
-  // op. MCallGetIntrinsicValue has an AliasSet of None for optimization
-  // purposes, as its side effect is not observable from JS. We are
-  // guaranteed to bail out after this function, but because of its AliasSet,
-  // type info will not be reflowed. Manually monitor here.
-  if (!JitOptions.warpBuilder) {
-    jsbytecode* pc;
-    JSScript* script = cx->currentScript(&pc);
-    JitScript::MonitorBytecodeType(cx, script, pc, rval);
-  }
-
-  return true;
+  return GlobalObject::getIntrinsicValue(cx, cx->global(), name, rval);
 }
 
 bool CreateThisFromIC(JSContext* cx, HandleObject callee,
@@ -2445,9 +2417,6 @@ bool DoConcatStringObject(JSContext* cx, HandleValue lhs, HandleValue rhs,
       return false;
     }
   }
-
-  // Note: we don't have to call JitScript::MonitorBytecodeType because we
-  // monitored the string-type when attaching the IC stub.
 
   res.setString(str);
   return true;

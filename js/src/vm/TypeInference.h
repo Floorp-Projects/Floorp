@@ -158,10 +158,6 @@ bool AddClearDefiniteGetterSetterForPrototypeChain(
     JSContext* cx, DPAConstraintInfo& constraintInfo, ObjectGroup* group,
     HandleId id, bool* added);
 
-bool AddClearDefiniteFunctionUsesInScript(JSContext* cx, ObjectGroup* group,
-                                          JSScript* script,
-                                          JSScript* calleeScript);
-
 // For groups where only a small number of objects have been allocated, this
 // structure keeps track of all objects in the group. Once COUNT objects have
 // been allocated, this structure is cleared and the objects are analyzed, to
