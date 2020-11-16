@@ -155,8 +155,10 @@ function testHTMLElements(list, isMac, expectedNoRingsOnWin)
       mouseRingSize = textControl ? "1px" : "2px";
     }
 
-    if (elem.localName == "a")
+    if (elem.localName == "a") {
       mouseRingSize = ringSize = "0px";
+      expectedMatchWithMouse = expectedMatchWithMouse && !isMac;
+    }
 
     synthesizeMouse(elem, 8, 8, { }, childwin);
     is(childdoc.activeElement, shouldFocus ? elem : childdoc.body, "mouse click on " + list[e]);
