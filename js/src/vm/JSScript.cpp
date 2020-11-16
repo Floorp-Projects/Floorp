@@ -4239,9 +4239,8 @@ static JSObject* CloneInnerInterpretedFunction(
   }
 
   MOZ_ASSERT(cloneScript->hasBytecode());
-  if (!JSFunction::setTypeForScriptedFunction(cx, clone)) {
-    return nullptr;
-  }
+
+  MOZ_RELEASE_ASSERT(!IsTypeInferenceEnabled());
 
   return clone;
 }

@@ -362,10 +362,7 @@ static bool SetTypeAndNameForExposedFunctions(JSContext* cx,
       continue;
     }
 
-    if (!JSFunction::setTypeForScriptedFunction(
-            cx, fun, scriptStencil.isSingletonFunction)) {
-      return false;
-    }
+    MOZ_RELEASE_ASSERT(!IsTypeInferenceEnabled());
 
     // Inferred and Guessed names are computed by BytecodeEmitter and so may
     // need to be applied to existing JSFunctions during delazification.
