@@ -11,9 +11,6 @@
 #ifndef WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_SINGLE_RW_FIFO_H_
 #define WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_SINGLE_RW_FIFO_H_
 
-#include "system_wrappers/include/atomic32.h"
-#include "typedefs.h"
-
 namespace webrtc {
 
 // Implements a lock-free FIFO losely based on
@@ -30,14 +27,14 @@ class SingleRwFifo {
 
   void Clear();
 
-  int size() { return size_.Value(); }
+  int size() { return size_; }
   int capacity() const { return capacity_; }
 
  private:
   std::unique_ptr<int8_t* []> queue_;
   int capacity_;
 
-  Atomic32 size_;
+  std::atomic<int32_t> size_;
 
   int read_pos_;
   int write_pos_;
