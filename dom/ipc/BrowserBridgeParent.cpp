@@ -201,13 +201,14 @@ IPCResult BrowserBridgeParent::RecvWillChangeProcess() {
   return IPC_OK();
 }
 
-IPCResult BrowserBridgeParent::RecvActivate() {
-  mBrowserParent->Activate();
+IPCResult BrowserBridgeParent::RecvActivate(uint64_t aActionId) {
+  mBrowserParent->Activate(aActionId);
   return IPC_OK();
 }
 
-IPCResult BrowserBridgeParent::RecvDeactivate(const bool& aWindowLowering) {
-  mBrowserParent->Deactivate(aWindowLowering);
+IPCResult BrowserBridgeParent::RecvDeactivate(const bool& aWindowLowering,
+                                              uint64_t aActionId) {
+  mBrowserParent->Deactivate(aWindowLowering, aActionId);
   return IPC_OK();
 }
 

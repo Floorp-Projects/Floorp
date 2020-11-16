@@ -709,7 +709,8 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvWindowBlur(
       const MaybeDiscarded<BrowsingContext>& aContext);
   mozilla::ipc::IPCResult RecvRaiseWindow(
-      const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType);
+      const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType,
+      uint64_t aActionId);
   mozilla::ipc::IPCResult RecvAdjustWindowFocus(
       const MaybeDiscarded<BrowsingContext>& aContext, bool aCheckPermission,
       bool aIsVisible);
@@ -718,11 +719,11 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvSetFocusedBrowsingContext(
       const MaybeDiscarded<BrowsingContext>& aContext);
   mozilla::ipc::IPCResult RecvSetActiveBrowsingContext(
-      const MaybeDiscarded<BrowsingContext>& aContext);
+      const MaybeDiscarded<BrowsingContext>& aContext, uint64_t aActionId);
   mozilla::ipc::IPCResult RecvAbortOrientationPendingPromises(
       const MaybeDiscarded<BrowsingContext>& aContext);
   mozilla::ipc::IPCResult RecvUnsetActiveBrowsingContext(
-      const MaybeDiscarded<BrowsingContext>& aContext);
+      const MaybeDiscarded<BrowsingContext>& aContext, uint64_t aActionId);
   mozilla::ipc::IPCResult RecvSetFocusedElement(
       const MaybeDiscarded<BrowsingContext>& aContext, bool aNeedsFocus);
   mozilla::ipc::IPCResult RecvFinalizeFocusOuter(
@@ -732,10 +733,13 @@ class ContentChild final : public PContentChild,
       const MaybeDiscarded<BrowsingContext>& aFocusedBrowsingContext,
       const MaybeDiscarded<BrowsingContext>& aBrowsingContextToClear,
       const MaybeDiscarded<BrowsingContext>& aAncestorBrowsingContextToFocus,
-      bool aIsLeavingDocument, bool aAdjustWidget);
+      bool aIsLeavingDocument, bool aAdjustWidget, uint64_t aActionId);
   mozilla::ipc::IPCResult RecvSetupFocusedAndActive(
       const MaybeDiscarded<BrowsingContext>& aFocusedBrowsingContext,
       const MaybeDiscarded<BrowsingContext>& aActiveBrowsingContext);
+  mozilla::ipc::IPCResult RecvReviseActiveBrowsingContext(
+      const MaybeDiscarded<BrowsingContext>& aActiveBrowsingContext,
+      uint64_t aActionId);
   mozilla::ipc::IPCResult RecvMaybeExitFullscreen(
       const MaybeDiscarded<BrowsingContext>& aContext);
 
