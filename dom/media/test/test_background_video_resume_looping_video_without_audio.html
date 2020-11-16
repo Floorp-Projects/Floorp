@@ -16,8 +16,12 @@
  */
 async function startTest() {
   const video = await createVisibleVideo();
-  await startVideo(video);
-  await suspendVideoDecoding(video);
+  // Start and immediately suspend the video to avoid races where the video
+  // decode is complete by the time it should be suspended.
+  await Promise.all([
+    suspendVideoDecoding(video),
+    startVideo(video),
+  ]);
   await resumeVideoDecoding(video);
   await waitUntilVideoLoopAgain(video);
   endTestAndClearVideo(video);
@@ -59,12 +63,14 @@ async function suspendVideoDecoding(video) {
   info(`suspend video decoding`);
   video.setVisible(false);
   await nextVideoSuspends(video);
+  info(`suspended video decoding`);
 }
 
 async function resumeVideoDecoding(video) {
   info(`resume video decoding.`);
   video.setVisible(true);
   await nextVideoResumes(video);
+  info(`resumed video decoding`);
 }
 
 async function waitUntilVideoLoopAgain(video) {
