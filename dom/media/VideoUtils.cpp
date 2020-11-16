@@ -188,11 +188,9 @@ uint32_t DecideAudioPlaybackSampleRate(const AudioInfo& aInfo) {
 
   if (resampling) {
     rate = 48000;
-  } else if (aInfo.mRate == 44100 || aInfo.mRate == 48000) {
+  } else if (aInfo.mRate >= 44100) {
     // The original rate is of good quality and we want to minimize unecessary
-    // resampling. The common scenario being that the sampling rate is one or
-    // the other. This minimizes audio quality regressions but depends on
-    // content providers not changing rates mid-stream.
+    // resampling, so we let cubeb decide how to resample (if needed).
     rate = aInfo.mRate;
   } else {
     // We will resample all data to match cubeb's preferred sampling rate.
