@@ -332,6 +332,10 @@ Class a11y::GetTypeFromRole(roles::Role aRole) {
       return [mozOptionAccessible class];
     }
 
+    case roles::RICH_OPTION: {
+      return [mozSelectableChildAccessible class];
+    }
+
     case roles::COMBOBOX_LIST:
     case roles::MENUBAR:
     case roles::MENUPOPUP: {
