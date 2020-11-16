@@ -105,6 +105,24 @@ interface nsIClearDataService : nsISupports
   void deleteDataFromOriginAttributesPattern(in jsval aOriginAttributesPattern,
                                              [optional] in nsIClearDataCallback aCallback);
 
+  /**
+   * This is a helper function to clear storageAccessAPI permissions
+   * in a way that will not result in users getting logged out by
+   * cookie purging. To that end we only clear permissions for principals
+   * whose base domain does not have any storage associated with it.
+   *
+   * The principals to be considered will need to be passed by the API consumer.
+   * It is recommended to use PrincipalsCollector.jsm for that.
+   *
+   * @param aPrincipalsWithStorage principals to be excluded from clearing
+   * @param aFrom microseconds from the epoch
+   * @param aCallback the optional callback will be executed when the operation
+   *                  is completed.
+   */
+  void deleteUserInteractionForClearingHistory(in Array<nsIPrincipal> aPrincipalsWithStorage,
+                                               [optional] in PRTime aFrom,
+                                               [optional] in nsIClearDataCallback aCallback);
+
   /**************************************************************************
    * Listed below are the various flags which may be or'd together.
    */
