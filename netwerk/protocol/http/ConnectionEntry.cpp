@@ -56,8 +56,9 @@ bool ConnectionEntry::AvailableForDispatchNow() {
     return true;
   }
 
-  return gHttpHandler->ConnMgr()->GetH2orH3ActiveConn(this, false, false) ? true
-                                                                   : false;
+  return gHttpHandler->ConnMgr()->GetH2orH3ActiveConn(this, false, false)
+             ? true
+             : false;
 }
 
 uint32_t ConnectionEntry::UnconnectedHalfOpens() const {

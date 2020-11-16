@@ -146,12 +146,12 @@ static std::shared_ptr<EglDisplay> GetAndInitDisplay(GLLibraryEGL& egl,
 
 static std::shared_ptr<EglDisplay> GetAndInitWARPDisplay(GLLibraryEGL& egl,
                                                          void* displayType) {
-  const EGLAttrib attrib_list[] = {LOCAL_EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE,
-                                   LOCAL_EGL_PLATFORM_ANGLE_DEVICE_TYPE_WARP_ANGLE,
-                                   // Requires:
-                                   LOCAL_EGL_PLATFORM_ANGLE_TYPE_ANGLE,
-                                   LOCAL_EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
-                                   LOCAL_EGL_NONE};
+  const EGLAttrib attrib_list[] = {
+      LOCAL_EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE,
+      LOCAL_EGL_PLATFORM_ANGLE_DEVICE_TYPE_WARP_ANGLE,
+      // Requires:
+      LOCAL_EGL_PLATFORM_ANGLE_TYPE_ANGLE,
+      LOCAL_EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE, LOCAL_EGL_NONE};
   const EGLDisplay display = egl.fGetPlatformDisplay(
       LOCAL_EGL_PLATFORM_ANGLE_ANGLE, displayType, attrib_list);
 
