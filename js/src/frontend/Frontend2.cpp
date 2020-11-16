@@ -478,7 +478,6 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
       script.lazyFunctionEnclosingScopeIndex_ = mozilla::Some(ScopeIndex(
           smooshScript.lazy_function_enclosing_scope_index.AsSome()));
     }
-    script.isStandaloneFunction = smooshScript.is_standalone_function;
     script.wasFunctionEmitted = smooshScript.was_function_emitted;
   }
 
