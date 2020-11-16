@@ -742,6 +742,10 @@ bool IsPrivilegedMozillaRemoteType(const nsACString& aContentProcessType) {
   return aContentProcessType == PRIVILEGEDMOZILLA_REMOTE_TYPE;
 }
 
+bool IsExtensionRemoteType(const nsACString& aContentProcessType) {
+  return aContentProcessType == EXTENSION_REMOTE_TYPE;
+}
+
 /*static*/
 uint32_t ContentParent::GetMaxProcessCount(
     const nsACString& aContentProcessType) {
