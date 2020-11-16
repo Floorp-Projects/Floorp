@@ -8,7 +8,7 @@ tasks:
     - $let:
           taskgraph:
               branch: taskgraph
-              revision: 12992b0f984884ec2b0a7bdedc3b3ba467363eb4
+              revision: 2b2622598df02bde211d8cedb334b7b22fb883a4
           trustDomain: mobile
       in:
           $let:
@@ -243,7 +243,7 @@ tasks:
                               # Note: This task is built server side without the context or tooling that
                               # exist in tree so we must hard code the hash
                               image:
-                                  mozillareleases/taskgraph:decision-mobile-6607973bc60e32323a541861cc5856cd6a0f51ea9fd664ef7d43bca8df53db47@sha256:8c471aacc469ea8e7bb4846c16efe086f7350a5cc1df570cc6c86b22895a2456
+                                  mozillareleases/taskgraph:decision-mobile-682fbaa1ef17e70ddfe3457da3eaf8e776c4a20fe5bfbdbeba0641fd5bceae2a@sha256:bbb2613aaab79d17e590fbd78c072d0643be40fd1237195703f84280ecc3b302
 
                               maxRunTime: 1800
 
@@ -261,12 +261,13 @@ tasks:
                                         $if: 'tasks_for == "action"'
                                         then: >
                                             PIP_IGNORE_INSTALLED=0 pip install --user /builds/worker/checkouts/taskgraph &&
+                                            PIP_IGNORE_INSTALLED=0 pip install --user mozilla-version &&
                                             taskcluster/scripts/decision-install-sdk.sh &&
                                             ln -s /builds/worker/artifacts artifacts &&
                                             ~/.local/bin/taskgraph action-callback
                                         else: >
                                             PIP_IGNORE_INSTALLED=0 pip install --user /builds/worker/checkouts/taskgraph &&
-                                            PIP_IGNORE_INSTALLED=0 pip install --user arrow taskcluster pyyaml &&
+                                            PIP_IGNORE_INSTALLED=0 pip install --user mozilla-version &&
                                             taskcluster/scripts/decision-install-sdk.sh &&
                                             ln -s /builds/worker/artifacts artifacts &&
                                             ~/.local/bin/taskgraph decision

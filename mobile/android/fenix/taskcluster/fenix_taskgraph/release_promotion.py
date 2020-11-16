@@ -4,6 +4,9 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import os
+
+from mozilla_version.fenix import FenixVersion
 from taskgraph.actions.registry import register_callback_action
 
 from taskgraph.util.taskcluster import get_artifact
@@ -12,10 +15,8 @@ from taskgraph.decision import taskgraph_decision
 from taskgraph.parameters import Parameters
 from taskgraph.util.taskgraph import find_decision_task, find_existing_tasks_from_previous_kinds
 
-from .parameters import resolve_release_type
-
 RELEASE_PROMOTION_PROJECTS = (
-    "https://github.com/JohanLorenzo/fenix",
+    "https://github.com/mozilla-mobile/fenix",
 )
 
 
@@ -89,8 +90,15 @@ def is_release_promotion_available(parameters):
                                 'relying on the in-tree version will break things.'),
                 'default': '',
             },
+            "next_version": {
+                "type": "string",
+                "description": (
+                    "Next version.",
+                ),
+                "default": "",
+            },
         },
-        "required": ['release_promotion_flavor', 'version', 'build_number'],
+        "required": ["release_promotion_flavor", "version", "build_number", "next_version"],
     }
 )
 def release_promotion_action(parameters, graph_config, input, task_group_id, task_id):
@@ -133,9 +141,23 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
     parameters['optimize_target_tasks'] = True
     parameters['shipping_phase'] = input['release_promotion_flavor']
 
+    version_in_file = read_version_file()
     parameters['version'] = input['version'] if input.get('version') else read_version_file()
-    parameters['head_tag'] = 'v{}'.format(parameters['version'])
-    parameters['release_type'] = resolve_release_type(parameters['head_tag'])
+    version_string = parameters['version']
+    if version_string != version_in_file:
+        raise ValueError("Version given in tag ({}) does not match the one in version.txt ({})".format(version_string, version_in_file))
+    parameters['head_tag'] = 'v{}'.format(version_string)
+
+    parameters['next_version'] = input['next_version']
+
+    version = FenixVersion.parse(version_string)
+    if version.is_beta:
+        release_type = "beta"
+    elif version.is_release:
+        release_type = "release"
+    else:
+        raise ValueError("Unsupported version type: {}".format(version.version_type))
+    parameters['release_type'] = release_type
 
     parameters['pull_request_number'] = None
 
