@@ -718,9 +718,9 @@ child:
     /**
      * Sending an activate message moves focus to the child.
      */
-    async Activate();
+    async Activate(uint64_t aActionId);
 
-    async Deactivate();
+    async Deactivate(uint64_t aActionId);
 
     async ScrollbarPreferenceChanged(ScrollbarPreference pref);
 
