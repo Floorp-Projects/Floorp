@@ -122,8 +122,6 @@
 #define TCP_FAST_OPEN_STALLS_TIMEOUT \
   "network.tcp.tcp_fastopen_http_stalls_timeout"
 
-#define ACCEPT_HEADER_NAVIGATION \
-  "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
 #define ACCEPT_HEADER_STYLE "text/css,*/*;q=0.1"
 #define ACCEPT_HEADER_ALL "*/*"
 
@@ -206,6 +204,14 @@ static nsCString ImageAcceptHeader() {
   return mimeTypes;
 }
 
+static nsCString DocumentAcceptHeader(const nsCString& aImageAcceptHeader) {
+  nsPrintfCString mimeTypes(
+      "text/html,application/xhtml+xml,application/xml;q=0.9,%s;q=0.8",
+      aImageAcceptHeader.get());
+
+  return std::move(mimeTypes);
+}
+
 nsHttpHandler::nsHttpHandler()
     : mHttpVersion(HttpVersion::v1_1),
       mProxyHttpVersion(HttpVersion::v1_1),
@@ -246,6 +252,7 @@ nsHttpHandler::nsHttpHandler()
       mQoSBits(0x00),
       mEnforceAssocReq(false),
       mImageAcceptHeader(ImageAcceptHeader()),
+      mDocumentAcceptHeader(DocumentAcceptHeader(ImageAcceptHeader())),
       mLastUniqueID(NowInSeconds()),
       mSessionStartTime(0),
       mLegacyAppName("Mozilla"),
@@ -697,7 +704,7 @@ nsresult nsHttpHandler::AddStandardRequestHeaders(
   nsAutoCString accept;
   if (aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
       aContentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT) {
-    accept.Assign(ACCEPT_HEADER_NAVIGATION);
+    accept.Assign(mDocumentAcceptHeader);
   } else if (aContentPolicyType == nsIContentPolicy::TYPE_IMAGE ||
              aContentPolicyType == nsIContentPolicy::TYPE_IMAGESET) {
     accept.Assign(mImageAcceptHeader);
@@ -1994,8 +2001,11 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     }
   }
 
-  if (PREF_CHANGED("image.http.accept") || PREF_CHANGED("image.avif.enabled") ||
-      PREF_CHANGED("image.webp.enabled")) {
+  const bool imageAcceptPrefChanged = PREF_CHANGED("image.http.accept") ||
+                                      PREF_CHANGED("image.avif.enabled") ||
+                                      PREF_CHANGED("image.webp.enabled");
+
+  if (imageAcceptPrefChanged) {
     nsAutoCString userSetImageAcceptHeader;
 
     if (Preferences::HasUserValue("image.http.accept")) {
@@ -2010,6 +2020,24 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
       mImageAcceptHeader.Assign(ImageAcceptHeader());
     } else {
       mImageAcceptHeader.Assign(userSetImageAcceptHeader);
+    }
+  }
+
+  if (PREF_CHANGED("network.http.accept") || imageAcceptPrefChanged) {
+    nsAutoCString userSetDocumentAcceptHeader;
+
+    if (Preferences::HasUserValue("network.http.accept")) {
+      rv = Preferences::GetCString("network.http.accept",
+                                   userSetDocumentAcceptHeader);
+      if (NS_FAILED(rv)) {
+        userSetDocumentAcceptHeader.Truncate();
+      }
+    }
+
+    if (userSetDocumentAcceptHeader.IsEmpty()) {
+      mDocumentAcceptHeader.Assign(DocumentAcceptHeader(mImageAcceptHeader));
+    } else {
+      mDocumentAcceptHeader.Assign(userSetDocumentAcceptHeader);
     }
   }
 

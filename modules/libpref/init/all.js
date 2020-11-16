@@ -1518,6 +1518,11 @@ pref("network.http.send_window_size", 1024);
   pref("network.http.active_tab_priority", true);
 #endif
 
+// By default the Accept header sent for documents loaded over HTTP(S) is derived
+// by DocumentAcceptHeader() in nsHttpHandler.cpp. If set, this pref overrides it.
+// There is also image.http.accept which works in scope of image.
+pref("network.http.accept", "");
+
 // default values for FTP
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
 // Section 4.8 "High-Throughput Data Service Class", and 80 (0x50, or AF22)
@@ -3753,6 +3758,7 @@ pref("toolkit.zoomManager.zoomValues", ".3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2
 
 // By default the Accept header sent for images loaded over HTTP(S) is derived
 // by ImageAcceptHeader() in nsHttpHandler.cpp. If set, this pref overrides it.
+// There is also network.http.accept which works in scope of document.
 pref("image.http.accept", "");
 
 //

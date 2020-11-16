@@ -634,6 +634,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   bool mEnforceAssocReq;
 
   nsCString mImageAcceptHeader;
+  nsCString mDocumentAcceptHeader;
 
   nsCString mAcceptLanguages;
   nsCString mHttpAcceptEncodings;
