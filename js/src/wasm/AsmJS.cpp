@@ -1386,13 +1386,13 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
 
     auto AddMathFunction = [this](const char* name,
                                   AsmJSMathBuiltinFunction func) {
-      auto mbAtom = parserAtoms_.internAscii(cx_, name, strlen(name));
-      if (mbAtom.isErr()) {
+      const ParserAtom* atom =
+          parserAtoms_.internAscii(cx_, name, strlen(name));
+      if (!atom) {
         return false;
       }
       MathBuiltin builtin(func);
-      return this->standardLibraryMathNames_.putNew(mbAtom.unwrap()->asName(),
-                                                    builtin);
+      return this->standardLibraryMathNames_.putNew(atom->asName(), builtin);
     };
 
     for (const auto& info : functions) {
@@ -1416,13 +1416,13 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
     };
 
     auto AddMathConstant = [this](const char* name, double cst) {
-      auto mbAtom = parserAtoms_.internAscii(cx_, name, strlen(name));
-      if (mbAtom.isErr()) {
+      const ParserAtom* atom =
+          parserAtoms_.internAscii(cx_, name, strlen(name));
+      if (!atom) {
         return false;
       }
       MathBuiltin builtin(cst);
-      return this->standardLibraryMathNames_.putNew(mbAtom.unwrap()->asName(),
-                                                    builtin);
+      return this->standardLibraryMathNames_.putNew(atom->asName(), builtin);
     };
 
     for (const auto& info : constants) {

@@ -842,14 +842,14 @@ bool PerHandlerParser<ParseHandler>::
       // TODO-Stencil
       //   After closed-over-bindings are snapshotted in the handler,
       //   remove this.
-      auto mbNameId = this->compilationState_.parserAtoms.internJSAtom(
-          cx_, this->getCompilationInfo(), name);
-      if (mbNameId.isErr()) {
+      const ParserAtom* parserAtom =
+          this->compilationState_.parserAtoms.internJSAtom(
+              cx_, this->getCompilationInfo(), name);
+      if (!parserAtom) {
         return false;
       }
-      const ParserName* nameId = mbNameId.unwrap()->asName();
 
-      scope.lookupDeclaredName(nameId)->value()->setClosedOver();
+      scope.lookupDeclaredName(parserAtom->asName())->value()->setClosedOver();
       MOZ_ASSERT(slotCount > 0);
       slotCount--;
     }
@@ -2399,8 +2399,7 @@ const ParserAtom* ParserBase::prefixAccessorName(PropertyType propType,
 
   const ParserAtom* atoms[2] = {prefix, propAtom};
   auto atomsRange = mozilla::Range(atoms, 2);
-  return this->compilationState_.parserAtoms.concatAtoms(cx_, atomsRange)
-      .unwrapOr(nullptr);
+  return this->compilationState_.parserAtoms.concatAtoms(cx_, atomsRange);
 }
 
 template <class ParseHandler, typename Unit>
@@ -2744,10 +2743,8 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   // TODO-Stencil: Consider for snapshotting.
   const ParserAtom* displayAtom = nullptr;
   if (fun->displayAtom()) {
-    displayAtom =
-        this->compilationState_.parserAtoms
-            .internJSAtom(cx_, this->compilationInfo_, fun->displayAtom())
-            .unwrapOr(nullptr);
+    displayAtom = this->compilationState_.parserAtoms.internJSAtom(
+        cx_, this->compilationInfo_, fun->displayAtom());
     if (!displayAtom) {
       return false;
     }
@@ -3236,10 +3233,8 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   // TODO-Stencil: Consider for snapshotting.
   const ParserAtom* displayAtom = nullptr;
   if (fun->displayAtom()) {
-    displayAtom =
-        this->compilationState_.parserAtoms
-            .internJSAtom(cx_, this->compilationInfo_, fun->displayAtom())
-            .unwrapOr(nullptr);
+    displayAtom = this->compilationState_.parserAtoms.internJSAtom(
+        cx_, this->compilationInfo_, fun->displayAtom());
     if (!displayAtom) {
       return null();
     }
@@ -10296,9 +10291,8 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
     }
   }
 
-  const ParserAtom* atom = this->compilationState_.parserAtoms
-                               .internChar16(cx_, chars.begin(), chars.length())
-                               .unwrapOr(nullptr);
+  const ParserAtom* atom = this->compilationState_.parserAtoms.internChar16(
+      cx_, chars.begin(), chars.length());
   if (!atom) {
     return nullptr;
   }
