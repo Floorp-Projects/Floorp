@@ -58,8 +58,8 @@ class FirefoxConnector {
     );
   }
 
-  get currentWatcher() {
-    return this.toolbox.resourceWatcher.watcher;
+  get currentWatcherFront() {
+    return this.toolbox.resourceWatcher.watcherFront;
   }
 
   /**
@@ -413,8 +413,8 @@ class FirefoxConnector {
    * Get the list of blocked URLs
    */
   async getBlockedUrls() {
-    if (this.hasResourceWatcherSupport && this.currentWatcher) {
-      const network = await this.currentWatcher.getNetworkActor();
+    if (this.hasResourceWatcherSupport && this.currentWatcherFront) {
+      const network = await this.currentWatcherFront.getNetworkActor();
       return network.getBlockedUrls();
     }
     if (!this.webConsoleFront.traits.blockedUrls) {
@@ -429,8 +429,8 @@ class FirefoxConnector {
    * @param {object} urls An array of URL strings
    */
   async setBlockedUrls(urls) {
-    if (this.hasResourceWatcherSupport && this.currentWatcher) {
-      const network = await this.currentWatcher.getNetworkActor();
+    if (this.this.hasResourceWatcherSupport && this.currentWatcherFront) {
+      const network = await this.currentWatcherFront.getNetworkActor();
       return network.setBlockedUrls(urls);
     }
     return this.webConsoleFront.setBlockedUrls(urls);
