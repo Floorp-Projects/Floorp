@@ -60,6 +60,7 @@ function test_drawFocusIfNeeded_canvas() {
 
 async function runTests() {
   await SimpleTest.promiseFocus();
+  SpecialPowers.setBoolPref("browser.display.always_show_rings_after_key_focus", true);
   synthesizeKey("KEY_Tab"); // Trigger keyboard navigation so outlines are shown.
   synthesizeKey("KEY_Tab", { shiftKey: true }); // And now undo the focus move.
   try {
