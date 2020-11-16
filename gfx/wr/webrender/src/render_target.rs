@@ -20,7 +20,7 @@ use crate::picture::{SliceId, SurfaceInfo, ResolvedSurfaceTexture, TileCacheInst
 use crate::prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
 use crate::prim_store::gradient::GRADIENT_FP_STOPS;
 use crate::render_backend::DataStores;
-use crate::render_task::{RenderTaskKind, RenderTaskAddress, ClearMode, BlitSource};
+use crate::render_task::{RenderTaskKind, RenderTaskAddress, BlitSource};
 use crate::render_task::{RenderTask, ScalingTask, SvgFilterInfo};
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
 use crate::resource_cache::ResourceCache;
@@ -190,7 +190,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
             max_dynamic_size: DeviceIntSize::new(0, 0),
             targets: Vec::new(),
             saved_index: None,
-            alloc_tracker: ArrayAllocationTracker::new(),
+            alloc_tracker: ArrayAllocationTracker::new(None),
             gpu_supports_fast_clears,
         }
     }
@@ -341,15 +341,6 @@ impl RenderTarget for ColorRenderTarget {
         for task_id in &self.alpha_tasks {
             profile_scope!("alpha_task");
             let task = &render_tasks[*task_id];
-
-            match task.clear_mode {
-                ClearMode::One |
-                ClearMode::Zero => {
-                    panic!("bug: invalid clear mode for color task");
-                }
-                ClearMode::DontCare |
-                ClearMode::Transparent => {}
-            }
 
             match task.kind {
                 RenderTaskKind::Picture(ref pic_task) => {
@@ -619,19 +610,6 @@ impl RenderTarget for AlphaRenderTarget {
         let task = &render_tasks[task_id];
         let (target_rect, _) = task.get_target_rect();
 
-        match task.clear_mode {
-            ClearMode::Zero => {
-                self.zero_clears.push(task_id);
-            }
-            ClearMode::One => {
-                self.one_clears.push(task_id);
-            }
-            ClearMode::DontCare => {}
-            ClearMode::Transparent => {
-                panic!("bug: invalid clear mode for alpha task");
-            }
-        }
-
         match task.kind {
             RenderTaskKind::Readback |
             RenderTaskKind::Picture(..) |
@@ -643,6 +621,7 @@ impl RenderTarget for AlphaRenderTarget {
                 panic!("BUG: should not be added to alpha target!");
             }
             RenderTaskKind::VerticalBlur(..) => {
+                self.zero_clears.push(task_id);
                 add_blur_instances(
                     &mut self.vertical_blurs,
                     BlurDirection::Vertical,
@@ -651,6 +630,7 @@ impl RenderTarget for AlphaRenderTarget {
                 );
             }
             RenderTaskKind::HorizontalBlur(..) => {
+                self.zero_clears.push(task_id);
                 add_blur_instances(
                     &mut self.horizontal_blurs,
                     BlurDirection::Horizontal,
@@ -659,6 +639,9 @@ impl RenderTarget for AlphaRenderTarget {
                 );
             }
             RenderTaskKind::CacheMask(ref task_info) => {
+                if task_info.clear_to_one {
+                    self.one_clears.push(task_id);
+                }
                 self.clip_batcher.add(
                     task_info.clip_node_range,
                     task_info.root_spatial_node_index,
@@ -676,6 +659,9 @@ impl RenderTarget for AlphaRenderTarget {
                 );
             }
             RenderTaskKind::ClipRegion(ref region_task) => {
+                if region_task.clear_to_one {
+                    self.one_clears.push(task_id);
+                }
                 let device_rect = DeviceRect::new(
                     DevicePoint::zero(),
                     target_rect.size.to_f32(),
