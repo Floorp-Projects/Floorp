@@ -16,7 +16,6 @@ bitflags! {
         const DITHERING = 1 << 11;
         const TEXTURE_EXTERNAL = 1 << 12;
         const DEBUG = 1 << 13;
-        const STORAGE_BUFFER = 1 << 14;
     }
 }
 
@@ -86,9 +85,6 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
         }
 
         base_prim_features.add(feature);
-    }
-    if flags.contains(ShaderFeatureFlags::STORAGE_BUFFER) {
-        base_prim_features.add("STORAGE_BUFFER");
     }
 
     // Brush shaders
