@@ -19,7 +19,6 @@ import time
 import mozlog.structured
 
 from marionette_driver import Wait
-from marionette_driver.legacy_actions import Actions
 from marionette_driver.errors import JavascriptException, ScriptTimeoutException
 from marionette_driver.keys import Keys
 from marionette_harness import MarionetteTestCase
@@ -380,10 +379,13 @@ class AwsyTestCase(MarionetteTestCase):
         browser will see the user as becoming inactive and trigger
         appropriate GCs, as would have happened in real use.
         """
-        action = Actions(self.marionette)
-        action.key_down(Keys.SHIFT)
-        action.key_up(Keys.SHIFT)
-        action.perform()
+        try:
+            action = self.marionette.actions.sequence("key", "keyboard_id")
+            action.key_down(Keys.SHIFT)
+            action.key_up(Keys.SHIFT)
+            action.perform()
+        finally:
+            self.marionette.actions.release()
 
     def open_pages(self):
         """
