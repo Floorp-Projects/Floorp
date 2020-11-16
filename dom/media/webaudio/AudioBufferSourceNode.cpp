@@ -349,7 +349,7 @@ class AudioBufferSourceNodeEngine final : public AudioNodeEngine {
     uint32_t numFrames = std::min<TrackTime>(
         WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock, aMaxPos - *aCurrentPosition);
     if (numFrames == WEBAUDIO_BLOCK_SIZE || !aChannels) {
-      aOutput->SetNull(numFrames);
+      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
     } else {
       if (*aOffsetWithinBlock == 0) {
         aOutput->AllocateChannels(aChannels);
