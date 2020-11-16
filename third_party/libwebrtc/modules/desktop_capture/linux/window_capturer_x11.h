@@ -22,7 +22,7 @@
 #include "modules/desktop_capture/desktop_capturer.h"
 #include "modules/desktop_capture/desktop_geometry.h"
 #include "modules/desktop_capture/linux/shared_x_display.h"
-#include "modules/desktop_capture/linux/shared_x_util.h"
+#include "modules/desktop_capture/linux/x_window_property.h"
 #include "modules/desktop_capture/linux/window_finder_x11.h"
 #include "modules/desktop_capture/linux/x_atom_cache.h"
 #include "modules/desktop_capture/linux/x_server_pixel_buffer.h"
