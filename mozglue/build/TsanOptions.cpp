@@ -307,6 +307,10 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:ScriptPreloader::Trace\n"
          "race:ScriptPreloader::WriteCache\n"
 
+         // Bug 1623541
+         "race:VRShMem::PullSystemState\n"
+         "race:VRShMem::PushSystemState\n"
+
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
