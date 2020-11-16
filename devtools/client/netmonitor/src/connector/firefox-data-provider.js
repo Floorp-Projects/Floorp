@@ -520,7 +520,7 @@ class FirefoxDataProvider {
       // Do a RDP request to fetch data from the actor.
       if (
         clientMethodName == "getStackTrace" &&
-        this.resourceWatcher.hasWatcherSupport(
+        this.resourceWatcher.hasResourceWatcherSupport(
           this.resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE
         )
       ) {
