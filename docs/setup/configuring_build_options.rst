@@ -244,11 +244,17 @@ Optimization
 ``ac_add_options --disable-optimize``
    Disables compiler optimization. This makes it much easier to step
    through code in a debugger.
+``ac_add_options --enable-release``
+   Enables more conservative, release engineering-oriented options. This may
+   slow down builds. This also turns on full optimizations for Rust. Note this
+   is the default when building release/beta/esr.
 ``ac_add_options --enable-debug-js-modules``
    Enable only JavaScript assertions. This is useful when working
    locally on JavaScript-powered components like the DevTools. This will
    help catch any errors introduced into the JS code, with less of a
    performance impact compared to the ``--enable-debug`` option.
+``export RUSTC_OPT_LEVEL=2``
+   Enable full optimizations for Rust code.
 
 You can make an optimized build with debugging symbols. See :ref:`Building
 with Debug Symbols <Building with Debug Symbols>`.
