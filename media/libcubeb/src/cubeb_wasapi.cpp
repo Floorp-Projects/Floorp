@@ -2085,9 +2085,11 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
   cubeb_device_info device_info;
   int rv = wasapi_create_device(stm->context, device_info, stm->device_enumerator.get(), device.get());
   if (rv == CUBEB_OK) {
-    const char* HANDSFREE_TAG = "BTHHFEENUM";
+    const char* HANDSFREE_TAG = "BTHHFENUM";
     size_t len = sizeof(HANDSFREE_TAG);
-    if (direction == eCapture && strncmp(device_info.group_id, HANDSFREE_TAG, len) == 0) {
+    if (direction == eCapture &&
+        strlen(device_info.group_id) >= len &&
+        strncmp(device_info.group_id, HANDSFREE_TAG, len) == 0) {
       // Rather high-latency to prevent constant under-runs in this particular
       // case of an input device using bluetooth handsfree.
       uint32_t default_period_frames = hns_to_frames(device_info.default_rate, default_period);
