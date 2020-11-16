@@ -305,11 +305,6 @@ void RenderCompositorD3D11SWGL::CreateTile(wr::NativeSurfaceId aId, int32_t aX,
   RefPtr<DataTextureSourceD3D11> source = new DataTextureSourceD3D11(
       mCompositor->GetDevice(), gfx::SurfaceFormat::B8G8R8A8, texture);
 
-  // We need to pad our tile textures by 16 bytes since SWGL can read up
-  // to 3 pixels past the end. We don't control the allocation size, so
-  // add an extra row instead.
-  desc.Height += 1;
-
   desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ;
   desc.Usage = D3D11_USAGE_STAGING;
   desc.BindFlags = 0;

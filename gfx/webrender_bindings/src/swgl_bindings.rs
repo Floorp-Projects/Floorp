@@ -1307,7 +1307,7 @@ impl Compositor for SwCompositor {
                 native_gl.bind_buffer(gl::PIXEL_UNPACK_BUFFER, tile.pbo_id);
                 native_gl.buffer_data_untyped(
                     gl::PIXEL_UNPACK_BUFFER,
-                    surface.tile_size.area() as isize * 4 + 16,
+                    surface.tile_size.area() as isize * 4,
                     ptr::null(),
                     gl::DYNAMIC_DRAW,
                 );
@@ -1385,7 +1385,7 @@ impl Compositor for SwCompositor {
                         buf = native_gl.map_buffer_range(
                             gl::PIXEL_UNPACK_BUFFER,
                             0,
-                            valid_rect.size.area() as isize * 4 + 16,
+                            valid_rect.size.area() as isize * 4,
                             gl::MAP_WRITE_BIT | gl::MAP_INVALIDATE_BUFFER_BIT,
                         ); // | gl::MAP_UNSYNCHRONIZED_BIT);
                         if buf != ptr::null_mut() {

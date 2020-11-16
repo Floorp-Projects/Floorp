@@ -2,29 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Load a partial span > 0 and < 4 pixels.
-template <typename V, typename P>
-static ALWAYS_INLINE V partial_load_span(P* src, int span) {
-  return bit_cast<V>(
-      (span >= 2 ? combine(unaligned_load<V2<P>>(src),
-                           V2<P>{span > 2 ? unaligned_load<P>(src + 2) : 0, 0})
-                 : V4<P>{unaligned_load<P>(src), 0, 0, 0}));
-}
-
-// Store a partial span > 0 and < 4 pixels.
-template <typename V, typename P>
-static ALWAYS_INLINE void partial_store_span(P* dst, V src, int span) {
-  auto pixels = bit_cast<V4<P>>(src);
-  if (span >= 2) {
-    unaligned_store(dst, lowHalf(pixels));
-    if (span > 2) {
-      unaligned_store(dst + 2, pixels.z);
-    }
-  } else {
-    unaligned_store(dst, pixels.x);
-  }
-}
-
 template <typename P>
 static inline void scale_row(P* dst, int dstWidth, const P* src, int srcWidth,
                              int span) {
@@ -316,7 +293,7 @@ void BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
   }
   prepare_texture(srctex);
   prepare_texture(dsttex, &dstReq);
-  if (!srcReq.same_size(dstReq) && filter == GL_LINEAR &&
+  if (!srcReq.same_size(dstReq) && srctex.width >= 2 && filter == GL_LINEAR &&
       (srctex.internal_format == GL_RGBA8 || srctex.internal_format == GL_R8 ||
        srctex.internal_format == GL_RG8)) {
     linear_blit(srctex, srcReq, srcfb->layer, dsttex, dstReq, dstfb->layer,
@@ -393,7 +370,7 @@ static void unscaled_row_composite(uint32_t* dest, const uint32_t* src,
     dest += 4;
   }
   if (src < end) {
-    WideRGBA8 srcpx = unpack(unaligned_load<PackedRGBA8>(src));
+    WideRGBA8 srcpx = unpack(partial_load_span<PackedRGBA8>(src, end - src));
     WideRGBA8 dstpx = unpack(partial_load_span<PackedRGBA8>(dest, end - src));
     auto r = pack(srcpx + dstpx - muldiv255(dstpx, alphas(srcpx)));
     partial_store_span(dest, r, end - src);
@@ -631,10 +608,10 @@ static inline V8<int16_t> textureLinearRowR8(S sampler, I32 ix, int32_t offsety,
   assert(sampler->format == TextureFormat::R8);
 
   // Calculate X fraction and clamp X offset into range.
-  I32 fracx = ix & (I32)0x7F;
+  I32 fracx = ix;
   ix >>= 7;
-  fracx &= (ix >= 0 && ix < int32_t(sampler->width) - 1);
-  ix = clampCoord(ix, sampler->width);
+  fracx = ((fracx & (ix >= 0)) | (ix > int32_t(sampler->width) - 2)) & 0x7F;
+  ix = clampCoord(ix, sampler->width - 1);
 
   // Load the sample taps and combine rows.
   auto abcd = linearRowTapsR8(sampler, ix, offsety, stridey, fracy);
@@ -666,10 +643,10 @@ static inline V8<int16_t> textureLinearRowPairedR8(S sampler, S sampler2,
   assert(sampler->stride == sampler2->stride);
 
   // Calculate X fraction and clamp X offset into range.
-  I32 fracx = ix & (I32)0x7F;
+  I32 fracx = ix;
   ix >>= 7;
-  fracx &= (ix >= 0 && ix < int32_t(sampler->width) - 1);
-  ix = clampCoord(ix, sampler->width);
+  fracx = ((fracx & (ix >= 0)) | (ix > int32_t(sampler->width) - 2)) & 0x7F;
+  ix = clampCoord(ix, sampler->width - 1);
 
   // Load the sample taps for the first sampler and combine rows.
   auto abcd = linearRowTapsR8(sampler, ix, offsety, stridey, fracy);
@@ -712,7 +689,26 @@ static void linear_row_yuv(uint32_t* dest, int span, const vec2_scalar& srcUV,
   int32_t yDU = int32_t((4 << STEP_BITS) * srcDU);
   int32_t cDU = int32_t((4 << STEP_BITS) * chromaDU);
 
-  if (sampler[0].format == TextureFormat::R16) {
+  if (sampler[0].width < 2 || sampler[1].width < 2) {
+    // If the source row has less than 2 pixels, it's not safe to use a linear
+    // filter because it may overread the row. Just convert the single pixel
+    // with nearest filtering and fill the row with it.
+    I16 yuv =
+        CONVERT(round_pixel((Float){
+                    texelFetch(&sampler[0], ivec2(srcUV), 0).x.x,
+                    texelFetch(&sampler[1], ivec2(chromaUV), 0).x.x,
+                    texelFetch(&sampler[2], ivec2(chromaUV), 0).x.x, 1.0f}),
+                I16);
+    auto rgb = YUVConverter<COLOR_SPACE>::convert(zip(I16(yuv.x), I16(yuv.x)),
+                                                  zip(I16(yuv.y), I16(yuv.z)));
+    for (; span >= 4; span -= 4) {
+      unaligned_store(dest, rgb);
+      dest += 4;
+    }
+    if (span > 0) {
+      partial_store_span(dest, rgb, span);
+    }
+  } else if (sampler[0].format == TextureFormat::R16) {
     // Sample each YUV plane, rescale it to fit in low 8 bits of word, and then
     // transform them by the appropriate color space.
     assert(colorDepth > 8);
@@ -824,11 +820,14 @@ static void linear_convert_yuv(Texture& ytex, Texture& utex, Texture& vtex,
                           float(utex.height) / ytex.height);
   vec2_scalar chromaUV = srcUV * chromaScale;
   vec2_scalar chromaDUV = srcDUV * chromaScale;
-  // Scale UVs by lerp precision
-  srcUV = linearQuantize(srcUV, 128);
-  srcDUV *= 128.0f;
-  chromaUV = linearQuantize(chromaUV, 128);
-  chromaDUV *= 128.0f;
+  // Scale UVs by lerp precision. If the row has only 1 pixel, then don't
+  // quantize so that we can use nearest filtering instead to avoid overreads.
+  if (ytex.width >= 2 && utex.width >= 2) {
+    srcUV = linearQuantize(srcUV, 128);
+    srcDUV *= 128.0f;
+    chromaUV = linearQuantize(chromaUV, 128);
+    chromaDUV *= 128.0f;
+  }
   // Calculate dest pointer from clamped offsets
   int destStride = dsttex.stride();
   char* dest = dsttex.sample_ptr(dstReq, dstBounds, 0, invertY);
