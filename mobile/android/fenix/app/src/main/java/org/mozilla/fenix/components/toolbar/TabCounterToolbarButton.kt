@@ -11,6 +11,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
+import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
@@ -24,7 +26,6 @@ import java.lang.ref.WeakReference
 @OptIn(ExperimentalCoroutinesApi::class)
 class TabCounterToolbarButton(
     private val lifecycleOwner: LifecycleOwner,
-    private val isPrivate: Boolean,
     private val onItemTapped: (TabCounterMenu.Item) -> Unit = {},
     private val showTabs: () -> Unit
 ) : Toolbar.Action {
@@ -37,7 +38,7 @@ class TabCounterToolbarButton(
         val settings = parent.context.components.settings
 
         store.flowScoped(lifecycleOwner) { flow ->
-            flow.map { state -> state.getNormalOrPrivateTabs(isPrivate).size }
+            flow.map { state -> state.getNormalOrPrivateTabs(isPrivate(store)).size }
                 .ifChanged()
                 .collect { tabs -> updateCount(tabs) }
         }
@@ -58,7 +59,7 @@ class TabCounterToolbarButton(
 
             addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
                 override fun onViewAttachedToWindow(v: View?) {
-                    setCount(store.state.getNormalOrPrivateTabs(isPrivate).size)
+                    setCount(store.state.getNormalOrPrivateTabs(isPrivate(store)).size)
                 }
 
                 override fun onViewDetachedFromWindow(v: View?) { /* no-op */ }
@@ -76,5 +77,9 @@ class TabCounterToolbarButton(
 
     private fun updateCount(count: Int) {
         reference.get()?.setCountWithAnimation(count)
+    }
+
+    private fun isPrivate(store: BrowserStore): Boolean {
+        return store.state.selectedTab?.content?.private ?: false
     }
 }
