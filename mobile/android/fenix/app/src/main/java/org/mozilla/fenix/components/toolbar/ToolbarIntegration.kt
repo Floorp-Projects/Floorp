@@ -141,7 +141,6 @@ class DefaultToolbarIntegration(
 
         val tabsAction = TabCounterToolbarButton(
             lifecycleOwner,
-            isPrivate,
             onItemTapped = {
                 interactor.onTabCounterMenuItemTapped(it)
             },

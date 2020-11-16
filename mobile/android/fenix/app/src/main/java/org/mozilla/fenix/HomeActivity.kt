@@ -180,7 +180,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                 .attachViewToRunVisualCompletenessQueueLater(WeakReference(rootContainer))
         }
 
-        checkPrivateShortcutEntryPoint(intent)
         privateNotificationObserver = PrivateNotificationFeature(
             applicationContext,
             components.core.store,
@@ -601,17 +600,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             return it.getBooleanExtra(START_IN_RECENTS_SCREEN, false)
         }
         return false
-    }
-
-    private fun checkPrivateShortcutEntryPoint(intent: Intent) {
-        if (intent.hasExtra(OPEN_TO_SEARCH) &&
-            (intent.getStringExtra(OPEN_TO_SEARCH) ==
-                    StartSearchIntentProcessor.STATIC_SHORTCUT_NEW_PRIVATE_TAB ||
-                    intent.getStringExtra(OPEN_TO_SEARCH) ==
-                    StartSearchIntentProcessor.PRIVATE_BROWSING_PINNED_SHORTCUT)
-        ) {
-            PrivateNotificationService.isStartedFromPrivateShortcut = true
-        }
     }
 
     private fun setupThemeAndBrowsingMode(mode: BrowsingMode) {

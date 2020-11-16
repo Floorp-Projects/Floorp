@@ -4,9 +4,11 @@
 
 package org.mozilla.fenix.session
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.privatemode.notification.AbstractPrivateNotificationService
 import org.mozilla.fenix.HomeActivity
@@ -36,31 +38,35 @@ class PrivateNotificationService : AbstractPrivateNotificationService() {
         color = ContextCompat.getColor(this@PrivateNotificationService, R.color.pbm_notification_color)
     }
 
+    @SuppressLint("MissingSuperCall")
     override fun erasePrivateTabs() {
+        val inPrivateMode = store.state.selectedTab?.content?.private ?: false
+
+        // Trigger use case directly for now (instead of calling super.erasePrivateTabs)
+        // as otherwise SessionManager and the store will be out of sync.
+        components.useCases.tabsUseCases.removePrivateTabs()
+
         metrics.track(Event.PrivateBrowsingNotificationTapped)
 
-        val homeScreenIntent = Intent(this, HomeActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            putExtra(HomeActivity.PRIVATE_BROWSING_MODE, isStartedFromPrivateShortcut)
-        }
-
-        if (VisibilityLifecycleCallback.finishAndRemoveTaskIfInBackground(this)) {
-            // Set start mode to be in background (recents screen)
-            homeScreenIntent.apply {
-                putExtra(HomeActivity.START_IN_RECENTS_SCREEN, true)
+        // If the app is in private mode we launch to the private mode home screen as a
+        // confirmation that all private tabs have been deleted. If we don't do this the user
+        // will end up on a new selected tab in normal mode which isn't desired.
+        // If the app is in normal mode there's no reason to direct the user away to
+        // private mode as all private tabs have been deleted.
+        if (inPrivateMode) {
+            val homeScreenIntent = Intent(this, HomeActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                putExtra(HomeActivity.PRIVATE_BROWSING_MODE, true)
             }
+
+            if (VisibilityLifecycleCallback.finishAndRemoveTaskIfInBackground(this)) {
+                // Set start mode to be in background (recents screen)
+                homeScreenIntent.apply {
+                    putExtra(HomeActivity.START_IN_RECENTS_SCREEN, true)
+                }
+            }
+
+            startActivity(homeScreenIntent)
         }
-
-        startActivity(homeScreenIntent)
-        super.erasePrivateTabs()
-    }
-
-    companion object {
-
-        /**
-         * Global used by [HomeActivity] to figure out if normal mode or private mode
-         * should be used after closing all private tabs.
-         */
-        var isStartedFromPrivateShortcut = false
     }
 }

@@ -8,10 +8,20 @@ import android.content.ComponentName
 import android.content.Intent
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.privatemode.notification.AbstractPrivateNotificationService.Companion.ACTION_ERASE
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
@@ -22,14 +32,21 @@ import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.android.controller.ServiceController
 
+@ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
 class PrivateNotificationServiceTest {
 
     private lateinit var controller: ServiceController<PrivateNotificationService>
+    private lateinit var store: BrowserStore
+
+    private val testDispatcher = TestCoroutineDispatcher()
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     @Before
     fun setup() {
-        val store = testContext.components.core.store
+        store = testContext.components.core.store
         every { store.dispatch(any()) } returns mockk()
 
         controller = Robolectric.buildService(
@@ -38,27 +55,34 @@ class PrivateNotificationServiceTest {
         )
     }
 
+    @After
+    fun cleanUp() {
+        testDispatcher.cleanupTestCoroutines()
+    }
+
     @Test
-    fun `service opens home activity with PBM flag set to true`() {
-        PrivateNotificationService.isStartedFromPrivateShortcut = true
+    fun `service opens home activity in private mode if app is in private mode`() {
+        val selectedPrivateTab = createTab("https://mozilla.org", private = true)
+        every { store.state } returns BrowserState(tabs = listOf(selectedPrivateTab), selectedTabId = selectedPrivateTab.id)
+
         val service = shadowOf(controller.get())
         controller.startCommand(0, 0)
 
         val intent = service.nextStartedActivity
+        assertNotNull(intent)
         assertEquals(ComponentName(testContext, HomeActivity::class.java), intent.component)
         assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK, intent.flags)
         assertEquals(true, intent.extras?.getBoolean(PRIVATE_BROWSING_MODE))
     }
 
     @Test
-    fun `service opens home activity with PBM flag set to false`() {
-        PrivateNotificationService.isStartedFromPrivateShortcut = false
+    fun `service starts no activity if app is in normal mode`() {
+        val selectedPrivateTab = createTab("https://mozilla.org", private = false)
+        every { store.state } returns BrowserState(tabs = listOf(selectedPrivateTab), selectedTabId = selectedPrivateTab.id)
+
         val service = shadowOf(controller.get())
         controller.startCommand(0, 0)
 
-        val intent = service.nextStartedActivity
-        assertEquals(ComponentName(testContext, HomeActivity::class.java), intent.component)
-        assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK, intent.flags)
-        assertEquals(false, intent.extras?.getBoolean(PRIVATE_BROWSING_MODE))
+        assertNull(service.nextStartedActivity)
     }
 }
