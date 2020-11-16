@@ -1272,7 +1272,7 @@
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">自由上网，拒绝跟踪</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">你的数据只要由你掌握。%s 可保护您免受大多数常见的跟踪器对您在线活动的窥视。</string>
+    <string name="preference_enhanced_tracking_protection_explanation">你的数据只由你掌握。%s 可保护您免受大多数常见的跟踪器对您在线活动的窥视。</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">详细了解</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->

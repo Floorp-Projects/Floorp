@@ -1204,7 +1204,7 @@
     <!-- Instructions on how to access pairing -->
     <string name="sign_in_instructions"><![CDATA[Bilgisayarınızda Firefox’u açıp <b>https://firefox.com/pair</b> adresine gidin]]></string>
     <!-- Text shown for sign in pairing when ready -->
-    <string name="sign_in_ready_for_scan">Taramaya hazır</string>
+    <string name="sign_in_ready_for_scan">Taramaya hazırım</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Kameranızla giriş yapın</string>
     <!-- Text shown for settings option for sign with email -->

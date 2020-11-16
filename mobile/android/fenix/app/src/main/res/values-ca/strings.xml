@@ -70,14 +70,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">No, gràcies</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Accediu al Firefox més ràpid. Afegiu un giny a la pantalla d’inici.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">Afegeix giny</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">Ara no</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string name="open_in_app_cfr_info_message">Podeu fer que el Firefox obri automàticament els enllaços en aplicacions.</string>
@@ -216,6 +208,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">Més informació</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Obre una pestanya nova del Firefox</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Cerca</string>
     <!-- Text preview for larger sized widgets -->
@@ -563,6 +557,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Al cap d’un mes</string>
 
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Tanca-les manualment</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Tanca-les al cap d’un dia</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Tanca-les al cap d’una setmana</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Tanca-les al cap d’un mes</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Pestanyes obertes</string>
@@ -629,8 +632,12 @@
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Obre les pestanyes</string>
 
-    <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">Elimina</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Nom de la col·lecció</string>
+	<!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Reanomena</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Elimina</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Suprimeix de l’historial</string>
@@ -684,11 +691,24 @@
     <string name="history_empty_message">No hi ha informació d’historial</string>
 
     <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Suprimeix les baixades</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">Segur que voleu esborrar les baixades?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
+    <string name="download_delete_multiple_items_snackbar">S’han suprimit les baixades</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">No hi ha cap baixada</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d seleccionades</string>
+
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Obre</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="download_delete_item">Suprimeix</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -1616,12 +1636,24 @@
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Mostra els llocs més visitats</string>
 
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Nom</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Nom del lloc principal</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">D’acord</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Cancel·la</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Elimina</string>
 
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Traieu tot el profit al %s.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Feu clic aquí per a veure més informació</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Recolliu tot allò que us insteressa</string>

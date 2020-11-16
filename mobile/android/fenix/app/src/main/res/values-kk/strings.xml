@@ -69,14 +69,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Жоқ, рахмет</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Firefox-қа тезірек жетіңіз. Негізгі экранға виджет қосыңыз.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">Виджет қосу</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">Қазір емес</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string name="open_in_app_cfr_info_message">Firefox-ты сілтемелерді қолданбаларда автоматты түрде ашатын етіп баптауға болады.</string>
@@ -498,7 +490,7 @@
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Жүктемелер</string>
     <!-- Option in library to open Bookmarks page -->
-    <string name="library_bookmarks"></string>
+    <string name="library_bookmarks">Бетбелгілер</string>
     <!-- Option in library to open Desktop Bookmarks root page -->
     <string name="library_desktop_bookmarks_root">Жұмыс үстел бетбелгілері</string>
     <!-- Option in library to open Desktop Bookmarks "menu" page -->
@@ -554,6 +546,15 @@
     <string name="close_tabs_after_one_week">Бір аптадан кейін</string>
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Бір айдан кейін</string>
+
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Қолмен жабу</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Бір күннен кейін жабу</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Бір аптадан кейін жабу</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Бір айдан кейін жабу</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -623,8 +624,10 @@
     <string name="collection_open_tabs">Беттерді ашу</string>
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Жинақ атауы</string>
-    <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">Өшіру</string>
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Атын өзгерту</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Өшіру</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Тарихтан өшіру</string>
@@ -677,11 +680,23 @@
     <string name="history_empty_message">Осында тарих жоқ</string>
 
     <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Жүктемелерді тазарту</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">Жүктемелеріңізді өшіруді шынымен қалайсыз ба?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
+    <string name="download_delete_multiple_items_snackbar">Жүктемелер өшірілді</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">Жүктемелер жоқ</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d таңдалды</string>
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Ашу</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="download_delete_item">Өшіру</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -1607,6 +1622,15 @@
 
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Ең көп қаралған сайттарды көрсету</string>
+
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Аты</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Үздік сайт атауы</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">ОК</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Бас тарту</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Өшіру</string>

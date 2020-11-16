@@ -200,6 +200,9 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Gouzout hirocʼh</string>
 
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Digeriñ un ivinell Firefox nevez</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Klask</string>
     <!-- Text preview for larger sized widgets -->
@@ -327,12 +330,20 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Rebuzadurioù</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Dastumad askouezhioù nevez</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">Mat eo</string>
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">Nullañ</string>
     <!-- Hint displayed on input field for custom collection name -->
     <string name="customize_addon_collection_hint">Anv an dastumad</string>
+
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Perc’henn an dastumad (Naoudi an arveriad)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Kemmet eo bet an dastumad askouezhioù. Kuitae vo an arload evit arloañ ar c’hemmoù...</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -518,6 +529,8 @@
     <!-- Tab Management -->
     <!-- Title of preference for tabs management -->
     <string name="preferences_tabs">Ivinelloù</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Gwel an ivinell</string>
     <!-- Option for a list tab view -->
     <string name="tab_view_list">Roll</string>
     <!-- Option for a grid tab view -->
@@ -651,6 +664,8 @@
     <string name="history_delete_some">Dilemel %1$d elfenn</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">Hiziv</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Dec’h</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Ar 24 eurvezh diwezhañ</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -665,6 +680,8 @@
     <!-- Downloads -->
     <!-- Text for the button to clear all downloads -->
     <string name="download_delete_all">Goullonderiñ roll ar pellgargadurioù</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">Sur oc’h e fell deoc’h skarzhañ ho pellgargadennoù?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
     <string name="download_delete_multiple_items_snackbar">Pellgargadurioù dilammet</string>
     <!-- Text shown when no download exists -->
@@ -1599,6 +1616,8 @@
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Anv</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Anv al lec’hienn pennañ</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">Mat eo</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
@@ -1610,6 +1629,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Tennit gounid eus %s.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Klikit da gaout muioc’h a vunudoù</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Dastumit ar pezh a zo pouezus evidoc‘h</string>
