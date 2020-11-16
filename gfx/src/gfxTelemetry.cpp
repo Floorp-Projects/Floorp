@@ -26,6 +26,8 @@ const char* FeatureStatusToString(FeatureStatus aStatus) {
       return "unavailable-not-built";
     case FeatureStatus::UnavailableNoAngle:
       return "unavailable-no-angle";
+    case FeatureStatus::UnavailableNoWebRender:
+      return "unavailable-no-webrender";
     case FeatureStatus::CrashedInHandler:
       return "crashed";
     case FeatureStatus::Blocked:
