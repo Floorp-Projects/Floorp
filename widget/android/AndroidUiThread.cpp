@@ -15,6 +15,7 @@
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
+#include "GeckoProfiler.h"
 #include "nsThread.h"
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
@@ -164,6 +165,7 @@ class CreateOnUiThread : public Runnable {
     sThread = new AndroidUiThread();
     sThread->InitCurrentThread();
     sThread->SetObserver(new ThreadObserver());
+    PROFILER_REGISTER_THREAD("AndroidUI");
     sMessageLoop =
         new MessageLoop(MessageLoop::TYPE_MOZILLA_ANDROID_UI, sThread.get());
     lock.NotifyAll();
@@ -193,6 +195,7 @@ class DestroyOnUiThread : public Runnable {
     delete sMessageLoop;
     sMessageLoop = nullptr;
     MOZ_ASSERT(sThread);
+    PROFILER_UNREGISTER_THREAD();
     nsThreadManager::get().UnregisterCurrentThread(*sThread);
     sThread = nullptr;
     mDestroyed = true;
