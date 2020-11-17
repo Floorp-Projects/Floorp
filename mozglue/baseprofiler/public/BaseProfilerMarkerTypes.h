@@ -111,19 +111,6 @@ struct UserTimingMeasure {
   }
 };
 
-struct Hang {
-  static constexpr Span<const char> MarkerTypeName() {
-    return MakeStringSpan("BHR-detected hang");
-  }
-  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter) {}
-  static MarkerSchema MarkerTypeDisplay() {
-    using MS = MarkerSchema;
-    MS schema{MS::Location::markerChart, MS::Location::markerTable,
-              MS::Location::timelineOverview};
-    return schema;
-  }
-};
-
 struct LongTask {
   static constexpr Span<const char> MarkerTypeName() {
     return MakeStringSpan("MainThreadLongTask");
