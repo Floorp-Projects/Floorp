@@ -763,10 +763,6 @@ TEST(GeckoProfiler, Markers)
 
   // Other markers in alphabetical order of payload class names.
 
-  PROFILER_ADD_MARKER_WITH_PAYLOAD("NativeAllocationMarkerPayload marker",
-                                   OTHER, NativeAllocationMarkerPayload,
-                                   (ts1, 9876543210, 1234, 5678, nullptr));
-
   nsCOMPtr<nsIURI> uri;
   ASSERT_TRUE(
       NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), "http://mozilla.org/"_ns)));
@@ -958,7 +954,6 @@ TEST(GeckoProfiler, Markers)
     S_Markers2ExplicitDefaultEmptyOptions,
     S_Markers2ExplicitDefaultWithOptions,
     S_FirstMarker,
-    S_NativeAllocationMarkerPayload,
     S_NetworkMarkerPayload_start,
     S_NetworkMarkerPayload_stop,
     S_NetworkMarkerPayload_redirect,
@@ -1305,16 +1300,6 @@ TEST(GeckoProfiler, Markers)
                 ts1Double = marker[START_TIME].asDouble();
                 ts2Double = marker[END_TIME].asDouble();
                 state = State(S_FirstMarker + 1);
-
-              } else if (nameString == "NativeAllocationMarkerPayload marker") {
-                EXPECT_EQ(state, S_NativeAllocationMarkerPayload);
-                state = State(S_NativeAllocationMarkerPayload + 1);
-                EXPECT_EQ(typeString, "Native allocation");
-                EXPECT_TIMING_INSTANT_AT(ts1Double);
-                EXPECT_TRUE(payload["stack"].isNull());
-                EXPECT_EQ_JSON(payload["size"], Int64, 9876543210);
-                EXPECT_EQ_JSON(payload["memoryAddress"], Int64, 1234);
-                EXPECT_EQ_JSON(payload["threadId"], Int64, 5678);
 
               } else if (nameString == "Load 1: http://mozilla.org/") {
                 EXPECT_EQ(state, S_NetworkMarkerPayload_start);

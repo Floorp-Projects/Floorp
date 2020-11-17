@@ -38,25 +38,6 @@ using UserTimingMeasure = mozilla::baseprofiler::markers::UserTimingMeasure;
 using MediaSampleMarker = mozilla::baseprofiler::markers::MediaSampleMarker;
 using ContentBuildMarker = mozilla::baseprofiler::markers::ContentBuildMarker;
 
-// This payload is for collecting information about native allocations. There is
-// a memory hook into malloc and other memory functions that can sample a subset
-// of the allocations. This information is then stored in this payload.
-struct NativeAllocationMarkerPayload {
-  static constexpr mozilla::Span<const char> MarkerTypeName() {
-    return mozilla::MakeStringSpan("Native allocation");
-  }
-  static void StreamJSONMarkerData(
-      mozilla::baseprofiler::SpliceableJSONWriter& aWriter, int64_t aSize,
-      uintptr_t aMemoryAddress, int aThreadId) {
-    aWriter.IntProperty("size", aSize);
-    aWriter.IntProperty("memoryAddress", static_cast<int64_t>(aMemoryAddress));
-    aWriter.IntProperty("threadId", aThreadId);
-  }
-  static mozilla::MarkerSchema MarkerTypeDisplay() {
-    return mozilla::MarkerSchema::SpecialFrontendLocation{};
-  }
-};
-
 struct IPCMarkerPayload {
   static constexpr mozilla::Span<const char> MarkerTypeName() {
     return mozilla::MakeStringSpan("IPC");
