@@ -849,7 +849,7 @@ function handleRequest(req, res) {
           priority: 1,
           name: "h3pool",
           values: [
-            { key: "alpn", value: "h2,h3" },
+            { key: "alpn", value: ["h2", "h3"] },
             { key: "no-default-alpn" },
             { key: "port", value: 8888 },
             { key: "ipv4hint", value: "1.2.3.4" },

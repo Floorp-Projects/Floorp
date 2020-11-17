@@ -60,7 +60,7 @@ interface nsISVCParam : nsISupports {
 
 [scriptable, uuid(0dc58309-4d67-4fc4-a4e3-38dbde9d9f4c)]
 interface nsISVCParamAlpn : nsISupports {
-  readonly attribute ACString alpn;
+  readonly attribute Array<ACString> alpn;
 };
 
 [scriptable, uuid(b3ed89c3-2ae6-4c92-8176-b76bc2437fcb)]
