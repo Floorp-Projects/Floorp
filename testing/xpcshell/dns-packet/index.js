@@ -1347,13 +1347,27 @@ svcparam.encode = function(param, buf, offset) {
       svcparam.encode.bytes += 2;
     }
   } else if (key == 1) { // alpn
-    let len = param.value.length
-    buf.writeUInt16BE(len || 0, offset);
+    let val = param.value;
+    if (!Array.isArray(val)) val = [val];
+    // The alpn param is prefixed by its length as a single byte, so the
+    // initialValue to reduce function is the length of the array.
+    let total = val.reduce(function(result, id) {
+      return result += id.length;
+    }, val.length);
+
+    buf.writeUInt16BE(total, offset);
     offset += 2;
     svcparam.encode.bytes += 2;
-    buf.write(param.value, offset)
-    offset += len;
-    svcparam.encode.bytes += len;
+
+    for (let id of val) {
+      buf.writeUInt8(id.length, offset);
+      offset += 1;
+      svcparam.encode.bytes += 1;
+
+      buf.write(id, offset);
+      offset += id.length;
+      svcparam.encode.bytes += id.length;
+    }
   } else if (key == 2) { // no-default-alpn
     buf.writeUInt16BE(0, offset);
     offset += 2;
@@ -1433,7 +1447,14 @@ svcparam.encodingLength = function (param) {
 
   switch (param.key) {
     case 'mandatory' : return 4 + 2*(Array.isArray(param.value) ? param.value.length : 1)
-    case 'alpn' : return 4 + param.value.length
+    case 'alpn' : {
+      let val = param.value;
+      if (!Array.isArray(val)) val = [val];
+      let total = val.reduce(function(result, id) {
+        return result += id.length;
+      }, val.length);
+      return 4 + total;
+    }
     case 'no-default-alpn' : return 4
     case 'port' : return 4 + 2
     case 'ipv4hint' : return 4 + 4 * (Array.isArray(param.value) ? param.value.length : 1)

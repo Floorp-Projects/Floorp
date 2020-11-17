@@ -1399,8 +1399,20 @@ nsresult TRR::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
       break;
     }
     case SvcParamKeyAlpn: {
-      field.mValue = AsVariant(SvcParamAlpn{
-          .mValue = nsCString((const char*)(&mResponse[svcbIndex]), length)});
+      field.mValue = AsVariant(SvcParamAlpn());
+      auto& alpnArray = field.mValue.as<SvcParamAlpn>().mValue;
+      while (length > 0) {
+        uint8_t alpnIdLength = mResponse[svcbIndex++];
+        length -= 1;
+        if (alpnIdLength > length) {
+          return NS_ERROR_UNEXPECTED;
+        }
+
+        alpnArray.AppendElement(
+            nsCString((const char*)&mResponse[svcbIndex], alpnIdLength));
+        length -= alpnIdLength;
+        svcbIndex += alpnIdLength;
+      }
       break;
     }
     case SvcParamKeyNoDefaultAlpn: {

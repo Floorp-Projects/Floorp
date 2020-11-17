@@ -121,7 +121,7 @@ add_task(async function testPriorityAndECHConfig() {
       data: {
         priority: 1,
         name: "test.p1.com",
-        values: [{ key: "alpn", value: "h2,h3" }],
+        values: [{ key: "alpn", value: ["h2", "h3"] }],
       },
     },
     {

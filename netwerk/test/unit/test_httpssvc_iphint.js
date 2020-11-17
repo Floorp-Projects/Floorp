@@ -127,7 +127,7 @@ add_task(async function testStoreIPHint() {
         priority: 1,
         name: "test.IPHint.com",
         values: [
-          { key: "alpn", value: "h2,h3" },
+          { key: "alpn", value: ["h2", "h3"] },
           { key: "port", value: 8888 },
           { key: "ipv4hint", value: ["1.2.3.4", "5.6.7.8"] },
           { key: "ipv6hint", value: ["::1", "fe80::794f:6d2c:3d5e:7836"] },
@@ -156,9 +156,9 @@ add_task(async function testStoreIPHint() {
   Assert.equal(answer[0].priority, 1);
   Assert.equal(answer[0].name, "test.IPHint.com");
   Assert.equal(answer[0].values.length, 4);
-  Assert.equal(
+  Assert.deepEqual(
     answer[0].values[0].QueryInterface(Ci.nsISVCParamAlpn).alpn,
-    "h2,h3",
+    ["h2", "h3"],
     "got correct answer"
   );
   Assert.equal(
