@@ -106,23 +106,21 @@ void CacheUseDOSDevicePathSyntaxPrefValue() {
 #endif
 
 Result<nsCOMPtr<nsIFile>, nsresult> QM_NewLocalFile(const nsAString& aPath) {
-  nsCOMPtr<nsIFile> file;
-  nsresult rv =
-      NS_NewLocalFile(aPath, /* aFollowLinks */ false, getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    QM_WARNING("Failed to construct a file for path (%s)",
-               NS_ConvertUTF16toUTF8(aPath).get());
-    return Err(rv);
-  }
+  QM_TRY_UNWRAP(auto file,
+                ToResultInvoke<nsCOMPtr<nsIFile>>(NS_NewLocalFile, aPath,
+                                                  /* aFollowLinks */ false),
+                QM_PROPAGATE, [&aPath](const nsresult rv) {
+                  QM_WARNING("Failed to construct a file for path (%s)",
+                             NS_ConvertUTF16toUTF8(aPath).get());
+                });
 
 #ifdef XP_WIN
   MOZ_ASSERT(gUseDOSDevicePathSyntax != -1);
 
   if (gUseDOSDevicePathSyntax) {
-    nsCOMPtr<nsILocalFileWin> winFile = do_QueryInterface(file, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
+    QM_TRY_INSPECT(const auto& winFile,
+                   ToResultGet<nsCOMPtr<nsILocalFileWin>>(
+                       MOZ_SELECT_OVERLOAD(do_QueryInterface), file));
 
     MOZ_ASSERT(winFile);
     winFile->SetUseDOSDevicePathSyntax(true);
