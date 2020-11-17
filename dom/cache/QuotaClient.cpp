@@ -384,13 +384,8 @@ Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
       }()));
 
   if (!maybePaddingSize) {
-    uint64_t usage;
-    if (qm->GetUsageForClient(PERSISTENCE_TYPE_DEFAULT, aGroupAndOrigin,
-                              Client::DOMCACHE, usage)) {
-      return UsageInfo{DatabaseUsageType(Some(usage))};
-    }
-
-    return UsageInfo{};
+    return qm->GetUsageForClient(PERSISTENCE_TYPE_DEFAULT, aGroupAndOrigin,
+                                 Client::DOMCACHE);
   }
 
   CACHE_TRY_INSPECT(

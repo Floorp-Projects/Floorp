@@ -84,6 +84,8 @@ class UsageInfo final {
     return *this;
   }
 
+  Maybe<uint64_t> DatabaseUsage() const { return mDatabaseUsage.GetValue(); }
+
   Maybe<uint64_t> FileUsage() const { return mFileUsage.GetValue(); }
 
   Maybe<uint64_t> TotalUsage() const {
