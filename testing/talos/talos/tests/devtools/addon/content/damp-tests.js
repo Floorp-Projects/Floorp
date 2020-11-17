@@ -4,8 +4,10 @@
 
 "use strict";
 
-/* globals module */
+/* globals module, require */
 
+const Services = require("Services");
+const isFissionEnabled = Services.prefs.getBoolPref("fission.autostart", false);
 /**
  * This is the registry for all DAMP tests. Tests will be run in the order specified by
  * the DAMP_TESTS array.
@@ -100,13 +102,14 @@ module.exports = [
     description:
       "Measure open/close toolbox on webconsole panel against complicated document",
   },
-  // Bug 1503499 - disable for frequent failures on fission
-  // {
-  //  name: "complicated.inspector",
-  //  path: "inspector/complicated.js",
-  //  description:
-  //    "Measure open/close toolbox on inspector panel against complicated document",
-  // },
+  {
+    name: "complicated.inspector",
+    path: "inspector/complicated.js",
+    description:
+      "Measure open/close toolbox on inspector panel against complicated document",
+    // Bug 1503499 & 1677587 - disable for frequent failures on fission
+    disabled: isFissionEnabled,
+  },
   {
     name: "complicated.debugger",
     path: "debugger/complicated.js",
@@ -118,6 +121,8 @@ module.exports = [
     path: "styleeditor/complicated.js",
     description:
       "Measure open/close toolbox on style editor panel against complicated document",
+    // Bug 1677587 - disable for frequent failures on fission
+    disabled: isFissionEnabled,
   },
   {
     name: "complicated.netmonitor",
