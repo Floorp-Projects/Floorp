@@ -23,6 +23,10 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">您的隐私标签页将显示于此。</string>
 
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">百度</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">京东</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">打开了 1 个标签页，点击即可切换。</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -611,6 +615,12 @@
     <string name="tab_tray_menu_home">前往主页</string>
     <!-- Shortcut action to toggle private mode -->
     <string name="tab_tray_menu_toggle">切换标签页模式</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">书签</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">关闭</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">分享所选标签页</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">将标签页从收藏集移除</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -1006,6 +1016,12 @@
     <string name="snackbar_tab_closed">标签页已关闭</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">标签页已关闭</string>
+    <!-- Text shown in snackbar when user closes tabs -->
+    <string name="snackbar_message_tabs_closed">标签页已关闭！</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">书签已保存！</string>
+    <!-- Text shown in snackbar action for viewing bookmarks -->
+    <string name="snackbar_message_bookmarks_view">查看</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">已添加至常用网站!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1568,7 +1584,7 @@
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">欢迎使用焕然一新的 %s</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">这是我们完全重新打造的浏览器，操作跟手，功能俱全，助您在线上做好更多事。\n\n稍等片刻，我们正在更新 %s 的</string>
+    <string name="migration_description">这是我们完全重新打造的浏览器，性能卓越，功能俱全，遨游网络更加得心应手。\n\n稍候片刻，我们正在更新 %s 的</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">正在更新 %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->

@@ -686,6 +686,13 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Sin historial aquí</string>
 
+    <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Eliminar descargas</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">¿De verdad quieres limpiar tus descargas?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
+    <string name="download_delete_multiple_items_snackbar">Descargas eliminadas</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">No hay descargas aquí</string>
     <!-- History multi select title in app bar
