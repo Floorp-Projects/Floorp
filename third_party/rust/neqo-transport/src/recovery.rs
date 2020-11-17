@@ -22,7 +22,6 @@ use crate::cc::CongestionControlAlgorithm;
 use crate::connection::LOCAL_IDLE_TIMEOUT;
 use crate::crypto::CryptoRecoveryToken;
 use crate::flow_mgr::FlowControlRecoveryToken;
-use crate::packet::PacketNumber;
 use crate::qlog::{self, QlogMetric};
 use crate::send_stream::StreamRecoveryToken;
 use crate::stats::{Stats, StatsCell};
@@ -226,7 +225,7 @@ impl SendProfile {
 #[derive(Debug)]
 pub(crate) struct LossRecoverySpace {
     space: PNSpace,
-    largest_acked: Option<PacketNumber>,
+    largest_acked: Option<u64>,
     largest_acked_sent_time: Option<Instant>,
     /// The time used to calculate the PTO timer for this space.
     /// This is the time that the last ACK-eliciting packet in this space
@@ -638,7 +637,7 @@ impl LossRecovery {
         self.packet_sender.cwnd_avail()
     }
 
-    pub fn largest_acknowledged_pn(&self, pn_space: PNSpace) -> Option<PacketNumber> {
+    pub fn largest_acknowledged_pn(&self, pn_space: PNSpace) -> Option<u64> {
         self.spaces.get(pn_space).and_then(|sp| sp.largest_acked)
     }
 

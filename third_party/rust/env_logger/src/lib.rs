@@ -15,16 +15,20 @@
 //! ## Example
 //!
 //! ```
-//! use log::{debug, error, log_enabled, info, Level};
+//! #[macro_use] extern crate log;
 //!
-//! env_logger::init();
+//! use log::Level;
 //!
-//! debug!("this is a debug {}", "message");
-//! error!("this is printed by default");
+//! fn main() {
+//!     env_logger::init();
 //!
-//! if log_enabled!(Level::Info) {
-//!     let x = 3 * 4; // expensive computation
-//!     info!("the answer was: {}", x);
+//!     debug!("this is a debug {}", "message");
+//!     error!("this is printed by default");
+//!
+//!     if log_enabled!(Level::Info) {
+//!         let x = 3 * 4; // expensive computation
+//!         info!("the answer was: {}", x);
+//!     }
 //! }
 //! ```
 //!
@@ -142,6 +146,7 @@
 //!
 //! ```
 //! # #[macro_use] extern crate log;
+//! # fn main() {}
 //! #[cfg(test)]
 //! mod tests {
 //!     fn init() {
@@ -220,7 +225,7 @@
 //! ```
 //! use env_logger::Env;
 //!
-//! env_logger::Builder::from_env(Env::default().default_filter_or("warn")).init();
+//! env_logger::from_env(Env::default().default_filter_or("warn")).init();
 //! ```
 //!
 //! [log-crate-url]: https://docs.rs/log/
@@ -232,7 +237,7 @@
 #![doc(
     html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
     html_favicon_url = "https://www.rust-lang.org/static/images/favicon.ico",
-    html_root_url = "https://docs.rs/env_logger/0.8.1"
+    html_root_url = "https://docs.rs/env_logger/0.7.1"
 )]
 #![cfg_attr(test, deny(warnings))]
 // When compiled for the rustc compiler itself we want to make sure that this is
@@ -252,13 +257,13 @@ pub use self::fmt::glob::*;
 
 use self::filter::Filter;
 use self::fmt::writer::{self, Writer};
-use self::fmt::{FormatFn, Formatter};
+use self::fmt::Formatter;
 
 /// The default name for the environment variable to read filters from.
-pub const DEFAULT_FILTER_ENV: &str = "RUST_LOG";
+pub const DEFAULT_FILTER_ENV: &'static str = "RUST_LOG";
 
 /// The default name for the environment variable to read style preferences from.
-pub const DEFAULT_WRITE_STYLE_ENV: &str = "RUST_LOG_STYLE";
+pub const DEFAULT_WRITE_STYLE_ENV: &'static str = "RUST_LOG_STYLE";
 
 /// Set of environment variables to configure from.
 ///
@@ -304,7 +309,8 @@ struct Var<'a> {
 pub struct Logger {
     writer: Writer,
     filter: Filter,
-    format: FormatFn,
+    #[allow(unknown_lints, bare_trait_objects)]
+    format: Box<Fn(&mut Formatter, &Record) -> io::Result<()> + Sync + Send>,
 }
 
 /// `Builder` acts as builder for initializing a `Logger`.
@@ -315,20 +321,23 @@ pub struct Logger {
 /// # Examples
 ///
 /// ```
-/// # #[macro_use] extern crate log;
-/// # use std::io::Write;
-/// use env_logger::Builder;
+/// #[macro_use] extern crate log;
+///
+/// use std::env;
+/// use std::io::Write;
 /// use log::LevelFilter;
+/// use env_logger::Builder;
 ///
-/// let mut builder = Builder::from_default_env();
+/// fn main() {
+///     let mut builder = Builder::from_default_env();
 ///
-/// builder
-///     .format(|buf, record| writeln!(buf, "{} - {}", record.level(), record.args()))
-///     .filter(None, LevelFilter::Info)
-///     .init();
+///     builder.format(|buf, record| writeln!(buf, "{} - {}", record.level(), record.args()))
+///            .filter(None, LevelFilter::Info)
+///            .init();
 ///
-/// error!("error message");
-/// info!("info message");
+///     error!("error message");
+///     info!("info message");
+/// }
 /// ```
 #[derive(Default)]
 pub struct Builder {
@@ -350,15 +359,16 @@ impl Builder {
     /// Create a new builder and configure filters and style:
     ///
     /// ```
+    /// # fn main() {
     /// use log::LevelFilter;
     /// use env_logger::{Builder, WriteStyle};
     ///
     /// let mut builder = Builder::new();
     ///
-    /// builder
-    ///     .filter(None, LevelFilter::Info)
-    ///     .write_style(WriteStyle::Always)
-    ///     .init();
+    /// builder.filter(None, LevelFilter::Info)
+    ///        .write_style(WriteStyle::Always)
+    ///        .init();
+    /// # }
     /// ```
     ///
     /// [`filter`]: #method.filter
@@ -402,61 +412,17 @@ impl Builder {
         E: Into<Env<'a>>,
     {
         let mut builder = Builder::new();
-        builder.parse_env(env);
-        builder
-    }
-
-    /// Applies the configuration from the environment.
-    ///
-    /// This function allows a builder to be configured with default parameters,
-    /// to be then overridden by the environment.
-    ///
-    /// # Examples
-    ///
-    /// Initialise a logger with filter level `Off`, then override the log
-    /// filter from an environment variable called `MY_LOG`:
-    ///
-    /// ```
-    /// use log::LevelFilter;
-    /// use env_logger::Builder;
-    ///
-    /// let mut builder = Builder::new();
-    ///
-    /// builder.filter_level(LevelFilter::Off);
-    /// builder.parse_env("MY_LOG");
-    /// builder.init();
-    /// ```
-    ///
-    /// Initialise a logger with filter level `Off`, then use the `MY_LOG`
-    /// variable to override filtering and `MY_LOG_STYLE` to override  whether
-    /// or not to write styles:
-    ///
-    /// ```
-    /// use log::LevelFilter;
-    /// use env_logger::{Builder, Env};
-    ///
-    /// let env = Env::new().filter("MY_LOG").write_style("MY_LOG_STYLE");
-    ///
-    /// let mut builder = Builder::new();
-    /// builder.filter_level(LevelFilter::Off);
-    /// builder.parse_env(env);
-    /// builder.init();
-    /// ```
-    pub fn parse_env<'a, E>(&mut self, env: E) -> &mut Self
-    where
-        E: Into<Env<'a>>,
-    {
         let env = env.into();
 
         if let Some(s) = env.get_filter() {
-            self.parse_filters(&s);
+            builder.parse_filters(&s);
         }
 
         if let Some(s) = env.get_write_style() {
-            self.parse_write_style(&s);
+            builder.parse_write_style(&s);
         }
 
-        self
+        builder
     }
 
     /// Initializes the log builder from the environment using default variable names.
@@ -479,32 +445,6 @@ impl Builder {
     /// [default environment variables]: struct.Env.html#default-environment-variables
     pub fn from_default_env() -> Self {
         Self::from_env(Env::default())
-    }
-
-    /// Applies the configuration from the environment using default variable names.
-    ///
-    /// This method is a convenient way to call `parse_env(Env::default())` without
-    /// having to use the `Env` type explicitly. The builder will use the
-    /// [default environment variables].
-    ///
-    /// # Examples
-    ///
-    /// Initialise a logger with filter level `Off`, then configure it using the
-    /// default environment variables:
-    ///
-    /// ```
-    /// use log::LevelFilter;
-    /// use env_logger::Builder;
-    ///
-    /// let mut builder = Builder::new();
-    /// builder.filter_level(LevelFilter::Off);
-    /// builder.parse_default_env();
-    /// builder.init();
-    /// ```
-    ///
-    /// [default environment variables]: struct.Env.html#default-environment-variables
-    pub fn parse_default_env(&mut self) -> &mut Self {
-        self.parse_env(Env::default())
     }
 
     /// Sets the format function for formatting the log output.
@@ -598,15 +538,17 @@ impl Builder {
     ///
     /// # Examples
     ///
-    /// Only include messages for info and above for logs in `path::to::module`:
+    /// Only include messages for warning and above for logs in `path::to::module`:
     ///
     /// ```
-    /// use env_logger::Builder;
+    /// # fn main() {
     /// use log::LevelFilter;
+    /// use env_logger::Builder;
     ///
     /// let mut builder = Builder::new();
     ///
     /// builder.filter_module("path::to::module", LevelFilter::Info);
+    /// # }
     /// ```
     pub fn filter_module(&mut self, module: &str, level: LevelFilter) -> &mut Self {
         self.filter.filter_module(module, level);
@@ -617,15 +559,17 @@ impl Builder {
     ///
     /// # Examples
     ///
-    /// Only include messages for info and above for logs in `path::to::module`:
+    /// Only include messages for warning and above for logs in `path::to::module`:
     ///
     /// ```
-    /// use env_logger::Builder;
+    /// # fn main() {
     /// use log::LevelFilter;
+    /// use env_logger::Builder;
     ///
     /// let mut builder = Builder::new();
     ///
     /// builder.filter_level(LevelFilter::Info);
+    /// # }
     /// ```
     pub fn filter_level(&mut self, level: LevelFilter) -> &mut Self {
         self.filter.filter_level(level);
@@ -639,15 +583,17 @@ impl Builder {
     ///
     /// # Examples
     ///
-    /// Only include messages for info and above for logs in `path::to::module`:
+    /// Only include messages for warning and above for logs in `path::to::module`:
     ///
     /// ```
-    /// use env_logger::Builder;
+    /// # fn main() {
     /// use log::LevelFilter;
+    /// use env_logger::Builder;
     ///
     /// let mut builder = Builder::new();
     ///
     /// builder.filter(Some("path::to::module"), LevelFilter::Info);
+    /// # }
     /// ```
     pub fn filter(&mut self, module: Option<&str>, level: LevelFilter) -> &mut Self {
         self.filter.filter(module, level);
@@ -1108,6 +1054,7 @@ pub fn init() {
 /// and `MY_LOG_STYLE` for writing colors:
 ///
 /// ```
+/// # extern crate env_logger;
 /// use env_logger::{Builder, Env};
 ///
 /// # fn run() -> Result<(), Box<::std::error::Error>> {
@@ -1117,7 +1064,7 @@ pub fn init() {
 ///
 /// Ok(())
 /// # }
-/// # run().unwrap();
+/// # fn main() { run().unwrap(); }
 /// ```
 ///
 /// # Errors
@@ -1167,9 +1114,6 @@ where
 /// Create a new builder with the default environment variables.
 ///
 /// The builder can be configured before being initialized.
-/// This is a convenient way of calling [`Builder::from_default_env`].
-///
-/// [`Builder::from_default_env`]: struct.Builder.html#method.from_default_env
 pub fn builder() -> Builder {
     Builder::from_default_env()
 }
@@ -1177,10 +1121,6 @@ pub fn builder() -> Builder {
 /// Create a builder from the given environment variables.
 ///
 /// The builder can be configured before being initialized.
-#[deprecated(
-    since = "0.8.0",
-    note = "Prefer `env_logger::Builder::from_env()` instead."
-)]
 pub fn from_env<'a, E>(env: E) -> Builder
 where
     E: Into<Env<'a>>,
