@@ -31,25 +31,32 @@ MediaDevices::~MediaDevices() {
 already_AddRefed<Promise> MediaDevices::GetUserMedia(
     const MediaStreamConstraints& aConstraints, CallerType aCallerType,
     ErrorResult& aRv) {
-  if (RefPtr<nsPIDOMWindowInner> owner = GetOwner()) {
-    if (Document* doc = owner->GetExtantDoc()) {
-      if (!owner->IsSecureContext()) {
-        doc->SetUseCounter(eUseCounter_custom_GetUserMediaInsec);
-      }
-      Document* topDoc = doc->GetTopLevelContentDocument();
-      IgnoredErrorResult ignored;
-      if (topDoc && !topDoc->HasFocus(ignored)) {
-        doc->SetUseCounter(eUseCounter_custom_GetUserMediaUnfocused);
-      }
+  MOZ_ASSERT(NS_IsMainThread());
+  // Get the relevant global for the promise from the wrapper cache because
+  // DOMEventTargetHelper::GetOwner() returns null if the document is unloaded.
+  // We know the wrapper exists because it is being used for |this| from JS.
+  // See https://github.com/heycam/webidl/issues/932 for why the relevant
+  // global is used instead of the current global.
+  nsCOMPtr<nsIGlobalObject> global = xpc::NativeGlobal(GetWrapper());
+  // global is a window because MediaDevices is exposed only to Window.
+  nsCOMPtr<nsPIDOMWindowInner> owner = do_QueryInterface(global);
+  if (Document* doc = owner->GetExtantDoc()) {
+    if (!owner->IsSecureContext()) {
+      doc->SetUseCounter(eUseCounter_custom_GetUserMediaInsec);
+    }
+    Document* topDoc = doc->GetTopLevelContentDocument();
+    IgnoredErrorResult ignored;
+    if (topDoc && !topDoc->HasFocus(ignored)) {
+      doc->SetUseCounter(eUseCounter_custom_GetUserMediaUnfocused);
     }
   }
-  RefPtr<Promise> p = Promise::Create(GetParentObject(), aRv);
+  RefPtr<Promise> p = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
   RefPtr<MediaDevices> self(this);
   MediaManager::Get()
-      ->GetUserMedia(GetOwner(), aConstraints, aCallerType)
+      ->GetUserMedia(owner, aConstraints, aCallerType)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [this, self, p](RefPtr<DOMMediaStream>&& aStream) {
@@ -71,26 +78,25 @@ already_AddRefed<Promise> MediaDevices::GetUserMedia(
 already_AddRefed<Promise> MediaDevices::EnumerateDevices(CallerType aCallerType,
                                                          ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (RefPtr<nsPIDOMWindowInner> owner = GetOwner()) {
-    if (Document* doc = owner->GetExtantDoc()) {
-      if (!owner->IsSecureContext()) {
-        doc->SetUseCounter(eUseCounter_custom_EnumerateDevicesInsec);
-      }
-      Document* topDoc = doc->GetTopLevelContentDocument();
-      IgnoredErrorResult ignored;
-      if (topDoc && !topDoc->HasFocus(ignored)) {
-        doc->SetUseCounter(eUseCounter_custom_EnumerateDevicesUnfocused);
-      }
+  nsCOMPtr<nsIGlobalObject> global = xpc::NativeGlobal(GetWrapper());
+  nsCOMPtr<nsPIDOMWindowInner> owner = do_QueryInterface(global);
+  if (Document* doc = owner->GetExtantDoc()) {
+    if (!owner->IsSecureContext()) {
+      doc->SetUseCounter(eUseCounter_custom_EnumerateDevicesInsec);
+    }
+    Document* topDoc = doc->GetTopLevelContentDocument();
+    IgnoredErrorResult ignored;
+    if (topDoc && !topDoc->HasFocus(ignored)) {
+      doc->SetUseCounter(eUseCounter_custom_EnumerateDevicesUnfocused);
     }
   }
-  RefPtr<Promise> p = Promise::Create(GetParentObject(), aRv);
+  RefPtr<Promise> p = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
   RefPtr<MediaDevices> self(this);
   MediaManager::Get()
-      ->EnumerateDevices(GetOwner(), aCallerType)
+      ->EnumerateDevices(owner, aCallerType)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [this, self,
@@ -135,13 +141,15 @@ already_AddRefed<Promise> MediaDevices::EnumerateDevices(CallerType aCallerType,
 already_AddRefed<Promise> MediaDevices::GetDisplayMedia(
     const DisplayMediaStreamConstraints& aConstraints, CallerType aCallerType,
     ErrorResult& aRv) {
-  RefPtr<Promise> p = Promise::Create(GetParentObject(), aRv);
+  nsCOMPtr<nsIGlobalObject> global = xpc::NativeGlobal(GetWrapper());
+  RefPtr<Promise> p = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
+  nsCOMPtr<nsPIDOMWindowInner> owner = do_QueryInterface(global);
   RefPtr<MediaDevices> self(this);
   MediaManager::Get()
-      ->GetDisplayMedia(GetOwner(), aConstraints, aCallerType)
+      ->GetDisplayMedia(owner, aConstraints, aCallerType)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [this, self, p](RefPtr<DOMMediaStream>&& aStream) {
