@@ -749,14 +749,15 @@ struct ProfileBufferEntryWriter::Serializer<ProfileBufferRawPointer<T>> {
 // wrapper necessary.
 template <typename T>
 struct ProfileBufferEntryReader::Deserializer<ProfileBufferRawPointer<T>> {
-  static void ReadInto(ProfileBufferEntryReader& aER, T*& aPtr) {
-    aER.ReadBytes(&aPtr, sizeof(aPtr));
+  static void ReadInto(ProfileBufferEntryReader& aER,
+                       ProfileBufferRawPointer<T>& aPtr) {
+    aER.ReadBytes(&aPtr.mRawPointer, sizeof(aPtr));
   }
 
-  static T* Read(ProfileBufferEntryReader& aER) {
-    T* ptr;
-    ReadInto(aER, ptr);
-    return ptr;
+  static ProfileBufferRawPointer<T> Read(ProfileBufferEntryReader& aER) {
+    ProfileBufferRawPointer<T> rawPointer;
+    ReadInto(aER, rawPointer);
+    return rawPointer;
   }
 };
 
