@@ -46,7 +46,7 @@ class UrlbarValueFormatter {
     return this.urlbarInput.querySelector("#urlbar-scheme");
   }
 
-  async update(forceURLFormat = false) {
+  async update() {
     // _getUrlMetaData does URI fixup, which depends on the search service, so
     // make sure it's initialized.  It can be uninitialized here on session
     // restore.  Skip this if the service is already initialized in order to
@@ -86,14 +86,7 @@ class UrlbarValueFormatter {
     // Apply new formatting.  Formatter methods should return true if they
     // successfully formatted the value and false if not.  We apply only
     // one formatter at a time, so we stop at the first successful one.
-    if (
-      forceURLFormat ||
-      this.urlbarInput.getAttribute("pageproxystate") === "valid"
-    ) {
-      this._formattingApplied = this._formatURL(forceURLFormat);
-    } else {
-      this._formattingApplied = this._formatSearchAlias();
-    }
+    this._formattingApplied = this._formatURL() || this._formatSearchAlias();
   }
 
   _ensureFormattedHostVisible(urlMetaData) {
@@ -134,20 +127,21 @@ class UrlbarValueFormatter {
     });
   }
 
-  _getUrlMetaData(forceURLFormat = false) {
-    if (!forceURLFormat && this.urlbarInput.focused) {
+  _getUrlMetaData() {
+    if (this.urlbarInput.focused) {
       return null;
     }
 
-    const inputValue = this.inputField.value;
+    let url = this.inputField.value;
     let browser = this.window.gBrowser.selectedBrowser;
 
     // Since doing a full URIFixup and offset calculations is expensive, we
     // keep the metadata cached in the browser itself, so when switching tabs
     // we can skip most of this.
-    if (browser._urlMetaData && browser._urlMetaData.url == inputValue) {
+    if (browser._urlMetaData && browser._urlMetaData.url == url) {
       return browser._urlMetaData.data;
     }
+    browser._urlMetaData = { url, data: null };
 
     // Get the URL from the fixup service:
     let flags =
@@ -158,7 +152,7 @@ class UrlbarValueFormatter {
     }
     let uriInfo;
     try {
-      uriInfo = Services.uriFixup.getFixupURIInfo(inputValue, flags);
+      uriInfo = Services.uriFixup.getFixupURIInfo(url, flags);
     } catch (ex) {}
     // Ignore if we couldn't make a URI out of this, the URI resulted in a search,
     // or the URI has a non-http(s)/ftp protocol.
@@ -168,52 +162,56 @@ class UrlbarValueFormatter {
       uriInfo.keywordProviderName ||
       !["http", "https", "ftp"].includes(uriInfo.fixedURI.scheme)
     ) {
-      browser._urlMetaData = { url: inputValue, data: null };
       return null;
     }
-
-    const { displayHostPort, displayPrePath, port, scheme } = uriInfo.fixedURI;
-
-    let url = UrlbarUtils.losslessDecodeURI(uriInfo.fixedURI);
-    // If the fixed uri is just an origin it will have a trailing slash. If the user didn't
-    // type that trailing slash, remove it to improve the uri readability and avoid flicker.
-    url = /\/$/.test(inputValue) ? url : url.replace(/\/$/, "");
-
-    const schemeWSlashes = `${scheme}://`;
-
-    // In order to recognize the domain including brackets [] of IPV6, use displayHostPort.
-    const domain =
-      port === -1
-        ? displayHostPort
-        : displayHostPort.substring(
-            0,
-            displayHostPort.length - `:${port}`.length
-          );
-
-    const preDomain = decodeURI(
-      displayPrePath.substring(
-        0,
-        displayPrePath.length - displayHostPort.length
-      )
-    );
 
     // If we trimmed off the http scheme, ensure we stick it back on before
     // trying to figure out what domain we're accessing, so we don't get
     // confused by user:pass@host http URLs. We later use
     // trimmedLength to ensure we don't count the length of a trimmed protocol
     // when determining which parts of the URL to highlight as "preDomain".
-    let replacedValue = url;
     let trimmedLength = 0;
-    if (
-      uriInfo.fixedURI.scheme == "http" &&
-      !inputValue.startsWith("http://")
-    ) {
-      replacedValue = replacedValue.replace(/^http:\/\//, "");
+    if (uriInfo.fixedURI.scheme == "http" && !url.startsWith("http://")) {
+      url = "http://" + url;
       trimmedLength = "http://".length;
     }
 
-    browser._urlMetaData = { url: replacedValue, data: null };
-    this.inputField.value = replacedValue;
+    // This RegExp is not a perfect match, and for specially crafted URLs it may
+    // get the host wrong; for safety reasons we will later compare the found
+    // host with the one that will actually be loaded.
+    let matchedURL = url.match(
+      /^(([a-z]+:\/\/)(?:[^\/#?]+@)?)(\S+?)(?::\d+)?\s*(?:[\/#?]|$)/
+    );
+    if (!matchedURL) {
+      return null;
+    }
+    let [, preDomain, schemeWSlashes, domain] = matchedURL;
+
+    // If the found host differs from the fixed URI one, we can't properly
+    // highlight it. To stay on the safe side, we clobber user's input with
+    // the fixed URI and apply highlight to that one instead.
+    let replaceUrl = false;
+    try {
+      replaceUrl =
+        Services.io.newURI("http://" + domain).displayHost !=
+        uriInfo.fixedURI.displayHost;
+    } catch (ex) {
+      return null;
+    }
+    if (replaceUrl) {
+      if (this._inGetUrlMetaData) {
+        // Protect from infinite recursion.
+        return null;
+      }
+      try {
+        this._inGetUrlMetaData = true;
+        this.window.gBrowser.userTypedValue = null;
+        this.urlbarInput.setURI(uriInfo.fixedURI);
+        return this._getUrlMetaData();
+      } finally {
+        this._inGetUrlMetaData = false;
+      }
+    }
 
     return (browser._urlMetaData.data = {
       domain,
@@ -245,15 +243,11 @@ class UrlbarValueFormatter {
    * it crosses out the https scheme.  It also ensures that the host is
    * visible (not scrolled out of sight).
    *
-   * @param {boolean} [forceURLFormat]
-   *        Whether to format URLs even when conditions forbid it,
-   *        for example when the urlbar has focus.
-   *
    * @returns {boolean}
    *   True if formatting was applied and false if not.
    */
-  _formatURL(forceURLFormat = false) {
-    let urlMetaData = this._getUrlMetaData(forceURLFormat);
+  _formatURL() {
+    let urlMetaData = this._getUrlMetaData();
     if (!urlMetaData) {
       return false;
     }
@@ -322,7 +316,6 @@ class UrlbarValueFormatter {
     }
 
     let selection = controller.getSelection(controller.SELECTION_URLSECONDARY);
-    selection.removeAllRanges();
 
     let rangeLength = preDomain.length + subDomain.length - trimmedLength;
     if (rangeLength) {
