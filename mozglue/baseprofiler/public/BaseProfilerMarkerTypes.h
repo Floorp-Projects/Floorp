@@ -132,6 +132,18 @@ struct MediaSample {
   }
 };
 
+struct ContentBuildMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("CONTENT_FULL_PAINT_TIME");
+  }
+  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter) {}
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::markerChart, MS::Location::markerTable};
+    return schema;
+  }
+};
+
 }  // namespace mozilla::baseprofiler::markers
 
 #endif  // MOZ_GECKO_PROFILER
