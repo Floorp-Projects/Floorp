@@ -8,12 +8,14 @@
 #define CSTrustDomain_h
 
 #include "mozpkix/pkixtypes.h"
+#include "nsCOMPtr.h"
+#include "nsTArray.h"
+
 #ifdef MOZ_NEW_CERT_STORAGE
 #  include "nsICertStorage.h"
 #else
 #  include "nsICertBlocklist.h"
 #endif
-#include "nsTArray.h"
 
 namespace mozilla {
 namespace psm {

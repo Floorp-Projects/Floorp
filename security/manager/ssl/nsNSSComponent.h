@@ -79,12 +79,10 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
 
   static nsresult SetEnabledTLSVersions();
 
-  // This function should be only called on parent process.
-  // When socket process is enabled, this function sends an IPC to clear the
-  // SSLTokensCache in socket process. If not,
-  // DoClearSSLExternalAndInternalSessionCache() will be called.
-  static void ClearSSLExternalAndInternalSessionCacheNative();
-  // This function does the actual work of clearing the session cache.
+  // This function does the actual work of clearing the session cache. It is to
+  // be used by the socket process (where there is no nsINSSComponent) and
+  // internally by nsNSSComponent.
+  // NB: NSS must have already been initialized before this is called.
   static void DoClearSSLExternalAndInternalSessionCache();
 
  protected:
@@ -96,6 +94,13 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
 
   void setValidationOptions(bool isInitialSetting,
                             const mozilla::MutexAutoLock& proofOfLock);
+  void GetRevocationBehaviorFromPrefs(
+      /*out*/ mozilla::psm::CertVerifier::OcspDownloadConfig* odc,
+      /*out*/ mozilla::psm::CertVerifier::OcspStrictConfig* osc,
+      /*out*/ uint32_t* certShortLifetimeInDays,
+      /*out*/ TimeDuration& softTimeout,
+      /*out*/ TimeDuration& hardTimeout,
+      const mozilla::MutexAutoLock& proofOfLock);
   void UpdateCertVerifierWithEnterpriseRoots();
   nsresult RegisterObservers();
 

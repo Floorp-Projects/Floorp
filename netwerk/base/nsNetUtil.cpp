@@ -2670,13 +2670,9 @@ void net_EnsurePSMInit() {
   nsCOMPtr<nsISupports> psm = do_GetService(PSM_COMPONENT_CONTRACTID, &rv);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-  nsCOMPtr<nsISupports> sss = do_GetService(NS_SSSERVICE_CONTRACTID);
-#ifdef MOZ_NEW_CERT_STORAGE
-  nsCOMPtr<nsISupports> cbl = do_GetService(NS_CERTSTORAGE_CONTRACTID);
-#else
+#ifndef MOZ_NEW_CERT_STORAGE
   nsCOMPtr<nsISupports> cbl = do_GetService(NS_CERTBLOCKLIST_CONTRACTID);
 #endif
-  nsCOMPtr<nsISupports> cos = do_GetService(NS_CERTOVERRIDE_CONTRACTID);
 }
 
 bool NS_IsAboutBlank(nsIURI* uri) {

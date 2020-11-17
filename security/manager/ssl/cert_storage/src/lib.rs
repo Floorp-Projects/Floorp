@@ -1149,6 +1149,10 @@ pub extern "C" fn cert_storage_constructor(
         return NS_ERROR_NO_AGGREGATION;
     }
 
+    if !is_main_thread() {
+        return NS_ERROR_NOT_SAME_THREAD;
+    }
+
     match do_construct_cert_storage(outer, iid, result) {
         Ok(_) => NS_OK,
         Err(_) => {
