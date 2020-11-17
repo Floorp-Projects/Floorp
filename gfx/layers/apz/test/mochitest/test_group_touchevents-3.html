@@ -11,6 +11,11 @@
 
 var touch_action_prefs = getPrefs("TOUCH_ACTION");
 
+var touch_action_and_exact_touch_events_prefs = [
+  ...touch_action_prefs,
+  ["android.touch_resampling.enabled", false],
+];
+
 var subtests = [
   // Simple test to exercise touch-action CSS property
   {"file": "helper_touch_action.html", "prefs": touch_action_prefs},
@@ -18,7 +23,7 @@ var subtests = [
   {"file": "helper_touch_action_complex.html", "prefs": touch_action_prefs},
   // Tests that touch-action CSS properties are handled in APZ without waiting
   // on the main-thread, when possible
-  {"file": "helper_touch_action_regions.html", "prefs": touch_action_prefs},
+  {"file": "helper_touch_action_regions.html", "prefs": touch_action_and_exact_touch_events_prefs},
   // Tests that touch-action inside zero-opacity items are respected
   {"file": "helper_touch_action_zero_opacity_bug1500864.html", "prefs": touch_action_prefs},
 
