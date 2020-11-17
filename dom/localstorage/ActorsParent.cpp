@@ -3148,55 +3148,42 @@ nsresult LoadArchivedOrigins() {
   return NS_OK;
 }
 
-nsresult GetUsage(mozIStorageConnection* aConnection,
-                  ArchivedOriginScope* aArchivedOriginScope, int64_t* aUsage) {
+Result<int64_t, nsresult> GetUsage(mozIStorageConnection& aConnection,
+                                   ArchivedOriginScope* aArchivedOriginScope) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aConnection);
-  MOZ_ASSERT(aUsage);
 
-  nsresult rv;
+  // XXX This could use CreateAndExecuteSingleStepStatement from dom/indexedDB
+  LS_TRY_INSPECT(
+      const auto& stmt,
+      ([aArchivedOriginScope,
+        &aConnection]() -> Result<nsCOMPtr<mozIStorageStatement>, nsresult> {
+        if (aArchivedOriginScope) {
+          LS_TRY_UNWRAP(
+              const auto stmt,
+              MOZ_TO_RESULT_INVOKE_TYPED(
+                  nsCOMPtr<mozIStorageStatement>, aConnection, CreateStatement,
+                  "SELECT "
+                  "total(utf16Length(key) + utf16Length(value)) "
+                  "FROM webappsstore2 "
+                  "WHERE originKey = :originKey "
+                  "AND originAttributes = :originAttributes;"_ns));
 
-  nsCOMPtr<mozIStorageStatement> stmt;
-  if (aArchivedOriginScope) {
-    rv = aConnection->CreateStatement(
-        nsLiteralCString("SELECT "
-                         "total(utf16Length(key) + utf16Length(value)) "
-                         "FROM webappsstore2 "
-                         "WHERE originKey = :originKey "
-                         "AND originAttributes = :originAttributes;"),
-        getter_AddRefs(stmt));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+          LS_TRY(aArchivedOriginScope->BindToStatement(stmt));
 
-    rv = aArchivedOriginScope->BindToStatement(stmt);
-  } else {
-    rv = aConnection->CreateStatement(nsLiteralCString("SELECT usage "
-                                                       "FROM database"),
-                                      getter_AddRefs(stmt));
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+          return stmt;
+        }
 
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        LS_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(
+            nsCOMPtr<mozIStorageStatement>, aConnection, CreateStatement,
+            "SELECT usage FROM database"_ns));
+      }()));
 
-  if (NS_WARN_IF(!hasResult)) {
-    return NS_ERROR_FAILURE;
-  }
+  LS_TRY_INSPECT(const bool& hasResult,
+                 MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
 
-  int64_t usage;
-  rv = stmt->GetInt64(0, &usage);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY(OkIf(hasResult), Err(NS_ERROR_FAILURE));
 
-  *aUsage = usage;
-  return NS_OK;
+  LS_TRY_RETURN(MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
 }
 
 void ShadowWritesPrefChangedCallback(const char* aPrefName, void* aClosure) {
@@ -7508,11 +7495,8 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
       return rv;
     }
 
-    int64_t newUsage;
-    rv = GetUsage(connection, mArchivedOriginScope.get(), &newUsage);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    LS_TRY_INSPECT(const int64_t& newUsage,
+                   GetUsage(*connection, mArchivedOriginScope.get()));
 
     if (!quotaObject) {
       quotaObject = GetQuotaObject();
@@ -8896,10 +8880,10 @@ Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
                         file, usageFile, aGroupAndOrigin.mOrigin,
                         getter_AddRefs(connection), &dummy));
 
-                    LS_TRY_INSPECT(const int64_t& usage,
-                                   ToResultInvoke<int64_t>(
-                                       GetUsage, connection,
-                                       /* aArchivedOriginScope */ nullptr));
+                    LS_TRY_INSPECT(
+                        const int64_t& usage,
+                        GetUsage(*connection,
+                                 /* aArchivedOriginScope */ nullptr));
 
                     LS_TRY(UpdateUsageFile(usageFile, usageJournalFile, usage));
 
