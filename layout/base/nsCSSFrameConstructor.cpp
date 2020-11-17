@@ -249,13 +249,6 @@ nsIFrame* NS_NewMenuBarFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame* NS_NewTreeBodyFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-// grid
-nsresult NS_NewGridLayout2(nsBoxLayout** aNewLayout);
-nsIFrame* NS_NewGridRowLeafFrame(PresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewGridRowGroupFrame(PresShell* aPresShell, ComputedStyle* aStyle);
-
-// end grid
-
 nsIFrame* NS_NewTitleBarFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame* NS_NewResizerFrame(PresShell* aPresShell, ComputedStyle* aStyle);
@@ -3995,13 +3988,6 @@ nsresult nsCSSFrameConstructor::GetAnonymousContent(
 #define SCROLLABLE_XUL_CREATE(_tag, _func) \
   { nsGkAtoms::_tag, SCROLLABLE_XUL_FCDATA(_func) }
 
-static nsIFrame* NS_NewGridBoxFrame(PresShell* aPresShell,
-                                    ComputedStyle* aComputedStyle) {
-  nsCOMPtr<nsBoxLayout> layout;
-  NS_NewGridLayout2(getter_AddRefs(layout));
-  return NS_NewBoxFrame(aPresShell, aComputedStyle, false, layout);
-}
-
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
@@ -4481,21 +4467,6 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
       return &data;
     }
 #ifdef MOZ_XUL
-    case StyleDisplayInside::MozGrid: {
-      static const FrameConstructionData data =
-          SCROLLABLE_XUL_FCDATA(NS_NewGridBoxFrame);
-      return &data;
-    }
-    case StyleDisplayInside::MozGridGroup: {
-      static const FrameConstructionData data =
-          SCROLLABLE_XUL_FCDATA(NS_NewGridRowGroupFrame);
-      return &data;
-    }
-    case StyleDisplayInside::MozGridLine: {
-      static const FrameConstructionData data =
-          SCROLLABLE_XUL_FCDATA(NS_NewGridRowLeafFrame);
-      return &data;
-    }
     case StyleDisplayInside::MozStack: {
       static const FrameConstructionData data =
           SCROLLABLE_XUL_FCDATA(NS_NewStackFrame);
