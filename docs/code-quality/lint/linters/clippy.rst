@@ -23,6 +23,17 @@ Configuration
 To enable clippy on new directory, add the path to the include
 section in the `clippy.yml <https://searchfox.org/mozilla-central/source/tools/lint/clippy.yml>`_ file.
 
+Autofix
+-------
+
+This linter provides a ``--fix`` option. It requires using nightly
+which can be installed with:
+
+.. code-block:: shell
+
+   $ rustup component add clippy --toolchain nightly-x86_64-unknown-linux-gnu
+
+
 
 Sources
 -------
