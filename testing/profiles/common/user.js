@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 // Common preferences file used by both unittest and perf harnesses.
 /* globals user_pref */
 user_pref("app.update.checkInstallTime", false);
