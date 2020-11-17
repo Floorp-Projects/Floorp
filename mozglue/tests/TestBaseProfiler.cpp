@@ -3471,15 +3471,6 @@ void TestProfiler() {
         mozilla::baseprofiler::markers::Tracing{}, "category"));
 
     MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
-        "mark", mozilla::baseprofiler::category::OTHER, {},
-        mozilla::baseprofiler::markers::UserTimingMark{}, "mark name"));
-
-    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
-        "measure", mozilla::baseprofiler::category::OTHER, {},
-        mozilla::baseprofiler::markers::UserTimingMeasure{}, "measure name",
-        Some(ProfilerString8View("start")), Some(ProfilerString8View("end"))));
-
-    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
         "text", mozilla::baseprofiler::category::OTHER, {},
         mozilla::baseprofiler::markers::Text{}, "text text"));
 
@@ -3541,10 +3532,6 @@ void TestProfiler() {
     MOZ_RELEASE_ASSERT(profileSV.find("\"markerSchema\": [") != svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"Text\",") != svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"tracing\",") != svnpos);
-    MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"UserTimingMark\",") !=
-                       svnpos);
-    MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"UserTimingMeasure\",") !=
-                       svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"MediaSample\",") != svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"display\": [") != svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"marker-chart\"") != svnpos);
@@ -4047,17 +4034,6 @@ void TestPredefinedMarkers() {
       buffer, std::string_view("tracing"),
       mozilla::baseprofiler::category::OTHER, {},
       mozilla::baseprofiler::markers::Tracing{}, "category"));
-
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
-      buffer, std::string_view("mark"), mozilla::baseprofiler::category::OTHER,
-      {}, mozilla::baseprofiler::markers::UserTimingMark{}, "mark name"));
-
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
-      buffer, std::string_view("measure"),
-      mozilla::baseprofiler::category::OTHER, {},
-      mozilla::baseprofiler::markers::UserTimingMeasure{}, "measure name ",
-      mozilla::Some(mozilla::ProfilerString8View(" start ")),
-      mozilla::Some(mozilla::ProfilerString8View("end"))));
 
   MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, std::string_view("text"), mozilla::baseprofiler::category::OTHER,

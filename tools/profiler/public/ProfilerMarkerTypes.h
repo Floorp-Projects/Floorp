@@ -32,8 +32,6 @@ namespace geckoprofiler::markers {
 
 // Import some common markers from mozilla::baseprofiler::markers.
 using Tracing = mozilla::baseprofiler::markers::Tracing;
-using UserTimingMark = mozilla::baseprofiler::markers::UserTimingMark;
-using UserTimingMeasure = mozilla::baseprofiler::markers::UserTimingMeasure;
 using MediaSampleMarker = mozilla::baseprofiler::markers::MediaSampleMarker;
 using ContentBuildMarker = mozilla::baseprofiler::markers::ContentBuildMarker;
 
