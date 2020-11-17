@@ -343,15 +343,13 @@ class QuotaManager final : public BackgroundThreadObject {
    * for the origin.
    */
   Result<nsCOMPtr<nsIFile>, nsresult> EnsureStorageAndOriginIsInitialized(
-      PersistenceType aPersistenceType, const QuotaInfo& aQuotaInfo,
-      Client::Type aClientType);
+      PersistenceType aPersistenceType, const QuotaInfo& aQuotaInfo);
 
   // Returns a pair of an nsIFile object referring to the directory, and a bool
   // indicating whether the directory was newly created.
   Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
-  EnsureStorageAndOriginIsInitializedInternal(
-      PersistenceType aPersistenceType, const QuotaInfo& aQuotaInfo,
-      const Nullable<Client::Type>& aClientType);
+  EnsureStorageAndOriginIsInitializedInternal(PersistenceType aPersistenceType,
+                                              const QuotaInfo& aQuotaInfo);
 
   nsresult EnsurePersistentOriginIsInitialized(const QuotaInfo& aQuotaInfo,
                                                nsIFile** aDirectory,

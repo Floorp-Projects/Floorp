@@ -6745,24 +6745,18 @@ already_AddRefed<DirectoryLock> QuotaManager::OpenDirectoryInternal(
 
 Result<nsCOMPtr<nsIFile>, nsresult>
 QuotaManager::EnsureStorageAndOriginIsInitialized(
-    PersistenceType aPersistenceType, const QuotaInfo& aQuotaInfo,
-    Client::Type aClientType) {
+    PersistenceType aPersistenceType, const QuotaInfo& aQuotaInfo) {
   AssertIsOnIOThread();
 
   QM_TRY_RETURN(
-      EnsureStorageAndOriginIsInitializedInternal(
-          aPersistenceType, aQuotaInfo, Nullable<Client::Type>(aClientType))
+      EnsureStorageAndOriginIsInitializedInternal(aPersistenceType, aQuotaInfo)
           .map([](const auto& res) { return res.first; }));
 }
 
 Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
 QuotaManager::EnsureStorageAndOriginIsInitializedInternal(
-    PersistenceType aPersistenceType, const QuotaInfo& aQuotaInfo,
-    const Nullable<Client::Type>& aClientType) {
+    PersistenceType aPersistenceType, const QuotaInfo& aQuotaInfo) {
   AssertIsOnIOThread();
-
-  // XXX Can't we just remove the argument if we don't need it?
-  Unused << aClientType;
 
   QM_TRY(EnsureStorageIsInitialized());
 
@@ -8580,13 +8574,6 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
         return false;
       }
 
-      if (params.clientTypeIsExplicit()) {
-        if (NS_WARN_IF(!Client::IsValidType(params.clientType()))) {
-          ASSERT_UNLESS_FUZZING();
-          return false;
-        }
-      }
-
       break;
     }
 
@@ -9600,10 +9587,6 @@ InitStorageAndOriginOp::InitStorageAndOriginOp(const RequestParams& aParams)
 
   mOriginScope.SetFromOrigin(quotaInfo.mOrigin);
 
-  if (params.clientTypeIsExplicit()) {
-    mClientType.SetValue(params.clientType());
-  }
-
   // Overwrite InitStorageAndOriginOp default values.
   mSuffix = std::move(quotaInfo.mSuffix);
   mGroup = std::move(quotaInfo.mGroup);
@@ -9622,8 +9605,7 @@ nsresult InitStorageAndOriginOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
       (aQuotaManager
            .EnsureStorageAndOriginIsInitializedInternal(
                mPersistenceType.Value(),
-               QuotaInfo{mSuffix, mGroup, nsCString{mOriginScope.GetOrigin()}},
-               mClientType)
+               QuotaInfo{mSuffix, mGroup, nsCString{mOriginScope.GetOrigin()}})
            .map([](const auto& res) { return res.second; })));
 
   return NS_OK;
