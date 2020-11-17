@@ -25,7 +25,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.sync.SyncedTabsViewHolder
 import org.mozilla.fenix.tabtray.TabTrayDialogFragmentAction.EnterMultiSelectMode
@@ -56,7 +55,6 @@ class SyncedTabsControllerTest {
 
         concatAdapter = mockk()
         every { concatAdapter.addAdapter(any()) } returns true
-        every { concatAdapter.addAdapter(any(), any()) } returns true
         every { concatAdapter.removeAdapter(any()) } returns true
 
         store = TabTrayDialogFragmentStore(
@@ -130,22 +128,11 @@ class SyncedTabsControllerTest {
 
     @Test
     fun `concatAdapter updated on mode changes`() = testDispatcher.runBlockingTest {
-        // When returning from Multiselect while in grid view the adapter should be added at the end
-        every { view.context.settings().gridTabView } returns true
-
         store.dispatch(EnterMultiSelectMode).joinBlocking()
         verify { concatAdapter.removeAdapter(any()) }
 
         store.dispatch(ExitMultiSelectMode).joinBlocking()
+        // When returning from Multiselect the adapter should be added at the end
         verify { concatAdapter.addAdapter(any()) }
-
-        // When returning from Multiselect while in list view the adapter should be added at the front
-        every { view.context.settings().gridTabView } returns false
-
-        store.dispatch(EnterMultiSelectMode).joinBlocking()
-        verify { concatAdapter.removeAdapter(any()) }
-
-        store.dispatch(ExitMultiSelectMode).joinBlocking()
-        verify { concatAdapter.addAdapter(0, any()) }
     }
 }

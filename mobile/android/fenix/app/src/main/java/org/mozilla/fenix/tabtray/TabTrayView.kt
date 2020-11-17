@@ -192,13 +192,8 @@ class TabTrayView(
 
             tabsAdapter.tabTrayInteractor = interactor
             tabsAdapter.onTabsUpdated = {
-                if (view.context.settings().gridTabView) {
-                    concatAdapter.addAdapter(syncedTabsController.adapter)
-                    concatAdapter.addAdapter(collectionsButtonAdapter)
-                } else {
-                    concatAdapter.addAdapter(syncedTabsController.adapter)
-                    concatAdapter.addAdapter(collectionsButtonAdapter)
-                }
+                concatAdapter.addAdapter(collectionsButtonAdapter)
+                concatAdapter.addAdapter(syncedTabsController.adapter)
 
                 if (hasAccessibilityEnabled) {
                     tabsAdapter.notifyItemRangeChanged(0, tabs.size)
