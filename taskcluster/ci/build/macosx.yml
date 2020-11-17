@@ -314,6 +314,9 @@ macosx64-shippable/opt:
             - artifact: target.test_packages.json
               extract: false
               dest: ../artifacts
+            - artifact: target.perftests.tests.tar.gz
+              extract: false
+              dest: ../artifacts
             - artifact: target.common.tests.tar.gz
               dest: x64/common
             - artifact: target.cppunittest.tests.tar.gz
