@@ -937,10 +937,6 @@ TEST(GeckoProfiler, Markers)
       profiler_add_marker("MediaSample", geckoprofiler::category::OTHER, {},
                           geckoprofiler::markers::MediaSample{}, 123, 456));
 
-  MOZ_RELEASE_ASSERT(profiler_add_marker("Budget",
-                                         geckoprofiler::category::OTHER, {},
-                                         geckoprofiler::markers::Budget{}));
-
   SpliceableChunkedJSONWriter w;
   w.Start();
   EXPECT_TRUE(::profiler_stream_json_for_this_process(w));
@@ -1788,7 +1784,6 @@ TEST(GeckoProfiler, Markers)
       EXPECT_TRUE(testedSchemaNames.find("Log") != testedSchemaNames.end());
       EXPECT_TRUE(testedSchemaNames.find("MediaSample") !=
                   testedSchemaNames.end());
-      EXPECT_TRUE(testedSchemaNames.find("Budget") != testedSchemaNames.end());
     }  // markerSchema
   }    // meta
 
