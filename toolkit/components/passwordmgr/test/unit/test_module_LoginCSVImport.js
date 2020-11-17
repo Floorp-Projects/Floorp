@@ -37,7 +37,7 @@ async function setupCsv(csvLines) {
   TTU.getAndClearKeyedHistogram("FX_MIGRATION_LOGINS_QUANTITY");
   TTU.getAndClearKeyedHistogram("FX_MIGRATION_LOGINS_IMPORT_MS");
   TTU.getAndClearKeyedHistogram("FX_MIGRATION_LOGINS_JANK_MS");
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
 
   let tmpFile = await LoginTestUtils.file.setupCsvFileWithLines(csvLines);
   return tmpFile.path;

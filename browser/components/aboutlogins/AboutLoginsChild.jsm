@@ -180,6 +180,10 @@ class AboutLoginsChild extends JSWindowActorChild {
         recordTelemetryEvent(event.detail);
         break;
       }
+      case "AboutLoginsRemoveAllLogins": {
+        this.sendAsyncMessage("AboutLogins:RemoveAllLogins");
+        break;
+      }
       case "AboutLoginsSortChanged": {
         this.sendAsyncMessage("AboutLogins:SortChanged", event.detail);
         break;

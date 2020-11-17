@@ -83,14 +83,14 @@ async function loginBackupDeleted() {
   });
 }
 
-// 1. Test that logins backup is deleted when Services.logins.removeAllLogins() is called.
+// 1. Test that logins backup is deleted when Services.logins.removeAllUserFacingLogins() is called.
 // 2. Test that logins backup is deleted when the last saved login is removed using
 //    Services.logins.removeLogin() when no fxa key is saved.
 // 3. If a fxa key is stored as a login, test that logins backup is updated to only store
 //    the fxa key when the last user facing login is deleted.
 add_task(async function test_deleteLoginsBackup_removeAll() {
   // Remove logins.json and logins-backup.json before starting.
-  info("Testing the removeAllLogins() case");
+  info("Testing the removeAllUserFacingLogins() case");
 
   await OS.File.remove(loginStorePath, { ignoreAbsent: true });
   await OS.File.remove(loginBackupPath, { ignoreAbsent: true });
@@ -113,7 +113,7 @@ add_task(async function test_deleteLoginsBackup_removeAll() {
 
   storageUpdatePromise = TestUtils.topicObserved("password-storage-updated");
   info("Removing all logins");
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
 
   await storageUpdatePromise;
   info("Writes to storage are complete when removeAllLogins() is called");

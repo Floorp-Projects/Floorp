@@ -124,7 +124,7 @@ add_task(async function test_all_logins_removed() {
     );
   });
 
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
 
   await SpecialPowers.spawn(browser, [], async () => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));

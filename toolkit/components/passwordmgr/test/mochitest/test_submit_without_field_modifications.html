@@ -54,7 +54,7 @@ async function setupWithOneLogin(pageUrl) {
 function resetSavedLogins() {
   let chromeScript = runInParent(function testTeardown() {
     const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-    Services.logins.removeAllLogins();
+    Services.logins.removeAllUserFacingLogins();
   });
   chromeScript.destroy();
 }

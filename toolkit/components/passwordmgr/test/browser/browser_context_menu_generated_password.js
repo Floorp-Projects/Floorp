@@ -412,7 +412,7 @@ add_task(async function fill_generated_password_with_matching_logins() {
     "Generated password shouldn't have changed to match the filled password"
   );
 
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
   LoginTestUtils.resetGeneratedPasswordsCache();
 });
 
