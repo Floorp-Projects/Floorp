@@ -1931,11 +1931,39 @@ void Document::AccumulatePageLoadTelemetry() {
     return;
   }
 
+  nsCString http3Key;
+  nsCOMPtr<nsIHttpChannelInternal> httpChannel =
+      do_QueryInterface(GetChannel());
+  if (httpChannel) {
+    uint32_t major;
+    uint32_t minor;
+    if (NS_SUCCEEDED(httpChannel->GetResponseVersion(&major, &minor))) {
+      if (major == 3) {
+        http3Key = "http3"_ns;
+      } else if (major == 2) {
+        bool supportHttp3 = false;
+        if (NS_FAILED(httpChannel->GetSupportsHTTP3(&supportHttp3))) {
+          supportHttp3 = false;
+        }
+        if (supportHttp3) {
+          http3Key = "supports_http3"_ns;
+        }
+      }
+    }
+  }
+
   // First Contentful Paint
   if (TimeStamp firstContentfulPaint =
           GetNavigationTiming()->GetFirstContentfulPaintTimeStamp()) {
     Telemetry::AccumulateTimeDelta(Telemetry::PERF_FIRST_CONTENTFUL_PAINT_MS,
                                    navigationStart, firstContentfulPaint);
+
+    if (!http3Key.IsEmpty()) {
+      Telemetry::AccumulateTimeDelta(
+          Telemetry::HTTP3_PERF_FIRST_CONTENTFUL_PAINT_MS, http3Key,
+          navigationStart, firstContentfulPaint);
+    }
+
     Telemetry::AccumulateTimeDelta(
         Telemetry::PERF_FIRST_CONTENTFUL_PAINT_FROM_RESPONSESTART_MS,
         responseStart, firstContentfulPaint);
@@ -1956,6 +1984,11 @@ void Document::AccumulatePageLoadTelemetry() {
           GetNavigationTiming()->GetLoadEventStartTimeStamp()) {
     Telemetry::AccumulateTimeDelta(Telemetry::PERF_PAGE_LOAD_TIME_MS,
                                    navigationStart, loadEventStart);
+    if (!http3Key.IsEmpty()) {
+      Telemetry::AccumulateTimeDelta(Telemetry::HTTP3_PERF_PAGE_LOAD_TIME_MS,
+                                     http3Key, navigationStart, loadEventStart);
+    }
+
     Telemetry::AccumulateTimeDelta(
         Telemetry::PERF_PAGE_LOAD_TIME_FROM_RESPONSESTART_MS, responseStart,
         loadEventStart);
