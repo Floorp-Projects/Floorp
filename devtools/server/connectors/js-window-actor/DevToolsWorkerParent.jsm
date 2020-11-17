@@ -51,21 +51,31 @@ class DevToolsWorkerParent extends JSWindowActorParent {
    * Request the content process to create Worker Targets if workers matching the browserId
    * are already available.
    */
-  instantiateWorkerTargets({
+  async instantiateWorkerTargets({
     watcherActorID,
     connectionPrefix,
     browserId,
     watchedData,
   }) {
-    return this.sendQuery(
-      "DevToolsWorkerParent:instantiate-already-available",
-      {
-        watcherActorID,
-        connectionPrefix,
-        browserId,
-        watchedData,
-      }
-    );
+    try {
+      await this.sendQuery(
+        "DevToolsWorkerParent:instantiate-already-available",
+        {
+          watcherActorID,
+          connectionPrefix,
+          browserId,
+          watchedData,
+        }
+      );
+    } catch (e) {
+      console.warn(
+        "Failed to create DevTools Worker target for browsingContext",
+        this.browsingContext.id,
+        "and watcher actor id",
+        watcherActorID
+      );
+      console.warn(e);
+    }
   }
 
   destroyWorkerTargets({ watcher, browserId }) {
@@ -78,12 +88,22 @@ class DevToolsWorkerParent extends JSWindowActorParent {
   /**
    * Communicate to the content process that some data have been added.
    */
-  addWatcherDataEntry({ watcherActorID, type, entries }) {
-    return this.sendQuery("DevToolsWorkerParent:addWatcherDataEntry", {
-      watcherActorID,
-      type,
-      entries,
-    });
+  async addWatcherDataEntry({ watcherActorID, type, entries }) {
+    try {
+      await this.sendQuery("DevToolsWorkerParent:addWatcherDataEntry", {
+        watcherActorID,
+        type,
+        entries,
+      });
+    } catch (e) {
+      console.warn(
+        "Failed to add watcher data entry for worker targets in browsing context",
+        this.browsingContext.id,
+        "and watcher actor id",
+        watcherActorID
+      );
+      console.warn(e);
+    }
   }
 
   /**

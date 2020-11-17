@@ -54,18 +54,29 @@ class DevToolsFrameParent extends JSWindowActorParent {
    * Request the content process to create the Frame Target if there is one
    * already available that matches the Browsing Context ID
    */
-  instantiateTarget({
+  async instantiateTarget({
     watcherActorID,
     connectionPrefix,
     browserId,
     watchedData,
   }) {
-    return this.sendQuery("DevToolsFrameParent:instantiate-already-available", {
-      watcherActorID,
-      connectionPrefix,
-      browserId,
-      watchedData,
-    });
+    try {
+      await this.sendQuery(
+        "DevToolsFrameParent:instantiate-already-available",
+        {
+          watcherActorID,
+          connectionPrefix,
+          browserId,
+          watchedData,
+        }
+      );
+    } catch (e) {
+      console.warn(
+        "Failed to create DevTools Frame target for browsingContext",
+        this.browsingContext.id
+      );
+      console.warn(e);
+    }
   }
 
   destroyTarget({ watcherActorID, browserId }) {
@@ -78,13 +89,21 @@ class DevToolsFrameParent extends JSWindowActorParent {
   /**
    * Communicate to the content process that some data have been added.
    */
-  addWatcherDataEntry({ watcherActorID, browserId, type, entries }) {
-    return this.sendQuery("DevToolsFrameParent:addWatcherDataEntry", {
-      watcherActorID,
-      browserId,
-      type,
-      entries,
-    });
+  async addWatcherDataEntry({ watcherActorID, browserId, type, entries }) {
+    try {
+      await this.sendQuery("DevToolsFrameParent:addWatcherDataEntry", {
+        watcherActorID,
+        browserId,
+        type,
+        entries,
+      });
+    } catch (e) {
+      console.warn(
+        "Failed to add watcher data entry for frame targets in browsing context",
+        this.browsingContext.id
+      );
+      console.warn(e);
+    }
   }
 
   /**
@@ -195,17 +214,6 @@ class DevToolsFrameParent extends JSWindowActorParent {
   /**
    * JsWindowActor API
    */
-
-  async sendQuery(msg, args) {
-    try {
-      const res = await super.sendQuery(msg, args);
-      return res;
-    } catch (e) {
-      console.error("Failed to sendQuery in DevToolsFrameParent", msg);
-      console.error(e.toString());
-      throw e;
-    }
-  }
 
   receiveMessage(message) {
     switch (message.name) {
