@@ -869,12 +869,6 @@ TEST(GeckoProfiler, Markers)
       /* const mozilla::Maybe<nsDependentCString>& aContentType =
          mozilla::Nothing() */);
 
-  nsCString screenshotURL = "url"_ns;
-  PROFILER_ADD_MARKER_WITH_PAYLOAD(
-      "ScreenshotPayload marker", OTHER, ScreenshotPayload,
-      (ts1, std::move(screenshotURL), mozilla::gfx::IntSize(12, 34),
-       uintptr_t(0x45678u)));
-
   PROFILER_ADD_MARKER_WITH_PAYLOAD("TextMarkerPayload marker 1", OTHER,
                                    TextMarkerPayload, ("text"_ns, ts1));
 
@@ -1007,7 +1001,6 @@ TEST(GeckoProfiler, Markers)
     S_NetworkMarkerPayload_start,
     S_NetworkMarkerPayload_stop,
     S_NetworkMarkerPayload_redirect,
-    S_ScreenshotPayload,
     S_TextMarkerPayload1,
     S_TextMarkerPayload2,
     S_UserTimingMarkerPayload_mark,
@@ -1430,15 +1423,6 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ_JSON(payload["RedirectURI"], String,
                                "http://example.com/");
                 EXPECT_TRUE(payload["contentType"].isNull());
-
-              } else if (nameString == "ScreenshotPayload marker") {
-                EXPECT_EQ(state, S_ScreenshotPayload);
-                state = State(S_ScreenshotPayload + 1);
-                EXPECT_EQ(typeString, "CompositorScreenshot");
-                EXPECT_EQ_STRINGTABLE(payload["url"], "url");
-                EXPECT_EQ_JSON(payload["windowID"], String, "0x45678");
-                EXPECT_EQ_JSON(payload["windowWidth"], Int, 12);
-                EXPECT_EQ_JSON(payload["windowHeight"], Int, 34);
 
               } else if (nameString == "TextMarkerPayload marker 1") {
                 EXPECT_EQ(state, S_TextMarkerPayload1);
