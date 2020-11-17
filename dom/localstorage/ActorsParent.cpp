@@ -1182,26 +1182,16 @@ Result<nsCOMPtr<nsIFile>, nsresult> GetUsageFile(
   return usageFile;
 }
 
-nsresult GetUsageJournalFile(const nsAString& aDirectoryPath,
-                             nsIFile** aUsageJournalFile) {
+Result<nsCOMPtr<nsIFile>, nsresult> GetUsageJournalFile(
+    const nsAString& aDirectoryPath) {
   MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
   MOZ_ASSERT(!aDirectoryPath.IsEmpty());
-  MOZ_ASSERT(aUsageJournalFile);
 
-  auto usageJournalFileOrErr = QM_NewLocalFile(aDirectoryPath);
-  if (NS_WARN_IF(usageJournalFileOrErr.isErr())) {
-    return usageJournalFileOrErr.unwrapErr();
-  }
+  LS_TRY_UNWRAP(auto usageJournalFile, QM_NewLocalFile(aDirectoryPath));
 
-  nsCOMPtr<nsIFile> usageJournalFile = usageJournalFileOrErr.unwrap();
+  LS_TRY(usageJournalFile->Append(kUsageJournalFileName));
 
-  nsresult rv = usageJournalFile->Append(kUsageJournalFileName);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  usageJournalFile.forget(aUsageJournalFile);
-  return NS_OK;
+  return usageJournalFile;
 }
 
 // Checks if aFile exists and is a file. Returns true if it exists and is a
@@ -4748,12 +4738,8 @@ nsresult Connection::FlushOp::DoDatastoreWork() {
   LS_TRY_INSPECT(const auto& usageFile,
                  GetUsageFile(mConnection->DirectoryPath()));
 
-  nsCOMPtr<nsIFile> usageJournalFile;
-  rv = GetUsageJournalFile(mConnection->DirectoryPath(),
-                           getter_AddRefs(usageJournalFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY_INSPECT(const auto& usageJournalFile,
+                 GetUsageJournalFile(mConnection->DirectoryPath()));
 
   rv = UpdateUsageFile(usageFile, usageJournalFile, usage);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -7501,11 +7487,8 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
 
   LS_TRY_INSPECT(const auto& usageFile, GetUsageFile(directoryPath));
 
-  nsCOMPtr<nsIFile> usageJournalFile;
-  rv = GetUsageJournalFile(directoryPath, getter_AddRefs(usageJournalFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY_INSPECT(const auto& usageJournalFile,
+                 GetUsageJournalFile(directoryPath));
 
   nsCOMPtr<mozIStorageConnection> connection;
   bool removedUsageFile;
@@ -8896,9 +8879,8 @@ Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
   // XXX Try to make usageFileExists const
   LS_TRY_UNWRAP(bool usageFileExists, ExistsAsFile(*usageFile));
 
-  LS_TRY_INSPECT(
-      const auto& usageJournalFile,
-      ToResultInvoke<nsCOMPtr<nsIFile>>(GetUsageJournalFile, directoryPath));
+  LS_TRY_INSPECT(const auto& usageJournalFile,
+                 GetUsageJournalFile(directoryPath));
 
   LS_TRY_INSPECT(const bool& usageJournalFileExists,
                  ExistsAsFile(*usageJournalFile));
