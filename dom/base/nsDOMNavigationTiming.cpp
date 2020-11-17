@@ -26,6 +26,7 @@
 #include "prtime.h"
 #ifdef MOZ_GECKO_PROFILER
 #  include "ProfilerMarkerPayload.h"
+#  include "mozilla/ProfilerMarkerTypes.h"
 #endif
 
 using namespace mozilla;
@@ -116,14 +117,18 @@ void nsDOMNavigationTiming::NotifyUnloadAccepted(nsIURI* aOldURI) {
 
 void nsDOMNavigationTiming::NotifyUnloadEventStart() {
   mUnloadStart = TimeStamp::Now();
-  PROFILER_TRACING_MARKER_DOCSHELL("Navigation", "Unload", NETWORK,
-                                   TRACING_INTERVAL_START, mDocShell);
+  PROFILER_MARKER("Unload", NETWORK,
+                  MarkerOptions(MarkerTiming::IntervalStart(),
+                                MarkerInnerWindowIdFromDocShell(mDocShell)),
+                  Tracing, "Navigation");
 }
 
 void nsDOMNavigationTiming::NotifyUnloadEventEnd() {
   mUnloadEnd = TimeStamp::Now();
-  PROFILER_TRACING_MARKER_DOCSHELL("Navigation", "Unload", NETWORK,
-                                   TRACING_INTERVAL_END, mDocShell);
+  PROFILER_MARKER("Unload", NETWORK,
+                  MarkerOptions(MarkerTiming::IntervalEnd(),
+                                MarkerInnerWindowIdFromDocShell(mDocShell)),
+                  Tracing, "Navigation");
 }
 
 void nsDOMNavigationTiming::NotifyLoadEventStart() {
@@ -132,8 +137,10 @@ void nsDOMNavigationTiming::NotifyLoadEventStart() {
   }
   mLoadEventStart = TimeStamp::Now();
 
-  PROFILER_TRACING_MARKER_DOCSHELL("Navigation", "Load", NETWORK,
-                                   TRACING_INTERVAL_START, mDocShell);
+  PROFILER_MARKER("Load", NETWORK,
+                  MarkerOptions(MarkerTiming::IntervalStart(),
+                                MarkerInnerWindowIdFromDocShell(mDocShell)),
+                  Tracing, "Navigation");
 
   if (IsTopLevelContentDocumentInContentProcess()) {
     mLoadEventStartForTelemetry = TimeStamp::Now();
@@ -163,8 +170,10 @@ void nsDOMNavigationTiming::NotifyLoadEventEnd() {
   }
   mLoadEventEnd = TimeStamp::Now();
 
-  PROFILER_TRACING_MARKER_DOCSHELL("Navigation", "Load", NETWORK,
-                                   TRACING_INTERVAL_END, mDocShell);
+  PROFILER_MARKER("Load", NETWORK,
+                  MarkerOptions(MarkerTiming::IntervalEnd(),
+                                MarkerInnerWindowIdFromDocShell(mDocShell)),
+                  Tracing, "Navigation");
 
   if (IsTopLevelContentDocumentInContentProcess()) {
 #ifdef MOZ_GECKO_PROFILER
@@ -244,8 +253,10 @@ void nsDOMNavigationTiming::NotifyDOMContentLoadedStart(nsIURI* aURI) {
   mLoadedURI = aURI;
   mDOMContentLoadedEventStart = TimeStamp::Now();
 
-  PROFILER_TRACING_MARKER_DOCSHELL("Navigation", "DOMContentLoaded", NETWORK,
-                                   TRACING_INTERVAL_START, mDocShell);
+  PROFILER_MARKER("DOMContentLoaded", NETWORK,
+                  MarkerOptions(MarkerTiming::IntervalStart(),
+                                MarkerInnerWindowIdFromDocShell(mDocShell)),
+                  Tracing, "Navigation");
 
   if (IsTopLevelContentDocumentInContentProcess()) {
     TimeStamp now = TimeStamp::Now();
@@ -276,8 +287,10 @@ void nsDOMNavigationTiming::NotifyDOMContentLoadedEnd(nsIURI* aURI) {
   mLoadedURI = aURI;
   mDOMContentLoadedEventEnd = TimeStamp::Now();
 
-  PROFILER_TRACING_MARKER_DOCSHELL("Navigation", "DOMContentLoaded", NETWORK,
-                                   TRACING_INTERVAL_END, mDocShell);
+  PROFILER_MARKER("DOMContentLoaded", NETWORK,
+                  MarkerOptions(MarkerTiming::IntervalEnd(),
+                                MarkerInnerWindowIdFromDocShell(mDocShell)),
+                  Tracing, "Navigation");
 
   if (IsTopLevelContentDocumentInContentProcess()) {
     Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_CONTENT_LOADED_END_MS,
