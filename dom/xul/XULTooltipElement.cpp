@@ -8,6 +8,8 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/XULTooltipElement.h"
 #include "mozilla/dom/NodeInfo.h"
+#include "mozilla/EventDispatcher.h"
+#include "nsContentCreatorFunctions.h"
 #include "nsCTooltipTextProvider.h"
 #include "nsITooltipTextProvider.h"
 
