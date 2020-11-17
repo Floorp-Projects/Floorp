@@ -14,20 +14,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851485
   /** Test for Bug 851485 **/
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout("untriaged");
 
-function delayedVerifyScroll(win) {
-  ok(win.scrollY > 3000);
+function verifyScroll(win) {
+  ok(win.scrollY > 3000, "Scrolling after load works.");
   SimpleTest.finish();
 }
 
-function verifyScroll(event) {
-  var win = event.target.defaultView;
-  win.onscroll = "";
-  setTimeout(function(){delayedVerifyScroll(win)},500)
-}
-
-function clickLink(link,win) {
+function clickLink(link, win) {
   win.document.body.offsetHeight;
   synthesizeMouseAtCenter(link, {type: "mousedown"}, win);
   synthesizeMouseAtCenter(link, {type: "mouseup"}, win);
@@ -38,10 +31,17 @@ function verifyAfterLoad() {
   var e = document.getElementsByTagName('iframe')[0];
   var win = e.contentWindow;
   if (win.location.hash != '') {
-    is(win.scrollY,500);
+    is(win.scrollY, 500, "Reloading keeps scroll position");
     var link = win.document.getElementsByTagName('a')[0];
-    win.onscroll = verifyScroll;
-    clickLink(link,win);
+    var anchor = win.document.getElementsByTagName('a')[1];
+    var observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        verifyScroll(win);
+        observer.disconnect();
+      }
+    });
+    observer.observe(anchor);
+    clickLink(link, win);
     return;
   }
 }
@@ -53,8 +53,8 @@ function runTest() {
     return;
   }
   win.location.hash='#anchor'
-  win.scrollTo(0,500);
-  e.setAttribute("onload","verifyAfterLoad()");
+  win.scrollTo(0, 500);
+  e.setAttribute("onload", "verifyAfterLoad()");
   win.location.reload()
 }
 
