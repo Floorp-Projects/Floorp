@@ -4678,8 +4678,7 @@ nsresult Connection::InitStorageAndOriginHelper::RunOnIOThread() {
 
   LS_TRY_INSPECT(const auto& directoryEntry,
                  quotaManager->EnsureStorageAndOriginIsInitialized(
-                     PERSISTENCE_TYPE_DEFAULT, mQuotaInfo,
-                     mozilla::dom::quota::Client::LS));
+                     PERSISTENCE_TYPE_DEFAULT, mQuotaInfo));
 
   nsresult rv = directoryEntry->GetPath(mOriginDirectoryPath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -7408,8 +7407,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
         this]() -> mozilla::Result<nsCOMPtr<nsIFile>, nsresult> {
         if (hasDataForMigration) {
           LS_TRY_RETURN(quotaManager->EnsureStorageAndOriginIsInitialized(
-              PERSISTENCE_TYPE_DEFAULT, mQuotaInfo,
-              mozilla::dom::quota::Client::LS));
+              PERSISTENCE_TYPE_DEFAULT, mQuotaInfo));
         } else {
           LS_TRY_UNWRAP(auto directoryEntry,
                         quotaManager->GetDirectoryForOrigin(
