@@ -60,7 +60,6 @@ CppUnitTests(
         "TestSmallPointerArray",
         "TestSplayTree",
         "TestSPSCQueue",
-        "TestTainting",
         "TestTemplateLib",
         "TestTextUtils",
         "TestThreadSafeWeakPtr",

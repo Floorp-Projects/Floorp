@@ -113,7 +113,7 @@ class Tainted {
  * then the value is considered valid.
  *
  * This file contains documentation and examples for the functions;
- * more usage examples are present in mfbt/tests/TestTainting.cpp
+ * more usage examples are present in mfbt/tests/gtest/TestTainting.cpp
  */
 
 /*
@@ -266,6 +266,45 @@ class Tainted {
 #define MOZ_VALIDATE_OR(tainted_value, condition, alternate_value) \
   (MOZ_IS_VALID(tainted_value, condition) ? tainted_value.Coerce() \
                                           : alternate_value)
+
+/*
+ * MOZ_FIND_AND_VALIDATE is for testing validity of a tainted value by comparing
+ * it against a list of known safe values. Returns a pointer to the matched
+ * safe value or nullptr if none was found.
+ *
+ * Note that for the comparison the macro will loop over the list and that the
+ * current element being tested against is provided as list_item.
+ *
+ * Example:
+ *
+ * Tainted<int> aId;
+ * NSTArray<Person> list;
+ * const Person* foo = MOZ_FIND_AND_VALIDATE(aId, list_item.id == aId, list);
+ *
+ * // Typically you would do nothing if invalid data is passed:
+ * if (MOZ_UNLIKELY(!foo)) {
+ *     return;
+ * }
+ *
+ * // Or alternately you can crash on invalid data
+ * MOZ_RELEASE_ASSERT(foo != nullptr, "Invalid person id sent from content
+ * process.");
+ *
+ * Arguments:
+ *  tainted_value - the name of the Tainted<> variable
+ *  condition - a condition involving the tainted value and list_item
+ *  validation_list - a list of known safe values to compare against
+ */
+#define MOZ_FIND_AND_VALIDATE(tainted_value, condition, validation_list) \
+  [&]() {                                                                \
+    auto& tmp = tainted_value.Coerce();                                  \
+    auto& tainted_value = tmp;                                           \
+    const auto macro_find_it =                                           \
+        std::find_if(validation_list.cbegin(), validation_list.cend(),   \
+                     [&](const auto& list_item) { return condition; });  \
+    return macro_find_it != validation_list.cend() ? &*macro_find_it     \
+                                                   : nullptr;            \
+  }()
 
 /*
  * MOZ_NO_VALIDATE allows unsafe removal of the Taint wrapper.
