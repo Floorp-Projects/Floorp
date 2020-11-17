@@ -323,6 +323,19 @@ nsresult LookupHelper::ConstructAnswer(LookupArgument* aArgument) {
   return NS_OK;
 }
 
+static void CStringToHexString(const nsACString& aIn, nsAString& aOut) {
+  static const char* const lut = "0123456789ABCDEF";
+
+  size_t len = aIn.Length();
+
+  aOut.SetCapacity(2 * len);
+  for (size_t i = 0; i < aIn.Length(); ++i) {
+    const char c = static_cast<char>(aIn[i]);
+    aOut.Append(lut[(c >> 4) & 0x0F]);
+    aOut.Append(lut[c & 15]);
+  }
+}
+
 nsresult LookupHelper::ConstructHTTPSRRAnswer(LookupArgument* aArgument) {
   nsCOMPtr<nsIDNSHTTPSSVCRecord> httpsRecord =
       do_QueryInterface(aArgument->mRecord);
@@ -433,8 +446,8 @@ nsresult LookupHelper::ConstructHTTPSRRAnswer(LookupArgument* aArgument) {
                 do_QueryInterface(value);
             nsCString echConfigStr;
             Unused << echConfigParam->GetEchconfig(echConfigStr);
-            CopyASCIItoUTF16(echConfigStr,
-                             nextRecord->mEchConfig.Value().mEchConfig);
+            CStringToHexString(echConfigStr,
+                               nextRecord->mEchConfig.Value().mEchConfig);
             break;
           }
           default:
