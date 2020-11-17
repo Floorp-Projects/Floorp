@@ -44,6 +44,56 @@ class SmokeTest {
         mockWebServer.shutdown()
     }
 
+    // copied over from HomeScreenTest
+    @Test
+    fun firstRunScreenTest() {
+        homeScreen {
+            verifyHomeScreen()
+            verifyNavigationToolbar()
+            verifyHomePrivateBrowsingButton()
+            verifyHomeMenu()
+            verifyHomeWordmark()
+
+            verifyWelcomeHeader()
+            // Sign in to Firefox
+            verifyStartSyncHeader()
+            verifyAccountsSignInButton()
+
+            // Intro to other sections
+            verifyGetToKnowHeader()
+
+            // Automatic privacy
+            scrollToElementByText("Automatic privacy")
+            verifyAutomaticPrivacyHeader()
+            verifyTrackingProtectionToggle()
+            verifyAutomaticPrivacyText()
+
+            // Choose your theme
+            verifyChooseThemeHeader()
+            verifyChooseThemeText()
+            verifyDarkThemeDescription()
+            verifyDarkThemeToggle()
+            verifyLightThemeDescription()
+            verifyLightThemeToggle()
+
+            // Browse privately
+            verifyBrowsePrivatelyHeader()
+            verifyBrowsePrivatelyText()
+
+            // Take a position
+            verifyTakePositionHeader()
+            verifyTakePositionElements()
+
+            // Your privacy
+            verifyYourPrivacyHeader()
+            verifyYourPrivacyText()
+            verifyPrivacyNoticeButton()
+
+            // Start Browsing
+            verifyStartBrowsingButton()
+        }
+    }
+
     @Test
     fun verifyBasicNavigationToolbarFunctionality() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)

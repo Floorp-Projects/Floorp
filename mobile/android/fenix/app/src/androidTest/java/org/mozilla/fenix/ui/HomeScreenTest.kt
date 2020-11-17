@@ -13,7 +13,6 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
-import org.mozilla.fenix.ui.robots.PRIVATE_SESSION_MESSAGE
 import org.mozilla.fenix.ui.robots.homeScreen
 
 /**
@@ -55,68 +54,6 @@ class HomeScreenTest {
     }
 
     @Test
-    fun firstRunScreenTest() {
-        homeScreen {
-            verifyHomeScreen()
-            verifyNavigationToolbar()
-            verifyHomePrivateBrowsingButton()
-            verifyHomeMenu()
-            verifyHomeWordmark()
-
-            verifyWelcomeHeader()
-            // Sign in to Firefox
-            verifyGetTheMostHeader()
-            verifyAccountsSignInButton()
-
-            // Intro to other sections
-            verifyGetToKnowHeader()
-
-            // See What's new
-            // scrollToElementByText("See what’s new")
-            // verifyWhatsNewHeader()
-            // verifyWhatsNewLink()
-
-            // Automatic privacy
-            scrollToElementByText("Automatic privacy")
-            verifyAutomaticPrivacyfHeader()
-            verifyTrackingProtectionToggle()
-            verifyAutomaticPrivacyText()
-
-            /* Check disable due to Firebase failures on Pixel 2 API 28
-            // Choose your theme
-            verifyChooseThemeHeader()
-            verifyChooseThemeText()
-            verifyDarkThemeDescription()
-            verifyDarkThemeToggle()
-            verifyLightThemeDescription()
-            verifyLightThemeToggle()
-
-            // Browse privately
-            scrollToElementByText("Open Settings")
-            verifyBrowsePrivatelyHeader()
-            verifyBrowsePrivatelyText()
-             */
-
-            swipeToBottom()
-
-            // Take a position
-            scrollToElementByText("Take a position")
-            verifyTakePositionHeader()
-            verifyTakePositionElements()
-
-            // Your privacy
-            scrollToElementByText("Your privacy")
-            verifyYourPrivacyHeader()
-            verifyYourPrivacyText()
-            verifyPrivacyNoticeButton()
-
-            // Start Browsing
-            swipeToBottom()
-            verifyStartBrowsingButton()
-        }
-    }
-
-    @Test
     fun privateModeScreenItemsTest() {
         homeScreen { }.dismissOnboarding()
         homeScreen { }.togglePrivateBrowsingMode()
@@ -139,7 +76,7 @@ class HomeScreenTest {
         homeScreen {
             // To deal with the race condition where multiple "add tab" buttons are present,
             // we need to wait until previous HomeFragment View objects are gone.
-            mDevice.waitNotNull(Until.gone(By.text(PRIVATE_SESSION_MESSAGE)), waitingTime)
+            mDevice.waitNotNull(Until.gone(By.text(privateSessionMessage)), waitingTime)
             verifyHomeScreen()
             verifyNavigationToolbar()
             verifyHomePrivateBrowsingButton()

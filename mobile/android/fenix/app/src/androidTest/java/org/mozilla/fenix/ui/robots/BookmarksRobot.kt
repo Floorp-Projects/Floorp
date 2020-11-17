@@ -43,7 +43,13 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
  */
 class BookmarksRobot {
 
-    fun verifyBookmarksMenuView() = assertBookmarksView()
+    fun verifyBookmarksMenuView() {
+        mDevice.findObject(
+            UiSelector().text("Bookmarks")
+        ).waitForExists(waitingTime)
+
+        assertBookmarksView()
+    }
 
     fun verifyEmptyBookmarksList() = assertEmptyBookmarksList()
 
