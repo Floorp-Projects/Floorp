@@ -37,7 +37,7 @@ namespace geckoprofiler::markers {
 using Tracing = mozilla::baseprofiler::markers::Tracing;
 using UserTimingMark = mozilla::baseprofiler::markers::UserTimingMark;
 using UserTimingMeasure = mozilla::baseprofiler::markers::UserTimingMeasure;
-using MediaSample = mozilla::baseprofiler::markers::MediaSample;
+using MediaSampleMarker = mozilla::baseprofiler::markers::MediaSampleMarker;
 using ContentBuildMarker = mozilla::baseprofiler::markers::ContentBuildMarker;
 
 struct ScreenshotPayload {
