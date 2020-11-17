@@ -570,23 +570,6 @@ class NPZCSupport final
     auto returnResult = java::GeckoResult::Ref::From(aResult);
     auto eventData =
         java::PanZoomController::MotionEventData::Ref::From(aEventData);
-    RefPtr<IAPZCTreeManager> controller;
-
-    if (auto window = mWindow.Access()) {
-      nsWindow* gkWindow = window->GetNsWindow();
-      if (gkWindow) {
-        controller = gkWindow->mAPZC;
-      }
-    }
-
-    if (!controller) {
-      if (returnResult) {
-        returnResult->Complete(
-            java::sdk::Integer::ValueOf(INPUT_RESULT_UNHANDLED));
-      }
-      return;
-    }
-
     nsTArray<int32_t> pointerId(eventData->PointerId()->GetElements());
     size_t pointerCount = pointerId.Length();
     MultiTouchInput::MultiTouchType type;
@@ -703,10 +686,34 @@ class NPZCSupport final
       input.mTouches.AppendElement(singleTouchData);
     }
 
-    APZEventResult result = controller->InputBridge()->ReceiveInputEvent(input);
+    FinishHandlingMotionEvent(std::move(input),
+                              java::GeckoResult::LocalRef(returnResult));
+  }
+
+  void FinishHandlingMotionEvent(MultiTouchInput&& aInput,
+                                 java::GeckoResult::LocalRef&& aReturnResult) {
+    RefPtr<IAPZCTreeManager> controller;
+
+    if (auto window = mWindow.Access()) {
+      nsWindow* gkWindow = window->GetNsWindow();
+      if (gkWindow) {
+        controller = gkWindow->mAPZC;
+      }
+    }
+
+    if (!controller) {
+      if (aReturnResult) {
+        aReturnResult->Complete(
+            java::sdk::Integer::ValueOf(INPUT_RESULT_UNHANDLED));
+      }
+      return;
+    }
+
+    APZEventResult result =
+        controller->InputBridge()->ReceiveInputEvent(aInput);
     if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
-      if (returnResult) {
-        returnResult->Complete(java::sdk::Integer::ValueOf(
+      if (aReturnResult) {
+        aReturnResult->Complete(java::sdk::Integer::ValueOf(
             (result.mHandledResult == Some(APZHandledResult::HandledByRoot))
                 ? INPUT_RESULT_HANDLED
                 : INPUT_RESULT_HANDLED_CONTENT));
@@ -715,13 +722,13 @@ class NPZCSupport final
     }
 
     // Dispatch APZ input event on Gecko thread.
-    PostInputEvent([input, result](nsWindow* window) {
-      WidgetTouchEvent touchEvent = input.ToWidgetTouchEvent(window);
+    PostInputEvent([aInput, result](nsWindow* window) {
+      WidgetTouchEvent touchEvent = aInput.ToWidgetTouchEvent(window);
       window->ProcessUntransformedAPZEvent(&touchEvent, result);
       window->DispatchHitTest(touchEvent);
     });
 
-    if (!returnResult) {
+    if (!aReturnResult) {
       // We don't care how APZ handled the event so we're done here.
       return;
     }
@@ -731,16 +738,16 @@ class NPZCSupport final
       // don't need to do any more work.
       switch (result.mStatus) {
         case nsEventStatus_eIgnore:
-          returnResult->Complete(
+          aReturnResult->Complete(
               java::sdk::Integer::ValueOf(INPUT_RESULT_UNHANDLED));
           break;
         case nsEventStatus_eConsumeDoDefault:
-          returnResult->Complete(java::sdk::Integer::ValueOf(
+          aReturnResult->Complete(java::sdk::Integer::ValueOf(
               ConvertAPZHandledResult(result.mHandledResult.value())));
           break;
         default:
           MOZ_ASSERT_UNREACHABLE("Unexpected nsEventStatus");
-          returnResult->Complete(
+          aReturnResult->Complete(
               java::sdk::Integer::ValueOf(INPUT_RESULT_UNHANDLED));
           break;
       }
@@ -750,9 +757,9 @@ class NPZCSupport final
     // Wait to see if APZ handled the event or not...
     controller->AddInputBlockCallback(
         result.mInputBlockId,
-        [returnResult = java::GeckoResult::GlobalRef(returnResult)](
+        [aReturnResult = java::GeckoResult::GlobalRef(aReturnResult)](
             uint64_t aInputBlockId, APZHandledResult aHandledResult) {
-          returnResult->Complete(java::sdk::Integer::ValueOf(
+          aReturnResult->Complete(java::sdk::Integer::ValueOf(
               ConvertAPZHandledResult(aHandledResult)));
         });
   }
