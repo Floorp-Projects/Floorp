@@ -730,6 +730,32 @@ const PushNotificationsCleaner = {
 };
 
 const StorageAccessCleaner = {
+  // This is a special function to implement deleteUserInteractionForClearingHistory.
+  deleteExceptPrincipals(aPrincipalsWithStorage, aFrom) {
+    // We compare by base domain in order to simulate the behavior
+    // from purging, Consider a scenario where the user is logged
+    // into sub.example.com but the cookies are on example.com. In this
+    // case, we will remove the user interaction for sub.example.com
+    // because its principal does not match the one with storage.
+    let baseDomainsWithStorage = new Set();
+    for (let principal of aPrincipalsWithStorage) {
+      baseDomainsWithStorage.add(principal.baseDomain);
+    }
+
+    return new Promise(aResolve => {
+      for (let perm of Services.perms.getAllByTypeSince(
+        "storageAccessAPI",
+        aFrom
+      )) {
+        if (!baseDomainsWithStorage.has(perm.principal.baseDomain)) {
+          Services.perms.removePermission(perm);
+        }
+      }
+
+      aResolve();
+    });
+  },
+
   deleteByHost(aHost, aOriginAttributes) {
     return new Promise(aResolve => {
       for (let perm of Services.perms.all) {
@@ -1324,6 +1350,24 @@ ClearDataService.prototype = Object.freeze({
         return Promise.resolve();
       }
     );
+  },
+
+  deleteUserInteractionForClearingHistory(
+    aPrincipalsWithStorage,
+    aFrom,
+    aCallback
+  ) {
+    if (!aCallback) {
+      return Cr.NS_ERROR_INVALID_ARG;
+    }
+
+    StorageAccessCleaner.deleteExceptPrincipals(
+      aPrincipalsWithStorage,
+      aFrom
+    ).then(() => {
+      aCallback.onDataDeleted(0);
+    });
+    return Cr.NS_OK;
   },
 
   // This internal method uses aFlags against FLAGS_MAP in order to retrieve a
