@@ -763,42 +763,6 @@ TEST(GeckoProfiler, Markers)
 
   // Other markers in alphabetical order of payload class names.
 
-  {
-    const char gcMajorJSON[] = "42";
-    const auto len = strlen(gcMajorJSON);
-    char* buffer =
-        static_cast<char*>(js::SystemAllocPolicy{}.pod_malloc<char>(len + 1));
-    strncpy(buffer, gcMajorJSON, len);
-    buffer[len] = '\0';
-    PROFILER_ADD_MARKER_WITH_PAYLOAD("GCMajorMarkerPayload marker", OTHER,
-                                     GCMajorMarkerPayload,
-                                     (ts1, ts2, JS::UniqueChars(buffer)));
-  }
-
-  {
-    const char gcMinorJSON[] = "43";
-    const auto len = strlen(gcMinorJSON);
-    char* buffer =
-        static_cast<char*>(js::SystemAllocPolicy{}.pod_malloc<char>(len + 1));
-    strncpy(buffer, gcMinorJSON, len);
-    buffer[len] = '\0';
-    PROFILER_ADD_MARKER_WITH_PAYLOAD("GCMinorMarkerPayload marker", OTHER,
-                                     GCMinorMarkerPayload,
-                                     (ts1, ts2, JS::UniqueChars(buffer)));
-  }
-
-  {
-    const char gcSliceJSON[] = "44";
-    const auto len = strlen(gcSliceJSON);
-    char* buffer =
-        static_cast<char*>(js::SystemAllocPolicy{}.pod_malloc<char>(len + 1));
-    strncpy(buffer, gcSliceJSON, len);
-    buffer[len] = '\0';
-    PROFILER_ADD_MARKER_WITH_PAYLOAD("GCSliceMarkerPayload marker", OTHER,
-                                     GCSliceMarkerPayload,
-                                     (ts1, ts2, JS::UniqueChars(buffer)));
-  }
-
   PROFILER_ADD_MARKER_WITH_PAYLOAD("NativeAllocationMarkerPayload marker",
                                    OTHER, NativeAllocationMarkerPayload,
                                    (ts1, 9876543210, 1234, 5678, nullptr));
@@ -994,9 +958,6 @@ TEST(GeckoProfiler, Markers)
     S_Markers2ExplicitDefaultEmptyOptions,
     S_Markers2ExplicitDefaultWithOptions,
     S_FirstMarker,
-    S_GCMajorMarkerPayload,
-    S_GCMinorMarkerPayload,
-    S_GCSliceMarkerPayload,
     S_NativeAllocationMarkerPayload,
     S_NetworkMarkerPayload_start,
     S_NetworkMarkerPayload_stop,
@@ -1344,29 +1305,6 @@ TEST(GeckoProfiler, Markers)
                 ts1Double = marker[START_TIME].asDouble();
                 ts2Double = marker[END_TIME].asDouble();
                 state = State(S_FirstMarker + 1);
-              } else if (nameString == "GCMajorMarkerPayload marker") {
-                EXPECT_EQ(state, S_GCMajorMarkerPayload);
-                state = State(S_GCMajorMarkerPayload + 1);
-                EXPECT_EQ(typeString, "GCMajor");
-                EXPECT_TIMING_INTERVAL_AT(ts1Double, ts2Double);
-                EXPECT_TRUE(payload["stack"].isNull());
-                EXPECT_EQ_JSON(payload["timings"], Int, 42);
-
-              } else if (nameString == "GCMinorMarkerPayload marker") {
-                EXPECT_EQ(state, S_GCMinorMarkerPayload);
-                state = State(S_GCMinorMarkerPayload + 1);
-                EXPECT_EQ(typeString, "GCMinor");
-                EXPECT_TIMING_INTERVAL_AT(ts1Double, ts2Double);
-                EXPECT_TRUE(payload["stack"].isNull());
-                EXPECT_EQ_JSON(payload["nursery"], Int, 43);
-
-              } else if (nameString == "GCSliceMarkerPayload marker") {
-                EXPECT_EQ(state, S_GCSliceMarkerPayload);
-                state = State(S_GCSliceMarkerPayload + 1);
-                EXPECT_EQ(typeString, "GCSlice");
-                EXPECT_TIMING_INTERVAL_AT(ts1Double, ts2Double);
-                EXPECT_TRUE(payload["stack"].isNull());
-                EXPECT_EQ_JSON(payload["timings"], Int, 44);
 
               } else if (nameString == "NativeAllocationMarkerPayload marker") {
                 EXPECT_EQ(state, S_NativeAllocationMarkerPayload);
