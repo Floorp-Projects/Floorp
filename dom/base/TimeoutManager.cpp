@@ -22,9 +22,6 @@
 #include "TimeoutBudgetManager.h"
 #include "mozilla/net/WebSocketEventService.h"
 #include "mozilla/MediaManager.h"
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
-#endif
 
 using namespace mozilla;
 using namespace mozilla::dom;

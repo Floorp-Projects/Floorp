@@ -93,10 +93,6 @@
 #include "nsStringBuffer.h"
 #include "nsWrapperCache.h"
 
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
-#endif
-
 #if defined(XP_MACOSX)
 #  include "nsMacUtilsImpl.h"
 #endif
