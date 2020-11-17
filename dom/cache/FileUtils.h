@@ -117,10 +117,9 @@ nsresult LockedDirectoryPaddingTemporaryWrite(nsIFile* aBaseDir,
 
 nsresult LockedDirectoryPaddingFinalizeWrite(nsIFile* aBaseDir);
 
-nsresult LockedDirectoryPaddingRestore(nsIFile* aBaseDir,
-                                       mozIStorageConnection* aConn,
-                                       bool aMustRestore,
-                                       int64_t* aPaddingSizeOut);
+// Returns a Result with a success value denoting the padding size.
+Result<int64_t, nsresult> LockedDirectoryPaddingRestore(
+    nsIFile& aBaseDir, mozIStorageConnection& aConn, bool aMustRestore);
 
 nsresult LockedDirectoryPaddingDeleteFile(nsIFile* aBaseDir,
                                           DirPaddingFile aPaddingFileType);
