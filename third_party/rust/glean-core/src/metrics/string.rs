@@ -77,3 +77,39 @@ impl StringMetric {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::test_get_num_recorded_errors;
+    use crate::tests::new_glean;
+    use crate::util::truncate_string_at_boundary;
+    use crate::ErrorType;
+    use crate::Lifetime;
+
+    #[test]
+    fn setting_a_long_string_records_an_error() {
+        let (glean, _) = new_glean(None);
+
+        let metric = StringMetric::new(CommonMetricData {
+            name: "string_metric".into(),
+            category: "test".into(),
+            send_in_pings: vec!["store1".into()],
+            lifetime: Lifetime::Application,
+            disabled: false,
+            dynamic_label: None,
+        });
+
+        let sample_string = "0123456789".repeat(11);
+        metric.set(&glean, sample_string.clone());
+
+        let truncated = truncate_string_at_boundary(sample_string, MAX_LENGTH_VALUE);
+        assert_eq!(truncated, metric.test_get_value(&glean, "store1").unwrap());
+
+        assert_eq!(
+            1,
+            test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidOverflow, None)
+                .unwrap()
+        );
+    }
+}

@@ -495,11 +495,9 @@ pub(crate) fn test_get_experiment_data(experiment_id: String) -> RecordedExperim
     })
 }
 
-/// TEST ONLY FUNCTION.
-/// Resets the Glean state and triggers init again.
+/// Destroy the global Glean state.
 #[cfg(test)]
-#[allow(dead_code)]
-pub(crate) fn reset_glean(cfg: Configuration, client_info: ClientInfoMetrics, clear_stores: bool) {
+pub(crate) fn destroy_glean(clear_stores: bool) {
     // Destroy the existing glean instance from glean-core.
     if was_initialize_called() {
         // We need to check if the Glean object (from glean-core) is
@@ -519,6 +517,13 @@ pub(crate) fn reset_glean(cfg: Configuration, client_info: ClientInfoMetrics, cl
         // Reset the dispatcher.
         dispatcher::reset_dispatcher();
     }
+}
+
+/// Resets the Glean state and triggers init again.
+#[cfg(test)]
+#[allow(dead_code)]
+pub(crate) fn reset_glean(cfg: Configuration, client_info: ClientInfoMetrics, clear_stores: bool) {
+    destroy_glean(clear_stores);
 
     // Always log pings for tests
     //Glean.setLogPings(true)
