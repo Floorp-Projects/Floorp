@@ -1066,7 +1066,7 @@ impl RenderBackend {
                     memory_pressure: true,
                 };
                 self.result_tx.send(msg).unwrap();
-                self.notifier.wake_up();
+                self.notifier.wake_up(false);
             }
             ApiMsg::ReportMemory(tx) => {
                 self.report_memory(tx);
@@ -1210,7 +1210,7 @@ impl RenderBackend {
                     _ => ResultMsg::DebugCommand(option),
                 };
                 self.result_tx.send(msg).unwrap();
-                self.notifier.wake_up();
+                self.notifier.wake_up(true);
             }
             ApiMsg::UpdateDocuments(transaction_msgs) => {
                 self.prepare_transactions(
@@ -1308,7 +1308,7 @@ impl RenderBackend {
             SceneBuilderResult::DocumentsForDebugger(json) => {
                 let msg = ResultMsg::DebugOutput(DebugOutput::FetchDocuments(json));
                 self.result_tx.send(msg).unwrap();
-                self.notifier.wake_up();
+                self.notifier.wake_up(false);
             }
         }
 

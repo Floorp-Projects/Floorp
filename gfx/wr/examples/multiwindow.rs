@@ -35,7 +35,7 @@ impl RenderNotifier for Notifier {
         })
     }
 
-    fn wake_up(&self) {
+    fn wake_up(&self, _composite_needed: bool) {
         #[cfg(not(target_os = "android"))]
         let _ = self.events_proxy.wakeup();
     }
@@ -43,9 +43,9 @@ impl RenderNotifier for Notifier {
     fn new_frame_ready(&self,
                        _: DocumentId,
                        _scrolled: bool,
-                       _composite_needed: bool,
+                       composite_needed: bool,
                        _render_time: Option<u64>) {
-        self.wake_up();
+        self.wake_up(composite_needed);
     }
 }
 

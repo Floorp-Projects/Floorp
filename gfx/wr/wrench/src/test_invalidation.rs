@@ -17,6 +17,11 @@ pub struct TestHarness<'a> {
     rx: Receiver<NotifierEvent>,
 }
 
+struct RenderResult {
+    pc_debug: PictureCacheDebugInfo,
+    composite_needed: bool,
+}
+
 // Convenience method to build a picture rect
 fn pr(x: f32, y: f32, w: f32, h: f32) -> PictureRect {
     PictureRect::new(
@@ -44,6 +49,7 @@ impl<'a> TestHarness<'a> {
     ) {
         // List all invalidation tests here
         self.test_basic();
+        self.test_composite_nop();
     }
 
     /// Simple validation / proof of concept of invalidation testing
@@ -52,7 +58,7 @@ impl<'a> TestHarness<'a> {
     ) {
         // Render basic.yaml, ensure that the valid/dirty rects are as expected
         let results = self.render_yaml("basic");
-        let tile_info = results.slice(0).tile(0, 0).as_dirty();
+        let tile_info = results.pc_debug.slice(0).tile(0, 0).as_dirty();
         assert_eq!(
             tile_info.local_valid_rect,
             pr(100.0, 100.0, 500.0, 100.0),
@@ -64,22 +70,60 @@ impl<'a> TestHarness<'a> {
 
         // Render it again and ensure the tile was considered valid (no rasterization was done)
         let results = self.render_yaml("basic");
-        assert_eq!(*results.slice(0).tile(0, 0), TileDebugInfo::Valid);
+        assert_eq!(*results.pc_debug.slice(0).tile(0, 0), TileDebugInfo::Valid);
+    }
+
+    /// Ensure WR detects composites are needed for position changes within a single tile.
+    fn test_composite_nop(
+        &mut self,
+    ) {
+        // Render composite_nop_1.yaml, ensure that the valid/dirty rects are as expected
+        let results = self.render_yaml("composite_nop_1");
+        let tile_info = results.pc_debug.slice(0).tile(0, 0).as_dirty();
+        assert_eq!(
+            tile_info.local_valid_rect,
+            pr(100.0, 100.0, 100.0, 100.0),
+        );
+        assert_eq!(
+            tile_info.local_dirty_rect,
+            pr(100.0, 100.0, 100.0, 100.0),
+        );
+
+        // Render composite_nop_2.yaml, ensure that the valid/dirty rects are as expected
+        let results = self.render_yaml("composite_nop_2");
+        let tile_info = results.pc_debug.slice(0).tile(0, 0).as_dirty();
+        assert_eq!(
+            tile_info.local_valid_rect,
+            pr(100.0, 120.0, 100.0, 100.0),
+        );
+        assert_eq!(
+            tile_info.local_dirty_rect,
+            pr(100.0, 120.0, 100.0, 100.0),
+        );
+
+        // Main part of this test - ensure WR detects a composite is required in this case
+        assert!(results.composite_needed);
     }
 
     /// Render a YAML file, and return the picture cache debug info
     fn render_yaml(
         &mut self,
         filename: &str,
-    ) -> PictureCacheDebugInfo {
+    ) -> RenderResult {
         let path = format!("invalidation/{}.yaml", filename);
         let mut reader = YamlFrameReader::new(&PathBuf::from(path));
 
         reader.do_frame(self.wrench);
-        self.rx.recv().unwrap();
+        let composite_needed = match self.rx.recv().unwrap() {
+            NotifierEvent::WakeUp { composite_needed } => composite_needed,
+            NotifierEvent::ShutDown => unreachable!(),
+        };
         let results = self.wrench.render();
         self.window.swap_buffers();
 
-        results.picture_cache_debug
+        RenderResult {
+            pc_debug: results.picture_cache_debug,
+            composite_needed,
+        }
     }
 }

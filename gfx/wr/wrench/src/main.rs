@@ -436,7 +436,9 @@ fn make_window(
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum NotifierEvent {
-    WakeUp,
+    WakeUp {
+        composite_needed: bool,
+    },
     ShutDown,
 }
 
@@ -452,8 +454,14 @@ impl RenderNotifier for Notifier {
         })
     }
 
-    fn wake_up(&self) {
-        self.tx.send(NotifierEvent::WakeUp).unwrap();
+    fn wake_up(
+        &self,
+        composite_needed: bool,
+    ) {
+        let msg = NotifierEvent::WakeUp {
+            composite_needed,
+        };
+        self.tx.send(msg).unwrap();
     }
 
     fn shut_down(&self) {
@@ -463,11 +471,11 @@ impl RenderNotifier for Notifier {
     fn new_frame_ready(&self,
                        _: DocumentId,
                        _scrolled: bool,
-                       _composite_needed: bool,
+                       composite_needed: bool,
                        _render_time: Option<u64>) {
         // TODO(gw): Refactor wrench so that it can take advantage of cases
         //           where no composite is required when appropriate.
-        self.wake_up();
+        self.wake_up(composite_needed);
     }
 }
 

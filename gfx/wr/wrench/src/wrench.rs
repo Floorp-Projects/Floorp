@@ -96,7 +96,7 @@ impl RenderNotifier for Notifier {
         Box::new(Notifier(self.0.clone()))
     }
 
-    fn wake_up(&self) {
+    fn wake_up(&self, _composite_needed: bool) {
         self.update(false);
     }
 

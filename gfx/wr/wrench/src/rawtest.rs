@@ -1310,7 +1310,7 @@ impl<'a> RawtestHarness<'a> {
 
         // Ensure we get a notification from rendering the above, even though
         // there are zero visible pixels
-        assert!(self.rx.recv().unwrap() == NotifierEvent::WakeUp);
+        assert!(self.rx.recv().unwrap() == NotifierEvent::WakeUp { composite_needed: true });
     }
 
 
