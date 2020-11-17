@@ -784,14 +784,12 @@ Result<int64_t, nsresult> LockedDirectoryPaddingGet(nsIFile& aBaseDir) {
       const auto& file,
       CloneFileAndAppend(aBaseDir, nsLiteralString(PADDING_FILE_NAME)));
 
-  nsCOMPtr<nsIInputStream> stream;
-  CACHE_TRY(NS_NewLocalFileInputStream(getter_AddRefs(stream), file));
+  CACHE_TRY_UNWRAP(auto stream, NS_NewLocalFileInputStream(file));
 
-  nsCOMPtr<nsIInputStream> bufferedStream;
-  CACHE_TRY(NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
-                                      stream.forget(), 512));
+  CACHE_TRY_INSPECT(const auto& bufferedStream,
+                    NS_NewBufferedInputStream(stream.forget(), 512));
 
-  nsCOMPtr<nsIObjectInputStream> objectStream =
+  const nsCOMPtr<nsIObjectInputStream> objectStream =
       NS_NewObjectInputStream(bufferedStream);
 
   CACHE_TRY_RETURN(
