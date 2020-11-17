@@ -721,7 +721,6 @@ WEBIDL_FILES = [
     "NamedNodeMap.webidl",
     "NativeOSFileInternals.webidl",
     "Navigator.webidl",
-    "NetDashboard.webidl",
     "NetErrorInfo.webidl",
     "NetworkInformation.webidl",
     "NetworkOptions.webidl",
