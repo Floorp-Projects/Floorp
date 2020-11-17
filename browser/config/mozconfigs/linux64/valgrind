@@ -1,8 +1,5 @@
 MOZ_AUTOMATION_CHECK=0
 
-# Avoid setting any incompatible strip flags in the nightly config
-NOSTRIP_BUILD=1
-
 . $topsrcdir/browser/config/mozconfigs/linux64/nightly
 
 ac_add_options --enable-valgrind
