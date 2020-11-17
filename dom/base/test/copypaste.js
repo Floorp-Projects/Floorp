@@ -110,9 +110,9 @@ async function testCopyPaste(isXHTML) {
     if (navigator.platform.includes("Win")) {
       // Windows has extra content.
       var expectedValue =
-        "<html><body>\n<!--StartFragment-->" +
+        kTextHtmlPrefixClipboardDataWindows +
         expected.replace(/\n/g, "\n") +
-        "<!--EndFragment-->\n</body>\n</html>";
+        kTextHtmlSuffixClipboardDataWindows;
     }
     testClipboardValue(mime, expectedValue);
   }

@@ -549,8 +549,8 @@ async function doContenteditableTests(aEditableDiv) {
   }
   // On windows, HTML clipboard includes extra data.
   // The values are from widget/windows/nsDataObj.cpp.
-  const kHTMLPrefix = (navigator.platform.includes("Win")) ? "<html><body>\n<!--StartFragment-->" : "";
-  const kHTMLPostfix = (navigator.platform.includes("Win")) ? "<!--EndFragment-->\n</body>\n</html>" : "";
+  const kHTMLPrefix = (navigator.platform.includes("Win")) ? kTextHtmlPrefixClipboardDataWindows : "";
+  const kHTMLPostfix = (navigator.platform.includes("Win")) ? kTextHtmlSuffixClipboardDataWindows : "";
   is(beforeInputEvents.length, 1,
      'One "beforeinput" event should be fired when pasting HTML');
   checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", null,

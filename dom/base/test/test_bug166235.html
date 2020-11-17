@@ -67,7 +67,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=816298
     var expectedValue = expected;
     // For Windows, navigator.platform returns "Win32".
     if (navigator.platform.includes("Win")) {
-      expectedValue = "<html><body>\n<!--StartFragment-->" + expected + "<!--EndFragment-->\n</body>\n</html>";
+      expectedValue = kTextHtmlPrefixClipboardDataWindows + expected + kTextHtmlSuffixClipboardDataWindows;
     }
     testClipboardValue(mime, expectedValue, test);
   }

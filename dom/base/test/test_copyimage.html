@@ -69,7 +69,7 @@ function testCopyImage () {
   // Is the text/html data correct ?
   var expected = '<img id="logo" src="about:logo">';
   if (navigator.platform.includes("Win")) {
-    expected = "<html><body>\n<!--StartFragment-->" + expected + "<!--EndFragment-->\n</body>\n</html>";
+    expected = kTextHtmlPrefixClipboardDataWindows + expected + kTextHtmlSuffixClipboardDataWindows;
   }
   testClipboardValue('text/html', expected);
 
