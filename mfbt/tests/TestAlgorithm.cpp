@@ -7,13 +7,15 @@
 #include "mozilla/Algorithm.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
+
 #include <iterator>
 
 static constexpr bool even(int32_t n) { return !(n & 1); }
 static constexpr bool odd(int32_t n) { return (n & 1); }
 
+using namespace mozilla;
+
 void TestAllOf() {
-  using namespace mozilla;
   using std::begin;
   using std::end;
 
@@ -36,7 +38,31 @@ void TestAllOf() {
   static_assert(!AllOf(arr3, arr3 + ArrayLength(arr3), odd), "3-2");
 }
 
+void TestAnyOf() {
+  using std::begin;
+  using std::end;
+
+  // The Android NDK's STL doesn't support `constexpr` `std::array::begin`, see
+  // bug 1677484. Hence using a raw array here.
+  constexpr int32_t arr1[1] = {0};
+  static_assert(!AnyOf(arr1, arr1, even));
+  static_assert(!AnyOf(arr1, arr1, odd));
+
+  constexpr int32_t arr2[] = {1};
+  static_assert(!AnyOf(begin(arr2), end(arr2), even));
+  static_assert(AnyOf(begin(arr2), end(arr2), odd));
+
+  constexpr int32_t arr3[] = {2};
+  static_assert(AnyOf(begin(arr3), end(arr3), even));
+  static_assert(!AnyOf(begin(arr3), end(arr3), odd));
+
+  constexpr int32_t arr4[] = {1, 2};
+  static_assert(AnyOf(begin(arr4), end(arr4), even));
+  static_assert(AnyOf(begin(arr4), end(arr4), odd));
+}
+
 int main() {
   TestAllOf();
+  TestAnyOf();
   return 0;
 }
