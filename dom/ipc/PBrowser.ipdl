@@ -626,7 +626,7 @@ child:
     /**
      * Parent informs the child to release all pointer capture.
      */
-    async ReleaseAllPointerCapture();
+    prio(input) async ReleaseAllPointerCapture();
 
 parent:
 
