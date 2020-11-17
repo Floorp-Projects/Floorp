@@ -49,6 +49,8 @@
 
 static mozilla::LazyLogModule gContentSinkLog("nsXULContentSink");
 
+using namespace mozilla;
+using namespace mozilla::dom;
 //----------------------------------------------------------------------
 
 XULContentSinkImpl::ContextStack::ContextStack() : mTop(nullptr), mDepth(0) {}

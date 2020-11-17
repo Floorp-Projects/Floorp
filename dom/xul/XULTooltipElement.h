@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-nsXULElement* NS_NewXULPopupElement(
+nsXULElement* NS_NewXULTooltipElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 class XULTooltipElement final : public XULPopupElement {
