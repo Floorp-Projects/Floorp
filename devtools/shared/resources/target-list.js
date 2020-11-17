@@ -230,7 +230,7 @@ class TargetList extends EventEmitter {
   }
 
   hasTargetWatcherSupport(type) {
-    return !!this.watcher?.traits[type];
+    return !!this.watcherFront?.traits[type];
   }
 
   /**
@@ -250,12 +250,12 @@ class TargetList extends EventEmitter {
    */
   async startListening({ onlyLegacy = false } = {}) {
     // Cache the Watcher once for all, the first time we call `startListening()`.
-    // This `watcher` attribute may be then used in any function in TargetList or ResourceWatcher after this.
-    if (!this.watcher) {
+    // This `watcherFront` attribute may be then used in any function in TargetList or ResourceWatcher after this.
+    if (!this.watcherFront) {
       // Bug 1675763: Watcher actor is not available in all situations yet.
       const supportsWatcher = this.descriptorFront?.traits?.watcher;
       if (supportsWatcher) {
-        this.watcher = await this.descriptorFront.getWatcher();
+        this.watcherFront = await this.descriptorFront.getWatcher();
       }
     }
 
@@ -306,10 +306,10 @@ class TargetList extends EventEmitter {
         }
         if (!this._startedListeningToWatcher) {
           this._startedListeningToWatcher = true;
-          this.watcher.on("target-available", this._onTargetAvailable);
-          this.watcher.on("target-destroyed", this._onTargetDestroyed);
+          this.watcherFront.on("target-available", this._onTargetAvailable);
+          this.watcherFront.on("target-destroyed", this._onTargetDestroyed);
         }
-        await this.watcher.watchTargets(type);
+        await this.watcherFront.watchTargets(type);
         continue;
       }
       if (this.legacyImplementation[type]) {
@@ -341,7 +341,7 @@ class TargetList extends EventEmitter {
         // Watcher listener as it is independant from the top level target.
         // This isn't the case for some Legacy Listeners, which fetch targets from the top level target
         if (!onlyLegacy) {
-          this.watcher.unwatchTargets(type);
+          this.watcherFront.unwatchTargets(type);
         }
         continue;
       }

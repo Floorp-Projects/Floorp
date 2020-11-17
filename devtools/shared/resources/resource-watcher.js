@@ -44,8 +44,8 @@ class ResourceWatcher {
     this._throttledNotifyWatchers = throttle(this._notifyWatchers, 100);
   }
 
-  get watcher() {
-    return this.targetList.watcher;
+  get watcherFront() {
+    return this.targetList.watcherFront;
   }
 
   /**
@@ -107,21 +107,25 @@ class ResourceWatcher {
     }
 
     // Bug 1675763: Watcher actor is not available in all situations yet.
-    if (!this._listenerRegistered && this.watcher) {
+    if (!this._listenerRegistered && this.watcherFront) {
       this._listenerRegistered = true;
       // Resources watched from the parent process will be emitted on the Watcher Actor.
       // So that we also have to listen for this event on it, in addition to all targets.
-      this.watcher.on(
+      this.watcherFront.on(
         "resource-available-form",
-        this._onResourceAvailable.bind(this, { watcherFront: this.watcher })
+        this._onResourceAvailable.bind(this, {
+          watcherFront: this.watcherFront,
+        })
       );
-      this.watcher.on(
+      this.watcherFront.on(
         "resource-updated-form",
-        this._onResourceUpdated.bind(this, { watcherFront: this.watcher })
+        this._onResourceUpdated.bind(this, { watcherFront: this.watcherFront })
       );
-      this.watcher.on(
+      this.watcherFront.on(
         "resource-destroyed-form",
-        this._onResourceDestroyed.bind(this, { watcherFront: this.watcher })
+        this._onResourceDestroyed.bind(this, {
+          watcherFront: this.watcherFront,
+        })
       );
     }
 
@@ -369,7 +373,7 @@ class ResourceWatcher {
           resource,
           targetList: this.targetList,
           targetFront,
-          watcher: this.watcher,
+          watcherFront: this.watcherFront,
         });
       }
 
@@ -597,7 +601,7 @@ class ResourceWatcher {
       );
       return null;
     }
-    return this.watcher.getBrowsingContextTarget(browsingContextID);
+    return this.watcherFront.getBrowsingContextTarget(browsingContextID);
   }
 
   _onWillNavigate(targetFront) {
@@ -612,7 +616,7 @@ class ResourceWatcher {
   }
 
   hasResourceWatcherSupport(resourceType) {
-    return this.watcher?.traits?.resources?.[resourceType];
+    return this.watcherFront?.traits?.resources?.[resourceType];
   }
 
   /**
@@ -643,7 +647,7 @@ class ResourceWatcher {
     // If the server supports the Watcher API and the Watcher supports
     // this resource type, use this API
     if (this.hasResourceWatcherSupport(resourceType)) {
-      await this.watcher.watchResources([resourceType]);
+      await this.watcherFront.watchResources([resourceType]);
       return;
     }
     // Otherwise, fallback on backward compat mode and use LegacyListeners.
@@ -722,7 +726,7 @@ class ResourceWatcher {
     // If the server supports the Watcher API and the Watcher supports
     // this resource type, use this API
     if (this.hasResourceWatcherSupport(resourceType)) {
-      this.watcher.unwatchResources([resourceType]);
+      this.watcherFront.unwatchResources([resourceType]);
       return;
     }
     // Otherwise, fallback on backward compat mode and use LegacyListeners.
