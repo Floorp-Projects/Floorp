@@ -3448,10 +3448,6 @@ void TestProfiler() {
         mozilla::baseprofiler::markers::UserTimingMeasure{}, "measure name",
         Some(ProfilerString8View("start")), Some(ProfilerString8View("end"))));
 
-    MOZ_RELEASE_ASSERT(
-        baseprofiler::AddMarker("hang", mozilla::baseprofiler::category::OTHER,
-                                {}, mozilla::baseprofiler::markers::Hang{}));
-
     MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
         "longtask", mozilla::baseprofiler::category::OTHER, {},
         mozilla::baseprofiler::markers::LongTask{}));
@@ -3525,8 +3521,6 @@ void TestProfiler() {
     MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"UserTimingMark\",") !=
                        svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"UserTimingMeasure\",") !=
-                       svnpos);
-    MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"BHR-detected hang\",") !=
                        svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"Log\",") != svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"MediaSample\",") != svnpos);
@@ -4044,10 +4038,6 @@ void TestPredefinedMarkers() {
       mozilla::baseprofiler::markers::UserTimingMeasure{}, "measure name ",
       mozilla::Some(mozilla::ProfilerString8View(" start ")),
       mozilla::Some(mozilla::ProfilerString8View("end"))));
-
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
-      buffer, std::string_view("hang"), mozilla::baseprofiler::category::OTHER,
-      {}, mozilla::baseprofiler::markers::Hang{}));
 
   MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, std::string_view("long task"),

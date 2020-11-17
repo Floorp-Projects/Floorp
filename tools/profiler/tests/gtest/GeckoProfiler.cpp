@@ -799,9 +799,6 @@ TEST(GeckoProfiler, Markers)
                                      (ts1, ts2, JS::UniqueChars(buffer)));
   }
 
-  PROFILER_ADD_MARKER_WITH_PAYLOAD("HangMarkerPayload marker", OTHER,
-                                   HangMarkerPayload, (ts1, ts2));
-
   PROFILER_ADD_MARKER_WITH_PAYLOAD("LogMarkerPayload marker", OTHER,
                                    LogMarkerPayload, ("module", "text", ts1));
 
@@ -910,9 +907,6 @@ TEST(GeckoProfiler, Markers)
       Some(mozilla::ProfilerString8View("start")),
       Some(mozilla::ProfilerString8View("end"))));
 
-  MOZ_RELEASE_ASSERT(profiler_add_marker("Hang", geckoprofiler::category::OTHER,
-                                         {}, geckoprofiler::markers::Hang{}));
-
   MOZ_RELEASE_ASSERT(profiler_add_marker("LongTask",
                                          geckoprofiler::category::OTHER, {},
                                          geckoprofiler::markers::LongTask{}));
@@ -975,7 +969,6 @@ TEST(GeckoProfiler, Markers)
     S_GCMajorMarkerPayload,
     S_GCMinorMarkerPayload,
     S_GCSliceMarkerPayload,
-    S_HangMarkerPayload,
     S_LogMarkerPayload,
     S_LongTaskMarkerPayload,
     S_NativeAllocationMarkerPayload,
@@ -1349,13 +1342,6 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_TIMING_INTERVAL_AT(ts1Double, ts2Double);
                 EXPECT_TRUE(payload["stack"].isNull());
                 EXPECT_EQ_JSON(payload["timings"], Int, 44);
-
-              } else if (nameString == "HangMarkerPayload marker") {
-                EXPECT_EQ(state, S_HangMarkerPayload);
-                state = State(S_HangMarkerPayload + 1);
-                EXPECT_EQ(typeString, "BHR-detected hang");
-                EXPECT_TIMING_INTERVAL_AT(ts1Double, ts2Double);
-                EXPECT_TRUE(payload["stack"].isNull());
 
               } else if (nameString == "LogMarkerPayload marker") {
                 EXPECT_EQ(state, S_LogMarkerPayload);
@@ -1744,8 +1730,6 @@ TEST(GeckoProfiler, Markers)
       EXPECT_TRUE(testedSchemaNames.find("UserTimingMark") !=
                   testedSchemaNames.end());
       EXPECT_TRUE(testedSchemaNames.find("UserTimingMeasure") !=
-                  testedSchemaNames.end());
-      EXPECT_TRUE(testedSchemaNames.find("BHR-detected hang") !=
                   testedSchemaNames.end());
       EXPECT_TRUE(testedSchemaNames.find("MainThreadLongTask") !=
                   testedSchemaNames.end());
