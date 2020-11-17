@@ -53,14 +53,19 @@ def is_valid_license(licenses, filename):
     return False
 
 
-def add_header(filename, header):
+def add_header(log, filename, header):
     """
     Add the header to the top of the file
     """
     header.append("\n")
     with open(filename, "r+") as f:
         # lines in list format
-        lines = f.readlines()
+        try:
+            lines = f.readlines()
+        except UnicodeDecodeError as e:
+            log.debug("Could not read file '{}'".format(f))
+            log.debug("Error: {}".format(e))
+            return
 
         i = 0
         if lines:
@@ -98,7 +103,7 @@ def is_test(f):
     )
 
 
-def fix_me(filename):
+def fix_me(log, filename):
     """
     Add the copyright notice to the top of the file
     """
@@ -136,13 +141,13 @@ def fix_me(filename):
                 end = " */"
             license.append(start + "* " + l.strip() + end + "\n")
 
-        add_header(filename, license)
+        add_header(log, filename, license)
         return
 
     if ext in [".py", ".ftl", ".properties"] or filename.endswith(".inc.xul"):
         for l in license_template:
             license.append("# " + l.strip() + "\n")
-        add_header(filename, license)
+        add_header(log, filename, license)
         return
 
     if ext in [".xml", ".xul", ".html", ".xhtml", ".dtd", ".svg"]:
@@ -160,11 +165,12 @@ def fix_me(filename):
                 # When dealing with an svg, we should not have a space between
                 # the license and the content
                 license.append("\n")
-        add_header(filename, license)
+        add_header(log, filename, license)
         return
 
 
 def lint(paths, config, fix=None, **lintargs):
+    log = lintargs["log"]
     files = list(expand_exclusions(paths, config, lintargs["root"]))
 
     licenses = load_valid_license()
@@ -181,5 +187,5 @@ def lint(paths, config, fix=None, **lintargs):
             }
             results.append(result.from_config(config, **res))
             if fix:
-                fix_me(f)
+                fix_me(log, f)
     return results
