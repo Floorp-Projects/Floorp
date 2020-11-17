@@ -21,6 +21,16 @@ internal class GeckoWebNotificationDelegate(
     }
 
     private fun GeckoViewWebNotification.toWebNotification(): WebNotification {
-        return WebNotification(title, tag, text, source, imageUrl, textDirection, lang, requireInteraction)
+        return WebNotification(
+            title = title,
+            tag = tag,
+            body = text,
+            sourceUrl = source,
+            iconUrl = imageUrl,
+            direction = textDirection,
+            lang = lang,
+            requireInteraction = requireInteraction,
+            triggeredByWebExtension = source == null
+        )
     }
 }

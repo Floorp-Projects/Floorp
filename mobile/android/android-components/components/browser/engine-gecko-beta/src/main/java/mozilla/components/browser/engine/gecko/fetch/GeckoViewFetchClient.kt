@@ -104,10 +104,10 @@ private fun WebRequest.Builder.addBodyFrom(request: Request): WebRequest.Builder
 }
 
 internal fun WebResponse.toResponse(): Response {
-    val isBlobUri = uri.startsWith("blob:")
     val isDataUri = uri.startsWith("data:")
+    val isBlobUri = uri.startsWith("blob:")
     val headers = translateHeaders(this)
-    // We use the same API for blobs,data URLs and HTTP requests, but blobs won't receive a status code.
+    // We use the same API for blobs, data URLs and HTTP requests, but blobs won't receive a status code.
     // If no exception is thrown we assume success.
     val status = if (isBlobUri || isDataUri) SUCCESS else statusCode
     return Response(

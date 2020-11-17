@@ -7,9 +7,12 @@ package mozilla.components.browser.engine.gecko
 import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.browser.engine.gecko.GeckoEngineView.Companion.DARK_COVER
 import mozilla.components.browser.engine.gecko.selection.GeckoSelectionActionDelegate
+import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
@@ -102,6 +105,23 @@ class GeckoEngineViewTest {
         engineView.clearSelection()
 
         verify(engineView.currentSelection)?.clearSelection()
+    }
+
+    @Test
+    fun `setColorScheme uses preferred color scheme to set correct cover color`() {
+        val engineView = GeckoEngineView(context)
+
+        engineView.geckoView = mock()
+
+        var preferredColorScheme: PreferredColorScheme = PreferredColorScheme.Light
+
+        engineView.setColorScheme(preferredColorScheme)
+
+        verify(engineView.geckoView)?.coverUntilFirstPaint(Color.WHITE)
+
+        preferredColorScheme = PreferredColorScheme.Dark
+        engineView.setColorScheme(preferredColorScheme)
+        verify(engineView.geckoView)?.coverUntilFirstPaint(DARK_COVER)
     }
 
     @Test
