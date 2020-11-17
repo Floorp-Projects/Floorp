@@ -992,15 +992,65 @@ void CycleCollectedJSRuntime::GCSliceCallback(JSContext* aContext,
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_thread_is_being_profiled()) {
     if (aProgress == JS::GC_CYCLE_END) {
-      PROFILER_ADD_MARKER_WITH_PAYLOAD(
-          "GCMajor", GCCC, GCMajorMarkerPayload,
-          (aDesc.startTime(aContext), aDesc.endTime(aContext),
-           aDesc.formatJSONProfiler(aContext)));
+      struct GCMajorMarker {
+        static constexpr mozilla::Span<const char> MarkerTypeName() {
+          return mozilla::MakeStringSpan("GCMajor");
+        }
+        static void StreamJSONMarkerData(
+            mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+            const mozilla::ProfilerString8View& aTimingJSON) {
+          if (aTimingJSON.Length() != 0) {
+            aWriter.SplicedJSONProperty("timings", aTimingJSON);
+          } else {
+            aWriter.NullProperty("timings");
+          }
+        }
+        static mozilla::MarkerSchema MarkerTypeDisplay() {
+          using MS = mozilla::MarkerSchema;
+          MS schema{MS::Location::markerChart, MS::Location::markerTable,
+                    MS::Location::timelineMemory};
+          // No display instructions here, there is special handling in the
+          // front-end.
+          return schema;
+        }
+      };
+
+      profiler_add_marker("GCMajor", baseprofiler::category::GCCC,
+                          MarkerTiming::Interval(aDesc.startTime(aContext),
+                                                 aDesc.endTime(aContext)),
+                          GCMajorMarker{},
+                          ProfilerString8View::WrapNullTerminatedString(
+                              aDesc.formatJSONProfiler(aContext).get()));
     } else if (aProgress == JS::GC_SLICE_END) {
-      PROFILER_ADD_MARKER_WITH_PAYLOAD(
-          "GCSlice", GCCC, GCSliceMarkerPayload,
-          (aDesc.lastSliceStart(aContext), aDesc.lastSliceEnd(aContext),
-           aDesc.sliceToJSONProfiler(aContext)));
+      struct GCSliceMarker {
+        static constexpr mozilla::Span<const char> MarkerTypeName() {
+          return mozilla::MakeStringSpan("GCSlice");
+        }
+        static void StreamJSONMarkerData(
+            mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+            const mozilla::ProfilerString8View& aTimingJSON) {
+          if (aTimingJSON.Length() != 0) {
+            aWriter.SplicedJSONProperty("timings", aTimingJSON);
+          } else {
+            aWriter.NullProperty("timings");
+          }
+        }
+        static mozilla::MarkerSchema MarkerTypeDisplay() {
+          using MS = mozilla::MarkerSchema;
+          MS schema{MS::Location::markerChart, MS::Location::markerTable,
+                    MS::Location::timelineMemory};
+          // No display instructions here, there is special handling in the
+          // front-end.
+          return schema;
+        }
+      };
+
+      profiler_add_marker("GCSlice", baseprofiler::category::GCCC,
+                          MarkerTiming::Interval(aDesc.lastSliceStart(aContext),
+                                                 aDesc.lastSliceEnd(aContext)),
+                          GCSliceMarker{},
+                          ProfilerString8View::WrapNullTerminatedString(
+                              aDesc.sliceToJSONProfiler(aContext).get()));
     }
   }
 #endif
@@ -1079,10 +1129,35 @@ void CycleCollectedJSRuntime::GCNurseryCollectionCallback(
 #ifdef MOZ_GECKO_PROFILER
   else if (aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END &&
            profiler_thread_is_being_profiled()) {
-    PROFILER_ADD_MARKER_WITH_PAYLOAD(
-        "GCMinor", GCCC, GCMinorMarkerPayload,
-        (self->mLatestNurseryCollectionStart, TimeStamp::Now(),
-         JS::MinorGcToJSON(aContext)));
+    struct GCMinorMarker {
+      static constexpr mozilla::Span<const char> MarkerTypeName() {
+        return mozilla::MakeStringSpan("GCMinor");
+      }
+      static void StreamJSONMarkerData(
+          mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+          const mozilla::ProfilerString8View& aTimingJSON) {
+        if (aTimingJSON.Length() != 0) {
+          aWriter.SplicedJSONProperty("nursery", aTimingJSON);
+        } else {
+          aWriter.NullProperty("nursery");
+        }
+      }
+      static mozilla::MarkerSchema MarkerTypeDisplay() {
+        using MS = mozilla::MarkerSchema;
+        MS schema{MS::Location::markerChart, MS::Location::markerTable,
+                  MS::Location::timelineMemory};
+        // No display instructions here, there is special handling in the
+        // front-end.
+        return schema;
+      }
+    };
+
+    profiler_add_marker(
+        "GCMinor", baseprofiler::category::GCCC,
+        MarkerTiming::IntervalUntilNowFrom(self->mLatestNurseryCollectionStart),
+        GCMinorMarker{},
+        ProfilerString8View::WrapNullTerminatedString(
+            JS::MinorGcToJSON(aContext).get()));
   }
 #endif
 
