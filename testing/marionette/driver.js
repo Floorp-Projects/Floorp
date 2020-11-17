@@ -1191,7 +1191,11 @@ GeckoDriver.prototype.navigateTo = async function(cmd) {
   }
 
   // Switch to the top-level browsing context before navigating
-  await this.listener.switchToFrame();
+  if (MarionettePrefs.useActors) {
+    this.contentBrowsingContext = browsingContext;
+  } else {
+    await this.listener.switchToFrame();
+  }
 
   const currentURL = await this._getCurrentURL();
   const loadEventExpected = navigate.isLoadEventExpected(currentURL, validURL);
@@ -1365,8 +1369,12 @@ GeckoDriver.prototype.refresh = async function() {
   const browsingContext = assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
-  // Switch to the top-level browsiing context before navigating
-  await this.listener.switchToFrame();
+  // Switch to the top-level browsing context before navigating
+  if (MarionettePrefs.useActors) {
+    this.contentBrowsingContext = browsingContext;
+  } else {
+    await this.listener.switchToFrame();
+  }
 
   await navigate.waitForNavigationCompleted(this, () => {
     navigate.refresh(browsingContext);
