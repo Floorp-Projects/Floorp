@@ -38,7 +38,6 @@ namespace geckoprofiler::markers {
 using Tracing = mozilla::baseprofiler::markers::Tracing;
 using UserTimingMark = mozilla::baseprofiler::markers::UserTimingMark;
 using UserTimingMeasure = mozilla::baseprofiler::markers::UserTimingMeasure;
-using Log = mozilla::baseprofiler::markers::Log;
 using MediaSample = mozilla::baseprofiler::markers::MediaSample;
 
 struct Network {
