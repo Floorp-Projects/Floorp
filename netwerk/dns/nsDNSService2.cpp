@@ -645,27 +645,14 @@ already_AddRefed<nsDNSService> nsDNSService::GetSingleton() {
   MOZ_ASSERT_IF(!nsIOService::UseSocketProcess(), XRE_IsParentProcess());
 
   if (!gDNSService) {
-    auto initTask = []() {
-      gDNSService = new nsDNSService();
-      if (NS_SUCCEEDED(gDNSService->Init())) {
-        ClearOnShutdown(&gDNSService);
-      } else {
-        gDNSService = nullptr;
-      }
-    };
-
     if (!NS_IsMainThread()) {
-      // Forward to the main thread synchronously.
-      RefPtr<nsIThread> mainThread = do_GetMainThread();
-      if (!mainThread) {
-        return nullptr;
-      }
-
-      SyncRunnable::DispatchToThread(mainThread,
-                                     new SyncRunnable(NS_NewRunnableFunction(
-                                         "nsDNSService::Init", initTask)));
+      return nullptr;
+    }
+    gDNSService = new nsDNSService();
+    if (NS_SUCCEEDED(gDNSService->Init())) {
+      ClearOnShutdown(&gDNSService);
     } else {
-      initTask();
+      gDNSService = nullptr;
     }
   }
 
