@@ -4,6 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/search_wrapper"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -74,82 +75,105 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <View
         android:id="@+id/fill_link_from_clipboard"
         android:layout_width="0dp"
         android:layout_height="@dimen/search_fragment_clipboard_item_height"
-        android:paddingStart="@dimen/search_fragment_clipboard_item_horizontal_margin"
-        android:paddingEnd="@dimen/search_fragment_clipboard_item_horizontal_margin"
         android:background="?foundation"
         android:clickable="true"
         android:focusable="true"
+        android:paddingStart="@dimen/search_fragment_clipboard_item_horizontal_margin"
+        android:paddingEnd="@dimen/search_fragment_clipboard_item_horizontal_margin"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar">
+        app:layout_constraintTop_toBottomOf="@+id/toolbar"
+        tools:visibility="visible" />
 
-        <ImageView
-            android:id="@+id/link_icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:importantForAccessibility="no"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ic_link" />
+    <ImageView
+        android:id="@+id/link_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:focusable="false"
+        android:importantForAccessibility="no"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/fill_link_from_clipboard"
+        app:layout_constraintStart_toStartOf="@+id/fill_link_from_clipboard"
+        app:layout_constraintTop_toTopOf="@+id/fill_link_from_clipboard"
+        app:srcCompat="@drawable/ic_link"
+        tools:visibility="visible" />
 
-        <TextView
-            android:id="@+id/clipboard_title"
-            style="@style/SearchClipboardTitleStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/search_fragment_clipboard_item_title_margin_start"
-            android:text="@string/awesomebar_clipboard_title"
-            app:layout_constraintBottom_toTopOf="@id/clipboard_url"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/link_icon"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_chainStyle="packed" />
+    <TextView
+        android:id="@+id/clipboard_title"
+        style="@style/SearchClipboardTitleStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/search_fragment_clipboard_item_title_margin_start"
+        android:clickable="false"
+        android:focusable="false"
+        android:importantForAccessibility="no"
+        android:text="@string/awesomebar_clipboard_title"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/clipboard_url"
+        app:layout_constraintEnd_toEndOf="@+id/fill_link_from_clipboard"
+        app:layout_constraintStart_toEndOf="@id/link_icon"
+        app:layout_constraintTop_toTopOf="@id/fill_link_from_clipboard"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Title"
+        tools:visibility="visible" />
 
-        <TextView
-            android:id="@+id/clipboard_url"
-            style="@style/SearchClipboardUrlStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="@id/clipboard_title"
-            app:layout_constraintTop_toBottomOf="@id/clipboard_title"
-            app:layout_constraintVertical_chainStyle="packed" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    <TextView
+        android:id="@+id/clipboard_url"
+        style="@style/SearchClipboardUrlStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/search_fragment_clipboard_item_title_margin_start"
+        android:clickable="false"
+        android:focusable="false"
+        android:importantForAccessibility="no"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/fill_link_from_clipboard"
+        app:layout_constraintEnd_toEndOf="@+id/fill_link_from_clipboard"
+        app:layout_constraintStart_toEndOf="@id/link_icon"
+        app:layout_constraintTop_toBottomOf="@id/clipboard_title"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="url"
+        tools:visibility="visible" />
 
-    <LinearLayout
+    <View
         android:id="@+id/pill_wrapper"
         android:layout_width="0dp"
         android:layout_height="@dimen/search_fragment_pill_height"
         android:background="?foundation"
-        android:orientation="horizontal"
+        android:importantForAccessibility="no"
         android:paddingStart="@dimen/search_fragment_pill_padding_start"
         android:paddingTop="@dimen/search_fragment_pill_padding_vertical"
         android:paddingEnd="@dimen/search_fragment_pill_padding_end"
         android:paddingBottom="@dimen/search_fragment_pill_padding_vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent" />
 
-        <ToggleButton
-            android:id="@+id/qr_scan_button"
-            style="@style/search_pill"
-            android:layout_marginEnd="@dimen/search_fragment_scan_button_margin_end"
-            android:textOff="@string/search_scan_button"
-            android:textOn="@string/search_scan_button"
-            app:drawableStartCompat="@drawable/ic_qr" />
+    <ToggleButton
+        android:id="@+id/qr_scan_button"
+        style="@style/search_pill"
+        android:layout_marginEnd="@dimen/search_fragment_scan_button_margin_end"
+        android:textOff="@string/search_scan_button"
+        android:textOn="@string/search_scan_button"
+        app:drawableStartCompat="@drawable/ic_qr"
+        app:layout_constraintBottom_toBottomOf="@id/pill_wrapper"
+        app:layout_constraintEnd_toStartOf="@id/search_engines_shortcut_button"
+        app:layout_constraintStart_toStartOf="@id/pill_wrapper"
+        app:layout_constraintTop_toTopOf="@id/pill_wrapper" />
 
-        <ToggleButton
-            android:id="@+id/search_engines_shortcut_button"
-            style="@style/search_pill"
-            android:textOff="@string/search_engine_button"
-            android:textOn="@string/search_engine_button"
-            app:drawableStartCompat="@drawable/ic_search" />
-    </LinearLayout>
+    <ToggleButton
+        android:id="@+id/search_engines_shortcut_button"
+        style="@style/search_pill"
+        android:textOff="@string/search_engine_button"
+        android:textOn="@string/search_engine_button"
+        app:drawableStartCompat="@drawable/ic_search"
+        app:layout_constraintBottom_toBottomOf="@id/pill_wrapper"
+        app:layout_constraintStart_toEndOf="@id/qr_scan_button"
+        app:layout_constraintTop_toTopOf="@id/pill_wrapper" />
 </androidx.constraintlayout.widget.ConstraintLayout>

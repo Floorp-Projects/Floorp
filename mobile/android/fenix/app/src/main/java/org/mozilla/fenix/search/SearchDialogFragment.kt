@@ -501,8 +501,14 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 searchState.query.isEmpty() &&
                 !clipboardUrl.isNullOrEmpty()
 
-        fill_link_from_clipboard.visibility = if (shouldShowView) View.VISIBLE else View.GONE
+        fill_link_from_clipboard.isVisible = shouldShowView
+        clipboard_url.isVisible = shouldShowView
+        clipboard_title.isVisible = shouldShowView
+        link_icon.isVisible = shouldShowView
+
         clipboard_url.text = clipboardUrl
+
+        fill_link_from_clipboard.contentDescription = "${clipboard_title.text}, ${clipboard_url.text}."
 
         if (clipboardUrl != null && !((activity as HomeActivity).browsingModeManager.mode.isPrivate)) {
             requireComponents.core.engine.speculativeConnect(clipboardUrl)
