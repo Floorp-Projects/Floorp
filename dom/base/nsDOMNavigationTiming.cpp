@@ -25,7 +25,6 @@
 #include "nsPrintfCString.h"
 #include "prtime.h"
 #ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
 #  include "mozilla/ProfilerMarkerTypes.h"
 #endif
 
