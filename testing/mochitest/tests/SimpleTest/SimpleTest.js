@@ -1180,6 +1180,27 @@ SimpleTest.waitForFocus = function(callback, targetWindow, expectBlankPage) {
 };
 /* eslint-enable mozilla/use-services */
 
+SimpleTest.stripLinebreaksAndWhitespaceAfterTags = function(aString) {
+  return aString.replace(/(>\s*(\r\n|\n|\r)*\s*)/gm, ">");
+};
+
+/*
+ * `navigator.platform` should include this, when the platform is Windows.
+ */
+const kPlatformWindows = "Win";
+
+/*
+ * See `SimpleTest.waitForClipboard`.
+ */
+const kTextHtmlPrefixClipboardDataWindows =
+  "<html><body>\n<!--StartFragment-->";
+
+/*
+ * See `SimpleTest.waitForClipboard`.
+ */
+const kTextHtmlSuffixClipboardDataWindows =
+  "<!--EndFragment-->\n</body>\n</html>";
+
 /*
  * Polls the clipboard waiting for the expected value. A known value different than
  * the expected value is put on the clipboard first (and also polled for) so we
@@ -1194,8 +1215,8 @@ SimpleTest.waitForFocus = function(callback, targetWindow, expectBlankPage) {
  *        as LineFeed.  Therefore, you cannot include CarriageReturn to the
  *        string.
  *        If you specify string value and expect "text/html" data, this wraps
- *        the expected value with "<html><body>\n<!--StartFragment-->" and
- *        "<!--EndFragment-->\n</body>\n</html>" only when it runs on Windows
+ *        the expected value with `kTextHtmlPrefixClipboardDataWindows` and
+ *        `kTextHtmlSuffixClipboardDataWindows` only when it runs on Windows
  *        because they are appended only by nsDataObj.cpp for Windows.
  *        https://searchfox.org/mozilla-central/rev/8f7b017a31326515cb467e69eef1f6c965b4f00e/widget/windows/nsDataObj.cpp#1798-1805,1839-1840,1842
  *        Therefore, you can specify selected (copied) HTML data simply on any
@@ -1283,7 +1304,9 @@ SimpleTest.promiseClipboardChange = async function(
       inputValidatorFn = function(aData) {
         return (
           aData.replace(/\r\n?/g, "\n") ===
-          `<html><body>\n<!--StartFragment-->${aExpectedStringOrValidatorFn}<!--EndFragment-->\n</body>\n</html>`
+          kTextHtmlPrefixClipboardDataWindows +
+            aExpectedStringOrValidatorFn +
+            kTextHtmlSuffixClipboardDataWindows
         );
       };
     } else {

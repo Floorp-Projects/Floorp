@@ -40,10 +40,6 @@
     const kInputEventType = "input";
     const kInputEventInputTypeInsertFromPaste = "insertFromPaste";
 
-    const kPlatformWindows = "Win";
-    const kClipboardDataPrefixOnWindows = "<html><body>\n<!--StartFragment-->";
-    const kClipboardDataSuffixOnWindows = "<!--EndFragment-->\n</body>\n</html>";
-
     // Where a table is pasted to in the test.
     const kTargetElementId = "targetElement";
 
@@ -55,10 +51,6 @@
     function FilterRowsWithParentTag(aTableName, aRowsInTable, aTagName) {
       return aRowsInTable.filter(rowName => document.getElementById(aTableName +
         rowName).parentElement.tagName == aTagName);
-    }
-
-    function stripLinebreaksAndWhitespaceAfterTags(aString) {
-      return aString.replace(/(>\s*(\r\n|\n|\r)*\s*)/gm,">");
     }
 
     /**
@@ -128,7 +120,7 @@
 
         // Linebreaks and whitespace after tags are irrelevant, hence stripping
         // them.
-        is(stripLinebreaksAndWhitespaceAfterTags(
+        is(SimpleTest.stripLinebreaksAndWhitespaceAfterTags(
           targetElement.children[0].outerHTML), expectedPastedHTML,
           "Pasted table (" + this._toString() + ") has expected outerHTML.");
       }
@@ -166,7 +158,7 @@
 
       _getOuterHTMLAndStripLinebreaksAndWhitespaceAfterTags(aElementId) {
         const outerHTML = document.getElementById(aElementId).outerHTML;
-        return stripLinebreaksAndWhitespaceAfterTags(outerHTML);
+        return SimpleTest.stripLinebreaksAndWhitespaceAfterTags(outerHTML);
       }
 
       _createExpectedOuterHTMLOfTable() {
@@ -266,14 +258,14 @@
 
             // Windows wraps the pasted HTML, see
             // https://searchfox.org/mozilla-central/rev/8f7b017a31326515cb467e69eef1f6c965b4f00e/widget/windows/nsDataObj.cpp#1798-1805,1839-1840,1842.
-            aExpectedPastedHTML = kClipboardDataPrefixOnWindows +
-              aExpectedPastedHTML + kClipboardDataSuffixOnWindows;
+            aExpectedPastedHTML = kTextHtmlPrefixClipboardDataWindows +
+              aExpectedPastedHTML + kTextHtmlSuffixClipboardDataWindows;
           }
 
           // The data's format doesn't specify whether there should be line
           // breaks or whitspace between tags. Hence, remove them.
-          return stripLinebreaksAndWhitespaceAfterTags(aData) ==
-            stripLinebreaksAndWhitespaceAfterTags(aExpectedPastedHTML);
+          return SimpleTest.stripLinebreaksAndWhitespaceAfterTags(aData) ==
+            SimpleTest.stripLinebreaksAndWhitespaceAfterTags(aExpectedPastedHTML);
         }
 
         return SimpleTest.promiseClipboardChange(validatorFn,
