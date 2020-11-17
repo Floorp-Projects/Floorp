@@ -210,8 +210,8 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     // fetch the node's target.
     let target;
     if (descriptorFront && descriptorFront.traits.watcher) {
-      const watcher = await descriptorFront.getWatcher();
-      target = await watcher.getBrowsingContextTarget(browsingContextId);
+      const watcherFront = await descriptorFront.getWatcher();
+      target = await watcherFront.getBrowsingContextTarget(browsingContextId);
     } else {
       // For descriptors which don't expose a watcher (e.g. WebExtension)
       // we used to call RootActor::getBrowsingContextDescriptor, but it was

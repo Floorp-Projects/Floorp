@@ -48,8 +48,8 @@ add_task(async () => {
     // We have to use the watcher in order to create the frame target
     // and also have to attach to it in order to later be able to
     // create the thread front
-    const watcher = await target.getWatcher();
-    await watcher.watchTargets("frame");
+    const watcherFront = await target.getWatcherFront();
+    await watcherFront.watchTargets("frame");
     const iframeTarget = await target.getBrowsingContextTarget(
       iframeBrowsingContext.id
     );
