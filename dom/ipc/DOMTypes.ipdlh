@@ -382,8 +382,9 @@ struct OwnerShowInfo {
   // TODO(emilio): Margin preferences go here.
   ScrollbarPreference scrollbarPreference;
 
-  // TODO(emilio): I think we should really be able to figure this out from the
+  // TODO(emilio): I think we should really be able to figure out these from the
   // parent process too instead.
+  bool parentWindowIsActive;
   nsSizeMode sizeMode;
 };
 

@@ -3670,9 +3670,9 @@ void nsWindow::OnContainerFocusOutEvent(GdkEventFocus* aEvent) {
 
   if (IsChromeWindowTitlebar()) {
     // DispatchDeactivateEvent() ultimately results in a call to
-    // BrowsingContext::SetIsActiveBrowserWindow(), which resets
-    // the state.  We call UpdateMozWindowActive() to keep it in
-    // sync with GDK_WINDOW_STATE_FOCUSED.
+    // nsGlobalWindowOuter::ActivateOrDeactivate(), which resets
+    // the mIsActive flag.  We call UpdateMozWindowActive() to keep
+    // the flag in sync with GDK_WINDOW_STATE_FOCUSED.
     UpdateMozWindowActive();
   }
 
@@ -3918,7 +3918,7 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
     mTitlebarBackdropState =
         !(aEvent->new_window_state & GDK_WINDOW_STATE_FOCUSED);
 
-    // keep IsActiveBrowserWindow in sync with GDK_WINDOW_STATE_FOCUSED
+    // keep mIsActive in sync with GDK_WINDOW_STATE_FOCUSED
     UpdateMozWindowActive();
 
     ForceTitlebarRedraw();
@@ -8140,12 +8140,11 @@ void nsWindow::UpdateMozWindowActive() {
   // Update activation state for the :-moz-window-inactive pseudoclass.
   // Normally, this follows focus; we override it here to follow
   // GDK_WINDOW_STATE_FOCUSED.
-  if (mozilla::dom::Document* document = GetDocument()) {
-    if (nsPIDOMWindowOuter* window = document->GetWindow()) {
-      if (RefPtr<mozilla::dom::BrowsingContext> bc =
-              window->GetBrowsingContext()) {
-        bc->SetIsActiveBrowserWindow(!mTitlebarBackdropState);
-      }
+  mozilla::dom::Document* document = GetDocument();
+  if (document) {
+    nsPIDOMWindowOuter* window = document->GetWindow();
+    if (window) {
+      window->SetActive(!mTitlebarBackdropState);
     }
   }
 }

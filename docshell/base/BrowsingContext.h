@@ -96,10 +96,6 @@ class WindowProxyHolder;
   /* If true, we're within the nested event loop in window.open, and this    \
    * context may not be used as the target of a load */                      \
   FIELD(PendingInitialization, bool)                                         \
-  /* Indicates if the browser window is active for the purpose of the        \
-   * :-moz-window-inactive pseudoclass. Only read from or set on the         \
-   * top BrowsingContext. */                                                 \
-  FIELD(IsActiveBrowserWindowInternal, bool)                                 \
   FIELD(OpenerPolicy, nsILoadInfo::CrossOriginOpenerPolicy)                  \
   /* Current opener for the BrowsingContext. Weak reference */               \
   FIELD(OpenerId, uint64_t)                                                  \
@@ -290,9 +286,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // null if it's not.
   Document* GetDocument() const {
     return mDocShell ? mDocShell->GetDocument() : nullptr;
-  }
-  Document* GetExtantDocument() const {
-    return mDocShell ? mDocShell->GetExtantDocument() : nullptr;
   }
 
   // This cleans up remote outer window proxies that might have been left behind
@@ -490,10 +483,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   }
 
   bool UseGlobalHistory() const { return GetUseGlobalHistory(); }
-
-  bool GetIsActiveBrowserWindow();
-
-  void SetIsActiveBrowserWindow(bool aActive);
 
   uint64_t BrowserId() const { return GetBrowserId(); }
 
@@ -861,10 +850,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void DidSet(FieldIndex<IDX_DisplayMode>, enum DisplayMode aOldValue);
 
   void DidSet(FieldIndex<IDX_IsActive>, bool aOldValue);
-
-  bool CanSet(FieldIndex<IDX_IsActiveBrowserWindowInternal>, const bool& aValue,
-              ContentParent* aSource);
-  void DidSet(FieldIndex<IDX_IsActiveBrowserWindowInternal>, bool aOldValue);
 
   // Ensure that we only set the flag on the top level browsingContext.
   // And then, we do a pre-order walk in the tree to refresh the

@@ -748,6 +748,8 @@ child:
 
     async DynamicToolbarOffsetChanged(ScreenIntCoord height);
 
+    async ParentActivated(bool aActivated);
+
     async SetKeyboardIndicators(UIStateChangeType showFocusRings);
 
     /**
