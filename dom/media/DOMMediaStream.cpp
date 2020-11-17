@@ -338,7 +338,10 @@ void DOMMediaStream::AddTrack(MediaStreamTrack& aTrack) {
   }
 
   mTracks.AppendElement(&aTrack);
-  NotifyTrackAdded(&aTrack);
+
+  if (!aTrack.Ended()) {
+    NotifyTrackAdded(&aTrack);
+  }
 }
 
 void DOMMediaStream::RemoveTrack(MediaStreamTrack& aTrack) {
