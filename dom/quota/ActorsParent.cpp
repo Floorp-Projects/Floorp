@@ -2539,13 +2539,9 @@ Result<nsCOMPtr<nsIOutputStream>, nsresult> GetOutputStream(
     nsIFile& aFile, FileFlag aFileFlag) {
   AssertIsOnIOThread();
 
-  nsCOMPtr<nsIOutputStream> outputStream;
   switch (aFileFlag) {
-    case kTruncateFileFlag: {
-      QM_TRY(NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), &aFile));
-
-      break;
-    }
+    case kTruncateFileFlag:
+      QM_TRY_RETURN(NS_NewLocalFileOutputStream(&aFile));
 
     case kUpdateFileFlag: {
       QM_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(&aFile, Exists));
@@ -2554,28 +2550,21 @@ Result<nsCOMPtr<nsIOutputStream>, nsresult> GetOutputStream(
         return nsCOMPtr<nsIOutputStream>();
       }
 
-      nsCOMPtr<nsIFileStream> stream;
-      QM_TRY(NS_NewLocalFileStream(getter_AddRefs(stream), &aFile));
+      QM_TRY_INSPECT(const auto& stream, NS_NewLocalFileStream(&aFile));
 
-      outputStream = do_QueryInterface(stream);
+      nsCOMPtr<nsIOutputStream> outputStream = do_QueryInterface(stream);
       QM_TRY(OkIf(outputStream), Err(NS_ERROR_FAILURE));
 
-      break;
+      return outputStream;
     }
 
-    case kAppendFileFlag: {
-      QM_TRY(
-          NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), &aFile,
-                                      PR_WRONLY | PR_CREATE_FILE | PR_APPEND));
-
-      break;
-    }
+    case kAppendFileFlag:
+      QM_TRY_RETURN(NS_NewLocalFileOutputStream(
+          &aFile, PR_WRONLY | PR_CREATE_FILE | PR_APPEND));
 
     default:
       MOZ_CRASH("Should never get here!");
   }
-
-  return outputStream;
 }
 
 Result<nsCOMPtr<nsIBinaryOutputStream>, nsresult> GetBinaryOutputStream(
@@ -2716,12 +2705,10 @@ Result<nsCOMPtr<nsIBinaryInputStream>, nsresult> GetBinaryInputStream(
 
   QM_TRY(file->Append(aFilename));
 
-  nsCOMPtr<nsIInputStream> stream;
-  QM_TRY(NS_NewLocalFileInputStream(getter_AddRefs(stream), file));
+  QM_TRY_UNWRAP(auto stream, NS_NewLocalFileInputStream(file));
 
-  nsCOMPtr<nsIInputStream> bufferedStream;
-  QM_TRY(NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
-                                   stream.forget(), 512));
+  QM_TRY_INSPECT(const auto& bufferedStream,
+                 NS_NewBufferedInputStream(stream.forget(), 512));
 
   QM_TRY(OkIf(bufferedStream), Err(NS_ERROR_FAILURE));
 
