@@ -159,9 +159,8 @@ Result<int64_t, nsresult> LockedGetPaddingSizeFromDB(
   // schema for the given origin).
   CACHE_TRY(db::CreateOrMigrateSchema(*conn));
 
-  CACHE_TRY_RETURN(ToResultInvoke<int64_t>(LockedDirectoryPaddingRestore, &aDir,
-                                           conn,
-                                           /* aMustRestore */ false));
+  CACHE_TRY_RETURN(LockedDirectoryPaddingRestore(aDir, *conn,
+                                                 /* aMustRestore */ false));
 }
 
 }  // namespace
@@ -274,15 +273,14 @@ nsresult CacheQuotaClient::RestorePaddingFileInternal(
   MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
   MOZ_DIAGNOSTIC_ASSERT(aConn);
 
-  int64_t dummyPaddingSize;
-
   MutexAutoLock lock(mDirPaddingFileMutex);
 
-  nsresult rv = LockedDirectoryPaddingRestore(
-      aBaseDir, aConn, /* aMustRestore */ true, &dummyPaddingSize);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  CACHE_TRY_INSPECT(const int64_t& dummyPaddingSize,
+                    LockedDirectoryPaddingRestore(*aBaseDir, *aConn,
+                                                  /* aMustRestore */ true));
+  Unused << dummyPaddingSize;
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult CacheQuotaClient::WipePaddingFileInternal(const QuotaInfo& aQuotaInfo,
