@@ -23,7 +23,6 @@
 
 #ifdef MOZ_GECKO_PROFILER
 
-#  include "js/AllocationRecording.h"
 #  include "js/ProfilingFrameIterator.h"
 #  include "js/Utility.h"
 #  include "mozilla/ipc/ProtocolUtils.h"
@@ -38,40 +37,6 @@ using UserTimingMark = mozilla::baseprofiler::markers::UserTimingMark;
 using UserTimingMeasure = mozilla::baseprofiler::markers::UserTimingMeasure;
 using MediaSampleMarker = mozilla::baseprofiler::markers::MediaSampleMarker;
 using ContentBuildMarker = mozilla::baseprofiler::markers::ContentBuildMarker;
-
-class JsAllocationMarkerPayload {
-  static constexpr mozilla::Span<const char> MarkerTypeName() {
-    return mozilla::MakeStringSpan("JS allocation");
-  }
-  static void StreamJSONMarkerData(
-      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
-      const mozilla::ProfilerString16View& aTypeName,
-      const mozilla::ProfilerString8View& aClassName,
-      const mozilla::ProfilerString16View& aDescriptiveTypeName,
-      const mozilla::ProfilerString8View& aCoarseType, uint64_t aSize,
-      bool aInNursery) {
-    if (aClassName.Length() != 0) {
-      aWriter.StringProperty("className", aClassName);
-    }
-    if (aTypeName.Length() != 0) {
-      aWriter.StringProperty(
-          "typeName",
-          NS_ConvertUTF16toUTF8(aTypeName.Data(), aTypeName.Length()));
-    }
-    if (aDescriptiveTypeName.Length() != 0) {
-      aWriter.StringProperty(
-          "descriptiveTypeName",
-          NS_ConvertUTF16toUTF8(aDescriptiveTypeName.Data(),
-                                aDescriptiveTypeName.Length()));
-    }
-    aWriter.StringProperty("coarseType", aCoarseType);
-    aWriter.IntProperty("size", aSize);
-    aWriter.BoolProperty("inNursery", aInNursery);
-  }
-  static mozilla::MarkerSchema MarkerTypeDisplay() {
-    return mozilla::MarkerSchema::SpecialFrontendLocation{};
-  }
-};
 
 // This payload is for collecting information about native allocations. There is
 // a memory hook into malloc and other memory functions that can sample a subset
