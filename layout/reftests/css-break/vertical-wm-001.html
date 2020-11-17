@@ -13,30 +13,20 @@
 <style type="text/css">
 body,html { padding:30px; margin:0; }
 .col {
-  -webkit-columns: 2;
-          columns: 2;
-  -webkit-column-gap: 0;
-          column-gap: 0;
-  -webkit-column-fill: auto;
-          column-fill: auto;
+  columns: 2;
+  column-gap: 0;
+  column-fill: auto;
 
-  width: 90px;
-  height: 140px;
+  block-size: 90px;
+  inline-size: 140px;
   border:1px solid;
 }
 .vl { writing-mode: vertical-lr; }
 
-.c {
-  width: 90px;
-  height: 140px;
-  writing-mode: vertical-lr;
-  border:1px solid;
-}
-
 .inner {
-  border-left:25px solid blue;
-  border-right:17px solid grey;
-  height: 70px;
+  border-block-start: 25px solid blue;
+  border-block-end: 17px solid grey;
+  inline-size: 70px;
 }
 
 x {
@@ -44,47 +34,35 @@ x {
   break-inside:avoid;
   page-break-inside:avoid;
   vertical-align: top;
-  width:20px; height:20px;
+  inline-size: 20px;
+  block-size: 20px;
   background:silver;
 }
 x:nth-of-type(2n) {background:purple;}
-
-.h {
-  width: 140px;
-  height: 90px;
-}
-.h x { display:block; }
-.h .inner {
-  border:none;
-  border-top:25px solid blue;
-  border-bottom:17px solid grey;
-  width: 70px;
-  height: auto;
-}
 </style>
 </head>
 <body>
 
 <div class="col vl">
-<div class="inner" style="margin-left:40px">
+<div class="inner" style="margin-block-start:40px">
 <x></x><x></x>
 </div>
 </div>
 
-<div class="col h">
-<div class="inner" style="margin-top:40px">
-<x></x><x></x>
-</div>
-</div>
-
-<div class="col vl">
-<div class="inner" style="margin-left:40px; width:90px">
+<div class="col">
+<div class="inner" style="margin-block-start:40px">
 <x></x><x></x>
 </div>
 </div>
 
 <div class="col vl">
-<div class="inner" style="margin-left:40px; width:100px">
+<div class="inner" style="margin-block-start:40px; block-size:90px">
+<x></x><x></x>
+</div>
+</div>
+
+<div class="col vl">
+<div class="inner" style="margin-block-start:40px; block-size:100px">
 <x></x><x></x>
 </div>
 </div>
