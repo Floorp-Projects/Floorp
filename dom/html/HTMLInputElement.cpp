@@ -54,6 +54,7 @@
 #include "nsError.h"
 #include "nsIEditor.h"
 #include "nsAttrValueOrString.h"
+#include "nsIPromptCollection.h"
 
 #include "mozilla/PresState.h"
 #include "nsLinebreakConverter.h"  //to strip out carriage returns
@@ -480,6 +481,37 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult) {
                mode == static_cast<int16_t>(nsIFilePicker::modeGetFolder));
     nsCOMPtr<nsISupports> tmp;
     nsresult rv = mFilePicker->GetDomFileOrDirectory(getter_AddRefs(tmp));
+
+    // Show a prompt to get user confirmation before allowing folder access.
+    // This is to prevent sites from tricking the user into uploading files.
+    // See Bug 1338637.
+    if (mode == static_cast<int16_t>(nsIFilePicker::modeGetFolder)) {
+      nsCOMPtr<nsIPromptCollection> prompter =
+          do_GetService("@mozilla.org/embedcomp/prompt-collection;1");
+      if (!prompter) {
+        return NS_ERROR_NOT_AVAILABLE;
+      }
+
+      bool confirmed = false;
+      BrowsingContext* bc = mInput->OwnerDoc()->GetBrowsingContext();
+
+      // Get directory name
+      RefPtr<Directory> directory = static_cast<Directory*>(tmp.get());
+      nsAutoString directoryName;
+      ErrorResult error;
+      directory->GetName(directoryName, error);
+      if (NS_WARN_IF(error.Failed())) {
+        return error.StealNSResult();
+      }
+
+      rv = prompter->ConfirmFolderUpload(bc, directoryName, &confirmed);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!confirmed) {
+        // User aborted upload
+        return NS_OK;
+      }
+    }
+
     NS_ENSURE_SUCCESS(rv, rv);
 
     RefPtr<Blob> blob = do_QueryObject(tmp);
