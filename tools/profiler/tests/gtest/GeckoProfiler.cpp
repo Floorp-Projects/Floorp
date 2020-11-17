@@ -829,15 +829,10 @@ TEST(GeckoProfiler, Markers)
       /* const mozilla::Maybe<nsDependentCString>& aContentType =
          mozilla::Nothing() */);
 
-  PROFILER_ADD_MARKER_WITH_PAYLOAD("TextMarkerPayload marker 1", OTHER,
-                                   TextMarkerPayload, ("text"_ns, ts1));
-
-  PROFILER_ADD_MARKER_WITH_PAYLOAD("TextMarkerPayload marker 2", OTHER,
-                                   TextMarkerPayload, ("text"_ns, ts1, ts2));
-
   MOZ_RELEASE_ASSERT(profiler_add_marker(
       "Text in main thread with stack", geckoprofiler::category::OTHER,
-      MarkerStack::Capture(), geckoprofiler::markers::Text{}, ""));
+      {MarkerStack::Capture(), MarkerTiming::Interval(ts1, ts2)},
+      geckoprofiler::markers::Text{}, ""));
   MOZ_RELEASE_ASSERT(profiler_add_marker(
       "Text from main thread with stack", geckoprofiler::category::OTHER,
       MarkerOptions(MarkerThreadId::MainThread(), MarkerStack::Capture()),
@@ -932,8 +927,6 @@ TEST(GeckoProfiler, Markers)
     S_NetworkMarkerPayload_start,
     S_NetworkMarkerPayload_stop,
     S_NetworkMarkerPayload_redirect,
-    S_TextMarkerPayload1,
-    S_TextMarkerPayload2,
     S_TextWithStack,
     S_TextToMTWithStack,
     S_RegThread_TextToMTWithStack,
@@ -1319,27 +1312,12 @@ TEST(GeckoProfiler, Markers)
                                "http://example.com/");
                 EXPECT_TRUE(payload["contentType"].isNull());
 
-              } else if (nameString == "TextMarkerPayload marker 1") {
-                EXPECT_EQ(state, S_TextMarkerPayload1);
-                state = State(S_TextMarkerPayload1 + 1);
-                EXPECT_EQ(typeString, "Text");
-                EXPECT_TIMING_INSTANT_AT(ts1Double);
-                EXPECT_TRUE(payload["stack"].isNull());
-                EXPECT_EQ_JSON(payload["name"], String, "text");
-
-              } else if (nameString == "TextMarkerPayload marker 2") {
-                EXPECT_EQ(state, S_TextMarkerPayload2);
-                state = State(S_TextMarkerPayload2 + 1);
-                EXPECT_EQ(typeString, "Text");
-                EXPECT_TIMING_INTERVAL_AT(ts1Double, ts2Double);
-                EXPECT_TRUE(payload["stack"].isNull());
-                EXPECT_EQ_JSON(payload["name"], String, "text");
-
               } else if (nameString == "Text in main thread with stack") {
                 EXPECT_EQ(state, S_TextWithStack);
                 state = State(S_TextWithStack + 1);
                 EXPECT_EQ(typeString, "Text");
                 EXPECT_FALSE(payload["stack"].isNull());
+                EXPECT_TIMING_INTERVAL_AT(ts1Double, ts2Double);
                 EXPECT_EQ_JSON(payload["name"], String, "");
 
               } else if (nameString == "Text from main thread with stack") {
