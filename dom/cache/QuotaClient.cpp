@@ -19,18 +19,8 @@
 #include "nsIFile.h"
 #include "nsThreadUtils.h"
 
-namespace {
+namespace mozilla::dom::cache {
 
-using mozilla::Atomic;
-using mozilla::MutexAutoLock;
-using mozilla::Result;
-using mozilla::Some;
-using mozilla::Unused;
-using mozilla::dom::ContentParentId;
-using mozilla::dom::cache::DirPaddingFile;
-using mozilla::dom::cache::kCachesSQLiteFilename;
-using mozilla::dom::cache::Manager;
-using mozilla::dom::cache::QuotaInfo;
 using mozilla::dom::quota::AssertIsOnIOThread;
 using mozilla::dom::quota::Client;
 using mozilla::dom::quota::CloneFileAndAppend;
@@ -42,8 +32,10 @@ using mozilla::dom::quota::QuotaManager;
 using mozilla::dom::quota::UsageInfo;
 using mozilla::ipc::AssertIsOnBackgroundThread;
 
-static nsresult GetBodyUsage(nsIFile* aMorgueDir, const Atomic<bool>& aCanceled,
-                             UsageInfo* aUsageInfo, const bool aInitializing) {
+namespace {
+
+nsresult GetBodyUsage(nsIFile* aMorgueDir, const Atomic<bool>& aCanceled,
+                      UsageInfo* aUsageInfo, const bool aInitializing) {
   AssertIsOnIOThread();
 
   nsCOMPtr<nsIDirectoryEnumerator> entries;
@@ -66,7 +58,7 @@ static nsresult GetBodyUsage(nsIFile* aMorgueDir, const Atomic<bool>& aCanceled,
 
     if (!isDir) {
       QuotaInfo dummy;
-      mozilla::DebugOnly<nsresult> result =
+      DebugOnly<nsresult> result =
           RemoveNsIFile(dummy, bodyDir, /* aTrackQuota */ false);
       // Try to remove the unexpected files, and keep moving on even if it fails
       // because it might be created by virus or the operation system
@@ -108,10 +100,10 @@ static nsresult GetBodyUsage(nsIFile* aMorgueDir, const Atomic<bool>& aCanceled,
 
       return NS_OK;
     };
-    rv = mozilla::dom::cache::BodyTraverseFiles(dummy, bodyDir, getUsage,
-                                                /* aCanRemoveFiles */
-                                                aInitializing,
-                                                /* aTrackQuota */ false);
+    rv = BodyTraverseFiles(dummy, bodyDir, getUsage,
+                           /* aCanRemoveFiles */
+                           aInitializing,
+                           /* aTrackQuota */ false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -123,7 +115,7 @@ static nsresult GetBodyUsage(nsIFile* aMorgueDir, const Atomic<bool>& aCanceled,
   return NS_OK;
 }
 
-static Result<int64_t, nsresult> LockedGetPaddingSizeFromDB(
+Result<int64_t, nsresult> LockedGetPaddingSizeFromDB(
     nsIFile& aDir, const GroupAndOrigin& aGroupAndOrigin) {
   QuotaInfo quotaInfo;
   static_cast<GroupAndOrigin&>(quotaInfo) = aGroupAndOrigin;
@@ -150,26 +142,23 @@ static Result<int64_t, nsresult> LockedGetPaddingSizeFromDB(
     return 0;
   }
 
-  CACHE_TRY_INSPECT(
-      const auto& conn,
-      mozilla::ToResultInvoke<nsCOMPtr<mozIStorageConnection>>(
-          mozilla::dom::cache::OpenDBConnection, quotaInfo, dbFile));
+  CACHE_TRY_INSPECT(const auto& conn,
+                    ToResultInvoke<nsCOMPtr<mozIStorageConnection>>(
+                        OpenDBConnection, quotaInfo, dbFile));
 
   // Make sure that the database has the latest schema before we try to read
   // from it. We have to do this because LockedGetPaddingSizeFromDB is called
   // by QuotaClient::GetUsageForOrigin which may run at any time (there's no
   // guarantee that SetupAction::RunSyncWithDBOnTarget already checked the
   // schema for the given origin).
-  CACHE_TRY(mozilla::dom::cache::db::CreateOrMigrateSchema(*conn));
+  CACHE_TRY(db::CreateOrMigrateSchema(*conn));
 
-  CACHE_TRY_RETURN(mozilla::ToResultInvoke<int64_t>(
-      mozilla::dom::cache::LockedDirectoryPaddingRestore, &aDir, conn,
-      /* aMustRestore */ false));
+  CACHE_TRY_RETURN(ToResultInvoke<int64_t>(LockedDirectoryPaddingRestore, &aDir,
+                                           conn,
+                                           /* aMustRestore */ false));
 }
 
 }  // namespace
-
-namespace mozilla::dom::cache {
 
 const nsLiteralString kCachesSQLiteFilename = u"caches.sqlite"_ns;
 
@@ -265,7 +254,7 @@ nsresult CacheQuotaClient::UpgradeStorageFrom2_0To2_1(nsIFile* aDirectory) {
 
   MutexAutoLock lock(mDirPaddingFileMutex);
 
-  nsresult rv = mozilla::dom::cache::LockedDirectoryPaddingInit(aDirectory);
+  nsresult rv = LockedDirectoryPaddingInit(aDirectory);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -283,7 +272,7 @@ nsresult CacheQuotaClient::RestorePaddingFileInternal(
 
   MutexAutoLock lock(mDirPaddingFileMutex);
 
-  nsresult rv = mozilla::dom::cache::LockedDirectoryPaddingRestore(
+  nsresult rv = LockedDirectoryPaddingRestore(
       aBaseDir, aConn, /* aMustRestore */ true, &dummyPaddingSize);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 
@@ -297,17 +286,15 @@ nsresult CacheQuotaClient::WipePaddingFileInternal(const QuotaInfo& aQuotaInfo,
 
   MutexAutoLock lock(mDirPaddingFileMutex);
 
-  MOZ_ASSERT(mozilla::dom::cache::DirectoryPaddingFileExists(
-      aBaseDir, DirPaddingFile::FILE));
+  MOZ_ASSERT(DirectoryPaddingFileExists(aBaseDir, DirPaddingFile::FILE));
 
   int64_t paddingSize = 0;
   bool temporaryPaddingFileExist =
-      mozilla::dom::cache::DirectoryPaddingFileExists(aBaseDir,
-                                                      DirPaddingFile::TMP_FILE);
+      DirectoryPaddingFileExists(aBaseDir, DirPaddingFile::TMP_FILE);
 
   if (temporaryPaddingFileExist ||
-      NS_WARN_IF(NS_FAILED(mozilla::dom::cache::LockedDirectoryPaddingGet(
-          aBaseDir, &paddingSize)))) {
+      NS_WARN_IF(
+          NS_FAILED(LockedDirectoryPaddingGet(aBaseDir, &paddingSize)))) {
     // XXXtt: Maybe have a method in the QuotaManager to clean the usage under
     // the quota client and the origin.
     // There is nothing we can do to recover the file.
@@ -316,23 +303,22 @@ nsresult CacheQuotaClient::WipePaddingFileInternal(const QuotaInfo& aQuotaInfo,
   }
 
   if (paddingSize > 0) {
-    mozilla::dom::cache::DecreaseUsageForQuotaInfo(aQuotaInfo, paddingSize);
+    DecreaseUsageForQuotaInfo(aQuotaInfo, paddingSize);
   }
 
-  nsresult rv = mozilla::dom::cache::LockedDirectoryPaddingDeleteFile(
-      aBaseDir, DirPaddingFile::FILE);
+  nsresult rv =
+      LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::FILE);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Remove temporary file if we have one.
-  rv = mozilla::dom::cache::LockedDirectoryPaddingDeleteFile(
-      aBaseDir, DirPaddingFile::TMP_FILE);
+  rv = LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::TMP_FILE);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = mozilla::dom::cache::LockedDirectoryPaddingInit(aBaseDir);
+  rv = LockedDirectoryPaddingInit(aBaseDir);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 
   return rv;
@@ -368,12 +354,10 @@ Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
         // previous action failed, so restore the padding file.
         MutexAutoLock lock(mDirPaddingFileMutex);
 
-        if (!mozilla::dom::cache::DirectoryPaddingFileExists(
-                dir, DirPaddingFile::TMP_FILE)) {
+        if (!DirectoryPaddingFileExists(dir, DirPaddingFile::TMP_FILE)) {
           const auto& maybePaddingSize = [&dir]() -> Maybe<int64_t> {
             CACHE_TRY_RETURN(
-                ToResultInvoke<int64_t>(
-                    mozilla::dom::cache::LockedDirectoryPaddingGet, dir)
+                ToResultInvoke<int64_t>(LockedDirectoryPaddingGet, dir)
                     .map(Some<int64_t>),
                 Nothing{});
           }();
@@ -522,4 +506,5 @@ nsresult WipePaddingFile(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir) {
 
   return rv;
 }
+
 }  // namespace mozilla::dom::cache
