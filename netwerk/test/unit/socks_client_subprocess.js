@@ -4,8 +4,6 @@
 
 var CC = Components.Constructor;
 
-var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
-
 const BinaryInputStream = CC(
   "@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream",
@@ -19,14 +17,39 @@ var sts = Cc["@mozilla.org/network/socket-transport-service;1"].getService(
   Ci.nsISocketTransportService
 );
 
-function launchConnection(socks_vers, socks_port, dest_host, dest_port, dns) {
-  var pi_flags = 0;
+function waitForStream(stream, streamType) {
+  return new Promise((resolve, reject) => {
+    stream = stream.QueryInterface(streamType);
+    if (!stream) {
+      reject("stream didn't implement given stream type");
+    }
+    let currentThread = Cc["@mozilla.org/thread-manager;1"].getService()
+      .currentThread;
+    stream.asyncWait(
+      stream => {
+        resolve(stream);
+      },
+      0,
+      0,
+      currentThread
+    );
+  });
+}
+
+async function launchConnection(
+  socks_vers,
+  socks_port,
+  dest_host,
+  dest_port,
+  dns
+) {
+  let pi_flags = 0;
   if (dns == "remote") {
     pi_flags = Ci.nsIProxyInfo.TRANSPARENT_PROXY_RESOLVES_HOST;
   }
 
-  var pps = new ProtocolProxyService();
-  var pi = pps.newProxyInfo(
+  let pps = new ProtocolProxyService();
+  let pi = pps.newProxyInfo(
     socks_vers,
     "localhost",
     socks_port,
@@ -36,29 +59,43 @@ function launchConnection(socks_vers, socks_port, dest_host, dest_port, dns) {
     -1,
     null
   );
-  var trans = sts.createTransport([], dest_host, dest_port, pi);
-  var input = trans.openInputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
-  var output = trans.openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
-  var bin = new BinaryInputStream(input);
-  var data = bin.readBytes(5);
+  let trans = sts.createTransport([], dest_host, dest_port, pi);
+  let input = trans.openInputStream(0, 0, 0);
+  let output = trans.openOutputStream(0, 0, 0);
+  input = await waitForStream(input, Ci.nsIAsyncInputStream);
+  let bin = new BinaryInputStream(input);
+  let data = bin.readBytes(5);
+  let response;
   if (data == "PING!") {
     print("client: got ping, sending pong.");
-    output.write("PONG!", 5);
+    response = "PONG!";
   } else {
     print("client: wrong data from server:", data);
-    output.write("Error: wrong data received.", 27);
+    response = "Error: wrong data received.";
   }
+  output = await waitForStream(output, Ci.nsIAsyncOutputStream);
+  output.write(response, response.length);
   output.close();
+  input.close();
 }
 
-for (var arg of arguments) {
-  print("client: running test", arg);
-  let test = arg.split("|");
-  launchConnection(
-    test[0],
-    parseInt(test[1]),
-    test[2],
-    parseInt(test[3]),
-    test[4]
-  );
+async function run(args) {
+  for (let arg of args) {
+    print("client: running test", arg);
+    let test = arg.split("|");
+    await launchConnection(
+      test[0],
+      parseInt(test[1]),
+      test[2],
+      parseInt(test[3]),
+      test[4]
+    );
+  }
+}
+
+var satisfied = false;
+run(arguments).then(() => (satisfied = true));
+var mainThread = Cc["@mozilla.org/thread-manager;1"].getService().mainThread;
+while (!satisfied) {
+  mainThread.processNextEvent(true);
 }

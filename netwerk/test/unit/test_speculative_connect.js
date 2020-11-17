@@ -100,6 +100,7 @@ function TestFailedStreamCallback(transport, hostname, next) {
   this.hostname = hostname;
   this.next = next;
   this.dummyContent = "G";
+  this.closed = false;
 }
 
 TestFailedStreamCallback.prototype = {
@@ -108,11 +109,15 @@ TestFailedStreamCallback.prototype = {
     "nsIOutputStreamCallback",
   ]),
   processException(e) {
+    if (this.closed) {
+      return;
+    }
     do_check_instanceof(e, Ci.nsIException);
     // A refusal to connect speculatively should throw an error.
     Assert.equal(e.result, Cr.NS_ERROR_CONNECTION_REFUSED);
+    this.closed = true;
     this.transport.close(Cr.NS_BINDING_ABORTED);
-    return true;
+    this.next();
   },
   onOutputStreamReady(outstream) {
     info("outputstream handler.");
@@ -121,7 +126,6 @@ TestFailedStreamCallback.prototype = {
       outstream.write(this.dummyContent, this.dummyContent.length);
     } catch (e) {
       this.processException(e);
-      this.next();
       return;
     }
     info("no exception on write. Wait for read.");
@@ -133,7 +137,6 @@ TestFailedStreamCallback.prototype = {
       instream.available();
     } catch (e) {
       this.processException(e);
-      this.next();
       return;
     }
     do_throw("Speculative Connect should have failed for " + this.hostname);

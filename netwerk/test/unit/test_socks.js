@@ -125,6 +125,7 @@ SocksClient.prototype = {
     if (len == 0) {
       print("server: client closed!");
       Assert.equal(this.state, STATE_GOT_PONG);
+      this.close();
       this.server.testCompleted(this);
       return;
     }
@@ -356,14 +357,12 @@ SocksClient.prototype = {
     this.outbuf += "PING!";
     this.inbuf = [];
     this.waitWrite(this.client_out);
-    this.waitRead(this.client_in);
   },
 
   checkPong() {
     var pong = buf2str(this.inbuf);
     Assert.equal(pong, "PONG!");
     this.state = STATE_GOT_PONG;
-    this.waitRead(this.client_in);
   },
 
   close() {
@@ -472,9 +471,6 @@ SocksTestServer.prototype = {
       }
       this.client_subprocess = null;
     }
-    for (var client of this.client_connections) {
-      client.close();
-    }
     this.client_connections = [];
     if (this.listener) {
       this.listener.close();
@@ -482,11 +478,6 @@ SocksTestServer.prototype = {
     }
   },
 };
-
-function test_timeout() {
-  socks_test_server.close();
-  do_throw("SOCKS test took too long!");
-}
 
 function run_test() {
   socks_test_server = new SocksTestServer();
@@ -524,6 +515,5 @@ function run_test() {
   });
   socks_test_server.runClientSubprocess();
 
-  do_timeout(120 * 1000, test_timeout);
   do_test_pending();
 }
