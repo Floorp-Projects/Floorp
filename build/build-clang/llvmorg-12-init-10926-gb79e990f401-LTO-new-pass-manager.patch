@@ -1,0 +1,66 @@
+diff --git a/lld/COFF/Config.h b/lld/COFF/Config.h
+index 7c439176f3a4..ae969c6bdd8b 100644
+--- a/lld/COFF/Config.h
++++ b/lld/COFF/Config.h
+@@ -155,6 +155,11 @@ struct Configuration {
+   // Used for /opt:lldltocachepolicy=policy
+   llvm::CachePruningPolicy ltoCachePolicy;
+ 
++  // Used for /opt:[no]ltonewpassmanager
++  bool ltoNewPassManager = false;
++  // Used for /opt:[no]ltodebugpassmanager
++  bool ltoDebugPassManager = false;
++
+   // Used for /merge:from=to (e.g. /merge:.rdata=.text)
+   std::map<StringRef, StringRef> merge;
+ 
+diff --git a/lld/COFF/Driver.cpp b/lld/COFF/Driver.cpp
+index 9ceccef86779..db2ae241dddf 100644
+--- a/lld/COFF/Driver.cpp
++++ b/lld/COFF/Driver.cpp
+@@ -1418,6 +1418,8 @@ void LinkerDriver::link(ArrayRef<const char *> argsArr) {
+   unsigned icfLevel =
+       args.hasArg(OPT_profile) ? 0 : 1; // 0: off, 1: limited, 2: on
+   unsigned tailMerge = 1;
++  bool ltoNewPM = false;
++  bool ltoDebugPM = false;
+   for (auto *arg : args.filtered(OPT_opt)) {
+     std::string str = StringRef(arg->getValue()).lower();
+     SmallVector<StringRef, 1> vec;
+@@ -1435,6 +1437,14 @@ void LinkerDriver::link(ArrayRef<const char *> argsArr) {
+         tailMerge = 2;
+       } else if (s == "nolldtailmerge") {
+         tailMerge = 0;
++      } else if (s == "ltonewpassmanager") {
++        ltoNewPM = true;
++      } else if (s == "noltonewpassmanager") {
++        ltoNewPM = false;
++      } else if (s == "ltodebugpassmanager") {
++        ltoDebugPM = true;
++      } else if (s == "noltodebugpassmanager") {
++        ltoDebugPM = false;
+       } else if (s.startswith("lldlto=")) {
+         StringRef optLevel = s.substr(7);
+         if (optLevel.getAsInteger(10, config->ltoo) || config->ltoo > 3)
+@@ -1464,6 +1474,8 @@ void LinkerDriver::link(ArrayRef<const char *> argsArr) {
+   config->doGC = doGC;
+   config->doICF = icfLevel > 0;
+   config->tailMerge = (tailMerge == 1 && config->doICF) || tailMerge == 2;
++  config->ltoNewPassManager = ltoNewPM;
++  config->ltoDebugPassManager = ltoDebugPM;
+ 
+   // Handle /lldsavetemps
+   if (args.hasArg(OPT_lldsavetemps))
+diff --git a/lld/COFF/LTO.cpp b/lld/COFF/LTO.cpp
+index bb44819e60f8..e55fb544b050 100644
+--- a/lld/COFF/LTO.cpp
++++ b/lld/COFF/LTO.cpp
+@@ -82,6 +82,8 @@ static lto::Config createConfig() {
+   c.MAttrs = getMAttrs();
+   c.CGOptLevel = args::getCGOptLevel(config->ltoo);
+   c.AlwaysEmitRegularLTOObj = !config->ltoObjPath.empty();
++  c.UseNewPM = config->ltoNewPassManager;
++  c.DebugPassManager = config->ltoDebugPassManager;
+ 
+   if (config->saveTemps)
+     checkError(c.addSaveTemps(std::string(config->outputFile) + ".",
