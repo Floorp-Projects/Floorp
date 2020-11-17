@@ -146,6 +146,8 @@ SI Bool if_then_else(I32 c, Bool t, Bool e) { return (c & t) | (~c & e); }
 
 SI Bool if_then_else(int32_t c, Bool t, Bool e) { return c ? t : e; }
 
+SI I16 if_then_else(I16 c, I16 t, I16 e) { return (c & t) | (~c & e); }
+
 template <typename T> SI void swap(T& a, T& b) {
   T t(a);
   a = b;
@@ -691,6 +693,24 @@ Float exp(Float y) {
   float l2e = 1.4426950408889634074f;
   return approx_pow2(l2e * y);
 }
+
+#define exp2 __glsl_exp2
+
+SI float exp2(float x) { return exp2f(x); }
+
+Float exp2(Float x) { return approx_pow2(x); }
+
+#define log __glsl_log
+
+SI float log(float x) { return logf(x); }
+
+Float log(Float x) { return approx_log2(x) * 0.69314718f; }
+
+#define log2 __glsl_log2
+
+SI float log2(float x) { return log2f(x); }
+
+Float log2(Float x) { return approx_log2(x); }
 
 struct ivec4;
 

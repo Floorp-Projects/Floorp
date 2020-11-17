@@ -7,6 +7,12 @@ static inline void commit_span(uint32_t* buf, WideRGBA8 r) {
   unaligned_store(buf, pack(r));
 }
 
+static inline void commit_span(uint32_t* buf, PackedRGBA8 r) {
+  if (blend_key)
+    r = pack(blend_pixels_RGBA8(unaligned_load<PackedRGBA8>(buf), unpack(r)));
+  unaligned_store(buf, r);
+}
+
 UNUSED static inline void commit_solid_span(uint32_t* buf, WideRGBA8 r,
                                             int len) {
   if (blend_key) {
@@ -205,6 +211,143 @@ static ALWAYS_INLINE T swgl_linearQuantizeStep(S s, T p) {
 #define swgl_commitGaussianBlurR8(s, p, uv_rect, hori, radius, coeffs, ...) \
   swgl_commitGaussianBlur(R8, uint8_t, s, p, uv_rect, hori, radius, coeffs, \
                           __VA_ARGS__)
+
+// Convert and pack planar YUV samples to RGB output using a color space
+SI PackedRGBA8 convertYUV(int colorSpace, U16 y, U16 u, U16 v) {
+  auto yy = V8<int16_t>(zip(y, y));
+  auto uv = V8<int16_t>(zip(u, v));
+  switch (colorSpace) {
+    case REC_601:
+      return YUVConverter<REC_601>::convert(yy, uv);
+    case REC_709:
+      return YUVConverter<REC_709>::convert(yy, uv);
+    case REC_2020:
+      return YUVConverter<REC_2020>::convert(yy, uv);
+    default:
+      return YUVConverter<IDENTITY>::convert(yy, uv);
+  }
+}
+
+// Helper functions to sample from planar YUV textures before converting to RGB
+template <typename S0>
+static inline PackedRGBA8 sampleYUV(S0 sampler0, vec2 uv0, int layer0,
+                                    int colorSpace, int rescaleFactor) {
+  ivec2 i0(uv0);
+  switch (sampler0->format) {
+    case TextureFormat::RGBA8: {
+      auto planar = textureLinearPlanarRGBA8(sampler0, i0, layer0);
+      return convertYUV(colorSpace, highHalf(planar.rg), lowHalf(planar.rg),
+                        lowHalf(planar.ba));
+    }
+    case TextureFormat::YUV422: {
+      auto planar = textureLinearPlanarYUV422(sampler0, i0, layer0);
+      return convertYUV(colorSpace, planar.y, planar.u, planar.v);
+    }
+    default:
+      assert(false);
+      return PackedRGBA8(0);
+  }
+}
+
+template <typename S0, typename C>
+static inline WideRGBA8 sampleColorYUV(S0 sampler0, vec2 uv0, int layer0,
+                                       int colorSpace, int rescaleFactor,
+                                       C color) {
+  return muldiv255(
+      unpack(sampleYUV(sampler0, uv0, layer0, colorSpace, rescaleFactor)),
+      pack_pixels_RGBA8(color));
+}
+
+template <typename S0, typename S1>
+static inline PackedRGBA8 sampleYUV(S0 sampler0, vec2 uv0, int layer0,
+                                    S1 sampler1, vec2 uv1, int layer1,
+                                    int colorSpace, int rescaleFactor) {
+  ivec2 i0(uv0);
+  ivec2 i1(uv1);
+  switch (sampler1->format) {
+    case TextureFormat::RG8: {
+      assert(sampler0->format == TextureFormat::R8);
+      auto y = textureLinearUnpackedR8(sampler0, i0, layer0);
+      auto planar = textureLinearPlanarRG8(sampler1, i1, layer1);
+      return convertYUV(colorSpace, y, lowHalf(planar.rg), highHalf(planar.rg));
+    }
+    default:
+      assert(false);
+      return PackedRGBA8(0);
+  }
+}
+
+template <typename S0, typename S1, typename C>
+static inline WideRGBA8 sampleColorYUV(S0 sampler0, vec2 uv0, int layer0,
+                                       S1 sampler1, vec2 uv1, int layer1,
+                                       int colorSpace, int rescaleFactor,
+                                       C color) {
+  return muldiv255(unpack(sampleYUV(sampler0, uv0, layer0, sampler1, uv1,
+                                    layer1, colorSpace, rescaleFactor)),
+                   pack_pixels_RGBA8(color));
+}
+
+template <typename S0, typename S1, typename S2>
+static inline PackedRGBA8 sampleYUV(S0 sampler0, vec2 uv0, int layer0,
+                                    S1 sampler1, vec2 uv1, int layer1,
+                                    S2 sampler2, vec2 uv2, int layer2,
+                                    int colorSpace, int rescaleFactor) {
+  ivec2 i0(uv0);
+  ivec2 i1(uv1);
+  ivec2 i2(uv2);
+  assert(sampler0->format == sampler1->format &&
+         sampler0->format == sampler2->format);
+  switch (sampler0->format) {
+    case TextureFormat::R8: {
+      auto y = textureLinearUnpackedR8(sampler0, i0, layer0);
+      auto u = textureLinearUnpackedR8(sampler1, i1, layer1);
+      auto v = textureLinearUnpackedR8(sampler2, i2, layer2);
+      return convertYUV(colorSpace, y, u, v);
+    }
+    case TextureFormat::R16: {
+      // The rescaling factor represents how many bits to add to renormalize the
+      // texture to 16 bits, and so the color depth is actually 16 minus the
+      // rescaling factor.
+      // Need to right shift the sample by the amount of bits over 8 it
+      // occupies. On output from textureLinearUnpackedR16, we have lost 1 bit
+      // of precision at the low end already, hence 1 is subtracted from the
+      // color depth.
+      int colorDepth = 16 - rescaleFactor;
+      int rescaleBits = (colorDepth - 1) - 8;
+      auto y = textureLinearUnpackedR16(sampler0, i0, layer0) >> rescaleBits;
+      auto u = textureLinearUnpackedR16(sampler1, i1, layer1) >> rescaleBits;
+      auto v = textureLinearUnpackedR16(sampler2, i2, layer2) >> rescaleBits;
+      return convertYUV(colorSpace, U16(y), U16(u), U16(v));
+    }
+    default:
+      assert(false);
+      return PackedRGBA8(0);
+  }
+}
+
+template <typename S0, typename S1, typename S2, typename C>
+static inline WideRGBA8 sampleColorYUV(S0 sampler0, vec2 uv0, int layer0,
+                                       S1 sampler1, vec2 uv1, int layer1,
+                                       S2 sampler2, vec2 uv2, int layer2,
+                                       int colorSpace, int rescaleFactor,
+                                       C color) {
+  return muldiv255(
+      unpack(sampleYUV(sampler0, uv0, layer0, sampler1, uv1, layer1, sampler2,
+                       uv2, layer2, colorSpace, rescaleFactor)),
+      pack_pixels_RGBA8(color));
+}
+
+// Commit a single chunk of a YUV surface represented by multiple planar
+// textures. This requires a color space specifier selecting how to convert
+// from YUV to RGB output. In the case of HDR formats, a rescaling factor
+// selects how many bits of precision must be utilized on conversion. See the
+// sampleYUV dispatcher functions for the various supported plane
+// configurations this intrinsic accepts.
+#define swgl_commitTextureLinearYUV(...) \
+  swgl_commitChunk(RGBA8, sampleYUV(__VA_ARGS__))
+// Commit a single chunk of a YUV surface scaled by a color.
+#define swgl_commitTextureLinearColorYUV(...) \
+  swgl_commitChunk(RGBA8, sampleColorYUV(__VA_ARGS__))
 
 // Dispatch helper used by the GLSL translator to swgl_drawSpan functions.
 // The number of pixels committed is tracked by checking for the difference in

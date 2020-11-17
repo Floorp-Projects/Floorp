@@ -504,8 +504,14 @@ SI I16 computeFracX(S sampler, ivec2 i, ivec2 frac) {
 // Convert Y coordinate to a 2^7 scale fraction for interpolation
 SI I16 computeFracY(ivec2 frac) { return CONVERT(frac.y & 0x7F, I16); }
 
+struct WidePlanarRGBA8 {
+  V8<uint16_t> rg;
+  V8<uint16_t> ba;
+};
+
 template <typename S>
-vec4 textureLinearRGBA8(S sampler, vec2 P, int32_t zoffset = 0) {
+SI WidePlanarRGBA8 textureLinearPlanarRGBA8(S sampler, vec2 P,
+                                            int32_t zoffset = 0) {
   assert(sampler->format == TextureFormat::RGBA8);
 
   ivec2 i(linearQuantize(P, 128, sampler));
@@ -549,9 +555,16 @@ vec4 textureLinearRGBA8(S sampler, vec2 P, int32_t zoffset = 0) {
   auto cdh = zipHigh(c0, d0);
   cdl += ((cdh - cdl) * fracx.zwzwzwzw) >> 7;
 
-  auto rg = CONVERT(V8<uint16_t>(zip2Low(abl, cdl)), V8<float>);
-  auto ba = CONVERT(V8<uint16_t>(zip2High(abl, cdl)), V8<float>);
+  auto rg = V8<uint16_t>(zip2Low(abl, cdl));
+  auto ba = V8<uint16_t>(zip2High(abl, cdl));
+  return WidePlanarRGBA8{rg, ba};
+}
 
+template <typename S>
+vec4 textureLinearRGBA8(S sampler, vec2 P, int32_t zoffset = 0) {
+  auto planar = textureLinearPlanarRGBA8(sampler, P, zoffset);
+  auto rg = CONVERT(planar.rg, V8<float>);
+  auto ba = CONVERT(planar.ba, V8<float>);
   auto r = lowHalf(rg);
   auto g = highHalf(rg);
   auto b = lowHalf(ba);
@@ -603,8 +616,13 @@ vec4 textureLinearR8(S sampler, vec2 P, int32_t zoffset = 0) {
   return vec4(r * (1.0f / 255.0f), 0.0f, 0.0f, 1.0f);
 }
 
+struct WidePlanarRG8 {
+  V8<uint16_t> rg;
+};
+
 template <typename S>
-vec4 textureLinearRG8(S sampler, vec2 P, int32_t zoffset = 0) {
+SI WidePlanarRG8 textureLinearPlanarRG8(S sampler, vec2 P,
+                                        int32_t zoffset = 0) {
   assert(sampler->format == TextureFormat::RG8);
 
   ivec2 i(linearQuantize(P, 128, sampler));
@@ -651,10 +669,16 @@ vec4 textureLinearRG8(S sampler, vec2 P, int32_t zoffset = 0) {
   // Blend columns
   abcdl += ((abcdh - abcdl) * fracx.xyzwxyzw) >> 7;
 
-  auto rg = CONVERT(V8<uint16_t>(abcdl), V8<float>) * (1.0f / 255.0f);
+  auto rg = V8<uint16_t>(abcdl);
+  return WidePlanarRG8{rg};
+}
+
+template <typename S>
+vec4 textureLinearRG8(S sampler, vec2 P, int32_t zoffset = 0) {
+  auto planar = textureLinearPlanarRG8(sampler, P, zoffset);
+  auto rg = CONVERT(planar.rg, V8<float>) * (1.0f / 255.0f);
   auto r = lowHalf(rg);
   auto g = highHalf(rg);
-
   return vec4(r, g, 0.0f, 1.0f);
 }
 
@@ -781,8 +805,15 @@ vec4 textureLinearRGBA32F(S sampler, vec2 P, int32_t zoffset = 0) {
   return pixel_float_to_vec4(c0, c1, c2, c3);
 }
 
+struct WidePlanarYUV8 {
+  U16 y;
+  U16 u;
+  U16 v;
+};
+
 template <typename S>
-vec4 textureLinearYUV422(S sampler, vec2 P, int32_t zoffset = 0) {
+SI WidePlanarYUV8 textureLinearPlanarYUV422(S sampler, vec2 P,
+                                            int32_t zoffset = 0) {
   assert(sampler->format == TextureFormat::YUV422);
 
   ivec2 i(linearQuantize(P, 128, sampler));
@@ -850,14 +881,19 @@ vec4 textureLinearYUV422(S sampler, vec2 P, int32_t zoffset = 0) {
   g0b += ((g1B - g0b) * fracx) >> 7;
   g1r += ((G0R - g1r) * fracx) >> 7;
 
-  auto g0bf = CONVERT(V8<uint16_t>(g0b), V8<float>);
-  auto g1rf = CONVERT(V8<uint16_t>(g1r), V8<float>);
-
   // Choose either g0 or g1 based on selector.
-  return vec4(
-      highHalf(g1rf) * (1.0f / 255.0f),
-      if_then_else(-selector, lowHalf(g1rf), lowHalf(g0bf)) * (1.0f / 255.0f),
-      highHalf(g0bf) * (1.0f / 255.0f), 1.0f);
+  return WidePlanarYUV8{
+      U16(if_then_else(CONVERT(-selector, I16), lowHalf(g1r), lowHalf(g0b))),
+      U16(highHalf(g0b)), U16(highHalf(g1r))};
+}
+
+template <typename S>
+vec4 textureLinearYUV422(S sampler, vec2 P, int32_t zoffset = 0) {
+  auto planar = textureLinearPlanarYUV422(sampler, P, zoffset);
+  auto y = CONVERT(planar.y, Float) * (1.0f / 255.0f);
+  auto u = CONVERT(planar.u, Float) * (1.0f / 255.0f);
+  auto v = CONVERT(planar.v, Float) * (1.0f / 255.0f);
+  return vec4(v, y, u, 1.0f);
 }
 
 SI vec4 texture(sampler2D sampler, vec2 P) {
@@ -1022,7 +1058,7 @@ static PackedR8 textureLinearPackedR8(S sampler, ivec2 i, int zoffset = 0) {
 }
 
 template <typename S>
-static PackedRG8 textureLinearPackedRG8(S sampler, ivec2 i, int zoffset = 0) {
+static WideRG8 textureLinearUnpackedRG8(S sampler, ivec2 i, int zoffset = 0) {
   assert(sampler->format == TextureFormat::RG8);
   ivec2 frac = i & 0x7F;
   i >>= 7;
@@ -1067,7 +1103,12 @@ static PackedRG8 textureLinearPackedRG8(S sampler, ivec2 i, int zoffset = 0) {
   // Blend columns
   abcdl += ((abcdh - abcdl) * fracx.xxyyzzww) >> 7;
 
-  return pack(WideRG8(abcdl));
+  return WideRG8(abcdl);
+}
+
+template <typename S>
+static PackedRG8 textureLinearPackedRG8(S sampler, ivec2 i, int zoffset = 0) {
+  return pack(textureLinearUnpackedRG8(sampler, i, zoffset));
 }
 
 template <int N>
