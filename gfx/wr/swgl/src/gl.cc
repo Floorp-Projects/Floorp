@@ -3011,6 +3011,7 @@ static inline void commit_output(P* buf, Z z, DepthRun* zbuf, int span) {
   }
 }
 
+#include "composite.h"
 #include "swgl_ext.h"
 
 #pragma GCC diagnostic push
@@ -4125,4 +4126,3 @@ void DestroyContext(Context* c) {
 
 }  // extern "C"
 
-#include "composite.h"
