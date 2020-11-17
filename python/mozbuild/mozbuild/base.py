@@ -599,8 +599,7 @@ class MozbuildObject(ProcessExecutionMixin):
         On Linux and Mac, this will show a desktop notification with the message,
         but on Windows we can only flash the screen.
         """
-        moz_nospam = os.environ.get("MOZ_NOSPAM")
-        if moz_nospam:
+        if "MOZ_NOSPAM" in os.environ or "MOZ_AUTOMATION" in os.environ:
             return
 
         try:
