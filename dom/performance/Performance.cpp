@@ -28,10 +28,6 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
-#endif
-
 #define PERFLOG(msg, ...) printf_stderr(msg, ##__VA_ARGS__)
 
 namespace mozilla::dom {

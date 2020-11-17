@@ -14,7 +14,6 @@
 #include "mozilla/ProfilerMarkers.h"
 #include "platform.h"
 #include "ProfileBuffer.h"
-#include "ProfilerMarkerPayload.h"
 
 #include "js/Initialization.h"
 #include "js/Printf.h"
@@ -579,75 +578,6 @@ TEST(GeckoProfiler, Pause)
   ASSERT_TRUE(!profiler_can_accept_markers());
 }
 
-// A class that keeps track of how many instances have been created, streamed,
-// and destroyed.
-class GTestMarkerPayload : public ProfilerMarkerPayload {
- public:
-  explicit GTestMarkerPayload(int aN) : mN(aN) { ++sNumCreated; }
-
-  virtual ~GTestMarkerPayload() { ++sNumDestroyed; }
-
-  DECL_STREAM_PAYLOAD
-
- private:
-  GTestMarkerPayload(CommonProps&& aCommonProps, int aN)
-      : ProfilerMarkerPayload(std::move(aCommonProps)), mN(aN) {
-    ++sNumDeserialized;
-  }
-
-  int mN;
-
- public:
-  // The number of GTestMarkerPayload instances that have been created,
-  // streamed, and destroyed.
-  static int sNumCreated;
-  static int sNumSerialized;
-  static int sNumDeserialized;
-  static int sNumStreamed;
-  static int sNumDestroyed;
-};
-
-int GTestMarkerPayload::sNumCreated = 0;
-int GTestMarkerPayload::sNumSerialized = 0;
-int GTestMarkerPayload::sNumDeserialized = 0;
-int GTestMarkerPayload::sNumStreamed = 0;
-int GTestMarkerPayload::sNumDestroyed = 0;
-
-ProfileBufferEntryWriter::Length GTestMarkerPayload::TagAndSerializationBytes()
-    const {
-  return CommonPropsTagAndSerializationBytes() +
-         ProfileBufferEntryWriter::SumBytes(mN);
-}
-
-void GTestMarkerPayload::SerializeTagAndPayload(
-    ProfileBufferEntryWriter& aEntryWriter) const {
-  static const DeserializerTag tag = TagForDeserializer(Deserialize);
-  SerializeTagAndCommonProps(tag, aEntryWriter);
-  aEntryWriter.WriteObject(mN);
-  ++sNumSerialized;
-}
-
-// static
-UniquePtr<ProfilerMarkerPayload> GTestMarkerPayload::Deserialize(
-    ProfileBufferEntryReader& aEntryReader) {
-  ProfilerMarkerPayload::CommonProps props =
-      DeserializeCommonProps(aEntryReader);
-  auto n = aEntryReader.ReadObject<int>();
-  return UniquePtr<ProfilerMarkerPayload>(
-      new GTestMarkerPayload(std::move(props), n));
-}
-
-void GTestMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                       const mozilla::TimeStamp& aStartTime,
-                                       UniqueStacks& aUniqueStacks) const {
-  StreamCommonProps("gtest", aWriter, aStartTime, aUniqueStacks);
-  char buf[64];
-  int written = SprintfLiteral(buf, "gtest-%d", mN);
-  ASSERT_GT(written, 0);
-  aWriter.IntProperty(mozilla::Span<const char>(buf, size_t(written)), mN);
-  ++sNumStreamed;
-}
-
 TEST(GeckoProfiler, Markers)
 {
   uint32_t features = ProfilerFeature::StackWalk;
@@ -670,17 +600,6 @@ TEST(GeckoProfiler, Markers)
 
   PROFILER_MARKER_UNTYPED("M1", OTHER, {});
   PROFILER_MARKER_UNTYPED("M3", OTHER, {});
-
-  for (int i = 0; i < 10; i++) {
-    PROFILER_ADD_MARKER_WITH_PAYLOAD("M5", OTHER, GTestMarkerPayload, (i));
-  }
-  // The GTestMarkerPayloads should have been created, serialized, and
-  // destroyed.
-  EXPECT_EQ(GTestMarkerPayload::sNumCreated, 10);
-  EXPECT_EQ(GTestMarkerPayload::sNumSerialized, 10);
-  EXPECT_EQ(GTestMarkerPayload::sNumDeserialized, 0);
-  EXPECT_EQ(GTestMarkerPayload::sNumStreamed, 0);
-  EXPECT_EQ(GTestMarkerPayload::sNumDestroyed, 10);
 
   // Create three strings: two that are the maximum allowed length, and one that
   // is one char longer.
@@ -878,14 +797,6 @@ TEST(GeckoProfiler, Markers)
   EXPECT_TRUE(::profiler_stream_json_for_this_process(w));
   w.End();
 
-  // The GTestMarkerPayloads should have been deserialized, streamed, and
-  // destroyed.
-  EXPECT_EQ(GTestMarkerPayload::sNumCreated, 10 + 0);
-  EXPECT_EQ(GTestMarkerPayload::sNumSerialized, 10 + 0);
-  EXPECT_EQ(GTestMarkerPayload::sNumDeserialized, 0 + 10);
-  EXPECT_EQ(GTestMarkerPayload::sNumStreamed, 0 + 10);
-  EXPECT_EQ(GTestMarkerPayload::sNumDestroyed, 10 + 10);
-
   UniquePtr<char[]> profile = w.ChunkedWriteFunc().CopyData();
   ASSERT_TRUE(!!profile.get());
 
@@ -899,16 +810,6 @@ TEST(GeckoProfiler, Markers)
     S_tracing_auto_tracing_end,
     S_M1,
     S_M3,
-    S_M5_gtest0,
-    S_M5_gtest1,
-    S_M5_gtest2,
-    S_M5_gtest3,
-    S_M5_gtest4,
-    S_M5_gtest5,
-    S_M5_gtest6,
-    S_M5_gtest7,
-    S_M5_gtest8,
-    S_M5_gtest9,
     S_Markers2DefaultEmptyOptions,
     S_Markers2DefaultWithOptions,
     S_Markers2ExplicitDefaultEmptyOptions,
@@ -1197,25 +1098,6 @@ TEST(GeckoProfiler, Markers)
                     break;
                 }
 
-              } else if (nameString == "M5") {
-                EXPECT_EQ(typeString, "gtest");
-                // It should only have one more element (apart from "type").
-                ASSERT_EQ(payload.size(), 2u);
-                const auto itEnd = payload.end();
-                for (auto it = payload.begin(); it != itEnd; ++it) {
-                  std::string key = it.name();
-                  if (key != "type") {
-                    const Json::Value& value = *it;
-                    ASSERT_TRUE(value.isInt());
-                    int valueInt = value.asInt();
-                    // We expect `"gtest-<i>" : <i>`.
-                    EXPECT_EQ(state, State(S_M5_gtest0 + valueInt));
-                    state = State(state + 1);
-                    EXPECT_EQ(key,
-                              std::string("gtest-") + std::to_string(valueInt));
-                  }
-                }
-
               } else if (nameString ==
                          "default-templated markers 2.0 with option") {
                 // TODO: Remove this when bug 1646714 lands.
@@ -1501,69 +1383,26 @@ TEST(GeckoProfiler, Markers)
 
   profiler_stop();
 
-  // Nothing more should have happened to the GTestMarkerPayloads.
-  EXPECT_EQ(GTestMarkerPayload::sNumCreated, 10 + 0 + 0);
-  EXPECT_EQ(GTestMarkerPayload::sNumSerialized, 10 + 0 + 0);
-  EXPECT_EQ(GTestMarkerPayload::sNumDeserialized, 0 + 10 + 0);
-  EXPECT_EQ(GTestMarkerPayload::sNumStreamed, 0 + 10 + 0);
-  EXPECT_EQ(GTestMarkerPayload::sNumDestroyed, 10 + 10 + 0);
-
   // Try to add markers while the profiler is stopped.
-  for (int i = 0; i < 10; i++) {
-    PROFILER_ADD_MARKER_WITH_PAYLOAD("M5", OTHER, GTestMarkerPayload, (i));
-  }
+  PROFILER_MARKER_UNTYPED("marker after profiler_stop", OTHER);
 
   // Warning: this could be racy
   profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL, features,
                  filters, MOZ_ARRAY_LENGTH(filters), 0);
 
-  EXPECT_TRUE(::profiler_stream_json_for_this_process(w));
+  // This last marker shouldn't get streamed.
+  SpliceableChunkedJSONWriter w2;
+  w2.Start();
+  EXPECT_TRUE(::profiler_stream_json_for_this_process(w2));
+  w2.End();
+  UniquePtr<char[]> profile2 = w.ChunkedWriteFunc().CopyData();
+  ASSERT_TRUE(!!profile2.get());
+  EXPECT_TRUE(
+      std::string_view(profile2.get()).find("marker after profiler_stop") ==
+      std::string_view::npos);
 
   profiler_stop();
-
-  // The second set of GTestMarkerPayloads should not have been serialized or
-  // streamed.
-  EXPECT_EQ(GTestMarkerPayload::sNumCreated, 10 + 0 + 0 + 10);
-  EXPECT_EQ(GTestMarkerPayload::sNumSerialized, 10 + 0 + 0 + 0);
-  EXPECT_EQ(GTestMarkerPayload::sNumDeserialized, 0 + 10 + 0 + 0);
-  EXPECT_EQ(GTestMarkerPayload::sNumStreamed, 0 + 10 + 0 + 0);
-  EXPECT_EQ(GTestMarkerPayload::sNumDestroyed, 10 + 10 + 0 + 10);
 }
-
-// The duration limit will be removed from Firefox, see bug 1632365.
-#if 0
-TEST(GeckoProfiler, DurationLimit)
-{
-  uint32_t features = ProfilerFeature::StackWalk;
-  const char* filters[] = {"GeckoMain"};
-
-  profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL, features,
-                 filters, MOZ_ARRAY_LENGTH(filters), 0, Some(1.5));
-
-  // Clear up the counters after the last test.
-  GTestMarkerPayload::sNumCreated = 0;
-  GTestMarkerPayload::sNumSerialized = 0;
-  GTestMarkerPayload::sNumDeserialized = 0;
-  GTestMarkerPayload::sNumStreamed = 0;
-  GTestMarkerPayload::sNumDestroyed = 0;
-
-  PROFILER_ADD_MARKER_WITH_PAYLOAD("M1", OTHER, GTestMarkerPayload, (1));
-  PR_Sleep(PR_MillisecondsToInterval(1100));
-  PROFILER_ADD_MARKER_WITH_PAYLOAD("M2", OTHER, GTestMarkerPayload, (2));
-  PR_Sleep(PR_MillisecondsToInterval(500));
-
-  SpliceableChunkedJSONWriter w;
-  ASSERT_TRUE(profiler_stream_json_for_this_process(w));
-
-  // Both markers created, serialized, destroyed; Only the first marker should
-  // have been deserialized, streamed, and destroyed again.
-  EXPECT_EQ(GTestMarkerPayload::sNumCreated, 2);
-  EXPECT_EQ(GTestMarkerPayload::sNumSerialized, 2);
-  EXPECT_EQ(GTestMarkerPayload::sNumDeserialized, 1);
-  EXPECT_EQ(GTestMarkerPayload::sNumStreamed, 1);
-  EXPECT_EQ(GTestMarkerPayload::sNumDestroyed, 3);
-}
-#endif
 
 #define COUNTER_NAME "TestCounter"
 #define COUNTER_DESCRIPTION "Test of counters in profiles"
