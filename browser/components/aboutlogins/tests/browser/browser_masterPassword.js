@@ -43,7 +43,7 @@ add_task(async function test() {
   await mpDialogShown;
 
   registerCleanupFunction(async function() {
-    Services.logins.removeAllLogins();
+    Services.logins.removeAllUserFacingLogins();
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
 

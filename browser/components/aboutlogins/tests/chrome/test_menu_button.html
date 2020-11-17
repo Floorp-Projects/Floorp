@@ -95,6 +95,7 @@ add_task(async function test_menu_open_close() {
     sendKey("TAB"); // Import from file
   }
   sendKey("TAB"); // Export
+  sendKey("TAB"); // Remove All Logins
 
   if (navigator.platform == "Win32" || navigator.platform == "MacIntel") {
     // The Import menuitem is only visible on Windows/macOS, where we will need another Tab
@@ -145,6 +146,7 @@ add_task(async function test_menu_keyboard_cycling() {
 
   let allItems = [
     "menuitem-export",
+    "menuitem-remove-all-logins",
     "menuitem-preferences",
     "menuitem-help",
   ];

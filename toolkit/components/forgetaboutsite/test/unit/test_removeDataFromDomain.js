@@ -318,7 +318,7 @@ async function test_login_manager_logins_not_cleared_with_uri_contains_domain() 
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_login_exists(TEST_HOST, true);
 
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
   check_login_exists(TEST_HOST, false);
 }
 
