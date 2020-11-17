@@ -105,6 +105,18 @@ class EditorToolbar extends Component {
       this.renderEvaluationContextSelector(),
       dom.button({
         className:
+          "devtools-button webconsole-editor-toolbar-prettyPrintButton",
+        title: l10n.getStr(
+          "webconsole.editor.toolbar.prettyPrintButton.tooltip"
+        ),
+        onClick: () => dispatch(actions.prettyPrintEditor()),
+      }),
+      dom.div({
+        className:
+          "devtools-separator webconsole-editor-toolbar-prettyPrintSeparator",
+      }),
+      dom.button({
+        className:
           "devtools-button webconsole-editor-toolbar-history-prevExpressionButton",
         title: l10n.getStr(
           "webconsole.editor.toolbar.history.prevExpressionButton.tooltip"
