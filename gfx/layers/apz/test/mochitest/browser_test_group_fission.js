@@ -50,12 +50,11 @@ add_task(async function test_main() {
       file: "helper_fission_tap.html",
       prefs: [["apz.max_tap_time", 10000]],
     },
-    { file: "helper_fission_inactivescroller_under_oopif.html" },
     // add additional tests here
   ];
   if (isWebRender) {
     subtests = subtests.concat([
-      // add WebRender-specific tests here
+      // add additional WebRender-specific tests here
     ]);
   } else {
     subtests = subtests.concat([
