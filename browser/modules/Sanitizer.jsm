@@ -14,22 +14,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",
+  PrincipalsCollector: "resource://gre/modules/PrincipalsCollector.jsm",
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.jsm",
 });
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "quotaManagerService",
-  "@mozilla.org/dom/quota-manager-service;1",
-  "nsIQuotaManagerService"
-);
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "serviceWorkerManager",
-  "@mozilla.org/serviceworkers/manager;1",
-  "nsIServiceWorkerManager"
-);
 
 var logConsole;
 function log(msg) {
@@ -746,90 +734,6 @@ async function sanitizeInternal(items, aItemsToClear, progress, options = {}) {
   progress = {};
   if (seenError) {
     throw new Error("Error sanitizing");
-  }
-}
-
-// This is an helper that retrieves the principals with site data just once
-// and only when needed.
-class PrincipalsCollector {
-  constructor() {
-    this.principals = null;
-  }
-
-  async getAllPrincipals(progress) {
-    if (this.principals == null) {
-      // Here is the list of principals with site data.
-      this.principals = await this.getAllPrincipalsInternal(progress);
-    }
-
-    return this.principals;
-  }
-
-  async getAllPrincipalsInternal(progress) {
-    progress.step = "principals-quota-manager";
-    let principals = await new Promise(resolve => {
-      quotaManagerService.listOrigins().callback = request => {
-        progress.step = "principals-quota-manager-listOrigins";
-        if (request.resultCode != Cr.NS_OK) {
-          // We are probably shutting down. We don't want to propagate the
-          // error, rejecting the promise.
-          resolve([]);
-          return;
-        }
-
-        let list = [];
-        for (const origin of request.result) {
-          let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-            origin
-          );
-          if (isSupportedPrincipal(principal)) {
-            list.push(principal);
-          }
-        }
-
-        progress.step = "principals-quota-manager-completed";
-        resolve(list);
-      };
-    }).catch(ex => {
-      Cu.reportError("QuotaManagerService promise failed: " + ex);
-      return [];
-    });
-
-    progress.step = "principals-service-workers";
-    let serviceWorkers = serviceWorkerManager.getAllRegistrations();
-    for (let i = 0; i < serviceWorkers.length; i++) {
-      let sw = serviceWorkers.queryElementAt(
-        i,
-        Ci.nsIServiceWorkerRegistrationInfo
-      );
-      // We don't need to check the scheme. SW are just exposed to http/https URLs.
-      principals.push(sw.principal);
-    }
-
-    // Let's take the list of unique hosts+OA from cookies.
-    progress.step = "principals-cookies";
-    let cookies = Services.cookies.cookies;
-    let hosts = new Set();
-    for (let cookie of cookies) {
-      hosts.add(
-        cookie.rawHost +
-          ChromeUtils.originAttributesToSuffix(cookie.originAttributes)
-      );
-    }
-
-    progress.step = "principals-host-cookie";
-    hosts.forEach(host => {
-      // Cookies and permissions are handled by origin/host. Doesn't matter if we
-      // use http: or https: schema here.
-      principals.push(
-        Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-          "https://" + host
-        )
-      );
-    });
-
-    progress.step = "total-principals:" + principals.length;
-    return principals;
   }
 }
 
