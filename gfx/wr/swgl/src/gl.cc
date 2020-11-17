@@ -1242,6 +1242,12 @@ void GetIntegerv(GLenum pname, GLint* params) {
     case GL_NUM_EXTENSIONS:
       params[0] = sizeof(extensions) / sizeof(extensions[0]);
       break;
+    case GL_MAJOR_VERSION:
+      params[0] = 3;
+      break;
+    case GL_MINOR_VERSION:
+      params[0] = 2;
+      break;
     default:
       debugf("unhandled glGetIntegerv parameter %x\n", pname);
       assert(false);

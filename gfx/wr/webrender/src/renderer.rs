@@ -107,6 +107,7 @@ use std::collections::hash_map::Entry;
 use std::f32;
 use std::marker::PhantomData;
 use std::mem;
+use std::num::NonZeroUsize;
 use std::os::raw::c_void;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -423,6 +424,17 @@ pub(crate) mod desc {
                 kind: VertexAttributeKind::I32,
             },
         ],
+    };
+
+    pub const PRIM_STORAGE_INSTANCES: VertexDescriptor = VertexDescriptor {
+        vertex_attributes: &[
+            VertexAttribute {
+                name: "aPosition",
+                count: 2,
+                kind: VertexAttributeKind::U8Norm,
+            },
+        ],
+        instance_attributes: &[],
     };
 
     pub const BLUR: VertexDescriptor = VertexDescriptor {
@@ -2009,6 +2021,7 @@ impl LazyInitializedDebugRenderer {
 // `Renderer::deinit()` below.
 pub struct RendererVAOs {
     prim_vao: VAO,
+    prim_storage_vao: Option<VAO>,
     blur_vao: VAO,
     clip_rect_vao: VAO,
     clip_box_shadow_vao: VAO,
@@ -2432,6 +2445,18 @@ impl Renderer {
         }
         let max_texture_size = device.max_texture_size();
 
+        // On some (mostly older, integrated) GPUs, the normal GPU texture cache update path
+        // doesn't work well when running on ANGLE, causing CPU stalls inside D3D and/or the
+        // GPU driver. See https://bugzilla.mozilla.org/show_bug.cgi?id=1576637 for much
+        // more detail. To reduce the number of code paths we have active that require testing,
+        // we will enable the GPU cache scatter update path on all devices running with ANGLE.
+        // We want a better solution long-term, but for now this is a significant performance
+        // improvement on HD4600 era GPUs, and shouldn't hurt performance in a noticeable
+        // way on other systems running under ANGLE.
+        let is_software = device.get_capabilities().renderer_name.starts_with("Software");
+        // Intel GPUs have different properties of memory and scheduling than others.
+        let is_intel = device.get_capabilities().renderer_name.contains("Intel");
+
         device.begin_frame();
 
         let shaders = match shaders {
@@ -2541,6 +2566,32 @@ impl Renderer {
         device.update_vao_indices(&prim_vao, &quad_indices, VertexUsageHint::Static);
         device.update_vao_main_vertices(&prim_vao, &quad_vertices, VertexUsageHint::Static);
 
+        // Using SSBO allows us to disable instancing, which allows the HW to process more vertices together.
+        // This is important on architectures with wide execution units, such as discrete AMD and NVidia.
+        let use_shader_storage_object = !is_intel &&
+            options.max_storage_instances.is_some() &&
+            device.get_capabilities().supports_shader_storage_object;
+        info!("Using SSBO: {}", use_shader_storage_object);
+        let (prim_storage_vao, max_primitive_instance_count) = if use_shader_storage_object {
+            let instance_count = options.max_storage_instances.unwrap().get();
+            let expanded_incides = (0 .. instance_count)
+                .flat_map(|quad| quad_indices.iter().map(move |&index| quad as u16 * 4 + index))
+                .collect::<Vec<_>>();
+            let expanded_vertices = (0 .. instance_count)
+                .flat_map(|_| [0u8, 0, 0xFF, 0, 0, 0xFF, 0xFF, 0xFF].iter().cloned())
+                .collect::<Vec<_>>();
+            let prim_storage_vao = device.create_storage_vao(
+                &desc::PRIM_STORAGE_INSTANCES,
+                mem::size_of::<PrimitiveInstanceData>(),
+            );
+            device.bind_vao(&prim_storage_vao);
+            device.update_vao_indices(&prim_storage_vao, &expanded_incides, VertexUsageHint::Static);
+            device.update_vao_main_vertices(&prim_storage_vao, &expanded_vertices, VertexUsageHint::Static);
+            (Some(prim_storage_vao), instance_count)
+        } else {
+            (None, options.max_instance_buffer_size / mem::size_of::<PrimitiveInstanceData>())
+        };
+
         let blur_vao = device.create_vao_with_new_instances(&desc::BLUR, &prim_vao);
         let clip_rect_vao = device.create_vao_with_new_instances(&desc::CLIP_RECT, &prim_vao);
         let clip_box_shadow_vao = device.create_vao_with_new_instances(&desc::CLIP_BOX_SHADOW, &prim_vao);
@@ -2561,16 +2612,6 @@ impl Renderer {
         for _ in 0 .. VERTEX_DATA_TEXTURE_COUNT {
             vertex_data_textures.push(VertexDataTextures::new());
         }
-
-        // On some (mostly older, integrated) GPUs, the normal GPU texture cache update path
-        // doesn't work well when running on ANGLE, causing CPU stalls inside D3D and/or the
-        // GPU driver. See https://bugzilla.mozilla.org/show_bug.cgi?id=1576637 for much
-        // more detail. To reduce the number of code paths we have active that require testing,
-        // we will enable the GPU cache scatter update path on all devices running with ANGLE.
-        // We want a better solution long-term, but for now this is a significant performance
-        // improvement on HD4600 era GPUs, and shouldn't hurt performance in a noticeable
-        // way on other systems running under ANGLE.
-        let is_software = device.get_capabilities().renderer_name.starts_with("Software");
 
         // On other GL platforms, like macOS or Android, creating many PBOs is very inefficient.
         // This is what happens in GPU cache updates in PBO path. Instead, we switch everything
@@ -2830,6 +2871,7 @@ impl Renderer {
             gpu_profiler,
             vaos: RendererVAOs {
                 prim_vao,
+                prim_storage_vao,
                 blur_vao,
                 clip_rect_vao,
                 clip_box_shadow_vao,
@@ -2876,8 +2918,7 @@ impl Renderer {
             allocated_native_surfaces: FastHashSet::default(),
             debug_overlay_state: DebugOverlayState::new(),
             buffer_damage_tracker: BufferDamageTracker::default(),
-            max_primitive_instance_count:
-                RendererOptions::MAX_INSTANCE_BUFFER_SIZE / mem::size_of::<PrimitiveInstanceData>(),
+            max_primitive_instance_count,
         };
 
         // We initially set the flags to default and then now call set_debug_flags
@@ -4327,10 +4368,16 @@ impl Renderer {
         };
 
         for chunk in data.chunks(chunk_size) {
-            self.device
-                .update_vao_instances(vao, chunk, ONE_TIME_USAGE_HINT);
-            self.device
-                .draw_indexed_triangles_instanced_u16(6, chunk.len() as i32);
+            if vertex_array_kind == VertexArrayKind::Primitive && self.vaos.prim_storage_vao.is_some() {
+                self.device.update_vao_storage(vao, chunk, 0, ONE_TIME_USAGE_HINT);
+                self.device
+                    .draw_triangles_u16(0, 6 * chunk.len() as i32);
+            } else {
+                self.device
+                    .update_vao_instances(vao, chunk, ONE_TIME_USAGE_HINT);
+                self.device
+                    .draw_indexed_triangles_instanced_u16(6, chunk.len() as i32);
+            }
             self.profile.inc(profiler::DRAW_CALLS);
             stats.total_draw_calls += 1;
         }
@@ -4802,8 +4849,13 @@ impl Renderer {
                     // are all set up from the previous draw_instanced_batch call,
                     // so just issue a draw call here to avoid re-uploading the
                     // instances and re-binding textures etc.
-                    self.device
-                        .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
+                    if self.vaos.prim_storage_vao.is_some() {
+                        self.device
+                            .draw_triangles_u16(0, 6 * batch.instances.len() as i32);
+                    } else {
+                        self.device
+                            .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
+                    }
 
                     self.set_blend_mode_subpixel_with_bg_color_pass2(framebuffer_kind);
                     // re-binding the shader after the blend mode change
@@ -4814,8 +4866,13 @@ impl Renderer {
                     );
                     self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass2 as _);
 
-                    self.device
-                        .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
+                    if self.vaos.prim_storage_vao.is_some() {
+                        self.device
+                            .draw_triangles_u16(0, 6 * batch.instances.len() as i32);
+                    } else {
+                        self.device
+                            .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
+                    }
                 }
 
                 if batch.key.blend_mode == BlendMode::SubpixelWithBgColor {
@@ -7055,6 +7112,9 @@ impl Renderer {
         self.texture_upload_pbo_pool.deinit(&mut self.device);
         self.texture_resolver.deinit(&mut self.device);
         self.device.delete_vao(self.vaos.prim_vao);
+        if let Some(vao) = self.vaos.prim_storage_vao {
+            self.device.delete_vao(vao);
+        }
         self.device.delete_vao(self.vaos.resolve_vao);
         self.device.delete_vao(self.vaos.clip_rect_vao);
         self.device.delete_vao(self.vaos.clip_box_shadow_vao);
@@ -7333,13 +7393,16 @@ pub struct RendererOptions {
     /// performance impact, so only use when debugging specific problems!
     pub panic_on_gl_error: bool,
     pub picture_tile_size: Option<DeviceIntSize>,
+    /// Maximum buffer size for instance data.
+    pub max_instance_buffer_size: usize,
+    /// Maximum number of instances that we can draw at once.
+    pub max_storage_instances: Option<NonZeroUsize>,
 }
 
 impl RendererOptions {
     /// Number of batches to look back in history for adding the current
     /// transparent instance into.
     const BATCH_LOOKBACK_COUNT: usize = 10;
-
     /// Since we are re-initializing the instance buffers on every draw call,
     /// the driver has to internally manage PBOs in flight.
     /// It's typically done by bucketing up to a specific limit, and then
@@ -7401,6 +7464,11 @@ impl Default for RendererOptions {
             enable_gpu_markers: true,
             panic_on_gl_error: false,
             picture_tile_size: None,
+            // Actual threshold in macOS GL drivers
+            max_instance_buffer_size: Self::MAX_INSTANCE_BUFFER_SIZE,
+            max_storage_instances: NonZeroUsize::new(
+                Self::MAX_INSTANCE_BUFFER_SIZE / mem::size_of::<PrimitiveInstanceData>(),
+            ),
         }
     }
 }
@@ -7920,7 +7988,7 @@ impl Renderer {
 
 fn get_vao(vertex_array_kind: VertexArrayKind, vaos: &RendererVAOs) -> &VAO {
     match vertex_array_kind {
-        VertexArrayKind::Primitive => &vaos.prim_vao,
+        VertexArrayKind::Primitive => vaos.prim_storage_vao.as_ref().unwrap_or(&vaos.prim_vao),
         VertexArrayKind::ClipImage => &vaos.clip_image_vao,
         VertexArrayKind::ClipRect => &vaos.clip_rect_vao,
         VertexArrayKind::ClipBoxShadow => &vaos.clip_box_shadow_vao,
