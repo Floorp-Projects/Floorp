@@ -286,7 +286,7 @@ TEST_VARIANTS = {
         },
     },
     "webgl-ipc": {
-        # TODO: After November 1st 2020, verify this variant is still needed.
+        # TODO: After 2021-02-01, verify this variant is still needed.
         "description": "{description} with WebGL IPC process enabled",
         "suffix": "gli",
         "replace": {
