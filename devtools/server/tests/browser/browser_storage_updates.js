@@ -6,6 +6,12 @@
 
 "use strict";
 
+/* import-globals-from storage-helpers.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/server/tests/browser/storage-helpers.js",
+  this
+);
+
 const TESTS = [
   // index 0
   {
@@ -190,8 +196,9 @@ const TESTS = [
 ];
 
 add_task(async function() {
-  const target = await addTabTarget(MAIN_DOMAIN + "storage-updates.html");
-  const front = await target.getFront("storage");
+  const { target, front } = await openTabAndSetupStorage(
+    MAIN_DOMAIN + "storage-updates.html"
+  );
 
   for (let i = 0; i < TESTS.length; i++) {
     const test = TESTS[i];

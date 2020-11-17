@@ -3403,13 +3403,31 @@ const StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
     // Fetch all the inner iframe windows in this tab.
     this.fetchChildWindows(this.parentActor.docShell);
 
+    // Skip initializing storage actors already instanced as Resources
+    // by the watcher. This happens when the target is a tab.
+    const isAddonTarget = !!this.parentActor.addonId;
+    const isWatcherEnabled = !isAddonTarget && !this.parentActor.isRootActor;
+    const shallUseLegacyActors = Services.prefs.getBoolPref(
+      "devtools.storage.test.forceLegacyActors",
+      false
+    );
+    const resourcesInWatcher = {
+      localStorage: isWatcherEnabled,
+      sessionStorage: isWatcherEnabled,
+    };
+
     // Initialize the registered store types
     for (const [store, ActorConstructor] of storageTypePool) {
       // Only create the extensionStorage actor when the debugging target
       // is an extension.
-      if (store === "extensionStorage" && !this.parentActor.addonId) {
+      if (store === "extensionStorage" && !isAddonTarget) {
         continue;
       }
+      // Skip resource actors
+      if (resourcesInWatcher[store] && !shallUseLegacyActors) {
+        continue;
+      }
+
       this.childActorPool.set(store, new ActorConstructor(this));
     }
 
