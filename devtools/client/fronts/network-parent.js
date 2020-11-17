@@ -8,18 +8,18 @@ const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
-const { networkSpec } = require("devtools/shared/specs/network");
+const { networkParentSpec } = require("devtools/shared/specs/network-parent");
 
 /**
  * Client side for the network actor, used for managing network requests.
  */
 
-class NetworkFront extends FrontClassWithSpec(networkSpec) {
+class NetworkParentFront extends FrontClassWithSpec(networkParentSpec) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
     // Attribute name from which to retrieve the actorID out of the target actor's form
-    this.formAttributeName = "networkActor";
+    this.formAttributeName = "networkParentActor";
   }
 }
 
-registerFront(NetworkFront);
+registerFront(NetworkParentFront);

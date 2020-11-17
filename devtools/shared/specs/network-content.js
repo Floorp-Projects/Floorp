@@ -6,8 +6,8 @@
 
 const { generateActorSpec, RetVal, Arg } = require("devtools/shared/protocol");
 
-const stackTracesSpec = generateActorSpec({
-  typeName: "stacktraces",
+const networkContentSpec = generateActorSpec({
+  typeName: "networkContent",
   methods: {
     getStackTrace: {
       request: { resourceId: Arg(0) },
@@ -17,4 +17,4 @@ const stackTracesSpec = generateActorSpec({
   },
 });
 
-exports.stackTracesSpec = stackTracesSpec;
+exports.networkContentSpec = networkContentSpec;

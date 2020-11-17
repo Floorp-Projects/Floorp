@@ -6,8 +6,8 @@
 
 const { generateActorSpec, Arg, RetVal } = require("devtools/shared/protocol");
 
-const networkSpec = generateActorSpec({
-  typeName: "network",
+const networkParentSpec = generateActorSpec({
+  typeName: "networkParent",
 
   methods: {
     setBlockedUrls: {
@@ -24,4 +24,4 @@ const networkSpec = generateActorSpec({
   },
 });
 
-exports.networkSpec = networkSpec;
+exports.networkParentSpec = networkParentSpec;

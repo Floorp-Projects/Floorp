@@ -414,7 +414,7 @@ class FirefoxConnector {
    */
   async getBlockedUrls() {
     if (this.hasResourceWatcherSupport && this.currentWatcherFront) {
-      const network = await this.currentWatcherFront.getNetworkActor();
+      const network = await this.currentWatcherFront.getNetworkParentActor();
       return network.getBlockedUrls();
     }
     if (!this.webConsoleFront.traits.blockedUrls) {
@@ -430,7 +430,7 @@ class FirefoxConnector {
    */
   async setBlockedUrls(urls) {
     if (this.hasResourceWatcherSupport && this.currentWatcherFront) {
-      const network = await this.currentWatcherFront.getNetworkActor();
+      const network = await this.currentWatcherFront.getNetworkParentActor();
       return network.setBlockedUrls(urls);
     }
     return this.webConsoleFront.setBlockedUrls(urls);
