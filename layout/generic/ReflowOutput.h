@@ -26,33 +26,18 @@ constexpr auto AllOverflowTypes() {
 }
 }  // namespace mozilla
 
-/**
- * When we store overflow areas as an array of scrollable and visual
- * overflow, we use these indices.
- *
- * eOverflowType_LENGTH is needed (for gcc 4.5.*, at least) to ensure
- * that 2 is a valid value of nsOverflowType for use in
- * NS_FOR_FRAME_OVERFLOW_TYPES.
- */
-enum nsOverflowType { eInkOverflow, eScrollableOverflow, eOverflowType_LENGTH };
-
 struct nsOverflowAreas {
  private:
+  enum nsOverflowType {
+    eInkOverflow,
+    eScrollableOverflow,
+  };
   nsRect mRects[2];
 
  public:
   // XXX: We can remove this alias after moving nsOverflowAreas into mozilla
   // namespace.
   using OverflowType = mozilla::OverflowType;
-
-  nsRect& Overflow(size_t aIndex) {
-    NS_ASSERTION(aIndex < 2, "index out of range");
-    return mRects[aIndex];
-  }
-  const nsRect& Overflow(size_t aIndex) const {
-    NS_ASSERTION(aIndex < 2, "index out of range");
-    return mRects[aIndex];
-  }
 
   nsRect& InkOverflow() { return mRects[eInkOverflow]; }
   const nsRect& InkOverflow() const { return mRects[eInkOverflow]; }
