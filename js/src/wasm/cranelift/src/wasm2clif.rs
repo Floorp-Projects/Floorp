@@ -669,7 +669,6 @@ impl<'static_env, 'module_env> TransEnv<'static_env, 'module_env> {
         self.switch_to_wasm_tls_realm(pos);
         self.reload_tls_and_pinned_regs(pos);
 
-        #![allow(clippy::question_mark)]
         if call.ret.is_none() {
             return None;
         }
