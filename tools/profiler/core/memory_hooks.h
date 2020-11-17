@@ -13,7 +13,7 @@ namespace profiler {
 
 void install_memory_hooks();
 void remove_memory_hooks();
-void enable_native_allocations();
+void enable_native_allocations(int aMainThreadId);
 void disable_native_allocations();
 
 }  // namespace profiler

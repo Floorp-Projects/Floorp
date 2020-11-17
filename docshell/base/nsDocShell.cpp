@@ -244,6 +244,10 @@
 #  include "nsIWebBrowserPrint.h"
 #endif
 
+#ifdef MOZ_GECKO_PROFILER
+#  include "ProfilerMarkerPayload.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::net;
