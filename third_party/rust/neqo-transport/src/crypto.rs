@@ -363,13 +363,16 @@ impl CryptoDxState {
             0xc3, 0xee, 0xf7, 0x12, 0xc7, 0x2e, 0xbb, 0x5a, 0x11, 0xa7, 0xd2, 0x43, 0x2b, 0xb4,
             0x63, 0x65, 0xbe, 0xf9, 0xf5, 0x02,
         ];
-        const INITIAL_SALT_29_30: &[u8] = &[
+        const INITIAL_SALT_29_32: &[u8] = &[
             0xaf, 0xbf, 0xec, 0x28, 0x99, 0x93, 0xd2, 0x4c, 0x9e, 0x97, 0x86, 0xf1, 0x9c, 0x61,
             0x11, 0xe0, 0x43, 0x90, 0xa8, 0x99,
         ];
         let salt = match quic_version {
             QuicVersion::Draft27 | QuicVersion::Draft28 => INITIAL_SALT_27,
-            QuicVersion::Draft29 | QuicVersion::Draft30 => INITIAL_SALT_29_30,
+            QuicVersion::Draft29
+            | QuicVersion::Draft30
+            | QuicVersion::Draft31
+            | QuicVersion::Draft32 => INITIAL_SALT_29_32,
         };
         let cipher = TLS_AES_128_GCM_SHA256;
         let initial_secret = hkdf::extract(
@@ -590,6 +593,15 @@ impl CryptoDxState {
             "server in",
             CLIENT_CID,
         )
+    }
+
+    /// Get the amount of extra padding packets protected with this profile need.
+    /// This is the difference between the size of the header protection sample
+    /// and the AEAD expansion.
+    pub fn extra_padding(&self) -> usize {
+        self.hpkey
+            .sample_size()
+            .saturating_sub(self.aead.expansion())
     }
 }
 
