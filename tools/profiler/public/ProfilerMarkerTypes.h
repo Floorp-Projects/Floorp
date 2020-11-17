@@ -240,37 +240,6 @@ struct GCMinor {
   }
 };
 
-struct StyleMarkerPayload {
-  static constexpr mozilla::Span<const char> MarkerTypeName() {
-    return mozilla::MakeStringSpan("Styles");
-  }
-  static void StreamJSONMarkerData(
-      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
-      const mozilla::ServoTraversalStatistics& aStats) {
-    aWriter.IntProperty("elementsTraversed", aStats.mElementsTraversed);
-    aWriter.IntProperty("elementsStyled", aStats.mElementsStyled);
-    aWriter.IntProperty("elementsMatched", aStats.mElementsMatched);
-    aWriter.IntProperty("stylesShared", aStats.mStylesShared);
-    aWriter.IntProperty("stylesReused", aStats.mStylesReused);
-  }
-  static mozilla::MarkerSchema MarkerTypeDisplay() {
-    using MS = mozilla::MarkerSchema;
-    MS schema{MS::Location::markerChart, MS::Location::markerTable,
-              MS::Location::timelineOverview};
-    schema.AddKeyLabelFormat("elementsTraversed", "Elements traversed",
-                             MS::Format::integer);
-    schema.AddKeyLabelFormat("elementsStyled", "Elements styled",
-                             MS::Format::integer);
-    schema.AddKeyLabelFormat("elementsMatched", "Elements matched",
-                             MS::Format::integer);
-    schema.AddKeyLabelFormat("stylesShared", "Styles shared",
-                             MS::Format::integer);
-    schema.AddKeyLabelFormat("stylesReused", "Styles reused",
-                             MS::Format::integer);
-    return schema;
-  }
-};
-
 class JsAllocationMarkerPayload {
   static constexpr mozilla::Span<const char> MarkerTypeName() {
     return mozilla::MakeStringSpan("JS allocation");
