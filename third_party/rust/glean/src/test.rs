@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::private::BooleanMetric;
+use crate::private::{BooleanMetric, CounterMetric};
 use once_cell::sync::Lazy;
 use std::path::PathBuf;
 use std::sync::Mutex;
@@ -20,7 +20,7 @@ const GLOBAL_APPLICATION_ID: &str = "org.mozilla.rlb.test";
 
 // Create a new instance of Glean with a temporary directory.
 // We need to keep the `TempDir` alive, so that it's not deleted before we stop using it.
-fn new_glean(configuration: Option<Configuration>) -> tempfile::TempDir {
+fn new_glean(configuration: Option<Configuration>, clear_stores: bool) -> tempfile::TempDir {
     let dir = tempfile::tempdir().unwrap();
     let tmpname = dir.path().display().to_string();
 
@@ -38,7 +38,7 @@ fn new_glean(configuration: Option<Configuration>) -> tempfile::TempDir {
         },
     };
 
-    crate::reset_glean(cfg, ClientInfoMetrics::unknown(), true);
+    crate::reset_glean(cfg, ClientInfoMetrics::unknown(), clear_stores);
     dir
 }
 
@@ -82,7 +82,7 @@ fn send_a_ping() {
         uploader: Some(Box::new(FakeUploader { sender: s })),
     };
 
-    let _t = new_glean(Some(cfg));
+    let _t = new_glean(Some(cfg), true);
     crate::dispatcher::block_on_queue();
 
     // Define a new ping and submit it.
@@ -100,7 +100,7 @@ fn disabling_upload_disables_metrics_recording() {
     let _lock = GLOBAL_LOCK.lock().unwrap();
     env_logger::try_init().ok();
 
-    let _t = new_glean(None);
+    let _t = new_glean(None, true);
     crate::dispatcher::block_on_queue();
 
     let metric = BooleanMetric::new(CommonMetricData {
@@ -122,7 +122,8 @@ fn test_experiments_recording() {
     // setup glean for the test
     let _lock = GLOBAL_LOCK.lock().unwrap();
     env_logger::try_init().ok();
-    let _t = new_glean(None);
+
+    let _t = new_glean(None, true);
 
     set_experiment_active("experiment_test".to_string(), "branch_a".to_string(), None);
     let mut extra = HashMap::new();
@@ -254,9 +255,37 @@ fn initialize_must_not_crash_if_data_dir_is_messed_up() {
 }
 
 #[test]
-#[ignore] // TODO: To be done in bug 1673667.
 fn queued_recorded_metrics_correctly_record_during_init() {
-    todo!()
+    let _lock = GLOBAL_LOCK.lock().unwrap();
+    env_logger::try_init().ok();
+
+    destroy_glean(true);
+
+    let metric = CounterMetric::new(CommonMetricData {
+        name: "counter_metric".into(),
+        category: "test".into(),
+        send_in_pings: vec!["store1".into()],
+        lifetime: Lifetime::Application,
+        disabled: false,
+        dynamic_label: None,
+    });
+
+    // This will queue 3 tasks that will add to the metric value once Glean is initialized
+    for _ in 0..3 {
+        metric.add(1);
+    }
+
+    // TODO: To be fixed in bug 1677150.
+    // Ensure that no value has been stored yet since the tasks have only been queued
+    // and not executed yet
+
+    // Calling `new_glean` here will cause Glean to be initialized and should cause the queued
+    // tasks recording metrics to execute
+    let _ = new_glean(None, false);
+
+    // Verify that the callback was executed by testing for the correct value
+    assert!(metric.test_get_value(None).is_some(), "Value must exist");
+    assert_eq!(3, metric.test_get_value(None).unwrap(), "Value must match");
 }
 
 #[test]

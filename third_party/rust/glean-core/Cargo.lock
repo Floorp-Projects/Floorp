@@ -180,7 +180,7 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "33.3.0"
+version = "33.4.0"
 dependencies = [
  "bincode",
  "chrono",
