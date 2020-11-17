@@ -34,19 +34,18 @@ using mozilla::ipc::AssertIsOnBackgroundThread;
 
 namespace {
 
-Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
-                                         const Atomic<bool>& aCanceled,
-                                         const bool aInitializing) {
-  AssertIsOnIOThread();
-
-  UsageInfo usageInfo;
-
+template <typename StepFunc>
+Result<UsageInfo, nsresult> ReduceUsageInfo(nsIFile& aDir,
+                                            const Atomic<bool>& aCanceled,
+                                            const StepFunc& aStepFunc) {
   // XXX The following loop (including the cancellation check) is very similar
   // to QuotaClient::GetDatabaseFilenames in dom/indexedDB/ActorsParent.cpp
   // (Also, it is a fallible variant of std::reduce)
-  CACHE_TRY_INSPECT(const auto& entries, MOZ_TO_RESULT_INVOKE_TYPED(
-                                             nsCOMPtr<nsIDirectoryEnumerator>,
-                                             aMorgueDir, GetDirectoryEntries));
+  CACHE_TRY_INSPECT(const auto& entries,
+                    MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIDirectoryEnumerator>,
+                                               aDir, GetDirectoryEntries));
+
+  UsageInfo usageInfo;
 
   CACHE_TRY(CollectEach(
       [&entries, &aCanceled]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
@@ -57,10 +56,29 @@ Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
         CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, entries,
                                                     GetNextFile));
       },
-      [&usageInfo, aInitializing](
-          const nsCOMPtr<nsIFile>& bodyDir) -> Result<Ok, nsresult> {
+      [&usageInfo,
+       &aStepFunc](const nsCOMPtr<nsIFile>& bodyDir) -> Result<Ok, nsresult> {
         CACHE_TRY(OkIf(!QuotaManager::IsShuttingDown()), Err(NS_ERROR_ABORT));
 
+        CACHE_TRY_INSPECT(const auto& stepUsageInfo, aStepFunc(bodyDir));
+
+        usageInfo += stepUsageInfo;
+
+        return Ok{};
+      }));
+
+  return usageInfo;
+}
+
+Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
+                                         const Atomic<bool>& aCanceled,
+                                         const bool aInitializing) {
+  AssertIsOnIOThread();
+
+  CACHE_TRY_RETURN(ReduceUsageInfo(
+      aMorgueDir, aCanceled,
+      [aInitializing](
+          const nsCOMPtr<nsIFile>& bodyDir) -> Result<UsageInfo, nsresult> {
         CACHE_TRY_INSPECT(const bool& isDir,
                           MOZ_TO_RESULT_INVOKE(bodyDir, IsDirectory));
 
@@ -70,9 +88,10 @@ Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
           // Try to remove the unexpected files, and keep moving on even if it
           // fails because it might be created by virus or the operation system
           MOZ_ASSERT(NS_SUCCEEDED(result));
-          return Ok{};
+          return UsageInfo{};
         }
 
+        UsageInfo usageInfo;
         const auto getUsage = [&usageInfo](nsIFile* bodyFile,
                                            const nsACString& leafName,
                                            bool& fileDeleted) -> nsresult {
@@ -106,10 +125,8 @@ Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
                                     /* aCanRemoveFiles */
                                     aInitializing,
                                     /* aTrackQuota */ false));
-        return Ok{};
+        return usageInfo;
       }));
-
-  return usageInfo;
 }
 
 Result<int64_t, nsresult> LockedGetPaddingSizeFromDB(
@@ -378,93 +395,70 @@ Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
         return Maybe<int64_t>{};
       }()));
 
-  UsageInfo usageInfo;
-
   if (!maybePaddingSize) {
     uint64_t usage;
     if (qm->GetUsageForClient(PERSISTENCE_TYPE_DEFAULT, aGroupAndOrigin,
                               Client::DOMCACHE, usage)) {
-      usageInfo += DatabaseUsageType(Some(usage));
+      return UsageInfo{DatabaseUsageType(Some(usage))};
     }
 
-    return usageInfo;
+    return UsageInfo{};
   }
+
+  CACHE_TRY_INSPECT(
+      const auto& innerUsageInfo,
+      ReduceUsageInfo(
+          *dir, aCanceled,
+          [&aCanceled, aInitializing](
+              const nsCOMPtr<nsIFile>& file) -> Result<UsageInfo, nsresult> {
+            CACHE_TRY_INSPECT(
+                const auto& leafName,
+                MOZ_TO_RESULT_INVOKE_TYPED(nsAutoString, file, GetLeafName));
+
+            CACHE_TRY_INSPECT(const bool& isDir,
+                              MOZ_TO_RESULT_INVOKE(file, IsDirectory));
+
+            if (isDir) {
+              if (leafName.EqualsLiteral("morgue")) {
+                CACHE_TRY_RETURN(GetBodyUsage(*file, aCanceled, aInitializing));
+              } else {
+                NS_WARNING("Unknown Cache directory found!");
+              }
+
+              return UsageInfo{};
+            }
+
+            // Ignore transient sqlite files and marker files
+            if (leafName.EqualsLiteral("caches.sqlite-journal") ||
+                leafName.EqualsLiteral("caches.sqlite-shm") ||
+                leafName.Find("caches.sqlite-mj"_ns, false, 0, 0) == 0 ||
+                leafName.EqualsLiteral("context_open.marker")) {
+              return UsageInfo{};
+            }
+
+            if (leafName.Equals(kCachesSQLiteFilename) ||
+                leafName.EqualsLiteral("caches.sqlite-wal")) {
+              CACHE_TRY_INSPECT(const int64_t& fileSize,
+                                MOZ_TO_RESULT_INVOKE(file, GetFileSize));
+              MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
+
+              return UsageInfo{DatabaseUsageType(Some(fileSize))};
+            }
+
+            // Ignore directory padding file
+            if (leafName.EqualsLiteral(PADDING_FILE_NAME) ||
+                leafName.EqualsLiteral(PADDING_TMP_FILE_NAME)) {
+              return UsageInfo{};
+            }
+
+            NS_WARNING("Unknown Cache file found!");
+
+            return UsageInfo{};
+          }));
 
   // FIXME: Separate file usage and database usage in OriginInfo so that the
   // workaround for treating padding file size as database usage can be removed.
-  usageInfo += DatabaseUsageType(maybePaddingSize);
-
-  // XXX The following loop (including the cancellation check) is very similar
-  // to QuotaClient::GetDatabaseFilenames in dom/indexedDB/ActorsParent.cpp
-  // (Also, it is a fallible variant of std::reduce)
-  CACHE_TRY_INSPECT(const auto& entries,
-                    MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIDirectoryEnumerator>,
-                                               dir, GetDirectoryEntries));
-
-  CACHE_TRY(CollectEach(
-      [&entries, &aCanceled]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
-        if (aCanceled) {
-          return nsCOMPtr<nsIFile>{};
-        }
-
-        CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, entries,
-                                                    GetNextFile));
-      },
-      [&aCanceled, &usageInfo,
-       aInitializing](const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
-        CACHE_TRY(OkIf(!QuotaManager::IsShuttingDown()), Err(NS_ERROR_ABORT));
-
-        CACHE_TRY_INSPECT(
-            const auto& leafName,
-            MOZ_TO_RESULT_INVOKE_TYPED(nsAutoString, file, GetLeafName));
-
-        CACHE_TRY_INSPECT(const bool& isDir,
-                          MOZ_TO_RESULT_INVOKE(file, IsDirectory));
-
-        if (isDir) {
-          if (leafName.EqualsLiteral("morgue")) {
-            // XXX This didn't use to warn for NS_ERROR_ABORT, should we keep
-            // that? (but it was and is propagated)
-            CACHE_TRY_INSPECT(const auto& bodyUsageInfo,
-                              GetBodyUsage(*file, aCanceled, aInitializing));
-            usageInfo += bodyUsageInfo;
-          } else {
-            NS_WARNING("Unknown Cache directory found!");
-          }
-
-          return Ok{};
-        }
-
-        // Ignore transient sqlite files and marker files
-        if (leafName.EqualsLiteral("caches.sqlite-journal") ||
-            leafName.EqualsLiteral("caches.sqlite-shm") ||
-            leafName.Find("caches.sqlite-mj"_ns, false, 0, 0) == 0 ||
-            leafName.EqualsLiteral("context_open.marker")) {
-          return Ok{};
-        }
-
-        if (leafName.Equals(kCachesSQLiteFilename) ||
-            leafName.EqualsLiteral("caches.sqlite-wal")) {
-          CACHE_TRY_INSPECT(const int64_t& fileSize,
-                            MOZ_TO_RESULT_INVOKE(file, GetFileSize));
-          MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
-
-          usageInfo += DatabaseUsageType(Some(fileSize));
-          return Ok{};
-        }
-
-        // Ignore directory padding file
-        if (leafName.EqualsLiteral(PADDING_FILE_NAME) ||
-            leafName.EqualsLiteral(PADDING_TMP_FILE_NAME)) {
-          return Ok{};
-        }
-
-        NS_WARNING("Unknown Cache file found!");
-
-        return Ok{};
-      }));
-
-  return usageInfo;
+  return UsageInfo{DatabaseUsageType(maybePaddingSize)} + innerUsageInfo;
 }
 
 // static

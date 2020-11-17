@@ -56,6 +56,18 @@ using FileUsageType = detail::Usage<UsageKind::File>;
 
 class UsageInfo final {
  public:
+  UsageInfo() = default;
+
+  explicit UsageInfo(const DatabaseUsageType aUsage) : mDatabaseUsage(aUsage) {}
+
+  explicit UsageInfo(const FileUsageType aUsage) : mFileUsage(aUsage) {}
+
+  UsageInfo operator+(const UsageInfo& aUsageInfo) {
+    UsageInfo res = *this;
+    res += aUsageInfo;
+    return res;
+  }
+
   UsageInfo& operator+=(const UsageInfo& aUsageInfo) {
     mDatabaseUsage += aUsageInfo.mDatabaseUsage;
     mFileUsage += aUsageInfo.mFileUsage;
