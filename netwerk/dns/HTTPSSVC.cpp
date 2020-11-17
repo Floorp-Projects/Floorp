@@ -67,12 +67,12 @@ SvcParam::GetType(uint16_t* aType) {
 }
 
 NS_IMETHODIMP
-SvcParam::GetAlpn(nsACString& aAlpn) {
+SvcParam::GetAlpn(nsTArray<nsCString>& aAlpn) {
   if (!mValue.is<SvcParamAlpn>()) {
     MOZ_ASSERT(false, "Unexpected type for variant");
     return NS_ERROR_NOT_AVAILABLE;
   }
-  aAlpn = mValue.as<SvcParamAlpn>().mValue;
+  aAlpn.AppendElements(mValue.as<SvcParamAlpn>().mValue);
   return NS_OK;
 }
 
@@ -172,13 +172,13 @@ bool SVCB::NoDefaultAlpn() const {
 Maybe<Tuple<nsCString, bool>> SVCB::GetAlpn(bool aNoHttp2,
                                             bool aNoHttp3) const {
   Maybe<Tuple<nsCString, bool>> alpn;
-  nsAutoCString alpnValue;
   for (const auto& value : mSvcFieldValue) {
     if (value.mValue.is<SvcParamAlpn>()) {
-      alpn.emplace();
-      alpnValue = value.mValue.as<SvcParamAlpn>().mValue;
-      if (!alpnValue.IsEmpty()) {
-        alpn = Some(SelectAlpnFromAlpnList(alpnValue, aNoHttp2, aNoHttp3));
+      nsTArray<nsCString> alpnList;
+      alpnList.AppendElements(value.mValue.as<SvcParamAlpn>().mValue);
+      if (!alpnList.IsEmpty()) {
+        alpn.emplace();
+        alpn = Some(SelectAlpnFromAlpnList(alpnList, aNoHttp2, aNoHttp3));
       }
       return alpn;
     }

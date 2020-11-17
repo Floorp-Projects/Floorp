@@ -376,9 +376,15 @@ nsresult LookupHelper::ConstructHTTPSRRAnswer(LookupArgument* aArgument) {
             nextRecord->mAlpn.Construct();
             nextRecord->mAlpn.Value().mType = type;
             nsCOMPtr<nsISVCParamAlpn> alpnParam = do_QueryInterface(value);
-            nsCString alpnStr;
-            Unused << alpnParam->GetAlpn(alpnStr);
-            CopyASCIItoUTF16(alpnStr, nextRecord->mAlpn.Value().mAlpn);
+            nsTArray<nsCString> alpn;
+            Unused << alpnParam->GetAlpn(alpn);
+            nsAutoCString alpnStr;
+            for (const auto& str : alpn) {
+              alpnStr.Append(str);
+              alpnStr.Append(',');
+            }
+            CopyASCIItoUTF16(Span(alpnStr.BeginReading(), alpnStr.Length() - 1),
+                             nextRecord->mAlpn.Value().mAlpn);
             break;
           }
           case SvcParamKeyNoDefaultAlpn: {

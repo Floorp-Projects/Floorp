@@ -29,7 +29,7 @@ struct SvcParamAlpn {
   bool operator==(const SvcParamAlpn& aOther) const {
     return mValue == aOther.mValue;
   }
-  nsCString mValue;
+  CopyableTArray<nsCString> mValue;
 };
 
 struct SvcParamNoDefaultAlpn {
