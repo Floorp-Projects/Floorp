@@ -159,7 +159,7 @@ impl RenderNotifier for Notifier {
         })
     }
 
-    fn wake_up(&self) {
+    fn wake_up(&self, _composite_needed: bool) {
     }
 
     fn new_frame_ready(&self,

@@ -558,7 +558,7 @@ impl RenderNotifier for CppNotifier {
         })
     }
 
-    fn wake_up(&self) {
+    fn wake_up(&self, _composite_needed: bool) {
         unsafe {
             wr_notifier_wake_up(self.window_id);
         }

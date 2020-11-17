@@ -197,7 +197,7 @@ impl api::RenderNotifier for Notifier {
         Box::new(Clone::clone(self))
     }
 
-    fn wake_up(&self) {
+    fn wake_up(&self, _composite_needed: bool) {
         self.tx.send(()).unwrap();
         let _ = self.events_proxy.wakeup();
     }
@@ -205,8 +205,8 @@ impl api::RenderNotifier for Notifier {
     fn new_frame_ready(&self,
                        _: api::DocumentId,
                        _: bool,
-                       _: bool,
+                       composite_needed: bool,
                        _: Option<u64>) {
-        self.wake_up();
+        self.wake_up(composite_needed);
     }
 }
