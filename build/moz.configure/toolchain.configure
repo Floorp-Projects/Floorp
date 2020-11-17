@@ -415,6 +415,8 @@ def get_compiler_info(compiler, language):
                 version = Version("8.0.0")
             elif version < "12.0":
                 version = Version("9.0.0")
+            elif version < "12.0.1":
+                version = Version("10.0.0")
             else:
                 version = Version("10.0.0.or.more")
 
