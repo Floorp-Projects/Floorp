@@ -45,7 +45,7 @@
 #endif
 
 #ifdef MOZ_GECKO_PROFILER
-#  include "mozilla/BaseProfilerMarkerTypes.h"
+#  include "mozilla/ProfilerMarkerTypes.h"
 #endif
 
 bool is_in_main_thread() { return NS_IsMainThread(); }
@@ -59,26 +59,20 @@ bool is_in_render_thread() {
 }
 
 void gecko_profiler_start_marker(const char* name) {
-#ifdef MOZ_GECKO_PROFILER
-  profiler_tracing_marker("WebRender", name,
-                          JS::ProfilingCategoryPair::GRAPHICS,
-                          TRACING_INTERVAL_START);
-#endif
+  PROFILER_MARKER(mozilla::ProfilerString8View::WrapNullTerminatedString(name),
+                  GRAPHICS, mozilla::MarkerTiming::IntervalStart(), Tracing,
+                  "WebRender");
 }
 
 void gecko_profiler_end_marker(const char* name) {
-#ifdef MOZ_GECKO_PROFILER
-  profiler_tracing_marker("WebRender", name,
-                          JS::ProfilingCategoryPair::GRAPHICS,
-                          TRACING_INTERVAL_END);
-#endif
+  PROFILER_MARKER(mozilla::ProfilerString8View::WrapNullTerminatedString(name),
+                  GRAPHICS, mozilla::MarkerTiming::IntervalEnd(), Tracing,
+                  "WebRender");
 }
 
 void gecko_profiler_event_marker(const char* name) {
-#ifdef MOZ_GECKO_PROFILER
-  profiler_tracing_marker("WebRender", name,
-                          JS::ProfilingCategoryPair::GRAPHICS, TRACING_EVENT);
-#endif
+  PROFILER_MARKER(mozilla::ProfilerString8View::WrapNullTerminatedString(name),
+                  GRAPHICS, {}, Tracing, "WebRender");
 }
 
 void gecko_profiler_add_text_marker(const char* name, const char* text_bytes,

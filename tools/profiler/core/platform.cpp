@@ -5755,47 +5755,6 @@ bool profiler_add_native_allocation_marker(int64_t aSize,
   return true;
 }
 
-void profiler_tracing_marker(const char* aCategoryString,
-                             const char* aMarkerName,
-                             JS::ProfilingCategoryPair aCategoryPair,
-                             TracingKind aKind,
-                             const Maybe<uint64_t>& aInnerWindowID) {
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  VTUNE_TRACING(aMarkerName, aKind);
-
-  // This function is hot enough that we use RacyFeatures, notActivePS.
-  if (!profiler_can_accept_markers()) {
-    return;
-  }
-
-  AUTO_PROFILER_STATS(add_marker_with_TracingMarkerPayload);
-  profiler_add_marker(
-      aMarkerName, aCategoryPair,
-      TracingMarkerPayload(aCategoryString, aKind, TimeStamp::NowUnfuzzed(),
-                           aInnerWindowID));
-}
-
-void profiler_tracing_marker(const char* aCategoryString,
-                             const char* aMarkerName,
-                             JS::ProfilingCategoryPair aCategoryPair,
-                             TracingKind aKind, UniqueProfilerBacktrace aCause,
-                             const Maybe<uint64_t>& aInnerWindowID) {
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  VTUNE_TRACING(aMarkerName, aKind);
-
-  // This function is hot enough that we use RacyFeatures, notActivePS.
-  if (!profiler_can_accept_markers()) {
-    return;
-  }
-
-  profiler_add_marker(
-      aMarkerName, aCategoryPair,
-      TracingMarkerPayload(aCategoryString, aKind, TimeStamp::NowUnfuzzed(),
-                           aInnerWindowID, std::move(aCause)));
-}
-
 void profiler_set_js_context(JSContext* aCx) {
   MOZ_ASSERT(aCx);
 

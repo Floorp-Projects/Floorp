@@ -656,28 +656,20 @@ TEST(GeckoProfiler, Markers)
   profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL, features,
                  filters, MOZ_ARRAY_LENGTH(filters), 0);
 
-  // Used in markers below.
-  TimeStamp ts0 = TimeStamp::NowUnfuzzed();
+  PROFILER_MARKER("tracing event", OTHER, {}, Tracing, "A");
+  PROFILER_MARKER("tracing start", OTHER, MarkerTiming::IntervalStart(),
+                  Tracing, "A");
+  PROFILER_MARKER("tracing end", OTHER, MarkerTiming::IntervalEnd(), Tracing,
+                  "A");
 
-  profiler_tracing_marker("A", "tracing event",
-                          JS::ProfilingCategoryPair::OTHER, TRACING_EVENT);
-  PROFILER_TRACING_MARKER("A", "tracing start", OTHER, TRACING_INTERVAL_START);
-  PROFILER_TRACING_MARKER("A", "tracing end", OTHER, TRACING_INTERVAL_END);
-
-  UniqueProfilerBacktrace bt = profiler_get_backtrace();
-  profiler_tracing_marker("B", "tracing event with stack",
-                          JS::ProfilingCategoryPair::OTHER, TRACING_EVENT,
-                          std::move(bt));
+  auto bt = profiler_capture_backtrace();
+  PROFILER_MARKER("tracing event with stack", OTHER,
+                  MarkerStack::TakeBacktrace(std::move(bt)), Tracing, "B");
 
   { AUTO_PROFILER_TRACING_MARKER("C", "auto tracing", OTHER); }
 
   PROFILER_MARKER_UNTYPED("M1", OTHER, {});
-  PROFILER_ADD_MARKER_WITH_PAYLOAD("M2", OTHER, TracingMarkerPayload,
-                                   ("C", TRACING_EVENT, ts0));
   PROFILER_MARKER_UNTYPED("M3", OTHER, {});
-  PROFILER_ADD_MARKER_WITH_PAYLOAD(
-      "M4", OTHER, TracingMarkerPayload,
-      ("C", TRACING_EVENT, ts0, mozilla::Nothing(), profiler_get_backtrace()));
 
   for (int i = 0; i < 10; i++) {
     PROFILER_ADD_MARKER_WITH_PAYLOAD("M5", OTHER, GTestMarkerPayload, (i));
@@ -906,9 +898,7 @@ TEST(GeckoProfiler, Markers)
     S_tracing_auto_tracing_start,
     S_tracing_auto_tracing_end,
     S_M1,
-    S_tracing_M2_C,
     S_M3,
-    S_tracing_M4_C_stack,
     S_M5_gtest0,
     S_M5_gtest1,
     S_M5_gtest2,
@@ -1159,7 +1149,6 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ(typeString, "tracing");
                 EXPECT_TIMING_INSTANT;
                 EXPECT_EQ_JSON(payload["category"], String, "A");
-                EXPECT_TRUE(payload["interval"].isNull());
                 EXPECT_TRUE(payload["stack"].isNull());
 
               } else if (nameString == "tracing start") {
@@ -1168,7 +1157,6 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ(typeString, "tracing");
                 EXPECT_TIMING_START;
                 EXPECT_EQ_JSON(payload["category"], String, "A");
-                EXPECT_EQ_JSON(payload["interval"], String, "start");
                 EXPECT_TRUE(payload["stack"].isNull());
 
               } else if (nameString == "tracing end") {
@@ -1177,7 +1165,6 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ(typeString, "tracing");
                 EXPECT_TIMING_END;
                 EXPECT_EQ_JSON(payload["category"], String, "A");
-                EXPECT_EQ_JSON(payload["interval"], String, "end");
                 EXPECT_TRUE(payload["stack"].isNull());
 
               } else if (nameString == "tracing event with stack") {
@@ -1186,7 +1173,6 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ(typeString, "tracing");
                 EXPECT_TIMING_INSTANT;
                 EXPECT_EQ_JSON(payload["category"], String, "B");
-                EXPECT_TRUE(payload["interval"].isNull());
                 EXPECT_TRUE(payload["stack"].isObject());
 
               } else if (nameString == "auto tracing") {
@@ -1196,7 +1182,6 @@ TEST(GeckoProfiler, Markers)
                     EXPECT_EQ(typeString, "tracing");
                     EXPECT_TIMING_START;
                     EXPECT_EQ_JSON(payload["category"], String, "C");
-                    EXPECT_EQ_JSON(payload["interval"], String, "start");
                     EXPECT_TRUE(payload["stack"].isNull());
                     break;
                   case S_tracing_auto_tracing_end:
@@ -1204,7 +1189,6 @@ TEST(GeckoProfiler, Markers)
                     EXPECT_EQ(typeString, "tracing");
                     EXPECT_TIMING_END;
                     EXPECT_EQ_JSON(payload["category"], String, "C");
-                    EXPECT_EQ_JSON(payload["interval"], String, "end");
                     ASSERT_TRUE(payload["stack"].isNull());
                     break;
                   default:
@@ -1212,24 +1196,6 @@ TEST(GeckoProfiler, Markers)
                                 state == S_tracing_auto_tracing_end);
                     break;
                 }
-
-              } else if (nameString == "M2") {
-                EXPECT_EQ(state, S_tracing_M2_C);
-                state = State(S_tracing_M2_C + 1);
-                EXPECT_EQ(typeString, "tracing");
-                EXPECT_TIMING_INSTANT;
-                EXPECT_EQ_JSON(payload["category"], String, "C");
-                EXPECT_TRUE(payload["interval"].isNull());
-                EXPECT_TRUE(payload["stack"].isNull());
-
-              } else if (nameString == "M4") {
-                EXPECT_EQ(state, S_tracing_M4_C_stack);
-                state = State(S_tracing_M4_C_stack + 1);
-                EXPECT_EQ(typeString, "tracing");
-                EXPECT_TIMING_INSTANT;
-                EXPECT_EQ_JSON(payload["category"], String, "C");
-                EXPECT_TRUE(payload["interval"].isNull());
-                EXPECT_TRUE(payload["stack"].isObject());
 
               } else if (nameString == "M5") {
                 EXPECT_EQ(typeString, "gtest");
