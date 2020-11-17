@@ -254,9 +254,7 @@ html|button {
   margin-inline: 4px;
 }
 
-html|button::-moz-focus-inner,
-html|select::-moz-focus-inner,
-html|input[type="color"]::-moz-focus-inner {
+::-moz-focus-inner {
   border: none;
 }
 
@@ -502,6 +500,7 @@ xul|search-textbox[focused] {
   border-color: var(--in-content-border-active);
   box-shadow: 0 0 0 1px var(--in-content-border-active),
     0 0 0 4px var(--in-content-border-active-shadow);
+  outline: none;
 }
 
 html|input[type="email"]:-moz-ui-invalid,
