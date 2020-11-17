@@ -46,13 +46,11 @@ fn get_build_info(dir: &Path) -> Box<dyn BuildInfo> {
         Box::new(Hg {})
     } else if Path::exists(&dir.join(".git")) {
         Box::new(Git {})
+    } else if let Some(parent) = dir.parent() {
+        get_build_info(parent)
     } else {
-        if let Some(parent) = dir.parent() {
-            get_build_info(parent)
-        } else {
-            eprintln!("unable to detect vcs");
-            Box::new(Noop {})
-        }
+        eprintln!("unable to detect vcs");
+        Box::new(Noop {})
     }
 }
 

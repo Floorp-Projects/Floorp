@@ -253,7 +253,7 @@ impl WrProgramBinaryDiskCache {
 
             let elapsed = start.elapsed();
             info!("Loaded shader in {:?}", elapsed);
-            let elapsed_ms = (elapsed.as_secs() * 1_000) + (elapsed.subsec_nanos() / 1_000_000) as u64;
+            let elapsed_ms = (elapsed.as_secs() * 1_000) + elapsed.subsec_millis() as u64;
 
             if elapsed_ms > MAX_LOAD_TIME_MS {
                 // Loading the startup shaders is taking too long, so bail out now.
@@ -322,7 +322,7 @@ impl WrProgramCache {
 
         WrProgramCache {
             program_cache,
-            disk_cache: disk_cache,
+            disk_cache,
         }
     }
 
