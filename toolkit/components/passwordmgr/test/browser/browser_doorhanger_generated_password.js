@@ -16,7 +16,7 @@ const usernameInputSelector = "#form-basic-username";
 requestLongerTimeout(2);
 
 async function task_setup() {
-  Services.logins.removeAllUserFacingLogins();
+  Services.logins.removeAllLogins();
   LoginTestUtils.resetGeneratedPasswordsCache();
   await cleanupPasswordNotifications();
 }

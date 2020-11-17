@@ -190,6 +190,6 @@ add_task(async function test_searchAndDedupeLogins_acceptDifferentSubdomains() {
       Assert.ok(actual[i].equals(login), `Check index ${i}`);
     }
 
-    Services.logins.removeAllUserFacingLogins();
+    Services.logins.removeAllLogins();
   }
 });

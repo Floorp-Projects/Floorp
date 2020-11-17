@@ -35,7 +35,7 @@ let TestObserver = {
         Assert.ok(expectedData.equals(subject)); // nsILoginInfo.equals()
         break;
       case "removeAllLogins":
-        Assert.ok(subject instanceof Ci.nsIArray);
+        Assert.equal(subject, null);
         break;
       case "hostSavingEnabled":
       case "hostSavingDisabled":
@@ -125,10 +125,6 @@ add_task(function test_notifications() {
     /* ========== 6 ========== */
     testnum++;
     testdesc = "removeAllLogins (again)";
-
-    expectedNotification = "addLogin";
-    expectedData = testuser1;
-    Services.logins.addLogin(testuser1);
 
     expectedNotification = "removeAllLogins";
     expectedData = null;

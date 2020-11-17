@@ -129,13 +129,6 @@ export default class MenuButton extends HTMLElement {
     if (this._menu.hidden) {
       this._showMenu();
     }
-    if (successor.disabled) {
-      if (next) {
-        successor = items[activeItemIndex + 2];
-      } else {
-        successor = items[activeItemIndex - 2];
-      }
-    }
     successor.focus();
   }
 

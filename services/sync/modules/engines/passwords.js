@@ -411,7 +411,7 @@ PasswordStore.prototype = {
   },
 
   async wipe() {
-    Services.logins.removeAllUserFacingLogins();
+    Services.logins.removeAllLogins();
   },
 };
 
@@ -463,18 +463,8 @@ PasswordTracker.prototype = {
         }
         break;
 
-      // Bug 1613620: We iterate through the removed logins and track them to ensure
-      // the logins are deleted across synced devices/accounts
       case "removeAllLogins":
-        subject.QueryInterface(Ci.nsIArrayExtensions);
-        let count = subject.Count();
-        for (let i = 0; i < count; i++) {
-          let currentSubject = subject.GetElementAt(i);
-          let tracked = await this._trackLogin(currentSubject);
-          if (tracked) {
-            this._log.trace(data + ": " + currentSubject.guid);
-          }
-        }
+        this._log.trace(data);
         this.score += SCORE_INCREMENT_XLARGE;
         break;
     }

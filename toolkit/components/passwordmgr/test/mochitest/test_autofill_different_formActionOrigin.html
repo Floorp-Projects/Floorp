@@ -33,7 +33,7 @@ let win = window.open("about:blank");
 SimpleTest.registerCleanupFunction(() => win.close());
 
 async function prepareLoginsAndProcessForm(url, logins = []) {
-  await LoginManager.removeAllUserFacingLogins();
+  await LoginManager.removeAllLogins();
 
   let dates = Date.now();
   for (let login of logins) {

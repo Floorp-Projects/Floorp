@@ -50,7 +50,7 @@ add_task(async function setup() {
   }
 
   registerCleanupFunction(() => {
-    Services.logins.removeAllUserFacingLogins();
+    Services.logins.removeAllLogins();
   });
 });
 

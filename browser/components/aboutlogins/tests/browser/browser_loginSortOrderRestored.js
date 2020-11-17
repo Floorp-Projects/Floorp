@@ -25,7 +25,7 @@ add_task(async function setup() {
   TEST_LOGIN3 = await addLogin(TEST_LOGIN3);
   info(`TEST_LOGIN3 added with guid=${TEST_LOGIN3.guid}`);
   registerCleanupFunction(() => {
-    Services.logins.removeAllUserFacingLogins();
+    Services.logins.removeAllLogins();
     Services.prefs.clearUserPref(SORT_PREF_NAME);
   });
 });

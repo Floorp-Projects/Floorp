@@ -886,7 +886,7 @@ add_task(async function test_recipeCaptureFields_ExistingLogin() {
   is(login.password, "notifyp1", "Check the password unchanged");
   is(login.timesUsed, 2, "Check times used incremented");
 
-  Services.logins.removeAllUserFacingLogins();
+  Services.logins.removeAllLogins();
 });
 
 add_task(async function test_saveUsingEnter() {
@@ -925,7 +925,7 @@ add_task(async function test_saveUsingEnter() {
     is(login.password, "notifyp1", "Check the password used on the new entry");
     is(login.timesUsed, 1, "Check times used on new entry");
 
-    Services.logins.removeAllUserFacingLogins();
+    Services.logins.removeAllLogins();
   }
 
   await testWithTextboxSelector("#password-notification-password");

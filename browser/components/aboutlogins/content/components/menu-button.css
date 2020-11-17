@@ -78,10 +78,6 @@
   background-image: url("chrome://browser/skin/save.svg");
 }
 
-.menuitem-remove-all-logins {
-  background-image: url("chrome://global/skin/icons/delete.svg");
-}
-
 .menuitem-preferences {
   background-image: url("chrome://global/skin/icons/settings.svg");
 }

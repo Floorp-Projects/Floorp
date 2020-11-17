@@ -34,7 +34,7 @@ let html = `
   </form>`;
 
 async function prepareLogins(logins = []) {
-  await LoginManager.removeAllUserFacingLogins();
+  await LoginManager.removeAllLogins();
 
   for (let login of logins) {
     let storageAddPromise = promiseStorageChanged(["addLogin"]);

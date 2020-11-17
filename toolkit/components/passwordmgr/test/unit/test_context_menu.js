@@ -281,7 +281,7 @@ async function runTestcase({ formOrigin, savedLogins, expectedItems }) {
     "All items correctly cleared."
   );
 
-  Services.logins.removeAllUserFacingLogins();
+  Services.logins.removeAllLogins();
 }
 
 /**

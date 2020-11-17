@@ -10,7 +10,7 @@ add_task(async function setup() {
   });
   registerCleanupFunction(() => {
     BrowserTestUtils.removeTab(aboutLoginsTab);
-    Services.logins.removeAllUserFacingLogins();
+    Services.logins.removeAllLogins();
   });
 });
 

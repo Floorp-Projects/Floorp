@@ -1293,7 +1293,7 @@ add_task(async function test_passwordsAvailable() {
   let hashes = []; // the hashes of all migrator websites, this is going to be used for the clean up
 
   registerCleanupFunction(() => {
-    Services.logins.removeAllUserFacingLogins();
+    Services.logins.removeAllLogins();
     logins = Services.logins.getAllLogins();
     Assert.equal(logins.length, 0, "There are no logins after the cleanup");
     // remove all the values created in this test from the registry

@@ -43,7 +43,7 @@ add_task(async function setup() {
 
   registerCleanupFunction(async () => {
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
-    Services.logins.removeAllUserFacingLogins();
+    Services.logins.removeAllLogins();
     await BrowserTestUtils.closeWindow(newWin);
   });
 });

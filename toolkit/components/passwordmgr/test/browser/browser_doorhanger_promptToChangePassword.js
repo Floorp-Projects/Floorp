@@ -78,7 +78,7 @@ async function showChangePasswordDoorhanger(
 }
 
 async function setupLogins(...logins) {
-  Services.logins.removeAllUserFacingLogins();
+  Services.logins.removeAllLogins();
   let savedLogins = {};
   let timesCreated = new Set();
   for (let login of logins) {
