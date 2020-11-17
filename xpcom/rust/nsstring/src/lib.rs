@@ -277,7 +277,7 @@ impl<'a> Drop for nsAStringBulkWriteHandle<'a> {
             let mut this = self.string.as_repr_mut();
             this.as_mut().length = 1u32;
             *(this.as_mut().data.as_mut()) = 0xFFFDu16;
-            *(this.as_mut().data.as_ptr().offset(1isize)) = 0;
+            *(this.as_mut().data.as_ptr().add(1)) = 0;
         }
     }
 }
@@ -307,13 +307,13 @@ impl<'a> Drop for nsACStringBulkWriteHandle<'a> {
             if self.capacity >= 3 {
                 this.as_mut().length = 3u32;
                 *(this.as_mut().data.as_mut()) = 0xEFu8;
-                *(this.as_mut().data.as_ptr().offset(1isize)) = 0xBFu8;
-                *(this.as_mut().data.as_ptr().offset(2isize)) = 0xBDu8;
-                *(this.as_mut().data.as_ptr().offset(3isize)) = 0;
+                *(this.as_mut().data.as_ptr().add(1)) = 0xBFu8;
+                *(this.as_mut().data.as_ptr().add(2)) = 0xBDu8;
+                *(this.as_mut().data.as_ptr().add(3)) = 0;
             } else {
                 this.as_mut().length = 1u32;
                 *(this.as_mut().data.as_mut()) = 0x1Au8; // U+FFFD doesn't fit
-                *(this.as_mut().data.as_ptr().offset(1isize)) = 0;
+                *(this.as_mut().data.as_ptr().add(1)) = 0;
             }
         }
     }
@@ -441,7 +441,7 @@ macro_rules! define_string_types {
                 unsafe {
                     let mut this = self.string.as_repr_mut();
                     this.as_mut().length = length as u32;
-                    *(this.as_mut().data.as_ptr().offset(length as isize)) = 0;
+                    *(this.as_mut().data.as_ptr().add(length)) = 0;
                     if cfg!(debug_assertions) {
                         // Overwrite the unused part in debug builds. Note
                         // that capacity doesn't include space for the zero
@@ -450,7 +450,7 @@ macro_rules! define_string_types {
                         // not reflected in the capacity number.
                         // write_bytes() takes care of multiplying the length
                         // by the size of T.
-                        ptr::write_bytes(this.as_mut().data.as_ptr().offset((length + 1) as isize),
+                        ptr::write_bytes(this.as_mut().data.as_ptr().add(length + 1),
                                          0xE4u8,
                                          self.capacity - length);
                     }
