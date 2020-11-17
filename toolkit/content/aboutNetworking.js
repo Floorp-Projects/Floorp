@@ -551,8 +551,8 @@ function displayHTTPSRRLookup(data) {
       let alpn = record.alpn ? `alpn="${record.alpn.alpn}" ` : "";
       let noDefaultAlpn = record.noDefaultAlpn ? "noDefaultAlpn " : "";
       let port = record.port ? `port="${record.port.port}" ` : "";
-      let echconfig = record.echconfig
-        ? `echconfig="${record.echconfig.echconfig}" `
+      let echConfig = record.echConfig
+        ? `echConfig="${record.echConfig.echConfig}" `
         : "";
       let ipv4hint = "";
       let ipv6hint = "";
@@ -575,9 +575,9 @@ function displayHTTPSRRLookup(data) {
         ipv6hint = `ipv6hint="${ipv6Str}" `;
       }
 
-      let str = `${record.priority} ${record.name} `;
+      let str = `${record.priority} ${record.targetName} `;
       str += `(${alpn}${noDefaultAlpn}${port}`;
-      str += `${ipv4hint}${echconfig}${ipv6hint})`;
+      str += `${ipv4hint}${echConfig}${ipv6hint})`;
       row.appendChild(col(str));
       new_cont.appendChild(row);
     }
