@@ -736,6 +736,8 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   mozilla::dom::Element* GetFrameElementInternal() const;
   void SetFrameElementInternal(mozilla::dom::Element* aFrameElement);
 
+  bool IsActive() { return mIsActive; }
+
   void SetDesktopModeViewport(bool aDesktopModeViewport) {
     mDesktopModeViewport = aDesktopModeViewport;
   }
@@ -764,6 +766,8 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 
   virtual nsPIDOMWindowOuter* GetPrivateRoot() = 0;
 
+  virtual void ActivateOrDeactivate(bool aActivate) = 0;
+
   /**
    * |top| gets the root of the window hierarchy.
    *
@@ -789,6 +793,10 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
    * returns null if GetInProcessScriptableParent would return this window.
    */
   virtual nsPIDOMWindowOuter* GetInProcessScriptableParentOrNull() = 0;
+
+  virtual bool IsTopLevelWindowActive() = 0;
+
+  virtual void SetActive(bool aActive) { mIsActive = aActive; }
 
   virtual void SetIsBackground(bool aIsBackground) = 0;
 
@@ -1082,6 +1090,9 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   RefPtr<mozilla::dom::BrowsingContext> mBrowsingContext;
 
   uint32_t mModalStateDepth;
+
+  // Tracks activation state that's used for :-moz-window-inactive.
+  bool mIsActive;
 
   // Tracks whether our docshell is active.  If it is, mIsBackground
   // is false.  Too bad we have so many different concepts of

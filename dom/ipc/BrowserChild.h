@@ -565,6 +565,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   bool IPCOpen() const { return mIPCOpen; }
 
+  bool ParentIsActive() const { return mParentIsActive; }
+
   const mozilla::layers::CompositorOptions& GetCompositorOptions() const;
   bool AsyncPanZoomEnabled() const;
 
@@ -712,6 +714,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   mozilla::ipc::IPCResult RecvSuppressDisplayport(const bool& aEnabled);
 
+  mozilla::ipc::IPCResult RecvParentActivated(const bool& aActivated);
+
   mozilla::ipc::IPCResult RecvScrollbarPreferenceChanged(ScrollbarPreference);
 
   mozilla::ipc::IPCResult RecvSetKeyboardIndicators(
@@ -844,6 +848,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   bool mIsTransparent;
 
   bool mIPCOpen;
+  bool mParentIsActive;
   CSSSize mUnscaledInnerSize;
   bool mDidSetRealShowInfo;
   bool mDidLoadURLInit;
