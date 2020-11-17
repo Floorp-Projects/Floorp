@@ -228,6 +228,10 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
   nsGlobalWindowInner::Cast(window)->StoreSharedWorker(sharedWorker);
   actor->SetParent(sharedWorker);
 
+  if (nsGlobalWindowInner::Cast(window)->IsSuspended()) {
+    sharedWorker->Suspend();
+  }
+
   return sharedWorker.forget();
 }
 
