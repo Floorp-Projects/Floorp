@@ -9,7 +9,7 @@
  * @fileOverview
  * This module exports a class that can be used to handle displaying a popup
  * doorhanger with a primary action to not show a popup for this extension again
- * and a secondary action to disable the extension.
+ * and a secondary action disables the addon, or brings the user to their settings.
  *
  * The original purpose of the popup was to notify users of an extension that has
  * changed the New Tab or homepage. Users would see this popup the first time they
@@ -109,6 +109,12 @@ class ExtensionControlledPopup {
    * @param {string} opts.learnMoreLink
    *                 The name of the SUMO page to link to, this is added to
    *                 app.support.baseURL.
+   * @param optional {string} opts.preferencesLocation
+   *                 If included, the name of the preferences tab that will be opened
+   *                 by the secondary action. If not included, the secondary option will
+   *                 disable the addon.
+   * @param optional {string} opts.preferencesEntrypoint
+   *                 The entrypoint to pass to preferences telemetry.
    * @param {function} opts.onObserverAdded
    *                   A callback that is triggered when an observer is registered to
    *                   trigger the popup on the next observerTopic.
@@ -135,6 +141,8 @@ class ExtensionControlledPopup {
     this.getLocalizedDescription = opts.getLocalizedDescription;
     this.learnMoreMessageId = opts.learnMoreMessageId;
     this.learnMoreLink = opts.learnMoreLink;
+    this.preferencesLocation = opts.preferencesLocation;
+    this.preferencesEntrypoint = opts.preferencesEntrypoint;
     this.onObserverAdded = opts.onObserverAdded;
     this.onObserverRemoved = opts.onObserverRemoved;
     this.beforeDisableAddon = opts.beforeDisableAddon;
@@ -280,6 +288,12 @@ class ExtensionControlledPopup {
       if (event.originalTarget == popupnotification.button) {
         // Main action is to keep changes.
         await this.setConfirmation(extensionId);
+      } else if (this.preferencesLocation) {
+        // Secondary action opens Preferences, if a preferencesLocation option is included.
+        let options = this.Entrypoint
+          ? { urlParams: { entrypoint: this.Entrypoint } }
+          : {};
+        win.openPreferences(this.preferencesLocation, options);
       } else {
         // Secondary action is to restore settings.
         if (this.beforeDisableAddon) {
