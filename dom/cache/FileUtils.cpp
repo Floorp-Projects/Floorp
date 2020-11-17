@@ -754,31 +754,14 @@ bool DirectoryPaddingFileExists(nsIFile* aBaseDir,
                                 DirPaddingFile aPaddingFileType) {
   MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
 
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = aBaseDir->Clone(getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
+  CACHE_TRY_INSPECT(
+      const auto& file,
+      CloneFileAndAppend(*aBaseDir, aPaddingFileType == DirPaddingFile::TMP_FILE
+                                        ? nsLiteralString(PADDING_TMP_FILE_NAME)
+                                        : nsLiteralString(PADDING_FILE_NAME)),
+      false);
 
-  nsString fileName;
-  if (aPaddingFileType == DirPaddingFile::TMP_FILE) {
-    fileName = nsLiteralString(PADDING_TMP_FILE_NAME);
-  } else {
-    fileName = nsLiteralString(PADDING_FILE_NAME);
-  }
-
-  rv = file->Append(fileName);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  bool exists = false;
-  rv = file->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  return exists;
+  CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE(file, Exists), false);
 }
 
 nsresult LockedDirectoryPaddingGet(nsIFile* aBaseDir,
