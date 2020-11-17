@@ -844,12 +844,6 @@ TEST(GeckoProfiler, Markers)
       (u"measure name"_ns, Some(u"start mark"_ns), Some(u"end mark"_ns), ts1,
        ts2, mozilla::Nothing()));
 
-  PROFILER_ADD_MARKER_WITH_PAYLOAD(
-      "IPCMarkerPayload marker", IPC, IPCMarkerPayload,
-      (1111, 1, 3 /* PAPZ::Msg_LayerTransforms */, mozilla::ipc::ParentSide,
-       mozilla::ipc::MessageDirection::eSending,
-       mozilla::ipc::MessagePhase::Endpoint, false, ts1));
-
   MOZ_RELEASE_ASSERT(profiler_add_marker(
       "Text in main thread with stack", geckoprofiler::category::OTHER,
       MarkerStack::Capture(), geckoprofiler::markers::Text{}, ""));
@@ -961,7 +955,6 @@ TEST(GeckoProfiler, Markers)
     S_TextMarkerPayload2,
     S_UserTimingMarkerPayload_mark,
     S_UserTimingMarkerPayload_measure,
-    S_IPCMarkerPayload,
     S_TextWithStack,
     S_TextToMTWithStack,
     S_RegThread_TextToMTWithStack,
@@ -1383,27 +1376,6 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ_JSON(payload["entryType"], String, "measure");
                 EXPECT_EQ_JSON(payload["startMark"], String, "start mark");
                 EXPECT_EQ_JSON(payload["endMark"], String, "end mark");
-
-              } else if (nameString == "IPCMarkerPayload marker") {
-                EXPECT_EQ(state, S_IPCMarkerPayload);
-                state = State(S_IPCMarkerPayload + 1);
-                EXPECT_EQ(typeString, "IPC");
-                EXPECT_TIMING_INSTANT_AT(ts1Double);
-
-                // The startTime and endTime are currently duplicated in the
-                // payload.
-                EXPECT_EQ_JSON(payload["startTime"], Double, ts1Double);
-                EXPECT_EQ_JSON(payload["endTime"], Double, ts1Double);
-
-                EXPECT_TRUE(payload["stack"].isNull());
-                EXPECT_EQ_JSON(payload["otherPid"], Int, 1111);
-                EXPECT_EQ_JSON(payload["messageSeqno"], Int, 1);
-                EXPECT_EQ_JSON(payload["messageType"], String,
-                               "PAPZ::Msg_LayerTransforms");
-                EXPECT_EQ_JSON(payload["side"], String, "parent");
-                EXPECT_EQ_JSON(payload["direction"], String, "sending");
-                EXPECT_EQ_JSON(payload["phase"], String, "endpoint");
-                EXPECT_EQ_JSON(payload["sync"], Bool, false);
 
               } else if (nameString == "Text in main thread with stack") {
                 EXPECT_EQ(state, S_TextWithStack);
