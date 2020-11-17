@@ -42,15 +42,6 @@ mozilla::LazyLogModule gMediaDemuxerLog("MediaDemuxer");
   DDMOZ_LOG(sFormatDecoderLog, mozilla::LogLevel::Verbose, "::%s: " arg, \
             __func__, ##__VA_ARGS__)
 
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
-#  define MEDIA_FORMAT_READER_STATUS_MARKER(tag, text, markerTime)           \
-    PROFILER_ADD_MARKER_WITH_PAYLOAD(tag, MEDIA_PLAYBACK, TextMarkerPayload, \
-                                     (text, markerTime))
-#else
-#  define MEDIA_FORMAT_READER_STATUS_MARKER(tag, text, markerTime)
-#endif
-
 #define NS_DispatchToMainThread(...) CompileError_UseAbstractMainThreadInstead
 
 namespace mozilla {
@@ -1933,8 +1924,7 @@ void MediaFormatReader::HandleDemuxedSamples(
     nsPrintfCString markerString(
         "%s stream id changed from:%" PRIu32 " to:%" PRIu32,
         TrackTypeToStr(aTrack), decoder.mLastStreamSourceID, info->GetID());
-    MEDIA_FORMAT_READER_STATUS_MARKER("StreamID Change", markerString,
-                                      TimeStamp::NowUnfuzzed());
+    PROFILER_MARKER_TEXT("StreamID Change", MEDIA_PLAYBACK, {}, markerString);
     LOG("%s", markerString.get());
 
     if (aTrack == TrackInfo::kVideoTrack) {
@@ -3152,6 +3142,5 @@ void MediaFormatReader::OnFirstDemuxFailed(TrackInfo::TrackType aType,
 }  // namespace mozilla
 
 #undef NS_DispatchToMainThread
-#undef MEDIA_FORMAT_READER_STATUS_MARKER
 #undef LOGV
 #undef LOG
