@@ -811,10 +811,15 @@ void SpeechRecognition::Start(const Optional<NonNull<DOMMediaStream>>& aStream,
     }
   } else {
     mTrackIsOwned = true;
+    nsPIDOMWindowInner* win = GetOwner();
+    if (!win || !win->IsFullyActive()) {
+      aRv.ThrowInvalidStateError("The document is not fully active.");
+      return;
+    }
     AutoNoJSAPI nojsapi;
     RefPtr<SpeechRecognition> self(this);
     MediaManager::Get()
-        ->GetUserMedia(GetOwner(), constraints, aCallerType)
+        ->GetUserMedia(win, constraints, aCallerType)
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
             [this, self,

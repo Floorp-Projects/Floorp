@@ -54,6 +54,20 @@ already_AddRefed<Promise> MediaDevices::GetUserMedia(
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
+  /* If requestedMediaTypes is the empty set, return a promise rejected with a
+   * TypeError. */
+  if (!MediaManager::IsOn(aConstraints.mVideo) &&
+      !MediaManager::IsOn(aConstraints.mAudio)) {
+    p->MaybeRejectWithTypeError("audio and/or video is required");
+    return p.forget();
+  }
+  /* If the relevant settings object's responsible document is NOT fully
+   * active, return a promise rejected with a DOMException object whose name
+   * attribute has the value "InvalidStateError". */
+  if (!owner->IsFullyActive()) {
+    p->MaybeRejectWithInvalidStateError("The document is not fully active.");
+    return p.forget();
+  }
   RefPtr<MediaDevices> self(this);
   MediaManager::Get()
       ->GetUserMedia(owner, aConstraints, aCallerType)
@@ -147,9 +161,112 @@ already_AddRefed<Promise> MediaDevices::GetDisplayMedia(
     return nullptr;
   }
   nsCOMPtr<nsPIDOMWindowInner> owner = do_QueryInterface(global);
+  /* If the relevant global object of this does not have transient activation,
+   * return a promise rejected with a DOMException object whose name attribute
+   * has the value InvalidStateError. */
+  Document* doc = owner->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    p->MaybeRejectWithSecurityError("No document.");
+    return p.forget();
+  }
+  if (!doc->HasBeenUserGestureActivated()) {
+    p->MaybeRejectWithInvalidStateError(
+        "getDisplayMedia must be called from a user gesture handler.");
+    return p.forget();
+  }
+  /* If constraints.video is false, return a promise rejected with a newly
+   * created TypeError. */
+  if (!MediaManager::IsOn(aConstraints.mVideo)) {
+    p->MaybeRejectWithTypeError("video is required");
+    return p.forget();
+  }
+  MediaStreamConstraints c;
+  auto& vc = c.mVideo.SetAsMediaTrackConstraints();
+
+  if (aConstraints.mVideo.IsMediaTrackConstraints()) {
+    vc = aConstraints.mVideo.GetAsMediaTrackConstraints();
+    /* If CS contains a member named advanced, return a promise rejected with
+     * a newly created TypeError. */
+    if (vc.mAdvanced.WasPassed()) {
+      p->MaybeRejectWithTypeError("advanced not allowed");
+      return p.forget();
+    }
+    auto getCLR = [](const auto& aCon) -> const ConstrainLongRange& {
+      static ConstrainLongRange empty;
+      return (aCon.WasPassed() && !aCon.Value().IsLong())
+                 ? aCon.Value().GetAsConstrainLongRange()
+                 : empty;
+    };
+    auto getCDR = [](auto&& aCon) -> const ConstrainDoubleRange& {
+      static ConstrainDoubleRange empty;
+      return (aCon.WasPassed() && !aCon.Value().IsDouble())
+                 ? aCon.Value().GetAsConstrainDoubleRange()
+                 : empty;
+    };
+    const auto& w = getCLR(vc.mWidth);
+    const auto& h = getCLR(vc.mHeight);
+    const auto& f = getCDR(vc.mFrameRate);
+    /* If CS contains a member whose name specifies a constrainable property
+     * applicable to display surfaces, and whose value in turn is a dictionary
+     * containing a member named either min or exact, return a promise
+     * rejected with a newly created TypeError. */
+    if (w.mMin.WasPassed() || h.mMin.WasPassed() || f.mMin.WasPassed()) {
+      p->MaybeRejectWithTypeError("min not allowed");
+      return p.forget();
+    }
+    if (w.mExact.WasPassed() || h.mExact.WasPassed() || f.mExact.WasPassed()) {
+      p->MaybeRejectWithTypeError("exact not allowed");
+      return p.forget();
+    }
+    /* If CS contains a member whose name, failedConstraint specifies a
+     * constrainable property, constraint, applicable to display surfaces, and
+     * whose value in turn is a dictionary containing a member named max, and
+     * that member's value in turn is less than the constrainable property's
+     * floor value, then let failedConstraint be the name of the constraint,
+     * let message be either undefined or an informative human-readable
+     * message, and return a promise rejected with a new OverconstrainedError
+     * created by calling OverconstrainedError(failedConstraint, message). */
+    // We fail early without incurring a prompt, on known-to-fail constraint
+    // values that don't reveal anything about the user's system.
+    const char* badConstraint = nullptr;
+    if (w.mMax.WasPassed() && w.mMax.Value() < 1) {
+      badConstraint = "width";
+    }
+    if (h.mMax.WasPassed() && h.mMax.Value() < 1) {
+      badConstraint = "height";
+    }
+    if (f.mMax.WasPassed() && f.mMax.Value() < 1) {
+      badConstraint = "frameRate";
+    }
+    if (badConstraint) {
+      p->MaybeReject(MakeRefPtr<dom::MediaStreamError>(
+          owner, *MakeRefPtr<MediaMgrError>(
+                     MediaMgrError::Name::OverconstrainedError, "",
+                     NS_ConvertASCIItoUTF16(badConstraint))));
+      return p.forget();
+    }
+  }
+  /* If the relevant settings object's responsible document is NOT fully
+   * active, return a promise rejected with a DOMException object whose name
+   * attribute has the value "InvalidStateError". */
+  if (!owner->IsFullyActive()) {
+    p->MaybeRejectWithInvalidStateError("The document is not fully active.");
+    return p.forget();
+  }
+  // We ask for "screen" sharing.
+  //
+  // If this is a privileged call or permission is disabled, this gives us full
+  // screen sharing by default, which is useful for internal testing.
+  //
+  // If this is a non-priviliged call, GetUserMedia() will change it to "window"
+  // for us.
+  vc.mMediaSource.Reset();
+  vc.mMediaSource.Construct().AssignASCII(
+      dom::MediaSourceEnumValues::GetString(MediaSourceEnum::Screen));
+
   RefPtr<MediaDevices> self(this);
   MediaManager::Get()
-      ->GetDisplayMedia(owner, aConstraints, aCallerType)
+      ->GetUserMedia(owner, c, aCallerType)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [this, self, p](RefPtr<DOMMediaStream>&& aStream) {
