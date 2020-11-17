@@ -44,20 +44,6 @@ using LongTask = mozilla::baseprofiler::markers::LongTask;
 using Log = mozilla::baseprofiler::markers::Log;
 using MediaSample = mozilla::baseprofiler::markers::MediaSample;
 
-struct Budget {
-  static constexpr mozilla::Span<const char> MarkerTypeName() {
-    return mozilla::MakeStringSpan("Budget");
-  }
-  static void StreamJSONMarkerData(
-      mozilla::baseprofiler::SpliceableJSONWriter& aWriter) {}
-  static mozilla::MarkerSchema MarkerTypeDisplay() {
-    using MS = mozilla::MarkerSchema;
-    MS schema{MS::Location::markerChart, MS::Location::markerTable};
-    // Nothing outside the defaults.
-    return schema;
-  }
-};
-
 struct Pref {
   static constexpr mozilla::Span<const char> MarkerTypeName() {
     return mozilla::MakeStringSpan("PreferenceRead");
