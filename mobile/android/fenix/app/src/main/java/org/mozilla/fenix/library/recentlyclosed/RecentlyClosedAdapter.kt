@@ -28,9 +28,9 @@ class RecentlyClosedAdapter(
 
     private object DiffCallback : DiffUtil.ItemCallback<ClosedTab>() {
         override fun areItemsTheSame(oldItem: ClosedTab, newItem: ClosedTab) =
-            oldItem.id == newItem.id || oldItem.title == newItem.title || oldItem.url == newItem.url
+            oldItem.id == newItem.id
 
         override fun areContentsTheSame(oldItem: ClosedTab, newItem: ClosedTab) =
-            oldItem.id == newItem.id || oldItem.title == newItem.title || oldItem.url == newItem.url
+            oldItem.id == newItem.id
     }
 }
