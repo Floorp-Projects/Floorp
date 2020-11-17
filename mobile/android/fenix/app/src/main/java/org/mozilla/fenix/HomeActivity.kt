@@ -770,8 +770,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     open fun navigateToBrowserOnColdStart() {
         // Normal tabs + cold start -> Should go back to browser if we had any tabs open when we left last
         // except for PBM + Cold Start there won't be any tabs since they're evicted so we never will navigate
-        if (FeatureFlags.returnToBrowserOnColdStart &&
-            settings().shouldReturnToBrowser &&
+        if (settings().shouldReturnToBrowser &&
             !browsingModeManager.mode.isPrivate
         ) {
             openToBrowser(BrowserDirection.FromGlobal, null)
