@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 use crate::command::LogOptions;
 use crate::logging::Level;
 use base64;
@@ -313,6 +317,14 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
                     ));
                 }
             }
+            "moz:debuggerAddress" => {
+                if !value.is_boolean() {
+                    return Err(WebDriverError::new(
+                        ErrorStatus::InvalidArgument,
+                        "moz:debuggerAddress is not a boolean",
+                    ));
+                }
+            }
             _ => {
                 return Err(WebDriverError::new(
                     ErrorStatus::InvalidArgument,
@@ -395,6 +407,27 @@ impl FirefoxOptions {
             rv.log = FirefoxOptions::load_log(&options)?;
             rv.prefs = FirefoxOptions::load_prefs(&options)?;
             rv.profile = FirefoxOptions::load_profile(&options)?;
+        }
+
+        if let Some(json) = matched.remove("moz:debuggerAddress") {
+            let use_web_socket = json.as_bool().ok_or_else(|| {
+                WebDriverError::new(
+                    ErrorStatus::InvalidArgument,
+                    "moz:debuggerAddress is not a boolean",
+                )
+            })?;
+
+            if use_web_socket {
+                let mut remote_args = Vec::new();
+                remote_args.push("--remote-debugging-port".to_owned());
+                remote_args.push("0".to_owned());
+
+                if let Some(ref mut args) = rv.args {
+                    args.append(&mut remote_args);
+                } else {
+                    rv.args = Some(remote_args);
+                }
+            }
         }
 
         Ok(rv)
@@ -752,6 +785,53 @@ mod tests {
         assert_eq!(opts.binary, Some(binary));
         assert_eq!(opts.log, LogOptions { level: None });
         assert_eq!(opts.prefs, vec![]);
+    }
+
+    #[test]
+    fn fx_options_from_capabilities_with_debugger_address_not_set() {
+        let mut caps = Capabilities::new();
+
+        let opts = FirefoxOptions::from_capabilities(None, AndroidStorageInput::Auto, &mut caps)
+            .expect("Valid Firefox options");
+
+        assert!(
+            opts.args.is_none(),
+            "CLI arguments for Firefox unexpectedly found"
+        );
+    }
+
+    #[test]
+    fn fx_options_from_capabilities_with_debugger_address_false() {
+        let mut caps = Capabilities::new();
+        caps.insert("moz:debuggerAddress".into(), json!(false));
+
+        let opts = FirefoxOptions::from_capabilities(None, AndroidStorageInput::Auto, &mut caps)
+            .expect("Valid Firefox options");
+
+        assert!(
+            opts.args.is_none(),
+            "CLI arguments for remote protocol unexpectedly found"
+        );
+    }
+
+    #[test]
+    fn fx_options_from_capabilities_with_debugger_address_true() {
+        let mut caps = Capabilities::new();
+        caps.insert("moz:debuggerAddress".into(), json!(true));
+
+        let opts = FirefoxOptions::from_capabilities(None, AndroidStorageInput::Auto, &mut caps)
+            .expect("Valid Firefox options");
+
+        if let Some(args) = opts.args {
+            let mut iter = args.iter();
+            assert!(iter
+                .find(|&arg| arg == &"--remote-debugging-port".to_owned())
+                .is_some()
+            );
+            assert_eq!(iter.next(), Some(&"0".to_owned()));
+        } else {
+            assert!(false, "CLI arguments for remote protocol not found");
+        }
     }
 
     #[test]

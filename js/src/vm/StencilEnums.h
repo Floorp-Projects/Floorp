@@ -105,17 +105,6 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // On top-level global/eval/module scripts, this is set when the embedding
   // ensures this script will not be re-used. In this case, parser literals may
   // be exposed directly instead of being cloned.
-  //
-  // For non-lazy functions, this is set when the function is almost-certain to
-  // be run once (and its parents transitively the same). In this case, the
-  // function may be marked as a singleton to improve typeset precision. Note
-  // that under edge cases with fun.caller the function may still run multiple
-  // times.
-  //
-  // For lazy functions, the situation is more complex. If enclosing script is
-  // not yet compiled, this flag is undefined and should not be used. As the
-  // enclosing script is compiled, this flag is updated to the same definition
-  // the eventual non-lazy function will use.
   TreatAsRunOnce = 1 << 7,
   // ----
 
@@ -254,10 +243,6 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // is set independently of whether we actually use an `arguments` binding. The
   // conditions are specified in the ECMAScript spec.
   HasMappedArgsObj = 1 << 27,
-
-  // All of 'this', 'arguments' and f.apply() are used. This is likely to be a
-  // wrapper. This is a heuristic that affects Type Inference.
-  IsLikelyConstructorWrapper = 1 << 28,
 };
 
 enum class MutableScriptFlagsEnum : uint32_t {

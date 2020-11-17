@@ -1184,10 +1184,6 @@ MediaSourceEnum MediaDevice::GetMediaSource() const {
   return mSource->GetMediaSource();
 }
 
-static bool IsOn(const OwningBooleanOrMediaTrackConstraints& aUnion) {
-  return !aUnion.IsBoolean() || aUnion.GetAsBoolean();
-}
-
 static const MediaTrackConstraints& GetInvariant(
     const OwningBooleanOrMediaTrackConstraints& aUnion) {
   static const MediaTrackConstraints empty;
@@ -1302,7 +1298,7 @@ class GetUserMediaStreamRunnable : public Runnable {
         audioTrackSource = new LocalTrackSource(
             principal, audioDeviceName, mSourceListener,
             mAudioDevice->GetMediaSource(), track, mPeerIdentity);
-        MOZ_ASSERT(IsOn(mConstraints.mAudio));
+        MOZ_ASSERT(MediaManager::IsOn(mConstraints.mAudio));
         RefPtr<MediaStreamTrack> domTrack = new dom::AudioStreamTrack(
             window, track, audioTrackSource, dom::MediaStreamTrackState::Live,
             false, GetInvariant(mConstraints.mAudio));
@@ -1316,7 +1312,7 @@ class GetUserMediaStreamRunnable : public Runnable {
       videoTrackSource = new LocalTrackSource(
           principal, videoDeviceName, mSourceListener,
           mVideoDevice->GetMediaSource(), track, mPeerIdentity);
-      MOZ_ASSERT(IsOn(mConstraints.mVideo));
+      MOZ_ASSERT(MediaManager::IsOn(mConstraints.mVideo));
       RefPtr<MediaStreamTrack> domTrack = new dom::VideoStreamTrack(
           window, track, videoTrackSource, dom::MediaStreamTrackState::Live,
           false, GetInvariant(mConstraints.mVideo));
@@ -2336,7 +2332,7 @@ enum class GetUserMediaSecurityState {
 static void ReduceConstraint(
     OwningBooleanOrMediaTrackConstraints& aConstraint) {
   // Not requesting stream.
-  if (!IsOn(aConstraint)) {
+  if (!MediaManager::IsOn(aConstraint)) {
     return;
   }
 
@@ -2374,22 +2370,6 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
   uint64_t windowID = aWindow->WindowID();
 
   MediaStreamConstraints c(aConstraintsPassedIn);  // use a modifiable copy
-
-  // Do all the validation we can while we're sync (to return an
-  // already-rejected promise on failure).
-
-  if (!IsOn(c.mVideo) && !IsOn(c.mAudio)) {
-    return StreamPromise::CreateAndReject(
-        MakeRefPtr<MediaMgrError>(MediaMgrError::Name::TypeError,
-                                  "audio and/or video is required"),
-        __func__);
-  }
-
-  if (!aWindow->IsFullyActive()) {
-    return StreamPromise::CreateAndReject(
-        MakeRefPtr<MediaMgrError>(MediaMgrError::Name::InvalidStateError),
-        __func__);
-  }
 
   if (sHasShutdown) {
     return StreamPromise::CreateAndReject(
@@ -2864,106 +2844,6 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
             return StreamPromise::CreateAndReject(std::move(aError), __func__);
           });
 };
-
-RefPtr<MediaManager::StreamPromise> MediaManager::GetDisplayMedia(
-    nsPIDOMWindowInner* aWindow,
-    const DisplayMediaStreamConstraints& aConstraintsPassedIn,
-    CallerType aCallerType) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aWindow);
-  Document* doc = aWindow->GetExtantDoc();
-  if (NS_WARN_IF(!doc)) {
-    return StreamPromise::CreateAndReject(
-        MakeRefPtr<MediaMgrError>(MediaMgrError::Name::SecurityError),
-        __func__);
-  }
-
-  if (!doc->HasBeenUserGestureActivated()) {
-    return StreamPromise::CreateAndReject(
-        MakeRefPtr<MediaMgrError>(MediaMgrError::Name::InvalidStateError,
-                                  "getDisplayMedia must be called from a user "
-                                  "gesture handler."),
-        __func__);
-  }
-
-  if (!IsOn(aConstraintsPassedIn.mVideo)) {
-    return StreamPromise::CreateAndReject(
-        MakeRefPtr<MediaMgrError>(MediaMgrError::Name::TypeError,
-                                  "video is required"),
-        __func__);
-  }
-
-  MediaStreamConstraints c;
-  auto& vc = c.mVideo.SetAsMediaTrackConstraints();
-
-  if (aConstraintsPassedIn.mVideo.IsMediaTrackConstraints()) {
-    vc = aConstraintsPassedIn.mVideo.GetAsMediaTrackConstraints();
-    if (vc.mAdvanced.WasPassed()) {
-      return StreamPromise::CreateAndReject(
-          MakeRefPtr<MediaMgrError>(MediaMgrError::Name::TypeError,
-                                    "advanced not allowed"),
-          __func__);
-    }
-    auto getCLR = [](const auto& aCon) -> const ConstrainLongRange& {
-      static ConstrainLongRange empty;
-      return (aCon.WasPassed() && !aCon.Value().IsLong())
-                 ? aCon.Value().GetAsConstrainLongRange()
-                 : empty;
-    };
-    auto getCDR = [](auto&& aCon) -> const ConstrainDoubleRange& {
-      static ConstrainDoubleRange empty;
-      return (aCon.WasPassed() && !aCon.Value().IsDouble())
-                 ? aCon.Value().GetAsConstrainDoubleRange()
-                 : empty;
-    };
-    const auto& w = getCLR(vc.mWidth);
-    const auto& h = getCLR(vc.mHeight);
-    const auto& f = getCDR(vc.mFrameRate);
-    if (w.mMin.WasPassed() || h.mMin.WasPassed() || f.mMin.WasPassed()) {
-      return StreamPromise::CreateAndReject(
-          MakeRefPtr<MediaMgrError>(MediaMgrError::Name::TypeError,
-                                    "min not allowed"),
-          __func__);
-    }
-    if (w.mExact.WasPassed() || h.mExact.WasPassed() || f.mExact.WasPassed()) {
-      return StreamPromise::CreateAndReject(
-          MakeRefPtr<MediaMgrError>(MediaMgrError::Name::TypeError,
-                                    "exact not allowed"),
-          __func__);
-    }
-    // As a UA optimization, we fail early without incurring a prompt, on
-    // known-to-fail constraint values that don't reveal anything about the
-    // user's system.
-    const char* badConstraint = nullptr;
-    if (w.mMax.WasPassed() && w.mMax.Value() < 1) {
-      badConstraint = "width";
-    }
-    if (h.mMax.WasPassed() && h.mMax.Value() < 1) {
-      badConstraint = "height";
-    }
-    if (f.mMax.WasPassed() && f.mMax.Value() < 1) {
-      badConstraint = "frameRate";
-    }
-    if (badConstraint) {
-      return StreamPromise::CreateAndReject(
-          MakeRefPtr<MediaMgrError>(MediaMgrError::Name::OverconstrainedError,
-                                    "", NS_ConvertASCIItoUTF16(badConstraint)),
-          __func__);
-    }
-  }
-  // We ask for "screen" sharing.
-  //
-  // If this is a privileged call or permission is disabled, this gives us full
-  // screen sharing by default, which is useful for internal testing.
-  //
-  // If this is a non-priviliged call, GetUserMedia() will change it to "window"
-  // for us.
-  vc.mMediaSource.Reset();
-  vc.mMediaSource.Construct().AssignASCII(
-      dom::MediaSourceEnumValues::GetString(MediaSourceEnum::Screen));
-
-  return MediaManager::GetUserMedia(aWindow, c, aCallerType);
-}
 
 /* static */
 void MediaManager::AnonymizeDevices(MediaDeviceSet& aDevices,

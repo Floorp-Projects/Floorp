@@ -89,6 +89,9 @@ class GfxInfo final : public GfxInfoBase {
   nsCString mOSRelease;
   nsAutoCStringN<16> mDesktopEnvironment;
 
+  nsCString mSecondaryVendorId;
+  nsCString mSecondaryDeviceId;
+
   struct ScreenInfo {
     uint32_t mWidth;
     uint32_t mHeight;
@@ -103,6 +106,7 @@ class GfxInfo final : public GfxInfoBase {
   bool mIsWayland;
   bool mIsWaylandDRM;
   bool mIsXWayland;
+  bool mHasMultipleGPUs;
 
   void AddCrashReportAnnotations();
 };

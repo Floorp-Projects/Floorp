@@ -653,9 +653,7 @@ nsresult nsContentPermissionRequestProxy::Init(
   return NS_OK;
 }
 
-void nsContentPermissionRequestProxy::OnParentDestroyed() {
-  mParent = nullptr;
-}
+void nsContentPermissionRequestProxy::OnParentDestroyed() { mParent = nullptr; }
 
 NS_IMPL_ISUPPORTS(nsContentPermissionRequestProxy, nsIContentPermissionRequest)
 
@@ -796,8 +794,10 @@ nsContentPermissionRequestProxy::Allow(JS::HandleValue aChoices) {
 
 RemotePermissionRequest::RemotePermissionRequest(
     nsIContentPermissionRequest* aRequest, nsPIDOMWindowInner* aWindow)
-    : mRequest(aRequest), mWindow(aWindow), mIPCOpen(false), mDestroyed(false) {
-}
+    : mRequest(aRequest),
+      mWindow(aWindow),
+      mIPCOpen(false),
+      mDestroyed(false) {}
 
 RemotePermissionRequest::~RemotePermissionRequest() {
   MOZ_ASSERT(

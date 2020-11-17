@@ -20,9 +20,23 @@ class DocAccessibleWrap : public DocAccessible {
  public:
   DocAccessibleWrap(dom::Document* aDocument, PresShell* aPresShell);
 
+  virtual ~DocAccessibleWrap();
+
   virtual void Shutdown() override;
 
-  virtual ~DocAccessibleWrap();
+  virtual void AttributeChanged(dom::Element* aElement, int32_t aNameSpaceID,
+                                nsAtom* aAttribute, int32_t aModType,
+                                const nsAttrValue* aOldValue) override;
+
+  void QueueNewLiveRegion(Accessible* aAccessible);
+
+  void ProcessNewLiveRegions();
+
+ protected:
+  virtual void DoInitialUpdate() override;
+
+ private:
+  nsTHashtable<nsVoidPtrHashKey> mNewLiveRegions;
 };
 
 }  // namespace a11y

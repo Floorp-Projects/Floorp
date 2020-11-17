@@ -874,7 +874,7 @@ const frontend::ParserAtom* js::Int32ToParserAtom(
     indexValue.emplace(si);
   }
 
-  return parserAtoms.internAscii(cx, start, length).unwrapOr(nullptr);
+  return parserAtoms.internAscii(cx, start, length);
 }
 
 /* Returns a non-nullptr pointer to inside cbuf.  */
@@ -1680,7 +1680,7 @@ const frontend::ParserAtom* js::NumberToParserAtom(
              numStr < cbuf.sbuf + cbuf.sbufSize);
 
   size_t length = strlen(numStr);
-  return parserAtoms.internAscii(cx, numStr, length).unwrapOr(nullptr);
+  return parserAtoms.internAscii(cx, numStr, length);
 }
 
 JSLinearString* js::IndexToString(JSContext* cx, uint32_t index) {

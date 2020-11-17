@@ -1,7 +1,3 @@
-// |jit-test| --no-warp
-// Disable WarpBuilder because the expression decompiler is not used for Ion
-// frames currently. See bug 831120.
-
 function check(f, message) {
   let caught = false;
   try {

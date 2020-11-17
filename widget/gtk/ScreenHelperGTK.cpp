@@ -32,8 +32,7 @@ static void monitors_changed(GdkScreen* aScreen, gpointer aClosure) {
   self->RefreshScreens();
 }
 
-static void screen_resolution_changed(GdkScreen* aScreen,
-                                      GParamSpec* aPspec,
+static void screen_resolution_changed(GdkScreen* aScreen, GParamSpec* aPspec,
                                       ScreenHelperGTK* self) {
   self->RefreshScreens();
 }

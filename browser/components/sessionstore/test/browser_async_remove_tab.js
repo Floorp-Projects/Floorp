@@ -32,56 +32,6 @@ function restoreClosedTabWithValue(rval) {
   return ss.undoCloseTab(window, index);
 }
 
-function promiseNewLocationAndHistoryEntryReplaced(tab, snippet) {
-  let browser = tab.linkedBrowser;
-
-  if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-    SpecialPowers.spawn(browser, [snippet], async function(codeSnippet) {
-      // Need to define 'webNavigation' for 'codeSnippet'
-      // eslint-disable-next-line no-unused-vars
-      let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
-      // Evaluate the snippet that changes the location.
-      // eslint-disable-next-line no-eval
-      eval(codeSnippet);
-    });
-    return promiseOnHistoryReplaceEntry(tab);
-  }
-
-  return SpecialPowers.spawn(browser, [snippet], async function(codeSnippet) {
-    let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
-    let shistory = webNavigation.sessionHistory.legacySHistory;
-
-    // Evaluate the snippet that changes the location.
-    // eslint-disable-next-line no-eval
-    eval(codeSnippet);
-
-    return new Promise(resolve => {
-      let listener = {
-        OnHistoryReplaceEntry() {
-          shistory.removeSHistoryListener(this);
-          resolve();
-        },
-
-        QueryInterface: ChromeUtils.generateQI([
-          "nsISHistoryListener",
-          "nsISupportsWeakReference",
-        ]),
-      };
-
-      shistory.addSHistoryListener(listener);
-
-      /* Keep the weak shistory listener alive. */
-      docShell.chromeEventHandler.addEventListener("unload", function() {
-        try {
-          shistory.removeSHistoryListener(listener);
-        } catch (e) {
-          /* Will most likely fail. */
-        }
-      });
-    });
-  });
-}
-
 add_task(async function dont_save_empty_tabs() {
   let { tab, r } = await createTabWithRandomValue("about:blank");
 
@@ -132,10 +82,14 @@ add_task(async function save_worthy_tabs_remote_final() {
   ok(browser.isRemoteBrowser, "browser is remote");
 
   // Replace about:blank with a new remote page.
-  let snippet =
-    'webNavigation.loadURI("https://example.com/",\
-    {triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal()})';
-  await promiseNewLocationAndHistoryEntryReplaced(tab, snippet);
+  let entryReplaced = promiseOnHistoryReplaceEntry(browser);
+  await SpecialPowers.spawn(browser, [], async () => {
+    let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
+    webNavigation.loadURI("https://example.com/", {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
+  });
+  await entryReplaced;
 
   // Remotness shouldn't have changed.
   ok(browser.isRemoteBrowser, "browser is still remote");
@@ -157,13 +111,9 @@ add_task(async function save_worthy_tabs_nonremote_final() {
   ok(browser.isRemoteBrowser, "browser is remote");
 
   // Replace about:blank with a non-remote entry.
-  await BrowserTestUtils.loadURI(browser, "about:robots");
+  BrowserTestUtils.loadURI(browser, "about:robots");
+  await BrowserTestUtils.browserLoaded(browser);
   ok(!browser.isRemoteBrowser, "browser is not remote anymore");
-
-  // Switching remoteness caused a SessionRestore to begin, moving over history
-  // and initiating the load in the target process. Wait for the full restore
-  // and load to complete before trying to close the tab.
-  await promiseTabRestored(tab);
 
   // Remove the tab before the update arrives.
   let promise = promiseRemoveTabAndSessionState(tab);
@@ -178,10 +128,15 @@ add_task(async function save_worthy_tabs_nonremote_final() {
 
 add_task(async function dont_save_empty_tabs_final() {
   let { tab, r } = await createTabWithRandomValue("https://example.com/");
+  let browser = tab.linkedBrowser;
+  ok(browser.isRemoteBrowser, "browser is remote");
 
   // Replace the current page with an about:blank entry.
-  let snippet = 'content.location.replace("about:blank")';
-  await promiseNewLocationAndHistoryEntryReplaced(tab, snippet);
+  let entryReplaced = promiseOnHistoryReplaceEntry(browser);
+  await SpecialPowers.spawn(browser, [], async () => {
+    content.location.replace("about:blank");
+  });
+  await entryReplaced;
 
   // Remove the tab before the update arrives.
   let promise = promiseRemoveTabAndSessionState(tab);

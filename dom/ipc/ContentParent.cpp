@@ -344,6 +344,10 @@ using namespace mozilla::widget;
 using mozilla::loader::PScriptCacheParent;
 using mozilla::Telemetry::ProcessID;
 
+extern mozilla::LazyLogModule gFocusLog;
+
+#define LOGFOCUS(args) MOZ_LOG(gFocusLog, mozilla::LogLevel::Debug, args)
+
 // XXX Workaround for bug 986973 to maintain the existing broken semantics
 template <>
 struct nsIConsoleService::COMTypeInfo<nsConsoleService, void> {
@@ -734,8 +738,12 @@ bool IsWebCoopCoepRemoteType(const nsACString& aContentProcessType) {
                           WITH_COOP_COEP_REMOTE_TYPE_PREFIX);
 }
 
-bool IsPriviligedMozillaRemoteType(const nsACString& aContentProcessType) {
+bool IsPrivilegedMozillaRemoteType(const nsACString& aContentProcessType) {
   return aContentProcessType == PRIVILEGEDMOZILLA_REMOTE_TYPE;
+}
+
+bool IsExtensionRemoteType(const nsACString& aContentProcessType) {
+  return aContentProcessType == EXTENSION_REMOTE_TYPE;
 }
 
 /*static*/
@@ -6592,19 +6600,21 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowBlur(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvRaiseWindow(
-    const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType) {
+    const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType,
+    uint64_t aActionId) {
   if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
         ("ParentIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
+
   CanonicalBrowsingContext* context = aContext.get_canonical();
 
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
   ContentParent* cp =
       cpm->GetContentProcessById(ContentParentId(context->OwnerProcessId()));
-  Unused << cp->SendRaiseWindow(context, aCallerType);
+  Unused << cp->SendRaiseWindow(context, aCallerType, aActionId);
   return IPC_OK();
 }
 
@@ -6673,7 +6683,7 @@ mozilla::ipc::IPCResult ContentParent::RecvSetFocusedBrowsingContext(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvSetActiveBrowsingContext(
-    const MaybeDiscarded<BrowsingContext>& aContext) {
+    const MaybeDiscarded<BrowsingContext>& aContext, uint64_t aActionId) {
   if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
@@ -6683,19 +6693,29 @@ mozilla::ipc::IPCResult ContentParent::RecvSetActiveBrowsingContext(
   CanonicalBrowsingContext* context = aContext.get_canonical();
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm) {
-    fm->SetActiveBrowsingContextInChrome(context);
+  if (!fm) {
+    return IPC_OK();
+  }
+
+  if (!fm->SetActiveBrowsingContextInChrome(context, aActionId)) {
+    LOGFOCUS(
+        ("Ignoring out-of-sequence attempt [%p] to set active browsing context "
+         "in parent.",
+         context));
+    Unused << SendReviseActiveBrowsingContext(
+        fm->GetActiveBrowsingContextInChrome(), aActionId);
+    return IPC_OK();
   }
 
   context->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
-    Unused << aParent->SendSetActiveBrowsingContext(context);
+    Unused << aParent->SendSetActiveBrowsingContext(context, aActionId);
   });
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvUnsetActiveBrowsingContext(
-    const MaybeDiscarded<BrowsingContext>& aContext) {
+    const MaybeDiscarded<BrowsingContext>& aContext, uint64_t aActionId) {
   if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
@@ -6705,14 +6725,22 @@ mozilla::ipc::IPCResult ContentParent::RecvUnsetActiveBrowsingContext(
   CanonicalBrowsingContext* context = aContext.get_canonical();
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm) {
-    if (context == fm->GetActiveBrowsingContextInChrome()) {
-      fm->SetActiveBrowsingContextInChrome(nullptr);
-    }
+  if (!fm) {
+    return IPC_OK();
+  }
+
+  if (!fm->SetActiveBrowsingContextInChrome(nullptr, aActionId)) {
+    LOGFOCUS(
+        ("Ignoring out-of-sequence attempt to unset active browsing context in "
+         "parent [%p].",
+         context));
+    Unused << SendReviseActiveBrowsingContext(
+        fm->GetActiveBrowsingContextInChrome(), aActionId);
+    return IPC_OK();
   }
 
   context->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
-    Unused << aParent->SendUnsetActiveBrowsingContext(context);
+    Unused << aParent->SendUnsetActiveBrowsingContext(context, aActionId);
   });
 
   return IPC_OK();
@@ -6757,13 +6785,22 @@ mozilla::ipc::IPCResult ContentParent::RecvFinalizeFocusOuter(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvInsertNewFocusActionId(
+    uint64_t aActionId) {
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm) {
+    fm->InsertNewFocusActionId(aActionId);
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvBlurToParent(
     const MaybeDiscarded<BrowsingContext>& aFocusedBrowsingContext,
     const MaybeDiscarded<BrowsingContext>& aBrowsingContextToClear,
     const MaybeDiscarded<BrowsingContext>& aAncestorBrowsingContextToFocus,
     bool aIsLeavingDocument, bool aAdjustWidget,
     bool aBrowsingContextToClearHandled,
-    bool aAncestorBrowsingContextToFocusHandled) {
+    bool aAncestorBrowsingContextToFocusHandled, uint64_t aActionId) {
   if (aFocusedBrowsingContext.IsNullOrDiscarded()) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
@@ -6804,9 +6841,10 @@ mozilla::ipc::IPCResult ContentParent::RecvBlurToParent(
 
   ContentParent* cp = cpm->GetContentProcessById(
       ContentParentId(focusedBrowsingContext->OwnerProcessId()));
-  Unused << cp->SendBlurToChild(
-      aFocusedBrowsingContext, aBrowsingContextToClear,
-      aAncestorBrowsingContextToFocus, aIsLeavingDocument, aAdjustWidget);
+  Unused << cp->SendBlurToChild(aFocusedBrowsingContext,
+                                aBrowsingContextToClear,
+                                aAncestorBrowsingContextToFocus,
+                                aIsLeavingDocument, aAdjustWidget, aActionId);
   return IPC_OK();
 }
 

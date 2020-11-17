@@ -782,15 +782,18 @@ static bool IsCSSWordSpacingSpace(const nsTextFragment* aFrag, uint32_t aPos,
   }
 }
 
+constexpr char16_t kOghamSpaceMark = 0x1680;
+
 // Check whether the string aChars/aLength starts with space that's
 // trimmable according to CSS 'white-space:normal/nowrap'.
 static bool IsTrimmableSpace(const char16_t* aChars, uint32_t aLength) {
   NS_ASSERTION(aLength > 0, "No text for IsSpace!");
 
   char16_t ch = *aChars;
-  if (ch == ' ')
+  if (ch == ' ' || ch == kOghamSpaceMark) {
     return !nsTextFrameUtils::IsSpaceCombiningSequenceTail(aChars + 1,
                                                            aLength - 1);
+  }
   return ch == '\t' || ch == '\f' || ch == '\n' || ch == '\r';
 }
 
@@ -807,6 +810,7 @@ static bool IsTrimmableSpace(const nsTextFragment* aFrag, uint32_t aPos,
 
   switch (aFrag->CharAt(aPos)) {
     case ' ':
+    case kOghamSpaceMark:
       return (!aStyleText->WhiteSpaceIsSignificant() || aAllowHangingWS) &&
              !IsSpaceCombiningSequenceTail(aFrag, aPos + 1);
     case '\n':
@@ -8413,8 +8417,8 @@ void nsTextFrame::AddInlineMinISizeForFlow(gfxContext* aRenderingContext,
       aData->mAtStartOfLine = false;
 
       if (collapseWhitespace || whitespaceCanHang) {
-        uint32_t trimStart =
-            GetEndOfTrimmedText(frag, textStyle, wordStart, i, &iter, whitespaceCanHang);
+        uint32_t trimStart = GetEndOfTrimmedText(frag, textStyle, wordStart, i,
+                                                 &iter, whitespaceCanHang);
         if (trimStart == start) {
           // This is *all* trimmable whitespace, so whatever trailingWhitespace
           // we saw previously is still trailing...

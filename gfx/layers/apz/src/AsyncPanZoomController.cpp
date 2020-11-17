@@ -1390,6 +1390,7 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(
         GetCurrentTouchBlock()
             ->GetOverscrollHandoffChain()
             ->SnapBackOverscrolledApzc(this);
+        mFlingAccelerator.Reset();
         // SnapBackOverscrolledApzc() will put any APZC it causes to snap back
         // into the OVERSCROLL_ANIMATION state. If that's not us, since we're
         // done TOUCHING enter the NOTHING state.
@@ -1788,6 +1789,7 @@ nsEventStatus AsyncPanZoomController::HandleEndOfPan() {
     GetCurrentInputBlock()
         ->GetOverscrollHandoffChain()
         ->SnapBackOverscrolledApzc(this);
+    mFlingAccelerator.Reset();
     return nsEventStatus_eConsumeNoDefault;
   }
 

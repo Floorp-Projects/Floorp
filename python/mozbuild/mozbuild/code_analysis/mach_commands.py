@@ -20,6 +20,7 @@ import xml.etree.ElementTree as ET
 import yaml
 
 import six
+from six.moves import input
 
 from mach.decorators import (
     CommandArgument,
@@ -68,7 +69,7 @@ def prompt_bool(prompt, limit=5):
 
     for _ in range(limit):
         try:
-            return strtobool(raw_input(prompt + "[Y/N]\n"))
+            return strtobool(input(prompt + "[Y/N]\n"))
         except ValueError:
             print(
                 "ERROR! Please enter a valid option! Please use any of the following:"

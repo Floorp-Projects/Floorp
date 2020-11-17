@@ -3887,9 +3887,12 @@ void webgl::TexUnpackBlobDesc::Shrink(const webgl::PackingInfo& pi) {
     const auto bytesPerRowStride =
         RoundUpToMultipleOf(bytesPerRowUnaligned, unpacking.mUnpackAlignment);
 
-    const auto bytesPerImageStride = bytesPerRowStride * unpacking.mUnpackImageHeight;
-    // SKIP_IMAGES is ignored for 2D targets, but at worst this just makes our shrinking less accurate.
-    const auto images = CheckedInt<size_t>(unpacking.mUnpackSkipImages) + size.z;
+    const auto bytesPerImageStride =
+        bytesPerRowStride * unpacking.mUnpackImageHeight;
+    // SKIP_IMAGES is ignored for 2D targets, but at worst this just makes our
+    // shrinking less accurate.
+    const auto images =
+        CheckedInt<size_t>(unpacking.mUnpackSkipImages) + size.z;
     const auto bytesUpperBound = bytesPerImageStride * images;
 
     if (bytesUpperBound.isValid()) {

@@ -1,5 +1,4 @@
-// |jit-test| --no-warp
-
+// |jit-test| --no-ion
 // Warp lacks Scalar Replacement support (bug 1650233). Re-evaluate after that
 // bug has been fixed.
 

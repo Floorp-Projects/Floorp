@@ -191,9 +191,6 @@ BufferTextureData* BufferTextureData::CreateForYCbCr(
                       yOffset, cbOffset, crOffset, aStereoMode, aColorDepth,
                       aYUVColorSpace, aColorRange, hasIntermediateBuffer);
 
-  // extra SIMD padding needed for SWGL
-  bufSize += 16;
-
   return CreateInternal(
       aAllocator ? aAllocator->GetTextureForwarder() : nullptr, descriptor,
       gfx::BackendType::NONE, bufSize, aTextureFlags);

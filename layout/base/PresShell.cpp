@@ -53,6 +53,8 @@
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/PointerEventHandler.h"
 #include "mozilla/dom/PopupBlocker.h"
@@ -1190,13 +1192,37 @@ void PresShell::Destroy() {
 
   AUTO_PROFILER_LABEL("PresShell::Destroy", LAYOUT);
 
-  // If we have a RCD that has been painted (mIsFirstPaint=false), then record
-  // whether or not it had an APZ zoom applied to it during its lifetime, and
-  // whether or not it's in responsive design mode. We omit unpainted presShells
-  // because we get a handful of transient presShells that always report no
-  // zoom, and those skew the numbers.
-  if (!mIsFirstPaint && mPresContext->IsRootContentDocumentCrossProcess() &&
-      !InRDMPane()) {
+  // Try to determine if the page is the user had a meaningful opportunity to
+  // zoom this page. This is not 100% accurate but should be "good enough" for
+  // telemetry purposes.
+  auto isUserZoomablePage = [&]() -> bool {
+    if (mIsFirstPaint) {
+      // Page was never painted, so it wasn't zoomable by the user. We get a
+      // handful of these "transient" presShells.
+      return false;
+    }
+    if (!mPresContext->IsRootContentDocumentCrossProcess()) {
+      // Not a root content document, so APZ doesn't support zooming it.
+      return false;
+    }
+    if (InRDMPane()) {
+      // Responsive design mode is a special case that we want to ignore here.
+      return false;
+    }
+    if (mDocument && mDocument->IsInitialDocument()) {
+      // Ignore initial about:blank page loads
+      return false;
+    }
+    if (XRE_IsContentProcess() &&
+        IsExtensionRemoteType(ContentChild::GetSingleton()->GetRemoteType())) {
+      // Also omit presShells from the extension process because they sometimes
+      // can't be zoomed by the user.
+      return false;
+    }
+    // Otherwise assume the page is user-zoomable.
+    return true;
+  };
+  if (isUserZoomablePage()) {
     Telemetry::Accumulate(Telemetry::APZ_ZOOM_ACTIVITY,
                           IsResolutionUpdatedByApz());
   }

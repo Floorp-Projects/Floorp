@@ -1395,9 +1395,7 @@ bool MBasicBlock::inheritPhisFromBackedge(TempAllocator& alloc,
     if (!entryDef->addInputSlow(exitDef)) {
       return false;
     }
-    if (!entryDef->checkForTypeChange(alloc, exitDef, &typeChange)) {
-      return false;
-    }
+    // TODO(no-TI): remove hadTypeChange
     *hadTypeChange |= typeChange;
   }
 

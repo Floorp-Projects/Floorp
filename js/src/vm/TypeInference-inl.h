@@ -333,11 +333,6 @@ static inline const char* TypeIdString(jsid id) {
 #endif
 }
 
-TemporaryTypeSet::TemporaryTypeSet(LifoAlloc* alloc, jit::MIRType type)
-    : TemporaryTypeSet(alloc, PrimitiveOrAnyObjectType(type)) {
-  MOZ_ASSERT(type != jit::MIRType::Value);
-}
-
 // New script properties analyses overview.
 //
 // When constructing objects using 'new' on a script, we attempt to determine
@@ -558,24 +553,6 @@ struct MOZ_RAII AutoEnterAnalysis {
 // Interface functions
 /////////////////////////////////////////////////////////////////////
 
-void TypeMonitorCallSlow(JSContext* cx, JSObject* callee, const CallArgs& args,
-                         bool constructing);
-
-/*
- * Monitor a javascript call, either on entry to the interpreter or made
- * from within the interpreter.
- */
-inline void TypeMonitorCall(JSContext* cx, const js::CallArgs& args,
-                            bool constructing) {
-  if (args.callee().is<JSFunction>()) {
-    JSFunction* fun = &args.callee().as<JSFunction>();
-    if (fun->isInterpreted() && fun->nonLazyScript()->hasJitScript() &&
-        IsTypeInferenceEnabled()) {
-      TypeMonitorCallSlow(cx, &args.callee(), args, constructing);
-    }
-  }
-}
-
 MOZ_ALWAYS_INLINE bool TrackPropertyTypes(JSObject* obj, jsid id) {
   if (obj->hasLazyGroup() ||
       obj->group()->unknownPropertiesDontCheckGeneration()) {
@@ -734,127 +711,6 @@ inline void MarkObjectStateChange(JSContext* cx, JSObject* obj) {
   if (!obj->group()->unknownProperties(sweep)) {
     obj->group()->markStateChange(sweep, cx);
   }
-}
-
-/* static */ inline void jit::JitScript::MonitorBytecodeType(
-    JSContext* cx, JSScript* script, jsbytecode* pc, StackTypeSet* types,
-    const js::Value& rval) {
-  if (!IsTypeInferenceEnabled()) {
-    return;
-  }
-  if (MOZ_UNLIKELY(rval.isMagic())) {
-    MonitorMagicValueBytecodeType(cx, script, pc, rval);
-    return;
-  }
-
-  TypeSet::Type type = TypeSet::GetValueType(rval);
-  if (!types->hasType(type)) {
-    MonitorBytecodeTypeSlow(cx, script, pc, types, type);
-  }
-}
-
-/* static */ inline void jit::JitScript::MonitorAssign(JSContext* cx,
-                                                       HandleObject obj,
-                                                       jsid id) {
-  if (!obj->isSingleton()) {
-    /*
-     * Mark as unknown any object which has had dynamic assignments to
-     * non-integer properties at SETELEM opcodes. This avoids making large
-     * numbers of type properties for hashmap-style objects. We don't need
-     * to do this for objects with singleton type, because type properties
-     * are only constructed for them when analyzed scripts depend on those
-     * specific properties.
-     */
-    uint32_t i;
-    if (IdIsIndex(id, &i)) {
-      return;
-    }
-
-    // But if we don't have too many properties yet, don't do anything.  The
-    // idea here is that normal object initialization should not trigger
-    // deoptimization in most cases, while actual usage as a hashmap should.
-    ObjectGroup* group = obj->group();
-    if (group->basePropertyCountDontCheckGeneration() < 128) {
-      return;
-    }
-    MarkObjectGroupUnknownProperties(cx, group);
-  }
-}
-
-/* static */ inline void jit::JitScript::MonitorThisType(JSContext* cx,
-                                                         JSScript* script,
-                                                         TypeSet::Type type) {
-  if (!IsTypeInferenceEnabled()) {
-    return;
-  }
-  cx->check(script, type);
-
-  JitScript* jitScript = script->maybeJitScript();
-  if (!jitScript) {
-    return;
-  }
-
-  AutoSweepJitScript sweep(script);
-  StackTypeSet* types = jitScript->thisTypes(sweep, script);
-
-  if (!types->hasType(type)) {
-    AutoEnterAnalysis enter(cx);
-
-    InferSpew(ISpewOps, "externalType: setThis %p: %s", script,
-              TypeSet::TypeString(type).get());
-    types->addType(sweep, cx, type);
-  }
-}
-
-/* static */ inline void jit::JitScript::MonitorThisType(
-    JSContext* cx, JSScript* script, const js::Value& value) {
-  if (!IsTypeInferenceEnabled()) {
-    return;
-  }
-  // Bound functions or class constructors can use the magic TDZ value as
-  // |this| argument. See CreateThis.
-  if (MOZ_UNLIKELY(value.isMagic())) {
-    MOZ_ASSERT(value.whyMagic() == JS_UNINITIALIZED_LEXICAL);
-    MOZ_ASSERT(script->function());
-    MonitorThisType(cx, script, TypeSet::UnknownType());
-    return;
-  }
-
-  MonitorThisType(cx, script, TypeSet::GetValueType(value));
-}
-
-/* static */ inline void jit::JitScript::MonitorArgType(JSContext* cx,
-                                                        JSScript* script,
-                                                        unsigned arg,
-                                                        TypeSet::Type type) {
-  if (!IsTypeInferenceEnabled()) {
-    return;
-  }
-  cx->check(script->compartment(), type);
-
-  JitScript* jitScript = script->maybeJitScript();
-  if (!jitScript) {
-    return;
-  }
-
-  AutoSweepJitScript sweep(script);
-  StackTypeSet* types = jitScript->argTypes(sweep, script, arg);
-
-  if (!types->hasType(type)) {
-    AutoEnterAnalysis enter(cx);
-
-    InferSpew(ISpewOps, "externalType: setArg %p %u: %s", script, arg,
-              TypeSet::TypeString(type).get());
-    types->addType(sweep, cx, type);
-  }
-}
-
-/* static */ inline void jit::JitScript::MonitorArgType(
-    JSContext* cx, JSScript* script, unsigned arg, const js::Value& value) {
-  if (!IsTypeInferenceEnabled()) {
-    return;
-  }
-  MonitorArgType(cx, script, arg, TypeSet::GetValueType(value));
 }
 
 /////////////////////////////////////////////////////////////////////

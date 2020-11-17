@@ -162,20 +162,22 @@ const frontend::ParserAtom* StringBuffer::finishParserAtom(
   }
 
   if (isLatin1()) {
-    auto result = parserAtoms.internLatin1(cx_, latin1Chars().begin(), len);
-    if (result.isErr()) {
+    const frontend::ParserAtom* result =
+        parserAtoms.internLatin1(cx_, latin1Chars().begin(), len);
+    if (!result) {
       return nullptr;
     }
     latin1Chars().clear();
-    return result.unwrap();
+    return result;
   }
 
-  auto result = parserAtoms.internChar16(cx_, twoByteChars().begin(), len);
-  if (result.isErr()) {
+  const frontend::ParserAtom* result =
+      parserAtoms.internChar16(cx_, twoByteChars().begin(), len);
+  if (!result) {
     return nullptr;
   }
   twoByteChars().clear();
-  return result.unwrap();
+  return result;
 }
 
 bool js::ValueToStringBufferSlow(JSContext* cx, const Value& arg,

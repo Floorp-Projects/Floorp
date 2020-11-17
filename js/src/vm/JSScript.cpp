@@ -4239,9 +4239,8 @@ static JSObject* CloneInnerInterpretedFunction(
   }
 
   MOZ_ASSERT(cloneScript->hasBytecode());
-  if (!JSFunction::setTypeForScriptedFunction(cx, clone)) {
-    return nullptr;
-  }
+
+  MOZ_RELEASE_ASSERT(!IsTypeInferenceEnabled());
 
   return clone;
 }
@@ -4370,7 +4369,8 @@ static JSScript* CopyScriptImpl(JSContext* cx, HandleScript src,
                                 HandleObject functionOrGlobal,
                                 HandleScriptSourceObject sourceObject,
                                 MutableHandle<GCVector<Scope*>> scopes) {
-  if (src->treatAsRunOnce() && !src->isFunction()) {
+  if (src->treatAsRunOnce()) {
+    MOZ_ASSERT(!src->isFunction());
     JS_ReportErrorASCII(cx, "No cloning toplevel run-once scripts");
     return nullptr;
   }
@@ -4723,6 +4723,15 @@ void js::SetFrameArgumentsObject(JSContext* cx, AbstractFramePtr frame,
     uint32_t frameSlot = bi.location().slot();
     if (IsOptimizedPlaceholderMagicValue(frame.unaliasedLocal(frameSlot))) {
       frame.unaliasedLocal(frameSlot) = ObjectValue(*argsobj);
+    }
+  }
+
+  // JS_OPTIMIZED_ARGUMENTS may also have been stored to a local slot
+  // during bailout. Update those local slots.
+  for (uint32_t i = 0; i < script->nfixed(); i++) {
+    Value& value = frame.unaliasedLocal(i);
+    if (value.isMagic() && value.whyMagic() == JS_OPTIMIZED_ARGUMENTS) {
+      frame.unaliasedLocal(i) = ObjectValue(*argsobj);
     }
   }
 }

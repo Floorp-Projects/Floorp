@@ -18,6 +18,7 @@
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
 #include "nsDocElementCreatedNotificationRunner.h"
+#include "nsIDocShell.h"
 #include "nsIScriptContext.h"
 #include "nsNameSpaceManager.h"
 #include "nsIScriptSecurityManager.h"

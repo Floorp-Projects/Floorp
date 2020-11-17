@@ -22,16 +22,6 @@ class JS_PUBLIC_API JSScript;
 namespace js {
 namespace jit {
 
-// Describes a single wasm::ImportExit which jumps (via an import with
-// the given index) directly to a JitScript.
-struct DependentWasmImport {
-  wasm::Instance* instance;
-  size_t importIndex;
-
-  DependentWasmImport(wasm::Instance& instance, size_t importIndex)
-      : instance(&instance), importIndex(importIndex) {}
-};
-
 // Information about a script's bytecode, used by IonBuilder. This is cached
 // in JitScript.
 struct IonBytecodeInfo {
@@ -215,44 +205,28 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
 // JitScript. Other stubs are stored in the optimized stub space stored in
 // JitZone and can be purged more eagerly. See JitScript::purgeOptimizedStubs.
 //
-// An ICScript contains a list of IC entries, in the following order:
-//
-//   - Type monitor IC for |this|.
-//   - Type monitor IC for each formal argument.
-//   - IC for each JOF_IC bytecode op.
+// An ICScript contains a list of IC entries. There's one IC for each JOF_IC
+// bytecode op.
 //
 // The ICScript also contains the warmUpCount for the script.
 //
-// Type Inference Data
-// ===================
-// JitScript also contains Type Inference data, most importantly:
-//
-// * An array of StackTypeSets for type monitoring of |this|, formal arguments,
-//   JOF_TYPESET ops. These TypeSets record the types we observed and have
-//   constraints to trigger invalidation of Ion code when the TypeSets change.
-//
-// * The bytecode type map to map from StackTypeSet index to bytecode offset.
-//
-// * List of Ion compilations inlining this script, for invalidation.
-//
-// The StackTypeSet array and bytecode type map are empty when TI is disabled.
+// Inlining Data
+// =============
+// JitScript also contains a list of Warp compilations inlining this script, for
+// invalidation.
 //
 // Memory Layout
 // =============
 // JitScript contains an ICScript as the last field. ICScript has a trailing
-// (variable length) ICEntry array. Following the ICScript, JitScript has
-// several additional trailing arrays. The memory layout is as follows:
+// (variable length) ICEntry array. The memory layout is as follows:
 //
 //  Item                    | Offset
 //  ------------------------+------------------------
 //  JitScript               | 0
 //  -->ICScript  (field)    |
 //     ICEntry[]            | icEntriesOffset()
-//  StackTypeSet[]          | typeSetOffset()
-//  uint32_t[]              | bytecodeTypeMapOffset()
-//    (= bytecode type map) |
 //
-// These offsets are also used to compute numICEntries and numTypeSets.
+// These offsets are also used to compute numICEntries.
 class alignas(uintptr_t) JitScript final : public TrailingArray {
   friend class ::JSScript;
 
@@ -261,11 +235,8 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
 
   // Like JSScript::jitCodeRaw_ but when the script has an IonScript this can
   // point to a separate entry point that skips the argument type checks.
+  // TODO(no-TI): remove.
   uint8_t* jitCodeSkipArgCheck_ = nullptr;
-
-  // If non-null, the list of wasm::Modules that contain an optimized call
-  // directly to this script.
-  js::UniquePtr<Vector<DependentWasmImport>> dependentWasmImports_;
 
   // Profile string used by the profiler for Baseline Interpreter frames.
   const char* profileString_ = nullptr;
@@ -317,18 +288,8 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   // IonCompilingScriptPtr or a valid IonScript*.
   IonScript* ionScript_ = nullptr;
 
-  // Offset of the StackTypeSet array.
-  Offset typeSetOffset_ = 0;
-
-  // Offset of the bytecode type map.
-  Offset bytecodeTypeMapOffset_ = 0;
-
   // The size of this allocation.
   Offset endOffset_ = 0;
-
-  // This field is used to avoid binary searches for the sought entry when
-  // bytecode map queries are in linear order.
-  uint32_t bytecodeTypeMapHint_ = 0;
 
   struct Flags {
     // Flag set when discarding JIT code to indicate this script is on the stack
@@ -358,16 +319,9 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   // End of fields.
 
   Offset icEntriesOffset() const { return offsetOfICEntries(); }
-  Offset typeSetOffset() const { return typeSetOffset_; }
-  Offset bytecodeTypeMapOffset() const { return bytecodeTypeMapOffset_; }
   Offset endOffset() const { return endOffset_; }
 
   ICEntry* icEntries() { return icScript_.icEntries(); }
-
-  StackTypeSet* typeArrayDontCheckGeneration() {
-    MOZ_ASSERT(IsTypeInferenceEnabled());
-    return offsetToPointer<StackTypeSet>(typeSetOffset());
-  }
 
   uint32_t typesGeneration() const { return uint32_t(flags_.typesGeneration); }
   void setTypesGeneration(uint32_t generation) {
@@ -387,9 +341,7 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   }
 
  public:
-  JitScript(JSScript* script, Offset typeSetOffset,
-            Offset bytecodeTypeMapOffset, Offset endOffset,
-            const char* profileString);
+  JitScript(JSScript* script, Offset endOffset, const char* profileString);
 
 #ifdef DEBUG
   ~JitScript() {
@@ -402,8 +354,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
     MOZ_ASSERT(!hasIonScript());
   }
 #endif
-
-  void initBytecodeTypeMap(JSScript* script);
 
   MOZ_MUST_USE bool ensureHasCachedIonData(JSContext* cx, HandleScript script);
 
@@ -445,12 +395,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   }
 
   uint32_t numICEntries() const { return icScript_.numICEntries(); }
-  uint32_t numTypeSets() const {
-    MOZ_ASSERT(IsTypeInferenceEnabled());
-    return numElements<StackTypeSet>(typeSetOffset(), bytecodeTypeMapOffset());
-  }
-
-  uint32_t* bytecodeTypeMapHint() { return &bytecodeTypeMapHint_; }
 
   bool active() const { return flags_.active; }
   void setActive() { flags_.active = true; }
@@ -462,82 +406,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
     MOZ_ASSERT(profileString_);
     return profileString_;
   }
-
-  /* Array of type sets for variables and JOF_TYPESET ops. */
-  StackTypeSet* typeArray(const js::AutoSweepJitScript& sweep) {
-    MOZ_ASSERT(sweep.jitScript() == this);
-    return typeArrayDontCheckGeneration();
-  }
-
-  uint32_t* bytecodeTypeMap() {
-    MOZ_ASSERT(IsTypeInferenceEnabled());
-    return offsetToPointer<uint32_t>(bytecodeTypeMapOffset());
-  }
-
-  inline StackTypeSet* thisTypes(const AutoSweepJitScript& sweep,
-                                 JSScript* script);
-  inline StackTypeSet* argTypes(const AutoSweepJitScript& sweep,
-                                JSScript* script, unsigned i);
-
-  static size_t NumTypeSets(JSScript* script);
-
-  /* Get the type set for values observed at an opcode. */
-  inline StackTypeSet* bytecodeTypes(const AutoSweepJitScript& sweep,
-                                     JSScript* script, jsbytecode* pc);
-
-  template <typename TYPESET>
-  static inline TYPESET* BytecodeTypes(JSScript* script, jsbytecode* pc,
-                                       uint32_t* bytecodeMap, uint32_t* hint,
-                                       TYPESET* typeArray);
-
-  /*
-   * Monitor a bytecode pushing any value. This must be called for any opcode
-   * which is JOF_TYPESET, and where either the script has not been analyzed
-   * by type inference or where the pc has type barriers. For simplicity, we
-   * always monitor JOF_TYPESET opcodes in the interpreter and stub calls,
-   * and only look at barriers when generating JIT code for the script.
-   */
-  static void MonitorBytecodeType(JSContext* cx, JSScript* script,
-                                  jsbytecode* pc, const js::Value& val);
-  static void MonitorBytecodeType(JSContext* cx, JSScript* script,
-                                  jsbytecode* pc, TypeSet::Type type);
-
-  static inline void MonitorBytecodeType(JSContext* cx, JSScript* script,
-                                         jsbytecode* pc, StackTypeSet* types,
-                                         const js::Value& val);
-
- private:
-  static void MonitorBytecodeTypeSlow(JSContext* cx, JSScript* script,
-                                      jsbytecode* pc, StackTypeSet* types,
-                                      TypeSet::Type type);
-
-  static void MonitorMagicValueBytecodeType(JSContext* cx, JSScript* script,
-                                            jsbytecode* pc,
-                                            const js::Value& rval);
-
- public:
-  /* Monitor an assignment at a SETELEM on a non-integer identifier. */
-  static inline void MonitorAssign(JSContext* cx, HandleObject obj, jsid id);
-
-  /* Add a type for a variable in a script. */
-  static inline void MonitorThisType(JSContext* cx, JSScript* script,
-                                     TypeSet::Type type);
-  static inline void MonitorThisType(JSContext* cx, JSScript* script,
-                                     const js::Value& value);
-  static inline void MonitorArgType(JSContext* cx, JSScript* script,
-                                    unsigned arg, TypeSet::Type type);
-  static inline void MonitorArgType(JSContext* cx, JSScript* script,
-                                    unsigned arg, const js::Value& value);
-
-  /*
-   * Freeze all the stack type sets in a script, for a compilation. Returns
-   * copies of the type sets which will be checked against the actual ones
-   * under FinishCompilation, to detect any type changes.
-   */
-  static bool FreezeTypeSets(CompilerConstraintList* constraints,
-                             JSScript* script, TemporaryTypeSet** pThisTypes,
-                             TemporaryTypeSet** pArgTypes,
-                             TemporaryTypeSet** pBytecodeTypes);
 
   static void Destroy(Zone* zone, JitScript* script);
 
@@ -563,10 +431,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   void incWarmUpCount(uint32_t amount) { icScript_.warmUpCount_ += amount; }
   void resetWarmUpCount(uint32_t count);
 
-#ifdef DEBUG
-  void printTypes(JSContext* cx, HandleScript script);
-#endif
-
   void prepareForDestruction(Zone* zone) {
     // When the script contains pointers to nursery things, the store buffer can
     // contain entries that point into the fallback stub space. Since we can
@@ -590,13 +454,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
 
   ICEntry& icEntry(size_t index) { return icScript_.icEntry(index); }
 
-  // Used to inform IonBuilder that a getter has been used and we must
-  // use a type barrier.
-  void noteAccessedGetter(uint32_t pcOffset);
-  // Used to inform IonBuilder that a SetElem has written to out-of-bounds
-  // indices, to determine whether we need a hole check.
-  void noteHasDenseAdd(uint32_t pcOffset);
-
   void trace(JSTracer* trc);
   void purgeOptimizedStubs(JSScript* script);
 
@@ -618,12 +475,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   ICEntry& icEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntry) {
     return icScript_.icEntryFromPCOffset(pcOffset, prevLookedUpEntry);
   }
-
-  MOZ_MUST_USE bool addDependentWasmImport(JSContext* cx,
-                                           wasm::Instance& instance,
-                                           uint32_t idx);
-  void removeDependentWasmImport(wasm::Instance& instance, uint32_t idx);
-  void unlinkDependentWasmImports();
 
   size_t allocBytes() const { return endOffset(); }
 

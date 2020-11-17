@@ -30,6 +30,14 @@
 #endif
 #endif
 
+#ifdef WR_FEATURE_STORAGE_BUFFER
+#ifdef GL_ES
+// require GLSL ES 3.1
+#else
+#extension GL_ARB_shader_storage_buffer_object : require
+#endif
+#endif
+
 #include base
 
 #if defined(WR_FEATURE_TEXTURE_EXTERNAL) || defined(WR_FEATURE_TEXTURE_RECT) || defined(WR_FEATURE_TEXTURE_2D)

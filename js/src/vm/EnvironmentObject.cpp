@@ -1587,10 +1587,6 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
             return true;
           }
         }
-
-        if (action == SET) {
-          jit::JitScript::MonitorArgType(cx, script, i, vp);
-        }
       }
 
       // It is possible that an optimized out value flows to this

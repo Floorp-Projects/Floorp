@@ -56,13 +56,15 @@ function start() {
       });
     }
 
-    async function test(testDriver) {
+    async function test() {
       is(window.scrollX, 0, "shouldn't have scrolled (1)");
       is(window.scrollY, 0, "shouldn't have scrolled (2)");
 
+      let waitForScroll = waitForScrollEvent(window);
+
       window.synthesizeKey("KEY_ArrowDown");
 
-      await waitForScrollEvent(window);
+      await waitForScroll;
 
       is(window.scrollX, 0, "shouldn't have scrolled (3)");
       isnot(window.scrollY, 0, "should have scrolled (4)");

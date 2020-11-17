@@ -8,8 +8,7 @@
         document.close();
         opener.is(history.length, length,
                   "document.open/close should not change history");
-        opener.nextTest();
-        window.close();
+        opener.finishTest();
       }
     </script>
   </head>

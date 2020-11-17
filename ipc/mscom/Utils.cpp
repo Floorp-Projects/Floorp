@@ -28,6 +28,8 @@
 #include <shlwapi.h>
 #include <winnt.h>
 
+#include <utility>
+
 #if defined(_MSC_VER)
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 #endif
@@ -315,6 +317,82 @@ void GUIDToString(REFGUID aGuid, nsAString& aOutString) {
     // Truncate the terminator
     aOutString.SetLength(result - 1);
   }
+}
+
+// Undocumented IIDs that are relevant for diagnostic purposes
+static const IID IID_ISCMLocalActivator = {
+    0x00000136,
+    0x0000,
+    0x0000,
+    {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}};
+static const IID IID_IRundown = {
+    0x00000134,
+    0x0000,
+    0x0000,
+    {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}};
+static const IID IID_IRemUnknown = {
+    0x00000131,
+    0x0000,
+    0x0000,
+    {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}};
+static const IID IID_IRemUnknown2 = {
+    0x00000143,
+    0x0000,
+    0x0000,
+    {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}};
+
+struct IIDToLiteralMapEntry {
+  constexpr IIDToLiteralMapEntry(REFIID aIid, nsLiteralCString&& aStr)
+      : mIid(aIid), mStr(std::forward<nsLiteralCString>(aStr)) {}
+
+  REFIID mIid;
+  const nsLiteralCString mStr;
+};
+
+/**
+ * Given the name of an interface, the IID_ENTRY macro generates a pair
+ * containing a reference to the interface ID and a stringified version of
+ * the interface name.
+ *
+ * For example:
+ *
+ *   {IID_ENTRY(IUnknown)}
+ * is expanded to:
+ *   {IID_IUnknown, "IUnknown"_ns}
+ *
+ */
+// clang-format off
+#  define IID_ENTRY_STRINGIFY(iface) #iface##_ns
+#  define IID_ENTRY(iface) IID_##iface, IID_ENTRY_STRINGIFY(iface)
+// clang-format on
+
+// Mapping of selected IIDs to friendly, human readable descriptions for each
+// interface.
+static constexpr IIDToLiteralMapEntry sIidDiagStrs[] = {
+    {IID_ENTRY(IUnknown)},
+    {IID_IRemUnknown, "cross-apartment IUnknown"_ns},
+    {IID_IRundown, "cross-apartment object management"_ns},
+    {IID_ISCMLocalActivator, "out-of-process object instantiation"_ns},
+    {IID_IRemUnknown2, "cross-apartment IUnknown"_ns}};
+
+#  undef IID_ENTRY
+#  undef IID_ENTRY_STRINGIFY
+
+void DiagnosticNameForIID(REFIID aIid, nsACString& aOutString) {
+  // If the IID matches something in sIidDiagStrs, output its string.
+  for (const auto& curEntry : sIidDiagStrs) {
+    if (curEntry.mIid == aIid) {
+      aOutString.Assign(curEntry.mStr);
+      return;
+    }
+  }
+
+  // Otherwise just convert the IID to string form and output that.
+  nsAutoString strIid;
+  GUIDToString(aIid, strIid);
+
+  aOutString.AssignLiteral("IID ");
+  AppendUTF16toUTF8(strIid, aOutString);
 }
 
 #else

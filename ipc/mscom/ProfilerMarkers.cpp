@@ -11,11 +11,13 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/mscom/Utils.h"
 #include "mozilla/Services.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsISupportsImpl.h"
+#include "nsString.h"
 #include "nsXULAppAPI.h"
 
 #include <objbase.h>
@@ -31,7 +33,7 @@ class ProfilerMarkerChannelHook final : public IChannelHook {
   ~ProfilerMarkerChannelHook() = default;
 
  public:
-  ProfilerMarkerChannelHook() : mRefCnt(0), mMainThreadORPCDepth(0) {}
+  ProfilerMarkerChannelHook() : mRefCnt(0) {}
 
   // IUnknown
   STDMETHODIMP QueryInterface(REFIID aIid, void** aOutInterface) override;
@@ -58,10 +60,6 @@ class ProfilerMarkerChannelHook final : public IChannelHook {
    *
    * Finally, our implementation responds to any request matching our extension
    * ID, however we only care about main thread COM calls.
-   *
-   * Further note that COM allows re-entrancy, however for our purposes we only
-   * care about the outermost IPC call on the main thread, so we use the
-   * mMainThreadORPCDepth variable to track that.
    */
 
   // IChannelHook
@@ -92,8 +90,10 @@ class ProfilerMarkerChannelHook final : public IChannelHook {
                    void* aDataBuf, HRESULT aFault) override {}
 
  private:
+  void BuildMarkerName(REFIID aIid, nsACString& aOutMarkerName);
+
+ private:
   mozilla::Atomic<ULONG> mRefCnt;
-  ULONG mMainThreadORPCDepth;
 };
 
 HRESULT ProfilerMarkerChannelHook::QueryInterface(REFIID aIid,
@@ -118,16 +118,23 @@ ULONG ProfilerMarkerChannelHook::Release() {
   return result;
 }
 
+void ProfilerMarkerChannelHook::BuildMarkerName(REFIID aIid,
+                                                nsACString& aOutMarkerName) {
+  aOutMarkerName.AssignLiteral("ORPC Call for ");
+
+  nsAutoCString iidStr;
+  mozilla::mscom::DiagnosticNameForIID(aIid, iidStr);
+  aOutMarkerName.Append(iidStr);
+}
+
 void ProfilerMarkerChannelHook::ClientGetSize(REFGUID aExtensionId, REFIID aIid,
                                               ULONG* aOutDataSize) {
   if (aExtensionId == GUID_MozProfilerMarkerExtension) {
     if (NS_IsMainThread()) {
-      if (!mMainThreadORPCDepth) {
-        PROFILER_TRACING_MARKER("MSCOM", "ORPC Call", IPC,
-                                TRACING_INTERVAL_START);
-      }
-
-      ++mMainThreadORPCDepth;
+      nsAutoCString markerName;
+      BuildMarkerName(aIid, markerName);
+      PROFILER_TRACING_MARKER("MSCOM", markerName.get(), IPC,
+                              TRACING_INTERVAL_START);
     }
 
     if (aOutDataSize) {
@@ -140,12 +147,11 @@ void ProfilerMarkerChannelHook::ClientGetSize(REFGUID aExtensionId, REFIID aIid,
 void ProfilerMarkerChannelHook::ClientNotify(REFGUID aExtensionId, REFIID aIid,
                                              ULONG aDataSize, void* aDataBuffer,
                                              DWORD aDataRep, HRESULT aFault) {
-  if (aExtensionId == GUID_MozProfilerMarkerExtension && NS_IsMainThread()) {
-    MOZ_ASSERT(mMainThreadORPCDepth > 0);
-    --mMainThreadORPCDepth;
-    if (!mMainThreadORPCDepth) {
-      PROFILER_TRACING_MARKER("MSCOM", "ORPC Call", IPC, TRACING_INTERVAL_END);
-    }
+  if (NS_IsMainThread() && aExtensionId == GUID_MozProfilerMarkerExtension) {
+    nsAutoCString markerName;
+    BuildMarkerName(aIid, markerName);
+    PROFILER_TRACING_MARKER("MSCOM", markerName.get(), IPC,
+                            TRACING_INTERVAL_END);
   }
 }
 

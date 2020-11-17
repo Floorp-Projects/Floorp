@@ -78,7 +78,8 @@ web-platform-tests:
     run-on-projects:
         by-test-platform:
             linux1804-32-shippable/opt: ['release']  # skip integration, Bug 1599197
-            .*-qr/.*: ['release']  # skip on integration branches due to high load
+            linux.*-qr/.*: ['release']  # skip on integration branches due to high load
+            windows.*-qr/.*: ['release']  # skip on integration branches due to high load
             default: built-projects
     mozharness:
         chunked: true

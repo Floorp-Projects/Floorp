@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <title>Test for Bug 1300461</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1300461">Mozilla Bug 1300461</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+  <script type="application/javascript">
+
+    let chromeScript = null;
+    if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
+      chromeScript = SpecialPowers.loadChromeScript(() => {
+        const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+        function doSend(message, fn) {
+          try {
+            // eslint-disable-next-line no-undef
+            sendAsyncMessage(message, {success: true, value: fn()});
+          } catch(_) {
+            // eslint-disable-next-line no-undef
+            sendAsyncMessage(message, {success: false});
+          }
+        }
+
+        // eslint-disable-next-line no-undef
+        addMessageListener("requestedIndex", () => {
+          doSend("requestedIndex", () => {
+            let win = Services.wm.getMostRecentWindow("navigator:browser");
+            let shistory = win.gBrowser.selectedBrowser.browsingContext.sessionHistory;
+            return shistory.requestedIndex;
+          })
+        });
+      });
+    }
+
+    async function getSHRequestedIndex() {
+      let p = chromeScript.promiseOneMessage("requestedIndex");
+      chromeScript.sendAsyncMessage("requestedIndex");
+      let result = await p;
+      ok(result.success, "Got requested index from parent");
+      return result.value;
+    }
+
+    var testCount = 0;
+
+    SimpleTest.waitForExplicitFinish();
+
+    var testWindow;
+    function runTest() {
+      testWindow = window.open("file_bug1300461.html", "", "width=360,height=480");
+      testWindow.onunload = function() { }; // to prevent bfcache
+    }
+
+    function finishTest() {
+      if (chromeScript) {
+        chromeScript.destroy();
+      }
+      testWindow.close();
+      SimpleTest.finish();
+    }
+
+  </script>
+</pre>
+</body>
+</html>

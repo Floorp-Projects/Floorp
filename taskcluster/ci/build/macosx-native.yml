@@ -10,8 +10,38 @@ job-defaults:
         max-run-time: 7200
     run:
         using: mozharness
-        actions: [get-secrets, build]
         script: "mozharness/scripts/fx_desktop_build.py"
+
+macosx64-plain/opt:
+    description: "MacOS X x64 Opt Plain"
+    index:
+        job-name: macosx64-plain-opt
+    treeherder:
+        symbol: Bp
+        platform: osx/opt
+        tier: 2
+    worker:
+        env:
+            PERFHERDER_EXTRA_OPTIONS: plain
+    run:
+        actions: [build]
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_macosx.py
+        extra-config:
+            disable_package_metrics: true
+            stage_platform: macosx64
+            mozconfig_platform: macosx64
+        mozconfig-variant: plain-opt
+    run-on-projects: ['mozilla-central']
+    fetches:
+        toolchain:
+            - macosx64-cbindgen
+            - macosx64-nasm
+            - macosx64-node
+            - macosx64-rust
+    optimization:
+        skip-unless-expanded: null
 
 macosx64-aarch64-shippable/opt:
     description: "MacOS X Aarch64"
@@ -30,6 +60,7 @@ macosx64-aarch64-shippable/opt:
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
             PERFHERDER_EXTRA_OPTIONS: aarch64
     run:
+        actions: [get-secrets, build]
         config:
             - builds/releng_base_firefox.py
             - builds/taskcluster_base_macosx.py
