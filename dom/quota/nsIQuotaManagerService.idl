@@ -75,14 +75,10 @@ interface nsIQuotaManagerService : nsISupports
    * @param aPersistenceType
    *        A string that tells what persistence type of origin will be
    *        initialized.
-   * @param aClientType
-   *        An optional string that tells what client type of origin will be
-   *        initialized.
    */
   [must_use] nsIQuotaRequest
   initStorageAndOrigin(in nsIPrincipal aPrincipal,
-                       in ACString aPersistenceType,
-                       [optional] in AString aClientType);
+                       in ACString aPersistenceType);
 
   /**
    * Schedules an asynchronous callback that will inspect all origins and

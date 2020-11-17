@@ -530,7 +530,6 @@ QuotaManagerService::InitTemporaryStorage(nsIQuotaRequest** _retval) {
 NS_IMETHODIMP
 QuotaManagerService::InitStorageAndOrigin(nsIPrincipal* aPrincipal,
                                           const nsACString& aPersistenceType,
-                                          const nsAString& aClientType,
                                           nsIQuotaRequest** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(nsContentUtils::IsCallerChrome());
@@ -556,19 +555,6 @@ QuotaManagerService::InitStorageAndOrigin(nsIPrincipal* aPrincipal,
   }
 
   params.persistenceType() = maybePersistenceType.value();
-
-  if (aClientType.IsVoid()) {
-    params.clientTypeIsExplicit() = false;
-  } else {
-    Client::Type clientType;
-    bool ok = Client::TypeFromText(aClientType, clientType, fallible);
-    if (NS_WARN_IF(!ok)) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    params.clientType() = clientType;
-    params.clientTypeIsExplicit() = true;
-  }
 
   RequestInfo info(request, params);
 

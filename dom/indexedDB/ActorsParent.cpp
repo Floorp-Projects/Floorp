@@ -16300,7 +16300,7 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
 
   IDB_TRY_INSPECT(const auto& dbDirectory,
                   quotaManager->EnsureStorageAndOriginIsInitialized(
-                      persistenceType, mQuotaInfo, Client::IDB));
+                      persistenceType, mQuotaInfo));
 
   IDB_TRY(
       dbDirectory->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME)));

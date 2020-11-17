@@ -400,7 +400,7 @@ Context::QuotaInitRunnable::Run() {
       MOZ_DIAGNOSTIC_ASSERT(qm);
 
       auto directoryOrErr = qm->EnsureStorageAndOriginIsInitialized(
-          PERSISTENCE_TYPE_DEFAULT, mQuotaInfo, quota::Client::DOMCACHE);
+          PERSISTENCE_TYPE_DEFAULT, mQuotaInfo);
       if (directoryOrErr.isErr()) {
         resolver->Resolve(directoryOrErr.inspectErr());
         break;
