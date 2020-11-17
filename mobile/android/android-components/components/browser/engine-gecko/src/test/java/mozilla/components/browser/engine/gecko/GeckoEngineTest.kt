@@ -64,7 +64,6 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.MockWebExtension
 import org.mozilla.geckoview.StorageController
-import org.mozilla.geckoview.WebExtensionController
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_CORRUPT_FILE
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_FILE_ACCESS
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_INCORRECT_HASH
@@ -74,10 +73,10 @@ import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_POST
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_SIGNEDSTATE_REQUIRED
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_UNEXPECTED_ADDON_TYPE
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_USER_CANCELED
+import org.mozilla.geckoview.WebExtensionController
 import org.mozilla.geckoview.WebPushController
 import org.robolectric.Robolectric
 import java.io.IOException
-import java.lang.Exception
 import org.mozilla.geckoview.WebExtension as GeckoWebExtension
 
 typealias GeckoInstallException = org.mozilla.geckoview.WebExtension.InstallException
@@ -892,7 +891,7 @@ class GeckoEngineTest {
         verify(webExtensionController).promptDelegate = geckoDelegateCaptor.capture()
 
         val result = geckoDelegateCaptor.value.onUpdatePrompt(
-                currentExtension, updatedExtension, updatedPermissions, hostPermissions
+            currentExtension, updatedExtension, updatedPermissions, hostPermissions
         )
         assertNotNull(result)
 
@@ -906,10 +905,10 @@ class GeckoEngineTest {
             onPermissionsGrantedCaptor.capture()
         )
         val current =
-                currentExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+            currentExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
         assertEquals(currentExtension, current.nativeExtension)
         val updated =
-                updatedExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+            updatedExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
         assertEquals(updatedExtension, updated.nativeExtension)
 
         onPermissionsGrantedCaptor.value.invoke(true)
@@ -933,7 +932,7 @@ class GeckoEngineTest {
         verify(webExtensionController).promptDelegate = geckoDelegateCaptor.capture()
 
         val result = geckoDelegateCaptor.value.onUpdatePrompt(
-            currentExtension, updatedExtension, updatedPermissions, emptyArray()
+                currentExtension, updatedExtension, updatedPermissions, emptyArray()
         )
         assertNotNull(result)
 
@@ -947,10 +946,10 @@ class GeckoEngineTest {
             onPermissionsGrantedCaptor.capture()
         )
         val current =
-            currentExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+                currentExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
         assertEquals(currentExtension, current.nativeExtension)
         val updated =
-            updatedExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+                updatedExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
         assertEquals(updatedExtension, updated.nativeExtension)
 
         onPermissionsGrantedCaptor.value.invoke(true)
@@ -1289,7 +1288,8 @@ class GeckoEngineTest {
 
             engine.updateWebExtension(
                 extension,
-                onError = { _, e -> throwable = e as WebExtensionException }
+                onError = { _, e -> throwable = e as WebExtensionException
+                }
             )
 
             updateExtensionResult.completeExceptionally(exception)
@@ -1818,6 +1818,39 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `shimmed content MUST be categorized as blocked`() {
+        val runtime = mock<GeckoRuntime>()
+        val engine = spy(GeckoEngine(context, runtime = runtime))
+        val mockSession = mock<GeckoEngineSession>()
+        val mockGeckoSetting = mock<GeckoRuntimeSettings>()
+        val mockGeckoContentBlockingSetting = mock<ContentBlocking.Settings>()
+        var trackersLog: List<TrackerLog>? = null
+
+        val mockContentBlockingController = mock<ContentBlockingController>()
+        val logEntriesResult = GeckoResult<List<ContentBlockingController.LogEntry>>()
+
+        val engineSetting = DefaultSettings()
+        engineSetting.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
+
+        whenever(engine.settings).thenReturn(engineSetting)
+        whenever(runtime.settings).thenReturn(mockGeckoSetting)
+        whenever(mockGeckoSetting.contentBlocking).thenReturn(mockGeckoContentBlockingSetting)
+
+        whenever(runtime.contentBlockingController).thenReturn(mockContentBlockingController)
+        whenever(mockContentBlockingController.getLog(any())).thenReturn(logEntriesResult)
+
+        engine.getTrackersLog(mockSession, onSuccess = { trackersLog = it })
+
+        logEntriesResult.complete(createShimmedEntryList())
+
+        val trackerLog = trackersLog!!.first()
+        assertEquals("www.tracker.com", trackerLog.url)
+        assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES))
+        assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.MOZILLA_SOCIAL))
+        assertTrue(trackerLog.loadedCategories.isEmpty())
+    }
+
+    @Test
     fun `fetch site with social trackers`() {
         val runtime = mock<GeckoRuntime>()
         val engine = GeckoEngine(context, runtime = runtime)
@@ -2001,9 +2034,29 @@ class GeckoEngineTest {
         return listOf(addLogEntry, addLogSecondEntry)
     }
 
-    private fun createBlockingData(category: Int): ContentBlockingController.LogEntry.BlockingData {
+    private fun createShimmedEntryList(): List<ContentBlockingController.LogEntry> {
+        val addLogEntry = object : ContentBlockingController.LogEntry() {}
+
+        ReflectionUtils.setField(addLogEntry, "origin", "www.tracker.com")
+        val shimmedContent = createBlockingData(Event.REPLACED_TRACKING_CONTENT, 2)
+        val loadedTrackingLevel1Content = createBlockingData(Event.LOADED_LEVEL_1_TRACKING_CONTENT)
+        val loadedSocialContent = createBlockingData(Event.LOADED_SOCIALTRACKING_CONTENT)
+
+        val contentBlockingList = listOf(
+                loadedTrackingLevel1Content,
+                loadedSocialContent,
+                shimmedContent
+        )
+
+        ReflectionUtils.setField(addLogEntry, "blockingData", contentBlockingList)
+
+        return listOf(addLogEntry)
+    }
+
+    private fun createBlockingData(category: Int, count: Int = 0): ContentBlockingController.LogEntry.BlockingData {
         val blockingData = object : ContentBlockingController.LogEntry.BlockingData() {}
         ReflectionUtils.setField(blockingData, "category", category)
+        ReflectionUtils.setField(blockingData, "count", count)
         return blockingData
     }
 

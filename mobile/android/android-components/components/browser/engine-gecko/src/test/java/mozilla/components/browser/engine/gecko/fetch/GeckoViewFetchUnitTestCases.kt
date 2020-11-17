@@ -265,8 +265,13 @@ class GeckoViewFetchUnitTestCases : FetchTestCases() {
     @Test
     fun toResponseMustReturn200ForBlobUrls() {
         val builder = WebResponse.Builder("blob:https://mdn.mozillademos.org/d518464c-5075-9046-aef2-9c313214ed53").statusCode(0).build()
+        assertEquals(Response.SUCCESS, builder.toResponse().status)
+    }
 
-        assertEquals(Response.SUCCESS, builder.toResponse(isBlobUri = true).status)
+    @Test
+    fun toResponseMustReturn200ForDataUrls() {
+        val builder = WebResponse.Builder("data:,Hello%2C%20World!").statusCode(0).build()
+        assertEquals(Response.SUCCESS, builder.toResponse().status)
     }
 
     private fun mockRequest(headerMap: Map<String, String>? = null, body: String? = null, method: String = "GET") {

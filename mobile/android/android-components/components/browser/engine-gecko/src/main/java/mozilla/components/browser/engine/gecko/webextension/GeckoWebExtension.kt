@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.gecko.webextension
 
 import android.graphics.Bitmap
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.browser.engine.gecko.await
 import mozilla.components.concept.engine.EngineSession
@@ -344,7 +345,8 @@ class GeckoWebExtension(
                 disabledFlags = DisabledFlags.select(it.disabledFlags),
                 optionsPageUrl = it.optionsPageUrl,
                 openOptionsPageInTab = it.openOptionsPageInTab,
-                baseUrl = it.baseUrl
+                baseUrl = it.baseUrl,
+                temporary = it.temporary
             )
         }
     }
@@ -362,7 +364,12 @@ class GeckoWebExtension(
     }
 
     override suspend fun loadIcon(size: Int): Bitmap? {
-        return null // Not yet supported
+        return getIcon(size).await()
+    }
+
+    @VisibleForTesting
+    internal fun getIcon(size: Int): GeckoResult<Bitmap> {
+        return nativeExtension.metaData.icon.getBitmap(size)
     }
 }
 

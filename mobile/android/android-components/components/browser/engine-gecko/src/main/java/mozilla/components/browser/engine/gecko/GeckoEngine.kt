@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.engine.gecko
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import androidx.annotation.VisibleForTesting
@@ -487,15 +488,7 @@ class GeckoEngine(
 
         override var automaticFontSizeAdjustment: Boolean
             get() = runtime.settings.automaticFontSizeAdjustment
-            set(value) {
-                try {
-                    runtime.settings.automaticFontSizeAdjustment = value
-                } catch (e: IllegalArgumentException) {
-                    // Catching exception here as a temporary workaround for:
-                    // - https://github.com/mozilla-mobile/android-components/issues/7922
-                    // - https://bugzilla.mozilla.org/show_bug.cgi?id=1656078
-                }
-            }
+            set(value) { runtime.settings.automaticFontSizeAdjustment = value }
 
         override var automaticLanguageAdjustment: Boolean
             get() = localeUpdater.enabled
@@ -661,6 +654,9 @@ class GeckoEngine(
         }
     }
 
+    private fun isCategoryActive(category: TrackingCategory) = settings.trackingProtectionPolicy?.contains(category)
+        ?: false
+
     /**
      * Mimics the behavior for categorizing trackers from desktop, they should be kept in sync,
      * as differences will result in improper categorization for trackers.
@@ -668,14 +664,57 @@ class GeckoEngine(
      */
     internal fun ContentBlockingController.LogEntry.toTrackerLog(): TrackerLog {
         val cookiesHasBeenBlocked = this.blockingData.any { it.hasBlockedCookies() }
+        val blockedCategories = blockingData.map { it.getBlockedCategory() }
+            .filterNot { it == TrackingCategory.NONE }
+            .distinct()
+        val loadedCategories = blockingData.map { it.getLoadedCategory() }
+            .filterNot { it == TrackingCategory.NONE }
+            .distinct()
+        /**
+         *  When a resource is shimmed we'll received a [REPLACED_UNSAFE_CONTENT] event with
+         *  the quantity [BlockingData.count] of categories that were shimmed, but it doesn't
+         *  specify which ones, it only tells us how many. For example:
+         *     {
+         *      "category": REPLACED_TRACKING_CONTENT,
+         *      "count": 2
+         *     }
+         *
+         *  This indicates that there are 2 categories that were shimmed, as a result
+         *  we have to infer based on the categories that are active vs the amount of
+         *  shimmed categories, for example:
+         *
+         *     "blockData": [
+         *      {
+         *          "category": LOADED_LEVEL_1_TRACKING_CONTENT,
+         *          "count": 1
+         *      },
+         *      {
+         *          "category": LOADED_SOCIALTRACKING_CONTENT,
+         *          "count": 1
+         *      },
+         *      {
+         *          "category": REPLACED_TRACKING_CONTENT,
+         *          "count": 2
+         *      }
+         *     ]
+         *  This indicates that categories [LOADED_LEVEL_1_TRACKING_CONTENT] and
+         *  [LOADED_SOCIALTRACKING_CONTENT] were loaded but shimmed and we should display them
+         *  as blocked instead of loaded.
+         */
+        val shimmedCount = blockingData.find {
+            it.category == Event.REPLACED_TRACKING_CONTENT
+        }?.count ?: 0
+
+        // If we find blocked categories that are loaded it means they were shimmed.
+        val shimmedCategories = loadedCategories.filter { isCategoryActive(it) }
+            .take(shimmedCount)
+
+        // We have to remove the categories that are shimmed from the loaded list and
+        // put them back in the blocked list.
         return TrackerLog(
             url = origin,
-            loadedCategories = blockingData.map { it.getLoadedCategory() }
-                .filterNot { it == TrackingCategory.NONE }
-                .distinct(),
-            blockedCategories = blockingData.map { it.getBlockedCategory() }
-                .filterNot { it == TrackingCategory.NONE }
-                .distinct(),
+            loadedCategories = loadedCategories.filterNot { it in shimmedCategories },
+            blockedCategories = (blockedCategories + shimmedCategories).distinct(),
             cookiesHasBeenBlocked = cookiesHasBeenBlocked
         )
     }
@@ -697,6 +736,10 @@ internal fun ContentBlockingController.LogEntry.BlockingData.hasBlockedCookies()
         category == Event.COOKIES_BLOCKED_SOCIALTRACKER
 }
 
+// There is going to be a patch from GV for adding [REPLACED_UNSAFE_CONTENT] as
+// a valid option for [BlockingData.category]
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1669577
+@SuppressLint("SwitchIntDef")
 internal fun ContentBlockingController.LogEntry.BlockingData.getBlockedCategory(): TrackingCategory {
     return when (category) {
         Event.BLOCKED_FINGERPRINTING_CONTENT -> TrackingCategory.FINGERPRINTING

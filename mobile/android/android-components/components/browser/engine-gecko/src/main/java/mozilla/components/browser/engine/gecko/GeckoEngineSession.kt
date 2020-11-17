@@ -14,7 +14,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import mozilla.components.browser.engine.gecko.fetch.toResponse
 import mozilla.components.browser.engine.gecko.media.GeckoMediaDelegate
+import mozilla.components.browser.engine.gecko.mediasession.GeckoMediaSessionDelegate
 import mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest
 import mozilla.components.browser.engine.gecko.prompt.GeckoPromptDelegate
 import mozilla.components.browser.engine.gecko.window.GeckoWindowRequest
@@ -30,16 +32,22 @@ import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
 import mozilla.components.concept.engine.window.WindowRequest
+import mozilla.components.concept.fetch.Headers.Names.CONTENT_DISPOSITION
+import mozilla.components.concept.fetch.Headers.Names.CONTENT_LENGTH
+import mozilla.components.concept.fetch.Headers.Names.CONTENT_TYPE
 import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.VisitType
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.util.Base64
 import mozilla.components.support.ktx.kotlin.isEmail
 import mozilla.components.support.ktx.kotlin.isExtensionUrl
 import mozilla.components.support.ktx.kotlin.isGeoLocation
 import mozilla.components.support.ktx.kotlin.isPhone
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
+import mozilla.components.support.utils.DownloadUtils
 import org.json.JSONObject
+import org.mozilla.geckoview.WebResponse
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.GeckoResult
@@ -71,9 +79,15 @@ class GeckoEngineSession(
     openGeckoSession: Boolean = true
 ) : CoroutineScope, EngineSession() {
 
+    // This logger is temporary and parsed by FNPRMS for performance measurements. It can be
+    // removed once FNPRMS is replaced: https://github.com/mozilla-mobile/android-components/issues/8662
+    // It mimics GeckoView debug log statements, hence the unintuitive tag and messages.
+    private val fnprmsLogger = Logger("GeckoSession")
+
     internal lateinit var geckoSession: GeckoSession
     internal var currentUrl: String? = null
     internal var lastLoadRequestUri: String? = null
+    internal var pageLoadingUrl: String? = null
     internal var scrollY: Int = 0
 
     internal var job: Job = Job()
@@ -132,13 +146,20 @@ class GeckoEngineSession(
         if (initialLoad) {
             initialLoadRequest = LoadRequest(url, parent, flags, additionalHeaders)
         }
-        geckoSession.loadUri(url, (parent as? GeckoEngineSession)?.geckoSession, flags.value, additionalHeaders)
+        @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/8710
+        geckoSession.loadUri(
+            url,
+            (parent as? GeckoEngineSession)?.geckoSession,
+            flags.value,
+            additionalHeaders ?: emptyMap()
+        )
     }
 
     /**
      * See [EngineSession.loadData]
      */
     override fun loadData(data: String, mimeType: String, encoding: String) {
+        @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/8710
         when (encoding) {
             "base64" -> geckoSession.loadData(data.toByteArray(), mimeType)
             else -> geckoSession.loadString(data, mimeType)
@@ -576,6 +597,17 @@ class GeckoEngineSession(
         }
 
         override fun onPageStart(session: GeckoSession, url: String) {
+            // This log statement is temporary and parsed by FNPRMS for performance measurements. It can be
+            // removed once FNPRMS is replaced: https://github.com/mozilla-mobile/android-components/issues/8662
+            fnprmsLogger.info("handleMessage GeckoView:PageStart uri=") // uri intentionally blank
+
+            pageLoadingUrl = url
+
+            // Ignore initial load of about:blank (see https://github.com/mozilla-mobile/android-components/issues/403)
+            if (initialLoad && url == ABOUT_BLANK) {
+                return
+            }
+
             notifyObservers {
                 onProgress(PROGRESS_START)
                 onLoadingStateChange(true)
@@ -583,9 +615,18 @@ class GeckoEngineSession(
         }
 
         override fun onPageStop(session: GeckoSession, success: Boolean) {
+            // This log statement is temporary and parsed by FNPRMS for performance measurements. It can be
+            // removed once FNPRMS is replaced: https://github.com/mozilla-mobile/android-components/issues/8662
+            fnprmsLogger.info("handleMessage GeckoView:PageStop uri=null") // uri intentionally hard-coded to null
             // by the time we reach here, any new request will come from web content.
             // If it comes from the chrome, loadUrl(url) or loadData(string) will set it to
             // false.
+
+            // Ignore initial load of about:blank (see https://github.com/mozilla-mobile/android-components/issues/403)
+            if (initialLoad && pageLoadingUrl == ABOUT_BLANK) {
+                return
+            }
+
             notifyObservers {
                 onProgress(PROGRESS_STOP)
                 onLoadingStateChange(false)
@@ -744,15 +785,30 @@ class GeckoEngineSession(
             notifyObservers { onFullScreenChange(fullScreen) }
         }
 
-        override fun onExternalResponse(session: GeckoSession, response: GeckoSession.WebResponseInfo) {
-            notifyObservers {
-                onExternalResource(
-                        url = response.uri,
-                        contentLength = response.contentLength,
-                        contentType = response.contentType,
-                        fileName = response.filename,
-                        isPrivate = privateMode
+        override fun onExternalResponse(session: GeckoSession, webResponse: WebResponse) {
+            with(webResponse) {
+                val contentType = headers[CONTENT_TYPE]?.trim()
+                val contentLength = headers[CONTENT_LENGTH]?.trim()?.toLong()
+                val contentDisposition = headers[CONTENT_DISPOSITION]?.trim()
+                val url = uri
+                val fileName = DownloadUtils.guessFileName(
+                    contentDisposition,
+                    destinationDirectory = null,
+                    url = url,
+                    mimeType = contentType
                 )
+                val response = webResponse.toResponse()
+
+                notifyObservers {
+                    onExternalResource(
+                            url = url,
+                            contentLength = contentLength,
+                            contentType = contentType,
+                            fileName = fileName,
+                            response = response,
+                            isPrivate = privateMode
+                    )
+                }
             }
         }
 
@@ -994,6 +1050,7 @@ class GeckoEngineSession(
         geckoSession.promptDelegate = GeckoPromptDelegate(this)
         geckoSession.historyDelegate = createHistoryDelegate()
         geckoSession.mediaDelegate = GeckoMediaDelegate(this)
+        geckoSession.mediaSessionDelegate = GeckoMediaSessionDelegate(this)
         geckoSession.scrollDelegate = createScrollDelegate()
     }
 

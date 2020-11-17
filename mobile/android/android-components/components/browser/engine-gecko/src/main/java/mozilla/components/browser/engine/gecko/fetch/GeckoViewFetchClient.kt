@@ -62,7 +62,7 @@ class GeckoViewFetchClient(
                 fetchFlags += GeckoWebExecutor.FETCH_FLAGS_NO_REDIRECTS
             }
             val webResponse = executor.fetch(webRequest, fetchFlags).poll(readTimeOutMillis)
-            webResponse?.toResponse(request.isBlobUri()) ?: throw IOException("Fetch failed with null response")
+            webResponse?.toResponse() ?: throw IOException("Fetch failed with null response")
         } catch (e: TimeoutException) {
             throw SocketTimeoutException()
         } catch (e: WebRequestError) {
@@ -103,12 +103,13 @@ private fun WebRequest.Builder.addBodyFrom(request: Request): WebRequest.Builder
     return this
 }
 
-@VisibleForTesting
-internal fun WebResponse.toResponse(isBlobUri: Boolean): Response {
+internal fun WebResponse.toResponse(): Response {
+    val isBlobUri = uri.startsWith("blob:")
+    val isDataUri = uri.startsWith("data:")
     val headers = translateHeaders(this)
-    // We use the same API for blobs and HTTP requests, but blobs won't receive a status code.
+    // We use the same API for blobs,data URLs and HTTP requests, but blobs won't receive a status code.
     // If no exception is thrown we assume success.
-    val status = if (isBlobUri) SUCCESS else statusCode
+    val status = if (isBlobUri || isDataUri) SUCCESS else statusCode
     return Response(
         uri,
         status,
