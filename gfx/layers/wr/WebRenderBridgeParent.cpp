@@ -45,7 +45,7 @@
 #endif
 
 #ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
+#  include "mozilla/BaseProfilerMarkerTypes.h"
 #endif
 
 bool is_in_main_thread() { return NS_IsMainThread(); }
@@ -226,46 +226,10 @@ class SceneBuiltNotification : public wr::NotificationHandler {
           auto endTime = TimeStamp::Now();
 #ifdef MOZ_GECKO_PROFILER
           if (profiler_can_accept_markers()) {
-            class ContentFullPaintPayload : public ProfilerMarkerPayload {
-             public:
-              ContentFullPaintPayload(const mozilla::TimeStamp& aStartTime,
-                                      const mozilla::TimeStamp& aEndTime)
-                  : ProfilerMarkerPayload(aStartTime, aEndTime) {}
-              mozilla::ProfileBufferEntryWriter::Length
-              TagAndSerializationBytes() const override {
-                return CommonPropsTagAndSerializationBytes();
-              }
-              void SerializeTagAndPayload(mozilla::ProfileBufferEntryWriter&
-                                              aEntryWriter) const override {
-                static const DeserializerTag tag =
-                    TagForDeserializer(Deserialize);
-                SerializeTagAndCommonProps(tag, aEntryWriter);
-              }
-              void StreamPayload(
-                  mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
-                  const TimeStamp& aProcessStartTime,
-                  UniqueStacks& aUniqueStacks) const override {
-                StreamCommonProps("CONTENT_FULL_PAINT_TIME", aWriter,
-                                  aProcessStartTime, aUniqueStacks);
-              }
-
-             private:
-              explicit ContentFullPaintPayload(CommonProps&& aCommonProps)
-                  : ProfilerMarkerPayload(std::move(aCommonProps)) {}
-              static mozilla::UniquePtr<ProfilerMarkerPayload> Deserialize(
-                  mozilla::ProfileBufferEntryReader& aEntryReader) {
-                ProfilerMarkerPayload::CommonProps props =
-                    DeserializeCommonProps(aEntryReader);
-                return UniquePtr<ProfilerMarkerPayload>(
-                    new ContentFullPaintPayload(std::move(props)));
-              }
-            };
-
-            AUTO_PROFILER_STATS(add_marker_with_ContentFullPaintPayload);
-            profiler_add_marker_for_thread(
-                profiler_current_thread_id(),
-                JS::ProfilingCategoryPair::GRAPHICS, "CONTENT_FULL_PAINT_TIME",
-                ContentFullPaintPayload(startTime, endTime));
+            profiler_add_marker("CONTENT_FULL_PAINT_TIME",
+                                geckoprofiler::category::GRAPHICS,
+                                MarkerTiming::Interval(startTime, endTime),
+                                baseprofiler::markers::ContentBuildMarker{});
           }
 #endif
           Telemetry::Accumulate(
