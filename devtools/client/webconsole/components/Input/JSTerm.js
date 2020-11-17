@@ -45,6 +45,11 @@ loader.lazyRequireGetter(
   true
 );
 loader.lazyRequireGetter(this, "saveAs", "devtools/shared/DevToolsUtils", true);
+loader.lazyRequireGetter(
+  this,
+  "beautify",
+  "devtools/shared/jsbeautify/beautify"
+);
 
 // React & Redux
 const {
@@ -113,6 +118,7 @@ class JSTerm extends Component {
       // Is the input in editor mode.
       editorMode: PropTypes.bool,
       editorWidth: PropTypes.number,
+      editorPrettifiedAt: PropTypes.number,
       showEditorOnboarding: PropTypes.bool,
       autocomplete: PropTypes.bool,
       showEvaluationContextSelector: PropTypes.bool,
@@ -595,6 +601,23 @@ class JSTerm extends Component {
       this.autocompletePopup
     ) {
       this.autocompletePopup.position = nextProps.autocompletePopupPosition;
+    }
+
+    if (
+      nextProps.editorPrettifiedAt &&
+      nextProps.editorPrettifiedAt !== this.props.editorPrettifiedAt
+    ) {
+      this._setValue(
+        beautify.js(this._getValue(), {
+          // Read directly from prefs because this.editor.config.indentUnit and
+          // this.editor.getOption('indentUnit') are not really synced with
+          // prefs.
+          indent_size: Services.prefs.getIntPref("devtools.editor.tabsize"),
+          indent_with_tabs: !Services.prefs.getBoolPref(
+            "devtools.editor.expandtab"
+          ),
+        })
+      );
     }
   }
 
@@ -1548,6 +1571,7 @@ function mapStateToProps(state) {
     showEditorOnboarding: state.ui.showEditorOnboarding,
     showEvaluationContextSelector: state.ui.showEvaluationContextSelector,
     autocompletePopupPosition: state.prefs.eagerEvaluation ? "top" : "bottom",
+    editorPrettifiedAt: state.ui.editorPrettifiedAt,
   };
 }
 

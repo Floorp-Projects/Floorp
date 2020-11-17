@@ -9,6 +9,7 @@ const {
   EVALUATE_EXPRESSION,
   SET_TERMINAL_INPUT,
   SET_TERMINAL_EAGER_RESULT,
+  EDITOR_PRETTY_PRINT,
 } = require("devtools/client/webconsole/constants");
 const { getAllPrefs } = require("devtools/client/webconsole/selectors/prefs");
 const {
@@ -364,10 +365,17 @@ function getEagerEvaluationResult(response) {
   return result;
 }
 
+function prettyPrintEditor() {
+  return {
+    type: EDITOR_PRETTY_PRINT,
+  };
+}
+
 module.exports = {
   evaluateExpression,
   focusInput,
   setInputValue,
   terminalInputChanged,
   updateInstantEvaluationResultForCurrentExpression,
+  prettyPrintEditor,
 };
