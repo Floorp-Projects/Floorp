@@ -1615,15 +1615,6 @@ GeckoDriver.prototype.switchToWindow = async function(cmd) {
     try {
       await this.setWindowHandle(found, focus);
       selected = true;
-
-      // Temporarily inform the framescript of the current browsing context to
-      // allow sending the correct page load events. This has to be done until
-      // the framescript is no longer in use (bug 1669172).
-      if (this.context == Context.Content) {
-        await this.listener.setBrowsingContextId(
-          this.contentBrowsingContext.id
-        );
-      }
     } catch (e) {
       logger.error(e);
     }
@@ -1759,14 +1750,6 @@ GeckoDriver.prototype.switchToParentFrame = async function() {
 
   if (MarionettePrefs.useActors) {
     this.contentBrowsingContext = browsingContext;
-
-    // Temporarily inform the framescript of the current browsing context to
-    // allow sending the correct page load events. This has to be done until
-    // the web progress listener is used (bug 1664165).
-    if (this.context == Context.Content) {
-      await this.listener.setBrowsingContextId(browsingContext.id);
-    }
-
     return;
   }
 
@@ -1814,14 +1797,6 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
     );
 
     this.contentBrowsingContext = browsingContext;
-
-    // Temporarily inform the framescript of the current browsing context to
-    // allow sending the correct page load events. This has to be done until
-    // the web progress listener is used (bug 1664165).
-    if (this.context == Context.Content) {
-      await this.listener.setBrowsingContextId(browsingContext.id);
-    }
-
     return;
   }
 
