@@ -265,20 +265,11 @@ class UrlbarInput {
 
   /**
    * Applies styling to the text in the urlbar input, depending on the text.
-   *
-   * @param {boolean} [forceURLFormat]
-   *        Whether to format URLs even when conditions forbid it,
-   *        for example when pageproxystate is not valid.
    */
-  formatValue(forceURLFormat = false) {
-    // If the selected browser is now loading, avoid reformatting.
-    if (!forceURLFormat && this.window.gBrowser.selectedBrowser._isURLLoading) {
-      return;
-    }
-
+  formatValue() {
     // The editor may not exist if the toolbar is not visible.
     if (this.editor) {
-      this.valueFormatter.update(forceURLFormat);
+      this.valueFormatter.update();
     }
   }
 
@@ -322,8 +313,6 @@ class UrlbarInput {
    *        otherwise.
    */
   setURI(uri = null, dueToTabSwitch = false) {
-    this.window.gBrowser.selectedBrowser._isURLLoading = false;
-
     let value = this.window.gBrowser.userTypedValue;
     let valid = false;
 
@@ -350,7 +339,7 @@ class UrlbarInput {
       } else {
         // We should deal with losslessDecodeURI throwing for exotic URIs
         try {
-          value = UrlbarUtils.losslessDecodeURI(uri);
+          value = losslessDecodeURI(uri);
         } catch (ex) {
           value = "about:blank";
         }
@@ -366,10 +355,6 @@ class UrlbarInput {
       valid = true;
     }
 
-    // The proxystate must be set before setting search mode and setting value
-    // below because search mode and formatting value depend on it.
-    this.setPageProxyState(valid ? "valid" : "invalid", dueToTabSwitch);
-
     let isDifferentValidValue = valid && value != this.untrimmedValue;
     this.value = value;
     this.valueIsTyped = !valid;
@@ -379,6 +364,10 @@ class UrlbarInput {
       // cursor position when the user switches windows while typing.
       this.selectionStart = this.selectionEnd = 0;
     }
+
+    // The proxystate must be set before setting search mode below because
+    // search mode depends on it.
+    this.setPageProxyState(valid ? "valid" : "invalid", dueToTabSwitch);
 
     // If we're switching tabs, restore the tab's search mode.  Otherwise, if
     // the URI is valid, exit search mode.  This must happen after setting
@@ -1884,7 +1873,7 @@ class UrlbarInput {
     });
   }
 
-  _setValue(val, allowTrim, forceURLFormat = false) {
+  _setValue(val, allowTrim) {
     // Don't expose internal about:reader URLs to the user.
     let originalUrl = ReaderMode.getOriginalUrlObjectForDisplay(val);
     if (originalUrl) {
@@ -1899,7 +1888,7 @@ class UrlbarInput {
     this.valueIsTyped = false;
     this._resultForCurrentValue = null;
     this.inputField.value = val;
-    this.formatValue(forceURLFormat);
+    this.formatValue();
     this.removeAttribute("actiontype");
 
     // Dispatch ValueChange event for accessibility.
@@ -1929,7 +1918,7 @@ class UrlbarInput {
     try {
       let uri = Services.io.newURI(result.payload.url);
       if (uri) {
-        return UrlbarUtils.losslessDecodeURI(uri);
+        return losslessDecodeURI(uri);
       }
     } catch (ex) {}
 
@@ -2326,8 +2315,7 @@ class UrlbarInput {
   ) {
     // No point in setting these because we'll handleRevert() a few rows below.
     if (openUILinkWhere == "current") {
-      browser._isURLLoading = true;
-      this._setValue(url, true, true);
+      this.value = url;
       browser.userTypedValue = url;
     }
 
@@ -3290,6 +3278,94 @@ function getDroppableData(event) {
   }
   // Handle as text.
   return event.dataTransfer.getData("text/unicode");
+}
+
+/**
+ * Decodes the given URI for displaying it in the address bar without losing
+ * information, such that hitting Enter again will load the same URI.
+ *
+ * @param {nsIURI} aURI
+ *   The URI to decode
+ * @returns {string}
+ *   The decoded URI
+ */
+function losslessDecodeURI(aURI) {
+  let scheme = aURI.scheme;
+  let value = aURI.displaySpec;
+
+  // Try to decode as UTF-8 if there's no encoding sequence that we would break.
+  if (!/%25(?:3B|2F|3F|3A|40|26|3D|2B|24|2C|23)/i.test(value)) {
+    let decodeASCIIOnly = !["https", "http", "file", "ftp"].includes(scheme);
+    if (decodeASCIIOnly) {
+      // This only decodes ascii characters (hex) 20-7e, except 25 (%).
+      // This avoids both cases stipulated below (%-related issues, and \r, \n
+      // and \t, which would be %0d, %0a and %09, respectively) as well as any
+      // non-US-ascii characters.
+      value = value.replace(
+        /%(2[0-4]|2[6-9a-f]|[3-6][0-9a-f]|7[0-9a-e])/g,
+        decodeURI
+      );
+    } else {
+      try {
+        value = decodeURI(value)
+          // decodeURI decodes %25 to %, which creates unintended encoding
+          // sequences. Re-encode it, unless it's part of a sequence that
+          // survived decodeURI, i.e. one for:
+          // ';', '/', '?', ':', '@', '&', '=', '+', '$', ',', '#'
+          // (RFC 3987 section 3.2)
+          .replace(
+            /%(?!3B|2F|3F|3A|40|26|3D|2B|24|2C|23)/gi,
+            encodeURIComponent
+          );
+      } catch (e) {}
+    }
+  }
+
+  // Encode potentially invisible characters:
+  //   U+0000-001F: C0/C1 control characters
+  //   U+007F-009F: commands
+  //   U+00A0, U+1680, U+2000-200A, U+202F, U+205F, U+3000: other spaces
+  //   U+2028-2029: line and paragraph separators
+  //   U+2800: braille empty pattern
+  //   U+FFFC: object replacement character
+  // Encode any trailing whitespace that may be part of a pasted URL, so that it
+  // doesn't get eaten away by the location bar (bug 410726).
+  // Encode all adjacent space chars (U+0020), to prevent spoofing attempts
+  // where they would push part of the URL to overflow the location bar
+  // (bug 1395508). A single space, or the last space if the are many, is
+  // preserved to maintain readability of certain urls. We only do this for the
+  // common space, because others may be eaten when copied to the clipboard, so
+  // it's safer to preserve them encoded.
+  value = value.replace(
+    // eslint-disable-next-line no-control-regex
+    /[\u0000-\u001f\u007f-\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u2800\u3000\ufffc]|[\r\n\t]|\u0020(?=\u0020)|\s$/g,
+    encodeURIComponent
+  );
+
+  // Encode characters that are ignorable, can't be rendered usefully, or may
+  // confuse users.
+  //
+  // Default ignorable characters; ZWNJ (U+200C) and ZWJ (U+200D) are excluded
+  // per bug 582186:
+  //   U+00AD, U+034F, U+06DD, U+070F, U+115F-1160, U+17B4, U+17B5, U+180B-180E,
+  //   U+2060, U+FEFF, U+200B, U+2060-206F, U+3164, U+FE00-FE0F, U+FFA0,
+  //   U+FFF0-FFFB, U+1D173-1D17A (U+D834 + DD73-DD7A),
+  //   U+E0000-E0FFF (U+DB40-DB43 + U+DC00-DFFF)
+  // Bidi control characters (RFC 3987 sections 3.2 and 4.1 paragraph 6):
+  //   U+061C, U+200E, U+200F, U+202A-202E, U+2066-2069
+  // Other format characters in the Cf category that are unlikely to be rendered
+  // usefully:
+  //   U+0600-0605, U+08E2, U+110BD (U+D804 + U+DCBD),
+  //   U+110CD (U+D804 + U+DCCD), U+13430-13438 (U+D80D + U+DC30-DC38),
+  //   U+1BCA0-1BCA3 (U+D82F + U+DCA0-DCA3)
+  // Mimicking UI parts:
+  //   U+1F50F-1F513 (U+D83D + U+DD0F-DD13), U+1F6E1 (U+D83D + U+DEE1)
+  value = value.replace(
+    // eslint-disable-next-line no-misleading-character-class
+    /[\u00ad\u034f\u061c\u06dd\u070f\u115f\u1160\u17b4\u17b5\u180b-\u180e\u200b\u200e\u200f\u202a-\u202e\u2060-\u206f\u3164\u0600-\u0605\u08e2\ufe00-\ufe0f\ufeff\uffa0\ufff0-\ufffb]|\ud804[\udcbd\udccd]|\ud80d[\udc30-\udc38]|\ud82f[\udca0-\udca3]|\ud834[\udd73-\udd7a]|[\udb40-\udb43][\udc00-\udfff]|\ud83d[\udd0f-\udd13\udee1]/g,
+    encodeURIComponent
+  );
+  return value;
 }
 
 /**
