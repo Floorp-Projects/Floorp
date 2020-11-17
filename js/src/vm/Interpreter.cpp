@@ -314,25 +314,28 @@ JSFunction* js::MakeDefaultConstructor(JSContext* cx, HandleScript script,
     return nullptr;
   }
 
-  // Clone bytecode from template function.
-  // NOTE: This will inherit the SelfHosted flag and SourceExtent from the
-  //       source script, but these will be fixed below.
-  MOZ_ASSERT(sourceFun->enclosingScope()->is<GlobalScope>());
-  RootedScope enclosingScope(cx, &cx->global()->emptyGlobalScope());
-  Rooted<ScriptSourceObject*> sourceObject(cx, script->sourceObject());
-  if (!CloneScriptIntoFunction(cx, enclosingScope, ctor, sourceScript,
-                               sourceObject)) {
-    return nullptr;
-  }
-  RootedScript ctorScript(cx, ctor->nonLazyScript());
-
   // Override the source span needs for toString. Calling toString on a class
   // constructor should return the class declaration, not the source for the
   // (self-hosted) constructor function.
   unsigned column;
   unsigned line = PCToLineNumber(script, pc, &column);
-  ctorScript->setDefaultClassConstructorSpan(classStartOffset, classEndOffset,
-                                             line, column);
+  SourceExtent classExtent = SourceExtent::makeClassExtent(
+      classStartOffset, classEndOffset, line, column);
+
+  // Clone bytecode from template function.
+  MOZ_ASSERT(sourceFun->enclosingScope()->is<GlobalScope>());
+  RootedScope enclosingScope(cx, &cx->global()->emptyGlobalScope());
+  Rooted<ScriptSourceObject*> sourceObject(cx, script->sourceObject());
+  if (!CloneScriptIntoFunction(cx, enclosingScope, ctor, sourceScript,
+                               sourceObject, &classExtent)) {
+    return nullptr;
+  }
+  RootedScript ctorScript(cx, ctor->nonLazyScript());
+
+  // Even though the script was cloned from the self-hosted template, we cannot
+  // delazify back to a SelfHostedLazyScript. The script is no longer marked as
+  // SelfHosted either.
+  ctorScript->clearAllowRelazify();
 
   MOZ_RELEASE_ASSERT(!IsTypeInferenceEnabled());
 

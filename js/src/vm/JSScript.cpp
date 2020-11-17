@@ -1250,25 +1250,6 @@ template XDRResult js::XDRLazyScript(XDRState<XDR_DECODE>*, HandleScope,
                                      HandleScriptSourceObject, HandleFunction,
                                      MutableHandle<BaseScript*>);
 
-void JSScript::setDefaultClassConstructorSpan(uint32_t start, uint32_t end,
-                                              unsigned line, unsigned column) {
-  extent_.toStringStart = start;
-  extent_.toStringEnd = end;
-  extent_.sourceStart = start;
-  extent_.sourceEnd = end;
-  extent_.lineno = line;
-  extent_.column = column;
-
-  // Since this script has been changed to point into the user's source, we
-  // can clear its self-hosted flag, allowing Debugger to see it.
-  clearFlag(ImmutableFlags::SelfHosted);
-
-  // Even though the script was cloned from the self-hosted template, we cannot
-  // delazify back to a SelfHostedLazyScript. The script is no longer marked as
-  // SelfHosted either.
-  clearAllowRelazify();
-}
-
 bool JSScript::initScriptCounts(JSContext* cx) {
   MOZ_ASSERT(!hasScriptCounts());
 
@@ -3694,7 +3675,7 @@ void PrivateScriptData::trace(JSTracer* trc) {
 /*static*/
 JSScript* JSScript::Create(JSContext* cx, js::HandleObject functionOrGlobal,
                            js::HandleScriptSourceObject sourceObject,
-                           SourceExtent extent,
+                           const SourceExtent& extent,
                            js::ImmutableScriptFlags flags) {
   return static_cast<JSScript*>(
       BaseScript::New(cx, functionOrGlobal, sourceObject, extent, flags));
@@ -3748,7 +3729,6 @@ bool JSScript::fullyInitFromStencil(
     JSContext* cx, frontend::CompilationInfo& compilationInfo,
     frontend::CompilationGCOutput& gcOutput, HandleScript script,
     const frontend::ScriptStencil& scriptStencil, HandleFunction fun) {
-  ImmutableScriptFlags lazyFlags;
   MutableScriptFlags lazyMutableFlags;
   RootedScope lazyEnclosingScope(cx);
 
@@ -3773,7 +3753,6 @@ bool JSScript::fullyInitFromStencil(
   // If we are using an existing lazy script, record enough info to be able to
   // rollback on failure.
   if (script->isReadyForDelazification()) {
-    lazyFlags = script->immutableFlags_;
     lazyMutableFlags = script->mutableFlags_;
     lazyEnclosingScope = script->releaseEnclosingScope();
     script->swapData(lazyData.get());
@@ -3784,7 +3763,6 @@ bool JSScript::fullyInitFromStencil(
   // just need to clear bytecode to mark script as incomplete.
   auto rollbackGuard = mozilla::MakeScopeExit([&] {
     if (lazyEnclosingScope) {
-      script->immutableFlags_ = lazyFlags;
       script->mutableFlags_ = lazyMutableFlags;
       script->warmUpData_.initEnclosingScope(lazyEnclosingScope);
       script->swapData(lazyData.get());
@@ -4368,7 +4346,8 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
 static JSScript* CopyScriptImpl(JSContext* cx, HandleScript src,
                                 HandleObject functionOrGlobal,
                                 HandleScriptSourceObject sourceObject,
-                                MutableHandle<GCVector<Scope*>> scopes) {
+                                MutableHandle<GCVector<Scope*>> scopes,
+                                SourceExtent* maybeClassExtent = nullptr) {
   if (src->treatAsRunOnce()) {
     MOZ_ASSERT(!src->isFunction());
     JS_ReportErrorASCII(cx, "No cloning toplevel run-once scripts");
@@ -4380,13 +4359,30 @@ static JSScript* CopyScriptImpl(JSContext* cx, HandleScript src,
   // Some embeddings are not careful to use ExposeObjectToActiveJS as needed.
   JS::AssertObjectIsNotGray(sourceObject);
 
+  // When cloning is for `MakeDefaultConstructor`, the SourceExtent will be
+  // provided by caller instead of copying from `src`.
+  const SourceExtent& extent =
+      maybeClassExtent ? *maybeClassExtent : src->extent();
+
   ImmutableScriptFlags flags = src->immutableFlags();
   flags.setFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,
                 scopes[0]->hasOnChain(ScopeKind::NonSyntactic));
 
+  // When this clone is for `MakeDefaultConstructor` we also want to clear the
+  // SelfHosted flag. This is a hack to do it here, but ensures that the flags
+  // are not modified after the JSScript is created.
+  if (maybeClassExtent) {
+    flags.clearFlag(JSScript::ImmutableFlags::SelfHosted);
+  }
+
+  // FunctionFlags and ImmutableScriptFlags should agree on self-hosting status.
+  MOZ_ASSERT_IF(functionOrGlobal->is<JSFunction>(),
+                functionOrGlobal->as<JSFunction>().isSelfHostedBuiltin() ==
+                    flags.hasFlag(JSScript::ImmutableFlags::SelfHosted));
+
   // Create a new JSScript to fill in.
-  RootedScript dst(cx, JSScript::Create(cx, functionOrGlobal, sourceObject,
-                                        src->extent(), flags));
+  RootedScript dst(
+      cx, JSScript::Create(cx, functionOrGlobal, sourceObject, extent, flags));
   if (!dst) {
     return nullptr;
   }
@@ -4443,9 +4439,10 @@ JSScript* js::CloneGlobalScript(JSContext* cx, ScopeKind scopeKind,
   return dst;
 }
 
-JSScript* js::CloneScriptIntoFunction(
-    JSContext* cx, HandleScope enclosingScope, HandleFunction fun,
-    HandleScript src, Handle<ScriptSourceObject*> sourceObject) {
+JSScript* js::CloneScriptIntoFunction(JSContext* cx, HandleScope enclosingScope,
+                                      HandleFunction fun, HandleScript src,
+                                      Handle<ScriptSourceObject*> sourceObject,
+                                      SourceExtent* maybeClassExtent) {
   // We are either delazifying a self-hosted lazy function or the function
   // should be in an inactive state.
   MOZ_ASSERT(fun->isIncomplete() || fun->hasSelfHostedLazyScript());
@@ -4479,7 +4476,8 @@ JSScript* js::CloneScriptIntoFunction(
 
   // Save flags in case we need to undo the early mutations.
   const FunctionFlags preservedFlags = fun->flags();
-  RootedScript dst(cx, CopyScriptImpl(cx, src, fun, sourceObject, &scopes));
+  RootedScript dst(cx, CopyScriptImpl(cx, src, fun, sourceObject, &scopes,
+                                      maybeClassExtent));
   if (!dst) {
     fun->setFlags(preservedFlags);
     return nullptr;

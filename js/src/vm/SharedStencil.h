@@ -200,6 +200,11 @@ struct SourceExtent {
     return SourceExtent(0, len, 0, len, lineno, column);
   }
 
+  static SourceExtent makeClassExtent(uint32_t start, uint32_t end,
+                                      uint32_t lineno, uint32_t column) {
+    return SourceExtent(start, end, start, end, lineno, column);
+  }
+
   uint32_t sourceStart = 0;
   uint32_t sourceEnd = 0;
   uint32_t toStringStart = 0;
