@@ -1348,26 +1348,22 @@ pub mod test_helpers {
         ($T:ty, $fname:ident) => {
             #[no_mangle]
             #[allow(non_snake_case)]
-            pub extern "C" fn $fname(size: *mut usize, align: *mut usize) {
-                unsafe {
-                    *size = mem::size_of::<$T>();
-                    *align = mem::align_of::<$T>();
-                }
+            pub unsafe extern "C" fn $fname(size: *mut usize, align: *mut usize) {
+                *size = mem::size_of::<$T>();
+                *align = mem::align_of::<$T>();
             }
         };
         ($T:ty, $U:ty, $V:ty, $fname:ident) => {
             #[no_mangle]
             #[allow(non_snake_case)]
-            pub extern "C" fn $fname(size: *mut usize, align: *mut usize) {
-                unsafe {
-                    *size = mem::size_of::<$T>();
-                    *align = mem::align_of::<$T>();
+            pub unsafe extern "C" fn $fname(size: *mut usize, align: *mut usize) {
+                *size = mem::size_of::<$T>();
+                *align = mem::align_of::<$T>();
 
-                    assert_eq!(*size, mem::size_of::<$U>());
-                    assert_eq!(*align, mem::align_of::<$U>());
-                    assert_eq!(*size, mem::size_of::<$V>());
-                    assert_eq!(*align, mem::align_of::<$V>());
-                }
+                assert_eq!(*size, mem::size_of::<$U>());
+                assert_eq!(*align, mem::align_of::<$U>());
+                assert_eq!(*size, mem::size_of::<$V>());
+                assert_eq!(*align, mem::align_of::<$V>());
             }
         };
     }
@@ -1395,38 +1391,36 @@ pub mod test_helpers {
         ($T:ty, $U:ty, $V:ty, $member:ident, $method:ident) => {
             #[no_mangle]
             #[allow(non_snake_case)]
-            pub extern "C" fn $method(size: *mut usize, align: *mut usize, offset: *mut usize) {
-                unsafe {
-                    // Create a temporary value of type T to get offsets, sizes
-                    // and alignments from.
-                    let tmp: mem::MaybeUninit<$T> = mem::MaybeUninit::uninit();
-                    // FIXME: This should use &raw references when available,
-                    // this is technically UB as it creates a reference to
-                    // uninitialized memory, but there's no better way to do
-                    // this right now.
-                    let tmp = &*tmp.as_ptr();
-                    *size = mem::size_of_val(&tmp.$member);
-                    *align = mem::align_of_val(&tmp.$member);
-                    *offset = (&tmp.$member as *const _ as usize) - (tmp as *const $T as usize);
+            pub unsafe extern "C" fn $method(size: *mut usize, align: *mut usize, offset: *mut usize) {
+                // Create a temporary value of type T to get offsets, sizes
+                // and alignments from.
+                let tmp: mem::MaybeUninit<$T> = mem::MaybeUninit::uninit();
+                // FIXME: This should use &raw references when available,
+                // this is technically UB as it creates a reference to
+                // uninitialized memory, but there's no better way to do
+                // this right now.
+                let tmp = &*tmp.as_ptr();
+                *size = mem::size_of_val(&tmp.$member);
+                *align = mem::align_of_val(&tmp.$member);
+                *offset = (&tmp.$member as *const _ as usize) - (tmp as *const $T as usize);
 
-                    let tmp: mem::MaybeUninit<$U> = mem::MaybeUninit::uninit();
-                    let tmp = &*tmp.as_ptr();
-                    assert_eq!(*size, mem::size_of_val(&tmp.hdr.$member));
-                    assert_eq!(*align, mem::align_of_val(&tmp.hdr.$member));
-                    assert_eq!(
-                        *offset,
-                        (&tmp.hdr.$member as *const _ as usize) - (tmp as *const $U as usize)
-                    );
+                let tmp: mem::MaybeUninit<$U> = mem::MaybeUninit::uninit();
+                let tmp = &*tmp.as_ptr();
+                assert_eq!(*size, mem::size_of_val(&tmp.hdr.$member));
+                assert_eq!(*align, mem::align_of_val(&tmp.hdr.$member));
+                assert_eq!(
+                    *offset,
+                    (&tmp.hdr.$member as *const _ as usize) - (tmp as *const $U as usize)
+                );
 
-                    let tmp: mem::MaybeUninit<$V> = mem::MaybeUninit::uninit();
-                    let tmp = &*tmp.as_ptr();
-                    assert_eq!(*size, mem::size_of_val(&tmp.hdr.$member));
-                    assert_eq!(*align, mem::align_of_val(&tmp.hdr.$member));
-                    assert_eq!(
-                        *offset,
-                        (&tmp.hdr.$member as *const _ as usize) - (tmp as *const $V as usize)
-                    );
-                }
+                let tmp: mem::MaybeUninit<$V> = mem::MaybeUninit::uninit();
+                let tmp = &*tmp.as_ptr();
+                assert_eq!(*size, mem::size_of_val(&tmp.hdr.$member));
+                assert_eq!(*align, mem::align_of_val(&tmp.hdr.$member));
+                assert_eq!(
+                    *offset,
+                    (&tmp.hdr.$member as *const _ as usize) - (tmp as *const $V as usize)
+                );
             }
         };
     }
@@ -1490,7 +1484,7 @@ pub mod test_helpers {
 
     #[no_mangle]
     #[allow(non_snake_case)]
-    pub extern "C" fn Rust_Test_NsStringFlags(
+    pub unsafe extern "C" fn Rust_Test_NsStringFlags(
         f_terminated: *mut u16,
         f_voided: *mut u16,
         f_refcounted: *mut u16,
@@ -1500,29 +1494,25 @@ pub mod test_helpers {
         f_class_inline: *mut u16,
         f_class_null_terminated: *mut u16,
     ) {
-        unsafe {
-            *f_terminated = DataFlags::TERMINATED.bits();
-            *f_voided = DataFlags::VOIDED.bits();
-            *f_refcounted = DataFlags::REFCOUNTED.bits();
-            *f_owned = DataFlags::OWNED.bits();
-            *f_inline = DataFlags::INLINE.bits();
-            *f_literal = DataFlags::LITERAL.bits();
-            *f_class_inline = ClassFlags::INLINE.bits();
-            *f_class_null_terminated = ClassFlags::NULL_TERMINATED.bits();
-        }
+        *f_terminated = DataFlags::TERMINATED.bits();
+        *f_voided = DataFlags::VOIDED.bits();
+        *f_refcounted = DataFlags::REFCOUNTED.bits();
+        *f_owned = DataFlags::OWNED.bits();
+        *f_inline = DataFlags::INLINE.bits();
+        *f_literal = DataFlags::LITERAL.bits();
+        *f_class_inline = ClassFlags::INLINE.bits();
+        *f_class_null_terminated = ClassFlags::NULL_TERMINATED.bits();
     }
 
     #[no_mangle]
     #[allow(non_snake_case)]
-    pub extern "C" fn Rust_InlineCapacityFromRust(
+    pub unsafe extern "C" fn Rust_InlineCapacityFromRust(
         cstring: *const nsACString,
         string: *const nsAString,
         cstring_capacity: *mut usize,
         string_capacity: *mut usize,
     ) {
-        unsafe {
-            *cstring_capacity = (*cstring).inline_capacity().unwrap();
-            *string_capacity = (*string).inline_capacity().unwrap();
-        }
+        *cstring_capacity = (*cstring).inline_capacity().unwrap();
+        *string_capacity = (*string).inline_capacity().unwrap();
     }
 }
