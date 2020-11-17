@@ -799,9 +799,6 @@ TEST(GeckoProfiler, Markers)
                                      (ts1, ts2, JS::UniqueChars(buffer)));
   }
 
-  PROFILER_ADD_MARKER_WITH_PAYLOAD("LogMarkerPayload marker", OTHER,
-                                   LogMarkerPayload, ("module", "text", ts1));
-
   PROFILER_ADD_MARKER_WITH_PAYLOAD("NativeAllocationMarkerPayload marker",
                                    OTHER, NativeAllocationMarkerPayload,
                                    (ts1, 9876543210, 1234, 5678, nullptr));
@@ -908,10 +905,6 @@ TEST(GeckoProfiler, Markers)
                                          {}, geckoprofiler::markers::Text{},
                                          "Text text"));
 
-  MOZ_RELEASE_ASSERT(profiler_add_marker("Log", geckoprofiler::category::OTHER,
-                                         {}, geckoprofiler::markers::Log{},
-                                         "module", "log text"));
-
   MOZ_RELEASE_ASSERT(
       profiler_add_marker("MediaSample", geckoprofiler::category::OTHER, {},
                           geckoprofiler::markers::MediaSample{}, 123, 456));
@@ -962,7 +955,6 @@ TEST(GeckoProfiler, Markers)
     S_GCMajorMarkerPayload,
     S_GCMinorMarkerPayload,
     S_GCSliceMarkerPayload,
-    S_LogMarkerPayload,
     S_NativeAllocationMarkerPayload,
     S_NetworkMarkerPayload_start,
     S_NetworkMarkerPayload_stop,
@@ -1335,15 +1327,6 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_TRUE(payload["stack"].isNull());
                 EXPECT_EQ_JSON(payload["timings"], Int, 44);
 
-              } else if (nameString == "LogMarkerPayload marker") {
-                EXPECT_EQ(state, S_LogMarkerPayload);
-                state = State(S_LogMarkerPayload + 1);
-                EXPECT_EQ(typeString, "Log");
-                EXPECT_TIMING_INSTANT_AT(ts1Double);
-                EXPECT_TRUE(payload["stack"].isNull());
-                EXPECT_EQ_JSON(payload["name"], String, "text");
-                EXPECT_EQ_JSON(payload["module"], String, "module");
-
               } else if (nameString == "NativeAllocationMarkerPayload marker") {
                 EXPECT_EQ(state, S_NativeAllocationMarkerPayload);
                 state = State(S_NativeAllocationMarkerPayload + 1);
@@ -1715,7 +1698,6 @@ TEST(GeckoProfiler, Markers)
                   testedSchemaNames.end());
       EXPECT_TRUE(testedSchemaNames.find("UserTimingMeasure") !=
                   testedSchemaNames.end());
-      EXPECT_TRUE(testedSchemaNames.find("Log") != testedSchemaNames.end());
       EXPECT_TRUE(testedSchemaNames.find("MediaSample") !=
                   testedSchemaNames.end());
     }  // markerSchema
