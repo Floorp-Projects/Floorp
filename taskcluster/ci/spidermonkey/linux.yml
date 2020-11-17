@@ -70,16 +70,6 @@ sm-plain-linux64/opt:
     run:
         spidermonkey-variant: plain
 
-sm-nowarp-linux64/debug:
-    description: "Spidermonkey No Warp"
-    index:
-        job-name: sm-plain-linux64-nowarp
-    treeherder:
-        platform: linux64/debug
-        symbol: SM(nowarp)
-    run:
-        spidermonkey-variant: nowarpdebug
-
 sm-smoosh-linux64/debug:
     description: "Spidermonkey SmooshMonkey"
     index:
@@ -116,18 +106,6 @@ sm-smoosh-linux64/opt:
             - linux64-rust
             - linux64-cbindgen
             - linux64-dump-syms
-    run-on-projects: ['mozilla-central']
-
-sm-warp-linux64/debug:
-    description: "Spidermonkey WarpBuilder"
-    index:
-        job-name: sm-warp-linux64-debug
-    treeherder:
-        platform: linux64/debug
-        symbol: SM(warp)
-        tier: 2
-    run:
-        spidermonkey-variant: warpdebug
     run-on-projects: ['mozilla-central']
 
 sm-nojit-linux64/opt:

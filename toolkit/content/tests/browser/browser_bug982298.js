@@ -34,7 +34,7 @@ add_task(async function() {
       let textarea = content.document.getElementById("textarea1");
       textarea.scrollTop = textarea.scrollHeight;
     });
-    await BrowserTestUtils.loadURI(browser, "about:blank");
+    BrowserTestUtils.loadURI(browser, "about:blank");
     await BrowserTestUtils.browserLoaded(browser);
 
     ok(

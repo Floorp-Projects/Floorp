@@ -236,16 +236,8 @@ MDefinition::AliasType AliasAnalysis::genericMightAlias(
     return MDefinition::AliasType::MayAlias;
   }
 
-  if (!loadObject->resultTypeSet() || !storeObject->resultTypeSet()) {
-    return MDefinition::AliasType::MayAlias;
-  }
-
-  if (loadObject->resultTypeSet()->objectsIntersect(
-          storeObject->resultTypeSet())) {
-    return MDefinition::AliasType::MayAlias;
-  }
-
-  return MDefinition::AliasType::NoAlias;
+  // TODO(no-TI): remove this function.
+  return MDefinition::AliasType::MayAlias;
 }
 
 // Whether there might be a path from src to dest, excluding loop backedges.

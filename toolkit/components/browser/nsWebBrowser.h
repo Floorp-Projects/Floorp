@@ -102,8 +102,8 @@ class nsWebBrowser final : public nsIWebBrowser,
   NS_DECL_NSIWEBPROGRESSLISTENER
 
   void SetAllowDNSPrefetch(bool aAllowPrefetch);
-  void FocusActivate();
-  void FocusDeactivate();
+  void FocusActivate(uint64_t aActionId);
+  void FocusDeactivate(uint64_t aActionId);
   void SetWillChangeProcess();
 
   static already_AddRefed<nsWebBrowser> Create(

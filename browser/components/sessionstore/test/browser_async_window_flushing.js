@@ -38,12 +38,8 @@ add_task(async function test_add_interesting_window() {
     content.location = newPage;
   });
 
-  if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-    let tab = newWin.gBrowser.selectedTab;
-    await promiseOnHistoryReplaceEntry(tab);
-  } else {
-    await promiseOnHistoryReplaceEntryInChild(browser);
-  }
+  await promiseOnHistoryReplaceEntry(browser);
+
   // Clear out the userTypedValue so that the new window looks like
   // it's really not worth restoring.
   browser.userTypedValue = null;

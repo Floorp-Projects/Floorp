@@ -276,9 +276,12 @@ class UniquePtr {
     return *this;
   }
 
-  std::add_lvalue_reference_t<T> operator*() const { return *get(); }
+  std::add_lvalue_reference_t<T> operator*() const {
+    MOZ_ASSERT(get(), "dereferencing a UniquePtr containing nullptr with *");
+    return *get();
+  }
   Pointer operator->() const {
-    MOZ_ASSERT(get(), "dereferencing a UniquePtr containing nullptr");
+    MOZ_ASSERT(get(), "dereferencing a UniquePtr containing nullptr with ->");
     return get();
   }
 

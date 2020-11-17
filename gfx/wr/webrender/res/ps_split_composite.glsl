@@ -47,11 +47,12 @@ struct SplitCompositeInstance {
 
 SplitCompositeInstance fetch_composite_instance() {
     SplitCompositeInstance ci;
+    ivec4 data = raw_instance_data();
 
-    ci.prim_header_index = aData.x;
-    ci.polygons_address = aData.y;
-    ci.z = float(aData.z);
-    ci.render_task_index = aData.w;
+    ci.prim_header_index = data.x;
+    ci.polygons_address = data.y;
+    ci.z = float(data.z);
+    ci.render_task_index = data.w;
 
     return ci;
 }

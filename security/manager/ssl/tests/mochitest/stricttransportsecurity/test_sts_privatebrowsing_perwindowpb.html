@@ -68,7 +68,7 @@
       await new Promise(resolve => whenDelayedStartupFinished(win, resolve));
 
       let browser = win.gBrowser.selectedBrowser;
-      await BrowserTestUtils.loadURI(browser, CONTENT_PAGE);
+      BrowserTestUtils.loadURI(browser, CONTENT_PAGE);
       await BrowserTestUtils.browserLoaded(browser);
 
       aCallback(win);

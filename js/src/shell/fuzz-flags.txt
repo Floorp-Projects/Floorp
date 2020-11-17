@@ -53,8 +53,6 @@
 --spectre-mitigations=off
 --spectre-mitigations=on
 --more-compartments
---warp
---no-warp
 --fast-warmup
 
 # GC-related

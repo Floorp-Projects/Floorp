@@ -8,6 +8,52 @@ We additionally have some capabilities that largely are implementation
 concerns that normal users should not care about:
 
 
+`moz:debuggerAddress`
+--------------------
+
+A boolean value to indicate if Firefox has to be started with the
+[Remote Protocol] enabled, which is a low-level debugging interface that
+implements a subset of the [Chrome DevTools Protocol] (CDP).
+
+When enabled the returned `moz:debuggerAddress` capability of the `New Session`
+command is the `host:port` combination of a server that supports the following
+HTTP endpoints:
+
+### GET /json/version
+
+The browser version metadata:
+
+    {
+        "Browser": "Firefox/84.0a1",
+        "Protocol-Version": "1.0",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:84.0) Gecko/20100101 Firefox/84.0",
+        "V8-Version": "1.0",
+        "WebKit-Version": "1.0",
+        "webSocketDebuggerUrl": "ws://localhost:9222/devtools/browser/fe507083-2960-a442-bbd7-7dfe1f111c05"
+    }
+
+### GET /json/list
+
+A list of all available websocket targets:
+
+    [ {
+        "description": "",
+        "devtoolsFrontendUrl": null,
+        "faviconUrl": "",
+        "id": "ecbf9028-676a-1b40-8596-a5edc0e2875b",
+        "type": "page",
+        "url": "https://www.mozilla.org/en-US/",
+        "browsingContextId": 29,
+        "webSocketDebuggerUrl": "ws://localhost:9222/devtools/page/ecbf9028-676a-1b40-8596-a5edc0e2875b"
+    } ]
+
+The contained `webSocketDebuggerUrl` entries can be used to connect to the
+websocket and interact with the browser by using the CDP protocol.
+
+[Remote Protocol]: /testing/remote/doc/
+[Chrome DevTools Protocol]: https://chromedevtools.github.io/devtools-protocol/
+
+
 `moz:useNonSpecCompliantPointerOrigin`
 --------------------------------------
 

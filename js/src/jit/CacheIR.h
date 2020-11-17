@@ -1447,6 +1447,7 @@ class MOZ_RAII BindNameIRGenerator : public IRGenerator {
 };
 
 // Information used by SetProp/SetElem stubs to check/update property types.
+// TODO(no-TI): remove.
 class MOZ_RAII PropertyTypeCheckInfo {
   RootedObjectGroup group_;
   RootedId id_;
@@ -1745,7 +1746,6 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   HandleValue newTarget_;
   HandleValueArray args_;
   PropertyTypeCheckInfo typeCheckInfo_;
-  BaselineCacheIRStubKind cacheIRStubKind_;
 
   ScriptedThisResult getThisForScripted(HandleFunction calleeFunc,
                                         MutableHandleObject result);
@@ -1886,8 +1886,6 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachStub();
 
   AttachDecision tryAttachDeferredStub(HandleValue result);
-
-  BaselineCacheIRStubKind cacheIRStubKind() const { return cacheIRStubKind_; }
 
   const PropertyTypeCheckInfo* typeCheckInfo() const { return &typeCheckInfo_; }
 };

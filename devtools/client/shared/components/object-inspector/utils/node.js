@@ -281,11 +281,8 @@ function nodeNeedsNumericalBuckets(item) {
   );
 }
 
-function makeNodesForPromiseProperties(item) {
-  const {
-    promiseState: { reason, value, state },
-  } = getValue(item);
-
+function makeNodesForPromiseProperties(loadedProps, item) {
+  const { reason, value, state } = loadedProps.promiseState;
   const properties = [];
 
   if (state) {
@@ -577,10 +574,6 @@ function makeNodesForProperties(objProps, parent) {
     }, this);
   }
 
-  if (nodeIsPromise(parent)) {
-    nodes.push(...makeNodesForPromiseProperties(parent));
-  }
-
   if (nodeHasEntries(parent)) {
     nodes.push(makeNodesForEntries(parent));
   }
@@ -803,6 +796,10 @@ function getChildren(options) {
 
   if (nodeIsMapEntry(item)) {
     return addToCache(makeNodesForMapEntry(item));
+  }
+
+  if (nodeIsPromise(item) && hasLoadedProps) {
+    return addToCache(makeNodesForPromiseProperties(loadedProps, item));
   }
 
   if (nodeIsProxy(item) && hasLoadedProps) {

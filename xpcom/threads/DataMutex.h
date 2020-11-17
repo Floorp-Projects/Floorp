@@ -37,7 +37,7 @@ namespace mozilla {
 //
 template <typename T, typename MutexType>
 class DataMutexBase {
- private:
+ public:
   class MOZ_STACK_CLASS AutoLock {
    public:
     T* operator->() const& { return &ref(); }
@@ -84,7 +84,6 @@ class DataMutexBase {
     DataMutexBase<T, MutexType>* mOwner;
   };
 
- public:
   explicit DataMutexBase(const char* aName) : mMutex(aName) {}
 
   DataMutexBase(T&& aValue, const char* aName)

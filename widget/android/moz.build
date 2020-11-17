@@ -143,7 +143,6 @@ UNIFIED_SOURCES += [
     "nsUserIdleServiceAndroid.cpp",
     "nsWidgetFactory.cpp",
     "nsWindow.cpp",
-    "ProcInfo.cpp",
     "ScreenHelperAndroid.cpp",
     "WebExecutorSupport.cpp",
 ]

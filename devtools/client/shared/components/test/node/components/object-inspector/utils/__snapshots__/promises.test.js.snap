@@ -13,12 +13,6 @@ Array [
         "value": Object {
           "actor": "server2.conn2.child1/obj36",
           "class": "Promise",
-          "promiseState": Object {
-            "reason": Object {
-              "type": "3",
-            },
-            "state": "rejected",
-          },
           "type": "object",
         },
       },
@@ -42,12 +36,6 @@ Array [
         "value": Object {
           "actor": "server2.conn2.child1/obj36",
           "class": "Promise",
-          "promiseState": Object {
-            "reason": Object {
-              "type": "3",
-            },
-            "state": "rejected",
-          },
           "type": "object",
         },
       },

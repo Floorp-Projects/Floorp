@@ -250,13 +250,6 @@ bool IonGetPropertyIC::update(JSContext* cx, HandleScript outerScript,
     }
   }
 
-  if (!ic->idempotent()) {
-    // Monitor changes to cache entry.
-    if (!ic->monitoredResult()) {
-      JitScript::MonitorBytecodeType(cx, ic->script(), ic->pc(), res);
-    }
-  }
-
   return true;
 }
 
@@ -294,8 +287,6 @@ bool IonGetPropSuperIC::update(JSContext* cx, HandleScript outerScript,
     }
   }
 
-  // Monitor changes to cache entry.
-  JitScript::MonitorBytecodeType(cx, ic->script(), ic->pc(), res);
   return true;
 }
 

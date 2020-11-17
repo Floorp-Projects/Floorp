@@ -50,6 +50,7 @@ nsresult GfxInfo::Init() {
   mIsWayland = false;
   mIsWaylandDRM = false;
   mIsXWayland = false;
+  mHasMultipleGPUs = false;
   return GfxInfoBase::Init();
 }
 
@@ -68,6 +69,18 @@ void GfxInfo::AddCrashReportAnnotations() {
                                      mIsWaylandDRM);
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::DesktopEnvironment, mDesktopEnvironment);
+
+  if (mHasMultipleGPUs) {
+    nsAutoCString note;
+    note.AppendLiteral("Has dual GPUs.");
+    if (!mSecondaryVendorId.IsEmpty()) {
+      note.AppendLiteral(" GPU #2: AdapterVendorID2: ");
+      note.Append(mSecondaryVendorId);
+      note.AppendLiteral(", AdapterDeviceID2: ");
+      note.Append(mSecondaryDeviceId);
+    }
+    CrashReporter::AppendAppNotesToCrashReport(note);
+  }
 }
 
 void GfxInfo::GetData() {
@@ -141,6 +154,9 @@ void GfxInfo::GetData() {
   nsCString screenInfo;
   nsCString adapterRam;
 
+  AutoTArray<nsCString, 2> pciVendors;
+  AutoTArray<nsCString, 2> pciDevices;
+
   nsCString* stringToFill = nullptr;
 
   char* bufptr = buf;
@@ -151,28 +167,39 @@ void GfxInfo::GetData() {
       if (stringToFill) {
         stringToFill->Assign(line);
         stringToFill = nullptr;
-      } else if (!strcmp(line, "VENDOR"))
+      } else if (!strcmp(line, "VENDOR")) {
         stringToFill = &glVendor;
-      else if (!strcmp(line, "RENDERER"))
+      } else if (!strcmp(line, "RENDERER")) {
         stringToFill = &glRenderer;
-      else if (!strcmp(line, "VERSION"))
+      } else if (!strcmp(line, "VERSION")) {
         stringToFill = &glVersion;
-      else if (!strcmp(line, "TFP"))
+      } else if (!strcmp(line, "TFP")) {
         stringToFill = &textureFromPixmap;
-      else if (!strcmp(line, "MESA_VENDOR_ID"))
+      } else if (!strcmp(line, "MESA_VENDOR_ID")) {
         stringToFill = &mesaVendor;
-      else if (!strcmp(line, "MESA_DEVICE_ID"))
+      } else if (!strcmp(line, "MESA_DEVICE_ID")) {
         stringToFill = &mesaDevice;
-      else if (!strcmp(line, "MESA_ACCELERATED"))
+      } else if (!strcmp(line, "MESA_ACCELERATED")) {
         stringToFill = &mesaAccelerated;
-      else if (!strcmp(line, "MESA_VRAM"))
+      } else if (!strcmp(line, "MESA_VRAM")) {
         stringToFill = &adapterRam;
-      else if (!strcmp(line, "DRI_DRIVER"))
+      } else if (!strcmp(line, "DRI_DRIVER")) {
         stringToFill = &driDriver;
-      else if (!strcmp(line, "SCREEN_INFO"))
+      } else if (!strcmp(line, "SCREEN_INFO")) {
         stringToFill = &screenInfo;
+      } else if (!strcmp(line, "PCI_VENDOR_ID")) {
+        stringToFill = pciVendors.AppendElement();
+      } else if (!strcmp(line, "PCI_DEVICE_ID")) {
+        stringToFill = pciDevices.AppendElement();
+      }
     }
   }
+
+  MOZ_ASSERT(pciDevices.Length() == pciVendors.Length(),
+             "Missing PCI vendors/devices");
+
+  size_t pciLen = std::min(pciVendors.Length(), pciDevices.Length());
+  mHasMultipleGPUs = pciLen > 1;
 
   if (!strcmp(textureFromPixmap.get(), "TRUE")) mHasTextureFromPixmap = true;
 
@@ -326,6 +353,94 @@ void GfxInfo::GetData() {
 
   if (!adapterRam.IsEmpty()) {
     mAdapterRAM = (uint32_t)atoi(adapterRam.get());
+  }
+
+  // If we have the DRI driver, we can derive the vendor ID from that if needed.
+  if (mVendorId.IsEmpty() && !driDriver.IsEmpty()) {
+    const char* nvidiaDrivers[] = {"nouveau", "tegra", nullptr};
+    for (size_t i = 0; nvidiaDrivers[i]; ++i) {
+      if (driDriver.Equals(nvidiaDrivers[i])) {
+        CopyUTF16toUTF8(GfxDriverInfo::GetDeviceVendor(DeviceVendor::NVIDIA),
+                        mVendorId);
+        break;
+      }
+    }
+
+    if (mVendorId.IsEmpty()) {
+      const char* intelDrivers[] = {"iris", "i915",  "i965",
+                                    "i810", "intel", nullptr};
+      for (size_t i = 0; intelDrivers[i]; ++i) {
+        if (driDriver.Equals(intelDrivers[i])) {
+          CopyUTF16toUTF8(GfxDriverInfo::GetDeviceVendor(DeviceVendor::Intel),
+                          mVendorId);
+          break;
+        }
+      }
+    }
+
+    if (mVendorId.IsEmpty()) {
+      const char* amdDrivers[] = {"r600",   "r200",     "r100",
+                                  "radeon", "radeonsi", nullptr};
+      for (size_t i = 0; amdDrivers[i]; ++i) {
+        if (driDriver.Equals(amdDrivers[i])) {
+          CopyUTF16toUTF8(GfxDriverInfo::GetDeviceVendor(DeviceVendor::ATI),
+                          mVendorId);
+          break;
+        }
+      }
+    }
+
+    if (mVendorId.IsEmpty()) {
+      if (driDriver.EqualsLiteral("freedreno")) {
+        CopyUTF16toUTF8(GfxDriverInfo::GetDeviceVendor(DeviceVendor::Qualcomm),
+                        mVendorId);
+      }
+    }
+  }
+
+  // If we still don't have a vendor ID, we can try the PCI vendor list.
+  if (mVendorId.IsEmpty()) {
+    if (pciVendors.Length() == 1) {
+      mVendorId = pciVendors[0];
+    } else if (pciVendors.IsEmpty()) {
+      NS_WARNING("No GPUs detected via PCI");
+    } else {
+      NS_WARNING("More than 1 GPU detected via PCI, cannot deduce vendor");
+    }
+  }
+
+  // If we know the vendor ID, but didn't get a device ID, we can guess from the
+  // PCI device list.
+  if (mDeviceId.IsEmpty() && !mVendorId.IsEmpty()) {
+    for (size_t i = 0; i < pciLen; ++i) {
+      if (mVendorId.Equals(pciVendors[i])) {
+        if (mDeviceId.IsEmpty()) {
+          mDeviceId = pciDevices[i];
+        } else {
+          NS_WARNING(
+              "More than 1 GPU from same vendor detected via PCI, cannot "
+              "deduce device");
+          mDeviceId.Truncate();
+          break;
+        }
+      }
+    }
+  }
+
+  // Assuming we know the vendor, we should check for a secondary card.
+  if (!mVendorId.IsEmpty()) {
+    if (pciLen > 2) {
+      NS_WARNING(
+          "More than 2 GPUs detected via PCI, secondary GPU is arbitrary");
+    }
+    for (size_t i = 0; i < pciLen; ++i) {
+      if (!mVendorId.Equals(pciVendors[i]) ||
+          (!mDeviceId.IsEmpty() && !mDeviceId.Equals(pciDevices[i]))) {
+        mSecondaryVendorId = pciVendors[i];
+        mSecondaryDeviceId = pciDevices[i];
+        break;
+      }
+    }
   }
 
   // Fallback to GL_VENDOR and GL_RENDERER.
@@ -830,7 +945,9 @@ GfxInfo::GetAdapterVendorID(nsAString& aAdapterVendorID) {
 
 NS_IMETHODIMP
 GfxInfo::GetAdapterVendorID2(nsAString& aAdapterVendorID) {
-  return NS_ERROR_FAILURE;
+  GetData();
+  CopyUTF8toUTF16(mSecondaryVendorId, aAdapterVendorID);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -842,7 +959,9 @@ GfxInfo::GetAdapterDeviceID(nsAString& aAdapterDeviceID) {
 
 NS_IMETHODIMP
 GfxInfo::GetAdapterDeviceID2(nsAString& aAdapterDeviceID) {
-  return NS_ERROR_FAILURE;
+  GetData();
+  CopyUTF8toUTF16(mSecondaryDeviceId, aAdapterDeviceID);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -886,7 +1005,11 @@ GfxInfo::GetDisplayHeight(nsTArray<uint32_t>& aDisplayHeight) {
 }
 
 NS_IMETHODIMP
-GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active) { return NS_ERROR_FAILURE; }
+GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active) {
+  // This is never the case, as the active GPU should be the primary GPU.
+  *aIsGPU2Active = false;
+  return NS_OK;
+}
 
 #ifdef DEBUG
 

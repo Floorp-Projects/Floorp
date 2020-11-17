@@ -1,5 +1,4 @@
-// |jit-test| --no-warp
-// Ion/Warp has known issues with function.arguments. See bug 1626294.
+// Note: Ion/Warp have known issues with function.arguments. See bug 1626294.
 
 function f(y) {
     y = 1;

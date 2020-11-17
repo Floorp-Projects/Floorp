@@ -13,6 +13,9 @@
 
 namespace mozilla {
 namespace dom {
+struct GPUComputePassDescriptor;
+struct GPUTextureDataLayout;
+class HTMLCanvasElement;
 template <typename T>
 class Sequence;
 class GPUComputePipelineOrGPURenderPipeline;

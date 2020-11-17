@@ -479,14 +479,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
 
   // Can be called from any thread
   void ScheduleRenderOnCompositorThread() override;
-  void SchedulePauseOnCompositorThread();
-  void InvalidateOnCompositorThread();
-  /**
-   * Returns true if a surface was obtained and the resume succeeded; false
-   * otherwise.
-   */
-  bool ScheduleResumeOnCompositorThread();
-  bool ScheduleResumeOnCompositorThread(int x, int y, int width, int height);
 
   void ScheduleComposition();
 

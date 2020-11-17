@@ -1,4 +1,4 @@
-// |jit-test| --ion-offthread-compile=off; --warp; skip-if: helperThreadCount() === 0
+// |jit-test| --ion-offthread-compile=off; skip-if: helperThreadCount() === 0
 
 var g = newGlobal();
 gczeal(9, 1);

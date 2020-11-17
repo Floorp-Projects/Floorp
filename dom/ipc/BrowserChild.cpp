@@ -1417,15 +1417,15 @@ void BrowserChild::ZoomToRect(const uint32_t& aPresShellId,
   }
 }
 
-mozilla::ipc::IPCResult BrowserChild::RecvActivate() {
+mozilla::ipc::IPCResult BrowserChild::RecvActivate(uint64_t aActionId) {
   MOZ_ASSERT(mWebBrowser);
-  mWebBrowser->FocusActivate();
+  mWebBrowser->FocusActivate(aActionId);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserChild::RecvDeactivate() {
+mozilla::ipc::IPCResult BrowserChild::RecvDeactivate(uint64_t aActionId) {
   MOZ_ASSERT(mWebBrowser);
-  mWebBrowser->FocusDeactivate();
+  mWebBrowser->FocusDeactivate(aActionId);
   return IPC_OK();
 }
 

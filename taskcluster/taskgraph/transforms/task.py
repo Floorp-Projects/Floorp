@@ -40,6 +40,7 @@ from taskgraph.util.scriptworker import (
     get_release_config,
 )
 from taskgraph.util.signed_artifacts import get_signed_artifacts
+from taskgraph.util.time import value_of
 from taskgraph.util.workertypes import worker_type_implementation
 from voluptuous import Any, Required, Optional, Extra, Match, All, NotIn
 from taskgraph import GECKO, MAX_DEPENDENCIES
@@ -1839,7 +1840,12 @@ def build_task(config, tasks):
                 )
             )
 
-        if "expires-after" not in task:
+        if "expires-after" in task:
+            if config.params.is_try():
+                delta = value_of(task["expires-after"])
+                if delta.days >= 28:
+                    task["expires-after"] = "28 days"
+        else:
             task["expires-after"] = "28 days" if config.params.is_try() else "1 year"
 
         if "deadline-after" not in task:

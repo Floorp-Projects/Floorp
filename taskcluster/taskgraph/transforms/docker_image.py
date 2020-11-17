@@ -140,7 +140,7 @@ def fill_template(config, tasks):
                 "image_name": image_name,
                 "artifact_prefix": "public",
             },
-            "expires-after": "28 days" if config.params.is_try() else "1 year",
+            "expires-after": "1 year",
             "scopes": [],
             "treeherder": {
                 "symbol": job_symbol,

@@ -4,13 +4,6 @@
       var oldHistoryObject = null;
 
       function test(event) {
-        // Disable the subtest for now since it relies on the bfcache.
-        if (opener.SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-          opener.nextTest();
-          window.close();
-          return;
-        }
-
         if (!opener.scrollRestorationTest) {
           opener.scrollRestorationTest = 0;
         }
@@ -139,8 +132,7 @@
             } catch (ex) {
               opener.isnot(ex, null, "Did get an exception");
             }
-            opener.nextTest();
-            window.close();
+            opener.finishTest();
             break;
           }
         }

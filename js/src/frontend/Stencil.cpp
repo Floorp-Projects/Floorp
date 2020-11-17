@@ -336,60 +336,6 @@ static bool InstantiateScopes(JSContext* cx, CompilationInfo& compilationInfo,
   return true;
 }
 
-// JSFunctions have a default ObjectGroup when they are created. Once their
-// enclosing script is compiled, we have more precise heuristic information and
-// now compute their final group. These functions have not been exposed to
-// script before this point.
-//
-// As well, anonymous functions may have either an "inferred" or a "guessed"
-// name assigned to them. This name isn't known until the enclosing function is
-// compiled so we must update it here.
-static bool SetTypeAndNameForExposedFunctions(JSContext* cx,
-                                              CompilationInfo& compilationInfo,
-                                              CompilationGCOutput& gcOutput) {
-  Rooted<JSFunction*> fun(cx);
-  for (auto item : compilationInfo.functionScriptStencils(gcOutput)) {
-    auto& scriptStencil = item.script;
-    fun = item.function;
-    if (!scriptStencil.functionFlags.hasBaseScript()) {
-      continue;
-    }
-
-    // If the function was not referenced by enclosing script's bytecode, we do
-    // not generate a BaseScript for it. For example, `(function(){});`.
-    if (!scriptStencil.wasFunctionEmitted &&
-        !scriptStencil.isStandaloneFunction) {
-      continue;
-    }
-
-    if (!JSFunction::setTypeForScriptedFunction(
-            cx, fun, scriptStencil.isSingletonFunction)) {
-      return false;
-    }
-
-    // Inferred and Guessed names are computed by BytecodeEmitter and so may
-    // need to be applied to existing JSFunctions during delazification.
-    if (fun->displayAtom() == nullptr) {
-      JSAtom* funcAtom = nullptr;
-      if (scriptStencil.functionFlags.hasInferredName() ||
-          scriptStencil.functionFlags.hasGuessedAtom()) {
-        funcAtom = compilationInfo.input.atomCache.getExistingAtomAt(
-            cx, scriptStencil.functionAtom);
-        MOZ_ASSERT(funcAtom);
-      }
-      if (scriptStencil.functionFlags.hasInferredName()) {
-        fun->setInferredName(funcAtom);
-      }
-
-      if (scriptStencil.functionFlags.hasGuessedAtom()) {
-        fun->setGuessedAtom(funcAtom);
-      }
-    }
-  }
-
-  return true;
-}
-
 // Instantiate js::BaseScripts from ScriptStencils for inner functions of the
 // compilation. Note that standalone functions and functions being delazified
 // are handled below with other top-levels.
@@ -513,7 +459,8 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInfo& compilationInfo,
 // to update it with information determined by the BytecodeEmitter. This applies
 // to both initial and delazification parses. The functions being update may or
 // may not have bytecode at this point.
-static void UpdateEmittedInnerFunctions(CompilationInfo& compilationInfo,
+static void UpdateEmittedInnerFunctions(JSContext* cx,
+                                        CompilationInfo& compilationInfo,
                                         CompilationGCOutput& gcOutput) {
   for (auto item : compilationInfo.functionScriptStencils(gcOutput)) {
     auto& scriptStencil = item.script;
@@ -533,11 +480,27 @@ static void UpdateEmittedInnerFunctions(CompilationInfo& compilationInfo,
       ScopeIndex index = *scriptStencil.lazyFunctionEnclosingScopeIndex_;
       Scope* scope = gcOutput.scopes[index];
       script->setEnclosingScope(scope);
-      script->initTreatAsRunOnce(scriptStencil.immutableFlags.hasFlag(
-          ImmutableScriptFlagsEnum::TreatAsRunOnce));
 
       if (scriptStencil.memberInitializers) {
         script->setMemberInitializers(*scriptStencil.memberInitializers);
+      }
+
+      // Inferred and Guessed names are computed by BytecodeEmitter and so may
+      // need to be applied to existing JSFunctions during delazification.
+      if (fun->displayAtom() == nullptr) {
+        JSAtom* funcAtom = nullptr;
+        if (scriptStencil.functionFlags.hasInferredName() ||
+            scriptStencil.functionFlags.hasGuessedAtom()) {
+          funcAtom = compilationInfo.input.atomCache.getExistingAtomAt(
+              cx, scriptStencil.functionAtom);
+          MOZ_ASSERT(funcAtom);
+        }
+        if (scriptStencil.functionFlags.hasInferredName()) {
+          fun->setInferredName(funcAtom);
+        }
+        if (scriptStencil.functionFlags.hasGuessedAtom()) {
+          fun->setGuessedAtom(funcAtom);
+        }
       }
     }
   }
@@ -581,13 +544,7 @@ static void AssertDelazificationFieldsMatch(CompilationInfo& compilationInfo,
 
     BaseScript* script = fun->baseScript();
 
-    // TreatAsRunOnce is updated by UpdateEmittedInnerFunctions.
-    uint32_t acceptableDifferenceForScript =
-        uint32_t(ImmutableScriptFlagsEnum::TreatAsRunOnce);
-    MOZ_ASSERT(
-        (uint32_t(script->immutableFlags()) | acceptableDifferenceForScript) ==
-        (uint32_t(scriptStencil.immutableFlags) |
-         acceptableDifferenceForScript));
+    MOZ_ASSERT(script->immutableFlags() == scriptStencil.immutableFlags);
 
     MOZ_ASSERT(script->extent().sourceStart ==
                scriptStencil.extent.sourceStart);
@@ -599,7 +556,7 @@ static void AssertDelazificationFieldsMatch(CompilationInfo& compilationInfo,
     MOZ_ASSERT(script->extent().lineno == scriptStencil.extent.lineno);
     MOZ_ASSERT(script->extent().column == scriptStencil.extent.column);
 
-    // Names are updated by SetTypeAndNameForExposedFunctions.
+    // Names are updated by UpdateInnerFunctions.
     constexpr uint16_t HAS_INFERRED_NAME =
         uint16_t(FunctionFlags::Flags::HAS_INFERRED_NAME);
     constexpr uint16_t HAS_GUESSED_ATOM =
@@ -700,9 +657,7 @@ bool CompilationInfo::instantiateStencilsAfterPreparation(
     return false;
   }
 
-  if (!SetTypeAndNameForExposedFunctions(cx, *this, gcOutput)) {
-    return false;
-  }
+  MOZ_RELEASE_ASSERT(!IsTypeInferenceEnabled());
 
   if (!input.lazy) {
     if (!InstantiateScriptStencils(cx, *this, gcOutput)) {
@@ -716,7 +671,7 @@ bool CompilationInfo::instantiateStencilsAfterPreparation(
 
   // Must be infallible from here forward.
 
-  UpdateEmittedInnerFunctions(*this, gcOutput);
+  UpdateEmittedInnerFunctions(cx, *this, gcOutput);
 
   if (!input.lazy) {
     LinkEnclosingLazyScript(*this, gcOutput);
@@ -999,6 +954,7 @@ void frontend::DumpTaggedParserAtomIndex(
     GenericPrinter& out = json.beginStringProperty("atom");
     WellKnownParserAtoms::getStatic2(index)->dumpCharsNoQuote(out);
     json.endString();
+    return;
   }
 
   MOZ_ASSERT(taggedIndex.isNull());
@@ -1397,9 +1353,6 @@ static void DumpImmutableScriptFlags(js::JSONPrinter& json,
         case ImmutableScriptFlagsEnum::HasMappedArgsObj:
           json.value("HasMappedArgsObj");
           break;
-        case ImmutableScriptFlagsEnum::IsLikelyConstructorWrapper:
-          json.value("IsLikelyConstructorWrapper");
-          break;
         default:
           json.value("Unknown(%x)", i);
           break;
@@ -1594,9 +1547,8 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
       json.property("lazyFunctionEnclosingScopeIndex", "Nothing");
     }
 
-    json.boolProperty("isStandaloneFunction", isStandaloneFunction);
     json.boolProperty("wasFunctionEmitted", wasFunctionEmitted);
-    json.boolProperty("isSingletonFunction", isSingletonFunction);
+    json.boolProperty("allowRelazify", allowRelazify);
   }
 }
 

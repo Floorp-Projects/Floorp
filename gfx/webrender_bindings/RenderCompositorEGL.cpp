@@ -10,6 +10,7 @@
 #include "GLContextEGL.h"
 #include "GLContextProvider.h"
 #include "GLLibraryEGL.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/BuildConstants.h"
 #include "mozilla/webrender/RenderThread.h"
@@ -244,7 +245,11 @@ bool RenderCompositorEGL::ShouldDrawPreviousPartialPresentRegions() {
 }
 
 size_t RenderCompositorEGL::GetBufferAge() const {
-  return gl::GLContextEGL::Cast(gl())->GetBufferAge();
+  if (!StaticPrefs::
+          gfx_webrender_allow_partial_present_buffer_age_AtStartup()) {
+    return 0;
+  }
+  return gl()->GetBufferAge();
 }
 
 void RenderCompositorEGL::SetBufferDamageRegion(const wr::DeviceIntRect* aRects,

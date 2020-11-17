@@ -48,7 +48,7 @@ linux64-rust-nightly:
         arguments: [
             # Last nightly with version 1.48.0. See bug #1672094 why
             # we're using this rather than the first with version 1.48.0.
-            '--channel', 'nightly-2020-10-03',
+            '--channel', 'nightly-2020-11-14',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
@@ -145,6 +145,17 @@ win64-rust-1.47:
             '--target', 'aarch64-pc-windows-msvc',
         ]
         toolchain-alias: win64-rust
+
+macosx64-rust-1.47:
+    treeherder:
+        symbol: TM(rust)
+    run:
+        arguments: [
+            '--channel', '1.47.0',
+            '--host', 'x86_64-apple-darwin',
+            '--target', 'x86_64-apple-darwin',
+        ]
+        toolchain-alias: macosx64-rust
 
 macosx64-rust-nightly:
     treeherder:

@@ -555,7 +555,8 @@ mochitest-webgpu:
         by-test-platform:
             .*mingw.*: ["release"]
             .*shippable.*: ["mozilla-central"]
-            default: ["trunk"]
+            (!-shippable).*-qr.*: ["trunk"]
+            default: []
     tier: default
     max-run-time:
         by-test-platform:

@@ -4136,9 +4136,11 @@ bool SVGTextFrame::ResolvePositionsForNode(nsIContent* aContent,
   }
 
   if (aContent->IsSVGElement(nsGkAtoms::textPath)) {
+    // Any ‘y’ attributes on horizontal <textPath> elements are ignored.
+    // Similarly, for vertical <texPath>s x attributes are ignored.
     // <textPath> elements behave as if they have x="0" y="0" on them, but only
-    // if there is not a value for the coordinates that got inherited from a
-    // parent.  We skip this if there is no text content, so that empty
+    // if there is not a value for the non-ignored coordinate that got inherited
+    // from a parent.  We skip this if there is no text content, so that empty
     // <textPath>s don't interrupt the layout of text in the parent element.
     if (HasTextContent(aContent)) {
       if (MOZ_UNLIKELY(aIndex >= mPositions.Length())) {
@@ -4147,10 +4149,11 @@ bool SVGTextFrame::ResolvePositionsForNode(nsIContent* aContent,
             "found by iterating content");
         return false;
       }
-      if (!mPositions[aIndex].IsXSpecified()) {
+      bool vertical = GetWritingMode().IsVertical();
+      if (vertical || !mPositions[aIndex].IsXSpecified()) {
         mPositions[aIndex].mPosition.x = 0.0;
       }
-      if (!mPositions[aIndex].IsYSpecified()) {
+      if (!vertical || !mPositions[aIndex].IsYSpecified()) {
         mPositions[aIndex].mPosition.y = 0.0;
       }
       mPositions[aIndex].mStartOfChunk = true;

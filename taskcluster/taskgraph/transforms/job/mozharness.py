@@ -297,21 +297,22 @@ def mozharness_on_generic_worker(config, job, taskdesc):
             "Windows and macOS"
         )
 
+    mh_command = []
     if job["worker"]["os"] == "windows":
-        mh_command = [
-            "c:/mozilla-build/python/python.exe",
-            "%GECKO_PATH%/testing/{}".format(run.pop("script")),
-        ]
+        mh_command.append("c:/mozilla-build/python3/python3.exe")
+        gecko_path = "%GECKO_PATH%"
     else:
-        mh_command = [
-            "$GECKO_PATH/mach",
-            "python",
-            "--no-activate",
-            "$GECKO_PATH/testing/{}".format(run.pop("script")),
-        ]
+        gecko_path = "$GECKO_PATH"
+
+    mh_command += [
+        "{}/mach".format(gecko_path),
+        "python",
+        "--no-activate",
+        "{}/testing/{}".format(gecko_path, run.pop("script")),
+    ]
 
     for path in run.pop("config-paths", []):
-        mh_command.append("--extra-config-path %GECKO_PATH%/{}".format(path))
+        mh_command.append("--extra-config-path {}/{}".format(gecko_path, path))
 
     for cfg in run.pop("config"):
         mh_command.extend(("--config", cfg))
@@ -346,20 +347,6 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     # Everything past this point is Windows-specific.
     if job["worker"]["os"] == "macosx":
         return
-
-    # TODO We should run the mozharness script with `mach python` so these
-    # modules are automatically available, but doing so somehow caused hangs in
-    # Windows ccov builds (see bug 1543149).
-    mozbase_dir = "{}/testing/mozbase".format(env["GECKO_PATH"])
-    env["PYTHONPATH"] = ";".join(
-        [
-            "{}/manifestparser".format(mozbase_dir),
-            "{}/mozinfo".format(mozbase_dir),
-            "{}/mozfile".format(mozbase_dir),
-            "{}/mozprocess".format(mozbase_dir),
-            "{}/third_party/python/six".format(env["GECKO_PATH"]),
-        ]
-    )
 
     if taskdesc.get("use-sccache"):
         worker["command"] = (

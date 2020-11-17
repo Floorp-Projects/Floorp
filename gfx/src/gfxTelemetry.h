@@ -26,6 +26,7 @@ enum class FeatureStatus {
   UnavailableNoHwCompositing,
   UnavailableNotBuilt,
   UnavailableNoAngle,
+  UnavailableNoWebRender,
 
   // This feature crashed immediately when we tried to initialize it, but we
   // were able to recover via SEH (or something similar).

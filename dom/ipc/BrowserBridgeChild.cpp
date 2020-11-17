@@ -74,10 +74,12 @@ void BrowserBridgeChild::NavigateByKey(bool aForward,
   Unused << SendNavigateByKey(aForward, aForDocumentNavigation);
 }
 
-void BrowserBridgeChild::Activate() { Unused << SendActivate(); }
+void BrowserBridgeChild::Activate(uint64_t aActionId) {
+  Unused << SendActivate(aActionId);
+}
 
-void BrowserBridgeChild::Deactivate(bool aWindowLowering) {
-  Unused << SendDeactivate(aWindowLowering);
+void BrowserBridgeChild::Deactivate(bool aWindowLowering, uint64_t aActionId) {
+  Unused << SendDeactivate(aWindowLowering, aActionId);
 }
 
 void BrowserBridgeChild::SetIsUnderHiddenEmbedderElement(

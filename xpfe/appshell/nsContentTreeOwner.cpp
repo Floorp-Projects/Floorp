@@ -386,16 +386,6 @@ NS_IMETHODIMP nsContentTreeOwner::ShouldLoadURI(
     nsIDocShell* aDocShell, nsIURI* aURI, nsIReferrerInfo* aReferrerInfo,
     bool aHasPostData, nsIPrincipal* aTriggeringPrincipal,
     nsIContentSecurityPolicy* aCsp, bool* _retval) {
-  NS_ENSURE_STATE(mAppWindow);
-
-  nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow;
-  mAppWindow->GetXULBrowserWindow(getter_AddRefs(xulBrowserWindow));
-
-  if (xulBrowserWindow)
-    return xulBrowserWindow->ShouldLoadURI(aDocShell, aURI, aReferrerInfo,
-                                           aHasPostData, aTriggeringPrincipal,
-                                           aCsp, _retval);
-
   *_retval = true;
   return NS_OK;
 }

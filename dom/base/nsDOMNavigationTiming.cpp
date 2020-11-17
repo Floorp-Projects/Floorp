@@ -562,7 +562,7 @@ void nsDOMNavigationTiming::MaybeSubmitTimeToLoadEventPreloadTelemetry(
 
   if (const ContentChild* cc = ContentChild::GetSingleton();
       cc && !(IsWebRemoteType(cc->GetRemoteType()) ||
-              IsPriviligedMozillaRemoteType(cc->GetRemoteType()))) {
+              IsPrivilegedMozillaRemoteType(cc->GetRemoteType()))) {
     return;
   }
 

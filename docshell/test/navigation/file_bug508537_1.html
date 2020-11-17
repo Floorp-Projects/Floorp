@@ -10,8 +10,7 @@
         if (opener && ++opener.testCount == 1) {
           window.location = "goback.html";
         } else {
-          opener.nextTest();
-          window.close();
+          opener.finishTest();
         }
       }
 

@@ -2931,7 +2931,7 @@ void AppWindow::WindowActivated() {
       mDocShell ? mDocShell->GetWindow() : nullptr;
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm && window) {
-    fm->WindowRaised(window);
+    fm->WindowRaised(window, nsFocusManager::GenerateFocusActionId());
   }
 
   if (mChromeLoaded) {
@@ -2947,7 +2947,7 @@ void AppWindow::WindowDeactivated() {
       mDocShell ? mDocShell->GetWindow() : nullptr;
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm && window && !fm->IsTestMode()) {
-    fm->WindowLowered(window);
+    fm->WindowLowered(window, nsFocusManager::GenerateFocusActionId());
   }
 }
 

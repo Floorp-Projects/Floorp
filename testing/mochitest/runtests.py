@@ -2137,6 +2137,15 @@ toolbar#nav-bar {
             self.log.info("Increasing default timeout to 90 seconds")
             prefs["testing.browserTestHarness.timeout"] = 90
 
+        # tsan builds need even more time
+        if (
+            mozinfo.info["tsan"]
+            and options.flavor == "browser"
+            and options.timeout is None
+        ):
+            self.log.info("Increasing default timeout to 120 seconds")
+            prefs["testing.browserTestHarness.timeout"] = 120
+
         if mozinfo.info["os"] == "win" and mozinfo.info["processor"] == "aarch64":
             extended_timeout = self.DEFAULT_TIMEOUT * 4
             self.log.info(

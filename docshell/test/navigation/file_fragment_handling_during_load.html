@@ -9,8 +9,7 @@
           return;
         }
         opener.ok(true, "Have loaded a new document.");
-        opener.nextTest();
-        window.close();
+        opener.finishTest();
       }
       function test() {
         // Test that executing back() before load has started doesn't interrupt

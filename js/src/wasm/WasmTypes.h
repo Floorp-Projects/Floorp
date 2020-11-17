@@ -48,7 +48,6 @@
 namespace js {
 
 namespace jit {
-class JitScript;
 enum class RoundingMode;
 template <class VecT, class ABIArgGeneratorT>
 class ABIArgIterBase;
@@ -1257,14 +1256,6 @@ class FuncType {
     for (ValType result : results()) {
       if (result.isReference() &&
           (!result.isExternRef() || !result.isNullable())) {
-        return true;
-      }
-    }
-    return false;
-  }
-  bool jitExitRequiresArgCheck() const {
-    for (ValType arg : args()) {
-      if (arg.isEncodedAsJSValueOnEscape()) {
         return true;
       }
     }
@@ -2945,10 +2936,6 @@ struct FuncImportTls {
 
   // The callee function's realm.
   JS::Realm* realm;
-
-  // If 'code' points into a JIT code thunk, the JitScript of the callee, for
-  // bidirectional registration purposes.
-  jit::JitScript* jitScript;
 
   // A GC pointer which keeps the callee alive and is used to recover import
   // values for lazy table initialization.

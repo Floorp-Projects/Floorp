@@ -416,7 +416,7 @@ add_task(async function() {
     gInvalidFormPopup,
     "popuphidden"
   );
-  await BrowserTestUtils.loadURI(browser, "data:text/html,<div>hello!</div>");
+  BrowserTestUtils.loadURI(browser, "data:text/html,<div>hello!</div>");
   await BrowserTestUtils.browserLoaded(browser);
 
   await popupHiddenPromise;

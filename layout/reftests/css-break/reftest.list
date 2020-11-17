@@ -9,4 +9,5 @@ fuzzy-if(!Android,0-1,0-62) fuzzy-if(Android,0-8,0-6627) random-if(/^Windows\x20
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == box-decoration-break-bug-1235152.html box-decoration-break-bug-1235152-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == box-decoration-break-bug-1249913.html box-decoration-break-bug-1249913-ref.html # Bug 1392106
 == vertical-wm-001.html vertical-wm-001-ref.html
+== vertical-wm-002.html vertical-wm-002-ref.html
 random-if(Android) == 1405443.html 1405443-ref.html

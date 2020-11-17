@@ -156,14 +156,6 @@ CFTypeRefPtr<IOSurfaceRef> SurfacePoolCA::LockedPool::ObtainSurfaceFromPool(cons
     return surface;
   }
 
-  // Add enough padding so that SWGL can safely read up to one SIMD vector worth
-  // of bytes at the last pixel, which it does for performance reasons.
-  //
-  // This in turn also requires specifying a properly aligned bytes per row
-  // value so odd-sized surfaces like a tooltip still work.
-  size_t bytesPerRow = IOSurfaceAlignProperty(kIOSurfaceBytesPerRow, aSize.width * 4);
-  size_t allocSize = IOSurfaceAlignProperty(kIOSurfaceAllocSize, bytesPerRow * aSize.height + 16);
-
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("IOSurface creation", GRAPHICS_TileAllocation,
                                         nsPrintfCString("%dx%d", aSize.width, aSize.height));
   CFTypeRefPtr<IOSurfaceRef> surface =
@@ -172,8 +164,6 @@ CFTypeRefPtr<IOSurfaceRef> SurfacePoolCA::LockedPool::ObtainSurfaceFromPool(cons
         (__bridge NSString*)kIOSurfaceHeight : @(aSize.height),
         (__bridge NSString*)kIOSurfacePixelFormat : @(kCVPixelFormatType_32BGRA),
         (__bridge NSString*)kIOSurfaceBytesPerElement : @(4),
-        (__bridge NSString*)kIOSurfaceBytesPerRow : @(bytesPerRow),
-        (__bridge NSString*)kIOSurfaceAllocSize : @(allocSize),
       }));
   if (surface) {
     // Create a new entry in mInUseEntries.

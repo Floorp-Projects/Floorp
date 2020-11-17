@@ -24,7 +24,6 @@ SessionHistoryInfo::SessionHistoryInfo(nsDocShellLoadState* aLoadState,
     : mURI(aLoadState->URI()),
       mOriginalURI(aLoadState->OriginalURI()),
       mResultPrincipalURI(aLoadState->ResultPrincipalURI()),
-      mReferrerInfo(aLoadState->GetReferrerInfo()),
       mPostData(aLoadState->PostDataStream()),
       mLoadType(aLoadState->LoadType()),
       mSrcdocData(aLoadState->SrcdocData()),
@@ -37,6 +36,10 @@ SessionHistoryInfo::SessionHistoryInfo(nsDocShellLoadState* aLoadState,
           aLoadState->PartitionedPrincipalToInherit(), aLoadState->Csp(),
           /* FIXME Is this correct? */
           aLoadState->TypeHint())) {
+  if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel)) {
+    mReferrerInfo = httpChannel->GetReferrerInfo();
+  }
+
   MaybeUpdateTitleFromURI();
 }
 

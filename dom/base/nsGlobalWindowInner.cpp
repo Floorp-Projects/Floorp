@@ -117,6 +117,7 @@
 #include "nsCharTraits.h"  // NS_IS_HIGH/LOW_SURROGATE
 #include "PostMessageEvent.h"
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "PaintWorkletImpl.h"
 
@@ -4259,7 +4260,8 @@ void nsGlobalWindowInner::SetFocusedElement(Element* aElement,
 uint32_t nsGlobalWindowInner::GetFocusMethod() { return mFocusMethod; }
 
 bool nsGlobalWindowInner::ShouldShowFocusRing() {
-  if (mFocusByKeyOccurred) {
+  if (mFocusByKeyOccurred &&
+      StaticPrefs::browser_display_always_show_rings_after_key_focus()) {
     return true;
   }
 
@@ -4310,7 +4312,7 @@ void nsGlobalWindowInner::PageHidden() {
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    fm->WindowHidden(GetOuterWindow());
+    fm->WindowHidden(GetOuterWindow(), nsFocusManager::GenerateFocusActionId());
   }
 
   mNeedsFocus = true;

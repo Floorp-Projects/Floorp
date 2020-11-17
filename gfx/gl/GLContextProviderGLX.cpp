@@ -171,6 +171,9 @@ bool GLXLibrary::EnsureInitialized() {
   const SymLoadStruct symbols_swapcontrol[] = {SYMBOL(SwapIntervalEXT),
                                                END_OF_SYMBOLS};
 
+  const SymLoadStruct symbols_querydrawable[] = {SYMBOL(QueryDrawable),
+                                                 END_OF_SYMBOLS};
+
   const auto fnLoadSymbols = [&](const SymLoadStruct* symbols) {
     if (pfnLoader.LoadSymbols(symbols)) return true;
 
@@ -215,6 +218,11 @@ bool GLXLibrary::EnsureInitialized() {
     NS_WARNING(
         "GLX_swap_control unsupported, ASAP mode may still block on buffer "
         "swaps.");
+  }
+
+  if (HasExtension(extensionsStr, "GLX_EXT_buffer_age") &&
+      fnLoadSymbols(symbols_querydrawable)) {
+    mHasBufferAge = true;
   }
 
   mIsATI = serverVendor && DoesStringMatch(serverVendor, "ATI");
@@ -617,6 +625,21 @@ bool GLContextGLX::SwapBuffers() {
   if (!mDoubleBuffered) return false;
   mGLX->fSwapBuffers(mDisplay, mDrawable);
   return true;
+}
+
+GLint GLContextGLX::GetBufferAge() const {
+  if (!sGLXLibrary.SupportsBufferAge()) {
+    return 0;
+  }
+
+  GLuint result = 0;
+  mGLX->fQueryDrawable(mDisplay, mDrawable, LOCAL_GLX_BACK_BUFFER_AGE_EXT,
+                       &result);
+  if (result > INT32_MAX) {
+    // If the result can't fit, just assume the buffer cannot be reused.
+    return 0;
+  }
+  return result;
 }
 
 void GLContextGLX::GetWSIInfo(nsCString* const out) const {

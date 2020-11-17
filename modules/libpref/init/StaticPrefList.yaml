@@ -969,6 +969,18 @@
 #endif
   mirror: always
 
+# Whether we should always enable focus rings after focus was moved by keyboard.
+#
+# This behavior matches both historical and GTK / Windows focus behavior.
+#
+# :focus-visible is intended to provide better heuristics than this, so for now
+# we make this false whenever layout.css.focus-visible.enabled is enabled by
+# default.
+- name: browser.display.always_show_rings_after_key_focus
+  type: bool
+  value: @IS_NOT_NIGHTLY_BUILD@
+  mirror: always
+
 # In theory: 0 = never, 1 = quick, 2 = always, though we always just use it as
 # a bool!
 - name: browser.display.use_document_fonts
@@ -4569,6 +4581,8 @@
   value: 25
   mirror: once
 
+# Number of damage rects we can give to the compositor for a new frame with
+# partial present. This controls whether partial present is used or not.
 - name: gfx.webrender.max-partial-present-rects
   type: uint32_t
 #if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GTK)
@@ -4576,6 +4590,14 @@
 #else
   value: 0
 #endif
+  mirror: once
+
+# Whether or not we can reuse the buffer contents using the GL buffer age
+# extension, if supported by the platform. This requires partial present
+# to be used.
+- name: gfx.webrender.allow-partial-present-buffer-age
+  type: bool
+  value: true
   mirror: once
 
 - name: gfx.webrender.enable-gpu-markers
@@ -5943,8 +5965,9 @@
 
 # Whether the `:focus-visible` pseudo-class is enabled.
 #
-# TODO: There are various ambiguities in the spec about this, so we shouldn't
-# ship this until those are sorted out.
+# NOTE: You probably want to change the default value of
+# browser.display.always_show_rings_after_key_focus whenever you change the
+# default value of this pref.
 - name: layout.css.focus-visible.enabled
   type: RelaxedAtomicBool
   value: @IS_NIGHTLY_BUILD@

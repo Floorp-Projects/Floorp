@@ -6,8 +6,8 @@ This document will cover the Remote Agent architecture by following the sequence
 Remote Agent startup
 --------------------
 
-Everything starts with `RemoteAgent` class.
-This singleton handles command lines arguments (--remote-debugging-port) to eventually
+Everything starts with the `RemoteAgent` implementation, which handles command line
+arguments (--remote-debugging-port) to eventually
 start a server listening on the TCP port 9222 (or the one specified by the command line).
 The browser target websocket URL will be printed to stderr.
 To do that this component glue together three main high level components:
@@ -31,7 +31,7 @@ To do that this component glue together three main high level components:
       We have a future intention to fix this and report only what Firefox implements.
     You can connect to these websocket URL in order to debug things.
 
-  * `targets/Targets`
+  * `targets/TargetList`
     This component is responsible of maintaining the list of all debuggable targets.
     For now it can be either:
     * The main browser target
@@ -49,7 +49,7 @@ Connecting to Websocket endpoints
 ---------------------------------
 
 Each target's websocket URL will be registered as a HTTP endpoint via `server/HTTPD:registerPathHandler`.
-(This registration is done from `RemoteAgent:init`)
+(This registration is done from `RemoteAgentClass:listen`)
 Once a HTTP request happens, `server/HTTPD` will call the `handle` method on the object passed to `registerPathHandler`.
 For static endpoints registered by `JSONHandler`, this will call `JSONHandler:handle` and return a JSON string as http body.
 For target's endpoint, it is slightly more complicated as it requires a special handshake to morph the HTTP connection into a WebSocket one.
@@ -81,7 +81,7 @@ When a request is made to a target URL, `targets/Target:handle` is called and:
     Typically, the `sessions/TabSession` forward the CDP command to the content process where the tab is running.
     It also redirects back the command response as well as Domain events from that process back to the parent process in order to
     forward them to the connection.
-    Sessions will be using the `Domains` class as an helper to manage a list of Domain implementations in a given context.
+    Sessions will be using the `DomainCache` class as a helper to manage a list of Domain implementations in a given context.
 
 Debugging additional Targets
 ----------------------------
@@ -139,25 +139,25 @@ Organizational chart of all the classes
     └───────────────┘       └───────────────┘ 1       └───────────────┘
             │
             │
-            │              1 ┌────────────┐ 1
-            └───────────────▶│  Targets   │◀─┐
-                             └────────────┘  │
-                                    │        │
-                                    ▼ 1..n   │
-                             ┌────────────┐  │
-           ┌─────────────────│ Target  [1]│  │
-           │                 └────────────┘  │
-           │                        ▲ 1      │
-           ▼ 1..n                   │        │
-    ┌────────────┐       1..n┌────────────┐  │
-    │ Connection │◀─────────▶│ Session [2]│──┘
+            │              1 ┌────────────────┐ 1
+            └───────────────▶│  TargetList    │◀─┐
+                             └────────────────┘  │
+                                    │            │
+                                    ▼ 1..n       │
+                             ┌────────────┐      │
+           ┌─────────────────│ Target  [1]│      │
+           │                 └────────────┘      │
+           │                        ▲ 1          │
+           ▼ 1..n                   │            │
+    ┌────────────┐       1..n┌────────────┐      │
+    │ Connection │◀─────────▶│ Session [2]│──────┘
     └────────────┘ 1         └────────────┘
            │                      1 ▲
            │                        │
            ▼ 1                      ▼ 1
-┌────────────────────┐       ┌────────────┐       1..n┌────────────┐
-│ WebSocketTransport │       │  Domains   │──────────▶│ Domain  [3]│
-└────────────────────┘       └────────────┘           └────────────┘
+┌────────────────────┐       ┌──────────────┐         1..n┌────────────┐
+│ WebSocketTransport │       │  DomainCache | │──────────▶│ Domain  [3]│
+└────────────────────┘       └──────────────┘             └────────────┘
 ```
  [1] Target is inherited by TabTarget and MainProcessTarget.
  [2] Session is inherited by TabSession and MainProcessSession.

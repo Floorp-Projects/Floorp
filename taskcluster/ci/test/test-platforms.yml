@@ -212,14 +212,14 @@ windows7-32-shippable/opt:
 
 # win7 qr builds for try purposes
 windows7-32-qr/debug:
-    build-platform: win64/debug
+    build-platform: win32/debug
     test-sets:
         - mochitest-webgpu
         - windows-qr-tests
         - web-platform-tests
 
 windows7-32-qr/opt:
-    build-platform: win64/opt
+    build-platform: win32/opt
     test-sets:
         - awsy
         - windows-qr-tests

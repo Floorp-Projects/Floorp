@@ -23,9 +23,7 @@ template <XDRMode mode>
     HasSharedData,
     HasFunctionAtom,
     HasScopeIndex,
-    IsStandaloneFunction,
     WasFunctionEmitted,
-    IsSingletonFunction,
     AllowRelazify,
   };
 
@@ -71,14 +69,8 @@ template <XDRMode mode>
     xdrFields.scopeIndex =
         stencil.lazyFunctionEnclosingScopeIndex_.valueOr(ScopeIndex());
 
-    if (stencil.isStandaloneFunction) {
-      xdrFlags |= 1 << uint8_t(XdrFlags::IsStandaloneFunction);
-    }
     if (stencil.wasFunctionEmitted) {
       xdrFlags |= 1 << uint8_t(XdrFlags::WasFunctionEmitted);
-    }
-    if (stencil.isSingletonFunction) {
-      xdrFlags |= 1 << uint8_t(XdrFlags::IsSingletonFunction);
     }
     if (stencil.allowRelazify) {
       xdrFlags |= 1 << uint8_t(XdrFlags::AllowRelazify);
@@ -136,14 +128,8 @@ template <XDRMode mode>
       stencil.lazyFunctionEnclosingScopeIndex_.emplace(xdrFields.scopeIndex);
     }
 
-    if (xdrFlags & (1 << uint8_t(XdrFlags::IsStandaloneFunction))) {
-      stencil.isStandaloneFunction = true;
-    }
     if (xdrFlags & (1 << uint8_t(XdrFlags::WasFunctionEmitted))) {
       stencil.wasFunctionEmitted = true;
-    }
-    if (xdrFlags & (1 << uint8_t(XdrFlags::IsSingletonFunction))) {
-      stencil.isSingletonFunction = true;
     }
     if (xdrFlags & (1 << uint8_t(XdrFlags::AllowRelazify))) {
       stencil.allowRelazify = true;

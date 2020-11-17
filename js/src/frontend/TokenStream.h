@@ -1502,12 +1502,44 @@ inline void SourceUnits<mozilla::Utf8Unit>::ungetLineOrParagraphSeparator() {
   MOZ_ASSERT(last == 0xA8 || last == 0xA9);
 }
 
-class TokenStreamCharsShared {
-  // Using char16_t (not Unit) is a simplifying decision that hopefully
-  // eliminates the need for a UTF-8 regular expression parser and makes
-  // |copyCharBufferTo| markedly simpler.
-  using CharBuffer = Vector<char16_t, 32>;
+/**
+ * An all-purpose buffer type for accumulating text during tokenizing.
+ *
+ * In principle we could make this buffer contain |char16_t|, |Utf8Unit|, or
+ * |Unit|.  We use |char16_t| because:
+ *
+ *   * we don't have a UTF-8 regular expression parser, so in general regular
+ *     expression text must be copied to a separate UTF-16 buffer to parse it,
+ *     and
+ *   * |TokenStreamCharsShared::copyCharBufferTo|, which copies a shared
+ *     |CharBuffer| to a |char16_t*|, is simpler if it doesn't have to convert.
+ */
+using CharBuffer = Vector<char16_t, 32>;
 
+/**
+ * Append the provided code point (in the range [U+0000, U+10FFFF], surrogate
+ * code points included) to the buffer.
+ */
+extern MOZ_MUST_USE bool AppendCodePointToCharBuffer(CharBuffer& charBuffer,
+                                                     uint32_t codePoint);
+
+/**
+ * Accumulate the range of UTF-16 text (lone surrogates permitted, because JS
+ * allows them in source text) into |charBuffer|.  Normalize '\r', '\n', and
+ * "\r\n" into '\n'.
+ */
+extern MOZ_MUST_USE bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(
+    CharBuffer& charBuffer, const char16_t* cur, const char16_t* end);
+
+/**
+ * Accumulate the range of previously-validated UTF-8 text into |charBuffer|.
+ * Normalize '\r', '\n', and "\r\n" into '\n'.
+ */
+extern MOZ_MUST_USE bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(
+    CharBuffer& charBuffer, const mozilla::Utf8Unit* cur,
+    const mozilla::Utf8Unit* end);
+
+class TokenStreamCharsShared {
  protected:
   JSContext* cx;
 
@@ -1525,8 +1557,6 @@ class TokenStreamCharsShared {
   explicit TokenStreamCharsShared(JSContext* cx, ParserAtomsTable* parserAtoms)
       : cx(cx), charBuffer(cx), parserAtoms(parserAtoms) {}
 
-  MOZ_MUST_USE bool appendCodePointToCharBuffer(uint32_t codePoint);
-
   MOZ_MUST_USE bool copyCharBufferTo(
       JSContext* cx, UniquePtr<char16_t[], JS::FreePolicy>* destination);
 
@@ -1542,14 +1572,14 @@ class TokenStreamCharsShared {
 
   const ParserAtom* drainCharBufferIntoAtom() {
     // Add to parser atoms table.
-    auto maybeId = this->parserAtoms->internChar16(cx, charBuffer.begin(),
-                                                   charBuffer.length());
-    if (maybeId.isErr()) {
+    const ParserAtom* atom = this->parserAtoms->internChar16(
+        cx, charBuffer.begin(), charBuffer.length());
+    if (!atom) {
       return nullptr;
     }
 
     charBuffer.clear();
-    return maybeId.unwrap();
+    return atom;
   }
 
  protected:
@@ -1655,14 +1685,6 @@ class TokenStreamCharsBase : public TokenStreamCharsShared {
   inline void consumeKnownCodeUnit(T) = delete;
 
   /**
-   * Accumulate the provided range of already-validated text (valid UTF-8, or
-   * anything if Unit is char16_t because JS allows lone surrogates) into
-   * |charBuffer|.  Normalize '\r', '\n', and "\r\n" into '\n'.
-   */
-  MOZ_MUST_USE bool fillCharBufferFromSourceNormalizingAsciiLineBreaks(
-      const Unit* cur, const Unit* end);
-
-  /**
    * Add a null-terminated line of context to error information, for the line
    * in |sourceUnits| that contains |offset|.  Also record the window's
    * length and the offset of the error in the window.  (Don't bother adding
@@ -1700,16 +1722,14 @@ template <>
 MOZ_ALWAYS_INLINE const ParserAtom*
 TokenStreamCharsBase<char16_t>::atomizeSourceChars(
     mozilla::Span<const char16_t> units) {
-  return this->parserAtoms->internChar16(cx, units.data(), units.size())
-      .unwrapOr(nullptr);
+  return this->parserAtoms->internChar16(cx, units.data(), units.size());
 }
 
 template <>
 /* static */ MOZ_ALWAYS_INLINE const ParserAtom*
 TokenStreamCharsBase<mozilla::Utf8Unit>::atomizeSourceChars(
     mozilla::Span<const mozilla::Utf8Unit> units) {
-  return this->parserAtoms->internUtf8(cx, units.data(), units.size())
-      .unwrapOr(nullptr);
+  return this->parserAtoms->internUtf8(cx, units.data(), units.size());
 }
 
 template <typename Unit>
@@ -1918,7 +1938,6 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
 
  protected:
   using CharsBase::addLineOfContext;
-  using CharsBase::fillCharBufferFromSourceNormalizingAsciiLineBreaks;
   using CharsBase::matchCodeUnit;
   using CharsBase::matchLineTerminator;
   using TokenStreamCharsShared::drainCharBufferIntoAtom;
@@ -2146,7 +2165,8 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
     // Template literals normalize only '\r' and "\r\n" to '\n'; Unicode
     // separators don't need special handling.
     // https://tc39.github.io/ecma262/#sec-static-semantics-tv-and-trv
-    if (!fillCharBufferFromSourceNormalizingAsciiLineBreaks(cur, end)) {
+    if (!FillCharBufferFromSourceNormalizingAsciiLineBreaks(this->charBuffer,
+                                                            cur, end)) {
       return nullptr;
     }
 
@@ -2433,10 +2453,8 @@ class MOZ_STACK_CLASS TokenStreamSpecific
  private:
   using CharsBase::atomizeSourceChars;
   using GeneralCharsBase::badToken;
-  using TokenStreamCharsShared::appendCodePointToCharBuffer;
   // Deliberately don't |using| |charBuffer| because of bug 1472569.  :-(
   using CharsBase::consumeKnownCodeUnit;
-  using CharsBase::fillCharBufferFromSourceNormalizingAsciiLineBreaks;
   using CharsBase::matchCodeUnit;
   using CharsBase::matchLineTerminator;
   using CharsBase::peekCodeUnit;

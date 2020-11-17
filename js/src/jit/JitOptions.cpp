@@ -345,13 +345,6 @@ void DefaultJitOptions::setFastWarmUp() {
   smallFunctionMaxBytecodeLength = 2000;
 }
 
-void DefaultJitOptions::setWarpEnabled(bool enable) {
-  // WarpBuilder doesn't use optimization levels.
-  warpBuilder = enable;
-  disableOptimizationLevels = enable;
-  normalIonWarmUpThreshold = enable ? 1500 : 1000;
-}
-
 void DefaultJitOptions::setNormalIonWarmUpThreshold(uint32_t warmUpThreshold) {
   normalIonWarmUpThreshold = warmUpThreshold;
 

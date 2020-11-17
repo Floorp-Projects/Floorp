@@ -643,7 +643,7 @@ impl SwCompositeGraphNode {
                 if lock.is_none() {
                     lock = Some(thread.lock());
                 }
-                thread.send_job(lock.as_mut().unwrap(), child, false);
+                thread.send_job(lock.as_mut().unwrap(), child);
             }
         }
     }
@@ -657,10 +657,11 @@ struct SwCompositeThread {
     jobs: Mutex<SwCompositeJobQueue>,
     /// Count of unprocessed jobs still in the queue
     job_count: AtomicIsize,
-    /// Condition signaled when there are jobs available to process.
+    /// Condition signaled when either there are jobs available to process or
+    /// there are no more jobs left to process. Otherwise stated, this signals
+    /// when the job queue transitions from an empty to non-empty state or from
+    /// a non-empty to empty state.
     jobs_available: Condvar,
-    /// Condition signaled when there are no more jobs left to process.
-    jobs_completed: Condvar,
 }
 
 /// The SwCompositeThread struct is shared between the SwComposite thread
@@ -681,7 +682,6 @@ impl SwCompositeThread {
             jobs: Mutex::new(SwCompositeJobQueue::new()),
             job_count: AtomicIsize::new(0),
             jobs_available: Condvar::new(),
-            jobs_completed: Condvar::new(),
         });
         let result = info.clone();
         let thread_name = "SwComposite";
@@ -759,7 +759,7 @@ impl SwCompositeThread {
         };
         self.job_count.fetch_add(num_bands as isize, Ordering::SeqCst);
         if graph_node.set_job(job, num_bands) {
-            self.send_job(job_queue, graph_node, true);
+            self.send_job(job_queue, graph_node);
         }
     }
 
@@ -776,10 +776,10 @@ impl SwCompositeThread {
     }
 
     /// Send a job to the composite thread by adding it to the job queue.
-    /// Optionally signal that this job has been added in case the queue
-    /// was empty and the SwComposite thread is waiting for jobs.
-    fn send_job(&self, queue: &mut SwCompositeJobQueue, job: SwCompositeGraphNodeRef, signal: bool) {
-        if signal && queue.is_empty() {
+    /// Signal that this job has been added in case the queue was empty and the
+    /// SwComposite thread is waiting for jobs.
+    fn send_job(&self, queue: &mut SwCompositeJobQueue, job: SwCompositeGraphNodeRef) {
+        if queue.is_empty() {
             self.jobs_available.notify_all();
         }
         queue.push_back(job);
@@ -792,20 +792,25 @@ impl SwCompositeThread {
         // won't be held while the job is processed later outside of this
         // function so that other threads can pull from the queue meanwhile.
         let mut jobs = self.lock();
-        if wait {
-            while jobs.is_empty() {
-                match self.job_count.load(Ordering::SeqCst) {
-                    // If waiting inside the SwCompositeThread and we completed all
-                    // available jobs, signal completion.
-                    0 => self.jobs_completed.notify_all(),
-                    // A negative job count signals to exit immediately.
-                    job_count if job_count < 0 => return None,
-                    _ => {}
+        while jobs.is_empty() {
+            match self.job_count.load(Ordering::SeqCst) {
+                // If we completed all available jobs, signal completion. If
+                // waiting inside the SwCompositeThread, then block waiting for
+                // more jobs to become available in a new frame. Otherwise,
+                // return immediately.
+                0 => {
+                    self.jobs_available.notify_all();
+                    if !wait {
+                        return None;
+                    }
                 }
-                // The SwCompositeThread needs to wait for jobs to become
-                // available to avoid busy waiting on the queue.
-                jobs = self.jobs_available.wait(jobs).unwrap();
+                // A negative job count signals to exit immediately.
+                job_count if job_count < 0 => return None,
+                _ => {}
             }
+            // The SwCompositeThread needs to wait for jobs to become
+            // available to avoid busy waiting on the queue.
+            jobs = self.jobs_available.wait(jobs).unwrap();
         }
         // Look for a job at the front of the queue. If there is one, take the
         // next unprocessed band from the job. If this was the last band in the
@@ -846,12 +851,9 @@ impl SwCompositeThread {
         // If processing synchronously, just wait for the composite thread
         // to complete processing any in-flight jobs, then bail.
         let mut jobs = self.lock();
-        // Wake up the composite thread in case it is blocked waiting on a 0
-        // job count resulting from job stealing while it was blocked.
-        self.jobs_available.notify_all();
         // If the job count is non-zero here, then there are in-flight jobs.
         while self.job_count.load(Ordering::SeqCst) > 0 {
-            jobs = self.jobs_completed.wait(jobs).unwrap();
+            jobs = self.jobs_available.wait(jobs).unwrap();
         }
     }
 
@@ -1307,7 +1309,7 @@ impl Compositor for SwCompositor {
                 native_gl.bind_buffer(gl::PIXEL_UNPACK_BUFFER, tile.pbo_id);
                 native_gl.buffer_data_untyped(
                     gl::PIXEL_UNPACK_BUFFER,
-                    surface.tile_size.area() as isize * 4 + 16,
+                    surface.tile_size.area() as isize * 4,
                     ptr::null(),
                     gl::DYNAMIC_DRAW,
                 );
@@ -1385,7 +1387,7 @@ impl Compositor for SwCompositor {
                         buf = native_gl.map_buffer_range(
                             gl::PIXEL_UNPACK_BUFFER,
                             0,
-                            valid_rect.size.area() as isize * 4 + 16,
+                            valid_rect.size.area() as isize * 4,
                             gl::MAP_WRITE_BIT | gl::MAP_INVALIDATE_BUFFER_BIT,
                         ); // | gl::MAP_UNSYNCHRONIZED_BIT);
                         if buf != ptr::null_mut() {

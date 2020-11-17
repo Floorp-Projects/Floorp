@@ -17,6 +17,10 @@ XPIDL_SOURCES += [
     "nsIProcessToolsService.idl",
 ]
 
+EXPORTS.mozilla += [
+    "ProcInfo.h",
+]
+
 EXPORTS += [
     "ProcessToolsService.h",
 ]
@@ -28,3 +32,15 @@ UNIFIED_SOURCES += [
 FINAL_LIBRARY = "xul"
 
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+
+# Platform-specific implementations of `ProcInfo`.
+toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]
+if toolkit == "gtk" or toolkit == "android":
+    UNIFIED_SOURCES += ["ProcInfo_linux.cpp"]
+elif toolkit == "windows":
+    UNIFIED_SOURCES += ["ProcInfo_win.cpp"]
+elif toolkit == "cocoa":
+    UNIFIED_SOURCES += ["ProcInfo.mm"]
+
+include("/ipc/chromium/chromium-config.mozbuild")
