@@ -1,23 +1,23 @@
 diff --git a/clang-tools-extra/clang-tidy/ClangTidy.cpp b/clang-tools-extra/clang-tidy/ClangTidy.cpp
-index 40aaf402ec0..2184d51c643 100644
+index d6913dfd3c07..d031a163fdd7 100644
 --- a/clang-tools-extra/clang-tidy/ClangTidy.cpp
 +++ b/clang-tools-extra/clang-tidy/ClangTidy.cpp
-@@ -410,6 +410,7 @@ ClangTidyASTConsumerFactory::CreateASTConsumer(
- 
-   for (auto &Check : Checks) {
+@@ -418,6 +418,7 @@ ClangTidyASTConsumerFactory::CreateASTConsumer(
+     if (!Check->isLanguageVersionSupported(Context.getLangOpts()))
+       continue;
      Check->registerMatchers(&*Finder);
 +    Check->registerPPCallbacks(Compiler);
      Check->registerPPCallbacks(*SM, PP, ModuleExpanderPP);
    }
- 
+
 diff --git a/clang-tools-extra/clang-tidy/ClangTidyCheck.h b/clang-tools-extra/clang-tidy/ClangTidyCheck.h
-index 1ad881f673a..59982bd377e 100644
+index 54b725126752..200780e86804 100644
 --- a/clang-tools-extra/clang-tidy/ClangTidyCheck.h
 +++ b/clang-tools-extra/clang-tidy/ClangTidyCheck.h
-@@ -53,6 +53,9 @@ public:
-   /// constructor using the Options.get() methods below.
-   ClangTidyCheck(StringRef CheckName, ClangTidyContext *Context);
- 
+@@ -130,6 +130,9 @@ public:
+     return true;
+   }
+
 +  /// This has been deprecated in clang 9 - needed by mozilla-must-override
 +  virtual void registerPPCallbacks(CompilerInstance &Compiler) {}
 +
