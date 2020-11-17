@@ -39,7 +39,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #ifdef MOZ_GECKO_PROFILER
-#  include "mozilla/BaseProfilerMarkerTypes.h"
+#  include "ProfilerMarkerPayload.h"
 #endif
 
 namespace mozilla {
@@ -372,10 +372,43 @@ void ContentCompositorBridgeParent::ShadowLayersUpdated(
   auto endTime = TimeStamp::Now();
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
-    profiler_add_marker(
-        "CONTENT_FULL_PAINT_TIME", geckoprofiler::category::GRAPHICS,
-        MarkerTiming::Interval(aInfo.transactionStart(), endTime),
-        baseprofiler::markers::ContentBuildMarker{});
+    class ContentBuildPayload : public ProfilerMarkerPayload {
+     public:
+      ContentBuildPayload(const mozilla::TimeStamp& aStartTime,
+                          const mozilla::TimeStamp& aEndTime)
+          : ProfilerMarkerPayload(aStartTime, aEndTime) {}
+      mozilla::ProfileBufferEntryWriter::Length TagAndSerializationBytes()
+          const override {
+        return CommonPropsTagAndSerializationBytes();
+      }
+      void SerializeTagAndPayload(
+          mozilla::ProfileBufferEntryWriter& aEntryWriter) const override {
+        static const DeserializerTag tag = TagForDeserializer(Deserialize);
+        SerializeTagAndCommonProps(tag, aEntryWriter);
+      }
+      void StreamPayload(mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+                         const TimeStamp& aProcessStartTime,
+                         UniqueStacks& aUniqueStacks) const override {
+        StreamCommonProps("CONTENT_FULL_PAINT_TIME", aWriter, aProcessStartTime,
+                          aUniqueStacks);
+      }
+
+     private:
+      explicit ContentBuildPayload(CommonProps&& aCommonProps)
+          : ProfilerMarkerPayload(std::move(aCommonProps)) {}
+      static mozilla::UniquePtr<ProfilerMarkerPayload> Deserialize(
+          mozilla::ProfileBufferEntryReader& aEntryReader) {
+        ProfilerMarkerPayload::CommonProps props =
+            DeserializeCommonProps(aEntryReader);
+        return UniquePtr<ProfilerMarkerPayload>(
+            new ContentBuildPayload(std::move(props)));
+      }
+    };
+    AUTO_PROFILER_STATS(add_marker_with_ContentBuildPayload);
+    profiler_add_marker_for_thread(
+        profiler_current_thread_id(), JS::ProfilingCategoryPair::GRAPHICS,
+        "CONTENT_FULL_PAINT_TIME",
+        ContentBuildPayload(aInfo.transactionStart(), endTime));
   }
 #endif
   Telemetry::Accumulate(

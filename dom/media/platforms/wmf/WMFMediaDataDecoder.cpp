@@ -9,13 +9,21 @@
 #include "VideoUtils.h"
 #include "WMFUtils.h"
 #include "mozilla/Logging.h"
-#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Telemetry.h"
 #include "nsTArray.h"
 
 #define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+
+#ifdef MOZ_GECKO_PROFILER
+#  include "ProfilerMarkerPayload.h"
+#  define WFM_MEDIA_DATA_DECODER_STATUS_MARKER(tag, text, markerTime)        \
+    PROFILER_ADD_MARKER_WITH_PAYLOAD(tag, MEDIA_PLAYBACK, TextMarkerPayload, \
+                                     (text, markerTime))
+#else
+#  define WFM_MEDIA_DATA_DECODER_STATUS_MARKER(tag, text, markerTime)
+#endif
 
 namespace mozilla {
 
@@ -94,7 +102,8 @@ RefPtr<MediaDataDecoder::DecodePromise> WMFMediaDataDecoder::ProcessError(
       "reason: %s",
       GetDescriptionName().get(), aReason);
   LOG(markerString.get());
-  PROFILER_MARKER_TEXT("WMFDecoder Error", MEDIA_PLAYBACK, {}, markerString);
+  WFM_MEDIA_DATA_DECODER_STATUS_MARKER("WMFDecoder Error", markerString,
+                                       TimeStamp::NowUnfuzzed());
 
   // TODO: For the error DXGI_ERROR_DEVICE_RESET, we could return
   // NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER to get the latest device. Maybe retry
