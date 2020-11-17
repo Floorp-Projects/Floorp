@@ -21,9 +21,6 @@
 #  include "mozilla/a11y/PDocAccessible.h"
 #endif
 #include "GeckoProfiler.h"
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
-#endif
 #include "GMPServiceParent.h"
 #include "HandlerServiceParent.h"
 #include "IHistory.h"

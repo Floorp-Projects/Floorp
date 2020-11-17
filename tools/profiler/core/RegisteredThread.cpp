@@ -37,7 +37,6 @@ size_t RegisteredThread::SizeOfIncludingThis(
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:
   // - mPlatformData
-  // - mRacyRegisteredThread.mPendingMarkers
   //
   // The following members are not measured:
   // - mThreadInfo: because it is non-owning
