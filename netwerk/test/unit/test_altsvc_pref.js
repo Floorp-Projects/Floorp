@@ -92,7 +92,6 @@ Http3CheckListener.prototype = {
       Assert.equal(httpVersion, "h3");
     }
 
-    run_next_test();
     do_test_finished();
   },
 };
