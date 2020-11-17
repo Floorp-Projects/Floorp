@@ -2783,19 +2783,15 @@ static void CollectJavaThreadProfileData(ProfileBuffer& aProfileBuffer) {
 
     if (!text) {
       // This marker doesn't have a text.
-      StoreMarker(aProfileBuffer.UnderlyingChunkedBuffer(), threadId,
-                  markerName.get(), timing,
-                  JS::ProfilingCategoryPair::JAVA_ANDROID, nullptr);
+      AddMarkerToBuffer(aProfileBuffer.UnderlyingChunkedBuffer(), markerName,
+                        geckoprofiler::category::JAVA_ANDROID,
+                        {MarkerThreadId(threadId), std::move(timing)});
     } else {
       // This marker has a text.
-      nsCString textString = text->ToCString();
-      const TextMarkerPayload payload(textString, startTime, endTime, Nothing(),
-                                      nullptr);
-
-      // Put the marker inside the buffer.
-      StoreMarker(aProfileBuffer.UnderlyingChunkedBuffer(), threadId,
-                  markerName.get(), timing,
-                  JS::ProfilingCategoryPair::JAVA_ANDROID, &payload);
+      AddMarkerToBuffer(aProfileBuffer.UnderlyingChunkedBuffer(), markerName,
+                        geckoprofiler::category::JAVA_ANDROID,
+                        {MarkerThreadId(threadId), std::move(timing)},
+                        geckoprofiler::markers::Text{}, text->ToCString());
     }
   }
 }
@@ -5109,10 +5105,8 @@ ProfilingStack* profiler_register_thread(const char* aName,
     text.AppendLiteral("\" attempted to re-register as \"");
     text.AppendASCII(aName);
     text.AppendLiteral("\"");
-    maybelocked_profiler_add_marker_for_thread(
-        profiler_main_thread_id(), JS::ProfilingCategoryPair::OTHER_Profiling,
-        "profiler_register_thread again",
-        TextMarkerPayload(text, TimeStamp::NowUnfuzzed()), &lock);
+    PROFILER_MARKER_TEXT("profiler_register_thread again", OTHER_Profiling,
+                         MarkerThreadId::MainThread(), text);
 
     return &thread->RacyRegisteredThread().ProfilingStack();
   }
@@ -5192,10 +5186,8 @@ void profiler_unregister_thread() {
         tid != profiler_main_thread_id()) {
       nsCString threadIdString;
       threadIdString.AppendInt(tid);
-      maybelocked_profiler_add_marker_for_thread(
-          profiler_main_thread_id(), JS::ProfilingCategoryPair::OTHER_Profiling,
-          "profiler_unregister_thread again",
-          TextMarkerPayload(threadIdString, TimeStamp::NowUnfuzzed()), &lock);
+      PROFILER_MARKER_TEXT("profiler_unregister_thread again", OTHER_Profiling,
+                           MarkerThreadId::MainThread(), threadIdString);
     }
   }
 }
@@ -5802,18 +5794,6 @@ void profiler_tracing_marker(const char* aCategoryString,
       aMarkerName, aCategoryPair,
       TracingMarkerPayload(aCategoryString, aKind, TimeStamp::NowUnfuzzed(),
                            aInnerWindowID, std::move(aCause)));
-}
-
-void profiler_add_text_marker(const char* aMarkerName, const nsACString& aText,
-                              JS::ProfilingCategoryPair aCategoryPair,
-                              const mozilla::TimeStamp& aStartTime,
-                              const mozilla::TimeStamp& aEndTime,
-                              const mozilla::Maybe<uint64_t>& aInnerWindowID,
-                              UniqueProfilerBacktrace aCause) {
-  AUTO_PROFILER_STATS(add_marker_with_TextMarkerPayload);
-  profiler_add_marker(aMarkerName, aCategoryPair,
-                      TextMarkerPayload(aText, aStartTime, aEndTime,
-                                        aInnerWindowID, std::move(aCause)));
 }
 
 void profiler_set_js_context(JSContext* aCx) {
