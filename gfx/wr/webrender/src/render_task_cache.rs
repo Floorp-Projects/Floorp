@@ -121,7 +121,6 @@ impl RenderTaskCache {
     ) {
         // Find out what size to alloc in the texture cache.
         let size = match render_task.location {
-            RenderTaskLocation::Fixed(..) |
             RenderTaskLocation::PictureCache { .. } |
             RenderTaskLocation::TextureCache { .. } => {
                 panic!("BUG: dynamic task was expected");

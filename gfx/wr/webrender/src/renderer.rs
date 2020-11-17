@@ -95,7 +95,6 @@ use crate::texture_cache::TextureCache;
 use crate::render_target::{AlphaRenderTarget, ColorRenderTarget, PictureCacheTarget};
 use crate::render_target::{RenderTarget, TextureCacheRenderTarget, RenderTargetList};
 use crate::render_target::{RenderTargetKind, BlitJob, BlitJobSource};
-use crate::render_task_graph::RenderPassKind;
 use crate::tile_cache::PictureCacheDebugInfo;
 use crate::util::drain_filter;
 
@@ -3277,16 +3276,9 @@ impl Renderer {
         for (_, render_doc) in &self.active_documents {
             for pass in &render_doc.frame.passes {
                 let mut debug_targets = Vec::new();
-                match pass.kind {
-                    RenderPassKind::MainFramebuffer { ref main_target, .. } => {
-                        debug_targets.push(Self::debug_color_target(main_target));
-                    }
-                    RenderPassKind::OffScreen { ref alpha, ref color, ref texture_cache, .. } => {
-                        debug_targets.extend(alpha.targets.iter().map(Self::debug_alpha_target));
-                        debug_targets.extend(color.targets.iter().map(Self::debug_color_target));
-                        debug_targets.extend(texture_cache.iter().map(|(_, target)| Self::debug_texture_cache_target(target)));
-                    }
-                }
+                debug_targets.extend(pass.alpha.targets.iter().map(Self::debug_alpha_target));
+                debug_targets.extend(pass.color.targets.iter().map(Self::debug_color_target));
+                debug_targets.extend(pass.texture_cache.iter().map(|(_, target)| Self::debug_texture_cache_target(target)));
 
                 debug_passes.add(debug_server::Pass { targets: debug_targets });
             }
@@ -6288,252 +6280,182 @@ impl Renderer {
                 &mut self.device,
             );
 
-            match pass.kind {
-                RenderPassKind::MainFramebuffer { .. } => {
-                    profile_scope!("main target");
+            profile_scope!("offscreen target");
 
-                    if let Some(device_size) = device_size {
-                        results.stats.color_target_count += 1;
-                        results.picture_cache_debug = mem::replace(
-                            &mut frame.composite_state.picture_cache_debug,
-                            PictureCacheDebugInfo::new(),
-                        );
+            let alpha_tex = self.allocate_target_texture(&mut pass.alpha);
+            let color_tex = self.allocate_target_texture(&mut pass.color);
 
-                        let size = frame.device_rect.size.to_f32();
-                        let surface_origin_is_top_left = self.device.surface_origin_is_top_left();
-                        let (bottom, top) = if surface_origin_is_top_left {
-                          (0.0, size.height)
-                        } else {
-                          (size.height, 0.0)
-                        };
-
-                        let projection = Transform3D::ortho(
-                            0.0,
-                            size.width,
-                            bottom,
-                            top,
-                            self.device.ortho_near_plane(),
-                            self.device.ortho_far_plane(),
-                        );
-
-                        let fb_scale = Scale::<_, _, FramebufferPixel>::new(1i32);
-                        let mut fb_rect = frame.device_rect * fb_scale;
-
-                        if !surface_origin_is_top_left {
-                            fb_rect.origin.y = device_size.height - fb_rect.origin.y - fb_rect.size.height;
-                        }
-
-                        let draw_target = DrawTarget::Default {
-                            rect: fb_rect,
-                            total_size: device_size * fb_scale,
-                            surface_origin_is_top_left,
-                        };
-
-                        // If we have a native OS compositor, then make use of that interface
-                        // to specify how to composite each of the picture cache surfaces.
-                        match self.current_compositor_kind {
-                            CompositorKind::Native { .. } => {
-                                // We have already queued surfaces for early native composition by this point.
-                                // All that is left is to finally update any external native surfaces that were
-                                // invalidated so that composition can complete.
-                                self.update_external_native_surfaces(
-                                    &frame.composite_state.external_surfaces,
-                                    results,
-                                );
-                            }
-                            CompositorKind::Draw { .. } => {
-                                self.composite_simple(
-                                    &frame.composite_state,
-                                    draw_target,
-                                    &projection,
-                                    results,
-                                    present_mode,
-                                );
-                            }
-                        }
-                    } else {
-                        // Rendering a frame without presenting it will confuse the partial
-                        // present logic, so force a full present for the next frame.
-                        self.force_redraw();
-                    }
+            // If this frame has already been drawn, then any texture
+            // cache targets have already been updated and can be
+            // skipped this time.
+            if !frame.has_been_rendered {
+                for (&(texture_id, target_index), target) in &pass.texture_cache {
+                    self.draw_texture_cache_target(
+                        &texture_id,
+                        target_index,
+                        target,
+                        &frame.render_tasks,
+                        &mut results.stats,
+                    );
                 }
-                RenderPassKind::OffScreen {
-                    ref mut alpha,
-                    ref mut color,
-                    ref mut texture_cache,
-                    ref mut picture_cache,
-                } => {
-                    profile_scope!("offscreen target");
 
-                    let alpha_tex = self.allocate_target_texture(alpha);
-                    let color_tex = self.allocate_target_texture(color);
+                if !pass.picture_cache.is_empty() {
+                    self.profile.inc(profiler::COLOR_PASSES);
+                }
 
-                    // If this frame has already been drawn, then any texture
-                    // cache targets have already been updated and can be
-                    // skipped this time.
-                    if !frame.has_been_rendered {
-                        for (&(texture_id, target_index), target) in texture_cache {
-                            self.draw_texture_cache_target(
-                                &texture_id,
-                                target_index,
-                                target,
-                                &frame.render_tasks,
-                                &mut results.stats,
-                            );
+                // Draw picture caching tiles for this pass.
+                for picture_target in &pass.picture_cache {
+                    results.stats.color_target_count += 1;
+
+                    let draw_target = match picture_target.surface {
+                        ResolvedSurfaceTexture::TextureCache { ref texture, layer } => {
+                            let (texture, _) = self.texture_resolver
+                                .resolve(texture)
+                                .expect("bug");
+
+                            DrawTarget::from_texture(
+                                texture,
+                                layer as usize,
+                                true,
+                            )
                         }
-
-                        if !picture_cache.is_empty() {
-                            self.profile.inc(profiler::COLOR_PASSES);
-                        }
-
-                        // Draw picture caching tiles for this pass.
-                        for picture_target in picture_cache {
-                            results.stats.color_target_count += 1;
-
-                            let draw_target = match picture_target.surface {
-                                ResolvedSurfaceTexture::TextureCache { ref texture, layer } => {
-                                    let (texture, _) = self.texture_resolver
-                                        .resolve(texture)
-                                        .expect("bug");
-
-                                    DrawTarget::from_texture(
-                                        texture,
-                                        layer as usize,
-                                        true,
+                        ResolvedSurfaceTexture::Native { id, size } => {
+                            let surface_info = match self.current_compositor_kind {
+                                CompositorKind::Native { .. } => {
+                                    let compositor = self.compositor_config.compositor().unwrap();
+                                    compositor.bind(
+                                        id,
+                                        picture_target.dirty_rect,
+                                        picture_target.valid_rect,
                                     )
                                 }
-                                ResolvedSurfaceTexture::Native { id, size } => {
-                                    let surface_info = match self.current_compositor_kind {
-                                        CompositorKind::Native { .. } => {
-                                            let compositor = self.compositor_config.compositor().unwrap();
-                                            compositor.bind(
-                                                id,
-                                                picture_target.dirty_rect,
-                                                picture_target.valid_rect,
-                                            )
-                                        }
-                                        CompositorKind::Draw { .. } => {
-                                            unreachable!();
-                                        }
-                                    };
-
-                                    DrawTarget::NativeSurface {
-                                        offset: surface_info.origin,
-                                        external_fbo_id: surface_info.fbo_id,
-                                        dimensions: size,
-                                    }
+                                CompositorKind::Draw { .. } => {
+                                    unreachable!();
                                 }
                             };
 
-                            let projection = Transform3D::ortho(
-                                0.0,
-                                draw_target.dimensions().width as f32,
-                                0.0,
-                                draw_target.dimensions().height as f32,
-                                self.device.ortho_near_plane(),
-                                self.device.ortho_far_plane(),
-                            );
+                            DrawTarget::NativeSurface {
+                                offset: surface_info.origin,
+                                external_fbo_id: surface_info.fbo_id,
+                                dimensions: size,
+                            }
+                        }
+                    };
 
-                            self.draw_picture_cache_target(
-                                picture_target,
-                                draw_target,
-                                &projection,
-                                &frame.render_tasks,
-                                &mut results.stats,
-                            );
+                    let projection = Transform3D::ortho(
+                        0.0,
+                        draw_target.dimensions().width as f32,
+                        0.0,
+                        draw_target.dimensions().height as f32,
+                        self.device.ortho_near_plane(),
+                        self.device.ortho_far_plane(),
+                    );
 
-                            // Native OS surfaces must be unbound at the end of drawing to them
-                            if let ResolvedSurfaceTexture::Native { .. } = picture_target.surface {
-                                match self.current_compositor_kind {
-                                    CompositorKind::Native { .. } => {
-                                        let compositor = self.compositor_config.compositor().unwrap();
-                                        compositor.unbind();
-                                    }
-                                    CompositorKind::Draw { .. } => {
-                                        unreachable!();
-                                    }
-                                }
+                    self.draw_picture_cache_target(
+                        picture_target,
+                        draw_target,
+                        &projection,
+                        &frame.render_tasks,
+                        &mut results.stats,
+                    );
+
+                    // Native OS surfaces must be unbound at the end of drawing to them
+                    if let ResolvedSurfaceTexture::Native { .. } = picture_target.surface {
+                        match self.current_compositor_kind {
+                            CompositorKind::Native { .. } => {
+                                let compositor = self.compositor_config.compositor().unwrap();
+                                compositor.unbind();
+                            }
+                            CompositorKind::Draw { .. } => {
+                                unreachable!();
                             }
                         }
                     }
-
-                    for (target_index, target) in alpha.targets.iter().enumerate() {
-                        results.stats.alpha_target_count += 1;
-                        let draw_target = DrawTarget::from_texture(
-                            &alpha_tex.as_ref().unwrap().texture,
-                            target_index,
-                            false,
-                        );
-
-                        let projection = Transform3D::ortho(
-                            0.0,
-                            draw_target.dimensions().width as f32,
-                            0.0,
-                            draw_target.dimensions().height as f32,
-                            self.device.ortho_near_plane(),
-                            self.device.ortho_far_plane(),
-                        );
-
-                        self.draw_alpha_target(
-                            draw_target,
-                            target,
-                            &projection,
-                            &frame.render_tasks,
-                            &mut results.stats,
-                        );
-                    }
-
-                    for (target_index, target) in color.targets.iter().enumerate() {
-                        results.stats.color_target_count += 1;
-                        let draw_target = DrawTarget::from_texture(
-                            &color_tex.as_ref().unwrap().texture,
-                            target_index,
-                            target.needs_depth(),
-                        );
-
-                        let projection = Transform3D::ortho(
-                            0.0,
-                            draw_target.dimensions().width as f32,
-                            0.0,
-                            draw_target.dimensions().height as f32,
-                            self.device.ortho_near_plane(),
-                            self.device.ortho_far_plane(),
-                        );
-
-                        let clear_depth = if target.needs_depth() {
-                            Some(1.0)
-                        } else {
-                            None
-                        };
-
-                        self.draw_color_target(
-                            draw_target,
-                            target,
-                            Some([0.0, 0.0, 0.0, 0.0]),
-                            clear_depth,
-                            &frame.render_tasks,
-                            &projection,
-                            &mut results.stats,
-                        );
-                    }
-
-                    // Only end the pass here and invalidate previous textures for
-                    // off-screen targets. Deferring return of the inputs to the
-                    // frame buffer until the implicit end_pass in end_frame allows
-                    // debug draw overlays to be added without triggering a copy
-                    // resolve stage in mobile / tiled GPUs.
-                    self.texture_resolver.end_pass(
-                        &mut self.device,
-                        alpha_tex,
-                        color_tex,
-                    );
                 }
             }
+
+            for (target_index, target) in pass.alpha.targets.iter().enumerate() {
+                results.stats.alpha_target_count += 1;
+                let draw_target = DrawTarget::from_texture(
+                    &alpha_tex.as_ref().unwrap().texture,
+                    target_index,
+                    false,
+                );
+
+                let projection = Transform3D::ortho(
+                    0.0,
+                    draw_target.dimensions().width as f32,
+                    0.0,
+                    draw_target.dimensions().height as f32,
+                    self.device.ortho_near_plane(),
+                    self.device.ortho_far_plane(),
+                );
+
+                self.draw_alpha_target(
+                    draw_target,
+                    target,
+                    &projection,
+                    &frame.render_tasks,
+                    &mut results.stats,
+                );
+            }
+
+            for (target_index, target) in pass.color.targets.iter().enumerate() {
+                results.stats.color_target_count += 1;
+                let draw_target = DrawTarget::from_texture(
+                    &color_tex.as_ref().unwrap().texture,
+                    target_index,
+                    target.needs_depth(),
+                );
+
+                let projection = Transform3D::ortho(
+                    0.0,
+                    draw_target.dimensions().width as f32,
+                    0.0,
+                    draw_target.dimensions().height as f32,
+                    self.device.ortho_near_plane(),
+                    self.device.ortho_far_plane(),
+                );
+
+                let clear_depth = if target.needs_depth() {
+                    Some(1.0)
+                } else {
+                    None
+                };
+
+                self.draw_color_target(
+                    draw_target,
+                    target,
+                    Some([0.0, 0.0, 0.0, 0.0]),
+                    clear_depth,
+                    &frame.render_tasks,
+                    &projection,
+                    &mut results.stats,
+                );
+            }
+
+            // Only end the pass here and invalidate previous textures for
+            // off-screen targets. Deferring return of the inputs to the
+            // frame buffer until the implicit end_pass in end_frame allows
+            // debug draw overlays to be added without triggering a copy
+            // resolve stage in mobile / tiled GPUs.
+            self.texture_resolver.end_pass(
+                &mut self.device,
+                alpha_tex,
+                color_tex,
+            );
             {
                 profile_scope!("gl.flush");
                 self.device.gl().flush();
             }
         }
+
+        self.composite_frame(
+            frame,
+            device_size,
+            results,
+            present_mode,
+        );
 
         if let Some(device_size) = device_size {
             self.draw_frame_debug_items(&frame.debug_items);
@@ -6545,6 +6467,81 @@ impl Renderer {
         self.draw_epoch_debug();
 
         frame.has_been_rendered = true;
+    }
+
+    fn composite_frame(
+        &mut self,
+        frame: &mut Frame,
+        device_size: Option<DeviceIntSize>,
+        results: &mut RenderResults,
+        present_mode: Option<PartialPresentMode>,
+    ) {
+        profile_scope!("main target");
+
+        if let Some(device_size) = device_size {
+            results.stats.color_target_count += 1;
+            results.picture_cache_debug = mem::replace(
+                &mut frame.composite_state.picture_cache_debug,
+                PictureCacheDebugInfo::new(),
+            );
+
+            let size = frame.device_rect.size.to_f32();
+            let surface_origin_is_top_left = self.device.surface_origin_is_top_left();
+            let (bottom, top) = if surface_origin_is_top_left {
+              (0.0, size.height)
+            } else {
+              (size.height, 0.0)
+            };
+
+            let projection = Transform3D::ortho(
+                0.0,
+                size.width,
+                bottom,
+                top,
+                self.device.ortho_near_plane(),
+                self.device.ortho_far_plane(),
+            );
+
+            let fb_scale = Scale::<_, _, FramebufferPixel>::new(1i32);
+            let mut fb_rect = frame.device_rect * fb_scale;
+
+            if !surface_origin_is_top_left {
+                fb_rect.origin.y = device_size.height - fb_rect.origin.y - fb_rect.size.height;
+            }
+
+            let draw_target = DrawTarget::Default {
+                rect: fb_rect,
+                total_size: device_size * fb_scale,
+                surface_origin_is_top_left,
+            };
+
+            // If we have a native OS compositor, then make use of that interface
+            // to specify how to composite each of the picture cache surfaces.
+            match self.current_compositor_kind {
+                CompositorKind::Native { .. } => {
+                    // We have already queued surfaces for early native composition by this point.
+                    // All that is left is to finally update any external native surfaces that were
+                    // invalidated so that composition can complete.
+                    self.update_external_native_surfaces(
+                        &frame.composite_state.external_surfaces,
+                        results,
+                    );
+                }
+                CompositorKind::Draw { .. } => {
+                    self.composite_simple(
+                        &frame.composite_state,
+                        draw_target,
+                        &projection,
+                        results,
+                        present_mode,
+                    );
+                }
+            }
+        } else {
+            // Rendering a frame without presenting it will confuse the partial
+            // present logic, so force a full present for the next frame.
+            self.force_redraw();
+        }
     }
 
     /// Initialize the PLS block, by reading the current framebuffer color.
