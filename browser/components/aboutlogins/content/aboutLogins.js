@@ -15,6 +15,13 @@ const gElements = {
   loginIntro: document.querySelector("login-intro"),
   loginItem: document.querySelector("login-item"),
   loginFilter: document.querySelector("login-filter"),
+  menuButton: document.querySelector("menu-button"),
+  // removeAllLogins button is nested inside of menuButton
+  get removeAllButton() {
+    return this.menuButton.shadowRoot.querySelector(
+      ".menuitem-remove-all-logins"
+    );
+  },
 };
 
 let numberOfLogins = 0;
@@ -23,6 +30,7 @@ function updateNoLogins() {
   document.documentElement.classList.toggle("no-logins", numberOfLogins == 0);
   gElements.loginList.classList.toggle("no-logins", numberOfLogins == 0);
   gElements.loginItem.classList.toggle("no-logins", numberOfLogins == 0);
+  gElements.removeAllButton.disabled = numberOfLogins == 0;
 }
 
 function handleAllLogins(logins) {
@@ -31,9 +39,14 @@ function handleAllLogins(logins) {
   updateNoLogins();
 }
 
+let fxaLoggedIn = null;
+let passwordSyncEnabled = null;
+
 function handleSyncState(syncState) {
   gElements.fxAccountsButton.updateState(syncState);
   gElements.loginIntro.updateState(syncState);
+  fxaLoggedIn = syncState.loggedIn;
+  passwordSyncEnabled = syncState.passwordSyncEnabled;
 }
 
 window.addEventListener("AboutLoginsChromeToContent", event => {
@@ -111,6 +124,40 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
       gElements.loginList.updateVulnerableLogins(event.detail.value);
       gElements.loginItem.updateVulnerableLogins(event.detail.value);
       break;
+    }
+  }
+});
+
+window.addEventListener("AboutLoginsRemoveAllLoginsDialog", () => {
+  let options = {};
+  if (fxaLoggedIn && passwordSyncEnabled) {
+    options.title = "about-logins-confirm-remove-all-sync-dialog-title";
+    options.message = "about-logins-confirm-remove-all-sync-dialog-message";
+  } else {
+    options.title = "about-logins-confirm-remove-all-dialog-title";
+    options.message = "about-logins-confirm-remove-all-dialog-message";
+  }
+  options.confirmCheckboxLabel =
+    "about-logins-confirm-remove-all-dialog-checkbox-label";
+  options.confirmButtonLabel =
+    "about-logins-confirm-remove-all-dialog-confirm-button";
+  options.count = numberOfLogins;
+
+  let dialog = document.querySelector("remove-logins-dialog");
+  let dialogPromise = dialog.show(options);
+  try {
+    dialogPromise.then(
+      () => {
+        let removeAllEvt = new CustomEvent("AboutLoginsRemoveAllLogins", {
+          bubbles: true,
+        });
+        window.dispatchEvent(removeAllEvt);
+      },
+      () => {}
+    );
+  } catch (e) {
+    if (e != undefined) {
+      throw e;
     }
   }
 });

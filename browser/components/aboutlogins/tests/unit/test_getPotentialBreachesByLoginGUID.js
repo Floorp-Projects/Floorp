@@ -199,7 +199,7 @@ add_task(async function test_breachAlertHiddenAfterDismissal() {
   );
 
   info("Clear login storage");
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
 
   const breachesByLoginGUID2 = await LoginBreaches.getPotentialBreachesByLoginGUID(
     [BREACHED_LOGIN, NOT_BREACHED_LOGIN],

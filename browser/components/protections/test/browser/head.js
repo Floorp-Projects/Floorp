@@ -83,7 +83,7 @@ const mockGetMonitorData = data => {
 };
 
 registerCleanupFunction(function head_cleanup() {
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
 });
 
 // Used to replace AboutProtectionsParent.VPNSubStatus and Region.current

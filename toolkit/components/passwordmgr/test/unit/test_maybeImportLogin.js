@@ -46,7 +46,7 @@ add_task(async function test_invalid_logins() {
     0,
     `Should have no logins in storage: ${JSON.stringify(savedLogins, null, 2)}`
   );
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
 });
 
 add_task(async function test_new_logins() {
@@ -97,7 +97,7 @@ add_task(async function test_new_logins() {
     2,
     "There should be 2 logins in total"
   );
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
 });
 
 add_task(async function test_duplicate_logins() {
@@ -135,7 +135,7 @@ add_task(async function test_duplicate_logins() {
     1,
     `There should still be 1 login for ${HOST1}`
   );
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
 });
 
 add_task(async function test_different_passwords() {
@@ -208,7 +208,7 @@ add_task(async function test_different_passwords() {
     "We should NOT have updated the password for this login."
   );
 
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
 });
 
 add_task(async function test_different_usernames_without_guid() {
@@ -247,7 +247,7 @@ add_task(async function test_different_usernames_without_guid() {
     `There should now be 2 logins for ${HOST1}`
   );
 
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
 });
 
 add_task(async function test_different_usernames_with_guid() {
@@ -289,7 +289,7 @@ add_task(async function test_different_usernames_with_guid() {
   Assert.equal(storageLogin.username, USER2, "Check username updated");
   Assert.equal(storageLogin.origin, HOST2, "Check origin updated");
 
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
 });
 
 add_task(async function test_different_targets() {
@@ -355,5 +355,5 @@ add_task(async function test_different_targets() {
     `There should now be 2 logins for ${HOST1}`
   );
 
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
 });

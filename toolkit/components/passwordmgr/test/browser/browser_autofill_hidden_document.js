@@ -47,7 +47,7 @@ function observeMasterPasswordDialog(window, result) {
 }
 
 add_task(async function setup() {
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
   let login = LoginTestUtils.testData.formLogin({
     origin: "http://example.org",
     formActionOrigin: "http://example.org",

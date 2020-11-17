@@ -115,7 +115,7 @@ add_task(async function test_setup() {
   authPromptModalType = Services.prefs.getIntPref("prompts.modalType.httpAuth");
   normalWin = await BrowserTestUtils.openNewBrowserWindow({ private: false });
   privateWin = await BrowserTestUtils.openNewBrowserWindow({ private: true });
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
 });
 
 add_task(async function test_normal_popup_notification_1() {
@@ -169,7 +169,7 @@ add_task(async function test_private_popup_notification_2() {
   );
 
   // clear existing logins for parity with the previous test
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
   await focusWindow(privateWin);
   await BrowserTestUtils.withNewTab(
     {
@@ -243,7 +243,7 @@ add_task(async function test_private_popup_notification_no_capture_pref_2b() {
   Services.prefs.setBoolPref(PRIVATE_BROWSING_CAPTURE_PREF, false);
 
   // clear existing logins for parity with the previous test
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
 
   await focusWindow(privateWin);
   await BrowserTestUtils.withNewTab(
@@ -289,7 +289,7 @@ add_task(async function test_normal_popup_notification_3() {
       "match existing username/password: no popup notification should appear"
   );
 
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
   Services.logins.addLogin(login);
   let allLogins = Services.logins.getAllLogins();
   // Sanity check the HTTP login exists.
@@ -340,7 +340,7 @@ add_task(async function test_private_popup_notification_3b() {
       " match existing username/password: no popup notification should appear"
   );
 
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
   Services.logins.addLogin(login);
   let allLogins = Services.logins.getAllLogins();
   // Sanity check the HTTP login exists.
@@ -392,7 +392,7 @@ add_task(async function test_normal_new_password_4() {
     "test 4: run with a login, outside of private mode," +
       " add a new password: popup notification should appear"
   );
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
   Services.logins.addLogin(login);
   let allLogins = Services.logins.getAllLogins();
   // Sanity check the HTTP login exists.
@@ -684,7 +684,7 @@ add_task(async function test_normal_http_basic_auth() {
   info(
     "test normal/basic-auth: verify that we get a doorhanger after basic-auth login"
   );
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
   clearHttpAuths();
 
   await focusWindow(normalWin);
@@ -737,7 +737,7 @@ add_task(async function test_private_http_basic_auth() {
   info(
     "test private/basic-auth: verify that we don't get a doorhanger after basic-auth login"
   );
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
   clearHttpAuths();
 
   const capturePrefValue = Services.prefs.getBoolPref(
@@ -792,7 +792,7 @@ add_task(async function test_private_http_basic_auth_no_capture_pref() {
   );
   Services.prefs.setBoolPref(PRIVATE_BROWSING_CAPTURE_PREF, false);
 
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
   clearHttpAuths();
 
   await focusWindow(privateWin);

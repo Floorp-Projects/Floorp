@@ -32,7 +32,7 @@ let readyPromise = registerRunTests(1);
 const { TestUtils } = SpecialPowers.Cu.import("resource://testing-common/TestUtils.jsm");
 
 async function prepareLogins(logins = []) {
-  await LoginManager.removeAllLogins();
+  await LoginManager.removeAllUserFacingLogins();
 
   for (let login of logins) {
     let storageAddPromise = promiseStorageChanged(["addLogin"]);
