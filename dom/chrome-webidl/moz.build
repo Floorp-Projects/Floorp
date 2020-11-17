@@ -65,6 +65,7 @@ WEBIDL_FILES = [
     "MozStorageAsyncStatementParams.webidl",
     "MozStorageStatementParams.webidl",
     "MozStorageStatementRow.webidl",
+    "NetDashboard.webidl",
     "PathUtils.webidl",
     "PrecompiledScript.webidl",
     "PromiseDebugging.webidl",
