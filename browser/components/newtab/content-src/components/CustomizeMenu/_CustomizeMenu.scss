@@ -1,0 +1,18 @@
+.customize-menu {
+  background-color: $white;
+  width: 432px;
+  height: 100%;
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1001;
+  box-shadow: 0px 0px 64px rgba(9, 32, 77, 0.12), 0px 0px 24px rgba(29, 17, 51, 0.12);
+
+  #closeButton {
+    margin-inline-end: 25px;
+    display: block;
+    margin-block: 20px 0;
+    box-shadow: none;
+  }
+}
