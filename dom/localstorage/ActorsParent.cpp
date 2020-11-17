@@ -1183,8 +1183,7 @@ nsresult UpdateUsageFile(nsIFile* aUsageFile, nsIFile* aUsageJournalFile,
     LS_TRY(aUsageJournalFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644));
   }
 
-  nsCOMPtr<nsIOutputStream> stream;
-  LS_TRY(NS_NewLocalFileOutputStream(getter_AddRefs(stream), aUsageFile));
+  LS_TRY_INSPECT(const auto& stream, NS_NewLocalFileOutputStream(aUsageFile));
 
   nsCOMPtr<nsIBinaryOutputStream> binaryStream =
       NS_NewObjectOutputStream(stream);
@@ -1206,12 +1205,10 @@ Result<UsageInfo, nsresult> LoadUsageFile(nsIFile& aUsageFile) {
 
   LS_TRY(OkIf(fileSize == kUsageFileSize), Err(NS_ERROR_FILE_CORRUPTED));
 
-  nsCOMPtr<nsIInputStream> stream;
-  LS_TRY(NS_NewLocalFileInputStream(getter_AddRefs(stream), &aUsageFile));
+  LS_TRY_UNWRAP(auto stream, NS_NewLocalFileInputStream(&aUsageFile));
 
-  nsCOMPtr<nsIInputStream> bufferedStream;
-  LS_TRY(NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
-                                   stream.forget(), 16));
+  LS_TRY_INSPECT(const auto& bufferedStream,
+                 NS_NewBufferedInputStream(stream.forget(), 16));
 
   const nsCOMPtr<nsIBinaryInputStream> binaryStream =
       NS_NewObjectInputStream(bufferedStream);
