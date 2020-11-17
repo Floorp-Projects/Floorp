@@ -272,7 +272,7 @@ add_task(async function setup() {
   }
 
   registerCleanupFunction(() => {
-    Services.logins.removeAllLogins();
+    Services.logins.removeAllUserFacingLogins();
     if (loginCrypto.finalize) {
       loginCrypto.finalize();
     }
@@ -327,7 +327,7 @@ add_task(async function test_importExistingLogins() {
     "Sanity check the source exists"
   );
 
-  Services.logins.removeAllLogins();
+  Services.logins.removeAllUserFacingLogins();
   let logins = Services.logins.getAllLogins();
   Assert.equal(
     logins.length,

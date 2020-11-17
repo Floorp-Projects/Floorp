@@ -426,6 +426,10 @@ class AboutLoginsParent extends JSWindowActorParent {
         fp.open(fpCallback);
         break;
       }
+      case "AboutLogins:RemoveAllLogins": {
+        Services.logins.removeAllUserFacingLogins();
+        break;
+      }
     }
   }
 
@@ -790,12 +794,14 @@ var AboutLogins = {
     // authenticated. More diagnostics and error states can be handled
     // by other more Sync-specific pages.
     const loggedIn = state.status != UIState.STATUS_NOT_CONFIGURED;
+    const passwordSyncEnabled = state.syncEnabled && PASSWORD_SYNC_ENABLED;
 
     return {
       loggedIn,
       email: state.email,
       avatarURL: state.avatarURL,
       fxAccountsEnabled: FXA_ENABLED,
+      passwordSyncEnabled,
     };
   },
 
@@ -815,6 +821,7 @@ var AboutLogins = {
   onPasswordSyncEnabledPreferenceChange(data, previous, latest) {
     Services.prefs.clearUserPref(SHOW_PASSWORD_SYNC_NOTIFICATION_PREF);
     this.updatePasswordSyncNotificationState(this.getSyncState(), latest);
+    this.messageSubscribers("AboutLogins:SyncState", this.getSyncState());
   },
 };
 var _AboutLogins = AboutLogins;
