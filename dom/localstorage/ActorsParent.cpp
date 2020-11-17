@@ -1170,25 +1170,16 @@ nsresult DetachShadowDatabase(mozIStorageConnection* aConnection) {
   return NS_OK;
 }
 
-nsresult GetUsageFile(const nsAString& aDirectoryPath, nsIFile** aUsageFile) {
+Result<nsCOMPtr<nsIFile>, nsresult> GetUsageFile(
+    const nsAString& aDirectoryPath) {
   MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
   MOZ_ASSERT(!aDirectoryPath.IsEmpty());
-  MOZ_ASSERT(aUsageFile);
 
-  auto usageFileOrErr = QM_NewLocalFile(aDirectoryPath);
-  if (NS_WARN_IF(usageFileOrErr.isErr())) {
-    return usageFileOrErr.unwrapErr();
-  }
+  LS_TRY_UNWRAP(auto usageFile, QM_NewLocalFile(aDirectoryPath));
 
-  nsCOMPtr<nsIFile> usageFile = usageFileOrErr.unwrap();
+  LS_TRY(usageFile->Append(kUsageFileName));
 
-  nsresult rv = usageFile->Append(kUsageFileName);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  usageFile.forget(aUsageFile);
-  return NS_OK;
+  return usageFile;
 }
 
 nsresult GetUsageJournalFile(const nsAString& aDirectoryPath,
@@ -4442,11 +4433,7 @@ nsresult Connection::EnsureStorageConnection() {
   MOZ_ASSERT(!exists);
 #endif
 
-  nsCOMPtr<nsIFile> usageFile;
-  rv = GetUsageFile(mDirectoryPath, getter_AddRefs(usageFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY_INSPECT(const auto& usageFile, GetUsageFile(mDirectoryPath));
 
   nsCOMPtr<mozIStorageConnection> storageConnection;
   bool removedUsageFile;
@@ -4759,11 +4746,8 @@ nsresult Connection::FlushOp::DoDatastoreWork() {
     return rv;
   }
 
-  nsCOMPtr<nsIFile> usageFile;
-  rv = GetUsageFile(mConnection->DirectoryPath(), getter_AddRefs(usageFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY_INSPECT(const auto& usageFile,
+                 GetUsageFile(mConnection->DirectoryPath()));
 
   nsCOMPtr<nsIFile> usageJournalFile;
   rv = GetUsageJournalFile(mConnection->DirectoryPath(),
@@ -7517,11 +7501,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   // from now on.
   RefPtr<QuotaObject> quotaObject;
 
-  nsCOMPtr<nsIFile> usageFile;
-  rv = GetUsageFile(directoryPath, getter_AddRefs(usageFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY_INSPECT(const auto& usageFile, GetUsageFile(directoryPath));
 
   nsCOMPtr<nsIFile> usageJournalFile;
   rv = GetUsageJournalFile(directoryPath, getter_AddRefs(usageJournalFile));
@@ -8913,8 +8893,7 @@ Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
   LS_TRY_INSPECT(const auto& directoryPath,
                  MOZ_TO_RESULT_INVOKE_TYPED(nsString, directory, GetPath));
 
-  LS_TRY_INSPECT(const auto& usageFile, ToResultInvoke<nsCOMPtr<nsIFile>>(
-                                            GetUsageFile, directoryPath));
+  LS_TRY_INSPECT(const auto& usageFile, GetUsageFile(directoryPath));
 
   // XXX Try to make usageFileExists const
   LS_TRY_UNWRAP(bool usageFileExists, ExistsAsFile(*usageFile));
