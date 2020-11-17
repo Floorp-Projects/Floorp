@@ -372,7 +372,7 @@ const MultiStageAboutWelcome = props => {
   Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
     (async () => {
       if (metricsFlowUri) {
-        setFlowParams((await _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__["AboutWelcomeUtils"].fetchFlowParams(metricsFlowUri)));
+        setFlowParams(await _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__["AboutWelcomeUtils"].fetchFlowParams(metricsFlowUri));
       }
     })();
   }, [metricsFlowUri]); // Transition to next screen, opening about:home on last screen button CTA
@@ -388,7 +388,7 @@ const MultiStageAboutWelcome = props => {
   const [region, setRegion] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(null);
   Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
     (async () => {
-      setRegion((await window.AWGetRegion()));
+      setRegion(await window.AWGetRegion());
     })();
   }, []); // Get the active theme so the rendering code can make it selected
   // by default.
@@ -409,7 +409,7 @@ const MultiStageAboutWelcome = props => {
   Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
     (async () => {
       let DEFAULT_SITES = await window.AWGetDefaultSites();
-      const importable = JSON.parse((await window.AWGetImportableSites()));
+      const importable = JSON.parse(await window.AWGetImportableSites());
       const showImportable = useImportable && importable.length >= 5;
 
       if (!importTelemetrySent) {
