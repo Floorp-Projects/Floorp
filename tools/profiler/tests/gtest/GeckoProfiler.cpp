@@ -835,15 +835,6 @@ TEST(GeckoProfiler, Markers)
   PROFILER_ADD_MARKER_WITH_PAYLOAD("TextMarkerPayload marker 2", OTHER,
                                    TextMarkerPayload, ("text"_ns, ts1, ts2));
 
-  PROFILER_ADD_MARKER_WITH_PAYLOAD("UserTimingMarkerPayload marker mark", OTHER,
-                                   UserTimingMarkerPayload,
-                                   (u"mark name"_ns, ts1, mozilla::Nothing()));
-
-  PROFILER_ADD_MARKER_WITH_PAYLOAD(
-      "UserTimingMarkerPayload marker measure", OTHER, UserTimingMarkerPayload,
-      (u"measure name"_ns, Some(u"start mark"_ns), Some(u"end mark"_ns), ts1,
-       ts2, mozilla::Nothing()));
-
   MOZ_RELEASE_ASSERT(profiler_add_marker(
       "Text in main thread with stack", geckoprofiler::category::OTHER,
       MarkerStack::Capture(), geckoprofiler::markers::Text{}, ""));
@@ -886,16 +877,6 @@ TEST(GeckoProfiler, Markers)
   MOZ_RELEASE_ASSERT(
       profiler_add_marker("Tracing", geckoprofiler::category::OTHER, {},
                           geckoprofiler::markers::Tracing{}, "category"));
-
-  MOZ_RELEASE_ASSERT(profiler_add_marker(
-      "UserTimingMark", geckoprofiler::category::OTHER, {},
-      geckoprofiler::markers::UserTimingMark{}, "mark name"));
-
-  MOZ_RELEASE_ASSERT(profiler_add_marker(
-      "UserTimingMeasure", geckoprofiler::category::OTHER, {},
-      geckoprofiler::markers::UserTimingMeasure{}, "measure name",
-      Some(mozilla::ProfilerString8View("start")),
-      Some(mozilla::ProfilerString8View("end"))));
 
   MOZ_RELEASE_ASSERT(profiler_add_marker("Text", geckoprofiler::category::OTHER,
                                          {}, geckoprofiler::markers::Text{},
@@ -953,8 +934,6 @@ TEST(GeckoProfiler, Markers)
     S_NetworkMarkerPayload_redirect,
     S_TextMarkerPayload1,
     S_TextMarkerPayload2,
-    S_UserTimingMarkerPayload_mark,
-    S_UserTimingMarkerPayload_measure,
     S_TextWithStack,
     S_TextToMTWithStack,
     S_RegThread_TextToMTWithStack,
@@ -1356,27 +1335,6 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_TRUE(payload["stack"].isNull());
                 EXPECT_EQ_JSON(payload["name"], String, "text");
 
-              } else if (nameString == "UserTimingMarkerPayload marker mark") {
-                EXPECT_EQ(state, S_UserTimingMarkerPayload_mark);
-                state = State(S_UserTimingMarkerPayload_mark + 1);
-                EXPECT_EQ(typeString, "UserTiming");
-                EXPECT_TIMING_INSTANT_AT(ts1Double);
-                EXPECT_TRUE(payload["stack"].isNull());
-                EXPECT_EQ_JSON(payload["name"], String, "mark name");
-                EXPECT_EQ_JSON(payload["entryType"], String, "mark");
-
-              } else if (nameString ==
-                         "UserTimingMarkerPayload marker measure") {
-                EXPECT_EQ(state, S_UserTimingMarkerPayload_measure);
-                state = State(S_UserTimingMarkerPayload_measure + 1);
-                EXPECT_EQ(typeString, "UserTiming");
-                EXPECT_TIMING_INTERVAL_AT(ts1Double, ts2Double);
-                EXPECT_TRUE(payload["stack"].isNull());
-                EXPECT_EQ_JSON(payload["name"], String, "measure name");
-                EXPECT_EQ_JSON(payload["entryType"], String, "measure");
-                EXPECT_EQ_JSON(payload["startMark"], String, "start mark");
-                EXPECT_EQ_JSON(payload["endMark"], String, "end mark");
-
               } else if (nameString == "Text in main thread with stack") {
                 EXPECT_EQ(state, S_TextWithStack);
                 state = State(S_TextWithStack + 1);
@@ -1494,70 +1452,6 @@ TEST(GeckoProfiler, Markers)
           EXPECT_EQ_JSON(data[0u]["label"], String, "Type");
           EXPECT_EQ_JSON(data[0u]["format"], String, "string");
 
-        } else if (nameString == "UserTimingMark") {
-          EXPECT_EQ(display.size(), 2u);
-          EXPECT_EQ(display[0u].asString(), "marker-chart");
-          EXPECT_EQ(display[1u].asString(), "marker-table");
-
-          ASSERT_EQ(data.size(), 4u);
-
-          ASSERT_TRUE(data[0u].isObject());
-          EXPECT_EQ_JSON(data[0u]["label"], String, "Marker");
-          EXPECT_EQ_JSON(data[0u]["value"], String, "UserTiming");
-
-          ASSERT_TRUE(data[1u].isObject());
-          EXPECT_EQ_JSON(data[1u]["key"], String, "entryType");
-          EXPECT_EQ_JSON(data[1u]["label"], String, "Entry Type");
-          EXPECT_EQ_JSON(data[1u]["format"], String, "string");
-
-          ASSERT_TRUE(data[2u].isObject());
-          EXPECT_EQ_JSON(data[2u]["key"], String, "name");
-          EXPECT_EQ_JSON(data[2u]["label"], String, "Name");
-          EXPECT_EQ_JSON(data[2u]["format"], String, "string");
-
-          ASSERT_TRUE(data[3u].isObject());
-          EXPECT_EQ_JSON(data[3u]["label"], String, "Description");
-          EXPECT_EQ_JSON(data[3u]["value"], String,
-                         "UserTimingMark is created using the DOM API "
-                         "performance.mark().");
-
-        } else if (nameString == "UserTimingMeasure") {
-          EXPECT_EQ(display.size(), 2u);
-          EXPECT_EQ(display[0u].asString(), "marker-chart");
-          EXPECT_EQ(display[1u].asString(), "marker-table");
-
-          ASSERT_EQ(data.size(), 6u);
-
-          ASSERT_TRUE(data[0u].isObject());
-          EXPECT_EQ_JSON(data[0u]["label"], String, "Marker");
-          EXPECT_EQ_JSON(data[0u]["value"], String, "UserTiming");
-
-          ASSERT_TRUE(data[1u].isObject());
-          EXPECT_EQ_JSON(data[1u]["key"], String, "entryType");
-          EXPECT_EQ_JSON(data[1u]["label"], String, "Entry Type");
-          EXPECT_EQ_JSON(data[1u]["format"], String, "string");
-
-          ASSERT_TRUE(data[2u].isObject());
-          EXPECT_EQ_JSON(data[2u]["key"], String, "name");
-          EXPECT_EQ_JSON(data[2u]["label"], String, "Name");
-          EXPECT_EQ_JSON(data[2u]["format"], String, "string");
-
-          ASSERT_TRUE(data[3u].isObject());
-          EXPECT_EQ_JSON(data[3u]["key"], String, "startMark");
-          EXPECT_EQ_JSON(data[3u]["label"], String, "Start Mark");
-          EXPECT_EQ_JSON(data[3u]["format"], String, "string");
-
-          ASSERT_TRUE(data[4u].isObject());
-          EXPECT_EQ_JSON(data[4u]["key"], String, "endMark");
-          EXPECT_EQ_JSON(data[4u]["label"], String, "End Mark");
-          EXPECT_EQ_JSON(data[4u]["format"], String, "string");
-
-          ASSERT_TRUE(data[5u].isObject());
-          EXPECT_EQ_JSON(data[5u]["label"], String, "Description");
-          EXPECT_EQ_JSON(data[5u]["value"], String,
-                         "UserTimingMeasure is created using the DOM API "
-                         "performance.measure().");
-
         } else if (nameString == "BHR-detected hang") {
           EXPECT_EQ(display.size(), 3u);
           EXPECT_EQ(display[0u].asString(), "marker-chart");
@@ -1627,10 +1521,6 @@ TEST(GeckoProfiler, Markers)
       // Check that we've got all expected schema.
       EXPECT_TRUE(testedSchemaNames.find("Text") != testedSchemaNames.end());
       EXPECT_TRUE(testedSchemaNames.find("tracing") != testedSchemaNames.end());
-      EXPECT_TRUE(testedSchemaNames.find("UserTimingMark") !=
-                  testedSchemaNames.end());
-      EXPECT_TRUE(testedSchemaNames.find("UserTimingMeasure") !=
-                  testedSchemaNames.end());
       EXPECT_TRUE(testedSchemaNames.find("MediaSample") !=
                   testedSchemaNames.end());
     }  // markerSchema
