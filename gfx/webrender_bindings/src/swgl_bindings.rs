@@ -1094,7 +1094,7 @@ impl SwCompositor {
                     color_depth: ColorDepth::Color8,
                     size: DeviceIntSize::zero(),
                 };
-                assert!(surface.tiles.len() > 0);
+                assert!(!surface.tiles.is_empty());
                 let mut tile = &mut surface.tiles[0];
                 if unsafe { wr_swgl_lock_composite_surface(self.gl.into(), external_image, &mut info) } {
                     tile.valid_rect = DeviceIntRect::from_size(info.size);
@@ -1468,7 +1468,7 @@ impl Compositor for SwCompositor {
                 assert!(stride % 4 == 0);
                 let buf = if tile.pbo_id != 0 {
                     native_gl.unmap_buffer(gl::PIXEL_UNPACK_BUFFER);
-                    0 as *mut c_void
+                    std::ptr::null_mut::<c_void>()
                 } else {
                     swbuf
                 };

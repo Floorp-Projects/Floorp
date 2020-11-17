@@ -669,6 +669,7 @@ impl<'static_env, 'module_env> TransEnv<'static_env, 'module_env> {
         self.switch_to_wasm_tls_realm(pos);
         self.reload_tls_and_pinned_regs(pos);
 
+        #![allow(clippy::question_mark)]
         if call.ret.is_none() {
             return None;
         }
@@ -760,9 +761,7 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
         }
 
         match global.value_type()? {
-            ir::types::R32 | ir::types::R64 => {
-                return Ok(GlobalVariable::Custom);
-            }
+            ir::types::R32 | ir::types::R64 => Ok(GlobalVariable::Custom),
             _ => {
                 let (base_gv, offset) = self.global_address(func, &global);
                 let mem_ty = global.value_type()?;

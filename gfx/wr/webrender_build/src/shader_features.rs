@@ -36,7 +36,7 @@ impl<'a> FeatureList<'a> {
     }
 
     fn add(&mut self, feature: &'a str) {
-        assert!(!feature.contains(","));
+        assert!(!feature.contains(','));
         self.list.push(feature);
     }
 
@@ -55,7 +55,7 @@ impl<'a> FeatureList<'a> {
     }
 
     fn finish(&mut self) -> String {
-        self.list.sort();
+        self.list.sort_unstable();
         self.list.join(",")
     }
 }

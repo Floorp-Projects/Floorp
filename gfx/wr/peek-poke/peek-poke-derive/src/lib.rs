@@ -43,10 +43,7 @@ fn get_discriminant_size_type(len: usize) -> TokenStream {
 
 fn is_struct(s: &Structure) -> bool {
     // a single variant with no prefix is 'struct'
-    match &s.variants()[..] {
-        [v] if v.prefix.is_none() => true,
-        _ => false,
-    }
+    matches!(&s.variants()[..], [v] if v.prefix.is_none())
 }
 
 fn derive_max_size(s: &Structure) -> TokenStream {
