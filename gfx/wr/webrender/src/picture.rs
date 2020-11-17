@@ -5433,10 +5433,7 @@ impl PicturePrimitive {
                                     )
                                 );
 
-                                frame_state.render_tasks.add_dependency(
-                                    frame_state.surfaces[parent_surface_index.0].render_tasks.unwrap().port,
-                                    render_task_id,
-                                );
+                                frame_state.render_task_roots.push(render_task_id);
 
                                 if first {
                                     // TODO(gw): Maybe we can restructure this code to avoid the
