@@ -7,7 +7,7 @@
 setup({explicit_done:true});
 window.onmessage = function(e) {
     test(function() {
-        assert_equals(e.data, "outerlog:log:willfocuswindow,windowfocus,didfocuswindow,", 'Check log');
+        assert_equals(e.data, "outerlog:log:willfocuswindow,windowfocus,didfocuswindow,windowblur,windowfocus,", 'Check log');
     }, "Check result");
     w.close();
     done();

@@ -773,9 +773,14 @@ void nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow,
   }
 
   nsCOMPtr<nsIAppWindow> appWin(do_GetInterface(baseWindow));
-  Focus(currentWindow, currentFocus, 0,
-        currentWindow->GetBrowsingContext() != GetFocusedBrowsingContext(),
-        false, appWin != nullptr, true, focusInOtherContentProcess, aActionId);
+  // We use mFocusedWindow here is basically for the case that iframe navigate
+  // from a.com to b.com for example, so it ends up being loaded in a different
+  // process after Fission, but
+  // currentWindow->GetBrowsingContext() == GetFocusedBrowsingContext() would
+  // still be true because focused browsing context is synced, and we won't
+  // fire a focus event while focusing if we use it as condition.
+  Focus(currentWindow, currentFocus, 0, currentWindow != mFocusedWindow, false,
+        appWin != nullptr, true, focusInOtherContentProcess, aActionId);
 }
 
 void nsFocusManager::WindowLowered(mozIDOMWindowProxy* aWindow,

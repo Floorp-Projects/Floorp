@@ -7,6 +7,12 @@
 <body>
 <h1>Inner</h1>
 <script>
+window.onmessage = function(e) {
+    if (e.data == "getlog") {
+        parent.postMessage(log, "*");
+    }
+};
+
 let log = "log:";
 window.onfocus = function() {
     log += "windowfocus,"
@@ -18,7 +24,7 @@ window.onload = function() {
     log += "willfocuswindow,"
     window.focus();
     log += "didfocuswindow,"
-    parent.postMessage(log, "*");
+    parent.postMessage("start", "*");
 }
 </script>
 </body>
