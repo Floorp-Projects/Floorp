@@ -43,21 +43,6 @@ using LongTask = mozilla::baseprofiler::markers::LongTask;
 using Log = mozilla::baseprofiler::markers::Log;
 using MediaSample = mozilla::baseprofiler::markers::MediaSample;
 
-// Tracks when a vsync occurs according to the HardwareComposer.
-struct Vsync {
-  static constexpr mozilla::Span<const char> MarkerTypeName() {
-    return mozilla::MakeStringSpan("VsyncTimestamp");
-  }
-  static void StreamJSONMarkerData(
-      mozilla::baseprofiler::SpliceableJSONWriter& aWriter) {}
-  static mozilla::MarkerSchema MarkerTypeDisplay() {
-    using MS = mozilla::MarkerSchema;
-    MS schema{MS::Location::markerChart, MS::Location::markerTable};
-    // Nothing outside the defaults.
-    return schema;
-  }
-};
-
 struct Network {
   static constexpr mozilla::Span<const char> MarkerTypeName() {
     return mozilla::MakeStringSpan("Network");
