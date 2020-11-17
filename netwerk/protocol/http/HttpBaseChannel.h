@@ -248,7 +248,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   using nsIClassifiedChannel::IsThirdPartyTrackingResource;
 
-  virtual void SetSource(UniquePtr<ProfileChunkedBuffer> aSource) override {
+  virtual void SetSource(UniqueProfilerBacktrace aSource) override {
     mSource = std::move(aSource);
   }
 
@@ -756,7 +756,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   Atomic<uint32_t, ReleaseAcquire> mThirdPartyClassificationFlags;
   Atomic<uint32_t, ReleaseAcquire> mFlashPluginState;
 
-  UniquePtr<ProfileChunkedBuffer> mSource;
+  UniqueProfilerBacktrace mSource;
 
   uint32_t mLoadFlags;
   uint32_t mCaps;

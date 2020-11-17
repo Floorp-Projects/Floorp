@@ -265,6 +265,10 @@ class ThreadIntercept {
   // or disabled.
   static mozilla::Atomic<bool, mozilla::Relaxed> sAllocationsFeatureEnabled;
 
+  // The markers will be stored on the main thread. Retain the id to the main
+  // thread of this process here.
+  static mozilla::Atomic<int, mozilla::Relaxed> sMainThreadId;
+
   ThreadIntercept() = default;
 
   // Only allow consumers to access this information if they run
@@ -311,15 +315,22 @@ class ThreadIntercept {
 
   bool IsBlocked() const { return ThreadIntercept::IsBlocked_(); }
 
-  static void EnableAllocationFeature() { sAllocationsFeatureEnabled = true; }
+  static void EnableAllocationFeature(int aMainThreadId) {
+    sAllocationsFeatureEnabled = true;
+    sMainThreadId = aMainThreadId;
+  }
 
   static void DisableAllocationFeature() { sAllocationsFeatureEnabled = false; }
+
+  static int MainThreadId() { return sMainThreadId; }
 };
 
 PROFILER_THREAD_LOCAL(bool) ThreadIntercept::tlsIsBlocked;
 
 mozilla::Atomic<bool, mozilla::Relaxed>
     ThreadIntercept::sAllocationsFeatureEnabled(false);
+
+mozilla::Atomic<int, mozilla::Relaxed> ThreadIntercept::sMainThreadId(0);
 
 // An object of this class must be created (on the stack) before running any
 // code that might allocate.
@@ -378,7 +389,7 @@ static void AllocCallback(void* aPtr, size_t aReqSize) {
       gBernoulli->trial(actualSize) &&
       // Second, attempt to add a marker if the Bernoulli trial passed.
       profiler_add_native_allocation_marker(
-          static_cast<int64_t>(actualSize),
+          ThreadIntercept::MainThreadId(), static_cast<int64_t>(actualSize),
           reinterpret_cast<uintptr_t>(aPtr))) {
     MOZ_ASSERT(gAllocationTracker,
                "gAllocationTracker must be properly installed for the memory "
@@ -421,7 +432,8 @@ static void FreeCallback(void* aPtr) {
       "gAllocationTracker must be properly installed for the memory hooks.");
   if (gAllocationTracker->RemoveMemoryAddressIfFound(aPtr)) {
     // This size here is negative, indicating a deallocation.
-    profiler_add_native_allocation_marker(signedSize,
+    profiler_add_native_allocation_marker(ThreadIntercept::MainThreadId(),
+                                          signedSize,
                                           reinterpret_cast<uintptr_t>(aPtr));
   }
 }
@@ -555,7 +567,7 @@ void install_memory_hooks() {
 // leak these values.
 void remove_memory_hooks() { jemalloc_replace_dynamic(nullptr); }
 
-void enable_native_allocations() {
+void enable_native_allocations(int aMainThreadId) {
   // The bloat log tracks allocations and deallocations. This can conflict
   // with the memory hook machinery, as the bloat log creates its own
   // allocations. This means we can re-enter inside the bloat log machinery. At
@@ -584,7 +596,7 @@ void enable_native_allocations() {
 
   EnsureBernoulliIsInstalled();
   EnsureAllocationTrackerIsInstalled();
-  ThreadIntercept::EnableAllocationFeature();
+  ThreadIntercept::EnableAllocationFeature(aMainThreadId);
 }
 
 // This is safe to call even if native allocations hasn't been enabled.

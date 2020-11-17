@@ -62,6 +62,17 @@
 #  define AUTO_PROFILER_LABEL_DYNAMIC_FAST(label, dynamicString, categoryPair, \
                                            ctx, flags)
 
+#  define PROFILER_ADD_MARKER_WITH_PAYLOAD(markerName, categoryPair, \
+                                           PayloadType, payloadArgs)
+
+#  define PROFILER_TRACING_MARKER(categoryString, markerName, categoryPair, \
+                                  kind)
+#  define PROFILER_TRACING_MARKER_DOCSHELL(categoryString, markerName, \
+                                           categoryPair, kind, docshell)
+#  define AUTO_PROFILER_TRACING_MARKER(categoryString, markerName, categoryPair)
+#  define AUTO_PROFILER_TRACING_MARKER_DOCSHELL(categoryString, markerName, \
+                                                categoryPair, docShell)
+
 // Function stubs for when MOZ_GECKO_PROFILER is not defined.
 
 // This won't be used, it's just there to allow the empty definition of
@@ -109,6 +120,7 @@ profiler_capture_backtrace() {
 
 class ProfilerBacktrace;
 class ProfilerCodeAddressService;
+class ProfilerMarkerPayload;
 namespace mozilla {
 class ProfileBufferControlledChunkManager;
 class ProfileChunkedBuffer;
@@ -878,18 +890,48 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
         ctx, label, dynamicString, JS::ProfilingCategoryPair::categoryPair,    \
         flags)
 
+// `PayloadType` is a sub-class of MarkerPayload, `parenthesizedPayloadArgs` is
+// the argument list used to construct that `PayloadType`. E.g.:
+// `PROFILER_ADD_MARKER_WITH_PAYLOAD("Load", DOM, TextMarkerPayload,
+//                                   ("text", start, end, ds, dsh))`
+#  define PROFILER_ADD_MARKER_WITH_PAYLOAD(                            \
+      markerName, categoryPair, PayloadType, parenthesizedPayloadArgs) \
+    do {                                                               \
+      AUTO_PROFILER_STATS(add_marker_with_##PayloadType);              \
+      ::profiler_add_marker(markerName,                                \
+                            ::JS::ProfilingCategoryPair::categoryPair, \
+                            PayloadType parenthesizedPayloadArgs);     \
+    } while (false)
+
+void profiler_add_marker(const char* aMarkerName,
+                         JS::ProfilingCategoryPair aCategoryPair,
+                         const ProfilerMarkerPayload& aPayload);
+
 void profiler_add_js_marker(const char* aMarkerName, const char* aMarkerText);
 void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info);
 
 // Returns true or or false depending on whether the marker was actually added
 // or not.
-bool profiler_add_native_allocation_marker(int64_t aSize,
-                                           uintptr_t aMemoryAddress);
+bool profiler_add_native_allocation_marker(int aMainThreadId, int64_t aSize,
+                                           uintptr_t aMemorySize);
 
 // Returns true if the profiler lock is currently held *on the current thread*.
 // This may be used by re-entrant code that may call profiler functions while
 // the profiler already has the lock (which would deadlock).
 bool profiler_is_locked_on_current_thread();
+
+// Insert a marker in the profile timeline for a specified thread.
+void profiler_add_marker_for_thread(int aThreadId,
+                                    JS::ProfilingCategoryPair aCategoryPair,
+                                    const char* aMarkerName,
+                                    const ProfilerMarkerPayload& aPayload);
+
+// Insert a marker in the profile timeline for the main thread.
+// This may be used to gather some markers from any thread, that should be
+// displayed in the main thread track.
+void profiler_add_marker_for_mainthread(JS::ProfilingCategoryPair aCategoryPair,
+                                        const char* aMarkerName,
+                                        const ProfilerMarkerPayload& aPayload);
 
 enum class NetworkLoadType { LOAD_START, LOAD_STOP, LOAD_REDIRECT };
 
@@ -899,8 +941,7 @@ void profiler_add_network_marker(
     mozilla::TimeStamp aEnd, int64_t aCount,
     mozilla::net::CacheDisposition aCacheDisposition, uint64_t aInnerWindowID,
     const mozilla::net::TimingStruct* aTimings = nullptr,
-    nsIURI* aRedirectURI = nullptr,
-    mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource = nullptr,
+    nsIURI* aRedirectURI = nullptr, UniqueProfilerBacktrace aSource = nullptr,
     const mozilla::Maybe<nsDependentCString>& aContentType =
         mozilla::Nothing());
 
@@ -927,6 +968,40 @@ inline mozilla::MarkerInnerWindowId MarkerInnerWindowIdFromDocShell(
   }
   return mozilla::MarkerInnerWindowId(*id);
 }
+
+// Adds a tracing marker to the profile. A no-op if the profiler is inactive.
+
+#  define PROFILER_TRACING_MARKER(categoryString, markerName, categoryPair, \
+                                  kind)                                     \
+    profiler_tracing_marker(categoryString, markerName,                     \
+                            JS::ProfilingCategoryPair::categoryPair, kind)
+#  define PROFILER_TRACING_MARKER_DOCSHELL(categoryString, markerName,       \
+                                           categoryPair, kind, docShell)     \
+    profiler_tracing_marker(                                                 \
+        categoryString, markerName, JS::ProfilingCategoryPair::categoryPair, \
+        kind, profiler_get_inner_window_id_from_docshell(docShell))
+
+void profiler_tracing_marker(
+    const char* aCategoryString, const char* aMarkerName,
+    JS::ProfilingCategoryPair aCategoryPair, TracingKind aKind,
+    const mozilla::Maybe<uint64_t>& aInnerWindowID = mozilla::Nothing());
+void profiler_tracing_marker(
+    const char* aCategoryString, const char* aMarkerName,
+    JS::ProfilingCategoryPair aCategoryPair, TracingKind aKind,
+    UniqueProfilerBacktrace aCause,
+    const mozilla::Maybe<uint64_t>& aInnerWindowID = mozilla::Nothing());
+
+// Adds a START/END pair of tracing markers.
+#  define AUTO_PROFILER_TRACING_MARKER(categoryString, markerName,           \
+                                       categoryPair)                         \
+    mozilla::AutoProfilerTracing PROFILER_RAII(                              \
+        categoryString, markerName, JS::ProfilingCategoryPair::categoryPair, \
+        mozilla::Nothing())
+#  define AUTO_PROFILER_TRACING_MARKER_DOCSHELL(categoryString, markerName,  \
+                                                categoryPair, docShell)      \
+    mozilla::AutoProfilerTracing PROFILER_RAII(                              \
+        categoryString, markerName, JS::ProfilingCategoryPair::categoryPair, \
+        profiler_get_inner_window_id_from_docshell(docShell))
 
 //---------------------------------------------------------------------------
 // Output profiles
@@ -1148,6 +1223,44 @@ class MOZ_RAII AutoProfilerLabel {
 
     static MOZ_THREAD_LOCAL(ProfilingStackOwner*) sProfilingStackOwnerTLS;
   };
+};
+
+class MOZ_RAII AutoProfilerTracing {
+ public:
+  AutoProfilerTracing(const char* aCategoryString, const char* aMarkerName,
+                      JS::ProfilingCategoryPair aCategoryPair,
+                      const mozilla::Maybe<uint64_t>& aInnerWindowID)
+      : mCategoryString(aCategoryString),
+        mMarkerName(aMarkerName),
+        mCategoryPair(aCategoryPair),
+        mInnerWindowID(aInnerWindowID) {
+    profiler_tracing_marker(mCategoryString, mMarkerName, aCategoryPair,
+                            TRACING_INTERVAL_START, mInnerWindowID);
+  }
+
+  AutoProfilerTracing(const char* aCategoryString, const char* aMarkerName,
+                      JS::ProfilingCategoryPair aCategoryPair,
+                      UniqueProfilerBacktrace aBacktrace,
+                      const mozilla::Maybe<uint64_t>& aInnerWindowID)
+      : mCategoryString(aCategoryString),
+        mMarkerName(aMarkerName),
+        mCategoryPair(aCategoryPair),
+        mInnerWindowID(aInnerWindowID) {
+    profiler_tracing_marker(mCategoryString, mMarkerName, aCategoryPair,
+                            TRACING_INTERVAL_START, std::move(aBacktrace),
+                            mInnerWindowID);
+  }
+
+  ~AutoProfilerTracing() {
+    profiler_tracing_marker(mCategoryString, mMarkerName, mCategoryPair,
+                            TRACING_INTERVAL_END, mInnerWindowID);
+  }
+
+ protected:
+  const char* mCategoryString;
+  const char* mMarkerName;
+  const JS::ProfilingCategoryPair mCategoryPair;
+  const mozilla::Maybe<uint64_t> mInnerWindowID;
 };
 
 // Get the MOZ_PROFILER_STARTUP* environment variables that should be

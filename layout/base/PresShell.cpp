@@ -9565,7 +9565,7 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
     innerWindowID = Some(window->WindowID());
   }
   AutoProfilerTracing tracingLayoutFlush(
-      "Paint", "Reflow", geckoprofiler::category::LAYOUT,
+      "Paint", "Reflow", JS::ProfilingCategoryPair::LAYOUT,
       std::move(mReflowCause), innerWindowID);
   mReflowCause = nullptr;
 #endif
