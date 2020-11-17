@@ -11,13 +11,13 @@ DIRS += [
 DevToolsModules(
     "channel-event-sink.js",
     "eventsource-actor.js",
+    "network-content.js",
     "network-event-actor.js",
     "network-event.js",
     "network-monitor.js",
     "network-observer.js",
+    "network-parent.js",
     "network-response-listener.js",
-    "network.js",
     "stack-trace-collector.js",
-    "stack-traces-actor.js",
     "websocket-actor.js",
 )

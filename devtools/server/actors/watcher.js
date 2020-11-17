@@ -35,8 +35,8 @@ loader.lazyRequireGetter(
 
 loader.lazyRequireGetter(
   this,
-  "NetworkActor",
-  "devtools/server/actors/network-monitor/network",
+  "NetworkParentActor",
+  "devtools/server/actors/network-monitor/network-parent",
   true
 );
 
@@ -425,7 +425,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    * @return {Object} actor
    *        The network actor.
    */
-  getNetworkActor() {
-    return new NetworkActor(this);
+  getNetworkParentActor() {
+    return new NetworkParentActor(this);
   },
 });
