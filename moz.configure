@@ -813,13 +813,25 @@ def strip(strip, install_strip):
 option(env="STRIP_FLAGS", nargs=1, when=strip, help="Flags for the strip command")
 
 
-@depends("STRIP_FLAGS", target, when=strip)
-def strip_flags(flags, target):
+@depends("STRIP_FLAGS", profiling, target, when=strip)
+def strip_flags(flags, profiling, target):
     if flags:
         return flags[0].split()
-    # Strip everything we can, which happens without flags on non-Darwin.
+    if profiling:
+        # Only strip debug info and symbols when profiling is enabled, keeping
+        # local symbols.
+        if target.kernel == "Darwin":
+            return ["-S"]
+        elif target.os == "Android":
+            # The tooling we use with Android supports detached symbols, and the
+            # size increase caused by local symbols are too much for mobile. So,
+            # don't restrict the amount of stripping with a flag.
+            return
+        else:
+            return ["--strip-debug"]
+    # Otherwise strip everything we can, which happens without flags on non-Darwin.
     # On Darwin, it tries to strip things it can't, so we need to limit its scope.
-    if target.kernel == "Darwin":
+    elif target.kernel == "Darwin":
         return ["-x", "-S"]
 
 
