@@ -137,8 +137,8 @@ impl<'env> EnvVariableFlags<'env> {
             jump_tables: None,
         };
 
-        for entry in input.split(",") {
-            if let Some(equals_index) = entry.find("=") {
+        for entry in input.split(',') {
+            if let Some(equals_index) = entry.find('=') {
                 let (key, value) = entry.split_at(equals_index);
 
                 // value starts with the =, remove it.

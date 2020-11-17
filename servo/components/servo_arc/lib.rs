@@ -771,7 +771,7 @@ impl<H, T> Arc<HeaderSlice<H, [T]>> {
                 // We should have consumed the buffer exactly, maybe accounting
                 // for some padding from the alignment.
                 debug_assert!(
-                    (buffer.offset(size as isize) as usize - current as *mut u8 as usize) <
+                    (buffer.add(size) as usize - current as *mut u8 as usize) <
                         inner_align
                 );
             }
@@ -858,8 +858,8 @@ impl<H> HeaderWithLength<H> {
     /// Creates a new HeaderWithLength.
     pub fn new(header: H, length: usize) -> Self {
         HeaderWithLength {
-            header: header,
-            length: length,
+            header,
+            length,
         }
     }
 }
@@ -1102,7 +1102,7 @@ impl<T> Clone for RawOffsetArc<T> {
 impl<T> Drop for RawOffsetArc<T> {
     fn drop(&mut self) {
         let _ = Arc::from_raw_offset(RawOffsetArc {
-            ptr: self.ptr.clone(),
+            ptr: self.ptr,
         });
     }
 }

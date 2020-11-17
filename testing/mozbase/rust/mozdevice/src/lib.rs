@@ -619,7 +619,7 @@ impl Device {
         let mut am_start = format!("am start -W -n {}/{}", package, activity);
 
         for arg in am_start_args {
-            am_start.push_str(" ");
+            am_start.push(' ');
             if SYNC_REGEX.is_match(arg.as_ref()) {
                 am_start.push_str(&format!("\"{}\"", &shell::escape(arg.as_ref())));
             } else {

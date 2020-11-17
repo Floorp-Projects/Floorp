@@ -145,7 +145,7 @@ impl FromStr for Version {
             {
                 version.patch = x
             }
-            if let Some(_) = captures.name("esr") {
+            if captures.name("esr").is_some() {
                 version.esr = true;
             }
             if let Some(pre_0) = captures.name("pre0").map(|x| x.as_str().to_string()) {
@@ -167,9 +167,10 @@ impl FromStr for Version {
                 }
             }
         } else {
-            return Err(Error::VersionError(
-                format!("Failed to parse {} as version string", version_string).into(),
-            ));
+            return Err(Error::VersionError(format!(
+                "Failed to parse {} as version string",
+                version_string
+            )));
         }
         Ok(version)
     }
