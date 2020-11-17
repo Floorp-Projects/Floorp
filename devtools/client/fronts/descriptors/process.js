@@ -99,15 +99,6 @@ class ProcessDescriptorFront extends FrontClassWithSpec(processDescriptorSpec) {
     return this._targetFrontPromise;
   }
 
-  getCachedWatcher() {
-    for (const child of this.poolChildren()) {
-      if (child.typeName == "watcher") {
-        return child;
-      }
-    }
-    return null;
-  }
-
   destroy() {
     if (this._processTargetFront) {
       this._processTargetFront.destroy();
