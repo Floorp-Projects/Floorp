@@ -98,6 +98,61 @@ add_task(async function() {
   nextHistoryButton.click();
   is(getInputValue(hud), "");
 
+  info("Test that clicking the pretty print button works as expected");
+  const expressionToPrettyPrint = [
+    // [raw, prettified, prettifiedWithTab, prettifiedWith4Spaces]
+    ["fn=n=>n*n", "fn = n => n * n", "fn = n => n * n", "fn = n => n * n"],
+    [
+      "{x:1, y:2}",
+      "{\n  x: 1,\n  y: 2\n}",
+      "{\n\tx: 1,\n\ty: 2\n}",
+      "{\n    x: 1,\n    y: 2\n}",
+    ],
+  ];
+
+  const prettyPrintButton = toolbar.querySelector(
+    ".webconsole-editor-toolbar-prettyPrintButton"
+  );
+  ok(prettyPrintButton, "The pretty print button is displayed in editor mode");
+  for (const [
+    input,
+    output,
+    outputWithTab,
+    outputWith4Spaces,
+  ] of expressionToPrettyPrint) {
+    // Setting the input value.
+    setInputValue(hud, input);
+    await pushPref("devtools.editor.tabsize", 2);
+    prettyPrintButton.click();
+    is(
+      getInputValue(hud),
+      output,
+      `Pretty print works for expression ${input}`
+    );
+    // Turn on indent with tab.
+    await pushPref("devtools.editor.expandtab", false);
+    prettyPrintButton.click();
+    is(
+      getInputValue(hud),
+      outputWithTab,
+      `Pretty print works for expression ${input} when expandtab is false`
+    );
+    await pushPref("devtools.editor.expandtab", true);
+    // Set indent size to 4.
+    await pushPref("devtools.editor.tabsize", 4);
+    prettyPrintButton.click();
+    is(
+      getInputValue(hud),
+      outputWith4Spaces,
+      `Pretty print works for expression ${input} when tabsize is 4`
+    );
+    await pushPref("devtools.editor.tabsize", 2);
+    ok(
+      isInputFocused(hud),
+      "input is still focused after clicking the pretty print button"
+    );
+  }
+
   info("Test that clicking the close button works as expected");
   const closeButton = toolbar.querySelector(
     ".webconsole-editor-toolbar-closeButton"

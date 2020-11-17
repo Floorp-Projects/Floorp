@@ -304,16 +304,18 @@ body {
      * The following elements are going to be present in the toolbar:
      *   - The run button
      *   - The evaluation selector button
+     *   - The pretty print button
+     *   - A separator
      *   - The history nav
      *   - A separator
      *   - The close button
      *
      * +-------------------------------------------+
-     * | ▶︎ Run  Top↕                    ˄ ˅ 🔍 | ✕ |
+     * | ▶︎ Run  Top↕               {} | ˄ ˅ 🔍 | ✕ |
      * +-------------------------------------------+
      *
      */
-  grid-template-columns: auto auto 1fr auto auto auto auto auto;
+  grid-template-columns: auto auto 1fr auto auto auto auto auto auto auto;
   height: unset;
 }
 
@@ -335,6 +337,14 @@ body {
   margin-inline-end: 2px;
 }
 
+.jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-prettyPrintButton {
+  grid-column: -7 / -8;
+}
+
+.jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-prettyPrintSeparator {
+  grid-column: -6 / -7;
+}
+
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-prevExpressionButton {
   grid-column: -5 / -6;
 }
@@ -353,6 +363,12 @@ body {
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-closeButton {
   grid-column: -1 / -2;
+}
+
+.jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-prettyPrintButton::before {
+  mask-image: url("chrome://devtools/content/debugger/images/prettyPrint.svg");
+  background-size: 16px;
+  background-color: var(--theme-icon-color);
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-prevExpressionButton::before {
