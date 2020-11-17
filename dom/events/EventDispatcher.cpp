@@ -1039,10 +1039,6 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
 
           struct DOMEventMarker {
             static constexpr Span<const char> MarkerTypeName() {
-              // Note: DOMEventMarkerPayload was originally a sub-class of
-              // TracingMarkerPayload, so it uses the same payload type.
-              // TODO: Change to its own distinct type, but this will require
-              // front-end changes.
               return MakeStringSpan("DOMEvent");
             }
             static void StreamJSONMarkerData(
