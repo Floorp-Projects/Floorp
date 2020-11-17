@@ -25,7 +25,6 @@
 
 #  include "js/ProfilingFrameIterator.h"
 #  include "js/Utility.h"
-#  include "mozilla/ipc/ProtocolUtils.h"
 #  include "mozilla/Preferences.h"
 #  include "mozilla/ServoTraversalStatistics.h"
 
@@ -37,69 +36,6 @@ using UserTimingMark = mozilla::baseprofiler::markers::UserTimingMark;
 using UserTimingMeasure = mozilla::baseprofiler::markers::UserTimingMeasure;
 using MediaSampleMarker = mozilla::baseprofiler::markers::MediaSampleMarker;
 using ContentBuildMarker = mozilla::baseprofiler::markers::ContentBuildMarker;
-
-struct IPCMarkerPayload {
-  static constexpr mozilla::Span<const char> MarkerTypeName() {
-    return mozilla::MakeStringSpan("IPC");
-  }
-  static void StreamJSONMarkerData(
-      mozilla::baseprofiler::SpliceableJSONWriter& aWriter, int32_t aOtherPid,
-      int32_t aMessageSeqno, IPC::Message::msgid_t aMessageType,
-      mozilla::ipc::Side aSide, mozilla::ipc::MessageDirection aDirection,
-      mozilla::ipc::MessagePhase aPhase, bool aSync,
-      const mozilla::TimeStamp& aTime) {
-    // TODO: Remove these Legacy times when frontend is updated.
-    mozilla::baseprofiler::WritePropertyTime(aWriter, "startTime", aTime);
-    mozilla::baseprofiler::WritePropertyTime(aWriter, "endTime", aTime);
-
-    using namespace mozilla::ipc;
-    aWriter.IntProperty("otherPid", aOtherPid);
-    aWriter.IntProperty("messageSeqno", aMessageSeqno);
-    aWriter.StringProperty(
-        "messageType",
-        mozilla::MakeStringSpan(IPC::StringFromIPCMessageType(aMessageType)));
-    aWriter.StringProperty("side", IPCSideToString(aSide));
-    aWriter.StringProperty("direction",
-                           aDirection == MessageDirection::eSending
-                               ? mozilla::MakeStringSpan("sending")
-                               : mozilla::MakeStringSpan("receiving"));
-    aWriter.StringProperty("phase", IPCPhaseToString(aPhase));
-    aWriter.BoolProperty("sync", aSync);
-  }
-  static mozilla::MarkerSchema MarkerTypeDisplay() {
-    return mozilla::MarkerSchema::SpecialFrontendLocation{};
-  }
-
- private:
-  static mozilla::Span<const char> IPCSideToString(mozilla::ipc::Side aSide) {
-    switch (aSide) {
-      case mozilla::ipc::ParentSide:
-        return mozilla::MakeStringSpan("parent");
-      case mozilla::ipc::ChildSide:
-        return mozilla::MakeStringSpan("child");
-      case mozilla::ipc::UnknownSide:
-        return mozilla::MakeStringSpan("unknown");
-      default:
-        MOZ_ASSERT_UNREACHABLE("Invalid IPC side");
-        return mozilla::MakeStringSpan("<invalid IPC side>");
-    }
-  }
-
-  static mozilla::Span<const char> IPCPhaseToString(
-      mozilla::ipc::MessagePhase aPhase) {
-    switch (aPhase) {
-      case mozilla::ipc::MessagePhase::Endpoint:
-        return mozilla::MakeStringSpan("endpoint");
-      case mozilla::ipc::MessagePhase::TransferStart:
-        return mozilla::MakeStringSpan("transferStart");
-      case mozilla::ipc::MessagePhase::TransferEnd:
-        return mozilla::MakeStringSpan("transferEnd");
-      default:
-        MOZ_ASSERT_UNREACHABLE("Invalid IPC phase");
-        return mozilla::MakeStringSpan("<invalid IPC phase>");
-    }
-  }
-};
 
 }  // namespace geckoprofiler::markers
 
