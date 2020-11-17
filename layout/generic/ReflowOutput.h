@@ -27,25 +27,16 @@ constexpr auto AllOverflowTypes() {
 }  // namespace mozilla
 
 struct nsOverflowAreas {
- private:
-  enum nsOverflowType {
-    eInkOverflow,
-    eScrollableOverflow,
-  };
-  nsRect mRects[2];
-
  public:
   // XXX: We can remove this alias after moving nsOverflowAreas into mozilla
   // namespace.
   using OverflowType = mozilla::OverflowType;
 
-  nsRect& InkOverflow() { return mRects[eInkOverflow]; }
-  const nsRect& InkOverflow() const { return mRects[eInkOverflow]; }
+  nsRect& InkOverflow() { return mInk; }
+  const nsRect& InkOverflow() const { return mInk; }
 
-  nsRect& ScrollableOverflow() { return mRects[eScrollableOverflow]; }
-  const nsRect& ScrollableOverflow() const {
-    return mRects[eScrollableOverflow];
-  }
+  nsRect& ScrollableOverflow() { return mScrollable; }
+  const nsRect& ScrollableOverflow() const { return mScrollable; }
 
   nsRect& Overflow(OverflowType aType) {
     return aType == OverflowType::Ink ? InkOverflow() : ScrollableOverflow();
@@ -54,23 +45,10 @@ struct nsOverflowAreas {
     return aType == OverflowType::Ink ? InkOverflow() : ScrollableOverflow();
   }
 
-  nsOverflowAreas() {
-    // default-initializes to zero due to nsRect's default constructor
-  }
+  nsOverflowAreas() = default;
 
-  nsOverflowAreas(const nsRect& aInkOverflow,
-                  const nsRect& aScrollableOverflow) {
-    mRects[eInkOverflow] = aInkOverflow;
-    mRects[eScrollableOverflow] = aScrollableOverflow;
-  }
-
-  nsOverflowAreas(const nsOverflowAreas& aOther) { *this = aOther; }
-
-  nsOverflowAreas& operator=(const nsOverflowAreas& aOther) {
-    mRects[0] = aOther.mRects[0];
-    mRects[1] = aOther.mRects[1];
-    return *this;
-  }
+  nsOverflowAreas(const nsRect& aInkOverflow, const nsRect& aScrollableOverflow)
+      : mInk(aInkOverflow), mScrollable(aScrollableOverflow) {}
 
   bool operator==(const nsOverflowAreas& aOther) const {
     // Scrollable overflow is a point-set rectangle and ink overflow
@@ -90,15 +68,12 @@ struct nsOverflowAreas {
   }
 
   nsOverflowAreas& operator+=(const nsPoint& aPoint) {
-    mRects[0] += aPoint;
-    mRects[1] += aPoint;
+    mInk += aPoint;
+    mScrollable += aPoint;
     return *this;
   }
 
-  void Clear() {
-    mRects[0].SetRect(0, 0, 0, 0);
-    mRects[1].SetRect(0, 0, 0, 0);
-  }
+  void Clear() { SetAllTo(nsRect()); }
 
   // Mutates |this| by unioning both overflow areas with |aOther|.
   void UnionWith(const nsOverflowAreas& aOther);
@@ -108,6 +83,10 @@ struct nsOverflowAreas {
 
   // Mutates |this| by setting both overflow areas to |aRect|.
   void SetAllTo(const nsRect& aRect);
+
+ private:
+  nsRect mInk;
+  nsRect mScrollable;
 };
 
 /**
