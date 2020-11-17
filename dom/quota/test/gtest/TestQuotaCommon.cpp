@@ -1331,6 +1331,67 @@ TEST(QuotaCommon_CollectEachInRange, FailureShortCircuit)
   MOZ_RELEASE_ASSERT(3 == bodyExecutions);
 }
 
+TEST(QuotaCommon_ReduceEach, Success)
+{
+  const auto result = ReduceEach(
+      [i = int{0}]() mutable -> Result<int, Failed> {
+        if (i < 5) {
+          return ++i;
+        }
+        return 0;
+      },
+      0, [](int val, int add) -> Result<int, Failed> { return val + add; });
+  static_assert(std::is_same_v<decltype(result), const Result<int, Failed>>);
+
+  MOZ_RELEASE_ASSERT(result.isOk());
+  MOZ_RELEASE_ASSERT(15 == result.inspect());
+}
+
+TEST(QuotaCommon_ReduceEach, StepError)
+{
+  const auto result = ReduceEach(
+      [i = int{0}]() mutable -> Result<int, Failed> {
+        if (i < 5) {
+          return ++i;
+        }
+        return 0;
+      },
+      0,
+      [](int val, int add) -> Result<int, Failed> {
+        if (val > 2) {
+          return Err(Failed{});
+        }
+        return val + add;
+      });
+  static_assert(std::is_same_v<decltype(result), const Result<int, Failed>>);
+
+  MOZ_RELEASE_ASSERT(result.isErr());
+}
+
+TEST(QuotaCommon_ReduceEach, GeneratorError)
+{
+  size_t generatorExecutions = 0;
+  const auto result = ReduceEach(
+      [i = int{0}, &generatorExecutions]() mutable -> Result<int, Failed> {
+        ++generatorExecutions;
+        if (i < 1) {
+          return ++i;
+        }
+        return Err(Failed{});
+      },
+      0,
+      [](int val, int add) -> Result<int, Failed> {
+        if (val > 2) {
+          return Err(Failed{});
+        }
+        return val + add;
+      });
+  static_assert(std::is_same_v<decltype(result), const Result<int, Failed>>);
+
+  MOZ_RELEASE_ASSERT(result.isErr());
+  MOZ_RELEASE_ASSERT(2 == generatorExecutions);
+}
+
 TEST(QuotaCommon_ScopedLogExtraInfo, AddAndRemove)
 {
   static constexpr auto text = "foo"_ns;
