@@ -111,21 +111,6 @@ struct UserTimingMeasure {
   }
 };
 
-struct LongTask {
-  static constexpr Span<const char> MarkerTypeName() {
-    return MakeStringSpan("MainThreadLongTask");
-  }
-  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter) {
-    aWriter.StringProperty("category", "LongTask");
-  }
-  static MarkerSchema MarkerTypeDisplay() {
-    using MS = MarkerSchema;
-    MS schema{MS::Location::markerChart, MS::Location::markerTable};
-    schema.AddKeyLabelFormat("category", "Type", MS::Format::string);
-    return schema;
-  }
-};
-
 struct Log {
   static constexpr Span<const char> MarkerTypeName() {
     return MakeStringSpan("Log");
