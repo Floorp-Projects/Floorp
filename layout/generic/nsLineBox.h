@@ -404,12 +404,12 @@ class nsLineBox final : public nsLineLink {
   // The scrollable overflow area are permitted to affect layout for handling of
   // overflow and scrollbars.
   void SetOverflowAreas(const nsOverflowAreas& aOverflowAreas);
-  mozilla::LogicalRect GetOverflowArea(nsOverflowType aType,
+  mozilla::LogicalRect GetOverflowArea(mozilla::OverflowType aType,
                                        mozilla::WritingMode aWM,
                                        const nsSize& aContainerSize) {
     return mozilla::LogicalRect(aWM, GetOverflowArea(aType), aContainerSize);
   }
-  nsRect GetOverflowArea(nsOverflowType aType) const {
+  nsRect GetOverflowArea(mozilla::OverflowType aType) const {
     return mData ? mData->mOverflowAreas.Overflow(aType) : GetPhysicalBounds();
   }
   nsOverflowAreas GetOverflowAreas() const {
@@ -419,9 +419,11 @@ class nsLineBox final : public nsLineLink {
     nsRect bounds = GetPhysicalBounds();
     return nsOverflowAreas(bounds, bounds);
   }
-  nsRect InkOverflowRect() const { return GetOverflowArea(eInkOverflow); }
+  nsRect InkOverflowRect() const {
+    return GetOverflowArea(mozilla::OverflowType::Ink);
+  }
   nsRect ScrollableOverflowRect() {
-    return GetOverflowArea(eScrollableOverflow);
+    return GetOverflowArea(mozilla::OverflowType::Scrollable);
   }
 
   void SlideBy(nscoord aDBCoord, const nsSize& aContainerSize) {

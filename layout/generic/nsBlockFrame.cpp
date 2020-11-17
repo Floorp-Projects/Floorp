@@ -2360,7 +2360,7 @@ void nsBlockFrame::PropagateFloatDamage(BlockReflowInput& aState,
     WritingMode wm = aState.mReflowInput.GetWritingMode();
     nsSize containerSize = aState.ContainerSize();
     LogicalRect overflow =
-        aLine->GetOverflowArea(eScrollableOverflow, wm, containerSize);
+        aLine->GetOverflowArea(OverflowType::Scrollable, wm, containerSize);
     nscoord lineBCoordCombinedBefore = overflow.BStart(wm) + aDeltaBCoord;
     nscoord lineBCoordCombinedAfter =
         lineBCoordCombinedBefore + overflow.BSize(wm);
@@ -3188,7 +3188,7 @@ void nsBlockFrame::ReflowLine(BlockReflowInput& aState, LineIterator aLine,
       nsFlowAreaRect r = aState.GetFloatAvailableSpaceForBSize(
           aLine->BStart(), aLine->BSize(), nullptr);
       if (r.HasFloats()) {
-        LogicalRect so = aLine->GetOverflowArea(eScrollableOverflow, wm,
+        LogicalRect so = aLine->GetOverflowArea(OverflowType::Scrollable, wm,
                                                 aLine->mContainerSize);
         nscoord s = r.mRect.IStart(wm);
         nscoord e = r.mRect.IEnd(wm);

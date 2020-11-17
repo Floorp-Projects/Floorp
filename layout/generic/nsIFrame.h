@@ -3537,7 +3537,9 @@ class nsIFrame : public nsQueryFrame {
    * system, and may not contain the frame's border-box, e.g. if there
    * is a CSS transform scaling it down)
    */
-  nsRect InkOverflowRect() const { return GetOverflowRect(eInkOverflow); }
+  nsRect InkOverflowRect() const {
+    return GetOverflowRect(mozilla::OverflowType::Ink);
+  }
 
   /**
    * Returns a rect that encompasses the area of this frame that the
@@ -3560,10 +3562,10 @@ class nsIFrame : public nsQueryFrame {
    * is a CSS transform scaling it down)
    */
   nsRect ScrollableOverflowRect() const {
-    return GetOverflowRect(eScrollableOverflow);
+    return GetOverflowRect(mozilla::OverflowType::Scrollable);
   }
 
-  nsRect GetOverflowRect(nsOverflowType aType) const;
+  nsRect GetOverflowRect(mozilla::OverflowType aType) const;
 
   nsOverflowAreas GetOverflowAreas() const;
 

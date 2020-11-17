@@ -1095,7 +1095,6 @@ void nsImageFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     // We include the altFeedbackSize in our ink overflow, but not in our
     // scrollable overflow, since it doesn't really need to be scrolled to
     // outside the image.
-    static_assert(eOverflowType_LENGTH == 2, "Unknown overflow types?");
     nsRect& inkOverflow = aMetrics.InkOverflow();
     inkOverflow.UnionRect(inkOverflow, altFeedbackSize);
   } else if (PresShell()->IsActive()) {
