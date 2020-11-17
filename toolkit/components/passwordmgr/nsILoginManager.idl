@@ -101,11 +101,22 @@ interface nsILoginManager : nsISupports {
   void recordPasswordUse(in nsILoginInfo aLogin, in boolean aPrivateContextWithoutExplicitConsent, in AString aLoginType, in boolean aFilled);
 
   /**
-   * Remove all logins known to login manager.
+   * Remove all stored user facing logins.
+   *
+   * This will remove all the logins that a user can access through about:logins.
+   * This will not remove the FxA Sync key which is stored with the rest of a user's logins
+   * but is not accessible through about:logins
    *
    * The browser sanitization feature allows the user to clear any stored
    * passwords. This interface allows that to be done without getting each
-   * login first (which might require knowing the master password).
+   * login first.
+   *
+   */
+  void removeAllUserFacingLogins();
+
+  /**
+   * Completely remove all logins, including the user's FxA Sync key.
+   *
    */
   void removeAllLogins();
 

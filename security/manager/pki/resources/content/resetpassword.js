@@ -14,7 +14,7 @@ function resetPassword() {
   token.reset();
 
   try {
-    Services.logins.removeAllLogins();
+    Services.logins.removeAllUserFacingLogins();
   } catch (e) {}
 
   let l10n = new Localization(["security/pippki/pippki.ftl"], true);

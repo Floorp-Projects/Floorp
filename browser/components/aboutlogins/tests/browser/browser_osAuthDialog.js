@@ -25,7 +25,7 @@ add_task(async function test() {
   });
 
   registerCleanupFunction(function() {
-    Services.logins.removeAllLogins();
+    Services.logins.removeAllUserFacingLogins();
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
 

@@ -23,6 +23,7 @@ menu =
 about-logins-menu-menuitem-import-from-another-browser = Import from Another Browser…
 about-logins-menu-menuitem-import-from-a-file = Import from a File…
 about-logins-menu-menuitem-export-logins = Export Logins…
+about-logins-menu-menuitem-remove-all-logins = Remove All Logins…
 menu-menuitem-preferences =
   { PLATFORM() ->
       [windows] Options
@@ -159,6 +160,35 @@ confirmation-dialog-dismiss-button =
 about-logins-confirm-remove-dialog-title = Remove this login?
 confirm-delete-dialog-message = This action cannot be undone.
 about-logins-confirm-remove-dialog-confirm-button = Remove
+
+about-logins-confirm-remove-all-dialog-confirm-button = Remove All
+about-logins-confirm-remove-all-dialog-checkbox-label =
+  { $count ->
+     [1] Yes, remove this login
+    *[other] Yes, remove these logins
+  }
+
+about-logins-confirm-remove-all-dialog-title =
+  { $count ->
+     [one] Remove { $count } login?
+    *[other] Remove all { $count } logins?
+  }
+about-logins-confirm-remove-all-dialog-message =
+  { $count ->
+     [1] This will remove the login you’ve saved to { -brand-short-name } and any breach alerts that appear here. You won’t be able to undo this action.
+    *[other] This will remove the logins you’ve saved to { -brand-short-name } and any breach alerts that appear here. You won’t be able to undo this action.
+  }
+
+about-logins-confirm-remove-all-sync-dialog-title =
+  { $count ->
+     [one] Remove { $count } login from all devices?
+    *[other] Remove all { $count } logins from all devices?
+  }
+about-logins-confirm-remove-all-sync-dialog-message=
+  { $count ->
+     [1] This will remove the login you’ve saved to { -brand-short-name } on all devices synced to your { -fxaccount-brand-name }. This will also remove breach alerts that appear here. You won’t be able to undo this action.
+    *[other] This will remove all logins you’ve saved to { -brand-short-name } on all devices synced to your { -fxaccount-brand-name }. This will also remove breach alerts that appear here. You won’t be able to undo this action.
+  }
 
 about-logins-confirm-export-dialog-title = Export logins and passwords
 about-logins-confirm-export-dialog-message = Your passwords will be saved as readable text (e.g., BadP@ssw0rd) so anyone who can open the exported file can view them.
