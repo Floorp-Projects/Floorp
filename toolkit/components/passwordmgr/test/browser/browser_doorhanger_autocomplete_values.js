@@ -177,7 +177,7 @@ add_task(async function test_edit_password() {
     await LoginTestUtils.clearData();
     await cleanupDoorhanger();
     await cleanupPasswordNotifications();
-    Services.logins.removeAllUserFacingLogins();
+    Services.logins.removeAllLogins();
 
     // Create the pre-existing logins when needed.
     info("Adding any saved logins");
@@ -269,7 +269,7 @@ add_task(async function test_edit_password() {
         await cleanupDoorhanger();
         await cleanupPasswordNotifications();
         await clearMessageCache(browser);
-        Services.logins.removeAllUserFacingLogins();
+        Services.logins.removeAllLogins();
       }
     );
   }

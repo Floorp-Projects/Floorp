@@ -84,7 +84,7 @@ add_task(async function test_logins_decrypt_failure() {
   Assert.equal(Services.logins.countLogins("", "", ""), logins.length);
 
   // Removing all logins removes the non-decryptable entries also.
-  Services.logins.removeAllUserFacingLogins();
+  Services.logins.removeAllLogins();
   Assert.equal(Services.logins.getAllLogins().length, 0);
   Assert.equal(Services.logins.countLogins("", "", ""), 0);
 });
@@ -151,7 +151,7 @@ add_task(function test_add_logins_with_decrypt_failure() {
   Services.logins.addLogin(login);
   equal(Services.logins.searchLogins(searchProp).length, 1);
 
-  Services.logins.removeAllUserFacingLogins();
+  Services.logins.removeAllLogins();
 });
 
 // Test the "syncID" metadata works as expected on decryption failure.
