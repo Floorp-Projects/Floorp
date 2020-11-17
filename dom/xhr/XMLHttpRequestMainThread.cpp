@@ -2458,7 +2458,7 @@ nsresult XMLHttpRequestMainThread::CreateChannel() {
     rv = httpChannel->SetRequestMethod(mRequestMethod);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    httpChannel->SetSource(profiler_get_backtrace());
+    httpChannel->SetSource(profiler_capture_backtrace());
 
     // Set the initiator type
     nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChannel));
@@ -3240,7 +3240,8 @@ void XMLHttpRequestMainThread::SetOriginStack(
   mOriginStack = std::move(aOriginStack);
 }
 
-void XMLHttpRequestMainThread::SetSource(UniqueProfilerBacktrace aSource) {
+void XMLHttpRequestMainThread::SetSource(
+    UniquePtr<ProfileChunkedBuffer> aSource) {
   if (!mChannel) {
     return;
   }
