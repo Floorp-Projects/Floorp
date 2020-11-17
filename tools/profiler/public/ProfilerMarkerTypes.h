@@ -44,67 +44,6 @@ using LongTask = mozilla::baseprofiler::markers::LongTask;
 using Log = mozilla::baseprofiler::markers::Log;
 using MediaSample = mozilla::baseprofiler::markers::MediaSample;
 
-struct Pref {
-  static constexpr mozilla::Span<const char> MarkerTypeName() {
-    return mozilla::MakeStringSpan("PreferenceRead");
-  }
-  static void StreamJSONMarkerData(
-      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
-      const mozilla::ProfilerString8View& aPrefName,
-      const mozilla::Maybe<mozilla::PrefValueKind>& aPrefKind,
-      const mozilla::Maybe<mozilla::PrefType>& aPrefType,
-      const mozilla::ProfilerString8View& aPrefValue,
-      const mozilla::TimeStamp& aPrefAccessTime) {
-    // TODO: This looks like it's always `Now()`, so it could probably be
-    // removed; but the frontend may need updating first.
-    mozilla::baseprofiler::WritePropertyTime(aWriter, "prefAccessTime",
-                                             aPrefAccessTime);
-    aWriter.StringProperty("prefName", aPrefName);
-    aWriter.StringProperty("prefKind", PrefValueKindToString(aPrefKind));
-    aWriter.StringProperty("prefType", PrefTypeToString(aPrefType));
-    aWriter.StringProperty("prefValue", aPrefValue);
-  }
-  static mozilla::MarkerSchema MarkerTypeDisplay() {
-    using MS = mozilla::MarkerSchema;
-    MS schema{MS::Location::markerChart, MS::Location::markerTable};
-    schema.AddKeyLabelFormat("prefName", "Name", MS::Format::string);
-    schema.AddKeyLabelFormat("prefKind", "Kind", MS::Format::string);
-    schema.AddKeyLabelFormat("prefType", "Type", MS::Format::string);
-    schema.AddKeyLabelFormat("prefValue", "Value", MS::Format::string);
-    return schema;
-  }
-
- private:
-  static mozilla::Span<const char> PrefValueKindToString(
-      const mozilla::Maybe<mozilla::PrefValueKind>& aKind) {
-    if (aKind) {
-      return *aKind == mozilla::PrefValueKind::Default
-                 ? mozilla::MakeStringSpan("Default")
-                 : mozilla::MakeStringSpan("User");
-    }
-    return "Shared";
-  }
-
-  static mozilla::Span<const char> PrefTypeToString(
-      const mozilla::Maybe<mozilla::PrefType>& type) {
-    if (type) {
-      switch (*type) {
-        case mozilla::PrefType::None:
-          return "None";
-        case mozilla::PrefType::Int:
-          return "Int";
-        case mozilla::PrefType::Bool:
-          return "Bool";
-        case mozilla::PrefType::String:
-          return "String";
-        default:
-          MOZ_ASSERT_UNREACHABLE("Unknown preference type.");
-      }
-    }
-    return "Preference not found";
-  }
-};
-
 // Contains the translation applied to a 2d layer so we can track the layer
 // position at each frame.
 struct LayerTranslation {
