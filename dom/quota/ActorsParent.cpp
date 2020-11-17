@@ -1013,7 +1013,7 @@ class OriginInfo final {
 
   void LockedResetUsageForClient(Client::Type aClientType);
 
-  bool LockedGetUsageForClient(Client::Type aClientType, uint64_t& aUsage);
+  UsageInfo LockedGetUsageForClient(Client::Type aClientType);
 
   void LockedUpdateAccessTime(int64_t aAccessTime) {
     AssertCurrentThreadOwnsQuotaMutex();
@@ -4247,10 +4247,9 @@ void QuotaManager::ResetUsageForClient(PersistenceType aPersistenceType,
   }
 }
 
-bool QuotaManager::GetUsageForClient(PersistenceType aPersistenceType,
-                                     const GroupAndOrigin& aGroupAndOrigin,
-                                     Client::Type aClientType,
-                                     uint64_t& aUsage) {
+UsageInfo QuotaManager::GetUsageForClient(PersistenceType aPersistenceType,
+                                          const GroupAndOrigin& aGroupAndOrigin,
+                                          Client::Type aClientType) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
 
@@ -4258,21 +4257,21 @@ bool QuotaManager::GetUsageForClient(PersistenceType aPersistenceType,
 
   GroupInfoPair* pair;
   if (!mGroupInfoPairs.Get(aGroupAndOrigin.mGroup, &pair)) {
-    return false;
+    return UsageInfo{};
   }
 
   RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
   if (!groupInfo) {
-    return false;
+    return UsageInfo{};
   }
 
   RefPtr<OriginInfo> originInfo =
       groupInfo->LockedGetOriginInfo(aGroupAndOrigin.mOrigin);
   if (!originInfo) {
-    return false;
+    return UsageInfo{};
   }
 
-  return originInfo->LockedGetUsageForClient(aClientType, aUsage);
+  return originInfo->LockedGetUsageForClient(aClientType);
 }
 
 void QuotaManager::UpdateOriginAccessTime(
@@ -7970,18 +7969,16 @@ void OriginInfo::LockedResetUsageForClient(Client::Type aClientType) {
   quotaManager->mTemporaryStorageUsage -= size;
 }
 
-bool OriginInfo::LockedGetUsageForClient(Client::Type aClientType,
-                                         uint64_t& aUsage) {
+UsageInfo OriginInfo::LockedGetUsageForClient(Client::Type aClientType) {
   AssertCurrentThreadOwnsQuotaMutex();
 
-  Maybe<uint64_t>& clientUsage = mClientUsages[aClientType];
+  // The current implementation of this method only supports DOMCACHE and LS,
+  // which only use DatabaseUsage. If this assertion is lifted, the logic below
+  // must be adapted.
+  MOZ_ASSERT(aClientType == Client::Type::DOMCACHE ||
+             aClientType == Client::Type::LS);
 
-  if (clientUsage.isNothing()) {
-    return false;
-  }
-
-  aUsage = clientUsage.value();
-  return true;
+  return UsageInfo{DatabaseUsageType{mClientUsages[aClientType]}};
 }
 
 void OriginInfo::LockedPersist() {

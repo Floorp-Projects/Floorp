@@ -219,9 +219,9 @@ class QuotaManager final : public BackgroundThreadObject {
                            const GroupAndOrigin& aGroupAndOrigin,
                            Client::Type aClientType);
 
-  bool GetUsageForClient(PersistenceType aPersistenceType,
-                         const GroupAndOrigin& aGroupAndOrigin,
-                         Client::Type aClientType, uint64_t& aUsage);
+  UsageInfo GetUsageForClient(PersistenceType aPersistenceType,
+                              const GroupAndOrigin& aGroupAndOrigin,
+                              Client::Type aClientType);
 
   void UpdateOriginAccessTime(PersistenceType aPersistenceType,
                               const GroupAndOrigin& aGroupAndOrigin);
