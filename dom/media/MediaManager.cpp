@@ -4464,9 +4464,9 @@ void SourceListener::SetMutedFor(LocalTrackSource* aTrackSource, bool aMute) {
   } else {
     aTrackSource->Unmute();
   }
-  if (state.mOffWhileDisabled && !state.mDeviceEnabled &&
-      state.mDevice->mKind == dom::MediaDeviceKind::Videoinput) {
-    // Camera is already off. TODO: Revisit once we support UA-muting mics.
+  if (!state.mOffWhileDisabled || !state.mDeviceEnabled) {
+    // If the pref to turn the underlying device is itself off, or the device is
+    // already off, it's unecessary to do anything else.
     return;
   }
   UpdateDevice(track, !aMute);
