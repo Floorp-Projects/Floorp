@@ -31,10 +31,6 @@
 #include "prinrval.h"
 #include "prthread.h"
 
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
-#endif
-
 #include <algorithm>
 
 // Activate BHR only for one every BHR_BETA_MOD users.
@@ -534,12 +530,26 @@ void BackgroundHangThread::ReportHang(TimeDuration aHangTime,
   // If the profiler is enabled, add a marker.
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
-    TimeStamp endTime = TimeStamp::Now();
-    TimeStamp startTime = endTime - aHangTime;
-    AUTO_PROFILER_STATS(add_marker_with_HangMarkerPayload);
-    profiler_add_marker_for_thread(
-        mStackHelper.GetThreadId(), JS::ProfilingCategoryPair::OTHER,
-        "BHR-detected hang", HangMarkerPayload(startTime, endTime));
+    struct HangMarker {
+      static constexpr Span<const char> MarkerTypeName() {
+        return MakeStringSpan("BHR-detected hang");
+      }
+      static void StreamJSONMarkerData(
+          baseprofiler::SpliceableJSONWriter& aWriter) {}
+      static MarkerSchema MarkerTypeDisplay() {
+        using MS = MarkerSchema;
+        MS schema{MS::Location::markerChart, MS::Location::markerTable,
+                  MS::Location::timelineOverview};
+        return schema;
+      }
+    };
+
+    const TimeStamp endTime = TimeStamp::NowUnfuzzed();
+    const TimeStamp startTime = endTime - aHangTime;
+    profiler_add_marker("BHR-detected hang", geckoprofiler::category::OTHER,
+                        {MarkerThreadId(mStackHelper.GetThreadId()),
+                         MarkerTiming::Interval(startTime, endTime)},
+                        HangMarker{});
   }
 #endif
 }
