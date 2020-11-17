@@ -10,23 +10,23 @@
 #include "mozilla/ReflowInput.h"
 
 void nsOverflowAreas::UnionWith(const nsOverflowAreas& aOther) {
-  // FIXME: We should probably change scrollable overflow to use
-  // UnionRectIncludeEmpty (but leave ink overflow using UnionRect).
-  NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
-    mRects[otype].UnionRect(mRects[otype], aOther.mRects[otype]);
-  }
+  // Bug 1677642: We should probably change scrollable overflow to use
+  // UnionRectEdges (but leave ink overflow using UnionRect)
+  InkOverflow().UnionRect(InkOverflow(), aOther.InkOverflow());
+  ScrollableOverflow().UnionRect(ScrollableOverflow(),
+                                 aOther.ScrollableOverflow());
 }
 
 void nsOverflowAreas::UnionAllWith(const nsRect& aRect) {
-  // FIXME: We should probably change scrollable overflow to use
-  // UnionRectIncludeEmpty (but leave ink overflow using UnionRect).
-  NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
-    mRects[otype].UnionRect(mRects[otype], aRect);
-  }
+  // Bug 1677642: We should probably change scrollable overflow to use
+  // UnionRectEdges (but leave ink overflow using UnionRect).
+  InkOverflow().UnionRect(InkOverflow(), aRect);
+  ScrollableOverflow().UnionRect(ScrollableOverflow(), aRect);
 }
 
 void nsOverflowAreas::SetAllTo(const nsRect& aRect) {
-  NS_FOR_FRAME_OVERFLOW_TYPES(otype) { mRects[otype] = aRect; }
+  InkOverflow() = aRect;
+  ScrollableOverflow() = aRect;
 }
 
 namespace mozilla {
@@ -35,19 +35,11 @@ ReflowOutput::ReflowOutput(const ReflowInput& aReflowInput)
     : ReflowOutput(aReflowInput.GetWritingMode()) {}
 
 void ReflowOutput::SetOverflowAreasToDesiredBounds() {
-  NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
-    mOverflowAreas.Overflow(otype).SetRect(0, 0, Width(), Height());
-  }
+  mOverflowAreas.SetAllTo(nsRect(0, 0, Width(), Height()));
 }
 
 void ReflowOutput::UnionOverflowAreasWithDesiredBounds() {
-  // FIXME: We should probably change scrollable overflow to use
-  // UnionRectIncludeEmpty (but leave ink overflow using UnionRect).
-  nsRect rect(0, 0, Width(), Height());
-  NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
-    nsRect& o = mOverflowAreas.Overflow(otype);
-    o.UnionRect(o, rect);
-  }
+  mOverflowAreas.UnionAllWith(nsRect(0, 0, Width(), Height()));
 }
 
 }  // namespace mozilla

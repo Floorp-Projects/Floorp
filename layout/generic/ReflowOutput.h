@@ -9,6 +9,7 @@
 #ifndef mozilla_ReflowOutput_h
 #define mozilla_ReflowOutput_h
 
+#include "mozilla/EnumeratedRange.h"
 #include "mozilla/WritingModes.h"
 #include "nsBoundingMetrics.h"
 #include "nsRect.h"
@@ -17,6 +18,12 @@
 
 namespace mozilla {
 struct ReflowInput;
+
+enum class OverflowType : uint8_t { Ink, Scrollable };
+constexpr auto AllOverflowTypes() {
+  return mozilla::MakeInclusiveEnumeratedRange(OverflowType::Ink,
+                                               OverflowType::Scrollable);
+}
 }  // namespace mozilla
 
 /**
@@ -29,15 +36,15 @@ struct ReflowInput;
  */
 enum nsOverflowType { eInkOverflow, eScrollableOverflow, eOverflowType_LENGTH };
 
-#define NS_FOR_FRAME_OVERFLOW_TYPES(var_)                 \
-  for (nsOverflowType var_ = nsOverflowType(0); var_ < 2; \
-       var_ = nsOverflowType(var_ + 1))
-
 struct nsOverflowAreas {
  private:
   nsRect mRects[2];
 
  public:
+  // XXX: We can remove this alias after moving nsOverflowAreas into mozilla
+  // namespace.
+  using OverflowType = mozilla::OverflowType;
+
   nsRect& Overflow(size_t aIndex) {
     NS_ASSERTION(aIndex < 2, "index out of range");
     return mRects[aIndex];
@@ -53,6 +60,13 @@ struct nsOverflowAreas {
   nsRect& ScrollableOverflow() { return mRects[eScrollableOverflow]; }
   const nsRect& ScrollableOverflow() const {
     return mRects[eScrollableOverflow];
+  }
+
+  nsRect& Overflow(OverflowType aType) {
+    return aType == OverflowType::Ink ? InkOverflow() : ScrollableOverflow();
+  }
+  const nsRect& Overflow(OverflowType aType) const {
+    return aType == OverflowType::Ink ? InkOverflow() : ScrollableOverflow();
   }
 
   nsOverflowAreas() {
