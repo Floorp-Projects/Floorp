@@ -56,7 +56,6 @@ const DITHERING_FEATURE: &str = "DITHERING";
 const DUAL_SOURCE_FEATURE: &str = "DUAL_SOURCE_BLENDING";
 const FAST_PATH_FEATURE: &str = "FAST_PATH";
 const PIXEL_LOCAL_STORAGE_FEATURE: &str = "PIXEL_LOCAL_STORAGE";
-const STORAGE_BUFFER_FEATURE: &str = "STORAGE_BUFFER";
 
 pub(crate) enum ShaderKind {
     Primitive,
@@ -312,13 +311,8 @@ impl BrushShader {
         use_advanced_blend: bool,
         use_dual_source: bool,
         use_pixel_local_storage: bool,
-        use_shader_storage_object: bool,
     ) -> Result<Self, ShaderError> {
-        let mut opaque_features = features.to_vec();
-        if use_shader_storage_object {
-            opaque_features.push(STORAGE_BUFFER_FEATURE);
-        }
-
+        let opaque_features = features.to_vec();
         let opaque = LazilyCompiledShader::new(
             ShaderKind::Brush,
             name,
@@ -625,9 +619,6 @@ impl Shaders {
         let use_advanced_blend_equation =
             device.get_capabilities().supports_advanced_blend_equation &&
             options.allow_advanced_blend_equation;
-        let use_shader_storage_object =
-            device.get_capabilities().supports_shader_storage_object &&
-            options.max_storage_instances.is_some();
 
         let mut shader_flags = match gl_type {
             GlType::Gl => ShaderFeatureFlags::GL,
@@ -636,7 +627,6 @@ impl Shaders {
         shader_flags.set(ShaderFeatureFlags::PIXEL_LOCAL_STORAGE, use_pixel_local_storage);
         shader_flags.set(ShaderFeatureFlags::ADVANCED_BLEND_EQUATION, use_advanced_blend_equation);
         shader_flags.set(ShaderFeatureFlags::DUAL_SOURCE_BLENDING, use_dual_source_blending);
-        shader_flags.set(ShaderFeatureFlags::STORAGE_BUFFER, use_shader_storage_object);
         shader_flags.set(ShaderFeatureFlags::DITHERING, options.enable_dithering);
         let shader_list = get_shader_features(shader_flags);
 
@@ -649,7 +639,6 @@ impl Shaders {
             false /* advanced blend */,
             false /* dual source */,
             use_pixel_local_storage,
-            use_shader_storage_object,
         )?;
 
         let brush_blend = BrushShader::new(
@@ -661,7 +650,6 @@ impl Shaders {
             false /* advanced blend */,
             false /* dual source */,
             use_pixel_local_storage,
-            use_shader_storage_object,
         )?;
 
         let brush_mix_blend = BrushShader::new(
@@ -673,7 +661,6 @@ impl Shaders {
             false /* advanced blend */,
             false /* dual source */,
             use_pixel_local_storage,
-            use_shader_storage_object,
         )?;
 
         let brush_conic_gradient = BrushShader::new(
@@ -689,7 +676,6 @@ impl Shaders {
             false /* advanced blend */,
             false /* dual source */,
             use_pixel_local_storage,
-            use_shader_storage_object,
         )?;
 
         let brush_radial_gradient = BrushShader::new(
@@ -705,7 +691,6 @@ impl Shaders {
             false /* advanced blend */,
             false /* dual source */,
             use_pixel_local_storage,
-            use_shader_storage_object,
         )?;
 
         let brush_linear_gradient = BrushShader::new(
@@ -721,7 +706,6 @@ impl Shaders {
             false /* advanced blend */,
             false /* dual source */,
             use_pixel_local_storage,
-            use_shader_storage_object,
         )?;
 
         let brush_opacity_aa = BrushShader::new(
@@ -733,7 +717,6 @@ impl Shaders {
             false /* advanced blend */,
             false /* dual source */,
             use_pixel_local_storage,
-            use_shader_storage_object,
         )?;
 
         let brush_opacity = BrushShader::new(
@@ -745,7 +728,6 @@ impl Shaders {
             false /* advanced blend */,
             false /* dual source */,
             use_pixel_local_storage,
-            use_shader_storage_object,
         )?;
 
         let cs_blur_a8 = LazilyCompiledShader::new(
@@ -875,9 +857,6 @@ impl Shaders {
         if use_pixel_local_storage {
             extra_prim_features.push(PIXEL_LOCAL_STORAGE_FEATURE);
         }
-        if use_shader_storage_object {
-            extra_prim_features.push(STORAGE_BUFFER_FEATURE);
-        }
 
         let ps_text_run = TextShader::new("ps_text_run",
             device,
@@ -945,7 +924,6 @@ impl Shaders {
                 use_advanced_blend_equation,
                 use_dual_source_blending,
                 use_pixel_local_storage,
-                use_shader_storage_object,
             )?);
 
             image_features.push("REPETITION");
@@ -960,7 +938,6 @@ impl Shaders {
                 use_advanced_blend_equation,
                 use_dual_source_blending,
                 use_pixel_local_storage,
-                use_shader_storage_object,
             )?);
 
             image_features.clear();
@@ -998,7 +975,6 @@ impl Shaders {
                     false /* advanced blend */,
                     false /* dual source */,
                     use_pixel_local_storage,
-                    use_shader_storage_object,
                 )?;
 
                 let composite_yuv_shader = LazilyCompiledShader::new(

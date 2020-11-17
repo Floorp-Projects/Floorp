@@ -315,7 +315,6 @@ impl VertexDescriptor {
 }
 
 impl VBOId {
-    const INVALID: Self = VBOId(0);
     fn bind(&self, gl: &dyn gl::Gl) {
         gl.bind_buffer(gl::ARRAY_BUFFER, self.0);
     }
@@ -325,11 +324,6 @@ impl IBOId {
     fn bind(&self, gl: &dyn gl::Gl) {
         gl.bind_buffer(gl::ELEMENT_ARRAY_BUFFER, self.0);
     }
-}
-
-impl SBOId {
-    const INVALID: Self = SBOId(0);
-    const BIND_POINT: gl::GLenum = gl::SHADER_STORAGE_BUFFER;
 }
 
 impl FBOId {
@@ -591,7 +585,6 @@ pub struct VAO {
     main_vbo_id: VBOId,
     instance_vbo_id: VBOId,
     instance_stride: usize,
-    storage_id: SBOId,
     owns_vertices_and_indices: bool,
 }
 
@@ -648,10 +641,6 @@ pub struct VBOId(gl::GLuint);
 
 #[derive(PartialEq, Eq, Hash, Debug, Copy, Clone)]
 struct IBOId(gl::GLuint);
-
-// Storage buffer
-#[derive(PartialEq, Eq, Hash, Debug, Copy, Clone)]
-struct SBOId(gl::GLuint);
 
 #[derive(Clone, Debug)]
 enum ProgramSourceType {
@@ -972,8 +961,6 @@ pub struct Capabilities {
     pub supports_texture_usage: bool,
     /// Whether offscreen render targets can be partially updated.
     pub supports_render_target_partial_update: bool,
-    /// Whether we can use SSBOs.
-    pub supports_shader_storage_object: bool,
     /// Whether the driver prefers fewer and larger texture uploads
     /// over many smaller updates.
     pub prefers_batched_texture_uploads: bool,
@@ -1347,8 +1334,6 @@ impl Device {
         let max_texture_size = max_texture_size[0];
         let max_texture_layers = max_texture_layers[0] as u32;
         let renderer_name = gl.get_string(gl::RENDERER);
-        info!("Renderer: {}", renderer_name);
-        info!("Max texture size: {}", max_texture_size);
 
         let mut extension_count = [0];
         unsafe {
@@ -1428,12 +1413,7 @@ impl Device {
         // So we must use glTexStorage instead. See bug 1591436.
         let is_emulator = renderer_name.starts_with("Android Emulator");
         let avoid_tex_image = is_emulator;
-        let mut gl_version = [0; 2];
-        unsafe {
-            gl.get_integer_v(gl::MAJOR_VERSION, &mut gl_version[0..1]);
-            gl.get_integer_v(gl::MINOR_VERSION, &mut gl_version[1..2]);
-        }
-        info!("GL context {:?} {}.{}", gl.get_type(), gl_version[0], gl_version[1]);
+        let gl_version = gl.get_string(gl::VERSION);
 
         // We block texture storage on mac because it doesn't support BGRA
         let supports_texture_storage = allow_texture_storage_support && !cfg!(target_os = "macos") &&
@@ -1446,7 +1426,7 @@ impl Device {
         let supports_texture_swizzle = allow_texture_swizzling &&
             match gl.get_type() {
                 // see https://www.g-truc.net/post-0734.html
-                gl::GlType::Gl => gl_version >= [3, 3] ||
+                gl::GlType::Gl => gl_version.as_str() >= "3.3" ||
                     supports_extension(&extensions, "GL_ARB_texture_swizzle"),
                 gl::GlType::Gles => true,
             };
@@ -1614,12 +1594,6 @@ impl Device {
         // and handles fewer, larger uploads better.
         let prefers_batched_texture_uploads = is_mali_g;
 
-        let supports_shader_storage_object = match gl.get_type() {
-            // see https://www.g-truc.net/post-0734.html
-            gl::GlType::Gl => supports_extension(&extensions, "GL_ARB_shader_storage_buffer_object"),
-            gl::GlType::Gles => gl_version >= [3, 1],
-        };
-
         Device {
             gl,
             base_gl: None,
@@ -1641,7 +1615,6 @@ impl Device {
                 supports_nonzero_pbo_offsets,
                 supports_texture_usage,
                 supports_render_target_partial_update,
-                supports_shader_storage_object,
                 prefers_batched_texture_uploads,
                 renderer_name,
             },
@@ -3162,34 +3135,7 @@ impl Device {
             main_vbo_id,
             instance_vbo_id,
             instance_stride,
-            storage_id: SBOId::INVALID,
             owns_vertices_and_indices,
-        }
-    }
-
-    pub fn create_storage_vao(
-        &mut self,
-        descriptor: &VertexDescriptor,
-        instance_stride: usize,
-    ) -> VAO {
-        let buffer_ids = self.gl.gen_buffers(3);
-        let ibo_id = IBOId(buffer_ids[0]);
-        let vbo_id = VBOId(buffer_ids[1]);
-        let storage_id = SBOId(buffer_ids[2]);
-        let vao_id = self.gl.gen_vertex_arrays(1)[0];
-
-        self.bind_vao_impl(vao_id);
-        ibo_id.bind(self.gl()); // force it to be a part of VAO
-        descriptor.bind(self.gl(), vbo_id, VBOId::INVALID);
-
-        VAO {
-            id: vao_id,
-            ibo_id,
-            main_vbo_id: vbo_id,
-            instance_vbo_id: VBOId::INVALID,
-            instance_stride,
-            storage_id,
-            owns_vertices_and_indices: true,
         }
     }
 
@@ -3259,11 +3205,7 @@ impl Device {
             self.gl.delete_buffers(&[vao.main_vbo_id.0]);
         }
 
-        if vao.instance_vbo_id != VBOId::INVALID {
-            self.gl.delete_buffers(&[vao.instance_vbo_id.0])
-        } else {
-            self.gl.delete_buffers(&[vao.storage_id.0])
-        }
+        self.gl.delete_buffers(&[vao.instance_vbo_id.0])
     }
 
     pub fn allocate_vbo<V>(
@@ -3354,26 +3296,6 @@ impl Device {
         debug_assert_eq!(vao.instance_stride as usize, mem::size_of::<V>());
 
         self.update_vbo_data(vao.instance_vbo_id, instances, usage_hint)
-    }
-
-    pub fn update_vao_storage<V>(
-        &mut self,
-        vao: &VAO,
-        storage: &[V],
-        shader_location: gl::GLuint,
-        usage_hint: VertexUsageHint,
-    ) {
-        debug_assert!(self.inside_frame);
-        debug_assert_eq!(self.bound_vao, vao.id);
-        debug_assert_eq!(vao.instance_stride as usize, mem::size_of::<V>());
-
-        self.gl.bind_buffer_base(SBOId::BIND_POINT, shader_location, vao.storage_id.0);
-        gl::buffer_data(
-            self.gl(),
-            SBOId::BIND_POINT,
-            storage,
-            usage_hint.to_gl(),
-        );
     }
 
     pub fn update_vao_indices<I>(&mut self, vao: &VAO, indices: &[I], usage_hint: VertexUsageHint) {
