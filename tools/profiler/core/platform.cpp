@@ -5463,11 +5463,49 @@ void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info) {
   if (!profiler_can_accept_markers()) {
     return;
   }
-  AUTO_PROFILER_STATS(add_marker_with_JsAllocationMarkerPayload);
+
+  struct JsAllocationMarker {
+    static constexpr mozilla::Span<const char> MarkerTypeName() {
+      return mozilla::MakeStringSpan("JS allocation");
+    }
+    static void StreamJSONMarkerData(
+        mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+        const mozilla::ProfilerString16View& aTypeName,
+        const mozilla::ProfilerString8View& aClassName,
+        const mozilla::ProfilerString16View& aDescriptiveTypeName,
+        const mozilla::ProfilerString8View& aCoarseType, uint64_t aSize,
+        bool aInNursery) {
+      if (aClassName.Length() != 0) {
+        aWriter.StringProperty("className", aClassName);
+      }
+      if (aTypeName.Length() != 0) {
+        aWriter.StringProperty(
+            "typeName",
+            NS_ConvertUTF16toUTF8(aTypeName.Data(), aTypeName.Length()));
+      }
+      if (aDescriptiveTypeName.Length() != 0) {
+        aWriter.StringProperty(
+            "descriptiveTypeName",
+            NS_ConvertUTF16toUTF8(aDescriptiveTypeName.Data(),
+                                  aDescriptiveTypeName.Length()));
+      }
+      aWriter.StringProperty("coarseType", aCoarseType);
+      aWriter.IntProperty("size", aSize);
+      aWriter.BoolProperty("inNursery", aInNursery);
+    }
+    static mozilla::MarkerSchema MarkerTypeDisplay() {
+      return mozilla::MarkerSchema::SpecialFrontendLocation{};
+    }
+  };
+
   profiler_add_marker(
-      "JS allocation", JS::ProfilingCategoryPair::JS,
-      JsAllocationMarkerPayload(TimeStamp::Now(), std::move(info),
-                                profiler_get_backtrace()));
+      "JS allocation", geckoprofiler::category::JS, MarkerStack::Capture(),
+      JsAllocationMarker{},
+      ProfilerString16View::WrapNullTerminatedString(info.typeName),
+      ProfilerString8View::WrapNullTerminatedString(info.className),
+      ProfilerString16View::WrapNullTerminatedString(info.descriptiveTypeName),
+      ProfilerString8View::WrapNullTerminatedString(info.coarseType), info.size,
+      info.inNursery);
 }
 
 bool profiler_is_locked_on_current_thread() {
