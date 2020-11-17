@@ -8,7 +8,18 @@ function getLog() {
     return log;
 }
 window.onmessage = function(e) {
-    opener.postMessage(getLog() + e.data, "*");
+    if (e.data == "start") {
+        other = window.open("focus-restoration-in-different-site-iframes-other.html", "otherwindow", "resizable=yes");
+    } else if (e.data == "other") {
+        other.close();
+        opener.step_timeout(function() {
+            document.getElementsByTagName("iframe")[0].contentWindow.postMessage("getlog", "*");
+        }, 2000);
+    } else {
+        opener.step_timeout(function() {
+            opener.postMessage(getLog() + e.data, "*");
+        }, 1500);
+    }
 };
 window.onload = function() {
     document.getElementsByTagName("iframe")[0].onfocus = function() {
