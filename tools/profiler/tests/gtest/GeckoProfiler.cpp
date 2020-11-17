@@ -802,9 +802,6 @@ TEST(GeckoProfiler, Markers)
   PROFILER_ADD_MARKER_WITH_PAYLOAD("LogMarkerPayload marker", OTHER,
                                    LogMarkerPayload, ("module", "text", ts1));
 
-  PROFILER_ADD_MARKER_WITH_PAYLOAD("LongTaskMarkerPayload marker", OTHER,
-                                   LongTaskMarkerPayload, (ts1, ts2));
-
   PROFILER_ADD_MARKER_WITH_PAYLOAD("NativeAllocationMarkerPayload marker",
                                    OTHER, NativeAllocationMarkerPayload,
                                    (ts1, 9876543210, 1234, 5678, nullptr));
@@ -907,10 +904,6 @@ TEST(GeckoProfiler, Markers)
       Some(mozilla::ProfilerString8View("start")),
       Some(mozilla::ProfilerString8View("end"))));
 
-  MOZ_RELEASE_ASSERT(profiler_add_marker("LongTask",
-                                         geckoprofiler::category::OTHER, {},
-                                         geckoprofiler::markers::LongTask{}));
-
   MOZ_RELEASE_ASSERT(profiler_add_marker("Text", geckoprofiler::category::OTHER,
                                          {}, geckoprofiler::markers::Text{},
                                          "Text text"));
@@ -970,7 +963,6 @@ TEST(GeckoProfiler, Markers)
     S_GCMinorMarkerPayload,
     S_GCSliceMarkerPayload,
     S_LogMarkerPayload,
-    S_LongTaskMarkerPayload,
     S_NativeAllocationMarkerPayload,
     S_NetworkMarkerPayload_start,
     S_NetworkMarkerPayload_stop,
@@ -1352,14 +1344,6 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ_JSON(payload["name"], String, "text");
                 EXPECT_EQ_JSON(payload["module"], String, "module");
 
-              } else if (nameString == "LongTaskMarkerPayload marker") {
-                EXPECT_EQ(state, S_LongTaskMarkerPayload);
-                state = State(S_LongTaskMarkerPayload + 1);
-                EXPECT_EQ(typeString, "MainThreadLongTask");
-                EXPECT_TIMING_INTERVAL_AT(ts1Double, ts2Double);
-                EXPECT_TRUE(payload["stack"].isNull());
-                EXPECT_EQ_JSON(payload["category"], String, "LongTask");
-
               } else if (nameString == "NativeAllocationMarkerPayload marker") {
                 EXPECT_EQ(state, S_NativeAllocationMarkerPayload);
                 state = State(S_NativeAllocationMarkerPayload + 1);
@@ -1730,8 +1714,6 @@ TEST(GeckoProfiler, Markers)
       EXPECT_TRUE(testedSchemaNames.find("UserTimingMark") !=
                   testedSchemaNames.end());
       EXPECT_TRUE(testedSchemaNames.find("UserTimingMeasure") !=
-                  testedSchemaNames.end());
-      EXPECT_TRUE(testedSchemaNames.find("MainThreadLongTask") !=
                   testedSchemaNames.end());
       EXPECT_TRUE(testedSchemaNames.find("Log") != testedSchemaNames.end());
       EXPECT_TRUE(testedSchemaNames.find("MediaSample") !=
