@@ -378,7 +378,7 @@ macro_rules! define_string_types {
             type Target = $AString;
             fn deref(&self) -> &$AString {
                 unsafe {
-                    mem::transmute(self)
+                    &*(self as *const _ as *const $AString)
                 }
             }
         }
@@ -386,7 +386,7 @@ macro_rules! define_string_types {
         impl DerefMut for $StringRepr {
             fn deref_mut(&mut self) -> &mut $AString {
                 unsafe {
-                    mem::transmute(self)
+                    &mut *(self as *mut _ as *mut $AString)
                 }
             }
         }
@@ -649,9 +649,9 @@ macro_rules! define_string_types {
 
             fn as_repr(&self) -> &$StringRepr {
                 // All $AString values point to a struct prefix which is
-                // identical to $StringRepr, this we can transmute `self`
-                // into $StringRepr to get the reference to the underlying
-                // data.
+                // identical to $StringRepr, thus we can cast `self`
+                // into *const $StringRepr to get the reference to the
+                // underlying data.
                 unsafe {
                     &*(self as *const _ as *const $StringRepr)
                 }
@@ -684,10 +684,10 @@ macro_rules! define_string_types {
             fn deref(&self) -> &[$char_t] {
                 unsafe {
                     // All $AString values point to a struct prefix which is
-                    // identical to $StringRepr, this we can transmute `self`
-                    // into $StringRepr to get the reference to the underlying
-                    // data.
-                    let this: &$StringRepr = mem::transmute(self);
+                    // identical to $StringRepr, thus we can cast `self`
+                    // into *const $StringRepr to get the reference to the
+                    // underlying data.
+                    let this = &*(self as *const _ as *const $StringRepr);
                     slice::from_raw_parts(this.data.as_ptr(), this.length as usize)
                 }
             }
