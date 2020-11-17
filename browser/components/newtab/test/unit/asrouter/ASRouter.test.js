@@ -2207,24 +2207,28 @@ describe("ASRouter", () => {
   });
 
   describe("#forceWNPanel", () => {
-    let browserWindow = {
-      document: new Document(),
-      PanelUI: {
-        showSubView: sinon.stub(),
-        panel: {
-          setAttribute: sinon.stub(),
+    let browser = {
+      ownerGlobal: {
+        document: new Document(),
+        PanelUI: {
+          showSubView: sinon.stub(),
+          panel: {
+            setAttribute: sinon.stub(),
+          },
         },
       },
     };
     let fakePanel = {
       setAttribute: sinon.stub(),
     };
-    sinon.stub(browserWindow.document, "getElementById").returns(fakePanel);
+    sinon
+      .stub(browser.ownerGlobal.document, "getElementById")
+      .returns(fakePanel);
 
     it("should call enableToolbarButton", async () => {
-      await Router.forceWNPanel(browserWindow);
+      await Router.forceWNPanel(browser);
       assert.calledOnce(FakeToolbarPanelHub.enableToolbarButton);
-      assert.calledOnce(browserWindow.PanelUI.showSubView);
+      assert.calledOnce(browser.ownerGlobal.PanelUI.showSubView);
       assert.calledWith(fakePanel.setAttribute, "noautohide", true);
     });
   });
