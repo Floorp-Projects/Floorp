@@ -79,6 +79,10 @@ async function getFullText(longStringFront, item) {
   }
 }
 
+async function getPromiseState(objectFront) {
+  return objectFront.getPromiseState();
+}
+
 async function getProxySlots(objectFront) {
   return objectFront.getProxySlots();
 }
@@ -100,5 +104,6 @@ module.exports = {
   enumSymbols,
   getPrototype,
   getFullText,
+  getPromiseState,
   getProxySlots,
 };

@@ -15,8 +15,7 @@
         d.write("test");
         d.close();
         opener.is(window.history.length, 1, "Unexpected history length");
-        opener.nextTest();
-        window.close();
+        opener.finishTest();
       }
     </script>
   </head>

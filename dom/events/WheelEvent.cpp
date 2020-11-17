@@ -18,7 +18,6 @@ WheelEvent::WheelEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                      ? aWheelEvent
                      : new WidgetWheelEvent(false, eVoidEvent, nullptr)),
       mAppUnitsPerDevPixel(0) {
-
   if (StaticPrefs::dom_event_wheel_deltaMode_lines_always_disabled()) {
     mDeltaModeCheckingState = DeltaModeCheckingState::Unchecked;
   }

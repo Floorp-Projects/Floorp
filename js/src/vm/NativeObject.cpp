@@ -2411,23 +2411,6 @@ static MOZ_ALWAYS_INLINE bool GetExistingProperty(
     return true;
   }
 
-  if (!jit::JitOptions.warpBuilder) {
-    // Set the accessed-getter flag for IonBuilder.
-    jsbytecode* pc;
-    JSScript* script = cx->currentScript(&pc);
-    if (script && script->hasJitScript()) {
-      switch (JSOp(*pc)) {
-        case JSOp::GetProp:
-        case JSOp::CallProp:
-        case JSOp::Length:
-          script->jitScript()->noteAccessedGetter(script->pcToOffset(pc));
-          break;
-        default:
-          break;
-      }
-    }
-  }
-
   if constexpr (!allowGC) {
     return false;
   } else {

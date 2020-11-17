@@ -131,14 +131,6 @@ class TestPolicy final : public TypePolicy {
                                  MInstruction* ins) const override;
 };
 
-class TypeBarrierPolicy final : public TypePolicy {
- public:
-  constexpr TypeBarrierPolicy() = default;
-  EMPTY_DATA_;
-  MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc,
-                                 MInstruction* ins) const override;
-};
-
 class CallPolicy final : public TypePolicy {
  public:
   constexpr CallPolicy() = default;
@@ -503,14 +495,6 @@ class StoreTypedArrayHolePolicy final : public StoreUnboxedScalarPolicy {
 class ClampPolicy final : public TypePolicy {
  public:
   constexpr ClampPolicy() = default;
-  EMPTY_DATA_;
-  MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc,
-                                 MInstruction* ins) const override;
-};
-
-class FilterTypeSetPolicy final : public TypePolicy {
- public:
-  constexpr FilterTypeSetPolicy() = default;
   EMPTY_DATA_;
   MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc,
                                  MInstruction* ins) const override;

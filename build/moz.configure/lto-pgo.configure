@@ -278,11 +278,16 @@ def lto(value, c_compiler, ld64_known_good, target, instrumented_build):
         # binary size growth while still getting good performance.
         # (For hot functions, PGO will put a multiplier on this limit.)
         if target.os == "WINNT":
+            ldflags.append("-opt:ltonewpassmanager")
             ldflags.append("-mllvm:-import-instr-limit=10")
+            ldflags.append("-mllvm:-import-hot-multiplier=30")
         elif target.os == "OSX":
+            # ld64 doesn't seem to have an option for the new pass manager
             ldflags.append("-Wl,-mllvm,-import-instr-limit=10")
         elif c_compiler.type == "clang":
+            ldflags.append("-Wl,-plugin-opt=new-pass-manager")
             ldflags.append("-Wl,-plugin-opt=-import-instr-limit=10")
+            ldflags.append("-Wl,-plugin-opt=-import-hot-multiplier=30")
 
     return namespace(
         enabled=enabled,

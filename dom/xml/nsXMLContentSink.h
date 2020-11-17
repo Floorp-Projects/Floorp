@@ -103,7 +103,8 @@ class nsXMLContentSink : public nsContentSink,
   // stylesheets are all done loading.
   virtual void MaybeStartLayout(bool aIgnorePendingSheets);
 
-  virtual nsresult AddAttributes(const char16_t** aNode, Element* aElement);
+  virtual nsresult AddAttributes(const char16_t** aNode,
+                                 mozilla::dom::Element* aElement);
   nsresult AddText(const char16_t* aString, int32_t aLength);
 
   virtual bool OnOpenContainer(const char16_t** aAtts, uint32_t aAttsCount,

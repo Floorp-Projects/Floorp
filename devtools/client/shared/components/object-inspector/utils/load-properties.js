@@ -9,6 +9,7 @@ const {
   getPrototype,
   enumSymbols,
   getFullText,
+  getPromiseState,
   getProxySlots,
 } = require("devtools/client/shared/components/object-inspector/utils/client");
 
@@ -24,6 +25,7 @@ const {
   nodeIsEntries,
   nodeIsMapEntry,
   nodeIsPrimitive,
+  nodeIsPromise,
   nodeIsProxy,
   nodeNeedsNumericalBuckets,
   nodeIsLongString,
@@ -77,6 +79,10 @@ function loadItemProperties(item, client, loadedProperties) {
     promises.push(getFullText(longStringFront, item));
   }
 
+  if (shouldLoadItemPromiseState(item, loadedProperties)) {
+    promises.push(getPromiseState(getObjectFront()));
+  }
+
   if (shouldLoadItemProxySlots(item, loadedProperties)) {
     promises.push(getProxySlots(getObjectFront()));
   }
@@ -102,6 +108,10 @@ function mergeResponses(responses) {
 
     if (response.fullText) {
       data.fullText = response.fullText;
+    }
+
+    if (response.promiseState) {
+      data.promiseState = response.promiseState;
     }
 
     if (response.proxyTarget && response.proxyHandler) {
@@ -198,6 +208,10 @@ function shouldLoadItemFullText(item, loadedProperties = new Map()) {
   return !loadedProperties.has(item.path) && nodeIsLongString(item);
 }
 
+function shouldLoadItemPromiseState(item, loadedProperties = new Map()) {
+  return !loadedProperties.has(item.path) && nodeIsPromise(item);
+}
+
 function shouldLoadItemProxySlots(item, loadedProperties = new Map()) {
   return !loadedProperties.has(item.path) && nodeIsProxy(item);
 }
@@ -211,5 +225,6 @@ module.exports = {
   shouldLoadItemPrototype,
   shouldLoadItemSymbols,
   shouldLoadItemFullText,
+  shouldLoadItemPromiseState,
   shouldLoadItemProxySlots,
 };

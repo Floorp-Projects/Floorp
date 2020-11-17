@@ -512,9 +512,9 @@ class BrowserParent final : public PBrowserParent,
   void DynamicToolbarOffsetChanged(ScreenIntCoord aOffset);
 #endif
 
-  void Activate();
+  void Activate(uint64_t aActionId);
 
-  void Deactivate(bool aWindowLowering);
+  void Deactivate(bool aWindowLowering, uint64_t aActionId);
 
   void MouseEnterIntoWidget();
 

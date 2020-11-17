@@ -145,14 +145,6 @@ class Instance {
   JSAtom* getFuncDisplayAtom(JSContext* cx, uint32_t funcIndex) const;
   void ensureProfilingLabels(bool profilingEnabled) const;
 
-  // Initially, calls to imports in wasm code call out through the generic
-  // callImport method. If the imported callee gets JIT compiled and the types
-  // match up, callImport will patch the code to instead call through a thunk
-  // directly into the JIT code. If the JIT code is released, the Instance must
-  // be notified so it can go back to the generic callImport.
-
-  void deoptimizeImportExit(uint32_t funcImportIndex);
-
   // Called by Wasm(Memory|Table)Object when a moving resize occurs:
 
   void onMovingGrowMemory();

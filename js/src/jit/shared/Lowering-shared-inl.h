@@ -367,32 +367,6 @@ void LIRGeneratorShared::redefine(MDefinition* def, MDefinition* as) {
   } else {
     ensureDefined(as);
     def->setVirtualRegister(as->virtualRegister());
-
-#ifdef DEBUG
-    if (JitOptions.runExtraChecks && def->resultTypeSet() &&
-        as->resultTypeSet() &&
-        !def->resultTypeSet()->equals(as->resultTypeSet())) {
-      switch (def->type()) {
-        case MIRType::Object:
-        case MIRType::ObjectOrNull:
-        case MIRType::String:
-        case MIRType::Symbol:
-        case MIRType::BigInt: {
-          LAssertResultT* check =
-              new (alloc()) LAssertResultT(useRegister(def));
-          add(check, def->toInstruction());
-          break;
-        }
-        case MIRType::Value: {
-          LAssertResultV* check = new (alloc()) LAssertResultV(useBox(def));
-          add(check, def->toInstruction());
-          break;
-        }
-        default:
-          break;
-      }
-    }
-#endif
   }
 }
 
@@ -648,9 +622,6 @@ static inline uint32_t VirtualRegisterOfPayload(MDefinition* mir) {
         inner->type() != MIRType::Float32) {
       return inner->virtualRegister();
     }
-  }
-  if (mir->isTypeBarrier() && mir->toTypeBarrier()->canRedefineInput()) {
-    return VirtualRegisterOfPayload(mir->toTypeBarrier()->input());
   }
   return mir->virtualRegister() + VREG_DATA_OFFSET;
 }

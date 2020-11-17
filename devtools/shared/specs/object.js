@@ -92,6 +92,14 @@ types.addDictType("object.originalSourceLocation", {
   functionDisplayName: "string",
 });
 
+types.addDictType("object.promiseState", {
+  state: "string",
+  value: "nullable:object.descriptor",
+  reason: "nullable:object.descriptor",
+  creationTimestamp: "number",
+  timeToSettle: "nullable:number",
+});
+
 types.addDictType("object.proxySlots", {
   proxyTarget: "object.descriptor",
   proxyHandler: "object.descriptor",
@@ -187,6 +195,10 @@ const objectSpec = generateActorSpec({
       response: {
         rejectionStack: RetVal("array:object.originalSourceLocation"),
       },
+    },
+    promiseState: {
+      request: {},
+      response: RetVal("object.promiseState"),
     },
     proxySlots: {
       request: {},

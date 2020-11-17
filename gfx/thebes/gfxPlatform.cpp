@@ -2882,6 +2882,11 @@ void gfxPlatform::InitWebGPUConfig() {
                        "WebGPU can only be enabled in nightly",
                        "WEBGPU_DISABLE_NON_NIGHTLY"_ns);
 #endif
+  if (!UseWebRender()) {
+    feature.ForceDisable(FeatureStatus::UnavailableNoWebRender,
+                         "WebGPU can't present without WebRender",
+                         "FEATURE_FAILURE_WEBGPU_NEED_WEBRENDER"_ns);
+  }
 }
 
 void gfxPlatform::InitOMTPConfig() {

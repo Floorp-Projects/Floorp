@@ -132,6 +132,88 @@ static int x_error_handler(Display*, XErrorEvent* ev) {
 // care about leaking memory
 extern "C" {
 
+#define PCI_FILL_IDENT 0x0001
+#define PCI_FILL_CLASS 0x0020
+#define PCI_BASE_CLASS_DISPLAY 0x03
+
+static int get_pci_status(char* buf, int bufsize) {
+  void* libpci = dlopen("libpci.so.3", RTLD_LAZY);
+  if (!libpci) {
+    libpci = dlopen("libpci.so", RTLD_LAZY);
+  }
+  if (!libpci) {
+    return 0;
+  }
+
+  typedef struct pci_dev {
+    struct pci_dev* next;
+    uint16_t domain_16;
+    uint8_t bus, dev, func;
+    unsigned int known_fields;
+    uint16_t vendor_id, device_id;
+    uint16_t device_class;
+  } pci_dev;
+
+  typedef struct pci_access {
+    unsigned int method;
+    int writeable;
+    int buscentric;
+    char* id_file_name;
+    int free_id_name;
+    int numeric_ids;
+    unsigned int id_lookup_mode;
+    int debugging;
+    void* error;
+    void* warning;
+    void* debug;
+    pci_dev* devices;
+  } pci_access;
+
+  typedef pci_access* (*PCIALLOC)(void);
+  PCIALLOC pci_alloc = cast<PCIALLOC>(dlsym(libpci, "pci_alloc"));
+
+  typedef void (*PCIINIT)(pci_access*);
+  PCIINIT pci_init = cast<PCIINIT>(dlsym(libpci, "pci_init"));
+
+  typedef void (*PCICLEANUP)(pci_access*);
+  PCICLEANUP pci_cleanup = cast<PCICLEANUP>(dlsym(libpci, "pci_cleanup"));
+
+  typedef void (*PCISCANBUS)(pci_access*);
+  PCISCANBUS pci_scan_bus = cast<PCISCANBUS>(dlsym(libpci, "pci_scan_bus"));
+
+  typedef void (*PCIFILLINFO)(pci_dev*, int);
+  PCIFILLINFO pci_fill_info = cast<PCIFILLINFO>(dlsym(libpci, "pci_fill_info"));
+
+  if (!pci_alloc || !pci_cleanup || !pci_scan_bus || !pci_fill_info) {
+    dlclose(libpci);
+    return 0;
+  }
+
+  pci_access* pacc = pci_alloc();
+  if (!pacc) {
+    dlclose(libpci);
+    return 0;
+  }
+
+  pci_init(pacc);
+  pci_scan_bus(pacc);
+
+  int length = 0;
+  for (pci_dev* dev = pacc->devices; dev; dev = dev->next) {
+    pci_fill_info(dev, PCI_FILL_IDENT | PCI_FILL_CLASS);
+    if (dev->device_class >> 8 == PCI_BASE_CLASS_DISPLAY && dev->vendor_id &&
+        dev->device_id) {
+      length += snprintf(buf + length, bufsize - length,
+                         "PCI_VENDOR_ID\n0x%04x\nPCI_DEVICE_ID\n0x%04x\n",
+                         dev->vendor_id, dev->device_id);
+    }
+  }
+
+  pci_cleanup(pacc);
+  dlclose(libpci);
+  return length;
+}
+
 typedef void* EGLNativeDisplayType;
 
 static int get_egl_status(char* buf, int bufsize,
@@ -309,6 +391,12 @@ bool wayland_egltest() {
   int length = get_egl_status(buf, bufsize, (EGLNativeDisplayType)dpy, true);
   if (length >= bufsize) {
     fatal_error("GL strings length too large for buffer size");
+  }
+
+  // Get a list of all GPUs from the PCI bus.
+  length += get_pci_status(buf + length, bufsize - length);
+  if (length >= bufsize) {
+    fatal_error("PCI strings length too large for buffer size");
   }
 
   ///// Finally write data to the pipe
@@ -524,6 +612,12 @@ void glxtest() {
     if (length >= bufsize) {
       fatal_error("GL strings length too large for buffer size");
     }
+  }
+
+  // Get a list of all GPUs from the PCI bus.
+  length += get_pci_status(buf + length, bufsize - length);
+  if (length >= bufsize) {
+    fatal_error("PCI strings length too large for buffer size");
   }
 
   ///// Finally write data to the pipe

@@ -6,6 +6,8 @@
 #include "ComputePipeline.h"
 
 #include "Device.h"
+#include "ipc/WebGPUChild.h"
+#include "mozilla/dom/WebGPUBinding.h"
 
 namespace mozilla {
 namespace webgpu {

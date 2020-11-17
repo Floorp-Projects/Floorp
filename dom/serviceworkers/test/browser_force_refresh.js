@@ -79,7 +79,7 @@ function test() {
       var tab = BrowserTestUtils.addTab(gBrowser);
       var tabBrowser = gBrowser.getBrowserForTab(tab);
       gBrowser.selectedTab = tab;
-      await BrowserTestUtils.loadURI(gBrowser, url);
+      BrowserTestUtils.loadURI(gBrowser, url);
     }
   );
 }

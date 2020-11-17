@@ -99,10 +99,8 @@ const frontend::ParserAtom* RealmInstrumentation::getInstrumentationKindName(
     InstrumentationKind kind) {
   for (size_t i = 0; i < mozilla::ArrayLength(instrumentationNames); i++) {
     if (kind == (InstrumentationKind)(1 << i)) {
-      return parserAtoms
-          .internAscii(cx, instrumentationNames[i],
-                       strlen(instrumentationNames[i]))
-          .unwrapOr(nullptr);
+      return parserAtoms.internAscii(cx, instrumentationNames[i],
+                                     strlen(instrumentationNames[i]));
     }
   }
   MOZ_CRASH("Unexpected instrumentation kind");

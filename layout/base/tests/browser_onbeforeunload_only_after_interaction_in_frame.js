@@ -57,7 +57,7 @@ async function openPage(shouldClick) {
     { gBrowser, url: "about:blank" },
     async function(browser) {
       // Load the page.
-      await BrowserTestUtils.loadURI(browser, PAGE_URL);
+      BrowserTestUtils.loadURI(browser, PAGE_URL);
       await BrowserTestUtils.browserLoaded(browser);
 
       let frameBC = browser.browsingContext.children[0];
@@ -85,7 +85,7 @@ async function openPage(shouldClick) {
         "Click should update frame interactivity state"
       );
       // And then navigate away.
-      await BrowserTestUtils.loadURI(browser, "http://example.com/");
+      BrowserTestUtils.loadURI(browser, "http://example.com/");
       await BrowserTestUtils.browserLoaded(browser);
     }
   );

@@ -140,10 +140,6 @@ static size_t GetEnteredOffset(BaselineCacheIRStubKind kind) {
   switch (kind) {
     case BaselineCacheIRStubKind::Regular:
       return ICCacheIR_Regular::offsetOfEnteredCount();
-    case BaselineCacheIRStubKind::Updated:
-      return ICCacheIR_Updated::offsetOfEnteredCount();
-    case BaselineCacheIRStubKind::Monitored:
-      return ICCacheIR_Monitored::offsetOfEnteredCount();
   }
   MOZ_CRASH("unhandled BaselineCacheIRStubKind");
 }
@@ -866,60 +862,7 @@ bool BaselineCacheIRCompiler::callTypeUpdateIC(
   // Ensure the stack is empty for the VM call below.
   allocator.discardStack(masm);
 
-  if (!IsTypeInferenceEnabled()) {
-    return true;
-  }
-
-  // R0 contains the value that needs to be typechecked.
-  MOZ_ASSERT(val == R0);
-  MOZ_ASSERT(scratch == R1.scratchReg());
-
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-  static const bool CallClobbersTailReg = false;
-#else
-  static const bool CallClobbersTailReg = true;
-#endif
-
-  // Call the first type update stub.
-  if (CallClobbersTailReg) {
-    masm.push(ICTailCallReg);
-  }
-  masm.push(ICStubReg);
-  masm.loadPtr(Address(ICStubReg, ICCacheIR_Updated::offsetOfFirstUpdateStub()),
-               ICStubReg);
-  masm.call(Address(ICStubReg, ICStub::offsetOfStubCode()));
-  masm.pop(ICStubReg);
-  if (CallClobbersTailReg) {
-    masm.pop(ICTailCallReg);
-  }
-
-  // The update IC will store 0 or 1 in |scratch|, R1.scratchReg(), reflecting
-  // if the value in R0 type-checked properly or not.
-  Label done;
-  masm.branch32(Assembler::Equal, scratch, Imm32(1), &done);
-
-  AutoStubFrame stubFrame(*this);
-  stubFrame.enter(masm, scratch, CallCanGC::CanNotGC);
-
-  masm.PushRegsInMask(saveRegs);
-
-  masm.Push(val);
-  masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
-  masm.Push(ICStubReg);
-
-  // Load previous frame pointer, push BaselineFrame*.
-  masm.loadPtr(Address(BaselineFrameReg, 0), scratch);
-  masm.pushBaselineFramePtr(scratch, scratch);
-
-  using Fn = bool (*)(JSContext*, BaselineFrame*, ICCacheIR_Updated*,
-                      HandleValue, HandleValue);
-  callVM<Fn, DoTypeUpdateFallback>(masm);
-
-  masm.PopRegsInMask(saveRegs);
-
-  stubFrame.leave(masm);
-
-  masm.bind(&done);
+  // TODO(no-TI): clean up.
   return true;
 }
 
@@ -2221,11 +2164,8 @@ bool BaselineCacheIRCompiler::emitMegamorphicSetElement(ObjOperandId objId,
 bool BaselineCacheIRCompiler::emitTypeMonitorResult() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   allocator.discardStack(masm);
-  if (IsTypeInferenceEnabled()) {
-    EmitEnterTypeMonitorIC(masm);
-  } else {
-    EmitReturnFromIC(masm);
-  }
+  // TODO(no-TI): remove CacheIR instruction.
+  EmitReturnFromIC(masm);
   return true;
 }
 
@@ -2468,12 +2408,6 @@ static void ResetEnteredCounts(ICFallbackStub* stub) {
       case ICStub::CacheIR_Regular:
         iter->toCacheIR_Regular()->resetEnteredCount();
         break;
-      case ICStub::CacheIR_Updated:
-        iter->toCacheIR_Updated()->resetEnteredCount();
-        break;
-      case ICStub::CacheIR_Monitored:
-        iter->toCacheIR_Monitored()->resetEnteredCount();
-        break;
       default:
         break;
     }
@@ -2502,16 +2436,11 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
   MOZ_ASSERT(stub->numOptimizedStubs() < MaxOptimizedCacheIRStubs);
 #endif
 
+  // TODO(no-TI): remove stubKind argument.
   uint32_t stubDataOffset = 0;
   switch (stubKind) {
-    case BaselineCacheIRStubKind::Monitored:
-      stubDataOffset = sizeof(ICCacheIR_Monitored);
-      break;
     case BaselineCacheIRStubKind::Regular:
       stubDataOffset = sizeof(ICCacheIR_Regular);
-      break;
-    case BaselineCacheIRStubKind::Updated:
-      stubDataOffset = sizeof(ICCacheIR_Updated);
       break;
   }
 
@@ -2581,32 +2510,6 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
         }
         break;
       }
-      case BaselineCacheIRStubKind::Monitored: {
-        if (!iter->isCacheIR_Monitored()) {
-          continue;
-        }
-        auto otherStub = iter->toCacheIR_Monitored();
-        if (otherStub->stubInfo() != stubInfo) {
-          continue;
-        }
-        if (!writer.stubDataEquals(otherStub->stubDataStart())) {
-          continue;
-        }
-        break;
-      }
-      case BaselineCacheIRStubKind::Updated: {
-        if (!iter->isCacheIR_Updated()) {
-          continue;
-        }
-        auto otherStub = iter->toCacheIR_Updated();
-        if (otherStub->stubInfo() != stubInfo) {
-          continue;
-        }
-        if (!writer.stubDataEquals(otherStub->stubDataStart())) {
-          continue;
-        }
-        break;
-      }
     }
 
     // We found a stub that's exactly the same as the stub we're about to
@@ -2656,36 +2559,6 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
       *attached = true;
       return newStub;
     }
-    case BaselineCacheIRStubKind::Monitored: {
-      ICStub* monitorStub = nullptr;
-      if (IsTypeInferenceEnabled()) {
-        ICTypeMonitor_Fallback* typeMonitorFallback =
-            stub->toMonitoredFallbackStub()->getFallbackMonitorStub(
-                cx, outerScript);
-        if (!typeMonitorFallback) {
-          cx->recoverFromOutOfMemory();
-          return nullptr;
-        }
-        monitorStub = typeMonitorFallback->firstMonitorStub();
-      }
-      auto newStub =
-          new (newStubMem) ICCacheIR_Monitored(code, monitorStub, stubInfo);
-      writer.copyStubData(newStub->stubDataStart());
-      stub->addNewStub(newStub);
-      *attached = true;
-      return newStub;
-    }
-    case BaselineCacheIRStubKind::Updated: {
-      auto newStub = new (newStubMem) ICCacheIR_Updated(code, stubInfo);
-      if (!newStub->initUpdatingChain(cx, stubSpace)) {
-        cx->recoverFromOutOfMemory();
-        return nullptr;
-      }
-      writer.copyStubData(newStub->stubDataStart());
-      stub->addNewStub(newStub);
-      *attached = true;
-      return newStub;
-    }
   }
 
   MOZ_CRASH("Invalid kind");
@@ -2697,7 +2570,6 @@ uint8_t* ICCacheIR_Trait<Base>::stubDataStart() {
 }
 
 template uint8_t* ICCacheIR_Trait<ICStub>::stubDataStart();
-template uint8_t* ICCacheIR_Trait<ICMonitoredStub>::stubDataStart();
 
 bool BaselineCacheIRCompiler::emitCallStringObjectConcatResult(
     ValOperandId lhsId, ValOperandId rhsId) {

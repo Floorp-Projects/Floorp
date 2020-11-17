@@ -59,6 +59,8 @@ inline mozAccessible* GetNativeFromGeckoAccessible(
   uint64_t mCachedState;
 
   nsStaticAtom* mARIARole;
+
+  bool mIsLiveRegion;
 }
 
 // inits with the given wrap or proxy accessible
@@ -133,6 +135,8 @@ inline mozAccessible* GetNativeFromGeckoAccessible(
 
 - (id<MOXTextMarkerSupport>)moxTextMarkerDelegate;
 
+- (BOOL)moxIsLiveRegion;
+
 // Attribute getters
 
 // override
@@ -182,6 +186,15 @@ inline mozAccessible* GetNativeFromGeckoAccessible(
 
 // override
 - (NSString*)moxARIACurrent;
+
+// override
+- (NSNumber*)moxARIAAtomic;
+
+// override
+- (NSString*)moxARIALive;
+
+// override
+- (NSString*)moxARIARelevant;
 
 // override
 - (id)moxTitleUIElement;

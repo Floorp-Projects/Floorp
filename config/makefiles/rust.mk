@@ -53,8 +53,11 @@ ifeq (1,$(MOZ_PARALLEL_BUILD))
 cargo_build_flags += -j1
 endif
 
-# This should also be paired with -Zbuild-std, but that doesn't work yet.
+# We also need to rebuild the rust stdlib so that it's instrumented. Because
+# build-std is still pretty experimental, we need to explicitly request
+# the panic_abort crate for `panic = "abort"` support.
 ifdef MOZ_TSAN
+cargo_build_flags += -Zbuild-std=std,panic_abort
 RUSTFLAGS += -Zsanitizer=thread
 endif
 

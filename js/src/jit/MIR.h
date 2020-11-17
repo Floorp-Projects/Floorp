@@ -82,7 +82,6 @@ class MDefinitionVisitorDefaultNoop {
 };
 
 class CompactBufferWriter;
-class IonBuilder;
 class Range;
 
 template <typename T>
@@ -471,7 +470,6 @@ class MDefinition : public MNode {
   Opcode op_;              // Opcode.
   uint16_t flags_;         // Bit flags.
   Range* range_;           // Any computed range for this def.
-  TemporaryTypeSet* resultTypeSet_;  // Optional refinement of the result type.
   union {
     MDefinition*
         loadDependency_;  // Implicit dependency (store, call, etc.) of this
@@ -527,7 +525,6 @@ class MDefinition : public MNode {
         op_(op),
         flags_(0),
         range_(nullptr),
-        resultTypeSet_(nullptr),
         loadDependency_(nullptr),
         trackedSite_(nullptr),
         bailoutKind_(BailoutKind::Unknown),
@@ -540,7 +537,6 @@ class MDefinition : public MNode {
         op_(other.op_),
         flags_(other.flags_),
         range_(other.range_),
-        resultTypeSet_(other.resultTypeSet_),
         loadDependency_(other.loadDependency_),
         trackedSite_(other.trackedSite_),
         bailoutKind_(other.bailoutKind_),
@@ -733,9 +729,6 @@ class MDefinition : public MNode {
   // is MIRType::Int32.
   MIRType type() const { return resultType_; }
 
-  TemporaryTypeSet* resultTypeSet() const { return resultTypeSet_; }
-  bool emptyResultTypeSet() const;
-
   bool mightBeType(MIRType type) const {
     MOZ_ASSERT(type != MIRType::Value);
     MOZ_ASSERT(type != MIRType::ObjectOrNull);
@@ -749,7 +742,7 @@ class MDefinition : public MNode {
     }
 
     if (this->type() == MIRType::Value) {
-      return !resultTypeSet() || resultTypeSet()->mightBeMIRType(type);
+      return true;
     }
 
     return false;
@@ -909,7 +902,6 @@ class MDefinition : public MNode {
   inline MControlInstruction* toControlInstruction();
 
   void setResultType(MIRType type) { resultType_ = type; }
-  void setResultTypeSet(TemporaryTypeSet* types) { resultTypeSet_ = types; }
   virtual AliasSet getAliasSet() const {
     // Instructions are effectful by default.
     return AliasSet::Store(AliasSet::Any);
@@ -1443,7 +1435,6 @@ class MLimitedTruncate : public MUnaryInstruction,
         truncate_(NoTruncate),
         truncateLimit_(limit) {
     setResultType(MIRType::Int32);
-    setResultTypeSet(input->resultTypeSet());
     setMovable();
   }
 
@@ -1719,10 +1710,9 @@ class MWasmFloatConstant : public MNullaryInstruction {
 class MParameter : public MNullaryInstruction {
   int32_t index_;
 
-  MParameter(int32_t index, TemporaryTypeSet* types)
+  explicit MParameter(int32_t index)
       : MNullaryInstruction(classOpcode), index_(index) {
     setResultType(MIRType::Value);
-    setResultTypeSet(types);
   }
 
  public:
@@ -2045,23 +2035,7 @@ class MThrow : public MUnaryInstruction, public BoxInputsPolicy::Data {
   bool possiblyCalls() const override { return true; }
 };
 
-// Fabricate a type set containing only the type of the specified object.
-TemporaryTypeSet* MakeSingletonTypeSet(TempAllocator& alloc,
-                                       CompilerConstraintList* constraints,
-                                       JSObject* obj);
-
-TemporaryTypeSet* MakeSingletonTypeSet(TempAllocator& alloc,
-                                       CompilerConstraintList* constraints,
-                                       ObjectGroup* obj);
-
-MOZ_MUST_USE bool MergeTypes(TempAllocator& alloc, MIRType* ptype,
-                             TemporaryTypeSet** ptypeSet, MIRType newType,
-                             TemporaryTypeSet* newTypeSet);
-
 bool TypeSetIncludes(TypeSet* types, MIRType input, TypeSet* inputTypes);
-
-bool EqualTypes(MIRType type1, TemporaryTypeSet* typeset1, MIRType type2,
-                TemporaryTypeSet* typeset2);
 
 class MNewArray : public MUnaryInstruction, public NoTypePolicy::Data {
  private:
@@ -2136,10 +2110,6 @@ class MNewArrayCopyOnWrite : public MUnaryInstruction,
         initialHeap_(initialHeap) {
     MOZ_ASSERT(!templateObject()->isSingleton());
     setResultType(MIRType::Object);
-    if (!JitOptions.warpBuilder) {
-      setResultTypeSet(
-          MakeSingletonTypeSet(alloc, constraints, templateObject()));
-    }
   }
 
  public:
@@ -2175,10 +2145,6 @@ class MNewArrayDynamicLength : public MUnaryInstruction,
         initialHeap_(initialHeap) {
     setGuard();  // Need to throw if length is negative.
     setResultType(MIRType::Object);
-    if (!JitOptions.warpBuilder && !templateObject->isSingleton()) {
-      setResultTypeSet(
-          MakeSingletonTypeSet(alloc, constraints, templateObject));
-    }
   }
 
  public:
@@ -2208,10 +2174,6 @@ class MNewTypedArray : public MUnaryInstruction, public NoTypePolicy::Data {
         initialHeap_(initialHeap) {
     MOZ_ASSERT(!templateObject()->isSingleton());
     setResultType(MIRType::Object);
-    if (!JitOptions.warpBuilder) {
-      setResultTypeSet(
-          MakeSingletonTypeSet(alloc, constraints, templateObject()));
-    }
   }
 
  public:
@@ -2246,10 +2208,6 @@ class MNewTypedArrayDynamicLength : public MUnaryInstruction,
     MOZ_ASSERT(!templateObject->isSingleton());
     setGuard();  // Need to throw if length is negative.
     setResultType(MIRType::Object);
-    if (!JitOptions.warpBuilder) {
-      setResultTypeSet(
-          MakeSingletonTypeSet(alloc, constraints, templateObject));
-    }
   }
 
  public:
@@ -2286,10 +2244,6 @@ class MNewTypedArrayFromArray : public MUnaryInstruction,
     MOZ_ASSERT(!templateObject->isSingleton());
     setGuard();  // Can throw during construction.
     setResultType(MIRType::Object);
-    if (!JitOptions.warpBuilder) {
-      setResultTypeSet(
-          MakeSingletonTypeSet(alloc, constraints, templateObject));
-    }
   }
 
  public:
@@ -2326,10 +2280,6 @@ class MNewTypedArrayFromArrayBuffer
     MOZ_ASSERT(!templateObject->isSingleton());
     setGuard();  // Can throw during construction.
     setResultType(MIRType::Object);
-    if (!JitOptions.warpBuilder) {
-      setResultTypeSet(
-          MakeSingletonTypeSet(alloc, constraints, templateObject));
-    }
   }
 
  public:
@@ -2367,11 +2317,6 @@ class MNewObject : public MUnaryInstruction, public NoTypePolicy::Data {
         vmCall_(vmCall) {
     MOZ_ASSERT_IF(mode != ObjectLiteral, templateObject());
     setResultType(MIRType::Object);
-
-    JSObject* obj = templateObject();
-    if (obj && !JitOptions.warpBuilder) {
-      setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, obj));
-    }
 
     // The constant is kept separated in a MConstant, this way we can safely
     // mark it during GC if we recover the object allocation.  Otherwise, by
@@ -2429,10 +2374,6 @@ class MNewIterator : public MUnaryInstruction, public NoTypePolicy::Data {
                MConstant* templateConst, Type type)
       : MUnaryInstruction(classOpcode, templateConst), type_(type) {
     setResultType(MIRType::Object);
-    if (!JitOptions.warpBuilder) {
-      setResultTypeSet(
-          MakeSingletonTypeSet(alloc, constraints, templateObject()));
-    }
     templateConst->setEmittedAtUses();
   }
 
@@ -3406,13 +3347,7 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data {
                type == MIRType::Symbol || type == MIRType::BigInt ||
                type == MIRType::Object);
 
-    TemporaryTypeSet* resultSet = ins->resultTypeSet();
-    if (resultSet && type == MIRType::Object) {
-      resultSet = resultSet->cloneObjectsOnly(alloc.lifoAlloc());
-    }
-
     setResultType(type);
-    setResultTypeSet(resultSet);
     setMovable();
 
     if (mode_ == TypeBarrier || mode_ == Fallible) {
@@ -3459,7 +3394,6 @@ class MGuardObject : public MUnaryInstruction, public SingleObjectPolicy::Data {
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    setResultTypeSet(ins->resultTypeSet());
   }
 
  public:
@@ -3490,7 +3424,6 @@ class MPolyInlineGuard : public MUnaryInstruction,
       : MUnaryInstruction(classOpcode, ins) {
     setGuard();
     setResultType(MIRType::Object);
-    setResultTypeSet(ins->resultTypeSet());
   }
 
  public:
@@ -3580,10 +3513,6 @@ class MCreateThisWithTemplate : public MUnaryInstruction,
       : MUnaryInstruction(classOpcode, templateConst),
         initialHeap_(initialHeap) {
     setResultType(MIRType::Object);
-    if (!JitOptions.warpBuilder) {
-      setResultTypeSet(
-          MakeSingletonTypeSet(alloc, constraints, templateObject()));
-    }
   }
 
  public:
@@ -3787,7 +3716,6 @@ class MGuardArgumentsObjectNotOverriddenIterator
   explicit MGuardArgumentsObjectNotOverriddenIterator(MDefinition* argsObj)
       : MUnaryInstruction(classOpcode, argsObj) {
     setResultType(MIRType::Object);
-    setResultTypeSet(argsObj->resultTypeSet());
     setMovable();
     setGuard();
   }
@@ -6360,10 +6288,6 @@ class MStringSplit : public MBinaryInstruction,
                MDefinition* string, MDefinition* sep, ObjectGroup* group)
       : MBinaryInstruction(classOpcode, string, sep), group_(group) {
     setResultType(MIRType::Object);
-    if (!JitOptions.warpBuilder) {
-      TemporaryTypeSet* types = MakeSingletonTypeSet(alloc, constraints, group);
-      setResultTypeSet(types);
-    }
   }
 
  public:
@@ -6581,11 +6505,6 @@ class MPhi final : public MDefinition,
   // Whether this phi's type already includes information for def.
   bool typeIncludes(MDefinition* def);
 
-  // Add types for this phi which speculate about new inputs that may come in
-  // via a loop backedge.
-  MOZ_MUST_USE bool addBackedgeType(TempAllocator& alloc, MIRType type,
-                                    TemporaryTypeSet* typeSet);
-
   // Mark all phis in |iterators|, and the phis they flow into, as having
   // implicit uses.
   static MOZ_MUST_USE bool markIteratorPhis(const PhiVector& iterators);
@@ -6618,14 +6537,8 @@ class MPhi final : public MDefinition,
     MOZ_ALWAYS_TRUE(addInputSlow(ins));
   }
 
-  // Update the type of this phi after adding |ins| as an input. Set
-  // |*ptypeChange| to true if the type changed.
-  bool checkForTypeChange(TempAllocator& alloc, MDefinition* ins,
-                          bool* ptypeChange);
-
   MDefinition* foldsTo(TempAllocator& alloc) override;
   MDefinition* foldsTernary(TempAllocator& alloc);
-  MDefinition* foldsFilterTypeSet();
 
   bool congruentTo(const MDefinition* ins) const override;
   bool updateForReplacement(MDefinition* def) override;
@@ -6673,7 +6586,6 @@ class MBeta : public MUnaryInstruction, public NoTypePolicy::Data {
   MBeta(MDefinition* val, const Range* comp)
       : MUnaryInstruction(classOpcode, val), comparison_(comp) {
     setResultType(val->type());
-    setResultTypeSet(val->resultTypeSet());
   }
 
  public:
@@ -6893,7 +6805,6 @@ class MLexicalCheck : public MUnaryInstruction, public BoxPolicy<0>::Data {
   explicit MLexicalCheck(MDefinition* input)
       : MUnaryInstruction(classOpcode, input) {
     setResultType(MIRType::Value);
-    setResultTypeSet(input->resultTypeSet());
     setMovable();
     setGuard();
 
@@ -6993,9 +6904,6 @@ class MRegExp : public MNullaryInstruction {
         source_(source),
         hasShared_(hasShared) {
     setResultType(MIRType::Object);
-    if (!JitOptions.warpBuilder) {
-      setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, source));
-    }
   }
 
  public:
@@ -7325,12 +7233,6 @@ class MLambda : public MBinaryInstruction, public SingleObjectPolicy::Data {
           MDefinition* envChain, MConstant* cst, const LambdaFunctionInfo& info)
       : MBinaryInstruction(classOpcode, envChain, cst), info_(info) {
     setResultType(MIRType::Object);
-    if (!JitOptions.warpBuilder) {
-      JSFunction* fun = info.funUnsafe();
-      if (!info.singletonType && !info.useSingletonForClone) {
-        setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, fun));
-      }
-    }
   }
 
  public:
@@ -7359,13 +7261,6 @@ class MLambdaArrow
       : MTernaryInstruction(classOpcode, envChain, newTarget, cst),
         info_(info) {
     setResultType(MIRType::Object);
-    if (!JitOptions.warpBuilder) {
-      JSFunction* fun = info.funUnsafe();
-      MOZ_ASSERT(!info.useSingletonForClone);
-      if (!info.singletonType) {
-        setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, fun));
-      }
-    }
   }
 
  public:
@@ -7576,7 +7471,6 @@ class MMaybeCopyElementsForWrite : public MUnaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    setResultTypeSet(object->resultTypeSet());
   }
 
  public:
@@ -9132,9 +9026,6 @@ class InlinePropertyTable : public TempObject {
   bool hasFunction(JSFunction* func) const;
   bool hasObjectGroup(ObjectGroup* group) const;
 
-  TemporaryTypeSet* buildTypeSetForFunction(TempAllocator& tempAlloc,
-                                            JSFunction* func) const;
-
   // Remove targets that vetoed inlining from the InlinePropertyTable.
   void trimTo(const InliningTargets& targets, const BoolVector& choiceSet);
 
@@ -9573,7 +9464,6 @@ class MGuardShape : public MUnaryInstruction, public SingleObjectPolicy::Data {
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    setResultTypeSet(obj->resultTypeSet());
     if (!JitOptions.warpBuilder) {
       // Ion has special handling for shape guard bailouts.
       setBailoutKind(BailoutKind::ShapeGuard);
@@ -9612,7 +9502,6 @@ class MGuardProto : public MBinaryInstruction, public SingleObjectPolicy::Data {
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    setResultTypeSet(obj->resultTypeSet());
   }
 
  public:
@@ -9644,7 +9533,6 @@ class MGuardNullProto : public MUnaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    setResultTypeSet(obj->resultTypeSet());
   }
 
  public:
@@ -9675,7 +9563,6 @@ class MGuardIsProxy : public MUnaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    setResultTypeSet(obj->resultTypeSet());
   }
 
  public:
@@ -9697,7 +9584,6 @@ class MGuardIsNotProxy : public MUnaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    setResultTypeSet(obj->resultTypeSet());
   }
 
  public:
@@ -9720,7 +9606,6 @@ class MGuardIsNotDOMProxy : public MUnaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    setResultTypeSet(proxy->resultTypeSet());
   }
 
  public:
@@ -9989,7 +9874,6 @@ class MGuardIsNotArrayBufferMaybeShared : public MUnaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    setResultTypeSet(obj->resultTypeSet());
   }
 
  public:
@@ -10012,7 +9896,6 @@ class MGuardIsTypedArray : public MUnaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    setResultTypeSet(obj->resultTypeSet());
   }
 
  public:
@@ -10160,7 +10043,6 @@ class MGuardFunctionFlags : public MUnaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    setResultTypeSet(fun->resultTypeSet());
   }
 
  public:
@@ -10196,7 +10078,6 @@ class MGuardFunctionIsNonBuiltinCtor : public MUnaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    setResultTypeSet(fun->resultTypeSet());
   }
 
  public:
@@ -10227,7 +10108,6 @@ class MGuardFunctionKind : public MUnaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    setResultTypeSet(fun->resultTypeSet());
   }
 
  public:
@@ -10270,7 +10150,6 @@ class MGuardFunctionScript : public MUnaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    setResultTypeSet(fun->resultTypeSet());
   }
 
  public:
@@ -10315,7 +10194,6 @@ class MGuardReceiverPolymorphic : public MUnaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    setResultTypeSet(obj->resultTypeSet());
     if (!JitOptions.warpBuilder) {
       // Ion has special handling for shape guard bailouts.
       setBailoutKind(BailoutKind::ShapeGuard);
@@ -11948,10 +11826,6 @@ class MRest : public MUnaryInstruction, public UnboxedInt32Policy<0>::Data {
         numFormals_(numFormals),
         templateObject_(templateObject) {
     setResultType(MIRType::Object);
-    if (!JitOptions.warpBuilder) {
-      setResultTypeSet(
-          MakeSingletonTypeSet(alloc, constraints, templateObject));
-    }
   }
 
  public:
@@ -11967,91 +11841,6 @@ class MRest : public MUnaryInstruction, public UnboxedInt32Policy<0>::Data {
   bool appendRoots(MRootList& roots) const override {
     return roots.append(templateObject());
   }
-};
-
-class MFilterTypeSet : public MUnaryInstruction,
-                       public FilterTypeSetPolicy::Data {
-  MFilterTypeSet(MDefinition* def, TemporaryTypeSet* types)
-      : MUnaryInstruction(classOpcode, def) {
-    MOZ_ASSERT(!types->unknown());
-    setResultType(types->getKnownMIRType());
-    setResultTypeSet(types);
-  }
-
- public:
-  INSTRUCTION_HEADER(FilterTypeSet)
-  TRIVIAL_NEW_WRAPPERS
-
-  bool congruentTo(const MDefinition* def) const override { return false; }
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-  virtual bool neverHoist() const override { return resultTypeSet()->empty(); }
-  void computeRange(TempAllocator& alloc) override;
-
-  bool isFloat32Commutative() const override {
-    return IsFloatingPointType(type());
-  }
-
-  bool canProduceFloat32() const override;
-  bool canConsumeFloat32(MUse* operand) const override;
-  void trySpecializeFloat32(TempAllocator& alloc) override;
-};
-
-// Given a value, guard that the value is in a particular TypeSet, then returns
-// that value.
-class MTypeBarrier : public MUnaryInstruction, public TypeBarrierPolicy::Data {
-  BarrierKind barrierKind_;
-
-  MTypeBarrier(MDefinition* def, TemporaryTypeSet* types,
-               BarrierKind kind = BarrierKind::TypeSet)
-      : MUnaryInstruction(classOpcode, def), barrierKind_(kind) {
-    MOZ_ASSERT(kind == BarrierKind::TypeTagOnly ||
-               kind == BarrierKind::TypeSet);
-
-    MOZ_ASSERT(!types->unknown());
-    setResultType(types->getKnownMIRType());
-    setResultTypeSet(types);
-
-    setGuard();
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(TypeBarrier)
-  TRIVIAL_NEW_WRAPPERS
-
-#ifdef JS_JITSPEW
-  void printOpcode(GenericPrinter& out) const override;
-#endif
-
-  bool congruentTo(const MDefinition* def) const override;
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-  virtual bool neverHoist() const override { return resultTypeSet()->empty(); }
-  BarrierKind barrierKind() const { return barrierKind_; }
-  MDefinition* foldsTo(TempAllocator& alloc) override;
-
-  bool canRedefineInput();
-
-  bool alwaysBails() const {
-    // If mirtype of input doesn't agree with mirtype of barrier,
-    // we will definitely bail.
-    MIRType type = resultTypeSet()->getKnownMIRType();
-    if (type == MIRType::Value) {
-      return false;
-    }
-    if (input()->type() == MIRType::Value) {
-      return false;
-    }
-    if (input()->type() == MIRType::ObjectOrNull) {
-      // The ObjectOrNull optimization is only performed when the
-      // barrier's type is MIRType::Null.
-      MOZ_ASSERT(type == MIRType::Null);
-      return false;
-    }
-    return input()->type() != type;
-  }
-
-  ALLOW_CLONE(MTypeBarrier)
 };
 
 // Given a value being written to another object, update the generational store
@@ -12601,7 +12390,6 @@ class MCheckThis : public MUnaryInstruction, public BoxInputsPolicy::Data {
       : MUnaryInstruction(classOpcode, thisVal) {
     setGuard();
     setResultType(MIRType::Value);
-    setResultTypeSet(thisVal->resultTypeSet());
   }
 
  public:
@@ -12619,7 +12407,6 @@ class MCheckThisReinit : public MUnaryInstruction,
       : MUnaryInstruction(classOpcode, thisVal) {
     setGuard();
     setResultType(MIRType::Value);
-    setResultTypeSet(thisVal->resultTypeSet());
   }
 
  public:
@@ -12840,13 +12627,7 @@ class MCheckIsObj : public MUnaryInstruction, public BoxInputsPolicy::Data {
 
   MCheckIsObj(TempAllocator& alloc, MDefinition* value, uint8_t checkKind)
       : MUnaryInstruction(classOpcode, value), checkKind_(checkKind) {
-    TemporaryTypeSet* resultSet = value->resultTypeSet();
-    if (resultSet) {
-      resultSet = resultSet->cloneObjectsOnly(alloc.lifoAlloc());
-    }
-
     setResultType(MIRType::Object);
-    setResultTypeSet(resultSet);
     setGuard();
   }
 
@@ -12866,7 +12647,6 @@ class MCheckObjCoercible : public MUnaryInstruction,
       : MUnaryInstruction(classOpcode, toCheck) {
     setGuard();
     setResultType(MIRType::Value);
-    setResultTypeSet(toCheck->resultTypeSet());
   }
 
  public:
@@ -12888,7 +12668,6 @@ class MCheckClassHeritage : public MUnaryInstruction,
       : MUnaryInstruction(classOpcode, heritage) {
     setGuard();
     setResultType(MIRType::Value);
-    setResultTypeSet(heritage->resultTypeSet());
   }
 
  public:
@@ -12903,7 +12682,6 @@ class MDebugCheckSelfHosted : public MUnaryInstruction,
       : MUnaryInstruction(classOpcode, toCheck) {
     setGuard();
     setResultType(MIRType::Value);
-    setResultTypeSet(toCheck->resultTypeSet());
   }
 
  public:
@@ -12951,7 +12729,6 @@ class MGuardArrayIsPacked : public MUnaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    setResultTypeSet(array->resultTypeSet());
   }
 
  public:
@@ -13067,7 +12844,6 @@ class MInitHomeObject : public MBinaryInstruction,
   explicit MInitHomeObject(MDefinition* function, MDefinition* homeObject)
       : MBinaryInstruction(classOpcode, function, homeObject) {
     setResultType(MIRType::Object);
-    setResultTypeSet(function->resultTypeSet());
   }
 
  public:
@@ -13155,7 +12931,6 @@ class MGuardHasGetterSetter : public MUnaryInstruction,
   MGuardHasGetterSetter(MDefinition* obj, Shape* shape)
       : MUnaryInstruction(classOpcode, obj), shape_(shape) {
     setResultType(MIRType::Object);
-    setResultTypeSet(obj->resultTypeSet());
     setMovable();
     setGuard();
   }
@@ -14696,47 +14471,6 @@ MConstant* MDefinition::maybeConstantValue() {
 }
 
 // Helper functions used to decide how to build MIR.
-
-bool ElementAccessIsDenseNative(CompilerConstraintList* constraints,
-                                MDefinition* obj, MDefinition* id);
-bool ElementAccessIsTypedArray(CompilerConstraintList* constraints,
-                               MDefinition* obj, MDefinition* id,
-                               Scalar::Type* arrayType);
-bool ElementAccessIsPacked(CompilerConstraintList* constraints,
-                           MDefinition* obj);
-bool ElementAccessMightBeCopyOnWrite(CompilerConstraintList* constraints,
-                                     MDefinition* obj);
-bool ElementAccessMightBeNonExtensible(CompilerConstraintList* constraints,
-                                       MDefinition* obj);
-AbortReasonOr<bool> ElementAccessHasExtraIndexedProperty(IonBuilder* builder,
-                                                         MDefinition* obj);
-MIRType DenseNativeElementType(CompilerConstraintList* constraints,
-                               MDefinition* obj);
-BarrierKind PropertyReadNeedsTypeBarrier(
-    JSContext* propertycx, TempAllocator& alloc,
-    CompilerConstraintList* constraints, TypeSet::ObjectKey* key,
-    PropertyName* name, TemporaryTypeSet* observed, bool updateObserved);
-BarrierKind PropertyReadNeedsTypeBarrier(JSContext* propertycx,
-                                         TempAllocator& alloc,
-                                         CompilerConstraintList* constraints,
-                                         MDefinition* obj, PropertyName* name,
-                                         TemporaryTypeSet* observed);
-AbortReasonOr<BarrierKind> PropertyReadOnPrototypeNeedsTypeBarrier(
-    IonBuilder* builder, MDefinition* obj, PropertyName* name,
-    TemporaryTypeSet* observed);
-bool PropertyReadIsIdempotent(CompilerConstraintList* constraints,
-                              MDefinition* obj, PropertyName* name);
-bool CanWriteProperty(TempAllocator& alloc, CompilerConstraintList* constraints,
-                      HeapTypeSetKey property, MDefinition* value,
-                      MIRType implicitType = MIRType::None);
-bool PropertyWriteNeedsTypeBarrier(TempAllocator& alloc,
-                                   CompilerConstraintList* constraints,
-                                   MBasicBlock* current, MDefinition** pobj,
-                                   PropertyName* name, MDefinition** pvalue,
-                                   bool canModify,
-                                   MIRType implicitType = MIRType::None);
-AbortReasonOr<bool> TypeCanHaveExtraIndexedProperties(IonBuilder* builder,
-                                                      TemporaryTypeSet* types);
 
 inline MIRType MIRTypeForArrayBufferViewRead(Scalar::Type arrayType,
                                              bool observedDouble) {

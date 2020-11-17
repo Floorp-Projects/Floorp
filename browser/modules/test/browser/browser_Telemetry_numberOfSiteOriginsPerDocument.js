@@ -77,11 +77,11 @@ add_task(async function test_numberOfSiteOriginsMultipleNavigations() {
   ];
 
   // Navigate to an interstitial page.
-  await BrowserTestUtils.loadURI(tab.linkedBrowser, "about:blank");
+  BrowserTestUtils.loadURI(tab.linkedBrowser, "about:blank");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   // Navigate to another test page.
-  await BrowserTestUtils.loadURI(tab.linkedBrowser, testPage);
+  BrowserTestUtils.loadURI(tab.linkedBrowser, testPage);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   wgpDestroyedPromises.push(

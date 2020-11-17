@@ -651,7 +651,7 @@ nsNSSCertificate::GetSha256SubjectPublicKeyInfoDigest(
   pkix::Input derPublicKey = cert.GetSubjectPublicKeyInfo();
   nsTArray<uint8_t> digestArray;
   nsresult rv = Digest::DigestBuf(SEC_OID_SHA256, derPublicKey.UnsafeGetData(),
-                                 derPublicKey.GetLength(), digestArray);
+                                  derPublicKey.GetLength(), digestArray);
   if (NS_FAILED(rv)) {
     return rv;
   }

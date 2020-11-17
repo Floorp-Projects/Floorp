@@ -4,92 +4,26 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=
 -->
 <head>
-  <title>Test for Bug </title>
+  <title>Test for Bug 462076</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body onload="nextTest()">
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=462076">Mozilla Bug 462076</a>
 <p id="display"></p>
 <div id="content" style="display: none">
 
 </div>
 <pre id="test">
   <script type="application/javascript">
-
-    let chromeScript = null;
-    if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-      chromeScript = SpecialPowers.loadChromeScript(() => {
-        const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-        function doSend(message, fn) {
-          try {
-            // eslint-disable-next-line no-undef
-            sendAsyncMessage(message, {success: true, value: fn()});
-          } catch(_) {
-            // eslint-disable-next-line no-undef
-            sendAsyncMessage(message, {success: false});
-          }
-        }
-
-        // eslint-disable-next-line no-undef
-        addMessageListener("requestedIndex", () => {
-          doSend("requestedIndex", () => {
-            let win = Services.wm.getMostRecentWindow("navigator:browser");
-            let shistory = win.gBrowser.selectedBrowser.browsingContext.sessionHistory;
-            return shistory.requestedIndex;
-          })
-        });
-
-        // eslint-disable-next-line no-undef
-        addMessageListener("evictAllContentViewers", _ => {
-          doSend("evictAllContentViewers", () => {
-            let win = Services.wm.getMostRecentWindow("navigator:browser");
-            let shistory = win.gBrowser.selectedBrowser.browsingContext.sessionHistory;
-            return shistory.evictAllContentViewers();
-          })
-        });
-      });
-    }
-
-    async function getSHRequestedIndex() {
-      let p = chromeScript.promiseOneMessage("requestedIndex");
-      chromeScript.sendAsyncMessage("requestedIndex");
-      let result = await p;
-      ok(result.success, "Got requested index from parent");
-      return result.value;
-    }
-
-    async function evictAllContentViewers() {
-      let p = chromeScript.promiseOneMessage("evictAllContentViewers");
-      chromeScript.sendAsyncMessage("evictAllContentViewers");
-      let result = await p;
-      ok(result.success, "Called evictAllContentViewers from parent");
-    }
-
-    /** Test for Bug  **/
-
     var testFiles =
       [ "file_bug462076_1.html",         // Dynamic frames before onload
         "file_bug462076_2.html",         // Dynamic frames when handling onload
         "file_bug462076_3.html",         // Dynamic frames after onload
-        "file_bug508537_1.html",         // Dynamic frames and forward-back
-        "file_document_write_1.html",    // Session history + document.write
-        // "file_static_and_dynamic_1.html",// Static and dynamic frames and forward-back
-        "file_bug534178.html",           // Session history entry clean-up.
-        "file_fragment_handling_during_load.html",
-        "file_nested_frames.html",
-        "file_shiftReload_and_pushState.html",
-        "file_scrollRestoration.html",
-        "file_bug1300461.html",
-        "file_bug1326251.html",
-        "file_bug1379762-1.html",
-        "file_bug1609475.html",
       ];
     var testCount = 0; // Used by the test files.
 
     SimpleTest.waitForExplicitFinish();
-    SimpleTest.requestFlakyTimeout("untriaged");
 
     var testWindow;
     function nextTest_() {
@@ -100,19 +34,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
         testWindow = window.open(nextFile, "", "width=360,height=480");
         testWindow.onunload = function() { }; // to prevent bfcache
       } else {
-        if (chromeScript) {
-          chromeScript.destroy();
-        }
         SimpleTest.finish();
       }
-    }
-
-    async function case3WaitForBlank() {
-      let loaded = SimpleTest.promiseWaitForCondition(() => {
-        return testWindow.location.href == "about:blank";
-      });
-      await loaded;
-      SpecialPowers.wrap(testWindow).history.back();
     }
 
     function nextTest() {

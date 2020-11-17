@@ -33,8 +33,6 @@ class SpecificParserAtomLookup;
 
 class ParserAtomsTable;
 
-mozilla::GenericErrorResult<OOM> RaiseParserAtomsOOMError(JSContext* cx);
-
 // An index to map WellKnownParserAtoms to cx->names().
 // This is consistent across multiple compilation.
 //
@@ -256,9 +254,9 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   ParserAtomEntry(ParserAtomEntry&& other) = delete;
 
   template <typename CharT, typename SeqCharT>
-  static JS::Result<ParserAtomEntry*, OOM> allocate(
-      JSContext* cx, LifoAlloc& alloc, InflatedChar16Sequence<SeqCharT> seq,
-      uint32_t length, HashNumber hash);
+  static ParserAtomEntry* allocate(JSContext* cx, LifoAlloc& alloc,
+                                   InflatedChar16Sequence<SeqCharT> seq,
+                                   uint32_t length, HashNumber hash);
 
   ParserAtom* asAtom() { return reinterpret_cast<ParserAtom*>(this); }
   const ParserAtom* asAtom() const {
@@ -674,34 +672,33 @@ class ParserAtomsTable {
  private:
   // Internal APIs for interning to the table after well-known atoms cases have
   // been tested.
-  JS::Result<const ParserAtom*, OOM> addEntry(JSContext* cx,
-                                              EntrySet::AddPtr& addPtr,
-                                              ParserAtomEntry* entry);
+  const ParserAtom* addEntry(JSContext* cx, EntrySet::AddPtr& addPtr,
+                             ParserAtomEntry* entry);
   template <typename AtomCharT, typename SeqCharT>
-  JS::Result<const ParserAtom*, OOM> internChar16Seq(
-      JSContext* cx, EntrySet::AddPtr& addPtr, HashNumber hash,
-      InflatedChar16Sequence<SeqCharT> seq, uint32_t length);
+  const ParserAtom* internChar16Seq(JSContext* cx, EntrySet::AddPtr& addPtr,
+                                    HashNumber hash,
+                                    InflatedChar16Sequence<SeqCharT> seq,
+                                    uint32_t length);
 
  public:
-  JS::Result<const ParserAtom*, OOM> internAscii(JSContext* cx,
-                                                 const char* asciiPtr,
-                                                 uint32_t length);
+  const ParserAtom* internAscii(JSContext* cx, const char* asciiPtr,
+                                uint32_t length);
 
-  JS::Result<const ParserAtom*, OOM> internLatin1(
-      JSContext* cx, const JS::Latin1Char* latin1Ptr, uint32_t length);
+  const ParserAtom* internLatin1(JSContext* cx, const JS::Latin1Char* latin1Ptr,
+                                 uint32_t length);
 
-  JS::Result<const ParserAtom*, OOM> internUtf8(
-      JSContext* cx, const mozilla::Utf8Unit* utf8Ptr, uint32_t nbyte);
+  const ParserAtom* internUtf8(JSContext* cx, const mozilla::Utf8Unit* utf8Ptr,
+                               uint32_t nbyte);
 
-  JS::Result<const ParserAtom*, OOM> internChar16(JSContext* cx,
-                                                  const char16_t* char16Ptr,
-                                                  uint32_t length);
+  const ParserAtom* internChar16(JSContext* cx, const char16_t* char16Ptr,
+                                 uint32_t length);
 
-  JS::Result<const ParserAtom*, OOM> internJSAtom(
-      JSContext* cx, CompilationInfo& compilationInfo, JSAtom* atom);
+  const ParserAtom* internJSAtom(JSContext* cx,
+                                 CompilationInfo& compilationInfo,
+                                 JSAtom* atom);
 
-  JS::Result<const ParserAtom*, OOM> concatAtoms(
-      JSContext* cx, mozilla::Range<const ParserAtom*> atoms);
+  const ParserAtom* concatAtoms(JSContext* cx,
+                                mozilla::Range<const ParserAtom*> atoms);
 
   const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;
   const ParserAtom* getStatic1(StaticParserString1 s) const;
@@ -726,19 +723,20 @@ class ParserAtomVectorBuilder {
   bool resize(JSContext* cx, size_t count);
   size_t length() const { return entries_.length(); }
 
-  JS::Result<const ParserAtom*, OOM> internLatin1At(
-      JSContext* cx, const JS::Latin1Char* latin1Ptr, HashNumber hash,
-      uint32_t length, ParserAtomIndex index);
+  const ParserAtom* internLatin1At(JSContext* cx,
+                                   const JS::Latin1Char* latin1Ptr,
+                                   HashNumber hash, uint32_t length,
+                                   ParserAtomIndex index);
 
-  JS::Result<const ParserAtom*, OOM> internChar16At(
-      JSContext* cx, const LittleEndianChars twoByteLE, HashNumber hash,
-      uint32_t length, ParserAtomIndex index);
+  const ParserAtom* internChar16At(JSContext* cx,
+                                   const LittleEndianChars twoByteLE,
+                                   HashNumber hash, uint32_t length,
+                                   ParserAtomIndex index);
 
  private:
   template <typename CharT, typename SeqCharT, typename InputCharsT>
-  JS::Result<const ParserAtom*, OOM> internAt(JSContext* cx, InputCharsT chars,
-                                              HashNumber hash, uint32_t length,
-                                              ParserAtomIndex index);
+  const ParserAtom* internAt(JSContext* cx, InputCharsT chars, HashNumber hash,
+                             uint32_t length, ParserAtomIndex index);
 
  public:
   const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;

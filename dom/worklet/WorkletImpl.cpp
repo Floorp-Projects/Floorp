@@ -14,6 +14,7 @@
 #include "mozilla/dom/RegisterWorkletBindings.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WorkletBinding.h"
+#include "mozilla/dom/WorkletGlobalScope.h"
 #include "nsGlobalWindowInner.h"
 
 namespace mozilla {
