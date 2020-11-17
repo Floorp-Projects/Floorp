@@ -8,15 +8,15 @@ const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
-const { stackTracesSpec } = require("devtools/shared/specs/stacktraces");
+const { networkContentSpec } = require("devtools/shared/specs/network-content");
 
-class StackTracesFront extends FrontClassWithSpec(stackTracesSpec) {
+class NetworkContentFront extends FrontClassWithSpec(networkContentSpec) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
     // Attribute name from which to retrieve the actorID out of the target actor's form
-    this.formAttributeName = "stacktracesActor";
+    this.formAttributeName = "networkContentActor";
   }
 }
 
-exports.StackTracesFront = StackTracesFront;
-registerFront(StackTracesFront);
+exports.NetworkContentFront = NetworkContentFront;
+registerFront(NetworkContentFront);

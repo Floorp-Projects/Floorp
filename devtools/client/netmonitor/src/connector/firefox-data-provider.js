@@ -303,8 +303,10 @@ class FirefoxDataProvider {
    * @return {object}
    */
   async _getStackTraceFromWatcher(actor) {
-    const stacktracesFront = await actor.targetFront.getFront("stacktraces");
-    const stacktrace = await stacktracesFront.getStackTrace(
+    const networkContentFront = await actor.targetFront.getFront(
+      "networkContent"
+    );
+    const stacktrace = await networkContentFront.getStackTrace(
       actor.stacktraceResourceId
     );
     return { stacktrace };

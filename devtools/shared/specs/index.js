@@ -144,14 +144,19 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/client/fronts/memory",
   },
   {
-    types: ["network"],
-    spec: "devtools/shared/specs/network",
-    front: "devtools/client/fronts/network",
+    types: ["networkContent"],
+    spec: "devtools/shared/specs/network-content",
+    front: "devtools/client/fronts/network-content",
   },
   {
     types: ["netEvent"],
     spec: "devtools/shared/specs/network-event",
     front: null,
+  },
+  {
+    types: ["networkParent"],
+    spec: "devtools/shared/specs/network-parent",
+    front: "devtools/client/fronts/network-parent",
   },
   /* imageData isn't an actor but just a DictType */
   {
@@ -223,11 +228,6 @@ const Types = (exports.__TypesForTests = [
     types: ["source"],
     spec: "devtools/shared/specs/source",
     front: "devtools/client/fronts/source",
-  },
-  {
-    types: ["stacktraces"],
-    spec: "devtools/shared/specs/stacktraces",
-    front: "devtools/client/fronts/stacktraces",
   },
   {
     types: [
