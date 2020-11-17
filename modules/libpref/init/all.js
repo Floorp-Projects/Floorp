@@ -467,7 +467,7 @@ pref("media.videocontrols.picture-in-picture.video-toggle.has-used", false);
     pref("media.getusermedia.microphone.off_while_disabled.enabled", false);
   #else
     pref("media.getusermedia.camera.off_while_disabled.enabled", true);
-    pref("media.getusermedia.microphone.off_while_disabled.enabled", true);
+    pref("media.getusermedia.microphone.off_while_disabled.enabled", false);
   #endif
   pref("media.getusermedia.camera.off_while_disabled.delay_ms", 3000);
   pref("media.getusermedia.microphone.off_while_disabled.delay_ms", 3000);
