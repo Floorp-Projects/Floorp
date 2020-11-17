@@ -108,7 +108,7 @@ LoginStore.prototype._save = async function() {
 
 /**
  * Delete logins backup file if the last saved login was removed using
- * removeLogin() or if all logins were removed at once using removeAllLogins().
+ * removeLogin() or if all logins were removed at once using removeAllUserFacingLogins().
  * Note that if the user has a fxa key stored as a login, we just update the
  * backup to only store the key when the last saved user facing login is removed.
  */

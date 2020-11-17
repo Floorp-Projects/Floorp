@@ -38,7 +38,7 @@ async function prepareAndProcessForm(url, login) {
 }
 
 async function checkFormsWithLogin(formUrls, login, expectedUsername, expectedPassword) {
-  await LoginManager.removeAllLogins();
+  await LoginManager.removeAllUserFacingLogins();
   await LoginManager.addLogin(login);
 
   for (let url of formUrls) {

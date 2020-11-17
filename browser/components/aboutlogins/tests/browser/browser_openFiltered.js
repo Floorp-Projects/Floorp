@@ -26,7 +26,7 @@ add_task(async function setup() {
   await tabOpenedPromise;
   registerCleanupFunction(() => {
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
-    Services.logins.removeAllLogins();
+    Services.logins.removeAllUserFacingLogins();
   });
 });
 
