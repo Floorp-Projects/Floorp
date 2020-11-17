@@ -10,6 +10,9 @@ const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { PrincipalsCollector } = ChromeUtils.import(
+  "resource://gre/modules/PrincipalsCollector.jsm"
+);
 
 const { debug, warn } = GeckoViewUtils.initLogging(
   "GeckoViewStorageController"
@@ -38,8 +41,7 @@ const ClearFlags = [
     // HISTORY
     1 << 3,
     Ci.nsIClearDataService.CLEAR_HISTORY |
-      Ci.nsIClearDataService.CLEAR_SESSION_HISTORY |
-      Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS,
+      Ci.nsIClearDataService.CLEAR_SESSION_HISTORY,
   ],
   [
     // DOM_STORAGES
@@ -108,9 +110,29 @@ const GeckoViewStorageController = {
     }
   },
 
-  clearData(aFlags, aCallback) {
+  async clearData(aFlags, aCallback) {
+    const flags = convertFlags(aFlags);
+
+    // storageAccessAPI permissions record every site that the user
+    // interacted with and thus mirror history quite closely. It makes
+    // sense to clear them when we clear history. However, since their absence
+    // indicates that we can purge cookies and site data for tracking origins without
+    // user interaction, we need to ensure that we only delete those permissions that
+    // do not have any existing storage.
+    if (flags & Ci.nsIClearDataService.CLEAR_HISTORY) {
+      const principalsCollector = new PrincipalsCollector();
+      const principals = await principalsCollector.getAllPrincipals();
+      await new Promise(resolve => {
+        Services.clearData.deleteUserInteractionForClearingHistory(
+          principals,
+          0,
+          resolve
+        );
+      });
+    }
+
     new Promise(resolve => {
-      Services.clearData.deleteData(convertFlags(aFlags), resolve);
+      Services.clearData.deleteData(flags, resolve);
     }).then(resultFlags => {
       aCallback.onSuccess();
     });
