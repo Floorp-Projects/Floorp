@@ -13,6 +13,7 @@
 #  include "nsIStringEnumerator.h"
 #endif
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/dom/Element.h"
 #include "nsIAppWindow.h"
 
 namespace mozilla {
