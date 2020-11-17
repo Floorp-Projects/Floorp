@@ -275,18 +275,6 @@ var gViewController = {
     }
     this.currentViewRequest = 0;
 
-    for (let type in this.viewObjects) {
-      let view = this.viewObjects[type];
-      if ("shutdown" in view) {
-        try {
-          view.shutdown();
-        } catch (e) {
-          // this shouldn't be fatal
-          Cu.reportError(e);
-        }
-      }
-    }
-
     window.controllers.removeController(this);
   },
 
