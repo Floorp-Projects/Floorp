@@ -29,6 +29,7 @@ pub struct SavedDatagram {
 pub struct SavedDatagrams {
     handshake: Vec<SavedDatagram>,
     application_data: Vec<SavedDatagram>,
+    available: Option<CryptoSpace>,
 }
 
 impl SavedDatagrams {
@@ -51,7 +52,21 @@ impl SavedDatagrams {
         }
     }
 
-    pub fn take_saved(&mut self, cspace: CryptoSpace) -> Vec<SavedDatagram> {
-        mem::take(self.store(cspace))
+    pub fn make_available(&mut self, cspace: CryptoSpace) {
+        debug_assert_ne!(cspace, CryptoSpace::ZeroRtt);
+        debug_assert_ne!(cspace, CryptoSpace::Initial);
+        if !self.store(cspace).is_empty() {
+            self.available = Some(cspace);
+        }
+    }
+
+    pub fn available(&self) -> Option<CryptoSpace> {
+        self.available
+    }
+
+    pub fn take_saved(&mut self) -> Vec<SavedDatagram> {
+        self.available
+            .take()
+            .map_or_else(Vec::new, |cspace| mem::take(self.store(cspace)))
     }
 }

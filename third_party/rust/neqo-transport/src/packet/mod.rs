@@ -12,6 +12,7 @@ use crate::{Error, Res};
 use neqo_common::{hex, hex_with_len, qtrace, Decoder, Encoder};
 use neqo_crypto::random;
 
+use std::cmp::min;
 use std::convert::TryFrom;
 use std::fmt;
 use std::iter::ExactSizeIterator;
@@ -34,6 +35,7 @@ const PACKET_HP_MASK_SHORT: u8 = 0x1f;
 
 const SAMPLE_SIZE: usize = 16;
 const SAMPLE_OFFSET: usize = 4;
+const MAX_PACKET_NUMBER_LEN: usize = 4;
 
 mod retry;
 
@@ -93,6 +95,8 @@ pub enum QuicVersion {
     Draft28,
     Draft29,
     Draft30,
+    Draft31,
+    Draft32,
 }
 
 impl QuicVersion {
@@ -102,6 +106,8 @@ impl QuicVersion {
             Self::Draft28 => 0xff00_0000 + 28,
             Self::Draft29 => 0xff00_0000 + 29,
             Self::Draft30 => 0xff00_0000 + 30,
+            Self::Draft31 => 0xff00_0000 + 31,
+            Self::Draft32 => 0xff00_0000 + 32,
         }
     }
 }
@@ -124,6 +130,10 @@ impl TryFrom<Version> for QuicVersion {
             Ok(Self::Draft29)
         } else if ver == 0xff00_0000 + 30 {
             Ok(Self::Draft30)
+        } else if ver == 0xff00_0000 + 31 {
+            Ok(Self::Draft31)
+        } else if ver == 0xff00_0000 + 32 {
+            Ok(Self::Draft32)
         } else {
             Err(Error::VersionNegotiation)
         }
@@ -227,6 +237,11 @@ impl PacketBuilder {
         self.limit - self.encoder.len()
     }
 
+    /// Pad with "PADDING" frames.
+    pub fn pad(&mut self) {
+        self.encoder.pad_to(self.limit, 0);
+    }
+
     /// Add unpredictable values for unprotected parts of the packet.
     pub fn scramble(&mut self, quic_bit: bool) {
         let mask = if quic_bit { PACKET_BIT_FIXED_QUIC } else { 0 }
@@ -254,14 +269,17 @@ impl PacketBuilder {
             self.offsets.len = self.encoder.len();
             self.encoder.encode(&[0; 2]);
         }
+
+        // This allows the input to be >4, which is absurd, but we can eat that.
+        let pn_len = min(MAX_PACKET_NUMBER_LEN, pn_len);
+        debug_assert_ne!(pn_len, 0);
         // Encode the packet number and save its offset.
-        debug_assert!(pn_len <= 4 && pn_len > 0);
         let pn_offset = self.encoder.len();
         self.encoder.encode_uint(pn_len, pn);
         self.offsets.pn = pn_offset..self.encoder.len();
 
         // Now encode the packet number length and save the header length.
-        self.encoder[self.header.start] |= (pn_len - 1) as u8;
+        self.encoder[self.header.start] |= u8::try_from(pn_len - 1).unwrap();
         self.header.end = self.encoder.len();
         self.pn = pn;
     }
@@ -272,11 +290,25 @@ impl PacketBuilder {
         self.encoder[self.offsets.len + 1] = (len & 0xff) as u8;
     }
 
+    fn pad_for_crypto(&mut self, crypto: &mut CryptoDxState) {
+        // Make sure that there is enough data in the packet.
+        // The length of the packet number plus the payload length needs to
+        // be at least 4 (MAX_PACKET_NUMBER_LEN) plus any amount by which
+        // the header protection sample exceeds the AEAD expansion.
+        let crypto_pad = crypto.extra_padding();
+        self.encoder.pad_to(
+            self.offsets.pn.start + MAX_PACKET_NUMBER_LEN + crypto_pad,
+            0,
+        );
+    }
+
     /// Build the packet and return the encoder.
     pub fn build(mut self, crypto: &mut CryptoDxState) -> Res<Encoder> {
+        self.pad_for_crypto(crypto);
         if self.offsets.len > 0 {
             self.write_len(crypto.expansion());
         }
+
         let hdr = &self.encoder[self.header.clone()];
         let body = &self.encoder[self.header.end..];
         qtrace!(
@@ -366,6 +398,8 @@ impl PacketBuilder {
         encoder.encode_uint(4, QuicVersion::Draft28.as_u32());
         encoder.encode_uint(4, QuicVersion::Draft29.as_u32());
         encoder.encode_uint(4, QuicVersion::Draft30.as_u32());
+        encoder.encode_uint(4, QuicVersion::Draft31.as_u32());
+        encoder.encode_uint(4, QuicVersion::Draft32.as_u32());
         // Add a greased version, using the randomness already generated.
         for g in &mut grease[..4] {
             *g = *g & 0xf0 | 0x0a;
@@ -651,7 +685,7 @@ impl<'a> PublicPacket<'a> {
 
         // Unmask the PN.
         let mut pn_encoded: u64 = 0;
-        for i in 0..4 {
+        for i in 0..MAX_PACKET_NUMBER_LEN {
             hdrbytes[self.header_len + i] ^= mask[1 + i];
             pn_encoded <<= 8;
             pn_encoded += u64::from(hdrbytes[self.header_len + i]);
@@ -660,7 +694,7 @@ impl<'a> PublicPacket<'a> {
         // Now decode the packet number length and apply it, hopefully in constant time.
         let pn_len = usize::from((first_byte & 0x3) + 1);
         hdrbytes.truncate(self.header_len + pn_len);
-        pn_encoded >>= 8 * (4 - pn_len);
+        pn_encoded >>= 8 * (MAX_PACKET_NUMBER_LEN - pn_len);
 
         qtrace!("unmasked hdr={}", hex(&hdrbytes));
 
@@ -1054,6 +1088,18 @@ mod tests {
         0x37, 0x10, 0x8c, 0xe0, 0x0a, 0x61,
     ];
 
+    const SAMPLE_RETRY_31: &[u8] = &[
+        0xff, 0xff, 0x00, 0x00, 0x1f, 0x00, 0x08, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5,
+        0x74, 0x6f, 0x6b, 0x65, 0x6e, 0xc7, 0x0c, 0xe5, 0xde, 0x43, 0x0b, 0x4b, 0xdb, 0x7d, 0xf1,
+        0xa3, 0x83, 0x3a, 0x75, 0xf9, 0x86,
+    ];
+
+    const SAMPLE_RETRY_32: &[u8] = &[
+        0xff, 0xff, 0x00, 0x00, 0x20, 0x00, 0x08, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5,
+        0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x59, 0x75, 0x65, 0x19, 0xdd, 0x6c, 0xc8, 0x5b, 0xd9, 0x0e,
+        0x33, 0xa9, 0x34, 0xd2, 0xff, 0x85,
+    ];
+
     const RETRY_TOKEN: &[u8] = b"token";
 
     fn build_retry_single(quic_version: QuicVersion, sample_retry: &[u8]) {
@@ -1095,6 +1141,16 @@ mod tests {
     #[test]
     fn build_retry_30() {
         build_retry_single(QuicVersion::Draft30, SAMPLE_RETRY_30);
+    }
+
+    #[test]
+    fn build_retry_31() {
+        build_retry_single(QuicVersion::Draft31, SAMPLE_RETRY_31);
+    }
+
+    #[test]
+    fn build_retry_32() {
+        build_retry_single(QuicVersion::Draft32, SAMPLE_RETRY_32);
     }
 
     #[test]
@@ -1142,6 +1198,16 @@ mod tests {
         decode_retry(QuicVersion::Draft30, SAMPLE_RETRY_30);
     }
 
+    #[test]
+    fn decode_retry_31() {
+        decode_retry(QuicVersion::Draft31, SAMPLE_RETRY_31);
+    }
+
+    #[test]
+    fn decode_retry_32() {
+        decode_retry(QuicVersion::Draft32, SAMPLE_RETRY_32);
+    }
+
     /// Check some packets that are clearly not valid Retry packets.
     #[test]
     fn invalid_retry() {
@@ -1178,7 +1244,8 @@ mod tests {
     const SAMPLE_VN: &[u8] = &[
         0x80, 0x00, 0x00, 0x00, 0x00, 0x08, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5, 0x08,
         0x83, 0x94, 0xc8, 0xf0, 0x3e, 0x51, 0x57, 0x08, 0xff, 0x00, 0x00, 0x1b, 0xff, 0x00, 0x00,
-        0x1c, 0xff, 0x00, 0x00, 0x1d, 0xff, 0x00, 0x00, 0x1e, 0x0a, 0x0a, 0x0a, 0x0a,
+        0x1c, 0xff, 0x00, 0x00, 0x1d, 0xff, 0x00, 0x00, 0x1e, 0xff, 0x00, 0x00, 0x1f, 0xff, 0x00,
+        0x00, 0x20, 0x0a, 0x0a, 0x0a, 0x0a,
     ];
 
     #[test]
