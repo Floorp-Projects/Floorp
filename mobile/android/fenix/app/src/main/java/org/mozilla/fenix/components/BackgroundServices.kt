@@ -157,7 +157,7 @@ class BackgroundServices(
 
         // Enable push if it's configured.
         push.feature?.let { autoPushFeature ->
-            FxaPushSupportFeature(context, accountManager, autoPushFeature)
+            FxaPushSupportFeature(context, accountManager, autoPushFeature, crashReporter)
         }
 
         SendTabFeature(accountManager) { device, tabs ->

@@ -118,7 +118,7 @@ class WebPushEngineIntegrationTest {
     @Test
     fun `delegate calls subscribe`() {
         integration.start()
-        val onSubscribeError = slot<() -> Unit>()
+        val onSubscribeError = slot<(Exception) -> Unit>()
         val onSubscribe = slot<(AutoPushSubscription?) -> Unit>()
         every {
             pushFeature.subscribe(
@@ -134,7 +134,7 @@ class WebPushEngineIntegrationTest {
 
         verify { onSubscription wasNot Called }
 
-        onSubscribeError.captured()
+        onSubscribeError.captured(mockk())
         verify { onSubscription(null) }
 
         onSubscribe.captured(AutoPushSubscription(
@@ -160,7 +160,7 @@ class WebPushEngineIntegrationTest {
     @Test
     fun `delegate calls unsubscribe`() {
         integration.start()
-        val onUnsubscribeError = slot<() -> Unit>()
+        val onUnsubscribeError = slot<(Exception) -> Unit>()
         val onUnsubscribe = slot<(Boolean) -> Unit>()
         every {
             pushFeature.unsubscribe(
@@ -175,7 +175,7 @@ class WebPushEngineIntegrationTest {
 
         verify { onUnsubscription wasNot Called }
 
-        onUnsubscribeError.captured()
+        onUnsubscribeError.captured(mockk())
         verify { onUnsubscription(false) }
 
         onUnsubscribe.captured(true)
