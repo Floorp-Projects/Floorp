@@ -949,7 +949,7 @@ macro_rules! define_string_types {
                 $String {
                     hdr: $StringRepr {
                         data: unsafe { ptr::NonNull::new_unchecked(ptr) },
-                        length: length,
+                        length,
                         dataflags: DataFlags::OWNED | DataFlags::TERMINATED,
                         classflags: ClassFlags::NULL_TERMINATED,
                     }
