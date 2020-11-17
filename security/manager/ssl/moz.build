@@ -203,9 +203,6 @@ if CONFIG["MOZ_NEW_CERT_STORAGE"]:
     XPIDL_SOURCES += [
         "nsICertStorage.idl",
     ]
-    UNIFIED_SOURCES += [
-        "cert_storage/src/cert_storage.cpp",
-    ]
 else:
     XPIDL_SOURCES += [
         "nsICertBlocklist.idl",

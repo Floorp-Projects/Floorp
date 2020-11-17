@@ -5,7 +5,6 @@
 #include "nsSiteSecurityService.h"
 
 #include "PublicKeyPinningService.h"
-#include "ScopedNSSTypes.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/LinkedList.h"
@@ -20,8 +19,6 @@
 #include "nsISocketProvider.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsIURI.h"
-#include "nsIX509Cert.h"
-#include "nsNSSCertificateDB.h"
 #include "nsNSSComponent.h"
 #include "nsNetUtil.h"
 #include "nsPromiseFlatString.h"

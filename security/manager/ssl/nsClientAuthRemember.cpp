@@ -80,8 +80,11 @@ nsClientAuthRememberService::ForgetRememberedDecision(const nsACString& key) {
   mClientAuthRememberList->Remove(PromiseFlatCString(key),
                                   mozilla::DataStorage_Persistent);
 
-  nsNSSComponent::ClearSSLExternalAndInternalSessionCacheNative();
-  return NS_OK;
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(NS_NSSCOMPONENT_CID));
+  if (!nssComponent) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  return nssComponent->ClearSSLExternalAndInternalSessionCache();
 }
 
 NS_IMETHODIMP
@@ -105,8 +108,11 @@ nsClientAuthRememberService::GetDecisions(
 NS_IMETHODIMP
 nsClientAuthRememberService::ClearRememberedDecisions() {
   mClientAuthRememberList->Clear();
-  nsNSSComponent::ClearSSLExternalAndInternalSessionCacheNative();
-  return NS_OK;
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(NS_NSSCOMPONENT_CID));
+  if (!nssComponent) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  return nssComponent->ClearSSLExternalAndInternalSessionCache();
 }
 
 NS_IMETHODIMP
@@ -133,8 +139,11 @@ nsClientAuthRememberService::DeleteDecisionsByHost(
       }
     }
   }
-  nsNSSComponent::ClearSSLExternalAndInternalSessionCacheNative();
-  return NS_OK;
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(NS_NSSCOMPONENT_CID));
+  if (!nssComponent) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  return nssComponent->ClearSSLExternalAndInternalSessionCache();
 }
 
 NS_IMETHODIMP
