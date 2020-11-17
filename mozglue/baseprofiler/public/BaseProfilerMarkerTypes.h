@@ -111,7 +111,7 @@ struct UserTimingMeasure {
   }
 };
 
-struct MediaSample {
+struct MediaSampleMarker {
   static constexpr Span<const char> MarkerTypeName() {
     return MakeStringSpan("MediaSample");
   }
