@@ -3453,10 +3453,6 @@ void TestProfiler() {
         mozilla::baseprofiler::markers::Text{}, "text text"));
 
     MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
-        "log", mozilla::baseprofiler::category::OTHER, {},
-        mozilla::baseprofiler::markers::Log{}, "module", "text"));
-
-    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
         "media sample", mozilla::baseprofiler::category::OTHER, {},
         mozilla::baseprofiler::markers::MediaSample{}, 123, 456));
 
@@ -3518,7 +3514,6 @@ void TestProfiler() {
                        svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"UserTimingMeasure\",") !=
                        svnpos);
-    MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"Log\",") != svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"MediaSample\",") != svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"display\": [") != svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"marker-chart\"") != svnpos);
@@ -4036,10 +4031,6 @@ void TestPredefinedMarkers() {
   MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, std::string_view("text"), mozilla::baseprofiler::category::OTHER,
       {}, mozilla::baseprofiler::markers::Text{}, "text text"));
-
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
-      buffer, std::string_view("log"), mozilla::baseprofiler::category::OTHER,
-      {}, mozilla::baseprofiler::markers::Log{}, "module", "text"));
 
   MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, std::string_view("media"), mozilla::baseprofiler::category::OTHER,
