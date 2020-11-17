@@ -27,12 +27,18 @@ mod backend {
     pub fn rkv_new(path: &Path) -> Result<Rkv, rkv::StoreError> {
         Rkv::new::<rkv::backend::Lmdb>(path)
     }
+
+    /// No migration necessary when staying with LMDB.
+    pub fn migrate(_path: &Path, _dst_env: &Rkv) {
+        // Intentionally left empty.
+    }
 }
 
 // Select the "safe mode" storage backend when the feature is activated.
 #[cfg(feature = "rkv-safe-mode")]
 mod backend {
-    use std::path::Path;
+    use rkv::migrator::Migrator;
+    use std::{fs, path::Path};
 
     /// cbindgen:ignore
     pub type Rkv = rkv::Rkv<rkv::backend::SafeModeEnvironment>;
@@ -43,6 +49,91 @@ mod backend {
 
     pub fn rkv_new(path: &Path) -> Result<Rkv, rkv::StoreError> {
         Rkv::new::<rkv::backend::SafeMode>(path)
+    }
+
+    fn delete_and_log(path: &Path, msg: &str) {
+        if let Err(err) = fs::remove_file(path) {
+            match err.kind() {
+                std::io::ErrorKind::NotFound => {
+                    // Silently drop this error, the file was already non-existing.
+                }
+                _ => log::warn!("{}", msg),
+            }
+        }
+    }
+
+    fn delete_lmdb_database(path: &Path) {
+        let datamdb = path.join("data.mdb");
+        delete_and_log(&datamdb, "Failed to delete old data.");
+
+        let lockmdb = path.join("lock.mdb");
+        delete_and_log(&lockmdb, "Failed to delete old lock.");
+    }
+
+    /// Migrate from LMDB storage to safe-mode storage.
+    ///
+    /// This migrates the data once, then deletes the LMDB storage.
+    /// The safe-mode storage must be empty for it to work.
+    /// Existing data will not be overwritten.
+    /// If the destination database is not empty the LMDB database is deleted
+    /// without migrating data.
+    /// This is a no-op if no LMDB database file exists.
+    pub fn migrate(path: &Path, dst_env: &Rkv) {
+        use rkv::{MigrateError, StoreError};
+
+        log::debug!("Migrating files in {}", path.display());
+
+        // Shortcut if no data to migrate is around.
+        let datamdb = path.join("data.mdb");
+        if !datamdb.exists() {
+            log::debug!("No data to migrate.");
+            return;
+        }
+
+        // We're handling the same error cases as `easy_migrate_lmdb_to_safe_mode`,
+        // but annotate each why they don't cause problems for Glean.
+        // Additionally for known cases we delete the LMDB database regardless.
+        let should_delete =
+            match Migrator::open_and_migrate_lmdb_to_safe_mode(path, |builder| builder, dst_env) {
+                // Source environment is corrupted.
+                // We start fresh with the new database.
+                Err(MigrateError::StoreError(StoreError::FileInvalid)) => true,
+                // Path not accessible.
+                // Somehow our directory vanished between us creating it and reading from it.
+                // Nothing we can do really.
+                Err(MigrateError::StoreError(StoreError::IoError(_))) => true,
+                // Path accessible but incompatible for configuration.
+                // This should not happen, we never used storages that safe-mode doesn't understand.
+                // If it does happen, let's start fresh and use the safe-mode from now on.
+                Err(MigrateError::StoreError(StoreError::UnsuitableEnvironmentPath(_))) => true,
+                // Nothing to migrate.
+                // Source database was empty. We just start fresh anyway.
+                Err(MigrateError::SourceEmpty) => true,
+                // Migrating would overwrite.
+                // Either a previous migration failed and we still started writing data,
+                // or someone placed back an old data file.
+                // In any case we better stay on the new data and delete the old one.
+                Err(MigrateError::DestinationNotEmpty) => {
+                    log::warn!("Failed to migrate old data. Destination was not empty");
+                    true
+                }
+                // An internal lock was poisoned.
+                // This would only happen if multiple things run concurrently and one crashes.
+                Err(MigrateError::ManagerPoisonError) => false,
+                // Other store errors are never returned from the migrator.
+                // We need to handle them to please rustc.
+                Err(MigrateError::StoreError(_)) => false,
+                // Other errors can't happen, so this leaves us with the Ok case.
+                // This already deleted the LMDB files.
+                Ok(()) => false,
+            };
+
+        if should_delete {
+            log::debug!("Need to delete remaining LMDB files.");
+            delete_lmdb_database(&path);
+        }
+
+        log::debug!("Migration ended. Safe-mode database in {}", path.display());
     }
 }
 
@@ -86,22 +177,36 @@ impl std::fmt::Debug for Database {
     }
 }
 
-/// Get the file size of a file in the given path and file.
+/// Calculate the  database size from all the files in the directory.
 ///
-/// # Arguments
+///  # Arguments
 ///
-/// - `path` - The path
+///  *`path` - The path to the directory
 ///
-/// # Returns
+///  # Returns
 ///
-/// Returns the non-zero file size in bytes,
+/// Returns the non-zero combined size of all files in a directory,
 /// or `None` on error or if the size is `0`.
-fn file_size(path: &Path) -> Option<NonZeroU64> {
-    log::trace!("Getting file size for path: {}", path.display());
-    fs::metadata(path)
-        .ok()
-        .map(|stat| stat.len())
-        .and_then(NonZeroU64::new)
+fn database_size(dir: &Path) -> Option<NonZeroU64> {
+    let mut total_size = 0;
+    if let Ok(entries) = fs::read_dir(dir) {
+        for entry in entries {
+            if let Ok(entry) = entry {
+                if let Ok(file_type) = entry.file_type() {
+                    if file_type.is_file() {
+                        let path = entry.path();
+                        if let Ok(metadata) = fs::metadata(path) {
+                            total_size += metadata.len();
+                        } else {
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    NonZeroU64::new(total_size)
 }
 
 impl Database {
@@ -115,14 +220,7 @@ impl Database {
     pub fn new(data_path: &str, delay_ping_lifetime_io: bool) -> Result<Self> {
         let path = Path::new(data_path).join("db");
         log::debug!("Database path: {:?}", path.display());
-
-        // FIXME(bug 1670634): This is probably more knowledge
-        // than we should have about the database internals.
-        // We could instead iterate over the directory and sum up the file sizes.
-        #[cfg(not(feature = "rkv-safe-mode"))]
-        let file_size = file_size(&path.join("data.mdb"));
-        #[cfg(feature = "rkv-safe-mode")]
-        let file_size = file_size(&path.join("data.safe.bin"));
+        let file_size = database_size(&path);
 
         let rkv = Self::open_rkv(&path)?;
         let user_store = rkv.open_single(Lifetime::User.as_str(), StoreOptions::create())?;
@@ -167,6 +265,8 @@ impl Database {
         fs::create_dir_all(&path)?;
 
         let rkv = rkv_new(&path)?;
+        migrate(path, &rkv);
+
         log::info!("Database initialized");
         Ok(rkv)
     }
@@ -1201,5 +1301,272 @@ mod test {
                 }
             },
         );
+    }
+
+    #[cfg(feature = "rkv-safe-mode")]
+    mod safe_mode_migration {
+        use super::*;
+        use rkv::Value;
+
+        #[test]
+        fn migration_works_on_startup() {
+            let dir = tempdir().unwrap();
+            let str_dir = dir.path().display().to_string();
+
+            let database_dir = dir.path().join("db");
+            let datamdb = database_dir.join("data.mdb");
+            let lockmdb = database_dir.join("lock.mdb");
+            let safebin = database_dir.join("data.safe.bin");
+
+            assert!(!safebin.exists());
+            assert!(!datamdb.exists());
+            assert!(!lockmdb.exists());
+
+            let store_name = "store1";
+            let metric_name = "bool";
+            let key = Database::get_storage_key(store_name, Some(metric_name));
+
+            // Ensure some old data in the LMDB format exists.
+            {
+                fs::create_dir_all(&database_dir).expect("create dir");
+                let rkv_db = rkv::Rkv::new::<rkv::backend::Lmdb>(&database_dir).expect("rkv env");
+
+                let store = rkv_db
+                    .open_single("ping", StoreOptions::create())
+                    .expect("opened");
+                let mut writer = rkv_db.write().expect("writer");
+                let metric = Metric::Boolean(true);
+                let value = bincode::serialize(&metric).expect("serialized");
+                store
+                    .put(&mut writer, &key, &Value::Blob(&value))
+                    .expect("wrote");
+                writer.commit().expect("committed");
+
+                assert!(datamdb.exists());
+                assert!(lockmdb.exists());
+                assert!(!safebin.exists());
+            }
+
+            // First open should migrate the data.
+            {
+                let db = Database::new(&str_dir, false).unwrap();
+                let safebin = database_dir.join("data.safe.bin");
+                assert!(safebin.exists(), "safe-mode file should exist");
+                assert!(!datamdb.exists(), "LMDB data should be deleted");
+                assert!(!lockmdb.exists(), "LMDB lock should be deleted");
+
+                let mut stored_metrics = vec![];
+                let mut snapshotter = |name: &[u8], metric: &Metric| {
+                    let name = str::from_utf8(name).unwrap().to_string();
+                    stored_metrics.push((name, metric.clone()))
+                };
+                db.iter_store_from(Lifetime::Ping, "store1", None, &mut snapshotter);
+
+                assert_eq!(1, stored_metrics.len());
+                assert_eq!(metric_name, stored_metrics[0].0);
+                assert_eq!(&Metric::Boolean(true), &stored_metrics[0].1);
+            }
+
+            // Next open should not re-create the LMDB files.
+            {
+                let db = Database::new(&str_dir, false).unwrap();
+                let safebin = database_dir.join("data.safe.bin");
+                assert!(safebin.exists(), "safe-mode file exists");
+                assert!(!datamdb.exists(), "LMDB data should not be recreated");
+                assert!(!lockmdb.exists(), "LMDB lock should not be recreated");
+
+                let mut stored_metrics = vec![];
+                let mut snapshotter = |name: &[u8], metric: &Metric| {
+                    let name = str::from_utf8(name).unwrap().to_string();
+                    stored_metrics.push((name, metric.clone()))
+                };
+                db.iter_store_from(Lifetime::Ping, "store1", None, &mut snapshotter);
+
+                assert_eq!(1, stored_metrics.len());
+                assert_eq!(metric_name, stored_metrics[0].0);
+                assert_eq!(&Metric::Boolean(true), &stored_metrics[0].1);
+            }
+        }
+
+        #[test]
+        fn migration_doesnt_overwrite() {
+            let dir = tempdir().unwrap();
+            let str_dir = dir.path().display().to_string();
+
+            let database_dir = dir.path().join("db");
+            let datamdb = database_dir.join("data.mdb");
+            let lockmdb = database_dir.join("lock.mdb");
+            let safebin = database_dir.join("data.safe.bin");
+
+            assert!(!safebin.exists());
+            assert!(!datamdb.exists());
+            assert!(!lockmdb.exists());
+
+            let store_name = "store1";
+            let metric_name = "counter";
+            let key = Database::get_storage_key(store_name, Some(metric_name));
+
+            // Ensure some old data in the LMDB format exists.
+            {
+                fs::create_dir_all(&database_dir).expect("create dir");
+                let rkv_db = rkv::Rkv::new::<rkv::backend::Lmdb>(&database_dir).expect("rkv env");
+
+                let store = rkv_db
+                    .open_single("ping", StoreOptions::create())
+                    .expect("opened");
+                let mut writer = rkv_db.write().expect("writer");
+                let metric = Metric::Counter(734); // this value will be ignored
+                let value = bincode::serialize(&metric).expect("serialized");
+                store
+                    .put(&mut writer, &key, &Value::Blob(&value))
+                    .expect("wrote");
+                writer.commit().expect("committed");
+
+                assert!(datamdb.exists());
+                assert!(lockmdb.exists());
+            }
+
+            // Ensure some data exists in the new database.
+            {
+                fs::create_dir_all(&database_dir).expect("create dir");
+                let rkv_db =
+                    rkv::Rkv::new::<rkv::backend::SafeMode>(&database_dir).expect("rkv env");
+
+                let store = rkv_db
+                    .open_single("ping", StoreOptions::create())
+                    .expect("opened");
+                let mut writer = rkv_db.write().expect("writer");
+                let metric = Metric::Counter(2);
+                let value = bincode::serialize(&metric).expect("serialized");
+                store
+                    .put(&mut writer, &key, &Value::Blob(&value))
+                    .expect("wrote");
+                writer.commit().expect("committed");
+
+                assert!(safebin.exists());
+            }
+
+            // First open should try migration and ignore it, because destination is not empty.
+            // It also deletes the leftover LMDB database.
+            {
+                let db = Database::new(&str_dir, false).unwrap();
+                let safebin = database_dir.join("data.safe.bin");
+                assert!(safebin.exists(), "safe-mode file should exist");
+                assert!(!datamdb.exists(), "LMDB data should be deleted");
+                assert!(!lockmdb.exists(), "LMDB lock should be deleted");
+
+                let mut stored_metrics = vec![];
+                let mut snapshotter = |name: &[u8], metric: &Metric| {
+                    let name = str::from_utf8(name).unwrap().to_string();
+                    stored_metrics.push((name, metric.clone()))
+                };
+                db.iter_store_from(Lifetime::Ping, "store1", None, &mut snapshotter);
+
+                assert_eq!(1, stored_metrics.len());
+                assert_eq!(metric_name, stored_metrics[0].0);
+                assert_eq!(&Metric::Counter(2), &stored_metrics[0].1);
+            }
+        }
+
+        #[test]
+        fn migration_ignores_broken_database() {
+            let dir = tempdir().unwrap();
+            let str_dir = dir.path().display().to_string();
+
+            let database_dir = dir.path().join("db");
+            let datamdb = database_dir.join("data.mdb");
+            let lockmdb = database_dir.join("lock.mdb");
+            let safebin = database_dir.join("data.safe.bin");
+
+            assert!(!safebin.exists());
+            assert!(!datamdb.exists());
+            assert!(!lockmdb.exists());
+
+            let store_name = "store1";
+            let metric_name = "counter";
+            let key = Database::get_storage_key(store_name, Some(metric_name));
+
+            // Ensure some old data in the LMDB format exists.
+            {
+                fs::create_dir_all(&database_dir).expect("create dir");
+                fs::write(&datamdb, "bogus").expect("dbfile created");
+
+                assert!(datamdb.exists());
+            }
+
+            // Ensure some data exists in the new database.
+            {
+                fs::create_dir_all(&database_dir).expect("create dir");
+                let rkv_db =
+                    rkv::Rkv::new::<rkv::backend::SafeMode>(&database_dir).expect("rkv env");
+
+                let store = rkv_db
+                    .open_single("ping", StoreOptions::create())
+                    .expect("opened");
+                let mut writer = rkv_db.write().expect("writer");
+                let metric = Metric::Counter(2);
+                let value = bincode::serialize(&metric).expect("serialized");
+                store
+                    .put(&mut writer, &key, &Value::Blob(&value))
+                    .expect("wrote");
+                writer.commit().expect("committed");
+            }
+
+            // First open should try migration and ignore it, because destination is not empty.
+            // It also deletes the leftover LMDB database.
+            {
+                let db = Database::new(&str_dir, false).unwrap();
+                let safebin = database_dir.join("data.safe.bin");
+                assert!(safebin.exists(), "safe-mode file should exist");
+                assert!(!datamdb.exists(), "LMDB data should be deleted");
+                assert!(!lockmdb.exists(), "LMDB lock should be deleted");
+
+                let mut stored_metrics = vec![];
+                let mut snapshotter = |name: &[u8], metric: &Metric| {
+                    let name = str::from_utf8(name).unwrap().to_string();
+                    stored_metrics.push((name, metric.clone()))
+                };
+                db.iter_store_from(Lifetime::Ping, "store1", None, &mut snapshotter);
+
+                assert_eq!(1, stored_metrics.len());
+                assert_eq!(metric_name, stored_metrics[0].0);
+                assert_eq!(&Metric::Counter(2), &stored_metrics[0].1);
+            }
+        }
+
+        #[test]
+        fn migration_ignores_empty_database() {
+            let dir = tempdir().unwrap();
+            let str_dir = dir.path().display().to_string();
+
+            let database_dir = dir.path().join("db");
+            let datamdb = database_dir.join("data.mdb");
+            let lockmdb = database_dir.join("lock.mdb");
+            let safebin = database_dir.join("data.safe.bin");
+
+            assert!(!safebin.exists());
+            assert!(!datamdb.exists());
+            assert!(!lockmdb.exists());
+
+            // Ensure old LMDB database exists, but is empty.
+            {
+                fs::create_dir_all(&database_dir).expect("create dir");
+                let rkv_db = rkv::Rkv::new::<rkv::backend::Lmdb>(&database_dir).expect("rkv env");
+                drop(rkv_db);
+                assert!(datamdb.exists());
+                assert!(lockmdb.exists());
+            }
+
+            // First open should try migration, but find no data.
+            // safe-mode does not write an empty database to disk.
+            // It also deletes the leftover LMDB database.
+            {
+                let _db = Database::new(&str_dir, false).unwrap();
+                let safebin = database_dir.join("data.safe.bin");
+                assert!(!safebin.exists(), "safe-mode file should exist");
+                assert!(!datamdb.exists(), "LMDB data should be deleted");
+                assert!(!lockmdb.exists(), "LMDB lock should be deleted");
+            }
+        }
     }
 }
