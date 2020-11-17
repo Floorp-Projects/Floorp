@@ -43,6 +43,8 @@ const VISITED_INVALID_PROPERTIES = allCssPropertiesExcept([
   "column-rule-color",
   "outline",
   "outline-color",
+  "text-decoration-color",
+  "text-emphasis-color",
 ]);
 
 class InactivePropertyHelper {
