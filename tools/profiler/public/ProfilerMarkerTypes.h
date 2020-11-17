@@ -27,7 +27,6 @@
 #  include "js/AllocationRecording.h"
 #  include "js/ProfilingFrameIterator.h"
 #  include "js/Utility.h"
-#  include "Layers.h"
 #  include "mozilla/ipc/ProtocolUtils.h"
 #  include "mozilla/net/HttpBaseChannel.h"
 #  include "mozilla/Preferences.h"
@@ -43,33 +42,6 @@ using Hang = mozilla::baseprofiler::markers::Hang;
 using LongTask = mozilla::baseprofiler::markers::LongTask;
 using Log = mozilla::baseprofiler::markers::Log;
 using MediaSample = mozilla::baseprofiler::markers::MediaSample;
-
-// Contains the translation applied to a 2d layer so we can track the layer
-// position at each frame.
-struct LayerTranslation {
-  static constexpr mozilla::Span<const char> MarkerTypeName() {
-    return mozilla::MakeStringSpan("LayerTranslation");
-  }
-  static void StreamJSONMarkerData(
-      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
-      mozilla::layers::Layer* aLayer, mozilla::gfx::Point aPoint) {
-    const size_t bufferSize = 32;
-    char buffer[bufferSize];
-    SprintfLiteral(buffer, "%p", aLayer);
-
-    aWriter.StringProperty("layer", buffer);
-    aWriter.IntProperty("x", aPoint.x);
-    aWriter.IntProperty("y", aPoint.y);
-  }
-  static mozilla::MarkerSchema MarkerTypeDisplay() {
-    using MS = mozilla::MarkerSchema;
-    MS schema{MS::Location::markerChart, MS::Location::markerTable};
-    schema.AddKeyLabelFormat("layer", "Layer", MS::Format::string);
-    schema.AddKeyLabelFormat("x", "X", MS::Format::integer);
-    schema.AddKeyLabelFormat("y", "Y", MS::Format::integer);
-    return schema;
-  }
-};
 
 // Tracks when a vsync occurs according to the HardwareComposer.
 struct Vsync {
