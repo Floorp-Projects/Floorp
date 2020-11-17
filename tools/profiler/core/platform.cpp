@@ -52,6 +52,7 @@
 #include "mozilla/AutoProfilerLabel.h"
 #include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
+#include "mozilla/net/HttpBaseChannel.h"  // for net::TimingStruct
 #include "mozilla/Printf.h"
 #include "mozilla/ProfileBufferChunkManagerSingle.h"
 #include "mozilla/ProfileBufferChunkManagerWithLocalLimit.h"
@@ -5481,39 +5482,148 @@ bool profiler_is_locked_on_current_thread() {
          CorePS::CoreBuffer().IsThreadSafeAndLockedOnCurrentThread();
 }
 
+static constexpr net::TimingStruct scEmptyNetTimingStruct;
+
 void profiler_add_network_marker(
     nsIURI* aURI, const nsACString& aRequestMethod, int32_t aPriority,
     uint64_t aChannelId, NetworkLoadType aType, mozilla::TimeStamp aStart,
     mozilla::TimeStamp aEnd, int64_t aCount,
     mozilla::net::CacheDisposition aCacheDisposition, uint64_t aInnerWindowID,
     const mozilla::net::TimingStruct* aTimings, nsIURI* aRedirectURI,
-    UniqueProfilerBacktrace aSource,
+    UniquePtr<ProfileChunkedBuffer> aSource,
     const Maybe<nsDependentCString>& aContentType) {
   if (!profiler_can_accept_markers()) {
     return;
   }
-  // These do allocations/frees/etc; avoid if not active
-  nsAutoCString spec;
-  nsAutoCString redirect_spec;
+
+  nsAutoCStringN<2048> name;
+  name.AppendASCII("Load ");
+  // top 32 bits are process id of the load
+  name.AppendInt(aChannelId & 0xFFFFFFFFu);
+
+  // These can do allocations/frees/etc; avoid if not active
+  nsAutoCStringN<2048> spec;
   if (aURI) {
     aURI->GetAsciiSpec(spec);
+    name.AppendASCII(": ");
+    name.Append(spec);
   }
+
+  nsAutoCString redirect_spec;
   if (aRedirectURI) {
     aRedirectURI->GetAsciiSpec(redirect_spec);
   }
-  // top 32 bits are process id of the load
-  uint32_t id = static_cast<uint32_t>(aChannelId & 0xFFFFFFFF);
-  char name[2048];
-  SprintfLiteral(name, "Load %d: %s", id, PromiseFlatCString(spec).get());
-  AUTO_PROFILER_STATS(add_marker_with_NetworkMarkerPayload);
+
+  struct NetworkMarker {
+    static constexpr Span<const char> MarkerTypeName() {
+      return MakeStringSpan("Network");
+    }
+    static void StreamJSONMarkerData(
+        baseprofiler::SpliceableJSONWriter& aWriter, mozilla::TimeStamp aStart,
+        mozilla::TimeStamp aEnd, int64_t aID, const ProfilerString8View& aURI,
+        const ProfilerString8View& aRequestMethod, NetworkLoadType aType,
+        int32_t aPri, int64_t aCount, net::CacheDisposition aCacheDisposition,
+        const net::TimingStruct& aTimings,
+        const ProfilerString8View& aRedirectURI,
+        const ProfilerString8View& aContentType) {
+      // This payload still streams a startTime and endTime property because it
+      // made the migration to MarkerTiming on the front-end easier.
+      baseprofiler::WritePropertyTime(aWriter, "startTime", aStart);
+      baseprofiler::WritePropertyTime(aWriter, "endTime", aEnd);
+
+      aWriter.IntProperty("id", aID);
+      aWriter.StringProperty("status", GetNetworkState(aType));
+      if (Span<const char> cacheString = GetCacheState(aCacheDisposition);
+          !cacheString.IsEmpty()) {
+        aWriter.StringProperty("cache", cacheString);
+      }
+      aWriter.IntProperty("pri", aPri);
+      if (aCount > 0) {
+        aWriter.IntProperty("count", aCount);
+      }
+      if (aURI.Length() != 0) {
+        aWriter.StringProperty("URI", aURI);
+      }
+      if (aRedirectURI.Length() != 0) {
+        aWriter.StringProperty("RedirectURI", aRedirectURI);
+      }
+      aWriter.StringProperty("requestMethod", aRequestMethod);
+
+      if (aContentType.Length() != 0) {
+        aWriter.StringProperty("contentType", aContentType);
+      } else {
+        aWriter.NullProperty("contentType");
+      }
+
+      if (aType != NetworkLoadType::LOAD_START) {
+        baseprofiler::WritePropertyTime(aWriter, "domainLookupStart",
+                                        aTimings.domainLookupStart);
+        baseprofiler::WritePropertyTime(aWriter, "domainLookupEnd",
+                                        aTimings.domainLookupEnd);
+        baseprofiler::WritePropertyTime(aWriter, "connectStart",
+                                        aTimings.connectStart);
+        baseprofiler::WritePropertyTime(aWriter, "tcpConnectEnd",
+                                        aTimings.tcpConnectEnd);
+        baseprofiler::WritePropertyTime(aWriter, "secureConnectionStart",
+                                        aTimings.secureConnectionStart);
+        baseprofiler::WritePropertyTime(aWriter, "connectEnd",
+                                        aTimings.connectEnd);
+        baseprofiler::WritePropertyTime(aWriter, "requestStart",
+                                        aTimings.requestStart);
+        baseprofiler::WritePropertyTime(aWriter, "responseStart",
+                                        aTimings.responseStart);
+        baseprofiler::WritePropertyTime(aWriter, "responseEnd",
+                                        aTimings.responseEnd);
+      }
+    }
+    static MarkerSchema MarkerTypeDisplay() {
+      return MarkerSchema::SpecialFrontendLocation{};
+    }
+
+   private:
+    static Span<const char> GetNetworkState(NetworkLoadType aType) {
+      switch (aType) {
+        case NetworkLoadType::LOAD_START:
+          return MakeStringSpan("STATUS_START");
+        case NetworkLoadType::LOAD_STOP:
+          return MakeStringSpan("STATUS_STOP");
+        case NetworkLoadType::LOAD_REDIRECT:
+          return MakeStringSpan("STATUS_REDIRECT");
+        default:
+          return MakeStringSpan("");
+      }
+    }
+
+    static Span<const char> GetCacheState(
+        net::CacheDisposition aCacheDisposition) {
+      switch (aCacheDisposition) {
+        case net::kCacheUnresolved:
+          return MakeStringSpan("Unresolved");
+        case net::kCacheHit:
+          return MakeStringSpan("Hit");
+        case net::kCacheHitViaReval:
+          return MakeStringSpan("HitViaReval");
+        case net::kCacheMissedViaReval:
+          return MakeStringSpan("MissedViaReval");
+        case net::kCacheMissed:
+          return MakeStringSpan("Missed");
+        case net::kCacheUnknown:
+        default:
+          return MakeStringSpan("");
+      }
+    }
+  };
+
   profiler_add_marker(
-      name, JS::ProfilingCategoryPair::NETWORK,
-      NetworkMarkerPayload(static_cast<int64_t>(aChannelId),
-                           PromiseFlatCString(spec).get(), aRequestMethod,
-                           aType, aStart, aEnd, aPriority, aCount,
-                           aCacheDisposition, aInnerWindowID, aTimings,
-                           PromiseFlatCString(redirect_spec).get(),
-                           std::move(aSource), aContentType));
+      name, geckoprofiler::category::NETWORK,
+      {MarkerTiming::Interval(aStart, aEnd),
+       MarkerStack::TakeBacktrace(std::move(aSource)),
+       MarkerInnerWindowId(aInnerWindowID)},
+      NetworkMarker{}, aStart, aEnd, static_cast<int64_t>(aChannelId), spec,
+      aRequestMethod, aType, aPriority, aCount, aCacheDisposition,
+      aTimings ? *aTimings : scEmptyNetTimingStruct, redirect_spec,
+      aContentType ? ProfilerString8View(*aContentType)
+                   : ProfilerString8View());
 }
 
 static void maybelocked_profiler_add_marker_for_thread(

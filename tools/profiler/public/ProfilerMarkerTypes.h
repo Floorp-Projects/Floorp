@@ -28,7 +28,6 @@
 #  include "js/ProfilingFrameIterator.h"
 #  include "js/Utility.h"
 #  include "mozilla/ipc/ProtocolUtils.h"
-#  include "mozilla/net/HttpBaseChannel.h"
 #  include "mozilla/Preferences.h"
 #  include "mozilla/ServoTraversalStatistics.h"
 
@@ -39,108 +38,6 @@ using Tracing = mozilla::baseprofiler::markers::Tracing;
 using UserTimingMark = mozilla::baseprofiler::markers::UserTimingMark;
 using UserTimingMeasure = mozilla::baseprofiler::markers::UserTimingMeasure;
 using MediaSample = mozilla::baseprofiler::markers::MediaSample;
-
-struct Network {
-  static constexpr mozilla::Span<const char> MarkerTypeName() {
-    return mozilla::MakeStringSpan("Network");
-  }
-  static void StreamJSONMarkerData(
-      mozilla::baseprofiler::SpliceableJSONWriter& aWriter, int64_t aID,
-      const mozilla::ProfilerString8View& aURI, NetworkLoadType aType,
-      const mozilla::TimeStamp& aStartTime, const mozilla::TimeStamp& aEndTime,
-      int32_t aPri, int64_t aCount,
-      mozilla::net::CacheDisposition aCacheDisposition, uint64_t aInnerWindowID,
-      const mozilla::net::TimingStruct& aTimings,
-      const mozilla::ProfilerString8View& aRedirectURI,
-      UniqueProfilerBacktrace aSource,
-      const mozilla::ProfilerString8View& aContentType) {
-    // TODO: Remove these Legacy start&end times when frontend is updated.
-    mozilla::baseprofiler::WritePropertyTime(aWriter, "startTime", aStartTime);
-    mozilla::baseprofiler::WritePropertyTime(aWriter, "endTime", aEndTime);
-
-    aWriter.IntProperty("id", aID);
-    mozilla::Span<const char> typeString = GetNetworkState(aType);
-    mozilla::Span<const char> cacheString = GetCacheState(aCacheDisposition);
-    // want to use aUniqueStacks.mUniqueStrings->WriteElement(aWriter,
-    // typeString);
-    aWriter.StringProperty("status", typeString);
-    if (!cacheString.IsEmpty()) {
-      aWriter.StringProperty("cache", cacheString);
-    }
-    aWriter.IntProperty("pri", aPri);
-    if (aCount > 0) {
-      aWriter.IntProperty("count", aCount);
-    }
-    if (aURI.Length() != 0) {
-      aWriter.StringProperty("URI", aURI);
-    }
-    if (aRedirectURI.Length() != 0) {
-      aWriter.StringProperty("RedirectURI", aRedirectURI);
-    }
-
-    if (aContentType.Length() != 0) {
-      aWriter.StringProperty("contentType", aContentType);
-    } else {
-      aWriter.NullProperty("contentType");
-    }
-
-    if (aType != NetworkLoadType::LOAD_START) {
-      mozilla::baseprofiler::WritePropertyTime(aWriter, "domainLookupStart",
-                                               aTimings.domainLookupStart);
-      mozilla::baseprofiler::WritePropertyTime(aWriter, "domainLookupEnd",
-                                               aTimings.domainLookupEnd);
-      mozilla::baseprofiler::WritePropertyTime(aWriter, "connectStart",
-                                               aTimings.connectStart);
-      mozilla::baseprofiler::WritePropertyTime(aWriter, "tcpConnectEnd",
-                                               aTimings.tcpConnectEnd);
-      mozilla::baseprofiler::WritePropertyTime(aWriter, "secureConnectionStart",
-                                               aTimings.secureConnectionStart);
-      mozilla::baseprofiler::WritePropertyTime(aWriter, "connectEnd",
-                                               aTimings.connectEnd);
-      mozilla::baseprofiler::WritePropertyTime(aWriter, "requestStart",
-                                               aTimings.requestStart);
-      mozilla::baseprofiler::WritePropertyTime(aWriter, "responseStart",
-                                               aTimings.responseStart);
-      mozilla::baseprofiler::WritePropertyTime(aWriter, "responseEnd",
-                                               aTimings.responseEnd);
-    }
-  }
-  static mozilla::MarkerSchema MarkerTypeDisplay() {
-    return mozilla::MarkerSchema::SpecialFrontendLocation{};
-  }
-
- private:
-  static mozilla::Span<const char> GetNetworkState(NetworkLoadType aType) {
-    switch (aType) {
-      case NetworkLoadType::LOAD_START:
-        return mozilla::MakeStringSpan("STATUS_START");
-      case NetworkLoadType::LOAD_STOP:
-        return mozilla::MakeStringSpan("STATUS_STOP");
-      case NetworkLoadType::LOAD_REDIRECT:
-        return mozilla::MakeStringSpan("STATUS_REDIRECT");
-    }
-    return mozilla::MakeStringSpan("");
-  }
-
-  static mozilla::Span<const char> GetCacheState(
-      mozilla::net::CacheDisposition aCacheDisposition) {
-    switch (aCacheDisposition) {
-      case mozilla::net::kCacheUnresolved:
-        return mozilla::MakeStringSpan("Unresolved");
-      case mozilla::net::kCacheHit:
-        return mozilla::MakeStringSpan("Hit");
-      case mozilla::net::kCacheHitViaReval:
-        return mozilla::MakeStringSpan("HitViaReval");
-      case mozilla::net::kCacheMissedViaReval:
-        return mozilla::MakeStringSpan("MissedViaReval");
-      case mozilla::net::kCacheMissed:
-        return mozilla::MakeStringSpan("Missed");
-      case mozilla::net::kCacheUnknown:
-      default:
-        return mozilla::MakeStringSpan("");
-    }
-  }
-};
 
 struct ScreenshotPayload {
   static constexpr mozilla::Span<const char> MarkerTypeName() {
