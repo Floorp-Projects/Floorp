@@ -830,11 +830,6 @@ TEST(GeckoProfiler, Markers)
        NetworkLoadType::LOAD_REDIRECT, ts1, ts2, 34, 56, net::kCacheUnresolved,
        78, nullptr, "http://example.com/"));
 
-  PROFILER_ADD_MARKER_WITH_PAYLOAD(
-      "PrefMarkerPayload marker", OTHER, PrefMarkerPayload,
-      ("preference name", mozilla::Nothing(), mozilla::Nothing(),
-       "preference value"_ns, ts1));
-
   nsCString screenshotURL = "url"_ns;
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "ScreenshotPayload marker", OTHER, ScreenshotPayload,
@@ -990,7 +985,6 @@ TEST(GeckoProfiler, Markers)
     S_NetworkMarkerPayload_start,
     S_NetworkMarkerPayload_stop,
     S_NetworkMarkerPayload_redirect,
-    S_PrefMarkerPayload,
     S_ScreenshotPayload,
     S_TextMarkerPayload1,
     S_TextMarkerPayload2,
@@ -1433,20 +1427,6 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ_JSON(payload["RedirectURI"], String,
                                "http://example.com/");
                 EXPECT_TRUE(payload["contentType"].isNull());
-
-              } else if (nameString == "PrefMarkerPayload marker") {
-                EXPECT_EQ(state, S_PrefMarkerPayload);
-                state = State(S_PrefMarkerPayload + 1);
-                EXPECT_EQ(typeString, "PreferenceRead");
-                EXPECT_TIMING_INSTANT_AT(ts1Double);
-                EXPECT_TRUE(payload["stack"].isNull());
-                EXPECT_EQ_JSON(payload["prefAccessTime"], Double, ts1Double);
-                EXPECT_EQ_JSON(payload["prefName"], String, "preference name");
-                EXPECT_EQ_JSON(payload["prefKind"], String, "Shared");
-                EXPECT_EQ_JSON(payload["prefType"], String,
-                               "Preference not found");
-                EXPECT_EQ_JSON(payload["prefValue"], String,
-                               "preference value");
 
               } else if (nameString == "ScreenshotPayload marker") {
                 EXPECT_EQ(state, S_ScreenshotPayload);
