@@ -1275,55 +1275,33 @@ nsresult UpdateUsageFile(nsIFile* aUsageFile, nsIFile* aUsageJournalFile,
   return NS_OK;
 }
 
-nsresult LoadUsageFile(nsIFile* aUsageFile, int64_t* aUsage) {
+Result<UsageInfo, nsresult> LoadUsageFile(nsIFile& aUsageFile) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aUsageFile);
-  MOZ_ASSERT(aUsage);
 
-  int64_t fileSize;
-  nsresult rv = aUsageFile->GetFileSize(&fileSize);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY_INSPECT(const int64_t& fileSize,
+                 MOZ_TO_RESULT_INVOKE(aUsageFile, GetFileSize));
 
-  if (NS_WARN_IF(fileSize != kUsageFileSize)) {
-    return NS_ERROR_FILE_CORRUPTED;
-  }
+  LS_TRY(OkIf(fileSize == kUsageFileSize), Err(NS_ERROR_FILE_CORRUPTED));
 
   nsCOMPtr<nsIInputStream> stream;
-  rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), aUsageFile);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY(NS_NewLocalFileInputStream(getter_AddRefs(stream), &aUsageFile));
 
   nsCOMPtr<nsIInputStream> bufferedStream;
-  rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
-                                 stream.forget(), 16);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY(NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
+                                   stream.forget(), 16));
 
-  nsCOMPtr<nsIBinaryInputStream> binaryStream =
+  const nsCOMPtr<nsIBinaryInputStream> binaryStream =
       NS_NewObjectInputStream(bufferedStream);
 
-  uint32_t cookie;
-  rv = binaryStream->Read32(&cookie);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY_INSPECT(const uint32_t& cookie,
+                 MOZ_TO_RESULT_INVOKE(binaryStream, Read32));
 
-  if (NS_WARN_IF(cookie != kUsageFileCookie)) {
-    return NS_ERROR_FILE_CORRUPTED;
-  }
+  LS_TRY(OkIf(cookie == kUsageFileCookie), Err(NS_ERROR_FILE_CORRUPTED));
 
-  uint64_t usage;
-  rv = binaryStream->Read64(&usage);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY_INSPECT(const uint64_t& usage,
+                 MOZ_TO_RESULT_INVOKE(binaryStream, Read64));
 
-  *aUsage = usage;
-  return NS_OK;
+  return UsageInfo{DatabaseUsageType(Some(usage))};
 }
 
 /*******************************************************************************
@@ -8905,34 +8883,29 @@ Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
       ([fileExists, usageFileExists, &file, &usageFile, &usageJournalFile,
         &aGroupAndOrigin]() -> Result<UsageInfo, nsresult> {
         if (fileExists) {
-          LS_TRY_INSPECT(
-              const int64_t& usage,
-              (ToResultInvoke<int64_t>(LoadUsageFile, usageFile)
-                   .orElse([&file, &usageFile, &usageJournalFile,
-                            &aGroupAndOrigin](
-                               const nsresult) -> Result<int64_t, nsresult> {
-                     nsCOMPtr<mozIStorageConnection> connection;
-                     bool dummy;
-                     LS_TRY(CreateStorageConnection(
-                         file, usageFile, aGroupAndOrigin.mOrigin,
-                         getter_AddRefs(connection), &dummy));
+          LS_TRY_RETURN(
+              LoadUsageFile(*usageFile)
+                  .orElse([&file, &usageFile, &usageJournalFile,
+                           &aGroupAndOrigin](
+                              const nsresult) -> Result<UsageInfo, nsresult> {
+                    nsCOMPtr<mozIStorageConnection> connection;
+                    bool dummy;
+                    LS_TRY(CreateStorageConnection(
+                        file, usageFile, aGroupAndOrigin.mOrigin,
+                        getter_AddRefs(connection), &dummy));
 
-                     LS_TRY_INSPECT(const int64_t& usage,
-                                    ToResultInvoke<int64_t>(
-                                        GetUsage, connection,
-                                        /* aArchivedOriginScope */ nullptr));
+                    LS_TRY_INSPECT(const int64_t& usage,
+                                   ToResultInvoke<int64_t>(
+                                       GetUsage, connection,
+                                       /* aArchivedOriginScope */ nullptr));
 
-                     LS_TRY(
-                         UpdateUsageFile(usageFile, usageJournalFile, usage));
+                    LS_TRY(UpdateUsageFile(usageFile, usageJournalFile, usage));
 
-                     LS_TRY(usageJournalFile->Remove(false));
+                    LS_TRY(usageJournalFile->Remove(false));
 
-                     return usage;
-                   })));
-
-          MOZ_ASSERT(usage >= 0);
-
-          return UsageInfo{DatabaseUsageType(Some(uint64_t(usage)))};
+                    MOZ_ASSERT(usage >= 0);
+                    return UsageInfo{DatabaseUsageType(Some(uint64_t(usage)))};
+                  }));
         }
 
         if (usageFileExists) {
