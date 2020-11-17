@@ -26,6 +26,7 @@
 namespace mozilla::dom::cache {
 
 using mozilla::dom::quota::Client;
+using mozilla::dom::quota::CloneFileAndAppend;
 using mozilla::dom::quota::FileInputStream;
 using mozilla::dom::quota::FileOutputStream;
 using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
@@ -780,50 +781,40 @@ bool DirectoryPaddingFileExists(nsIFile* aBaseDir,
   return exists;
 }
 
-// static
 nsresult LockedDirectoryPaddingGet(nsIFile* aBaseDir,
                                    int64_t* aPaddingSizeOut) {
   MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
   MOZ_DIAGNOSTIC_ASSERT(aPaddingSizeOut);
+
+  CACHE_TRY_INSPECT(const int64_t& paddingSize,
+                    LockedDirectoryPaddingGet(*aBaseDir));
+
+  *aPaddingSizeOut = paddingSize;
+  return NS_OK;
+}
+
+Result<int64_t, nsresult> LockedDirectoryPaddingGet(nsIFile& aBaseDir) {
   MOZ_DIAGNOSTIC_ASSERT(
-      !DirectoryPaddingFileExists(aBaseDir, DirPaddingFile::TMP_FILE));
+      !DirectoryPaddingFileExists(&aBaseDir, DirPaddingFile::TMP_FILE));
 
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = aBaseDir->Clone(getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = file->Append(nsLiteralString(PADDING_FILE_NAME));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY_INSPECT(
+      const auto& file,
+      CloneFileAndAppend(aBaseDir, nsLiteralString(PADDING_FILE_NAME)));
 
   nsCOMPtr<nsIInputStream> stream;
-  rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), file);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY(NS_NewLocalFileInputStream(getter_AddRefs(stream), file));
 
   nsCOMPtr<nsIInputStream> bufferedStream;
-  rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
-                                 stream.forget(), 512);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY(NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
+                                      stream.forget(), 512));
 
   nsCOMPtr<nsIObjectInputStream> objectStream =
       NS_NewObjectInputStream(bufferedStream);
 
-  uint64_t paddingSize = 0;
-  rv = objectStream->Read64(&paddingSize);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  *aPaddingSizeOut = paddingSize;
-
-  return rv;
+  CACHE_TRY_RETURN(
+      MOZ_TO_RESULT_INVOKE(objectStream, Read64).map([](const uint64_t val) {
+        return int64_t(val);
+      }));
 }
 
 // static

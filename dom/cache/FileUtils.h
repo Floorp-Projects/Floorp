@@ -102,6 +102,10 @@ bool DirectoryPaddingFileExists(nsIFile* aBaseDir,
  *
  */
 
+// Returns a Result with a success value denoting the padding size.
+Result<int64_t, nsresult> LockedDirectoryPaddingGet(nsIFile& aBaseDir);
+
+// XXX Remove this overload when migrating the callers to use CACHE_TRY.
 nsresult LockedDirectoryPaddingGet(nsIFile* aBaseDir, int64_t* aPaddingSizeOut);
 
 nsresult LockedDirectoryPaddingInit(nsIFile* aBaseDir);

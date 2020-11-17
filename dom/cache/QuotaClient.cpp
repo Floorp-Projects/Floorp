@@ -360,10 +360,8 @@ Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
 
         if (!DirectoryPaddingFileExists(dir, DirPaddingFile::TMP_FILE)) {
           const auto& maybePaddingSize = [&dir]() -> Maybe<int64_t> {
-            CACHE_TRY_RETURN(
-                ToResultInvoke<int64_t>(LockedDirectoryPaddingGet, dir)
-                    .map(Some<int64_t>),
-                Nothing{});
+            CACHE_TRY_RETURN(LockedDirectoryPaddingGet(*dir).map(Some<int64_t>),
+                             Nothing{});
           }();
 
           if (maybePaddingSize) {
