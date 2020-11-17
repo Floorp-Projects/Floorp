@@ -319,8 +319,16 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
 
-  wr::DisplayListBuilder builder(WrBridge()->GetPipeline(),
-                                 mLastDisplayListSize, &mDisplayItemCache);
+  // While the first display list after tab-switch can be large, the
+  // following ones are always smaller thanks to interning (rarely above 0.3MB).
+  // So don't let the spike of the first allocation make us allocate a large
+  // contiguous buffer (with some likelihood of OOM, see bug 1531819).
+  static const size_t kMaxPrealloc = 300000;
+  size_t preallocate =
+      mLastDisplayListSize < kMaxPrealloc ? mLastDisplayListSize : kMaxPrealloc;
+
+  wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), preallocate,
+                                 &mDisplayItemCache);
 
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge());
   wr::usize builderDumpIndex = 0;
