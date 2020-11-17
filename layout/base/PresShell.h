@@ -2861,7 +2861,7 @@ class PresShell final : public nsStubDocumentObserver,
   // These two fields capture call stacks of any changes that require a restyle
   // or a reflow. Only the first change per restyle / reflow is recorded (the
   // one that caused a call to SetNeedStyleFlush() / SetNeedLayoutFlush()).
-  UniqueProfilerBacktrace mStyleCause;
+  UniquePtr<ProfileChunkedBuffer> mStyleCause;
   UniqueProfilerBacktrace mReflowCause;
 #endif
 
