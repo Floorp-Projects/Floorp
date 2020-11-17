@@ -436,7 +436,7 @@ class nsLineBox final : public nsLineLink {
       nsPoint physicalDelta =
           mozilla::LogicalPoint(mWritingMode, 0, aDBCoord)
               .GetPhysicalPoint(mWritingMode, nullContainerSize);
-      NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+      for (const auto otype : mozilla::AllOverflowTypes()) {
         mData->mOverflowAreas.Overflow(otype) += physicalDelta;
       }
     }
@@ -453,7 +453,7 @@ class nsLineBox final : public nsLineLink {
     // this has a physical-coordinate effect only in vertical-rl mode
     if (mWritingMode.IsVerticalRL() && mData) {
       nsPoint physicalDelta(-delta.width, 0);
-      NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+      for (const auto otype : mozilla::AllOverflowTypes()) {
         mData->mOverflowAreas.Overflow(otype) += physicalDelta;
       }
     }

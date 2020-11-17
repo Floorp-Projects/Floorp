@@ -529,12 +529,15 @@ void nsLineBox::ClearFloatEdges() {
 }
 
 void nsLineBox::SetOverflowAreas(const nsOverflowAreas& aOverflowAreas) {
-  NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+#ifdef DEBUG
+  for (const auto otype : mozilla::AllOverflowTypes()) {
     NS_ASSERTION(aOverflowAreas.Overflow(otype).width >= 0,
-                 "illegal width for combined area");
+                 "Illegal width for an overflow area!");
     NS_ASSERTION(aOverflowAreas.Overflow(otype).height >= 0,
-                 "illegal height for combined area");
+                 "Illegal height for an overflow area!");
   }
+#endif
+
   nsRect bounds = GetPhysicalBounds();
   if (!aOverflowAreas.InkOverflow().IsEqualInterior(bounds) ||
       !aOverflowAreas.ScrollableOverflow().IsEqualEdges(bounds)) {
