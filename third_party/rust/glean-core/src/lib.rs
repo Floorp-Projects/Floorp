@@ -201,10 +201,10 @@ impl Glean {
         let data_store = Some(Database::new(&cfg.data_path, cfg.delay_ping_lifetime_io)?);
         let event_data_store = EventDatabase::new(&cfg.data_path)?;
 
-        // Create an upload manager with rate limiting of 10 pings every 60 seconds.
+        // Create an upload manager with rate limiting of 15 pings every 60 seconds.
         let mut upload_manager = PingUploadManager::new(&cfg.data_path, &cfg.language_binding_name);
         upload_manager.set_rate_limiter(
-            /* seconds per interval */ 60, /* max tasks per interval */ 15,
+            /* seconds per interval */ 60, /* max pings per interval */ 15,
         );
 
         // We only scan the pending ping sdirectories when calling this from a subprocess,
