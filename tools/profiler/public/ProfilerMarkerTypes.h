@@ -38,6 +38,7 @@ using Tracing = mozilla::baseprofiler::markers::Tracing;
 using UserTimingMark = mozilla::baseprofiler::markers::UserTimingMark;
 using UserTimingMeasure = mozilla::baseprofiler::markers::UserTimingMeasure;
 using MediaSample = mozilla::baseprofiler::markers::MediaSample;
+using ContentBuildMarker = mozilla::baseprofiler::markers::ContentBuildMarker;
 
 struct ScreenshotPayload {
   static constexpr mozilla::Span<const char> MarkerTypeName() {
