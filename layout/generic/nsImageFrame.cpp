@@ -2009,10 +2009,11 @@ bool nsDisplayImage::CreateWebRenderCommands(
     case ImgDrawResult::TEMPORARY_ERROR:
       if (mPrevImage && mPrevImage != mImage) {
         RefPtr<ImageContainer> prevContainer;
-        drawResult = mPrevImage->GetImageContainerAtSize(
+        ImgDrawResult newDrawResult = mPrevImage->GetImageContainerAtSize(
             aManager->LayerManager(), decodeSize, svgContext, flags,
             getter_AddRefs(prevContainer));
-        if (prevContainer && drawResult == ImgDrawResult::SUCCESS) {
+        if (prevContainer && newDrawResult == ImgDrawResult::SUCCESS) {
+          drawResult = newDrawResult;
           container = std::move(prevContainer);
           break;
         }
