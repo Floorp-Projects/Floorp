@@ -1,6 +1,3 @@
-# Avoid setting any incompatible strip flags in the nightly config
-NOSTRIP_BUILD=1
-
 . "$topsrcdir/browser/config/mozconfigs/linux64/nightly"
 
 TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
