@@ -23,6 +23,7 @@ namespace {
 
 using mozilla::Atomic;
 using mozilla::MutexAutoLock;
+using mozilla::Result;
 using mozilla::Some;
 using mozilla::Unused;
 using mozilla::dom::ContentParentId;
@@ -32,6 +33,7 @@ using mozilla::dom::cache::Manager;
 using mozilla::dom::cache::QuotaInfo;
 using mozilla::dom::quota::AssertIsOnIOThread;
 using mozilla::dom::quota::Client;
+using mozilla::dom::quota::CloneFileAndAppend;
 using mozilla::dom::quota::DatabaseUsageType;
 using mozilla::dom::quota::GroupAndOrigin;
 using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
@@ -121,14 +123,8 @@ static nsresult GetBodyUsage(nsIFile* aMorgueDir, const Atomic<bool>& aCanceled,
   return NS_OK;
 }
 
-static nsresult LockedGetPaddingSizeFromDB(
-    nsIFile* aDir, const GroupAndOrigin& aGroupAndOrigin,
-    int64_t* aPaddingSizeOut) {
-  MOZ_DIAGNOSTIC_ASSERT(aDir);
-  MOZ_DIAGNOSTIC_ASSERT(aPaddingSizeOut);
-
-  *aPaddingSizeOut = 0;
-
+static Result<int64_t, nsresult> LockedGetPaddingSizeFromDB(
+    nsIFile& aDir, const GroupAndOrigin& aGroupAndOrigin) {
   QuotaInfo quotaInfo;
   static_cast<GroupAndOrigin&>(quotaInfo) = aGroupAndOrigin;
   // quotaInfo.mDirectoryLockId must be -1 (which is default for new QuotaInfo)
@@ -140,59 +136,35 @@ static nsresult LockedGetPaddingSizeFromDB(
   // for the SQLite file).
   MOZ_DIAGNOSTIC_ASSERT(quotaInfo.mDirectoryLockId == -1);
 
-  nsCOMPtr<nsIFile> dbFile;
-  nsresult rv = aDir->Clone(getter_AddRefs(dbFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY_INSPECT(const auto& dbFile,
+                    CloneFileAndAppend(aDir, kCachesSQLiteFilename));
 
-  rv = dbFile->Append(kCachesSQLiteFilename);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(dbFile, Exists));
 
-  bool exists = false;
-  rv = dbFile->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Return NS_OK with size = 0 if caches.sqlite doesn't exist.
+  // Return size = 0 if caches.sqlite doesn't exist.
   // This function is only called if the value of the padding size couldn't be
   // determined from the padding file, possibly because it doesn't exist, or a
   // leftover temporary padding file was found.
   // There is no other way to get the overall padding size of an origin.
   if (!exists) {
-    return NS_OK;
+    return 0;
   }
 
-  nsCOMPtr<mozIStorageConnection> conn;
-  rv = mozilla::dom::cache::OpenDBConnection(quotaInfo, dbFile,
-                                             getter_AddRefs(conn));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY_INSPECT(
+      const auto& conn,
+      mozilla::ToResultInvoke<nsCOMPtr<mozIStorageConnection>>(
+          mozilla::dom::cache::OpenDBConnection, quotaInfo, dbFile));
 
   // Make sure that the database has the latest schema before we try to read
   // from it. We have to do this because LockedGetPaddingSizeFromDB is called
   // by QuotaClient::GetUsageForOrigin which may run at any time (there's no
   // guarantee that SetupAction::RunSyncWithDBOnTarget already checked the
   // schema for the given origin).
-  rv = mozilla::dom::cache::db::CreateOrMigrateSchema(*conn);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY(mozilla::dom::cache::db::CreateOrMigrateSchema(*conn));
 
-  int64_t paddingSize = 0;
-  rv = mozilla::dom::cache::LockedDirectoryPaddingRestore(
-      aDir, conn, /* aMustRestore */ false, &paddingSize);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  *aPaddingSizeOut = paddingSize;
-
-  return rv;
+  CACHE_TRY_RETURN(mozilla::ToResultInvoke<int64_t>(
+      mozilla::dom::cache::LockedDirectoryPaddingRestore, &aDir, conn,
+      /* aMustRestore */ false));
 }
 
 }  // namespace
@@ -412,8 +384,7 @@ Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
         }
 
         if (aInitializing) {
-          CACHE_TRY_RETURN(ToResultInvoke<int64_t>(LockedGetPaddingSizeFromDB,
-                                                   dir, aGroupAndOrigin)
+          CACHE_TRY_RETURN(LockedGetPaddingSizeFromDB(*dir, aGroupAndOrigin)
                                .map(Some<int64_t>));
         }
 
