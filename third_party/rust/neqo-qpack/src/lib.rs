@@ -24,12 +24,11 @@ mod qlog;
 mod qpack_send_buf;
 pub mod reader;
 mod static_table;
-mod stats;
+pub mod stats;
 mod table;
 
 pub use decoder::QPackDecoder;
 pub use encoder::QPackEncoder;
-pub use stats::Stats;
 
 pub type Header = (String, String);
 type Res<T> = Result<T, Error>;
