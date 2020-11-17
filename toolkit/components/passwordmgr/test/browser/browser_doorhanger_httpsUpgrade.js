@@ -96,7 +96,7 @@ add_task(async function test_httpsUpgradeCaptureFields_changePW() {
   is(login.password, "pass2", "Check the password changed");
   is(login.timesUsed, 2, "Check times used increased");
 
-  Services.logins.removeAllUserFacingLogins();
+  Services.logins.removeAllLogins();
 });
 
 add_task(
@@ -165,7 +165,7 @@ add_task(
       "timeLastUsed == timePasswordChanged"
     );
 
-    Services.logins.removeAllUserFacingLogins();
+    Services.logins.removeAllLogins();
   }
 );
 

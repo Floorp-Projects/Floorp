@@ -38,7 +38,7 @@ function addLogin(host, timestamp) {
 }
 
 async function setupPasswords() {
-  loginManager.removeAllUserFacingLogins();
+  loginManager.removeAllLogins();
   addLogin(FXA_HOST, REFERENCE_DATE);
   addLogin(NEW_HOST, REFERENCE_DATE);
   addLogin(OLD_HOST, REFERENCE_DATE - 10000);

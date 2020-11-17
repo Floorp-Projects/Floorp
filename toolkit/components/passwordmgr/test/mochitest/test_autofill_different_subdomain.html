@@ -45,7 +45,7 @@ async function checkWindowLoginForm(expectedUsername, expectedPassword) {
 }
 
 async function prepareLogins(logins = []) {
-  await LoginManager.removeAllUserFacingLogins();
+  await LoginManager.removeAllLogins();
 
   let dates = Date.now();
   for (let login of logins) {

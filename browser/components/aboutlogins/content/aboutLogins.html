@@ -13,7 +13,6 @@
     <link rel="localization" href="browser/branding/brandings.ftl">
     <link rel="localization" href="browser/aboutLogins.ftl">
     <script type="module" src="chrome://browser/content/aboutlogins/components/confirmation-dialog.js"></script>
-    <script type="module" src="chrome://browser/content/aboutlogins/components/remove-logins-dialog.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/fxaccounts-button.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-filter.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-intro.js"></script>
@@ -38,7 +37,6 @@
     <login-item></login-item>
     <login-intro></login-intro>
     <confirmation-dialog hidden></confirmation-dialog>
-    <remove-logins-dialog hidden></remove-logins-dialog>
     <div id="master-password-required-overlay"></div>
 
     <template id="confirmation-dialog-template">
@@ -59,31 +57,6 @@
             <button class="confirm-button danger-button"></button>
             <button class="cancel-button" data-l10n-id="confirmation-dialog-cancel-button"></button>
           </div>
-        </div>
-      </div>
-    </template>
-
-    <template id="remove-logins-dialog-template">
-      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
-      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
-      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/remove-logins-dialog.css">
-      <div class="overlay">
-      <div class="container" role="dialog" aria-labelledby="title" aria-describedby="message">
-        <button class="dismiss-button" data-l10n-id="confirmation-dialog-dismiss-button">
-          <img class="dismiss-icon" src="chrome://global/skin/icons/close.svg"/>
-        </button>
-        <div class="content">
-          <img class="warning-icon" src="chrome://global/skin/icons/delete.svg"/>
-          <h1 class="title" id="title"></h1>
-          <p class="message" id="message"></p>
-          <div class="checkbox-wrapper">
-            <input id="confirmation-checkbox" type="checkbox" class="checkbox"></input>
-            <label for="confirmation-checkbox"></label>
-          </div>
-        </div>
-        <div class="buttons">
-          <button class="confirm-button danger-button"></button>
-          <button class="cancel-button" data-l10n-id="confirmation-dialog-cancel-button"></button>
         </div>
       </div>
     </template>
@@ -302,7 +275,6 @@
         <button role="menuitem" class="menuitem-button menuitem-import-browser ghost-button" hidden data-supported-platforms="Win32,MacIntel" data-event-name="AboutLoginsImportFromBrowser" data-l10n-id="about-logins-menu-menuitem-import-from-another-browser"></button>
         <button role="menuitem" class="menuitem-button menuitem-import-file ghost-button" data-event-name="AboutLoginsImportFromFile" data-l10n-id="about-logins-menu-menuitem-import-from-a-file"></button>
         <button role="menuitem" class="menuitem-button menuitem-export ghost-button" data-event-name="AboutLoginsExportPasswordsDialog" data-l10n-id="about-logins-menu-menuitem-export-logins"></button>
-        <button role="menuitem" class="menuitem-button menuitem-remove-all-logins ghost-button" data-event-name="AboutLoginsRemoveAllLoginsDialog" data-l10n-id="about-logins-menu-menuitem-remove-all-logins"></button>
         <hr role="separator" class="menuitem-separator"></hr>
         <button role="menuitem" class="menuitem-button menuitem-preferences ghost-button" data-event-name="AboutLoginsOpenPreferences" data-l10n-id="menu-menuitem-preferences"></button>
         <hr role="separator" class="menuitem-separator"></hr>
