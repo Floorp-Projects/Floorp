@@ -150,9 +150,7 @@ Result<int64_t, nsresult> LockedGetPaddingSizeFromDB(
     return 0;
   }
 
-  CACHE_TRY_INSPECT(const auto& conn,
-                    ToResultInvoke<nsCOMPtr<mozIStorageConnection>>(
-                        OpenDBConnection, quotaInfo, dbFile));
+  CACHE_TRY_INSPECT(const auto& conn, OpenDBConnection(quotaInfo, *dbFile));
 
   // Make sure that the database has the latest schema before we try to read
   // from it. We have to do this because LockedGetPaddingSizeFromDB is called

@@ -158,7 +158,13 @@ nsresult DBAction::OpenConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
     return rv;
   }
 
-  return OpenDBConnection(aQuotaInfo, dbFile, aConnOut);
+  auto res = OpenDBConnection(aQuotaInfo, *dbFile);
+  if (res.isErr()) {
+    return res.inspectErr();
+  }
+
+  *aConnOut = res.unwrap().forget().take();
+  return NS_OK;
 }
 
 SyncDBAction::SyncDBAction(Mode aMode) : DBAction(aMode) {}
@@ -178,97 +184,78 @@ void SyncDBAction::RunWithDBOnTarget(SafeRefPtr<Resolver> aResolver,
   aResolver->Resolve(rv);
 }
 
-// static
-nsresult OpenDBConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile,
-                          mozIStorageConnection** aConnOut) {
+Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenDBConnection(
+    const QuotaInfo& aQuotaInfo, nsIFile& aDBFile) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aQuotaInfo.mDirectoryLockId >= -1);
-  MOZ_DIAGNOSTIC_ASSERT(aDBFile);
-  MOZ_DIAGNOSTIC_ASSERT(aConnOut);
 
   // Use our default file:// protocol handler directly to construct the database
   // URL.  This avoids any problems if a plugin registers a custom file://
   // handler.  If such a custom handler used javascript, then we would have a
   // bad time running off the main thread here.
-  RefPtr<nsFileProtocolHandler> handler = new nsFileProtocolHandler();
-  nsresult rv = handler->Init();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  auto handler = MakeRefPtr<nsFileProtocolHandler>();
+  CACHE_TRY(handler->Init());
 
-  nsCOMPtr<nsIURIMutator> mutator;
-  rv = handler->NewFileURIMutator(aDBFile, getter_AddRefs(mutator));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIFileURL> dbFileUrl;
+  CACHE_TRY_INSPECT(const auto& mutator,
+                    MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIURIMutator>, handler,
+                                               NewFileURIMutator, &aDBFile));
 
   const nsCString directoryLockIdClause =
       aQuotaInfo.mDirectoryLockId >= 0
           ? "&directoryLockId="_ns + IntToCString(aQuotaInfo.mDirectoryLockId)
           : EmptyCString();
 
-  rv = NS_MutateURI(mutator)
-           .SetQuery("cache=private"_ns + directoryLockIdClause)
-           .Finalize(dbFileUrl);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  nsCOMPtr<nsIFileURL> dbFileUrl;
+  CACHE_TRY(NS_MutateURI(mutator)
+                .SetQuery("cache=private"_ns + directoryLockIdClause)
+                .Finalize(dbFileUrl));
 
-  nsCOMPtr<mozIStorageService> ss =
-      do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
-  if (NS_WARN_IF(!ss)) {
-    return NS_ERROR_UNEXPECTED;
-  }
+  CACHE_TRY_INSPECT(
+      const auto& storageService,
+      ToResultGet<nsCOMPtr<mozIStorageService>>(
+          MOZ_SELECT_OVERLOAD(do_GetService), MOZ_STORAGE_SERVICE_CONTRACTID),
+      Err(NS_ERROR_UNEXPECTED));
 
-  nsCOMPtr<mozIStorageConnection> conn;
-  rv = ss->OpenDatabaseWithFileURL(dbFileUrl, ""_ns, getter_AddRefs(conn));
-  if (rv == NS_ERROR_FILE_CORRUPTED) {
-    NS_WARNING("Cache database corrupted. Recreating empty database.");
+  CACHE_TRY_UNWRAP(
+      auto conn,
+      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>,
+                                 storageService, OpenDatabaseWithFileURL,
+                                 dbFileUrl, ""_ns)
+          .orElse([&aQuotaInfo, &aDBFile, &storageService,
+                   &dbFileUrl](const nsresult rv)
+                      -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
+            if (rv == NS_ERROR_FILE_CORRUPTED) {
+              NS_WARNING(
+                  "Cache database corrupted. Recreating empty database.");
 
-    conn = nullptr;
+              // There is nothing else we can do to recover.  Also, this data
+              // can be deleted by QuotaManager at any time anyways.
+              CACHE_TRY(WipeDatabase(aQuotaInfo, &aDBFile));
 
-    // There is nothing else we can do to recover.  Also, this data can
-    // be deleted by QuotaManager at any time anyways.
-    rv = WipeDatabase(aQuotaInfo, aDBFile);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = ss->OpenDatabaseWithFileURL(dbFileUrl, ""_ns, getter_AddRefs(conn));
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+              CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(
+                  nsCOMPtr<mozIStorageConnection>, storageService,
+                  OpenDatabaseWithFileURL, dbFileUrl, ""_ns));
+            }
+            return Err(rv);
+          }));
 
   // Check the schema to make sure it is not too old.
-  int32_t schemaVersion = 0;
-  rv = conn->GetSchemaVersion(&schemaVersion);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY_INSPECT(const int32_t& schemaVersion,
+                    MOZ_TO_RESULT_INVOKE(conn, GetSchemaVersion));
   if (schemaVersion > 0 && schemaVersion < db::kFirstShippedSchemaVersion) {
+    // Close existing connection before wiping database.
     conn = nullptr;
-    rv = WipeDatabase(aQuotaInfo, aDBFile);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
 
-    rv = ss->OpenDatabaseWithFileURL(dbFileUrl, ""_ns, getter_AddRefs(conn));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    CACHE_TRY(WipeDatabase(aQuotaInfo, &aDBFile));
+
+    CACHE_TRY_UNWRAP(conn, MOZ_TO_RESULT_INVOKE_TYPED(
+                               nsCOMPtr<mozIStorageConnection>, storageService,
+                               OpenDatabaseWithFileURL, dbFileUrl, ""_ns));
   }
 
-  rv = db::InitializeConnection(*conn);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY(db::InitializeConnection(*conn));
 
-  conn.forget(aConnOut);
-
-  return rv;
+  return conn;
 }
 
 }  // namespace mozilla::dom::cache
