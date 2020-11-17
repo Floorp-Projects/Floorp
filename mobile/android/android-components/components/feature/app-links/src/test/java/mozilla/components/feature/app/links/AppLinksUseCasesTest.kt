@@ -34,6 +34,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.Shadows.shadowOf
 import java.io.File
+import java.lang.NullPointerException
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
@@ -371,6 +372,38 @@ class AppLinksUseCasesTest {
         var failedToLaunch = false
         val failedAction = { failedToLaunch = true }
         `when`(context.startActivity(any())).thenThrow(ActivityNotFoundException("failed"))
+        subject.openAppLink(redirect.appIntent, failedToLaunchAction = failedAction)
+
+        verify(context).startActivity(any())
+        assert(failedToLaunch)
+    }
+
+    @Test
+    fun `Security exception perform failure action`() {
+        val context = createContext()
+        val appIntent = Intent()
+        val redirect = AppLinkRedirect(appIntent, appUrl, null)
+        val subject = AppLinksUseCases(context, { true })
+
+        var failedToLaunch = false
+        val failedAction = { failedToLaunch = true }
+        `when`(context.startActivity(any())).thenThrow(SecurityException("failed"))
+        subject.openAppLink(redirect.appIntent, failedToLaunchAction = failedAction)
+
+        verify(context).startActivity(any())
+        assert(failedToLaunch)
+    }
+
+    @Test
+    fun `Null pointer exception perform failure action`() {
+        val context = createContext()
+        val appIntent = Intent()
+        val redirect = AppLinkRedirect(appIntent, appUrl, null)
+        val subject = AppLinksUseCases(context, { true })
+
+        var failedToLaunch = false
+        val failedAction = { failedToLaunch = true }
+        `when`(context.startActivity(any())).thenThrow(NullPointerException("failed"))
         subject.openAppLink(redirect.appIntent, failedToLaunchAction = failedAction)
 
         verify(context).startActivity(any())

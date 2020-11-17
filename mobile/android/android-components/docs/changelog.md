@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **feature-app-links**
+    * Added handling of PackageItemInfo.packageName NullPointerException on some Xiaomi and TCL devices
+
 # 67.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v66.0.0...v67.0.0)

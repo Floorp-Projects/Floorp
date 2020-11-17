@@ -18,6 +18,8 @@ import androidx.annotation.VisibleForTesting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.pm.isPackageInstalled
 import mozilla.components.support.ktx.android.net.isHttpOrHttps
+import java.lang.Exception
+import java.lang.NullPointerException
 import java.net.URISyntaxException
 
 private const val EXTRA_BROWSER_FALLBACK_URL = "browser_fallback_url"
@@ -182,6 +184,7 @@ class AppLinksUseCases(
      *
      * This does not do any additional UI other than the chooser that Android may provide the user.
      */
+    @Suppress("TooGenericExceptionCaught")
     inner class OpenAppLinkRedirect internal constructor(
         private val context: Context
     ) {
@@ -201,12 +204,14 @@ class AppLinksUseCases(
                         it.flags = it.flags or Intent.FLAG_ACTIVITY_NEW_TASK
                     }
                     context.startActivity(it)
-                } catch (e: ActivityNotFoundException) {
-                    failedToLaunchAction()
-                    Logger.error("failed to start third party app activity", e)
-                } catch (e: SecurityException) {
-                    failedToLaunchAction()
-                    Logger.error("failed to start third party app activity", e)
+                } catch (e: Exception) {
+                    when (e) {
+                        is ActivityNotFoundException, is SecurityException, is NullPointerException -> {
+                            failedToLaunchAction()
+                            Logger.error("failed to start third party app activity", e)
+                        }
+                        else -> throw e
+                    }
                 }
             }
         }
