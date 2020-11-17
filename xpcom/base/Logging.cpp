@@ -23,9 +23,6 @@
 #include "nsDebugImpl.h"
 #include "NSPRLogModulesParser.h"
 #include "LogCommandLineHandler.h"
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
-#endif
 
 #include "prenv.h"
 #ifdef XP_WIN
@@ -419,15 +416,33 @@ class LogModuleManager {
 
 #ifdef MOZ_GECKO_PROFILER
     if (mAddProfilerMarker && profiler_can_accept_markers()) {
-      if (aStart) {
-        PROFILER_ADD_MARKER_WITH_PAYLOAD(
-            "LogMessages", OTHER, LogMarkerPayload,
-            (aName, buffToWrite, *aStart, TimeStamp::Now()));
-      } else {
-        PROFILER_ADD_MARKER_WITH_PAYLOAD(
-            "LogMessages", OTHER, LogMarkerPayload,
-            (aName, buffToWrite, TimeStamp::Now()));
-      }
+      struct LogMarker {
+        static constexpr Span<const char> MarkerTypeName() {
+          return MakeStringSpan("Log");
+        }
+        static void StreamJSONMarkerData(
+            baseprofiler::SpliceableJSONWriter& aWriter,
+            const ProfilerString8View& aModule,
+            const ProfilerString8View& aText) {
+          aWriter.StringProperty("module", aModule);
+          aWriter.StringProperty("name", aText);
+        }
+        static MarkerSchema MarkerTypeDisplay() {
+          using MS = MarkerSchema;
+          MS schema{MS::Location::markerTable};
+          schema.SetTableLabel("({marker.data.module}) {marker.data.name}");
+          schema.AddKeyLabelFormat("module", "Module", MS::Format::string);
+          schema.AddKeyLabelFormat("name", "Name", MS::Format::string);
+          return schema;
+        }
+      };
+
+      profiler_add_marker(
+          "LogMessages", geckoprofiler::category::OTHER,
+          aStart ? MarkerTiming::IntervalUntilNowFrom(*aStart)
+                 : MarkerTiming::InstantNow(),
+          LogMarker{}, ProfilerString8View::WrapNullTerminatedString(aName),
+          ProfilerString8View::WrapNullTerminatedString(buffToWrite));
     }
 #endif
 

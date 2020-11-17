@@ -111,26 +111,6 @@ struct UserTimingMeasure {
   }
 };
 
-struct Log {
-  static constexpr Span<const char> MarkerTypeName() {
-    return MakeStringSpan("Log");
-  }
-  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter,
-                                   const ProfilerString8View& aModule,
-                                   const ProfilerString8View& aText) {
-    aWriter.StringProperty("module", aModule);
-    aWriter.StringProperty("name", aText);
-  }
-  static MarkerSchema MarkerTypeDisplay() {
-    using MS = MarkerSchema;
-    MS schema{MS::Location::markerTable};
-    schema.SetTableLabel("({marker.data.module}) {marker.data.name}");
-    schema.AddKeyLabelFormat("module", "Module", MS::Format::string);
-    schema.AddKeyLabelFormat("name", "Name", MS::Format::string);
-    return schema;
-  }
-};
-
 struct MediaSample {
   static constexpr Span<const char> MarkerTypeName() {
     return MakeStringSpan("MediaSample");
