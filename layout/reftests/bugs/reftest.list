@@ -919,9 +919,6 @@ fuzzy-if(Android,0-13,0-9) == 407111-1.html 407111-1-ref.html  # Bug 1128229
 == 408782-2b.html 408782-2-ref.html
 == 409084-1a.html 409084-1-ref.html
 == 409084-1b.html 409084-1-ref.html
-== 409089-1.html 409089-1-ref.html
-== 409089-2.html 409089-2-ref.html
-== 409089-3.html 409089-3-ref.html
 fuzzy-if(winWidget,0-123,0-1600) fuzzy-if(webrender&&swgl,0-1,0-39) == 409659-1a.html 409659-1-ref.html  # Bug 1128229
 != 409659-1b.html 409659-1-ref.html
 != 409659-1c.html 409659-1-ref.html
