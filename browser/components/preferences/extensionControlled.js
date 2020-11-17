@@ -59,6 +59,8 @@ const API_PROXY_PREFS = [
 
 let extensionControlledContentIds = {
   "privacy.containers": "browserContainersExtensionContent",
+  homepage_override: "browserHomePageExtensionContent",
+  newTabURL: "browserNewTabExtensionContent",
   webNotificationsDisabled: "browserNotificationsPermissionExtensionContent",
   "services.passwordSavingEnabled": "passwordManagerExtensionContent",
   "proxy.settings": "proxyExtensionContent",
@@ -71,6 +73,8 @@ let extensionControlledContentIds = {
 };
 
 const extensionControlledL10nKeys = {
+  homepage_override: "homepage-override",
+  newTabURL: "new-tab-url",
   webNotificationsDisabled: "web-notifications",
   "services.passwordSavingEnabled": "password-saving",
   "privacy.containers": "privacy-containers",

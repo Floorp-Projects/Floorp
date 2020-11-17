@@ -1,11 +1,6 @@
 /* eslint-env webextensions */
 
 const PROXY_PREF = "network.proxy.type";
-const HOMEPAGE_URL_PREF = "browser.startup.homepage";
-const HOMEPAGE_OVERRIDE_KEY = "homepage_override";
-const URL_OVERRIDES_TYPE = "url_overrides";
-const NEW_TAB_KEY = "newTabURL";
-const PREF_SETTING_TYPE = "prefs";
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -26,10 +21,6 @@ const { AddonTestUtils } = ChromeUtils.import(
 );
 AddonTestUtils.initMochitest(this);
 
-const { ExtensionPreferencesManager } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionPreferencesManager.jsm"
-);
-
 const TEST_DIR = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 const CHROME_URL_ROOT = TEST_DIR + "/";
 const PERMISSIONS_URL =
@@ -43,6 +34,24 @@ function getSupportsFile(path) {
   let uri = Services.io.newURI(CHROME_URL_ROOT + path);
   let fileurl = cr.convertChromeURL(uri);
   return fileurl.QueryInterface(Ci.nsIFileURL);
+}
+
+async function installAddon(xpiName) {
+  let filePath = getSupportsFile(`addons/${xpiName}`).file;
+  let install = await AddonManager.getInstallForFile(filePath);
+  if (!install) {
+    throw new Error(`An install was not created for ${filePath}`);
+  }
+  return new Promise((resolve, reject) => {
+    install.addListener({
+      onDownloadFailed: reject,
+      onDownloadCancelled: reject,
+      onInstallFailed: reject,
+      onInstallCancelled: reject,
+      onInstallEnded: resolve,
+    });
+    install.install();
+  });
 }
 
 function waitForMessageChange(
@@ -127,209 +136,89 @@ async function reEnableExtension(addon, labelId) {
 }
 
 add_task(async function testExtensionControlledHomepage() {
-  const ADDON_ID = "@set_homepage";
-  const SECOND_ADDON_ID = "@second_set_homepage";
-
   await openPreferencesViaOpenPreferencesAPI("paneHome", { leaveOpen: true });
-  let homepagePref = () => Services.prefs.getCharPref(HOMEPAGE_URL_PREF);
-  let originalHomepagePref = homepagePref();
+  let doc = gBrowser.contentDocument;
   is(
     gBrowser.currentURI.spec,
     "about:preferences#home",
     "#home should be in the URI for about:preferences"
   );
-  let doc = gBrowser.contentDocument;
+  let homepagePref = () =>
+    Services.prefs.getCharPref("browser.startup.homepage");
+  let originalHomepagePref = homepagePref();
+  let extensionHomepage = "https://developer.mozilla.org/";
+  let controlledContent = doc.getElementById("browserHomePageExtensionContent");
+
   let homeModeEl = doc.getElementById("homeMode");
   let customSettingsSection = doc.getElementById("customSettings");
 
-  is(homeModeEl.itemCount, 3, "The menu list starts with 3 options");
-
-  let promise = TestUtils.waitForCondition(
-    () => homeModeEl.itemCount === 4,
-    "wait for the addon option to be added as an option in the menu list"
-  );
-  let extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
-    manifest: {
-      version: "1.0",
-      name: "set_homepage",
-      applications: {
-        gecko: {
-          id: ADDON_ID,
-        },
-      },
-      chrome_settings_overrides: { homepage: "/home.html" },
-    },
-  });
-  await extension.startup();
-  await promise;
-
   // The homepage is set to the default and the custom settings section is hidden
+  ok(originalHomepagePref != extensionHomepage, "homepage is empty by default");
   is(homeModeEl.disabled, false, "The homepage menulist is enabled");
   is(
     customSettingsSection.hidden,
     true,
     "The custom settings element is hidden"
   );
+  is(controlledContent.hidden, true, "The extension controlled row is hidden");
 
-  let addon = await AddonManager.getAddonByID(ADDON_ID);
-  is(
-    homeModeEl.value,
-    addon.id,
-    "the home select menu's value is set to the addon"
-  );
-
-  promise = TestUtils.waitForPrefChange(HOMEPAGE_URL_PREF);
-  // Set the Menu to the default value
-  homeModeEl.value = "0";
-  homeModeEl.dispatchEvent(new Event("command"));
+  // Install an extension that will set the homepage.
+  let promise = waitForMessageShown("browserHomePageExtensionContent");
+  await installAddon("set_homepage.xpi");
   await promise;
-  is(homepagePref(), originalHomepagePref, "homepage is set back to default");
-  let levelOfControl = await ExtensionPreferencesManager.getLevelOfControl(
-    addon.id,
-    HOMEPAGE_OVERRIDE_KEY,
-    PREF_SETTING_TYPE
-  );
-  is(
-    levelOfControl,
-    "not_controllable",
-    "getLevelOfControl returns not_controllable."
-  );
-  let setting = await ExtensionPreferencesManager.getSetting(
-    HOMEPAGE_OVERRIDE_KEY
-  );
-  ok(!setting.value, "the setting is not set.");
 
-  promise = TestUtils.waitForPrefChange(HOMEPAGE_URL_PREF);
-  // Set the menu to the addon value
-  homeModeEl.value = ADDON_ID;
-  homeModeEl.dispatchEvent(new Event("command"));
-  await promise;
-  ok(
-    homepagePref().startsWith("moz-extension") &&
-      homepagePref().endsWith("home.html"),
-    "Home url should be provided by the extension."
-  );
-  levelOfControl = await ExtensionPreferencesManager.getLevelOfControl(
-    addon.id,
-    HOMEPAGE_OVERRIDE_KEY,
-    PREF_SETTING_TYPE
-  );
-  is(
-    levelOfControl,
-    "controlled_by_this_extension",
-    "getLevelOfControl returns controlled_by_this_extension."
-  );
-  setting = await ExtensionPreferencesManager.getSetting(HOMEPAGE_OVERRIDE_KEY);
-  ok(
-    setting.value.startsWith("moz-extension") &&
-      setting.value.endsWith("home.html"),
-    "The setting value is the same as the extension."
-  );
-
-  // Add a second extension, ensure it is added to the menulist and selected.
-  promise = TestUtils.waitForCondition(
-    () => homeModeEl.itemCount == 5,
-    "addon option is added as an option in the menu list"
-  );
-  let secondExtension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
-    manifest: {
-      version: "1.0",
-      name: "second_set_homepage",
-      applications: {
-        gecko: {
-          id: SECOND_ADDON_ID,
-        },
+  // The homepage has been set by the extension, the user is notified and it isn't editable.
+  let controlledLabel = controlledContent.querySelector("description");
+  is(homepagePref(), extensionHomepage, "homepage is set by extension");
+  Assert.deepEqual(
+    doc.l10n.getAttributes(controlledLabel),
+    {
+      id: "extension-controlled-homepage-override",
+      args: {
+        name: "set_homepage",
       },
-      chrome_settings_overrides: { homepage: "/home2.html" },
     },
-  });
-  await secondExtension.startup();
-  await promise;
-
-  let secondAddon = await AddonManager.getAddonByID(SECOND_ADDON_ID);
-  is(homeModeEl.value, SECOND_ADDON_ID, "home menulist is set to the add-on");
-
-  levelOfControl = await ExtensionPreferencesManager.getLevelOfControl(
-    secondAddon.id,
-    HOMEPAGE_OVERRIDE_KEY,
-    PREF_SETTING_TYPE
+    "The user is notified that an extension is controlling the homepage"
   );
+  is(controlledContent.hidden, false, "The extension controlled row is hidden");
+  is(homeModeEl.disabled, true, "The homepage input is disabled");
+
+  // Disable the extension.
+  let enableMessageShown = waitForEnableMessage(controlledContent.id);
+  doc.getElementById("disableHomePageExtension").click();
+  await enableMessageShown;
+
+  // The user is notified how to enable the extension.
   is(
-    levelOfControl,
-    "controlled_by_this_extension",
-    "getLevelOfControl returns controlled_by_this_extension."
-  );
-  setting = await ExtensionPreferencesManager.getSetting(HOMEPAGE_OVERRIDE_KEY);
-  ok(
-    setting.value.startsWith("moz-extension") &&
-      setting.value.endsWith("home2.html"),
-    "The setting value is the same as the extension."
+    doc.l10n.getAttributes(controlledLabel.querySelector("label")).id,
+    "extension-controlled-enable",
+    "The user is notified of how to enable the extension again"
   );
 
-  promise = TestUtils.waitForCondition(
-    () => homeModeEl.itemCount == 4,
-    "addon option is no longer an option in the menu list after disable, even if it was not selected"
-  );
-  await addon.disable();
-  await promise;
-
-  // Ensure that re-enabling an addon adds it back to the menulist
-  promise = TestUtils.waitForCondition(
-    () => homeModeEl.itemCount == 5,
-    "addon option is added again to the menulist when enabled"
-  );
-  await addon.enable();
-  await promise;
-
-  promise = TestUtils.waitForCondition(
-    () => homeModeEl.itemCount == 4,
-    "addon option is no longer an option in the menu list after disable"
-  );
-  await secondAddon.disable();
-  await promise;
-
-  promise = TestUtils.waitForCondition(
-    () => homeModeEl.itemCount == 5,
-    "addon option is added again to the menulist when enabled"
-  );
-  await secondAddon.enable();
-  await promise;
-
-  promise = TestUtils.waitForCondition(
-    () => homeModeEl.itemCount == 3,
-    "addon options are no longer an option in the menu list after disabling all addons"
-  );
-  await secondAddon.disable();
-  await addon.disable();
-  await promise;
-
-  is(homeModeEl.value, "0", "addon option is not selected in the menu list");
-
-  levelOfControl = await ExtensionPreferencesManager.getLevelOfControl(
-    secondAddon.id,
-    HOMEPAGE_OVERRIDE_KEY,
-    PREF_SETTING_TYPE
-  );
-  is(
-    levelOfControl,
-    "controllable_by_this_extension",
-    "getLevelOfControl returns controllable_by_this_extension."
-  );
-  setting = await ExtensionPreferencesManager.getSetting(HOMEPAGE_OVERRIDE_KEY);
-  ok(!setting.value, "The setting value is back to default.");
+  // The user can dismiss the enable instructions.
+  let hidden = waitForMessageHidden("browserHomePageExtensionContent");
+  controlledLabel.querySelector("image:last-of-type").click();
+  await hidden;
 
   // The homepage elements are reset to their original state.
   is(homepagePref(), originalHomepagePref, "homepage is set back to default");
   is(homeModeEl.disabled, false, "The homepage menulist is enabled");
+  is(controlledContent.hidden, true, "The extension controlled row is hidden");
+
+  // Cleanup the add-on and tab.
+  let addon = await AddonManager.getAddonByID("@set_homepage");
+  // Enable the extension so we get the UNINSTALL event, which is needed by
+  // ExtensionPreferencesManager to clean up properly.
+  // FIXME: See https://bugzilla.mozilla.org/show_bug.cgi?id=1408226.
+  promise = waitForMessageShown("browserHomePageExtensionContent");
+  await addon.enable();
+  await promise;
+  // Do the uninstall now that the enable code has been run.
+  await addon.uninstall();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  await extension.unload();
-  await secondExtension.unload();
 });
 
 add_task(async function testPrefLockedHomepage() {
-  const ADDON_ID = "@set_homepage";
   await openPreferencesViaOpenPreferencesAPI("paneHome", { leaveOpen: true });
   let doc = gBrowser.contentDocument;
   is(
@@ -348,6 +237,7 @@ add_task(async function testPrefLockedHomepage() {
   let homePageInput = doc.getElementById("homePageUrl");
   let prefs = Services.prefs.getDefaultBranch(null);
   let mutationOpts = { attributes: true, attributeFilter: ["disabled"] };
+  let controlledContent = doc.getElementById("browserHomePageExtensionContent");
 
   // Helper functions.
   let getButton = pref =>
@@ -387,39 +277,14 @@ add_task(async function testPrefLockedHomepage() {
     prefs.setCharPref(homePagePref, originalHomepage);
   };
 
-  // Lock or unlock prefs then wait for all mutations to finish.
-  // Expects a bool indicating if we should lock or unlock.
-  let waitForLockMutations = lock => {
-    let mutationsDone = waitForAllMutations();
-    if (lock) {
-      lockPrefs();
-    } else {
-      unlockPrefs();
-    }
-    return mutationsDone;
-  };
-
   ok(
     originalHomepage != extensionHomepage,
     "The extension will change the homepage"
   );
 
   // Install an extension that sets the homepage to MDN.
-  let promise = TestUtils.waitForPrefChange(HOMEPAGE_URL_PREF);
-  let extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
-    manifest: {
-      version: "1.0",
-      name: "set_homepage",
-      applications: {
-        gecko: {
-          id: ADDON_ID,
-        },
-      },
-      chrome_settings_overrides: { homepage: "https://developer.mozilla.org/" },
-    },
-  });
-  await extension.startup();
+  let promise = waitForMessageShown(controlledContent.id);
+  await installAddon("set_homepage.xpi");
   await promise;
 
   // Check that everything is still disabled, homepage didn't change.
@@ -433,9 +298,34 @@ add_task(async function testPrefLockedHomepage() {
     extensionHomepage,
     "The homepage is set by the extension"
   );
+  is(
+    homePageInput.disabled,
+    true,
+    "Homepage custom input is disabled when set by extension"
+  );
+  is(
+    homeModeEl.disabled,
+    true,
+    "Homepage menulist is disabled when set by extension"
+  );
+  buttonPrefs.forEach(pref => {
+    is(
+      getButton(pref).disabled,
+      true,
+      `${pref} is disabled when set by extension`
+    );
+  });
+  is(
+    controlledContent.hidden,
+    false,
+    "The extension controlled message is shown"
+  );
 
   // Lock all of the prefs, wait for the UI to update.
-  await waitForLockMutations(true);
+  let messageHidden = waitForMessageHidden(controlledContent.id);
+
+  lockPrefs();
+  await messageHidden;
 
   // Check that everything is now disabled.
   is(getHomepage(), lockedHomepage, "The reported homepage is set by the pref");
@@ -445,6 +335,11 @@ add_task(async function testPrefLockedHomepage() {
     true,
     "The homepage is disabed when the pref is locked"
   );
+  is(
+    homeModeEl.disabled,
+    true,
+    "Homepage menulist is disabled when the pref is locked"
+  );
 
   buttonPrefs.forEach(pref => {
     is(
@@ -453,69 +348,51 @@ add_task(async function testPrefLockedHomepage() {
       `The ${pref} button is disabled when locked`
     );
   });
-
-  let levelOfControl = await ExtensionPreferencesManager.getLevelOfControl(
-    ADDON_ID,
-    HOMEPAGE_OVERRIDE_KEY,
-    PREF_SETTING_TYPE
-  );
   is(
-    levelOfControl,
-    "not_controllable",
-    "getLevelOfControl returns not_controllable, the pref is locked."
+    controlledContent.hidden,
+    true,
+    "The extension controlled message is hidden when locked"
   );
 
-  // Verify that the UI is selecting the extension's Id in the menulist
-  let unlockedPromise = TestUtils.waitForCondition(
-    () => homeModeEl.value == ADDON_ID,
-    "Homepage menulist value is equal to the extension ID"
-  );
   // Unlock the prefs, wait for the UI to update.
+  let messageShown = waitForMessageShown(controlledContent.id);
   unlockPrefs();
-  await unlockedPromise;
+  await messageShown;
 
+  // Verify that the UI is showing the extension's settings.
   is(
-    homeModeEl.disabled,
-    false,
-    "the home select element is not disabled when the pref is not locked"
+    homePageInput.value,
+    extensionHomepage,
+    "The homepage is set by the extension"
   );
   is(
     homePageInput.disabled,
+    true,
+    "Homepage is disabled when set by extension"
+  );
+  is(
+    homeModeEl.disabled,
+    true,
+    "Homepage menulist is disabled when set by extension"
+  );
+  buttonPrefs.forEach(pref => {
+    is(
+      getButton(pref).disabled,
+      true,
+      `${pref} is disabled when set by extension`
+    );
+  });
+  is(
+    controlledContent.hidden,
     false,
-    "The homepage is enabled when the pref is unlocked"
-  );
-  is(
-    getHomepage(),
-    extensionHomepage,
-    "The homepage is reset to extension page"
-  );
-
-  levelOfControl = await ExtensionPreferencesManager.getLevelOfControl(
-    ADDON_ID,
-    HOMEPAGE_OVERRIDE_KEY,
-    PREF_SETTING_TYPE
-  );
-  is(
-    levelOfControl,
-    "controlled_by_this_extension",
-    "getLevelOfControl returns controlled_by_this_extension after prefs are unlocked."
-  );
-  let setting = await ExtensionPreferencesManager.getSetting(
-    HOMEPAGE_OVERRIDE_KEY
-  );
-  is(
-    setting.value,
-    extensionHomepage,
-    "The setting value is equal to the extensionHomepage."
+    "The extension controlled message is shown when unlocked"
   );
 
   // Uninstall the add-on.
-  promise = TestUtils.waitForPrefChange(HOMEPAGE_URL_PREF);
-  await extension.unload();
+  let addon = await AddonManager.getAddonByID("@set_homepage");
+  promise = waitForEnableMessage(controlledContent.id);
+  await addon.uninstall();
   await promise;
-
-  setting = await ExtensionPreferencesManager.getSetting(HOMEPAGE_OVERRIDE_KEY);
-  ok(!setting, "The setting is gone after the addon is uninstalled.");
 
   // Check that everything is now enabled again.
   is(
@@ -543,7 +420,9 @@ add_task(async function testPrefLockedHomepage() {
   });
 
   // Lock the prefs without an extension.
-  await waitForLockMutations(true);
+  let mutationsDone = waitForAllMutations();
+  lockPrefs();
+  await mutationsDone;
 
   // Check that everything is now disabled.
   is(getHomepage(), lockedHomepage, "The reported homepage is set by the pref");
@@ -556,7 +435,7 @@ add_task(async function testPrefLockedHomepage() {
   is(
     homeModeEl.disabled,
     true,
-    "Homepage menulist is disabled when pref is locked"
+    "Homepage menulist is disabled when prefis locked"
   );
   buttonPrefs.forEach(pref => {
     is(
@@ -567,7 +446,8 @@ add_task(async function testPrefLockedHomepage() {
   });
 
   // Unlock the prefs without an extension.
-  await waitForLockMutations(false);
+  unlockPrefs();
+  await waitForAllMutations();
 
   // Check that everything is enabled again.
   is(
@@ -593,192 +473,81 @@ add_task(async function testPrefLockedHomepage() {
       `The ${pref} button is enabled when unlocked`
     );
   });
+  is(
+    controlledContent.hidden,
+    true,
+    "The extension controlled message is hidden when unlocked with no extension"
+  );
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function testExtensionControlledNewTab() {
-  const ADDON_ID = "@set_newtab";
-  const SECOND_ADDON_ID = "@second_set_newtab";
-  const DEFAULT_NEWTAB = "about:newtab";
-  const NEWTAB_CONTROLLED_PREF = "browser.newtab.extensionControlled";
-
   await openPreferencesViaOpenPreferencesAPI("paneHome", { leaveOpen: true });
+  let doc = gBrowser.contentDocument;
   is(
     gBrowser.currentURI.spec,
     "about:preferences#home",
     "#home should be in the URI for about:preferences"
   );
 
-  let doc = gBrowser.contentDocument;
-  let newTabMenuList = doc.getElementById("newTabMode");
-  // The new tab page is set to the default.
-  is(AboutNewTab.newTabURL, DEFAULT_NEWTAB, "new tab is set to default");
+  let controlledContent = doc.getElementById("browserNewTabExtensionContent");
 
-  let promise = TestUtils.waitForCondition(
-    () => newTabMenuList.itemCount == 3,
-    "addon option is added as an option in the menu list"
-  );
+  // The new tab is set to the default and message is hidden.
+  ok(!AboutNewTab.newTabURL.startsWith("moz-extension:"), "new tab is not set");
+  is(controlledContent.hidden, true, "The extension controlled row is hidden");
+
   // Install an extension that will set the new tab page.
-  let extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
-    manifest: {
-      version: "1.0",
-      name: "set_newtab",
-      applications: {
-        gecko: {
-          id: ADDON_ID,
-        },
-      },
-      chrome_url_overrides: { newtab: "/newtab.html" },
-    },
-  });
-  await extension.startup();
-
+  let promise = waitForMessageShown("browserNewTabExtensionContent");
+  await installAddon("set_newtab.xpi");
   await promise;
-  let addon = await AddonManager.getAddonByID(ADDON_ID);
 
-  is(newTabMenuList.value, ADDON_ID, "New tab menulist is set to the add-on");
-
-  let levelOfControl = await ExtensionPreferencesManager.getLevelOfControl(
-    addon.id,
-    NEW_TAB_KEY,
-    URL_OVERRIDES_TYPE
-  );
-  is(
-    levelOfControl,
-    "controlled_by_this_extension",
-    "getLevelOfControl returns controlled_by_this_extension."
-  );
-  let setting = ExtensionSettingsStore.getSetting(
-    URL_OVERRIDES_TYPE,
-    NEW_TAB_KEY
-  );
+  // The new tab page has been set by the extension and the user is notified.
+  let controlledLabel = controlledContent.querySelector("description");
   ok(
-    setting.value.startsWith("moz-extension") &&
-      setting.value.endsWith("newtab.html"),
-    "The url_overrides is set by this extension"
+    AboutNewTab.newTabURL.startsWith("moz-extension:"),
+    "new tab url is set by extension"
   );
-
-  promise = TestUtils.waitForPrefChange(NEWTAB_CONTROLLED_PREF);
-  // Set the menu to the default value
-  newTabMenuList.value = "0";
-  newTabMenuList.dispatchEvent(new Event("command"));
-  await promise;
-  let newTabPref = Services.prefs.getBoolPref(NEWTAB_CONTROLLED_PREF, false);
-  is(newTabPref, false, "the new tab is not controlled");
-
-  levelOfControl = await ExtensionPreferencesManager.getLevelOfControl(
-    addon.id,
-    NEW_TAB_KEY,
-    URL_OVERRIDES_TYPE
-  );
-  is(
-    levelOfControl,
-    "not_controllable",
-    "getLevelOfControl returns not_controllable."
-  );
-  setting = ExtensionSettingsStore.getSetting(URL_OVERRIDES_TYPE, NEW_TAB_KEY);
-  ok(!setting.value, "The url_overrides is not set by this extension");
-
-  promise = TestUtils.waitForPrefChange(NEWTAB_CONTROLLED_PREF);
-  // Set the menu to a the addon value
-  newTabMenuList.value = ADDON_ID;
-  newTabMenuList.dispatchEvent(new Event("command"));
-  await promise;
-  newTabPref = Services.prefs.getBoolPref(NEWTAB_CONTROLLED_PREF, false);
-  is(newTabPref, true, "the new tab is controlled");
-
-  // Add a second extension, ensure it is added to the menulist and selected.
-  promise = TestUtils.waitForCondition(
-    () => newTabMenuList.itemCount == 4,
-    "addon option is added as an option in the menu list"
-  );
-  let secondExtension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
-    manifest: {
-      version: "1.0",
-      name: "second_set_newtab",
-      applications: {
-        gecko: {
-          id: SECOND_ADDON_ID,
-        },
+  Assert.deepEqual(
+    doc.l10n.getAttributes(controlledLabel),
+    {
+      id: "extension-controlled-new-tab-url",
+      args: {
+        name: "set_newtab",
       },
-      chrome_url_overrides: { newtab: "/newtab2.html" },
     },
-  });
-  await secondExtension.startup();
-  await promise;
-  let secondAddon = await AddonManager.getAddonByID(SECOND_ADDON_ID);
+    "The user is notified that an extension is controlling the new tab page"
+  );
+  is(controlledContent.hidden, false, "The extension controlled row is hidden");
+
+  // Disable the extension.
+  doc.getElementById("disableNewTabExtension").click();
+
+  // Verify the user is notified how to enable the extension.
+  await waitForEnableMessage(controlledContent.id);
   is(
-    newTabMenuList.value,
-    SECOND_ADDON_ID,
-    "New tab menulist is set to the add-on"
+    doc.l10n.getAttributes(controlledLabel.querySelector("label")).id,
+    "extension-controlled-enable",
+    "The user is notified of how to enable the extension again"
   );
 
-  levelOfControl = await ExtensionPreferencesManager.getLevelOfControl(
-    secondAddon.id,
-    NEW_TAB_KEY,
-    URL_OVERRIDES_TYPE
-  );
-  is(
-    levelOfControl,
-    "controlled_by_this_extension",
-    "getLevelOfControl returns controlled_by_this_extension."
-  );
-  setting = ExtensionSettingsStore.getSetting(URL_OVERRIDES_TYPE, NEW_TAB_KEY);
+  // Verify the enable message can be dismissed.
+  let hidden = waitForMessageHidden(controlledContent.id);
+  let dismissButton = controlledLabel.querySelector("image:last-of-type");
+  dismissButton.click();
+  await hidden;
+
+  // Ensure the New Tab page has been reset and there is no message.
   ok(
-    setting.value.startsWith("moz-extension") &&
-      setting.value.endsWith("newtab2.html"),
-    "The url_overrides is set by the second extension"
-  );
-
-  promise = TestUtils.waitForCondition(
-    () => newTabMenuList.itemCount == 3,
-    "addon option is no longer an option in the menu list after disable, even if it was not selected"
-  );
-  await addon.disable();
-  await promise;
-
-  // Ensure that re-enabling an addon adds it back to the menulist
-  promise = TestUtils.waitForCondition(
-    () => newTabMenuList.itemCount == 4,
-    "addon option is added again to the menulist when enabled"
-  );
-  await addon.enable();
-  await promise;
-
-  promise = TestUtils.waitForCondition(
-    () => newTabMenuList.itemCount == 3,
-    "addon option is no longer an option in the menu list after disable"
-  );
-  await secondAddon.disable();
-  await promise;
-
-  promise = TestUtils.waitForCondition(
-    () => newTabMenuList.itemCount == 4,
-    "addon option is added again to the menulist when enabled"
-  );
-  await secondAddon.enable();
-  await promise;
-
-  promise = TestUtils.waitForCondition(
-    () => newTabMenuList.itemCount == 2,
-    "addon options are all removed after disabling all"
-  );
-  await addon.disable();
-  await secondAddon.disable();
-  await promise;
-  is(
-    AboutNewTab.newTabURL,
-    DEFAULT_NEWTAB,
+    !AboutNewTab.newTabURL.startsWith("moz-extension:"),
     "new tab page is set back to default"
   );
+  is(controlledContent.hidden, true, "The extension controlled row is shown");
 
-  // Cleanup the tabs and add-on.
+  // Cleanup the tab and add-on.
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  await extension.unload();
-  await secondExtension.unload();
+  let addon = await AddonManager.getAddonByID("@set_newtab");
+  await addon.uninstall();
 });
 
 add_task(async function testExtensionControlledWebNotificationsPermission() {
@@ -879,11 +648,19 @@ add_task(async function testExtensionControlledHomepageUninstalledAddon() {
       "about:preferences#home",
       "#home should be in the URI for about:preferences"
     );
+    let controlledContent = doc.getElementById(
+      "browserHomePageExtensionContent"
+    );
 
     // The homepage is enabled.
     let homepageInput = doc.getElementById("homePageUrl");
     is(homepageInput.disabled, false, "The homepage input is enabled");
     is(homepageInput.value, "", "The homepage input is empty");
+    is(
+      controlledContent.hidden,
+      true,
+      "The extension controlled row is hidden"
+    );
 
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
