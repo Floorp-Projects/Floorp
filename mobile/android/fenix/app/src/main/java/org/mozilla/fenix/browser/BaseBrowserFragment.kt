@@ -117,6 +117,8 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.home.SharedViewModel
+import org.mozilla.fenix.onboarding.FenixOnboarding
+import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
@@ -174,6 +176,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
     protected var webAppToolbarShouldBeVisible = true
 
     private val sharedViewModel: SharedViewModel by activityViewModels()
+    private val onboarding by lazy { FenixOnboarding(requireContext()) }
 
     @CallSuper
     override fun onCreateView(
@@ -217,6 +220,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
         }
 
         observeTabSelection(requireComponents.core.store)
+
+        if (!onboarding.userHasBeenOnboarded()) {
+            observeTabSource(requireComponents.core.store)
+        }
+
         requireContext().accessibilityManager.addAccessibilityStateChangeListener(this)
     }
 
@@ -841,6 +849,25 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
         }
     }
 
+    @VisibleForTesting
+    @Suppress("ComplexCondition")
+    internal fun observeTabSource(store: BrowserStore) {
+        consumeFlow(store) { flow ->
+            flow.mapNotNull { state ->
+                state.selectedTab
+            }
+                .collect {
+                if (!onboarding.userHasBeenOnboarded() &&
+                    it.content.loadRequest?.triggeredByRedirect != true &&
+                    it.source !in intentSourcesList &&
+                    it.content.url !in onboardingLinksList
+                ) {
+                    onboarding.finish()
+                }
+            }
+        }
+    }
+
     private fun handleTabSelected(selectedTab: TabSessionState) {
         if (!this.isRemoving) {
             updateThemeForSession(selectedTab)
@@ -1206,6 +1233,17 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
         private const val REQUEST_CODE_APP_PERMISSIONS = 3
+
+        val onboardingLinksList: List<String> = listOf(
+            SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
+            SupportUtils.getFirefoxAccountSumoUrl()
+        )
+
+        val intentSourcesList: List<SessionState.Source> = listOf(
+            SessionState.Source.ACTION_SEARCH,
+            SessionState.Source.ACTION_SEND,
+            SessionState.Source.ACTION_VIEW
+        )
     }
 
     override fun onAccessibilityStateChanged(enabled: Boolean) {
