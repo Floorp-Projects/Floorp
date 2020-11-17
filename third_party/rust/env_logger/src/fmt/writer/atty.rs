@@ -9,6 +9,8 @@ from being printed.
 
 #[cfg(feature = "atty")]
 mod imp {
+    use atty;
+
     pub(in crate::fmt) fn is_stdout() -> bool {
         atty::is(atty::Stream::Stdout)
     }

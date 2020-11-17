@@ -164,7 +164,6 @@ impl QPackEncoder {
     }
 
     fn header_ack(&mut self, stream_id: u64) -> Res<()> {
-        self.stats.header_acks_recv += 1;
         let mut new_acked = self.table.get_acked_inserts_cnt();
         if let Some(hb_list) = self.unacked_header_blocks.get_mut(&stream_id) {
             if let Some(ref_list) = hb_list.pop_back() {
@@ -189,7 +188,6 @@ impl QPackEncoder {
     }
 
     fn stream_cancellation(&mut self, stream_id: u64) -> Res<()> {
-        self.stats.stream_cancelled_recv += 1;
         let mut was_blocker = false;
         if let Some(hb_list) = self.unacked_header_blocks.get_mut(&stream_id) {
             debug_assert!(!hb_list.is_empty());
@@ -225,6 +223,7 @@ impl QPackEncoder {
             }
             DecoderInstruction::HeaderAck { stream_id } => self.header_ack(stream_id),
             DecoderInstruction::StreamCancellation { stream_id } => {
+                self.stats.stream_cancelled_recv += 1;
                 self.stream_cancellation(stream_id)
             }
             _ => Ok(()),
@@ -478,8 +477,8 @@ impl QPackEncoder {
     }
 
     #[must_use]
-    pub fn stats(&self) -> Stats {
-        self.stats.clone()
+    pub fn stats(&self) -> &Stats {
+        &self.stats
     }
 
     #[must_use]

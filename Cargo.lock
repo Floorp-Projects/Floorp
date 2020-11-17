@@ -28,6 +28,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ansi_term"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee49baf6cb617b853aa8d93bf420db2383fab46d314482ca2803b40d5fde979b"
+dependencies = [
+ "winapi 0.3.9",
+]
+
+[[package]]
 name = "anyhow"
 version = "1.0.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -277,14 +286,18 @@ dependencies = [
  "cexpr",
  "cfg-if 0.1.10",
  "clang-sys",
+ "clap",
+ "env_logger 0.7.1",
  "lazy_static",
  "lazycell",
+ "log",
  "peeking_take_while",
  "proc-macro2",
  "quote",
  "regex",
  "rustc-hash",
  "shlex",
+ "which",
 ]
 
 [[package]]
@@ -611,11 +624,14 @@ version = "2.31.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f0f16b89cbb9ee36d87483dc939fe9f1e13c05898d56d7b230a0d4dff033a536"
 dependencies = [
+ "ansi_term",
+ "atty",
  "bitflags",
  "strsim",
  "term_size",
  "textwrap",
  "unicode-width",
+ "vec_map",
 ]
 
 [[package]]
@@ -1310,11 +1326,15 @@ dependencies = [
 
 [[package]]
 name = "env_logger"
-version = "0.8.1"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54532e3223c5af90a6a757c90b5c5521564b07e5e7a958681bcd2afad421cdcd"
+checksum = "44533bbbb3bb3c1fa17d9f2e4e38bbbaf8396ba82193c4cb1b6445d711445d36"
 dependencies = [
+ "atty",
+ "humantime",
  "log",
+ "regex",
+ "termcolor",
 ]
 
 [[package]]
@@ -3322,11 +3342,11 @@ dependencies = [
 
 [[package]]
 name = "neqo-common"
-version = "0.4.15"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.15#ae72ce7e6aabd22ef5638d234fbcab3f7142d438"
+version = "0.4.14"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.14#ec00592e3332b7a0eb4b88457a89c24c55bf3974"
 dependencies = [
  "chrono",
- "env_logger 0.8.1",
+ "env_logger 0.7.1",
  "lazy_static",
  "log",
  "qlog",
@@ -3334,8 +3354,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.4.15"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.15#ae72ce7e6aabd22ef5638d234fbcab3f7142d438"
+version = "0.4.14"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.14#ec00592e3332b7a0eb4b88457a89c24c55bf3974"
 dependencies = [
  "bindgen",
  "log",
@@ -3347,8 +3367,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.4.15"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.15#ae72ce7e6aabd22ef5638d234fbcab3f7142d438"
+version = "0.4.14"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.14#ec00592e3332b7a0eb4b88457a89c24c55bf3974"
 dependencies = [
  "log",
  "neqo-common",
@@ -3361,8 +3381,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-qpack"
-version = "0.4.15"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.15#ae72ce7e6aabd22ef5638d234fbcab3f7142d438"
+version = "0.4.14"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.14#ec00592e3332b7a0eb4b88457a89c24c55bf3974"
 dependencies = [
  "lazy_static",
  "log",
@@ -3375,8 +3395,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.4.15"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.15#ae72ce7e6aabd22ef5638d234fbcab3f7142d438"
+version = "0.4.14"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.14#ec00592e3332b7a0eb4b88457a89c24c55bf3974"
 dependencies = [
  "indexmap",
  "lazy_static",
@@ -5605,6 +5625,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e0a7d8bed3178a8fb112199d466eeca9ed09a14ba8ad67718179b4fd5487d0b"
 
 [[package]]
+name = "vec_map"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
+
+[[package]]
 name = "version_check"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5928,6 +5954,15 @@ dependencies = [
  "serde",
  "wgpu-core",
  "wgpu-types",
+]
+
+[[package]]
+name = "which"
+version = "3.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d011071ae14a2f6671d0b74080ae0cd8ebf3a6f8c9589a2cd45f23126fe29724"
+dependencies = [
+ "libc",
 ]
 
 [[package]]

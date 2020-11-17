@@ -52,6 +52,7 @@
 //!
 //!     fn flush(&self) {}
 //! }
+//! # fn main() {}
 //! ```
 //!
 //! [Enabling Logging]: ../index.html#enabling-logging
@@ -91,18 +92,24 @@ pub struct Filter {
 /// ## Example
 ///
 /// ```
-/// # #[macro_use] extern crate log;
-/// # use std::env;
+/// #[macro_use]
+/// extern crate log;
+/// extern crate env_logger;
+///
+/// use std::env;
+/// use std::io;
 /// use env_logger::filter::Builder;
 ///
-/// let mut builder = Builder::new();
+/// fn main() {
+///     let mut builder = Builder::new();
 ///
-/// // Parse a logging filter from an environment variable.
-/// if let Ok(rust_log) = env::var("RUST_LOG") {
-///     builder.parse(&rust_log);
+///     // Parse a logging filter from an environment variable.
+///     if let Ok(rust_log) = env::var("RUST_LOG") {
+///        builder.parse(&rust_log);
+///     }
+///
+///     let filter = builder.build();
 /// }
-///
-/// let filter = builder.build();
 /// ```
 ///
 /// [`Filter`]: struct.Filter.html
@@ -125,15 +132,20 @@ impl Filter {
     /// # Example
     ///
     /// ```rust
+    /// extern crate log;
+    /// extern crate env_logger;
+    ///
     /// use log::LevelFilter;
     /// use env_logger::filter::Builder;
     ///
-    /// let mut builder = Builder::new();
-    /// builder.filter(Some("module1"), LevelFilter::Info);
-    /// builder.filter(Some("module2"), LevelFilter::Error);
+    /// fn main() {
+    ///     let mut builder = Builder::new();
+    ///     builder.filter(Some("module1"), LevelFilter::Info);
+    ///     builder.filter(Some("module2"), LevelFilter::Error);
     ///
-    /// let filter = builder.build();
-    /// assert_eq!(filter.filter(), LevelFilter::Info);
+    ///     let filter = builder.build();
+    ///     assert_eq!(filter.filter(), LevelFilter::Info);
+    /// }
     /// ```
     pub fn filter(&self) -> LevelFilter {
         self.directives
@@ -298,9 +310,9 @@ fn parse_spec(spec: &str) -> (Vec<Directive>, Option<inner::Filter>) {
         );
         return (dirs, None);
     }
-    if let Some(m) = mods {
+    mods.map(|m| {
         for s in m.split(',') {
-            if s.is_empty() {
+            if s.len() == 0 {
                 continue;
             }
             let mut parts = s.split('=');
@@ -340,9 +352,9 @@ fn parse_spec(spec: &str) -> (Vec<Directive>, Option<inner::Filter>) {
                 level: log_level,
             });
         }
-    }
+    });
 
-    let filter = filter.and_then(|filter| match inner::Filter::new(filter) {
+    let filter = filter.map_or(None, |filter| match inner::Filter::new(filter) {
         Ok(re) => Some(re),
         Err(e) => {
             eprintln!("warning: invalid regex filter - {}", e);
@@ -350,7 +362,7 @@ fn parse_spec(spec: &str) -> (Vec<Directive>, Option<inner::Filter>) {
         }
     });
 
-    (dirs, filter)
+    return (dirs, filter);
 }
 
 // Check whether a level and target are enabled by the set of directives.

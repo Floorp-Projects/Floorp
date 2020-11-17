@@ -4,17 +4,13 @@ Using `env_logger::Logger` and the `log::Log` trait directly.
 This example doesn't rely on environment variables, or having a static logger installed.
 */
 
-use env_logger::{Builder, WriteStyle};
-
-use log::{Level, LevelFilter, Log, MetadataBuilder, Record};
-
-fn record() -> Record<'static> {
-    let error_metadata = MetadataBuilder::new()
+fn record() -> log::Record<'static> {
+    let error_metadata = log::MetadataBuilder::new()
         .target("myApp")
-        .level(Level::Error)
+        .level(log::Level::Error)
         .build();
 
-    Record::builder()
+    log::Record::builder()
         .metadata(error_metadata)
         .args(format_args!("Error!"))
         .line(Some(433))
@@ -24,14 +20,16 @@ fn record() -> Record<'static> {
 }
 
 fn main() {
-    let stylish_logger = Builder::new()
-        .filter(None, LevelFilter::Error)
-        .write_style(WriteStyle::Always)
+    use log::Log;
+
+    let stylish_logger = env_logger::Builder::new()
+        .filter(None, log::LevelFilter::Error)
+        .write_style(env_logger::WriteStyle::Always)
         .build();
 
-    let unstylish_logger = Builder::new()
-        .filter(None, LevelFilter::Error)
-        .write_style(WriteStyle::Never)
+    let unstylish_logger = env_logger::Builder::new()
+        .filter(None, log::LevelFilter::Error)
+        .write_style(env_logger::WriteStyle::Never)
         .build();
 
     stylish_logger.log(&record());
