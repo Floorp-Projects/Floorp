@@ -1596,20 +1596,6 @@ pref("media.gmp.trial-create.enabled", true);
 pref("media.gmp-gmpopenh264.visible", true);
 pref("media.gmp-gmpopenh264.enabled", true);
 
-#ifdef XP_MACOSX
-  // These prefs control whether or not a universal build running on
-  // an Apple Silicon machine will attempt to use an x64 Widevine or
-  // OpenH264 plugin. This requires launching the GMP child process
-  // executable in x64 mode. We expect to allow this for Widevine until
-  // an arm64 version of Widevine is made available. We don't expect
-  // to need to allow this for OpenH264.
-  //
-  // Allow a Widevine GMP x64 process to be executed on ARM builds.
-  pref("media.gmp-widevinecdm.allow-x64-plugin-on-arm64", true);
-  // Don't allow an OpenH264 GMP x64 process to be executed on ARM builds.
-  pref("media.gmp-gmpopenh264.allow-x64-plugin-on-arm64", false);
-#endif
-
 // Set Firefox to block autoplay, asking for permission by default.
 pref("media.autoplay.default", 1); // 0=Allowed, 1=Blocked, 5=All Blocked
 
