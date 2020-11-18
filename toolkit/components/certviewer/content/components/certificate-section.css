@@ -5,6 +5,7 @@
 h1 {
   font-size: 1.5em;
   font-weight: lighter;
+  color: white;
   margin: 3em 0 1em;
 }
 
@@ -12,14 +13,12 @@ h1 {
   display: flex;
   text-align: center;
   border-bottom: 1px solid var(--in-content-border-active);
-  box-shadow: var(--card-shadow);
 }
 
 .info-groups {
   display: none;
   outline: none;
-  background-color: var(--in-content-box-background);
-  box-shadow: var(--card-shadow);
+  background-color: var(--in-content-page-background);
   margin-bottom: 2em;
   border-radius: 0 0 4px 4px;
 }
