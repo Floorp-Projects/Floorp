@@ -69,10 +69,6 @@ inline bool ObjectGroup::canPreTenure(const AutoSweepObjectGroup& sweep) {
   return !unknownProperties(sweep);
 }
 
-inline bool ObjectGroup::fromAllocationSite(const AutoSweepObjectGroup& sweep) {
-  return flags(sweep) & OBJECT_FLAG_FROM_ALLOCATION_SITE;
-}
-
 inline void ObjectGroup::setShouldPreTenure(const AutoSweepObjectGroup& sweep,
                                             JSContext* cx) {
   MOZ_ASSERT(canPreTenure(sweep));

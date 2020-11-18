@@ -423,24 +423,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
                                                   newKind);
     }
 
-    jsbytecode* pc = nullptr;
-    RootedScript script(cx);
-    if (IsTypeInferenceEnabled()) {
-      script = cx->currentScript(&pc);
-    }
-
-    Rooted<TypedArrayObject*> obj(
-        cx, newBuiltinClassInstance(cx, allocKind, GenericObject));
-    if (!obj) {
-      return nullptr;
-    }
-
-    if (script && !ObjectGroup::setAllocationSiteObjectGroup(
-                      cx, script, pc, obj, /* singleton = */ false)) {
-      return nullptr;
-    }
-
-    return obj;
+    return newBuiltinClassInstance(cx, allocKind, GenericObject);
   }
 
   static TypedArrayObject* makeInstance(
@@ -491,12 +474,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
     AutoSetNewObjectMetadata metadata(cx);
 
-    jsbytecode* pc = nullptr;
-    RootedScript script(cx);
-    if (IsTypeInferenceEnabled()) {
-      script = cx->currentScript(&pc);
-    }
-
     Rooted<TypedArrayObject*> tarray(
         cx, newBuiltinClassInstance(cx, allocKind, TenuredObject));
     if (!tarray) {
@@ -509,11 +486,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     // won't be any elements to store. Therefore, we set the pointer to
     // nullptr and avoid allocating memory that will never be used.
     tarray->initPrivate(nullptr);
-
-    if (script && !ObjectGroup::setAllocationSiteObjectGroup(
-                      cx, script, pc, tarray, /* singleton = */ false)) {
-      return nullptr;
-    }
 
     return tarray;
   }

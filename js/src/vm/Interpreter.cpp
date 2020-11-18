@@ -382,17 +382,15 @@ JSObject* js::ValueToCallable(JSContext* cx, HandleValue v, int numToSkip,
   return nullptr;
 }
 
-static bool MaybeCreateThisForConstructor(JSContext* cx, const CallArgs& args,
-                                          bool createSingleton) {
+static bool MaybeCreateThisForConstructor(JSContext* cx, const CallArgs& args) {
   if (args.thisv().isObject()) {
     return true;
   }
 
   RootedFunction callee(cx, &args.callee().as<JSFunction>());
   RootedObject newTarget(cx, &args.newTarget().toObject());
-  NewObjectKind newKind = createSingleton ? SingletonObject : GenericObject;
 
-  return CreateThis(cx, callee, newTarget, newKind, args.mutableThisv());
+  return CreateThis(cx, callee, newTarget, GenericObject, args.mutableThisv());
 }
 
 static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
@@ -612,20 +610,8 @@ bool js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args,
   // Create |this| if we're constructing. Switch to the callee's realm to
   // ensure this object has the correct realm.
   AutoRealm ar(cx, state.script());
-  if (construct) {
-    bool createSingleton = false;
-    if (IsTypeInferenceEnabled()) {
-      jsbytecode* pc;
-      if (JSScript* script = cx->currentScript(&pc)) {
-        if (ObjectGroup::useSingletonForNewObject(cx, script, pc)) {
-          createSingleton = true;
-        }
-      }
-    }
-
-    if (!MaybeCreateThisForConstructor(cx, args, createSingleton)) {
-      return false;
-    }
+  if (construct && !MaybeCreateThisForConstructor(cx, args)) {
+    return false;
   }
 
   bool ok = RunScript(cx, state);
@@ -3339,12 +3325,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
               }
             });
 
-        if (construct) {
-          bool createSingleton =
-              ObjectGroup::useSingletonForNewObject(cx, script, REGS.pc);
-          if (!MaybeCreateThisForConstructor(cx, args, createSingleton)) {
-            goto error;
-          }
+        if (construct && !MaybeCreateThisForConstructor(cx, args)) {
+          goto error;
         }
 
         {
@@ -5373,9 +5355,6 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
   //   (script, pc) tuple.
   if (withTemplateGroup) {
     group = baseObject->getGroup(cx, baseObject);
-  } else if (ObjectGroup::useSingletonForAllocationSite(script, pc,
-                                                        JSProto_Object)) {
-    newKind = SingletonObject;
   } else {
     group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Object);
     if (!group) {
@@ -5404,11 +5383,8 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
     return nullptr;
   }
 
-  if (newKind == SingletonObject) {
-    MOZ_ASSERT(obj->isSingleton());
-  } else {
-    obj->setGroup(group);
-  }
+  // TODO(no-TI): clean up. Remove JSOp::NewObjectWithGroup.
+  obj->setGroup(group);
 
   return obj;
 }
@@ -5455,33 +5431,7 @@ ArrayObject* js::NewArrayOperation(
   MOZ_ASSERT(JSOp(*pc) == JSOp::NewArray);
   MOZ_ASSERT(newKind != SingletonObject);
 
-  RootedObjectGroup group(cx);
-  if (ObjectGroup::useSingletonForAllocationSite(script, pc, JSProto_Array)) {
-    newKind = SingletonObject;
-  } else {
-    group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Array);
-    if (!group) {
-      return nullptr;
-    }
-
-    AutoSweepObjectGroup sweep(group);
-    if (group->shouldPreTenure(sweep)) {
-      newKind = TenuredObject;
-    }
-  }
-
-  ArrayObject* obj = NewDenseFullyAllocatedArray(cx, length, nullptr, newKind);
-  if (!obj) {
-    return nullptr;
-  }
-
-  if (newKind == SingletonObject) {
-    MOZ_ASSERT(obj->isSingleton());
-  } else {
-    obj->setGroup(group);
-  }
-
-  return obj;
+  return NewDenseFullyAllocatedArray(cx, length, nullptr, newKind);
 }
 
 ArrayObject* js::NewArrayOperationWithTemplate(JSContext* cx,
