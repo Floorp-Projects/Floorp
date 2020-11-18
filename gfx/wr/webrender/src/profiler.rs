@@ -316,7 +316,7 @@ impl Profiler {
             int("Interned filter data", "", INTERNED_FILTER_DATA, Expected::none()),
             int("Interned backdrops", "", INTERNED_BACKDROPS, Expected::none()),
 
-            int("Texture cache glyphs regions", "", TEXTURE_CACHE_RGBA8_GLYPHS_REGIONS, expected(0..257)),
+            int("Texture cache glyphs regions", "", TEXTURE_CACHE_RGBA8_GLYPHS_REGIONS, expected(0..100)),
             float("Texture cache glyphs mem", "MB", TEXTURE_CACHE_RGBA8_GLYPHS_MEM, expected(0.0..100.0)),
         ];
 
