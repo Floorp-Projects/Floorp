@@ -79,3 +79,27 @@ add_task(async function testModalPrintDialogCancelled() {
     helper.assertDialogClosed();
   });
 });
+
+add_task(async function testPrintDoesNotWaitForPreview() {
+  await PrintHelper.withTestPage(async helper => {
+    helper.addMockPrinter("A printer");
+    await SpecialPowers.pushPrefEnv({
+      set: [["print_printer", "A printer"]],
+    });
+
+    await helper.startPrint({ waitFor: "loadComplete" });
+    await helper.awaitAnimationFrame();
+
+    helper.mockFilePicker("print_does_not_wait_for_preview.pdf");
+    await helper.setupMockPrint();
+    helper.click(helper.get("open-dialog-link"));
+
+    helper.assertDialogHidden();
+    await helper.withClosingFn(() => {
+      helper.resolveShowSystemDialog();
+      helper.resolvePrint();
+    });
+
+    helper.assertDialogClosed();
+  });
+});
