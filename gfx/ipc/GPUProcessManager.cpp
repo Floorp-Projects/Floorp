@@ -484,6 +484,14 @@ void GPUProcessManager::DisableWebRender(wr::WebRenderError aError,
   if (aError != wr::WebRenderError::INITIALIZE) {
     NotifyDisablingWebRender();
   }
+#elif defined(MOZ_WIDGET_GTK)
+  // Hardware compositing should be disabled by default if we aren't using
+  // WebRender. We had to check if it is enabled at all, because it may
+  // already have been forced disabled (e.g. safe mode, headless). It may
+  // still be forced on by the user, and if so, this should have no effect.
+  gfxConfig::SetFailed(Feature::HW_COMPOSITING, FeatureStatus::Blocked,
+                       "Acceleration blocked by platform",
+                       "FEATURE_FAILURE_LOST_WEBRENDER"_ns);
 #endif
 
   if (mProcess) {
