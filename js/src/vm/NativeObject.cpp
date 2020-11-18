@@ -367,27 +367,6 @@ Shape* js::NativeObject::lookupPure(jsid id) {
   return Shape::searchNoHashify(lastProperty(), id);
 }
 
-void NativeObject::setLastPropertyShrinkFixedSlots(Shape* shape) {
-  MOZ_ASSERT(!inDictionaryMode());
-  MOZ_ASSERT(!shape->inDictionary());
-  MOZ_ASSERT(shape->zone() == zone());
-  MOZ_ASSERT(lastProperty()->slotSpan() == shape->slotSpan());
-  MOZ_ASSERT(shape->getObjectClass() == getClass());
-
-  DebugOnly<size_t> oldFixed = numFixedSlots();
-  DebugOnly<size_t> newFixed = shape->numFixedSlots();
-  MOZ_ASSERT(newFixed < oldFixed);
-  MOZ_ASSERT(shape->slotSpan() <= oldFixed);
-  MOZ_ASSERT(shape->slotSpan() <= newFixed);
-  MOZ_ASSERT(numDynamicSlots() == 0);
-  MOZ_ASSERT(calculateDynamicSlots(oldFixed, shape->slotSpan(), getClass()) ==
-             0);
-  MOZ_ASSERT(calculateDynamicSlots(newFixed, shape->slotSpan(), getClass()) ==
-             0);
-
-  setShape(shape);
-}
-
 bool NativeObject::ensureSlotsForDictionaryObject(JSContext* cx,
                                                   uint32_t span) {
   MOZ_ASSERT(inDictionaryMode());

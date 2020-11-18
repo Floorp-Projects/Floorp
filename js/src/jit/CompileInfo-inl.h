@@ -26,8 +26,6 @@ static inline const char* AnalysisModeString(AnalysisMode mode) {
   switch (mode) {
     case Analysis_None:
       return "Analysis_None";
-    case Analysis_DefiniteProperties:
-      return "Analysis_DefiniteProperties";
     case Analysis_ArgumentsUsage:
       return "Analysis_ArgumentsUsage";
     default:
