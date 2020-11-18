@@ -673,7 +673,7 @@ items from that key's value."
             # explicitly
             if c.get("update_channel"):
                 update_channel = c["update_channel"]
-                if isinstance(update_channel, six.text_type):
+                if six.PY2 and isinstance(update_channel, six.text_type):
                     update_channel = update_channel.encode("utf-8")
                 env["MOZ_UPDATE_CHANNEL"] = update_channel
             else:  # let's just give the generic channel based on branch
