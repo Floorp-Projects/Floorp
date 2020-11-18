@@ -154,6 +154,7 @@ def test_manifests_modifier(task, label, symbol, revision, test_manifests):
     if th_info.get("groupSymbol"):
         # Group all backfilled tasks together
         th_info["groupSymbol"] = "{}-bk".format(th_info["groupSymbol"])
+    task.task["tags"]["action"] = "backfill-task"
     return task
 
 

@@ -142,6 +142,17 @@ def is_subset(subset, superset):
             },
             id="retrigger_decision",
         ),
+        pytest.param(
+            {"tags": {"action": "backfill-task"}},
+            {
+                "hookPayload": {
+                    "decision": {
+                        "action": {"cb_name": "retrigger-decision"},
+                    },
+                },
+            },
+            id="retrigger_backfill",
+        ),
     ],
 )
 def test_extract_applicable_action(
