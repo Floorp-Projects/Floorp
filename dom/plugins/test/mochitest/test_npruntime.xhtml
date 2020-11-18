@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Basic Plugin Tests"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript" src="plugin-utils.js"></script>
+  <script type="application/javascript">
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+  </script>
+<body xmlns="http://www.w3.org/1999/xhtml" onload="runTests()">
+<embed id="plugin1" type="application/x-test" width="400" height="400"></embed>
+</body>
+<script class="testbody" type="application/javascript">
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+async function runTests() {
+  var pluginElement = document.getElementById("plugin1");
+  await SimpleTest.promiseWaitForCondition(() => pluginElement.identifierToStringTest !== undefined,
+                                           "Waited too long for plugin to activate");
+
+  ok(pluginElement.identifierToStringTest('foo') == "foo", "identifierToStringTest failed");
+
+  SimpleTest.finish();
+}
+]]>
+</script>
+</window>

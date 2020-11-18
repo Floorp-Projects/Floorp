@@ -1,0 +1,36 @@
+<head>
+  <title>NPN_GetURL called from NPP_Destroy</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+
+  <link rel="stylesheet" type="text/css"
+	href="/tests/SimpleTest/test.css">
+
+<body onload="runTest()">
+  <script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("untriaged");
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  function runTest() {
+    var p = document.getElementById("plugin1");
+    var destroyed = false;
+    p.callOnDestroy(function() {
+      destroyed = true;
+      ok(!p.streamTest("loremipsum.txt", false, null, null,
+                       function(r, t) {
+                         ok(false, "get-during-destroy should have failed");
+                       }, null, true), "NPN_GetURLNotify should fail during NPP_Destroy");
+    });
+    document.body.removeChild(p);
+
+    setTimeout(function() {
+      ok(destroyed, "callback was fired as expected");
+      SimpleTest.finish();
+    }, 1000);
+  }
+  </script>
+
+  <p id="display"></p>
+
+  <embed id="plugin1" type="application/x-test"></embed>

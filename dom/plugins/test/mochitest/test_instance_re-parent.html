@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test re-parentinging an instance's DOM node</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="plugin-utils.js"></script>
+</head>
+<body onload="begin()">
+  <script type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  const MAX_CHECK_PLUGIN_STOPPED_ATTEMPTS = 50;
+  var numCheckPluginStoppedAttempts = 0;
+  var exceptionThrown = false;
+  var p = null;
+  var d1 = null;
+  var d2 = null;
+
+  var destroyed = false;
+
+  function begin() {
+    runTests(function() {
+      // Callback when finished - set plugin to windowed and repeat the tests
+
+      info("Repeating tests with wmode=window");
+      p.setAttribute("wmode", "window");
+      d1.appendChild(p);
+
+      // Forces the plugin to be respawned
+      // eslint-disable-next-line no-self-assign
+      p.src = p.src;
+
+      destroyed = false;
+      exceptionThrown = false;
+      runTests(function() {
+        SimpleTest.finish();
+      });
+    });
+  }
+
+  function checkPluginStopped(callback, param) {
+    if (numCheckPluginStoppedAttempts < MAX_CHECK_PLUGIN_STOPPED_ATTEMPTS &&
+        !destroyed) {
+      ++numCheckPluginStoppedAttempts;
+      SimpleTest.executeSoon(function() {
+          checkPluginStopped(callback, param);
+      });
+    } else {
+      info("Number of check plugin stopped attempts: " +
+           numCheckPluginStoppedAttempts);
+      callback(param);
+    }
+  }
+
+  function runTests(callback) {
+    p = document.getElementById("plugin1");
+    d1 = document.getElementById("div1");
+    d2 = document.getElementById("div2");
+
+    // First tests involve moving the instance from one div to another.
+    p.startWatchingInstanceCount();
+    p.callOnDestroy(function() {
+      destroyed = true;
+    });
+
+    try {
+      d1.removeChild(p);
+    } catch (e) {
+      exceptionThrown = true;
+    }
+    is(exceptionThrown, false, "Testing for exception after removeChild.");
+
+    try {
+      d2.appendChild(p);
+    } catch (e) {
+      exceptionThrown = true;
+    }
+    is(exceptionThrown, false, "Testing for exception after appendChild.");
+
+    is(destroyed, false, "No instances should have been destroyed at this point.");
+    is(p.getInstanceCount(), 0, "No new instances should have been created at this point.");
+
+    // Wait for the event loop to spin and ensure the plugin still wasn't touched
+    SimpleTest.executeSoon(function() {
+      is(destroyed, false, "No instances should have been destroyed at this point.");
+      is(p.getInstanceCount(), 0, "No new instances should have been created at this point.");
+
+      d2.removeChild(p);
+      checkPluginStopped(continueTestsAfterPluginDestruction, callback);
+    });
+  }
+
+  function continueTestsAfterPluginDestruction(callback) {
+    d2.appendChild(p);
+    SimpleTest.executeSoon(function() {
+      try {
+        is(p.getInstanceCount(), 1, "One new instance should have been created at this point.");
+      } catch (e) {
+        exceptionThrown = true;
+      }
+      is(exceptionThrown, false, "Testing for exception getting instance count from plugin.");
+
+      p.stopWatchingInstanceCount();
+      callback.apply(null);
+    });
+  }
+  </script>
+
+  <p id="display"></p>
+
+  <div id="div1">
+    <!-- This embed has to have a "src" attribute. Part of this test involves seeing if we
+         properly restart plugins that have been added back to a document without a change
+         in URL. Not re-loading an object when the URL hasn't changed is a shortcut used for
+         some object types. Without a URL, this won't be tested. -->
+    <embed id="plugin1" src="loremipsum.txt" type="application/x-test" width="200" height="200"></embed>
+  </div>
+  <div id="div2">
+  </div>
+</body>
+</html>

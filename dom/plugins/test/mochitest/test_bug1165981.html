@@ -1,0 +1,74 @@
+<html>
+  <head>
+     <title>Bug 1165981 Test</title>
+
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="plugin-utils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+    <script class="testbody" type="application/javascript">
+      "use strict";
+
+      SimpleTest.waitForExplicitFinish();
+
+      function findPlugin(pluginName) {
+          for (var i = 0; i < navigator.plugins.length; i++) {
+            var plugin = navigator.plugins[i];
+            if (plugin.name === pluginName) {
+              return plugin;
+            }
+          }
+          return null;
+      }
+
+      function findMimeType(mimeTypeType) {
+          for (var i = 0; i < navigator.mimeTypes.length; i++) {
+            var mimeType = navigator.mimeTypes[i];
+            if (mimeType.type === mimeTypeType) {
+              return mimeType;
+            }
+          }
+          return null;
+      }
+
+      function createNode(id, type) {
+          let obj = document.createElement("object");
+          obj.type = type;
+          obj.id = id;
+          obj.width = 200;
+          obj.height = 200;
+          document.body.appendChild(obj);
+      }
+
+      async function run() {
+        ok(await SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Shockwave Flash"), "Should find allowed test flash plugin");
+        ok(!await SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Third Test Plug-in"), "Should not find disallowed plugin");
+        await SpecialPowers.pushPermissions([{type: "plugin:flash", allow: true, context: document}]);
+
+        createNode("plugin-flash", "application/x-shockwave-flash-test");
+        createNode("disallowedPlugin", "application/x-third-test");
+        var pluginElement = document.getElementById("plugin-flash");
+        is(pluginElement.identifierToStringTest("foo"), "foo", "Should be able to call a function provided by the plugin");
+
+        pluginElement = document.getElementById("disallowedPlugin");
+        is(typeof pluginElement.identifierToStringTest, "undefined", "Should NOT be able to call a function on a disallowed plugin");
+
+        ok(navigator.plugins["Shockwave Flash"], "Should have queried a plugin named 'Shockwave Flash'");
+        ok(!navigator.plugins["Third Test Plug-in"], "Should NOT have queried a disallowed plugin named 'Third Test Plug-in'");
+
+        ok(findPlugin("Shockwave Flash"), "Should have found a plugin named 'Shockwave Flash'");
+        ok(!findPlugin("Third Test Plug-in"), "Should NOT found a disallowed plugin named 'Third Test Plug-in'");
+
+        ok(navigator.mimeTypes["application/x-shockwave-flash-test"], "Should have queried a MIME type named 'application/x-shockwave-flash-test'");
+        ok(!navigator.mimeTypes["application/x-third-test"], "Should NOT have queried a disallowed type named 'application/x-third-test'");
+
+        ok(findMimeType("application/x-shockwave-flash-test"), "Should have found a MIME type named 'application/x-shockwave-flash-test'");
+        ok(!findMimeType("application/x-third-test"), "Should NOT have found a disallowed MIME type named 'application/x-third-test'");
+
+        SimpleTest.finish();
+      }
+    </script>
+
+  <body onload="run()">
+  </body>
+</html>

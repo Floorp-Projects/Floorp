@@ -1728,6 +1728,65 @@ add_task(async function test_select_input_text_password() {
   */
 });
 
+add_task(async function test_click_to_play_blocked_plugin() {
+  await test_contextmenu(
+    "#test-plugin",
+    [
+      "context-navigation",
+      null,
+      [
+        "context-back",
+        false,
+        "context-forward",
+        false,
+        "context-reload",
+        true,
+        "context-bookmarkpage",
+        true,
+      ],
+      null,
+      "---",
+      null,
+      "context-ctp-play",
+      true,
+      "context-ctp-hide",
+      true,
+      "---",
+      null,
+      "context-savepage",
+      true,
+      ...(hasPocket ? ["context-pocket", true] : []),
+      "---",
+      null,
+      "context-sendpagetodevice",
+      true,
+      [],
+      null,
+      "---",
+      null,
+      "context-viewbgimage",
+      false,
+      "context-selectall",
+      true,
+      "---",
+      null,
+      "context-viewsource",
+      true,
+      "context-viewinfo",
+      true,
+    ],
+    {
+      maybeScreenshotsPresent: true,
+      preCheckContextMenuFn() {
+        setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
+      },
+      postCheckContextMenuFn() {
+        getTestPlugin().enabledState = Ci.nsIPluginTag.STATE_ENABLED;
+      },
+    }
+  );
+});
+
 add_task(async function test_longdesc() {
   await test_contextmenu("#test-longdesc", [
     "context-viewimage",

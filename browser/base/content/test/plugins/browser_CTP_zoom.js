@@ -11,6 +11,11 @@ var gTestBrowser = null;
 add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
+    setTestPluginEnabledState(
+      Ci.nsIPluginTag.STATE_ENABLED,
+      "Second Test Plug-in"
+    );
     Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
     FullZoom.reset(); // must be called before closing the tab we zoomed!
     gBrowser.removeCurrentTab();
@@ -25,6 +30,17 @@ add_task(async function() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gTestBrowser = gBrowser.selectedBrowser;
 
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
+
+  let popupNotification = PopupNotifications.getNotification(
+    "click-to-play-plugins",
+    gTestBrowser
+  );
+  ok(
+    !popupNotification,
+    "Test 1, Should not have a click-to-play notification"
+  );
+
   await promiseTabLoadEvent(
     gBrowser.selectedTab,
     gTestRoot + "plugin_zoom.html"
@@ -32,6 +48,8 @@ add_task(async function() {
 
   // Work around for delayed PluginBindingAttached
   await promiseUpdatePluginBindings(gTestBrowser);
+
+  await promisePopupNotification("click-to-play-plugins");
 });
 
 // Enlarges the zoom level 4 times and tests that the overlay is
@@ -51,10 +69,8 @@ add_task(async function() {
       let plugin = doc.getElementById("test");
       let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
       Assert.ok(
-        overlay &&
-          !overlay.classList.contains("visible") &&
-          overlay.getAttribute("blockall") == "blockall",
-        "Overlay should be present for zoom change count " + args.count
+        overlay && overlay.classList.contains("visible"),
+        "Overlay should be visible for zoom change count " + args.count
       );
     });
   }

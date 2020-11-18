@@ -1,0 +1,67 @@
+<html>
+<head>
+  <title>Basic NPAPI Redirect Handling</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+</head>
+<body onload="runTests()">
+  <script class="testbody" type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+    var p = null;
+
+    var redirectingURL = "307-xo-redirect.sjs";
+    var redirectTargetURL = "http://example.org/tests/dom/plugins/test/mochitest/loremipsum.txt";
+
+    var expectedWriteURL = "";
+    var expectedNotifyStatus = -1;
+
+    function redirectCallback(url, httpStatus) {
+      is(url, redirectTargetURL, "Test for expected redirect notify URL.");
+      is(httpStatus, 307, "Test for expected http redirect status.");
+    }
+
+    function writeCallback(url) {
+      is(url, expectedWriteURL, "Test for expected stream write URL.");
+    }
+
+    function notifyCallback(status, data) {
+      is(status, expectedNotifyStatus, "Test for expected stream notification status.");
+      runNextTest();
+    }
+
+    function test1() {
+      expectedWriteURL = "";
+      expectedNotifyStatus = 2;
+
+      p.streamTest(redirectingURL, false, null, writeCallback, notifyCallback, redirectCallback, false);
+    }
+
+    function test2() {
+      expectedWriteURL = redirectTargetURL;
+      expectedNotifyStatus = 0;
+
+      p.streamTest(redirectingURL, false, null, writeCallback, notifyCallback, redirectCallback, true);
+    }
+
+    var tests = [test1, test2];
+    var currentTest = -1;
+    function runNextTest() {
+      currentTest++;
+      if (currentTest < tests.length) {
+        tests[currentTest]();
+      } else {
+        SimpleTest.finish();
+      }
+    }
+
+    function runTests() {
+      p = document.getElementById("plugin1");
+      runNextTest();
+    }
+  </script>
+
+  <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
+</body>
+</html>

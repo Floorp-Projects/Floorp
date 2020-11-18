@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test copying text from browser to plugin</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="plugin-utils.js"></script>
+
+  <script class="testbody" type="text/javascript">
+function runTests() {
+  var text = " some text \n to copy 'n paste ";
+  var textElt = document.getElementById("input");
+  var plugin = document.getElementById("plugin1");
+
+  // Make sure we wait for the clipboard
+  SimpleTest.waitForClipboard(text, () => {
+    textElt.focus();
+    textElt.value = text;
+    textElt.select();
+    SpecialPowers.wrap(textElt).editor.copy();
+  }, () => {
+    is(plugin.getClipboardText(), text);
+    SimpleTest.finish();
+  }, () => {
+    ok(false, "Failed to set the clipboard text!");
+    SimpleTest.finish();
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  </script>
+</head>
+
+<body onload="runTests()">
+  <embed id="plugin1" type="application/x-test" width="400" height="400"></embed>
+  <textarea id="input"></textarea>
+
+</body>
+</html>

@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<html xmlns="http://www.w3.org/1999/xhtml" title="Test Plugin Clipping: Plugins in Transforms">
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+var child;
+function childDone() {
+  child.close();
+  SimpleTest.executeSoon(SimpleTest.finish);
+}
+
+if (navigator.platform.indexOf("Mac") == 0) {
+  todo(false, "Mac plugins do not run in windowed mode");
+} else {
+  SimpleTest.waitForExplicitFinish();
+  child = window.open("plugin_clipping_helper_transformed.xhtml", "", "width=620,height=320");
+}
+]]>
+</script>
+
+</body>
+</html>

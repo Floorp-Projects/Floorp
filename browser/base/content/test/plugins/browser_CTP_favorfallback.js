@@ -8,6 +8,7 @@ var gPluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Shockwave Flash");
     Services.prefs.clearUserPref("plugins.favorfallback.mode");
     Services.prefs.clearUserPref("plugins.favorfallback.rules");
   });
@@ -15,6 +16,10 @@ add_task(async function() {
 
 add_task(async function() {
   Services.prefs.setCharPref("plugins.favorfallback.mode", "follow-ctp");
+  setTestPluginEnabledState(
+    Ci.nsIPluginTag.STATE_CLICKTOPLAY,
+    "Shockwave Flash"
+  );
 });
 
 /* The expected behavior of each testcase is documented with its markup
@@ -76,8 +81,8 @@ add_task(async function() {
           );
           is(
             ctpPlugin.pluginFallbackType,
-            Ci.nsIObjectLoadingContent.PLUGIN_ALTERNATE,
-            "Plugins always use alternate content"
+            Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
+            "Plugin is CTP"
           );
         }
 

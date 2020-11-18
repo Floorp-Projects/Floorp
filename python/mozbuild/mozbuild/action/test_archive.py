@@ -52,6 +52,22 @@ TEST_HARNESS_BINS = [
 
 TEST_HARNESS_DLLS = ["crashinjectdll", "mozglue"]
 
+TEST_PLUGIN_DLLS = [
+    "npsecondtest",
+    "npswftest",
+    "nptest",
+    "nptestjava",
+    "npthirdtest",
+]
+
+TEST_PLUGIN_DIRS = [
+    "JavaTest.plugin/**",
+    "SecondTest.plugin/**",
+    "Test.plugin/**",
+    "ThirdTest.plugin/**",
+    "npswftest.plugin/**",
+]
+
 GMP_TEST_PLUGIN_DIRS = [
     "gmp-clearkey/**",
     "gmp-fake/**",
@@ -220,7 +236,27 @@ ARCHIVE_FILES = {
                 )
                 for f in TEST_HARNESS_DLLS
             ],
-            'dest': 'bin',
+            "dest": "bin",
+        },
+        {
+            "source": buildconfig.topobjdir,
+            "base": "dist/plugins",
+            "patterns": [
+                "%s%s%s"
+                % (
+                    buildconfig.substs["DLL_PREFIX"],
+                    f,
+                    buildconfig.substs["DLL_SUFFIX"],
+                )
+                for f in TEST_PLUGIN_DLLS
+            ],
+            "dest": "bin/plugins",
+        },
+        {
+            "source": buildconfig.topobjdir,
+            "base": "dist/plugins",
+            "patterns": TEST_PLUGIN_DIRS,
+            "dest": "bin/plugins",
         },
         {
             "source": buildconfig.topobjdir,
@@ -496,51 +532,6 @@ ARCHIVE_FILES = {
             "pattern": "**",
             "dest": "netwerk/test/http3serverDB",
         },
-        {
-            'source': buildconfig.topsrcdir,
-            'pattern': 'build/common_virtualenv_packages.txt'
-        },
-        {
-            'source': buildconfig.topsrcdir,
-            'pattern': 'build/mach_virtualenv_packages.txt'
-        },
-        {
-            'source': buildconfig.topsrcdir,
-            'pattern': 'mach/**'
-        },
-        {
-            'source': buildconfig.topsrcdir,
-            'pattern': 'testing/web-platform/tests/tools/third_party/certifi/**'
-        },
-        {
-            'source': buildconfig.topsrcdir,
-            'pattern': 'testing/mozharness/**'
-        },
-        {
-            'source': buildconfig.topsrcdir,
-            'pattern': 'browser/config/**'
-        },
-        {
-            'source': buildconfig.topobjdir,
-            'base': '_tests/modules',
-            'pattern': '**',
-            'dest': 'bin/modules'
-        },
-        {
-            'source': buildconfig.topobjdir,
-            'base': 'dist/bin',
-            'patterns': ["browser/**", "chrome/**", "chrome.manifest",
-                         "components/**", "http3server", "*.ini",
-                         "localization/**", "modules/**",
-                         "update.locale", "greprefs.js"],
-            'dest': 'bin',
-        },
-        {
-            'source': buildconfig.topsrcdir,
-            'base': 'netwerk/test/http3serverDB',
-            'pattern': '**',
-            'dest': 'netwerk/test/http3serverDB',
-        }
     ],
     "condprof": [
         {

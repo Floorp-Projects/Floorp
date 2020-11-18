@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=427744
+-->
+<head>
+  <title>Test for Bug 427744</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=427744">Mozilla Bug 427744</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 427744 **/
+
+var firstPlugin = navigator.plugins["Test Plug-in"];
+ok(firstPlugin, "Should have seen the test plugin");
+is(firstPlugin.version, "1.0.0.0", "Should have seen the right test plugin version");
+
+var secondPlugin = navigator.plugins["Second Test Plug-in"];
+ok(secondPlugin, "Should have seen the second test plugin");
+is(secondPlugin.version, "1.0.0.0", "Should have seen the right second test plugin version");
+
+</script>
+</pre>
+</body>
+</html>

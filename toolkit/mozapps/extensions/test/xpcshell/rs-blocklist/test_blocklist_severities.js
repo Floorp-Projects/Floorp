@@ -88,6 +88,39 @@ var ADDONS = [
   },
 ];
 
+var PLUGINS = [
+  // Tests how the blocklist affects a disabled plugin
+  new MockPluginTag(
+    { name: "test_bug455906_1", version: "5" },
+    Ci.nsIPluginTag.STATE_DISABLED
+  ),
+  // Tests how the blocklist affects an enabled plugin
+  new MockPluginTag(
+    { name: "test_bug455906_2", version: "5" },
+    Ci.nsIPluginTag.STATE_ENABLED
+  ),
+  // Tests how the blocklist affects an enabled plugin, to be disabled by the notification
+  new MockPluginTag(
+    { name: "test_bug455906_3", version: "5" },
+    Ci.nsIPluginTag.STATE_ENABLED
+  ),
+  // Tests how the blocklist affects a disabled plugin that was already warned about
+  new MockPluginTag(
+    { name: "test_bug455906_4", version: "5" },
+    Ci.nsIPluginTag.STATE_DISABLED
+  ),
+  // Tests how the blocklist affects an enabled plugin that was already warned about
+  new MockPluginTag(
+    { name: "test_bug455906_5", version: "5" },
+    Ci.nsIPluginTag.STATE_ENABLED
+  ),
+  // Tests how the blocklist affects an already blocked plugin
+  new MockPluginTag(
+    { name: "test_bug455906_6", version: "5" },
+    Ci.nsIPluginTag.STATE_ENABLED
+  ),
+];
+
 var gNotificationCheck = null;
 
 // Don't need the full interface, attempts to call other methods will just
@@ -150,6 +183,21 @@ const BLOCKLIST_DATA = {
         versionRange: [],
       },
     ],
+    // Block 4-6:
+    plugins: [
+      {
+        matchName: "^test_bug455906_4$",
+        versionRange: [{ severity: "0" }],
+      },
+      {
+        matchName: "^test_bug455906_5$",
+        versionRange: [{ severity: "1" }],
+      },
+      {
+        matchName: "^test_bug455906_6$",
+        versionRange: [{ severity: "2" }],
+      },
+    ],
   },
   warn: {
     // warn for all test add-ons:
@@ -157,6 +205,13 @@ const BLOCKLIST_DATA = {
       guid: a.id,
       versionRange: [{ severity: "-1" }],
     })),
+    // warn for all plugins with a regex:
+    plugins: [
+      {
+        matchName: "^test_bug455906",
+        versionRange: [{ severity: "-1" }],
+      },
+    ],
   },
   block: {
     // block all test add-ons:
@@ -165,6 +220,14 @@ const BLOCKLIST_DATA = {
       blockID: a.id,
       versionRange: [],
     })),
+    // block all plugins with a regex:
+    plugins: [
+      {
+        matchName: "^test_bug455906",
+        versionRange: [],
+        blockID: "test_bug455906_plugin",
+      },
+    ],
   },
   empty: {
     // Block a dummy so there's a change:
@@ -174,6 +237,8 @@ const BLOCKLIST_DATA = {
         versionRange: [],
       },
     ],
+    // Need an empty list to force clearing things:
+    plugins: [],
   },
 };
 
@@ -181,6 +246,12 @@ async function loadBlocklist(id, callback) {
   gNotificationCheck = callback;
 
   await AddonTestUtils.loadBlocklistRawData(BLOCKLIST_DATA[id]);
+}
+
+async function check_plugin_state(plugin) {
+  let blocklistState = await Blocklist.getPluginBlocklistState(plugin);
+  return `${plugin.disabled},${blocklistState ==
+    Services.blocklist.STATE_BLOCKED}`;
 }
 
 function create_blocklistURL(blockID) {
@@ -228,6 +299,13 @@ async function checkInitialState() {
     softDisabled: false,
     appDisabled: true,
   });
+
+  equal(await check_plugin_state(PLUGINS[0]), "true,false");
+  equal(await check_plugin_state(PLUGINS[1]), "false,false");
+  equal(await check_plugin_state(PLUGINS[2]), "false,false");
+  equal(await check_plugin_state(PLUGINS[3]), "true,false");
+  equal(await check_plugin_state(PLUGINS[4]), "false,false");
+  equal(await check_plugin_state(PLUGINS[5]), "false,true");
 }
 
 function checkAddonState(addon, state) {
@@ -241,7 +319,10 @@ add_task(async function setup() {
 
   // Load the initial blocklist into the profile to check add-ons start in the
   // right state.
+  // Make sure to do this before we touch the plugin service, since that
+  // will force a blocklist load.
   await AddonTestUtils.loadBlocklistRawData(BLOCKLIST_DATA.start);
+  mockPluginHost(PLUGINS);
 
   for (let addon of ADDONS) {
     await createAddon(addon);
@@ -296,6 +377,9 @@ add_task(async function test_1() {
     appDisabled: true,
   });
 
+  // We've overridden the plugin host so we cannot tell what that would have
+  // initialised the plugins as
+
   // Put the add-ons into the base state
   await addons[0].disable();
   await addons[4].enable();
@@ -305,10 +389,29 @@ add_task(async function test_1() {
 
   await loadBlocklist("warn", args => {
     dump("Checking notification pt 2\n");
+    // Note: in the XML version, this notifies for 4 items - 2 add-ons and 2 plugins.
     // This test is artificial, we don't notify for add-ons anymore, see
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1257565#c111 . Cleaning this up
     // should happen but this patchset is too huge as it is so I'm deferring it.
     equal(args.list.length, 2);
+
+    for (let addon of args.list) {
+      if (addon.item instanceof Ci.nsIPluginTag) {
+        switch (addon.item.name) {
+          case "test_bug455906_2":
+            ok(!addon.blocked);
+            break;
+          case "test_bug455906_3":
+            ok(!addon.blocked);
+            addon.disable = true;
+            break;
+          default:
+            do_throw("Unknown plugin: " + addon.item.name);
+        }
+      } else {
+        do_throw("Everything here should be a plugin, what is this?!");
+      }
+    }
   });
 
   await promiseRestartManager();
@@ -322,6 +425,7 @@ add_task(async function test_1() {
     softDisabled: true,
     appDisabled: false,
   });
+  equal(await check_plugin_state(PLUGINS[2]), "true,false");
 
   info("The blocked add-on should have changed to soft disabled");
   checkAddonState(addons[5], {
@@ -334,6 +438,7 @@ add_task(async function test_1() {
     softDisabled: true,
     appDisabled: true,
   });
+  equal(await check_plugin_state(PLUGINS[5]), "true,false");
 
   info("These should have been unchanged");
   checkAddonState(addons[0], {
@@ -354,10 +459,16 @@ add_task(async function test_1() {
     softDisabled: false,
     appDisabled: false,
   });
+  equal(await check_plugin_state(PLUGINS[0]), "true,false");
+  equal(await check_plugin_state(PLUGINS[1]), "false,false");
+  equal(await check_plugin_state(PLUGINS[3]), "true,false");
+  equal(await check_plugin_state(PLUGINS[4]), "false,false");
 
   // Back to starting state
   await addons[2].enable();
   await addons[5].enable();
+  PLUGINS[2].enabledState = Ci.nsIPluginTag.STATE_ENABLED;
+  PLUGINS[5].enabledState = Ci.nsIPluginTag.STATE_ENABLED;
 
   await promiseRestartManager();
   await loadBlocklist("start");
@@ -370,6 +481,38 @@ add_task(async function test_pt3() {
   await loadBlocklist("block", args => {
     dump("Checking notification pt 3\n");
     equal(args.list.length, 3);
+
+    for (let addon of args.list) {
+      if (addon.item instanceof Ci.nsIPluginTag) {
+        switch (addon.item.name) {
+          case "test_bug455906_2":
+            ok(addon.blocked);
+            break;
+          case "test_bug455906_3":
+            ok(addon.blocked);
+            break;
+          case "test_bug455906_5":
+            ok(addon.blocked);
+            break;
+          default:
+            do_throw("Unknown addon: " + addon.item.name);
+        }
+      } else {
+        switch (addon.item.id) {
+          case "test_bug455906_2@tests.mozilla.org":
+            ok(addon.blocked);
+            break;
+          case "test_bug455906_3@tests.mozilla.org":
+            ok(addon.blocked);
+            break;
+          case "test_bug455906_5@tests.mozilla.org":
+            ok(addon.blocked);
+            break;
+          default:
+            do_throw("Unknown addon: " + addon.item.id);
+        }
+      }
+    }
   });
 
   await promiseRestartManager();
@@ -398,6 +541,11 @@ add_task(async function test_pt3() {
     softDisabled: false,
     appDisabled: true,
   });
+  equal(await check_plugin_state(PLUGINS[0]), "true,true");
+  equal(await check_plugin_state(PLUGINS[1]), "false,true");
+  equal(await check_plugin_state(PLUGINS[2]), "false,true");
+  equal(await check_plugin_state(PLUGINS[3]), "true,true");
+  equal(await check_plugin_state(PLUGINS[4]), "false,true");
 
   // Should have gained the blocklist state but no longer be soft disabled
   checkAddonState(addons[3], {
@@ -428,6 +576,28 @@ add_task(async function test_pt3() {
     create_blocklistURL(addons[4].id)
   );
 
+  // All plugins have the same blockID on the test
+  equal(
+    await Blocklist.getPluginBlockURL(PLUGINS[0]),
+    create_blocklistURL("test_bug455906_plugin")
+  );
+  equal(
+    await Blocklist.getPluginBlockURL(PLUGINS[1]),
+    create_blocklistURL("test_bug455906_plugin")
+  );
+  equal(
+    await Blocklist.getPluginBlockURL(PLUGINS[2]),
+    create_blocklistURL("test_bug455906_plugin")
+  );
+  equal(
+    await Blocklist.getPluginBlockURL(PLUGINS[3]),
+    create_blocklistURL("test_bug455906_plugin")
+  );
+  equal(
+    await Blocklist.getPluginBlockURL(PLUGINS[4]),
+    create_blocklistURL("test_bug455906_plugin")
+  );
+
   // Shouldn't be changed
   checkAddonState(addons[5], {
     userDisabled: false,
@@ -439,6 +609,7 @@ add_task(async function test_pt3() {
     softDisabled: false,
     appDisabled: true,
   });
+  equal(await check_plugin_state(PLUGINS[5]), "false,true");
 
   // Back to starting state
   await loadBlocklist("start");
@@ -447,6 +618,7 @@ add_task(async function test_pt3() {
 add_task(async function test_pt4() {
   let addon = await AddonManager.getAddonByID(ADDONS[4].id);
   await addon.enable();
+  PLUGINS[4].enabledState = Ci.nsIPluginTag.STATE_ENABLED;
 
   await promiseRestartManager();
   await checkInitialState();
@@ -454,7 +626,7 @@ add_task(async function test_pt4() {
   await loadBlocklist("empty", args => {
     dump("Checking notification pt 4\n");
     // See note in other callback - we no longer notify for non-blocked add-ons.
-    ok(false, "Should not get a notification as there are no blocked addons.");
+    ok(false, "Should not get a notification as there are no blocked plugins.");
   });
 
   await promiseRestartManager();
@@ -467,6 +639,7 @@ add_task(async function test_pt4() {
     softDisabled: false,
     appDisabled: false,
   });
+  equal(await check_plugin_state(PLUGINS[5]), "false,false");
 
   // Should get re-enabled
   checkAddonState(addons[3], {
@@ -501,4 +674,9 @@ add_task(async function test_pt4() {
     softDisabled: false,
     appDisabled: true,
   });
+  equal(await check_plugin_state(PLUGINS[0]), "true,false");
+  equal(await check_plugin_state(PLUGINS[1]), "false,false");
+  equal(await check_plugin_state(PLUGINS[2]), "false,false");
+  equal(await check_plugin_state(PLUGINS[3]), "true,false");
+  equal(await check_plugin_state(PLUGINS[4]), "false,false");
 });

@@ -1,0 +1,33 @@
+<html>
+<head>
+  <title>NPAPI NPN_PostURL NPStream Test</title>
+  <script type="text/javascript" 
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" 
+          src="pluginstream.js"></script>
+  <script type="text/javascript" src="plugin-utils.js"></script>
+  <script type="text/javascript">
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+  </script>
+  <link rel="stylesheet" type="text/css" 
+        href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <p id="display"></p>
+
+  <iframe id="testframe" name="testframe" onload="frameLoaded()"></iframe>
+
+  <!--
+   - In this test, a stream is sent to the plugin via NPP_NewStream, 
+   - NP_NORMAL.  When the stream is destroyed, the plugin posts the
+   - stream content to post.sjs via NPN_PostURL, with a frame specified
+   - to display the post's response.  Post.sjs just reflects
+   - the body of the post back in the HTTP response, so the original
+   - stream content should end up being displayed in the frame.   
+   -->
+  <embed src="loremipsum.txt" streammode="normal"
+         frame="testframe" posturl="post.sjs" postmode="frame"
+         id="embedtest" style="width: 400px; height: 100px;"
+         type="application/x-test"></embed>
+</body>
+</html>

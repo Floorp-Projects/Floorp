@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+object {
+  width: 200px;
+  height: 200px;
+}
+
+.testcase {
+  position: relative;
+  margin-bottom: 5px;
+}
+
+.cover {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: green;
+}
+</style>
+</head>
+<body>
+
+  <div id="testcase1" class="testcase" shouldshow="true"
+       style="top: -100px">
+    <!-- Should show overlay even though the top part is outside
+       of the page. -->
+    <object type="application/x-test"></object>
+  </div>
+
+  <div id="testcase2" class="testcase" shouldshow="true"
+       style="left: -100px">
+    <!-- Should show overlay even though the left part is outside
+       of the page. -->
+    <object type="application/x-test"></object>
+  </div>
+
+  <div id="testcase3" class="testcase" shouldshow="false"
+       style="left: -210px">
+    <!-- The object is entirely outside of the page, so the overlay
+         should NOT show. -->
+    <object type="application/x-test"></object>
+  </div>
+
+  <div id="testcase4" class="testcase" shouldshow="true">
+    <!-- Should show overlay even though the top-left corner is covered. -->
+    <div class="cover" style="top: 0; left: 0"></div>
+    <object type="application/x-test"></object>
+  </div>
+
+  <div id="testcase5" class="testcase" shouldshow="true">
+    <!-- Should show overlay even though the top-right corner is covered. -->
+    <div class="cover" style="top: 0; left: 180px"></div>
+    <object type="application/x-test"></object>
+  </div>
+
+  <div id="testcase6" class="testcase" shouldshow="true">
+    <!-- Should show overlay even though the bottom-left corner is covered. -->
+    <div class="cover" style="top: 180px; left: 0"></div>
+    <object type="application/x-test"></object>
+  </div>
+
+
+  <div id="testcase7" class="testcase" shouldshow="true">
+    <!-- Should show overlay even though the bottom-right corner is covered. -->
+    <div class="cover" style="top: 180px; left: 180px"></div>
+    <object type="application/x-test"></object>
+  </div>
+
+  <div id="testcase8" class="testcase" shouldshow="true">
+    <!-- Should show overlay even though the center is covered. -->
+    <div class="cover" style="top: 90px; left: 90px"></div>
+    <object type="application/x-test"></object>
+  </div>
+
+  <div id="testcase9" class="testcase" shouldshow="true">
+    <!-- Should show overlay even though multiple points are covered,
+       but not all of them. -->
+    <div class="cover" style="top: 0; left: 0"></div>
+    <div class="cover" style="top: 0; left: 180px"></div>
+    <div class="cover" style="top: 180px; left: 0"></div>
+    <div class="cover" style="top: 180px; left: 180px"></div>
+    <object type="application/x-test"></object>
+  </div>
+
+  <div id="testcase10" class="testcase" shouldshow="true">
+    <!-- Another case where 4 are covered, but not all. -->
+    <div class="cover" style="top: 90px; left: 90px"></div>
+    <div class="cover" style="top: 0; left: 180px"></div>
+    <div class="cover" style="top: 180px; left: 0"></div>
+    <div class="cover" style="top: 180px; left: 180px"></div>
+    <object type="application/x-test"></object>
+  </div>
+
+  <div id="testcase11" class="testcase" shouldshow="false">
+    <!-- All corners and center are covered here, so in this
+         case the overlay should NOT show. -->
+    <div class="cover" style="top: 0; left: 0"></div>
+    <div class="cover" style="top: 0; left: 180px"></div>
+    <div class="cover" style="top: 180px; left: 0"></div>
+    <div class="cover" style="top: 180px; left: 180px"></div>
+    <div class="cover" style="top: 90px; left: 90px"></div>
+    <object type="application/x-test"></object>
+  </div>
+
+  <div id="testcase12" class="testcase" shouldshow="false">
+        <!-- All corners and center are covered here, by a single
+        element. In this case the overlay should NOT show. -->
+    <div class="cover" style="width: 200px; height:200px"></div>
+    <object type="application/x-test"></object>
+  </div>
+
+</body>
+</html>

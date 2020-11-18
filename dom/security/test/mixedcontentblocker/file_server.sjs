@@ -106,7 +106,7 @@ function handleRequest(request, response)
       break;
 
     case "object":
-      response.setHeader("Content-Type", "application/x-test-match", false);
+      response.setHeader("Content-Type", "application/x-test", false);
       break;
 
    case "xhr":

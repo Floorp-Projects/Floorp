@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<html xmlns="http://www.w3.org/1999/xhtml" title="Test Plugin Clipping: Plugins and Tables">
+<head>
+  <style>
+  embed { width:300px; height:200px; display:block; }
+  </style>
+</head>
+<body>
+
+<!-- Use a XUL element here so we can get its screenX/Y -->
+<hbox style="height:10px; position:absolute; left:0; top:0; z-index:-100;" id="h1"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <hbox style="width:100px;"></hbox><hbox id="h2"/>
+</hbox>
+
+<embed id="p1" type="application/x-test" wmode="window"
+       style="position:absolute; top:0; left:0;"></embed>
+<table style="width:300px; height:100px; position:absolute; top:100px; left:0; background:white;">
+</table>
+<embed id="p2" type="application/x-test" wmode="window"
+       style="position:absolute; top:200px; left:0;"></embed>
+<table style="width:300px; height:300px; position:absolute; top:300px; left:0; background:white; border-collapse:collapse;">
+</table>
+
+<script src="plugin_clipping_lib.js"></script>
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+function runTests() {
+  // p1 is partially covered by a table with an opaque background
+  checkClipRegion("p1", [[0, 0, 300, 100]]);
+  // p2 is partially covered by a table with an opaque background
+  checkClipRegion("p2", [[0, 0, 300, 100]]);
+
+  window.opener.SimpleTest.finish();
+  window.close();
+}
+
+]]>
+</script>
+
+</body>
+</html>

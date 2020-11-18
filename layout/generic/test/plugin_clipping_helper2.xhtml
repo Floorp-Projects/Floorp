@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<html xmlns="http://www.w3.org/1999/xhtml" title="Test Plugin Clipping: Dynamic Tests">
+<head>
+  <style>
+  embed { width:300px; height:200px; display:block; }
+  </style>
+</head>
+<body>
+
+<!-- Use a XUL element here so we can get its screenX/Y -->
+<hbox style="height:10px; position:absolute; left:0; top:0; z-index:-100;" id="h1"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <hbox style="width:100px;"></hbox><hbox id="h2"/>
+</hbox>
+
+<div id="d1" style="width:200px; overflow:hidden; position:absolute; top:0; left:0;">
+  <embed id="p1" type="application/x-test" wmode="window" style="position:relative"></embed>
+</div>
+<div id="d2" style="width:200px; height:200px; overflow:hidden; position:absolute; top:100px; left:0;">
+  <embed id="p2" type="application/x-test" wmode="window"></embed>
+  <div id="zbox" style="position:absolute; left:50px; top:50px; width:100px; height:100px; background:yellow;">
+  </div>
+</div>
+
+<div id="scroll"
+     style="position:absolute; top:0; left:0; width:300px; height:400px; overflow:scroll;">
+  <div id="sbox"
+       style="margin-top:350px; margin-left:50px; margin-bottom:1000px; width:100px; height:100px; background:blue;"></div>
+</div>
+
+<script src="plugin_clipping_lib.js"></script>
+<script class="testbody" type="application/javascript">
+<![CDATA[
+var scroll = document.getElementById("scroll");
+var zbox = document.getElementById("zbox");
+var sbox = document.getElementById("sbox");
+var p1 = document.getElementById("p1");
+var d2 = document.getElementById("d2");
+
+function runTests() {
+
+  checkClipRegion("p1", [[0, 0, 200, 100]]);
+  checkClipRegion("p2", [[0, 0, 200, 50], [0, 50, 50, 150], [150, 50, 200, 150], [0, 150, 200, 200]]);
+
+  scroll.scrollTop = 150;
+
+  // A non-zero timeout is needed on X11 (unless an XSync could be performed)
+  // to delay an OOP plugin's X requests enough so that the X server processes
+  // them after the parent processes requests (for the changes above).
+  setTimeout(part2, 1000);
+}
+
+function part2() {
+  checkClipRegion("p2", [[0, 0, 200, 50], [0, 50, 50, 200], [150, 50, 200, 200]]);
+
+  zbox.style.zIndex = -1;
+
+  setTimeout(part3, 1000);
+}
+
+function part3() {
+  checkClipRegion("p2", [[0, 0, 200, 100], [0, 100, 50, 200], [150, 100, 200, 200]]);
+
+  sbox.style.background = "";
+
+  setTimeout(part4, 1000);
+}
+
+function part4() {
+  checkClipRegion("p2", [[0, 0, 200, 200]]);
+  
+  p1.style.zIndex = 1;
+
+  setTimeout(part5, 1000);
+}
+
+function part5() {
+  checkClipRegion("p1", [[0, 0, 200, 200]]);
+  checkClipRegion("p2", [[0, 100, 200, 200]]);
+
+  // Test subpixel stuff
+  p1.style.zIndex = -1;
+  zbox.style.zIndex = 1;
+  zbox.style.top = "50.3px;"
+  d2.style.top = "100.3px";
+
+  setTimeout(done, 1000);
+}
+
+function done() {
+  checkClipRegionNoBounds("p2", [[0, 0, 200, 50], [0, 50, 50, 150], [150, 50, 200, 150], [0, 150, 200, 200]]);
+
+  window.opener.SimpleTest.finish();
+  window.close();
+}
+
+]]>
+</script>
+
+</body>
+</html>

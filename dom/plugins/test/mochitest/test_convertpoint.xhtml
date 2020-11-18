@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Basic Plugin Tests"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript" src="plugin-utils.js"></script>
+  <script type="application/javascript">
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+  </script>
+<body xmlns="http://www.w3.org/1999/xhtml" onload="runTests()">
+<embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
+</body>
+<script class="testbody" type="application/javascript">
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+async function runTests() {
+  var pluginElement = document.getElementById("plugin1");
+  await SimpleTest.promiseWaitForCondition(() => pluginElement.convertPointX !== undefined,
+                                           "Waited too long for plugin to activate");
+  // Poll to see if the plugin is in the right place yet.
+  // Check if x-coordinate 0 in plugin space is 0 in window space. If it is,
+  // the plugin hasn't been placed yet.
+  if (pluginElement.convertPointX(1, 0, 0, 2) == 0) {
+    setTimeout(runTests, 0);
+    return;
+  }
+
+  var domWindowUtils = window.windowUtils;
+
+  var pluginRect = pluginElement.getBoundingClientRect();
+  var pluginX = pluginRect.left + (window.mozInnerScreenX - window.screenX);
+  var pluginY = pluginRect.top + (window.mozInnerScreenY - window.screenY);
+
+  var windowX = window.screenX;
+  var windowY = window.screenY;
+  var windowHeight = window.outerHeight;
+
+  var screenHeight = window.screen.height;
+
+  // arbitrary coordinates of test point in plugin top-left origin terms
+  var xOffset = 5;
+  var yOffset = 5;
+
+  var NPCoordinateSpacePluginX = 0 + xOffset;
+  var NPCoordinateSpacePluginY = 0 + yOffset;
+
+  var NPCoordinateSpaceWindowX = pluginX + xOffset;
+  var NPCoordinateSpaceWindowY = (windowHeight - pluginY) - yOffset;
+
+  var NPCoordinateSpaceFlippedWindowX = pluginX + xOffset;
+  var NPCoordinateSpaceFlippedWindowY = pluginY + yOffset;
+
+  var NPCoordinateSpaceScreenX = windowX + pluginX + xOffset;
+  var NPCoordinateSpaceScreenY = ((screenHeight - windowY) - pluginY) - yOffset;
+
+  var NPCoordinateSpaceFlippedScreenX = windowX + pluginX + xOffset;
+  var NPCoordinateSpaceFlippedScreenY = windowY + pluginY + yOffset;
+
+  // these are in coordinate space enumeration order
+  var xValues = new Array(NPCoordinateSpacePluginX, NPCoordinateSpaceWindowX, NPCoordinateSpaceFlippedWindowX, NPCoordinateSpaceScreenX, NPCoordinateSpaceFlippedScreenX);
+  var yValues = new Array(NPCoordinateSpacePluginY, NPCoordinateSpaceWindowY, NPCoordinateSpaceFlippedWindowY, NPCoordinateSpaceScreenY, NPCoordinateSpaceFlippedScreenY);
+
+  var i;
+  for (i = 0; i < 5; i = i + 1) {
+    var sourceCoordSpaceValue = i + 1;
+    var j;
+    for (j = 0; j < 5; j = j + 1) {
+      var destCoordSpaceValue = j + 1;
+      xResult = pluginElement.convertPointX(sourceCoordSpaceValue, xValues[i], yValues[i], destCoordSpaceValue);
+      yResult = pluginElement.convertPointY(sourceCoordSpaceValue, xValues[i], yValues[i], destCoordSpaceValue);
+      is(xResult, xValues[j], "convertPointX: space " + sourceCoordSpaceValue + " to space " + destCoordSpaceValue + " mismatch");
+      is(yResult, yValues[j], "convertPointY: space " + sourceCoordSpaceValue + " to space " + destCoordSpaceValue + " mismatch");
+    }
+  }
+
+  SimpleTest.finish();
+}
+]]>
+</script>
+</window>

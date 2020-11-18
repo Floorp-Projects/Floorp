@@ -1,0 +1,58 @@
+<head>
+  <title>Plugin crashing</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+
+<body>
+  <script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  window.frameLoaded = function frameLoaded_toCrash() {
+    SimpleTest.expectChildProcessCrash();
+
+    var iframe = document.getElementById("iframe1");
+    var p = iframe.contentDocument.getElementById("plugin1");
+
+    p.setColor("FFFF00FF");
+
+    try {
+      p.crash();
+      ok(false, "p.crash() should throw an exception");
+    } catch (e) {
+      ok(true, "p.crash() should throw an exception");
+    }
+
+    // Create random identifiers to test bug 560213
+    for (var i = 0; i < 5; ++i) {
+      var r = "rid_" + Math.floor(Math.random() * 10000 + 1);
+      try {
+        ok(!(r in p), "unknown identifier in crashed plugin should fail silently");
+      } catch (e) {
+        ok(false, "unknown identifier check threw");
+      }
+    }
+
+    try {
+      p.setColor("FFFF0000");
+      ok(false, "p.setColor should throw after the plugin crashes");
+    } catch (e) {
+      ok(true, "p.setColor should throw after the plugin crashes");
+    }
+
+    window.frameLoaded = function reloaded() {
+      var p1 = iframe.contentDocument.getElementById("plugin1");
+      try {
+        p1.setColor("FF00FF00");
+        ok(true, "Reloading worked");
+      } catch (e) {
+        ok(false, "Reloading didn't give us a usable plugin");
+      }
+      SimpleTest.finish();
+    };
+
+    iframe.contentWindow.location.reload();
+  };
+
+  </script>
+  <iframe id="iframe1" src="crashing_subpage.html" width="600" height="600"></iframe>

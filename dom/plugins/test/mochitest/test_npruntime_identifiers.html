@@ -1,0 +1,66 @@
+<html>
+<head>
+  <title>NPN_Invoke Tests</title>
+  <script type="text/javascript" 
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="plugin-utils.js"></script>
+  <link rel="stylesheet" type="text/css" 
+        href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <p id="display"></p>
+
+  <script class="testbody" type="application/javascript">
+  // //
+  // This test exercises NP identifiers by querying the reflector to make sure
+  // that identifiers are translated to values correctly.
+  
+  SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  var testsRun = 0;
+
+  function doTest() {
+    SpecialPowers.gc();
+
+    var reflector = document.getElementById("subframe").contentDocument.getElementById("plugin1").getReflector();
+
+    var i, prop, randomnumber;
+
+    for (i = 0; i < 20; ++i) {
+      randomnumber = Math.floor(Math.random() * 1001);
+      prop = "prop" + randomnumber;
+      is(reflector[prop], prop, "Property " + prop);
+    }
+
+    for (i = -10; i < 0; ++i) {
+      is(reflector[i], String(i), "Property " + i);
+      prop = "prop" + i;
+      is(reflector[prop], prop, "Property " + prop);
+    }
+
+    for (i = 0; i < 10; ++i) {
+      is(reflector[i], i, "Property " + i);
+      prop = "prop" + i;
+      is(reflector[prop], prop, "Property " + prop);
+    }
+
+    is(reflector.a, "a", "Property .a");
+    is(reflector.a, "a", "Property ['a']");
+    reflector = null;
+
+    SpecialPowers.gc();
+
+    ++testsRun;
+    if (testsRun == 3) {
+      SimpleTest.finish();
+    } else {
+      document.getElementById("subframe").contentWindow.location.reload(true);
+    }
+  }
+  </script>
+
+  <iframe id="subframe" src="npruntime_identifiers_subpage.html" onload="doTest()"></iframe>
+
+</body>
+</html>

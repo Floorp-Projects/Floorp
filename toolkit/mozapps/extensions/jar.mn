@@ -9,6 +9,8 @@ toolkit.jar:
   content/mozapps/extensions/extensions.js                      (content/extensions.js)
   content/mozapps/extensions/blocklist.xhtml                    (content/blocklist.xhtml)
   content/mozapps/extensions/blocklist.js                       (content/blocklist.js)
+  content/mozapps/extensions/pluginPrefs.xhtml                  (content/pluginPrefs.xhtml)
+  content/mozapps/extensions/pluginPrefs.js                     (content/pluginPrefs.js)
   content/mozapps/extensions/OpenH264-license.txt               (content/OpenH264-license.txt)
   content/mozapps/extensions/aboutaddons.html                   (content/aboutaddons.html)
   content/mozapps/extensions/aboutaddons.js                     (content/aboutaddons.js)

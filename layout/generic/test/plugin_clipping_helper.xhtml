@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<html xmlns="http://www.w3.org/1999/xhtml" title="Test Plugin Clipping">
+<head>
+  <style>
+  embed { width:200px; height:200px; display:block; }
+  iframe { border:none; }
+  </style>
+</head>
+<body>
+
+<!-- Use a XUL element here so we can get its screenX/Y -->
+<hbox style="height:10px; position:absolute; left:0; top:0; z-index:-100;" id="h1"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <hbox style="width:100px;"></hbox><hbox id="h2"/>
+</hbox>
+
+<!-- Non-clipped plugin -->
+<embed id="p1" type="application/x-test" wmode="window"
+       style="position:absolute; left:300px; top:0"></embed>
+<!-- Clipped to the top and left by the viewport -->
+<embed id="p2" type="application/x-test" wmode="window"
+       style="position:absolute; left:-100px; top:-100px;"></embed>
+<!-- Clipped by a scrollable DIV -->
+<div style="overflow:auto; width:200px; height:200px;
+            position:absolute; left:100px; top:0;">
+  <div style="position:relative; left:-100px; top:-100px;">
+    <embed id="p3" type="application/x-test" wmode="window"></embed>
+  </div>
+</div>
+<!-- Clipped by a scrollable DIV *and* to the viewport -->
+<div style="overflow:auto; width:200px; height:200px; position:absolute; top:100px; left:-100px;">
+  <div style="position:relative; top:-100px;">
+    <embed id="p4" type="application/x-test" wmode="window"></embed>
+  </div>
+</div>
+<!-- Clipped by an iframe -->
+<iframe id="f1" style="position:absolute; left:200px; top:200px; width:200px; height:200px;"
+        src="data:text/html,&lt;embed style='position:absolute; left:-100px; top:-100px; width:200px; height:200px;' id='p5' type='application/x-test' wmode='window'&gt;"></iframe>
+
+<script src="plugin_clipping_lib.js"></script>
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+function runTests() {
+  checkClipRegion("p1", [[0, 0, 200, 200]]);
+  checkClipRegion("p2", [[100, 100, 200, 200]]);
+  checkClipRegion("p3", [[100, 100, 200, 200]]);
+  checkClipRegion("p4", [[100, 100, 200, 200]]);
+  checkClipRegionForFrame("f1", "p5", [[100, 100, 200, 200]]);
+
+  window.opener.SimpleTest.finish();
+  window.close();
+}
+]]>
+</script>
+
+</body>
+</html>

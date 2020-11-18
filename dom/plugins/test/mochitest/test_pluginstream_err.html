@@ -1,0 +1,174 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=517078
+
+Tests for plugin stream error conditions.
+-->
+<head>
+  <title>NPAPI Stream Error Tests</title>
+  <script type="text/javascript" 
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="plugin-utils.js"></script>
+  <link rel="stylesheet" type="text/css" 
+        href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="startTests()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=517078">
+  Mozilla Bug 517078</a> - Plugin Stream Error Tests
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<div id="test">
+<script class="testbody" type="text/javascript">
+// //
+// These tests verify that nothing "bad" happens when a plugin returns an
+// error from one of the NPP_ stream functions.  "Bad" is defined here
+// as the plugin being terminated, or NPP_ stream functions being
+// called inappropriately by the browser after the plugin has returned
+// a stream error.
+//
+
+function $(id) { return document.getElementById(id); }
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+
+var tests = [
+  {
+    "src": "loremipsum.txt",
+    "streammode": "normal",
+    "functiontofail": "npp_newstream",
+    "failurecode": "1",
+    "frame": "testframe",
+  },
+  {
+    "src": "loremipsum.txt",
+    "streammode": "normal",
+    "functiontofail": "npp_newstream",
+    "failurecode": "3",
+    "frame": "testframe",
+  },
+  {
+    "src": "loremipsum.txt",
+    "streammode": "normal",
+    "functiontofail": "npp_newstream",
+    "failurecode": "5",
+    "frame": "testframe",
+  },
+  {
+    "geturl": "loremipsum.txt",
+    "streammode": "normal",
+    "functiontofail": "npp_newstream",
+    "failurecode": "1",
+    "frame": "testframe",
+  },
+  {
+    "src": "loremipsum.txt",
+    "streammode": "normal",
+    "functiontofail": "npp_write",
+    "frame": "testframe",
+  },
+  {
+    "src": "loremipsum.txt",
+    "streammode": "asfile",
+    "functiontofail": "npp_write",
+    "frame": "testframe",
+  },
+  {
+    "src": "loremipsum.txt",
+    "streammode": "normal",
+    "functiontofail": "npp_destroystream",
+    "failurecode": "1",
+    "frame": "testframe",
+  },
+];
+
+function iframeonload(evt) {
+  // We have to use SpecialPowers because nptest.cpp prepends
+  // data: whichs makes the frame cross origin with the including page.
+  var wrappedDoc = SpecialPowers.wrap(evt.target).contentDocument;
+  var contentLength = wrappedDoc.body.innerHTML.length;
+  var plugin = gTestWindow.document.getElementById("embedtest");
+  var functionToFail = plugin.getAttribute("functiontofail");
+  if (contentLength > 0) {
+    is(wrappedDoc.body.innerHTML, "pass",
+      "test frame has unexpected content");
+    setTimeout(function() {
+      // This verifies that the plugin hasn't been unloaded, and that
+      // no calls to NPP_ functions have been made unexpectedly.
+      is(plugin.getError(), "pass", "plugin reported an error");
+      gTestWindow.close();
+      setTimeout(runNextTest, 10);
+    }, functionToFail == "npp_newstream" ? 500 : 10);
+  }
+}
+
+var index = 0;
+var gTestWindow;
+function runNextTest() {
+  if (index == tests.length * 2) {
+    SimpleTest.finish();
+    return;
+  }
+
+  gTestWindow = window.open("plugin_window.html",
+                            "",
+                            "width=620,height=320");
+}
+
+function continueTest() {
+  // We run each test as an embed and an object, as their initial stream
+  // handling differs.
+  var tag = index % 2 ? "embed" : "object";
+  var test = tests[Math.floor(index / 2)];
+
+  var p = gTestWindow.document.createElement("p");
+  p.textContent = "Plugin Stream Test " + Number(index);
+  gTestWindow.document.getElementById("test").appendChild(p);
+
+  if (test.frame) {
+    var iframe = gTestWindow.document.createElement("iframe");
+    iframe.name = test.frame;
+    iframe.onload = iframeonload;
+    gTestWindow.document.getElementById("test").appendChild(iframe);
+  }
+
+  var plugin = gTestWindow.document.createElement(tag);
+  plugin.setAttribute("id", "embedtest");
+  plugin.setAttribute("style", "width: 400px; height: 100px;");
+  plugin.setAttribute("type", "application/x-test");
+  for (var name in test) {
+    if (tag == "embed") {
+      plugin.setAttribute(name, test[name]);
+    } else if (name == "src") {
+      plugin.setAttribute("data", test[name]);
+    } else {
+      var param = document.createElement("param");
+      param.name = name;
+      param.value = test[name];
+      plugin.appendChild(param);
+    }
+  }
+  gTestWindow.document.getElementById("test").appendChild(plugin);
+
+  gTestWindow.document.getElementById("test")
+                      .appendChild(document.createElement("br"));
+
+  index++;
+}
+
+function startTests() {
+  SpecialPowers.pushPrefEnv({"set": [
+    ["security.data_uri.block_toplevel_data_uri_navigations", false],
+  ]}, runNextTest);
+}
+
+</script>
+</div>
+</body>
+</html>
+

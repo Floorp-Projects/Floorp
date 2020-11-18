@@ -1,0 +1,33 @@
+<html>
+<head>
+  <title>NPN_Timer Tests</title>
+  <script type="text/javascript" 
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="plugin-utils.js"></script>
+  <link rel="stylesheet" type="text/css" 
+        href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runTests()">
+  <script class="testbody" type="application/javascript">
+  
+  SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  function pluginTimerTestFinish(result) {
+    ok(result, "timer tests completed");
+    SimpleTest.finish();
+  }
+  
+  function runTests() {
+    var plugin = document.getElementById("plugin1");
+    plugin.timerTest("pluginTimerTestFinish");
+  }
+  </script>
+
+  <p id="display"></p>
+
+  <embed id="plugin1" type="application/x-test" width="400" height="100">
+  </embed>
+
+ </body>
+ </html>

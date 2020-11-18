@@ -8,6 +8,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=720130
   <title>Test for Bug 720130</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+  <script type="application/javascript">
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+  </script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -15,12 +19,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=720130
 <p id="display"></p>
 <div id="content">
   <input>
-  <object data="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAATklEQVRYhe3SIQ4AIBADwf7/04elBAtrVlSduGnSTDJ7cuT1PQJwwO+Hl7sAGAA07gjAAfgIBeAAoHFHAA7ARygABwCNOwJwAD5CATRgAYXh+kypw86nAAAAAElFTkSuQmCC"></object>
+  <object type="application/x-test"></object>
   <button>foo</button>
-  <object type="application/x-shockwave-flash"></object>
-  <object tabindex='0' type="application/x-shockwave-flash"></object>
-  <object data="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAATklEQVRYhe3SIQ4AIBADwf7/04elBAtrVlSduGnSTDJ7cuT1PQJwwO+Hl7sAGAA07gjAAfgIBeAAoHFHAA7ARygABwCNOwJwAD5CATRgAYXh+kypw86nAAAAAElFTkSuQmCC"></object>
-  <object tabindex='0' data="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAATklEQVRYhe3SIQ4AIBADwf7/04elBAtrVlSduGnSTDJ7cuT1PQJwwO+Hl7sAGAA07gjAAfgIBeAAoHFHAA7ARygABwCNOwJwAD5CATRgAYXh+kypw86nAAAAAElFTkSuQmCC"></object>
+  <object tabindex='0' type="application/x-test"></object>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -48,14 +49,8 @@ function checkFocus() {
          "third focused element should be the button");
       break;
     case 3:
-      ok(document.activeElement != document.getElementsByTagName('object')[1],
-         "fourth focused element should not be the plugin object");
-      ok(document.activeElement != document.getElementsByTagName('object')[2],
-         "fourth focused element should not be the plugin object with tabindex");
-      ok(document.activeElement != document.getElementsByTagName('object')[3],
-         "fourth focused element should not be the image object without tabindex");
-      is(document.activeElement, document.getElementsByTagName('object')[4],
-         "fourth focused element should be the image object with tabindex");
+      is(document.activeElement, document.getElementsByTagName('object')[1],
+         "fourth focused element should be the object");
       break;
   }
 
@@ -69,7 +64,7 @@ function doTest() {
 
   // Preliminary check: tabindex should be 0 on the object.
   is(document.getElementsByTagName('object')[0].tabIndex, 0,
-     "the element shouldn't get focus while navigating in the document");
+     "the plugin shouldn't get focus while navigating in the document");
 
   document.addEventListener("focus", function() {
     checkFocus();
@@ -80,7 +75,14 @@ function doTest() {
     }
 
     document.removeEventListener("focus", arguments.callee, true);
-    SimpleTest.finish();
+
+    // Just make sure that .focus() still works.
+    var o = document.getElementsByTagName('object')[0];
+    o.onfocus = function() {
+      SimpleTest.finish();
+      o.onfocus = null;
+    };
+    o.focus();
   }, true);
 
   synthesizeKey("KEY_Tab");

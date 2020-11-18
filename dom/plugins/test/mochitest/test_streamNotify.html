@@ -1,0 +1,100 @@
+<head>
+  <title>NPN_Get/PostURLNotify tests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+
+<body onload="runTests()">
+  <script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("untriaged");
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  var pending = 5;
+  function testDone() {
+    dump("testDone: " + pending + "\n");
+    --pending;
+
+    // Wait for a bit so that any unexpected notifications from the
+    // malformed data or null-post tests are received.
+    if (0 == pending)
+      window.setTimeout(SimpleTest.finish, 2000);
+  }
+
+  function runTests() {
+    var p = document.getElementById("plugin1");
+
+    ok(p.streamTest("loremipsum.txt", false, null, null,
+                    function(r, t) {
+                      is(r, 0, "GET loremipsum.txt");
+                      is(t.substr(0, 11), "Lorem ipsum",
+                         "GET loremipsum.txt correct");
+                      testDone();
+                    }, null, true), "streamTest GET");
+
+    ok(!p.streamTest("post.sjs", true, null, null,
+                     function(r, t) {
+                       ok(false, "Shouldn't get callback from null post");
+                     }, null, true), "streamTest POST null postdata");
+
+    ok(p.streamTest("post.sjs", true, "Something good", null,
+                    function(r, t) {
+                      is(r, 0, "POST something good");
+                      is(t, "Something good", "POST non-null correct");
+                      testDone();
+                    }, null, true), "streamTest POST valid postdata");
+
+    ok(p.streamTest("http://example.invalid/", false, null, null,
+                    function(r, t) {
+                      is(r, 1, "Shouldn't load example.invalid DNS name");
+                      testDone();
+                    }, null, true), "streamTest GET bad DNS");
+
+    ok(!p.streamTest("http://localhost:-8/", false, null, null,
+                    function(r, t) {
+                      ok(false, "Shouldn't get callback from malformed URI");
+                    }, null, true), "streamTest GET invalid URL");
+
+    ok(p.streamTest("javascript:'Hello';", false, null, null,
+                    function(r, t) {
+                      is(r, 0, "GET javascript: URI");
+                      is(t, "Hello", "GET javascript: URI correct");
+                      testDone();
+                    }, null, true), "streamTest GET javascript: URI");
+
+/*
+ * XXX/cjones: disabled for now because it appears to be hard to make
+ * mochitest ignore the malformed javascript
+
+    ok(!p.streamTest("javascript:syntax##$&*@error-*", false, null,
+                     function(r, t) {
+                       is(r, 1, "Shouldn't load invalid javascript: URI");
+                       testDone();
+                     }), "streamTest GET bad javascript: URI");
+*/
+
+    ok(p.streamTest("data:text/plain,World", false, null, null,
+                    function(r, t) {
+                      is(r, 0, "GET data: URI");
+                      is(t, "World", "GET data: URI correct");
+                      testDone();
+                    }, null, true), "streamTest GET data: URI");
+
+    ok(!p.streamTest("data:malformed?", false, null, null,
+                     function(r, t) {
+                       todo(false, "Shouldn't get callback for invalid data: URI");
+                     }, null, true), "streamTest GET bad data: URI");
+
+    ok(!p.postFileToURLTest("post.sjs"), "postFileToURLTest POST a file");
+
+    ok(!p.streamTest("post.sjs", true, "non-existent-file",
+                     function(r, t) {
+                       ok(false, "Shouldn't get write callback from file post");
+                     }, function(r, t) {
+                       ok(false, "Shouldn't get notify callback from file post");
+                     }, function(r, t) {
+                       ok(false, "Shouldn't get redirect callback from file post");
+                     }, true, true), "streamTest POST a file");
+  }
+  </script>
+
+  <embed id="plugin1" type="application/x-test" width="400" height="400"></embed>

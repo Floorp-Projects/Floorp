@@ -1,0 +1,46 @@
+<html>
+<head>
+  <title>Test NPNVdocumentOrigin</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+</head>
+<body onload="runTest()">
+  <script class="testbody" type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+    function runTest() {
+      "use strict";
+      var p1 = document.getElementById("plugin1");
+      var realOrigin = "http://mochi.test:8888";
+
+      // Test with no modifications
+      is(p1.getNPNVdocumentOrigin(), realOrigin, "Checking for expected origin.");
+
+      // This used to test that shadowing window.location.toString didn't confuse
+      // getNPNVdocumentOrigin. But now we explicitly throw when that happens. So
+      // just verify that we throw. There's no reason why getNPNVdocumentOrigin _would_
+      // be confused in this case anyway.
+      try {
+        window.location.toString = function() { return "http://victim.rckc.at/"; };
+        ok(false, "Should throw when shadowing window.location.toString");
+      } catch (e) {
+        ok(true, "Should throw when shadowing window.location.toString");
+      }
+
+      // Create a plugin in a new window with about:blank
+      var newWindow = window.open("about:blank");
+      newWindow.onload = function() {
+        newWindow.document.writeln('<embed id="plugin2" type="application/x-test" width="200" height="200"></embed>');
+        var p2 = newWindow.document.getElementById("plugin2");
+        is(p2.getNPNVdocumentOrigin(), realOrigin, "Checking for expected origin of plugin in new about:blank window.");
+        newWindow.close();
+
+        SimpleTest.finish();
+      };
+    }
+  </script>
+
+  <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
+</body>
+</html>

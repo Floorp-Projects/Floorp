@@ -1,0 +1,260 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace html url(http://www.w3.org/1999/xhtml);
+
+/* These styles affect only the bound element, not other page content. */
+.mainBox {
+ --grey-10: #f9f9fa;
+ --grey-60: #4a4a4f;
+ --grey-70: #38383d;
+}
+
+.mainBox {
+  font: message-box;
+  font-size: 12px;
+  text-align: center;
+  display: table;
+  width: 100%;
+  height: 100%;
+  background-color: rgb(72,72,72);
+  color: white;
+  user-select: none;
+}
+
+.hoverBox {
+  display: table-cell;
+  box-sizing: border-box;
+  padding: 5px;
+  vertical-align: middle;
+  width: 100%;
+  height: 100%;
+}
+
+:host(:-moz-handler-vulnerable-updatable) .hoverBox:active,
+:host(:-moz-handler-vulnerable-no-update) .hoverBox:active {
+  background-color: rgb(65, 65, 65);
+}
+
+:host(:-moz-handler-vulnerable-updatable) .hoverBox:active .msgClickToPlay,
+:host(:-moz-handler-vulnerable-no-update) .hoverBox:active .msgClickToPlay {
+  color: red;
+}
+
+:host(:-moz-handler-vulnerable-updatable) .hoverBox,
+:host(:-moz-handler-vulnerable-no-update) .hoverBox,
+:host(:-moz-handler-blocked) .hoverBox,
+:host(:-moz-handler-crashed) .hoverBox {
+  background-image: url(chrome://global/skin/plugins/contentPluginStripe.png);
+}
+
+html|a {
+  color: white;
+}
+
+.icon {
+  width: 48px;
+  height: 48px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  border: none;
+  background-color: transparent;
+  -moz-user-focus: ignore;
+  margin-bottom: 6px;
+  -moz-context-properties: fill;
+}
+
+:host(:-moz-handler-vulnerable-updatable) .icon,
+:host(:-moz-handler-vulnerable-no-update) .icon {
+  background-image: url(chrome://global/skin/plugins/contentPluginBlocked.png);
+  -moz-user-focus: normal;
+}
+
+:host(:-moz-handler-blocked) .icon {
+  background-image: url(chrome://global/skin/plugins/contentPluginBlocked.png);
+}
+
+:host(:-moz-handler-clicktoplay) .icon {
+  background-image: url(chrome://global/skin/plugins/plugin.svg);
+  fill: var(--grey-10);
+  -moz-user-focus: normal;
+}
+
+:host(:-moz-handler-crashed) .icon {
+  background-image: url(chrome://global/skin/plugins/contentPluginCrashed.png);
+}
+
+.throbber {
+  padding-left: 16px; /* width of the background image */
+  background: url(chrome://global/skin/icons/loading.png) no-repeat;
+  margin-left: 5px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .throbber {
+    background-image: url(chrome://global/skin/icons/loading@2x.png);
+    background-size: 16px;
+  }
+}
+
+/* on desktop, don't ever show the tap-to-play UI: that is for mobile only */
+:host(:-moz-handler-clicktoplay) .msgTapToPlay {
+  display: none;
+}
+
+.submitStatus div {
+  min-height: 19px; /* height of biggest line (with throbber) */
+}
+
+.submitComment {
+  width: 340px;
+  height: 70px;
+  padding: 5px;
+  border: none;
+  border-radius: 5px;
+  resize: none;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.submitURLOptInBox {
+  text-align: start;
+}
+
+.submitURLOptIn {
+  margin-left: -1px;
+}
+
+.mainBox[chromedir="rtl"] .submitURLOptIn {
+  margin-left: 0;
+  margin-right: -1px;
+}
+
+.submitButtonBox {
+  margin-top: 7px;
+}
+
+.submitButton {
+  float: right;
+}
+
+.mainBox[chromedir="rtl"] .submitButton {
+  float: left;
+}
+
+.helpIcon {
+  display: inline-block;
+  min-width: 16px;
+  min-height: 16px;
+  background: url(chrome://global/skin/plugins/pluginHelp-16.png) no-repeat;
+  cursor: pointer;
+  float: left;
+}
+
+.mainBox[chromedir="rtl"] .helpIcon {
+  float: right;
+}
+
+.closeIcon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  margin-top: 4px;
+  margin-inline: -24px 4px;
+  border: none;
+  border-radius: 2px;
+  background-color: transparent;
+  background-image: url(chrome://global/skin/icons/close.svg);
+  background-repeat: no-repeat;
+  -moz-context-properties: fill, fill-opacity;
+  fill-opacity: 0;
+  fill: var(--grey-10);
+}
+
+.closeIcon:hover {
+  fill-opacity: .1;
+}
+
+.closeIcon:hover:active {
+  fill-opacity: .2;
+}
+
+.action-link {
+  display: inline-block;
+  border-radius: 10px;
+  background-color: rgb(35, 35, 35);
+  padding: 2px 8px;
+  margin-top: 7px;
+  text-decoration: none;
+}
+.action-link:active {
+  background-color: rgb(20, 20, 20);
+}
+
+:host(:-moz-handler-vulnerable-updatable) .action-link {
+  background-color: #a81b0c;
+}
+
+:host(:-moz-handler-vulnerable-updatable) .action-link:active {
+  background-color: #801409;
+}
+
+/* New Photon styling
+ *
+ * At the moment, these rules are written to only override
+ * :-moz-handler-clicktoplay styling. Once we finish the
+ * redesign for all cases, we can change the CSS directly
+ * above instead of writing these super-specific rules.
+ */
+:host(:-moz-handler-clicktoplay) .mainBox {
+  background-color: var(--grey-70);
+}
+
+:host(:-moz-handler-clicktoplay) .msgClickToPlay {
+  /* Triggers overflow event if the container is too small */
+  min-width: 240px;
+  font-size: 13px;
+}
+
+:host(:-moz-handler-clicktoplay) .mainBox[sizing=oversized] {
+  /* Triggers overflow event when there is a layout */
+  width: 101%;
+}
+
+:host(:-moz-handler-clicktoplay) .mainBox[sizing=blank] .hoverBox {
+  visibility: hidden;
+}
+
+:host(:-moz-handler-clicktoplay) .mainBox[sizing=tiny] .icon {
+  width: 16px;
+  height: 16px;
+}
+
+:host(:-moz-handler-clicktoplay) .mainBox[sizing=reduced] .icon {
+  width: 32px;
+  height: 32px;
+}
+
+:host(:-moz-handler-clicktoplay) .mainBox[sizing=blank] .closeIcon,
+:host(:-moz-handler-clicktoplay) .mainBox[sizing=tiny] .closeIcon,
+:host(:-moz-handler-clicktoplay) .mainBox[sizing=reduced] .closeIcon {
+  display: none;
+}
+
+:host(:-moz-handler-clicktoplay) .mainBox[notext] .msgClickToPlay {
+  display: none;
+}
+
+:host(:-moz-handler-clicktoplay) .mainBox[notext] .icon {
+  /* Override a `margin-bottom: 6px` now that .msgClickToPlay
+   * below the icon is no longer shown, in order to achieve
+   * a perfect vertical centering of the icon.
+   */
+  margin-bottom: 0;
+}
+
+:host(:-moz-handler-clicktoplay) .hoverBox:active {
+  background-color: var(--grey-60);
+}
