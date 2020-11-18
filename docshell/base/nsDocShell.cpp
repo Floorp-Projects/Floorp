@@ -8909,15 +8909,6 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
             scrollRestorationIsManual.value());
       }
 
-      // As we're replacing the active session history entry we need to ensure
-      // the top window context resets its "SHEntryHasUserInteraction" cache
-      // that prevents documents from repeatedly setting user interaction
-      // on SH entries.
-      WindowContext* topWc = mBrowsingContext->GetTopWindowContext();
-      if (topWc && !topWc->IsDiscarded()) {
-        MOZ_ALWAYS_SUCCEEDS(topWc->SetSHEntryHasUserInteraction(false));
-      }
-
       if (LOAD_TYPE_HAS_FLAGS(mLoadType, LOAD_FLAGS_REPLACE_HISTORY)) {
         mBrowsingContext->ReplaceActiveSessionHistoryEntry(mActiveEntry.get());
       } else {
@@ -11589,15 +11580,6 @@ void nsDocShell::UpdateActiveEntry(
   mActiveEntry->SetStateData(static_cast<nsStructuredCloneContainer*>(aData));
   mActiveEntry->SetURIWasModified(aURIWasModified);
   mActiveEntry->SetScrollRestorationIsManual(aScrollRestorationIsManual);
-
-  // As we're replacing the active session history entry we need to ensure
-  // the top window context resets its "SHEntryHasUserInteraction" cache
-  // that prevents documents from repeatedly setting user interaction
-  // on SH entries.
-  WindowContext* topWc = mBrowsingContext->GetTopWindowContext();
-  if (topWc && !topWc->IsDiscarded()) {
-    MOZ_ALWAYS_SUCCEEDS(topWc->SetSHEntryHasUserInteraction(false));
-  }
 
   if (replace) {
     mBrowsingContext->ReplaceActiveSessionHistoryEntry(mActiveEntry.get());

@@ -376,10 +376,5 @@ add_task(async function test_iframe_pushState() {
 // entries without user interaction when navigating inside an iframe
 // by following links.
 add_task(async function test_iframe_followLink() {
-  // Bug 1670933
-  if (gFissionBrowser) {
-    return;
-  }
-
   await runIframeTest(followLink);
 });
