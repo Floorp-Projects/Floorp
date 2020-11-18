@@ -14,10 +14,200 @@ const DIALOG_URL_APP_CHOOSER =
 const DIALOG_URL_PERMISSION =
   "chrome://mozapps/content/handling/permissionDialog.xhtml";
 
-var EXPORTED_SYMBOLS = ["nsContentDispatchChooser"];
+var EXPORTED_SYMBOLS = [
+  "nsContentDispatchChooser",
+  "ContentDispatchChooserTelemetry",
+];
 
 const PROTOCOL_HANDLER_OPEN_PERM_KEY = "open-protocol-handler";
 const PERMISSION_KEY_DELIMITER = "^";
+
+let ContentDispatchChooserTelemetry = {
+  /**
+   * Maps protocol scheme to telemetry label.
+   */
+  SCHEME_TO_LABEL: {
+    bingmaps: "BING",
+    bingweather: "BING",
+    fb: "FACEBOOK",
+    fbmessenger: "FACEBOOK",
+    findmy: "APPLE_FINDMY",
+    findmyfriends: "APPLE_FINDMY",
+    fmf1: "APPLE_FINDMY",
+    fmip1: "APPLE_FINDMY",
+    git: "GIT",
+    "git-client": "GIT",
+    grenada: "APPLE_FINDMY",
+    ichat: "IMESSAGE",
+    im: "INSTANT_MESSAGE",
+    imessage: "IMESSAGE",
+    ipp: "IPP",
+    ipps: "IPP",
+    irc: "IRC",
+    irc6: "IRC",
+    ircs: "IRC",
+    itals: "APPLE_LIVESTREAM",
+    italss: "APPLE_LIVESTREAM",
+    itls: "APPLE_LIVESTREAM",
+    itlss: "APPLE_LIVESTREAM",
+    itms: "APPLE_MUSIC",
+    itmss: "APPLE_MUSIC",
+    itsradio: "APPLE_MUSIC",
+    itunes: "APPLE_MUSIC",
+    itunesradio: "APPLE_MUSIC",
+    itvls: "APPLE_LIVESTREAM",
+    itvlss: "APPLE_LIVESTREAM",
+    macappstore: "MACAPPSTORE",
+    macappstores: "MACAPPSTORE",
+    map: "MAP",
+    mapitem: "MAP",
+    maps: "MAP",
+    message: "MESSAGE",
+    messages: "MESSAGE",
+    microsoftmusic: "MICROSOFT_APP",
+    microsoftvideo: "MICROSOFT_APP",
+    mswindowsmusic: "MICROSOFT_APP",
+    music: "MUSIC",
+    musics: "MUSIC",
+    onenote: "ONENOTE",
+    "onenote-cmd": "ONENOTE",
+    pcast: "PODCAST",
+    podcast: "PODCAST",
+    podcasts: "PODCAST",
+    search: "SEARCH",
+    "search-ms": "SEARCH",
+    sip: "SIP",
+    sips: "SIP",
+    skype: "SKYPE",
+    "skype-meetnow": "SKYPE",
+    skypewin: "SKYPE",
+    tg: "TELEGRAM",
+    tv: "TELEVISION",
+    zoommtg: "ZOOM",
+    zoompbx: "ZOOM",
+    zoomus: "ZOOM",
+    zune: "MICROSOFT_APP",
+  },
+
+  /**
+   * Maps protocol scheme prefix to telemetry label.
+   */
+  SCHEME_PREFIX_TO_LABEL: {
+    apple: "APPLE",
+    "com.microsoft": "MICROSOFT_APP",
+    facetime: "FACETIME",
+    "fb-messenger": "FACEBOOK",
+    icloud: "ICLOUD",
+    "itms-": "APPLE_MUSIC",
+    microsoft: "MICROSOFT_APP",
+    "ms-": "MICROSOFT_APP",
+    outlook: "OUTLOOK",
+    photos: "PHOTOS",
+    "web+": "WEBHANDLER",
+    windows: "WINDOWS_PREFIX",
+    "x-apple": "APPLE",
+    xbox: "XBOX",
+  },
+
+  /**
+   * Lazy getter for labels of the external protocol navigation telemetry probe.
+   * @returns {string[]} - An array of histogram labels.
+   */
+  get _telemetryLabels() {
+    if (!this._telemetryLabelArray) {
+      this._telemetryLabelArray = Services.telemetry.getCategoricalLabels().EXTERNAL_PROTOCOL_HANDLER_DIALOG_CONTEXT_SCHEME;
+    }
+    return this._telemetryLabelArray;
+  },
+
+  /**
+   * Get histogram label by protocol scheme.
+   * @param {string} aScheme - Protocol scheme to map to histogram label.
+   * @returns {string} - Label.
+   */
+  _getTelemetryLabel(aScheme) {
+    if (!aScheme) {
+      throw new Error("Invalid scheme");
+    }
+    let labels = this._telemetryLabels;
+
+    // Custom scheme-to-label mappings
+    let mappedLabel = this.SCHEME_TO_LABEL[aScheme];
+    if (mappedLabel) {
+      return mappedLabel;
+    }
+
+    // Prefix mappings
+    for (let prefix of Object.keys(this.SCHEME_PREFIX_TO_LABEL)) {
+      if (aScheme.startsWith(prefix)) {
+        return this.SCHEME_PREFIX_TO_LABEL[prefix];
+      }
+    }
+
+    // Test if we have a label for the protocol scheme.
+    // If not, we use the "OTHER" label.
+    if (labels.includes(aScheme)) {
+      return aScheme;
+    }
+
+    return "OTHER";
+  },
+
+  /**
+   * Determine if a load was triggered from toplevel or an iframe
+   * (cross or same origin) and returns the histogram key.
+   *
+   * @param {BrowsingContext} [aBrowsingContext] - Context of the load.
+   * @param {nsIPrincipal} [aTriggeringPrincipal] - Principal which triggered
+   * the load.
+   * @returns {string} - Histogram key. May return "UNKNOWN".
+   */
+  _getTelemetryKey(aBrowsingContext, aTriggeringPrincipal) {
+    if (!aBrowsingContext) {
+      return "UNKNOWN";
+    }
+    if (aBrowsingContext.top == aBrowsingContext) {
+      return "TOPLEVEL";
+    }
+
+    // We're in a frame, check if the frame is cross origin with the top context.
+    if (!aTriggeringPrincipal) {
+      return "UNKNOWN";
+    }
+
+    if (aTriggeringPrincipal.isNullPrincipal) {
+      return "NULLPRINCIPAL";
+    }
+
+    let topLevelPrincipal =
+      aBrowsingContext.top.embedderElement?.contentPrincipal;
+    if (!topLevelPrincipal) {
+      return "UNKNOWN";
+    }
+
+    if (topLevelPrincipal.isThirdPartyPrincipal(aTriggeringPrincipal)) {
+      return "SUB_CROSSORIGIN";
+    }
+
+    return "SUB_SAMEORIGIN";
+  },
+
+  /**
+   * Record telemetry for the external protocol handler dialog.
+   * @param {string} aScheme - Scheme of the protocol being loaded.
+   * @param {BrowsingContext} [aBrowsingContext] - Context of the load.
+   * @param {nsIPrincipal} [aTriggeringPrincipal] - Principal which triggered
+   * the load.
+   */
+  recordTelemetry(aScheme, aBrowsingContext, aTriggeringPrincipal) {
+    let type = this._getTelemetryKey(aBrowsingContext, aTriggeringPrincipal);
+    let label = this._getTelemetryLabel(aScheme);
+
+    Services.telemetry
+      .getKeyedHistogramById("EXTERNAL_PROTOCOL_HANDLER_DIALOG_CONTEXT_SCHEME")
+      .add(type, label);
+  },
+};
 
 class nsContentDispatchChooser {
   /**
@@ -57,6 +247,17 @@ class nsContentDispatchChooser {
           throw error;
         }
       }
+    }
+
+    // We will show a prompt, record telemetry.
+    try {
+      ContentDispatchChooserTelemetry.recordTelemetry(
+        aHandler.type,
+        aBrowsingContext,
+        aPrincipal
+      );
+    } catch (error) {
+      Cu.reportError(error);
     }
 
     let shouldOpenHandler = false;
