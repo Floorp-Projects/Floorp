@@ -321,7 +321,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
                     nsTArray<nsIFrame*>& aPlaceholders,
                     const FlexboxAxisTracker& aAxisTracker,
                     nscoord aMainGapSize, nscoord aCrossGapSize,
-                    bool aHasLineClampEllipsis,
+                    nscoord aConsumedBSize, bool aHasLineClampEllipsis,
                     ComputedFlexContainerInfo* const aContainerInfo);
 
   /**
@@ -447,7 +447,8 @@ class nsFlexContainerFrame final : public nsContainerFrame {
                          nsTArray<FlexLine>& aLines);
 
   nscoord GetMainSizeFromReflowInput(const ReflowInput& aReflowInput,
-                                     const FlexboxAxisTracker& aAxisTracker);
+                                     const FlexboxAxisTracker& aAxisTracker,
+                                     nscoord aConsumedBSize);
 
   /**
    * Resolves the content-box main-size of a flex container frame,
@@ -477,7 +478,8 @@ class nsFlexContainerFrame final : public nsContainerFrame {
 
   nscoord ComputeCrossSize(const ReflowInput& aReflowInput,
                            const FlexboxAxisTracker& aAxisTracker,
-                           nscoord aSumLineCrossSizes, bool* aIsDefinite) const;
+                           nscoord aSumLineCrossSizes, nscoord aConsumedBSize,
+                           bool* aIsDefinite) const;
 
   /**
    * Compute the size of the available space that we'll give to our children to
