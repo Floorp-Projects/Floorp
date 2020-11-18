@@ -1629,6 +1629,11 @@ function runCompositionTest()
     return;
   }
 
+  let textRect3QueriedWithRelativeOffset = synthesizeQueryTextRect(-8, 1, true);
+  let textRect4QueriedWithRelativeOffset = synthesizeQueryTextRect(-8 + 1, 1, true);
+  checkRect(textRect3QueriedWithRelativeOffset, textRect3, "runCompositionTest: textRect #2-1-2");
+  checkRect(textRect4QueriedWithRelativeOffset, textRect4, "runCompositionTest: textRect #2-1-3");
+
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u3058",
@@ -9586,6 +9591,7 @@ async function runTest()
   await runBug1584901Test();
 
   runUndoRedoTest();
+  runCompositionTest();
   runCompositionCommitAsIsTest();
   runCompositionCommitTest();
   runCompositionEventTest();
