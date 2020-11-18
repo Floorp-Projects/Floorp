@@ -28,8 +28,6 @@ relativesrcdir toolkit/locales:
   locale/@AB_CD@/browser/overrides/commonDialogs.properties        (%chrome/global/commonDialogs.properties)
   locale/@AB_CD@/browser/overrides/intl.properties                 (%chrome/global/intl.properties)
   locale/@AB_CD@/browser/overrides/intl.css                        (%chrome/global/intl.css)
-# plugins
-  locale/@AB_CD@/browser/overrides/plugins/pluginproblem.dtd       (%chrome/pluginproblem/pluginproblem.dtd)
 #about:webrtc
   locale/@AB_CD@/browser/overrides/global/aboutWebrtc.properties  (%chrome/global/aboutWebrtc.properties)
 
