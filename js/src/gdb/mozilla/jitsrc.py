@@ -79,6 +79,13 @@ patterns = [
         "0",
         "0",
     ),
+    (
+        "<unnamed>",
+        1,
+        "js::jit::AssemblerBufferWithConstantPools<.*>::executableCopy",
+        "&cur->instructions[0]",
+        "dest",
+    ),
 ]
 
 
@@ -97,7 +104,8 @@ class JitSource(gdb.Command):
             b.enabled = True
 
     def search_stack(self, base_name, hops, name, src, dst, address):
-        if not re.match(base_name, gdb.newest_frame().name()):
+        current_frame_name = gdb.newest_frame().name() or "<unnamed>"
+        if not re.match(base_name, current_frame_name):
             return None
         f = gdb.newest_frame()
         for _ in range(hops):
