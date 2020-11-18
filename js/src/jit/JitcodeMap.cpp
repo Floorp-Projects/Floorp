@@ -562,6 +562,7 @@ void JitcodeGlobalTable::setAllEntriesAsExpired() {
   }
 }
 
+// TODO(no-TI): remove this and IfUnmarked.
 struct Unconditionally {
   template <typename T>
   static bool ShouldTrace(JSRuntime* rt, T* thingp) {
@@ -575,12 +576,6 @@ struct IfUnmarked {
     return !IsMarkedUnbarriered(rt, thingp);
   }
 };
-
-template <>
-bool IfUnmarked::ShouldTrace<TypeSet::Type>(JSRuntime* rt,
-                                            TypeSet::Type* type) {
-  return !TypeSet::IsTypeMarked(rt, type);
-}
 
 bool JitcodeGlobalTable::markIteratively(GCMarker* marker) {
   // JitcodeGlobalTable must keep entries that are in the sampler buffer

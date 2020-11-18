@@ -496,30 +496,6 @@ ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const JSClass* clasp,
     group->setTypeDescr(&associated->as<TypeDescr>());
   }
 
-  /*
-   * Some builtin objects have slotful native properties baked in at
-   * creation via the Shape::{insert,get}initialShape mechanism. Since
-   * these properties are never explicitly defined on new objects, update
-   * the type information for them here.
-   */
-
-  const JSAtomState& names = cx->names();
-
-  if (clasp == &RegExpObject::class_) {
-    AddTypePropertyId(cx, group, nullptr, NameToId(names.lastIndex),
-                      TypeSet::Int32Type());
-  } else if (clasp == &StringObject::class_) {
-    AddTypePropertyId(cx, group, nullptr, NameToId(names.length),
-                      TypeSet::Int32Type());
-  } else if (ErrorObject::isErrorClass(clasp)) {
-    AddTypePropertyId(cx, group, nullptr, NameToId(names.fileName),
-                      TypeSet::StringType());
-    AddTypePropertyId(cx, group, nullptr, NameToId(names.lineNumber),
-                      TypeSet::Int32Type());
-    AddTypePropertyId(cx, group, nullptr, NameToId(names.columnNumber),
-                      TypeSet::Int32Type());
-  }
-
   groups.defaultNewGroupCache.put(group, associated);
   return group;
 }
@@ -626,59 +602,6 @@ ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, JSProtoKey key) {
   return defaultNewGroup(cx, GetClassForProtoKey(key), TaggedProto(proto));
 }
 
-/////////////////////////////////////////////////////////////////////
-// ObjectGroupRealm ArrayObjectTable
-/////////////////////////////////////////////////////////////////////
-
-struct ObjectGroupRealm::ArrayObjectKey : public DefaultHasher<ArrayObjectKey> {
-  TypeSet::Type type;
-
-  ArrayObjectKey() : type(TypeSet::UndefinedType()) {}
-
-  explicit ArrayObjectKey(TypeSet::Type type) : type(type) {}
-
-  static inline uint32_t hash(const ArrayObjectKey& v) { return v.type.raw(); }
-
-  static inline bool match(const ArrayObjectKey& v1, const ArrayObjectKey& v2) {
-    return v1.type == v2.type;
-  }
-
-  bool operator==(const ArrayObjectKey& other) { return type == other.type; }
-
-  bool operator!=(const ArrayObjectKey& other) { return !(*this == other); }
-
-  bool traceWeak(JSTracer* trc) {
-    MOZ_ASSERT(type.isUnknown() || !type.isSingleton());
-    if (!type.isUnknown() && type.isGroup()) {
-      ObjectGroup* group = type.groupNoBarrier();
-      if (!TraceManuallyBarrieredWeakEdge(trc, &group, "ObjectGroup")) {
-        return false;
-      }
-      if (group != type.groupNoBarrier()) {
-        type = TypeSet::ObjectType(group);
-      }
-    }
-    return true;
-  }
-};
-
-static inline bool NumberTypes(TypeSet::Type a, TypeSet::Type b) {
-  return (a.isPrimitive(ValueType::Int32) ||
-          a.isPrimitive(ValueType::Double)) &&
-         (b.isPrimitive(ValueType::Int32) || b.isPrimitive(ValueType::Double));
-}
-
-/*
- * As for GetValueType, but requires object types to be non-singletons with
- * their default prototype. These are the only values that should appear in
- * arrays and objects whose type can be fixed.
- */
-static inline TypeSet::Type GetValueTypeForTable(const Value& v) {
-  TypeSet::Type type = TypeSet::GetValueType(v);
-  MOZ_ASSERT(!type.isSingleton());
-  return type;
-}
-
 /* static */
 ArrayObject* ObjectGroup::newArrayObject(JSContext* cx, const Value* vp,
                                          size_t length, NewObjectKind newKind,
@@ -700,63 +623,7 @@ ArrayObject* ObjectGroup::newArrayObject(JSContext* cx, const Value* vp,
     return NewDenseCopiedArray(cx, length, vp, nullptr, newKind);
   }
 
-  // Get a type which captures all the elements in the array to be created.
-  Rooted<TypeSet::Type> elementType(cx, TypeSet::UnknownType());
-  if (arrayKind != NewArrayKind::UnknownIndex && length != 0) {
-    elementType = GetValueTypeForTable(vp[0]);
-    for (unsigned i = 1; i < length; i++) {
-      TypeSet::Type ntype = GetValueTypeForTable(vp[i]);
-      if (ntype != elementType) {
-        if (NumberTypes(elementType, ntype)) {
-          elementType = TypeSet::DoubleType();
-        } else {
-          elementType = TypeSet::UnknownType();
-          break;
-        }
-      }
-    }
-  }
-
-  ObjectGroupRealm& realm = ObjectGroupRealm::getForNewObject(cx);
-  ObjectGroupRealm::ArrayObjectTable*& table = realm.arrayObjectTable;
-
-  if (!table) {
-    table = cx->new_<ObjectGroupRealm::ArrayObjectTable>();
-    if (!table) {
-      return nullptr;
-    }
-  }
-
-  ObjectGroupRealm::ArrayObjectKey key(elementType);
-  DependentAddPtr<ObjectGroupRealm::ArrayObjectTable> p(cx, *table, key);
-
-  RootedObjectGroup group(cx);
-  if (p) {
-    group = p->value();
-  } else {
-    JSObject* proto = GlobalObject::getOrCreateArrayPrototype(cx, cx->global());
-    if (!proto) {
-      return nullptr;
-    }
-    Rooted<TaggedProto> taggedProto(cx, TaggedProto(proto));
-    group = ObjectGroupRealm::makeGroup(cx, cx->realm(), &ArrayObject::class_,
-                                        taggedProto);
-    if (!group) {
-      return nullptr;
-    }
-
-    AddTypePropertyId(cx, group, nullptr, JSID_VOID, elementType);
-
-    if (!p.add(cx, *table, ObjectGroupRealm::ArrayObjectKey(elementType),
-               group)) {
-      return nullptr;
-    }
-  }
-
-  // The type of the elements being added will already be reflected in type
-  // information.
-  ShouldUpdateTypes updateTypes = ShouldUpdateTypes::DontUpdate;
-  return NewCopiedArrayTryUseGroup(cx, group, vp, length, newKind, updateTypes);
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 // Try to change the group of |source| to match that of |target|.
@@ -898,79 +765,6 @@ bool js::CombinePlainObjectPropertyTypes(JSContext* cx, JSObject* newObj,
   }
   return true;
 }
-
-/////////////////////////////////////////////////////////////////////
-// ObjectGroupRealm PlainObjectTable
-/////////////////////////////////////////////////////////////////////
-
-struct ObjectGroupRealm::PlainObjectKey {
-  jsid* properties;
-  uint32_t nproperties;
-
-  struct Lookup {
-    IdValuePair* properties;
-    uint32_t nproperties;
-
-    Lookup(IdValuePair* properties, uint32_t nproperties)
-        : properties(properties), nproperties(nproperties) {}
-  };
-
-  static inline HashNumber hash(const Lookup& lookup) {
-    HashNumber hash = HashId(lookup.properties[lookup.nproperties - 1].id);
-    return mozilla::AddToHash(hash, lookup.nproperties);
-  }
-
-  static inline bool match(const PlainObjectKey& v, const Lookup& lookup) {
-    if (lookup.nproperties != v.nproperties) {
-      return false;
-    }
-    for (size_t i = 0; i < lookup.nproperties; i++) {
-      if (lookup.properties[i].id != v.properties[i]) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  bool traceWeak(JSTracer* trc) {
-    for (unsigned i = 0; i < nproperties; i++) {
-      if (!TraceManuallyBarrieredWeakEdge(trc, &properties[i],
-                                          "PlainObjectKey::properties")) {
-        return false;
-      }
-    }
-    return true;
-  }
-};
-
-struct ObjectGroupRealm::PlainObjectEntry {
-  WeakHeapPtrObjectGroup group;
-  WeakHeapPtrShape shape;
-  TypeSet::Type* types;
-
-  bool traceWeak(JSTracer* trc, unsigned nproperties) {
-    if (!TraceWeakEdge(trc, &group, "PlainObjectEntry::group")) {
-      return false;
-    }
-    if (!TraceWeakEdge(trc, &shape, "PlainObjectEntry::shape")) {
-      return false;
-    }
-    for (unsigned i = 0; i < nproperties; i++) {
-      MOZ_ASSERT(!types[i].isSingleton());
-      if (types[i].isGroup()) {
-        ObjectGroup* group = types[i].groupNoBarrier();
-        if (!TraceManuallyBarrieredWeakEdge(trc, &group,
-                                            "PlainObjectEntry::types::group")) {
-          return false;
-        }
-        if (group != types[i].groupNoBarrier()) {
-          types[i] = TypeSet::ObjectType(group);
-        }
-      }
-    }
-    return true;
-  }
-};
 
 static bool AddPlainObjectProperties(JSContext* cx, HandlePlainObject obj,
                                      IdValuePair* properties,
@@ -1269,8 +1063,6 @@ bool ObjectGroup::findAllocationSite(JSContext* cx, const ObjectGroup* group,
 ObjectGroupRealm::~ObjectGroupRealm() {
   js_delete(defaultNewTable);
   js_delete(lazyTable);
-  js_delete(arrayObjectTable);
-  js_delete(plainObjectTable);
   js_delete(allocationSiteTable);
   stringSplitStringGroup = nullptr;
 }
@@ -1360,25 +1152,7 @@ void ObjectGroupRealm::addSizeOfExcludingThis(
         allocationSiteTable->sizeOfIncludingThis(mallocSizeOf);
   }
 
-  if (arrayObjectTable) {
-    *arrayObjectGroupTables +=
-        arrayObjectTable->shallowSizeOfIncludingThis(mallocSizeOf);
-  }
-
-  if (plainObjectTable) {
-    *plainObjectGroupTables +=
-        plainObjectTable->shallowSizeOfIncludingThis(mallocSizeOf);
-
-    for (PlainObjectTable::Enum e(*plainObjectTable); !e.empty();
-         e.popFront()) {
-      const PlainObjectKey& key = e.front().key();
-      const PlainObjectEntry& value = e.front().value();
-
-      /* key.ids and values.types have the same length. */
-      *plainObjectGroupTables +=
-          mallocSizeOf(key.properties) + mallocSizeOf(value.types);
-    }
-  }
+  // TODO(no-TI): remove unused arguments.
 
   if (defaultNewTable) {
     *realmTables += defaultNewTable->sizeOfIncludingThis(mallocSizeOf);
@@ -1393,19 +1167,6 @@ void ObjectGroupRealm::clearTables() {
   if (allocationSiteTable) {
     allocationSiteTable->clear();
   }
-  if (arrayObjectTable) {
-    arrayObjectTable->clear();
-  }
-  if (plainObjectTable) {
-    for (PlainObjectTable::Enum e(*plainObjectTable); !e.empty();
-         e.popFront()) {
-      const PlainObjectKey& key = e.front().key();
-      PlainObjectEntry& entry = e.front().value();
-      js_free(key.properties);
-      js_free(entry.types);
-    }
-    plainObjectTable->clear();
-  }
   if (defaultNewTable) {
     defaultNewTable->clear();
   }
@@ -1415,31 +1176,7 @@ void ObjectGroupRealm::clearTables() {
   defaultNewGroupCache.purge();
 }
 
-/* static */
-bool ObjectGroupRealm::PlainObjectTableSweepPolicy::traceWeak(
-    JSTracer* trc, PlainObjectKey* key, PlainObjectEntry* entry) {
-  if (JS::GCPolicy<PlainObjectKey>::traceWeak(trc, key) &&
-      entry->traceWeak(trc, key->nproperties)) {
-    return true;
-  }
-
-  js_free(key->properties);
-  js_free(entry->types);
-  return false;
-}
-
 void ObjectGroupRealm::traceWeak(JSTracer* trc) {
-  /*
-   * Iterate through the array/object group tables and remove all entries
-   * referencing collected data. These tables only hold weak references.
-   */
-
-  if (arrayObjectTable) {
-    arrayObjectTable->traceWeak(trc);
-  }
-  if (plainObjectTable) {
-    plainObjectTable->traceWeak(trc);
-  }
   if (stringSplitStringGroup) {
     JS::GCPolicy<WeakHeapPtrObjectGroup>::traceWeak(trc,
                                                     &stringSplitStringGroup);

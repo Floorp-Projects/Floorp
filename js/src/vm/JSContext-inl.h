@@ -191,10 +191,6 @@ class ContextChecks {
     check(desc.value(), argIndex);
   }
 
-  void check(TypeSet::Type type, int argIndex) {
-    check(type.maybeCompartment(), argIndex);
-  }
-
   void check(JS::Handle<mozilla::Maybe<JS::Value>> maybe, int argIndex) {
     if (maybe.get().isSome()) {
       check(maybe.get().ref(), argIndex);

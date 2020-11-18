@@ -938,8 +938,6 @@ ArrayObject* RegExpRealm::createMatchResultTemplateObject(JSContext* cx) {
                                 groupsVal, JSPROP_ENUMERATE)) {
     return nullptr;
   }
-  AddTypePropertyId(cx, templateObject, NameToId(cx->names().groups),
-                    TypeSet::AnyObjectType());
 
   // Make sure that the properties are in the right slots.
 #ifdef DEBUG
@@ -953,11 +951,6 @@ ArrayObject* RegExpRealm::createMatchResultTemplateObject(JSContext* cx) {
   MOZ_ASSERT(indexShape->slot() == MatchResultObjectIndexSlot &&
              indexShape->propidRef() == NameToId(cx->names().index));
 #endif
-
-  // Make sure type information reflects the indexed properties which might
-  // be added.
-  AddTypePropertyId(cx, templateObject, JSID_VOID, TypeSet::StringType());
-  AddTypePropertyId(cx, templateObject, JSID_VOID, TypeSet::UndefinedType());
 
   matchResultTemplateObject_.set(templateObject);
 
