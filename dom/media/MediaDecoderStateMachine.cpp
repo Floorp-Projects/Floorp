@@ -15,6 +15,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/NotNull.h"
+#include "mozilla/ProfilerMarkerTypes.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_media.h"
@@ -42,12 +43,8 @@
 #  define MDSM_ERROR_MARKER(tag, error, markerTime)                          \
     PROFILER_ADD_MARKER_WITH_PAYLOAD(tag, MEDIA_PLAYBACK, TextMarkerPayload, \
                                      (error, markerTime))
-#  define MDSM_SAMPLE_MARKER(tag, startTime, endTime) \
-    PROFILER_ADD_MARKER_WITH_PAYLOAD(                 \
-        tag, MEDIA_PLAYBACK, MediaSampleMarkerPayload, (startTime, endTime))
 #else
 #  define MDSM_ERROR_MARKER(tag, error, markerTime)
-#  define MDSM_SAMPLE_MARKER(tag, startTime, endTime)
 #endif
 
 namespace mozilla {
@@ -2859,8 +2856,9 @@ void MediaDecoderStateMachine::PushAudio(AudioData* aSample) {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(aSample);
   AudioQueue().Push(aSample);
-  MDSM_SAMPLE_MARKER("MDSM::PushAudio", aSample->mTime.ToMicroseconds(),
-                     aSample->GetEndTime().ToMicroseconds());
+  PROFILER_MARKER("MDSM::PushAudio", MEDIA_PLAYBACK, {}, MediaSampleMarker,
+                  aSample->mTime.ToMicroseconds(),
+                  aSample->GetEndTime().ToMicroseconds());
 }
 
 void MediaDecoderStateMachine::PushVideo(VideoData* aSample) {
@@ -2868,8 +2866,9 @@ void MediaDecoderStateMachine::PushVideo(VideoData* aSample) {
   MOZ_ASSERT(aSample);
   aSample->mFrameID = ++mCurrentFrameID;
   VideoQueue().Push(aSample);
-  MDSM_SAMPLE_MARKER("MDSM::PushVideo", aSample->mTime.ToMicroseconds(),
-                     aSample->GetEndTime().ToMicroseconds());
+  PROFILER_MARKER("MDSM::PushVideo", MEDIA_PLAYBACK, {}, MediaSampleMarker,
+                  aSample->mTime.ToMicroseconds(),
+                  aSample->GetEndTime().ToMicroseconds());
 }
 
 void MediaDecoderStateMachine::OnAudioPopped(const RefPtr<AudioData>& aSample) {
