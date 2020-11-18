@@ -140,6 +140,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void RemoveFromSessionHistory();
 
   void HistoryGo(int32_t aIndex, uint64_t aHistoryEpoch,
+                 bool aRequireUserInteraction,
                  Maybe<ContentParentId> aContentId,
                  std::function<void(int32_t&&)>&& aResolver);
 

@@ -242,6 +242,22 @@ bool WindowContext::CanSet(
   return CheckOnlyOwningProcessCanSet(aSource);
 }
 
+void WindowContext::DidSet(FieldIndex<IDX_SHEntryHasUserInteraction>,
+                           bool aOldValue) {
+  MOZ_ASSERT(
+      TopWindowContext() == this,
+      "SHEntryHasUserInteraction can only be set on the top window context");
+  // This field is set when the child notifies us of new user interaction, so we
+  // also set the currently active shentry in the parent as having interaction.
+  if (XRE_IsParentProcess() && mBrowsingContext) {
+    SessionHistoryEntry* activeEntry =
+        mBrowsingContext->Canonical()->GetActiveSessionHistoryEntry();
+    if (activeEntry && GetSHEntryHasUserInteraction()) {
+      activeEntry->SetHasUserInteraction(true);
+    }
+  }
+}
+
 void WindowContext::DidSet(FieldIndex<IDX_UserActivationState>) {
   MOZ_ASSERT_IF(!mInProcess, mUserGestureStart.IsNull());
   USER_ACTIVATION_LOG("Set user gesture activation %" PRIu8

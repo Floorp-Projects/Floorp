@@ -251,6 +251,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   void DidSet(FieldIndex<IDX_HasReportedShadowDOMUsage>, bool aOldValue);
 
+  void DidSet(FieldIndex<IDX_SHEntryHasUserInteraction>, bool aOldValue);
+
   // Overload `DidSet` to get notifications for a particular field being set.
   //
   // You can also overload the variant that gets the old value if you need it.

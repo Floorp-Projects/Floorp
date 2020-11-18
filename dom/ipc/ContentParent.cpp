@@ -7018,10 +7018,12 @@ mozilla::ipc::IPCResult ContentParent::RecvHistoryCommit(
 
 mozilla::ipc::IPCResult ContentParent::RecvHistoryGo(
     const MaybeDiscarded<BrowsingContext>& aContext, int32_t aOffset,
-    uint64_t aHistoryEpoch, HistoryGoResolver&& aResolveRequestedIndex) {
+    uint64_t aHistoryEpoch, bool aRequireUserInteraction,
+    HistoryGoResolver&& aResolveRequestedIndex) {
   if (!aContext.IsDiscarded()) {
-    aContext.get_canonical()->HistoryGo(aOffset, aHistoryEpoch, Some(ChildID()),
-                                        std::move(aResolveRequestedIndex));
+    aContext.get_canonical()->HistoryGo(
+        aOffset, aHistoryEpoch, aRequireUserInteraction, Some(ChildID()),
+        std::move(aResolveRequestedIndex));
   }
   return IPC_OK();
 }
