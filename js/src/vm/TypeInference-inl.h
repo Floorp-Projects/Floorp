@@ -1080,16 +1080,7 @@ inline void HeapTypeSet::newPropertyState(const AutoSweepObjectGroup& sweep,
                                           JSContext* cx) {
   checkMagic();
 
-  /* Propagate the change to all constraints. */
-  if (!cx->isHelperThreadContext()) {
-    TypeConstraint* constraint = constraintList(sweep);
-    while (constraint) {
-      constraint->newPropertyState(cx, this);
-      constraint = constraint->next();
-    }
-  } else {
-    MOZ_ASSERT(!constraintList(sweep));
-  }
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 inline void HeapTypeSet::setNonDataProperty(const AutoSweepObjectGroup& sweep,

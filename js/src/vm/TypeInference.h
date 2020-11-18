@@ -31,9 +31,7 @@
 
 namespace js {
 
-class TypeConstraint;
 class TypeZone;
-class HeapTypeSetKey;
 class PlainObject;
 
 namespace jit {
@@ -101,59 +99,6 @@ class MOZ_RAII AutoSweepJitScript : public AutoSweepBase {
   Zone* zone() const { return zone_; }
 #endif
 };
-
-// Stack class to record information about constraints that need to be added
-// after finishing the Definite Properties Analysis. When the analysis succeeds
-// the |finishConstraints| method must be called to add the constraints to the
-// TypeSets.
-//
-// There are two constraint types managed here:
-//
-//   1. Proto constraints for HeapTypeSets, to guard against things like getters
-//      and setters on the proto chain.
-//
-//   2. Inlining constraints for StackTypeSets, to invalidate when additional
-//      functions could be called at call sites where we inlined a function.
-//
-// This class uses bare GC-thing pointers because GC is suppressed when the
-// analysis runs.
-class MOZ_RAII DPAConstraintInfo {
-  struct ProtoConstraint {
-    JSObject* proto;
-    jsid id;
-    ProtoConstraint(JSObject* proto, jsid id) : proto(proto), id(id) {}
-  };
-  struct InliningConstraint {
-    JSScript* caller;
-    JSScript* callee;
-    InliningConstraint(JSScript* caller, JSScript* callee)
-        : caller(caller), callee(callee) {}
-  };
-
-  JS::AutoCheckCannotGC nogc_;
-  Vector<ProtoConstraint, 8> protoConstraints_;
-  Vector<InliningConstraint, 4> inliningConstraints_;
-
- public:
-  explicit DPAConstraintInfo(JSContext* cx)
-      : nogc_(cx), protoConstraints_(cx), inliningConstraints_(cx) {}
-
-  DPAConstraintInfo(const DPAConstraintInfo&) = delete;
-  void operator=(const DPAConstraintInfo&) = delete;
-
-  MOZ_MUST_USE bool addProtoConstraint(JSObject* proto, jsid id) {
-    return protoConstraints_.emplaceBack(proto, id);
-  }
-  MOZ_MUST_USE bool addInliningConstraint(JSScript* caller, JSScript* callee) {
-    return inliningConstraints_.emplaceBack(caller, callee);
-  }
-
-  MOZ_MUST_USE bool finishConstraints(JSContext* cx, ObjectGroup* group);
-};
-
-bool AddClearDefiniteGetterSetterForPrototypeChain(
-    JSContext* cx, DPAConstraintInfo& constraintInfo, ObjectGroup* group,
-    HandleId id, bool* added);
 
 // For groups where only a small number of objects have been allocated, this
 // structure keeps track of all objects in the group. Once COUNT objects have
@@ -327,7 +272,6 @@ enum TypeSpewChannel {
 
 bool InferSpewActive(TypeSpewChannel channel);
 const char* InferSpewColorReset();
-const char* InferSpewColor(TypeConstraint* constraint);
 const char* InferSpewColor(TypeSet* types);
 
 #  define InferSpew(channel, ...)   \
@@ -344,9 +288,6 @@ bool ObjectGroupHasProperty(JSContext* cx, ObjectGroup* group, jsid id,
 #else
 
 inline const char* InferSpewColorReset() { return nullptr; }
-inline const char* InferSpewColor(TypeConstraint* constraint) {
-  return nullptr;
-}
 inline const char* InferSpewColor(TypeSet* types) { return nullptr; }
 
 #  define InferSpew(channel, ...) \

@@ -3914,13 +3914,6 @@ MDefinition* jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
   return def;
 }
 
-bool jit::AnalyzeNewScriptDefiniteProperties(
-    JSContext* cx, DPAConstraintInfo& constraintInfo, HandleFunction fun,
-    ObjectGroup* group, HandlePlainObject baseobj,
-    Vector<TypeNewScriptInitializer>* initializerList) {
-  MOZ_CRASH("TODO(no-TI): delete");
-}
-
 static bool ArgumentsUseCanBeLazy(JSContext* cx, JSScript* script,
                                   MInstruction* ins, size_t index,
                                   bool* argumentsContentsObserved) {

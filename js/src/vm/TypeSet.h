@@ -58,7 +58,6 @@ class AutoSweepObjectGroup;
 class LifoAlloc;
 class ObjectGroup;
 class SystemAllocPolicy;
-class TypeConstraint;
 class TypeNewScript;
 class TypeZone;
 
@@ -498,9 +497,6 @@ class TypeSet {
 
   bool objectsIntersect(const TypeSet* other) const;
 
-  /* Forward all types in this set to the specified constraint. */
-  bool addTypesToConstraint(JSContext* cx, TypeConstraint* constraint);
-
   JS::Compartment* maybeCompartment();
 
   // Trigger a read barrier on all the contents of a type set.
@@ -537,8 +533,7 @@ static const uintptr_t BaseTypeInferenceMagic = 0xa1a2b3b4;
 #else
 static const uintptr_t BaseTypeInferenceMagic = 0xa1a2b3b4c5c6d7d8;
 #endif
-static const uintptr_t TypeConstraintMagic = BaseTypeInferenceMagic + 1;
-static const uintptr_t ConstraintTypeSetMagic = BaseTypeInferenceMagic + 2;
+static const uintptr_t ConstraintTypeSetMagic = BaseTypeInferenceMagic + 1;
 
 #ifdef JS_CRASH_DIAGNOSTICS
 extern void ReportMagicWordFailure(uintptr_t actual, uintptr_t expected);
@@ -546,85 +541,12 @@ extern void ReportMagicWordFailure(uintptr_t actual, uintptr_t expected,
                                    uintptr_t flags, uintptr_t objectSet);
 #endif
 
-/*
- * A constraint which listens to additions to a type set and propagates those
- * changes to other type sets.
- */
-class TypeConstraint {
- private:
-#ifdef JS_CRASH_DIAGNOSTICS
-  uintptr_t magic_ = TypeConstraintMagic;
-#endif
-
-  /* Next constraint listening to the same type set. */
-  TypeConstraint* next_ = nullptr;
-
- public:
-  TypeConstraint() = default;
-
-  void checkMagic() const {
-#ifdef JS_CRASH_DIAGNOSTICS
-    if (MOZ_UNLIKELY(magic_ != TypeConstraintMagic)) {
-      ReportMagicWordFailure(magic_, TypeConstraintMagic);
-    }
-#endif
-  }
-
-  TypeConstraint* next() const {
-    checkMagic();
-    if (next_) {
-      next_->checkMagic();
-    }
-    return next_;
-  }
-  void setNext(TypeConstraint* next) {
-    MOZ_ASSERT(!next_);
-    checkMagic();
-    if (next) {
-      next->checkMagic();
-    }
-    next_ = next;
-  }
-
-  /* Debugging name for this kind of constraint. */
-  virtual const char* kind() = 0;
-
-  /* Register a new type for the set this constraint is listening to. */
-  virtual void newType(JSContext* cx, TypeSet* source, TypeSet::Type type) = 0;
-
-  /*
-   * For constraints attached to an object property's type set, mark the
-   * property as having changed somehow.
-   */
-  virtual void newPropertyState(JSContext* cx, TypeSet* source) {}
-
-  /*
-   * For constraints attached to the JSID_EMPTY type set on an object,
-   * indicate a change in one of the object's dynamic property flags or other
-   * state.
-   */
-  virtual void newObjectState(JSContext* cx, ObjectGroup* group) {}
-
-  /*
-   * If the data this constraint refers to is still live, copy it into the
-   * zone's new allocator. Type constraints only hold weak references.
-   */
-  virtual bool sweep(TypeZone& zone, TypeConstraint** res) = 0;
-
-  /* The associated compartment, if any. */
-  virtual JS::Compartment* maybeCompartment() = 0;
-};
-
 /* Superclass common to stack and heap type sets. */
 class ConstraintTypeSet : public TypeSet {
  private:
 #ifdef JS_CRASH_DIAGNOSTICS
   uintptr_t magic_ = ConstraintTypeSetMagic;
 #endif
-
- protected:
-  /* Chain of constraints which propagate changes out from this type set. */
-  TypeConstraint* constraintList_ = nullptr;
 
  public:
   ConstraintTypeSet() = default;
@@ -636,16 +558,6 @@ class ConstraintTypeSet : public TypeSet {
                              uintptr_t(objectSet));
     }
 #endif
-  }
-
-  // This takes a reference to AutoSweepBase to ensure we swept the owning
-  // ObjectGroup or JitScript.
-  TypeConstraint* constraintList(const AutoSweepBase& sweep) const {
-    checkMagic();
-    if (constraintList_) {
-      constraintList_->checkMagic();
-    }
-    return constraintList_;
   }
 
   /*
@@ -662,10 +574,6 @@ class ConstraintTypeSet : public TypeSet {
   // Trigger a post barrier when writing to this set, if necessary.
   // addType(cx, type) takes care of this automatically.
   void postWriteBarrier(JSContext* cx, Type type);
-
-  /* Add a new constraint to this set. */
-  bool addConstraint(JSContext* cx, TypeConstraint* constraint,
-                     bool callExisting = true);
 
   inline void sweep(const AutoSweepBase& sweep, JS::Zone* zone);
   inline void trace(JS::Zone* zone, JSTracer* trc);
