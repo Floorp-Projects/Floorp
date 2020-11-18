@@ -535,6 +535,8 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
         }
       }
 
+      ResetSHEntryHasUserInteractionCache();
+
       HistoryCommitIndexAndLength(aChangeID, caller);
 
       return;
@@ -650,6 +652,9 @@ void CanonicalBrowsingContext::SetActiveSessionHistoryEntry(
           UseRemoteSubframes());
     }
   }
+
+  ResetSHEntryHasUserInteractionCache();
+
   // FIXME Need to do the equivalent of EvictContentViewersOrReplaceEntry.
   HistoryCommitIndexAndLength(aChangeID, caller);
 }
@@ -667,6 +672,9 @@ void CanonicalBrowsingContext::ReplaceActiveSessionHistoryEntry(
     shistory->NotifyOnHistoryReplaceEntry();
     shistory->UpdateRootBrowsingContextState();
   }
+
+  ResetSHEntryHasUserInteractionCache();
+
   // FIXME Need to do the equivalent of EvictContentViewersOrReplaceEntry.
 }
 
@@ -1555,6 +1563,13 @@ void CanonicalBrowsingContext::EndDocumentLoad(bool aForProcessSwitch) {
     // Resetting the current load identifier on a discarded context
     // has no effect when a document load has finished.
     Unused << SetCurrentLoadIdentifier(Nothing());
+  }
+}
+
+void CanonicalBrowsingContext::ResetSHEntryHasUserInteractionCache() {
+  WindowContext* topWc = GetTopWindowContext();
+  if (topWc && !topWc->IsDiscarded()) {
+    MOZ_ALWAYS_SUCCEEDS(topWc->SetSHEntryHasUserInteraction(false));
   }
 }
 
