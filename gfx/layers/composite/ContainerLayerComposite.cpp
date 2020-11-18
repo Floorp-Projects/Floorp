@@ -40,10 +40,6 @@
 #include <vector>
 #include "GeckoProfiler.h"  // for GeckoProfiler
 
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"  // for LayerTranslationMarkerPayload
-#endif
-
 static mozilla::LazyLogModule sGfxCullLog("gfx.culling");
 #define CULLING_LOG(...) MOZ_LOG(sGfxCullLog, LogLevel::Debug, (__VA_ARGS__))
 
@@ -103,9 +99,37 @@ static void PrintUniformityInfo(Layer* aLayer) {
   }
 
   Point translation = transform.As2D().GetTranslation();
-  PROFILER_ADD_MARKER_WITH_PAYLOAD("LayerTranslation", GRAPHICS,
-                                   LayerTranslationMarkerPayload,
-                                   (aLayer, translation, TimeStamp::Now()));
+
+  // Contains the translation applied to a 2d layer so we can track the layer
+  // position at each frame.
+  struct LayerTranslationMarker {
+    static constexpr Span<const char> MarkerTypeName() {
+      return MakeStringSpan("LayerTranslation");
+    }
+    static void StreamJSONMarkerData(
+        baseprofiler::SpliceableJSONWriter& aWriter,
+        ProfileBufferRawPointer<layers::Layer> aLayer, gfx::Point aPoint) {
+      const size_t bufferSize = 32;
+      char buffer[bufferSize];
+      SprintfLiteral(buffer, "%p", aLayer.mRawPointer);
+
+      aWriter.StringProperty("layer", buffer);
+      aWriter.IntProperty("x", aPoint.x);
+      aWriter.IntProperty("y", aPoint.y);
+    }
+    static MarkerSchema MarkerTypeDisplay() {
+      using MS = MarkerSchema;
+      MS schema{MS::Location::markerChart, MS::Location::markerTable};
+      schema.AddKeyLabelFormat("layer", "Layer", MS::Format::string);
+      schema.AddKeyLabelFormat("x", "X", MS::Format::integer);
+      schema.AddKeyLabelFormat("y", "Y", MS::Format::integer);
+      return schema;
+    }
+  };
+
+  profiler_add_marker("LayerTranslation", geckoprofiler::category::GRAPHICS, {},
+                      LayerTranslationMarker{},
+                      WrapProfileBufferRawPointer(aLayer), translation);
 #endif
 }
 
