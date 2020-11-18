@@ -202,12 +202,6 @@ void js::PrintTypes(JSContext* cx, Compartment* comp, bool force) {
   if (!force && !InferSpewActive(ISpewResult)) {
     return;
   }
-
-  for (auto group = zone->cellIter<ObjectGroup>(); !group.done();
-       group.next()) {
-    AutoSweepObjectGroup sweep(group);
-    group->print(sweep);
-  }
 #endif
 }
 
@@ -217,10 +211,6 @@ void js::PrintTypes(JSContext* cx, Compartment* comp, bool force) {
 
 void js::AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj,
                            jsid id, const Value& value) {
-  MOZ_CRASH("TODO(no-TI): remove");
-}
-
-void ObjectGroup::print(const AutoSweepObjectGroup& sweep) {
   MOZ_CRASH("TODO(no-TI): remove");
 }
 
@@ -234,20 +224,6 @@ static inline void AssertGCStateForSweep(Zone* zone) {
   // IsAboutToBeFinalized doesn't work right on tenured objects when called
   // during a minor collection.
   MOZ_ASSERT(!JS::RuntimeHeapIsMinorCollecting());
-}
-
-/*
- * Before sweeping the arenas themselves, scan all groups in a compartment to
- * fixup weak references: property type sets referencing dead JS and type
- * objects, and singleton JS objects whose type is not referenced elsewhere.
- * This is done either incrementally as part of the sweep, or on demand as type
- * objects are accessed before their contents have been swept.
- */
-void ObjectGroup::sweep(const AutoSweepObjectGroup& sweep) {
-  MOZ_ASSERT(generation() != zoneFromAnyThread()->types.generation);
-  setGeneration(zone()->types.generation);
-
-  AssertGCStateForSweep(zone());
 }
 
 /* static */

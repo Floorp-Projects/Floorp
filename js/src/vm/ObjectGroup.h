@@ -26,7 +26,6 @@ namespace js {
 class TypeDescr;
 
 class AutoClearTypeInferenceStateOnOOM;
-class AutoSweepObjectGroup;
 class ObjectGroupRealm;
 class PlainObject;
 
@@ -142,12 +141,10 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
     return singleton();
   }
 
-  bool singleton() const {
-    return flagsDontCheckGeneration() & OBJECT_FLAG_SINGLETON;
-  }
+  bool singleton() const { return flags() & OBJECT_FLAG_SINGLETON; }
 
   bool lazy() const {
-    bool res = flagsDontCheckGeneration() & OBJECT_FLAG_LAZY_SINGLETON;
+    bool res = flags() & OBJECT_FLAG_LAZY_SINGLETON;
     MOZ_ASSERT_IF(res, singleton());
     return res;
   }
@@ -175,7 +172,7 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
                           OBJECT_FLAG_ADDENDUM_SHIFT);
   }
 
-  ObjectGroupFlags flagsDontCheckGeneration() const { return flags_; }
+  ObjectGroupFlags flags() const { return flags_; }
 
  public:
   TypeDescr* maybeTypeDescr() {
@@ -202,26 +199,7 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 
   /* Helpers */
 
-  void print(const AutoSweepObjectGroup& sweep);
-
   void traceChildren(JSTracer* trc);
-
-  inline bool needsSweep();
-  void sweep(const AutoSweepObjectGroup& sweep);
-
- private:
-  uint32_t generation() {
-    return (flags_ & OBJECT_FLAG_GENERATION_MASK) >>
-           OBJECT_FLAG_GENERATION_SHIFT;
-  }
-
- public:
-  void setGeneration(uint32_t generation) {
-    MOZ_ASSERT(generation <=
-               (OBJECT_FLAG_GENERATION_MASK >> OBJECT_FLAG_GENERATION_SHIFT));
-    flags_ &= ~OBJECT_FLAG_GENERATION_MASK;
-    flags_ |= generation << OBJECT_FLAG_GENERATION_SHIFT;
-  }
 
   void finalize(JSFreeOp* fop) {
     // Nothing to do.

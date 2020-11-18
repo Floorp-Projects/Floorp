@@ -13,13 +13,6 @@
 
 namespace js {
 
-inline bool ObjectGroup::needsSweep() {
-  // Note: this can be called off thread during compacting GCs, in which case
-  // nothing will be running on the main thread.
-  MOZ_ASSERT(!TlsContext.get()->inUnsafeCallWithABI);
-  return generation() != zoneFromAnyThread()->types.generation;
-}
-
 /* static */ inline ObjectGroup* ObjectGroup::lazySingletonGroup(
     JSContext* cx, ObjectGroup* oldGroup, const JSClass* clasp,
     TaggedProto proto) {

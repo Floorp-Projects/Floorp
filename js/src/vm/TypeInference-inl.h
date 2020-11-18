@@ -208,27 +208,6 @@ inline void MarkTypePropertyNonWritable(JSContext* cx, JSObject* obj, jsid id) {
   MOZ_CRASH("TODO(no-TI): remove");
 }
 
-/////////////////////////////////////////////////////////////////////
-// ObjectGroup
-/////////////////////////////////////////////////////////////////////
-
-inline AutoSweepObjectGroup::AutoSweepObjectGroup(ObjectGroup* group)
-#ifdef DEBUG
-    : group_(group)
-#endif
-{
-  if (group->needsSweep()) {
-    group->sweep(*this);
-  }
-}
-
-#ifdef DEBUG
-inline AutoSweepObjectGroup::~AutoSweepObjectGroup() {
-  // This should still hold.
-  MOZ_ASSERT(!group_->needsSweep());
-}
-#endif
-
 inline AutoSweepJitScript::AutoSweepJitScript(BaseScript* script)
 #ifdef DEBUG
     : zone_(script->zone()),

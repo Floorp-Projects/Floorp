@@ -54,7 +54,6 @@ class TempAllocator;
 
 class AutoClearTypeInferenceStateOnOOM;
 class AutoSweepBase;
-class AutoSweepObjectGroup;
 class LifoAlloc;
 class ObjectGroup;
 class SystemAllocPolicy;
@@ -86,11 +85,6 @@ enum : uint32_t {
   // Mask/shift for the kind of addendum attached to this group.
   OBJECT_FLAG_ADDENDUM_MASK = 0x38000000,
   OBJECT_FLAG_ADDENDUM_SHIFT = 27,
-
-  // Mask/shift for this group's generation. If out of sync with the
-  // TypeZone's generation, this group hasn't been swept yet.
-  OBJECT_FLAG_GENERATION_MASK = 0x40000000,
-  OBJECT_FLAG_GENERATION_SHIFT = 30,
 };
 using ObjectGroupFlags = uint32_t;
 

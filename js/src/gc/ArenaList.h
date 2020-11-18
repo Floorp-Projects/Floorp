@@ -279,8 +279,6 @@ class ArenaLists {
   ZoneData<Arena*> gcAccessorShapeArenasToUpdate;
   ZoneData<Arena*> gcScriptArenasToUpdate;
   ZoneData<Arena*> gcNewScriptArenasToUpdate;
-  ZoneData<Arena*> gcObjectGroupArenasToUpdate;
-  ZoneData<Arena*> gcNewObjectGroupArenasToUpdate;
 
   // The list of empty arenas which are collected during the sweep phase and
   // released at the end of sweeping every sweep group.

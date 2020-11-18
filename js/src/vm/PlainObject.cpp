@@ -29,7 +29,6 @@
 using JS::Handle;
 using JS::Rooted;
 
-using js::AutoSweepObjectGroup;
 using js::CopyInitializerObject;
 using js::GenericObject;
 using js::GuessObjectGCKind;
