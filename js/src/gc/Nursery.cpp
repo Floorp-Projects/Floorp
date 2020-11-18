@@ -1101,13 +1101,7 @@ void js::Nursery::printCollectionProfile(JS::GCReason reason,
 }
 
 void js::Nursery::printTenuringData(const TenureCountCache& tenureCounts) {
-  for (const auto& entry : tenureCounts.entries) {
-    if (entry.count >= reportTenurings_) {
-      fprintf(stderr, "  %u x ", entry.count);
-      AutoSweepObjectGroup sweep(entry.group);
-      entry.group->print(sweep);
-    }
-  }
+  // TODO(no-TI): remove.
 }
 
 js::Nursery::CollectionResult js::Nursery::doCollection(

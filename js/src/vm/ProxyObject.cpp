@@ -132,14 +132,11 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
   // Ensure that the wrapper has the same lifetime assumptions as the
   // wrappee. Prefer to allocate in the nursery, when possible.
   gc::InitialHeap heap;
-  {
-    AutoSweepObjectGroup sweep(group);
-    if ((priv.isGCThing() && priv.toGCThing()->isTenured()) ||
-        !handler->canNurseryAllocate()) {
-      heap = gc::TenuredHeap;
-    } else {
-      heap = gc::DefaultHeap;
-    }
+  if ((priv.isGCThing() && priv.toGCThing()->isTenured()) ||
+      !handler->canNurseryAllocate()) {
+    heap = gc::TenuredHeap;
+  } else {
+    heap = gc::DefaultHeap;
   }
 
   debugCheckNewObject(group, shape, allocKind, heap);

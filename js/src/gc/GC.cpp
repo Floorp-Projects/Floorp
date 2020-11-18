@@ -2233,10 +2233,6 @@ void GCRuntime::sweepTypesAfterCompacting(Zone* zone) {
     }
     AutoSweepJitScript sweep(base->asJSScript());
   }
-  for (auto group = zone->cellIterUnsafe<ObjectGroup>(); !group.done();
-       group.next()) {
-    AutoSweepObjectGroup sweep(group);
-  }
 
   zone->types.endSweep(rt);
 }
@@ -2766,8 +2762,6 @@ ArenaLists::ArenaLists(Zone* zone)
       gcAccessorShapeArenasToUpdate(zone, nullptr),
       gcScriptArenasToUpdate(zone, nullptr),
       gcNewScriptArenasToUpdate(zone, nullptr),
-      gcObjectGroupArenasToUpdate(zone, nullptr),
-      gcNewObjectGroupArenasToUpdate(zone, nullptr),
       savedEmptyArenas(zone, nullptr) {
   for (auto i : AllAllocKinds()) {
     concurrentUse(i) = ConcurrentUse::None;
@@ -2900,9 +2894,6 @@ Arena* ArenaLists::takeSweptEmptyArenas() {
 void ArenaLists::queueForegroundThingsForSweep() {
   gcShapeArenasToUpdate = arenasToSweep(AllocKind::SHAPE);
   gcAccessorShapeArenasToUpdate = arenasToSweep(AllocKind::ACCESSOR_SHAPE);
-  gcObjectGroupArenasToUpdate = arenasToSweep(AllocKind::OBJECT_GROUP);
-  gcNewObjectGroupArenasToUpdate =
-      newArenasInMarkPhase(AllocKind::OBJECT_GROUP).head();
   gcScriptArenasToUpdate = arenasToSweep(AllocKind::SCRIPT);
   gcNewScriptArenasToUpdate = newArenasInMarkPhase(AllocKind::SCRIPT).head();
 }
@@ -2935,8 +2926,6 @@ void ArenaLists::checkNoArenasToUpdate() {
   MOZ_ASSERT(!gcAccessorShapeArenasToUpdate);
   MOZ_ASSERT(!gcScriptArenasToUpdate);
   MOZ_ASSERT(!gcNewScriptArenasToUpdate);
-  MOZ_ASSERT(!gcObjectGroupArenasToUpdate);
-  MOZ_ASSERT(!gcNewObjectGroupArenasToUpdate);
 }
 
 void ArenaLists::checkNoArenasToUpdateForKind(AllocKind kind) {
@@ -2951,10 +2940,6 @@ void ArenaLists::checkNoArenasToUpdateForKind(AllocKind kind) {
     case AllocKind::SCRIPT:
       MOZ_ASSERT(!gcScriptArenasToUpdate);
       MOZ_ASSERT(!gcNewScriptArenasToUpdate);
-      break;
-    case AllocKind::OBJECT_GROUP:
-      MOZ_ASSERT(!gcObjectGroupArenasToUpdate);
-      MOZ_ASSERT(!gcNewObjectGroupArenasToUpdate);
       break;
     default:
       break;
@@ -5684,10 +5669,6 @@ static void SweepThing(JSFreeOp* fop, BaseScript* script) {
   AutoSweepJitScript sweep(script);
 }
 
-static void SweepThing(JSFreeOp* fop, ObjectGroup* group) {
-  AutoSweepObjectGroup sweep(group);
-}
-
 template <typename T>
 static bool SweepArenaList(JSFreeOp* fop, Arena** arenasToSweep,
                            SliceBudget& sliceBudget) {
@@ -5738,16 +5719,6 @@ IncrementalProgress GCRuntime::sweepTypeInformation(JSFreeOp* fop,
 
   if (!SweepArenaList<BaseScript>(fop, &al.gcNewScriptArenasToUpdate.ref(),
                                   budget)) {
-    return NotFinished;
-  }
-
-  if (!SweepArenaList<ObjectGroup>(fop, &al.gcObjectGroupArenasToUpdate.ref(),
-                                   budget)) {
-    return NotFinished;
-  }
-
-  if (!SweepArenaList<ObjectGroup>(
-          fop, &al.gcNewObjectGroupArenasToUpdate.ref(), budget)) {
     return NotFinished;
   }
 
@@ -7956,7 +7927,6 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
       }
     }
 
-    group->setGeneration(target->zone()->types.generation);
     group->realm_ = target;
   }
 

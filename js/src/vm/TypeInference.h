@@ -66,22 +66,6 @@ class MOZ_RAII AutoSweepBase {
   JS::AutoCheckCannotGC nogc;
 };
 
-// Sweep an ObjectGroup. Functions that expect a swept group should take a
-// reference to this class.
-class MOZ_RAII AutoSweepObjectGroup : public AutoSweepBase {
-#ifdef DEBUG
-  ObjectGroup* group_;
-#endif
-
- public:
-  inline explicit AutoSweepObjectGroup(ObjectGroup* group);
-#ifdef DEBUG
-  inline ~AutoSweepObjectGroup();
-
-  ObjectGroup* group() const { return group_; }
-#endif
-};
-
 // Sweep the type inference data in a JitScript. Functions that expect a swept
 // script should take a reference to this class.
 class MOZ_RAII AutoSweepJitScript : public AutoSweepBase {
