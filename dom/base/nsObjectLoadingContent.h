@@ -104,6 +104,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
     // The plugin is click-to-play, but the user won't see overlays
     eFallbackClickToPlayQuiet =
         nsIObjectLoadingContent::PLUGIN_CLICK_TO_PLAY_QUIET,
+    // Plugins are no longer supported.  Content is just a transparent rect.
+    eFallbackBlockAllPlugins = nsIObjectLoadingContent::PLUGIN_BLOCK_ALL,
   };
 
   nsObjectLoadingContent();

@@ -9735,18 +9735,11 @@ uint32_t nsContentUtils::HtmlObjectContentTypeForMIMEType(
     return nsIObjectLoadingContent::TYPE_DOCUMENT;
   }
 
-  RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
-  if (pluginHost) {
-    nsCOMPtr<nsIPluginTag> tag = PluginTagForType(aMIMEType, aNoFakePlugin);
-    if (tag) {
-      if (!aNoFakePlugin &&
-          nsCOMPtr<nsIFakePluginTag>(do_QueryInterface(tag))) {
-        return nsIObjectLoadingContent::TYPE_FAKE_PLUGIN;
-      }
-
-      // ShouldPlay will handle checking for disabled plugins
-      return nsIObjectLoadingContent::TYPE_PLUGIN;
-    }
+  bool isPlugin = nsPluginHost::GetSpecialType(aMIMEType) !=
+                  nsPluginHost::eSpecialType_None;
+  if (isPlugin) {
+    // ShouldPlay will handle checking for disabled plugins
+    return nsIObjectLoadingContent::TYPE_PLUGIN;
   }
 
   return nsIObjectLoadingContent::TYPE_NULL;
