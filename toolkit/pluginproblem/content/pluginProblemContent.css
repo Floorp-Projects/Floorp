@@ -14,97 +14,10 @@
   height: 200px;
 }
 
-:host(:-moz-handler-clicktoplay) .mainBox,
-:host(:-moz-handler-vulnerable-updatable) .mainBox,
-:host(:-moz-handler-vulnerable-no-update) .mainBox,
-:host(:-moz-handler-blocked) .mainBox {
-  -moz-user-focus: normal;
-}
-
-:host(:-moz-handler-clicktoplay) .mainBox:focus,
-:host(:-moz-handler-vulnerable-updatable) .mainBox:focus,
-:host(:-moz-handler-vulnerable-no-update) .mainBox:focus,
-:host(:-moz-handler-blocked) .mainBox:focus {
-  outline: 1px dotted;
-}
-
 .mainBox {
   width: inherit;
   height: inherit;
   overflow: hidden;
-  direction: ltr;
-  unicode-bidi: embed;
-  /* used to block inherited properties */
-  text-transform: none;
-  text-indent: 0;
-  cursor: initial;
-  white-space: initial;
-  word-spacing: initial;
-  letter-spacing: initial;
-  line-height: initial;
-  visibility: hidden;
-}
-
-.visible {
-  visibility: visible;
-}
-
-/* Initialize the overlay with visibility:hidden to prevent flickering if
-* the plugin is too small to show the overlay */
-.mainBox > .hoverBox,
-.mainBox > .closeIcon {
-  visibility: hidden;
-}
-
-.visible > .hoverBox,
-.visible > .closeIcon {
-  visibility: visible;
-}
-
-.mainBox[chromedir="rtl"] {
-  direction: rtl;
-}
-
-:host(:-moz-handler-clicktoplay) .hoverBox,
-:host(:-moz-handler-vulnerable-updatable) .hoverBox,
-:host(:-moz-handler-vulnerable-no-update) .hoverBox {
-  cursor: pointer;
-}
-
-.hoverBox > label {
   cursor: inherit;
-}
-.icon {
-  cursor: inherit;
-}
-
-.msg {
-  display: none;
-}
-
-:host(:-moz-handler-clicktoplay) .msgClickToPlay,
-:host(:-moz-handler-vulnerable-updatable) .msgVulnerabilityStatus,
-:host(:-moz-handler-vulnerable-updatable) .msgCheckForUpdates,
-:host(:-moz-handler-vulnerable-updatable) .msgClickToPlay,
-:host(:-moz-handler-vulnerable-no-update) .msgVulnerabilityStatus,
-:host(:-moz-handler-vulnerable-no-update) .msgClickToPlay,
-:host(:-moz-handler-blocked) .msgBlocked,
-:host(:-moz-handler-crashed) .msgCrashed {
-  display: block;
-}
-
-.submitStatus[status] {
-  display: -moz-box;
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  height: 160px;
-}
-
-.submitStatus[status="noReport"]   .msgNoCrashReport,
-.submitStatus[status="please"]     .msgPleaseSubmit,
-.submitStatus[status="noSubmit"]   .msgNotSubmitted,
-.submitStatus[status="submitting"] .msgSubmitting,
-.submitStatus[status="success"]    .msgSubmitted,
-.submitStatus[status="failed"]     .msgSubmitFailed {
-  display: block;
+  visibility: hidden;
 }
