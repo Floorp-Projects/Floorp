@@ -7252,10 +7252,9 @@ void HTMLMediaElement::SetDecoder(MediaDecoder* aDecoder) {
 }
 
 float HTMLMediaElement::ComputedVolume() const {
-  return mMuted
-             ? 0.0f
-             : mAudioChannelWrapper ? mAudioChannelWrapper->GetEffectiveVolume()
-                                    : mVolume;
+  return mMuted                 ? 0.0f
+         : mAudioChannelWrapper ? mAudioChannelWrapper->GetEffectiveVolume()
+                                : mVolume;
 }
 
 bool HTMLMediaElement::ComputedMuted() const {

@@ -536,8 +536,8 @@ Result CertVerifier::VerifyCert(
       (mOCSPDownloadConfig == ocspOff) || (mOCSPDownloadConfig == ocspEVOnly) ||
               (flags & FLAG_LOCAL_ONLY)
           ? NSSCertDBTrustDomain::NeverFetchOCSP
-          : !mOCSPStrict ? NSSCertDBTrustDomain::FetchOCSPForDVSoftFail
-                         : NSSCertDBTrustDomain::FetchOCSPForDVHardFail;
+      : !mOCSPStrict ? NSSCertDBTrustDomain::FetchOCSPForDVSoftFail
+                     : NSSCertDBTrustDomain::FetchOCSPForDVHardFail;
 
   Input stapledOCSPResponseInput;
   const Input* stapledOCSPResponse = nullptr;

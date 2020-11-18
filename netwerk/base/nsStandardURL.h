@@ -319,8 +319,8 @@ class nsStandardURL : public nsIFileURL,
                            public nsISerializable {
     NS_FORWARD_SAFE_NSIURISETTERS_RET(BaseURIMutator<T>::mURI)
 
-    [[nodiscard]] NS_IMETHOD
-        Deserialize(const mozilla::ipc::URIParams& aParams) override {
+    [[nodiscard]] NS_IMETHOD Deserialize(
+        const mozilla::ipc::URIParams& aParams) override {
       return BaseURIMutator<T>::InitFromIPCParams(aParams);
     }
 

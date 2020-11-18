@@ -953,10 +953,9 @@ static void CollectCertTelemetry(
     const UniqueCERTCertList& aBuiltCertChain,
     const CertificateTransparencyInfo& aCertificateTransparencyInfo,
     const CRLiteTelemetryInfo& aCRLiteTelemetryInfo) {
-  uint32_t evStatus = (aCertVerificationResult != Success)
-                          ? 0  // 0 = Failure
-                          : (aEvOidPolicy == SEC_OID_UNKNOWN) ? 1   // 1 = DV
-                                                              : 2;  // 2 = EV
+  uint32_t evStatus = (aCertVerificationResult != Success) ? 0  // 0 = Failure
+                      : (aEvOidPolicy == SEC_OID_UNKNOWN)  ? 1  // 1 = DV
+                                                           : 2;  // 2 = EV
   Telemetry::Accumulate(Telemetry::CERT_EV_STATUS, evStatus);
 
   if (aOcspStaplingStatus != CertVerifier::OCSP_STAPLING_NEVER_CHECKED) {
@@ -1232,11 +1231,10 @@ PRErrorCode AuthCertificateParseResults(
       ("[0x%" PRIx64 "] Certificate error was not overridden\n", aPtrForLog));
 
   // pick the error code to report by priority
-  return errorCodeTrust
-             ? errorCodeTrust
-             : errorCodeMismatch
-                   ? errorCodeMismatch
-                   : errorCodeTime ? errorCodeTime : aDefaultErrorCodeToReport;
+  return errorCodeTrust      ? errorCodeTrust
+         : errorCodeMismatch ? errorCodeMismatch
+         : errorCodeTime     ? errorCodeTime
+                             : aDefaultErrorCodeToReport;
 }
 
 }  // unnamed namespace

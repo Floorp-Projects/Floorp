@@ -576,9 +576,9 @@ NS_IMETHODIMP
 nsNavHistoryContainerResultNode::GetState(uint16_t* _state) {
   NS_ENSURE_ARG_POINTER(_state);
 
-  *_state = mExpanded ? (uint16_t)STATE_OPENED
-                      : mAsyncPendingStmt ? (uint16_t)STATE_LOADING
-                                          : (uint16_t)STATE_CLOSED;
+  *_state = mExpanded           ? (uint16_t)STATE_OPENED
+            : mAsyncPendingStmt ? (uint16_t)STATE_LOADING
+                                : (uint16_t)STATE_CLOSED;
 
   return NS_OK;
 }

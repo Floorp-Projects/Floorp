@@ -2823,9 +2823,7 @@ JSString* DateTimeHelper::timeZoneComment(JSContext* cx, double utcTime,
   int64_t utcMilliseconds = static_cast<int64_t>(utcTime);
   if (!DateTimeInfo::timeZoneDisplayName(timeZoneStart, remainingSpace,
                                          utcMilliseconds, locale)) {
-    {
-      JS_ReportOutOfMemory(cx);
-    }
+    { JS_ReportOutOfMemory(cx); }
     return nullptr;
   }
 

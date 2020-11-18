@@ -1590,7 +1590,8 @@ void ObjectGroup::print(const AutoSweepObjectGroup& sweep) {
       stderr, "%s : %s", TypeSet::ObjectGroupString(this).get(),
       tagged.isObject()
           ? TypeSet::TypeString(TypeSet::ObjectType(tagged.toObject())).get()
-          : tagged.isDynamic() ? "(dynamic)" : "(null)");
+      : tagged.isDynamic() ? "(dynamic)"
+                           : "(null)");
 
   if (unknownProperties(sweep)) {
     fprintf(stderr, " unknown");

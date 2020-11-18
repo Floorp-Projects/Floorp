@@ -3129,9 +3129,9 @@ class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 2> {
   }
 
   const char* extraName() const {
-    return mode() == NORMAL
-               ? "Normal"
-               : mode() == TRUNCATE ? "Truncate" : "TruncateNoWrap";
+    return mode() == NORMAL     ? "Normal"
+           : mode() == TRUNCATE ? "Truncate"
+                                : "TruncateNoWrap";
   }
 
   static const size_t Input = 0;

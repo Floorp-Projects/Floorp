@@ -3750,10 +3750,10 @@ bool GeneralParser<ParseHandler, Unit>::maybeParseDirective(
       if (pc_->isFunctionBox()) {
         FunctionBox* funbox = pc_->functionBox();
         if (!funbox->hasSimpleParameterList()) {
-          const char* parameterKind =
-              funbox->hasDestructuringArgs
-                  ? "destructuring"
-                  : funbox->hasParameterExprs ? "default" : "rest";
+          const char* parameterKind = funbox->hasDestructuringArgs
+                                          ? "destructuring"
+                                      : funbox->hasParameterExprs ? "default"
+                                                                  : "rest";
           errorAt(directivePos.begin, JSMSG_STRICT_NON_SIMPLE_PARAMS,
                   parameterKind);
           return false;

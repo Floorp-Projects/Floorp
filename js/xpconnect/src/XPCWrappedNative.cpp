@@ -1743,8 +1743,9 @@ char* XPCWrappedNative::ToString(
           JS_sprintf_append(std::move(name), "%s", array[1]->GetNameString());
     } else {
       for (uint16_t i = 1; i < count; i++) {
-        const char* fmt =
-            (i == 1) ? "(%s" : (i == count - 1) ? ", %s)" : ", %s";
+        const char* fmt = (i == 1)           ? "(%s"
+                          : (i == count - 1) ? ", %s)"
+                                             : ", %s";
         name =
             JS_sprintf_append(std::move(name), fmt, array[i]->GetNameString());
       }
