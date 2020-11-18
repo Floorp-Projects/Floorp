@@ -48,7 +48,7 @@ enum class PhoneFeature(val androidPermissionsList: Array<String>) : Parcelable 
         @StringRes val stringRes = if (isAndroidPermissionGranted(context)) {
             when (this) {
                 AUTOPLAY_AUDIBLE ->
-                    when (settings?.getAutoplayUserSetting(default = AUTOPLAY_BLOCK_ALL) ?: AUTOPLAY_BLOCK_ALL) {
+                    when (settings?.getAutoplayUserSetting() ?: AUTOPLAY_BLOCK_ALL) {
                         AUTOPLAY_ALLOW_ALL -> R.string.preference_option_autoplay_allowed2
                         AUTOPLAY_ALLOW_ON_WIFI -> R.string.preference_option_autoplay_allowed_wifi_only2
                         AUTOPLAY_BLOCK_AUDIBLE -> R.string.preference_option_autoplay_block_audio2

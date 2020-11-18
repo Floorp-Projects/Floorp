@@ -40,6 +40,7 @@ import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitTyp
 import org.mozilla.fenix.settings.logins.SavedLoginsSortingStrategyMenu
 import org.mozilla.fenix.settings.logins.SortingStrategy
 import org.mozilla.fenix.settings.registerOnSharedPreferenceChangeListener
+import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_ALL
 import java.security.InvalidParameterException
 
 private const val AUTOPLAY_USER_SETTING = "AUTOPLAY_USER_SETTING"
@@ -744,9 +745,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      * either [AUTOPLAY_ALLOW_ALL] or [AUTOPLAY_BLOCK_ALL]. Because of this, we are forced to save
      * the user selected setting as well.
      */
-    fun getAutoplayUserSetting(
-        default: Int
-    ) = preferences.getInt(AUTOPLAY_USER_SETTING, default)
+    fun getAutoplayUserSetting() = preferences.getInt(AUTOPLAY_USER_SETTING, AUTOPLAY_BLOCK_ALL)
 
     private fun getSitePermissionsPhoneFeatureAutoplayAction(
         feature: PhoneFeature,

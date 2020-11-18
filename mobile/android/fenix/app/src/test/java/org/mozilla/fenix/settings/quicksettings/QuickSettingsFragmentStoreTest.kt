@@ -125,7 +125,7 @@ class QuickSettingsFragmentStoreTest {
         every { permissions.mediaKeySystemAccess } returns SitePermissions.Status.NO_DECISION
         every { permissions.autoplayAudible } returns SitePermissions.AutoplayStatus.ALLOWED
         every { permissions.autoplayInaudible } returns SitePermissions.AutoplayStatus.BLOCKED
-        every { appSettings.getAutoplayUserSetting(any()) } returns AUTOPLAY_BLOCK_ALL
+        every { appSettings.getAutoplayUserSetting() } returns AUTOPLAY_BLOCK_ALL
 
         val state = QuickSettingsFragmentStore.createWebsitePermissionState(
             context, permissions, permissionHighlights, appSettings

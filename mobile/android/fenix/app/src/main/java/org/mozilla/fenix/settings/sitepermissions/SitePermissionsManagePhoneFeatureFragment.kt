@@ -79,14 +79,12 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
     private fun initFirstRadio(rootView: View) {
         with(rootView.ask_to_allow_radio) {
             if (args.phoneFeature == AUTOPLAY_AUDIBLE) {
-                // Disabled because GV does not allow this setting. TODO Reenable after
-                // https://bugzilla.mozilla.org/show_bug.cgi?id=1621825 is fixed
-//                text = getString(R.string.preference_option_autoplay_allowed2)
-//                setOnClickListener {
-//                    saveActionInSettings(it.context, AUTOPLAY_ALLOW_ALL)
-//                }
-//                restoreState(AUTOPLAY_ALLOW_ALL)
-                visibility = View.GONE
+                text = getString(R.string.preference_option_autoplay_allowed2)
+                setOnClickListener {
+                    saveActionInSettings(AUTOPLAY_ALLOW_ALL)
+                }
+                restoreState(AUTOPLAY_ALLOW_ALL)
+                visibility = View.VISIBLE
             } else {
                 text = getCombinedLabel(
                     getString(R.string.preference_option_phone_feature_ask_to_allow),
@@ -109,10 +107,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
                     getString(R.string.preference_option_autoplay_allowed_wifi_subtext)
                 )
                 setOnClickListener {
-                    // TODO replace with AUTOPLAY_ALLOW_ON_WIFI when
-                    // https://bugzilla.mozilla.org/show_bug.cgi?id=1621825 is fixed. This GV bug
-                    // makes ALLOW_ALL behave as ALLOW_ON_WIFI
-                    saveActionInSettings(AUTOPLAY_ALLOW_ALL)
+                    saveActionInSettings(AUTOPLAY_ALLOW_ON_WIFI)
                 }
                 restoreState(AUTOPLAY_ALLOW_ON_WIFI)
             } else {
@@ -129,7 +124,10 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
         with(rootView.third_radio) {
             if (args.phoneFeature == AUTOPLAY_AUDIBLE) {
                 visibility = View.VISIBLE
-                text = getString(R.string.preference_option_autoplay_block_audio2)
+                text = getCombinedLabel(
+                    getString(R.string.preference_option_autoplay_block_audio2),
+                    getString(R.string.phone_feature_recommended)
+                )
                 setOnClickListener {
                     saveActionInSettings(AUTOPLAY_BLOCK_AUDIBLE)
                 }
@@ -151,10 +149,8 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
         with(rootView.fourth_radio) {
             if (args.phoneFeature == AUTOPLAY_AUDIBLE) {
                 visibility = View.VISIBLE
-                text = getCombinedLabel(
-                    getString(R.string.preference_option_autoplay_blocked3),
-                    getString(R.string.phone_feature_recommended)
-                )
+                text = getString(R.string.preference_option_autoplay_blocked3)
+
                 setOnClickListener {
                     saveActionInSettings(AUTOPLAY_BLOCK_ALL)
                 }
@@ -173,7 +169,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
     }
 
     private fun RadioButton.restoreState(buttonAutoplaySetting: Int) {
-        if (settings.getAutoplayUserSetting(AUTOPLAY_BLOCK_ALL) == buttonAutoplaySetting) {
+        if (settings.getAutoplayUserSetting() == buttonAutoplaySetting) {
             this.isChecked = true
             this.setStartCheckedIndicator()
         }
@@ -194,9 +190,11 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
         val setting: Event.AutoPlaySettingChanged.AutoplaySetting
 
         val (audible, inaudible) = when (autoplaySetting) {
-            AUTOPLAY_ALLOW_ALL,
+            AUTOPLAY_ALLOW_ALL -> {
+                setting = Event.AutoPlaySettingChanged.AutoplaySetting.ALLOW_ALL
+                ALLOWED to ALLOWED
+            }
             AUTOPLAY_ALLOW_ON_WIFI -> {
-                settings.setAutoplayUserSetting(AUTOPLAY_ALLOW_ON_WIFI)
                 setting = Event.AutoPlaySettingChanged.AutoplaySetting.BLOCK_CELLULAR
                 BLOCKED to BLOCKED
             }

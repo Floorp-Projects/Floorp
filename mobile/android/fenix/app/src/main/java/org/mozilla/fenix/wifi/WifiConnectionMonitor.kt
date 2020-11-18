@@ -10,6 +10,7 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import androidx.annotation.VisibleForTesting
 
 /**
  * Attaches itself to the [Application] and listens for WIFI available/not available events. This
@@ -26,14 +27,22 @@ import android.net.NetworkRequest
  * ```
  */
 class WifiConnectionMonitor(app: Application) {
-    private val callbacks = mutableListOf<(Boolean) -> Unit>()
-    private val connectivityManager = app.getSystemService(Context.CONNECTIVITY_SERVICE) as
+    @VisibleForTesting
+    internal val callbacks = mutableListOf<(Boolean) -> Unit>()
+
+    @VisibleForTesting
+    internal var connectivityManager = app.getSystemService(Context.CONNECTIVITY_SERVICE) as
             ConnectivityManager
 
-    private var lastKnownStateWasAvailable: Boolean? = null
-    private var isRegistered = false
+    @VisibleForTesting
+    internal var lastKnownStateWasAvailable: Boolean? = null
 
-    private val frameworkListener = object : ConnectivityManager.NetworkCallback() {
+    @VisibleForTesting
+    internal var isRegistered = false
+        @Synchronized set
+
+    @VisibleForTesting
+    internal val frameworkListener = object : ConnectivityManager.NetworkCallback() {
         override fun onLost(network: Network) {
             notifyListeners(false)
             lastKnownStateWasAvailable = false
@@ -86,6 +95,8 @@ class WifiConnectionMonitor(app: Application) {
         if (!isRegistered) return
         connectivityManager.unregisterNetworkCallback(frameworkListener)
         isRegistered = false
+        lastKnownStateWasAvailable = null
+        callbacks.clear()
     }
 
     /**

@@ -852,12 +852,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
         view: View
     ): List<ContextMenuCandidate>
 
-    @CallSuper
-    override fun onStart() {
-        super.onStart()
-        sitePermissionWifiIntegration.get()?.maybeAddWifiConnectedListener()
-    }
-
     @VisibleForTesting
     internal fun observeRestoreComplete(store: BrowserStore, navController: NavController) {
         val activity = activity as HomeActivity

@@ -602,7 +602,7 @@ sealed class Event {
 
     data class AutoPlaySettingChanged(val setting: AutoplaySetting) : Event() {
         enum class AutoplaySetting {
-            BLOCK_CELLULAR, BLOCK_AUDIO, BLOCK_ALL
+            BLOCK_CELLULAR, BLOCK_AUDIO, BLOCK_ALL, ALLOW_ALL
         }
 
         override val extras: Map<Autoplay.settingChangedKeys, String>?

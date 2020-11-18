@@ -594,6 +594,21 @@ class SettingsTest {
     }
 
     @Test
+    fun getSitePermissionsCustomSettingsRules_autoplay_defaults() {
+        val settings = Settings(testContext)
+
+        assertEquals(
+            AutoplayAction.BLOCKED,
+            settings.getSitePermissionsCustomSettingsRules().autoplayAudible
+        )
+
+        assertEquals(
+            AutoplayAction.BLOCKED,
+            settings.getSitePermissionsCustomSettingsRules().autoplayInaudible
+        )
+    }
+
+    @Test
     fun getSitePermissionsCustomSettingsRules_persistentStorage() {
         settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.PERSISTENT_STORAGE, ALLOWED)
 
