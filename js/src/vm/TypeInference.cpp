@@ -56,78 +56,6 @@ using mozilla::PodCopy;
 
 using js::jit::JitScript;
 
-/////////////////////////////////////////////////////////////////////
-// Logging
-/////////////////////////////////////////////////////////////////////
-
-#ifdef DEBUG
-
-bool js::InferSpewActive(TypeSpewChannel channel) {
-  static bool active[SPEW_COUNT];
-  static bool checked = false;
-  if (!checked) {
-    checked = true;
-    PodArrayZero(active);
-    const char* env = getenv("INFERFLAGS");
-    if (!env) {
-      return false;
-    }
-    if (strstr(env, "ops")) {
-      active[ISpewOps] = true;
-    }
-    if (strstr(env, "result")) {
-      active[ISpewResult] = true;
-    }
-    if (strstr(env, "full")) {
-      for (unsigned i = 0; i < SPEW_COUNT; i++) {
-        active[i] = true;
-      }
-    }
-  }
-  return active[channel];
-}
-
-static bool InferSpewColorable() {
-  /* Only spew colors on xterm-color to not screw up emacs. */
-  static bool colorable = false;
-  static bool checked = false;
-  if (!checked) {
-    checked = true;
-    const char* env = getenv("TERM");
-    if (!env) {
-      return false;
-    }
-    if (strcmp(env, "xterm-color") == 0 || strcmp(env, "xterm-256color") == 0) {
-      colorable = true;
-    }
-  }
-  return colorable;
-}
-
-const char* js::InferSpewColorReset() {
-  if (!InferSpewColorable()) {
-    return "";
-  }
-  return "\x1b[0m";
-}
-
-void js::InferSpewImpl(const char* fmt, ...) {
-  va_list ap;
-  va_start(ap, fmt);
-  fprintf(stderr, "[infer] ");
-  vfprintf(stderr, fmt, ap);
-  fprintf(stderr, "\n");
-  va_end(ap);
-}
-#endif
-
-void js::EnsureTrackPropertyTypes(JSContext* cx, JSObject* obj, jsid id) {
-  if (!IsTypeInferenceEnabled()) {
-    return;
-  }
-  MOZ_CRASH("TODO(no-TI): remove");
-}
-
 bool js::ClassCanHaveExtraProperties(const JSClass* clasp) {
   return clasp->getResolve() || clasp->getOpsLookupProperty() ||
          clasp->getOpsGetProperty() || IsTypedArrayClass(clasp);
@@ -149,9 +77,6 @@ void TypeZone::processPendingRecompiles(JSFreeOp* fop,
 }
 
 void TypeZone::addPendingRecompile(JSContext* cx, const RecompileInfo& info) {
-  InferSpew(ISpewOps, "addPendingRecompile: %p:%s:%u", info.script(),
-            info.script()->filename(), info.script()->lineno());
-
   AutoEnterOOMUnsafeRegion oomUnsafe;
   RecompileInfoVector& vector =
       cx->zone()->types.activeAnalysis->pendingRecompiles;
@@ -190,28 +115,6 @@ void TypeZone::addPendingRecompile(JSContext* cx, JSScript* script) {
       inlinedCompilations->clearAndFree();
     }
   }
-}
-
-void js::PrintTypes(JSContext* cx, Compartment* comp, bool force) {
-#ifdef DEBUG
-  gc::AutoSuppressGC suppressGC(cx);
-
-  Zone* zone = comp->zone();
-  AutoEnterAnalysis enter(nullptr, zone);
-
-  if (!force && !InferSpewActive(ISpewResult)) {
-    return;
-  }
-#endif
-}
-
-/////////////////////////////////////////////////////////////////////
-// ObjectGroup
-/////////////////////////////////////////////////////////////////////
-
-void js::AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj,
-                           jsid id, const Value& value) {
-  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 /////////////////////////////////////////////////////////////////////

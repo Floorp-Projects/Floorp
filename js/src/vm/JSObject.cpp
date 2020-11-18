@@ -550,11 +550,6 @@ bool js::SetIntegrityLevel(JSContext* cx, HandleObject obj,
       if (!isPrivate) {
         child.setAttrs(child.attrs() |
                        GetSealedOrFrozenAttributes(child.attrs(), level));
-
-        if (!JSID_IS_EMPTY(child.get().propid) &&
-            level == IntegrityLevel::Frozen) {
-          MarkTypePropertyNonWritable(cx, nobj, child.get().propid);
-        }
       }
 
       last = cx->zone()->propertyTree().getChild(cx, last, child);

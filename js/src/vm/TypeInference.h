@@ -188,37 +188,6 @@ class TypeZone {
   }
 };
 
-enum TypeSpewChannel {
-  ISpewOps,    /* ops: New constraints and types. */
-  ISpewResult, /* result: Final type sets. */
-  SPEW_COUNT
-};
-
-#ifdef DEBUG
-
-bool InferSpewActive(TypeSpewChannel channel);
-const char* InferSpewColorReset();
-
-#  define InferSpew(channel, ...)   \
-    if (InferSpewActive(channel)) { \
-      InferSpewImpl(__VA_ARGS__);   \
-    } else {                        \
-    }
-void InferSpewImpl(const char* fmt, ...) MOZ_FORMAT_PRINTF(1, 2);
-
-#else
-
-inline const char* InferSpewColorReset() { return nullptr; }
-
-#  define InferSpew(channel, ...) \
-    do {                          \
-    } while (0)
-
-#endif
-
-// Prints type information for a context if spew is enabled or force is set.
-void PrintTypes(JSContext* cx, JS::Compartment* comp, bool force);
-
 } /* namespace js */
 
 // JS::ubi::Nodes can point to object groups; they're js::gc::Cell instances

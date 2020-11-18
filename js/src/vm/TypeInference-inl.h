@@ -161,53 +161,6 @@ struct MOZ_RAII AutoEnterAnalysis {
   }
 };
 
-/////////////////////////////////////////////////////////////////////
-// Interface functions
-/////////////////////////////////////////////////////////////////////
-
-MOZ_ALWAYS_INLINE bool TrackPropertyTypes(JSObject* obj, jsid id) {
-  return false;
-}
-
-void EnsureTrackPropertyTypes(JSContext* cx, JSObject* obj, jsid id);
-
-inline bool CanHaveEmptyPropertyTypesForOwnProperty(JSObject* obj) {
-  // Per the comment on TypeSet::propertySet, property type sets for global
-  // objects may be empty for 'own' properties if the global property still
-  // has its initial undefined value.
-  return obj->is<GlobalObject>();
-}
-
-MOZ_ALWAYS_INLINE bool HasTypePropertyId(JSObject* obj, jsid id,
-                                         const Value& value) {
-  MOZ_CRASH("TODO(no-TI): remove");
-}
-
-void AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj,
-                       jsid id, const Value& value);
-
-MOZ_ALWAYS_INLINE void AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id,
-                                         const Value& value) {
-  if (!IsTypeInferenceEnabled()) {
-    return;
-  }
-  MOZ_CRASH("TODO(no-TI): remove");
-}
-
-inline void MarkTypePropertyNonData(JSContext* cx, JSObject* obj, jsid id) {
-  if (!IsTypeInferenceEnabled()) {
-    return;
-  }
-  MOZ_CRASH("TODO(no-TI): remove");
-}
-
-inline void MarkTypePropertyNonWritable(JSContext* cx, JSObject* obj, jsid id) {
-  if (!IsTypeInferenceEnabled()) {
-    return;
-  }
-  MOZ_CRASH("TODO(no-TI): remove");
-}
-
 inline AutoSweepJitScript::AutoSweepJitScript(BaseScript* script)
 #ifdef DEBUG
     : zone_(script->zone()),

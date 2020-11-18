@@ -1349,11 +1349,6 @@ static MOZ_ALWAYS_INLINE void UpdateShapeTypeAndValue(JSContext* cx,
 
   if (shape->isDataProperty()) {
     obj->setSlotWithType(cx, shape, value, /* overwriting = */ false);
-  } else {
-    MarkTypePropertyNonData(cx, obj, id);
-  }
-  if (!shape->writable()) {
-    MarkTypePropertyNonWritable(cx, obj, id);
   }
 }
 

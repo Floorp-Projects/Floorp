@@ -64,13 +64,9 @@ inline void EnvironmentObject::setAliasedBinding(JSContext* cx,
   setAliasedBinding(cx, bi.location().slot(), v);
 }
 
-inline void CallObject::setAliasedFormalFromArguments(JSContext* cx,
-                                                      const Value& argsValue,
-                                                      jsid id, const Value& v) {
+inline void CallObject::setAliasedFormalFromArguments(const Value& argsValue,
+                                                      const Value& v) {
   setSlot(ArgumentsObject::SlotFromMagicScopeSlotValue(argsValue), v);
-  if (isSingleton()) {
-    AddTypePropertyId(cx, this, id, v);
-  }
 }
 
 } /* namespace js */

@@ -1176,9 +1176,6 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
       }
 
       maybeEmitIdGuard(id);
-      if (holder) {
-        EnsureTrackPropertyTypes(cx_, holder, id);
-      }
       EmitReadSlotResult(writer, obj, holder, shape, objId);
       EmitReadSlotReturn(writer, obj, holder, shape);
 
@@ -1367,11 +1364,7 @@ AttachDecision GetPropIRGenerator::tryAttachCrossCompartmentWrapper(
       return AttachDecision::NoAction;
     }
 
-    if (holder) {
-      // Need to be in the compartment of the holder to
-      // call EnsureTrackPropertyTypes
-      EnsureTrackPropertyTypes(cx_, holder, id);
-    } else {
+    if (!holder) {
       // UNCACHEABLE_PROTO may result in guards against specific
       // (cross-compartment) prototype objects, so don't try to attach IC if we
       // see the flag at all.
@@ -1998,10 +1991,6 @@ AttachDecision GetPropIRGenerator::tryAttachModuleNamespace(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
-  if (IsIonEnabled(cx_)) {
-    EnsureTrackPropertyTypes(cx_, env, shape->propid());
-  }
-
   // Check for the specific namespace object.
   maybeEmitIdGuard(id);
   writer.guardSpecificObject(objId, ns);
@@ -2062,13 +2051,6 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
     case CanAttachNone:
       return AttachDecision::NoAction;
     case CanAttachReadSlot: {
-      if (holder) {
-        // Instantiate this property, for use during Ion compilation.
-        if (IsIonEnabled(cx_)) {
-          EnsureTrackPropertyTypes(cx_, holder, id);
-        }
-      }
-
       if (val_.isNumber()) {
         writer.guardIsNumber(valId);
       } else {
@@ -2690,11 +2672,6 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
     return AttachDecision::NoAction;
   }
 
-  // Instantiate this global property, for use during Ion compilation.
-  if (IsIonEnabled(cx_)) {
-    EnsureTrackPropertyTypes(cx_, holder, id);
-  }
-
   if (holder == globalLexical) {
     // There is no need to guard on the shape. Lexical bindings are
     // non-configurable, and this stub cannot be shared across globals.
@@ -2756,10 +2733,6 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId,
   if (IsCacheableGetPropCall(&globalLexical->global(), holder, shape) !=
       CanAttachNativeGetter) {
     return AttachDecision::NoAction;
-  }
-
-  if (IsIonEnabled(cx_)) {
-    EnsureTrackPropertyTypes(cx_, holder, id);
   }
 
   // Shape guard for global lexical.
@@ -3572,8 +3545,8 @@ static Shape* LookupShapeForSetSlot(JSOp op, NativeObject* obj, jsid id) {
   return shape;
 }
 
-static bool CanAttachNativeSetSlot(JSContext* cx, JSOp op, HandleObject obj,
-                                   HandleId id, MutableHandleShape propShape) {
+static bool CanAttachNativeSetSlot(JSOp op, HandleObject obj, HandleId id,
+                                   MutableHandleShape propShape) {
   if (!obj->isNative()) {
     return false;
   }
@@ -3582,18 +3555,6 @@ static bool CanAttachNativeSetSlot(JSContext* cx, JSOp op, HandleObject obj,
   if (!propShape) {
     return false;
   }
-
-  ObjectGroup* group = JSObject::getGroup(cx, obj);
-  if (!group) {
-    cx->recoverFromOutOfMemory();
-    return false;
-  }
-
-  // For some property writes, such as the initial overwrite of global
-  // properties, TI will not mark the property as having been
-  // overwritten. Don't attach a stub in this case, so that we don't
-  // execute another write to the property without TI seeing that write.
-  EnsureTrackPropertyTypes(cx, obj, id);
 
   return true;
 }
@@ -3624,7 +3585,7 @@ AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
                                                           HandleId id,
                                                           ValOperandId rhsId) {
   RootedShape propShape(cx_);
-  if (!CanAttachNativeSetSlot(cx_, JSOp(*pc_), obj, id, &propShape)) {
+  if (!CanAttachNativeSetSlot(JSOp(*pc_), obj, id, &propShape)) {
     return AttachDecision::NoAction;
   }
 
@@ -4299,7 +4260,7 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyExpando(
   }
 
   RootedShape propShape(cx_);
-  if (CanAttachNativeSetSlot(cx_, JSOp(*pc_), expandoObj, id, &propShape)) {
+  if (CanAttachNativeSetSlot(JSOp(*pc_), expandoObj, id, &propShape)) {
     maybeEmitIdGuard(id);
     ObjOperandId expandoObjId =
         guardDOMProxyExpandoObjectAndShape(obj, objId, expandoVal, expandoObj);
@@ -4433,7 +4394,7 @@ AttachDecision SetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
   Handle<GlobalObject*> windowObj = cx_->global();
 
   RootedShape propShape(cx_);
-  if (!CanAttachNativeSetSlot(cx_, JSOp(*pc_), windowObj, id, &propShape)) {
+  if (!CanAttachNativeSetSlot(JSOp(*pc_), windowObj, id, &propShape)) {
     return AttachDecision::NoAction;
   }
 
@@ -9005,12 +8966,6 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
   // Verify that spread calls have a reasonable number of arguments.
   if (isSpread && args_.length() > JIT_ARGS_LENGTH_MAX) {
     return AttachDecision::NoAction;
-  }
-
-  // Keep track of the function's |prototype| property in type
-  // information, for use during Ion compilation.
-  if (IsIonEnabled(cx_)) {
-    EnsureTrackPropertyTypes(cx_, calleeFunc, NameToId(cx_->names().prototype));
   }
 
   RootedObject templateObj(cx_);
