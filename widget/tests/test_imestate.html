@@ -8,9 +8,6 @@
           href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
 <body onload="setTimeout(runTests, 0);" style="ime-mode: disabled;">
-<script>
-setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
-</script>
 <div id="display" style="ime-mode: disabled;">
   <!-- input elements -->
   <input type="text"     id="text"/><br/>
@@ -674,21 +671,24 @@ function runPluginTest() {
 
   var plugin = document.getElementById("plugin");
 
+  // Plugins are not supported and their elements should not accept focus;
+  // therefore, IME should not enable when we play with it.
+
   document.activeElement.blur();
   is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
      "runPluginTest: unexpected enabled state when no element has focus");
 
   plugin.focus();
-  is(gUtils.IMEStatus, gUtils.IME_STATUS_PLUGIN,
-     "runPluginTest: unexpected enabled state when plugin has focus");
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
+     "runPluginTest: unexpected enabled state when attempting to give focus to plugin");
 
   plugin.blur();
   is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
-     "runPluginTest: unexpected enabled state when plugin has focus");
+     "runPluginTest: unexpected enabled state after unfocusing plugin");
 
   plugin.focus();
-  is(gUtils.IMEStatus, gUtils.IME_STATUS_PLUGIN,
-     "runPluginTest: unexpected enabled state when plugin has focus #2");
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
+     "runPluginTest: unexpected enabled state when attempting to give focus to plugin #2");
 
   var parent = plugin.parentNode;
   parent.removeChild(plugin);
