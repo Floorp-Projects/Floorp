@@ -258,6 +258,54 @@ class StoreExtensionsKtTest {
     }
 
     @Test
+    @ExperimentalCoroutinesApi
+    fun `Subscription is not added if owner destroyed before flow created`() {
+        val owner = MockedLifecycleOwner(Lifecycle.State.STARTED)
+        val latch = CountDownLatch(1)
+
+        val store = Store(
+            TestState(counter = 23),
+            ::reducer
+        )
+
+        owner.lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
+        val flow = store.flow(owner)
+        GlobalScope.launch {
+            flow.collect {
+                latch.countDown()
+            }
+        }
+
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertFalse(latch.await(1, TimeUnit.SECONDS))
+        assertTrue(store.subscriptions.isEmpty())
+    }
+
+    @Test
+    @ExperimentalCoroutinesApi
+    fun `Subscription is not added if owner destroyed before flow produced`() {
+        val owner = MockedLifecycleOwner(Lifecycle.State.STARTED)
+        val latch = CountDownLatch(1)
+
+        val store = Store(
+            TestState(counter = 23),
+            ::reducer
+        )
+
+        val flow = store.flow(owner)
+        owner.lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
+        GlobalScope.launch {
+            flow.collect {
+                latch.countDown()
+            }
+        }
+
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertFalse(latch.await(1, TimeUnit.SECONDS))
+        assertTrue(store.subscriptions.isEmpty())
+    }
+
+    @Test
     @Synchronized
     @ExperimentalCoroutinesApi
     fun `Reading state updates from Flow without lifecycle owner`() {

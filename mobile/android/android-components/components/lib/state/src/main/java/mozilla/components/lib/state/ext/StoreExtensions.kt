@@ -144,7 +144,27 @@ fun <S : State, A : Action> Store<S, A>.channel(
 fun <S : State, A : Action> Store<S, A>.flow(
     owner: LifecycleOwner? = null
 ): Flow<S> {
+
+    var destroyed = owner?.lifecycle?.currentState == Lifecycle.State.DESTROYED
+    val ownerDestroyedObserver = object : LifecycleObserver {
+        @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        fun onDestroy() {
+            destroyed = true
+        }
+    }
+    owner?.lifecycle?.addObserver(ownerDestroyedObserver)
+
     return channelFlow {
+        // By the time this block executes the fragment or view could already be destroyed
+        // so we exit early to avoid creating an unnecessary subscription. This is important
+        // as otherwise we'd be leaking the owner via the subscription because we only
+        // unsubscribe on destroy which already happened.
+        if (destroyed) {
+            return@channelFlow
+        }
+
+        owner?.lifecycle?.removeObserver(ownerDestroyedObserver)
+
         val subscription = observeManually { state ->
             runBlocking { send(state) }
         }

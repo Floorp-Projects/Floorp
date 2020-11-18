@@ -7,6 +7,7 @@ package mozilla.components.lib.state
 import android.os.Handler
 import android.os.Looper
 import androidx.annotation.CheckResult
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -38,7 +39,8 @@ open class Store<S : State, A : Action>(
     private val dispatcher = Executors.newSingleThreadExecutor(threadFactory).asCoroutineDispatcher()
     private val reducerChainBuilder = ReducerChainBuilder(threadFactory, reducer, middleware)
     private val scope = CoroutineScope(dispatcher)
-    private val subscriptions = Collections.newSetFromMap(ConcurrentHashMap<Subscription<S, A>, Boolean>())
+    @VisibleForTesting
+    internal val subscriptions = Collections.newSetFromMap(ConcurrentHashMap<Subscription<S, A>, Boolean>())
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
         // We want exceptions in the reducer to crash the app and not get silently ignored. Therefore we rethrow the
         // exception on the main thread.
