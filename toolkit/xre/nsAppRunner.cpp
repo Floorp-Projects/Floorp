@@ -4071,18 +4071,22 @@ static void PR_CALLBACK ReadAheadDlls_ThreadStart(void* arg) {
 
 #if defined(MOZ_WAYLAND)
 bool IsWaylandDisabled() {
-  const char* backendPref = PR_GetEnv("GDK_BACKEND");
-  if (backendPref && strcmp(backendPref, "wayland") == 0) {
-    return false;
+  // MOZ_ENABLE_WAYLAND is our primary Wayland on/off switch.
+  const char* waylandPref = PR_GetEnv("MOZ_ENABLE_WAYLAND");
+  bool enableWayland = (waylandPref && *waylandPref);
+  if (!enableWayland) {
+    const char* backendPref = PR_GetEnv("GDK_BACKEND");
+    enableWayland = (backendPref && strncmp(backendPref, "wayland", 7) == 0);
+    if (enableWayland) {
+      NS_WARNING(
+          "Wayland backend should be enabled by MOZ_ENABLE_WAYLAND=1."
+          "GDK_BACKEND is a Gtk3 debug variable and may cause various issues.");
+    }
   }
-  // Enable Wayland on Gtk+ >= 3.22 where we can expect recent enough
-  // compositor & libwayland interface.
-  bool disableWayland = (gtk_check_version(3, 22, 0) != nullptr);
-  if (!disableWayland) {
-    // Make X11 backend the default one unless MOZ_ENABLE_WAYLAND is set.
-    disableWayland = (PR_GetEnv("MOZ_ENABLE_WAYLAND") == nullptr);
+  if (enableWayland && gtk_check_version(3, 22, 0) != nullptr) {
+    NS_WARNING("Running Wayland backen on Gtk3 < 3.22. Expect issues/glitches");
   }
-  return disableWayland;
+  return !enableWayland;
 }
 #endif
 
