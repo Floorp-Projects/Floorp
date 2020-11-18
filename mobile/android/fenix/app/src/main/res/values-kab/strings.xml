@@ -20,6 +20,8 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Accaren-ik n tbaḍnit ad d-ttwaseknen dagi.</string>
 
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 yiccer i yeldin. Sit akken ad tbeddleḍ iccer.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -73,14 +75,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="cfr_pos_button_text">Rnu anegzum</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Ala, tanemmirt</string>
-
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Kcem ɣer Firefox s lemɣawla. Rnu awiǧit ɣer ugdil-inek agejdan.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">Rnu awiǧit</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">Mačči tura</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
@@ -570,6 +564,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Seld yiwen n waggur</string>
 
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Mdel s ufus</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Iccaren yeldin</string>
@@ -639,7 +636,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Isem n tegrumma</string>
     <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">Kkes</string>
+	<string name="remove_top_site">Kkes</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Kkes seg umazray</string>
@@ -692,12 +689,12 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Ulac amazray dagi</string>
 
-    <!-- Downloads -->
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">Ulac isidar da</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d yettwafren</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->

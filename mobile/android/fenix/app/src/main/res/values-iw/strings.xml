@@ -19,6 +19,10 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">הלשוניות הפרטיות שלך יופיעו כאן.</string>
 
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">Baidu</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">לשונית אחת פתוחה. יש להקיש כדי להחליף לשוניות.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -94,6 +98,11 @@
     <string name="tab_tray_close_tabs_banner_positive_button_text">הצגת אפשרויות</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">סגירה</string>
+
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_grid_view_banner_positive_button_text">מעבר להגדרות</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_grid_view_banner_negative_button_text">התעלמות</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -593,8 +602,18 @@
     <string name="tab_tray_menu_open_new_tab">לשונית חדשה</string>
     <!-- Shortcut action to toggle private mode -->
     <string name="tab_tray_menu_toggle">החלפת מצב לשונית</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">הוספה לסימניות</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">סגירה</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">שיתוף לשוניות נבחרות</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">תפריט לשוניות נבחרות</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">הסרת לשונית מהאוסף</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">בחירת לשוניות</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">סגירת לשונית</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -969,6 +988,12 @@
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">הלשוניות נסגרו</string>
 
+    <!-- Text shown in snackbar when user closes tabs -->
+    <string name="snackbar_message_tabs_closed">הלשוניות נסגרו!</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">הסימניות נשמרו!</string>
+    <!-- Text shown in snackbar action for viewing bookmarks -->
+    <string name="snackbar_message_bookmarks_view">הצגה</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">נוסף לאתרים המובילים!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1377,6 +1402,10 @@
     <string name="preferences_passwords_logins_and_passwords">כניסות וססמאות</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">שמירת כניסות וססמאות</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">לבקש לשמור</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">לעולם לא לשמור</string>
     <!-- Preference for autofilling saved logins in Fenix -->
     <string name="preferences_passwords_autofill">מילוי אוטומטי</string>
     <!-- Preference for syncing saved logins in Fenix -->
@@ -1385,6 +1414,8 @@
     <string name="preferences_passwords_sync_logins_on">פעיל</string>
     <!-- Syncing saved logins in Fenix is off -->
     <string name="preferences_passwords_sync_logins_off">כבוי</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">חיבור מחדש</string>
     <!-- Syncing saved logins in Fenix needs login -->
     <string name="preferences_passwords_sync_logins_sign_in">התחברות אל Sync</string>
     <!-- Preference to access list of saved logins -->

@@ -91,7 +91,7 @@
     <string name="camera_permissions_needed_negative_button_text">Descartar</string>
 
     <!-- Text for the banner message to tell users about our auto close feature. -->
-    <string name="tab_tray_close_tabs_banner_message">Defina fechar automaticamente as abas abertas que não foram vistas no último dia, semana ou mês.</string>
+    <string name="tab_tray_close_tabs_banner_message">Você pode fazer com que abas abertas não vistas no último dia, semana ou mês sejam fechadas automaticamente.</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_close_tabs_banner_positive_button_text">Ver opções</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
@@ -274,7 +274,7 @@
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Abrir links em abas privativas</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
-    <string name="preferences_allow_screenshots_in_private_mode">Permitir capturas de tela na navegação privativa</string>
+    <string name="preferences_allow_screenshots_in_private_mode">Permitir captura de tela na navegação privativa</string>
     <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
     <string name="preferences_screenshots_in_private_mode_disclaimer">Se permitido, as abas privativas também ficam visíveis quando vários aplicativos estão abertos</string>
     <!-- Preference for adding private browsing shortcut -->
@@ -338,7 +338,7 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Configurações da conta</string>
     <!-- Preference for enabling url autocomplete-->
-    <string name="preferences_enable_autocomplete_urls">Completar URLs automaticamente</string>
+    <string name="preferences_enable_autocomplete_urls">Completar endereços automaticamente</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Abrir links em aplicativos</string>
 
@@ -493,13 +493,13 @@
 
     <!-- Gestures Preferences-->
     <!-- Preferences for using pull to refresh in a webpage -->
-    <string name="preference_gestures_website_pull_to_refresh">Puxe para atualizar</string>
+    <string name="preference_gestures_website_pull_to_refresh">Puxar para atualizar</string>
     <!-- Preference for using the dynamic toolbar -->
-    <string name="preference_gestures_dynamic_toolbar">Deslize para ocultar a barra de ferramentas</string>
+    <string name="preference_gestures_dynamic_toolbar">Deslizar para ocultar a barra de ferramentas</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Deslize a barra de ferramentas para o lado para mudar de aba</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Deslizar a barra de ferramentas para o lado para mudar de aba</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
-    <string name="preference_gestures_swipe_toolbar_show_tabs">Deslize a barra de ferramentas para cima para abrir abas</string>
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Deslizar a barra de ferramentas para cima para abrir abas</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -592,6 +592,8 @@
     <string name="tab_tray_title">Abas abertas</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Salvar em coleção</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">Selecionar</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Compartilhar todas as abas</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -1080,7 +1082,7 @@
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit">Excluir dados de navegação automaticamente ao selecionar &quot;Sair&quot; no menu principal.</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit_2">Excluir automaticamente os dados de navegação quando você selecionar \&quot;Sair\&quot; no menu principal.</string>
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Excluir automaticamente os dados de navegação selecionados abaixo ao selecionar \&quot;Sair\&quot; no menu principal</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Sair</string>
 
@@ -1527,7 +1529,7 @@
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Nome</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Termo de pesquisa a ser usado</string>
+    <string name="search_add_custom_engine_search_string_hint">Código de pesquisa a ser usado</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example">Substitua a consulta por “%s”. Por exemplo:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
@@ -1543,7 +1545,7 @@
     <!-- Text shown when a user tries to add a search engine that already exists -->
     <string name="search_add_custom_engine_error_existing_name">Já existe mecanismo de pesquisa com nome “%s”.</string>
     <!-- Text shown when a user leaves the search string field empty -->
-    <string name="search_add_custom_engine_error_empty_search_string">Digite um termo de pesquisa</string>
+    <string name="search_add_custom_engine_error_empty_search_string">Digite um código de pesquisa</string>
     <!-- Text shown when a user leaves out the required template string -->
     <string name="search_add_custom_engine_error_missing_template">Verifique se o termo da pesquisa corresponde ao formato do exemplo</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
