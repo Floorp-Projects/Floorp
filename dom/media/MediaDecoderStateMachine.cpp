@@ -15,7 +15,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/NotNull.h"
-#include "mozilla/ProfilerMarkerTypes.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_media.h"
@@ -28,6 +27,7 @@
 #include "AudioSegment.h"
 #include "DOMMediaStream.h"
 #include "ImageContainer.h"
+#include "GeckoProfiler.h"
 #include "MediaDecoder.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaShutdownManager.h"
@@ -39,13 +39,8 @@
 #include "VideoUtils.h"
 
 #ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
-#  define MDSM_ERROR_MARKER(tag, error, markerTime)                          \
-    PROFILER_ADD_MARKER_WITH_PAYLOAD(tag, MEDIA_PLAYBACK, TextMarkerPayload, \
-                                     (error, markerTime))
-#else
-#  define MDSM_ERROR_MARKER(tag, error, markerTime)
-#endif
+#  include "mozilla/ProfilerMarkerTypes.h"
+#endif  // MOZ_GECKO_PROFILER
 
 namespace mozilla {
 
@@ -3468,8 +3463,8 @@ bool MediaDecoderStateMachine::HasLowBufferedData(const TimeUnit& aThreshold) {
 void MediaDecoderStateMachine::DecodeError(const MediaResult& aError) {
   MOZ_ASSERT(OnTaskQueue());
   LOGE("Decode error: %s", aError.Description().get());
-  MDSM_ERROR_MARKER("MDSM::DecodeError", aError.Description(),
-                    TimeStamp::NowUnfuzzed());
+  PROFILER_MARKER_TEXT("MDSM::DecodeError", MEDIA_PLAYBACK, {},
+                       aError.Description());
   // Notify the decode error and MediaDecoder will shut down MDSM.
   mOnPlaybackErrorEvent.Notify(aError);
 }

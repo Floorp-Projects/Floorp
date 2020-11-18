@@ -13,17 +13,9 @@
 #include "MediaInfo.h"
 #include "PDMFactory.h"
 #include "VPXDecoder.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
-
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
-#  define MEDIA_CHANGE_MONITOR_STATUS_MARKER(tag, text, markerTime)          \
-    PROFILER_ADD_MARKER_WITH_PAYLOAD(tag, MEDIA_PLAYBACK, TextMarkerPayload, \
-                                     (text, markerTime))
-#else
-#  define MEDIA_CHANGE_MONITOR_STATUS_MARKER(tag, text, markerTime)
-#endif
 
 namespace mozilla {
 
@@ -98,11 +90,9 @@ class H264ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
     mPreviousExtraData = aSample->mExtraData;
     UpdateConfigFromExtraData(extra_data);
 
-    MEDIA_CHANGE_MONITOR_STATUS_MARKER(
-        "H264 Stream Change",
-        "H264ChangeMonitor::CheckForChange has detected a change in the "
-        "stream and will request a new decoder"_ns,
-        TimeStamp::NowUnfuzzed());
+    PROFILER_MARKER_TEXT("H264 Stream Change", MEDIA_PLAYBACK, {},
+                         "H264ChangeMonitor::CheckForChange has detected a "
+                         "change in the stream and will request a new decoder");
     return NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
   }
 
@@ -204,11 +194,10 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
       mCurrentConfig.SetImageRect(
           gfx::IntRect(0, 0, info.mImage.width, info.mImage.height));
 
-      MEDIA_CHANGE_MONITOR_STATUS_MARKER(
-          "VPX Stream Change",
+      PROFILER_MARKER_TEXT(
+          "VPX Stream Change", MEDIA_PLAYBACK, {},
           "VPXChangeMonitor::CheckForChange has detected a change in the "
-          "stream and will request a new decoder"_ns,
-          TimeStamp::NowUnfuzzed());
+          "stream and will request a new decoder");
       rv = NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
     }
     mInfo = Some(info);
@@ -755,5 +744,3 @@ void MediaChangeMonitor::FlushThenShutdownDecoder(
 }
 
 }  // namespace mozilla
-
-#undef MEDIA_CHANGE_MONITOR_STATUS_MARKER

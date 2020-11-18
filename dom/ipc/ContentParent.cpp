@@ -918,9 +918,7 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
       if (profiler_thread_is_being_profiled()) {
         nsPrintfCString marker("Reused process %u",
                                (unsigned int)retval->ChildID());
-        TimeStamp now = TimeStamp::Now();
-        PROFILER_ADD_MARKER_WITH_PAYLOAD("Process", DOM, TextMarkerPayload,
-                                         (marker, now, now));
+        PROFILER_MARKER_TEXT("Process", DOM, {}, marker);
       }
 #endif
       MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
@@ -959,9 +957,7 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
     if (profiler_thread_is_being_profiled()) {
       nsPrintfCString marker("Recycled process %u (%p)",
                              (unsigned int)recycled->ChildID(), recycled.get());
-      TimeStamp now = TimeStamp::Now();
-      PROFILER_ADD_MARKER_WITH_PAYLOAD("Process", DOM, TextMarkerPayload,
-                                       (marker, now, now));
+      PROFILER_MARKER_TEXT("Process", DOM, {}, marker);
     }
 #endif
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
@@ -984,9 +980,7 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
     if (profiler_thread_is_being_profiled()) {
       nsPrintfCString marker("Assigned preallocated process %u",
                              (unsigned int)preallocated->ChildID());
-      TimeStamp now = TimeStamp::Now();
-      PROFILER_ADD_MARKER_WITH_PAYLOAD("Process", DOM, TextMarkerPayload,
-                                       (marker, now, now));
+      PROFILER_MARKER_TEXT("Process", DOM, {}, marker);
     }
 #endif
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
@@ -2423,9 +2417,10 @@ bool ContentParent::LaunchSubprocessResolve(bool aIsSync,
     nsPrintfCString marker("Process start%s for %u",
                            mIsAPreallocBlocker ? " (immediate)" : "",
                            (unsigned int)ChildID());
-    PROFILER_ADD_MARKER_WITH_PAYLOAD(
-        mIsAPreallocBlocker ? "Process Immediate Launch" : "Process Launch",
-        DOM, TextMarkerPayload, (marker, mLaunchTS, launchResumeTS));
+    PROFILER_MARKER_TEXT(
+        mIsAPreallocBlocker ? ProfilerString8View("Process Immediate Launch")
+                            : ProfilerString8View("Process Launch"),
+        DOM, MarkerTiming::Interval(mLaunchTS, launchResumeTS), marker);
   }
 #endif
 
