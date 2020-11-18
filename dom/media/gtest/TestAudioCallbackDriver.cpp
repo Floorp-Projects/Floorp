@@ -32,9 +32,16 @@ class MockGraphInterface : public GraphInterface {
   /* OneIteration cannot be mocked because IterationResult is non-memmovable and
    * cannot be passed as a parameter, which GMock does internally. */
   IterationResult OneIteration(GraphTime, GraphTime, AudioMixer*) {
-    return mKeepProcessing ? IterationResult::CreateStillProcessing()
-                           : IterationResult::CreateStop(
-                                 NS_NewRunnableFunction(__func__, [] {}));
+    if (!mKeepProcessing) {
+      return IterationResult::CreateStop(
+          NS_NewRunnableFunction(__func__, [] {}));
+    }
+    GraphDriver* next = mNextDriver.exchange(nullptr);
+    if (next) {
+      return IterationResult::CreateSwitchDriver(
+          next, NS_NewRunnableFunction(__func__, [] {}));
+    }
+    return IterationResult::CreateStillProcessing();
   }
 #ifdef DEBUG
   bool InDriverIteration(GraphDriver* aDriver) override {
@@ -44,8 +51,11 @@ class MockGraphInterface : public GraphInterface {
 
   void StopIterating() { mKeepProcessing = false; }
 
+  void SwitchTo(GraphDriver* aDriver) { mNextDriver = aDriver; }
+
  protected:
   Atomic<bool> mKeepProcessing{true};
+  Atomic<GraphDriver*> mNextDriver{nullptr};
   virtual ~MockGraphInterface() = default;
 };
 

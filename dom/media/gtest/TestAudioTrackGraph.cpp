@@ -426,6 +426,149 @@ TEST(TestAudioTrackGraph, AudioInputTrack)
   EXPECT_LE(nrDiscontinuities, 2U);
 }
 
+TEST(TestAudioTrackGraph, ReOpenAudioInput)
+{
+  MockCubeb* cubeb = new MockCubeb();
+  CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
+
+  // 48k is a native processing rate, and avoids a resampling pass compared
+  // to 44.1k. The resampler may add take a few frames to stabilize, which show
+  // as unexected discontinuities in the test.
+  const TrackRate rate = 48000;
+
+  MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
+      MediaTrackGraph::SYSTEM_THREAD_DRIVER, /*window*/ nullptr, rate, nullptr);
+
+  RefPtr<AudioInputTrack> inputTrack;
+  RefPtr<ProcessedMediaTrack> outputTrack;
+  RefPtr<MediaInputPort> port;
+  RefPtr<AudioInputProcessing> listener;
+  auto p = Invoke([&] {
+    inputTrack = AudioInputTrack::Create(graph);
+    outputTrack = graph->CreateForwardedInputTrack(MediaSegment::AUDIO);
+    outputTrack->QueueSetAutoend(false);
+    outputTrack->AddAudioOutput(reinterpret_cast<void*>(1));
+    port = outputTrack->AllocateInputPort(inputTrack);
+    listener = new AudioInputProcessing(2, PRINCIPAL_HANDLE_NONE);
+    inputTrack->SetInputProcessing(listener);
+    inputTrack->GraphImpl()->AppendMessage(
+        MakeUnique<StartInputProcessing>(inputTrack, listener));
+    inputTrack->OpenAudioInput((void*)1, listener);
+    return graph->NotifyWhenDeviceStarted(inputTrack);
+  });
+
+  MockCubebStream* stream = WaitFor(cubeb->StreamInitEvent());
+  EXPECT_TRUE(stream->mHasInput);
+  Unused << WaitFor(p);
+
+  // Set a drift factor so that we don't dont produce perfect 10ms-chunks. This
+  // will exercise whatever buffers are in the audio processing pipeline, and
+  // the bookkeeping surrounding them.
+  stream->SetDriftFactor(1.111);
+
+  // Wait for a second worth of audio data. GoFaster is dispatched through a
+  // ControlMessage so that it is called in the first audio driver iteration.
+  // Otherwise the audio driver might be going very fast while the fallback
+  // system clock driver is still in an iteration.
+  DispatchFunction([&] {
+    inputTrack->GraphImpl()->AppendMessage(MakeUnique<GoFaster>(cubeb));
+  });
+  {
+    uint32_t totalFrames = 0;
+    WaitUntil(stream->FramesProcessedEvent(), [&](uint32_t aFrames) {
+      totalFrames += aFrames;
+      return totalFrames > static_cast<uint32_t>(graph->GraphRate());
+    });
+  }
+  cubeb->DontGoFaster();
+
+  // Close the input to see that no asserts go off due to bad state.
+  DispatchFunction([&] {
+    // Device id does not matter. Ignore.
+    auto id = Some((CubebUtils::AudioDeviceID)1);
+    inputTrack->CloseAudioInput(id);
+  });
+
+  stream = WaitFor(cubeb->StreamInitEvent());
+  EXPECT_FALSE(stream->mHasInput);
+  Unused << WaitFor(
+      Invoke([&] { return graph->NotifyWhenDeviceStarted(inputTrack); }));
+
+  // Output-only. Wait for another second before unmuting.
+  DispatchFunction([&] {
+    inputTrack->GraphImpl()->AppendMessage(MakeUnique<GoFaster>(cubeb));
+  });
+  {
+    uint32_t totalFrames = 0;
+    WaitUntil(stream->FramesProcessedEvent(), [&](uint32_t aFrames) {
+      totalFrames += aFrames;
+      return totalFrames > static_cast<uint32_t>(graph->GraphRate());
+    });
+  }
+  cubeb->DontGoFaster();
+
+  // Re-open the input to again see that no asserts go off due to bad state.
+  DispatchFunction([&] {
+    // Device id does not matter. Ignore.
+    inputTrack->OpenAudioInput((void*)1, listener);
+  });
+
+  stream = WaitFor(cubeb->StreamInitEvent());
+  EXPECT_TRUE(stream->mHasInput);
+  Unused << WaitFor(
+      Invoke([&] { return graph->NotifyWhenDeviceStarted(inputTrack); }));
+
+  // Full-duplex. Wait for another second before finishing.
+  DispatchFunction([&] {
+    inputTrack->GraphImpl()->AppendMessage(MakeUnique<GoFaster>(cubeb));
+  });
+  {
+    uint32_t totalFrames = 0;
+    WaitUntil(stream->FramesProcessedEvent(), [&](uint32_t aFrames) {
+      totalFrames += aFrames;
+      return totalFrames > static_cast<uint32_t>(graph->GraphRate());
+    });
+  }
+  cubeb->DontGoFaster();
+
+  // Clean up.
+  DispatchFunction([&] {
+    outputTrack->RemoveAudioOutput((void*)1);
+    outputTrack->Destroy();
+    port->Destroy();
+    inputTrack->GraphImpl()->AppendMessage(
+        MakeUnique<StopInputProcessing>(listener));
+    Maybe<CubebUtils::AudioDeviceID> id =
+        Some(reinterpret_cast<CubebUtils::AudioDeviceID>(1));
+    inputTrack->CloseAudioInput(id);
+    inputTrack->Destroy();
+  });
+
+  uint32_t inputRate = stream->InputSampleRate();
+  uint32_t inputFrequency = stream->InputFrequency();
+  uint64_t preSilenceSamples;
+  uint32_t estimatedFreq;
+  uint32_t nrDiscontinuities;
+  Tie(preSilenceSamples, estimatedFreq, nrDiscontinuities) =
+      WaitFor(stream->OutputVerificationEvent());
+
+  EXPECT_EQ(estimatedFreq, inputFrequency);
+  std::cerr << "PreSilence: " << preSilenceSamples << std::endl;
+  // We buffer 10ms worth of frames in non-passthrough mode, plus up to 128
+  // frames as we round up to the nearest block. See AudioInputProcessing::Pull.
+  EXPECT_GE(preSilenceSamples, 128U + inputRate / 100);
+  // If the fallback system clock driver is doing a graph iteration before the
+  // first audio driver iteration comes in, that iteration is ignored and
+  // results in zeros. It takes one fallback driver iteration *after* the audio
+  // driver has started to complete the switch, *usually* resulting two
+  // 10ms-iterations of silence; sometimes only one.
+  EXPECT_LE(preSilenceSamples, 128U + 3 * inputRate / 100 /* 3*10ms */);
+  // The waveform from AudioGenerator starts at 0, but we don't control its
+  // ending, so we expect a discontinuity there. Note that this check is only
+  // for the waveform on the stream *after* re-opening the input.
+  EXPECT_LE(nrDiscontinuities, 1U);
+}
+
 void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
                         float aDriftFactor, uint32_t aBufferMs = 50) {
   std::cerr << "TestCrossGraphPort input: " << aInputRate
