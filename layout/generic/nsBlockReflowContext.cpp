@@ -339,7 +339,7 @@ void nsBlockReflowContext::ReflowBlock(
 bool nsBlockReflowContext::PlaceBlock(const ReflowInput& aReflowInput,
                                       bool aForceFit, nsLineBox* aLine,
                                       nsCollapsingMargin& aBEndMarginResult,
-                                      nsOverflowAreas& aOverflowAreas,
+                                      OverflowAreas& aOverflowAreas,
                                       const nsReflowStatus& aReflowStatus) {
   // Compute collapsed block-end margin value.
   WritingMode parentWM = mMetrics.GetWritingMode();

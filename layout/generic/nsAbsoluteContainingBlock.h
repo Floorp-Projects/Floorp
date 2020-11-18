@@ -91,7 +91,7 @@ class nsAbsoluteContainingBlock {
   void Reflow(nsContainerFrame* aDelegatingFrame, nsPresContext* aPresContext,
               const ReflowInput& aReflowInput, nsReflowStatus& aReflowStatus,
               const nsRect& aContainingBlock, AbsPosReflowFlags aFlags,
-              nsOverflowAreas* aOverflowAreas);
+              mozilla::OverflowAreas* aOverflowAreas);
 
   using PostDestroyData = nsIFrame::PostDestroyData;
   void DestroyFrames(nsIFrame* aDelegatingFrame, nsIFrame* aDestructRoot,
@@ -141,7 +141,7 @@ class nsAbsoluteContainingBlock {
                            const nsRect& aContainingBlockRect,
                            AbsPosReflowFlags aFlags, nsIFrame* aKidFrame,
                            nsReflowStatus& aStatus,
-                           nsOverflowAreas* aOverflowAreas);
+                           mozilla::OverflowAreas* aOverflowAreas);
 
   /**
    * Mark our absolute frames dirty.

@@ -77,7 +77,7 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
   virtual void DidReflow(nsPresContext* aPresContext,
                          const ReflowInput* aReflowInput) override;
 
-  virtual void UnionChildOverflow(nsOverflowAreas& aOverflowAreas) override;
+  void UnionChildOverflow(mozilla::OverflowAreas& aOverflowAreas) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;

@@ -9601,7 +9601,7 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
     size = target->GetLogicalSize();
   }
 
-  nsOverflowAreas oldOverflow;  // initialized and used only when !isRoot
+  OverflowAreas oldOverflow;  // initialized and used only when !isRoot
   if (!isRoot) {
     oldOverflow = target->GetOverflowAreas();
   }

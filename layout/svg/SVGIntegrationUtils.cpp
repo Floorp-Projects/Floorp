@@ -95,7 +95,7 @@ class PreEffectsInkOverflowCollector : public nsLayoutUtils::BoxCallback {
     // continuations are not set correctly while reflowing.
     if (SVGIntegrationUtils::UsingOverflowAffectingEffects(aFrame) &&
         !aInReflow) {
-      nsOverflowAreas* preTransformOverflows =
+      OverflowAreas* preTransformOverflows =
           aFrame->GetProperty(nsIFrame::PreTransformOverflowAreasProperty());
 
       MOZ_ASSERT(!preTransformOverflows,

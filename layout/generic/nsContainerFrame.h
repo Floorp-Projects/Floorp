@@ -369,7 +369,7 @@ class nsContainerFrame : public nsSplittableFrame {
    */
   void ReflowOverflowContainerChildren(
       nsPresContext* aPresContext, const ReflowInput& aReflowInput,
-      nsOverflowAreas& aOverflowRects, ReflowChildFlags aFlags,
+      mozilla::OverflowAreas& aOverflowRects, ReflowChildFlags aFlags,
       nsReflowStatus& aStatus,
       ChildFrameMerger aMergeFunc = DefaultChildFrameMerge,
       Maybe<nsSize> aContainerSize = Nothing());
@@ -491,7 +491,7 @@ class nsContainerFrame : public nsSplittableFrame {
 
   // Incorporate the child overflow areas into aOverflowAreas.
   // If the child does not have a overflow, use the child area.
-  void ConsiderChildOverflow(nsOverflowAreas& aOverflowAreas,
+  void ConsiderChildOverflow(mozilla::OverflowAreas& aOverflowAreas,
                              nsIFrame* aChildFrame);
 
  protected:

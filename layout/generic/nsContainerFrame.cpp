@@ -1280,7 +1280,7 @@ void nsContainerFrame::FinishReflowChild(nsIFrame* aKidFrame,
 
 void nsContainerFrame::ReflowOverflowContainerChildren(
     nsPresContext* aPresContext, const ReflowInput& aReflowInput,
-    nsOverflowAreas& aOverflowRects, ReflowChildFlags aFlags,
+    OverflowAreas& aOverflowRects, ReflowChildFlags aFlags,
     nsReflowStatus& aStatus, ChildFrameMerger aMergeFunc,
     Maybe<nsSize> aContainerSize) {
   MOZ_ASSERT(aPresContext, "null pointer");
@@ -2847,7 +2847,7 @@ bool nsContainerFrame::ShouldAvoidBreakInside(
          !GetPrevInFlow();
 }
 
-void nsContainerFrame::ConsiderChildOverflow(nsOverflowAreas& aOverflowAreas,
+void nsContainerFrame::ConsiderChildOverflow(OverflowAreas& aOverflowAreas,
                                              nsIFrame* aChildFrame) {
   if (StyleDisplay()->IsContainLayout() &&
       IsFrameOfType(eSupportsContainLayoutAndPaint)) {
@@ -2858,7 +2858,7 @@ void nsContainerFrame::ConsiderChildOverflow(nsOverflowAreas& aOverflowAreas,
     // so this has the same affect as unioning the child's visual and
     // scrollable overflow with the parent's ink overflow.
     nsRect childVisual = aChildFrame->InkOverflowRect();
-    nsOverflowAreas combined = nsOverflowAreas(childVisual, nsRect());
+    OverflowAreas combined = OverflowAreas(childVisual, nsRect());
     aOverflowAreas.UnionWith(combined + aChildFrame->GetPosition());
   } else {
     aOverflowAreas.UnionWith(aChildFrame->GetOverflowAreas() +
