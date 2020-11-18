@@ -7,7 +7,7 @@ use api::{DebugFlags, ImageDescriptor};
 use api::units::*;
 #[cfg(test)]
 use api::{DocumentId, IdNamespace};
-use euclid::{point2, size2};
+use euclid::point2;
 use crate::device::{TextureFilter, TextureFormatPair};
 use crate::freelist::{FreeListHandle, WeakFreeListHandle};
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};
@@ -41,12 +41,15 @@ pub enum TargetShader {
 
 /// The size of each region in shared cache texture arrays.
 pub const TEXTURE_REGION_DIMENSIONS: i32 = 512;
-pub const GLYPH_TEXTURE_REGION_DIMENSIONS: i32 = 128;
 
 const PICTURE_TEXTURE_SLICE_COUNT: usize = 8;
 
 /// The chosen image format for picture tiles.
 const PICTURE_TILE_FORMAT: ImageFormat = ImageFormat::RGBA8;
+
+/// The number of pixels in a region. Derived from the above.
+const TEXTURE_REGION_PIXELS: usize =
+    (TEXTURE_REGION_DIMENSIONS as usize) * (TEXTURE_REGION_DIMENSIONS as usize);
 
 /// Items in the texture cache can either be standalone textures,
 /// or a sub-rect inside the shared cache.
@@ -253,30 +256,26 @@ impl SharedTextures {
             alpha8_linear: TextureUnits::new(
                 TextureFormatPair::from(ImageFormat::R8),
                 TextureFilter::Linear,
-                1024,
-                TEXTURE_REGION_DIMENSIONS,
+                2
             ),
             // Used for experimental hdr yuv texture support, but not used in
             // production Firefox.
             alpha16_linear: TextureUnits::new(
                 TextureFormatPair::from(ImageFormat::R16),
                 TextureFilter::Linear,
-                TEXTURE_REGION_DIMENSIONS,
-                TEXTURE_REGION_DIMENSIONS,
+                1
             ),
             // The primary cache for images, etc.
             color8_linear: TextureUnits::new(
                 color_formats.clone(),
                 TextureFilter::Linear,
-                2048,
-                TEXTURE_REGION_DIMENSIONS
+                4,
             ),
             // The cache for glyphs (separate to help with batching).
             color8_glyphs: TextureUnits::new(
                 color_formats.clone(),
                 TextureFilter::Linear,
-                2048,
-                GLYPH_TEXTURE_REGION_DIMENSIONS,
+                4,
             ),
             // Used for image-rendering: crisp. This is mostly favicons, which
             // are small. Some other images use it too, but those tend to be
@@ -284,8 +283,7 @@ impl SharedTextures {
             color8_nearest: TextureUnits::new(
                 color_formats,
                 TextureFilter::Nearest,
-                TEXTURE_REGION_DIMENSIONS,
-                TEXTURE_REGION_DIMENSIONS,
+                1,
             ),
         }
     }
@@ -301,7 +299,7 @@ impl SharedTextures {
 
     /// Returns a mutable borrow for the shared texture array matching the parameters.
     fn select(
-        &mut self, size: DeviceIntSize, external_format: ImageFormat, filter: TextureFilter, shader: TargetShader,
+        &mut self, external_format: ImageFormat, filter: TextureFilter, shader: TargetShader,
     ) -> &mut TextureUnits {
         match external_format {
             ImageFormat::R8 => {
@@ -314,11 +312,8 @@ impl SharedTextures {
             }
             ImageFormat::RGBA8 |
             ImageFormat::BGRA8 => {
-                let max = size.width.max(size.height);
                 match (filter, shader) {
-                    (TextureFilter::Linear, TargetShader::Text) if max <= GLYPH_TEXTURE_REGION_DIMENSIONS => {
-                        &mut self.color8_glyphs
-                    }
+                    (TextureFilter::Linear, TargetShader::Text) => &mut self.color8_glyphs,
                     (TextureFilter::Linear, _) => &mut self.color8_linear,
                     (TextureFilter::Nearest, _) => &mut self.color8_nearest,
                     _ => panic!("Unexpexcted filter {:?}", filter),
@@ -992,12 +987,7 @@ impl TextureCache {
             }
             EntryDetails::Cache { origin, region_index, .. } => {
                 // Free the block in the given region.
-                let texture_array = self.shared_textures.select(
-                    entry.size,
-                    entry.input_format,
-                    entry.filter,
-                    entry.shader,
-                );
+                let texture_array = self.shared_textures.select(entry.input_format, entry.filter, entry.shader);
                 let unit = texture_array.units
                     .iter_mut()
                     .find(|unit| unit.texture_id == entry.texture_id)
@@ -1028,20 +1018,13 @@ impl TextureCache {
         &mut self,
         params: &CacheAllocParams,
     ) -> CacheEntry {
-        let units = self.shared_textures.select(
-            params.descriptor.size,
+        // Mutably borrow the correct texture.
+        let texture_array = self.shared_textures.select(
             params.descriptor.format,
             params.filter,
             params.shader,
         );
-
-        let (texture_id, region_index, allocated_rect) = units.allocate(
-            params.descriptor.size,
-            &mut self.pending_updates,
-            &mut self.next_id,
-        );
-
-        let swizzle = if units.formats.external == params.descriptor.format {
+        let swizzle = if texture_array.formats.external == params.descriptor.format {
             Swizzle::default()
         } else {
             match self.swizzle {
@@ -1050,26 +1033,49 @@ impl TextureCache {
             }
         };
 
-        let bpp = units.formats.internal.bytes_per_pixel();
-        self.shared_bytes_allocated += (allocated_rect.size.area() * bpp) as usize;
+        let slab_size = SlabSize::new(params.descriptor.size);
 
-        CacheEntry {
-            size: params.descriptor.size,
-            user_data: params.user_data,
-            last_access: self.now,
-            details: EntryDetails::Cache {
-                origin: allocated_rect.origin,
-                region_index: region_index,
-            },
-            uv_rect_handle: GpuCacheHandle::new(),
-            input_format: params.descriptor.format,
-            filter: params.filter,
-            swizzle,
-            texture_id,
-            eviction_notice: None,
-            uv_rect_kind: params.uv_rect_kind,
-            shader: params.shader
-        }
+        let info = TextureCacheAllocInfo {
+            target: ImageBufferKind::Texture2D,
+            width: texture_array.regions_per_row * TEXTURE_REGION_DIMENSIONS,
+            height: texture_array.regions_per_row * TEXTURE_REGION_DIMENSIONS,
+            format: texture_array.formats.internal,
+            filter: texture_array.filter,
+            layer_count: 1,
+            is_shared_cache: true,
+            has_depth: false,
+        };
+
+        let unit_index = if let Some(index) = texture_array.units
+            .iter()
+            .position(|unit| unit.can_alloc(slab_size))
+        {
+            index
+        } else {
+            let index = texture_array.units.len();
+            let regions_per_row = texture_array.regions_per_row;
+            texture_array.units.push(TextureUnit {
+                texture_id: self.next_id,
+                regions_per_row,
+                regions: Vec::new(),
+                empty_regions: 0,
+            });
+
+            let num_regions = texture_array.regions_per_texture();
+            let unit = &mut texture_array.units[index];
+
+            unit.push_regions(num_regions);
+
+            self.pending_updates.push_alloc(self.next_id, info);
+            self.next_id.0 += 1;
+            index
+        };
+
+        self.shared_bytes_allocated += slab_size.size_in_bytes(texture_array.formats.internal);
+
+        // Do the allocation. This can fail and return None
+        // if there are no free slots or regions available.
+        texture_array.alloc(params, unit_index, self.now, swizzle, params.shader)
     }
 
     // Returns true if the given image descriptor *may* be
@@ -1242,6 +1248,35 @@ struct SlabSize {
 }
 
 impl SlabSize {
+    fn new(size: DeviceIntSize) -> Self {
+        let x_size = quantize_dimension(size.width);
+        let y_size = quantize_dimension(size.height);
+
+        assert!(x_size > 0 && x_size <= TEXTURE_REGION_DIMENSIONS);
+        assert!(y_size > 0 && y_size <= TEXTURE_REGION_DIMENSIONS);
+
+        let (width, height) = match (x_size, y_size) {
+            // Special cased rectangular slab pages.
+            (512, 0..=64) => (512, 64),
+            (512, 128) => (512, 128),
+            (512, 256) => (512, 256),
+            (0..=64, 512) => (64, 512),
+            (128, 512) => (128, 512),
+            (256, 512) => (256, 512),
+
+            // If none of those fit, use a square slab size.
+            (x_size, y_size) => {
+                let square_size = cmp::max(x_size, y_size);
+                (square_size, square_size)
+            }
+        };
+
+        SlabSize {
+            width,
+            height,
+        }
+    }
+
     fn size_in_bytes(&self, format: ImageFormat) -> usize {
         let bpp = format.bytes_per_pixel();
         (self.width * self.height * bpp) as usize
@@ -1290,13 +1325,13 @@ impl TextureRegion {
     }
 
     // Initialize a region to be an allocator for a specific slab size.
-    fn init(&mut self, slab_size: SlabSize, region_size: i32, empty_regions: &mut usize) {
+    fn init(&mut self, slab_size: SlabSize, empty_regions: &mut usize) {
         debug_assert!(self.slab_size == SlabSize::invalid());
         debug_assert!(self.free_slots.is_empty());
 
         self.slab_size = slab_size;
-        let slots_per_x_axis = region_size / self.slab_size.width;
-        let slots_per_y_axis = region_size / self.slab_size.height;
+        let slots_per_x_axis = TEXTURE_REGION_DIMENSIONS / self.slab_size.width;
+        let slots_per_y_axis = TEXTURE_REGION_DIMENSIONS / self.slab_size.height;
 
         // Add each block to a freelist.
         for y in 0 .. slots_per_y_axis {
@@ -1355,99 +1390,39 @@ impl TextureRegion {
 struct TextureUnit {
     texture_id: CacheTextureId,
     regions: Vec<TextureRegion>,
-    region_size: i32,
     empty_regions: usize,
+    regions_per_row: i32,
 }
 
 impl TextureUnit {
-    fn slab_size(&self, size: DeviceIntSize) -> SlabSize {
-        fn quantize_dimension(size: i32) -> i32 {
-            match size {
-                0 => unreachable!(),
-                1..=16 => 16,
-                17..=32 => 32,
-                33..=64 => 64,
-                65..=128 => 128,
-                129..=256 => 256,
-                257..=512 => 512,
-                _ => panic!("Invalid dimensions for cache!"),
-            }
+    /// Adds a new empty region to the array.
+    fn push_regions(&mut self, count: i32) {
+        assert!(self.empty_regions <= self.regions.len());
+        for _ in 0..count {
+            let index = self.regions.len();
+            let offset = self.region_offset(index as i32);
+            self.regions.push(TextureRegion::new(index, offset));
+            self.empty_regions += 1;
         }
+    }
 
+    fn region_offset(&self, index: i32) -> DeviceIntPoint {
+        point2(
+            (index % self.regions_per_row) * TEXTURE_REGION_DIMENSIONS,
+            (index / self.regions_per_row) * TEXTURE_REGION_DIMENSIONS,
+        )
+    }
 
-        let x_size = quantize_dimension(size.width);
-        let y_size = quantize_dimension(size.height);
-
-        let (width, height) = match (x_size, y_size) {
-            // Special cased rectangular slab pages.
-            (512, 0..=64) => (512, 64),
-            (512, 128) => (512, 128),
-            (512, 256) => (512, 256),
-            (0..=64, 512) => (64, 512),
-            (128, 512) => (128, 512),
-            (256, 512) => (256, 512),
-
-            // If none of those fit, use a square slab size.
-            (x_size, y_size) => {
-                let square_size = cmp::max(x_size, y_size);
-                (square_size, square_size)
-            }
-        };
-
-        SlabSize {
-            width,
-            height,
-        }
+    /// Returns true if we can allocate the given entry.
+    fn can_alloc(&self, slab_size: SlabSize) -> bool {
+        self.empty_regions != 0 || self.regions.iter().any(|region| {
+            region.slab_size == slab_size && !region.free_slots.is_empty()
+        })
     }
 
     fn is_empty(&self) -> bool {
         self.empty_regions == self.regions.len()
     }
-
-    // Returns the region index and allocated rect.
-    fn allocate(&mut self, size: DeviceIntSize) -> Option<(usize, DeviceIntRect)> {
-        // Keep track of the location of an empty region,
-        // in case we need to select a new empty region
-        // after the loop.
-        let mut empty_region_index = None;
-
-        let slab_size = self.slab_size(size);
-        let allocated_size = size2(slab_size.width, slab_size.height);
-
-        // Run through the existing regions of this size, and see if
-        // we can find a free block in any of them.
-        for (i, region) in self.regions.iter_mut().enumerate() {
-            if region.is_empty() {
-                empty_region_index = Some(i);
-            } else if region.slab_size == slab_size {
-                if let Some(location) = region.alloc() {
-                    return Some((
-                        region.index,
-                        DeviceIntRect {
-                            origin: location,
-                            size: allocated_size,
-                        }
-                    ));
-                }
-            }
-        }
-
-        if let Some(empty_region_index) = empty_region_index {
-            let region = &mut self.regions[empty_region_index];
-            region.init(slab_size, self.region_size, &mut self.empty_regions);
-
-            return Some((
-                region.index,
-                DeviceIntRect {
-                    origin: region.alloc().unwrap(),
-                    size: allocated_size,
-                },
-            ))
-        }
-
-        None
-    }
-
 }
 
 /// A number of 2D textures (single layer), each with a number of
@@ -1458,101 +1433,32 @@ struct TextureUnits {
     filter: TextureFilter,
     formats: TextureFormatPair<ImageFormat>,
     units: SmallVec<[TextureUnit; 1]>,
-    size: i32,
-    region_size: i32,
+    regions_per_row: i32,
 }
 
 impl TextureUnits {
     fn new(
         formats: TextureFormatPair<ImageFormat>,
         filter: TextureFilter,
-        size: i32,
-        region_size: i32,
+        regions_per_row: i32,
     ) -> Self {
         TextureUnits {
             formats,
             filter,
             units: SmallVec::new(),
-            size,
-            region_size,
+            regions_per_row,
         }
+    }
+
+    fn regions_per_texture(&self) -> i32 {
+        self.regions_per_row * self.regions_per_row
     }
 
     /// Returns the number of GPU bytes consumed by this texture array.
     fn size_in_bytes(&self) -> usize {
         let bpp = self.formats.internal.bytes_per_pixel() as usize;
         let num_regions: usize = self.units.iter().map(|u| u.regions.len()).sum();
-        num_regions * (self.region_size * self.region_size) as usize * bpp
-    }
-
-    fn add_texture(&mut self, texture_id: CacheTextureId) -> usize {
-        let regions_per_row = self.size / self.region_size;
-        let num_regions = (regions_per_row * regions_per_row) as usize;
-
-        let mut texture = TextureUnit {
-            texture_id,
-            regions: Vec::with_capacity(num_regions),
-            region_size: self.region_size,
-            empty_regions: num_regions,
-        };
-
-        for index in 0..num_regions {
-            let offset = point2(
-                (index as i32 % regions_per_row) * self.region_size,
-                (index as i32 / regions_per_row) * self.region_size,
-            );
-
-            texture.regions.push(TextureRegion::new(index, offset));
-        }
-
-        let unit_index = self.units.len();
-        self.units.push(texture);
-
-        unit_index
-    }
-
-    /// Returns the texture id, region index and allocated rect.
-    ///
-    /// Adds a new texture if there's no spot available.
-    fn allocate(
-        &mut self,
-        requested_size: DeviceIntSize,
-        pending_updates: &mut TextureUpdateList,
-        next_id: &mut CacheTextureId,
-    ) -> (CacheTextureId, usize, DeviceIntRect) {
-        let mut allocation = None;
-        for unit in &mut self.units {
-            if let Some((region, rect)) = unit.allocate(requested_size) {
-                allocation = Some((unit.texture_id, region, rect));
-            }
-        }
-
-        allocation.unwrap_or_else(|| {
-            let texture_id = *next_id;
-            next_id.0 += 1;
-
-            pending_updates.push_alloc(
-                texture_id,
-                TextureCacheAllocInfo {
-                    target: ImageBufferKind::Texture2D,
-                    width: self.size,
-                    height: self.size,
-                    format: self.formats.internal,
-                    filter: self.filter,
-                    layer_count: 1,
-                    is_shared_cache: true,
-                    has_depth: false,
-                },
-            );
-
-            let unit_index = self.add_texture(texture_id);
-
-            let (region_index, rect) = self.units[unit_index]
-                .allocate(requested_size)
-                .unwrap();
-
-            (texture_id, region_index, rect)
-        })
+        num_regions * TEXTURE_REGION_PIXELS * bpp
     }
 
     fn clear(&mut self, updates: &mut TextureUpdateList) {
@@ -1579,22 +1485,91 @@ impl TextureUnits {
         profile.set(mem_idx, profiler::bytes_to_mb(self.size_in_bytes()));
     }
 
+    /// Allocate space in this texture array.
+    fn alloc(
+        &mut self,
+        params: &CacheAllocParams,
+        unit_index: usize,
+        now: FrameStamp,
+        swizzle: Swizzle,
+        shader: TargetShader,
+    ) -> CacheEntry {
+        // Quantize the size of the allocation to select a region to
+        // allocate from.
+        let slab_size = SlabSize::new(params.descriptor.size);
+        let unit = &mut self.units[unit_index];
+
+        // TODO(gw): For simplicity, the initial implementation just
+        //           has a single vec<> of regions. We could easily
+        //           make this more efficient by storing a list of
+        //           regions for each slab size specifically...
+
+        // Keep track of the location of an empty region,
+        // in case we need to select a new empty region
+        // after the loop.
+        let mut empty_region_index = None;
+        let mut entry_details = None;
+
+        // Run through the existing regions of this size, and see if
+        // we can find a free block in any of them.
+        for (i, region) in unit.regions.iter_mut().enumerate() {
+            if region.is_empty() {
+                empty_region_index = Some(i);
+            } else if region.slab_size == slab_size {
+                if let Some(location) = region.alloc() {
+                    entry_details = Some(EntryDetails::Cache {
+                        region_index: region.index,
+                        origin: location,
+                    });
+                    break;
+                }
+            }
+        }
+
+        // Find a region of the right size and try to allocate from it.
+        let details = match entry_details {
+            Some(details) => details,
+            None => {
+                let region = &mut unit.regions[empty_region_index.unwrap()];
+                region.init(slab_size, &mut unit.empty_regions);
+                EntryDetails::Cache {
+                    region_index: region.index,
+                    origin: region.alloc().unwrap(),
+                }
+            }
+        };
+
+        CacheEntry {
+            size: params.descriptor.size,
+            user_data: params.user_data,
+            last_access: now,
+            details,
+            uv_rect_handle: GpuCacheHandle::new(),
+            input_format: params.descriptor.format,
+            filter: self.filter,
+            swizzle,
+            texture_id: unit.texture_id,
+            eviction_notice: None,
+            uv_rect_kind: params.uv_rect_kind,
+            shader
+        }
+    }
+
+
     #[allow(dead_code)]
     pub fn dump_as_svg(&self, output: &mut dyn std::io::Write) -> std::io::Result<()> {
         use svg_fmt::*;
 
         let num_arrays = self.units.len() as f32;
-        let region_size = self.region_size as f32;
+        let num_regions = self.regions_per_texture() as f32;
 
         let text_spacing = 15.0;
-        let array_spacing = 30.0;
-        let unit_spacing = 5.0;
-        let unit_size = 200.0 * (self.region_size as f32 / 512.0);
-        let regions_per_row = (self.size / self.region_size) as usize;
-        let texture_size = text_spacing + array_spacing + (unit_size + unit_spacing) * regions_per_row as f32;
+        let array_spacing = 60.0;
+        let unit_spacing = 10.0;
+        let unit_size = 100.0;
 
-        let svg_w = array_spacing * 2.0 + regions_per_row as f32 * (unit_size + unit_spacing);
-        let svg_h = array_spacing + num_arrays * (texture_size + array_spacing);
+        let svg_w = array_spacing * 2.0 + num_regions * (unit_size + unit_spacing);
+        let svg_h = unit_spacing * 2.0 + num_arrays * (text_spacing * 2.0 + array_spacing + unit_size);
 
         writeln!(output, "{}", BeginSvg { w: svg_w, h: svg_h })?;
 
@@ -1606,21 +1581,31 @@ impl TextureUnits {
                 .fill(rgb(50, 50, 50))
         )?;
 
+        let mut x = array_spacing;
         let mut y = array_spacing;
         for unit in &self.units {
-            writeln!(output, "    {}", text(array_spacing, y, format!("{:?}", unit.texture_id)).color(rgb(230, 230, 230)))?;
-            for (idx, region) in unit.regions.iter().enumerate() {
+            writeln!(output, "    {}", text(x, y, format!("{:?}", unit.texture_id)).color(rgb(230, 230, 230)))?;
+            for region in &unit.regions {
                 let slab_size = region.slab_size;
-                let x = array_spacing + (idx % regions_per_row) as f32 * (unit_size + unit_spacing);
 
-                let y = y + text_spacing + (idx / regions_per_row) as f32 * (unit_size + unit_spacing);
+                let y = y + text_spacing;
+
+                let region_text = if slab_size.width == 0 {
+                    "(empty)".to_string()
+                } else {
+                    format!("{}x{}", slab_size.width, slab_size.height)
+                };
+
+                writeln!(output, "    {}", text(x, y, region_text).color(rgb(230, 230, 230)))?;
+
+                let y = y + text_spacing;
 
                 let texture_background = if region.is_empty() { rgb(30, 30, 30) } else { rgb(40, 40, 130) };
                 writeln!(output, "    {}", rectangle(x, y, unit_size, unit_size).inflate(1.0, 1.0).fill(rgb(10, 10, 10)))?;
                 writeln!(output, "    {}", rectangle(x, y, unit_size, unit_size).fill(texture_background))?;
 
-                let sw = (slab_size.width as f32 / region_size) * unit_size;
-                let sh = (slab_size.height as f32 / region_size) * unit_size;
+                let sw = (slab_size.width as f32 / 512.0) * unit_size;
+                let sh = (slab_size.height as f32 / 512.0) * unit_size;
 
                 for slot in &region.free_slots {
                     let sx = x + slot.0 as f32 * sw;
@@ -1630,15 +1615,11 @@ impl TextureUnits {
                     writeln!(output, "    {}", rectangle(sx, sy, sw, sh).inflate(-0.5, -0.5).fill(rgb(30, 30, 30)))?;
                 }
 
-                if slab_size.width != 0 {
-                    let region_text = format!("{}x{}", slab_size.width, slab_size.height);
-                    let tx = x + 1.0;
-                    let ty = y + unit_size - 1.0;
-                    writeln!(output, "    {}", text(tx, ty, region_text).color(rgb(230, 230, 230)))?;
-                }
+                x += unit_spacing + unit_size;
             }
 
-            y += array_spacing + texture_size;
+            y += array_spacing + unit_size;
+            x = array_spacing;
         }
 
         writeln!(output, "{}", EndSvg)
@@ -1811,5 +1792,18 @@ impl TextureCacheUpdate {
                 }
             }
         }
+    }
+}
+
+fn quantize_dimension(size: i32) -> i32 {
+    match size {
+        0 => unreachable!(),
+        1..=16 => 16,
+        17..=32 => 32,
+        33..=64 => 64,
+        65..=128 => 128,
+        129..=256 => 256,
+        257..=512 => 512,
+        _ => panic!("Invalid dimensions for cache!"),
     }
 }
