@@ -27,7 +27,6 @@
 #include "AudioSegment.h"
 #include "DOMMediaStream.h"
 #include "ImageContainer.h"
-#include "GeckoProfiler.h"
 #include "MediaDecoder.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaShutdownManager.h"
@@ -39,8 +38,17 @@
 #include "VideoUtils.h"
 
 #ifdef MOZ_GECKO_PROFILER
-#  include "mozilla/ProfilerMarkerTypes.h"
-#endif  // MOZ_GECKO_PROFILER
+#  include "ProfilerMarkerPayload.h"
+#  define MDSM_ERROR_MARKER(tag, error, markerTime)                          \
+    PROFILER_ADD_MARKER_WITH_PAYLOAD(tag, MEDIA_PLAYBACK, TextMarkerPayload, \
+                                     (error, markerTime))
+#  define MDSM_SAMPLE_MARKER(tag, startTime, endTime) \
+    PROFILER_ADD_MARKER_WITH_PAYLOAD(                 \
+        tag, MEDIA_PLAYBACK, MediaSampleMarkerPayload, (startTime, endTime))
+#else
+#  define MDSM_ERROR_MARKER(tag, error, markerTime)
+#  define MDSM_SAMPLE_MARKER(tag, startTime, endTime)
+#endif
 
 namespace mozilla {
 
@@ -2851,9 +2859,8 @@ void MediaDecoderStateMachine::PushAudio(AudioData* aSample) {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(aSample);
   AudioQueue().Push(aSample);
-  PROFILER_MARKER("MDSM::PushAudio", MEDIA_PLAYBACK, {}, MediaSampleMarker,
-                  aSample->mTime.ToMicroseconds(),
-                  aSample->GetEndTime().ToMicroseconds());
+  MDSM_SAMPLE_MARKER("MDSM::PushAudio", aSample->mTime.ToMicroseconds(),
+                     aSample->GetEndTime().ToMicroseconds());
 }
 
 void MediaDecoderStateMachine::PushVideo(VideoData* aSample) {
@@ -2861,9 +2868,8 @@ void MediaDecoderStateMachine::PushVideo(VideoData* aSample) {
   MOZ_ASSERT(aSample);
   aSample->mFrameID = ++mCurrentFrameID;
   VideoQueue().Push(aSample);
-  PROFILER_MARKER("MDSM::PushVideo", MEDIA_PLAYBACK, {}, MediaSampleMarker,
-                  aSample->mTime.ToMicroseconds(),
-                  aSample->GetEndTime().ToMicroseconds());
+  MDSM_SAMPLE_MARKER("MDSM::PushVideo", aSample->mTime.ToMicroseconds(),
+                     aSample->GetEndTime().ToMicroseconds());
 }
 
 void MediaDecoderStateMachine::OnAudioPopped(const RefPtr<AudioData>& aSample) {
@@ -3463,8 +3469,8 @@ bool MediaDecoderStateMachine::HasLowBufferedData(const TimeUnit& aThreshold) {
 void MediaDecoderStateMachine::DecodeError(const MediaResult& aError) {
   MOZ_ASSERT(OnTaskQueue());
   LOGE("Decode error: %s", aError.Description().get());
-  PROFILER_MARKER_TEXT("MDSM::DecodeError", MEDIA_PLAYBACK, {},
-                       aError.Description());
+  MDSM_ERROR_MARKER("MDSM::DecodeError", aError.Description(),
+                    TimeStamp::NowUnfuzzed());
   // Notify the decode error and MediaDecoder will shut down MDSM.
   mOnPlaybackErrorEvent.Notify(aError);
 }

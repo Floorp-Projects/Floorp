@@ -67,6 +67,10 @@
 #  include "GeckoTaskTracer.h"
 #endif
 
+#ifdef MOZ_GECKO_PROFILER
+#  include "ProfilerMarkerPayload.h"
+#endif
+
 #include <functional>
 
 using namespace mozilla::dom;

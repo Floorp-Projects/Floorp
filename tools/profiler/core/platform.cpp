@@ -37,6 +37,7 @@
 #include "ProfilerChild.h"
 #include "ProfilerCodeAddressService.h"
 #include "ProfilerIOInterposeObserver.h"
+#include "ProfilerMarkerPayload.h"
 #include "ProfilerParent.h"
 #include "RegisteredThread.h"
 #include "shared-libraries.h"
@@ -51,7 +52,6 @@
 #include "mozilla/AutoProfilerLabel.h"
 #include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
-#include "mozilla/net/HttpBaseChannel.h"  // for net::TimingStruct
 #include "mozilla/Printf.h"
 #include "mozilla/ProfileBufferChunkManagerSingle.h"
 #include "mozilla/ProfileBufferChunkManagerWithLocalLimit.h"
@@ -1631,6 +1631,44 @@ void ProfilingStackOwner::DumpStackAndCrash() const {
 // The name of the main thread.
 static const char* const kMainThreadName = "GeckoMain";
 
+// TODO - It is better to have the marker timing created by the original callers
+// of the profiler_add_marker API, rather than deduce it from the payload. This
+// is a bigger code diff for adding MarkerTiming, so do that work in a
+// follow-up.
+MarkerTiming get_marker_timing_from_payload(
+    const ProfilerMarkerPayload& aPayload) {
+  const TimeStamp& start = aPayload.GetStartTime();
+  const TimeStamp& end = aPayload.GetEndTime();
+  if (start.IsNull()) {
+    if (end.IsNull()) {
+      // The payload contains no time information, use the current time.
+      return MarkerTiming::InstantAt(TimeStamp::NowUnfuzzed());
+    }
+    return MarkerTiming::IntervalEnd(end);
+  }
+  if (end.IsNull()) {
+    return MarkerTiming::IntervalStart(start);
+  }
+  if (start == end) {
+    return MarkerTiming::InstantAt(start);
+  }
+  return MarkerTiming::Interval(start, end);
+}
+
+// Add the marker to the given buffer with the given information.
+// This is a unified insertion point for all the markers.
+static void StoreMarker(ProfileChunkedBuffer& aChunkedBuffer, int aThreadId,
+                        const char* aMarkerName,
+                        const MarkerTiming& aMarkerTiming,
+                        JS::ProfilingCategoryPair aCategoryPair,
+                        const ProfilerMarkerPayload* aPayload) {
+  aChunkedBuffer.PutObjects(
+      ProfileBufferEntry::Kind::MarkerData, aThreadId,
+      WrapProfileBufferUnownedCString(aMarkerName),
+      aMarkerTiming.GetStartTime(), aMarkerTiming.GetEndTime(),
+      aMarkerTiming.GetPhase(), static_cast<uint32_t>(aCategoryPair), aPayload);
+}
+
 ////////////////////////////////////////////////////////////////////////
 // BEGIN sampling/unwinding code
 
@@ -2744,15 +2782,19 @@ static void CollectJavaThreadProfileData(ProfileBuffer& aProfileBuffer) {
 
     if (!text) {
       // This marker doesn't have a text.
-      AddMarkerToBuffer(aProfileBuffer.UnderlyingChunkedBuffer(), markerName,
-                        geckoprofiler::category::JAVA_ANDROID,
-                        {MarkerThreadId(threadId), std::move(timing)});
+      StoreMarker(aProfileBuffer.UnderlyingChunkedBuffer(), threadId,
+                  markerName.get(), timing,
+                  JS::ProfilingCategoryPair::JAVA_ANDROID, nullptr);
     } else {
       // This marker has a text.
-      AddMarkerToBuffer(aProfileBuffer.UnderlyingChunkedBuffer(), markerName,
-                        geckoprofiler::category::JAVA_ANDROID,
-                        {MarkerThreadId(threadId), std::move(timing)},
-                        geckoprofiler::markers::Text{}, text->ToCString());
+      nsCString textString = text->ToCString();
+      const TextMarkerPayload payload(textString, startTime, endTime, Nothing(),
+                                      nullptr);
+
+      // Put the marker inside the buffer.
+      StoreMarker(aProfileBuffer.UnderlyingChunkedBuffer(), threadId,
+                  markerName.get(), timing,
+                  JS::ProfilingCategoryPair::JAVA_ANDROID, &payload);
     }
   }
 }
@@ -4552,9 +4594,7 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
   }
 
   // Set up profiling for each registered thread, if appropriate.
-#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
-  bool isMainThreadBeingProfiled = false;
-#endif
+  Maybe<int> mainThreadId;
   int tid = profiler_current_thread_id();
   const Vector<UniquePtr<RegisteredThread>>& registeredThreads =
       CorePS::RegisteredThreads(aLock);
@@ -4580,11 +4620,9 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
           TriggerPollJSSamplingOnMainThread();
         }
       }
-#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
       if (info->IsMainThread()) {
-        isMainThreadBeingProfiled = true;
+        mainThreadId = Some(info->ThreadId());
       }
-#endif
       registeredThread->RacyRegisteredThread().ReinitializeOnResume();
       if (registeredThread->GetJSContext()) {
         profiledThreadData->NotifyReceivedJSContext(0);
@@ -4619,8 +4657,8 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
   if (ActivePS::FeatureNativeAllocations(aLock)) {
-    if (isMainThreadBeingProfiled) {
-      mozilla::profiler::enable_native_allocations();
+    if (mainThreadId.isSome()) {
+      mozilla::profiler::enable_native_allocations(mainThreadId.value());
     } else {
       NS_WARNING(
           "The nativeallocations feature is turned on, but the main thread is "
@@ -5029,6 +5067,11 @@ void profiler_remove_sampled_counter(BaseProfilerCount* aCounter) {
   CorePS::RemoveCounter(lock, aCounter);
 }
 
+static void maybelocked_profiler_add_marker_for_thread(
+    int aThreadId, JS::ProfilingCategoryPair aCategoryPair,
+    const char* aMarkerName, const ProfilerMarkerPayload& aPayload,
+    const PSAutoLock* aLockOrNull);
+
 ProfilingStack* profiler_register_thread(const char* aName,
                                          void* aGuessStackTop) {
   DEBUG_LOG("profiler_register_thread(%s)", aName);
@@ -5065,8 +5108,10 @@ ProfilingStack* profiler_register_thread(const char* aName,
     text.AppendLiteral("\" attempted to re-register as \"");
     text.AppendASCII(aName);
     text.AppendLiteral("\"");
-    PROFILER_MARKER_TEXT("profiler_register_thread again", OTHER_Profiling,
-                         MarkerThreadId::MainThread(), text);
+    maybelocked_profiler_add_marker_for_thread(
+        profiler_main_thread_id(), JS::ProfilingCategoryPair::OTHER_Profiling,
+        "profiler_register_thread again",
+        TextMarkerPayload(text, TimeStamp::NowUnfuzzed()), &lock);
 
     return &thread->RacyRegisteredThread().ProfilingStack();
   }
@@ -5146,8 +5191,10 @@ void profiler_unregister_thread() {
         tid != profiler_main_thread_id()) {
       nsCString threadIdString;
       threadIdString.AppendInt(tid);
-      PROFILER_MARKER_TEXT("profiler_unregister_thread again", OTHER_Profiling,
-                           MarkerThreadId::MainThread(), threadIdString);
+      maybelocked_profiler_add_marker_for_thread(
+          profiler_main_thread_id(), JS::ProfilingCategoryPair::OTHER_Profiling,
+          "profiler_unregister_thread again",
+          TextMarkerPayload(threadIdString, TimeStamp::NowUnfuzzed()), &lock);
     }
   }
 }
@@ -5369,6 +5416,40 @@ void ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {
   delete aBacktrace;
 }
 
+static void racy_profiler_add_marker(const char* aMarkerName,
+                                     JS::ProfilingCategoryPair aCategoryPair,
+                                     const ProfilerMarkerPayload* aPayload) {
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  // This function is hot enough that we use RacyFeatures, not ActivePS.
+  if (!profiler_can_accept_markers()) {
+    return;
+  }
+
+  // Note that it's possible that the above test would change again before we
+  // actually record the marker. Because of this imprecision it's possible to
+  // miss a marker or record one we shouldn't. Either way is not a big deal.
+
+  RacyRegisteredThread* racyRegisteredThread =
+      TLSRegisteredThread::RacyRegisteredThread();
+  if (!racyRegisteredThread || !racyRegisteredThread->IsBeingProfiled()) {
+    return;
+  }
+
+  const MarkerTiming markerTiming =
+      aPayload ? get_marker_timing_from_payload(*aPayload)
+               : MarkerTiming::InstantNow();
+
+  StoreMarker(CorePS::CoreBuffer(), racyRegisteredThread->ThreadId(),
+              aMarkerName, markerTiming, aCategoryPair, aPayload);
+}
+
+void profiler_add_marker(const char* aMarkerName,
+                         JS::ProfilingCategoryPair aCategoryPair,
+                         const ProfilerMarkerPayload& aPayload) {
+  racy_profiler_add_marker(aMarkerName, aCategoryPair, &aPayload);
+}
+
 // This is a simplified version of profiler_add_marker that can be easily passed
 // into the JS engine.
 void profiler_add_js_marker(const char* aMarkerName, const char* aMarkerText) {
@@ -5381,49 +5462,11 @@ void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info) {
   if (!profiler_can_accept_markers()) {
     return;
   }
-
-  struct JsAllocationMarker {
-    static constexpr mozilla::Span<const char> MarkerTypeName() {
-      return mozilla::MakeStringSpan("JS allocation");
-    }
-    static void StreamJSONMarkerData(
-        mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
-        const mozilla::ProfilerString16View& aTypeName,
-        const mozilla::ProfilerString8View& aClassName,
-        const mozilla::ProfilerString16View& aDescriptiveTypeName,
-        const mozilla::ProfilerString8View& aCoarseType, uint64_t aSize,
-        bool aInNursery) {
-      if (aClassName.Length() != 0) {
-        aWriter.StringProperty("className", aClassName);
-      }
-      if (aTypeName.Length() != 0) {
-        aWriter.StringProperty(
-            "typeName",
-            NS_ConvertUTF16toUTF8(aTypeName.Data(), aTypeName.Length()));
-      }
-      if (aDescriptiveTypeName.Length() != 0) {
-        aWriter.StringProperty(
-            "descriptiveTypeName",
-            NS_ConvertUTF16toUTF8(aDescriptiveTypeName.Data(),
-                                  aDescriptiveTypeName.Length()));
-      }
-      aWriter.StringProperty("coarseType", aCoarseType);
-      aWriter.IntProperty("size", aSize);
-      aWriter.BoolProperty("inNursery", aInNursery);
-    }
-    static mozilla::MarkerSchema MarkerTypeDisplay() {
-      return mozilla::MarkerSchema::SpecialFrontendLocation{};
-    }
-  };
-
+  AUTO_PROFILER_STATS(add_marker_with_JsAllocationMarkerPayload);
   profiler_add_marker(
-      "JS allocation", geckoprofiler::category::JS, MarkerStack::Capture(),
-      JsAllocationMarker{},
-      ProfilerString16View::WrapNullTerminatedString(info.typeName),
-      ProfilerString8View::WrapNullTerminatedString(info.className),
-      ProfilerString16View::WrapNullTerminatedString(info.descriptiveTypeName),
-      ProfilerString8View::WrapNullTerminatedString(info.coarseType), info.size,
-      info.inNursery);
+      "JS allocation", JS::ProfilingCategoryPair::JS,
+      JsAllocationMarkerPayload(TimeStamp::Now(), std::move(info),
+                                profiler_get_backtrace()));
 }
 
 bool profiler_is_locked_on_current_thread() {
@@ -5438,154 +5481,100 @@ bool profiler_is_locked_on_current_thread() {
          CorePS::CoreBuffer().IsThreadSafeAndLockedOnCurrentThread();
 }
 
-static constexpr net::TimingStruct scEmptyNetTimingStruct;
-
 void profiler_add_network_marker(
     nsIURI* aURI, const nsACString& aRequestMethod, int32_t aPriority,
     uint64_t aChannelId, NetworkLoadType aType, mozilla::TimeStamp aStart,
     mozilla::TimeStamp aEnd, int64_t aCount,
     mozilla::net::CacheDisposition aCacheDisposition, uint64_t aInnerWindowID,
     const mozilla::net::TimingStruct* aTimings, nsIURI* aRedirectURI,
-    UniquePtr<ProfileChunkedBuffer> aSource,
+    UniqueProfilerBacktrace aSource,
     const Maybe<nsDependentCString>& aContentType) {
   if (!profiler_can_accept_markers()) {
     return;
   }
-
-  nsAutoCStringN<2048> name;
-  name.AppendASCII("Load ");
-  // top 32 bits are process id of the load
-  name.AppendInt(aChannelId & 0xFFFFFFFFu);
-
-  // These can do allocations/frees/etc; avoid if not active
-  nsAutoCStringN<2048> spec;
+  // These do allocations/frees/etc; avoid if not active
+  nsAutoCString spec;
+  nsAutoCString redirect_spec;
   if (aURI) {
     aURI->GetAsciiSpec(spec);
-    name.AppendASCII(": ");
-    name.Append(spec);
   }
-
-  nsAutoCString redirect_spec;
   if (aRedirectURI) {
     aRedirectURI->GetAsciiSpec(redirect_spec);
   }
-
-  struct NetworkMarker {
-    static constexpr Span<const char> MarkerTypeName() {
-      return MakeStringSpan("Network");
-    }
-    static void StreamJSONMarkerData(
-        baseprofiler::SpliceableJSONWriter& aWriter, mozilla::TimeStamp aStart,
-        mozilla::TimeStamp aEnd, int64_t aID, const ProfilerString8View& aURI,
-        const ProfilerString8View& aRequestMethod, NetworkLoadType aType,
-        int32_t aPri, int64_t aCount, net::CacheDisposition aCacheDisposition,
-        const net::TimingStruct& aTimings,
-        const ProfilerString8View& aRedirectURI,
-        const ProfilerString8View& aContentType) {
-      // This payload still streams a startTime and endTime property because it
-      // made the migration to MarkerTiming on the front-end easier.
-      baseprofiler::WritePropertyTime(aWriter, "startTime", aStart);
-      baseprofiler::WritePropertyTime(aWriter, "endTime", aEnd);
-
-      aWriter.IntProperty("id", aID);
-      aWriter.StringProperty("status", GetNetworkState(aType));
-      if (Span<const char> cacheString = GetCacheState(aCacheDisposition);
-          !cacheString.IsEmpty()) {
-        aWriter.StringProperty("cache", cacheString);
-      }
-      aWriter.IntProperty("pri", aPri);
-      if (aCount > 0) {
-        aWriter.IntProperty("count", aCount);
-      }
-      if (aURI.Length() != 0) {
-        aWriter.StringProperty("URI", aURI);
-      }
-      if (aRedirectURI.Length() != 0) {
-        aWriter.StringProperty("RedirectURI", aRedirectURI);
-      }
-      aWriter.StringProperty("requestMethod", aRequestMethod);
-
-      if (aContentType.Length() != 0) {
-        aWriter.StringProperty("contentType", aContentType);
-      } else {
-        aWriter.NullProperty("contentType");
-      }
-
-      if (aType != NetworkLoadType::LOAD_START) {
-        baseprofiler::WritePropertyTime(aWriter, "domainLookupStart",
-                                        aTimings.domainLookupStart);
-        baseprofiler::WritePropertyTime(aWriter, "domainLookupEnd",
-                                        aTimings.domainLookupEnd);
-        baseprofiler::WritePropertyTime(aWriter, "connectStart",
-                                        aTimings.connectStart);
-        baseprofiler::WritePropertyTime(aWriter, "tcpConnectEnd",
-                                        aTimings.tcpConnectEnd);
-        baseprofiler::WritePropertyTime(aWriter, "secureConnectionStart",
-                                        aTimings.secureConnectionStart);
-        baseprofiler::WritePropertyTime(aWriter, "connectEnd",
-                                        aTimings.connectEnd);
-        baseprofiler::WritePropertyTime(aWriter, "requestStart",
-                                        aTimings.requestStart);
-        baseprofiler::WritePropertyTime(aWriter, "responseStart",
-                                        aTimings.responseStart);
-        baseprofiler::WritePropertyTime(aWriter, "responseEnd",
-                                        aTimings.responseEnd);
-      }
-    }
-    static MarkerSchema MarkerTypeDisplay() {
-      return MarkerSchema::SpecialFrontendLocation{};
-    }
-
-   private:
-    static Span<const char> GetNetworkState(NetworkLoadType aType) {
-      switch (aType) {
-        case NetworkLoadType::LOAD_START:
-          return MakeStringSpan("STATUS_START");
-        case NetworkLoadType::LOAD_STOP:
-          return MakeStringSpan("STATUS_STOP");
-        case NetworkLoadType::LOAD_REDIRECT:
-          return MakeStringSpan("STATUS_REDIRECT");
-        default:
-          MOZ_ASSERT(false, "Unexpected NetworkLoadType enum value.");
-          return MakeStringSpan("");
-      }
-    }
-
-    static Span<const char> GetCacheState(
-        net::CacheDisposition aCacheDisposition) {
-      switch (aCacheDisposition) {
-        case net::kCacheUnresolved:
-          return MakeStringSpan("Unresolved");
-        case net::kCacheHit:
-          return MakeStringSpan("Hit");
-        case net::kCacheHitViaReval:
-          return MakeStringSpan("HitViaReval");
-        case net::kCacheMissedViaReval:
-          return MakeStringSpan("MissedViaReval");
-        case net::kCacheMissed:
-          return MakeStringSpan("Missed");
-        case net::kCacheUnknown:
-          return MakeStringSpan("");
-        default:
-          MOZ_ASSERT(false, "Unexpected CacheDisposition enum value.");
-          return MakeStringSpan("");
-      }
-    }
-  };
-
+  // top 32 bits are process id of the load
+  uint32_t id = static_cast<uint32_t>(aChannelId & 0xFFFFFFFF);
+  char name[2048];
+  SprintfLiteral(name, "Load %d: %s", id, PromiseFlatCString(spec).get());
+  AUTO_PROFILER_STATS(add_marker_with_NetworkMarkerPayload);
   profiler_add_marker(
-      name, geckoprofiler::category::NETWORK,
-      {MarkerTiming::Interval(aStart, aEnd),
-       MarkerStack::TakeBacktrace(std::move(aSource)),
-       MarkerInnerWindowId(aInnerWindowID)},
-      NetworkMarker{}, aStart, aEnd, static_cast<int64_t>(aChannelId), spec,
-      aRequestMethod, aType, aPriority, aCount, aCacheDisposition,
-      aTimings ? *aTimings : scEmptyNetTimingStruct, redirect_spec,
-      aContentType ? ProfilerString8View(*aContentType)
-                   : ProfilerString8View());
+      name, JS::ProfilingCategoryPair::NETWORK,
+      NetworkMarkerPayload(static_cast<int64_t>(aChannelId),
+                           PromiseFlatCString(spec).get(), aRequestMethod,
+                           aType, aStart, aEnd, aPriority, aCount,
+                           aCacheDisposition, aInnerWindowID, aTimings,
+                           PromiseFlatCString(redirect_spec).get(),
+                           std::move(aSource), aContentType));
 }
 
-bool profiler_add_native_allocation_marker(int64_t aSize,
+static void maybelocked_profiler_add_marker_for_thread(
+    int aThreadId, JS::ProfilingCategoryPair aCategoryPair,
+    const char* aMarkerName, const ProfilerMarkerPayload& aPayload,
+    const PSAutoLock* aLockOrNull) {
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  if (!profiler_can_accept_markers()) {
+    return;
+  }
+
+#ifdef DEBUG
+  auto checkThreadId = [](int aThreadId, const PSAutoLock& aLock) {
+    if (!ActivePS::Exists(aLock)) {
+      return;
+    }
+
+    // Assert that our thread ID makes sense
+    bool realThread = false;
+    const Vector<UniquePtr<RegisteredThread>>& registeredThreads =
+        CorePS::RegisteredThreads(aLock);
+    for (auto& thread : registeredThreads) {
+      RefPtr<ThreadInfo> info = thread->Info();
+      if (info->ThreadId() == aThreadId) {
+        realThread = true;
+        break;
+      }
+    }
+    MOZ_ASSERT(realThread, "Invalid thread id");
+  };
+
+  if (aLockOrNull) {
+    checkThreadId(aThreadId, *aLockOrNull);
+  } else {
+    PSAutoLock lock(gPSMutex);
+    checkThreadId(aThreadId, lock);
+  }
+#endif
+
+  StoreMarker(CorePS::CoreBuffer(), aThreadId, aMarkerName,
+              get_marker_timing_from_payload(aPayload), aCategoryPair,
+              &aPayload);
+}
+
+void profiler_add_marker_for_thread(int aThreadId,
+                                    JS::ProfilingCategoryPair aCategoryPair,
+                                    const char* aMarkerName,
+                                    const ProfilerMarkerPayload& aPayload) {
+  return maybelocked_profiler_add_marker_for_thread(
+      aThreadId, aCategoryPair, aMarkerName, aPayload, nullptr);
+}
+
+void profiler_add_marker_for_mainthread(JS::ProfilingCategoryPair aCategoryPair,
+                                        const char* aMarkerName,
+                                        const ProfilerMarkerPayload& aPayload) {
+  profiler_add_marker_for_thread(profiler_main_thread_id(), aCategoryPair,
+                                 aMarkerName, aPayload);
+}
+
+bool profiler_add_native_allocation_marker(int aMainThreadId, int64_t aSize,
                                            uintptr_t aMemoryAddress) {
   if (!profiler_can_accept_markers()) {
     return false;
@@ -5602,28 +5591,67 @@ bool profiler_add_native_allocation_marker(int64_t aSize,
     return false;
   }
 
-  struct NativeAllocationMarker {
-    static constexpr mozilla::Span<const char> MarkerTypeName() {
-      return mozilla::MakeStringSpan("Native allocation");
-    }
-    static void StreamJSONMarkerData(
-        mozilla::baseprofiler::SpliceableJSONWriter& aWriter, int64_t aSize,
-        uintptr_t aMemoryAddress, int aThreadId) {
-      aWriter.IntProperty("size", aSize);
-      aWriter.IntProperty("memoryAddress",
-                          static_cast<int64_t>(aMemoryAddress));
-      aWriter.IntProperty("threadId", aThreadId);
-    }
-    static mozilla::MarkerSchema MarkerTypeDisplay() {
-      return mozilla::MarkerSchema::SpecialFrontendLocation{};
-    }
-  };
-
-  profiler_add_marker("Native allocation", geckoprofiler::category::OTHER,
-                      {MarkerThreadId::MainThread(), MarkerStack::Capture()},
-                      NativeAllocationMarker{}, aSize, aMemoryAddress,
-                      profiler_current_thread_id());
+  AUTO_PROFILER_STATS(add_marker_with_NativeAllocationMarkerPayload);
+  maybelocked_profiler_add_marker_for_thread(
+      aMainThreadId, JS::ProfilingCategoryPair::OTHER, "Native allocation",
+      NativeAllocationMarkerPayload(TimeStamp::Now(), aSize, aMemoryAddress,
+                                    profiler_current_thread_id(),
+                                    profiler_get_backtrace()),
+      nullptr);
   return true;
+}
+
+void profiler_tracing_marker(const char* aCategoryString,
+                             const char* aMarkerName,
+                             JS::ProfilingCategoryPair aCategoryPair,
+                             TracingKind aKind,
+                             const Maybe<uint64_t>& aInnerWindowID) {
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  VTUNE_TRACING(aMarkerName, aKind);
+
+  // This function is hot enough that we use RacyFeatures, notActivePS.
+  if (!profiler_can_accept_markers()) {
+    return;
+  }
+
+  AUTO_PROFILER_STATS(add_marker_with_TracingMarkerPayload);
+  profiler_add_marker(
+      aMarkerName, aCategoryPair,
+      TracingMarkerPayload(aCategoryString, aKind, TimeStamp::NowUnfuzzed(),
+                           aInnerWindowID));
+}
+
+void profiler_tracing_marker(const char* aCategoryString,
+                             const char* aMarkerName,
+                             JS::ProfilingCategoryPair aCategoryPair,
+                             TracingKind aKind, UniqueProfilerBacktrace aCause,
+                             const Maybe<uint64_t>& aInnerWindowID) {
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  VTUNE_TRACING(aMarkerName, aKind);
+
+  // This function is hot enough that we use RacyFeatures, notActivePS.
+  if (!profiler_can_accept_markers()) {
+    return;
+  }
+
+  profiler_add_marker(
+      aMarkerName, aCategoryPair,
+      TracingMarkerPayload(aCategoryString, aKind, TimeStamp::NowUnfuzzed(),
+                           aInnerWindowID, std::move(aCause)));
+}
+
+void profiler_add_text_marker(const char* aMarkerName, const nsACString& aText,
+                              JS::ProfilingCategoryPair aCategoryPair,
+                              const mozilla::TimeStamp& aStartTime,
+                              const mozilla::TimeStamp& aEndTime,
+                              const mozilla::Maybe<uint64_t>& aInnerWindowID,
+                              UniqueProfilerBacktrace aCause) {
+  AUTO_PROFILER_STATS(add_marker_with_TextMarkerPayload);
+  profiler_add_marker(aMarkerName, aCategoryPair,
+                      TextMarkerPayload(aText, aStartTime, aEndTime,
+                                        aInnerWindowID, std::move(aCause)));
 }
 
 void profiler_set_js_context(JSContext* aCx) {
