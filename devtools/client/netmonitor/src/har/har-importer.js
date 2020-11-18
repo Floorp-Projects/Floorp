@@ -90,7 +90,7 @@ HarImporter.prototype = {
         },
         totalTime: TIMING_KEYS.reduce((sum, type) => {
           const time = entry.timings[type];
-          return time != -1 ? sum + time : sum;
+          return typeof time != "undefined" && time != -1 ? sum + time : sum;
         }, 0),
 
         httpVersion: entry.request.httpVersion,
