@@ -2414,19 +2414,30 @@ function synthesizeSelectionSet(aOffset, aLength, aReverse, aWindow) {
  *                 selection root.
  * @param aLength  The length of the text.  If the length is too long,
  *                 the extra length is ignored.
+ * @param aIsRelative   Optional (If true, aOffset is relative to start of
+ *                      composition if there is, or start of selection.)
  * @param aWindow  Optional (If null, current |window| will be used)
  * @return         An nsIQueryContentEventResult object.  If this failed,
  *                 the result might be null.
  */
-function synthesizeQueryTextRect(aOffset, aLength, aWindow) {
+function synthesizeQueryTextRect(aOffset, aLength, aIsRelative, aWindow) {
+  if (aIsRelative !== undefined && typeof aIsRelative !== "boolean") {
+    throw new Error(
+      "Maybe, you set Window object to the 3rd argument, but it should be a boolean value"
+    );
+  }
   var utils = _getDOMWindowUtils(aWindow);
+  let flags = QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK;
+  if (aIsRelative === true) {
+    flags |= QUERY_CONTENT_FLAG_OFFSET_RELATIVE_TO_INSERTION_POINT;
+  }
   return utils.sendQueryContentEvent(
     utils.QUERY_TEXT_RECT,
     aOffset,
     aLength,
     0,
     0,
-    QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK
+    flags
   );
 }
 
