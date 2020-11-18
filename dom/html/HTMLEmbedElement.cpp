@@ -163,7 +163,18 @@ nsresult HTMLEmbedElement::AfterMaybeChangeAttr(int32_t aNamespaceID,
 
 bool HTMLEmbedElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                                        int32_t* aTabIndex) {
-  // Has plugin content: let the plugin decide what to do in terms of
+  // If we have decided that this is a blocked plugin then do not allow focus.
+  if ((Type() == eType_Null) &&
+      (PluginFallbackType() == eFallbackBlockAllPlugins)) {
+    if (aTabIndex) {
+      *aTabIndex = -1;
+    }
+
+    *aIsFocusable = false;
+    return false;
+  }
+
+  // Has non-plugin content: let the plugin decide what to do in terms of
   // internal focus from mouse clicks
   if (aTabIndex) {
     *aTabIndex = TabIndex();
