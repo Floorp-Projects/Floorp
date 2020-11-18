@@ -13,6 +13,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ClientID: "resource://gre/modules/ClientID.jsm",
   Services: "resource://gre/modules/Services.jsm",
   TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
+  AttributionCode: "resource:///modules/AttributionCode.jsm",
 });
 XPCOMUtils.defineLazyServiceGetters(this, {
   gUUIDGenerator: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
@@ -65,6 +66,26 @@ class AboutWelcomeTelemetry {
     return `${structuredIngestionEndpointBase}/${extension}`;
   }
 
+  /**
+   * Attach browser attribution data to a ping payload.
+   *
+   * It intentionally queries the *cached* attribution data other than calling
+   * `getAttrDataAsync()` in order to minimize the overhead here.
+   * For the same reason, we are not querying the attribution data from
+   * `TelemetryEnvironment.currentEnvironment.settings`.
+   *
+   * In practice, it's very likely that the attribution data is already read
+   * and cached at some point by `AboutWelcomeParent`, so it should be able to
+   * read the cached results for the most if not all of the pings.
+   */
+  _maybeAttachAttribution(ping) {
+    const attribution = AttributionCode.getCachedAttributionData();
+    if (attribution && Object.keys(attribution).length) {
+      ping.attribution = attribution;
+    }
+    return ping;
+  }
+
   async _createPing(event) {
     if (event.event_context && typeof event.event_context === "object") {
       event.event_context = JSON.stringify(event.event_context);
@@ -77,7 +98,7 @@ class AboutWelcomeTelemetry {
       browser_session_id: browserSessionId,
     };
 
-    return ping;
+    return this._maybeAttachAttribution(ping);
   }
 
   async sendTelemetry(event) {

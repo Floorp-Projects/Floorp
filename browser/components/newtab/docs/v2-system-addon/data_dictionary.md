@@ -343,7 +343,21 @@ Schema definitions/validations that can be used for tests can be found in `syste
 |                            | `Example: {"experiment_1": {"branch": "control"}, "experiment_2": {"branch": "treatment"}}`. This deprecates the `shield_id` used in Activity Stream |                  |
 |                            | and Messaging System.                                                                                                                                |                  |
 +----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+
-| `browser_session_id`       | [Optional] The unique identifier for a browser session, retrieved from TelemetrySession                                                              | :one:            |
+| ``browser_session_id``     | [Optional] The unique identifier for a browser session, retrieved from TelemetrySession                                                              | :one:            |
++----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+
+| ``attribution.source``     | [Optional] Referring partner domain, when install happens via a known partner                                                                        | :one:            |
++----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+
+| ``attribution.medium``     | [Optional] Category of the source, such as 'organic' for a search engine                                                                             | :one:            |
++----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+
+| ``attribution.campaign``   | [Optional] Identifier of the particular campaign that led to the download of the product                                                             | :one:            |
++----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+
+| ``attribution.content``    | [Optional] Identifier to indicate the particular link within a campaign                                                                              | :one:            |
++----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+
+| ``attribution.experiment`` | [Optional] Funnel experiment identifier, see bug 1567339                                                                                             | :one:            |
++----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+
+| ``attribution.variantion`` | [Optional] Funnel experiment variant identifier, see bug 1567339                                                                                     | :one:            |
++----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+
+| ``attribution.ua``         | [Optional] Derived user agent, see bug 1595063                                                                                                       | :one:            |
 +----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+
 ```
 
