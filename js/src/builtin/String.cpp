@@ -3307,15 +3307,6 @@ static ArrayObject* NewFullyAllocatedStringArray(JSContext* cx,
     return nullptr;
   }
 
-  // Only string values will be added to this array. Inform TI early about
-  // the element type, so we can directly initialize all elements using
-  // NativeObject::initDenseElement() instead of the slightly more expensive
-  // NativeObject::initDenseElementWithType() method.
-  // Since this function is never called to create a zero-length array, it's
-  // always necessary and correct to call AddTypePropertyId here.
-  MOZ_ASSERT(length > 0);
-  AddTypePropertyId(cx, array, JSID_VOID, TypeSet::StringType());
-
   return array;
 }
 

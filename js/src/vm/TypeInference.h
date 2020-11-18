@@ -214,7 +214,6 @@ enum TypeSpewChannel {
 
 bool InferSpewActive(TypeSpewChannel channel);
 const char* InferSpewColorReset();
-const char* InferSpewColor(TypeSet* types);
 
 #  define InferSpew(channel, ...)   \
     if (InferSpewActive(channel)) { \
@@ -226,7 +225,6 @@ void InferSpewImpl(const char* fmt, ...) MOZ_FORMAT_PRINTF(1, 2);
 #else
 
 inline const char* InferSpewColorReset() { return nullptr; }
-inline const char* InferSpewColor(TypeSet* types) { return nullptr; }
 
 #  define InferSpew(channel, ...) \
     do {                          \

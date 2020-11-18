@@ -384,22 +384,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 class ObjectGroupRealm {
  private:
   class NewTable;
-
-  struct ArrayObjectKey;
-  using ArrayObjectTable =
-      js::GCRekeyableHashMap<ArrayObjectKey, WeakHeapPtrObjectGroup,
-                             ArrayObjectKey, SystemAllocPolicy>;
-
-  struct PlainObjectKey;
-  struct PlainObjectEntry;
-  struct PlainObjectTableSweepPolicy {
-    static bool traceWeak(JSTracer* trc, PlainObjectKey* key,
-                          PlainObjectEntry* entry);
-  };
-  using PlainObjectTable =
-      JS::GCHashMap<PlainObjectKey, PlainObjectEntry, PlainObjectKey,
-                    SystemAllocPolicy, PlainObjectTableSweepPolicy>;
-
   class AllocationSiteTable;
 
  private:
@@ -425,18 +409,6 @@ class ObjectGroupRealm {
                                           TaggedProto proto,
                                           JSObject* associated);
   } defaultNewGroupCache = {};
-
-  // Tables for managing groups common to the contents of large script
-  // singleton objects and JSON objects. These are vanilla ArrayObjects and
-  // PlainObjects, so we distinguish the groups of different ones by looking
-  // at the types of their properties.
-  //
-  // All singleton/JSON arrays which have the same prototype, are homogenous
-  // and of the same element type will share a group. All singleton/JSON
-  // objects which have the same shape and property types will also share a
-  // group. We don't try to collate arrays or objects with type mismatches.
-  ArrayObjectTable* arrayObjectTable = nullptr;
-  PlainObjectTable* plainObjectTable = nullptr;
 
   // Table for referencing types of objects keyed to an allocation site.
   AllocationSiteTable* allocationSiteTable = nullptr;

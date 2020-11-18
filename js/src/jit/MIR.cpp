@@ -1999,38 +1999,6 @@ static void MergeTypes(MIRType* ptype, MIRType newType) {
   }
 }
 
-// Tests whether 'types' includes all possible values represented by
-// input/inputTypes.
-bool jit::TypeSetIncludes(TypeSet* types, MIRType input, TypeSet* inputTypes) {
-  if (!types) {
-    return inputTypes && inputTypes->empty();
-  }
-
-  switch (input) {
-    case MIRType::Undefined:
-    case MIRType::Null:
-    case MIRType::Boolean:
-    case MIRType::Int32:
-    case MIRType::Double:
-    case MIRType::Float32:
-    case MIRType::String:
-    case MIRType::Symbol:
-    case MIRType::BigInt:
-    case MIRType::MagicOptimizedArguments:
-      return types->hasType(TypeSet::PrimitiveType(input));
-
-    case MIRType::Object:
-      return types->unknownObject() ||
-             (inputTypes && inputTypes->isSubset(types));
-
-    case MIRType::Value:
-      return types->unknown() || (inputTypes && inputTypes->isSubset(types));
-
-    default:
-      MOZ_CRASH("Bad input type");
-  }
-}
-
 bool MPhi::specializeType(TempAllocator& alloc) {
 #ifdef DEBUG
   MOZ_ASSERT(!specialized_);
