@@ -471,7 +471,7 @@ struct IntrinsicSize {
   explicit IntrinsicSize(const nsSize& aSize)
       : IntrinsicSize(aSize.Width(), aSize.Height()) {}
 
-  Maybe<nsSize> ToSize() const {
+  mozilla::Maybe<nsSize> ToSize() const {
     return width && height ? Some(nsSize(*width, *height)) : Nothing();
   }
 
@@ -2298,7 +2298,7 @@ class nsIFrame : public nsQueryFrame {
   /**
    * Get the cursor for a given frame.
    */
-  virtual Maybe<Cursor> GetCursor(const nsPoint&);
+  virtual mozilla::Maybe<Cursor> GetCursor(const nsPoint&);
 
   /**
    * Get a point (in the frame's coordinate space) given an offset into
@@ -3665,22 +3665,13 @@ class nsIFrame : public nsQueryFrame {
    *       if this frame has a previous or next continuation to determine
    *       if a side should be skipped.
    *       Unfortunately, this only works after reflow has been completed. In
-   *       lieu of this, during reflow, a SkipSidesDuringReflow parameter can
-   *       be passed in, indicating that it should be used to determine if sides
+   *       lieu of this, during reflow, an ReflowInput parameter can be
+   *       passed in, indicating that it should be used to determine if sides
    *       should be skipped during reflow.
-   *
-   * FIXME(emilio, bug 1677917): That's wrong, fix BlockReflowInput and remove
-   * SkipSidesDuringReflow and related code.
    */
-  Sides GetSkipSides() const;
-
-  struct SkipSidesDuringReflow {
-    const ReflowInput& mReflowInput;
-    const nscoord mConsumedBSize = NS_UNCONSTRAINEDSIZE;
-  };
-
+  Sides GetSkipSides(const ReflowInput* aReflowInput = nullptr) const;
   virtual LogicalSides GetLogicalSkipSides(
-      const Maybe<SkipSidesDuringReflow>& = Nothing()) const {
+      const ReflowInput* aReflowInput = nullptr) const {
     return LogicalSides(mWritingMode);
   }
 

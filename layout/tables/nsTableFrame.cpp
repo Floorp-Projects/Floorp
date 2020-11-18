@@ -1360,7 +1360,7 @@ nsMargin nsTableFrame::GetDeflationForBackground(
 }
 
 nsIFrame::LogicalSides nsTableFrame::GetLogicalSkipSides(
-    const Maybe<SkipSidesDuringReflow>&) const {
+    const ReflowInput* aReflowInput) const {
   LogicalSides skip(mWritingMode);
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                    StyleBoxDecorationBreak::Clone)) {
@@ -1369,10 +1369,10 @@ nsIFrame::LogicalSides nsTableFrame::GetLogicalSkipSides(
 
   // frame attribute was accounted for in nsHTMLTableElement::MapTableBorderInto
   // account for pagination
-  if (GetPrevInFlow()) {
+  if (nullptr != GetPrevInFlow()) {
     skip |= eLogicalSideBitsBStart;
   }
-  if (GetNextInFlow()) {
+  if (nullptr != GetNextInFlow()) {
     skip |= eLogicalSideBitsBEnd;
   }
   return skip;

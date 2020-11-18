@@ -4100,8 +4100,7 @@ void nsFlexContainerFrame::GenerateFlexLines(const SharedFlexData& aData,
 // reflow input (specifically, the main-size of *this continuation* of the
 // flex container).
 nscoord nsFlexContainerFrame::GetMainSizeFromReflowInput(
-    const ReflowInput& aReflowInput, const FlexboxAxisTracker& aAxisTracker,
-    nscoord aConsumedBSize) {
+    const ReflowInput& aReflowInput, const FlexboxAxisTracker& aAxisTracker) {
   if (aAxisTracker.IsRowOriented()) {
     // Row-oriented --> our main axis is the inline axis, so our main size
     // is our inline size (which should already be resolved).
@@ -4113,7 +4112,7 @@ nscoord nsFlexContainerFrame::GetMainSizeFromReflowInput(
   }
 
   // Note: This may be unconstrained, if our block size is "auto":
-  return GetEffectiveComputedBSize(aReflowInput, aConsumedBSize);
+  return GetEffectiveComputedBSize(aReflowInput);
 }
 
 // Returns the largest outer hypothetical main-size of any line in |aLines|.
@@ -4160,8 +4159,7 @@ nscoord nsFlexContainerFrame::ComputeMainSize(
 
 nscoord nsFlexContainerFrame::ComputeCrossSize(
     const ReflowInput& aReflowInput, const FlexboxAxisTracker& aAxisTracker,
-    nscoord aSumLineCrossSizes, nscoord aConsumedBSize,
-    bool* aIsDefinite) const {
+    nscoord aSumLineCrossSizes, bool* aIsDefinite) const {
   MOZ_ASSERT(aIsDefinite, "outparam pointer must be non-null");
 
   if (aAxisTracker.IsColumnOriented()) {
@@ -4182,8 +4180,7 @@ nscoord nsFlexContainerFrame::ComputeCrossSize(
     return aReflowInput.ComputedISize();
   }
 
-  nscoord effectiveComputedBSize =
-      GetEffectiveComputedBSize(aReflowInput, aConsumedBSize);
+  nscoord effectiveComputedBSize = GetEffectiveComputedBSize(aReflowInput);
   if (effectiveComputedBSize != NS_UNCONSTRAINEDSIZE) {
     // Row-oriented case (cross axis is block-axis), with fixed BSize:
     *aIsDefinite = true;
@@ -4404,10 +4401,8 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   const LogicalSize availableSizeForItems =
       ComputeAvailableSizeForItems(aReflowInput, borderPadding);
 
-  const nscoord consumedBSize =
-      CalcAndCacheConsumedBSize(aReflowInput.GetWritingMode());
   nscoord contentBoxMainSize =
-      GetMainSizeFromReflowInput(aReflowInput, axisTracker, consumedBSize);
+      GetMainSizeFromReflowInput(aReflowInput, axisTracker);
   nscoord contentBoxCrossSize;
   nscoord flexContainerAscent;
 
@@ -4418,8 +4413,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     mainGapSize = nsLayoutUtils::ResolveGapToLength(stylePos->mColumnGap,
                                                     contentBoxMainSize);
     crossGapSize = nsLayoutUtils::ResolveGapToLength(
-        stylePos->mRowGap,
-        GetEffectiveComputedBSize(aReflowInput, consumedBSize));
+        stylePos->mRowGap, GetEffectiveComputedBSize(aReflowInput));
   } else {
     mainGapSize = nsLayoutUtils::ResolveGapToLength(stylePos->mRowGap,
                                                     contentBoxMainSize);
@@ -4446,7 +4440,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     // layout result closer to the one as if there's no fragmentation.
     DoFlexLayout(aReflowInput, contentBoxMainSize, contentBoxCrossSize,
                  flexContainerAscent, lines, struts, placeholders, axisTracker,
-                 mainGapSize, crossGapSize, consumedBSize, hasLineClampEllipsis,
+                 mainGapSize, crossGapSize, hasLineClampEllipsis,
                  containerInfo);
 
     if (!struts.IsEmpty()) {
@@ -4455,8 +4449,8 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
       placeholders.Clear();
       DoFlexLayout(aReflowInput, contentBoxMainSize, contentBoxCrossSize,
                    flexContainerAscent, lines, struts, placeholders,
-                   axisTracker, mainGapSize, crossGapSize, consumedBSize,
-                   hasLineClampEllipsis, containerInfo);
+                   axisTracker, mainGapSize, crossGapSize, hasLineClampEllipsis,
+                   containerInfo);
     }
   } else {
     auto* data = FirstInFlow()->GetProperty(SharedFlexData::Prop());
@@ -4470,6 +4464,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   const LogicalSize contentBoxSize =
       axisTracker.LogicalSizeFromFlexRelativeSizes(contentBoxMainSize,
                                                    contentBoxCrossSize);
+  const nscoord consumedBSize = ConsumedBSize(wm);
   const nscoord effectiveContentBSize =
       contentBoxSize.BSize(wm) - consumedBSize;
 
@@ -4880,8 +4875,7 @@ void nsFlexContainerFrame::DoFlexLayout(
     nscoord& aContentBoxCrossSize, nscoord& aFlexContainerAscent,
     nsTArray<FlexLine>& aLines, nsTArray<StrutInfo>& aStruts,
     nsTArray<nsIFrame*>& aPlaceholders, const FlexboxAxisTracker& aAxisTracker,
-    nscoord aMainGapSize, nscoord aCrossGapSize, nscoord aConsumedBSize,
-    bool aHasLineClampEllipsis,
+    nscoord aMainGapSize, nscoord aCrossGapSize, bool aHasLineClampEllipsis,
     ComputedFlexContainerInfo* const aContainerInfo) {
   MOZ_ASSERT(aLines.IsEmpty(), "Caller should pass an empty array for lines!");
   MOZ_ASSERT(aPlaceholders.IsEmpty(),
@@ -4984,9 +4978,8 @@ void nsFlexContainerFrame::DoFlexLayout(
   }
 
   bool isCrossSizeDefinite;
-  aContentBoxCrossSize =
-      ComputeCrossSize(aReflowInput, aAxisTracker, sumLineCrossSizes,
-                       aConsumedBSize, &isCrossSizeDefinite);
+  aContentBoxCrossSize = ComputeCrossSize(
+      aReflowInput, aAxisTracker, sumLineCrossSizes, &isCrossSizeDefinite);
 
   // Set up state for cross-axis alignment, at a high level (outside the
   // scope of a particular flex line)

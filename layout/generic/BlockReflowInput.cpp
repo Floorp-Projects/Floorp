@@ -42,9 +42,7 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
       mBorderPadding(
           mReflowInput
               .ComputedLogicalBorderPadding(mReflowInput.GetWritingMode())
-              .ApplySkipSides(aFrame->GetLogicalSkipSides(
-                  Some(nsIFrame::SkipSidesDuringReflow{aReflowInput,
-                                                       aConsumedBSize})))),
+              .ApplySkipSides(aFrame->GetLogicalSkipSides(&aReflowInput))),
       mPrevBEndMargin(),
       mLineNumber(0),
       mFloatBreakType(StyleClear::None),
