@@ -369,16 +369,6 @@ class JSObject
   inline void setGroup(js::ObjectGroup* group);
 
   /*
-   * Mark an object that has been iterated over and is a singleton. We need
-   * to recover this information in the object's type information after it
-   * is purged on GC.
-   */
-  inline bool isIteratedSingleton() const;
-  static bool setIteratedSingleton(JSContext* cx, JS::HandleObject obj) {
-    return setFlags(cx, obj, js::BaseShape::ITERATED_SINGLETON);
-  }
-
-  /*
    * Mark an object as requiring its default 'new' type to have unknown
    * properties.
    */

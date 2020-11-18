@@ -24,12 +24,6 @@ inline void ArrayObject::setLength(JSContext* cx, uint32_t length) {
   MOZ_ASSERT(lengthIsWritable());
   MOZ_ASSERT_IF(length != getElementsHeader()->length,
                 !denseElementsAreFrozen());
-
-  if (length > INT32_MAX) {
-    /* Track objects with overflowing lengths in type information. */
-    MarkObjectGroupFlags(cx, this, OBJECT_FLAG_LENGTH_OVERFLOW);
-  }
-
   getElementsHeader()->length = length;
 }
 

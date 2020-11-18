@@ -83,28 +83,6 @@ enum : uint32_t {
    */
   OBJECT_FLAG_LAZY_SINGLETON = 0x4,
 
-  /* Whether any objects this represents may have sparse indexes. */
-  OBJECT_FLAG_SPARSE_INDEXES = 0x00010000,
-
-  /* Whether any objects this represents may not have packed dense elements. */
-  OBJECT_FLAG_NON_PACKED = 0x00020000,
-
-  /*
-   * Whether any objects this represents may be arrays whose length does not
-   * fit in an int32.
-   */
-  OBJECT_FLAG_LENGTH_OVERFLOW = 0x00040000,
-
-  /* Whether any objects have been iterated over. */
-  OBJECT_FLAG_ITERATED = 0x00080000,
-
-  /* Whether any object this represents may have non-extensible elements. */
-  OBJECT_FLAG_NON_EXTENSIBLE_ELEMENTS = 0x00100000,
-
-  // (0x00200000 is unused)
-
-  // (0x00400000 is unused)
-
   /*
    * Whether objects with this type should be allocated directly in the
    * tenured heap.
