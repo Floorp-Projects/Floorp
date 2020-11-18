@@ -1461,7 +1461,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "d5f93337dd271a3eeb1a165525476d0b0c178985"
+        "revision": "40ad6124727984acf1ffe33fb477fe801960bfda"
     },
     "sv-SE": {
         "pin": false,
