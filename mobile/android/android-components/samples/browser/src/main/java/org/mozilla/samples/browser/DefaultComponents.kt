@@ -50,8 +50,8 @@ import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.downloads.DownloadMiddleware
 import mozilla.components.feature.downloads.DownloadsUseCases
 import mozilla.components.feature.intent.processing.TabIntentProcessor
+import mozilla.components.feature.media.MediaSessionFeature
 import mozilla.components.feature.media.RecordingDevicesNotificationFeature
-import mozilla.components.feature.media.middleware.MediaMiddleware
 import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppInterceptor
 import mozilla.components.feature.pwa.WebAppShortcutManager
@@ -81,7 +81,7 @@ import org.mozilla.samples.browser.downloads.DownloadService
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.FindInPageIntegration
 import org.mozilla.samples.browser.integration.P2PIntegration
-import org.mozilla.samples.browser.media.MediaService
+import org.mozilla.samples.browser.media.MediaSessionService
 import org.mozilla.samples.browser.request.SampleRequestInterceptor
 import java.util.concurrent.TimeUnit
 
@@ -132,7 +132,6 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     val store by lazy {
         BrowserStore(middleware = listOf(
-            MediaMiddleware(applicationContext, MediaService::class.java),
             DownloadMiddleware(applicationContext, DownloadService::class.java),
             ReaderViewMiddleware(),
             ThumbnailsMiddleware(thumbnailStorage),
@@ -177,6 +176,8 @@ open class DefaultComponents(private val applicationContext: Context) {
 
             WebNotificationFeature(applicationContext, engine, icons, R.drawable.ic_notification,
                 permissionStorage, BrowserActivity::class.java)
+
+            MediaSessionFeature(applicationContext, MediaSessionService::class.java, store).start()
         }
     }
 

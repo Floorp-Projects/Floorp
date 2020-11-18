@@ -12,7 +12,7 @@ import kotlinx.android.synthetic.main.fragment_browser.view.*
 import mozilla.components.browser.thumbnails.BrowserThumbnails
 import mozilla.components.feature.awesomebar.AwesomeBarFeature
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
-import mozilla.components.feature.media.fullscreen.MediaFullscreenOrientationFeature
+import mozilla.components.feature.media.fullscreen.MediaSessionFullscreenFeature
 import mozilla.components.feature.search.SearchFeature
 import mozilla.components.feature.search.ext.toDefaultSearchEngineProvider
 import mozilla.components.feature.session.FullScreenFeature
@@ -36,8 +36,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private val webExtToolbarFeature = ViewBoundFeatureWrapper<WebExtensionToolbarFeature>()
     private val searchFeature = ViewBoundFeatureWrapper<SearchFeature>()
     private val fullScreenFeature = ViewBoundFeatureWrapper<FullScreenFeature>()
-    private val fullScreenMediaFeature =
-        ViewBoundFeatureWrapper<MediaFullscreenOrientationFeature>()
+    private val mediaSessionFullscreenFeature =
+        ViewBoundFeatureWrapper<MediaSessionFullscreenFeature>()
 
     @Suppress("LongMethod")
     override fun onCreateView(
@@ -113,8 +113,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             view = layout
         )
 
-        fullScreenMediaFeature.set(
-            feature = MediaFullscreenOrientationFeature(
+        mediaSessionFullscreenFeature.set(
+            feature = MediaSessionFullscreenFeature(
                 activity!!,
                 components.store
             ),
