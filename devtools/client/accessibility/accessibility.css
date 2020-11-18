@@ -290,6 +290,7 @@ body {
 .description img {
   margin-inline-end: 12px;
   flex-basis: 42px;
+  height: 42px;
   flex-shrink: 0;
   -moz-context-properties: fill;
   fill: var(--grey-40);
