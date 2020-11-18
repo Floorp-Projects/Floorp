@@ -39,6 +39,8 @@ def set_defaults(config, jobs):
             worker["chain-of-trust"] = True
         elif worker_os == "windows":
             worker["chain-of-trust"] = True
+        if worker_os == "macosx":
+            job["worker"]["env"].setdefault("SHELL", "/bin/bash")
 
         yield job
 
