@@ -653,7 +653,7 @@ class OpenRunnable final : public WorkerThreadProxySyncRunnable {
 
   // Remember the worker thread's stack when the XHR was opened for profiling
   // purposes.
-  UniqueProfilerBacktrace mSource;
+  UniquePtr<ProfileChunkedBuffer> mSource;
 
  public:
   OpenRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
@@ -664,7 +664,7 @@ class OpenRunnable final : public WorkerThreadProxySyncRunnable {
                XMLHttpRequestResponseType aResponseType,
                const nsString& aMimeTypeOverride,
                UniquePtr<SerializedStackHolder> aOriginStack,
-               UniqueProfilerBacktrace aSource = nullptr)
+               UniquePtr<ProfileChunkedBuffer> aSource = nullptr)
       : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy),
         mMethod(aMethod),
         mURL(aURL),
@@ -1741,7 +1741,7 @@ void XMLHttpRequestWorker::Open(const nsACString& aMethod,
       mWorkerPrivate, mProxy, aMethod, aUrl, aUser, aPassword,
       mBackgroundRequest, mWithCredentials, mTimeout, mResponseType,
       alsoOverrideMimeType ? mMimeTypeOverride : VoidString(), std::move(stack),
-      profiler_get_backtrace());
+      profiler_capture_backtrace());
 
   ++mProxy->mOpenCount;
   runnable->Dispatch(Canceling, aRv);
