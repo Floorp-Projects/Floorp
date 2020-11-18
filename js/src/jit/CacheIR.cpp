@@ -3573,9 +3573,7 @@ static Shape* LookupShapeForSetSlot(JSOp op, NativeObject* obj, jsid id) {
 }
 
 static bool CanAttachNativeSetSlot(JSContext* cx, JSOp op, HandleObject obj,
-                                   HandleId id,
-                                   bool* isTemporarilyUnoptimizable,
-                                   MutableHandleShape propShape) {
+                                   HandleId id, MutableHandleShape propShape) {
   if (!obj->isNative()) {
     return false;
   }
@@ -3596,10 +3594,6 @@ static bool CanAttachNativeSetSlot(JSContext* cx, JSOp op, HandleObject obj,
   // overwritten. Don't attach a stub in this case, so that we don't
   // execute another write to the property without TI seeing that write.
   EnsureTrackPropertyTypes(cx, obj, id);
-  if (!PropertyHasBeenMarkedNonConstant(obj, id)) {
-    *isTemporarilyUnoptimizable = true;
-    return false;
-  }
 
   return true;
 }
@@ -3630,11 +3624,8 @@ AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
                                                           HandleId id,
                                                           ValOperandId rhsId) {
   RootedShape propShape(cx_);
-  bool isTemporarilyUnoptimizable = false;
-  if (!CanAttachNativeSetSlot(cx_, JSOp(*pc_), obj, id,
-                              &isTemporarilyUnoptimizable, &propShape)) {
-    return isTemporarilyUnoptimizable ? AttachDecision::TemporarilyUnoptimizable
-                                      : AttachDecision::NoAction;
+  if (!CanAttachNativeSetSlot(cx_, JSOp(*pc_), obj, id, &propShape)) {
+    return AttachDecision::NoAction;
   }
 
   // Don't attach a megamorphic store slot stub for ops like JSOp::InitElem.
@@ -4307,11 +4298,8 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyExpando(
     expandoObj = &expandoAndGeneration->expando.toObject();
   }
 
-  bool isTemporarilyUnoptimizable = false;
-
   RootedShape propShape(cx_);
-  if (CanAttachNativeSetSlot(cx_, JSOp(*pc_), expandoObj, id,
-                             &isTemporarilyUnoptimizable, &propShape)) {
+  if (CanAttachNativeSetSlot(cx_, JSOp(*pc_), expandoObj, id, &propShape)) {
     maybeEmitIdGuard(id);
     ObjOperandId expandoObjId =
         guardDOMProxyExpandoObjectAndShape(obj, objId, expandoVal, expandoObj);
@@ -4341,8 +4329,7 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyExpando(
     return AttachDecision::Attach;
   }
 
-  return isTemporarilyUnoptimizable ? AttachDecision::TemporarilyUnoptimizable
-                                    : AttachDecision::NoAction;
+  return AttachDecision::NoAction;
 }
 
 AttachDecision SetPropIRGenerator::tryAttachProxy(HandleObject obj,
@@ -4446,11 +4433,8 @@ AttachDecision SetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
   Handle<GlobalObject*> windowObj = cx_->global();
 
   RootedShape propShape(cx_);
-  bool isTemporarilyUnoptimizable = false;
-  if (!CanAttachNativeSetSlot(cx_, JSOp(*pc_), windowObj, id,
-                              &isTemporarilyUnoptimizable, &propShape)) {
-    return isTemporarilyUnoptimizable ? AttachDecision::TemporarilyUnoptimizable
-                                      : AttachDecision::NoAction;
+  if (!CanAttachNativeSetSlot(cx_, JSOp(*pc_), windowObj, id, &propShape)) {
+    return AttachDecision::NoAction;
   }
 
   maybeEmitIdGuard(id);

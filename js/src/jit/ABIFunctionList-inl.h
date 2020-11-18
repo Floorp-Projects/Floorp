@@ -129,7 +129,6 @@ namespace jit {
   _(js::jit::GetNativeDataPropertyPure<false>)                        \
   _(js::jit::GetNativeDataPropertyPure<true>)                         \
   _(js::jit::GlobalHasLiveOnDebuggerStatement)                        \
-  _(js::jit::GroupHasPropertyTypes)                                   \
   _(js::jit::HandleCodeCoverageAtPC)                                  \
   _(js::jit::HandleCodeCoverageAtPrologue)                            \
   _(js::jit::HandleException)                                         \

@@ -1078,18 +1078,6 @@ PlainObject* Realm::createIterResultTemplateObject(
     return nullptr;
   }
 
-  AutoSweepObjectGroup sweep(group);
-  if (!group->unknownProperties(sweep)) {
-    // Update `value` property typeset, since it can be any value.
-    HeapTypeSet* types =
-        group->maybeGetProperty(sweep, NameToId(cx->names().value));
-    MOZ_ASSERT(types);
-    {
-      AutoEnterAnalysis enter(cx);
-      types->makeUnknown(sweep, cx);
-    }
-  }
-
   // Make sure that the properties are in the right slots.
   DebugOnly<Shape*> shape = templateObject->lastProperty();
   MOZ_ASSERT(shape->previous()->slot() == Realm::IterResultObjectValueSlot &&
