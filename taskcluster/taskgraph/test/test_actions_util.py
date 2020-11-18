@@ -6,13 +6,19 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 import json
+from pprint import pprint
+
+import pytest
 from mock import patch
 from mozunit import main, MockedOpen
+
+from taskgraph import actions, create
 from taskgraph.decision import read_artifact
 from taskgraph.actions.util import (
-    relativize_datestamps,
     combine_task_graph_files,
+    relativize_datestamps,
 )
+from taskgraph.util import taskcluster
 
 TASK_DEF = {
     "created": "2017-10-10T18:33:03.460Z",
@@ -31,6 +37,12 @@ TASK_DEF = {
         "maxRunTime": 1800,
     },
 }
+
+
+@pytest.fixture(scope="module", autouse=True)
+def enable_test_mode():
+    create.testing = True
+    taskcluster.testing = True
 
 
 class TestRelativize(unittest.TestCase):
@@ -94,6 +106,65 @@ class TestCombineTaskGraphFiles(unittest.TestCase):
                     "taskb",
                 ],
             )
+
+
+def is_subset(subset, superset):
+    if isinstance(subset, dict):
+        return all(
+            key in superset and is_subset(val, superset[key])
+            for key, val in subset.items()
+        )
+
+    if isinstance(subset, list) or isinstance(subset, set):
+        return all(
+            any(is_subset(subitem, superitem) for superitem in superset)
+            for subitem in subset
+        )
+
+    if isinstance(subset, str):
+        return subset in superset
+
+    # assume that subset is a plain value if none of the above match
+    return subset == superset
+
+
+@pytest.mark.parametrize(
+    "task_def,expected",
+    [
+        pytest.param(
+            {"tags": {"kind": "decision-task"}},
+            {
+                "hookPayload": {
+                    "decision": {
+                        "action": {"cb_name": "retrigger-decision"},
+                    },
+                },
+            },
+            id="retrigger_decision",
+        ),
+    ],
+)
+def test_extract_applicable_action(
+    responses, monkeypatch, actions_json, task_def, expected
+):
+    base_url = "https://taskcluster"
+    decision_task_id = "dddd"
+    task_id = "tttt"
+
+    monkeypatch.setenv("TASK_ID", task_id)
+    monkeypatch.setenv("TASKCLUSTER_ROOT_URL", base_url)
+    monkeypatch.setenv("TASKCLUSTER_PROXY_URL", base_url)
+    responses.add(
+        responses.GET,
+        "{}/api/queue/v1/task/{}".format(base_url, task_id),
+        status=200,
+        json=task_def,
+    )
+    action = actions.util._extract_applicable_action(
+        actions_json, "retrigger", decision_task_id, task_id
+    )
+    pprint(action, indent=2)
+    assert is_subset(expected, action)
 
 
 if __name__ == "__main__":
