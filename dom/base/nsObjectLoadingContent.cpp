@@ -2621,6 +2621,14 @@ void nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
       thisEl->NotifyUAWidgetTeardown();
     } else if (!hadProblemState && hasProblemState) {
       thisEl->AttachAndSetUAShadowRoot();
+      // When blocking all plugins, we do not want the element to have focus
+      // so relinquish focus if we are in that state.
+      if (PluginFallbackType() == eFallbackBlockAllPlugins) {
+        nsFocusManager* fm = nsFocusManager::GetFocusManager();
+        if (fm && fm->GetFocusedElement() == thisEl) {
+          fm->ClearFocus(doc->GetWindow());
+        }
+      }
     }
   } else if (aOldType != mType) {
     // If our state changed, then we already recreated frames
