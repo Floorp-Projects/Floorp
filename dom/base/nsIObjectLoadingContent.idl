@@ -65,6 +65,9 @@ interface nsIObjectLoadingContent : nsISupports
   const unsigned long PLUGIN_VULNERABLE_NO_UPDATE = 10;
   // The plugin is click-to-play, but the user won't see overlays
   const unsigned long PLUGIN_CLICK_TO_PLAY_QUIET  = 11;
+  // Plugins are no longer supported.  The plugin should not load and should
+  // be represented by a transparent element.
+  const unsigned long PLUGIN_BLOCK_ALL            = 12;
 
   // Plugins-specific permission indicating that we want to prompt the user
   // to decide whether they want to allow a plugin, but to do so in a less

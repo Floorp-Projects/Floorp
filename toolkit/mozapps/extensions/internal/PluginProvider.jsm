@@ -467,47 +467,15 @@ PluginWrapper.prototype = {
   },
 
   get permissions() {
-    let {
-      tags: [tag],
-    } = pluginFor(this);
-    let permissions = 0;
-    if (tag.isEnabledStateLocked) {
-      return permissions;
-    }
-    if (!this.appDisabled) {
-      if (this.userDisabled !== true) {
-        permissions |= AddonManager.PERM_CAN_DISABLE;
-      }
-
-      if (this.userDisabled !== AddonManager.STATE_ASK_TO_ACTIVATE) {
-        permissions |= AddonManager.PERM_CAN_ASK_TO_ACTIVATE;
-      }
-
-      let blocklistState = this.blocklistState;
-      let isCTPBlocklisted =
-        blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE ||
-        blocklistState ==
-          Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE;
-      if (
-        this.userDisabled !== false &&
-        !isCTPBlocklisted &&
-        !this.isFlashPlugin
-      ) {
-        permissions |= AddonManager.PERM_CAN_ENABLE;
-      }
-    }
-    return permissions;
+    return 0;
   },
 
   get optionsType() {
-    return AddonManager.OPTIONS_TYPE_INLINE_BROWSER;
+    return null;
   },
 
   get optionsURL() {
-    return (
-      "chrome://mozapps/content/extensions/pluginPrefs.xhtml#id=" +
-      encodeURIComponent(this.id)
-    );
+    return null;
   },
 
   get updateDate() {
