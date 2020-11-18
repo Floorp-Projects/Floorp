@@ -6,6 +6,8 @@
 
 #include "SharedSection.h"
 
+#include "CheckForCaller.h"
+
 namespace mozilla {
 namespace freestanding {
 
@@ -214,6 +216,15 @@ LauncherVoidResult SharedSection::TransferHandle(
 }
 
 extern "C" MOZ_EXPORT uint32_t GetDependentModulePaths(uint32_t** aOutArray) {
+  const bool isCallerXul = CheckForAddress(RETURN_ADDRESS(), L"xul.dll");
+  MOZ_ASSERT(isCallerXul);
+  if (!isCallerXul) {
+    if (aOutArray) {
+      *aOutArray = nullptr;
+    }
+    return 0;
+  }
+
   LauncherResult<SharedSection::Layout*> resultView = gSharedSection.GetView();
   if (resultView.isErr()) {
     if (aOutArray) {

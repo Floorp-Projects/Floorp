@@ -6,34 +6,15 @@
 
 #include "mozilla/LoaderAPIInterfaces.h"
 
+#include "freestanding/CheckForCaller.h"
 #include "freestanding/LoaderPrivateAPI.h"
-
-#if defined(_MSC_VER)
-#  include <intrin.h>
-#  pragma intrinsic(_ReturnAddress)
-#  define RETURN_ADDRESS() _ReturnAddress()
-#elif defined(__GNUC__) || defined(__clang__)
-#  define RETURN_ADDRESS() \
-    __builtin_extract_return_addr(__builtin_return_address(0))
-#endif
-
-static bool CheckForMozglue(void* aReturnAddress) {
-  HMODULE callingModule;
-  if (!::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                                GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                            reinterpret_cast<LPCWSTR>(aReturnAddress),
-                            &callingModule)) {
-    return false;
-  }
-
-  return callingModule && callingModule == ::GetModuleHandleW(L"mozglue.dll");
-}
 
 namespace mozilla {
 
 extern "C" MOZ_EXPORT nt::LoaderAPI* GetNtLoaderAPI(
     nt::LoaderObserver* aNewObserver) {
-  const bool isCallerMozglue = CheckForMozglue(RETURN_ADDRESS());
+  const bool isCallerMozglue =
+      CheckForAddress(RETURN_ADDRESS(), L"mozglue.dll");
   MOZ_ASSERT(isCallerMozglue);
   if (!isCallerMozglue) {
     return nullptr;
