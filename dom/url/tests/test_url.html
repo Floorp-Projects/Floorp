@@ -487,5 +487,15 @@
     is(u.toJSON(), "http://www.example.org/", "URL.toJSON()");
     is(JSON.stringify(u), "\"http://www.example.org/\"", "JSON.stringify(u) works");
   </script>
+
+  <script>
+    // bug 1648493
+    var url = new URL("http://example.com/");
+    url.protocol = 'file'
+    url.protocol = 'resource'
+    url.password = 'Ãª'
+    url.username = 'Ã§'
+    url.protocol = 't'
+  </script>
 </body>
 </html>
