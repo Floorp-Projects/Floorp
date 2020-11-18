@@ -10,7 +10,7 @@ use std::ops::{Deref, DerefMut};
 use std::os::raw::c_void;
 use std::ptr;
 use std::rc::Rc;
-use std::sync::atomic::{AtomicIsize, AtomicU32, AtomicU8, Ordering};
+use std::sync::atomic::{AtomicIsize, AtomicPtr, AtomicU32, AtomicU8, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread;
 use webrender::{
@@ -530,6 +530,10 @@ impl SwCompositeGraphNodeRef {
     fn get_mut(&self) -> &mut SwCompositeGraphNode {
         unsafe { &mut *self.0.get() }
     }
+
+    fn get_ptr_mut(&self) -> *mut SwCompositeGraphNode {
+        self.0.get()
+    }
 }
 
 unsafe impl Send for SwCompositeGraphNodeRef {}
@@ -615,9 +619,13 @@ impl SwCompositeGraphNode {
         self.parents.fetch_sub(1, Ordering::SeqCst) <= 1
     }
 
-    fn take_band(&self) -> (u8, bool) {
+    fn take_band(&self) -> Option<u8> {
         let band_index = self.band_index.fetch_add(1, Ordering::SeqCst);
-        (band_index, band_index + 1 >= self.max_bands)
+        if band_index < self.max_bands {
+            Some(band_index)
+        } else {
+            None
+        }
     }
 
     /// Try to take the job from this node for processing and then process it within the current band.
@@ -655,6 +663,11 @@ impl SwCompositeGraphNode {
 struct SwCompositeThread {
     /// Queue of available composite jobs
     jobs: Mutex<SwCompositeJobQueue>,
+    /// Cache of the current job being processed. This maintains a pointer to
+    /// the contents of the SwCompositeGraphNodeRef, which is safe due to the
+    /// fact that SwCompositor maintains a strong reference to the contents
+    /// in an SwTile to keep it alive while this is in use.
+    current_job: AtomicPtr<SwCompositeGraphNode>,
     /// Count of unprocessed jobs still in the queue
     job_count: AtomicIsize,
     /// Condition signaled when either there are jobs available to process or
@@ -680,6 +693,7 @@ impl SwCompositeThread {
     fn new() -> Arc<SwCompositeThread> {
         let info = Arc::new(SwCompositeThread {
             jobs: Mutex::new(SwCompositeJobQueue::new()),
+            current_job: AtomicPtr::new(ptr::null_mut()),
             job_count: AtomicIsize::new(0),
             jobs_available: Condvar::new(),
         });
@@ -718,7 +732,7 @@ impl SwCompositeThread {
     /// Process a job contained in a dependency graph node received from the job queue.
     /// Any child dependencies will be unblocked as appropriate after processing. The
     /// job count will be updated to reflect this.
-    fn process_job(&self, mut graph_node: SwCompositeGraphNodeRef, band: u8) {
+    fn process_job(&self, graph_node: &mut SwCompositeGraphNode, band: u8) {
         // Do the actual processing of the job contained in this node.
         graph_node.process_job(band);
         // Unblock any child dependencies now that this job has been processed.
@@ -785,14 +799,49 @@ impl SwCompositeThread {
         queue.push_back(job);
     }
 
+    /// Try to get a band of work from the currently cached job when available.
+    /// If there is a job, but it has no available bands left, null out the job
+    /// so that other threads do not bother checking the job.
+    fn try_take_job(&self) -> Option<(&mut SwCompositeGraphNode, u8)> {
+        let current_job_ptr = self.current_job.load(Ordering::SeqCst);
+        if let Some(current_job) = unsafe { current_job_ptr.as_mut() } {
+            if let Some(band) = current_job.take_band() {
+                return Some((current_job, band));
+            }
+            self.current_job
+                .compare_and_swap(current_job_ptr, ptr::null_mut(), Ordering::Relaxed);
+        }
+        return None;
+    }
+
     /// Take a job from the queue. Optionally block waiting for jobs to become
     /// available if this is called from the SwComposite thread.
-    fn take_job(&self, wait: bool) -> Option<(SwCompositeGraphNodeRef, u8)> {
+    fn take_job(&self, wait: bool) -> Option<(&mut SwCompositeGraphNode, u8)> {
+        // First try checking the cached job outside the scope of the mutex.
+        // For jobs that have multiple bands, this allows us to avoid having
+        // to lock the mutex multiple times to check the job for each band.
+        if let Some((job, band)) = self.try_take_job() {
+            return Some((job, band));
+        }
         // Lock the job queue while checking for available jobs. The lock
         // won't be held while the job is processed later outside of this
         // function so that other threads can pull from the queue meanwhile.
         let mut jobs = self.lock();
-        while jobs.is_empty() {
+        loop {
+            // While inside the mutex, check the cached job again to see if it
+            // has been updated.
+            if let Some((job, band)) = self.try_take_job() {
+                return Some((job, band));
+            }
+            // If no cached job was available, try to take a job from the queue
+            // and install it as the current job.
+            if let Some(job) = jobs.pop_front() {
+                self.current_job.store(job.get_ptr_mut(), Ordering::SeqCst);
+                continue;
+            }
+            // Otherwise, the job queue is currently empty. Depending on the
+            // value of the job count we may either wait for jobs to become
+            // available or exit.
             match self.job_count.load(Ordering::SeqCst) {
                 // If we completed all available jobs, signal completion. If
                 // waiting inside the SwCompositeThread, then block waiting for
@@ -811,16 +860,6 @@ impl SwCompositeThread {
             // The SwCompositeThread needs to wait for jobs to become
             // available to avoid busy waiting on the queue.
             jobs = self.jobs_available.wait(jobs).unwrap();
-        }
-        // Look for a job at the front of the queue. If there is one, take the
-        // next unprocessed band from the job. If this was the last band in the
-        // job, then finally remove it from the queue.
-        if let Some(job) = jobs.front() {
-            let (band, done) = job.take_band();
-            let job = if done { jobs.pop_front().unwrap() } else { job.clone() };
-            Some((job, band))
-        } else {
-            None
         }
     }
 
