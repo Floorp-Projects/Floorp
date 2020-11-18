@@ -48,12 +48,7 @@ const CompatibilityActor = protocol.ActorClassWithSpec(compatibilitySpec, {
 
   getTraits() {
     return {
-      traits: {
-        // Indicates the function for compatibility check exists
-        // This is to preserve backwards compatibility and can be
-        // removed once FF82 hits release channel
-        declarationBlockIssueComputationEnabled: true,
-      },
+      traits: {},
     };
   },
 
