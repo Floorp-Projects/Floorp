@@ -1099,10 +1099,14 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
           if (aPresContext && aPresContext->GetRootPresContext()) {
             nsRefreshDriver* driver =
                 aPresContext->GetRootPresContext()->RefreshDriver();
-            if (driver && driver->HasPendingTick()) {
-              driver->RegisterCompositionPayload(
-                  {layers::CompositionPayloadType::eKeyPress,
-                   aEvent->mTimeStamp});
+            if (driver && driver->ViewManagerFlushIsPending()) {
+              nsIWidget* widget = aPresContext->GetRootWidget();
+              layers::LayerManager* lm =
+                  widget ? widget->GetLayerManager() : nullptr;
+              if (lm) {
+                lm->RegisterPayload({layers::CompositionPayloadType::eKeyPress,
+                                     aEvent->mTimeStamp});
+              }
             }
           }
         }

@@ -28,7 +28,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/VisualViewport.h"
 #include "mozilla/layers/TransactionIdAllocator.h"
-#include "LayersTypes.h"
 
 class nsPresContext;
 
@@ -394,8 +393,6 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
     EnsureTimerStarted();
   }
 
-  bool HasPendingTick() const { return mActiveTimer; }
-
   void EnsureIntersectionObservationsUpdateHappens() {
     // This is enough to make sure that UpdateIntersectionObservations runs at
     // least once. This is presumably the intent of step 5 in [1]:
@@ -410,13 +407,6 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
     EnsureTimerStarted();
     mNeedToUpdateIntersectionObservations = true;
   }
-
-  // Register a composition payload that will be forwarded to the layer manager
-  // if the current or upcoming refresh tick does a paint.
-  // If no paint happens, the payload is discarded.
-  // Should only be called on root refresh drivers.
-  void RegisterCompositionPayload(
-      const mozilla::layers::CompositionPayload& aPayload);
 
   enum class TickReasons : uint32_t {
     eNone = 0,
@@ -585,7 +575,6 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   // to be called when the timer is re-started and should not influence its
   // starting or stopping.
   nsTObserverArray<nsATimerAdjustmentObserver*> mTimerAdjustmentObservers;
-  nsTArray<mozilla::layers::CompositionPayload> mCompositionPayloads;
   RequestTable mRequests;
   ImageStartTable mStartTable;
   AutoTArray<nsCOMPtr<nsIRunnable>, 16> mEarlyRunners;
