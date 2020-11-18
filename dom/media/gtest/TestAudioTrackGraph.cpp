@@ -569,6 +569,103 @@ TEST(TestAudioTrackGraph, ReOpenAudioInput)
   EXPECT_LE(nrDiscontinuities, 1U);
 }
 
+TEST(TestAudioTrackGraph, AudioInputTrackDisabling)
+{
+  MockCubeb* cubeb = new MockCubeb();
+  CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
+
+  MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
+      MediaTrackGraph::SYSTEM_THREAD_DRIVER, /*window*/ nullptr,
+      MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE, nullptr);
+
+  RefPtr<AudioInputTrack> inputTrack;
+  RefPtr<ProcessedMediaTrack> outputTrack;
+  RefPtr<MediaInputPort> port;
+  RefPtr<AudioInputProcessing> listener;
+  auto p = Invoke([&] {
+    inputTrack = AudioInputTrack::Create(graph);
+    outputTrack = graph->CreateForwardedInputTrack(MediaSegment::AUDIO);
+    outputTrack->QueueSetAutoend(false);
+    outputTrack->AddAudioOutput(reinterpret_cast<void*>(1));
+    port = outputTrack->AllocateInputPort(inputTrack);
+    /* Primary graph: Open Audio Input through SourceMediaTrack */
+    listener = new AudioInputProcessing(2, PRINCIPAL_HANDLE_NONE);
+    inputTrack->GraphImpl()->AppendMessage(
+        MakeUnique<SetPassThrough>(inputTrack, listener, true));
+    inputTrack->SetInputProcessing(listener);
+    inputTrack->OpenAudioInput((void*)1, listener);
+    inputTrack->GraphImpl()->AppendMessage(
+        MakeUnique<StartInputProcessing>(inputTrack, listener));
+    return graph->NotifyWhenDeviceStarted(inputTrack);
+  });
+
+  MockCubebStream* stream = WaitFor(cubeb->StreamInitEvent());
+  EXPECT_TRUE(stream->mHasInput);
+  Unused << WaitFor(p);
+
+  // Wait for a second worth of audio data. GoFaster is dispatched through a
+  // ControlMessage so that it is called in the first audio driver iteration.
+  // Otherwise the audio driver might be going very fast while the fallback
+  // system clock driver is still in an iteration.
+  DispatchFunction([&] {
+    inputTrack->GraphImpl()->AppendMessage(MakeUnique<GoFaster>(cubeb));
+  });
+  uint32_t totalFrames = 0;
+  WaitUntil(stream->FramesProcessedEvent(), [&](uint32_t aFrames) {
+    totalFrames += aFrames;
+    return totalFrames > static_cast<uint32_t>(graph->GraphRate());
+  });
+  cubeb->DontGoFaster();
+
+  const uint32_t ITERATION_COUNT = 5;
+  uint32_t iterations = ITERATION_COUNT;
+  DisabledTrackMode currentMode = DisabledTrackMode::SILENCE_BLACK;
+  while (iterations--) {
+    // toggle the track enabled mode, wait a second, do this ITERATION_COUNT
+    // times
+    DispatchFunction([&] {
+      inputTrack->SetDisabledTrackMode(currentMode);
+      if (currentMode == DisabledTrackMode::SILENCE_BLACK) {
+        currentMode = DisabledTrackMode::ENABLED;
+      } else {
+        currentMode = DisabledTrackMode::SILENCE_BLACK;
+      }
+      inputTrack->GraphImpl()->AppendMessage(MakeUnique<GoFaster>(cubeb));
+    });
+
+    totalFrames = 0;
+    WaitUntil(stream->FramesProcessedEvent(), [&](uint32_t aFrames) {
+      totalFrames += aFrames;
+      return totalFrames > static_cast<uint32_t>(graph->GraphRate());
+    });
+    cubeb->DontGoFaster();
+  }
+
+  // Clean up.
+  DispatchFunction([&] {
+    outputTrack->RemoveAudioOutput((void*)1);
+    outputTrack->Destroy();
+    port->Destroy();
+    inputTrack->GraphImpl()->AppendMessage(
+        MakeUnique<StopInputProcessing>(listener));
+    Maybe<CubebUtils::AudioDeviceID> id =
+        Some(reinterpret_cast<CubebUtils::AudioDeviceID>(1));
+    inputTrack->CloseAudioInput(id);
+    inputTrack->Destroy();
+  });
+
+  uint64_t preSilenceSamples;
+  uint32_t estimatedFreq;
+  uint32_t nrDiscontinuities;
+  Tie(preSilenceSamples, estimatedFreq, nrDiscontinuities) =
+      WaitFor(stream->OutputVerificationEvent());
+
+  // We're enabling/disabling the track ITERATION_COUNT times, so we expect the
+  // same number of discontinuities.
+  std::cerr << "nrDiscontinuities" << nrDiscontinuities << std::endl;
+  EXPECT_EQ(nrDiscontinuities, ITERATION_COUNT);
+}
+
 void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
                         float aDriftFactor, uint32_t aBufferMs = 50) {
   std::cerr << "TestCrossGraphPort input: " << aInputRate
