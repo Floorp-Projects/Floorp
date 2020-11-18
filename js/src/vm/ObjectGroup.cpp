@@ -379,10 +379,6 @@ ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const JSClass* clasp,
   }
 
   ObjectGroupFlags initialFlags = 0;
-  if (proto.isDynamic() ||
-      (proto.isObject() && proto.toObject()->isNewGroupUnknown())) {
-    initialFlags = OBJECT_FLAG_DYNAMIC_MASK;
-  }
 
   Rooted<TaggedProto> protoRoot(cx, proto);
   ObjectGroup* group = ObjectGroupRealm::makeGroup(cx, cx->realm(), clasp,
@@ -454,17 +450,7 @@ void ObjectGroup::setDefaultNewGroupUnknown(JSContext* cx,
                                             ObjectGroupRealm& realm,
                                             const JSClass* clasp,
                                             HandleObject obj) {
-  // If the object already has a new group, mark that group as unknown.
-  ObjectGroupRealm::NewTable* table = realm.defaultNewTable;
-  if (table) {
-    Rooted<TaggedProto> taggedProto(cx, TaggedProto(obj));
-    auto lookup =
-        ObjectGroupRealm::NewEntry::Lookup(clasp, taggedProto, nullptr);
-    auto p = table->lookup(lookup);
-    if (p) {
-      MarkObjectGroupUnknownProperties(cx, p->group);
-    }
-  }
+  // TODO(no-TI): remove.
 }
 
 inline const JSClass* GetClassForProtoKey(JSProtoKey key) {
@@ -676,11 +662,6 @@ ObjectGroup* ObjectGroupRealm::makeGroup(
     Handle<TaggedProto> proto, ObjectGroupFlags initialFlags /* = 0 */) {
   MOZ_ASSERT_IF(proto.isObject(),
                 cx->isInsideCurrentCompartment(proto.toObject()));
-
-  if (!IsTypeInferenceEnabled()) {
-    // Don't track type information.
-    initialFlags |= OBJECT_FLAG_DYNAMIC_MASK;
-  }
 
   ObjectGroup* group = Allocate<ObjectGroup>(cx);
   if (!group) {

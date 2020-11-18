@@ -178,10 +178,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   ObjectGroupFlags flagsDontCheckGeneration() const { return flags_; }
 
  public:
-  inline ObjectGroupFlags flags(const AutoSweepObjectGroup&);
-  inline void addFlags(const AutoSweepObjectGroup&, ObjectGroupFlags flags);
-  inline void clearFlags(const AutoSweepObjectGroup&, ObjectGroupFlags flags);
-
   TypeDescr* maybeTypeDescr() {
     // Note: there is no need to sweep when accessing the type descriptor
     // of an object, as it is strongly held and immutable.
@@ -204,41 +200,7 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   inline ObjectGroup(const JSClass* clasp, TaggedProto proto, JS::Realm* realm,
                      ObjectGroupFlags initialFlags);
 
-  inline bool hasAnyFlags(const AutoSweepObjectGroup& sweep,
-                          ObjectGroupFlags flags);
-  inline bool hasAllFlags(const AutoSweepObjectGroup& sweep,
-                          ObjectGroupFlags flags);
-
-  bool hasAnyFlagsDontCheckGeneration(ObjectGroupFlags flags) {
-    MOZ_ASSERT((flags & OBJECT_FLAG_DYNAMIC_MASK) == flags);
-    return !!(this->flagsDontCheckGeneration() & flags);
-  }
-  bool hasAllFlagsDontCheckGeneration(ObjectGroupFlags flags) {
-    MOZ_ASSERT((flags & OBJECT_FLAG_DYNAMIC_MASK) == flags);
-    return (this->flagsDontCheckGeneration() & flags) == flags;
-  }
-
-  inline bool unknownProperties(const AutoSweepObjectGroup& sweep);
-
-  bool unknownPropertiesDontCheckGeneration() {
-    MOZ_ASSERT_IF(flagsDontCheckGeneration() & OBJECT_FLAG_UNKNOWN_PROPERTIES,
-                  hasAllFlagsDontCheckGeneration(OBJECT_FLAG_DYNAMIC_MASK));
-    return !!(flagsDontCheckGeneration() & OBJECT_FLAG_UNKNOWN_PROPERTIES);
-  }
-
-  inline bool shouldPreTenure(const AutoSweepObjectGroup& sweep);
-  inline bool shouldPreTenureDontCheckGeneration();
-
-  inline bool canPreTenure(const AutoSweepObjectGroup& sweep);
-  inline void setShouldPreTenure(const AutoSweepObjectGroup& sweep,
-                                 JSContext* cx);
-
   /* Helpers */
-
-  void markStateChange(const AutoSweepObjectGroup& sweep, JSContext* cx);
-  void setFlags(const AutoSweepObjectGroup& sweep, JSContext* cx,
-                ObjectGroupFlags flags);
-  void markUnknown(const AutoSweepObjectGroup& sweep, JSContext* cx);
 
   void print(const AutoSweepObjectGroup& sweep);
 

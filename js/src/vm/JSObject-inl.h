@@ -400,11 +400,6 @@ inline gc::InitialHeap GetInitialHeap(NewObjectKind newKind,
 
 inline gc::InitialHeap GetInitialHeap(NewObjectKind newKind,
                                       ObjectGroup* group) {
-  AutoSweepObjectGroup sweep(group);
-  if (group->shouldPreTenure(sweep)) {
-    return gc::TenuredHeap;
-  }
-
   return GetInitialHeap(newKind, group->clasp());
 }
 
