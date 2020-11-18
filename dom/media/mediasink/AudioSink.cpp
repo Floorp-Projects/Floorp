@@ -12,10 +12,27 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/ProfilerMarkerTypes.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsPrintfCString.h"
+
+#ifdef MOZ_GECKO_PROFILER
+#  include "ProfilerMarkerPayload.h"
+#  define PROFILER_AUDIO_MARKER(tag, sample)                              \
+    do {                                                                  \
+      uint64_t startTime = (sample)->mTime.ToMicroseconds();              \
+      uint64_t endTime = (sample)->GetEndTime().ToMicroseconds();         \
+      auto profilerTag = (tag);                                           \
+      mOwnerThread->Dispatch(NS_NewRunnableFunction(                      \
+          "AudioSink:AddMarker", [profilerTag, startTime, endTime] {      \
+            PROFILER_ADD_MARKER_WITH_PAYLOAD(profilerTag, MEDIA_PLAYBACK, \
+                                             MediaSampleMarkerPayload,    \
+                                             (startTime, endTime));       \
+          }));                                                            \
+    } while (0)
+#else
+#  define PROFILER_AUDIO_MARKER(tag, sample)
+#endif
 
 namespace mozilla {
 
@@ -254,16 +271,7 @@ UniquePtr<AudioStream::Chunk> AudioSink::PopFrames(uint32_t aFrames) {
   SINK_LOG_V("playing audio at time=%" PRId64 " offset=%u length=%u",
              mCurrentData->mTime.ToMicroseconds(),
              mCurrentData->Frames() - mCursor->Available(), framesToPop);
-
-#ifdef MOZ_GECKO_PROFILER
-  mOwnerThread->Dispatch(NS_NewRunnableFunction(
-      "AudioSink:AddMarker",
-      [startTime = mCurrentData->mTime.ToMicroseconds(),
-       endTime = mCurrentData->GetEndTime().ToMicroseconds()] {
-        PROFILER_MARKER("PlayAudio", MEDIA_PLAYBACK, {}, MediaSampleMarker,
-                        startTime, endTime);
-      }));
-#endif  // MOZ_GECKO_PROFILER
+  PROFILER_AUDIO_MARKER("PlayAudio", mCurrentData);
 
   UniquePtr<AudioStream::Chunk> chunk =
       MakeUnique<Chunk>(mCurrentData, framesToPop, mCursor->Ptr());

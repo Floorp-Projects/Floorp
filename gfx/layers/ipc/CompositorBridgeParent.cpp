@@ -90,6 +90,9 @@
 #include "mozilla/HalTypes.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
+#ifdef MOZ_GECKO_PROFILER
+#  include "ProfilerMarkerPayload.h"
+#endif
 #include "mozilla/VsyncDispatcher.h"
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
 #  include "VsyncSource.h"
@@ -2173,23 +2176,8 @@ already_AddRefed<IAPZCTreeManager> CompositorBridgeParent::GetAPZCTreeManager(
 static void InsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (profiler_thread_is_being_profiled()) {
-    // Tracks when a vsync occurs according to the HardwareComposer.
-    struct VsyncMarker {
-      static constexpr mozilla::Span<const char> MarkerTypeName() {
-        return mozilla::MakeStringSpan("VsyncTimestamp");
-      }
-      static void StreamJSONMarkerData(
-          baseprofiler::SpliceableJSONWriter& aWriter) {}
-      static MarkerSchema MarkerTypeDisplay() {
-        using MS = MarkerSchema;
-        MS schema{MS::Location::markerChart, MS::Location::markerTable};
-        // Nothing outside the defaults.
-        return schema;
-      }
-    };
-    profiler_add_marker("VsyncTimestamp", geckoprofiler::category::GRAPHICS,
-                        MarkerTiming::InstantAt(aVsyncTimestamp),
-                        VsyncMarker{});
+    PROFILER_ADD_MARKER_WITH_PAYLOAD("VsyncTimestamp", GRAPHICS,
+                                     VsyncMarkerPayload, (aVsyncTimestamp));
   }
 }
 #endif
@@ -2754,23 +2742,42 @@ int32_t RecordContentFrameTime(
 
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
-    struct ContentFrameMarker {
-      static constexpr Span<const char> MarkerTypeName() {
-        return MakeStringSpan("CONTENT_FRAME_TIME");
+    class ContentFramePayload : public ProfilerMarkerPayload {
+     public:
+      ContentFramePayload(const mozilla::TimeStamp& aStartTime,
+                          const mozilla::TimeStamp& aEndTime)
+          : ProfilerMarkerPayload(aStartTime, aEndTime) {}
+      mozilla::ProfileBufferEntryWriter::Length TagAndSerializationBytes()
+          const override {
+        return CommonPropsTagAndSerializationBytes();
       }
-      static void StreamJSONMarkerData(
-          baseprofiler::SpliceableJSONWriter& aWriter) {}
-      static MarkerSchema MarkerTypeDisplay() {
-        using MS = MarkerSchema;
-        MS schema{MS::Location::markerChart, MS::Location::markerTable};
-        // Nothing outside the defaults.
-        return schema;
+      void SerializeTagAndPayload(
+          mozilla::ProfileBufferEntryWriter& aEntryWriter) const override {
+        static const DeserializerTag tag = TagForDeserializer(Deserialize);
+        SerializeTagAndCommonProps(tag, aEntryWriter);
+      }
+      void StreamPayload(mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+                         const TimeStamp& aProcessStartTime,
+                         UniqueStacks& aUniqueStacks) const override {
+        StreamCommonProps("CONTENT_FRAME_TIME", aWriter, aProcessStartTime,
+                          aUniqueStacks);
+      }
+
+     private:
+      explicit ContentFramePayload(CommonProps&& aCommonProps)
+          : ProfilerMarkerPayload(std::move(aCommonProps)) {}
+      static mozilla::UniquePtr<ProfilerMarkerPayload> Deserialize(
+          mozilla::ProfileBufferEntryReader& aEntryReader) {
+        ProfilerMarkerPayload::CommonProps props =
+            DeserializeCommonProps(aEntryReader);
+        return UniquePtr<ProfilerMarkerPayload>(
+            new ContentFramePayload(std::move(props)));
       }
     };
-
-    profiler_add_marker("CONTENT_FRAME_TIME", geckoprofiler::category::GRAPHICS,
-                        MarkerTiming::Interval(aTxnStart, aCompositeEnd),
-                        ContentFrameMarker{});
+    AUTO_PROFILER_STATS(add_marker_with_ContentFramePayload);
+    profiler_add_marker_for_thread(
+        profiler_current_thread_id(), JS::ProfilingCategoryPair::GRAPHICS,
+        "CONTENT_FRAME_TIME", ContentFramePayload(aTxnStart, aCompositeEnd));
   }
 #endif
 

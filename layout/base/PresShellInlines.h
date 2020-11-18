@@ -23,7 +23,7 @@ void PresShell::SetNeedLayoutFlush() {
 
 #ifdef MOZ_GECKO_PROFILER
   if (!mReflowCause) {
-    mReflowCause = profiler_capture_backtrace();
+    mReflowCause = profiler_get_backtrace();
   }
 #endif
 
@@ -40,7 +40,7 @@ void PresShell::SetNeedStyleFlush() {
 
 #ifdef MOZ_GECKO_PROFILER
   if (!mStyleCause) {
-    mStyleCause = profiler_capture_backtrace();
+    mStyleCause = profiler_get_backtrace();
   }
 #endif
 

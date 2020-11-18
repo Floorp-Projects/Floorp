@@ -70,8 +70,11 @@ enum class ProfileBufferEntryKind : ProfileBufferEntryKindUnderlyingType {
   // Any value starting here does *not* represent a `ProfileBufferEntry` and
   // requires separate decoding and handling.
 
-  // Markers and their data.
-  Marker = LEGACY_LIMIT,
+  // Marker data, including payload.
+  MarkerData = LEGACY_LIMIT,
+
+  // Markers from 2.0 specs.
+  Marker,
 
   // Optional between TimeBeforeCompactStack and CompactStack.
   UnresponsiveDurationMs,

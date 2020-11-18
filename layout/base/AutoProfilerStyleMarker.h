@@ -8,15 +8,16 @@
 #define mozilla_AutoProfilerStyleMarker_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ServoTraversalStatistics.h"
 #include "mozilla/TimeStamp.h"
+#include "GeckoProfiler.h"
+#include "ProfilerMarkerPayload.h"
 
 namespace mozilla {
 
 class MOZ_RAII AutoProfilerStyleMarker {
  public:
-  explicit AutoProfilerStyleMarker(UniquePtr<ProfileChunkedBuffer> aCause,
+  explicit AutoProfilerStyleMarker(UniqueProfilerBacktrace aCause,
                                    const Maybe<uint64_t>& aInnerWindowID)
       : mActive(profiler_can_accept_markers()),
         mStartTime(TimeStamp::Now()),
@@ -35,57 +36,17 @@ class MOZ_RAII AutoProfilerStyleMarker {
     if (!mActive) {
       return;
     }
-
-    struct StyleMarker {
-      static constexpr mozilla::Span<const char> MarkerTypeName() {
-        return mozilla::MakeStringSpan("Styles");
-      }
-      static void StreamJSONMarkerData(
-          baseprofiler::SpliceableJSONWriter& aWriter,
-          uint32_t aElementsTraversed, uint32_t aElementsStyled,
-          uint32_t aElementsMatched, uint32_t aStylesShared,
-          uint32_t aStylesReused) {
-        aWriter.IntProperty("elementsTraversed", aElementsTraversed);
-        aWriter.IntProperty("elementsStyled", aElementsStyled);
-        aWriter.IntProperty("elementsMatched", aElementsMatched);
-        aWriter.IntProperty("stylesShared", aStylesShared);
-        aWriter.IntProperty("stylesReused", aStylesReused);
-      }
-      static MarkerSchema MarkerTypeDisplay() {
-        using MS = MarkerSchema;
-        MS schema{MS::Location::markerChart, MS::Location::markerTable,
-                  MS::Location::timelineOverview};
-        schema.AddKeyLabelFormat("elementsTraversed", "Elements traversed",
-                                 MS::Format::integer);
-        schema.AddKeyLabelFormat("elementsStyled", "Elements styled",
-                                 MS::Format::integer);
-        schema.AddKeyLabelFormat("elementsMatched", "Elements matched",
-                                 MS::Format::integer);
-        schema.AddKeyLabelFormat("stylesShared", "Styles shared",
-                                 MS::Format::integer);
-        schema.AddKeyLabelFormat("stylesReused", "Styles reused",
-                                 MS::Format::integer);
-        return schema;
-      }
-    };
-
     ServoTraversalStatistics::sActive = false;
-    profiler_add_marker("Styles", geckoprofiler::category::LAYOUT,
-                        {MarkerTiming::IntervalUntilNowFrom(mStartTime),
-                         MarkerStack::TakeBacktrace(std::move(mCause)),
-                         MarkerInnerWindowId(mInnerWindowID)},
-                        StyleMarker{},
-                        ServoTraversalStatistics::sSingleton.mElementsTraversed,
-                        ServoTraversalStatistics::sSingleton.mElementsStyled,
-                        ServoTraversalStatistics::sSingleton.mElementsMatched,
-                        ServoTraversalStatistics::sSingleton.mStylesShared,
-                        ServoTraversalStatistics::sSingleton.mStylesReused);
+    PROFILER_ADD_MARKER_WITH_PAYLOAD(
+        "Styles", LAYOUT, StyleMarkerPayload,
+        (mStartTime, TimeStamp::Now(), std::move(mCause),
+         ServoTraversalStatistics::sSingleton, mInnerWindowID));
   }
 
  private:
   bool mActive;
   TimeStamp mStartTime;
-  UniquePtr<ProfileChunkedBuffer> mCause;
+  UniqueProfilerBacktrace mCause;
   Maybe<uint64_t> mInnerWindowID;
 };
 

@@ -785,20 +785,13 @@ void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
     MOZ_ASSERT(static_cast<ProfileBufferEntry::KindUnderlyingType>(type) <
                static_cast<ProfileBufferEntry::KindUnderlyingType>(
                    ProfileBufferEntry::Kind::MODERN_LIMIT));
-    bool entryWasFullyRead = false;
-
-    if (type == ProfileBufferEntry::Kind::Marker) {
-      entryWasFullyRead = ::mozilla::base_profiler_markers_detail::
-          DeserializeAfterKindAndStream(
-              aER, aWriter, aThreadId,
-              [&](ProfileChunkedBuffer& aChunkedBuffer) {
-                ProfilerBacktrace backtrace("", &aChunkedBuffer);
-                backtrace.StreamJSON(aWriter, TimeStamp::ProcessCreation(),
-                                     aUniqueStacks);
-              });
-    }
-
-    if (!entryWasFullyRead) {
+    if (type != ProfileBufferEntry::Kind::Marker ||
+        !::mozilla::base_profiler_markers_detail::DeserializeAfterKindAndStream(
+            aER, aWriter, aThreadId, [&](ProfileChunkedBuffer& aChunkedBuffer) {
+              ProfilerBacktrace backtrace("", &aChunkedBuffer);
+              backtrace.StreamJSON(aWriter, TimeStamp::ProcessCreation(),
+                                   aUniqueStacks);
+            })) {
       // Not a marker, or marker for another thread.
       // We probably didn't read the whole entry, so we need to skip to the end.
       aER.SetRemainingBytes(0);
