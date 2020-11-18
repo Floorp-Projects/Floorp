@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
   ServiceRequest: "resource://gre/modules/ServiceRequest.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
 });
 
@@ -735,7 +734,10 @@ var AddonDatabase = {
    * A getter to retrieve the path to the DB
    */
   get jsonFile() {
-    return OS.Path.join(OS.Constants.Path.profileDir, FILE_DATABASE);
+    return PathUtils.join(
+      Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+      FILE_DATABASE
+    );
   },
 
   /**
@@ -749,7 +751,7 @@ var AddonDatabase = {
         let inputDB, schema;
 
         try {
-          let data = await OS.File.read(this.jsonFile, { encoding: "utf-8" });
+          let data = await IOUtils.readUTF8(this.jsonFile);
           inputDB = JSON.parse(data);
 
           if (
@@ -769,7 +771,7 @@ var AddonDatabase = {
             throw new Error("Invalid schema value.");
           }
         } catch (e) {
-          if (e instanceof OS.File.Error && e.becauseNoSuchFile) {
+          if (e.name == "NotFoundError") {
             logger.debug("No " + FILE_DATABASE + " found.");
           } else {
             logger.error(
@@ -847,7 +849,7 @@ var AddonDatabase = {
 
     // shutdown(true) never rejects
     this._deleting = this.shutdown(true)
-      .then(() => OS.File.remove(this.jsonFile, {}))
+      .then(() => IOUtils.remove(this.jsonFile))
       .catch(error =>
         logger.error(
           "Unable to delete Addon Repository file " + this.jsonFile,
@@ -866,7 +868,7 @@ var AddonDatabase = {
       addons: Array.from(this.DB.addons.values()),
     };
 
-    await OS.File.writeAtomic(this.jsonFile, JSON.stringify(json), {
+    await IOUtils.writeAtomicUTF8(this.jsonFile, JSON.stringify(json), {
       tmpPath: `${this.jsonFile}.tmp`,
     });
   },
