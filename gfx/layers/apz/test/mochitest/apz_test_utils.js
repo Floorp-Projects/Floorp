@@ -1055,6 +1055,10 @@ function getPrefs(ident) {
         // position is synced back to the main thread. So we disable displayport
         // expiry for these tests.
         ["apz.displayport_expiry_ms", 0],
+        // We need to disable touch resampling during these tests because we
+        // rely on touch move events being processed without delay. Touch
+        // resampling only processes them once vsync fires.
+        ["android.touch_resampling.enabled", false],
       ];
     case "TOUCH_ACTION":
       return [
