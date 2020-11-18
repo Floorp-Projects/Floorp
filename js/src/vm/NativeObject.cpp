@@ -2356,11 +2356,6 @@ static MOZ_ALWAYS_INLINE bool GetExistingProperty(
     MOZ_ASSERT(shape->hasDefaultGetter());
 
     vp.set(obj->getSlot(shape->slot()));
-
-    MOZ_ASSERT_IF(
-        !vp.isMagic(JS_UNINITIALIZED_LEXICAL) && !obj->isSingleton() &&
-            !obj->template is<EnvironmentObject>() && shape->hasDefaultGetter(),
-        ObjectGroupHasProperty(cx, obj->group(), shape->propid(), vp));
     return true;
   }
 

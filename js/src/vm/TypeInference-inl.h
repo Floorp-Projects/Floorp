@@ -419,17 +419,7 @@ struct MOZ_RAII AutoEnterAnalysis {
 /////////////////////////////////////////////////////////////////////
 
 MOZ_ALWAYS_INLINE bool TrackPropertyTypes(JSObject* obj, jsid id) {
-  if (obj->hasLazyGroup() ||
-      obj->group()->unknownPropertiesDontCheckGeneration()) {
-    return false;
-  }
-
-  if (obj->isSingleton() &&
-      !obj->group()->maybeGetPropertyDontCheckGeneration(id)) {
-    return false;
-  }
-
-  return true;
+  return false;
 }
 
 void EnsureTrackPropertyTypes(JSContext* cx, JSObject* obj, jsid id);
@@ -441,58 +431,19 @@ inline bool CanHaveEmptyPropertyTypesForOwnProperty(JSObject* obj) {
   return obj->is<GlobalObject>();
 }
 
-inline bool PropertyHasBeenMarkedNonConstant(JSObject* obj, jsid id) {
-  // Non-constant properties are only relevant for singleton objects.
-  if (!obj->isSingleton()) {
-    return true;
-  }
-
-  // EnsureTrackPropertyTypes must have been called on this object.
-  AutoSweepObjectGroup sweep(obj->group());
-  if (obj->group()->unknownProperties(sweep)) {
-    return true;
-  }
-  HeapTypeSet* types = obj->group()->maybeGetProperty(sweep, IdToTypeId(id));
-  return types->nonConstantProperty();
-}
-
 MOZ_ALWAYS_INLINE bool HasTrackedPropertyType(JSObject* obj, jsid id,
                                               TypeSet::Type type) {
-  MOZ_ASSERT(IsTypeInferenceEnabled());
-  MOZ_ASSERT(id == IdToTypeId(id));
-  MOZ_ASSERT(TrackPropertyTypes(obj, id));
-
-  if (HeapTypeSet* types =
-          obj->group()->maybeGetPropertyDontCheckGeneration(id)) {
-    if (!types->hasType(type)) {
-      return false;
-    }
-    // Non-constant properties are only relevant for singleton objects.
-    if (obj->isSingleton() && !types->nonConstantProperty()) {
-      return false;
-    }
-    return true;
-  }
-
-  return false;
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 MOZ_ALWAYS_INLINE bool HasTypePropertyId(JSObject* obj, jsid id,
                                          TypeSet::Type type) {
-  MOZ_ASSERT(IsTypeInferenceEnabled());
-
-  id = IdToTypeId(id);
-  if (!TrackPropertyTypes(obj, id)) {
-    return true;
-  }
-
-  return HasTrackedPropertyType(obj, id, type);
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 MOZ_ALWAYS_INLINE bool HasTypePropertyId(JSObject* obj, jsid id,
                                          const Value& value) {
-  MOZ_ASSERT(IsTypeInferenceEnabled());
-  return HasTypePropertyId(obj, id, TypeSet::GetValueType(value));
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 void AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj,
@@ -506,25 +457,15 @@ MOZ_ALWAYS_INLINE void AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id,
   if (!IsTypeInferenceEnabled()) {
     return;
   }
-  id = IdToTypeId(id);
-  if (TrackPropertyTypes(obj, id) && !HasTrackedPropertyType(obj, id, type)) {
-    AddTypePropertyId(cx, obj->group(), obj, id, type);
-  }
+  MOZ_CRASH("TODO(no-TI): remove");
 }
-
-void AddMagicTypePropertyId(JSContext* cx, JSObject* obj, jsid id,
-                            JSWhyMagic type);
 
 MOZ_ALWAYS_INLINE void AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id,
                                          const Value& value) {
   if (!IsTypeInferenceEnabled()) {
     return;
   }
-  if (MOZ_UNLIKELY(value.isMagic())) {
-    AddMagicTypePropertyId(cx, obj, id, value.whyMagic());
-  } else {
-    AddTypePropertyId(cx, obj, id, TypeSet::GetValueType(value));
-  }
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 inline void MarkObjectGroupFlags(JSContext* cx, JSObject* obj,
@@ -550,20 +491,14 @@ inline void MarkTypePropertyNonData(JSContext* cx, JSObject* obj, jsid id) {
   if (!IsTypeInferenceEnabled()) {
     return;
   }
-  id = IdToTypeId(id);
-  if (TrackPropertyTypes(obj, id)) {
-    obj->group()->markPropertyNonData(cx, obj, id);
-  }
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 inline void MarkTypePropertyNonWritable(JSContext* cx, JSObject* obj, jsid id) {
   if (!IsTypeInferenceEnabled()) {
     return;
   }
-  id = IdToTypeId(id);
-  if (TrackPropertyTypes(obj, id)) {
-    obj->group()->markPropertyNonWritable(cx, obj, id);
-  }
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 /* Mark a state change on a particular object. */
@@ -1047,128 +982,6 @@ inline const JSClass* TypeSet::getObjectClass(unsigned i) const {
 /////////////////////////////////////////////////////////////////////
 // ObjectGroup
 /////////////////////////////////////////////////////////////////////
-
-inline uint32_t ObjectGroup::basePropertyCountDontCheckGeneration() {
-  uint32_t flags = flagsDontCheckGeneration();
-  return (flags & OBJECT_FLAG_PROPERTY_COUNT_MASK) >>
-         OBJECT_FLAG_PROPERTY_COUNT_SHIFT;
-}
-
-inline uint32_t ObjectGroup::basePropertyCount(
-    const AutoSweepObjectGroup& sweep) {
-  MOZ_ASSERT(sweep.group() == this);
-  return basePropertyCountDontCheckGeneration();
-}
-
-inline void ObjectGroup::setBasePropertyCount(const AutoSweepObjectGroup& sweep,
-                                              uint32_t count) {
-  // Note: Callers must ensure they are performing threadsafe operations.
-  MOZ_ASSERT(count <= OBJECT_FLAG_PROPERTY_COUNT_LIMIT);
-  flags_ = (flags(sweep) & ~OBJECT_FLAG_PROPERTY_COUNT_MASK) |
-           (count << OBJECT_FLAG_PROPERTY_COUNT_SHIFT);
-}
-
-inline HeapTypeSet* ObjectGroup::getProperty(const AutoSweepObjectGroup& sweep,
-                                             JSContext* cx, JSObject* obj,
-                                             jsid id) {
-  MOZ_ASSERT(IsTypeInferenceEnabled());
-  MOZ_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id) ||
-             JSID_IS_SYMBOL(id));
-  MOZ_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
-  MOZ_ASSERT_IF(obj, obj->group() == this);
-  MOZ_ASSERT_IF(singleton(), obj);
-  MOZ_ASSERT(cx->compartment() == compartment());
-
-  if (unknownProperties(sweep)) {
-    return nullptr;
-  }
-
-  if (HeapTypeSet* types = maybeGetProperty(sweep, id)) {
-    return types;
-  }
-
-  Property* base = cx->typeLifoAlloc().new_<Property>(id);
-  if (!base) {
-    markUnknown(sweep, cx);
-    return nullptr;
-  }
-
-  uint32_t propertyCount = basePropertyCount(sweep);
-  Property** pprop = TypeHashSet::Insert<jsid, Property, Property>(
-      cx->typeLifoAlloc(), propertySet, propertyCount, id);
-  if (!pprop) {
-    markUnknown(sweep, cx);
-    return nullptr;
-  }
-
-  MOZ_ASSERT(!*pprop);
-
-  setBasePropertyCount(sweep, propertyCount);
-  *pprop = base;
-
-  updateNewPropertyTypes(sweep, cx, obj, id, &base->types);
-
-  if (propertyCount == OBJECT_FLAG_PROPERTY_COUNT_LIMIT) {
-    // We hit the maximum number of properties the object can have, mark
-    // the object unknown so that new properties will not be added in the
-    // future.
-    markUnknown(sweep, cx);
-  }
-
-  base->types.checkMagic();
-  return &base->types;
-}
-
-MOZ_ALWAYS_INLINE HeapTypeSet* ObjectGroup::maybeGetPropertyDontCheckGeneration(
-    jsid id) {
-  MOZ_ASSERT(IsTypeInferenceEnabled());
-  MOZ_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id) ||
-             JSID_IS_SYMBOL(id));
-  MOZ_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
-  MOZ_ASSERT(!unknownPropertiesDontCheckGeneration());
-
-  Property* prop = TypeHashSet::Lookup<jsid, Property, Property>(
-      propertySet, basePropertyCountDontCheckGeneration(), id);
-
-  if (!prop) {
-    return nullptr;
-  }
-
-  prop->types.checkMagic();
-  return &prop->types;
-}
-
-MOZ_ALWAYS_INLINE HeapTypeSet* ObjectGroup::maybeGetProperty(
-    const AutoSweepObjectGroup& sweep, jsid id) {
-  MOZ_ASSERT(sweep.group() == this);
-  return maybeGetPropertyDontCheckGeneration(id);
-}
-
-inline unsigned ObjectGroup::getPropertyCount(
-    const AutoSweepObjectGroup& sweep) {
-  uint32_t count = basePropertyCount(sweep);
-  if (count > TypeHashSet::SET_ARRAY_SIZE) {
-    return TypeHashSet::Capacity(count);
-  }
-  return count;
-}
-
-inline ObjectGroup::Property* ObjectGroup::getProperty(
-    const AutoSweepObjectGroup& sweep, unsigned i) {
-  MOZ_ASSERT(IsTypeInferenceEnabled());
-  MOZ_ASSERT(i < getPropertyCount(sweep));
-  Property* result;
-  if (basePropertyCount(sweep) == 1) {
-    MOZ_ASSERT(i == 0);
-    result = (Property*)propertySet;
-  } else {
-    result = propertySet[i];
-  }
-  if (result) {
-    result->types.checkMagic();
-  }
-  return result;
-}
 
 inline AutoSweepObjectGroup::AutoSweepObjectGroup(ObjectGroup* group)
 #ifdef DEBUG

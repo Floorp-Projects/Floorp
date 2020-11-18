@@ -57,19 +57,6 @@ using mozilla::PodCopy;
 using js::jit::JitScript;
 
 #ifdef DEBUG
-
-static inline jsid id___proto__(JSContext* cx) {
-  return NameToId(cx->names().proto);
-}
-
-static inline jsid id_constructor(JSContext* cx) {
-  return NameToId(cx->names().constructor);
-}
-
-static inline jsid id_caller(JSContext* cx) {
-  return NameToId(cx->names().caller);
-}
-
 const char* js::TypeIdStringImpl(jsid id) {
   if (JSID_IS_VOID(id)) {
     return "(index)";
@@ -86,7 +73,6 @@ const char* js::TypeIdStringImpl(jsid id) {
   PutEscapedString(bufs[which], 100, JSID_TO_LINEAR_STRING(id), 0);
   return bufs[which];
 }
-
 #endif
 
 /////////////////////////////////////////////////////////////////////
@@ -231,80 +217,6 @@ void js::InferSpewImpl(const char* fmt, ...) {
   fprintf(stderr, "\n");
   va_end(ap);
 }
-
-MOZ_NORETURN MOZ_COLD static void MOZ_FORMAT_PRINTF(2, 3)
-    TypeFailure(JSContext* cx, const char* fmt, ...) {
-  char msgbuf[1024]; /* Larger error messages will be truncated */
-  char errbuf[1024];
-
-  va_list ap;
-  va_start(ap, fmt);
-  VsprintfLiteral(errbuf, fmt, ap);
-  va_end(ap);
-
-  SprintfLiteral(msgbuf, "[infer failure] %s", errbuf);
-
-  /* Dump type state, even if INFERFLAGS is unset. */
-  PrintTypes(cx, cx->compartment(), true);
-
-  MOZ_ReportAssertionFailure(msgbuf, __FILE__, __LINE__);
-  MOZ_CRASH();
-}
-
-bool js::ObjectGroupHasProperty(JSContext* cx, ObjectGroup* group, jsid id,
-                                const Value& value) {
-  /*
-   * Check the correctness of the type information in the object's property
-   * against an actual value.
-   */
-  AutoSweepObjectGroup sweep(group);
-  if (!group->unknownProperties(sweep) && !value.isUndefined()) {
-    id = IdToTypeId(id);
-
-    /* Watch for properties which inference does not monitor. */
-    if (id == id___proto__(cx) || id == id_constructor(cx) ||
-        id == id_caller(cx)) {
-      return true;
-    }
-
-    TypeSet::Type type = TypeSet::GetValueType(value);
-
-    AutoEnterAnalysis enter(cx);
-
-    /*
-     * We don't track types for properties inherited from prototypes which
-     * haven't yet been accessed during analysis of the inheriting object.
-     * Don't do the property instantiation now.
-     */
-    TypeSet* types = group->maybeGetProperty(sweep, id);
-    if (!types) {
-      return true;
-    }
-
-    // Type set guards might miss when an object's group changes and its
-    // properties become unknown.
-    if (value.isObject()) {
-      if (types->unknownObject()) {
-        return true;
-      }
-      for (size_t i = 0; i < types->getObjectCount(); i++) {
-        if (TypeSet::ObjectKey* key = types->getObject(i)) {
-          if (key->unknownProperties()) {
-            return true;
-          }
-        }
-      }
-    }
-
-    if (!types->hasType(type)) {
-      TypeFailure(cx, "Missing type in object %s %s: %s",
-                  TypeSet::ObjectGroupString(group).get(), TypeIdString(id),
-                  TypeSet::TypeString(type).get());
-    }
-  }
-  return true;
-}
-
 #endif
 
 /////////////////////////////////////////////////////////////////////
@@ -845,29 +757,7 @@ void js::EnsureTrackPropertyTypes(JSContext* cx, JSObject* obj, jsid id) {
   if (!IsTypeInferenceEnabled()) {
     return;
   }
-  id = IdToTypeId(id);
-
-  if (obj->isSingleton()) {
-    AutoEnterAnalysis enter(cx);
-    if (obj->hasLazyGroup()) {
-      AutoEnterOOMUnsafeRegion oomUnsafe;
-      RootedObject objRoot(cx, obj);
-      if (!JSObject::getGroup(cx, objRoot)) {
-        oomUnsafe.crash(
-            "Could not allocate ObjectGroup in EnsureTrackPropertyTypes");
-      }
-    }
-    ObjectGroup* group = obj->group();
-    AutoSweepObjectGroup sweep(group);
-    if (!group->unknownProperties(sweep) &&
-        !group->getProperty(sweep, cx, obj, id)) {
-      MOZ_ASSERT(group->unknownProperties(sweep));
-      return;
-    }
-  }
-
-  MOZ_ASSERT(obj->group()->unknownPropertiesDontCheckGeneration() ||
-             TrackPropertyTypes(obj, id));
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 static void ObjectStateChange(const AutoSweepObjectGroup& sweep, JSContext* cx,
@@ -1031,86 +921,6 @@ static inline void UpdatePropertyType(const AutoSweepObjectGroup& sweep,
   }
 }
 
-void ObjectGroup::updateNewPropertyTypes(const AutoSweepObjectGroup& sweep,
-                                         JSContext* cx, JSObject* objArg,
-                                         jsid id, HeapTypeSet* types) {
-  InferSpew(ISpewOps, "typeSet: %sT%p%s property %s %s", InferSpewColor(types),
-            types, InferSpewColorReset(),
-            TypeSet::ObjectGroupString(this).get(), TypeIdString(id));
-
-  MOZ_ASSERT_IF(objArg, objArg->group() == this);
-  MOZ_ASSERT_IF(singleton(), objArg);
-
-  if (!singleton() || !objArg->isNative()) {
-    types->setNonConstantProperty(sweep, cx);
-    return;
-  }
-
-  NativeObject* obj = &objArg->as<NativeObject>();
-
-  /*
-   * Fill the property in with any type the object already has in an own
-   * property. We are only interested in plain native properties and
-   * dense elements which don't go through a barrier when read by the VM
-   * or jitcode.
-   */
-
-  if (JSID_IS_VOID(id)) {
-    /* Go through all shapes on the object to get integer-valued properties. */
-    RootedShape shape(cx, obj->lastProperty());
-    while (!shape->isEmptyShape()) {
-      if (JSID_IS_VOID(IdToTypeId(shape->propid()))) {
-        UpdatePropertyType(sweep, cx, types, obj, shape, true);
-      }
-      shape = shape->previous();
-    }
-
-    /* Also get values of any dense elements in the object. */
-    for (size_t i = 0; i < obj->getDenseInitializedLength(); i++) {
-      const Value& value = obj->getDenseElement(i);
-      if (!value.isMagic(JS_ELEMENTS_HOLE)) {
-        TypeSet::Type type = TypeSet::GetValueType(value);
-        types->TypeSet::addType(type, &cx->typeLifoAlloc());
-        types->postWriteBarrier(cx, type);
-      }
-    }
-  } else if (!JSID_IS_EMPTY(id)) {
-    RootedId rootedId(cx, id);
-    Shape* shape = obj->lookup(cx, rootedId);
-    if (shape) {
-      UpdatePropertyType(sweep, cx, types, obj, shape, false);
-    }
-  }
-}
-
-void ObjectGroup::addDefiniteProperties(JSContext* cx, Shape* shape) {
-  AutoSweepObjectGroup sweep(this);
-  if (unknownProperties(sweep)) {
-    return;
-  }
-
-  // Mark all properties of shape as definite properties of this group.
-  AutoEnterAnalysis enter(cx);
-
-  while (!shape->isEmptyShape()) {
-    jsid id = IdToTypeId(shape->propid());
-    if (!JSID_IS_VOID(id)) {
-      MOZ_ASSERT_IF(shape->slot() >= shape->numFixedSlots(),
-                    shape->numFixedSlots() == NativeObject::MAX_FIXED_SLOTS);
-      TypeSet* types = getProperty(sweep, cx, nullptr, id);
-      if (!types) {
-        MOZ_ASSERT(unknownProperties(sweep));
-        return;
-      }
-      if (types->canSetDefinite(shape->slot())) {
-        types->setDefinite(shape->slot());
-      }
-    }
-
-    shape = shape->previous();
-  }
-}
-
 void js::AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj,
                            jsid id, TypeSet::Type type) {
   MOZ_ASSERT(id == IdToTypeId(id));
@@ -1120,105 +930,12 @@ void js::AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj,
     return;
   }
 
-  AutoEnterAnalysis enter(cx);
-
-  HeapTypeSet* types = group->getProperty(sweep, cx, obj, id);
-  if (!types) {
-    return;
-  }
-
-  // Clear any constant flag if it exists.
-  if (!types->empty() && !types->nonConstantProperty()) {
-    InferSpew(ISpewOps, "constantMutated: %sT%p%s %s", InferSpewColor(types),
-              types, InferSpewColorReset(), TypeSet::TypeString(type).get());
-    types->setNonConstantProperty(sweep, cx);
-  }
-
-  if (types->hasType(type)) {
-    return;
-  }
-
-  InferSpew(ISpewOps, "externalType: property %s %s: %s",
-            TypeSet::ObjectGroupString(group).get(), TypeIdString(id),
-            TypeSet::TypeString(type).get());
-  types->addType(sweep, cx, type);
-
-  // If this addType caused the type set to be marked as containing any
-  // object, make sure that is reflected in other type sets the addType is
-  // propagated to below.
-  if (type.isObjectUnchecked() && types->unknownObject()) {
-    type = TypeSet::AnyObjectType();
-  }
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 void js::AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj,
                            jsid id, const Value& value) {
   AddTypePropertyId(cx, group, obj, id, TypeSet::GetValueType(value));
-}
-
-void js::AddMagicTypePropertyId(JSContext* cx, JSObject* obj, jsid id,
-                                JSWhyMagic type) {
-  // Some MagicValues can be stored in environment object slots but are not
-  // exposed to script. We don't want to add MagicValue types to HeapTypeSets
-  // but there's one case we need to handle: Ion can add a freeze constraint to
-  // the global lexical environment (in IonBuilder::testGlobalLexicalBinding) to
-  // guard a lexical binding does not exist, so we need to trigger this
-  // constraint when defining an uninitialized lexical as part of JSOP_DEFLET or
-  // JSOP_DEFCONST.
-  //
-  // Also note that the global lexical is the only environment object for which
-  // we track property types. See CreateEnvironmentObject.
-
-  MOZ_ASSERT(type == JS_UNINITIALIZED_LEXICAL || type == JS_OPTIMIZED_OUT);
-  MOZ_ASSERT(obj->is<EnvironmentObject>());
-
-  if (type != JS_UNINITIALIZED_LEXICAL) {
-    return;
-  }
-
-  id = IdToTypeId(id);
-  if (!TrackPropertyTypes(obj, id)) {
-    return;
-  }
-
-  MOZ_ASSERT(obj->isSingleton());
-  MOZ_ASSERT(obj->is<LexicalEnvironmentObject>());
-  MOZ_ASSERT(obj->as<LexicalEnvironmentObject>().isGlobal());
-
-  AutoEnterAnalysis enter(cx);
-  AutoSweepObjectGroup sweep(obj->group());
-
-  if (HeapTypeSet* types = obj->group()->maybeGetProperty(sweep, id)) {
-    types->markLexicalBindingExists(sweep, cx);
-  }
-}
-
-void ObjectGroup::markPropertyNonData(JSContext* cx, JSObject* obj, jsid id) {
-  AutoEnterAnalysis enter(cx);
-
-  id = IdToTypeId(id);
-
-  AutoSweepObjectGroup sweep(this);
-  HeapTypeSet* types = getProperty(sweep, cx, obj, id);
-  if (types) {
-    types->setNonDataProperty(sweep, cx);
-  }
-}
-
-void ObjectGroup::markPropertyNonWritable(JSContext* cx, JSObject* obj,
-                                          jsid id) {
-  if (!IsTypeInferenceEnabled()) {
-    return;
-  }
-  AutoEnterAnalysis enter(cx);
-
-  id = IdToTypeId(id);
-
-  AutoSweepObjectGroup sweep(this);
-  HeapTypeSet* types = getProperty(sweep, cx, obj, id);
-  if (types) {
-    types->setNonWritableProperty(sweep, cx);
-  }
 }
 
 void ObjectGroup::markStateChange(const AutoSweepObjectGroup& sweep,
@@ -1262,27 +979,6 @@ void ObjectGroup::markUnknown(const AutoSweepObjectGroup& sweep,
             TypeSet::ObjectGroupString(this).get());
 
   ObjectStateChange(sweep, cx, this, true);
-
-  /*
-   * Existing constraints may have already been added to this object, which we
-   * need to do the right thing for. We can't ensure that we will mark all
-   * unknown objects before they have been accessed, as the __proto__ of a known
-   * object could be dynamically set to an unknown object, and we can decide to
-   * ignore properties of an object during analysis (i.e. hashmaps). Adding
-   * unknown for any properties accessed already accounts for possible values
-   * read from them.
-   */
-
-  unsigned count = getPropertyCount(sweep);
-  for (unsigned i = 0; i < count; i++) {
-    Property* prop = getProperty(sweep, i);
-    if (prop) {
-      prop->types.addType(sweep, cx, TypeSet::UnknownType());
-      prop->types.setNonDataProperty(sweep, cx);
-    }
-  }
-
-  clearProperties(sweep);
 }
 
 void ObjectGroup::print(const AutoSweepObjectGroup& sweep) {
@@ -1314,24 +1010,7 @@ void ObjectGroup::print(const AutoSweepObjectGroup& sweep) {
     }
   }
 
-  unsigned count = getPropertyCount(sweep);
-
-  if (count == 0) {
-    fprintf(stderr, " {}\n");
-    return;
-  }
-
-  fprintf(stderr, " {");
-
-  for (unsigned i = 0; i < count; i++) {
-    Property* prop = getProperty(sweep, i);
-    if (prop) {
-      fprintf(stderr, "\n    %s:", TypeIdString(prop->id));
-      prop->types.print();
-    }
-  }
-
-  fprintf(stderr, "\n}\n");
+  fprintf(stderr, "\n");
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1475,17 +1154,6 @@ void ConstraintTypeSet::sweep(const AutoSweepBase& sweep, Zone* zone) {
   }
 }
 
-inline void ObjectGroup::clearProperties(const AutoSweepObjectGroup& sweep) {
-  // We're about to remove edges from the group to property ids. Incremental
-  // GC should know about these edges.
-  if (zone()->needsIncrementalBarrier()) {
-    traceChildren(zone()->barrierTracer());
-  }
-
-  setBasePropertyCount(sweep, 0);
-  propertySet = nullptr;
-}
-
 /*
  * Before sweeping the arenas themselves, scan all groups in a compartment to
  * fixup weak references: property type sets referencing dead JS and type
@@ -1498,103 +1166,6 @@ void ObjectGroup::sweep(const AutoSweepObjectGroup& sweep) {
   setGeneration(zone()->types.generation);
 
   AssertGCStateForSweep(zone());
-
-  Maybe<AutoClearTypeInferenceStateOnOOM> clearStateOnOOM;
-  if (!zone()->types.isSweepingTypes()) {
-    clearStateOnOOM.emplace(zone());
-  }
-
-  AutoTouchingGrayThings tgt;
-
-  LifoAlloc& typeLifoAlloc = zone()->types.typeLifoAlloc();
-
-  /*
-   * Properties were allocated from the old arena, and need to be copied over
-   * to the new one.
-   */
-  unsigned propertyCount = basePropertyCount(sweep);
-  if (propertyCount >= 2) {
-    unsigned oldCapacity = TypeHashSet::Capacity(propertyCount);
-    Property** oldArray = propertySet;
-
-    MOZ_RELEASE_ASSERT(uintptr_t(oldArray[-1]) == oldCapacity);
-
-    auto poisonArray = mozilla::MakeScopeExit([oldArray, oldCapacity] {
-      size_t size = sizeof(Property*) * (oldCapacity + 1);
-      AlwaysPoison(oldArray - 1, JS_SWEPT_TI_PATTERN, size,
-                   MemCheckKind::MakeUndefined);
-    });
-
-    unsigned oldPropertyCount = propertyCount;
-    unsigned oldPropertiesFound = 0;
-
-    clearProperties(sweep);
-    propertyCount = 0;
-    for (unsigned i = 0; i < oldCapacity; i++) {
-      Property* prop = oldArray[i];
-      if (prop) {
-        oldPropertiesFound++;
-        prop->types.checkMagic();
-        if (singleton() && !zone()->isPreservingCode()) {
-          /*
-           * Don't copy over properties of singleton objects when their
-           * presence will not be required by jitcode or type constraints
-           * (i.e. for the definite properties analysis). The contents of
-           * these type sets will be regenerated as necessary.
-           */
-          AlwaysPoison(prop, JS_SWEPT_TI_PATTERN, sizeof(Property),
-                       MemCheckKind::MakeUndefined);
-          continue;
-        }
-
-        Property* newProp = typeLifoAlloc.new_<Property>(*prop);
-        AlwaysPoison(prop, JS_SWEPT_TI_PATTERN, sizeof(Property),
-                     MemCheckKind::MakeUndefined);
-        if (newProp) {
-          Property** pentry = TypeHashSet::Insert<jsid, Property, Property>(
-              typeLifoAlloc, propertySet, propertyCount, newProp->id);
-          if (pentry) {
-            *pentry = newProp;
-            newProp->types.sweep(sweep, zone());
-            continue;
-          }
-        }
-
-        zone()->types.setOOMSweepingTypes();
-        addFlags(sweep,
-                 OBJECT_FLAG_DYNAMIC_MASK | OBJECT_FLAG_UNKNOWN_PROPERTIES);
-        clearProperties(sweep);
-        return;
-      }
-    }
-    MOZ_RELEASE_ASSERT(oldPropertyCount == oldPropertiesFound);
-    setBasePropertyCount(sweep, propertyCount);
-  } else if (propertyCount == 1) {
-    Property* prop = (Property*)propertySet;
-    prop->types.checkMagic();
-    if (singleton() && !zone()->isPreservingCode()) {
-      // Skip, as above.
-      AlwaysPoison(prop, JS_SWEPT_TI_PATTERN, sizeof(Property),
-                   MemCheckKind::MakeUndefined);
-      clearProperties(sweep);
-    } else {
-      Property* newProp = typeLifoAlloc.new_<Property>(*prop);
-      AlwaysPoison(prop, JS_SWEPT_TI_PATTERN, sizeof(Property),
-                   MemCheckKind::MakeUndefined);
-      if (newProp) {
-        propertySet = (Property**)newProp;
-        newProp->types.sweep(sweep, zone());
-      } else {
-        zone()->types.setOOMSweepingTypes();
-        addFlags(sweep,
-                 OBJECT_FLAG_DYNAMIC_MASK | OBJECT_FLAG_UNKNOWN_PROPERTIES);
-        clearProperties(sweep);
-        return;
-      }
-    }
-  } else {
-    MOZ_RELEASE_ASSERT(!propertySet);
-  }
 }
 
 /* static */

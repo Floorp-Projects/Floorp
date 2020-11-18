@@ -297,11 +297,7 @@ struct TenureCountCache {
   TenureCountCache() = default;
 
   HashNumber hash(ObjectGroup* group) {
-#if JS_BITS_PER_WORD == 32
     static const size_t ZeroBits = 3;
-#else
-    static const size_t ZeroBits = 4;
-#endif
 
     uintptr_t word = uintptr_t(group);
     MOZ_ASSERT((word & ((1 << ZeroBits) - 1)) == 0);

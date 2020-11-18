@@ -81,8 +81,6 @@ enum NewObjectKind {
 /* Type information about an object accessed by a script. */
 class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
  public:
-  class Property;
-
   /* Class shared by objects in this group, stored in the cell header. */
   const JSClass* clasp() const { return headerPtr(); }
 
@@ -99,49 +97,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   // If non-null, holds additional information about this object, whose
   // format is indicated by the object's addendum kind.
   void* addendum_ = nullptr;
-
-  /*
-   * [SMDOC] Type-Inference object properties
-   *
-   * Properties of this object.
-   *
-   * The type sets in the properties of a group describe the possible values
-   * that can be read out of that property in actual JS objects. In native
-   * objects, property types account for plain data properties (those with a
-   * slot and no getter or setter hook) and dense elements. In typed objects,
-   * property types account for object and value properties and elements in the
-   * object.
-   *
-   * For accesses on these properties, the correspondence is as follows:
-   *
-   * 1. If the group has unknownProperties(), the possible properties and
-   *    value types for associated JSObjects are unknown.
-   *
-   * 2. Otherwise, for any |obj| in |group|, and any |id| which is a property
-   *    in |obj|, before obj->getProperty(id) the property in |group| for
-   *    |id| must reflect the result of the getProperty.
-   *
-   * There are several exceptions to this:
-   *
-   * 1. For properties of global JS objects which are undefined at the point
-   *    where the property was (lazily) generated, the property type set will
-   *    remain empty, and the 'undefined' type will only be added after a
-   *    subsequent assignment or deletion. After these properties have been
-   *    assigned a defined value, the only way they can become undefined
-   *    again is after such an assign or deletion.
-   *
-   * 2. Array lengths are special cased by the compiler and VM and are not
-   *    reflected in property types.
-   *
-   * 3. In typed objects, the initial values of properties (null pointers and
-   *    undefined values) are not reflected in the property types. These values
-   *    are always possible when reading the property.
-   *
-   * We establish these by using write barriers on calls to setProperty and
-   * defineProperty which are on native properties, and on any jitcode which
-   * might update the property with a new type.
-   */
-  Property** propertySet = nullptr;
 
   // END OF PROPERTIES
 
@@ -263,24 +218,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
     setAddendum(Addendum_InterpretedFunction, fun);
   }
 
-  class Property {
-   public:
-    // Identifier for this property, JSID_VOID for the aggregate integer
-    // index property, or JSID_EMPTY for properties holding constraints
-    // listening to changes in the group's state.
-    const GCPtrId id;
-
-    // Possible own types for this property.
-    HeapTypeSet types;
-
-    explicit Property(jsid id) : id(id) {}
-
-    Property(const Property& o) : id(o.id.get()), types(o.types) {}
-
-    static uint32_t keyBits(jsid id) { return uint32_t(JSID_BITS(id)); }
-    static jsid getKey(Property* p) { return p->id; }
-  };
-
  public:
   inline ObjectGroup(const JSClass* clasp, TaggedProto proto, JS::Realm* realm,
                      ObjectGroupFlags initialFlags);
@@ -315,33 +252,8 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   inline void setShouldPreTenure(const AutoSweepObjectGroup& sweep,
                                  JSContext* cx);
 
-  /*
-   * Get or create a property of this object. Only call this for properties
-   * which a script accesses explicitly.
-   */
-  inline HeapTypeSet* getProperty(const AutoSweepObjectGroup& sweep,
-                                  JSContext* cx, JSObject* obj, jsid id);
-
-  /* Get a property only if it already exists. */
-  MOZ_ALWAYS_INLINE HeapTypeSet* maybeGetProperty(
-      const AutoSweepObjectGroup& sweep, jsid id);
-  MOZ_ALWAYS_INLINE HeapTypeSet* maybeGetPropertyDontCheckGeneration(jsid id);
-
-  /*
-   * Iterate through the group's properties. getPropertyCount overapproximates
-   * in the hash case (see SET_ARRAY_SIZE in TypeInference-inl.h), and
-   * getProperty may return nullptr.
-   */
-  inline unsigned getPropertyCount(const AutoSweepObjectGroup& sweep);
-  inline Property* getProperty(const AutoSweepObjectGroup& sweep, unsigned i);
-
   /* Helpers */
 
-  void updateNewPropertyTypes(const AutoSweepObjectGroup& sweep, JSContext* cx,
-                              JSObject* obj, jsid id, HeapTypeSet* types);
-  void addDefiniteProperties(JSContext* cx, Shape* shape);
-  void markPropertyNonData(JSContext* cx, JSObject* obj, jsid id);
-  void markPropertyNonWritable(JSContext* cx, JSObject* obj, jsid id);
   void markStateChange(const AutoSweepObjectGroup& sweep, JSContext* cx);
   void setFlags(const AutoSweepObjectGroup& sweep, JSContext* cx,
                 ObjectGroupFlags flags);
@@ -349,7 +261,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 
   void print(const AutoSweepObjectGroup& sweep);
 
-  inline void clearProperties(const AutoSweepObjectGroup& sweep);
   void traceChildren(JSTracer* trc);
 
   inline bool needsSweep();
@@ -378,19 +289,11 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
  public:
   const ObjectGroupFlags* addressOfFlags() const { return &flags_; }
 
-  inline uint32_t basePropertyCount(const AutoSweepObjectGroup& sweep);
-  inline uint32_t basePropertyCountDontCheckGeneration();
-
- private:
-  inline void setBasePropertyCount(const AutoSweepObjectGroup& sweep,
-                                   uint32_t count);
-
   static void staticAsserts() {
     static_assert(offsetof(ObjectGroup, proto_) ==
                   offsetof(JS::shadow::ObjectGroup, proto));
   }
 
- public:
   // Whether to make a deep cloned singleton when cloning fun.
   static bool useSingletonForClone(JSFunction* fun);
 

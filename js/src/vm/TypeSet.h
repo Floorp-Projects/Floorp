@@ -159,12 +159,6 @@ enum : uint32_t {
    */
   OBJECT_FLAG_LAZY_SINGLETON = 0x4,
 
-  /* Mask/shift for the number of properties in propertySet */
-  OBJECT_FLAG_PROPERTY_COUNT_MASK = 0xfff8,
-  OBJECT_FLAG_PROPERTY_COUNT_SHIFT = 3,
-  OBJECT_FLAG_PROPERTY_COUNT_LIMIT =
-      OBJECT_FLAG_PROPERTY_COUNT_MASK >> OBJECT_FLAG_PROPERTY_COUNT_SHIFT,
-
   /* Whether any objects this represents may have sparse indexes. */
   OBJECT_FLAG_SPARSE_INDEXES = 0x00010000,
 

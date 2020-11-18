@@ -2902,21 +2902,6 @@ AtomicsReadWriteModifyFn AtomicsXor(Scalar::Type elementType) {
   }
 }
 
-bool GroupHasPropertyTypes(ObjectGroup* group, jsid* id, Value* v) {
-  AutoUnsafeCallWithABI unsafe;
-  if (group->unknownPropertiesDontCheckGeneration()) {
-    return true;
-  }
-  HeapTypeSet* propTypes = group->maybeGetPropertyDontCheckGeneration(*id);
-  if (!propTypes) {
-    return true;
-  }
-  if (!propTypes->nonConstantProperty()) {
-    return false;
-  }
-  return propTypes->hasType(TypeSet::GetValueType(*v));
-}
-
 void AssumeUnreachable(const char* output) {
   MOZ_ReportAssertionFailure(output, __FILE__, __LINE__);
 }
