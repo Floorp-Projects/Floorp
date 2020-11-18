@@ -1070,6 +1070,25 @@ bool WarpBuilder::build_StrictNe(BytecodeLocation loc) {
   return buildCompareOp(loc);
 }
 
+// Returns true iff the MTest added for |op| has a true-target corresponding
+// with the join point in the bytecode.
+static bool TestTrueTargetIsJoinPoint(JSOp op) {
+  switch (op) {
+    case JSOp::IfNe:
+    case JSOp::Or:
+    case JSOp::Case:
+      return true;
+
+    case JSOp::IfEq:
+    case JSOp::And:
+    case JSOp::Coalesce:
+      return false;
+
+    default:
+      MOZ_CRASH("Unexpected op");
+  }
+}
+
 bool WarpBuilder::build_JumpTarget(BytecodeLocation loc) {
   PendingEdgesMap::Ptr p = pendingEdges_.lookup(loc.toRawBytecode());
   if (!p) {
