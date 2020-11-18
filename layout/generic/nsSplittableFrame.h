@@ -93,10 +93,8 @@ class nsSplittableFrame : public nsIFrame {
    *
    * This guarantees that the internal cache works, by refreshing it. Calling it
    * multiple times in the same reflow is wasteful, but not an error.
-   *
-   * @param aWM a writing-mode to determine the block-axis
    */
-  nscoord CalcAndCacheConsumedBSize(mozilla::WritingMode aWM);
+  nscoord CalcAndCacheConsumedBSize();
 
   /**
    * Retrieve the effective computed block size of this frame, which is the

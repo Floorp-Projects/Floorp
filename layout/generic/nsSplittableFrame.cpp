@@ -186,14 +186,15 @@ void nsSplittableFrame::RemoveFromFlow(nsIFrame* aFrame) {
 
 NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(ConsumedBSizeProperty, nscoord);
 
-nscoord nsSplittableFrame::CalcAndCacheConsumedBSize(WritingMode aWM) {
+nscoord nsSplittableFrame::CalcAndCacheConsumedBSize() {
   nsIFrame* prev = GetPrevContinuation();
   if (!prev) {
     return 0;
   }
+  const auto wm = GetWritingMode();
   nscoord bSize = 0;
   for (; prev; prev = prev->GetPrevContinuation()) {
-    bSize += prev->ContentSize(aWM).BSize(aWM);
+    bSize += prev->ContentSize(wm).BSize(wm);
     bool found = false;
     nscoord consumed = prev->GetProperty(ConsumedBSizeProperty(), &found);
     if (found) {

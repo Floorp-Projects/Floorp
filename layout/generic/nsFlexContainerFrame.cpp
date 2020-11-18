@@ -4404,8 +4404,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   const LogicalSize availableSizeForItems =
       ComputeAvailableSizeForItems(aReflowInput, borderPadding);
 
-  const nscoord consumedBSize =
-      CalcAndCacheConsumedBSize(aReflowInput.GetWritingMode());
+  const nscoord consumedBSize = CalcAndCacheConsumedBSize();
   nscoord contentBoxMainSize =
       GetMainSizeFromReflowInput(aReflowInput, axisTracker, consumedBSize);
   nscoord contentBoxCrossSize;
