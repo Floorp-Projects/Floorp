@@ -1155,6 +1155,9 @@ void AudioInputProcessing::NotifyInputStopped(MediaTrackGraphImpl* aGraph) {
   // the amount of buffered silence during the switch.
   mLiveFramesAppended = false;
   mSegment.Clear();
+  if (mPacketizerInput) {
+    mPacketizerInput->Clear();
+  }
 }
 
 // Called back on GraphDriver thread!
