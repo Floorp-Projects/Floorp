@@ -223,10 +223,6 @@ const char* InferSpewColor(TypeSet* types);
     }
 void InferSpewImpl(const char* fmt, ...) MOZ_FORMAT_PRINTF(1, 2);
 
-/* Check that the type property for id in group contains value. */
-bool ObjectGroupHasProperty(JSContext* cx, ObjectGroup* group, jsid id,
-                            const Value& value);
-
 #else
 
 inline const char* InferSpewColorReset() { return nullptr; }
