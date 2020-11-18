@@ -74,9 +74,6 @@ class TypeZone;
 
 /* Flags and other state stored in ObjectGroup::Flags */
 enum : uint32_t {
-  /* Whether this group is associated with some allocation site. */
-  OBJECT_FLAG_FROM_ALLOCATION_SITE = 0x1,
-
   /* Whether this group is associated with a single object. */
   OBJECT_FLAG_SINGLETON = 0x2,
 
