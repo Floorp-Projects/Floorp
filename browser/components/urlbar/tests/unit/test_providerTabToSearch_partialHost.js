@@ -4,8 +4,8 @@
 // Search engine origins are autofilled normally when they get over the
 // threshold, though certain origins redirect to localized subdomains, that
 // the user is unlikely to type, for example wikipedia.org => en.wikipedia.org.
-// This checks that we can autofill the search engine origin even if the user
-// types just "wiki".
+// We should get a tab to search result also for these cases, where a normal
+// autofill wouldn't happen.
 
 "use strict";
 
@@ -42,34 +42,30 @@ add_task(async function setup() {
     template: url,
     searchGetParams: "q={searchTerms}",
   });
+  let defaultEngine = await Services.search.getDefault();
+  await Services.search.setDefault(engine);
   registerCleanupFunction(async () => {
+    await Services.search.setDefault(defaultEngine);
     await Services.search.removeEngine(engine);
   });
   // Make sure the engine domain would be autofilled.
   await PlacesUtils.bookmarks.insert({
     url,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "bookmark",
   });
 
   info("Test matching cases");
 
-  for (let searchStr of ["e", "en", "ex", "example.com"]) {
+  for (let searchStr of ["ex", "example.c"]) {
     info("Searching for " + searchStr);
     let context = createContext(searchStr, { isPrivate: false });
-    let [title] = UrlbarUtils.stripPrefixAndTrim(url, {
-      stripHttp: true,
-      trimEmptyQuery: true,
-      trimSlash: true,
-    });
     await check_results({
       context,
-      autofilled:
-        searchStr + url.substring(url.indexOf(searchStr) + searchStr.length),
-      completed: url,
       matches: [
-        makeVisitResult(context, {
-          uri: url,
-          title,
+        makeSearchResult(context, {
+          engineName: Services.search.defaultEngine.name,
+          providerName: "HeuristicFallback",
           heuristic: true,
         }),
         makeSearchResult(context, {
@@ -79,6 +75,11 @@ add_task(async function setup() {
           keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
           query: "",
           providerName: "TabToSearch",
+          satisfiesAutofillThreshold: true,
+        }),
+        makeBookmarkResult(context, {
+          uri: url,
+          title: "bookmark",
         }),
       ],
     });
@@ -98,25 +99,18 @@ add_task(async function setup() {
   await PlacesUtils.bookmarks.insert({
     url: url2,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "bookmark",
   });
 
-  for (let searchStr of ["mo", "it", "it.m", "www.it"]) {
+  for (let searchStr of ["mo", "mochi.c"]) {
     info("Searching for " + searchStr);
     let context = createContext(searchStr, { isPrivate: false });
-    let [title] = UrlbarUtils.stripPrefixAndTrim(url2, {
-      stripHttp: true,
-      trimEmptyQuery: true,
-      trimSlash: true,
-    });
     await check_results({
       context,
-      autofilled:
-        searchStr + url2.substring(url2.indexOf(searchStr) + searchStr.length),
-      completed: url2,
       matches: [
-        makeVisitResult(context, {
-          uri: url2,
-          title,
+        makeSearchResult(context, {
+          engineName: Services.search.defaultEngine.name,
+          providerName: "HeuristicFallback",
           heuristic: true,
         }),
         makeSearchResult(context, {
@@ -126,6 +120,11 @@ add_task(async function setup() {
           keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
           query: "",
           providerName: "TabToSearch",
+          satisfiesAutofillThreshold: true,
+        }),
+        makeBookmarkResult(context, {
+          uri: url2,
+          title: "bookmark",
         }),
       ],
     });

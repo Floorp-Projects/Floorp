@@ -351,25 +351,20 @@ add_task(async function test_casing() {
 });
 
 add_task(async function test_publicSuffix() {
-  info(
-    "Tab-to-search results appear also in case of different subdomain and suffix."
-  );
+  info("Tab-to-search results appear also in case of partial host match.");
   let engine = await Services.search.addEngineWithDetails("MyTest", {
     template: "https://test.mytest.it/?search={searchTerms}",
   });
-  // The top level domain will be autofilled, not the full domain.
-  await PlacesTestUtils.addVisits(["https://mytest.com/"]);
+  await PlacesTestUtils.addVisits(["https://test.mytest.it/"]);
   let context = createContext("my", { isPrivate: false });
   await check_results({
     context,
-    autofilled: "mytest.com/",
-    completed: "https://mytest.com/",
     matches: [
-      makeVisitResult(context, {
-        uri: "https://mytest.com/",
-        title: "https://mytest.com",
+      makeSearchResult(context, {
+        engineName: Services.search.defaultEngine.name,
+        engineIconUri: Services.search.defaultEngine.iconURI?.spec,
         heuristic: true,
-        providerName: "Autofill",
+        providerName: "HeuristicFallback",
       }),
       makeSearchResult(context, {
         engineName: engine.name,
@@ -378,6 +373,12 @@ add_task(async function test_publicSuffix() {
         keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
         query: "",
         providerName: "TabToSearch",
+        satisfiesAutofillThreshold: true,
+      }),
+      makeVisitResult(context, {
+        uri: "https://test.mytest.it/",
+        title: "test visit for https://test.mytest.it/",
+        providerName: "UnifiedComplete",
       }),
     ],
   });

@@ -303,36 +303,48 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     }
 
     if (result.providerName == "TabToSearch") {
-      // Discard tab-to-search results if we're not autofilling a URL or
-      // a tab-to-search result was added already.
-      if (
-        state.context.heuristicResult.type != UrlbarUtils.RESULT_TYPE.URL ||
-        !state.context.heuristicResult.autofill ||
-        !state.canAddTabToSearch
-      ) {
+      // Discard the result if a tab-to-search result was added already.
+      if (!state.canAddTabToSearch) {
         return false;
       }
 
-      let autofillHostname = new URL(state.context.heuristicResult.payload.url)
-        .hostname;
-      let [autofillDomain] = UrlbarUtils.stripPrefixAndTrim(autofillHostname, {
-        stripWww: true,
-      });
-      // Strip the public suffix because we want to allow matching "domain.it"
-      // with "domain.com".
-      autofillDomain = UrlbarUtils.stripPublicSuffixFromHost(autofillDomain);
-      if (!autofillDomain) {
-        return false;
-      }
+      if (!result.payload.satisfiesAutofillThreshold) {
+        // Discard the result if the heuristic result is not autofill.
+        if (
+          state.context.heuristicResult.type != UrlbarUtils.RESULT_TYPE.URL ||
+          !state.context.heuristicResult.autofill
+        ) {
+          return false;
+        }
 
-      // For tab-to-search results, result.payload.url is the engine's domain
-      // with the public suffix already stripped, for example "www.mozilla.".
-      let [engineDomain] = UrlbarUtils.stripPrefixAndTrim(result.payload.url, {
-        stripWww: true,
-      });
-      // Discard if the engine domain does not end with the autofilled one.
-      if (!engineDomain.endsWith(autofillDomain)) {
-        return false;
+        let autofillHostname = new URL(
+          state.context.heuristicResult.payload.url
+        ).hostname;
+        let [autofillDomain] = UrlbarUtils.stripPrefixAndTrim(
+          autofillHostname,
+          {
+            stripWww: true,
+          }
+        );
+        // Strip the public suffix because we want to allow matching "domain.it"
+        // with "domain.com".
+        autofillDomain = UrlbarUtils.stripPublicSuffixFromHost(autofillDomain);
+        if (!autofillDomain) {
+          return false;
+        }
+
+        // For tab-to-search results, result.payload.url is the engine's domain
+        // with the public suffix already stripped, for example "www.mozilla.".
+        let [engineDomain] = UrlbarUtils.stripPrefixAndTrim(
+          result.payload.url,
+          {
+            stripWww: true,
+          }
+        );
+        // Discard if the engine domain does not end with the autofilled one.
+        if (!engineDomain.endsWith(autofillDomain)) {
+          return false;
+        }
       }
     }
 
