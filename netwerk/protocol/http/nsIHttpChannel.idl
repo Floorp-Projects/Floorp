@@ -501,6 +501,6 @@ interface nsIHttpChannel : nsIIdentChannel
                              in AString aContentType);
 
 %{ C++
-  virtual void SetSource(UniqueProfilerBacktrace aSource) {}
+  virtual void SetSource(mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource) {}
 %}
 };
