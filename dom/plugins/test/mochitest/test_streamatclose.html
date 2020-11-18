@@ -1,0 +1,45 @@
+<html>
+<head>
+  <title>Stream open at NPP_Destroy</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="plugin-utils.js"></script>
+  <link rel="stylesheet" type="text/css"
+	href="/tests/SimpleTest/test.css">
+
+<body onload="startTest()">
+  <script type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("untriaged");
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  var urlnotified = false;
+
+  var p = null;
+
+  function startTest() {
+    p = document.getElementById("embedtest");
+    ok(p.streamTest("neverending.sjs", false, null, null,
+                    function(r, t) {
+                      is(r, 2, "Stream should have failed");
+                      urlnotified = true;
+                    }, null, true), "neverending.sjs started successfully");
+
+    setTimeout(removePlugin, 500);
+  }
+
+  function removePlugin() {
+    document.body.removeChild(p); // Fires NPP_Destroy immediately
+    SimpleTest.executeSoon(done);
+  }
+
+  function done() {
+    ok(urlnotified, "NPP_URLNotify should be called if streams are active at NPP_Destroy");
+    SimpleTest.finish();
+  }
+
+  </script>
+
+  <p id="display"></p>
+
+  <embed id="embedtest"
+   style="width: 400px; height: 100px;" type="application/x-test"></embed>

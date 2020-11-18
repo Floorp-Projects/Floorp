@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<embed type="application/x-test" width="200" height="200"></embed>
+<script>
+var plugin = document.querySelector("embed");
+onload = function() {
+  plugin.startAudioPlayback();
+};
+
+function start_plugin() {
+  plugin.startAudioPlayback();
+}
+
+function stop_plugin() {
+  plugin.stopAudioPlayback();
+}
+
+</script>
+<button id="start" onclick="start_plugin()">Start</button>
+<button id="stop" onclick="stop_plugin()">Stop</button>

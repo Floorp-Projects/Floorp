@@ -1,0 +1,24 @@
+<head>
+  <title>NPNV*NPObject accessibility tests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+
+<body onload="runTests()">
+  <script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  function runTests() {
+    var p1 = document.getElementById("plugin1");
+    var p2 = document.getElementById("plugin2");
+
+    var o = p1.getObjectValue();
+    ok(p1.checkObjectValue(o), "Plugin objects passed to the same instance are identical.");
+    ok(!p2.checkObjectValue(o), "Plugin objects passed to another instance are double-wrapped.");
+
+    SimpleTest.finish();
+  }
+  </script>
+
+  <embed id="plugin1" type="application/x-test" width="400" height="400"></embed>
+  <embed id="plugin2" type="application/x-test" width="400" height="400"></embed>

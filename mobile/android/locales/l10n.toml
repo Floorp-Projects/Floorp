@@ -201,6 +201,10 @@ exclude-multi-locale = [
     l10n = "{l}toolkit/chrome/global/intl.css"
 
 [[paths]]
+    reference = "toolkit/locales/en-US/chrome/pluginproblem/pluginproblem.dtd"
+    l10n = "{l}toolkit/chrome/pluginproblem/pluginproblem.dtd"
+
+[[paths]]
     reference = "toolkit/locales/en-US/chrome/global/aboutSupport.dtd"
     l10n = "{l}toolkit/chrome/global/aboutSupport.dtd"
 

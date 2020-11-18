@@ -1,0 +1,27 @@
+<head>
+<title>Test for correct async delivery of large streams, bug
+532208</title>
+
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="plugin-utils.js"></script>
+
+<body onload="setTimeout(runTests, 2000)">
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+function runTests() {
+  try {
+    document.getElementById("plugin1").getPaintCount();
+    ok(true, "Data delivery didn't crash");
+  } catch (e) {
+    ok(false, "Data delivery crashed");
+  }
+  SimpleTest.finish();
+}
+</script>
+
+<embed id="plugin1" type="application/x-test" width="400"
+  height="400" src="large-pic.jpg" functiontofail="npp_write_rpc" streammode="normal"></embed>

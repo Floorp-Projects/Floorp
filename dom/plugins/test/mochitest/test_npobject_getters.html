@@ -1,0 +1,29 @@
+<head>
+  <title>NPNV*NPObject accessibility tests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+
+<body onload="runTests()">
+  <script class="testbody" type="application/javascript">
+  dump("lastScript\n");
+
+  SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  function runTests() {
+    ok(
+      document.getElementById("plugin1").pluginFoundElement,
+      "plugin1.pluginFoundElement (NPNVPluginElementNPObject) - " +
+      document.getElementById("plugin1").pluginFoundElement
+    );
+    ok(
+      window.pluginFoundWindow,
+      "window.pluginFoundWindow (NPNVWindowNPObject) - " +
+      window.pluginFoundWindow
+    );
+
+    SimpleTest.finish();
+  }
+  </script>
+
+  <embed id="plugin1" type="application/x-test" width="400" height="400"></embed>

@@ -1,0 +1,44 @@
+<head>
+  <title>Plugin crashing in nested loop</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+
+<body>
+  <script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  window.frameLoaded = function frameLoaded_toCrash() {
+    var iframe = document.getElementById("iframe1");
+    var p = iframe.contentDocument.getElementById("plugin1");
+
+    // This test is for bug 550026, which is inherently nondeterministic.
+    // If we hit that bug, the browser process would crash when the plugin
+    // crashes in crashInNestedLoop.  If not, we'll pass "spuriously".
+    try {
+      p.crashInNestedLoop();
+      // The plugin didn't crash when expected.  This happens sometimes.  Give
+      // it longer to crash.  If it crashes (but not at the apropriate time),
+      // soft fail with a todo; if it doesn't crash then something went wrong,
+      // so fail.
+      SimpleTest.requestFlakyTimeout("sometimes the plugin takes a little longer to crash");
+      setTimeout(
+        function() {
+          try {
+            p.getPaintCount();
+            ok(false, "plugin should crash");
+          } catch (e) {
+            todo(false, "p.crashInNestedLoop() should throw an exception");
+          }
+
+          SimpleTest.finish();
+        },
+        1000);
+    } catch (e) {
+      ok(true, "p.crashInNestedLoop() should throw an exception");
+      SimpleTest.finish();
+    }
+  };
+
+  </script>
+  <iframe id="iframe1" src="crashing_subpage.html" width="600" height="600"></iframe>

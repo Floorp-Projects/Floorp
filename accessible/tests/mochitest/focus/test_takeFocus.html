@@ -49,6 +49,7 @@
       gQueue.push(new takeFocusInvoker("aria-link2"));
       gQueue.push(new takeFocusInvoker("link"));
       gQueue.push(new takeFocusInvoker("item2"));
+      gQueue.push(new takeFocusInvoker("plugin"));
       gQueue.push(new takeFocusInvoker(document));
       gQueue.push(new takeFocusInvoker("lb_item2"));
       gQueue.push(new takeFocusInvoker(document));
@@ -59,8 +60,13 @@
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
+    function waitForPlugin() {
+      window.setTimeout((isAccessible("plugin") ? doTest : waitForPlugin), 0);
+    }
+
     SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(doTest);
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+    addA11yLoadEvent(waitForPlugin);
   </script>
 </head>
 
@@ -75,6 +81,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=452710"
      title="nsIAccessible::takeFocus testing">
     Mozilla Bug 452710
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=646361"
+     title="No focus event fired on document when focus is set to the document while focused in a plugin">
+    Mozilla Bug 646361
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=706067"
@@ -96,6 +107,8 @@
     <div role="option" id="item2">item2</div>
     <div role="option" id="item3">item3</div>
   </div>
+
+  <embed id="plugin" type="application/x-test" width="200" height="200" wmode="window"></embed>
 
   <select id="listbox" size="5">
     <option id="lb_item1">item1</option>

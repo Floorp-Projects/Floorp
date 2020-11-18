@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test whether we are adding the dummy plugin correctly when there is only 1 plugin and its hidden</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="plugin-utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<body>
+  <script type="application/javascript">
+  "use strict";
+  {
+    SimpleTest.waitForExplicitFinish();
+    let ph = SpecialPowers.Cc["@mozilla.org/plugin/host;1"].getService(SpecialPowers.Ci.nsIPluginHost);
+    let plugins = ph.getPluginTags();
+    let testPluginName = plugins[0].name;
+    let prefName = "plugins.navigator.hidden_ctp_plugin";
+    try {
+      SpecialPowers.getCharPref(prefName);
+    } catch (ex) {}
+    let promise = SpecialPowers.pushPrefEnv({ set: [[prefName, testPluginName]]});
+    promise.then(function() {
+      for (let i = 0; i < plugins.length; i++) {
+        let plugin = plugins[i];
+        let newState = (plugin.name == testPluginName ? SpecialPowers.Ci.nsIPluginTag.STATE_CLICKTOPLAY :
+                        SpecialPowers.Ci.nsIPluginTag.STATE_DISABLED);
+        if (plugin.enabledState != newState) {
+          let oldState = plugin.enabledState;
+          setTestPluginEnabledState(newState, plugin.name);
+          SimpleTest.registerCleanupFunction(function() {
+            if (plugin.enabledState != oldState)
+              setTestPluginEnabledState(oldState, plugin.name);
+          });
+        }
+      }
+      // we have disabled all the plugins except for 1 which is click to play and hidden. The
+      // navigator.plugins list should have only one entry and it should be the dummy plugin.
+      isnot(navigator.plugins.length, 0, "navigator.plugins should not be empty");
+      SimpleTest.finish();
+    });
+  }
+</script>
+</body>

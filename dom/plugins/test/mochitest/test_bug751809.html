@@ -1,0 +1,81 @@
+<html>
+<head>
+  <title>Bug 751809</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+  <script type="application/javascript">
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_CLICKTOPLAY);
+  </script>
+</head>
+
+<body onload="go();">
+  <embed id="plugin" type="application/x-test" width="400" height="400" drawmode="solid" color="FF00FFFF"></embed>
+
+  <script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  const utils = window.windowUtils;
+
+  function go() {
+    var plugin = document.getElementById("plugin");
+    var objLoadingContent = SpecialPowers.wrap(plugin);
+    ok(!objLoadingContent.activated, "plugin should not be activated");
+  
+    SimpleTest.waitForFocus(afterWindowFocus);
+  }
+
+  function afterWindowFocus() {
+    var plugin = document.getElementById("plugin");
+    var objLoadingContent = SpecialPowers.wrap(plugin);
+
+    objLoadingContent.playPlugin();
+    var condition = () => plugin.setColor !== undefined;
+    SimpleTest.waitForCondition(condition, afterPluginActivation,
+                                "Waited too long for plugin to activate");
+  }
+  
+  function afterPluginActivation() {
+    var plugin = document.getElementById("plugin");
+    var objLoadingContent = SpecialPowers.wrap(plugin);
+    ok(objLoadingContent.activated, "plugin should be activated now");
+
+    // Triggering a paint and waiting for it to be flushed makes sure
+    // that both plugin and platform see the plugin element as visible.
+    // See bug 805330 for details.
+    /* global waitForAllPaintsFlushed */
+    plugin.setColor("FF000088");
+    waitForAllPaintsFlushed(afterPaintsFlushed);
+  }
+
+  function afterPaintsFlushed() {
+    var plugin = document.getElementById("plugin");
+    try {
+      is(plugin.getMouseUpEventCount(), 0, "Plugin should not have received mouse events yet.");
+    } catch (e) {
+      ok(false, "plugin.getMouseUpEventCount() shouldn't throw");
+    }
+
+    synthesizeMouseAtCenter(plugin, {});
+    var condition = () => plugin.getMouseUpEventCount() > 0;
+    SimpleTest.waitForCondition(condition, afterFirstClick,
+                                "Waited too long for plugin to receive the mouse click");
+  }
+
+  function afterFirstClick() {
+    var plugin = document.getElementById("plugin");
+    try {
+      is(plugin.getMouseUpEventCount(), 1, "Plugin should have received 1 mouse up event.");
+    } catch (e) {
+      ok(false, "plugin.getMouseUpEventCount() shouldn't throw");
+    }
+
+    SimpleTest.finish();
+  }
+
+  </script>
+</body>
+</html>

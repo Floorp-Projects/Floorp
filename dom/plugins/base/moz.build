@@ -23,6 +23,7 @@ EXPORTS += [
     "nptypes.h",
     "nsJSNPRuntime.h",
     "nsNPAPIPluginInstance.h",
+    "nsPluginDirServiceProvider.h",
     "nsPluginHost.h",
     "nsPluginInstanceOwner.h",
     "nsPluginLogging.h",
@@ -39,6 +40,7 @@ UNIFIED_SOURCES += [
     "nsPluginInstanceOwner.cpp",
     "nsPluginStreamListenerPeer.cpp",
     "nsPluginTags.cpp",
+    "PluginFinder.cpp",
 ]
 
 SOURCES += [
@@ -48,6 +50,7 @@ SOURCES += [
 
 if CONFIG["OS_ARCH"] == "WINNT":
     UNIFIED_SOURCES += [
+        "nsPluginDirServiceProvider.cpp",
         "nsPluginNativeWindowWin.cpp",
         "nsPluginsDirWin.cpp",
     ]

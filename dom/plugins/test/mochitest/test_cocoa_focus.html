@@ -1,0 +1,28 @@
+<html>
+<head>
+  <title>NPCocoaEventFocusChanged Tests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body onload="runTests()">
+  <script class="testbody" type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+    var gOtherWindow;
+
+    function runTests() {
+      // We have to have two top-level windows in play in order to run these tests.
+      gOtherWindow = window.open("cocoa_focus.html", "", "width=250,height=250");
+    }
+
+    function testsFinished() {
+      // Tests have finished running, close the new window and end tests.
+      gOtherWindow.close();
+      SimpleTest.finish();
+    }
+  </script>
+</body>
+</html>

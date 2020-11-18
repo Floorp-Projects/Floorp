@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=539565
+-->
+<head>
+  <title>Test #2 for Bug 539565</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script class="testbody" type="text/javascript">
+function runTests() {
+  var moveBy = 17;
+  var waitedForPaint = 0;
+  function waitForPaint(func) {
+    waitedForPaint = 0;
+    var testplugin = $("plugin1");
+    testplugin.last_paint_count = testplugin.getPaintCount ? testplugin.getPaintCount() : -2;
+    function waitForPaintCountIncrement() {
+      waitedForPaint++;
+      moveBy = -moveBy;
+      $("abs").style.left = ($("abs").offsetLeft + moveBy) + "px";
+      document.documentElement.offsetHeight;
+      var pc = testplugin.getPaintCount ? testplugin.getPaintCount() : -2;
+      if (waitedForPaint == 20 || (pc != testplugin.last_paint_count && pc >= 0)) {
+        setTimeout(func, 0);
+      } else {
+        setTimeout(waitForPaintCountIncrement, 50);
+      }
+    }
+    waitForPaintCountIncrement();
+  }
+
+  function doClick(x, y, func) {
+    synthesizeMouse($("plugin1"), x, y, {}, window);
+    setTimeout(func, 0);
+  }
+
+  function verify(test, x, y, next) {
+    var p = $("plugin1").getLastMouseX();
+    const delta = 2;
+    var dpr = window.devicePixelRatio / SpecialPowers.getFullZoom(window);
+    ok(p - delta <= x * dpr && x * dpr <= p + delta, "test" + test + " LastMouseX got " + p + " expected " + x +
+                                     " with fullZoom=" + SpecialPowers.getFullZoom(window) + " MozTransform='" + $("container").style.MozTransform + "'");
+    p = $("plugin1").getLastMouseY();
+    ok(p - delta <= y * dpr && y * dpr <= p + delta, "test" + test + " LastMouseY got " + p + " expected " + y +
+                                     " with fullZoom=" + SpecialPowers.getFullZoom(window) + " MozTransform='" + $("container").style.MozTransform + "'");
+    if (next) next();
+  }
+
+  function click(x, y, next) {
+    waitForPaint(function() { doClick(x, y, next); });
+  }
+  function zoom(factor) {
+    SpecialPowers.setFullZoom(window, factor);
+  }
+
+  function test3() { // fullZoom=1 + scale(2)
+    zoom(1);
+    //
+    // ======================== BUG WARNING =========================================
+    // 'container' already has -moz-transform:scale(2) in its style attribute.
+    // Removing that and setting MozTransform dynamically here (as in test4)
+    // makes the test fail ("getLastMouseX is not a function" in verify() above)
+    // Looks like the plugin instance got destroyed and we never recover from that...
+    // ==============================================================================
+    //
+    click(50, 136, function() { verify("3", 25, 68, test3b); });
+  }
+  function test3b() {
+    click(208, 212, function() { verify("3b", 104, 106, test4); });
+  }
+  function test4() { // fullZoom=2 + scale(0.5)
+    zoom(2);
+    var container = $("container");
+    container.style.MozTransformOrigin = "0px 0px";
+    container.style.MozTransform = "scale(0.5)";
+    document.documentElement.offsetHeight;
+    click(60, 52, function() { verify("4", 240, 208, test5); });
+  }
+  function test5() { // fullZoom=2 + scale(2)
+    zoom(2);
+    var container = $("container");
+    container.style.MozTransformOrigin = "0px 0px";
+    container.style.MozTransform = "scale(2)";
+    document.documentElement.offsetHeight;
+    click(108, 112, function() { verify("5", 108, 112, endTest); });
+  }
+
+  function endTest() {
+    zoom(1);
+    SimpleTest.finish();
+  }
+
+  setTimeout(function() { waitForPaint(test3); }, 1000);
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  </script>
+</head>
+
+<body onload="runTests()">
+ <div id="container" style="position:relative;top: 0px; left: 0px; width: 640px; height: 480px; -moz-transform:scale(2); -moz-transform-origin:0px 0px;"> 
+  <div id="abs" style="position:absolute; left:90px; top:90px; width:20px; height:20px; background:blue; pointer-events:none;"></div>
+  <embed id="plugin1" type="application/x-test" wmode="transparent" width="200" height="200"></embed>
+ </div>
+</body>
+</html>

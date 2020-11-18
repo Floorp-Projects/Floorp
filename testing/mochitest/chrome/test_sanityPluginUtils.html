@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="text/javascript">
+  var start = new Date();
+  </script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript">
+  var loadTime = new Date();
+  </script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body onload="starttest()">
+<!-- load the test plugin defined at $(DIST)/bin/plugins/Test.plugin/ -->
+<embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
+<script class="testbody" type="text/javascript">
+info("\nProfile::PluginUtilsLoadTime: " + (loadTime - start) + "\n");
+function starttest() {
+  SimpleTest.waitForExplicitFinish();
+  var startTime = new Date();
+  // increase the runtime of the test so it is detectible, otherwise we get 0-1ms
+  let runtimes = 100;
+  function runTest(plugin) {
+    is(plugin.version, "1.0.0.0", "Make sure version is correct");
+    is(plugin.name, "Test Plug-in");
+  }
+  while (runtimes > 0) {
+    ok(PluginUtils.withTestPlugin(runTest), "Test plugin should be found");
+    --runtimes;
+  }
+  var endTime = new Date();
+  info("\nProfile::PluginUtilsRunTime: " + (endTime - startTime) + "\n");
+  SimpleTest.finish();
+}
+</script>
+</body>
+</html>
