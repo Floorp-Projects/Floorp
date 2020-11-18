@@ -808,19 +808,6 @@ this.PluginBlocklistRS = {
   },
 
   _showBlockedPluginsPrompt(blockedPlugins) {
-    if ("@mozilla.org/addons/blocklist-prompt;1" in Cc) {
-      try {
-        let blockedPrompter = Cc[
-          "@mozilla.org/addons/blocklist-prompt;1"
-        ].getService().wrappedJSObject;
-        blockedPrompter.prompt(blockedPlugins);
-      } catch (e) {
-        LOG(e);
-      }
-      this._notifyUpdate();
-      return;
-    }
-
     let args = {
       restart: false,
       list: blockedPlugins,
