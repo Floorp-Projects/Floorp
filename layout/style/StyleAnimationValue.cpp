@@ -143,7 +143,7 @@ Size AnimationValue::GetScaleValue(const nsIFrame* aFrame) const {
   if (!canDraw2D) {
     return Size();
   }
-  return transform2d.ScaleFactors(true);
+  return transform2d.ScaleFactors();
 }
 
 void AnimationValue::SerializeSpecifiedValue(nsCSSPropertyID aProperty,

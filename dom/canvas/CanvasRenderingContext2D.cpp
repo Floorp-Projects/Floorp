@@ -4524,7 +4524,7 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
   // the image. Nearest sampling when down-scaling is rarely desirable and
   // smoothing when down-scaling matches chromium's behavior.
   // If any dimension is up-scaled, we consider the image as being up-scaled.
-  auto scale = mTarget->GetTransform().ScaleFactors(true);
+  auto scale = mTarget->GetTransform().ScaleFactors();
   bool isDownScale =
       aDw * Abs(scale.width) < aSw && aDh * Abs(scale.height) < aSh;
 
@@ -4605,7 +4605,7 @@ void CanvasRenderingContext2D::DrawDirectlyToCanvas(
   // for context shadow.
   Matrix matrix = tempTarget->GetTransform();
   gfxMatrix contextMatrix = ThebesMatrix(matrix);
-  gfxSize contextScale(contextMatrix.ScaleFactors(true));
+  gfxSize contextScale(contextMatrix.ScaleFactors());
 
   // Scale the dest rect to include the context scale.
   aDest.Scale(contextScale.width, contextScale.height);

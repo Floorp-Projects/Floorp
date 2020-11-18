@@ -2050,7 +2050,7 @@ gfxSize nsLayoutUtils::GetTransformToAncestorScale(nsIFrame* aFrame) {
       RelativeTo{nsLayoutUtils::GetDisplayRootFrame(aFrame)});
   Matrix transform2D;
   if (transform.Is2D(&transform2D)) {
-    return ThebesMatrix(transform2D).ScaleFactors(true);
+    return ThebesMatrix(transform2D).ScaleFactors();
   }
   return gfxSize(1, 1);
 }
@@ -2086,7 +2086,7 @@ gfxSize nsLayoutUtils::GetTransformToAncestorScaleExcludingAnimated(
       aFrame, nsLayoutUtils::GetDisplayRootFrame(aFrame));
   Matrix transform2D;
   if (transform.Is2D(&transform2D)) {
-    return ThebesMatrix(transform2D).ScaleFactors(true);
+    return ThebesMatrix(transform2D).ScaleFactors();
   }
   return gfxSize(1, 1);
 }
@@ -6005,7 +6005,7 @@ static SnappedImageDrawingParameters ComputeSnappedImageDrawingParameters(
   // scale and has integer coordinates. If not, we need these properties to
   // compute the optimal drawn image size, so compute |snappedDestSize| here.
   gfxSize snappedDestSize = dest.Size();
-  gfxSize scaleFactors = currentMatrix.ScaleFactors(true);
+  gfxSize scaleFactors = currentMatrix.ScaleFactors();
   if (!didSnap) {
     snappedDestSize.Scale(scaleFactors.width, scaleFactors.height);
     snappedDestSize.width = NS_round(snappedDestSize.width);
@@ -6096,7 +6096,7 @@ static SnappedImageDrawingParameters ComputeSnappedImageDrawingParameters(
     // follow the pattern that we take |currentMatrix| into account only if
     // |didSnap| is true.
     gfxSize unsnappedDestSize =
-        didSnap ? devPixelDest.Size() * currentMatrix.ScaleFactors(true)
+        didSnap ? devPixelDest.Size() * currentMatrix.ScaleFactors()
                 : devPixelDest.Size();
 
     gfxRect anchoredDestRect(anchorPoint, unsnappedDestSize);
@@ -8972,7 +8972,7 @@ static nsSize ComputeMaxSizeForPartialPrerender(nsIFrame* aFrame,
   }
 
   gfx::Rect result(0, 0, aMaxSize.width, aMaxSize.height);
-  gfx::Size scale = transform2D.ScaleFactors(true);
+  gfx::Size scale = transform2D.ScaleFactors();
   if (scale.width != 0 && scale.height != 0) {
     result.width /= scale.width;
     result.height /= scale.height;
@@ -9515,8 +9515,7 @@ bool nsLayoutUtils::FrameIsMostlyScrolledOutOfViewInCrossProcess(
   MOZ_ASSERT(browserChild);
 
   Size scale =
-      browserChild->GetChildToParentConversionMatrix().As2D().ScaleFactors(
-          true);
+      browserChild->GetChildToParentConversionMatrix().As2D().ScaleFactors();
   ScreenSize margin(scale.width * CSSPixel::FromAppUnits(aMargin),
                     scale.height * CSSPixel::FromAppUnits(aMargin));
 
