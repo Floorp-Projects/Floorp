@@ -428,8 +428,8 @@ class nsTextFrame : public nsIFrame {
       TrailingWhitespace aTrimTrailingWhitespace =
           TrailingWhitespace::Trim) final;
 
-  nsOverflowAreas RecomputeOverflow(nsIFrame* aBlockFrame,
-                                    bool aIncludeShadows = true);
+  mozilla::OverflowAreas RecomputeOverflow(nsIFrame* aBlockFrame,
+                                           bool aIncludeShadows = true);
 
   enum TextRunType : uint8_t {
     // Anything in reflow (but not intrinsic width calculation) or
@@ -751,8 +751,8 @@ class nsTextFrame : public nsIFrame {
 
   bool IsInitialLetterChild() const;
 
-  bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) final;
-  bool ComputeCustomOverflowInternal(nsOverflowAreas& aOverflowAreas,
+  bool ComputeCustomOverflow(mozilla::OverflowAreas& aOverflowAreas) final;
+  bool ComputeCustomOverflowInternal(mozilla::OverflowAreas& aOverflowAreas,
                                      bool aIncludeShadows);
 
   void AssignJustificationGaps(const mozilla::JustificationAssignment& aAssign);

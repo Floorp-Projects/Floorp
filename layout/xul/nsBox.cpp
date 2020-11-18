@@ -285,7 +285,7 @@ nsresult nsIFrame::SyncXULLayout(nsBoxLayoutState& aBoxLayoutState) {
     inkOverflow = InkOverflowRect();
   } else {
     nsRect rect(nsPoint(0, 0), GetSize());
-    nsOverflowAreas overflowAreas(rect, rect);
+    OverflowAreas overflowAreas(rect, rect);
     if (!DoesClipChildrenInBothAxes() && !IsXULCollapsed()) {
       // See if our child frames caused us to overflow after being laid
       // out. If so, store the overflow area.  This normally can't happen

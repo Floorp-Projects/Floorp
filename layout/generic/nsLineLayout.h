@@ -113,7 +113,7 @@ class nsLineLayout {
    * combined area (== overflow area) for the line, and handle view
    * sizing/positioning and the setting of the overflow rect.
    */
-  void RelativePositionFrames(nsOverflowAreas& aOverflowAreas) {
+  void RelativePositionFrames(mozilla::OverflowAreas& aOverflowAreas) {
     RelativePositionFrames(mRootSpan, aOverflowAreas);
   }
 
@@ -402,7 +402,7 @@ class nsLineLayout {
     // When setting frame coordinates, we have to convert to the frame's
     //  writing mode
     mozilla::LogicalRect mBounds;
-    nsOverflowAreas mOverflowAreas;
+    mozilla::OverflowAreas mOverflowAreas;
 
     // From reflow-state
     mozilla::LogicalMargin mMargin;         // in *line* writing mode
@@ -640,10 +640,10 @@ class nsLineLayout {
   void ApplyRelativePositioning(PerFrameData* aPFD);
 
   void RelativePositionAnnotations(PerSpanData* aRubyPSD,
-                                   nsOverflowAreas& aOverflowAreas);
+                                   mozilla::OverflowAreas& aOverflowAreas);
 
   void RelativePositionFrames(PerSpanData* psd,
-                              nsOverflowAreas& aOverflowAreas);
+                              mozilla::OverflowAreas& aOverflowAreas);
 
   bool TrimTrailingWhiteSpaceIn(PerSpanData* psd, nscoord* aDeltaISize);
 

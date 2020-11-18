@@ -3369,7 +3369,7 @@ void SVGTextFrame::ReflowSVG() {
                   NS_FRAME_HAS_DIRTY_CHILDREN);
 
   nsRect overflow = nsRect(nsPoint(0, 0), mRect.Size());
-  nsOverflowAreas overflowAreas(overflow, overflow);
+  OverflowAreas overflowAreas(overflow, overflow);
   FinishAndStoreOverflow(overflowAreas, mRect.Size());
 
   // XXX SVGContainerFrame::ReflowSVG only looks at its ISVGDisplayableFrame

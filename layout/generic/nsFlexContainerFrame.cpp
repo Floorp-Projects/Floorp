@@ -4480,7 +4480,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   }
 
   const auto* prevInFlow = static_cast<nsFlexContainerFrame*>(GetPrevInFlow());
-  nsOverflowAreas ocBounds;
+  OverflowAreas ocBounds;
   nsReflowStatus ocStatus;
   nscoord sumOfChildrenBlockSize;
   if (prevInFlow) {

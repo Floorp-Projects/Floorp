@@ -525,7 +525,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
   }
 
   nsRect contentRect(0, 0, 0, 0);
-  nsOverflowAreas overflowRects;
+  OverflowAreas overflowRects;
 
   nsIFrame* child = mFrames.FirstChild();
   LogicalPoint childOrigin(wm, 0, 0);
@@ -918,7 +918,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
   if ((wm.IsVerticalRL() || isRTL) &&
       containerSize.width != contentSize.Width(wm)) {
     const nsSize finalContainerSize = aDesiredSize.PhysicalSize();
-    nsOverflowAreas overflowRects;
+    OverflowAreas overflowRects;
     for (nsIFrame* child : mFrames) {
       // Get the logical position as set previously using a provisional or
       // dummy containerSize, and reset with the correct container size.

@@ -365,7 +365,7 @@ void SVGForeignObjectFrame::ReflowSVG() {
   auto* anonKid = PrincipalChildList().FirstChild();
   nsRect overflow = anonKid->InkOverflowRect();
 
-  nsOverflowAreas overflowAreas(overflow, overflow);
+  OverflowAreas overflowAreas(overflow, overflow);
   FinishAndStoreOverflow(overflowAreas, mRect.Size());
 
   // Now unset the various reflow bits:

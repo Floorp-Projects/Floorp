@@ -453,7 +453,7 @@ bool nsLineBox::SetCarriedOutBEndMargin(nsCollapsingMargin aValue) {
 
 void nsLineBox::MaybeFreeData() {
   nsRect bounds = GetPhysicalBounds();
-  if (mData && mData->mOverflowAreas == nsOverflowAreas(bounds, bounds)) {
+  if (mData && mData->mOverflowAreas == OverflowAreas(bounds, bounds)) {
     if (IsInline()) {
       if (mInlineData->mFloats.IsEmpty()) {
         delete mInlineData;
@@ -528,7 +528,7 @@ void nsLineBox::ClearFloatEdges() {
   }
 }
 
-void nsLineBox::SetOverflowAreas(const nsOverflowAreas& aOverflowAreas) {
+void nsLineBox::SetOverflowAreas(const OverflowAreas& aOverflowAreas) {
 #ifdef DEBUG
   for (const auto otype : mozilla::AllOverflowTypes()) {
     NS_ASSERTION(aOverflowAreas.Overflow(otype).width >= 0,
