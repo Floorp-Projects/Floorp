@@ -1,0 +1,18 @@
+.customize-menu {
+  background-color: $white;
+  width: 432px;
+  height: 100%;
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1001;
+  box-shadow: 0 0 64px $customize-menu-first-shadow, 0 0 24px $customize-menu-second-shadow;
+
+  .close-button {
+    margin-inline-end: 25px;
+    display: block;
+    margin-block: 20px 0;
+    box-shadow: none !important; // sass-lint:disable-line no-important
+  }
+}

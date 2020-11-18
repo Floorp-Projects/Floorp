@@ -1364,6 +1364,10 @@ pref("browser.newtab.preload", true);
 // Preference to enable the entire new newtab experience at once.
 pref("browser.newtabpage.activity-stream.newNewtabExperience.enabled", false);
 
+// A preference which allows us to enable the fly out customization overlay
+// on the newtab page.
+pref("browser.newtabpage.activity-stream.customizationMenu.enabled", false);
+
 // Activity Stream prefs that control to which page to redirect
 #ifndef RELEASE_OR_BETA
   pref("browser.newtabpage.activity-stream.debug", false);

@@ -164,6 +164,18 @@ module.exports = function(config) {
               functions: 0,
               branches: 0,
             },
+            "content-src/components/CustomizeMenu/**/*.jsx": {
+              statements: 0,
+              lines: 0,
+              functions: 0,
+              branches: 0,
+            },
+            "content-src/components/CustomizeMenu/*.jsx": {
+              statements: 0,
+              lines: 0,
+              functions: 0,
+              branches: 0,
+            },
             "content-src/lib/aboutwelcome-utils.js": {
               statements: 50,
               lines: 50,
