@@ -143,9 +143,6 @@ bool TypedArrayObject::ensureHasBuffer(JSContext* cx,
 
   tarray->setFixedSlot(TypedArrayObject::BUFFER_SLOT, ObjectValue(*buffer));
 
-  // Notify compiled jit code that the base pointer has moved.
-  MarkObjectStateChange(cx, tarray);
-
   return true;
 }
 
@@ -413,12 +410,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     if (group) {
       MOZ_ASSERT(group->clasp() == instanceClass());
       NewObjectKind newKind = GenericObject;
-      {
-        AutoSweepObjectGroup sweep(group);
-        if (group->shouldPreTenure(sweep)) {
-          newKind = TenuredObject;
-        }
-      }
       return NewObjectWithGroup<TypedArrayObject>(cx, group, allocKind,
                                                   newKind);
     }

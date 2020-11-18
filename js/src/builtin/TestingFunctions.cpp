@@ -5960,28 +5960,6 @@ static bool GlobalLexicals(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool MarkObjectPropertiesUnknown(JSContext* cx, unsigned argc,
-                                        Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject callee(cx, &args.callee());
-
-  if (!args.get(0).isObject()) {
-    ReportUsageErrorASCII(cx, callee, "Argument must be an object");
-    return false;
-  }
-
-  RootedObject obj(cx, &args[0].toObject());
-  RootedObjectGroup group(cx, JSObject::getGroup(cx, obj));
-  if (!group) {
-    return false;
-  }
-
-  MarkObjectGroupUnknownProperties(cx, group);
-
-  args.rval().setUndefined();
-  return true;
-}
-
 static bool EncodeAsUtf8InBuffer(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, "encodeAsUtf8InBuffer", 2)) {
@@ -7217,10 +7195,6 @@ gc::ZealModeHelpText),
 "    baselineCompile();  for (var i=0; i<1; i++) {} ...\n"
 "  The interpreter will enter the new jitcode at the loop header unless\n"
 "  baselineCompile returned a string or threw an error.\n"),
-
-    JS_FN_HELP("markObjectPropertiesUnknown", MarkObjectPropertiesUnknown, 1, 0,
-"markObjectPropertiesUnknown(obj)",
-"  Mark all objects in obj's object group as having unknown properties.\n"),
 
     JS_FN_HELP("encodeAsUtf8InBuffer", EncodeAsUtf8InBuffer, 2, 0,
 "encodeAsUtf8InBuffer(str, uint8Array)",

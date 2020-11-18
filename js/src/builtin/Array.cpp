@@ -3382,11 +3382,6 @@ static JSObject* SliceArguments(JSContext* cx, Handle<ArgumentsObject*> argsobj,
   }
   result->setDenseInitializedLength(count);
 
-  MOZ_ASSERT(result->group()->unknownPropertiesDontCheckGeneration(),
-             "The default array group has unknown properties, so we can "
-             "directly initialize the"
-             "dense elements without needing to update the indexed type set.");
-
   for (uint32_t index = 0; index < count; index++) {
     const Value& v = argsobj->element(begin + index);
     result->initDenseElement(index, v);
@@ -4166,13 +4161,6 @@ static inline ArrayObject* NewArrayTryUseGroup(
     JSContext* cx, HandleObjectGroup group, size_t length,
     NewObjectKind newKind = GenericObject) {
   MOZ_ASSERT(newKind != SingletonObject);
-
-  {
-    AutoSweepObjectGroup sweep(group);
-    if (group->shouldPreTenure(sweep)) {
-      newKind = TenuredObject;
-    }
-  }
 
   RootedObject proto(cx, group->proto().toObject());
   ArrayObject* res = NewArray<maxLength>(cx, length, proto, newKind);

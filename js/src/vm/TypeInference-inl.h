@@ -194,25 +194,6 @@ MOZ_ALWAYS_INLINE void AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id,
   MOZ_CRASH("TODO(no-TI): remove");
 }
 
-inline void MarkObjectGroupFlags(JSContext* cx, JSObject* obj,
-                                 ObjectGroupFlags flags) {
-  if (obj->hasLazyGroup()) {
-    return;
-  }
-
-  AutoSweepObjectGroup sweep(obj->group());
-  if (!obj->group()->hasAllFlags(sweep, flags)) {
-    obj->group()->setFlags(sweep, cx, flags);
-  }
-}
-
-inline void MarkObjectGroupUnknownProperties(JSContext* cx, ObjectGroup* obj) {
-  AutoSweepObjectGroup sweep(obj);
-  if (!obj->unknownProperties(sweep)) {
-    obj->markUnknown(sweep, cx);
-  }
-}
-
 inline void MarkTypePropertyNonData(JSContext* cx, JSObject* obj, jsid id) {
   if (!IsTypeInferenceEnabled()) {
     return;
@@ -225,18 +206,6 @@ inline void MarkTypePropertyNonWritable(JSContext* cx, JSObject* obj, jsid id) {
     return;
   }
   MOZ_CRASH("TODO(no-TI): remove");
-}
-
-/* Mark a state change on a particular object. */
-inline void MarkObjectStateChange(JSContext* cx, JSObject* obj) {
-  if (obj->hasLazyGroup()) {
-    return;
-  }
-
-  AutoSweepObjectGroup sweep(obj->group());
-  if (!obj->group()->unknownProperties(sweep)) {
-    obj->group()->markStateChange(sweep, cx);
-  }
 }
 
 /////////////////////////////////////////////////////////////////////

@@ -1525,12 +1525,7 @@ JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
     return arrRes;
   }
 
-  NewObjectKind newKind;
-  {
-    AutoSweepObjectGroup sweep(templateObj->group());
-    newKind = templateObj->group()->shouldPreTenure(sweep) ? TenuredObject
-                                                           : GenericObject;
-  }
+  NewObjectKind newKind = GenericObject;
   ArrayObject* arrRes = NewDenseCopiedArray(cx, length, rest, nullptr, newKind);
   if (arrRes) {
     arrRes->setGroup(templateObj->group());

@@ -5360,13 +5360,6 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
     if (!group) {
       return nullptr;
     }
-
-    {
-      AutoSweepObjectGroup sweep(group);
-      if (group->shouldPreTenure(sweep)) {
-        newKind = TenuredObject;
-      }
-    }
   }
 
   RootedPlainObject obj(cx);
@@ -5397,13 +5390,7 @@ JSObject* js::NewObjectOperationWithTemplate(JSContext* cx,
   MOZ_ASSERT(!templateObject->isSingleton());
   MOZ_ASSERT(cx->realm() == templateObject->nonCCWRealm());
 
-  NewObjectKind newKind;
-  {
-    ObjectGroup* group = templateObject->group();
-    AutoSweepObjectGroup sweep(group);
-    newKind = group->shouldPreTenure(sweep) ? TenuredObject : GenericObject;
-  }
-
+  NewObjectKind newKind = GenericObject;
   JSObject* obj =
       CopyInitializerObject(cx, templateObject.as<PlainObject>(), newKind);
   if (!obj) {
@@ -5438,13 +5425,7 @@ ArrayObject* js::NewArrayOperationWithTemplate(JSContext* cx,
                                                HandleObject templateObject) {
   MOZ_ASSERT(!templateObject->isSingleton());
 
-  NewObjectKind newKind;
-  {
-    AutoSweepObjectGroup sweep(templateObject->group());
-    newKind = templateObject->group()->shouldPreTenure(sweep) ? TenuredObject
-                                                              : GenericObject;
-  }
-
+  NewObjectKind newKind = GenericObject;
   ArrayObject* obj = NewDenseFullyAllocatedArray(
       cx, templateObject->as<ArrayObject>().length(), nullptr, newKind);
   if (!obj) {

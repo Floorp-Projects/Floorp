@@ -20,61 +20,6 @@ inline bool ObjectGroup::needsSweep() {
   return generation() != zoneFromAnyThread()->types.generation;
 }
 
-inline ObjectGroupFlags ObjectGroup::flags(const AutoSweepObjectGroup& sweep) {
-  MOZ_ASSERT(sweep.group() == this);
-  return flagsDontCheckGeneration();
-}
-
-inline void ObjectGroup::addFlags(const AutoSweepObjectGroup& sweep,
-                                  ObjectGroupFlags flags) {
-  MOZ_ASSERT(sweep.group() == this);
-  flags_ |= flags;
-}
-
-inline void ObjectGroup::clearFlags(const AutoSweepObjectGroup& sweep,
-                                    ObjectGroupFlags flags) {
-  MOZ_ASSERT(sweep.group() == this);
-  flags_ &= ~flags;
-}
-
-inline bool ObjectGroup::hasAnyFlags(const AutoSweepObjectGroup& sweep,
-                                     ObjectGroupFlags flags) {
-  MOZ_ASSERT((flags & OBJECT_FLAG_DYNAMIC_MASK) == flags);
-  return !!(this->flags(sweep) & flags);
-}
-
-inline bool ObjectGroup::hasAllFlags(const AutoSweepObjectGroup& sweep,
-                                     ObjectGroupFlags flags) {
-  MOZ_ASSERT((flags & OBJECT_FLAG_DYNAMIC_MASK) == flags);
-  return (this->flags(sweep) & flags) == flags;
-}
-
-inline bool ObjectGroup::unknownProperties(const AutoSweepObjectGroup& sweep) {
-  MOZ_ASSERT_IF(flags(sweep) & OBJECT_FLAG_UNKNOWN_PROPERTIES,
-                hasAllFlags(sweep, OBJECT_FLAG_DYNAMIC_MASK));
-  return !!(flags(sweep) & OBJECT_FLAG_UNKNOWN_PROPERTIES);
-}
-
-inline bool ObjectGroup::shouldPreTenure(const AutoSweepObjectGroup& sweep) {
-  MOZ_ASSERT(sweep.group() == this);
-  return shouldPreTenureDontCheckGeneration();
-}
-
-inline bool ObjectGroup::shouldPreTenureDontCheckGeneration() {
-  return hasAnyFlagsDontCheckGeneration(OBJECT_FLAG_PRE_TENURE) &&
-         !unknownPropertiesDontCheckGeneration();
-}
-
-inline bool ObjectGroup::canPreTenure(const AutoSweepObjectGroup& sweep) {
-  return !unknownProperties(sweep);
-}
-
-inline void ObjectGroup::setShouldPreTenure(const AutoSweepObjectGroup& sweep,
-                                            JSContext* cx) {
-  MOZ_ASSERT(canPreTenure(sweep));
-  setFlags(sweep, cx, OBJECT_FLAG_PRE_TENURE);
-}
-
 /* static */ inline ObjectGroup* ObjectGroup::lazySingletonGroup(
     JSContext* cx, ObjectGroup* oldGroup, const JSClass* clasp,
     TaggedProto proto) {

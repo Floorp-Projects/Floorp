@@ -128,15 +128,6 @@ void js::EnsureTrackPropertyTypes(JSContext* cx, JSObject* obj, jsid id) {
   MOZ_CRASH("TODO(no-TI): remove");
 }
 
-static void ObjectStateChange(const AutoSweepObjectGroup& sweep, JSContext* cx,
-                              ObjectGroup* group, bool markingUnknown) {
-  if (group->unknownProperties(sweep)) {
-    return;
-  }
-
-  MOZ_CRASH("TODO(no-TI): remove");
-}
-
 bool js::ClassCanHaveExtraProperties(const JSClass* clasp) {
   return clasp->getResolve() || clasp->getOpsLookupProperty() ||
          clasp->getOpsGetProperty() || IsTypedArrayClass(clasp);
@@ -227,43 +218,6 @@ void js::PrintTypes(JSContext* cx, Compartment* comp, bool force) {
 void js::AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj,
                            jsid id, const Value& value) {
   MOZ_CRASH("TODO(no-TI): remove");
-}
-
-void ObjectGroup::markStateChange(const AutoSweepObjectGroup& sweep,
-                                  JSContext* cx) {
-  MOZ_ASSERT(cx->compartment() == compartment());
-
-  if (unknownProperties(sweep)) {
-    return;
-  }
-
-  MOZ_CRASH("TODO(no-TI): remove");
-}
-
-void ObjectGroup::setFlags(const AutoSweepObjectGroup& sweep, JSContext* cx,
-                           ObjectGroupFlags flags) {
-  MOZ_ASSERT(!(flags & OBJECT_FLAG_UNKNOWN_PROPERTIES),
-             "Should use markUnknown to set unknownProperties");
-
-  if (hasAllFlags(sweep, flags)) {
-    return;
-  }
-
-  AutoEnterAnalysis enter(cx);
-
-  addFlags(sweep, flags);
-
-  ObjectStateChange(sweep, cx, this, false);
-}
-
-void ObjectGroup::markUnknown(const AutoSweepObjectGroup& sweep,
-                              JSContext* cx) {
-  AutoEnterAnalysis enter(cx);
-
-  MOZ_ASSERT(cx->zone()->types.activeAnalysis);
-  MOZ_ASSERT(!unknownProperties(sweep));
-
-  ObjectStateChange(sweep, cx, this, true);
 }
 
 void ObjectGroup::print(const AutoSweepObjectGroup& sweep) {
