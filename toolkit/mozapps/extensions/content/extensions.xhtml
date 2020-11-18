@@ -19,21 +19,5 @@
   <script src="chrome://mozapps/content/extensions/aboutaddonsCommon.js"/>
   <script src="chrome://mozapps/content/extensions/extensions.js"/>
 
-  <stack id="main-page-stack" flex="1">
-  <hbox id="main-page-content" flex="1">
-    <vbox flex="1">
-      <!-- view port -->
-      <deck id="view-port" flex="1" selectedIndex="0">
-        <!-- container for views with the search/tools header -->
-        <vbox id="headered-views" flex="1">
-          <deck id="headered-views-content" flex="1" selectedIndex="0">
-            <vbox id="html-view" flex="1">
-              <browser id="html-view-browser" type="content" flex="1" disablehistory="true"/>
-            </vbox>
-          </deck>
-        </vbox>
-      </deck>
-    </vbox>
-  </hbox>
-  </stack>
+  <browser id="html-view-browser" type="content" flex="1" disablehistory="true"/>
 </window>
