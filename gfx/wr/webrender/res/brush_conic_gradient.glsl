@@ -10,7 +10,7 @@ flat varying HIGHP_FS_ADDRESS int  v_gradient_address;
 
 flat varying vec2 v_center;
 flat varying float v_start_offset;
-flat varying float v_offset_scale;
+flat varying float v_end_offset;
 flat varying float v_angle;
 
 // Size of the gradient pattern's rectangle, used to compute horizontal and vertical
@@ -73,21 +73,12 @@ void brush_vs(
     }
 
     v_center = gradient.center_point;
-    v_angle = PI / 2.0 - gradient.angle;
+    v_angle = gradient.angle;
     v_start_offset = gradient.start_end_offset.x;
-    if (gradient.start_end_offset.x != gradient.start_end_offset.y) {
-      // Store 1/scale where scale = end_offset - start_offset
-      v_offset_scale = 1.0 / (gradient.start_end_offset.y - gradient.start_end_offset.x);
-    } else {
-      // If scale = 0, we can't get its reciprocal. Instead, just use a zero scale.
-      v_offset_scale = 0.0;
-    }
+    v_end_offset = gradient.start_end_offset.y;
 
     vec2 tile_repeat = local_rect.size / gradient.stretch_size;
     v_repeated_size = gradient.stretch_size;
-
-    // Normalize UV to 0..1 scale.
-    v_pos /= v_repeated_size;
 
     v_gradient_address = prim_user_data.x;
 
@@ -109,27 +100,25 @@ Fragment brush_fs() {
     vec2 local_pos = max(v_pos, vec2(0.0));
 
     // Apply potential horizontal and vertical repetitions.
-    vec2 pos = fract(local_pos);
+    vec2 pos = mod(local_pos, v_repeated_size);
 
+    vec2 prim_size = v_repeated_size * v_tile_repeat;
     // Handle bottom and right inflated edges (see brush_image).
-    if (local_pos.x >= v_tile_repeat.x) {
-        pos.x = 1.0;
+    if (local_pos.x >= prim_size.x) {
+        pos.x = v_repeated_size.x;
     }
-    if (local_pos.y >= v_tile_repeat.y) {
-        pos.y = 1.0;
+    if (local_pos.y >= prim_size.y) {
+        pos.y = v_repeated_size.y;
     }
 #else
     // Apply potential horizontal and vertical repetitions.
-    vec2 pos = fract(v_pos);
+    vec2 pos = mod(v_pos, v_repeated_size);
 #endif
 
-    // Rescale UV to actual repetition size. This can't be done in the vertex
-    // shader due to the use of atan() below.
-    pos *= v_repeated_size;
-
     vec2 current_dir = pos - v_center;
-    float current_angle = atan(current_dir.y, current_dir.x) + v_angle;
-    float offset = (fract(current_angle / (2.0 * PI)) - v_start_offset) * v_offset_scale;
+    float current_angle = atan(current_dir.y, current_dir.x) + (PI / 2.0 - v_angle);
+    float offset = mod(current_angle / (2.0 * PI), 1.0) - v_start_offset;
+    offset = offset / (v_end_offset - v_start_offset);
 
     vec4 color = sample_gradient(v_gradient_address,
                                  offset,
