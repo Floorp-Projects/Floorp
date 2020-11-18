@@ -212,17 +212,6 @@ const char* js::InferSpewColorReset() {
   return "\x1b[0m";
 }
 
-const char* js::InferSpewColor(TypeConstraint* constraint) {
-  /* Type constraints are printed out using foreground colors. */
-  static const char* const colors[] = {"\x1b[31m", "\x1b[32m", "\x1b[33m",
-                                       "\x1b[34m", "\x1b[35m", "\x1b[36m",
-                                       "\x1b[37m"};
-  if (!InferSpewColorable()) {
-    return "";
-  }
-  return colors[DefaultHasher<TypeConstraint*>::hash(constraint) % 7];
-}
-
 const char* js::InferSpewColor(TypeSet* types) {
   /* Type sets are printed out using bold colors. */
   static const char* const colors[] = {"\x1b[1;31m", "\x1b[1;32m", "\x1b[1;33m",
@@ -472,56 +461,11 @@ bool TypeSet::enumerateTypes(TypeList* list) const {
   return true;
 }
 
-inline bool TypeSet::addTypesToConstraint(JSContext* cx,
-                                          TypeConstraint* constraint) {
-  /*
-   * Build all types in the set into a vector before triggering the
-   * constraint, as doing so may modify this type set.
-   */
-  TypeList types;
-  if (!enumerateTypes(&types)) {
-    return false;
-  }
-
-  for (unsigned i = 0; i < types.length(); i++) {
-    constraint->newType(cx, this, types[i]);
-  }
-
-  return true;
-}
-
 #ifdef DEBUG
 static inline bool CompartmentsMatch(Compartment* a, Compartment* b) {
   return !a || !b || a == b;
 }
 #endif
-
-bool ConstraintTypeSet::addConstraint(JSContext* cx, TypeConstraint* constraint,
-                                      bool callExisting) {
-  checkMagic();
-
-  if (!constraint) {
-    /* OOM failure while constructing the constraint. */
-    return false;
-  }
-
-  MOZ_RELEASE_ASSERT(cx->zone()->types.activeAnalysis);
-  MOZ_ASSERT(
-      CompartmentsMatch(maybeCompartment(), constraint->maybeCompartment()));
-
-  InferSpew(ISpewOps, "addConstraint: %sT%p%s %sC%p%s %s", InferSpewColor(this),
-            this, InferSpewColorReset(), InferSpewColor(constraint), constraint,
-            InferSpewColorReset(), constraint->kind());
-
-  MOZ_ASSERT(constraint->next() == nullptr);
-  constraint->setNext(constraintList_);
-  constraintList_ = constraint;
-
-  if (callExisting) {
-    return addTypesToConstraint(cx, constraint);
-  }
-  return true;
-}
 
 void TypeSet::clearObjects() {
   setBaseObjectCount(0);
@@ -717,19 +661,7 @@ void ConstraintTypeSet::addType(const AutoSweepBase& sweep, JSContext* cx,
 
   postWriteBarrier(cx, type);
 
-  InferSpew(ISpewOps, "addType: %sT%p%s %s", InferSpewColor(this), this,
-            InferSpewColorReset(), TypeString(type).get());
-
-  /* Propagate the type to all constraints. */
-  if (!cx->isHelperThreadContext()) {
-    TypeConstraint* constraint = constraintList(sweep);
-    while (constraint) {
-      constraint->newType(cx, this, type);
-      constraint = constraint->next();
-    }
-  } else {
-    MOZ_ASSERT(!constraintList_);
-  }
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 void TypeSet::print(FILE* fp) {
@@ -876,40 +808,6 @@ bool TypeSet::IsTypeAboutToBeFinalized(TypeSet::Type* v) {
   return isAboutToBeFinalized;
 }
 
-/////////////////////////////////////////////////////////////////////
-// Compiler constraints
-/////////////////////////////////////////////////////////////////////
-
-// Compiler constraints overview
-//
-// Constraints generated during Ion compilation capture assumptions made about
-// heap properties that will trigger invalidation of the resulting Ion code if
-// the constraint is violated. Constraints can only be attached to type sets on
-// the main thread, so to allow compilation to occur almost entirely off thread
-// the generation is split into two phases.
-//
-// During compilation, CompilerConstraint values are constructed in a list,
-// recording the heap property type set which was read from and its expected
-// contents, along with the assumption made about those contents.
-//
-// At the end of compilation, when linking the result on the main thread, the
-// list of compiler constraints are read and converted to type constraints and
-// attached to the type sets. If the property type sets have changed so that the
-// assumptions no longer hold then the compilation is aborted and its result
-// discarded.
-
-// Superclass of all constraints generated during Ion compilation. These may
-// be allocated off thread, using the current JIT context's allocator.
-class CompilerConstraint {
- public:
-  explicit CompilerConstraint(LifoAlloc* alloc) {}
-
-  // Generate the type constraint recording the assumption made by this
-  // compilation. Returns true if the assumption originally made still holds.
-  virtual bool generateTypeConstraint(JSContext* cx,
-                                      RecompileInfo recompileInfo) = 0;
-};
-
 const JSClass* TypeSet::ObjectKey::clasp() {
   return isGroup() ? group()->clasp() : singleton()->getClass();
 }
@@ -986,26 +884,7 @@ static void ObjectStateChange(const AutoSweepObjectGroup& sweep, JSContext* cx,
     return;
   }
 
-  /* All constraints listening to state changes are on the empty id. */
-  HeapTypeSet* types = group->maybeGetProperty(sweep, JSID_EMPTY);
-
-  /* Mark as unknown after getting the types, to avoid assertion. */
-  if (markingUnknown) {
-    group->addFlags(sweep,
-                    OBJECT_FLAG_DYNAMIC_MASK | OBJECT_FLAG_UNKNOWN_PROPERTIES);
-  }
-
-  if (types) {
-    if (!cx->isHelperThreadContext()) {
-      TypeConstraint* constraint = types->constraintList(sweep);
-      while (constraint) {
-        constraint->newObjectState(cx, group);
-        constraint = constraint->next();
-      }
-    } else {
-      MOZ_ASSERT(!types->constraintList(sweep));
-    }
-  }
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 bool js::ClassCanHaveExtraProperties(const JSClass* clasp) {
@@ -1368,19 +1247,7 @@ void ObjectGroup::markStateChange(const AutoSweepObjectGroup& sweep,
     return;
   }
 
-  AutoEnterAnalysis enter(cx);
-  HeapTypeSet* types = maybeGetProperty(sweep, JSID_EMPTY);
-  if (types) {
-    if (!cx->isHelperThreadContext()) {
-      TypeConstraint* constraint = types->constraintList(sweep);
-      while (constraint) {
-        constraint->newObjectState(cx, this);
-        constraint = constraint->next();
-      }
-    } else {
-      MOZ_ASSERT(!types->constraintList(sweep));
-    }
-  }
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 void ObjectGroup::setFlags(const AutoSweepObjectGroup& sweep, JSContext* cx,
@@ -1613,119 +1480,6 @@ void ObjectGroup::print(const AutoSweepObjectGroup& sweep) {
 }
 
 /////////////////////////////////////////////////////////////////////
-// Type Analysis
-/////////////////////////////////////////////////////////////////////
-
-/*
- * Persistent constraint clearing out newScript and definite properties from
- * an object should a property on another object get a getter or setter.
- */
-class TypeConstraintClearDefiniteGetterSetter : public TypeConstraint {
- public:
-  ObjectGroup* group;
-
-  explicit TypeConstraintClearDefiniteGetterSetter(ObjectGroup* group)
-      : group(group) {}
-
-  const char* kind() override { return "clearDefiniteGetterSetter"; }
-
-  void newPropertyState(JSContext* cx, TypeSet* source) override {
-    /*
-     * Clear out the newScript shape and definite property information from
-     * an object if the source type set could be a setter or could be
-     * non-writable.
-     */
-    if (source->nonDataProperty() || source->nonWritableProperty()) {
-      group->clearNewScript(cx);
-    }
-  }
-
-  void newType(JSContext* cx, TypeSet* source, TypeSet::Type type) override {}
-
-  bool sweep(TypeZone& zone, TypeConstraint** res) override {
-    if (IsAboutToBeFinalizedUnbarriered(&group)) {
-      return false;
-    }
-    *res = zone.typeLifoAlloc().new_<TypeConstraintClearDefiniteGetterSetter>(
-        group);
-    return true;
-  }
-
-  Compartment* maybeCompartment() override { return group->compartment(); }
-};
-
-bool js::AddClearDefiniteGetterSetterForPrototypeChain(
-    JSContext* cx, DPAConstraintInfo& constraintInfo, ObjectGroup* group,
-    HandleId id, bool* added) {
-  /*
-   * Ensure that if the properties named here could have a getter, setter or
-   * a permanent property in any transitive prototype, the definite
-   * properties get cleared from the group.
-   */
-
-  *added = false;
-
-  RootedObject proto(cx, group->proto().toObjectOrNull());
-  while (proto) {
-    if (!proto->hasStaticPrototype()) {
-      return true;
-    }
-    ObjectGroup* protoGroup = JSObject::getGroup(cx, proto);
-    if (!protoGroup) {
-      return false;
-    }
-    AutoSweepObjectGroup sweep(protoGroup);
-    if (protoGroup->unknownProperties(sweep)) {
-      return true;
-    }
-    HeapTypeSet* protoTypes = protoGroup->getProperty(sweep, cx, proto, id);
-    if (!protoTypes) {
-      return false;
-    }
-    if (protoTypes->nonDataProperty() || protoTypes->nonWritableProperty()) {
-      return true;
-    }
-    if (!constraintInfo.addProtoConstraint(proto, id)) {
-      return false;
-    }
-    proto = proto->staticPrototype();
-  }
-
-  *added = true;
-  return true;
-}
-
-/*
- * Constraint which clears definite properties on a group should a type set
- * contain any types other than a single object.
- */
-class TypeConstraintClearDefiniteSingle : public TypeConstraint {
- public:
-  ObjectGroup* group;
-
-  explicit TypeConstraintClearDefiniteSingle(ObjectGroup* group)
-      : group(group) {}
-
-  const char* kind() override { return "clearDefiniteSingle"; }
-
-  void newType(JSContext* cx, TypeSet* source, TypeSet::Type type) override {
-    if (source->baseFlags() || source->getObjectCount() > 1) {
-      group->clearNewScript(cx);
-    }
-  }
-
-  bool sweep(TypeZone& zone, TypeConstraint** res) override {
-    if (IsAboutToBeFinalizedUnbarriered(&group)) {
-      return false;
-    }
-    *res = zone.typeLifoAlloc().new_<TypeConstraintClearDefiniteSingle>(group);
-    return true;
-  }
-
-  Compartment* maybeCompartment() override { return group->compartment(); }
-};
-
-/////////////////////////////////////////////////////////////////////
 // PreliminaryObjectArray
 /////////////////////////////////////////////////////////////////////
 
@@ -1948,309 +1702,9 @@ void TypeNewScript::registerNewObject(PlainObject* res) {
   preliminaryObjects->registerNewObject(res);
 }
 
-static bool ChangeObjectFixedSlotCount(JSContext* cx, PlainObject* obj,
-                                       gc::AllocKind allocKind) {
-  MOZ_ASSERT(OnlyHasDataProperties(obj->lastProperty()));
-
-  Shape* newShape = ReshapeForAllocKind(cx, obj->lastProperty(),
-                                        obj->taggedProto(), allocKind);
-  if (!newShape) {
-    return false;
-  }
-
-  obj->setLastPropertyShrinkFixedSlots(newShape);
-  return true;
-}
-
-bool DPAConstraintInfo::finishConstraints(JSContext* cx, ObjectGroup* group) {
-  for (const ProtoConstraint& constraint : protoConstraints_) {
-    ObjectGroup* protoGroup = constraint.proto->group();
-
-    // Note: we rely on the group's type information being unchanged since
-    // AddClearDefiniteGetterSetterForPrototypeChain.
-
-    AutoSweepObjectGroup sweep(protoGroup);
-    bool unknownProperties = protoGroup->unknownProperties(sweep);
-    MOZ_RELEASE_ASSERT(!unknownProperties);
-
-    HeapTypeSet* protoTypes =
-        protoGroup->getProperty(sweep, cx, constraint.proto, constraint.id);
-    MOZ_RELEASE_ASSERT(protoTypes);
-
-    MOZ_ASSERT(!protoTypes->nonDataProperty());
-    MOZ_ASSERT(!protoTypes->nonWritableProperty());
-
-    if (!protoTypes->addConstraint(
-            cx,
-            cx->typeLifoAlloc().new_<TypeConstraintClearDefiniteGetterSetter>(
-                group))) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-  }
-
-  return true;
-}
-
 bool TypeNewScript::maybeAnalyze(JSContext* cx, ObjectGroup* group,
                                  bool* regenerate, bool force) {
-  // Perform the new script properties analysis if necessary, returning
-  // whether the new group table was updated and group needs to be refreshed.
-
-  // Make sure there aren't dead references in preliminaryObjects. This can
-  // clear out the new script information on OOM.
-  AutoSweepObjectGroup sweep(group);
-  if (!group->newScript(sweep)) {
-    return true;
-  }
-
-  MOZ_ASSERT(this == group->newScript(sweep));
-  MOZ_ASSERT(cx->realm() == group->realm());
-
-  if (regenerate) {
-    *regenerate = false;
-  }
-
-  if (analyzed()) {
-    // The analyses have already been performed.
-    return true;
-  }
-
-  // Don't perform the analyses until sufficient preliminary objects have
-  // been allocated.
-  if (!force && !preliminaryObjects->full()) {
-    return true;
-  }
-
-  AutoEnterAnalysis enter(cx);
-
-  // Any failures after this point will clear out this TypeNewScript.
-  auto destroyNewScript = mozilla::MakeScopeExit([&] {
-    if (group) {
-      group->clearNewScript(cx);
-    }
-  });
-
-  // Compute the greatest common shape prefix and the largest slot span of
-  // the preliminary objects.
-  Shape* prefixShape = nullptr;
-  size_t maxSlotSpan = 0;
-  for (size_t i = 0; i < PreliminaryObjectArray::COUNT; i++) {
-    JSObject* objBase = preliminaryObjects->get(i);
-    if (!objBase) {
-      continue;
-    }
-    PlainObject* obj = &objBase->as<PlainObject>();
-
-    // For now, we require all preliminary objects to have only simple
-    // lineages of plain data properties.
-    Shape* shape = obj->lastProperty();
-    if (shape->inDictionary() || !OnlyHasDataProperties(shape) ||
-        shape->getObjectFlags() != 0) {
-      return true;
-    }
-
-    maxSlotSpan = std::max<size_t>(maxSlotSpan, obj->slotSpan());
-
-    if (prefixShape) {
-      MOZ_ASSERT(shape->numFixedSlots() == prefixShape->numFixedSlots());
-      prefixShape = CommonPrefix(prefixShape, shape);
-    } else {
-      prefixShape = shape;
-    }
-    if (prefixShape->isEmptyShape()) {
-      // The preliminary objects don't have any common properties.
-      return true;
-    }
-  }
-  if (!prefixShape) {
-    return true;
-  }
-
-  gc::AllocKind kind = gc::GetGCObjectKind(maxSlotSpan);
-
-  if (kind != gc::GetGCObjectKind(NativeObject::MAX_FIXED_SLOTS)) {
-    // The template object will have a different allocation kind from the
-    // preliminary objects that have already been constructed. Optimizing
-    // definite property accesses requires both that the property is
-    // definitely in a particular slot and that the object has a specific
-    // number of fixed slots. So, adjust the shape and slot layout of all
-    // the preliminary objects so that their structure matches that of the
-    // template object. Also recompute the prefix shape, as it reflects the
-    // old number of fixed slots.
-    Shape* newPrefixShape = nullptr;
-    for (size_t i = 0; i < PreliminaryObjectArray::COUNT; i++) {
-      JSObject* objBase = preliminaryObjects->get(i);
-      if (!objBase) {
-        continue;
-      }
-      PlainObject* obj = &objBase->as<PlainObject>();
-      if (!ChangeObjectFixedSlotCount(cx, obj, kind)) {
-        return false;
-      }
-      if (newPrefixShape) {
-        MOZ_ASSERT(CommonPrefix(obj->lastProperty(), newPrefixShape) ==
-                   newPrefixShape);
-      } else {
-        newPrefixShape = obj->lastProperty();
-        while (newPrefixShape->slotSpan() > prefixShape->slotSpan()) {
-          newPrefixShape = newPrefixShape->previous();
-        }
-      }
-    }
-    prefixShape = newPrefixShape;
-  }
-
-  RootedObjectGroup groupRoot(cx, group);
-  templateObject_ =
-      NewObjectWithGroup<PlainObject>(cx, groupRoot, kind, TenuredObject);
-  if (!templateObject_) {
-    return false;
-  }
-
-  Vector<TypeNewScriptInitializer> initializerVector(cx);
-
-  DPAConstraintInfo constraintInfo(cx);
-
-  RootedPlainObject templateRoot(cx, templateObject());
-  RootedFunction fun(cx, function());
-  if (!jit::AnalyzeNewScriptDefiniteProperties(
-          cx, constraintInfo, fun, group, templateRoot, &initializerVector)) {
-    return false;
-  }
-
-  if (!group->newScript(sweep)) {
-    return true;
-  }
-
-  MOZ_ASSERT(OnlyHasDataProperties(templateObject()->lastProperty()));
-
-  MOZ_ASSERT(!initializerList);
-  InitializerList* newInitializerList = nullptr;
-  if (templateObject()->slotSpan() != 0) {
-    // Make sure that all definite properties found are reflected in the
-    // prefix shape. Otherwise, the constructor behaved differently before
-    // we baseline compiled it and started observing types. Compare
-    // property names rather than looking at the shapes directly, as the
-    // allocation kind and other non-property parts of the template and
-    // existing objects may differ.
-    if (templateObject()->slotSpan() > prefixShape->slotSpan()) {
-      return true;
-    }
-    {
-      Shape* shape = prefixShape;
-      while (shape->slotSpan() != templateObject()->slotSpan()) {
-        shape = shape->previous();
-      }
-      Shape* templateShape = templateObject()->lastProperty();
-      while (!shape->isEmptyShape()) {
-        if (shape->slot() != templateShape->slot()) {
-          return true;
-        }
-        if (shape->propid() != templateShape->propid()) {
-          return true;
-        }
-        shape = shape->previous();
-        templateShape = templateShape->previous();
-      }
-      if (!templateShape->isEmptyShape()) {
-        return true;
-      }
-    }
-
-    size_t nbytes = sizeOfInitializerList(initializerVector.length());
-    newInitializerList = reinterpret_cast<InitializerList*>(
-        group->zone()->pod_calloc<uint8_t>(nbytes));
-    if (!newInitializerList) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-    newInitializerList->length = initializerVector.length();
-    PodCopy(newInitializerList->entries, initializerVector.begin(),
-            initializerVector.length());
-  }
-
-  RemoveCellMemory(group, gcMallocBytes(), MemoryUse::ObjectGroupAddendum);
-
-  initializerList = newInitializerList;
-
-  js_delete(preliminaryObjects);
-  preliminaryObjects = nullptr;
-
-  AddCellMemory(group, gcMallocBytes(), MemoryUse::ObjectGroupAddendum);
-
-  if (prefixShape->slotSpan() == templateObject()->slotSpan()) {
-    // The definite properties analysis found exactly the properties that
-    // are held in common by the preliminary objects. No further analysis
-    // is needed.
-
-    if (!constraintInfo.finishConstraints(cx, group)) {
-      return false;
-    }
-    if (!group->newScript(sweep)) {
-      return true;
-    }
-
-    group->addDefiniteProperties(cx, templateObject()->lastProperty());
-
-    destroyNewScript.release();
-    return true;
-  }
-
-  // There are more properties consistently added to objects of this group
-  // than were discovered by the definite properties analysis. Use the
-  // existing group to represent fully initialized objects with all
-  // definite properties in the prefix shape, and make a new group to
-  // represent partially initialized objects.
-  MOZ_ASSERT(prefixShape->slotSpan() > templateObject()->slotSpan());
-
-  ObjectGroupFlags initialFlags =
-      group->flags(sweep) & OBJECT_FLAG_DYNAMIC_MASK;
-
-  Rooted<TaggedProto> protoRoot(cx, group->proto());
-  ObjectGroup* initialGroup = ObjectGroupRealm::makeGroup(
-      cx, group->realm(), group->clasp(), protoRoot, initialFlags);
-  if (!initialGroup) {
-    return false;
-  }
-
-  // Add the constraints. Use the initialGroup as group referenced by the
-  // constraints because that's the group that will have the TypeNewScript
-  // associated with it. See the detachNewScript and setNewScript calls below.
-  if (!constraintInfo.finishConstraints(cx, initialGroup)) {
-    return false;
-  }
-  if (!group->newScript(sweep)) {
-    return true;
-  }
-
-  initialGroup->addDefiniteProperties(cx, templateObject()->lastProperty());
-  group->addDefiniteProperties(cx, prefixShape);
-
-  ObjectGroupRealm& realm = ObjectGroupRealm::get(group);
-  realm.replaceDefaultNewGroup(group->clasp(), group->proto(), function(),
-                               initialGroup);
-
-  templateObject()->setGroup(initialGroup);
-
-  // Transfer this TypeNewScript from the fully initialized group to the
-  // partially initialized group.
-  group->detachNewScript();
-  initialGroup->setNewScript(this);
-
-  // prefixShape was read via a weak pointer, so we need a read barrier before
-  // we store it into the heap.
-  gc::ReadBarrier(prefixShape);
-
-  initializedShape_ = prefixShape;
-  initializedGroup_ = group;
-
-  destroyNewScript.release();
-
-  if (regenerate) {
-    *regenerate = true;
-  }
-  return true;
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 bool TypeNewScript::rollbackPartiallyInitializedObjects(JSContext* cx,
@@ -2523,30 +1977,6 @@ void ConstraintTypeSet::sweep(const AutoSweepBase& sweep, Zone* zone) {
       setBaseObjectCount(0);
     }
   }
-
-  /*
-   * Type constraints only hold weak references. Copy constraints referring
-   * to data that is still live into the zone's new arena.
-   */
-  TypeConstraint* constraint = constraintList(sweep);
-  constraintList_ = nullptr;
-  while (constraint) {
-    MOZ_ASSERT(zone->types.sweepTypeLifoAlloc.ref().contains(constraint));
-    TypeConstraint* copy;
-    if (constraint->sweep(zone->types, &copy)) {
-      if (copy) {
-        MOZ_ASSERT(zone->types.typeLifoAlloc().contains(copy));
-        copy->setNext(constraintList_);
-        constraintList_ = copy;
-      } else {
-        zone->types.setOOMSweepingTypes();
-      }
-    }
-    TypeConstraint* next = constraint->next();
-    AlwaysPoison(constraint, JS_SWEPT_TI_PATTERN, sizeof(TypeConstraint),
-                 MemCheckKind::MakeUndefined);
-    constraint = next;
-  }
 }
 
 inline void ObjectGroup::clearProperties(const AutoSweepObjectGroup& sweep) {
@@ -2617,8 +2047,7 @@ void ObjectGroup::sweep(const AutoSweepObjectGroup& sweep) {
       if (prop) {
         oldPropertiesFound++;
         prop->types.checkMagic();
-        if (singleton() && !prop->types.constraintList(sweep) &&
-            !zone()->isPreservingCode()) {
+        if (singleton() && !zone()->isPreservingCode()) {
           /*
            * Don't copy over properties of singleton objects when their
            * presence will not be required by jitcode or type constraints
@@ -2655,8 +2084,7 @@ void ObjectGroup::sweep(const AutoSweepObjectGroup& sweep) {
   } else if (propertyCount == 1) {
     Property* prop = (Property*)propertySet;
     prop->types.checkMagic();
-    if (singleton() && !prop->types.constraintList(sweep) &&
-        !zone()->isPreservingCode()) {
+    if (singleton() && !zone()->isPreservingCode()) {
       // Skip, as above.
       AlwaysPoison(prop, JS_SWEPT_TI_PATTERN, sizeof(Property),
                    MemCheckKind::MakeUndefined);

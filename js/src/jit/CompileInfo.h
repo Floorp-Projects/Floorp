@@ -52,12 +52,6 @@ enum AnalysisMode {
   Analysis_None,
 
   /*
-   * MIR analysis performed when invoking 'new' on a script, to determine
-   * definite properties. Used by the optimizing JIT.
-   */
-  Analysis_DefiniteProperties,
-
-  /*
    * MIR analysis performed when executing a script which uses its arguments,
    * when it is not known whether a lazy arguments value can be used.
    */
