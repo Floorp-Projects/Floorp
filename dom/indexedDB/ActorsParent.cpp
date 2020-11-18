@@ -14155,52 +14155,52 @@ NS_IMETHODIMP
 Maintenance::Run() {
   MOZ_ASSERT(mState != State::Complete);
 
-  nsresult rv;
+  const auto handleError = [this](const nsresult rv) {
+    if (mState != State::Finishing) {
+      if (NS_SUCCEEDED(mResultCode)) {
+        mResultCode = rv;
+      }
+
+      // Must set mState before dispatching otherwise we will race with the
+      // owning thread.
+      mState = State::Finishing;
+
+      if (IsOnBackgroundThread()) {
+        Finish();
+      } else {
+        MOZ_ALWAYS_SUCCEEDS(mQuotaClient->BackgroundThread()->Dispatch(
+            this, NS_DISPATCH_NORMAL));
+      }
+    }
+  };
 
   switch (mState) {
     case State::Initial:
-      rv = Start();
+      IDB_TRY(Start(), NS_OK, handleError);
       break;
 
     case State::CreateIndexedDatabaseManager:
-      rv = CreateIndexedDatabaseManager();
+      IDB_TRY(CreateIndexedDatabaseManager(), NS_OK, handleError);
       break;
 
     case State::IndexedDatabaseManagerOpen:
-      rv = OpenDirectory();
+      IDB_TRY(OpenDirectory(), NS_OK, handleError);
       break;
 
     case State::DirectoryWorkOpen:
-      rv = DirectoryWork();
+      IDB_TRY(DirectoryWork(), NS_OK, handleError);
       break;
 
     case State::BeginDatabaseMaintenance:
-      rv = BeginDatabaseMaintenance();
+      IDB_TRY(BeginDatabaseMaintenance(), NS_OK, handleError);
       break;
 
     case State::Finishing:
       Finish();
-      return NS_OK;
+      break;
 
     default:
       MOZ_CRASH("Bad state!");
-  }
-
-  if (NS_WARN_IF(NS_FAILED(rv)) && mState != State::Finishing) {
-    if (NS_SUCCEEDED(mResultCode)) {
-      mResultCode = rv;
-    }
-
-    // Must set mState before dispatching otherwise we will race with the owning
-    // thread.
-    mState = State::Finishing;
-
-    if (IsOnBackgroundThread()) {
-      Finish();
-    } else {
-      MOZ_ALWAYS_SUCCEEDS(
-          mQuotaClient->BackgroundThread()->Dispatch(this, NS_DISPATCH_NORMAL));
-    }
   }
 
   return NS_OK;
