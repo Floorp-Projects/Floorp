@@ -155,21 +155,7 @@ ObjectGroup* JSObject::makeLazyGroup(JSContext* cx, HandleObject obj) {
   MOZ_ASSERT(cx->compartment() == obj->compartment());
 
   // Find flags which need to be specified immediately on the object.
-  // Don't track whether singletons are packed.
-  ObjectGroupFlags initialFlags =
-      OBJECT_FLAG_SINGLETON | OBJECT_FLAG_NON_PACKED;
-
-  if (obj->isIteratedSingleton()) {
-    initialFlags |= OBJECT_FLAG_ITERATED;
-  }
-
-  if (obj->isNative() && obj->as<NativeObject>().isIndexed()) {
-    initialFlags |= OBJECT_FLAG_SPARSE_INDEXES;
-  }
-
-  if (obj->is<ArrayObject>() && obj->as<ArrayObject>().length() > INT32_MAX) {
-    initialFlags |= OBJECT_FLAG_LENGTH_OVERFLOW;
-  }
+  ObjectGroupFlags initialFlags = OBJECT_FLAG_SINGLETON;
 
   Rooted<TaggedProto> proto(cx, obj->taggedProto());
   ObjectGroup* group = ObjectGroupRealm::makeGroup(
