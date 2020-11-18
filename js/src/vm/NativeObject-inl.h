@@ -86,13 +86,7 @@ inline void NativeObject::addDenseElementType(JSContext* cx, uint32_t index,
     return;
   }
 
-  // Avoid a slow AddTypePropertyId call if the type is the same as the type
-  // of the previous element.
-  TypeSet::Type thisType = TypeSet::GetValueType(val);
-  if (index == 0 || elements_[index - 1].isMagic() ||
-      TypeSet::GetValueType(elements_[index - 1]) != thisType) {
-    AddTypePropertyId(cx, this, JSID_VOID, thisType);
-  }
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 inline void NativeObject::setDenseElementWithType(JSContext* cx, uint32_t index,
