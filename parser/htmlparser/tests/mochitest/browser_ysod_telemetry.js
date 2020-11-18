@@ -30,7 +30,12 @@ add_task(async function test_popup_opened() {
         method: "shown",
         object: "ysod",
         value: PAGE_URL.substr(0, 80),
-        extra: { error_code: "11", location: "3:12" },
+        extra: {
+          error_code: "11",
+          location: "3:12",
+          last_line: "    <title>&nonExistingEntity;</title>",
+          last_line_len: "38",
+        },
       },
     ],
     {
