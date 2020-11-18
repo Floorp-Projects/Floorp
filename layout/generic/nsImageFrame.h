@@ -119,7 +119,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
 #endif
 
   LogicalSides GetLogicalSkipSides(
-      const ReflowInput* aReflowInput = nullptr) const final;
+      const Maybe<SkipSidesDuringReflow>&) const final;
 
   static void ReleaseGlobals() {
     if (gIconLoad) {
