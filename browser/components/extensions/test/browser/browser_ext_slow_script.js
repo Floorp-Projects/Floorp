@@ -50,15 +50,14 @@ add_task(async function test_slow_content_script() {
 
   await extension.startup();
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "http://example.com/"
-  );
-
-  let notification = await BrowserTestUtils.waitForGlobalNotificationBar(
+  let alert = BrowserTestUtils.waitForGlobalNotificationBar(
     window,
     "process-hang"
   );
+
+  BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+
+  let notification = await alert;
   let text = notification.messageText.textContent;
 
   ok(text.includes("\u201cSlow Script Extension\u201d"), "Label is correct");
@@ -66,7 +65,7 @@ add_task(async function test_slow_content_script() {
   let stopButton = notification.querySelector("[label='Stop It']");
   stopButton.click();
 
-  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   await extension.unload();
 });
