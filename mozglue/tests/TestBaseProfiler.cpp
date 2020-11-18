@@ -3449,10 +3449,6 @@ void TestProfiler() {
         Some(ProfilerString8View("start")), Some(ProfilerString8View("end"))));
 
     MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
-        "longtask", mozilla::baseprofiler::category::OTHER, {},
-        mozilla::baseprofiler::markers::LongTask{}));
-
-    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
         "text", mozilla::baseprofiler::category::OTHER, {},
         mozilla::baseprofiler::markers::Text{}, "text text"));
 
@@ -3524,8 +3520,6 @@ void TestProfiler() {
                        svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"Log\",") != svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"MediaSample\",") != svnpos);
-    MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"MainThreadLongTask\",") !=
-                       svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"display\": [") != svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"marker-chart\"") != svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"marker-table\"") != svnpos);
@@ -4038,11 +4032,6 @@ void TestPredefinedMarkers() {
       mozilla::baseprofiler::markers::UserTimingMeasure{}, "measure name ",
       mozilla::Some(mozilla::ProfilerString8View(" start ")),
       mozilla::Some(mozilla::ProfilerString8View("end"))));
-
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
-      buffer, std::string_view("long task"),
-      mozilla::baseprofiler::category::OTHER, {},
-      mozilla::baseprofiler::markers::LongTask{}));
 
   MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, std::string_view("text"), mozilla::baseprofiler::category::OTHER,
