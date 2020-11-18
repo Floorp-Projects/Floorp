@@ -11429,8 +11429,7 @@ static bool AddInlinedCompilations(HandleScript script,
   return true;
 }
 
-bool CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints,
-                         const WarpSnapshot* snapshot) {
+bool CodeGenerator::link(JSContext* cx, const WarpSnapshot* snapshot) {
   // We cancel off-thread Ion compilations in a few places during GC, but if
   // this compilation was performed off-thread it will already have been
   // removed from the relevant lists by this point. Don't allow GC here.

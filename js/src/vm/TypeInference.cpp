@@ -910,41 +910,6 @@ class CompilerConstraint {
                                       RecompileInfo recompileInfo) = 0;
 };
 
-class js::CompilerConstraintList {
- private:
-  // OOM during generation of some constraint.
-  bool failed_;
-
-  // Allocator used for constraints.
-  LifoAlloc* alloc_;
-
-  // Constraints generated on heap properties.
-  Vector<CompilerConstraint*, 0, jit::JitAllocPolicy> constraints;
-
- public:
-  explicit CompilerConstraintList(jit::TempAllocator& alloc)
-      : failed_(false), alloc_(alloc.lifoAlloc()), constraints(alloc) {}
-
-  void add(CompilerConstraint* constraint) {
-    if (!constraint || !constraints.append(constraint)) {
-      setFailed();
-    }
-  }
-
-  size_t length() { return constraints.length(); }
-
-  CompilerConstraint* get(size_t i) { return constraints[i]; }
-
-  bool failed() { return failed_; }
-  void setFailed() { failed_ = true; }
-  LifoAlloc* alloc() const { return alloc_; }
-};
-
-CompilerConstraintList* js::NewCompilerConstraintList(
-    jit::TempAllocator& alloc) {
-  return alloc.lifoAlloc()->new_<CompilerConstraintList>(alloc);
-}
-
 const JSClass* TypeSet::ObjectKey::clasp() {
   return isGroup() ? group()->clasp() : singleton()->getClass();
 }

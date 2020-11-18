@@ -753,7 +753,7 @@ class MDefinition : public MNode {
   // Return true if the result-set types are a subset of the given types.
   bool definitelyType(std::initializer_list<MIRType> types) const;
 
-  bool maybeEmulatesUndefined(CompilerConstraintList* constraints);
+  bool maybeEmulatesUndefined();
 
   // Float32 specialization operations (see big comment in IonAnalysis before
   // the Float32 specialization algorithm).
@@ -1481,22 +1481,19 @@ class MConstant : public MNullaryInstruction {
 #endif
 
  protected:
-  MConstant(TempAllocator& alloc, const Value& v,
-            CompilerConstraintList* constraints);
+  MConstant(TempAllocator& alloc, const Value& v);
   explicit MConstant(JSObject* obj);
   explicit MConstant(float f);
   explicit MConstant(int64_t i);
 
  public:
   INSTRUCTION_HEADER(Constant)
-  static MConstant* New(TempAllocator& alloc, const Value& v,
-                        CompilerConstraintList* constraints = nullptr);
-  static MConstant* New(TempAllocator::Fallible alloc, const Value& v,
-                        CompilerConstraintList* constraints = nullptr);
+  static MConstant* New(TempAllocator& alloc, const Value& v);
+  static MConstant* New(TempAllocator::Fallible alloc, const Value& v);
   static MConstant* New(TempAllocator& alloc, const Value& v, MIRType type);
   static MConstant* NewFloat32(TempAllocator& alloc, double d);
   static MConstant* NewInt64(TempAllocator& alloc, int64_t i);
-  static MConstant* NewConstraintlessObject(TempAllocator& alloc, JSObject* v);
+  static MConstant* NewObject(TempAllocator& alloc, JSObject* v);
   static MConstant* Copy(TempAllocator& alloc, MConstant* src) {
     return new (alloc) MConstant(*src);
   }
@@ -1953,6 +1950,7 @@ static inline BranchDirection NegateBranchDirection(BranchDirection dir) {
 // Tests if the input instruction evaluates to true or false, and jumps to the
 // start of a corresponding basic block.
 class MTest : public MAryControlInstruction<1, 2>, public TestPolicy::Data {
+  // TODO(no-TI): remove here and other MIR instructions.
   bool operandMightEmulateUndefined_;
 
   MTest(MDefinition* ins, MBasicBlock* trueBranch, MBasicBlock* falseBranch)
@@ -1982,12 +1980,6 @@ class MTest : public MAryControlInstruction<1, 2>, public TestPolicy::Data {
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
-  // We cache whether our operand might emulate undefined, but we don't want
-  // to do that from New() or the constructor, since those can be called on
-  // background threads.  So make callers explicitly call it if they want us
-  // to check whether the operand might do this.  If this method is never
-  // called, we'll assume our operand can emulate undefined.
-  void cacheOperandMightEmulateUndefined(CompilerConstraintList* constraints);
   MDefinition* foldsDoubleNegation(TempAllocator& alloc);
   MDefinition* foldsConstant(TempAllocator& alloc);
   MDefinition* foldsTypes(TempAllocator& alloc);
@@ -1996,12 +1988,10 @@ class MTest : public MAryControlInstruction<1, 2>, public TestPolicy::Data {
   void filtersUndefinedOrNull(bool trueBranch, MDefinition** subject,
                               bool* filtersUndefined, bool* filtersNull);
 
-  void markNoOperandEmulatesUndefined() {
-    operandMightEmulateUndefined_ = false;
-  }
   bool operandMightEmulateUndefined() const {
     return operandMightEmulateUndefined_;
   }
+
 #ifdef DEBUG
   bool isConsistentFloat32Use(MUse* use) const override { return true; }
 #endif
@@ -2052,20 +2042,18 @@ class MNewArray : public MUnaryInstruction, public NoTypePolicy::Data {
 
   bool vmCall_;
 
-  MNewArray(TempAllocator& alloc, CompilerConstraintList* constraints,
-            uint32_t length, MConstant* templateConst,
+  MNewArray(TempAllocator& alloc, uint32_t length, MConstant* templateConst,
             gc::InitialHeap initialHeap, jsbytecode* pc, bool vmCall = false);
 
  public:
   INSTRUCTION_HEADER(NewArray)
   TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
 
-  static MNewArray* NewVM(TempAllocator& alloc,
-                          CompilerConstraintList* constraints, uint32_t length,
+  static MNewArray* NewVM(TempAllocator& alloc, uint32_t length,
                           MConstant* templateConst, gc::InitialHeap initialHeap,
                           jsbytecode* pc) {
-    return new (alloc) MNewArray(alloc, constraints, length, templateConst,
-                                 initialHeap, pc, true);
+    return new (alloc)
+        MNewArray(alloc, length, templateConst, initialHeap, pc, true);
   }
 
   uint32_t length() const { return length_; }
@@ -2103,9 +2091,8 @@ class MNewArrayCopyOnWrite : public MUnaryInstruction,
                              public NoTypePolicy::Data {
   gc::InitialHeap initialHeap_;
 
-  MNewArrayCopyOnWrite(TempAllocator& alloc,
-                       CompilerConstraintList* constraints,
-                       MConstant* templateConst, gc::InitialHeap initialHeap)
+  MNewArrayCopyOnWrite(TempAllocator& alloc, MConstant* templateConst,
+                       gc::InitialHeap initialHeap)
       : MUnaryInstruction(classOpcode, templateConst),
         initialHeap_(initialHeap) {
     MOZ_ASSERT(!templateObject()->isSingleton());
@@ -2136,10 +2123,8 @@ class MNewArrayDynamicLength : public MUnaryInstruction,
   CompilerObject templateObject_;
   gc::InitialHeap initialHeap_;
 
-  MNewArrayDynamicLength(TempAllocator& alloc,
-                         CompilerConstraintList* constraints,
-                         JSObject* templateObject, gc::InitialHeap initialHeap,
-                         MDefinition* length)
+  MNewArrayDynamicLength(TempAllocator& alloc, JSObject* templateObject,
+                         gc::InitialHeap initialHeap, MDefinition* length)
       : MUnaryInstruction(classOpcode, length),
         templateObject_(templateObject),
         initialHeap_(initialHeap) {
@@ -2168,8 +2153,8 @@ class MNewArrayDynamicLength : public MUnaryInstruction,
 class MNewTypedArray : public MUnaryInstruction, public NoTypePolicy::Data {
   gc::InitialHeap initialHeap_;
 
-  MNewTypedArray(TempAllocator& alloc, CompilerConstraintList* constraints,
-                 MConstant* templateConst, gc::InitialHeap initialHeap)
+  MNewTypedArray(TempAllocator& alloc, MConstant* templateConst,
+                 gc::InitialHeap initialHeap)
       : MUnaryInstruction(classOpcode, templateConst),
         initialHeap_(initialHeap) {
     MOZ_ASSERT(!templateObject()->isSingleton());
@@ -2198,9 +2183,7 @@ class MNewTypedArrayDynamicLength : public MUnaryInstruction,
   CompilerObject templateObject_;
   gc::InitialHeap initialHeap_;
 
-  MNewTypedArrayDynamicLength(TempAllocator& alloc,
-                              CompilerConstraintList* constraints,
-                              JSObject* templateObject,
+  MNewTypedArrayDynamicLength(TempAllocator& alloc, JSObject* templateObject,
                               gc::InitialHeap initialHeap, MDefinition* length)
       : MUnaryInstruction(classOpcode, length),
         templateObject_(templateObject),
@@ -2234,10 +2217,8 @@ class MNewTypedArrayFromArray : public MUnaryInstruction,
   CompilerObject templateObject_;
   gc::InitialHeap initialHeap_;
 
-  MNewTypedArrayFromArray(TempAllocator& alloc,
-                          CompilerConstraintList* constraints,
-                          JSObject* templateObject, gc::InitialHeap initialHeap,
-                          MDefinition* array)
+  MNewTypedArrayFromArray(TempAllocator& alloc, JSObject* templateObject,
+                          gc::InitialHeap initialHeap, MDefinition* array)
       : MUnaryInstruction(classOpcode, array),
         templateObject_(templateObject),
         initialHeap_(initialHeap) {
@@ -2268,9 +2249,7 @@ class MNewTypedArrayFromArrayBuffer
   CompilerObject templateObject_;
   gc::InitialHeap initialHeap_;
 
-  MNewTypedArrayFromArrayBuffer(TempAllocator& alloc,
-                                CompilerConstraintList* constraints,
-                                JSObject* templateObject,
+  MNewTypedArrayFromArrayBuffer(TempAllocator& alloc, JSObject* templateObject,
                                 gc::InitialHeap initialHeap,
                                 MDefinition* arrayBuffer,
                                 MDefinition* byteOffset, MDefinition* length)
@@ -2308,9 +2287,8 @@ class MNewObject : public MUnaryInstruction, public NoTypePolicy::Data {
   Mode mode_;
   bool vmCall_;
 
-  MNewObject(TempAllocator& alloc, CompilerConstraintList* constraints,
-             MConstant* templateConst, gc::InitialHeap initialHeap, Mode mode,
-             bool vmCall = false)
+  MNewObject(TempAllocator& alloc, MConstant* templateConst,
+             gc::InitialHeap initialHeap, Mode mode, bool vmCall = false)
       : MUnaryInstruction(classOpcode, templateConst),
         initialHeap_(initialHeap),
         mode_(mode),
@@ -2332,12 +2310,10 @@ class MNewObject : public MUnaryInstruction, public NoTypePolicy::Data {
   INSTRUCTION_HEADER(NewObject)
   TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
 
-  static MNewObject* NewVM(TempAllocator& alloc,
-                           CompilerConstraintList* constraints,
-                           MConstant* templateConst,
+  static MNewObject* NewVM(TempAllocator& alloc, MConstant* templateConst,
                            gc::InitialHeap initialHeap, Mode mode) {
     return new (alloc)
-        MNewObject(alloc, constraints, templateConst, initialHeap, mode, true);
+        MNewObject(alloc, templateConst, initialHeap, mode, true);
   }
 
   Mode mode() const { return mode_; }
@@ -2370,8 +2346,7 @@ class MNewIterator : public MUnaryInstruction, public NoTypePolicy::Data {
  private:
   Type type_;
 
-  MNewIterator(TempAllocator& alloc, CompilerConstraintList* constraints,
-               MConstant* templateConst, Type type)
+  MNewIterator(TempAllocator& alloc, MConstant* templateConst, Type type)
       : MUnaryInstruction(classOpcode, templateConst), type_(type) {
     setResultType(MIRType::Object);
     templateConst->setEmittedAtUses();
@@ -3246,7 +3221,6 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
 
   static CompareType determineCompareType(JSOp op, MDefinition* left,
                                           MDefinition* right);
-  void cacheOperandMightEmulateUndefined(CompilerConstraintList* constraints);
 
 #ifdef DEBUG
   bool isConsistentFloat32Use(MUse* use) const override {
@@ -3507,9 +3481,8 @@ class MCreateThisWithTemplate : public MUnaryInstruction,
                                 public NoTypePolicy::Data {
   gc::InitialHeap initialHeap_;
 
-  MCreateThisWithTemplate(TempAllocator& alloc,
-                          CompilerConstraintList* constraints,
-                          MConstant* templateConst, gc::InitialHeap initialHeap)
+  MCreateThisWithTemplate(TempAllocator& alloc, MConstant* templateConst,
+                          gc::InitialHeap initialHeap)
       : MUnaryInstruction(classOpcode, templateConst),
         initialHeap_(initialHeap) {
     setResultType(MIRType::Object);
@@ -4674,8 +4647,7 @@ class MTypeOf : public MUnaryInstruction,
   TRIVIAL_NEW_WRAPPERS
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
-  void cacheInputMaybeCallableOrEmulatesUndefined(
-      CompilerConstraintList* constraints);
+  void cacheInputMaybeCallableOrEmulatesUndefined();
 
   bool inputMaybeCallableOrEmulatesUndefined() const {
     return inputMaybeCallableOrEmulatesUndefined_;
@@ -6284,8 +6256,8 @@ class MStringSplit : public MBinaryInstruction,
                      public MixPolicy<StringPolicy<0>, StringPolicy<1>>::Data {
   CompilerObjectGroup group_;
 
-  MStringSplit(TempAllocator& alloc, CompilerConstraintList* constraints,
-               MDefinition* string, MDefinition* sep, ObjectGroup* group)
+  MStringSplit(TempAllocator& alloc, MDefinition* string, MDefinition* sep,
+               ObjectGroup* group)
       : MBinaryInstruction(classOpcode, string, sep), group_(group) {
     setResultType(MIRType::Object);
   }
@@ -6898,8 +6870,7 @@ class MRegExp : public MNullaryInstruction {
   CompilerGCPointer<RegExpObject*> source_;
   bool hasShared_;
 
-  MRegExp(TempAllocator& alloc, CompilerConstraintList* constraints,
-          RegExpObject* source, bool hasShared)
+  MRegExp(TempAllocator& alloc, RegExpObject* source, bool hasShared)
       : MNullaryInstruction(classOpcode),
         source_(source),
         hasShared_(hasShared) {
@@ -7229,8 +7200,8 @@ struct LambdaFunctionInfo {
 class MLambda : public MBinaryInstruction, public SingleObjectPolicy::Data {
   const LambdaFunctionInfo info_;
 
-  MLambda(TempAllocator& alloc, CompilerConstraintList* constraints,
-          MDefinition* envChain, MConstant* cst, const LambdaFunctionInfo& info)
+  MLambda(TempAllocator& alloc, MDefinition* envChain, MConstant* cst,
+          const LambdaFunctionInfo& info)
       : MBinaryInstruction(classOpcode, envChain, cst), info_(info) {
     setResultType(MIRType::Object);
   }
@@ -7255,8 +7226,8 @@ class MLambdaArrow
       public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>, ObjectPolicy<2>>::Data {
   const LambdaFunctionInfo info_;
 
-  MLambdaArrow(TempAllocator& alloc, CompilerConstraintList* constraints,
-               MDefinition* envChain, MDefinition* newTarget, MConstant* cst,
+  MLambdaArrow(TempAllocator& alloc, MDefinition* envChain,
+               MDefinition* newTarget, MConstant* cst,
                const LambdaFunctionInfo& info)
       : MTernaryInstruction(classOpcode, envChain, newTarget, cst),
         info_(info) {
@@ -7832,19 +7803,13 @@ class MNot : public MUnaryInstruction, public TestPolicy::Data {
   bool operandMightEmulateUndefined_;
   bool operandIsNeverNaN_;
 
-  explicit MNot(MDefinition* input,
-                CompilerConstraintList* constraints = nullptr)
+  explicit MNot(MDefinition* input)
       : MUnaryInstruction(classOpcode, input),
         operandMightEmulateUndefined_(true),
         operandIsNeverNaN_(false) {
     setResultType(MIRType::Boolean);
     setMovable();
-    if (constraints) {
-      cacheOperandMightEmulateUndefined(constraints);
-    }
   }
-
-  void cacheOperandMightEmulateUndefined(CompilerConstraintList* constraints);
 
  public:
   static MNot* NewInt32(TempAllocator& alloc, MDefinition* input) {
@@ -11819,8 +11784,7 @@ class MRest : public MUnaryInstruction, public UnboxedInt32Policy<0>::Data {
   unsigned numFormals_;
   CompilerGCPointer<ArrayObject*> templateObject_;
 
-  MRest(TempAllocator& alloc, CompilerConstraintList* constraints,
-        MDefinition* numActuals, unsigned numFormals,
+  MRest(TempAllocator& alloc, MDefinition* numActuals, unsigned numFormals,
         ArrayObject* templateObject)
       : MUnaryInstruction(classOpcode, numActuals),
         numFormals_(numFormals),

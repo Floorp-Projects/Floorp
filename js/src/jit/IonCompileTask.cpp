@@ -73,10 +73,8 @@ void IonCompileTask::trace(JSTracer* trc) {
 }
 
 IonCompileTask::IonCompileTask(MIRGenerator& mirGen, bool scriptHasIonScript,
-                               CompilerConstraintList* constraints,
                                WarpSnapshot* snapshot)
     : mirGen_(mirGen),
-      constraints_(constraints),
       snapshot_(snapshot),
       scriptHasIonScript_(scriptHasIonScript) {}
 

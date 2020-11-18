@@ -15,9 +15,6 @@
 #include "vm/HelperThreadTask.h"
 
 namespace js {
-
-class CompilerConstraintList;
-
 namespace jit {
 
 class CodeGenerator;
@@ -35,7 +32,6 @@ class IonCompileTask final : public HelperThreadTask,
   // performed by FinishOffThreadTask().
   CodeGenerator* backgroundCodegen_ = nullptr;
 
-  CompilerConstraintList* constraints_ = nullptr;
   MRootList* rootList_ = nullptr;
   WarpSnapshot* snapshot_ = nullptr;
 
@@ -45,14 +41,12 @@ class IonCompileTask final : public HelperThreadTask,
 
  public:
   explicit IonCompileTask(MIRGenerator& mirGen, bool scriptHasIonScript,
-                          CompilerConstraintList* constraints,
                           WarpSnapshot* snapshot);
 
   JSScript* script() { return mirGen_.outerInfo().script(); }
   MIRGenerator& mirGen() { return mirGen_; }
   TempAllocator& alloc() { return mirGen_.alloc(); }
   bool scriptHasIonScript() const { return scriptHasIonScript_; }
-  CompilerConstraintList* constraints() { return constraints_; }
   WarpSnapshot* snapshot() { return snapshot_; }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
