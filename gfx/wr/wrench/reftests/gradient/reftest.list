@@ -1,5 +1,5 @@
 platform(linux,mac) == premultiplied-aligned.yaml premultiplied-aligned.png
-fuzzy(1,500) platform(linux,mac) == premultiplied-angle.yaml premultiplied-angle.png
+platform(linux,mac) == premultiplied-angle.yaml premultiplied-angle.png
 platform(linux,mac) == premultiplied-radial.yaml premultiplied-radial.png
 platform(linux,mac) == premultiplied-conic.yaml premultiplied-conic.png
 
@@ -67,7 +67,7 @@ fuzzy(1,17) == tiling-radial-4.yaml tiling-radial-4-ref.yaml
 
 fuzzy(1,17) == tiling-conic-1.yaml tiling-conic-1-ref.yaml
 fuzzy(1,1) == tiling-conic-2.yaml tiling-conic-2-ref.yaml
-fuzzy(1,7) == tiling-conic-3.yaml tiling-conic-3-ref.yaml
+fuzzy(1,3) == tiling-conic-3.yaml tiling-conic-3-ref.yaml
 
 == radial-zero-size-1.yaml radial-zero-size-ref.yaml
 == radial-zero-size-2.yaml radial-zero-size-ref.yaml
@@ -81,7 +81,7 @@ platform(linux,mac) fuzzy-range(<=1,*1404) == repeat-border-radius.yaml repeat-b
 
 == conic.yaml conic-ref.yaml
 fuzzy(1,57) == conic-simple.yaml conic-simple.png
-fuzzy(255,302) == conic-angle.yaml conic-angle.png
+fuzzy(255,166) == conic-angle.yaml conic-angle.png
 == conic-center.yaml conic-center.png
 fuzzy(1,2) == conic-angle-wraparound.yaml conic-angle.yaml
 fuzzy(1,1) == conic-angle-wraparound-negative.yaml conic-angle.yaml
