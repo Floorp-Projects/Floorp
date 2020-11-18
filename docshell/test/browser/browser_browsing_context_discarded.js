@@ -2,35 +2,64 @@
 
 const TOPIC = "browsing-context-discarded";
 
-add_task(async function toplevel() {
-  let win = await BrowserTestUtils.openNewBrowserWindow();
-  let bc = await SpecialPowers.spawn(
-    win.gBrowser.selectedBrowser,
-    [],
-    () => content.docShell.browsingContext
-  );
+async function observeDiscarded(browsingContexts, callback) {
+  let discarded = [];
 
-  let promise = BrowserUtils.promiseObserved(TOPIC, subject => subject === bc);
-  await BrowserTestUtils.closeWindow(win);
+  let promise = BrowserUtils.promiseObserved(TOPIC, subject => {
+    ok(subject instanceof BrowsingContext, "subject to be a BrowsingContext");
+    discarded.push(subject);
+
+    return browsingContexts.every(item => discarded.includes(item));
+  });
+  await callback();
   await promise;
 
-  // If we make it here, then we've received the notification.
-  ok(true, "got top-level notification");
+  return discarded;
+}
+
+add_task(async function toplevelForNewWindow() {
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  let browsingContext = win.gBrowser.selectedBrowser.browsingContext;
+
+  await observeDiscarded([win.browsingContext, browsingContext], async () => {
+    await BrowserTestUtils.closeWindow(win);
+  });
+});
+
+add_task(async function toplevelForNewTab() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  let browsingContext = tab.linkedBrowser.browsingContext;
+
+  let discarded = await observeDiscarded([browsingContext], () => {
+    BrowserTestUtils.removeTab(tab);
+  });
+
+  ok(
+    !discarded.includes(window.browsingContext),
+    "no notification for the current window's chrome browsing context"
+  );
 });
 
 add_task(async function subframe() {
-  let win = await BrowserTestUtils.openNewBrowserWindow();
-  let bc = await SpecialPowers.spawn(win.gBrowser.selectedBrowser, [], () => {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  let browsingContext = await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     let iframe = content.document.createElement("iframe");
     content.document.body.appendChild(iframe);
     iframe.contentWindow.location = "https://example.com/";
     return iframe.browsingContext;
   });
 
-  let promise = BrowserUtils.promiseObserved(TOPIC, subject => subject === bc);
-  await BrowserTestUtils.closeWindow(win);
-  await promise;
+  let discarded = await observeDiscarded([browsingContext], async () => {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+      let iframe = content.document.querySelector("iframe");
+      iframe.remove();
+    });
+  });
 
-  // If we make it here, then we've received the notification.
-  ok(true, "got subframe notification");
+  ok(
+    !discarded.includes(tab.browsingContext),
+    "no notification for toplevel browsing context"
+  );
+
+  BrowserTestUtils.removeTab(tab);
 });
