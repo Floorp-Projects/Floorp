@@ -66,7 +66,7 @@ void brush_vs(
     v_center = gradient.center_start_end_radius.xy;
     v_start_radius = gradient.center_start_end_radius.z;
     if (gradient.center_start_end_radius.z != gradient.center_start_end_radius.w) {
-      // Store 1/rd where rd = end_radius - start_start
+      // Store 1/rd where rd = end_radius - start_radius
       v_radius_scale = 1.0 / (gradient.center_start_end_radius.w - gradient.center_start_end_radius.z);
     } else {
       // If rd = 0, we can't get its reciprocal. Instead, just use a zero scale.
@@ -80,6 +80,9 @@ void brush_vs(
     v_center.y *= gradient.ratio_xy;
     v_repeated_size = gradient.stretch_size;
     v_repeated_size.y *=  gradient.ratio_xy;
+
+    // Normalize UV to 0..1 scale.
+    v_pos /= v_repeated_size;
 
     v_gradient_address = prim_user_data.x;
 
@@ -101,20 +104,23 @@ Fragment brush_fs() {
     vec2 local_pos = max(v_pos, vec2(0.0));
 
     // Apply potential horizontal and vertical repetitions.
-    vec2 pos = mod(local_pos, v_repeated_size);
+    vec2 pos = fract(local_pos);
 
-    vec2 prim_size = v_repeated_size * v_tile_repeat;
     // Handle bottom and right inflated edges (see brush_image).
-    if (local_pos.x >= prim_size.x) {
-        pos.x = v_repeated_size.x;
+    if (local_pos.x >= v_tile_repeat.x) {
+        pos.x = 1.0;
     }
-    if (local_pos.y >= prim_size.y) {
-        pos.y = v_repeated_size.y;
+    if (local_pos.y >= v_tile_repeat.y) {
+        pos.y = 1.0;
     }
 #else
     // Apply potential horizontal and vertical repetitions.
-    vec2 pos = mod(v_pos, v_repeated_size);
+    vec2 pos = fract(v_pos);
 #endif
+
+    // Rescale UV to actual repetition size. This can't be done in the vertex
+    // shader due to the use of length() below.
+    pos *= v_repeated_size;
 
     // Solve for t in length(pd) = v_start_radius + t * rd
     vec2 pd = pos - v_center;
