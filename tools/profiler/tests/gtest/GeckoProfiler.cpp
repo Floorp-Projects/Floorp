@@ -851,9 +851,6 @@ TEST(GeckoProfiler, Markers)
       (u"measure name"_ns, Some(u"start mark"_ns), Some(u"end mark"_ns), ts1,
        ts2, mozilla::Nothing()));
 
-  PROFILER_ADD_MARKER_WITH_PAYLOAD("VsyncMarkerPayload marker", OTHER,
-                                   VsyncMarkerPayload, (ts1));
-
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "IPCMarkerPayload marker", IPC, IPCMarkerPayload,
       (1111, 1, 3 /* PAPZ::Msg_LayerTransforms */, mozilla::ipc::ParentSide,
@@ -990,7 +987,6 @@ TEST(GeckoProfiler, Markers)
     S_TextMarkerPayload2,
     S_UserTimingMarkerPayload_mark,
     S_UserTimingMarkerPayload_measure,
-    S_VsyncMarkerPayload,
     S_IPCMarkerPayload,
     S_TextWithStack,
     S_TextToMTWithStack,
@@ -1473,14 +1469,6 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ_JSON(payload["entryType"], String, "measure");
                 EXPECT_EQ_JSON(payload["startMark"], String, "start mark");
                 EXPECT_EQ_JSON(payload["endMark"], String, "end mark");
-
-              } else if (nameString == "VsyncMarkerPayload marker") {
-                EXPECT_EQ(state, S_VsyncMarkerPayload);
-                state = State(S_VsyncMarkerPayload + 1);
-                EXPECT_EQ(typeString, "VsyncTimestamp");
-                // Timestamp is stored in marker outside of payload.
-                EXPECT_TIMING_INSTANT_AT(ts1Double);
-                EXPECT_TRUE(payload["stack"].isNull());
 
               } else if (nameString == "IPCMarkerPayload marker") {
                 EXPECT_EQ(state, S_IPCMarkerPayload);

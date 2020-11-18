@@ -2176,8 +2176,23 @@ already_AddRefed<IAPZCTreeManager> CompositorBridgeParent::GetAPZCTreeManager(
 static void InsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (profiler_thread_is_being_profiled()) {
-    PROFILER_ADD_MARKER_WITH_PAYLOAD("VsyncTimestamp", GRAPHICS,
-                                     VsyncMarkerPayload, (aVsyncTimestamp));
+    // Tracks when a vsync occurs according to the HardwareComposer.
+    struct VsyncMarker {
+      static constexpr mozilla::Span<const char> MarkerTypeName() {
+        return mozilla::MakeStringSpan("VsyncTimestamp");
+      }
+      static void StreamJSONMarkerData(
+          baseprofiler::SpliceableJSONWriter& aWriter) {}
+      static MarkerSchema MarkerTypeDisplay() {
+        using MS = MarkerSchema;
+        MS schema{MS::Location::markerChart, MS::Location::markerTable};
+        // Nothing outside the defaults.
+        return schema;
+      }
+    };
+    profiler_add_marker("VsyncTimestamp", geckoprofiler::category::GRAPHICS,
+                        MarkerTiming::InstantAt(aVsyncTimestamp),
+                        VsyncMarker{});
   }
 }
 #endif
