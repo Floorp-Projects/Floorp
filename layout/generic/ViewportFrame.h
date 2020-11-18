@@ -61,7 +61,7 @@ class ViewportFrame : public nsContainerFrame {
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
 
-  bool ComputeCustomOverflow(nsOverflowAreas&) override { return false; }
+  bool ComputeCustomOverflow(mozilla::OverflowAreas&) override { return false; }
 
   /**
    * Adjust aReflowInput to account for scrollbars and pres shell

@@ -7188,7 +7188,7 @@ NS_DECLARE_FRAME_PROPERTY_DELETABLE(WebRenderTextBounds, nsRect)
 nsRect nsTextFrame::WebRenderBounds() {
   nsRect* cachedBounds = GetProperty(WebRenderTextBounds());
   if (!cachedBounds) {
-    nsOverflowAreas overflowAreas;
+    OverflowAreas overflowAreas;
     ComputeCustomOverflowInternal(overflowAreas, false);
     cachedBounds = new nsRect();
     *cachedBounds = overflowAreas.InkOverflow();
@@ -9701,12 +9701,12 @@ nsTextFrame::TrimOutput nsTextFrame::TrimTrailingWhiteSpace(
   return result;
 }
 
-nsOverflowAreas nsTextFrame::RecomputeOverflow(nsIFrame* aBlockFrame,
-                                               bool aIncludeShadows) {
+OverflowAreas nsTextFrame::RecomputeOverflow(nsIFrame* aBlockFrame,
+                                             bool aIncludeShadows) {
   RemoveProperty(WebRenderTextBounds());
 
   nsRect bounds(nsPoint(0, 0), GetSize());
-  nsOverflowAreas result(bounds, bounds);
+  OverflowAreas result(bounds, bounds);
 
   gfxSkipCharsIterator iter = EnsureTextRun(nsTextFrame::eInflated);
   if (!mTextRun) return result;
@@ -10154,11 +10154,11 @@ bool nsTextFrame::HasAnyNoncollapsedCharacters() {
   return skippedOffset != skippedOffsetEnd;
 }
 
-bool nsTextFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) {
+bool nsTextFrame::ComputeCustomOverflow(OverflowAreas& aOverflowAreas) {
   return ComputeCustomOverflowInternal(aOverflowAreas, true);
 }
 
-bool nsTextFrame::ComputeCustomOverflowInternal(nsOverflowAreas& aOverflowAreas,
+bool nsTextFrame::ComputeCustomOverflowInternal(OverflowAreas& aOverflowAreas,
                                                 bool aIncludeShadows) {
   if (HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     return true;

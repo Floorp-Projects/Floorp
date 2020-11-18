@@ -40,7 +40,7 @@ class nsBlockReflowContext {
   bool PlaceBlock(const ReflowInput& aReflowInput, bool aForceFit,
                   nsLineBox* aLine,
                   nsCollapsingMargin& aBEndMarginResult /* out */,
-                  nsOverflowAreas& aOverflowAreas,
+                  mozilla::OverflowAreas& aOverflowAreas,
                   const nsReflowStatus& aReflowStatus);
 
   nsCollapsingMargin& GetCarriedOutBEndMargin() {

@@ -116,16 +116,16 @@ class OverflowChangedTracker {
             frame->GetProperty(nsIFrame::DebugInitialOverflowPropertyApplied()),
             "InitialOverflowProperty must be set first.");
 
-        nsOverflowAreas* overflow =
+        OverflowAreas* overflow =
             frame->GetProperty(nsIFrame::InitialOverflowProperty());
         if (overflow) {
           // FinishAndStoreOverflow will change the overflow areas passed in,
           // so make a copy.
-          nsOverflowAreas overflowCopy = *overflow;
+          OverflowAreas overflowCopy = *overflow;
           frame->FinishAndStoreOverflow(overflowCopy, frame->GetSize());
         } else {
           nsRect bounds(nsPoint(0, 0), frame->GetSize());
-          nsOverflowAreas boundsOverflow;
+          OverflowAreas boundsOverflow;
           boundsOverflow.SetAllTo(bounds);
           frame->FinishAndStoreOverflow(boundsOverflow, bounds.Size());
         }

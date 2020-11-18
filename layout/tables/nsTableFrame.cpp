@@ -2016,7 +2016,7 @@ void nsTableFrame::FixupPositionedTableParts(nsPresContext* aPresContext,
   nsLayoutUtils::UnionChildOverflow(this, aDesiredSize.mOverflowAreas);
 }
 
-bool nsTableFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) {
+bool nsTableFrame::ComputeCustomOverflow(OverflowAreas& aOverflowAreas) {
   // As above in Reflow, make sure the table overflow area includes the table
   // rect, and check for collapsed borders leaking out.
   if (ShouldApplyOverflowClipping(StyleDisplay()) != PhysicalAxes::Both) {
@@ -2147,7 +2147,7 @@ void nsTableFrame::AdjustForCollapsingRowsCols(
   nsTableFrame* firstInFlow = static_cast<nsTableFrame*>(FirstInFlow());
   nscoord iSize = firstInFlow->GetCollapsedISize(aWM, aBorderPadding);
   nscoord rgISize = iSize - GetColSpacing(-1) - GetColSpacing(GetColCount());
-  nsOverflowAreas overflow;
+  OverflowAreas overflow;
   // Walk the list of children
   for (uint32_t childX = 0; childX < rowGroups.Length(); childX++) {
     nsTableRowGroupFrame* rgFrame = rowGroups[childX];
@@ -2840,7 +2840,7 @@ void nsTableFrame::PlaceRepeatedFooter(TableReflowInput& aReflowInput,
 void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
                                   nsReflowStatus& aStatus,
                                   nsIFrame*& aLastChildReflowed,
-                                  nsOverflowAreas& aOverflowAreas) {
+                                  OverflowAreas& aOverflowAreas) {
   aStatus.Reset();
   aLastChildReflowed = nullptr;
 

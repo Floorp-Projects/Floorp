@@ -228,7 +228,7 @@ class nsTableCellFrame : public nsContainerFrame,
 
   void DecorateForSelection(DrawTarget* aDrawTarget, nsPoint aPt);
 
-  virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override;
+  bool ComputeCustomOverflow(mozilla::OverflowAreas& aOverflowAreas) override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override {
     return nsContainerFrame::IsFrameOfType(aFlags & ~(nsIFrame::eTablePart));

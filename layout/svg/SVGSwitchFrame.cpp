@@ -217,7 +217,7 @@ void SVGSwitchFrame::ReflowSVG() {
     RemoveStateBits(NS_FRAME_FIRST_REFLOW);  // tell our children
   }
 
-  nsOverflowAreas overflowRects;
+  OverflowAreas overflowRects;
 
   nsIFrame* child = GetActiveChildFrame();
   ReflowAllSVGTextFramesInsideNonActiveChildren(child);

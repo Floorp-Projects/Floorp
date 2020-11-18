@@ -403,7 +403,7 @@ class nsLineBox final : public nsLineLink {
   // The ink overflow area should never be used for things that affect layout.
   // The scrollable overflow area are permitted to affect layout for handling of
   // overflow and scrollbars.
-  void SetOverflowAreas(const nsOverflowAreas& aOverflowAreas);
+  void SetOverflowAreas(const mozilla::OverflowAreas& aOverflowAreas);
   mozilla::LogicalRect GetOverflowArea(mozilla::OverflowType aType,
                                        mozilla::WritingMode aWM,
                                        const nsSize& aContainerSize) {
@@ -412,12 +412,12 @@ class nsLineBox final : public nsLineLink {
   nsRect GetOverflowArea(mozilla::OverflowType aType) const {
     return mData ? mData->mOverflowAreas.Overflow(aType) : GetPhysicalBounds();
   }
-  nsOverflowAreas GetOverflowAreas() const {
+  mozilla::OverflowAreas GetOverflowAreas() const {
     if (mData) {
       return mData->mOverflowAreas;
     }
     nsRect bounds = GetPhysicalBounds();
-    return nsOverflowAreas(bounds, bounds);
+    return mozilla::OverflowAreas(bounds, bounds);
   }
   nsRect InkOverflowRect() const {
     return GetOverflowArea(mozilla::OverflowType::Ink);
@@ -640,7 +640,7 @@ class nsLineBox final : public nsLineLink {
   struct ExtraData {
     explicit ExtraData(const nsRect& aBounds)
         : mOverflowAreas(aBounds, aBounds) {}
-    nsOverflowAreas mOverflowAreas;
+    mozilla::OverflowAreas mOverflowAreas;
   };
 
   struct ExtraBlockData : public ExtraData {

@@ -1333,7 +1333,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   }
 
   // Handle paginated overflow (see nsContainerFrame.h)
-  nsOverflowAreas ocBounds;
+  OverflowAreas ocBounds;
   nsReflowStatus ocStatus;
   if (GetPrevInFlow()) {
     ReflowOverflowContainerChildren(
@@ -1348,7 +1348,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
 
   // Drain & handle pushed floats
   DrainPushedFloats();
-  nsOverflowAreas fcBounds;
+  OverflowAreas fcBounds;
   nsReflowStatus fcStatus;
   ReflowPushedFloats(state, fcBounds, fcStatus);
 
@@ -2036,7 +2036,7 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
 
 static void ConsiderBlockEndEdgeOfChildren(const WritingMode aWritingMode,
                                            nscoord aBEndEdgeOfChildren,
-                                           nsOverflowAreas& aOverflowAreas,
+                                           OverflowAreas& aOverflowAreas,
                                            const nsStyleDisplay* aDisplay) {
   // Factor in the block-end edge of the children.  Child frames will be added
   // to the overflow area as we iterate through the lines, but their margins
@@ -2084,11 +2084,11 @@ static void ConsiderBlockEndEdgeOfChildren(const WritingMode aWritingMode,
 void nsBlockFrame::ComputeOverflowAreas(const nsRect& aBounds,
                                         const nsStyleDisplay* aDisplay,
                                         nscoord aBEndEdgeOfChildren,
-                                        nsOverflowAreas& aOverflowAreas) {
+                                        OverflowAreas& aOverflowAreas) {
   // Compute the overflow areas of our children
   // XXX_perf: This can be done incrementally.  It is currently one of
   // the things that makes incremental reflow O(N^2).
-  nsOverflowAreas areas(aBounds, aBounds);
+  OverflowAreas areas(aBounds, aBounds);
   if (ShouldApplyOverflowClipping(aDisplay) != PhysicalAxes::Both) {
     for (const auto& line : Lines()) {
       if (aDisplay->IsContainLayout()) {
@@ -2099,8 +2099,8 @@ void nsBlockFrame::ComputeOverflowAreas(const nsRect& aBounds,
         // so this has the same affect as unioning the child's visual and
         // scrollable overflow with its parent's ink overflow.
         nsRect childVisualRect = line.InkOverflowRect();
-        nsOverflowAreas childVisualArea =
-            nsOverflowAreas(childVisualRect, nsRect());
+        OverflowAreas childVisualArea =
+            OverflowAreas(childVisualRect, nsRect());
         areas.UnionWith(childVisualArea);
       } else {
         areas.UnionWith(line.GetOverflowAreas());
@@ -2129,14 +2129,14 @@ void nsBlockFrame::ComputeOverflowAreas(const nsRect& aBounds,
   aOverflowAreas = areas;
 }
 
-void nsBlockFrame::UnionChildOverflow(nsOverflowAreas& aOverflowAreas) {
+void nsBlockFrame::UnionChildOverflow(OverflowAreas& aOverflowAreas) {
   // We need to update the overflow areas of lines manually, as they
   // get cached and re-used otherwise. Lines aren't exposed as normal
   // frame children, so calling UnionChildOverflow alone will end up
   // using the old cached values.
   for (auto& line : Lines()) {
     nsRect bounds = line.GetPhysicalBounds();
-    nsOverflowAreas lineAreas(bounds, bounds);
+    OverflowAreas lineAreas(bounds, bounds);
 
     int32_t n = line.GetChildCount();
     for (nsIFrame* lineFrame = line.mFirstChild; n > 0;
@@ -2161,7 +2161,7 @@ void nsBlockFrame::UnionChildOverflow(nsOverflowAreas& aOverflowAreas) {
                                     {kPrincipalList, kFloatList});
 }
 
-bool nsBlockFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) {
+bool nsBlockFrame::ComputeCustomOverflow(OverflowAreas& aOverflowAreas) {
   bool found;
   nscoord blockEndEdgeOfChildren =
       GetProperty(BlockEndEdgeOfChildrenProperty(), &found);
@@ -3981,7 +3981,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
       bool forceFit = aState.IsAdjacentWithTop() && clearance <= 0 &&
                       !floatAvailableSpace.HasFloats();
       nsCollapsingMargin collapsedBEndMargin;
-      nsOverflowAreas overflowAreas;
+      OverflowAreas overflowAreas;
       *aKeepReflowGoing =
           brc.PlaceBlock(*childReflowInput, forceFit, aLine.get(),
                          collapsedBEndMargin, overflowAreas, frameReflowStatus);
@@ -4956,7 +4956,7 @@ bool nsBlockFrame::PlaceLine(BlockReflowInput& aState,
 
   // From here on, pfd->mBounds rectangles are incorrect because bidi
   // might have moved frames around!
-  nsOverflowAreas overflowAreas;
+  OverflowAreas overflowAreas;
   aLineLayout.RelativePositionFrames(overflowAreas);
   aLine->SetOverflowAreas(overflowAreas);
   if (addedMarker) {
@@ -5035,7 +5035,7 @@ bool nsBlockFrame::PlaceLine(BlockReflowInput& aState,
   if (aLine->HasFloats()) {
     // Union the float overflow areas (stored in aState) and the value computed
     // by the line layout code.
-    nsOverflowAreas lineOverflowAreas = aState.mFloatOverflowAreas;
+    OverflowAreas lineOverflowAreas = aState.mFloatOverflowAreas;
     lineOverflowAreas.UnionWith(aLine->GetOverflowAreas());
     aLine->SetOverflowAreas(lineOverflowAreas);
 
@@ -6678,7 +6678,7 @@ StyleClear nsBlockFrame::FindTrailingClear() {
 }
 
 void nsBlockFrame::ReflowPushedFloats(BlockReflowInput& aState,
-                                      nsOverflowAreas& aOverflowAreas,
+                                      OverflowAreas& aOverflowAreas,
                                       nsReflowStatus& aStatus) {
   // Pushed floats live at the start of our float list; see comment
   // above nsBlockFrame::DrainPushedFloats.

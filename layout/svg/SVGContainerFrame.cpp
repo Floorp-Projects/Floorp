@@ -67,7 +67,7 @@ void SVGContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
   mFrames.DestroyFrame(aOldFrame);
 }
 
-bool SVGContainerFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) {
+bool SVGContainerFrame::ComputeCustomOverflow(OverflowAreas& aOverflowAreas) {
   if (mState & NS_FRAME_IS_NONDISPLAY) {
     // We don't maintain overflow rects.
     // XXX It would have be better if the restyle request hadn't even happened.
@@ -309,7 +309,7 @@ void SVGDisplayContainerFrame::ReflowSVG() {
     RemoveStateBits(NS_FRAME_FIRST_REFLOW);  // tell our children
   }
 
-  nsOverflowAreas overflowRects;
+  OverflowAreas overflowRects;
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
     ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);

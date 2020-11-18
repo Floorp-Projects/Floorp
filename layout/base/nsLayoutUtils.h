@@ -69,7 +69,6 @@ class nsIFrame;
 class nsPIDOMWindowOuter;
 class imgIRequest;
 struct nsStyleFont;
-struct nsOverflowAreas;
 
 namespace mozilla {
 struct AspectRatio;
@@ -87,6 +86,7 @@ class EffectSet;
 struct ActiveScrolledRoot;
 enum class ScrollOrigin : uint8_t;
 enum class StyleImageOrientation : uint8_t;
+struct OverflowAreas;
 namespace dom {
 class CanvasRenderingContext2D;
 class DOMRectList;
@@ -2304,7 +2304,7 @@ class nsLayoutUtils {
    * kSelectPopupList and kPopupList are always skipped.
    */
   static void UnionChildOverflow(
-      nsIFrame* aFrame, nsOverflowAreas& aOverflowAreas,
+      nsIFrame* aFrame, mozilla::OverflowAreas& aOverflowAreas,
       mozilla::layout::FrameChildListIDs aSkipChildLists =
           mozilla::layout::FrameChildListIDs());
 

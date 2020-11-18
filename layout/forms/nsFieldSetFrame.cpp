@@ -395,7 +395,7 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
   NS_WARNING_ASSERTION(aReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE,
                        "Should have a precomputed inline-size!");
 
-  nsOverflowAreas ocBounds;
+  OverflowAreas ocBounds;
   nsReflowStatus ocStatus;
   auto* prevInFlow = static_cast<nsFieldSetFrame*>(GetPrevInFlow());
   if (prevInFlow) {

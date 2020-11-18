@@ -475,7 +475,7 @@ class nsBlockFrame : public nsContainerFrame {
   void ComputeOverflowAreas(const nsRect& aBounds,
                             const nsStyleDisplay* aDisplay,
                             nscoord aBEndEdgeOfChildren,
-                            nsOverflowAreas& aOverflowAreas);
+                            mozilla::OverflowAreas& aOverflowAreas);
 
   /**
    * Add the frames in aFrameList to this block after aPrevSibling.
@@ -535,9 +535,11 @@ class nsBlockFrame : public nsContainerFrame {
   void ReparentFloats(nsIFrame* aFirstFrame, nsBlockFrame* aOldParent,
                       bool aReparentSiblings);
 
-  virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override;
+  virtual bool ComputeCustomOverflow(
+      mozilla::OverflowAreas& aOverflowAreas) override;
 
-  virtual void UnionChildOverflow(nsOverflowAreas& aOverflowAreas) override;
+  virtual void UnionChildOverflow(
+      mozilla::OverflowAreas& aOverflowAreas) override;
 
   /**
    * Load all of aFrame's floats into the float manager iff aFrame is not a
@@ -644,7 +646,7 @@ class nsBlockFrame : public nsContainerFrame {
   /** Reflow pushed floats
    */
   void ReflowPushedFloats(BlockReflowInput& aState,
-                          nsOverflowAreas& aOverflowAreas,
+                          mozilla::OverflowAreas& aOverflowAreas,
                           nsReflowStatus& aStatus);
 
   /** Find any trailing BR clear from the last line of the block (or its PIFs)

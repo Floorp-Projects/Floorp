@@ -547,7 +547,7 @@ bool nsLayoutUtils::GPUImageScalingEnabled() {
 }
 
 void nsLayoutUtils::UnionChildOverflow(nsIFrame* aFrame,
-                                       nsOverflowAreas& aOverflowAreas,
+                                       OverflowAreas& aOverflowAreas,
                                        FrameChildListIDs aSkipChildLists) {
   // Iterate over all children except pop-ups.
   FrameChildListIDs skip(aSkipChildLists);
@@ -558,7 +558,7 @@ void nsLayoutUtils::UnionChildOverflow(nsIFrame* aFrame,
       continue;
     }
     for (nsIFrame* child : list) {
-      nsOverflowAreas childOverflow =
+      OverflowAreas childOverflow =
           child->GetOverflowAreas() + child->GetPosition();
       aOverflowAreas.UnionWith(childOverflow);
     }

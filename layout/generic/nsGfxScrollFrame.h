@@ -381,7 +381,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
     mScrollPosForLayerPixelAlignment = GetScrollPosition();
   }
 
-  bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas);
+  bool ComputeCustomOverflow(mozilla::OverflowAreas& aOverflowAreas);
 
   void UpdateSticky();
 
@@ -835,7 +835,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   void DidReflow(nsPresContext* aPresContext,
                  const ReflowInput* aReflowInput) override;
 
-  bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) final {
+  bool ComputeCustomOverflow(mozilla::OverflowAreas& aOverflowAreas) final {
     return mHelper.ComputeCustomOverflow(aOverflowAreas);
   }
 
@@ -1290,7 +1290,7 @@ class nsXULScrollFrame final : public nsBoxFrame,
   nscoord GetMinISize(gfxContext *aRenderingContext) final;
 #endif
 
-  bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) final {
+  bool ComputeCustomOverflow(mozilla::OverflowAreas& aOverflowAreas) final {
     return mHelper.ComputeCustomOverflow(aOverflowAreas);
   }
 

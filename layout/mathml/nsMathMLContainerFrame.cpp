@@ -749,7 +749,7 @@ void nsMathMLContainerFrame::GatherAndStoreOverflow(ReflowOutput* aMetrics) {
 }
 
 bool nsMathMLContainerFrame::ComputeCustomOverflow(
-    nsOverflowAreas& aOverflowAreas) {
+    OverflowAreas& aOverflowAreas) {
   // All non-child-frame content such as nsMathMLChars (and most child-frame
   // content) is included in mBoundingMetrics.
   nsRect boundingBox(

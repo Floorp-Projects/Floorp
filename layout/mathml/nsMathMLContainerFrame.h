@@ -109,7 +109,7 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
-  virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override;
+  bool ComputeCustomOverflow(mozilla::OverflowAreas& aOverflowAreas) override;
 
   virtual void MarkIntrinsicISizesDirty() override;
 

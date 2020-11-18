@@ -56,7 +56,7 @@ class SVGFELeafFrame final : public nsIFrame {
   virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                                     int32_t aModType) override;
 
-  virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override {
+  virtual bool ComputeCustomOverflow(OverflowAreas& aOverflowAreas) override {
     // We don't maintain a ink overflow rect
     return false;
   }
