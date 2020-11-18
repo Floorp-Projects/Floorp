@@ -3916,7 +3916,8 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_14___default.a
       },
       privacyNoticeURL: topStories.privacyNoticeURL,
       showPrefName: topStories.pref.feed,
-      title: message.header.title
+      title: message.header.title,
+      eventSource: "CARDGRID"
     }, this.renderLayout(layoutRender)), this.renderLayout([{
       width: 12,
       components: [{
