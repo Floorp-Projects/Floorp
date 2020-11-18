@@ -76,7 +76,7 @@ class PrintHelper {
     this.sourceBrowser = sourceBrowser;
   }
 
-  async startPrint(condition = {}) {
+  async startPrint() {
     this.sourceBrowser.ownerGlobal.document
       .getElementById("cmd_print")
       .doCommand();
@@ -85,12 +85,7 @@ class PrintHelper {
       "Wait for dialog"
     );
     await dialog._dialogReady;
-
-    if (Object.keys(condition).length === 0) {
-      await this.win._initialized;
-    } else if (condition.waitFor == "loadComplete") {
-      await BrowserTestUtils.waitForAttributeRemoval("loading", document.body);
-    }
+    await this.win._initialized;
   }
 
   beforeInit(initFn) {
