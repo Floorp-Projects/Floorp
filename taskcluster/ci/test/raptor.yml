@@ -25,21 +25,24 @@ job-defaults:
                         by-pageload:
                             warm:
                                 by-test-platform:
-                                    (linux|windows|macos)(?!.*shippable).*: []
+                                    windows7-32.*/opt: []
+                                    (linux|windows10|macos)(?!.*shippable).*: []
                                     linux.*shippable.*: []
                                     macos.*shippable.*: []
                                     default: ["mozilla-central"]
                             cold:
                                 by-test-platform:
+                                    windows7-32.*/opt: []
                                     macosx.*64(?:-qr)?/opt: ["mozilla-central"]
-                                    (linux|windows|macos)(?!.*shippable).*: []
+                                    (linux|windows10|macos)(?!.*shippable).*: []
                                     linux.*shippable.*: []
                                     macos.*shippable.*: []
                                     default: ["trunk", "mozilla-beta"]
                     default:
                         by-test-platform:
+                            windows7-32.*/opt: []
                             macosx.*64(?:-qr)?/opt: ["mozilla-central"]
-                            (linux|windows|macos)(?!.*shippable).*: []
+                            (linux|windows10|macos)(?!.*shippable).*: []
                             default: ["trunk", "mozilla-beta"]
             chrome: []
             chromium: []
@@ -47,12 +50,14 @@ job-defaults:
                 by-test-name:
                     raptor-.*-profiling.*:
                         by-test-platform:
-                            (linux|windows|macos)(?!.*shippable).*: []
+                            windows7-32.*/opt: []
+                            (linux|windows10|macos)(?!.*shippable).*: []
                             default: ["mozilla-central"]
                     default:
                         by-test-platform:
+                            windows7-32.*/opt: []
                             macosx.*64(?:-qr)?/opt: ["mozilla-central"]
-                            (linux|windows|macos)(?!.*shippable).*: []
+                            (linux|windows10|macos)(?!.*shippable).*: []
                             default: ["trunk", "mozilla-beta"]
     limit-platforms:
         by-app:
@@ -220,12 +225,14 @@ raptor-tp6-live:
         by-pageload:
             warm:
                 by-test-platform:
-                    (linux|windows|macos)(?!.*shippable).*: []
+                    windows7-32.*/opt: []
+                    (linux|windows10|macos)(?!.*shippable).*: []
                     default: ["mozilla-central"]
             cold:
                 by-test-platform:
+                    windows7-32.*/opt: []
                     macosx.*64(?:-qr)?/opt: ["mozilla-central"]
-                    (linux|windows|macos)(?!.*shippable).*: []
+                    (linux|windows10|macos)(?!.*shippable).*: []
                     default: ["mozilla-central", "autoland"]
     tier: 2
     mozharness:
@@ -612,8 +619,9 @@ raptor-youtube-playback-h264-sfr-firefox:
     treeherder-symbol: Rap(ytp-h264-sfr)
     run-on-projects:
         by-test-platform:
+            windows7-32.*/opt: []
             windows10-64-ref-hw-2017/opt: ['mozilla-central']
-            (linux|windows|macos)(?!.*shippable).*: []
+            (linux|windows10|macos)(?!.*shippable).*: []
             default: ['mozilla-central']
     max-run-time:
         by-test-platform:
@@ -630,8 +638,9 @@ raptor-youtube-playback-hfr-firefox:
     treeherder-symbol: Rap(ytp-hfr)
     run-on-projects:
         by-test-platform:
+            windows7-32.*/opt: []
             windows10-64-ref-hw-2017/opt: ['mozilla-central']
-            (linux|windows|macos)(?!.*shippable).*: []
+            (linux|windows10|macos)(?!.*shippable).*: []
             default: ['mozilla-central']
     max-run-time: 3600
     tier: 2
@@ -646,8 +655,9 @@ raptor-youtube-playback-vp9-sfr-firefox:
     treeherder-symbol: Rap(ytp-vp9-sfr)
     run-on-projects:
         by-test-platform:
+            windows7-32.*/opt: []
             windows10-64-ref-hw-2017/opt: ['mozilla-central']
-            (linux|windows|macos)(?!.*shippable).*: []
+            (linux|windows10|macos)(?!.*shippable).*: []
             default: ['mozilla-central']
     max-run-time:
         by-test-platform:
@@ -666,8 +676,9 @@ raptor-youtube-playback-widevine-hfr-firefox:
     treeherder-symbol: Rap(ytp-widevine-hfr)
     run-on-projects:
         by-test-platform:
+            windows7-32.*/opt: []
             windows10-64-ref-hw-2017/opt: ['mozilla-central']
-            (linux|windows|macos)(?!.*shippable).*: []
+            (linux|windows10|macos)(?!.*shippable).*: []
             default: ['mozilla-central']
     max-run-time:
         by-test-platform:
@@ -684,8 +695,9 @@ raptor-youtube-playback-widevine-h264-sfr-firefox:
     treeherder-symbol: Rap(ytp-widevine-h264-sfr)
     run-on-projects:
         by-test-platform:
+            windows7-32.*/opt: []
             windows10-64-ref-hw-2017/opt: ['mozilla-central']
-            (linux|windows|macos)(?!.*shippable).*: []
+            (linux|windows10|macos)(?!.*shippable).*: []
             default: ['mozilla-central']
     max-run-time:
         by-test-platform:
@@ -743,7 +755,8 @@ raptor-jetstream2-firefox:
     treeherder-symbol: Rap(js2)
     run-on-projects:
         by-test-platform:
-            (linux|windows|macos)(?!.*shippable).*: []
+            windows7-32.*/opt: []
+            (linux|windows10|macos)(?!.*shippable).*: []
             default: ['mozilla-central']
     tier: 3
     max-run-time: 8000
