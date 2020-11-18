@@ -67,7 +67,6 @@ def _extract_applicable_action(actions_json, action_name, task_group_id, task_id
     """
     if task_id:
         tags = get_task_definition(task_id).get("tags")
-    action = None
 
     for _action in actions_json["actions"]:
         if action_name != _action["name"]:
@@ -76,21 +75,16 @@ def _extract_applicable_action(actions_json, action_name, task_group_id, task_id
         context = _action.get("context", [])
         # Ensure the task is within the context of the action
         if task_id and tags and _tags_within_context(tags, context):
-            action = _action
+            return _action
         elif context == []:
-            action = _action
+            return _action
 
-    if not action:
-        available_actions = ", ".join(
-            sorted({a["name"] for a in actions_json["actions"]})
+    available_actions = ", ".join(sorted({a["name"] for a in actions_json["actions"]}))
+    raise LookupError(
+        "{} action is not available for this task. Available: {}".format(
+            action_name, available_actions
         )
-        raise LookupError(
-            "{} action is not available for this task. Available: {}".format(
-                action_name, available_actions
-            )
-        )
-
-    return action
+    )
 
 
 def trigger_action(action_name, decision_task_id, task_id=None, input={}):
