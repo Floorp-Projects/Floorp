@@ -252,8 +252,8 @@ class nsTableCellFrame : public nsContainerFrame,
                    ClassID aID);
   ~nsTableCellFrame();
 
-  virtual LogicalSides GetLogicalSkipSides(
-      const ReflowInput* aReflowInput = nullptr) const override;
+  LogicalSides GetLogicalSkipSides(
+      const Maybe<SkipSidesDuringReflow>& aConsumed = Nothing()) const override;
 
   /**
    * GetBorderOverflow says how far the cell's own borders extend
