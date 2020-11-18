@@ -11,9 +11,6 @@
 #include "GeckoProfiler.h"
 #include "gfxUtils.h"
 #include "nsThreadUtils.h"
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
-#endif
 
 using namespace mozilla;
 using namespace mozilla::gfx;
