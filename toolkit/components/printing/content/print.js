@@ -226,12 +226,6 @@ var PrintEventHandler = {
       // This file in only used if pref print.always_print_silent is false, so
       // no need to check that here.
 
-      if (document.body.getAttribute("rendering")) {
-        // Disable elements of form while waiting to initialize
-        this.printForm.disable();
-        await window._initialized;
-      }
-
       // Hide the dialog box before opening system dialog
       // We cannot close the window yet because the browsing context for the
       // print preview browser is needed to print the page.
