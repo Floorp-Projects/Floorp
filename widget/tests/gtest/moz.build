@@ -6,7 +6,6 @@
 
 UNIFIED_SOURCES = [
     "TestTimeConverter.cpp",
-    "TestTouchResampler.cpp",
 ]
 
 FINAL_LIBRARY = "xul-gtest"
