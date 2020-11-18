@@ -2685,11 +2685,11 @@ static void CollectJavaThreadProfileData(ProfileBuffer& aProfileBuffer) {
   // if we can customize it
 
   // Pass the samples
-  // FIXME(bug 1618560): We are currently only profiling the Java main thread.
+  // FIXME(bug 1618560): We are currently only profiling the Android UI thread.
   constexpr int threadId = 0;
   int sampleId = 0;
   while (true) {
-    // Gets the data from the java main thread only.
+    // Gets the data from the Android UI thread only.
     double sampleTime = java::GeckoJavaSampler::GetSampleTime(sampleId);
     if (sampleTime == 0.0) {
       break;
@@ -2716,7 +2716,7 @@ static void CollectJavaThreadProfileData(ProfileBuffer& aProfileBuffer) {
 
   // Pass the markers now
   while (true) {
-    // Gets the data from the java main thread only.
+    // Gets the data from the Android UI thread only.
     java::GeckoJavaSampler::Marker::LocalRef marker =
         java::GeckoJavaSampler::PollNextMarker();
     if (!marker) {
@@ -2847,10 +2847,16 @@ static void locked_profiler_stream_json_for_this_process(
       ProfileBuffer javaBuffer(bufferManager);
       CollectJavaThreadProfileData(javaBuffer);
 
-      // Thread id of java Main thread is 0, if we support profiling of other
-      // java thread, we have to get thread id and name via JNI.
+      // Set the thread id of the Android UI thread to be 0.
+      // We are profiling the Android UI thread twice: Both from the C++ side
+      // (as a regular C++ profiled thread with the name "AndroidUI"), and from
+      // the Java side. The thread's actual ID is mozilla::jni::GetUIThreadId(),
+      // but since we're using that ID for the C++ side, we need to pick another
+      // tid that doesn't conflict with it for the Java side. So we just use 0.
+      // Once we add support for profiling of other java threads, we'll have to
+      // get their thread id and name via JNI.
       RefPtr<ThreadInfo> threadInfo = new ThreadInfo(
-          "Java Main Thread", 0, false, CorePS::ProcessStartTime());
+          "AndroidUI (JVM)", 0, false, CorePS::ProcessStartTime());
       ProfiledThreadData profiledThreadData(threadInfo, nullptr);
       profiledThreadData.StreamJSON(
           javaBuffer, nullptr, aWriter, CorePS::ProcessName(aLock),
