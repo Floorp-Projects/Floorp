@@ -44,4 +44,12 @@ class TopSiteItemViewHolderTest {
         view.top_site_item.performClick()
         verify { interactor.onSelectTopSite("https://getpocket.com", TopSite.Type.DEFAULT) }
     }
+
+    @Test
+    fun `calls interactor on long click`() {
+        TopSiteItemViewHolder(view, interactor).bind(pocket)
+
+        view.top_site_item.performLongClick()
+        verify { interactor.onTopSiteMenuOpened() }
+    }
 }

@@ -47,6 +47,7 @@ class CollectionViewHolder(
         }
 
         collection_overflow_button.setOnClickListener {
+            interactor.onCollectionMenuOpened()
             collectionMenu.menuBuilder
                 .build(view.context)
                 .show(anchor = it)

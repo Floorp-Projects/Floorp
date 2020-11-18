@@ -116,4 +116,16 @@ class SessionControlInteractorTest {
         interactor.onRemoveCollectionsPlaceholder()
         verify { controller.handleRemoveCollectionsPlaceholder() }
     }
+
+    @Test
+    fun onCollectionMenuOpened() {
+        interactor.onCollectionMenuOpened()
+        verify { controller.handleMenuOpened() }
+    }
+
+    @Test
+    fun onTopSiteMenuOpened() {
+        interactor.onTopSiteMenuOpened()
+        verify { controller.handleMenuOpened() }
+    }
 }

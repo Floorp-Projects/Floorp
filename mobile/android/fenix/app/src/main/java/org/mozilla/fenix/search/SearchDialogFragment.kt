@@ -10,7 +10,9 @@ import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
@@ -21,6 +23,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStub
 import android.view.WindowManager
+import android.view.inputmethod.InputMethodManager
 import android.view.accessibility.AccessibilityEvent
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
@@ -183,6 +186,15 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
         requireComponents.core.engine.speculativeCreateSession(isPrivate)
 
+        if (findNavController().previousBackStackEntry?.destination?.id == R.id.homeFragment) {
+            // When displayed above home, dispatches the touch events to scrim area to the HomeFragment
+            view.search_wrapper.background = ColorDrawable(Color.TRANSPARENT)
+            dialog?.window?.decorView?.setOnTouchListener { _, event ->
+                requireActivity().dispatchTouchEvent(event)
+                false
+            }
+        }
+
         return view
     }
 
@@ -193,9 +205,12 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
         setupConstraints(view)
 
-        search_wrapper.setOnClickListener {
-            it.hideKeyboardAndSave()
-            dismissAllowingStateLoss()
+        // When displayed above browser, dismisses dialog on clicking scrim area
+        if (findNavController().previousBackStackEntry?.destination?.id == R.id.browserFragment) {
+            search_wrapper.setOnClickListener {
+                it.hideKeyboardAndSave()
+                dismissAllowingStateLoss()
+            }
         }
 
         view.search_engines_shortcut_button.setOnClickListener {
@@ -325,6 +340,21 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         qr_scan_button.isChecked = false
         view?.hideKeyboard()
         toolbarView.view.requestFocus()
+    }
+
+    /*
+     * This way of dismissing the keyboard is needed to smoothly dismiss the keyboard while the dialog
+     * is also dismissing. For example, when clicking a top site on home while this dialog is showing.
+     */
+    private fun hideDeviceKeyboard() {
+        val imm =
+            requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0)
+    }
+
+    override fun onDismiss(dialog: DialogInterface) {
+        super.onDismiss(dialog)
+        hideDeviceKeyboard()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {

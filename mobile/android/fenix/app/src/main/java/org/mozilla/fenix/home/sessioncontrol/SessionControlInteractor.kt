@@ -23,6 +23,7 @@ interface TabSessionInteractor {
 /**
  * Interface for collection related actions in the [SessionControlInteractor].
  */
+@SuppressWarnings("TooManyFunctions")
 interface CollectionInteractor {
     /**
      * Shows the Collection Creation fragment for selecting the tabs to add to the given tab
@@ -98,6 +99,11 @@ interface CollectionInteractor {
      * User has removed the collections placeholder from home.
      */
     fun onRemoveCollectionsPlaceholder()
+
+    /**
+     * User has opened collection 3 dot menu.
+     */
+    fun onCollectionMenuOpened()
 }
 
 interface ToolbarInteractor {
@@ -177,6 +183,11 @@ interface TopSiteInteractor {
      * @param type The type of the top site.
      */
     fun onSelectTopSite(url: String, type: TopSite.Type)
+
+    /**
+     * Called when top site menu is opened.
+     */
+    fun onTopSiteMenuOpened()
 }
 
 /**
@@ -275,5 +286,13 @@ class SessionControlInteractor(
 
     override fun onRemoveCollectionsPlaceholder() {
         controller.handleRemoveCollectionsPlaceholder()
+    }
+
+    override fun onCollectionMenuOpened() {
+        controller.handleMenuOpened()
+    }
+
+    override fun onTopSiteMenuOpened() {
+        controller.handleMenuOpened()
     }
 }

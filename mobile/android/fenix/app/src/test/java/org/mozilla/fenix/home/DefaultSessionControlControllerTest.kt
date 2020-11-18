@@ -434,4 +434,30 @@ class DefaultSessionControlControllerTest {
             fragmentStore.dispatch(HomeFragmentAction.RemoveCollectionsPlaceholder)
         }
     }
+
+    @Test
+    fun handleMenuOpenedWhileSearchShowing() {
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.searchDialogFragment
+        }
+
+        controller.handleMenuOpened()
+
+        verify {
+            navController.navigateUp()
+        }
+    }
+
+    @Test
+    fun handleMenuOpenedWhileSearchNotShowing() {
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.homeFragment
+        }
+
+        controller.handleMenuOpened()
+
+        verify(exactly = 0) {
+            navController.navigateUp()
+        }
+    }
 }

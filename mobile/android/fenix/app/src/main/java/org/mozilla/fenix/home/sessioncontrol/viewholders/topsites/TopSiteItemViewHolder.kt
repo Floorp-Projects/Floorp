@@ -36,6 +36,7 @@ class TopSiteItemViewHolder(
         }
 
         top_site_item.setOnLongClickListener {
+            interactor.onTopSiteMenuOpened()
             it.context.components.analytics.metrics.track(Event.TopSiteLongPress(topSite.type))
 
             val topSiteMenu = TopSiteItemMenu(view.context, topSite.type != FRECENT) { item ->

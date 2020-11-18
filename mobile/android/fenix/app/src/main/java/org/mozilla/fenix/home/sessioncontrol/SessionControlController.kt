@@ -34,7 +34,6 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.sessionsOfType
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentDirections
@@ -158,6 +157,11 @@ interface SessionControlController {
      * @see [CollectionInteractor.onRemoveCollectionsPlaceholder]
      */
     fun handleRemoveCollectionsPlaceholder()
+
+    /**
+     * @see [CollectionInteractor.onCollectionMenuOpened] and [TopSiteInteractor.onTopSiteMenuOpened]
+     */
+    fun handleMenuOpened()
 }
 
 @Suppress("TooManyFunctions", "LargeClass")
@@ -193,7 +197,12 @@ class DefaultSessionControlController(
         )
     }
 
+    override fun handleMenuOpened() {
+        dismissSearchDialogIfDisplayed()
+    }
+
     override fun handleCollectionOpenTabClicked(tab: ComponentTab) {
+        dismissSearchDialogIfDisplayed()
         sessionManager.restore(
             activity,
             engine,
@@ -256,6 +265,7 @@ class DefaultSessionControlController(
     }
 
     override fun handleCollectionShareTabsClicked(collection: TabCollection) {
+        dismissSearchDialogIfDisplayed()
         showShareFragment(
             collection.title,
             collection.tabs.map { ShareData(url = it.url, title = it.title) }
@@ -282,6 +292,7 @@ class DefaultSessionControlController(
     }
 
     override fun handlePrivateBrowsingLearnMoreClicked() {
+        dismissSearchDialogIfDisplayed()
         activity.openToBrowserAndLoad(
             searchTermOrURL = SupportUtils.getGenericSumoURLForTopic
                 (SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS),
@@ -293,9 +304,9 @@ class DefaultSessionControlController(
     override fun handleRenameTopSiteClicked(topSite: TopSite) {
         activity.let {
             val customLayout =
-                    LayoutInflater.from(it).inflate(R.layout.top_sites_rename_dialog, null)
+                LayoutInflater.from(it).inflate(R.layout.top_sites_rename_dialog, null)
             val topSiteLabelEditText: EditText =
-                    customLayout.findViewById(R.id.top_site_title)
+                customLayout.findViewById(R.id.top_site_title)
             topSiteLabelEditText.setText(topSite.title)
 
             AlertDialog.Builder(it).apply {
@@ -344,6 +355,7 @@ class DefaultSessionControlController(
     }
 
     override fun handleSelectTopSite(url: String, type: TopSite.Type) {
+        dismissSearchDialogIfDisplayed()
         metrics.track(Event.TopSiteOpenInNewTab)
         when (type) {
             TopSite.Type.DEFAULT -> metrics.track(Event.TopSiteOpenDefault)
@@ -360,6 +372,12 @@ class DefaultSessionControlController(
             startLoading = true
         )
         activity.openToBrowser(BrowserDirection.FromHome)
+    }
+
+    private fun dismissSearchDialogIfDisplayed() {
+        if (navController.currentDestination?.id == R.id.searchDialogFragment) {
+            navController.navigateUp()
+        }
     }
 
     override fun handleStartBrowsingClicked() {
