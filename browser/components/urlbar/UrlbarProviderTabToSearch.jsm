@@ -19,8 +19,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarView: "resource:///modules/UrlbarView.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
+  UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
@@ -260,7 +262,6 @@ class ProviderTabToSearch extends UrlbarProvider {
     // enginesForDomainPrefix only matches against engine domains.
     // Remove trailing slashes and www. from the search string and check if the
     // resulting string is worth matching.
-    // The muxer will verify that the found result matches the autofilled value.
     let [searchStr] = UrlbarUtils.stripPrefixAndTrim(
       queryContext.searchString,
       {
@@ -268,53 +269,94 @@ class ProviderTabToSearch extends UrlbarProvider {
         trimSlash: true,
       }
     );
+    // Skip any string that cannot be an origin.
+    if (
+      !UrlbarTokenizer.looksLikeOrigin(searchStr, {
+        ignoreKnownDomains: true,
+        noIp: true,
+      })
+    ) {
+      return;
+    }
 
-    // Add all matching engines. The muxer will pick the one that matches
-    // autofill, if any.
+    // Also remove the public suffix, if present, to allow for partial matches.
+    if (searchStr.includes(".")) {
+      searchStr = UrlbarUtils.stripPublicSuffixFromHost(searchStr);
+    }
+
+    // Add all matching engines.
     let engines = await UrlbarSearchUtils.enginesForDomainPrefix(searchStr, {
       matchAllDomainLevels: true,
     });
+    if (!engines.length) {
+      return;
+    }
 
     const onboardingInteractionsLeft = UrlbarPrefs.get(
       "tabToSearch.onboard.interactionsLeft"
     );
     let showedOnboarding = false;
+
+    // If the engine host begins with the search string, autofill may happen
+    // for it, and the Muxer will retain the result only if there's a matching
+    // autofill heuristic result.
+    // Otherwise, we may have a partial match, where the search string is at
+    // the boundary of a host part, for example "wiki" in "en.wikipedia.org".
+    // We put those engines apart, and later we check if their host satisfies
+    // the autofill threshold. If they do, we mark them with the
+    // "satisfiesAutofillThreshold" payload property, so the muxer can avoid
+    // filtering them out.
+    let partialMatchEnginesByHost = new Map();
+
     for (let engine of engines) {
-      // Set the domain without public suffix as url, it will be used by
-      // the muxer to evaluate this result.
-      let url = engine.getResultDomain();
-      url = url.substr(0, url.length - engine.searchUrlPublicSuffix.length);
-      let result;
-      if (onboardingInteractionsLeft > 0) {
-        result = new UrlbarResult(
-          UrlbarUtils.RESULT_TYPE.DYNAMIC,
-          UrlbarUtils.RESULT_SOURCE.SEARCH,
-          {
-            engine: engine.name,
-            url,
-            keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
-            icon: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
-            dynamicType: DYNAMIC_RESULT_TYPE,
-          }
-        );
-        result.resultSpan = 2;
-        showedOnboarding = true;
-      } else {
-        result = new UrlbarResult(
-          UrlbarUtils.RESULT_TYPE.SEARCH,
-          UrlbarUtils.RESULT_SOURCE.SEARCH,
-          ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-            engine: engine.name,
-            url,
-            keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
-            icon: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
-            query: "",
-          })
-        );
+      // Trim the engine host. This will also be set as the result url, so the
+      // Muxer can use it to filter.
+      let [host] = UrlbarUtils.stripPrefixAndTrim(engine.getResultDomain(), {
+        stripWww: true,
+      });
+      // Check if the host may be autofilled.
+      if (host.startsWith(searchStr.toLocaleLowerCase())) {
+        if (onboardingInteractionsLeft > 0) {
+          addCallback(this, makeOnboardingResult(engine));
+          showedOnboarding = true;
+        } else {
+          addCallback(this, makeResult(queryContext, engine));
+        }
+        continue;
       }
 
-      result.suggestedIndex = 1;
-      addCallback(this, result);
+      // Otherwise it may be a partial match that would not be autofilled.
+      if (host.includes("." + searchStr.toLocaleLowerCase())) {
+        partialMatchEnginesByHost.set(engine.getResultDomain(), engine);
+        // Don't continue here, we are looking for more partial matches.
+      }
+      // We also try to match the searchForm domain, because otherwise for an
+      // engine like ebay, we'd check rover.ebay.com, when the user is likely
+      // to visit ebay.LANG. The searchForm URL often points to the main host.
+      let searchFormHost;
+      try {
+        searchFormHost = new URL(engine.searchForm).host;
+      } catch (ex) {
+        // Invalid url or no searchForm.
+      }
+      if (searchFormHost?.includes("." + searchStr)) {
+        partialMatchEnginesByHost.set(searchFormHost, engine);
+      }
+    }
+    if (partialMatchEnginesByHost.size) {
+      let host = await UrlbarProviderAutofill.getTopHostOverThreshold(
+        queryContext,
+        Array.from(partialMatchEnginesByHost.keys())
+      );
+      if (host) {
+        let engine = partialMatchEnginesByHost.get(host);
+        if (onboardingInteractionsLeft > 0) {
+          showedOnboarding = true;
+          addCallback(this, makeOnboardingResult(engine, true));
+        } else {
+          addCallback(this, makeResult(queryContext, engine, true));
+        }
+      }
     }
 
     // The muxer ensures we show at most one tab-to-search result per query.
@@ -328,6 +370,49 @@ class ProviderTabToSearch extends UrlbarProvider {
       );
     }
   }
+}
+
+function makeOnboardingResult(engine, satisfiesAutofillThreshold = false) {
+  let [url] = UrlbarUtils.stripPrefixAndTrim(engine.getResultDomain(), {
+    stripWww: true,
+  });
+  url = url.substr(0, url.length - engine.searchUrlPublicSuffix.length);
+  let result = new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.DYNAMIC,
+    UrlbarUtils.RESULT_SOURCE.SEARCH,
+    {
+      engine: engine.name,
+      url,
+      keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+      icon: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
+      dynamicType: DYNAMIC_RESULT_TYPE,
+      satisfiesAutofillThreshold,
+    }
+  );
+  result.resultSpan = 2;
+  result.suggestedIndex = 1;
+  return result;
+}
+
+function makeResult(context, engine, satisfiesAutofillThreshold = false) {
+  let [url] = UrlbarUtils.stripPrefixAndTrim(engine.getResultDomain(), {
+    stripWww: true,
+  });
+  url = url.substr(0, url.length - engine.searchUrlPublicSuffix.length);
+  let result = new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.SEARCH,
+    UrlbarUtils.RESULT_SOURCE.SEARCH,
+    ...UrlbarResult.payloadAndSimpleHighlights(context.tokens, {
+      engine: engine.name,
+      url,
+      keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+      icon: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
+      query: "",
+      satisfiesAutofillThreshold,
+    })
+  );
+  result.suggestedIndex = 1;
+  return result;
 }
 
 var UrlbarProviderTabToSearch = new ProviderTabToSearch();
