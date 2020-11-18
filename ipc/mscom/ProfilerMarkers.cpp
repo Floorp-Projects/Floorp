@@ -23,6 +23,10 @@
 #include <objbase.h>
 #include <objidlbase.h>
 
+#ifdef MOZ_GECKO_PROFILER
+#  include "mozilla/ProfilerMarkerTypes.h"
+#endif
+
 // {9DBE6B28-E5E7-4FDE-AF00-9404604E74DC}
 static const GUID GUID_MozProfilerMarkerExtension = {
     0x9dbe6b28, 0xe5e7, 0x4fde, {0xaf, 0x0, 0x94, 0x4, 0x60, 0x4e, 0x74, 0xdc}};
@@ -133,8 +137,8 @@ void ProfilerMarkerChannelHook::ClientGetSize(REFGUID aExtensionId, REFIID aIid,
     if (NS_IsMainThread()) {
       nsAutoCString markerName;
       BuildMarkerName(aIid, markerName);
-      PROFILER_TRACING_MARKER("MSCOM", markerName.get(), IPC,
-                              TRACING_INTERVAL_START);
+      PROFILER_MARKER(markerName, IPC, mozilla::MarkerTiming::IntervalStart(),
+                      Tracing, "MSCOM");
     }
 
     if (aOutDataSize) {
@@ -150,8 +154,8 @@ void ProfilerMarkerChannelHook::ClientNotify(REFGUID aExtensionId, REFIID aIid,
   if (NS_IsMainThread() && aExtensionId == GUID_MozProfilerMarkerExtension) {
     nsAutoCString markerName;
     BuildMarkerName(aIid, markerName);
-    PROFILER_TRACING_MARKER("MSCOM", markerName.get(), IPC,
-                            TRACING_INTERVAL_END);
+    PROFILER_MARKER(markerName, IPC, mozilla::MarkerTiming::IntervalEnd(),
+                    Tracing, "MSCOM");
   }
 }
 

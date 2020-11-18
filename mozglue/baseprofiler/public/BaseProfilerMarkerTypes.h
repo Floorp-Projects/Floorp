@@ -29,25 +29,6 @@
 
 namespace mozilla::baseprofiler::markers {
 
-struct Tracing {
-  static constexpr Span<const char> MarkerTypeName() {
-    return MakeStringSpan("tracing");
-  }
-  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter,
-                                   const ProfilerString8View& aCategory) {
-    if (aCategory.Length() != 0) {
-      aWriter.StringProperty("category", aCategory);
-    }
-  }
-  static MarkerSchema MarkerTypeDisplay() {
-    using MS = MarkerSchema;
-    MS schema{MS::Location::markerChart, MS::Location::markerTable,
-              MS::Location::timelineOverview};
-    schema.AddKeyLabelFormat("category", "Type", MS::Format::string);
-    return schema;
-  }
-};
-
 struct MediaSampleMarker {
   static constexpr Span<const char> MarkerTypeName() {
     return MakeStringSpan("MediaSample");
