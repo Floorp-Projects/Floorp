@@ -396,7 +396,7 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
 
   void SetOriginStack(UniquePtr<SerializedStackHolder> aOriginStack);
 
-  void SetSource(UniqueProfilerBacktrace aSource);
+  void SetSource(UniquePtr<ProfileChunkedBuffer> aSource);
 
   virtual uint16_t ErrorCode() const override {
     return static_cast<uint16_t>(mErrorLoad);
