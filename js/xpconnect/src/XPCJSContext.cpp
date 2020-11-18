@@ -63,9 +63,6 @@
 #include "nsIXULRuntime.h"
 #include "nsJSPrincipals.h"
 #include "ExpandedPrincipal.h"
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
-#endif
 
 #if defined(XP_LINUX) && !defined(ANDROID)
 // For getrlimit and min/max.
@@ -591,9 +588,7 @@ bool XPCJSContext::InterruptCallback(JSContext* cx) {
     if (const char* file = scriptFilename.get()) {
       filename.Assign(file, strlen(file));
     }
-    PROFILER_ADD_MARKER_WITH_PAYLOAD("JS::InterruptCallback", JS,
-                                     TextMarkerPayload,
-                                     (filename, TimeStamp::Now()));
+    PROFILER_MARKER_TEXT("JS::InterruptCallback", JS, {}, filename);
   }
 #endif
 
