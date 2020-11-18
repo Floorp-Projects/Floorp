@@ -12,8 +12,8 @@ GeckoSimplePrograms(
 )
 
 # See the comment at the top of SmokeDMD.cpp:RunTests().
-if CONFIG["CXX_TYPE"] == "clang-cl":
-    CXXFLAGS += ["-Og-"]
+if CONFIG["CC_TYPE"] == "clang-cl":
+    CXXFLAGS += ["-Od"]
 else:
     CXXFLAGS += ["-O0"]
 
