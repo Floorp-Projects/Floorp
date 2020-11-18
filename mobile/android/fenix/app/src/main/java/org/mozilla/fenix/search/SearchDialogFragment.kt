@@ -467,6 +467,9 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 clear(fill_link_from_clipboard.id, TOP)
                 connect(fill_link_from_clipboard.id, BOTTOM, pill_wrapper.id, TOP)
 
+                clear(fill_link_divider.id, TOP)
+                connect(fill_link_divider.id, BOTTOM, fill_link_from_clipboard.id, TOP)
+
                 applyTo(search_wrapper)
             }
         }
@@ -529,6 +532,9 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 !clipboardUrl.isNullOrEmpty()
 
         fill_link_from_clipboard.isVisible = shouldShowView
+        fill_link_divider.isVisible = shouldShowView
+        pill_wrapper_divider.isVisible =
+            !(shouldShowView && requireComponents.settings.shouldUseBottomToolbar)
         clipboard_url.isVisible = shouldShowView
         clipboard_title.isVisible = shouldShowView
         link_icon.isVisible = shouldShowView
