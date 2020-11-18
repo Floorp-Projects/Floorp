@@ -62,7 +62,7 @@ class SearchMiddlewareTest {
     }
 
     @Test
-    fun `Loads search engines for region`() {
+    fun `Loads search engines for region (US)`() {
         val searchMiddleware = SearchMiddleware(
             testContext,
             ioDispatcher = dispatcher,
@@ -84,6 +84,37 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.regionSearchEngines.isNotEmpty())
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
+
+        assertNotNull(store.state.search.regionSearchEngines.find { it.name == "Google" })
+        assertNull(store.state.search.regionSearchEngines.find { it.name == "Yandex" })
+    }
+
+    @Test
+    fun `Loads search engines for region (RU)`() {
+        val searchMiddleware = SearchMiddleware(
+            testContext,
+            ioDispatcher = dispatcher,
+            customStorage = CustomSearchEngineStorage(testContext, dispatcher)
+        )
+
+        val store = BrowserStore(
+            middleware = listOf(searchMiddleware)
+        )
+
+        assertTrue(store.state.search.regionSearchEngines.isEmpty())
+
+        store.dispatch(SearchAction.SetRegionAction(
+            RegionState("RU", "RU")
+        )).joinBlocking()
+
+        wait(store, dispatcher)
+
+        assertTrue(store.state.search.regionSearchEngines.isNotEmpty())
+        assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
+        assertTrue(store.state.search.additionalSearchEngines.isEmpty())
+
+        assertNotNull(store.state.search.regionSearchEngines.find { it.name == "Google" })
+        assertNotNull(store.state.search.regionSearchEngines.find { it.name == "Yandex" })
     }
 
     @Test
