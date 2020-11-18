@@ -6,6 +6,7 @@ package mozilla.components.feature.media.service
 
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationManagerCompat
@@ -25,6 +26,7 @@ import mozilla.components.feature.media.facts.emitStatePauseFact
 import mozilla.components.feature.media.facts.emitStatePlayFact
 import mozilla.components.feature.media.facts.emitStateStopFact
 import mozilla.components.feature.media.notification.MediaNotification
+import mozilla.components.feature.media.focus.AudioFocus
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
@@ -43,6 +45,9 @@ internal class MediaSessionServiceDelegate(
     private val logger = Logger("MediaSessionService")
     private val notification by lazy { MediaNotification(context, service::class.java) }
     private val mediaSession: MediaSessionCompat by lazy { MediaSessionCompat(context, "MozacMediaSession") }
+    private val audioFocus: AudioFocus by lazy {
+        AudioFocus(context.getSystemService(Context.AUDIO_SERVICE) as AudioManager, store)
+    }
     private var scope: CoroutineScope? = null
     private var controller: MediaSession.Controller? = null
 
@@ -105,7 +110,10 @@ internal class MediaSessionServiceDelegate(
         }
 
         when (activeState.mediaSessionState?.playbackState) {
-            MediaSession.PlaybackState.PLAYING -> emitStatePlayFact()
+            MediaSession.PlaybackState.PLAYING -> {
+                audioFocus.request(activeState.id)
+                emitStatePlayFact()
+            }
             MediaSession.PlaybackState.PAUSED -> emitStatePauseFact()
             else -> emitStateStopFact()
         }

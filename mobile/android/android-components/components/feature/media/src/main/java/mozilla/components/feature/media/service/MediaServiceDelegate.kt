@@ -111,7 +111,7 @@ internal class MediaServiceDelegate(
         }
 
         if (state.media.aggregate.state == MediaState.State.PLAYING) {
-            audioFocus.request(state.media)
+            audioFocus.request(state.media.aggregate.activeTabId)
         }
 
         updateMediaSession(state)
