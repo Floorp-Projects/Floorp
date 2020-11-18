@@ -22,33 +22,8 @@ def hash_path(path):
 
 
 @memoize
-def hash_path_as_of_base_revision(base_path, path):
-    repo = get_repository(base_path)
-    base_revision = get_base_revision(base_path)
-    return hashlib.sha256(
-        repo.get_file_content(path, revision=base_revision)
-    ).hexdigest()
-
-
-@memoize
-def get_repository(base_path):
-    return get_repository_object(base_path)
-
-
-@memoize
 def get_file_finder(base_path):
-    return get_repository(base_path).get_tracked_files_finder()
-
-
-@memoize
-def get_dirty(base_path):
-    repo = get_repository(base_path)
-    return set(repo.get_outgoing_files()) | set(repo.get_changed_files())
-
-
-@memoize
-def get_base_revision(base_path):
-    return get_repository(base_path).base_ref
+    return get_repository_object(base_path).get_tracked_files_finder()
 
 
 def hash_paths(base_path, patterns):
@@ -60,9 +35,8 @@ def hash_paths(base_path, patterns):
     Each file is hashed. The list of all hashes and file paths is then
     itself hashed to produce the result.
     """
-    dirty = get_dirty(base_path)
-    h = hashlib.sha256()
     finder = get_file_finder(base_path)
+    h = hashlib.sha256()
     files = {}
     for pattern in patterns:
         found = list(finder.find(pattern))
@@ -71,12 +45,14 @@ def hash_paths(base_path, patterns):
         else:
             raise Exception("%s did not match anything" % pattern)
     for path in sorted(files.keys()):
-        # If the file is dirty, read the file contents from the VCS directly.
-        # Otherwise, read the contents from the filesystem.
-        if path in dirty:
-            path_hash = hash_path_as_of_base_revision(base_path, path)
-        else:
-            path_hash = hash_path(mozpath.abspath(mozpath.join(base_path, path)))
-        h.update(six.ensure_binary("{} {}\n".format(path_hash, mozpath.normsep(path))))
-
+        if path.endswith((".pyc", ".pyd", ".pyo")):
+            continue
+        h.update(
+            six.ensure_binary(
+                "{} {}\n".format(
+                    hash_path(mozpath.abspath(mozpath.join(base_path, path))),
+                    mozpath.normsep(path),
+                )
+            )
+        )
     return h.hexdigest()
