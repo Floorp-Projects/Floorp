@@ -221,13 +221,6 @@ void brush_vs(
     v_uv_bounds = vec4(min_uv, max_uv) / texture_size.xyxy;
 #endif
 
-#ifdef WR_FEATURE_REPETITION
-    // Normalize UV to 0..1 scale only if using repetition. Otherwise, leave
-    // UVs unnormalized since we won't compute a modulus without repetition
-    // enabled.
-    v_uv /= (v_uv_bounds.zw - v_uv_bounds.xy);
-#endif
-
 #ifdef WR_FEATURE_ALPHA_PASS
     v_tile_repeat = repeat.xy;
 
@@ -286,19 +279,19 @@ vec2 compute_repeated_uvs(float perspective_divisor) {
     vec2 local_uv = max(v_uv * perspective_divisor, vec2(0.0));
 
     // Handle horizontal and vertical repetitions.
-    vec2 repeated_uv = fract(local_uv) * uv_size + v_uv_bounds.xy;
+    vec2 repeated_uv = mod(local_uv, uv_size) + v_uv_bounds.xy;
 
     // This takes care of the bottom and right inflated parts.
     // We do it after the modulo because the latter wraps around the values exactly on
     // the right and bottom edges, which we do not want.
-    if (local_uv.x >= v_tile_repeat.x) {
+    if (local_uv.x >= v_tile_repeat.x * uv_size.x) {
         repeated_uv.x = v_uv_bounds.z;
     }
-    if (local_uv.y >= v_tile_repeat.y) {
+    if (local_uv.y >= v_tile_repeat.y * uv_size.y) {
         repeated_uv.y = v_uv_bounds.w;
     }
 #else
-    vec2 repeated_uv = fract(v_uv * perspective_divisor) * uv_size + v_uv_bounds.xy;
+    vec2 repeated_uv = mod(v_uv * perspective_divisor, uv_size) + v_uv_bounds.xy;
 #endif
 
     return repeated_uv;
