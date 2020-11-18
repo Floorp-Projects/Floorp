@@ -489,12 +489,6 @@ PlainObject* NewPlainObjectWithProperties(JSContext* cx,
                                           size_t nproperties,
                                           NewObjectKind newKind);
 
-bool CombineArrayElementTypes(JSContext* cx, JSObject* newObj,
-                              const Value* compare, size_t ncompare);
-
-bool CombinePlainObjectPropertyTypes(JSContext* cx, JSObject* newObj,
-                                     const Value* compare, size_t ncompare);
-
 }  // namespace js
 
 #endif /* vm_ObjectGroup_h */
