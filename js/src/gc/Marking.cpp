@@ -1550,14 +1550,6 @@ void js::ObjectGroup::traceChildren(JSTracer* trc) {
     TraceManuallyBarrieredEdge(trc, &global, "group_global");
   }
 
-  if (newScript(sweep)) {
-    newScript(sweep)->trace(trc);
-  }
-
-  if (maybePreliminaryObjects(sweep)) {
-    maybePreliminaryObjects(sweep)->trace(trc);
-  }
-
   if (JSObject* descr = maybeTypeDescr()) {
     TraceManuallyBarrieredEdge(trc, &descr, "group_type_descr");
     MOZ_ASSERT(js::IsTypeDescrClass(MaybeForwardedObjectClass(descr)));
@@ -1585,14 +1577,6 @@ void js::GCMarker::lazilyMarkChildren(ObjectGroup* group) {
   // Note: the realm's global can be nullptr if we GC while creating the global.
   if (GlobalObject* global = group->realm()->unsafeUnbarrieredMaybeGlobal()) {
     traverseEdge(group, static_cast<JSObject*>(global));
-  }
-
-  if (group->newScript(sweep)) {
-    group->newScript(sweep)->trace(this);
-  }
-
-  if (group->maybePreliminaryObjects(sweep)) {
-    group->maybePreliminaryObjects(sweep)->trace(this);
   }
 
   if (TypeDescr* descr = group->maybeTypeDescr()) {

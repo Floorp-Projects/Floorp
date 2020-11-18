@@ -1434,9 +1434,6 @@ static void DumpFunctionFlagsItems(js::JSONPrinter& json,
         case FunctionFlags::Flags::RESOLVED_LENGTH:
           json.value("RESOLVED_LENGTH");
           break;
-        case FunctionFlags::Flags::NEW_SCRIPT_CLEARED:
-          json.value("NEW_SCRIPT_CLEARED");
-          break;
         default:
           json.value("Unknown(%x)", i);
           break;

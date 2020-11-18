@@ -488,10 +488,7 @@ static void StatsCellCallback(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
     }
 
     case JS::TraceKind::ObjectGroup: {
-      ObjectGroup* group = &cellptr.as<ObjectGroup>();
       zStats->objectGroupsGCHeap += thingSize;
-      zStats->objectGroupsMallocHeap +=
-          group->sizeOfExcludingThis(rtStats->mallocSizeOf_);
       break;
     }
 

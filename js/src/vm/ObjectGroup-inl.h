@@ -79,18 +79,6 @@ inline void ObjectGroup::setShouldPreTenure(const AutoSweepObjectGroup& sweep,
   setFlags(sweep, cx, OBJECT_FLAG_PRE_TENURE);
 }
 
-inline TypeNewScript* ObjectGroup::newScript(
-    const AutoSweepObjectGroup& sweep) {
-  MOZ_ASSERT(sweep.group() == this);
-  return newScriptDontCheckGeneration();
-}
-
-inline PreliminaryObjectArrayWithTemplate* ObjectGroup::maybePreliminaryObjects(
-    const AutoSweepObjectGroup& sweep) {
-  MOZ_ASSERT(sweep.group() == this);
-  return maybePreliminaryObjectsDontCheckGeneration();
-}
-
 /* static */ inline ObjectGroup* ObjectGroup::lazySingletonGroup(
     JSContext* cx, ObjectGroup* oldGroup, const JSClass* clasp,
     TaggedProto proto) {

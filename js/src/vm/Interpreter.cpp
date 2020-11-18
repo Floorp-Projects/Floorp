@@ -5384,12 +5384,7 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
 
     {
       AutoSweepObjectGroup sweep(group);
-      if (group->maybePreliminaryObjects(sweep)) {
-        group->maybePreliminaryObjects(sweep)->maybeAnalyze(cx, group);
-      }
-
-      if (group->shouldPreTenure(sweep) ||
-          group->maybePreliminaryObjects(sweep)) {
+      if (group->shouldPreTenure(sweep)) {
         newKind = TenuredObject;
       }
     }
@@ -5413,14 +5408,6 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
     MOZ_ASSERT(obj->isSingleton());
   } else {
     obj->setGroup(group);
-
-    if (!withTemplateGroup) {
-      AutoSweepObjectGroup sweep(group);
-      if (PreliminaryObjectArray* preliminaryObjects =
-              group->maybePreliminaryObjects(sweep)) {
-        preliminaryObjects->registerNewObject(obj);
-      }
-    }
   }
 
   return obj;

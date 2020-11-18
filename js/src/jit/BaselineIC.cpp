@@ -2855,16 +2855,13 @@ bool DoNewObjectFallback(JSContext* cx, BaselineFrame* frame,
 
   RootedObject templateObject(cx, stub->templateObject());
   if (templateObject) {
-    MOZ_ASSERT(
-        !templateObject->group()->maybePreliminaryObjectsDontCheckGeneration());
     obj = NewObjectOperationWithTemplate(cx, templateObject);
   } else {
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(script);
     obj = NewObjectOperation(cx, script, pc);
 
-    if (obj && !obj->isSingleton() &&
-        !obj->group()->maybePreliminaryObjectsDontCheckGeneration()) {
+    if (obj && !obj->isSingleton()) {
       templateObject = NewObjectOperation(cx, script, pc, TenuredObject);
       if (!templateObject) {
         return false;
