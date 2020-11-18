@@ -92,82 +92,6 @@ bool ObjectGroup::useSingletonForClone(JSFunction* fun) {
   return false;
 }
 
-/* static */
-bool ObjectGroup::useSingletonForNewObject(JSContext* cx, JSScript* script,
-                                           jsbytecode* pc) {
-  /*
-   * Make a heuristic guess at a use of JSOp::New that the constructed object
-   * should have a fresh group. We do this when the New is immediately
-   * followed by a simple assignment to an object's .prototype field.
-   * This is designed to catch common patterns for subclassing in JS:
-   *
-   * function Super() { ... }
-   * function Sub1() { ... }
-   * function Sub2() { ... }
-   *
-   * Sub1.prototype = new Super();
-   * Sub2.prototype = new Super();
-   *
-   * Using distinct groups for the particular prototypes of Sub1 and
-   * Sub2 lets us continue to distinguish the two subclasses and any extra
-   * properties added to those prototype objects.
-   */
-  if (!IsTypeInferenceEnabled()) {
-    return false;
-  }
-  if (script->isGenerator() || script->isAsync()) {
-    return false;
-  }
-  if (JSOp(*pc) != JSOp::New) {
-    return false;
-  }
-  pc += JSOpLength_New;
-  if (JSOp(*pc) != JSOp::SetProp) {
-    return false;
-  }
-  return script->getName(pc) == cx->names().prototype;
-}
-
-/* static */
-bool ObjectGroup::useSingletonForAllocationSite(JSScript* script,
-                                                jsbytecode* pc,
-                                                JSProtoKey key) {
-  /*
-   * Objects created outside loops in global and eval scripts should have
-   * singleton types. For now this is only done for plain objects, but not
-   * typed arrays or normal arrays.
-   */
-
-  if (!IsTypeInferenceEnabled()) {
-    return false;
-  }
-
-  if (script->function()) {
-    return false;
-  }
-
-  if (key != JSProto_Object) {
-    return false;
-  }
-
-  // All loops in the script will have a try note indicating their boundary.
-
-  uint32_t offset = script->pcToOffset(pc);
-
-  for (const TryNote& tn : script->trynotes()) {
-    if (tn.kind() != TryNoteKind::ForIn && tn.kind() != TryNoteKind::ForOf &&
-        tn.kind() != TryNoteKind::Loop) {
-      continue;
-    }
-
-    if (tn.start <= offset && offset < tn.start + tn.length) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 /////////////////////////////////////////////////////////////////////
 // JSObject
 /////////////////////////////////////////////////////////////////////
@@ -669,117 +593,14 @@ JSObject* ObjectGroup::newPlainObject(JSContext* cx, IdValuePair* properties,
   MOZ_CRASH("TODO(no-TI): remove");
 }
 
-/////////////////////////////////////////////////////////////////////
-// ObjectGroupRealm AllocationSiteTable
-/////////////////////////////////////////////////////////////////////
-
-struct ObjectGroupRealm::AllocationSiteKey {
-  WeakHeapPtrScript script;
-
-  uint32_t offset : 24;
-  JSProtoKey kind : 8;
-
-  WeakHeapPtrObject proto;
-
-  static const uint32_t OFFSET_LIMIT = (1 << 23);
-
-  AllocationSiteKey(JSScript* script_, uint32_t offset_, JSProtoKey kind_,
-                    JSObject* proto_)
-      : script(script_), offset(offset_), kind(kind_), proto(proto_) {
-    MOZ_ASSERT(offset_ < OFFSET_LIMIT);
-  }
-
-  AllocationSiteKey(const AllocationSiteKey& key) = default;
-
-  AllocationSiteKey(AllocationSiteKey&& key)
-      : script(std::move(key.script)),
-        offset(key.offset),
-        kind(key.kind),
-        proto(std::move(key.proto)) {}
-
-  void operator=(AllocationSiteKey&& key) {
-    script = std::move(key.script);
-    offset = key.offset;
-    kind = key.kind;
-    proto = std::move(key.proto);
-  }
-
-  void trace(JSTracer* trc) {
-    TraceRoot(trc, &script, "AllocationSiteKey script");
-    TraceNullableRoot(trc, &proto, "AllocationSiteKey proto");
-  }
-
-  bool needsSweep() {
-    return IsAboutToBeFinalizedUnbarriered(script.unbarrieredAddress()) ||
-           (proto &&
-            IsAboutToBeFinalizedUnbarriered(proto.unbarrieredAddress()));
-  }
-
-  bool operator==(const AllocationSiteKey& other) const {
-    return script == other.script && offset == other.offset &&
-           kind == other.kind && proto == other.proto;
-  }
-};
-
-namespace js {
-template <>
-struct MovableCellHasher<ObjectGroupRealm::AllocationSiteKey> {
-  using Key = ObjectGroupRealm::AllocationSiteKey;
-  using Lookup = ObjectGroupRealm::AllocationSiteKey;
-
-  static bool hasHash(const Lookup& l) {
-    return MovableCellHasher<JSScript*>::hasHash(l.script.unbarrieredGet()) &&
-           MovableCellHasher<JSObject*>::hasHash(l.proto.unbarrieredGet());
-  }
-  static bool ensureHash(const Lookup& l) {
-    return MovableCellHasher<JSScript*>::ensureHash(
-               l.script.unbarrieredGet()) &&
-           MovableCellHasher<JSObject*>::ensureHash(l.proto.unbarrieredGet());
-  }
-  static inline HashNumber hash(const Key& key) {
-    HashNumber hash = mozilla::HashGeneric(key.offset, key.kind);
-    hash = mozilla::AddToHash(
-        hash, MovableCellHasher<JSScript*>::hash(key.script.unbarrieredGet()));
-    hash = mozilla::AddToHash(
-        hash, MovableCellHasher<JSObject*>::hash(key.proto.unbarrieredGet()));
-    return hash;
-  }
-
-  static inline bool match(const Key& a, const Lookup& b) {
-    return a.offset == b.offset && a.kind == b.kind &&
-           MovableCellHasher<JSScript*>::match(a.script.unbarrieredGet(),
-                                               b.script.unbarrieredGet()) &&
-           MovableCellHasher<JSObject*>::match(a.proto.unbarrieredGet(),
-                                               b.proto.unbarrieredGet());
-  }
-};
-}  // namespace js
-
-class ObjectGroupRealm::AllocationSiteTable
-    : public JS::WeakCache<js::GCHashMap<
-          AllocationSiteKey, WeakHeapPtrObjectGroup,
-          MovableCellHasher<AllocationSiteKey>, SystemAllocPolicy>> {
-  using Table =
-      js::GCHashMap<AllocationSiteKey, WeakHeapPtrObjectGroup,
-                    MovableCellHasher<AllocationSiteKey>, SystemAllocPolicy>;
-  using Base = JS::WeakCache<Table>;
-
- public:
-  explicit AllocationSiteTable(Zone* zone) : Base(zone) {}
-};
-
 /* static */
 ObjectGroup* ObjectGroup::allocationSiteGroup(
     JSContext* cx, JSScript* scriptArg, jsbytecode* pc, JSProtoKey kind,
     HandleObject protoArg /* = nullptr */) {
-  MOZ_ASSERT(!useSingletonForAllocationSite(scriptArg, pc, kind));
   MOZ_ASSERT_IF(protoArg, kind == JSProto_Array);
   MOZ_ASSERT(cx->realm() == scriptArg->realm());
 
-  uint32_t offset = scriptArg->pcToOffset(pc);
-
-  if (!IsTypeInferenceEnabled() ||
-      offset >= ObjectGroupRealm::AllocationSiteKey::OFFSET_LIMIT) {
+  if (!IsTypeInferenceEnabled()) {
     if (protoArg) {
       return defaultNewGroup(cx, GetClassForProtoKey(kind),
                              TaggedProto(protoArg));
@@ -811,69 +632,10 @@ ObjectGroup* ObjectGroup::callingAllocationSiteGroup(JSContext* cx,
 }
 
 /* static */
-bool ObjectGroup::setAllocationSiteObjectGroup(JSContext* cx,
-                                               HandleScript script,
-                                               jsbytecode* pc, HandleObject obj,
-                                               bool singleton) {
-  MOZ_ASSERT(IsTypeInferenceEnabled());
-
-  JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(obj->getClass());
-  MOZ_ASSERT(key != JSProto_Null);
-  MOZ_ASSERT(singleton == useSingletonForAllocationSite(script, pc, key));
-
-  if (singleton) {
-    MOZ_ASSERT(obj->isSingleton());
-  } else {
-    ObjectGroup* group = allocationSiteGroup(cx, script, pc, key);
-    if (!group) {
-      return false;
-    }
-    obj->setGroup(group);
-  }
-
-  return true;
-}
-
-/* static */
 ArrayObject* ObjectGroup::getOrFixupCopyOnWriteObject(JSContext* cx,
                                                       HandleScript script,
                                                       jsbytecode* pc) {
-  MOZ_ASSERT(IsTypeInferenceEnabled());
-
-  // Make sure that the template object for script/pc has a type indicating
-  // that the object and its copies have copy on write elements.
-  RootedArrayObject obj(cx, &script->getObject(pc)->as<ArrayObject>());
-  MOZ_ASSERT(obj->denseElementsAreCopyOnWrite());
-
-  {
-    AutoSweepObjectGroup sweepObjGroup(obj->group());
-    if (obj->group()->fromAllocationSite(sweepObjGroup)) {
-      MOZ_ASSERT(
-          obj->group()->hasAnyFlags(sweepObjGroup, OBJECT_FLAG_COPY_ON_WRITE));
-      return obj;
-    }
-  }
-
-  RootedObjectGroup group(cx,
-                          allocationSiteGroup(cx, script, pc, JSProto_Array));
-  if (!group) {
-    return nullptr;
-  }
-
-  AutoSweepObjectGroup sweepGroup(group);
-  group->addFlags(sweepGroup, OBJECT_FLAG_COPY_ON_WRITE);
-
-  // Update type information in the initializer object group.
-  MOZ_ASSERT(obj->slotSpan() == 0);
-  if (IsTypeInferenceEnabled()) {
-    for (size_t i = 0; i < obj->getDenseInitializedLength(); i++) {
-      const Value& v = obj->getDenseElement(i);
-      AddTypePropertyId(cx, group, nullptr, JSID_VOID, v);
-    }
-  }
-
-  obj->setGroup(group);
-  return obj;
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 /* static */
@@ -890,32 +652,6 @@ ArrayObject* ObjectGroup::getCopyOnWriteObject(JSScript* script,
   return obj;
 }
 
-/* static */
-bool ObjectGroup::findAllocationSite(JSContext* cx, const ObjectGroup* group,
-                                     JSScript** script, uint32_t* offset) {
-  *script = nullptr;
-  *offset = 0;
-
-  ObjectGroupRealm& realm = ObjectGroupRealm::get(group);
-  const ObjectGroupRealm::AllocationSiteTable* table =
-      realm.allocationSiteTable;
-
-  if (!table) {
-    return false;
-  }
-
-  for (ObjectGroupRealm::AllocationSiteTable::Range r = table->all();
-       !r.empty(); r.popFront()) {
-    if (group == r.front().value()) {
-      *script = r.front().key().script;
-      *offset = r.front().key().offset;
-      return true;
-    }
-  }
-
-  return false;
-}
-
 /////////////////////////////////////////////////////////////////////
 // ObjectGroupRealm
 /////////////////////////////////////////////////////////////////////
@@ -923,7 +659,6 @@ bool ObjectGroup::findAllocationSite(JSContext* cx, const ObjectGroup* group,
 ObjectGroupRealm::~ObjectGroupRealm() {
   js_delete(defaultNewTable);
   js_delete(lazyTable);
-  js_delete(allocationSiteTable);
   stringSplitStringGroup = nullptr;
 }
 
@@ -1007,11 +742,6 @@ void ObjectGroupRealm::addSizeOfExcludingThis(
     mozilla::MallocSizeOf mallocSizeOf, size_t* allocationSiteTables,
     size_t* arrayObjectGroupTables, size_t* plainObjectGroupTables,
     size_t* realmTables) {
-  if (allocationSiteTable) {
-    *allocationSiteTables +=
-        allocationSiteTable->sizeOfIncludingThis(mallocSizeOf);
-  }
-
   // TODO(no-TI): remove unused arguments.
 
   if (defaultNewTable) {
@@ -1024,9 +754,6 @@ void ObjectGroupRealm::addSizeOfExcludingThis(
 }
 
 void ObjectGroupRealm::clearTables() {
-  if (allocationSiteTable) {
-    allocationSiteTable->clear();
-  }
   if (defaultNewTable) {
     defaultNewTable->clear();
   }

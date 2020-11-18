@@ -248,7 +248,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   inline bool shouldPreTenureDontCheckGeneration();
 
   inline bool canPreTenure(const AutoSweepObjectGroup& sweep);
-  inline bool fromAllocationSite(const AutoSweepObjectGroup& sweep);
   inline void setShouldPreTenure(const AutoSweepObjectGroup& sweep,
                                  JSContext* cx);
 
@@ -296,14 +295,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 
   // Whether to make a deep cloned singleton when cloning fun.
   static bool useSingletonForClone(JSFunction* fun);
-
-  // Whether to make a singleton when calling 'new' at script/pc.
-  static bool useSingletonForNewObject(JSContext* cx, JSScript* script,
-                                       jsbytecode* pc);
-
-  // Whether to make a singleton object at an allocation site.
-  static bool useSingletonForAllocationSite(JSScript* script, jsbytecode* pc,
-                                            JSProtoKey key);
 
  public:
   // Static accessors for ObjectGroupRealm NewTable.
@@ -361,20 +352,10 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   static ObjectGroup* callingAllocationSiteGroup(JSContext* cx, JSProtoKey key,
                                                  HandleObject proto = nullptr);
 
-  // Set the group or singleton-ness of an object created for an allocation
-  // site.
-  static bool setAllocationSiteObjectGroup(JSContext* cx, HandleScript script,
-                                           jsbytecode* pc, HandleObject obj,
-                                           bool singleton);
-
   static ArrayObject* getOrFixupCopyOnWriteObject(JSContext* cx,
                                                   HandleScript script,
                                                   jsbytecode* pc);
   static ArrayObject* getCopyOnWriteObject(JSScript* script, jsbytecode* pc);
-
-  // Returns false if not found.
-  static bool findAllocationSite(JSContext* cx, const ObjectGroup* group,
-                                 JSScript** script, uint32_t* offset);
 
  private:
   static ObjectGroup* defaultNewGroup(JSContext* cx, JSProtoKey key);
@@ -384,7 +365,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 class ObjectGroupRealm {
  private:
   class NewTable;
-  class AllocationSiteTable;
 
  private:
   // Set of default 'new' or lazy groups in the realm.
@@ -410,9 +390,6 @@ class ObjectGroupRealm {
                                           JSObject* associated);
   } defaultNewGroupCache = {};
 
-  // Table for referencing types of objects keyed to an allocation site.
-  AllocationSiteTable* allocationSiteTable = nullptr;
-
   // A single per-realm ObjectGroup for all calls to StringSplitString.
   // StringSplitString is always called from self-hosted code, and conceptually
   // the return object for a string.split(string) operation should have a
@@ -425,9 +402,6 @@ class ObjectGroupRealm {
 
  private:
   friend class ObjectGroup;
-
-  struct AllocationSiteKey;
-  friend struct MovableCellHasher<AllocationSiteKey>;
 
  public:
   struct NewEntry;
