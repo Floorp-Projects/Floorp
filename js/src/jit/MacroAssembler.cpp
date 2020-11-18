@@ -1932,21 +1932,7 @@ void MacroAssembler::loadJitActivation(Register dest) {
 void MacroAssembler::guardGroupHasUnanalyzedNewScript(Register group,
                                                       Register scratch,
                                                       Label* fail) {
-  Label noNewScript;
-  load32(Address(group, ObjectGroup::offsetOfFlags()), scratch);
-  and32(Imm32(OBJECT_FLAG_ADDENDUM_MASK), scratch);
-  branch32(Assembler::NotEqual, scratch,
-           Imm32(uint32_t(ObjectGroup::Addendum_NewScript)
-                 << OBJECT_FLAG_ADDENDUM_SHIFT),
-           &noNewScript);
-
-  // Guard group->newScript()->preliminaryObjects is non-nullptr.
-  loadPtr(Address(group, ObjectGroup::offsetOfAddendum()), scratch);
-  branchPtr(Assembler::Equal,
-            Address(scratch, TypeNewScript::offsetOfPreliminaryObjects()),
-            ImmWord(0), fail);
-
-  bind(&noNewScript);
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 void MacroAssembler::guardSpecificAtom(Register str, JSAtom* atom,

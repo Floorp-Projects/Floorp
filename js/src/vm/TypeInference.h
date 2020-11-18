@@ -100,63 +100,6 @@ class MOZ_RAII AutoSweepJitScript : public AutoSweepBase {
 #endif
 };
 
-// For groups where only a small number of objects have been allocated, this
-// structure keeps track of all objects in the group. Once COUNT objects have
-// been allocated, this structure is cleared and the objects are analyzed, to
-// perform the new script properties analyses or determine if an unboxed
-// representation can be used.
-class PreliminaryObjectArray {
- public:
-  static const uint32_t COUNT = 20;
-
- private:
-  // All objects with the type which have been allocated. The pointers in
-  // this array are weak.
-  JSObject* objects[COUNT] = {};  // zeroes
-
- public:
-  PreliminaryObjectArray() = default;
-
-  void registerNewObject(PlainObject* res);
-
-  JSObject* get(size_t i) const {
-    MOZ_ASSERT(i < COUNT);
-    return objects[i];
-  }
-
-  bool full() const;
-  void sweep();
-};
-
-class PreliminaryObjectArrayWithTemplate : public PreliminaryObjectArray {
-  HeapPtr<Shape*> shape_;
-
- public:
-  explicit PreliminaryObjectArrayWithTemplate(Shape* shape) : shape_(shape) {}
-
-  Shape* shape() { return shape_; }
-
-  void maybeAnalyze(JSContext* cx, ObjectGroup* group, bool force = false);
-
-  void trace(JSTracer* trc);
-
-  static void preWriteBarrier(
-      PreliminaryObjectArrayWithTemplate* preliminaryObjects);
-};
-
-/**
- * A type representing the initializer of a property within a script being
- * 'new'd.
- */
-class TypeNewScriptInitializer {
- public:
-  enum Kind { SETPROP, SETPROP_FRAME } kind;
-  uint32_t offset;
-
-  TypeNewScriptInitializer(Kind kind, uint32_t offset)
-      : kind(kind), offset(offset) {}
-};
-
 /* Is this a reasonable PC to be doing inlining on? */
 inline bool isInlinableCall(jsbytecode* pc);
 
@@ -230,7 +173,6 @@ class TypeZone {
 
   void beginSweep();
   void endSweep(JSRuntime* rt);
-  void clearAllNewScriptsOnOOM();
 
   /* Mark a script as needing recompilation once inference has finished. */
   void addPendingRecompile(JSContext* cx, const RecompileInfo& info);

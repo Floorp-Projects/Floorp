@@ -25,8 +25,6 @@ namespace js {
 
 class TypeDescr;
 
-class PreliminaryObjectArrayWithTemplate;
-class TypeNewScript;
 class AutoClearTypeInferenceStateOnOOM;
 class AutoSweepObjectGroup;
 class ObjectGroupRealm;
@@ -214,14 +212,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
     // canonical JSFunction object.
     Addendum_InterpretedFunction,
 
-    // When used by the 'new' group when constructing an interpreted
-    // function, the addendum stores a TypeNewScript.
-    Addendum_NewScript,
-
-    // For some plain objects, the addendum stores a
-    // PreliminaryObjectArrayWithTemplate.
-    Addendum_PreliminaryObjects,
-
     // When used by typed objects, the addendum stores a TypeDescr.
     Addendum_TypeDescr
   };
@@ -234,51 +224,12 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
                           OBJECT_FLAG_ADDENDUM_SHIFT);
   }
 
-  TypeNewScript* newScriptDontCheckGeneration() const {
-    if (addendumKind() == Addendum_NewScript) {
-      return reinterpret_cast<TypeNewScript*>(addendum_);
-    }
-    return nullptr;
-  }
-
-  void detachNewScript(bool isSweeping, ObjectGroup* replacement);
-
   ObjectGroupFlags flagsDontCheckGeneration() const { return flags_; }
 
  public:
   inline ObjectGroupFlags flags(const AutoSweepObjectGroup&);
   inline void addFlags(const AutoSweepObjectGroup&, ObjectGroupFlags flags);
   inline void clearFlags(const AutoSweepObjectGroup&, ObjectGroupFlags flags);
-  inline TypeNewScript* newScript(const AutoSweepObjectGroup& sweep);
-
-  void setNewScript(TypeNewScript* newScript) {
-    MOZ_ASSERT(newScript);
-    setAddendum(Addendum_NewScript, newScript);
-  }
-  void detachNewScript() { setAddendum(Addendum_None, nullptr); }
-
-  inline PreliminaryObjectArrayWithTemplate* maybePreliminaryObjects(
-      const AutoSweepObjectGroup& sweep);
-
-  PreliminaryObjectArrayWithTemplate*
-  maybePreliminaryObjectsDontCheckGeneration() {
-    if (addendumKind() == Addendum_PreliminaryObjects) {
-      return reinterpret_cast<PreliminaryObjectArrayWithTemplate*>(addendum_);
-    }
-    return nullptr;
-  }
-
-  void setPreliminaryObjects(
-      PreliminaryObjectArrayWithTemplate* preliminaryObjects) {
-    setAddendum(Addendum_PreliminaryObjects, preliminaryObjects);
-  }
-
-  void detachPreliminaryObjects() {
-    MOZ_ASSERT(maybePreliminaryObjectsDontCheckGeneration());
-    setAddendum(Addendum_None, nullptr);
-  }
-
-  inline bool hasUnanalyzedPreliminaryObjects();
 
   TypeDescr* maybeTypeDescr() {
     // Note: there is no need to sweep when accessing the type descriptor
@@ -395,8 +346,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   void setFlags(const AutoSweepObjectGroup& sweep, JSContext* cx,
                 ObjectGroupFlags flags);
   void markUnknown(const AutoSweepObjectGroup& sweep, JSContext* cx);
-  void maybeClearNewScriptOnOOM();
-  void clearNewScript(JSContext* cx, ObjectGroup* replacement = nullptr);
 
   void print(const AutoSweepObjectGroup& sweep);
 
@@ -420,9 +369,9 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
     flags_ |= generation << OBJECT_FLAG_GENERATION_SHIFT;
   }
 
-  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-
-  void finalize(JSFreeOp* fop);
+  void finalize(JSFreeOp* fop) {
+    // Nothing to do.
+  }
 
   static const JS::TraceKind TraceKind = JS::TraceKind::ObjectGroup;
 

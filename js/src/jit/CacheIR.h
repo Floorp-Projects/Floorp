@@ -1286,9 +1286,6 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
   HandleValue receiver_;
   GetPropertyResultFlags resultFlags_;
 
-  enum class PreliminaryObjectAction { None, Unlink, NotePreliminary };
-  PreliminaryObjectAction preliminaryObjectAction_;
-
   AttachDecision tryAttachNative(HandleObject obj, ObjOperandId objId,
                                  HandleId id, ValOperandId receiverId);
   AttachDecision tryAttachUnboxed(HandleObject obj, ObjOperandId objId,
@@ -1399,14 +1396,6 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
 
   AttachDecision tryAttachStub();
   AttachDecision tryAttachIdempotentStub();
-
-  bool shouldUnlinkPreliminaryObjectStubs() const {
-    return preliminaryObjectAction_ == PreliminaryObjectAction::Unlink;
-  }
-
-  bool shouldNotePreliminaryObjectStub() const {
-    return preliminaryObjectAction_ == PreliminaryObjectAction::NotePreliminary;
-  }
 };
 
 // GetNameIRGenerator generates CacheIR for a GetName IC.
@@ -1493,11 +1482,7 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
   HandleValue idVal_;
   HandleValue rhsVal_;
   PropertyTypeCheckInfo typeCheckInfo_;
-
-  enum class PreliminaryObjectAction { None, Unlink, NotePreliminary };
-  PreliminaryObjectAction preliminaryObjectAction_;
   bool attachedTypedArrayOOBStub_;
-
   bool maybeHasExtraIndexedProps_;
 
  public:
@@ -1593,14 +1578,6 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
   AttachDecision tryAttachAddSlotStub(HandleObjectGroup oldGroup,
                                       HandleShape oldShape);
   void trackAttached(const char* name);
-
-  bool shouldUnlinkPreliminaryObjectStubs() const {
-    return preliminaryObjectAction_ == PreliminaryObjectAction::Unlink;
-  }
-
-  bool shouldNotePreliminaryObjectStub() const {
-    return preliminaryObjectAction_ == PreliminaryObjectAction::NotePreliminary;
-  }
 
   const PropertyTypeCheckInfo* typeCheckInfo() const { return &typeCheckInfo_; }
 

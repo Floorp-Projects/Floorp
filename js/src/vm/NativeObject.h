@@ -1166,9 +1166,6 @@ class NativeObject : public JSObject {
   inline void shiftDenseElementsUnchecked(uint32_t count);
 
  public:
-  static bool rollbackProperties(JSContext* cx, HandleNativeObject obj,
-                                 uint32_t slotSpan);
-
   MOZ_ALWAYS_INLINE void setSlotWithType(JSContext* cx, Shape* shape,
                                          const Value& value,
                                          bool overwriting = true);

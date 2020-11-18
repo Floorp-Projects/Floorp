@@ -1409,9 +1409,6 @@ static void ReportZoneStats(const JS::ZoneStats& zStats,
       pathPrefix + "object-groups/gc-heap"_ns, zStats.objectGroupsGCHeap,
       "Classification and type inference information about objects.");
 
-  ZRREPORT_BYTES(pathPrefix + "object-groups/malloc-heap"_ns,
-                 zStats.objectGroupsMallocHeap, "Object group addenda.");
-
   ZRREPORT_GC_BYTES(pathPrefix + "scopes/gc-heap"_ns, zStats.scopesGCHeap,
                     "Scope information for scripts.");
 

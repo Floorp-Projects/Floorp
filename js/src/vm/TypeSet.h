@@ -58,7 +58,6 @@ class AutoSweepObjectGroup;
 class LifoAlloc;
 class ObjectGroup;
 class SystemAllocPolicy;
-class TypeNewScript;
 class TypeZone;
 
 /*
@@ -196,9 +195,6 @@ enum : uint32_t {
 
   /* Whether objects with this type might have copy on write elements. */
   OBJECT_FLAG_COPY_ON_WRITE = 0x01000000,
-
-  /* Whether this type has had its 'new' script cleared in the past. */
-  OBJECT_FLAG_NEW_SCRIPT_CLEARED = 0x02000000,
 
   /*
    * Whether all properties of this object are considered unknown.
