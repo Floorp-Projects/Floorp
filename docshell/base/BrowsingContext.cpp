@@ -664,6 +664,11 @@ void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
       Canonical()->mWebProgress = new BrowsingContextWebProgress();
     }
   }
+
+  if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
+    obs->NotifyWhenScriptSafe(ToSupports(this), "browsing-context-attached",
+                              nullptr);
+  }
 }
 
 void BrowsingContext::Detach(bool aFromIPC) {
