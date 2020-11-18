@@ -23,7 +23,6 @@
 
 #ifdef MOZ_GECKO_PROFILER
 
-#  include "gfxASurface.h"
 #  include "js/AllocationRecording.h"
 #  include "js/ProfilingFrameIterator.h"
 #  include "js/Utility.h"
@@ -39,30 +38,6 @@ using UserTimingMark = mozilla::baseprofiler::markers::UserTimingMark;
 using UserTimingMeasure = mozilla::baseprofiler::markers::UserTimingMeasure;
 using MediaSampleMarker = mozilla::baseprofiler::markers::MediaSampleMarker;
 using ContentBuildMarker = mozilla::baseprofiler::markers::ContentBuildMarker;
-
-struct ScreenshotPayload {
-  static constexpr mozilla::Span<const char> MarkerTypeName() {
-    return mozilla::MakeStringSpan("CompositorScreenshot");
-  }
-  static void StreamJSONMarkerData(
-      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
-      const mozilla::ProfilerString8View& aScreenshotDataURL,
-      const mozilla::gfx::IntSize& aWindowSize, uintptr_t aWindowIdentifier) {
-    // TODO: Use UniqueStacks&Strings
-    // aUniqueStacks.mUniqueStrings->WriteProperty(aWriter, "url",
-    //                                             mScreenshotDataURL.get());
-    aWriter.StringProperty("url", aScreenshotDataURL);
-
-    char hexWindowID[32];
-    SprintfLiteral(hexWindowID, "0x%" PRIXPTR, aWindowIdentifier);
-    aWriter.StringProperty("windowID", hexWindowID);
-    aWriter.DoubleProperty("windowWidth", aWindowSize.width);
-    aWriter.DoubleProperty("windowHeight", aWindowSize.height);
-  }
-  static mozilla::MarkerSchema MarkerTypeDisplay() {
-    return mozilla::MarkerSchema::SpecialFrontendLocation{};
-  }
-};
 
 struct GCSlice {
   static constexpr mozilla::Span<const char> MarkerTypeName() {
