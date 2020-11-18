@@ -7,6 +7,7 @@
 package mozilla.components.feature.accounts.push
 
 import android.content.Context
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.setMain
@@ -26,10 +27,12 @@ import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
 
+@RunWith(AndroidJUnit4::class)
 class ConstellationObserverTest {
 
     private val push: AutoPushFeature = mock()
@@ -114,6 +117,7 @@ class ConstellationObserverTest {
 
         observer.onDevicesUpdate(state)
 
+        verify(push).unsubscribe(eq("testScope"), any(), any())
         verify(push).subscribe(eq("testScope"), any(), any(), any())
         verify(verifier).increment()
     }
@@ -129,7 +133,7 @@ class ConstellationObserverTest {
         `when`(account.deviceConstellation()).thenReturn(constellation)
         `when`(state.currentDevice).thenReturn(device)
         `when`(device.subscription).thenReturn(subscription)
-        `when`(subscription.endpoint).thenReturn("https://example.com")
+        `when`(subscription.endpoint).thenReturn("https://example.com/foobar")
 
         observer.onSubscribe(state, testSubscription())
 
@@ -145,5 +149,20 @@ class ConstellationObserverTest {
         verify(crashReporter).recordCrashBreadcrumb(any())
     }
 
-    private fun testSubscription() = AutoPushSubscription(scope = "testScope", endpoint = "https://example.com", publicKey = "", authKey = "", appServerKey = null)
+    @Test
+    fun `notify crash reporter if un-subscribe error occurs`() {
+        val observer = ConstellationObserver(context, push, "testScope", account, verifier, crashReporter)
+
+        observer.onUnsubscribeError(mock())
+
+        verify(crashReporter).recordCrashBreadcrumb(any())
+    }
+
+    private fun testSubscription() = AutoPushSubscription(
+        scope = "testScope",
+        endpoint = "https://example.com/foobar",
+        publicKey = "",
+        authKey = "",
+        appServerKey = null
+    )
 }

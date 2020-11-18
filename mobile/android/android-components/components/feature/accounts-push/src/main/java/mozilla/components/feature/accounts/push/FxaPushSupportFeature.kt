@@ -22,6 +22,7 @@ import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.DeviceConstellationObserver
 import mozilla.components.concept.sync.DevicePushSubscription
 import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.feature.accounts.push.ext.redactPartialUri
 import mozilla.components.feature.push.AutoPushFeature
 import mozilla.components.feature.push.AutoPushSubscription
 import mozilla.components.feature.push.PushScope
@@ -203,6 +204,11 @@ internal class ConstellationObserver(
         }
 
         logger.info("We have been notified that our push subscription has expired; re-subscribing.")
+        push.unsubscribe(
+            scope = scope,
+            onUnsubscribeError = ::onUnsubscribeError,
+            onUnsubscribe = ::onUnsubscribeResult
+        )
         push.subscribe(
             scope = scope,
             onSubscribeError = ::onSubscribeError,
@@ -223,12 +229,15 @@ internal class ConstellationObserver(
         if (subscription.endpoint == oldEndpoint) {
             val exception = IllegalStateException(
                 "New push endpoint matches existing one",
-                Throwable("New endpoint: ${subscription.endpoint}\nOld endpoint: $oldEndpoint")
+                Throwable(
+                    "New endpoint: ${subscription.endpoint.redactPartialUri()}\n" +
+                    "Old endpoint: ${oldEndpoint.redactPartialUri()}"
+                )
             )
 
-            crashReporter?.submitCaughtException(exception)
-
             logger.warn("Push endpoints match!", exception)
+
+            crashReporter?.submitCaughtException(exception)
         }
 
         CoroutineScope(Dispatchers.Main).launch {
@@ -237,14 +246,42 @@ internal class ConstellationObserver(
     }
 
     internal fun onSubscribeError(e: Exception) {
-        fun Exception.toBreadcrumb() = Breadcrumb(
-            message = "Re-subscribing to FxA push failed after subscriptionExpired",
-            data = mapOf(
-                "exception" to javaClass.name,
-                "message" to message.orEmpty()
+        logger.warn("Re-subscribing failed; FxA push events will not be received.", e)
+        breadcrumb(
+            exception = e,
+            message = "Re-subscribing to failed FxA push after subscriptionExpired"
+        )
+    }
+
+    internal fun onUnsubscribeError(e: Exception) {
+        logger.warn("Un-subscribing failed; subscribe may return the same endpoint", e)
+        breadcrumb(
+            exception = e,
+            message = "Un-subscribing to failed FxA push after subscriptionExpired"
+        )
+    }
+
+    internal fun onUnsubscribeResult(success: Boolean) {
+        logger.info("Un-subscribing successful: $success")
+        if (success) {
+            logger.info("Subscribe call should give you a new endpoint.")
+        }
+    }
+
+    private fun breadcrumb(
+        exception: Exception,
+        message: String
+    ) {
+        crashReporter?.recordCrashBreadcrumb(
+            Breadcrumb(
+                category = ConstellationObserver::class.java.simpleName,
+                message = message,
+                data = mapOf(
+                    "exception" to exception.javaClass.name,
+                    "message" to exception.message.orEmpty()
+                )
             )
         )
-        crashReporter?.recordCrashBreadcrumb(e.toBreadcrumb())
     }
 }
 
