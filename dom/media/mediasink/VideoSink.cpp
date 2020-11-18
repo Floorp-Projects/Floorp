@@ -16,6 +16,7 @@
 #include "VideoUtils.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/ProfilerMarkerTypes.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_media.h"
 
@@ -28,15 +29,6 @@ extern mozilla::LazyLogModule gMediaDecoderLog;
   MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, (FMT(x, ##__VA_ARGS__)))
 #define VSINK_LOG_V(x, ...) \
   MOZ_LOG(gMediaDecoderLog, LogLevel::Verbose, (FMT(x, ##__VA_ARGS__)))
-
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
-#  define VSINK_ADD_PROFILER_MARKER(tag, startTime, endTime) \
-    PROFILER_ADD_MARKER_WITH_PAYLOAD(                        \
-        tag, MEDIA_PLAYBACK, MediaSampleMarkerPayload, (startTime, endTime))
-#else
-#  define VSINK_ADD_PROFILER_MARKER(tag, startTime, endTime)
-#endif
 
 namespace mozilla {
 
@@ -463,8 +455,9 @@ void VideoSink::RenderVideoFrames(int32_t aMaxFrames, int64_t aClockTime,
                 frame->mTime.ToMicroseconds(), frame->mFrameID,
                 VideoQueue().GetSize());
     if (!wasSent) {
-      VSINK_ADD_PROFILER_MARKER("PlayVideo", frame->mTime.ToMicroseconds(),
-                                frame->GetEndTime().ToMicroseconds());
+      PROFILER_MARKER("PlayVideo", MEDIA_PLAYBACK, {}, MediaSampleMarker,
+                      frame->mTime.ToMicroseconds(),
+                      frame->GetEndTime().ToMicroseconds());
     }
   }
 
@@ -503,8 +496,9 @@ void VideoSink::UpdateRenderedVideoFrames() {
       VSINK_LOG_V("discarding video frame mTime=%" PRId64
                   " clock_time=%" PRId64,
                   frame->mTime.ToMicroseconds(), clockTime.ToMicroseconds());
-      VSINK_ADD_PROFILER_MARKER("DiscardVideo", frame->mTime.ToMicroseconds(),
-                                frame->GetEndTime().ToMicroseconds());
+      PROFILER_MARKER("DiscardVideo", MEDIA_PLAYBACK, {}, MediaSampleMarker,
+                      frame->mTime.ToMicroseconds(),
+                      frame->GetEndTime().ToMicroseconds());
     }
   }
 

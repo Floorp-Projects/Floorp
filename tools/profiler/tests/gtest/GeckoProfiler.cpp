@@ -953,9 +953,9 @@ TEST(GeckoProfiler, Markers)
                                          {}, geckoprofiler::markers::Text{},
                                          "Text text"));
 
-  MOZ_RELEASE_ASSERT(
-      profiler_add_marker("MediaSample", geckoprofiler::category::OTHER, {},
-                          geckoprofiler::markers::MediaSample{}, 123, 456));
+  MOZ_RELEASE_ASSERT(profiler_add_marker(
+      "MediaSample", geckoprofiler::category::OTHER, {},
+      geckoprofiler::markers::MediaSampleMarker{}, 123, 456));
 
   SpliceableChunkedJSONWriter w;
   w.Start();
