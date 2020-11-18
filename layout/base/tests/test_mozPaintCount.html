@@ -3,16 +3,11 @@
 <head>
   <title>Tests for DOMWindowUtils.paintCount</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="plugin-utils.js"></script>
-  <script type="application/javascript">
-    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
-  </script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body onload="doBackgroundFlicker()">
 <p id="display">
-<embed type="application/x-test" width="100" height="100" id="p"
-       drawmode="solid" color="FF00FF00"></embed>
+<div width="100" height="100" id="p" style="background-color: rgb(0,0,0)"/>
 </p>
 <div id="content" style="display: none">
   
@@ -26,7 +21,7 @@ var startPaintCount = SpecialPowers.DOMWindowUtils.paintCount;
 ok(true, "Got to initial paint count: " + startPaintCount);
 var color = 0;
 
-function doPluginFlicker() {
+function doElementFlicker() {
   ok(true, "Plugin color iteration " + color + ", paint count: " + SpecialPowers.DOMWindowUtils.paintCount);
   if (SpecialPowers.DOMWindowUtils.paintCount - startPaintCount > 20) {
     ok(true, "Got enough paints from plugin color changes");
@@ -35,13 +30,8 @@ function doPluginFlicker() {
   }
 
   color = (color + 1) % 256;
-  var str = color.toString(16);
-  if (str.length < 2) {
-    str = "0" + str;
-  }
-  str = "FF" + str + str + str;
-  document.getElementById("p").setColor(str);
-  setTimeout(doPluginFlicker, 0);
+  document.getElementById("p").style.backgroundColor = "rgb(" + color + "," + color + "," + color + ")";
+  setTimeout(doElementFlicker, 0);
 }
 
 function doBackgroundFlicker() {
@@ -49,7 +39,7 @@ function doBackgroundFlicker() {
   if (SpecialPowers.DOMWindowUtils.paintCount - startPaintCount > 20) {
     ok(true, "Got enough paints from background color changes");
     startPaintCount = SpecialPowers.DOMWindowUtils.paintCount;
-    doPluginFlicker();
+    doElementFlicker();
     return;
   }
 
