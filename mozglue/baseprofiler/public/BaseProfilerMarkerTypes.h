@@ -48,69 +48,6 @@ struct Tracing {
   }
 };
 
-struct UserTimingMark {
-  static constexpr Span<const char> MarkerTypeName() {
-    return MakeStringSpan("UserTimingMark");
-  }
-  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter,
-                                   const ProfilerString8View& aName) {
-    aWriter.StringProperty("name", aName);
-    aWriter.StringProperty("entryType", "mark");
-    aWriter.NullProperty("startMark");
-    aWriter.NullProperty("endMark");
-  }
-  static MarkerSchema MarkerTypeDisplay() {
-    using MS = MarkerSchema;
-    MS schema{MS::Location::markerChart, MS::Location::markerTable};
-    schema.SetAllLabels("{marker.data.name}");
-    schema.AddStaticLabelValue("Marker", "UserTiming");
-    schema.AddKeyLabelFormat("entryType", "Entry Type", MS::Format::string);
-    schema.AddKeyLabelFormat("name", "Name", MS::Format::string);
-    schema.AddStaticLabelValue(
-        "Description",
-        "UserTimingMark is created using the DOM API performance.mark().");
-    return schema;
-  }
-};
-
-struct UserTimingMeasure {
-  static constexpr Span<const char> MarkerTypeName() {
-    return MakeStringSpan("UserTimingMeasure");
-  }
-  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter,
-                                   const ProfilerString8View& aName,
-                                   const Maybe<ProfilerString8View>& aStartMark,
-                                   const Maybe<ProfilerString8View>& aEndMark) {
-    aWriter.StringProperty("name", aName);
-    aWriter.StringProperty("entryType", "measure");
-
-    if (aStartMark.isSome()) {
-      aWriter.StringProperty("startMark", *aStartMark);
-    } else {
-      aWriter.NullProperty("startMark");
-    }
-    if (aEndMark.isSome()) {
-      aWriter.StringProperty("endMark", *aEndMark);
-    } else {
-      aWriter.NullProperty("endMark");
-    }
-  }
-  static MarkerSchema MarkerTypeDisplay() {
-    using MS = MarkerSchema;
-    MS schema{MS::Location::markerChart, MS::Location::markerTable};
-    schema.SetAllLabels("{marker.data.name}");
-    schema.AddStaticLabelValue("Marker", "UserTiming");
-    schema.AddKeyLabelFormat("entryType", "Entry Type", MS::Format::string);
-    schema.AddKeyLabelFormat("name", "Name", MS::Format::string);
-    schema.AddKeyLabelFormat("startMark", "Start Mark", MS::Format::string);
-    schema.AddKeyLabelFormat("endMark", "End Mark", MS::Format::string);
-    schema.AddStaticLabelValue("Description",
-                               "UserTimingMeasure is created using the DOM API "
-                               "performance.measure().");
-    return schema;
-  }
-};
-
 struct MediaSampleMarker {
   static constexpr Span<const char> MarkerTypeName() {
     return MakeStringSpan("MediaSample");
