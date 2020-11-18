@@ -67,7 +67,7 @@ if CONFIG["MOZ_DEBUG"]:
 
 # Because we don't actually link this code anywhere, we don't care about
 # their optimization level, so don't waste time on optimization.
-if CONFIG["CXX_TYPE"] == "clang-cl":
+if CONFIG["CC_TYPE"] == "clang-cl":
     CXXFLAGS += ["-Od"]
 else:
     CXXFLAGS += ["-O0"]
