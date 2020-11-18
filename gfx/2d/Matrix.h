@@ -444,14 +444,14 @@ class BaseMatrix {
    * The xMajor parameter indicates if the larger scale is
    * to be assumed to be in the X direction or not.
    */
-  MatrixSize ScaleFactors(bool xMajor) const {
+  MatrixSize ScaleFactors() const {
     T det = Determinant();
 
     if (det == 0.0) {
       return MatrixSize(0.0, 0.0);
     }
 
-    MatrixSize sz = xMajor ? MatrixSize(1.0, 0.0) : MatrixSize(0.0, 1.0);
+    MatrixSize sz = MatrixSize(1.0, 0.0);
     sz = TransformSize(sz);
 
     T major = sqrt(sz.width * sz.width + sz.height * sz.height);
@@ -466,11 +466,7 @@ class BaseMatrix {
       minor = det / major;
     }
 
-    if (xMajor) {
-      return MatrixSize(major, minor);
-    }
-
-    return MatrixSize(minor, major);
+    return MatrixSize(major, minor);
   }
 };
 
