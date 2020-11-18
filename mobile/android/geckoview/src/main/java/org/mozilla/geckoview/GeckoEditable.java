@@ -1569,10 +1569,6 @@ import android.view.inputmethod.EditorInfo;
                     Log.d(LOGTAG, "restartInput(" + reason + ", " + toggleSoftInput + ')');
                 }
 
-                if (toggleSoftInput) {
-                    mSoftInputReentrancyGuard.incrementAndGet();
-                }
-
                 final GeckoSession session = mSession.get();
                 if (session != null) {
                     session.getTextInput().getDelegate().restartInput(session, reason);
@@ -1723,55 +1719,53 @@ import android.view.inputmethod.EditorInfo;
         ThreadUtils.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                final int reentrancyGuard = mSoftInputReentrancyGuard.decrementAndGet();
-                final boolean isReentrant;
-                if (reentrancyGuard < 0) {
-                    mSoftInputReentrancyGuard.incrementAndGet();
-                    isReentrant = false;
-                } else {
-                    isReentrant = reentrancyGuard > 0;
-                }
+                try {
+                    final int reentrancyGuard = mSoftInputReentrancyGuard.incrementAndGet();
+                    final boolean isReentrant =  reentrancyGuard > 1;
 
-                // When using Find In Page, we can still receive notifyIMEContext calls due to the
-                // selection changing when highlighting. However in this case we don't want to
-                // show/hide the keyboard because the find box has the focus and is taking input from
-                // the keyboard.
-                final GeckoSession session = mSession.get();
+                    // When using Find In Page, we can still receive notifyIMEContext calls due to the
+                    // selection changing when highlighting. However in this case we don't want to
+                    // show/hide the keyboard because the find box has the focus and is taking input from
+                    // the keyboard.
+                    final GeckoSession session = mSession.get();
 
-                if (session == null) {
-                    return;
-                }
-
-                final View view = session.getTextInput().getView();
-                final boolean isFocused = (view == null) || view.hasFocus();
-
-                final boolean isUserAction = ((flags &
-                        SessionTextInput.EditableListener.IME_FLAG_USER_ACTION) != 0);
-
-                if (!force && (isReentrant || !isFocused || !isUserAction)) {
-                    if (DEBUG) {
-                        Log.d(LOGTAG, "toggleSoftInput: no-op, reentrant=" + isReentrant +
-                                ", focused=" + isFocused + ", user=" + isUserAction);
+                    if (session == null) {
+                        return;
                     }
-                    return;
+
+                    final View view = session.getTextInput().getView();
+                    final boolean isFocused = (view == null) || view.hasFocus();
+
+                    final boolean isUserAction = ((flags &
+                            SessionTextInput.EditableListener.IME_FLAG_USER_ACTION) != 0);
+
+                    if (!force && (isReentrant || !isFocused || !isUserAction)) {
+                        if (DEBUG) {
+                            Log.d(LOGTAG, "toggleSoftInput: no-op, reentrant=" + isReentrant +
+                                    ", focused=" + isFocused + ", user=" + isUserAction);
+                        }
+                        return;
+                    }
+                    if (state == SessionTextInput.EditableListener.IME_STATE_DISABLED) {
+                        session.getTextInput().getDelegate().hideSoftInput(session);
+                        return;
+                    }
+                    {
+                        final GeckoBundle bundle = new GeckoBundle();
+                        // This bit is subtle. We want to force-zoom to the input
+                        // if we're _not_ force-showing the virtual keyboard.
+                        //
+                        // We only force-show the virtual keyboard as a result of
+                        // something that _doesn't_ switch the focus, and we don't
+                        // want to move the view out of the focused editor unless
+                        // we _actually_ show toggle the keyboard.
+                        bundle.putBoolean("force", !force);
+                        session.getEventDispatcher().dispatch("GeckoView:ZoomToInput", bundle);
+                    }
+                    session.getTextInput().getDelegate().showSoftInput(session);
+                } finally {
+                    mSoftInputReentrancyGuard.decrementAndGet();
                 }
-                if (state == SessionTextInput.EditableListener.IME_STATE_DISABLED) {
-                    session.getTextInput().getDelegate().hideSoftInput(session);
-                    return;
-                }
-                {
-                    final GeckoBundle bundle = new GeckoBundle();
-                    // This bit is subtle. We want to force-zoom to the input
-                    // if we're _not_ force-showing the virtual keyboard.
-                    //
-                    // We only force-show the virtual keyboard as a result of
-                    // something that _doesn't_ switch the focus, and we don't
-                    // want to move the view out of the focused editor unless
-                    // we _actually_ show toggle the keyboard.
-                    bundle.putBoolean("force", !force);
-                    session.getEventDispatcher().dispatch("GeckoView:ZoomToInput", bundle);
-                }
-                session.getTextInput().getDelegate().showSoftInput(session);
             }
         });
     }
