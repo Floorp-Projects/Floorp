@@ -77,6 +77,8 @@
 
 #include "mozilla/dom/Promise.h"
 
+#include "PluginFinder.h"
+
 #if defined(XP_WIN)
 #  include "nsIWindowMediator.h"
 #  include "nsIBaseWindow.h"
@@ -180,6 +182,14 @@ class BlocklistPromiseHandler final
         sPluginBlocklistStatesChangedSinceLastWrite = false;
 
         RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
+        // XXXgijs This will wipe invalid plugin info. That's unfortunate, but
+        // there's no easy way around this - re-running FindPlugins will only
+        // keep invalid plugin info around long enough to use it if we force
+        // it to re-create plugin tags, and in any case can cause re-entrancy
+        // because it would do more async blocklist lookups. Just make sure
+        // we write the blocklist info.
+        PluginFinder::WritePluginInfo(host->mFlashOnly, host->mPlugins);
+
         // We update blocklist info in content processes asynchronously
         // by just sending a new plugin list to content.
         host->IncrementChromeEpoch();
@@ -255,11 +265,17 @@ nsPluginHost::nsPluginHost()
     : mPluginsLoaded(false),
       mOverrideInternalTypes(false),
       mPluginsDisabled(false),
+      mFlashOnly(true),
+      mDoReloadOnceFindingFinished(false),
+      mAddedFinderShutdownBlocker(false),
       mPluginEpoch(0) {
   // check to see if pref is set at startup to let plugins take over in
   // full page mode for certain image mime types that we handle internally
   mOverrideInternalTypes =
       Preferences::GetBool("plugin.override_internal_types", false);
+  if (xpc::IsInAutomation()) {
+    mFlashOnly = Preferences::GetBool("plugin.load_flash_only", true);
+  }
 
   bool waylandBackend = false;
 #if defined(MOZ_WIDGET_GTK) && defined(MOZ_X11)
@@ -350,8 +366,56 @@ bool nsPluginHost::IsRunningPlugin(nsPluginTag* aPluginTag) {
 }
 
 nsresult nsPluginHost::ReloadPlugins() {
-  PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsPluginHost::ReloadPlugins\n"));
-  return NS_ERROR_PLUGINS_PLUGINSNOTCHANGED;
+  PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsPluginHost::ReloadPlugins Begin\n"));
+
+  // If we're calling this from a content process, forward the reload request to
+  // the parent process. If plugins actually changed, it will notify us
+  // asynchronously later.
+  if (XRE_IsContentProcess()) {
+    Unused
+        << mozilla::dom::ContentChild::GetSingleton()->SendMaybeReloadPlugins();
+    // In content processes, always signal that plugins have not changed. We
+    // will never know if they changed here unless we make slow synchronous
+    // calls. This information will hopefully only be wrong once, as if there
+    // has been a plugin update, we expect to have gotten notification from the
+    // parent process and everything should be updated by the next time this is
+    // called. See Bug 1337058 for more info.
+    return NS_ERROR_PLUGINS_PLUGINSNOTCHANGED;
+  }
+  // this will create the initial plugin list out of cache
+  // if it was not created yet
+  if (!mPluginsLoaded) return LoadPlugins();
+
+  // We're already in the process of finding more plugins. Do it again once
+  // done (because maybe things have changed since we started looking).
+  if (mPendingFinder) {
+    mDoReloadOnceFindingFinished = true;
+    return NS_ERROR_PLUGINS_PLUGINSNOTCHANGED;
+  }
+
+  // we are re-scanning plugins. New plugins may have been added, also some
+  // plugins may have been removed, so we should probably shut everything down
+  // but don't touch running (active and not stopped) plugins
+
+  // check if plugins changed, no need to do anything else
+  // if no changes to plugins have been made
+  // We're doing this on the main thread, and we checked mPendingFinder
+  // above, so we don't need to do anything else to ensure we don't re-enter.
+  // Future work may make this asynchronous and do the finding away from
+  // the mainthread for the reload case, too, (in which case we should use
+  // mPendingFinder instead of a local copy, and update PluginFinder) but at
+  // the moment this is less important than the initial finding on startup.
+  RefPtr<PluginFinder> pf = new PluginFinder(mFlashOnly);
+  bool pluginschanged;
+  MOZ_TRY(pf->HavePluginsChanged([&pluginschanged](bool aPluginsChanged) {
+    pluginschanged = aPluginsChanged;
+  }));
+  pf->Run();
+
+  // if no changed detected, return an appropriate error code
+  if (!pluginschanged) return NS_ERROR_PLUGINS_PLUGINSNOTCHANGED;
+
+  return ActuallyReloadPlugins();
 }
 
 void nsPluginHost::ClearNonRunningPlugins() {
@@ -573,8 +637,35 @@ void nsPluginHost::OnPluginInstanceDestroyed(nsPluginTag* aPluginTag) {
     }
   }
 
+  // We have some options for unloading plugins if they have no instances.
+  //
+  // Unloading plugins immediately can be bad - some plugins retain state
+  // between instances even when there are none. This is largely limited to
+  // going from one page to another, so state is retained without an instance
+  // for only a very short period of time. In order to allow this to work
+  // we don't unload plugins immediately by default. This is supported
+  // via a hidden user pref though.
+  //
+  // Another reason not to unload immediately is that loading is expensive,
+  // and it is better to leave popular plugins loaded.
+  //
+  // Our default behavior is to try to unload a plugin after a pref-controlled
+  // delay once its last instance is destroyed. This seems like a reasonable
+  // compromise that allows us to reclaim memory while allowing short state
+  // retention and avoid perf hits for loading popular plugins.
   if (!hasInstance) {
-    aPluginTag->TryUnloadPlugin(false);
+    if (UnloadPluginsASAP()) {
+      aPluginTag->TryUnloadPlugin(false);
+    } else {
+      if (aPluginTag->mUnloadTimer) {
+        aPluginTag->mUnloadTimer->Cancel();
+      } else {
+        aPluginTag->mUnloadTimer = NS_NewTimer();
+      }
+      uint32_t unloadTimeout = StaticPrefs::dom_ipc_plugins_unloadTimeoutSecs();
+      aPluginTag->mUnloadTimer->InitWithCallback(this, 1000 * unloadTimeout,
+                                                 nsITimer::TYPE_ONE_SHOT);
+    }
   }
 }
 
@@ -1737,6 +1828,27 @@ void nsPluginHost::SetChromeEpochForContent(uint32_t aEpoch) {
   mPluginEpoch = aEpoch;
 }
 
+#ifdef XP_WIN
+static void WatchRegKey(uint32_t aRoot, nsCOMPtr<nsIWindowsRegKey>& aKey) {
+  if (aKey) {
+    return;
+  }
+
+  aKey = do_CreateInstance("@mozilla.org/windows-registry-key;1");
+  if (!aKey) {
+    return;
+  }
+  nsresult rv = aKey->Open(
+      aRoot, u"Software\\MozillaPlugins"_ns,
+      nsIWindowsRegKey::ACCESS_READ | nsIWindowsRegKey::ACCESS_NOTIFY);
+  if (NS_FAILED(rv)) {
+    aKey = nullptr;
+    return;
+  }
+  aKey->StartWatching(true);
+}
+#endif
+
 already_AddRefed<nsIAsyncShutdownClient> GetProfileChangeTeardownPhase() {
   nsCOMPtr<nsIAsyncShutdownService> asyncShutdownSvc =
       services::GetAsyncShutdownService();
@@ -1752,9 +1864,133 @@ already_AddRefed<nsIAsyncShutdownClient> GetProfileChangeTeardownPhase() {
   return shutdownPhase.forget();
 }
 
-nsresult nsPluginHost::LoadPlugins() { return NS_OK; }
+nsresult nsPluginHost::LoadPlugins() {
+  // This should only be run in the parent process. On plugin list change, we'll
+  // update observers in the content process as part of SetPluginsInContent
+  if (XRE_IsContentProcess()) {
+    return NS_OK;
+  }
+  // do not do anything if it is already done
+  // use ReloadPlugins() to enforce loading
+  if (mPluginsLoaded) return NS_OK;
 
-void nsPluginHost::FindingFinished() {}
+  // Uh oh, someone's forcing us to load plugins, but we're already in the
+  // process of doing so. Schedule a reload for when we're done:
+  if (mPendingFinder) {
+    mDoReloadOnceFindingFinished = true;
+    return NS_OK;
+  }
+
+  if (mPluginsDisabled) return NS_OK;
+
+#ifdef XP_WIN
+  WatchRegKey(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE, mRegKeyHKLM);
+  WatchRegKey(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER, mRegKeyHKCU);
+#endif
+
+  // This is a runnable. The main part of its work will be done away from the
+  // main thread.
+  mPendingFinder = new PluginFinder(mFlashOnly);
+  mDoReloadOnceFindingFinished = false;
+  mAddedFinderShutdownBlocker = false;
+  RefPtr<nsPluginHost> self = this;
+  // Note that if we're in flash only mode, which is the default, then the
+  // callback will be called twice. Once for flash (or nothing, if we're not
+  // (yet) aware of flash being present), and then again after we've actually
+  // looked for it on disk.
+  nsresult rv = mPendingFinder->DoFullSearch(
+      [self](bool aPluginsChanged, RefPtr<nsPluginTag> aPlugins,
+             const nsTArray<std::pair<bool, RefPtr<nsPluginTag>>>&
+                 aBlocklistRequests) {
+        MOZ_ASSERT(NS_IsMainThread(),
+                   "Callback should only be called on the main thread.");
+        self->mPluginsLoaded = true;
+        if (aPluginsChanged) {
+          self->ClearNonRunningPlugins();
+          while (aPlugins) {
+            RefPtr<nsPluginTag> pluginTag = aPlugins;
+            aPlugins = aPlugins->mNext;
+            self->AddPluginTag(pluginTag);
+          }
+          self->IncrementChromeEpoch();
+          self->BroadcastPluginsToContent();
+        }
+
+        // Do blocklist queries immediately after.
+        for (auto pair : aBlocklistRequests) {
+          RefPtr<nsPluginTag> pluginTag = pair.second;
+          bool shouldSoftblock = pair.first;
+          self->UpdatePluginBlocklistState(pluginTag, shouldSoftblock);
+        }
+
+        if (aPluginsChanged) {
+          nsCOMPtr<nsIObserverService> obsService =
+              mozilla::services::GetObserverService();
+          if (obsService) {
+            obsService->NotifyObservers(nullptr, "plugins-list-updated",
+                                        nullptr);
+          }
+        }
+      });
+  // Deal with the profile not being ready yet by returning NS_OK - we'll get
+  // the data later.
+  if (NS_FAILED(rv)) {
+    mPendingFinder = nullptr;
+    if (rv == NS_ERROR_NOT_AVAILABLE) {
+      return NS_OK;
+    }
+    return rv;
+  }
+  bool dispatched = false;
+
+  // If we're only looking for flash (the default), try to do so away from
+  // the main thread. Note that in this case, the callback may have been called
+  // already, from the cached plugin info.
+  if (mFlashOnly) {
+    // First add the shutdown blocker, to avoid the potential for race
+    // conditions.
+    nsCOMPtr<nsIAsyncShutdownClient> shutdownPhase =
+        GetProfileChangeTeardownPhase();
+    if (shutdownPhase) {
+      rv = shutdownPhase->AddBlocker(mPendingFinder,
+                                     NS_LITERAL_STRING_FROM_CSTRING(__FILE__),
+                                     __LINE__, u""_ns);
+      mAddedFinderShutdownBlocker = NS_SUCCEEDED(rv);
+    }
+
+    nsCOMPtr<nsIEventTarget> target =
+        do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = target->Dispatch(mPendingFinder, nsIEventTarget::DISPATCH_NORMAL);
+      dispatched = NS_SUCCEEDED(rv);
+    }
+    // If we somehow failed to dispatch, remove the shutdown blocker.
+    if (mAddedFinderShutdownBlocker && !dispatched) {
+      shutdownPhase->RemoveBlocker(mPendingFinder);
+      mAddedFinderShutdownBlocker = false;
+    }
+  }
+  if (!dispatched) {
+    mPendingFinder->Run();
+    // We're running synchronously, so just remove the pending finder now.
+    mPendingFinder = nullptr;
+  }
+
+  return NS_OK;
+}
+
+void nsPluginHost::FindingFinished() {
+  if (mAddedFinderShutdownBlocker) {
+    nsCOMPtr<nsIAsyncShutdownClient> shutdownPhase =
+        GetProfileChangeTeardownPhase();
+    shutdownPhase->RemoveBlocker(mPendingFinder);
+    mAddedFinderShutdownBlocker = false;
+  }
+  mPendingFinder = nullptr;
+  if (mDoReloadOnceFindingFinished) {
+    Unused << ReloadPlugins();
+  }
+}
 
 nsresult nsPluginHost::SetPluginsInContent(
     uint32_t aPluginEpoch, nsTArray<mozilla::plugins::PluginTag>& aPlugins,
@@ -2653,7 +2889,9 @@ bool nsPluginHost::CanUsePluginForMIMEType(const nsACString& aMIMEType) {
   if (nsPluginHost::GetSpecialType(aMIMEType) ==
           nsPluginHost::eSpecialType_Flash ||
       MimeTypeIsAllowedForFakePlugin(NS_ConvertUTF8toUTF16(aMIMEType)) ||
-      aMIMEType.LowerCaseEqualsLiteral("application/x-test")) {
+      aMIMEType.LowerCaseEqualsLiteral("application/x-test") ||
+      aMIMEType.LowerCaseEqualsLiteral("application/x-second-test") ||
+      aMIMEType.LowerCaseEqualsLiteral("application/x-third-test")) {
     return true;
   }
 

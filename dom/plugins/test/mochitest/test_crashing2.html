@@ -1,0 +1,72 @@
+<head>
+  <title>Plugin crashing</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+
+<body onload="mainLoaded()">
+  <iframe id="iframe1" src="about:blank" width="600" height="600"></iframe>
+
+  <script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  var iframe = document.getElementById("iframe1");
+
+  function mainLoaded() {
+    SimpleTest.expectChildProcessCrash();
+
+    var p = iframe.contentDocument.createElement("embed");
+    p.setAttribute("id", "plugin1");
+    p.setAttribute("type", "application/x-test");
+    p.setAttribute("width", "400");
+    p.setAttribute("height", "400");
+    p.setAttribute("drawmode", "solid");
+    p.setAttribute("color", "FF00FFFF");
+    p.setAttribute("newCrash", "true");
+    iframe.contentDocument.body.appendChild(p);
+
+    // The plugin will now crash when it is instantiated, but
+    // that happens asynchronously. HACK: this should use an
+    // event instead of nested pending runnables, but I don't
+    // know of any DOM event that's fired when a plugin is
+    // instantiated.
+    SimpleTest.executeSoon(function() {
+      SimpleTest.executeSoon(function() {
+        ok(p.setColor === undefined,
+           "Plugin should have crashed on creation");
+
+        window.frameLoaded = reloaded1;
+        iframe.contentWindow.location.replace("crashing_subpage.html");
+      });
+    });
+  }
+
+  function reloaded1() {
+    var p = iframe.contentDocument.getElementById("plugin1");
+    try {
+      p.setColor("FF00FF00");
+      ok(true, "Reloading after crash-on-new worked");
+    } catch (e) {
+      ok(false, "Reloading after crash-on-new didn't give us a usable plugin");
+    }
+    p.crashOnDestroy();
+    // the child crash should happen here
+    p.remove();
+
+    window.frameLoaded = reloaded2;
+    SimpleTest.executeSoon(function() {
+      iframe.contentWindow.location.reload();
+    });
+  }
+
+  function reloaded2() {
+    var p = iframe.contentDocument.getElementById("plugin1");
+    try {
+      p.setColor("FF00FF00");
+      ok(true, "Reloading after crash-on-destroy worked");
+    } catch (e) {
+      ok(false, "Reloading after crash-on-destroy didn't give us a usable plugin");
+    }
+    SimpleTest.finish();
+  }
+  </script>

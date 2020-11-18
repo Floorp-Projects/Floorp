@@ -276,11 +276,6 @@ class PluginChild extends JSWindowActorChild {
       overlay.removeAttribute("notext");
     }
 
-    if (fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_BLOCK_ALL) {
-      overlay.setAttribute("blockall", "blockall");
-      return OVERLAY_DISPLAY.HIDDEN;
-    }
-
     // The hit test below only works with correct layout information,
     // don't do it if layout needs flush.
     // We also don't want to access scrollWidth/scrollHeight if
@@ -389,8 +384,6 @@ class PluginChild extends JSWindowActorChild {
         return "PluginVulnerableUpdatable";
       case Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE:
         return "PluginVulnerableNoUpdate";
-      case Ci.nsIObjectLoadingContent.PLUGIN_BLOCK_ALL:
-        return "PluginBlockAll";
       default:
         // Not all states map to a handler
         return null;
@@ -482,7 +475,6 @@ class PluginChild extends JSWindowActorChild {
         this.onPluginCrashed(pluginElement, event);
         break;
 
-      case "PluginBlockAll":
       case "PluginNotFound": {
         /* NOP */
         break;
@@ -725,7 +717,6 @@ class PluginChild extends JSWindowActorChild {
       event.originalTarget.getAttribute("anonid") != "closeIcon" &&
       event.originalTarget.id != "closeIcon" &&
       !overlay.hasAttribute("dismissed") &&
-      !overlay.hasAttribute("blockall") &&
       event.button == 0 &&
       event.isTrusted
     ) {

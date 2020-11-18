@@ -59,6 +59,8 @@ struct _NPP;
 typedef _NPP* NPP;
 #endif
 
+class PluginFinder;
+
 class nsPluginHost final : public nsIPluginHost,
                            public nsIObserver,
                            public nsITimerCallback,
@@ -66,6 +68,7 @@ class nsPluginHost final : public nsIPluginHost,
                            public nsINamed {
   friend class nsPluginTag;
   friend class nsFakePluginTag;
+  friend class PluginFinder;
   virtual ~nsPluginHost();
 
  public:
@@ -312,6 +315,7 @@ class nsPluginHost final : public nsIPluginHost,
   void ClearNonRunningPlugins();
   nsresult ActuallyReloadPlugins();
 
+  // Callback into the host from PluginFinder once it's done.
   void FindingFinished();
 
   RefPtr<nsPluginTag> mPlugins;
@@ -328,6 +332,14 @@ class nsPluginHost final : public nsIPluginHost,
 
   // set by pref plugin.disable
   bool mPluginsDisabled;
+
+  // set by pref plugin.load_flash_only
+  bool mFlashOnly;
+
+  // Only one plugin finding operation should be run at a time.
+  RefPtr<PluginFinder> mPendingFinder;
+  bool mDoReloadOnceFindingFinished;
+  bool mAddedFinderShutdownBlocker;
 
   // Any instances in this array will have valid plugin objects via GetPlugin().
   // When removing an instance it might not die - be sure to null out it's

@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+  <title>Test for Bug 852315</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="plugin-utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <base href="chrome://browser/content/">
+</head>
+<body>
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+// Tests that the document-inactive notification stopping plugins does not
+// fatally re-enter when adding other plugins to the document.
+
+var i = document.createElement("iframe");
+var ob = document.body;
+i.addEventListener("load", function loadfunc() {
+  var d = i.contentWindow.document;
+  var e = i.contentDocument.createElement("embed");
+  var destroyran = false;
+  e.type = "application/x-test";
+  i.contentDocument.body.appendChild(e);
+
+  // On despawn, append an embed tag to document.
+  e.callOnDestroy(function() {
+    var e2 = d.createElement("embed");
+    d.body.appendChild(e2);
+    destroyran = true;
+  });
+
+  // Navigate the frame to cause the document with the plugin to go inactive
+  i.removeEventListener("load", loadfunc);
+  i.src = "about:blank";
+
+  const MAX_ATTEMPTS = 50;
+  var attempts = 0;
+  function checkPluginDestroyRan() {
+    // We may need to retry a few times until the plugin stop event makes
+    // its way through the event queue.
+    if (attempts < MAX_ATTEMPTS && !destroyran) {
+      ++attempts;
+      SimpleTest.executeSoon(checkPluginDestroyRan);
+    } else {
+      info("Number of retry attempts: " + attempts);
+      ok(destroyran, "OnDestroy callback ran and did not crash");
+      SimpleTest.finish();
+    }
+  }
+
+  SimpleTest.executeSoon(checkPluginDestroyRan);
+});
+document.body.appendChild(i);
+
+</script>
+</body>
+</html>

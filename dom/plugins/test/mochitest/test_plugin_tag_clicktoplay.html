@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta><charset="utf-8"/>
+    <title>Test Modifying Plugin click-to-play Flag</title>
+    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="plugin-utils.js"></script>
+  </head>
+  <body>
+    <script class="testbody" type="application/javascript">
+      const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+      var pluginHost = Cc["@mozilla.org/plugin/host;1"]
+                       .getService(Ci.nsIPluginHost);
+
+      var testPlugin = getTestPlugin();
+      var secondTestPlugin = getTestPlugin("Second Test Plug-in");
+      ok(testPlugin, "Should have Test Plug-in");
+      ok(secondTestPlugin, "Should have Second Test Plug-in");
+
+      // make sure both start off as click-to-play
+      setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_CLICKTOPLAY);
+      setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Second Test Plug-in");
+
+      testPlugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
+      is(pluginHost.getStateForType("application/x-test"), Ci.nsIPluginTag.STATE_ENABLED, "click-to-play should be off for Test Plug-in now");
+      is(pluginHost.getStateForType("application/x-second-test"), Ci.nsIPluginTag.STATE_CLICKTOPLAY, "click-to-play should still be on for the Second Test Plug-in");
+
+      testPlugin.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
+      is(pluginHost.getStateForType("application/x-test"), Ci.nsIPluginTag.STATE_CLICKTOPLAY, "click-to-play should be on for Test Plug-in now");
+    </script>
+  </body>
+</html>

@@ -1,0 +1,33 @@
+<head>
+  <title>Plugin instantiation</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+
+<body onload="mainLoaded()">
+  <iframe id="iframe1" src="about:blank" width="600" height="600"></iframe>
+
+  <script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  var iframe = document.getElementById("iframe1");
+
+  function mainLoaded() {
+    var p = iframe.contentDocument.createElement("embed");
+    p.setAttribute("id", "plugin1");
+    p.setAttribute("type", "application/x-test");
+    p.setAttribute("width", "400");
+    p.setAttribute("height", "400");
+    p.setAttribute("drawmode", "solid");
+    p.setAttribute("color", "FF00FFFF");
+    iframe.contentDocument.body.appendChild(p);
+
+    // Plugin instantiation happens asynchronously
+    SimpleTest.executeSoon(function() {
+      SimpleTest.executeSoon(function() {
+        ok(p.setColor !== undefined, "Dynamic plugin instantiation.");
+        SimpleTest.finish();
+      });
+    });
+  }
+  </script>

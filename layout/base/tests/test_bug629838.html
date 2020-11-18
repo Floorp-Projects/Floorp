@@ -3,11 +3,16 @@
 <head>
   <title>Tests for MozAfterPaint</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+  <script type="application/javascript">
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+  </script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <p id="display">
-<div width="100" height="100" id="p" style="background-color: rgb(0,0,0)"/>
+<embed type="application/x-test" width="100" height="100" id="p"
+       drawmode="solid" color="FF00FF00"></embed>
 </p>
 <div id="content" style="display: none">
   
@@ -41,19 +46,24 @@ document.addEventListener("DOMContentLoaded", startTest, true);
 // Instead, wait for a minimum number of afterPaint events to at least ensure that they are being fired.
 const minimumAfterPaintsToPass = 10;
 
-function doElementFlicker() {
-  ok(true, "Element color iteration " + color + 
+function doPluginFlicker() {
+  ok(true, "Plugin color iteration " + color + 
      ", afterpaint count: " + afterPaintCount +
      ", mozpaint count: " + SpecialPowers.DOMWindowUtils.paintCount);
   if (afterPaintCount >= minimumAfterPaintsToPass) { 
-    ok(true, "afterPaintCount incremented enough from color changes.");
+    ok(true, "afterPaintCount incremented enough from plugin color changes.");
     SimpleTest.finish();
     return;
   }
 
   color = (color + 1) % 256;
-  document.getElementById("p").style.backgroundColor = "rgb(" + color + "," + color + "," + color + ")";
-  setTimeout(doElementFlicker, 0);
+  var str = color.toString(16);
+  if (str.length < 2) {
+    str = "0" + str;
+  }
+  str = "FF" + str + str + str;
+  document.getElementById("p").setColor(str);
+  setTimeout(doPluginFlicker, 0);
 }
 
 function doBackgroundFlicker() {
@@ -64,7 +74,7 @@ function doBackgroundFlicker() {
     ok(true, "afterPaintCount incremented enough from background color changes.");
     afterPaintCount = 0;
     initialPaintCount = SpecialPowers.DOMWindowUtils.paintCount;
-    doElementFlicker();
+    doPluginFlicker();
     return;
   }
 

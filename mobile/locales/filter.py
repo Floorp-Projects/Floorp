@@ -24,6 +24,7 @@ def test(mod, path, entity=None):
             "chrome/global/commonDialogs.properties",
             "chrome/global/intl.properties",
             "chrome/global/intl.css",
+            "chrome/pluginproblem/pluginproblem.dtd",
             "chrome/global/aboutWebrtc.properties",
         ):
             return "error"

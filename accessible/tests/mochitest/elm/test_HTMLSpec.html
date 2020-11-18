@@ -461,8 +461,20 @@
       // ////////////////////////////////////////////////////////////////////////
       // HTML:embed (windowless/windowed plugins and media)
 
-      ok(!isAccessible("embed_plugin_windowless"), "(blocked) windowless plugin embed element is not accessible");
-      ok(!isAccessible("embed_plugin_windowed"), "(blocked) windowed plugin embed element is not accessible");
+      if (WIN) {
+        obj = {
+          role: ROLE_EMBEDDED_OBJECT,
+          states: STATE_UNAVAILABLE,
+        };
+
+        testElm("embed_plugin_windowless", obj);
+
+        obj = {
+          role: ROLE_EMBEDDED_OBJECT,
+          absentStates: STATE_UNAVAILABLE,
+        };
+        testElm("embed_plugin_windowed", obj);
+      }
 
       obj = {
         role: ROLE_GRAPHIC,
@@ -1121,8 +1133,20 @@
       // ////////////////////////////////////////////////////////////////////////
       // HTML:object (windowless/windowed plugins and media) and HTML:param
 
-      ok(!isAccessible("object_plugin_windowless"), "(blocked) windowless plugin object element is not accessible");
-      ok(!isAccessible("object_plugin_windowed"), "(blocked) windowed plugin object element is not accessible");
+      if (WIN) {
+        obj = {
+          role: ROLE_EMBEDDED_OBJECT,
+          states: STATE_UNAVAILABLE,
+          children: [ ], // no child for HTML:param
+        };
+        testElm("object_plugin_windowless", obj);
+
+        obj = {
+          role: ROLE_EMBEDDED_OBJECT,
+          absentStates: STATE_UNAVAILABLE,
+        };
+        testElm("object_plugin_windowed", obj);
+      }
 
       obj = {
         role: ROLE_GRAPHIC,
@@ -1457,6 +1481,7 @@
 
     SimpleTest.waitForExplicitFinish();
     addA11yLoadEvent(doTest);
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
     </script>
 </head>

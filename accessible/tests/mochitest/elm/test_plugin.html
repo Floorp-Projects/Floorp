@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Plugin tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+
+    function doTest() {
+      if (!WIN) {
+        ok(true,
+           "It's Windows specific test. Feel free to extend the test.");
+
+        SimpleTest.finish();
+        return;
+      }
+
+      testStates("plugin-windowless", STATE_UNAVAILABLE);
+      testAccessibleTree("plugin-windowless", { EMBEDDED_OBJECT: [ ] });
+
+      testStates("plugin-windowless-fallback", STATE_UNAVAILABLE);
+      testAccessibleTree("plugin-windowless-fallback", { EMBEDDED_OBJECT: [ ] });
+
+      testStates("plugin-windowed", 0, 0, STATE_UNAVAILABLE);
+      testAccessibleTree("plugin-windowed", { EMBEDDED_OBJECT: [ { NOTHING: [] } ] });
+
+      testStates("plugin-windowed-fallback", 0, 0, STATE_UNAVAILABLE);
+      testAccessibleTree("plugin-windowed-fallback",
+                         { EMBEDDED_OBJECT: [ { NOTHING: [] } ] });
+
+      // make sure we handle content changes under the plugin.
+      getNode("fallback1").setAttribute("href", "5");
+      getNode("fallback2").setAttribute("href", "5");
+      SimpleTest.executeSoon(function() { SimpleTest.finish(); });
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Embed and object HTML tags should be given an accessible role of embedded object"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=485270">Bug 485270</a>
+  <a target="_blank"
+     title="Embedded object accessibles for inaccessible/windowless plugins should not expose a NULL child"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=816856">Bug 816856</a>
+  <a target="_blank"
+     title="Updating accessible tree for plugin with fallback shouldn't crash"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=881636">Bug 881636</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <embed id="plugin-windowless" type="application/x-test"
+         width="300" height="300"></embed>
+  <embed id="plugin-windowed" type="application/x-test" wmode="window"
+         width="300" height="300"></embed>
+  <embed id="plugin-windowless-fallback" type="application/x-test"
+    width="300" height="300"><a id="fallback1">foo</a></embed>
+  <embed id="plugin-windowed-fallback" type="application/x-test" wmode="window"
+    width="300" height="300"><a id="fallback2">foo</a></embed>
+</body>
+</html>

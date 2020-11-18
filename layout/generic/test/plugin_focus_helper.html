@@ -1,0 +1,132 @@
+<html>
+<head>
+  <title>Test that clicking on plugins transfers focus correctly</title>
+  <style>
+  embed { width:200px; height:200px; }
+  </style>
+</head>
+<body>
+
+<p><input type="text" id="input"></input>
+<p><embed id="p1" type="application/x-test" wmode="window" paintscript="didPaint('p1')">
+   <embed id="p2" type="application/x-test" paintscript="didPaint('p2')"></p>
+
+<script type="text/javascript">
+var SimpleTest = window.opener.SimpleTest;
+var is = window.opener.is;
+var ok = window.opener.ok;
+var todo = window.opener.todo;
+var info = window.opener.info;
+
+SimpleTest.waitForExplicitFinish();
+
+// We don't want to trigger native mouse events until the document is fully
+// loaded and each plugin has painted once.
+var expectPaints = 2;
+var loaded = false;
+function didPaint(id) {
+  ok(--expectPaints >= 0, "Got plugin painted event from "+id);
+  document.getElementById(id).setAttribute("paintscript", null);
+  if (expectPaints == 0) {
+    if (document.readyState == "complete") {
+      theTest();
+    } else {
+      info("Waiting for document load to continue");
+      window.addEventListener("load", function() { theTest(); });
+    }
+  }
+}
+
+//
+// Begin the test
+//
+function theTest() {
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+var gWindowUtils = SpecialPowers.getDOMWindowUtils(window);
+
+var nativeMouseDown;
+var nativeMouseUp;
+
+function nativeClickElement(id) {
+  return function() {
+
+    var element = document.getElementById(id);
+    var bounds = element.getBoundingClientRect();
+    var x = (bounds.left + window.mozInnerScreenX + 10);
+    var y = (bounds.top + window.mozInnerScreenY + 10);
+
+    SimpleTest.executeSoon(function () {
+      gWindowUtils.sendNativeMouseEvent(x, y, nativeMouseDown, 0, element);
+      gWindowUtils.sendNativeMouseEvent(x, y, nativeMouseUp, 0, element);
+    });
+  };
+}
+
+function done() {
+  // Something about this test is losing focus to the OS intermittently, remove
+  // the windowed plugins and wait for this window to be focused before
+  // continuing. (Bug 874843)
+  for (var p of [ "p1", "p2" ]) {
+    p = document.getElementById(p);
+    p.remove();
+    p = null;
+  }
+  SimpleTest.waitForFocus(window.opener.childDone, window);
+}
+
+var step = 0;
+var steps = [
+  { event:"focus", id:"input", action:nativeClickElement("p1") },
+  { event:"blur", id:"input" },
+  { event:"focus", id:"p1", action:nativeClickElement("p2") },
+  { event:"blur", id:"p1" },
+  { event:"focus", id:"p2", action:nativeClickElement("input") },
+  { event:"blur", id:"p2" },
+  { event:"focus", id:"input", action:done }
+];
+
+function handleEvent(event) {
+  if (step >= steps.length)
+    return;
+
+  var s = steps[step++];
+  is(event.type, s.event, "Check event type");
+  is(event.target.id, s.id, "Check event target");
+
+  if (s.action) {
+    SimpleTest.executeSoon(s.action);
+  }
+}
+
+var elems = ["input", "p1", "p2"];
+for (var i = 0; i < elems.length; ++i) {
+  var e = document.getElementById(elems[i]);
+  e.addEventListener("focus", handleEvent);
+  e.addEventListener("blur", handleEvent);
+}
+
+function doTest() {
+  input.focus();
+}
+
+if (navigator.platform.includes("Mac")) {
+  nativeMouseDown = 1; // NSLeftMouseDown
+  nativeMouseUp = 2; // NSLeftMouseUp
+  SimpleTest.waitForFocus(doTest, window);
+} else if (navigator.platform.includes("Win")) {
+  nativeMouseDown = 2; // MOUSEEVENTF_LEFTDOWN
+  nativeMouseUp = 4; // MOUSEEVENTF_LEFTUP
+  SimpleTest.waitForFocus(doTest, window);
+} else {
+  // XXX(johns): our gtk2 sendNativeMouseEvent doesn't support clicks
+  todo(false, "Platform not supported");
+  done();
+}
+
+} // function theTest
+</script>
+
+</body>
+</html>

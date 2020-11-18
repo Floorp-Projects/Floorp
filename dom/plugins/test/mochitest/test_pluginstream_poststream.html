@@ -1,0 +1,31 @@
+<html>
+<head>
+  <title>NPAPI NPN_PostURL NPStream Test</title>
+  <script type="text/javascript" 
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" 
+          src="pluginstream.js"></script>
+  <script type="text/javascript" src="plugin-utils.js"></script>
+  <script type="text/javascript">
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+  </script>
+  <link rel="stylesheet" type="text/css" 
+        href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <p id="display"></p>
+
+  <iframe id="testframe" name="testframe" onload="frameLoaded()"></iframe>
+
+  <!--
+   - Same as test_pluginstream_post.html, except NULL is passed to NPN_PostURL
+   - as the frame parameter, so the HTTP response to the post is passed to the
+   - plugin via NPP_NewStream. Once this stream is received, it's displayed
+   - in a frame in the browser via a call to NPN_GetURL.
+   -->
+  <embed src="loremipsum.txt" streammode="normal"
+         frame="testframe" posturl="post.sjs" postmode="stream"
+         id="embedtest" style="width: 400px; height: 100px;"
+         type="application/x-test"></embed>
+</body>
+</html>

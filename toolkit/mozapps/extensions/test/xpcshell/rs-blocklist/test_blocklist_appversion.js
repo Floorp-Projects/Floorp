@@ -9,6 +9,8 @@
 // test_blocklistchange.js.
 Services.prefs.setBoolPref("extensions.blocklist.useMLBF", false);
 
+const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+
 var ADDONS = [
   {
     id: "test_bug449027_1@tests.mozilla.org",
@@ -212,6 +214,69 @@ var ADDONS = [
   },
 ];
 
+class MockPlugin extends MockPluginTag {
+  constructor(name, version, start, appBlocks, toolkitBlocks) {
+    super({ name, version });
+    this.start = start;
+    this.appBlocks = appBlocks;
+    this.toolkitBlocks = toolkitBlocks;
+  }
+}
+
+var PLUGINS = [
+  new MockPlugin("test_bug449027_1", "5", false, false, false),
+  new MockPlugin("test_bug449027_2", "5", false, true, false),
+  new MockPlugin("test_bug449027_3", "5", false, true, false),
+  new MockPlugin("test_bug449027_4", "5", false, false, false),
+  new MockPlugin("test_bug449027_5", "5", false, false, false),
+  new MockPlugin("test_bug449027_6", "5", false, true, false),
+  new MockPlugin("test_bug449027_7", "5", false, true, false),
+  new MockPlugin("test_bug449027_8", "5", false, true, false),
+  new MockPlugin("test_bug449027_9", "5", false, true, false),
+  new MockPlugin("test_bug449027_10", "5", false, true, false),
+  new MockPlugin("test_bug449027_11", "5", false, true, false),
+  new MockPlugin("test_bug449027_12", "5", false, true, false),
+  new MockPlugin("test_bug449027_13", "5", false, true, false),
+  new MockPlugin("test_bug449027_14", "5", false, false, false),
+  new MockPlugin("test_bug449027_15", "5", false, true, true),
+  new MockPlugin("test_bug449027_16", "5", false, true, true),
+  new MockPlugin("test_bug449027_17", "5", false, false, false),
+  new MockPlugin("test_bug449027_18", "5", false, false, false),
+  new MockPlugin("test_bug449027_19", "5", false, true, true),
+  new MockPlugin("test_bug449027_20", "5", false, true, true),
+  new MockPlugin("test_bug449027_21", "5", false, true, true),
+  new MockPlugin("test_bug449027_22", "5", false, true, true),
+  new MockPlugin("test_bug449027_23", "5", false, true, true),
+  new MockPlugin("test_bug449027_24", "5", false, true, true),
+  new MockPlugin("test_bug449027_25", "5", false, true, true),
+];
+
+var gNewBlocks = [];
+
+mockPluginHost(PLUGINS);
+
+var BlocklistPrompt = {
+  get wrappedJSObject() {
+    return this;
+  },
+
+  prompt(list) {
+    gNewBlocks = list.map(item => `${item.name} ${item.version}`);
+  },
+
+  QueryInterface: ChromeUtils.generateQI([]),
+};
+
+let factory = ComponentUtils.generateSingletonFactory(function() {
+  return BlocklistPrompt;
+});
+Cm.registerFactory(
+  Components.ID("{26d32654-30c7-485d-b983-b4d2568aebba}"),
+  "Blocklist Prompt",
+  "@mozilla.org/addons/blocklist-prompt;1",
+  factory
+);
+
 function createAddon(addon) {
   return promiseInstallWebExtension({
     manifest: {
@@ -249,6 +314,29 @@ async function checkState(test, lastTest, callback) {
       addon[test],
       `Blocklist state should match expected for extension ${addon.id}, test ${test}`
     );
+  }
+
+  for (let plugin of PLUGINS) {
+    equal(
+      await plugin.isBlocklisted(),
+      plugin[test],
+      `Blocklist state should match expected for plugin ${plugin.name}, test ${test}`
+    );
+  }
+
+  if (lastTest) {
+    var expected = 0;
+    for (let plugin of PLUGINS) {
+      if (plugin[test] && !plugin[lastTest]) {
+        ok(
+          gNewBlocks.includes(`${plugin.name} ${plugin.version}`),
+          `Plugin ${plugin.name} should have been listed in the blocklist notification for test ${test}`
+        );
+        expected++;
+      }
+    }
+
+    Assert.equal(expected, gNewBlocks.length);
   }
 }
 

@@ -6,9 +6,11 @@ if (!gMultiProcessBrowser) {
 }
 
 const kBaseURI = "http://mochi.test:8888/browser/dom/base/test/empty.html";
+const kPluginJS = "chrome://mochitests/content/browser/dom/base/test/plugin.js";
 var testURLs = [
   "http://mochi.test:8888/browser/dom/base/test/file_audioLoop.html",
   "http://mochi.test:8888/browser/dom/base/test/file_audioLoopInIframe.html",
+  "http://mochi.test:8888/browser/dom/base/test/file_pluginAudio.html",
   "http://mochi.test:8888/browser/dom/base/test/file_webaudio_startstop.html",
 ];
 
@@ -21,6 +23,8 @@ var testURLs = [
 const kMinTimeoutBackground = 100 * 1000 * 1000;
 
 const kDelay = 10;
+
+Services.scriptloader.loadSubScript(kPluginJS, this);
 
 async function runTest(url) {
   let currentTab = gBrowser.selectedTab;

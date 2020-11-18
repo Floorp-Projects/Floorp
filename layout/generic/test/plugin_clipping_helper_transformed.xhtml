@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<html xmlns="http://www.w3.org/1999/xhtml" title="Test Plugin Clipping: Plugins in Transforms">
+<head>
+  <style>
+  embed { width:300px; height:200px; display:block; }
+  </style>
+</head>
+<body>
+
+<!-- Use a XUL element here so we can get its screenX/Y -->
+<hbox style="height:10px; position:absolute; left:0; top:0; z-index:-100;" id="h1"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <hbox style="width:100px;"></hbox><hbox id="h2"/>
+</hbox>
+
+<div style="width:200px; position:absolute; top:0; left:0; -moz-transform:rotate(90deg)">
+  <embed id="p1" type="application/x-test" wmode="window"></embed>
+</div>
+<svg xmlns="http://www.w3.org/2000/svg" style="width:200px; position:absolute; top:200px; left:0;">
+  <foreignObject width="200" height="200">
+    <embed xmlns="http://www.w3.org/1999/xhtml" id="p2" type="application/x-test" wmode="window"></embed>
+  </foreignObject>
+</svg>
+
+<script src="plugin_clipping_lib.js"></script>
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+function runTests() {
+  // p1 and p2 are both in a transformed context so they should be hidden.
+  checkClipRegionNoBounds("p1", []);
+  checkClipRegionNoBounds("p2", []);
+
+  window.opener.childDone();
+}
+
+]]>
+</script>
+
+</body>
+</html>

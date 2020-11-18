@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for plugin input event</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/NativeKeyCodes.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="application/javascript">
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+</script>
+
+<p id="display">
+  <embed id="plugin" type="application/x-test" wmode="opaque">
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var gPlugin = document.getElementById("plugin");
+
+var gUtils = window.windowUtils;
+
+function* doTest() {
+  gPlugin.focus();
+
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_PLUGIN,
+     "Plugin failed to get focus");
+
+  is(gPlugin.getLastKeyText(), "", "Must be empty before first key test");
+
+  yield synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, WIN_VK_A, {}, "a", "a", continueTest);
+  is(gPlugin.getLastKeyText(), "a", "Invalid character was inputted");
+
+  yield synthesizeNativeKey(KEYBOARD_LAYOUT_GERMAN, WIN_VK_OEM_PLUS, {}, "+", "+", continueTest);
+  is(gPlugin.getLastKeyText(), "+", "Invalid character was inputted");
+
+  yield synthesizeNativeKey(KEYBOARD_LAYOUT_GERMAN, WIN_VK_OEM_PLUS, {altGrKey: 1}, "~", "+", continueTest);
+  is(gPlugin.getLastKeyText(), "~", "Invalid character was inputted");
+}
+
+var gTestContinuation = null;
+
+function continueTest() {
+  if (!gTestContinuation) {
+    gTestContinuation = doTest(continueTest);
+  }
+  var ret = gTestContinuation.next();
+  if (ret.done) {
+    SimpleTest.finish();
+  } else {
+    is(ret.value, true, "Key synthesized successfully");
+  }
+}
+
+SimpleTest.waitForFocus(continueTest);
+
+</script>
+</body>
+</html>

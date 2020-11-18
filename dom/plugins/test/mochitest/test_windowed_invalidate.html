@@ -1,0 +1,66 @@
+<html>
+<head>
+  <title>Test NPN_Invalidate working for a windowed plugin</title>
+  <script type="text/javascript" 
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="plugin-utils.js"></script>
+  <link rel="stylesheet" type="text/css" 
+        href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runTests()">
+  <script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("untriaged");
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  var lastPaintCount;
+  var p = null;
+
+  function checkPainted() {
+    if (p.getPaintCount() > lastPaintCount) {
+      ok(true, "Plugin did repaint");
+      SimpleTest.finish();
+    } else {
+      setTimeout(checkPainted, 100);
+    }
+  }
+
+  function doTest() {
+    // Cause the plugin to invalidate itself using NPN_Invalidate,
+    // and then wait for the plugin's paintCount to increase. This is the
+    // simplest way to check that a windowed plugin has repainted.
+    p.setColor("FF00FF00");
+    checkPainted();
+  }
+
+  function checkPaintCountStabilized() {
+    // Wait for the paint count to stabilize (i.e. doesn't change for a full
+    // second), so that all buffered-up painting is hopefully finished,
+    // before running the test
+    lastPaintCount = p.getPaintCount();
+    setTimeout(function() {
+      var newCount = p.getPaintCount();
+      if (newCount == lastPaintCount) {
+        doTest();
+      } else {
+        checkPaintCountStabilized();
+      }
+    }, 1000);
+  }
+
+  function runTests() {
+    p = document.getElementById("p");
+    checkPaintCountStabilized();
+  }
+  </script>
+
+  <p id="display"></p>
+
+  <embed id="p" type="application/x-test" wmode="window" drawmode="solid"
+         color="FFFF0000">
+  </embed>
+
+  <div id="verbose">
+  </div>
+ </body>
+ </html>
