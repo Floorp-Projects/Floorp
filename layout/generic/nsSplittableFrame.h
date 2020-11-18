@@ -87,13 +87,16 @@ class nsSplittableFrame : public nsIFrame {
    * Return the sum of the block-axis content size of our previous
    * continuations.
    *
-   * @param aWM a writing-mode to determine the block-axis
+   * Classes that call this are _required_ to call this at least once for each
+   * reflow (unless you're the first continuation, in which case you can skip
+   * it, because as an optimization we don't cache it there).
    *
-   * @note (bz) This makes laying out a splittable frame with N continuations
-   *       O(N^2)! So, use this function with caution and minimize the number
-   *       of calls to this method.
+   * This guarantees that the internal cache works, by refreshing it. Calling it
+   * multiple times in the same reflow is wasteful, but not an error.
+   *
+   * @param aWM a writing-mode to determine the block-axis
    */
-  nscoord ConsumedBSize(mozilla::WritingMode aWM) const;
+  nscoord CalcAndCacheConsumedBSize(mozilla::WritingMode aWM);
 
   /**
    * Retrieve the effective computed block size of this frame, which is the
@@ -101,8 +104,7 @@ class nsSplittableFrame : public nsIFrame {
    * continuations.
    */
   nscoord GetEffectiveComputedBSize(
-      const ReflowInput& aReflowInput,
-      nscoord aConsumed = NS_UNCONSTRAINEDSIZE) const;
+      const ReflowInput& aReflowInput, nscoord aConsumed) const;
 
   /**
    * @see nsIFrame::GetLogicalSkipSides()
