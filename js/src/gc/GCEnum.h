@@ -116,7 +116,6 @@ enum class GCAbortReason {
   _(TypeDescrTraceList)                    \
   _(NativeIterator)                        \
   _(JitScript)                             \
-  _(ObjectGroupAddendum)                   \
   _(ScriptDebugScript)                     \
   _(BreakpointSite)                        \
   _(Breakpoint)                            \

@@ -581,14 +581,6 @@ void TypeSet::addType(Type type, LifoAlloc* alloc) {
     if (ngroup->unknownProperties(sweep)) {
       goto unknownObject;
     }
-
-    // If we add a partially initialized group to a type set, add the
-    // corresponding fully initialized group, as an object's group may change
-    // from the former to the latter via the acquired properties analysis.
-    if (ngroup->newScript(sweep) &&
-        ngroup->newScript(sweep)->initializedGroup()) {
-      addType(ObjectType(ngroup->newScript(sweep)->initializedGroup()), alloc);
-    }
   }
 
   if (false) {
@@ -1157,16 +1149,6 @@ void js::AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj,
   if (type.isObjectUnchecked() && types->unknownObject()) {
     type = TypeSet::AnyObjectType();
   }
-
-  // Propagate new types from partially initialized groups to fully
-  // initialized groups for the acquired properties analysis. Note that we
-  // don't need to do this for other property changes, as these will also be
-  // reflected via shape changes on the object that will prevent the object
-  // from acquiring the fully initialized group.
-  if (group->newScript(sweep) && group->newScript(sweep)->initializedGroup()) {
-    AddTypePropertyId(cx, group->newScript(sweep)->initializedGroup(), nullptr,
-                      id, type);
-  }
 }
 
 void js::AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj,
@@ -1267,13 +1249,6 @@ void ObjectGroup::setFlags(const AutoSweepObjectGroup& sweep, JSContext* cx,
             TypeSet::ObjectGroupString(this).get(), flags);
 
   ObjectStateChange(sweep, cx, this, false);
-
-  // Propagate flag changes from partially to fully initialized groups for the
-  // acquired properties analysis.
-  if (newScript(sweep) && newScript(sweep)->initializedGroup()) {
-    AutoSweepObjectGroup sweepInit(newScript(sweep)->initializedGroup());
-    newScript(sweep)->initializedGroup()->setFlags(sweepInit, cx, flags);
-  }
 }
 
 void ObjectGroup::markUnknown(const AutoSweepObjectGroup& sweep,
@@ -1286,7 +1261,6 @@ void ObjectGroup::markUnknown(const AutoSweepObjectGroup& sweep,
   InferSpew(ISpewOps, "UnknownProperties: %s",
             TypeSet::ObjectGroupString(this).get());
 
-  clearNewScript(cx);
   ObjectStateChange(sweep, cx, this, true);
 
   /*
@@ -1309,111 +1283,6 @@ void ObjectGroup::markUnknown(const AutoSweepObjectGroup& sweep,
   }
 
   clearProperties(sweep);
-}
-
-void ObjectGroup::detachNewScript(bool isSweeping, ObjectGroup* replacement) {
-  // Clear the TypeNewScript from this ObjectGroup and, if it has been
-  // analyzed, remove it from the newObjectGroups table so that it will not be
-  // produced by calling 'new' on the associated function anymore.
-  // The TypeNewScript is not actually destroyed.
-  AutoSweepObjectGroup sweep(this);
-  TypeNewScript* newScript = this->newScript(sweep);
-  MOZ_ASSERT(newScript);
-
-  if (newScript->analyzed()) {
-    ObjectGroupRealm& objectGroups = ObjectGroupRealm::get(this);
-    const JSClass* clasp = this->clasp();
-    MOZ_ASSERT(clasp == &PlainObject::class_);
-    TaggedProto proto = this->proto();
-    if (proto.isObject() && IsForwarded(proto.toObject())) {
-      proto = TaggedProto(Forwarded(proto.toObject()));
-    }
-    JSObject* associated = MaybeForwarded(newScript->function());
-    if (replacement) {
-      AutoSweepObjectGroup sweepReplacement(replacement);
-      MOZ_ASSERT(replacement->newScript(sweepReplacement)->function() ==
-                 newScript->function());
-      objectGroups.replaceDefaultNewGroup(clasp, proto, associated,
-                                          replacement);
-    } else {
-      objectGroups.removeDefaultNewGroup(clasp, proto, associated);
-    }
-  } else {
-    MOZ_ASSERT(!replacement);
-  }
-
-  setAddendum(Addendum_None, nullptr, isSweeping);
-}
-
-void ObjectGroup::maybeClearNewScriptOnOOM() {
-  MOZ_ASSERT(zone()->isGCSweepingOrCompacting());
-
-  if (!isMarkedAny()) {
-    return;
-  }
-
-  AutoSweepObjectGroup sweep(this);
-  TypeNewScript* newScript = this->newScript(sweep);
-  if (!newScript) {
-    return;
-  }
-
-  addFlags(sweep, OBJECT_FLAG_NEW_SCRIPT_CLEARED);
-
-  // This method is called during GC sweeping, so don't trigger pre barriers.
-  detachNewScript(/* isSweeping = */ true, nullptr);
-
-  js_delete(newScript);
-}
-
-void ObjectGroup::clearNewScript(JSContext* cx,
-                                 ObjectGroup* replacement /* = nullptr*/) {
-  AutoSweepObjectGroup sweep(this);
-  TypeNewScript* newScript = this->newScript(sweep);
-  if (!newScript) {
-    return;
-  }
-
-  AutoEnterAnalysis enter(cx);
-
-  if (!replacement) {
-    // Invalidate any Ion code constructing objects of this type.
-    setFlags(sweep, cx, OBJECT_FLAG_NEW_SCRIPT_CLEARED);
-
-    // Mark the constructing function as having its 'new' script cleared, so we
-    // will not try to construct another one later.
-    newScript->function()->setNewScriptCleared();
-  }
-
-  detachNewScript(/* isSweeping = */ false, replacement);
-
-  if (!cx->isHelperThreadContext()) {
-    bool found = newScript->rollbackPartiallyInitializedObjects(cx, this);
-
-    // If we managed to rollback any partially initialized objects, then
-    // any definite properties we added due to analysis of the new script
-    // are now invalid, so remove them. If there weren't any partially
-    // initialized objects then we don't need to change type information,
-    // as no more objects of this type will be created and the 'new' script
-    // analysis was still valid when older objects were created.
-    if (found) {
-      for (unsigned i = 0; i < getPropertyCount(sweep); i++) {
-        Property* prop = getProperty(sweep, i);
-        if (!prop) {
-          continue;
-        }
-        if (prop->types.definiteProperty()) {
-          prop->types.setNonDataProperty(sweep, cx);
-        }
-      }
-    }
-  } else {
-    // Helper threads are not allowed to run scripts.
-    MOZ_ASSERT(!cx->activation());
-  }
-
-  js_delete(newScript);
-  markStateChange(sweep, cx);
 }
 
 void ObjectGroup::print(const AutoSweepObjectGroup& sweep) {
@@ -1454,20 +1323,6 @@ void ObjectGroup::print(const AutoSweepObjectGroup& sweep) {
 
   fprintf(stderr, " {");
 
-  if (newScript(sweep)) {
-    if (newScript(sweep)->analyzed()) {
-      fprintf(stderr, "\n    newScript %d properties",
-              (int)newScript(sweep)->templateObject()->slotSpan());
-      if (newScript(sweep)->initializedGroup()) {
-        fprintf(stderr, " initializedGroup %#" PRIxPTR " with %d properties",
-                uintptr_t(newScript(sweep)->initializedGroup()),
-                int(newScript(sweep)->initializedShape()->slotSpan()));
-      }
-    } else {
-      fprintf(stderr, "\n    newScript unanalyzed");
-    }
-  }
-
   for (unsigned i = 0; i < count; i++) {
     Property* prop = getProperty(sweep, i);
     if (prop) {
@@ -1477,365 +1332,6 @@ void ObjectGroup::print(const AutoSweepObjectGroup& sweep) {
   }
 
   fprintf(stderr, "\n}\n");
-}
-
-/////////////////////////////////////////////////////////////////////
-// PreliminaryObjectArray
-/////////////////////////////////////////////////////////////////////
-
-void PreliminaryObjectArray::registerNewObject(PlainObject* res) {
-  MOZ_ASSERT(IsTypeInferenceEnabled());
-
-  // The preliminary object pointers are weak, and won't be swept properly
-  // during nursery collections, so the preliminary objects need to be
-  // initially tenured.
-  MOZ_ASSERT(!IsInsideNursery(res));
-
-  for (size_t i = 0; i < COUNT; i++) {
-    if (!objects[i]) {
-      objects[i] = res;
-      return;
-    }
-  }
-
-  MOZ_CRASH("There should be room for registering the new object");
-}
-
-bool PreliminaryObjectArray::full() const {
-  for (size_t i = 0; i < COUNT; i++) {
-    if (!objects[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-void PreliminaryObjectArray::sweep() {
-  MOZ_ASSERT(IsTypeInferenceEnabled());
-
-  // All objects in the array are weak, so clear any that are about to be
-  // destroyed.
-  for (size_t i = 0; i < COUNT; i++) {
-    JSObject** ptr = &objects[i];
-    if (*ptr && IsAboutToBeFinalizedUnbarriered(ptr)) {
-      *ptr = nullptr;
-    }
-  }
-}
-
-void PreliminaryObjectArrayWithTemplate::trace(JSTracer* trc) {
-  MOZ_ASSERT(IsTypeInferenceEnabled());
-  TraceNullableEdge(trc, &shape_, "PreliminaryObjectArrayWithTemplate_shape");
-}
-
-/* static */
-void PreliminaryObjectArrayWithTemplate::preWriteBarrier(
-    PreliminaryObjectArrayWithTemplate* objects) {
-  Shape* shape = objects->shape();
-
-  if (!shape) {
-    return;
-  }
-
-  JS::Zone* zone = shape->zoneFromAnyThread();
-  if (zone->needsIncrementalBarrier()) {
-    objects->trace(zone->barrierTracer());
-  }
-}
-
-// Return whether shape consists entirely of plain data properties.
-static bool OnlyHasDataProperties(Shape* shape) {
-  MOZ_ASSERT(!shape->inDictionary());
-
-  while (!shape->isEmptyShape()) {
-    if (!shape->isDataProperty() || !shape->configurable() ||
-        !shape->enumerable() || !shape->writable()) {
-      return false;
-    }
-    shape = shape->previous();
-  }
-
-  return true;
-}
-
-// Find the most recent common ancestor of two shapes, or an empty shape if
-// the two shapes have no common ancestor.
-static Shape* CommonPrefix(Shape* first, Shape* second) {
-  MOZ_ASSERT(OnlyHasDataProperties(first));
-  MOZ_ASSERT(OnlyHasDataProperties(second));
-
-  while (first->slotSpan() > second->slotSpan()) {
-    first = first->previous();
-  }
-  while (second->slotSpan() > first->slotSpan()) {
-    second = second->previous();
-  }
-
-  while (first != second && !first->isEmptyShape()) {
-    first = first->previous();
-    second = second->previous();
-  }
-
-  return first;
-}
-
-void PreliminaryObjectArrayWithTemplate::maybeAnalyze(JSContext* cx,
-                                                      ObjectGroup* group,
-                                                      bool force) {
-  // Don't perform the analyses until sufficient preliminary objects have
-  // been allocated.
-  if (!force && !full()) {
-    return;
-  }
-
-  AutoEnterAnalysis enter(cx);
-
-  UniquePtr<PreliminaryObjectArrayWithTemplate> preliminaryObjects(this);
-  group->detachPreliminaryObjects();
-
-  MOZ_ASSERT(shape());
-  MOZ_ASSERT(shape()->slotSpan() != 0);
-  MOZ_ASSERT(OnlyHasDataProperties(shape()));
-
-  // Make sure all the preliminary objects reflect the properties originally
-  // in the template object.
-  for (size_t i = 0; i < PreliminaryObjectArray::COUNT; i++) {
-    JSObject* objBase = preliminaryObjects->get(i);
-    if (!objBase) {
-      continue;
-    }
-    PlainObject* obj = &objBase->as<PlainObject>();
-
-    if (obj->inDictionaryMode() ||
-        !OnlyHasDataProperties(obj->lastProperty())) {
-      return;
-    }
-
-    if (CommonPrefix(obj->lastProperty(), shape()) != shape()) {
-      return;
-    }
-  }
-
-  // Since the preliminary objects still reflect the template object's
-  // properties, and all objects in the future will be created with those
-  // properties, the properties can be marked as definite for objects in the
-  // group.
-  group->addDefiniteProperties(cx, shape());
-}
-
-/////////////////////////////////////////////////////////////////////
-// TypeNewScript
-/////////////////////////////////////////////////////////////////////
-
-// Make a TypeNewScript for |group|, and set it up to hold the preliminary
-// objects created with the group.
-/* static */
-bool TypeNewScript::make(JSContext* cx, ObjectGroup* group, JSFunction* fun) {
-  AutoSweepObjectGroup sweep(group);
-  MOZ_ASSERT(cx->zone()->types.activeAnalysis);
-  MOZ_ASSERT(!group->newScript(sweep));
-  MOZ_ASSERT(cx->realm() == group->realm());
-  MOZ_ASSERT(cx->realm() == fun->realm());
-
-  // rollbackPartiallyInitializedObjects expects function_ to be
-  // canonicalized.
-  MOZ_ASSERT(fun->maybeCanonicalFunction() == fun);
-
-  if (group->unknownProperties(sweep)) {
-    return true;
-  }
-
-  auto newScript = cx->make_unique<TypeNewScript>();
-  if (!newScript) {
-    return false;
-  }
-
-  newScript->function_ = fun;
-
-  newScript->preliminaryObjects = group->zone()->new_<PreliminaryObjectArray>();
-  if (!newScript->preliminaryObjects) {
-    return true;
-  }
-
-  group->setNewScript(newScript.release());
-
-  gc::gcprobes::TypeNewScript(group);
-  return true;
-}
-
-size_t TypeNewScript::sizeOfIncludingThis(
-    mozilla::MallocSizeOf mallocSizeOf) const {
-  size_t n = mallocSizeOf(this);
-  n += mallocSizeOf(preliminaryObjects);
-  n += mallocSizeOf(initializerList);
-  return n;
-}
-
-/* static */ size_t TypeNewScript::sizeOfInitializerList(size_t length) {
-  // TypeNewScriptInitializer struct contains [1] element in its size.
-  size_t size = sizeof(TypeNewScript::InitializerList);
-  if (length > 0) {
-    size += (length - 1) * sizeof(TypeNewScriptInitializer);
-  }
-  return size;
-}
-
-size_t TypeNewScript::gcMallocBytes() const {
-  size_t size = sizeof(TypeNewScript);
-  if (preliminaryObjects) {
-    size += sizeof(PreliminaryObjectArray);
-  }
-  if (initializerList) {
-    size += sizeOfInitializerList(initializerList->length);
-  }
-  return size;
-}
-
-void TypeNewScript::registerNewObject(PlainObject* res) {
-  MOZ_ASSERT(!analyzed());
-
-  // New script objects must have the maximum number of fixed slots, so that
-  // we can adjust their shape later to match the number of fixed slots used
-  // by the template object we eventually create.
-  MOZ_ASSERT(res->numFixedSlots() == NativeObject::MAX_FIXED_SLOTS);
-
-  preliminaryObjects->registerNewObject(res);
-}
-
-bool TypeNewScript::maybeAnalyze(JSContext* cx, ObjectGroup* group,
-                                 bool* regenerate, bool force) {
-  MOZ_CRASH("TODO(no-TI): remove");
-}
-
-bool TypeNewScript::rollbackPartiallyInitializedObjects(JSContext* cx,
-                                                        ObjectGroup* group) {
-  // If we cleared this new script while in the middle of initializing an
-  // object, it will still have the new script's shape and reflect the no
-  // longer correct state of the object once its initialization is completed.
-  // We can't detect the possibility of this statically while remaining
-  // robust, but the new script keeps track of where each property is
-  // initialized so we can walk the stack and fix up any such objects.
-  // Return whether any objects were modified.
-
-  if (!initializerList) {
-    return false;
-  }
-
-  bool found = false;
-
-  RootedFunction function(cx, this->function());
-  Vector<uint32_t, 32> pcOffsets(cx);
-  for (AllScriptFramesIter iter(cx); !iter.done(); ++iter) {
-    {
-      AutoEnterOOMUnsafeRegion oomUnsafe;
-      if (!pcOffsets.append(iter.script()->pcToOffset(iter.pc()))) {
-        oomUnsafe.crash("rollbackPartiallyInitializedObjects");
-      }
-    }
-
-    if (!iter.isConstructing()) {
-      continue;
-    }
-
-    MOZ_ASSERT(iter.calleeTemplate()->maybeCanonicalFunction());
-
-    if (iter.calleeTemplate()->maybeCanonicalFunction() != function) {
-      continue;
-    }
-
-    // Derived class constructors initialize their this-binding later and
-    // we shouldn't run the definite properties analysis on them.
-    MOZ_ASSERT(!iter.script()->isDerivedClassConstructor());
-
-    Value thisv = iter.thisArgument(cx);
-    if (!thisv.isObject() || thisv.toObject().hasLazyGroup() ||
-        thisv.toObject().group() != group) {
-      continue;
-    }
-
-    // Found a matching frame.
-    RootedPlainObject obj(cx, &thisv.toObject().as<PlainObject>());
-
-    // If not finished, number of properties that have been added.
-    uint32_t numProperties = 0;
-
-    // Whether the current SetProp is within an inner frame which has
-    // finished entirely.
-    bool pastProperty = false;
-
-    // Index in pcOffsets of the outermost frame.
-    int callDepth = pcOffsets.length() - 1;
-
-    // Index in pcOffsets of the frame currently being checked for a SetProp.
-    int setpropDepth = callDepth;
-
-    size_t i;
-    for (i = 0; i < initializerList->length; i++) {
-      const TypeNewScriptInitializer init = initializerList->entries[i];
-      if (init.kind == TypeNewScriptInitializer::SETPROP) {
-        if (!pastProperty && pcOffsets[setpropDepth] < init.offset) {
-          // Have not yet reached this setprop.
-          break;
-        }
-        // This setprop has executed, reset state for the next one.
-        numProperties++;
-        pastProperty = false;
-        setpropDepth = callDepth;
-      } else {
-        MOZ_ASSERT(init.kind == TypeNewScriptInitializer::SETPROP_FRAME);
-        if (!pastProperty) {
-          if (pcOffsets[setpropDepth] < init.offset) {
-            // Have not yet reached this inner call.
-            break;
-          } else if (pcOffsets[setpropDepth] > init.offset) {
-            // Have advanced past this inner call.
-            pastProperty = true;
-          } else if (setpropDepth == 0) {
-            // Have reached this call but not yet in it.
-            break;
-          } else {
-            // Somewhere inside this inner call.
-            setpropDepth--;
-          }
-        }
-      }
-    }
-
-    // Whether all identified 'new' properties have been initialized.
-    bool finished = i == initializerList->length;
-
-    if (!finished) {
-      (void)NativeObject::rollbackProperties(cx, obj, numProperties);
-      found = true;
-    }
-  }
-
-  return found;
-}
-
-void TypeNewScript::trace(JSTracer* trc) {
-  TraceEdge(trc, &function_, "TypeNewScript_function");
-  TraceNullableEdge(trc, &templateObject_, "TypeNewScript_templateObject");
-  TraceNullableEdge(trc, &initializedShape_, "TypeNewScript_initializedShape");
-  TraceNullableEdge(trc, &initializedGroup_, "TypeNewScript_initializedGroup");
-}
-
-/* static */
-void TypeNewScript::preWriteBarrier(TypeNewScript* newScript) {
-  if (JS::RuntimeHeapIsCollecting()) {
-    return;
-  }
-
-  JS::Zone* zone = newScript->function()->zoneFromAnyThread();
-  if (zone->needsIncrementalBarrier()) {
-    newScript->trace(zone->barrierTracer());
-  }
-}
-
-void TypeNewScript::sweep() {
-  if (preliminaryObjects) {
-    preliminaryObjects->sweep();
-  }
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -2010,14 +1506,6 @@ void ObjectGroup::sweep(const AutoSweepObjectGroup& sweep) {
 
   AutoTouchingGrayThings tgt;
 
-  if (maybePreliminaryObjects(sweep)) {
-    maybePreliminaryObjects(sweep)->sweep();
-  }
-
-  if (newScript(sweep)) {
-    newScript(sweep)->sweep();
-  }
-
   LifoAlloc& typeLifoAlloc = zone()->types.typeLifoAlloc();
 
   /*
@@ -2176,13 +1664,6 @@ void TypeZone::endSweep(JSRuntime* rt) {
   rt->gc.queueAllLifoBlocksForFree(&sweepTypeLifoAlloc.ref());
 }
 
-void TypeZone::clearAllNewScriptsOnOOM() {
-  for (auto group = zone()->cellIter<ObjectGroup>(); !group.done();
-       group.next()) {
-    group->maybeClearNewScriptOnOOM();
-  }
-}
-
 AutoClearTypeInferenceStateOnOOM::AutoClearTypeInferenceStateOnOOM(Zone* zone)
     : zone(zone) {
   MOZ_RELEASE_ASSERT(CurrentThreadCanAccessZone(zone));
@@ -2198,7 +1679,6 @@ AutoClearTypeInferenceStateOnOOM::~AutoClearTypeInferenceStateOnOOM() {
     js::CancelOffThreadIonCompile(rt);
     zone->setPreservingCode(false);
     zone->discardJitCode(&fop, Zone::KeepBaselineCode);
-    zone->types.clearAllNewScriptsOnOOM();
   }
 
   zone->types.setSweepingTypes(false);
@@ -2207,6 +1687,5 @@ AutoClearTypeInferenceStateOnOOM::~AutoClearTypeInferenceStateOnOOM() {
 JS::ubi::Node::Size JS::ubi::Concrete<js::ObjectGroup>::size(
     mozilla::MallocSizeOf mallocSizeOf) const {
   Size size = js::gc::Arena::thingSize(get().asTenured().getAllocKind());
-  size += get().sizeOfExcludingThis(mallocSizeOf);
   return size;
 }

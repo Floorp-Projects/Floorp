@@ -25,7 +25,6 @@ namespace js {
 class GenericPrinter;
 class ObjectGroup;
 class PlainObject;
-class TypeNewScriptInitializer;
 
 namespace jit {
 

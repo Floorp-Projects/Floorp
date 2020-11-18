@@ -950,8 +950,7 @@ static bool NewObjectWithGroupIsCachable(JSContext* cx, HandleObjectGroup group,
     return false;
   }
 
-  AutoSweepObjectGroup sweep(group);
-  return !group->newScript(sweep) || group->newScript(sweep)->analyzed();
+  return true;
 }
 
 /*
@@ -4167,8 +4166,6 @@ void JSObject::debugCheckNewObject(ObjectGroup* group, Shape* shape,
                 heap == gc::TenuredHeap ||
                     CanNurseryAllocateFinalizedClass(clasp) ||
                     clasp->isProxy());
-  MOZ_ASSERT_IF(group->hasUnanalyzedPreliminaryObjects(),
-                heap == gc::TenuredHeap);
 
   // Check that the group's shouldPreTenure flag is respected but ignore
   // environment objects that the JIT expects to be nursery allocated.

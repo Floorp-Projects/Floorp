@@ -1350,16 +1350,6 @@ static MOZ_ALWAYS_INLINE void UpdateShapeTypeAndValue(JSContext* cx,
 
   if (shape->isDataProperty()) {
     obj->setSlotWithType(cx, shape, value, /* overwriting = */ false);
-
-    // Per the acquired properties analysis, when the shape of a partially
-    // initialized object is changed to its fully initialized shape, its
-    // group can be updated as well.
-    AutoSweepObjectGroup sweep(obj->groupRaw());
-    if (TypeNewScript* newScript = obj->groupRaw()->newScript(sweep)) {
-      if (newScript->initializedShape() == shape) {
-        obj->setGroup(newScript->initializedGroup());
-      }
-    }
   } else {
     MarkTypePropertyNonData(cx, obj, id);
   }
@@ -1380,16 +1370,6 @@ static MOZ_ALWAYS_INLINE void UpdateShapeTypeAndValueForWritableDataProp(
   MOZ_ASSERT(shape->writable());
 
   obj->setSlotWithType(cx, shape, value, /* overwriting = */ false);
-
-  // Per the acquired properties analysis, when the shape of a partially
-  // initialized object is changed to its fully initialized shape, its
-  // group can be updated as well.
-  AutoSweepObjectGroup sweep(obj->groupRaw());
-  if (TypeNewScript* newScript = obj->groupRaw()->newScript(sweep)) {
-    if (newScript->initializedShape() == shape) {
-      obj->setGroup(newScript->initializedGroup());
-    }
-  }
 }
 
 void js::AddPropertyTypesAfterProtoChange(JSContext* cx, NativeObject* obj,

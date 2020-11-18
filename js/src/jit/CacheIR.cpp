@@ -230,8 +230,7 @@ GetPropIRGenerator::GetPropIRGenerator(JSContext* cx, HandleScript script,
       val_(val),
       idVal_(idVal),
       receiver_(receiver),
-      resultFlags_(resultFlags),
-      preliminaryObjectAction_(PreliminaryObjectAction::None) {}
+      resultFlags_(resultFlags) {}
 
 static void EmitLoadSlotResult(CacheIRWriter& writer, ObjOperandId holderId,
                                NativeObject* holder, Shape* shape) {
@@ -582,26 +581,6 @@ static bool CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, jsid id) {
   } while (curObj);
 
   return true;
-}
-
-// Return whether obj is in some PreliminaryObjectArray and has a structure
-// that might change in the future.
-static bool IsPreliminaryObject(JSObject* obj) {
-  if (obj->isSingleton()) {
-    return false;
-  }
-
-  AutoSweepObjectGroup sweep(obj->group());
-  TypeNewScript* newScript = obj->group()->newScript(sweep);
-  if (newScript && !newScript->analyzed()) {
-    return true;
-  }
-
-  if (obj->group()->maybePreliminaryObjects(sweep)) {
-    return true;
-  }
-
-  return false;
 }
 
 static bool IsCacheableNoProperty(JSContext* cx, JSObject* obj,
@@ -1199,12 +1178,6 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
       maybeEmitIdGuard(id);
       if (holder) {
         EnsureTrackPropertyTypes(cx_, holder, id);
-        // See the comment in StripPreliminaryObjectStubs.
-        if (IsPreliminaryObject(obj)) {
-          preliminaryObjectAction_ = PreliminaryObjectAction::NotePreliminary;
-        } else {
-          preliminaryObjectAction_ = PreliminaryObjectAction::Unlink;
-        }
       }
       EmitReadSlotResult(writer, obj, holder, shape, objId);
       EmitReadSlotReturn(writer, obj, holder, shape);
@@ -1398,14 +1371,6 @@ AttachDecision GetPropIRGenerator::tryAttachCrossCompartmentWrapper(
       // Need to be in the compartment of the holder to
       // call EnsureTrackPropertyTypes
       EnsureTrackPropertyTypes(cx_, holder, id);
-      if (unwrapped == holder) {
-        // See the comment in StripPreliminaryObjectStubs.
-        if (IsPreliminaryObject(unwrapped)) {
-          preliminaryObjectAction_ = PreliminaryObjectAction::NotePreliminary;
-        } else {
-          preliminaryObjectAction_ = PreliminaryObjectAction::Unlink;
-        }
-      }
     } else {
       // UNCACHEABLE_PROTO may result in guards against specific
       // (cross-compartment) prototype objects, so don't try to attach IC if we
@@ -3505,7 +3470,6 @@ SetPropIRGenerator::SetPropIRGenerator(JSContext* cx, HandleScript script,
       idVal_(idVal),
       rhsVal_(rhsVal),
       typeCheckInfo_(cx, needsTypeBarrier),
-      preliminaryObjectAction_(PreliminaryObjectAction::None),
       attachedTypedArrayOOBStub_(false),
       maybeHasExtraIndexedProps_(maybeHasExtraIndexedProps) {}
 
@@ -3694,12 +3658,6 @@ AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
   }
   if (!IsGlobalLexicalSetGName(JSOp(*pc_), nobj, propShape)) {
     TestMatchingNativeReceiver(writer, nobj, objId);
-  }
-
-  if (IsPreliminaryObject(obj)) {
-    preliminaryObjectAction_ = PreliminaryObjectAction::NotePreliminary;
-  } else {
-    preliminaryObjectAction_ = PreliminaryObjectAction::Unlink;
   }
 
   typeCheckInfo_.set(nobj->group(), id);
@@ -4656,19 +4614,8 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(
     writer.guardGroup(objId, oldGroup);
   }
 
-  // If we are adding a property to an object for which the new script
-  // properties analysis hasn't been performed yet, make sure the stub fails
-  // after we run the analysis as a group change may be required here. The
-  // group change is not required for correctness but improves type
-  // information elsewhere.
-  AutoSweepObjectGroup sweep(oldGroup);
-  if (oldGroup->newScript(sweep) && !oldGroup->newScript(sweep)->analyzed()) {
-    writer.guardGroupHasUnanalyzedNewScript(oldGroup);
-    MOZ_ASSERT(IsPreliminaryObject(obj));
-    preliminaryObjectAction_ = PreliminaryObjectAction::NotePreliminary;
-  } else {
-    preliminaryObjectAction_ = PreliminaryObjectAction::Unlink;
-  }
+  // TODO(no-TI): remove GuardGroupHasUnanalyzedNewScript, group-changing code
+  // from AddAndStore* ops.
 
   // Shape guard the object.
   writer.guardShape(objId, oldShape);
@@ -9018,13 +8965,6 @@ ScriptedThisResult CallIRGenerator::getThisForScripted(
     if (!group) {
       cx_->clearPendingException();
       return ScriptedThisResult::NoAction;
-    }
-
-    AutoSweepObjectGroup sweep(group);
-    if (group->newScript(sweep) && !group->newScript(sweep)->analyzed()) {
-      // The new script analysis has not been done on this function.
-      // Don't attach until after the analysis has been done.
-      return ScriptedThisResult::TemporarilyUnoptimizable;
     }
   }
 

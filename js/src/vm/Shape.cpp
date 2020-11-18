@@ -1412,32 +1412,6 @@ void NativeObject::clear(JSContext* cx, HandleNativeObject obj) {
 }
 
 /* static */
-bool NativeObject::rollbackProperties(JSContext* cx, HandleNativeObject obj,
-                                      uint32_t slotSpan) {
-  /*
-   * Remove properties from this object until it has a matching slot span.
-   * The object cannot have escaped in a way which would prevent safe
-   * removal of the last properties.
-   */
-  MOZ_ASSERT(!obj->inDictionaryMode() && slotSpan <= obj->slotSpan());
-  while (true) {
-    if (obj->lastProperty()->isEmptyShape()) {
-      MOZ_ASSERT(slotSpan == 0);
-      break;
-    }
-    uint32_t slot = obj->lastProperty()->slot();
-    if (slot < slotSpan) {
-      break;
-    }
-    if (!NativeObject::removeProperty(cx, obj, obj->lastProperty()->propid())) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-/* static */
 Shape* NativeObject::replaceWithNewEquivalentShape(JSContext* cx,
                                                    HandleNativeObject obj,
                                                    Shape* oldShape,

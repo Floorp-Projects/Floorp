@@ -60,16 +60,6 @@ ObjectGroup::ObjectGroup(const JSClass* clasp, TaggedProto proto,
   setGeneration(zone()->types.generation);
 }
 
-void ObjectGroup::finalize(JSFreeOp* fop) {
-  if (auto newScript = newScriptDontCheckGeneration()) {
-    newScript->clear();
-    fop->delete_(this, newScript, newScript->gcMallocBytes(),
-                 MemoryUse::ObjectGroupAddendum);
-  }
-  fop->delete_(this, maybePreliminaryObjectsDontCheckGeneration(),
-               MemoryUse::ObjectGroupAddendum);
-}
-
 void ObjectGroup::setProtoUnchecked(TaggedProto proto) {
   proto_ = proto;
   MOZ_ASSERT_IF(proto_.isObject() && proto_.toObject()->isNative(),
@@ -81,61 +71,19 @@ void ObjectGroup::setProto(TaggedProto proto) {
   setProtoUnchecked(proto);
 }
 
-size_t ObjectGroup::sizeOfExcludingThis(
-    mozilla::MallocSizeOf mallocSizeOf) const {
-  size_t n = 0;
-  if (TypeNewScript* newScript = newScriptDontCheckGeneration()) {
-    n += newScript->sizeOfIncludingThis(mallocSizeOf);
-  }
-  return n;
-}
-
-static inline size_t AddendumAllocSize(ObjectGroup::AddendumKind kind,
-                                       void* addendum) {
-  if (kind == ObjectGroup::Addendum_NewScript) {
-    auto newScript = static_cast<TypeNewScript*>(addendum);
-    return newScript->gcMallocBytes();
-  }
-  if (kind == ObjectGroup::Addendum_PreliminaryObjects) {
-    return sizeof(PreliminaryObjectArrayWithTemplate);
-  }
-  // Other addendum kinds point to GC memory tracked elsewhere.
-  return 0;
-}
-
 void ObjectGroup::setAddendum(AddendumKind kind, void* addendum,
                               bool isSweeping /* = flase */) {
   MOZ_ASSERT(!needsSweep());
-  MOZ_ASSERT(kind <= (OBJECT_FLAG_ADDENDUM_MASK >> OBJECT_FLAG_ADDENDUM_SHIFT));
 
-  RemoveCellMemory(this, AddendumAllocSize(addendumKind(), addendum_),
-                   MemoryUse::ObjectGroupAddendum, isSweeping);
+  // Note: cast to unsigned to suppress always-true compiler warning.
+  MOZ_ASSERT(unsigned(kind) <=
+             (OBJECT_FLAG_ADDENDUM_MASK >> OBJECT_FLAG_ADDENDUM_SHIFT));
 
-  if (!isSweeping) {
-    // Trigger a write barrier if we are clearing new script or preliminary
-    // object information outside of sweeping. Other addendums are immutable.
-    AutoSweepObjectGroup sweep(this);
-    switch (addendumKind()) {
-      case Addendum_PreliminaryObjects:
-        PreliminaryObjectArrayWithTemplate::preWriteBarrier(
-            maybePreliminaryObjects(sweep));
-        break;
-      case Addendum_NewScript:
-        TypeNewScript::preWriteBarrier(newScript(sweep));
-        break;
-      case Addendum_None:
-        break;
-      default:
-        MOZ_ASSERT(addendumKind() == kind);
-    }
-  }
+  MOZ_ASSERT_IF(addendumKind() != Addendum_None, addendumKind() == kind);
 
   flags_ &= ~OBJECT_FLAG_ADDENDUM_MASK;
   flags_ |= kind << OBJECT_FLAG_ADDENDUM_SHIFT;
   addendum_ = addendum;
-
-  AddCellMemory(this, AddendumAllocSize(kind, addendum),
-                MemoryUse::ObjectGroupAddendum);
 }
 
 /* static */
@@ -457,31 +405,16 @@ ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const JSClass* clasp,
   MOZ_ASSERT_IF(proto.isObject(),
                 cx->isInsideCurrentCompartment(proto.toObject()));
 
-  if (associated && !associated->is<TypeDescr>() && !IsTypeInferenceEnabled()) {
+  if (associated && !associated->is<TypeDescr>()) {
     associated = nullptr;
   }
 
   if (associated) {
-    if (associated->is<JSFunction>()) {
-      // Canonicalize new functions to use the original one associated with its
-      // script.
-      associated = associated->as<JSFunction>().maybeCanonicalFunction();
-
-      // If we have previously cleared the 'new' script information for this
-      // function, don't try to construct another one. Also, for simplicity,
-      // don't bother optimizing cross-realm constructors.
-      if (associated && (associated->as<JSFunction>().wasNewScriptCleared() ||
-                         associated->as<JSFunction>().realm() != cx->realm())) {
-        associated = nullptr;
-      }
-    } else if (associated->is<TypeDescr>()) {
-      if (!IsTypedObjectClass(clasp)) {
-        // This can happen when we call Reflect.construct with a TypeDescr as
-        // newTarget argument. We're not creating a TypedObject in this case, so
-        // don't set the TypeDescr on the group.
-        associated = nullptr;
-      }
-    } else {
+    MOZ_ASSERT(associated->is<TypeDescr>());
+    if (!IsTypedObjectClass(clasp)) {
+      // This can happen when we call Reflect.construct with a TypeDescr as
+      // newTarget argument. We're not creating a TypedObject in this case, so
+      // don't set the TypeDescr on the group.
       associated = nullptr;
     }
   }
@@ -560,13 +493,7 @@ ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const JSClass* clasp,
   }
 
   if (associated) {
-    if (associated->is<JSFunction>()) {
-      if (!TypeNewScript::make(cx, group, &associated->as<JSFunction>())) {
-        return nullptr;
-      }
-    } else {
-      group->setTypeDescr(&associated->as<TypeDescr>());
-    }
+    group->setTypeDescr(&associated->as<TypeDescr>());
   }
 
   /*
@@ -1045,18 +972,6 @@ struct ObjectGroupRealm::PlainObjectEntry {
   }
 };
 
-static bool CanShareObjectGroup(IdValuePair* properties, size_t nproperties) {
-  // Don't reuse groups for objects containing indexed properties, which
-  // might end up as dense elements.
-  for (size_t i = 0; i < nproperties; i++) {
-    uint32_t index;
-    if (IdIsIndex(properties[i].id, &index)) {
-      return false;
-    }
-  }
-  return true;
-}
-
 static bool AddPlainObjectProperties(JSContext* cx, HandlePlainObject obj,
                                      IdValuePair* properties,
                                      size_t nproperties) {
@@ -1097,169 +1012,7 @@ JSObject* ObjectGroup::newPlainObject(JSContext* cx, IdValuePair* properties,
     return NewPlainObjectWithProperties(cx, properties, nproperties, newKind);
   }
 
-  ObjectGroupRealm& realm = ObjectGroupRealm::getForNewObject(cx);
-  ObjectGroupRealm::PlainObjectTable*& table = realm.plainObjectTable;
-
-  if (!table) {
-    table = cx->new_<ObjectGroupRealm::PlainObjectTable>();
-    if (!table) {
-      return nullptr;
-    }
-  }
-
-  ObjectGroupRealm::PlainObjectKey::Lookup lookup(properties, nproperties);
-  ObjectGroupRealm::PlainObjectTable::Ptr p = table->lookup(lookup);
-
-  if (!p) {
-    if (!CanShareObjectGroup(properties, nproperties)) {
-      return NewPlainObjectWithProperties(cx, properties, nproperties, newKind);
-    }
-
-    JSObject* proto = GlobalObject::getOrCreatePrototype(cx, JSProto_Object);
-    if (!proto) {
-      return nullptr;
-    }
-
-    Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
-    RootedObjectGroup group(
-        cx, ObjectGroupRealm::makeGroup(cx, cx->realm(), &PlainObject::class_,
-                                        tagged));
-    if (!group) {
-      return nullptr;
-    }
-
-    gc::AllocKind allocKind = gc::GetGCObjectKind(nproperties);
-    RootedPlainObject obj(cx, NewObjectWithGroup<PlainObject>(
-                                  cx, group, allocKind, TenuredObject));
-    if (!obj || !AddPlainObjectProperties(cx, obj, properties, nproperties)) {
-      return nullptr;
-    }
-
-    // Don't make entries with duplicate property names, which will show up
-    // here as objects with fewer properties than we thought we were
-    // adding to the object. In this case, reset the object's group to the
-    // default (which will have unknown properties) so that the group we
-    // just created will be collected by the GC.
-    if (obj->slotSpan() != nproperties) {
-      ObjectGroup* group =
-          defaultNewGroup(cx, obj->getClass(), obj->taggedProto());
-      if (!group) {
-        return nullptr;
-      }
-      obj->setGroup(group);
-      return obj;
-    }
-
-    // Keep track of the initial objects we create with this type.
-    // If the initial ones have a consistent shape and property types, we
-    // will try to use an unboxed layout for the group.
-    PreliminaryObjectArrayWithTemplate* preliminaryObjects =
-        cx->new_<PreliminaryObjectArrayWithTemplate>(obj->lastProperty());
-    if (!preliminaryObjects) {
-      return nullptr;
-    }
-    group->setPreliminaryObjects(preliminaryObjects);
-    preliminaryObjects->registerNewObject(obj);
-
-    auto ids = cx->make_zeroed_pod_array<jsid>(nproperties);
-    if (!ids) {
-      return nullptr;
-    }
-
-    auto types = cx->make_zeroed_pod_array<TypeSet::Type>(nproperties);
-    if (!types) {
-      return nullptr;
-    }
-
-    for (size_t i = 0; i < nproperties; i++) {
-      ids[i] = properties[i].id;
-      types[i] = GetValueTypeForTable(obj->getSlot(i));
-      AddTypePropertyId(cx, group, nullptr, IdToTypeId(ids[i]), types[i]);
-    }
-
-    ObjectGroupRealm::PlainObjectKey key;
-    key.properties = ids.get();
-    key.nproperties = nproperties;
-    MOZ_ASSERT(ObjectGroupRealm::PlainObjectKey::match(key, lookup));
-
-    ObjectGroupRealm::PlainObjectEntry entry;
-    entry.group.set(group);
-    entry.shape.set(obj->lastProperty());
-    entry.types = types.get();
-
-    ObjectGroupRealm::PlainObjectTable::AddPtr np = table->lookupForAdd(lookup);
-    if (!table->add(np, key, entry)) {
-      ReportOutOfMemory(cx);
-      return nullptr;
-    }
-
-    mozilla::Unused << ids.release();
-    mozilla::Unused << types.release();
-
-    return obj;
-  }
-
-  RootedObjectGroup group(cx, p->value().group);
-
-  // AutoSweepObjectGroup checks no GC happens in its scope, so we use Maybe
-  // and reset() it before GC calls.
-  mozilla::Maybe<AutoSweepObjectGroup> sweep;
-  sweep.emplace(group);
-
-  // Update property types according to the properties we are about to add.
-  // Do this before we do anything which can GC, which might move or remove
-  // this table entry.
-  if (!group->unknownProperties(*sweep)) {
-    for (size_t i = 0; i < nproperties; i++) {
-      TypeSet::Type type = p->value().types[i];
-      TypeSet::Type ntype = GetValueTypeForTable(properties[i].value);
-      if (ntype == type) {
-        continue;
-      }
-      if (ntype.isPrimitive(ValueType::Int32) &&
-          type.isPrimitive(ValueType::Double)) {
-        // The property types already reflect 'int32'.
-      } else {
-        if (ntype.isPrimitive(ValueType::Double) &&
-            type.isPrimitive(ValueType::Int32)) {
-          // Include 'double' in the property types to avoid the update below
-          // later.
-          p->value().types[i] = TypeSet::DoubleType();
-        }
-        AddTypePropertyId(cx, group, nullptr, IdToTypeId(properties[i].id),
-                          ntype);
-      }
-    }
-  }
-
-  RootedShape shape(cx, p->value().shape);
-
-  if (group->maybePreliminaryObjects(*sweep)) {
-    newKind = TenuredObject;
-  }
-
-  sweep.reset();
-
-  gc::AllocKind allocKind = gc::GetGCObjectKind(nproperties);
-  RootedPlainObject obj(
-      cx, NewObjectWithGroup<PlainObject>(cx, group, allocKind, newKind));
-
-  if (!obj || !obj->setLastProperty(cx, shape)) {
-    return nullptr;
-  }
-
-  for (size_t i = 0; i < nproperties; i++) {
-    obj->setSlot(i, properties[i].value);
-  }
-
-  sweep.emplace(group);
-
-  if (group->maybePreliminaryObjects(*sweep)) {
-    group->maybePreliminaryObjects(*sweep)->registerNewObject(obj);
-    group->maybePreliminaryObjects(*sweep)->maybeAnalyze(cx, group);
-  }
-
-  return obj;
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1380,64 +1133,7 @@ ObjectGroup* ObjectGroup::allocationSiteGroup(
     return defaultNewGroup(cx, kind);
   }
 
-  ObjectGroupRealm& realm = ObjectGroupRealm::getForNewObject(cx);
-  ObjectGroupRealm::AllocationSiteTable*& table = realm.allocationSiteTable;
-
-  if (!table) {
-    table = cx->new_<ObjectGroupRealm::AllocationSiteTable>(cx->zone());
-    if (!table) {
-      return nullptr;
-    }
-  }
-
-  RootedScript script(cx, scriptArg);
-  JSObject* proto = protoArg;
-  if (!proto && kind != JSProto_Null) {
-    proto = GlobalObject::getOrCreatePrototype(cx, kind);
-    if (!proto) {
-      return nullptr;
-    }
-  }
-
-  Rooted<ObjectGroupRealm::AllocationSiteKey> key(
-      cx, ObjectGroupRealm::AllocationSiteKey(script, offset, kind, proto));
-
-  ObjectGroupRealm::AllocationSiteTable::AddPtr p = table->lookupForAdd(key);
-  if (p) {
-    return p->value();
-  }
-
-  AutoEnterAnalysis enter(cx);
-
-  Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
-  ObjectGroup* res = ObjectGroupRealm::makeGroup(
-      cx, script->realm(), GetClassForProtoKey(kind), tagged,
-      OBJECT_FLAG_FROM_ALLOCATION_SITE);
-  if (!res) {
-    return nullptr;
-  }
-
-  if (JSOp(*pc) == JSOp::NewObject) {
-    // Keep track of the preliminary objects with this group, so we can try
-    // to use an unboxed layout for the object once some are allocated.
-    Shape* shape = script->getObject(pc)->as<PlainObject>().lastProperty();
-    if (!shape->isEmptyShape()) {
-      PreliminaryObjectArrayWithTemplate* preliminaryObjects =
-          cx->new_<PreliminaryObjectArrayWithTemplate>(shape);
-      if (preliminaryObjects) {
-        res->setPreliminaryObjects(preliminaryObjects);
-      } else {
-        cx->recoverFromOutOfMemory();
-      }
-    }
-  }
-
-  if (!table->add(p, key, res)) {
-    ReportOutOfMemory(cx);
-    return nullptr;
-  }
-
-  return res;
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 /* static */
