@@ -163,10 +163,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   enum AddendumKind {
     Addendum_None,
 
-    // When used by interpreted function, the addendum stores the
-    // canonical JSFunction object.
-    Addendum_InterpretedFunction,
-
     // When used by typed objects, the addendum stores a TypeDescr.
     Addendum_TypeDescr
   };
@@ -202,20 +198,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 
   void setTypeDescr(TypeDescr* descr) {
     setAddendum(Addendum_TypeDescr, descr);
-  }
-
-  JSFunction* maybeInterpretedFunction() {
-    // Note: as with type descriptors, there is no need to sweep when
-    // accessing the interpreted function associated with an object.
-    if (addendumKind() == Addendum_InterpretedFunction) {
-      return reinterpret_cast<JSFunction*>(addendum_);
-    }
-    return nullptr;
-  }
-
-  void setInterpretedFunction(JSFunction* fun) {
-    MOZ_ASSERT(!gc::IsInsideNursery(reinterpret_cast<gc::Cell*>(fun)));
-    setAddendum(Addendum_InterpretedFunction, fun);
   }
 
  public:

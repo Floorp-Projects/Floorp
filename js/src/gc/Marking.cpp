@@ -1544,12 +1544,8 @@ void js::ObjectGroup::traceChildren(JSTracer* trc) {
     MOZ_ASSERT(js::IsTypeDescrClass(MaybeForwardedObjectClass(descr)));
     setTypeDescr(static_cast<TypeDescr*>(descr));
   }
-
-  if (JSObject* fun = maybeInterpretedFunction()) {
-    TraceManuallyBarrieredEdge(trc, &fun, "group_function");
-    setInterpretedFunction(&MaybeForwardedObjectAs<JSFunction>(fun));
-  }
 }
+
 void js::GCMarker::lazilyMarkChildren(ObjectGroup* group) {
   if (group->proto().isObject()) {
     traverseEdge(group, group->proto().toObject());
@@ -1562,10 +1558,6 @@ void js::GCMarker::lazilyMarkChildren(ObjectGroup* group) {
 
   if (TypeDescr* descr = group->maybeTypeDescr()) {
     traverseEdge(group, static_cast<JSObject*>(descr));
-  }
-
-  if (JSFunction* fun = group->maybeInterpretedFunction()) {
-    traverseEdge(group, static_cast<JSObject*>(fun));
   }
 }
 
