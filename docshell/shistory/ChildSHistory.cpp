@@ -154,17 +154,6 @@ void ChildSHistory::Go(int32_t aOffset, bool aRequireUserInteraction,
       return;
     }
 
-    // See Bug 1650095.
-    if (mozilla::SessionHistoryInParent() && !mPendingEpoch) {
-      mPendingEpoch = true;
-      RefPtr<ChildSHistory> self(this);
-      NS_DispatchToCurrentThread(
-          NS_NewRunnableFunction("UpdateEpochRunnable", [self] {
-            self->mHistoryEpoch++;
-            self->mPendingEpoch = false;
-          }));
-    }
-
     // Check for user interaction if desired, except for the first and last
     // history entries. We compare with >= to account for the case where
     // aOffset >= Count().
@@ -177,7 +166,17 @@ void ChildSHistory::Go(int32_t aOffset, bool aRequireUserInteraction,
     }
   }
 
-  GotoIndex(index.value(), aOffset, aRv);
+  if (mozilla::SessionHistoryInParent() && !mPendingEpoch) {
+    mPendingEpoch = true;
+    RefPtr<ChildSHistory> self(this);
+    NS_DispatchToCurrentThread(
+        NS_NewRunnableFunction("UpdateEpochRunnable", [self] {
+          self->mHistoryEpoch++;
+          self->mPendingEpoch = false;
+        }));
+  }
+
+  GotoIndex(index.value(), aOffset, aRequireUserInteraction, aRv);
 }
 
 void ChildSHistory::AsyncGo(int32_t aOffset, bool aRequireUserInteraction,
@@ -200,14 +199,15 @@ void ChildSHistory::AsyncGo(int32_t aOffset, bool aRequireUserInteraction,
 }
 
 void ChildSHistory::GotoIndex(int32_t aIndex, int32_t aOffset,
-                              ErrorResult& aRv) {
+                              bool aRequireUserInteraction, ErrorResult& aRv) {
   MOZ_LOG(gSHLog, LogLevel::Debug,
           ("ChildSHistory::GotoIndex(%d, %d), epoch %" PRIu64, aIndex, aOffset,
            mHistoryEpoch));
   if (mozilla::SessionHistoryInParent()) {
     nsCOMPtr<nsISHistory> shistory = mHistory;
     mBrowsingContext->HistoryGo(
-        aOffset, mHistoryEpoch, [shistory](int32_t&& aRequestedIndex) {
+        aOffset, mHistoryEpoch, aRequireUserInteraction,
+        [shistory](int32_t&& aRequestedIndex) {
           // FIXME Should probably only do this for non-fission.
           if (shistory) {
             shistory->InternalSetRequestedIndex(aRequestedIndex);
