@@ -383,7 +383,7 @@ TEST(TestAudioTrackGraph, AudioInputTrack)
     inputTrack->GraphImpl()->AppendMessage(MakeUnique<GoFaster>(cubeb));
   });
   uint32_t totalFrames = 0;
-  WaitUntil(stream->FramesProcessedEvent(), [&](uint32_t aFrames) {
+  WaitUntil(stream->FramesVerifiedEvent(), [&](uint32_t aFrames) {
     totalFrames += aFrames;
     return totalFrames > static_cast<uint32_t>(graph->GraphRate());
   });
@@ -500,7 +500,7 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
     inputTrack->GraphImpl()->AppendMessage(MakeUnique<GoFaster>(cubeb));
   });
   uint32_t totalFrames = 0;
-  WaitUntil(partnerStream->FramesProcessedEvent(), [&](uint32_t aFrames) {
+  WaitUntil(partnerStream->FramesVerifiedEvent(), [&](uint32_t aFrames) {
     totalFrames += aFrames;
     return totalFrames > static_cast<uint32_t>(partner->GraphRate() * 3);
   });

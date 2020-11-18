@@ -90,6 +90,10 @@ MediaEventSource<uint32_t>& MockCubebStream::FramesProcessedEvent() {
   return mFramesProcessedEvent;
 }
 
+MediaEventSource<uint32_t>& MockCubebStream::FramesVerifiedEvent() {
+  return mFramesVerifiedEvent;
+}
+
 MediaEventSource<Tuple<uint64_t, float, uint32_t>>&
 MockCubebStream::OutputVerificationEvent() {
   return mOutputVerificationEvent;
@@ -119,8 +123,9 @@ void MockCubebStream::Process10Ms() {
   mAudioVerifier.AppendDataInterleaved(mOutputBuffer, outframes,
                                        NUM_OF_CHANNELS);
 
+  mFramesProcessedEvent.Notify(outframes);
   if (mAudioVerifier.PreSilenceEnded()) {
-    mFramesProcessedEvent.Notify(outframes);
+    mFramesVerifiedEvent.Notify(outframes);
   }
 
   if (outframes < nrFrames) {
