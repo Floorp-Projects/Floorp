@@ -84,12 +84,32 @@ void ProfilerScreenshots::SubmitScreenshot(
               nullptr, &dataURL);
           if (NS_SUCCEEDED(rv)) {
             // Add a marker with the data URL.
-            AUTO_PROFILER_STATS(add_marker_with_ScreenshotPayload);
-            profiler_add_marker_for_thread(
-                sourceThread, JS::ProfilingCategoryPair::GRAPHICS,
-                "CompositorScreenshot",
-                ScreenshotPayload(timeStamp, std::move(dataURL), originalSize,
-                                  windowIdentifier));
+            struct ScreenshotMarker {
+              static constexpr mozilla::Span<const char> MarkerTypeName() {
+                return mozilla::MakeStringSpan("CompositorScreenshot");
+              }
+              static void StreamJSONMarkerData(
+                  mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+                  const mozilla::ProfilerString8View& aScreenshotDataURL,
+                  const mozilla::gfx::IntSize& aWindowSize,
+                  uintptr_t aWindowIdentifier) {
+                aWriter.UniqueStringProperty("url", aScreenshotDataURL);
+
+                char hexWindowID[32];
+                SprintfLiteral(hexWindowID, "0x%" PRIXPTR, aWindowIdentifier);
+                aWriter.StringProperty("windowID", hexWindowID);
+                aWriter.DoubleProperty("windowWidth", aWindowSize.width);
+                aWriter.DoubleProperty("windowHeight", aWindowSize.height);
+              }
+              static mozilla::MarkerSchema MarkerTypeDisplay() {
+                return mozilla::MarkerSchema::SpecialFrontendLocation{};
+              }
+            };
+            profiler_add_marker(
+                "CompositorScreenshot", geckoprofiler::category::GRAPHICS,
+                {MarkerThreadId(sourceThread),
+                 MarkerTiming::InstantAt(timeStamp)},
+                ScreenshotMarker{}, dataURL, originalSize, windowIdentifier);
           }
         }
 
