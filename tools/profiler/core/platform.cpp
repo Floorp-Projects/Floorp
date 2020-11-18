@@ -4595,7 +4595,9 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
   }
 
   // Set up profiling for each registered thread, if appropriate.
-  Maybe<int> mainThreadId;
+#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
+  bool isMainThreadBeingProfiled = false;
+#endif
   int tid = profiler_current_thread_id();
   const Vector<UniquePtr<RegisteredThread>>& registeredThreads =
       CorePS::RegisteredThreads(aLock);
@@ -4621,9 +4623,11 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
           TriggerPollJSSamplingOnMainThread();
         }
       }
+#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
       if (info->IsMainThread()) {
-        mainThreadId = Some(info->ThreadId());
+        isMainThreadBeingProfiled = true;
       }
+#endif
       registeredThread->RacyRegisteredThread().ReinitializeOnResume();
       if (registeredThread->GetJSContext()) {
         profiledThreadData->NotifyReceivedJSContext(0);
@@ -4658,8 +4662,8 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
   if (ActivePS::FeatureNativeAllocations(aLock)) {
-    if (mainThreadId.isSome()) {
-      mozilla::profiler::enable_native_allocations(mainThreadId.value());
+    if (isMainThreadBeingProfiled) {
+      mozilla::profiler::enable_native_allocations();
     } else {
       NS_WARNING(
           "The nativeallocations feature is turned on, but the main thread is "
@@ -5725,7 +5729,7 @@ void profiler_add_marker_for_mainthread(JS::ProfilingCategoryPair aCategoryPair,
                                  aMarkerName, aPayload);
 }
 
-bool profiler_add_native_allocation_marker(int aMainThreadId, int64_t aSize,
+bool profiler_add_native_allocation_marker(int64_t aSize,
                                            uintptr_t aMemoryAddress) {
   if (!profiler_can_accept_markers()) {
     return false;
@@ -5742,13 +5746,27 @@ bool profiler_add_native_allocation_marker(int aMainThreadId, int64_t aSize,
     return false;
   }
 
-  AUTO_PROFILER_STATS(add_marker_with_NativeAllocationMarkerPayload);
-  maybelocked_profiler_add_marker_for_thread(
-      aMainThreadId, JS::ProfilingCategoryPair::OTHER, "Native allocation",
-      NativeAllocationMarkerPayload(TimeStamp::Now(), aSize, aMemoryAddress,
-                                    profiler_current_thread_id(),
-                                    profiler_get_backtrace()),
-      nullptr);
+  struct NativeAllocationMarker {
+    static constexpr mozilla::Span<const char> MarkerTypeName() {
+      return mozilla::MakeStringSpan("Native allocation");
+    }
+    static void StreamJSONMarkerData(
+        mozilla::baseprofiler::SpliceableJSONWriter& aWriter, int64_t aSize,
+        uintptr_t aMemoryAddress, int aThreadId) {
+      aWriter.IntProperty("size", aSize);
+      aWriter.IntProperty("memoryAddress",
+                          static_cast<int64_t>(aMemoryAddress));
+      aWriter.IntProperty("threadId", aThreadId);
+    }
+    static mozilla::MarkerSchema MarkerTypeDisplay() {
+      return mozilla::MarkerSchema::SpecialFrontendLocation{};
+    }
+  };
+
+  profiler_add_marker("Native allocation", geckoprofiler::category::OTHER,
+                      {MarkerThreadId::MainThread(), MarkerStack::Capture()},
+                      NativeAllocationMarker{}, aSize, aMemoryAddress,
+                      profiler_current_thread_id());
   return true;
 }
 
