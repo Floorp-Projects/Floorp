@@ -935,13 +935,6 @@ static JSObject* GetIterator(JSContext* cx, HandleObject obj) {
     return nullptr;
   }
 
-  if (IsTypeInferenceEnabled()) {
-    if (obj->isSingleton() && !JSObject::setIteratedSingleton(cx, obj)) {
-      return nullptr;
-    }
-    MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_ITERATED);
-  }
-
   // If the object has dense elements, mark the dense elements as
   // maybe-in-iteration.
   //
