@@ -358,8 +358,7 @@ class CallObject : public EnvironmentObject {
   const Value& aliasedFormalFromArguments(const Value& argsValue) {
     return getSlot(ArgumentsObject::SlotFromMagicScopeSlotValue(argsValue));
   }
-  inline void setAliasedFormalFromArguments(JSContext* cx,
-                                            const Value& argsValue, jsid id,
+  inline void setAliasedFormalFromArguments(const Value& argsValue,
                                             const Value& v);
 
   JSFunction& callee() const {

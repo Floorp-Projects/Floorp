@@ -509,7 +509,7 @@ static bool MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
   if (JSID_IS_INT(id)) {
     unsigned arg = unsigned(JSID_TO_INT(id));
     if (arg < argsobj->initialLength() && !argsobj->isElementDeleted(arg)) {
-      argsobj->setElement(cx, arg, v);
+      argsobj->setElement(arg, v);
       return result.succeed();
     }
   } else {
@@ -717,7 +717,7 @@ bool MappedArgumentsObject::obj_defineProperty(JSContext* cx, HandleObject obj,
       }
     } else {
       if (desc.hasValue()) {
-        argsobj->setElement(cx, arg, desc.value());
+        argsobj->setElement(arg, desc.value());
       }
       if (desc.hasWritable() && !desc.writable()) {
         if (!argsobj->markElementDeleted(cx, arg)) {
@@ -772,7 +772,7 @@ static bool UnmappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
   if (JSID_IS_INT(id)) {
     unsigned arg = unsigned(JSID_TO_INT(id));
     if (arg < argsobj->initialLength()) {
-      argsobj->setElement(cx, arg, v);
+      argsobj->setElement(arg, v);
       return result.succeed();
     }
   } else {

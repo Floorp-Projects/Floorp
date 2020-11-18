@@ -1247,8 +1247,6 @@ Shape* NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj,
   MOZ_ASSERT_IF(shape->isDataProperty() != needSlot, needSlot);
 #endif
 
-  MarkTypePropertyNonData(cx, obj, shape->propid());
-
   AssertCanChangeAttrs(shape, attrs);
 
   if (shape->attrs == attrs && shape->getter() == getter &&
