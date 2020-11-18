@@ -116,11 +116,11 @@ add_task(async function test_saveBookmarks_with_no_backups() {
 
   Services.prefs.setIntPref("browser.bookmarks.max_backups", 0);
 
-  let filePath = do_get_tempdir().path + "/backup.json";
+  let filePath = PathUtils.join(do_get_tempdir().path, "backup.json");
   await PlacesBackups.saveBookmarksToJSONFile(filePath);
   let files = bookmarksBackupDir.directoryEntries;
   Assert.ok(!files.hasMoreElements(), "Should have no backup files.");
-  await OS.File.remove(filePath);
+  await IOUtils.remove(filePath);
   // We don't need to call cleanupFiles as we are not creating any
   // backups but need to reset the cache.
   delete PlacesBackups._backupFiles;
@@ -132,7 +132,7 @@ add_task(async function test_saveBookmarks_with_backups() {
 
   Services.prefs.setIntPref("browser.bookmarks.max_backups", NUMBER_OF_BACKUPS);
 
-  let filePath = do_get_tempdir().path + "/backup.json";
+  let filePath = PathUtils.join(do_get_tempdir().path, "backup.json");
   let dateObj = new Date();
   let dates = await createBackups(
     NUMBER_OF_BACKUPS,
@@ -141,8 +141,12 @@ add_task(async function test_saveBookmarks_with_backups() {
   );
 
   await PlacesBackups.saveBookmarksToJSONFile(filePath);
+
+  let backupPath = await PlacesBackups.getMostRecentBackup();
+  Assert.ok(await IOUtils.read(backupPath, { decompress: true }));
+
   dates.push(dateObj.getTime());
   await checkBackups(dates, bookmarksBackupDir);
-  await OS.File.remove(filePath);
+  await IOUtils.remove(filePath);
   await cleanupFiles(bookmarksBackupDir);
 });
