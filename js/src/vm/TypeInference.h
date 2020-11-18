@@ -33,7 +33,6 @@ namespace js {
 
 class TypeConstraint;
 class TypeZone;
-class CompilerConstraintList;
 class HeapTypeSetKey;
 class PlainObject;
 
@@ -102,8 +101,6 @@ class MOZ_RAII AutoSweepJitScript : public AutoSweepBase {
   Zone* zone() const { return zone_; }
 #endif
 };
-
-CompilerConstraintList* NewCompilerConstraintList(jit::TempAllocator& alloc);
 
 // Stack class to record information about constraints that need to be added
 // after finishing the Definite Properties Analysis. When the analysis succeeds

@@ -453,31 +453,13 @@ void MInstruction::clearResumePoint() {
   resumePoint_ = nullptr;
 }
 
-bool MDefinition::maybeEmulatesUndefined(CompilerConstraintList* constraints) {
+bool MDefinition::maybeEmulatesUndefined() {
+  // TODO(no-TI): remove.
   if (!mightBeType(MIRType::Object)) {
     return false;
   }
 
   return true;
-}
-
-static bool MaybeCallable(CompilerConstraintList* constraints,
-                          MDefinition* op) {
-  if (!op->mightBeType(MIRType::Object)) {
-    return false;
-  }
-
-  // TODO(no-TI): clean up all this code.
-  return true;
-}
-
-void MTest::cacheOperandMightEmulateUndefined(
-    CompilerConstraintList* constraints) {
-  MOZ_ASSERT(operandMightEmulateUndefined());
-
-  if (!getOperand(0)->maybeEmulatesUndefined(constraints)) {
-    markNoOperandEmulatesUndefined();
-  }
 }
 
 MDefinition* MTest::foldsDoubleNegation(TempAllocator& alloc) {
@@ -884,14 +866,12 @@ void MDefinition::replaceAllLiveUsesWith(MDefinition* dom) {
   }
 }
 
-MConstant* MConstant::New(TempAllocator& alloc, const Value& v,
-                          CompilerConstraintList* constraints) {
-  return new (alloc) MConstant(alloc, v, constraints);
+MConstant* MConstant::New(TempAllocator& alloc, const Value& v) {
+  return new (alloc) MConstant(alloc, v);
 }
 
-MConstant* MConstant::New(TempAllocator::Fallible alloc, const Value& v,
-                          CompilerConstraintList* constraints) {
-  return new (alloc) MConstant(alloc.alloc, v, constraints);
+MConstant* MConstant::New(TempAllocator::Fallible alloc, const Value& v) {
+  return new (alloc) MConstant(alloc.alloc, v);
 }
 
 MConstant* MConstant::NewFloat32(TempAllocator& alloc, double d) {
@@ -912,8 +892,7 @@ MConstant* MConstant::New(TempAllocator& alloc, const Value& v, MIRType type) {
   return res;
 }
 
-MConstant* MConstant::NewConstraintlessObject(TempAllocator& alloc,
-                                              JSObject* v) {
+MConstant* MConstant::NewObject(TempAllocator& alloc, JSObject* v) {
   return new (alloc) MConstant(v);
 }
 
@@ -936,8 +915,7 @@ bool jit::IonCompilationCanUseNurseryPointers() {
 
 #endif  // DEBUG
 
-MConstant::MConstant(TempAllocator& alloc, const js::Value& vp,
-                     CompilerConstraintList* constraints)
+MConstant::MConstant(TempAllocator& alloc, const js::Value& vp)
     : MNullaryInstruction(classOpcode) {
   setResultType(MIRTypeFromValue(vp));
 
@@ -3208,20 +3186,6 @@ MCompare::CompareType MCompare::determineCompareType(JSOp op, MDefinition* left,
   return Compare_Unknown;
 }
 
-void MCompare::cacheOperandMightEmulateUndefined(
-    CompilerConstraintList* constraints) {
-  MOZ_ASSERT(operandMightEmulateUndefined());
-
-  if (getOperand(0)->maybeEmulatesUndefined(constraints)) {
-    return;
-  }
-  if (getOperand(1)->maybeEmulatesUndefined(constraints)) {
-    return;
-  }
-
-  markNoOperandEmulatesUndefined();
-}
-
 MDefinition* MBitNot::foldsTo(TempAllocator& alloc) {
   MOZ_ASSERT(type() == MIRType::Int32);
 
@@ -3341,16 +3305,6 @@ MDefinition* MTypeOf::foldsTo(TempAllocator& alloc) {
 
   return MConstant::New(
       alloc, StringValue(TypeName(type, GetJitContext()->runtime->names())));
-}
-
-void MTypeOf::cacheInputMaybeCallableOrEmulatesUndefined(
-    CompilerConstraintList* constraints) {
-  MOZ_ASSERT(inputMaybeCallableOrEmulatesUndefined());
-
-  if (!input()->maybeEmulatesUndefined(constraints) &&
-      !MaybeCallable(constraints, input())) {
-    markInputNotCallableOrEmulatesUndefined();
-  }
 }
 
 MUrsh* MUrsh::NewWasm(TempAllocator& alloc, MDefinition* left,
@@ -4312,15 +4266,6 @@ void MCompare::filtersUndefinedOrNull(bool trueBranch, MDefinition** subject,
   *subject = lhs();
 }
 
-void MNot::cacheOperandMightEmulateUndefined(
-    CompilerConstraintList* constraints) {
-  MOZ_ASSERT(operandMightEmulateUndefined());
-
-  if (!getOperand(0)->maybeEmulatesUndefined(constraints)) {
-    markNoOperandEmulatesUndefined();
-  }
-}
-
 MDefinition* MNot::foldsTo(TempAllocator& alloc) {
   // Fold if the input is constant
   if (MConstant* inputConst = input()->maybeConstantValue()) {
@@ -4448,9 +4393,7 @@ bool MObjectState::initFromTemplateObject(TempAllocator& alloc,
     Value val = nativeObject.getSlot(i);
     MDefinition* def = undefinedVal;
     if (!val.isUndefined()) {
-      MConstant* ins = val.isObject() ? MConstant::NewConstraintlessObject(
-                                            alloc, &val.toObject())
-                                      : MConstant::New(alloc, val);
+      MConstant* ins = MConstant::New(alloc, val);
       block()->insertBefore(this, ins);
       def = ins;
     }
@@ -4521,9 +4464,7 @@ bool MArrayState::initFromTemplateObject(TempAllocator& alloc,
     Value val = obj->getDenseElement(i);
     MDefinition* def = undefinedVal;
     if (!val.isUndefined()) {
-      MConstant* ins = val.isObject() ? MConstant::NewConstraintlessObject(
-                                            alloc, &val.toObject())
-                                      : MConstant::New(alloc, val);
+      MConstant* ins = MConstant::New(alloc, val);
       block()->insertBefore(this, ins);
       def = ins;
     }
@@ -4579,9 +4520,9 @@ MArgumentState* MArgumentState::Copy(TempAllocator& alloc,
   return res;
 }
 
-MNewArray::MNewArray(TempAllocator& alloc, CompilerConstraintList* constraints,
-                     uint32_t length, MConstant* templateConst,
-                     gc::InitialHeap initialHeap, jsbytecode* pc, bool vmCall)
+MNewArray::MNewArray(TempAllocator& alloc, uint32_t length,
+                     MConstant* templateConst, gc::InitialHeap initialHeap,
+                     jsbytecode* pc, bool vmCall)
     : MUnaryInstruction(classOpcode, templateConst),
       length_(length),
       initialHeap_(initialHeap),

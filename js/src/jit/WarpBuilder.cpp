@@ -862,8 +862,7 @@ bool WarpBuilder::build_RegExp(BytecodeLocation loc) {
 
   auto* snapshot = getOpSnapshot<WarpRegExp>(loc);
 
-  MRegExp* regexp = MRegExp::New(alloc(), /* constraints = */ nullptr, reObj,
-                                 snapshot->hasShared());
+  MRegExp* regexp = MRegExp::New(alloc(), reObj, snapshot->hasShared());
   current->add(regexp);
   current->push(regexp);
 
@@ -1504,7 +1503,7 @@ bool WarpBuilder::build_DynamicImport(BytecodeLocation loc) {
 
 bool WarpBuilder::build_Not(BytecodeLocation loc) {
   MDefinition* value = current->pop();
-  MNot* ins = MNot::New(alloc(), value, /* constraints = */ nullptr);
+  MNot* ins = MNot::New(alloc(), value);
   current->add(ins);
   current->push(ins);
   return true;
@@ -2300,11 +2299,11 @@ bool WarpBuilder::build_NewArray(BytecodeLocation loc) {
 
   MNewArray* ins;
   if (useVMCall) {
-    ins = MNewArray::NewVM(alloc(), /* constraints = */ nullptr, length,
-                           templateConst, heap, loc.toRawBytecode());
+    ins = MNewArray::NewVM(alloc(), length, templateConst, heap,
+                           loc.toRawBytecode());
   } else {
-    ins = MNewArray::New(alloc(), /* constraints = */ nullptr, length,
-                         templateConst, heap, loc.toRawBytecode());
+    ins = MNewArray::New(alloc(), length, templateConst, heap,
+                         loc.toRawBytecode());
   }
   current->add(ins);
   current->push(ins);
@@ -2318,12 +2317,10 @@ bool WarpBuilder::build_NewArrayCopyOnWrite(BytecodeLocation loc) {
 
   // TODO: pre-tenuring.
   gc::InitialHeap heap = gc::DefaultHeap;
-  MConstant* templateConst =
-      MConstant::NewConstraintlessObject(alloc(), templateObject);
+  MConstant* templateConst = MConstant::NewObject(alloc(), templateObject);
   current->add(templateConst);
 
-  auto* ins = MNewArrayCopyOnWrite::New(alloc(), /* constraints = */ nullptr,
-                                        templateConst, heap);
+  auto* ins = MNewArrayCopyOnWrite::New(alloc(), templateConst, heap);
   current->add(ins);
   current->push(ins);
   return true;
@@ -2336,12 +2333,12 @@ bool WarpBuilder::build_NewObject(BytecodeLocation loc) {
   MNewObject* ins;
   if (const auto* snapshot = getOpSnapshot<WarpNewObject>(loc)) {
     auto* templateConst = constant(ObjectValue(*snapshot->templateObject()));
-    ins = MNewObject::New(alloc(), /* constraints = */ nullptr, templateConst,
-                          heap, MNewObject::ObjectLiteral);
+    ins = MNewObject::New(alloc(), templateConst, heap,
+                          MNewObject::ObjectLiteral);
   } else {
     auto* templateConst = constant(NullValue());
-    ins = MNewObject::NewVM(alloc(), /* constraints = */ nullptr, templateConst,
-                            heap, MNewObject::ObjectLiteral);
+    ins = MNewObject::NewVM(alloc(), templateConst, heap,
+                            MNewObject::ObjectLiteral);
   }
   current->add(ins);
   current->push(ins);
@@ -2632,7 +2629,7 @@ bool WarpBuilder::build_Lambda(BytecodeLocation loc) {
   JSFunction* fun = loc.getFunction(script_);
   MConstant* funConst = constant(ObjectValue(*fun));
 
-  auto* ins = MLambda::New(alloc(), /* constraints = */ nullptr, env, funConst,
+  auto* ins = MLambda::New(alloc(), env, funConst,
                            LambdaInfoFromSnapshot(fun, snapshot));
   current->add(ins);
   current->push(ins);
@@ -2650,9 +2647,8 @@ bool WarpBuilder::build_LambdaArrow(BytecodeLocation loc) {
   JSFunction* fun = loc.getFunction(script_);
   MConstant* funConst = constant(ObjectValue(*fun));
 
-  auto* ins =
-      MLambdaArrow::New(alloc(), /* constraints = */ nullptr, env, newTarget,
-                        funConst, LambdaInfoFromSnapshot(fun, snapshot));
+  auto* ins = MLambdaArrow::New(alloc(), env, newTarget, funConst,
+                                LambdaInfoFromSnapshot(fun, snapshot));
   current->add(ins);
   current->push(ins);
   return resumeAfter(ins, loc);
@@ -2825,11 +2821,11 @@ bool WarpBuilder::build_Rest(BytecodeLocation loc) {
     MConstant* templateConst = constant(ObjectValue(*templateObject));
     MNewArray* newArray;
     if (numRest > snapshot->maxInlineElements()) {
-      newArray = MNewArray::NewVM(alloc(), /* constraints = */ nullptr, numRest,
-                                  templateConst, heap, loc.toRawBytecode());
+      newArray = MNewArray::NewVM(alloc(), numRest, templateConst, heap,
+                                  loc.toRawBytecode());
     } else {
-      newArray = MNewArray::New(alloc(), /* constraints = */ nullptr, numRest,
-                                templateConst, heap, loc.toRawBytecode());
+      newArray = MNewArray::New(alloc(), numRest, templateConst, heap,
+                                loc.toRawBytecode());
     }
     current->add(newArray);
     current->push(newArray);
@@ -2882,8 +2878,7 @@ bool WarpBuilder::build_Rest(BytecodeLocation loc) {
   // Pass in the number of actual arguments, the number of formals (not
   // including the rest parameter slot itself), and the template object.
   unsigned numFormals = info().nargs() - 1;
-  MRest* rest = MRest::New(alloc(), /* constraints = */ nullptr, numActuals,
-                           numFormals, templateObject);
+  MRest* rest = MRest::New(alloc(), numActuals, numFormals, templateObject);
   current->add(rest);
   current->push(rest);
   return true;

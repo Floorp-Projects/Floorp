@@ -332,15 +332,13 @@ void JitRealm::performStubReadBarriers(uint32_t stubsToBarrier) const {
 }
 
 static bool LinkCodeGen(JSContext* cx, CodeGenerator* codegen,
-                        HandleScript script,
-                        CompilerConstraintList* constraints,
-                        const WarpSnapshot* snapshot) {
+                        HandleScript script, const WarpSnapshot* snapshot) {
   TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
   TraceLoggerEvent event(TraceLogger_AnnotateScripts, script);
   AutoTraceLog logScript(logger, event);
   AutoTraceLog logLink(logger, TraceLogger_IonLinking);
 
-  if (!codegen->link(cx, constraints, snapshot)) {
+  if (!codegen->link(cx, snapshot)) {
     return false;
   }
 
@@ -355,8 +353,7 @@ static bool LinkBackgroundCodeGen(JSContext* cx, IonCompileTask* task) {
 
   JitContext jctx(cx, &task->alloc());
   RootedScript script(cx, task->script());
-  return LinkCodeGen(cx, codegen, script, task->constraints(),
-                     task->snapshot());
+  return LinkCodeGen(cx, codegen, script, task->snapshot());
 }
 
 void jit::LinkIonScript(JSContext* cx, HandleScript calleeScript) {
@@ -1599,11 +1596,6 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
     return AbortReason::Alloc;
   }
 
-  CompilerConstraintList* constraints = NewCompilerConstraintList(*temp);
-  if (!constraints) {
-    return AbortReason::Alloc;
-  }
-
   const OptimizationInfo* optimizationInfo =
       IonOptimizations.get(optimizationLevel);
   const JitCompileOptions options(cx);
@@ -1645,8 +1637,8 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
             ". (Compiled on background thread.)",
             script->filename(), script->lineno(), script->column());
 
-    IonCompileTask* task = alloc->new_<IonCompileTask>(
-        *mirGen, scriptHasIonScript, constraints, snapshot);
+    IonCompileTask* task =
+        alloc->new_<IonCompileTask>(*mirGen, scriptHasIonScript, snapshot);
     if (!task) {
       return AbortReason::Alloc;
     }
@@ -1687,7 +1679,7 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
       return AbortReason::Disable;
     }
 
-    succeeded = LinkCodeGen(cx, codegen.get(), script, constraints, snapshot);
+    succeeded = LinkCodeGen(cx, codegen.get(), script, snapshot);
   }
 
   if (succeeded) {
