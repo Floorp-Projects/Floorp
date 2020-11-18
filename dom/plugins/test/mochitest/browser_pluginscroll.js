@@ -21,7 +21,9 @@ function coordinatesRelativeToWindow(aX, aY, aElement) {
   };
 }
 
-var apzEnabled = Preferences.get("layers.async-pan-zoom.enabled", false);
+var apzEnabled =
+  Services.appinfo.fissionAutostart ||
+  Preferences.get("layers.async-pan-zoom.enabled", false);
 var pluginHideEnabled = Preferences.get(
   "gfx.e10s.hide-plugins-for-scroll",
   true
