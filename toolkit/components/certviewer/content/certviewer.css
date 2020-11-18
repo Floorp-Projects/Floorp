@@ -2,6 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:root {
+  background-color: var(--grey-50);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    background-color: var(--grey-60);
+  }
+}
+
 body {
   max-width: 800px;
   margin: 0 auto;
