@@ -10,6 +10,10 @@ flat varying HIGHP_FS_ADDRESS int v_gradient_address;
 
 flat varying vec2 v_start_point;
 flat varying vec2 v_scale_dir;
+// Size of the gradient pattern's rectangle, used to compute horizontal and vertical
+// repetitions. Not to be confused with another kind of repetition of the pattern
+// which happens along the gradient stops.
+flat varying vec2 v_repeated_size;
 // Repetition along the gradient stops.
 flat varying float v_gradient_repeat;
 
@@ -67,16 +71,7 @@ void brush_vs(
     v_scale_dir = dir / dot(dir, dir);
 
     vec2 tile_repeat = local_rect.size / gradient.stretch_size;
-
-    // Size of the gradient pattern's rectangle, used to compute horizontal and vertical
-    // repetitions. Not to be confused with another kind of repetition of the pattern
-    // which happens along the gradient stops.
-    vec2 repeated_size = gradient.stretch_size;
-
-    // Normalize UV and offsets to 0..1 scale.
-    v_pos /= repeated_size;
-    v_start_point /= repeated_size;
-    v_scale_dir *= repeated_size;
+    v_repeated_size = gradient.stretch_size;
 
     v_gradient_address = prim_user_data.x;
 
@@ -98,18 +93,19 @@ Fragment brush_fs() {
     vec2 local_pos = max(v_pos, vec2(0.0));
 
     // Apply potential horizontal and vertical repetitions.
-    vec2 pos = fract(local_pos);
+    vec2 pos = mod(local_pos, v_repeated_size);
 
+    vec2 prim_size = v_repeated_size * v_tile_repeat;
     // Handle bottom and right inflated edges (see brush_image).
-    if (local_pos.x >= v_tile_repeat.x) {
-        pos.x = 1.0;
+    if (local_pos.x >= prim_size.x) {
+        pos.x = v_repeated_size.x;
     }
-    if (local_pos.y >= v_tile_repeat.y) {
-        pos.y = 1.0;
+    if (local_pos.y >= prim_size.y) {
+        pos.y = v_repeated_size.y;
     }
 #else
     // Apply potential horizontal and vertical repetitions.
-    vec2 pos = fract(v_pos);
+    vec2 pos = mod(v_pos, v_repeated_size);
 #endif
 
     float offset = dot(pos - v_start_point, v_scale_dir);

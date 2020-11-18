@@ -3452,13 +3452,6 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         Type::new(Float),
         vec![Type::new(Float)],
     );
-    declare_function(
-        state,
-        "fract",
-        None,
-        Type::new(Vec2),
-        vec![Type::new(Vec2)],
-    );
     declare_function(state, "mod", None, Type::new(Vec2), vec![Type::new(Vec2)]);
     declare_function(state, "mod", None, Type::new(Float), vec![Type::new(Float)]);
 
