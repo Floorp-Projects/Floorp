@@ -1362,6 +1362,22 @@ main {
   font-size: 15px;
   z-index: 11002; }
 
+.customize-menu {
+  background-color: #FFF;
+  width: 432px;
+  height: 100%;
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1001;
+  box-shadow: 0 0 64px rgba(9, 32, 77, 0.12), 0 0 24px rgba(29, 17, 51, 0.12); }
+  .customize-menu .close-button {
+    margin-inline-end: 25px;
+    display: block;
+    margin-block: 20px 0;
+    box-shadow: none !important; }
+
 .card-outer {
   background: var(--newtab-card-background-color);
   border-radius: 3px;

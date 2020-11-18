@@ -9,6 +9,7 @@ import { ConfirmDialog } from "content-src/components/ConfirmDialog/ConfirmDialo
 import { connect } from "react-redux";
 import { DiscoveryStreamBase } from "content-src/components/DiscoveryStreamBase/DiscoveryStreamBase";
 import { ErrorBoundary } from "content-src/components/ErrorBoundary/ErrorBoundary";
+import { CustomizeMenu } from "content-src/components/CustomizeMenu/CustomizeMenu";
 import React from "react";
 import { Search } from "content-src/components/Search/Search";
 import { Sections } from "content-src/components/Sections/Sections";
@@ -102,8 +103,10 @@ export class BaseContent extends React.PureComponent {
   constructor(props) {
     super(props);
     this.openPreferences = this.openPreferences.bind(this);
+    this.openCustomizationMenu = this.openCustomizationMenu.bind(this);
+    this.closeCustomizationMenu = this.closeCustomizationMenu.bind(this);
     this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
-    this.state = { fixedSearch: false };
+    this.state = { fixedSearch: false, customizeMenuVisible: false };
   }
 
   componentDidMount() {
@@ -129,6 +132,14 @@ export class BaseContent extends React.PureComponent {
     this.props.dispatch(ac.UserEvent({ event: "OPEN_NEWTAB_PREFS" }));
   }
 
+  openCustomizationMenu() {
+    this.setState({ customizeMenuVisible: true });
+  }
+
+  closeCustomizationMenu() {
+    this.setState({ customizeMenuVisible: false });
+  }
+
   render() {
     const { props } = this;
     const { App } = props;
@@ -149,6 +160,11 @@ export class BaseContent extends React.PureComponent {
       filteredSections.filter(section => section.enabled).length === 0;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
     const showLogo = prefs["logowordmark.alwaysVisible"];
+
+    const customizationMenuEnabled = prefs["customizationMenu.enabled"];
+    const newNewtabExperienceEnabled = prefs["newNewtabExperience.enabled"];
+    const canShowCustomizationMenu =
+      customizationMenuEnabled || newNewtabExperienceEnabled;
 
     const outerClassName = [
       "outer-wrapper",
@@ -193,11 +209,18 @@ export class BaseContent extends React.PureComponent {
               ) : (
                 <Sections />
               )}
-              <PrefsButton onClick={this.openPreferences} />
             </div>
             <ConfirmDialog />
           </main>
         </div>
+        {canShowCustomizationMenu ? (
+          <PrefsButton onClick={this.openCustomizationMenu} />
+        ) : (
+          <PrefsButton onClick={this.openPreferences} />
+        )}
+        {canShowCustomizationMenu && this.state.customizeMenuVisible && (
+          <CustomizeMenu onClose={this.closeCustomizationMenu} />
+        )}
       </div>
     );
   }

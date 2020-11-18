@@ -111,6 +111,8 @@ this.PrefsFeed = class PrefsFeed {
       value: handoffToAwesomebarPrefValue,
     });
 
+    this._setBoolPref(values, "newNewtabExperience.enabled", false);
+    this._setBoolPref(values, "customizationMenu.enabled", false);
     this._setBoolPref(values, "logowordmark.alwaysVisible", false);
     this._setBoolPref(values, "feeds.section.topstories", false);
     this._setBoolPref(values, "discoverystream.enabled", false);
