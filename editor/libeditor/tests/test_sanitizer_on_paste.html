@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test pasting table rows</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<textarea></textarea>
+<div contenteditable="true">Paste target</div>
+<script>
+  SimpleTest.waitForExplicitFinish();
+  function fail() {
+    ok(false, "Should not run event handlers.");
+  }
+  document.addEventListener('copy', ev => {
+    dump("IN LISTENER\n");
+    const payload = `<svg><style><image href=file_sanitizer_on_paste.sjs onerror=fail() onload=fail()>`
+    
+    ev.preventDefault();
+    ev.clipboardData.setData('text/html', payload);
+    ev.clipboardData.setData('text/plain', payload);
+  });
+
+  document.getElementsByTagName("textarea")[0].focus();
+  synthesizeKey("c", { accelKey: true } /* aEvent*/);
+
+  let div = document.getElementsByTagName("div")[0];
+  div.focus(); 
+  synthesizeKey("v", { accelKey: true } /* aEvent*/);
+
+  let svg = div.firstChild;
+  is(svg.nodeName, "svg", "Node name should be svg");
+
+  let style = svg.firstChild;
+  if (style) {
+    is(style.firstChild, null, "Style should not have child nodes.");
+  } else {
+    ok(false, "Should have gotten a node.");
+  }
+
+  var s = document.createElement("script");
+  s.src = "file_sanitizer_on_paste.sjs?report=1";
+  document.body.appendChild(s);
+</script>
+</body>
