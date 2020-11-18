@@ -249,7 +249,7 @@ class MockCubeb {
 
   // MockCubeb specific API
   void StartStream(MockCubebStream* aStream);
-  void StopStream(MockCubebStream* aStream);
+  int StopStream(MockCubebStream* aStream);
 
   // Simulates the audio thread. The thread is created at Start and destroyed
   // at Stop. At next StreamStart a new thread is created.
