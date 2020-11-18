@@ -12882,71 +12882,74 @@ nsresult QuotaClient::UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory) {
                   GetDatabaseFilenames(*aDirectory,
                                        /* aCanceled */ AtomicBool{false}));
 
-  for (const nsString& subdirName : subdirsToProcess) {
-    // If the directory has the correct suffix then it should exist in
-    // databaseFilenames.
-    nsDependentSubstring subdirNameBase;
-    if (GetFilenameBase(subdirName, kFileManagerDirectoryNameSuffix,
-                        subdirNameBase)) {
-      Unused << NS_WARN_IF(!databaseFilenames.GetEntry(subdirNameBase));
+  IDB_TRY(CollectEachInRange(
+      subdirsToProcess,
+      [&databaseFilenames = databaseFilenames,
+       aDirectory](const nsString& subdirName) -> Result<Ok, nsresult> {
+        // If the directory has the correct suffix then it should exist in
+        // databaseFilenames.
+        nsDependentSubstring subdirNameBase;
+        if (GetFilenameBase(subdirName, kFileManagerDirectoryNameSuffix,
+                            subdirNameBase)) {
+          IDB_TRY(OkIf(databaseFilenames.GetEntry(subdirNameBase)), Ok{});
+          return Ok{};
+        }
 
-      continue;
-    }
+        // The directory didn't have the right suffix but we might need to
+        // rename it. Check to see if we have a database that references this
+        // directory.
+        IDB_TRY_INSPECT(
+            const auto& subdirNameWithSuffix,
+            ([&databaseFilenames,
+              &subdirName]() -> Result<nsAutoString, NotOk> {
+              if (databaseFilenames.GetEntry(subdirName)) {
+                return nsAutoString{subdirName +
+                                    kFileManagerDirectoryNameSuffix};
+              }
 
-    // The directory didn't have the right suffix but we might need to rename
-    // it. Check to see if we have a database that references this directory.
-    nsString subdirNameWithSuffix;
-    if (databaseFilenames.GetEntry(subdirName)) {
-      subdirNameWithSuffix = subdirName + kFileManagerDirectoryNameSuffix;
-    } else {
-      // Windows doesn't allow a directory to end with a dot ('.'), so we have
-      // to check that possibility here too.
-      // We do this on all platforms, because the origin directory may have
-      // been created on Windows and now accessed on different OS.
-      nsString subdirNameWithDot = subdirName + u"."_ns;
-      if (NS_WARN_IF(!databaseFilenames.GetEntry(subdirNameWithDot))) {
-        continue;
-      }
-      subdirNameWithSuffix =
-          subdirNameWithDot + kFileManagerDirectoryNameSuffix;
-    }
+              // Windows doesn't allow a directory to end with a dot ('.'), so
+              // we have to check that possibility here too. We do this on all
+              // platforms, because the origin directory may have been created
+              // on Windows and now accessed on different OS.
+              const nsAutoString subdirNameWithDot = subdirName + u"."_ns;
+              IDB_TRY(OkIf(databaseFilenames.GetEntry(subdirNameWithDot)),
+                      Err(NotOk{}));
 
-    // We do have a database that uses this subdir so we should rename it now.
-    IDB_TRY_INSPECT(const auto& subdir,
-                    CloneFileAndAppend(*aDirectory, subdirName));
+              return nsAutoString{subdirNameWithDot +
+                                  kFileManagerDirectoryNameSuffix};
+            }()),
+            Ok{});
 
-    DebugOnly<bool> isDirectory;
-    MOZ_ASSERT(NS_SUCCEEDED(subdir->IsDirectory(&isDirectory)));
-    MOZ_ASSERT(isDirectory);
+        // We do have a database that uses this subdir so we should rename it
+        // now.
+        IDB_TRY_INSPECT(const auto& subdir,
+                        CloneFileAndAppend(*aDirectory, subdirName));
 
-    // Check if the subdir with suffix already exists before renaming.
-    IDB_TRY_INSPECT(const auto& subdirWithSuffix,
-                    CloneFileAndAppend(*aDirectory, subdirNameWithSuffix));
+        DebugOnly<bool> isDirectory;
+        MOZ_ASSERT(NS_SUCCEEDED(subdir->IsDirectory(&isDirectory)));
+        MOZ_ASSERT(isDirectory);
 
-    bool exists;
-    nsresult rv = subdirWithSuffix->Exists(&exists);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        // Check if the subdir with suffix already exists before renaming.
+        IDB_TRY_INSPECT(const auto& subdirWithSuffix,
+                        CloneFileAndAppend(*aDirectory, subdirNameWithSuffix));
 
-    if (exists) {
-      IDB_WARNING("Deleting old %s files directory!",
-                  NS_ConvertUTF16toUTF8(subdirName).get());
+        IDB_TRY_INSPECT(const bool& exists,
+                        MOZ_TO_RESULT_INVOKE(subdirWithSuffix, Exists));
 
-      rv = subdir->Remove(/* aRecursive */ true);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+        if (exists) {
+          IDB_WARNING("Deleting old %s files directory!",
+                      NS_ConvertUTF16toUTF8(subdirName).get());
 
-      continue;
-    }
+          IDB_TRY(subdir->Remove(/* aRecursive */ true));
 
-    // Finally, rename the subdir.
-    rv = subdir->RenameTo(nullptr, subdirNameWithSuffix);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
+          return Ok{};
+        }
+
+        // Finally, rename the subdir.
+        IDB_TRY(subdir->RenameTo(nullptr, subdirNameWithSuffix));
+
+        return Ok{};
+      }));
 
   return NS_OK;
 }
