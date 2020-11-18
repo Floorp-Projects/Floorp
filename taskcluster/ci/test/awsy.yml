@@ -31,7 +31,8 @@ job-defaults:
     run-on-projects:
         by-test-platform:
             .*-devedition/.*: []  # don't run on devedition
-            (linux|win|mac)(?!.*shippable).*/opt: []
+            windows7-32.*/opt: []
+            (linux|windows10|mac)(?!.*shippable).*/opt: []
             default: ['integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
     test-manifest-loader: null  # don't load tests in the taskgraph
     fission-run-on-projects:
@@ -53,7 +54,8 @@ awsy-tp6:
         by-test-platform:
             .*-ccov.*/.*: []  # don't run on coverage
             .*-devedition/.*: []  # don't run on devedition
-            (linux|win|mac)(?!.*shippable)(?!.*ccov).*/opt: []
+            windows7-32.*/opt: []
+            (linux|windows10|mac)(?!.*shippable)(?!.*ccov).*/opt: []
             default: ['integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
     mozharness:
         extra-options:
