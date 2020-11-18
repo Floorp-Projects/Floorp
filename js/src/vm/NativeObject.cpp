@@ -1371,58 +1371,6 @@ static MOZ_ALWAYS_INLINE void UpdateShapeTypeAndValueForWritableDataProp(
   obj->setSlotWithType(cx, shape, value, /* overwriting = */ false);
 }
 
-void js::AddPropertyTypesAfterProtoChange(JSContext* cx, NativeObject* obj,
-                                          ObjectGroup* oldGroup) {
-  MOZ_ASSERT(obj->group() != oldGroup);
-  MOZ_ASSERT(!obj->group()->unknownPropertiesDontCheckGeneration());
-
-  AutoSweepObjectGroup sweepOldGroup(oldGroup);
-  if (oldGroup->unknownProperties(sweepOldGroup)) {
-    MarkObjectGroupUnknownProperties(cx, obj->group());
-    return;
-  }
-
-  // First copy the dynamic flags.
-  MarkObjectGroupFlags(
-      cx, obj, oldGroup->flags(sweepOldGroup) & OBJECT_FLAG_DYNAMIC_MASK);
-
-  // Now update all property types. If the object has many properties, this
-  // function may be slow so we mark all properties as unknown.
-  static const size_t MaxPropertyCount = 40;
-
-  size_t nprops = obj->getDenseInitializedLength();
-  if (nprops > MaxPropertyCount) {
-    MarkObjectGroupUnknownProperties(cx, obj->group());
-    return;
-  }
-
-  // Add dense element types.
-  for (size_t i = 0; i < obj->getDenseInitializedLength(); i++) {
-    Value val = obj->getDenseElement(i);
-    if (!val.isMagic(JS_ELEMENTS_HOLE)) {
-      AddTypePropertyId(cx, obj, JSID_VOID, val);
-    }
-  }
-
-  // Add property types.
-  for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront()) {
-    Shape* shape = &r.front();
-    jsid id = shape->propid();
-    if (JSID_IS_EMPTY(id)) {
-      continue;
-    }
-
-    if (nprops++ > MaxPropertyCount) {
-      MarkObjectGroupUnknownProperties(cx, obj->group());
-      return;
-    }
-
-    Value val = shape->isDataProperty() ? obj->getSlot(shape->slot())
-                                        : UndefinedValue();
-    UpdateShapeTypeAndValue(cx, obj, shape, id, val);
-  }
-}
-
 static bool ReshapeForShadowedPropSlow(JSContext* cx, HandleNativeObject obj,
                                        HandleId id) {
   MOZ_ASSERT(obj->isDelegate());

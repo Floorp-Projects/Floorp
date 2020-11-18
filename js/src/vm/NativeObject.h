@@ -1779,9 +1779,6 @@ inline NativeObject* MaybeNativeObject(JSObject* obj) {
 // Defined in NativeObject-inl.h.
 bool IsPackedArray(JSObject* obj);
 
-extern void AddPropertyTypesAfterProtoChange(JSContext* cx, NativeObject* obj,
-                                             ObjectGroup* oldGroup);
-
 // Initialize an object's reserved slot with a private value pointing to
 // malloc-allocated memory and associate the memory with the object.
 //

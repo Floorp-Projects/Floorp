@@ -35,8 +35,6 @@ inline void ArrayObject::setLength(JSContext* cx, uint32_t length) {
   MOZ_ASSERT(clasp == shape->getObjectClass());
   MOZ_ASSERT(clasp == &ArrayObject::class_);
   MOZ_ASSERT_IF(clasp->hasFinalize(), heap == gc::TenuredHeap);
-  MOZ_ASSERT_IF(group->shouldPreTenureDontCheckGeneration(),
-                heap == gc::TenuredHeap);
 
   // Arrays can use their fixed slots to store elements, so can't have shapes
   // which allow named properties to be stored in the fixed slots.

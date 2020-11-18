@@ -134,8 +134,7 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
   gc::InitialHeap heap;
   {
     AutoSweepObjectGroup sweep(group);
-    if (group->shouldPreTenure(sweep) ||
-        (priv.isGCThing() && priv.toGCThing()->isTenured()) ||
+    if ((priv.isGCThing() && priv.toGCThing()->isTenured()) ||
         !handler->canNurseryAllocate()) {
       heap = gc::TenuredHeap;
     } else {
@@ -161,11 +160,6 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
   gc::gcprobes::CreateObject(proxy);
 
   proxy->init(handler, priv, cx);
-
-  // Don't track types of properties of non-DOM and non-singleton proxies.
-  if (!clasp->isDOMClass()) {
-    MarkObjectGroupUnknownProperties(cx, proxy->group());
-  }
 
   return proxy;
 }

@@ -83,24 +83,6 @@ enum : uint32_t {
    */
   OBJECT_FLAG_LAZY_SINGLETON = 0x4,
 
-  /*
-   * Whether objects with this type should be allocated directly in the
-   * tenured heap.
-   */
-  OBJECT_FLAG_PRE_TENURE = 0x00800000,
-
-  /* Whether objects with this type might have copy on write elements. */
-  OBJECT_FLAG_COPY_ON_WRITE = 0x01000000,
-
-  /*
-   * Whether all properties of this object are considered unknown.
-   * If set, all other flags in DYNAMIC_MASK will also be set.
-   */
-  OBJECT_FLAG_UNKNOWN_PROPERTIES = 0x04000000,
-
-  /* Flags which indicate dynamic properties of represented objects. */
-  OBJECT_FLAG_DYNAMIC_MASK = 0x07ff0000,
-
   // Mask/shift for the kind of addendum attached to this group.
   OBJECT_FLAG_ADDENDUM_MASK = 0x38000000,
   OBJECT_FLAG_ADDENDUM_SHIFT = 27,
