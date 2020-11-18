@@ -230,12 +230,6 @@
     type: bool
     value: true
     mirror: always
-
--   name: android.touch_resampling.enabled
-    type: RelaxedAtomicBool
-    value: true
-    mirror: always
-
 #endif
 
 #---------------------------------------------------------------------------
