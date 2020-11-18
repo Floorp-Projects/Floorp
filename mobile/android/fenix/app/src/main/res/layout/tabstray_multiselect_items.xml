@@ -16,9 +16,9 @@
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/tab_tray_collection_button_multiselect_content_description"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/topBar"
         app:layout_constraintEnd_toStartOf="@id/share_multi_select"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toTopOf="@id/topBar"
         app:srcCompat="@drawable/ic_tab_collection"
         app:tint="@color/contrast_text_normal_theme" />
 
@@ -29,9 +29,9 @@
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/tab_tray_multiselect_share_content_description"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/topBar"
         app:layout_constraintEnd_toStartOf="@id/menu_multi_select"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toTopOf="@id/topBar"
         app:srcCompat="@drawable/ic_share_filled"
         app:tint="@color/contrast_text_normal_theme" />
 
@@ -42,9 +42,9 @@
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/tab_tray_multiselect_menu_content_description"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/topBar"
+        app:layout_constraintEnd_toEndOf="@id/topBar"
+        app:layout_constraintTop_toTopOf="@id/topBar"
         app:srcCompat="@drawable/ic_menu"
         app:tint="@color/contrast_text_normal_theme" />
 </merge>
