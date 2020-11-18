@@ -316,3 +316,11 @@ void safevals() {
     consume(std::move(unsafe10));
   }
 }
+
+// Make sure `this` is live at the beginning of a function.
+class Subcell : public Cell {
+  int method() {
+    GC();
+    return f; // this->f
+  }
+};
