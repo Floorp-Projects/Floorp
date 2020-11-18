@@ -160,18 +160,12 @@ handle to wayland compositor by WindowBackBuffer/WindowSurfaceWayland
 #define BUFFER_BPP 4
 gfx::SurfaceFormat WindowBackBuffer::mFormat = gfx::SurfaceFormat::B8G8R8A8;
 
-static mozilla::Mutex* gDelayedCommitLock = nullptr;
+static StaticMutex gDelayedCommitLock;
 static GList* gDelayedCommits = nullptr;
-
-static void DelayedCommitsEnsureMutext() {
-  if (!gDelayedCommitLock) {
-    gDelayedCommitLock = new mozilla::Mutex("DelayedCommit lock");
-  }
-}
 
 static bool DelayedCommitsCheckAndRemoveSurface(
     WindowSurfaceWayland* aSurface) {
-  MutexAutoLock lock(*gDelayedCommitLock);
+  StaticMutexAutoLock lock(gDelayedCommitLock);
   GList* foundCommit = g_list_find(gDelayedCommits, aSurface);
   if (foundCommit) {
     gDelayedCommits = g_list_delete_link(gDelayedCommits, foundCommit);
@@ -180,7 +174,7 @@ static bool DelayedCommitsCheckAndRemoveSurface(
 }
 
 static bool DelayedCommitsCheckAndAddSurface(WindowSurfaceWayland* aSurface) {
-  MutexAutoLock lock(*gDelayedCommitLock);
+  StaticMutexAutoLock lock(gDelayedCommitLock);
   GList* foundCommit = g_list_find(gDelayedCommits, aSurface);
   if (!foundCommit) {
     gDelayedCommits = g_list_prepend(gDelayedCommits, aSurface);
@@ -485,7 +479,6 @@ WindowSurfaceWayland::WindowSurfaceWayland(nsWindow* aWindow)
   for (int i = 0; i < BACK_BUFFER_NUM; i++) {
     mShmBackupBuffer[i] = nullptr;
   }
-  DelayedCommitsEnsureMutext();
 }
 
 WindowSurfaceWayland::~WindowSurfaceWayland() {
