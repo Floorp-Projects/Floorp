@@ -683,10 +683,17 @@ var UrlbarUtils = {
    *   not be used in hot paths.
    */
   stripPublicSuffixFromHost(host) {
-    return host.substring(
-      0,
-      host.length - Services.eTLD.getKnownPublicSuffixFromHost(host).length
-    );
+    try {
+      return host.substring(
+        0,
+        host.length - Services.eTLD.getKnownPublicSuffixFromHost(host).length
+      );
+    } catch (ex) {
+      if (ex.result != Cr.NS_ERROR_HOST_IS_IP_ADDRESS) {
+        throw ex;
+      }
+    }
+    return host;
   },
 
   /**
@@ -1126,6 +1133,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       },
       query: {
         type: "string",
+      },
+      satisfiesAutofillThreshold: {
+        type: "boolean",
       },
       suggestion: {
         type: "string",
