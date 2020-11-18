@@ -258,17 +258,17 @@ void nsTableRowGroupFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 }
 
 nsIFrame::LogicalSides nsTableRowGroupFrame::GetLogicalSkipSides(
-    const Maybe<SkipSidesDuringReflow>&) const {
+    const ReflowInput* aReflowInput) const {
   LogicalSides skip(mWritingMode);
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                    StyleBoxDecorationBreak::Clone)) {
     return skip;
   }
 
-  if (GetPrevInFlow()) {
+  if (nullptr != GetPrevInFlow()) {
     skip |= eLogicalSideBitsBStart;
   }
-  if (GetNextInFlow()) {
+  if (nullptr != GetNextInFlow()) {
     skip |= eLogicalSideBitsBEnd;
   }
   return skip;

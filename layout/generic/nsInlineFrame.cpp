@@ -18,7 +18,6 @@
 #include "mozilla/SVGUtils.h"
 #include "nsLineLayout.h"
 #include "nsBlockFrame.h"
-#include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
@@ -792,7 +791,7 @@ void nsInlineFrame::PushFrames(nsPresContext* aPresContext,
 //////////////////////////////////////////////////////////////////////
 
 nsIFrame::LogicalSides nsInlineFrame::GetLogicalSkipSides(
-    const Maybe<SkipSidesDuringReflow>&) const {
+    const ReflowInput* aReflowInput) const {
   LogicalSides skip(mWritingMode);
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                    StyleBoxDecorationBreak::Clone)) {
