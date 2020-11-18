@@ -28,6 +28,10 @@ XPCOMUtils.defineLazyGetter(this, "Loader", () =>
 XPCOMUtils.defineLazyGetter(this, "DevToolsUtils", () =>
   Loader.require("devtools/shared/DevToolsUtils")
 );
+XPCOMUtils.defineLazyModuleGetters(this, {
+  WatchedDataHelpers:
+    "resource://devtools/server/actors/watcher/WatchedDataHelpers.jsm",
+});
 
 // Name of the attribute into which we save data in `sharedData` object.
 const SHARED_DATA_KEY_NAME = "DevTools:watchedPerWatcher";
@@ -444,10 +448,11 @@ class DevToolsWorkerChild extends JSWindowActorChild {
       return;
     }
 
-    if (!watcherConnectionData.watchedData[type]) {
-      watcherConnectionData.watchedData[type] = [];
-    }
-    watcherConnectionData.watchedData[type].push(...entries);
+    WatchedDataHelpers.addWatchedDataEntry(
+      watcherConnectionData.watchedData,
+      type,
+      entries
+    );
 
     const promises = [];
     for (const {
@@ -473,13 +478,11 @@ class DevToolsWorkerChild extends JSWindowActorChild {
       return;
     }
 
-    if (watcherConnectionData.watchedData[type]) {
-      watcherConnectionData.watchedData[
-        type
-      ] = watcherConnectionData.watchedData[type].filter(
-        entry => !entries.includes(entry)
-      );
-    }
+    WatchedDataHelpers.removeWatchedDataEntry(
+      watcherConnectionData.watchedData,
+      type,
+      entries
+    );
 
     for (const {
       dbg,
