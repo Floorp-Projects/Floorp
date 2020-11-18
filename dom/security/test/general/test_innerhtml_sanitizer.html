@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>Test for Bug 1667113</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1667113">Mozilla Bug 1667113</a>
+<div></div>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+// Please note that 'fakeServer' does not exist because the test relies
+// on "csp-on-violate-policy" , and "specialpowers-http-notify-request"
+// which fire if either the request is blocked or fires. The test does
+// not rely on the result of the load.
+
+function fail() {
+  ok(false, "Should not call this")
+}
+
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy");
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request");
+}
+examiner.prototype  = {
+  observe(subject, topic, data) {
+    if (topic === "csp-on-violate-policy") {
+      let asciiSpec = SpecialPowers.getPrivilegedProps(
+                       SpecialPowers.do_QueryInterface(subject, "nsIURI"),
+                       "asciiSpec");
+      if (asciiSpec.includes("fakeServer")) {
+        ok (false, "Should not attempt fetch, not even blocked by CSP.");
+      }
+    }
+
+    if (topic === "specialpowers-http-notify-request") {
+      if (data.includes("fakeServer")) {
+        ok (false, "Should not try fetch");
+      }
+    }
+  },
+  remove() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
+  }
+}
+
+window.examiner = new examiner();
+
+let div = document.getElementsByTagName("div")[0];
+div.innerHTML = "<svg><style><title><audio src=fakeServer onerror=fail() onload=fail()>";
+
+let svg = div.firstChild;
+is(svg.nodeName, "svg", "Node name should be svg");
+
+let style = svg.firstChild;
+if (style) {
+  is(style.firstChild, null, "Style should not have child nodes.");
+} else {
+  ok(false, "Should have gotten a node.");
+}
+
+
+SimpleTest.executeSoon(function() {
+  window.examiner.remove();
+  SimpleTest.finish();
+});
+
+</script>
+</body>
+</html>
