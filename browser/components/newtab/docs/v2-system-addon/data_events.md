@@ -513,57 +513,6 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
 }
 ```
 
-### Onboarding user events on about:welcome
-
-#### Form Submit Events
-
-```js
-{
-  "event": ["SUBMIT_EMAIL" | "SUBMIT_SIGNIN" | "SKIPPED_SIGNIN"],
-  "value": {
-    "has_flow_params": false,
-  }
-
-  // Basic metadata
-  "action": "activity_stream_event",
-  "page": "about:welcome",
-  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
-  "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
-  "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
-  "addon_version": "20180710100040",
-  "locale": "en-US",
-  "experiments": {
-    "experiment_1": {"branch": "control"},
-    "experiment_2": {"branch": "treatment"}
-  },
-  "user_prefs": 7
-}
-```
-
-#### Firefox Accounts Metrics flow errors
-
-```js
-{
-  "event": ["FXA_METRICS_FETCH_ERROR" | "FXA_METRICS_ERROR"],
-  "value": 500, // Only FXA_METRICS_FETCH_ERROR provides this value, this value is any valid HTTP status code except 200.
-
-  // Basic metadata
-  "action": "activity_stream_event",
-  "page": "about:welcome",
-  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
-  "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
-  "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
-  "addon_version": "20180710100040",
-  "locale": "en-US",
-  "experiments": {
-    "experiment_1": {"branch": "control"},
-    "experiment_2": {"branch": "treatment"}
-  },
-  "user_prefs": 7
-}
-```
-
-
 ## Session end pings
 
 When a session ends, the browser will send a `"activity_stream_session"` ping to our metrics servers. This ping contains the length of the session, a unique reason for why the session ended, and some additional metadata.
@@ -1195,26 +1144,6 @@ CFR impression ping has two forms, in which the message_id could be of different
 }
 ```
 
-#### Onboarding impression
-```js
-{
-  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
-  "action": "onboarding_user_event",
-  "impression_id": "n/a",
-  "source": "FIRST_RUN",
-  "addon_version": "20180710100040",
-  "locale": "en-US",
-  "experiments": {
-    "experiment_1": {"branch": "control"},
-    "experiment_2": {"branch": "treatment"}
-  },
-  "message_id": "EXTENDED_TRIPLETS_1",
-  "event": "IMPRESSION",
-  "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
-  "event_context": { "page": ["about:welcome" | "about:home" | "about:newtab"] }
-}
-```
-
 #### Onboarding Simplified Welcome impression
 ```js
 {
@@ -1227,9 +1156,44 @@ CFR impression ping has two forms, in which the message_id could be of different
   "message_id": "ABOUT_WELCOME",
   "event": "IMPRESSION",
   "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
-  "event_context": { "page": "about:welcome" }
+  "event_context": { "page": "about:welcome" },
+  "attribution": {
+    "source": "mozilla.org",
+    "medium": "referral",
+    "campaign": "Firefox-Brand-US-Mozilla-Org",
+    "content": "test-addon@github.io",
+    "experiment": "ua-onboarding",
+    "variation": "chrome",
+    "ua": "firefox"
+  }
 }
 ```
+
+#### Onboarding Simplified Welcome click button ping
+```js
+{
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "version": "76.0a1",
+  "locale": "en-US",
+  "experiments": {},
+  "release_channel": "default",
+  "addon_version": "20200330194034"
+  "message_id": "ABOUT_WELCOME",
+  "event": "CLICK_BUTTION",
+  "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
+  "event_context": { "page": "about:welcome", "source": ["primary_button", "secondary_button" },
+  "attribution": {
+    "source": "mozilla.org",
+    "medium": "referral",
+    "campaign": "Firefox-Brand-US-Mozilla-Org",
+    "content": "test-addon@github.io",
+    "experiment": "ua-onboarding",
+    "variation": "chrome",
+    "ua": "firefox"
+  }
+}
+```
+
 #### Onboarding Simplified Welcome Session End ping
 ```js
 {
@@ -1244,7 +1208,16 @@ CFR impression ping has two forms, in which the message_id could be of different
   "event": "SESSION_END",
   "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
   "event_context": { "page": "about:welcome", "reason":
-    ["welcome-window-closed" | "welcome-tab-closed" | "app-shut-down" | "address-bar-navigated" | "unknown"]}
+    ["welcome-window-closed" | "welcome-tab-closed" | "app-shut-down" | "address-bar-navigated" | "unknown"]},
+  "attribution": {
+    "source": "mozilla.org",
+    "medium": "referral",
+    "campaign": "Firefox-Brand-US-Mozilla-Org",
+    "content": "test-addon@github.io",
+    "experiment": "ua-onboarding",
+    "variation": "chrome",
+    "ua": "firefox"
+  }
 }
 ```
 
@@ -1267,26 +1240,6 @@ This reports the user's interaction with Activity Stream Router.
   "source": "NEWTAB_FOOTER_BAR",
   "message_id": "some_snippet_id",
   "event": ["CLICK_BUTTION" | "BLOCK"]
-}
-```
-
-#### Onboarding interaction pings
-```js
-{
-  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
-  "action": "onboarding_user_event",
-  "addon_version": "20180710100040",
-  "impression_id": "n/a",
-  "locale": "en-US",
-  "experiments": {
-    "experiment_1": {"branch": "control"},
-    "experiment_2": {"branch": "treatment"}
-  },
-  "source": "ONBOARDING",
-  "message_id": "onboarding_message_1",
-  "event": ["IMPRESSION" | "CLICK_BUTTION" | "INSTALL" | "BLOCK"],
-  "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
-  "event_context": { "page": ["about:welcome" | "about:home" | "about:newtab"] }
 }
 ```
 
