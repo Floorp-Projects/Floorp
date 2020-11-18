@@ -1203,10 +1203,9 @@ static gint moz_gtk_text_view_paint(cairo_t* cr, GdkRectangle* aRect,
   // has focus, but perhaps this may help identify a focused textarea with
   // some themes as GtkTextView backgrounds do not typically render
   // differently with focus.
-  GtkStateFlags state_flags =
-      state->disabled
-          ? GTK_STATE_FLAG_INSENSITIVE
-          : state->focused ? GTK_STATE_FLAG_FOCUSED : GTK_STATE_FLAG_NORMAL;
+  GtkStateFlags state_flags = state->disabled  ? GTK_STATE_FLAG_INSENSITIVE
+                              : state->focused ? GTK_STATE_FLAG_FOCUSED
+                                               : GTK_STATE_FLAG_NORMAL;
 
   GtkStyleContext* style_frame = GetStyleContext(
       MOZ_GTK_SCROLLED_WINDOW, state->scale, direction, state_flags);

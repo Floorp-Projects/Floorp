@@ -160,12 +160,10 @@ namespace baseprofiler {
 using detail::RacyFeatures;
 
 bool LogTest(int aLevelToTest) {
-  static const int maxLevel =
-      getenv("MOZ_BASE_PROFILER_VERBOSE_LOGGING")
-          ? 5
-          : getenv("MOZ_BASE_PROFILER_DEBUG_LOGGING")
-                ? 4
-                : getenv("MOZ_BASE_PROFILER_LOGGING") ? 3 : 0;
+  static const int maxLevel = getenv("MOZ_BASE_PROFILER_VERBOSE_LOGGING") ? 5
+                              : getenv("MOZ_BASE_PROFILER_DEBUG_LOGGING") ? 4
+                              : getenv("MOZ_BASE_PROFILER_LOGGING")       ? 3
+                                                                          : 0;
   return aLevelToTest <= maxLevel;
 }
 

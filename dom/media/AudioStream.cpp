@@ -379,9 +379,9 @@ AudioStream::Start() {
     mState = ERRORED;
   }
 
-  LOG("started, state %s", mState == STARTED
-                               ? "STARTED"
-                               : mState == DRAINED ? "DRAINED" : "ERRORED");
+  LOG("started, state %s", mState == STARTED   ? "STARTED"
+                           : mState == DRAINED ? "DRAINED"
+                                               : "ERRORED");
   if (mState == STARTED || mState == DRAINED) {
     return promise.forget();
   }

@@ -100,7 +100,7 @@ void FlushICache(void* code, size_t size, bool codeIsThreadLocal) {
       "jr.hb  $ra \n"
       "move   $ra, %[tmp] \n"
       ".set   pop\n"
-      : [ tmp ] "=&r"(tmp));
+      : [tmp] "=&r"(tmp));
 
 #elif defined(__GNUC__)
   intptr_t end = reinterpret_cast<intptr_t>(code) + size;

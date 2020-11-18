@@ -153,9 +153,9 @@ class MessageChannel::InterruptFrame {
   InterruptFrame(Direction direction, const Message* msg)
       : mMessageName(msg->name()),
         mMessageRoutingId(msg->routing_id()),
-        mMesageSemantics(msg->is_interrupt()
-                             ? INTR_SEMS
-                             : msg->is_sync() ? SYNC_SEMS : ASYNC_SEMS),
+        mMesageSemantics(msg->is_interrupt() ? INTR_SEMS
+                         : msg->is_sync()    ? SYNC_SEMS
+                                             : ASYNC_SEMS),
         mDirection(direction),
         mMoved(false) {
     MOZ_RELEASE_ASSERT(mMessageName);
@@ -199,9 +199,9 @@ class MessageChannel::InterruptFrame {
                 const char** name) const {
     *id = mMessageRoutingId;
     *dir = (IN_MESSAGE == mDirection) ? "in" : "out";
-    *sems = (INTR_SEMS == mMesageSemantics)
-                ? "intr"
-                : (SYNC_SEMS == mMesageSemantics) ? "sync" : "async";
+    *sems = (INTR_SEMS == mMesageSemantics)   ? "intr"
+            : (SYNC_SEMS == mMesageSemantics) ? "sync"
+                                              : "async";
     *name = mMessageName;
   }
 

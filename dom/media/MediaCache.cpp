@@ -1513,12 +1513,10 @@ void MediaCache::Update() {
     }
     LOG("Stream %p, mCacheSuspended=%d, enableReading=%d, action=%s", stream,
         stream->mCacheSuspended, enableReading,
-        actions[i].mTag == StreamAction::SEEK
-            ? "SEEK"
-            : actions[i].mTag == StreamAction::RESUME
-                  ? "RESUME"
-                  : actions[i].mTag == StreamAction::SUSPEND ? "SUSPEND"
-                                                             : "NONE");
+        actions[i].mTag == StreamAction::SEEK      ? "SEEK"
+        : actions[i].mTag == StreamAction::RESUME  ? "RESUME"
+        : actions[i].mTag == StreamAction::SUSPEND ? "SUSPEND"
+                                                   : "NONE");
   }
 #ifdef DEBUG
   mInUpdate = false;

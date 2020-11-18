@@ -62,12 +62,13 @@ class imgRequest final : public nsIStreamListener,
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
 
-      [[nodiscard]] nsresult
-      Init(nsIURI* aURI, nsIURI* aFinalURI, bool aHadInsecureRedirect,
-           nsIRequest* aRequest, nsIChannel* aChannel,
-           imgCacheEntry* aCacheEntry, mozilla::dom::Document* aLoadingDocument,
-           nsIPrincipal* aTriggeringPrincipal, int32_t aCORSMode,
-           nsIReferrerInfo* aReferrerInfo);
+  [[nodiscard]] nsresult Init(nsIURI* aURI, nsIURI* aFinalURI,
+                              bool aHadInsecureRedirect, nsIRequest* aRequest,
+                              nsIChannel* aChannel, imgCacheEntry* aCacheEntry,
+                              mozilla::dom::Document* aLoadingDocument,
+                              nsIPrincipal* aTriggeringPrincipal,
+                              int32_t aCORSMode,
+                              nsIReferrerInfo* aReferrerInfo);
 
   void ClearLoader();
 

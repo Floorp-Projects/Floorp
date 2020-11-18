@@ -613,16 +613,19 @@ class WritingMode {
 };
 
 inline std::ostream& operator<<(std::ostream& aStream, const WritingMode& aWM) {
-  return aStream
-         << (aWM.IsVertical()
-                 ? aWM.IsVerticalLR()
-                       ? aWM.IsBidiLTR()
-                             ? aWM.IsSideways() ? "sw-lr-ltr" : "v-lr-ltr"
-                             : aWM.IsSideways() ? "sw-lr-rtl" : "v-lr-rtl"
-                       : aWM.IsBidiLTR()
-                             ? aWM.IsSideways() ? "sw-rl-ltr" : "v-rl-ltr"
-                             : aWM.IsSideways() ? "sw-rl-rtl" : "v-rl-rtl"
-                 : aWM.IsBidiLTR() ? "h-ltr" : "h-rtl");
+  return aStream << (aWM.IsVertical()
+                         ? aWM.IsVerticalLR() ? aWM.IsBidiLTR()
+                                                    ? aWM.IsSideways()
+                                                          ? "sw-lr-ltr"
+                                                          : "v-lr-ltr"
+                                                : aWM.IsSideways() ? "sw-lr-rtl"
+                                                                   : "v-lr-rtl"
+                           : aWM.IsBidiLTR()
+                               ? aWM.IsSideways() ? "sw-rl-ltr" : "v-rl-ltr"
+                           : aWM.IsSideways() ? "sw-rl-rtl"
+                                              : "v-rl-rtl"
+                     : aWM.IsBidiLTR() ? "h-ltr"
+                                       : "h-rtl");
 }
 
 /**

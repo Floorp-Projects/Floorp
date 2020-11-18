@@ -1618,10 +1618,9 @@ void MediaFormatReader::NotifyNewOutput(
             break;
           case MediaData::Type::RAW_DATA:
             DDLOGPR(DDLogCategory::Log,
-                    aTrack == TrackInfo::kAudioTrack
-                        ? "decoded_audio"
-                        : aTrack == TrackInfo::kVideoTrack ? "decoded_video"
-                                                           : "decoded_?",
+                    aTrack == TrackInfo::kAudioTrack   ? "decoded_audio"
+                    : aTrack == TrackInfo::kVideoTrack ? "decoded_video"
+                                                       : "decoded_?",
                     "{\"type\":\"RawData\", \"offset\":%" PRIi64
                     " \"time_us\":%" PRIi64 ", \"timecode_us\":%" PRIi64
                     ", \"duration_us\":%" PRIi64 ", \"kf\":%s}",
@@ -1632,10 +1631,9 @@ void MediaFormatReader::NotifyNewOutput(
             break;
           case MediaData::Type::NULL_DATA:
             DDLOGPR(DDLogCategory::Log,
-                    aTrack == TrackInfo::kAudioTrack
-                        ? "decoded_audio"
-                        : aTrack == TrackInfo::kVideoTrack ? "decoded_video"
-                                                           : "decoded_?",
+                    aTrack == TrackInfo::kAudioTrack   ? "decoded_audio"
+                    : aTrack == TrackInfo::kVideoTrack ? "decoded_video"
+                                                       : "decoded_?",
                     "{\"type\":\"NullData\", \"offset\":%" PRIi64
                     " \"time_us\":%" PRIi64 ", \"timecode_us\":%" PRIi64
                     ", \"duration_us\":%" PRIi64 ", \"kf\":%s}",
@@ -1845,9 +1843,9 @@ void MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
   RefPtr<MediaFormatReader> self = this;
   decoder.mFlushed = false;
   DDLOGPR(DDLogCategory::Log,
-          aTrack == TrackInfo::kAudioTrack
-              ? "decode_audio"
-              : aTrack == TrackInfo::kVideoTrack ? "decode_video" : "decode_?",
+          aTrack == TrackInfo::kAudioTrack   ? "decode_audio"
+          : aTrack == TrackInfo::kVideoTrack ? "decode_video"
+                                             : "decode_?",
           "{\"type\":\"MediaRawData\", \"offset\":%" PRIi64
           ", \"bytes\":%zu, \"time_us\":%" PRIi64 ", \"timecode_us\":%" PRIi64
           ", \"duration_us\":%" PRIi64 ",%s%s}",

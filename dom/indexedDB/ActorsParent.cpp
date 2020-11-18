@@ -4538,9 +4538,9 @@ class IndexCursorBase : public CursorBase {
 
     const nsCString& GetContinueQuery(const bool hasContinueKey,
                                       const bool hasContinuePrimaryKey) const {
-      return hasContinuePrimaryKey
-                 ? mContinuePrimaryKeyQuery
-                 : hasContinueKey ? mContinueToQuery : mContinueQuery;
+      return hasContinuePrimaryKey ? mContinuePrimaryKeyQuery
+             : hasContinueKey      ? mContinueToQuery
+                                   : mContinueQuery;
     }
   };
 };

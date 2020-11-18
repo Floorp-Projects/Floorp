@@ -52,18 +52,16 @@ extern const js::ClassExtension XPC_WN_JSClassExtension;
 #define XPC_MAKE_CLASS_OPS(_flags)                                             \
   {                                                                            \
     /* addProperty */                                                          \
-    ((_flags)&XPC_SCRIPTABLE_USE_JSSTUB_FOR_ADDPROPERTY)                       \
-        ? nullptr                                                              \
-        : ((_flags)&XPC_SCRIPTABLE_ALLOW_PROP_MODS_DURING_RESOLVE)             \
-              ? XPC_WN_MaybeResolvingPropertyStub                              \
-              : XPC_WN_CannotModifyPropertyStub,                               \
+    ((_flags)&XPC_SCRIPTABLE_USE_JSSTUB_FOR_ADDPROPERTY) ? nullptr             \
+    : ((_flags)&XPC_SCRIPTABLE_ALLOW_PROP_MODS_DURING_RESOLVE)                 \
+        ? XPC_WN_MaybeResolvingPropertyStub                                    \
+        : XPC_WN_CannotModifyPropertyStub,                                     \
                                                                                \
         /* delProperty */                                                      \
-        ((_flags)&XPC_SCRIPTABLE_USE_JSSTUB_FOR_DELPROPERTY)                   \
-            ? nullptr                                                          \
-            : ((_flags)&XPC_SCRIPTABLE_ALLOW_PROP_MODS_DURING_RESOLVE)         \
-                  ? XPC_WN_MaybeResolvingDeletePropertyStub                    \
-                  : XPC_WN_CannotDeletePropertyStub,                           \
+        ((_flags)&XPC_SCRIPTABLE_USE_JSSTUB_FOR_DELPROPERTY) ? nullptr         \
+        : ((_flags)&XPC_SCRIPTABLE_ALLOW_PROP_MODS_DURING_RESOLVE)             \
+            ? XPC_WN_MaybeResolvingDeletePropertyStub                          \
+            : XPC_WN_CannotDeletePropertyStub,                                 \
                                                                                \
         /* enumerate */                                                        \
         ((_flags)&XPC_SCRIPTABLE_WANT_NEWENUMERATE)                            \

@@ -335,11 +335,10 @@ struct DataTypeForFormat<WebGLTexelFormat::RGB11F11F10F, true, false, false> {
 
 template <WebGLTexelFormat Format>
 struct IntermediateFormat {
-  static const WebGLTexelFormat Value = IsFloatFormat<Format>::Value
-                                            ? WebGLTexelFormat::RGBA32F
-                                            : IsHalfFloatFormat<Format>::Value
-                                                  ? WebGLTexelFormat::RGBA16F
-                                                  : WebGLTexelFormat::RGBA8;
+  static const WebGLTexelFormat Value =
+      IsFloatFormat<Format>::Value       ? WebGLTexelFormat::RGBA32F
+      : IsHalfFloatFormat<Format>::Value ? WebGLTexelFormat::RGBA16F
+                                         : WebGLTexelFormat::RGBA8;
 };
 
 inline size_t TexelBytesForFormat(WebGLTexelFormat format) {

@@ -2458,9 +2458,9 @@ void CreateDependentString::generate(MacroAssembler& masm,
   auto newGCString = [&](FallbackKind kind) {
     uint32_t flags = kind == FallbackKind::InlineString
                          ? JSString::INIT_THIN_INLINE_FLAGS
-                         : kind == FallbackKind::FatInlineString
-                               ? JSString::INIT_FAT_INLINE_FLAGS
-                               : JSString::INIT_DEPENDENT_FLAGS;
+                     : kind == FallbackKind::FatInlineString
+                         ? JSString::INIT_FAT_INLINE_FLAGS
+                         : JSString::INIT_DEPENDENT_FLAGS;
     if (encoding_ == CharEncoding::Latin1) {
       flags |= JSString::LATIN1_CHARS_BIT;
     }

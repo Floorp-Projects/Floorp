@@ -3264,10 +3264,10 @@ void WorkerPrivate::SetGCTimerMode(GCTimerMode aMode) {
 
   data->mPeriodicGCTimerRunning = false;
   data->mIdleGCTimerRunning = false;
-  LOG(WorkerLog(),
-      ("Worker %p canceled GC timer because %s\n", this,
-       aMode == PeriodicTimer ? "periodic"
-                              : aMode == IdleTimer ? "idle" : "none"));
+  LOG(WorkerLog(), ("Worker %p canceled GC timer because %s\n", this,
+                    aMode == PeriodicTimer ? "periodic"
+                    : aMode == IdleTimer   ? "idle"
+                                           : "none"));
 
   if (aMode == NoTimer) {
     return;
