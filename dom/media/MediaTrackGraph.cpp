@@ -697,8 +697,12 @@ void MediaTrackGraphImpl::CloseAudioInputImpl(
       mInputDeviceUsers.GetValue(aID.value());
 
   MOZ_ASSERT(listeners);
-  DebugOnly<bool> wasPresent = listeners->RemoveElement(aListener);
+  bool wasPresent = listeners->RemoveElement(aListener);
   MOZ_ASSERT(wasPresent);
+
+  if (wasPresent) {
+    aListener->NotifyInputStopped(this);
+  }
 
   // Breaks the cycle between the MTG and the listener.
   aListener->Disconnect(this);
