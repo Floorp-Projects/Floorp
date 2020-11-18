@@ -1085,10 +1085,10 @@ void nsNativeThemeCocoa::DrawMenuIcon(CGContextRef cgContext, const CGRect& aRec
   CGFloat paddingY = std::max(CGFloat(0.0), aRect.size.height - size.height);
   CGFloat paddingStartX = std::min(paddingX, kMenuIconIndent);
   CGFloat paddingEndX = std::max(CGFloat(0.0), paddingX - kMenuIconIndent);
-  CGRect drawRect = CGRectMake(
-      aRect.origin.x + (aParams.centerHorizontally ? ceil(paddingX / 2)
-                                                   : aParams.rtl ? paddingEndX : paddingStartX),
-      aRect.origin.y + ceil(paddingY / 2), size.width, size.height);
+  CGRect drawRect = CGRectMake(aRect.origin.x + (aParams.centerHorizontally ? ceil(paddingX / 2)
+                                                 : aParams.rtl              ? paddingEndX
+                                                                            : paddingStartX),
+                               aRect.origin.y + ceil(paddingY / 2), size.width, size.height);
 
   NSString* state =
       aParams.disabled ? @"disabled" : (aParams.insideActiveMenuItem ? @"pressed" : @"normal");

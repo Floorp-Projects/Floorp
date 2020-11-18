@@ -461,7 +461,8 @@ void GeckoEditableSupport::OnKeyEvent(int32_t aAction, int32_t aKeyCode,
   nsCOMPtr<nsIWidget> widget = GetWidget();
   RefPtr<TextEventDispatcher> dispatcher =
       mDispatcher ? mDispatcher.get()
-                  : widget ? widget->GetTextEventDispatcher() : nullptr;
+      : widget    ? widget->GetTextEventDispatcher()
+                  : nullptr;
   NS_ENSURE_TRUE_VOID(dispatcher && widget);
 
   if (!aIsSynthesizedImeKey) {

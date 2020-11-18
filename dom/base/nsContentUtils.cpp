@@ -7967,7 +7967,8 @@ nsresult nsContentUtils::SendMouseEvent(
   event.mButton = aButton;
   event.mButtons = aButtons != nsIDOMWindowUtils::MOUSE_BUTTONS_NOT_SPECIFIED
                        ? aButtons
-                       : msg == eMouseUp ? 0 : GetButtonsFlagForButton(aButton);
+                   : msg == eMouseUp ? 0
+                                     : GetButtonsFlagForButton(aButton);
   event.mPressure = aPressure;
   event.mInputSource = aInputSourceArg;
   event.mClickCount = aClickCount;

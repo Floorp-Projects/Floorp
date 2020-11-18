@@ -341,10 +341,9 @@ void CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot,
     mir = mir->toBox()->getOperand(0);
   }
 
-  MIRType type =
-      mir->isRecoveredOnBailout()
-          ? MIRType::None
-          : mir->isUnused() ? MIRType::MagicOptimizedOut : mir->type();
+  MIRType type = mir->isRecoveredOnBailout() ? MIRType::None
+                 : mir->isUnused()           ? MIRType::MagicOptimizedOut
+                                             : mir->type();
 
   RValueAllocation alloc;
 

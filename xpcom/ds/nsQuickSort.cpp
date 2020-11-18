@@ -66,10 +66,10 @@ static INLINE void swapfunc(char*, char*, int, int);
     } while (--i > 0);                  \
   }
 
-#define SWAPINIT(a, es)                                                \
-  swaptype = ((char*)a - (char*)0) % sizeof(long) || es % sizeof(long) \
-                 ? 2                                                   \
-                 : es == sizeof(long) ? 0 : 1;
+#define SWAPINIT(a, es)                                                    \
+  swaptype = ((char*)a - (char*)0) % sizeof(long) || es % sizeof(long) ? 2 \
+             : es == sizeof(long)                                      ? 0 \
+                                                                       : 1;
 
 static INLINE void swapfunc(char* a, char* b, int n, int swaptype) {
   if (swaptype <= 1) swapcode(long, a, b, n) else swapcode(char, a, b, n)

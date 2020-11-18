@@ -25,8 +25,7 @@ class FileChannelParent : public nsIParentChannel, public PFileChannelParent {
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
-      [[nodiscard]] bool
-      Init(const uint64_t& aChannelId);
+  [[nodiscard]] bool Init(const uint64_t& aChannelId);
 
  private:
   ~FileChannelParent() = default;

@@ -53,7 +53,8 @@ template <typename T>
 int nsTDefaultStringComparator(const T* aLhs, const T* aRhs, uint32_t aLLength,
                                uint32_t aRLength) {
   return aLLength == aRLength ? nsCharTraits<T>::compare(aLhs, aRhs, aLLength)
-                              : (aLLength > aRLength) ? 1 : -1;
+         : (aLLength > aRLength) ? 1
+                                 : -1;
 }
 
 template int nsTDefaultStringComparator(const char*, const char*, uint32_t,

@@ -1026,9 +1026,10 @@ struct SourceUnitTraits<mozilla::Utf8Unit> {
   static constexpr uint8_t maxUnitsLength = 4;
 
   static constexpr size_t lengthInUnits(char32_t codePoint) {
-    return codePoint < 0x80
-               ? 1
-               : codePoint < 0x800 ? 2 : codePoint < 0x10000 ? 3 : 4;
+    return codePoint < 0x80      ? 1
+           : codePoint < 0x800   ? 2
+           : codePoint < 0x10000 ? 3
+                                 : 4;
   }
 };
 

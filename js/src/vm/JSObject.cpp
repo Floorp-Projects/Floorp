@@ -2962,9 +2962,9 @@ static bool ReportCantConvert(JSContext* cx, unsigned errorNumber,
 
   RootedValue val(cx, ObjectValue(*obj));
   ReportValueError(cx, errorNumber, JSDVG_SEARCH_STACK, val, str,
-                   hint == JSTYPE_UNDEFINED
-                       ? "primitive type"
-                       : hint == JSTYPE_STRING ? "string" : "number");
+                   hint == JSTYPE_UNDEFINED ? "primitive type"
+                   : hint == JSTYPE_STRING  ? "string"
+                                            : "number");
   return false;
 }
 
@@ -3067,11 +3067,11 @@ bool js::ToPrimitiveSlow(JSContext* cx, JSType preferredType,
     }
 
     // Steps 1-3, 6.a-b.
-    RootedValue arg0(cx, StringValue(preferredType == JSTYPE_STRING
-                                         ? cx->names().string
-                                         : preferredType == JSTYPE_NUMBER
-                                               ? cx->names().number
-                                               : cx->names().default_));
+    RootedValue arg0(
+        cx,
+        StringValue(preferredType == JSTYPE_STRING   ? cx->names().string
+                    : preferredType == JSTYPE_NUMBER ? cx->names().number
+                                                     : cx->names().default_));
 
     if (!js::Call(cx, method, vp, arg0, vp)) {
       return false;
@@ -3788,10 +3788,11 @@ JS_FRIEND_API void js::DumpBacktrace(JSContext* cx, js::GenericPrinter& out) {
       filename = i.filename();
       line = i.computeLine();
     }
-    char frameType =
-        i.isInterp()
-            ? 'i'
-            : i.isBaseline() ? 'b' : i.isIon() ? 'I' : i.isWasm() ? 'W' : '?';
+    char frameType = i.isInterp()     ? 'i'
+                     : i.isBaseline() ? 'b'
+                     : i.isIon()      ? 'I'
+                     : i.isWasm()     ? 'W'
+                                      : '?';
 
     out.printf("#%zu %14p %c   %s:%u", depth, i.rawFramePtr(), frameType,
                filename, line);

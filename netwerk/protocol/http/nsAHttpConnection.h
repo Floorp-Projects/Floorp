@@ -49,9 +49,10 @@ class nsAHttpConnection : public nsISupports {
   //
   // @return failure code to close the transaction.
   //
-  [[nodiscard]] virtual nsresult
-      OnHeadersAvailable(nsAHttpTransaction*, nsHttpRequestHead*,
-                         nsHttpResponseHead*, bool* reset) = 0;
+  [[nodiscard]] virtual nsresult OnHeadersAvailable(nsAHttpTransaction*,
+                                                    nsHttpRequestHead*,
+                                                    nsHttpResponseHead*,
+                                                    bool* reset) = 0;
 
   //
   // called by a transaction to resume either sending or receiving data

@@ -1534,11 +1534,10 @@ bool SavedStacks::insertFrames(JSContext* cx, MutableHandleSavedFrame frame,
       // Translate our capture into a frame count limit for
       // adoptAsyncStack, which will impose further limits.
       Maybe<size_t> maxFrames =
-          !capture.is<JS::MaxFrames>()
+          !capture.is<JS::MaxFrames>() ? Nothing()
+          : capture.as<JS::MaxFrames>().maxFrames == 0
               ? Nothing()
-              : capture.as<JS::MaxFrames>().maxFrames == 0
-                    ? Nothing()
-                    : Some(capture.as<JS::MaxFrames>().maxFrames);
+              : Some(capture.as<JS::MaxFrames>().maxFrames);
 
       // Clip the stack if needed, attach the async cause string to the
       // top frame, and copy it into our compartment if necessary.

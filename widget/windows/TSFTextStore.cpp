@@ -421,11 +421,10 @@ static const nsCString GetSinkMaskNameStr(DWORD aSinkMask) {
 }
 
 static const char* GetActiveSelEndName(TsActiveSelEnd aSelEnd) {
-  return aSelEnd == TS_AE_NONE
-             ? "TS_AE_NONE"
-             : aSelEnd == TS_AE_START
-                   ? "TS_AE_START"
-                   : aSelEnd == TS_AE_END ? "TS_AE_END" : "Unknown";
+  return aSelEnd == TS_AE_NONE    ? "TS_AE_NONE"
+         : aSelEnd == TS_AE_START ? "TS_AE_START"
+         : aSelEnd == TS_AE_END   ? "TS_AE_END"
+                                  : "Unknown";
 }
 
 static const nsCString GetLockFlagNameStr(DWORD aLockFlags) {
@@ -1596,9 +1595,9 @@ TSFStaticSink::OnActivated(DWORD dwProfileType, LANGID langid, REFCLSID rclsid,
            this,
            dwProfileType == TF_PROFILETYPE_INPUTPROCESSOR
                ? "TF_PROFILETYPE_INPUTPROCESSOR"
-               : dwProfileType == TF_PROFILETYPE_KEYBOARDLAYOUT
-                     ? "TF_PROFILETYPE_KEYBOARDLAYOUT"
-                     : "Unknown",
+           : dwProfileType == TF_PROFILETYPE_KEYBOARDLAYOUT
+               ? "TF_PROFILETYPE_KEYBOARDLAYOUT"
+               : "Unknown",
            dwProfileType, langid, GetCLSIDNameStr(rclsid).get(),
            GetGUIDNameStr(catid).get(), GetGUIDNameStr(guidProfile).get(), hkl,
            dwFlags, GetBoolName(dwFlags & TF_IPSINK_FLAG_ACTIVE),
@@ -4988,11 +4987,10 @@ TSFTextStore::InsertTextAtSelection(DWORD dwFlags, const WCHAR* pchText,
        "pchText=0x%p \"%s\", cch=%lu, pacpStart=0x%p, pacpEnd=0x%p, "
        "pChange=0x%p), IsComposing()=%s",
        this,
-       dwFlags == 0
-           ? "0"
-           : dwFlags == TF_IAS_NOQUERY
-                 ? "TF_IAS_NOQUERY"
-                 : dwFlags == TF_IAS_QUERYONLY ? "TF_IAS_QUERYONLY" : "Unknown",
+       dwFlags == 0                  ? "0"
+       : dwFlags == TF_IAS_NOQUERY   ? "TF_IAS_NOQUERY"
+       : dwFlags == TF_IAS_QUERYONLY ? "TF_IAS_QUERYONLY"
+                                     : "Unknown",
        pchText, pchText && cch ? GetEscapedUTF8String(pchText, cch).get() : "",
        cch, pacpStart, pacpEnd, pChange,
        GetBoolName(mComposition.IsComposing())));

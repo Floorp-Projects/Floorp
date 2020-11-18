@@ -1132,8 +1132,8 @@ class PageFaultsSoftReporter final : public nsIMemoryReporter {
 };
 NS_IMPL_ISUPPORTS(PageFaultsSoftReporter, nsIMemoryReporter)
 
-[[nodiscard]] static nsresult
-    PageFaultsHardDistinguishedAmount(int64_t* aAmount) {
+[[nodiscard]] static nsresult PageFaultsHardDistinguishedAmount(
+    int64_t* aAmount) {
   struct rusage usage;
   int err = getrusage(RUSAGE_SELF, &usage);
   if (err != 0) {

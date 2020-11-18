@@ -1310,9 +1310,7 @@ bool jit::EliminateDeadCode(MIRGenerator* mir, MIRGraph& graph) {
          iter != block->rend();) {
       MInstruction* inst = *iter++;
       if (js::jit::IsDiscardable(inst)) {
-        {
-          block->discard(inst);
-        }
+        { block->discard(inst); }
       }
     }
   }

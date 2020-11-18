@@ -114,15 +114,13 @@ void MouseScrollHandler::MaybeLogKeyState() {
   if (::GetKeyboardState(keyboardState)) {
     for (size_t i = 0; i < ArrayLength(keyboardState); i++) {
       if (keyboardState[i]) {
-        MOZ_LOG(
-            gMouseScrollLog, LogLevel::Debug,
-            ("    Current key state: keyboardState[0x%02X]=0x%02X (%s)", i,
-             keyboardState[i],
-             ((keyboardState[i] & 0x81) == 0x81)
-                 ? "Pressed and Toggled"
-                 : (keyboardState[i] & 0x80)
-                       ? "Pressed"
-                       : (keyboardState[i] & 0x01) ? "Toggled" : "Unknown"));
+        MOZ_LOG(gMouseScrollLog, LogLevel::Debug,
+                ("    Current key state: keyboardState[0x%02X]=0x%02X (%s)", i,
+                 keyboardState[i],
+                 ((keyboardState[i] & 0x81) == 0x81) ? "Pressed and Toggled"
+                 : (keyboardState[i] & 0x80)         ? "Pressed"
+                 : (keyboardState[i] & 0x01)         ? "Toggled"
+                                                     : "Unknown"));
       }
     }
   } else {
@@ -214,7 +212,8 @@ bool MouseScrollHandler::ProcessMessage(nsWindowBase* aWidget, UINT msg,
                "msg=%s(0x%04X), wParam=0x%02X, ::GetMessageTime()=%d",
                aWidget,
                msg == WM_KEYDOWN ? "WM_KEYDOWN"
-                                 : msg == WM_KEYUP ? "WM_KEYUP" : "Unknown",
+               : msg == WM_KEYUP ? "WM_KEYUP"
+                                 : "Unknown",
                msg, wParam, ::GetMessageTime()));
       MaybeLogKeyState();
       if (Device::Elantech::HandleKeyMessage(aWidget, msg, wParam, lParam)) {
@@ -377,11 +376,10 @@ void MouseScrollHandler::ProcessNativeMouseWheelMessage(nsWindowBase* aWidget,
           ("MouseScroll::ProcessNativeMouseWheelMessage: aWidget=%p, "
            "aMessage=%s, wParam=0x%08X, lParam=0x%08X, point: { x=%d, y=%d }",
            aWidget,
-           aMessage == WM_MOUSEWHEEL
-               ? "WM_MOUSEWHEEL"
-               : aMessage == WM_MOUSEHWHEEL
-                     ? "WM_MOUSEHWHEEL"
-                     : aMessage == WM_VSCROLL ? "WM_VSCROLL" : "WM_HSCROLL",
+           aMessage == WM_MOUSEWHEEL    ? "WM_MOUSEWHEEL"
+           : aMessage == WM_MOUSEHWHEEL ? "WM_MOUSEHWHEEL"
+           : aMessage == WM_VSCROLL     ? "WM_VSCROLL"
+                                        : "WM_HSCROLL",
            aWParam, aLParam, point.x, point.y));
   MaybeLogKeyState();
 

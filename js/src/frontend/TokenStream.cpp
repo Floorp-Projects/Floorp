@@ -3741,8 +3741,8 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
   MOZ_ASSERT_IF(!parsingTemplate, !templateHead);
 
   TokenKind kind = !parsingTemplate ? TokenKind::String
-                                    : templateHead ? TokenKind::TemplateHead
-                                                   : TokenKind::NoSubsTemplate;
+                   : templateHead   ? TokenKind::TemplateHead
+                                    : TokenKind::NoSubsTemplate;
   newAtomToken(kind, atom, start, modifier, out);
   return true;
 }

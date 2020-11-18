@@ -575,7 +575,8 @@ bool TimeoutManager::ClearTimeoutInternal(int32_t aTimerId,
           ("%s(TimeoutManager=%p, timeout=%p, ID=%u)\n",
            timeout->mReason == Timeout::Reason::eIdleCallbackTimeout
                ? "CancelIdleCallback"
-               : timeout->mIsInterval ? "ClearInterval" : "ClearTimeout",
+           : timeout->mIsInterval ? "ClearInterval"
+                                  : "ClearTimeout",
            this, timeout, timeout->mTimeoutId));
 
   if (timeout->mRunning) {

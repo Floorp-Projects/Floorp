@@ -1078,8 +1078,14 @@ class TernaryNode : public ParseNode {
   TernaryNode(ParseNodeKind kind, ParseNode* kid1, ParseNode* kid2,
               ParseNode* kid3)
       : TernaryNode(kind, kid1, kid2, kid3,
-                    TokenPos((kid1 ? kid1 : kid2 ? kid2 : kid3)->pn_pos.begin,
-                             (kid3 ? kid3 : kid2 ? kid2 : kid1)->pn_pos.end)) {}
+                    TokenPos((kid1   ? kid1
+                              : kid2 ? kid2
+                                     : kid3)
+                                 ->pn_pos.begin,
+                             (kid3   ? kid3
+                              : kid2 ? kid2
+                                     : kid1)
+                                 ->pn_pos.end)) {}
 
   TernaryNode(ParseNodeKind kind, ParseNode* kid1, ParseNode* kid2,
               ParseNode* kid3, const TokenPos& pos)

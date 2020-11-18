@@ -566,14 +566,14 @@ int nsMacUtilsImpl::PreTranslateBinary(nsCString aBinaryPath) {
   // sandboxing may interfere with translation.
   MOZ_ASSERT(XRE_IsParentProcess());
   if (!XRE_IsParentProcess()) {
-      return -1;
+    return -1;
   }
 
   // Translation can take several seconds and therefore
   // should not be done on the main thread.
   MOZ_ASSERT(!NS_IsMainThread());
   if (NS_IsMainThread()) {
-      return -1;
+    return -1;
   }
 
   // @available() is not available for macOS 11 at this time so use

@@ -57,10 +57,9 @@ TimeStamp InputEventStatistics::GetInputHandlingStartTime(
     return TimeStamp::Now() - TimeDuration::FromMilliseconds(1);
   }
   TimeDuration inputCost = mLastInputDurations->GetMean() * aInputCount;
-  inputCost =
-      inputCost > mMaxInputDuration
-          ? mMaxInputDuration
-          : inputCost < mMinInputDuration ? mMinInputDuration : inputCost;
+  inputCost = inputCost > mMaxInputDuration   ? mMaxInputDuration
+              : inputCost < mMinInputDuration ? mMinInputDuration
+                                              : inputCost;
 
   return nextTickHint.value() - inputCost;
 }

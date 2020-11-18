@@ -1354,9 +1354,9 @@ void SMILTimedElement::DoPostSeek() {
 
 void SMILTimedElement::UnpreserveInstanceTimes(InstanceTimeList& aList) {
   const SMILInterval* prevInterval = GetPreviousInterval();
-  const SMILInstanceTime* cutoff =
-      mCurrentInterval ? mCurrentInterval->Begin()
-                       : prevInterval ? prevInterval->Begin() : nullptr;
+  const SMILInstanceTime* cutoff = mCurrentInterval ? mCurrentInterval->Begin()
+                                   : prevInterval   ? prevInterval->Begin()
+                                                    : nullptr;
   uint32_t count = aList.Length();
   for (uint32_t i = 0; i < count; ++i) {
     SMILInstanceTime* instance = aList[i].get();

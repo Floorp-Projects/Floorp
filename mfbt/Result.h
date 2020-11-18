@@ -379,13 +379,12 @@ struct SelectResultImpl {
   static const PackingStrategy value =
       (HasFreeLSB<V>::value && HasFreeLSB<E>::value)
           ? PackingStrategy::LowBitTagIsError
-          : (UnusedZero<E>::value && sizeof(E) <= sizeof(uintptr_t))
-                ? PackingStrategy::NullIsOk
-                : (std::is_default_constructible_v<V> &&
-                   std::is_default_constructible_v<E> &&
-                   IsPackableVariant<V, E>::value)
-                      ? PackingStrategy::PackedVariant
-                      : PackingStrategy::Variant;
+      : (UnusedZero<E>::value && sizeof(E) <= sizeof(uintptr_t))
+          ? PackingStrategy::NullIsOk
+      : (std::is_default_constructible_v<V> &&
+         std::is_default_constructible_v<E> && IsPackableVariant<V, E>::value)
+          ? PackingStrategy::PackedVariant
+          : PackingStrategy::Variant;
 
   using Type = ResultImplementation<V, E, value>;
 };

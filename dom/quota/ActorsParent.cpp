@@ -1052,13 +1052,15 @@ class OriginInfo final {
 class OriginInfoLRUComparator {
  public:
   bool Equals(const OriginInfo* a, const OriginInfo* b) const {
-    return a && b ? a->LockedAccessTime() == b->LockedAccessTime()
-                  : !a && !b ? true : false;
+    return a && b     ? a->LockedAccessTime() == b->LockedAccessTime()
+           : !a && !b ? true
+                      : false;
   }
 
   bool LessThan(const OriginInfo* a, const OriginInfo* b) const {
     return a && b ? a->LockedAccessTime() < b->LockedAccessTime()
-                  : b ? true : false;
+           : b    ? true
+                  : false;
   }
 };
 

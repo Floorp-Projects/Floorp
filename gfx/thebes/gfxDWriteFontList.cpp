@@ -1272,11 +1272,10 @@ void gfxDWriteFontList::GetFacesInitDataForFamily(
                      << aFamily->Key().AsString(SharedFontList()).get();
         continue;
       }
-      SlantStyleRange slant(dwstyle == DWRITE_FONT_STYLE_NORMAL
-                                ? FontSlantStyle::Normal()
-                                : dwstyle == DWRITE_FONT_STYLE_ITALIC
-                                      ? FontSlantStyle::Italic()
-                                      : FontSlantStyle::Oblique());
+      SlantStyleRange slant(
+          dwstyle == DWRITE_FONT_STYLE_NORMAL   ? FontSlantStyle::Normal()
+          : dwstyle == DWRITE_FONT_STYLE_ITALIC ? FontSlantStyle::Italic()
+                                                : FontSlantStyle::Oblique());
       aFaces.AppendElement(fontlist::Face::InitData{
           name, uint16_t(i), false, weight, stretch, slant, charmap});
     }

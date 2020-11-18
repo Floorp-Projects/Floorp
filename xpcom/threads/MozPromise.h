@@ -459,9 +459,9 @@ class MozPromise : public MozPromiseBase {
           "%s dispatch",
           aPromise->mValue.IsResolve() ? "Resolving" : "Rejecting", mCallSite,
           r.get(), aPromise, this,
-          aPromise->mUseSynchronousTaskDispatch
-              ? "synchronous"
-              : aPromise->mUseDirectTaskDispatch ? "directtask" : "normal");
+          aPromise->mUseSynchronousTaskDispatch ? "synchronous"
+          : aPromise->mUseDirectTaskDispatch    ? "directtask"
+                                                : "normal");
 
       if (aPromise->mUseSynchronousTaskDispatch &&
           mResponseTarget->IsOnCurrentThread()) {

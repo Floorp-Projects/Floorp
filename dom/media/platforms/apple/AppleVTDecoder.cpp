@@ -44,11 +44,9 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
                       ? DefaultColorSpace({mPictureWidth, mPictureHeight})
                       : aConfig.mColorSpace),
       mColorRange(aConfig.mColorRange),
-      mStreamType(MP4Decoder::IsH264(aConfig.mMimeType)
-                      ? StreamType::H264
-                      : VPXDecoder::IsVP9(aConfig.mMimeType)
-                            ? StreamType::VP9
-                            : StreamType::Unknown),
+      mStreamType(MP4Decoder::IsH264(aConfig.mMimeType)  ? StreamType::H264
+                  : VPXDecoder::IsVP9(aConfig.mMimeType) ? StreamType::VP9
+                                                         : StreamType::Unknown),
       mTaskQueue(
           new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
                         "AppleVTDecoder")),

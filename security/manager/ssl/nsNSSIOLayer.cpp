@@ -218,12 +218,11 @@ void nsNSSSocketInfo::SetHandshakeCompleted() {
       NotAllowedToFalseStart = 4,
     };
 
-    HandshakeType handshakeType =
-        !IsFullHandshake() ? Resumption
-                           : mFalseStarted ? FalseStarted
-                                           : mFalseStartCallbackCalled
-                                                 ? ChoseNotToFalseStart
-                                                 : NotAllowedToFalseStart;
+    HandshakeType handshakeType = !IsFullHandshake() ? Resumption
+                                  : mFalseStarted    ? FalseStarted
+                                  : mFalseStartCallbackCalled
+                                      ? ChoseNotToFalseStart
+                                      : NotAllowedToFalseStart;
 
     // This will include TCP and proxy tunnel wait time
     Telemetry::AccumulateTimeDelta(

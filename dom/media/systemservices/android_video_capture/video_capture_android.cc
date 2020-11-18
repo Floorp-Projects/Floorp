@@ -146,15 +146,11 @@ void VideoCaptureAndroid::OnIncomingFrame(rtc::scoped_refptr<I420Buffer> buffer,
   rtc::CritScope cs(&_apiCs);
 
   VideoRotation rotation =
-      (degrees <= 45 || degrees > 315)
-          ? kVideoRotation_0
-          : (degrees > 45 && degrees <= 135)
-                ? kVideoRotation_90
-                : (degrees > 135 && degrees <= 225)
-                      ? kVideoRotation_180
-                      : (degrees > 225 && degrees <= 315)
-                            ? kVideoRotation_270
-                            : kVideoRotation_0;  // Impossible.
+      (degrees <= 45 || degrees > 315)    ? kVideoRotation_0
+      : (degrees > 45 && degrees <= 135)  ? kVideoRotation_90
+      : (degrees > 135 && degrees <= 225) ? kVideoRotation_180
+      : (degrees > 225 && degrees <= 315) ? kVideoRotation_270
+                                          : kVideoRotation_0;  // Impossible.
 
   // Historically, we have ignored captureTime. Why?
   VideoFrame captureFrame(I420Buffer::Rotate(*buffer, rotation), 0,
