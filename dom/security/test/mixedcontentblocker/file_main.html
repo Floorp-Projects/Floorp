@@ -78,7 +78,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=62178
     var object = document.createElement("object");
     var objectId = uniqueID();
     object.data = baseUrl + "?type=object" + uniqueIDParam(objectId);
-    object.type = "application/x-test";
+    object.type = "image/png";
     object.width = "200";
     object.height = "200";
 
@@ -87,15 +87,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=62178
     var objectCount = 0;
 
     function objectStatus(object) {
-      // Expose our privileged bits on the object
+      // Expose our privileged bits on the object.  We will match the MIME type to the one
+      // provided by file_server.sjs
       object = SpecialPowers.wrap(object);
-
-      if (object.displayedType != SpecialPowers.Ci.nsIObjectLoadingContent.TYPE_NULL) {
+      var typeIsSet = object.actualType && (object.actualType !== '');
+      var isLoaded = typeIsSet && object.actualType === 'application/x-test-match';
+      if (isLoaded) {
         //object loaded
         report("object", "insecure object loaded");
       }
       else {
-        if(objectCount < MAX_COUNT) {
+        if(!typeIsSet && objectCount < MAX_COUNT) {
           objectCount++;
           setTimeout(objectStatus, TIMEOUT_INTERVAL, object);
         }
