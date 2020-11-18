@@ -768,7 +768,8 @@ nscoord nsBlockFrame::GetMinISize(gfxContext* aRenderingContext) {
     curFrame->LazyMarkLinesDirty();
   }
 
-  if (HasAnyStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION)) {
+  if (HasAnyStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION) &&
+      PresContext()->BidiEnabled()) {
     ResolveBidi();
   }
 
@@ -855,7 +856,8 @@ nscoord nsBlockFrame::GetPrefISize(gfxContext* aRenderingContext) {
     curFrame->LazyMarkLinesDirty();
   }
 
-  if (HasAnyStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION)) {
+  if (HasAnyStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION) &&
+      PresContext()->BidiEnabled()) {
     ResolveBidi();
   }
   InlinePrefISizeData data;
@@ -1328,7 +1330,8 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   BlockReflowInput state(*reflowInput, aPresContext, this, blockStartMarginRoot,
                          blockEndMarginRoot, needFloatManager, consumedBSize);
 
-  if (HasAnyStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION)) {
+  if (HasAnyStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION) &&
+      PresContext()->BidiEnabled()) {
     static_cast<nsBlockFrame*>(FirstContinuation())->ResolveBidi();
   }
 
@@ -7750,12 +7753,7 @@ nscoord nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
 nsresult nsBlockFrame::ResolveBidi() {
   NS_ASSERTION(!GetPrevInFlow(),
                "ResolveBidi called on non-first continuation");
-
-  nsPresContext* presContext = PresContext();
-  if (!presContext->BidiEnabled()) {
-    return NS_OK;
-  }
-
+  MOZ_ASSERT(PresContext()->BidiEnabled());
   return nsBidiPresUtils::Resolve(this);
 }
 
