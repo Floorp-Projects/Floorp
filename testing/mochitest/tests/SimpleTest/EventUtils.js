@@ -3304,25 +3304,6 @@ async function synthesizePlainDragAndCancel(
   return result;
 }
 
-var PluginUtils = {
-  withTestPlugin(callback) {
-    var ph = _EU_Cc["@mozilla.org/plugin/host;1"].getService(
-      _EU_Ci.nsIPluginHost
-    );
-    var tags = ph.getPluginTags();
-
-    // Find the test plugin
-    for (var i = 0; i < tags.length; i++) {
-      if (tags[i].name == "Test Plug-in") {
-        callback(tags[i]);
-        return true;
-      }
-    }
-    todo(false, "Need a test plugin on this platform");
-    return false;
-  },
-};
-
 class EventCounter {
   constructor(aTarget, aType, aOptions = {}) {
     this.target = aTarget;
