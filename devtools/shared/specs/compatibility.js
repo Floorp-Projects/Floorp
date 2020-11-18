@@ -37,6 +37,9 @@ const compatibilitySpec = generateActorSpec({
   typeName: "compatibility",
 
   methods: {
+    // While not being used on the client at the moment, keep this method in case
+    // we need traits again to support backwards compatibility for the Compatibility
+    // actor.
     getTraits: {
       request: {},
       response: { traits: RetVal("json") },
