@@ -18321,33 +18321,34 @@ nsresult DatabaseOp::SendToIOThread() {
 
 NS_IMETHODIMP
 DatabaseOp::Run() {
-  nsresult rv;
+  const auto handleError = [this](const nsresult rv) {
+    if (mState != State::SendingResults) {
+      SetFailureCodeIfUnset(rv);
+
+      // Must set mState before dispatching otherwise we will race with the
+      // owning thread.
+      mState = State::SendingResults;
+
+      MOZ_ALWAYS_SUCCEEDS(
+          mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
+    }
+  };
 
   switch (mState) {
     case State::Initial:
-      rv = SendToIOThread();
+      IDB_TRY(SendToIOThread(), NS_OK, handleError);
       break;
 
     case State::DatabaseWork:
-      rv = DoDatabaseWork();
+      IDB_TRY(DoDatabaseWork(), NS_OK, handleError);
       break;
 
     case State::SendingResults:
       SendResults();
-      return NS_OK;
+      break;
 
     default:
       MOZ_CRASH("Bad state!");
-  }
-
-  if (NS_WARN_IF(NS_FAILED(rv)) && mState != State::SendingResults) {
-    SetFailureCodeIfUnset(rv);
-
-    // Must set mState before dispatching otherwise we will race with the owning
-    // thread.
-    mState = State::SendingResults;
-
-    MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
   }
 
   return NS_OK;
