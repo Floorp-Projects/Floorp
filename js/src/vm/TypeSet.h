@@ -55,8 +55,6 @@ class TempAllocator;
 class AutoClearTypeInferenceStateOnOOM;
 class AutoSweepBase;
 class AutoSweepObjectGroup;
-class CompilerConstraintList;
-class HeapTypeSetKey;
 class LifoAlloc;
 class ObjectGroup;
 class SystemAllocPolicy;
@@ -291,9 +289,6 @@ class TypeSet {
     TaggedProto proto();
 
     bool unknownProperties();
-    bool hasFlags(CompilerConstraintList* constraints, ObjectGroupFlags flags);
-    bool hasStableClassAndProto(CompilerConstraintList* constraints);
-    void watchStateChangeForTypedArrayData(CompilerConstraintList* constraints);
     void ensureTrackedProperty(JSContext* cx, jsid id);
 
     ObjectGroup* maybeGroup();

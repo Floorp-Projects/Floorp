@@ -304,7 +304,7 @@ MInstruction* WarpCacheIRTranspiler::objectStubField(uint32_t offset) {
     return ins;
   }
 
-  auto* ins = MConstant::NewConstraintlessObject(alloc(), field.toObject());
+  auto* ins = MConstant::NewObject(alloc(), field.toObject());
   add(ins);
   return ins;
 }
@@ -2890,8 +2890,7 @@ bool WarpCacheIRTranspiler::emitStringSplitStringResult(
   MDefinition* separator = getOperand(separatorId);
   ObjectGroup* group = groupStubField(groupOffset);
 
-  auto* split = MStringSplit::New(alloc(), /* constraints = */ nullptr, str,
-                                  separator, group);
+  auto* split = MStringSplit::New(alloc(), str, separator, group);
   add(split);
 
   pushResult(split);
@@ -3096,8 +3095,7 @@ bool WarpCacheIRTranspiler::emitNewIteratorResult(
   JSObject* templateObj = tenuredObjectStubField(templateObjectOffset);
 
   auto* templateConst = constant(ObjectValue(*templateObj));
-  auto* iter = MNewIterator::New(alloc(), /* constraints = */ nullptr,
-                                 templateConst, type);
+  auto* iter = MNewIterator::New(alloc(), templateConst, type);
   add(iter);
 
   pushResult(iter);
@@ -3130,8 +3128,8 @@ bool WarpCacheIRTranspiler::emitObjectCreateResult(
 
   // TODO: support pre-tenuring.
   gc::InitialHeap heap = gc::DefaultHeap;
-  auto* obj = MNewObject::New(alloc(), /* constraints = */ nullptr,
-                              templateConst, heap, MNewObject::ObjectCreate);
+  auto* obj =
+      MNewObject::New(alloc(), templateConst, heap, MNewObject::ObjectCreate);
   addEffectful(obj);
 
   pushResult(obj);
@@ -3159,11 +3157,11 @@ bool WarpCacheIRTranspiler::emitNewArrayFromLengthResult(
 
       MNewArray* obj;
       if (len > inlineLength) {
-        obj = MNewArray::NewVM(alloc(), /* constraints = */ nullptr, len,
-                               templateConst, heap, loc_.toRawBytecode());
+        obj = MNewArray::NewVM(alloc(), len, templateConst, heap,
+                               loc_.toRawBytecode());
       } else {
-        obj = MNewArray::New(alloc(), /* constraints = */ nullptr, len,
-                             templateConst, heap, loc_.toRawBytecode());
+        obj = MNewArray::New(alloc(), len, templateConst, heap,
+                             loc_.toRawBytecode());
       }
       add(obj);
       pushResult(obj);
@@ -3171,8 +3169,7 @@ bool WarpCacheIRTranspiler::emitNewArrayFromLengthResult(
     }
   }
 
-  auto* obj = MNewArrayDynamicLength::New(alloc(), /* constraints = */ nullptr,
-                                          templateObj, heap, length);
+  auto* obj = MNewArrayDynamicLength::New(alloc(), templateObj, heap, length);
   addEffectful(obj);
   pushResult(obj);
   return resumeAfter(obj);
@@ -3191,16 +3188,15 @@ bool WarpCacheIRTranspiler::emitNewTypedArrayFromLengthResult(
     if (len > 0 &&
         uint32_t(len) == templateObj->as<TypedArrayObject>().length().get()) {
       auto* templateConst = constant(ObjectValue(*templateObj));
-      auto* obj = MNewTypedArray::New(alloc(), /* constraints = */ nullptr,
-                                      templateConst, heap);
+      auto* obj = MNewTypedArray::New(alloc(), templateConst, heap);
       add(obj);
       pushResult(obj);
       return true;
     }
   }
 
-  auto* obj = MNewTypedArrayDynamicLength::New(
-      alloc(), /* constraints = */ nullptr, templateObj, heap, length);
+  auto* obj =
+      MNewTypedArrayDynamicLength::New(alloc(), templateObj, heap, length);
   addEffectful(obj);
   pushResult(obj);
   return resumeAfter(obj);
@@ -3217,9 +3213,8 @@ bool WarpCacheIRTranspiler::emitNewTypedArrayFromArrayBufferResult(
   // TODO: support pre-tenuring.
   gc::InitialHeap heap = gc::DefaultHeap;
 
-  auto* obj = MNewTypedArrayFromArrayBuffer::New(
-      alloc(), /* constraints = */ nullptr, templateObj, heap, buffer,
-      byteOffset, length);
+  auto* obj = MNewTypedArrayFromArrayBuffer::New(alloc(), templateObj, heap,
+                                                 buffer, byteOffset, length);
   addEffectful(obj);
 
   pushResult(obj);
@@ -3234,8 +3229,7 @@ bool WarpCacheIRTranspiler::emitNewTypedArrayFromArrayResult(
   // TODO: support pre-tenuring.
   gc::InitialHeap heap = gc::DefaultHeap;
 
-  auto* obj = MNewTypedArrayFromArray::New(alloc(), /* constraints = */ nullptr,
-                                           templateObj, heap, array);
+  auto* obj = MNewTypedArrayFromArray::New(alloc(), templateObj, heap, array);
   addEffectful(obj);
 
   pushResult(obj);
@@ -4188,8 +4182,7 @@ bool WarpCacheIRTranspiler::emitMetaTwoByte(MetaTwoByteKind kind,
   // TODO: support pre-tenuring.
   gc::InitialHeap heap = gc::DefaultHeap;
 
-  auto* createThis = MCreateThisWithTemplate::New(
-      alloc(), /* constraints = */ nullptr, templateConst, heap);
+  auto* createThis = MCreateThisWithTemplate::New(alloc(), templateConst, heap);
   add(createThis);
 
   callInfo_->thisArg()->setImplicitlyUsedUnchecked();

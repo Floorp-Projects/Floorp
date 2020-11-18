@@ -29,7 +29,6 @@ class PreliminaryObjectArrayWithTemplate;
 class TypeNewScript;
 class AutoClearTypeInferenceStateOnOOM;
 class AutoSweepObjectGroup;
-class CompilerConstraintList;
 class ObjectGroupRealm;
 class PlainObject;
 
