@@ -11075,14 +11075,6 @@ static int Shell(JSContext* cx, OptionParser* op, char** envp) {
     }
   }
 
-  /*
-   * Dump remaining type inference results while we still have a context.
-   * This printing depends on atoms still existing.
-   */
-  for (CompartmentsIter c(cx->runtime()); !c.done(); c.next()) {
-    PrintTypes(cx, c, false);
-  }
-
   return result;
 }
 

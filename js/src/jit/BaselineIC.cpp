@@ -2361,10 +2361,6 @@ bool DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame,
     return true;
   }
 
-  // For functions, keep track of the |prototype| property in type information,
-  // for use during Ion compilation.
-  EnsureTrackPropertyTypes(cx, obj, NameToId(cx->names().prototype));
-
   TryAttachStub<InstanceOfIRGenerator>("InstanceOf", cx, frame, stub,
                                        BaselineCacheIRStubKind::Regular, lhs,
                                        obj);

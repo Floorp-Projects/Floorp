@@ -2133,6 +2133,7 @@ template bool GetNativeDataPropertyByValuePure<true>(JSContext* cx,
 template bool GetNativeDataPropertyByValuePure<false>(JSContext* cx,
                                                       JSObject* obj, Value* vp);
 
+// TODO(no-TI): remove NeedsTypeBarrier.
 template <bool NeedsTypeBarrier>
 bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
                                Value* val) {
@@ -2145,11 +2146,6 @@ bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
   NativeObject* nobj = &obj->as<NativeObject>();
   Shape* shape = nobj->lastProperty()->search(cx, NameToId(name));
   if (!shape || !shape->isDataProperty() || !shape->writable()) {
-    return false;
-  }
-
-  if (NeedsTypeBarrier && IsTypeInferenceEnabled() &&
-      !HasTypePropertyId(nobj, NameToId(name), *val)) {
     return false;
   }
 

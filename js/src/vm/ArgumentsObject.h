@@ -342,7 +342,7 @@ class ArgumentsObject : public NativeObject {
    */
   const Value& element(uint32_t i) const;
 
-  inline void setElement(JSContext* cx, uint32_t i, const Value& v);
+  inline void setElement(uint32_t i, const Value& v);
 
   const Value& arg(unsigned i) const {
     MOZ_ASSERT(i < data()->numArgs);
