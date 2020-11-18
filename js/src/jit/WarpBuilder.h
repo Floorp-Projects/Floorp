@@ -9,6 +9,7 @@
 
 #include <initializer_list>
 
+#include "ds/InlineTable.h"
 #include "jit/JitContext.h"
 #include "jit/MIR.h"
 #include "jit/MIRBuilderShared.h"
@@ -74,6 +75,118 @@ class MIRGraph;
 class WarpSnapshot;
 
 enum class CacheKind : uint8_t;
+
+// [SMDOC] Control Flow handling in WarpBuilder.
+//
+// WarpBuilder traverses the script's bytecode and compiles each instruction to
+// corresponding MIR instructions. Handling control flow bytecode ops requires
+// some special machinery:
+//
+// Forward branches
+// ----------------
+// Most branches in the bytecode are forward branches to a JSOp::JumpTarget
+// instruction that we have not inspected yet. We compile them in two phases:
+//
+// 1) When compiling the source instruction: the MBasicBlock is terminated
+//    with a control instruction that has a nullptr successor block. We also add
+//    a PendingEdge instance to the PendingEdges list for the target bytecode
+//    location.
+//
+// 2) When finally compiling the JSOp::JumpTarget: WarpBuilder::build_JumpTarget
+//    creates the target block and uses the list of PendingEdges to 'link' the
+//    blocks.
+//
+// Loops
+// -----
+// Loops may be nested within other loops, so each WarpBuilder has a LoopState
+// stack. This is used to link the backedge to the loop's header block.
+//
+// Unreachable/dead code
+// ---------------------
+// Some bytecode instructions never fall through to the next instruction, for
+// example JSOp::Return, JSOp::Goto, or JSOp::Throw. Code after such
+// instructions is guaranteed to be dead so WarpBuilder skips it until it gets
+// to a jump target instruction with pending edges.
+//
+// Note: The frontend may generate unnecessary JSOp::JumpTarget instructions we
+// can ignore when they have no incoming pending edges.
+//
+// Try-catch
+// ---------
+// WarpBuilder supports scripts with try-catch by only compiling the try-block
+// and bailing out (to the Baseline Interpreter) from the exception handler
+// whenever we need to execute the catch-block.
+//
+// Because we don't compile the catch-block and the code after the try-catch may
+// only be reachable via the catch-block, Baseline's BytecodeAnalysis ensures
+// Baseline does not attempt OSR into Warp at loops that are only reachable via
+// catch/finally blocks.
+//
+// Finally-blocks are currently not supported by WarpBuilder.
+
+// PendingEdge is used whenever a block is terminated with a forward branch in
+// the bytecode. When we reach the jump target we use this information to link
+// the block to the jump target's block.
+class PendingEdge {
+ public:
+  enum class Kind : uint8_t {
+    // MTest true-successor.
+    TestTrue,
+
+    // MTest false-successor.
+    TestFalse,
+
+    // MGoto successor.
+    Goto,
+  };
+
+ private:
+  MBasicBlock* block_;
+  Kind kind_;
+  JSOp testOp_ = JSOp::Undefined;
+
+  PendingEdge(MBasicBlock* block, Kind kind, JSOp testOp = JSOp::Undefined)
+      : block_(block), kind_(kind), testOp_(testOp) {}
+
+ public:
+  static PendingEdge NewTestTrue(MBasicBlock* block, JSOp op) {
+    return PendingEdge(block, Kind::TestTrue, op);
+  }
+  static PendingEdge NewTestFalse(MBasicBlock* block, JSOp op) {
+    return PendingEdge(block, Kind::TestFalse, op);
+  }
+  static PendingEdge NewGoto(MBasicBlock* block) {
+    return PendingEdge(block, Kind::Goto);
+  }
+
+  MBasicBlock* block() const { return block_; }
+  Kind kind() const { return kind_; }
+
+  JSOp testOp() const {
+    MOZ_ASSERT(kind_ == Kind::TestTrue || kind_ == Kind::TestFalse);
+    return testOp_;
+  }
+};
+
+// PendingEdgesMap maps a bytecode instruction to a Vector of PendingEdges
+// targeting it. We use InlineMap<> for this because most of the time there are
+// only a few pending edges but there can be many when switch-statements are
+// involved.
+using PendingEdges = Vector<PendingEdge, 2, SystemAllocPolicy>;
+using PendingEdgesMap =
+    InlineMap<jsbytecode*, PendingEdges, 8, PointerHasher<jsbytecode*>,
+              SystemAllocPolicy>;
+
+// LoopState stores information about a loop that's being compiled to MIR.
+class LoopState {
+  MBasicBlock* header_ = nullptr;
+
+ public:
+  explicit LoopState(MBasicBlock* header) : header_(header) {}
+
+  MBasicBlock* header() const { return header_; }
+};
+using LoopStateStack = Vector<LoopState, 4, JitAllocPolicy>;
 
 // Data that is shared across all WarpBuilders for a given compilation.
 class MOZ_STACK_CLASS WarpCompilation {

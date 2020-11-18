@@ -11991,8 +11991,26 @@ struct MStoreToRecover : public TempObject,
 using MStoresToRecoverList = InlineSpaghettiStack<MStoreToRecover>;
 
 // A resume point contains the information needed to reconstruct the Baseline
-// state from a position in the JIT. See the big comment near resumeAfter() in
-// IonBuilder.cpp.
+// Interpreter state from a position in Warp JIT code. A resume point is a
+// mapping of stack slots to MDefinitions.
+//
+// We capture stack state at critical points:
+//   * (1) At the beginning of every basic block.
+//   * (2) After every effectful operation.
+//
+// As long as these two properties are maintained, instructions can be moved,
+// hoisted, or, eliminated without problems, and ops without side effects do not
+// need to worry about capturing state at precisely the right point in time.
+//
+// Effectful instructions, of course, need to capture state after completion,
+// where the interpreter will not attempt to repeat the operation. For this,
+// ResumeAfter must be used. The state is attached directly to the effectful
+// instruction to ensure that no intermediate instructions could be injected
+// in between by a future analysis pass.
+//
+// During LIR construction, if an instruction can bail back to the interpreter,
+// we create an LSnapshot, which uses the last known resume point to request
+// register/stack assignments for every live value.
 class MResumePoint final : public MNode
 #ifdef DEBUG
     ,
