@@ -35,7 +35,6 @@ var gTestWindows = [
   { test: "file_fullscreen-esc-exit.html" },
   { test: "file_fullscreen-denied.html" },
   { test: "file_fullscreen-api.html" },
-  { test: "file_fullscreen-plugins.html" },
   { test: "file_fullscreen-hidden.html" },
   { test: "file_fullscreen-svg-element.html" },
   { test: "file_fullscreen-navigation.html" },
@@ -76,38 +75,6 @@ function nextTest() {
   }
 }
 
-var gHeadlessSkipList = [
-  { test: "file_fullscreen-plugins.html", reason: "bug 1409805" },
-];
-
-var gLinuxE10sSkipList = [
-  { "test": "file_fullscreen-plugins.html", "reason": "bug 1330553" },
-];
-
-function shouldSkipTest(test) {
-  function checkList(list) {
-    for (let item of list) {
-      if (item.test == test) {
-        todo(false, `${test} skipped due to ${item.reason}`);
-        return true;
-      }
-    }
-    return false;
-  }
-
-  if (SpecialPowers.Cc["@mozilla.org/gfx/info;1"].getService(SpecialPowers.Ci.nsIGfxInfo).isHeadless &&
-      checkList(gHeadlessSkipList)) {
-    return true;
-  }
-
-  if (!SpecialPowers.isMainProcess() &&
-      navigator.platform.includes('Linux') &&
-      checkList(gLinuxE10sSkipList)) {
-    return true;
-  }
-  return false;
-}
-
 function waitForEvent(eventTarget, eventName, checkFn, callback) {
   eventTarget.addEventListener(eventName, function listener(event) {
     if (checkFn && !checkFn(event)) {
@@ -121,38 +88,33 @@ function waitForEvent(eventTarget, eventName, checkFn, callback) {
 function runNextTest() {
   if (gTestIndex < gTestWindows.length) {
     let test = gTestWindows[gTestIndex];
-    if (shouldSkipTest(test.test)) {
-      info(`Skip test ${test.test}`);
-      SimpleTest.executeSoon(runNextTest);
-    } else {
-      let promise = ("prefs" in test)
-                      ? SpecialPowers.pushPrefEnv({"set": test.prefs})
-                      : Promise.resolve();
-      promise.then(function() {
-        info(`Run test ${test.test}`);
-        testWindow = window.open(test.test, "", "width=500,height=500,scrollbars=yes");
-        // We'll wait for the window to load, then make sure our window is refocused
-        // before starting the test, which will get kicked off on "focus".
-        // This ensures that we're essentially back on the primary "desktop" on
-        // OS X Lion before we run the test.
-        waitForLoadAndPaint(testWindow, function() {
-          SimpleTest.waitForFocus(function() {
-            info("Were focused");
-            // For the platforms that support reporting occlusion state (e.g. Mac),
-            // we should wait until the docshell has been activated again,
-            // otherwise, the fullscreen request might be denied.
-            if (testWindow.document.hidden) {
-              info("Waiting for document to unhide");
-              waitForEvent(testWindow.document, "visibilitychange", (event) => {
-                return !testWindow.document.hidden;
-              }, testWindow.begin);
-              return;
-            }
-            testWindow.begin();
-          }, testWindow);
-        });
+    let promise = ("prefs" in test)
+                    ? SpecialPowers.pushPrefEnv({"set": test.prefs})
+                    : Promise.resolve();
+    promise.then(function() {
+      info(`Run test ${test.test}`);
+      testWindow = window.open(test.test, "", "width=500,height=500,scrollbars=yes");
+      // We'll wait for the window to load, then make sure our window is refocused
+      // before starting the test, which will get kicked off on "focus".
+      // This ensures that we're essentially back on the primary "desktop" on
+      // OS X Lion before we run the test.
+      waitForLoadAndPaint(testWindow, function() {
+        SimpleTest.waitForFocus(function() {
+          info("Were focused");
+          // For the platforms that support reporting occlusion state (e.g. Mac),
+          // we should wait until the docshell has been activated again,
+          // otherwise, the fullscreen request might be denied.
+          if (testWindow.document.hidden) {
+            info("Waiting for document to unhide");
+            waitForEvent(testWindow.document, "visibilitychange", (event) => {
+              return !testWindow.document.hidden;
+            }, testWindow.begin);
+            return;
+          }
+          testWindow.begin();
+        }, testWindow);
       });
-    }
+    });
     gTestIndex++;
   } else {
     SimpleTest.finish();
