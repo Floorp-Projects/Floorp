@@ -13,9 +13,9 @@ GeckoSimplePrograms(
 
 # See the comment at the top of SmokeDMD.cpp:RunTests().
 if CONFIG["CXX_TYPE"] == "clang-cl":
-    CXXFLAGS += ["-Og-", "-clang:-fno-lto"]
+    CXXFLAGS += ["-Og-"]
 else:
-    CXXFLAGS += ["-O0", "-fno-lto"]
+    CXXFLAGS += ["-O0"]
 
 DEFINES["MOZ_NO_MOZALLOC"] = True
 
