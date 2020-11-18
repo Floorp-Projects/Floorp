@@ -29,7 +29,137 @@
 
 namespace mozilla::baseprofiler::markers {
 
-struct MediaSampleMarker {
+struct Tracing {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("tracing");
+  }
+  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter,
+                                   const ProfilerString8View& aCategory) {
+    if (aCategory.Length() != 0) {
+      aWriter.StringProperty("category", aCategory);
+    }
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::markerChart, MS::Location::markerTable,
+              MS::Location::timelineOverview};
+    schema.AddKeyLabelFormat("category", "Type", MS::Format::string);
+    return schema;
+  }
+};
+
+struct UserTimingMark {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("UserTimingMark");
+  }
+  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter,
+                                   const ProfilerString8View& aName) {
+    aWriter.StringProperty("name", aName);
+    aWriter.StringProperty("entryType", "mark");
+    aWriter.NullProperty("startMark");
+    aWriter.NullProperty("endMark");
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::markerChart, MS::Location::markerTable};
+    schema.SetAllLabels("{marker.data.name}");
+    schema.AddStaticLabelValue("Marker", "UserTiming");
+    schema.AddKeyLabelFormat("entryType", "Entry Type", MS::Format::string);
+    schema.AddKeyLabelFormat("name", "Name", MS::Format::string);
+    schema.AddStaticLabelValue(
+        "Description",
+        "UserTimingMark is created using the DOM API performance.mark().");
+    return schema;
+  }
+};
+
+struct UserTimingMeasure {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("UserTimingMeasure");
+  }
+  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter,
+                                   const ProfilerString8View& aName,
+                                   const Maybe<ProfilerString8View>& aStartMark,
+                                   const Maybe<ProfilerString8View>& aEndMark) {
+    aWriter.StringProperty("name", aName);
+    aWriter.StringProperty("entryType", "measure");
+
+    if (aStartMark.isSome()) {
+      aWriter.StringProperty("startMark", *aStartMark);
+    } else {
+      aWriter.NullProperty("startMark");
+    }
+    if (aEndMark.isSome()) {
+      aWriter.StringProperty("endMark", *aEndMark);
+    } else {
+      aWriter.NullProperty("endMark");
+    }
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::markerChart, MS::Location::markerTable};
+    schema.SetAllLabels("{marker.data.name}");
+    schema.AddStaticLabelValue("Marker", "UserTiming");
+    schema.AddKeyLabelFormat("entryType", "Entry Type", MS::Format::string);
+    schema.AddKeyLabelFormat("name", "Name", MS::Format::string);
+    schema.AddKeyLabelFormat("startMark", "Start Mark", MS::Format::string);
+    schema.AddKeyLabelFormat("endMark", "End Mark", MS::Format::string);
+    schema.AddStaticLabelValue("Description",
+                               "UserTimingMeasure is created using the DOM API "
+                               "performance.measure().");
+    return schema;
+  }
+};
+
+struct Hang {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("BHR-detected hang");
+  }
+  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter) {}
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::markerChart, MS::Location::markerTable,
+              MS::Location::timelineOverview};
+    return schema;
+  }
+};
+
+struct LongTask {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("MainThreadLongTask");
+  }
+  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter) {
+    aWriter.StringProperty("category", "LongTask");
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::markerChart, MS::Location::markerTable};
+    schema.AddKeyLabelFormat("category", "Type", MS::Format::string);
+    return schema;
+  }
+};
+
+struct Log {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("Log");
+  }
+  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter,
+                                   const ProfilerString8View& aModule,
+                                   const ProfilerString8View& aText) {
+    aWriter.StringProperty("module", aModule);
+    aWriter.StringProperty("name", aText);
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::markerTable};
+    schema.SetTableLabel("({marker.data.module}) {marker.data.name}");
+    schema.AddKeyLabelFormat("module", "Module", MS::Format::string);
+    schema.AddKeyLabelFormat("name", "Name", MS::Format::string);
+    return schema;
+  }
+};
+
+struct MediaSample {
   static constexpr Span<const char> MarkerTypeName() {
     return MakeStringSpan("MediaSample");
   }
@@ -46,18 +176,6 @@ struct MediaSampleMarker {
                              MS::Format::microseconds);
     schema.AddKeyLabelFormat("sampleEndTimeUs", "Sample end time",
                              MS::Format::microseconds);
-    return schema;
-  }
-};
-
-struct ContentBuildMarker {
-  static constexpr Span<const char> MarkerTypeName() {
-    return MakeStringSpan("CONTENT_FULL_PAINT_TIME");
-  }
-  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter) {}
-  static MarkerSchema MarkerTypeDisplay() {
-    using MS = MarkerSchema;
-    MS schema{MS::Location::markerChart, MS::Location::markerTable};
     return schema;
   }
 };
