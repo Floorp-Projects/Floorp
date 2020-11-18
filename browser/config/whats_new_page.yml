@@ -19,6 +19,7 @@
       versions: ["<{version.major_number}.0"]
       locales:
           - an
+          - ar
           - be
           - ca
           - cak
@@ -26,10 +27,15 @@
           - cy
           - da
           - de
+          - de-AT
+          - de-BE
+          - de-CH
+          - de-DE
           - dsb
           - el
           - en-CA
           - en-GB
+          - en-IE
           - en-US
           - es-AR
           - es-CL
@@ -67,6 +73,7 @@
           - sq
           - sr
           - sv-SE
+          - th
           - tr
           - uk
           - ur
