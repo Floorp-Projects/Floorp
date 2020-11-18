@@ -224,7 +224,7 @@ nscoord nsSplittableFrame::GetEffectiveComputedBSize(
 }
 
 nsIFrame::LogicalSides nsSplittableFrame::GetLogicalSkipSides(
-    const ReflowInput* aReflowInput) const {
+    const Maybe<SkipSidesDuringReflow>& aDuringReflow) const {
   LogicalSides skip(mWritingMode);
   if (IsTrueOverflowContainer()) {
     skip |= eLogicalSideBitsBBoth;
@@ -240,15 +240,17 @@ nsIFrame::LogicalSides nsSplittableFrame::GetLogicalSkipSides(
     skip |= eLogicalSideBitsBStart;
   }
 
-  if (aReflowInput) {
+  if (aDuringReflow) {
+    nscoord availBSize = aDuringReflow->mReflowInput.AvailableBSize();
     // We're in the midst of reflow right now, so it's possible that we haven't
     // created a next-in-flow yet. If our content block-size is going to exceed
     // our available block-size, though, then we're going to need a
     // next-in-flow, it just hasn't been created yet.
-    if (NS_UNCONSTRAINEDSIZE != aReflowInput->AvailableBSize()) {
-      nscoord effectiveBSize = GetEffectiveComputedBSize(*aReflowInput);
+    if (NS_UNCONSTRAINEDSIZE != availBSize) {
+      nscoord effectiveBSize = GetEffectiveComputedBSize(
+          aDuringReflow->mReflowInput, aDuringReflow->mConsumedBSize);
       if (effectiveBSize != NS_UNCONSTRAINEDSIZE &&
-          effectiveBSize > aReflowInput->AvailableBSize()) {
+          effectiveBSize > availBSize) {
         // Our computed block-size is going to exceed our available block-size,
         // so we're going to need a next-in-flow.
         skip |= eLogicalSideBitsBEnd;
