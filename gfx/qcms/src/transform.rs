@@ -1246,6 +1246,8 @@ fn qcms_transform_precacheLUT_float(
                 (*transform).transform_fn = Some(qcms_transform_data_tetra_clut_rgb)
             }
             debug_assert!((*transform).transform_fn.is_some());
+        } else {
+            return null_mut();
         }
     }
     return Box::into_raw(transform);
