@@ -21,7 +21,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
-// Bug 1618560: Currently we only profile the Android UI thread. Ideally we should
+// Bug 1618560: Currently we only profile the Java Main Thread. Ideally we should
 // be able to profile multiple threads.
 public class GeckoJavaSampler {
     private static final String LOGTAG = "GeckoJavaSampler";
