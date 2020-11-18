@@ -54,10 +54,12 @@ int MockCubebStream::Stop() {
   mOutputVerificationEvent.Notify(MakeTuple(
       mAudioVerifier.PreSilenceSamples(), mAudioVerifier.EstimatedFreq(),
       mAudioVerifier.CountDiscontinuities()));
-  reinterpret_cast<MockCubeb*>(context)->StopStream(this);
-  cubeb_stream* stream = reinterpret_cast<cubeb_stream*>(this);
-  mStateCallback(stream, mUserPtr, CUBEB_STATE_STOPPED);
-  return CUBEB_OK;
+  int rv = reinterpret_cast<MockCubeb*>(context)->StopStream(this);
+  if (rv == CUBEB_OK) {
+    cubeb_stream* stream = reinterpret_cast<cubeb_stream*>(this);
+    mStateCallback(stream, mUserPtr, CUBEB_STATE_STOPPED);
+  }
+  return rv;
 }
 
 cubeb_devid MockCubebStream::GetInputDeviceID() const { return mInputDeviceID; }
@@ -322,10 +324,13 @@ void MockCubeb::StartStream(MockCubebStream* aStream) {
   }
 }
 
-void MockCubeb::StopStream(MockCubebStream* aStream) {
+int MockCubeb::StopStream(MockCubebStream* aStream) {
   UniquePtr<std::thread> audioThread;
   {
     auto streams = mLiveStreams.Lock();
+    if (!streams->Contains(aStream)) {
+      return CUBEB_ERROR;
+    }
     MOZ_ASSERT(streams->Contains(aStream));
     streams->RemoveElement(aStream);
     MOZ_ASSERT(mFakeAudioThread);
@@ -336,6 +341,7 @@ void MockCubeb::StopStream(MockCubebStream* aStream) {
   if (audioThread) {
     audioThread->join();
   }
+  return CUBEB_OK;
 }
 
 void MockCubeb::ThreadFunction() {
