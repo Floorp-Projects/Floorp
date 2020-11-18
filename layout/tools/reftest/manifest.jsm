@@ -576,9 +576,8 @@ function BuildConditionSandbox(aURL) {
     var osxmatch = /Mac OS X (\d+).(\d+)$/.exec(hh.oscpu);
     sandbox.OSX = osxmatch ? parseInt(osxmatch[1]) * 100 + parseInt(osxmatch[2]) : undefined;
 
-    // see if we have the test plugin available,
-    // and set a sandox prop accordingly
-    sandbox.haveTestPlugin = !sandbox.Android && !!getTestPlugin("Test Plug-in");
+    // Plugins are no longer supported.  Don't try to use TestPlugin.
+    sandbox.haveTestPlugin = false;
 
     // Set a flag on sandbox if the windows default theme is active
     sandbox.windowsDefaultTheme = g.containingWindow.matchMedia("(-moz-windows-default-theme)").matches;
