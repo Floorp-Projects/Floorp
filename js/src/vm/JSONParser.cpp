@@ -591,15 +591,6 @@ inline bool JSONParserBase::finishObject(MutableHandleValue vp,
     return false;
   }
   stack.popBack();
-
-  if (!stack.empty() && stack.back().state == FinishArrayElement) {
-    const ElementVector& elements = stack.back().elements();
-    if (!CombinePlainObjectPropertyTypes(cx, obj, elements.begin(),
-                                         elements.length())) {
-      return false;
-    }
-  }
-
   return true;
 }
 
@@ -618,15 +609,6 @@ inline bool JSONParserBase::finishArray(MutableHandleValue vp,
     return false;
   }
   stack.popBack();
-
-  if (!stack.empty() && stack.back().state == FinishArrayElement) {
-    const ElementVector& elements = stack.back().elements();
-    if (!CombineArrayElementTypes(cx, obj, elements.begin(),
-                                  elements.length())) {
-      return false;
-    }
-  }
-
   return true;
 }
 
