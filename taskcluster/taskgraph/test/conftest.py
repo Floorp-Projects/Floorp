@@ -3,10 +3,16 @@
 
 from __future__ import absolute_import
 
-from mach.logging import LoggingManager
+import os
 
 import pytest
+from mach.logging import LoggingManager
 from responses import RequestsMock
+
+from taskgraph import GECKO
+from taskgraph.actions import render_actions_json
+from taskgraph.config import load_graph_config
+from taskgraph.parameters import Parameters
 
 
 @pytest.fixture
@@ -33,3 +39,14 @@ def enable_logging():
     """Ensure logs from taskgraph are displayed when a test fails."""
     lm = LoggingManager()
     lm.add_terminal_logging()
+
+
+@pytest.fixture(scope="session")
+def graph_config():
+    return load_graph_config(os.path.join(GECKO, "taskcluster", "ci"))
+
+
+@pytest.fixture(scope="session")
+def actions_json(graph_config):
+    decision_task_id = "abcdef"
+    return render_actions_json(Parameters(strict=False), graph_config, decision_task_id)

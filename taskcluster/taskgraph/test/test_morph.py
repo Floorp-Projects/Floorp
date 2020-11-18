@@ -4,24 +4,16 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import os
-
 import pytest
 import six
 
-from taskgraph import morph, GECKO
-from taskgraph.config import load_graph_config
+from taskgraph import morph
 from taskgraph.graph import Graph
 from taskgraph.parameters import Parameters
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.task import Task
 
 from mozunit import main
-
-
-@pytest.fixture(scope="module")
-def graph_config():
-    return load_graph_config(os.path.join(GECKO, "taskcluster", "ci"))
 
 
 @pytest.fixture
