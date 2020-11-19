@@ -34,6 +34,7 @@
 
 #include "mozilla/Algorithm.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/ClearOnShutdown.h"
 
 #include "mozilla/dom/RTCStatsReportBinding.h"
 
@@ -65,7 +66,6 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   nsresult CreateIceCtx(const std::string& aName,
                         const nsTArray<dom::RTCIceServer>& aIceServers,
                         dom::RTCIceTransportPolicy aIcePolicy) override;
-  void Destroy() override;
 
   // We will probably be able to move the proxy lookup stuff into
   // this class once we move mtransport to its own process.
@@ -115,7 +115,13 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   RefPtr<dom::RTCStatsPromise> GetIceStats(const std::string& aTransportId,
                                            DOMHighResTimeStamp aNow) override;
 
+  void Shutdown();
+
  private:
+  void Destroy() override;
+  void Destroy_s();
+  void DestroyFinal();
+  void Shutdown_s();
   RefPtr<TransportFlow> CreateTransportFlow(const std::string& aTransportId,
                                             bool aIsRtcp,
                                             RefPtr<DtlsIdentity> aDtlsIdentity,
@@ -184,6 +190,41 @@ already_AddRefed<MediaTransportHandler> MediaTransportHandler::Create(
   return result.forget();
 }
 
+class STSShutdownHandler {
+ public:
+  ~STSShutdownHandler() {
+    MOZ_ASSERT(NS_IsMainThread());
+    for (const auto& handler : mHandlers) {
+      handler->Shutdown();
+    }
+  }
+
+  void Register(MediaTransportHandlerSTS* aHandler) {
+    MOZ_ASSERT(NS_IsMainThread());
+    mHandlers.insert(aHandler);
+  }
+
+  void Deregister(MediaTransportHandlerSTS* aHandler) {
+    MOZ_ASSERT(NS_IsMainThread());
+    mHandlers.erase(aHandler);
+  }
+
+ private:
+  // Raw ptrs, registered on init, deregistered on destruction, all on main
+  std::set<MediaTransportHandlerSTS*> mHandlers;
+};
+
+static STSShutdownHandler* GetShutdownHandler() {
+  MOZ_ASSERT(NS_IsMainThread());
+  static UniquePtr<STSShutdownHandler> sHandler(new STSShutdownHandler);
+  static bool initted = false;
+  if (!initted) {
+    initted = true;
+    ClearOnShutdown(&sHandler, ShutdownPhase::WillShutdown);
+  }
+  return sHandler.get();
+}
+
 MediaTransportHandlerSTS::MediaTransportHandlerSTS(
     nsISerialEventTarget* aCallbackThread)
     : MediaTransportHandler(aCallbackThread) {
@@ -195,7 +236,7 @@ MediaTransportHandlerSTS::MediaTransportHandlerSTS(
 
   RLogConnector::CreateInstance();
 
-  CSFLogDebug(LOGTAG, "%s done", __func__);
+  CSFLogDebug(LOGTAG, "%s done %p", __func__, this);
 
   // We do not set up mDNSService here, because we are not running on main (we
   // use PBackground), and the DNS service asserts.
@@ -447,6 +488,8 @@ nsresult MediaTransportHandlerSTS::CreateIceCtx(
         config.mPolicy = toNrIcePolicy(aIcePolicy);
         config.mNatSimulatorConfig = GetNatConfig();
 
+        GetShutdownHandler()->Register(this);
+
         return InvokeAsync(
             mStsThread, __func__,
             [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
@@ -503,42 +546,85 @@ nsresult MediaTransportHandlerSTS::CreateIceCtx(
   return NS_OK;
 }
 
-void MediaTransportHandlerSTS::Destroy() {
-  if (!mInitPromise) {
+void MediaTransportHandlerSTS::Shutdown() {
+  CSFLogDebug(LOGTAG, "%s", __func__);
+  if (!mStsThread->IsOnCurrentThread()) {
+    mStsThread->Dispatch(NewNonOwningRunnableMethod(
+        __func__, this, &MediaTransportHandlerSTS::Shutdown_s));
     return;
   }
 
-  mInitPromise->Then(
-      mStsThread, __func__,
-      [this, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
-        disconnect_all();
-        // Clear the transports before destroying the ice ctx so that
-        // the close_notify alerts have a chance to be sent as the
-        // TransportFlow destructors execute.
-        mTransports.clear();
-        if (mIceCtx) {
-          // We're already on the STS thread, but the TransportFlow
-          // destructors executed when mTransports.clear() is called
-          // above dispatch calls to DestroyFinal to the STS thread. If
-          // we don't also dispatch the call to destory the NrIceCtx to
-          // the STS thread, it will tear down the NrIceMediaStreams
-          // before the TransportFlows are destroyed.  Without a valid
-          // NrIceMediaStreams the close_notify alert cannot be sent.
-          mStsThread->Dispatch(NS_NewRunnableFunction(
-              __func__, [iceCtx = RefPtr<NrIceCtx>(mIceCtx)] {
-                NrIceStats stats = iceCtx->Destroy();
-                CSFLogDebug(LOGTAG,
-                            "Ice Telemetry: stun (retransmits: %d)"
-                            "   turn (401s: %d   403s: %d   438s: %d)",
-                            stats.stun_retransmits, stats.turn_401s,
-                            stats.turn_403s, stats.turn_438s);
-              }));
-
-          mIceCtx = nullptr;
-        }
-      },
-      [](const std::string& aError) {});
+  Shutdown_s();
 }
+
+void MediaTransportHandlerSTS::Shutdown_s() {
+  CSFLogDebug(LOGTAG, "%s", __func__);
+  disconnect_all();
+  // Clear the transports before destroying the ice ctx so that
+  // the close_notify alerts have a chance to be sent as the
+  // TransportFlow destructors execute.
+  mTransports.clear();
+  if (mIceCtx) {
+    // We're already on the STS thread, but the TransportFlow
+    // destructors executed when mTransports.clear() is called
+    // above dispatch calls to DestroyFinal to the STS thread. If
+    // we don't also dispatch the call to destory the NrIceCtx to
+    // the STS thread, it will tear down the NrIceMediaStreams
+    // before the TransportFlows are destroyed.  Without a valid
+    // NrIceMediaStreams the close_notify alert cannot be sent.
+    mStsThread->Dispatch(
+        NS_NewRunnableFunction(__func__, [iceCtx = RefPtr<NrIceCtx>(mIceCtx)] {
+          NrIceStats stats = iceCtx->Destroy();
+          CSFLogDebug(LOGTAG,
+                      "Ice Telemetry: stun (retransmits: %d)"
+                      "   turn (401s: %d   403s: %d   438s: %d)",
+                      stats.stun_retransmits, stats.turn_401s, stats.turn_403s,
+                      stats.turn_438s);
+        }));
+  }
+  mIceCtx = nullptr;
+}
+
+void MediaTransportHandlerSTS::Destroy() {
+  CSFLogDebug(LOGTAG, "%s %p", __func__, this);
+  // Our "destruction tour" starts on main, because we need to deregister.
+  if (!NS_IsMainThread()) {
+    GetMainThreadEventTarget()->Dispatch(NewNonOwningRunnableMethod(
+        __func__, this, &MediaTransportHandlerSTS::Destroy));
+    return;
+  }
+
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!GetShutdownHandler()) {
+    // Already shut down. Nothing else to do.
+    delete this;
+    return;
+  }
+
+  GetShutdownHandler()->Deregister(this);
+
+  // mIceCtx still has a reference to us via sigslot! We must dispach to STS,
+  // and clean up there. However, by the time _that_ happens, we may have
+  // dispatched a signal callback to mCallbackThread, so we have to dispatch
+  // the final destruction to mCallbackThread.
+  mStsThread->Dispatch(NewNonOwningRunnableMethod(
+      __func__, this, &MediaTransportHandlerSTS::Destroy_s));
+}
+
+void MediaTransportHandlerSTS::Destroy_s() {
+  Shutdown_s();
+  if (mCallbackThread && !mCallbackThread->IsOnCurrentThread()) {
+    nsresult rv = mCallbackThread->Dispatch(NewNonOwningRunnableMethod(
+        __func__, this, &MediaTransportHandlerSTS::DestroyFinal));
+    if (NS_SUCCEEDED(rv)) {
+      return;
+    }
+  }
+
+  DestroyFinal();
+}
+
+void MediaTransportHandlerSTS::DestroyFinal() { delete this; }
 
 void MediaTransportHandlerSTS::SetProxyConfig(
     NrSocketProxyConfig&& aProxyConfig) {
@@ -546,6 +632,10 @@ void MediaTransportHandlerSTS::SetProxyConfig(
       mStsThread, __func__,
       [this, self = RefPtr<MediaTransportHandlerSTS>(this),
        aProxyConfig = std::move(aProxyConfig)]() mutable {
+        if (!mIceCtx) {
+          return;  // Probably due to XPCOM shutdown
+        }
+
         mIceCtx->SetProxyConfig(std::move(aProxyConfig));
       },
       [](const std::string& aError) {});
@@ -557,6 +647,10 @@ void MediaTransportHandlerSTS::EnsureProvisionalTransport(
   mInitPromise->Then(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
+        if (!mIceCtx) {
+          return;  // Probably due to XPCOM shutdown
+        }
+
         RefPtr<NrIceMediaStream> stream(mIceCtx->GetStream(aTransportId));
         if (!stream) {
           CSFLogDebug(LOGTAG, "%s: Creating ICE media stream=%s components=%u",
@@ -597,6 +691,10 @@ void MediaTransportHandlerSTS::ActivateTransport(
       mStsThread, __func__,
       [=, keyDer = aKeyDer.Clone(), certDer = aCertDer.Clone(),
        self = RefPtr<MediaTransportHandlerSTS>(this)]() {
+        if (!mIceCtx) {
+          return;  // Probably due to XPCOM shutdown
+        }
+
         MOZ_ASSERT(aComponentCount);
         RefPtr<DtlsIdentity> dtlsIdentity(
             DtlsIdentity::Deserialize(keyDer, certDer, aAuthType));
@@ -677,6 +775,10 @@ void MediaTransportHandlerSTS::SetTargetForDefaultLocalAddressLookup(
   mInitPromise->Then(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
+        if (!mIceCtx) {
+          return;  // Probably due to XPCOM shutdown
+        }
+
         mIceCtx->SetTargetForDefaultLocalAddressLookup(aTargetIp, aTargetPort);
       },
       [](const std::string& aError) {});
@@ -689,6 +791,10 @@ void MediaTransportHandlerSTS::StartIceGathering(
       mStsThread, __func__,
       [=, stunAddrs = aStunAddrs.Clone(),
        self = RefPtr<MediaTransportHandlerSTS>(this)]() {
+        if (!mIceCtx) {
+          return;  // Probably due to XPCOM shutdown
+        }
+
         mObfuscateHostAddresses = aObfuscateHostAddresses;
 
         // Belt and suspenders - in e10s mode, the call below to SetStunAddrs
@@ -714,6 +820,10 @@ void MediaTransportHandlerSTS::StartIceChecks(
   mInitPromise->Then(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
+        if (!mIceCtx) {
+          return;  // Probably due to XPCOM shutdown
+        }
+
         nsresult rv = mIceCtx->ParseGlobalAttributes(aIceOptions);
         if (NS_FAILED(rv)) {
           CSFLogError(LOGTAG, "%s: couldn't parse global parameters",
@@ -755,6 +865,10 @@ void MediaTransportHandlerSTS::AddIceCandidate(
   mInitPromise->Then(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
+        if (!mIceCtx) {
+          return;  // Probably due to XPCOM shutdown
+        }
+
         std::vector<std::string> tokens;
         TokenizeCandidate(aCandidate, tokens);
 
@@ -790,6 +904,10 @@ void MediaTransportHandlerSTS::UpdateNetworkState(bool aOnline) {
   mInitPromise->Then(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
+        if (!mIceCtx) {
+          return;  // Probably due to XPCOM shutdown
+        }
+
         mIceCtx->UpdateNetworkState(aOnline);
       },
       [](const std::string& aError) {});
@@ -800,6 +918,10 @@ void MediaTransportHandlerSTS::RemoveTransportsExcept(
   mInitPromise->Then(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
+        if (!mIceCtx) {
+          return;  // Probably due to XPCOM shutdown
+        }
+
         for (auto it = mTransports.begin(); it != mTransports.end();) {
           const std::string transportId(it->first);
           if (!aTransportIds.count(transportId)) {
@@ -837,6 +959,10 @@ void MediaTransportHandlerSTS::SendPacket(const std::string& aTransportId,
       mStsThread, __func__,
       [this, self = RefPtr<MediaTransportHandlerSTS>(this), aTransportId,
        aPacket = std::move(aPacket)]() mutable {
+        if (!mIceCtx) {
+          return;  // Probably due to XPCOM shutdown
+        }
+
         MOZ_ASSERT(aPacket.type() != MediaPacket::UNCLASSIFIED);
         RefPtr<TransportFlow> flow =
             GetTransportFlow(aTransportId, aPacket.type() == MediaPacket::RTCP);
@@ -899,10 +1025,11 @@ TransportLayer::State MediaTransportHandler::GetState(
 void MediaTransportHandler::OnCandidate(const std::string& aTransportId,
                                         const CandidateInfo& aCandidateInfo) {
   if (mCallbackThread && !mCallbackThread->IsOnCurrentThread()) {
-    mCallbackThread->Dispatch(WrapRunnable(RefPtr<MediaTransportHandler>(this),
-                                           &MediaTransportHandler::OnCandidate,
-                                           aTransportId, aCandidateInfo),
-                              NS_DISPATCH_NORMAL);
+    mCallbackThread->Dispatch(
+        // This is being called from sigslot, which does not hold a strong ref.
+        WrapRunnable(this, &MediaTransportHandler::OnCandidate, aTransportId,
+                     aCandidateInfo),
+        NS_DISPATCH_NORMAL);
     return;
   }
 
@@ -912,8 +1039,8 @@ void MediaTransportHandler::OnCandidate(const std::string& aTransportId,
 void MediaTransportHandler::OnAlpnNegotiated(const std::string& aAlpn) {
   if (mCallbackThread && !mCallbackThread->IsOnCurrentThread()) {
     mCallbackThread->Dispatch(
-        WrapRunnable(RefPtr<MediaTransportHandler>(this),
-                     &MediaTransportHandler::OnAlpnNegotiated, aAlpn),
+        // This is being called from sigslot, which does not hold a strong ref.
+        WrapRunnable(this, &MediaTransportHandler::OnAlpnNegotiated, aAlpn),
         NS_DISPATCH_NORMAL);
     return;
   }
@@ -926,8 +1053,9 @@ void MediaTransportHandler::OnGatheringStateChange(
     dom::RTCIceGatheringState aState) {
   if (mCallbackThread && !mCallbackThread->IsOnCurrentThread()) {
     mCallbackThread->Dispatch(
-        WrapRunnable(RefPtr<MediaTransportHandler>(this),
-                     &MediaTransportHandler::OnGatheringStateChange, aState),
+        // This is being called from sigslot, which does not hold a strong ref.
+        WrapRunnable(this, &MediaTransportHandler::OnGatheringStateChange,
+                     aState),
         NS_DISPATCH_NORMAL);
     return;
   }
@@ -939,8 +1067,9 @@ void MediaTransportHandler::OnConnectionStateChange(
     dom::RTCIceConnectionState aState) {
   if (mCallbackThread && !mCallbackThread->IsOnCurrentThread()) {
     mCallbackThread->Dispatch(
-        WrapRunnable(RefPtr<MediaTransportHandler>(this),
-                     &MediaTransportHandler::OnConnectionStateChange, aState),
+        // This is being called from sigslot, which does not hold a strong ref.
+        WrapRunnable(this, &MediaTransportHandler::OnConnectionStateChange,
+                     aState),
         NS_DISPATCH_NORMAL);
     return;
   }
@@ -952,9 +1081,9 @@ void MediaTransportHandler::OnPacketReceived(const std::string& aTransportId,
                                              const MediaPacket& aPacket) {
   if (mCallbackThread && !mCallbackThread->IsOnCurrentThread()) {
     mCallbackThread->Dispatch(
-        WrapRunnable(RefPtr<MediaTransportHandler>(this),
-                     &MediaTransportHandler::OnPacketReceived, aTransportId,
-                     const_cast<MediaPacket&>(aPacket)),
+        // This is being called from sigslot, which does not hold a strong ref.
+        WrapRunnable(this, &MediaTransportHandler::OnPacketReceived,
+                     aTransportId, const_cast<MediaPacket&>(aPacket)),
         NS_DISPATCH_NORMAL);
     return;
   }
@@ -966,9 +1095,9 @@ void MediaTransportHandler::OnEncryptedSending(const std::string& aTransportId,
                                                const MediaPacket& aPacket) {
   if (mCallbackThread && !mCallbackThread->IsOnCurrentThread()) {
     mCallbackThread->Dispatch(
-        WrapRunnable(RefPtr<MediaTransportHandler>(this),
-                     &MediaTransportHandler::OnEncryptedSending, aTransportId,
-                     const_cast<MediaPacket&>(aPacket)),
+        // This is being called from sigslot, which does not hold a strong ref.
+        WrapRunnable(this, &MediaTransportHandler::OnEncryptedSending,
+                     aTransportId, const_cast<MediaPacket&>(aPacket)),
         NS_DISPATCH_NORMAL);
     return;
   }
@@ -980,8 +1109,8 @@ void MediaTransportHandler::OnStateChange(const std::string& aTransportId,
                                           TransportLayer::State aState) {
   if (mCallbackThread && !mCallbackThread->IsOnCurrentThread()) {
     mCallbackThread->Dispatch(
-        WrapRunnable(RefPtr<MediaTransportHandler>(this),
-                     &MediaTransportHandler::OnStateChange, aTransportId,
+        // This is being called from sigslot, which does not hold a strong ref.
+        WrapRunnable(this, &MediaTransportHandler::OnStateChange, aTransportId,
                      aState),
         NS_DISPATCH_NORMAL);
     return;
@@ -999,9 +1128,9 @@ void MediaTransportHandler::OnRtcpStateChange(const std::string& aTransportId,
                                               TransportLayer::State aState) {
   if (mCallbackThread && !mCallbackThread->IsOnCurrentThread()) {
     mCallbackThread->Dispatch(
-        WrapRunnable(RefPtr<MediaTransportHandler>(this),
-                     &MediaTransportHandler::OnRtcpStateChange, aTransportId,
-                     aState),
+        // This is being called from sigslot, which does not hold a strong ref.
+        WrapRunnable(this, &MediaTransportHandler::OnRtcpStateChange,
+                     aTransportId, aState),
         NS_DISPATCH_NORMAL);
     return;
   }
