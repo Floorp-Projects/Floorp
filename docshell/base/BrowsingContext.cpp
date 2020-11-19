@@ -2340,8 +2340,8 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_UseErrorPages>,
   return CheckOnlyEmbedderCanSet(aSource);
 }
 
-mozilla::dom::TouchEventsOverride BrowsingContext::TouchEventsOverride() {
-  BrowsingContext* bc = this;
+mozilla::dom::TouchEventsOverride BrowsingContext::TouchEventsOverride() const {
+  const BrowsingContext* bc = this;
   while (bc) {
     mozilla::dom::TouchEventsOverride tev =
         bc->GetTouchEventsOverrideInternal();

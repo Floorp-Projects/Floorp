@@ -463,7 +463,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool WatchedByDevTools();
   void SetWatchedByDevTools(bool aWatchedByDevTools, ErrorResult& aRv);
 
-  mozilla::dom::TouchEventsOverride TouchEventsOverride();
+  mozilla::dom::TouchEventsOverride TouchEventsOverride() const;
   void SetTouchEventsOverride(
       const enum TouchEventsOverride aTouchEventsOverride, ErrorResult& aRv);
   MOZ_MUST_USE nsresult
