@@ -35,7 +35,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Extension: "resource://gre/modules/Extension.jsm",
   Langpack: "resource://gre/modules/Extension.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   JSONFile: "resource://gre/modules/JSONFile.jsm",
   TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
 
@@ -694,14 +693,14 @@ class XPIStateLocation extends Map {
     // no profile extensions were present at startup, make sure it
     // exists now.
     if (name === KEY_APP_PROFILE) {
-      OS.File.makeDir(this.path, { ignoreExisting: true });
+      awaitPromise(IOUtils.makeDirectory(this.path));
     }
 
     if (saved) {
       this.restore(saved);
     }
 
-    this._installler = undefined;
+    this._installer = undefined;
   }
 
   hasPrecedence(otherLocation) {
@@ -1626,7 +1625,10 @@ var XPIStates = {
   save() {
     if (!this._jsonFile) {
       this._jsonFile = new JSONFile({
-        path: OS.Path.join(OS.Constants.Path.profileDir, FILE_XPI_STATES),
+        path: PathUtils.join(
+          Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+          FILE_XPI_STATES
+        ),
         finalizeAt: AddonManagerPrivate.finalShutdown,
         compression: "lz4",
       });

@@ -269,12 +269,6 @@ const startupPhases = {
     },
     {
       // bug 1541246
-      path: "ProfD:extensions",
-      condition: WIN,
-      stat: 1,
-    },
-    {
-      // bug 1541246
       path: "UAppData:",
       ignoreIfUnused: true, // sometimes before opening first browser window,
       // sometimes before first paint
