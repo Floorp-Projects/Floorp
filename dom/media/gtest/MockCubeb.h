@@ -263,6 +263,31 @@ class MockCubeb {
   // after CUBEB_STATE_STARTED until the first callback.
   void SetStreamStartDelay(TimeDuration aDuration);
 
+  // Helper class that automatically unforces a forced audio thread on release.
+  class AudioThreadAutoUnforcer {
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioThreadAutoUnforcer)
+
+   public:
+    explicit AudioThreadAutoUnforcer(MockCubeb* aContext)
+        : mContext(aContext) {}
+
+   protected:
+    virtual ~AudioThreadAutoUnforcer() { mContext->UnforceAudioThread(); }
+    MockCubeb* mContext;
+  };
+
+  // Creates the audio thread if one is not available. The audio thread remains
+  // forced until UnforceAudioThread is called. The returned promise is resolved
+  // when the audio thread is running. With this, a test can ensure starting
+  // audio streams is deterministically fast across platforms for more accurate
+  // results.
+  using ForcedAudioThreadPromise =
+      MozPromise<RefPtr<AudioThreadAutoUnforcer>, nsresult, false>;
+  RefPtr<ForcedAudioThreadPromise> ForceAudioThread();
+
+  // Allows a forced audio thread to stop.
+  void UnforceAudioThread();
+
   int StreamInit(cubeb* aContext, cubeb_stream** aStream,
                  cubeb_devid aInputDevice,
                  cubeb_stream_params* aInputStreamParams,
@@ -312,6 +337,10 @@ class MockCubeb {
   bool mSupportsDeviceCollectionChangedCallback = true;
   // The delay to use for stream start, in microseconds.
   Atomic<int32_t> mStreamStartDelayUs;
+  // Whether the audio thread is forced, i.e., whether it remains active even
+  // with no live streams.
+  Atomic<bool> mForcedAudioThread{false};
+  MozPromiseHolder<ForcedAudioThreadPromise> mForcedAudioThreadPromise;
   // Our input and output devices.
   nsTArray<cubeb_device_info> mInputDevices;
   nsTArray<cubeb_device_info> mOutputDevices;

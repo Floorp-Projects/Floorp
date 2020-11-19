@@ -129,6 +129,8 @@ void TestSlowStart(const TrackRate aRate) MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
   MockCubeb* cubeb = new MockCubeb();
   const TimeDuration startDelay = TimeDuration::FromSeconds(0.3);
   cubeb->SetStreamStartDelay(startDelay);
+  auto unforcer = WaitFor(cubeb->ForceAudioThread()).unwrap();
+  Unused << unforcer;
   CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
 
   RefPtr<AudioCallbackDriver> driver;
