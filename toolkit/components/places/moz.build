@@ -62,7 +62,6 @@ if CONFIG["MOZ_PLACES"]:
         "ExtensionSearchHandler.jsm",
         "History.jsm",
         "PlacesBackups.jsm",
-        "PlacesCategoriesStarter.jsm",
         "PlacesDBUtils.jsm",
         "PlacesExpiration.jsm",
         "PlacesRemoteTabsAutocompleteProvider.jsm",
