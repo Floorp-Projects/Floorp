@@ -589,7 +589,7 @@ const FEEDS_DATA = [
     name: "section.highlights",
     factory: () => new HighlightsFeed(),
     title: "Fetches content recommendations from places db",
-    value: false,
+    value: true,
   },
   {
     name: "system.topstories",
