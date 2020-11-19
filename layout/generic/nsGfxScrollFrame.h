@@ -1531,7 +1531,7 @@ class nsXULScrollFrame final : public nsBoxFrame,
   bool IsScrollAnimating(IncludeApzAnimation aIncludeApz) final {
     return mHelper.IsScrollAnimating(aIncludeApz);
   }
-  mozilla::ScrollGeneration CurrentScrollGeneration() final {
+  mozilla::ScrollGeneration CurrentScrollGeneration() const final {
     return mHelper.CurrentScrollGeneration();
   }
   nsPoint LastScrollDestination() final {
