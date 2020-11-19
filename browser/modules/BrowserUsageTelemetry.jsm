@@ -879,14 +879,16 @@ let BrowserUsageTelemetry = {
           "browser.toolbars.bookmarks.visibility",
           "newtab"
         );
-        value = (value == "never").toString();
-      } else {
-        value = Services.xulStore.getValue(
-          AppConstants.BROWSER_CHROME_URL,
-          nodeId,
-          "collapsed"
-        );
+        if (value != "newtab") {
+          return value == "never" ? "off" : "on";
+        }
+        return value;
       }
+      value = Services.xulStore.getValue(
+        AppConstants.BROWSER_CHROME_URL,
+        nodeId,
+        "collapsed"
+      );
 
       if (value) {
         return value == "true" ? "off" : "on";
