@@ -135,7 +135,7 @@ class MockCubebStream {
                   cubeb_stream_params* aOutputStreamParams,
                   cubeb_data_callback aDataCallback,
                   cubeb_state_callback aStateCallback, void* aUserPtr,
-                  SmartMockCubebStream* aSelf);
+                  SmartMockCubebStream* aSelf, TimeDuration aStartDelay);
 
   ~MockCubebStream();
 
@@ -167,6 +167,7 @@ class MockCubebStream {
 
   const bool mHasInput;
   const bool mHasOutput;
+  const TimeDuration mStartDelay;
   SmartMockCubebStream* const mSelf;
 
  private:
@@ -211,10 +212,11 @@ class SmartMockCubebStream
                        cubeb_devid aOutputDevice,
                        cubeb_stream_params* aOutputStreamParams,
                        cubeb_data_callback aDataCallback,
-                       cubeb_state_callback aStateCallback, void* aUserPtr)
+                       cubeb_state_callback aStateCallback, void* aUserPtr,
+                       TimeDuration aStartDelay)
       : MockCubebStream(aContext, aInputDevice, aInputStreamParams,
                         aOutputDevice, aOutputStreamParams, aDataCallback,
-                        aStateCallback, aUserPtr, this) {}
+                        aStateCallback, aUserPtr, this, aStartDelay) {}
 };
 
 // This class has two facets: it is both a fake cubeb backend that is intended
@@ -256,6 +258,10 @@ class MockCubeb {
   // This allows simulating a backend that does not support setting a device
   // collection invalidation callback, to be able to test the fallback path.
   void SetSupportDeviceChangeCallback(bool aSupports);
+
+  // Makes MockCubebStreams starting after this point wait for the given time
+  // after CUBEB_STATE_STARTED until the first callback.
+  void SetStreamStartDelay(TimeDuration aDuration);
 
   int StreamInit(cubeb* aContext, cubeb_stream** aStream,
                  cubeb_devid aInputDevice,
@@ -304,6 +310,8 @@ class MockCubeb {
   // notification via a system callback. If not, Gecko is expected to re-query
   // the list every time.
   bool mSupportsDeviceCollectionChangedCallback = true;
+  // The delay to use for stream start, in microseconds.
+  Atomic<int32_t> mStreamStartDelayUs;
   // Our input and output devices.
   nsTArray<cubeb_device_info> mInputDevices;
   nsTArray<cubeb_device_info> mOutputDevices;
