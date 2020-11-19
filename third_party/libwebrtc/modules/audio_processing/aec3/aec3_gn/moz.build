@@ -1,0 +1,110 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+  ### This moz.build was AUTOMATICALLY GENERATED from a GN config,  ###
+  ### DO NOT edit it by hand.                                       ###
+
+COMPILE_FLAGS["OS_INCLUDES"] = []
+AllowCompilerWarnings()
+
+DEFINES["ABSL_ALLOCATOR_NOTHROW"] = "1"
+DEFINES["CR_SYSROOT_HASH"] = "5f64b417e1018dcf8fcc81dc2714e0f264b9b911"
+DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
+DEFINES["USE_AURA"] = "1"
+DEFINES["USE_GLIB"] = "1"
+DEFINES["USE_NSS_CERTS"] = "1"
+DEFINES["USE_OZONE"] = "1"
+DEFINES["USE_UDEV"] = True
+DEFINES["USE_X11"] = "1"
+DEFINES["WEBRTC_APM_DEBUG_DUMP"] = "0"
+DEFINES["WEBRTC_ENABLE_PROTOBUF"] = "0"
+DEFINES["WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE"] = True
+DEFINES["WEBRTC_LIBRARY_IMPL"] = True
+DEFINES["WEBRTC_LINUX"] = True
+DEFINES["WEBRTC_MOZILLA_BUILD"] = True
+DEFINES["WEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS"] = "0"
+DEFINES["WEBRTC_POSIX"] = True
+DEFINES["_DEBUG"] = True
+DEFINES["_FILE_OFFSET_BITS"] = "64"
+DEFINES["_GNU_SOURCE"] = True
+DEFINES["_LARGEFILE64_SOURCE"] = True
+DEFINES["_LARGEFILE_SOURCE"] = True
+DEFINES["__STDC_CONSTANT_MACROS"] = True
+DEFINES["__STDC_FORMAT_MACROS"] = True
+
+FINAL_LIBRARY = "webrtc"
+
+
+LOCAL_INCLUDES += [
+    "!/ipc/ipdl/_ipdlheaders",
+    "/ipc/chromium/src",
+    "/ipc/glue",
+    "/third_party/libwebrtc/",
+    "/third_party/libwebrtc/third_party/abseil-cpp/"
+]
+
+OS_LIBS += [
+    "atomic",
+    "rt"
+]
+
+UNIFIED_SOURCES += [
+    "/third_party/libwebrtc/modules/audio_processing/aec3/adaptive_fir_filter.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/adaptive_fir_filter_erl.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_common.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_fft.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/aec_state.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/alignment_mixer.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/api_call_jitter_metrics.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/block_buffer.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/block_delay_buffer.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/block_framer.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/block_processor.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/block_processor_metrics.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/clockdrift_detector.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/coarse_filter_update_gain.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/comfort_noise_generator.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/decimator.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/dominant_nearend_detector.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/downsampled_render_buffer.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/echo_audibility.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/echo_canceller3.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/echo_path_delay_estimator.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/echo_path_variability.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/echo_remover.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/echo_remover_metrics.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/erl_estimator.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/erle_estimator.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/fft_buffer.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/filter_analyzer.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/frame_blocker.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/fullband_erle_estimator.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/matched_filter.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/matched_filter_lag_aggregator.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/moving_average.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/refined_filter_update_gain.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/render_buffer.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/render_delay_buffer.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/render_delay_controller.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/render_delay_controller_metrics.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/render_signal_analyzer.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/residual_echo_estimator.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/reverb_decay_estimator.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/reverb_frequency_response.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/reverb_model.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/reverb_model_estimator.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/signal_dependent_erle_estimator.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/spectrum_buffer.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/stationarity_estimator.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/subband_erle_estimator.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/subband_nearend_detector.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/subtractor.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/subtractor_output.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/subtractor_output_analyzer.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/suppression_filter.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/suppression_gain.cc"
+]
+
+Library("aec3_gn")
