@@ -1189,9 +1189,7 @@ void nsContainerFrame::FinishReflowChild(
   }
 
   nsPoint curOrigin = aKidFrame->GetPosition();
-  WritingMode outerWM = aDesiredSize.GetWritingMode();
-  LogicalSize convertedSize =
-      aDesiredSize.Size(outerWM).ConvertTo(aWM, outerWM);
+  const LogicalSize convertedSize = aDesiredSize.Size(aWM);
   LogicalPoint pos(aPos);
 
   if (aFlags & ReflowChildFlags::ApplyRelativePositioning) {
