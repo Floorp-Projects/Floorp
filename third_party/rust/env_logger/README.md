@@ -22,7 +22,7 @@ It must be added along with `log` to the project dependencies:
 ```toml
 [dependencies]
 log = "0.4.0"
-env_logger = "0.8.1"
+env_logger = "0.8.2"
 ```
 
 `env_logger` must be initialized as early as possible in the project. After it's initialized, you can use the `log` macros to do actual logging.
@@ -59,7 +59,7 @@ Tests can use the `env_logger` crate to see log messages generated during that t
 log = "0.4.0"
 
 [dev-dependencies]
-env_logger = "0.8.1"
+env_logger = "0.8.2"
 ```
 
 ```rust

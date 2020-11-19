@@ -1,11 +1,8 @@
 #![feature(test)]
-extern crate chrono;
-extern crate humantime;
 extern crate test;
 
 use chrono::{DateTime};
 use humantime::parse_rfc3339;
-
 
 #[bench]
 fn rfc3339_humantime_seconds(b: &mut test::Bencher) {

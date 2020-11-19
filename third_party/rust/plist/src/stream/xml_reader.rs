@@ -255,6 +255,10 @@ mod tests {
             Integer((-9223372036854775808i64).into()),
             String("HexademicalNumber".to_owned()),
             Integer(0xdead_beef_u64.into()),
+            String("IsTrue".into()),
+            Boolean(true),
+            String("IsNotFalse".into()),
+            Boolean(false),
             EndCollection,
         ];
 

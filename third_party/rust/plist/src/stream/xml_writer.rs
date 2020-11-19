@@ -323,6 +323,10 @@ mod tests {
             Event::Integer(18446744073709551615u64.into()),
             Event::String("SmallestNumber".to_owned()),
             Event::Integer((-9223372036854775808i64).into()),
+            Event::String("IsTrue".into()),
+            Event::Boolean(true),
+            Event::String("IsNotFalse".into()),
+            Event::Boolean(false),
             Event::EndCollection,
         ];
 
@@ -368,6 +372,10 @@ mod tests {
 \t<integer>18446744073709551615</integer>
 \t<key>SmallestNumber</key>
 \t<integer>-9223372036854775808</integer>
+\t<key>IsTrue</key>
+\t<true />
+\t<key>IsNotFalse</key>
+\t<false />
 </dict>
 </plist>";
 

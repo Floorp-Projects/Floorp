@@ -424,22 +424,23 @@ mod tests {
         let events: Vec<Event> = streaming_parser.map(|e| e.unwrap()).collect();
 
         let comparison = &[
-            StartDictionary(Some(11)),
+            StartDictionary(Some(13)),
             String("Author".into()),
             String("William Shakespeare".into()),
-            String("Height".into()),
-            Real(1.6),
-            String("Data".into()),
-            Data(vec![0, 0, 0, 190, 0, 0, 0, 3, 0, 0, 0, 30, 0, 0, 0]),
             String("Birthdate".into()),
             Date(parse_rfc3339_weak("1981-05-16 11:32:06").unwrap().into()),
-            String("BiggestNumber".into()),
-            Integer(18446744073709551615u64.into()),
-            String("SmallestNumber".into()),
-            Integer((-9223372036854775808i64).into()),
             String("EmptyArray".into()),
             StartArray(Some(0)),
             EndCollection,
+            String("IsNotFalse".into()),
+            Boolean(false),
+            String("SmallestNumber".into()),
+            Integer((-9223372036854775808i64).into()),
+            String("EmptyDictionary".into()),
+            StartDictionary(Some(0)),
+            EndCollection,
+            String("Height".into()),
+            Real(1.6),
             String("Lines".into()),
             StartArray(Some(2)),
             String("It is a tale told by an idiot,".into()),
@@ -447,15 +448,18 @@ mod tests {
             EndCollection,
             String("Death".into()),
             Integer(1564.into()),
-            String("EmptyDictionary".into()),
-            StartDictionary(Some(0)),
-            EndCollection,
             String("Blank".into()),
             String("".into()),
+            String("BiggestNumber".into()),
+            Integer(18446744073709551615u64.into()),
+            String("IsTrue".into()),
+            Boolean(true),
+            String("Data".into()),
+            Data(vec![0, 0, 0, 190, 0, 0, 0, 3, 0, 0, 0, 30, 0, 0, 0]),
             EndCollection,
         ];
 
-        assert_eq!(events, comparison);
+        assert_eq!(events, &comparison[..]);
     }
 
     #[test]

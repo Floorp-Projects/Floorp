@@ -2,7 +2,7 @@ use serde::de;
 use std::{
     fmt::Display,
     fs::File,
-    io::{BufReader, Read, Seek},
+    io::{BufReader, Cursor, Read, Seek},
     iter::Peekable,
     mem,
     path::Path,
@@ -360,6 +360,12 @@ where
     fn size_hint(&self) -> Option<usize> {
         self.remaining
     }
+}
+
+/// Deserializes an instance of type `T` from a byte slice.
+pub fn from_bytes<T: de::DeserializeOwned>(bytes: &[u8]) -> Result<T, Error> {
+    let cursor = Cursor::new(bytes);
+    from_reader(cursor)
 }
 
 /// Deserializes an instance of type `T` from a plist file of any encoding.
