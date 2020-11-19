@@ -1709,7 +1709,7 @@ void DocumentLoadListener::TriggerProcessSwitch(
       // This load has already started, so we want to filter out any 'stop'
       // progress events coming from the old process as a result of us
       // disconnecting from it.
-      browserParent->SuspendProgressEventsUntilAfterNextLoadStarts();
+      browserParent->SuspendProgressEvents();
     }
   }
   DisconnectListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED, true);
@@ -2156,9 +2156,9 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
       RefPtr<BrowserParent> browserParent =
           loadingContext->GetCurrentWindowGlobal()->GetBrowserParent();
 
-      // This load has already started, so we want to suspend the start progress
-      // events from the docshell from reaching the parent.
-      browserParent->SuspendProgressEventsUntilAfterNextLoadStarts();
+      // XXX(anny) This is currently a dead code path because parent-controlled
+      // DC pref is off. When we enable the pref, we might get extra STATE_START
+      // progress events
 
       // Notify the docshell that it should load using the newly connected
       // channel

@@ -719,13 +719,9 @@ class BrowserParent final : public PBrowserParent,
                           uint32_t aPresShellId);
   void StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId);
 
-  // Suspend nsIWebProgressListener events until after the next STATE_START
-  // onStateChange. This is used to block STATE_STOP events from the old process
-  // when process switching away, as well as the initial about:blank and
-  // STATE_START from the new process.
-  void SuspendProgressEventsUntilAfterNextLoadStarts() {
-    mSuspendedProgressEvents = true;
-  }
+  // Suspend nsIWebProgressListener events. This is used to block any further
+  // progress events from the old process when process switching away.
+  void SuspendProgressEvents() { mSuspendedProgressEvents = true; }
 
   bool CanCancelContentJS(nsIRemoteTab::NavigationType aNavigationType,
                           int32_t aNavigationIndex,
@@ -1009,9 +1005,8 @@ class BrowserParent final : public PBrowserParent,
   bool mIsMouseEnterIntoWidgetEventSuppressed : 1;
 
   // Set to true if we're currently suspending nsIWebProgress events.
-  // We keep suspending until we get a STATE_START onStateChange event
-  // (for something that isn't the initial about:blank) and then start
-  // allowing future events.
+  // We do this when we are process switching and want to suspend events
+  // from the old BrowserParent after it sent STATE_START event.
   bool mSuspendedProgressEvents : 1;
 };
 
