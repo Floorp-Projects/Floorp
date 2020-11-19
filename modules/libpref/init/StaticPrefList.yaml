@@ -8796,6 +8796,13 @@
   value: false
   mirror: always
 
+# When a h3 transaction is inserted in the pending queue, the time (ms) we wait
+# to create a TCP backup connection.
+- name: network.http.http3.backup_timer_delay
+  type: RelaxedAtomicUint32
+  value: 100
+  mirror: always
+
 # When true, a http request will be upgraded to https when HTTPS RR is
 # available.
 - name: network.dns.upgrade_with_https_rr
