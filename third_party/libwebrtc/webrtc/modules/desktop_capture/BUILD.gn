@@ -10,6 +10,10 @@ import("//build/config/linux/pkg_config.gni")
 import("//build/config/ui.gni")
 import("../../webrtc.gni")
 
+if (build_with_mozilla) {
+  defines = [ "MULTI_MONITOR_SCREENSHARE" ]
+}
+
 use_desktop_capture_differ_sse2 = current_cpu == "x86" || current_cpu == "x64"
 
 rtc_static_library("primitives") {
@@ -155,18 +159,6 @@ if (rtc_include_tests) {
   }
 }
 
-if (is_linux) {
-  if (rtc_use_pipewire) {
-    defines = [ "WEBRTC_USE_PIPEWIRE" ]
-    pkg_config("gio") {
-      packages = [
-        "gio-2.0",
-        "gio-unix-2.0",
-      ]
-    }
-  }
-}
-
 rtc_source_set("desktop_capture") {
   public_deps = [
     ":desktop_capture_generic",
@@ -302,8 +294,6 @@ rtc_static_library("desktop_capture_generic") {
   ]
 
   if (build_with_mozilla) {
-    defines = [ "MULTI_MONITOR_SCREENSHARE" ]
-
     sources += [
       "desktop_device_info.cc",
       "desktop_device_info.h",
@@ -326,7 +316,6 @@ rtc_static_library("desktop_capture_generic") {
   }
 
   if (use_x11 || rtc_use_pipewire) {
-    include_dirs = [ "/third_party/libwebrtc/third_party/pipewire" ]
     sources += [
       "mouse_cursor_monitor_linux.cc",
       "screen_capturer_linux.cc",
@@ -368,7 +357,6 @@ rtc_static_library("desktop_capture_generic") {
   }
 
   if (rtc_use_pipewire) {
-    include_dirs = [ "/third_party/libwebrtc/third_party/pipewire" ]
     sources += [
       "linux/base_capturer_pipewire.cc",
       "linux/base_capturer_pipewire.h",
@@ -378,10 +366,15 @@ rtc_static_library("desktop_capture_generic") {
       "linux/window_capturer_pipewire.h",
     ]
 
-    configs += [
-      ":gio",
-      ":pipewire",
-    ]
+    if (!build_with_mozilla) {
+      configs += [
+        ":gio",
+        ":pipewire",
+      ]
+    } else {
+      defines += [ "WEBRTC_USE_PIPEWIRE" ]
+      include_dirs += [ "/third_party/pipewire" ]
+    }
   }
 
   if (!is_win && !is_mac && !use_x11 && !rtc_use_pipewire) {
