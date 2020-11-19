@@ -1327,6 +1327,10 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // front-end side to show blocking icon.
   void MaybeNotifyAutoplayBlocked();
 
+  // Dispatch event for video control when video gets blocked in order to show
+  // the click-to-play icon.
+  void DispatchBlockEventForVideoControl();
+
   // When playing state change, we have to notify MediaControl in the chrome
   // process in order to keep its playing state correct.
   void NotifyMediaControlPlaybackStateChanged();

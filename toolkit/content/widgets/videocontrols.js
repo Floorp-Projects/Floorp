@@ -2809,7 +2809,8 @@ this.NoControlsMobileImplWidget = class {
     this.shadowRoot.firstElementChild.setAttribute("localedir", direction);
 
     this.Utils = {
-      videoEvents: ["play", "playing", "MozNoControlsBlockedVideo"],
+      videoEvents: ["play", "playing"],
+      videoControlEvents: ["MozNoControlsBlockedVideo"],
       terminate() {
         for (let event of this.videoEvents) {
           try {
@@ -2817,6 +2818,12 @@ this.NoControlsMobileImplWidget = class {
               capture: true,
               mozSystemGroup: true,
             });
+          } catch (ex) {}
+        }
+
+        for (let event of this.videoControlEvents) {
+          try {
+            this.videocontrols.removeEventListener(event, this);
           } catch (ex) {}
         }
 
@@ -2904,6 +2911,10 @@ this.NoControlsMobileImplWidget = class {
             capture: true,
             mozSystemGroup: true,
           });
+        }
+
+        for (let event of this.videoControlEvents) {
+          this.videocontrols.addEventListener(event, this);
         }
       },
     };
