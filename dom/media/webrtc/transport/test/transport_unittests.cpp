@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+
 /* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -484,9 +484,15 @@ class TransportTestPeer : public sigslot::has_slots<> {
   }
 
   void DisconnectDestroyFlow() {
-    loopback_->Disconnect();
-    disconnect_all();  // Disconnect from the signals;
-    flow_ = nullptr;
+    test_utils_->sts_target()->Dispatch(
+        NS_NewRunnableFunction(
+            __func__,
+            [this] {
+              loopback_->Disconnect();
+              disconnect_all();  // Disconnect from the signals;
+              flow_ = nullptr;
+            }),
+        NS_DISPATCH_SYNC);
   }
 
   void SetDtlsAllowAll() {
