@@ -3222,14 +3222,20 @@
       this.removeTabs(selectedTabs);
     },
 
-    removeTabs(tabs) {
+    removeTabs(
+      tabs,
+      { animate = true, suppressWarnAboutClosingWindow = false } = {}
+    ) {
       // When 'closeWindowWithLastTab' pref is enabled, closing all tabs
       // can be considered equivalent to closing the window.
       if (
         this.tabs.length == tabs.length &&
         Services.prefs.getBoolPref("browser.tabs.closeWindowWithLastTab")
       ) {
-        window.closeWindow(true, window.warnAboutClosingWindow);
+        window.closeWindow(
+          true,
+          suppressWarnAboutClosingWindow ? null : window.warnAboutClosingWindow
+        );
         return;
       }
 
@@ -3240,7 +3246,8 @@
       try {
         let tabsWithBeforeUnload = [];
         let lastToClose;
-        let aParams = { animate: true, prewarmed: true };
+        let aParams = { animate, prewarmed: true };
+
         for (let tab of tabs) {
           if (tab.selected) {
             lastToClose = tab;
