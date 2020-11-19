@@ -1365,17 +1365,17 @@ bool MediaTrackGraphImpl::UpdateMainThreadState() {
   return false;
 }
 
-auto MediaTrackGraphImpl::OneIteration(GraphTime aStateEnd,
+auto MediaTrackGraphImpl::OneIteration(GraphTime aStateTime,
                                        GraphTime aIterationEnd,
                                        AudioMixer* aMixer) -> IterationResult {
   if (mGraphRunner) {
-    return mGraphRunner->OneIteration(aStateEnd, aIterationEnd, aMixer);
+    return mGraphRunner->OneIteration(aStateTime, aIterationEnd, aMixer);
   }
 
-  return OneIterationImpl(aStateEnd, aIterationEnd, aMixer);
+  return OneIterationImpl(aStateTime, aIterationEnd, aMixer);
 }
 
-auto MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateEnd,
+auto MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateTime,
                                            GraphTime aIterationEnd,
                                            AudioMixer* aMixer)
     -> IterationResult {
@@ -1406,14 +1406,14 @@ auto MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateEnd,
     NS_ProcessPendingEvents(nullptr);
   }
 
-  GraphTime stateEnd = std::min(aStateEnd, GraphTime(mEndTime));
-  UpdateGraph(stateEnd);
+  GraphTime stateTime = std::min(aStateTime, GraphTime(mEndTime));
+  UpdateGraph(stateTime);
 
-  mStateComputedTime = stateEnd;
+  mStateComputedTime = stateTime;
 
   GraphTime oldProcessedTime = mProcessedTime;
   Process(aMixer);
-  MOZ_ASSERT(mProcessedTime == stateEnd);
+  MOZ_ASSERT(mProcessedTime == stateTime);
 
   UpdateCurrentTimeForTracks(oldProcessedTime);
 

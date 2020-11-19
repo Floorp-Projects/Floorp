@@ -35,7 +35,7 @@ class GraphRunner final : public Runnable {
    * Signals one iteration of mGraph. Hands state over to mThread and runs
    * the iteration there.
    */
-  IterationResult OneIteration(GraphTime aStateEnd, GraphTime aIterationEnd,
+  IterationResult OneIteration(GraphTime aStateTime, GraphTime aIterationEnd,
                                AudioMixer* aMixer);
 
   /**
@@ -62,16 +62,18 @@ class GraphRunner final : public Runnable {
   ~GraphRunner();
 
   class IterationState {
-    GraphTime mStateEnd;
+    GraphTime mStateTime;
     GraphTime mIterationEnd;
     AudioMixer* MOZ_NON_OWNING_REF mMixer;
 
    public:
-    IterationState(GraphTime aStateEnd, GraphTime aIterationEnd,
+    IterationState(GraphTime aStateTime, GraphTime aIterationEnd,
                    AudioMixer* aMixer)
-        : mStateEnd(aStateEnd), mIterationEnd(aIterationEnd), mMixer(aMixer) {}
+        : mStateTime(aStateTime),
+          mIterationEnd(aIterationEnd),
+          mMixer(aMixer) {}
     IterationState& operator=(const IterationState& aOther) = default;
-    GraphTime StateEnd() const { return mStateEnd; }
+    GraphTime StateTime() const { return mStateTime; }
     GraphTime IterationEnd() const { return mIterationEnd; }
     AudioMixer* Mixer() const { return mMixer; }
   };
@@ -90,8 +92,8 @@ class GraphRunner final : public Runnable {
 
   enum class ThreadState {
     Wait,      // Waiting for a message.  This is the initial state.
-               // A transition from Run back to Wait occurs on the runner
-               // thread after it processes as far as mIterationState->mStateEnd
+               // A transition from Run back to Wait occurs on the runner thread
+               // after it processes as far as mIterationState->mStateTime
                // and sets mIterationResult.
     Run,       // Set on driver thread after each mIterationState update.
     Shutdown,  // Set when Shutdown() is called on main thread.

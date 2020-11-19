@@ -56,13 +56,13 @@ void GraphRunner::Shutdown() {
   mThread->Shutdown();
 }
 
-auto GraphRunner::OneIteration(GraphTime aStateEnd, GraphTime aIterationEnd,
+auto GraphRunner::OneIteration(GraphTime aStateTime, GraphTime aIterationEnd,
                                AudioMixer* aMixer) -> IterationResult {
   TRACE();
 
   MonitorAutoLock lock(mMonitor);
   MOZ_ASSERT(mThreadState == ThreadState::Wait);
-  mIterationState = Some(IterationState(aStateEnd, aIterationEnd, aMixer));
+  mIterationState = Some(IterationState(aStateTime, aIterationEnd, aMixer));
 
 #ifdef DEBUG
   if (auto audioDriver = mGraph->CurrentDriver()->AsAudioCallbackDriver()) {
@@ -113,7 +113,7 @@ NS_IMETHODIMP GraphRunner::Run() {
     }
     MOZ_DIAGNOSTIC_ASSERT(mIterationState.isSome());
     TRACE();
-    mIterationResult = mGraph->OneIterationImpl(mIterationState->StateEnd(),
+    mIterationResult = mGraph->OneIterationImpl(mIterationState->StateTime(),
                                                 mIterationState->IterationEnd(),
                                                 mIterationState->Mixer());
     // Signal that mIterationResult was updated
