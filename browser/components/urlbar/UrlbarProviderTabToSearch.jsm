@@ -103,6 +103,7 @@ function initializeDynamicResult() {
 class ProviderTabToSearch extends UrlbarProvider {
   constructor() {
     super();
+    this.onboardingEnginesShown = new Set();
   }
 
   /**
@@ -242,6 +243,32 @@ class ProviderTabToSearch extends UrlbarProvider {
   }
 
   /**
+   * Called when the user starts and ends an engagement with the urlbar. We
+   * clear onboardingEnginesShown on engagement because we want to record in
+   * urlbar.tips once per engagement per engine. This has the unfortunate side
+   * effect of recording again when the user re-opens a view with a retained
+   * tab-to-search result. This is an acceptable tradeoff for not recording
+   * multiple times if the user backspaces autofill but then retypes the engine
+   * hostname, yielding the same tab-to-search result.
+   *
+   * @param {boolean} isPrivate True if the engagement is in a private context.
+   * @param {string} state The state of the engagement, one of: start,
+   *        engagement, abandonment, discard.
+   */
+  onEngagement(isPrivate, state) {
+    if (!this.onboardingEnginesShown.size) {
+      return;
+    }
+
+    Services.telemetry.keyedScalarAdd(
+      "urlbar.tips",
+      "tabtosearch_onboard-shown",
+      this.onboardingEnginesShown.size
+    );
+    this.onboardingEnginesShown.clear();
+  }
+
+  /**
    * Defines whether the view should defer user selection events while waiting
    * for the first result from this provider.
    * @returns {boolean} Whether the provider wants to defer user selection
@@ -295,7 +322,6 @@ class ProviderTabToSearch extends UrlbarProvider {
     const onboardingInteractionsLeft = UrlbarPrefs.get(
       "tabToSearch.onboard.interactionsLeft"
     );
-    let showedOnboarding = false;
 
     // If the engine host begins with the search string, autofill may happen
     // for it, and the Muxer will retain the result only if there's a matching
@@ -318,7 +344,6 @@ class ProviderTabToSearch extends UrlbarProvider {
       if (host.startsWith(searchStr.toLocaleLowerCase())) {
         if (onboardingInteractionsLeft > 0) {
           addCallback(this, makeOnboardingResult(engine));
-          showedOnboarding = true;
         } else {
           addCallback(this, makeResult(queryContext, engine));
         }
@@ -351,23 +376,11 @@ class ProviderTabToSearch extends UrlbarProvider {
       if (host) {
         let engine = partialMatchEnginesByHost.get(host);
         if (onboardingInteractionsLeft > 0) {
-          showedOnboarding = true;
           addCallback(this, makeOnboardingResult(engine, true));
         } else {
           addCallback(this, makeResult(queryContext, engine, true));
         }
       }
-    }
-
-    // The muxer ensures we show at most one tab-to-search result per query.
-    // Thus, we increment this telemetry just once, even if we sent multiple
-    // results to the muxer.
-    if (showedOnboarding) {
-      Services.telemetry.keyedScalarAdd(
-        "urlbar.tips",
-        "tabtosearch_onboard-shown",
-        1
-      );
     }
   }
 }
