@@ -10,7 +10,7 @@
 use crate::ir::condcodes::{FloatCC, IntCC};
 use crate::ir::types::*;
 use crate::ir::Inst as IRInst;
-use crate::ir::{InstructionData, Opcode, Type};
+use crate::ir::{Opcode, Type};
 use crate::machinst::lower::*;
 use crate::machinst::*;
 use crate::CodegenResult;
@@ -20,6 +20,7 @@ use crate::isa::aarch64::AArch64Backend;
 
 use super::lower_inst;
 
+use crate::data_value::DataValue;
 use log::{debug, trace};
 use regalloc::{Reg, RegClass, Writable};
 use smallvec::SmallVec;
@@ -126,22 +127,9 @@ pub(crate) fn const_param_to_u128<C: LowerCtx<I = Inst>>(
     ctx: &mut C,
     inst: IRInst,
 ) -> Option<u128> {
-    let data = match ctx.data(inst) {
-        &InstructionData::Shuffle { mask, .. } => ctx.get_immediate(mask),
-        &InstructionData::UnaryConst {
-            constant_handle, ..
-        } => ctx.get_constant_data(constant_handle),
-        _ => return None,
-    };
-    let data = data.clone().into_vec();
-
-    if data.len() == 16 {
-        let mut bytes = [0u8; 16];
-
-        bytes.copy_from_slice(&data);
-        Some(u128::from_le_bytes(bytes))
-    } else {
-        None
+    match ctx.get_immediate(inst) {
+        Some(DataValue::V128(bytes)) => Some(u128::from_le_bytes(bytes)),
+        _ => None,
     }
 }
 
@@ -586,11 +574,11 @@ type AddressAddend64List = SmallVec<[Reg; 4]>;
 /// - NarrowValueMode::ZeroExtend64: the associated input is 32 bits wide;
 ///                                  do a zero-extension.
 ///
-/// We do not descend further into the inputs of extensions, because supporting
-/// (e.g.) a 32-bit add that is later extended would require additional masking
-/// of high-order bits, which is too complex. So, in essence, we descend any
-/// number of adds from the roots, collecting all 64-bit address addends; then
-/// possibly support extensions at these leaves.
+/// We do not descend further into the inputs of extensions (unless it is a constant),
+/// because supporting (e.g.) a 32-bit add that is later extended would require
+/// additional masking of high-order bits, which is too complex. So, in essence, we
+/// descend any number of adds from the roots, collecting all 64-bit address addends;
+/// then possibly support extensions at these leaves.
 fn collect_address_addends<C: LowerCtx<I = Inst>>(
     ctx: &mut C,
     roots: &[InsnInput],
@@ -621,8 +609,20 @@ fn collect_address_addends<C: LowerCtx<I = Inst>>(
                         ExtendOp::SXTW
                     };
                     let extendee_input = InsnInput { insn, input: 0 };
-                    let reg = put_input_in_reg(ctx, extendee_input, NarrowValueMode::None);
-                    result32.push((reg, extendop));
+                    // If the input is a zero-extension of a constant, add the value to the known
+                    // offset.
+                    // Only do this for zero-extension, as generating a sign-extended
+                    // constant may be more instructions than using the 'SXTW' addressing mode.
+                    if let (Some(insn), ExtendOp::UXTW) = (
+                        maybe_input_insn(ctx, extendee_input, Opcode::Iconst),
+                        extendop,
+                    ) {
+                        let value = ctx.get_constant(insn).unwrap() as i64;
+                        offset += value;
+                    } else {
+                        let reg = put_input_in_reg(ctx, extendee_input, NarrowValueMode::None);
+                        result32.push((reg, extendop));
+                    }
                 }
                 Opcode::Uextend | Opcode::Sextend => {
                     let reg = put_input_in_reg(ctx, input, NarrowValueMode::None);
@@ -825,7 +825,11 @@ pub(crate) fn lower_constant_f32<C: LowerCtx<I = Inst>>(
     rd: Writable<Reg>,
     value: f32,
 ) {
-    ctx.emit(Inst::load_fp_constant32(rd, value));
+    let alloc_tmp = |class, ty| ctx.alloc_tmp(class, ty);
+
+    for inst in Inst::load_fp_constant32(rd, value.to_bits(), alloc_tmp) {
+        ctx.emit(inst);
+    }
 }
 
 pub(crate) fn lower_constant_f64<C: LowerCtx<I = Inst>>(
@@ -833,7 +837,11 @@ pub(crate) fn lower_constant_f64<C: LowerCtx<I = Inst>>(
     rd: Writable<Reg>,
     value: f64,
 ) {
-    ctx.emit(Inst::load_fp_constant64(rd, value));
+    let alloc_tmp = |class, ty| ctx.alloc_tmp(class, ty);
+
+    for inst in Inst::load_fp_constant64(rd, value.to_bits(), alloc_tmp) {
+        ctx.emit(inst);
+    }
 }
 
 pub(crate) fn lower_constant_f128<C: LowerCtx<I = Inst>>(
@@ -841,7 +849,48 @@ pub(crate) fn lower_constant_f128<C: LowerCtx<I = Inst>>(
     rd: Writable<Reg>,
     value: u128,
 ) {
-    ctx.emit(Inst::load_fp_constant128(rd, value));
+    if value == 0 {
+        // Fast-track a common case.  The general case, viz, calling `Inst::load_fp_constant128`,
+        // is potentially expensive.
+        ctx.emit(Inst::VecDupImm {
+            rd,
+            imm: ASIMDMovModImm::zero(),
+            invert: false,
+            size: VectorSize::Size8x16,
+        });
+    } else {
+        let alloc_tmp = |class, ty| ctx.alloc_tmp(class, ty);
+        for inst in Inst::load_fp_constant128(rd, value, alloc_tmp) {
+            ctx.emit(inst);
+        }
+    }
+}
+
+pub(crate) fn lower_splat_const<C: LowerCtx<I = Inst>>(
+    ctx: &mut C,
+    rd: Writable<Reg>,
+    value: u64,
+    size: VectorSize,
+) {
+    let (value, narrow_size) = match size.lane_size() {
+        ScalarSize::Size8 => (value as u8 as u64, ScalarSize::Size128),
+        ScalarSize::Size16 => (value as u16 as u64, ScalarSize::Size8),
+        ScalarSize::Size32 => (value as u32 as u64, ScalarSize::Size16),
+        ScalarSize::Size64 => (value, ScalarSize::Size32),
+        _ => unreachable!(),
+    };
+    let (value, size) = match Inst::get_replicated_vector_pattern(value as u128, narrow_size) {
+        Some((value, lane_size)) => (
+            value,
+            VectorSize::from_lane_size(lane_size, size.is_128bits()),
+        ),
+        None => (value, size),
+    };
+    let alloc_tmp = |class, ty| ctx.alloc_tmp(class, ty);
+
+    for inst in Inst::load_replicated_vector_pattern(rd, value, size, alloc_tmp) {
+        ctx.emit(inst);
+    }
 }
 
 pub(crate) fn lower_condcode(cc: IntCC) -> Cond {

@@ -676,7 +676,7 @@ impl Validator {
                     }
                 }
             }
-            MemoryType::M64 { limits } => {
+            MemoryType::M64 { limits, shared } => {
                 if !self.features.memory64 {
                     return self.create_error("memory64 must be enabled for 64-bit memories");
                 }
@@ -688,6 +688,14 @@ impl Validator {
                 if let Some(maximum) = limits.maximum {
                     if maximum > MAX_WASM_MEMORY64_PAGES {
                         return self.create_error("memory initial size too large");
+                    }
+                }
+                if *shared {
+                    if !self.features.threads {
+                        return self.create_error("threads must be enabled for shared memories");
+                    }
+                    if limits.maximum.is_none() {
+                        return self.create_error("shared memory must have maximum size");
                     }
                 }
             }
@@ -1033,8 +1041,17 @@ impl Validator {
                             return Ok(());
                         }
                     }
-                    (MemoryType::M64 { limits: a }, MemoryType::M64 { limits: b }) => {
-                        if limits_match!(a, b) {
+                    (
+                        MemoryType::M64 {
+                            limits: a,
+                            shared: ash,
+                        },
+                        MemoryType::M64 {
+                            limits: b,
+                            shared: bsh,
+                        },
+                    ) => {
+                        if limits_match!(a, b) && ash == bsh {
                             return Ok(());
                         }
                     }

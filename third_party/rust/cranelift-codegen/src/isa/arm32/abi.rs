@@ -2,7 +2,6 @@
 
 use crate::ir;
 use crate::ir::types::*;
-use crate::ir::SourceLoc;
 use crate::isa;
 use crate::isa::arm32::inst::*;
 use crate::machinst::*;
@@ -43,6 +42,11 @@ impl ABIMachineSpec for Arm32MachineDeps {
 
     fn word_bits() -> u32 {
         32
+    }
+
+    /// Return required stack alignment in bytes.
+    fn stack_align(_call_conv: isa::CallConv) -> u32 {
+        8
     }
 
     fn compute_arg_locs(
@@ -212,7 +216,7 @@ impl ABIMachineSpec for Arm32MachineDeps {
             rm: limit_reg,
         });
         insts.push(Inst::TrapIf {
-            trap_info: (ir::SourceLoc::default(), ir::TrapCode::StackOverflow),
+            trap_info: ir::TrapCode::StackOverflow,
             // Here `Lo` == "less than" when interpreting the two
             // operands as unsigned integers.
             cond: Cond::Lo,
@@ -308,6 +312,7 @@ impl ABIMachineSpec for Arm32MachineDeps {
         _flags: &settings::Flags,
         clobbers: &Set<Writable<RealReg>>,
         fixed_frame_storage_size: u32,
+        _outgoing_args_size: u32,
     ) -> (u64, SmallVec<[Inst; 16]>) {
         let mut insts = SmallVec::new();
         if fixed_frame_storage_size > 0 {
@@ -336,6 +341,8 @@ impl ABIMachineSpec for Arm32MachineDeps {
         _call_conv: isa::CallConv,
         _flags: &settings::Flags,
         clobbers: &Set<Writable<RealReg>>,
+        _fixed_frame_storage_size: u32,
+        _outgoing_args_size: u32,
     ) -> SmallVec<[Inst; 16]> {
         let mut insts = SmallVec::new();
         let clobbered_vec = get_callee_saves(clobbers);
@@ -358,9 +365,10 @@ impl ABIMachineSpec for Arm32MachineDeps {
         dest: &CallDest,
         uses: Vec<Reg>,
         defs: Vec<Writable<Reg>>,
-        loc: SourceLoc,
         opcode: ir::Opcode,
         tmp: Writable<Reg>,
+        _callee_conv: isa::CallConv,
+        _caller_conv: isa::CallConv,
     ) -> SmallVec<[(InstIsSafepoint, Inst); 2]> {
         let mut insts = SmallVec::new();
         match &dest {
@@ -371,7 +379,6 @@ impl ABIMachineSpec for Arm32MachineDeps {
                         dest: name.clone(),
                         uses,
                         defs,
-                        loc,
                         opcode,
                     }),
                 },
@@ -383,7 +390,6 @@ impl ABIMachineSpec for Arm32MachineDeps {
                         rt: tmp,
                         name: Box::new(name.clone()),
                         offset: 0,
-                        srcloc: loc,
                     },
                 ));
                 insts.push((
@@ -393,7 +399,6 @@ impl ABIMachineSpec for Arm32MachineDeps {
                             rm: tmp.to_reg(),
                             uses,
                             defs,
-                            loc,
                             opcode,
                         }),
                     },
@@ -406,7 +411,6 @@ impl ABIMachineSpec for Arm32MachineDeps {
                         rm: *reg,
                         uses,
                         defs,
-                        loc,
                         opcode,
                     }),
                 },
@@ -431,11 +435,11 @@ impl ABIMachineSpec for Arm32MachineDeps {
         s.nominal_sp_to_fp
     }
 
-    fn get_caller_saves(_call_conv: isa::CallConv) -> Vec<Writable<Reg>> {
+    fn get_regs_clobbered_by_call(_: isa::CallConv) -> Vec<Writable<Reg>> {
         let mut caller_saved = Vec::new();
         for i in 0..15 {
             let r = writable_rreg(i);
-            if is_caller_save(r.to_reg().to_real_reg()) {
+            if is_reg_clobbered_by_call(r.to_reg().to_real_reg()) {
                 caller_saved.push(r);
             }
         }
@@ -461,7 +465,7 @@ fn get_callee_saves(regs: &Set<Writable<RealReg>>) -> Vec<Writable<RealReg>> {
     ret
 }
 
-fn is_caller_save(r: RealReg) -> bool {
+fn is_reg_clobbered_by_call(r: RealReg) -> bool {
     let enc = r.get_hw_encoding();
     enc <= 3
 }

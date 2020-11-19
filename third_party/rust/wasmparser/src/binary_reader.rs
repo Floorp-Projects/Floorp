@@ -363,13 +363,8 @@ impl<'a> BinaryReader<'a> {
             Ok(MemoryType::M32 { limits, shared })
         } else {
             let limits = self.read_resizable_limits64((flags & 0x1) != 0)?;
-            if (flags & 0x2) != 0 {
-                return Err(BinaryReaderError::new(
-                    "64-bit memories cannot be shared",
-                    pos,
-                ));
-            }
-            Ok(MemoryType::M64 { limits })
+            let shared = (flags & 0x2) != 0;
+            Ok(MemoryType::M64 { limits, shared })
         }
     }
 
@@ -1687,6 +1682,7 @@ impl<'a> BinaryReader<'a> {
             0xb7 => Operator::I32x4MinU,
             0xb8 => Operator::I32x4MaxS,
             0xb9 => Operator::I32x4MaxU,
+            0xba => Operator::I32x4DotI16x8S,
             0xc1 => Operator::I64x2Neg,
             0xcb => Operator::I64x2Shl,
             0xcc => Operator::I64x2ShrS,
@@ -1728,6 +1724,12 @@ impl<'a> BinaryReader<'a> {
             0xf9 => Operator::I32x4TruncSatF32x4U,
             0xfa => Operator::F32x4ConvertI32x4S,
             0xfb => Operator::F32x4ConvertI32x4U,
+            0xfc => Operator::V128Load32Zero {
+                memarg: self.read_memarg_of_align(2)?,
+            },
+            0xfd => Operator::V128Load64Zero {
+                memarg: self.read_memarg_of_align(3)?,
+            },
             _ => {
                 return Err(BinaryReaderError::new(
                     format!("Unknown 0xfd subopcode: 0x{:x}", code),

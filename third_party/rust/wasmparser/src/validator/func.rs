@@ -36,6 +36,14 @@ impl<T: WasmModuleResources> FuncValidator<T> {
         })
     }
 
+    /// Get the current height of the operand stack.
+    ///
+    /// This returns the height of the whole operand stack for this function,
+    /// not just for the current control frame.
+    pub fn operand_stack_height(&self) -> u32 {
+        self.validator.operands.len() as u32
+    }
+
     /// Convenience function to validate an entire function's body.
     ///
     /// You may not end up using this in final implementations because you'll
@@ -103,5 +111,89 @@ impl<T: WasmModuleResources> FuncValidator<T> {
     /// Returns the underlying module resources that this validator is using.
     pub fn resources(&self) -> &T {
         &self.resources
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::WasmFuncType;
+
+    struct EmptyResources;
+
+    impl WasmModuleResources for EmptyResources {
+        type FuncType = EmptyFuncType;
+
+        fn table_at(&self, _at: u32) -> Option<crate::TableType> {
+            todo!()
+        }
+        fn memory_at(&self, _at: u32) -> Option<crate::MemoryType> {
+            todo!()
+        }
+        fn global_at(&self, _at: u32) -> Option<crate::GlobalType> {
+            todo!()
+        }
+        fn func_type_at(&self, _type_idx: u32) -> Option<&Self::FuncType> {
+            Some(&EmptyFuncType)
+        }
+        fn type_of_function(&self, _func_idx: u32) -> Option<&Self::FuncType> {
+            todo!()
+        }
+        fn element_type_at(&self, _at: u32) -> Option<Type> {
+            todo!()
+        }
+        fn element_count(&self) -> u32 {
+            todo!()
+        }
+        fn data_count(&self) -> u32 {
+            todo!()
+        }
+        fn is_function_referenced(&self, _idx: u32) -> bool {
+            todo!()
+        }
+    }
+
+    struct EmptyFuncType;
+
+    impl WasmFuncType for EmptyFuncType {
+        fn len_inputs(&self) -> usize {
+            0
+        }
+        fn len_outputs(&self) -> usize {
+            0
+        }
+        fn input_at(&self, _at: u32) -> Option<Type> {
+            todo!()
+        }
+        fn output_at(&self, _at: u32) -> Option<Type> {
+            todo!()
+        }
+    }
+
+    #[test]
+    fn operand_stack_height() {
+        let mut v = FuncValidator::new(0, 0, &EmptyResources, &Default::default()).unwrap();
+
+        // Initially zero values on the stack.
+        assert_eq!(v.operand_stack_height(), 0);
+
+        // Pushing a constant value makes use have one value on the stack.
+        assert!(v.op(0, &Operator::I32Const { value: 0 }).is_ok());
+        assert_eq!(v.operand_stack_height(), 1);
+
+        // Entering a new control block does not affect the stack height.
+        assert!(v
+            .op(
+                1,
+                &Operator::Block {
+                    ty: crate::TypeOrFuncType::Type(crate::Type::EmptyBlockType)
+                }
+            )
+            .is_ok());
+        assert_eq!(v.operand_stack_height(), 1);
+
+        // Pushing another constant value makes use have two values on the stack.
+        assert!(v.op(2, &Operator::I32Const { value: 99 }).is_ok());
+        assert_eq!(v.operand_stack_height(), 2);
     }
 }
