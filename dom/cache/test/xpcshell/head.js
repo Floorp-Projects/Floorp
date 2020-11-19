@@ -75,10 +75,16 @@ function resetTesting() {
   Services.prefs.clearUserPref("dom.quotaManager.testing");
 }
 
-function reset() {
-  let request = Services.qms.reset();
+function initStorage() {
+  return Services.qms.init();
+}
 
-  return request;
+function initTemporaryStorage() {
+  return Services.qms.initTemporaryStorage();
+}
+
+function initTemporaryOrigin(principal) {
+  return Services.qms.initializeTemporaryOrigin("default", principal);
 }
 
 function clearOrigin(principal) {
@@ -87,14 +93,8 @@ function clearOrigin(principal) {
   return request;
 }
 
-function initStorageAndOrigin(principal) {
-  let request = Services.qms.initStorageAndOrigin(
-    principal,
-    "default",
-    "cache"
-  );
-
-  return request;
+function reset() {
+  return Services.qms.reset();
 }
 
 async function requestFinished(request) {
