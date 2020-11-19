@@ -815,3 +815,16 @@ async function ensureMessageAndClosePiP(browser, videoID, pipWin, isIframe) {
     await uaWidgetUpdate;
   }
 }
+
+/**
+ * Helper function that returns True if the specified video is paused
+ * and False if the specified video is not paused.
+ *
+ * @param {Element} browser The <xul:browser> that has the <video> loaded in it.
+ * @param {String} videoID The ID of the video to check.
+ */
+async function isVideoPaused(browser, videoID) {
+  return SpecialPowers.spawn(browser, [videoID], async videoID => {
+    return content.document.getElementById(videoID).paused;
+  });
+}
