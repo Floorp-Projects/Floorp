@@ -479,10 +479,6 @@ void Zone::discardJitCode(JSFreeOp* fop,
     // stubs because the optimizedStubSpace will be purged below.
     if (discardBaselineCode) {
       jitScript->purgeOptimizedStubs(script);
-
-      // ICs were purged so the script will need to warm back up before it can
-      // be inlined during Ion compilation.
-      jitScript->clearIonCompiledOrInlined();
     }
 
     // Finally, reset the active flag.
