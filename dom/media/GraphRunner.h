@@ -35,7 +35,7 @@ class GraphRunner final : public Runnable {
    * Signals one iteration of mGraph. Hands state over to mThread and runs
    * the iteration there.
    */
-  IterationResult OneIteration(GraphTime aStateTime, GraphTime aIterationEnd,
+  IterationResult OneIteration(GraphTime aStateEnd, GraphTime aIterationEnd,
                                AudioMixer* aMixer);
 
   /**
@@ -46,14 +46,14 @@ class GraphRunner final : public Runnable {
   /**
    * Returns true if called on mThread.
    */
-  bool OnThread() const;
+  bool OnThread();
 
 #ifdef DEBUG
   /**
    * Returns true if called on mThread, and aDriver was the driver that called
    * OneIteration() last.
    */
-  bool InDriverIteration(const GraphDriver* aDriver) const;
+  bool InDriverIteration(GraphDriver* aDriver);
 #endif
 
  private:
@@ -62,18 +62,16 @@ class GraphRunner final : public Runnable {
   ~GraphRunner();
 
   class IterationState {
-    GraphTime mStateTime;
+    GraphTime mStateEnd;
     GraphTime mIterationEnd;
     AudioMixer* MOZ_NON_OWNING_REF mMixer;
 
    public:
-    IterationState(GraphTime aStateTime, GraphTime aIterationEnd,
+    IterationState(GraphTime aStateEnd, GraphTime aIterationEnd,
                    AudioMixer* aMixer)
-        : mStateTime(aStateTime),
-          mIterationEnd(aIterationEnd),
-          mMixer(aMixer) {}
+        : mStateEnd(aStateEnd), mIterationEnd(aIterationEnd), mMixer(aMixer) {}
     IterationState& operator=(const IterationState& aOther) = default;
-    GraphTime StateTime() const { return mStateTime; }
+    GraphTime StateEnd() const { return mStateEnd; }
     GraphTime IterationEnd() const { return mIterationEnd; }
     AudioMixer* Mixer() const { return mMixer; }
   };
@@ -92,8 +90,8 @@ class GraphRunner final : public Runnable {
 
   enum class ThreadState {
     Wait,      // Waiting for a message.  This is the initial state.
-               // A transition from Run back to Wait occurs on the runner thread
-               // after it processes as far as mIterationState->mStateTime
+               // A transition from Run back to Wait occurs on the runner
+               // thread after it processes as far as mIterationState->mStateEnd
                // and sets mIterationResult.
     Run,       // Set on driver thread after each mIterationState update.
     Shutdown,  // Set when Shutdown() is called on main thread.

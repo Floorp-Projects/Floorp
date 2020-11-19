@@ -56,13 +56,13 @@ void GraphRunner::Shutdown() {
   mThread->Shutdown();
 }
 
-auto GraphRunner::OneIteration(GraphTime aStateTime, GraphTime aIterationEnd,
+auto GraphRunner::OneIteration(GraphTime aStateEnd, GraphTime aIterationEnd,
                                AudioMixer* aMixer) -> IterationResult {
   TRACE();
 
   MonitorAutoLock lock(mMonitor);
   MOZ_ASSERT(mThreadState == ThreadState::Wait);
-  mIterationState = Some(IterationState(aStateTime, aIterationEnd, aMixer));
+  mIterationState = Some(IterationState(aStateEnd, aIterationEnd, aMixer));
 
 #ifdef DEBUG
   if (auto audioDriver = mGraph->CurrentDriver()->AsAudioCallbackDriver()) {
@@ -113,7 +113,7 @@ NS_IMETHODIMP GraphRunner::Run() {
     }
     MOZ_DIAGNOSTIC_ASSERT(mIterationState.isSome());
     TRACE();
-    mIterationResult = mGraph->OneIterationImpl(mIterationState->StateTime(),
+    mIterationResult = mGraph->OneIterationImpl(mIterationState->StateEnd(),
                                                 mIterationState->IterationEnd(),
                                                 mIterationState->Mixer());
     // Signal that mIterationResult was updated
@@ -130,12 +130,12 @@ NS_IMETHODIMP GraphRunner::Run() {
   return NS_OK;
 }
 
-bool GraphRunner::OnThread() const {
+bool GraphRunner::OnThread() {
   return mThread->EventTarget()->IsOnCurrentThread();
 }
 
 #ifdef DEBUG
-bool GraphRunner::InDriverIteration(const GraphDriver* aDriver) const {
+bool GraphRunner::InDriverIteration(GraphDriver* aDriver) {
   if (!OnThread()) {
     return false;
   }
