@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.mediasession.MediaSession
+import mozilla.components.feature.media.ext.findActiveMediaTab
 import mozilla.components.feature.media.ext.getTitleOrUrl
 import mozilla.components.feature.media.ext.nonPrivateUrl
 import mozilla.components.feature.media.ext.toPlaybackState
@@ -54,14 +55,9 @@ internal class MediaSessionServiceDelegate(
     fun onCreate() {
         logger.debug("Service created")
         scope = store.flowScoped { flow ->
-            flow.map {
-                it.tabs + it.customTabs
-            }.map { tab ->
-                tab.filter { it.mediaSessionState != null &&
-                    it.mediaSessionState!!.playbackState != MediaSession.PlaybackState.UNKNOWN }
-            }.ifChanged().collect { states ->
-                processMediaSessionStates(states)
-            }
+            flow.map { state -> state.findActiveMediaTab() }
+                .ifChanged { tab -> tab?.mediaSessionState }
+                .collect { state -> processMediaSessionState(state) }
         }
     }
 
@@ -100,26 +96,24 @@ internal class MediaSessionServiceDelegate(
         shutdown()
     }
 
-    private fun processMediaSessionStates(sessionStates: List<SessionState>) {
-        val activeState = sessionStates.sortedByDescending { it.mediaSessionState }.firstOrNull()
-
-        if (activeState == null) {
-            updateNotification(activeState)
+    private fun processMediaSessionState(state: SessionState?) {
+        if (state == null) {
+            updateNotification(state)
             shutdown()
             return
         }
 
-        when (activeState.mediaSessionState?.playbackState) {
+        when (state.mediaSessionState?.playbackState) {
             MediaSession.PlaybackState.PLAYING -> {
-                audioFocus.request(activeState.id)
+                audioFocus.request(state.id)
                 emitStatePlayFact()
             }
             MediaSession.PlaybackState.PAUSED -> emitStatePauseFact()
             else -> emitStateStopFact()
         }
 
-        updateMediaSession(activeState)
-        updateNotification(activeState)
+        updateMediaSession(state)
+        updateNotification(state)
     }
 
     private fun updateMediaSession(sessionState: SessionState) {
