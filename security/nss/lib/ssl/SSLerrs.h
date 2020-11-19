@@ -585,3 +585,18 @@ ER3(SSL_ERROR_DC_EXPIRED, (SSL_ERROR_BASE + 185),
 
 ER3(SSL_ERROR_DC_INAPPROPRIATE_VALIDITY_PERIOD, (SSL_ERROR_BASE + 186),
     "SSL received a delegated credential with excessive TTL.")
+
+ER3(SSL_ERROR_FEATURE_DISABLED, (SSL_ERROR_BASE + 187),
+    "The requested feature is disabled.")
+
+ER3(SSL_ERROR_ECH_RETRY_WITH_ECH, (SSL_ERROR_BASE + 188),
+    "TLS ECH was rejected, but verification succeeded and compatible retry_configs are available.")
+
+ER3(SSL_ERROR_ECH_RETRY_WITHOUT_ECH, (SSL_ERROR_BASE + 189),
+    "TLS ECH was rejected, but verification succeeded and no compatible retry_configs were found.")
+
+ER3(SSL_ERROR_ECH_FAILED, (SSL_ERROR_BASE + 190),
+    "TLS ECH was rejected and verification failed.")
+
+ER3(SSL_ERROR_ECH_REQUIRED_ALERT, (SSL_ERROR_BASE + 191),
+    "SSL peer reported ECH required.")

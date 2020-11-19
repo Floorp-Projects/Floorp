@@ -19,7 +19,7 @@
 #include "nss.h"
 #include "pk11pqg.h"
 #include "pk11pub.h"
-#include "tls13esni.h"
+#include "tls13ech.h"
 #include "tls13psk.h"
 #include "tls13subcerts.h"
 
@@ -92,7 +92,8 @@ static sslOptions ssl_defaults = {
     .enableHelloDowngradeCheck = PR_FALSE,
     .enableV2CompatibleHello = PR_FALSE,
     .enablePostHandshakeAuth = PR_FALSE,
-    .suppressEndOfEarlyData = PR_FALSE
+    .suppressEndOfEarlyData = PR_FALSE,
+    .enableTls13GreaseEch = PR_FALSE
 };
 
 /*
@@ -371,12 +372,18 @@ ssl_DupSocket(sslSocket *os)
         ss->resumptionTokenCallback = os->resumptionTokenCallback;
         ss->resumptionTokenContext = os->resumptionTokenContext;
 
-        if (os->esniKeys) {
-            ss->esniKeys = tls13_CopyESNIKeys(os->esniKeys);
-            if (!ss->esniKeys) {
+        rv = tls13_CopyEchConfigs(&os->echConfigs, &ss->echConfigs);
+        if (rv != SECSuccess) {
+            goto loser;
+        }
+        if (os->echPrivKey && os->echPubKey) {
+            ss->echPrivKey = SECKEY_CopyPrivateKey(os->echPrivKey);
+            ss->echPubKey = SECKEY_CopyPublicKey(os->echPubKey);
+            if (!ss->echPrivKey || !ss->echPubKey) {
                 goto loser;
             }
         }
+
         if (os->antiReplay) {
             ss->antiReplay = tls13_RefAntiReplayContext(os->antiReplay);
             PORT_Assert(ss->antiReplay); /* Can't fail. */
@@ -478,13 +485,13 @@ ssl_DestroySocketContents(sslSocket *ss)
     ssl_ClearPRCList(&ss->ssl3.hs.dtlsRcvdHandshake, NULL);
     tls13_DestroyPskList(&ss->ssl3.hs.psks);
 
-    tls13_DestroyESNIKeys(ss->esniKeys);
     tls13_ReleaseAntiReplayContext(ss->antiReplay);
 
-    if (ss->psk) {
-        tls13_DestroyPsk(ss->psk);
-        ss->psk = NULL;
-    }
+    tls13_DestroyPsk(ss->psk);
+
+    tls13_DestroyEchConfigs(&ss->echConfigs);
+    SECKEY_DestroyPrivateKey(ss->echPrivKey);
+    SECKEY_DestroyPublicKey(ss->echPubKey);
 }
 
 /*
@@ -2378,6 +2385,7 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
 {
     sslSocket *sm = NULL, *ss = NULL;
     PRCList *cursor;
+    SECStatus rv;
 
     if (model == NULL) {
         PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
@@ -2447,7 +2455,6 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
     for (cursor = PR_NEXT_LINK(&sm->extensionHooks);
          cursor != &sm->extensionHooks;
          cursor = PR_NEXT_LINK(cursor)) {
-        SECStatus rv;
         sslCustomExtensionHooks *hook = (sslCustomExtensionHooks *)cursor;
         rv = SSL_InstallExtensionHooks(ss->fd, hook->type,
                                        hook->writer, hook->writerArg,
@@ -2473,12 +2480,19 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
         }
     }
 
-    /* Copy ESNI. */
-    tls13_DestroyESNIKeys(ss->esniKeys);
-    ss->esniKeys = NULL;
-    if (sm->esniKeys) {
-        ss->esniKeys = tls13_CopyESNIKeys(sm->esniKeys);
-        if (!ss->esniKeys) {
+    /* Copy ECH. */
+    tls13_DestroyEchConfigs(&ss->echConfigs);
+    SECKEY_DestroyPrivateKey(ss->echPrivKey);
+    SECKEY_DestroyPublicKey(ss->echPubKey);
+    rv = tls13_CopyEchConfigs(&sm->echConfigs, &ss->echConfigs);
+    if (rv != SECSuccess) {
+        return NULL;
+    }
+    if (sm->echPrivKey && sm->echPubKey) {
+        /* Might be client (no keys). */
+        ss->echPrivKey = SECKEY_CopyPrivateKey(sm->echPrivKey);
+        ss->echPubKey = SECKEY_CopyPublicKey(sm->echPubKey);
+        if (!ss->echPrivKey || !ss->echPubKey) {
             return NULL;
         }
     }
@@ -4161,6 +4175,7 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
     PR_INIT_CLIST(&ss->serverCerts);
     PR_INIT_CLIST(&ss->ephemeralKeyPairs);
     PR_INIT_CLIST(&ss->extensionHooks);
+    PR_INIT_CLIST(&ss->echConfigs);
 
     ss->dbHandle = CERT_GetDefaultCertDB();
 
@@ -4194,7 +4209,8 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
     PR_INIT_CLIST(&ss->ssl3.hs.psks);
     dtls_InitTimers(ss);
 
-    ss->esniKeys = NULL;
+    ss->echPrivKey = NULL;
+    ss->echPubKey = NULL;
     ss->antiReplay = NULL;
     ss->psk = NULL;
 
@@ -4277,9 +4293,10 @@ struct {
     EXP(DestroyAead),
     EXP(DestroyMaskingContext),
     EXP(DestroyResumptionTokenInfo),
-    EXP(EnableESNI),
-    EXP(EncodeESNIKeys),
+    EXP(EnableTls13GreaseEch),
+    EXP(EncodeEchConfig),
     EXP(GetCurrentEpoch),
+    EXP(GetEchRetryConfigs),
     EXP(GetExtensionSupport),
     EXP(GetResumptionTokenInfo),
     EXP(HelloRetryRequestCallback),
@@ -4295,16 +4312,18 @@ struct {
     EXP(RecordLayerData),
     EXP(RecordLayerWriteCallback),
     EXP(ReleaseAntiReplayContext),
+    EXP(RemoveEchConfigs),
     EXP(RemoveExternalPsk),
     EXP(SecretCallback),
     EXP(SendCertificateRequest),
     EXP(SendSessionTicket),
     EXP(SetAntiReplayContext),
+    EXP(SetClientEchConfigs),
     EXP(SetDtls13VersionWorkaround),
-    EXP(SetESNIKeyPair),
     EXP(SetMaxEarlyDataSize),
     EXP(SetResumptionTokenCallback),
     EXP(SetResumptionToken),
+    EXP(SetServerEchConfigs),
     EXP(SetTimeFunc),
 #endif
     { "", NULL }
@@ -4339,6 +4358,17 @@ ssl_ClearPRCList(PRCList *list, void (*f)(void *))
         }
         PORT_Free(cursor);
     }
+}
+
+SECStatus
+SSLExp_EnableTls13GreaseEch(PRFileDesc *fd, PRBool enabled)
+{
+    sslSocket *ss = ssl_FindSocket(fd);
+    if (!ss) {
+        return SECFailure;
+    }
+    ss->opt.enableTls13GreaseEch = enabled;
+    return SECSuccess;
 }
 
 SECStatus

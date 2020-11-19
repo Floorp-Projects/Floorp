@@ -19,6 +19,7 @@ typedef enum {
 } tls13ExtensionStatus;
 
 #define TLS13_MAX_FINISHED_SIZE 64
+#define TLS13_COOKIE_SENTINEL 0xff
 
 SECStatus tls13_UnprotectRecord(
     sslSocket *ss, ssl3CipherSpec *spec,
@@ -68,7 +69,8 @@ PRInt32 tls13_LimitEarlyData(sslSocket *ss, SSLContentType type, PRInt32 toSend)
 PRBool tls13_AllowPskCipher(const sslSocket *ss,
                             const ssl3CipherSuiteDef *cipher_def);
 PRBool tls13_PskSuiteEnabled(sslSocket *ss);
-SECStatus tls13_WriteExtensionsWithBinder(sslSocket *ss, sslBuffer *extensions);
+SECStatus tls13_WriteExtensionsWithBinder(sslSocket *ss, sslBuffer *extensions,
+                                          sslBuffer *chBuf);
 SECStatus tls13_HandleClientHelloPart2(sslSocket *ss,
                                        const SECItem *suites,
                                        sslSessionID *sid,

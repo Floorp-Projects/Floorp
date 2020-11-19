@@ -83,63 +83,6 @@ class TlsExtensionTruncator : public TlsExtensionFilter {
   size_t length_;
 };
 
-class TlsExtensionAppender : public TlsHandshakeFilter {
- public:
-  TlsExtensionAppender(const std::shared_ptr<TlsAgent>& a,
-                       uint8_t handshake_type, uint16_t ext, DataBuffer& data)
-      : TlsHandshakeFilter(a, {handshake_type}), extension_(ext), data_(data) {}
-
-  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
-                                               const DataBuffer& input,
-                                               DataBuffer* output) {
-    TlsParser parser(input);
-    if (!TlsExtensionFilter::FindExtensions(&parser, header)) {
-      return KEEP;
-    }
-    *output = input;
-
-    // Increase the length of the extensions block.
-    if (!UpdateLength(output, parser.consumed(), 2)) {
-      return KEEP;
-    }
-
-    // Extensions in Certificate are nested twice.  Increase the size of the
-    // certificate list.
-    if (header.handshake_type() == kTlsHandshakeCertificate) {
-      TlsParser p2(input);
-      if (!p2.SkipVariable(1)) {
-        ADD_FAILURE();
-        return KEEP;
-      }
-      if (!UpdateLength(output, p2.consumed(), 3)) {
-        return KEEP;
-      }
-    }
-
-    size_t offset = output->len();
-    offset = output->Write(offset, extension_, 2);
-    WriteVariable(output, offset, data_, 2);
-
-    return CHANGE;
-  }
-
- private:
-  bool UpdateLength(DataBuffer* output, size_t offset, size_t size) {
-    uint32_t len;
-    if (!output->Read(offset, size, &len)) {
-      ADD_FAILURE();
-      return false;
-    }
-
-    len += 4 + data_.len();
-    output->Write(offset, len, size);
-    return true;
-  }
-
-  const uint16_t extension_;
-  const DataBuffer data_;
-};
-
 class TlsExtensionTestBase : public TlsConnectTestBase {
  protected:
   TlsExtensionTestBase(SSLProtocolVariant variant, uint16_t version)
@@ -1155,6 +1098,22 @@ TEST_P(TlsExtensionTest13, HrrThenRemoveSupportedGroups) {
                               SSL_ERROR_MISSING_SUPPORTED_GROUPS_EXTENSION);
 }
 
+#ifdef NSS_ENABLE_DRAFT_HPKE
+TEST_P(TlsExtensionTest13, HrrThenRemoveEch) {
+  if (variant_ == ssl_variant_datagram) {
+    // ECH not supported in DTLS.
+    return;
+  }
+
+  EnsureTlsSetup();
+  SetupEch(client_, server_);
+  ExpectAlert(server_, kTlsAlertIllegalParameter);
+  HrrThenRemoveExtensionsTest(ssl_tls13_encrypted_client_hello_xtn,
+                              SSL_ERROR_ILLEGAL_PARAMETER_ALERT,
+                              SSL_ERROR_BAD_2ND_CLIENT_HELLO);
+}
+#endif
+
 TEST_P(TlsExtensionTest13, EmptyVersionList) {
   static const uint8_t ext[] = {0x00, 0x00};
   ConnectWithBogusVersionList(ext, sizeof(ext));
@@ -1289,6 +1248,7 @@ TEST_P(TlsBogusExtensionTest13, AddBogusExtensionNewSessionTicket) {
 
 TEST_P(TlsConnectStream, IncludePadding) {
   EnsureTlsSetup();
+  SSL_EnableTls13GreaseEch(client_->ssl_fd(), PR_FALSE);  // Don't GREASE
 
   // This needs to be long enough to push a TLS 1.0 ClientHello over 255, but
   // short enough not to push a TLS 1.3 ClientHello over 511.

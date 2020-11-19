@@ -1,6 +1,0 @@
-
-2 Added functions:
-
-  [A] 'function PRBool NSS_IsPolicyLocked()'    {NSS_IsPolicyLocked@@NSSUTIL_3.59}
-  [A] 'function void NSS_LockPolicy()'    {NSS_LockPolicy@@NSSUTIL_3.59}
-

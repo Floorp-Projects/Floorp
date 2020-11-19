@@ -1,0 +1,82 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
+ * This file is PRIVATE to SSL.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef __tls13ech_h_
+#define __tls13ech_h_
+
+#include "pk11hpke.h"
+
+/* draft-08, shared-mode only.
+ * Notes on the implementation status:
+ * - Padding (https://tools.ietf.org/html/draft-ietf-tls-esni-08#section-6.2),
+ *   is not implemented (see bug 1677181).
+ * - When multiple ECHConfigs are provided by the server, the first compatible
+ *   config is selected by the client. Ciphersuite choices are limited and only
+ *   the AEAD may vary (AES-128-GCM or ChaCha20Poly1305).
+ * - Some of the buffering (construction/compression/decompression) could likely
+ *   be optimized, but the spec is still evolving so that work is deferred.
+ */
+#define TLS13_ECH_VERSION 0xfe08
+#define TLS13_ECH_SIGNAL_LEN 8
+
+static const char kHpkeInfoEch[] = "tls ech";
+static const char kHpkeInfoEchHrr[] = "tls ech hrr key";
+static const char kHpkeLabelHrrPsk[] = "hrr key";
+static const char hHkdfInfoEchConfigID[] = "tls ech config id";
+static const char kHkdfInfoEchConfirm[] = "ech accept confirmation";
+
+struct sslEchConfigContentsStr {
+    char *publicName;
+    SECItem publicKey; /* NULL on server. Use the keypair in sslEchConfig instead. */
+    HpkeKemId kemId;
+    HpkeKdfId kdfId;
+    HpkeAeadId aeadId;
+    SECItem suites; /* One or more HpkeCipherSuites. The selected s
+                     * suite is placed in kdfId and aeadId. */
+    PRUint16 maxNameLen;
+    /* No supported extensions. */
+};
+
+struct sslEchConfigStr {
+    PRCList link;
+    SECItem raw;
+    PRUint8 configId[32];
+    PRUint16 version;
+    sslEchConfigContents contents;
+};
+
+SECStatus SSLExp_EncodeEchConfig(const char *publicName, const PRUint32 *hpkeSuites,
+                                 unsigned int hpkeSuiteCount, HpkeKemId kemId,
+                                 const SECKEYPublicKey *pubKey, PRUint16 maxNameLen,
+                                 PRUint8 *out, unsigned int *outlen, unsigned int maxlen);
+SECStatus SSLExp_GetEchRetryConfigs(PRFileDesc *fd, SECItem *retryConfigs);
+SECStatus SSLExp_SetClientEchConfigs(PRFileDesc *fd, const PRUint8 *echConfigs,
+                                     unsigned int echConfigsLen);
+SECStatus SSLExp_SetServerEchConfigs(PRFileDesc *fd,
+                                     const SECKEYPublicKey *pubKey, const SECKEYPrivateKey *privKey,
+                                     const PRUint8 *echConfigs, unsigned int numEchConfigs);
+SECStatus SSLExp_RemoveEchConfigs(PRFileDesc *fd);
+
+SECStatus tls13_ClientSetupEch(sslSocket *ss, sslClientHelloType type);
+SECStatus tls13_ConstructClientHelloWithEch(sslSocket *ss, const sslSessionID *sid,
+                                            PRBool freshSid, sslBuffer *chOuterBuf,
+                                            sslBuffer *chInnerXtnsBuf);
+SECStatus tls13_CopyEchConfigs(PRCList *oconfigs, PRCList *configs);
+SECStatus tls13_DecodeEchConfigs(const SECItem *data, PRCList *configs);
+void tls13_DestroyEchConfigs(PRCList *list);
+SECStatus tls13_GetMatchingEchConfig(const sslSocket *ss, HpkeKdfId kdf, HpkeAeadId aead,
+                                     const SECItem *configId, sslEchConfig **cfg);
+SECStatus tls13_MaybeHandleEch(sslSocket *ss, const PRUint8 *msg, PRUint32 msgLen, SECItem *sidBytes,
+                               SECItem *comps, SECItem *cookieBytes, SECItem *suites, SECItem **echInner);
+SECStatus tls13_MaybeHandleEchSignal(sslSocket *ss);
+SECStatus tls13_MaybeAcceptEch(sslSocket *ss, const SECItem *sidBytes, const PRUint8 *chOuter,
+                               unsigned int chOuterLen, SECItem **chInner);
+SECStatus tls13_MaybeGreaseEch(sslSocket *ss, unsigned int prefixLen, sslBuffer *buf);
+SECStatus tls13_WriteServerEchSignal(sslSocket *ss);
+
+#endif

@@ -56,6 +56,7 @@ const uint8_t kTlsAlertUnsupportedExtension = 110;
 const uint8_t kTlsAlertUnrecognizedName = 112;
 const uint8_t kTlsAlertCertificateRequired = 116;
 const uint8_t kTlsAlertNoApplicationProtocol = 120;
+const uint8_t kTlsAlertEchRequired = 121;
 
 const uint8_t kTlsFakeChangeCipherSpec[] = {
     ssl_ct_change_cipher_spec,  // Type
