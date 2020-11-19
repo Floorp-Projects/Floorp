@@ -63,8 +63,6 @@ class MediaTransportHandler {
   virtual void EnterPrivateMode() = 0;
   virtual void ExitPrivateMode() = 0;
 
-  virtual void Destroy() = 0;
-
   virtual nsresult CreateIceCtx(const std::string& aName,
                                 const nsTArray<dom::RTCIceServer>& aIceServers,
                                 dom::RTCIceTransportPolicy aIcePolicy) = 0;
@@ -129,7 +127,9 @@ class MediaTransportHandler {
   sigslot::signal2<const std::string&, TransportLayer::State> SignalStateChange;
   sigslot::signal2<const std::string&, TransportLayer::State>
       SignalRtcpStateChange;
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaTransportHandler)
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DESTROY(MediaTransportHandler,
+                                                     Destroy())
 
   TransportLayer::State GetState(const std::string& aTransportId,
                                  bool aRtcp) const;
@@ -148,6 +148,7 @@ class MediaTransportHandler {
                      TransportLayer::State aState);
   void OnRtcpStateChange(const std::string& aTransportId,
                          TransportLayer::State aState);
+  virtual void Destroy() = 0;
   virtual ~MediaTransportHandler() = default;
   std::map<std::string, TransportLayer::State> mStateCache;
   std::map<std::string, TransportLayer::State> mRtcpStateCache;
