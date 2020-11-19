@@ -886,9 +886,10 @@ void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info);
 bool profiler_add_native_allocation_marker(int64_t aSize,
                                            uintptr_t aMemoryAddress);
 
-// Returns true if the profiler lock is currently held *on the current thread*.
-// This may be used by re-entrant code that may call profiler functions while
-// the profiler already has the lock (which would deadlock).
+// Returns true if any of the profiler mutexes are currently locked *on the
+// current thread*. This may be used by re-entrant code that may call profiler
+// functions while the same of a different profiler mutex is locked, which could
+// deadlock.
 bool profiler_is_locked_on_current_thread();
 
 enum class NetworkLoadType { LOAD_START, LOAD_STOP, LOAD_REDIRECT };
