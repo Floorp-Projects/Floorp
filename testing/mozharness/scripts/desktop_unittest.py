@@ -926,7 +926,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
         try:
             import psutil
 
-            path = os.path.join(dir, "system-info.log")
+            path = os.path.join(
+                self.query_abs_dirs()["abs_blob_upload_dir"], "system-info.log"
+            )
             with open(path, "w") as f:
                 f.write("System info collected at %s\n\n" % datetime.now())
                 f.write("\nBoot time %s\n" % datetime.fromtimestamp(psutil.boot_time()))
