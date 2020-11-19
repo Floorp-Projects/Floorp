@@ -198,7 +198,6 @@ class MediaStatusManager : public IMediaInfoUpdater {
 
  protected:
   ~MediaStatusManager() = default;
-  virtual void HandleActualPlaybackStateChanged() = 0;
 
   // This event would be notified when the active media session changes its
   // supported actions.

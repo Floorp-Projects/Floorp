@@ -93,6 +93,9 @@ MediaController::MediaController(uint64_t aBrowsingContextId)
   mSupportedActionsChangedListener = SupportedActionsChangedEvent().Connect(
       AbstractThread::MainThread(), this,
       &MediaController::HandleSupportedMediaSessionActionsChanged);
+  mPlaybackChangedListener = PlaybackChangedEvent().Connect(
+      AbstractThread::MainThread(), this,
+      &MediaController::HandleActualPlaybackStateChanged);
   mPositionStateChangedListener = PositionChangedEvent().Connect(
       AbstractThread::MainThread(), this,
       &MediaController::HandlePositionStateChanged);
@@ -231,6 +234,7 @@ void MediaController::Shutdown() {
   Deactivate();
   mShutdown = true;
   mSupportedActionsChangedListener.DisconnectIfExists();
+  mPlaybackChangedListener.DisconnectIfExists();
   mPositionStateChangedListener.DisconnectIfExists();
   mMetadataChangedListener.DisconnectIfExists();
 }
