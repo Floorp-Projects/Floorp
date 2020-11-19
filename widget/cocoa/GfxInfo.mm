@@ -32,31 +32,45 @@ NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
 GfxInfo::GfxInfo() : mNumGPUsDetected(0), mOSXVersion{0} { mAdapterRAM[0] = mAdapterRAM[1] = 0; }
 
 static OperatingSystem OSXVersionToOperatingSystem(uint32_t aOSXVersion) {
-  if (nsCocoaFeatures::ExtractMajorVersion(aOSXVersion) == 10) {
-    switch (nsCocoaFeatures::ExtractMinorVersion(aOSXVersion)) {
-      case 6:
-        return OperatingSystem::OSX10_6;
-      case 7:
-        return OperatingSystem::OSX10_7;
-      case 8:
-        return OperatingSystem::OSX10_8;
-      case 9:
-        return OperatingSystem::OSX10_9;
-      case 10:
-        return OperatingSystem::OSX10_10;
-      case 11:
-        return OperatingSystem::OSX10_11;
-      case 12:
-        return OperatingSystem::OSX10_12;
-      case 13:
-        return OperatingSystem::OSX10_13;
-      case 14:
-        return OperatingSystem::OSX10_14;
-      case 15:
-        return OperatingSystem::OSX10_15;
-      case 16:
-        return OperatingSystem::OSX10_16;
-    }
+  switch (nsCocoaFeatures::ExtractMajorVersion(aOSXVersion)) {
+    case 10:
+      switch (nsCocoaFeatures::ExtractMinorVersion(aOSXVersion)) {
+        case 6:
+          return OperatingSystem::OSX10_6;
+        case 7:
+          return OperatingSystem::OSX10_7;
+        case 8:
+          return OperatingSystem::OSX10_8;
+        case 9:
+          return OperatingSystem::OSX10_9;
+        case 10:
+          return OperatingSystem::OSX10_10;
+        case 11:
+          return OperatingSystem::OSX10_11;
+        case 12:
+          return OperatingSystem::OSX10_12;
+        case 13:
+          return OperatingSystem::OSX10_13;
+        case 14:
+          return OperatingSystem::OSX10_14;
+        case 15:
+          return OperatingSystem::OSX10_15;
+        case 16:
+          // Depending on the SDK version, we either get 10.16 or 11.0.
+          // Normalize this to 11.0.
+          return OperatingSystem::OSX11_0;
+        default:
+          break;
+      }
+      break;
+    case 11:
+      switch (nsCocoaFeatures::ExtractMinorVersion(aOSXVersion)) {
+        case 0:
+          return OperatingSystem::OSX11_0;
+        default:
+          break;
+      }
+      break;
   }
 
   return OperatingSystem::Unknown;
