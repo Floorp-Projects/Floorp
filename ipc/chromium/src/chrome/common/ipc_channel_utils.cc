@@ -21,6 +21,13 @@ void AddIPCProfilerMarker(const Message& aMessage, int32_t aOtherPid,
       return;
     }
 
+    if (profiler_is_locked_on_current_thread()) {
+      // One of the profiler mutexes is locked on this thread, don't record
+      // markers, because we don't want to expose profiler IPCs due to the
+      // profiler itself, and also to avoid possible re-entrancy issues.
+      return;
+    }
+
     // The current timestamp must be given to the `IPCMarker` payload.
     const mozilla::TimeStamp now = mozilla::TimeStamp::NowUnfuzzed();
     PROFILER_MARKER("IPC", IPC, mozilla::MarkerTiming::InstantAt(now),
