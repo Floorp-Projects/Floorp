@@ -151,11 +151,7 @@ function assertReceivedFlags(aState, aObjOrEvent, aFlags) {
       aObjOrEvent.state,
       "Got a notification for the all notifications listener"
     );
-    is(
-      aFlags,
-      aFlags & aObjOrEvent.flags,
-      `Got correct flags for ${aState}`
-    );
+    is(aFlags, aFlags & aObjOrEvent.flags, `Got correct flags for ${aState}`);
   } else {
     is(
       aState,
