@@ -6,6 +6,7 @@ skip_on(android,device) fuzzy(1,331264) == tile-repeat-prim-or-decompose.yaml ti
 platform(linux,mac) options(allow-mipmaps) == downscale.yaml downscale.png
 skip_on(android,device) fuzzy-if(platform(swgl),1,20) == segments.yaml segments.png
 platform(linux,mac) == yuv.yaml yuv.png
+platform(linux,mac) fuzzy(1,6000) fuzzy-if(platform(swgl),1,205000) == yuv-clip.yaml yuv.png
 skip_on(android,device) == tiled-clip-chain.yaml tiled-clip-chain-ref.yaml
 skip_on(android,device) == tiled-complex-clip.yaml tiled-complex-clip-ref.yaml
 platform(linux,mac) == texture-rect.yaml texture-rect-ref.yaml
