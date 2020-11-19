@@ -65,7 +65,7 @@ class PeerConnectionCtx {
   mozilla::dom::Sequence<mozilla::dom::RTCStatsReportInternal>
       mStatsForClosedPeerConnections;
 
-  const std::map<const std::string, PeerConnectionImpl*>& mGetPeerConnections();
+  const std::map<const std::string, PeerConnectionImpl*>& GetPeerConnections();
 
  private:
   // We could make these available only via accessors but it's too much trouble.

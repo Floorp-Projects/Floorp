@@ -20,14 +20,12 @@ async protocol PWebrtcGlobal {
 parent: // child -> parent messages
   async __delete__();
 #ifdef MOZ_WEBRTC
-  async GetStatsResult(int aRequestId, RTCStatsReportInternal[] aStats);
-  async GetLogResult(int aRequestId, WebrtcGlobalLog aLog);
 
 child: // parent -> child messages
-  async GetStatsRequest(int aRequestId, nsString aPcIdFilter);
-  async ClearStatsRequest();
-  async GetLogRequest(int aRequestId, nsCString aPattern);
-  async ClearLogRequest();
+  async GetStats(nsString aPcIdFilter) returns (RTCStatsReportInternal[] stats);
+  async ClearStats();
+  async GetLog(nsCString aPattern) returns (WebrtcGlobalLog logs);
+  async ClearLog();
   async SetAecLogging(bool aEnable);
   async SetDebugMode(int aLevel);
 #endif
