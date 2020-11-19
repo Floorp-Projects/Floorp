@@ -1695,24 +1695,6 @@ class InitializeTemporaryOriginOp final : public InitializeOriginRequestBase {
   void GetResponse(RequestResponse& aResponse) override;
 };
 
-class InitStorageAndOriginOp final : public QuotaRequestBase {
-  nsCString mSuffix;
-  nsCString mGroup;
-  bool mCreated;
-
- public:
-  explicit InitStorageAndOriginOp(const RequestParams& aParams);
-
-  void Init(Quota& aQuota) override;
-
- private:
-  ~InitStorageAndOriginOp() = default;
-
-  nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
-
-  void GetResponse(RequestResponse& aResponse) override;
-};
-
 class ResetOrClearOp final : public QuotaRequestBase {
   const bool mClear;
 
@@ -6766,33 +6748,6 @@ already_AddRefed<DirectoryLock> QuotaManager::OpenDirectoryInternal(
   return blocked ? lock.forget() : nullptr;
 }
 
-Result<nsCOMPtr<nsIFile>, nsresult>
-QuotaManager::EnsureStorageAndOriginIsInitialized(
-    PersistenceType aPersistenceType, const QuotaInfo& aQuotaInfo) {
-  AssertIsOnIOThread();
-
-  QM_TRY_RETURN(
-      EnsureStorageAndOriginIsInitializedInternal(aPersistenceType, aQuotaInfo)
-          .map([](const auto& res) { return res.first; }));
-}
-
-Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
-QuotaManager::EnsureStorageAndOriginIsInitializedInternal(
-    PersistenceType aPersistenceType, const QuotaInfo& aQuotaInfo) {
-  AssertIsOnIOThread();
-
-  QM_TRY(EnsureStorageIsInitialized());
-
-  if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
-    QM_TRY_RETURN(EnsurePersistentOriginIsInitialized(aQuotaInfo));
-  }
-
-  QM_TRY(EnsureTemporaryStorageIsInitialized());
-
-  QM_TRY_RETURN(
-      EnsureTemporaryOriginIsInitialized(aPersistenceType, aQuotaInfo));
-}
-
 Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
 QuotaManager::EnsurePersistentOriginIsInitialized(const QuotaInfo& aQuotaInfo) {
   AssertIsOnIOThread();
@@ -8573,24 +8528,6 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
       break;
     }
 
-    case RequestParams::TInitStorageAndOriginParams: {
-      const InitStorageAndOriginParams& params =
-          aParams.get_InitStorageAndOriginParams();
-
-      if (NS_WARN_IF(
-              !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        ASSERT_UNLESS_FUZZING();
-        return false;
-      }
-
-      if (NS_WARN_IF(!IsValidPersistenceType(params.persistenceType()))) {
-        ASSERT_UNLESS_FUZZING();
-        return false;
-      }
-
-      break;
-    }
-
     case RequestParams::TClearOriginParams: {
       const ClearResetOriginParams& params =
           aParams.get_ClearOriginParams().commonParams();
@@ -8820,9 +8757,6 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
 
       case RequestParams::TInitializeTemporaryOriginParams:
         return MakeRefPtr<InitializeTemporaryOriginOp>(aParams);
-
-      case RequestParams::TInitStorageAndOriginParams:
-        return MakeRefPtr<InitStorageAndOriginOp>(aParams);
 
       case RequestParams::TClearOriginParams:
         return MakeRefPtr<ClearOriginOp>(aParams);
@@ -9681,60 +9615,6 @@ void InitializeTemporaryOriginOp::GetResponse(RequestResponse& aResponse) {
   AssertIsOnOwningThread();
 
   aResponse = InitializeTemporaryOriginResponse(mCreated);
-}
-
-InitStorageAndOriginOp::InitStorageAndOriginOp(const RequestParams& aParams)
-    : QuotaRequestBase(/* aExclusive */ false), mCreated(false) {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aParams.type() == RequestParams::TInitStorageAndOriginParams);
-
-  const InitStorageAndOriginParams& params =
-      aParams.get_InitStorageAndOriginParams();
-
-  auto quotaInfo =
-      QuotaManager::GetInfoFromValidatedPrincipalInfo(params.principalInfo());
-
-  // Overwrite OriginOperationBase default values.
-  mNeedsQuotaManagerInit = true;
-  mNeedsStorageInit = false;
-
-  // Overwrite NormalOriginOperationBase default values.
-  mPersistenceType.SetValue(params.persistenceType());
-
-  mOriginScope.SetFromOrigin(quotaInfo.mOrigin);
-
-  // Overwrite InitStorageAndOriginOp default values.
-  mSuffix = std::move(quotaInfo.mSuffix);
-  mGroup = std::move(quotaInfo.mGroup);
-}
-
-void InitStorageAndOriginOp::Init(Quota& aQuota) { AssertIsOnOwningThread(); }
-
-nsresult InitStorageAndOriginOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(!mPersistenceType.IsNull());
-
-  AUTO_PROFILER_LABEL("InitStorageAndOriginOp::DoDirectoryWork", OTHER);
-
-  QM_TRY_UNWRAP(
-      mCreated,
-      (aQuotaManager
-           .EnsureStorageAndOriginIsInitializedInternal(
-               mPersistenceType.Value(),
-               QuotaInfo{mSuffix, mGroup, nsCString{mOriginScope.GetOrigin()}})
-           .map([](const auto& res) { return res.second; })));
-
-  return NS_OK;
-}
-
-void InitStorageAndOriginOp::GetResponse(RequestResponse& aResponse) {
-  AssertIsOnOwningThread();
-
-  InitStorageAndOriginResponse response;
-
-  response.created() = mCreated;
-
-  aResponse = response;
 }
 
 ResetOrClearOp::ResetOrClearOp(bool aClear)

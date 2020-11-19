@@ -41,11 +41,6 @@ struct InitializeTemporaryOriginResponse
   bool created;
 };
 
-struct InitStorageAndOriginResponse
-{
-  bool created;
-};
-
 struct ClearOriginResponse
 {
 };
@@ -96,7 +91,6 @@ union RequestResponse
   InitTemporaryStorageResponse;
   InitializePersistentOriginResponse;
   InitializeTemporaryOriginResponse;
-  InitStorageAndOriginResponse;
   ClearOriginResponse;
   ResetOriginResponse;
   ClearDataResponse;
