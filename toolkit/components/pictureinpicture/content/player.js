@@ -307,7 +307,9 @@ let Player = {
       }
 
       case "close": {
-        this.actor.sendAsyncMessage("PictureInPicture:Pause");
+        this.actor.sendAsyncMessage("PictureInPicture:Pause", {
+          reason: "pip-closed",
+        });
         this.closePipWindow({ reason: "close-button" });
         break;
       }
