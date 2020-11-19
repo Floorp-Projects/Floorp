@@ -157,60 +157,48 @@ const QUERY_ORIGIN_PREFIX_BOOKMARK = originQuery(
 
 const QUERY_URL_HISTORY_BOOKMARK = urlQuery(
   `AND (bookmarked OR frecency > 20)
-     AND strip_prefix_and_userinfo(url) COLLATE NOCASE
-       BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
+     AND strip_prefix_and_userinfo(url) BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
   `AND (bookmarked OR frecency > 20)
-     AND strip_prefix_and_userinfo(url) COLLATE NOCASE
-       BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`
+     AND strip_prefix_and_userinfo(url) BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`
 );
 
 const QUERY_URL_PREFIX_HISTORY_BOOKMARK = urlQuery(
   `AND (bookmarked OR frecency > 20)
-     AND url COLLATE NOCASE
-       BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
+     AND url BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
   `AND (bookmarked OR frecency > 20)
-     AND url COLLATE NOCASE
-       BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`
+     AND url BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`
 );
 
 const QUERY_URL_HISTORY = urlQuery(
   `AND (visited OR NOT bookmarked)
      AND frecency > 20
-     AND strip_prefix_and_userinfo(url) COLLATE NOCASE
-       BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
+     AND strip_prefix_and_userinfo(url) BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
   `AND (visited OR NOT bookmarked)
      AND frecency > 20
-     AND strip_prefix_and_userinfo(url) COLLATE NOCASE
-       BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`
+     AND strip_prefix_and_userinfo(url) BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`
 );
 
 const QUERY_URL_PREFIX_HISTORY = urlQuery(
   `AND (visited OR NOT bookmarked)
      AND frecency > 20
-     AND url COLLATE NOCASE
-       BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
+     AND url BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
   `AND (visited OR NOT bookmarked)
      AND frecency > 20
-     AND url COLLATE NOCASE
-       BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`
+     AND url BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`
 );
 
 const QUERY_URL_BOOKMARK = urlQuery(
   `AND bookmarked
-     AND strip_prefix_and_userinfo(url) COLLATE NOCASE
-       BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
+     AND strip_prefix_and_userinfo(url) BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
   `AND bookmarked
-     AND strip_prefix_and_userinfo(url) COLLATE NOCASE
-       BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`
+     AND strip_prefix_and_userinfo(url) BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`
 );
 
 const QUERY_URL_PREFIX_BOOKMARK = urlQuery(
   `AND bookmarked
-     AND url COLLATE NOCASE
-       BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
+     AND url BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
   `AND bookmarked
-     AND url COLLATE NOCASE
-       BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`
+     AND url BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`
 );
 
 const kProtocolsWithIcons = [
@@ -596,11 +584,7 @@ class ProviderAutofill extends UrlbarProvider {
         //  - http://mozilla.org/f[oo/]
         //  - http://mozilla.org/foo/b[ar/]
         //  - http://mozilla.org/foo/bar/b[az]
-        // And, toLowerCase() is preferred over toLocaleLowerCase() here
-        // because "COLLATE NOCASE" in the SQL only handles ASCII characters.
-        let strippedURLIndex = url
-          .toLowerCase()
-          .indexOf(strippedURL.toLowerCase());
+        let strippedURLIndex = url.indexOf(strippedURL);
         let strippedPrefix = url.substr(0, strippedURLIndex);
         let nextSlashIndex = url.indexOf(
           "/",
