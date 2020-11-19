@@ -74,14 +74,12 @@ void CodeGenerator::visitTestIAndBranch(LTestIAndBranch* test) {
   MBasicBlock* mirTrue = test->ifTrue();
   MBasicBlock* mirFalse = test->ifFalse();
 
-  masm.test32(input, input);
-
   // Jump to the True block if NonZero.
   // Jump to the False block if Zero.
   if (isNextBlock(mirFalse->lir())) {
-    jumpToBlock(mirTrue, Assembler::NonZero);
+    masm.branch32(Assembler::NonZero, input, Imm32(0), getJumpLabelForBranch(mirTrue));
   } else {
-    jumpToBlock(mirFalse, Assembler::Zero);
+    masm.branch32(Assembler::Zero, input, Imm32(0), getJumpLabelForBranch(mirFalse));
     if (!isNextBlock(mirTrue->lir())) {
       jumpToBlock(mirTrue);
     }
