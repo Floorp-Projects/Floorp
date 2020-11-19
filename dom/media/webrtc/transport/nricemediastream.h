@@ -213,8 +213,7 @@ class NrIceMediaStream {
   nr_ice_media_stream* GetStreamForRemoteUfrag(const std::string& ufrag);
 
   State state_;
-  nr_ice_ctx* ctx_;
-  nr_ice_peer_ctx* ctx_peer_;
+  RefPtr<NrIceCtx> ctx_;
   const std::string name_;
   const size_t components_;
   nr_ice_media_stream* stream_;

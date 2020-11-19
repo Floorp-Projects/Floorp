@@ -62,7 +62,6 @@ static int nr_ice_fetch_stun_servers(int ct, nr_ice_stun_server **out);
 #ifdef USE_TURN
 static int nr_ice_fetch_turn_servers(int ct, nr_ice_turn_server **out);
 #endif /* USE_TURN */
-static void nr_ice_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg);
 static int nr_ice_ctx_pair_new_trickle_candidates(nr_ice_ctx *ctx, nr_ice_candidate *cand);
 static int no_op(void **obj) {
   return 0;
@@ -416,19 +415,30 @@ int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp)
 
     _status=0;
   abort:
-    if(_status && ctx)
-      nr_ice_ctx_destroy_cb(0,0,ctx);
+    if (_status && ctx) nr_ice_ctx_destroy(&ctx);
 
     return(_status);
   }
 
-static void nr_ice_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg)
-  {
-    nr_ice_ctx *ctx=cb_arg;
+  void nr_ice_ctx_add_flags(nr_ice_ctx* ctx, UINT4 flags) {
+    ctx->flags |= flags;
+  }
+
+  void nr_ice_ctx_remove_flags(nr_ice_ctx* ctx, UINT4 flags) {
+    ctx->flags &= ~flags;
+  }
+
+  void nr_ice_ctx_destroy(nr_ice_ctx** ctxp) {
+    if (!ctxp || !*ctxp) return;
+
+    nr_ice_ctx* ctx = *ctxp;
     nr_ice_foundation *f1,*f2;
     nr_ice_media_stream *s1,*s2;
     int i;
     nr_ice_stun_id *id1,*id2;
+
+    ctx->done_cb = 0;
+    ctx->trickle_cb = 0;
 
     STAILQ_FOREACH_SAFE(s1, &ctx->streams, entry, s2){
       STAILQ_REMOVE(&ctx->streams,s1,nr_ice_media_stream_,entry);
@@ -466,31 +476,8 @@ static void nr_ice_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg)
     nr_socket_factory_destroy(&ctx->socket_factory);
 
     RFREE(ctx);
-  }
-
-void nr_ice_ctx_add_flags(nr_ice_ctx *ctx, UINT4 flags)
-  {
-    ctx->flags |= flags;
-  }
-
-void nr_ice_ctx_remove_flags(nr_ice_ctx *ctx, UINT4 flags)
-  {
-    ctx->flags &= ~flags;
-  }
-
-int nr_ice_ctx_destroy(nr_ice_ctx **ctxp)
-  {
-    if(!ctxp || !*ctxp)
-      return(0);
-
-    (*ctxp)->done_cb=0;
-    (*ctxp)->trickle_cb=0;
-
-    NR_ASYNC_SCHEDULE(nr_ice_ctx_destroy_cb,*ctxp);
 
     *ctxp=0;
-
-    return(0);
   }
 
 void nr_ice_gather_finished_cb(NR_SOCKET s, int h, void *cb_arg)
