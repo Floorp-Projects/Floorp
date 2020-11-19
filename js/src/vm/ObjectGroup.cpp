@@ -154,13 +154,6 @@ ObjectGroup* JSObject::makeLazyGroup(JSContext* cx, HandleObject obj) {
   return group;
 }
 
-/* static */
-bool JSObject::setNewGroupUnknown(JSContext* cx, ObjectGroupRealm& realm,
-                                  const JSClass* clasp, JS::HandleObject obj) {
-  ObjectGroup::setDefaultNewGroupUnknown(cx, realm, clasp, obj);
-  return JSObject::setFlags(cx, obj, BaseShape::NEW_GROUP_UNKNOWN);
-}
-
 /////////////////////////////////////////////////////////////////////
 // ObjectGroupRealm NewTable
 /////////////////////////////////////////////////////////////////////
@@ -428,14 +421,6 @@ ObjectGroup* ObjectGroup::lazySingletonGroup(JSContext* cx,
   return group;
 }
 
-/* static */
-void ObjectGroup::setDefaultNewGroupUnknown(JSContext* cx,
-                                            ObjectGroupRealm& realm,
-                                            const JSClass* clasp,
-                                            HandleObject obj) {
-  // TODO(no-TI): remove.
-}
-
 inline const JSClass* GetClassForProtoKey(JSProtoKey key) {
   switch (key) {
     case JSProto_Null:
@@ -609,34 +594,6 @@ ObjectGroupRealm::~ObjectGroupRealm() {
   js_delete(defaultNewTable);
   js_delete(lazyTable);
   stringSplitStringGroup = nullptr;
-}
-
-void ObjectGroupRealm::removeDefaultNewGroup(const JSClass* clasp,
-                                             TaggedProto proto,
-                                             JSObject* associated) {
-  auto p = defaultNewTable->lookup(NewEntry::Lookup(clasp, proto, associated));
-  MOZ_RELEASE_ASSERT(p);
-
-  defaultNewTable->remove(p);
-  defaultNewGroupCache.purge();
-}
-
-void ObjectGroupRealm::replaceDefaultNewGroup(const JSClass* clasp,
-                                              TaggedProto proto,
-                                              JSObject* associated,
-                                              ObjectGroup* group) {
-  NewEntry::Lookup lookup(clasp, proto, associated);
-
-  auto p = defaultNewTable->lookup(lookup);
-  MOZ_RELEASE_ASSERT(p);
-  defaultNewTable->remove(p);
-  defaultNewGroupCache.purge();
-  {
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    if (!defaultNewTable->putNew(lookup, NewEntry(group, associated))) {
-      oomUnsafe.crash("Inconsistent object table");
-    }
-  }
 }
 
 /* static */
