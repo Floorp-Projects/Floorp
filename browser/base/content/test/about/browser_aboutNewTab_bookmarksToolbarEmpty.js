@@ -19,6 +19,10 @@ const bookmarksInfo = [
 ];
 
 add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    // Ensure we can wait for about:newtab to load.
+    set: [["browser.newtab.preload", false]],
+  });
   // Move all existing bookmarks in the Bookmarks Toolbar and
   // Other Bookmarks to the Bookmarks Menu so they don't affect
   // the visibility of the Bookmarks Toolbar. Restore them at
@@ -70,7 +74,6 @@ add_task(async function bookmarks_toolbar_not_shown_when_empty() {
     let newtab = await BrowserTestUtils.openNewForegroundTab({
       gBrowser,
       opening: "about:newtab",
-      waitForLoad: false,
     });
     let emptyMessage = document.getElementById("personal-toolbar-empty");
 
