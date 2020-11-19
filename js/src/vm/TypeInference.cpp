@@ -156,12 +156,6 @@ void JitScript::sweepTypes(const js::AutoSweepJitScript& sweep, Zone* zone) {
     }
     inlinedCompilations.shrinkTo(dest);
   }
-
-  if (types.hadOOMSweepingTypes()) {
-    // It's possible we OOM'd while copying freeze constraints, so they
-    // need to be regenerated.
-    flags_.hasFreezeConstraints = false;
-  }
 }
 
 TypeZone::TypeZone(Zone* zone)

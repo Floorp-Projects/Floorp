@@ -256,18 +256,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
     // scope).
     const HeapPtr<EnvironmentObject*> templateEnv = nullptr;
 
-    // The total bytecode length of all scripts we inlined when we Ion-compiled
-    // this script. 0 if Ion did not compile this script or if we didn't inline
-    // anything.
-    uint16_t inlinedBytecodeLength = 0;
-
-    // The max inlining depth where we can still inline all functions we inlined
-    // when we Ion-compiled this script. This starts as UINT8_MAX, since we have
-    // no data yet, and won't affect inlining heuristics in that case. The value
-    // is updated when we Ion-compile this script. See makeInliningDecision for
-    // more info.
-    uint8_t maxInliningDepth = UINT8_MAX;
-
     // Analysis information based on the script and its bytecode.
     IonBytecodeInfo bytecodeInfo = {};
 
@@ -299,14 +287,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
     // Generation for type sweeping. If out of sync with the TypeZone's
     // generation, this JitScript needs to be swept.
     bool typesGeneration : 1;
-
-    // Whether freeze constraints for stack type sets have been generated.
-    bool hasFreezeConstraints : 1;
-
-    // Flag set if this script has ever been Ion compiled, either directly or
-    // inlined into another script. This is cleared when the script's type
-    // information or caches are cleared.
-    bool ionCompiledOrInlined : 1;
 
     // True if this script entered Ion via OSR at a loop header.
     bool hadIonOSR : 1;
@@ -357,21 +337,8 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
 
   MOZ_MUST_USE bool ensureHasCachedIonData(JSContext* cx, HandleScript script);
 
-  bool hasFreezeConstraints(const js::AutoSweepJitScript& sweep) const {
-    MOZ_ASSERT(sweep.jitScript() == this);
-    return flags_.hasFreezeConstraints;
-  }
-  void setHasFreezeConstraints(const js::AutoSweepJitScript& sweep) {
-    MOZ_ASSERT(sweep.jitScript() == this);
-    flags_.hasFreezeConstraints = true;
-  }
-
   inline bool typesNeedsSweep(Zone* zone) const;
   void sweepTypes(const js::AutoSweepJitScript& sweep, Zone* zone);
-
-  void setIonCompiledOrInlined() { flags_.ionCompiledOrInlined = true; }
-  void clearIonCompiledOrInlined() { flags_.ionCompiledOrInlined = false; }
-  bool ionCompiledOrInlined() const { return flags_.ionCompiledOrInlined; }
 
   void setHadIonOSR() { flags_.hadIonOSR = true; }
   bool hadIonOSR() const { return flags_.hadIonOSR; }
@@ -490,26 +457,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   }
   bool hasTryFinally() const {
     return cachedIonData().bytecodeInfo.hasTryFinally;
-  }
-
-  uint8_t maxInliningDepth() const {
-    return hasCachedIonData() ? cachedIonData().maxInliningDepth : UINT8_MAX;
-  }
-  void resetMaxInliningDepth() { cachedIonData().maxInliningDepth = UINT8_MAX; }
-
-  void setMaxInliningDepth(uint32_t depth) {
-    MOZ_ASSERT(depth <= UINT8_MAX);
-    cachedIonData().maxInliningDepth = depth;
-  }
-
-  uint16_t inlinedBytecodeLength() const {
-    return hasCachedIonData() ? cachedIonData().inlinedBytecodeLength : 0;
-  }
-  void setInlinedBytecodeLength(uint32_t len) {
-    if (len > UINT16_MAX) {
-      len = UINT16_MAX;
-    }
-    cachedIonData().inlinedBytecodeLength = len;
   }
 
  private:
