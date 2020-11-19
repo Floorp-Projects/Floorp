@@ -168,6 +168,12 @@ extern "C" const char* __tsan_default_suppressions() {
          // up due to "volatile" being too weak for this.
          "race:third_party/sqlite3/*\n"
          "deadlock:third_party/sqlite3/*\n"
+         // Bug 1674770 - permanent
+         // Upstream Bug: https://github.com/Amanieu/parking_lot/issues/257
+         //
+         // parking_lot using incorrect atomic orderings in RwLock, upstream
+         // fix already up for review.
+         "race:StrongRuleNode::ensure_child\n"
          // No Bug - permanent
          // Upstream Bug: https://github.com/rayon-rs/rayon/issues/812
          //
