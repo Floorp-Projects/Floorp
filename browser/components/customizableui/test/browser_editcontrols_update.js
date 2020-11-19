@@ -74,6 +74,13 @@ function expectCommandUpdate(count, testWindow = window) {
   });
 }
 
+// Call this between `.select()` to make sure the selection actually changes
+// and thus TextInputListener::UpdateTextInputCommands() is called.
+function deselectURLBarAndSpin() {
+  gURLBar.inputField.setSelectionRange(0, 0);
+  return new Promise(setTimeout);
+}
+
 add_task(async function test_init() {
   // Put something on the clipboard to verify that the paste button is properly enabled during the test.
   let clipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
@@ -121,8 +128,9 @@ add_task(async function test_panelui_opened() {
   // Check that updates do not occur after the panel has been closed.
   checkState(true, "Update when edit-controls is on panel and hidden");
 
-  // Mac will update the enabled st1ate even when the panel is closed so that
+  // Mac will update the enabled state even when the panel is closed so that
   // main menubar shortcuts will work properly.
+  await deselectURLBarAndSpin();
   overridePromise = expectCommandUpdate(isMac ? 1 : 0);
   gURLBar.select();
   await overridePromise;
@@ -158,6 +166,7 @@ add_task(async function test_panelui_customize_to_toolbar() {
   await overridePromise;
   checkState(false, "Update when edit-controls on toolbar and focused");
 
+  await deselectURLBarAndSpin();
   overridePromise = expectCommandUpdate(1);
   gURLBar.select();
   await overridePromise;
@@ -185,6 +194,7 @@ add_task(async function test_panelui_customize_to_toolbar() {
 
   // Mac will update the enabled state even when the buttons are overflowing,
   // so main menubar shortcuts will work properly.
+  await deselectURLBarAndSpin();
   overridePromise = expectCommandUpdate(isMac ? 1 : 0);
   gURLBar.select();
   await overridePromise;
@@ -194,6 +204,7 @@ add_task(async function test_panelui_customize_to_toolbar() {
   );
 
   // Check that we get an update if we select content while the panel is open.
+  await deselectURLBarAndSpin();
   overridePromise = expectCommandUpdate(1);
   await navbar.overflowable.show();
   gURLBar.select();
@@ -201,6 +212,7 @@ add_task(async function test_panelui_customize_to_toolbar() {
 
   // And that we don't (except on mac) when the panel is hidden.
   kOverflowPanel.hidePopup();
+  await deselectURLBarAndSpin();
   overridePromise = expectCommandUpdate(isMac ? 1 : 0);
   gURLBar.select();
   await overridePromise;
@@ -215,11 +227,13 @@ add_task(async function test_panelui_customize_to_toolbar() {
   // updateEditUIVisibility should be called when customization happens but isn't. See bug 1359790.
   updateEditUIVisibility();
 
+  await deselectURLBarAndSpin();
   overridePromise = expectCommandUpdate(isMac ? 1 : 0);
   gURLBar.select();
   await overridePromise;
 
   // Check that we get an update if we select content while the panel is open.
+  await deselectURLBarAndSpin();
   overridePromise = expectCommandUpdate(1);
   await navbar.overflowable.show();
   gURLBar.select();
@@ -227,6 +241,7 @@ add_task(async function test_panelui_customize_to_toolbar() {
 
   // And that we don't (except on mac) when the panel is hidden.
   kOverflowPanel.hidePopup();
+  await deselectURLBarAndSpin();
   overridePromise = expectCommandUpdate(isMac ? 1 : 0);
   gURLBar.select();
   await overridePromise;
