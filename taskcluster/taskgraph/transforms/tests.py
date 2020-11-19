@@ -813,10 +813,6 @@ def set_target(config, tasks):
         else:
             task["mozharness"]["build-artifact-name"] = get_artifact_path(task, target)
 
-        # disable the media decoding sanity test as it negatively impacts results.
-        extra_options.append('--add-option')
-        extra_options.append('--setpref,media.sanity-test.disabled=true')
-
         yield task
 
 
