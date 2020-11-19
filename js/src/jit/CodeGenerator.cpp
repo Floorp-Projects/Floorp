@@ -3707,8 +3707,6 @@ void CodeGenerator::visitLambdaArrow(LLambdaArrow* lir) {
       lir, ArgList(ImmGCPtr(info.funUnsafe()), envChain, newTarget),
       StoreRegisterTo(output));
 
-  MOZ_ASSERT(!info.useSingletonForClone);
-
   if (info.singletonType) {
     // If the function has a singleton type, this instruction will only be
     // executed once so we don't bother inlining it.
