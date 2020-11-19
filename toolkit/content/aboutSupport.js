@@ -76,9 +76,6 @@ var snapshotFormatters = {
     $("application-box").textContent = data.name;
     $("useragent-box").textContent = data.userAgent;
     $("os-box").textContent = data.osVersion;
-    if (AppConstants.platform == "macosx") {
-      $("rosetta-box").textContent = data.rosetta;
-    }
     $("binary-box").textContent = Services.dirsvc.get(
       "XREExeF",
       Ci.nsIFile
