@@ -1208,14 +1208,14 @@ void MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs,
                                   L label) {
   MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed ||
              cond == NotSigned);
-  // x86 prefers |test foo, foo| to |cmp foo, #0|.
-  // Convert the former to the latter for ARM.
   if (lhs == rhs && (cond == Zero || cond == NonZero)) {
-    cmp32(lhs, Imm32(0));
+    // The x86-biased front end prefers |test foo, foo| to |cmp foo, #0|, but
+    // the latter is better on ARM64.
+    branchTest32(cond, lhs, Imm32(0), label);
   } else {
     test32(lhs, rhs);
+    B(label, cond);
   }
-  B(label, cond);
 }
 
 template <class L>
@@ -1223,8 +1223,14 @@ void MacroAssembler::branchTest32(Condition cond, Register lhs, Imm32 rhs,
                                   L label) {
   MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed ||
              cond == NotSigned);
-  test32(lhs, rhs);
-  B(label, cond);
+  if (rhs.value == 0 && cond == Zero) {
+    Cbz(ARMRegister(lhs, 32), label);
+  } else if (rhs.value == 0 && cond == NonZero) {
+    Cbnz(ARMRegister(lhs, 32), label);
+  } else {
+    test32(lhs, rhs);
+    B(label, cond);
+  }
 }
 
 void MacroAssembler::branchTest32(Condition cond, const Address& lhs, Imm32 rhs,
@@ -1253,8 +1259,14 @@ void MacroAssembler::branchTestPtr(Condition cond, Register lhs, Register rhs,
 
 void MacroAssembler::branchTestPtr(Condition cond, Register lhs, Imm32 rhs,
                                    Label* label) {
-  Tst(ARMRegister(lhs, 64), Operand(rhs.value));
-  B(label, cond);
+  if (rhs.value == 0 && cond == Zero) {
+    Cbz(ARMRegister(lhs, 64), label);
+  } else if (rhs.value == 0 && cond == NonZero) {
+    Cbnz(ARMRegister(lhs, 64), label);
+  } else {
+    Tst(ARMRegister(lhs, 64), Operand(rhs.value));
+    B(label, cond);
+  }
 }
 
 void MacroAssembler::branchTestPtr(Condition cond, const Address& lhs,
