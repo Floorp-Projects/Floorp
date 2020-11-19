@@ -2,7 +2,7 @@
  * simd/jsimd.h
  *
  * Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
- * Copyright (C) 2011, 2014-2016, 2018, D. R. Commander.
+ * Copyright (C) 2011, 2014-2016, 2018, 2020, D. R. Commander.
  * Copyright (C) 2013-2014, MIPS Technologies, Inc., California.
  * Copyright (C) 2014, Linaro Limited.
  * Copyright (C) 2015-2016, 2018, Matthieu Darbois.
@@ -882,7 +882,7 @@ EXTERN(void) jsimd_convsamp_float_sse2
 EXTERN(void) jsimd_convsamp_float_dspr2
   (JSAMPARRAY sample_data, JDIMENSION start_col, FAST_FLOAT *workspace);
 
-/* Slow Integer Forward DCT */
+/* Accurate Integer Forward DCT */
 EXTERN(void) jsimd_fdct_islow_mmx(DCTELEM *data);
 
 extern const int jconst_fdct_islow_sse2[];
@@ -989,7 +989,7 @@ EXTERN(void) jsimd_idct_12x12_pass1_dspr2
 EXTERN(void) jsimd_idct_12x12_pass2_dspr2
   (int *workspace, int *output);
 
-/* Slow Integer Inverse DCT */
+/* Accurate Integer Inverse DCT */
 EXTERN(void) jsimd_idct_islow_mmx
   (void *dct_table, JCOEFPTR coef_block, JSAMPARRAY output_buf,
    JDIMENSION output_col);

@@ -1,12 +1,12 @@
 /*
- * ARMv8 NEON optimizations for libjpeg-turbo
+ * Armv8 Neon optimizations for libjpeg-turbo
  *
  * Copyright (C) 2009-2011, Nokia Corporation and/or its subsidiary(-ies).
  *                          All Rights Reserved.
  * Author:  Siarhei Siamashka <siarhei.siamashka@nokia.com>
  * Copyright (C) 2013-2014, Linaro Limited.  All Rights Reserved.
  * Author:  Ragesh Radhakrishnan <ragesh.r@linaro.org>
- * Copyright (C) 2014-2016, D. R. Commander.  All Rights Reserved.
+ * Copyright (C) 2014-2016, 2020, D. R. Commander.  All Rights Reserved.
  * Copyright (C) 2015-2016, 2018, Matthieu Darbois.  All Rights Reserved.
  * Copyright (C) 2016, Siarhei Siamashka.  All Rights Reserved.
  *
@@ -33,6 +33,8 @@
 
 #if defined(__APPLE__)
 .section __DATA, __const
+#elif defined(_WIN32)
+.section .rdata
 #else
 .section .rodata, "a", %progbits
 #endif
@@ -609,23 +611,23 @@ asm_function jsimd_idct_islow_neon
     shrn2           v5.8h, v15.4s, #16  /* wsptr[DCTSIZE*3] = (int)DESCALE(tmp13 + tmp0, CONST_BITS+PASS1_BITS+3) */
     shrn2           v6.8h, v17.4s, #16  /* wsptr[DCTSIZE*4] = (int)DESCALE(tmp13 - tmp0, CONST_BITS+PASS1_BITS+3) */
     movi            v0.16b, #(CENTERJSAMPLE)
-    /* Prepare pointers (dual-issue with NEON instructions) */
+    /* Prepare pointers (dual-issue with Neon instructions) */
       ldp             TMP1, TMP2, [OUTPUT_BUF], 16
-    sqrshrn         v28.8b, v2.8h, #(CONST_BITS+PASS1_BITS+3-16)
+    sqrshrn         v28.8b, v2.8h, #(CONST_BITS + PASS1_BITS + 3 - 16)
       ldp             TMP3, TMP4, [OUTPUT_BUF], 16
-    sqrshrn         v29.8b, v3.8h, #(CONST_BITS+PASS1_BITS+3-16)
+    sqrshrn         v29.8b, v3.8h, #(CONST_BITS + PASS1_BITS + 3 - 16)
       add             TMP1, TMP1, OUTPUT_COL
-    sqrshrn         v30.8b, v4.8h, #(CONST_BITS+PASS1_BITS+3-16)
+    sqrshrn         v30.8b, v4.8h, #(CONST_BITS + PASS1_BITS + 3 - 16)
       add             TMP2, TMP2, OUTPUT_COL
-    sqrshrn         v31.8b, v5.8h, #(CONST_BITS+PASS1_BITS+3-16)
+    sqrshrn         v31.8b, v5.8h, #(CONST_BITS + PASS1_BITS + 3 - 16)
       add             TMP3, TMP3, OUTPUT_COL
-    sqrshrn2        v28.16b, v6.8h, #(CONST_BITS+PASS1_BITS+3-16)
+    sqrshrn2        v28.16b, v6.8h, #(CONST_BITS + PASS1_BITS + 3 - 16)
       add             TMP4, TMP4, OUTPUT_COL
-    sqrshrn2        v29.16b, v7.8h, #(CONST_BITS+PASS1_BITS+3-16)
+    sqrshrn2        v29.16b, v7.8h, #(CONST_BITS + PASS1_BITS + 3 - 16)
       ldp             TMP5, TMP6, [OUTPUT_BUF], 16
-    sqrshrn2        v30.16b, v8.8h, #(CONST_BITS+PASS1_BITS+3-16)
+    sqrshrn2        v30.16b, v8.8h, #(CONST_BITS + PASS1_BITS + 3 - 16)
       ldp             TMP7, TMP8, [OUTPUT_BUF], 16
-    sqrshrn2        v31.16b, v9.8h, #(CONST_BITS+PASS1_BITS+3-16)
+    sqrshrn2        v31.16b, v9.8h, #(CONST_BITS + PASS1_BITS + 3 - 16)
       add             TMP5, TMP5, OUTPUT_COL
     add             v16.16b, v28.16b, v0.16b
       add             TMP6, TMP6, OUTPUT_COL
@@ -737,14 +739,14 @@ asm_function jsimd_idct_islow_neon
     add             v14.4s, v6.4s, v10.4s  /* tmp13 + tmp0 */
     sub             v16.4s, v6.4s, v10.4s  /* tmp13 - tmp0 */
 
-    rshrn           v2.4h, v18.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*0] = (int)DESCALE(tmp10 + tmp3, CONST_BITS-PASS1_BITS) */
-    rshrn           v3.4h, v22.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*1] = (int)DESCALE(tmp11 + tmp2, CONST_BITS-PASS1_BITS) */
-    rshrn           v4.4h, v26.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*2] = (int)DESCALE(tmp12 + tmp1, CONST_BITS-PASS1_BITS) */
-    rshrn           v5.4h, v14.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*3] = (int)DESCALE(tmp13 + tmp0, CONST_BITS-PASS1_BITS) */
-    rshrn2          v2.8h, v16.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*4] = (int)DESCALE(tmp13 - tmp0, CONST_BITS-PASS1_BITS) */
-    rshrn2          v3.8h, v28.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*5] = (int)DESCALE(tmp12 - tmp1, CONST_BITS-PASS1_BITS) */
-    rshrn2          v4.8h, v24.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*6] = (int)DESCALE(tmp11 - tmp2, CONST_BITS-PASS1_BITS) */
-    rshrn2          v5.8h, v20.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*7] = (int)DESCALE(tmp10 - tmp3, CONST_BITS-PASS1_BITS) */
+    rshrn           v2.4h, v18.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*0] = (int)DESCALE(tmp10 + tmp3, CONST_BITS-PASS1_BITS) */
+    rshrn           v3.4h, v22.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*1] = (int)DESCALE(tmp11 + tmp2, CONST_BITS-PASS1_BITS) */
+    rshrn           v4.4h, v26.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*2] = (int)DESCALE(tmp12 + tmp1, CONST_BITS-PASS1_BITS) */
+    rshrn           v5.4h, v14.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*3] = (int)DESCALE(tmp13 + tmp0, CONST_BITS-PASS1_BITS) */
+    rshrn2          v2.8h, v16.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*4] = (int)DESCALE(tmp13 - tmp0, CONST_BITS-PASS1_BITS) */
+    rshrn2          v3.8h, v28.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*5] = (int)DESCALE(tmp12 - tmp1, CONST_BITS-PASS1_BITS) */
+    rshrn2          v4.8h, v24.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*6] = (int)DESCALE(tmp11 - tmp2, CONST_BITS-PASS1_BITS) */
+    rshrn2          v5.8h, v20.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*7] = (int)DESCALE(tmp10 - tmp3, CONST_BITS-PASS1_BITS) */
     mov             v6.16b, v15.16b
     mov             v7.16b, v15.16b
     mov             v8.16b, v15.16b
@@ -821,14 +823,14 @@ asm_function jsimd_idct_islow_neon
     mov             v3.16b, v14.16b
     mov             v4.16b, v14.16b
     mov             v5.16b, v14.16b
-    rshrn           v6.4h, v19.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*0] = (int)DESCALE(tmp10 + tmp3, CONST_BITS-PASS1_BITS) */
-    rshrn           v7.4h, v23.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*1] = (int)DESCALE(tmp11 + tmp2, CONST_BITS-PASS1_BITS) */
-    rshrn           v8.4h, v27.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*2] = (int)DESCALE(tmp12 + tmp1, CONST_BITS-PASS1_BITS) */
-    rshrn           v9.4h, v15.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*3] = (int)DESCALE(tmp13 + tmp0, CONST_BITS-PASS1_BITS) */
-    rshrn2          v6.8h, v17.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*4] = (int)DESCALE(tmp13 - tmp0, CONST_BITS-PASS1_BITS) */
-    rshrn2          v7.8h, v29.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*5] = (int)DESCALE(tmp12 - tmp1, CONST_BITS-PASS1_BITS) */
-    rshrn2          v8.8h, v25.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*6] = (int)DESCALE(tmp11 - tmp2, CONST_BITS-PASS1_BITS) */
-    rshrn2          v9.8h, v21.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*7] = (int)DESCALE(tmp10 - tmp3, CONST_BITS-PASS1_BITS) */
+    rshrn           v6.4h, v19.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*0] = (int)DESCALE(tmp10 + tmp3, CONST_BITS-PASS1_BITS) */
+    rshrn           v7.4h, v23.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*1] = (int)DESCALE(tmp11 + tmp2, CONST_BITS-PASS1_BITS) */
+    rshrn           v8.4h, v27.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*2] = (int)DESCALE(tmp12 + tmp1, CONST_BITS-PASS1_BITS) */
+    rshrn           v9.4h, v15.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*3] = (int)DESCALE(tmp13 + tmp0, CONST_BITS-PASS1_BITS) */
+    rshrn2          v6.8h, v17.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*4] = (int)DESCALE(tmp13 - tmp0, CONST_BITS-PASS1_BITS) */
+    rshrn2          v7.8h, v29.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*5] = (int)DESCALE(tmp12 - tmp1, CONST_BITS-PASS1_BITS) */
+    rshrn2          v8.8h, v25.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*6] = (int)DESCALE(tmp11 - tmp2, CONST_BITS-PASS1_BITS) */
+    rshrn2          v9.8h, v21.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*7] = (int)DESCALE(tmp10 - tmp3, CONST_BITS-PASS1_BITS) */
     b               1b
 
 .balign 16
@@ -931,22 +933,22 @@ asm_function jsimd_idct_islow_neon
     sub             v16.4s, v6.4s, v10.4s   /* tmp13 - tmp0 */
     sub             v17.4s, v31.4s, v11.4s  /* tmp13 - tmp0 */
 
-    rshrn           v2.4h, v18.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*0] = (int)DESCALE(tmp10 + tmp3, CONST_BITS-PASS1_BITS) */
-    rshrn           v3.4h, v22.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*1] = (int)DESCALE(tmp11 + tmp2, CONST_BITS-PASS1_BITS) */
-    rshrn           v4.4h, v26.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*2] = (int)DESCALE(tmp12 + tmp1, CONST_BITS-PASS1_BITS) */
-    rshrn           v5.4h, v14.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*3] = (int)DESCALE(tmp13 + tmp0, CONST_BITS-PASS1_BITS) */
-    rshrn           v6.4h, v19.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*0] = (int)DESCALE(tmp10 + tmp3, CONST_BITS-PASS1_BITS) */
-    rshrn           v7.4h, v23.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*1] = (int)DESCALE(tmp11 + tmp2, CONST_BITS-PASS1_BITS) */
-    rshrn           v8.4h, v27.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*2] = (int)DESCALE(tmp12 + tmp1, CONST_BITS-PASS1_BITS) */
-    rshrn           v9.4h, v15.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*3] = (int)DESCALE(tmp13 + tmp0, CONST_BITS-PASS1_BITS) */
-    rshrn2          v2.8h, v16.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*4] = (int)DESCALE(tmp13 - tmp0, CONST_BITS-PASS1_BITS) */
-    rshrn2          v3.8h, v28.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*5] = (int)DESCALE(tmp12 - tmp1, CONST_BITS-PASS1_BITS) */
-    rshrn2          v4.8h, v24.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*6] = (int)DESCALE(tmp11 - tmp2, CONST_BITS-PASS1_BITS) */
-    rshrn2          v5.8h, v20.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*7] = (int)DESCALE(tmp10 - tmp3, CONST_BITS-PASS1_BITS) */
-    rshrn2          v6.8h, v17.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*4] = (int)DESCALE(tmp13 - tmp0, CONST_BITS-PASS1_BITS) */
-    rshrn2          v7.8h, v29.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*5] = (int)DESCALE(tmp12 - tmp1, CONST_BITS-PASS1_BITS) */
-    rshrn2          v8.8h, v25.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*6] = (int)DESCALE(tmp11 - tmp2, CONST_BITS-PASS1_BITS) */
-    rshrn2          v9.8h, v21.4s, #(CONST_BITS-PASS1_BITS)  /* wsptr[DCTSIZE*7] = (int)DESCALE(tmp10 - tmp3, CONST_BITS-PASS1_BITS) */
+    rshrn           v2.4h, v18.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*0] = (int)DESCALE(tmp10 + tmp3, CONST_BITS-PASS1_BITS) */
+    rshrn           v3.4h, v22.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*1] = (int)DESCALE(tmp11 + tmp2, CONST_BITS-PASS1_BITS) */
+    rshrn           v4.4h, v26.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*2] = (int)DESCALE(tmp12 + tmp1, CONST_BITS-PASS1_BITS) */
+    rshrn           v5.4h, v14.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*3] = (int)DESCALE(tmp13 + tmp0, CONST_BITS-PASS1_BITS) */
+    rshrn           v6.4h, v19.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*0] = (int)DESCALE(tmp10 + tmp3, CONST_BITS-PASS1_BITS) */
+    rshrn           v7.4h, v23.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*1] = (int)DESCALE(tmp11 + tmp2, CONST_BITS-PASS1_BITS) */
+    rshrn           v8.4h, v27.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*2] = (int)DESCALE(tmp12 + tmp1, CONST_BITS-PASS1_BITS) */
+    rshrn           v9.4h, v15.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*3] = (int)DESCALE(tmp13 + tmp0, CONST_BITS-PASS1_BITS) */
+    rshrn2          v2.8h, v16.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*4] = (int)DESCALE(tmp13 - tmp0, CONST_BITS-PASS1_BITS) */
+    rshrn2          v3.8h, v28.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*5] = (int)DESCALE(tmp12 - tmp1, CONST_BITS-PASS1_BITS) */
+    rshrn2          v4.8h, v24.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*6] = (int)DESCALE(tmp11 - tmp2, CONST_BITS-PASS1_BITS) */
+    rshrn2          v5.8h, v20.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*7] = (int)DESCALE(tmp10 - tmp3, CONST_BITS-PASS1_BITS) */
+    rshrn2          v6.8h, v17.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*4] = (int)DESCALE(tmp13 - tmp0, CONST_BITS-PASS1_BITS) */
+    rshrn2          v7.8h, v29.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*5] = (int)DESCALE(tmp12 - tmp1, CONST_BITS-PASS1_BITS) */
+    rshrn2          v8.8h, v25.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*6] = (int)DESCALE(tmp11 - tmp2, CONST_BITS-PASS1_BITS) */
+    rshrn2          v9.8h, v21.4s, #(CONST_BITS - PASS1_BITS)  /* wsptr[DCTSIZE*7] = (int)DESCALE(tmp10 - tmp3, CONST_BITS-PASS1_BITS) */
     b               1b
 
     .unreq          DCT_TABLE
@@ -990,7 +992,7 @@ asm_function jsimd_idct_islow_neon
  * function from jidctfst.c
  *
  * Normally 1-D AAN DCT needs 5 multiplications and 29 additions.
- * But in ARM NEON case some extra additions are required because VQDMULH
+ * But in Arm Neon case some extra additions are required because VQDMULH
  * instruction can't handle the constants larger than 1. So the expressions
  * like "x * 1.082392200" have to be converted to "x * 0.082392200 + x",
  * which introduces an extra addition. Overall, there are 6 extra additions
@@ -1022,7 +1024,7 @@ asm_function jsimd_idct_ifast_neon
        instruction ensures that those bits are set to zero. */
     uxtw x3, w3
 
-    /* Load and dequantize coefficients into NEON registers
+    /* Load and dequantize coefficients into Neon registers
      * with the following allocation:
      *       0 1 2 3 | 4 5 6 7
      *      ---------+--------
@@ -1035,7 +1037,7 @@ asm_function jsimd_idct_ifast_neon
      *   6 | d28     | d29     ( v22.8h )
      *   7 | d30     | d31     ( v23.8h )
      */
-    /* Save NEON registers used in fast IDCT */
+    /* Save Neon registers used in fast IDCT */
     get_symbol_loc  TMP5, Ljsimd_idct_ifast_neon_consts
     ld1             {v16.8h, v17.8h}, [COEF_BLOCK], 32
     ld1             {v0.8h, v1.8h}, [DCT_TABLE], 32
@@ -1140,7 +1142,7 @@ asm_function jsimd_idct_ifast_neon
     add             v20.8h, v20.8h, v1.8h
     /* Descale to 8-bit and range limit */
     movi            v0.16b, #0x80
-      /* Prepare pointers (dual-issue with NEON instructions) */
+      /* Prepare pointers (dual-issue with Neon instructions) */
       ldp             TMP1, TMP2, [OUTPUT_BUF], 16
     sqshrn          v28.8b, v16.8h, #5
       ldp             TMP3, TMP4, [OUTPUT_BUF], 16
@@ -1219,7 +1221,7 @@ asm_function jsimd_idct_ifast_neon
  *
  * NOTE: jpeg-8 has an improved implementation of 4x4 inverse-DCT, which
  *       requires much less arithmetic operations and hence should be faster.
- *       The primary purpose of this particular NEON optimized function is
+ *       The primary purpose of this particular Neon optimized function is
  *       bit exact compatibility with jpeg-6b.
  *
  * TODO: a bit better instructions scheduling can be achieved by expanding
@@ -1289,7 +1291,7 @@ asm_function jsimd_idct_4x4_neon
        instruction ensures that those bits are set to zero. */
     uxtw x3, w3
 
-    /* Save all used NEON registers */
+    /* Save all used Neon registers */
     sub             sp, sp, 64
     mov             x9, sp
     /* Load constants (v3.4h is just used for padding) */
@@ -1298,7 +1300,7 @@ asm_function jsimd_idct_4x4_neon
     st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [x9], 32
     ld1             {v0.4h, v1.4h, v2.4h, v3.4h}, [TMP4]
 
-    /* Load all COEF_BLOCK into NEON registers with the following allocation:
+    /* Load all COEF_BLOCK into Neon registers with the following allocation:
      *       0 1 2 3 | 4 5 6 7
      *      ---------+--------
      *   0 | v4.4h   | v5.4h
@@ -1403,7 +1405,7 @@ asm_function jsimd_idct_4x4_neon
     st1             {v27.b}[7], [TMP4], 1
 #endif
 
-    /* vpop            {v8.4h - v15.4h}    ;not available */
+    /* vpop            {v8.4h - v15.4h}    (not available) */
     ld1             {v8.8b, v9.8b, v10.8b, v11.8b}, [sp], 32
     ld1             {v12.8b, v13.8b, v14.8b, v15.8b}, [sp], 32
     blr             x30
@@ -1432,7 +1434,7 @@ asm_function jsimd_idct_4x4_neon
  *
  * NOTE: jpeg-8 has an improved implementation of 2x2 inverse-DCT, which
  *       requires much less arithmetic operations and hence should be faster.
- *       The primary purpose of this particular NEON optimized function is
+ *       The primary purpose of this particular Neon optimized function is
  *       bit exact compatibility with jpeg-6b.
  */
 
@@ -1471,7 +1473,7 @@ asm_function jsimd_idct_2x2_neon
        instruction ensures that those bits are set to zero. */
     uxtw x3, w3
 
-    /* vpush           {v8.4h - v15.4h}            ; not available */
+    /* vpush           {v8.4h - v15.4h}    (not available) */
     sub             sp, sp, 64
     mov             x9, sp
 
@@ -1481,7 +1483,7 @@ asm_function jsimd_idct_2x2_neon
     st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [x9], 32
     ld1             {v14.4h}, [TMP2]
 
-    /* Load all COEF_BLOCK into NEON registers with the following allocation:
+    /* Load all COEF_BLOCK into Neon registers with the following allocation:
      *       0 1 2 3 | 4 5 6 7
      *      ---------+--------
      *   0 | v4.4h   | v5.4h
@@ -1855,7 +1857,7 @@ asm_function jsimd_ycc_\colorid\()_convert_neon_slowst3
     /* Load constants to d1, d2, d3 (v0.4h is just used for padding) */
     get_symbol_loc  x15, Ljsimd_ycc_rgb_neon_consts
 
-    /* Save NEON registers */
+    /* Save Neon registers */
     st1             {v8.8b, v9.8b, v10.8b, v11.8b}, [x9], 32
     st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [x9], 32
     ld1             {v0.4h, v1.4h}, [x15], 16
@@ -2140,7 +2142,7 @@ generate_jsimd_ycc_rgb_convert_neon extbgr,  24, 2, .4h,  1, .4h,  0, .4h,  .8b,
 .endm
 
 /* TODO: expand macros and interleave instructions if some in-order
- *       ARM64 processor actually can dual-issue LOAD/STORE with ALU */
+ *       AArch64 processor actually can dual-issue LOAD/STORE with ALU */
 .macro do_rgb_to_yuv_stage2_store_load_stage1 fast_ld3
     do_rgb_to_yuv_stage2
     do_load         \bpp, 8, \fast_ld3
@@ -2180,7 +2182,7 @@ asm_function jsimd_\colorid\()_ycc_convert_neon_slowld3
     ldr             OUTPUT_BUF2, [OUTPUT_BUF, #16]
     .unreq          OUTPUT_BUF
 
-    /* Save NEON registers */
+    /* Save Neon registers */
     sub             sp, sp, #64
     mov             x9, sp
     st1             {v8.8b, v9.8b, v10.8b, v11.8b}, [x9], 32
@@ -2357,7 +2359,7 @@ asm_function jsimd_convsamp_neon
 /*
  * jsimd_fdct_islow_neon
  *
- * This file contains a slow-but-accurate integer implementation of the
+ * This file contains a slower but more accurate integer implementation of the
  * forward DCT (Discrete Cosine Transform). The following code is based
  * directly on the IJG''s original jfdctint.c; see the jfdctint.c for
  * more details.
@@ -2394,13 +2396,13 @@ asm_function jsimd_fdct_islow_neon
     get_symbol_loc  TMP, Ljsimd_fdct_islow_neon_consts
     ld1             {v0.8h, v1.8h}, [TMP]
 
-    /* Save NEON registers */
+    /* Save Neon registers */
     sub             sp, sp, #64
     mov             x10, sp
     st1             {v8.8b, v9.8b, v10.8b, v11.8b}, [x10], 32
     st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [x10], 32
 
-    /* Load all DATA into NEON registers with the following allocation:
+    /* Load all DATA into Neon registers with the following allocation:
      *       0 1 2 3 | 4 5 6 7
      *      ---------+--------
      *   0 | d16     | d17    | v16.8h
@@ -2627,7 +2629,7 @@ asm_function jsimd_fdct_islow_neon
     st1             {v16.8h, v17.8h, v18.8h, v19.8h}, [DATA], 64
     st1             {v20.8h, v21.8h, v22.8h, v23.8h}, [DATA]
 
-    /* Restore NEON registers */
+    /* Restore Neon registers */
     ld1             {v8.8b, v9.8b, v10.8b, v11.8b}, [sp], 32
     ld1             {v12.8b, v13.8b, v14.8b, v15.8b}, [sp], 32
 
@@ -2679,7 +2681,7 @@ asm_function jsimd_fdct_ifast_neon
     get_symbol_loc  TMP, Ljsimd_fdct_ifast_neon_consts
     ld1             {v0.4h}, [TMP]
 
-    /* Load all DATA into NEON registers with the following allocation:
+    /* Load all DATA into Neon registers with the following allocation:
      *       0 1 2 3 | 4 5 6 7
      *      ---------+--------
      *   0 | d16     | d17    | v0.8h
@@ -3064,7 +3066,7 @@ asm_function jsimd_huff_encode_one_block_neon_slowtbl
 .endif
     sub             sp, sp, 272
     sub             BUFFER, BUFFER, #0x1    /* BUFFER=buffer-- */
-    /* Save ARM registers */
+    /* Save Arm registers */
     stp             x19, x20, [sp]
     get_symbol_loc  x15, Ljsimd_huff_encode_one_block_neon_consts
     ldr             PUT_BUFFER, [x0, #0x10]

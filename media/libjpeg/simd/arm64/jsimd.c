@@ -12,7 +12,7 @@
  *
  * This file contains the interface between the "normal" portions
  * of the library and the SIMD implementations when running on a
- * 64-bit ARM architecture.
+ * 64-bit Arm architecture.
  */
 
 #define JPEG_INTERNALS
@@ -114,8 +114,8 @@ parse_proc_cpuinfo(int bufsize)
  */
 
 /*
- * ARMv8 architectures support NEON extensions by default.
- * It is no longer optional as it was with ARMv7.
+ * Armv8 architectures support Neon extensions by default.
+ * It is no longer optional as it was with Armv7.
  */
 
 
