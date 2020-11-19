@@ -131,6 +131,15 @@ static nsTArray<dom::RTCStatsReportInternal>& GetWebrtcGlobalStatsStash() {
   return *sStash;
 }
 
+static std::map<int32_t, dom::Sequence<nsString>>& GetWebrtcGlobalLogStash() {
+  static StaticAutoPtr<std::map<int32_t, dom::Sequence<nsString>>> sStash;
+  if (!sStash) {
+    sStash = new std::map<int32_t, dom::Sequence<nsString>>();
+    ClearOnShutdown(&sStash);
+  }
+  return *sStash;
+}
+
 static void ClearClosedStats() {
   GetWebrtcGlobalStatsStash().Clear();
   PeerConnectionCtx* ctx = GetPeerConnectionCtx();
@@ -265,8 +274,7 @@ void WebrtcGlobalInformation::GetAllStats(
   aRv = NS_OK;
 }
 
-static RefPtr<PWebrtcGlobalParent::GetLogPromise> GetLogPromise(
-    const nsCString& aPattern) {
+static RefPtr<PWebrtcGlobalParent::GetLogPromise> GetLogPromise() {
   PeerConnectionCtx* ctx = GetPeerConnectionCtx();
   if (!ctx) {
     // This process has never created a PeerConnection, so no ICE logging.
@@ -307,8 +315,8 @@ static RefPtr<PWebrtcGlobalParent::GetLogPromise> GetLogPromise(
             std::move(logs), __func__);
       };
 
-  return transportHandler->GetIceLog(aPattern)->Then(
-      GetMainThreadSerialEventTarget(), __func__, std::move(AddMarkers));
+  return transportHandler->GetIceLog(nsCString())
+      ->Then(GetMainThreadSerialEventTarget(), __func__, std::move(AddMarkers));
 }
 
 static nsresult RunLogClear() {
@@ -344,6 +352,7 @@ void WebrtcGlobalInformation::ClearLogging(const GlobalObject& aGlobal) {
 
   // Chrome-only API
   MOZ_ASSERT(XRE_IsParentProcess());
+  GetWebrtcGlobalLogStash().clear();
 
   if (!WebrtcContentParents::Empty()) {
     // Clear content process signaling logs
@@ -356,6 +365,44 @@ void WebrtcGlobalInformation::ClearLogging(const GlobalObject& aGlobal) {
   Unused << RunLogClear();
 }
 
+static RefPtr<GenericPromise> UpdateLogStash() {
+  nsTArray<RefPtr<GenericPromise>> logPromises;
+  MOZ_ASSERT(XRE_IsParentProcess());
+  for (const auto& cp : WebrtcContentParents::GetAll()) {
+    auto StashLog =
+        [id = cp->Id() * 2 /* Make sure 1 isn't used */](
+            PWebrtcGlobalParent::GetLogPromise::ResolveOrRejectValue&& aValue) {
+          if (aValue.IsResolve() && !aValue.ResolveValue().IsEmpty()) {
+            GetWebrtcGlobalLogStash()[id] = aValue.ResolveValue();
+          }
+          return GenericPromise::CreateAndResolve(true, __func__);
+        };
+    logPromises.AppendElement(cp->SendGetLog()->Then(
+        GetMainThreadSerialEventTarget(), __func__, std::move(StashLog)));
+  }
+
+  // Get ICE logging for this (the parent) process. How long do we support this?
+  logPromises.AppendElement(GetLogPromise()->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [](PWebrtcGlobalParent::GetLogPromise::ResolveOrRejectValue&& aValue) {
+        if (aValue.IsResolve()) {
+          GetWebrtcGlobalLogStash()[1] = aValue.ResolveValue();
+        }
+        return GenericPromise::CreateAndResolve(true, __func__);
+      }));
+
+  return GenericPromise::AllSettled(GetMainThreadSerialEventTarget(),
+                                    logPromises)
+      ->Then(GetMainThreadSerialEventTarget(), __func__,
+             [](GenericPromise::AllSettledPromiseType::ResolveOrRejectValue&&
+                    aValue) {
+               // We don't care about the value, since we're just going to copy
+               // what is in the stash. This ignores failures too, which is what
+               // we want.
+               return GenericPromise::CreateAndResolve(true, __func__);
+             });
+}
+
 void WebrtcGlobalInformation::GetLogging(
     const GlobalObject& aGlobal, const nsAString& aPattern,
     WebrtcGlobalLoggingCallback& aLoggingCallback, ErrorResult& aRv) {
@@ -366,17 +413,8 @@ void WebrtcGlobalInformation::GetLogging(
 
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  nsTArray<RefPtr<PWebrtcGlobalParent::GetLogPromise>> logPromises;
-
   nsAutoCString pattern;
   CopyUTF16toUTF8(aPattern, pattern);
-
-  for (const auto& cp : WebrtcContentParents::GetAll()) {
-    logPromises.AppendElement(cp->SendGetLog(pattern));
-  }
-
-  // Get logs from this (the parent) process.
-  logPromises.AppendElement(GetLogPromise(pattern));
 
   // CallbackObject does not support threadsafe refcounting, and must be
   // destroyed on main.
@@ -384,18 +422,17 @@ void WebrtcGlobalInformation::GetLogging(
       new nsMainThreadPtrHolder<WebrtcGlobalLoggingCallback>(
           "WebrtcGlobalLoggingCallback", &aLoggingCallback));
 
-  auto FlattenAndCallback =
-      [callbackHandle](WebrtcGlobalParent::GetLogPromise::
-                           AllSettledPromiseType::ResolveOrRejectValue&& aValue)
+  auto FilterThenCallback =
+      [pattern, callbackHandle](GenericPromise::ResolveOrRejectValue&& aValue)
           MOZ_CAN_RUN_SCRIPT_BOUNDARY {
             dom::Sequence<nsString> flattened;
-            MOZ_RELEASE_ASSERT(aValue.IsResolve(),
-                               "AllSettled should never reject!");
-            for (auto& logResult : aValue.ResolveValue()) {
-              if (logResult.IsResolve()) {
-                if (!flattened.AppendElements(
-                        std::move(logResult.ResolveValue()), fallible)) {
-                  mozalloc_handle_oom(0);
+            for (const auto& [id, log] : GetWebrtcGlobalLogStash()) {
+              (void)id;
+              for (const auto& line : log) {
+                if (pattern.IsEmpty() || (line.Find(pattern) != kNotFound)) {
+                  if (!flattened.AppendElement(line, fallible)) {
+                    mozalloc_handle_oom(0);
+                  }
                 }
               }
             }
@@ -403,11 +440,8 @@ void WebrtcGlobalInformation::GetLogging(
             callbackHandle->Call(flattened, rv);
           };
 
-  PWebrtcGlobalParent::GetLogPromise::AllSettled(
-      GetMainThreadSerialEventTarget(), logPromises)
-      ->Then(GetMainThreadSerialEventTarget(), __func__,
-             std::move(FlattenAndCallback));
-
+  UpdateLogStash()->Then(GetMainThreadSerialEventTarget(), __func__,
+                         std::move(FilterThenCallback));
   aRv = NS_OK;
 }
 
@@ -510,13 +544,13 @@ mozilla::ipc::IPCResult WebrtcGlobalChild::RecvClearStats() {
 }
 
 mozilla::ipc::IPCResult WebrtcGlobalChild::RecvGetLog(
-    const nsCString& aPattern, GetLogResolver&& aResolve) {
+    GetLogResolver&& aResolve) {
   if (mShutdown) {
     aResolve(Sequence<nsString>());
     return IPC_OK();
   }
 
-  GetLogPromise(aPattern)->Then(
+  GetLogPromise()->Then(
       GetMainThreadSerialEventTarget(), __func__,
       [aResolve = std::move(aResolve)](
           PWebrtcGlobalParent::GetLogPromise::ResolveOrRejectValue&& aValue) {

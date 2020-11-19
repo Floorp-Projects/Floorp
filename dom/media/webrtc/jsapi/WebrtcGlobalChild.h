@@ -25,7 +25,7 @@ class WebrtcGlobalChild : public PWebrtcGlobalChild {
   // ipdl-generated things yet.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual mozilla::ipc::IPCResult RecvGetLog(
-      const nsCString& aPattern, GetLogResolver&& aResolve) override;
+      GetLogResolver&& aResolve) override;
   virtual mozilla::ipc::IPCResult RecvClearLog() override;
   virtual mozilla::ipc::IPCResult RecvSetAecLogging(
       const bool& aEnable) override;

@@ -24,7 +24,7 @@ parent: // child -> parent messages
 child: // parent -> child messages
   async GetStats(nsString aPcIdFilter) returns (RTCStatsReportInternal[] stats);
   async ClearStats();
-  async GetLog(nsCString aPattern) returns (WebrtcGlobalLog logs);
+  async GetLog() returns (WebrtcGlobalLog logs);
   async ClearLog();
   async SetAecLogging(bool aEnable);
   async SetDebugMode(int aLevel);
