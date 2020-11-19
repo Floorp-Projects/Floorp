@@ -10,24 +10,25 @@
 //! Timestamp parsing/formatting is super-fast because format is basically
 //! fixed.
 //!
-//! See [serde-humantime] for serde integration.
+//! See [humantime-serde] for serde integration (previous crate [serde-humantime] looks unmaintained).
 //!
 //! [serde-humantime]: https://docs.rs/serde-humantime/0.1.1/serde_humantime/
+//! [humantime-serde]: https://docs.rs/humantime-serde
+
+#![forbid(unsafe_code)]
 #![warn(missing_debug_implementations)]
 #![warn(missing_docs)]
-
-#[macro_use] extern crate quick_error;
 
 mod duration;
 mod wrapper;
 mod date;
 
-pub use duration::{parse_duration, Error as DurationError};
-pub use duration::{format_duration, FormattedDuration};
-pub use wrapper::{Duration, Timestamp};
-pub use date::{parse_rfc3339, parse_rfc3339_weak, Error as TimestampError};
-pub use date::{
+pub use self::duration::{parse_duration, Error as DurationError};
+pub use self::duration::{format_duration, FormattedDuration};
+pub use self::wrapper::{Duration, Timestamp};
+pub use self::date::{parse_rfc3339, parse_rfc3339_weak, Error as TimestampError};
+pub use self::date::{
     format_rfc3339, format_rfc3339_micros, format_rfc3339_millis, format_rfc3339_nanos,
     format_rfc3339_seconds,
 };
-pub use date::{Rfc3339Timestamp};
+pub use self::date::{Rfc3339Timestamp};

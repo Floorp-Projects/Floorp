@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "env_logger"
-version = "0.8.1"
+version = "0.8.2"
 authors = ["The Rust Project Developers"]
 description = "A logging implementation for `log` which is configured via an environment\nvariable.\n"
 documentation = "https://docs.rs/env_logger"
