@@ -2405,6 +2405,7 @@ VARIABLES = {
                 "non_unified_sources": StrictOrderingOnAppendList,
                 "mozilla_flags": list,
                 "gn_target": six.text_type,
+                "write_mozbuild_vars": dict,
             }
         ),
         list,
@@ -2419,6 +2420,8 @@ VARIABLES = {
             - mozilla_flags, a set of flags that if present in the gn config
               will be mirrored to the resulting mozbuild configuration.
             - gn_target, the name of the target to build.
+            - write_mozbuild_vars, a dictionary containing variables to control
+              code generation of moz.build files.
         """,
     ),
     "SPHINX_TREES": (
