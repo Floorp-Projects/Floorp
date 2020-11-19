@@ -226,11 +226,11 @@ with only_when(target_is_osx):
                 )
             return value[0]
 
-    @depends(macos_private_frameworks)
-    def macos_private_frameworks(value):
+    @depends(macos_private_frameworks, macos_sdk)
+    def macos_private_frameworks(value, sdk):
         if value:
             return value
-        return "/System/Library/PrivateFrameworks"
+        return os.path.join(sdk or "/", "System/Library/PrivateFrameworks")
 
     set_config("MACOS_PRIVATE_FRAMEWORKS_DIR", macos_private_frameworks)
 
