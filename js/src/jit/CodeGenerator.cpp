@@ -6958,10 +6958,6 @@ bool CodeGenerator::generateBody() {
             current->mir()->isLoopHeader() ? " (loop header)" : "");
 #endif
 
-    if (current->mir()->isLoopHeader() && gen->compilingWasm()) {
-      masm.nopAlign(CodeAlignment);
-    }
-
     masm.bind(current->label());
 
     mozilla::Maybe<ScriptCountBlockState> blockCounts;
@@ -6977,6 +6973,10 @@ bool CodeGenerator::generateBody() {
       return false;
     }
 #endif
+
+    if (current->mir()->isLoopHeader() && gen->compilingWasm()) {
+      masm.nopAlign(CodeAlignment);
+    }
 
     for (LInstructionIterator iter = current->begin(); iter != current->end();
          iter++) {

@@ -820,14 +820,8 @@ void MacroAssembler::branch32(Condition cond, Register lhs, Register rhs,
 template <class L>
 void MacroAssembler::branch32(Condition cond, Register lhs, Imm32 imm,
                               L label) {
-  if (imm.value == 0 && cond == Assembler::Equal) {
-    Cbz(ARMRegister(lhs, 32), label);
-  } else if (imm.value == 0 && cond == Assembler::NotEqual) {
-    Cbnz(ARMRegister(lhs, 32), label);
-  } else {
-    cmp32(lhs, imm);
-    B(label, cond);
-  }
+  cmp32(lhs, imm);
+  B(label, cond);
 }
 
 void MacroAssembler::branch32(Condition cond, Register lhs, const Address& rhs,
@@ -895,14 +889,8 @@ void MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress lhs,
 
 void MacroAssembler::branch64(Condition cond, Register64 lhs, Imm64 val,
                               Label* success, Label* fail) {
-  if (val.value == 0 && cond == Assembler::Equal) {
-    Cbz(ARMRegister(lhs.reg, 64), success);
-  } else if (val.value == 0 && cond == Assembler::NotEqual) {
-    Cbnz(ARMRegister(lhs.reg, 64), success);
-  } else {
-    Cmp(ARMRegister(lhs.reg, 64), val.value);
-    B(success, cond);
-  }
+  Cmp(ARMRegister(lhs.reg, 64), val.value);
+  B(success, cond);
   if (fail) {
     B(fail);
   }
@@ -946,26 +934,14 @@ void MacroAssembler::branchPtr(Condition cond, Register lhs, Register rhs,
 
 void MacroAssembler::branchPtr(Condition cond, Register lhs, Imm32 rhs,
                                Label* label) {
-  if (rhs.value == 0 && cond == Assembler::Equal) {
-    Cbz(ARMRegister(lhs, 64), label);
-  } else if (rhs.value == 0 && cond == Assembler::NotEqual) {
-    Cbnz(ARMRegister(lhs, 64), label);
-  } else {
-    cmpPtr(lhs, rhs);
-    B(label, cond);
-  }
+  cmpPtr(lhs, rhs);
+  B(label, cond);
 }
 
 void MacroAssembler::branchPtr(Condition cond, Register lhs, ImmPtr rhs,
                                Label* label) {
-  if (rhs.value == 0 && cond == Assembler::Equal) {
-    Cbz(ARMRegister(lhs, 64), label);
-  } else if (rhs.value == 0 && cond == Assembler::NotEqual) {
-    Cbnz(ARMRegister(lhs, 64), label);
-  } else {
-    cmpPtr(lhs, rhs);
-    B(label, cond);
-  }
+  cmpPtr(lhs, rhs);
+  B(label, cond);
 }
 
 void MacroAssembler::branchPtr(Condition cond, Register lhs, ImmGCPtr rhs,
@@ -979,14 +955,8 @@ void MacroAssembler::branchPtr(Condition cond, Register lhs, ImmGCPtr rhs,
 
 void MacroAssembler::branchPtr(Condition cond, Register lhs, ImmWord rhs,
                                Label* label) {
-  if (rhs.value == 0 && cond == Assembler::Equal) {
-    Cbz(ARMRegister(lhs, 64), label);
-  } else if (rhs.value == 0 && cond == Assembler::NotEqual) {
-    Cbnz(ARMRegister(lhs, 64), label);
-  } else {
-    cmpPtr(lhs, rhs);
-    B(label, cond);
-  }
+  cmpPtr(lhs, rhs);
+  B(label, cond);
 }
 
 template <class L>
@@ -1208,14 +1178,14 @@ void MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs,
                                   L label) {
   MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed ||
              cond == NotSigned);
+  // x86 prefers |test foo, foo| to |cmp foo, #0|.
+  // Convert the former to the latter for ARM.
   if (lhs == rhs && (cond == Zero || cond == NonZero)) {
-    // The x86-biased front end prefers |test foo, foo| to |cmp foo, #0|, but
-    // the latter is better on ARM64.
-    branchTest32(cond, lhs, Imm32(0), label);
+    cmp32(lhs, Imm32(0));
   } else {
     test32(lhs, rhs);
-    B(label, cond);
   }
+  B(label, cond);
 }
 
 template <class L>
@@ -1223,14 +1193,8 @@ void MacroAssembler::branchTest32(Condition cond, Register lhs, Imm32 rhs,
                                   L label) {
   MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed ||
              cond == NotSigned);
-  if (rhs.value == 0 && cond == Zero) {
-    Cbz(ARMRegister(lhs, 32), label);
-  } else if (rhs.value == 0 && cond == NonZero) {
-    Cbnz(ARMRegister(lhs, 32), label);
-  } else {
-    test32(lhs, rhs);
-    B(label, cond);
-  }
+  test32(lhs, rhs);
+  B(label, cond);
 }
 
 void MacroAssembler::branchTest32(Condition cond, const Address& lhs, Imm32 rhs,
@@ -1259,14 +1223,8 @@ void MacroAssembler::branchTestPtr(Condition cond, Register lhs, Register rhs,
 
 void MacroAssembler::branchTestPtr(Condition cond, Register lhs, Imm32 rhs,
                                    Label* label) {
-  if (rhs.value == 0 && cond == Zero) {
-    Cbz(ARMRegister(lhs, 64), label);
-  } else if (rhs.value == 0 && cond == NonZero) {
-    Cbnz(ARMRegister(lhs, 64), label);
-  } else {
-    Tst(ARMRegister(lhs, 64), Operand(rhs.value));
-    B(label, cond);
-  }
+  Tst(ARMRegister(lhs, 64), Operand(rhs.value));
+  B(label, cond);
 }
 
 void MacroAssembler::branchTestPtr(Condition cond, const Address& lhs,
