@@ -213,14 +213,18 @@ TEST(TestAudioTrackGraph, ErrorCallback)
   CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
 
   MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
-      MediaTrackGraph::AUDIO_THREAD_DRIVER, /*window*/ nullptr,
+      MediaTrackGraph::SYSTEM_THREAD_DRIVER, /*window*/ nullptr,
       MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE, nullptr);
 
   // Dummy track to make graph rolling. Add it and remove it to remove the
   // graph from the global hash table and let it shutdown.
+  //
+  // We open an input through this track so that there's something triggering
+  // EnsureNextIteration on the fallback driver after the callback driver has
+  // gotten the error.
   RefPtr<AudioInputTrack> inputTrack;
   RefPtr<AudioInputProcessing> listener;
-  Unused << WaitFor(Invoke([&] {
+  auto started = Invoke([&] {
     inputTrack = AudioInputTrack::Create(graph);
     listener = new AudioInputProcessing(2, PRINCIPAL_HANDLE_NONE);
     inputTrack->GraphImpl()->AppendMessage(
@@ -228,13 +232,6 @@ TEST(TestAudioTrackGraph, ErrorCallback)
     inputTrack->SetInputProcessing(listener);
     inputTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(inputTrack, listener));
-    return graph->NotifyWhenDeviceStarted(inputTrack);
-  }));
-
-  // We open an input through this track so that there's something triggering
-  // EnsureNextIteration on the fallback driver after the callback driver has
-  // gotten the error.
-  auto started = Invoke([&] {
     inputTrack->OpenAudioInput((void*)1, listener);
     return graph->NotifyWhenDeviceStarted(inputTrack);
   });
@@ -662,6 +659,14 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
               }
               return inputStream && partnerStream;
             });
+
+  Unused << WaitFor(Invoke([&] {
+    nsTArray<RefPtr<MediaTrackGraph::GraphStartedPromise>> ps(
+        {primary->NotifyWhenDeviceStarted(inputTrack),
+         partner->NotifyWhenDeviceStarted(receiver)});
+    return MediaTrackGraph::GraphStartedPromise::All(
+        GetCurrentSerialEventTarget(), ps);
+  }));
 
   partnerStream->SetDriftFactor(aDriftFactor);
 
