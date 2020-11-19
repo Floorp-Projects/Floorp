@@ -91,6 +91,8 @@ class DataMutexBase {
 
   AutoLock Lock() { return AutoLock(this); }
 
+  const MutexType& Mutex() const { return mMutex; }
+
  private:
   MutexType mMutex;
   T mValue;
