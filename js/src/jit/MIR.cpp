@@ -5178,15 +5178,6 @@ bool MGuardReceiverPolymorphic::appendRoots(MRootList& roots) const {
   return true;
 }
 
-bool MDispatchInstruction::appendRoots(MRootList& roots) const {
-  for (const Entry& entry : map_) {
-    if (!entry.appendRoots(roots)) {
-      return false;
-    }
-  }
-  return true;
-}
-
 bool MConstant::appendRoots(MRootList& roots) const {
   switch (type()) {
     case MIRType::String:

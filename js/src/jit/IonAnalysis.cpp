@@ -1310,7 +1310,7 @@ bool jit::EliminateDeadCode(MIRGenerator* mir, MIRGraph& graph) {
          iter != block->rend();) {
       MInstruction* inst = *iter++;
       if (js::jit::IsDiscardable(inst)) {
-        { block->discard(inst); }
+        block->discard(inst);
       }
     }
   }
@@ -3928,18 +3928,11 @@ static bool ArgumentsUseCanBeLazy(JSContext* cx, JSScript* script,
   }
 
   // arguments[i] can read fp->unaliasedActual(i) directly.
-  if (JitOptions.warpBuilder) {
-    if (ins->isGetPropertyCache() && index == 0 &&
-        IsGetElemPC(ins->resumePoint()->pc())) {
-      script->setUninlineable();
-      *argumentsContentsObserved = true;
-      return true;
-    }
-  } else {
-    if (ins->isCallGetElement() && index == 0) {
-      *argumentsContentsObserved = true;
-      return true;
-    }
+  if (ins->isGetPropertyCache() && index == 0 &&
+      IsGetElemPC(ins->resumePoint()->pc())) {
+    script->setUninlineable();
+    *argumentsContentsObserved = true;
+    return true;
   }
 
   // MGetArgumentsObjectArg needs to be considered as a use that allows
@@ -3961,17 +3954,10 @@ static bool ArgumentsUseCanBeLazy(JSContext* cx, JSScript* script,
     return false;
   };
 
-  if (JitOptions.warpBuilder) {
-    if (ins->isGetPropertyCache() && index == 0) {
-      MDefinition* id = ins->toGetPropertyCache()->idval();
-      if (id->isConstant() && id->type() == MIRType::String &&
-          getPropCanBeLazy(id->toConstant()->toString())) {
-        return true;
-      }
-    }
-  } else {
-    if (ins->isCallGetProperty() && index == 0 &&
-        getPropCanBeLazy(ins->toCallGetProperty()->name())) {
+  if (ins->isGetPropertyCache() && index == 0) {
+    MDefinition* id = ins->toGetPropertyCache()->idval();
+    if (id->isConstant() && id->type() == MIRType::String &&
+        getPropCanBeLazy(id->toConstant()->toString())) {
       return true;
     }
   }

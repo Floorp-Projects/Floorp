@@ -241,14 +241,11 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void addGetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs,
                            TypedOrValueRegister value,
                            const ConstantOrRegister& id,
-                           TypedOrValueRegister output, Register maybeTemp,
-                           GetPropertyResultFlags flags);
+                           TypedOrValueRegister output, Register maybeTemp);
   void addSetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs,
                            Register objReg, Register temp,
                            const ConstantOrRegister& id,
-                           const ConstantOrRegister& value, bool strict,
-                           bool needsPostBarrier, bool needsTypeBarrier,
-                           bool guardHoles);
+                           const ConstantOrRegister& value, bool strict);
 
   MOZ_MUST_USE bool generateBranchV(const ValueOperand& value, Label* ifTrue,
                                     Label* ifFalse, FloatRegister fr);

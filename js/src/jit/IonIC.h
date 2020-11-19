@@ -79,7 +79,7 @@ class IonIC {
   // The first optimized stub, or nullptr.
   IonICStub* firstStub_;
 
-  // Location of this IC, nullptr for idempotent caches.
+  // Location of this IC.
   JSScript* script_;
   jsbytecode* pc_;
 
@@ -92,7 +92,6 @@ class IonIC {
   uint32_t fallbackOffset_;
 
   CacheKind kind_;
-  bool idempotent_ : 1;
   ICState state_;
 
  protected:
@@ -104,7 +103,6 @@ class IonIC {
         rejoinOffset_(0),
         fallbackOffset_(0),
         kind_(kind),
-        idempotent_(false),
         state_() {}
 
   void attachStub(IonICStub* newStub, JitCode* code);
@@ -136,9 +134,6 @@ class IonIC {
 
   CacheKind kind() const { return kind_; }
   uint8_t** codeRawPtr() { return &codeRaw_; }
-
-  bool idempotent() const { return idempotent_; }
-  void setIdempotent() { idempotent_ = true; }
 
   void setFallbackOffset(CodeOffset offset) {
     fallbackOffset_ = offset.offset();
@@ -231,33 +226,22 @@ class IonGetPropertyIC : public IonIC {
   TypedOrValueRegister output_;
   Register maybeTemp_;  // Might be InvalidReg.
 
-  GetPropertyResultFlags resultFlags_;
-
  public:
   IonGetPropertyIC(CacheKind kind, LiveRegisterSet liveRegs,
                    TypedOrValueRegister value, const ConstantOrRegister& id,
-                   TypedOrValueRegister output, Register maybeTemp,
-                   GetPropertyResultFlags resultFlags)
+                   TypedOrValueRegister output, Register maybeTemp)
       : IonIC(kind),
         liveRegs_(liveRegs),
         value_(value),
         id_(id),
         output_(output),
-        maybeTemp_(maybeTemp),
-        resultFlags_(resultFlags) {}
+        maybeTemp_(maybeTemp) {}
 
   TypedOrValueRegister value() const { return value_; }
   ConstantOrRegister id() const { return id_; }
   TypedOrValueRegister output() const { return output_; }
   Register maybeTemp() const { return maybeTemp_; }
   LiveRegisterSet liveRegs() const { return liveRegs_; }
-  GetPropertyResultFlags resultFlags() const { return resultFlags_; }
-  bool monitoredResult() const {
-    return resultFlags_ & GetPropertyResultFlags::Monitored;
-  }
-  bool allowDoubleResult() const {
-    return resultFlags_ & GetPropertyResultFlags::AllowDouble;
-  }
 
   static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript,
                                   IonGetPropertyIC* ic, HandleValue val,
@@ -303,27 +287,18 @@ class IonSetPropertyIC : public IonIC {
   ConstantOrRegister id_;
   ConstantOrRegister rhs_;
   bool strict_ : 1;
-  // TODO(no-TI): remove flags.
-  bool needsPostBarrier_ : 1;
-  bool needsTypeBarrier_ : 1;
-  bool guardHoles_ : 1;
 
  public:
   IonSetPropertyIC(CacheKind kind, LiveRegisterSet liveRegs, Register object,
                    Register temp, const ConstantOrRegister& id,
-                   const ConstantOrRegister& rhs, bool strict,
-                   bool needsPostBarrier, bool needsTypeBarrier,
-                   bool guardHoles)
+                   const ConstantOrRegister& rhs, bool strict)
       : IonIC(kind),
         liveRegs_(liveRegs),
         object_(object),
         temp_(temp),
         id_(id),
         rhs_(rhs),
-        strict_(strict),
-        needsPostBarrier_(needsPostBarrier),
-        needsTypeBarrier_(needsTypeBarrier),
-        guardHoles_(guardHoles) {}
+        strict_(strict) {}
 
   LiveRegisterSet liveRegs() const { return liveRegs_; }
   Register object() const { return object_; }
@@ -333,9 +308,6 @@ class IonSetPropertyIC : public IonIC {
   Register temp() const { return temp_; }
 
   bool strict() const { return strict_; }
-  bool needsPostBarrier() const { return needsPostBarrier_; }
-  bool needsTypeBarrier() const { return needsTypeBarrier_; }
-  bool guardHoles() const { return guardHoles_; }
 
   static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript,
                                   IonSetPropertyIC* ic, HandleObject obj,
