@@ -5,6 +5,8 @@
 
   ### This moz.build was AUTOMATICALLY GENERATED from a GN config,  ###
   ### DO NOT edit it by hand.                                       ###
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CXXFLAGS += CONFIG["TK_CFLAGS"]
 
 COMPILE_FLAGS["OS_INCLUDES"] = []
 AllowCompilerWarnings()
@@ -25,8 +27,7 @@ LOCAL_INCLUDES += [
     "/ipc/chromium/src",
     "/ipc/glue",
     "/media/libyuv/libyuv/include/",
-    "/third_party/libwebrtc/webrtc/",
-    "/third_party/pipewire"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 UNIFIED_SOURCES += [
@@ -162,7 +163,6 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
-    DEFINES["WEBRTC_USE_PIPEWIRE"] = "1"
 
     OS_LIBS += [
         "rt",
@@ -193,14 +193,6 @@ if CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/webrtc/modules/desktop_capture/mouse_cursor_monitor_linux.cc",
         "/third_party/libwebrtc/webrtc/modules/desktop_capture/screen_capturer_linux.cc",
         "/third_party/libwebrtc/webrtc/modules/desktop_capture/window_capturer_linux.cc"
-    ]
-
-    CXXFLAGS += CONFIG['TK_CFLAGS']
-
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/webrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc",
-        "/third_party/libwebrtc/webrtc/modules/desktop_capture/linux/screen_capturer_pipewire.cc",
-        "/third_party/libwebrtc/webrtc/modules/desktop_capture/linux/window_capturer_pipewire.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "NetBSD":
@@ -393,11 +385,48 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["DISABLE_NACL"] = True
     DEFINES["NO_TCMALLOC"] = True
+    DEFINES["WEBRTC_USE_PIPEWIRE"] = True
+
+    LOCAL_INCLUDES += [
+        "/third_party/pipewire/"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/webrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc",
+        "/third_party/libwebrtc/webrtc/modules/desktop_capture/linux/screen_capturer_pipewire.cc",
+        "/third_party/libwebrtc/webrtc/modules/desktop_capture/linux/window_capturer_pipewire.cc"
+    ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
     CXXFLAGS += [
         "-msse2"
+    ]
+
+    DEFINES["WEBRTC_USE_PIPEWIRE"] = True
+
+    LOCAL_INCLUDES += [
+        "/third_party/pipewire/"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/webrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc",
+        "/third_party/libwebrtc/webrtc/modules/desktop_capture/linux/screen_capturer_pipewire.cc",
+        "/third_party/libwebrtc/webrtc/modules/desktop_capture/linux/window_capturer_pipewire.cc"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["WEBRTC_USE_PIPEWIRE"] = True
+
+    LOCAL_INCLUDES += [
+        "/third_party/pipewire/"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/webrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc",
+        "/third_party/libwebrtc/webrtc/modules/desktop_capture/linux/screen_capturer_pipewire.cc",
+        "/third_party/libwebrtc/webrtc/modules/desktop_capture/linux/window_capturer_pipewire.cc"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
