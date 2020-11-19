@@ -34,7 +34,9 @@ def resolve_keys(config, tasks):
 @transforms.add
 def build_worker_definition(config, tasks):
     for task in tasks:
-        worker_definition = {}
+        worker_definition = {
+            "branch": config.params["head_ref"].decode("utf-8"),
+        }
         task["worker"].update(worker_definition)
 
         yield task

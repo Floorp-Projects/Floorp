@@ -172,6 +172,7 @@ def build_github_release_payload(config, task, task_def):
         Required("bump"): bool,
         Optional("bump-files"): [text_type],
         Optional("push"): bool,
+        Optional("branch"): text_type,
     },
 )
 def build_version_bump_payload(config, task, task_def):
@@ -196,3 +197,6 @@ def build_version_bump_payload(config, task, task_def):
 
     if worker.get('force-dry-run'):
         task_def['payload']['dry_run'] = True
+
+    if worker.get("branch"):
+        task_def["payload"]["branch"] = worker["branch"]
