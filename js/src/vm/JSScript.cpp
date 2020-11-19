@@ -4360,8 +4360,7 @@ static JSScript* CopyScriptImpl(JSContext* cx, HandleScript src,
 
   // When cloning is for `MakeDefaultConstructor`, the SourceExtent will be
   // provided by caller instead of copying from `src`.
-  const SourceExtent& extent =
-      maybeClassExtent ? *maybeClassExtent : src->extent();
+  SourceExtent extent = maybeClassExtent ? *maybeClassExtent : src->extent();
 
   ImmutableScriptFlags flags = src->immutableFlags();
   flags.setFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,

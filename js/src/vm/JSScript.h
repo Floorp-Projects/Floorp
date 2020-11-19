@@ -1632,7 +1632,7 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   }
   uint32_t toStringStart() const { return extent_.toStringStart; }
   uint32_t toStringEnd() const { return extent_.toStringEnd; }
-  const SourceExtent& extent() const { return extent_; }
+  SourceExtent extent() const { return extent_; }
 
   MOZ_MUST_USE bool appendSourceDataForToString(JSContext* cx,
                                                 js::StringBuffer& buf);
