@@ -56,6 +56,9 @@ webrtc_non_unified_sources = [
     "../../../../third_party/libwebrtc/webrtc/video/overuse_frame_detector.cc",  # Because of name clash with call_stats.cc on kWeightFactor
 ]
 
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    DIRS += ["../../../../third_party/pipewire/libpipewire"]
+
 GN_DIRS += ["../../../../third_party/libwebrtc/webrtc"]
 
 gn_vars_copy = gn_vars.copy()
