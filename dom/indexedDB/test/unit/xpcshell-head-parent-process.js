@@ -252,11 +252,12 @@ function setTimeout(fun, timeout) {
   return timer;
 }
 
-function initStorageAndChromeOrigin(persistence) {
-  let principal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
-    Ci.nsIPrincipal
-  );
-  return Services.qms.initStorageAndOrigin(principal, persistence, "idb");
+function initStorage() {
+  return Services.qms.init();
+}
+
+function initPersistentOrigin(principal) {
+  return Services.qms.initializePersistentOrigin(principal);
 }
 
 function resetOrClearAllDatabases(callback, clear) {
@@ -535,6 +536,10 @@ function enablePreprocessing() {
 function resetPreprocessing() {
   info("Clearing preprocessing pref");
   SpecialPowers.clearUserPref("dom.indexedDB.preprocessing");
+}
+
+function getSystemPrincipal() {
+  return Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
 }
 
 function getPrincipal(url) {

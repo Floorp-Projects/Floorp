@@ -16301,9 +16301,22 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
   QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  IDB_TRY_INSPECT(const auto& dbDirectory,
-                  quotaManager->EnsureStorageAndOriginIsInitialized(
-                      persistenceType, mQuotaInfo));
+  IDB_TRY(quotaManager->EnsureStorageIsInitialized());
+
+  IDB_TRY_INSPECT(
+      const auto& dbDirectory,
+      ([persistenceType, &quotaManager, this]()
+           -> mozilla::Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult> {
+        if (persistenceType == PERSISTENCE_TYPE_PERSISTENT) {
+          IDB_TRY_RETURN(
+              quotaManager->EnsurePersistentOriginIsInitialized(mQuotaInfo));
+        }
+
+        IDB_TRY(quotaManager->EnsureTemporaryStorageIsInitialized());
+        IDB_TRY_RETURN(quotaManager->EnsureTemporaryOriginIsInitialized(
+            persistenceType, mQuotaInfo));
+      }()
+                  .map([](const auto& res) { return res.first; })));
 
   IDB_TRY(
       dbDirectory->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME)));
