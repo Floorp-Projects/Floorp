@@ -105,6 +105,33 @@ LazyLogModule ScriptLoader::gScriptLoaderLog("ScriptLoader");
 // store bytecode without reading it.
 static constexpr auto kNullMimeType = "javascript/null"_ns;
 
+/////////////////////////////////////////////////////////////
+// AsyncCompileShutdownObserver
+/////////////////////////////////////////////////////////////
+
+NS_IMPL_ISUPPORTS(AsyncCompileShutdownObserver, nsIObserver)
+
+void AsyncCompileShutdownObserver::OnShutdown() {
+  if (mScriptLoader) {
+    mScriptLoader->Shutdown();
+    Unregister();
+  }
+}
+
+void AsyncCompileShutdownObserver::Unregister() {
+  if (mScriptLoader) {
+    mScriptLoader = nullptr;
+    nsContentUtils::UnregisterShutdownObserver(this);
+  }
+}
+
+NS_IMETHODIMP
+AsyncCompileShutdownObserver::Observe(nsISupports* aSubject, const char* aTopic,
+                                      const char16_t* aData) {
+  OnShutdown();
+  return NS_OK;
+}
+
 //////////////////////////////////////////////////////////////
 // ScriptLoader::PreloadInfo
 //////////////////////////////////////////////////////////////
@@ -153,6 +180,9 @@ ScriptLoader::ScriptLoader(Document* aDocument)
 
   mSpeculativeOMTParsingEnabled = StaticPrefs::
       dom_script_loader_external_scripts_speculative_omt_parse_enabled();
+
+  mShutdownObserver = new AsyncCompileShutdownObserver(this);
+  nsContentUtils::RegisterShutdownObserver(mShutdownObserver);
 }
 
 ScriptLoader::~ScriptLoader() {
@@ -203,6 +233,11 @@ ScriptLoader::~ScriptLoader() {
 
   for (size_t i = 0; i < mPreloads.Length(); i++) {
     AccumulateCategorical(LABELS_DOM_SCRIPT_PRELOAD_RESULT::NotUsed);
+  }
+
+  if (mShutdownObserver) {
+    mShutdownObserver->Unregister();
+    mShutdownObserver = nullptr;
   }
 }
 
@@ -2059,6 +2094,53 @@ class NotifyOffThreadScriptLoadCompletedRunnable : public Runnable {
 
 } /* anonymous namespace */
 
+void ScriptLoader::Shutdown() {
+  CancelScriptLoadRequests();
+  GiveUpBytecodeEncoding();
+}
+
+void ScriptLoader::CancelScriptLoadRequests() {
+  // Cancel all requests that have not been executed.
+  if (mParserBlockingRequest) {
+    mParserBlockingRequest->Cancel();
+  }
+
+  for (ScriptLoadRequest* req = mXSLTRequests.getFirst(); req;
+       req = req->getNext()) {
+    req->Cancel();
+  }
+
+  for (ScriptLoadRequest* req = mDeferRequests.getFirst(); req;
+       req = req->getNext()) {
+    req->Cancel();
+  }
+
+  for (ScriptLoadRequest* req = mLoadingAsyncRequests.getFirst(); req;
+       req = req->getNext()) {
+    req->Cancel();
+  }
+
+  for (ScriptLoadRequest* req = mLoadedAsyncRequests.getFirst(); req;
+       req = req->getNext()) {
+    req->Cancel();
+  }
+
+  for (ScriptLoadRequest* req = mDynamicImportRequests.getFirst(); req;
+       req = req->getNext()) {
+    req->Cancel();
+  }
+
+  for (ScriptLoadRequest* req =
+           mNonAsyncExternalScriptInsertedRequests.getFirst();
+       req; req = req->getNext()) {
+    req->Cancel();
+  }
+
+  for (size_t i = 0; i < mPreloads.Length(); i++) {
+    mPreloads[i].mRequest->Cancel();
+  }
+}
+
 nsresult ScriptLoader::ProcessOffThreadRequest(ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->mProgress == ScriptLoadRequest::Progress::eCompiling);
   MOZ_ASSERT(!aRequest->mWasCompiledOMT);
@@ -3043,6 +3125,16 @@ void ScriptLoader::RegisterForBytecodeEncoding(ScriptLoadRequest* aRequest) {
 void ScriptLoader::LoadEventFired() {
   mLoadEventFired = true;
   MaybeTriggerBytecodeEncoding();
+}
+
+void ScriptLoader::Destroy() {
+  // Off thread compilations will be canceled in ProcessRequest after the inner
+  // window is removed in Document::Destroy()
+  if (mShutdownObserver) {
+    mShutdownObserver->Unregister();
+    mShutdownObserver = nullptr;
+  }
+  GiveUpBytecodeEncoding();
 }
 
 void ScriptLoader::MaybeTriggerBytecodeEncoding() {
