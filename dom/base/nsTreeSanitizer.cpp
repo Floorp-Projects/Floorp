@@ -6,6 +6,7 @@
 
 #include "nsTreeSanitizer.h"
 
+#include "mozilla/Algorithm.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BindingStyleRule.h"
 #include "mozilla/DeclarationBlock.h"
@@ -26,6 +27,8 @@
 #include "nsIParserUtils.h"
 #include "mozilla/dom/Document.h"
 #include "nsQueryObject.h"
+
+#include <iterator>
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -380,7 +383,7 @@ const nsStaticAtom* const kElementsSVG[] = {
     // vkern
     nullptr};
 
-const nsStaticAtom* const kAttributesSVG[] = {
+constexpr const nsStaticAtom* const kAttributesSVG[] = {
     // accent-height
     nsGkAtoms::accumulate,          // accumulate
     nsGkAtoms::additive,            // additive
@@ -454,6 +457,7 @@ const nsStaticAtom* const kAttributesSVG[] = {
     nsGkAtoms::gradientTransform,  // gradientTransform
     nsGkAtoms::gradientUnits,      // gradientUnits
     nsGkAtoms::height,             // height
+    nsGkAtoms::href,
     // horiz-adv-x
     // horiz-origin-x
     // horiz-origin-y
@@ -613,7 +617,17 @@ const nsStaticAtom* const kAttributesSVG[] = {
     nsGkAtoms::zoomAndPan,        // zoomAndPan
     nullptr};
 
-const nsStaticAtom* const kURLAttributesSVG[] = {nsGkAtoms::href, nullptr};
+constexpr const nsStaticAtom* const kURLAttributesSVG[] = {nsGkAtoms::href,
+                                                           nullptr};
+
+static_assert(AllOf(std::begin(kURLAttributesSVG), std::end(kURLAttributesSVG),
+                    [](auto aURLAttributeSVG) {
+                      return AnyOf(std::begin(kAttributesSVG),
+                                   std::end(kAttributesSVG),
+                                   [&](auto aAttributeSVG) {
+                                     return aAttributeSVG == aURLAttributeSVG;
+                                   });
+                    }));
 
 const nsStaticAtom* const kElementsMathML[] = {
     nsGkAtoms::abs_,                  // abs

@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test pasting &lt;svg&gt;&lt;image href&gt;</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    const kPasteTargetId = "pasteTarget";
+    const kTestContentId = "testContent";
+
+    function selectSVG() {
+      const testContent = document.getElementById(kTestContentId);
+      document.getSelection().selectAllChildren(testContent);
+    }
+
+    async function copyToClipboard() {
+      function validatorFn(aData) {
+        const testContent = document.getElementById(kTestContentId);
+
+        let expectedData = testContent.outerHTML;
+        if (navigator.platform.includes(kPlatformWindows)) {
+          expectedData = kTextHtmlPrefixClipboardDataWindows +
+            expectedData + kTextHtmlSuffixClipboardDataWindows;
+        }
+
+        return SimpleTest.stripLinebreaksAndWhitespaceAfterTags(aData) ==
+          SimpleTest.stripLinebreaksAndWhitespaceAfterTags(expectedData);
+      }
+
+      function setupFn() {
+        synthesizeKey("c", { accelKey: true } /* aEvent */);
+      }
+
+      const flavor = "text/html";
+
+      await SimpleTest.promiseClipboardChange(validatorFn, setupFn, flavor);
+    }
+
+    async function pasteTo(aTargetElement) {
+      document.getSelection().selectAllChildren(aTargetElement);
+
+      const promiseInputEvent = new Promise(resolve => {
+        document.addEventListener("input", resolve,
+          { once: true } /* options */);
+        synthesizeKey("v", { accelKey: true } /* aEvent */);
+      });
+
+      await promiseInputEvent;
+    }
+
+    async function runTest() {
+      selectSVG();
+      await copyToClipboard();
+
+      // Get the test-content before pasting, because pasting will duplicate
+      // ids.
+      const expectedPastedInnerHTML =
+        SimpleTest.stripLinebreaksAndWhitespaceAfterTags(
+          document.getElementById(kTestContentId).outerHTML);
+
+      const pasteTargetElement = document.getElementById(kPasteTargetId);
+      await pasteTo(pasteTargetElement);
+
+      const pastedInnerHTMLWithoutLinebreaksAndWhitespaceAfterTags =
+        SimpleTest.stripLinebreaksAndWhitespaceAfterTags(
+          pasteTargetElement.innerHTML);
+
+      is(pastedInnerHTMLWithoutLinebreaksAndWhitespaceAfterTags,
+        expectedPastedInnerHTML,
+        "Pasted HTML is as expected.");
+
+      SimpleTest.finish()
+    }
+
+    function onLoad() {
+      SimpleTest.waitForExplicitFinish();
+      SimpleTest.waitForFocus(runTest);
+    };
+  </script>
+</head>
+<body onload="onLoad()">
+  <h6>
+    Test for <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1669050">bug 1669050</a>
+  </h6>
+<div id="testContent">
+  foo
+  <svg>
+    <image
+     href="http://mochi.test:8888/tests/dom/base/test/name_of_some_image_file.png"
+     height="200" width="200">
+    </image>
+  </svg>
+  bar
+</div>
+<div contenteditable id="pasteTarget"/>
+</body>
+</html>
