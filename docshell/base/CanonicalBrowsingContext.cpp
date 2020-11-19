@@ -1330,7 +1330,7 @@ CanonicalBrowsingContext::ChangeRemoteness(const nsACString& aRemoteType,
       embedderWindowGlobal->GetBrowserParent();
   // Switching to local. No new process, so perform switch sync.
   if (embedderBrowser &&
-      aRemoteType.Equals(embedderBrowser->Manager()->GetRemoteType())) {
+      aRemoteType == embedderBrowser->Manager()->GetRemoteType()) {
     MOZ_DIAGNOSTIC_ASSERT(
         aPendingSwitchId,
         "We always have a PendingSwitchId, except for print-preview loads, "
