@@ -851,7 +851,15 @@ fn bad_client_initial() {
     // The server should reject this.
     let response = server.process(Some(bad_dgram), now());
     let close_dgram = response.dgram().unwrap();
-    assert!(close_dgram.len() < 200); // Too small for anything real.
+    // The resulting datagram might contain multiple packets, but each is small.
+    let (initial_close, rest) = split_datagram(&close_dgram);
+    // Allow for large connection IDs and a 32 byte CONNECTION_CLOSE.
+    assert!(initial_close.len() <= 100);
+    let (handshake_close, short_close) = split_datagram(&rest.unwrap());
+    // The Handshake packet containing the close is the same size as the Initial,
+    // plus 1 byte for the Token field in the Initial.
+    assert_eq!(initial_close.len(), handshake_close.len() + 1);
+    assert!(short_close.unwrap().len() <= 73);
 
     // The client should accept this new and stop trying to connect.
     // It will generate a CONNECTION_CLOSE first though.

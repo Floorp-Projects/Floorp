@@ -27,11 +27,10 @@ fn init_logger() {
         .filter("MY_LOG_LEVEL")
         .write_style("MY_LOG_STYLE");
 
-    let mut builder = Builder::from_env(env);
-
-    builder.format_level(false).format_timestamp_nanos();
-
-    builder.init();
+    Builder::from_env(env)
+        .format_level(false)
+        .format_timestamp_nanos()
+        .init();
 }
 
 fn main() {

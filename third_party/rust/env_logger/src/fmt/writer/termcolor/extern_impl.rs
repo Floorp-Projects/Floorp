@@ -51,8 +51,8 @@ impl Formatter {
     pub fn default_level_style(&self, level: Level) -> Style {
         let mut level_style = self.style();
         match level {
-            Level::Trace => level_style.set_color(Color::Black).set_intense(true),
-            Level::Debug => level_style.set_color(Color::White),
+            Level::Trace => level_style.set_color(Color::Cyan),
+            Level::Debug => level_style.set_color(Color::Blue),
             Level::Info => level_style.set_color(Color::Green),
             Level::Warn => level_style.set_color(Color::Yellow),
             Level::Error => level_style.set_color(Color::Red).set_bold(true),
@@ -370,9 +370,9 @@ impl Style {
     }
 
     /// Wrap a value in the style by taking ownership of it.
-    pub(crate) fn into_value<T>(&mut self, value: T) -> StyledValue<'static, T> {
+    pub(crate) fn into_value<T>(self, value: T) -> StyledValue<'static, T> {
         StyledValue {
-            style: Cow::Owned(self.clone()),
+            style: Cow::Owned(self),
             value,
         }
     }
@@ -451,6 +451,7 @@ impl_styled_value_fmt!(
 ///
 /// Hexadecimal numbers are written with a `0x` prefix.
 #[allow(missing_docs)]
+#[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Color {
     Black,
@@ -463,8 +464,6 @@ pub enum Color {
     White,
     Ansi256(u8),
     Rgb(u8, u8, u8),
-    #[doc(hidden)]
-    __Nonexhaustive,
 }
 
 impl Color {
@@ -480,7 +479,6 @@ impl Color {
             Color::White => Some(termcolor::Color::White),
             Color::Ansi256(value) => Some(termcolor::Color::Ansi256(value)),
             Color::Rgb(r, g, b) => Some(termcolor::Color::Rgb(r, g, b)),
-            _ => None,
         }
     }
 }

@@ -133,7 +133,7 @@ fn get_bash() -> PathBuf {
     // another instance of bash that might be sitting around (like WSL).
     match env::var("MOZILLABUILD") {
         Ok(d) => PathBuf::from(d).join("msys").join("bin").join("bash.exe"),
-        _ => PathBuf::from("bash"),
+        Err(_) => PathBuf::from("bash"),
     }
 }
 
@@ -339,7 +339,7 @@ fn setup_for_gecko() -> Vec<String> {
             "cargo:rustc-link-search=native={}",
             path.join("dist").join("bin").to_str().unwrap()
         );
-        let nsslib_path = path.clone().join("security").join("nss").join("lib");
+        let nsslib_path = path.join("security").join("nss").join("lib");
         println!(
             "cargo:rustc-link-search=native={}",
             nsslib_path.join("nss").join("nss_nss3").to_str().unwrap()
