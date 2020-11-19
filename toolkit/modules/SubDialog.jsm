@@ -772,7 +772,9 @@ SubDialog.prototype = {
 
   _trapFocus() {
     this.focus();
-    this._box.addEventListener("keydown", this, true);
+    // Attach a system event listener so the dialog can cancel keydown events.
+    // See Bug 1669990.
+    this._box.addEventListener("keydown", this, { mozSystemGroup: true });
     this._closeButton?.addEventListener("keydown", this);
 
     if (!this._window.isChromeWindow) {
@@ -781,7 +783,7 @@ SubDialog.prototype = {
   },
 
   _untrapFocus() {
-    this._box.removeEventListener("keydown", this, true);
+    this._box.removeEventListener("keydown", this, { mozSystemGroup: true });
     this._closeButton?.removeEventListener("keydown", this);
     this._window.removeEventListener("focus", this, true);
   },
