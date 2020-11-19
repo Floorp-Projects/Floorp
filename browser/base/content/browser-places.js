@@ -2362,9 +2362,14 @@ var BookmarkingUI = {
     let unfiledGuid = PlacesUtils.bookmarks.unfiledGuid;
     let numberOfBookmarks = PlacesUtils.getChildCountForFolder(unfiledGuid);
     let placement = CustomizableUI.getPlacementOfWidget("personal-bookmarks");
+    let showOtherBookmarksEnabled = Services.prefs.getBoolPref(
+      "browser.toolbars.bookmarks.showOtherBookmarks",
+      true
+    );
 
     if (
       numberOfBookmarks > 0 &&
+      showOtherBookmarksEnabled &&
       placement?.area == CustomizableUI.AREA_BOOKMARKS
     ) {
       let otherBookmarksPopup = document.getElementById("OtherBookmarksPopup");
@@ -2377,6 +2382,44 @@ var BookmarkingUI = {
     } else {
       otherBookmarks.hidden = true;
     }
+  },
+
+  buildShowOtherBookmarksMenuItem() {
+    let unfiledGuid = PlacesUtils.bookmarks.unfiledGuid;
+    let numberOfBookmarks = PlacesUtils.getChildCountForFolder(unfiledGuid);
+
+    if (!gBookmarksToolbar2h2020 || numberOfBookmarks < 1) {
+      return null;
+    }
+
+    let showOtherBookmarksMenuItem = Services.prefs.getBoolPref(
+      "browser.toolbars.bookmarks.showOtherBookmarks",
+      true
+    );
+
+    let menuItem = document.createXULElement("menuitem");
+
+    menuItem.setAttribute("id", "show-other-bookmarks_PersonalToolbar");
+    menuItem.setAttribute("toolbarId", "PersonalToolbar");
+    menuItem.setAttribute("type", "checkbox");
+    menuItem.setAttribute("checked", showOtherBookmarksMenuItem);
+    menuItem.setAttribute("selectiontype", "none|single");
+
+    MozXULElement.insertFTLIfNeeded("browser/toolbarContextMenu.ftl");
+    document.l10n.setAttributes(
+      menuItem,
+      "toolbar-context-menu-bookmarks-show-other-bookmarks"
+    );
+    menuItem.addEventListener("command", () => {
+      Services.prefs.setBoolPref(
+        "browser.toolbars.bookmarks.showOtherBookmarks",
+        !showOtherBookmarksMenuItem
+      );
+
+      BookmarkingUI.maybeShowOtherBookmarksFolder();
+    });
+
+    return menuItem;
   },
 
   QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
