@@ -28,11 +28,8 @@ TransportFlow::~TransportFlow() {
   // destroy it simultaneously. The conversion to a UniquePtr
   // ensures automatic destruction of the queue at exit of
   // DestroyFinal.
-  MOZ_RELEASE_ASSERT(target_);
-  DebugOnly<nsresult> rv = target_->Dispatch(
-      WrapRunnableNM(&TransportFlow::DestroyFinal, std::move(layers_)),
-      NS_DISPATCH_NORMAL);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  CheckThread();
+  ClearLayers(layers_.get());
 }
 
 void TransportFlow::DestroyFinal(

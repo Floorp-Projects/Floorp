@@ -34,12 +34,13 @@
 
 #include "mozilla/Algorithm.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/ClearOnShutdown.h"
 
 #include "mozilla/dom/RTCStatsReportBinding.h"
 
 #include "nss.h"                // For NSS_NoDB_Init
 #include "mozilla/PublicSSL.h"  // For psm::InitializeCipherSuite
+
+#include "nsISocketTransportService.h"
 
 #include <string>
 #include <vector>
@@ -190,13 +191,46 @@ already_AddRefed<MediaTransportHandler> MediaTransportHandler::Create(
   return result.forget();
 }
 
-class STSShutdownHandler {
+class STSShutdownHandler : public nsISTSShutdownObserver {
  public:
-  ~STSShutdownHandler() {
+  NS_DECL_ISUPPORTS
+
+  // Lazy singleton
+  static RefPtr<STSShutdownHandler>& Instance() {
+    MOZ_ASSERT(NS_IsMainThread());
+    static RefPtr<STSShutdownHandler> sHandler(new STSShutdownHandler);
+    return sHandler;
+  }
+
+  void Shutdown() {
     MOZ_ASSERT(NS_IsMainThread());
     for (const auto& handler : mHandlers) {
       handler->Shutdown();
     }
+    mHandlers.clear();
+  }
+
+  STSShutdownHandler() {
+    CSFLogDebug(LOGTAG, "%s", __func__);
+    nsresult res;
+    nsCOMPtr<nsISocketTransportService> sts =
+        do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &res);
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(res));
+    MOZ_RELEASE_ASSERT(sts);
+    sts->AddShutdownObserver(this);
+  }
+
+  NS_IMETHOD Observe() override {
+    CSFLogDebug(LOGTAG, "%s", __func__);
+    Shutdown();
+    nsresult res;
+    nsCOMPtr<nsISocketTransportService> sts =
+        do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &res);
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(res));
+    MOZ_RELEASE_ASSERT(sts);
+    sts->RemoveShutdownObserver(this);
+    Instance() = nullptr;
+    return NS_OK;
   }
 
   void Register(MediaTransportHandlerSTS* aHandler) {
@@ -210,20 +244,13 @@ class STSShutdownHandler {
   }
 
  private:
+  virtual ~STSShutdownHandler() {}
+
   // Raw ptrs, registered on init, deregistered on destruction, all on main
   std::set<MediaTransportHandlerSTS*> mHandlers;
 };
 
-static STSShutdownHandler* GetShutdownHandler() {
-  MOZ_ASSERT(NS_IsMainThread());
-  static UniquePtr<STSShutdownHandler> sHandler(new STSShutdownHandler);
-  static bool initted = false;
-  if (!initted) {
-    initted = true;
-    ClearOnShutdown(&sHandler, ShutdownPhase::WillShutdown);
-  }
-  return sHandler.get();
-}
+NS_IMPL_ISUPPORTS(STSShutdownHandler, nsISTSShutdownObserver);
 
 MediaTransportHandlerSTS::MediaTransportHandlerSTS(
     nsISerialEventTarget* aCallbackThread)
@@ -488,7 +515,8 @@ nsresult MediaTransportHandlerSTS::CreateIceCtx(
         config.mPolicy = toNrIcePolicy(aIcePolicy);
         config.mNatSimulatorConfig = GetNatConfig();
 
-        GetShutdownHandler()->Register(this);
+        MOZ_RELEASE_ASSERT(STSShutdownHandler::Instance());
+        STSShutdownHandler::Instance()->Register(this);
 
         return InvokeAsync(
             mStsThread, __func__,
@@ -548,13 +576,9 @@ nsresult MediaTransportHandlerSTS::CreateIceCtx(
 
 void MediaTransportHandlerSTS::Shutdown() {
   CSFLogDebug(LOGTAG, "%s", __func__);
-  if (!mStsThread->IsOnCurrentThread()) {
-    mStsThread->Dispatch(NewNonOwningRunnableMethod(
-        __func__, this, &MediaTransportHandlerSTS::Shutdown_s));
-    return;
-  }
-
-  Shutdown_s();
+  MOZ_ASSERT(NS_IsMainThread());
+  mStsThread->Dispatch(NewNonOwningRunnableMethod(
+      __func__, this, &MediaTransportHandlerSTS::Shutdown_s));
 }
 
 void MediaTransportHandlerSTS::Shutdown_s() {
@@ -565,24 +589,15 @@ void MediaTransportHandlerSTS::Shutdown_s() {
   // TransportFlow destructors execute.
   mTransports.clear();
   if (mIceCtx) {
-    // We're already on the STS thread, but the TransportFlow
-    // destructors executed when mTransports.clear() is called
-    // above dispatch calls to DestroyFinal to the STS thread. If
-    // we don't also dispatch the call to destory the NrIceCtx to
-    // the STS thread, it will tear down the NrIceMediaStreams
-    // before the TransportFlows are destroyed.  Without a valid
-    // NrIceMediaStreams the close_notify alert cannot be sent.
-    mStsThread->Dispatch(
-        NS_NewRunnableFunction(__func__, [iceCtx = RefPtr<NrIceCtx>(mIceCtx)] {
-          NrIceStats stats = iceCtx->Destroy();
-          CSFLogDebug(LOGTAG,
-                      "Ice Telemetry: stun (retransmits: %d)"
-                      "   turn (401s: %d   403s: %d   438s: %d)",
-                      stats.stun_retransmits, stats.turn_401s, stats.turn_403s,
-                      stats.turn_438s);
-        }));
+    NrIceStats stats = mIceCtx->Destroy();
+    CSFLogDebug(LOGTAG,
+                "Ice Telemetry: stun (retransmits: %d)"
+                "   turn (401s: %d   403s: %d   438s: %d)",
+                stats.stun_retransmits, stats.turn_401s, stats.turn_403s,
+                stats.turn_438s);
   }
   mIceCtx = nullptr;
+  mDNSResolver = nullptr;
 }
 
 void MediaTransportHandlerSTS::Destroy() {
@@ -595,24 +610,30 @@ void MediaTransportHandlerSTS::Destroy() {
   }
 
   MOZ_ASSERT(NS_IsMainThread());
-  if (!GetShutdownHandler()) {
-    // Already shut down. Nothing else to do.
+  if (!STSShutdownHandler::Instance()) {
+    CSFLogDebug(LOGTAG, "%s Already shut down. Nothing else to do.", __func__);
     delete this;
     return;
   }
 
-  GetShutdownHandler()->Deregister(this);
+  STSShutdownHandler::Instance()->Deregister(this);
+  Shutdown();
 
   // mIceCtx still has a reference to us via sigslot! We must dispach to STS,
   // and clean up there. However, by the time _that_ happens, we may have
   // dispatched a signal callback to mCallbackThread, so we have to dispatch
   // the final destruction to mCallbackThread.
-  mStsThread->Dispatch(NewNonOwningRunnableMethod(
+  nsresult rv = mStsThread->Dispatch(NewNonOwningRunnableMethod(
       __func__, this, &MediaTransportHandlerSTS::Destroy_s));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    CSFLogError(LOGTAG,
+                "Unable to dispatch to STS: why has the XPCOM shutdown handler "
+                "not been invoked?");
+    delete this;
+  }
 }
 
 void MediaTransportHandlerSTS::Destroy_s() {
-  Shutdown_s();
   if (mCallbackThread && !mCallbackThread->IsOnCurrentThread()) {
     nsresult rv = mCallbackThread->Dispatch(NewNonOwningRunnableMethod(
         __func__, this, &MediaTransportHandlerSTS::DestroyFinal));
