@@ -147,7 +147,8 @@ nsHttpTransaction::nsHttpTransaction()
       mProxyConnectResponseCode(0),
       m421Received(false),
       mDontRetryWithDirectRoute(false),
-      mFastFallbackTriggered(false) {
+      mFastFallbackTriggered(false),
+      mAllRecordsInH3ExcludedListBefore(false) {
   this->mSelfAddr.inet = {};
   this->mPeerAddr.inet = {};
   LOG(("Creating nsHttpTransaction @%p\n", this));
@@ -1138,7 +1139,7 @@ bool nsHttpTransaction::PrepareSVCBRecordsForRetry(
   nsTArray<RefPtr<nsISVCBRecord>> records;
   Unused << mHTTPSSVCRecord->GetAllRecordsWithEchConfig(
       mCaps & NS_HTTP_DISALLOW_SPDY, noHttp3, &aAllRecordsHaveEchConfig,
-      records);
+      &mAllRecordsInH3ExcludedListBefore, records);
 
   // Note that it's possible that we can't get any usable record here. For
   // example, when http3 connection is failed, we won't select records with
@@ -1248,8 +1249,12 @@ void nsHttpTransaction::PrepareConnInfoForRetry(nsresult aReason) {
           return;
         }
       } else {
-        LOG((" No available records to retry"));
-        if (gHttpHandler->FallbackToOriginIfConfigsAreECHAndAllFailed()) {
+        LOG(
+            (" No available records to retry, "
+             "mAllRecordsInH3ExcludedListBefore=%d",
+             mAllRecordsInH3ExcludedListBefore));
+        if (gHttpHandler->FallbackToOriginIfConfigsAreECHAndAllFailed() &&
+            !mAllRecordsInH3ExcludedListBefore) {
           mOrigConnInfo.swap(mConnInfo);
         }
         return;
@@ -1483,6 +1488,14 @@ void nsHttpTransaction::Close(nsresult reason) {
           }
         }
         return;
+      }
+      // mConnInfo could be set to null in PrepareConnInfoForRetry() when we
+      // can't find an available https rr to retry. We have to set mConnInfo
+      // back to mOrigConnInfo to make sure no crash when mConnInfo being
+      // accessed again.
+      if (!mConnInfo) {
+        mConnInfo.swap(mOrigConnInfo);
+        MOZ_ASSERT(mConnInfo);
       }
     }
   }
@@ -2426,12 +2439,19 @@ void nsHttpTransaction::DisableSpdy() {
 void nsHttpTransaction::DisableHttp3() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  mCaps |= NS_HTTP_DISALLOW_HTTP3;
   // mOrigConnInfo is an indicator that HTTPS RR is used, so don't mess up the
   // connection info.
-  // When HTTPS RR is used, PrepareConnInfoForRetry() will make sure we'll retry
-  // with a non-http3 connection info.
-  if (mConnInfo && !mOrigConnInfo) {
+  // When HTTPS RR is used, PrepareConnInfoForRetry() could select other h3
+  // record to connect.
+  if (mOrigConnInfo) {
+    LOG(("nsHttpTransaction::DisableHttp3 this=%p mOrigConnInfo=%s", this,
+         mOrigConnInfo->HashKey().get()));
+    return;
+  }
+
+  mCaps |= NS_HTTP_DISALLOW_HTTP3;
+  MOZ_ASSERT(mConnInfo);
+  if (mConnInfo) {
     // After CloneAsDirectRoute(), http3 will be disabled.
     RefPtr<nsHttpConnectionInfo> connInfo;
     mConnInfo->CloneAsDirectRoute(getter_AddRefs(connInfo));
