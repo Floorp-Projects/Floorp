@@ -6,12 +6,10 @@
 
 #ifndef _include_dom_media_ipc_RDDProcessHost_h_
 #define _include_dom_media_ipc_RDDProcessHost_h_
-#include "mozilla/ipc/GeckoChildProcessHost.h"
-
-#include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/ProtocolUtils.h"
-#include "mozilla/ipc/TaskFactory.h"
+#include "mozilla/media/MediaUtils.h"
 
 namespace mozilla {
 namespace ipc {
@@ -37,8 +35,6 @@ class RDDProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
  public:
   class Listener {
    public:
-    virtual void OnProcessLaunchComplete(RDDProcessHost* aHost) {}
-
     // The RDDProcessHost has unexpectedly shutdown or had its connection
     // severed. This is not called if an error occurs after calling
     // Shutdown().
@@ -48,19 +44,18 @@ class RDDProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   explicit RDDProcessHost(Listener* listener);
 
   // Launch the subprocess asynchronously. On failure, false is returned.
-  // Otherwise, true is returned, and the OnProcessLaunchComplete listener
-  // callback will be invoked either when a connection has been established, or
-  // if a connection could not be established due to an asynchronous error.
+  // Otherwise, true is returned. If succeeded, a follow-up call should be made
+  // to LaunchPromise() which will return a promise that will be resolved once
+  // the RDD process has launched and a channel has been established.
   //
   // @param aExtraOpts (StringVector)
   //        Extra options to pass to the subprocess.
   bool Launch(StringVector aExtraOpts);
 
-  // If the process is being launched, block until it has launched and
-  // connected. If a launch task is pending, it will fire immediately.
-  //
-  // Returns true if the process is successfully connected; false otherwise.
-  bool WaitForLaunch();
+  // Return a promise that will be resolved once the process has completed its
+  // launch. The promise will be immediately resolved if the launch has already
+  // succeeded.
+  RefPtr<GenericNonExclusivePromise> LaunchPromise();
 
   // Inform the process that it should clean up its resources and shut
   // down. This initiates an asynchronous shutdown sequence. After this
@@ -72,13 +67,19 @@ class RDDProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
 
   // Return the actor for the top-level actor of the process. If the process
   // has not connected yet, this returns null.
-  RDDChild* GetActor() const { return mRDDChild.get(); }
+  RDDChild* GetActor() const {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mRDDChild.get();
+  }
 
   // Return a unique id for this process, guaranteed not to be shared with any
   // past or future instance of RDDProcessHost.
   uint64_t GetProcessToken() const;
 
-  bool IsConnected() const { return !!mRDDChild; }
+  bool IsConnected() const {
+    MOZ_ASSERT(NS_IsMainThread());
+    return !!mRDDChild;
+  }
 
   // Return the time stamp for when we tried to launch the RDD process.
   // This is currently used for Telemetry so that we can determine how
@@ -92,9 +93,6 @@ class RDDProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
 
   void SetListener(Listener* aListener);
 
-  // Used for tests and diagnostics
-  void KillProcess();
-
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   // Return the sandbox type to be used with this process type.
   static MacSandboxType GetMacSandboxType();
@@ -103,11 +101,8 @@ class RDDProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
  private:
   ~RDDProcessHost();
 
-  // Called on the main thread.
-  void OnChannelConnectedTask();
-  void OnChannelErrorTask();
-
-  // Called on the main thread after a connection has been established.
+  // Called on the main thread with true after a connection has been established
+  // or false if it failed (including if it failed before the timeout kicked in)
   void InitAfterConnect(bool aSucceeded);
 
   // Called on the main thread when the mRDDChild actor is shutting down.
@@ -130,21 +125,37 @@ class RDDProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
 
   DISALLOW_COPY_AND_ASSIGN(RDDProcessHost);
 
-  Listener* mListener;
-  mozilla::ipc::TaskFactory<RDDProcessHost> mTaskFactory;
+  Listener* const mListener;
 
+  // All members below are only ever accessed on the main thread.
   enum class LaunchPhase { Unlaunched, Waiting, Complete };
-  LaunchPhase mLaunchPhase;
+  LaunchPhase mLaunchPhase = LaunchPhase::Unlaunched;
 
   UniquePtr<RDDChild> mRDDChild;
-  uint64_t mProcessToken;
+  uint64_t mProcessToken = 0;
 
   UniquePtr<ipc::SharedPreferenceSerializer> mPrefSerializer;
 
-  bool mShutdownRequested;
-  bool mChannelClosed;
+  bool mShutdownRequested = false;
+  bool mChannelClosed = false;
 
   TimeStamp mLaunchTime;
+  void RejectPromise();
+  void ResolvePromise();
+
+  // Set to true on construction and to false just prior deletion.
+  // The RDDProcessHost isn't refcounted; so we can capture this by value in
+  // lambdas along with a strong reference to mLiveToken and check if that value
+  // is true before accessing "this".
+  // While a reference to mLiveToken can be taken on any thread; its value can
+  // only be read on the main thread.
+  const RefPtr<media::Refcountable<bool>> mLiveToken;
+  RefPtr<GenericNonExclusivePromise::Private> mLaunchPromise;
+  bool mLaunchPromiseSettled = false;
+  // Will be set to true if we've exceeded the allowed startup time or if the
+  // RDD process as successfully started. This is used to determine if the
+  // timeout runnable needs to execute code or not.
+  bool mTimerChecked = false;
 };
 
 }  // namespace mozilla
