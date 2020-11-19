@@ -118,7 +118,11 @@ export class BaseContent extends React.PureComponent {
   }
 
   onWindowScroll() {
-    const showLogo = this.props.Prefs.values["logowordmark.alwaysVisible"];
+    const prefs = this.props.Prefs.values;
+    // Show logo only if the logo is enabled and pocket is not enabled.
+    const showLogo =
+      prefs["logowordmark.alwaysVisible"] &&
+      !(prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"]);
     const SCROLL_THRESHOLD = showLogo ? 179 : 34;
     if (global.scrollY > SCROLL_THRESHOLD && !this.state.fixedSearch) {
       this.setState({ fixedSearch: true });
@@ -159,7 +163,7 @@ export class BaseContent extends React.PureComponent {
       !pocketEnabled &&
       filteredSections.filter(section => section.enabled).length === 0;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
-    const showLogo = prefs["logowordmark.alwaysVisible"];
+    const showLogo = prefs["logowordmark.alwaysVisible"] && !pocketEnabled;
 
     const customizationMenuEnabled = prefs["customizationMenu.enabled"];
     const newNewtabExperienceEnabled = prefs["newNewtabExperience.enabled"];

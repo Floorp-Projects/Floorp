@@ -58,26 +58,51 @@ test_newtab(function test_render_topsites_again() {
 
 test_newtab({
   async before({ pushPrefs }) {
-    await pushPrefs([
-      "browser.newtabpage.activity-stream.logowordmark.alwaysVisible",
-      true,
-    ]);
+    await pushPrefs(
+      ["browser.newtabpage.activity-stream.logowordmark.alwaysVisible", true],
+      ["browser.newtabpage.activity-stream.feeds.section.topstories", false],
+      ["browser.newtabpage.activity-stream.feeds.system.topstories", true]
+    );
   },
   test: function test_render_logo() {
     let logoWordmark = content.document.querySelector(".logo-and-wordmark");
-    ok(logoWordmark, "The logo is rendered when pref is true");
+    ok(
+      logoWordmark,
+      "The logo is rendered when pref is true, and pocket is disabled"
+    );
   },
 });
 
 test_newtab({
   async before({ pushPrefs }) {
-    await pushPrefs([
-      "browser.newtabpage.activity-stream.logowordmark.alwaysVisible",
-      false,
-    ]);
+    await pushPrefs(
+      ["browser.newtabpage.activity-stream.logowordmark.alwaysVisible", false],
+      ["browser.newtabpage.activity-stream.feeds.section.topstories", false],
+      ["browser.newtabpage.activity-stream.feeds.system.topstories", false]
+    );
   },
   test: function test_render_logo_false() {
     let logoWordmark = content.document.querySelector(".logo-and-wordmark");
-    ok(!logoWordmark, "The logo is not rendered when pref is false");
+    ok(
+      !logoWordmark,
+      "The logo is not rendered when pref is false, even with pocket disabled"
+    );
+  },
+});
+
+test_newtab({
+  async before({ pushPrefs }) {
+    await pushPrefs(
+      ["browser.newtabpage.activity-stream.logowordmark.alwaysVisible", true],
+      ["browser.newtabpage.activity-stream.feeds.section.topstories", true],
+      ["browser.newtabpage.activity-stream.feeds.system.topstories", true]
+    );
+  },
+  test: function test_render_logo() {
+    let logoWordmark = content.document.querySelector(".logo-and-wordmark");
+    ok(
+      !logoWordmark,
+      "The logo is not rendered when pref is true, and pocket is enabled"
+    );
   },
 });
