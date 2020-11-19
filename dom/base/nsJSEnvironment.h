@@ -108,9 +108,8 @@ class nsJSContext : public nsIScriptContext {
   static void KillShrinkingGCTimer();
 
   static void MaybePokeCC();
-  static void EnsureCCRunner(mozilla::TimeDuration aDelay,
-                             mozilla::TimeDuration aBudget);
   static void KillCCRunner();
+  static void KillICCRunner();
   static void KillFullGCTimer();
   static void KillInterSliceGCRunner();
 
