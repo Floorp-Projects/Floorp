@@ -2224,8 +2224,6 @@ void Zone::prepareForCompacting() {
 void GCRuntime::sweepTypesAfterCompacting(Zone* zone) {
   zone->beginSweepTypes();
 
-  AutoClearTypeInferenceStateOnOOM oom(zone);
-
   for (auto base = zone->cellIterUnsafe<BaseScript>(); !base.done();
        base.next()) {
     if (!base->hasJitScript()) {
@@ -5709,8 +5707,6 @@ IncrementalProgress GCRuntime::sweepTypeInformation(JSFreeOp* fop,
   gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::SWEEP_TYPES);
 
   ArenaLists& al = sweepZone->arenas;
-
-  AutoClearTypeInferenceStateOnOOM oom(sweepZone);
 
   if (!SweepArenaList<BaseScript>(fop, &al.gcScriptArenasToUpdate.ref(),
                                   budget)) {

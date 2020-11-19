@@ -52,7 +52,6 @@ class TempAllocator;
 
 }  // namespace jit
 
-class AutoClearTypeInferenceStateOnOOM;
 class AutoSweepBase;
 class LifoAlloc;
 class ObjectGroup;
