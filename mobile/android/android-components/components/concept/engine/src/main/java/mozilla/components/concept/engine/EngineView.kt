@@ -96,7 +96,10 @@ interface EngineView {
 
     /**
      * Request a screenshot of the visible portion of the web page currently being rendered.
-     * @param onFinish A callback to inform that process of capturing a thumbnail has finished.
+     * @param onFinish A callback to inform that process of capturing a
+     * thumbnail has finished. Important for engine-gecko: Make sure not to reference the
+     * context or view in this callback to prevent memory leaks:
+     * https://bugzilla.mozilla.org/show_bug.cgi?id=1678364
      */
     fun captureThumbnail(onFinish: (Bitmap?) -> Unit)
 

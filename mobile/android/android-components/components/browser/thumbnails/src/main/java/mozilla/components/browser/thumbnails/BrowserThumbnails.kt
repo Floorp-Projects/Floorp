@@ -58,6 +58,11 @@ class BrowserThumbnails(
      */
     fun requestScreenshot() {
         if (!isLowOnMemory()) {
+            // Create a local reference to prevent capturing "this" in the lambda
+            // which would leak the context if the view is destroyed before the
+            // callback is invoked. This is a workaround for:
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1678364
+            val store = this.store
             engineView.captureThumbnail {
                 val bitmap = it ?: return@captureThumbnail
                 val tabId = store.state.selectedTabId ?: return@captureThumbnail
