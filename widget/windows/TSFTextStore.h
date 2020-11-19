@@ -492,10 +492,22 @@ class TSFTextStore final : public ITextStoreACP,
   Composition mComposition;
 
   /**
-   * IsHandlingComposition() returns true if there is a composition in the
-   * focused editor.
+   * IsHandlingCompositionInParent() returns true if eCompositionStart is
+   * dispatched, but eCompositionCommit(AsIs) is not dispatched.  This means
+   * that if composition is handled in a content process, this status indicates
+   * whether ContentCacheInParent has composition or not.  On the other hand,
+   * if it's handled in the chrome process, this is exactly same as
+   * IsHandlingCompositionInContent().
    */
-  bool IsHandlingComposition() const {
+  bool IsHandlingCompositionInParent() const {
+    return mDispatcher && mDispatcher->IsComposing();
+  }
+
+  /**
+   * IsHandlingCompositionInContent() returns true if there is a composition in
+   * the focused editor which may be in a content process.
+   */
+  bool IsHandlingCompositionInContent() const {
     return mDispatcher && mDispatcher->IsHandlingComposition();
   }
 
