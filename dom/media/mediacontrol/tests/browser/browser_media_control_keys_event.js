@@ -19,19 +19,18 @@ add_task(async function testPlayPauseAndStop() {
   await playMedia(tab, testVideoId);
 
   info(`pressing 'pause' key`);
-  await generateMediaControlKey("pause");
+  MediaControlService.generateMediaControlKey("pause");
   await checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId);
 
   info(`pressing 'play' key`);
-  await generateMediaControlKey("play");
+  MediaControlService.generateMediaControlKey("play");
   await checkOrWaitUntilMediaStartedPlaying(tab, testVideoId);
 
   info(`pressing 'stop' key`);
-  await generateMediaControlKey("stop");
+  MediaControlService.generateMediaControlKey("stop");
   await checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId);
 
-  info(`we have stop controlling media, pressing 'play' won't resume media`);
-  // Not expect playback state change, so using ChromeUtils's method directly.
+  info(`Has stopped controlling media, pressing 'play' won't resume it`);
   MediaControlService.generateMediaControlKey("play");
   await checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId);
 
@@ -45,22 +44,19 @@ add_task(async function testPlayPause() {
   await playMedia(tab, testVideoId);
 
   info(`pressing 'playPause' key, media should stop`);
-  await generateMediaControlKey("playpause");
-  await checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId);
+  MediaControlService.generateMediaControlKey("playpause");
+  await Promise.all([
+    new Promise(r => (tab.controller.onplaybackstatechange = r)),
+    checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId),
+  ]);
 
   info(`pressing 'playPause' key, media should start`);
-  await generateMediaControlKey("playpause");
-  await checkOrWaitUntilMediaStartedPlaying(tab, testVideoId);
+  MediaControlService.generateMediaControlKey("playpause");
+  await Promise.all([
+    new Promise(r => (tab.controller.onplaybackstatechange = r)),
+    checkOrWaitUntilMediaStartedPlaying(tab, testVideoId),
+  ]);
 
   info(`remove tab`);
   await tab.close();
 });
-
-/**
- * The following are helper functions.
- */
-function generateMediaControlKey(event) {
-  const playbackStateChanged = waitUntilDisplayedPlaybackChanged();
-  MediaControlService.generateMediaControlKey(event);
-  return playbackStateChanged;
-}

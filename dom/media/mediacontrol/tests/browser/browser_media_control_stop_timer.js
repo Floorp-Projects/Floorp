@@ -68,9 +68,13 @@ add_task(async function testNotToStopMediaControlForPIPVideo() {
 /**
  * The following is helper function.
  */
-function pauseMediaAndMediaControlShouldBeStopped(tab, testVideoId) {
+function pauseMediaAndMediaControlShouldBeStopped(tab, elementId) {
   // After pausing media, the stop timer would be triggered and stop the media
-  // control, which would reset the current main media controller.
-  const controllerChangedPromise = waitUntilMainMediaControllerChanged();
-  return Promise.all([pauseMedia(tab, testVideoId), controllerChangedPromise]);
+  // control.
+  return Promise.all([
+    new Promise(r => (tab.controller.ondeactivated = r)),
+    SpecialPowers.spawn(tab.linkedBrowser, [elementId], Id => {
+      content.document.getElementById(Id).pause();
+    }),
+  ]);
 }
