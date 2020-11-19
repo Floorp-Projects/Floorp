@@ -42,7 +42,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "async_timer.h"
 #include "ice_reg.h"
 
-static void nr_ice_peer_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg);
 static void nr_ice_peer_ctx_parse_stream_attributes_int(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream, nr_ice_media_stream *pstream, char **attrs, int attr_ct);
 static int nr_ice_ctx_parse_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_stream *pstream, char *candidate, int trickled, const char *mdns_addr);
 static void nr_ice_peer_ctx_start_trickle_timer(nr_ice_peer_ctx *pctx);
@@ -81,7 +80,7 @@ int nr_ice_peer_ctx_create(nr_ice_ctx *ctx, nr_ice_handler *handler,char *label,
     _status = 0;
   abort:
     if(_status){
-      nr_ice_peer_ctx_destroy_cb(0,0,pctx);
+      nr_ice_peer_ctx_destroy(&pctx);
     }
     return(_status);
   }
@@ -476,10 +475,14 @@ int nr_ice_peer_ctx_disable_component(nr_ice_peer_ctx *pctx, nr_ice_media_stream
     return(_status);
   }
 
-static void nr_ice_peer_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg)
-  {
-    nr_ice_peer_ctx *pctx=cb_arg;
+  void nr_ice_peer_ctx_destroy(nr_ice_peer_ctx** pctxp) {
+    if (!pctxp || !*pctxp) return;
+
+    nr_ice_peer_ctx* pctx = *pctxp;
     nr_ice_media_stream *str1,*str2;
+
+    /* Stop calling the handler */
+    pctx->handler = 0;
 
     NR_async_timer_cancel(pctx->connected_cb_timer);
     RFREE(pctx->label);
@@ -498,24 +501,9 @@ static void nr_ice_peer_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg)
     }
 
     RFREE(pctx);
-  }
-
-int nr_ice_peer_ctx_destroy(nr_ice_peer_ctx **pctxp)
-  {
-
-    if(!pctxp || !*pctxp)
-      return(0);
-
-    /* Stop calling the handler */
-    (*pctxp)->handler = 0;
-
-    NR_ASYNC_SCHEDULE(nr_ice_peer_ctx_destroy_cb,*pctxp);
 
     *pctxp=0;
-
-    return(0);
   }
-
 
 /* Start the checks for the first media stream (S 5.7)
    The rest remain FROZEN */
