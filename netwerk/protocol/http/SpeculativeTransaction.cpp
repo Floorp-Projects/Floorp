@@ -16,8 +16,10 @@ namespace net {
 
 SpeculativeTransaction::SpeculativeTransaction(
     nsHttpConnectionInfo* aConnInfo, nsIInterfaceRequestor* aCallbacks,
-    uint32_t aCaps)
-    : NullHttpTransaction(aConnInfo, aCallbacks, aCaps) {}
+    uint32_t aCaps, std::function<void(bool)>&& aCallback)
+    : NullHttpTransaction(aConnInfo, aCallbacks, aCaps),
+      mTriedToWrite(false),
+      mCloseCallback(std::move(aCallback)) {}
 
 SpeculativeTransaction::~SpeculativeTransaction() {}
 
@@ -58,6 +60,24 @@ nsresult SpeculativeTransaction::OnHTTPSRRAvailable(
   RefPtr<SpeculativeTransaction> newTrans = CreateWithNewConnInfo(newInfo);
   gHttpHandler->ConnMgr()->DoSpeculativeConnection(newTrans, false);
   return NS_OK;
+}
+
+nsresult SpeculativeTransaction::ReadSegments(nsAHttpSegmentReader* aReader,
+                                              uint32_t aCount,
+                                              uint32_t* aCountRead) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  mTriedToWrite = true;
+  return NullHttpTransaction::ReadSegments(aReader, aCount, aCountRead);
+}
+
+void SpeculativeTransaction::Close(nsresult aReason) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  NullHttpTransaction::Close(aReason);
+
+  if (mCloseCallback) {
+    mCloseCallback(mTriedToWrite && aReason == NS_BASE_STREAM_CLOSED);
+    mCloseCallback = nullptr;
+  }
 }
 
 }  // namespace net
