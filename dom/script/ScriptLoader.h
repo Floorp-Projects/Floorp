@@ -46,6 +46,25 @@ class ModuleScript;
 class ScriptLoadHandler;
 class ScriptRequestProcessor;
 
+class AsyncCompileShutdownObserver final : public nsIObserver {
+  ~AsyncCompileShutdownObserver() { Unregister(); }
+
+ public:
+  explicit AsyncCompileShutdownObserver(ScriptLoader* aLoader)
+      : mScriptLoader(aLoader) {}
+
+  void OnShutdown();
+  void Unregister();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+ private:
+  // Defined during registration in ScriptLoader constructor, and
+  // cleared during destructor, ScriptLoader::Destroy() or Shutdown.
+  ScriptLoader* mScriptLoader;
+};
+
 //////////////////////////////////////////////////////////////
 // Script loader implementation
 //////////////////////////////////////////////////////////////
@@ -373,7 +392,7 @@ class ScriptLoader final : public nsISupports {
    * any references to the JSScript or to the Request which might be used for
    * caching the encoded bytecode.
    */
-  void Destroy() { GiveUpBytecodeEncoding(); }
+  void Destroy();
 
   /**
    * Implement the HostResolveImportedModule abstract operation.
@@ -404,6 +423,11 @@ class ScriptLoader final : public nsISupports {
   static LoadedScript* GetActiveScript(JSContext* aCx);
 
   Document* GetDocument() const { return mDocument; }
+
+  /**
+   *   Called by shutdown observer.
+   */
+  void Shutdown();
 
  private:
   virtual ~ScriptLoader();
@@ -612,6 +636,12 @@ class ScriptLoader final : public nsISupports {
 
   void RunScriptWhenSafe(ScriptLoadRequest* aRequest);
 
+  /**
+   *  Wait for any unused off thread compilations to finish and then
+   *  cancel them.
+   */
+  void CancelScriptLoadRequests();
+
   Document* mDocument;  // [WEAK]
   nsCOMArray<nsIScriptLoaderObserver> mObservers;
   ScriptLoadRequestList mNonAsyncExternalScriptInsertedRequests;
@@ -672,6 +702,9 @@ class ScriptLoader final : public nsISupports {
   nsRefPtrHashtable<nsURIHashKey, ModuleScript> mFetchedModules;
 
   nsCOMPtr<nsIConsoleReportCollector> mReporter;
+
+  // ShutdownObserver for off thread compilations
+  RefPtr<AsyncCompileShutdownObserver> mShutdownObserver;
 
   // Logging
  public:
