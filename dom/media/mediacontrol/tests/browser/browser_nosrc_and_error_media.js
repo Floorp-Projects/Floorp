@@ -25,7 +25,7 @@ add_task(async function setupTestingPref() {
 add_task(async function testNoSrcOrErrorMediaEntersPIPMode() {
   for (let page of PAGES) {
     info(`open media page ${page}`);
-    const tab = await createTabAndLoad(page);
+    const tab = await createLoadedTabWrapper(page, { needCheck: false });
 
     info(`controller should always inactive`);
     const controller = tab.linkedBrowser.browsingContext.mediaController;
@@ -33,32 +33,28 @@ add_task(async function testNoSrcOrErrorMediaEntersPIPMode() {
       ok(false, "should not get activated!");
     };
 
-    info(`enter PIP mode several times and controller should keep inactive`);
-    for (let idx = 0; idx < 3; idx++) {
-      const winPIP = await triggerPictureInPicture(
-        tab.linkedBrowser,
-        testVideoId
-      );
-
-      await ensureMessageAndClosePiP(
-        tab.linkedBrowser,
-        testVideoId,
-        winPIP,
-        false
-      );
-    }
+    info(`enter and leave PIP mode which would not affect controller`);
+    const winPIP = await triggerPictureInPicture(
+      tab.linkedBrowser,
+      testVideoId
+    );
+    await ensureMessageAndClosePiP(
+      tab.linkedBrowser,
+      testVideoId,
+      winPIP,
+      false
+    );
     ok(!controller.isActive, "controller is still inactive");
 
     info(`remove tab`);
-    await BrowserTestUtils.removeTab(tab);
-    await SimpleTest.promiseFocus(window);
+    await tab.close();
   }
 });
 
 add_task(async function testNoSrcOrErrorMediaEntersFullscreen() {
   for (let page of PAGES) {
     info(`open media page ${page}`);
-    const tab = await createTabAndLoad(page);
+    const tab = await createLoadedTabWrapper(page, { needCheck: false });
 
     info(`controller should always inactive`);
     const controller = tab.linkedBrowser.browsingContext.mediaController;
@@ -66,15 +62,13 @@ add_task(async function testNoSrcOrErrorMediaEntersFullscreen() {
       ok(false, "should not get activated!");
     };
 
-    info(`enter fullscreen several times and controller should keep inactive`);
+    info(`enter and leave fullscreen which would not affect controller`);
     await ensureTabIsAlreadyFocused(tab);
-    for (let idx = 0; idx < 3; idx++) {
-      await enterAndLeaveFullScreen(tab, testVideoId);
-    }
+    await enterAndLeaveFullScreen(tab, testVideoId);
     ok(!controller.isActive, "controller is still inactive");
 
     info(`remove tab`);
-    await BrowserTestUtils.removeTab(tab);
+    await tab.close();
   }
 });
 

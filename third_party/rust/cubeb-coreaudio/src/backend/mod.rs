@@ -2474,12 +2474,12 @@ impl<'ctx> CoreStreamData<'ctx> {
                         self.aggregate_device.get_device_id()
                     );
                 }
-                Err(status) => {
+                Err(e) => {
                     cubeb_log!(
                         "({:p}) Create aggregate devices failed. Error: {}.\
                          Use assigned devices directly instead.",
                         self.stm_ptr,
-                        status
+                        e
                     );
                 }
             }

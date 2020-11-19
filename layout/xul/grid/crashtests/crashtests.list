@@ -1,7 +1,0 @@
-load chrome://reftest/content/crashtests/layout/xul/grid/crashtests/306911-grid-testcases.xhtml
-load chrome://reftest/content/crashtests/layout/xul/grid/crashtests/306911-grid-testcases2.xhtml
-load chrome://reftest/content/crashtests/layout/xul/grid/crashtests/311710-1.xhtml
-load chrome://reftest/content/crashtests/layout/xul/grid/crashtests/312784-1.xhtml
-load 313173-1.html
-load chrome://reftest/content/crashtests/layout/xul/grid/crashtests/321066-1.xhtml
-load chrome://reftest/content/crashtests/layout/xul/grid/crashtests/423802-crash.xhtml

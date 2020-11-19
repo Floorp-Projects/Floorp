@@ -75,11 +75,6 @@ function is_in_list(aManager, view, canGoBack, canGoForward) {
     "Should be on the right category"
   );
 
-  is(
-    get_current_view(aManager).id,
-    "html-view",
-    "the current view should be set to the HTML about:addons browser"
-  );
   doc = aManager.getHtmlBrowser().contentDocument;
   ok(
     doc.querySelector("addon-list"),
@@ -99,11 +94,6 @@ function is_in_detail(aManager, view, canGoBack, canGoForward) {
     "Should be on the right category"
   );
 
-  is(
-    get_current_view(aManager).id,
-    "html-view",
-    "the current view should be set to the HTML about:addons browser"
-  );
   doc = aManager.getHtmlBrowser().contentDocument;
   is(
     doc.querySelectorAll("addon-card").length,
@@ -115,11 +105,6 @@ function is_in_detail(aManager, view, canGoBack, canGoForward) {
 }
 
 function is_in_discovery(aManager, canGoBack, canGoForward) {
-  is(
-    get_current_view(aManager).id,
-    "html-view",
-    "the current view should be set to the HTML about:addons browser"
-  );
   const doc = aManager.getHtmlBrowser().contentDocument;
   ok(
     doc.querySelector("discovery-pane"),

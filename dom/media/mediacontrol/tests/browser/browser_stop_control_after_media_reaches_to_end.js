@@ -15,19 +15,19 @@ add_task(async function setupTestingPref() {
  */
 add_task(async function testControllerShouldStopAfterMediaReachesToTheEnd() {
   info(`open media page and play media until the end`);
-  const tab = await createTabAndLoad(PAGE_URL);
+  const tab = await createLoadedTabWrapper(PAGE_URL);
   await Promise.all([
     checkIfMediaControllerBecomeInactiveAfterMediaEnds(tab),
     playMediaUntilItReachesToTheEnd(tab),
   ]);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testControllerWontStopAfterMediaReachesToTheEnd() {
   info(`open media page and create media session`);
-  const tab = await createTabAndLoad(PAGE_URL);
+  const tab = await createLoadedTabWrapper(PAGE_URL);
   await createMediaSession(tab);
 
   info(`play media until the end`);
@@ -37,7 +37,7 @@ add_task(async function testControllerWontStopAfterMediaReachesToTheEnd() {
   await checkControllerIsActive(tab);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 /**

@@ -277,6 +277,13 @@ describe("<DiscoveryStreamBase>", () => {
         .type(),
       CollapsibleSection
     );
+    assert.equal(
+      wrapper
+        .children()
+        .at(0)
+        .props().eventSource,
+      "CARDGRID"
+    );
   });
 
   it("should render a Message component", () => {

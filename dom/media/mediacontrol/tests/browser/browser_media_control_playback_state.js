@@ -23,18 +23,20 @@ add_task(async function setupTestingPref() {
  */
 add_task(async function testDefaultPlaybackStateBeforeAnyMediaStart() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY, {
+    needCheck: false,
+  });
 
   info(`before media starts, playback state should be 'none'`);
   await isActualPlaybackStateEqualTo(tab, "none");
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testGuessedPlaybackState() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(
     `Now declared='none', guessed='playing', so actual playback state should be 'playing'`
@@ -49,12 +51,12 @@ add_task(async function testGuessedPlaybackState() {
   await isActualPlaybackStateEqualTo(tab, "paused");
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testBothGuessedAndDeclaredPlaybackState() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(
     `Now declared='paused', guessed='playing', so actual playback state should be 'playing'`
@@ -76,7 +78,7 @@ add_task(async function testBothGuessedAndDeclaredPlaybackState() {
   await isActualPlaybackStateEqualTo(tab, "playing");
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 /**

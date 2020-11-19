@@ -1,7 +1,6 @@
 use super::*;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-const APPLE_EVENT_TIMEOUT: OSStatus = -1712;
 pub const DRIFT_COMPENSATION: u32 = 1;
 
 #[derive(Debug)]
@@ -10,6 +9,41 @@ pub struct AggregateDevice {
     device_id: AudioObjectID,
     input_id: AudioObjectID,
     output_id: AudioObjectID,
+}
+
+#[derive(Debug)]
+pub enum Error {
+    OS(OSStatus),
+    Timeout(std::time::Duration),
+    LessThan2Devices(usize),
+}
+
+impl From<OSStatus> for Error {
+    fn from(status: OSStatus) -> Self {
+        Error::OS(status)
+    }
+}
+
+impl From<std::time::Duration> for Error {
+    fn from(duration: std::time::Duration) -> Self {
+        Error::Timeout(duration)
+    }
+}
+
+impl From<usize> for Error {
+    fn from(number: usize) -> Self {
+        Error::LessThan2Devices(number)
+    }
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::OS(status) => write!(f, "OSStatus({})", status),
+            Error::Timeout(duration) => write!(f, "Timeout({:?})", duration),
+            Error::LessThan2Devices(number) => write!(f, "LessThan2Devices({} only)", number),
+        }
+    }
 }
 
 impl AggregateDevice {
@@ -33,7 +67,7 @@ impl AggregateDevice {
     pub fn new(
         input_id: AudioObjectID,
         output_id: AudioObjectID,
-    ) -> std::result::Result<Self, OSStatus> {
+    ) -> std::result::Result<Self, Error> {
         let plugin_id = Self::get_system_plugin_id()?;
         let device_id = Self::create_blank_device_sync(plugin_id)?;
 
@@ -68,7 +102,7 @@ impl AggregateDevice {
     }
 
     // The following APIs are set to `pub` for testing purpose.
-    pub fn get_system_plugin_id() -> std::result::Result<AudioObjectID, OSStatus> {
+    pub fn get_system_plugin_id() -> std::result::Result<AudioObjectID, Error> {
         let address = AudioObjectPropertyAddress {
             mSelector: kAudioHardwarePropertyPlugInForBundleID,
             mScope: kAudioObjectPropertyScopeGlobal,
@@ -79,7 +113,7 @@ impl AggregateDevice {
         let status =
             audio_object_get_property_data_size(kAudioObjectSystemObject, &address, &mut size);
         if status != NO_ERR {
-            return Err(status);
+            return Err(Error::from(status));
         }
         assert_ne!(size, 0);
 
@@ -106,13 +140,13 @@ impl AggregateDevice {
             assert_ne!(plugin_id, kAudioObjectUnknown);
             Ok(plugin_id)
         } else {
-            Err(status)
+            Err(Error::from(status))
         }
     }
 
     pub fn create_blank_device_sync(
         plugin_id: AudioObjectID,
-    ) -> std::result::Result<AudioObjectID, OSStatus> {
+    ) -> std::result::Result<AudioObjectID, Error> {
         let waiting_time = Duration::new(5, 0);
 
         let condvar_pair = Arc::new((Mutex::new(Vec::<AudioObjectID>::new()), Condvar::new()));
@@ -124,22 +158,22 @@ impl AggregateDevice {
             DeviceType::INPUT | DeviceType::OUTPUT,
         );
 
-        let r = audio_object_add_property_listener(
+        let status = audio_object_add_property_listener(
             kAudioObjectSystemObject,
             &address,
             devices_changed_callback,
             data_ptr as *mut c_void,
         );
-        assert_eq!(r, NO_ERR);
+        assert_eq!(status, NO_ERR);
 
         let _teardown = finally(|| {
-            let r = audio_object_remove_property_listener(
+            let status = audio_object_remove_property_listener(
                 kAudioObjectSystemObject,
                 &address,
                 devices_changed_callback,
                 data_ptr as *mut c_void,
             );
-            assert_eq!(r, NO_ERR);
+            assert_eq!(status, NO_ERR);
         });
 
         let device = Self::create_blank_device(plugin_id)?;
@@ -156,7 +190,7 @@ impl AggregateDevice {
                 );
             }
             if !devs.contains(&device) {
-                return Err(APPLE_EVENT_TIMEOUT);
+                return Err(Error::from(waiting_time));
             }
         }
 
@@ -180,7 +214,7 @@ impl AggregateDevice {
 
     pub fn create_blank_device(
         plugin_id: AudioObjectID,
-    ) -> std::result::Result<AudioObjectID, OSStatus> {
+    ) -> std::result::Result<AudioObjectID, Error> {
         assert_ne!(plugin_id, kAudioObjectUnknown);
 
         let address = AudioObjectPropertyAddress {
@@ -192,7 +226,7 @@ impl AggregateDevice {
         let mut size: usize = 0;
         let status = audio_object_get_property_data_size(plugin_id, &address, &mut size);
         if status != NO_ERR {
-            return Err(status);
+            return Err(Error::from(status));
         }
         assert_ne!(size, 0);
 
@@ -261,7 +295,7 @@ impl AggregateDevice {
             assert_ne!(device_id, kAudioObjectUnknown);
             Ok(device_id)
         } else {
-            Err(status)
+            Err(Error::from(status))
         }
     }
 
@@ -269,7 +303,7 @@ impl AggregateDevice {
         device_id: AudioDeviceID,
         input_id: AudioDeviceID,
         output_id: AudioDeviceID,
-    ) -> std::result::Result<(), OSStatus> {
+    ) -> std::result::Result<(), Error> {
         let address = AudioObjectPropertyAddress {
             mSelector: kAudioAggregateDevicePropertyFullSubDeviceList,
             mScope: kAudioObjectPropertyScopeGlobal,
@@ -289,7 +323,7 @@ impl AggregateDevice {
             data_ptr as *mut c_void,
         );
         if status != NO_ERR {
-            return Err(status);
+            return Err(Error::from(status));
         }
 
         let remove_listener = || -> OSStatus {
@@ -317,14 +351,14 @@ impl AggregateDevice {
                 );
             }
             if *dev != device_id {
-                let r = remove_listener();
+                let status = remove_listener();
                 // If the error is kAudioHardwareBadObjectError, it implies `device_id` is somehow
                 // dead, so its listener should receive nothing. It's ok to leave here.
-                assert!(r == NO_ERR || r == (kAudioHardwareBadObjectError as OSStatus));
+                assert!(status == NO_ERR || status == (kAudioHardwareBadObjectError as OSStatus));
                 // TODO: Destroy the aggregate device immediately if error is not
                 // kAudioHardwareBadObjectError. Otherwise the `devices_changed_callback` is able
                 // to touch the `cloned_condvar_pair` after it's freed.
-                return Err(APPLE_EVENT_TIMEOUT);
+                return Err(Error::from(waiting_time));
             }
         }
 
@@ -342,8 +376,8 @@ impl AggregateDevice {
             NO_ERR
         }
 
-        let r = remove_listener();
-        assert_eq!(r, NO_ERR);
+        let status = remove_listener();
+        assert_eq!(status, NO_ERR);
         Ok(())
     }
 
@@ -351,7 +385,7 @@ impl AggregateDevice {
         device_id: AudioDeviceID,
         input_id: AudioDeviceID,
         output_id: AudioDeviceID,
-    ) -> std::result::Result<(), OSStatus> {
+    ) -> std::result::Result<(), Error> {
         assert_ne!(device_id, kAudioObjectUnknown);
         assert_ne!(input_id, kAudioObjectUnknown);
         assert_ne!(output_id, kAudioObjectUnknown);
@@ -386,14 +420,14 @@ impl AggregateDevice {
             if status == NO_ERR {
                 Ok(())
             } else {
-                Err(status)
+                Err(Error::from(status))
             }
         }
     }
 
     pub fn get_sub_devices(
         device_id: AudioDeviceID,
-    ) -> std::result::Result<Vec<AudioObjectID>, OSStatus> {
+    ) -> std::result::Result<Vec<AudioObjectID>, Error> {
         assert_ne!(device_id, kAudioObjectUnknown);
 
         let mut sub_devices = Vec::new();
@@ -403,35 +437,35 @@ impl AggregateDevice {
             mElement: kAudioObjectPropertyElementMaster,
         };
         let mut size: usize = 0;
-        let rv = audio_object_get_property_data_size(device_id, &address, &mut size);
+        let status = audio_object_get_property_data_size(device_id, &address, &mut size);
 
-        if rv == kAudioHardwareUnknownPropertyError as OSStatus {
+        if status == kAudioHardwareUnknownPropertyError as OSStatus {
             // Return a vector containing the device itself if the device has no sub devices.
             sub_devices.push(device_id);
             return Ok(sub_devices);
-        } else if rv != NO_ERR {
-            return Err(rv);
+        } else if status != NO_ERR {
+            return Err(Error::from(status));
         }
 
         assert_ne!(size, 0);
 
         let count = size / mem::size_of::<AudioObjectID>();
         sub_devices = allocate_array(count);
-        let rv = audio_object_get_property_data(
+        let status = audio_object_get_property_data(
             device_id,
             &address,
             &mut size,
             sub_devices.as_mut_ptr(),
         );
 
-        if rv == NO_ERR {
+        if status == NO_ERR {
             Ok(sub_devices)
         } else {
-            Err(rv)
+            Err(Error::from(status))
         }
     }
 
-    pub fn set_master_device(device_id: AudioDeviceID) -> std::result::Result<(), OSStatus> {
+    pub fn set_master_device(device_id: AudioDeviceID) -> std::result::Result<(), Error> {
         assert_ne!(device_id, kAudioObjectUnknown);
         let address = AudioObjectPropertyAddress {
             mSelector: kAudioAggregateDevicePropertyMasterSubDevice,
@@ -451,13 +485,13 @@ impl AggregateDevice {
         if status == NO_ERR {
             Ok(())
         } else {
-            Err(status)
+            Err(Error::from(status))
         }
     }
 
     pub fn activate_clock_drift_compensation(
         device_id: AudioObjectID,
-    ) -> std::result::Result<(), OSStatus> {
+    ) -> std::result::Result<(), Error> {
         assert_ne!(device_id, kAudioObjectUnknown);
         let address = AudioObjectPropertyAddress {
             mSelector: kAudioObjectPropertyOwnedObjects,
@@ -478,14 +512,19 @@ impl AggregateDevice {
             &mut size,
         );
         if status != NO_ERR {
-            return Err(status);
+            return Err(Error::from(status));
         }
         assert!(size > 0);
         let subdevices_num = size / mem::size_of::<AudioObjectID>();
-        assert!(
-            subdevices_num >= 2,
-            "We should have at least one input and one output device."
-        );
+        if subdevices_num < 2 {
+            cubeb_log!(
+                "Aggregate-device {} contains {} sub-devices only.\
+                We should have at least one input and one output device.",
+                device_id,
+                subdevices_num
+            );
+            return Err(Error::LessThan2Devices(subdevices_num));
+        }
         let mut sub_devices: Vec<AudioObjectID> = allocate_array(subdevices_num);
         let status = audio_object_get_property_data_with_qualifier(
             device_id,
@@ -496,7 +535,7 @@ impl AggregateDevice {
             sub_devices.as_mut_ptr(),
         );
         if status != NO_ERR {
-            return Err(status);
+            return Err(Error::from(status));
         }
 
         let address = AudioObjectPropertyAddress {
@@ -527,7 +566,7 @@ impl AggregateDevice {
     pub fn destroy_device(
         plugin_id: AudioObjectID,
         mut device_id: AudioDeviceID,
-    ) -> std::result::Result<(), OSStatus> {
+    ) -> std::result::Result<(), Error> {
         assert_ne!(plugin_id, kAudioObjectUnknown);
         assert_ne!(device_id, kAudioObjectUnknown);
 
@@ -540,7 +579,7 @@ impl AggregateDevice {
         let mut size: usize = 0;
         let status = audio_object_get_property_data_size(plugin_id, &address, &mut size);
         if status != NO_ERR {
-            return Err(status);
+            return Err(Error::from(status));
         }
         assert!(size > 0);
 
@@ -548,7 +587,7 @@ impl AggregateDevice {
         if status == NO_ERR {
             Ok(())
         } else {
-            Err(status)
+            Err(Error::from(status))
         }
     }
 
@@ -556,7 +595,7 @@ impl AggregateDevice {
         device_id: AudioDeviceID,
         input_id: AudioDeviceID,
         output_id: AudioDeviceID,
-    ) -> std::result::Result<(), OSStatus> {
+    ) -> std::result::Result<(), Error> {
         assert_ne!(device_id, kAudioObjectUnknown);
         assert_ne!(input_id, kAudioObjectUnknown);
         assert_ne!(output_id, kAudioObjectUnknown);
@@ -601,7 +640,7 @@ impl AggregateDevice {
                 &input_rate,
             );
             if status != NO_ERR {
-                return Err(status);
+                return Err(Error::from(status));
             }
         }
 

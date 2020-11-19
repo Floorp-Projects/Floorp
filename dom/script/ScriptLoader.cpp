@@ -24,6 +24,7 @@
 #include "js/SourceText.h"
 #include "js/Utility.h"
 #include "xpcpublic.h"
+#include "GeckoProfiler.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContent.h"
 #include "nsJSUtils.h"
@@ -82,10 +83,6 @@
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "nsIScriptError.h"
 #include "nsIAsyncOutputStream.h"
-
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
-#endif
 
 using JS::SourceText;
 
@@ -2180,7 +2177,7 @@ NotifyOffThreadScriptLoadCompletedRunnable::Run() {
 
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_is_active()) {
-    const char* scriptSourceString;
+    ProfilerString8View scriptSourceString;
     if (request->IsTextSource()) {
       scriptSourceString = "ScriptCompileOffThread";
     } else if (request->IsBinASTSource()) {
@@ -2192,10 +2189,11 @@ NotifyOffThreadScriptLoadCompletedRunnable::Run() {
 
     nsAutoCString profilerLabelString;
     GetProfilerLabelForRequest(request, profilerLabelString);
-    PROFILER_ADD_MARKER_WITH_PAYLOAD(
-        scriptSourceString, JS, TextMarkerPayload,
-        (profilerLabelString, request->mOffThreadParseStartTime,
-         request->mOffThreadParseStopTime));
+    PROFILER_MARKER_TEXT(
+        scriptSourceString, JS,
+        MarkerTiming::Interval(request->mOffThreadParseStartTime,
+                               request->mOffThreadParseStopTime),
+        profilerLabelString);
   }
 #endif
 

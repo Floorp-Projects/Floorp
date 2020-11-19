@@ -1250,6 +1250,17 @@ class PictureInPictureChild extends JSWindowActorChild {
         break;
       }
       case "PictureInPicture:Pause": {
+        if (message.data && message.data.reason == "pip-closed") {
+          let video = this.getWeakVideo();
+
+          // Currently in Firefox srcObjects are MediaStreams. However, by spec a srcObject
+          // can be either a MediaStream, MediaSource or Blob. In case of future changes
+          // we do not want to pause MediaStream srcObjects and we want to maintain current
+          // behavior for non-MediaStream srcObjects.
+          if (video && video.srcObject instanceof MediaStream) {
+            break;
+          }
+        }
         this.pause();
         break;
       }
