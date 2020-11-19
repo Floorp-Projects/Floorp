@@ -20,6 +20,8 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Accaren-ik n tbaḍnit ad d-ttwaseknen dagi.</string>
 
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">Baidu</string>
     <!-- Default title for pinned JD top site that links to JD home page  -->
     <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
@@ -97,6 +99,13 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="tab_tray_close_tabs_banner_positive_button_text">Wali iɣewwaṛen</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Zgel</string>
+
+    <!-- Text for the banner message to tell users about our grid view feature. -->
+    <string name="tab_tray_grid_view_banner_message">Senfel taneɣruft n waccaren yeldin. Ddu ɣer yiɣewwaren syen fren iẓiki deg n yiccer.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_grid_view_banner_positive_button_text">Ddu ɣer yiɣewwaren</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_grid_view_banner_negative_button_text">Zgel</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -567,6 +576,14 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Mdel s ufus</string>
 
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Mdel seld yiwen wass</string>
+
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Mdel seld yiwen umalas</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Mdel seld yiwen wayyur</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Iccaren yeldin</string>
@@ -584,6 +601,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="tab_tray_title">Ldi acarren</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Sekles ɣer tagrumma</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">Fren</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Bḍu akk accaren</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -598,8 +617,18 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="tab_tray_menu_home">Uɣal s axxam</string>
     <!-- Shortcut action to toggle private mode -->
     <string name="tab_tray_menu_toggle">Sken/ffer askar n waccaren</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">Ticreḍt n usebter</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">Mdel</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">Bḍu accaren yettwafernen</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">Umuɣ n waccaren i yettwafernen</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Kkes iccer seg tegrumma</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">Fren accaren</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Mdel iccer</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -635,7 +664,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Isem n tegrumma</string>
-    <!-- Text for the menu button to remove a top site -->
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Senfel isem</string>
+	<!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">Kkes</string>
 
     <!-- Text for the menu button to delete a top site from history -->
@@ -689,11 +720,24 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Ulac amazray dagi</string>
 
+    <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Kkes isadaren</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">D tidet tebɣiḍ ad tsefḍeḍ isadaren?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
+    <string name="download_delete_multiple_items_snackbar">Isadaren ttwakksen</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">Ulac isidar da</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d yettwafren</string>
+
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Ldi</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="download_delete_item">Kkes</string>
 
 
     <!-- Crashes -->
@@ -960,6 +1004,12 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="snackbar_tab_closed">Iccer imdel</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Medlen iccaren</string>
+    <!-- Text shown in snackbar when user closes tabs -->
+    <string name="snackbar_message_tabs_closed">Accaren medlen!</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">Ticraḍ n yisebtar ttwakelsent!</string>
+    <!-- Text shown in snackbar action for viewing bookmarks -->
+    <string name="snackbar_message_bookmarks_view">Sken</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">Rnu ɣer ismal ifazen!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1627,6 +1677,15 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Sken-d ismal ittwarzan aṭas</string>
+
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Isem</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Isem n useɣwen ifazen</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">IH</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Sefsex</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Kkes</string>

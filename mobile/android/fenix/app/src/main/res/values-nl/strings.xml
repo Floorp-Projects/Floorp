@@ -102,6 +102,8 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Sluiten</string>
 
+    <!-- Text for the banner message to tell users about our grid view feature. -->
+    <string name="tab_tray_grid_view_banner_message">Wijzig de opmaak van open tabbladen. Ga naar instellingen en selecteer onder Tabbladweergave ‘Raster’.</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_grid_view_banner_positive_button_text">Naar Instellingen</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
@@ -598,6 +600,8 @@
     <string name="tab_tray_title">Open tabbladen</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">In collectie opslaan</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">Selecteren</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Alle tabbladen delen</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -618,6 +622,8 @@
     <string name="tab_tray_multiselect_menu_item_close">Sluiten</string>
     <!-- Content description for tabs tray multiselect share button -->
     <string name="tab_tray_multiselect_share_content_description">Geselecteerde tabbladen delen</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">Menu Geselecteerde tabbladen</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Tabblad uit collectie verwijderen</string>
     <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -1000,6 +1006,8 @@
     <string name="snackbar_message_tabs_closed">Tabbladen gesloten!</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Bladwijzers opgeslagen!</string>
+    <!-- Text shown in snackbar action for viewing bookmarks -->
+    <string name="snackbar_message_bookmarks_view">Weergeven</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">Toegevoegd aan topwebsites!</string>
     <!-- Text shown in snackbar when user closes a private tab -->

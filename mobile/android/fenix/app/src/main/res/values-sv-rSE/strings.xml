@@ -602,6 +602,8 @@
     <string name="tab_tray_title">Öppna flikar</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Spara i samling</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">Välj</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Dela alla flikar</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -622,6 +624,8 @@
     <string name="tab_tray_multiselect_menu_item_close">Stäng</string>
     <!-- Content description for tabs tray multiselect share button -->
     <string name="tab_tray_multiselect_share_content_description">Dela valda flikar</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">Meny för valda flikar</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Ta bort flik från samlingen</string>
     <!-- Text for button to enter multiselect mode in tabs tray -->

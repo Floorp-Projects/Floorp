@@ -92,6 +92,8 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Argas</string>
 
+    <!-- Text for the banner message to tell users about our grid view feature. -->
+    <string name="tab_tray_grid_view_banner_message">Cheñchit ar mod ma vez diskouezet an ivinelloù digoret. Kit en arventennoù ha diuzit eta gael ha dindan mod-diskouez an ivinelloù.</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_grid_view_banner_positive_button_text">Mont en arventennoù</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
@@ -581,6 +583,8 @@
     <string name="tab_tray_title">Ivinelloù digor</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Enrollañ en dastumad</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">Diuzañ</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Rannañ an holl ivinelloù</string>
     <!-- Text shown in the menu to view recently closed tabs -->
