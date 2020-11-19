@@ -22,9 +22,6 @@
 #include "TimeoutBudgetManager.h"
 #include "mozilla/net/WebSocketEventService.h"
 #include "mozilla/MediaManager.h"
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
-#endif
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -154,10 +151,13 @@ void TimeoutManager::MoveIdleToActive() {
           int(elapsed.ToMilliseconds()), int(target.ToMilliseconds()),
           int(delta.ToMilliseconds()));
       // don't have end before start...
-      PROFILER_ADD_MARKER_WITH_PAYLOAD(
-          "setTimeout deferred release", DOM, TextMarkerPayload,
-          (marker, delta.ToMilliseconds() >= 0 ? timeout->When() : now, now,
-           Some(mWindow.WindowID())));
+      PROFILER_MARKER_TEXT(
+          "setTimeout deferred release", DOM,
+          MarkerOptions(
+              MarkerTiming::Interval(
+                  delta.ToMilliseconds() >= 0 ? timeout->When() : now, now),
+              MarkerInnerWindowId(mWindow.WindowID())),
+          marker);
     }
 #endif
     num++;
@@ -906,10 +906,13 @@ void TimeoutManager::RunTimeout(const TimeStamp& aNow,
               int(elapsed.ToMilliseconds()), int(target.ToMilliseconds()),
               int(delta.ToMilliseconds()), int(runtime.ToMilliseconds()));
           // don't have end before start...
-          PROFILER_ADD_MARKER_WITH_PAYLOAD(
-              "setTimeout", DOM, TextMarkerPayload,
-              (marker, delta.ToMilliseconds() >= 0 ? timeout->When() : now, now,
-               Some(mWindow.WindowID())));
+          PROFILER_MARKER_TEXT(
+              "setTimeout", DOM,
+              MarkerOptions(
+                  MarkerTiming::Interval(
+                      delta.ToMilliseconds() >= 0 ? timeout->When() : now, now),
+                  MarkerInnerWindowId(mWindow.WindowID())),
+              marker);
         }
 #endif
 

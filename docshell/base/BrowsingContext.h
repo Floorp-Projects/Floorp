@@ -733,6 +733,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   GetTriggeringAndInheritPrincipalsForCurrentLoad();
 
   void HistoryGo(int32_t aOffset, uint64_t aHistoryEpoch,
+                 bool aRequireUserInteraction,
                  std::function<void(int32_t&&)>&& aResolver);
 
   bool ShouldUpdateSessionHistory(uint32_t aLoadType);

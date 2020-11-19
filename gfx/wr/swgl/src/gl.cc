@@ -22,6 +22,8 @@
 #  define debugf(...) printf(__VA_ARGS__)
 #endif
 
+// #define PRINT_TIMINGS
+
 #ifdef _WIN32
 #  define ALWAYS_INLINE __forceinline
 #  define NO_INLINE __declspec(noinline)
@@ -4021,8 +4023,8 @@ void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
     v.validate();
   }
 
-#ifndef NDEBUG
-  // uint64_t start = get_time_value();
+#ifdef PRINT_TIMINGS
+  uint64_t start = get_time_value();
 #endif
 
   ctx->shaded_rows = 0;
@@ -4074,17 +4076,22 @@ void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
     q.value += ctx->shaded_pixels;
   }
 
-#ifndef NDEBUG
-  // uint64_t end = get_time_value();
-  // debugf("draw(%d): %fms for %d pixels in %d rows (avg %f pixels/row, %f
-  // ns/pixel)\n", instancecount, double(end - start)/(1000.*1000.),
-  // ctx->shaded_pixels, ctx->shaded_rows,
-  // double(ctx->shaded_pixels)/ctx->shaded_rows, double(end -
-  // start)/max(ctx->shaded_pixels, 1));
+#ifdef PRINT_TIMINGS
+  uint64_t end = get_time_value();
+  printf("draw(%s, %d): %fms for %d pixels in %d rows (avg %f pixels/row, %fns/pixel)\n",
+         ctx->programs[ctx->current_program].impl->get_name(),
+         instancecount, double(end - start)/(1000.*1000.),
+         ctx->shaded_pixels, ctx->shaded_rows,
+         double(ctx->shaded_pixels)/ctx->shaded_rows,
+         double(end - start)/max(ctx->shaded_pixels, 1));
 #endif
 }
 
-void Finish() {}
+void Finish() {
+#ifdef PRINT_TIMINGS
+  printf("Finish\n");
+#endif
+}
 
 void MakeCurrent(Context* c) {
   if (ctx == c) {

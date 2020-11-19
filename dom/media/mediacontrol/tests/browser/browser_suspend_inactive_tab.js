@@ -35,12 +35,12 @@ add_task(async function testInactiveTabWouldBeSuspended() {
   await shouldTabStateEqualTo(tab, "suspended");
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testInactiveTabEverStartPlayingWontBeSuspended() {
   info(`open tab1 and play media`);
-  const tab1 = await createTab(PAGE_NON_AUTOPLAY);
+  const tab1 = await createTab(PAGE_NON_AUTOPLAY, { needCheck: true });
   await shouldTabStateEqualTo(tab1, "running");
   await playMedia(tab1, VIDEO_ID);
 
@@ -55,7 +55,7 @@ add_task(async function testInactiveTabEverStartPlayingWontBeSuspended() {
   await shouldTabStateEqualTo(tab1, "running");
 
   info(`open tab2 and play media`);
-  const tab2 = await createTab(PAGE_NON_AUTOPLAY);
+  const tab2 = await createTab(PAGE_NON_AUTOPLAY, { needCheck: true });
   await shouldTabStateEqualTo(tab2, "running");
   await playMedia(tab2, VIDEO_ID);
 
@@ -65,15 +65,14 @@ add_task(async function testInactiveTabEverStartPlayingWontBeSuspended() {
   await shouldTabStateEqualTo(tab1, "suspended");
 
   info(`remove tabs`);
-  await BrowserTestUtils.removeTab(tab1);
-  await BrowserTestUtils.removeTab(tab2);
+  await Promise.all([tab1.close(), tab2.close()]);
 });
 
 /**
  * The following are helper functions.
  */
-async function createTab(url) {
-  const tab = await createTabAndLoad(url);
+async function createTab(url, needCheck = false) {
+  const tab = await createLoadedTabWrapper(url, { needCheck });
   await createStateObserver(tab);
   return tab;
 }

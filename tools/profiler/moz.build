@@ -15,7 +15,6 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
         "public/GeckoProfilerReporter.h",
         "public/ProfilerChild.h",
         "public/ProfilerCodeAddressService.h",
-        "public/ProfilerMarkerPayload.h",
         "public/ProfilerParent.h",
         "public/shared-libraries.h",
     ]
@@ -27,7 +26,6 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
         "core/ProfiledThreadData.cpp",
         "core/ProfilerBacktrace.cpp",
         "core/ProfilerCodeAddressService.cpp",
-        "core/ProfilerMarkerPayload.cpp",
         "core/RegisteredThread.cpp",
         "gecko/ChildProfilerController.cpp",
         "gecko/nsProfilerStartParams.cpp",

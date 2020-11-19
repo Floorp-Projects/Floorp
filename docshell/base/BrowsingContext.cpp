@@ -664,6 +664,11 @@ void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
       Canonical()->mWebProgress = new BrowsingContextWebProgress();
     }
   }
+
+  if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
+    obs->NotifyWhenScriptSafe(ToSupports(this), "browsing-context-attached",
+                              nullptr);
+  }
 }
 
 void BrowsingContext::Detach(bool aFromIPC) {
@@ -2860,15 +2865,17 @@ void BrowsingContext::RemoveFromSessionHistory() {
 }
 
 void BrowsingContext::HistoryGo(int32_t aOffset, uint64_t aHistoryEpoch,
+                                bool aRequireUserInteraction,
                                 std::function<void(int32_t&&)>&& aResolver) {
   if (XRE_IsContentProcess()) {
     ContentChild::GetSingleton()->SendHistoryGo(
-        this, aOffset, aHistoryEpoch, std::move(aResolver),
+        this, aOffset, aHistoryEpoch, aRequireUserInteraction,
+        std::move(aResolver),
         [](mozilla::ipc::
                ResponseRejectReason) { /* FIXME Is ignoring this fine? */ });
   } else {
     Canonical()->HistoryGo(
-        aOffset, aHistoryEpoch,
+        aOffset, aHistoryEpoch, aRequireUserInteraction,
         Canonical()->GetContentParent()
             ? Some(Canonical()->GetContentParent()->ChildID())
             : Nothing(),

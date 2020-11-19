@@ -6,9 +6,8 @@ const { ContextualIdentityService } = ChromeUtils.import(
   "resource://gre/modules/ContextualIdentityService.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-const TEST_STORE_FILE_PATH = OS.Path.join(
+const TEST_STORE_FILE_PATH = PathUtils.join(
   profileDir.path,
   "test-containers.json"
 );
@@ -91,7 +90,7 @@ add_task(async function corruptedFile() {
   );
 
   // Let's create a corrupted file.
-  await OS.File.writeAtomic(TEST_STORE_FILE_PATH, "{ vers", {
+  await IOUtils.writeAtomicUTF8(TEST_STORE_FILE_PATH, "{ vers", {
     tmpPath: TEST_STORE_FILE_PATH + ".tmp",
   });
 
@@ -157,9 +156,7 @@ add_task(async function corruptedFile() {
 
   // Verify the version of the newly created containers.json file.
   cis.save();
-  const stateFileText = await OS.File.read(TEST_STORE_FILE_PATH, {
-    encoding: "utf-8",
-  });
+  const stateFileText = await IOUtils.readUTF8(TEST_STORE_FILE_PATH);
   equal(
     JSON.parse(stateFileText).version,
     cis.LAST_CONTAINERS_JSON_VERSION,

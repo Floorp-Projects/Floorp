@@ -3291,6 +3291,11 @@ bool gfxPlatform::AsyncPanZoomEnabled() {
 #ifdef MOZ_WIDGET_ANDROID
   return true;
 #else
+  // If Fission is enabled, OOP iframes require APZ for hittest.  So, we
+  // need to forcibly enable APZ in that case for avoiding users confused.
+  if (FissionAutostart()) {
+    return true;
+  }
   return StaticPrefs::
       layers_async_pan_zoom_enabled_AtStartup_DoNotUseDirectly();
 #endif

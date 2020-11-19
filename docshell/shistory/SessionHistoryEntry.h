@@ -101,6 +101,11 @@ class SessionHistoryInfo {
   }
   bool GetURIWasModified() const { return mURIWasModified; }
 
+  void SetHasUserInteraction(bool aHasUserInteraction) {
+    mHasUserInteraction = aHasUserInteraction;
+  }
+  bool GetHasUserInteraction() const { return mHasUserInteraction; }
+
   uint64_t SharedId() const;
 
   nsILayoutHistoryState* GetLayoutHistoryState();
@@ -152,6 +157,7 @@ class SessionHistoryInfo {
   bool mIsSrcdocEntry = false;
   bool mScrollRestorationIsManual = false;
   bool mPersist = true;
+  bool mHasUserInteraction = false;
 
   union SharedState {
     SharedState();

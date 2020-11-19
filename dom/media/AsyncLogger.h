@@ -16,9 +16,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Sprintf.h"
 #include "GeckoProfiler.h"
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
-#endif
 #include "MPSCQueue.h"
 
 #if defined(_WIN32)
@@ -199,24 +196,41 @@ class AsyncLogger {
         }
 #ifdef MOZ_GECKO_PROFILER
         {
+          struct Budget {
+            static constexpr Span<const char> MarkerTypeName() {
+              return MakeStringSpan("Budget");
+            }
+            static void StreamJSONMarkerData(
+                baseprofiler::SpliceableJSONWriter& aWriter) {}
+            static MarkerSchema MarkerTypeDisplay() {
+              using MS = MarkerSchema;
+              MS schema{MS::Location::markerChart, MS::Location::markerTable};
+              // Nothing outside the defaults.
+              return schema;
+            }
+          };
+
           TracePayload message;
           while (mMessageQueueProfiler.Pop(&message) && mRunning) {
             if (message.mPhase != TracingPhase::COMPLETE) {
-              TracingKind kind = message.mPhase == TracingPhase::BEGIN
-                                     ? TracingKind::TRACING_INTERVAL_START
-                                     : TracingKind::TRACING_INTERVAL_END;
-              TracingMarkerPayload payload("media", kind, message.mTimestamp);
-              profiler_add_marker_for_thread(
-                  message.mTID, JS::ProfilingCategoryPair::MEDIA_RT,
-                  message.mName, payload);
+              profiler_add_marker(
+                  ProfilerString8View::WrapNullTerminatedString(message.mName),
+                  geckoprofiler::category::MEDIA_RT,
+                  {MarkerThreadId(message.mTID),
+                   (message.mPhase == TracingPhase::BEGIN)
+                       ? MarkerTiming::IntervalStart(message.mTimestamp)
+                       : MarkerTiming::IntervalEnd(message.mTimestamp)},
+                  Budget{});
             } else {
-              mozilla::TimeStamp end =
-                  message.mTimestamp +
-                  TimeDuration::FromMicroseconds(message.mDurationUs);
-              BudgetMarkerPayload payload(message.mTimestamp, end);
-              profiler_add_marker_for_thread(
-                  message.mTID, JS::ProfilingCategoryPair::MEDIA_RT,
-                  message.mName, payload);
+              profiler_add_marker(
+                  ProfilerString8View::WrapNullTerminatedString(message.mName),
+                  geckoprofiler::category::MEDIA_RT,
+                  {MarkerThreadId(message.mTID),
+                   MarkerTiming::Interval(
+                       message.mTimestamp,
+                       message.mTimestamp + TimeDuration::FromMicroseconds(
+                                                message.mDurationUs))},
+                  Budget{});
             }
           }
         }

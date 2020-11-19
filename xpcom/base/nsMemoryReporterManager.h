@@ -43,10 +43,10 @@ class nsMemoryReporterManager final : public nsIMemoryReporterManager,
   nsMemoryReporterManager();
 
   // Gets the memory reporter manager service.
-  static nsMemoryReporterManager* GetOrCreate() {
+  static already_AddRefed<nsMemoryReporterManager> GetOrCreate() {
     nsCOMPtr<nsIMemoryReporterManager> imgr =
         do_GetService("@mozilla.org/memory-reporter-manager;1");
-    return static_cast<nsMemoryReporterManager*>(imgr.get());
+    return imgr.forget().downcast<nsMemoryReporterManager>();
   }
 
   typedef nsDataHashtable<nsRefPtrHashKey<nsIMemoryReporter>, bool>
