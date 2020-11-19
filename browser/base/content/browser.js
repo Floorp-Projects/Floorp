@@ -1803,11 +1803,12 @@ var gBrowserInit = {
       let node = document.getElementById(area);
       CustomizableUI.registerToolbarNode(node);
     }
+    let bookmarksToolbarVisibility = gBookmarksToolbar2h2020
+      ? gBookmarksToolbarVisibility
+      : gBookmarksToolbarVisibility == "always";
     setToolbarVisibility(
       gNavToolbox.querySelector("#PersonalToolbar"),
-      gBookmarksToolbar2h2020
-        ? gBookmarksToolbarVisibility
-        : gBookmarksToolbarVisibility == "always",
+      bookmarksToolbarVisibility,
       false,
       false
     );

@@ -7383,13 +7383,13 @@
   "FX_MIGRATION_ENTRY_POINT": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "bug_numbers": [731025, 1584261, 1643431],
+    "bug_numbers": [731025, 1584261, 1643431, 1665442],
     "alert_emails": ["gijs@mozilla.com", "MattN+telemetry@mozilla.com"],
     "expires_in_version": "86",
     "kind": "enumerated",
     "n_values": 10,
     "releaseChannelCollection": "opt-out",
-    "description": "Where the migration wizard was entered from. 0=Other/catch-all, 1=first-run, 2=refresh-firefox, 3=Places window, 4=Password manager, 5=New tab, 6=File menu, 7=Help menu"
+    "description": "Where the migration wizard was entered from. 0=Other/catch-all, 1=first-run, 2=refresh-firefox, 3=Places window, 4=Password manager, 5=New tab, 6=File menu, 7=Help menu, 8=Bookmarks toolbar"
   },
   "FX_MIGRATION_SOURCE_BROWSER": {
     "record_in_processes": ["main"],
