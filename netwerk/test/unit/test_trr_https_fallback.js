@@ -130,9 +130,15 @@ function channelOpenPromise(chan, flags) {
   return new Promise(resolve => {
     function finish(req, buffer) {
       resolve([req, buffer]);
+      certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+        false
+      );
     }
     let internal = chan.QueryInterface(Ci.nsIHttpChannelInternal);
     internal.setWaitForHTTPSSVCRecord();
+    certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+      true
+    );
     chan.asyncOpen(new ChannelListener(finish, null, flags));
   });
 }
@@ -225,18 +231,10 @@ add_task(async function testFallbackToTheLastRecord() {
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    true
-  );
-
   let chan = makeChan(`https://test.fallback.com:${h2Port}/server-timing`);
   let [req, resp] = await channelOpenPromise(chan);
   // Test if this request is done by h2.
   Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
-
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    false
-  );
 
   await trrServer.stop();
 });
@@ -323,18 +321,10 @@ add_task(async function testFallbackToTheOrigin() {
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    true
-  );
-
   let chan = makeChan(`https://test.foo.com:${h2Port}/server-timing`);
   let [req, resp] = await channelOpenPromise(chan);
   // Test if this request is done by h2.
   Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
-
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    false
-  );
 
   await trrServer.stop();
 });
@@ -412,17 +402,9 @@ add_task(async function testAllRecordsFailed() {
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    true
-  );
-
   // This channel should be failed.
   let chan = makeChan(`https://test.bar.com:${h2Port}/server-timing`);
   await channelOpenPromise(chan, CL_EXPECT_LATE_FAILURE | CL_ALLOW_UNKNOWN_CL);
-
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    false
-  );
 
   await trrServer.stop();
 });
@@ -479,10 +461,6 @@ add_task(async function testFallbackToTheOrigin2() {
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    true
-  );
-
   let chan = makeChan(`https://test.example.com:${h2Port}/server-timing`);
   await channelOpenPromise(chan, CL_EXPECT_LATE_FAILURE | CL_ALLOW_UNKNOWN_CL);
 
@@ -498,10 +476,6 @@ add_task(async function testFallbackToTheOrigin2() {
 
   chan = makeChan(`https://test.example.com:${h2Port}/server-timing`);
   await channelOpenPromise(chan);
-
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    false
-  );
 
   await trrServer.stop();
 });
@@ -587,16 +561,8 @@ add_task(async function testFallbackToTheOrigin3() {
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    true
-  );
-
   let chan = makeChan(`https://vulnerable.com:${h2Port}/server-timing`);
   await channelOpenPromise(chan);
-
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    false
-  );
 
   await trrServer.stop();
 });
@@ -662,10 +628,6 @@ add_task(async function testResetExclusionList() {
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    true
-  );
-
   // After this request, test.reset1.com and test.reset2.com should be both in
   // the exclusion list.
   let chan = makeChan(`https://test.reset.com:${h2Port}/server-timing`);
@@ -694,10 +656,6 @@ add_task(async function testResetExclusionList() {
   // A record for test.reset1.com, this request should be succeeded.
   chan = makeChan(`https://test.reset.com:${h2Port}/server-timing`);
   await channelOpenPromise(chan);
-
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    false
-  );
 
   await trrServer.stop();
 });
@@ -757,19 +715,11 @@ add_task(async function testH3Connection() {
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    true
-  );
-
   let chan = makeChan(`https://test.h3.com`);
   let [req, resp] = await channelOpenPromise(chan);
   Assert.equal(req.protocolVersion, "h3");
   let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
   Assert.equal(internal.remotePort, h3Port);
-
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    false
-  );
 
   await trrServer.stop();
 });
@@ -848,10 +798,6 @@ add_task(async function testFastfallbackToH2() {
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    true
-  );
-
   let chan = makeChan(`https://test.fastfallback.com/server-timing`);
   let [req, resp] = await channelOpenPromise(chan);
   Assert.equal(req.protocolVersion, "h2");
@@ -869,10 +815,6 @@ add_task(async function testFastfallbackToH2() {
   Assert.equal(req.protocolVersion, "h2");
   internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
   Assert.equal(internal.remotePort, h2Port);
-
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    false
-  );
 
   await trrServer.stop();
 });
@@ -927,16 +869,220 @@ add_task(async function testFailedH3Connection() {
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
 
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    true
-  );
-
   let chan = makeChan(`https://test.h3.org`);
   await channelOpenPromise(chan, CL_EXPECT_LATE_FAILURE | CL_ALLOW_UNKNOWN_CL);
 
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    false
+  await trrServer.stop();
+});
+
+// Test we don't use the service mode record whose domain is in
+// http3 excluded list.
+add_task(async function testHttp3ExcludedList() {
+  trrServer = new TRRServer();
+  await trrServer.start();
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${trrServer.port}/dns-query`
   );
+  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setIntPref(
+    "network.dns.httpssvc.http3_fast_fallback_timeout",
+    0
+  );
+
+  Services.prefs.setCharPref(
+    "network.http.http3.alt-svc-mapping-for-testing",
+    "www.h3_fail.org;h3-27=:" + h3Port
+  );
+
+  // This will fail because there is no address record for www.h3_fail.org.
+  let chan = makeChan(`https://www.h3_fail.org`);
+  await channelOpenPromise(chan, CL_EXPECT_LATE_FAILURE | CL_ALLOW_UNKNOWN_CL);
+
+  // Now www.h3_fail.org should be already excluded, so the second record
+  // foo.example.com will be selected.
+  await trrServer.registerDoHAnswers("test.h3_excluded.org", "HTTPS", [
+    {
+      name: "test.h3_excluded.org",
+      ttl: 55,
+      type: "HTTPS",
+      flush: false,
+      data: {
+        priority: 1,
+        name: "www.h3_fail.org",
+        values: [
+          { key: "alpn", value: "h3-27" },
+          { key: "port", value: h3Port },
+        ],
+      },
+    },
+    {
+      name: "test.h3_excluded.org",
+      ttl: 55,
+      type: "HTTPS",
+      flush: false,
+      data: {
+        priority: 2,
+        name: "foo.example.com",
+        values: [
+          { key: "alpn", value: "h3-27" },
+          { key: "port", value: h3Port },
+        ],
+      },
+    },
+  ]);
+
+  let listener = new DNSListener();
+
+  let request = dns.asyncResolve(
+    "test.h3_excluded.org",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    null, // resolverInfo
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  let [inRequest, inRecord, inStatus] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.equal(inStatus, Cr.NS_OK, "status OK");
+
+  chan = makeChan(`https://test.h3_excluded.org`);
+  let [req, resp] = await channelOpenPromise(chan);
+  Assert.equal(req.protocolVersion, "h3");
+  let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
+  Assert.equal(internal.remotePort, h3Port);
+
+  await trrServer.stop();
+});
+
+add_task(async function testAllRecordsInHttp3ExcludedList() {
+  trrServer = new TRRServer();
+  await trrServer.start();
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${trrServer.port}/dns-query`
+  );
+  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setIntPref(
+    "network.dns.httpssvc.http3_fast_fallback_timeout",
+    0
+  );
+
+  Services.prefs.setCharPref(
+    "network.http.http3.alt-svc-mapping-for-testing",
+    "www.h3_fail1.org;h3-27=:" + h3Port
+  );
+
+  await trrServer.registerDoHAnswers("www.h3_all_excluded.org", "A", [
+    {
+      name: "www.h3_all_excluded.org",
+      ttl: 55,
+      type: "A",
+      flush: false,
+      data: "127.0.0.1",
+    },
+  ]);
+
+  // Test we can connect to www.h3_all_excluded.org sucessfully.
+  let chan = makeChan(
+    `https://www.h3_all_excluded.org:${h2Port}/server-timing`
+  );
+
+  let [req, resp] = await channelOpenPromise(chan);
+
+  // Test if this request is done by h2.
+  Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
+
+  // This will fail because there is no address record for www.h3_fail1.org.
+  chan = makeChan(`https://www.h3_fail1.org`);
+  await channelOpenPromise(chan, CL_EXPECT_LATE_FAILURE | CL_ALLOW_UNKNOWN_CL);
+
+  Services.prefs.setCharPref(
+    "network.http.http3.alt-svc-mapping-for-testing",
+    "www.h3_fail2.org;h3-27=:" + h3Port
+  );
+
+  // This will fail because there is no address record for www.h3_fail2.org.
+  chan = makeChan(`https://www.h3_fail2.org`);
+  await channelOpenPromise(chan, CL_EXPECT_LATE_FAILURE | CL_ALLOW_UNKNOWN_CL);
+
+  await trrServer.registerDoHAnswers("www.h3_all_excluded.org", "HTTPS", [
+    {
+      name: "www.h3_all_excluded.org",
+      ttl: 55,
+      type: "HTTPS",
+      flush: false,
+      data: {
+        priority: 1,
+        name: "www.h3_fail1.org",
+        values: [
+          { key: "alpn", value: "h3-27" },
+          { key: "port", value: h3Port },
+          { key: "echconfig", value: "456..." },
+        ],
+      },
+    },
+    {
+      name: "www.h3_all_excluded.org",
+      ttl: 55,
+      type: "HTTPS",
+      flush: false,
+      data: {
+        priority: 2,
+        name: "www.h3_fail2.org",
+        values: [
+          { key: "alpn", value: "h3-27" },
+          { key: "port", value: h3Port },
+          { key: "echconfig", value: "456..." },
+        ],
+      },
+    },
+  ]);
+
+  let listener = new DNSListener();
+
+  let request = dns.asyncResolve(
+    "www.h3_all_excluded.org",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    null, // resolverInfo
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  let [inRequest, inRecord, inStatus] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.equal(inStatus, Cr.NS_OK, "status OK");
+
+  // All HTTPS RRs are in http3 excluded list and all records are failed to
+  // connect, so don't fallback to the origin one.
+  chan = makeChan(`https://www.h3_all_excluded.org:${h2Port}/server-timing`);
+  await channelOpenPromise(chan, CL_EXPECT_LATE_FAILURE | CL_ALLOW_UNKNOWN_CL);
+
+  await trrServer.registerDoHAnswers("www.h3_fail1.org", "A", [
+    {
+      name: "www.h3_fail1.org",
+      ttl: 55,
+      type: "A",
+      flush: false,
+      data: "127.0.0.1",
+    },
+  ]);
+
+  // The the case that when all records are in http3 excluded list, we still
+  // give the first record one more shot.
+  chan = makeChan(`https://www.h3_all_excluded.org`);
+  [req, resp] = await channelOpenPromise(chan);
+  Assert.equal(req.protocolVersion, "h3");
+  let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
+  Assert.equal(internal.remotePort, h3Port);
 
   await trrServer.stop();
 });

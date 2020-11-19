@@ -46,6 +46,14 @@ class PendingTransactionInfo final : public ARefBase {
   ~PendingTransactionInfo();
 };
 
+class PendingComparator {
+ public:
+  bool Equals(const PendingTransactionInfo* aPendingTrans,
+              const nsAHttpTransaction* aTrans) const {
+    return aPendingTrans->Transaction() == aTrans;
+  }
+};
+
 }  // namespace net
 }  // namespace mozilla
 

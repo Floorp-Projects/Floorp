@@ -956,16 +956,17 @@ nsresult HalfOpenSocket::SetupConn(nsIAsyncOutputStream* out, bool aFastOpen) {
       }
     }
 
-    if (nullTrans) {
-      nullTrans->Close(rv);
-    } else if (nsHttpTransaction* trans =
-                   mTransaction->QueryHttpTransaction()) {
+    if (nsHttpTransaction* trans = mTransaction->QueryHttpTransaction()) {
       if (mIsHttp3) {
         trans->DisableHttp3();
         gHttpHandler->ExcludeHttp3(mEnt->mConnInfo);
       }
-      Unused << gHttpHandler->ConnMgr()->CancelTransaction(trans, rv);
+      // The transaction's connection info is changed after DisableHttp3(), so
+      // this is the only point we can remove this transaction from its conn
+      // entry.
+      mEnt->RemoveTransFromPendingQ(trans);
     }
+    mTransaction->Close(rv);
 
     return rv;
   }
