@@ -118,7 +118,7 @@ StaticRefPtr<PeerConnectionCtxObserver>
     PeerConnectionCtx::gPeerConnectionCtxObserver;
 
 const std::map<const std::string, PeerConnectionImpl*>&
-PeerConnectionCtx::mGetPeerConnections() {
+PeerConnectionCtx::GetPeerConnections() {
   return mPeerConnections;
 }
 
