@@ -17,7 +17,6 @@ mk_add_options "export LD_LIBRARY_PATH=$MOZ_FETCHES_DIR/clang/lib"
 # Upload the resulting tarball from /tmp to tooltool, and change the entry in
 # `browser/config/tooltool-manifests/macosx64/cross-releng.manifest`.
 CROSS_SYSROOT=$topsrcdir/MacOSX10.11.sdk
-CROSS_PRIVATE_FRAMEWORKS=$CROSS_SYSROOT/System/Library/PrivateFrameworks
 
 export CC="$MOZ_FETCHES_DIR/clang/bin/clang"
 export CXX="$MOZ_FETCHES_DIR/clang/bin/clang++"
@@ -36,7 +35,6 @@ export HOST_LDFLAGS="-g"
 
 ac_add_options --target=x86_64-apple-darwin
 export MACOS_SDK_DIR=$CROSS_SYSROOT
-export MACOS_PRIVATE_FRAMEWORKS_DIR=$CROSS_PRIVATE_FRAMEWORKS
 
 if [ "x$MOZ_PKG_SPECIAL" != "xasan" -a -z "$MOZ_AUTOMATION_ARTIFACT_BUILDS" ]; then
   # Enable static analysis checks by default on OSX cross builds.
