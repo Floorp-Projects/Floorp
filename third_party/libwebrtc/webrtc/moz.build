@@ -186,9 +186,6 @@ if CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/webrtc/modules/video_capture/video_capture_internal_impl_gn",
         "/third_party/libwebrtc/webrtc/system_wrappers/cpu_features_linux_gn"
     ]
-    DIRS += [
-        "/third_party/pipewire/libpipewire"
-    ]
 
 if CONFIG["OS_TARGET"] == "NetBSD":
 
