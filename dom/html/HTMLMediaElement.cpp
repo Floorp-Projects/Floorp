@@ -4923,6 +4923,7 @@ void HTMLMediaElement::UnbindFromTree(bool aNullParent) {
                              [self = RefPtr<HTMLMediaElement>(this)]() {
                                if (!self->IsInComposedDoc()) {
                                  self->PauseInternal();
+                                 self->mMediaControlKeyListener->StopIfNeeded();
                                }
                              });
   RunInStableState(task);
