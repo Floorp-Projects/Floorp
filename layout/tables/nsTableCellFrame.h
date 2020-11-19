@@ -285,8 +285,7 @@ inline mozilla::LogicalSize nsTableCellFrame::GetDesiredSize() {
 }
 
 inline void nsTableCellFrame::SetDesiredSize(const ReflowOutput& aDesiredSize) {
-  mozilla::WritingMode wm = aDesiredSize.GetWritingMode();
-  mDesiredSize = aDesiredSize.Size(wm).ConvertTo(GetWritingMode(), wm);
+  mDesiredSize = aDesiredSize.Size(GetWritingMode());
 }
 
 inline bool nsTableCellFrame::GetContentEmpty() const {
