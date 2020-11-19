@@ -12,6 +12,7 @@
 #include <type_traits>
 
 #include "mozilla/dom/WebrtcGlobalInformationBinding.h"
+#include "mozilla/dom/RTCStatsReportBinding.h"  // for RTCStatsReportInternal
 #include "mozilla/dom/ContentChild.h"
 
 #include "nsNetCID.h"               // NS_SOCKETTRANSPORTSERVICE_CONTRACTID
@@ -21,6 +22,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/ClearOnShutdown.h"
 
 #include "transport/runnable_utils.h"
 #include "MediaTransportHandler.h"
@@ -118,7 +120,17 @@ GetStatsPromiseForThisProcess(const nsAString& aPcIdFilter) {
              std::move(UnwrapUniquePtrs));
 }
 
+static nsTArray<dom::RTCStatsReportInternal>& GetWebrtcGlobalStatsStash() {
+  static StaticAutoPtr<nsTArray<dom::RTCStatsReportInternal>> sStash;
+  if (!sStash) {
+    sStash = new nsTArray<dom::RTCStatsReportInternal>();
+    ClearOnShutdown(&sStash);
+  }
+  return *sStash;
+}
+
 static void ClearClosedStats() {
+  GetWebrtcGlobalStatsStash().Clear();
   PeerConnectionCtx* ctx = GetPeerConnectionCtx();
 
   if (ctx) {
@@ -175,22 +187,70 @@ void WebrtcGlobalInformation::GetAllStats(
       new nsMainThreadPtrHolder<WebrtcGlobalStatisticsCallback>(
           "WebrtcGlobalStatisticsCallback", &aStatsCallback));
 
-  auto FlattenAndCallback =
-      [callbackHandle](
-          PWebrtcGlobalParent::GetStatsPromise::AllSettledPromiseType::
-              ResolveOrRejectValue&& aResult) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+  auto FlattenThenStashThenCallback =
+      [callbackHandle,
+       filter](PWebrtcGlobalParent::GetStatsPromise::AllSettledPromiseType::
+                   ResolveOrRejectValue&& aResult) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+        std::set<nsString> pcids;
         WebrtcGlobalStatisticsReport flattened;
         MOZ_RELEASE_ASSERT(aResult.IsResolve(),
                            "AllSettled should never reject!");
         for (auto& contentProcessResult : aResult.ResolveValue()) {
           // TODO: Report rejection on individual content processes someday?
           if (contentProcessResult.IsResolve()) {
-            if (!flattened.mReports.AppendElements(
-                    std::move(contentProcessResult.ResolveValue()), fallible)) {
-              mozalloc_handle_oom(0);
+            for (auto& pcStats : contentProcessResult.ResolveValue()) {
+              pcids.insert(pcStats.mPcid);
+              if (!flattened.mReports.AppendElement(std::move(pcStats),
+                                                    fallible)) {
+                mozalloc_handle_oom(0);
+              }
             }
           }
         }
+
+        if (filter.IsEmpty()) {
+          // Unfiltered is pretty simple; add stuff from stash that is
+          // missing, then stomp the stash with the new reports.
+          for (auto& pcStats : GetWebrtcGlobalStatsStash()) {
+            if (!pcids.count(pcStats.mPcid)) {
+              // Stats from a closed PC or stopped content process.
+              // Content process may have gone away before we got to update
+              // this.
+              pcStats.mClosed = true;
+              if (!flattened.mReports.AppendElement(std::move(pcStats),
+                                                    fallible)) {
+                mozalloc_handle_oom(0);
+              }
+            }
+          }
+          GetWebrtcGlobalStatsStash() = flattened.mReports;
+        } else {
+          // Filtered is slightly more complex
+          if (flattened.mReports.IsEmpty()) {
+            // Find entry from stash and add it to report
+            for (auto& pcStats : GetWebrtcGlobalStatsStash()) {
+              if (pcStats.mPcid == filter) {
+                pcStats.mClosed = true;
+                if (!flattened.mReports.AppendElement(std::move(pcStats),
+                                                      fallible)) {
+                  mozalloc_handle_oom(0);
+                }
+              }
+            }
+          } else {
+            // Find entries in stash, remove them, and then add new entries
+            for (size_t i = 0; i < GetWebrtcGlobalStatsStash().Length();) {
+              auto& pcStats = GetWebrtcGlobalStatsStash()[i];
+              if (pcStats.mPcid == filter) {
+                GetWebrtcGlobalStatsStash().RemoveElementAt(i);
+              } else {
+                ++i;
+              }
+            }
+            GetWebrtcGlobalStatsStash().AppendElements(flattened.mReports);
+          }
+        }
+
         IgnoredErrorResult rv;
         callbackHandle->Call(flattened, rv);
       };
@@ -198,7 +258,7 @@ void WebrtcGlobalInformation::GetAllStats(
   PWebrtcGlobalParent::GetStatsPromise::AllSettled(
       GetMainThreadSerialEventTarget(), statsPromises)
       ->Then(GetMainThreadSerialEventTarget(), __func__,
-             std::move(FlattenAndCallback));
+             std::move(FlattenThenStashThenCallback));
 
   aRv = NS_OK;
 }
