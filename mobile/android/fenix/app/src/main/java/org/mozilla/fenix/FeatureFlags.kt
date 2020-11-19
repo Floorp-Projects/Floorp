@@ -35,4 +35,10 @@ object FeatureFlags {
      * Enables ETP cookie purging
      */
     val etpCookiePurging = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enables the Nimbus experiments library, especially the settings toggle to opt-out of
+     * all experiments.
+     */
+    val nimbusExperiments = Config.channel.isNightlyOrDebug
 }

@@ -231,7 +231,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true
     )
 
-    val isExperimentationEnabled by booleanPreference(
+    var isExperimentationEnabled by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_experimentation),
         default = true
     )

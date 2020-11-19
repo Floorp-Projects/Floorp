@@ -13,6 +13,6 @@
         android:title="@string/preferences_marketing_data" />
     <SwitchPreference
         android:key="@string/pref_key_experimentation"
-        android:summary="@string/preference_experiments_summary"
-        android:title="@string/preference_experiments" />
+        android:summary="@string/preference_experiments_summary_2"
+        android:title="@string/preference_experiments_2" />
 </PreferenceScreen>

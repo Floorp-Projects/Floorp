@@ -13,8 +13,10 @@ import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.lib.crash.service.GleanCrashReporterService
 import mozilla.components.lib.crash.service.MozillaSocorroService
 import mozilla.components.lib.crash.service.SentryService
+import mozilla.components.service.nimbus.Nimbus
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ReleaseChannel
@@ -97,6 +99,23 @@ class Analytics(
             isDataTelemetryEnabled = { context.settings().isTelemetryEnabled },
             isMarketingDataTelemetryEnabled = { context.settings().isMarketingTelemetryEnabled }
         )
+    }
+
+    val experiments by lazyMonitored {
+        Nimbus().apply {
+            if (FeatureFlags.nimbusExperiments) {
+                initialize(context)
+                // Global opt out state is stored in Nimbus, and shouldn't be toggled to `true`
+                // from the app unless the user does so from a UI control.
+                // However, the user may have opt-ed out of mako experiments already, so
+                // we should respect that setting here.
+                val enabled = context.settings().isExperimentationEnabled
+                if (!enabled) {
+                    globalUserParticipation = enabled
+                }
+                context.settings().isExperimentationEnabled = globalUserParticipation
+            }
+        }
     }
 }
 

@@ -32,10 +32,13 @@ class SettingsSubMenuDataCollectionRobot {
 
     fun verifyMarketingDataSwitchDefault() = assertMarketingDataValueSwitchDefault()
 
+    fun verifyExperimentsSwitchDefault() = assertExperimentsSwitchDefault()
+
     fun verifyDataCollectionSubMenuItems() {
         verifyDataCollectionOptions()
         verifyUsageAndTechnicalDataSwitchDefault()
         verifyMarketingDataSwitchDefault()
+        verifyExperimentsSwitchDefault()
     }
 
     class Transition {
@@ -76,6 +79,9 @@ private fun assertDataCollectionOptions() {
 
     onView(withText(marketingDataText))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+    onView(withText(R.string.preference_experiments_2)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    onView(withText(R.string.preference_experiments_summary_2)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun usageAndTechnicalDataButton() = onView(withText(R.string.preference_usage_data))
@@ -86,4 +92,9 @@ private fun assertUsageAndTechnicalDataSwitchDefault() = usageAndTechnicalDataBu
 private fun marketingDataButton() = onView(withText(R.string.preferences_marketing_data))
 
 private fun assertMarketingDataValueSwitchDefault() = marketingDataButton()
+    .assertIsEnabled(isEnabled = true)
+
+private fun experimentsButton() = onView(withText(R.string.preference_experiments_2))
+
+private fun assertExperimentsSwitchDefault() = experimentsButton()
     .assertIsEnabled(isEnabled = true)
