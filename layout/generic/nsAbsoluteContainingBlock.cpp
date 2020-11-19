@@ -767,7 +767,7 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
   ReflowOutput kidDesiredSize(kidReflowInput);
   aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowInput, aStatus);
 
-  const LogicalSize kidSize = kidDesiredSize.Size(wm).ConvertTo(outerWM, wm);
+  const LogicalSize kidSize = kidDesiredSize.Size(outerWM);
 
   LogicalMargin offsets = kidReflowInput.ComputedLogicalOffsets(outerWM);
 

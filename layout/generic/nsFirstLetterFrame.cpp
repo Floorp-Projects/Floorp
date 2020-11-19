@@ -198,7 +198,7 @@ void nsFirstLetterFrame::Reflow(nsPresContext* aPresContext,
     mBaseline = kidMetrics.BlockStartAscent();
 
     // Place and size the child and update the output metrics
-    LogicalSize convertedSize = kidMetrics.Size(lineWM).ConvertTo(wm, lineWM);
+    LogicalSize convertedSize = kidMetrics.Size(wm);
     kid->SetRect(nsRect(bp.IStart(wm), bp.BStart(wm), convertedSize.ISize(wm),
                         convertedSize.BSize(wm)));
     kid->FinishAndStoreOverflow(&kidMetrics, rs.mStyleDisplay);
