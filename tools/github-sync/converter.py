@@ -214,6 +214,10 @@ def prune_boring(rev):
             # prune more parents
             continue
 
+        # Collapse identical parents, because if the parents are identical
+        # we don't need to keep multiple copies of them.
+        hg_commits[rev].parents = list(dict.fromkeys(hg_commits[rev].parents))
+
         # If we get here, all of `rev`s parents are interesting, so we can't
         # prune them. Move up to the parent rev and start processing that, or
         # if we have multiple parents then recurse on those nodes.
