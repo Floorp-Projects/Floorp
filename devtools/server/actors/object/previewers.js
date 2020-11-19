@@ -360,6 +360,35 @@ const previewers = {
     },
   ],
 
+  Promise: [
+    function({ obj, hooks }, grip, rawObj) {
+      const {state, value, reason} = ObjectUtils.getPromiseState(obj);
+      const ownProperties = Object.create(null);
+      ownProperties["<state>"] = state;
+      let ownPropertiesLength = 1;
+
+      // Only expose <value> or <reason> in top-level promises, to avoid recursion.
+      // <state> is not problematic because it's a string.
+      if (hooks.getGripDepth() === 1) {
+        if (state == "fulfilled") {
+          ownProperties["<value>"] = hooks.createValueGrip(value);
+          ++ownPropertiesLength;
+        } else if (state == "rejected") {
+          ownProperties["<reason>"] = hooks.createValueGrip(reason);
+          ++ownPropertiesLength;
+        }
+      }
+
+      grip.preview = {
+        kind: "Object",
+        ownProperties,
+        ownPropertiesLength,
+      };
+
+      return true;
+    },
+  ],
+
   Proxy: [
     function({ obj, hooks }, grip, rawObj) {
       // Only preview top-level proxies, avoiding recursion. Otherwise, since both the

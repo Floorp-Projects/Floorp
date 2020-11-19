@@ -13,11 +13,10 @@ define(function(require, exports, module) {
   // Dependencies
   const {
     getGripType,
-    isGrip,
     wrapRender,
   } = require("devtools/client/shared/components/reps/reps/rep-utils");
 
-  const PropRep = require("devtools/client/shared/components/reps/reps/prop-rep");
+  const Grip = require("devtools/client/shared/components/reps/reps/grip");
   const {
     MODE,
   } = require("devtools/client/shared/components/reps/reps/constants");
@@ -38,101 +37,58 @@ define(function(require, exports, module) {
 
   function PromiseRep(props) {
     const object = props.object;
-    const shouldRenderTooltip = props.shouldRenderTooltip;
-    const { promiseState } = object;
 
+    // @backward-compat { added in 85 } On older servers, the preview of a promise was
+    // useless and didn't include the internal promise state, which was directly exposed
+    // in the grip.
+    if (object.promiseState) {
+      const { state, value, reason } = object.promiseState;
+      const ownProperties = Object.create(null);
+      ownProperties["<state>"] = state;
+      let ownPropertiesLength = 1;
+      if (state == "fulfilled") {
+        ownProperties["<value>"] = value;
+        ++ownPropertiesLength;
+      } else if (state == "rejected") {
+        ownProperties["<reason>"] = reason;
+        ++ownPropertiesLength;
+      }
+      object.preview = {
+        kind: "Object",
+        ownProperties,
+        ownPropertiesLength,
+      };
+    }
+
+    if (props.mode !== MODE.TINY) {
+      return Grip.rep(props);
+    }
+
+    const shouldRenderTooltip = props.shouldRenderTooltip;
     const config = {
       "data-link-actor-id": object.actor,
       className: "objectBox objectBox-object",
       title: shouldRenderTooltip ? "Promise" : null,
     };
 
-    if (props.mode === MODE.TINY) {
-      const {
-        Rep,
-      } = require("devtools/client/shared/components/reps/reps/rep");
+    const { Rep } = require("devtools/client/shared/components/reps/reps/rep");
 
-      return span(
-        config,
-        getTitle(object),
-        span(
-          {
-            className: "objectLeftBrace",
-          },
-          " { "
-        ),
-        Rep({ object: promiseState.state }),
-        span(
-          {
-            className: "objectRightBrace",
-          },
-          " }"
-        )
-      );
-    }
-
-    const propsArray = getProps(props, promiseState);
     return span(
       config,
       getTitle(object),
-      span(
-        {
-          className: "objectLeftBrace",
-        },
-        " { "
-      ),
-      ...propsArray,
-      span(
-        {
-          className: "objectRightBrace",
-        },
-        " }"
-      )
+      span({ className: "objectLeftBrace" }, " { "),
+      Rep({ object: object.preview.ownProperties["<state>"] }),
+      span({ className: "objectRightBrace" }, " }")
     );
   }
 
   function getTitle(object) {
-    return span(
-      {
-        className: "objectTitle",
-      },
-      object.class
-    );
-  }
-
-  function getProps(props, promiseState) {
-    const keys = ["state"];
-    if (promiseState.hasOwnProperty("value")) {
-      keys.push("value");
-    } else if (promiseState.hasOwnProperty("reason")) {
-      keys.push("reason");
-    }
-
-    return keys.reduce((res, key, i) => {
-      const object = promiseState[key];
-      res = res.concat(
-        PropRep({
-          ...props,
-          mode: MODE.TINY,
-          name: `<${key}>`,
-          object: object.getGrip ? object.getGrip() : object,
-          equal: ": ",
-          suppressQuotes: true,
-        })
-      );
-
-      // Interleave commas between elements
-      if (i !== keys.length - 1) {
-        res.push(", ");
-      }
-
-      return res;
-    }, []);
+    return span({ className: "objectTitle" }, object.class);
   }
 
   // Registration
   function supportsObject(object, noGrip = false) {
-    if (noGrip === true || !isGrip(object)) {
+    if (!Grip.supportsObject(object, noGrip)) {
       return false;
     }
     return getGripType(object, noGrip) == "Promise";
