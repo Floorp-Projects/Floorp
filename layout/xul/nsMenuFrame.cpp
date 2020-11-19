@@ -212,7 +212,7 @@ void nsMenuFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
   }
 }
 
-nsMenuPopupFrame* nsMenuFrame::GetPopup() {
+nsMenuPopupFrame* nsMenuFrame::GetPopup() const {
   nsFrameList* popupList = GetPopupList();
   return popupList ? static_cast<nsMenuPopupFrame*>(popupList->FirstChild())
                    : nullptr;
@@ -1117,7 +1117,7 @@ nsMenuFrame::SetActiveChild(dom::Element* aChild) {
   return NS_OK;
 }
 
-nsIScrollableFrame* nsMenuFrame::GetScrollTargetFrame() {
+nsIScrollableFrame* nsMenuFrame::GetScrollTargetFrame() const {
   nsMenuPopupFrame* popupFrame = GetPopup();
   if (!popupFrame) return nullptr;
   nsIFrame* childFrame = popupFrame->PrincipalChildList().FirstChild();

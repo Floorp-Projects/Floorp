@@ -1346,7 +1346,7 @@ nsIFrame* nsComboboxControlFrame::CreateFrameForDisplayNode() {
   return mDisplayFrame;
 }
 
-nsIScrollableFrame* nsComboboxControlFrame::GetScrollTargetFrame() {
+nsIScrollableFrame* nsComboboxControlFrame::GetScrollTargetFrame() const {
   return do_QueryFrame(mDropdownFrame);
 }
 
