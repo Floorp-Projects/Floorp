@@ -686,7 +686,9 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_7___default.a.PureCompo
   }
 
   onWindowScroll() {
-    const showLogo = this.props.Prefs.values["logowordmark.alwaysVisible"];
+    const prefs = this.props.Prefs.values; // Show logo only if the logo is enabled and pocket is not enabled.
+
+    const showLogo = prefs["logowordmark.alwaysVisible"] && !(prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"]);
     const SCROLL_THRESHOLD = showLogo ? 179 : 34;
 
     if (global.scrollY > SCROLL_THRESHOLD && !this.state.fixedSearch) {
@@ -725,7 +727,7 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_7___default.a.PureCompo
     const pocketEnabled = prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"];
     const noSectionsEnabled = !prefs["feeds.topsites"] && !pocketEnabled && filteredSections.filter(section => section.enabled).length === 0;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
-    const showLogo = prefs["logowordmark.alwaysVisible"];
+    const showLogo = prefs["logowordmark.alwaysVisible"] && !pocketEnabled;
     const outerClassName = ["outer-wrapper", isDiscoveryStream && pocketEnabled && "ds-outer-wrapper-search-alignment", isDiscoveryStream && "ds-outer-wrapper-breakpoint-override", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search", showLogo && "visible-logo"].filter(v => v).join(" ");
     return react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("div", {
       className: outerClassName
