@@ -2,7 +2,7 @@
 
 wasmFailValidateText('(module (func (select (i32.const 0) (i32.const 0) (f32.const 0))))', mismatchError("f32", "i32"));
 
-wasmFailValidateText('(module (func (select (i32.const 0) (f32.const 0) (i32.const 0))) (export "" (func 0)))', /(select operand types must match)|(type mismatch: expected Some\(F32\), found Some\(I32\))/);
+wasmFailValidateText('(module (func (select (i32.const 0) (f32.const 0) (i32.const 0))) (export "" (func 0)))', /(select operand types must match)|(type mismatch: expected f32, found i32)/);
 wasmFailValidateText('(module (func (select (block ) (i32.const 0) (i32.const 0))) (export "" (func 0)))', emptyStackError);
 wasmFailValidateText('(module (func (select (return) (i32.const 0) (i32.const 0))) (export "" (func 0)))', unusedValuesError);
 assertEq(wasmEvalText('(module (func (drop (select (return) (i32.const 0) (i32.const 0)))) (export "" (func 0)))').exports[""](), undefined);

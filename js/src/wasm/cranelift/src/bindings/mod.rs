@@ -25,7 +25,8 @@ use cranelift_codegen::ir::immediates::{Ieee32, Ieee64};
 use cranelift_codegen::ir::{self, InstBuilder, SourceLoc};
 use cranelift_codegen::isa;
 
-use cranelift_wasm::{wasmparser, FuncIndex, GlobalIndex, SignatureIndex, TableIndex, WasmResult};
+use cranelift_wasm::{wasmparser, FuncIndex, GlobalIndex, SignatureIndex, TableIndex, TypeIndex,
+                     WasmResult};
 
 use crate::compile;
 use crate::utils::BasicError;
@@ -284,8 +285,18 @@ impl<'a> ModuleEnvironment<'a> {
     pub fn func_is_import(&self, func_index: FuncIndex) -> bool {
         unsafe { low_level::env_func_is_import(self.env, func_index.index()) }
     }
-    pub fn signature(&self, sig_index: SignatureIndex) -> FuncTypeWithId {
-        FuncTypeWithId::new(unsafe { low_level::env_signature(self.env, sig_index.index()) })
+    pub fn signature(&self, type_index: TypeIndex) -> FuncTypeWithId {
+        // This function takes `TypeIndex` rather than the `SignatureIndex` that one
+        // might expect.  Why?  https://github.com/bytecodealliance/wasmtime/pull/2115
+        // introduces two new types to the type section as viewed by Cranelift.  This is
+        // in support of the module linking proposal.  So now a type index (for
+        // Cranelift) can refer to a func, module, or instance type.  When the type index
+        // refers to a func type, it can also be used to get the signature index which
+        // can be used to get the ir::Signature for that func type.  For us, Cranelift is
+        // only used with function types so we can just assume type index and signature
+        // index are 1:1.  If and when we come to support the module linking proposal,
+        // this will need to be revisited.
+        FuncTypeWithId::new(unsafe { low_level::env_signature(self.env, type_index.index()) })
     }
     pub fn table(&self, table_index: TableIndex) -> TableDesc {
         TableDesc(unsafe { low_level::env_table(self.env, table_index.index()) })

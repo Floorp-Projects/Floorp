@@ -31,7 +31,7 @@ use cranelift_codegen::isa::{CallConv, TargetFrontendConfig, TargetIsa};
 use cranelift_codegen::packed_option::PackedOption;
 use cranelift_wasm::{
     FuncEnvironment, FuncIndex, FunctionBuilder, GlobalIndex, GlobalVariable, MemoryIndex,
-    ReturnMode, SignatureIndex, TableIndex, TargetEnvironment, WasmError, WasmResult,
+    ReturnMode, TableIndex, TargetEnvironment, WasmError, WasmResult, TypeIndex
 };
 
 use crate::bindings::{self, GlobalDesc, SymbolicAddress};
@@ -825,7 +825,7 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
     fn make_indirect_sig(
         &mut self,
         func: &mut ir::Function,
-        index: SignatureIndex,
+        index: TypeIndex,
     ) -> WasmResult<ir::SigRef> {
         let wsig = self.module_env.signature(index);
         let mut sigdata = init_sig_from_wsig(self.static_env.call_conv(), &wsig)?;
@@ -890,7 +890,7 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
         mut pos: FuncCursor,
         table_index: TableIndex,
         table: ir::Table,
-        sig_index: SignatureIndex,
+        sig_index: TypeIndex,
         sig_ref: ir::SigRef,
         callee: ir::Value,
         call_args: &[ir::Value],
@@ -1095,12 +1095,20 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
     fn translate_memory_copy(
         &mut self,
         mut pos: FuncCursor,
-        _index: MemoryIndex,
-        heap: ir::Heap,
+        _src_index: MemoryIndex,
+        src_heap: ir::Heap,
+        _dst_index: MemoryIndex,
+        dst_heap: ir::Heap,
         dst: ir::Value,
         src: ir::Value,
         len: ir::Value,
     ) -> WasmResult<()> {
+        if src_heap != dst_heap {
+            return Err(WasmError::Unsupported(
+                "memory_copy between different heaps is not supported".to_string(),
+            ));
+        }
+        let heap = src_heap;
         let heap_gv = pos.func.heaps[heap].base;
         let mem_base = pos.ins().global_value(POINTER_TYPE, heap_gv);
 
