@@ -1844,18 +1844,19 @@ class DictionaryBootstrapScope extends BootstrapScope {
   }
 }
 
-class LangpackBootstrapScope {
+class LangpackBootstrapScope extends BootstrapScope {
   install(data, reason) {}
   uninstall(data, reason) {}
+  update(data, reason) {}
 
   startup(data, reason) {
     // eslint-disable-next-line no-use-before-define
     this.langpack = new Langpack(data);
-    return this.langpack.startup();
+    return this.langpack.startup(this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
   }
 
   shutdown(data, reason) {
-    this.langpack.shutdown();
+    this.langpack.shutdown(this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
     this.langpack = null;
   }
 }

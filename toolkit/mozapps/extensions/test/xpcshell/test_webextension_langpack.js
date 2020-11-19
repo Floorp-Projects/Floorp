@@ -11,6 +11,12 @@ const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
 
+XPCOMUtils.defineLazyGetter(this, "resourceProtocol", () =>
+  Services.io
+    .getProtocolHandler("resource")
+    .QueryInterface(Ci.nsIResProtocolHandler)
+);
+
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
 const ID = "langpack-und@test.mozilla.org";
@@ -299,10 +305,52 @@ add_task(async function test_locale_registries_async() {
   await promiseShutdownManager();
 });
 
+add_task(async function test_langpack_app_shutdown() {
+  let langpackId = `langpack-und-${AppConstants.MOZ_BUILD_APP.replace(
+    "/",
+    "-"
+  )}`;
+  let check = (yes, msg) => {
+    equal(resourceProtocol.hasSubstitution(langpackId), yes, msg);
+  };
+
+  await promiseStartupManager();
+
+  check(false, "no initial resource substitution");
+
+  await Promise.all([
+    promiseLangpackStartup(),
+    AddonTestUtils.promiseInstallXPI(ADDONS.langpack_1),
+  ]);
+
+  check(true, "langpack resource available after startup");
+
+  await promiseShutdownManager();
+
+  check(true, "langpack resource available after app shutdown");
+
+  await promiseStartupManager();
+
+  let addon = await AddonManager.getAddonByID(ID);
+  await addon.uninstall();
+
+  check(false, "langpack resource removed during shutdown for uninstall");
+
+  await promiseShutdownManager();
+});
+
 add_task(async function test_amazing_disappearing_langpacks() {
   let check = yes => {
-    equal(L10nRegistry.getAvailableLocales().includes("und"), yes);
-    equal(Services.locale.availableLocales.includes("und"), yes);
+    equal(
+      L10nRegistry.getAvailableLocales().includes("und"),
+      yes,
+      "check L10nRegistry"
+    );
+    equal(
+      Services.locale.availableLocales.includes("und"),
+      yes,
+      "check availableLocales"
+    );
   };
 
   await promiseStartupManager();
