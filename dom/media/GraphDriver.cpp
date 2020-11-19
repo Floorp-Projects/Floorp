@@ -871,7 +871,7 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   if (mAudioStreamState.compareExchange(AudioStreamState::Pending,
                                         AudioStreamState::Running)) {
     LOG(LogLevel::Verbose, ("%p: AudioCallbackDriver %p First audio callback "
-                            "close the Fallabck driver",
+                            "close the Fallback driver",
                             Graph(), this));
   }
 
@@ -880,8 +880,8 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     // Wait for the fallback driver to stop. Wake it up so it can stop if it's
     // sleeping.
     LOG(LogLevel::Verbose,
-        ("%p: AudioCallbackDriver %p Wait the Fallback driver to stop", Graph(),
-         this));
+        ("%p: AudioCallbackDriver %p Waiting for the Fallback driver to stop",
+         Graph(), this));
     EnsureNextIteration();
     PodZero(aOutputBuffer, aFrames * mOutputChannelCount);
     return aFrames;
@@ -1073,11 +1073,11 @@ void AudioCallbackDriver::StateCallback(cubeb_state aState) {
   LOG(LogLevel::Debug,
       ("AudioCallbackDriver(%p) State: %s", this, StateToString(aState)));
 
-  // Clear the flag for the not running
-  // states: stopped, drained, error.
-  AudioStreamState streamState = mAudioStreamState.exchange(
-      aState == CUBEB_STATE_STARTED ? AudioStreamState::Pending
-                                    : AudioStreamState::None);
+  AudioStreamState streamState = mAudioStreamState;
+  if (aState != CUBEB_STATE_STARTED) {
+    // Clear the flag for the not running states: stopped, drained, error.
+    streamState = mAudioStreamState.exchange(AudioStreamState::None);
+  }
 
   if (aState == CUBEB_STATE_ERROR) {
     // About to hand over control of the graph.  Do not start a new driver if
