@@ -271,6 +271,13 @@ impl SecurityState {
     }
 
     pub fn get_has_prior_data(&self, data_type: u8) -> Result<bool, SecurityStateError> {
+        if data_type == nsICertStorage::DATA_TYPE_CRLITE_FILTER_FULL as u8 {
+            return Ok(self.crlite_filter.is_some());
+        }
+        if data_type == nsICertStorage::DATA_TYPE_CRLITE_FILTER_INCREMENTAL as u8 {
+            return Ok(self.crlite_stash.len() != 0);
+        }
+
         let env_and_store = match self.env_and_store.as_ref() {
             Some(env_and_store) => env_and_store,
             None => return Err(SecurityStateError::from("env and store not initialized?")),
