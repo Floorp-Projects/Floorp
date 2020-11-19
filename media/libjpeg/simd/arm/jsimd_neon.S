@@ -1,5 +1,5 @@
 /*
- * ARMv7 NEON optimizations for libjpeg-turbo
+ * Armv7 Neon optimizations for libjpeg-turbo
  *
  * Copyright (C) 2009-2011, Nokia Corporation and/or its subsidiary(-ies).
  *                          All Rights Reserved.
@@ -107,69 +107,69 @@ _\fname:
  * Uses some ideas from the comments in 'simd/jiss2int-64.asm'
  */
 #define REF_1D_IDCT(xrow0, xrow1, xrow2, xrow3, xrow4, xrow5, xrow6, xrow7) { \
-    DCTELEM row0, row1, row2, row3, row4, row5, row6, row7; \
-    JLONG   q1, q2, q3, q4, q5, q6, q7; \
-    JLONG   tmp11_plus_tmp2, tmp11_minus_tmp2; \
-    \
-    /* 1-D iDCT input data */ \
-    row0 = xrow0; \
-    row1 = xrow1; \
-    row2 = xrow2; \
-    row3 = xrow3; \
-    row4 = xrow4; \
-    row5 = xrow5; \
-    row6 = xrow6; \
-    row7 = xrow7; \
-    \
-    q5 = row7 + row3; \
-    q4 = row5 + row1; \
-    q6 = MULTIPLY(q5, FIX_1_175875602_MINUS_1_961570560) + \
-         MULTIPLY(q4, FIX_1_175875602); \
-    q7 = MULTIPLY(q5, FIX_1_175875602) + \
-         MULTIPLY(q4, FIX_1_175875602_MINUS_0_390180644); \
-    q2 = MULTIPLY(row2, FIX_0_541196100) + \
-         MULTIPLY(row6, FIX_0_541196100_MINUS_1_847759065); \
-    q4 = q6; \
-    q3 = ((JLONG)row0 - (JLONG)row4) << 13; \
-    q6 += MULTIPLY(row5, -FIX_2_562915447) + \
-          MULTIPLY(row3, FIX_3_072711026_MINUS_2_562915447); \
-    /* now we can use q1 (reloadable constants have been used up) */ \
-    q1 = q3 + q2; \
-    q4 += MULTIPLY(row7, FIX_0_298631336_MINUS_0_899976223) + \
-          MULTIPLY(row1, -FIX_0_899976223); \
-    q5 = q7; \
-    q1 = q1 + q6; \
-    q7 += MULTIPLY(row7, -FIX_0_899976223) + \
-          MULTIPLY(row1, FIX_1_501321110_MINUS_0_899976223); \
-    \
-    /* (tmp11 + tmp2) has been calculated (out_row1 before descale) */ \
-    tmp11_plus_tmp2 = q1; \
-    row1 = 0; \
-    \
-    q1 = q1 - q6; \
-    q5 += MULTIPLY(row5, FIX_2_053119869_MINUS_2_562915447) + \
-          MULTIPLY(row3, -FIX_2_562915447); \
-    q1 = q1 - q6; \
-    q6 = MULTIPLY(row2, FIX_0_541196100_PLUS_0_765366865) + \
-         MULTIPLY(row6, FIX_0_541196100); \
-    q3 = q3 - q2; \
-    \
-    /* (tmp11 - tmp2) has been calculated (out_row6 before descale) */ \
-    tmp11_minus_tmp2 = q1; \
-    \
-    q1 = ((JLONG)row0 + (JLONG)row4) << 13; \
-    q2 = q1 + q6; \
-    q1 = q1 - q6; \
-    \
-    /* pick up the results */ \
-    tmp0  = q4; \
-    tmp1  = q5; \
-    tmp2  = (tmp11_plus_tmp2 - tmp11_minus_tmp2) / 2; \
-    tmp3  = q7; \
-    tmp10 = q2; \
-    tmp11 = (tmp11_plus_tmp2 + tmp11_minus_tmp2) / 2; \
-    tmp12 = q3; \
-    tmp13 = q1; \
+  DCTELEM row0, row1, row2, row3, row4, row5, row6, row7; \
+  JLONG   q1, q2, q3, q4, q5, q6, q7; \
+  JLONG   tmp11_plus_tmp2, tmp11_minus_tmp2; \
+  \
+  /* 1-D iDCT input data */ \
+  row0 = xrow0; \
+  row1 = xrow1; \
+  row2 = xrow2; \
+  row3 = xrow3; \
+  row4 = xrow4; \
+  row5 = xrow5; \
+  row6 = xrow6; \
+  row7 = xrow7; \
+  \
+  q5 = row7 + row3; \
+  q4 = row5 + row1; \
+  q6 = MULTIPLY(q5, FIX_1_175875602_MINUS_1_961570560) + \
+       MULTIPLY(q4, FIX_1_175875602); \
+  q7 = MULTIPLY(q5, FIX_1_175875602) + \
+       MULTIPLY(q4, FIX_1_175875602_MINUS_0_390180644); \
+  q2 = MULTIPLY(row2, FIX_0_541196100) + \
+       MULTIPLY(row6, FIX_0_541196100_MINUS_1_847759065); \
+  q4 = q6; \
+  q3 = ((JLONG)row0 - (JLONG)row4) << 13; \
+  q6 += MULTIPLY(row5, -FIX_2_562915447) + \
+        MULTIPLY(row3, FIX_3_072711026_MINUS_2_562915447); \
+  /* now we can use q1 (reloadable constants have been used up) */ \
+  q1 = q3 + q2; \
+  q4 += MULTIPLY(row7, FIX_0_298631336_MINUS_0_899976223) + \
+        MULTIPLY(row1, -FIX_0_899976223); \
+  q5 = q7; \
+  q1 = q1 + q6; \
+  q7 += MULTIPLY(row7, -FIX_0_899976223) + \
+        MULTIPLY(row1, FIX_1_501321110_MINUS_0_899976223); \
+  \
+  /* (tmp11 + tmp2) has been calculated (out_row1 before descale) */ \
+  tmp11_plus_tmp2 = q1; \
+  row1 = 0; \
+  \
+  q1 = q1 - q6; \
+  q5 += MULTIPLY(row5, FIX_2_053119869_MINUS_2_562915447) + \
+        MULTIPLY(row3, -FIX_2_562915447); \
+  q1 = q1 - q6; \
+  q6 = MULTIPLY(row2, FIX_0_541196100_PLUS_0_765366865) + \
+       MULTIPLY(row6, FIX_0_541196100); \
+  q3 = q3 - q2; \
+  \
+  /* (tmp11 - tmp2) has been calculated (out_row6 before descale) */ \
+  tmp11_minus_tmp2 = q1; \
+  \
+  q1 = ((JLONG)row0 + (JLONG)row4) << 13; \
+  q2 = q1 + q6; \
+  q1 = q1 - q6; \
+  \
+  /* pick up the results */ \
+  tmp0  = q4; \
+  tmp1  = q5; \
+  tmp2  = (tmp11_plus_tmp2 - tmp11_minus_tmp2) / 2; \
+  tmp3  = q7; \
+  tmp10 = q2; \
+  tmp11 = (tmp11_plus_tmp2 + tmp11_minus_tmp2) / 2; \
+  tmp12 = q3; \
+  tmp13 = q1; \
 }
 
 #define XFIX_0_899976223                    d0[0]
@@ -229,7 +229,7 @@ asm_function jsimd_idct_islow_neon
     ROW7L           .req d30
     ROW7R           .req d31
 
-    /* Load and dequantize coefficients into NEON registers
+    /* Load and dequantize coefficients into Neon registers
      * with the following allocation:
      *       0 1 2 3 | 4 5 6 7
      *      ---------+--------
@@ -261,7 +261,7 @@ asm_function jsimd_idct_islow_neon
     vld1.16         {d0, d1, d2, d3}, [ip, :128]  /* load constants */
     add             ip, ip, #16
     vmul.s16        q15, q15, q3
-    vpush           {d8-d15}                      /* save NEON registers */
+    vpush           {d8 - d15}                    /* save Neon registers */
     /* 1-D IDCT, pass 1, left 4x8 half */
     vadd.s16        d4, ROW7L, ROW3L
     vadd.s16        d5, ROW5L, ROW1L
@@ -507,7 +507,7 @@ asm_function jsimd_idct_islow_neon
     vqrshrn.s16     d17, q9, #2
     vqrshrn.s16     d18, q10, #2
     vqrshrn.s16     d19, q11, #2
-    vpop            {d8-d15}                      /* restore NEON registers */
+    vpop            {d8 - d15}                    /* restore Neon registers */
     vqrshrn.s16     d20, q12, #2
       /* Transpose the final 8-bit samples and do signed->unsigned conversion */
       vtrn.16         q8, q9
@@ -688,7 +688,7 @@ asm_function jsimd_idct_islow_neon
  * function from jidctfst.c
  *
  * Normally 1-D AAN DCT needs 5 multiplications and 29 additions.
- * But in ARM NEON case some extra additions are required because VQDMULH
+ * But in Arm Neon case some extra additions are required because VQDMULH
  * instruction can't handle the constants larger than 1. So the expressions
  * like "x * 1.082392200" have to be converted to "x * 0.082392200 + x",
  * which introduces an extra addition. Overall, there are 6 extra additions
@@ -718,7 +718,7 @@ asm_function jsimd_idct_ifast_neon
     TMP3            .req r2
     TMP4            .req ip
 
-    /* Load and dequantize coefficients into NEON registers
+    /* Load and dequantize coefficients into Neon registers
      * with the following allocation:
      *       0 1 2 3 | 4 5 6 7
      *      ---------+--------
@@ -749,7 +749,7 @@ asm_function jsimd_idct_ifast_neon
     vmul.s16        q13, q13, q1
     vld1.16         {d0}, [ip, :64]  /* load constants */
     vmul.s16        q15, q15, q3
-    vpush           {d8-d13}         /* save NEON registers */
+    vpush           {d8 - d13}       /* save Neon registers */
     /* 1-D IDCT, pass 1 */
     vsub.s16        q2, q10, q14
     vadd.s16        q14, q10, q14
@@ -842,7 +842,7 @@ asm_function jsimd_idct_ifast_neon
     vadd.s16        q14, q5, q3
     vsub.s16        q9, q5, q3
     vsub.s16        q13, q10, q2
-    vpop            {d8-d13}      /* restore NEON registers */
+    vpop            {d8 - d13}    /* restore Neon registers */
     vadd.s16        q10, q10, q2
     vsub.s16        q11, q12, q1
     vadd.s16        q12, q12, q1
@@ -913,7 +913,7 @@ asm_function jsimd_idct_ifast_neon
  *
  * NOTE: jpeg-8 has an improved implementation of 4x4 inverse-DCT, which
  *       requires much less arithmetic operations and hence should be faster.
- *       The primary purpose of this particular NEON optimized function is
+ *       The primary purpose of this particular Neon optimized function is
  *       bit exact compatibility with jpeg-6b.
  *
  * TODO: a bit better instructions scheduling can be achieved by expanding
@@ -1010,13 +1010,13 @@ asm_function jsimd_idct_4x4_neon
     TMP3            .req r2
     TMP4            .req ip
 
-    vpush           {d8-d15}
+    vpush           {d8 - d15}
 
     /* Load constants (d3 is just used for padding) */
     adr             TMP4, jsimd_idct_4x4_neon_consts
     vld1.16         {d0, d1, d2, d3}, [TMP4, :128]
 
-    /* Load all COEF_BLOCK into NEON registers with the following allocation:
+    /* Load all COEF_BLOCK into Neon registers with the following allocation:
      *       0 1 2 3 | 4 5 6 7
      *      ---------+--------
      *   0 | d4      | d5
@@ -1099,7 +1099,7 @@ asm_function jsimd_idct_4x4_neon
     vst1.8          {d27[7]}, [TMP4]!
 #endif
 
-    vpop            {d8-d15}
+    vpop            {d8 - d15}
     bx              lr
 
     .unreq          DCT_TABLE
@@ -1126,7 +1126,7 @@ asm_function jsimd_idct_4x4_neon
  *
  * NOTE: jpeg-8 has an improved implementation of 2x2 inverse-DCT, which
  *       requires much less arithmetic operations and hence should be faster.
- *       The primary purpose of this particular NEON optimized function is
+ *       The primary purpose of this particular Neon optimized function is
  *       bit exact compatibility with jpeg-6b.
  */
 
@@ -1167,13 +1167,13 @@ asm_function jsimd_idct_2x2_neon
     TMP1            .req r0
     TMP2            .req ip
 
-    vpush           {d8-d15}
+    vpush           {d8 - d15}
 
     /* Load constants */
     adr             TMP2, jsimd_idct_2x2_neon_consts
     vld1.16         {d0}, [TMP2, :64]
 
-    /* Load all COEF_BLOCK into NEON registers with the following allocation:
+    /* Load all COEF_BLOCK into Neon registers with the following allocation:
      *       0 1 2 3 | 4 5 6 7
      *      ---------+--------
      *   0 | d4      | d5
@@ -1254,7 +1254,7 @@ asm_function jsimd_idct_2x2_neon
     vst1.8          {d26[1]}, [TMP2]!
     vst1.8          {d27[5]}, [TMP2]!
 
-    vpop            {d8-d15}
+    vpop            {d8 - d15}
     bx              lr
 
     .unreq          DCT_TABLE
@@ -1499,7 +1499,7 @@ asm_function jsimd_ycc_\colorid\()_convert_neon
     adr             ip, jsimd_ycc_\colorid\()_neon_consts
     vld1.16         {d0, d1, d2, d3}, [ip, :128]
 
-    /* Save ARM registers and handle input arguments */
+    /* Save Arm registers and handle input arguments */
     push            {r4, r5, r6, r7, r8, r9, r10, lr}
     ldr             NUM_ROWS, [sp, #(4 * 8)]
     ldr             INPUT_BUF0, [INPUT_BUF]
@@ -1507,8 +1507,8 @@ asm_function jsimd_ycc_\colorid\()_convert_neon
     ldr             INPUT_BUF2, [INPUT_BUF, #8]
     .unreq          INPUT_BUF
 
-    /* Save NEON registers */
-    vpush           {d8-d15}
+    /* Save Neon registers */
+    vpush           {d8 - d15}
 
     /* Initially set d10, d11, d12, d13 to 0xFF */
     vmov.u8         q5, #255
@@ -1571,7 +1571,7 @@ asm_function jsimd_ycc_\colorid\()_convert_neon
     bgt             0b
 9:
     /* Restore all registers and return */
-    vpop            {d8-d15}
+    vpop            {d8 - d15}
     pop             {r4, r5, r6, r7, r8, r9, r10, pc}
 
     .unreq          OUTPUT_WIDTH
@@ -1814,7 +1814,7 @@ asm_function jsimd_\colorid\()_ycc_convert_neon
     adr             ip, jsimd_\colorid\()_ycc_neon_consts
     vld1.16         {d0, d1, d2, d3}, [ip, :128]
 
-    /* Save ARM registers and handle input arguments */
+    /* Save Arm registers and handle input arguments */
     push            {r4, r5, r6, r7, r8, r9, r10, lr}
     ldr             NUM_ROWS, [sp, #(4 * 8)]
     ldr             OUTPUT_BUF0, [OUTPUT_BUF]
@@ -1822,8 +1822,8 @@ asm_function jsimd_\colorid\()_ycc_convert_neon
     ldr             OUTPUT_BUF2, [OUTPUT_BUF, #8]
     .unreq          OUTPUT_BUF
 
-    /* Save NEON registers */
-    vpush           {d8-d15}
+    /* Save Neon registers */
+    vpush           {d8 - d15}
 
     /* Outer loop over scanlines */
     cmp             NUM_ROWS, #1
@@ -1882,7 +1882,7 @@ asm_function jsimd_\colorid\()_ycc_convert_neon
     bgt             0b
 9:
     /* Restore all registers and return */
-    vpop            {d8-d15}
+    vpop            {d8 - d15}
     pop             {r4, r5, r6, r7, r8, r9, r10, pc}
 
     .unreq          OUTPUT_WIDTH
@@ -2011,13 +2011,13 @@ asm_function jsimd_fdct_ifast_neon
     DATA            .req r0
     TMP             .req ip
 
-    vpush           {d8-d15}
+    vpush           {d8 - d15}
 
     /* Load constants */
     adr             TMP, jsimd_fdct_ifast_neon_consts
     vld1.16         {d0}, [TMP, :64]
 
-    /* Load all DATA into NEON registers with the following allocation:
+    /* Load all DATA into Neon registers with the following allocation:
      *       0 1 2 3 | 4 5 6 7
      *      ---------+--------
      *   0 | d16     | d17    | q8
@@ -2096,7 +2096,7 @@ asm_function jsimd_fdct_ifast_neon
     vst1.16         {d24, d25, d26, d27}, [DATA, :128]!
     vst1.16         {d28, d29, d30, d31}, [DATA, :128]
 
-    vpop            {d8-d15}
+    vpop            {d8 - d15}
     bx              lr
 
     .unreq          DATA
@@ -2112,8 +2112,8 @@ asm_function jsimd_fdct_ifast_neon
  *
  * Note: the code uses 2 stage pipelining in order to improve instructions
  *       scheduling and eliminate stalls (this provides ~15% better
- *       performance for this function on both ARM Cortex-A8 and
- *       ARM Cortex-A9 when compared to the non-pipelined variant).
+ *       performance for this function on both Arm Cortex-A8 and
+ *       Arm Cortex-A9 when compared to the non-pipelined variant).
  *       The instructions which belong to the second stage use different
  *       indentation for better readiability.
  */
@@ -2404,7 +2404,7 @@ asm_function jsimd_h2v1_fancy_upsample_neon
     TMP               .req lr
 
     push            {r4, r5, r6, lr}
-    vpush           {d8-d15}
+    vpush           {d8 - d15}
 
     ldr             OUTPUT_DATA, [OUTPUT_DATA_PTR]
     cmp             MAX_V_SAMP_FACTOR, #0
@@ -2422,7 +2422,7 @@ asm_function jsimd_h2v1_fancy_upsample_neon
     bgt             11b
 
 99:
-    vpop            {d8-d15}
+    vpop            {d8 - d15}
     pop             {r4, r5, r6, pc}
 
     .unreq          MAX_V_SAMP_FACTOR

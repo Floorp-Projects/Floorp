@@ -13,7 +13,7 @@
  *
  * This file contains the interface between the "normal" portions
  * of the library and the SIMD implementations when running on a
- * 32-bit ARM architecture.
+ * 32-bit Arm architecture.
  */
 
 #define JPEG_INTERNALS
@@ -118,7 +118,7 @@ init_simd(void)
 #if defined(__ARM_NEON__)
   simd_support |= JSIMD_NEON;
 #elif defined(__linux__) || defined(ANDROID) || defined(__ANDROID__)
-  /* We still have a chance to use NEON regardless of globally used
+  /* We still have a chance to use Neon regardless of globally used
    * -mcpu/-mfpu options passed to gcc by performing runtime detection via
    * /proc/cpuinfo parsing on linux/android */
   while (!parse_proc_cpuinfo(bufsize)) {

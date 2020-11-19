@@ -1,7 +1,7 @@
 /*
  * Loongson MMI optimizations for libjpeg-turbo
  *
- * Copyright (C) 2014-2015, 2018, D. R. Commander.  All Rights Reserved.
+ * Copyright (C) 2014-2015, 2018, 2020, D. R. Commander.  All Rights Reserved.
  * Copyright (C) 2016-2017, Loongson Technology Corporation Limited, BeiJing.
  *                          All Rights Reserved.
  * Authors:  ZhuChen     <zhuchen@loongson.cn>
@@ -28,7 +28,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-/* SLOW INTEGER INVERSE DCT */
+/* ACCUATE INTEGER INVERSE DCT */
 
 #include "jsimd_mmi.h"
 
