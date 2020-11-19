@@ -1,22 +1,4 @@
 /**
- * Create a new tab and load the content from a given window (optional), if
- * caller doesn't provide any window, then we would create tab in the current
- * window.
- *
- * @param {string} url
- *        The URL that tab is going to load
- * @param {window} inputWindow [optional]
- *        The window that uses to create a tab
- * @return {tab}
- *         Return a loaded tab created from the given window
- */
-async function createTabAndLoad(url, inputWindow = null) {
-  const browser = inputWindow ? inputWindow.gBrowser : window.gBrowser;
-  let tab = await BrowserTestUtils.openNewForegroundTab(browser, url);
-  return tab;
-}
-
-/**
  * This function would create a new foreround tab and load the url for it. In
  * addition, instead of returning a tab element, we return a tab wrapper that
  * helps us to automatically detect if the media controller of that tab
