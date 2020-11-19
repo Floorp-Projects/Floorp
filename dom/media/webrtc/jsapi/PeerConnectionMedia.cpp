@@ -629,6 +629,9 @@ void PeerConnectionMedia::SelfDestruct_m() {
 
   ASSERT_ON_THREAD(mMainThread);
 
+  mTransportHandler->RemoveTransportsExcept(std::set<std::string>());
+  mTransportHandler = nullptr;
+
   mMainThread = nullptr;
 
   // Final self-destruct.
@@ -641,9 +644,6 @@ void PeerConnectionMedia::ShutdownMediaTransport_s() {
   CSFLogDebug(LOGTAG, "%s: ", __FUNCTION__);
 
   disconnect_all();
-
-  mTransportHandler->RemoveTransportsExcept(std::set<std::string>());
-  mTransportHandler = nullptr;
 
   // we're holding a ref to 'this' that's released by SelfDestruct_m
   mMainThread->Dispatch(
