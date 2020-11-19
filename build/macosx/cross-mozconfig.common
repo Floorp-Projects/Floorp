@@ -23,7 +23,6 @@ export CC="$MOZ_FETCHES_DIR/clang/bin/clang"
 export CXX="$MOZ_FETCHES_DIR/clang/bin/clang++"
 export CFLAGS="$CFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
 export CXXFLAGS="$CXXFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
-export BINDGEN_CFLAGS="-isysroot $CROSS_SYSROOT"
 export DSYMUTIL=$topsrcdir/build/macosx/llvm-dsymutil
 mk_add_options "export REAL_DSYMUTIL=$MOZ_FETCHES_DIR/llvm-dsymutil/bin/dsymutil"
 export MKFSHFS=$MOZ_FETCHES_DIR/hfsplus-tools/newfs_hfs
