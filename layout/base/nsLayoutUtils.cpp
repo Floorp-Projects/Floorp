@@ -2044,7 +2044,7 @@ Matrix4x4Flagged nsLayoutUtils::GetTransformToAncestor(
   return ctm;
 }
 
-gfxSize nsLayoutUtils::GetTransformToAncestorScale(nsIFrame* aFrame) {
+gfxSize nsLayoutUtils::GetTransformToAncestorScale(const nsIFrame* aFrame) {
   Matrix4x4Flagged transform = GetTransformToAncestor(
       RelativeTo{aFrame},
       RelativeTo{nsLayoutUtils::GetDisplayRootFrame(aFrame)});
@@ -7822,7 +7822,7 @@ nsRect nsLayoutUtils::GetBoxShadowRectForFrame(nsIFrame* aFrame,
 
 /* static */
 bool nsLayoutUtils::GetContentViewerSize(
-    nsPresContext* aPresContext, LayoutDeviceIntSize& aOutSize,
+    const nsPresContext* aPresContext, LayoutDeviceIntSize& aOutSize,
     SubtractDynamicToolbar aSubtractDynamicToolbar) {
   nsCOMPtr<nsIDocShell> docShell = aPresContext->GetDocShell();
   if (!docShell) {
@@ -7856,7 +7856,7 @@ bool nsLayoutUtils::GetContentViewerSize(
 }
 
 bool nsLayoutUtils::UpdateCompositionBoundsForRCDRSF(
-    ParentLayerRect& aCompBounds, nsPresContext* aPresContext) {
+    ParentLayerRect& aCompBounds, const nsPresContext* aPresContext) {
   SubtractDynamicToolbar shouldSubtractDynamicToolbar =
       SubtractDynamicToolbar::Yes;
 
@@ -7892,7 +7892,7 @@ bool nsLayoutUtils::UpdateCompositionBoundsForRCDRSF(
 
 /* static */
 nsMargin nsLayoutUtils::ScrollbarAreaToExcludeFromCompositionBoundsFor(
-    nsIFrame* aScrollFrame) {
+    const nsIFrame* aScrollFrame) {
   if (!aScrollFrame || !aScrollFrame->GetScrollTargetFrame()) {
     return nsMargin();
   }
@@ -7958,7 +7958,7 @@ nsSize nsLayoutUtils::CalculateCompositionSizeForFrame(
 
 /* static */
 CSSSize nsLayoutUtils::CalculateRootCompositionSize(
-    nsIFrame* aFrame, bool aIsRootContentDocRootScrollFrame,
+    const nsIFrame* aFrame, bool aIsRootContentDocRootScrollFrame,
     const FrameMetrics& aMetrics) {
   if (aIsRootContentDocRootScrollFrame) {
     return ViewAs<LayerPixel>(
@@ -8019,7 +8019,7 @@ CSSSize nsLayoutUtils::CalculateRootCompositionSize(
 
 /* static */
 nsRect nsLayoutUtils::CalculateScrollableRectForFrame(
-    nsIScrollableFrame* aScrollableFrame, nsIFrame* aRootFrame) {
+    const nsIScrollableFrame* aScrollableFrame, const nsIFrame* aRootFrame) {
   nsRect contentBounds;
   if (aScrollableFrame) {
     contentBounds = aScrollableFrame->GetScrollRange();
@@ -9543,7 +9543,7 @@ nsSize nsLayoutUtils::ExpandHeightForViewportUnits(nsPresContext* aPresContext,
 
 template <typename SizeType>
 /* static */ SizeType ExpandHeightForDynamicToolbarImpl(
-    nsPresContext* aPresContext, const SizeType& aSize) {
+    const nsPresContext* aPresContext, const SizeType& aSize) {
   RefPtr<MobileViewportManager> MVM =
       aPresContext->PresShell()->GetMobileViewportManager();
   MOZ_ASSERT(MVM);
@@ -9560,10 +9560,10 @@ template <typename SizeType>
 }
 
 CSSSize nsLayoutUtils::ExpandHeightForDynamicToolbar(
-    nsPresContext* aPresContext, const CSSSize& aSize) {
+    const nsPresContext* aPresContext, const CSSSize& aSize) {
   return ExpandHeightForDynamicToolbarImpl(aPresContext, aSize);
 }
-nsSize nsLayoutUtils::ExpandHeightForDynamicToolbar(nsPresContext* aPresContext,
-                                                    const nsSize& aSize) {
+nsSize nsLayoutUtils::ExpandHeightForDynamicToolbar(
+    const nsPresContext* aPresContext, const nsSize& aSize) {
   return ExpandHeightForDynamicToolbarImpl(aPresContext, aSize);
 }
