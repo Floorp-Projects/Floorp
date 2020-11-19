@@ -77,3 +77,6 @@ GN_DIRS["../../../../third_party/libwebrtc/webrtc"].sandbox_vars[
 GN_DIRS[
     "../../../../third_party/libwebrtc/webrtc"
 ].non_unified_sources += webrtc_non_unified_sources
+GN_DIRS["../../../../third_party/libwebrtc/webrtc"].write_mozbuild_vars[
+    "INCLUDE_TK_CFLAGS_DIRS"
+] = ["third_party/libwebrtc/webrtc/modules/desktop_capture/desktop_capture_generic_gn"]
