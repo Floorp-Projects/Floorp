@@ -271,6 +271,12 @@ static inline PackedRGBA8 sampleYUV(S0 sampler0, vec2 uv0, int layer0,
       auto planar = textureLinearPlanarRG8(sampler1, i1, layer1);
       return convertYUV(colorSpace, y, lowHalf(planar.rg), highHalf(planar.rg));
     }
+    case TextureFormat::RGBA8: {
+      assert(sampler0->format == TextureFormat::R8);
+      auto y = textureLinearUnpackedR8(sampler0, i0, layer0);
+      auto planar = textureLinearPlanarRGBA8(sampler1, i1, layer1);
+      return convertYUV(colorSpace, y, lowHalf(planar.ba), highHalf(planar.rg));
+    }
     default:
       assert(false);
       return PackedRGBA8(0);
