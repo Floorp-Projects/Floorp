@@ -17,16 +17,26 @@ add_task(
     );
 
     const environment = await packet.frame.getEnvironment();
-    const grip = environment.bindings.variables.p;
+    const grip = environment.bindings.variables.p.value;
 
-    ok(grip.value.preview);
-    equal(grip.value.class, "Promise");
-    equal(grip.value.promiseState.state, "fulfilled");
+    ok(grip.preview);
+    equal(grip.class, "Promise");
+    equal(grip.preview.ownProperties["<state>"], "fulfilled");
     equal(
-      grip.value.promiseState.value.actorID,
+      grip.preview.ownProperties["<value>"].actorID,
       packet.frame.arguments[0].actorID,
-      "The promise's fulfilled state value should be the same value passed " +
-        "to the then function"
+      "The promise's fulfilled state value in the preview should be the same " +
+        "value passed to the then function"
+    );
+
+    const objClient = threadFront.pauseGrip(grip);
+    const { promiseState } = await objClient.getPromiseState();
+    equal(promiseState.state, "fulfilled");
+    equal(
+      promiseState.value.getGrip().actorID,
+      packet.frame.arguments[0].actorID,
+      "The promise's fulfilled state value in getPromiseState() should be " +
+        "the same value passed to the then function"
     );
   })
 );
