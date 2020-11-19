@@ -27,6 +27,9 @@ elif "MOZILLABUILD" in os.environ:
     _current_shell = os.environ["MOZILLABUILD"] + "/msys/bin/sh.exe"
 elif "COMSPEC" in os.environ:
     _current_shell = os.environ["COMSPEC"]
+elif sys.platform != "win32":
+    # Fall back to a standard shell.
+    _current_shell = "/bin/sh"
 else:
     raise Exception("Could not detect environment shell!")
 
