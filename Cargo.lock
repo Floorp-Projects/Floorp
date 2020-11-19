@@ -220,6 +220,7 @@ dependencies = [
  "env_logger",
  "log",
  "smallvec",
+ "wasmparser 0.67.0",
 ]
 
 [[package]]
@@ -774,22 +775,22 @@ dependencies = [
 
 [[package]]
 name = "cranelift-bforest"
-version = "0.67.0"
-source = "git+https://github.com/bytecodealliance/wasmtime?rev=e22e2c3722f2fbccd3c8d3230119fa04c332c69c#e22e2c3722f2fbccd3c8d3230119fa04c332c69c"
+version = "0.68.0"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?branch=firefox85#dcc52ba3f69d3de7cdbd787b936825d9c61e3c27"
 dependencies = [
- "cranelift-entity 0.67.0",
+ "cranelift-entity 0.68.0",
 ]
 
 [[package]]
 name = "cranelift-codegen"
-version = "0.67.0"
-source = "git+https://github.com/bytecodealliance/wasmtime?rev=e22e2c3722f2fbccd3c8d3230119fa04c332c69c#e22e2c3722f2fbccd3c8d3230119fa04c332c69c"
+version = "0.68.0"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?branch=firefox85#dcc52ba3f69d3de7cdbd787b936825d9c61e3c27"
 dependencies = [
  "byteorder",
  "cranelift-bforest",
  "cranelift-codegen-meta",
  "cranelift-codegen-shared",
- "cranelift-entity 0.67.0",
+ "cranelift-entity 0.68.0",
  "log",
  "regalloc",
  "smallvec",
@@ -799,17 +800,17 @@ dependencies = [
 
 [[package]]
 name = "cranelift-codegen-meta"
-version = "0.67.0"
-source = "git+https://github.com/bytecodealliance/wasmtime?rev=e22e2c3722f2fbccd3c8d3230119fa04c332c69c#e22e2c3722f2fbccd3c8d3230119fa04c332c69c"
+version = "0.68.0"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?branch=firefox85#dcc52ba3f69d3de7cdbd787b936825d9c61e3c27"
 dependencies = [
  "cranelift-codegen-shared",
- "cranelift-entity 0.67.0",
+ "cranelift-entity 0.68.0",
 ]
 
 [[package]]
 name = "cranelift-codegen-shared"
-version = "0.67.0"
-source = "git+https://github.com/bytecodealliance/wasmtime?rev=e22e2c3722f2fbccd3c8d3230119fa04c332c69c#e22e2c3722f2fbccd3c8d3230119fa04c332c69c"
+version = "0.68.0"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?branch=firefox85#dcc52ba3f69d3de7cdbd787b936825d9c61e3c27"
 
 [[package]]
 name = "cranelift-entity"
@@ -818,13 +819,13 @@ source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=477d8fc53a6
 
 [[package]]
 name = "cranelift-entity"
-version = "0.67.0"
-source = "git+https://github.com/bytecodealliance/wasmtime?rev=e22e2c3722f2fbccd3c8d3230119fa04c332c69c#e22e2c3722f2fbccd3c8d3230119fa04c332c69c"
+version = "0.68.0"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?branch=firefox85#dcc52ba3f69d3de7cdbd787b936825d9c61e3c27"
 
 [[package]]
 name = "cranelift-frontend"
-version = "0.67.0"
-source = "git+https://github.com/bytecodealliance/wasmtime?rev=e22e2c3722f2fbccd3c8d3230119fa04c332c69c#e22e2c3722f2fbccd3c8d3230119fa04c332c69c"
+version = "0.68.0"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?branch=firefox85#dcc52ba3f69d3de7cdbd787b936825d9c61e3c27"
 dependencies = [
  "cranelift-codegen",
  "log",
@@ -834,16 +835,17 @@ dependencies = [
 
 [[package]]
 name = "cranelift-wasm"
-version = "0.67.0"
-source = "git+https://github.com/bytecodealliance/wasmtime?rev=e22e2c3722f2fbccd3c8d3230119fa04c332c69c#e22e2c3722f2fbccd3c8d3230119fa04c332c69c"
+version = "0.68.0"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?branch=firefox85#dcc52ba3f69d3de7cdbd787b936825d9c61e3c27"
 dependencies = [
  "cranelift-codegen",
- "cranelift-entity 0.67.0",
+ "cranelift-entity 0.68.0",
  "cranelift-frontend",
  "itertools 0.9.0",
  "log",
+ "smallvec",
  "thiserror",
- "wasmparser 0.63.0",
+ "wasmparser 0.67.0",
 ]
 
 [[package]]
@@ -4194,9 +4196,9 @@ dependencies = [
 
 [[package]]
 name = "regalloc"
-version = "0.0.30"
+version = "0.0.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2041c2d34f6ff346d6f428974f03d8bf12679b0c816bb640dc5eb1d48848d8d1"
+checksum = "571f7f397d61c4755285cd37853fe8e03271c243424a907415909379659381c5"
 dependencies = [
  "log",
  "rustc-hash",
@@ -5678,9 +5680,9 @@ checksum = "073da89bf1c84db000dd68ce660c1b4a08e3a2d28fd1e3394ab9e7abdde4a0f8"
 
 [[package]]
 name = "wasmparser"
-version = "0.63.0"
+version = "0.67.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57da5d7300428d75d8b3cdfb736e41ee6af8926d69c1de2f201a1a22f234b7b5"
+checksum = "9f091cf3849e5fe76a60255bff169277459f2201435bc583b6656880553f0ad0"
 
 [[package]]
 name = "wast"

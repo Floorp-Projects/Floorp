@@ -111,7 +111,7 @@
 use super::abi::*;
 use crate::binemit::StackMap;
 use crate::ir::types::*;
-use crate::ir::{ArgumentExtension, SourceLoc, StackSlot};
+use crate::ir::{ArgumentExtension, StackSlot};
 use crate::machinst::*;
 use crate::settings;
 use crate::CodegenResult;
@@ -215,6 +215,9 @@ pub trait ABIMachineSpec {
             _ => unreachable!(),
         }
     }
+
+    /// Returns required stack alignment in bytes.
+    fn stack_align(call_conv: isa::CallConv) -> u32;
 
     /// Process a list of parameters or return values and allocate them to registers
     /// and stack slots.
@@ -326,6 +329,7 @@ pub trait ABIMachineSpec {
         flags: &settings::Flags,
         clobbers: &Set<Writable<RealReg>>,
         fixed_frame_storage_size: u32,
+        outgoing_args_size: u32,
     ) -> (u64, SmallVec<[Self::I; 16]>);
 
     /// Generate a clobber-restore sequence. This sequence should perform the
@@ -336,6 +340,8 @@ pub trait ABIMachineSpec {
         call_conv: isa::CallConv,
         flags: &settings::Flags,
         clobbers: &Set<Writable<RealReg>>,
+        fixed_frame_storage_size: u32,
+        outgoing_args_size: u32,
     ) -> SmallVec<[Self::I; 16]>;
 
     /// Generate a call instruction/sequence. This method is provided one
@@ -344,9 +350,10 @@ pub trait ABIMachineSpec {
         dest: &CallDest,
         uses: Vec<Reg>,
         defs: Vec<Writable<Reg>>,
-        loc: SourceLoc,
         opcode: ir::Opcode,
         tmp: Writable<Reg>,
+        callee_conv: isa::CallConv,
+        callee_conv: isa::CallConv,
     ) -> SmallVec<[(InstIsSafepoint, Self::I); 2]>;
 
     /// Get the number of spillslots required for the given register-class and
@@ -359,8 +366,9 @@ pub trait ABIMachineSpec {
     /// Get the "nominal SP to FP" offset from an instruction-emission state.
     fn get_nominal_sp_to_fp(s: &<Self::I as MachInstEmit>::State) -> i64;
 
-    /// Get all caller-save registers.
-    fn get_caller_saves(call_conv: isa::CallConv) -> Vec<Writable<Reg>>;
+    /// Get all caller-save registers, that is, registers that we expect
+    /// not to be saved across a call to a callee with the given ABI.
+    fn get_regs_clobbered_by_call(call_conv_of_callee: isa::CallConv) -> Vec<Writable<Reg>>;
 }
 
 /// ABI information shared between body (callee) and caller.
@@ -428,10 +436,16 @@ pub struct ABICalleeImpl<M: ABIMachineSpec> {
     stackslots: Vec<u32>,
     /// Total stack size of all stackslots.
     stackslots_size: u32,
+    /// Stack size to be reserved for outgoing arguments.
+    outgoing_args_size: u32,
     /// Clobbered registers, from regalloc.
     clobbered: Set<Writable<RealReg>>,
     /// Total number of spillslots, from regalloc.
     spillslots: Option<usize>,
+    /// Storage allocated for the fixed part of the stack frame.  This is
+    /// usually the same as the total frame size below, except in the case
+    /// of the baldrdash calling convention.
+    fixed_frame_storage_size: u32,
     /// "Total frame size", as defined by "distance between FP and nominal SP".
     /// Some items are pushed below nominal SP, so the function may actually use
     /// more stack than this would otherwise imply. It is simply the initial
@@ -516,8 +530,10 @@ impl<M: ABIMachineSpec> ABICalleeImpl<M> {
             sig,
             stackslots,
             stackslots_size: stack_offset,
+            outgoing_args_size: 0,
             clobbered: Set::empty(),
             spillslots: None,
+            fixed_frame_storage_size: 0,
             total_frame_size: None,
             ret_area_ptr: None,
             call_conv,
@@ -678,8 +694,18 @@ impl<M: ABIMachineSpec> ABICallee for ABICalleeImpl<M> {
         }
     }
 
+    fn accumulate_outgoing_args_size(&mut self, size: u32) {
+        if size > self.outgoing_args_size {
+            self.outgoing_args_size = size;
+        }
+    }
+
     fn flags(&self) -> &settings::Flags {
         &self.flags
+    }
+
+    fn call_conv(&self) -> isa::CallConv {
+        self.sig.call_conv
     }
 
     fn liveins(&self) -> Set<RealReg> {
@@ -929,10 +955,8 @@ impl<M: ABIMachineSpec> ABICallee for ABICalleeImpl<M> {
             );
             total_stacksize += self.flags.baldrdash_prologue_words() as u32 * bytes;
         }
-        let mask = 2 * bytes - 1;
+        let mask = M::stack_align(self.call_conv) - 1;
         let total_stacksize = (total_stacksize + mask) & !mask; // 16-align the stack.
-
-        let mut fixed_frame_storage_size = 0;
 
         if !self.call_conv.extends_baldrdash() {
             // Leaf functions with zero stack don't need a stack check if one's
@@ -944,7 +968,7 @@ impl<M: ABIMachineSpec> ABICallee for ABICalleeImpl<M> {
                 }
             }
             if total_stacksize > 0 {
-                fixed_frame_storage_size += total_stacksize;
+                self.fixed_frame_storage_size += total_stacksize;
             }
         }
 
@@ -963,12 +987,14 @@ impl<M: ABIMachineSpec> ABICallee for ABICalleeImpl<M> {
             self.call_conv,
             &self.flags,
             &self.clobbered,
-            fixed_frame_storage_size,
+            self.fixed_frame_storage_size,
+            self.outgoing_args_size,
         );
         insts.extend(clobber_insts);
 
-        if clobber_size > 0 {
-            insts.push(M::gen_nominal_sp_adj(clobber_size as i32));
+        let sp_adj = self.outgoing_args_size as i32 + clobber_size as i32;
+        if sp_adj > 0 {
+            insts.push(M::gen_nominal_sp_adj(sp_adj));
         }
 
         self.total_frame_size = Some(total_stacksize);
@@ -983,6 +1009,8 @@ impl<M: ABIMachineSpec> ABICallee for ABICalleeImpl<M> {
             self.call_conv,
             &self.flags,
             &self.clobbered,
+            self.fixed_frame_storage_size,
+            self.outgoing_args_size,
         ));
 
         // N.B.: we do *not* emit a nominal SP adjustment here, because (i) there will be no
@@ -1027,6 +1055,18 @@ impl<M: ABIMachineSpec> ABICallee for ABICalleeImpl<M> {
         let ty = ty_from_ty_hint_or_reg_class::<M>(to_reg.to_reg().to_reg(), ty);
         self.load_spillslot(from_slot, ty, to_reg.map(|r| r.to_reg()))
     }
+
+    fn unwind_info_kind(&self) -> UnwindInfoKind {
+        match self.sig.call_conv {
+            #[cfg(feature = "unwind")]
+            isa::CallConv::Fast | isa::CallConv::Cold | isa::CallConv::SystemV => {
+                UnwindInfoKind::SystemV
+            }
+            #[cfg(feature = "unwind")]
+            isa::CallConv::WindowsFastcall => UnwindInfoKind::Windows,
+            _ => UnwindInfoKind::None,
+        }
+    }
 }
 
 fn abisig_to_uses_and_defs<M: ABIMachineSpec>(sig: &ABISig) -> (Vec<Reg>, Vec<Writable<Reg>>) {
@@ -1040,7 +1080,7 @@ fn abisig_to_uses_and_defs<M: ABIMachineSpec>(sig: &ABISig) -> (Vec<Reg>, Vec<Wr
     }
 
     // Compute defs: all retval regs, and all caller-save (clobbered) regs.
-    let mut defs = M::get_caller_saves(sig.call_conv);
+    let mut defs = M::get_regs_clobbered_by_call(sig.call_conv);
     for ret in &sig.rets {
         match ret {
             &ABIArg::Reg(reg, ..) => defs.push(Writable::from_reg(reg.to_reg())),
@@ -1061,10 +1101,10 @@ pub struct ABICallerImpl<M: ABIMachineSpec> {
     defs: Vec<Writable<Reg>>,
     /// Call destination.
     dest: CallDest,
-    /// Location of callsite.
-    loc: ir::SourceLoc,
-    /// Actuall call opcode; used to distinguish various types of calls.
+    /// Actual call opcode; used to distinguish various types of calls.
     opcode: ir::Opcode,
+    /// Caller's calling convention.
+    caller_conv: isa::CallConv,
 
     _mach: PhantomData<M>,
 }
@@ -1084,7 +1124,7 @@ impl<M: ABIMachineSpec> ABICallerImpl<M> {
         sig: &ir::Signature,
         extname: &ir::ExternalName,
         dist: RelocDistance,
-        loc: ir::SourceLoc,
+        caller_conv: isa::CallConv,
     ) -> CodegenResult<ABICallerImpl<M>> {
         let sig = ABISig::from_func_sig::<M>(sig)?;
         let (uses, defs) = abisig_to_uses_and_defs::<M>(&sig);
@@ -1093,8 +1133,8 @@ impl<M: ABIMachineSpec> ABICallerImpl<M> {
             uses,
             defs,
             dest: CallDest::ExtName(extname.clone(), dist),
-            loc,
             opcode: ir::Opcode::Call,
+            caller_conv,
             _mach: PhantomData,
         })
     }
@@ -1104,8 +1144,8 @@ impl<M: ABIMachineSpec> ABICallerImpl<M> {
     pub fn from_ptr(
         sig: &ir::Signature,
         ptr: Reg,
-        loc: ir::SourceLoc,
         opcode: ir::Opcode,
+        caller_conv: isa::CallConv,
     ) -> CodegenResult<ABICallerImpl<M>> {
         let sig = ABISig::from_func_sig::<M>(sig)?;
         let (uses, defs) = abisig_to_uses_and_defs::<M>(&sig);
@@ -1114,8 +1154,8 @@ impl<M: ABIMachineSpec> ABICallerImpl<M> {
             uses,
             defs,
             dest: CallDest::Reg(ptr),
-            loc,
             opcode,
+            caller_conv,
             _mach: PhantomData,
         })
     }
@@ -1145,6 +1185,11 @@ impl<M: ABIMachineSpec> ABICaller for ABICallerImpl<M> {
         } else {
             self.sig.args.len()
         }
+    }
+
+    fn accumulate_outgoing_args_size<C: LowerCtx<I = Self::I>>(&self, ctx: &mut C) {
+        let off = self.sig.stack_arg_space + self.sig.stack_ret_space;
+        ctx.abi().accumulate_outgoing_args_size(off as u32);
     }
 
     fn emit_stack_pre_adjust<C: LowerCtx<I = Self::I>>(&self, ctx: &mut C) {
@@ -1255,8 +1300,16 @@ impl<M: ABIMachineSpec> ABICaller for ABICallerImpl<M> {
             self.emit_copy_reg_to_arg(ctx, i, rd.to_reg());
         }
         let tmp = ctx.alloc_tmp(word_rc, word_type);
-        for (is_safepoint, inst) in
-            M::gen_call(&self.dest, uses, defs, self.loc, self.opcode, tmp).into_iter()
+        for (is_safepoint, inst) in M::gen_call(
+            &self.dest,
+            uses,
+            defs,
+            self.opcode,
+            tmp,
+            self.sig.call_conv,
+            self.caller_conv,
+        )
+        .into_iter()
         {
             match is_safepoint {
                 InstIsSafepoint::Yes => ctx.emit_safepoint(inst),

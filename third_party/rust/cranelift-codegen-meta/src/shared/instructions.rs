@@ -2193,6 +2193,24 @@ pub(crate) fn define(
         .operands_out(vec![s]),
     );
 
+    let a = &Operand::new("a", TxN);
+    let x = &Operand::new("x", Int);
+
+    ig.push(
+        Inst::new(
+            "vhigh_bits",
+            r#"
+        Reduce a vector to a scalar integer.
+
+        Return a scalar integer, consisting of the concatenation of the most significant bit
+        of each lane of ``a``.
+        "#,
+            &formats.unary,
+        )
+        .operands_in(vec![a])
+        .operands_out(vec![x]),
+    );
+
     let a = &Operand::new("a", &Int.as_bool());
     let Cond = &Operand::new("Cond", &imm.intcc);
     let x = &Operand::new("x", Int);
@@ -3559,6 +3577,22 @@ pub(crate) fn define(
         .operands_out(vec![a]),
     );
 
+    ig.push(
+        Inst::new(
+            "fmin_pseudo",
+            r#"
+        Floating point pseudo-minimum, propagating NaNs.  This behaves differently from ``fmin``.
+        See https://github.com/WebAssembly/simd/pull/122 for background.
+
+        The behaviour is defined as ``fmin_pseudo(a, b) = (b < a) ? b : a``, and the behaviour
+        for zero or NaN inputs follows from the behaviour of ``<`` with such inputs.
+        "#,
+            &formats.binary,
+        )
+        .operands_in(vec![x, y])
+        .operands_out(vec![a]),
+    );
+
     let a = &Operand::new("a", Float).with_doc("The larger of ``x`` and ``y``");
 
     ig.push(
@@ -3568,6 +3602,22 @@ pub(crate) fn define(
         Floating point maximum, propagating NaNs.
 
         If either operand is NaN, this returns a NaN.
+        "#,
+            &formats.binary,
+        )
+        .operands_in(vec![x, y])
+        .operands_out(vec![a]),
+    );
+
+    ig.push(
+        Inst::new(
+            "fmax_pseudo",
+            r#"
+        Floating point pseudo-maximum, propagating NaNs.  This behaves differently from ``fmax``.
+        See https://github.com/WebAssembly/simd/pull/122 for background.
+
+        The behaviour is defined as ``fmax_pseudo(a, b) = (a < b) ? b : a``, and the behaviour
+        for zero or NaN inputs follows from the behaviour of ``<`` with such inputs.
         "#,
             &formats.binary,
         )
@@ -3748,12 +3798,9 @@ pub(crate) fn define(
         Inst::new(
             "scalar_to_vector",
             r#"
-    Scalar To Vector -- move a value out of a scalar register and into a vector register; the
-    scalar will be moved to the lowest-order bits of the vector register. Note that this
-    instruction is intended as a low-level legalization instruction and frontends should prefer
-    insertlane; on certain architectures, scalar_to_vector may zero the highest-order bits for some
-    types (e.g. integers) but not for others (e.g. floats).
-    "#,
+            Copies a scalar value to a vector value.  The scalar is copied into the
+            least significant lane of the vector, and all other lanes will be zero.
+            "#,
             &formats.unary,
         )
         .operands_in(vec![s])
@@ -4025,6 +4072,41 @@ pub(crate) fn define(
             &formats.unary,
         )
         .operands_in(vec![x])
+        .operands_out(vec![a]),
+    );
+
+    let I16x8 = &TypeVar::new(
+        "I16x8",
+        "A SIMD vector type containing 8 integer lanes each 16 bits wide.",
+        TypeSetBuilder::new()
+            .ints(16..16)
+            .simd_lanes(8..8)
+            .includes_scalars(false)
+            .build(),
+    );
+
+    let x = &Operand::new("x", I16x8);
+    let y = &Operand::new("y", I16x8);
+    let a = &Operand::new("a", &I16x8.merge_lanes());
+
+    ig.push(
+        Inst::new(
+            "widening_pairwise_dot_product_s",
+            r#"
+        Takes corresponding elements in `x` and `y`, performs a sign-extending length-doubling
+        multiplication on them, then adds adjacent pairs of elements to form the result.  For
+        example, if the input vectors are `[x3, x2, x1, x0]` and `[y3, y2, y1, y0]`, it produces
+        the vector `[r1, r0]`, where `r1 = sx(x3) * sx(y3) + sx(x2) * sx(y2)` and
+        `r0 = sx(x1) * sx(y1) + sx(x0) * sx(y0)`, and `sx(n)` sign-extends `n` to twice its width.
+
+        This will double the lane width and halve the number of lanes.  So the resulting
+        vector has the same number of bits as `x` and `y` do (individually).
+
+        See https://github.com/WebAssembly/simd/pull/127 for background info.
+            "#,
+            &formats.binary,
+        )
+        .operands_in(vec![x, y])
         .operands_out(vec![a]),
     );
 
@@ -4407,6 +4489,25 @@ pub(crate) fn define(
             &formats.nullary,
         )
         .other_side_effects(true),
+    );
+
+    let Offset = &Operand::new("Offset", &imm.offset32).with_doc("Byte offset from base address");
+    let a = &Operand::new("a", TxN);
+
+    ig.push(
+        Inst::new(
+            "load_splat",
+            r#"
+        Load an element from memory at ``p + Offset`` and return a vector
+        whose lanes are all set to that element.
+
+        This is equivalent to ``load`` followed by ``splat``.
+        "#,
+            &formats.load,
+        )
+        .operands_in(vec![MemFlags, p, Offset])
+        .operands_out(vec![a])
+        .can_load(true),
     );
 
     ig.build()

@@ -902,9 +902,9 @@ impl Reg {
 /// create a distinction, at the Rust type level, between a plain "register"
 /// and a "writable register".
 ///
-/// There is nothing that ensures that Writable<..> is only wrapped around Reg
-/// and its variants (`RealReg`, `VirtualReg`).  That however is its intended
-/// and currently its only use.
+/// Only structs that implement the `WritableBase` trait can be wrapped with
+/// `Writable`. These are the Reg, RealReg and VirtualReg data structures only,
+/// since `WritableBase` is not exposed to end users.
 ///
 /// Writable<..> can be used by the client to ensure that, internally, it only
 /// generates instructions that write to registers that should be written. The
@@ -918,11 +918,21 @@ impl Reg {
 /// error.
 #[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
 #[cfg_attr(feature = "enable-serde", derive(Serialize, Deserialize))]
-pub struct Writable<R: Copy + Clone + PartialEq + Eq + Hash + PartialOrd + Ord + fmt::Debug> {
+pub struct Writable<R: WritableBase> {
     reg: R,
 }
 
-impl<R: Copy + Clone + PartialEq + Eq + Hash + PartialOrd + Ord + fmt::Debug> Writable<R> {
+/// Set of requirements for types that can be wrapped in Writable.
+pub trait WritableBase:
+    Copy + Clone + PartialEq + Eq + Hash + PartialOrd + Ord + fmt::Debug
+{
+}
+
+impl WritableBase for Reg {}
+impl WritableBase for RealReg {}
+impl WritableBase for VirtualReg {}
+
+impl<R: WritableBase> Writable<R> {
     /// Create a Writable<R> from an R. The client should carefully audit where
     /// it calls this constructor to ensure correctness (see `Writable<..>`
     /// struct documentation).
@@ -939,26 +949,23 @@ impl<R: Copy + Clone + PartialEq + Eq + Hash + PartialOrd + Ord + fmt::Debug> Wr
     pub fn map<F, U>(&self, f: F) -> Writable<U>
     where
         F: Fn(R) -> U,
-        U: Copy + Clone + PartialEq + Eq + Hash + PartialOrd + Ord + fmt::Debug,
+        U: WritableBase,
     {
         Writable { reg: f(self.reg) }
     }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub enum SpillSlot {
-    SpillSlot(u32),
-}
+pub struct SpillSlot(u32);
+
 impl SpillSlot {
     #[inline(always)]
     pub fn new(n: u32) -> Self {
-        SpillSlot::SpillSlot(n)
+        Self(n)
     }
     #[inline(always)]
     pub fn get(self) -> u32 {
-        match self {
-            SpillSlot::SpillSlot(n) => n,
-        }
+        self.0
     }
     #[inline(always)]
     pub fn get_usize(self) -> usize {
@@ -972,6 +979,7 @@ impl SpillSlot {
         SpillSlot::new(self.get() + num_slots)
     }
 }
+
 impl fmt::Debug for SpillSlot {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         write!(fmt, "S{}", self.get())

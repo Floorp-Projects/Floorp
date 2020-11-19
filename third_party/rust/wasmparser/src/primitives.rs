@@ -215,6 +215,7 @@ pub enum MemoryType {
     },
     M64 {
         limits: ResizableLimits64,
+        shared: bool,
     },
 }
 
@@ -735,6 +736,7 @@ pub enum Operator<'a> {
     I32x4MinU,
     I32x4MaxS,
     I32x4MaxU,
+    I32x4DotI16x8S,
     I64x2Neg,
     I64x2Shl,
     I64x2ShrS,
@@ -781,7 +783,9 @@ pub enum Operator<'a> {
     V128Load8Splat { memarg: MemoryImmediate },
     V128Load16Splat { memarg: MemoryImmediate },
     V128Load32Splat { memarg: MemoryImmediate },
+    V128Load32Zero { memarg: MemoryImmediate },
     V128Load64Splat { memarg: MemoryImmediate },
+    V128Load64Zero { memarg: MemoryImmediate },
     I8x16NarrowI16x8S,
     I8x16NarrowI16x8U,
     I16x8NarrowI32x4S,
