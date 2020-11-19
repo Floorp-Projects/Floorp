@@ -69,19 +69,6 @@ void ObjectGroup::setProto(TaggedProto proto) {
   setProtoUnchecked(proto);
 }
 
-void ObjectGroup::setAddendum(AddendumKind kind, void* addendum,
-                              bool isSweeping /* = flase */) {
-  // Note: cast to unsigned to suppress always-true compiler warning.
-  MOZ_ASSERT(unsigned(kind) <=
-             (OBJECT_FLAG_ADDENDUM_MASK >> OBJECT_FLAG_ADDENDUM_SHIFT));
-
-  MOZ_ASSERT_IF(addendumKind() != Addendum_None, addendumKind() == kind);
-
-  flags_ &= ~OBJECT_FLAG_ADDENDUM_MASK;
-  flags_ |= kind << OBJECT_FLAG_ADDENDUM_SHIFT;
-  addendum_ = addendum;
-}
-
 /* static */
 bool ObjectGroup::useSingletonForClone(JSFunction* fun) {
   MOZ_RELEASE_ASSERT(!IsTypeInferenceEnabled());

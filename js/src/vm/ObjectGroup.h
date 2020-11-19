@@ -93,9 +93,8 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   /* Flags for this group. */
   ObjectGroupFlags flags_;  // set by constructor
 
-  // If non-null, holds additional information about this object, whose
-  // format is indicated by the object's addendum kind.
-  void* addendum_ = nullptr;
+  // Non-null only for typed objects.
+  TypeDescr* typeDescr_ = nullptr;
 
   // END OF PROPERTIES
 
@@ -112,10 +111,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 
   static inline uint32_t offsetOfFlags() {
     return offsetof(ObjectGroup, flags_);
-  }
-
-  static inline uint32_t offsetOfAddendum() {
-    return offsetof(ObjectGroup, addendum_);
   }
 
   friend class gc::GCRuntime;
@@ -155,43 +150,22 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   JS::Compartment* maybeCompartment() const { return compartment(); }
   JS::Realm* realm() const { return realm_; }
 
- public:
-  // Kinds of addendums which can be attached to ObjectGroups.
-  enum AddendumKind {
-    Addendum_None,
-
-    // When used by typed objects, the addendum stores a TypeDescr.
-    Addendum_TypeDescr
-  };
-
  private:
-  void setAddendum(AddendumKind kind, void* addendum, bool isSweeping = false);
-
-  AddendumKind addendumKind() const {
-    return (AddendumKind)((flags_ & OBJECT_FLAG_ADDENDUM_MASK) >>
-                          OBJECT_FLAG_ADDENDUM_SHIFT);
-  }
-
   ObjectGroupFlags flags() const { return flags_; }
 
  public:
   TypeDescr* maybeTypeDescr() {
     // Note: there is no need to sweep when accessing the type descriptor
     // of an object, as it is strongly held and immutable.
-    if (addendumKind() == Addendum_TypeDescr) {
-      return &typeDescr();
-    }
-    return nullptr;
+    return typeDescr_;
   }
 
   TypeDescr& typeDescr() {
-    MOZ_ASSERT(addendumKind() == Addendum_TypeDescr);
-    return *reinterpret_cast<TypeDescr*>(addendum_);
+    MOZ_ASSERT(typeDescr_);
+    return *typeDescr_;
   }
 
-  void setTypeDescr(TypeDescr* descr) {
-    setAddendum(Addendum_TypeDescr, descr);
-  }
+  void setTypeDescr(TypeDescr* descr) { typeDescr_ = descr; }
 
  public:
   inline ObjectGroup(const JSClass* clasp, TaggedProto proto, JS::Realm* realm,

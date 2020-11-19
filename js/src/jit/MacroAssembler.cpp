@@ -3263,10 +3263,7 @@ void MacroAssembler::branchTestObjCompartment(
 void MacroAssembler::branchIfObjGroupHasNoAddendum(Register obj,
                                                    Register scratch,
                                                    Label* label) {
-  MOZ_ASSERT(obj != scratch);
-  loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
-  branchPtr(Assembler::Equal, Address(scratch, ObjectGroup::offsetOfAddendum()),
-            ImmWord(0), label);
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 void MacroAssembler::branchIfPretenuredGroup(const ObjectGroup* group,
