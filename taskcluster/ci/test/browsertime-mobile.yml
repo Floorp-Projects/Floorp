@@ -337,6 +337,7 @@ browsertime-tp6m-live:
                 - youtube
                 - [youtube-watch, youtube-w]
     apps: ["fenix", "chrome-m", "geckoview"]
+    run-on-projects: []
     webrender-run-on-projects:
         by-app:
             geckoview:
