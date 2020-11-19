@@ -59,8 +59,6 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
       bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset,
       mozilla::Maybe<uint32_t> numNewSlotsOffset);
 
-  bool needsPostBarrier() const;
-
   void pushStubCodePointer();
 
   CACHE_IR_COMPILER_UNSHARED_GENERATED

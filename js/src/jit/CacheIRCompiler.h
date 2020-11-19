@@ -726,9 +726,6 @@ class MOZ_RAII CacheIRCompiler {
   mozilla::Maybe<TypedOrValueRegister> outputUnchecked_;
   Mode mode_;
 
-  // Whether this IC may read double values from uint32 arrays.
-  mozilla::Maybe<bool> allowDoubleResult_;
-
   // Distance from the IC to the stub data; mostly will be
   // sizeof(stubType)
   uint32_t stubDataOffset_;

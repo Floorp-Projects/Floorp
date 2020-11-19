@@ -4927,9 +4927,8 @@ bool CacheIRCompiler::emitLoadTypedArrayElementResult(
 
       masm.tagValue(JSVAL_TYPE_BIGINT, *bigInt, output.valueReg());
     } else {
-      bool allowDouble = *allowDoubleResult_ && allowDoubleForUint32;
       masm.loadFromTypedArray(elementType, source, output.valueReg(),
-                              allowDouble, scratch1, failure->label());
+                              allowDoubleForUint32, scratch1, failure->label());
     }
   } else {
     bool needGpr =

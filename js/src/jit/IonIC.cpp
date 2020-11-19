@@ -173,22 +173,16 @@ bool IonGetPropertyIC::update(JSContext* cx, HandleScript outerScript,
   // Optimized-arguments and other magic values must not escape to Ion ICs.
   MOZ_ASSERT(!val.isMagic());
 
-  // If the IC is idempotent, we will redo the op in the interpreter.
-  if (ic->idempotent()) {
-    adi.disable();
-  }
-
   if (ic->state().maybeTransition()) {
     ic->discardStubs(cx->zone(), ionScript);
   }
 
   bool attached = false;
   if (ic->state().canAttachStub()) {
-    jsbytecode* pc = ic->idempotent() ? nullptr : ic->pc();
+    jsbytecode* pc = ic->pc();
     GetPropIRGenerator gen(cx, outerScript, pc, ic->state().mode(), ic->kind(),
-                           val, idVal, val, ic->resultFlags());
-    switch (ic->idempotent() ? gen.tryAttachIdempotentStub()
-                             : gen.tryAttachStub()) {
+                           val, idVal, val);
+    switch (gen.tryAttachStub()) {
       case AttachDecision::Attach:
         ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
                               &attached);
@@ -205,37 +199,6 @@ bool IonGetPropertyIC::update(JSContext* cx, HandleScript outerScript,
     if (!attached) {
       ic->state().trackNotAttached();
     }
-  }
-
-  if (!attached && ic->idempotent()) {
-    // Invalidate the cache if the property was not found, or was found on
-    // a non-native object. This ensures:
-    // 1) The property read has no observable side-effects.
-    // 2) There's no need to dynamically monitor the return type. This would
-    //    be complicated since (due to GVN) there can be multiple pc's
-    //    associated with a single idempotent cache.
-    JitSpew(JitSpew_IonIC, "Invalidating from idempotent cache %s:%u:%u",
-            outerScript->filename(), outerScript->lineno(),
-            outerScript->column());
-
-    outerScript->setInvalidatedIdempotentCache();
-
-    // Do not re-invalidate if the lookup already caused invalidation.
-    if (outerScript->hasIonScript()) {
-      Invalidate(cx, outerScript);
-    }
-
-    // IonBuilder::createScriptedThis does not use InvalidedIdempotentCache
-    // flag so prevent bailout-loop by disabling Ion for the script.
-    MOZ_ASSERT(ic->kind() == CacheKind::GetProp);
-    if (idVal.toString()->asAtom().asPropertyName() == cx->names().prototype) {
-      if (val.isObject() && val.toObject().is<JSFunction>()) {
-        outerScript->disableIon();
-      }
-    }
-
-    // We will redo the potentially effectful lookup in Baseline.
-    return true;
   }
 
   if (ic->kind() == CacheKind::GetProp) {
@@ -268,8 +231,7 @@ bool IonGetPropSuperIC::update(JSContext* cx, HandleScript outerScript,
 
   RootedValue val(cx, ObjectValue(*obj));
   TryAttachIonStub<GetPropIRGenerator, IonGetPropSuperIC>(
-      cx, ic, ionScript, ic->kind(), val, idVal, receiver,
-      GetPropertyResultFlags::All);
+      cx, ic, ionScript, ic->kind(), val, idVal, receiver);
 
   if (ic->kind() == CacheKind::GetPropSuper) {
     RootedPropertyName name(cx, idVal.toString()->asAtom().asPropertyName());
@@ -318,7 +280,7 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
     RootedScript script(cx, ic->script());
     jsbytecode* pc = ic->pc();
     SetPropIRGenerator gen(cx, script, pc, ic->kind(), ic->state().mode(), objv,
-                           idVal, rhs, ic->guardHoles());
+                           idVal, rhs);
     switch (gen.tryAttachStub()) {
       case AttachDecision::Attach:
         ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
@@ -394,7 +356,7 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
     RootedScript script(cx, ic->script());
     jsbytecode* pc = ic->pc();
     SetPropIRGenerator gen(cx, script, pc, ic->kind(), ic->state().mode(), objv,
-                           idVal, rhs, ic->guardHoles());
+                           idVal, rhs);
     MOZ_ASSERT(deferType == DeferType::AddSlot);
     AttachDecision decision = gen.tryAttachAddSlotStub(oldGroup, oldShape);
 

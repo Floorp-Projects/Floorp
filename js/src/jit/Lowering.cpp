@@ -249,14 +249,6 @@ void LIRGenerator::visitNewStringObject(MNewStringObject* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitInitElem(MInitElem* ins) {
-  LInitElem* lir = new (alloc())
-      LInitElem(useRegisterAtStart(ins->getObject()),
-                useBoxAtStart(ins->getId()), useBoxAtStart(ins->getValue()));
-  add(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitInitElemGetterSetter(MInitElemGetterSetter* ins) {
   LInitElemGetterSetter* lir = new (alloc()) LInitElemGetterSetter(
       useRegisterAtStart(ins->object()), useBoxAtStart(ins->idValue()),
@@ -4016,11 +4008,9 @@ void LIRGenerator::visitGetPropertyCache(MGetPropertyCache* ins) {
   MOZ_ASSERT(id->type() == MIRType::String || id->type() == MIRType::Symbol ||
              id->type() == MIRType::Int32 || id->type() == MIRType::Value);
 
-  if (ins->monitoredResult()) {
-    // Emit an overrecursed check: this is necessary because the cache can
-    // attach a scripted getter stub that calls this script recursively.
-    gen->setNeedsOverrecursedCheck();
-  }
+  // Emit an overrecursed check: this is necessary because the cache can
+  // attach a scripted getter stub that calls this script recursively.
+  gen->setNeedsOverrecursedCheck();
 
   // If this is a GetProp, the id is a constant string. Allow passing it as a
   // constant to reduce register allocation pressure.
@@ -4521,30 +4511,6 @@ void LIRGenerator::visitAssertShape(MAssertShape* ins) {
   add(lir, ins);
 }
 
-void LIRGenerator::visitCallGetProperty(MCallGetProperty* ins) {
-  LCallGetProperty* lir =
-      new (alloc()) LCallGetProperty(useBoxAtStart(ins->value()));
-  defineReturn(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitCallGetElement(MCallGetElement* ins) {
-  MOZ_ASSERT(ins->lhs()->type() == MIRType::Value);
-  MOZ_ASSERT(ins->rhs()->type() == MIRType::Value);
-
-  LCallGetElement* lir = new (alloc())
-      LCallGetElement(useBoxAtStart(ins->lhs()), useBoxAtStart(ins->rhs()));
-  defineReturn(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitCallSetProperty(MCallSetProperty* ins) {
-  LInstruction* lir = new (alloc()) LCallSetProperty(
-      useRegisterAtStart(ins->object()), useBoxAtStart(ins->value()));
-  add(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitDeleteProperty(MDeleteProperty* ins) {
   LCallDeleteProperty* lir =
       new (alloc()) LCallDeleteProperty(useBoxAtStart(ins->value()));
@@ -4594,14 +4560,6 @@ void LIRGenerator::visitCallSetElement(MCallSetElement* ins) {
   LCallSetElement* lir = new (alloc())
       LCallSetElement(useRegisterAtStart(ins->object()),
                       useBoxAtStart(ins->index()), useBoxAtStart(ins->value()));
-  add(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitCallInitElementArray(MCallInitElementArray* ins) {
-  LCallInitElementArray* lir = new (alloc()) LCallInitElementArray(
-      useRegisterAtStart(ins->object()),
-      useRegisterOrConstantAtStart(ins->index()), useBoxAtStart(ins->value()));
   add(lir, ins);
   assignSafepoint(lir, ins);
 }

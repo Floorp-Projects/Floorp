@@ -76,10 +76,6 @@ void IonCacheIRCompiler::callVM(MacroAssembler& masm) {
   callVMInternal(masm, id);
 }
 
-bool IonCacheIRCompiler::needsPostBarrier() const {
-  return ic_->asSetPropertyIC()->needsPostBarrier();
-}
-
 void IonCacheIRCompiler::pushStubCodePointer() {
   stubJitCodeOffset_.emplace(masm.PushWithPatch(ImmPtr((void*)-1)));
 }
@@ -302,8 +298,6 @@ bool IonCacheIRCompiler::init() {
       liveRegs_.emplace(ic->liveRegs());
       outputUnchecked_.emplace(output);
 
-      allowDoubleResult_.emplace(ic->allowDoubleResult());
-
       MOZ_ASSERT(numInputs == 1 || numInputs == 2);
 
       allocator.initInputLocation(0, ic->value());
@@ -321,8 +315,6 @@ bool IonCacheIRCompiler::init() {
 
       liveRegs_.emplace(ic->liveRegs());
       outputUnchecked_.emplace(output);
-
-      allowDoubleResult_.emplace(true);
 
       MOZ_ASSERT(numInputs == 2 || numInputs == 3);
 
@@ -1276,18 +1268,12 @@ bool IonCacheIRCompiler::emitStoreFixedSlot(ObjOperandId objId,
   Register obj = allocator.useRegister(masm, objId);
   int32_t offset = int32StubField(offsetOffset);
   ConstantOrRegister val = allocator.useConstantOrRegister(masm, rhsId);
-
-  Maybe<AutoScratchRegister> scratch;
-  if (needsPostBarrier()) {
-    scratch.emplace(allocator, masm);
-  }
+  AutoScratchRegister scratch(allocator, masm);
 
   Address slot(obj, offset);
   EmitPreBarrier(masm, slot, MIRType::Value);
   masm.storeConstantOrRegister(val, slot);
-  if (needsPostBarrier()) {
-    emitPostBarrierSlot(obj, val, scratch.ref());
-  }
+  emitPostBarrierSlot(obj, val, scratch);
   return true;
 }
 
@@ -1304,9 +1290,7 @@ bool IonCacheIRCompiler::emitStoreDynamicSlot(ObjOperandId objId,
   Address slot(scratch, offset);
   EmitPreBarrier(masm, slot, MIRType::Value);
   masm.storeConstantOrRegister(val, slot);
-  if (needsPostBarrier()) {
-    emitPostBarrierSlot(obj, val, scratch);
-  }
+  emitPostBarrierSlot(obj, val, scratch);
   return true;
 }
 
@@ -1398,9 +1382,7 @@ bool IonCacheIRCompiler::emitAddAndStoreSlotShared(
     masm.storeConstantOrRegister(val, slot);
   }
 
-  if (needsPostBarrier()) {
-    emitPostBarrierSlot(obj, val, scratch1);
-  }
+  emitPostBarrierSlot(obj, val, scratch1);
 
   return true;
 }
@@ -1566,9 +1548,7 @@ bool IonCacheIRCompiler::emitStoreDenseElement(ObjOperandId objId,
 
   EmitPreBarrier(masm, element, MIRType::Value);
   EmitStoreDenseElement(masm, val, scratch1, element);
-  if (needsPostBarrier()) {
-    emitPostBarrierElement(obj, val, scratch1, index);
-  }
+  emitPostBarrierElement(obj, val, scratch1, index);
   return true;
 }
 
@@ -1670,9 +1650,7 @@ bool IonCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
 
   masm.bind(&doStore);
   EmitStoreDenseElement(masm, val, scratch1, element);
-  if (needsPostBarrier()) {
-    emitPostBarrierElement(obj, val, scratch1, index);
-  }
+  emitPostBarrierElement(obj, val, scratch1, index);
   return true;
 }
 
