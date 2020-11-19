@@ -152,7 +152,7 @@ class MediaController final : public DOMEventTargetHelper,
 
  private:
   ~MediaController();
-  void HandleActualPlaybackStateChanged() override;
+  void HandleActualPlaybackStateChanged();
   void UpdateMediaControlActionToContentMediaIfNeeded(
       const MediaControlAction& aAction);
   void HandleSupportedMediaSessionActionsChanged(
@@ -194,6 +194,7 @@ class MediaController final : public DOMEventTargetHelper,
   MediaEventListener mSupportedActionsChangedListener;
   MediaEventProducer<nsTArray<MediaControlKey>> mSupportedKeysChangedEvent;
 
+  MediaEventListener mPlaybackChangedListener;
   MediaEventListener mPositionStateChangedListener;
   MediaEventListener mMetadataChangedListener;
 
