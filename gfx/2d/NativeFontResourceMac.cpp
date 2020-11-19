@@ -53,7 +53,7 @@ class NativeFontResourceMacReporter final : public nsIMemoryReporter {
         subPath.AppendPrintf("<anonymized-%p>", this);
       } else {
         if (i.second.Length()) {
-          subPath.AppendLiteral("family=");
+          subPath.AppendLiteral("psname=");
           subPath.Append(i.second);
         } else {
           subPath.AppendPrintf("Unknown(%d)", unknownFontIndex);
