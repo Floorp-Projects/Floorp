@@ -90,7 +90,7 @@ impl Http3Connection {
         Self {
             state: Http3State::Initializing,
             local_qpack_settings,
-            control_stream_local: ControlStreamLocal::default(),
+            control_stream_local: ControlStreamLocal::new(),
             control_stream_remote: ControlStreamRemote::new(),
             new_streams: HashMap::new(),
             qpack_encoder: QPackEncoder::new(local_qpack_settings, true),
@@ -421,7 +421,7 @@ impl Http3Connection {
     pub fn handle_zero_rtt_rejected(&mut self) -> Res<()> {
         if self.state == Http3State::ZeroRtt {
             self.state = Http3State::Initializing;
-            self.control_stream_local = ControlStreamLocal::default();
+            self.control_stream_local = ControlStreamLocal::new();
             self.control_stream_remote = ControlStreamRemote::new();
             self.new_streams.clear();
             self.qpack_encoder = QPackEncoder::new(self.local_qpack_settings, true);

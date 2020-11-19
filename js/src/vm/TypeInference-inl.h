@@ -111,10 +111,6 @@ struct MOZ_RAII AutoEnterAnalysis {
   // Prevent GC activity in the middle of analysis.
   gc::AutoSuppressGC suppressGC;
 
-  // Allow clearing inference info on OOM during incremental sweeping. This is
-  // constructed for the outermost AutoEnterAnalysis on the stack.
-  mozilla::Maybe<AutoClearTypeInferenceStateOnOOM> oom;
-
   // Pending recompilations to perform before execution of JIT code can resume.
   RecompileInfoVector pendingRecompiles;
 
@@ -155,7 +151,6 @@ struct MOZ_RAII AutoEnterAnalysis {
     this->zone = zone;
 
     if (!zone->types.activeAnalysis) {
-      oom.emplace(zone);
       zone->types.activeAnalysis = this;
     }
   }

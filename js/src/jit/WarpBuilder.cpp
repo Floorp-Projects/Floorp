@@ -2612,11 +2612,9 @@ bool WarpBuilder::build_InitElemInc(BytecodeLocation loc) {
 
 static LambdaFunctionInfo LambdaInfoFromSnapshot(JSFunction* fun,
                                                  const WarpLambda* snapshot) {
-  // Pass false for singletonType and useSingletonForClone as asserted in
-  // WarpOracle.
+  // Pass false for singletonType as asserted in WarpOracle.
   return LambdaFunctionInfo(fun, snapshot->baseScript(), snapshot->flags(),
-                            snapshot->nargs(), /* singletonType = */ false,
-                            /* useSingletonForClone = */ false);
+                            snapshot->nargs(), /* singletonType = */ false);
 }
 
 bool WarpBuilder::build_Lambda(BytecodeLocation loc) {
@@ -3062,11 +3060,7 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
           val = maybeGuardNotOptimizedArguments(val);
         }
       }
-      // For now pass monitoredResult = true to get the behavior we want (no
-      // TI-related restrictions apply, similar to the Baseline IC).
-      // See also IonGetPropertyICFlags.
-      bool monitoredResult = true;
-      auto* ins = MGetPropertyCache::New(alloc(), val, id, monitoredResult);
+      auto* ins = MGetPropertyCache::New(alloc(), val, id);
       current->add(ins);
       current->push(ins);
       return resumeAfter(ins, loc);
@@ -3074,9 +3068,7 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
     case CacheKind::GetElem: {
       MOZ_ASSERT(numInputs == 2);
       MDefinition* val = maybeGuardNotOptimizedArguments(getInput(0));
-      bool monitoredResult = true;  // See GetProp case above.
-      auto* ins =
-          MGetPropertyCache::New(alloc(), val, getInput(1), monitoredResult);
+      auto* ins = MGetPropertyCache::New(alloc(), val, getInput(1));
       current->add(ins);
       current->push(ins);
       return resumeAfter(ins, loc);
@@ -3086,24 +3078,16 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
       PropertyName* name = loc.getPropertyName(script_);
       MConstant* id = constant(StringValue(name));
       bool strict = loc.isStrictSetOp();
-      bool needsPostBarrier = true;
-      bool needsTypeBarrier = false;
-      bool guardHoles = true;
-      auto* ins = MSetPropertyCache::New(alloc(), getInput(0), id, getInput(1),
-                                         strict, needsPostBarrier,
-                                         needsTypeBarrier, guardHoles);
+      auto* ins =
+          MSetPropertyCache::New(alloc(), getInput(0), id, getInput(1), strict);
       current->add(ins);
       return resumeAfter(ins, loc);
     }
     case CacheKind::SetElem: {
       MOZ_ASSERT(numInputs == 3);
       bool strict = loc.isStrictSetOp();
-      bool needsPostBarrier = true;
-      bool needsTypeBarrier = false;
-      bool guardHoles = true;
       auto* ins = MSetPropertyCache::New(alloc(), getInput(0), getInput(1),
-                                         getInput(2), strict, needsPostBarrier,
-                                         needsTypeBarrier, guardHoles);
+                                         getInput(2), strict);
       current->add(ins);
       return resumeAfter(ins, loc);
     }

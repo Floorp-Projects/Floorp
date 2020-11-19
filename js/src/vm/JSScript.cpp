@@ -888,7 +888,6 @@ XDRResult js::XDRImmutableScriptData(XDRState<mode>* xdr,
   MOZ_TRY(xdr->codeUint32(&isd->bodyScopeIndex.index));
   MOZ_TRY(xdr->codeUint32(&isd->numICEntries));
   MOZ_TRY(xdr->codeUint16(&isd->funLength));
-  MOZ_TRY(xdr->codeUint16(&isd->numBytecodeTypeSets));
 
   static_assert(sizeof(jsbytecode) == 1);
   static_assert(sizeof(SrcNote) == 1);
@@ -4510,9 +4509,9 @@ void CopySpan(const SourceSpan& source, TargetSpan target) {
 /* static */
 js::UniquePtr<ImmutableScriptData> ImmutableScriptData::new_(
     JSContext* cx, uint32_t mainOffset, uint32_t nfixed, uint32_t nslots,
-    GCThingIndex bodyScopeIndex, uint32_t numICEntries,
-    uint32_t numBytecodeTypeSets, bool isFunction, uint16_t funLength,
-    mozilla::Span<const jsbytecode> code, mozilla::Span<const SrcNote> notes,
+    GCThingIndex bodyScopeIndex, uint32_t numICEntries, bool isFunction,
+    uint16_t funLength, mozilla::Span<const jsbytecode> code,
+    mozilla::Span<const SrcNote> notes,
     mozilla::Span<const uint32_t> resumeOffsets,
     mozilla::Span<const ScopeNote> scopeNotes,
     mozilla::Span<const TryNote> tryNotes) {
@@ -4541,8 +4540,6 @@ js::UniquePtr<ImmutableScriptData> ImmutableScriptData::new_(
   data->nslots = nslots;
   data->bodyScopeIndex = bodyScopeIndex;
   data->numICEntries = numICEntries;
-  data->numBytecodeTypeSets = std::min<uint32_t>(
-      uint32_t(JSScript::MaxBytecodeTypeSets), numBytecodeTypeSets);
 
   if (isFunction) {
     data->funLength = funLength;

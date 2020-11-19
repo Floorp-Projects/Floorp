@@ -165,7 +165,6 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
       object = ins->getOperand(0);
       break;
     case MDefinition::Opcode::GetPropertyCache:
-    case MDefinition::Opcode::CallGetProperty:
     case MDefinition::Opcode::GetDOMProperty:
     case MDefinition::Opcode::GetDOMMember:
     case MDefinition::Opcode::LoadDOMExpandoValue:

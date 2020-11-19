@@ -385,10 +385,9 @@ class FirefoxConnector {
    * Send a HTTP request data payload
    *
    * @param {object} data data payload would like to sent to backend
-   * @param {function} callback callback will be invoked after the request finished
    */
-  sendHTTPRequest(data, callback) {
-    this.webConsoleFront.sendHTTPRequest(data).then(callback);
+  sendHTTPRequest(data) {
+    return this.webConsoleFront.sendHTTPRequest(data);
   }
 
   /**

@@ -5099,86 +5099,6 @@ bool MGuardReceiverPolymorphic::congruentTo(const MDefinition* ins) const {
   return congruentIfOperandsEqual(ins);
 }
 
-void InlinePropertyTable::trimTo(const InliningTargets& targets,
-                                 const BoolVector& choiceSet) {
-  for (size_t i = 0; i < targets.length(); i++) {
-    // If the target was inlined, don't erase the entry.
-    if (choiceSet[i]) {
-      continue;
-    }
-
-    // If the target wasn't a function we would have veto'ed it
-    // and it will not be in the entries list.
-    if (!targets[i].target->is<JSFunction>()) {
-      continue;
-    }
-
-    JSFunction* target = &targets[i].target->as<JSFunction>();
-
-    // Eliminate all entries containing the vetoed function from the map.
-    size_t j = 0;
-    while (j < numEntries()) {
-      if (entries_[j]->func == target) {
-        entries_.erase(&entries_[j]);
-      } else {
-        j++;
-      }
-    }
-  }
-}
-
-void InlinePropertyTable::trimToTargets(const InliningTargets& targets) {
-  JitSpew(JitSpew_Inlining, "Got inlineable property cache with %d cases",
-          (int)numEntries());
-
-  size_t i = 0;
-  while (i < numEntries()) {
-    bool foundFunc = false;
-    for (size_t j = 0; j < targets.length(); j++) {
-      if (entries_[i]->func == targets[j].target) {
-        foundFunc = true;
-        break;
-      }
-    }
-    if (!foundFunc) {
-      entries_.erase(&(entries_[i]));
-    } else {
-      i++;
-    }
-  }
-
-  JitSpew(JitSpew_Inlining,
-          "%d inlineable cases left after trimming to %d targets",
-          (int)numEntries(), (int)targets.length());
-}
-
-bool InlinePropertyTable::hasFunction(JSFunction* func) const {
-  for (size_t i = 0; i < numEntries(); i++) {
-    if (entries_[i]->func == func) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool InlinePropertyTable::hasObjectGroup(ObjectGroup* group) const {
-  for (size_t i = 0; i < numEntries(); i++) {
-    if (entries_[i]->group == group) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool InlinePropertyTable::appendRoots(MRootList& roots) const {
-  for (const Entry* entry : entries_) {
-    if (!entry->appendRoots(roots)) {
-      return false;
-    }
-  }
-  return true;
-}
-
 MDefinition::AliasType MGetPropertyPolymorphic::mightAlias(
     const MDefinition* store) const {
   // Allow hoisting this instruction if the store does not write to a
@@ -5256,26 +5176,6 @@ bool MGuardReceiverPolymorphic::appendRoots(MRootList& roots) const {
     }
   }
   return true;
-}
-
-bool MDispatchInstruction::appendRoots(MRootList& roots) const {
-  for (const Entry& entry : map_) {
-    if (!entry.appendRoots(roots)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool MObjectGroupDispatch::appendRoots(MRootList& roots) const {
-  if (inlinePropertyTable_ && !inlinePropertyTable_->appendRoots(roots)) {
-    return false;
-  }
-  return MDispatchInstruction::appendRoots(roots);
-}
-
-bool MFunctionDispatch::appendRoots(MRootList& roots) const {
-  return MDispatchInstruction::appendRoots(roots);
 }
 
 bool MConstant::appendRoots(MRootList& roots) const {

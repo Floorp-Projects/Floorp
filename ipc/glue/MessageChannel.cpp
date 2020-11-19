@@ -2784,7 +2784,11 @@ void MessageChannel::AddProfilerMarker(const IPC::Message& aMessage,
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_feature_active(ProfilerFeature::IPCMessages)) {
     int32_t pid = mListener->OtherPidMaybeInvalid();
-    if (pid != kInvalidProcessId) {
+    // Only record markers for IPCs with a valid pid.
+    // And if one of the profiler mutexes is locked on this thread, don't record
+    // markers, because we don't want to expose profiler IPCs due to the
+    // profiler itself, and also to avoid possible re-entrancy issues.
+    if (pid != kInvalidProcessId && !profiler_is_locked_on_current_thread()) {
       // The current timestamp must be given to the `IPCMarker` payload.
       const TimeStamp now = TimeStamp::NowUnfuzzed();
       PROFILER_MARKER("IPC", IPC, MarkerTiming::InstantAt(now), IPCMarker, now,

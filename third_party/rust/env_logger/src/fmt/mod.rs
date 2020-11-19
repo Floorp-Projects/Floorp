@@ -136,13 +136,14 @@ impl fmt::Debug for Formatter {
     }
 }
 
+pub(crate) type FormatFn = Box<dyn Fn(&mut Formatter, &Record) -> io::Result<()> + Sync + Send>;
+
 pub(crate) struct Builder {
     pub format_timestamp: Option<TimestampPrecision>,
     pub format_module_path: bool,
     pub format_level: bool,
     pub format_indent: Option<usize>,
-    #[allow(unknown_lints, bare_trait_objects)]
-    pub custom_format: Option<Box<Fn(&mut Formatter, &Record) -> io::Result<()> + Sync + Send>>,
+    pub custom_format: Option<FormatFn>,
     built: bool,
 }
 
@@ -165,8 +166,7 @@ impl Builder {
     /// If the `custom_format` is `Some`, then any `default_format` switches are ignored.
     /// If the `custom_format` is `None`, then a default format is returned.
     /// Any `default_format` switches set to `false` won't be written by the format.
-    #[allow(unknown_lints, bare_trait_objects)]
-    pub fn build(&mut self) -> Box<Fn(&mut Formatter, &Record) -> io::Result<()> + Sync + Send> {
+    pub fn build(&mut self) -> FormatFn {
         assert!(!self.built, "attempt to re-use consumed builder");
 
         let built = mem::replace(
@@ -230,6 +230,7 @@ impl<'a> DefaultFormat<'a> {
                 .style()
                 .set_color(Color::Black)
                 .set_intense(true)
+                .clone()
                 .into_value(text)
         }
         #[cfg(not(feature = "termcolor"))]

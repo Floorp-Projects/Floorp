@@ -4248,42 +4248,18 @@ void SourceListener::GetSettingsFor(MediaTrack* aTrack,
   }
 }
 
-static bool SameGroupAsCurrentAudioOutput(const nsString& aGroupId) {
-  CubebDeviceEnumerator* enumerator = CubebDeviceEnumerator::GetInstance();
-  // Get the current graph's device info. This is always the
-  // default audio output device for now.
-  RefPtr<AudioDeviceInfo> outputDevice =
-      enumerator->DefaultDevice(CubebDeviceEnumerator::Side::OUTPUT);
-  return outputDevice && outputDevice->GroupID().Equals(aGroupId);
-}
-
 auto SourceListener::UpdateDevice(MediaTrack* aTrack, bool aOn)
     -> RefPtr<DeviceOperationPromise> {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<SourceListener> self = this;
   DeviceState& state = GetDeviceStateFor(aTrack);
-  nsString groupId;
-  state.mDevice->GetRawGroupId(groupId);
 
   return MediaManager::Dispatch<DeviceOperationPromise>(
              __func__,
-             [self, device = state.mDevice, aOn,
-              groupId](MozPromiseHolder<DeviceOperationPromise>& h) {
-               if (device->mKind == dom::MediaDeviceKind::Audioinput && !aOn &&
-                   SameGroupAsCurrentAudioOutput(groupId)) {
-                 // Don't turn off the microphone of a device that is on the
-                 // same physical device as the output.
-                 //
-                 // Also don't take this branch when turning on, in case the
-                 // default audio output device has changed. The AudioInput
-                 // source start/stop are idempotent, so this works.
-                 LOG("Not turning device off, as it matches audio output (%s)",
-                     NS_ConvertUTF16toUTF8(groupId).get());
-                 h.Resolve(NS_OK, __func__);
-                 return;
-               }
+             [self, device = state.mDevice,
+              aOn](MozPromiseHolder<DeviceOperationPromise>& h) {
                LOG("Turning %s device (%s)", aOn ? "on" : "off",
-                   NS_ConvertUTF16toUTF8(groupId).get());
+                   NS_ConvertUTF16toUTF8(device->mName).get());
                h.Resolve(aOn ? device->Start() : device->Stop(), __func__);
              })
       ->Then(
@@ -4488,9 +4464,9 @@ void SourceListener::SetMutedFor(LocalTrackSource* aTrackSource, bool aMute) {
   } else {
     aTrackSource->Unmute();
   }
-  if (state.mOffWhileDisabled && !state.mDeviceEnabled &&
-      state.mDevice->mKind == dom::MediaDeviceKind::Videoinput) {
-    // Camera is already off. TODO: Revisit once we support UA-muting mics.
+  if (!state.mOffWhileDisabled || !state.mDeviceEnabled) {
+    // If the pref to turn the underlying device is itself off, or the device is
+    // already off, it's unecessary to do anything else.
     return;
   }
   UpdateDevice(track, !aMute);

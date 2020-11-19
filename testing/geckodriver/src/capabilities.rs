@@ -826,8 +826,7 @@ mod tests {
             let mut iter = args.iter();
             assert!(iter
                 .find(|&arg| arg == &"--remote-debugging-port".to_owned())
-                .is_some()
-            );
+                .is_some());
             assert_eq!(iter.next(), Some(&"0".to_owned()));
         } else {
             assert!(false, "CLI arguments for remote protocol not found");

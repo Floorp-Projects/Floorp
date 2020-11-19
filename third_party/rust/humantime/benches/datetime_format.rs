@@ -1,16 +1,14 @@
 #![feature(test)]
-extern crate chrono;
-extern crate humantime;
 extern crate test;
 
 use std::io::Write;
 use std::time::{Duration, UNIX_EPOCH};
-use humantime::format_rfc3339;
 
+use humantime::format_rfc3339;
 
 #[bench]
 fn rfc3339_humantime_seconds(b: &mut test::Bencher) {
-    let time = UNIX_EPOCH + Duration::new(1483228799, 0);
+    let time = UNIX_EPOCH + Duration::new(1_483_228_799, 0);
     let mut buf = Vec::with_capacity(100);
     b.iter(|| {
         buf.truncate(0);
@@ -28,11 +26,11 @@ fn rfc3339_chrono(b: &mut test::Bencher) {
     use chrono::format::Pad::*;
 
     let time = DateTime::<Utc>::from_utc(
-        NaiveDateTime::from_timestamp(1483228799, 0), Utc);
+        NaiveDateTime::from_timestamp(1_483_228_799, 0), Utc);
     let mut buf = Vec::with_capacity(100);
 
     // formatting code from env_logger
-    const ITEMS: &'static [Item<'static>] = {
+    const ITEMS: &[Item<'static>] = {
         &[
             Numeric(Year, Zero),
             Literal("-"),

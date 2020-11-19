@@ -99,10 +99,7 @@ add_task(async function test_execute() {
     annotations: new Map([["test-anno", content]]),
   });
 
-  // Request to gather Places telemetry data.
-  Cc["@mozilla.org/places/categoriesStarter;1"]
-    .getService(Ci.nsIObserver)
-    .observe(null, "gather-places-telemetry", null);
+  await PlacesDBUtils.telemetry();
 
   await PlacesTestUtils.promiseAsyncUpdates();
 

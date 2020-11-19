@@ -38,6 +38,11 @@ class PromptCollection {
       prompter.asyncShowPrompt(msg, resolve);
     }).then(result => !!result?.allow);
   }
+
+  confirmFolderUpload() {
+    // Folder upload is not supported by GeckoView yet, see Bug 1674428.
+    return false;
+  }
 }
 
 PromptCollection.prototype.QueryInterface = ChromeUtils.generateQI([

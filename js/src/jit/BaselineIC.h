@@ -582,9 +582,6 @@ class ICFallbackStub : public ICStub {
 // Shared trait for all CacheIR stubs.
 template <typename Base>
 class ICCacheIR_Trait : public Base {
-  // Flags stored in the uint16_t extra_ field in ICStub.
-  static constexpr uint16_t PreliminaryObjectBit = 1 << 0;
-
  protected:
   const CacheIRStubInfo* stubInfo_;
 
@@ -606,11 +603,6 @@ class ICCacheIR_Trait : public Base {
   // the caller.
   uint32_t enteredCount() const { return enteredCount_; }
   void resetEnteredCount() { enteredCount_ = 0; }
-
-  void notePreliminaryObject() { this->extra_ |= PreliminaryObjectBit; }
-  bool hasPreliminaryObject() const {
-    return (this->extra_ & PreliminaryObjectBit) != 0;
-  }
 
   static constexpr size_t offsetOfEnteredCount() {
     using T = ICCacheIR_Trait<Base>;
@@ -750,9 +742,6 @@ class ICToBool_Fallback : public ICFallbackStub {
 
   explicit ICToBool_Fallback(TrampolinePtr stubCode)
       : ICFallbackStub(ICStub::ToBool_Fallback, stubCode) {}
-
- public:
-  static const uint32_t MAX_OPTIMIZED_STUBS = 8;
 };
 
 // GetElem
@@ -764,16 +753,6 @@ class ICGetElem_Fallback : public ICFallbackStub {
 
   explicit ICGetElem_Fallback(TrampolinePtr stubCode)
       : ICFallbackStub(ICStub::GetElem_Fallback, stubCode) {}
-
-  static const uint16_t EXTRA_NEGATIVE_INDEX = 0x1;
-  static const uint16_t SAW_NON_INTEGER_INDEX_BIT = 0x2;
-
- public:
-  void noteNegativeIndex() { extra_ |= EXTRA_NEGATIVE_INDEX; }
-  bool hasNegativeIndex() const { return extra_ & EXTRA_NEGATIVE_INDEX; }
-
-  void setSawNonIntegerIndex() { extra_ |= SAW_NON_INTEGER_INDEX_BIT; }
-  bool sawNonIntegerIndex() const { return extra_ & SAW_NON_INTEGER_INDEX_BIT; }
 };
 
 // SetElem
@@ -785,16 +764,6 @@ class ICSetElem_Fallback : public ICFallbackStub {
 
   explicit ICSetElem_Fallback(TrampolinePtr stubCode)
       : ICFallbackStub(ICStub::SetElem_Fallback, stubCode) {}
-
-  static const size_t HasDenseAddFlag = 0x1;
-  static const size_t HasTypedArrayOOBFlag = 0x2;
-
- public:
-  void noteHasDenseAdd() { extra_ |= HasDenseAddFlag; }
-  bool hasDenseAdd() const { return extra_ & HasDenseAddFlag; }
-
-  void noteHasTypedArrayOOB() { extra_ |= HasTypedArrayOOBFlag; }
-  bool hasTypedArrayOOB() const { return extra_ & HasTypedArrayOOBFlag; }
 };
 
 // In
@@ -861,16 +830,6 @@ class ICGetProp_Fallback : public ICFallbackStub {
 
   explicit ICGetProp_Fallback(TrampolinePtr stubCode)
       : ICFallbackStub(ICStub::GetProp_Fallback, stubCode) {}
-
- public:
-  // Whether this bytecode op called a getter. This is used by IonBuilder.
-  // To improve performance, the flag is not set if WarpBuilder is enabled.
-  static const size_t ACCESSED_GETTER_BIT = 1;
-
-  void noteAccessedGetter() { extra_ |= (1u << ACCESSED_GETTER_BIT); }
-  bool hasAccessedGetter() const {
-    return extra_ & (1u << ACCESSED_GETTER_BIT);
-  }
 };
 
 // SetProp
@@ -905,10 +864,6 @@ class ICSetProp_Fallback : public ICFallbackStub {
 class ICCall_Fallback : public ICFallbackStub {
   friend class ICStubSpace;
 
- public:
-  static const uint32_t MAX_OPTIMIZED_STUBS = 16;
-
- private:
   explicit ICCall_Fallback(TrampolinePtr stubCode)
       : ICFallbackStub(ICStub::Call_Fallback, stubCode) {}
 };
@@ -964,8 +919,6 @@ class ICRest_Fallback : public ICFallbackStub {
         templateObject_(templateObject) {}
 
  public:
-  static const uint32_t MAX_OPTIMIZED_STUBS = 8;
-
   GCPtrArrayObject& templateObject() { return templateObject_; }
 };
 
@@ -982,10 +935,6 @@ class ICUnaryArith_Fallback : public ICFallbackStub {
 
   explicit ICUnaryArith_Fallback(TrampolinePtr stubCode)
       : ICFallbackStub(UnaryArith_Fallback, stubCode) {}
-
- public:
-  bool sawDoubleResult() { return extra_; }
-  void setSawDoubleResult() { extra_ = 1; }
 };
 
 // Compare
@@ -1015,14 +964,6 @@ class ICBinaryArith_Fallback : public ICFallbackStub {
 
   explicit ICBinaryArith_Fallback(TrampolinePtr stubCode)
       : ICFallbackStub(BinaryArith_Fallback, stubCode) {}
-
-  static const uint16_t SAW_DOUBLE_RESULT_BIT = 0x1;
-
- public:
-  static const uint32_t MAX_OPTIMIZED_STUBS = 8;
-
-  bool sawDoubleResult() const { return extra_ & SAW_DOUBLE_RESULT_BIT; }
-  void setSawDoubleResult() { extra_ |= SAW_DOUBLE_RESULT_BIT; }
 };
 
 // JSOp::NewArray
