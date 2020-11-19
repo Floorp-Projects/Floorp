@@ -40,14 +40,14 @@ add_task(async function() {
   await checkCorsMessage(message, "CORSDisabled");
   await pushPref("content.cors.disable", false);
 
-  info("Test CORSPreflightDidNotSucceed2");
+  info("Test CORSPreflightDidNotSucceed");
   onCorsMessage = waitForMessage(
     hud,
     `CORS preflight response did not succeed`
   );
-  makeFaultyCorsCall("CORSPreflightDidNotSucceed2");
+  makeFaultyCorsCall("CORSPreflightDidNotSucceed");
   message = await onCorsMessage;
-  await checkCorsMessage(message, "CORSPreflightDidNotSucceed2");
+  await checkCorsMessage(message, "CORSPreflightDidNotSucceed");
 
   info("Test CORS did not succeed");
   onCorsMessage = waitForMessage(hud, "Reason: CORS request did not succeed");
@@ -146,7 +146,7 @@ add_task(async function() {
   message = await onCorsMessage;
   await checkCorsMessage(message, "CORSInvalidAllowHeader");
 
-  info("Test CORSMissingAllowHeaderFromPreflight2");
+  info("Test CORSMissingAllowHeaderFromPreflight");
   onCorsMessage = waitForMessage(
     hud,
     `Reason: header ${quote("xyz")} is not allowed according to ` +
@@ -154,9 +154,9 @@ add_task(async function() {
         "Access-Control-Allow-Headers"
       )} from CORS preflight response`
   );
-  makeFaultyCorsCall("CORSMissingAllowHeaderFromPreflight2");
+  makeFaultyCorsCall("CORSMissingAllowHeaderFromPreflight");
   message = await onCorsMessage;
-  await checkCorsMessage(message, "CORSMissingAllowHeaderFromPreflight2");
+  await checkCorsMessage(message, "CORSMissingAllowHeaderFromPreflight");
 
   // See Bug 1480671.
   // XXX: how to make Origin to not be included in the request ?
@@ -216,7 +216,7 @@ function makeFaultyCorsCall(errorCategory, corsUrl) {
         options.credentials = "include";
       }
 
-      if (category === "CORSMissingAllowHeaderFromPreflight2") {
+      if (category === "CORSMissingAllowHeaderFromPreflight") {
         options.headers = new content.Headers({ xyz: true });
       }
 
