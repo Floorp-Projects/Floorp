@@ -20,7 +20,7 @@ add_task(async function setupTestingPref() {
  */
 add_task(async function testSetPositionState() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_URL);
+  const tab = await createLoadedTabWrapper(PAGE_URL);
 
   info(`start media`);
   await playMedia(tab, testVideoId);
@@ -44,7 +44,7 @@ add_task(async function testSetPositionState() {
   });
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 /**

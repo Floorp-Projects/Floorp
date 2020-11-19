@@ -15,7 +15,7 @@ add_task(async function setupTestingPref() {
  */
 add_task(async function testSeekAudibleCapturedMedia() {
   info(`open new non autoplay media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY_MEDIA);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY_MEDIA);
 
   info(`perform seek on the captured media before it starts`);
   await captureAudio(tab, testVideoId);
@@ -29,7 +29,7 @@ add_task(async function testSeekAudibleCapturedMedia() {
   await checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 /**
