@@ -56,9 +56,12 @@ async function testSteps() {
 
   info("Verifying initialization");
 
+  let request = initStorage();
+  await requestFinished(request);
+
   createTestingEnvironment();
 
-  let request = initStorageAndChromeOrigin("persistent");
+  request = initPersistentOrigin(getSystemPrincipal());
   await requestFinished(request);
 
   let testingFiles = getTestingFiles();
