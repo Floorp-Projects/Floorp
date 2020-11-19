@@ -228,7 +228,7 @@ add_task(async function testSetMetadataBeforeMediaStarts() {
     album: "foo",
     artwork: [{ src: "bar.jpg", sizes: "128x128", type: "image/jpeg" }],
   };
-  await setMediaMetadata(tab, metadata);
+  await setMediaMetadata(tab, metadata, { notExpectChange: true });
 
   info(`current media metadata should be empty before media starts`);
   isCurrentMetadataEmpty();
@@ -267,6 +267,9 @@ add_task(async function testSetMetadataAmongMultipleTabs() {
   info(`open media page in tab1`);
   const tab1 = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
+  info(`start media in tab1`);
+  await playMedia(tab1, testVideoId);
+
   info(`set metadata for tab1`);
   let metadata = {
     title: "foo",
@@ -275,9 +278,6 @@ add_task(async function testSetMetadataAmongMultipleTabs() {
     artwork: [{ src: "bar.jpg", sizes: "128x128", type: "image/jpeg" }],
   };
   await setMediaMetadata(tab1, metadata);
-
-  info(`start media in tab1`);
-  await playMedia(tab1, testVideoId);
 
   info(`check if current active metadata is equal to what we've set before`);
   await isCurrentMetadataEqualTo(metadata);
@@ -383,14 +383,16 @@ add_task(async function testUpdateDefaultMetadataWhenPageTitleChanges() {
 /**
  * The following are helper functions.
  */
-function setMediaMetadata(tab, metadata) {
+function setMediaMetadata(tab, metadata, { notExpectChange } = {}) {
   const controller = tab.linkedBrowser.browsingContext.mediaController;
-  const promise = SpecialPowers.spawn(tab.linkedBrowser, [metadata], data => {
-    content.navigator.mediaSession.metadata = new content.MediaMetadata(data);
-  });
+  const metadatachangePromise = notExpectChange
+    ? Promise.resolve()
+    : new Promise(r => (controller.onmetadatachange = r));
   return Promise.all([
-    promise,
-    new Promise(r => (controller.onmetadatachange = r)),
+    metadatachangePromise,
+    SpecialPowers.spawn(tab.linkedBrowser, [metadata], data => {
+      content.navigator.mediaSession.metadata = new content.MediaMetadata(data);
+    }),
   ]);
 }
 
