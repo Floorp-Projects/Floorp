@@ -180,7 +180,7 @@ enum class DeviceFamily : uint8_t {
   IntelHDGraphicsToIvyBridge,
   IntelHDGraphicsToSandyBridge,
   IntelHaswell,
-  IntelHD3000,
+  IntelSandyBridge,
   IntelHD520,
   IntelMobileHDGraphics,
   NvidiaBlockD3D9Layers,
