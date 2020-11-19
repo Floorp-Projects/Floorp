@@ -4,31 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Fired by BrowserGlue._onFirstWindowLoaded when async telemetry data should
-// be collected.
-const TOPIC_GATHER_TELEMETRY = "gather-places-telemetry";
-
 // Seconds between maintenance runs.
 const MAINTENANCE_INTERVAL_SECONDS = 7 * 86400;
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(
-  this,
-  "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "PlacesDBUtils",
-  "resource://gre/modules/PlacesDBUtils.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 /**
  * This component can be used as a starter for modules that have to run when
  * certain categories are invoked.
  */
 function PlacesCategoriesStarter() {
-  Services.obs.addObserver(this, TOPIC_GATHER_TELEMETRY);
   Services.obs.addObserver(this, PlacesUtils.TOPIC_SHUTDOWN);
 }
 
@@ -37,16 +29,9 @@ PlacesCategoriesStarter.prototype = {
     switch (aTopic) {
       case PlacesUtils.TOPIC_SHUTDOWN:
         Services.obs.removeObserver(this, PlacesUtils.TOPIC_SHUTDOWN);
-        Services.obs.removeObserver(this, TOPIC_GATHER_TELEMETRY);
         if (Cu.isModuleLoaded("resource://gre/modules/PlacesDBUtils.jsm")) {
           PlacesDBUtils.shutdown();
         }
-        break;
-      case TOPIC_GATHER_TELEMETRY:
-        // Collect Places telemetry on the first idle.
-        Services.tm.idleDispatchToMainThread(() => {
-          PlacesDBUtils.telemetry();
-        });
         break;
       case "idle-daily":
         // Once a week run places.sqlite maintenance tasks.
