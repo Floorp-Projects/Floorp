@@ -13938,12 +13938,12 @@ nsresult Maintenance::DirectoryWork() {
             // (EnsureTemporaryStorageIsInitialized cleans up only
             // non-persistent origins).
 
-            nsCOMPtr<nsIFile> directory;
-            bool created;
-            IDB_TRY(quotaManager->EnsurePersistentOriginIsInitialized(
-                        quotaInfo, getter_AddRefs(directory), &created),
-                    // Not much we can do here...
-                    Ok{});
+            IDB_TRY_UNWRAP(
+                const DebugOnly<bool> created,
+                quotaManager->EnsurePersistentOriginIsInitialized(quotaInfo)
+                    .map([](const auto& res) { return res.second; }),
+                // Not much we can do here...
+                Ok{});
 
             // We found this origin directory by traversing the repository, so
             // EnsurePersistentOriginIsInitialized shouldn't report that a new
