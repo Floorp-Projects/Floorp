@@ -246,7 +246,7 @@ mem_test("(memory.init 1 (i32.const 1) (i32.const 1) (i32.const 1) (i32.const 1)
 // init: too few args
 mem_test("(memory.init 1 (i32.const 1) (i32.const 1))", "",
          WebAssembly.CompileError,
-         /(popping value from empty stack)|(expected Some\(I32\) but nothing on stack)/);
+         /(popping value from empty stack)|(expected i32 but nothing on stack)/);
 
 // invalid argument types
 {
@@ -372,7 +372,7 @@ tab_test("(table.init 1 (i32.const 1) (i32.const 1) (i32.const 1) (i32.const 1))
 // init: too few args
 tab_test("(table.init 1 (i32.const 1) (i32.const 1))", "",
          WebAssembly.CompileError,
-         /(popping value from empty stack)|(expected Some\(I32\) but nothing on stack)/);
+         /(popping value from empty stack)|(expected i32 but nothing on stack)/);
 
 // invalid argument types
 {
