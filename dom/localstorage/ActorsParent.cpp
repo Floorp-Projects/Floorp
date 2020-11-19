@@ -1387,7 +1387,7 @@ class Connection final {
   class CachedStatement;
 
  private:
-  class InitStorageAndOriginHelper;
+  class InitTemporaryOriginHelper;
 
   class FlushOp;
   class CloseOp;
@@ -1530,7 +1530,7 @@ class Connection::CachedStatement final {
 };
 
 /**
- * Helper to invoke EnsureStorageAndOriginIsInitialized on the QuotaManager IO
+ * Helper to invoke EnsureTemporaryOriginIsInitialized on the QuotaManager IO
  * thread from the LocalStorage connection thread when creating a database
  * connection on demand. This is necessary because we attempt to defer the
  * creation of the origin directory and the database until absolutely needed,
@@ -1539,7 +1539,7 @@ class Connection::CachedStatement final {
  * could be logic on the IO thread that also wants to deal with the same
  * origin, so we need to queue a runnable and wait our turn.)
  */
-class Connection::InitStorageAndOriginHelper final : public Runnable {
+class Connection::InitTemporaryOriginHelper final : public Runnable {
   mozilla::Monitor mMonitor;
   const QuotaInfo mQuotaInfo;
   nsString mOriginDirectoryPath;
@@ -1547,9 +1547,9 @@ class Connection::InitStorageAndOriginHelper final : public Runnable {
   bool mWaiting;
 
  public:
-  explicit InitStorageAndOriginHelper(const QuotaInfo& aQuotaInfo)
-      : Runnable("dom::localstorage::Connection::InitStorageAndOriginHelper"),
-        mMonitor("InitStorageAndOriginHelper::mMonitor"),
+  explicit InitTemporaryOriginHelper(const QuotaInfo& aQuotaInfo)
+      : Runnable("dom::localstorage::Connection::InitTemporaryOriginHelper"),
+        mMonitor("InitTemporaryOriginHelper::mMonitor"),
         mQuotaInfo(aQuotaInfo),
         mIOThreadResultCode(NS_OK),
         mWaiting(true) {
@@ -1559,7 +1559,7 @@ class Connection::InitStorageAndOriginHelper final : public Runnable {
   nsresult BlockAndReturnOriginDirectoryPath(nsAString& aOriginDirectoryPath);
 
  private:
-  ~InitStorageAndOriginHelper() = default;
+  ~InitTemporaryOriginHelper() = default;
 
   nsresult RunOnIOThread();
 
@@ -4255,8 +4255,8 @@ nsresult Connection::EnsureStorageConnection() {
     return NS_OK;
   }
 
-  RefPtr<InitStorageAndOriginHelper> helper =
-      new InitStorageAndOriginHelper(mQuotaInfo);
+  RefPtr<InitTemporaryOriginHelper> helper =
+      new InitTemporaryOriginHelper(mQuotaInfo);
 
   nsString originDirectoryPath;
   rv = helper->BlockAndReturnOriginDirectoryPath(originDirectoryPath);
@@ -4534,7 +4534,7 @@ void Connection::CachedStatement::Assign(
 }
 
 nsresult
-Connection::InitStorageAndOriginHelper::BlockAndReturnOriginDirectoryPath(
+Connection::InitTemporaryOriginHelper::BlockAndReturnOriginDirectoryPath(
     nsAString& aOriginDirectoryPath) {
   AssertIsOnConnectionThread();
 
@@ -4557,15 +4557,17 @@ Connection::InitStorageAndOriginHelper::BlockAndReturnOriginDirectoryPath(
   return NS_OK;
 }
 
-nsresult Connection::InitStorageAndOriginHelper::RunOnIOThread() {
+nsresult Connection::InitTemporaryOriginHelper::RunOnIOThread() {
   AssertIsOnIOThread();
 
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
   LS_TRY_INSPECT(const auto& directoryEntry,
-                 quotaManager->EnsureStorageAndOriginIsInitialized(
-                     PERSISTENCE_TYPE_DEFAULT, mQuotaInfo));
+                 quotaManager
+                     ->EnsureTemporaryOriginIsInitialized(
+                         PERSISTENCE_TYPE_DEFAULT, mQuotaInfo)
+                     .map([](const auto& res) { return res.first; }));
 
   nsresult rv = directoryEntry->GetPath(mOriginDirectoryPath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -4576,7 +4578,7 @@ nsresult Connection::InitStorageAndOriginHelper::RunOnIOThread() {
 }
 
 NS_IMETHODIMP
-Connection::InitStorageAndOriginHelper::Run() {
+Connection::InitTemporaryOriginHelper::Run() {
   AssertIsOnIOThread();
 
   nsresult rv = RunOnIOThread();
@@ -7286,18 +7288,20 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
       ([hasDataForMigration, &quotaManager,
         this]() -> mozilla::Result<nsCOMPtr<nsIFile>, nsresult> {
         if (hasDataForMigration) {
-          LS_TRY_RETURN(quotaManager->EnsureStorageAndOriginIsInitialized(
-              PERSISTENCE_TYPE_DEFAULT, mQuotaInfo));
-        } else {
-          LS_TRY_UNWRAP(auto directoryEntry,
-                        quotaManager->GetDirectoryForOrigin(
-                            PERSISTENCE_TYPE_DEFAULT, Origin()));
-
-          quotaManager->EnsureQuotaForOrigin(PERSISTENCE_TYPE_DEFAULT,
-                                             mQuotaInfo);
-
-          return directoryEntry;
+          LS_TRY_RETURN(quotaManager
+                            ->EnsureTemporaryOriginIsInitialized(
+                                PERSISTENCE_TYPE_DEFAULT, mQuotaInfo)
+                            .map([](const auto& res) { return res.first; }));
         }
+
+        LS_TRY_UNWRAP(auto directoryEntry,
+                      quotaManager->GetDirectoryForOrigin(
+                          PERSISTENCE_TYPE_DEFAULT, Origin()));
+
+        quotaManager->EnsureQuotaForOrigin(PERSISTENCE_TYPE_DEFAULT,
+                                           mQuotaInfo);
+
+        return directoryEntry;
       }()));
 
   rv =
