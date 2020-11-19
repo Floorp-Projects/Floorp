@@ -15,10 +15,12 @@ MockCubebStream::MockCubebStream(cubeb* aContext, cubeb_devid aInputDevice,
                                  cubeb_stream_params* aOutputStreamParams,
                                  cubeb_data_callback aDataCallback,
                                  cubeb_state_callback aStateCallback,
-                                 void* aUserPtr, SmartMockCubebStream* aSelf)
+                                 void* aUserPtr, SmartMockCubebStream* aSelf,
+                                 TimeDuration aStartDelay)
     : context(aContext),
       mHasInput(aInputStreamParams),
       mHasOutput(aOutputStreamParams),
+      mStartDelay(aStartDelay),
       mSelf(aSelf),
       mDataCallback(aDataCallback),
       mStateCallback(aStateCallback),
@@ -45,6 +47,18 @@ MockCubebStream::~MockCubebStream() = default;
 int MockCubebStream::Start() {
   mStateCallback(AsCubebStream(), mUserPtr, CUBEB_STATE_STARTED);
   mStreamStop = false;
+  if (!mStartDelay.IsZero()) {
+    NS_DispatchBackgroundTask(NS_NewRunnableFunction(
+        "MockCubebStream::DelayedStart",
+        [self = RefPtr<SmartMockCubebStream>(mSelf), startDelay = mStartDelay] {
+          std::this_thread::sleep_for(
+              std::chrono::microseconds((int64_t)startDelay.ToMicroseconds()));
+          if (!self->mStreamStop) {
+            MockCubeb::AsMock(self->context)->StartStream(self);
+          }
+        }));
+    return CUBEB_OK;
+  }
   MockCubeb::AsMock(context)->StartStream(this);
   return CUBEB_OK;
 }
@@ -297,6 +311,10 @@ void MockCubeb::SetSupportDeviceChangeCallback(bool aSupports) {
   mSupportsDeviceCollectionChangedCallback = aSupports;
 }
 
+void MockCubeb::SetStreamStartDelay(TimeDuration aDuration) {
+  mStreamStartDelayUs = aDuration.ToMicroseconds();
+}
+
 int MockCubeb::StreamInit(cubeb* aContext, cubeb_stream** aStream,
                           cubeb_devid aInputDevice,
                           cubeb_stream_params* aInputStreamParams,
@@ -306,7 +324,8 @@ int MockCubeb::StreamInit(cubeb* aContext, cubeb_stream** aStream,
                           cubeb_state_callback aStateCallback, void* aUserPtr) {
   auto mockStream = MakeRefPtr<SmartMockCubebStream>(
       aContext, aInputDevice, aInputStreamParams, aOutputDevice,
-      aOutputStreamParams, aDataCallback, aStateCallback, aUserPtr);
+      aOutputStreamParams, aDataCallback, aStateCallback, aUserPtr,
+      TimeDuration::FromMicroseconds(mStreamStartDelayUs));
   *aStream = mockStream->AsCubebStream();
   mStreamInitEvent.Notify(mockStream);
   // AddRef the stream to keep it alive. StreamDestroy releases it.
