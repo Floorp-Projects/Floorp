@@ -76,11 +76,7 @@ static void TimedOut(nsITimer* aTimer, void* aClosure) {
 
 void IdleTaskRunner::SetDeadline(mozilla::TimeStamp aDeadline) {
   mDeadline = aDeadline;
-}
-
-void IdleTaskRunner::SetBudget(int64_t aBudget) {
-  mBudget = TimeDuration::FromMilliseconds(aBudget);
-}
+};
 
 void IdleTaskRunner::SetTimer(uint32_t aDelay, nsIEventTarget* aTarget) {
   MOZ_ASSERT(NS_IsMainThread());
