@@ -5440,9 +5440,11 @@ bool profiler_is_locked_on_current_thread() {
   // - The main profiler mutex, used by most functions, and/or
   // - The buffer mutex, used directly in some functions without locking the
   //   main mutex, e.g., marker-related functions.
-  // - The ProfilerChild mutex, used to store and process buffer chunk updates.
+  // - The ProfilerParent or ProfilerChild mutex, used to store and process
+  //   buffer chunk updates.
   return gPSMutex.IsLockedOnCurrentThread() ||
          CorePS::CoreBuffer().IsThreadSafeAndLockedOnCurrentThread() ||
+         ProfilerParent::IsLockedOnCurrentThread() ||
          ProfilerChild::IsLockedOnCurrentThread();
 }
 
