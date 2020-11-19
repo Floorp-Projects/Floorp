@@ -7,8 +7,7 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
-        title="Sample sub-dialog" style="width: 32em; height: 5em;"
-        onload="document.getElementById('textbox').focus();">
+        title="Sample sub-dialog">
 <dialog id="subDialog">
   <script>
     document.addEventListener("dialogaccept", acceptSubdialog);
@@ -20,6 +19,11 @@
   <description id="desc">A sample sub-dialog for testing</description>
 
   <html:input id="textbox" value="Default text" />
+
+  <html:select id="select">
+    <html:option>Foo</html:option>
+    <html:option>Bar</html:option>
+  </html:select>
 
   <separator class="thin"/>
 
