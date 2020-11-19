@@ -23,7 +23,7 @@ add_task(async function setupTestingPref() {
  */
 add_task(async function testActiveSessionWhenClosingTab() {
   info(`open tab1 and load media session test page`);
-  const tab1 = await createTabAndLoad(PAGE);
+  const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
   await startMediaPlayback(tab1);
 
   info(`pressing '${ACTION}' key`);
@@ -33,7 +33,7 @@ add_task(async function testActiveSessionWhenClosingTab() {
   await checkIfActionReceived(tab1, ACTION);
 
   info(`open tab2 and load media session test page`);
-  const tab2 = await createTabAndLoad(PAGE);
+  const tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
   await startMediaPlayback(tab2);
 
   info(`pressing '${ACTION}' key`);
@@ -65,7 +65,7 @@ add_task(async function testActiveSessionWhenClosingTab() {
  */
 add_task(async function testActiveSessionWhenNavigatingTab() {
   info(`open tab1 and load media session test page`);
-  const tab1 = await createTabAndLoad(PAGE);
+  const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
   await startMediaPlayback(tab1);
 
   info(`pressing '${ACTION}' key`);
@@ -75,7 +75,7 @@ add_task(async function testActiveSessionWhenNavigatingTab() {
   await checkIfActionReceived(tab1, ACTION);
 
   info(`open tab2 and load media session test page`);
-  const tab2 = await createTabAndLoad(PAGE);
+  const tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
   await startMediaPlayback(tab2);
 
   info(`pressing '${ACTION}' key`);
@@ -108,7 +108,7 @@ add_task(async function testActiveSessionWhenNavigatingTab() {
  */
 add_task(async function testCreatingSessionWithoutPlayingMedia() {
   info(`open tab1 and load media session test page`);
-  const tab1 = await createTabAndLoad(PAGE);
+  const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
   await startMediaPlayback(tab1);
 
   info(`pressing '${ACTION}' key`);
@@ -118,7 +118,7 @@ add_task(async function testCreatingSessionWithoutPlayingMedia() {
   await checkIfActionReceived(tab1, ACTION);
 
   info(`open tab2 and load media session test page`);
-  const tab2 = await createTabAndLoad(PAGE);
+  const tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
 
   info(`pressing '${ACTION}' key`);
   MediaControlService.generateMediaControlKey(ACTION);
