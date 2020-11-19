@@ -1748,13 +1748,6 @@ static bool CanIonCompileOrInlineScript(JSScript* script, const char** reason) {
     return false;
   }
 
-  if (script->numBytecodeTypeSets() >= JSScript::MaxBytecodeTypeSets) {
-    // In this case multiple bytecode ops can share a single observed
-    // TypeSet (see bug 1303710).
-    *reason = "too many typesets";
-    return false;
-  }
-
   return true;
 }
 
