@@ -820,8 +820,14 @@ void MacroAssembler::branch32(Condition cond, Register lhs, Register rhs,
 template <class L>
 void MacroAssembler::branch32(Condition cond, Register lhs, Imm32 imm,
                               L label) {
-  cmp32(lhs, imm);
-  B(label, cond);
+  if (imm.value == 0 && cond == Assembler::Equal) {
+    Cbz(ARMRegister(lhs, 32), label);
+  } else if (imm.value == 0 && cond == Assembler::NotEqual) {
+    Cbnz(ARMRegister(lhs, 32), label);
+  } else {
+    cmp32(lhs, imm);
+    B(label, cond);
+  }
 }
 
 void MacroAssembler::branch32(Condition cond, Register lhs, const Address& rhs,
@@ -889,8 +895,14 @@ void MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress lhs,
 
 void MacroAssembler::branch64(Condition cond, Register64 lhs, Imm64 val,
                               Label* success, Label* fail) {
-  Cmp(ARMRegister(lhs.reg, 64), val.value);
-  B(success, cond);
+  if (val.value == 0 && cond == Assembler::Equal) {
+    Cbz(ARMRegister(lhs.reg, 64), success);
+  } else if (val.value == 0 && cond == Assembler::NotEqual) {
+    Cbnz(ARMRegister(lhs.reg, 64), success);
+  } else {
+    Cmp(ARMRegister(lhs.reg, 64), val.value);
+    B(success, cond);
+  }
   if (fail) {
     B(fail);
   }
@@ -934,14 +946,26 @@ void MacroAssembler::branchPtr(Condition cond, Register lhs, Register rhs,
 
 void MacroAssembler::branchPtr(Condition cond, Register lhs, Imm32 rhs,
                                Label* label) {
-  cmpPtr(lhs, rhs);
-  B(label, cond);
+  if (rhs.value == 0 && cond == Assembler::Equal) {
+    Cbz(ARMRegister(lhs, 64), label);
+  } else if (rhs.value == 0 && cond == Assembler::NotEqual) {
+    Cbnz(ARMRegister(lhs, 64), label);
+  } else {
+    cmpPtr(lhs, rhs);
+    B(label, cond);
+  }
 }
 
 void MacroAssembler::branchPtr(Condition cond, Register lhs, ImmPtr rhs,
                                Label* label) {
-  cmpPtr(lhs, rhs);
-  B(label, cond);
+  if (rhs.value == 0 && cond == Assembler::Equal) {
+    Cbz(ARMRegister(lhs, 64), label);
+  } else if (rhs.value == 0 && cond == Assembler::NotEqual) {
+    Cbnz(ARMRegister(lhs, 64), label);
+  } else {
+    cmpPtr(lhs, rhs);
+    B(label, cond);
+  }
 }
 
 void MacroAssembler::branchPtr(Condition cond, Register lhs, ImmGCPtr rhs,
@@ -955,8 +979,14 @@ void MacroAssembler::branchPtr(Condition cond, Register lhs, ImmGCPtr rhs,
 
 void MacroAssembler::branchPtr(Condition cond, Register lhs, ImmWord rhs,
                                Label* label) {
-  cmpPtr(lhs, rhs);
-  B(label, cond);
+  if (rhs.value == 0 && cond == Assembler::Equal) {
+    Cbz(ARMRegister(lhs, 64), label);
+  } else if (rhs.value == 0 && cond == Assembler::NotEqual) {
+    Cbnz(ARMRegister(lhs, 64), label);
+  } else {
+    cmpPtr(lhs, rhs);
+    B(label, cond);
+  }
 }
 
 template <class L>
