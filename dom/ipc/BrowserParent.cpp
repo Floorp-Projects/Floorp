@@ -2567,21 +2567,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnStateChange(
     const nsresult aStatus,
     const Maybe<WebProgressStateChangeData>& aStateChangeData) {
   if (mSuspendedProgressEvents) {
-    nsCOMPtr<nsIURI> uri = aRequestData.requestURI();
-    const uint32_t startDocumentFlags =
-        nsIWebProgressListener::STATE_START |
-        nsIWebProgressListener::STATE_IS_DOCUMENT |
-        nsIWebProgressListener::STATE_IS_REQUEST |
-        nsIWebProgressListener::STATE_IS_WINDOW |
-        nsIWebProgressListener::STATE_IS_NETWORK;
-    // Once we get a load start from something that isn't the initial
-    // about:blank, we should stop blocking future state changes.
-    if ((aStateFlags & startDocumentFlags) == startDocumentFlags &&
-        (aWebProgressData && aWebProgressData->isTopLevel()) &&
-        (!uri || !NS_IsAboutBlank(uri))) {
-      mSuspendedProgressEvents = false;
-    }
-
     return IPC_OK();
   }
 

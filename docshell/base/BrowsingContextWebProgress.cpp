@@ -104,6 +104,44 @@ BrowsingContextWebProgress::OnStateChange(nsIWebProgress* aWebProgress,
                                           nsIRequest* aRequest,
                                           uint32_t aStateFlags,
                                           nsresult aStatus) {
+  const uint32_t startDocumentFlags =
+      nsIWebProgressListener::STATE_START |
+      nsIWebProgressListener::STATE_IS_DOCUMENT |
+      nsIWebProgressListener::STATE_IS_REQUEST |
+      nsIWebProgressListener::STATE_IS_WINDOW |
+      nsIWebProgressListener::STATE_IS_NETWORK;
+  bool isTopLevel = false;
+  nsresult rv = aWebProgress->GetIsTopLevel(&isTopLevel);
+  NS_ENSURE_SUCCESS(rv, rv);
+  bool isTopLevelStartDocumentEvent =
+      (aStateFlags & startDocumentFlags) == startDocumentFlags && isTopLevel;
+  // If we receive a matching STATE_START for a top-level document event,
+  // and we are currently not suspending this event, start suspending all
+  // further matching STATE_START events after this one.
+  if (isTopLevelStartDocumentEvent && !mSuspendOnStateStartChangeEvents) {
+    mSuspendOnStateStartChangeEvents = true;
+  } else if (mSuspendOnStateStartChangeEvents) {
+    // If we are currently suspending matching STATE_START events, check if this
+    // is a corresponding STATE_STOP event.
+    const uint32_t stopWindowFlags = nsIWebProgressListener::STATE_STOP |
+                                     nsIWebProgressListener::STATE_IS_WINDOW;
+    bool isTopLevelStopWindowEvent =
+        (aStateFlags & stopWindowFlags) == stopWindowFlags && isTopLevel;
+    if (isTopLevelStopWindowEvent) {
+      // If this is a STATE_STOP event corresponding to the initial STATE_START
+      // event, stop suspending matching STATE_START events.
+      mSuspendOnStateStartChangeEvents = false;
+    } else if (isTopLevelStartDocumentEvent) {
+      // We have received a matching STATE_START event at least twice, but
+      // haven't received the corresponding STATE_STOP event for the first one.
+      // Don't let this event through. This is probably a duplicate event from
+      // the new BrowserParent due to a process switch.
+      return NS_OK;
+    }
+    // Allow all other progress events that don't match top-level start document
+    // flags.
+  }
+
   UpdateAndNotifyListeners(
       ((aStateFlags >> 16) & nsIWebProgress::NOTIFY_STATE_ALL),
       [&](nsIWebProgressListener* listener) {

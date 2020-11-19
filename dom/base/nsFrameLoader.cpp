@@ -1855,7 +1855,7 @@ void nsFrameLoader::StartDestroy(bool aForProcessSwitch) {
     if (aForProcessSwitch) {
       // This should suspend all future progress events from this BrowserParent,
       // since we're going to tear it down after stopping the docshell in it.
-      browserParent->SuspendProgressEventsUntilAfterNextLoadStarts();
+      browserParent->SuspendProgressEvents();
     }
   }
 

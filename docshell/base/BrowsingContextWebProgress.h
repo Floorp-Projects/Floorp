@@ -49,6 +49,17 @@ class BrowsingContextWebProgress final : public nsIWebProgress,
 
   using ListenerArray = nsAutoTObserverArray<ListenerInfo, 4>;
   ListenerArray mListenerInfoList;
+
+  // This indicates whether we are currently suspending onStateChange top level
+  // STATE_START events for a document. We start suspending whenever we receive
+  // the first STATE_START event with the matching flags (see
+  // ::RecvOnStateChange for details), until we get a corresponding STATE_STOP
+  // event. In the meantime, if there other onStateChange events, this flag does
+  // not affect them. We do this to avoid duplicate onStateChange STATE_START
+  // events that happen during process switch. With this flag, we allow
+  // onStateChange STATE_START event from the old BrowserParent, but not the
+  // same event from the new BrowserParent during a process switch.
+  bool mSuspendOnStateStartChangeEvents = false;
 };
 
 }  // namespace dom
