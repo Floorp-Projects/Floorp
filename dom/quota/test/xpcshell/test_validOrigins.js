@@ -64,11 +64,21 @@ async function testSteps() {
     },
   ];
 
+  info("Initializing");
+
+  let request = init();
+  await requestFinished(request);
+
+  info("Initializing temporary storage");
+
+  request = initTemporaryStorage();
+  await requestFinished(request);
+
   for (let origin of origins) {
     info(`Testing ${origin.url}`);
 
     try {
-      let request = initStorageAndOrigin(getPrincipal(origin.url), "default");
+      request = initTemporaryOrigin("default", getPrincipal(origin.url));
       await requestFinished(request);
 
       ok(true, "Should not have thrown");
@@ -84,6 +94,6 @@ async function testSteps() {
     );
   }
 
-  let request = clear();
+  request = clear();
   await requestFinished(request);
 }

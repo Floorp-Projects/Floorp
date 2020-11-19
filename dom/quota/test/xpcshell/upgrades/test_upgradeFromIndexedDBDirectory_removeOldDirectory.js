@@ -72,9 +72,14 @@ async function testSteps() {
   exists = persistentStorageDir.exists();
   ok(!exists, "Persistent storage directory doesn't exist");
 
+  info("Initializing temporary storage");
+
+  request = initTemporaryStorage();
+  await requestFinished(request);
+
   info("Initializing origin");
 
-  request = initStorageAndOrigin(getPrincipal(url), persistence);
+  request = initTemporaryOrigin(persistence, getPrincipal(url));
   await requestFinished(request);
 
   ok(!request.result, "Origin directory wasn't created");

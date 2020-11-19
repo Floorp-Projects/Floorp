@@ -72,9 +72,14 @@ async function testSteps() {
   exists = defaultStorageDir.exists();
   ok(exists, "Default storage directory does exist");
 
+  info("Initializing temporary storage");
+
+  request = initTemporaryStorage();
+  await requestFinished(request);
+
   info("Initializing origin");
 
-  request = initStorageAndOrigin(getPrincipal(url), persistence);
+  request = initTemporaryOrigin(persistence, getPrincipal(url));
   await requestFinished(request);
 
   ok(!request.result, "Origin directory wasn't created");
