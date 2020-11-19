@@ -10,23 +10,27 @@ const MS_PER_DAY = 86400000;
 // Corrupt DBs older than this value are removed.
 const CORRUPT_DB_RETAIN_DAYS = 14;
 
+// Seconds between maintenance runs.
+const MAINTENANCE_INTERVAL_SECONDS = 7 * 86400;
+
+const { ComponentUtils } = ChromeUtils.import(
+  "resource://gre/modules/ComponentUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Sqlite: "resource://gre/modules/Sqlite.jsm",
 });
 
-var EXPORTED_SYMBOLS = ["PlacesDBUtils"];
+var EXPORTED_SYMBOLS = ["PlacesDBUtils", "PlacesDBUtilsIdleMaintenance"];
 
 var PlacesDBUtils = {
   _isShuttingDown: false,
-  shutdown() {
-    PlacesDBUtils._isShuttingDown = true;
-  },
 
   _clearTaskQueue: false,
   clearPendingTasks() {
@@ -1328,6 +1332,12 @@ var PlacesDBUtils = {
    *         - logs: an array of strings containing the messages logged by the task
    */
   async runTasks(tasks) {
+    if (!this._registeredShutdownObserver) {
+      this._registeredShutdownObserver = true;
+      PlacesUtils.registerShutdownFunction(() => {
+        this._isShuttingDown = true;
+      });
+    }
     PlacesDBUtils._clearTaskQueue = false;
     let tasksMap = new Map();
     for (let task of tasks) {
@@ -1400,3 +1410,30 @@ async function integrity(dbName) {
     await db.close();
   }
 }
+
+function PlacesDBUtilsIdleMaintenance() {}
+
+PlacesDBUtilsIdleMaintenance.prototype = {
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "idle-daily":
+        // Once a week run places.sqlite maintenance tasks.
+        let lastMaintenance = Services.prefs.getIntPref(
+          "places.database.lastMaintenance",
+          0
+        );
+        let nowSeconds = parseInt(Date.now() / 1000);
+        if (lastMaintenance < nowSeconds - MAINTENANCE_INTERVAL_SECONDS) {
+          PlacesDBUtils.maintenanceOnIdle();
+        }
+        break;
+      default:
+        throw new Error("Trying to handle an unknown category.");
+    }
+  },
+  _xpcom_factory: ComponentUtils.generateSingletonFactory(
+    PlacesDBUtilsIdleMaintenance
+  ),
+  classID: Components.ID("d38926e0-29c1-11eb-8588-0800200c9a66"),
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
+};
