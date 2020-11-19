@@ -146,12 +146,12 @@ win64-rust-1.47:
         ]
         toolchain-alias: win64-rust
 
-macosx64-rust-nightly:
+macosx64-rust-beta:
     treeherder:
-        symbol: TM(rust-nightly)
+        symbol: TM(rust-beta)
     run:
         arguments: [
-            '--channel', 'nightly-2020-11-09',
+            '--channel', 'beta-2020-11-18',
             '--host', 'x86_64-apple-darwin',
             '--target', 'x86_64-apple-darwin',
             '--target', 'aarch64-apple-darwin',

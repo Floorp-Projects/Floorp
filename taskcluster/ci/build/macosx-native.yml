@@ -46,6 +46,6 @@ macosx64-aarch64-shippable/opt:
             - macosx64-dump-syms
             - macosx64-nasm
             - macosx64-node
-            - macosx64-rust-nightly
+            - macosx64-rust-beta
     optimization:
         skip-unless-expanded: null
