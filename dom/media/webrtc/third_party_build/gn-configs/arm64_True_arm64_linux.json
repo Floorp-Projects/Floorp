@@ -10835,6 +10835,7 @@
             ],
             "defines": [
                 "MULTI_MONITOR_SCREENSHARE",
+                "WEBRTC_USE_PIPEWIRE",
                 "V8_DEPRECATION_WARNINGS",
                 "USE_NSS_CERTS=1",
                 "USE_X11=1",
@@ -10863,6 +10864,7 @@
             ],
             "include_dirs": [
                 "/media/libyuv/libyuv/include/",
+                "/third_party/pipewire/",
                 "//",
                 "/home/jenkins/workspace/Firefox-default/label/aarch64/firefox/obj-aarch64-unknown-linux-gnu/media/webrtc/trunk/webrtc/gn-output/gen/"
             ],
@@ -10944,7 +10946,13 @@
                 "//modules/desktop_capture/linux/desktop_device_info_x11.cc",
                 "//modules/desktop_capture/linux/desktop_device_info_x11.h",
                 "//modules/desktop_capture/linux/shared_x_util.cc",
-                "//modules/desktop_capture/linux/shared_x_util.h"
+                "//modules/desktop_capture/linux/shared_x_util.h",
+                "//modules/desktop_capture/linux/base_capturer_pipewire.cc",
+                "//modules/desktop_capture/linux/base_capturer_pipewire.h",
+                "//modules/desktop_capture/linux/screen_capturer_pipewire.cc",
+                "//modules/desktop_capture/linux/screen_capturer_pipewire.h",
+                "//modules/desktop_capture/linux/window_capturer_pipewire.cc",
+                "//modules/desktop_capture/linux/window_capturer_pipewire.h"
             ],
             "type": "static_library"
         },
