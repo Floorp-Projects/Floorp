@@ -69,12 +69,6 @@ void ObjectGroup::setProto(TaggedProto proto) {
   setProtoUnchecked(proto);
 }
 
-/* static */
-bool ObjectGroup::useSingletonForClone(JSFunction* fun) {
-  MOZ_RELEASE_ASSERT(!IsTypeInferenceEnabled());
-  return false;
-}
-
 /////////////////////////////////////////////////////////////////////
 // JSObject
 /////////////////////////////////////////////////////////////////////
