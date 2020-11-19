@@ -4,7 +4,6 @@ license:
     include:
         - .
     exclude:
-        - .hg
         # These paths need to be triaged.
         - build/pgo/js-input
         # License not super clear
