@@ -1208,14 +1208,18 @@ void MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs,
                                   L label) {
   MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed ||
              cond == NotSigned);
-  // x86 prefers |test foo, foo| to |cmp foo, #0|.
-  // Convert the former to the latter for ARM.
   if (lhs == rhs && (cond == Zero || cond == NonZero)) {
-    cmp32(lhs, Imm32(0));
+    // The x86-biased front end prefers |test foo, foo| to |cmp foo, #0|, but
+    // the latter is better on ARM64.
+    if (cond == Zero) {
+      Cbz(ARMRegister(lhs, 32), label);
+    } else {
+      Cbnz(ARMRegister(lhs, 32), label);
+    }
   } else {
     test32(lhs, rhs);
+    B(label, cond);
   }
-  B(label, cond);
 }
 
 template <class L>
