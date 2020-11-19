@@ -18,9 +18,14 @@ TEST(DataMutex, Basic)
 {
   {
     DataMutex<uint32_t> i(1, "1");
-    auto x = i.Lock();
-    *x = 4;
-    ASSERT_EQ(*x, 4u);
+    i.Mutex().AssertNotCurrentThreadOwns();
+    {
+      auto x = i.Lock();
+      i.Mutex().AssertCurrentThreadOwns();
+      *x = 4;
+      ASSERT_EQ(*x, 4u);
+    }
+    i.Mutex().AssertNotCurrentThreadOwns();
   }
   {
     DataMutex<A> a({4}, "StructA");
