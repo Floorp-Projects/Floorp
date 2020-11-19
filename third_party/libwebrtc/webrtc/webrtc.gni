@@ -71,7 +71,7 @@ declare_args() {
   rtc_enable_bwe_test_logging = false
 
   # Set this to use PipeWire on the Wayland display server.
-  rtc_use_pipewire = false
+  rtc_use_pipewire = true
 
   rtc_enable_android_opensl = false
 
