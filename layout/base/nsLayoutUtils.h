@@ -861,7 +861,7 @@ class nsLayoutUtils {
    * Gets the scale factors of the transform for aFrame relative to the root
    * frame if this transform is 2D, or the identity scale factors otherwise.
    */
-  static gfxSize GetTransformToAncestorScale(nsIFrame* aFrame);
+  static gfxSize GetTransformToAncestorScale(const nsIFrame* aFrame);
 
   /**
    * Gets the scale factors of the transform for aFrame relative to the root
@@ -2485,12 +2485,12 @@ class nsLayoutUtils {
    */
   enum class SubtractDynamicToolbar { No, Yes };
   static bool GetContentViewerSize(
-      nsPresContext* aPresContext, LayoutDeviceIntSize& aOutSize,
+      const nsPresContext* aPresContext, LayoutDeviceIntSize& aOutSize,
       SubtractDynamicToolbar = SubtractDynamicToolbar::Yes);
 
  private:
   static bool UpdateCompositionBoundsForRCDRSF(
-      mozilla::ParentLayerRect& aCompBounds, nsPresContext* aPresContext);
+      mozilla::ParentLayerRect& aCompBounds, const nsPresContext* aPresContext);
 
  public:
   /**
@@ -2518,7 +2518,7 @@ class nsLayoutUtils {
    *          mDevPixelsPerCSSPixel set.
    */
   static CSSSize CalculateRootCompositionSize(
-      nsIFrame* aFrame, bool aIsRootContentDocRootScrollFrame,
+      const nsIFrame* aFrame, bool aIsRootContentDocRootScrollFrame,
       const FrameMetrics& aMetrics);
 
   /**
@@ -2528,7 +2528,7 @@ class nsLayoutUtils {
    * scrollable rect as the rect of the root frame.
    */
   static nsRect CalculateScrollableRectForFrame(
-      nsIScrollableFrame* aScrollableFrame, nsIFrame* aRootFrame);
+      const nsIScrollableFrame* aScrollableFrame, const nsIFrame* aRootFrame);
 
   /**
    * Calculate the expanded scrollable rect for a frame. See FrameMetrics.h for
@@ -2674,7 +2674,7 @@ class nsLayoutUtils {
    *     scrollable content.
    */
   static nsMargin ScrollbarAreaToExcludeFromCompositionBoundsFor(
-      nsIFrame* aScrollFrame);
+      const nsIFrame* aScrollFrame);
 
   /**
    * Looks in the layer subtree rooted at aLayer for a metrics with scroll id
@@ -2875,9 +2875,9 @@ class nsLayoutUtils {
   static nsSize ExpandHeightForViewportUnits(nsPresContext* aPresContext,
                                              const nsSize& aSize);
 
-  static CSSSize ExpandHeightForDynamicToolbar(nsPresContext* aPresContext,
-                                               const CSSSize& aSize);
-  static nsSize ExpandHeightForDynamicToolbar(nsPresContext* aPresContext,
+  static CSSSize ExpandHeightForDynamicToolbar(
+      const nsPresContext* aPresContext, const CSSSize& aSize);
+  static nsSize ExpandHeightForDynamicToolbar(const nsPresContext* aPresContext,
                                               const nsSize& aSize);
 
   /**
