@@ -346,11 +346,6 @@ define(function(require, exports, module) {
       return [];
     }
 
-    // Promise resolved value Grip
-    if (grip.promiseState && grip.promiseState.value) {
-      return [grip.promiseState.value];
-    }
-
     // Array Grip
     if (grip.preview && grip.preview.items) {
       return grip.preview.items;

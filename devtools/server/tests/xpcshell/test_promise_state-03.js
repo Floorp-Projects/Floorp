@@ -17,15 +17,25 @@ add_task(
     );
 
     const environment = await packet.frame.getEnvironment();
-    const grip = environment.bindings.variables.p;
-    ok(grip.value.preview);
-    equal(grip.value.class, "Promise");
-    equal(grip.value.promiseState.state, "rejected");
+    const grip = environment.bindings.variables.p.value;
+    ok(grip.preview);
+    equal(grip.class, "Promise");
+    equal(grip.preview.ownProperties["<state>"], "rejected");
     equal(
-      grip.value.promiseState.reason.actorID,
+      grip.preview.ownProperties["<reason>"].actorID,
       packet.frame.arguments[0].actorID,
-      "The promise's rejected state reason should be the same value passed " +
-        "to the then function"
+      "The promise's rejected state reason in the preview should be the same " +
+        "value passed to the then function"
+    );
+
+    const objClient = threadFront.pauseGrip(grip);
+    const { promiseState } = await objClient.getPromiseState();
+    equal(promiseState.state, "rejected");
+    equal(
+      promiseState.reason.getGrip().actorID,
+      packet.frame.arguments[0].actorID,
+      "The promise's rejected state value in getPromiseState() should be " +
+        "the same value passed to the then function"
     );
   })
 );

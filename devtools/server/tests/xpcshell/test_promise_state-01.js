@@ -17,11 +17,15 @@ add_task(
     );
 
     const environment = await packet.frame.getEnvironment();
-    const grip = environment.bindings.variables.p;
+    const grip = environment.bindings.variables.p.value;
 
-    ok(grip.value.preview);
-    equal(grip.value.class, "Promise");
-    equal(grip.value.promiseState.state, "pending");
+    ok(grip.preview);
+    equal(grip.class, "Promise");
+    equal(grip.preview.ownProperties["<state>"], "pending");
+
+    const objClient = threadFront.pauseGrip(grip);
+    const { promiseState } = await objClient.getPromiseState();
+    equal(promiseState.state, "pending");
   })
 );
 

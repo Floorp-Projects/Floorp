@@ -175,23 +175,17 @@ stubs.set("Promise.resolve(1n)", {
   extensible: true,
   frozen: false,
   sealed: false,
-  promiseState: {
-    state: "fulfilled",
-    value: {
-      type: "BigInt",
-      text: "1",
-    },
-    creationTimestamp: 1550831461773.1665,
-    timeToSettle: 0.036448000464588404,
-  },
   ownPropertyLength: 0,
   preview: {
     kind: "Object",
-    ownProperties: {},
-    ownSymbols: [],
-    ownPropertiesLength: 0,
-    ownSymbolsLength: 0,
-    safeGetterValues: {},
+    ownProperties: {
+      "<state>": "fulfilled",
+      "<value>": {
+        type: "BigInt",
+        text: "1",
+      },
+    },
+    ownPropertiesLength: 2,
   },
 });
 

@@ -106,9 +106,12 @@ describe("Promise - fulfilled with object", () => {
 
 describe("Promise - fulfilled with array", () => {
   const object = stubs.get("FulfilledWithArray");
-  const length = getGripLengthBubbleText(object.promiseState.value, {
-    mode: MODE.TINY,
-  });
+  const length = getGripLengthBubbleText(
+    object.preview.ownProperties["<value>"],
+    {
+      mode: MODE.TINY,
+    }
+  );
   const out = `Promise { <state>: "fulfilled", <value>: ${length} […] }`;
 
   it("selects PromiseRep Rep for Promise fulfilled with an array", () => {

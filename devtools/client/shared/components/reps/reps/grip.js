@@ -201,8 +201,8 @@ define(function(require, exports, module) {
     // The server synthesizes some property names for a Proxy, like
     // <target> and <handler>; we don't want to quote these because,
     // as synthetic properties, they appear more natural when
-    // unquoted.
-    const suppressQuotes = object.class === "Proxy";
+    // unquoted. Analogous for a Promise.
+    const suppressQuotes = ["Proxy", "Promise"].includes(object.class);
     const propsArray = getProps(props, properties, indexes, suppressQuotes);
 
     // Show symbols.

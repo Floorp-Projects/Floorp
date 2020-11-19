@@ -165,11 +165,6 @@ const proto = {
 
     this.hooks.incrementGripDepth();
 
-    // TODO (bug 1676476): remove this and instead add a previewer for promises.
-    if (g.class == "Promise" && this.hooks.getGripDepth() < 3) {
-      g.promiseState = this.promiseState().promiseState;
-    }
-
     if (g.class == "Function") {
       g.isClassConstructor = this.obj.isClassConstructor;
     }
