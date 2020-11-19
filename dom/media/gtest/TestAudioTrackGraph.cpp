@@ -270,6 +270,8 @@ TEST(TestAudioTrackGraph, AudioInputTrack)
 {
   MockCubeb* cubeb = new MockCubeb();
   CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
+  auto unforcer = WaitFor(cubeb->ForceAudioThread()).unwrap();
+  Unused << unforcer;
 
   // Start on a system clock driver, then switch to full-duplex in one go. If we
   // did output-then-full-duplex we'd risk a second NotifyWhenDeviceStarted
@@ -602,6 +604,8 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
 
   MockCubeb* cubeb = new MockCubeb();
   CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
+  auto unforcer = WaitFor(cubeb->ForceAudioThread()).unwrap();
+  Unused << unforcer;
 
   /* Primary graph: Create the graph. */
   MediaTrackGraph* primary =
