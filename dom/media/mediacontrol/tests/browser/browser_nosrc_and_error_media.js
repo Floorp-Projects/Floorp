@@ -33,25 +33,21 @@ add_task(async function testNoSrcOrErrorMediaEntersPIPMode() {
       ok(false, "should not get activated!");
     };
 
-    info(`enter PIP mode several times and controller should keep inactive`);
-    for (let idx = 0; idx < 3; idx++) {
-      const winPIP = await triggerPictureInPicture(
-        tab.linkedBrowser,
-        testVideoId
-      );
-
-      await ensureMessageAndClosePiP(
-        tab.linkedBrowser,
-        testVideoId,
-        winPIP,
-        false
-      );
-    }
+    info(`enter and leave PIP mode which would not affect controller`);
+    const winPIP = await triggerPictureInPicture(
+      tab.linkedBrowser,
+      testVideoId
+    );
+    await ensureMessageAndClosePiP(
+      tab.linkedBrowser,
+      testVideoId,
+      winPIP,
+      false
+    );
     ok(!controller.isActive, "controller is still inactive");
 
     info(`remove tab`);
     await tab.close();
-    await SimpleTest.promiseFocus(window);
   }
 });
 
@@ -66,11 +62,9 @@ add_task(async function testNoSrcOrErrorMediaEntersFullscreen() {
       ok(false, "should not get activated!");
     };
 
-    info(`enter fullscreen several times and controller should keep inactive`);
+    info(`enter and leave fullscreen which would not affect controller`);
     await ensureTabIsAlreadyFocused(tab);
-    for (let idx = 0; idx < 3; idx++) {
-      await enterAndLeaveFullScreen(tab, testVideoId);
-    }
+    await enterAndLeaveFullScreen(tab, testVideoId);
     ok(!controller.isActive, "controller is still inactive");
 
     info(`remove tab`);

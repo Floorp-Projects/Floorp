@@ -8,8 +8,8 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-// Bug 1620686 - This test requests a lot of fullscreen and picture-in-picture
-// for media elements which needs longer time to run.
+// Bug 1673509 - This test requests a lot of fullscreen for media elements,
+// which sometime Gecko would take longer time to fulfill.
 requestLongerTimeout(2);
 
 // This array contains the elements' id in `file_non_eligible_media.html`.
@@ -36,65 +36,63 @@ add_task(async function setupTestingPref() {
   });
 });
 
-add_task(async function testPlayPauseAndStop() {
-  for (const elementId of gNonEligibleElementIds) {
-    info(`- open new tab and start non eligible media ${elementId} -`);
-    const tab = await createLoadedTabWrapper(PAGE_NON_ELIGIBLE_MEDIA, {
-      needCheck: false,
-    });
-    await startNonEligibleMedia(tab, elementId);
+add_task(
+  async function testNonAudibleMediaCantActivateControllerButAudibleMediaCan() {
+    for (const elementId of gNonEligibleElementIds) {
+      info(`open new tab with non eligible media elements`);
+      const tab = await createLoadedTabWrapper(PAGE_NON_ELIGIBLE_MEDIA, {
+        needCheck: couldElementBecomeEligible(elementId),
+      });
 
-    // Generate media control event should be postponed for a while to ensure
-    // that we didn't create any controller.
-    info(`- let media play for a while -`);
-    await checkIfMediaIsStillPlaying(tab, elementId);
+      info(`although media is playing but it won't activate controller`);
+      await Promise.all([
+        startNonEligibleMedia(tab, elementId),
+        checkIfMediaIsStillPlaying(tab, elementId),
+      ]);
+      ok(!tab.controller.isActive, "controller is still inactive");
 
-    info(`- simulate pressing 'pause' media control key -`);
-    MediaControlService.generateMediaControlKey("pause");
+      if (couldElementBecomeEligible(elementId)) {
+        info(`make element ${elementId} audible would activate controller`);
+        await Promise.all([
+          makeElementEligible(tab, elementId),
+          checkOrWaitUntilControllerBecomeActive(tab),
+        ]);
+      }
 
-    info(`- non eligible media won't be controlled by media control -`);
-    await checkIfMediaIsStillPlaying(tab, elementId);
-
-    if (couldElementBecomeEligible(elementId)) {
-      info(`- make element ${elementId} audible -`);
-      await makeElementEligible(tab, elementId);
-
-      info(`- simulate pressing 'pause' media control key -`);
-      MediaControlService.generateMediaControlKey("pause");
-
-      info(`- audible media should be controlled by media control -`);
-      await waitUntilMediaPaused(tab, elementId);
+      info(`remove tab`);
+      await tab.close();
     }
-
-    info(`remove tab`);
-    await tab.close();
   }
-});
+);
 
 /**
  * Normally those media are not able to being controlled, however, once they
  * enter fullsceen or Picture-in-Picture mode, then they can be controlled.
  */
 add_task(async function testNonEligibleMediaEnterFullscreen() {
+  info(`open new tab with non eligible media elements`);
+  const tab = await createLoadedTabWrapper(PAGE_NON_ELIGIBLE_MEDIA);
+
   for (const elementId of gNonEligibleElementIds) {
-    info(`- open new tab and start non eligible media ${elementId} -`);
-    const tab = await createLoadedTabWrapper(PAGE_NON_ELIGIBLE_MEDIA);
     await startNonEligibleMedia(tab, elementId);
 
     info(`entering fullscreen should activate the media controller`);
-    await enableFullScreen(tab, elementId);
+    await enterFullScreen(tab, elementId);
     await checkOrWaitUntilControllerBecomeActive(tab);
     ok(true, `fullscreen ${elementId} media is able to being controlled`);
 
-    info(`remove tab`);
-    await tab.close();
+    info(`leave fullscreen`);
+    await leaveFullScreen(tab);
   }
+  info(`remove tab`);
+  await tab.close();
 });
 
 add_task(async function testNonEligibleMediaEnterPIPMode() {
+  info(`open new tab with non eligible media elements`);
+  const tab = await createLoadedTabWrapper(PAGE_NON_ELIGIBLE_MEDIA);
+
   for (const elementId of gNonEligibleElementIds) {
-    info(`- open new tab and start non eligible media ${elementId} -`);
-    const tab = await createLoadedTabWrapper(PAGE_NON_ELIGIBLE_MEDIA);
     await startNonEligibleMedia(tab, elementId);
 
     info(`media entering PIP mode should activate the media controller`);
@@ -102,10 +100,11 @@ add_task(async function testNonEligibleMediaEnterPIPMode() {
     await checkOrWaitUntilControllerBecomeActive(tab);
     ok(true, `PIP ${elementId} media is able to being controlled`);
 
-    info(`remove tab`);
+    info(`stop PIP mode`);
     await BrowserTestUtils.closeWindow(winPIP);
-    await tab.close();
   }
+  info(`remove tab`);
+  await tab.close();
 });
 
 /**
@@ -124,6 +123,7 @@ function startNonEligibleMedia(tab, elementId) {
       const context = new content.AudioContext();
       context.createMediaElementSource(video);
     }
+    info(`start non eligible media ${Id}`);
     return video.play();
   });
 }
@@ -180,10 +180,10 @@ function waitUntilMediaPaused(tab, elementId) {
   });
 }
 
-function enableFullScreen(tab, elementId) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [elementId], elementId => {
+function enterFullScreen(tab, elementId) {
+  return SpecialPowers.spawn(tab.linkedBrowser, [elementId], Id => {
     return new Promise(r => {
-      const element = content.document.getElementById(elementId);
+      const element = content.document.getElementById(Id);
       element.requestFullscreen();
       element.onfullscreenchange = () => {
         element.onfullscreenchange = null;
@@ -195,5 +195,11 @@ function enableFullScreen(tab, elementId) {
         element.requestFullscreen();
       };
     });
+  });
+}
+
+function leaveFullScreen(tab) {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], _ => {
+    return content.document.exitFullscreen();
   });
 }
