@@ -510,11 +510,10 @@ struct WidePlanarRGBA8 {
 };
 
 template <typename S>
-SI WidePlanarRGBA8 textureLinearPlanarRGBA8(S sampler, vec2 P,
+SI WidePlanarRGBA8 textureLinearPlanarRGBA8(S sampler, ivec2 i,
                                             int32_t zoffset = 0) {
   assert(sampler->format == TextureFormat::RGBA8);
 
-  ivec2 i(linearQuantize(P, 128, sampler));
   ivec2 frac = i;
   i >>= 7;
 
@@ -562,7 +561,8 @@ SI WidePlanarRGBA8 textureLinearPlanarRGBA8(S sampler, vec2 P,
 
 template <typename S>
 vec4 textureLinearRGBA8(S sampler, vec2 P, int32_t zoffset = 0) {
-  auto planar = textureLinearPlanarRGBA8(sampler, P, zoffset);
+  ivec2 i(linearQuantize(P, 128, sampler));
+  auto planar = textureLinearPlanarRGBA8(sampler, i, zoffset);
   auto rg = CONVERT(planar.rg, V8<float>);
   auto ba = CONVERT(planar.ba, V8<float>);
   auto r = lowHalf(rg);
@@ -621,11 +621,10 @@ struct WidePlanarRG8 {
 };
 
 template <typename S>
-SI WidePlanarRG8 textureLinearPlanarRG8(S sampler, vec2 P,
+SI WidePlanarRG8 textureLinearPlanarRG8(S sampler, ivec2 i,
                                         int32_t zoffset = 0) {
   assert(sampler->format == TextureFormat::RG8);
 
-  ivec2 i(linearQuantize(P, 128, sampler));
   ivec2 frac = i;
   i >>= 7;
 
@@ -675,7 +674,8 @@ SI WidePlanarRG8 textureLinearPlanarRG8(S sampler, vec2 P,
 
 template <typename S>
 vec4 textureLinearRG8(S sampler, vec2 P, int32_t zoffset = 0) {
-  auto planar = textureLinearPlanarRG8(sampler, P, zoffset);
+  ivec2 i(linearQuantize(P, 128, sampler));
+  auto planar = textureLinearPlanarRG8(sampler, i, zoffset);
   auto rg = CONVERT(planar.rg, V8<float>) * (1.0f / 255.0f);
   auto r = lowHalf(rg);
   auto g = highHalf(rg);
@@ -812,11 +812,10 @@ struct WidePlanarYUV8 {
 };
 
 template <typename S>
-SI WidePlanarYUV8 textureLinearPlanarYUV422(S sampler, vec2 P,
+SI WidePlanarYUV8 textureLinearPlanarYUV422(S sampler, ivec2 i,
                                             int32_t zoffset = 0) {
   assert(sampler->format == TextureFormat::YUV422);
 
-  ivec2 i(linearQuantize(P, 128, sampler));
   ivec2 frac = i;
   i >>= 7;
 
@@ -889,7 +888,8 @@ SI WidePlanarYUV8 textureLinearPlanarYUV422(S sampler, vec2 P,
 
 template <typename S>
 vec4 textureLinearYUV422(S sampler, vec2 P, int32_t zoffset = 0) {
-  auto planar = textureLinearPlanarYUV422(sampler, P, zoffset);
+  ivec2 i(linearQuantize(P, 128, sampler));
+  auto planar = textureLinearPlanarYUV422(sampler, i, zoffset);
   auto y = CONVERT(planar.y, Float) * (1.0f / 255.0f);
   auto u = CONVERT(planar.u, Float) * (1.0f / 255.0f);
   auto v = CONVERT(planar.v, Float) * (1.0f / 255.0f);
