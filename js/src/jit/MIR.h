@@ -2543,22 +2543,6 @@ class MInitPropGetterSetter
   }
 };
 
-class MInitElem
-    : public MTernaryInstruction,
-      public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>, BoxPolicy<2>>::Data {
-  MInitElem(MDefinition* obj, MDefinition* id, MDefinition* value)
-      : MTernaryInstruction(classOpcode, obj, id, value) {
-    setResultType(MIRType::None);
-  }
-
- public:
-  INSTRUCTION_HEADER(InitElem)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, getObject), (1, getId), (2, getValue))
-
-  bool possiblyCalls() const override { return true; }
-};
-
 class MInitElemGetterSetter
     : public MTernaryInstruction,
       public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>, ObjectPolicy<2>>::Data {
@@ -7159,25 +7143,21 @@ struct LambdaFunctionInfo {
   js::FunctionFlags flags;
   uint16_t nargs;
   bool singletonType;
-  bool useSingletonForClone;
 
   LambdaFunctionInfo(JSFunction* fun, BaseScript* baseScript,
-                     FunctionFlags flags, uint16_t nargs, bool singletonType,
-                     bool useSingletonForClone)
+                     FunctionFlags flags, uint16_t nargs, bool singletonType)
       : fun_(fun),
         baseScript(baseScript),
         flags(flags),
         nargs(nargs),
-        singletonType(singletonType),
-        useSingletonForClone(useSingletonForClone) {}
+        singletonType(singletonType) {}
 
   LambdaFunctionInfo(const LambdaFunctionInfo& other)
       : fun_(static_cast<JSFunction*>(other.fun_)),
         baseScript(other.baseScript),
         flags(other.flags),
         nargs(other.nargs),
-        singletonType(other.singletonType),
-        useSingletonForClone(other.useSingletonForClone) {}
+        singletonType(other.singletonType) {}
 
   // Be careful when calling this off-thread. Don't call any JSFunction*
   // methods that depend on script/lazyScript - this can race with
@@ -8919,153 +8899,18 @@ class MStoreFixedSlot
   ALLOW_CLONE(MStoreFixedSlot)
 };
 
-struct InliningTarget {
-  JSObject* target;
-
-  // If target is a singleton, group is nullptr. If target is not a singleton,
-  // this is the group we need to guard on when doing a polymorphic inlining
-  // dispatch. Note that this can be different from target->group() due to
-  // proto mutation.
-  ObjectGroup* group;
-
-  InliningTarget(JSObject* target, ObjectGroup* group)
-      : target(target), group(group) {
-    MOZ_ASSERT(target->isSingleton() == !group);
-  }
-};
-
-using InliningTargets = Vector<InliningTarget, 4, JitAllocPolicy>;
-using BoolVector = Vector<bool, 8, JitAllocPolicy>;
-
-class InlinePropertyTable : public TempObject {
-  struct Entry : public TempObject {
-    CompilerObjectGroup group;
-    CompilerFunction func;
-
-    Entry(ObjectGroup* group, JSFunction* func) : group(group), func(func) {}
-    bool appendRoots(MRootList& roots) const {
-      return roots.append(group) && roots.append(func);
-    }
-  };
-
-  jsbytecode* pc_;
-  MResumePoint* priorResumePoint_;
-  Vector<Entry*, 4, JitAllocPolicy> entries_;
-
- public:
-  InlinePropertyTable(TempAllocator& alloc, jsbytecode* pc)
-      : pc_(pc), priorResumePoint_(nullptr), entries_(alloc) {}
-
-  void setPriorResumePoint(MResumePoint* resumePoint) {
-    MOZ_ASSERT(priorResumePoint_ == nullptr);
-    priorResumePoint_ = resumePoint;
-  }
-  bool hasPriorResumePoint() { return bool(priorResumePoint_); }
-  MResumePoint* takePriorResumePoint() {
-    MResumePoint* rp = priorResumePoint_;
-    priorResumePoint_ = nullptr;
-    return rp;
-  }
-
-  jsbytecode* pc() const { return pc_; }
-
-  MOZ_MUST_USE bool addEntry(TempAllocator& alloc, ObjectGroup* group,
-                             JSFunction* func) {
-    return entries_.append(new (alloc) Entry(group, func));
-  }
-
-  size_t numEntries() const { return entries_.length(); }
-
-  ObjectGroup* getObjectGroup(size_t i) const {
-    MOZ_ASSERT(i < numEntries());
-    return entries_[i]->group;
-  }
-
-  JSFunction* getFunction(size_t i) const {
-    MOZ_ASSERT(i < numEntries());
-    return entries_[i]->func;
-  }
-
-  bool hasFunction(JSFunction* func) const;
-  bool hasObjectGroup(ObjectGroup* group) const;
-
-  // Remove targets that vetoed inlining from the InlinePropertyTable.
-  void trimTo(const InliningTargets& targets, const BoolVector& choiceSet);
-
-  // Ensure that the InlinePropertyTable's domain is a subset of |targets|.
-  void trimToTargets(const InliningTargets& targets);
-
-  bool appendRoots(MRootList& roots) const;
-};
-
 class MGetPropertyCache : public MBinaryInstruction,
                           public MixPolicy<BoxExceptPolicy<0, MIRType::Object>,
                                            CacheIdPolicy<1>>::Data {
-  bool idempotent_ : 1;
-  bool monitoredResult_ : 1;
-
-  InlinePropertyTable* inlinePropertyTable_;
-
-  MGetPropertyCache(MDefinition* obj, MDefinition* id, bool monitoredResult)
-      : MBinaryInstruction(classOpcode, obj, id),
-        idempotent_(false),
-        monitoredResult_(monitoredResult),
-        inlinePropertyTable_(nullptr) {
+  MGetPropertyCache(MDefinition* obj, MDefinition* id)
+      : MBinaryInstruction(classOpcode, obj, id) {
     setResultType(MIRType::Value);
-
-    // The cache will invalidate if there are objects with e.g. lookup or
-    // resolve hooks on the proto chain. setGuard ensures this check is not
-    // eliminated.
-    setGuard();
   }
 
  public:
   INSTRUCTION_HEADER(GetPropertyCache)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, value), (1, idval))
-
-  InlinePropertyTable* initInlinePropertyTable(TempAllocator& alloc,
-                                               jsbytecode* pc) {
-    MOZ_ASSERT(inlinePropertyTable_ == nullptr);
-    inlinePropertyTable_ = new (alloc) InlinePropertyTable(alloc, pc);
-    return inlinePropertyTable_;
-  }
-
-  void clearInlinePropertyTable() { inlinePropertyTable_ = nullptr; }
-
-  InlinePropertyTable* propTable() const { return inlinePropertyTable_; }
-
-  bool idempotent() const { return idempotent_; }
-  void setIdempotent() {
-    idempotent_ = true;
-    setMovable();
-  }
-  bool monitoredResult() const { return monitoredResult_; }
-
-  bool congruentTo(const MDefinition* ins) const override {
-    if (!idempotent_) {
-      return false;
-    }
-    if (!ins->isGetPropertyCache()) {
-      return false;
-    }
-    return congruentIfOperandsEqual(ins);
-  }
-
-  AliasSet getAliasSet() const override {
-    if (idempotent_) {
-      return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
-                            AliasSet::DynamicSlot);
-    }
-    return AliasSet::Store(AliasSet::Any);
-  }
-
-  bool appendRoots(MRootList& roots) const override {
-    if (inlinePropertyTable_) {
-      return inlinePropertyTable_->appendRoots(roots);
-    }
-    return true;
-  }
 };
 
 class MHomeObjectSuperBase : public MUnaryInstruction,
@@ -9237,148 +9082,6 @@ class MSetPropertyPolymorphic
     return AliasSet::Store(AliasSet::ObjectFields | AliasSet::FixedSlot |
                            AliasSet::DynamicSlot |
                            (hasUnboxedStore ? AliasSet::UnboxedElement : 0));
-  }
-  bool appendRoots(MRootList& roots) const override;
-};
-
-class MDispatchInstruction : public MControlInstruction,
-                             public SingleObjectPolicy::Data {
-  // Map from JSFunction* -> MBasicBlock.
-  struct Entry {
-    JSFunction* func;
-    // If |func| has a singleton group, |funcGroup| is null. Otherwise,
-    // |funcGroup| holds the ObjectGroup for |func|, and dispatch guards
-    // on the group instead of directly on the function.
-    ObjectGroup* funcGroup;
-    MBasicBlock* block;
-
-    Entry(JSFunction* func, ObjectGroup* funcGroup, MBasicBlock* block)
-        : func(func), funcGroup(funcGroup), block(block) {}
-    bool appendRoots(MRootList& roots) const {
-      return roots.append(func) && roots.append(funcGroup);
-    }
-  };
-  Vector<Entry, 4, JitAllocPolicy> map_;
-
-  // An optional fallback path that uses MCall.
-  MBasicBlock* fallback_;
-  MUse operand_;
-
-  void initOperand(size_t index, MDefinition* operand) {
-    MOZ_ASSERT(index == 0);
-    operand_.init(operand, this);
-  }
-
- public:
-  NAMED_OPERANDS((0, input))
-  MDispatchInstruction(TempAllocator& alloc, Opcode op, MDefinition* input)
-      : MControlInstruction(op), map_(alloc), fallback_(nullptr) {
-    initOperand(0, input);
-  }
-
- protected:
-  MUse* getUseFor(size_t index) final {
-    MOZ_ASSERT(index == 0);
-    return &operand_;
-  }
-  const MUse* getUseFor(size_t index) const final {
-    MOZ_ASSERT(index == 0);
-    return &operand_;
-  }
-  MDefinition* getOperand(size_t index) const final {
-    MOZ_ASSERT(index == 0);
-    return operand_.producer();
-  }
-  size_t numOperands() const final { return 1; }
-  size_t indexOf(const MUse* u) const final {
-    MOZ_ASSERT(u == getUseFor(0));
-    return 0;
-  }
-  void replaceOperand(size_t index, MDefinition* operand) final {
-    MOZ_ASSERT(index == 0);
-    operand_.replaceProducer(operand);
-  }
-
- public:
-  void setSuccessor(size_t i, MBasicBlock* successor) {
-    MOZ_ASSERT(i < numSuccessors());
-    if (i == map_.length()) {
-      fallback_ = successor;
-    } else {
-      map_[i].block = successor;
-    }
-  }
-  size_t numSuccessors() const final {
-    return map_.length() + (fallback_ ? 1 : 0);
-  }
-  void replaceSuccessor(size_t i, MBasicBlock* successor) final {
-    setSuccessor(i, successor);
-  }
-  MBasicBlock* getSuccessor(size_t i) const final {
-    MOZ_ASSERT(i < numSuccessors());
-    if (i == map_.length()) {
-      return fallback_;
-    }
-    return map_[i].block;
-  }
-
- public:
-  MOZ_MUST_USE bool addCase(JSFunction* func, ObjectGroup* funcGroup,
-                            MBasicBlock* block) {
-    return map_.append(Entry(func, funcGroup, block));
-  }
-  uint32_t numCases() const { return map_.length(); }
-  JSFunction* getCase(uint32_t i) const { return map_[i].func; }
-  ObjectGroup* getCaseObjectGroup(uint32_t i) const {
-    return map_[i].funcGroup;
-  }
-  MBasicBlock* getCaseBlock(uint32_t i) const { return map_[i].block; }
-
-  bool hasFallback() const { return bool(fallback_); }
-  void addFallback(MBasicBlock* block) {
-    MOZ_ASSERT(!hasFallback());
-    fallback_ = block;
-  }
-  MBasicBlock* getFallback() const {
-    MOZ_ASSERT(hasFallback());
-    return fallback_;
-  }
-  bool appendRoots(MRootList& roots) const override;
-};
-
-// Polymorphic dispatch for inlining, keyed off incoming ObjectGroup.
-class MObjectGroupDispatch : public MDispatchInstruction {
-  // Map ObjectGroup (of CallProp's Target Object) -> JSFunction (yielded by the
-  // CallProp).
-  InlinePropertyTable* inlinePropertyTable_;
-
-  MObjectGroupDispatch(TempAllocator& alloc, MDefinition* input,
-                       InlinePropertyTable* table)
-      : MDispatchInstruction(alloc, classOpcode, input),
-        inlinePropertyTable_(table) {}
-
- public:
-  INSTRUCTION_HEADER(ObjectGroupDispatch)
-
-  static MObjectGroupDispatch* New(TempAllocator& alloc, MDefinition* ins,
-                                   InlinePropertyTable* table) {
-    return new (alloc) MObjectGroupDispatch(alloc, ins, table);
-  }
-
-  InlinePropertyTable* propTable() const { return inlinePropertyTable_; }
-  bool appendRoots(MRootList& roots) const override;
-};
-
-// Polymorphic dispatch for inlining, keyed off incoming JSFunction*.
-class MFunctionDispatch : public MDispatchInstruction {
-  MFunctionDispatch(TempAllocator& alloc, MDefinition* input)
-      : MDispatchInstruction(alloc, classOpcode, input) {}
-
- public:
-  INSTRUCTION_HEADER(FunctionDispatch)
-
-  static MFunctionDispatch* New(TempAllocator& alloc, MDefinition* ins) {
-    return new (alloc) MFunctionDispatch(alloc, ins);
   }
   bool appendRoots(MRootList& roots) const override;
 };
@@ -10855,99 +10558,21 @@ class MDeleteElement : public MBinaryInstruction, public BoxInputsPolicy::Data {
   bool strict() const { return strict_; }
 };
 
-// Note: This uses CallSetElementPolicy to always box its second input,
-// ensuring we don't need two LIR instructions to lower this.
-class MCallSetProperty : public MSetPropertyInstruction,
-                         public CallSetElementPolicy::Data {
-  MCallSetProperty(MDefinition* obj, MDefinition* value, PropertyName* name,
-                   bool strict)
-      : MSetPropertyInstruction(classOpcode, obj, value, name, strict) {}
-
- public:
-  INSTRUCTION_HEADER(CallSetProperty)
-  TRIVIAL_NEW_WRAPPERS
-
-  bool possiblyCalls() const override { return true; }
-};
-
 class MSetPropertyCache : public MTernaryInstruction,
                           public MixPolicy<SingleObjectPolicy, CacheIdPolicy<1>,
                                            NoFloatPolicy<2>>::Data {
   bool strict_ : 1;
-  bool needsPostBarrier_ : 1;
-  bool needsTypeBarrier_ : 1;
-  bool guardHoles_ : 1;
 
   MSetPropertyCache(MDefinition* obj, MDefinition* id, MDefinition* value,
-                    bool strict, bool needsPostBarrier, bool typeBarrier,
-                    bool guardHoles)
-      : MTernaryInstruction(classOpcode, obj, id, value),
-        strict_(strict),
-        needsPostBarrier_(needsPostBarrier),
-        needsTypeBarrier_(typeBarrier),
-        guardHoles_(guardHoles) {}
+                    bool strict)
+      : MTernaryInstruction(classOpcode, obj, id, value), strict_(strict) {}
 
  public:
   INSTRUCTION_HEADER(SetPropertyCache)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object), (1, idval), (2, value))
 
-  bool needsPostBarrier() const { return needsPostBarrier_; }
-  bool needsTypeBarrier() const { return needsTypeBarrier_; }
-
-  bool guardHoles() const { return guardHoles_; }
-
   bool strict() const { return strict_; }
-};
-
-class MCallGetProperty : public MUnaryInstruction,
-                         public BoxInputsPolicy::Data {
-  CompilerPropertyName name_;
-  bool idempotent_;
-
-  MCallGetProperty(MDefinition* value, PropertyName* name)
-      : MUnaryInstruction(classOpcode, value), name_(name), idempotent_(false) {
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(CallGetProperty)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, value))
-
-  PropertyName* name() const { return name_; }
-
-  // Constructors need to perform a GetProp on the function prototype.
-  // Since getters cannot be set on the prototype, fetching is non-effectful.
-  // The operation may be safely repeated in case of bailout.
-  void setIdempotent() { idempotent_ = true; }
-  AliasSet getAliasSet() const override {
-    if (!idempotent_) {
-      return AliasSet::Store(AliasSet::Any);
-    }
-    return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
-                          AliasSet::DynamicSlot);
-  }
-  bool possiblyCalls() const override { return true; }
-  bool appendRoots(MRootList& roots) const override {
-    return roots.append(name_);
-  }
-};
-
-// Inline call to handle lhs[rhs]. The first input is a Value so that this
-// instruction can handle both objects and strings.
-class MCallGetElement : public MBinaryInstruction,
-                        public BoxInputsPolicy::Data {
-  MCallGetElement(MDefinition* lhs, MDefinition* rhs)
-      : MBinaryInstruction(classOpcode, lhs, rhs) {
-    setResultType(MIRType::Value);
-  }
-
- public:
-  INSTRUCTION_HEADER(CallGetElement)
-  TRIVIAL_NEW_WRAPPERS
-
-  bool possiblyCalls() const override { return true; }
 };
 
 class MCallSetElement : public MSetElementInstruction,
@@ -10959,23 +10584,6 @@ class MCallSetElement : public MSetElementInstruction,
  public:
   INSTRUCTION_HEADER(CallSetElement)
   TRIVIAL_NEW_WRAPPERS
-
-  bool possiblyCalls() const override { return true; }
-};
-
-class MCallInitElementArray
-    : public MTernaryInstruction,
-      public MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>,
-                       BoxPolicy<2>>::Data {
-  MCallInitElementArray(MDefinition* obj, MDefinition* index, MDefinition* val)
-      : MTernaryInstruction(classOpcode, obj, index, val) {
-    MOZ_ASSERT(index->type() == MIRType::Int32);
-  }
-
- public:
-  INSTRUCTION_HEADER(CallInitElementArray)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object), (1, index), (2, value))
 
   bool possiblyCalls() const override { return true; }
 };

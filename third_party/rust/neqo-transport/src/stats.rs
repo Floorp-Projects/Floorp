@@ -49,6 +49,44 @@ pub struct FrameStats {
     pub new_token: usize,
 }
 
+impl Debug for FrameStats {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(
+            f,
+            "    crypto {} done {} token {} close {}",
+            self.crypto, self.handshake_done, self.new_token, self.connection_close,
+        )?;
+        writeln!(
+            f,
+            "    ack {} (max {}) ping {} padding {}",
+            self.ack, self.largest_acknowledged, self.ping, self.padding
+        )?;
+        writeln!(
+            f,
+            "    stream {} reset {} stop {}",
+            self.stream, self.reset_stream, self.stop_sending,
+        )?;
+        writeln!(
+            f,
+            "    max: stream {} data {} stream_data {}",
+            self.max_streams, self.max_data, self.max_stream_data,
+        )?;
+        writeln!(
+            f,
+            "    blocked: stream {} data {} stream_data {}",
+            self.streams_blocked, self.data_blocked, self.stream_data_blocked,
+        )?;
+        writeln!(
+            f,
+            "    ncid {} rcid {} pchallenge {} presponse {}",
+            self.new_connection_id,
+            self.retire_connection_id,
+            self.path_challenge,
+            self.path_response,
+        )
+    }
+}
+
 /// Connection statistics
 #[derive(Default, Clone)]
 #[allow(clippy::module_name_repetitions)]
@@ -129,7 +167,11 @@ impl Debug for Stats {
             "  tx: {} lost {} lateack {} ptoack {}",
             self.packets_tx, self.lost, self.late_ack, self.pto_ack
         )?;
-        write!(f, "  resumed: {} ", self.resumed)
+        writeln!(f, "  resumed: {} ", self.resumed)?;
+        writeln!(f, "  frames rx:")?;
+        self.frame_rx.fmt(f)?;
+        writeln!(f, "  frames tx:")?;
+        self.frame_tx.fmt(f)
     }
 }
 

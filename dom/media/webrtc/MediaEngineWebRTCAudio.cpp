@@ -1272,6 +1272,7 @@ void AudioInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
   mInputProcessing->Pull(
       GraphImpl(), aFrom, aTo, TrackTimeToGraphTime(GetEnd()),
       GetData<AudioSegment>(), aTo == GraphImpl()->mStateComputedTime, &ended);
+  ApplyTrackDisabling(mSegment.get());
   if (ended && (aFlags & ALLOW_END)) {
     mEnded = true;
   }

@@ -595,6 +595,7 @@ nsresult nsHttpHandler::Init() {
     obsService->AddObserver(this, "intl:app-locales-changed", true);
     obsService->AddObserver(this, "browser-delayed-startup-finished", true);
     obsService->AddObserver(this, "network:captive-portal-connectivity", true);
+    obsService->AddObserver(this, "network:reset-http3-excluded-list", true);
 
     if (!IsNeckoChild()) {
       obsService->AddObserver(
@@ -2502,6 +2503,9 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
   } else if (!strcmp(topic, "network:captive-portal-connectivity")) {
     nsAutoCString data8 = NS_ConvertUTF16toUTF8(data);
     mThroughCaptivePortal = data8.EqualsLiteral("captive");
+  } else if (!strcmp(topic, "network:reset-http3-excluded-list")) {
+    MutexAutoLock lock(mHttpExclusionLock);
+    mExcludedHttp3Origins.Clear();
   }
 
   return NS_OK;

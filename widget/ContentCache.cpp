@@ -590,6 +590,20 @@ bool ContentCacheInParent::HandleQueryContentEvent(
 
   bool isRelativeToInsertionPoint = aEvent.mInput.mRelativeToInsertionPoint;
   if (isRelativeToInsertionPoint) {
+    MOZ_LOG(sContentCacheLog, LogLevel::Debug,
+            ("0x%p HandleQueryContentEvent(), "
+             "making offset absolute... aEvent={ mMessage=%s, mInput={ "
+             "mOffset=%" PRId64 ", mLength=%" PRIu32 " } }, "
+             "aWidget={ PluginHasFocus()=%s }, mWidgetHasComposition=%s, "
+             "mPendingCommitCount=%" PRIu8 ", mCompositionStart=%" PRIu32 ", "
+             "mPendingCommitLength=%" PRIu32 ", "
+             "mSelection={ StartOffset()=%d, Length()=%d }",
+             this, ToChar(aEvent.mMessage), aEvent.mInput.mOffset,
+             aEvent.mInput.mLength, GetBoolName(aWidget->PluginHasFocus()),
+             GetBoolName(mWidgetHasComposition), mPendingCommitCount,
+             mCompositionStart, mPendingCommitLength,
+             mSelection.IsValid() ? mSelection.StartOffset() : -1,
+             mSelection.IsValid() ? mSelection.Length() : -1));
     if (aWidget->PluginHasFocus()) {
       if (NS_WARN_IF(!aEvent.mInput.MakeOffsetAbsolute(0))) {
         MOZ_LOG(sContentCacheLog, LogLevel::Error,

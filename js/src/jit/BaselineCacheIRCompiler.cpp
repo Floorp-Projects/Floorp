@@ -2321,9 +2321,6 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
     return false;
   }
 
-  // Baseline ICs monitor values when needed, so returning doubles is fine.
-  allowDoubleResult_.emplace(true);
-
   size_t numInputs = writer_.numInputOperands();
   MOZ_ASSERT(numInputs == NumInputsForCacheKind(kind));
 

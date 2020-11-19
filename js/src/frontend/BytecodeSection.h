@@ -306,12 +306,6 @@ class BytecodeSection {
   }
   void setNumICEntries(uint32_t entries) { numICEntries_ = entries; }
 
-  uint32_t numTypeSets() const { return numTypeSets_; }
-  void incrementNumTypeSets() {
-    MOZ_ASSERT(numTypeSets_ != UINT32_MAX, "Shouldn't overflow");
-    numTypeSets_++;
-  }
-
  private:
   // ---- Bytecode ----
 
@@ -391,9 +385,6 @@ class BytecodeSection {
   // Number of ICEntries in the script. There's one ICEntry for each JOF_IC op
   // and, if the script is a function, for |this| and each formal argument.
   uint32_t numICEntries_ = 0;
-
-  // Number of JOF_TYPESET opcodes generated.
-  uint32_t numTypeSets_ = 0;
 };
 
 // Data that is not directly associated with specific opcode/index inside

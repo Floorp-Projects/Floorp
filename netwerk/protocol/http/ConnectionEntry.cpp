@@ -221,6 +221,7 @@ void ConnectionEntry::InsertTransaction(
     bool aInsertAsFirstForTheSamePriority /* = false */) {
   mPendingQ.InsertTransaction(pendingTransInfo,
                               aInsertAsFirstForTheSamePriority);
+  pendingTransInfo->Transaction()->OnPendingQueueInserted();
 }
 
 nsTArray<RefPtr<PendingTransactionInfo>>*
@@ -910,6 +911,29 @@ void ConnectionEntry::LogConnections() {
     MOZ_ASSERT(mIdleConns.Length() == 0);
   }
   LOG(("]"));
+}
+
+bool ConnectionEntry::RemoveTransFromPendingQ(nsHttpTransaction* aTrans) {
+  // We will abandon all half-open sockets belonging to the given
+  // transaction.
+  nsTArray<RefPtr<PendingTransactionInfo>>* infoArray =
+      GetTransactionPendingQHelper(aTrans);
+
+  RefPtr<PendingTransactionInfo> pendingTransInfo;
+  int32_t transIndex =
+      infoArray ? infoArray->IndexOf(aTrans, 0, PendingComparator()) : -1;
+  if (transIndex >= 0) {
+    pendingTransInfo = (*infoArray)[transIndex];
+    infoArray->RemoveElementAt(transIndex);
+  }
+
+  if (!pendingTransInfo) {
+    return false;
+  }
+
+  // Abandon all half-open sockets belonging to the given transaction.
+  pendingTransInfo->AbandonHalfOpenAndForgetActiveConn();
+  return true;
 }
 
 }  // namespace net

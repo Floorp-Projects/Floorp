@@ -113,6 +113,19 @@ impl Value {
         IntoEvents::new(self)
     }
 
+    /// If the `Value` is a Array, returns the underlying `Vec`.
+    ///
+    /// Returns `None` otherwise.
+    ///
+    /// This method consumes the `Value`. To get a reference instead, use
+    /// `as_array`.
+    pub fn into_array(self) -> Option<Vec<Value>> {
+        match self {
+            Value::Array(dict) => Some(dict),
+            _ => None,
+        }
+    }
+
     /// If the `Value` is an Array, returns the associated `Vec`.
     ///
     /// Returns `None` otherwise.
@@ -129,6 +142,19 @@ impl Value {
     pub fn as_array_mut(&mut self) -> Option<&mut Vec<Value>> {
         match *self {
             Value::Array(ref mut array) => Some(array),
+            _ => None,
+        }
+    }
+
+    /// If the `Value` is a Dictionary, returns the associated `BTreeMap`.
+    ///
+    /// Returns `None` otherwise.
+    ///
+    /// This method consumes the `Value`. To get a reference instead, use
+    /// `as_dictionary`.
+    pub fn into_dictionary(self) -> Option<Dictionary> {
+        match self {
+            Value::Dictionary(dict) => Some(dict),
             _ => None,
         }
     }

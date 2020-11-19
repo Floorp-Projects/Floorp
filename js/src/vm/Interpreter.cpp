@@ -4674,11 +4674,6 @@ bool js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name,
   return GetProperty(cx, obj, receiver, name, vp);
 }
 
-bool js::GetValueProperty(JSContext* cx, HandleValue value,
-                          HandlePropertyName name, MutableHandleValue vp) {
-  return GetProperty(cx, value, name, vp);
-}
-
 JSObject* js::Lambda(JSContext* cx, HandleFunction fun, HandleObject parent) {
   MOZ_ASSERT(!fun->isArrow());
 
