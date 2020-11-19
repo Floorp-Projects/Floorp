@@ -64,7 +64,7 @@ class nsFieldSetFrame final : public nsContainerFrame {
     return nsContainerFrame::IsFrameOfType(
         aFlags & ~nsIFrame::eCanContainOverflowContainers);
   }
-  virtual nsIScrollableFrame* GetScrollTargetFrame() override {
+  virtual nsIScrollableFrame* GetScrollTargetFrame() const override {
     return do_QueryFrame(GetInner());
   }
 

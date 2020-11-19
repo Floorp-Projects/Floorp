@@ -867,7 +867,9 @@ class nsHTMLScrollFrame : public nsContainerFrame,
 
   void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData&) override;
 
-  nsIScrollableFrame* GetScrollTargetFrame() final { return this; }
+  nsIScrollableFrame* GetScrollTargetFrame() const final {
+    return const_cast<nsHTMLScrollFrame*>(this);
+  }
 
   nsContainerFrame* GetContentInsertionFrame() override {
     return mHelper.GetScrolledFrame()->GetContentInsertionFrame();
@@ -1055,7 +1057,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   bool IsScrollAnimating(IncludeApzAnimation aIncludeApz) final {
     return mHelper.IsScrollAnimating(aIncludeApz);
   }
-  mozilla::ScrollGeneration CurrentScrollGeneration() final {
+  mozilla::ScrollGeneration CurrentScrollGeneration() const final {
     return mHelper.CurrentScrollGeneration();
   }
   nsPoint LastScrollDestination() final {
@@ -1312,7 +1314,9 @@ class nsXULScrollFrame final : public nsBoxFrame,
   void DestroyFrom(nsIFrame* aDestructRoot,
                    PostDestroyData& aPostDestroyData) final;
 
-  nsIScrollableFrame* GetScrollTargetFrame() final { return this; }
+  nsIScrollableFrame* GetScrollTargetFrame() const final {
+    return const_cast<nsXULScrollFrame*>(this);
+  }
 
   nsContainerFrame* GetContentInsertionFrame() final {
     return mHelper.GetScrolledFrame()->GetContentInsertionFrame();

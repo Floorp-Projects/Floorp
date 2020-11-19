@@ -855,7 +855,7 @@ class nsIFrame : public nsQueryFrame {
    * like nsTextControlFrame that contain a scrollframe, will return
    * that scrollframe.
    */
-  virtual nsIScrollableFrame* GetScrollTargetFrame() { return nullptr; }
+  virtual nsIScrollableFrame* GetScrollTargetFrame() const { return nullptr; }
 
   /**
    * Get the offsets of the frame. most will be 0,0

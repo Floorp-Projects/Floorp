@@ -125,7 +125,7 @@ nsTextControlFrame::nsTextControlFrame(ComputedStyle* aStyle,
 
 nsTextControlFrame::~nsTextControlFrame() = default;
 
-nsIScrollableFrame* nsTextControlFrame::GetScrollTargetFrame() {
+nsIScrollableFrame* nsTextControlFrame::GetScrollTargetFrame() const {
   if (!mRootNode) {
     return nullptr;
   }
