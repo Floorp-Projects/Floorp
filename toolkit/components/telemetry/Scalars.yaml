@@ -339,6 +339,42 @@ browser.engagement:
     operating_systems:
       - windows
 
+  bookmarks_toolbar_bookmark_added:
+    bug_numbers:
+      - 1665391
+    description: >
+      The count of bookmarks added to the bookmarks toolbar. This counts bookmarks created on the
+      bookmarks toolbar and bookmarks moved to the bookmarks toolbar.
+    expires: never
+    kind: uint
+    notification_emails:
+      - rtestard@mozilla.com
+      - jaws@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
+  bookmarks_toolbar_bookmark_opened:
+    bug_numbers:
+      - 1665391
+    description: >
+      The count of bookmarks opened from the Bookmarks Toolbar. This counts bookmarks opened on the
+      toolbar and bookmarks opened from the 'symlinked' Other Bookmarks folder on the
+      Bookmarks Toolbar. It does not count Bookmarks Toolbar bookmarks opened via the Library,
+      Bookmarks Menu, or other UI since the goal is to measure interactions that pass through the toolbar.
+    expires: never
+    kind: uint
+    notification_emails:
+      - rtestard@mozilla.com
+      - jaws@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
 # The following section contains the browser engagement scalars.
 browser.engagement.navigation:
   urlbar:

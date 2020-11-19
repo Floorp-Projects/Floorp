@@ -902,6 +902,13 @@ var BookmarksEventHandler = {
     var target = aEvent.originalTarget;
     if (target._placesNode) {
       PlacesUIUtils.openNodeWithEvent(target._placesNode, aEvent);
+      // Only record interactions through the Bookmarks Toolbar
+      if (target.closest("#PersonalToolbar")) {
+        Services.telemetry.scalarAdd(
+          "browser.engagement.bookmarks_toolbar_bookmark_opened",
+          1
+        );
+      }
     }
   },
 
@@ -2240,6 +2247,12 @@ var BookmarkingUI = {
               }
             }
           }
+          if (ev.parentGuid == PlacesUtils.bookmarks.toolbarGuid) {
+            Services.telemetry.scalarAdd(
+              "browser.engagement.bookmarks_toolbar_bookmark_added",
+              1
+            );
+          }
           break;
         case "bookmark-removed":
           // If one of the tracked bookmarks has been removed, unregister it.
@@ -2312,11 +2325,17 @@ var BookmarkingUI = {
       this.maybeShowOtherBookmarksFolder();
     }
 
-    let hasMovedToOrOutOfToolbar =
-      newParentGuid === PlacesUtils.bookmarks.toolbarGuid ||
+    let hasMovedToToolbar = newParentGuid === PlacesUtils.bookmarks.toolbarGuid;
+    let hasMovedOutOfToolbar =
       oldParentGuid === PlacesUtils.bookmarks.toolbarGuid;
-    if (hasMovedToOrOutOfToolbar) {
+    if (hasMovedToToolbar || hasMovedOutOfToolbar) {
       this.updateEmptyToolbarMessage();
+    }
+    if (hasMovedToToolbar) {
+      Services.telemetry.scalarAdd(
+        "browser.engagement.bookmarks_toolbar_bookmark_added",
+        1
+      );
     }
   },
 
