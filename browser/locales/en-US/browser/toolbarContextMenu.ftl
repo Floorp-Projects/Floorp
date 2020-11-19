@@ -64,7 +64,3 @@ toolbar-context-menu-bookmarks-toolbar-never-show =
 toolbar-context-menu-bookmarks-toolbar-on-new-tab =
     .label = Only on New Tab
     .accesskey = O
-
-toolbar-context-menu-bookmarks-show-other-bookmarks =
-    .label = Show Other Bookmarks
-    .accesskey = h
