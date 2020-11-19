@@ -164,67 +164,62 @@ void nsMenuBarListener::ToggleMenuActiveState() {
 
 ////////////////////////////////////////////////////////////////////////
 nsresult nsMenuBarListener::KeyUp(Event* aKeyEvent) {
-  WidgetKeyboardEvent* nativeKeyEvent =
-      aKeyEvent->WidgetEventPtr()->AsKeyboardEvent();
-  if (!nativeKeyEvent) {
+  RefPtr<KeyboardEvent> keyEvent = aKeyEvent->AsKeyboardEvent();
+  if (!keyEvent) {
     return NS_OK;
   }
 
   InitAccessKey();
 
   // handlers shouldn't be triggered by non-trusted events.
-  if (!nativeKeyEvent->IsTrusted()) {
+  if (!keyEvent->IsTrusted()) {
     return NS_OK;
   }
 
-  if (!mAccessKey || !StaticPrefs::ui_key_menuAccessKeyFocuses()) {
-    return NS_OK;
-  }
+  if (mAccessKey && StaticPrefs::ui_key_menuAccessKeyFocuses()) {
+    bool defaultPrevented = keyEvent->DefaultPrevented();
 
-  // On a press of the ALT key by itself, we toggle the menu's
-  // active/inactive state.
-  if (!nativeKeyEvent->DefaultPrevented() && mAccessKeyDown &&
-      !mAccessKeyDownCanceled &&
-      static_cast<int32_t>(nativeKeyEvent->mKeyCode) == mAccessKey) {
-    // The access key was down and is now up, and no other
-    // keys were pressed in between.
-    bool toggleMenuActiveState = true;
-    if (!mMenuBarFrame->IsActive()) {
-      // If the focused content is in a remote process, we should allow the
-      // focused web app to prevent to activate the menubar.
-      if (nativeKeyEvent->WillBeSentToRemoteProcess()) {
-        nativeKeyEvent->StopImmediatePropagation();
-        nativeKeyEvent->MarkAsWaitingReplyFromRemoteProcess();
-        return NS_OK;
-      }
-      // First, close all existing popups because other popups shouldn't
-      // handle key events when menubar is active and IME should be
-      // disabled.
-      nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-      if (pm) {
-        pm->Rollup(0, false, nullptr, nullptr);
-      }
-      // If menubar active state is changed or the menubar is destroyed
-      // during closing the popups, we should do nothing anymore.
-      toggleMenuActiveState = !Destroyed() && !mMenuBarFrame->IsActive();
-    }
-    if (toggleMenuActiveState) {
+    // On a press of the ALT key by itself, we toggle the menu's
+    // active/inactive state.
+    // Get the ascii key code.
+    uint32_t theChar = keyEvent->KeyCode();
+
+    if (!defaultPrevented && mAccessKeyDown && !mAccessKeyDownCanceled &&
+        (int32_t)theChar == mAccessKey) {
+      // The access key was down and is now up, and no other
+      // keys were pressed in between.
+      bool toggleMenuActiveState = true;
       if (!mMenuBarFrame->IsActive()) {
-        mMenuBarFrame->SetActiveByKeyboard();
+        // First, close all existing popups because other popups shouldn't
+        // handle key events when menubar is active and IME should be
+        // disabled.
+        nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+        if (pm) {
+          pm->Rollup(0, false, nullptr, nullptr);
+        }
+        // If menubar active state is changed or the menubar is destroyed
+        // during closing the popups, we should do nothing anymore.
+        toggleMenuActiveState = !Destroyed() && !mMenuBarFrame->IsActive();
       }
-      ToggleMenuActiveState();
+      if (toggleMenuActiveState) {
+        if (!mMenuBarFrame->IsActive()) {
+          mMenuBarFrame->SetActiveByKeyboard();
+        }
+        ToggleMenuActiveState();
+      }
+    }
+    mAccessKeyDown = false;
+    mAccessKeyDownCanceled = false;
+
+    bool active = !Destroyed() && mMenuBarFrame->IsActive();
+    if (active) {
+      keyEvent->StopPropagation();
+      keyEvent->PreventDefault();
+      return NS_OK;  // I am consuming event
     }
   }
 
-  mAccessKeyDown = false;
-  mAccessKeyDownCanceled = false;
-
-  if (!Destroyed() && mMenuBarFrame->IsActive()) {
-    nativeKeyEvent->StopPropagation();
-    nativeKeyEvent->PreventDefault();
-  }
-
-  return NS_OK;
+  return NS_OK;  // means I am NOT consuming event
 }
 
 ////////////////////////////////////////////////////////////////////////
