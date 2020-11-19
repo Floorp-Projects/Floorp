@@ -1634,9 +1634,9 @@ impl GpuCacheTexture {
             1,
         );
 
-        // Blit the contents of the previous texture, if applicable.
+        // Copy the contents of the previous texture, if applicable.
         if let Some(blit_source) = blit_source {
-            device.blit_renderable_texture(&mut texture, &blit_source);
+            device.copy_entire_texture(&mut texture, &blit_source);
             device.delete_texture(blit_source);
         }
 
@@ -4025,13 +4025,14 @@ impl Renderer {
             pub struct BatchUploadCopy<'a> {
                 // Index within batch_upload_textures
                 src_texture_index: usize,
-                src_rect: DeviceIntRect,
+                src_offset: DeviceIntPoint,
                 // We store the texture ID as well as a reference to the texture so that we
                 // can easily sort the copies to group them by destination target.
                 dest_texture_id: CacheTextureId,
                 dest_texture: &'a Texture,
-                dest_layer_index: usize,
-                dest_rect: DeviceIntRect,
+                dest_layer_index: LayerIndex,
+                dest_offset: DeviceIntPoint,
+                size: DeviceIntSize,
             }
             // A list of copies that must be performed from the temporary textures to the texture cache.
             let mut batch_upload_copies = Vec::new();
@@ -4155,11 +4156,12 @@ impl Renderer {
 
                         batch_upload_copies.push(BatchUploadCopy {
                             src_texture_index: buffer.texture_index,
-                            src_rect: allocated_rect,
+                            src_offset: allocated_rect.origin,
                             dest_texture_id: texture_id,
                             dest_texture: texture,
-                            dest_layer_index: layer_index as usize,
-                            dest_rect: rect,
+                            dest_layer_index: layer_index as LayerIndex,
+                            dest_offset: rect.origin,
+                            size: rect.size,
                         });
 
                         unsafe {
@@ -4230,19 +4232,18 @@ impl Renderer {
             // Sort them by destination and source to minimize framebuffer binding changes.
             batch_upload_copies.sort_unstable_by_key(|b| (b.dest_texture_id.0, b.dest_layer_index, b.src_texture_index));
             for copy in batch_upload_copies {
-                // Currently this code-path is only used for Mali-Gxx, where using glCopyImageSubData caused
-                // the driver to hang, but glBlitFramebuffer worked correctly. As more platforms start to
-                // use this path we should make this decision based on the platform support.
-                device.blit_render_target(
-                    ReadTarget::from_texture(&batch_upload_textures[copy.src_texture_index], 0),
-                    device_rect_as_framebuffer_rect(&copy.src_rect),
-                    DrawTarget::from_texture(
-                        copy.dest_texture,
-                        copy.dest_layer_index,
-                        false
-                    ),
-                    device_rect_as_framebuffer_rect(&copy.dest_rect),
-                    TextureFilter::Nearest,
+                device.copy_texture_sub_region(
+                    &batch_upload_textures[copy.src_texture_index],
+                    copy.src_offset.x as _,
+                    copy.src_offset.y as _,
+                    0,
+                    copy.dest_texture,
+                    copy.dest_offset.x as _,
+                    copy.dest_offset.y as _,
+                    copy.dest_layer_index,
+                    copy.size.width as _,
+                    copy.size.height as _,
+                    1,
                 );
             }
 
