@@ -1,19 +1,90 @@
 /**
- * Create a new tab and load the content from a given window (optional), if
- * caller doesn't provide any window, then we would create tab in the current
- * window.
- *
- * @param {string} url
- *        The URL that tab is going to load
- * @param {window} inputWindow [optional]
- *        The window that uses to create a tab
- * @return {tab}
- *         Return a loaded tab created from the given window
+ * This function would create a new foreround tab and load the url for it. In
+ * addition, instead of returning a tab element, we return a tab wrapper that
+ * helps us to automatically detect if the media controller of that tab
+ * dispatches the first (activated) and the last event (deactivated) correctly.
+ * @ param url
+ *         the page url which tab would load
+ * @ param input window (optional)
+ *         if it exists, the tab would be created from the input window. If not,
+ *         then the tab would be created in current window.
+ * @ param needCheck (optional)
+ *         it decides if we would perform the check for the first and last event
+ *         on the media controller. It's default true.
  */
-async function createTabAndLoad(url, inputWindow = null) {
+async function createLoadedTabWrapper(
+  url,
+  { inputWindow = window, needCheck = true } = {}
+) {
+  class tabWrapper {
+    constructor(tab, needCheck) {
+      this._tab = tab;
+      this._controller = tab.linkedBrowser.browsingContext.mediaController;
+      this._firstEvent = "";
+      this._lastEvent = "";
+      this._events = [
+        "activated",
+        "deactivated",
+        "metadatachange",
+        "playbackstatechange",
+        "positionstatechange",
+        "supportedkeyschange",
+      ];
+      this._needCheck = needCheck;
+      if (this._needCheck) {
+        this._registerAllEvents();
+      }
+    }
+    _registerAllEvents() {
+      for (let event of this._events) {
+        this._controller.addEventListener(event, this._handleEvent.bind(this));
+      }
+    }
+    _unregisterAllEvents() {
+      for (let event of this._events) {
+        this._controller.removeEventListener(
+          event,
+          this._handleEvent.bind(this)
+        );
+      }
+    }
+    _handleEvent(event) {
+      info(`handle event=${event.type}`);
+      if (this._firstEvent === "") {
+        this._firstEvent = event.type;
+      }
+      this._lastEvent = event.type;
+    }
+    get linkedBrowser() {
+      return this._tab.linkedBrowser;
+    }
+    get controller() {
+      return this._controller;
+    }
+    get tabElement() {
+      return this._tab;
+    }
+    async close() {
+      info(`wait until finishing close tab wrapper`);
+      const deactivationPromise = this._controller.isActive
+        ? new Promise(r => (this._controller.ondeactivated = r))
+        : Promise.resolve();
+      BrowserTestUtils.removeTab(this._tab);
+      await deactivationPromise;
+      if (this._needCheck) {
+        is(this._firstEvent, "activated", "First event should be 'activated'");
+        is(
+          this._lastEvent,
+          "deactivated",
+          "Last event should be 'deactivated'"
+        );
+        this._unregisterAllEvents();
+      }
+    }
+  }
   const browser = inputWindow ? inputWindow.gBrowser : window.gBrowser;
   let tab = await BrowserTestUtils.openNewForegroundTab(browser, url);
-  return tab;
+  return new tabWrapper(tab, needCheck);
 }
 
 /**

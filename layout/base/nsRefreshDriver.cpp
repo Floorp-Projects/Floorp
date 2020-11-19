@@ -1413,6 +1413,11 @@ void nsRefreshDriver::NotifyDOMContentLoaded() {
   }
 }
 
+void nsRefreshDriver::RegisterCompositionPayload(
+    const mozilla::layers::CompositionPayload& aPayload) {
+  mCompositionPayloads.AppendElement(aPayload);
+}
+
 void nsRefreshDriver::RunDelayedEventsSoon() {
   // Place entries for delayed events into their corresponding normal list,
   // and schedule a refresh. When these delayed events run, if their document
@@ -2055,6 +2060,9 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   TickReasons tickReasons = GetReasonsToTick();
   if (tickReasons == TickReasons::eNone) {
     // We no longer have any observers.
+    // Discard composition payloads because there is no paint.
+    mCompositionPayloads.Clear();
+
     // We don't want to stop the timer when observers are initially
     // removed, because sometimes observers can be added and removed
     // often depending on what other things are going on and in that
@@ -2064,9 +2072,8 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     // On top level content pages keep the timer running initially so that we
     // paint the page soon enough.
     if (ShouldKeepTimerRunningWhileWaitingForFirstContentfulPaint()) {
-      PROFILER_TRACING_MARKER(
-          "Paint", "RefreshDriver waiting for first contentful paint", GRAPHICS,
-          TRACING_EVENT);
+      PROFILER_MARKER("RefreshDriver waiting for first contentful paint",
+                      GRAPHICS, {}, Tracing, "Paint");
     } else {
       StopTimer();
     }
@@ -2351,6 +2358,16 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
         MarkerStack::TakeBacktrace(std::move(mViewManagerFlushCause)),
         transactionId);
 
+    // Forward our composition payloads to the layer manager.
+    if (!mCompositionPayloads.IsEmpty()) {
+      nsIWidget* widget = mPresContext->GetRootWidget();
+      layers::LayerManager* lm = widget ? widget->GetLayerManager() : nullptr;
+      if (lm) {
+        lm->RegisterPayloads(mCompositionPayloads);
+      }
+      mCompositionPayloads.Clear();
+    }
+
     RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
 
     nsTArray<nsDocShell*> profilingDocShells;
@@ -2397,6 +2414,9 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
 
     dispatchRunnablesAfterTick = true;
     mHasScheduleFlush = false;
+  } else {
+    // No paint happened, discard composition payloads.
+    mCompositionPayloads.Clear();
   }
 
   double totalMs = (TimeStamp::Now() - mTickStart).ToMilliseconds();

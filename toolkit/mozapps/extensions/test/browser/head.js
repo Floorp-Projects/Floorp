@@ -265,20 +265,6 @@ function get_addon_file_url(aFilename) {
   }
 }
 
-function get_current_view(aManager) {
-  let view = aManager.document.getElementById("view-port").selectedPanel;
-  if (view.id == "headered-views") {
-    view = aManager.document.getElementById("headered-views-content")
-      .selectedPanel;
-  }
-  is(
-    view,
-    aManager.gViewController.displayedView,
-    "view controller is tracking the displayed view correctly"
-  );
-  return view;
-}
-
 function check_all_in_list(aManager, aIds, aIgnoreExtras) {
   var doc = aManager.document;
   var list = doc.getElementById("addon-list");

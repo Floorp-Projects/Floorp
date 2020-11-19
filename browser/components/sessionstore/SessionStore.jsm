@@ -1024,7 +1024,9 @@ var SessionStoreInternal = {
       },
 
       OnHistoryNewEntry(newURI, oldIndex) {
-        this.notifySHistoryChanges(oldIndex);
+        // We use oldIndex - 1 to collect the current entry as well. This makes sure to
+        // collect any changes that were made to the entry while the document was active.
+        this.notifySHistoryChanges(oldIndex == -1 ? oldIndex : oldIndex - 1);
       },
 
       OnHistoryGotoIndex() {

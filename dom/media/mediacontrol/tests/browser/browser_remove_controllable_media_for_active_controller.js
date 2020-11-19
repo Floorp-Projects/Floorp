@@ -20,7 +20,7 @@ add_task(async function setupTestingPref() {
 add_task(
   async function testControllerWithActiveMediaSessionShouldStillBeActiveWhenNoControllableMediaPresents() {
     info(`open media page`);
-    const tab = await createTabAndLoad(PAGE_URL);
+    const tab = await createLoadedTabWrapper(PAGE_URL);
 
     info(`play media would activate controller and media session`);
     await setupMediaSession(tab);
@@ -28,7 +28,10 @@ add_task(
     await checkOrWaitControllerBecomesActive(tab);
 
     info(`remove playing media so we don't have any controllable media now`);
-    await removePlayingMedia(tab);
+    await Promise.all([
+      new Promise(r => (tab.controller.onplaybackstatechange = r)),
+      removePlayingMedia(tab),
+    ]);
 
     info(`despite that, controller should still be active`);
     await checkOrWaitControllerBecomesActive(tab);
@@ -37,27 +40,29 @@ add_task(
     await ensureActiveMediaSessionReceivedMediaKey(tab);
 
     info(`remove tab`);
-    await BrowserTestUtils.removeTab(tab);
+    await tab.close();
   }
 );
 
 add_task(
   async function testControllerWithoutActiveMediaSessionShouldBecomeInactiveWhenNoControllableMediaPresents() {
     info(`open media page`);
-    const tab = await createTabAndLoad(PAGE_URL);
+    const tab = await createLoadedTabWrapper(PAGE_URL);
 
     info(`play media would activate controller`);
     await playMedia(tab, testVideoId);
     await checkOrWaitControllerBecomesActive(tab);
 
-    info(`remove playing media so we don't have any controllable media now`);
-    await removePlayingMedia(tab);
-
-    info(`without having media session, controller should be deactivated`);
-    await checkOrWaitControllerBecomesInactive(tab);
+    info(
+      `remove playing media so we don't have any controllable media, which would deactivate controller`
+    );
+    await Promise.all([
+      new Promise(r => (tab.controller.ondeactivated = r)),
+      removePlayingMedia(tab),
+    ]);
 
     info(`remove tab`);
-    await BrowserTestUtils.removeTab(tab);
+    await tab.close();
   }
 );
 
@@ -88,13 +93,9 @@ async function ensureActiveMediaSessionReceivedMediaKey(tab) {
 }
 
 function removePlayingMedia(tab) {
-  const controller = tab.linkedBrowser.browsingContext.mediaController;
-  return Promise.all([
-    new Promise(r => (controller.onplaybackstatechange = r)),
-    SpecialPowers.spawn(tab.linkedBrowser, [testVideoId], Id => {
-      content.document.getElementById(Id).remove();
-    }),
-  ]);
+  return SpecialPowers.spawn(tab.linkedBrowser, [testVideoId], Id => {
+    content.document.getElementById(Id).remove();
+  });
 }
 
 async function checkOrWaitControllerBecomesActive(tab) {
@@ -103,12 +104,4 @@ async function checkOrWaitControllerBecomesActive(tab) {
     await new Promise(r => (controller.onactivated = r));
   }
   ok(controller.isActive, `controller is active`);
-}
-
-async function checkOrWaitControllerBecomesInactive(tab) {
-  const controller = tab.linkedBrowser.browsingContext.mediaController;
-  if (controller.isActive) {
-    await new Promise(r => (controller.ondeactivated = r));
-  }
-  ok(!controller.isActive, `controller is inacitve`);
 }

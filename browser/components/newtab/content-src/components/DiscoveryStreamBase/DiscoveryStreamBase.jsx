@@ -360,6 +360,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             privacyNoticeURL={topStories.privacyNoticeURL}
             showPrefName={topStories.pref.feed}
             title={message.header.title}
+            eventSource="CARDGRID"
           >
             {this.renderLayout(layoutRender)}
           </CollapsibleSection>

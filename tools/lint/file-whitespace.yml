@@ -102,7 +102,6 @@ file-whitespace:
         - layout/tables/test/test_bug337124.html
         - layout/tables/crashtests
         - layout/xul/crashtests
-        - layout/xul/grid/crashtests
         - layout/xul/reftest
         - layout/xul/test
         - layout/xul/tree

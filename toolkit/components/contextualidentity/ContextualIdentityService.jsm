@@ -34,7 +34,6 @@ ChromeUtils.defineModuleGetter(
   "AsyncShutdown",
   "resource://gre/modules/AsyncShutdown.jsm"
 );
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
   this,
   "DeferredTask",
@@ -170,7 +169,7 @@ _ContextualIdentityService.prototype = {
   },
 
   load() {
-    return OS.File.read(this._path).then(
+    return IOUtils.read(this._path).then(
       bytes => {
         // If synchronous loading happened in the meantime, exit now.
         if (this._dataReady) {
@@ -217,14 +216,7 @@ _ContextualIdentityService.prototype = {
   },
 
   loadError(error) {
-    if (
-      error != null &&
-      !(error instanceof OS.File.Error && error.becauseNoSuchFile) &&
-      !(
-        error instanceof Components.Exception &&
-        error.result == Cr.NS_ERROR_FILE_NOT_FOUND
-      )
-    ) {
+    if (error != null && error.name != "NotFoundError") {
       // Let's report the error.
       Cu.reportError(error);
     }
@@ -266,7 +258,7 @@ _ContextualIdentityService.prototype = {
     };
 
     let bytes = gTextEncoder.encode(JSON.stringify(object));
-    return OS.File.writeAtomic(this._path, bytes, {
+    return IOUtils.writeAtomic(this._path, bytes, {
       tmpPath: this._path + ".tmp",
     });
   },
@@ -653,5 +645,8 @@ _ContextualIdentityService.prototype = {
   },
 };
 
-let path = OS.Path.join(OS.Constants.Path.profileDir, "containers.json");
+let path = PathUtils.join(
+  Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+  "containers.json"
+);
 var ContextualIdentityService = new _ContextualIdentityService(path);

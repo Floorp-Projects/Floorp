@@ -318,7 +318,6 @@ void MediaStatusManager::UpdateActualPlaybackState() {
   mActualPlaybackState = newState;
   LOG("UpdateActualPlaybackState : '%s'",
       ToMediaSessionPlaybackStateStr(mActualPlaybackState));
-  HandleActualPlaybackStateChanged();
   mPlaybackStateChangedEvent.Notify(mActualPlaybackState);
 }
 

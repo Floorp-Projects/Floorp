@@ -31,6 +31,7 @@ SessionHistoryInfo::SessionHistoryInfo(nsDocShellLoadState* aLoadState,
       mLoadReplace(aLoadState->LoadReplace()),
       /* FIXME Should this be aLoadState->IsSrcdocLoad()? */
       mIsSrcdocEntry(!aLoadState->SrcdocData().IsEmpty()),
+      mHasUserInteraction(false),
       mSharedState(SharedState::Create(
           aLoadState->TriggeringPrincipal(), aLoadState->PrincipalToInherit(),
           aLoadState->PartitionedPrincipalToInherit(), aLoadState->Csp(),
@@ -129,6 +130,7 @@ void SessionHistoryInfo::Reset(nsIURI* aURI, const nsID& aDocShellID,
   mIsSrcdocEntry = false;
   mScrollRestorationIsManual = false;
   mPersist = false;
+  mHasUserInteraction = false;
 
   mSharedState.Get()->mTriggeringPrincipal = aTriggeringPrincipal;
   mSharedState.Get()->mPrincipalToInherit = aPrincipalToInherit;
@@ -503,14 +505,27 @@ SessionHistoryEntry::SetIsSubFrame(bool aIsSubFrame) {
 
 NS_IMETHODIMP
 SessionHistoryEntry::GetHasUserInteraction(bool* aFlag) {
-  NS_WARNING("Not implemented in the parent process!");
-  *aFlag = true;
+  // The back button and menulist deal with root/top-level
+  // session history entries, thus we annotate only the root entry.
+  if (!mParent) {
+    *aFlag = mInfo->mHasUserInteraction;
+  } else {
+    nsCOMPtr<nsISHEntry> root = nsSHistory::GetRootSHEntry(this);
+    root->GetHasUserInteraction(aFlag);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 SessionHistoryEntry::SetHasUserInteraction(bool aFlag) {
-  NS_WARNING("Not implemented in the parent process!");
+  // The back button and menulist deal with root/top-level
+  // session history entries, thus we annotate only the root entry.
+  if (!mParent) {
+    mInfo->mHasUserInteraction = aFlag;
+  } else {
+    nsCOMPtr<nsISHEntry> root = nsSHistory::GetRootSHEntry(this);
+    root->SetHasUserInteraction(aFlag);
+  }
   return NS_OK;
 }
 
@@ -957,7 +972,7 @@ SessionHistoryEntry::Clone(nsISHEntry** aEntry) {
   entry->mInfo->mScrollPositionY = 0;
   entry->mInfo->mScrollRestorationIsManual = false;
 
-  // entry->mInfo->mHasUserInteraction = false;
+  entry->mInfo->mHasUserInteraction = false;
 
   entry.forget(aEntry);
 
@@ -1364,6 +1379,7 @@ void IPDLParamTraits<dom::SessionHistoryInfo>::Write(
   WriteIPDLParam(aMsg, aActor, aParam.mIsSrcdocEntry);
   WriteIPDLParam(aMsg, aActor, aParam.mScrollRestorationIsManual);
   WriteIPDLParam(aMsg, aActor, aParam.mPersist);
+  WriteIPDLParam(aMsg, aActor, aParam.mHasUserInteraction);
   WriteIPDLParam(aMsg, aActor, aParam.mSharedState.Get()->mId);
   WriteIPDLParam(aMsg, aActor, aParam.mSharedState.Get()->mTriggeringPrincipal);
   WriteIPDLParam(aMsg, aActor, aParam.mSharedState.Get()->mPrincipalToInherit);
@@ -1400,6 +1416,7 @@ bool IPDLParamTraits<dom::SessionHistoryInfo>::Read(
       !ReadIPDLParam(aMsg, aIter, aActor,
                      &aResult->mScrollRestorationIsManual) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mPersist) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mHasUserInteraction) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &sharedId)) {
     aActor->FatalError("Error reading fields for SessionHistoryInfo");
     return false;

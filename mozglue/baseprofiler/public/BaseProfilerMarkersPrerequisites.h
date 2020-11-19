@@ -129,7 +129,8 @@ class MOZ_STACK_CLASS ProfilerStringView {
                            Ownership::Reference) {}
 
   // Implicit constructor from std::string.
-  constexpr MOZ_IMPLICIT ProfilerStringView(const std::string& aString)
+  constexpr MOZ_IMPLICIT ProfilerStringView(
+      const std::basic_string<CHAR>& aString)
       : ProfilerStringView(aString.data(), aString.length(),
                            Ownership::Reference) {}
 
@@ -141,7 +142,7 @@ class MOZ_STACK_CLASS ProfilerStringView {
   static constexpr ProfilerStringView WrapNullTerminatedString(
       const CHAR* aString) {
     return ProfilerStringView(
-        aString, aString ? std::char_traits<char>::length(aString) : 0,
+        aString, aString ? std::char_traits<CHAR>::length(aString) : 0,
         Ownership::Reference);
   }
 
@@ -182,8 +183,8 @@ class MOZ_STACK_CLASS ProfilerStringView {
   }
   // No `IsOwned...()` because it's a secret, only used internally!
 
-  [[nodiscard]] operator Span<const char>() const {
-    return Span<const char>(Data(), Length());
+  [[nodiscard]] operator Span<const CHAR>() const {
+    return Span<const CHAR>(Data(), Length());
   }
 
  private:

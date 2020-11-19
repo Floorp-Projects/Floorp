@@ -71,7 +71,8 @@ class ChildSHistory : public nsISupports, public nsWrapperCache {
                CallerType aCallerType, ErrorResult& aRv);
 
   // aIndex is the new index, and aOffset is the offset between new and current.
-  void GotoIndex(int32_t aIndex, int32_t aOffset, ErrorResult& aRv);
+  void GotoIndex(int32_t aIndex, int32_t aOffset, bool aRequireUserInteraction,
+                 ErrorResult& aRv);
 
   void RemovePendingHistoryNavigations();
 

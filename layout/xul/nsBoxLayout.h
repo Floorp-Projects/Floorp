@@ -23,8 +23,6 @@ struct nsMargin;
     }                                                \
   }
 
-class nsIGridPart;
-
 class nsBoxLayout : public nsISupports {
  protected:
   virtual ~nsBoxLayout() = default;
@@ -59,8 +57,6 @@ class nsBoxLayout : public nsISupports {
   virtual void AddXULBorderAndPadding(nsIFrame* aBox, nsSize& aSize);
   virtual void AddXULMargin(nsIFrame* aChild, nsSize& aSize);
   virtual void AddXULMargin(nsSize& aSize, const nsMargin& aMargin);
-
-  virtual nsIGridPart* AsGridPart() { return nullptr; }
 
   static void AddLargestSize(nsSize& aSize, const nsSize& aToAdd);
   static void AddSmallestSize(nsSize& aSize, const nsSize& aToAdd);

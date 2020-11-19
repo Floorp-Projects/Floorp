@@ -535,6 +535,8 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
         }
       }
 
+      ResetSHEntryHasUserInteractionCache();
+
       HistoryCommitIndexAndLength(aChangeID, caller);
 
       return;
@@ -650,6 +652,9 @@ void CanonicalBrowsingContext::SetActiveSessionHistoryEntry(
           UseRemoteSubframes());
     }
   }
+
+  ResetSHEntryHasUserInteractionCache();
+
   // FIXME Need to do the equivalent of EvictContentViewersOrReplaceEntry.
   HistoryCommitIndexAndLength(aChangeID, caller);
 }
@@ -667,6 +672,9 @@ void CanonicalBrowsingContext::ReplaceActiveSessionHistoryEntry(
     shistory->NotifyOnHistoryReplaceEntry();
     shistory->UpdateRootBrowsingContextState();
   }
+
+  ResetSHEntryHasUserInteractionCache();
+
   // FIXME Need to do the equivalent of EvictContentViewersOrReplaceEntry.
 }
 
@@ -702,8 +710,15 @@ void CanonicalBrowsingContext::RemoveFromSessionHistory() {
 }
 
 void CanonicalBrowsingContext::HistoryGo(
-    int32_t aOffset, uint64_t aHistoryEpoch, Maybe<ContentParentId> aContentId,
+    int32_t aOffset, uint64_t aHistoryEpoch, bool aRequireUserInteraction,
+    Maybe<ContentParentId> aContentId,
     std::function<void(int32_t&&)>&& aResolver) {
+  if (aRequireUserInteraction && aOffset != -1 && aOffset != 1) {
+    NS_ERROR(
+        "aRequireUserInteraction may only be used with an offset of -1 or 1");
+    return;
+  }
+
   nsSHistory* shistory = static_cast<nsSHistory*>(GetSessionHistory());
   if (!shistory) {
     return;
@@ -716,13 +731,25 @@ void CanonicalBrowsingContext::HistoryGo(
           ("HistoryGo(%d->%d) epoch %" PRIu64 "/id %" PRIu64, aOffset,
            (index + aOffset).value(), aHistoryEpoch,
            (uint64_t)(aContentId.isSome() ? aContentId.value() : 0)));
-  index += aOffset;
-  if (!index.isValid()) {
-    MOZ_LOG(gSHLog, LogLevel::Debug, ("Invalid index"));
-    return;
-  }
 
-  // FIXME userinteraction bits may needs tweaks here.
+  while (true) {
+    index += aOffset;
+    if (!index.isValid()) {
+      MOZ_LOG(gSHLog, LogLevel::Debug, ("Invalid index"));
+      return;
+    }
+
+    // Check for user interaction if desired, except for the first and last
+    // history entries. We compare with >= to account for the case where
+    // aOffset >= length.
+    if (!aRequireUserInteraction || index.value() >= shistory->Length() - 1 ||
+        index.value() <= 0) {
+      break;
+    }
+    if (shistory->HasUserInteractionAtIndex(index.value())) {
+      break;
+    }
+  }
 
   // Implement aborting additional history navigations from within the same
   // event spin of the content process.
@@ -1536,6 +1563,13 @@ void CanonicalBrowsingContext::EndDocumentLoad(bool aForProcessSwitch) {
     // Resetting the current load identifier on a discarded context
     // has no effect when a document load has finished.
     Unused << SetCurrentLoadIdentifier(Nothing());
+  }
+}
+
+void CanonicalBrowsingContext::ResetSHEntryHasUserInteractionCache() {
+  WindowContext* topWc = GetTopWindowContext();
+  if (topWc && !topWc->IsDiscarded()) {
+    MOZ_ALWAYS_SUCCEEDS(topWc->SetSHEntryHasUserInteraction(false));
   }
 }
 

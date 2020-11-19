@@ -23,7 +23,7 @@ add_task(async function setupTestingPref() {
  */
 add_task(async function testDefaultSupportedKeys() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
   await playMedia(tab, testVideoId);
@@ -32,12 +32,12 @@ add_task(async function testDefaultSupportedKeys() {
   await supportedKeysShouldEqualTo(tab, sDefaultSupportedKeys);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testNoActionHandlerBeingSet() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
   await playMedia(tab, testVideoId);
@@ -52,12 +52,12 @@ add_task(async function testNoActionHandlerBeingSet() {
   await supportedKeysShouldEqualTo(tab, sDefaultSupportedKeys);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testSettingActionsWhichAreAlreadyDefaultKeys() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
   await playMedia(tab, testVideoId);
@@ -72,12 +72,12 @@ add_task(async function testSettingActionsWhichAreAlreadyDefaultKeys() {
   await supportedKeysShouldEqualTo(tab, sDefaultSupportedKeys);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testSettingActionsWhichAreNotDefaultKeys() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
   await playMedia(tab, testVideoId);
@@ -98,7 +98,7 @@ add_task(async function testSettingActionsWhichAreNotDefaultKeys() {
   await supportedKeysShouldEqualTo(tab, expectedKeys);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 /**

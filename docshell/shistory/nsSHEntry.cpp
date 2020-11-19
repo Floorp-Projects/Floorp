@@ -300,13 +300,14 @@ nsSHEntry::SetIsSubFrame(bool aFlag) {
 
 NS_IMETHODIMP
 nsSHEntry::GetHasUserInteraction(bool* aFlag) {
-  // We can't assert that this getter isn't accessed only on root
-  // entries because there's JS code that will iterate over entries
-  // for serialization etc., so let's assert the next best thing.
-  MOZ_ASSERT(!mParent || !mHasUserInteraction,
-             "User interaction can only be set on root entries");
-
-  *aFlag = mHasUserInteraction;
+  // The back button and menulist deal with root/top-level
+  // session history entries, thus we annotate only the root entry.
+  if (!mParent) {
+    *aFlag = mHasUserInteraction;
+  } else {
+    nsCOMPtr<nsISHEntry> root = nsSHistory::GetRootSHEntry(this);
+    root->GetHasUserInteraction(aFlag);
+  }
   return NS_OK;
 }
 

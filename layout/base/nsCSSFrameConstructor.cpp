@@ -129,6 +129,10 @@
 #include "nsTextNode.h"
 #include "ActiveLayerTracker.h"
 
+#ifdef MOZ_GECKO_PROFILER
+#  include "mozilla/ProfilerMarkerTypes.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -244,13 +248,6 @@ nsIFrame* NS_NewMenuFrame(PresShell* aPresShell, ComputedStyle* aStyle,
 nsIFrame* NS_NewMenuBarFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame* NS_NewTreeBodyFrame(PresShell* aPresShell, ComputedStyle* aStyle);
-
-// grid
-nsresult NS_NewGridLayout2(nsBoxLayout** aNewLayout);
-nsIFrame* NS_NewGridRowLeafFrame(PresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewGridRowGroupFrame(PresShell* aPresShell, ComputedStyle* aStyle);
-
-// end grid
 
 nsIFrame* NS_NewTitleBarFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
@@ -3991,13 +3988,6 @@ nsresult nsCSSFrameConstructor::GetAnonymousContent(
 #define SCROLLABLE_XUL_CREATE(_tag, _func) \
   { nsGkAtoms::_tag, SCROLLABLE_XUL_FCDATA(_func) }
 
-static nsIFrame* NS_NewGridBoxFrame(PresShell* aPresShell,
-                                    ComputedStyle* aComputedStyle) {
-  nsCOMPtr<nsBoxLayout> layout;
-  NS_NewGridLayout2(getter_AddRefs(layout));
-  return NS_NewBoxFrame(aPresShell, aComputedStyle, false, layout);
-}
-
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
@@ -4477,21 +4467,6 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
       return &data;
     }
 #ifdef MOZ_XUL
-    case StyleDisplayInside::MozGrid: {
-      static const FrameConstructionData data =
-          SCROLLABLE_XUL_FCDATA(NS_NewGridBoxFrame);
-      return &data;
-    }
-    case StyleDisplayInside::MozGridGroup: {
-      static const FrameConstructionData data =
-          SCROLLABLE_XUL_FCDATA(NS_NewGridRowGroupFrame);
-      return &data;
-    }
-    case StyleDisplayInside::MozGridLine: {
-      static const FrameConstructionData data =
-          SCROLLABLE_XUL_FCDATA(NS_NewGridRowLeafFrame);
-      return &data;
-    }
     case StyleDisplayInside::MozStack: {
       static const FrameConstructionData data =
           SCROLLABLE_XUL_FCDATA(NS_NewStackFrame);
@@ -8194,9 +8169,8 @@ static nsIFrame* FindPreviousNonWhitespaceSibling(nsIFrame* aFrame) {
 bool nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(
     nsIFrame* aFrame) {
 #define TRACE(reason)                                                       \
-  PROFILER_TRACING_MARKER("Layout",                                         \
-                          "MaybeRecreateContainerForFrameRemoval: " reason, \
-                          LAYOUT, TRACING_EVENT)
+  PROFILER_MARKER("MaybeRecreateContainerForFrameRemoval: " reason, LAYOUT, \
+                  {}, Tracing, "Layout")
   MOZ_ASSERT(aFrame, "Must have a frame");
   MOZ_ASSERT(aFrame->GetParent(), "Frame shouldn't be root");
   MOZ_ASSERT(aFrame == aFrame->FirstContinuation(),
@@ -10719,9 +10693,8 @@ bool nsCSSFrameConstructor::MaybeRecreateForColumnSpan(
     // some of them have column-span:all descendants. Sadly, there's no way to
     // detect this by checking FrameConstructionItems in WipeContainingBlock().
     // Otherwise, we would have already wiped the multi-column containing block.
-    PROFILER_TRACING_MARKER(
-        "Layout", "Reframe multi-column after constructing frame list", LAYOUT,
-        TRACING_EVENT);
+    PROFILER_MARKER("Reframe multi-column after constructing frame list",
+                    LAYOUT, {}, Tracing, "Layout");
 
     // aFrameList can contain placeholder frames. In order to destroy their
     // associated out-of-flow frames properly, we need to manually flush all the
@@ -11046,9 +11019,9 @@ static bool IsSafeToAppendToIBSplitInline(nsIFrame* aParentFrame,
 }
 
 bool nsCSSFrameConstructor::WipeInsertionParent(nsContainerFrame* aFrame) {
-#define TRACE(reason)                                                       \
-  PROFILER_TRACING_MARKER("Layout", "WipeInsertionParent: " reason, LAYOUT, \
-                          TRACING_EVENT)
+#define TRACE(reason)                                                  \
+  PROFILER_MARKER("WipeInsertionParent: " reason, LAYOUT, {}, Tracing, \
+                  "Layout");
 
   const LayoutFrameType frameType = aFrame->Type();
 
@@ -11108,9 +11081,9 @@ bool nsCSSFrameConstructor::WipeContainingBlock(
     nsFrameConstructorState& aState, nsIFrame* aContainingBlock,
     nsIFrame* aFrame, FrameConstructionItemList& aItems, bool aIsAppend,
     nsIFrame* aPrevSibling) {
-#define TRACE(reason)                                                       \
-  PROFILER_TRACING_MARKER("Layout", "WipeContainingBlock: " reason, LAYOUT, \
-                          TRACING_EVENT)
+#define TRACE(reason)                                                  \
+  PROFILER_MARKER("WipeContainingBlock: " reason, LAYOUT, {}, Tracing, \
+                  "Layout");
 
   if (aItems.IsEmpty()) {
     return false;

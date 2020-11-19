@@ -31,7 +31,7 @@ add_task(async function setupTestingPref() {
  */
 add_task(async function testStopMediaControlAfterPausingMedia() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
   await playMedia(tab, testVideoId);
@@ -40,12 +40,12 @@ add_task(async function testStopMediaControlAfterPausingMedia() {
   await pauseMediaAndMediaControlShouldBeStopped(tab, testVideoId);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testNotToStopMediaControlForPIPVideo() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
   await playMedia(tab, testVideoId);
@@ -62,15 +62,19 @@ add_task(async function testNotToStopMediaControlForPIPVideo() {
 
   info(`remove tab`);
   await BrowserTestUtils.closeWindow(winPIP);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 /**
  * The following is helper function.
  */
-function pauseMediaAndMediaControlShouldBeStopped(tab, testVideoId) {
+function pauseMediaAndMediaControlShouldBeStopped(tab, elementId) {
   // After pausing media, the stop timer would be triggered and stop the media
-  // control, which would reset the current main media controller.
-  const controllerChangedPromise = waitUntilMainMediaControllerChanged();
-  return Promise.all([pauseMedia(tab, testVideoId), controllerChangedPromise]);
+  // control.
+  return Promise.all([
+    new Promise(r => (tab.controller.ondeactivated = r)),
+    SpecialPowers.spawn(tab.linkedBrowser, [elementId], Id => {
+      content.document.getElementById(Id).pause();
+    }),
+  ]);
 }

@@ -58,7 +58,7 @@ if CONFIG["MOZ_XUL"]:
     ]
 
 if CONFIG["MOZ_XUL"]:
-    DIRS += ["tree", "grid"]
+    DIRS += ["tree"]
 
 CFLAGS += CONFIG["TK_CFLAGS"]
 CXXFLAGS += CONFIG["TK_CFLAGS"]

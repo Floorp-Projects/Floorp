@@ -230,7 +230,6 @@ if (window.docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory) {
 }
 
 var gViewController = {
-  viewPort: null,
   currentViewId: "",
   currentViewObj: null,
   currentViewRequest: 0,
@@ -246,10 +245,6 @@ var gViewController = {
   lastHistoryIndex: -1,
 
   initialize() {
-    this.viewPort = document.getElementById("view-port");
-    this.headeredViews = document.getElementById("headered-views");
-    this.headeredViewsDeck = document.getElementById("headered-views-content");
-
     this.viewObjects.shortcuts = htmlView("shortcuts");
     this.viewObjects.list = htmlView("list");
     this.viewObjects.detail = htmlView("detail");
@@ -360,23 +355,6 @@ var gViewController = {
     notifyInitialized();
   },
 
-  get displayedView() {
-    if (this.viewPort.selectedPanel == this.headeredViews) {
-      return this.headeredViewsDeck.selectedPanel;
-    }
-    return this.viewPort.selectedPanel;
-  },
-
-  set displayedView(view) {
-    let node = view.node;
-    if (node.parentNode == this.headeredViewsDeck) {
-      this.headeredViewsDeck.selectedPanel = node;
-      this.viewPort.selectedPanel = this.headeredViews;
-    } else {
-      this.viewPort.selectedPanel = node;
-    }
-  },
-
   loadViewInternal(aViewId, aPreviousView, aState, aEvent) {
     var view = this.parseViewId(aViewId);
 
@@ -407,7 +385,6 @@ var gViewController = {
     this.currentViewId = aViewId;
     this.currentViewObj = viewObj;
 
-    this.displayedView = this.currentViewObj;
     this.isLoading = true;
 
     recordViewTelemetry(view.param);
@@ -515,23 +492,21 @@ async function promiseHtmlBrowserLoaded() {
 
 function htmlView(type) {
   return {
-    _browser: null,
     node: null,
 
     initialize() {
-      this._browser = getHtmlBrowser();
-      this.node = this._browser.closest("#html-view");
+      this.node = getHtmlBrowser();
     },
 
     async show(param, request, state) {
       await promiseHtmlBrowserLoaded();
-      await this._browser.contentWindow.show(type, param, state);
+      await this.node.contentWindow.show(type, param, state);
       gViewController.notifyViewChanged();
     },
 
     async hide() {
       await promiseHtmlBrowserLoaded();
-      return this._browser.contentWindow.hide();
+      return this.node.contentWindow.hide();
     },
 
     getSelectedAddon() {

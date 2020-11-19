@@ -1052,9 +1052,11 @@ pref("dom.cycle_collector.incremental", true);
 //   3 = openAbused
 pref("privacy.popups.disable_from_plugins", 3);
 
-// Enable Paritioned LocalStorage for a list of hosts when detected as trackers
+// Fix cookie blocking breakage by providing ephemeral Paritioned LocalStorage
+// for a list of hosts when detected as trackers.
 // (See nsICookieService::BEHAVIOR_REJECT_TRACKER cookie behavior)
-pref("privacy.restrict3rdpartystorage.partitionedHosts", "accounts.google.com/o/oauth2/");
+// See: Bug 1505212, Bug 1659394, Bug 1631811, Bug 1665035.
+pref("privacy.restrict3rdpartystorage.partitionedHosts", "accounts.google.com/o/oauth2/,d35nw2lg0ahg0v.cloudfront.net/,datastudio.google.com/embed/reporting/,d3qlaywcwingl6.cloudfront.net/");
 
 // If a host is contained in this pref list, user-interaction is required
 // before granting the storage access permission.

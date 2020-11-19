@@ -40,7 +40,7 @@ add_task(async function setupTestingPref() {
  */
 add_task(async function testDefaultMetadataForPageWithoutMediaSession() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
   await playMedia(tab, testVideoId);
@@ -49,13 +49,13 @@ add_task(async function testDefaultMetadataForPageWithoutMediaSession() {
   await isGivenTabUsingDefaultMetadata(tab);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(
   async function testDefaultMetadataForEmptyTitlePageWithoutMediaSession() {
     info(`open media page`);
-    const tab = await createTabAndLoad(PAGE_EMPTY_TITLE_URL);
+    const tab = await createLoadedTabWrapper(PAGE_EMPTY_TITLE_URL);
 
     info(`start media`);
     await playMedia(tab, testVideoId);
@@ -64,13 +64,13 @@ add_task(
     await isGivenTabUsingDefaultMetadata(tab);
 
     info(`remove tab`);
-    await BrowserTestUtils.removeTab(tab);
+    await tab.close();
   }
 );
 
 add_task(async function testDefaultMetadataForPageUsingEmptyMetadata() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
   await playMedia(tab, testVideoId);
@@ -87,12 +87,12 @@ add_task(async function testDefaultMetadataForPageUsingEmptyMetadata() {
   await isGivenTabUsingDefaultMetadata(tab);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testDefaultMetadataForPageUsingNullMetadata() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
   await playMedia(tab, testVideoId);
@@ -104,12 +104,12 @@ add_task(async function testDefaultMetadataForPageUsingNullMetadata() {
   await isGivenTabUsingDefaultMetadata(tab);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testMetadataWithEmptyTitleAndArtwork() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
   await playMedia(tab, testVideoId);
@@ -126,12 +126,12 @@ add_task(async function testMetadataWithEmptyTitleAndArtwork() {
   await isGivenTabUsingDefaultMetadata(tab);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testMetadataWithoutTitleAndArtwork() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
   await playMedia(tab, testVideoId);
@@ -146,17 +146,17 @@ add_task(async function testMetadataWithoutTitleAndArtwork() {
   await isGivenTabUsingDefaultMetadata(tab);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testMetadataInPrivateBrowsing() {
   info(`create a private window`);
-  const privateWindow = await BrowserTestUtils.openNewBrowserWindow({
+  const inputWindow = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
 
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY, privateWindow);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY, { inputWindow });
 
   info(`start media`);
   await playMedia(tab, testVideoId);
@@ -174,15 +174,15 @@ add_task(async function testMetadataInPrivateBrowsing() {
   await isGivenTabUsingDefaultMetadata(tab, { isPrivateBrowsing: true });
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 
   info(`close private window`);
-  await BrowserTestUtils.closeWindow(privateWindow);
+  await BrowserTestUtils.closeWindow(inputWindow);
 });
 
 add_task(async function testSetMetadataFromMediaSessionAPI() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
   await playMedia(tab, testVideoId);
@@ -212,12 +212,14 @@ add_task(async function testSetMetadataFromMediaSessionAPI() {
   await isCurrentMetadataEqualTo(metadata);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testSetMetadataBeforeMediaStarts() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY, {
+    needCheck: false,
+  });
 
   info(`set metadata`);
   let metadata = {
@@ -226,18 +228,18 @@ add_task(async function testSetMetadataBeforeMediaStarts() {
     album: "foo",
     artwork: [{ src: "bar.jpg", sizes: "128x128", type: "image/jpeg" }],
   };
-  await setMediaMetadata(tab, metadata);
+  await setMediaMetadata(tab, metadata, { notExpectChange: true });
 
   info(`current media metadata should be empty before media starts`);
   isCurrentMetadataEmpty();
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testSetMetadataAfterMediaPaused() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(`start media in order to let this tab be controlled`);
   await playMedia(tab, testVideoId);
@@ -258,12 +260,12 @@ add_task(async function testSetMetadataAfterMediaPaused() {
   await isCurrentMetadataEqualTo(metadata);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testSetMetadataAmongMultipleTabs() {
   info(`open media page in tab1`);
-  const tab1 = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab1 = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(`start media in tab1`);
   await playMedia(tab1, testVideoId);
@@ -281,7 +283,10 @@ add_task(async function testSetMetadataAmongMultipleTabs() {
   await isCurrentMetadataEqualTo(metadata);
 
   info(`open another page in tab2`);
-  const tab2 = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab2 = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
+
+  info(`start media in tab2`);
+  await playMedia(tab2, testVideoId);
 
   info(`set metadata for tab2`);
   metadata = {
@@ -291,9 +296,6 @@ add_task(async function testSetMetadataAmongMultipleTabs() {
     artwork: [{ src: "bar2.jpg", sizes: "129x129", type: "image/jpeg" }],
   };
   await setMediaMetadata(tab2, metadata);
-
-  info(`start media in tab2`);
-  await playMedia(tab2, testVideoId);
 
   info(`current active metadata should become metadata from tab2`);
   await isCurrentMetadataEqualTo(metadata);
@@ -313,13 +315,12 @@ add_task(async function testSetMetadataAmongMultipleTabs() {
   await isCurrentMetadataEqualTo(metadata);
 
   info(`remove tabs`);
-  await BrowserTestUtils.removeTab(tab1);
-  await BrowserTestUtils.removeTab(tab2);
+  await Promise.all([tab1.close(), tab2.close()]);
 });
 
 add_task(async function testMetadataAfterTabNavigation() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
   await playMedia(tab, testVideoId);
@@ -338,20 +339,21 @@ add_task(async function testMetadataAfterTabNavigation() {
 
   info(`navigate tab to blank page`);
   await Promise.all([
+    new Promise(r => (tab.controller.ondeactivated = r)),
     BrowserTestUtils.loadURI(tab.linkedBrowser, "about:blank"),
-    waitUntilMainMediaControllerChanged(),
+    waitUntilDisplayedMetadataChanged(),
   ]);
 
   info(`current media metadata should be reset`);
   isCurrentMetadataEmpty();
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testUpdateDefaultMetadataWhenPageTitleChanges() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(`start media`);
   await playMedia(tab, testVideoId);
@@ -375,20 +377,22 @@ add_task(async function testUpdateDefaultMetadataWhenPageTitleChanges() {
   await isCurrentMetadataEqualTo(metadata);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 /**
  * The following are helper functions.
  */
-function setMediaMetadata(tab, metadata) {
+function setMediaMetadata(tab, metadata, { notExpectChange } = {}) {
   const controller = tab.linkedBrowser.browsingContext.mediaController;
-  const promise = SpecialPowers.spawn(tab.linkedBrowser, [metadata], data => {
-    content.navigator.mediaSession.metadata = new content.MediaMetadata(data);
-  });
+  const metadatachangePromise = notExpectChange
+    ? Promise.resolve()
+    : new Promise(r => (controller.onmetadatachange = r));
   return Promise.all([
-    promise,
-    new Promise(r => (controller.onmetadatachange = r)),
+    metadatachangePromise,
+    SpecialPowers.spawn(tab.linkedBrowser, [metadata], data => {
+      content.navigator.mediaSession.metadata = new content.MediaMetadata(data);
+    }),
   ]);
 }
 
