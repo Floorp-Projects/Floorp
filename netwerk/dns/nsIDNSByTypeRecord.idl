@@ -115,5 +115,6 @@ interface nsIDNSHTTPSSVCRecord : nsISupports
 
   Array<nsISVCBRecord> GetAllRecordsWithEchConfig(in boolean aNoHttp2,
                                                   in boolean aNoHttp3,
-                                                  out boolean aAllRecordsHaveEchConfig);
+                                                  out boolean aAllRecordsHaveEchConfig,
+                                                  out boolean aAllRecordsInH3ExcludedList);
 };

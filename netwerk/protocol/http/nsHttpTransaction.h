@@ -499,6 +499,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   nsTArray<RefPtr<nsISVCBRecord>> mRecordsForRetry;
   bool mDontRetryWithDirectRoute = false;
   bool mFastFallbackTriggered = false;
+  bool mAllRecordsInH3ExcludedListBefore = false;
   nsCOMPtr<nsITimer> mFastFallbackTimer;
   nsCOMPtr<nsISVCBRecord> mFastFallbackRecord;
   RefPtr<HTTPSRecordResolver> mResolver;
