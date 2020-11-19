@@ -7201,7 +7201,7 @@
 #ifdef MOZ_FFVPX
 - name: media.rdd-ffvpx.enabled
   type: RelaxedAtomicBool
-#if defined(XP_WIN) && !defined(_ARM64_)
+#if defined(XP_WIN)
   value: @IS_NIGHTLY_BUILD@
 #elif defined(XP_MACOSX)
   value: @IS_NIGHTLY_BUILD@
@@ -7216,7 +7216,7 @@
 #ifdef MOZ_WMF
 - name: media.rdd-wmf.enabled
   type: RelaxedAtomicBool
-#if defined(XP_WIN) && !defined(_ARM64_)
+#if defined(XP_WIN)
   value: @IS_NIGHTLY_BUILD@
 #else
   value: false
@@ -7233,11 +7233,11 @@
 
 - name: media.rdd-theora.enabled
   type: RelaxedAtomicBool
-#if defined(XP_LINUX) && !defined(ANDROID)
-  value: @IS_NIGHTLY_BUILD@
-#elif defined(XP_WIN) && !defined(_ARM64_)
+#if defined(XP_WIN)
   value: @IS_NIGHTLY_BUILD@
 #elif defined(XP_MACOSX)
+  value: @IS_NIGHTLY_BUILD@
+#elif defined(XP_LINUX) && !defined(ANDROID)
   value: @IS_NIGHTLY_BUILD@
 #else
   value: false
@@ -7246,11 +7246,11 @@
 
 - name: media.rdd-vorbis.enabled
   type: RelaxedAtomicBool
-#if defined(XP_LINUX) && !defined(ANDROID)
+#if defined(XP_WIN)
   value: true
 #elif defined(XP_MACOSX)
   value: true
-#elif defined(XP_WIN) && !defined(_ARM64_)
+#elif defined(XP_LINUX) && !defined(ANDROID)
   value: true
 #else
   value: false
@@ -7259,11 +7259,11 @@
 
 - name: media.rdd-vpx.enabled
   type: RelaxedAtomicBool
-#if defined(XP_LINUX) && !defined(ANDROID)
-  value: @IS_NIGHTLY_BUILD@
-#elif defined(XP_WIN) && !defined(_ARM64_)
+#if defined(XP_WIN)
   value: @IS_NIGHTLY_BUILD@
 #elif defined(XP_MACOSX)
+  value: @IS_NIGHTLY_BUILD@
+#elif defined(XP_LINUX) && !defined(ANDROID)
   value: @IS_NIGHTLY_BUILD@
 #else
   value: false
@@ -7272,11 +7272,11 @@
 
 - name: media.rdd-wav.enabled
   type: RelaxedAtomicBool
-#if defined(XP_LINUX) && !defined(ANDROID)
-  value: true
-#elif defined(XP_WIN) && !defined(_ARM64_)
+#if defined(XP_WIN)
   value: true
 #elif defined(XP_MACOSX)
+  value: true
+#elif defined(XP_LINUX) && !defined(ANDROID)
   value: true
 #else
   value: false
@@ -7285,11 +7285,11 @@
 
 - name: media.rdd-opus.enabled
   type: RelaxedAtomicBool
-#if defined(XP_LINUX) && !defined(ANDROID)
-  value: true
-#elif defined(XP_WIN) && !defined(_ARM64_)
+#if defined(XP_WIN)
   value: true
 #elif defined(XP_MACOSX)
+  value: true
+#elif defined(XP_LINUX) && !defined(ANDROID)
   value: true
 #else
   value: false
