@@ -65,6 +65,8 @@ details > summary {
   width: 18em;
   cursor: pointer;
   outline: none;
+  font-size: 17px;
+  font-weight: 600;
 }
 
 #report-title, #title {
