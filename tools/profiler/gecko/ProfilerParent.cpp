@@ -8,6 +8,7 @@
 
 #include "nsProfiler.h"
 
+#include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/IOInterposer.h"
@@ -39,6 +40,8 @@ class ProfileBufferGlobalController final {
       base::ProcessId aProcessId,
       ProfileBufferControlledChunkManager::Update&& aUpdate);
 
+  static bool IsLockedOnCurrentThread();
+
  private:
   void HandleChunkManagerNonFinalUpdate(
       base::ProcessId aProcessId,
@@ -54,9 +57,9 @@ class ProfileBufferGlobalController final {
     ProfileBufferControlledChunkManager::Update mPendingUpdate;
   };
 
-  DataMutex<ParentChunkManagerAndPendingUpdate>
-      mParentChunkManagerAndPendingUpdate{
-          "ProfileBufferGlobalController::mParentChunkManagerAndPendingUpdate"};
+  static DataMutexBase<ParentChunkManagerAndPendingUpdate,
+                       baseprofiler::detail::BaseProfilerMutex>
+      sParentChunkManagerAndPendingUpdate;
 
   size_t mUnreleasedTotalBytes = 0;
 
@@ -105,6 +108,12 @@ class ProfileBufferGlobalController final {
   using TimeStampAndBytesAndPidArray = nsTArray<TimeStampAndBytesAndPid>;
   TimeStampAndBytesAndPidArray mReleasedChunksByTime;
 };
+
+/* static */
+DataMutexBase<ProfileBufferGlobalController::ParentChunkManagerAndPendingUpdate,
+              baseprofiler::detail::BaseProfilerMutex>
+    ProfileBufferGlobalController::sParentChunkManagerAndPendingUpdate{
+        "ProfileBufferGlobalController::sParentChunkManagerAndPendingUpdate"};
 
 // This singleton class tracks live ProfilerParent's (meaning there's a current
 // connection with a child process).
@@ -168,7 +177,7 @@ ProfileBufferGlobalController::ProfileBufferGlobalController(
 
   {
     auto lockedParentChunkManagerAndPendingUpdate =
-        mParentChunkManagerAndPendingUpdate.Lock();
+        sParentChunkManagerAndPendingUpdate.Lock();
     lockedParentChunkManagerAndPendingUpdate->mChunkManager =
         parentChunkManager;
   }
@@ -178,7 +187,7 @@ ProfileBufferGlobalController::ProfileBufferGlobalController(
         MOZ_ASSERT(!aUpdate.IsNotUpdate(),
                    "Update callback should never be given a non-update");
         auto lockedParentChunkManagerAndPendingUpdate =
-            mParentChunkManagerAndPendingUpdate.Lock();
+            sParentChunkManagerAndPendingUpdate.Lock();
         if (aUpdate.IsFinal()) {
           // Final update of the parent.
           // We cannot keep the chunk manager, and there's no point handling
@@ -211,9 +220,10 @@ ProfileBufferGlobalController ::~ProfileBufferGlobalController() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   // Extract the parent chunk manager (if still set).
   // This means any update after this will be ignored.
-  ProfileBufferControlledChunkManager* parentChunkManager = [this]() {
+  ProfileBufferControlledChunkManager* parentChunkManager = []() {
     auto lockedParentChunkManagerAndPendingUpdate =
-        mParentChunkManagerAndPendingUpdate.Lock();
+        sParentChunkManagerAndPendingUpdate.Lock();
+    lockedParentChunkManagerAndPendingUpdate->mPendingUpdate.Clear();
     return std::exchange(
         lockedParentChunkManagerAndPendingUpdate->mChunkManager, nullptr);
   }();
@@ -236,7 +246,7 @@ void ProfileBufferGlobalController::HandleChildChunkManagerUpdate(
              "HandleChildChunkManagerUpdate should not be given a non-update");
 
   auto lockedParentChunkManagerAndPendingUpdate =
-      mParentChunkManagerAndPendingUpdate.Lock();
+      sParentChunkManagerAndPendingUpdate.Lock();
   if (!lockedParentChunkManagerAndPendingUpdate->mChunkManager) {
     // No chunk manager, ignore updates.
     return;
@@ -287,6 +297,11 @@ void ProfileBufferGlobalController::HandleChildChunkManagerUpdate(
   HandleChunkManagerNonFinalUpdate(
       aProcessId, std::move(aUpdate),
       *lockedParentChunkManagerAndPendingUpdate->mChunkManager);
+}
+
+/* static */
+bool ProfileBufferGlobalController::IsLockedOnCurrentThread() {
+  return sParentChunkManagerAndPendingUpdate.Mutex().IsLockedOnCurrentThread();
 }
 
 void ProfileBufferGlobalController::HandleChunkManagerNonFinalUpdate(
@@ -612,6 +627,11 @@ ProfileBufferChunkManagerUpdate ProfilerParent::MakeFinalUpdate() {
   return ProfileBufferChunkManagerUpdate{
       uint64_t(scUpdateUnreleasedBytesFINAL), 0, TimeStamp{},
       nsTArray<ProfileBufferChunkMetadata>{}};
+}
+
+/* static */
+bool ProfilerParent::IsLockedOnCurrentThread() {
+  return ProfileBufferGlobalController::IsLockedOnCurrentThread();
 }
 
 void ProfilerParent::RequestChunkManagerUpdate() {
