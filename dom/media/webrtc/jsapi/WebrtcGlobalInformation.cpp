@@ -96,8 +96,10 @@ GetStatsPromiseForThisProcess(const nsAString& aPcIdFilter) {
 
     // Grab stats for closed PCs
     for (const auto& report : ctx->mStatsForClosedPeerConnections) {
-      promises.AppendElement(dom::RTCStatsReportPromise::CreateAndResolve(
-          MakeUnique<dom::RTCStatsReportInternal>(report), __func__));
+      if (aPcIdFilter.IsEmpty() || aPcIdFilter == report.mPcid) {
+        promises.AppendElement(dom::RTCStatsReportPromise::CreateAndResolve(
+            MakeUnique<dom::RTCStatsReportInternal>(report), __func__));
+      }
     }
   }
 
