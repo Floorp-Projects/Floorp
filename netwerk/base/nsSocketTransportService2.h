@@ -346,6 +346,8 @@ class nsSocketTransportService final : public nsPISocketTransportService,
   bool mEsniEnabled;
   bool mTrustedMitmDetected;
   bool mNotTrustedMitmDetected;
+
+  CopyableTArray<nsCOMPtr<nsISTSShutdownObserver>> mShutdownObservers;
 };
 
 extern nsSocketTransportService* gSocketTransportService;

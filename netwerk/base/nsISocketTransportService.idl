@@ -18,6 +18,16 @@ struct PRFileDesc;
 [ptr] native PRFileDescPtr(PRFileDesc);
 [ptr] native nsASocketHandlerPtr(nsASocketHandler);
 
+[scriptable, function, uuid(338947df-2f3b-4d24-9ce4-ecf161c1b7df)]
+interface nsISTSShutdownObserver : nsISupports {
+
+   /**
+    * Observe will be called when the SocketTransportService is shutting down,
+    * before threads are stopped.
+    */
+    void observe();
+};
+
 [builtinclass, scriptable, uuid(ad56b25f-e6bb-4db3-9f7b-5b7db33fd2b1)]
 interface nsISocketTransportService : nsISupports
 {
@@ -128,6 +138,9 @@ interface nsISocketTransportService : nsISupports
      *       socket thread.
      */
     [noscript] void notifyWhenCanAttachSocket(in nsIRunnable aEvent);
+
+    [noscript] void addShutdownObserver(in nsISTSShutdownObserver aObserver);
+    [noscript] void removeShutdownObserver(in nsISTSShutdownObserver aObserver);
 };
 
 [builtinclass, scriptable, uuid(c5204623-5b58-4a16-8b2e-67c34dd02e3f)]
