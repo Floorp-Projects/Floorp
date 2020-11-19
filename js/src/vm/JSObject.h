@@ -368,14 +368,6 @@ class JSObject
 
   inline void setGroup(js::ObjectGroup* group);
 
-  /*
-   * Mark an object as requiring its default 'new' type to have unknown
-   * properties.
-   */
-  inline bool isNewGroupUnknown() const;
-  static bool setNewGroupUnknown(JSContext* cx, js::ObjectGroupRealm& realm,
-                                 const JSClass* clasp, JS::HandleObject obj);
-
   /* Set a new prototype for an object with a singleton type. */
   static bool splicePrototype(JSContext* cx, js::HandleObject obj,
                               js::Handle<js::TaggedProto> proto);
