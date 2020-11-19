@@ -154,7 +154,7 @@ sRGBColor nsNativeBasicTheme::ComputeBorderColor(const EventStates& aState) {
   bool isActive =
       aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
   bool isHovered = !isDisabled && aState.HasState(NS_EVENT_STATE_HOVER);
-  bool isFocused = aState.HasState(NS_EVENT_STATE_FOCUS);
+  bool isFocused = aState.HasState(NS_EVENT_STATE_FOCUSRING);
   if (isDisabled) {
     return sColorGrey40Alpha50;
   }
@@ -194,7 +194,6 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeButtonColors(
   }();
 
   const sRGBColor borderColor = ComputeBorderColor(aState);
-
   return std::make_pair(backgroundColor, borderColor);
 }
 
@@ -434,7 +433,7 @@ void nsNativeBasicTheme::PaintCheckboxControl(DrawTarget* aDrawTarget,
   PaintRoundedRectWithRadius(aDrawTarget, aRect, backgroundColor, borderColor,
                              borderWidth, radius, aDpiRatio);
 
-  if (aState.HasState(NS_EVENT_STATE_FOCUS)) {
+  if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
     PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 3.0f);
   }
 }
@@ -555,7 +554,7 @@ void nsNativeBasicTheme::PaintRadioControl(DrawTarget* aDrawTarget,
   PaintStrokedEllipse(aDrawTarget, aRect, backgroundColor, borderColor,
                       borderWidth, aDpiRatio);
 
-  if (aState.HasState(NS_EVENT_STATE_FOCUS)) {
+  if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
     PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, 2.0f, 3.0f);
   }
 }
@@ -590,7 +589,7 @@ void nsNativeBasicTheme::PaintTextField(DrawTarget* aDrawTarget,
   PaintRoundedRectWithRadius(aDrawTarget, aRect, backgroundColor, borderColor,
                              kTextFieldBorderWidth, radius, aDpiRatio);
 
-  if (aState.HasState(NS_EVENT_STATE_FOCUS)) {
+  if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
     PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 0.0f);
   }
 }
@@ -605,7 +604,7 @@ void nsNativeBasicTheme::PaintListbox(DrawTarget* aDrawTarget,
   PaintRoundedRectWithRadius(aDrawTarget, aRect, backgroundColor, borderColor,
                              kMenulistBorderWidth, radius, aDpiRatio);
 
-  if (aState.HasState(NS_EVENT_STATE_FOCUS)) {
+  if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
     PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 0.0f);
   }
 }
@@ -620,7 +619,7 @@ void nsNativeBasicTheme::PaintMenulist(DrawTarget* aDrawTarget,
   PaintRoundedRectWithRadius(aDrawTarget, aRect, backgroundColor, borderColor,
                              kMenulistBorderWidth, radius, aDpiRatio);
 
-  if (aState.HasState(NS_EVENT_STATE_FOCUS)) {
+  if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
     PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 0.0f);
   }
 }
@@ -821,7 +820,7 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame, DrawTarget* aDrawTarget,
   PaintStrokedEllipse(aDrawTarget, thumbRect, thumbColor, thumbBorderColor,
                       thumbBorderWidth, aDpiRatio);
 
-  if (aState.HasState(NS_EVENT_STATE_FOCUS)) {
+  if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
     PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 3.0f);
   }
 }
@@ -960,7 +959,7 @@ void nsNativeBasicTheme::PaintButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
   PaintRoundedRectWithRadius(aDrawTarget, aRect, backgroundColor, borderColor,
                              kButtonBorderWidth, radius, aDpiRatio);
 
-  if (aState.HasState(NS_EVENT_STATE_FOCUS)) {
+  if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
     PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 0.0f);
   }
 }
