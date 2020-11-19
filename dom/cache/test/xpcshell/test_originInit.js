@@ -116,7 +116,13 @@ async function testSteps() {
       removeFile(cachesDatabase);
     }
 
-    let request = initStorageAndOrigin(principal);
+    let request = initStorage();
+    await requestFinished(request);
+
+    request = initTemporaryStorage();
+    await requestFinished(request);
+
+    request = initTemporaryOrigin(principal);
     await requestFinished(request);
 
     // After the origin is initialized, ".padding-tmp" should have always been

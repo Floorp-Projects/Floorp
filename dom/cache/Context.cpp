@@ -391,25 +391,36 @@ Context::QuotaInitRunnable::Run() {
     case STATE_ENSURE_ORIGIN_INITIALIZED: {
       AssertIsOnIOThread();
 
-      if (mCanceled) {
-        resolver->Resolve(NS_ERROR_ABORT);
-        break;
+      auto res = [this]() -> Result<Ok, nsresult> {
+        if (mCanceled) {
+          return Err(NS_ERROR_ABORT);
+        }
+
+        QuotaManager* quotaManager = QuotaManager::Get();
+        MOZ_DIAGNOSTIC_ASSERT(quotaManager);
+
+        CACHE_TRY(quotaManager->EnsureStorageIsInitialized());
+
+        CACHE_TRY(quotaManager->EnsureTemporaryStorageIsInitialized());
+
+        CACHE_TRY_UNWRAP(mQuotaInfo.mDir,
+                         quotaManager
+                             ->EnsureTemporaryOriginIsInitialized(
+                                 PERSISTENCE_TYPE_DEFAULT, mQuotaInfo)
+                             .map([](const auto& res) { return res.first; }));
+
+        mState = STATE_RUN_ON_TARGET;
+
+        MOZ_ALWAYS_SUCCEEDS(
+            mTarget->Dispatch(this, nsIThread::DISPATCH_NORMAL));
+
+        return Ok{};
+      }();
+
+      if (res.isErr()) {
+        resolver->Resolve(res.inspectErr());
       }
 
-      QuotaManager* qm = QuotaManager::Get();
-      MOZ_DIAGNOSTIC_ASSERT(qm);
-
-      auto directoryOrErr = qm->EnsureStorageAndOriginIsInitialized(
-          PERSISTENCE_TYPE_DEFAULT, mQuotaInfo);
-      if (directoryOrErr.isErr()) {
-        resolver->Resolve(directoryOrErr.inspectErr());
-        break;
-      }
-      mQuotaInfo.mDir = directoryOrErr.unwrap();
-
-      mState = STATE_RUN_ON_TARGET;
-
-      MOZ_ALWAYS_SUCCEEDS(mTarget->Dispatch(this, nsIThread::DISPATCH_NORMAL));
       break;
     }
     // -------------------
