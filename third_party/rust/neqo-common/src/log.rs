@@ -52,7 +52,7 @@ pub fn init() {
                 "{}s{:3}ms {} {}",
                 elapsed.as_secs(),
                 elapsed.as_millis() % 1000,
-                buf.default_styled_level(record.level()),
+                record.level(),
                 record.args()
             )
         });

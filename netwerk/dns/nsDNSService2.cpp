@@ -399,9 +399,11 @@ nsDNSByTypeRecord::GetServiceModeRecord(bool aNoHttp2, bool aNoHttp3,
 NS_IMETHODIMP
 nsDNSByTypeRecord::GetAllRecordsWithEchConfig(
     bool aNoHttp2, bool aNoHttp3, bool* aAllRecordsHaveEchConfig,
+    bool* aAllRecordsInH3ExcludedList,
     nsTArray<RefPtr<nsISVCBRecord>>& aResult) {
   return mHostRecord->GetAllRecordsWithEchConfig(
-      aNoHttp2, aNoHttp3, aAllRecordsHaveEchConfig, aResult);
+      aNoHttp2, aNoHttp3, aAllRecordsHaveEchConfig, aAllRecordsInH3ExcludedList,
+      aResult);
 }
 
 NS_IMETHODIMP

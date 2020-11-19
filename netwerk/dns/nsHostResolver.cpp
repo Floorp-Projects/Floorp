@@ -599,6 +599,7 @@ TypeHostRecord::GetServiceModeRecord(bool aNoHttp2, bool aNoHttp3,
 NS_IMETHODIMP
 TypeHostRecord::GetAllRecordsWithEchConfig(
     bool aNoHttp2, bool aNoHttp3, bool* aAllRecordsHaveEchConfig,
+    bool* aAllRecordsInH3ExcludedList,
     nsTArray<RefPtr<nsISVCBRecord>>& aResult) {
   MutexAutoLock lock(mResultsLock);
   if (!mResults.is<TypeRecordHTTPSSVC>()) {
@@ -607,7 +608,8 @@ TypeHostRecord::GetAllRecordsWithEchConfig(
 
   auto& records = mResults.as<TypeRecordHTTPSSVC>();
   GetAllRecordsWithEchConfigInternal(aNoHttp2, aNoHttp3, records,
-                                     aAllRecordsHaveEchConfig, aResult);
+                                     aAllRecordsHaveEchConfig,
+                                     aAllRecordsInH3ExcludedList, aResult);
   return NS_OK;
 }
 

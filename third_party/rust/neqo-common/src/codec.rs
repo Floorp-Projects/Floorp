@@ -368,6 +368,13 @@ impl Encoder {
     pub fn truncate(&mut self, len: usize) {
         self.buf.truncate(len);
     }
+
+    /// Pad the buffer to `len` with bytes set to `v`.
+    pub fn pad_to(&mut self, len: usize, v: u8) {
+        if len > self.buf.len() {
+            self.buf.resize(len, v);
+        }
+    }
 }
 
 impl Debug for Encoder {
@@ -776,5 +783,16 @@ mod tests {
         let mut enc = Encoder::from_hex("010234");
         enc[0] = 0xff;
         assert_eq!(enc, Encoder::from_hex("ff0234"));
+    }
+
+    #[test]
+    fn pad() {
+        let mut enc = Encoder::from_hex("010234");
+        enc.pad_to(5, 0);
+        assert_eq!(enc, Encoder::from_hex("0102340000"));
+        enc.pad_to(4, 0);
+        assert_eq!(enc, Encoder::from_hex("0102340000"));
+        enc.pad_to(7, 0xc2);
+        assert_eq!(enc, Encoder::from_hex("0102340000c2c2"));
     }
 }

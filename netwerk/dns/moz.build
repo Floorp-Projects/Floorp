@@ -61,6 +61,7 @@ UNIFIED_SOURCES += [
     "ChildDNSService.cpp",
     "DNS.cpp",
     "DNSListenerProxy.cpp",
+    "DNSPacket.cpp",
     "DNSRequestChild.cpp",
     "DNSRequestParent.cpp",
     "DNSResolverInfo.cpp",

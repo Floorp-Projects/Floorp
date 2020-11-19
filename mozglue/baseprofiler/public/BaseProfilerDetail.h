@@ -29,6 +29,8 @@ namespace detail {
 class BaseProfilerMutex : private ::mozilla::detail::MutexImpl {
  public:
   BaseProfilerMutex() : ::mozilla::detail::MutexImpl() {}
+  explicit BaseProfilerMutex(const char* aName)
+      : ::mozilla::detail::MutexImpl(), mName(aName) {}
 
   BaseProfilerMutex(const BaseProfilerMutex&) = delete;
   BaseProfilerMutex& operator=(const BaseProfilerMutex&) = delete;
@@ -77,6 +79,8 @@ class BaseProfilerMutex : private ::mozilla::detail::MutexImpl {
     ::mozilla::detail::MutexImpl::unlock();
   }
 
+  const char* GetName() const { return mName; }
+
  private:
   // Thread currently owning the lock, or 0.
   // Atomic because it may be read at any time independent of the mutex.
@@ -85,6 +89,8 @@ class BaseProfilerMutex : private ::mozilla::detail::MutexImpl {
   // - If it's different from their thread id it doesn't matter what other
   //   number it is (0 or another id) and that it can change again at any time.
   Atomic<int, MemoryOrdering::Relaxed> mOwningThreadId{0};
+
+  const char* mName = nullptr;
 };
 
 // RAII class to lock a mutex.

@@ -283,10 +283,6 @@ inline bool JSObject::staticPrototypeIsImmutable() const {
   return hasAllFlags(js::BaseShape::IMMUTABLE_PROTOTYPE);
 }
 
-inline bool JSObject::isNewGroupUnknown() const {
-  return hasAllFlags(js::BaseShape::NEW_GROUP_UNKNOWN);
-}
-
 namespace js {
 
 static MOZ_ALWAYS_INLINE bool IsFunctionObject(const js::Value& v) {

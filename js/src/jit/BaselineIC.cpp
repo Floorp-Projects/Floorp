@@ -853,12 +853,11 @@ bool FallbackICCodeCompiler::emit_ToBool() {
   return tailCallVM<Fn, DoToBoolFallback>(masm);
 }
 
-static bool TryAttachGetPropStub(const char* name, JSContext* cx,
+// TODO(no-TI): can this be replaced with TryAttachStub?
+static void TryAttachGetPropStub(const char* name, JSContext* cx,
                                  BaselineFrame* frame, ICFallbackStub* stub,
                                  CacheKind kind, HandleValue val,
                                  HandleValue idVal, HandleValue receiver) {
-  bool attached = false;
-
   if (stub->state().maybeTransition()) {
     stub->discardStubs(cx, frame->invalidationScript());
   }
@@ -867,9 +866,10 @@ static bool TryAttachGetPropStub(const char* name, JSContext* cx,
     RootedScript script(cx, frame->script());
     ICScript* icScript = frame->icScript();
     jsbytecode* pc = stub->icEntry()->pc(script);
+    bool attached = false;
 
     GetPropIRGenerator gen(cx, script, pc, stub->state().mode(), kind, val,
-                           idVal, receiver, GetPropertyResultFlags::All);
+                           idVal, receiver);
     switch (gen.tryAttachStub()) {
       case AttachDecision::Attach: {
         ICStub* newStub =
@@ -894,8 +894,6 @@ static bool TryAttachGetPropStub(const char* name, JSContext* cx,
       stub->trackNotAttached(cx, frame->invalidationScript());
     }
   }
-
-  return attached;
 }
 
 //
@@ -927,32 +925,13 @@ bool DoGetElemFallback(JSContext* cx, BaselineFrame* frame,
     }
   }
 
-  bool attached = TryAttachGetPropStub("GetElem", cx, frame, stub,
-                                       CacheKind::GetElem, lhs, rhs, lhs);
+  TryAttachGetPropStub("GetElem", cx, frame, stub, CacheKind::GetElem, lhs, rhs,
+                       lhs);
 
   if (!isOptimizedArgs) {
     if (!GetElementOperation(cx, op, lhsCopy, rhs, res)) {
       return false;
     }
-  }
-
-  if (attached) {
-    return true;
-  }
-
-  // GetElem operations which could access negative indexes generally can't
-  // be optimized without the potential for bailouts, as we can't statically
-  // determine that an object has no properties on such indexes.
-  if (rhs.isNumber() && rhs.toNumber() < 0) {
-    stub->noteNegativeIndex();
-  }
-
-  // GetElem operations which could access non-integer indexes generally can't
-  // be optimized without the potential for bailouts.
-  int32_t representable;
-  if (rhs.isNumber() && rhs.isDouble() &&
-      !mozilla::NumberEqualsInt32(rhs.toDouble(), &representable)) {
-    stub->setSawNonIntegerIndex();
   }
 
   return true;
@@ -972,36 +951,12 @@ bool DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame,
 
   MOZ_ASSERT(op == JSOp::GetElemSuper);
 
-  bool attached =
-      TryAttachGetPropStub("GetElemSuper", cx, frame, stub,
-                           CacheKind::GetElemSuper, lhs, rhs, receiver);
+  TryAttachGetPropStub("GetElemSuper", cx, frame, stub, CacheKind::GetElemSuper,
+                       lhs, rhs, receiver);
 
   // |lhs| is [[HomeObject]].[[Prototype]] which must be Object
   RootedObject lhsObj(cx, &lhs.toObject());
-  if (!GetObjectElementOperation(cx, op, lhsObj, receiver, rhs, res)) {
-    return false;
-  }
-
-  if (attached) {
-    return true;
-  }
-
-  // GetElem operations which could access negative indexes generally can't
-  // be optimized without the potential for bailouts, as we can't statically
-  // determine that an object has no properties on such indexes.
-  if (rhs.isNumber() && rhs.toNumber() < 0) {
-    stub->noteNegativeIndex();
-  }
-
-  // GetElem operations which could access non-integer indexes generally can't
-  // be optimized without the potential for bailouts.
-  int32_t representable;
-  if (rhs.isNumber() && rhs.isDouble() &&
-      !mozilla::NumberEqualsInt32(rhs.toDouble(), &representable)) {
-    stub->setSawNonIntegerIndex();
-  }
-
-  return true;
+  return GetObjectElementOperation(cx, op, lhsObj, receiver, rhs, res);
 }
 
 bool FallbackICCodeCompiler::emitGetElem(bool hasReceiver) {
@@ -1131,10 +1086,6 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
             &attached);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
-
-          if (gen.attachedTypedArrayOOBStub()) {
-            stub->noteHasTypedArrayOOB();
-          }
         }
       } break;
       case AttachDecision::NoAction:
@@ -2535,10 +2486,6 @@ bool DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame,
   }
   MOZ_ASSERT(res.isNumeric());
 
-  if (res.isDouble()) {
-    stub->setSawDoubleResult();
-  }
-
   TryAttachStub<UnaryArithIRGenerator>("UnaryArith", cx, frame, stub,
                                        BaselineCacheIRStubKind::Regular, op,
                                        val, res);
@@ -2657,10 +2604,6 @@ bool DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame,
     }
     default:
       MOZ_CRASH("Unhandled baseline arith op");
-  }
-
-  if (ret.isDouble()) {
-    stub->setSawDoubleResult();
   }
 
   TryAttachStub<BinaryArithIRGenerator>("BinaryArith", cx, frame, stub,

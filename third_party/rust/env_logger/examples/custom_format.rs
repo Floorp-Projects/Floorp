@@ -19,7 +19,8 @@ If you want to control the logging output completely, see the `custom_logger` ex
 
 #[cfg(all(feature = "termcolor", feature = "humantime"))]
 fn main() {
-    use env_logger::{fmt, Builder, Env};
+    use env_logger::{fmt::Color, Builder, Env};
+
     use std::io::Write;
 
     fn init_logger() {
@@ -30,7 +31,7 @@ fn main() {
         Builder::from_env(env)
             .format(|buf, record| {
                 let mut style = buf.style();
-                style.set_bg(fmt::Color::Yellow).set_bold(true);
+                style.set_bg(Color::Yellow).set_bold(true);
 
                 let timestamp = buf.timestamp();
 

@@ -2045,17 +2045,6 @@ static JSObject* CreateObjectPrototype(JSContext* cx, JSProtoKey key) {
              "should have been able to make a fresh Object.prototype's "
              "[[Prototype]] immutable");
 
-  /*
-   * The default 'new' type of Object.prototype is required by type inference
-   * to have unknown properties, to simplify handling of e.g. heterogenous
-   * objects in JSON and script literals.
-   */
-  ObjectGroupRealm& realm = ObjectGroupRealm::getForNewObject(cx);
-  if (!JSObject::setNewGroupUnknown(cx, realm, &PlainObject::class_,
-                                    objectProto)) {
-    return nullptr;
-  }
-
   return objectProto;
 }
 

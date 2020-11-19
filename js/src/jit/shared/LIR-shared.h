@@ -492,25 +492,6 @@ class LNewStringObject : public LInstructionHelper<1, 1, 1> {
   MNewStringObject* mir() const { return mir_->toNewStringObject(); }
 };
 
-class LInitElem : public LCallInstructionHelper<0, 1 + 2 * BOX_PIECES, 0> {
- public:
-  LIR_HEADER(InitElem)
-
-  LInitElem(const LAllocation& object, const LBoxAllocation& id,
-            const LBoxAllocation& value)
-      : LCallInstructionHelper(classOpcode) {
-    setOperand(0, object);
-    setBoxOperand(IdIndex, id);
-    setBoxOperand(ValueIndex, value);
-  }
-
-  static const size_t IdIndex = 1;
-  static const size_t ValueIndex = 1 + BOX_PIECES;
-
-  const LAllocation* getObject() { return getOperand(0); }
-  MInitElem* mir() const { return mir_->toInitElem(); }
-};
-
 class LInitElemGetterSetter
     : public LCallInstructionHelper<0, 2 + BOX_PIECES, 0> {
  public:
@@ -1594,45 +1575,6 @@ class LTestVAndBranch : public LControlInstructionHelper<2, BOX_PIECES, 3> {
   MBasicBlock* ifFalsy() { return getSuccessor(1); }
 
   MTest* mir() const { return mir_->toTest(); }
-};
-
-// Dispatches control flow to a successor based on incoming JSFunction*.
-// Used to implemenent polymorphic inlining.
-class LFunctionDispatch : public LInstructionHelper<0, 1, 0> {
-  // Dispatch is performed based on a function -> block map
-  // stored in the MIR.
-
- public:
-  LIR_HEADER(FunctionDispatch);
-
-  explicit LFunctionDispatch(const LAllocation& in)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, in);
-  }
-
-  MFunctionDispatch* mir() const { return mir_->toFunctionDispatch(); }
-};
-
-class LObjectGroupDispatch : public LInstructionHelper<0, 1, 1> {
-  // Dispatch is performed based on an ObjectGroup -> block
-  // map inferred by the MIR.
-
- public:
-  LIR_HEADER(ObjectGroupDispatch);
-
-  const char* extraName() const {
-    return mir()->hasFallback() ? "HasFallback" : "NoFallback";
-  }
-
-  LObjectGroupDispatch(const LAllocation& in, const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, in);
-    setTemp(0, temp);
-  }
-
-  const LDefinition* temp() { return getTemp(0); }
-
-  MObjectGroupDispatch* mir() const { return mir_->toObjectGroupDispatch(); }
 };
 
 // Compares two integral values of the same JS type, either integer or object.
@@ -5764,40 +5706,6 @@ class LCopyLexicalEnvironmentObject : public LCallInstructionHelper<1, 1, 0> {
   }
 };
 
-class LCallGetProperty
-    : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES, 0> {
- public:
-  LIR_HEADER(CallGetProperty)
-
-  static const size_t Value = 0;
-
-  explicit LCallGetProperty(const LBoxAllocation& val)
-      : LCallInstructionHelper(classOpcode) {
-    setBoxOperand(Value, val);
-  }
-
-  MCallGetProperty* mir() const { return mir_->toCallGetProperty(); }
-};
-
-// Call js::GetElement.
-class LCallGetElement
-    : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0> {
- public:
-  LIR_HEADER(CallGetElement)
-
-  static const size_t LhsInput = 0;
-  static const size_t RhsInput = BOX_PIECES;
-
-  LCallGetElement(const LBoxAllocation& lhs, const LBoxAllocation& rhs)
-      : LCallInstructionHelper(classOpcode) {
-    setBoxOperand(LhsInput, lhs);
-    setBoxOperand(RhsInput, rhs);
-  }
-
-  MCallGetElement* mir() const { return mir_->toCallGetElement(); }
-};
-
-// Call js::SetElement.
 class LCallSetElement
     : public LCallInstructionHelper<0, 1 + 2 * BOX_PIECES, 0> {
  public:
@@ -5815,45 +5723,6 @@ class LCallSetElement
   }
 
   const MCallSetElement* mir() const { return mir_->toCallSetElement(); }
-};
-
-// Call js::InitElementArray.
-class LCallInitElementArray
-    : public LCallInstructionHelper<0, 2 + BOX_PIECES, 0> {
- public:
-  LIR_HEADER(CallInitElementArray)
-
-  static const size_t Value = 2;
-
-  LCallInitElementArray(const LAllocation& obj, const LAllocation& index,
-                        const LBoxAllocation& value)
-      : LCallInstructionHelper(classOpcode) {
-    setOperand(0, obj);
-    setOperand(1, index);
-    setBoxOperand(Value, value);
-  }
-  const LAllocation* object() { return getOperand(0); }
-  const LAllocation* index() { return getOperand(1); }
-  const MCallInitElementArray* mir() const {
-    return mir_->toCallInitElementArray();
-  }
-};
-
-// Call a VM function to perform a property or name assignment of a generic
-// value.
-class LCallSetProperty : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0> {
- public:
-  LIR_HEADER(CallSetProperty)
-
-  LCallSetProperty(const LAllocation& obj, const LBoxAllocation& value)
-      : LCallInstructionHelper(classOpcode) {
-    setOperand(0, obj);
-    setBoxOperand(Value, value);
-  }
-
-  static const size_t Value = 1;
-
-  const MCallSetProperty* mir() const { return mir_->toCallSetProperty(); }
 };
 
 class LCallDeleteProperty : public LCallInstructionHelper<1, BOX_PIECES, 0> {

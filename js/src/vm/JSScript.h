@@ -1718,8 +1718,6 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   MUTABLE_FLAG_GETTER_SETTER(hadLICMBailout, HadLICMBailout)
   MUTABLE_FLAG_GETTER_SETTER(hadOverflowBailout, HadOverflowBailout)
   MUTABLE_FLAG_GETTER_SETTER(uninlineable, Uninlineable)
-  MUTABLE_FLAG_GETTER_SETTER(invalidatedIdempotentCache,
-                             InvalidatedIdempotentCache)
   MUTABLE_FLAG_GETTER_SETTER(failedLexicalCheck, FailedLexicalCheck)
   MUTABLE_FLAG_GETTER_SETTER(hadSpeculativePhiBailout, HadSpeculativePhiBailout)
 
@@ -2094,17 +2092,6 @@ class JSScript : public js::BaseScript {
     // checking |hasMappedArgsObj()|. (Mapped arguments objects are only
     // created for non-strict functions with simple parameter lists.)
     return hasMappedArgsObj();
-  }
-
-  // If there are more than MaxBytecodeTypeSets JOF_TYPESET ops in the script,
-  // the first MaxBytecodeTypeSets - 1 JOF_TYPESET ops have their own TypeSet
-  // and all other JOF_TYPESET ops share the last TypeSet.
-  static constexpr size_t MaxBytecodeTypeSets = UINT16_MAX;
-  static_assert(sizeof(js::ImmutableScriptData::numBytecodeTypeSets) == 2,
-                "MaxBytecodeTypeSets must match sizeof(numBytecodeTypeSets)");
-
-  size_t numBytecodeTypeSets() const {
-    return immutableScriptData()->numBytecodeTypeSets;
   }
 
   size_t numICEntries() const { return immutableScriptData()->numICEntries; }

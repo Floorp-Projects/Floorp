@@ -41,7 +41,10 @@ where
 {
     match quic_version {
         QuicVersion::Draft27 | QuicVersion::Draft28 => &RETRY_AEAD_27,
-        QuicVersion::Draft29 | QuicVersion::Draft30 => &RETRY_AEAD_29,
+        QuicVersion::Draft29
+        | QuicVersion::Draft30
+        | QuicVersion::Draft31
+        | QuicVersion::Draft32 => &RETRY_AEAD_29,
     }
     .try_with(|aead| f(&aead.borrow()))
     .map_err(|e| {

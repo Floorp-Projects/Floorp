@@ -12,6 +12,7 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref(
     "network.http.http3.alt-svc-mapping-for-testing"
   );
+  Services.prefs.clearUserPref("network.http.http3.backup_timer_delay");
   dump("cleanup done\n");
 });
 
@@ -53,6 +54,7 @@ add_task(async function test_setup() {
     "network.http.http3.alt-svc-mapping-for-testing",
     "foo.example.com;h3-27=:" + h3Port
   );
+  Services.prefs.setIntPref("network.http.http3.backup_timer_delay", 0);
 
   let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
     Ci.nsIX509CertDB

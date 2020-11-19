@@ -1395,7 +1395,11 @@ pub mod test_helpers {
         ($T:ty, $U:ty, $V:ty, $member:ident, $method:ident) => {
             #[no_mangle]
             #[allow(non_snake_case)]
-            pub unsafe extern "C" fn $method(size: *mut usize, align: *mut usize, offset: *mut usize) {
+            pub unsafe extern "C" fn $method(
+                size: *mut usize,
+                align: *mut usize,
+                offset: *mut usize,
+            ) {
                 // Create a temporary value of type T to get offsets, sizes
                 // and alignments from.
                 let tmp: mem::MaybeUninit<$T> = mem::MaybeUninit::uninit();

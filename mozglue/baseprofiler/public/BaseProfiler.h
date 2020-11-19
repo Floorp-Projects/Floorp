@@ -808,9 +808,10 @@ namespace baseprofiler {
 MFBT_API void profiler_add_js_marker(const char* aMarkerName,
                                      const char* aMarkerText);
 
-// Returns true if the profiler lock is currently held *on the current thread*.
-// This may be used by re-entrant code that may call profiler functions while
-// the profiler already has the lock (which would deadlock).
+// Returns true if any of the profiler mutexes are currently locked *on the
+// current thread*. This may be used by re-entrant code that may call profiler
+// functions while the same of a different profiler mutex is locked, which could
+// deadlock.
 bool profiler_is_locked_on_current_thread();
 
 //---------------------------------------------------------------------------

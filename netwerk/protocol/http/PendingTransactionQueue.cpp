@@ -25,14 +25,6 @@ static uint64_t TabIdForQueuing(nsAHttpTransaction* transaction) {
              : 0;
 }
 
-class PendingComparator {
- public:
-  bool Equals(const PendingTransactionInfo* aPendingTrans,
-              const nsAHttpTransaction* aTrans) const {
-    return aPendingTrans->Transaction() == aTrans;
-  }
-};
-
 // This function decides the transaction's order in the pending queue.
 // Given two transactions t1 and t2, returning true means that t2 is
 // more important than t1 and thus should be dispatched first.

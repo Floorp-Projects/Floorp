@@ -47,8 +47,8 @@ function handleRequest(request, response) {
     case "CORSMissingAllowCredentials":
       corsMissingAllowCredentials(request, response);
       break;
-    case "CORSPreflightDidNotSucceed2":
-      corsPreflightDidNotSucceed2(request, response);
+    case "CORSPreflightDidNotSucceed":
+      corsPreflightDidNotSucceed(request, response);
       break;
     case "CORSInvalidAllowMethod":
       corsInvalidAllowMethod(request, response);
@@ -56,8 +56,8 @@ function handleRequest(request, response) {
     case "CORSInvalidAllowHeader":
       corsInvalidAllowHeader(request, response);
       break;
-    case "CORSMissingAllowHeaderFromPreflight2":
-      corsMissingAllowHeaderFromPreflight2(request, response);
+    case "CORSMissingAllowHeaderFromPreflight":
+      corsMissingAllowHeaderFromPreflight(request, response);
       break;
   }
 }
@@ -94,12 +94,20 @@ function corsMultipleOriginNotAllowed(request, response) {
 }
 
 function corsAllowOriginNotMatchingOrigin(request, response) {
-  response.setStatusLine(request.httpVersion, 200, "corsAllowOriginNotMatchingOrigin");
+  response.setStatusLine(
+    request.httpVersion,
+    200,
+    "corsAllowOriginNotMatchingOrigin"
+  );
   response.setHeader("Access-Control-Allow-Origin", "mochi.test");
 }
 
 function corsNotSupportingCredentials(request, response) {
-  response.setStatusLine(request.httpVersion, 200, "corsNotSupportingCredentials");
+  response.setStatusLine(
+    request.httpVersion,
+    200,
+    "corsNotSupportingCredentials"
+  );
   response.setHeader("Access-Control-Allow-Origin", "*");
 }
 
@@ -111,12 +119,16 @@ function corsMethodNotFound(request, response) {
 }
 
 function corsMissingAllowCredentials(request, response) {
-  response.setStatusLine(request.httpVersion, 200, "corsMissingAllowCredentials");
+  response.setStatusLine(
+    request.httpVersion,
+    200,
+    "corsMissingAllowCredentials"
+  );
   // Need to set an explicit origin (i.e. not "*") to make the request fail.
   response.setHeader("Access-Control-Allow-Origin", "http://example.com");
 }
 
-function corsPreflightDidNotSucceed2(request, response) {
+function corsPreflightDidNotSucceed(request, response) {
   const isPreflight = request.method == "OPTIONS";
   if (isPreflight) {
     response.setStatusLine(request.httpVersion, 500, "Preflight fail");
@@ -137,8 +149,12 @@ function corsInvalidAllowHeader(request, response) {
   response.setHeader("Access-Control-Allow-Headers", "xyz;");
 }
 
-function corsMissingAllowHeaderFromPreflight2(request, response) {
-  response.setStatusLine(request.httpVersion, 200, "corsMissingAllowHeaderFromPreflight2");
+function corsMissingAllowHeaderFromPreflight(request, response) {
+  response.setStatusLine(
+    request.httpVersion,
+    200,
+    "corsMissingAllowHeaderFromPreflight"
+  );
   response.setHeader("Access-Control-Allow-Origin", "*");
   response.setHeader("Access-Control-Allow-Methods", "PUT");
 }

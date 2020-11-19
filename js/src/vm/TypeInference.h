@@ -42,24 +42,6 @@ class TempAllocator;
 
 }  // namespace jit
 
-// If there is an OOM while sweeping types, the type information is deoptimized
-// so that it stays correct (i.e. overapproximates the possible types in the
-// zone), but constraints might not have been triggered on the deoptimization
-// or even copied over completely. In this case, destroy all JIT code and new
-// script information in the zone, the only things whose correctness depends on
-// the type constraints.
-class AutoClearTypeInferenceStateOnOOM {
-  Zone* zone;
-
-  AutoClearTypeInferenceStateOnOOM(const AutoClearTypeInferenceStateOnOOM&) =
-      delete;
-  void operator=(const AutoClearTypeInferenceStateOnOOM&) = delete;
-
- public:
-  explicit AutoClearTypeInferenceStateOnOOM(Zone* zone);
-  ~AutoClearTypeInferenceStateOnOOM();
-};
-
 class MOZ_RAII AutoSweepBase {
   // Make sure we don't GC while this class is live since GC might trigger
   // (incremental) sweeping.
@@ -136,7 +118,6 @@ class TypeZone {
   ZoneData<LifoAlloc> sweepTypeLifoAlloc;
 
   ZoneData<bool> sweepingTypes;
-  ZoneData<bool> oomSweepingTypes;
 
   ZoneData<bool> keepJitScripts;
 
@@ -167,17 +148,7 @@ class TypeZone {
   bool isSweepingTypes() const { return sweepingTypes; }
   void setSweepingTypes(bool sweeping) {
     MOZ_RELEASE_ASSERT(sweepingTypes != sweeping);
-    MOZ_ASSERT_IF(sweeping, !oomSweepingTypes);
     sweepingTypes = sweeping;
-    oomSweepingTypes = false;
-  }
-  void setOOMSweepingTypes() {
-    MOZ_ASSERT(sweepingTypes);
-    oomSweepingTypes = true;
-  }
-  bool hadOOMSweepingTypes() {
-    MOZ_ASSERT(sweepingTypes);
-    return oomSweepingTypes;
   }
 
   mozilla::Maybe<IonCompilationId> currentCompilationId() const {

@@ -122,11 +122,10 @@ function sendCustomRequest(connector, requestId = null) {
       data.body = request.requestPostData.postData.text;
     }
 
-    connector.sendHTTPRequest(data, response => {
-      return dispatch({
-        type: SEND_CUSTOM_REQUEST,
-        id: response.eventActor.actor,
-      });
+    const response = await connector.sendHTTPRequest(data);
+    dispatch({
+      type: SEND_CUSTOM_REQUEST,
+      id: response.eventActor.actor,
     });
   };
 }

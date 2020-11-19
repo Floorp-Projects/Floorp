@@ -2224,8 +2224,6 @@ void Zone::prepareForCompacting() {
 void GCRuntime::sweepTypesAfterCompacting(Zone* zone) {
   zone->beginSweepTypes();
 
-  AutoClearTypeInferenceStateOnOOM oom(zone);
-
   for (auto base = zone->cellIterUnsafe<BaseScript>(); !base.done();
        base.next()) {
     if (!base->hasJitScript()) {
@@ -5710,8 +5708,6 @@ IncrementalProgress GCRuntime::sweepTypeInformation(JSFreeOp* fop,
 
   ArenaLists& al = sweepZone->arenas;
 
-  AutoClearTypeInferenceStateOnOOM oom(sweepZone);
-
   if (!SweepArenaList<BaseScript>(fop, &al.gcScriptArenasToUpdate.ref(),
                                   budget)) {
     return NotFinished;
@@ -7921,8 +7917,6 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
         JSObject* targetProto =
             global->getPrototypeForOffThreadPlaceholder(obj);
         MOZ_ASSERT(targetProto->isDelegate());
-        MOZ_ASSERT_IF(targetProto->isNewGroupUnknown(),
-                      obj->isNewGroupUnknown());
         group->setProtoUnchecked(TaggedProto(targetProto));
       }
     }

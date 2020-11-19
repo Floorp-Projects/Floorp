@@ -131,6 +131,48 @@ class PromptCollection {
       result.QueryInterface(Ci.nsIPropertyBag2).get("buttonNumClicked") == 0
     );
   }
+
+  confirmFolderUpload(browsingContext, directoryName) {
+    let title;
+    let message;
+    let acceptLabel;
+
+    try {
+      title = this.stringBundles.dom.GetStringFromName(
+        "FolderUploadPrompt.title"
+      );
+      message = this.stringBundles.dom.formatStringFromName(
+        "FolderUploadPrompt.message",
+        [directoryName]
+      );
+      acceptLabel = this.stringBundles.dom.GetStringFromName(
+        "FolderUploadPrompt.acceptButtonLabel"
+      );
+    } catch (exception) {
+      Cu.reportError("Failed to get strings from dom.properties");
+      return false;
+    }
+
+    let buttonFlags =
+      Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0 +
+      Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1 +
+      Services.prompt.BUTTON_POS_1_DEFAULT;
+
+    return (
+      Services.prompt.confirmExBC(
+        browsingContext,
+        Services.prompt.MODAL_TYPE_TAB,
+        title,
+        message,
+        buttonFlags,
+        acceptLabel,
+        null,
+        null,
+        null,
+        {}
+      ) === 0
+    );
+  }
 }
 
 const BUNDLES = {

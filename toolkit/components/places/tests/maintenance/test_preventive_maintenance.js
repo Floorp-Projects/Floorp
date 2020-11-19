@@ -2839,3 +2839,20 @@ add_task(async function test_preventive_maintenance() {
   Assert.equal(bs.getFolderIdForItem(gUnfiledFolderId), bs.placesRoot);
   Assert.equal(bs.getFolderIdForItem(bs.toolbarFolder), bs.placesRoot);
 });
+
+// ------------------------------------------------------------------------------
+
+add_task(async function test_idle_daily() {
+  const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+  const sandbox = sinon.createSandbox();
+  sandbox.stub(PlacesDBUtils, "maintenanceOnIdle");
+  Services.prefs.clearUserPref("places.database.lastMaintenance");
+  Cc["@mozilla.org/places/databaseUtilsIdleMaintenance;1"]
+    .getService(Ci.nsIObserver)
+    .observe(null, "idle-daily", "");
+  Assert.ok(
+    PlacesDBUtils.maintenanceOnIdle.calledOnce,
+    "maintenanceOnIdle was invoked"
+  );
+  sandbox.restore();
+});

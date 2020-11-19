@@ -82,7 +82,6 @@ const startupPhases = {
     denylist: {
       components: new Set([
         "PageIconProtocolHandler.js",
-        "PlacesCategoriesStarter.js",
         "nsPlacesExpiration.js",
       ]),
       modules: new Set([

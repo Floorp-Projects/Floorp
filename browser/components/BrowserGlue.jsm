@@ -16,59 +16,97 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "ASRouterDefaultConfig",
-  "resource://activity-stream/lib/ASRouterDefaultConfig.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "ASRouterNewTabHook",
-  "resource://activity-stream/lib/ASRouterNewTabHook.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "ActorManagerParent",
-  "resource://gre/modules/ActorManagerParent.jsm"
-);
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AboutNewTab",
-  "resource:///modules/AboutNewTab.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AboutNewTab: "resource:///modules/AboutNewTab.jsm",
+  ActorManagerParent: "resource://gre/modules/ActorManagerParent.jsm",
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
+  AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
+  ASRouterDefaultConfig:
+    "resource://activity-stream/lib/ASRouterDefaultConfig.jsm",
+  ASRouterNewTabHook: "resource://activity-stream/lib/ASRouterNewTabHook.jsm",
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
+  Blocklist: "resource://gre/modules/Blocklist.jsm",
+  BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.jsm",
+  BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.jsm",
+  BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
+  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  ContextualIdentityService:
+    "resource://gre/modules/ContextualIdentityService.jsm",
+  Corroborate: "resource://gre/modules/Corroborate.jsm",
+  DeferredTask: "resource://gre/modules/DeferredTask.jsm",
+  Discovery: "resource:///modules/Discovery.jsm",
+  DoHController: "resource:///modules/DoHController.jsm",
+  DownloadsViewableInternally:
+    "resource:///modules/DownloadsViewableInternally.jsm",
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
+  ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
+  FeatureGate: "resource://featuregates/FeatureGate.jsm",
+  FirefoxMonitor: "resource:///modules/FirefoxMonitor.jsm",
+  FxAccounts: "resource://gre/modules/FxAccounts.jsm",
+  HomePage: "resource:///modules/HomePage.jsm",
+  Integration: "resource://gre/modules/Integration.jsm",
+  Log: "resource://gre/modules/Log.jsm",
+  LoginBreaches: "resource:///modules/LoginBreaches.jsm",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+  NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
+  Normandy: "resource://normandy/Normandy.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  OsEnvironment: "resource://gre/modules/OsEnvironment.jsm",
+  PageActions: "resource:///modules/PageActions.jsm",
+  PageThumbs: "resource://gre/modules/PageThumbs.jsm",
+  PdfJs: "resource://pdf.js/PdfJs.jsm",
+  PermissionUI: "resource:///modules/PermissionUI.jsm",
+  PlacesBackups: "resource://gre/modules/PlacesBackups.jsm",
+  PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.jsm",
+  PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  PluralForm: "resource://gre/modules/PluralForm.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
+  PublicSuffixList: "resource://gre/modules/netwerk-dns/PublicSuffixList.jsm",
+  RemoteSettings: "resource://services-settings/remote-settings.js",
+  RemoteSecuritySettings:
+    "resource://gre/modules/psm/RemoteSecuritySettings.jsm",
+  RFPHelper: "resource://gre/modules/RFPHelper.jsm",
+  SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
+  Sanitizer: "resource:///modules/Sanitizer.jsm",
+  SaveToPocket: "chrome://pocket/content/SaveToPocket.jsm",
+  SearchTelemetry: "resource:///modules/SearchTelemetry.jsm",
+  SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
+  SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
+  TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
+  TabUnloader: "resource:///modules/TabUnloader.jsm",
+  TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
+  TRRRacer: "resource:///modules/TRRPerformance.jsm",
+  UIState: "resource://services-sync/UIState.jsm",
+  WebChannel: "resource://gre/modules/WebChannel.jsm",
+  WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
+});
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "E10SUtils",
-  "resource://gre/modules/E10SUtils.jsm"
-);
+// eslint-disable-next-line no-unused-vars
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AboutLoginsParent: "resource:///modules/AboutLoginsParent.jsm",
+  PluginManager: "resource:///actors/PluginParent.jsm",
+});
 
-ChromeUtils.defineModuleGetter(this, "Log", "resource://gre/modules/Log.jsm");
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "NetUtil",
-  "resource://gre/modules/NetUtil.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "DeferredTask",
-  "resource://gre/modules/DeferredTask.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "FeatureGate",
-  "resource://featuregates/FeatureGate.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "PlacesUIUtils",
-  "resource:///modules/PlacesUIUtils.jsm"
-);
+// Modules requiring an initialization method call.
+let initializedModules = {};
+[
+  [
+    "ContentPrefServiceParent",
+    "resource://gre/modules/ContentPrefServiceParent.jsm",
+    "alwaysInit",
+  ],
+  ["UpdateListener", "resource://gre/modules/UpdateListener.jsm", "init"],
+].forEach(([name, resource, init]) => {
+  XPCOMUtils.defineLazyGetter(this, name, () => {
+    ChromeUtils.import(resource, initializedModules);
+    initializedModules[name][init]();
+    return initializedModules[name];
+  });
+});
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -794,92 +832,6 @@ XPCOMUtils.defineLazyGetter(
   "WeaveService",
   () => Cc["@mozilla.org/weave/service;1"].getService().wrappedJSObject
 );
-
-// lazy module getters
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
-  AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
-  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
-  Blocklist: "resource://gre/modules/Blocklist.jsm",
-  BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.jsm",
-  BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.jsm",
-  BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
-  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  ContextualIdentityService:
-    "resource://gre/modules/ContextualIdentityService.jsm",
-  Corroborate: "resource://gre/modules/Corroborate.jsm",
-  Discovery: "resource:///modules/Discovery.jsm",
-  DoHController: "resource:///modules/DoHController.jsm",
-  DownloadsViewableInternally:
-    "resource:///modules/DownloadsViewableInternally.jsm",
-  ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
-  FirefoxMonitor: "resource:///modules/FirefoxMonitor.jsm",
-  FxAccounts: "resource://gre/modules/FxAccounts.jsm",
-  HomePage: "resource:///modules/HomePage.jsm",
-  Integration: "resource://gre/modules/Integration.jsm",
-  LoginBreaches: "resource:///modules/LoginBreaches.jsm",
-  NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
-  Normandy: "resource://normandy/Normandy.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
-  OsEnvironment: "resource://gre/modules/OsEnvironment.jsm",
-  PageActions: "resource:///modules/PageActions.jsm",
-  PageThumbs: "resource://gre/modules/PageThumbs.jsm",
-  PdfJs: "resource://pdf.js/PdfJs.jsm",
-  PermissionUI: "resource:///modules/PermissionUI.jsm",
-  PlacesBackups: "resource://gre/modules/PlacesBackups.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  PluralForm: "resource://gre/modules/PluralForm.jsm",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
-  PublicSuffixList: "resource://gre/modules/netwerk-dns/PublicSuffixList.jsm",
-  RemoteSettings: "resource://services-settings/remote-settings.js",
-  RemoteSecuritySettings:
-    "resource://gre/modules/psm/RemoteSecuritySettings.jsm",
-  RFPHelper: "resource://gre/modules/RFPHelper.jsm",
-  SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
-  Sanitizer: "resource:///modules/Sanitizer.jsm",
-  SaveToPocket: "chrome://pocket/content/SaveToPocket.jsm",
-  SearchTelemetry: "resource:///modules/SearchTelemetry.jsm",
-  SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
-  SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
-  TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
-  TabUnloader: "resource:///modules/TabUnloader.jsm",
-  TRRRacer: "resource:///modules/TRRPerformance.jsm",
-  UIState: "resource://services-sync/UIState.jsm",
-  WebChannel: "resource://gre/modules/WebChannel.jsm",
-  WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
-});
-
-// eslint-disable-next-line no-unused-vars
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AboutLoginsParent: "resource:///modules/AboutLoginsParent.jsm",
-  AsyncPrefs: "resource://gre/modules/AsyncPrefs.jsm",
-  PluginManager: "resource:///actors/PluginParent.jsm",
-});
-
-/**
- * IF YOU ADD OR REMOVE FROM THIS LIST, PLEASE UPDATE THE LIST ABOVE AS WELL.
- * XXX Bug 1325373 is for making eslint detect these automatically.
- */
-
-let initializedModules = {};
-
-[
-  [
-    "ContentPrefServiceParent",
-    "resource://gre/modules/ContentPrefServiceParent.jsm",
-    "alwaysInit",
-  ],
-  ["UpdateListener", "resource://gre/modules/UpdateListener.jsm", "init"],
-].forEach(([name, resource, init]) => {
-  XPCOMUtils.defineLazyGetter(this, name, () => {
-    ChromeUtils.import(resource, initializedModules);
-    initializedModules[name][init]();
-    return initializedModules[name];
-  });
-});
 
 if (AppConstants.MOZ_CRASHREPORTER) {
   XPCOMUtils.defineLazyModuleGetters(this, {
@@ -1898,11 +1850,12 @@ BrowserGlue.prototype = {
 
     this._collectFirstPartyIsolationTelemetry();
 
-    if (!this._placesTelemetryGathered) {
-      Cc["@mozilla.org/places/categoriesStarter;1"]
-        .getService(Ci.nsIObserver)
-        .observe(null, "gather-places-telemetry", null);
+    if (!this._placesTelemetryGathered && TelemetryUtils.isTelemetryEnabled) {
       this._placesTelemetryGathered = true;
+      // Collect Places telemetry on the first idle.
+      Services.tm.idleDispatchToMainThread(() => {
+        PlacesDBUtils.telemetry();
+      });
     }
 
     // Set the default favicon size for UI views that use the page-icon protocol.

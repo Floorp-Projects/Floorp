@@ -260,10 +260,6 @@ bool BytecodeEmitter::emitCheck(JSOp op, ptrdiff_t delta,
     return false;
   }
 
-  if (BytecodeOpHasTypeSet(op)) {
-    bytecodeSection().incrementNumTypeSets();
-  }
-
   if (BytecodeOpHasIC(op)) {
     // Even if every bytecode op is a JOF_IC op and the function has ARGC_LIMIT
     // arguments, numICEntries cannot overflow.
@@ -2507,9 +2503,9 @@ js::UniquePtr<ImmutableScriptData> BytecodeEmitter::createImmutableScriptData(
 
   return ImmutableScriptData::new_(
       cx, mainOffset(), maxFixedSlots, nslots, bodyScopeIndex,
-      bytecodeSection().numICEntries(), bytecodeSection().numTypeSets(),
-      isFunction, funLength, bytecodeSection().code(),
-      bytecodeSection().notes(), bytecodeSection().resumeOffsetList().span(),
+      bytecodeSection().numICEntries(), isFunction, funLength,
+      bytecodeSection().code(), bytecodeSection().notes(),
+      bytecodeSection().resumeOffsetList().span(),
       bytecodeSection().scopeNoteList().span(),
       bytecodeSection().tryNoteList().span());
 }

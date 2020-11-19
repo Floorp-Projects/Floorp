@@ -7,6 +7,7 @@
 #ifndef ProfilerChild_h
 #define ProfilerChild_h
 
+#include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/PProfilerChild.h"
 #include "mozilla/ProfileBufferControlledChunkManager.h"
@@ -36,6 +37,8 @@ class ProfilerChild final : public PProfilerChild,
 
   // This should be called regularly from outside of the profiler lock.
   static void ProcessPendingUpdate();
+
+  static bool IsLockedOnCurrentThread();
 
  private:
   virtual ~ProfilerChild();
@@ -78,7 +81,9 @@ class ProfilerChild final : public PProfilerChild,
     RefPtr<ProfilerChild> mProfilerChild;
     ProfileBufferControlledChunkManager::Update mUpdate;
   };
-  static StaticDataMutex<ProfilerChildAndUpdate> sPendingChunkManagerUpdate;
+  static DataMutexBase<ProfilerChildAndUpdate,
+                       baseprofiler::detail::BaseProfilerMutex>
+      sPendingChunkManagerUpdate;
 };
 
 }  // namespace mozilla

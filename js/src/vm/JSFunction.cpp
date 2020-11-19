@@ -2108,8 +2108,7 @@ bool js::CanReuseScriptForClone(JS::Realm* realm, HandleFunction fun,
                                 HandleObject newEnclosingEnv) {
   MOZ_ASSERT(fun->isInterpreted());
 
-  if (realm != fun->realm() || fun->isSingleton() ||
-      ObjectGroup::useSingletonForClone(fun)) {
+  if (realm != fun->realm() || fun->isSingleton()) {
     return false;
   }
 

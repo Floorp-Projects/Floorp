@@ -2065,29 +2065,11 @@ void nsHttpConnectionMgr::OnMsgCancelTransaction(int32_t reason,
     if (trans->ConnectionInfo()) {
       ent = mCT.GetWeak(trans->ConnectionInfo()->HashKey());
     }
-    if (ent) {
-      int32_t transIndex;
-      // We will abandon all half-open sockets belonging to the given
-      // transaction.
-      nsTArray<RefPtr<PendingTransactionInfo>>* infoArray =
-          ent->GetTransactionPendingQHelper(trans);
-
-      RefPtr<PendingTransactionInfo> pendingTransInfo;
-      transIndex =
-          infoArray ? infoArray->IndexOf(trans, 0, PendingComparator()) : -1;
-      if (transIndex >= 0) {
-        LOG(
-            ("nsHttpConnectionMgr::OnMsgCancelTransaction [trans=%p]"
-             " found in urgentStart queue\n",
-             trans));
-        pendingTransInfo = (*infoArray)[transIndex];
-        infoArray->RemoveElementAt(transIndex);
-      }
-
-      // Abandon all half-open sockets belonging to the given transaction.
-      if (pendingTransInfo) {
-        pendingTransInfo->AbandonHalfOpenAndForgetActiveConn();
-      }
+    if (ent && ent->RemoveTransFromPendingQ(trans)) {
+      LOG(
+          ("nsHttpConnectionMgr::OnMsgCancelTransaction [trans=%p]"
+           " removed from pending queue\n",
+           trans));
     }
 
     trans->Close(closeCode);
@@ -3461,12 +3443,15 @@ void nsHttpConnectionMgr::MoveToWildCardConnEntry(
   ent->MoveConnection(proxyConn, wcEnt);
 }
 
-bool nsHttpConnectionMgr::MoveTransToHTTPSSVCConnEntry(
-    nsHttpTransaction* aTrans, nsHttpConnectionInfo* aNewCI) {
+bool nsHttpConnectionMgr::MoveTransToNewConnEntry(nsHttpTransaction* aTrans,
+                                                  nsHttpConnectionInfo* aNewCI,
+                                                  bool aNoHttp3ForNewEntry) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  LOG(("nsHttpConnectionMgr::MoveTransToHTTPSSVCConnEntry: trans=%p aNewCI=%s",
-       aTrans, aNewCI->HashKey().get()));
+  LOG(
+      ("nsHttpConnectionMgr::MoveTransToNewConnEntry: trans=%p aNewCI=%s "
+       "aNoHttp3ForNewEntry=%d",
+       aTrans, aNewCI->HashKey().get(), aNoHttp3ForNewEntry));
 
   bool prohibitWildCard = !!aTrans->TunnelProvider();
   bool noHttp3 = aTrans->Caps() & NS_HTTP_DISALLOW_HTTP3;
@@ -3475,37 +3460,17 @@ bool nsHttpConnectionMgr::MoveTransToHTTPSSVCConnEntry(
   ConnectionEntry* oldEntry = GetOrCreateConnectionEntry(
       aTrans->ConnectionInfo(), prohibitWildCard, noHttp2, noHttp3);
 
-  ConnectionEntry* newEntry =
-      GetOrCreateConnectionEntry(aNewCI, prohibitWildCard, noHttp2, noHttp3);
+  ConnectionEntry* newEntry = GetOrCreateConnectionEntry(
+      aNewCI, prohibitWildCard, noHttp2, noHttp3 || aNoHttp3ForNewEntry);
 
   if (oldEntry == newEntry) {
     return true;
   }
 
   // Step 2: Try to find the undispatched transaction.
-  int32_t transIndex;
-  // We will abandon all half-open sockets belonging to the given
-  // transaction.
-  nsTArray<RefPtr<PendingTransactionInfo>>* infoArray =
-      oldEntry->GetTransactionPendingQHelper(aTrans);
-
-  RefPtr<PendingTransactionInfo> pendingTransInfo;
-  transIndex =
-      infoArray ? infoArray->IndexOf(aTrans, 0, PendingComparator()) : -1;
-  if (transIndex >= 0) {
-    pendingTransInfo = (*infoArray)[transIndex];
-    infoArray->RemoveElementAt(transIndex);
-  }
-
-  // It's fine we can't find the transaction. The transaction may not be added.
-  if (!pendingTransInfo) {
+  if (!oldEntry->RemoveTransFromPendingQ(aTrans)) {
     return false;
   }
-
-  MOZ_ASSERT(pendingTransInfo->Transaction() == aTrans);
-
-  // Abandon all half-open sockets belonging to the given transaction.
-  pendingTransInfo->AbandonHalfOpenAndForgetActiveConn();
 
   // Step 3: Add the transaction to the new entry.
   aTrans->UpdateConnectionInfo(aNewCI);

@@ -18,7 +18,8 @@ class HTTPSRecordResolver;
 class SpeculativeTransaction : public NullHttpTransaction {
  public:
   SpeculativeTransaction(nsHttpConnectionInfo* aConnInfo,
-                         nsIInterfaceRequestor* aCallbacks, uint32_t aCaps);
+                         nsIInterfaceRequestor* aCallbacks, uint32_t aCaps,
+                         std::function<void(bool)>&& aCallback = nullptr);
 
   already_AddRefed<SpeculativeTransaction> CreateWithNewConnInfo(
       nsHttpConnectionInfo* aConnInfo);
@@ -45,6 +46,10 @@ class SpeculativeTransaction : public NullHttpTransaction {
   const Maybe<bool>& IsFromPredictor() { return mIsFromPredictor; }
   const Maybe<bool>& Allow1918() { return mAllow1918; }
 
+  void Close(nsresult aReason) override;
+  nsresult ReadSegments(nsAHttpSegmentReader* aReader, uint32_t aCount,
+                        uint32_t* aCountRead) override;
+
  protected:
   virtual ~SpeculativeTransaction();
 
@@ -53,6 +58,9 @@ class SpeculativeTransaction : public NullHttpTransaction {
   Maybe<bool> mIgnoreIdle;
   Maybe<bool> mIsFromPredictor;
   Maybe<bool> mAllow1918;
+
+  bool mTriedToWrite = false;
+  std::function<void(bool)> mCloseCallback;
 };
 
 }  // namespace net

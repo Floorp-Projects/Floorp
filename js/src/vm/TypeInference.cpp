@@ -136,11 +136,6 @@ void JitScript::sweepTypes(const js::AutoSweepJitScript& sweep, Zone* zone) {
 
   AssertGCStateForSweep(zone);
 
-  Maybe<AutoClearTypeInferenceStateOnOOM> clearStateOnOOM;
-  if (!zone->types.isSweepingTypes()) {
-    clearStateOnOOM.emplace(zone);
-  }
-
   TypeZone& types = zone->types;
 
   // Sweep the inlinedCompilations Vector.
@@ -156,12 +151,6 @@ void JitScript::sweepTypes(const js::AutoSweepJitScript& sweep, Zone* zone) {
     }
     inlinedCompilations.shrinkTo(dest);
   }
-
-  if (types.hadOOMSweepingTypes()) {
-    // It's possible we OOM'd while copying freeze constraints, so they
-    // need to be regenerated.
-    flags_.hasFreezeConstraints = false;
-  }
 }
 
 TypeZone::TypeZone(Zone* zone)
@@ -171,7 +160,6 @@ TypeZone::TypeZone(Zone* zone)
       generation(zone, 0),
       sweepTypeLifoAlloc(zone, (size_t)TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
       sweepingTypes(zone, false),
-      oomSweepingTypes(zone, false),
       keepJitScripts(zone, false),
       activeAnalysis(zone, nullptr) {}
 
@@ -194,26 +182,6 @@ void TypeZone::beginSweep() {
 
 void TypeZone::endSweep(JSRuntime* rt) {
   rt->gc.queueAllLifoBlocksForFree(&sweepTypeLifoAlloc.ref());
-}
-
-AutoClearTypeInferenceStateOnOOM::AutoClearTypeInferenceStateOnOOM(Zone* zone)
-    : zone(zone) {
-  MOZ_RELEASE_ASSERT(CurrentThreadCanAccessZone(zone));
-  MOZ_ASSERT(!TlsContext.get()->inUnsafeCallWithABI);
-  zone->types.setSweepingTypes(true);
-}
-
-AutoClearTypeInferenceStateOnOOM::~AutoClearTypeInferenceStateOnOOM() {
-  if (zone->types.hadOOMSweepingTypes()) {
-    gc::AutoSetThreadIsSweeping threadIsSweeping(zone);
-    JSRuntime* rt = zone->runtimeFromMainThread();
-    JSFreeOp fop(rt);
-    js::CancelOffThreadIonCompile(rt);
-    zone->setPreservingCode(false);
-    zone->discardJitCode(&fop, Zone::KeepBaselineCode);
-  }
-
-  zone->types.setSweepingTypes(false);
 }
 
 JS::ubi::Node::Size JS::ubi::Concrete<js::ObjectGroup>::size(
