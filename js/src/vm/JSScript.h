@@ -2096,17 +2096,6 @@ class JSScript : public js::BaseScript {
     return hasMappedArgsObj();
   }
 
-  // If there are more than MaxBytecodeTypeSets JOF_TYPESET ops in the script,
-  // the first MaxBytecodeTypeSets - 1 JOF_TYPESET ops have their own TypeSet
-  // and all other JOF_TYPESET ops share the last TypeSet.
-  static constexpr size_t MaxBytecodeTypeSets = UINT16_MAX;
-  static_assert(sizeof(js::ImmutableScriptData::numBytecodeTypeSets) == 2,
-                "MaxBytecodeTypeSets must match sizeof(numBytecodeTypeSets)");
-
-  size_t numBytecodeTypeSets() const {
-    return immutableScriptData()->numBytecodeTypeSets;
-  }
-
   size_t numICEntries() const { return immutableScriptData()->numICEntries; }
 
   size_t funLength() const { return immutableScriptData()->funLength; }
