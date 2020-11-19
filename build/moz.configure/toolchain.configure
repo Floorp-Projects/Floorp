@@ -114,8 +114,8 @@ with only_when(target_is_osx):
         "--enable-macos-target",
         env="MACOSX_DEPLOYMENT_TARGET",
         nargs=1,
-        default="10.9",
-        help="Set the minimum MacOS version needed at runtime",
+        default=depends(target)(lambda t: "11.0" if t.cpu == "aarch64" else "10.9"),
+        help="Set the minimum MacOS version needed at runtime{|}",
     )
 
     @depends("--enable-macos-target")
