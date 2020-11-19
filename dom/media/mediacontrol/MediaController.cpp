@@ -521,16 +521,22 @@ void MediaController::HandleMetadataChanged(
 }
 
 void MediaController::DispatchAsyncEvent(const nsAString& aName) {
-  LOG("Dispatch event %s", NS_ConvertUTF16toUTF8(aName).get());
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(this, aName, CanBubble::eYes);
-  asyncDispatcher->PostDOMEvent();
+  RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
+  event->InitEvent(aName, false, false);
+  event->SetTrusted(true);
+  DispatchAsyncEvent(event);
 }
 
 void MediaController::DispatchAsyncEvent(Event* aEvent) {
   MOZ_ASSERT(aEvent);
   nsAutoString eventType;
   aEvent->GetType(eventType);
+  if (!mIsActive && !eventType.EqualsLiteral("deactivated")) {
+    LOG("Only 'deactivated' can be dispatched on a deactivated controller, not "
+        "'%s'",
+        NS_ConvertUTF16toUTF8(eventType).get());
+    return;
+  }
   LOG("Dispatch event %s", NS_ConvertUTF16toUTF8(eventType).get());
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
       new AsyncEventDispatcher(this, aEvent);
