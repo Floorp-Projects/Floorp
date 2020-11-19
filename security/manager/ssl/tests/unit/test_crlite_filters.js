@@ -50,15 +50,18 @@ function getHash(aStr) {
 }
 
 /**
- * Simulate a Remote Settings synchronization by filling up the
- * local data with fake records.
+ * Simulate a Remote Settings synchronization by filling up the local data with
+ * fake records.
  *
- * @param {*} filters List of filters for which we will create
- *                    records.
+ * @param {*} filters List of filters for which we will create records.
+ * @param {Boolean} clear Whether or not to clear the local DB first. Defaults
+ *                        to true.
  */
-async function syncAndDownload(filters) {
+async function syncAndDownload(filters, clear = true) {
   const localDB = await CRLiteFiltersClient.client.db;
-  await localDB.clear();
+  if (clear) {
+    await localDB.clear();
+  }
 
   for (let filter of filters) {
     const filename =
@@ -568,6 +571,68 @@ add_task(
       Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
     );
     Services.prefs.clearUserPref("security.pki.crlite_ct_merge_delay_seconds");
+  }
+);
+
+add_task(
+  {
+    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
+  },
+  async function test_crlite_filters_avoid_reprocessing_filters() {
+    Services.prefs.setBoolPref(CRLITE_FILTERS_ENABLED_PREF, true);
+
+    let result = await syncAndDownload([
+      { timestamp: "2019-01-01T00:00:00Z", type: "full", id: "0000" },
+      {
+        timestamp: "2019-01-01T06:00:00Z",
+        type: "diff",
+        id: "0001",
+        parent: "0000",
+      },
+      {
+        timestamp: "2019-01-01T12:00:00Z",
+        type: "diff",
+        id: "0002",
+        parent: "0001",
+      },
+      {
+        timestamp: "2019-01-01T18:00:00Z",
+        type: "diff",
+        id: "0003",
+        parent: "0002",
+      },
+    ]);
+    let [status, filters] = result.split(";");
+    equal(status, "finished", "CRLite filter download should have run");
+    let filtersSplit = filters.split(",");
+    deepEqual(
+      filtersSplit,
+      [
+        "2019-01-01T00:00:00Z-full",
+        "2019-01-01T06:00:00Z-diff",
+        "2019-01-01T12:00:00Z-diff",
+        "2019-01-01T18:00:00Z-diff",
+      ],
+      "Should have downloaded the expected CRLite filters"
+    );
+    // This simulates another poll without clearing the database first. The
+    // filter and stashes should not be re-downloaded.
+    result = await syncAndDownload([], false);
+    equal(result, "finished;");
+
+    // If a new stash is added, only it should be downloaded.
+    result = await syncAndDownload(
+      [
+        {
+          timestamp: "2019-01-02T00:00:00Z",
+          type: "diff",
+          id: "0004",
+          parent: "0003",
+        },
+      ],
+      false
+    );
+    equal(result, "finished;2019-01-02T00:00:00Z-diff");
   }
 );
 
