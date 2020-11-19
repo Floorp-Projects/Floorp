@@ -446,7 +446,7 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * Returns the current generation counter for the scrollframe. This counter
    * increments every time the scroll position is set.
    */
-  virtual mozilla::ScrollGeneration CurrentScrollGeneration() = 0;
+  virtual mozilla::ScrollGeneration CurrentScrollGeneration() const = 0;
   /**
    * LastScrollDestination returns the destination of the most recently
    * requested smooth scroll animation.
