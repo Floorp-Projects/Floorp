@@ -73,8 +73,12 @@ bool UnscaledFontGDI::GetFontInstanceData(FontInstanceDataOutput aCb,
 
 bool UnscaledFontGDI::GetFontDescriptor(FontDescriptorOutput aCb,
                                         void* aBaton) {
-  aCb(reinterpret_cast<uint8_t*>(&mLogFont), sizeof(mLogFont), 0, aBaton);
-  return true;
+  // Because all the callers of this function are preparing a recorded
+  // event to be played back in another process, it's not helpful to ever
+  // return a font descriptor, since it isn't meaningful in another
+  // process. Those callers will always need to send full font data, and
+  // returning false here will ensure that that happens.
+  return false;
 }
 
 already_AddRefed<UnscaledFont> UnscaledFontGDI::CreateFromFontDescriptor(
