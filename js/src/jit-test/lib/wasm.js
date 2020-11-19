@@ -59,22 +59,9 @@ function wasmCompilationShouldFail(bin, compile_error_regex) {
     }
 }
 
-function typeToCraneliftName(ty) {
-    switch(ty) {
-        case 'externref':
-            return 'ExternRef';
-        case 'funcref':
-            return 'FuncRef';
-        default:
-            return ty.toUpperCase();
-    }
-}
-
 function mismatchError(actual, expect) {
-    let actualCL = typeToCraneliftName(actual);
-    let expectCL = typeToCraneliftName(expect);
     var str = `(type mismatch: expression has type ${actual} but expected ${expect})|` +
-              `(type mismatch: expected Some\\(${expectCL}\\), found Some\\(${actualCL}\\))`;
+              `(type mismatch: expected ${expect}, found ${actual}\)`;
     return RegExp(str);
 }
 

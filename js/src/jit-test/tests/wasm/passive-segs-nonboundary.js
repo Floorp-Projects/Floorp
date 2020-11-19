@@ -370,7 +370,7 @@ checkMiscPrefixed([0x13], true);        // table.size+1, which is currently unas
         )`;
         assertErrorMessage(() => wasmEvalText(text1),
                            WebAssembly.CompileError,
-                           /(popping value from empty stack)|(expected Some\(I32\) but nothing on stack)/);
+                           /(popping value from empty stack)|(expected i32 but nothing on stack)/);
         let text2 =
         `(module
           (memory (export "memory") 1 1)

@@ -175,7 +175,7 @@ assertErrorMessage(() => wasmEvalText(
         (table.fill $t (i32.const 0) (ref.null extern) (f64.const 0))
      ))`),
      WebAssembly.CompileError,
-     /(type mismatch: expression has type f64 but expected i32)|(type mismatch: expected Some\(I32\), found Some\(F64\))/);
+     /(type mismatch: expression has type f64 but expected i32)|(type mismatch: expected i32, found f64)/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
@@ -184,7 +184,7 @@ assertErrorMessage(() => wasmEvalText(
         (table.fill $t (i32.const 0) (f32.const 0) (i32.const 0))
      ))`),
      WebAssembly.CompileError,
-     /(type mismatch: expression has type f32 but expected externref)|(type mismatch: expected Some\(ExternRef\), found Some\(F32\))/);
+     /(type mismatch: expression has type f32 but expected externref)|(type mismatch: expected externref, found f32)/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
@@ -193,7 +193,7 @@ assertErrorMessage(() => wasmEvalText(
         (table.fill $t (i64.const 0) (ref.null extern) (i32.const 0))
      ))`),
      WebAssembly.CompileError,
-     /(type mismatch: expression has type i64 but expected i32)|(type mismatch: expected Some\(I32\), found Some\(I64\))/);
+     /(type mismatch: expression has type i64 but expected i32)|(type mismatch: expected i32, found i64)/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
@@ -211,4 +211,4 @@ assertErrorMessage(() => wasmEvalText(
          (table.fill (i32.const 0) (local.get $v) (i32.const 0)))
      )`),
      WebAssembly.CompileError,
-     /(expression has type externref but expected funcref)|(type mismatch: expected Some\(FuncRef\), found Some\(ExternRef\))/);
+     /(expression has type externref but expected funcref)|(type mismatch: expected funcref, found externref)/);

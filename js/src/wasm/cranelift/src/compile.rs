@@ -338,11 +338,6 @@ impl<'a> Relocations<'a> {
 }
 
 impl<'a> RelocSink for Relocations<'a> {
-    /// Add a relocation referencing a block at the current offset.
-    fn reloc_block(&mut self, _at: CodeOffset, _reloc: Reloc, _block_offset: CodeOffset) {
-        unimplemented!("block relocations NYI");
-    }
-
     /// Add a relocation referencing an external symbol at the current offset.
     fn reloc_external(
         &mut self,
