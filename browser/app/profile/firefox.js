@@ -1429,7 +1429,7 @@ pref("browser.newtabpage.activity-stream.feeds.section.topstories", true);
   pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
 #endif
 
-pref("browser.newtabpage.activity-stream.logowordmark.alwaysVisible", false);
+pref("browser.newtabpage.activity-stream.logowordmark.alwaysVisible", true);
 
 // Used to display triplet cards on newtab
 pref("trailhead.firstrun.newtab.triplets", "");
