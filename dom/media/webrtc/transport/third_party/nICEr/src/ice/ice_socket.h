@@ -89,6 +89,7 @@ int nr_ice_socket_register_stun_client(nr_ice_socket *sock, nr_stun_client_ctx *
 int nr_ice_socket_register_stun_server(nr_ice_socket *sock, nr_stun_server_ctx *srv,void **handle);
 int nr_ice_socket_register_turn_client(nr_ice_socket *sock, nr_turn_client_ctx *srv,nr_socket *turn_socket, void **handle);
 int nr_ice_socket_deregister(nr_ice_socket *sock, void *handle);
+void nr_ice_socket_failed(nr_ice_socket *sock);
 
 #ifdef __cplusplus
 }
