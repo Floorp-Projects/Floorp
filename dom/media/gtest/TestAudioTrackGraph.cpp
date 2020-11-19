@@ -529,7 +529,7 @@ TEST(TestAudioTrackGraph, AudioInputTrackDisabling)
     return graph->NotifyWhenDeviceStarted(inputTrack);
   });
 
-  MockCubebStream* stream = WaitFor(cubeb->StreamInitEvent());
+  RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
   EXPECT_TRUE(stream->mHasInput);
   Unused << WaitFor(p);
 
