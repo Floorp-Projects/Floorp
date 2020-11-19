@@ -818,14 +818,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     guardGroup(obj, group);
   }
 
-  void guardGroupForTypeBarrier(ObjOperandId obj, ObjectGroup* group) {
-    // Typesets will always be a super-set of any typesets previously seen
-    // for this group. If the type/group of a value being stored to a
-    // property in this group is not known, a TypeUpdate IC chain should be
-    // used as well.
-    guardGroup(obj, group);
-  }
-
   void guardGroupForLayout(ObjOperandId obj, ObjectGroup* group) {
     // NOTE: Comment in guardGroupForTypeBarrier also applies.
     MOZ_ASSERT(IsTypedObjectClass(group->clasp()));
@@ -1435,53 +1427,11 @@ class MOZ_RAII BindNameIRGenerator : public IRGenerator {
   AttachDecision tryAttachStub();
 };
 
-// Information used by SetProp/SetElem stubs to check/update property types.
-// TODO(no-TI): remove.
-class MOZ_RAII PropertyTypeCheckInfo {
-  RootedObjectGroup group_;
-  RootedId id_;
-  bool needsTypeBarrier_;
-
-  PropertyTypeCheckInfo(const PropertyTypeCheckInfo&) = delete;
-  void operator=(const PropertyTypeCheckInfo&) = delete;
-
- public:
-  PropertyTypeCheckInfo(JSContext* cx, bool needsTypeBarrier)
-      : group_(cx), id_(cx), needsTypeBarrier_(needsTypeBarrier) {
-    if (!IsTypeInferenceEnabled()) {
-      needsTypeBarrier_ = false;
-    }
-  }
-
-  bool needsTypeBarrier() const { return needsTypeBarrier_; }
-  bool isSet() const { return group_ != nullptr; }
-
-  ObjectGroup* group() const {
-    MOZ_ASSERT(isSet());
-    return group_;
-  }
-
-  jsid id() const {
-    MOZ_ASSERT(isSet());
-    return id_;
-  }
-
-  void set(ObjectGroup* group, jsid id) {
-    MOZ_ASSERT(!group_);
-    MOZ_ASSERT(group);
-    if (needsTypeBarrier_) {
-      group_ = group;
-      id_ = id;
-    }
-  }
-};
-
 // SetPropIRGenerator generates CacheIR for a SetProp IC.
 class MOZ_RAII SetPropIRGenerator : public IRGenerator {
   HandleValue lhsVal_;
   HandleValue idVal_;
   HandleValue rhsVal_;
-  PropertyTypeCheckInfo typeCheckInfo_;
   bool attachedTypedArrayOOBStub_;
   bool maybeHasExtraIndexedProps_;
 
@@ -1571,15 +1521,12 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
   SetPropIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
                      CacheKind cacheKind, ICState::Mode mode,
                      HandleValue lhsVal, HandleValue idVal, HandleValue rhsVal,
-                     bool needsTypeBarrier = true,
                      bool maybeHasExtraIndexedProps = true);
 
   AttachDecision tryAttachStub();
   AttachDecision tryAttachAddSlotStub(HandleObjectGroup oldGroup,
                                       HandleShape oldShape);
   void trackAttached(const char* name);
-
-  const PropertyTypeCheckInfo* typeCheckInfo() const { return &typeCheckInfo_; }
 
   bool attachedTypedArrayOOBStub() const { return attachedTypedArrayOOBStub_; }
 
@@ -1722,7 +1669,6 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   HandleValue thisval_;
   HandleValue newTarget_;
   HandleValueArray args_;
-  PropertyTypeCheckInfo typeCheckInfo_;
 
   ScriptedThisResult getThisForScripted(HandleFunction calleeFunc,
                                         MutableHandleObject result);
@@ -1863,8 +1809,6 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachStub();
 
   AttachDecision tryAttachDeferredStub(HandleValue result);
-
-  const PropertyTypeCheckInfo* typeCheckInfo() const { return &typeCheckInfo_; }
 };
 
 class MOZ_RAII CompareIRGenerator : public IRGenerator {

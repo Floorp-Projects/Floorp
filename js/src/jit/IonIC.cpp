@@ -318,12 +318,11 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
     RootedScript script(cx, ic->script());
     jsbytecode* pc = ic->pc();
     SetPropIRGenerator gen(cx, script, pc, ic->kind(), ic->state().mode(), objv,
-                           idVal, rhs, ic->needsTypeBarrier(),
-                           ic->guardHoles());
+                           idVal, rhs, ic->guardHoles());
     switch (gen.tryAttachStub()) {
       case AttachDecision::Attach:
         ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
-                              &attached, gen.typeCheckInfo());
+                              &attached);
         break;
       case AttachDecision::NoAction:
         break;
@@ -395,15 +394,14 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
     RootedScript script(cx, ic->script());
     jsbytecode* pc = ic->pc();
     SetPropIRGenerator gen(cx, script, pc, ic->kind(), ic->state().mode(), objv,
-                           idVal, rhs, ic->needsTypeBarrier(),
-                           ic->guardHoles());
+                           idVal, rhs, ic->guardHoles());
     MOZ_ASSERT(deferType == DeferType::AddSlot);
     AttachDecision decision = gen.tryAttachAddSlotStub(oldGroup, oldShape);
 
     switch (decision) {
       case AttachDecision::Attach:
         ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
-                              &attached, gen.typeCheckInfo());
+                              &attached);
         break;
       case AttachDecision::NoAction:
         gen.trackAttached(IRGenerator::NotAttached);

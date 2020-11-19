@@ -219,8 +219,7 @@ class IonIC {
   void trace(JSTracer* trc, IonScript* ionScript);
 
   void attachCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
-                         CacheKind kind, IonScript* ionScript, bool* attached,
-                         const PropertyTypeCheckInfo* typeCheckInfo = nullptr);
+                         CacheKind kind, IonScript* ionScript, bool* attached);
 };
 
 class IonGetPropertyIC : public IonIC {
@@ -304,6 +303,7 @@ class IonSetPropertyIC : public IonIC {
   ConstantOrRegister id_;
   ConstantOrRegister rhs_;
   bool strict_ : 1;
+  // TODO(no-TI): remove flags.
   bool needsPostBarrier_ : 1;
   bool needsTypeBarrier_ : 1;
   bool guardHoles_ : 1;
