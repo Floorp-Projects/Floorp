@@ -118,6 +118,14 @@ class L10nRegistryService {
     }
   }
 
+  /**
+   * Empty the sources to mimic shutdown for testing from xpcshell.
+   */
+  clearSources() {
+    this.sources = new Map();
+    Services.locale.availableLocales = this.getAvailableLocales();
+  }
+
   handleEvent(event) {
     if (event.type === "change") {
       if (event.changedKeys.includes("L10nRegistry:Sources")) {
