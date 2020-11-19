@@ -276,7 +276,7 @@ struct nsCSSRendering {
   /**
    * @return true if |aFrame| is a canvas frame, in the CSS sense.
    */
-  static bool IsCanvasFrame(nsIFrame* aFrame);
+  static bool IsCanvasFrame(const nsIFrame* aFrame);
 
   /**
    * Fill in an aBackgroundSC to be used to paint the background
@@ -284,9 +284,9 @@ struct nsCSSRendering {
    * backgrounds between BODY, the root element, and the canvas.
    * @return true if there is some meaningful background.
    */
-  static bool FindBackground(nsIFrame* aForFrame,
+  static bool FindBackground(const nsIFrame* aForFrame,
                              mozilla::ComputedStyle** aBackgroundSC);
-  static bool FindBackgroundFrame(nsIFrame* aForFrame,
+  static bool FindBackgroundFrame(const nsIFrame* aForFrame,
                                   nsIFrame** aBackgroundFrame);
 
   /**
@@ -308,7 +308,7 @@ struct nsCSSRendering {
    *   contains background style information for the canvas on return
    */
 
-  static nsIFrame* FindCanvasBackgroundFrame(nsIFrame* aForFrame,
+  static nsIFrame* FindCanvasBackgroundFrame(const nsIFrame* aForFrame,
                                              nsIFrame* aRootElementFrame) {
     MOZ_ASSERT(IsCanvasFrame(aForFrame), "not a canvas frame");
     if (aRootElementFrame) {
@@ -318,7 +318,7 @@ struct nsCSSRendering {
     // This should always give transparent, so we'll fill it in with the
     // default color if needed.  This seems to happen a bit while a page is
     // being loaded.
-    return aForFrame;
+    return const_cast<nsIFrame*>(aForFrame);
   }
 
   static mozilla::ComputedStyle* FindCanvasBackground(
