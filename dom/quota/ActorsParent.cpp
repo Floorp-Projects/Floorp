@@ -1657,6 +1657,44 @@ class InitTemporaryStorageOp final : public QuotaRequestBase {
   void GetResponse(RequestResponse& aResponse) override;
 };
 
+class InitializeOriginRequestBase : public QuotaRequestBase {
+ protected:
+  nsCString mSuffix;
+  nsCString mGroup;
+  bool mCreated;
+
+ public:
+  void Init(Quota& aQuota) override;
+
+ protected:
+  InitializeOriginRequestBase(PersistenceType aPersistenceType,
+                              const PrincipalInfo& aPrincipalInfo);
+};
+
+class InitializePersistentOriginOp final : public InitializeOriginRequestBase {
+ public:
+  explicit InitializePersistentOriginOp(const RequestParams& aParams);
+
+ private:
+  ~InitializePersistentOriginOp() = default;
+
+  nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
+
+  void GetResponse(RequestResponse& aResponse) override;
+};
+
+class InitializeTemporaryOriginOp final : public InitializeOriginRequestBase {
+ public:
+  explicit InitializeTemporaryOriginOp(const RequestParams& aParams);
+
+ private:
+  ~InitializeTemporaryOriginOp() = default;
+
+  nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
+
+  void GetResponse(RequestResponse& aResponse) override;
+};
+
 class InitStorageAndOriginOp final : public QuotaRequestBase {
   nsCString mSuffix;
   nsCString mGroup;
@@ -8495,6 +8533,37 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
     case RequestParams::TInitTemporaryStorageParams:
       break;
 
+    case RequestParams::TInitializePersistentOriginParams: {
+      const InitializePersistentOriginParams& params =
+          aParams.get_InitializePersistentOriginParams();
+
+      if (NS_WARN_IF(
+              !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+
+      break;
+    }
+
+    case RequestParams::TInitializeTemporaryOriginParams: {
+      const InitializeTemporaryOriginParams& params =
+          aParams.get_InitializeTemporaryOriginParams();
+
+      if (NS_WARN_IF(!IsBestEffortPersistenceType(params.persistenceType()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+
+      if (NS_WARN_IF(
+              !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+
+      break;
+    }
+
     case RequestParams::TInitStorageAndOriginParams: {
       const InitStorageAndOriginParams& params =
           aParams.get_InitStorageAndOriginParams();
@@ -8736,6 +8805,12 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
 
       case RequestParams::TInitTemporaryStorageParams:
         return MakeRefPtr<InitTemporaryStorageOp>();
+
+      case RequestParams::TInitializePersistentOriginParams:
+        return MakeRefPtr<InitializePersistentOriginOp>(aParams);
+
+      case RequestParams::TInitializeTemporaryOriginParams:
+        return MakeRefPtr<InitializeTemporaryOriginOp>(aParams);
 
       case RequestParams::TInitStorageAndOriginParams:
         return MakeRefPtr<InitStorageAndOriginOp>(aParams);
@@ -9501,6 +9576,102 @@ void InitTemporaryStorageOp::GetResponse(RequestResponse& aResponse) {
   AssertIsOnOwningThread();
 
   aResponse = InitTemporaryStorageResponse();
+}
+
+InitializeOriginRequestBase::InitializeOriginRequestBase(
+    const PersistenceType aPersistenceType, const PrincipalInfo& aPrincipalInfo)
+    : QuotaRequestBase(/* aExclusive */ false), mCreated(false) {
+  AssertIsOnOwningThread();
+
+  auto quotaInfo =
+      QuotaManager::GetInfoFromValidatedPrincipalInfo(aPrincipalInfo);
+
+  // Overwrite OriginOperationBase default values.
+  mNeedsQuotaManagerInit = true;
+  mNeedsStorageInit = false;
+
+  // Overwrite NormalOriginOperationBase default values.
+  mPersistenceType.SetValue(aPersistenceType);
+  mOriginScope.SetFromOrigin(quotaInfo.mOrigin);
+
+  // Overwrite InitializeOriginRequestBase default values.
+  mSuffix = std::move(quotaInfo.mSuffix);
+  mGroup = std::move(quotaInfo.mGroup);
+}
+
+void InitializeOriginRequestBase::Init(Quota& aQuota) {
+  AssertIsOnOwningThread();
+}
+
+InitializePersistentOriginOp::InitializePersistentOriginOp(
+    const RequestParams& aParams)
+    : InitializeOriginRequestBase(
+          PERSISTENCE_TYPE_PERSISTENT,
+          aParams.get_InitializePersistentOriginParams().principalInfo()) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aParams.type() ==
+             RequestParams::TInitializePersistentOriginParams);
+}
+
+nsresult InitializePersistentOriginOp::DoDirectoryWork(
+    QuotaManager& aQuotaManager) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(!mPersistenceType.IsNull());
+
+  AUTO_PROFILER_LABEL("InitializePersistentOriginOp::DoDirectoryWork", OTHER);
+
+  QM_TRY(OkIf(aQuotaManager.IsStorageInitialized()), NS_ERROR_FAILURE);
+
+  QM_TRY_UNWRAP(mCreated,
+                (aQuotaManager
+                     .EnsurePersistentOriginIsInitialized(QuotaInfo{
+                         mSuffix, mGroup, nsCString{mOriginScope.GetOrigin()}})
+                     .map([](const auto& res) { return res.second; })));
+
+  return NS_OK;
+}
+
+void InitializePersistentOriginOp::GetResponse(RequestResponse& aResponse) {
+  AssertIsOnOwningThread();
+
+  aResponse = InitializePersistentOriginResponse(mCreated);
+}
+
+InitializeTemporaryOriginOp::InitializeTemporaryOriginOp(
+    const RequestParams& aParams)
+    : InitializeOriginRequestBase(
+          aParams.get_InitializeTemporaryOriginParams().persistenceType(),
+          aParams.get_InitializeTemporaryOriginParams().principalInfo()) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aParams.type() == RequestParams::TInitializeTemporaryOriginParams);
+}
+
+nsresult InitializeTemporaryOriginOp::DoDirectoryWork(
+    QuotaManager& aQuotaManager) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(!mPersistenceType.IsNull());
+
+  AUTO_PROFILER_LABEL("InitializeTemporaryOriginOp::DoDirectoryWork", OTHER);
+
+  QM_TRY(OkIf(aQuotaManager.IsStorageInitialized()), NS_ERROR_FAILURE);
+
+  QM_TRY(OkIf(aQuotaManager.IsTemporaryStorageInitialized()), NS_ERROR_FAILURE);
+
+  QM_TRY_UNWRAP(
+      mCreated,
+      (aQuotaManager
+           .EnsureTemporaryOriginIsInitialized(
+               mPersistenceType.Value(),
+               QuotaInfo{mSuffix, mGroup, nsCString{mOriginScope.GetOrigin()}})
+           .map([](const auto& res) { return res.second; })));
+
+  return NS_OK;
+}
+
+void InitializeTemporaryOriginOp::GetResponse(RequestResponse& aResponse) {
+  AssertIsOnOwningThread();
+
+  aResponse = InitializeTemporaryOriginResponse(mCreated);
 }
 
 InitStorageAndOriginOp::InitStorageAndOriginOp(const RequestParams& aParams)

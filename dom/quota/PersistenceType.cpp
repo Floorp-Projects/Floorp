@@ -160,6 +160,19 @@ bool IsValidPersistenceType(const PersistenceType aPersistenceType) {
   }
 }
 
+bool IsBestEffortPersistenceType(const PersistenceType aPersistenceType) {
+  switch (aPersistenceType) {
+    case PERSISTENCE_TYPE_TEMPORARY:
+    case PERSISTENCE_TYPE_DEFAULT:
+      return true;
+
+    case PERSISTENCE_TYPE_PERSISTENT:
+    case PERSISTENCE_TYPE_INVALID:
+    default:
+      return false;
+  }
+}
+
 nsLiteralCString PersistenceTypeToString(
     const PersistenceType aPersistenceType) {
   const auto maybeString = TypeTo_impl<nsLiteralCString>(aPersistenceType);
