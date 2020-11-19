@@ -76,6 +76,13 @@ class ReleaseParser(BaseTryParser):
         self.set_defaults(migrations=[])
 
 
+_UNSET_EARLY_BETA_OR_EARLIER = """\
+# Define indicating that this build is prior to one of the early betas. To be
+# unset mid-way through the beta cycle.
+EARLY_BETA_OR_EARLIER=
+"""
+
+
 def run(
     version,
     migrations,
@@ -93,6 +100,9 @@ def run(
         "browser/config/version_display.txt": "{}\n".format(version),
         "config/milestone.txt": "{}\n".format(app_version),
     }
+
+    if "beta-to-release" in migrations:
+        files_to_change["build/defines.sh"] = _UNSET_EARLY_BETA_OR_EARLIER
 
     release_type = version.version_type.name.lower()
     if release_type not in ("beta", "release", "esr"):
