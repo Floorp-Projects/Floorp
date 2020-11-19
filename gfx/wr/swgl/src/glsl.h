@@ -420,7 +420,7 @@ struct vec2 {
   constexpr vec2(vec2_scalar s) : x(s.x), y(s.y) {}
   constexpr vec2(vec2_scalar s0, vec2_scalar s1, vec2_scalar s2, vec2_scalar s3)
       : x(Float{s0.x, s1.x, s2.x, s3.x}), y(Float{s0.y, s1.y, s2.y, s3.y}) {}
-  vec2(ivec2 a);
+  explicit vec2(ivec2 a);
   Float x;
   Float y;
 
