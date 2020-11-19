@@ -94,24 +94,6 @@ interface nsIQuotaManagerService : nsISupports
                             in nsIPrincipal aPrincipal);
 
   /**
-   * Initializes storage directory, temporary storage (if persistence type is
-   * default or temporary) and directory for the given origin. This can be used
-   * in tests to verify origin initialization.
-   *
-   * If the dom.quotaManager.testing preference is not true the call will be
-   * a no-op.
-   *
-   * @param aPrincipal
-   *        A principal for the origin whose directory is to be initialized.
-   * @param aPersistenceType
-   *        A string that tells what persistence type of origin will be
-   *        initialized.
-   */
-  [must_use] nsIQuotaRequest
-  initStorageAndOrigin(in nsIPrincipal aPrincipal,
-                       in ACString aPersistenceType);
-
-  /**
    * Schedules an asynchronous callback that will inspect all origins and
    * return the total amount of disk space being used by storages for each
    * origin separately.
