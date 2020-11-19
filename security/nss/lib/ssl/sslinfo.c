@@ -89,6 +89,7 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
             inf.pskType = ssl_psk_none;
         }
         inf.peerDelegCred = tls13_IsVerifyingWithDelegatedCredential(ss);
+        inf.echAccepted = ss->ssl3.hs.echAccepted;
 
         if (sid) {
             unsigned int sidLen;
@@ -171,6 +172,9 @@ SSL_GetPreliminaryChannelInfo(PRFileDesc *fd,
     inf.peerDelegCred = tls13_IsVerifyingWithDelegatedCredential(ss);
     inf.authKeyBits = ss->sec.authKeyBits;
     inf.signatureScheme = ss->sec.signatureScheme;
+    inf.echAccepted = ss->ssl3.hs.echAccepted;
+    /* Only expose this if the application should use it for verification. */
+    inf.echPublicName = (inf.echAccepted == PR_FALSE) ? ss->ssl3.hs.echPublicName : NULL;
 
     memcpy(info, &inf, inf.length);
     return SECSuccess;

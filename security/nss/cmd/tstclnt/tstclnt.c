@@ -231,7 +231,7 @@ PrintUsageHeader()
             "  [-r N] [-w passwd] [-W pwfile] [-q [-t seconds]]\n"
             "  [-I groups] [-J signatureschemes]\n"
             "  [-A requestfile] [-L totalconnections] [-P {client,server}]\n"
-            "  [-N encryptedSniKeys] [-Q] [-z externalPsk]\n"
+            "  [-N echConfigs] [-Q] [-z externalPsk]\n"
             "\n",
             progName);
 }
@@ -316,7 +316,7 @@ PrintParameterUsage()
     fprintf(stderr, "%-20s Enable alternative TLS 1.3 handshake\n", "-X alt-server-hello");
     fprintf(stderr, "%-20s Use DTLS\n", "-P {client, server}");
     fprintf(stderr, "%-20s Exit after handshake\n", "-Q");
-    fprintf(stderr, "%-20s Encrypted SNI Keys\n", "-N");
+    fprintf(stderr, "%-20s Use Encrypted Client Hello with the given Base64-encoded ECHConfigs\n", "-N");
     fprintf(stderr, "%-20s Enable post-handshake authentication\n"
                     "%-20s for TLS 1.3; need to specify -n\n",
             "-E", "");
@@ -1010,7 +1010,7 @@ PRBool stopAfterHandshake = PR_FALSE;
 PRBool requestToExit = PR_FALSE;
 char *versionString = NULL;
 PRBool handshakeComplete = PR_FALSE;
-char *encryptedSNIKeys = NULL;
+char *echConfigs = NULL;
 PRBool enablePostHandshakeAuth = PR_FALSE;
 PRBool enableDelegatedCredentials = PR_FALSE;
 const secuExporter *enabledExporters = NULL;
@@ -1263,6 +1263,30 @@ importPsk(PRFileDesc *s)
     return rv;
 }
 
+static SECStatus
+printEchRetryConfigs(PRFileDesc *s)
+{
+    if (PORT_GetError() == SSL_ERROR_ECH_RETRY_WITH_ECH) {
+        SECItem retries = { siBuffer, NULL, 0 };
+        SECStatus rv = SSL_GetEchRetryConfigs(s, &retries);
+        if (rv != SECSuccess) {
+            SECU_PrintError(progName, "SSL_GetEchRetryConfigs failed");
+            return SECFailure;
+        }
+        char *retriesBase64 = NSSBase64_EncodeItem(NULL, NULL, 0, &retries);
+        if (!retriesBase64) {
+            SECU_PrintError(progName, "NSSBase64_EncodeItem on retry_configs failed");
+            SECITEM_FreeItem(&retries, PR_FALSE);
+            return SECFailure;
+        }
+
+        fprintf(stderr, "Received ECH retry_configs: \n%s\n", retriesBase64);
+        PORT_Free(retriesBase64);
+        SECITEM_FreeItem(&retries, PR_FALSE);
+    }
+    return SECSuccess;
+}
+
 static int
 run()
 {
@@ -1511,21 +1535,20 @@ run()
         }
     }
 
-    if (encryptedSNIKeys) {
-        SECItem esniKeysBin = { siBuffer, NULL, 0 };
+    if (echConfigs) {
+        SECItem echConfigsBin = { siBuffer, NULL, 0 };
 
-        if (!NSSBase64_DecodeBuffer(NULL, &esniKeysBin, encryptedSNIKeys,
-                                    strlen(encryptedSNIKeys))) {
-            SECU_PrintError(progName, "ESNIKeys record is invalid base64");
+        if (!NSSBase64_DecodeBuffer(NULL, &echConfigsBin, echConfigs,
+                                    strlen(echConfigs))) {
+            SECU_PrintError(progName, "ECHConfigs record is invalid base64");
             error = 1;
             goto done;
         }
 
-        rv = SSL_EnableESNI(s, esniKeysBin.data, esniKeysBin.len,
-                            "dummy.invalid");
-        SECITEM_FreeItem(&esniKeysBin, PR_FALSE);
+        rv = SSL_SetClientEchConfigs(s, echConfigsBin.data, echConfigsBin.len);
+        SECITEM_FreeItem(&echConfigsBin, PR_FALSE);
         if (rv < 0) {
-            SECU_PrintError(progName, "SSL_EnableESNI failed");
+            SECU_PrintError(progName, "SSL_SetClientEchConfigs failed");
             error = 1;
             goto done;
         }
@@ -1702,6 +1725,9 @@ run()
             } else {
                 error = writeBytesToServer(s, buf, nb);
                 if (error) {
+                    if (echConfigs) {
+                        (void)printEchRetryConfigs(s);
+                    }
                     goto done;
                 }
                 pollset[SSOCK_FD].in_flags = PR_POLL_READ;
@@ -1881,7 +1907,7 @@ main(int argc, char **argv)
                 break;
 
             case 'N':
-                encryptedSNIKeys = PORT_Strdup(optstate->value);
+                echConfigs = PORT_Strdup(optstate->value);
                 break;
 
             case 'P':
@@ -2257,7 +2283,7 @@ done:
     PORT_Free(pwdata.data);
     PORT_Free(host);
     PORT_Free(zeroRttData);
-    PORT_Free(encryptedSNIKeys);
+    PORT_Free(echConfigs);
     SECITEM_ZfreeItem(&psk, PR_FALSE);
     SECITEM_ZfreeItem(&pskLabel, PR_FALSE);
 

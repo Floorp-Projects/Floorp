@@ -9,9 +9,8 @@
 #ifndef __ssl3ext_h_
 #define __ssl3ext_h_
 
+#include "pk11hpke.h"
 #include "sslencode.h"
-
-#define TLS13_ESNI_NONCE_SIZE 16
 
 typedef enum {
     sni_nametype_hostname
@@ -98,7 +97,8 @@ struct TLSExtensionDataStr {
 
     PRUint16 dtlsSRTPCipherSuite; /* 0 if not selected */
 
-    unsigned int lastXtnOffset; /* Where to insert padding. 0 = end. */
+    unsigned int lastXtnOffset; /* Where to insert any other extensions.
+                                 * 0 = end, otherwise base of PSK xtn. */
     PRCList remoteKeyShares;    /* The other side's public keys (TLS 1.3) */
 
     /* The following are used by a TLS 1.3 server. */
@@ -113,14 +113,6 @@ struct TLSExtensionDataStr {
 
     /* The record size limit set by the peer. Our value is kept in ss->opt. */
     PRUint16 recordSizeLimit;
-
-    /* ESNI working state */
-    SECItem keyShareExtension;
-    ssl3CipherSuite esniSuite;
-    sslEphemeralKeyPair *esniPrivateKey;
-    /* Pointer into |ss->esniKeys->keyShares| */
-    TLS13KeyShareEntry *peerEsniShare;
-    PRUint8 esniNonce[TLS13_ESNI_NONCE_SIZE];
 
     /* Delegated credentials.
      *
@@ -138,6 +130,14 @@ struct TLSExtensionDataStr {
     /* A non-owning reference to the selected PSKs. MUST NOT be freed directly,
      * rather through tls13_DestoryPskList(). */
     sslPsk *selectedPsk;
+
+    /* ECH working state. */
+    SECItem innerCh;             /* Server: "payload value of ClientECH. */
+    SECItem echSenderPubKey;     /* Server: "enc value of ClientECH, required for CHInner decryption. */
+    SECItem echConfigId;         /* Server: "config_id" value of ClientECH.  */
+    PRUint32 echCipherSuite;     /* Server: "cipher_suite" value of ClientECH. */
+    SECItem echRetryConfigs;     /* Client: Retry_configs from ServerEncryptedCH. */
+    PRBool echRetryConfigsValid; /* Client: Permits retry_configs to be extracted. */
 };
 
 typedef struct TLSExtensionStr {
@@ -165,6 +165,7 @@ SECStatus ssl3_HandleParsedExtensions(sslSocket *ss,
 TLSExtension *ssl3_FindExtension(sslSocket *ss,
                                  SSLExtensionType extension_type);
 void ssl3_DestroyRemoteExtensions(PRCList *list);
+void ssl3_MoveRemoteExtensions(PRCList *dst, PRCList *src);
 void ssl3_InitExtensionData(TLSExtensionData *xtnData, const sslSocket *ss);
 void ssl3_DestroyExtensionData(TLSExtensionData *xtnData);
 void ssl3_ResetExtensionData(TLSExtensionData *xtnData, const sslSocket *ss);
@@ -180,7 +181,9 @@ SECStatus ssl_ConstructExtensions(sslSocket *ss, sslBuffer *buf,
                                   SSLHandshakeType message);
 SECStatus ssl_SendEmptyExtension(const sslSocket *ss, TLSExtensionData *xtnData,
                                  sslBuffer *buf, PRBool *append);
-SECStatus ssl_InsertPaddingExtension(const sslSocket *ss, unsigned int prefixLen,
+SECStatus ssl3_EmplaceExtension(sslSocket *ss, sslBuffer *buf, PRUint16 exType,
+                                const PRUint8 *data, unsigned int len, PRBool advertise);
+SECStatus ssl_InsertPaddingExtension(sslSocket *ss, unsigned int prefixLen,
                                      sslBuffer *buf);
 
 /* Thunks to let us operate on const sslSocket* objects. */

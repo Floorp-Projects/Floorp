@@ -17,6 +17,7 @@ extern "C" {
 #include "gtest_utils.h"
 #include "tls_agent.h"
 #include "tls_filter.h"
+#include "tls_parser.h"
 #include "tls_protect.h"
 
 namespace nss_test {
@@ -1029,6 +1030,69 @@ PacketFilter::Action TlsExtensionReplacer::FilterExtension(
 
   *output = data_;
   return CHANGE;
+}
+
+PacketFilter::Action TlsExtensionResizer::FilterExtension(
+    uint16_t extension_type, const DataBuffer& input, DataBuffer* output) {
+  if (extension_type != extension_) {
+    return KEEP;
+  }
+
+  if (input.len() <= length_) {
+    DataBuffer buf(length_ - input.len());
+    output->Append(buf);
+    return CHANGE;
+  }
+
+  output->Assign(input.data(), length_);
+  return CHANGE;
+}
+
+PacketFilter::Action TlsExtensionAppender::FilterHandshake(
+    const HandshakeHeader& header, const DataBuffer& input,
+    DataBuffer* output) {
+  TlsParser parser(input);
+  if (!TlsExtensionFilter::FindExtensions(&parser, header)) {
+    return KEEP;
+  }
+  *output = input;
+
+  // Increase the length of the extensions block.
+  if (!UpdateLength(output, parser.consumed(), 2)) {
+    return KEEP;
+  }
+
+  // Extensions in Certificate are nested twice.  Increase the size of the
+  // certificate list.
+  if (header.handshake_type() == kTlsHandshakeCertificate) {
+    TlsParser p2(input);
+    if (!p2.SkipVariable(1)) {
+      ADD_FAILURE();
+      return KEEP;
+    }
+    if (!UpdateLength(output, p2.consumed(), 3)) {
+      return KEEP;
+    }
+  }
+
+  size_t offset = output->len();
+  offset = output->Write(offset, extension_, 2);
+  WriteVariable(output, offset, data_, 2);
+
+  return CHANGE;
+}
+
+bool TlsExtensionAppender::UpdateLength(DataBuffer* output, size_t offset,
+                                        size_t size) {
+  uint32_t len;
+  if (!output->Read(offset, size, &len)) {
+    ADD_FAILURE();
+    return false;
+  }
+
+  len += 4 + data_.len();
+  output->Write(offset, len, size);
+  return true;
 }
 
 PacketFilter::Action TlsExtensionDropper::FilterExtension(

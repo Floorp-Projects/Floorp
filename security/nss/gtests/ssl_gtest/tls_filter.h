@@ -11,6 +11,7 @@
 #include <memory>
 #include <set>
 #include <vector>
+#include "pk11pub.h"
 #include "sslt.h"
 #include "sslproto.h"
 #include "test_io.h"
@@ -521,6 +522,37 @@ class TlsExtensionReplacer : public TlsExtensionFilter {
                                        DataBuffer* output) override;
 
  private:
+  const uint16_t extension_;
+  const DataBuffer data_;
+};
+
+class TlsExtensionResizer : public TlsExtensionFilter {
+ public:
+  TlsExtensionResizer(const std::shared_ptr<TlsAgent>& a, uint16_t extension,
+                      size_t length)
+      : TlsExtensionFilter(a), extension_(extension), length_(length) {}
+  PacketFilter::Action FilterExtension(uint16_t extension_type,
+                                       const DataBuffer& input,
+                                       DataBuffer* output) override;
+
+ private:
+  uint16_t extension_;
+  size_t length_;
+};
+
+class TlsExtensionAppender : public TlsHandshakeFilter {
+ public:
+  TlsExtensionAppender(const std::shared_ptr<TlsAgent>& a,
+                       uint8_t handshake_type, uint16_t ext, DataBuffer& data)
+      : TlsHandshakeFilter(a, {handshake_type}), extension_(ext), data_(data) {}
+
+  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                               const DataBuffer& input,
+                                               DataBuffer* output);
+
+ private:
+  bool UpdateLength(DataBuffer* output, size_t offset, size_t size);
+
   const uint16_t extension_;
   const DataBuffer data_;
 };
