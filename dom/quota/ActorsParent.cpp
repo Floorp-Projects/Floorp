@@ -4423,12 +4423,12 @@ nsresult QuotaManager::LoadQuota() {
       }
 
       // We don't need to update the .metadata-v2 file on disk here,
-      // EnsureStorageAndOriginIsInitialized is responsible for doing that. We
+      // EnsureTemporaryOriginIsInitialized is responsible for doing that. We
       // just need to use correct group before initializing quota for the given
       // origin. (Note that calling GetDirectoryMetadata2WithRestore below
       // might update the group in the metadata file, but only as a side-effect.
       // The actual place we ensure consistency is in
-      // EnsureStorageAndOriginIsInitialized.)
+      // EnsureTemporaryOriginIsInitialized.)
 
       nsCString clientUsagesText;
       rv = stmt->GetUTF8String(3, clientUsagesText);
@@ -4493,7 +4493,7 @@ nsresult QuotaManager::LoadQuota() {
 
         // Calling GetDirectoryMetadata2WithRestore might update the group in
         // the metadata file, but only as a side-effect. The actual place we
-        // ensure consistency is in EnsureStorageAndOriginIsInitialized.
+        // ensure consistency is in EnsureTemporaryOriginIsInitialized.
 
         int64_t metadataLastAccessTime;
         bool metadataPersisted;
@@ -6796,7 +6796,7 @@ QuotaManager::EnsureStorageAndOriginIsInitializedInternal(
 Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
 QuotaManager::EnsurePersistentOriginIsInitialized(const QuotaInfo& aQuotaInfo) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(mStorageConnection);
+  MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
 
   auto res = [&aQuotaInfo, this]()
       -> mozilla::Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult> {
@@ -6851,8 +6851,8 @@ QuotaManager::EnsureTemporaryOriginIsInitialized(
     PersistenceType aPersistenceType, const QuotaInfo& aQuotaInfo) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
-  MOZ_ASSERT(mStorageConnection);
-  MOZ_ASSERT(mTemporaryStorageInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
+  MOZ_DIAGNOSTIC_ASSERT(mTemporaryStorageInitialized);
 
   auto res = [&aPersistenceType, &aQuotaInfo, this]()
       -> mozilla::Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult> {
@@ -6872,6 +6872,15 @@ QuotaManager::EnsureTemporaryOriginIsInitialized(
                                       /* aPersisted */ false, aQuotaInfo));
     }
 
+    // TODO: If the metadata file exists and we didn't call
+    //       GetDirectoryMetadata2WithRestore for it (because the quota info
+    //       was loaded from the cache), then the group in the metadata file
+    //       may be wrong, so it should be checked and eventually updated.
+    //       It's not a big deal that we are not doing it here, because the
+    //       origin will be marked as "accessed", so
+    //       GetDirectoryMetadata2WithRestore will be called for the metadata
+    //       file in next session in LoadQuotaFromCache.
+
     return std::pair(std::move(directory), created);
   }();
 
@@ -6889,7 +6898,7 @@ QuotaManager::EnsureTemporaryOriginIsInitialized(
 
 nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
   AssertIsOnIOThread();
-  MOZ_ASSERT(mStorageConnection);
+  MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
 
   if (mTemporaryStorageInitialized) {
     mInitializationInfo.AssertInitializationAttempted(

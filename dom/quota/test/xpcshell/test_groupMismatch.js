@@ -11,7 +11,6 @@
 loadScript("dom/quota/test/common/file.js");
 
 async function testSteps() {
-  const principal = getPrincipal("https://foo.bar.mozilla-iot.org");
   const metadataFile = getRelativeFile(
     "storage/default/https+++foo.bar.mozilla-iot.org/.metadata-v2"
   );
@@ -55,9 +54,14 @@ async function testSteps() {
 
   let metadataBuffer = await readMetadataFile();
 
-  info("Initializing origin");
+  info("Initializing");
 
-  request = initStorageAndOrigin(principal, "default");
+  request = init();
+  await requestFinished(request);
+
+  info("Initializing temporary storage");
+
+  request = initTemporaryStorage();
   await requestFinished(request);
 
   info("Reading out contents of metadata file");

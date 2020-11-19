@@ -52,10 +52,20 @@ async function testSteps() {
   request = clear();
   await requestFinished(request);
 
+  info("Initializing");
+
+  request = init();
+  await requestFinished(request);
+
+  info("Initializing temporary storage");
+
+  request = initTemporaryStorage();
+  await requestFinished(request);
+
   info("Initializing origins");
 
   for (const origin of origins) {
-    request = initStorageAndOrigin(getPrincipal(origin), "default");
+    request = initTemporaryOrigin("default", getPrincipal(origin));
     await requestFinished(request);
   }
 

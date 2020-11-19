@@ -16,6 +16,11 @@ async function testSteps() {
 
   SpecialPowers.setBoolPref("security.fileuri.strict_origin_policy", false);
 
+  info("Initializing");
+
+  let request = init();
+  await requestFinished(request);
+
   info("Creating origin directories");
 
   for (let origin of origins) {
@@ -23,15 +28,20 @@ async function testSteps() {
     originDir.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0755", 8));
   }
 
+  info("Initializing temporary storage");
+
+  request = initTemporaryStorage();
+  await requestFinished(request);
+
   info("Initializing origin directories");
 
   for (let origin of origins) {
     let result;
 
     try {
-      let request = initStorageAndOrigin(
-        getPrincipal(origin.url),
-        origin.persistence
+      request = initTemporaryOrigin(
+        origin.persistence,
+        getPrincipal(origin.url)
       );
       result = await requestFinished(request);
 

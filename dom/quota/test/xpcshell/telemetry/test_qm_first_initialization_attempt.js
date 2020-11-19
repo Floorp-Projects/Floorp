@@ -560,6 +560,12 @@ const testcases = [
   {
     mainKey: "PersistentOrigin",
     async setup(expectedInitResult) {
+      // We need to initialize storage before creating the origin files. If we
+      // don't do that, the storage directory created for the origin files
+      // would trigger storage upgrades (from version 0 to current version).
+      let request = init();
+      await requestFinished(request);
+
       if (!expectedInitResult) {
         const originFiles = [
           getRelativeFile("storage/permanent/https+++example.com"),
@@ -567,22 +573,27 @@ const testcases = [
           getRelativeFile("storage/default/https+++example2.com"),
         ];
 
-        // We need to initialize storage before creating the origin files. If
-        // we don't do that, the storage directory created for the origin files
-        // would trigger storage upgrades (from version 0 to current version).
-        let request = init();
-        await requestFinished(request);
-
         for (const originFile of originFiles) {
           originFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
         }
       }
+
+      request = initTemporaryStorage();
+      await requestFinished(request);
     },
-    initFunction: initStorageAndOrigin,
-    initArgs: [
-      [getPrincipal("https://example.com"), "persistent"],
-      [getPrincipal("https://example1.com"), "persistent"],
-      [getPrincipal("https://example2.com"), "default"],
+    initFunctions: [
+      {
+        name: initPersistentOrigin,
+        args: [getPrincipal("https://example.com")],
+      },
+      {
+        name: initPersistentOrigin,
+        args: [getPrincipal("https://example1.com")],
+      },
+      {
+        name: initTemporaryOrigin,
+        args: ["default", getPrincipal("https://example2.com")],
+      },
     ],
     expectedSnapshots: {
       initFailure: {
@@ -632,6 +643,10 @@ const testcases = [
   {
     mainKey: "TemporaryOrigin",
     async setup(expectedInitResult) {
+      // See the comment for "PersistentOrigin".
+      let request = init();
+      await requestFinished(request);
+
       if (!expectedInitResult) {
         const originFiles = [
           getRelativeFile("storage/temporary/https+++example.com"),
@@ -640,21 +655,31 @@ const testcases = [
           getRelativeFile("storage/permanent/https+++example2.com"),
         ];
 
-        // See the comment for "PersistentOrigin".
-        let request = init();
-        await requestFinished(request);
-
         for (const originFile of originFiles) {
           originFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
         }
       }
+
+      request = initTemporaryStorage();
+      await requestFinished(request);
     },
-    initFunction: initStorageAndOrigin,
-    initArgs: [
-      [getPrincipal("https://example.com"), "temporary"],
-      [getPrincipal("https://example.com"), "default"],
-      [getPrincipal("https://example1.com"), "default"],
-      [getPrincipal("https://example2.com"), "persistent"],
+    initFunctions: [
+      {
+        name: initTemporaryOrigin,
+        args: ["temporary", getPrincipal("https://example.com")],
+      },
+      {
+        name: initTemporaryOrigin,
+        args: ["default", getPrincipal("https://example.com")],
+      },
+      {
+        name: initTemporaryOrigin,
+        args: ["default", getPrincipal("https://example1.com")],
+      },
+      {
+        name: initPersistentOrigin,
+        args: [getPrincipal("https://example2.com")],
+      },
     ],
     // Only the first result of EnsureTemporaryOriginIsInitialized per origin
     // should be reported. Thus, only the results for (temporary, example.com),
@@ -775,9 +800,21 @@ async function testSteps() {
       // Call the initialization function twice, so we can verify below that
       // only the first initialization attempt has been reported.
       for (let i = 0; i < 2; ++i) {
-        const initArgs = testcase.initArgs ? testcase.initArgs : [[]];
-        for (const initArg of initArgs) {
-          request = testcase.initFunction(...initArg);
+        let initFunctions;
+
+        if (testcase.initFunctions) {
+          initFunctions = testcase.initFunctions;
+        } else {
+          initFunctions = [
+            {
+              name: testcase.initFunction,
+              args: [],
+            },
+          ];
+        }
+
+        for (const initFunction of initFunctions) {
+          request = initFunction.name(...initFunction.args);
           try {
             await requestFinished(request);
             ok(expectedInitResult, msg);

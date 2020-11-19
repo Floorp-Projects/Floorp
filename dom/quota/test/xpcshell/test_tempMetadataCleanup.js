@@ -18,12 +18,14 @@ function* testSteps() {
 
   installPackage("tempMetadataCleanup_profile");
 
+  info("Initializing");
+
+  let request = init(continueToNextStepSync);
+  yield undefined;
+
   info("Initializing origin");
 
-  let request = initStorageAndChromeOrigin(
-    "persistent",
-    continueToNextStepSync
-  );
+  request = initPersistentOrigin(getCurrentPrincipal(), continueToNextStepSync);
   yield undefined;
 
   ok(request.resultCode == NS_OK, "Initialization succeeded");
