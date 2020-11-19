@@ -9384,7 +9384,7 @@
 
 - name: security.bad_cert_domain_error.url_fix_enabled
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 - name: security.csp.enable
