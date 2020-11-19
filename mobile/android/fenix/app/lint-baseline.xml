@@ -54,17 +54,6 @@
         errorLine1="    &lt;androidx.constraintlayout.widget.ConstraintLayout"
         errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/res/layout/component_tabstray.xml"
-            line="52"
-            column="6"/>
-    </issue>
-
-    <issue
-        id="MozMultipleConstraintLayouts"
-        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
-        errorLine1="    &lt;androidx.constraintlayout.widget.ConstraintLayout"
-        errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
             file="src/main/res/layout/component_tracking_protection_panel.xml"
             line="15"
             column="6"/>
@@ -112,17 +101,6 @@
             file="src/main/res/layout/fragment_search.xml"
             line="82"
             column="14"/>
-    </issue>
-
-    <issue
-        id="MozMultipleConstraintLayouts"
-        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
-        errorLine1="    &lt;androidx.constraintlayout.widget.ConstraintLayout"
-        errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/fragment_search_dialog.xml"
-            line="77"
-            column="6"/>
     </issue>
 
     <issue
