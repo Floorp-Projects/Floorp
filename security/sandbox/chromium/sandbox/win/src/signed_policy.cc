@@ -12,7 +12,25 @@
 #include "sandbox/win/src/policy_engine_opcodes.h"
 #include "sandbox/win/src/policy_params.h"
 #include "sandbox/win/src/sandbox_policy.h"
+#include "sandbox/win/src/sandbox_utils.h"
 #include "sandbox/win/src/win_utils.h"
+
+namespace {
+
+bool IsValidNtPath(const base::FilePath& name) {
+  UNICODE_STRING uni_name;
+  OBJECT_ATTRIBUTES obj_attr;
+  sandbox::InitObjectAttribs(name.value(), OBJ_CASE_INSENSITIVE, nullptr,
+                             &obj_attr, &uni_name, nullptr);
+
+  NtQueryAttributesFileFunction NtQueryAttributesFile = nullptr;
+  ResolveNTFunctionPtr("NtQueryAttributesFile", &NtQueryAttributesFile);
+  FILE_BASIC_INFORMATION file_info;
+  return NtQueryAttributesFile &&
+         NT_SUCCESS(NtQueryAttributesFile(&obj_attr, &file_info));
+}
+
+}  // namespace
 
 namespace sandbox {
 
@@ -25,16 +43,22 @@ bool SignedPolicy::GenerateRules(const wchar_t* name,
   }
 
   base::FilePath file_path(name);
+  base::FilePath nt_filename;
   std::wstring nt_path_name;
-  if (!GetNtPathFromWin32Path(file_path.DirName().value().c_str(),
-                              &nt_path_name))
+  if (GetNtPathFromWin32Path(file_path.DirName().value().c_str(),
+                             &nt_path_name)) {
+    base::FilePath nt_path(nt_path_name);
+    nt_filename = nt_path.Append(file_path.BaseName());
+  } else if (IsValidNtPath(file_path)) {
+    nt_filename = std::move(file_path);
+  } else {
     return false;
-  base::FilePath nt_path(nt_path_name);
-  std::wstring nt_filename = nt_path.Append(file_path.BaseName()).value();
+  }
+
   // Create a rule to ASK_BROKER if name matches.
   PolicyRule signed_policy(ASK_BROKER);
-  if (!signed_policy.AddStringMatch(IF, NameBased::NAME, nt_filename.c_str(),
-                                    CASE_INSENSITIVE)) {
+  if (!signed_policy.AddStringMatch(
+          IF, NameBased::NAME, nt_filename.value().c_str(), CASE_INSENSITIVE)) {
     return false;
   }
   if (!policy->AddRule(IpcTag::NTCREATESECTION, &signed_policy)) {
