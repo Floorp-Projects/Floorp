@@ -295,7 +295,13 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x0D2B); /* IntelHaswell_GT3e_4 */
       APPEND_DEVICE(0x0D2E); /* IntelHaswell_GT3e_5 */
       break;
-    case DeviceFamily::IntelHD3000:
+    case DeviceFamily::IntelSandyBridge:
+      APPEND_DEVICE(0x0102);
+      APPEND_DEVICE(0x0106);
+      APPEND_DEVICE(0x010a);
+      APPEND_DEVICE(0x0112);
+      APPEND_DEVICE(0x0116);
+      APPEND_DEVICE(0x0122);
       APPEND_DEVICE(0x0126);
       break;
     case DeviceFamily::IntelHD520:
@@ -887,7 +893,7 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceFamily id) {
     case DeviceFamily::IntelHDGraphicsToIvyBridge:
     case DeviceFamily::IntelHDGraphicsToSandyBridge:
     case DeviceFamily::IntelHaswell:
-    case DeviceFamily::IntelHD3000:
+    case DeviceFamily::IntelSandyBridge:
     case DeviceFamily::IntelHD520:
     case DeviceFamily::IntelMobileHDGraphics:
     case DeviceFamily::IntelRolloutWebRender:
