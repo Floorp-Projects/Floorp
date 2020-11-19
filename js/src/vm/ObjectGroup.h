@@ -212,10 +212,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
                                                 const JSClass* clasp,
                                                 TaggedProto proto);
 
-  static void setDefaultNewGroupUnknown(JSContext* cx, ObjectGroupRealm& realm,
-                                        const JSClass* clasp,
-                                        JS::HandleObject obj);
-
   // Static accessors for ObjectGroupRealm ArrayObjectTable and
   // PlainObjectTable.
 
@@ -310,11 +306,6 @@ class ObjectGroupRealm {
 
   static ObjectGroupRealm& get(const ObjectGroup* group);
   static ObjectGroupRealm& getForNewObject(JSContext* cx);
-
-  void removeDefaultNewGroup(const JSClass* clasp, TaggedProto proto,
-                             JSObject* associated);
-  void replaceDefaultNewGroup(const JSClass* clasp, TaggedProto proto,
-                              JSObject* associated, ObjectGroup* group);
 
   static ObjectGroup* makeGroup(JSContext* cx, JS::Realm* realm,
                                 const JSClass* clasp, Handle<TaggedProto> proto,
