@@ -120,7 +120,7 @@ class nsMenuFrame final : public nsBoxFrame, public nsIReflowCallback {
 
   NS_IMETHOD SelectMenu(bool aActivateFlag);
 
-  virtual nsIScrollableFrame* GetScrollTargetFrame() override;
+  virtual nsIScrollableFrame* GetScrollTargetFrame() const override;
 
   /**
    * NOTE: OpenMenu will open the menu asynchronously.
@@ -145,7 +145,7 @@ class nsMenuFrame final : public nsBoxFrame, public nsIReflowCallback {
 
   const nsAString& GetRadioGroupName() { return mGroupName; }
   nsMenuType GetMenuType() { return mType; }
-  nsMenuPopupFrame* GetPopup();
+  nsMenuPopupFrame* GetPopup() const;
 
   /**
    * @return true if this frame has a popup child frame.
