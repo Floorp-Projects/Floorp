@@ -2653,12 +2653,9 @@ void LIRGenerator::visitDynamicImport(MDynamicImport* ins) {
 }
 
 void LIRGenerator::visitLambda(MLambda* ins) {
-  if (ins->info().singletonType || ins->info().useSingletonForClone) {
+  if (ins->info().singletonType) {
     // If the function has a singleton type, this instruction will only be
     // executed once so we don't bother inlining it.
-    //
-    // If UseSingletonForClone is true, we will assign a singleton type to
-    // the clone and we have to clone the script, we can't do that inline.
     LLambdaForSingleton* lir = new (alloc())
         LLambdaForSingleton(useRegisterAtStart(ins->environmentChain()));
     defineReturn(lir, ins);

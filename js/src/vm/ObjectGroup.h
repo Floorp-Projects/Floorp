@@ -181,18 +181,11 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 
   static const JS::TraceKind TraceKind = JS::TraceKind::ObjectGroup;
 
- public:
-  const ObjectGroupFlags* addressOfFlags() const { return &flags_; }
-
   static void staticAsserts() {
     static_assert(offsetof(ObjectGroup, proto_) ==
                   offsetof(JS::shadow::ObjectGroup, proto));
   }
 
-  // Whether to make a deep cloned singleton when cloning fun.
-  static bool useSingletonForClone(JSFunction* fun);
-
- public:
   // Static accessors for ObjectGroupRealm NewTable.
 
   static ObjectGroup* defaultNewGroup(JSContext* cx, const JSClass* clasp,

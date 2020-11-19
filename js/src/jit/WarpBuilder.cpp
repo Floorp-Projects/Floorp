@@ -2612,11 +2612,9 @@ bool WarpBuilder::build_InitElemInc(BytecodeLocation loc) {
 
 static LambdaFunctionInfo LambdaInfoFromSnapshot(JSFunction* fun,
                                                  const WarpLambda* snapshot) {
-  // Pass false for singletonType and useSingletonForClone as asserted in
-  // WarpOracle.
+  // Pass false for singletonType as asserted in WarpOracle.
   return LambdaFunctionInfo(fun, snapshot->baseScript(), snapshot->flags(),
-                            snapshot->nargs(), /* singletonType = */ false,
-                            /* useSingletonForClone = */ false);
+                            snapshot->nargs(), /* singletonType = */ false);
 }
 
 bool WarpBuilder::build_Lambda(BytecodeLocation loc) {
