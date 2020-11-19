@@ -955,18 +955,6 @@ void LIRGenerator::visitTest(MTest* test) {
   }
 }
 
-void LIRGenerator::visitFunctionDispatch(MFunctionDispatch* ins) {
-  LFunctionDispatch* lir =
-      new (alloc()) LFunctionDispatch(useRegister(ins->input()));
-  add(lir, ins);
-}
-
-void LIRGenerator::visitObjectGroupDispatch(MObjectGroupDispatch* ins) {
-  LObjectGroupDispatch* lir =
-      new (alloc()) LObjectGroupDispatch(useRegister(ins->input()), temp());
-  add(lir, ins);
-}
-
 static inline bool CanEmitCompareAtUses(MInstruction* ins) {
   if (!ins->canEmitAtUses()) {
     return false;
