@@ -31,42 +31,16 @@ const { EventEmitter } = ChromeUtils.import(
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AMTelemetry",
-  "resource://gre/modules/AddonManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionTestCommon",
-  "resource://testing-common/ExtensionTestCommon.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "Management",
-  "resource://gre/modules/Extension.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionAddonObserver",
-  "resource://gre/modules/Extension.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "FileTestUtils",
-  "resource://testing-common/FileTestUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "HttpServer",
-  "resource://testing-common/httpd.js"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "MockRegistrar",
-  "resource://testing-common/MockRegistrar.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AMTelemetry: "resource://gre/modules/AddonManager.jsm",
+  ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
+  Management: "resource://gre/modules/Extension.jsm",
+  ExtensionAddonObserver: "resource://gre/modules/Extension.jsm",
+  FileTestUtils: "resource://testing-common/FileTestUtils.jsm",
+  HttpServer: "resource://testing-common/httpd.js",
+  L10nRegistry: "resource://gre/modules/L10nRegistry.jsm",
+  MockRegistrar: "resource://testing-common/MockRegistrar.jsm",
+});
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   aomStartup: [
@@ -1058,6 +1032,9 @@ var AddonTestUtils = {
     for (let file of this.addonsList.xpis) {
       Services.obs.notifyObservers(file, "flush-cache-entry");
     }
+
+    // Clear L10nRegistry entries so restaring the AOM will work correctly with locales.
+    L10nRegistry.clearSources();
 
     // Clear any crash report annotations
     this.appInfo.annotations = {};

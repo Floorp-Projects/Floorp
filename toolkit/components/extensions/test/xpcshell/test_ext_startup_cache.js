@@ -2,8 +2,15 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+const { AddonManager } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
+);
+
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
 );
 
 AddonTestUtils.init(this);
@@ -12,7 +19,7 @@ AddonTestUtils.overrideCertDB();
 AddonTestUtils.createAppInfo(
   "xpcshell@tests.mozilla.org",
   "XPCShell",
-  "1",
+  "42",
   "42"
 );
 
@@ -65,6 +72,41 @@ add_task(async function() {
   Preferences.set("extensions.logging.enabled", false);
   await AddonTestUtils.promiseStartupManager();
 
+  // Install langpacks to get proper locale startup.
+  let langpack = {
+    "manifest.json": {
+      name: "test Language Pack",
+      version: "1.0",
+      manifest_version: 2,
+      applications: {
+        gecko: {
+          id: "@test-langpack",
+          strict_min_version: "42.0",
+          strict_max_version: "42.0",
+        },
+      },
+      langpack_id: "fr",
+      languages: {
+        fr: {
+          chrome_resources: {
+            global: "chrome/fr/locale/fr/global/",
+          },
+          version: "20171001190118",
+        },
+      },
+      sources: {
+        browser: {
+          base_path: "browser/",
+        },
+      },
+    },
+  };
+
+  let [, { addon }] = await Promise.all([
+    TestUtils.topicObserved("webextension-langpack-startup"),
+    AddonTestUtils.promiseInstallXPI(langpack),
+  ]);
+
   let extension = ExtensionTestUtils.loadExtension(
     makeExtension({ version: "1.0" })
   );
@@ -80,7 +122,7 @@ add_task(async function() {
   //
   // In the future, we should provide some way for tests to decouple their
   // language selection from that of Firefox.
-  Services.locale.availableLocales = ["en-US", "fr", "jp"];
+  ok(Services.locale.availableLocales.includes("fr"), "fr locale is avialable");
 
   await extension.startup();
 
@@ -120,6 +162,11 @@ add_task(async function() {
   equal(extension.version, "1.1", "Expected extension version");
   manifest = await getManifest();
   equal(manifest.name, "en-US 1.1", "Got expected manifest name");
+
+  info("uninstall locale 'fr'");
+  addon = await AddonManager.getAddonByID("@test-langpack");
+  await addon.uninstall();
+  ok(!Services.locale.availableLocales.includes("fr"), "fr locale is removed");
 
   await extension.unload();
 });
