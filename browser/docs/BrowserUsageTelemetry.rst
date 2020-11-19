@@ -91,7 +91,9 @@ setting the scalar key ``<widget id>_pinned_<area>`` to true. The widget ID are
 the IDs of the elements in the DOM. The area is one of the areas listed above
 from the browser UI that can be customised.
 
-For the areas that can be controlled the scalar keys ``<area>_<off/on>`` are set.
+For the areas that can be controlled the scalar keys ``<area>_<off/on/newtab>`` are set.
+``newtab`` is special to the Bookmarks Toolbar and is used when the toolbar will only
+be shown on the New Tab page.
 
 Widget Customization
 --------------------
