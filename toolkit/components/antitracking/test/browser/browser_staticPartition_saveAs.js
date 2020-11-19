@@ -184,3 +184,92 @@ add_task(async function testContextMenuSaveImage() {
     }
   }
 });
+
+add_task(async function testSavePageInOfflineMode() {
+  for (let networkIsolation of [true, false]) {
+    for (let partitionPerSite of [true, false]) {
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          ["privacy.partition.network_state", networkIsolation],
+          ["privacy.dynamic_firstparty.use_site", partitionPerSite],
+        ],
+      });
+
+      let partitionKey = partitionPerSite
+        ? "(http,example.net)"
+        : "example.net";
+
+      info(`Open a new tab which loads an image`);
+      let tab = await BrowserTestUtils.openNewForegroundTab(
+        gBrowser,
+        TEST_IMAGE_URL
+      );
+
+      info("Toggle on the offline mode");
+      BrowserOffline.toggleOfflineStatus();
+
+      info("Open file menu and trigger 'Save Page As'");
+      let menubar = document.getElementById("main-menubar");
+      let filePopup = document.getElementById("menu_FilePopup");
+
+      // We only use the shortcut keys to open the file menu in Windows and Linux.
+      // Mac doesn't have a shortcut to only open the file menu. Instead, we directly
+      // trigger the save in MAC without any UI interactions.
+      if (Services.appinfo.OS !== "Darwin") {
+        let menubarActive = BrowserTestUtils.waitForEvent(
+          menubar,
+          "DOMMenuBarActive"
+        );
+        EventUtils.synthesizeKey("KEY_F10");
+        await menubarActive;
+
+        let popupShownPromise = BrowserTestUtils.waitForEvent(
+          filePopup,
+          "popupshown"
+        );
+        // In window, it still needs one extra down key to open the file menu.
+        if (Services.appinfo.OS === "WINNT") {
+          EventUtils.synthesizeKey("KEY_ArrowDown");
+        }
+        await popupShownPromise;
+      }
+
+      let transferCompletePromise = createPromiseForTransferComplete();
+      let observerPromise = createPromiseForObservingChannel(
+        TEST_IMAGE_URL,
+        partitionKey
+      );
+
+      info("Triggering the save process.");
+      let fileSavePageAsElement = document.getElementById("menu_savePage");
+      fileSavePageAsElement.doCommand();
+
+      info("Waiting for the channel.");
+      await observerPromise;
+
+      info("Wait until the save is finished.");
+      await transferCompletePromise;
+
+      // Close the file menu.
+      if (Services.appinfo.OS !== "Darwin") {
+        let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+          filePopup,
+          "popuphidden"
+        );
+        filePopup.hidePopup();
+        await popupHiddenPromise;
+      }
+
+      info("Toggle off the offline mode");
+      BrowserOffline.toggleOfflineStatus();
+
+      // Clean up
+      BrowserTestUtils.removeTab(tab);
+      await new Promise(resolve => {
+        Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+          resolve()
+        );
+      });
+    }
+  }
+});
