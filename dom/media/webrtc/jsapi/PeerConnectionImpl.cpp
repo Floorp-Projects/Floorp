@@ -429,28 +429,17 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
 
   CopyUTF16toUTF8(locationAStr, locationCStr);
 
-  SprintfLiteral(temp, "%" PRIu64 " (id=%" PRIu64 " url=%s)",
-                 static_cast<uint64_t>(timestamp),
-                 static_cast<uint64_t>(mWindow ? mWindow->WindowID() : 0),
-                 locationCStr.get() ? locationCStr.get() : "NULL");
-
-  mName = temp;
-
-  // Generate a random handle
-  unsigned char handle_bin[8];
-  SECStatus rv;
-  rv = PK11_GenerateRandom(handle_bin, sizeof(handle_bin));
-  if (rv != SECSuccess) {
+  if (!mUuidGen->Generate(&mHandle)) {
     MOZ_CRASH();
     return NS_ERROR_UNEXPECTED;
   }
 
-  char hex[17];
-  SprintfLiteral(hex, "%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x", handle_bin[0],
-                 handle_bin[1], handle_bin[2], handle_bin[3], handle_bin[4],
-                 handle_bin[5], handle_bin[6], handle_bin[7]);
+  SprintfLiteral(temp, "%s %" PRIu64 " (id=%" PRIu64 " url=%s)",
+                 mHandle.c_str(), static_cast<uint64_t>(timestamp),
+                 static_cast<uint64_t>(mWindow ? mWindow->WindowID() : 0),
+                 locationCStr.get() ? locationCStr.get() : "NULL");
 
-  mHandle = hex;
+  mName = temp;
 
   STAMP_TIMECARD(mTimeCard, "Initializing PC Ctx");
   res = PeerConnectionCtx::InitializeGlobal(mThread, mSTSThread);
