@@ -9,9 +9,4 @@ fi
 
 ac_add_options --with-branding=browser/branding/nightly
 
-# STRIP_FLAGS is only valid for builds that strip; code coverage builds disable stripping
-if [ -z "$NOSTRIP_BUILD" ] && [ -z "$USE_ARTIFACT" ]; then
-  ac_add_options STRIP_FLAGS=-S
-fi
-
 . "$topsrcdir/build/mozconfig.common.override"
