@@ -6303,6 +6303,15 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
     if (toolbar.id == "PersonalToolbar" && gBookmarksToolbar2h2020) {
       let menu = BookmarkingUI.buildBookmarksToolbarSubmenu(toolbar);
       popup.insertBefore(menu, firstMenuItem);
+
+      // Insert Show Otherbookmarks menu item.
+      let otherBookmarksMenuItem = BookmarkingUI.buildShowOtherBookmarksMenuItem();
+
+      if (!otherBookmarksMenuItem) {
+        continue;
+      }
+
+      popup.insertBefore(otherBookmarksMenuItem, menu.nextElementSibling);
     } else {
       let menuItem = document.createXULElement("menuitem");
       menuItem.setAttribute("id", "toggle_" + toolbar.id);
