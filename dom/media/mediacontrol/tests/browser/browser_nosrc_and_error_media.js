@@ -25,7 +25,7 @@ add_task(async function setupTestingPref() {
 add_task(async function testNoSrcOrErrorMediaEntersPIPMode() {
   for (let page of PAGES) {
     info(`open media page ${page}`);
-    const tab = await createTabAndLoad(page);
+    const tab = await createLoadedTabWrapper(page, { needCheck: false });
 
     info(`controller should always inactive`);
     const controller = tab.linkedBrowser.browsingContext.mediaController;
@@ -50,7 +50,7 @@ add_task(async function testNoSrcOrErrorMediaEntersPIPMode() {
     ok(!controller.isActive, "controller is still inactive");
 
     info(`remove tab`);
-    await BrowserTestUtils.removeTab(tab);
+    await tab.close();
     await SimpleTest.promiseFocus(window);
   }
 });
@@ -58,7 +58,7 @@ add_task(async function testNoSrcOrErrorMediaEntersPIPMode() {
 add_task(async function testNoSrcOrErrorMediaEntersFullscreen() {
   for (let page of PAGES) {
     info(`open media page ${page}`);
-    const tab = await createTabAndLoad(page);
+    const tab = await createLoadedTabWrapper(page, { needCheck: false });
 
     info(`controller should always inactive`);
     const controller = tab.linkedBrowser.browsingContext.mediaController;
@@ -74,7 +74,7 @@ add_task(async function testNoSrcOrErrorMediaEntersFullscreen() {
     ok(!controller.isActive, "controller is still inactive");
 
     info(`remove tab`);
-    await BrowserTestUtils.removeTab(tab);
+    await tab.close();
   }
 });
 

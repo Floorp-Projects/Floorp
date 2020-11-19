@@ -13,7 +13,7 @@ add_task(async function setupTestingPref() {
  */
 add_task(async function testResumingLatestPausedMedias() {
   info(`open media page and play all media`);
-  const tab = await createTabAndLoad(PAGE_URL);
+  const tab = await createLoadedTabWrapper(PAGE_URL);
   await playAllMedia(tab);
 
   /**
@@ -118,7 +118,7 @@ add_task(async function testResumingLatestPausedMedias() {
   });
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 /**

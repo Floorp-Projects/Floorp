@@ -14,7 +14,7 @@ add_task(async function setupTestingPref() {
  */
 add_task(async function testSetPositionState() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_URL);
+  const tab = await createLoadedTabWrapper(PAGE_URL);
 
   info(`play video1 (audible) and video2 (inaudible)`);
   await playBothAudibleAndInaudibleMedia(tab);
@@ -37,7 +37,7 @@ add_task(async function testSetPositionState() {
   });
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 /**

@@ -30,7 +30,7 @@ add_task(async function testAudioFocusChangesAmongMultipleFrames() {
    * frame doesn't use media session, the current metadata would be the default
    * metadata.
    */
-  const tab = await createTabAndLoad(mainPageURL);
+  const tab = await createLoadedTabWrapper(mainPageURL);
   await playAndWaitUntilMetadataChanged(tab);
   await isGivenTabUsingDefaultMetadata(tab);
 
@@ -55,7 +55,7 @@ add_task(async function testAudioFocusChangesAmongMultipleFrames() {
   /**
    * Remove tab and end test.
    */
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testAudioFocusChangesAfterPausingAudioFocusOwner() {
@@ -65,7 +65,7 @@ add_task(async function testAudioFocusChangesAfterPausingAudioFocusOwner() {
    * frame doesn't use media session, the current metadata would be the default
    * metadata.
    */
-  const tab = await createTabAndLoad(mainPageURL);
+  const tab = await createLoadedTabWrapper(mainPageURL);
   await playAndWaitUntilMetadataChanged(tab);
   await isGivenTabUsingDefaultMetadata(tab);
 
@@ -88,7 +88,7 @@ add_task(async function testAudioFocusChangesAfterPausingAudioFocusOwner() {
   /**
    * Remove tab and end test.
    */
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testAudioFocusUnchangesAfterPausingAudioFocusOwner() {
@@ -98,7 +98,7 @@ add_task(async function testAudioFocusUnchangesAfterPausingAudioFocusOwner() {
    * frame doesn't use media session, the current metadata would be the default
    * metadata.
    */
-  const tab = await createTabAndLoad(mainPageURL);
+  const tab = await createLoadedTabWrapper(mainPageURL);
   await playAndWaitUntilMetadataChanged(tab);
   await isGivenTabUsingDefaultMetadata(tab);
 
@@ -122,7 +122,7 @@ add_task(async function testAudioFocusUnchangesAfterPausingAudioFocusOwner() {
   /**
    * Remove tab and end test.
    */
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(
@@ -133,7 +133,7 @@ add_task(
      * main frame doesn't use media session, the current metadata would be the
      * default metadata.
      */
-    const tab = await createTabAndLoad(mainPageURL);
+    const tab = await createLoadedTabWrapper(mainPageURL);
     await playAndWaitUntilMetadataChanged(tab);
     await isGivenTabUsingDefaultMetadata(tab);
 
@@ -159,7 +159,7 @@ add_task(
     /**
      * Remove tab and end test.
      */
-    await BrowserTestUtils.removeTab(tab);
+    await tab.close();
   }
 );
 
@@ -169,7 +169,7 @@ add_task(
      * Play media for frame1, so frame1 owns the audio focus and frame1's metadata
      * should be displayed.
      */
-    const tab = await createTabAndLoad(mainPageURL);
+    const tab = await createLoadedTabWrapper(mainPageURL);
     await loadPageForFrame(tab, frame1, frameURL);
     let metadataFrame1 = await setMetadataAndGetReturnResult(tab, frame1);
     await playAndWaitUntilMetadataChanged(tab, frame1);
@@ -197,7 +197,7 @@ add_task(
     /**
      * Remove tab and end test.
      */
-    await BrowserTestUtils.removeTab(tab);
+    await tab.close();
   }
 );
 
@@ -208,7 +208,7 @@ add_task(async function testNoAudioFocusAfterRemovingAudioFocusOwner() {
    * frame doesn't use media session, the current metadata would be the default
    * metadata.
    */
-  const tab = await createTabAndLoad(mainPageURL);
+  const tab = await createLoadedTabWrapper(mainPageURL);
   await playAndWaitUntilMetadataChanged(tab);
   await isGivenTabUsingDefaultMetadata(tab);
 
@@ -236,7 +236,7 @@ add_task(async function testNoAudioFocusAfterRemovingAudioFocusOwner() {
   /**
    * Remove tab and end test.
    */
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 /**

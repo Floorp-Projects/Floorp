@@ -39,7 +39,9 @@ add_task(async function setupTestingPref() {
 add_task(async function testPlayPauseAndStop() {
   for (const elementId of gNonEligibleElementIds) {
     info(`- open new tab and start non eligible media ${elementId} -`);
-    const tab = await createTabAndLoad(PAGE_NON_ELIGIBLE_MEDIA);
+    const tab = await createLoadedTabWrapper(PAGE_NON_ELIGIBLE_MEDIA, {
+      needCheck: false,
+    });
     await startNonEligibleMedia(tab, elementId);
 
     // Generate media control event should be postponed for a while to ensure
@@ -65,7 +67,7 @@ add_task(async function testPlayPauseAndStop() {
     }
 
     info(`remove tab`);
-    await BrowserTestUtils.removeTab(tab);
+    await tab.close();
   }
 });
 
@@ -76,7 +78,7 @@ add_task(async function testPlayPauseAndStop() {
 add_task(async function testNonEligibleMediaEnterFullscreen() {
   for (const elementId of gNonEligibleElementIds) {
     info(`- open new tab and start non eligible media ${elementId} -`);
-    const tab = await createTabAndLoad(PAGE_NON_ELIGIBLE_MEDIA);
+    const tab = await createLoadedTabWrapper(PAGE_NON_ELIGIBLE_MEDIA);
     await startNonEligibleMedia(tab, elementId);
 
     info(`entering fullscreen should activate the media controller`);
@@ -85,14 +87,14 @@ add_task(async function testNonEligibleMediaEnterFullscreen() {
     ok(true, `fullscreen ${elementId} media is able to being controlled`);
 
     info(`remove tab`);
-    await BrowserTestUtils.removeTab(tab);
+    await tab.close();
   }
 });
 
 add_task(async function testNonEligibleMediaEnterPIPMode() {
   for (const elementId of gNonEligibleElementIds) {
     info(`- open new tab and start non eligible media ${elementId} -`);
-    const tab = await createTabAndLoad(PAGE_NON_ELIGIBLE_MEDIA);
+    const tab = await createLoadedTabWrapper(PAGE_NON_ELIGIBLE_MEDIA);
     await startNonEligibleMedia(tab, elementId);
 
     info(`media entering PIP mode should activate the media controller`);
@@ -102,7 +104,7 @@ add_task(async function testNonEligibleMediaEnterPIPMode() {
 
     info(`remove tab`);
     await BrowserTestUtils.closeWindow(winPIP);
-    await BrowserTestUtils.removeTab(tab);
+    await tab.close();
   }
 });
 
