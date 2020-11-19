@@ -603,46 +603,6 @@ QuotaManagerService::InitializeTemporaryOrigin(
 }
 
 NS_IMETHODIMP
-QuotaManagerService::InitStorageAndOrigin(nsIPrincipal* aPrincipal,
-                                          const nsACString& aPersistenceType,
-                                          nsIQuotaRequest** _retval) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
-
-  if (NS_WARN_IF(!StaticPrefs::dom_quotaManager_testing())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  RefPtr<Request> request = new Request();
-
-  InitStorageAndOriginParams params;
-
-  nsresult rv =
-      CheckedPrincipalToPrincipalInfo(aPrincipal, params.principalInfo());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  const auto maybePersistenceType =
-      PersistenceTypeFromString(aPersistenceType, fallible);
-  if (NS_WARN_IF(maybePersistenceType.isNothing())) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  params.persistenceType() = maybePersistenceType.value();
-
-  RequestInfo info(request, params);
-
-  rv = InitiateRequest(info);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  request.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 QuotaManagerService::GetUsage(nsIQuotaUsageCallback* aCallback, bool aGetAll,
                               nsIQuotaUsageRequest** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
