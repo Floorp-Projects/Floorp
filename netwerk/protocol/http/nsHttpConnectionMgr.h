@@ -74,8 +74,9 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   // Move a transaction from the pendingQ of it's connection entry to another
   // one. Returns true if the transaction is moved successfully, otherwise
   // returns false.
-  bool MoveTransToHTTPSSVCConnEntry(nsHttpTransaction* aTrans,
-                                    nsHttpConnectionInfo* aNewCI);
+  bool MoveTransToNewConnEntry(nsHttpTransaction* aTrans,
+                               nsHttpConnectionInfo* aNewCI,
+                               bool aNoHttp3ForNewEntry = false);
 
   // This is used to force an idle connection to be closed and removed from
   // the idle connection list. It is called when the idle connection detects
