@@ -434,7 +434,13 @@ def find_common_attrs(config_attributes):
 
 
 def write_mozbuild(
-    config, srcdir, output, non_unified_sources, gn_config_files, mozilla_flags
+    config,
+    srcdir,
+    output,
+    non_unified_sources,
+    gn_config_files,
+    mozilla_flags,
+    write_mozbuild_variables,
 ):
 
     all_mozbuild_results = []
@@ -472,6 +478,13 @@ def write_mozbuild(
             mb.write(license_header)
             mb.write("\n")
             mb.write(generated_header)
+
+            try:
+                if relsrcdir in write_mozbuild_variables["INCLUDE_TK_CFLAGS_DIRS"]:
+                    mb.write('if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":\n')
+                    mb.write('    CXXFLAGS += CONFIG["TK_CFLAGS"]\n')
+            except KeyError:
+                pass
 
             all_args = [args for args, _ in configs]
 
@@ -653,6 +666,7 @@ class GnMozbuildWriterBackend(BuildBackend):
                     obj.non_unified_sources,
                     gn_config_files,
                     obj.mozilla_flags,
+                    obj.write_mozbuild_variables,
                 )
             else:
                 print(
