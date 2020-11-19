@@ -15,7 +15,7 @@
 #include "selfencrypt.h"
 #include "ssl3ext.h"
 #include "ssl3exthandle.h"
-#include "tls13esni.h"
+#include "tls13ech.h"
 #include "tls13exthandle.h" /* For tls13_ServerSendStatusRequestXtn. */
 
 PRBool
@@ -42,13 +42,11 @@ ssl_ShouldSendSNIExtension(const sslSocket *ss, const char *url)
  */
 SECStatus
 ssl3_ClientFormatServerNameXtn(const sslSocket *ss, const char *url,
-                               TLSExtensionData *xtnData,
+                               unsigned int len, TLSExtensionData *xtnData,
                                sslBuffer *buf)
 {
-    unsigned int len;
     SECStatus rv;
 
-    len = PORT_Strlen(url);
     /* length of server_name_list */
     rv = sslBuffer_AppendNumber(buf, len + 3, 2);
     if (rv != SECSuccess) {
@@ -76,17 +74,15 @@ ssl3_ClientSendServerNameXtn(const sslSocket *ss, TLSExtensionData *xtnData,
 
     const char *url = ss->url;
 
-    /* We only make an ESNI private key if we are going to
-     * send ESNI. */
-    if (ss->xtnData.esniPrivateKey != NULL) {
-        url = ss->esniKeys->dummySni;
-    }
-
     if (!ssl_ShouldSendSNIExtension(ss, url)) {
         return SECSuccess;
     }
 
-    rv = ssl3_ClientFormatServerNameXtn(ss, url, xtnData, buf);
+    /* If ECH, write the public name. The real server name
+     * is emplaced while constructing CHInner extensions. */
+    sslEchConfig *cfg = (sslEchConfig *)PR_LIST_HEAD(&ss->echConfigs);
+    const char *sniContents = PR_CLIST_IS_EMPTY(&ss->echConfigs) ? url : cfg->contents.publicName;
+    rv = ssl3_ClientFormatServerNameXtn(ss, sniContents, strlen(sniContents), xtnData, buf);
     if (rv != SECSuccess) {
         return SECFailure;
     }
@@ -105,13 +101,6 @@ ssl3_HandleServerNameXtn(const sslSocket *ss, TLSExtensionData *xtnData,
 
     if (!ss->sec.isServer) {
         return SECSuccess; /* ignore extension */
-    }
-
-    if (ssl3_ExtensionNegotiated(ss, ssl_tls13_encrypted_sni_xtn)) {
-        /* If we already have ESNI, make sure we don't overwrite
-         * the value. */
-        PORT_Assert(ss->version >= SSL_LIBRARY_VERSION_TLS_1_3);
-        return SECSuccess;
     }
 
     /* Server side - consume client data and register server sender. */
@@ -323,11 +312,11 @@ ssl3_SelectAppProtocol(const sslSocket *ss, TLSExtensionData *xtnData,
     }
 
     PORT_Assert(ss->nextProtoCallback);
-    /* The cipher suite isn't selected yet.  Note that extensions
+    /* Neither the cipher suite nor ECH are selected yet Note that extensions
      * sometimes affect what cipher suite is selected, e.g., for ECC. */
     PORT_Assert((ss->ssl3.hs.preliminaryInfo &
-                 ssl_preinfo_all & ~ssl_preinfo_cipher_suite) ==
-                (ssl_preinfo_all & ~ssl_preinfo_cipher_suite));
+                 ssl_preinfo_all & ~ssl_preinfo_cipher_suite & ~ssl_preinfo_ech) ==
+                (ssl_preinfo_all & ~ssl_preinfo_cipher_suite & ~ssl_preinfo_ech));
     /* The callback has to make sure that either rv != SECSuccess or that result
      * is not set if there is no common protocol. */
     rv = ss->nextProtoCallback(ss->nextProtoArg, ss->fd, data->data, data->len,

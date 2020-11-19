@@ -165,6 +165,23 @@ sslBuffer_InsertLength(sslBuffer *b, unsigned int at, unsigned int size)
     return SECSuccess;
 }
 
+SECStatus
+sslBuffer_InsertNumber(sslBuffer *b, unsigned int at,
+                       PRUint64 v, unsigned int size)
+{
+    PORT_Assert(b->len >= at + size);
+    PORT_Assert(b->space >= at + size);
+
+    PORT_Assert(size <= 4 && size > 0);
+    if (v >= (1ULL << (8 * size))) {
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
+    }
+
+    ssl_EncodeUintX(SSL_BUFFER_BASE(b) + at, v, size);
+    return SECSuccess;
+}
+
 void
 sslBuffer_Clear(sslBuffer *b)
 {
@@ -247,8 +264,8 @@ sslRead_ReadNumber(sslReader *reader, unsigned int bytes, PRUint64 *num)
 #define MAX_SEND_BUF_LENGTH 32000 /* watch for 16-bit integer overflow */
 #define MIN_SEND_BUF_LENGTH 4000
 
-SECStatus
-ssl3_AppendHandshake(sslSocket *ss, const void *void_src, unsigned int bytes)
+static SECStatus
+ssl3_AppendHandshakeInternal(sslSocket *ss, const void *void_src, unsigned int bytes, PRBool suppressHash)
 {
     unsigned char *src = (unsigned char *)void_src;
     int room = ss->sec.ci.sendBuf.space - ss->sec.ci.sendBuf.len;
@@ -267,7 +284,8 @@ ssl3_AppendHandshake(sslSocket *ss, const void *void_src, unsigned int bytes)
     }
 
     PRINT_BUF(60, (ss, "Append to Handshake", (unsigned char *)void_src, bytes));
-    if (!ss->firstHsDone || ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+    // TODO: Move firstHsDone and version check into callers as a suppression.
+    if (!suppressHash && (!ss->firstHsDone || ss->version < SSL_LIBRARY_VERSION_TLS_1_3)) {
         rv = ssl3_UpdateHandshakeHashes(ss, src, bytes);
         if (rv != SECSuccess)
             return SECFailure; /* error code set by ssl3_UpdateHandshakeHashes */
@@ -290,6 +308,18 @@ ssl3_AppendHandshake(sslSocket *ss, const void *void_src, unsigned int bytes)
     PORT_Memcpy(ss->sec.ci.sendBuf.buf + ss->sec.ci.sendBuf.len, src, bytes);
     ss->sec.ci.sendBuf.len += bytes;
     return SECSuccess;
+}
+
+SECStatus
+ssl3_AppendHandshakeSuppressHash(sslSocket *ss, const void *void_src, unsigned int bytes)
+{
+    return ssl3_AppendHandshakeInternal(ss, void_src, bytes, PR_TRUE);
+}
+
+SECStatus
+ssl3_AppendHandshake(sslSocket *ss, const void *void_src, unsigned int bytes)
+{
+    return ssl3_AppendHandshakeInternal(ss, void_src, bytes, PR_FALSE);
 }
 
 SECStatus

@@ -214,6 +214,31 @@ TEST_F(Tls13CompatTest, EnabledHrrZeroRtt) {
   CheckForCompatHandshake();
 }
 
+#ifdef NSS_ENABLE_DRAFT_HPKE
+TEST_F(Tls13CompatTest, EnabledAcceptedEch) {
+  EnsureTlsSetup();
+  SetupEch(client_, server_);
+  EnableCompatMode();
+  InstallFilters();
+  Connect();
+  CheckForCompatHandshake();
+}
+
+TEST_F(Tls13CompatTest, EnabledRejectedEch) {
+  EnsureTlsSetup();
+  // Configure ECH on the client only, and expect CCS.
+  SetupEch(client_, server_, HpkeDhKemX25519Sha256, false, true, false);
+  EnableCompatMode();
+  InstallFilters();
+  ExpectAlert(client_, kTlsAlertEchRequired);
+  ConnectExpectFailOneSide(TlsAgent::CLIENT);
+  client_->CheckErrorCode(SSL_ERROR_ECH_RETRY_WITHOUT_ECH);
+  CheckForCompatHandshake();
+  // Reset expectations for the TlsAgent dtor.
+  server_->ExpectReceiveAlert(kTlsAlertCloseNotify, kTlsAlertWarning);
+}
+#endif
+
 class TlsSessionIDEchoFilter : public TlsHandshakeFilter {
  public:
   TlsSessionIDEchoFilter(const std::shared_ptr<TlsAgent>& a)

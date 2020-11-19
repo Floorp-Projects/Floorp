@@ -74,6 +74,7 @@ TlsAgent::TlsAgent(const std::string& nm, Role rl, SSLProtocolVariant var)
       expected_version_(0),
       expected_cipher_suite_(0),
       expect_client_auth_(false),
+      expect_ech_(false),
       expect_psk_(ssl_psk_none),
       can_falsestart_hook_called_(false),
       sni_hook_called_(false),
@@ -687,7 +688,9 @@ void TlsAgent::EnableFalseStart() {
   SetOption(SSL_ENABLE_FALSE_START, PR_TRUE);
 }
 
-void TlsAgent::ExpectPsk() { expect_psk_ = ssl_psk_external; }
+void TlsAgent::ExpectEch(bool expected) { expect_ech_ = expected; }
+
+void TlsAgent::ExpectPsk(SSLPskType psk) { expect_psk_ = psk; }
 
 void TlsAgent::ExpectResumption() { expect_psk_ = ssl_psk_resume; }
 
@@ -820,7 +823,6 @@ void TlsAgent::CheckPreliminaryInfo() {
             SSL_GetPreliminaryChannelInfo(ssl_fd(), &preinfo, sizeof(preinfo)));
   EXPECT_EQ(sizeof(preinfo), preinfo.length);
   EXPECT_TRUE(preinfo.valuesSet & ssl_preinfo_version);
-  EXPECT_TRUE(preinfo.valuesSet & ssl_preinfo_cipher_suite);
 
   // A version of 0 is invalid and indicates no expectation.  This value is
   // initialized to 0 so that tests that don't explicitly set an expected
@@ -932,6 +934,7 @@ void TlsAgent::Connected() {
 
   EXPECT_EQ(expect_psk_ == ssl_psk_resume, info_.resumed == PR_TRUE);
   EXPECT_EQ(expect_psk_, info_.pskType);
+  EXPECT_EQ(expect_ech_, info_.echAccepted);
 
   // Preliminary values are exposed through callbacks during the handshake.
   // If either expected values were set or the callbacks were called, check

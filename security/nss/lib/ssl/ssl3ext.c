@@ -53,7 +53,6 @@ static const ssl3ExtensionHandler clientHelloHandlers[] = {
     { ssl_tls13_early_data_xtn, &tls13_ServerHandleEarlyDataXtn },
     { ssl_tls13_psk_key_exchange_modes_xtn, &tls13_ServerHandlePskModesXtn },
     { ssl_tls13_cookie_xtn, &tls13_ServerHandleCookieXtn },
-    { ssl_tls13_encrypted_sni_xtn, &tls13_ServerHandleEsniXtn },
     { ssl_tls13_post_handshake_auth_xtn, &tls13_ServerHandlePostHandshakeAuthXtn },
     { ssl_record_size_limit_xtn, &ssl_HandleRecordSizeLimitXtn },
     { 0, NULL }
@@ -74,6 +73,7 @@ static const ssl3ExtensionHandler serverHelloHandlersTLS[] = {
     { ssl_tls13_key_share_xtn, &tls13_ClientHandleKeyShareXtn },
     { ssl_tls13_pre_shared_key_xtn, &tls13_ClientHandlePreSharedKeyXtn },
     { ssl_tls13_early_data_xtn, &tls13_ClientHandleEarlyDataXtn },
+    { ssl_tls13_encrypted_client_hello_xtn, &tls13_ClientHandleEchXtn },
     { ssl_record_size_limit_xtn, &ssl_HandleRecordSizeLimitXtn },
     { 0, NULL }
 };
@@ -143,7 +143,6 @@ static const sslExtensionBuilder clientHelloSendersTLS[] =
       { ssl_signature_algorithms_xtn, &ssl3_SendSigAlgsXtn },
       { ssl_tls13_cookie_xtn, &tls13_ClientSendHrrCookieXtn },
       { ssl_tls13_psk_key_exchange_modes_xtn, &tls13_ClientSendPskModesXtn },
-      { ssl_tls13_encrypted_sni_xtn, &tls13_ClientSendEsniXtn },
       { ssl_tls13_post_handshake_auth_xtn, &tls13_ClientSendPostHandshakeAuthXtn },
       { ssl_record_size_limit_xtn, &ssl_SendRecordSizeLimitXtn },
       /* The pre_shared_key extension MUST be last. */
@@ -193,7 +192,8 @@ static const struct {
     { ssl_tls13_psk_key_exchange_modes_xtn, ssl_ext_native_only },
     { ssl_tls13_ticket_early_data_info_xtn, ssl_ext_native_only },
     { ssl_tls13_certificate_authorities_xtn, ssl_ext_native },
-    { ssl_renegotiation_info_xtn, ssl_ext_native }
+    { ssl_renegotiation_info_xtn, ssl_ext_native },
+    { ssl_tls13_encrypted_client_hello_xtn, ssl_ext_native_only },
 };
 
 static SSLExtensionSupport
@@ -866,6 +866,56 @@ ssl_CalculatePaddingExtLen(const sslSocket *ss, unsigned int clientHelloLength)
     return extensionLen - 4;
 }
 
+/* Manually insert an extension, retaining the position of the PSK
+ * extension, if present. */
+SECStatus
+ssl3_EmplaceExtension(sslSocket *ss, sslBuffer *buf, PRUint16 exType,
+                      const PRUint8 *data, unsigned int len, PRBool advertise)
+{
+    SECStatus rv;
+    unsigned int tailLen;
+
+    /* Move the tail if there is one. This only happens if we are sending the
+     * TLS 1.3 PSK extension, which needs to be at the end. */
+    if (ss->xtnData.lastXtnOffset) {
+        PORT_Assert(buf->len > ss->xtnData.lastXtnOffset);
+        tailLen = buf->len - ss->xtnData.lastXtnOffset;
+        rv = sslBuffer_Grow(buf, buf->len + 4 + len);
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
+        PORT_Memmove(buf->buf + ss->xtnData.lastXtnOffset + 4 + len,
+                     buf->buf + ss->xtnData.lastXtnOffset,
+                     tailLen);
+        buf->len = ss->xtnData.lastXtnOffset;
+    } else {
+        tailLen = 0;
+    }
+
+    rv = sslBuffer_AppendNumber(buf, exType, 2);
+    if (rv != SECSuccess) {
+        return SECFailure; /* Code already set. */
+    }
+    rv = sslBuffer_AppendVariable(buf, data, len, 2);
+    if (rv != SECSuccess) {
+        return SECFailure; /* Code already set. */
+    }
+
+    if (ss->xtnData.lastXtnOffset) {
+        ss->xtnData.lastXtnOffset += 4 + len;
+    }
+
+    buf->len += tailLen;
+
+    /* False only to retain behavior with padding_xtn. Maybe
+     * we can just mark that advertised as well? TODO */
+    if (advertise) {
+        ss->xtnData.advertised[ss->xtnData.numAdvertised++] = exType;
+    }
+
+    return SECSuccess;
+}
+
 /* ssl3_SendPaddingExtension possibly adds an extension which ensures that a
  * ClientHello record is either < 256 bytes or is >= 512 bytes. This ensures
  * that we don't trigger bugs in F5 products.
@@ -875,13 +925,16 @@ ssl_CalculatePaddingExtLen(const sslSocket *ss, unsigned int clientHelloLength)
  * to insert padding at the right place.
  */
 SECStatus
-ssl_InsertPaddingExtension(const sslSocket *ss, unsigned int prefixLen,
+ssl_InsertPaddingExtension(sslSocket *ss, unsigned int prefixLen,
                            sslBuffer *buf)
 {
     static unsigned char padding[252] = { 0 };
     unsigned int paddingLen;
-    unsigned int tailLen;
-    SECStatus rv;
+    /* Exit early if an application-provided extension hook
+     * already added padding. */
+    if (ssl3_ExtensionAdvertised(ss, ssl_padding_xtn)) {
+        return SECSuccess;
+    }
 
     /* Account for the size of the header, the length field of the extensions
      * block and the size of the existing extensions. */
@@ -890,35 +943,18 @@ ssl_InsertPaddingExtension(const sslSocket *ss, unsigned int prefixLen,
         return SECSuccess;
     }
 
-    /* Move the tail if there is one. This only happens if we are sending the
-     * TLS 1.3 PSK extension, which needs to be at the end. */
-    if (ss->xtnData.lastXtnOffset) {
-        PORT_Assert(buf->len > ss->xtnData.lastXtnOffset);
-        tailLen = buf->len - ss->xtnData.lastXtnOffset;
-        rv = sslBuffer_Grow(buf, buf->len + 4 + paddingLen);
-        if (rv != SECSuccess) {
-            return SECFailure;
-        }
-        PORT_Memmove(buf->buf + ss->xtnData.lastXtnOffset + 4 + paddingLen,
-                     buf->buf + ss->xtnData.lastXtnOffset,
-                     tailLen);
-        buf->len = ss->xtnData.lastXtnOffset;
-    } else {
-        tailLen = 0;
-    }
+    return ssl3_EmplaceExtension(ss, buf, ssl_padding_xtn, padding, paddingLen, PR_FALSE);
+}
 
-    rv = sslBuffer_AppendNumber(buf, ssl_padding_xtn, 2);
-    if (rv != SECSuccess) {
-        return SECFailure; /* Code already set. */
+void
+ssl3_MoveRemoteExtensions(PRCList *dst, PRCList *src)
+{
+    PRCList *cur_p;
+    while (!PR_CLIST_IS_EMPTY(src)) {
+        cur_p = PR_LIST_TAIL(src);
+        PR_REMOVE_LINK(cur_p);
+        PR_APPEND_LINK(cur_p, dst);
     }
-    rv = sslBuffer_AppendVariable(buf, padding, paddingLen, 2);
-    if (rv != SECSuccess) {
-        return SECFailure; /* Code already set. */
-    }
-
-    buf->len += tailLen;
-
-    return SECSuccess;
 }
 
 void
@@ -982,9 +1018,14 @@ ssl3_DestroyExtensionData(TLSExtensionData *xtnData)
         xtnData->certReqAuthorities.arena = NULL;
     }
     PORT_Free(xtnData->advertised);
-    ssl_FreeEphemeralKeyPair(xtnData->esniPrivateKey);
-    SECITEM_FreeItem(&xtnData->keyShareExtension, PR_FALSE);
     tls13_DestroyDelegatedCredential(xtnData->peerDelegCred);
+
+    /* ECH State */
+    SECITEM_FreeItem(&xtnData->innerCh, PR_FALSE);
+    SECITEM_FreeItem(&xtnData->echSenderPubKey, PR_FALSE);
+    SECITEM_FreeItem(&xtnData->echConfigId, PR_FALSE);
+    SECITEM_FreeItem(&xtnData->echRetryConfigs, PR_FALSE);
+    xtnData->echRetryConfigsValid = PR_FALSE;
 }
 
 /* Free everything that has been allocated and then reset back to

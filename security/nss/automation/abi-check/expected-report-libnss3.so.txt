@@ -1,8 +1,0 @@
-
-4 Added functions:
-
-  [A] 'function SECStatus CERT_AddCertToListHeadWithData(CERTCertList*, CERTCertificate*, void*)'    {CERT_AddCertToListHeadWithData@@NSS_3.59}
-  [A] 'function SECStatus CERT_AddCertToListTailWithData(CERTCertList*, CERTCertificate*, void*)'    {CERT_AddCertToListTailWithData@@NSS_3.59}
-  [A] 'function PK11SymKey* PK11_PubUnwrapSymKeyWithMechanism(SECKEYPrivateKey*, CK_MECHANISM_TYPE, SECItem*, SECItem*, CK_MECHANISM_TYPE, CK_ATTRIBUTE_TYPE, int)'    {PK11_PubUnwrapSymKeyWithMechanism@@NSS_3.59}
-  [A] 'function SECStatus PK11_PubWrapSymKeyWithMechanism(SECKEYPublicKey*, CK_MECHANISM_TYPE, SECItem*, PK11SymKey*, SECItem*)'    {PK11_PubWrapSymKeyWithMechanism@@NSS_3.59}
-

@@ -76,6 +76,7 @@ typedef enum {
     bad_certificate_hash_value = 114,
     certificate_required = 116,
     no_application_protocol = 120,
+    ech_required = 121,
 
     /* invalid alert */
     no_alert = 256

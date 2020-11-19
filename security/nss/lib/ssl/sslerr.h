@@ -276,8 +276,21 @@ typedef enum {
     SSL_ERROR_DC_EXPIRED = (SSL_ERROR_BASE + 185),
     SSL_ERROR_DC_INAPPROPRIATE_VALIDITY_PERIOD = (SSL_ERROR_BASE + 186),
     SSL_ERROR_FEATURE_DISABLED = (SSL_ERROR_BASE + 187),
+    /* ECH rejected, public name authentication succeeded,
+     * and at least one of the retry_configs is compatible. */
+    SSL_ERROR_ECH_RETRY_WITH_ECH = (SSL_ERROR_BASE + 188),
+    /* ECH rejected, public name authentication succeeded,
+     * but none of the retry_configs are compatible. */
+    SSL_ERROR_ECH_RETRY_WITHOUT_ECH = (SSL_ERROR_BASE + 189),
+    /* ECH rejected and public name authentication failed. */
+    SSL_ERROR_ECH_FAILED = (SSL_ERROR_BASE + 190),
+    SSL_ERROR_ECH_REQUIRED_ALERT     = (SSL_ERROR_BASE + 191),
     SSL_ERROR_END_OF_LIST   /* let the c compiler determine the value of this. */
 } SSLErrorCodes;
+
+#define SSL_ERROR_RX_MALFORMED_ECH_CONFIG SSL_ERROR_RX_MALFORMED_ESNI_KEYS
+#define SSL_ERROR_RX_MALFORMED_ECH_EXTENSION SSL_ERROR_RX_MALFORMED_ESNI_EXTENSION
+#define SSL_ERROR_MISSING_ECH_EXTENSION SSL_ERROR_MISSING_ESNI_EXTENSION
 #endif /* NO_SECURITY_ERROR_ENUM */
 
 /* clang-format on */

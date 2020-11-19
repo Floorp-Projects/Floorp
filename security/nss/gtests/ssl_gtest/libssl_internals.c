@@ -8,8 +8,10 @@
 #include "libssl_internals.h"
 
 #include "nss.h"
+#include "pk11hpke.h"
 #include "pk11pub.h"
 #include "pk11priv.h"
+#include "tls13ech.h"
 #include "seccomon.h"
 #include "selfencrypt.h"
 #include "secmodti.h"
@@ -479,5 +481,19 @@ SECStatus SSLInt_HasPendingHandshakeData(PRFileDesc *fd, PRBool *pending) {
   ssl_GetSSL3HandshakeLock(ss);
   *pending = ss->ssl3.hs.msg_body.len > 0;
   ssl_ReleaseSSL3HandshakeLock(ss);
+  return SECSuccess;
+}
+
+SECStatus SSLInt_SetRawEchConfigForRetry(PRFileDesc *fd, const uint8_t *buf,
+                                         size_t len) {
+  sslSocket *ss = ssl_FindSocket(fd);
+  if (!ss) {
+    return SECFailure;
+  }
+
+  sslEchConfig *cfg = (sslEchConfig *)PR_LIST_HEAD(&ss->echConfigs);
+  SECITEM_FreeItem(&cfg->raw, PR_FALSE);
+  SECITEM_AllocItem(NULL, &cfg->raw, len);
+  memcpy(cfg->raw.data, buf, len);
   return SECSuccess;
 }

@@ -93,7 +93,7 @@ SECStatus ssl3_ProcessSessionTicketCommon(sslSocket *ss, const SECItem *ticket,
                                           /* out */ SECItem *appToken);
 PRBool ssl_ShouldSendSNIExtension(const sslSocket *ss, const char *url);
 SECStatus ssl3_ClientFormatServerNameXtn(const sslSocket *ss, const char *url,
-                                         TLSExtensionData *xtnData,
+                                         unsigned int len, TLSExtensionData *xtnData,
                                          sslBuffer *buf);
 SECStatus ssl3_ClientSendServerNameXtn(const sslSocket *ss,
                                        TLSExtensionData *xtnData,

@@ -12,7 +12,7 @@
 #include "pk11pub.h"
 #include "ssl3ext.h"
 #include "ssl3exthandle.h"
-#include "tls13esni.h"
+#include "tls13ech.h"
 #include "tls13exthandle.h"
 #include "tls13psk.h"
 #include "tls13subcerts.h"
@@ -126,7 +126,6 @@ tls13_ClientSendKeyShareXtn(const sslSocket *ss, TLSExtensionData *xtnData,
 {
     SECStatus rv;
     PRCList *cursor;
-    unsigned int extStart;
     unsigned int lengthOffset;
 
     if (ss->vrange.max < SSL_LIBRARY_VERSION_TLS_1_3) {
@@ -137,8 +136,6 @@ tls13_ClientSendKeyShareXtn(const sslSocket *ss, TLSExtensionData *xtnData,
      * preexisting key (in future will be keys) */
     SSL_TRC(3, ("%d: TLS13[%d]: send client key share xtn",
                 SSL_GETPID(), ss->fd));
-
-    extStart = SSL_BUFFER_LEN(buf);
 
     /* Save the offset to the length. */
     rv = sslBuffer_Skip(buf, 2, &lengthOffset);
@@ -158,13 +155,6 @@ tls13_ClientSendKeyShareXtn(const sslSocket *ss, TLSExtensionData *xtnData,
         }
     }
     rv = sslBuffer_InsertLength(buf, lengthOffset, 2);
-    if (rv != SECSuccess) {
-        return SECFailure;
-    }
-
-    rv = SECITEM_MakeItem(NULL, &xtnData->keyShareExtension,
-                          SSL_BUFFER_BASE(buf) + extStart,
-                          SSL_BUFFER_LEN(buf) - extStart);
     if (rv != SECSuccess) {
         return SECFailure;
     }
@@ -849,6 +839,7 @@ tls13_ClientSendSupportedVersionsXtn(const sslSocket *ss, TLSExtensionData *xtnD
         return SECFailure;
     }
 
+    PORT_Assert(!ss->ssl3.hs.echHpkeCtx || ss->vrange.max >= SSL_LIBRARY_VERSION_TLS_1_3);
     for (version = ss->vrange.max; version >= ss->vrange.min; --version) {
         PRUint16 wire = tls13_EncodeVersion(version,
                                             ss->protocolVariant);
@@ -1213,289 +1204,30 @@ tls13_ServerSendHrrCookieXtn(const sslSocket *ss, TLSExtensionData *xtnData,
 }
 
 SECStatus
-tls13_ClientSendEsniXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                        sslBuffer *buf, PRBool *added)
+tls13_ClientHandleEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
+                         SECItem *data)
 {
     SECStatus rv;
-    PRUint8 sniBuf[1024];
-    PRUint8 hash[64];
-    sslBuffer sni = SSL_BUFFER(sniBuf);
-    const ssl3CipherSuiteDef *suiteDef;
-    ssl3KeyMaterial keyMat;
-    PRUint8 outBuf[1024];
-    unsigned int outLen;
-    unsigned int sniStart;
-    unsigned int sniLen;
-    sslBuffer aadInput = SSL_BUFFER_EMPTY;
-    unsigned int keyShareBufStart;
-    unsigned int keyShareBufLen;
+    PRCList parsedConfigs;
+    PR_INIT_CLIST(&parsedConfigs);
 
-    PORT_Memset(&keyMat, 0, sizeof(keyMat));
-
-    if (!ss->xtnData.esniPrivateKey) {
-        return SECSuccess;
-    }
-
-    /* nonce */
-    rv = PK11_GenerateRandom(
-        (unsigned char *)xtnData->esniNonce, sizeof(xtnData->esniNonce));
-    if (rv != SECSuccess) {
+    /* Parse the list to determine 1) That the configs are valid
+     * and properly encoded, and 2) If any are compatible. */
+    rv = tls13_DecodeEchConfigs(data, &parsedConfigs);
+    if (rv == SECFailure) {
+        ssl3_ExtSendAlert(ss, alert_fatal, decode_error);
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_ECH_CONFIG);
         return SECFailure;
     }
-    rv = sslBuffer_Append(&sni, xtnData->esniNonce, sizeof(xtnData->esniNonce));
-    if (rv != SECSuccess) {
-        return SECFailure;
+    /* Don't mark ECH negotiated on retry. Save the the raw
+     * configs so the application can retry. If we sent GREASE
+     * ECH (no echHpkeCtx), don't apply returned retry_configs. */
+    if (ss->ssl3.hs.echHpkeCtx && !PR_CLIST_IS_EMPTY(&parsedConfigs)) {
+        rv = SECITEM_CopyItem(NULL, &xtnData->echRetryConfigs, data);
     }
+    tls13_DestroyEchConfigs(&parsedConfigs);
 
-    /* sni */
-    sniStart = SSL_BUFFER_LEN(&sni);
-    rv = ssl3_ClientFormatServerNameXtn(ss, ss->url, xtnData, &sni);
-    if (rv != SECSuccess) {
-        return SECFailure;
-    }
-
-    sniLen = SSL_BUFFER_LEN(&sni) - sniStart;
-    /* Padding. */
-    if (ss->esniKeys->paddedLength > sniLen) {
-        unsigned int paddingRequired = ss->esniKeys->paddedLength - sniLen;
-        while (paddingRequired--) {
-            rv = sslBuffer_AppendNumber(&sni, 0, 1);
-            if (rv != SECSuccess) {
-                return SECFailure;
-            }
-        }
-    }
-
-    suiteDef = ssl_LookupCipherSuiteDef(xtnData->esniSuite);
-    PORT_Assert(suiteDef);
-    if (!suiteDef) {
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-        return SECFailure;
-    }
-
-    /* Format the first part of the extension so we have the
-     * encoded KeyShareEntry. */
-    rv = sslBuffer_AppendNumber(buf, xtnData->esniSuite, 2);
-    if (rv != SECSuccess) {
-        return SECFailure;
-    }
-    keyShareBufStart = SSL_BUFFER_LEN(buf);
-    rv = tls13_EncodeKeyShareEntry(buf,
-                                   xtnData->esniPrivateKey->group->name,
-                                   xtnData->esniPrivateKey->keys->pubKey);
-    if (rv != SECSuccess) {
-        return SECFailure;
-    }
-    keyShareBufLen = SSL_BUFFER_LEN(buf) - keyShareBufStart;
-
-    if (tls13_GetHashSizeForHash(suiteDef->prf_hash) > sizeof(hash)) {
-        PORT_Assert(PR_FALSE);
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-        return SECFailure;
-    }
-
-    rv = PK11_HashBuf(ssl3_HashTypeToOID(suiteDef->prf_hash),
-                      hash,
-                      ss->esniKeys->data.data,
-                      ss->esniKeys->data.len);
-    if (rv != SECSuccess) {
-        PORT_Assert(PR_FALSE);
-        return SECFailure;
-    }
-
-    rv = sslBuffer_AppendVariable(buf, hash,
-                                  tls13_GetHashSizeForHash(suiteDef->prf_hash), 2);
-    if (rv != SECSuccess) {
-        return SECFailure;
-    }
-
-    /* Compute the ESNI keys. */
-    rv = tls13_ComputeESNIKeys(ss, xtnData->peerEsniShare,
-                               xtnData->esniPrivateKey->keys,
-                               suiteDef,
-                               hash,
-                               SSL_BUFFER_BASE(buf) + keyShareBufStart,
-                               keyShareBufLen,
-                               CONST_CAST(PRUint8, ss->ssl3.hs.client_random),
-                               &keyMat);
-    if (rv != SECSuccess) {
-        return SECFailure;
-    }
-
-    rv = tls13_FormatEsniAADInput(&aadInput,
-                                  xtnData->keyShareExtension.data,
-                                  xtnData->keyShareExtension.len);
-    if (rv != SECSuccess) {
-        ssl_DestroyKeyMaterial(&keyMat);
-        return SECFailure;
-    }
-
-    /* Now encrypt. */
-    unsigned char *aad = SSL_BUFFER_BASE(&aadInput);
-    int aadLen = SSL_BUFFER_LEN(&aadInput);
-    const ssl3BulkCipherDef *cipher_def = ssl_GetBulkCipherDef(suiteDef);
-    int ivLen = cipher_def->iv_size + cipher_def->explicit_nonce_size;
-    unsigned char zero[sizeof(sslSequenceNumber)] = { 0 };
-    SSLCipherAlgorithm calg = cipher_def->calg;
-    SECItem null_params = { siBuffer, NULL, 0 };
-    PK11Context *ctxt = PK11_CreateContextBySymKey(ssl3_Alg2Mech(calg),
-                                                   CKA_NSS_MESSAGE | CKA_ENCRYPT,
-                                                   keyMat.key, &null_params);
-    if (!ctxt) {
-        ssl_DestroyKeyMaterial(&keyMat);
-        sslBuffer_Clear(&aadInput);
-        return SECFailure;
-    }
-
-    /* This function is a single shot, with fresh/unique keys, no need to
-     * generate the IV internally */
-    rv = tls13_AEAD(ctxt, PR_FALSE /* Encrypt */, CKG_NO_GENERATE, 0,
-                    keyMat.iv, NULL, ivLen, zero, sizeof(zero), aad, aadLen,
-                    outBuf, &outLen, sizeof(outBuf), cipher_def->tag_size,
-                    SSL_BUFFER_BASE(&sni), SSL_BUFFER_LEN(&sni));
-    ssl_DestroyKeyMaterial(&keyMat);
-    sslBuffer_Clear(&aadInput);
-    PK11_DestroyContext(ctxt, PR_TRUE);
-    if (rv != SECSuccess) {
-        return SECFailure;
-    }
-
-    /* Encode the rest. */
-    rv = sslBuffer_AppendVariable(buf, outBuf, outLen, 2);
-    if (rv != SECSuccess) {
-        return SECFailure;
-    }
-
-    *added = PR_TRUE;
-    return SECSuccess;
-}
-
-static SECStatus
-tls13_ServerSendEsniXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                        sslBuffer *buf, PRBool *added)
-{
-    SECStatus rv;
-
-    rv = sslBuffer_Append(buf, xtnData->esniNonce, sizeof(xtnData->esniNonce));
-    if (rv != SECSuccess) {
-        return SECFailure;
-    }
-
-    *added = PR_TRUE;
-    return SECSuccess;
-}
-
-SECStatus
-tls13_ServerHandleEsniXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                          SECItem *data)
-{
-    sslReadBuffer buf;
-    PRUint8 *plainText = NULL;
-    unsigned int ptLen;
-    SECStatus rv;
-
-    /* If we are doing < TLS 1.3, then ignore this. */
-    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
-        return SECSuccess;
-    }
-
-    if (!ss->esniKeys) {
-        /* Apparently we used to be configured for ESNI, but
-         * no longer. This violates the spec, or the client is
-         * broken. */
-        return SECFailure;
-    }
-
-    plainText = PORT_ZAlloc(data->len);
-    if (!plainText) {
-        return SECFailure;
-    }
-    rv = tls13_ServerDecryptEsniXtn(ss, data->data, data->len,
-                                    plainText, &ptLen, data->len);
-    if (rv) {
-        goto loser;
-    }
-
-    /* Read out the interior extension. */
-    sslReader sniRdr = SSL_READER(plainText, ptLen);
-
-    rv = sslRead_Read(&sniRdr, sizeof(xtnData->esniNonce), &buf);
-    if (rv != SECSuccess) {
-        goto loser;
-    }
-    PORT_Memcpy(xtnData->esniNonce, buf.buf, sizeof(xtnData->esniNonce));
-
-    /* We need to capture the whole block with the length. */
-    SECItem sniItem = { siBuffer, (unsigned char *)SSL_READER_CURRENT(&sniRdr), 0 };
-    rv = sslRead_ReadVariable(&sniRdr, 2, &buf);
-    if (rv != SECSuccess) {
-        goto loser;
-    }
-    sniItem.len = buf.len + 2;
-
-    /* Check the padding. Note we don't need to do this in constant time
-     * because it's inside the AEAD boundary. */
-    /* TODO(ekr@rtfm.com): check that the padding is the right length. */
-    PRUint64 tmp;
-    while (SSL_READER_REMAINING(&sniRdr)) {
-        rv = sslRead_ReadNumber(&sniRdr, 1, &tmp);
-        if (rv != SECSuccess) {
-            goto loser;
-        }
-        if (tmp != 0) {
-            goto loser;
-        }
-    }
-
-    rv = ssl3_HandleServerNameXtn(ss, xtnData, &sniItem);
-    if (rv != SECSuccess) {
-        goto loser;
-    }
-
-    rv = ssl3_RegisterExtensionSender(ss, xtnData,
-                                      ssl_tls13_encrypted_sni_xtn,
-                                      tls13_ServerSendEsniXtn);
-    if (rv != SECSuccess) {
-        goto loser;
-    }
-
-    /* Keep track of negotiated extensions. */
-    xtnData->negotiated[xtnData->numNegotiated++] =
-        ssl_tls13_encrypted_sni_xtn;
-
-    PORT_ZFree(plainText, data->len);
-    return SECSuccess;
-loser:
-    PORT_ZFree(plainText, data->len);
-    return SECFailure;
-}
-
-/* Function to check the extension. We don't install a handler here
- * because we need to check for the presence of the extension as
- * well and it's easier to do it in one place. */
-SECStatus
-tls13_ClientCheckEsniXtn(sslSocket *ss)
-{
-    TLSExtension *esniExtension =
-        ssl3_FindExtension(ss, ssl_tls13_encrypted_sni_xtn);
-    if (!esniExtension) {
-        FATAL_ERROR(ss, SSL_ERROR_MISSING_ESNI_EXTENSION, missing_extension);
-        return SECFailure;
-    }
-
-    if (esniExtension->data.len != sizeof(ss->xtnData.esniNonce)) {
-        FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_ESNI_EXTENSION, illegal_parameter);
-        return SECFailure;
-    }
-
-    if (0 != NSS_SecureMemcmp(esniExtension->data.data,
-                              ss->xtnData.esniNonce,
-                              sizeof(ss->xtnData.esniNonce))) {
-        FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_ESNI_EXTENSION, illegal_parameter);
-        return SECFailure;
-    }
-
-    return SECSuccess;
+    return rv;
 }
 
 /* Indicates support for the delegated credentials extension. This should be
@@ -1690,4 +1422,124 @@ tls13_ServerHandleDelegatedCredentialsXtn(const sslSocket *ss,
     return ssl3_RegisterExtensionSender(
         ss, xtnData, ssl_delegated_credentials_xtn,
         tls13_ServerSendDelegatedCredentialsXtn);
+}
+
+/* Adds the ECH extension containing server retry_configs */
+SECStatus
+tls13_ServerSendEchXtn(const sslSocket *ss,
+                       TLSExtensionData *xtnData,
+                       sslBuffer *buf, PRBool *added)
+{
+    SECStatus rv;
+    PORT_Assert(ss->version >= SSL_LIBRARY_VERSION_TLS_1_3);
+    if (PR_CLIST_IS_EMPTY(&ss->echConfigs)) {
+        return SECSuccess;
+    }
+
+    const sslEchConfig *cfg = (sslEchConfig *)PR_LIST_HEAD(&ss->echConfigs);
+    rv = sslBuffer_AppendVariable(buf, cfg->raw.data, cfg->raw.len, 2);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+
+    *added = PR_TRUE;
+    return SECSuccess;
+}
+
+SECStatus
+tls13_ServerHandleEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
+                         SECItem *data)
+{
+    SECStatus rv;
+    HpkeKdfId kdf;
+    HpkeAeadId aead;
+    PRUint32 tmp;
+    SECItem configId;
+    SECItem senderPubKey;
+    SECItem encryptedCh;
+
+    /* Ignore it if not doing 1.3+. If we have no ECHConfigs,
+     * proceed to save the config_id for HRR validation. */
+    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3 ||
+        IS_DTLS(ss)) {
+        return SECSuccess;
+    }
+
+    /* On CHInner, the extension must be empty. */
+    if (ss->ssl3.hs.echAccepted && data->len > 0) {
+        ssl3_ExtSendAlert(ss, alert_fatal, illegal_parameter);
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_ECH_EXTENSION);
+        return SECFailure;
+    } else if (ss->ssl3.hs.echAccepted) {
+        xtnData->negotiated[xtnData->numNegotiated++] = ssl_tls13_encrypted_client_hello_xtn;
+        return SECSuccess;
+    }
+
+    /* Parse the KDF and AEAD. */
+    rv = ssl3_ExtConsumeHandshakeNumber(ss, &tmp, 2,
+                                        &data->data, &data->len);
+    if (rv != SECSuccess) {
+        goto alert_loser;
+    }
+    kdf = (HpkeKdfId)tmp;
+    rv = ssl3_ExtConsumeHandshakeNumber(ss, &tmp, 2,
+                                        &data->data, &data->len);
+    if (rv != SECSuccess) {
+        goto alert_loser;
+    }
+    aead = (HpkeAeadId)tmp;
+
+    /* config_id */
+    rv = ssl3_ExtConsumeHandshakeVariable(ss, &configId, 1,
+                                          &data->data, &data->len);
+    if (rv != SECSuccess) {
+        goto alert_loser;
+    }
+
+    /* enc */
+    rv = ssl3_ExtConsumeHandshakeVariable(ss, &senderPubKey, 2,
+                                          &data->data, &data->len);
+    if (rv != SECSuccess) {
+        goto alert_loser;
+    }
+
+    /* payload */
+    rv = ssl3_ExtConsumeHandshakeVariable(ss, &encryptedCh, 2,
+                                          &data->data, &data->len);
+    if (rv != SECSuccess) {
+        goto alert_loser;
+    }
+
+    if (data->len) {
+        goto alert_loser;
+    }
+
+    /* All fields required. */
+    if (!configId.len || !senderPubKey.len || !encryptedCh.len) {
+        goto alert_loser;
+    }
+
+    rv = SECITEM_CopyItem(NULL, &xtnData->echSenderPubKey, &senderPubKey);
+    if (rv == SECFailure) {
+        return SECFailure;
+    }
+
+    rv = SECITEM_CopyItem(NULL, &xtnData->innerCh, &encryptedCh);
+    if (rv == SECFailure) {
+        return SECFailure;
+    }
+
+    rv = SECITEM_CopyItem(NULL, &xtnData->echConfigId, &configId);
+    if (rv == SECFailure) {
+        return SECFailure;
+    }
+    xtnData->echCipherSuite = (aead & 0xFFFF) << 16 | (kdf & 0xFFFF);
+
+    /* Not negotiated until tls13_MaybeAcceptEch. */
+    return SECSuccess;
+
+alert_loser:
+    ssl3_ExtSendAlert(ss, alert_fatal, decode_error);
+    PORT_SetError(SSL_ERROR_RX_MALFORMED_ECH_EXTENSION);
+    return SECFailure;
 }

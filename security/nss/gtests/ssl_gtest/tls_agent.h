@@ -158,7 +158,9 @@ class TlsAgent : public PollTarget {
   void SetServerKeyBits(uint16_t bits);
   void ExpectReadWriteError();
   void EnableFalseStart();
-  void ExpectPsk();
+  void ExpectEch(bool expected = true);
+  bool GetEchExpected() const { return expect_ech_; }
+  void ExpectPsk(SSLPskType psk = ssl_psk_external);
   void ExpectResumption();
   void SkipVersionChecks();
   void SetSignatureSchemes(const SSLSignatureScheme* schemes, size_t count);
@@ -186,6 +188,7 @@ class TlsAgent : public PollTarget {
   void EnableExtendedMasterSecret();
   void CheckExtendedMasterSecret(bool expected);
   void CheckEarlyDataAccepted(bool expected);
+  void CheckEchAccepted(bool expected);
   void SetDowngradeCheckVersion(uint16_t version);
   void CheckSecretsDestroyed();
   void ConfigNamedGroups(const std::vector<SSLNamedGroup>& groups);
@@ -426,6 +429,7 @@ class TlsAgent : public PollTarget {
   uint16_t expected_version_;
   uint16_t expected_cipher_suite_;
   bool expect_client_auth_;
+  bool expect_ech_;
   SSLPskType expect_psk_;
   bool can_falsestart_hook_called_;
   bool sni_hook_called_;

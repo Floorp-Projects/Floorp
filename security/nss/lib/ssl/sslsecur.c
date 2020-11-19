@@ -173,8 +173,17 @@ SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
     ssl_Release1stHandshakeLock(ss);
 
     ssl3_DestroyRemoteExtensions(&ss->ssl3.hs.remoteExtensions);
+    ssl3_DestroyRemoteExtensions(&ss->ssl3.hs.echOuterExtensions);
     ssl3_ResetExtensionData(&ss->xtnData, ss);
     tls13_ResetHandshakePsks(ss, &ss->ssl3.hs.psks);
+
+    if (ss->ssl3.hs.echHpkeCtx) {
+        PK11_HPKE_DestroyContext(ss->ssl3.hs.echHpkeCtx, PR_TRUE);
+        ss->ssl3.hs.echHpkeCtx = NULL;
+        PORT_Assert(ss->ssl3.hs.echPublicName);
+        PORT_Free((void *)ss->ssl3.hs.echPublicName); /* CONST */
+        ss->ssl3.hs.echPublicName = NULL;
+    }
 
     if (!ss->TCPconnected)
         ss->TCPconnected = (PR_SUCCESS == ssl_DefGetpeername(ss, &addr));

@@ -248,6 +248,91 @@ void TlsConnectTestBase::ResetAntiReplay(PRTime window) {
   anti_replay_.reset(p_anti_replay);
 }
 
+void TlsConnectTestBase::MakeEcKeyParams(SECItem* params, SSLNamedGroup group) {
+  auto groupDef = ssl_LookupNamedGroup(group);
+  ASSERT_NE(nullptr, groupDef);
+
+  auto oidData = SECOID_FindOIDByTag(groupDef->oidTag);
+  ASSERT_NE(nullptr, oidData);
+  ASSERT_NE(nullptr,
+            SECITEM_AllocItem(nullptr, params, (2 + oidData->oid.len)));
+  params->data[0] = SEC_ASN1_OBJECT_ID;
+  params->data[1] = oidData->oid.len;
+  memcpy(params->data + 2, oidData->oid.data, oidData->oid.len);
+}
+
+void TlsConnectTestBase::GenerateEchConfig(
+    HpkeKemId kem_id, const std::vector<uint32_t>& cipher_suites,
+    const std::string& public_name, uint16_t max_name_len, DataBuffer& record,
+    ScopedSECKEYPublicKey& pubKey, ScopedSECKEYPrivateKey& privKey) {
+  bool gen_keys = !pubKey && !privKey;
+  SECKEYECParams ecParams = {siBuffer, NULL, 0};
+  MakeEcKeyParams(&ecParams, ssl_grp_ec_curve25519);
+
+  SECKEYPublicKey* pub = nullptr;
+  SECKEYPrivateKey* priv = nullptr;
+
+  if (gen_keys) {
+    priv = SECKEY_CreateECPrivateKey(&ecParams, &pub, nullptr);
+  } else {
+    priv = privKey.get();
+    pub = pubKey.get();
+  }
+  ASSERT_NE(nullptr, priv);
+  SECITEM_FreeItem(&ecParams, PR_FALSE);
+  PRUint8 encoded[1024];
+  unsigned int encoded_len = 0;
+  SECStatus rv = SSL_EncodeEchConfig(
+      public_name.c_str(), cipher_suites.data(), cipher_suites.size(), kem_id,
+      pub, max_name_len, encoded, &encoded_len, sizeof(encoded));
+  EXPECT_EQ(SECSuccess, rv);
+  EXPECT_GT(encoded_len, 0U);
+
+  if (gen_keys) {
+    pubKey.reset(pub);
+    privKey.reset(priv);
+  }
+  record.Truncate(0);
+  record.Write(0, encoded, encoded_len);
+}
+
+void TlsConnectTestBase::SetupEch(std::shared_ptr<TlsAgent>& client,
+                                  std::shared_ptr<TlsAgent>& server,
+                                  HpkeKemId kem_id, bool expect_ech,
+                                  bool set_client_config,
+                                  bool set_server_config) {
+  EXPECT_TRUE(set_server_config || set_client_config);
+  ScopedSECKEYPublicKey pub;
+  ScopedSECKEYPrivateKey priv;
+  DataBuffer record;
+  static const std::vector<uint32_t> kDefaultSuites = {
+      (static_cast<uint16_t>(HpkeKdfHkdfSha256) << 16) |
+          HpkeAeadChaCha20Poly1305,
+      (static_cast<uint16_t>(HpkeKdfHkdfSha256) << 16) | HpkeAeadAes128Gcm};
+
+  GenerateEchConfig(kem_id, kDefaultSuites, "public.name", 100, record, pub,
+                    priv);
+  ASSERT_NE(0U, record.len());
+  SECStatus rv;
+  if (set_server_config) {
+    rv = SSL_SetServerEchConfigs(server->ssl_fd(), pub.get(), priv.get(),
+                                 record.data(), record.len());
+    ASSERT_EQ(SECSuccess, rv);
+  }
+  if (set_client_config) {
+    rv = SSL_SetClientEchConfigs(client->ssl_fd(), record.data(), record.len());
+    ASSERT_EQ(SECSuccess, rv);
+  }
+
+  /* Filter expect_ech, which typically defaults to true. Parameterized tests
+   * running DTLS or TLS < 1.3 should expect only a non-ECH result. */
+  bool expect = expect_ech && variant_ != ssl_variant_datagram &&
+                version_ >= SSL_LIBRARY_VERSION_TLS_1_3 && set_client_config &&
+                set_server_config;
+  client->ExpectEch(expect);
+  server->ExpectEch(expect);
+}
+
 void TlsConnectTestBase::Reset() {
   // Take a copy of the names because they are about to disappear.
   std::string server_name = server_->name();

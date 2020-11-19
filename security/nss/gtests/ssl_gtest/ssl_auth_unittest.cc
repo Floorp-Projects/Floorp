@@ -660,6 +660,18 @@ TEST_P(TlsConnectGeneric, ClientAuthEcdsa) {
   CheckKeys(ssl_kea_ecdh, ssl_auth_ecdsa);
 }
 
+#ifdef NSS_ENABLE_DRAFT_HPKE
+TEST_P(TlsConnectGeneric, ClientAuthWithEch) {
+  Reset(TlsAgent::kServerEcdsa256);
+  EnsureTlsSetup();
+  SetupEch(client_, server_);
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+  Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_ecdsa);
+}
+#endif
+
 TEST_P(TlsConnectGeneric, ClientAuthBigRsa) {
   Reset(TlsAgent::kServerRsa, TlsAgent::kRsa2048);
   client_->SetupClientAuth();
