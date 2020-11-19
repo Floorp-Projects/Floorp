@@ -545,11 +545,11 @@ void nr_ice_gather_finished_cb(NR_SOCKET s, int h, void *cb_arg)
           /* But continue */
         }
       }
+    }
 
-      if (nr_ice_media_stream_is_done_gathering(stream) &&
-          ctx->trickle_cb) {
-        ctx->trickle_cb(ctx->trickle_cb_arg, ctx, stream, component_id, NULL);
-      }
+    if (nr_ice_media_stream_is_done_gathering(stream) &&
+        ctx->trickle_cb) {
+      ctx->trickle_cb(ctx->trickle_cb_arg, ctx, stream, component_id, NULL);
     }
 
     if(ctx->uninitialized_candidates==0){
