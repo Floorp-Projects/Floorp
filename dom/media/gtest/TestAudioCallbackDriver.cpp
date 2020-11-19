@@ -65,7 +65,7 @@ class MockGraphInterface : public GraphInterface {
   void SetEnsureNextIteration(bool aEnsure) { mEnsureNextIteration = aEnsure; }
 
 #ifdef DEBUG
-  bool InDriverIteration(GraphDriver* aDriver) override {
+  bool InDriverIteration(const GraphDriver* aDriver) const override {
     return aDriver->OnThread();
   }
 #endif
