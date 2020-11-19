@@ -1332,6 +1332,6 @@ def target_tasks_perftest_autoland(full_task_graph, parameters, graph_config):
         if task.kind != "perftest":
             continue
         if task.attributes.get("cron", False) and any(
-            test_name in name for test_name in ["view", "main"]
+            test_name in name for test_name in ["view"]
         ):
             yield name

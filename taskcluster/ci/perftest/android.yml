@@ -159,7 +159,7 @@ hw-g5-main-fenix:
         symbol: perftest(main-fenix)
     platform: android-hw-g5-7-0-arm7-api-16/opt
     attributes:
-        cron: true
+        cron: false
     run:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
@@ -191,7 +191,7 @@ hw-p2-main-fenix:
         symbol: perftest(main-fenix)
     platform: android-hw-p2-8-0-android-aarch64/opt
     attributes:
-        cron: true
+        cron: false
     run:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
