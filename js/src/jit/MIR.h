@@ -8915,98 +8915,16 @@ class MStoreFixedSlot
   ALLOW_CLONE(MStoreFixedSlot)
 };
 
-struct InliningTarget {
-  JSObject* target;
-
-  // If target is a singleton, group is nullptr. If target is not a singleton,
-  // this is the group we need to guard on when doing a polymorphic inlining
-  // dispatch. Note that this can be different from target->group() due to
-  // proto mutation.
-  ObjectGroup* group;
-
-  InliningTarget(JSObject* target, ObjectGroup* group)
-      : target(target), group(group) {
-    MOZ_ASSERT(target->isSingleton() == !group);
-  }
-};
-
-using InliningTargets = Vector<InliningTarget, 4, JitAllocPolicy>;
-using BoolVector = Vector<bool, 8, JitAllocPolicy>;
-
-class InlinePropertyTable : public TempObject {
-  struct Entry : public TempObject {
-    CompilerObjectGroup group;
-    CompilerFunction func;
-
-    Entry(ObjectGroup* group, JSFunction* func) : group(group), func(func) {}
-    bool appendRoots(MRootList& roots) const {
-      return roots.append(group) && roots.append(func);
-    }
-  };
-
-  jsbytecode* pc_;
-  MResumePoint* priorResumePoint_;
-  Vector<Entry*, 4, JitAllocPolicy> entries_;
-
- public:
-  InlinePropertyTable(TempAllocator& alloc, jsbytecode* pc)
-      : pc_(pc), priorResumePoint_(nullptr), entries_(alloc) {}
-
-  void setPriorResumePoint(MResumePoint* resumePoint) {
-    MOZ_ASSERT(priorResumePoint_ == nullptr);
-    priorResumePoint_ = resumePoint;
-  }
-  bool hasPriorResumePoint() { return bool(priorResumePoint_); }
-  MResumePoint* takePriorResumePoint() {
-    MResumePoint* rp = priorResumePoint_;
-    priorResumePoint_ = nullptr;
-    return rp;
-  }
-
-  jsbytecode* pc() const { return pc_; }
-
-  MOZ_MUST_USE bool addEntry(TempAllocator& alloc, ObjectGroup* group,
-                             JSFunction* func) {
-    return entries_.append(new (alloc) Entry(group, func));
-  }
-
-  size_t numEntries() const { return entries_.length(); }
-
-  ObjectGroup* getObjectGroup(size_t i) const {
-    MOZ_ASSERT(i < numEntries());
-    return entries_[i]->group;
-  }
-
-  JSFunction* getFunction(size_t i) const {
-    MOZ_ASSERT(i < numEntries());
-    return entries_[i]->func;
-  }
-
-  bool hasFunction(JSFunction* func) const;
-  bool hasObjectGroup(ObjectGroup* group) const;
-
-  // Remove targets that vetoed inlining from the InlinePropertyTable.
-  void trimTo(const InliningTargets& targets, const BoolVector& choiceSet);
-
-  // Ensure that the InlinePropertyTable's domain is a subset of |targets|.
-  void trimToTargets(const InliningTargets& targets);
-
-  bool appendRoots(MRootList& roots) const;
-};
-
 class MGetPropertyCache : public MBinaryInstruction,
                           public MixPolicy<BoxExceptPolicy<0, MIRType::Object>,
                                            CacheIdPolicy<1>>::Data {
   bool idempotent_ : 1;
   bool monitoredResult_ : 1;
 
-  InlinePropertyTable* inlinePropertyTable_;
-
   MGetPropertyCache(MDefinition* obj, MDefinition* id, bool monitoredResult)
       : MBinaryInstruction(classOpcode, obj, id),
         idempotent_(false),
-        monitoredResult_(monitoredResult),
-        inlinePropertyTable_(nullptr) {
+        monitoredResult_(monitoredResult) {
     setResultType(MIRType::Value);
 
     // The cache will invalidate if there are objects with e.g. lookup or
@@ -9019,17 +8937,6 @@ class MGetPropertyCache : public MBinaryInstruction,
   INSTRUCTION_HEADER(GetPropertyCache)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, value), (1, idval))
-
-  InlinePropertyTable* initInlinePropertyTable(TempAllocator& alloc,
-                                               jsbytecode* pc) {
-    MOZ_ASSERT(inlinePropertyTable_ == nullptr);
-    inlinePropertyTable_ = new (alloc) InlinePropertyTable(alloc, pc);
-    return inlinePropertyTable_;
-  }
-
-  void clearInlinePropertyTable() { inlinePropertyTable_ = nullptr; }
-
-  InlinePropertyTable* propTable() const { return inlinePropertyTable_; }
 
   bool idempotent() const { return idempotent_; }
   void setIdempotent() {
@@ -9054,13 +8961,6 @@ class MGetPropertyCache : public MBinaryInstruction,
                             AliasSet::DynamicSlot);
     }
     return AliasSet::Store(AliasSet::Any);
-  }
-
-  bool appendRoots(MRootList& roots) const override {
-    if (inlinePropertyTable_) {
-      return inlinePropertyTable_->appendRoots(roots);
-    }
-    return true;
   }
 };
 
@@ -9338,43 +9238,6 @@ class MDispatchInstruction : public MControlInstruction,
   MBasicBlock* getFallback() const {
     MOZ_ASSERT(hasFallback());
     return fallback_;
-  }
-  bool appendRoots(MRootList& roots) const override;
-};
-
-// Polymorphic dispatch for inlining, keyed off incoming ObjectGroup.
-class MObjectGroupDispatch : public MDispatchInstruction {
-  // Map ObjectGroup (of CallProp's Target Object) -> JSFunction (yielded by the
-  // CallProp).
-  InlinePropertyTable* inlinePropertyTable_;
-
-  MObjectGroupDispatch(TempAllocator& alloc, MDefinition* input,
-                       InlinePropertyTable* table)
-      : MDispatchInstruction(alloc, classOpcode, input),
-        inlinePropertyTable_(table) {}
-
- public:
-  INSTRUCTION_HEADER(ObjectGroupDispatch)
-
-  static MObjectGroupDispatch* New(TempAllocator& alloc, MDefinition* ins,
-                                   InlinePropertyTable* table) {
-    return new (alloc) MObjectGroupDispatch(alloc, ins, table);
-  }
-
-  InlinePropertyTable* propTable() const { return inlinePropertyTable_; }
-  bool appendRoots(MRootList& roots) const override;
-};
-
-// Polymorphic dispatch for inlining, keyed off incoming JSFunction*.
-class MFunctionDispatch : public MDispatchInstruction {
-  MFunctionDispatch(TempAllocator& alloc, MDefinition* input)
-      : MDispatchInstruction(alloc, classOpcode, input) {}
-
- public:
-  INSTRUCTION_HEADER(FunctionDispatch)
-
-  static MFunctionDispatch* New(TempAllocator& alloc, MDefinition* ins) {
-    return new (alloc) MFunctionDispatch(alloc, ins);
   }
   bool appendRoots(MRootList& roots) const override;
 };
