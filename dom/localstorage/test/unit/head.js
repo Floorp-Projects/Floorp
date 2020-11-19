@@ -107,16 +107,16 @@ function setTimeout(callback, timeout) {
   return timer;
 }
 
-function init() {
-  let request = Services.qms.init();
-
-  return request;
+function initStorage() {
+  return Services.qms.init();
 }
 
-function initStorageAndOrigin(principal, persistence) {
-  let request = Services.qms.initStorageAndOrigin(principal, persistence, "ls");
+function initTemporaryStorage() {
+  return Services.qms.initTemporaryStorage();
+}
 
-  return request;
+function initTemporaryOrigin(persistence, principal) {
+  return Services.qms.initializeTemporaryOrigin(persistence, principal);
 }
 
 function getOriginUsage(principal, fromMemory = false) {

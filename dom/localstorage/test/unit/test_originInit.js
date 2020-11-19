@@ -57,7 +57,13 @@ async function testSteps() {
   }
 
   async function initTestOrigin() {
-    let request = initStorageAndOrigin(principal, "default");
+    let request = initStorage();
+    await requestFinished(request);
+
+    request = initTemporaryStorage();
+    await requestFinished(request);
+
+    request = initTemporaryOrigin("default", principal);
     await requestFinished(request);
   }
 

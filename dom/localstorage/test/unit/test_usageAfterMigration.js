@@ -38,10 +38,21 @@ async function testSteps() {
     installPackage("usageAfterMigration_profile");
 
     if (createUsageDir) {
+      // Origin must be initialized before the usage dir is created.
+
+      info("Initializing storage");
+
+      request = initStorage();
+      await requestFinished(request);
+
+      info("Initializing temporary storage");
+
+      request = initTemporaryStorage();
+      await requestFinished(request);
+
       info("Initializing origin");
 
-      // Origin must be initialized before the usage dir is created.
-      request = initStorageAndOrigin(principal, "default");
+      request = initTemporaryOrigin("default", principal);
       await requestFinished(request);
 
       info("Creating usage as a directory");
