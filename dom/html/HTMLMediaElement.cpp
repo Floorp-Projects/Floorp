@@ -4348,12 +4348,7 @@ void HTMLMediaElement::DispatchEventsWhenPlayWasNotAllowed() {
   if (StaticPrefs::media_autoplay_block_event_enabled()) {
     DispatchAsyncEvent(u"blocked"_ns);
   }
-#if defined(MOZ_WIDGET_ANDROID)
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(this, u"MozAutoplayMediaBlocked"_ns,
-                               CanBubble::eYes, ChromeOnlyDispatch::eYes);
-  asyncDispatcher->PostDOMEvent();
-#endif
+  DispatchBlockEventForVideoControl();
   MaybeNotifyAutoplayBlocked();
   ReportToConsole(nsIScriptError::warningFlag, "BlockAutoplayError");
   mHasEverBeenBlockedForAutoplay = true;
@@ -4366,6 +4361,20 @@ void HTMLMediaElement::MaybeNotifyAutoplayBlocked() {
       new AsyncEventDispatcher(OwnerDoc(), u"GloballyAutoplayBlocked"_ns,
                                CanBubble::eYes, ChromeOnlyDispatch::eYes);
   asyncDispatcher->PostDOMEvent();
+}
+
+void HTMLMediaElement::DispatchBlockEventForVideoControl() {
+#if defined(MOZ_WIDGET_ANDROID)
+  nsVideoFrame* videoFrame = do_QueryFrame(GetPrimaryFrame());
+  if (!videoFrame || !videoFrame->GetVideoControls()) {
+    return;
+  }
+
+  RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
+      videoFrame->GetVideoControls(), u"MozNoControlsBlockedVideo"_ns,
+      CanBubble::eYes);
+  asyncDispatcher->PostDOMEvent();
+#endif
 }
 
 void HTMLMediaElement::PlayInternal(bool aHandlingUserInput) {
