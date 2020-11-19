@@ -16,6 +16,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarProviderTabToSearch:
+    "resource:///modules/UrlbarProviderTabToSearch.jsm",
   UrlbarMuxer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
@@ -536,6 +538,14 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // TODO (Bug 1670185): figure out better strategies to manage this case.
     if (result.providerName == "TabToSearch") {
       state.canAddTabToSearch = false;
+      // We want to record in urlbar.tips once per engagement per engine. Since
+      // whether these results are shown is dependent on the Muxer, we must
+      // add to `onboardingEnginesShown` here.
+      if (result.payload.dynamicType) {
+        UrlbarProviderTabToSearch.onboardingEnginesShown.add(
+          result.payload.engine
+        );
+      }
     }
   }
 }
