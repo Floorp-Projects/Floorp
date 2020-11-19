@@ -291,6 +291,8 @@ function* testSteps() {
   getRelativeFile("storage/default/invalid+++example.com").remove(false);
   getRelativeFile("storage/temporary/invalid+++example.com").remove(false);
 
+  info("Checking origin directories");
+
   for (let origin of origins) {
     if (!origin.newPath || origin.newPath != origin.oldPath) {
       let originDir = getRelativeFile(origin.oldPath);
@@ -332,24 +334,39 @@ function* testSteps() {
           "Metadata differ"
         );
       }
+    }
+  }
 
+  info("Initializing");
+
+  request = initTemporaryStorage(continueToNextStepSync);
+  yield undefined;
+
+  ok(request.resultCode == NS_OK, "Initialization succeeded");
+
+  info("Initializing origins");
+
+  for (const origin of origins) {
+    if (origin.newPath) {
       info("Initializing origin");
 
+      let principal;
       if (origin.chrome) {
-        request = initStorageAndChromeOrigin(
-          origin.persistence,
-          continueToNextStepSync
-        );
-        yield undefined;
+        principal = getCurrentPrincipal();
       } else {
-        let principal = getPrincipal(origin.url);
-        request = initStorageAndOrigin(
-          principal,
+        principal = getPrincipal(origin.url);
+      }
+
+      if (origin.persistence == "persistent") {
+        request = initPersistentOrigin(principal, continueToNextStepSync);
+      } else {
+        request = initTemporaryOrigin(
           origin.persistence,
+          principal,
           continueToNextStepSync
         );
-        yield undefined;
       }
+      yield undefined;
 
       ok(request.resultCode == NS_OK, "Initialization succeeded");
 

@@ -22,7 +22,12 @@ async function testSteps() {
   for (let allowListFile of allowListFiles) {
     info("Testing " + allowListFile + " in the repository");
 
-    info("Creating unknown file");
+    info("Initializing");
+
+    let request = init();
+    await requestFinished(request);
+
+    info("Creating unknown files");
 
     for (let dir of ["persistenceType dir", "origin dir"]) {
       let dirPath =
@@ -33,12 +38,9 @@ async function testSteps() {
       file.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("0644", 8));
     }
 
-    info("Initializing an origin");
+    info("Initializing temporary storage");
 
-    let request = initStorageAndOrigin(
-      getPrincipal("http://example.com"),
-      "default"
-    );
+    request = initTemporaryStorage();
     await requestFinished(request);
 
     info("Resetting");

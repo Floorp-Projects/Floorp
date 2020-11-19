@@ -59,7 +59,13 @@ async function testSteps() {
 
   // Unknown file and unknown directory in the origin directory
   {
-    const request = initStorageAndOrigin(principal, "default");
+    let request = init();
+    await requestFinished(request);
+
+    request = initTemporaryStorage();
+    await requestFinished(request);
+
+    request = initTemporaryOrigin("default", principal);
     await requestFinished(request);
 
     ok(request.result === true, "The origin directory was created");
