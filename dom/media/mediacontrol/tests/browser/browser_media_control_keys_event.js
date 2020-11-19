@@ -15,7 +15,7 @@ add_task(async function setupTestingPref() {
 
 add_task(async function testPlayPauseAndStop() {
   info(`open page and start media`);
-  const tab = await createTabAndLoad(PAGE);
+  const tab = await createLoadedTabWrapper(PAGE);
   await playMedia(tab, testVideoId);
 
   info(`pressing 'pause' key`);
@@ -36,12 +36,12 @@ add_task(async function testPlayPauseAndStop() {
   await checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testPlayPause() {
   info(`open page and start media`);
-  const tab = await createTabAndLoad(PAGE);
+  const tab = await createLoadedTabWrapper(PAGE);
   await playMedia(tab, testVideoId);
 
   info(`pressing 'playPause' key, media should stop`);
@@ -53,7 +53,7 @@ add_task(async function testPlayPause() {
   await checkOrWaitUntilMediaStartedPlaying(tab, testVideoId);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 /**

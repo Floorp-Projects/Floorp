@@ -27,7 +27,7 @@ add_task(async function setupTestingPref() {
  */
 add_task(async function testMediaEntersPIPMode() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(`trigger PIP mode`);
   const winPIP = await triggerPictureInPicture(tab.linkedBrowser, testVideoId);
@@ -38,12 +38,12 @@ add_task(async function testMediaEntersPIPMode() {
 
   info(`remove tab`);
   await BrowserTestUtils.closeWindow(winPIP);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testMutedMediaEntersPIPMode() {
   info(`open media page and mute video`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
   await muteMedia(tab, testVideoId);
 
   info(`trigger PIP mode`);
@@ -55,12 +55,12 @@ add_task(async function testMutedMediaEntersPIPMode() {
 
   info(`remove tab`);
   await BrowserTestUtils.closeWindow(winPIP);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testMediaEntersFullScreen() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(`make video fullscreen`);
   await enableFullScreen(tab, testVideoId);
@@ -70,12 +70,12 @@ add_task(async function testMediaEntersFullScreen() {
   await checkOrWaitUntilMediaStartedPlaying(tab, testVideoId);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testMutedMediaEntersFullScreen() {
   info(`open media page and mute video`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
   await muteMedia(tab, testVideoId);
 
   info(`make video fullscreen`);
@@ -86,12 +86,16 @@ add_task(async function testMutedMediaEntersFullScreen() {
   await checkOrWaitUntilMediaStartedPlaying(tab, testVideoId);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testNonMediaEntersFullScreen() {
-  info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  info(`open media page which won't have an activated controller`);
+  // As we won't activate controller in this test case, not need to
+  // check controller's status.
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY, {
+    needCheck: false,
+  });
 
   info(`make non-media element fullscreen`);
   const nonMediaElementId = "image";
@@ -104,12 +108,12 @@ add_task(async function testNonMediaEntersFullScreen() {
   await checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 add_task(async function testMediaInIframeEntersFullScreen() {
   info(`open media page`);
-  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab = await createLoadedTabWrapper(PAGE_NON_AUTOPLAY);
 
   info(`make video in iframe fullscreen`);
   await enableMediaFullScreenInIframe(tab, testVideoId);
@@ -127,7 +131,7 @@ add_task(async function testMediaInIframeEntersFullScreen() {
   await removeIframeFromDocument(tab);
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 /**

@@ -20,7 +20,7 @@ add_task(async function setupTestingPref() {
 add_task(
   async function testControllerWithActiveMediaSessionShouldStillBeActiveWhenNoControllableMediaPresents() {
     info(`open media page`);
-    const tab = await createTabAndLoad(PAGE_URL);
+    const tab = await createLoadedTabWrapper(PAGE_URL);
 
     info(`play media would activate controller and media session`);
     await setupMediaSession(tab);
@@ -37,14 +37,14 @@ add_task(
     await ensureActiveMediaSessionReceivedMediaKey(tab);
 
     info(`remove tab`);
-    await BrowserTestUtils.removeTab(tab);
+    await tab.close();
   }
 );
 
 add_task(
   async function testControllerWithoutActiveMediaSessionShouldBecomeInactiveWhenNoControllableMediaPresents() {
     info(`open media page`);
-    const tab = await createTabAndLoad(PAGE_URL);
+    const tab = await createLoadedTabWrapper(PAGE_URL);
 
     info(`play media would activate controller`);
     await playMedia(tab, testVideoId);
@@ -57,7 +57,7 @@ add_task(
     await checkOrWaitControllerBecomesInactive(tab);
 
     info(`remove tab`);
-    await BrowserTestUtils.removeTab(tab);
+    await tab.close();
   }
 );
 

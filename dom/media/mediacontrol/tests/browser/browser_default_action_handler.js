@@ -34,7 +34,7 @@ add_task(async function triggerDefaultActionHandler() {
     for (const action of kActions) {
       info(`test for '${action}', shouldCreateSession=${shouldCreateSession}`);
       info(`open page and start media`);
-      const tab = await createTabAndLoad(PAGE_URL);
+      const tab = await createLoadedTabWrapper(PAGE_URL);
       await playMedia(tab, videoId);
 
       if (shouldCreateSession) {
@@ -65,7 +65,7 @@ add_task(async function triggerDefaultActionHandler() {
       }
 
       info(`remove tab`);
-      await BrowserTestUtils.removeTab(tab);
+      await tab.close();
     }
   }
 });
@@ -74,7 +74,7 @@ add_task(async function triggerNonDefaultHandlerWhenSetCustomizedHandler() {
   const kActions = ["play", "pause", "stop"];
   for (const action of kActions) {
     info(`open page and start media`);
-    const tab = await createTabAndLoad(PAGE_URL);
+    const tab = await createLoadedTabWrapper(PAGE_URL);
     await startMedia(tab, { videoId });
 
     info(`set action handler for '${action}'`);
@@ -88,7 +88,7 @@ add_task(async function triggerNonDefaultHandlerWhenSetCustomizedHandler() {
     await checkOrWaitUntilMediaPlays(tab, { videoId });
 
     info(`remove tab`);
-    await BrowserTestUtils.removeTab(tab);
+    await tab.close();
   }
 });
 
@@ -99,7 +99,7 @@ add_task(
       const kActions = ["play", "pause", "stop"];
       for (const action of kActions) {
         info(`open page and load iframe`);
-        const tab = await createTabAndLoad(PAGE_URL);
+        const tab = await createLoadedTabWrapper(PAGE_URL);
         const frameId = "iframe";
         await loadIframe(tab, frameId, url);
 
@@ -145,7 +145,7 @@ add_task(
         }
 
         info(`remove tab`);
-        await BrowserTestUtils.removeTab(tab);
+        await tab.close();
       }
     }
   }
@@ -153,7 +153,7 @@ add_task(
 
 add_task(async function onlyResumeActiveMediaSession() {
   info(`open page and load iframes`);
-  const tab = await createTabAndLoad(PAGE2_URL);
+  const tab = await createLoadedTabWrapper(PAGE2_URL);
   const frame1Id = "frame1";
   const frame2Id = "frame2";
   await loadIframe(tab, frame1Id, CORS_IFRAME_URL);
@@ -186,7 +186,7 @@ add_task(async function onlyResumeActiveMediaSession() {
   await checkOrWaitUntilMediaPlays(tab, { frameId: frame2Id });
 
   info(`remove tab`);
-  await BrowserTestUtils.removeTab(tab);
+  await tab.close();
 });
 
 /**
