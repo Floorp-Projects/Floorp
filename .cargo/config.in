@@ -22,6 +22,11 @@ git = "https://github.com/mozilla/application-services"
 replace-with = "vendored-sources"
 rev = "8a576fbe79199fa8664f64285524017f74ebcc5f"
 
+[source."https://github.com/mozilla-spidermonkey/wasmtime"]
+branch = "firefox85"
+git = "https://github.com/mozilla-spidermonkey/wasmtime"
+replace-with = "vendored-sources"
+
 [source."https://github.com/mozilla-spidermonkey/jsparagus"]
 git = "https://github.com/mozilla-spidermonkey/jsparagus"
 replace-with = "vendored-sources"
@@ -56,11 +61,6 @@ rev = "4d4e1cd4cbfad2b81264a7239a336b6ec1346611"
 git = "https://github.com/djg/cubeb-pulse-rs"
 replace-with = "vendored-sources"
 rev = "bf31534d08b2c16fb5e4c5834944ae3271efbd63"
-
-[source."https://github.com/bytecodealliance/wasmtime"]
-git = "https://github.com/bytecodealliance/wasmtime"
-replace-with = "vendored-sources"
-rev = "e22e2c3722f2fbccd3c8d3230119fa04c332c69c"
 
 [source."https://github.com/badboy/failure"]
 git = "https://github.com/badboy/failure"

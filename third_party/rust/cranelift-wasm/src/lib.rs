@@ -20,9 +20,8 @@
         clippy::float_arithmetic,
         clippy::mut_mut,
         clippy::nonminimal_bool,
-        clippy::option_map_unwrap_or,
-        clippy::option_map_unwrap_or_else,
-        clippy::print_stdout,
+        clippy::map_unwrap_or,
+        clippy::clippy::print_stdout,
         clippy::unicode_not_nfc,
         clippy::use_self
     )
@@ -65,11 +64,7 @@ pub use crate::func_translator::FuncTranslator;
 pub use crate::module_translator::translate_module;
 pub use crate::state::func_state::FuncTranslationState;
 pub use crate::state::module_state::ModuleTranslationState;
-pub use crate::translation_utils::{
-    get_vmctx_value_label, DataIndex, DefinedFuncIndex, DefinedGlobalIndex, DefinedMemoryIndex,
-    DefinedTableIndex, ElemIndex, FuncIndex, Global, GlobalIndex, GlobalInit, Memory, MemoryIndex,
-    SignatureIndex, Table, TableElementType, TableIndex,
-};
+pub use crate::translation_utils::*;
 pub use cranelift_frontend::FunctionBuilder;
 
 // Convenience reexport of the wasmparser crate that we're linking against,

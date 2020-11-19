@@ -1792,7 +1792,9 @@ pub fn alloc_main<F: Function>(
     let mut reg_vecs = RegVecs::new(/*sanitized=*/ false);
     let mut dummy_bounds = RegVecBounds::new();
     for insn in &final_insns {
-        add_raw_reg_vecs_for_insn::<F>(insn, &mut reg_vecs, &mut dummy_bounds);
+        if func.is_included_in_clobbers(insn) {
+            add_raw_reg_vecs_for_insn::<F>(insn, &mut reg_vecs, &mut dummy_bounds);
+        }
     }
     for reg in reg_vecs.defs.iter().chain(reg_vecs.mods.iter()) {
         assert!(reg.is_real());

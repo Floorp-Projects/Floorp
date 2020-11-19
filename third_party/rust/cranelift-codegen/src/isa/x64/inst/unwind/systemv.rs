@@ -1,12 +1,10 @@
 //! Unwind information for System V ABI (x86-64).
 
-use crate::ir::Function;
-use crate::isa::{
-    unwind::systemv::{RegisterMappingError, UnwindInfo},
-    CallConv, RegUnit, TargetIsa,
-};
+use crate::isa::unwind::input;
+use crate::isa::unwind::systemv::{RegisterMappingError, UnwindInfo};
 use crate::result::CodegenResult;
 use gimli::{write::CommonInformationEntry, Encoding, Format, Register, X86_64};
+use regalloc::{Reg, RegClass};
 
 /// Creates a new x86-64 common information entry (CIE).
 pub fn create_cie() -> CommonInformationEntry {
@@ -34,11 +32,7 @@ pub fn create_cie() -> CommonInformationEntry {
 }
 
 /// Map Cranelift registers to their corresponding Gimli registers.
-pub fn map_reg(isa: &dyn TargetIsa, reg: RegUnit) -> Result<Register, RegisterMappingError> {
-    if isa.name() != "x86" || isa.pointer_bits() != 64 {
-        return Err(RegisterMappingError::UnsupportedArchitecture);
-    }
-
+pub fn map_reg(reg: Reg) -> Result<Register, RegisterMappingError> {
     // Mapping from https://github.com/bytecodealliance/cranelift/pull/902 by @iximeow
     const X86_GP_REG_MAP: [gimli::Register; 16] = [
         X86_64::RAX,
@@ -77,62 +71,40 @@ pub fn map_reg(isa: &dyn TargetIsa, reg: RegUnit) -> Result<Register, RegisterMa
         X86_64::XMM15,
     ];
 
-    let reg_info = isa.register_info();
-    let bank = reg_info
-        .bank_containing_regunit(reg)
-        .ok_or_else(|| RegisterMappingError::MissingBank)?;
-    match bank.name {
-        "IntRegs" => {
+    match reg.get_class() {
+        RegClass::I64 => {
             // x86 GP registers have a weird mapping to DWARF registers, so we use a
             // lookup table.
-            Ok(X86_GP_REG_MAP[(reg - bank.first_unit) as usize])
+            Ok(X86_GP_REG_MAP[reg.get_hw_encoding() as usize])
         }
-        "FloatRegs" => Ok(X86_XMM_REG_MAP[(reg - bank.first_unit) as usize]),
-        _ => Err(RegisterMappingError::UnsupportedRegisterBank(bank.name)),
+        RegClass::V128 => Ok(X86_XMM_REG_MAP[reg.get_hw_encoding() as usize]),
+        _ => Err(RegisterMappingError::UnsupportedRegisterBank("class?")),
     }
 }
 
 pub(crate) fn create_unwind_info(
-    func: &Function,
-    isa: &dyn TargetIsa,
+    unwind: input::UnwindInfo<Reg>,
 ) -> CodegenResult<Option<UnwindInfo>> {
-    // Only System V-like calling conventions are supported
-    match func.signature.call_conv {
-        CallConv::Fast | CallConv::Cold | CallConv::SystemV => {}
-        _ => return Ok(None),
-    }
-
-    if func.prologue_end.is_none() || isa.name() != "x86" || isa.pointer_bits() != 64 {
-        return Ok(None);
-    }
-
-    let unwind = match super::create_unwind_info(func, isa)? {
-        Some(u) => u,
-        None => {
-            return Ok(None);
-        }
-    };
-
-    struct RegisterMapper<'a, 'b>(&'a (dyn TargetIsa + 'b));
-    impl<'a, 'b> crate::isa::unwind::systemv::RegisterMapper<RegUnit> for RegisterMapper<'a, 'b> {
-        fn map(&self, reg: RegUnit) -> Result<u16, RegisterMappingError> {
-            Ok(map_reg(self.0, reg)?.0)
+    struct RegisterMapper;
+    impl crate::isa::unwind::systemv::RegisterMapper<Reg> for RegisterMapper {
+        fn map(&self, reg: Reg) -> Result<u16, RegisterMappingError> {
+            Ok(map_reg(reg)?.0)
         }
         fn sp(&self) -> u16 {
             X86_64::RSP.0
         }
     }
-    let map = RegisterMapper(isa);
+    let map = RegisterMapper;
 
     Ok(Some(UnwindInfo::build(unwind, &map)?))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::cursor::{Cursor, FuncCursor};
     use crate::ir::{
-        types, AbiParam, ExternalName, InstBuilder, Signature, StackSlotData, StackSlotKind,
+        types, AbiParam, ExternalName, Function, InstBuilder, Signature, StackSlotData,
+        StackSlotKind,
     };
     use crate::isa::{lookup, CallConv};
     use crate::settings::{builder, Flags};
@@ -142,7 +114,6 @@ mod tests {
     use target_lexicon::triple;
 
     #[test]
-    #[cfg_attr(feature = "x64", should_panic)] // TODO #2079
     fn test_simple_func() {
         let isa = lookup(triple!("x86_64"))
             .expect("expect x86 ISA")
@@ -155,8 +126,8 @@ mod tests {
 
         context.compile(&*isa).expect("expected compilation");
 
-        let fde = match isa
-            .create_unwind_info(&context.func)
+        let fde = match context
+            .create_unwind_info(isa.as_ref())
             .expect("can create unwind info")
         {
             Some(crate::isa::unwind::UnwindInfo::SystemV(info)) => {
@@ -165,7 +136,7 @@ mod tests {
             _ => panic!("expected unwind information"),
         };
 
-        assert_eq!(format!("{:?}", fde), "FrameDescriptionEntry { address: Constant(1234), length: 16, lsda: None, instructions: [(2, CfaOffset(16)), (2, Offset(Register(6), -16)), (5, CfaRegister(Register(6))), (15, SameValue(Register(6))), (15, Cfa(Register(7), 8))] }");
+        assert_eq!(format!("{:?}", fde), "FrameDescriptionEntry { address: Constant(1234), length: 13, lsda: None, instructions: [(1, CfaOffset(16)), (1, Offset(Register(6), -16)), (4, CfaRegister(Register(6)))] }");
     }
 
     fn create_function(call_conv: CallConv, stack_slot: Option<StackSlotData>) -> Function {
@@ -185,7 +156,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "x64", should_panic)] // TODO #2079
     fn test_multi_return_func() {
         let isa = lookup(triple!("x86_64"))
             .expect("expect x86 ISA")
@@ -195,8 +165,8 @@ mod tests {
 
         context.compile(&*isa).expect("expected compilation");
 
-        let fde = match isa
-            .create_unwind_info(&context.func)
+        let fde = match context
+            .create_unwind_info(isa.as_ref())
             .expect("can create unwind info")
         {
             Some(crate::isa::unwind::UnwindInfo::SystemV(info)) => {
@@ -205,7 +175,7 @@ mod tests {
             _ => panic!("expected unwind information"),
         };
 
-        assert_eq!(format!("{:?}", fde), "FrameDescriptionEntry { address: Constant(4321), length: 16, lsda: None, instructions: [(2, CfaOffset(16)), (2, Offset(Register(6), -16)), (5, CfaRegister(Register(6))), (12, RememberState), (12, SameValue(Register(6))), (12, Cfa(Register(7), 8)), (13, RestoreState), (15, SameValue(Register(6))), (15, Cfa(Register(7), 8))] }");
+        assert_eq!(format!("{:?}", fde), "FrameDescriptionEntry { address: Constant(4321), length: 23, lsda: None, instructions: [(1, CfaOffset(16)), (1, Offset(Register(6), -16)), (4, CfaRegister(Register(6))), (16, RememberState), (18, RestoreState)] }");
     }
 
     fn create_multi_return_function(call_conv: CallConv) -> Function {

@@ -4,11 +4,11 @@
 
 use crate::binemit::CodeOffset;
 use crate::ir::types::{B1, B16, B32, B8, I16, I32, I8, IFLAGS};
-use crate::ir::{ExternalName, Opcode, SourceLoc, TrapCode, Type};
+use crate::ir::{ExternalName, Opcode, TrapCode, Type};
 use crate::machinst::*;
 use crate::{settings, CodegenError, CodegenResult};
 
-use regalloc::{RealRegUniverse, Reg, RegClass, SpillSlot, VirtualReg, Writable};
+use regalloc::{PrettyPrint, RealRegUniverse, Reg, RegClass, SpillSlot, VirtualReg, Writable};
 use regalloc::{RegUsageCollector, RegUsageMapper};
 
 use alloc::boxed::Box;
@@ -22,6 +22,7 @@ mod emit;
 pub use self::emit::*;
 mod regs;
 pub use self::regs::*;
+pub mod unwind;
 
 #[cfg(test)]
 mod emit_tests;
@@ -82,7 +83,6 @@ pub struct CallInfo {
     pub dest: ExternalName,
     pub uses: Vec<Reg>,
     pub defs: Vec<Writable<Reg>>,
-    pub loc: SourceLoc,
     pub opcode: Opcode,
 }
 
@@ -93,7 +93,6 @@ pub struct CallIndInfo {
     pub rm: Reg,
     pub uses: Vec<Reg>,
     pub defs: Vec<Writable<Reg>>,
-    pub loc: SourceLoc,
     pub opcode: Opcode,
 }
 
@@ -217,7 +216,6 @@ pub enum Inst {
     Store {
         rt: Reg,
         mem: AMode,
-        srcloc: Option<SourceLoc>,
         bits: u8,
     },
 
@@ -226,7 +224,6 @@ pub enum Inst {
     Load {
         rt: Writable<Reg>,
         mem: AMode,
-        srcloc: Option<SourceLoc>,
         bits: u8,
         sign_extend: bool,
     },
@@ -275,7 +272,6 @@ pub enum Inst {
     LoadExtName {
         rt: Writable<Reg>,
         name: Box<ExternalName>,
-        srcloc: SourceLoc,
         offset: i32,
     },
 
@@ -307,13 +303,13 @@ pub enum Inst {
     /// unit to the register allocator.
     TrapIf {
         cond: Cond,
-        trap_info: (SourceLoc, TrapCode),
+        trap_info: TrapCode,
     },
 
     /// An instruction guaranteed to always be undefined and to trigger an illegal instruction at
     /// runtime.
     Udf {
-        trap_info: (SourceLoc, TrapCode),
+        trap_info: TrapCode,
     },
 
     /// A "breakpoint" instruction, used for e.g. traps and debug breakpoints.
@@ -389,7 +385,6 @@ impl Inst {
         Inst::Load {
             rt: into_reg,
             mem,
-            srcloc: None,
             bits,
             sign_extend: false,
         }
@@ -404,7 +399,6 @@ impl Inst {
         Inst::Store {
             rt: from_reg,
             mem,
-            srcloc: None,
             bits,
         }
     }
@@ -897,7 +891,7 @@ fn mem_finalize_for_show(
     (mem_str, mem)
 }
 
-impl ShowWithRRU for Inst {
+impl PrettyPrint for Inst {
     fn show_rru(&self, mb_rru: Option<&RealRegUniverse>) -> String {
         self.pretty_print(mb_rru, &mut EmitState::default())
     }
@@ -1188,7 +1182,6 @@ impl Inst {
                 rt,
                 ref name,
                 offset,
-                srcloc: _srcloc,
             } => {
                 let rt = rt.show_rru(mb_rru);
                 format!("ldr {}, [pc, #4] ; b 4 ; data {:?} + {}", rt, name, offset)

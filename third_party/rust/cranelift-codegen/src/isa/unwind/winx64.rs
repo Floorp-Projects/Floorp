@@ -1,7 +1,10 @@
 //! Windows x64 ABI unwind information.
 
+use crate::isa::{unwind::input, RegUnit};
+use crate::result::{CodegenError, CodegenResult};
 use alloc::vec::Vec;
 use byteorder::{ByteOrder, LittleEndian};
+use log::warn;
 #[cfg(feature = "enable-serde")]
 use serde::{Deserialize, Serialize};
 
@@ -134,6 +137,17 @@ impl UnwindCode {
     }
 }
 
+pub(crate) enum MappedRegister {
+    Int(u8),
+    Xmm(u8),
+}
+
+/// Maps UnwindInfo register to Windows x64 unwind data.
+pub(crate) trait RegisterMapper {
+    /// Maps RegUnit.
+    fn map(reg: RegUnit) -> MappedRegister;
+}
+
 /// Represents Windows x64 unwind information.
 ///
 /// For information about Windows x64 unwind info, see:
@@ -204,4 +218,77 @@ impl UnwindInfo {
             .iter()
             .fold(0, |nodes, c| nodes + c.node_count())
     }
+
+    pub(crate) fn build<MR: RegisterMapper>(
+        unwind: input::UnwindInfo<RegUnit>,
+    ) -> CodegenResult<Self> {
+        use crate::isa::unwind::input::UnwindCode as InputUnwindCode;
+
+        let word_size: u32 = unwind.word_size.into();
+        let mut unwind_codes = Vec::new();
+        for (offset, c) in unwind.prologue_unwind_codes.iter() {
+            match c {
+                InputUnwindCode::SaveRegister { reg, stack_offset } => {
+                    let reg = MR::map(*reg);
+                    let offset = ensure_unwind_offset(*offset)?;
+                    match reg {
+                        MappedRegister::Int(reg) => {
+                            // Attempt to convert sequence of the `InputUnwindCode`:
+                            // `StackAlloc { size = word_size }`, `SaveRegister { stack_offset: 0 }`
+                            // to the shorter `UnwindCode::PushRegister`.
+                            let push_reg_sequence = if let Some(UnwindCode::StackAlloc {
+                                offset: alloc_offset,
+                                size,
+                            }) = unwind_codes.last()
+                            {
+                                *size == word_size && offset == *alloc_offset && *stack_offset == 0
+                            } else {
+                                false
+                            };
+                            if push_reg_sequence {
+                                *unwind_codes.last_mut().unwrap() =
+                                    UnwindCode::PushRegister { offset, reg };
+                            } else {
+                                // TODO add `UnwindCode::SaveRegister` to handle multiple register
+                                // pushes with single `UnwindCode::StackAlloc`.
+                                return Err(CodegenError::Unsupported(
+                                    "Unsupported UnwindCode::PushRegister sequence".into(),
+                                ));
+                            }
+                        }
+                        MappedRegister::Xmm(reg) => {
+                            unwind_codes.push(UnwindCode::SaveXmm {
+                                offset,
+                                reg,
+                                stack_offset: *stack_offset,
+                            });
+                        }
+                    }
+                }
+                InputUnwindCode::StackAlloc { size } => {
+                    unwind_codes.push(UnwindCode::StackAlloc {
+                        offset: ensure_unwind_offset(*offset)?,
+                        size: *size,
+                    });
+                }
+                _ => {}
+            }
+        }
+
+        Ok(Self {
+            flags: 0, // this assumes cranelift functions have no SEH handlers
+            prologue_size: ensure_unwind_offset(unwind.prologue_size)?,
+            frame_register: None,
+            frame_register_offset: 0,
+            unwind_codes,
+        })
+    }
+}
+
+fn ensure_unwind_offset(offset: u32) -> CodegenResult<u8> {
+    if offset > 255 {
+        warn!("function prologues cannot exceed 255 bytes in size for Windows x64");
+        return Err(CodegenError::CodeTooLarge);
+    }
+    Ok(offset as u8)
 }
