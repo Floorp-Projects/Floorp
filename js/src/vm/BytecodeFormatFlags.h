@@ -51,8 +51,7 @@ enum {
   JOF_CONSTRUCT = 1 << 13,   /* invoke instruction using [[Construct]] entry */
   JOF_SPREAD = 1 << 14,      /* invoke instruction using spread argument */
   JOF_GNAME = 1 << 15,       /* predicted global name */
-  JOF_TYPESET = 1 << 16,     /* has an entry in a script's type sets */
-  JOF_IC = 1 << 17,          /* baseline may use an IC for this op */
+  JOF_IC = 1 << 16,          /* baseline may use an IC for this op */
 };
 
 #endif /* vm_BytecodeFormatFlags_h */
