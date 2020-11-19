@@ -437,6 +437,14 @@ add_task(async function testAboutPage() {
       const enrollmentButton = content.document.getElementById(
         "enrollment-button"
       );
+
+      for (const section of ["details", "data"]) {
+        ok(
+          content.document.getElementById(section).open === true,
+          "before enrollment, dialog sections are open."
+        );
+      }
+
       enrollmentButton.click();
 
       const dialog = content.document.getElementById("join-ion-consent-dialog");
@@ -498,6 +506,13 @@ add_task(async function testAboutPage() {
         !enrolledToolbarButton.hidden,
         "after enrollment, Ion toolbar button is not hidden."
       );
+
+      for (const section of ["details", "data"]) {
+        ok(
+          content.document.getElementById(section).open === false,
+          "after enrollment, dialog sections are closed."
+        );
+      }
 
       for (const cachedAddon of CACHED_ADDONS) {
         const addonId = cachedAddon.addon_id;
@@ -751,6 +766,13 @@ add_task(async function testAboutPage() {
           ok(
             joinButton.disabled,
             "After unenrollment, join button is disabled."
+          );
+        }
+
+        for (const section of ["details", "data"]) {
+          ok(
+            content.document.getElementById(section).open === true,
+            "after unenrollment, dialog sections are open."
           );
         }
       }
