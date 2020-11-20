@@ -48,6 +48,9 @@ add_task(async function testNoSrcOrErrorMediaEntersPIPMode() {
 
     info(`remove tab`);
     await tab.close();
+    // To ensure the focus would be gave back to the original window. If we do
+    // not do that, then lacking of focus would interfere other following tests.
+    await SimpleTest.promiseFocus(window);
   }
 });
 
