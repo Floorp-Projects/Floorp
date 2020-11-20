@@ -21,4 +21,15 @@ export MOZILLA_OFFICIAL=1
 export MOZ_PACKAGE_JSSHELL=1
 
 ac_add_options --target=aarch64-apple-darwin
-export MACOS_SDK_DIR=/Applications/Xcode-12.2.Release.Candidate.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk
+export MACOS_SDK_DIR=$MOZ_FETCHES_DIR/MacOSX11.0.sdk
+
+# Xcode clang defaults to something similar to -mcpu=apple-a12, while upstream
+# clang defaults to -mcpu=apple-a7, which disables a bunch of performance-enabling
+# CPU features. TODO: this should be done by configure.
+export CFLAGS="$CFLAGS -mcpu=apple-a12"
+export CXXFLAGS="$CXXFLAGS -mcpu=apple-a12"
+
+RUSTC="$MOZ_FETCHES_DIR/rustc-beta/rustc/bin/rustc"
+CARGO="$MOZ_FETCHES_DIR/rustc-beta/rustc/bin/cargo"
+RUSTDOC="$MOZ_FETCHES_DIR/rustc-beta/rustc/bin/rustdoc"
+RUSTFMT="$MOZ_FETCHES_DIR/rustc-beta/rustc/bin/rustfmt"

@@ -16,11 +16,10 @@ class UnifiedTestFinder(UnifiedFinder):
     def unify_file(self, path, file1, file2):
         unified = super(UnifiedTestFinder, self).unify_file(path, file1, file2)
         basename = mozpath.basename(path)
-        if basename in ("mozinfo.json", "wptrunner.local.ini"):
-            # The mozinfo.json files contain build-time paths that differ between
-            # both ends, as well as processor and pgo status, which differ as well.
-            # The wptrunner.local.ini file contains build-time paths that differ.
-            # Remove the block or one of the conditions when this assert is hit.
+        if basename == "mozinfo.json":
+            # The mozinfo.json files contain processor and pgo status, which differ
+            # between both ends.
+            # Remove the block when this assert is hit.
             assert not unified
             errors.ignore_errors()
             self._report_difference(path, file1, file2)

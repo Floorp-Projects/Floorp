@@ -259,6 +259,50 @@ macosx64-x64-shippable/opt:
             - linux64-clang-macosx-cross
             - wasi-sysroot
 
+macosx64-aarch64-shippable/opt:
+    description: "MacOS X aarch64 Cross-compile"
+    attributes:
+        enable-full-crashsymbols: true
+        skip-verify-test-packaging: true
+    shipping-phase: build
+    shipping-product: firefox
+    index:
+        job-name: macosx64-aarch64-opt
+        type: shippable
+    treeherder:
+        platform: osx-aarch64-shippable/opt
+        symbol: B
+        tier: 1
+    run-on-projects: ['release']
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: ""
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+            PERFHERDER_EXTRA_OPTIONS: aarch64
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+            - taskcluster_nightly.py
+        extra-config:
+            mozconfig_platform: macosx64-aarch64
+    dependencies:
+        linux64-rust-macos-beta: toolchain-linux64-rust-macos-beta
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-aarch64-cross
+            - macosx64-sdk-11.0
+        # Because job-defaults contain linux64-rust-macos, which we can't
+        # remove, and that would extract to the same directory, with no
+        # guaranteed order,we need to manually extract to a different
+        # directory, and make the build use that instead, until we can use
+        # a stable rust.
+        linux64-rust-macos-beta:
+            - artifact: rustc.tar.zst
+              dest: rustc-beta
+
 macosx64-shippable/opt:
     description: "MacOS X Universal"
     attributes:
