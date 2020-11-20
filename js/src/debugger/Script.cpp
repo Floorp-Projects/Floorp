@@ -1377,6 +1377,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::DefLet:
     case JSOp::DefConst:
     case JSOp::DefFun:
+    case JSOp::GlobalOrEvalDeclInstantiation:
     case JSOp::SetFunName:
     case JSOp::MutateProto:
     case JSOp::DynamicImport:
@@ -1571,7 +1572,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::CheckThis:
     case JSOp::CheckReturn:
     case JSOp::CheckThisReinit:
-    case JSOp::GlobalOrEvalDeclInstantiation:
     case JSOp::SuperFun:
     case JSOp::SpreadSuperCall:
     case JSOp::SuperCall:
