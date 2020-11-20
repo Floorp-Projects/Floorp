@@ -11,8 +11,12 @@ DIRS += [
     "build",
 ]
 
-# For now, don't build mozalloc when building with --enable-project=memory
-if CONFIG["MOZ_BUILD_APP"] != "memory":
+if CONFIG["MOZ_BUILD_APP"] == "memory":
+    DIRS += [
+        "mozjemalloc_info",
+    ]
+else:
+    # For now, don't build mozalloc when building with --enable-project=memory
     DIRS += [
         "mozalloc",
     ]
