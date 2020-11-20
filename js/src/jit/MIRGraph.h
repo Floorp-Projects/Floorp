@@ -175,13 +175,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
     }
   }
 
-  // Discard the slot at the given depth, lowering all slots above.
-  void shimmySlots(int discardDepth);
-
-  // In an OSR block, set all MOsrValues to use the MResumePoint attached to
-  // the MStart.
-  MOZ_MUST_USE bool linkOsrValues(MStart* start);
-
   // Sets the instruction associated with various slot types. The
   // instruction must lie at the top of the stack.
   void setLocal(uint32_t local) { setVariable(info_.localSlot(local)); }
@@ -191,9 +184,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   // Rewrites a slot directly, bypassing the stack transition. This should
   // not be used under most circumstances.
   void rewriteSlot(uint32_t slot, MDefinition* ins) { setSlot(slot, ins); }
-
-  // Rewrites a slot based on its depth (same as argument to peek()).
-  void rewriteAtDepth(int32_t depth, MDefinition* ins);
 
   // Tracks an instruction as being pushed onto the operand stack.
   void push(MDefinition* ins) {
@@ -283,10 +273,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   void clearDominatorInfo();
 
   // Sets a back edge. This places phi nodes and rewrites instructions within
-  // the current loop as necessary. If the backedge introduces new types for
-  // phis at the loop header, returns a disabling abort.
-  MOZ_MUST_USE AbortReason setBackedge(TempAllocator& alloc,
-                                       MBasicBlock* block);
+  // the current loop as necessary.
+  MOZ_MUST_USE bool setBackedge(MBasicBlock* block);
   MOZ_MUST_USE bool setBackedgeWasm(MBasicBlock* block, size_t paramCount);
 
   // Resets a LOOP_HEADER block to a NORMAL block.  This is needed when
@@ -302,9 +290,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   void inheritPhis(MBasicBlock* header);
 
   // Propagates backedge slots into phis operands of the loop header.
-  MOZ_MUST_USE bool inheritPhisFromBackedge(TempAllocator& alloc,
-                                            MBasicBlock* backedge,
-                                            bool* hadTypeChange);
+  MOZ_MUST_USE bool inheritPhisFromBackedge(MBasicBlock* backedge);
 
   // Compute the types for phis in this block according to their inputs.
   MOZ_MUST_USE bool specializePhis(TempAllocator& alloc);
