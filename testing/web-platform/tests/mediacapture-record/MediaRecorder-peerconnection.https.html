@@ -15,15 +15,15 @@
   <video id="remote" autoplay width="240" />
   <script>
 
-[{ name: "video", kind: { video: true, audio: false }, mimeType: "" },
- { name: "audio", kind: { video: false, audio: true }, mimeType: "" },
- { name: "audio/video", kind: { video: true, audio: true }, mimeType: "" },
- { name: "audio", kind: { video: false, audio: true }, mimeType: "video/webm;codecs=vp8" },
- { name: "video", kind: { video: true, audio: false }, mimeType: "video/webm;codecs=vp8" },
- { name: "audio/video", kind: { video: true, audio: true }, mimeType: "video/webm;codecs=vp8" },
- { name: "audio", kind: { video: false, audio: true }, mimeType: "video/webm;codecs=vp9" },
- { name: "video", kind: { video: true, audio: false }, mimeType: "video/webm;codecs=vp9" },
- { name: "audio/video", kind: { video: true, audio: true }, mimeType: "video/webm;codecs=vp9" }]
+[{ kind: { video: true, audio: false }, mimeType: "" },
+ { kind: { video: false, audio: true }, mimeType: "" },
+ { kind: { video: true, audio: true }, mimeType: "" },
+ { kind: { video: false, audio: true }, mimeType: "video/webm;codecs=vp8" },
+ { kind: { video: true, audio: false }, mimeType: "video/webm;codecs=vp8" },
+ { kind: { video: true, audio: true }, mimeType: "video/webm;codecs=vp8" },
+ { kind: { video: false, audio: true }, mimeType: "video/webm;codecs=vp9" },
+ { kind: { video: true, audio: false }, mimeType: "video/webm;codecs=vp9" },
+ { kind: { video: true, audio: true }, mimeType: "video/webm;codecs=vp9" }]
   .forEach(args => {
     const formatString = JSON.stringify(args.kind) +
         " with format " + (args.mimeType ? args.mimeType : "[passthrough]") + ".";
