@@ -1566,9 +1566,9 @@ bool WarpBuilder::build_DefFun(BytecodeLocation loc) {
   return resumeAfter(deffun, loc);
 }
 
-bool WarpBuilder::build_CheckGlobalOrEvalDecl(BytecodeLocation loc) {
+bool WarpBuilder::build_GlobalOrEvalDeclInstantiation(BytecodeLocation loc) {
   MOZ_ASSERT(!script_->isForEval(), "Eval scripts not supported");
-  auto* redeclCheck = MGlobalNameConflictsCheck::New(alloc());
+  auto* redeclCheck = MGlobalDeclInstantiation::New(alloc());
   current->add(redeclCheck);
   return resumeAfter(redeclCheck, loc);
 }

@@ -1564,6 +1564,12 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       }
       break;
 
+    case JOF_GCTHING:
+      if (!sp->jsprintf(" %u", unsigned(GET_GCTHING_INDEX(pc)))) {
+        return 0;
+      }
+      break;
+
     case JOF_UINT32:
       if (!sp->jsprintf(" %u", GET_UINT32(pc))) {
         return 0;

@@ -3730,9 +3730,9 @@ static bool CheckEvalDeclarationConflicts(JSContext* cx, HandleScript script,
   return true;
 }
 
-bool js::CheckGlobalOrEvalDeclarationConflicts(JSContext* cx,
-                                               HandleObject envChain,
-                                               HandleScript script) {
+bool js::GlobalOrEvalDeclInstantiation(JSContext* cx, HandleObject envChain,
+                                       HandleScript script,
+                                       GCThingIndex lastFun) {
   MOZ_ASSERT(script->isGlobalCode() || script->isForEval());
 
   RootedObject varObj(cx, &GetVariablesObject(envChain));

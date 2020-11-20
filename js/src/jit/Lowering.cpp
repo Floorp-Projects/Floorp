@@ -5310,9 +5310,8 @@ void LIRGenerator::visitThrowRuntimeLexicalError(
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitGlobalNameConflictsCheck(
-    MGlobalNameConflictsCheck* ins) {
-  LGlobalNameConflictsCheck* lir = new (alloc()) LGlobalNameConflictsCheck();
+void LIRGenerator::visitGlobalDeclInstantiation(MGlobalDeclInstantiation* ins) {
+  LGlobalDeclInstantiation* lir = new (alloc()) LGlobalDeclInstantiation();
   add(lir, ins);
   assignSafepoint(lir, ins);
 }

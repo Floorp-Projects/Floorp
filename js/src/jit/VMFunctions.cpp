@@ -1449,7 +1449,8 @@ bool GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame,
   return false;
 }
 
-bool GlobalNameConflictsCheckFromIon(JSContext* cx, HandleScript script) {
+bool GlobalDeclInstantiationFromIon(JSContext* cx, HandleScript script,
+                                    jsbytecode* pc) {
   Rooted<LexicalEnvironmentObject*> globalLexical(
       cx, &cx->global()->lexicalEnvironment());
   return CheckGlobalDeclarationConflicts(cx, script, globalLexical,

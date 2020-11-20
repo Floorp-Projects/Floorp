@@ -3918,17 +3918,19 @@ bool BaselineCodeGen<Handler>::emit_DefFun() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_CheckGlobalOrEvalDecl() {
+bool BaselineCodeGen<Handler>::emit_GlobalOrEvalDeclInstantiation() {
   frame.syncStack(0);
 
   prepareVMCall();
 
+  loadInt32LengthBytecodeOperand(R0.scratchReg());
+  pushArg(R0.scratchReg());
   pushScriptArg();
   masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
   pushArg(R0.scratchReg());
 
-  using Fn = bool (*)(JSContext*, HandleObject, HandleScript);
-  return callVM<Fn, js::CheckGlobalOrEvalDeclarationConflicts>();
+  using Fn = bool (*)(JSContext*, HandleObject, HandleScript, GCThingIndex);
+  return callVM<Fn, js::GlobalOrEvalDeclInstantiation>();
 }
 
 template <typename Handler>

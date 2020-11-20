@@ -81,8 +81,6 @@ namespace jit {
   _(CallNativeSetter, js::jit::CallNativeSetter)                               \
   _(CharCodeAt, js::jit::CharCodeAt)                                           \
   _(CheckClassHeritageOperation, js::CheckClassHeritageOperation)              \
-  _(CheckGlobalOrEvalDeclarationConflicts,                                     \
-    js::CheckGlobalOrEvalDeclarationConflicts)                                 \
   _(CheckOverRecursed, js::jit::CheckOverRecursed)                             \
   _(CheckOverRecursedBaseline, js::jit::CheckOverRecursedBaseline)             \
   _(CheckPrivateFieldOperation, js::CheckPrivateFieldOperation)                \
@@ -135,7 +133,8 @@ namespace jit {
   _(GetOrCreateModuleMetaObject, js::GetOrCreateModuleMetaObject)              \
   _(GetPrototypeOf, js::jit::GetPrototypeOf)                                   \
   _(GetSparseElementHelper, js::GetSparseElementHelper)                        \
-  _(GlobalNameConflictsCheckFromIon, js::jit::GlobalNameConflictsCheckFromIon) \
+  _(GlobalDeclInstantiationFromIon, js::jit::GlobalDeclInstantiationFromIon)   \
+  _(GlobalOrEvalDeclInstantiation, js::GlobalOrEvalDeclInstantiation)          \
   _(GreaterThan, js::GreaterThan)                                              \
   _(GreaterThanOrEqual, js::GreaterThanOrEqual)                                \
   _(HandleDebugTrap, js::jit::HandleDebugTrap)                                 \
