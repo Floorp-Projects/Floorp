@@ -30,7 +30,14 @@ TEST_COMMANDS=$(echo "$FIRST_PASS_COMPONENTS" | sed "s/$/:test/g")
 LINT_COMMANDS=$(echo "$FIRST_PASS_COMPONENTS" | sed "s/$/:lintRelease/g")
 
 NEXUS_PREFIX='http://localhost:8081/nexus/content/repositories'
-GRADLE_ARGS="--parallel -PgoogleRepo=$NEXUS_PREFIX/google/ -PjcenterRepo=$NEXUS_PREFIX/jcenter/ -PcentralRepo=$NEXUS_PREFIX/central/"
+REPOS="-PgoogleRepo=$NEXUS_PREFIX/google/ -PjcenterRepo=$NEXUS_PREFIX/jcenter/ -PcentralRepo=$NEXUS_PREFIX/central/"
+GRADLE_ARGS="--parallel $REPOS"
+
+# Before building anything we explicitly build one component that contains Glean and initializes
+# the Miniconda Python environment and doesn't have (almost) any other transitive dependencies.
+# If that happens concurrently with other tasks then this seems to fail quite often. So let's do it
+# here first and also not use the "--parallel` flag.
+./gradlew $REPOS support-sync-telemetry:assemble
 
 # First pass. We build everything to be sure to fetch all dependencies
 ./gradlew $GRADLE_ARGS $ASSEMBLE_COMMANDS $ASSEMBLE_TEST_COMMANDS ktlint detekt $LINT_COMMANDS
