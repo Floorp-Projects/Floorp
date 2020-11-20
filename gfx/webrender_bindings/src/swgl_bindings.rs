@@ -948,6 +948,7 @@ impl SwCompositor {
         // Only create the SwComposite thread if we're neither using OpenGL composition nor a native
         // render compositor. Thus, we are compositing into the main software framebuffer, which in
         // that case benefits from compositing asynchronously while we are updating tiles.
+        assert!(native_gl.is_none() || compositor.is_none());
         let composite_thread = if native_gl.is_none() && compositor.is_none() {
             Some(SwCompositeThread::new())
         } else {
@@ -1541,21 +1542,6 @@ impl Compositor for SwCompositor {
                 native_gl.pixel_store_i(gl::UNPACK_ROW_LENGTH, 0);
                 if tile.pbo_id != 0 {
                     native_gl.bind_buffer(gl::PIXEL_UNPACK_BUFFER, 0);
-                }
-
-                if let Some(compositor) = &mut self.compositor {
-                    let info = compositor.bind(id, tile.dirty_rect, tile.valid_rect);
-                    native_gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, info.fbo_id);
-
-                    let viewport = dirty.translate(info.origin.to_vector());
-                    let draw_tile = self.draw_tile.as_ref().unwrap();
-                    draw_tile.enable(&viewport);
-                    draw_tile.draw(&viewport, &viewport, &dirty, &surface, &tile, false, gl::LINEAR);
-                    draw_tile.disable();
-
-                    native_gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, 0);
-
-                    compositor.unbind();
                 }
 
                 native_gl.bind_texture(gl::TEXTURE_2D, 0);
