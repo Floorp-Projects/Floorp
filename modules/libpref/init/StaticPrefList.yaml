@@ -9503,13 +9503,6 @@
     value: false
     mirror: always
 
-  # Controls whether we disable win32k for the processes.
-  # true means that win32k system calls are not permitted.
--   name: security.sandbox.rdd.win32k-disable
-    type: RelaxedAtomicBool
-    value: false
-    mirror: always
-
   # Note: win32k is currently _not_ disabled for GMP due to intermittent test
   # failures, where the GMP process fails very early. See bug 1449348.
 -   name: security.sandbox.gmp.win32k-disable
