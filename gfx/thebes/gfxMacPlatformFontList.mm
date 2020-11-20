@@ -924,6 +924,8 @@ nsresult gfxMacPlatformFontList::InitFontListForPlatform() {
 
   Telemetry::AutoTimer<Telemetry::MAC_INITFONTLIST_TOTAL> timer;
 
+  InitSystemFontNames();
+
   if (XRE_IsContentProcess()) {
     // Content process: use font list passed from the chrome process via
     // the GetXPCOMProcessAttributes message, because it's much faster than
@@ -932,6 +934,13 @@ nsresult gfxMacPlatformFontList::InitFontListForPlatform() {
     for (FontFamilyListEntry& ffe : fontList) {
       switch (ffe.entryType()) {
         case kStandardFontFamily:
+          // On Catalina or later, we pre-initialize system font-family entries
+          // in InitSystemFontNames(), so we can just skip them here.
+          if (nsCocoaFeatures::OnCatalinaOrLater() &&
+              (ffe.familyName() == mSystemTextFontFamilyName ||
+               ffe.familyName() == mSystemDisplayFontFamilyName)) {
+            continue;
+          }
           AddFamily(ffe.familyName(), ffe.visibility());
           break;
         case kTextSizeSystemFontFamily:
@@ -947,7 +956,6 @@ nsresult gfxMacPlatformFontList::InitFontListForPlatform() {
   } else {
     // We're not a content process, so get the available fonts directly
     // from Core Text.
-    InitSystemFontNames();
     CFArrayRef familyNames = CTFontManagerCopyAvailableFontFamilyNames();
     for (NSString* familyName in (NSArray*)familyNames) {
       AddFamily((CFStringRef)familyName);
