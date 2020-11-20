@@ -160,7 +160,8 @@ class MinidumpGenerator {
   bool WriteContext(breakpad_thread_state_data_t state,
                     MDLocationDescriptor *register_location);
   bool WriteCVRecord(MDRawModule *module, int cpu_type, int cpu_subtype,
-                     const char *module_path, bool in_memory);
+                     const char *module_path, bool in_memory,
+                     bool out_of_process, bool in_dyld_shared_cache);
   bool WriteModuleStream(unsigned int index, MDRawModule *module);
   size_t CalculateStackSize(mach_vm_address_t start_addr);
   int  FindExecutableModule();
