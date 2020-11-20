@@ -21,6 +21,7 @@ import mozilla.components.browser.state.action.RestoreCompleteAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.LoadRequestState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -38,6 +39,7 @@ import org.mozilla.fenix.components.toolbar.BrowserToolbarView
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.onboarding.FenixOnboarding
 
 @ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
@@ -52,6 +54,7 @@ class BrowserFragmentTest {
     private lateinit var context: Context
     private lateinit var lifecycleOwner: MockedLifecycleOwner
     private lateinit var navController: NavController
+    private lateinit var onboarding: FenixOnboarding
 
     private val testDispatcher = TestCoroutineDispatcher()
 
@@ -68,6 +71,7 @@ class BrowserFragmentTest {
         view = mockk(relaxed = true)
         lifecycleOwner = MockedLifecycleOwner(Lifecycle.State.STARTED)
         navController = mockk(relaxed = true)
+        onboarding = mockk(relaxed = true)
 
         browserFragment = spyk(BrowserFragment())
         every { browserFragment.view } returns view
@@ -75,6 +79,8 @@ class BrowserFragmentTest {
         every { browserFragment.browserToolbarView } returns mockk(relaxed = true)
         every { browserFragment.activity } returns homeActivity
         every { browserFragment.lifecycle } returns lifecycleOwner.lifecycle
+        every { browserFragment.onboarding } returns onboarding
+
         every { browserFragment.requireContext() } returns context
         every { browserFragment.initializeUI(any()) } returns mockk()
         every { browserFragment.fullScreenChanged(any()) } returns Unit
@@ -203,6 +209,79 @@ class BrowserFragmentTest {
         store.dispatch(RestoreCompleteAction).joinBlocking()
 
         verify(exactly = 1) { navController.popBackStack(R.id.homeFragment, false) }
+    }
+
+    @Test
+    fun `GIVEN the onboarding is finished WHEN visiting any link THEN the onboarding is not dismissed `() {
+        every { onboarding.userHasBeenOnboarded() } returns true
+
+        browserFragment.observeTabSource(store)
+
+        val newSelectedTab = createTab("any-tab.org")
+        addAndSelectTab(newSelectedTab)
+
+        verify(exactly = 0) { onboarding.finish() }
+    }
+
+    @Test
+    fun `GIVEN the onboarding is not finished WHEN visiting a link THEN the onboarding is dismissed `() {
+        every { onboarding.userHasBeenOnboarded() } returns false
+
+        browserFragment.observeTabSource(store)
+
+        val newSelectedTab = createTab("any-tab.org")
+        addAndSelectTab(newSelectedTab)
+
+        verify(exactly = 1) { onboarding.finish() }
+    }
+
+    @Test
+    fun `GIVEN the onboarding is not finished WHEN visiting an onboarding link THEN the onboarding is not dismissed `() {
+        every { onboarding.userHasBeenOnboarded() } returns false
+
+        browserFragment.observeTabSource(store)
+
+        val newSelectedTab = createTab(BaseBrowserFragment.onboardingLinksList[0])
+        addAndSelectTab(newSelectedTab)
+
+        verify(exactly = 0) { onboarding.finish() }
+    }
+
+    @Test
+    fun `GIVEN the onboarding is not finished WHEN opening a page from another app THEN the onboarding is not dismissed `() {
+        every { onboarding.userHasBeenOnboarded() } returns false
+
+        browserFragment.observeTabSource(store)
+
+        val newSelectedTab1: TabSessionState = mockk(relaxed = true)
+        val newSelectedTab2: TabSessionState = mockk(relaxed = true)
+        val newSelectedTab3: TabSessionState = mockk(relaxed = true)
+
+        every { newSelectedTab1.source } returns SessionState.Source.ACTION_SEARCH
+        every { newSelectedTab2.source } returns SessionState.Source.ACTION_SEND
+        every { newSelectedTab3.source } returns SessionState.Source.ACTION_VIEW
+
+        addAndSelectTab(newSelectedTab1)
+        verify(exactly = 0) { onboarding.finish() }
+
+        addAndSelectTab(newSelectedTab2)
+        verify(exactly = 0) { onboarding.finish() }
+
+        addAndSelectTab(newSelectedTab3)
+        verify(exactly = 0) { onboarding.finish() }
+    }
+
+    @Test
+    fun `GIVEN the onboarding is not finished WHEN visiting an link after redirect THEN the onboarding is not dismissed `() {
+        every { onboarding.userHasBeenOnboarded() } returns false
+
+        val newSelectedTab: TabSessionState = mockk(relaxed = true)
+        every { newSelectedTab.content.loadRequest?.triggeredByRedirect } returns true
+
+        browserFragment.observeTabSource(store)
+        addAndSelectTab(newSelectedTab)
+
+        verify(exactly = 0) { onboarding.finish() }
     }
 
     private fun addAndSelectTab(tab: TabSessionState) {

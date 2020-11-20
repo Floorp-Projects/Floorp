@@ -176,7 +176,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
     protected var webAppToolbarShouldBeVisible = true
 
     private val sharedViewModel: SharedViewModel by activityViewModels()
-    private val onboarding by lazy { FenixOnboarding(requireContext()) }
+
+    @VisibleForTesting
+    internal val onboarding by lazy { FenixOnboarding(requireContext()) }
 
     @CallSuper
     override fun onCreateView(
