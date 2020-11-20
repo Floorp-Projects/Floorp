@@ -7,6 +7,7 @@ package mozilla.components.service.nimbus
 import android.content.Context
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.pm.PackageInfoCompat
@@ -70,15 +71,26 @@ private const val EXPERIMENT_COLLECTION_NAME = "nimbus-mobile-experiments"
 private const val NIMBUS_DATA_DIR: String = "nimbus_data"
 
 /**
- * A singleton implementation of the [NimbusApi] interface backed by the Nimbus SDK.
+ * This class allows client apps to configure Nimbus to point to your own server.
+ * Client app developers should set up their own Nimbus infrastructure, to avoid different
+ * organizations running conflicting experiments or hitting servers with extra network traffic.
  */
-class Nimbus : NimbusApi {
+data class NimbusServerSettings(
+    val url: Uri
+)
+
+/**
+ * A implementation of the [NimbusApi] interface backed by the Nimbus SDK.
+ */
+class Nimbus(
+    context: Context,
+    server: NimbusServerSettings?
+) : NimbusApi {
     // Using a single threaded executor here to enforce synchronization where needed.
     private val scope: CoroutineScope =
         CoroutineScope(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
 
-    private lateinit var nimbus: NimbusClientInterface
-    private lateinit var dataDir: File
+    private val nimbus: NimbusClientInterface
     private var onExperimentUpdated: ((List<EnrolledExperiment>) -> Unit)? = null
 
     private var isInitialized = false
@@ -87,15 +99,51 @@ class Nimbus : NimbusApi {
         get() = nimbus.getGlobalUserParticipation()
         set(active) = nimbus.setGlobalUserParticipation(active)
 
+    init {
+        // Set the name of the native library so that we use
+        // the appservices megazord for compiled code.
+        System.setProperty(
+            "uniffi.component.nimbus.libraryOverride",
+            System.getProperty("mozilla.appservices.megazord.library", "megazord")
+        )
+
+        // Build Nimbus AppContext object to pass into initialize
+        val experimentContext = buildExperimentContext(context)
+
+        // Build a File object to represent the data directory for Nimbus data
+        val dataDir = File(context.applicationInfo.dataDir, NIMBUS_DATA_DIR)
+
+        // Initialize Nimbus
+        val remoteSettingsConfig = server?.let {
+            RemoteSettingsConfig(
+                serverUrl = server.url.toString(),
+                bucketName = EXPERIMENT_BUCKET_NAME,
+                collectionName = EXPERIMENT_COLLECTION_NAME
+            )
+        }
+        // We'll temporarily use this until the Nimbus SDK supports null servers
+        // https://github.com/mozilla/nimbus-sdk/pull/66 is landed, so this is the next release of
+        // Nimbus SDK.
+        ?: RemoteSettingsConfig(
+            serverUrl = "https://settings.stage.mozaws.net",
+            bucketName = EXPERIMENT_BUCKET_NAME,
+            collectionName = EXPERIMENT_COLLECTION_NAME
+        )
+
+        nimbus = NimbusClient(
+            experimentContext,
+            dataDir.path,
+            remoteSettingsConfig,
+            // The "dummy" field here is required for obscure reasons when generating code on desktop,
+            // so we just automatically set it to a dummy value.
+            AvailableRandomizationUnits(clientId = null, dummy = 0)
+        )
+    }
+
     /**
      * Initialize the Nimbus SDK library.
      *
      * This should only be initialized once by the application.
-     *
-     * @param context [Context] to access application and device parameters.  As we cannot enforce
-     * through the compiler that the context pass to the initialize function is a Application
-     * Context, there could potentially be a memory leak if the initializing application doesn't
-     * comply.
      *
      * @param onExperimentUpdated callback that will be executed when the list of experiments has
      * been updated from the experiments endpoint and evaluated by the Nimbus-SDK. This is meant to
@@ -105,40 +153,14 @@ class Nimbus : NimbusApi {
      * is enrolled.
      */
     fun initialize(
-        context: Context,
         onExperimentUpdated: ((activeExperiments: List<EnrolledExperiment>) -> Unit)? = null
     ) {
-        // Set the name of the native library so that we use
-        // the appservices megazord for compiled code.
-        System.setProperty(
-            "uniffi.component.nimbus.libraryOverride",
-            System.getProperty("mozilla.appservices.megazord.library", "megazord")
-        )
-
         this.onExperimentUpdated = onExperimentUpdated
-
-        // Build Nimbus AppContext object to pass into initialize
-        val experimentContext = buildExperimentContext(context)
-
-        // Build a File object to represent the data directory for Nimbus data
-        dataDir = File(context.applicationInfo.dataDir, NIMBUS_DATA_DIR)
-
-        // Initialize Nimbus
-        nimbus = NimbusClient(
-            experimentContext,
-            dataDir.path,
-            RemoteSettingsConfig(
-                serverUrl = context.resources.getString(R.string.nimbus_default_endpoint),
-                bucketName = EXPERIMENT_BUCKET_NAME,
-                collectionName = EXPERIMENT_COLLECTION_NAME
-            ),
-            // The "dummy" field here is required for obscure reasons when generating code on desktop,
-            // so we just automatically set it to a dummy value.
-            AvailableRandomizationUnits(clientId = null, dummy = 0)
-        )
 
         // Do initialization off of the main thread
         scope.launch {
+            nimbus.updateExperiments()
+
             // Get experiments
             val activeExperiments = nimbus.getActiveExperiments()
 

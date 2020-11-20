@@ -6,11 +6,14 @@ package org.mozilla.samples.glean
 
 import android.app.Application
 import android.content.Intent
+import android.net.Uri
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
 import mozilla.components.service.nimbus.Nimbus
+import mozilla.components.service.nimbus.NimbusApi
+import mozilla.components.service.nimbus.NimbusServerSettings
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.rusthttp.RustHttpConfig
@@ -23,9 +26,7 @@ import org.mozilla.samples.glean.GleanMetrics.Pings
 class GleanApplication : Application() {
 
     companion object {
-        val nimbus: Nimbus by lazy {
-            Nimbus()
-        }
+        lateinit var nimbus: NimbusApi
     }
 
     override fun onCreate() {
@@ -64,10 +65,15 @@ class GleanApplication : Application() {
     private fun initNimbus() {
         RustLog.enable()
         RustHttpConfig.setClient(lazy { HttpURLConnectionClient() })
-        nimbus.initialize(this) {
-            val intent = Intent()
-            intent.action = "org.mozilla.samples.glean.experiments.updated"
-            sendBroadcast(intent)
+        val url = Uri.parse(getString(R.string.nimbus_default_endpoint))
+        nimbus = Nimbus(this,
+            NimbusServerSettings(url)
+        ).also { nimbus ->
+            nimbus.initialize {
+                val intent = Intent()
+                intent.action = "org.mozilla.samples.glean.experiments.updated"
+                sendBroadcast(intent)
+            }
         }
     }
 }
