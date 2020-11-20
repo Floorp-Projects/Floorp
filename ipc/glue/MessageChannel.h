@@ -899,8 +899,8 @@ struct IPCMarker {
     using namespace mozilla::ipc;
     // This payload still streams a startTime and endTime property because it
     // made the migration to MarkerTiming on the front-end easier.
-    mozilla::baseprofiler::WritePropertyTime(aWriter, "startTime", aStart);
-    mozilla::baseprofiler::WritePropertyTime(aWriter, "endTime", aEnd);
+    aWriter.TimeProperty("startTime", aStart);
+    aWriter.TimeProperty("endTime", aEnd);
 
     aWriter.IntProperty("otherPid", aOtherPid);
     aWriter.IntProperty("messageSeqno", aMessageSeqno);

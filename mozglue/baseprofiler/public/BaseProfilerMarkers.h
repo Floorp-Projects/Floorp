@@ -106,17 +106,6 @@ inline ProfileBufferBlockIndex AddMarker(const ProfilerString8View& aName,
   return AddMarker(aName, aCategory, std::move(aOptions), markers::NoPayload{});
 }
 
-// Marker types' StreamJSONMarkerData functions should use this to correctly
-// output timestamps as a JSON property.
-inline void WritePropertyTime(JSONWriter& aWriter,
-                              const Span<const char>& aName,
-                              const TimeStamp& aTime) {
-  if (!aTime.IsNull()) {
-    aWriter.DoubleProperty(
-        aName, (aTime - TimeStamp::ProcessCreation()).ToMilliseconds());
-  }
-}
-
 }  // namespace mozilla::baseprofiler
 
 // Same as `AddMarker()` (without payload). This macro is safe to use even if
