@@ -80,8 +80,6 @@ StoreBuffer::StoreBuffer(JSRuntime* rt, const Nursery& nursery)
       nursery_(nursery),
       aboutToOverflow_(false),
       enabled_(false),
-      cancelIonCompilations_(false),
-      hasTypeSetPointers_(false),
       mayHavePointersToDeadCells_(false)
 #ifdef DEBUG
       ,
@@ -134,8 +132,6 @@ void StoreBuffer::clear() {
   }
 
   aboutToOverflow_ = false;
-  cancelIonCompilations_ = false;
-  hasTypeSetPointers_ = false;
   mayHavePointersToDeadCells_ = false;
 
   bufferVal.clear();

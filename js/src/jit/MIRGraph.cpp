@@ -35,7 +35,6 @@ MIRGenerator::MIRGenerator(CompileRealm* realm,
       needsStaticStackAlignment_(false),
       instrumentedProfiling_(false),
       instrumentedProfilingIsCached_(false),
-      safeForMinorGC_(true),
       stringsCanBeInNursery_(realm ? realm->zone()->canNurseryAllocateStrings()
                                    : false),
       bigIntsCanBeInNursery_(realm ? realm->zone()->canNurseryAllocateBigInts()

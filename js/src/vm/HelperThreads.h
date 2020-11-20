@@ -134,13 +134,9 @@ struct ZonesInState {
   JSRuntime* runtime;
   JS::shadow::Zone::GCState state;
 };
-struct CompilationsUsingNursery {
-  JSRuntime* runtime;
-};
 
-using CompilationSelector =
-    mozilla::Variant<JSScript*, JS::Realm*, JS::Zone*, ZonesInState, JSRuntime*,
-                     CompilationsUsingNursery>;
+using CompilationSelector = mozilla::Variant<JSScript*, JS::Realm*, JS::Zone*,
+                                             ZonesInState, JSRuntime*>;
 
 /*
  * Cancel scheduled or in progress Ion compilations.
@@ -166,11 +162,6 @@ inline void CancelOffThreadIonCompile(JSRuntime* runtime,
 
 inline void CancelOffThreadIonCompile(JSRuntime* runtime) {
   CancelOffThreadIonCompile(CompilationSelector(runtime));
-}
-
-inline void CancelOffThreadIonCompilesUsingNurseryPointers(JSRuntime* runtime) {
-  CancelOffThreadIonCompile(
-      CompilationSelector(CompilationsUsingNursery{runtime}));
 }
 
 #ifdef DEBUG

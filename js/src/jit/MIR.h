@@ -999,23 +999,20 @@ class MUseDefIterator {
   MDefinition* def() const { return current_->consumer()->toDefinition(); }
 };
 
-#ifdef DEBUG
-bool IonCompilationCanUseNurseryPointers();
-#endif
-
-// Helper class to check that GC pointers embedded in MIR instructions are in
-// in the nursery only when the store buffer has been marked as needing to
-// cancel all ion compilations. Otherwise, off-thread Ion compilation and
-// nursery GCs can happen in parallel, so it's invalid to store pointers to
-// nursery things. There's no need to root these pointers, as GC is suppressed
-// during compilation and off-thread compilations are canceled on major GCs.
+// Helper class to check that GC pointers embedded in MIR instructions are not
+// in the nursery. Off-thread compilation and nursery GCs can happen in
+// parallel. Nursery pointers are handled with MNurseryObject and the
+// nurseryObjects lists in WarpSnapshot and IonScript.
+//
+// These GC things are rooted through the WarpSnapshot. Compacting GCs cancel
+// off-thread compilations.
 template <typename T>
 class CompilerGCPointer {
   js::gc::Cell* ptr_;
 
  public:
   explicit CompilerGCPointer(T ptr) : ptr_(ptr) {
-    MOZ_ASSERT_IF(IsInsideNursery(ptr), IonCompilationCanUseNurseryPointers());
+    MOZ_ASSERT(!IsInsideNursery(ptr));
     MOZ_ASSERT_IF(!CurrentThreadIsIonCompiling(), TlsContext.get()->suppressGC);
   }
 

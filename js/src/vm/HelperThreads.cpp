@@ -303,7 +303,6 @@ static JSRuntime* GetSelectorRuntime(const CompilationSelector& selector) {
     JSRuntime* operator()(Zone* zone) { return zone->runtimeFromMainThread(); }
     JSRuntime* operator()(ZonesInState zbs) { return zbs.runtime; }
     JSRuntime* operator()(JSRuntime* runtime) { return runtime; }
-    JSRuntime* operator()(CompilationsUsingNursery cun) { return cun.runtime; }
   };
 
   return selector.match(Matcher());
@@ -316,9 +315,6 @@ static bool JitDataStructuresExist(const CompilationSelector& selector) {
     bool operator()(Zone* zone) { return !!zone->jitZone(); }
     bool operator()(ZonesInState zbs) { return zbs.runtime->hasJitRuntime(); }
     bool operator()(JSRuntime* runtime) { return runtime->hasJitRuntime(); }
-    bool operator()(CompilationsUsingNursery cun) {
-      return cun.runtime->hasJitRuntime();
-    }
   };
 
   return selector.match(Matcher());
@@ -340,10 +336,6 @@ static bool IonCompileTaskMatches(const CompilationSelector& selector,
     bool operator()(ZonesInState zbs) {
       return zbs.runtime == task_->script()->runtimeFromAnyThread() &&
              zbs.state == task_->script()->zoneFromAnyThread()->gcState();
-    }
-    bool operator()(CompilationsUsingNursery cun) {
-      return cun.runtime == task_->script()->runtimeFromAnyThread() &&
-             !task_->mirGen().safeForMinorGC();
     }
   };
 

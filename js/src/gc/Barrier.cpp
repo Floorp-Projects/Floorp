@@ -65,11 +65,6 @@ bool CurrentThreadIsIonCompiling() {
   return jcx && jcx->inIonBackend();
 }
 
-bool CurrentThreadIsIonCompilingSafeForMinorGC() {
-  jit::JitContext* jcx = jit::MaybeGetJitContext();
-  return jcx && jcx->inIonBackendSafeForMinorGC();
-}
-
 bool CurrentThreadIsGCMarking() {
   JSContext* cx = MaybeGetJSContext();
   return cx && cx->gcUse == JSContext::GCUse::Marking;

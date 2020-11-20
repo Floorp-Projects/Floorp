@@ -896,25 +896,6 @@ MConstant* MConstant::NewObject(TempAllocator& alloc, JSObject* v) {
   return new (alloc) MConstant(v);
 }
 
-#ifdef DEBUG
-
-bool jit::IonCompilationCanUseNurseryPointers() {
-  // If we are doing backend compilation, which could occur on a helper
-  // thread but might actually be on the main thread, check the flag set on
-  // the JSContext by AutoEnterIonCompilation.
-  if (CurrentThreadIsIonCompiling()) {
-    return !CurrentThreadIsIonCompilingSafeForMinorGC();
-  }
-
-  // Otherwise, we must be on the main thread during MIR construction. The
-  // store buffer must have been notified that minor GCs must cancel pending
-  // or in progress Ion compilations.
-  JSRuntime* rt = TlsContext.get()->zone()->runtimeFromMainThread();
-  return rt->gc.storeBuffer().cancelIonCompilations();
-}
-
-#endif  // DEBUG
-
 MConstant::MConstant(TempAllocator& alloc, const js::Value& vp)
     : MNullaryInstruction(classOpcode) {
   setResultType(MIRTypeFromValue(vp));
@@ -942,16 +923,12 @@ MConstant::MConstant(TempAllocator& alloc, const js::Value& vp)
       payload_.sym = vp.toSymbol();
       break;
     case MIRType::BigInt:
-      MOZ_ASSERT_IF(IsInsideNursery(vp.toBigInt()),
-                    IonCompilationCanUseNurseryPointers());
+      MOZ_ASSERT(!IsInsideNursery(vp.toBigInt()));
       payload_.bi = vp.toBigInt();
       break;
     case MIRType::Object:
+      MOZ_ASSERT(!IsInsideNursery(&vp.toObject()));
       payload_.obj = &vp.toObject();
-      // Create a singleton type set for the object. This isn't necessary for
-      // other types as the result type encodes all needed information.
-      MOZ_ASSERT_IF(IsInsideNursery(&vp.toObject()),
-                    IonCompilationCanUseNurseryPointers());
       break;
     case MIRType::MagicOptimizedArguments:
     case MIRType::MagicOptimizedOut:
@@ -967,7 +944,7 @@ MConstant::MConstant(TempAllocator& alloc, const js::Value& vp)
 }
 
 MConstant::MConstant(JSObject* obj) : MNullaryInstruction(classOpcode) {
-  MOZ_ASSERT_IF(IsInsideNursery(obj), IonCompilationCanUseNurseryPointers());
+  MOZ_ASSERT(!IsInsideNursery(obj));
   setResultType(MIRType::Object);
   payload_.obj = obj;
   setMovable();
