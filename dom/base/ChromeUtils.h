@@ -83,7 +83,7 @@ class ChromeUtils {
                             const nsAString& aMessage);
 
   static void AddProfilerMarker(GlobalObject& aGlobal, const nsACString& aName,
-                                const Optional<DOMHighResTimeStamp>& aStartTime,
+                                const ProfilerMarkerOptionsOrDouble& aOptions,
                                 const Optional<nsACString>& text);
 
   static void OriginAttributesToSuffix(
