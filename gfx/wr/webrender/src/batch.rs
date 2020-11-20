@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AlphaType, ClipMode, ExternalImageType, ImageRendering, ImageBufferKind};
+use api::{AlphaType, ClipMode, ExternalImageType, ImageRendering};
 use api::{FontInstanceFlags, YuvColorSpace, YuvFormat, ColorDepth, ColorRange, PremultipliedColorF};
 use api::units::*;
 use crate::clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItemKind, ClipStore};
@@ -26,7 +26,7 @@ use crate::prim_store::image::ImageSource;
 use crate::render_target::RenderTargetContext;
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraph};
 use crate::render_task::RenderTaskAddress;
-use crate::renderer::{BlendMode, ShaderColorMode};
+use crate::renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
 use crate::renderer::{BLOCKS_PER_UV_RECT, MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::{CacheItem, GlyphFetchResult, ImageProperties, ImageRequest, ResourceCache};
 use crate::space::SpaceMapper;
@@ -989,9 +989,6 @@ impl BatchBuilder {
                     );
                 }
 
-                // TODO: it would be less error-prone to get this info from the texture cache.
-                let image_buffer_kind = ImageBufferKind::Texture2D;
-
                 let non_segmented_blend_mode = if !common_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex
@@ -1009,7 +1006,7 @@ impl BatchBuilder {
                 };
 
                 let batch_params = BrushBatchParameters::instanced(
-                    BrushBatchKind::Image(image_buffer_kind),
+                    BrushBatchKind::Image(ImageBufferKind::Texture2DArray),
                     ImageBrushData {
                         color_mode: ShaderColorMode::Image,
                         alpha_type: AlphaType::PremultipliedAlpha,
@@ -3556,7 +3553,6 @@ pub fn get_buffer_kind(texture: TextureSource) -> ImageBufferKind {
                 }
             }
         }
-        TextureSource::TextureCache(..) => ImageBufferKind::Texture2D,
         _ => ImageBufferKind::Texture2DArray,
     }
 }
