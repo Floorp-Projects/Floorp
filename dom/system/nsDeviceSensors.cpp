@@ -195,15 +195,12 @@ static bool WindowCannotReceiveSensorEvent(nsPIDOMWindowInner* aWindow) {
   }
 
   nsPIDOMWindowOuter* windowOuter = aWindow->GetOuterWindow();
-  bool disabled =
-      windowOuter->IsBackground() || !windowOuter->IsTopLevelWindowActive();
-  if (disabled) {
+  BrowsingContext* topBC = aWindow->GetBrowsingContext()->Top();
+  if (windowOuter->IsBackground() || !topBC->GetIsActiveBrowserWindow()) {
     return true;
   }
 
   // Check to see if this window is a cross-origin iframe:
-
-  auto topBC = aWindow->GetBrowsingContext()->Top();
   if (!topBC->IsInProcess()) {
     return true;
   }

@@ -892,15 +892,6 @@ static bool AllDescendantsOfType(BrowsingContext* aParent,
   return true;
 }
 
-static bool ParentWindowIsActive(Document* aDoc) {
-  nsCOMPtr<nsPIWindowRoot> root = nsContentUtils::GetWindowRoot(aDoc);
-  if (root) {
-    nsPIDOMWindowOuter* rootWin = root->GetWindow();
-    return rootWin && rootWin->IsActive();
-  }
-  return false;
-}
-
 void nsFrameLoader::MaybeShowFrame() {
   nsIFrame* frame = GetPrimaryFrameOfOwningContent();
   if (frame) {
@@ -1090,15 +1081,20 @@ bool nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
       return false;
     }
 
+    if (BrowserHost* bh = mRemoteBrowser->AsBrowserHost()) {
+      RefPtr<BrowsingContext> bc = bh->GetBrowsingContext()->Top();
+
+      // Set to the current activation of the window.
+      bc->SetIsActiveBrowserWindow(bc->GetIsActiveBrowserWindow());
+    }
+
     nsCOMPtr<nsISupports> container = mOwnerContent->OwnerDoc()->GetContainer();
     nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
     nsCOMPtr<nsIWidget> mainWidget;
     baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
     nsSizeMode sizeMode =
         mainWidget ? mainWidget->SizeMode() : nsSizeMode_Normal;
-    OwnerShowInfo info(size, GetScrollbarPreference(mOwnerContent),
-                       ParentWindowIsActive(mOwnerContent->OwnerDoc()),
-                       sizeMode);
+    OwnerShowInfo info(size, GetScrollbarPreference(mOwnerContent), sizeMode);
     if (!mRemoteBrowser->Show(info)) {
       return false;
     }
@@ -1319,10 +1315,14 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
   otherBrowserParent->SetOwnerElement(ourContent);
 
   // Update window activation state for the swapped owner content.
-  Unused << browserParent->SendParentActivated(
-      ParentWindowIsActive(otherContent->OwnerDoc()));
-  Unused << otherBrowserParent->SendParentActivated(
-      ParentWindowIsActive(ourContent->OwnerDoc()));
+  bool ourActive = otherBc->GetIsActiveBrowserWindow();
+  bool otherActive = ourBc->GetIsActiveBrowserWindow();
+  if (ourBc->IsTop()) {
+    ourBc->SetIsActiveBrowserWindow(otherActive);
+  }
+  if (otherBc->IsTop()) {
+    otherBc->SetIsActiveBrowserWindow(ourActive);
+  }
 
   MaybeUpdatePrimaryBrowserParent(eBrowserParentChanged);
   aOther->MaybeUpdatePrimaryBrowserParent(eBrowserParentChanged);
