@@ -420,8 +420,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
                                       std::forward<Args>(args)...);
   }
 
-  void beginSweepTypes();
-
   bool hasMarkedRealms();
 
   void scheduleGC() {

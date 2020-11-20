@@ -62,56 +62,13 @@ bool js::ClassCanHaveExtraProperties(const JSClass* clasp) {
          clasp->getOpsGetProperty() || IsTypedArrayClass(clasp);
 }
 
-/////////////////////////////////////////////////////////////////////
-// Tracing
-/////////////////////////////////////////////////////////////////////
-
-static inline void AssertGCStateForSweep(Zone* zone) {
-  MOZ_ASSERT(zone->isGCSweepingOrCompacting());
-
-  // IsAboutToBeFinalized doesn't work right on tenured objects when called
-  // during a minor collection.
-  MOZ_ASSERT(!JS::RuntimeHeapIsMinorCollecting());
-}
-
-/* static */
-void JitScript::sweepTypes(const js::AutoSweepJitScript& sweep, Zone* zone) {
-  MOZ_ASSERT(typesGeneration() != zone->types.generation);
-  setTypesGeneration(zone->types.generation);
-
-  AssertGCStateForSweep(zone);
-}
-
 TypeZone::TypeZone(Zone* zone)
     : zone_(zone),
-      typeLifoAlloc_(zone, (size_t)TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
       currentCompilationId_(zone),
-      generation(zone, 0),
-      sweepTypeLifoAlloc(zone, (size_t)TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-      sweepingTypes(zone, false),
       keepJitScripts(zone, false),
       activeAnalysis(zone, nullptr) {}
 
-TypeZone::~TypeZone() {
-  MOZ_RELEASE_ASSERT(!sweepingTypes);
-  MOZ_ASSERT(!keepJitScripts);
-}
-
-void TypeZone::beginSweep() {
-  MOZ_ASSERT(zone()->isGCSweepingOrCompacting());
-  MOZ_ASSERT(
-      !zone()->runtimeFromMainThread()->gc.storeBuffer().hasTypeSetPointers());
-
-  // Clear the analysis pool, but don't release its data yet. While sweeping
-  // types any live data will be allocated into the pool.
-  sweepTypeLifoAlloc.ref().steal(&typeLifoAlloc());
-
-  generation = !generation;
-}
-
-void TypeZone::endSweep(JSRuntime* rt) {
-  rt->gc.queueAllLifoBlocksForFree(&sweepTypeLifoAlloc.ref());
-}
+TypeZone::~TypeZone() { MOZ_ASSERT(!keepJitScripts); }
 
 JS::ubi::Node::Size JS::ubi::Concrete<js::ObjectGroup>::size(
     mozilla::MallocSizeOf mallocSizeOf) const {

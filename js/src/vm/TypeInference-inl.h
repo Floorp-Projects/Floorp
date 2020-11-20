@@ -113,27 +113,6 @@ struct MOZ_RAII AutoEnterAnalysis {
   }
 };
 
-inline AutoSweepJitScript::AutoSweepJitScript(BaseScript* script)
-#ifdef DEBUG
-    : zone_(script->zone()),
-      jitScript_(script->maybeJitScript())
-#endif
-{
-  if (jit::JitScript* jitScript = script->maybeJitScript()) {
-    Zone* zone = script->zone();
-    if (jitScript->typesNeedsSweep(zone)) {
-      jitScript->sweepTypes(*this, zone);
-    }
-  }
-}
-
-#ifdef DEBUG
-inline AutoSweepJitScript::~AutoSweepJitScript() {
-  // This should still hold.
-  MOZ_ASSERT_IF(jitScript_, !jitScript_->typesNeedsSweep(zone_));
-}
-#endif
-
 }  // namespace js
 
 #endif /* vm_TypeInference_inl_h */
