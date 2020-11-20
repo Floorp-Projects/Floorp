@@ -300,9 +300,6 @@ class JSObject
   // called for an object that was just created.
   static inline bool setSingleton(JSContext* cx, js::HandleObject obj);
 
-  // Change an existing object to have a singleton group.
-  static bool changeToSingleton(JSContext* cx, js::HandleObject obj);
-
   static inline js::ObjectGroup* getGroup(JSContext* cx, js::HandleObject obj);
 
 #ifdef DEBUG

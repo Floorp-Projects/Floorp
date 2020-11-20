@@ -1993,11 +1993,6 @@ bool js::SetPrototypeForClonedFunction(JSContext* cx, HandleFunction fun,
   return true;
 }
 
-/* static */
-bool JSObject::changeToSingleton(JSContext* cx, HandleObject obj) {
-  MOZ_CRASH("TODO(no-TI): remove");
-}
-
 /**
  * Returns the original Object.prototype from the embedding-provided incumbent
  * global.

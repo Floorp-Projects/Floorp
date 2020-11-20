@@ -81,12 +81,7 @@ inline void NativeObject::clearShouldConvertDoubleElements() {
 inline void NativeObject::addDenseElementType(JSContext* cx, uint32_t index,
                                               const Value& val) {
   MOZ_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
-
-  if (!IsTypeInferenceEnabled()) {
-    return;
-  }
-
-  MOZ_CRASH("TODO(no-TI): remove");
+  // TODO(no-TI): remove.
 }
 
 inline void NativeObject::setDenseElementWithType(JSContext* cx, uint32_t index,

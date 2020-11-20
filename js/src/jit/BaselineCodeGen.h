@@ -256,7 +256,6 @@ class BaselineCodeGen {
   MOZ_MUST_USE bool emitEpilogue();
   MOZ_MUST_USE bool emitOutOfLinePostBarrierSlot();
   MOZ_MUST_USE bool emitStackCheck();
-  MOZ_MUST_USE bool emitArgumentTypeChecks();
   MOZ_MUST_USE bool emitDebugPrologue();
   MOZ_MUST_USE bool emitDebugEpilogue();
 

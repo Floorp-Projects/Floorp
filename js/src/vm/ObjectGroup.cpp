@@ -316,26 +316,6 @@ ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const JSClass* clasp,
     if (!JSObject::setDelegate(cx, protoObj)) {
       return nullptr;
     }
-
-    // Objects which are prototypes of one another should be singletons, so
-    // that their type information can be tracked more precisely. Limit
-    // this group change to plain objects, to avoid issues with other types
-    // of singletons like typed arrays.
-    if (protoObj->is<PlainObject>() && !protoObj->isSingleton() &&
-        IsTypeInferenceEnabled()) {
-      if (!JSObject::changeToSingleton(cx, protoObj)) {
-        return nullptr;
-      }
-
-      // |ReshapeForProtoMutation| ensures singletons will reshape when
-      // prototype is mutated so clear the UNCACHEABLE_PROTO flag.
-      if (protoObj->hasUncacheableProto()) {
-        HandleNativeObject nobj = protoObj.as<NativeObject>();
-        if (!NativeObject::clearFlag(cx, nobj, BaseShape::UNCACHEABLE_PROTO)) {
-          return nullptr;
-        }
-      }
-    }
   }
 
   ObjectGroupRealm::NewTable::AddPtr p = table->lookupForAdd(
@@ -471,11 +451,7 @@ ArrayObject* ObjectGroup::newArrayObject(JSContext* cx, const Value* vp,
     return obj;
   }
 
-  if (!IsTypeInferenceEnabled()) {
-    return NewDenseCopiedArray(cx, length, vp, nullptr, newKind);
-  }
-
-  MOZ_CRASH("TODO(no-TI): remove");
+  return NewDenseCopiedArray(cx, length, vp, nullptr, newKind);
 }
 
 static bool AddPlainObjectProperties(JSContext* cx, HandlePlainObject obj,
@@ -512,13 +488,7 @@ PlainObject* js::NewPlainObjectWithProperties(JSContext* cx,
 JSObject* ObjectGroup::newPlainObject(JSContext* cx, IdValuePair* properties,
                                       size_t nproperties,
                                       NewObjectKind newKind) {
-  // Watch for simple cases where we don't try to reuse plain object groups.
-  if (!IsTypeInferenceEnabled() || newKind == SingletonObject ||
-      nproperties == 0 || nproperties >= PropertyTree::MAX_HEIGHT) {
-    return NewPlainObjectWithProperties(cx, properties, nproperties, newKind);
-  }
-
-  MOZ_CRASH("TODO(no-TI): remove");
+  return NewPlainObjectWithProperties(cx, properties, nproperties, newKind);
 }
 
 /* static */
@@ -528,15 +498,11 @@ ObjectGroup* ObjectGroup::allocationSiteGroup(
   MOZ_ASSERT_IF(protoArg, kind == JSProto_Array);
   MOZ_ASSERT(cx->realm() == scriptArg->realm());
 
-  if (!IsTypeInferenceEnabled()) {
-    if (protoArg) {
-      return defaultNewGroup(cx, GetClassForProtoKey(kind),
-                             TaggedProto(protoArg));
-    }
-    return defaultNewGroup(cx, kind);
+  if (protoArg) {
+    return defaultNewGroup(cx, GetClassForProtoKey(kind),
+                           TaggedProto(protoArg));
   }
-
-  MOZ_CRASH("TODO(no-TI): remove");
+  return defaultNewGroup(cx, kind);
 }
 
 /* static */
@@ -544,14 +510,6 @@ ObjectGroup* ObjectGroup::callingAllocationSiteGroup(JSContext* cx,
                                                      JSProtoKey key,
                                                      HandleObject proto) {
   MOZ_ASSERT_IF(proto, key == JSProto_Array);
-
-  if (IsTypeInferenceEnabled()) {
-    jsbytecode* pc;
-    RootedScript script(cx, cx->currentScript(&pc));
-    if (script) {
-      return allocationSiteGroup(cx, script, pc, key, proto);
-    }
-  }
 
   if (proto) {
     return defaultNewGroup(cx, GetClassForProtoKey(key), TaggedProto(proto));

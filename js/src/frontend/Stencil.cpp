@@ -657,8 +657,6 @@ bool CompilationInfo::instantiateStencilsAfterPreparation(
     return false;
   }
 
-  MOZ_RELEASE_ASSERT(!IsTypeInferenceEnabled());
-
   if (!input.lazy) {
     if (!InstantiateScriptStencils(cx, *this, gcOutput)) {
       return false;

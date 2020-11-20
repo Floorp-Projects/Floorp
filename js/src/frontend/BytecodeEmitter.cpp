@@ -128,12 +128,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
       perScriptData_(cx, compilationInfo),
       compilationInfo(compilationInfo),
       compilationState(compilationState),
-      emitterMode(emitterMode) {
-  if (IsTypeInferenceEnabled() && sc->isFunctionBox()) {
-    // Functions have IC entries for type monitoring |this| and arguments.
-    bytecodeSection().setNumICEntries(sc->asFunctionBox()->nargs() + 1);
-  }
-}
+      emitterMode(emitterMode) {}
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                                  BCEParserHandle* handle, SharedContext* sc,
@@ -9733,22 +9728,9 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
 
 bool BytecodeEmitter::emitArrayLiteral(ListNode* array) {
   bool isSingleton = checkSingletonContext();
-  if (!array->hasNonConstInitializer() && array->head()) {
-    // If the array consists entirely of primitive values, make a
-    // template object with copy on write elements that can be reused
-    // every time the initializer executes. In non-singleton mode, don't do
-    // this if the array is small: copying the elements lazily is not worth it
-    // in that case.
-    // Note: for now we don't use COW arrays if TI is disabled. We probably need
-    // a BaseShape flag to optimize this better without TI. See bug 1626854.
-    static const size_t MinElementsForCopyOnWrite = 5;
-    if (IsTypeInferenceEnabled() &&
-        emitterMode != BytecodeEmitter::SelfHosting &&
-        (array->count() >= MinElementsForCopyOnWrite || isSingleton) &&
-        isArrayObjLiteralCompatible(array->head())) {
-      return emitObjLiteralArray(array->head(), /* isCow = */ !isSingleton);
-    }
-  }
+
+  // TODO(no-TI): remove COW arrays. See if we can use JSOp::Object for arrays
+  // again.
 
   return emitArray(array->head(), array->count(),
                    /* isInner = */ isSingleton);

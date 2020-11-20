@@ -148,14 +148,8 @@ inline bool IsIonEnabled(JSContext* cx) {
     return false;
   }
 
-  // If TI is disabled, Ion can only be used if WarpBuilder is enabled.
-  if (MOZ_LIKELY(IsTypeInferenceEnabled())) {
-    MOZ_ASSERT(!JitOptions.warpBuilder,
-               "Shouldn't enable WarpBuilder without disabling TI!");
-  } else {
-    if (!JitOptions.warpBuilder) {
-      return false;
-    }
+  if (!JitOptions.warpBuilder) {
+    return false;
   }
 
   if (MOZ_LIKELY(JitOptions.ion)) {

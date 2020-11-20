@@ -4217,8 +4217,6 @@ static JSObject* CloneInnerInterpretedFunction(
 
   MOZ_ASSERT(cloneScript->hasBytecode());
 
-  MOZ_RELEASE_ASSERT(!IsTypeInferenceEnabled());
-
   return clone;
 }
 

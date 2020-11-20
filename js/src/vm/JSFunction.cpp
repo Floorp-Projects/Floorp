@@ -650,8 +650,6 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
       return xdr->fail(JS::TranscodeResult_Throw);
     }
     objp.set(fun);
-
-    MOZ_RELEASE_ASSERT(!IsTypeInferenceEnabled());
   }
 
   if (xdrFlags & IsLazy) {

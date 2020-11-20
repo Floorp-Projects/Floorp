@@ -1420,59 +1420,15 @@ bool IonCacheIRCompiler::emitAllocateAndStoreDynamicSlot(
 
 static void EmitStoreDenseElement(MacroAssembler& masm,
                                   const ConstantOrRegister& value,
-                                  Register elements,
                                   BaseObjectElementIndex target) {
-  // If the ObjectElements::CONVERT_DOUBLE_ELEMENTS flag is set, int32 values
-  // have to be converted to double first. If the value is not int32, it can
-  // always be stored directly.
-
-  Address elementsFlags(elements, ObjectElements::offsetOfFlags());
   if (value.constant()) {
     Value v = value.value();
-    Label done;
-    if (IsTypeInferenceEnabled()) {
-      if (v.isInt32()) {
-        Label dontConvert;
-        masm.branchTest32(Assembler::Zero, elementsFlags,
-                          Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS),
-                          &dontConvert);
-        masm.storeValue(DoubleValue(v.toInt32()), target);
-        masm.jump(&done);
-        masm.bind(&dontConvert);
-      }
-    }
     masm.storeValue(v, target);
-    masm.bind(&done);
     return;
   }
 
   TypedOrValueRegister reg = value.reg();
-  if (!IsTypeInferenceEnabled() ||
-      (reg.hasTyped() && reg.type() != MIRType::Int32)) {
-    masm.storeTypedOrValue(reg, target);
-    return;
-  }
-
-  Label convert, storeValue, done;
-  masm.branchTest32(Assembler::NonZero, elementsFlags,
-                    Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS), &convert);
-  masm.bind(&storeValue);
   masm.storeTypedOrValue(reg, target);
-  masm.jump(&done);
-
-  masm.bind(&convert);
-  ScratchDoubleScope fpscratch(masm);
-  if (reg.hasValue()) {
-    masm.branchTestInt32(Assembler::NotEqual, reg.valueReg(), &storeValue);
-    masm.int32ValueToDouble(reg.valueReg(), fpscratch);
-    masm.boxDouble(fpscratch, target);
-  } else {
-    MOZ_ASSERT(reg.type() == MIRType::Int32);
-    masm.convertInt32ToDouble(reg.typedReg().gpr(), fpscratch);
-    masm.boxDouble(fpscratch, target);
-  }
-
-  masm.bind(&done);
 }
 
 static void EmitAssertNoCopyOnWriteElements(MacroAssembler& masm,
@@ -1547,7 +1503,7 @@ bool IonCacheIRCompiler::emitStoreDenseElement(ObjOperandId objId,
   masm.branchTestMagic(Assembler::Equal, element, failure->label());
 
   EmitPreBarrier(masm, element, MIRType::Value);
-  EmitStoreDenseElement(masm, val, scratch1, element);
+  EmitStoreDenseElement(masm, val, element);
   emitPostBarrierElement(obj, val, scratch1, index);
   return true;
 }
@@ -1649,7 +1605,7 @@ bool IonCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
   EmitPreBarrier(masm, element, MIRType::Value);
 
   masm.bind(&doStore);
-  EmitStoreDenseElement(masm, val, scratch1, element);
+  EmitStoreDenseElement(masm, val, element);
   emitPostBarrierElement(obj, val, scratch1, index);
   return true;
 }
