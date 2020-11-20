@@ -29,26 +29,6 @@
       let testURI = NetUtil.newURI(getHttpUrl("bug293235_p2.html"));
       let os = Cc["@mozilla.org/observer-service;1"].
                getService(Ci.nsIObserverService);
-      const URI_VISITED_RESOLUTION_TOPIC = "visited-status-resolution";
-      let observer = {
-        notified: false,
-        observe: function(aSubject, aTopic, aData)
-        {
-          if (!testURI.equals(aSubject.QueryInterface(Ci.nsIURI))) {
-            return;
-          }
-          is(aTopic, URI_VISITED_RESOLUTION_TOPIC, "Unexpected topic");
-          this.notified = true;
-
-          // Cleanup after ourselves...
-          os.removeObserver(this, URI_VISITED_RESOLUTION_TOPIC);
-        },
-      };
-      os.addObserver(observer, URI_VISITED_RESOLUTION_TOPIC);
-      function notified() {
-        return observer.notified;
-      }
-
       // Load a test page containing a link that should be initially
       // blue, per the :link style.
       await new Promise(resolve => {
@@ -56,11 +36,6 @@
           uri: getHttpUrl("bug293235.html"),
           onNavComplete: resolve,
         });
-      });
-
-      // Before we go any further, make sure our link has been notified.
-      await new Promise(resolve => {
-        waitForTrue(notified, resolve);
       });
 
       // Now that we've been notified, we can check our link color.
@@ -89,7 +64,7 @@
             resolve();
         }
 
-        // Because adding visits is async, we will not be notified imemdiately.
+        // Because adding visits is async, we will not be notified immediately.
         let visitObserver = {
           observe: function(aSubject, aTopic, aData)
           {
