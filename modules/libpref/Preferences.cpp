@@ -4386,10 +4386,21 @@ struct Internals {
   template <typename T>
   static void UpdateMirror(const char* aPref, void* aMirror) {
     StripAtomic<T> value;
-    // We disallow the deletion of mirrored prefs.
-    // This assertion is the only place where we enforce this.
-    MOZ_ALWAYS_SUCCEEDS(GetPrefValue(aPref, &value, PrefValueKind::User));
-    *static_cast<T*>(aMirror) = value;
+
+    nsresult rv = GetPrefValue(aPref, &value, PrefValueKind::User);
+    if (NS_SUCCEEDED(rv)) {
+      *static_cast<T*>(aMirror) = value;
+    } else {
+      // GetPrefValue() can fail if the update is caused by the pref being
+      // deleted or if it fails to make a cast. This assertion is the only place
+      // where we safeguard these. In this case the mirror variable will be
+      // untouched, thus keeping the value it had prior to the change.
+      // (Note that this case won't happen for a deletion via DeleteBranch()
+      // unless bug 343600 is fixed, but it will happen for a deletion via
+      // ClearUserPref().)
+      NS_WARNING(nsPrintfCString("Pref changed failure: %s\n", aPref).get());
+      MOZ_ASSERT(false);
+    }
   }
 
   template <typename T>
