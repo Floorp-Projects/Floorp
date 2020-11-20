@@ -381,12 +381,8 @@ template <ComparisonKind Kind>
 bool StringsCompare(JSContext* cx, HandleString lhs, HandleString rhs,
                     bool* res);
 
-MOZ_MUST_USE bool ArrayPopDense(JSContext* cx, HandleObject obj,
-                                MutableHandleValue rval);
 MOZ_MUST_USE bool ArrayPushDense(JSContext* cx, HandleArrayObject arr,
                                  HandleValue v, uint32_t* length);
-MOZ_MUST_USE bool ArrayShiftDense(JSContext* cx, HandleObject obj,
-                                  MutableHandleValue rval);
 JSString* ArrayJoin(JSContext* cx, HandleObject array, HandleString sep);
 MOZ_MUST_USE bool SetArrayLength(JSContext* cx, HandleObject obj,
                                  HandleValue value, bool strict);

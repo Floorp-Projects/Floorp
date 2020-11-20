@@ -4422,34 +4422,12 @@ class LFallibleStoreElementT : public LInstructionHelper<0, 4, 1> {
   const LDefinition* spectreTemp() { return getTemp(0); }
 };
 
-class LArrayPopShiftV : public LInstructionHelper<BOX_PIECES, 1, 2> {
+class LArrayPopShift : public LInstructionHelper<BOX_PIECES, 1, 2> {
  public:
-  LIR_HEADER(ArrayPopShiftV)
+  LIR_HEADER(ArrayPopShift)
 
-  LArrayPopShiftV(const LAllocation& object, const LDefinition& temp0,
-                  const LDefinition& temp1)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, object);
-    setTemp(0, temp0);
-    setTemp(1, temp1);
-  }
-
-  const char* extraName() const {
-    return mir()->mode() == MArrayPopShift::Pop ? "Pop" : "Shift";
-  }
-
-  const MArrayPopShift* mir() const { return mir_->toArrayPopShift(); }
-  const LAllocation* object() { return getOperand(0); }
-  const LDefinition* temp0() { return getTemp(0); }
-  const LDefinition* temp1() { return getTemp(1); }
-};
-
-class LArrayPopShiftT : public LInstructionHelper<1, 1, 2> {
- public:
-  LIR_HEADER(ArrayPopShiftT)
-
-  LArrayPopShiftT(const LAllocation& object, const LDefinition& temp0,
-                  const LDefinition& temp1)
+  LArrayPopShift(const LAllocation& object, const LDefinition& temp0,
+                 const LDefinition& temp1)
       : LInstructionHelper(classOpcode) {
     setOperand(0, object);
     setTemp(0, temp0);
