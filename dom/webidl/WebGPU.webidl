@@ -188,8 +188,8 @@ partial interface GPUDevice {
     //readonly attribute Promise<GPUDeviceLostInfo> lost;
     //void pushErrorScope(GPUErrorFilter filter);
     //Promise<GPUError?> popErrorScope();
-    //[Exposed=Window]
-    //attribute EventHandler onuncapturederror;
+    [Exposed=Window]
+    attribute EventHandler onuncapturederror;
 };
 
 // ****************************************************************************
