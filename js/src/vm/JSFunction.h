@@ -456,7 +456,7 @@ class JSFunction : public js::NativeObject {
   bool isIncomplete() const { return isInterpreted() && !u.scripted.s.script_; }
 
   JSScript* nonLazyScript() const {
-    MOZ_ASSERT(hasBaseScript());
+    MOZ_ASSERT(hasBytecode());
     MOZ_ASSERT(u.scripted.s.script_);
     return static_cast<JSScript*>(u.scripted.s.script_);
   }
