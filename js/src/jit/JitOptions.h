@@ -146,9 +146,6 @@ inline bool IsBaselineInterpreterEnabled() {
 }
 
 }  // namespace jit
-
-inline bool IsTypeInferenceEnabled() { return !jit::JitOptions.warpBuilder; }
-
 }  // namespace js
 
 #endif /* jit_JitOptions_h */

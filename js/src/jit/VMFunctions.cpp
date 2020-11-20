@@ -932,17 +932,7 @@ bool ArrayPushDense(JSContext* cx, HandleArrayObject arr, HandleValue v,
     return result == DenseElementResult::Success;
   }
 
-  // AutoDetectInvalidation uses GetTopJitJSScript(cx)->ionScript(), but it's
-  // possible the setOrExtendDenseElements call already invalidated the
-  // IonScript. JSJitFrameIter::ionScript works when the script is invalidated
-  // so we use that instead.
-  JSJitFrameIter frame(cx->activation()->asJit());
-  MOZ_ASSERT(frame.type() == FrameType::Exit);
-  ++frame;
-  IonScript* ionScript = frame.ionScript();
-
   JS::RootedValueArray<3> argv(cx);
-  AutoDetectInvalidation adi(cx, argv[0], ionScript);
   argv[0].setUndefined();
   argv[1].setObject(*arr);
   argv[2].set(v);
@@ -950,22 +940,9 @@ bool ArrayPushDense(JSContext* cx, HandleArrayObject arr, HandleValue v,
     return false;
   }
 
-  if (argv[0].isInt32()) {
-    *length = argv[0].toInt32();
-    return true;
-  }
-
-  // Without TI this should not happen, we should have bailed out before
-  // calling the VM function if we are about to overflow.
-  MOZ_ASSERT(IsTypeInferenceEnabled());
-
-  // array_push changed the length to be larger than INT32_MAX. In this case
-  // OBJECT_FLAG_LENGTH_OVERFLOW was set, TI invalidated the script, and the
-  // AutoDetectInvalidation instance on the stack will replace *length with
-  // the actual return value during bailout.
-  MOZ_ASSERT(adi.shouldSetReturnOverride());
-  MOZ_ASSERT(argv[0].toDouble() == double(INT32_MAX) + 1);
-  *length = 0;
+  // Length must fit in an int32 because we guard against overflow before
+  // calling this VM function.
+  *length = argv[0].toInt32();
   return true;
 }
 
