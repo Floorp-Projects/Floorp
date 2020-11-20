@@ -723,6 +723,28 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 #endif
 
     ////////////////////////////////////
+    // FEATURE_WEBRENDER_SOFTWARE - ALLOWLIST
+#ifdef NIGHTLY_BUILD
+    APPEND_TO_DRIVER_BLOCKLIST_EXT(
+        OperatingSystem::Linux, ScreenSizeStatus::SmallAndMedium,
+        BatteryStatus::All, DesktopEnvironment::All, WindowProtocol::All,
+        DriverVendor::NonMesaAll, DeviceFamily::All,
+        nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
+        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_COMPARISON_IGNORED,
+        V(0, 0, 0, 0), "FEATURE_ROLLOUT_NIGHTLY_SOFTWARE_WR_NON_MESA_S_M_SCRN",
+        "");
+
+    APPEND_TO_DRIVER_BLOCKLIST_EXT(
+        OperatingSystem::Linux, ScreenSizeStatus::SmallAndMedium,
+        BatteryStatus::All, DesktopEnvironment::All, WindowProtocol::All,
+        DriverVendor::HardwareMesaAll, DeviceFamily::All,
+        nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
+        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_COMPARISON_IGNORED,
+        V(0, 0, 0, 0), "FEATURE_ROLLOUT_NIGHTLY_SOFTWARE_WR_HW_MESA_S_M_SCRN",
+        "");
+#endif
+
+    ////////////////////////////////////
 
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
         OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
@@ -754,10 +776,24 @@ bool GfxInfo::DoesWindowProtocolMatch(const nsAString& aBlocklistWindowProtocol,
 
 bool GfxInfo::DoesDriverVendorMatch(const nsAString& aBlocklistVendor,
                                     const nsAString& aDriverVendor) {
-  if (mIsMesa && aBlocklistVendor.Equals(
-                     GfxDriverInfo::GetDriverVendor(DriverVendor::MesaAll),
-                     nsCaseInsensitiveStringComparator)) {
-    return true;
+  if (mIsMesa) {
+    if (aBlocklistVendor.Equals(
+            GfxDriverInfo::GetDriverVendor(DriverVendor::MesaAll),
+            nsCaseInsensitiveStringComparator)) {
+      return true;
+    }
+    if (mIsAccelerated &&
+        aBlocklistVendor.Equals(
+            GfxDriverInfo::GetDriverVendor(DriverVendor::HardwareMesaAll),
+            nsCaseInsensitiveStringComparator)) {
+      return true;
+    }
+    if (!mIsAccelerated &&
+        aBlocklistVendor.Equals(
+            GfxDriverInfo::GetDriverVendor(DriverVendor::SoftwareMesaAll),
+            nsCaseInsensitiveStringComparator)) {
+      return true;
+    }
   }
   if (!mIsMesa && aBlocklistVendor.Equals(
                       GfxDriverInfo::GetDriverVendor(DriverVendor::NonMesaAll),
