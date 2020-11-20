@@ -47,7 +47,7 @@
     },
     "followOnCookies": {
       "type": "array",
-      "title": "Follow-on Cookes",
+      "title": "Follow-on Cookies",
       "description": "An array of cookie details that are used to identify follow-on searches.",
       "items": {
         "type": "object",
