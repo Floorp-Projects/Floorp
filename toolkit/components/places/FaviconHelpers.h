@@ -42,9 +42,6 @@ class nsIPrincipal;
 // is far in the future.
 #define MAX_FAVICON_EXPIRATION ((PRTime)7 * 24 * 60 * 60 * PR_USEC_PER_SEC)
 
-// Whether there are unsupported payloads to convert yet.
-#define PREF_CONVERT_PAYLOADS "places.favicons.convertPayloads"
-
 namespace mozilla {
 namespace places {
 
@@ -296,30 +293,6 @@ class NotifyIconObservers final : public Runnable {
   nsMainThreadPtrHandle<nsIFaviconDataCallback> mCallback;
   IconData mIcon;
   PageData mPage;
-};
-
-/**
- * Fetches and converts unsupported payloads. This is used during the initial
- * migration of icons from the old to the new store.
- */
-class FetchAndConvertUnsupportedPayloads final : public Runnable {
- public:
-  NS_DECL_NSIRUNNABLE
-
-  /**
-   * Constructor.
-   *
-   * @param aDBConn
-   *        The database connection to use.
-   */
-  explicit FetchAndConvertUnsupportedPayloads(mozIStorageConnection* aDBConn);
-
- private:
-  nsresult ConvertPayload(int64_t aId, const nsACString& aMimeType,
-                          nsCString& aPayload, int32_t* aWidth);
-  nsresult StorePayload(int64_t aId, int32_t aWidth, const nsCString& aPayload);
-
-  nsCOMPtr<mozIStorageConnection> mDB;
 };
 
 /**

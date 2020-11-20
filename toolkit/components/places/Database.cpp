@@ -350,8 +350,6 @@ Database::Database()
       mDBPageSize(0),
       mDatabaseStatus(nsINavHistoryService::DATABASE_STATUS_OK),
       mClosed(false),
-      mShouldConvertIconPayloads(false),
-      mShouldVacuumIcons(false),
       mClientsShutdown(new ClientsShutdownBlocker()),
       mConnectionShutdown(new ConnectionShutdownBlocker(this)),
       mMaxUrlLength(0),
@@ -1096,16 +1094,8 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
   }
 
   auto guard = MakeScopeExit([&]() {
-    // This runs at the end of the migration, out of the transaction,
+    // These run at the end of the migration, out of the transaction,
     // regardless of its success.
-    if (mShouldVacuumIcons) {
-      mShouldVacuumIcons = false;
-      MOZ_ALWAYS_SUCCEEDS(mMainConn->ExecuteSimpleSQL("VACUUM favicons"_ns));
-    }
-    if (mShouldConvertIconPayloads) {
-      mShouldConvertIconPayloads = false;
-      nsFaviconService::ConvertUnsupportedPayloads(mMainConn);
-    }
     MigrateV52OriginFrecencies();
   });
 
@@ -1128,60 +1118,10 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
     if (currentSchemaVersion < DATABASE_SCHEMA_VERSION) {
       *aDatabaseMigrated = true;
 
-      if (currentSchemaVersion < 35) {
-        // These are versions older than Firefox 52 ESR that are not supported
+      if (currentSchemaVersion < 43) {
+        // These are versions older than Firefox 60 ESR that are not supported
         // anymore.  In this case it's safer to just replace the database.
         return NS_ERROR_FILE_CORRUPTED;
-      }
-
-      // Firefox 52 ESR uses schema version 35.
-
-      if (currentSchemaVersion < 36) {
-        rv = MigrateV36Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      if (currentSchemaVersion < 37) {
-        rv = MigrateV37Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      // Firefox 55 uses schema version 37.
-
-      if (currentSchemaVersion < 38) {
-        rv = MigrateV38Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      // Firefox 56 uses schema version 38.
-
-      if (currentSchemaVersion < 39) {
-        rv = MigrateV39Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      // Firefox 57 uses schema version 39. - This is a watershed version.
-
-      if (currentSchemaVersion < 40) {
-        rv = MigrateV40Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      if (currentSchemaVersion < 41) {
-        rv = MigrateV41Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      // Firefox 58 uses schema version 41.
-
-      if (currentSchemaVersion < 42) {
-        rv = MigrateV42Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      if (currentSchemaVersion < 43) {
-        rv = MigrateV43Up();
-        NS_ENSURE_SUCCESS(rv, rv);
       }
 
       // Firefox 60 uses schema version 43. - This is an ESR.
@@ -1234,6 +1174,7 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
       }
 
       // Firefox 62 uses schema version 52.
+      // Firefox 68 uses schema version 52. - This is an ESR.
 
       if (currentSchemaVersion < 53) {
         rv = MigrateV53Up();
@@ -1241,6 +1182,7 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
       }
 
       // Firefox 69 uses schema version 53
+      // Firefox 78 uses schema version 53 - This is an ESR.
 
       if (currentSchemaVersion < 54) {
         rv = MigrateV54Up();
@@ -1647,230 +1589,6 @@ nsresult Database::InitTempEntities() {
   return NS_OK;
 }
 
-nsresult Database::MigrateV36Up() {
-  // Add sync status and change counter tracking columns for bookmarks.
-  nsCOMPtr<mozIStorageStatement> syncStatusStmt;
-  nsresult rv =
-      mMainConn->CreateStatement("SELECT syncStatus FROM moz_bookmarks"_ns,
-                                 getter_AddRefs(syncStatusStmt));
-  if (NS_FAILED(rv)) {
-    // We default to SYNC_STATUS_UNKNOWN = 0 for existing bookmarks, matching
-    // the bookmark restore behavior. If Sync is set up, we'll update the status
-    // to SYNC_STATUS_NORMAL = 2 before the first post-migration sync.
-    rv = mMainConn->ExecuteSimpleSQL(
-        nsLiteralCString("ALTER TABLE moz_bookmarks "
-                         "ADD COLUMN syncStatus INTEGER DEFAULT 0 NOT NULL"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  nsCOMPtr<mozIStorageStatement> syncChangeCounterStmt;
-  rv = mMainConn->CreateStatement(
-      "SELECT syncChangeCounter FROM moz_bookmarks"_ns,
-      getter_AddRefs(syncChangeCounterStmt));
-  if (NS_FAILED(rv)) {
-    // The change counter starts at 1 for all local bookmarks. It's incremented
-    // for each modification that should trigger a sync, and decremented after
-    // the modified bookmark is uploaded to the server.
-    rv = mMainConn->ExecuteSimpleSQL(nsLiteralCString(
-        "ALTER TABLE moz_bookmarks "
-        "ADD COLUMN syncChangeCounter INTEGER DEFAULT 1 NOT NULL"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  nsCOMPtr<mozIStorageStatement> tombstoneTableStmt;
-  rv = mMainConn->CreateStatement("SELECT 1 FROM moz_bookmarks_deleted"_ns,
-                                  getter_AddRefs(tombstoneTableStmt));
-  if (NS_FAILED(rv)) {
-    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_BOOKMARKS_DELETED);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
-}
-
-nsresult Database::MigrateV37Up() {
-  // Move favicons to the new database.
-  // For now we retain the old moz_favicons table, but we empty it.
-  // This allows for a "safer" downgrade, even if icons will be lost in the
-  // process. In a couple versions we shall drop moz_favicons completely.
-
-  // First, check if the old favicons table still exists.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mMainConn->CreateStatement("SELECT url FROM moz_favicons"_ns,
-                                           getter_AddRefs(stmt));
-  if (NS_FAILED(rv)) {
-    // The table has already been removed, nothing to do.
-    return NS_OK;
-  }
-
-  // The new table accepts only png or svg payloads, so we set a valid width
-  // only for them, the mime-type for the others.  Later we will asynchronously
-  // try to convert the unsupported payloads, or remove them.
-
-  // Add pages.
-  rv = mMainConn->ExecuteSimpleSQL(nsLiteralCString(
-      "INSERT INTO moz_pages_w_icons (page_url, page_url_hash) "
-      "SELECT h.url, hash(h.url) "
-      "FROM moz_places h "
-      "JOIN moz_favicons f ON f.id = h.favicon_id"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  // Set icons as expired, so we will replace them with proper versions at the
-  // first load.
-  // Note: we use a peculiarity of Sqlite here, where the column affinity
-  // is not enforced, thanks to that we can store a string in an integer column.
-  rv = mMainConn->ExecuteSimpleSQL(nsLiteralCString(
-      "INSERT INTO moz_icons (icon_url, fixed_icon_url_hash, width, data) "
-      "SELECT url, hash(fixup_url(url)), "
-      "(CASE WHEN mime_type = 'image/png' THEN 16 "
-      "WHEN mime_type = 'image/svg+xml' THEN 65535 "
-      "ELSE mime_type END), "
-      "data FROM moz_favicons "
-      "WHERE LENGTH(data) > 0 "));
-  NS_ENSURE_SUCCESS(rv, rv);
-  // Create relations.
-  rv = mMainConn->ExecuteSimpleSQL(nsLiteralCString(
-      "INSERT OR IGNORE INTO moz_icons_to_pages (page_id, icon_id) "
-      "SELECT (SELECT id FROM moz_pages_w_icons "
-      "WHERE page_url_hash = h.url_hash "
-      "AND page_url = h.url), "
-      "(SELECT id FROM moz_icons "
-      "WHERE fixed_icon_url_hash = hash(fixup_url(f.url)) "
-      "AND icon_url = f.url) "
-      "FROM moz_favicons f "
-      "JOIN moz_places h on f.id = h.favicon_id"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  // Remove old favicons and relations.
-  rv = mMainConn->ExecuteSimpleSQL("DELETE FROM moz_favicons"_ns);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv =
-      mMainConn->ExecuteSimpleSQL("UPDATE moz_places SET favicon_id = NULL"_ns);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // The async favicons conversion will happen at the end of the normal schema
-  // migration.
-  mShouldConvertIconPayloads = true;
-
-  return NS_OK;
-}
-
-nsresult Database::MigrateV38Up() {
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mMainConn->CreateStatement(
-      "SELECT description, preview_image_url FROM moz_places"_ns,
-      getter_AddRefs(stmt));
-  if (NS_FAILED(rv)) {
-    rv = mMainConn->ExecuteSimpleSQL(
-        "ALTER TABLE moz_places ADD COLUMN description TEXT"_ns);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mMainConn->ExecuteSimpleSQL(nsLiteralCString(
-        "ALTER TABLE moz_places ADD COLUMN preview_image_url TEXT"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
-}
-
-nsresult Database::MigrateV39Up() {
-  // Create an index on dateAdded.
-  nsresult rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_BOOKMARKS_DATEADDED);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult Database::MigrateV40Up() {
-  // We are changing the hashing function to crop the hashed text to a maximum
-  // length, thus we must recalculate the hashes.
-  // Due to this, on downgrade some of these may not match, it should be limited
-  // to unicode and very long urls though.
-  nsresult rv = mMainConn->ExecuteSimpleSQL(
-      nsLiteralCString("UPDATE moz_places "
-                       "SET url_hash = hash(url) "
-                       "WHERE url_hash <> hash(url)"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mMainConn->ExecuteSimpleSQL(nsLiteralCString(
-      "UPDATE moz_icons "
-      "SET fixed_icon_url_hash = hash(fixup_url(icon_url)) "
-      "WHERE fixed_icon_url_hash <> hash(fixup_url(icon_url))"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mMainConn->ExecuteSimpleSQL(
-      nsLiteralCString("UPDATE moz_pages_w_icons "
-                       "SET page_url_hash = hash(page_url) "
-                       "WHERE page_url_hash <> hash(page_url)"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-
-nsresult Database::MigrateV41Up() {
-  // Remove old favicons entities.
-  nsresult rv = mMainConn->ExecuteSimpleSQL(
-      "DROP INDEX IF EXISTS moz_places_faviconindex"_ns);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mMainConn->ExecuteSimpleSQL("DROP TABLE IF EXISTS moz_favicons"_ns);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-
-nsresult Database::MigrateV42Up() {
-  // auto_vacuum of the favicons database was broken, we may have to set it
-  // again.
-  int32_t vacuum = 0;
-  {
-    nsCOMPtr<mozIStorageStatement> stmt;
-    nsresult rv = mMainConn->CreateStatement("PRAGMA favicons.auto_vacuum"_ns,
-                                             getter_AddRefs(stmt));
-    NS_ENSURE_SUCCESS(rv, rv);
-    bool hasResult = false;
-    if (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-      vacuum = stmt->AsInt32(0);
-    }
-  }
-  if (vacuum != 2) {
-    nsresult rv = mMainConn->ExecuteSimpleSQL(
-        "PRAGMA favicons.auto_vacuum = INCREMENTAL"_ns);
-    NS_ENSURE_SUCCESS(rv, rv);
-    // For the change to be effective, we must vacuum the database.
-    mShouldVacuumIcons = true;
-  }
-  return NS_OK;
-}
-
-nsresult Database::MigrateV43Up() {
-  // moz_keywords doesn't properly disallow multiple keyword for the same URI
-  // because for postData NULL != NULL. We should use an empty string instead.
-
-  // To avoid constraint failures, we must first remove duplicate keywords.
-  // This may cause a dataloss, but the only alternative would be to modify the
-  // related url, and that's far more complex.
-  nsresult rv =
-      mMainConn->ExecuteSimpleSQL(nsLiteralCString("DELETE FROM moz_keywords "
-                                                   "WHERE post_data ISNULL "
-                                                   "AND id NOT IN ( "
-                                                   "SELECT MAX(id) "
-                                                   "FROM moz_keywords "
-                                                   "WHERE post_data ISNULL "
-                                                   "GROUP BY place_id "
-                                                   ")"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  // We must recalculate foreign_count for all the touched places.
-  rv = mMainConn->ExecuteSimpleSQL(nsLiteralCString(
-      "UPDATE moz_places "
-      "SET foreign_count = (SELECT count(*) FROM moz_bookmarks WHERE fk = "
-      "moz_places.id) + "
-      "(SELECT count(*) FROM moz_keywords WHERE place_id = moz_places.id) "
-      "WHERE id IN (SELECT DISTINCT place_id FROM moz_keywords) "));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv =
-      mMainConn->ExecuteSimpleSQL(nsLiteralCString("UPDATE moz_keywords "
-                                                   "SET post_data = '' "
-                                                   "WHERE post_data ISNULL "));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
 nsresult Database::MigrateV44Up() {
   // We need to remove any non-builtin roots and their descendants.
 
@@ -2097,8 +1815,9 @@ nsresult Database::MigrateV48Up() {
   // From this point on, nobody should use moz_hosts again.  Empty it so that we
   // don't leak the user's history, but don't remove it yet so that the user can
   // downgrade.
-  rv = mMainConn->ExecuteSimpleSQL("DELETE FROM moz_hosts; "_ns);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // This can fail, if moz_hosts doesn't exist anymore, that is what happens in
+  // case of downgrade+upgrade.
+  Unused << mMainConn->ExecuteSimpleSQL("DELETE FROM moz_hosts; "_ns);
 
   return NS_OK;
 }
