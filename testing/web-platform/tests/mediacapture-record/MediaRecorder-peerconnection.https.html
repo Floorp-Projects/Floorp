@@ -18,12 +18,11 @@
 [{ kind: { video: true, audio: false }, mimeType: "" },
  { kind: { video: false, audio: true }, mimeType: "" },
  { kind: { video: true, audio: true }, mimeType: "" },
- { kind: { video: false, audio: true }, mimeType: "video/webm;codecs=vp8" },
+ { kind: { video: false, audio: true }, mimeType: "audio/webm;codecs=opus" },
  { kind: { video: true, audio: false }, mimeType: "video/webm;codecs=vp8" },
- { kind: { video: true, audio: true }, mimeType: "video/webm;codecs=vp8" },
- { kind: { video: false, audio: true }, mimeType: "video/webm;codecs=vp9" },
+ { kind: { video: true, audio: true }, mimeType: "video/webm;codecs=vp8,opus" },
  { kind: { video: true, audio: false }, mimeType: "video/webm;codecs=vp9" },
- { kind: { video: true, audio: true }, mimeType: "video/webm;codecs=vp9" }]
+ { kind: { video: true, audio: true }, mimeType: "video/webm;codecs=vp9,opus" }]
   .forEach(args => {
     const formatString = JSON.stringify(args.kind) +
         " with format " + (args.mimeType ? args.mimeType : "[passthrough]") + ".";
