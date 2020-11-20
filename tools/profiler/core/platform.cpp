@@ -5494,8 +5494,8 @@ void profiler_add_network_marker(
         const ProfilerString8View& aContentType) {
       // This payload still streams a startTime and endTime property because it
       // made the migration to MarkerTiming on the front-end easier.
-      baseprofiler::WritePropertyTime(aWriter, "startTime", aStart);
-      baseprofiler::WritePropertyTime(aWriter, "endTime", aEnd);
+      aWriter.TimeProperty("startTime", aStart);
+      aWriter.TimeProperty("endTime", aEnd);
 
       aWriter.IntProperty("id", aID);
       aWriter.StringProperty("status", GetNetworkState(aType));
@@ -5522,24 +5522,16 @@ void profiler_add_network_marker(
       }
 
       if (aType != NetworkLoadType::LOAD_START) {
-        baseprofiler::WritePropertyTime(aWriter, "domainLookupStart",
-                                        aTimings.domainLookupStart);
-        baseprofiler::WritePropertyTime(aWriter, "domainLookupEnd",
-                                        aTimings.domainLookupEnd);
-        baseprofiler::WritePropertyTime(aWriter, "connectStart",
-                                        aTimings.connectStart);
-        baseprofiler::WritePropertyTime(aWriter, "tcpConnectEnd",
-                                        aTimings.tcpConnectEnd);
-        baseprofiler::WritePropertyTime(aWriter, "secureConnectionStart",
-                                        aTimings.secureConnectionStart);
-        baseprofiler::WritePropertyTime(aWriter, "connectEnd",
-                                        aTimings.connectEnd);
-        baseprofiler::WritePropertyTime(aWriter, "requestStart",
-                                        aTimings.requestStart);
-        baseprofiler::WritePropertyTime(aWriter, "responseStart",
-                                        aTimings.responseStart);
-        baseprofiler::WritePropertyTime(aWriter, "responseEnd",
-                                        aTimings.responseEnd);
+        aWriter.TimeProperty("domainLookupStart", aTimings.domainLookupStart);
+        aWriter.TimeProperty("domainLookupEnd", aTimings.domainLookupEnd);
+        aWriter.TimeProperty("connectStart", aTimings.connectStart);
+        aWriter.TimeProperty("tcpConnectEnd", aTimings.tcpConnectEnd);
+        aWriter.TimeProperty("secureConnectionStart",
+                             aTimings.secureConnectionStart);
+        aWriter.TimeProperty("connectEnd", aTimings.connectEnd);
+        aWriter.TimeProperty("requestStart", aTimings.requestStart);
+        aWriter.TimeProperty("responseStart", aTimings.responseStart);
+        aWriter.TimeProperty("responseEnd", aTimings.responseEnd);
       }
     }
     static MarkerSchema MarkerTypeDisplay() {
