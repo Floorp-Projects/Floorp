@@ -22,6 +22,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/IonScript.h"
 #include "jit/JitScript.h"
+#include "jit/JitZone.h"
 #include "js/HeapAPI.h"
 #include "util/DiagnosticAssertions.h"
 #include "vm/ArrayObject.h"
@@ -42,43 +43,6 @@
 #include "vm/ObjectGroup-inl.h"
 
 namespace js {
-
-/////////////////////////////////////////////////////////////////////
-// RecompileInfo
-/////////////////////////////////////////////////////////////////////
-
-jit::IonScript* RecompileInfo::maybeIonScriptToInvalidate(
-    const TypeZone& zone) const {
-  MOZ_ASSERT(script_->zone() == zone.zone());
-
-  // Make sure this is not called under CodeGenerator::link (before the
-  // IonScript is created).
-  MOZ_ASSERT_IF(zone.currentCompilationId(),
-                zone.currentCompilationId().ref() != id_);
-
-  if (!script_->hasIonScript() ||
-      script_->ionScript()->compilationId() != id_) {
-    return nullptr;
-  }
-
-  return script_->ionScript();
-}
-
-inline bool RecompileInfo::shouldSweep(const TypeZone& zone) {
-  if (IsAboutToBeFinalizedUnbarriered(&script_)) {
-    return true;
-  }
-
-  MOZ_ASSERT(script_->zone() == zone.zone());
-
-  // Don't sweep if we're called under CodeGenerator::link, before the
-  // IonScript is created.
-  if (zone.currentCompilationId() && zone.currentCompilationId().ref() == id_) {
-    return false;
-  }
-
-  return maybeIonScriptToInvalidate(zone) == nullptr;
-}
 
 class MOZ_RAII AutoSuppressAllocationMetadataBuilder {
   JS::Zone* zone;
@@ -111,9 +75,6 @@ struct MOZ_RAII AutoEnterAnalysis {
   // Prevent GC activity in the middle of analysis.
   gc::AutoSuppressGC suppressGC;
 
-  // Pending recompilations to perform before execution of JIT code can resume.
-  RecompileInfoVector pendingRecompiles;
-
   // Prevent us from calling the objectMetadataCallback.
   js::AutoSuppressAllocationMetadataBuilder suppressMetadata;
 
@@ -136,10 +97,6 @@ struct MOZ_RAII AutoEnterAnalysis {
     }
 
     zone->types.activeAnalysis = nullptr;
-
-    if (!pendingRecompiles.empty()) {
-      zone->types.processPendingRecompiles(freeOp, pendingRecompiles);
-    }
   }
 
  private:

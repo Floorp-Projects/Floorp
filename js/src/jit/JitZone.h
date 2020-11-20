@@ -19,6 +19,7 @@
 #include "gc/Barrier.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/ICStubSpace.h"
+#include "jit/Invalidation.h"
 #include "js/AllocPolicy.h"
 #include "js/GCHashTable.h"
 #include "js/HashTable.h"
@@ -98,6 +99,12 @@ class JitZone {
   // Executable allocator for all code except wasm code.
   MainThreadData<ExecutableAllocator> execAlloc_;
 
+  // HashMap that maps scripts to compilations inlining those scripts.
+  using InlinedScriptMap =
+      GCHashMap<WeakHeapPtr<BaseScript*>, RecompileInfoVector,
+                MovableCellHasher<WeakHeapPtr<BaseScript*>>, SystemAllocPolicy>;
+  InlinedScriptMap inlinedCompilations_;
+
  public:
   void traceWeak(JSTracer* trc);
 
@@ -140,11 +147,19 @@ class JitZone {
 
   ExecutableAllocator& execAlloc() { return execAlloc_.ref(); }
   const ExecutableAllocator& execAlloc() const { return execAlloc_.ref(); }
-};
 
-// Called from Zone::discardJitCode().
-void InvalidateAll(JSFreeOp* fop, JS::Zone* zone);
-void FinishInvalidation(JSFreeOp* fop, JSScript* script);
+  MOZ_MUST_USE bool addInlinedCompilation(const RecompileInfo& info,
+                                          JSScript* inlined);
+
+  RecompileInfoVector* maybeInlinedCompilations(JSScript* inlined) {
+    auto p = inlinedCompilations_.lookup(inlined);
+    return p ? &p->value() : nullptr;
+  }
+
+  void removeInlinedCompilations(JSScript* inlined) {
+    inlinedCompilations_.remove(inlined);
+  }
+};
 
 }  // namespace jit
 }  // namespace js

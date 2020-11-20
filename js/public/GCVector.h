@@ -156,6 +156,24 @@ class GCVector {
     }
   }
 
+  bool traceWeak(JSTracer* trc) {
+    T* src = begin();
+    T* dst = begin();
+    while (src != end()) {
+      if (GCPolicy<T>::traceWeak(trc, src)) {
+        if (src != dst) {
+          *dst = std::move(*src);
+        }
+        dst++;
+      }
+      src++;
+    }
+
+    MOZ_ASSERT(dst <= end());
+    shrinkBy(end() - dst);
+    return !empty();
+  }
+
   bool needsSweep() const { return !this->empty(); }
 
   void sweep() {
