@@ -33,7 +33,7 @@ class MarionetteCommandsChild extends JSWindowActorChild {
     super();
 
     // sandbox storage and name of the current sandbox
-    this.sandboxes = new Sandboxes(() => this.contentWindow);
+    this.sandboxes = new Sandboxes(() => this.document.defaultView);
   }
 
   get innerWindowId() {
@@ -59,15 +59,15 @@ class MarionetteCommandsChild extends JSWindowActorChild {
 
     // Listen for click event to indicate one click has happened, so actions
     // code can send dblclick event
-    this.contentWindow.addEventListener(
+    this.document.defaultView.addEventListener(
       "click",
       event.DoubleClickTracker.setClick
     );
-    this.contentWindow.addEventListener(
+    this.document.defaultView.addEventListener(
       "dblclick",
       event.DoubleClickTracker.resetClick
     );
-    this.contentWindow.addEventListener(
+    this.document.defaultView.addEventListener(
       "unload",
       event.DoubleClickTracker.resetClick,
       true
@@ -79,7 +79,11 @@ class MarionetteCommandsChild extends JSWindowActorChild {
       let result;
 
       const { name, data: serializedData } = msg;
-      const data = evaluate.fromJSON(serializedData, null, this.contentWindow);
+      const data = evaluate.fromJSON(
+        serializedData,
+        null,
+        this.document.defaultView
+      );
 
       switch (name) {
         case "MarionetteCommandsParent:clearElement":
@@ -202,7 +206,7 @@ class MarionetteCommandsChild extends JSWindowActorChild {
     if (opts.sandboxName) {
       sb = this.sandboxes.get(opts.sandboxName, opts.newSandbox);
     } else {
-      sb = sandbox.createMutable(this.contentWindow);
+      sb = sandbox.createMutable(this.document.defaultView);
     }
 
     return evaluate.sandbox(sb, script, args, opts);
@@ -224,7 +228,7 @@ class MarionetteCommandsChild extends JSWindowActorChild {
 
     opts.all = false;
 
-    const container = { frame: this.contentWindow };
+    const container = { frame: this.document.defaultView };
     return element.find(container, strategy, selector, opts);
   }
 
@@ -244,7 +248,7 @@ class MarionetteCommandsChild extends JSWindowActorChild {
 
     opts.all = true;
 
-    const container = { frame: this.contentWindow };
+    const container = { frame: this.document.defaultView };
     return element.find(container, strategy, selector, opts);
   }
 
@@ -264,7 +268,7 @@ class MarionetteCommandsChild extends JSWindowActorChild {
    * Get the current URL.
    */
   async getCurrentUrl() {
-    return this.contentWindow.location.href;
+    return this.document.defaultView.location.href;
   }
 
   /**
@@ -299,8 +303,8 @@ class MarionetteCommandsChild extends JSWindowActorChild {
 
     const rect = elem.getBoundingClientRect();
     return {
-      x: rect.x + this.contentWindow.pageXOffset,
-      y: rect.y + this.contentWindow.pageYOffset,
+      x: rect.x + this.document.defaultView.pageXOffset,
+      y: rect.y + this.document.defaultView.pageYOffset,
       width: rect.width,
       height: rect.height,
     };
@@ -321,7 +325,7 @@ class MarionetteCommandsChild extends JSWindowActorChild {
   async getElementText(options = {}) {
     const { elem } = options;
 
-    return atom.getElementText(elem, this.contentWindow);
+    return atom.getElementText(elem, this.document.defaultView);
   }
 
   /**
@@ -330,7 +334,7 @@ class MarionetteCommandsChild extends JSWindowActorChild {
   async getElementValueOfCssProperty(options = {}) {
     const { name, elem } = options;
 
-    const style = this.contentWindow.getComputedStyle(elem);
+    const style = this.document.defaultView.getComputedStyle(elem);
     return style.getPropertyValue(name);
   }
 
@@ -364,7 +368,9 @@ class MarionetteCommandsChild extends JSWindowActorChild {
    */
   async getScreenshotRect(options = {}) {
     const { elem, full = true, scroll = true } = options;
-    const win = elem ? this.contentWindow : this.browsingContext.top.window;
+    const win = elem
+      ? this.document.defaultView
+      : this.browsingContext.top.window;
 
     let rect;
 
@@ -439,7 +445,7 @@ class MarionetteCommandsChild extends JSWindowActorChild {
 
     await action.dispatch(
       action.Chain.fromJSON(actions),
-      this.contentWindow,
+      this.document.defaultView,
       !capabilities["moz:useNonSpecCompliantPointerOrigin"]
     );
   }
@@ -454,7 +460,7 @@ class MarionetteCommandsChild extends JSWindowActorChild {
     await action.dispatchTickActions(
       action.inputsToCancel.reverse(),
       0,
-      this.contentWindow
+      this.document.defaultView
     );
     action.inputsToCancel.length = 0;
     action.inputStateMap.clear();
