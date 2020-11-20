@@ -30,6 +30,8 @@ class RenderCompositorSWGL : public RenderCompositor {
   void CancelFrame() override;
   RenderedFrameId EndFrame(const nsTArray<DeviceIntRect>& aDirtyRects) final;
 
+  bool UsePartialPresent() override { return true; }
+
   void Pause() override;
   bool Resume() override;
 

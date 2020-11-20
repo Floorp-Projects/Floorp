@@ -1020,6 +1020,7 @@ impl SwCompositor {
     /// in composition.
     fn init_overlaps(
         &self,
+        overlap_id: &NativeSurfaceId,
         overlap_surface: &SwSurface,
         overlap_tile: &SwTile,
         overlap_transform: &CompositorSurfaceTransform,
@@ -1033,6 +1034,11 @@ impl SwCompositor {
         // on its own future update.
         let mut overlaps = if overlap_tile.invalid.get() { 1 } else { 0 };
         for &(ref id, ref transform, ref clip_rect, _) in &self.frame_surfaces {
+            // We only want to consider surfaces that were added before the current one we're
+            // checking for overlaps. If we find that surface, then we're done.
+            if id == overlap_id {
+                break;
+            }
             // If the surface's clip rect doesn't overlap the tile's rect,
             // then there is no need to check any tiles within the surface.
             if !overlap_rect.intersects(clip_rect) {
@@ -1593,13 +1599,6 @@ impl Compositor for SwCompositor {
                 self.late_surfaces.push((id, transform, clip_rect, filter));
                 return;
             }
-
-            // Compute overlap dependencies for the surface.
-            if let Some(surface) = self.surfaces.get(&id) {
-                for tile in &surface.tiles {
-                    self.init_overlaps(surface, tile, &transform, &clip_rect);
-                }
-            }
         }
 
         self.frame_surfaces.push((id, transform, clip_rect, filter));
@@ -1610,8 +1609,26 @@ impl Compositor for SwCompositor {
     /// frame will not have overlap dependencies assigned and so must instead
     /// be added to the late_surfaces queue to be processed at the end of the
     /// frame.
-    fn start_compositing(&mut self, _dirty_rects: &[DeviceIntRect]) {
+    fn start_compositing(&mut self, dirty_rects: &[DeviceIntRect]) {
+        if dirty_rects.len() == 1 {
+            // Factor dirty rect into surface clip rects and discard surfaces that are
+            // entirely clipped out.
+            for &mut (ref _id, ref _transform, ref mut clip_rect, _filter) in &mut self.frame_surfaces {
+                *clip_rect = clip_rect.intersection(&dirty_rects[0]).unwrap_or_default();
+            }
+            self.frame_surfaces.retain(|&(_, _, clip_rect, _)| !clip_rect.is_empty());
+        }
+
         if let Some(ref composite_thread) = self.composite_thread {
+            // Compute overlap dependencies for surfaces.
+            for &(ref id, ref transform, ref clip_rect, _filter) in &self.frame_surfaces {
+                if let Some(surface) = self.surfaces.get(id) {
+                    for tile in &surface.tiles {
+                        self.init_overlaps(id, surface, tile, transform, clip_rect);
+                    }
+                }
+            }
+
             composite_thread.start_compositing();
             // Issue any initial composite jobs for the SwComposite thread.
             let mut lock = composite_thread.lock();
