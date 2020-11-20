@@ -3,12 +3,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import, print_function, unicode_literals
-from mozbuild.util import memoize
-import mozpack.path as mozpath
-from mozversioncontrol import get_repository_object
+
 import hashlib
 import io
+import os
 import six
+import subprocess
+
+from mozbuild.util import memoize
+import mozpack.path as mozpath
+from mozversioncontrol import get_repository_object, NonexistentFile
 
 
 @memoize
@@ -22,8 +26,33 @@ def hash_path(path):
 
 
 @memoize
+def hash_path_as_of_base_revision(base_path, path):
+    repo = get_repository(base_path)
+    base_revision = get_base_revision(base_path)
+    return hashlib.sha256(
+        repo.get_file_content(path, revision=base_revision)
+    ).hexdigest()
+
+
+@memoize
+def get_repository(base_path):
+    return get_repository_object(base_path)
+
+
+@memoize
 def get_file_finder(base_path):
-    return get_repository_object(base_path).get_tracked_files_finder()
+    return get_repository(base_path).get_tracked_files_finder()
+
+
+@memoize
+def get_dirty(base_path):
+    repo = get_repository(base_path)
+    return set(repo.get_outgoing_files()) | set(repo.get_changed_files())
+
+
+@memoize
+def get_base_revision(base_path):
+    return get_repository(base_path).base_ref
 
 
 def hash_paths(base_path, patterns):
@@ -44,15 +73,28 @@ def hash_paths(base_path, patterns):
             files.update(found)
         else:
             raise Exception("%s did not match anything" % pattern)
+
+    dirty = set()
+    include_local_changes = os.environ.get("MACH_ARTIFACT_INCLUDE_LOCAL_CHANGES", False)
+    try:
+        dirty = get_dirty(base_path)
+    except subprocess.CalledProcessError:
+        include_local_changes = True
+
     for path in sorted(files.keys()):
-        if path.endswith((".pyc", ".pyd", ".pyo")):
-            continue
-        h.update(
-            six.ensure_binary(
-                "{} {}\n".format(
-                    hash_path(mozpath.abspath(mozpath.join(base_path, path))),
-                    mozpath.normsep(path),
-                )
-            )
-        )
+        path_hash = None
+        # If the file is dirty, and we haven't been asked specifically to include
+        # local changes, read the file contents from the VCS directly. Otherwise, read
+        # the contents from the filesystem.
+        if not include_local_changes and path in dirty:
+            try:
+                path_hash = hash_path_as_of_base_revision(base_path, path)
+            except NonexistentFile:
+                # If the file didn't exist at the base revision, that's fine,
+                # just continue to the next file.
+                continue
+        if path_hash is None:
+            path_hash = hash_path(mozpath.abspath(mozpath.join(base_path, path)))
+        h.update(six.ensure_binary("{} {}\n".format(path_hash, mozpath.normsep(path))))
+
     return h.hexdigest()
