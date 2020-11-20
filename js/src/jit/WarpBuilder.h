@@ -303,7 +303,6 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
   MOZ_MUST_USE bool buildBinaryOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildCompareOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildTestOp(BytecodeLocation loc);
-  MOZ_MUST_USE bool buildDefLexicalOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildCallOp(BytecodeLocation loc);
 
   MOZ_MUST_USE bool buildInitPropGetterSetterOp(BytecodeLocation loc);

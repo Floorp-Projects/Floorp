@@ -1373,10 +1373,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::InitAliasedLexical:
     case JSOp::SetIntrinsic:
     case JSOp::InitGLexical:
-    case JSOp::DefVar:
-    case JSOp::DefLet:
-    case JSOp::DefConst:
-    case JSOp::DefFun:
     case JSOp::GlobalOrEvalDeclInstantiation:
     case JSOp::SetFunName:
     case JSOp::MutateProto:

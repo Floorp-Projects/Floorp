@@ -266,10 +266,6 @@ IonBytecodeInfo js::jit::AnalyzeBytecodeForIon(JSContext* cx,
       case JSOp::SetAliasedVar:
       case JSOp::Lambda:
       case JSOp::LambdaArrow:
-      case JSOp::DefFun:
-      case JSOp::DefVar:
-      case JSOp::DefLet:
-      case JSOp::DefConst:
       case JSOp::PushLexicalEnv:
       case JSOp::PopLexicalEnv:
       case JSOp::ImplicitThis:
