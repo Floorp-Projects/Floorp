@@ -1,0 +1,46 @@
+pull_request_rules:
+  - name: Resolve conflict
+    conditions:
+      - conflict
+    actions:
+        comment:
+          message: This pull request has conflicts when rebasing. Could you fix it @{{author}}? 🙏
+  - name: MickeyMoz - Auto Merge
+    conditions:
+      - author=MickeyMoz
+      - status-success=pr-complete
+      - files~=(Gecko.kt|AndroidComponents.kt)
+    actions:
+      review:
+        type: APPROVE
+        message: MickeyMoz 💪
+      merge:
+        method: rebase
+        strict: smart
+  - name: L10N - Auto Merge
+    conditions:
+      - author=mozilla-l10n-automation-bot
+      - status-success=pr-complete
+      - files~=(strings.xml)
+    actions:
+      review:
+        type: APPROVE
+        message: LGTM 😎
+      merge:
+        method: rebase
+        strict: smart
+  - name: Release automation
+    conditions:
+      - base~=releases/.*
+      - author=st3fan
+      - status-success=pr-complete
+      - files~=(AndroidComponents.kt)
+    actions:
+      review:
+        type: APPROVE
+        message: 🚢
+      merge:
+        method: rebase
+        strict: smart
+      delete_head_branch:
+        force: false
