@@ -46,7 +46,6 @@
 #include "vm/RegExpObject.h"
 #include "vm/SharedMem.h"
 #include "vm/TypedArrayObject.h"
-#include "vm/TypeSet.h"
 
 namespace JS {
 struct ExpandoAndGeneration;
@@ -2596,6 +2595,8 @@ class WrappedFunction : public TempObject {
     return true;
   }
 };
+
+enum class DOMObjectKind : uint8_t { Proxy, Native, Unknown };
 
 class MCall : public MVariadicInstruction, public CallPolicy::Data {
  private:
