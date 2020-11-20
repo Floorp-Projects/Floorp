@@ -33,7 +33,7 @@ function compareImages(refData, tstData, width, height, diff) {
       return true;
     }
 
-    // TODO: Implement crazy check that's used in OpenGL ES 2.0 conformance tests.
+    // TODO: Implement check that's used in OpenGL ES 2.0 conformance tests.
     // NOTE: on Desktop things seem to be working. Maybe the more complex check
     // is needed for embedded systems?
     return false;

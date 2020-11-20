@@ -336,7 +336,7 @@ MP4Metadata::ResultAndTrackInfo MP4Metadata::GetTrackInfo(
           ("track codec %s (%u)\n", codecString, codecType));
 #endif
 
-  // This specialization interface is crazy.
+  // This specialization interface is wild.
   UniquePtr<mozilla::TrackInfo> e;
   switch (aType) {
     case TrackInfo::TrackType::kAudioTrack: {
