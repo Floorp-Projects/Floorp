@@ -662,47 +662,6 @@ class LWasmInterruptCheck : public LInstructionHelper<0, 1, 0> {
   const LAllocation* tlsPtr() { return getOperand(0); }
 };
 
-class LDefVar : public LCallInstructionHelper<0, 1, 0> {
- public:
-  LIR_HEADER(DefVar)
-
-  explicit LDefVar(const LAllocation& envChain)
-      : LCallInstructionHelper(classOpcode) {
-    setOperand(0, envChain);
-  }
-
-  const LAllocation* environmentChain() { return getOperand(0); }
-  MDefVar* mir() const { return mir_->toDefVar(); }
-};
-
-class LDefLexical : public LCallInstructionHelper<0, 1, 0> {
- public:
-  LIR_HEADER(DefLexical)
-
-  explicit LDefLexical(const LAllocation& envChain)
-      : LCallInstructionHelper(classOpcode) {
-    setOperand(0, envChain);
-  }
-
-  const LAllocation* environmentChain() { return getOperand(0); }
-  MDefLexical* mir() const { return mir_->toDefLexical(); }
-};
-
-class LDefFun : public LCallInstructionHelper<0, 2, 0> {
- public:
-  LIR_HEADER(DefFun)
-
-  LDefFun(const LAllocation& fun, const LAllocation& envChain)
-      : LCallInstructionHelper(classOpcode) {
-    setOperand(0, fun);
-    setOperand(1, envChain);
-  }
-
-  const LAllocation* fun() { return getOperand(0); }
-  const LAllocation* environmentChain() { return getOperand(1); }
-  MDefFun* mir() const { return mir_->toDefFun(); }
-};
-
 class LTypeOfV : public LInstructionHelper<1, BOX_PIECES, 1> {
  public:
   LIR_HEADER(TypeOfV)

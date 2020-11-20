@@ -3327,72 +3327,6 @@
      */ \
     MACRO(BindVar, bind_var, NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Create a new binding on the current VariableEnvironment (the environment
-     * on the environment chain designated to receive new variables).
-     *
-     * `JSOp::Def{Var,Let,Const,Fun}` instructions must appear in the script
-     * before anything else that might add bindings to the environment, and
-     * only once per binding. There must be a correct entry for the new binding
-     * in `script->bodyScope()`. (All this ensures that at run time, there is
-     * no existing conflicting binding. This is checked by the
-     * `JSOp::GlobalOrEvalDeclInstantiation` bytecode instruction that must
-     * appear before `JSOp::Def{Var,Let,Const,Fun}`.)
-     *
-     * Throw a SyntaxError if the current VariableEnvironment is the global
-     * environment and a binding with the same name exists on the global
-     * lexical environment.
-     *
-     * This is used for global scripts and also in some cases for function
-     * scripts where use of dynamic scoping inhibits optimization.
-     *
-     *   Category: Variables and scopes
-     *   Type: Creating and deleting bindings
-     *   Operands: uint32_t nameIndex
-     *   Stack: =>
-     */ \
-    MACRO(DefVar, def_var, NULL, 5, 0, 0, JOF_ATOM) \
-    /*
-     * Create a new binding for the given function on the current scope.
-     *
-     * `fun` must be a function object with an explicit name. The new
-     * variable's name is `fun->explicitName()`, and its value is `fun`. In
-     * global scope, this creates a new property on the global object.
-     *
-     * Implements: The body of the loop in [GlobalDeclarationInstantiation][1]
-     * step 17 ("For each Parse Node *f* in *functionsToInitialize*...") and
-     * the corresponding loop in [EvalDeclarationInstantiation][2].
-     *
-     * [1]: https://tc39.es/ecma262/#sec-globaldeclarationinstantiation
-     * [2]: https://tc39.es/ecma262/#sec-evaldeclarationinstantiation
-     *
-     *   Category: Variables and scopes
-     *   Type: Creating and deleting bindings
-     *   Operands:
-     *   Stack: fun =>
-     */ \
-    MACRO(DefFun, def_fun, NULL, 1, 1, 0, JOF_BYTE) \
-    /*
-     * Create a new uninitialized mutable binding in the global lexical
-     * environment. Throw a SyntaxError if a binding with the same name already
-     * exists on that environment, or if a var binding with the same name
-     * exists on the global.
-     *
-     *   Category: Variables and scopes
-     *   Type: Creating and deleting bindings
-     *   Operands: uint32_t nameIndex
-     *   Stack: =>
-     */ \
-    MACRO(DefLet, def_let, NULL, 5, 0, 0, JOF_ATOM) \
-    /*
-     * Like `DefLet`, but create an uninitialized constant binding.
-     *
-     *   Category: Variables and scopes
-     *   Type: Creating and deleting bindings
-     *   Operands: uint32_t nameIndex
-     *   Stack: =>
-     */ \
-    MACRO(DefConst, def_const, NULL, 5, 0, 0, JOF_ATOM) \
-    /*
      * Check for conflicting bindings and then initialize them in global or
      * sloppy eval scripts. This is required for global scripts with any
      * top-level bindings, or any sloppy-eval scripts with any non-lexical
@@ -3685,6 +3619,10 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
+  MACRO(235)                                   \
+  MACRO(236)                                   \
+  MACRO(237)                                   \
+  MACRO(238)                                   \
   MACRO(239)                                   \
   MACRO(240)                                   \
   MACRO(241)                                   \

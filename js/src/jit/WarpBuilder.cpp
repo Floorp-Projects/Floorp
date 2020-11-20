@@ -1530,42 +1530,6 @@ bool WarpBuilder::usesEnvironmentChain() const {
   return script_->jitScript()->usesEnvironmentChain();
 }
 
-bool WarpBuilder::build_DefVar(BytecodeLocation loc) {
-  MOZ_ASSERT(usesEnvironmentChain());
-
-  MDefinition* env = current->environmentChain();
-  MDefVar* defvar = MDefVar::New(alloc(), env);
-  current->add(defvar);
-  return resumeAfter(defvar, loc);
-}
-
-bool WarpBuilder::buildDefLexicalOp(BytecodeLocation loc) {
-  MOZ_ASSERT(usesEnvironmentChain());
-
-  MDefinition* env = current->environmentChain();
-  MDefLexical* defLexical = MDefLexical::New(alloc(), env);
-  current->add(defLexical);
-  return resumeAfter(defLexical, loc);
-}
-
-bool WarpBuilder::build_DefLet(BytecodeLocation loc) {
-  return buildDefLexicalOp(loc);
-}
-
-bool WarpBuilder::build_DefConst(BytecodeLocation loc) {
-  return buildDefLexicalOp(loc);
-}
-
-bool WarpBuilder::build_DefFun(BytecodeLocation loc) {
-  MOZ_ASSERT(usesEnvironmentChain());
-
-  MDefinition* fun = current->pop();
-  MDefinition* env = current->environmentChain();
-  MDefFun* deffun = MDefFun::New(alloc(), fun, env);
-  current->add(deffun);
-  return resumeAfter(deffun, loc);
-}
-
 bool WarpBuilder::build_GlobalOrEvalDeclInstantiation(BytecodeLocation loc) {
   MOZ_ASSERT(!script_->isForEval(), "Eval scripts not supported");
   auto* redeclCheck = MGlobalDeclInstantiation::New(alloc());

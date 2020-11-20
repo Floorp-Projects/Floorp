@@ -6799,46 +6799,6 @@ class MGlobalDeclInstantiation : public MNullaryInstruction {
   TRIVIAL_NEW_WRAPPERS
 };
 
-// If not defined, set a global variable to |undefined|.
-class MDefVar : public MUnaryInstruction, public NoTypePolicy::Data {
- private:
-  explicit MDefVar(MDefinition* envChain)
-      : MUnaryInstruction(classOpcode, envChain) {}
-
- public:
-  INSTRUCTION_HEADER(DefVar)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, environmentChain))
-
-  bool possiblyCalls() const override { return true; }
-};
-
-class MDefLexical : public MUnaryInstruction, public NoTypePolicy::Data {
- private:
-  explicit MDefLexical(MDefinition* envChain)
-      : MUnaryInstruction(classOpcode, envChain) {}
-
- public:
-  INSTRUCTION_HEADER(DefLexical)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, environmentChain))
-
-  bool possiblyCalls() const override { return true; }
-};
-
-class MDefFun : public MBinaryInstruction, public ObjectPolicy<0>::Data {
- private:
-  MDefFun(MDefinition* fun, MDefinition* envChain)
-      : MBinaryInstruction(classOpcode, fun, envChain) {}
-
- public:
-  INSTRUCTION_HEADER(DefFun)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, fun), (1, environmentChain))
-
-  bool possiblyCalls() const override { return true; }
-};
-
 class MRegExp : public MNullaryInstruction {
   CompilerGCPointer<RegExpObject*> source_;
   bool hasShared_;
