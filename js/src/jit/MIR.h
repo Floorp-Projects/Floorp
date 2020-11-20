@@ -6789,12 +6789,13 @@ class MThrowRuntimeLexicalError : public MNullaryInstruction {
   }
 };
 
-// In the prologues of global and eval scripts, check for redeclarations.
-class MGlobalNameConflictsCheck : public MNullaryInstruction {
-  MGlobalNameConflictsCheck() : MNullaryInstruction(classOpcode) { setGuard(); }
+// In the prologues of global and eval scripts, check for redeclarations and
+// initialize bindings.
+class MGlobalDeclInstantiation : public MNullaryInstruction {
+  MGlobalDeclInstantiation() : MNullaryInstruction(classOpcode) { setGuard(); }
 
  public:
-  INSTRUCTION_HEADER(GlobalNameConflictsCheck)
+  INSTRUCTION_HEADER(GlobalDeclInstantiation)
   TRIVIAL_NEW_WRAPPERS
 };
 

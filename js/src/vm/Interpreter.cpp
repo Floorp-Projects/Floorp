@@ -3755,13 +3755,14 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(DefFun)
 
-    CASE(CheckGlobalOrEvalDecl) {
+    CASE(GlobalOrEvalDeclInstantiation) {
+      GCThingIndex lastFun = GET_GCTHING_INDEX(REGS.pc);
       HandleObject env = REGS.fp()->environmentChain();
-      if (!CheckGlobalOrEvalDeclarationConflicts(cx, env, script)) {
+      if (!GlobalOrEvalDeclInstantiation(cx, env, script, lastFun)) {
         goto error;
       }
     }
-    END_CASE(CheckGlobalOrEvalDecl)
+    END_CASE(GlobalOrEvalDeclInstantiation)
 
     CASE(Lambda) {
       /* Load the specified function object literal. */

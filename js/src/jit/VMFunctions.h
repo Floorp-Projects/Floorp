@@ -463,8 +463,9 @@ MOZ_MUST_USE bool GeneratorThrowOrReturn(
     Handle<AbstractGeneratorObject*> genObj, HandleValue arg,
     int32_t resumeKindArg);
 
-MOZ_MUST_USE bool GlobalNameConflictsCheckFromIon(JSContext* cx,
-                                                  HandleScript script);
+MOZ_MUST_USE bool GlobalDeclInstantiationFromIon(JSContext* cx,
+                                                 HandleScript script,
+                                                 jsbytecode* pc);
 MOZ_MUST_USE bool InitFunctionEnvironmentObjects(JSContext* cx,
                                                  BaselineFrame* frame);
 
