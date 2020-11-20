@@ -568,6 +568,7 @@ pub enum ResultMsg {
         ResourceUpdateList,
     ),
     AppendNotificationRequests(Vec<NotificationRequest>),
+    ForceRedraw,
 }
 
 #[derive(Clone, Debug)]
