@@ -20,6 +20,11 @@ const TOPSTORIES_PREF =
   "browser.newtabpage.activity-stream.feeds.system.topstories";
 
 add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    // Highlights are preffed off by default.
+    set: [[HIGHLIGHTS_PREF, true]],
+  });
+
   registerCleanupFunction(async () => {
     await SpecialPowers.popPrefEnv();
     [
