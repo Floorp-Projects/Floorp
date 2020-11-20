@@ -436,7 +436,7 @@ void Composite(LockedTexture* lockedDst, LockedTexture* lockedSrc, GLint srcX,
     if (!srcReq.same_size(dstReq) && srctex.width >= 2 && filter == GL_LINEAR) {
       linear_blit(srctex, srcReq, 0, dsttex, dstReq, 0, flip, clipRect);
     } else {
-      scale_blit(srctex, srcReq, 0, dsttex, dstReq, 0, flip, clipRect); 
+      scale_blit(srctex, srcReq, 0, dsttex, dstReq, 0, flip, clipRect);
     }
   } else {
     if (!srcReq.same_size(dstReq) && srctex.width >= 2) {
