@@ -11,20 +11,19 @@
 #include "nsIClassInfoImpl.h"
 #include "prtime.h"
 
-namespace mozilla {
-namespace glean {
+namespace mozilla::glean {
 
 NS_IMPL_CLASSINFO(GleanDatetime, nullptr, 0, {0})
 NS_IMPL_ISUPPORTS_CI(GleanDatetime, nsIGleanDatetime)
 
 NS_IMETHODIMP
-GleanDatetime::Set(PRTime value, uint8_t optional_argc) {
-  if (optional_argc == 0) {
-    this->mDatetime.Set();
+GleanDatetime::Set(PRTime aValue, uint8_t aOptionalArgc) {
+  if (aOptionalArgc == 0) {
+    mDatetime.Set();
   } else {
     PRExplodedTime exploded;
-    PR_ExplodeTime(value, PR_LocalTimeParameters, &exploded);
-    this->mDatetime.Set(&exploded);
+    PR_ExplodeTime(aValue, PR_LocalTimeParameters, &exploded);
+    mDatetime.Set(&exploded);
   }
 
   return NS_OK;
@@ -44,5 +43,4 @@ GleanDatetime::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
   return NS_OK;
 }
 
-}  // namespace glean
-}  // namespace mozilla
+}  // namespace mozilla::glean

@@ -9,26 +9,25 @@
 
 #include "nsIGleanMetrics.h"
 
-namespace mozilla {
-namespace glean {
+namespace mozilla::glean {
 
 namespace impl {
 extern "C" {
-void fog_counter_add(uint32_t id, int32_t amount);
-uint32_t fog_counter_test_has_value(uint32_t id, const char* storageName);
-int32_t fog_counter_test_get_value(uint32_t id, const char* storageName);
+void fog_counter_add(uint32_t aId, int32_t aAmount);
+uint32_t fog_counter_test_has_value(uint32_t aId, const char* aStorageName);
+int32_t fog_counter_test_get_value(uint32_t aId, const char* aStorageName);
 }
 
 class CounterMetric {
  public:
-  constexpr explicit CounterMetric(uint32_t id) : mId(id) {}
+  constexpr explicit CounterMetric(uint32_t aId) : mId(aId) {}
 
   /*
    * Increases the counter by `amount`.
    *
-   * @param amount The amount to increase by. Should be positive.
+   * @param aAmount The amount to increase by. Should be positive.
    */
-  void Add(int32_t amount = 1) const { fog_counter_add(mId, amount); }
+  void Add(int32_t aAmount = 1) const { fog_counter_add(mId, aAmount); }
 
   /**
    * **Test-only API**
@@ -69,7 +68,6 @@ class GleanCounter final : public nsIGleanCounter {
   const impl::CounterMetric mCounter;
 };
 
-}  // namespace glean
-}  // namespace mozilla
+}  // namespace mozilla::glean
 
-#endif /* mozilla_glean_GleanCounter.h */
+#endif /* mozilla_glean_GleanCounter_h */
