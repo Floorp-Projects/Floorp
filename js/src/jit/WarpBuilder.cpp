@@ -1451,14 +1451,12 @@ bool WarpBuilder::buildBackedge() {
   MBasicBlock* header = loopStack_.popCopy().header();
   current->end(MGoto::New(alloc(), header));
 
-  AbortReason r = header->setBackedge(alloc(), current);
-  if (r == AbortReason::NoAbort) {
-    setTerminatedBlock();
-    return true;
+  if (!header->setBackedge(current)) {
+    return false;
   }
 
-  MOZ_ASSERT(r == AbortReason::Alloc);
-  return false;
+  setTerminatedBlock();
+  return true;
 }
 
 bool WarpBuilder::buildForwardGoto(BytecodeLocation target) {

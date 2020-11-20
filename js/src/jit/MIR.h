@@ -6352,7 +6352,6 @@ class MPhi final : public MDefinition,
   InputVector inputs_;
 
   TruncateKind truncateKind_;
-  bool hasBackedgeType_;
   bool triedToSpecialize_;
   bool isIterator_;
   bool canProduceFloat32_;
@@ -6385,7 +6384,6 @@ class MPhi final : public MDefinition,
       : MDefinition(classOpcode),
         inputs_(alloc),
         truncateKind_(NoTruncate),
-        hasBackedgeType_(false),
         triedToSpecialize_(false),
         isIterator_(false),
         canProduceFloat32_(false),
@@ -6422,7 +6420,6 @@ class MPhi final : public MDefinition,
   void replaceOperand(size_t index, MDefinition* operand) final {
     inputs_[index].replaceProducer(operand);
   }
-  bool hasBackedgeType() const { return hasBackedgeType_; }
   bool triedToSpecialize() const { return triedToSpecialize_; }
   void specialize(MIRType type) {
     triedToSpecialize_ = true;
@@ -11635,7 +11632,6 @@ class MResumePoint final : public MNode
  public:
   static MResumePoint* New(TempAllocator& alloc, MBasicBlock* block,
                            jsbytecode* pc, Mode mode);
-  static MResumePoint* Copy(TempAllocator& alloc, MResumePoint* src);
 
   MBasicBlock* block() const { return resumePointBlock(); }
 

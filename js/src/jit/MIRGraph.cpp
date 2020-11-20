@@ -606,78 +606,6 @@ bool MBasicBlock::initEntrySlots(TempAllocator& alloc) {
   return true;
 }
 
-void MBasicBlock::shimmySlots(int discardDepth) {
-  // Move all slots above the given depth down by one,
-  // overwriting the MDefinition at discardDepth.
-
-  MOZ_ASSERT(discardDepth < 0);
-  MOZ_ASSERT(stackPosition_ + discardDepth >= info_.firstStackSlot());
-
-  for (int i = discardDepth; i < -1; i++) {
-    slots_[stackPosition_ + i] = slots_[stackPosition_ + i + 1];
-  }
-
-  --stackPosition_;
-}
-
-bool MBasicBlock::linkOsrValues(MStart* start) {
-  MResumePoint* res = start->resumePoint();
-
-  for (uint32_t i = 0; i < stackDepth(); i++) {
-    MDefinition* def = slots_[i];
-    MInstruction* cloneRp = nullptr;
-    if (i == info().environmentChainSlot()) {
-      if (def->isOsrEnvironmentChain()) {
-        cloneRp = def->toOsrEnvironmentChain();
-      }
-    } else if (i == info().returnValueSlot()) {
-      if (def->isOsrReturnValue()) {
-        cloneRp = def->toOsrReturnValue();
-      }
-    } else if (info().hasArguments() && i == info().argsObjSlot()) {
-      MOZ_ASSERT(def->isConstant() || def->isOsrArgumentsObject());
-      MOZ_ASSERT_IF(def->isConstant(),
-                    def->toConstant()->type() == MIRType::Undefined);
-      if (def->isOsrArgumentsObject()) {
-        cloneRp = def->toOsrArgumentsObject();
-      }
-    } else {
-      MOZ_ASSERT(def->isOsrValue() || def->isGetArgumentsObjectArg() ||
-                 def->isConstant() || def->isParameter());
-
-      // A constant Undefined can show up here for an argument slot when
-      // the function has an arguments object, but the argument in
-      // question is stored on the scope chain.
-      MOZ_ASSERT_IF(def->isConstant(),
-                    def->toConstant()->type() == MIRType::Undefined);
-
-      if (def->isOsrValue()) {
-        cloneRp = def->toOsrValue();
-      } else if (def->isGetArgumentsObjectArg()) {
-        cloneRp = def->toGetArgumentsObjectArg();
-      } else if (def->isParameter()) {
-        cloneRp = def->toParameter();
-      }
-    }
-
-    if (cloneRp) {
-      MResumePoint* clone = MResumePoint::Copy(graph().alloc(), res);
-      if (!clone) {
-        return false;
-      }
-      cloneRp->setResumePoint(clone);
-    }
-  }
-
-  return true;
-}
-
-void MBasicBlock::rewriteAtDepth(int32_t depth, MDefinition* ins) {
-  MOZ_ASSERT(depth < 0);
-  MOZ_ASSERT(stackPosition_ + depth >= info_.firstStackSlot());
-  rewriteSlot(stackPosition_ + depth, ins);
-}
-
 MDefinition* MBasicBlock::environmentChain() {
   return getSlot(info().environmentChainSlot());
 }
@@ -1109,7 +1037,7 @@ void MBasicBlock::assertUsesAreNotWithin(MUseIterator use, MUseIterator end) {
 #endif
 }
 
-AbortReason MBasicBlock::setBackedge(TempAllocator& alloc, MBasicBlock* pred) {
+bool MBasicBlock::setBackedge(MBasicBlock* pred) {
   // Predecessors must be finished, and at the correct stack depth.
   MOZ_ASSERT(hasLastIns());
   MOZ_ASSERT(pred->hasLastIns());
@@ -1118,25 +1046,15 @@ AbortReason MBasicBlock::setBackedge(TempAllocator& alloc, MBasicBlock* pred) {
   // We must be a pending loop header
   MOZ_ASSERT(kind_ == PENDING_LOOP_HEADER);
 
-  bool hadTypeChange = false;
-
   // Add exit definitions to each corresponding phi at the entry.
-  if (!inheritPhisFromBackedge(alloc, pred, &hadTypeChange)) {
-    return AbortReason::Alloc;
-  }
-
-  if (hadTypeChange) {
-    return AbortReason::Disable;
+  if (!inheritPhisFromBackedge(pred)) {
+    return false;
   }
 
   // We are now a loop header proper
   kind_ = LOOP_HEADER;
 
-  if (!predecessors_.append(pred)) {
-    return AbortReason::Alloc;
-  }
-
-  return AbortReason::NoAbort;
+  return predecessors_.append(pred);
 }
 
 bool MBasicBlock::setBackedgeWasm(MBasicBlock* pred, size_t paramCount) {
@@ -1352,9 +1270,7 @@ void MBasicBlock::inheritPhis(MBasicBlock* header) {
   }
 }
 
-bool MBasicBlock::inheritPhisFromBackedge(TempAllocator& alloc,
-                                          MBasicBlock* backedge,
-                                          bool* hadTypeChange) {
+bool MBasicBlock::inheritPhisFromBackedge(MBasicBlock* backedge) {
   // We must be a pending loop header
   MOZ_ASSERT(kind_ == PENDING_LOOP_HEADER);
 
@@ -1390,13 +1306,9 @@ bool MBasicBlock::inheritPhisFromBackedge(TempAllocator& alloc,
       exitDef = entryDef->getOperand(0);
     }
 
-    bool typeChange = false;
-
     if (!entryDef->addInputSlow(exitDef)) {
       return false;
     }
-    // TODO(no-TI): remove hadTypeChange
-    *hadTypeChange |= typeChange;
   }
 
   return true;
