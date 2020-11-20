@@ -29,17 +29,17 @@ GleanUuid::GenerateAndSet(JSContext* cx) {
 }
 
 NS_IMETHODIMP
-GleanUuid::TestHasValue(const nsACString& aStorageName, JSContext* cx,
-                        bool* result) {
-  *result = this->mUuid.TestHasValue(PromiseFlatCString(aStorageName).get());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 GleanUuid::TestGetValue(const nsACString& aStorageName, JSContext* cx,
-                        nsACString& result) {
-  result.Assign(
-      this->mUuid.TestGetValue(PromiseFlatCString(aStorageName).get()));
+                        JS::MutableHandleValue aResult) {
+  auto result =
+      this->mUuid.TestGetValue(PromiseFlatCString(aStorageName).get());
+  if (result.isNothing()) {
+    aResult.set(JS::UndefinedValue());
+  } else {
+    const NS_ConvertUTF8toUTF16 str(result.value());
+    aResult.set(
+        JS::StringValue(JS_NewUCStringCopyN(cx, str.Data(), str.Length())));
+  }
   return NS_OK;
 }
 

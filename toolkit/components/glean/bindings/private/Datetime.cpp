@@ -31,18 +31,16 @@ GleanDatetime::Set(PRTime value, uint8_t optional_argc) {
 }
 
 NS_IMETHODIMP
-GleanDatetime::TestHasValue(const nsACString& aStorageName, JSContext* cx,
-                            bool* result) {
-  *result =
-      this->mDatetime.TestHasValue(PromiseFlatCString(aStorageName).get());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GleanDatetime::TestGetValue(const nsACString& aStorageName, JSContext* cx,
-                            nsACString& result) {
-  result.Assign(
-      this->mDatetime.TestGetValue(PromiseFlatCString(aStorageName).get()));
+GleanDatetime::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
+                            JS::MutableHandleValue aResult) {
+  auto result = mDatetime.TestGetValue(PromiseFlatCString(aStorageName).get());
+  if (result.isNothing()) {
+    aResult.set(JS::UndefinedValue());
+  } else {
+    const NS_ConvertUTF8toUTF16 str(result.value());
+    aResult.set(
+        JS::StringValue(JS_NewUCStringCopyN(aCx, str.Data(), str.Length())));
+  }
   return NS_OK;
 }
 

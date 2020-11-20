@@ -44,26 +44,8 @@ class DatetimeMetric {
     int32_t offset =
         exploded.tm_params.tp_gmt_offset + exploded.tm_params.tp_dst_offset;
     fog_datetime_set(mId, exploded.tm_year, exploded.tm_month + 1,
-                    exploded.tm_mday, exploded.tm_hour, exploded.tm_min,
-                    exploded.tm_sec, exploded.tm_usec * 1000, offset);
-  }
-
-  /**
-   * **Test-only API**
-   *
-   * Tests whether a value is stored for the metric.
-   *
-   * This function will attempt to await the last parent-process task (if any)
-   * writing to the the metric's storage engine before returning a value.
-   * This function will not wait for data from child processes.
-   *
-   * Parent process only. Panics in child processes.
-   *
-   * @param aStorageName the name of the ping to retrieve the metric for.
-   * @return true if metric value exists, otherwise false
-   */
-  bool TestHasValue(const char* aStorageName) const {
-    return fog_datetime_test_has_value(mId, aStorageName) != 0;
+                     exploded.tm_mday, exploded.tm_hour, exploded.tm_min,
+                     exploded.tm_sec, exploded.tm_usec * 1000, offset);
   }
 
   /**
@@ -78,12 +60,15 @@ class DatetimeMetric {
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
-   * @return value of the stored metric.
+   * @return value of the stored metric, or Nothing() if there is no value.
    */
-  nsCString TestGetValue(const char* aStorageName) const {
+  Maybe<nsCString> TestGetValue(const char* aStorageName) const {
+    if (!fog_datetime_test_has_value(mId, aStorageName)) {
+      return Nothing();
+    }
     nsCString ret;
     fog_datetime_test_get_value(mId, aStorageName, ret);
-    return ret;
+    return Some(ret);
   }
 
  private:

@@ -38,24 +38,6 @@ class StringMetric {
   /**
    * **Test-only API**
    *
-   * Tests whether a value is stored for the metric.
-   *
-   * This function will attempt to await the last parent-process task (if any)
-   * writing to the the metric's storage engine before returning a value.
-   * This function will not wait for data from child processes.
-   *
-   * Parent process only. Panics in child processes.
-   *
-   * @param aStorageName the name of the ping to retrieve the metric for.
-   * @return true if metric value exists, otherwise false
-   */
-  bool TestHasValue(const char* aStorageName) const {
-    return fog_string_test_has_value(mId, aStorageName) != 0;
-  }
-
-  /**
-   * **Test-only API**
-   *
    * Gets the currently stored value as a string.
    *
    * This function will attempt to await the last parent-process task (if any)
@@ -65,12 +47,15 @@ class StringMetric {
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
-   * @return value of the stored metric.
+   * @return value of the stored metric, or Nothing() if there is no value.
    */
-  nsCString TestGetValue(const char* aStorageName) const {
+  Maybe<nsCString> TestGetValue(const char* aStorageName) const {
+    if (!fog_string_test_has_value(mId, aStorageName)) {
+      return Nothing();
+    }
     nsCString ret;
     fog_string_test_get_value(mId, aStorageName, ret);
-    return ret;
+    return Some(ret);
   }
 
  private:
