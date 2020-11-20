@@ -172,7 +172,7 @@ class nsDOMAttributeMap final : public nsISupports, public nsWrapperCache {
   Attr* GetAttribute(mozilla::dom::NodeInfo* aNodeInfo);
 };
 
-// XXX khuey yes this is crazy.  The bindings code needs to see this include,
+// XXX khuey yes this is strange.  The bindings code needs to see this include,
 // but if we pull it in at the top of the file we get a circular include
 // problem.
 #include "mozilla/dom/Element.h"
