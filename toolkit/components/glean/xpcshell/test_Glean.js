@@ -65,3 +65,13 @@ add_task(async function test_fog_uuid_works() {
     Glean.test_only.what_id_it.testGetValue("test-ping")
   );
 });
+
+add_task(function test_fog_datetime_works() {
+  const value = new Date("2020-06-11T12:00:00");
+
+  Glean.test_only.what_a_date.set(value.getTime() * 1000);
+  Assert.ok(Glean.test_only.what_a_date.testHasValue("test-ping"));
+
+  const received = Glean.test_only.what_a_date.testGetValue("test-ping");
+  Assert.ok(received.startsWith("2020-06-11T12:00:00"));
+});

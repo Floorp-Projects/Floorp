@@ -100,3 +100,46 @@ pub extern "C" fn fog_uuid_generate_and_set(id: u32) {
         None => panic!("No metric for id {}", id),
     }
 }
+
+#[no_mangle]
+pub extern "C" fn fog_datetime_test_has_value(id: u32, storage_name: FfiStr) -> u8 {
+    match crate::metrics::__glean_metric_maps::DATETIME_MAP.get(&id.into()) {
+        Some(metric) => metric.test_get_value(storage_name.as_str()).is_some() as u8,
+        None => panic!("No metric for id {}", id),
+    }
+}
+
+#[cfg(feature = "with_gecko")]
+#[no_mangle]
+pub extern "C" fn fog_datetime_test_get_value(
+    id: u32,
+    storage_name: FfiStr,
+    value: &mut nsACString,
+) {
+    match crate::metrics::__glean_metric_maps::DATETIME_MAP.get(&id.into()) {
+        Some(metric) => {
+            value.assign(&metric.test_get_value(storage_name.as_str()).unwrap());
+        }
+        None => panic!("No metric for id {}", id),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn fog_datetime_set(
+    id: u32,
+    year: i32,
+    month: u32,
+    day: u32,
+    hour: u32,
+    minute: u32,
+    second: u32,
+    nano: u32,
+    offset_seconds: i32,
+) {
+    match crate::metrics::__glean_metric_maps::DATETIME_MAP.get(&id.into()) {
+        Some(metric) => {
+            metric.set_with_details(year, month, day, hour, minute, second, nano, offset_seconds);
+        }
+        None => panic!("No metric for id {}", id),
+    }
+}
