@@ -1032,9 +1032,9 @@ var PlacesDBUtils = {
 
     // Get maximum number of unique URIs.
     try {
-      let limitURIs = Services.prefs.getIntPref(
-        "places.history.expiration.transient_current_max_pages"
-      );
+      let limitURIs = await Cc["@mozilla.org/places/expiration;1"]
+        .getService(Ci.nsISupports)
+        .wrappedJSObject.getPagesLimit();
       logs.push(
         "History can store a maximum of " + limitURIs + " unique pages"
       );
