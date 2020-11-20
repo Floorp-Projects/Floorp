@@ -66,4 +66,5 @@ Recycled chunk
 .. _ProfileBuffer.h: https://searchfox.org/mozilla-central/source/tools/profiler/core/ProfileBuffer.h
 .. _ProfileBuffer: https://searchfox.org/mozilla-central/search?q=ProfileBuffer&path=&case=true&regexp=false
 .. _ProfilerParent: https://searchfox.org/mozilla-central/search?q=ProfilerParent&path=&case=true&regexp=false
+.. _ProfilerChild: https://searchfox.org/mozilla-central/search?q=ProfilerChild&path=&case=true&regexp=false
 .. _DestroyReleasedChunksAtOrBefore: https://searchfox.org/mozilla-central/search?q=DestroyReleasedChunksAtOrBefore&path=&case=true&regexp=false
