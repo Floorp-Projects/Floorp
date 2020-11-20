@@ -25,6 +25,30 @@ interface MozQueryInterface {
 };
 
 /**
+ * Options for a marker created with the addProfilerMarker method.
+ * All fields are optional.
+ */
+dictionary ProfilerMarkerOptions {
+  // A timestamp to use as the start time of the marker.
+  // If no start time is provided, the marker will have no duration.
+  // In window and ChromeWorker contexts, use a timestamp from
+  // `performance.now()`.
+  // In JS modules, use `Cu.now()` to get a timestamp.
+  DOMHighResTimeStamp startTime = 0;
+
+  // If captureStack is true, a profiler stack will be captured and associated
+  // with the marker.
+  boolean captureStack = false;
+
+  // Markers are created by default in the JavaScript category, but this can be
+  // overridden.
+  // Examples of correct values: "JavaScript", "Test", "Other", ...
+  // See ProfilingCategoryList.h for the complete list of valid values.
+  // Using an unrecognized value will set the category to "Other".
+  ByteString category = "JavaScript";
+};
+
+/**
  * A collection of static utility methods that are only exposed to system code.
  * This is exposed in all the system globals where we can expose stuff by
  * default, so should only include methods that are **thread-safe**.
@@ -171,15 +195,18 @@ namespace ChromeUtils {
    * add a marker for the current thread. No-op otherwise.
    *
    * @param name              The name of the marker.
-   * @param startTime         The timestamp to use as the start of the marker.
-   *                          If omitted, the marker will have no duration.
+   * @param options           Either a timestamp to use as the start time of the
+   *                          marker, or a ProfilerMarkerOptions object that can
+   *                          contain startTime, captureStack or category fields.
+   *                          If this parameter is omitted, the marker will have
+   *                           no duration.
    *                          In window and ChromeWorker contexts, use a
    *                          timestamp from `performance.now()`.
    *                          In JS modules, use `Cu.now()` to get a timestamp.
    * @param text              Text to associate with the marker.
    */
   void addProfilerMarker(UTF8String name,
-                         optional DOMHighResTimeStamp startTime,
+                         optional (ProfilerMarkerOptions or DOMHighResTimeStamp) options = {},
                          optional UTF8String text);
 
   /**
