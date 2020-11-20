@@ -604,104 +604,75 @@ bool BaselineStackBuilder::buildBaselineFrame() {
     flags |= BaselineFrame::DEBUGGEE;
   }
 
+  // Get |envChain|.
   JSObject* envChain = nullptr;
-  Value returnValue = UndefinedValue();
-  ArgumentsObject* argsObj = nullptr;
+  Value envChainSlot = iter_.read();
+  if (envChainSlot.isObject()) {
+    // The env slot has been updated from UndefinedValue. It must be the
+    // complete initial environment.
+    envChain = &envChainSlot.toObject();
 
-  BailoutKind bailoutKind = iter_.bailoutKind();
-  if (bailoutKind == BailoutKind::ArgumentCheck) {
-    // We may fail before the envChain slot is set. Skip it and use
-    // the function's initial environment.  This will be fixed up
-    // later if needed in |FinishBailoutToBaseline|, which calls
-    // |EnsureHasEnvironmentObjects|.
-    // TODO(no-TI): remove ArgumentCheck kind.
-    JitSpew(JitSpew_BaselineBailouts,
-            "      BailoutKind::ArgumentCheck! Using function's environment");
-    envChain = fun_->environment();
-
-    // Skip envChain.
-    iter_.skip();
-
-    // Skip return value.
-    iter_.skip();
-
-    // Scripts with |argumentsHasVarBinding| have an extra slot.
-    // Skip argsObj if present.
-    if (script_->argumentsHasVarBinding()) {
-      JitSpew(JitSpew_BaselineBailouts,
-              "      BailoutKind::ArgumentCheck for script with "
-              "argumentsHasVarBinding! "
-              "Using empty arguments object");
-      iter_.skip();
+    // Set the HAS_INITIAL_ENV flag if needed.
+    if (fun_ && fun_->needsFunctionEnvironmentObjects()) {
+      MOZ_ASSERT(fun_->nonLazyScript()->initialEnvironmentShape());
+      MOZ_ASSERT(!fun_->needsExtraBodyVarEnvironment());
+      flags |= BaselineFrame::HAS_INITIAL_ENV;
     }
   } else {
-    // Get |envChain|.
-    Value envChainSlot = iter_.read();
-    if (envChainSlot.isObject()) {
-      // The env slot has been updated from UndefinedValue. It must be the
-      // complete initial environment.
-      envChain = &envChainSlot.toObject();
+    MOZ_ASSERT(envChainSlot.isUndefined() ||
+               envChainSlot.isMagic(JS_OPTIMIZED_OUT));
+    MOZ_ASSERT(envChainSlotCanBeOptimized());
 
-      // Set the HAS_INITIAL_ENV flag if needed.
-      if (fun_ && fun_->needsFunctionEnvironmentObjects()) {
-        MOZ_ASSERT(fun_->nonLazyScript()->initialEnvironmentShape());
-        MOZ_ASSERT(!fun_->needsExtraBodyVarEnvironment());
-        flags |= BaselineFrame::HAS_INITIAL_ENV;
-      }
+    // The env slot has been optimized out.
+    // Get it from the function or script.
+    if (fun_) {
+      envChain = fun_->environment();
+    } else if (script_->module()) {
+      envChain = script_->module()->environment();
     } else {
-      MOZ_ASSERT(envChainSlot.isUndefined() ||
-                 envChainSlot.isMagic(JS_OPTIMIZED_OUT));
-      MOZ_ASSERT(envChainSlotCanBeOptimized());
-
-      // The env slot has been optimized out.
-      // Get it from the function or script.
-      if (fun_) {
-        envChain = fun_->environment();
-      } else if (script_->module()) {
-        envChain = script_->module()->environment();
-      } else {
-        // For global scripts without a non-syntactic env the env
-        // chain is the script's global lexical environment. (We do
-        // not compile scripts with a non-syntactic global scope).
-        // Also note that it's invalid to resume into the prologue in
-        // this case because the prologue expects the env chain in R1
-        // for eval and global scripts.
-        MOZ_ASSERT(!script_->isForEval());
-        MOZ_ASSERT(!script_->hasNonSyntacticScope());
-        envChain = &(script_->global().lexicalEnvironment());
-      }
-    }
-
-    // Get |returnValue| if present.
-    if (script_->noScriptRval()) {
-      // Don't use the return value (likely a JS_OPTIMIZED_OUT MagicValue) to
-      // not confuse Baseline.
-      iter_.skip();
-    } else {
-      returnValue = iter_.read();
-      flags |= BaselineFrame::HAS_RVAL;
-    }
-
-    // Get |argsObj| if present.
-    if (script_->argumentsHasVarBinding()) {
-      Value maybeArgsObj = iter_.read();
-      MOZ_ASSERT(maybeArgsObj.isObject() || maybeArgsObj.isUndefined() ||
-                 maybeArgsObj.isMagic(JS_OPTIMIZED_OUT));
-      if (maybeArgsObj.isObject()) {
-        argsObj = &maybeArgsObj.toObject().as<ArgumentsObject>();
-      }
+      // For global scripts without a non-syntactic env the env
+      // chain is the script's global lexical environment. (We do
+      // not compile scripts with a non-syntactic global scope).
+      // Also note that it's invalid to resume into the prologue in
+      // this case because the prologue expects the env chain in R1
+      // for eval and global scripts.
+      MOZ_ASSERT(!script_->isForEval());
+      MOZ_ASSERT(!script_->hasNonSyntacticScope());
+      envChain = &(script_->global().lexicalEnvironment());
     }
   }
-  MOZ_ASSERT(envChain);
 
   // Write |envChain|.
+  MOZ_ASSERT(envChain);
   JitSpew(JitSpew_BaselineBailouts, "      EnvChain=%p", envChain);
   blFrame()->setEnvironmentChain(envChain);
+
+  // Get |returnValue| if present.
+  Value returnValue = UndefinedValue();
+  if (script_->noScriptRval()) {
+    // Don't use the return value (likely a JS_OPTIMIZED_OUT MagicValue) to
+    // not confuse Baseline.
+    iter_.skip();
+  } else {
+    returnValue = iter_.read();
+    flags |= BaselineFrame::HAS_RVAL;
+  }
 
   // Write |returnValue|.
   JitSpew(JitSpew_BaselineBailouts, "      ReturnValue=%016" PRIx64,
           *((uint64_t*)&returnValue));
   blFrame()->setReturnValue(returnValue);
+
+  // Get |argsObj| if present.
+  ArgumentsObject* argsObj = nullptr;
+  if (script_->argumentsHasVarBinding()) {
+    Value maybeArgsObj = iter_.read();
+    MOZ_ASSERT(maybeArgsObj.isObject() || maybeArgsObj.isUndefined() ||
+               maybeArgsObj.isMagic(JS_OPTIMIZED_OUT));
+    if (maybeArgsObj.isObject()) {
+      argsObj = &maybeArgsObj.toObject().as<ArgumentsObject>();
+    }
+  }
 
   // Note: we do not need to initialize the scratchValue field in BaselineFrame.
 
@@ -709,10 +680,8 @@ bool BaselineStackBuilder::buildBaselineFrame() {
   blFrame()->setFlags(flags);
 
   // Write |icScript|.
-  if (JitOptions.warpBuilder) {
-    JitSpew(JitSpew_BaselineBailouts, "      ICScript=%p", icScript_);
-    blFrame()->setICScript(icScript_);
-  }
+  JitSpew(JitSpew_BaselineBailouts, "      ICScript=%p", icScript_);
+  blFrame()->setICScript(icScript_);
 
   // initArgsObjUnchecked modifies the frame's flags, so call it after setFlags.
   if (argsObj) {
@@ -2185,11 +2154,6 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
       JSScript::argumentsOptimizationFailed(cx, innerScript);
       break;
 
-    case BailoutKind::ArgumentCheck:
-      // Do nothing, bailout will resume before the argument monitor ICs.
-      // This is unreachable in Warp.
-      MOZ_ASSERT(!JitOptions.warpBuilder);
-      break;
     case BailoutKind::BoundsCheck:
       HandleBoundsCheckFailure(cx, outerScript, innerScript);
       break;

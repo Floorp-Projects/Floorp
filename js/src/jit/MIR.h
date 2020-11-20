@@ -1379,13 +1379,9 @@ class MVariadicT : public T {
 
 using MVariadicInstruction = MVariadicT<MInstruction>;
 
-// Generates an LSnapshot without further effect.
+// TODO(no-TI): try to remove this instruction.
 class MStart : public MNullaryInstruction {
-  MStart() : MNullaryInstruction(classOpcode) {
-    // The snapshot for this instruction covers bailouts that happen before
-    // the env chain is set. See BaselineStackBuilder::buildBaselineFrame.
-    setBailoutKind(BailoutKind::ArgumentCheck);
-  }
+  MStart() : MNullaryInstruction(classOpcode) {}
 
  public:
   INSTRUCTION_HEADER(Start)
