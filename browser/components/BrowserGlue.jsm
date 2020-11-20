@@ -232,8 +232,12 @@ let JSWINDOWACTORS = {
       },
     },
     // The wildcard on about:newtab is for the ?endpoint query parameter
-    // that is used for snippets debugging.
-    matches: ["about:home", "about:welcome", "about:newtab*"],
+    // that is used for snippets debugging. The wildcard for about:home
+    // is similar, and also allows for falling back to loading the
+    // about:home document dynamically if an attempt is made to load
+    // about:home?jscache from the AboutHomeStartupCache as a top-level
+    // load.
+    matches: ["about:home*", "about:welcome", "about:newtab*"],
     remoteTypes: ["privilegedabout"],
   },
 

@@ -144,7 +144,10 @@ async function simulateRestart(
  *
  * @param page (String)
  *   The HTML content to write into the cache. This cannot be the empty
- *   string.
+ *   string. Note that this string should contain a node that has an
+ *   id of "root", in order for the newtab scripts to attach correctly.
+ *   Otherwise, an exception might get thrown which can cause shutdown
+ *   leaks.
  * @param script (String)
  *   The JS content to write into the cache that can be loaded via
  *   about:home?jscache. This cannot be the empty string.
@@ -156,6 +159,10 @@ async function simulateRestart(
 async function injectIntoCache(page, script) {
   if (!page || !script) {
     throw new Error("Cannot injectIntoCache with falsey values");
+  }
+
+  if (!page.includes(`id="root"`)) {
+    throw new Error("Page markup must include a root node.");
   }
 
   await AboutHomeStartupCache.ensureCacheEntry();
