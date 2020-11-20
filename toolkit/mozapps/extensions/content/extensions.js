@@ -240,7 +240,6 @@ var gViewController = {
   // was loaded, so start counting from a random value to avoid collisions.
   nextHistoryEntryId: Math.floor(Math.random() * 2 ** 32),
   viewObjects: {},
-  viewChangeCallback: null,
   initialViewSelected: false,
   lastHistoryIndex: -1,
 
@@ -402,19 +401,8 @@ var gViewController = {
     this.initialViewSelected = true;
   },
 
-  // Moves back in the document history and removes the current history entry
-  popState(aCallback) {
-    this.viewChangeCallback = aCallback;
-    gHistory.popState();
-  },
-
   notifyViewChanged() {
     this.isLoading = false;
-
-    if (this.viewChangeCallback) {
-      this.viewChangeCallback();
-      this.viewChangeCallback = null;
-    }
 
     var event = document.createEvent("Events");
     event.initEvent("ViewChanged", true, true);
