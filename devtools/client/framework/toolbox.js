@@ -305,7 +305,6 @@ function Toolbox(
   this._saveSplitConsoleHeight = this._saveSplitConsoleHeight.bind(this);
   this._onFocus = this._onFocus.bind(this);
   this._onBrowserMessage = this._onBrowserMessage.bind(this);
-  this._updateTextBoxMenuItems = this._updateTextBoxMenuItems.bind(this);
   this._onPerformanceFrontEvent = this._onPerformanceFrontEvent.bind(this);
   this._onTabsOrderUpdated = this._onTabsOrderUpdated.bind(this);
   this._onToolbarFocus = this._onToolbarFocus.bind(this);
@@ -3790,21 +3789,6 @@ Toolbox.prototype = {
     await onceDestroyed;
 
     Services.obs.removeObserver(leakCheckObserver, topic);
-  },
-
-  /**
-   * Enable / disable necessary textbox menu items using globalOverlay.js.
-   */
-  _updateTextBoxMenuItems: function() {
-    const window = this.win;
-    [
-      "cmd_undo",
-      "cmd_delete",
-      "cmd_cut",
-      "cmd_copy",
-      "cmd_paste",
-      "cmd_selectAll",
-    ].forEach(window.goUpdateCommand);
   },
 
   /**

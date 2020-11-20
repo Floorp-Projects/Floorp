@@ -242,6 +242,9 @@ const shortcutHandlers = {
  *         The inspector we're watching.
  * @param  {iframe} frame
  *         An iframe in which the caller has kindly loaded markup.xhtml.
+ * @param  {XULWindow} controllerWindow
+ *         Will enable the undo/redo feature from devtools/client/shared/undo.
+ *         Should be a XUL window, will typically point to the toolbox window.
  */
 function MarkupView(inspector, frame, controllerWindow) {
   EventEmitter.decorate(this);
