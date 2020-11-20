@@ -7,6 +7,7 @@
 
 #include "mozilla/Preferences.h"
 #include "nsString.h"
+#include "prtime.h"
 
 using mozilla::Preferences;
 using namespace mozilla::glean;
@@ -96,4 +97,16 @@ TEST(FOG, TestCppUuidWorks)
   // isn't 4, this won't ever collide with kTestUuid.
   ASSERT_STRNE(kTestUuid.get(),
                test_only::what_id_it.TestGetValue("test-ping").get());
+}
+
+TEST(FOG, TestCppDatetimeWorks)
+{
+  PRExplodedTime date = {0, 35, 10, 12, 6, 10, 2020, 0, 0, {5 * 60 * 60, 0}};
+  mozilla::glean::test_only::what_a_date.Set(&date);
+  ASSERT_TRUE(mozilla::glean::test_only::what_a_date.TestHasValue("test-ping"));
+
+  nsCString received;
+  received.Assign(
+      mozilla::glean::test_only::what_a_date.TestGetValue("test-ping"));
+  ASSERT_STREQ(received.get(), "2020-11-06T12:10:35+05:00");
 }
