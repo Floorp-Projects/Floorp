@@ -561,6 +561,7 @@ talos-webgl:
         by-test-platform:
             .*-ccov.*/.*: []
             android.*: []
+            windows7-32.*: []
             (linux64|windows10|macos).*-qr.*: ['webgl-ipc', 'webrender-sw']
             windows10-64-ccov-qr/opt: []
             default: ['webgl-ipc']
@@ -585,6 +586,7 @@ talos-webgl-profiling:
         by-test-platform:
             .*-ccov.*/.*: []
             android.*: []
+            windows7-32.*: []
             default: ['webgl-ipc']
     max-run-time: 1800
     mozharness:
