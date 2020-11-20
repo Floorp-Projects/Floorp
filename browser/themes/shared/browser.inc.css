@@ -81,6 +81,11 @@
   transition: min-height 170ms ease-out, max-height 170ms ease-out, visibility 170ms linear;
 }
 
+#PersonalToolbar[collapsed=false]:not([initialized]) > #personal-toolbar-empty {
+  width: 0;
+  visibility: hidden;
+}
+
 #PersonalToolbar[collapsed=true].instant {
   visibility: collapse;
 }
