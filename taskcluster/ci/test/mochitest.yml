@@ -5,6 +5,7 @@
 job-defaults:
     suite:
         category: mochitest
+    force-py2: true
     target:
         by-test-platform:
             android-em-7.*: geckoview-androidTest.apk

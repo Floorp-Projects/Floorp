@@ -45,6 +45,7 @@ mozharness_test_run_schema = Schema(
     {
         Required("using"): "mozharness-test",
         Required("test"): test_description_schema,
+        Optional("force-py2"): bool,
         # Base work directory used to set up the task.
         Optional("workdir"): text_type,
     }
@@ -91,6 +92,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
     worker = taskdesc["worker"] = job["worker"]
 
     # apply some defaults
+    run.setdefault("force-py2", False)
     worker["docker-image"] = test["docker-image"]
     worker["allow-ptrace"] = True  # required for all tests, for crashreporter
     worker["loopback-video"] = test["loopback-video"]
@@ -131,12 +133,13 @@ def mozharness_test_on_docker(config, job, taskdesc):
     env = worker.setdefault("env", {})
     env.update(
         {
+            "ENABLE_E10S": text_type(bool(test.get("e10s"))).lower(),
             "MOZHARNESS_CONFIG": " ".join(mozharness["config"]),
             "MOZHARNESS_SCRIPT": mozharness["script"],
             "MOZILLA_BUILD_URL": {"task-reference": installer},
             "NEED_PULSEAUDIO": "true",
             "NEED_WINDOW_MANAGER": "true",
-            "ENABLE_E10S": text_type(bool(test.get("e10s"))).lower(),
+            "PYTHON": "python2.7" if run["force-py2"] else "python3",
             "WORKING_DIR": "/builds/worker",
         }
     )
@@ -236,10 +239,12 @@ def mozharness_test_on_docker(config, job, taskdesc):
 
 @run_job_using("generic-worker", "mozharness-test", schema=mozharness_test_run_schema)
 def mozharness_test_on_generic_worker(config, job, taskdesc):
+    run = job["run"]
     test = taskdesc["run"]["test"]
     mozharness = test["mozharness"]
     worker = taskdesc["worker"] = job["worker"]
 
+    run.setdefault("force-py2", False)
     bitbar_script = "test-linux.sh"
 
     is_macosx = worker["os"] == "macosx"
@@ -304,6 +309,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
     env = worker.setdefault("env", {})
     env["GECKO_HEAD_REPOSITORY"] = config.params["head_repository"]
     env["GECKO_HEAD_REV"] = config.params["head_rev"]
+    env["PYTHON"] = "python2.7" if run["force-py2"] else "python3"
 
     # this list will get cleaned up / reduced / removed in bug 1354088
     if is_macosx:
@@ -354,7 +360,9 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
 
     if is_windows:
         mh_command = [
-            "c:\\mozilla-build\\python\\python.exe",
+            "c:\\mozilla-build\\{python}\\{python}.exe".format(
+                python="python" if run["force-py2"] else "python3"
+            ),
             "-u",
             "mozharness\\scripts\\" + normpath(mozharness["script"]),
         ]
@@ -362,7 +370,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
         mh_command = ["bash", "./{}".format(bitbar_script)]
     elif is_macosx and "macosx1014-64" in test["test-platform"]:
         mh_command = [
-            "/usr/local/bin/python2",
+            "/usr/local/bin/{}".format("python2" if run["force-py2"] else "python3"),
             "-u",
             "mozharness/scripts/" + mozharness["script"],
         ]
@@ -372,7 +380,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             # Using /usr/bin/python2.7 rather than python2.7 because
             # /usr/local/bin/python2.7 is broken on the mac workers.
             # See bug #1547903.
-            "/usr/bin/python2.7",
+            "/usr/bin/{}".format("python2.7" if run["force-py2"] else "python3"),
             "-u",
             "mozharness/scripts/" + mozharness["script"],
         ]
