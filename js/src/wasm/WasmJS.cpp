@@ -322,7 +322,12 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
   bool debug = WasmDebuggerActive(cx);
   bool functionReferences = WasmFunctionReferencesFlag(cx);
   bool gc = WasmGcFlag(cx);
-  bool simd = WasmSimdFlag(cx);
+#ifdef JS_CODEGEN_ARM64
+  // Cranelift aarch64 has full SIMD support.
+  bool simdOnNonAarch64 = false;
+#else
+  bool simdOnNonAarch64 = WasmSimdFlag(cx);
+#endif
   if (reason) {
     char sep = 0;
     if (debug && !Append(reason, "debug", &sep)) {
@@ -334,11 +339,11 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
     if (gc && !Append(reason, "gc", &sep)) {
       return false;
     }
-    if (simd && !Append(reason, "simd", &sep)) {
+    if (simdOnNonAarch64 && !Append(reason, "simd", &sep)) {
       return false;
     }
   }
-  *isDisabled = debug || functionReferences || gc || simd;
+  *isDisabled = debug || functionReferences || gc || simdOnNonAarch64;
   return true;
 }
 
@@ -375,8 +380,8 @@ bool wasm::MultiValuesAvailable(JSContext* cx) {
 }
 
 bool wasm::SimdAvailable(JSContext* cx) {
-  // Cranelift does not support SIMD.
-  return WasmSimdFlag(cx) && (BaselineAvailable(cx) || IonAvailable(cx));
+  return WasmSimdFlag(cx) &&
+         (BaselineAvailable(cx) || IonAvailable(cx) || CraneliftAvailable(cx));
 }
 
 bool wasm::ThreadsAvailable(JSContext* cx) {

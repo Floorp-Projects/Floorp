@@ -69,6 +69,7 @@ struct CraneliftStaticEnvironment {
   bool platform_is_windows;
   bool ref_types_enabled;
   bool threads_enabled;
+  bool v128_enabled;
   size_t static_memory_bound;
   size_t memory_guard_size;
   size_t memory_base_tls_offset;
@@ -168,6 +169,7 @@ struct BD_ConstantValue {
     float f32;
     double f64;
     void* r;
+    uint8_t v128[16];  // Little-endian
   } u;
 };
 
