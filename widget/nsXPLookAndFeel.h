@@ -49,21 +49,27 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
 
   void Init();
 
+  // These functions will return a value specified by an override pref, if it
+  // exists, and otherwise will call into the NativeGetXxx function to get the
+  // platform-specific value.
   //
-  // All these routines will return NS_OK if they have a value,
-  // in which case the nsLookAndFeel should use that value;
-  // otherwise we'll return NS_ERROR_NOT_AVAILABLE, in which case, the
-  // platform-specific nsLookAndFeel should use its own values instead.
-  //
-  nsresult GetColorImpl(ColorID aID, bool aUseStandinsForNativeColors,
-                        nscolor& aResult);
-  virtual nsresult GetIntImpl(IntID aID, int32_t& aResult);
-  virtual nsresult GetFloatImpl(FloatID aID, float& aResult);
+  // NS_ERROR_NOT_AVAILABLE is returned if there is neither an override pref or
+  // a platform-specific value.
+  nsresult GetColorValue(ColorID aID, bool aUseStandinsForNativeColors,
+                         nscolor& aResult);
+  nsresult GetIntValue(IntID aID, int32_t& aResult);
+  nsresult GetFloatValue(FloatID aID, float& aResult);
+  // Same, but returns false if there is no platform-specific value.
+  // (There are no override prefs for font values.)
+  bool GetFontValue(FontID aID, nsString& aName, gfxFontStyle& aStyle) {
+    return NativeGetFont(aID, aName, aStyle);
+  }
 
-  // This one is different: there are no override prefs (fixme?), so
-  // there is no XP implementation, only per-system impls.
-  virtual bool GetFontImpl(FontID aID, nsString& aName,
-                           gfxFontStyle& aStyle) = 0;
+  virtual nsresult NativeGetInt(IntID aID, int32_t& aResult) = 0;
+  virtual nsresult NativeGetFloat(FloatID aID, float& aResult) = 0;
+  virtual nsresult NativeGetColor(ColorID aID, nscolor& aResult) = 0;
+  virtual bool NativeGetFont(FontID aID, nsString& aName,
+                             gfxFontStyle& aStyle) = 0;
 
   virtual void RefreshImpl();
 
@@ -92,7 +98,6 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
   void InitFromPref(nsLookAndFeelIntPref* aPref);
   void InitFromPref(nsLookAndFeelFloatPref* aPref);
   void InitColorFromPref(int32_t aIndex);
-  virtual nsresult NativeGetColor(ColorID aID, nscolor& aResult) = 0;
   bool IsSpecialColor(ColorID aID, nscolor& aColor);
   bool ColorIsNotCSSAccessible(ColorID aID);
   nscolor GetStandinForNativeColor(ColorID aID);
