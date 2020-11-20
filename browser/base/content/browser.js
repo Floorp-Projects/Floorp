@@ -1620,6 +1620,16 @@ var gBrowserInit = {
   },
 
   onBeforeInitialXULLayout() {
+    BookmarkingUI.updateEmptyToolbarMessage();
+    setToolbarVisibility(
+      BookmarkingUI.toolbar,
+      gBookmarksToolbar2h2020
+        ? gBookmarksToolbarVisibility
+        : gBookmarksToolbarVisibility == "always",
+      false,
+      false
+    );
+
     // Set a sane starting width/height for all resolutions on new profiles.
     if (Services.prefs.getBoolPref("privacy.resistFingerprinting")) {
       // When the fingerprinting resistance is enabled, making sure that we don't
@@ -1715,15 +1725,6 @@ var gBrowserInit = {
       let node = document.getElementById(area);
       CustomizableUI.registerToolbarNode(node);
     }
-    let bookmarksToolbarVisibility = gBookmarksToolbar2h2020
-      ? gBookmarksToolbarVisibility
-      : gBookmarksToolbarVisibility == "always";
-    setToolbarVisibility(
-      gNavToolbox.querySelector("#PersonalToolbar"),
-      bookmarksToolbarVisibility,
-      false,
-      false
-    );
     BrowserSearch.initPlaceHolder();
 
     // Hack to ensure that the various initial pages favicon is loaded
@@ -2273,6 +2274,10 @@ var gBrowserInit = {
     }
 
     scheduleIdleTask(() => {
+      PlacesToolbarHelper.startShowingToolbar();
+    });
+
+    scheduleIdleTask(() => {
       // Initialize the Sync UI
       gSync.init();
     });
@@ -2369,11 +2374,11 @@ var gBrowserInit = {
       //                      a tabbrowser, which will be replaced by this
       //                      window (for this case, all other arguments are
       //                      ignored).
-      if (!window.arguments || !window.arguments[0]) {
+      let uri = window.arguments?.[0];
+      if (!uri || uri instanceof window.XULElement) {
         return null;
       }
 
-      let uri = window.arguments[0];
       let defaultArgs = BrowserHandler.defaultArgs;
 
       // If the given URI is different from the homepage, we want to load it.
@@ -6488,7 +6493,7 @@ function setToolbarVisibility(
         isVisible = false;
         break;
       case "newtab":
-        let { currentURI } = gBrowser;
+        let currentURI = gBrowser?.currentURI;
         if (!gBrowserInit.domContentLoaded) {
           let uriToLoad = gBrowserInit.uriToLoadPromise;
           if (uriToLoad) {
@@ -6501,7 +6506,8 @@ function setToolbarVisibility(
             } catch (ex) {}
           }
         }
-        isVisible = BookmarkingUI.isOnNewTabPage({ currentURI });
+        isVisible =
+          !!currentURI && BookmarkingUI.isOnNewTabPage({ currentURI });
         break;
     }
   }
