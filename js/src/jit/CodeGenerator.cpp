@@ -3787,8 +3787,6 @@ void CodeGenerator::visitIsConstructing(LIsConstructing* lir) {
   masm.andPtr(Imm32(0x1), output);
 }
 
-void CodeGenerator::visitStart(LStart* lir) {}
-
 void CodeGenerator::visitReturn(LReturn* lir) {
 #if defined(JS_NUNBOX32)
   DebugOnly<LAllocation*> type = lir->getOperand(TYPE_INDEX);
@@ -6877,9 +6875,6 @@ void CodeGenerator::emitDebugForceBailing(LInstruction* lir) {
     return;
   }
   if (!lir->snapshot()) {
-    return;
-  }
-  if (lir->isStart()) {
     return;
   }
   if (lir->isOsiPoint()) {
