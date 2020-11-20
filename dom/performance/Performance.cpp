@@ -64,8 +64,9 @@ already_AddRefed<Performance> Performance::CreateForWorker(
   return performance.forget();
 }
 
-Performance::Performance(bool aSystemPrincipal)
-    : mResourceTimingBufferSize(kDefaultResourceTimingBufferSize),
+Performance::Performance(nsIGlobalObject* aGlobal, bool aSystemPrincipal)
+    : DOMEventTargetHelper(aGlobal),
+      mResourceTimingBufferSize(kDefaultResourceTimingBufferSize),
       mPendingNotificationObserversTask(false),
       mPendingResourceTimingBufferFullEvent(false),
       mSystemPrincipal(aSystemPrincipal) {
