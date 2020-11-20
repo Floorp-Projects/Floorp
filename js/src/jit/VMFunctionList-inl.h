@@ -38,9 +38,7 @@ namespace jit {
   _(ArgumentsObjectCreateForIon, js::ArgumentsObject::createForIon)            \
   _(ArrayConstructorOneArg, js::ArrayConstructorOneArg)                        \
   _(ArrayJoin, js::jit::ArrayJoin)                                             \
-  _(ArrayPopDense, js::jit::ArrayPopDense)                                     \
   _(ArrayPushDense, js::jit::ArrayPushDense)                                   \
-  _(ArrayShiftDense, js::jit::ArrayShiftDense)                                 \
   _(ArraySliceDense, js::ArraySliceDense)                                      \
   _(AsyncFunctionAwait, js::AsyncFunctionAwait)                                \
   _(AsyncFunctionResolve, js::AsyncFunctionResolve)                            \
