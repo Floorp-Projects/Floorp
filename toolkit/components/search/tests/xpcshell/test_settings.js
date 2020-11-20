@@ -30,7 +30,6 @@ add_task(async function setup() {
 
 async function loadSettingsFile(settingsFile, setVersion) {
   settingsTemplate = await readJSONFile(do_get_file(settingsFile));
-  settingsTemplate.buildID = getAppInfo().platformBuildID;
   if (setVersion) {
     settingsTemplate.version = SearchUtils.SETTINGS_VERSION;
   }
@@ -161,6 +160,10 @@ add_task(async function test_settings_write() {
 
   info("Check search.json.mozlz4");
   let settingsData = await promiseSettingsData();
+
+  // Remove buildID and locale, as they are no longer used.
+  delete settingsTemplate.buildID;
+  delete settingsTemplate.locale;
 
   for (let engine of settingsTemplate.engines) {
     // Remove _shortName from the settings template, as it is no longer supported,

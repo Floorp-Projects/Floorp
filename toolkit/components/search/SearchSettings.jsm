@@ -190,18 +190,9 @@ class SearchSettings {
     }
 
     let settings = {};
-    let locale = Services.locale.requestedLocale;
-    let buildID = Services.appinfo.platformBuildID;
 
     // Allows us to force a settings refresh should the settings format change.
     settings.version = SearchUtils.SETTINGS_VERSION;
-    // We don't want to incur the costs of stat()ing each plugin on every
-    // startup when the only (supported) time they will change is during
-    // app updates (where the buildID is obviously going to change).
-    // Extension-shipped plugins are the only exception to this, but their
-    // directories are blown away during updates, so we'll detect their changes.
-    settings.buildID = buildID;
-    settings.locale = locale;
     settings.engines = [...this._searchService._engines.values()];
     settings.metaData = this._metaData;
 
