@@ -12,16 +12,12 @@
 namespace mozilla {
 
 void OverflowAreas::UnionWith(const OverflowAreas& aOther) {
-  // Bug 1677642: We should probably change scrollable overflow to use
-  // UnionRectEdges (but leave ink overflow using UnionRect)
   InkOverflow().UnionRect(InkOverflow(), aOther.InkOverflow());
   ScrollableOverflow().UnionRect(ScrollableOverflow(),
                                  aOther.ScrollableOverflow());
 }
 
 void OverflowAreas::UnionAllWith(const nsRect& aRect) {
-  // Bug 1677642: We should probably change scrollable overflow to use
-  // UnionRectEdges (but leave ink overflow using UnionRect).
   InkOverflow().UnionRect(InkOverflow(), aRect);
   ScrollableOverflow().UnionRect(ScrollableOverflow(), aRect);
 }

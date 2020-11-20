@@ -9556,8 +9556,6 @@ bool nsIFrame::FinishAndStoreOverflow(OverflowAreas& aOverflowAreas,
   // the area unnecessarily.
   if ((aNewSize.width != 0 || !IsInlineFrame()) &&
       !HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
-    // Bug 1677642: We should probably call OverflowArea::UnionAllWith() once
-    // the scrollable overflow is using UnionEdges.
     for (const auto otype : AllOverflowTypes()) {
       nsRect& o = aOverflowAreas.Overflow(otype);
       o.UnionRectEdges(o, bounds);
