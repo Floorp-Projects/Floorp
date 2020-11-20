@@ -465,8 +465,38 @@ void nsHttpResponseHead::AssignDefaultStatusText() {
     case 417:
       mStatusText.AssignLiteral("Expectation Failed");
       break;
+    case 418:
+      mStatusText.AssignLiteral("I'm a teapot");
+      break;
     case 421:
       mStatusText.AssignLiteral("Misdirected Request");
+      break;
+    case 422:
+      mStatusText.AssignLiteral("Unprocessable Entity");
+      break;
+    case 423:
+      mStatusText.AssignLiteral("Locked");
+      break;
+    case 424:
+      mStatusText.AssignLiteral("Failed Dependency");
+      break;
+    case 425:
+      mStatusText.AssignLiteral("Too Early");
+      break;
+    case 426:
+      mStatusText.AssignLiteral("Upgrade Required");
+      break;
+    case 428:
+      mStatusText.AssignLiteral("Precondition Required");
+      break;
+    case 429:
+      mStatusText.AssignLiteral("Too Many Requests");
+      break;
+    case 431:
+      mStatusText.AssignLiteral("Request Header Fields Too Large");
+      break;
+    case 451:
+      mStatusText.AssignLiteral("Unavailable For Legal Reasons");
       break;
     case 501:
       mStatusText.AssignLiteral("Not Implemented");
@@ -482,6 +512,21 @@ void nsHttpResponseHead::AssignDefaultStatusText() {
       break;
     case 505:
       mStatusText.AssignLiteral("HTTP Version Unsupported");
+      break;
+    case 506:
+      mStatusText.AssignLiteral("Variant Also Negotiates");
+      break;
+    case 507:
+      mStatusText.AssignLiteral("Insufficient Storage ");
+      break;
+    case 508:
+      mStatusText.AssignLiteral("Loop Detected");
+      break;
+    case 510:
+      mStatusText.AssignLiteral("Not Extended");
+      break;
+    case 511:
+      mStatusText.AssignLiteral("Network Authentication Required");
       break;
     default:
       mStatusText.AssignLiteral("No Reason Phrase");
