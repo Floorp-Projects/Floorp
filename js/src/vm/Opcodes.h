@@ -2748,8 +2748,8 @@
     /*
      * Initialize a global lexical binding.
      *
-     * The binding must already have been created by `DefLet` or `DefConst` and
-     * must be uninitialized.
+     * The binding must already have been created by
+     * `GlobalOrEvalDeclInstantiation` and must be uninitialized.
      *
      * Like `JSOp::InitLexical` but for global lexicals. Unlike `InitLexical`
      * this can't be used to mark a binding as uninitialized.
@@ -3393,11 +3393,13 @@
      */ \
     MACRO(DefConst, def_const, NULL, 5, 0, 0, JOF_ATOM) \
     /*
-     * Check for conflicting bindings before `JSOp::Def{Var,Let,Const,Fun}` in
-     * global or sloppy eval scripts.
+     * Check for conflicting bindings and then initialize them in global or
+     * sloppy eval scripts. This is required for global scripts with any
+     * top-level bindings, or any sloppy-eval scripts with any non-lexical
+     * top-level bindings.
      *
-     * Implements: [GlobalDeclarationInstantiation][1] steps 5, 6, 10 and 12,
-     * and [EvalDeclarationInstantiation][2] steps 5 and 8.
+     * Implements: [GlobalDeclarationInstantiation][1] and
+     *             [EvalDeclarationInstantiation][2] (except step 12).
      *
      * The `lastFun` argument is a GCThingIndex of the last hoisted top-level
      * function that is part of top-level script initialization. The gcthings

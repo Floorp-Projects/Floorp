@@ -2384,30 +2384,6 @@ bool BytecodeEmitter::defineHoistedTopLevelFunctions(ParseNode* body) {
   return emitHoistedFunctionsInList(&body->as<ListNode>());
 }
 
-class DynamicBindingIter : public ParserBindingIter {
- public:
-  explicit DynamicBindingIter(GlobalSharedContext* sc)
-      : ParserBindingIter(*sc->bindings) {}
-
-  explicit DynamicBindingIter(EvalSharedContext* sc)
-      : ParserBindingIter(*sc->bindings, /* strict = */ false) {
-    MOZ_ASSERT(!sc->strict());
-  }
-
-  JSOp bindingOp() const {
-    switch (kind()) {
-      case BindingKind::Var:
-        return JSOp::DefVar;
-      case BindingKind::Let:
-        return JSOp::DefLet;
-      case BindingKind::Const:
-        return JSOp::DefConst;
-      default:
-        MOZ_CRASH("Bad BindingKind");
-    }
-  }
-};
-
 // For Global and sloppy-Eval scripts, this performs most of the steps of the
 // spec's [GlobalDeclarationInstantiation] and [EvalDeclarationInstantiation]
 // operations.
@@ -2443,44 +2419,35 @@ bool BytecodeEmitter::emitDeclarationInstantiation(ParseNode* body) {
     }
   }
 
-  // Check for declaration conflicts before the Def* ops.
-  if (!emitGCIndexOp(JSOp::GlobalOrEvalDeclInstantiation, GCThingIndex())) {
+#if DEBUG
+  // There should be no emitted functions yet.
+  for (const auto& thing : perScriptData().gcThingList().objects()) {
+    MOZ_ASSERT(thing.isEmptyGlobalScope() || thing.isScope());
+  }
+#endif
+
+  // Emit the hoisted functions to gc-things list. There is no bytecode
+  // generated yet to bind them.
+  if (!defineHoistedTopLevelFunctions(body)) {
     return false;
   }
 
-  // Emit the Def{Var,Let,Const} ops.
-  if (sc->isGlobalContext()) {
-    for (DynamicBindingIter bi(sc->asGlobalContext()); bi; bi++) {
-      const ParserAtom* name = bi.name();
+  // Save the last GCThingIndex emitted. The hoisted functions are contained in
+  // the gc-things list up until this point. This set of gc-things also contain
+  // initial scopes (of which there must be at least one).
+  MOZ_ASSERT(perScriptData().gcThingList().length() > 0);
+  GCThingIndex lastFun =
+      GCThingIndex(perScriptData().gcThingList().length() - 1);
 
-      // Define the name in the prologue. Do not emit DefVar for
-      // functions that we'll emit DefFun for.
-      if (bi.isTopLevelFunction()) {
-        continue;
-      }
-
-      if (!emitAtomOp(bi.bindingOp(), name)) {
-        return false;
-      }
-    }
-  } else {
-    MOZ_ASSERT(sc->isEvalContext());
-
-    for (DynamicBindingIter bi(sc->asEvalContext()); bi; bi++) {
-      MOZ_ASSERT(bi.bindingOp() == JSOp::DefVar);
-
-      if (bi.isTopLevelFunction()) {
-        continue;
-      }
-
-      if (!emitAtomOp(JSOp::DefVar, bi.name())) {
-        return false;
-      }
-    }
+#if DEBUG
+  for (const auto& thing : perScriptData().gcThingList().objects()) {
+    MOZ_ASSERT(thing.isEmptyGlobalScope() || thing.isScope() ||
+               thing.isFunction());
   }
+#endif
 
-  // Emit the DefFun ops.
-  if (!defineHoistedTopLevelFunctions(body)) {
+  // Check for declaration conflicts and initialize the bindings.
+  if (!emitGCIndexOp(JSOp::GlobalOrEvalDeclInstantiation, lastFun)) {
     return false;
   }
 
@@ -2517,10 +2484,14 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
   bool isSloppyEval = sc->isEvalContext() && !sc->strict();
   if (isSloppyEval && body->is<LexicalScopeNode>() &&
       !body->as<LexicalScopeNode>().isEmptyScope()) {
-    // Sloppy eval scripts may need to emit DEFFUNs in the prologue. If there is
-    // an immediately enclosed lexical scope, we need to enter the lexical
-    // scope in the prologue for the DEFFUNs to pick up the right
-    // environment chain.
+    // Sloppy eval scripts may emit hoisted functions bindings with a
+    // `JSOp::GlobalOrEvalDeclInstantiation` opcode below. If this eval needs a
+    // top-level lexical environment, we must ensure that environment is created
+    // before those functions are created and bound.
+    //
+    // This differs from the global-script case below because the global-lexical
+    // environment exists outside the script itself. In the case of strict eval
+    // scripts, the `emitterScope` above is already sufficient.
     EmitterScope lexicalEmitterScope(this);
     LexicalScopeNode* scope = &body->as<LexicalScopeNode>();
 

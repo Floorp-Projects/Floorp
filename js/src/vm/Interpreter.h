@@ -664,7 +664,7 @@ void ReportInNotObjectError(JSContext* cx, HandleValue lref, int lindex,
 
 // The parser only reports redeclarations that occurs within a single
 // script. Due to the extensibility of the global lexical scope, we also check
-// for redeclarations during runtime in JSOp::Def{Var,Let,Const}.
+// for redeclarations during runtime in JSOp::GlobalOrEvalDeclInstantation.
 void ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name,
                                 const char* redeclKind);
 

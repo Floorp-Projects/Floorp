@@ -7,6 +7,7 @@
 #include "frontend/FunctionEmitter.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Unused.h"
 
 #include "builtin/ModuleObject.h"          // ModuleObject
 #include "frontend/BytecodeEmitter.h"      // BytecodeEmitter
@@ -307,14 +308,11 @@ bool FunctionEmitter::emitTopLevelFunction(GCThingIndex index) {
   MOZ_ASSERT(syntaxKind_ == FunctionSyntaxKind::Statement);
   MOZ_ASSERT(bce_->inPrologue());
 
-  if (!bce_->emitGCIndexOp(JSOp::Lambda, index)) {
-    //              [stack] FUN
-    return false;
-  }
-  if (!bce_->emit1(JSOp::DefFun)) {
-    //              [stack]
-    return false;
-  }
+  // NOTE: The `index` is not directly stored as an opcode, but we collect the
+  // range of indices in `BytecodeEmitter::emitDeclarationInstantiation` instead
+  // of discrete indices.
+  mozilla::Unused << index;
+
   return true;
 }
 
