@@ -198,10 +198,6 @@ enum class BailoutKind : uint8_t {
 
   // END Invalid assumptions bailouts
 
-  // A bailout at the very start of a function indicates that there may be
-  // a type mismatch in the arguments that necessitates a reflow.
-  ArgumentCheck,
-
   // A bailout triggered by a bounds-check failure.
   BoundsCheck,
 
@@ -363,8 +359,6 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "DoubleOutput";
 
     // Other bailouts.
-    case BailoutKind::ArgumentCheck:
-      return "ArgumentCheck";
     case BailoutKind::BoundsCheck:
       return "BoundsCheck";
     case BailoutKind::ShapeGuard:

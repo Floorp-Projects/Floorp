@@ -1994,17 +1994,7 @@ void LIRGenerator::visitStringConvertCase(MStringConvertCase* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitStart(MStart* start) {
-  LStart* lir = new (alloc()) LStart;
-
-  // Create a snapshot that captures the initial state of the function.
-  assignSnapshot(lir, start->bailoutKind());
-  if (start->block()->graph().entryBlock() == start->block()) {
-    lirGraph_.setEntrySnapshot(lir->snapshot());
-  }
-
-  add(lir);
-}
+void LIRGenerator::visitStart(MStart* start) {}
 
 void LIRGenerator::visitNop(MNop* nop) {}
 

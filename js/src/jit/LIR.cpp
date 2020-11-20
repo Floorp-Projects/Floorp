@@ -29,7 +29,6 @@ LIRGraph::LIRGraph(MIRGraph* mir)
       numInstructions_(1),  // First id is 1.
       localSlotCount_(0),
       argumentSlotCount_(0),
-      entrySnapshot_(nullptr),
       mir_(*mir) {}
 
 bool LIRGraph::addConstantToPool(const Value& v, uint32_t* index) {

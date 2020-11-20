@@ -3393,16 +3393,6 @@ class LPowHalfD : public LInstructionHelper<1, 1, 0> {
   MPowHalf* mir() const { return mir_->toPowHalf(); }
 };
 
-// No-op instruction that is used to hold the entry snapshot. This simplifies
-// register allocation as it doesn't need to sniff the snapshot out of the
-// LIRGraph.
-class LStart : public LInstructionHelper<0, 0, 0> {
- public:
-  LIR_HEADER(Start)
-
-  LStart() : LInstructionHelper(classOpcode) {}
-};
-
 class LNaNToZero : public LInstructionHelper<1, 1, 1> {
  public:
   LIR_HEADER(NaNToZero)
