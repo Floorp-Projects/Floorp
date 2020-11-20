@@ -44,14 +44,16 @@ promise_test(async t => {
       t, /*audio=*/false, /*video=*/true, /*videoCodecPreference=*/"VP8");
   const recorder = new MediaRecorder(stream);  // Possibly passthrough.
   recorder.start();
-  await waitForReceivedFrames(t, remotePc, false, true, 10);
+  await waitForReceivedFramesOrPackets(t, remotePc, false, true, 10);
 
   // Switch codec to VP9; we expect onerror to not be invoked.
   recorder.onerror = t.step_func(() => assert_unreached(
       "MediaRecorder should be prepared to handle codec switches"));
   setTransceiverCodecPreference(transceivers.video, "VP9");
-  exchangeOfferAnswer(localPc, remotePc);
-  await waitForReceivedCodec(t, remotePc, "VP9");
+  await Promise.all([
+    exchangeOfferAnswer(localPc, remotePc),
+    waitForReceivedCodec(t, remotePc, "VP9")
+  ]);
 }, "PeerConnection passthrough MediaRecorder should be prepared to handle " +
         "the codec switching from VP8 to VP9");
 

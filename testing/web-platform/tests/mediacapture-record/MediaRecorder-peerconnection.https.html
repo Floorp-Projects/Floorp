@@ -42,7 +42,7 @@ function runTests({kind, mimeType}) {
       const recorder = new MediaRecorder(stream, { mimeType });
       recorder.start();
       await new Promise(r => recorder.onstart = r);
-      await waitForReceivedFrames(
+      await waitForReceivedFramesOrPackets(
         t, remotePc, kind.audio, kind.video, 10);
       for (transceiver of remotePc.getTransceivers()) {
         transceiver.receiver.track.stop();
