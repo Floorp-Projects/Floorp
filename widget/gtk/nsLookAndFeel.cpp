@@ -589,21 +589,6 @@ static int32_t ConvertGTKStepperStyleToMozillaScrollArrowStyle(
 nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
   nsresult res = NS_OK;
 
-  // Set these before they can get overrided in the nsXPLookAndFeel.
-  switch (aID) {
-    case IntID::ScrollButtonLeftMouseButtonAction:
-      aResult = 0;
-      return NS_OK;
-    case IntID::ScrollButtonMiddleMouseButtonAction:
-      aResult = 1;
-      return NS_OK;
-    case IntID::ScrollButtonRightMouseButtonAction:
-      aResult = 2;
-      return NS_OK;
-    default:
-      break;
-  }
-
   res = nsXPLookAndFeel::GetIntImpl(aID, aResult);
   if (NS_SUCCEEDED(res)) return res;
   res = NS_OK;
@@ -614,6 +599,15 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
   // are read, and so EnsureInit(), which depends on preference values,
   // is deliberately delayed until required.
   switch (aID) {
+    case IntID::ScrollButtonLeftMouseButtonAction:
+      aResult = 0;
+      break;
+    case IntID::ScrollButtonMiddleMouseButtonAction:
+      aResult = 1;
+      break;
+    case IntID::ScrollButtonRightMouseButtonAction:
+      aResult = 2;
+      break;
     case IntID::CaretBlinkTime:
       EnsureInit();
       aResult = mCaretBlinkTime;
