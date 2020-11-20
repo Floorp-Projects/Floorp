@@ -804,9 +804,10 @@ void EditorEventListener::RefuseToDropAndHideCaret(DragEvent* aDragEvent) {
 
   aDragEvent->PreventDefault();
   aDragEvent->StopImmediatePropagation();
-  MOZ_ASSERT(aDragEvent->GetDataTransfer());
-  aDragEvent->GetDataTransfer()->SetDropEffectInt(
-      nsIDragService::DRAGDROP_ACTION_NONE);
+  DataTransfer* dataTransfer = aDragEvent->GetDataTransfer();
+  if (dataTransfer) {
+    dataTransfer->SetDropEffectInt(nsIDragService::DRAGDROP_ACTION_NONE);
+  }
   if (mCaret) {
     mCaret->SetVisible(false);
   }
@@ -902,9 +903,9 @@ nsresult EditorEventListener::DragOverOrDrop(DragEvent* aDragEvent) {
   // because once DataTransfer is retrieved, DragEvent has initialized it
   // with nsContentUtils::SetDataTransferInEvent() but it does not check
   // whether the content is movable or not.
-  MOZ_ASSERT(aDragEvent->GetDataTransfer());
   DataTransfer* dataTransfer = aDragEvent->GetDataTransfer();
-  if (dataTransfer->DropEffectInt() == nsIDragService::DRAGDROP_ACTION_MOVE) {
+  if (dataTransfer &&
+      dataTransfer->DropEffectInt() == nsIDragService::DRAGDROP_ACTION_MOVE) {
     nsCOMPtr<nsINode> dragSource = dataTransfer->GetMozSourceNode();
     if (dragSource && !dragSource->IsEditable()) {
       // In this case, we shouldn't allow "move" because the drag source
@@ -983,11 +984,15 @@ bool EditorEventListener::CanInsertAtDropPosition(DragEvent* aDragEvent) {
   MOZ_ASSERT(!mEditorBase->IsReadonly());
   MOZ_ASSERT(DragEventHasSupportingData(aDragEvent));
 
+  DataTransfer* dataTransfer = aDragEvent->GetDataTransfer();
+  if (NS_WARN_IF(!dataTransfer)) {
+    return false;
+  }
+
   // If there is no source node, this is probably an external drag and the
   // drop is allowed. The later checks rely on checking if the drag target
   // is the same as the drag source.
-  nsCOMPtr<nsINode> sourceNode =
-      aDragEvent->GetDataTransfer()->GetMozSourceNode();
+  nsCOMPtr<nsINode> sourceNode = dataTransfer->GetMozSourceNode();
   if (!sourceNode) {
     return true;
   }
