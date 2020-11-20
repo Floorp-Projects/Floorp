@@ -13,7 +13,7 @@ cd build
 cmake \
   -GNinja \
   -DCMAKE_BUILD_TYPE=Release \
-  -DLLVM_TARGETS_TO_BUILD=X86 \
+  -DLLVM_TARGETS_TO_BUILD="X86;AArch64" \
   -DCMAKE_C_COMPILER=$MOZ_FETCHES_DIR/gcc/bin/gcc \
   ..
 
