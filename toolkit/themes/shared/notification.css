@@ -125,6 +125,11 @@ notification[type="critical"] > hbox > .messageImage {
   margin-inline-end: 16px;
 }
 
+.messageCloseButton:-moz-focusring {
+  /* Override the dotted outline from button.css */
+  outline: none;
+}
+
 .messageCloseButton:-moz-focusring > .toolbarbutton-icon {
   outline: var(--toolbarbutton-focus-outline, 2px solid currentColor);
   -moz-outline-radius: var(--toolbarbutton-border-radius, 4px);
