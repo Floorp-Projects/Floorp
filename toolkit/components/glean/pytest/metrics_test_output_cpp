@@ -49,6 +49,14 @@ namespace test_nested {
      */
     constexpr impl::UuidMetric uuid_metric(14);
 
+    /**
+     * generated from test.nested.datetime_metric
+     *
+     * A multi-line
+     * description
+     */
+    constexpr impl::DatetimeMetric datetime_metric(15);
+
 }
 
 } // namespace glean
