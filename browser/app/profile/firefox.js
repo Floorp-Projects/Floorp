@@ -1463,6 +1463,7 @@ pref("browser.messaging-system.personalized-cfr.score-threshold", 5000);
 // See Console.jsm LOG_LEVELS for all possible values
 pref("messaging-system.log", "warn");
 pref("messaging-system.rsexperimentloader.enabled", true);
+pref("messaging-system.rsexperimentloader.collection_id", "nimbus-desktop-experiments");
 
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);

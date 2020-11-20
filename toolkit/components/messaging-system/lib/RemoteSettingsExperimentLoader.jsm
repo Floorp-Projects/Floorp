@@ -41,7 +41,8 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIUpdateTimerManager"
 );
 
-const COLLECTION_ID = "nimbus-desktop-experiments";
+const COLLECTION_ID_PREF = "messaging-system.rsexperimentloader.collection_id";
+const COLLECTION_ID_FALLBACK = "nimbus-desktop-experiments";
 const ENABLED_PREF = "messaging-system.rsexperimentloader.enabled";
 const STUDIES_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 
@@ -49,6 +50,13 @@ const TIMER_NAME = "rs-experiment-loader-timer";
 const TIMER_LAST_UPDATE_PREF = `app.update.lastUpdateTime.${TIMER_NAME}`;
 // Use the same update interval as normandy
 const RUN_INTERVAL_PREF = "app.normandy.run_interval_seconds";
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "COLLECTION_ID",
+  COLLECTION_ID_PREF,
+  COLLECTION_ID_FALLBACK
+);
 
 class _RemoteSettingsExperimentLoader {
   constructor() {
