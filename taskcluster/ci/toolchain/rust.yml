@@ -98,6 +98,19 @@ linux64-rust-macos-1.47:
         ]
         toolchain-alias: linux64-rust-macos
 
+linux64-rust-macos-beta:
+    description: "rust repack with macos-cross support"
+    treeherder:
+        symbol: TL(rust-macos-beta)
+    run:
+        arguments: [
+            '--channel', 'beta-2020-11-18',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-apple-darwin',
+            '--target', 'aarch64-apple-darwin',
+        ]
+
 linux64-rust-android-1.47:
     description: "rust repack with android-cross support"
     treeherder:
