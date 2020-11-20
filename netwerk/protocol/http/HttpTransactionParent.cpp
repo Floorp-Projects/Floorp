@@ -142,6 +142,7 @@ nsresult HttpTransactionParent::Init(
   mOnPushCallback = std::move(aOnPushCallback);
   mCaps = caps;
   mConnInfo = cinfo->Clone();
+  mIsHttp3Used = cinfo->IsHttp3();
 
   HttpConnectionInfoCloneArgs infoArgs;
   nsHttpConnectionInfo::SerializeHttpConnectionInfo(cinfo, infoArgs);
@@ -358,6 +359,8 @@ bool HttpTransactionParent::ResponseIsComplete() { return mResponseIsComplete; }
 int64_t HttpTransactionParent::GetTransferSize() { return mTransferSize; }
 
 int64_t HttpTransactionParent::GetRequestSize() { return mRequestSize; }
+
+bool HttpTransactionParent::IsHttp3Used() { return mIsHttp3Used; }
 
 bool HttpTransactionParent::DataSentToChildProcess() {
   return mDataSentToChildProcess;

@@ -396,6 +396,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   bool mDeferredSendProgress;
   bool mWaitingOnPipeOut;
 
+  bool mIsHttp3Used = false;
   bool mDoNotRemoveAltSvc;
 
   // mClosed           := transaction has been explicitly closed

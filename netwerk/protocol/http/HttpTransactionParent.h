@@ -127,6 +127,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   bool mResponseIsComplete;
   int64_t mTransferSize;
   int64_t mRequestSize;
+  bool mIsHttp3Used = false;
   bool mProxyConnectFailed;
   Atomic<bool, ReleaseAcquire> mCanceled;
   Atomic<nsresult, ReleaseAcquire> mStatus;
