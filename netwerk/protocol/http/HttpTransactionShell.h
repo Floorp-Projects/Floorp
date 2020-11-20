@@ -133,6 +133,7 @@ class HttpTransactionShell : public nsISupports {
   virtual bool ResponseIsComplete() = 0;
   virtual int64_t GetTransferSize() = 0;
   virtual int64_t GetRequestSize() = 0;
+  virtual bool IsHttp3Used() = 0;
 
   // Called to notify that a requested DNS cache entry was refreshed.
   virtual void SetDNSWasRefreshed() = 0;
@@ -202,6 +203,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
   virtual bool ResponseIsComplete() override;                                  \
   virtual int64_t GetTransferSize() override;                                  \
   virtual int64_t GetRequestSize() override;                                   \
+  virtual bool IsHttp3Used() override;                                         \
   virtual void SetDNSWasRefreshed() override;                                  \
   virtual void DontReuseConnection() override;                                 \
   virtual bool HasStickyConnection() const override;                           \
