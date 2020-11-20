@@ -26,7 +26,7 @@ async function exchangeOfferAnswer(pc1, pc2) {
  * @param {string} codecPreference The codec preference.
  */
 function setTransceiverCodecPreference(transceiver, codecPreference) {
-  for (let codec of RTCRtpSender.getCapabilities('video').codecs) {
+  for (const codec of RTCRtpSender.getCapabilities('video').codecs) {
     if (codec.mimeType.includes(codecPreference)) {
       transceiver.setCodecPreferences([codec]);
       return;
@@ -42,7 +42,7 @@ function setTransceiverCodecPreference(transceiver, codecPreference) {
  * @param {boolean} useVideo True if video should be used.
  * @param {string} [videoCodecPreference] String containing the codec preference.
  * @returns an array with the two connected peer connections, the remote stream,
- * and the list of transceivers.
+ * and an object containing transceivers by kind.
  */
 async function startConnection(t, useAudio, useVideo, videoCodecPreference) {
   const stream = await navigator.mediaDevices.getUserMedia({
@@ -53,17 +53,16 @@ async function startConnection(t, useAudio, useVideo, videoCodecPreference) {
   t.add_cleanup(() => pc1.close());
   const pc2 = new RTCPeerConnection();
   t.add_cleanup(() => pc2.close());
-  let transceivers = {};
-  stream.getTracks().forEach(track => {
-    const transceiver = pc1.addTransceiver(track);
+  const transceivers = {};
+  for (const track of stream.getTracks()) {
+    const transceiver = pc1.addTransceiver(track, {streams: [stream]});
     transceivers[track.kind] = transceiver;
     if (videoCodecPreference && track.kind == 'video') {
       setTransceiverCodecPreference(transceiver, videoCodecPreference);
     }
-  });
+  }
   function doExchange(localPc, remotePc) {
-    localPc.addEventListener('icecandidate', event => {
-      const { candidate } = event;
+    localPc.addEventListener('icecandidate', ({candidate}) => {
       if (candidate && remotePc.signalingState !== 'closed') {
         remotePc.addIceCandidate(candidate);
       }
@@ -71,21 +70,15 @@ async function startConnection(t, useAudio, useVideo, videoCodecPreference) {
   }
   doExchange(pc1, pc2);
   doExchange(pc2, pc1);
-  exchangeOfferAnswer(pc1, pc2);
-  const remoteStream = await new Promise(resolve => {
-    let tracks = [];
-    pc2.ontrack = e => {
-      tracks.push(e.track)
-      if (tracks.length < useAudio + useVideo) return;
-      const stream = new MediaStream(tracks);
-      // The srcObject sink is needed for the tests to get exercised in Chrome.
-      const remoteVideo = document.getElementById('remote');
-      if (remoteVideo) {
-        remoteVideo.srcObject = stream;
-      }
-      resolve(stream)
-    }
-  });
+  const haveTrackEvent = new Promise(r => pc2.ontrack = r);
+  await exchangeOfferAnswer(pc1, pc2);
+  const {streams} = await haveTrackEvent;
+  const remoteStream = streams[0];
+  // The srcObject sink is needed for the tests to get exercised in Chrome (bug)
+  const remoteVideo = document.getElementById('remote');
+  if (remoteVideo) {
+    remoteVideo.srcObject = remoteStream;
+  }
   return [pc1, pc2, remoteStream, transceivers]
 }
 
@@ -99,17 +92,17 @@ async function startConnection(t, useAudio, useVideo, videoCodecPreference) {
  * @param {int} numFramesOrPackets Number of frames (video) and packets (audio)
  * to wait for.
  */
-async function waitForReceivedFrames(
+async function waitForReceivedFramesOrPackets(
     t, pc, lookForAudio, lookForVideo, numFramesOrPackets) {
   let initialAudioPackets = 0;
   let initialVideoFrames = 0;
   while (lookForAudio || lookForVideo) {
     const report = await pc.getStats();
-    report.forEach(stats => {
-      if (stats.type && stats.type == 'inbound-rtp') {
+    for (const stats of report.values()) {
+      if (stats.type == 'inbound-rtp') {
         if (lookForAudio && stats.kind == 'audio') {
           if (!initialAudioPackets) {
-            initialAudioPackets = stats.packetsReceived
+            initialAudioPackets = stats.packetsReceived;
           } else if (stats.packetsReceived > initialAudioPackets +
                      numFramesOrPackets) {
             lookForAudio = false;
@@ -124,8 +117,8 @@ async function waitForReceivedFrames(
           }
         }
       }
-    });
-    await new Promise(r => { t.step_timeout(r, 100); });
+    }
+    await new Promise(r => t.step_timeout(r, 100));
   }
 }
 
@@ -140,17 +133,16 @@ async function waitForReceivedCodec(t, pc, codecToLookFor) {
   let currentCodecId;
   for (;;) {
     const report = await pc.getStats();
-    report.forEach(stats => {
-      if (stats.id) {
-        if (stats.type == 'inbound-rtp' && stats.kind == 'video') {
-          currentCodecId = stats.codecId;
-        } else if (currentCodecId && stats.id == currentCodecId &&
-                   stats.mimeType.toLowerCase().includes(
-                      codecToLookFor.toLowerCase())) {
-          return;
+    for (const stats of report.values()) {
+      if (stats.type == 'inbound-rtp' && stats.kind == 'video') {
+        if (stats.codecId) {
+          if (report.get(stats.codecId).mimeType.toLowerCase()
+              .includes(codecToLookFor.toLowerCase())) {
+            return;
+          }
         }
       }
-    });
-    await new Promise(r => { t.step_timeout(r, 100); });
+    }
+    await new Promise(r => t.step_timeout(r, 100));
   }
 }
