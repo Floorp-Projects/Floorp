@@ -6313,9 +6313,10 @@ migration:
   uninstaller_profile_refresh:
     bug_numbers:
       - 1634115
+      - 1672585
     description: >
       Set when a profile refresh is initiated from the uninstaller.
-    expires: "85"
+    expires: "90"
     kind: boolean
     notification_emails:
       - agashlin@mozilla.com
