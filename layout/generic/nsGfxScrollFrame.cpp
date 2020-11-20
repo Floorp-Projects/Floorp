@@ -3528,6 +3528,26 @@ class MOZ_RAII AutoContainsBlendModeCapturer {
   }
 };
 
+// Finds the max z-index of the items in aList that meet the following
+// conditions
+//   1) have z-index auto or z-index >= 0.
+//   2) aFrame is a proper ancestor of the item's frame.
+// Returns -1 if there is no such item.
+static int32_t MaxZIndexInListOfItemsContainedInFrame(nsDisplayList* aList,
+                                                      nsIFrame* aFrame) {
+  int32_t maxZIndex = -1;
+  for (nsDisplayItem* item = aList->GetBottom(); item;
+       item = item->GetAbove()) {
+    nsIFrame* itemFrame = item->Frame();
+    // Perspective items return the scroll frame as their Frame(), so consider
+    // their TransformFrame() instead.
+    if (nsLayoutUtils::IsProperAncestorFrame(aFrame, itemFrame)) {
+      maxZIndex = std::max(maxZIndex, item->ZIndex());
+    }
+  }
+  return maxZIndex;
+}
+
 void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayListSet& aLists) {
   SetAndNullOnExit<const nsIFrame> tmpBuilder(
@@ -4046,11 +4066,35 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // create a displayport for this frame. We'll add the item later on.
     if (!mWillBuildScrollableLayer) {
       if (aBuilder->BuildCompositorHitTestInfo()) {
+        int32_t zIndex = MaxZIndexInListOfItemsContainedInFrame(
+            scrolledContent.PositionedDescendants(), mOuter);
+        if (aBuilder->IsPartialUpdate()) {
+          if (auto* items =
+                  mScrolledFrame->GetProperty(nsIFrame::DisplayItems())) {
+            for (nsDisplayItemBase* item : *items) {
+              if (item->GetType() ==
+                  DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+                auto* hitTestItem =
+                    static_cast<nsDisplayCompositorHitTestInfo*>(item);
+                if (hitTestItem->HasHitTestInfo() &&
+                    hitTestItem->HitTestFlags().contains(
+                        CompositorHitTestFlags::eInactiveScrollframe)) {
+                  zIndex = std::max(zIndex, hitTestItem->ZIndex());
+                  item->SetCantBeReused();
+                }
+              }
+            }
+          }
+        }
+        // Make sure the z-index of the inactive item is at least zero.
+        // Otherwise, it will end up behind non-positioned items in the scrolled
+        // content.
+        zIndex = std::max(zIndex, 0);
         nsDisplayCompositorHitTestInfo* hitInfo =
             MakeDisplayItemWithIndex<nsDisplayCompositorHitTestInfo>(
                 aBuilder, mScrolledFrame, 1, info, Some(area));
         if (hitInfo) {
-          AppendInternalItemToTop(scrolledContent, hitInfo, Some(INT32_MAX));
+          AppendInternalItemToTop(scrolledContent, hitInfo, Some(zIndex));
         }
       }
     }
