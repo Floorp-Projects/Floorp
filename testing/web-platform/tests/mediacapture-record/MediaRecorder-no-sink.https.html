@@ -1,5 +1,6 @@
 <!doctype html>
 <html>
+<meta name="timeout" content="long">
 
 <head>
   <title>MediaRecorder peer connection</title>
@@ -13,28 +14,27 @@
 <body>
   <script>
 
-[{name: "audio",        kind: {audio: true, video: false}},
- {name: "video",        kind: {audio: false, video: true}},
- {name: "audio/video",  kind: {audio: true, video: true}}].forEach(args => {
+[{audio: true, video: false},
+ {audio: false, video: true},
+ {audio: true, video: true}].forEach(kind => {
   promise_test(async t => {
     const [localPc, remotePc, stream] = await startConnection(
-        t, args.kind.audio, args.kind.video);
+        t, kind.audio, kind.video);
     const recorder = new MediaRecorder(stream);
     // Set an arbitrary timeslice interval so the ondataavailable event
-    // handler gets invoked repeatedly. Without it, the test would
-    // deadlock as it's currently written.
-    recorder.start(100);
+    // handler gets invoked repeatedly so this test doesn't hang.
+    recorder.start(200);
     let combinedSize = 0;
-    const dataPromise = new Promise(r => recorder.ondataavailable = e => {
-      // Wait for an arbitrary amount of data to appear before we resolve.
-      combinedSize += e.data.size;
-      if (combinedSize > 4711) r();
-    });
-    await dataPromise;
+    // Wait for an arbitrary amount of data to appear before we resolve.
+    // Keep it small for android tests
+    while (combinedSize < 2000) {
+      const {data} = await new Promise(r => recorder.ondataavailable = r);
+      combinedSize += data.size;
+    }
     recorder.stop();
-  }, "PeerConnection MediaRecorder records " + args.name +
+  }, "PeerConnection MediaRecorder records " + JSON.stringify(kind) +
      " from PeerConnection without sinks");
- });
+});
 
   </script>
 </body>
