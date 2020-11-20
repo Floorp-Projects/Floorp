@@ -427,6 +427,7 @@ def get_compiler_info(compiler, language):
         os=data.get("OS"),
         language="C++" if cplusplus else "C",
         language_version=cplusplus if cplusplus else stdc_version,
+        xcode=bool(data.get("XCODE")),
     )
 
 
@@ -477,12 +478,12 @@ def check_compiler(compiler, language, target):
     has_target = False
     if info.type == "clang":
         # Add the target explicitly when the target is aarch64 macosx, because
-        # the clang target is named differently, and we need to work around
+        # the Xcode clang target is named differently, and we need to work around
         # https://github.com/rust-lang/rust-bindgen/issues/1871 and
         # https://github.com/alexcrichton/cc-rs/issues/542 so we always want
         # the target on the command line, even if the compiler would default to
         # that.
-        if target.os == "OSX" and target.cpu == "aarch64":
+        if info.xcode and target.os == "OSX" and target.cpu == "aarch64":
             if "--target=arm64-apple-darwin" not in compiler:
                 flags.append("--target=arm64-apple-darwin")
             has_target = True
