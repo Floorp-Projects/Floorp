@@ -21,20 +21,15 @@ class AppShutdown {
   static bool IsShuttingDown();
 
   /**
-   * Returns the current exit code that the process will be terminated with.
-   */
-  static int GetExitCode();
-
-  /**
    * Save environment variables that we might need if the app initiates a
    * restart later in its lifecycle.
    */
   static void SaveEnvVarsForPotentialRestart();
 
   /**
-   * Init the shutdown with the requested shutdown mode and exit code.
+   * Init the shutdown with the requested shutdown mode.
    */
-  static void Init(AppShutdownMode aMode, int aExitCode);
+  static void Init(AppShutdownMode aMode);
 
   /**
    * Confirm that we are in fact going to be shutting down.
@@ -59,10 +54,8 @@ class AppShutdown {
    * destructors for xul.dll.
    *
    * This method terminates the current process without those issues.
-   *
-   * Optionally a custom exit code can be supplied.
    */
-  static void DoImmediateExit(int aExitCode = 0);
+  static void DoImmediateExit();
 
   /**
    * True if the application is currently attempting to shut down in order to

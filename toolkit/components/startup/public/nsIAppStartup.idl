@@ -123,17 +123,12 @@ interface nsIAppStartup : nsISupports
      * @param aMode
      *        This parameter modifies how the app is shutdown, and it is
      *        constructed from the constants defined above.
-     * @param aExitCode
-     *        The exit code to return from the process. The precise code
-     *        returned by the process may vary depending on the platform. Only
-     *        values 0-255 should generallt be used. If not specified an exit
-     *        code of 0 will be used.
      *
      * @return false if the shutdown was cancelled due to the presence
      *         of a hidden window or if the user disallowed a window
      *         to be closed.
      */
-    bool quit(in uint32_t aMode, [optional] in int32_t aExitCode);
+    bool quit(in uint32_t aMode);
 
     /**
      * True if the application is in the process of shutting down.
