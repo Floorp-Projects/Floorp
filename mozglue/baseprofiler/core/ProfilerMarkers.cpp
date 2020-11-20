@@ -90,8 +90,16 @@ void MarkerSchema::Stream(JSONWriter& aWriter,
   {
     aWriter.StringProperty("name", aName);
 
+    if (!mChartLabel.empty()) {
+      aWriter.StringProperty("chartLabel", mChartLabel);
+    }
+
     if (!mTooltipLabel.empty()) {
       aWriter.StringProperty("tooltipLabel", mTooltipLabel);
+    }
+
+    if (!mTableLabel.empty()) {
+      aWriter.StringProperty("tableLabel", mTableLabel);
     }
 
     aWriter.StartArrayProperty("display");
