@@ -446,7 +446,7 @@ struct SwCompositeJob {
     locked_dst: swgl::LockedResource,
     src_rect: DeviceIntRect,
     dst_rect: DeviceIntRect,
-    clip_rect: DeviceIntRect,
+    clipped_dst: DeviceIntRect,
     opaque: bool,
     flip_y: bool,
     filter: ImageRendering,
@@ -461,14 +461,12 @@ impl SwCompositeJob {
         // the following index.
         let band_index = band_index as i32;
         let num_bands = self.num_bands as i32;
-        let band_offset = (self.dst_rect.size.height * band_index) / num_bands;
-        let band_height = (self.dst_rect.size.height * (band_index + 1)) / num_bands - band_offset;
-        let band_clip = DeviceIntRect::new(DeviceIntPoint::new(self.dst_rect.origin.x, self.dst_rect.origin.y + band_offset),
-                                           DeviceIntSize::new(self.dst_rect.size.width, band_height));
-        let clip_rect = match self.clip_rect.intersection(&band_clip) {
-            Some(clip_rect) => clip_rect,
-            _ => return,
-        };
+        let band_offset = (self.clipped_dst.size.height * band_index) / num_bands;
+        let band_height = (self.clipped_dst.size.height * (band_index + 1)) / num_bands - band_offset;
+        // Create a rect that is the intersection of the band with the clipped dest
+        let band_clip = DeviceIntRect::new(DeviceIntPoint::new(self.clipped_dst.origin.x,
+                                                               self.clipped_dst.origin.y + band_offset),
+                                           DeviceIntSize::new(self.clipped_dst.size.width, band_height));
         match self.locked_src {
             SwCompositeSource::BGRA(ref resource) => {
                 self.locked_dst.composite(
@@ -484,10 +482,10 @@ impl SwCompositeJob {
                     self.opaque,
                     self.flip_y,
                     image_rendering_to_gl_filter(self.filter),
-                    clip_rect.origin.x,
-                    clip_rect.origin.y,
-                    clip_rect.size.width,
-                    clip_rect.size.height,
+                    band_clip.origin.x,
+                    band_clip.origin.y,
+                    band_clip.size.width,
+                    band_clip.size.height,
                 );
             }
             SwCompositeSource::YUV(ref y, ref u, ref v, color_space, color_depth) => {
@@ -512,10 +510,10 @@ impl SwCompositeJob {
                     self.dst_rect.size.width,
                     self.dst_rect.size.height,
                     self.flip_y,
-                    clip_rect.origin.x,
-                    clip_rect.origin.y,
-                    clip_rect.size.width,
-                    clip_rect.size.height,
+                    band_clip.origin.x,
+                    band_clip.origin.y,
+                    band_clip.size.width,
+                    band_clip.size.height,
                 );
             }
         }
@@ -771,8 +769,13 @@ impl SwCompositeThread {
     ) {
         // For jobs that would span a sufficiently large destination rectangle, split
         // it into multiple horizontal bands so that multiple threads can process them.
-        let num_bands = if dst_rect.size.width >= 64 && dst_rect.size.height >= 64 {
-            (dst_rect.size.height / 64).min(4) as u8
+        let clipped_dst = match dst_rect.intersection(&clip_rect) {
+            Some(clipped_dst) => clipped_dst,
+            None => return,
+        };
+
+        let num_bands = if clipped_dst.size.width >= 64 && clipped_dst.size.height >= 64 {
+            (clipped_dst.size.height / 64).min(4) as u8
         } else {
             1
         };
@@ -781,7 +784,7 @@ impl SwCompositeThread {
             locked_dst,
             src_rect,
             dst_rect,
-            clip_rect,
+            clipped_dst,
             opaque,
             flip_y,
             filter,
