@@ -14,6 +14,7 @@ namespace webgl {
 
 // TODO: This should probably replace Shmem, or at least this should move to
 // ipc/glue.
+
 class RaiiShmem final {
   RefPtr<mozilla::ipc::ActorLifecycleProxy> mWeakRef;
   mozilla::ipc::Shmem mShmem = {};
@@ -33,12 +34,18 @@ class RaiiShmem final {
   RaiiShmem() = default;
 
   RaiiShmem(mozilla::ipc::IProtocol* const allocator,
-            const mozilla::ipc::Shmem& shmem)
-      : mWeakRef(allocator->ToplevelProtocol()->GetLifecycleProxy()),
-        mShmem(shmem) {
+            const mozilla::ipc::Shmem& shmem) {
+    if (!allocator || !allocator->CanSend()) {
+      return;
+    }
+
     // Shmems are handled by the top-level, so use that or we might leak after
     // the actor dies.
-    MOZ_ASSERT(mWeakRef);
+    mWeakRef = allocator->ToplevelProtocol()->GetLifecycleProxy();
+    mShmem = shmem;
+    if (!mWeakRef || !mWeakRef->Get() || !IsShmem()) {
+      reset();
+    }
   }
 
   void reset() {
@@ -78,7 +85,9 @@ class RaiiShmem final {
   }
 
   Range<uint8_t> ByteRange() const {
-    MOZ_ASSERT(IsShmem());
+    if (!IsShmem()) {
+      return {};
+    }
     return {mShmem.get<uint8_t>(), mShmem.Size<uint8_t>()};
   }
 
