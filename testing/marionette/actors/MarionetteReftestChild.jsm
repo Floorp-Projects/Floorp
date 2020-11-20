@@ -91,7 +91,9 @@ class MarionetteReftestChild extends JSWindowActorChild {
     const hasReftestWait = documentElement.classList.contains("reftest-wait");
 
     logger.debug("Waiting for event loop to spin");
-    await new Promise(resolve => this.contentWindow.setTimeout(resolve, 0));
+    await new Promise(resolve =>
+      this.document.defaultView.setTimeout(resolve, 0)
+    );
 
     await this.paintComplete(useRemote);
 
@@ -103,8 +105,8 @@ class MarionetteReftestChild extends JSWindowActorChild {
       await this.paintComplete(useRemote);
     }
     if (
-      this.contentWindow.innerWidth < documentElement.scrollWidth ||
-      this.contentWindow.innerHeight < documentElement.scrollHeight
+      this.document.defaultView.innerWidth < documentElement.scrollWidth ||
+      this.document.defaultView.innerHeight < documentElement.scrollHeight
     ) {
       logger.warn(
         `${url} overflows viewport (width: ${documentElement.scrollWidth}, height: ${documentElement.scrollHeight})`
@@ -115,7 +117,7 @@ class MarionetteReftestChild extends JSWindowActorChild {
 
   paintComplete(useRemote) {
     logger.debug("Waiting for rendering");
-    let windowUtils = this.contentWindow.windowUtils;
+    let windowUtils = this.document.defaultView.windowUtils;
     return new Promise(resolve => {
       let maybeResolve = () => {
         this.flushRendering();
@@ -127,14 +129,18 @@ class MarionetteReftestChild extends JSWindowActorChild {
 
         if (windowUtils.isMozAfterPaintPending) {
           logger.debug("isMozAfterPaintPending: true");
-          this.contentWindow.addEventListener("MozAfterPaint", maybeResolve, {
-            once: true,
-          });
+          this.document.defaultView.addEventListener(
+            "MozAfterPaint",
+            maybeResolve,
+            {
+              once: true,
+            }
+          );
         } else {
           // resolve at the start of the next frame in case of leftover paints
           logger.debug("isMozAfterPaintPending: false");
-          this.contentWindow.requestAnimationFrame(() => {
-            this.contentWindow.requestAnimationFrame(resolve);
+          this.document.defaultView.requestAnimationFrame(() => {
+            this.document.defaultView.requestAnimationFrame(resolve);
           });
         }
       };
@@ -146,17 +152,17 @@ class MarionetteReftestChild extends JSWindowActorChild {
     logger.debug("Waiting for reftest-wait removal");
     return new Promise(resolve => {
       const documentElement = this.document.documentElement;
-      let observer = new this.contentWindow.MutationObserver(() => {
+      let observer = new this.document.defaultView.MutationObserver(() => {
         if (!documentElement.classList.contains("reftest-wait")) {
           observer.disconnect();
           logger.debug("reftest-wait removed");
-          this.contentWindow.setTimeout(resolve, 0);
+          this.document.defaultView.setTimeout(resolve, 0);
         }
       });
       if (documentElement.classList.contains("reftest-wait")) {
         observer.observe(documentElement, { attributes: true });
       } else {
-        this.contentWindow.setTimeout(resolve, 0);
+        this.document.defaultView.setTimeout(resolve, 0);
       }
     });
   }
@@ -164,7 +170,7 @@ class MarionetteReftestChild extends JSWindowActorChild {
   flushRendering() {
     let anyPendingPaintsGeneratedInDescendants = false;
 
-    let windowUtils = this.contentWindow.windowUtils;
+    let windowUtils = this.document.defaultView.windowUtils;
 
     function flushWindow(win) {
       let utils = win.windowUtils;
@@ -188,7 +194,7 @@ class MarionetteReftestChild extends JSWindowActorChild {
         flushWindow(win.frames[i]);
       }
     }
-    flushWindow(this.contentWindow);
+    flushWindow(this.document.defaultView);
 
     if (
       anyPendingPaintsGeneratedInDescendants &&
