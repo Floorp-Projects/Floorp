@@ -300,10 +300,7 @@ class BaselineFrame {
   void setInterpreterFieldsForPrologue(JSScript* script);
 
   ICScript* icScript() const;
-  void setICScript(ICScript* icScript) {
-    MOZ_ASSERT(JitOptions.warpBuilder);
-    icScript_ = icScript;
-  }
+  void setICScript(ICScript* icScript) { icScript_ = icScript; }
 
   JSScript* invalidationScript() const;
 

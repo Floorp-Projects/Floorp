@@ -19,7 +19,6 @@
 #include "js/GCHashTable.h"
 #include "js/TypeDecls.h"
 #include "vm/TaggedProto.h"
-#include "vm/TypeSet.h"
 
 namespace js {
 
@@ -55,6 +54,19 @@ enum NewObjectKind {
    */
   TenuredObject
 };
+
+// Flags stored in ObjectGroup::Flags.
+enum : uint32_t {
+  /* Whether this group is associated with a single object. */
+  OBJECT_FLAG_SINGLETON = 0x2,
+
+  /*
+   * Whether this group is used by objects whose singleton groups have not
+   * been created yet.
+   */
+  OBJECT_FLAG_LAZY_SINGLETON = 0x4,
+};
+using ObjectGroupFlags = uint32_t;
 
 /*
  * [SMDOC] Type-Inference lazy ObjectGroup
