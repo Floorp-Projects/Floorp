@@ -255,8 +255,6 @@ void Zone::changeGCState(GCState prev, GCState next) {
   }
 }
 
-void Zone::beginSweepTypes() { types.beginSweep(); }
-
 template <class Pred>
 static void EraseIf(js::gc::WeakEntryVector& entries, Pred pred) {
   auto* begin = entries.begin();
@@ -660,7 +658,7 @@ void Zone::addSizeOfIncludingThis(
     size_t* uniqueIdMap, size_t* shapeCaches, size_t* atomsMarkBitmaps,
     size_t* compartmentObjects, size_t* crossCompartmentWrappersTables,
     size_t* compartmentsPrivateData, size_t* scriptCountsMapArg) {
-  *typePool += types.typeLifoAlloc().sizeOfExcludingThis(mallocSizeOf);
+  // TODO(no-TI): remove typePool argument.
   *regexpZone += regExps().sizeOfExcludingThis(mallocSizeOf);
   if (jitZone_) {
     jitZone_->addSizeOfIncludingThis(mallocSizeOf, code, jitZone,

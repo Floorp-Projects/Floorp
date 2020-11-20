@@ -367,9 +367,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // For JIT use.
   static size_t offsetOfZone() { return offsetof(JSContext, zone_); }
 
-  // Zone local methods that can be used freely.
-  inline js::LifoAlloc& typeLifoAlloc();
-
   // Current global. This is only safe to use within the scope of the
   // AutoRealm from which it's called.
   inline js::Handle<js::GlobalObject*> global() const;

@@ -278,10 +278,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
     // and type information and JIT code should not be discarded.
     bool active : 1;
 
-    // Generation for type sweeping. If out of sync with the TypeZone's
-    // generation, this JitScript needs to be swept.
-    bool typesGeneration : 1;
-
     // True if this script entered Ion via OSR at a loop header.
     bool hadIonOSR : 1;
   };
@@ -296,12 +292,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   Offset endOffset() const { return endOffset_; }
 
   ICEntry* icEntries() { return icScript_.icEntries(); }
-
-  uint32_t typesGeneration() const { return uint32_t(flags_.typesGeneration); }
-  void setTypesGeneration(uint32_t generation) {
-    MOZ_ASSERT(generation <= 1);
-    flags_.typesGeneration = generation;
-  }
 
   bool hasCachedIonData() const { return !!cachedIonData_; }
 
@@ -330,9 +320,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
 #endif
 
   MOZ_MUST_USE bool ensureHasCachedIonData(JSContext* cx, HandleScript script);
-
-  inline bool typesNeedsSweep(Zone* zone) const;
-  void sweepTypes(const js::AutoSweepJitScript& sweep, Zone* zone);
 
   void setHadIonOSR() { flags_.hadIonOSR = true; }
   bool hadIonOSR() const { return flags_.hadIonOSR; }

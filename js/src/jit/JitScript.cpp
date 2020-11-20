@@ -46,8 +46,6 @@ JitScript::JitScript(JSScript* script, Offset endOffset,
       endOffset_(endOffset),
       icScript_(script->getWarmUpCount(), endOffset - offsetOfICScript(),
                 /*depth=*/0) {
-  setTypesGeneration(script->zone()->types.generation);
-
   // Ensure the baselineScript_ and ionScript_ fields match the BaselineDisabled
   // and IonDisabled script flags.
   if (!script->canBaselineCompile()) {
