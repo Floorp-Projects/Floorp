@@ -340,3 +340,22 @@ linux64-makecab:
             - makecab
         toolchain:
             - linux64-rust-1.47
+
+macosx64-sdk-11.0:
+    description: "MacOSX11.0 SDK"
+    attributes:
+        artifact_prefix: project/gecko/mac-sdk
+    treeherder:
+        symbol: TM(sdk11)
+    worker-type: b-osx-1015
+    worker:
+        max-run-time: 3600
+        env:
+            PATH: "/usr/local/bin:/bin:/sbin:/usr/bin:/usr/sbin"
+    run:
+        script: pack.sh
+        arguments:
+            - /Applications/Xcode-12.2.Release.Candidate.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk
+        toolchain-artifact: project/gecko/mac-sdk/MacOSX11.0.sdk.tar.zst
+    # Expiry similar to that of fetches
+    expires-after: 1000 years
