@@ -104,13 +104,10 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
       actor: this.actorID,
       startedDateTime: this._startedDateTime,
       timeStamp: Date.parse(this._startedDateTime),
-      request: {
-        url: this._request.url,
-        method: this._request.method,
-      },
+      url: this._request.url,
+      method: this._request.method,
       isXHR: this._isXHR,
       cause: this._cause,
-      response: {},
       timings: {},
       fromCache: this._fromCache,
       fromServiceWorker: this._fromServiceWorker,
@@ -122,7 +119,6 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
       // For websocket requests the serial is used instead of the channel id.
       stacktraceResourceId:
         this._cause.type == "websocket" ? this._serial : this._channelId,
-      updates: [],
     };
   },
 
@@ -333,12 +329,9 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     // bug 1462561 - Use "json" type and manually manage/marshall actors to woraround
     // protocol.js performance issue
     this.manage(postData.text);
-    const dataSize = postData.size;
     postData.text = postData.text.form();
 
-    this._onEventUpdate("requestPostData", {
-      dataSize,
-    });
+    this._onEventUpdate("requestPostData", {});
   },
 
   /**
@@ -369,7 +362,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     // Consider as not discarded if info.discardResponseBody is undefined
     this._discardResponseBody = !!info.discardResponseBody;
 
-    this._onEventUpdate("responseStart", { response: info });
+    this._onEventUpdate("responseStart", { ...info });
   },
 
   /**
@@ -462,7 +455,6 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     this._onEventUpdate("responseContent", {
       mimeType: content.mimeType,
       contentSize: content.size,
-      encoding: content.encoding,
       transferredSize: content.transferredSize,
       blockedReason,
       blockingExtension,
