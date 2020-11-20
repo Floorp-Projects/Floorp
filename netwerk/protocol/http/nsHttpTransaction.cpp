@@ -579,6 +579,9 @@ void nsHttpTransaction::SetConnection(nsAHttpConnection* conn) {
   {
     MutexAutoLock lock(mLock);
     mConnection = conn;
+    if (mConnection) {
+      mIsHttp3Used = mConnection->Version() == HttpVersion::v3_0;
+    }
   }
 }
 
@@ -1065,6 +1068,8 @@ bool nsHttpTransaction::ResponseIsComplete() { return mResponseIsComplete; }
 int64_t nsHttpTransaction::GetTransferSize() { return mTransferSize; }
 
 int64_t nsHttpTransaction::GetRequestSize() { return mRequestSize; }
+
+bool nsHttpTransaction::IsHttp3Used() { return mIsHttp3Used; }
 
 bool nsHttpTransaction::Http2Disabled() const {
   return mCaps & NS_HTTP_DISALLOW_SPDY;
