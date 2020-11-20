@@ -304,7 +304,7 @@ void ProcessPendingGetURLAppleEvents() {
   nsCOMPtr<nsIAppStartup> appService = do_GetService("@mozilla.org/toolkit/app-startup;1");
   if (appService) {
     bool userAllowedQuit = true;
-    appService->Quit(nsIAppStartup::eForceQuit, &userAllowedQuit);
+    appService->Quit(nsIAppStartup::eForceQuit, 0, &userAllowedQuit);
     if (!userAllowedQuit) {
       return NSTerminateCancel;
     }

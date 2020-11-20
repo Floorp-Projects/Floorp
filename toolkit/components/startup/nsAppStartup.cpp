@@ -275,7 +275,7 @@ nsAppStartup::Run(void) {
   // regardless of whether the event loop has spun or not. Note that this call
   // is a no-op if Quit has already been called previously.
   bool userAllowedQuit = true;
-  Quit(eForceQuit, &userAllowedQuit);
+  Quit(eForceQuit, 0, &userAllowedQuit);
 
   nsresult retval = NS_OK;
   if (mozilla::AppShutdown::IsRestarting()) {
@@ -286,7 +286,7 @@ nsAppStartup::Run(void) {
 }
 
 NS_IMETHODIMP
-nsAppStartup::Quit(uint32_t aMode, bool* aUserAllowedQuit) {
+nsAppStartup::Quit(uint32_t aMode, int aExitCode, bool* aUserAllowedQuit) {
   uint32_t ferocity = (aMode & 0xF);
 
   // If the shutdown was cancelled due to a hidden window or
@@ -371,7 +371,7 @@ nsAppStartup::Quit(uint32_t aMode, bool* aUserAllowedQuit) {
     auto shutdownMode = ((aMode & eRestart) != 0)
                             ? mozilla::AppShutdownMode::Restart
                             : mozilla::AppShutdownMode::Normal;
-    mozilla::AppShutdown::Init(shutdownMode);
+    mozilla::AppShutdown::Init(shutdownMode, aExitCode);
 
     if (mozilla::AppShutdown::IsRestarting()) {
       // Mark the next startup as a restart.
@@ -506,7 +506,12 @@ nsAppStartup::ExitLastWindowClosingSurvivalArea(void) {
 
   if (mRunning) {
     bool userAllowedQuit = false;
-    Quit(eConsiderQuit, &userAllowedQuit);
+
+    // A previous call to Quit may have told all windows to close and then
+    // bailed out waiting for that to happen. This is how we get back into Quit
+    // after each window closes so the exit process can continue when ready.
+    // Make sure to pass along the exit code that was initially passed to Quit.
+    Quit(eConsiderQuit, mozilla::AppShutdown::GetExitCode(), &userAllowedQuit);
   }
 
   return NS_OK;
@@ -952,7 +957,7 @@ NS_IMETHODIMP
 nsAppStartup::RestartInSafeMode(uint32_t aQuitMode) {
   PR_SetEnv("MOZ_SAFE_MODE_RESTART=1");
   bool userAllowedQuit = false;
-  this->Quit(aQuitMode | nsIAppStartup::eRestart, &userAllowedQuit);
+  this->Quit(aQuitMode | nsIAppStartup::eRestart, 0, &userAllowedQuit);
 
   return NS_OK;
 }

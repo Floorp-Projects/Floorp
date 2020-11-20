@@ -37,6 +37,7 @@ static ShutdownPhase sFastShutdownPhase = ShutdownPhase::NotInShutdown;
 static ShutdownPhase sLateWriteChecksPhase = ShutdownPhase::NotInShutdown;
 static AppShutdownMode sShutdownMode = AppShutdownMode::Normal;
 static Atomic<bool, MemoryOrdering::Relaxed> sIsShuttingDown;
+static int sExitCode = 0;
 
 // These environment variable strings are all deliberately copied and leaked
 // due to requirements of PR_SetEnv and similar.
@@ -65,6 +66,8 @@ ShutdownPhase GetShutdownPhaseFromPrefValue(int32_t aPrefValue) {
 }
 
 bool AppShutdown::IsShuttingDown() { return sIsShuttingDown; }
+
+int AppShutdown::GetExitCode() { return sExitCode; }
 
 void AppShutdown::SaveEnvVarsForPotentialRestart() {
   const char* s = PR_GetEnv("XUL_APP_FILE");
@@ -124,10 +127,12 @@ wchar_t* CopyPathIntoNewWCString(nsIFile* aFile) {
 }
 #endif
 
-void AppShutdown::Init(AppShutdownMode aMode) {
+void AppShutdown::Init(AppShutdownMode aMode, int aExitCode) {
   if (sShutdownMode == AppShutdownMode::Normal) {
     sShutdownMode = aMode;
   }
+
+  sExitCode = aExitCode;
 
   // Late-write checks needs to find the profile directory, so it has to
   // be initialized before services::Shutdown or (because of
@@ -184,7 +189,7 @@ void AppShutdown::MaybeFastShutdown(ShutdownPhase aPhase) {
     profiler_shutdown(IsFastShutdown::Yes);
 #endif
 
-    DoImmediateExit();
+    DoImmediateExit(sExitCode);
   } else if (aPhase == sLateWriteChecksPhase) {
 #ifdef XP_MACOSX
     OnlyReportDirtyWrites();
@@ -221,15 +226,15 @@ void AppShutdown::OnShutdownConfirmed() {
   }
 }
 
-void AppShutdown::DoImmediateExit() {
+void AppShutdown::DoImmediateExit(int aExitCode) {
 #ifdef XP_WIN
   HANDLE process = ::GetCurrentProcess();
-  if (::TerminateProcess(process, 0)) {
+  if (::TerminateProcess(process, aExitCode)) {
     ::WaitForSingleObject(process, INFINITE);
   }
   MOZ_CRASH("TerminateProcess failed.");
 #else
-  _exit(0);
+  _exit(aExitCode);
 #endif
 }
 
