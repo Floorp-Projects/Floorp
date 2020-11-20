@@ -30,11 +30,6 @@ inline AutoKeepJitScripts::~AutoKeepJitScripts() {
   zone_.keepJitScripts = prev_;
 }
 
-inline bool JitScript::typesNeedsSweep(Zone* zone) const {
-  MOZ_ASSERT(!js::TlsContext.get()->inUnsafeCallWithABI);
-  return typesGeneration() != zone->types.generation;
-}
-
 }  // namespace jit
 }  // namespace js
 

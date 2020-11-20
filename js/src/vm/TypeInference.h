@@ -42,30 +42,6 @@ class TempAllocator;
 
 }  // namespace jit
 
-class MOZ_RAII AutoSweepBase {
-  // Make sure we don't GC while this class is live since GC might trigger
-  // (incremental) sweeping.
-  JS::AutoCheckCannotGC nogc;
-};
-
-// Sweep the type inference data in a JitScript. Functions that expect a swept
-// script should take a reference to this class.
-class MOZ_RAII AutoSweepJitScript : public AutoSweepBase {
-#ifdef DEBUG
-  Zone* zone_;
-  jit::JitScript* jitScript_;
-#endif
-
- public:
-  inline explicit AutoSweepJitScript(BaseScript* script);
-#ifdef DEBUG
-  inline ~AutoSweepJitScript();
-
-  jit::JitScript* jitScript() const { return jitScript_; }
-  Zone* zone() const { return zone_; }
-#endif
-};
-
 /* Is this a reasonable PC to be doing inlining on? */
 inline bool isInlinableCall(jsbytecode* pc);
 
@@ -76,10 +52,6 @@ struct AutoEnterAnalysis;
 class TypeZone {
   JS::Zone* const zone_;
 
-  /* Pool for type information in this zone. */
-  static const size_t TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 8 * 1024;
-  ZoneData<LifoAlloc> typeLifoAlloc_;
-
   // Under CodeGenerator::link, the id of the current compilation.
   ZoneData<mozilla::Maybe<IonCompilationId>> currentCompilationId_;
 
@@ -87,15 +59,6 @@ class TypeZone {
   void operator=(const TypeZone&) = delete;
 
  public:
-  // Current generation for sweeping.
-  ZoneOrGCTaskOrIonCompileData<uint32_t> generation;
-
-  // During incremental sweeping, allocator holding the old type information
-  // for the zone.
-  ZoneData<LifoAlloc> sweepTypeLifoAlloc;
-
-  ZoneData<bool> sweepingTypes;
-
   ZoneData<bool> keepJitScripts;
 
   // The topmost AutoEnterAnalysis on the stack, if there is one.
@@ -105,22 +68,6 @@ class TypeZone {
   ~TypeZone();
 
   JS::Zone* zone() const { return zone_; }
-
-  LifoAlloc& typeLifoAlloc() {
-#ifdef JS_CRASH_DIAGNOSTICS
-    MOZ_RELEASE_ASSERT(CurrentThreadCanAccessZone(zone_));
-#endif
-    return typeLifoAlloc_.ref();
-  }
-
-  void beginSweep();
-  void endSweep(JSRuntime* rt);
-
-  bool isSweepingTypes() const { return sweepingTypes; }
-  void setSweepingTypes(bool sweeping) {
-    MOZ_RELEASE_ASSERT(sweepingTypes != sweeping);
-    sweepingTypes = sweeping;
-  }
 
   mozilla::Maybe<IonCompilationId> currentCompilationId() const {
     return currentCompilationId_.ref();

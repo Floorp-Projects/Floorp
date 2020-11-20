@@ -313,10 +313,6 @@ MOZ_ALWAYS_INLINE bool CheckForInterrupt(JSContext* cx) {
 
 } /* namespace js */
 
-inline js::LifoAlloc& JSContext::typeLifoAlloc() {
-  return zone()->types.typeLifoAlloc();
-}
-
 inline js::Nursery& JSContext::nursery() { return runtime()->gc.nursery(); }
 
 inline void JSContext::minorGC(JS::GCReason reason) {

@@ -181,19 +181,6 @@ PhaseKindGraphRoots = [
                     PhaseKind("SWEEP_JIT_DATA", "Sweep JIT Data", 65),
                     PhaseKind("SWEEP_WEAK_CACHES", "Sweep Weak Caches", 66),
                     PhaseKind("SWEEP_MISC", "Sweep Miscellaneous", 29),
-                    PhaseKind(
-                        "SWEEP_TYPES",
-                        "Sweep type information",
-                        30,
-                        [
-                            PhaseKind(
-                                "SWEEP_TYPES_BEGIN",
-                                "Sweep type tables and compilations",
-                                31,
-                            ),
-                            PhaseKind("SWEEP_TYPES_END", "Free type arena", 32),
-                        ],
-                    ),
                     JoinParallelTasksPhaseKind,
                 ],
             ),
