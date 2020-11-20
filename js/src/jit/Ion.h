@@ -66,15 +66,6 @@ MethodStatus CanEnterIon(JSContext* cx, RunState& state);
 
 MethodStatus Recompile(JSContext* cx, HandleScript script, bool force);
 
-// Walk the stack and invalidate active Ion frames for the invalid scripts.
-void Invalidate(TypeZone& types, JSFreeOp* fop,
-                const RecompileInfoVector& invalid, bool resetUses = true,
-                bool cancelOffThread = true);
-void Invalidate(JSContext* cx, const RecompileInfoVector& invalid,
-                bool resetUses = true, bool cancelOffThread = true);
-void Invalidate(JSContext* cx, JSScript* script, bool resetUses = true,
-                bool cancelOffThread = true);
-
 class MIRGenerator;
 class LIRGraph;
 class CodeGenerator;

@@ -39,6 +39,7 @@
 #include "frontend/StencilXdr.h"   // frontend::StencilXdr::SharedData
 #include "gc/FreeOp.h"
 #include "jit/BaselineJIT.h"
+#include "jit/Invalidation.h"
 #include "jit/Ion.h"
 #include "jit/IonScript.h"
 #include "jit/JitCode.h"
@@ -4753,8 +4754,9 @@ void JSScript::argumentsOptimizationFailed(JSContext* cx, HandleScript script) {
   // Warp code depends on the NeedsArgsObj flag so invalidate the script
   // (including compilations inlining the script).
   if (jit::JitOptions.warpBuilder) {
-    AutoEnterAnalysis enter(cx->runtime()->defaultFreeOp(), script->zone());
-    script->zone()->types.addPendingRecompile(cx, script);
+    jit::RecompileInfoVector invalid;
+    AddPendingInvalidation(invalid, script);
+    Invalidate(cx, invalid);
   }
 
   /*
