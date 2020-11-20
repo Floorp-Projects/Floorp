@@ -8752,17 +8752,6 @@ ScriptedThisResult CallIRGenerator::getThisForScripted(
     return ScriptedThisResult::NoAction;
   }
 
-  {
-    AutoRealm ar(cx_, calleeFunc);
-    TaggedProto proto(&protov.toObject());
-    ObjectGroup* group = ObjectGroup::defaultNewGroup(cx_, &PlainObject::class_,
-                                                      proto, newTarget);
-    if (!group) {
-      cx_->clearPendingException();
-      return ScriptedThisResult::NoAction;
-    }
-  }
-
   PlainObject* thisObject =
       CreateThisForFunction(cx_, calleeFunc, newTarget, TenuredObject);
   if (!thisObject) {
