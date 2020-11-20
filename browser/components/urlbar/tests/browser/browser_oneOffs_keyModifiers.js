@@ -42,7 +42,6 @@ add_task(async function init() {
       // This test is only concerned with update2 behaviour.
       ["browser.urlbar.update2", true],
       ["browser.urlbar.update2.oneOffsRefresh", true],
-      ["browser.urlbar.update2.localOneOffs", true],
     ],
   });
 

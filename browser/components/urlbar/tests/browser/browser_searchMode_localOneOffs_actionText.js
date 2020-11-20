@@ -19,7 +19,6 @@ add_task(async function setup() {
       ["browser.urlbar.suggest.searches", true],
       ["browser.urlbar.update2", true],
       ["browser.urlbar.update2.oneOffsRefresh", true],
-      ["browser.urlbar.update2.localOneOffs", true],
     ],
   });
   engine = await SearchTestUtils.promiseNewSearchEngine(

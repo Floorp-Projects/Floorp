@@ -62,6 +62,26 @@
   margin-inline-start: 0;
 }
 
+#engineList treechildren::-moz-tree-image(bookmarks),
+#engineList treechildren::-moz-tree-image(tabs),
+#engineList treechildren::-moz-tree-image(history) {
+  -moz-context-properties: fill;
+}
+
+/* Local search shortcut icon colors.  These should match the values in
+   urlbarView.inc.css. */
+#engineList treechildren::-moz-tree-image(bookmarks) {
+  fill: #0060df; /* Blue-60 */
+}
+#engineList treechildren::-moz-tree-image(tabs) {
+  fill: #008eaf; /* Teal-70 */
+}
+#engineList treechildren::-moz-tree-image(history),
+#engineList treechildren::-moz-tree-image(bookmarks, selected),
+#engineList treechildren::-moz-tree-image(tabs, selected) {
+  fill: currentColor;
+}
+
 #engineShown {
   min-width: 26px;
 }

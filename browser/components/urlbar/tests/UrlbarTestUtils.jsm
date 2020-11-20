@@ -403,12 +403,13 @@ var UrlbarTestUtils = {
       "Urlbar should never be in search mode without the corresponding attribute."
     );
 
-    if (!expectedSearchMode) {
-      this.Assert.ok(
-        !window.gURLBar.searchMode,
-        "gURLBar.searchMode not expected"
-      );
+    this.Assert.equal(
+      !!window.gURLBar.searchMode,
+      !!expectedSearchMode,
+      "gURLBar.searchMode should exist as expected"
+    );
 
+    if (!expectedSearchMode) {
       // Check the input's placeholder.
       const prefName =
         "browser.urlbar.placeholderName" +
@@ -425,8 +426,26 @@ var UrlbarTestUtils = {
     }
 
     // Default to full search mode for less verbose tests.
+    expectedSearchMode = { ...expectedSearchMode };
     if (!expectedSearchMode.hasOwnProperty("isPreview")) {
       expectedSearchMode.isPreview = false;
+    }
+
+    // expectedSearchMode may come from UrlbarUtils.LOCAL_SEARCH_MODES.  The
+    // objects in that array include useful metadata like icon URIs and pref
+    // names that are not usually included in actual search mode objects.  For
+    // convenience, ignore those properties if they aren't also present in the
+    // urlbar's actual search mode object.
+    let ignoreProperties = ["icon", "pref", "restrict"];
+    for (let prop of ignoreProperties) {
+      if (prop in expectedSearchMode && !(prop in window.gURLBar.searchMode)) {
+        if (this._testScope) {
+          this._testScope.info(
+            `Ignoring unimportant property '${prop}' in expected search mode`
+          );
+        }
+        delete expectedSearchMode[prop];
+      }
     }
 
     this.Assert.deepEqual(
