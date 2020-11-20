@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::ImageBufferKind;
 use crate::batch::{BatchKey, BatchKind, BrushBatchKind, BatchFeatures};
 use crate::composite::CompositeSurfaceFormat;
 use crate::device::{Device, Program, ShaderError};
@@ -10,7 +9,7 @@ use euclid::default::Transform3D;
 use crate::glyph_rasterizer::GlyphFormat;
 use crate::renderer::{
     desc,
-    BlendMode, DebugFlags, RendererError, RendererOptions,
+    BlendMode, DebugFlags, ImageBufferKind, RendererError, RendererOptions,
     TextureSampler, VertexArrayKind, ShaderPrecacheFlags,
 };
 
@@ -22,23 +21,25 @@ use std::rc::Rc;
 
 use webrender_build::shader::{ShaderFeatures, ShaderFeatureFlags, get_shader_features};
 
-pub(crate) fn get_feature_string(kind: ImageBufferKind) -> &'static str {
-    match kind {
-        ImageBufferKind::Texture2D => "TEXTURE_2D",
-        ImageBufferKind::Texture2DArray => "",
-        ImageBufferKind::TextureRect => "TEXTURE_RECT",
-        ImageBufferKind::TextureExternal => "TEXTURE_EXTERNAL",
+impl ImageBufferKind {
+    pub(crate) fn get_feature_string(&self) -> &'static str {
+        match *self {
+            ImageBufferKind::Texture2D => "TEXTURE_2D",
+            ImageBufferKind::Texture2DArray => "",
+            ImageBufferKind::TextureRect => "TEXTURE_RECT",
+            ImageBufferKind::TextureExternal => "TEXTURE_EXTERNAL",
+        }
     }
-}
 
-fn has_platform_support(kind: ImageBufferKind, gl_type: &GlType) -> bool {
-    match (kind, gl_type) {
-        (ImageBufferKind::Texture2D, _) => true,
-        (ImageBufferKind::Texture2DArray, _) => true,
-        (ImageBufferKind::TextureRect, &GlType::Gles) => false,
-        (ImageBufferKind::TextureRect, &GlType::Gl) => true,
-        (ImageBufferKind::TextureExternal, &GlType::Gles) => true,
-        (ImageBufferKind::TextureExternal, &GlType::Gl) => false,
+    fn has_platform_support(&self, gl_type: &GlType) -> bool {
+        match (*self, gl_type) {
+            (ImageBufferKind::Texture2D, _) => true,
+            (ImageBufferKind::Texture2DArray, _) => true,
+            (ImageBufferKind::TextureRect, &GlType::Gles) => false,
+            (ImageBufferKind::TextureRect, &GlType::Gl) => true,
+            (ImageBufferKind::TextureExternal, &GlType::Gles) => true,
+            (ImageBufferKind::TextureExternal, &GlType::Gl) => false,
+        }
     }
 }
 
@@ -446,7 +447,6 @@ impl TextShader {
     ) -> Result<Self, ShaderError> {
         let mut simple_features = features.to_vec();
         simple_features.push("ALPHA_PASS");
-        simple_features.push("TEXTURE_2D");
 
         let simple = LazilyCompiledShader::new(
             ShaderKind::Text,
@@ -460,7 +460,6 @@ impl TextShader {
         let mut glyph_transform_features = features.to_vec();
         glyph_transform_features.push("GLYPH_TRANSFORM");
         glyph_transform_features.push("ALPHA_PASS");
-        glyph_transform_features.push("TEXTURE_2D");
 
         let glyph_transform = LazilyCompiledShader::new(
             ShaderKind::Text,
@@ -473,7 +472,6 @@ impl TextShader {
 
         let mut debug_overdraw_features = features.to_vec();
         debug_overdraw_features.push("DEBUG_OVERDRAW");
-        debug_overdraw_features.push("TEXTURE_2D");
 
         let debug_overdraw = LazilyCompiledShader::new(
             ShaderKind::Text,
@@ -778,7 +776,7 @@ impl Shaders {
         let cs_clip_box_shadow = LazilyCompiledShader::new(
             ShaderKind::ClipCache(VertexArrayKind::ClipBoxShadow),
             "cs_clip_box_shadow",
-            &["TEXTURE_2D"],
+            &[],
             device,
             options.precache_flags,
             &shader_list,
@@ -787,7 +785,7 @@ impl Shaders {
         let cs_clip_image = LazilyCompiledShader::new(
             ShaderKind::ClipCache(VertexArrayKind::ClipImage),
             "cs_clip_image",
-            &["TEXTURE_2D"],
+            &[],
             device,
             options.precache_flags,
             &shader_list,
@@ -826,8 +824,8 @@ impl Shaders {
             cs_scale.push(None);
         }
         for image_buffer_kind in &IMAGE_BUFFER_KINDS {
-            if has_platform_support(*image_buffer_kind, &gl_type) {
-                let feature_string = get_feature_string(*image_buffer_kind);
+            if image_buffer_kind.has_platform_support(&gl_type) {
+                let feature_string = image_buffer_kind.get_feature_string();
 
                 let mut features = Vec::new();
                 if feature_string != "" {
@@ -906,11 +904,11 @@ impl Shaders {
             brush_fast_image.push(None);
         }
         for buffer_kind in 0 .. IMAGE_BUFFER_KINDS.len() {
-            if !has_platform_support(IMAGE_BUFFER_KINDS[buffer_kind], &gl_type) {
+            if !IMAGE_BUFFER_KINDS[buffer_kind].has_platform_support(&gl_type) {
                 continue;
             }
 
-            let feature_string = get_feature_string(IMAGE_BUFFER_KINDS[buffer_kind]);
+            let feature_string = IMAGE_BUFFER_KINDS[buffer_kind].get_feature_string();
             if feature_string != "" {
                 image_features.push(feature_string);
             }
@@ -957,10 +955,10 @@ impl Shaders {
             composite_rgba.push(None);
         }
         for image_buffer_kind in &IMAGE_BUFFER_KINDS {
-            if has_platform_support(*image_buffer_kind, &gl_type) {
+            if image_buffer_kind.has_platform_support(&gl_type) {
                 yuv_features.push("YUV");
 
-                let feature_string = get_feature_string(*image_buffer_kind);
+                let feature_string = image_buffer_kind.get_feature_string();
                 if feature_string != "" {
                     yuv_features.push(feature_string);
                     rgba_features.push(feature_string);

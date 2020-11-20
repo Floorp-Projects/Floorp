@@ -1012,11 +1012,11 @@ void DXGITextureHostD3D11::PushResourceUpdates(
       MOZ_ASSERT(aImageKeys.length() == 1);
 
       wr::ImageDescriptor descriptor(mSize, GetFormat());
-      auto imageType = gfx::gfxVars::UseSoftwareWebRender()
-                           ? wr::ExternalImageType::TextureHandle(
-                                 wr::ImageBufferKind::TextureRect)
-                           : wr::ExternalImageType::TextureHandle(
-                                 wr::ImageBufferKind::TextureExternal);
+      auto imageType =
+          gfx::gfxVars::UseSoftwareWebRender()
+              ? wr::ExternalImageType::TextureHandle(wr::TextureTarget::Rect)
+              : wr::ExternalImageType::TextureHandle(
+                    wr::TextureTarget::External);
       (aResources.*method)(aImageKeys[0], descriptor, aExtID, imageType, 0);
       break;
     }
@@ -1034,11 +1034,11 @@ void DXGITextureHostD3D11::PushResourceUpdates(
                                       mFormat == gfx::SurfaceFormat::NV12
                                           ? gfx::SurfaceFormat::R8G8
                                           : gfx::SurfaceFormat::R16G16);
-      auto imageType = gfx::gfxVars::UseSoftwareWebRender()
-                           ? wr::ExternalImageType::TextureHandle(
-                                 wr::ImageBufferKind::TextureRect)
-                           : wr::ExternalImageType::TextureHandle(
-                                 wr::ImageBufferKind::TextureExternal);
+      auto imageType =
+          gfx::gfxVars::UseSoftwareWebRender()
+              ? wr::ExternalImageType::TextureHandle(wr::TextureTarget::Rect)
+              : wr::ExternalImageType::TextureHandle(
+                    wr::TextureTarget::External);
       (aResources.*method)(aImageKeys[0], descriptor0, aExtID, imageType, 0);
       (aResources.*method)(aImageKeys[1], descriptor1, aExtID, imageType, 1);
       break;
@@ -1286,11 +1286,10 @@ void DXGIYCbCrTextureHostD3D11::PushResourceUpdates(
   auto method = aOp == TextureHost::ADD_IMAGE
                     ? &wr::TransactionBuilder::AddExternalImage
                     : &wr::TransactionBuilder::UpdateExternalImage;
-  auto imageType = gfx::gfxVars::UseSoftwareWebRender()
-                       ? wr::ExternalImageType::TextureHandle(
-                             wr::ImageBufferKind::TextureRect)
-                       : wr::ExternalImageType::TextureHandle(
-                             wr::ImageBufferKind::TextureExternal);
+  auto imageType =
+      gfx::gfxVars::UseSoftwareWebRender()
+          ? wr::ExternalImageType::TextureHandle(wr::TextureTarget::Rect)
+          : wr::ExternalImageType::TextureHandle(wr::TextureTarget::External);
 
   // y
   wr::ImageDescriptor descriptor0(mSizeY, gfx::SurfaceFormat::A8);

@@ -4,7 +4,7 @@
 
 use super::super::shader_source::{OPTIMIZED_SHADERS, UNOPTIMIZED_SHADERS};
 use api::{ColorF, ImageDescriptor, ImageFormat};
-use api::{MixBlendMode, ImageBufferKind, VoidPtrToSizeFn};
+use api::{MixBlendMode, TextureTarget, VoidPtrToSizeFn};
 use api::units::*;
 use euclid::default::Transform3D;
 use gleam::gl;
@@ -150,12 +150,12 @@ fn depth_target_size_in_bytes(dimensions: &DeviceIntSize) -> usize {
     (pixels as usize) * 4
 }
 
-pub fn get_gl_target(target: ImageBufferKind) -> gl::GLuint {
+pub fn get_gl_target(target: TextureTarget) -> gl::GLuint {
     match target {
-        ImageBufferKind::Texture2D => gl::TEXTURE_2D,
-        ImageBufferKind::Texture2DArray => gl::TEXTURE_2D_ARRAY,
-        ImageBufferKind::TextureRect => gl::TEXTURE_RECTANGLE,
-        ImageBufferKind::TextureExternal => gl::TEXTURE_EXTERNAL_OES,
+        TextureTarget::Default => gl::TEXTURE_2D,
+        TextureTarget::Array => gl::TEXTURE_2D_ARRAY,
+        TextureTarget::Rect => gl::TEXTURE_RECTANGLE,
+        TextureTarget::External => gl::TEXTURE_EXTERNAL_OES,
     }
 }
 
@@ -383,7 +383,7 @@ pub struct ExternalTexture {
 impl ExternalTexture {
     pub fn new(
         id: u32,
-        target: ImageBufferKind,
+        target: TextureTarget,
         swizzle: Swizzle,
         uv_rect: TexelRect,
     ) -> Self {
@@ -2215,7 +2215,7 @@ impl Device {
 
     pub fn create_texture(
         &mut self,
-        target: ImageBufferKind,
+        target: TextureTarget,
         format: ImageFormat,
         mut width: i32,
         mut height: i32,
@@ -3087,7 +3087,7 @@ impl Device {
     }
 
     pub fn attach_read_texture_external(
-        &mut self, texture_id: gl::GLuint, target: ImageBufferKind, layer_id: i32
+        &mut self, texture_id: gl::GLuint, target: TextureTarget, layer_id: i32
     ) {
         self.attach_read_texture_raw(texture_id, get_gl_target(target), layer_id)
     }

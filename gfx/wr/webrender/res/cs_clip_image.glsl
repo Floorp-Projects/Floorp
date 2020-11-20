@@ -9,6 +9,7 @@ varying vec2 vClipMaskImageUv;
 
 flat varying vec4 vClipMaskUvRect;
 flat varying vec4 vClipMaskUvInnerRect;
+flat varying float vLayer;
 
 #ifdef WR_VERTEX_SHADER
 
@@ -51,6 +52,7 @@ void main(void) {
         cmi.shared.device_pixel_scale
     );
     vLocalPos = vi.local_pos;
+    vLayer = res.layer;
     vClipMaskImageUv = (vi.local_pos.xy - cmi.tile_rect.p0 * vi.local_pos.w) / cmi.tile_rect.size;
 
     vec2 texture_size = vec2(textureSize(sColor0, 0));
@@ -77,7 +79,7 @@ void main(void) {
     vec2 source_uv = clamp(
         clamped_mask_uv / vLocalPos.w * vClipMaskUvRect.zw + vClipMaskUvRect.xy,
         vClipMaskUvInnerRect.xy, vClipMaskUvInnerRect.zw);
-    float clip_alpha = texture(sColor0, source_uv).r; //careful: texture has type A8
+    float clip_alpha = texture(sColor0, vec3(source_uv, vLayer)).r; //careful: texture has type A8
     oFragColor = vec4(alpha * clip_alpha, 1.0, 1.0, 1.0);
 }
 #endif
