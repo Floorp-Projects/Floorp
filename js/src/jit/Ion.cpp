@@ -1558,7 +1558,7 @@ CodeGenerator* GenerateCode(MIRGenerator* mir, LIRGraph* lir) {
 
 CodeGenerator* CompileBackEnd(MIRGenerator* mir, WarpSnapshot* snapshot) {
   // Everything in CompileBackEnd can potentially run on a helper thread.
-  AutoEnterIonBackend enter(mir->safeForMinorGC());
+  AutoEnterIonBackend enter;
   AutoSpewEndFunction spewEndFunction(mir);
 
   MOZ_ASSERT(!!snapshot == JitOptions.warpBuilder);
@@ -1697,10 +1697,6 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
   }
 
   const bool scriptHasIonScript = script->hasIonScript();
-
-  if (cx->runtime()->gc.storeBuffer().cancelIonCompilations()) {
-    mirGen->setNotSafeForMinorGC();
-  }
 
   MOZ_ASSERT(recompile == script->hasIonScript());
   MOZ_ASSERT(script->canIonCompile());

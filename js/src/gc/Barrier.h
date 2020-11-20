@@ -309,7 +309,6 @@ void CellPtrPreWriteBarrier(JS::GCCellPtr thing);
 // a helper thread.
 bool CurrentThreadIsIonCompiling();
 
-bool CurrentThreadIsIonCompilingSafeForMinorGC();
 bool CurrentThreadIsGCSweeping();
 bool CurrentThreadIsGCFinalizing();
 bool CurrentThreadIsTouchingGrayThings();

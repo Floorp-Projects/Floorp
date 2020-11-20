@@ -105,9 +105,6 @@ class MIRGenerator final {
 
   bool bigIntsCanBeInNursery() const { return bigIntsCanBeInNursery_; }
 
-  bool safeForMinorGC() const { return safeForMinorGC_; }
-  void setNotSafeForMinorGC() { safeForMinorGC_ = false; }
-
   // Whether the main thread is trying to cancel this build.
   bool shouldCancel(const char* why) { return cancelBuild_; }
   void cancel() { cancelBuild_ = true; }
@@ -151,7 +148,6 @@ class MIRGenerator final {
 
   bool instrumentedProfiling_;
   bool instrumentedProfilingIsCached_;
-  bool safeForMinorGC_;
   bool stringsCanBeInNursery_;
   bool bigIntsCanBeInNursery_;
 

@@ -1119,15 +1119,6 @@ js::Nursery::CollectionResult js::Nursery::doCollection(
   // Mark the store buffer. This must happen first.
   StoreBuffer& sb = gc->storeBuffer();
 
-  // The MIR graph only contains nursery pointers if cancelIonCompilations()
-  // is set on the store buffer, in which case we cancel all compilations
-  // of such graphs.
-  startProfile(ProfileKey::CancelIonCompilations);
-  if (sb.cancelIonCompilations()) {
-    js::CancelOffThreadIonCompilesUsingNurseryPointers(rt);
-  }
-  endProfile(ProfileKey::CancelIonCompilations);
-
   // Strings in the whole cell buffer must be traced first, in order to mark
   // tenured dependent strings' bases as non-deduplicatable. The rest of
   // nursery collection (whole non-string cells, edges, etc.) can happen later.

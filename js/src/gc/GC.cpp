@@ -5281,8 +5281,6 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
 
   using namespace gcstats;
 
-  MOZ_ASSERT(!storeBuffer().hasTypeSetPointers());
-
   AutoSCC scc(stats(), sweepGroupIndex);
 
   bool sweepingAtoms = false;
@@ -7147,8 +7145,7 @@ bool GCRuntime::shouldCollectNurseryForSlice(bool nonincrementalByAPI,
 
   bool nonIncremental = nonincrementalByAPI || budget.isUnlimited();
 
-  bool shouldCollectForSweeping = storeBuffer().hasTypeSetPointers() ||
-                                  storeBuffer().mayHavePointersToDeadCells();
+  bool shouldCollectForSweeping = storeBuffer().mayHavePointersToDeadCells();
 
   switch (incrementalState) {
     case State::NotActive:
