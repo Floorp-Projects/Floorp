@@ -130,7 +130,7 @@ class SharedJSAllocatedData final {
  *   returning a fatal false if unable to extract.  (And
  *   SerializedStructuredCloneBuffer wraps/defers to it.)  But if it's possible
  *   the ClonedMessageData came from a different source that might have borrowed
- *   the buffers itself, then things will crash.  That would be a pretty crazy
+ *   the buffers itself, then things will crash.  That would be a pretty strange
  *   implementation; if you see one, change it to use SharedJSAllocatedData.
  *
  * 1: Specifically, in the Write() case an owning SharedJSAllocatedData is

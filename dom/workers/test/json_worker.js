@@ -8,7 +8,7 @@ cyclicalObject.foo = cyclicalObject;
 var cyclicalArray = [];
 cyclicalArray.push(cyclicalArray);
 
-function makeCrazyNested(obj, count) {
+function makeNested(obj, count) {
   var innermostobj;
   for (var i = 0; i < count; i++) {
     obj.foo = { bar: 5 };
@@ -18,12 +18,12 @@ function makeCrazyNested(obj, count) {
   return innermostobj;
 }
 
-var crazyNestedObject = {};
-makeCrazyNested(crazyNestedObject, 100);
+var nestedObject = {};
+makeNested(nestedObject, 100);
 
-var crazyCyclicalObject = {};
-var innermost = makeCrazyNested(crazyCyclicalObject, 1000);
-innermost.baz = crazyCyclicalObject;
+var cyclicalObject = {};
+var innermost = makeNested(cyclicalObject, 1000);
+innermost.baz = cyclicalObject;
 
 var objectWithSaneGetter = {};
 objectWithSaneGetter.__defineGetter__("foo", function() {
@@ -103,12 +103,12 @@ var messages = [
   },
   {
     type: "object",
-    value: crazyNestedObject,
-    jsonValue: JSON.stringify(crazyNestedObject),
+    value: nestedObject,
+    jsonValue: JSON.stringify(nestedObject),
   },
   {
     type: "object",
-    value: crazyCyclicalObject,
+    value: cyclicalObject,
   },
   {
     type: "object",
