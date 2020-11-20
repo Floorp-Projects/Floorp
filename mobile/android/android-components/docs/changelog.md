@@ -18,6 +18,9 @@ permalink: /changelog/
 * **feature-app-links**
     * Added handling of PackageItemInfo.packageName NullPointerException on some Xiaomi and TCL devices
 
+* **feature-tab-collections**:
+    * [createCollection] now returns the id of the newly created collection
+
 # 67.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v66.0.0...v67.0.0)

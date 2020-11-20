@@ -33,7 +33,7 @@ class TabCollectionStorage(
     /**
      * Creates a new [TabCollection] and save the state of the given [Session]s in it.
      */
-    fun createCollection(title: String, sessions: List<Session> = emptyList()) {
+    fun createCollection(title: String, sessions: List<Session> = emptyList()): Long? {
         val entity = TabCollectionEntity(
             title = title,
             updatedAt = System.currentTimeMillis(),
@@ -43,6 +43,7 @@ class TabCollectionStorage(
         }
 
         addTabsToCollection(entity, sessions)
+        return entity.id
     }
 
     /**
