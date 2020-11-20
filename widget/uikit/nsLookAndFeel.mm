@@ -259,10 +259,8 @@ nsresult nsLookAndFeel::NativeGetColor(const ColorID aID, nscolor& aResult) {
 }
 
 NS_IMETHODIMP
-nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
-  nsresult res = nsXPLookAndFeel::GetIntImpl(aID, aResult);
-  if (NS_SUCCEEDED(res)) return res;
-  res = NS_OK;
+nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
+  nsresult res = NS_OK;
 
   switch (aID) {
     case IntID::ScrollButtonLeftMouseButtonAction:
@@ -361,10 +359,8 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
 }
 
 NS_IMETHODIMP
-nsLookAndFeel::GetFloatImpl(FloatID aID, float& aResult) {
-  nsresult res = nsXPLookAndFeel::GetFloatImpl(aID, aResult);
-  if (NS_SUCCEEDED(res)) return res;
-  res = NS_OK;
+nsLookAndFeel::NativeGetFloat(FloatID aID, float& aResult) {
+  nsresult res = NS_OK;
 
   switch (aID) {
     case FloatID::IMEUnderlineRelativeSize:
@@ -381,7 +377,7 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float& aResult) {
   return res;
 }
 
-bool nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName, gfxFontStyle& aFontStyle) {
+bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName, gfxFontStyle& aFontStyle) {
   // hack for now
   if (aID == FontID::Window || aID == FontID::Document) {
     aFontStyle.style = FontSlantStyle::Normal();
