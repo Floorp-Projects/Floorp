@@ -23,16 +23,15 @@ GleanCounter::Add(uint32_t amount, JSContext* cx) {
 }
 
 NS_IMETHODIMP
-GleanCounter::TestHasValue(const nsACString& aStorageName, JSContext* cx,
-                           bool* result) {
-  *result = this->mCounter.TestHasValue(PromiseFlatCString(aStorageName).get());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GleanCounter::TestGetValue(const nsACString& aStorageName, JSContext* cx,
-                           int32_t* result) {
-  *result = this->mCounter.TestGetValue(PromiseFlatCString(aStorageName).get());
+GleanCounter::TestGetValue(const nsACString& aStorageName,
+                           JS::MutableHandleValue aResult) {
+  auto result =
+      this->mCounter.TestGetValue(PromiseFlatCString(aStorageName).get());
+  if (result.isNothing()) {
+    aResult.set(JS::UndefinedValue());
+  } else {
+    aResult.set(JS::Int32Value(result.value()));
+  }
   return NS_OK;
 }
 

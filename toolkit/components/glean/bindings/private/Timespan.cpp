@@ -29,18 +29,15 @@ GleanTimespan::Stop(JSContext* cx) {
 }
 
 NS_IMETHODIMP
-GleanTimespan::TestHasValue(const nsACString& aStorageName, JSContext* cx,
-                            bool* result) {
-  *result =
-      this->mTimespan.TestHasValue(PromiseFlatCString(aStorageName).get());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GleanTimespan::TestGetValue(const nsACString& aStorageName, JSContext* cx,
-                            int64_t* result) {
-  *result =
+GleanTimespan::TestGetValue(const nsACString& aStorageName,
+                            JS::MutableHandleValue aResult) {
+  auto result =
       this->mTimespan.TestGetValue(PromiseFlatCString(aStorageName).get());
+  if (result.isNothing()) {
+    aResult.set(JS::UndefinedValue());
+  } else {
+    aResult.set(JS::DoubleValue(result.value()));
+  }
   return NS_OK;
 }
 

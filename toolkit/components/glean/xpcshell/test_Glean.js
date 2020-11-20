@@ -28,7 +28,6 @@ add_task(function test_setup() {
 
 add_task(function test_fog_counter_works() {
   Glean.test_only.bad_code.add(31);
-  Assert.ok(Glean.test_only.bad_code.testHasValue("test-ping"));
   Assert.equal(31, Glean.test_only.bad_code.testGetValue("test-ping"));
 });
 
@@ -36,7 +35,6 @@ add_task(async function test_fog_string_works() {
   const value = "a cheesy string!";
   Glean.test_only.cheesy_string.set(value);
 
-  Assert.ok(Glean.test_only.cheesy_string.testHasValue("test-ping"));
   Assert.equal(value, Glean.test_only.cheesy_string.testGetValue("test-ping"));
 });
 
@@ -47,14 +45,12 @@ add_task(async function test_fog_timespan_works() {
   await sleep(10);
   Glean.test_only.can_we_time_it.stop();
 
-  Assert.ok(Glean.test_only.can_we_time_it.testHasValue("test-ping"));
   Assert.ok(Glean.test_only.can_we_time_it.testGetValue("test-ping") > 0);
 });
 
 add_task(async function test_fog_uuid_works() {
   const kTestUuid = "decafdec-afde-cafd-ecaf-decafdecafde";
   Glean.test_only.what_id_it.set(kTestUuid);
-  Assert.ok(Glean.test_only.what_id_it.testHasValue("test-ping"));
   Assert.equal(kTestUuid, Glean.test_only.what_id_it.testGetValue("test-ping"));
 
   Glean.test_only.what_id_it.generateAndSet();
@@ -70,7 +66,6 @@ add_task(function test_fog_datetime_works() {
   const value = new Date("2020-06-11T12:00:00");
 
   Glean.test_only.what_a_date.set(value.getTime() * 1000);
-  Assert.ok(Glean.test_only.what_a_date.testHasValue("test-ping"));
 
   const received = Glean.test_only.what_a_date.testGetValue("test-ping");
   Assert.ok(received.startsWith("2020-06-11T12:00:00"));
