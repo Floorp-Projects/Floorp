@@ -32,6 +32,7 @@ exports.PSEUDO_CLASSES = [
   ":hover",
   ":active",
   ":focus",
+  ":focus-visible",
   ":focus-within",
   ":visited",
 ];
