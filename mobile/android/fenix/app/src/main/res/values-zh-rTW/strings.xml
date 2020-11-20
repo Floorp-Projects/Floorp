@@ -966,7 +966,7 @@
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">最近使用</string>
     <!-- An option from the share dialog to sign into sync -->
-    <string name="sync_sign_in">登入至 Sync</string>
+    <string name="sync_sign_in">登入 Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">傳送到所有裝置</string>
     <!-- An option from the share dialog to reconnect to sync -->
@@ -1184,7 +1184,7 @@
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">登入中…</string>
     <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">登入至 Firefox</string>
+    <string name="onboarding_firefox_account_sign_in">登入 Firefox</string>
 
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">不要登入</string>
@@ -1449,7 +1449,7 @@
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">重新連結</string>
     <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">登入至 Sync</string>
+    <string name="preferences_passwords_sync_logins_sign_in">登入 Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">儲存的登入資訊</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1669,7 +1669,7 @@
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">檢視您其他裝置中的分頁清單。</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
-    <string name="synced_tabs_sign_in_button">登入至 Sync</string>
+    <string name="synced_tabs_sign_in_button">登入 Sync</string>
 
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">無已開啟的分頁</string>
