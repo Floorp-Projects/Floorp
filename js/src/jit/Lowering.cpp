@@ -3438,32 +3438,15 @@ void LIRGenerator::visitEffectiveAddress(MEffectiveAddress* ins) {
 }
 
 void LIRGenerator::visitArrayPopShift(MArrayPopShift* ins) {
-  LUse object = useRegister(ins->object());
+  MOZ_ASSERT(ins->type() == MIRType::Value);
 
-  switch (ins->type()) {
-    case MIRType::Value: {
-      LArrayPopShiftV* lir =
-          new (alloc()) LArrayPopShiftV(object, temp(), temp());
-      if (JitOptions.warpBuilder) {
-        assignSnapshot(lir, ins->bailoutKind());
-      }
-      defineBox(lir, ins);
-      if (!JitOptions.warpBuilder || ins->mode() == MArrayPopShift::Shift) {
-        assignSafepoint(lir, ins);
-      }
-      break;
-    }
-    case MIRType::Undefined:
-    case MIRType::Null:
-      MOZ_CRASH("typed load must have a payload");
+  auto* lir =
+      new (alloc()) LArrayPopShift(useRegister(ins->object()), temp(), temp());
+  assignSnapshot(lir, ins->bailoutKind());
+  defineBox(lir, ins);
 
-    default: {
-      LArrayPopShiftT* lir =
-          new (alloc()) LArrayPopShiftT(object, temp(), temp());
-      define(lir, ins);
-      assignSafepoint(lir, ins);
-      break;
-    }
+  if (ins->mode() == MArrayPopShift::Shift) {
+    assignSafepoint(lir, ins);
   }
 }
 

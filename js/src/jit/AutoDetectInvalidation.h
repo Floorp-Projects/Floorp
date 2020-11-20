@@ -18,6 +18,7 @@
 
 namespace js::jit {
 
+// TODO(no-TI): remove.
 class AutoDetectInvalidation {
   JSContext* cx_;
   IonScript* ionScript_;

@@ -207,9 +207,6 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   template <typename T>
   void emitStoreElementHoleV(T* lir);
 
-  void emitArrayPopShift(LInstruction* lir, const MArrayPopShift* mir,
-                         Register obj, Register elementsTemp,
-                         Register lengthTemp, TypedOrValueRegister out);
   void emitArrayPush(LInstruction* lir, Register obj,
                      const ConstantOrRegister& value, Register elementsTemp,
                      Register length, Register spectreTemp);
