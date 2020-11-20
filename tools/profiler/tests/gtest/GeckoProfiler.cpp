@@ -690,7 +690,7 @@ TEST(GeckoProfiler, Markers)
       aWriter.StringProperty("text", aText);
       aWriter.UniqueStringProperty("unique text", aUniqueText);
       aWriter.UniqueStringProperty("unique text again", aUniqueText);
-      mozilla::baseprofiler::WritePropertyTime(aWriter, "time", aTime);
+      aWriter.TimeProperty("time", aTime);
     }
     static mozilla::MarkerSchema MarkerTypeDisplay() {
       // Note: This is an test function that is not intended to actually output

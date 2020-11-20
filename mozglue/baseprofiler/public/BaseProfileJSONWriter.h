@@ -9,6 +9,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/JSONWriter.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 
 #include <functional>
@@ -164,6 +165,15 @@ class SpliceableJSONWriter : public JSONWriter {
   }
 
   void EndBareList() { EndCollection(scEmptyString); }
+
+  // This function must be used to correctly stream timestamps in profiles.
+  // Null timestamps don't output anything.
+  void TimeProperty(const Span<const char>& aName, const TimeStamp& aTime) {
+    if (!aTime.IsNull()) {
+      DoubleProperty(aName,
+                     (aTime - TimeStamp::ProcessCreation()).ToMilliseconds());
+    }
+  }
 
   void NullElements(uint32_t aCount) {
     for (uint32_t i = 0; i < aCount; i++) {
