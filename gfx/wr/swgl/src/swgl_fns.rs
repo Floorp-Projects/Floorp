@@ -305,8 +305,10 @@ extern "C" {
         opaque: GLboolean,
         flip: GLboolean,
         filter: GLenum,
-        band_offset: GLint,
-        band_height: GLsizei,
+        clip_x: GLint,
+        clip_y: GLint,
+        clip_width: GLsizei,
+        clip_height: GLsizei,
     );
     fn CompositeYUV(
         locked_dst: *mut LockedTexture,
@@ -324,8 +326,10 @@ extern "C" {
         dst_width: GLsizei,
         dst_height: GLsizei,
         flip: GLboolean,
-        band_offset: GLint,
-        band_height: GLsizei,
+        clip_x: GLint,
+        clip_y: GLint,
+        clip_width: GLsizei,
+        clip_height: GLsizei,
     );
     fn CreateContext() -> *mut c_void;
     fn ReferenceContext(ctx: *mut c_void);
@@ -2369,8 +2373,10 @@ impl LockedResource {
         opaque: bool,
         flip: bool,
         filter: GLenum,
-        band_offset: GLint,
-        band_height: GLsizei,
+        clip_x: GLint,
+        clip_y: GLint,
+        clip_width: GLsizei,
+        clip_height: GLsizei,
     ) {
         unsafe {
             Composite(
@@ -2387,8 +2393,10 @@ impl LockedResource {
                 opaque as GLboolean,
                 flip as GLboolean,
                 filter,
-                band_offset,
-                band_height,
+                clip_x,
+                clip_y,
+                clip_width,
+                clip_height,
             );
         }
     }
@@ -2410,8 +2418,10 @@ impl LockedResource {
         dst_width: GLsizei,
         dst_height: GLsizei,
         flip: bool,
-        band_offset: GLint,
-        band_height: GLsizei,
+        clip_x: GLint,
+        clip_y: GLint,
+        clip_width: GLsizei,
+        clip_height: GLsizei,
     ) {
         unsafe {
             CompositeYUV(
@@ -2430,8 +2440,10 @@ impl LockedResource {
                 dst_width,
                 dst_height,
                 flip as GLboolean,
-                band_offset,
-                band_height,
+                clip_x,
+                clip_y,
+                clip_width,
+                clip_height,
             );
         }
     }

@@ -207,8 +207,10 @@ impl SwTile {
         let dest_rect = transform
             .outer_transformed_rect(&valid.to_f32())?
             .round_out()
-            .to_i32()
-            .intersection(clip_rect)?;
+            .to_i32();
+        if !dest_rect.intersects(clip_rect) {
+             return None;
+        }
         // To get a valid source rect, we need to inverse transform the clipped destination rect to find out the effect
         // of the clip rect in source-space. After this, we subtract off the source-space valid rect origin to get
         // a source rect that is now relative to the surface origin rather than absolute.
@@ -371,6 +373,7 @@ impl DrawTileHelper {
         viewport: &DeviceIntRect,
         dest: &DeviceIntRect,
         src: &DeviceIntRect,
+        _clip: &DeviceIntRect,
         surface: &SwSurface,
         tile: &SwTile,
         flip_y: bool,
@@ -443,6 +446,7 @@ struct SwCompositeJob {
     locked_dst: swgl::LockedResource,
     src_rect: DeviceIntRect,
     dst_rect: DeviceIntRect,
+    clip_rect: DeviceIntRect,
     opaque: bool,
     flip_y: bool,
     filter: ImageRendering,
@@ -459,6 +463,12 @@ impl SwCompositeJob {
         let num_bands = self.num_bands as i32;
         let band_offset = (self.dst_rect.size.height * band_index) / num_bands;
         let band_height = (self.dst_rect.size.height * (band_index + 1)) / num_bands - band_offset;
+        let band_clip = DeviceIntRect::new(DeviceIntPoint::new(self.dst_rect.origin.x, self.dst_rect.origin.y + band_offset),
+                                           DeviceIntSize::new(self.dst_rect.size.width, band_height));
+        let clip_rect = match self.clip_rect.intersection(&band_clip) {
+            Some(clip_rect) => clip_rect,
+            _ => return,
+        };
         match self.locked_src {
             SwCompositeSource::BGRA(ref resource) => {
                 self.locked_dst.composite(
@@ -474,8 +484,10 @@ impl SwCompositeJob {
                     self.opaque,
                     self.flip_y,
                     image_rendering_to_gl_filter(self.filter),
-                    band_offset,
-                    band_height,
+                    clip_rect.origin.x,
+                    clip_rect.origin.y,
+                    clip_rect.size.width,
+                    clip_rect.size.height,
                 );
             }
             SwCompositeSource::YUV(ref y, ref u, ref v, color_space, color_depth) => {
@@ -500,8 +512,10 @@ impl SwCompositeJob {
                     self.dst_rect.size.width,
                     self.dst_rect.size.height,
                     self.flip_y,
-                    band_offset,
-                    band_height,
+                    clip_rect.origin.x,
+                    clip_rect.origin.y,
+                    clip_rect.size.width,
+                    clip_rect.size.height,
                 );
             }
         }
@@ -748,6 +762,7 @@ impl SwCompositeThread {
         locked_dst: swgl::LockedResource,
         src_rect: DeviceIntRect,
         dst_rect: DeviceIntRect,
+        clip_rect: DeviceIntRect,
         opaque: bool,
         flip_y: bool,
         filter: ImageRendering,
@@ -766,6 +781,7 @@ impl SwCompositeThread {
             locked_dst,
             src_rect,
             dst_rect,
+            clip_rect,
             opaque,
             flip_y,
             filter,
@@ -1116,6 +1132,7 @@ impl SwCompositor {
                     framebuffer,
                     src_rect,
                     dst_rect,
+                    *clip_rect,
                     surface.is_opaque,
                     flip_y,
                     filter,
@@ -1659,6 +1676,7 @@ impl Compositor for SwCompositor {
                                 &viewport,
                                 &dst_rect,
                                 &src_rect,
+                                clip_rect,
                                 surface,
                                 tile,
                                 flip_y,

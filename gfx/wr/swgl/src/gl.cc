@@ -75,6 +75,12 @@ struct IntRect {
     return *this;
   }
 
+  IntRect intersection(const IntRect& o) {
+    IntRect result = *this;
+    result.intersect(o);
+    return result;
+  }
+
   // Scale from source-space to dest-space, optionally rounding inward
   IntRect& scale(int srcWidth, int srcHeight, int dstWidth, int dstHeight,
                  bool roundIn = false) {
