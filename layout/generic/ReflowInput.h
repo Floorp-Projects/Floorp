@@ -1016,6 +1016,11 @@ struct ReflowInput : public SizeComputationInput {
                                      nsHypotheticalPosition& aHypotheticalPos,
                                      mozilla::LayoutFrameType aFrameType) const;
 
+  // This calculates the size by using the resolved auto block size (from
+  // non-auto block insets), according to the writing mode of current block.
+  LogicalSize CalculateAbsoluteSizeWithResolvedAutoBlockSize(
+      nscoord aAutoBSize, const LogicalSize& aTentativeComputedSize) const;
+
   void InitAbsoluteConstraints(nsPresContext* aPresContext,
                                const ReflowInput* aCBReflowInput,
                                const mozilla::LogicalSize& aContainingBlockSize,
