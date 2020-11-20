@@ -7,6 +7,11 @@ ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm", this);
 async function openRemoveAllDialog(browser) {
   await SimpleTest.promiseFocus(browser);
   await BrowserTestUtils.synthesizeMouseAtCenter("menu-button", {}, browser);
+  await SpecialPowers.spawn(browser, [], async () => {
+    let menuButton = content.document.querySelector("menu-button");
+    let menu = menuButton.shadowRoot.querySelector("ul.menu");
+    await ContentTaskUtils.waitForCondition(() => !menu.hidden);
+  });
   function getRemoveAllMenuButton() {
     let menuButton = window.document.querySelector("menu-button");
     return menuButton.shadowRoot.querySelector(".menuitem-remove-all-logins");
