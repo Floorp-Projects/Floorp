@@ -15,6 +15,9 @@ permalink: /changelog/
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * 🚒 Bug fixed [issue #8464](https://github.com/mozilla-mobile/android-components/issues/8464) - Crash when confirming a prompt that was already confirmed
 
+* **feature-downloads**
+  * 🚒 Bug fixed [issue #9033](https://github.com/mozilla-mobile/android-components/issues/9033) - Fix resuming downloads in slow networks more details see the [Fenix issue](https://github.com/mozilla-mobile/fenix/issues/9354#issuecomment-731267368).
+
 * **feature-app-links**
     * Added handling of PackageItemInfo.packageName NullPointerException on some Xiaomi and TCL devices
 

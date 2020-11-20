@@ -597,8 +597,8 @@ abstract class AbstractFetchDownloadService : Service() {
         }
     }
 
-    @Suppress("ComplexCondition")
-    internal fun performDownload(currentDownloadJobState: DownloadJobState) {
+    @Suppress("ComplexCondition", "ComplexMethod")
+    internal fun performDownload(currentDownloadJobState: DownloadJobState, useHttpClient: Boolean = false) {
         val download = currentDownloadJobState.state
         val isResumingDownload = currentDownloadJobState.currentBytesCopied > 0L
         val headers = MutableHeaders()
@@ -613,13 +613,15 @@ abstract class AbstractFetchDownloadService : Service() {
             Request.CookiePolicy.INCLUDE
         }
 
+        var isUsingHttpClient = false
         val request = Request(download.url.sanitizeURL(), headers = headers, cookiePolicy = cookiePolicy)
         // When resuming a download we need to use the httpClient as
         // download.response doesn't support adding headers.
-        val response = if (isResumingDownload) {
+        val response = if (isResumingDownload || useHttpClient || download.response == null) {
+            isUsingHttpClient = true
             httpClient.fetch(request)
         } else {
-            download.response ?: httpClient.fetch(request)
+            requireNotNull(download.response)
         }
         logger.debug("Fetching download for ${currentDownloadJobState.state.id} ")
 
@@ -636,14 +638,17 @@ abstract class AbstractFetchDownloadService : Service() {
         }
 
         response.body.useStream { inStream ->
+            var copyInChuckStatus: CopyInChuckStatus? = null
             val newDownloadState = download.withResponse(response.headers, inStream)
             currentDownloadJobState.state = newDownloadState
 
             useFileStream(newDownloadState, isResumingDownload) { outStream ->
-                copyInChunks(currentDownloadJobState, inStream, outStream)
+                copyInChuckStatus = copyInChunks(currentDownloadJobState, inStream, outStream, isUsingHttpClient)
             }
 
-            verifyDownload(currentDownloadJobState)
+            if (copyInChuckStatus != CopyInChuckStatus.ERROR_IN_STREAM_CLOSED) {
+                verifyDownload(currentDownloadJobState)
+            }
         }
     }
 
@@ -672,7 +677,18 @@ abstract class AbstractFetchDownloadService : Service() {
     }
 
     @VisibleForTesting
-    internal fun copyInChunks(downloadJobState: DownloadJobState, inStream: InputStream, outStream: OutputStream) {
+    internal enum class CopyInChuckStatus {
+        COMPLETED, ERROR_IN_STREAM_CLOSED
+    }
+
+    @VisibleForTesting
+    @Suppress("MaxLineLength")
+    internal fun copyInChunks(
+        downloadJobState: DownloadJobState,
+        inStream: InputStream,
+        outStream: OutputStream,
+        downloadWithHttpClient: Boolean = false
+    ): CopyInChuckStatus {
         val data = ByteArray(CHUNK_SIZE)
         logger.debug("starting copyInChunks ${downloadJobState.state.id}" +
                 " currentBytesCopied ${downloadJobState.state.currentBytesCopied}")
@@ -685,10 +701,19 @@ abstract class AbstractFetchDownloadService : Service() {
             updateDownloadState(newState)
         }
 
+        var isInStreamClosed = false
         // To ensure that we copy all files (even ones that don't have fileSize, we must NOT check < fileSize
         while (getDownloadJobStatus(downloadJobState) == DOWNLOADING) {
-            val bytesRead = inStream.read(data)
-
+            var bytesRead: Int
+            try {
+                bytesRead = inStream.read(data)
+            } catch (e: IOException) {
+                if (downloadWithHttpClient) {
+                    throw e
+                }
+                isInStreamClosed = true
+                break
+            }
             // If bytesRead is -1, there's no data left to read from the stream
             if (bytesRead == -1) { break }
             downloadJobState.currentBytesCopied += bytesRead
@@ -697,10 +722,20 @@ abstract class AbstractFetchDownloadService : Service() {
 
             outStream.write(data, 0, bytesRead)
         }
+        if (isInStreamClosed) {
+            // In cases where [download.response] is available and users with slow
+            // networks start a download but quickly press pause and then resume
+            // [isResumingDownload] will be false as there will be not enough time
+            // for bytes to be copied, but the stream in [download.response] will be closed,
+            // we have to fallback to [httpClient]
+            performDownload(downloadJobState, useHttpClient = true)
+            return CopyInChuckStatus.ERROR_IN_STREAM_CLOSED
+        }
         logger.debug(
             "Finishing copyInChunks ${downloadJobState.state.id} " +
                 "currentBytesCopied ${downloadJobState.currentBytesCopied}"
         )
+        return CopyInChuckStatus.COMPLETED
     }
 
     /**

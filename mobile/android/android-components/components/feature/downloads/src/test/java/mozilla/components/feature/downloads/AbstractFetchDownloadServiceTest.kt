@@ -42,6 +42,7 @@ import mozilla.components.feature.downloads.AbstractFetchDownloadService.Compani
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_RESUME
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_TRY_AGAIN
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.PROGRESS_UPDATE_INTERVAL
+import mozilla.components.feature.downloads.AbstractFetchDownloadService.CopyInChuckStatus.ERROR_IN_STREAM_CLOSED
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobState
 import mozilla.components.feature.downloads.DownloadNotification.NOTIFICATION_DOWNLOAD_GROUP_ID
 import mozilla.components.feature.downloads.facts.DownloadsFacts.Items.NOTIFICATION
@@ -72,6 +73,7 @@ import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.isNull
 import org.mockito.Mock
 import org.mockito.Mockito.atLeastOnce
+import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.doCallRealMethod
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
@@ -146,7 +148,7 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs.values.forEach { it.job?.join() }
 
         val providedDownload = argumentCaptor<DownloadJobState>()
-        verify(service).performDownload(providedDownload.capture())
+        verify(service).performDownload(providedDownload.capture(), anyBoolean())
 
         assertEquals(download.url, providedDownload.value.state.url)
         assertEquals(download.fileName, providedDownload.value.state.fileName)
@@ -333,7 +335,7 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs.values.forEach { it.job?.join() }
 
         val providedDownload = argumentCaptor<DownloadJobState>()
-        verify(service).performDownload(providedDownload.capture())
+        verify(service).performDownload(providedDownload.capture(), anyBoolean())
 
         val pauseIntent = Intent(ACTION_PAUSE).apply {
             setPackage(testContext.applicationContext.packageName)
@@ -372,7 +374,7 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs.values.forEach { it.job?.join() }
 
         val providedDownload = argumentCaptor<DownloadJobState>()
-        verify(service).performDownload(providedDownload.capture())
+        verify(service).performDownload(providedDownload.capture(), anyBoolean())
 
         val cancelIntent = Intent(ACTION_CANCEL).apply {
             setPackage(testContext.applicationContext.packageName)
@@ -419,7 +421,7 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs.values.forEach { it.job?.join() }
 
         val providedDownload = argumentCaptor<DownloadJobState>()
-        verify(service).performDownload(providedDownload.capture())
+        verify(service).performDownload(providedDownload.capture(), anyBoolean())
 
         // Simulate a pause
         var downloadJobState = service.downloadJobs[providedDownload.value.state.id]!!
@@ -472,7 +474,7 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs.values.forEach { it.job?.join() }
 
         val providedDownload = argumentCaptor<DownloadJobState>()
-        verify(service).performDownload(providedDownload.capture())
+        verify(service).performDownload(providedDownload.capture(), anyBoolean())
         service.downloadJobs[providedDownload.value.state.id]?.job?.join()
 
         // Simulate a failure
@@ -523,7 +525,7 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs.values.forEach { it.job?.join() }
 
         val providedDownload = argumentCaptor<DownloadJobState>()
-        verify(service).performDownload(providedDownload.capture())
+        verify(service).performDownload(providedDownload.capture(), anyBoolean())
 
         service.downloadJobs[providedDownload.value.state.id]?.job?.join()
         val downloadJobState = service.downloadJobs[providedDownload.value.state.id]!!
@@ -577,7 +579,7 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs.values.forEach { it.job?.join() }
 
         val providedDownload = argumentCaptor<DownloadJobState>()
-        verify(service).performDownload(providedDownload.capture())
+        verify(service).performDownload(providedDownload.capture(), anyBoolean())
 
         service.downloadJobs[providedDownload.value.state.id]?.job?.join()
         val downloadJobState = service.downloadJobs[providedDownload.value.state.id]!!
@@ -597,7 +599,7 @@ class AbstractFetchDownloadServiceTest {
         val downloadIntent = Intent("ACTION_DOWNLOAD")
         downloadIntent.putExtra(EXTRA_DOWNLOAD_ID, download.id)
 
-        doNothing().`when`(service).performDownload(any())
+        doNothing().`when`(service).performDownload(any(), anyBoolean())
 
         browserStore.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
         service.onStartCommand(downloadIntent, 0, 0)
@@ -628,7 +630,7 @@ class AbstractFetchDownloadServiceTest {
         val downloadIntent = Intent("ACTION_DOWNLOAD")
         downloadIntent.putExtra(EXTRA_DOWNLOAD_ID, download.id)
 
-        doNothing().`when`(service).performDownload(any())
+        doNothing().`when`(service).performDownload(any(), anyBoolean())
 
         browserStore.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
         service.onStartCommand(downloadIntent, 0, 0)
@@ -708,7 +710,7 @@ class AbstractFetchDownloadServiceTest {
         val downloadIntent = Intent("ACTION_DOWNLOAD")
         downloadIntent.putExtra(EXTRA_DOWNLOAD_ID, download.id)
 
-        doNothing().`when`(service).performDownload(any())
+        doNothing().`when`(service).performDownload(any(), anyBoolean())
 
         service.onStartCommand(downloadIntent, 0, 0)
 
@@ -723,7 +725,7 @@ class AbstractFetchDownloadServiceTest {
         val downloadIntent = Intent("ACTION_DOWNLOAD")
         downloadIntent.putExtra(EXTRA_DOWNLOAD_ID, download.id)
 
-        doNothing().`when`(service).performDownload(any())
+        doNothing().`when`(service).performDownload(any(), anyBoolean())
 
         browserStore.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
         service.onStartCommand(downloadIntent, 0, 0)
@@ -932,7 +934,7 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs.values.forEach { it.job?.join() }
 
         val providedDownload = argumentCaptor<DownloadJobState>()
-        verify(service).performDownload(providedDownload.capture())
+        verify(service).performDownload(providedDownload.capture(), anyBoolean())
 
         service.downloadJobs[providedDownload.value.state.id]?.job?.join()
         val downloadJobState = service.downloadJobs[providedDownload.value.state.id]!!
@@ -964,7 +966,7 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs.values.forEach { it.job?.join() }
 
         val providedDownload = argumentCaptor<DownloadJobState>()
-        verify(service).performDownload(providedDownload.capture())
+        verify(service).performDownload(providedDownload.capture(), anyBoolean())
 
         service.downloadJobs[providedDownload.value.state.id]?.job?.join()
         val downloadJobState = service.downloadJobs[providedDownload.value.state.id]!!
@@ -995,7 +997,7 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs.values.forEach { it.job?.join() }
 
         val providedDownload = argumentCaptor<DownloadJobState>()
-        verify(service).performDownload(providedDownload.capture())
+        verify(service).performDownload(providedDownload.capture(), anyBoolean())
 
         service.downloadJobs[providedDownload.value.state.id]?.job?.join()
         val downloadJobState = service.downloadJobs[providedDownload.value.state.id]!!
@@ -1027,7 +1029,7 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs.values.forEach { it.job?.join() }
 
         val providedDownload = argumentCaptor<DownloadJobState>()
-        verify(service).performDownload(providedDownload.capture())
+        verify(service).performDownload(providedDownload.capture(), anyBoolean())
 
         service.downloadJobs[providedDownload.value.state.id]?.job?.join()
         val downloadJobState = service.downloadJobs[providedDownload.value.state.id]!!
@@ -1053,7 +1055,7 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs.values.forEach { it.job?.join() }
 
         val providedDownload = argumentCaptor<DownloadJobState>()
-        verify(service).performDownload(providedDownload.capture())
+        verify(service).performDownload(providedDownload.capture(), anyBoolean())
 
         val downloadJobState = service.downloadJobs[providedDownload.value.state.id]!!
         assertEquals(FAILED, service.getDownloadJobStatus(downloadJobState))
@@ -1160,7 +1162,7 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs.values.forEach { assertTrue(it.job!!.isActive) }
 
         val providedDownload = argumentCaptor<DownloadJobState>()
-        verify(service).performDownload(providedDownload.capture())
+        verify(service).performDownload(providedDownload.capture(), anyBoolean())
 
         // Advance the clock so that the puller posts a notification.
         testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
@@ -1219,7 +1221,7 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs.values.forEach { it.job?.join() }
 
         val providedDownload = argumentCaptor<DownloadJobState>()
-        verify(service).performDownload(providedDownload.capture())
+        verify(service).performDownload(providedDownload.capture(), anyBoolean())
 
         service.setDownloadJobStatus(service.downloadJobs[download.id]!!, DownloadState.Status.PAUSED)
 
@@ -1502,7 +1504,7 @@ class AbstractFetchDownloadServiceTest {
 
         val providedDownload = argumentCaptor<DownloadJobState>()
 
-        verify(service).performDownload(providedDownload.capture())
+        verify(service).performDownload(providedDownload.capture(), anyBoolean())
         service.downloadJobs[providedDownload.value.state.id]?.job?.join()
 
         val cancelledDownloadJobState = service.downloadJobs[providedDownload.value.state.id]!!
@@ -1521,7 +1523,7 @@ class AbstractFetchDownloadServiceTest {
         browserStore.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
         service.onStartCommand(downloadIntent, 0, 0)
         service.downloadJobs.values.forEach { it.job?.join() }
-        verify(service, times(2)).performDownload(providedDownload.capture())
+        verify(service, times(2)).performDownload(providedDownload.capture(), anyBoolean())
         service.downloadJobs[providedDownload.value.state.id]?.job?.join()
 
         val downloadJobState = service.downloadJobs[providedDownload.value.state.id]!!
@@ -1618,5 +1620,62 @@ class AbstractFetchDownloadServiceTest {
         service.copyInChunks(downloadJobState, inputStream, mock())
 
         assertEquals(15, downloadJobState.currentBytesCopied)
+    }
+
+    @Test
+    fun `copyInChunks - must return ERROR_IN_STREAM_CLOSED when inStream is closed`() = runBlocking {
+        val downloadJobState = DownloadJobState(state = mock(), status = DOWNLOADING)
+        val inputStream = mock<InputStream>()
+
+        assertEquals(0, downloadJobState.currentBytesCopied)
+
+        doAnswer { throw IOException() }.`when`(inputStream).read(any())
+        doNothing().`when`(service).updateDownloadState(any())
+        doNothing().`when`(service).performDownload(any(), anyBoolean())
+
+        val status = service.copyInChunks(downloadJobState, inputStream, mock())
+
+        verify(service).performDownload(downloadJobState, true)
+        assertEquals(ERROR_IN_STREAM_CLOSED, status)
+    }
+
+    @Test
+    fun `copyInChunks - must throw when inStream is closed and download was performed using http client`() = runBlocking {
+        val downloadJobState = DownloadJobState(state = mock(), status = DOWNLOADING)
+        val inputStream = mock<InputStream>()
+        var exceptionWasThrown = false
+
+        assertEquals(0, downloadJobState.currentBytesCopied)
+
+        doAnswer { throw IOException() }.`when`(inputStream).read(any())
+        doNothing().`when`(service).updateDownloadState(any())
+        doNothing().`when`(service).performDownload(any(), anyBoolean())
+
+        try {
+            service.copyInChunks(downloadJobState, inputStream, mock(), true)
+        } catch (e: IOException) {
+            exceptionWasThrown = true
+        }
+
+        verify(service, times(0)).performDownload(downloadJobState, true)
+        assertTrue(exceptionWasThrown)
+    }
+
+    @Test
+    fun `copyInChunks - must return COMPLETED when finish copying bytes`() = runBlocking {
+        val downloadJobState = DownloadJobState(state = mock(), status = DOWNLOADING)
+        val inputStream = mock<InputStream>()
+
+        assertEquals(0, downloadJobState.currentBytesCopied)
+
+        doReturn(15, -1).`when`(inputStream).read(any())
+        doNothing().`when`(service).updateDownloadState(any())
+
+        val status = service.copyInChunks(downloadJobState, inputStream, mock())
+
+        verify(service, never()).performDownload(any(), anyBoolean())
+
+        assertEquals(15, downloadJobState.currentBytesCopied)
+        assertEquals(AbstractFetchDownloadService.CopyInChuckStatus.COMPLETED, status)
     }
 }
