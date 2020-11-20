@@ -145,9 +145,12 @@ impl<'static_env, 'module_env> BatchCompiler<'static_env, 'module_env> {
     }
 
     pub fn compile(&mut self, stackmaps: bindings::Stackmaps) -> CodegenResult<()> {
+        debug!("=== BatchCompiler::compile: BEGIN ==============================");
         let info = self.context.compile(&*self.isa)?;
-        debug!("Optimized wasm function IR: {}", self);
-        self.binemit(info, stackmaps)
+        let res = self.binemit(info, stackmaps);
+        debug!("=== BatchCompiler::compile: END ================================");
+        debug!("");
+        res
     }
 
     /// Translate the WebAssembly code to Cranelift IR.
@@ -163,7 +166,7 @@ impl<'static_env, 'module_env> BatchCompiler<'static_env, 'module_env> {
         let features = WasmFeatures {
             reference_types: self.static_env.ref_types_enabled,
             module_linking: false,
-            simd: false, // TODO
+            simd: self.static_env.v128_enabled,
             multi_value: true,
             threads: self.static_env.threads_enabled,
             tail_call: false,

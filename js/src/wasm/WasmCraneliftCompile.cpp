@@ -297,6 +297,7 @@ class CraneliftContext {
       : moduleEnv_(moduleEnv), compiler_(nullptr) {
     staticEnv_.ref_types_enabled = moduleEnv.refTypesEnabled();
     staticEnv_.threads_enabled = true;
+    staticEnv_.v128_enabled = moduleEnv.v128Enabled();
 #ifdef WASM_SUPPORTS_HUGE_MEMORY
     if (moduleEnv.hugeMemoryEnabled()) {
       // In the huge memory configuration, we always reserve the full 4 GB
@@ -361,6 +362,8 @@ CraneliftStaticEnvironment::CraneliftStaticEnvironment()
       platform_is_windows(false),
 #endif
       ref_types_enabled(false),
+      threads_enabled(false),
+      v128_enabled(false),
       static_memory_bound(0),
       memory_guard_size(0),
       memory_base_tls_offset(offsetof(TlsData, memoryBase)),
@@ -650,6 +653,9 @@ BD_ConstantValue global_constantValue(const GlobalDesc* global) {
       break;
     case TypeCode::F64:
       v.u.f64 = value.f64();
+      break;
+    case TypeCode::V128:
+      memcpy(&v.u.v128, &value.v128(), sizeof(v.u.v128));
       break;
     case AbstractReferenceTypeCode:
       v.u.r = value.ref().forCompiledCode();
