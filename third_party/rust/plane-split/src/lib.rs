@@ -10,18 +10,11 @@ the resulting sub-polygons by depth and avoid transparency blending issues.
 */
 #![warn(missing_docs)]
 
-extern crate binary_space_partition;
-extern crate euclid;
-#[macro_use]
-extern crate log;
-extern crate num_traits;
-
 mod bsp;
 mod clip;
 mod polygon;
 
-use euclid::{Point3D, Scale, Vector3D};
-use euclid::approxeq::ApproxEq;
+use euclid::{approxeq::ApproxEq, Point3D, Scale, Vector3D};
 use num_traits::{Float, One, Zero};
 
 use std::ops;
@@ -30,19 +23,25 @@ pub use self::bsp::BspSplitter;
 pub use self::clip::Clipper;
 pub use self::polygon::{Intersection, LineProjection, Polygon};
 
-
-fn is_zero<T>(value: T) -> bool where
-    T: Copy + Zero + ApproxEq<T> + ops::Mul<T, Output=T> {
+fn is_zero<T>(value: T) -> bool
+where
+    T: Copy + Zero + ApproxEq<T> + ops::Mul<T, Output = T>,
+{
     //HACK: this is rough, but the original Epsilon is too strict
     (value * value).approx_eq(&T::zero())
 }
 
-fn is_zero_vec<T, U>(vec: Vector3D<T, U>) -> bool where
-   T: Copy + Zero + ApproxEq<T> +
-      ops::Add<T, Output=T> + ops::Sub<T, Output=T> + ops::Mul<T, Output=T> {
+fn is_zero_vec<T, U>(vec: Vector3D<T, U>) -> bool
+where
+    T: Copy
+        + Zero
+        + ApproxEq<T>
+        + ops::Add<T, Output = T>
+        + ops::Sub<T, Output = T>
+        + ops::Mul<T, Output = T>,
+{
     vec.dot(vec).approx_eq(&T::zero())
 }
-
 
 /// A generic line.
 #[derive(Debug)]
@@ -53,9 +52,15 @@ pub struct Line<T, U> {
     pub dir: Vector3D<T, U>,
 }
 
-impl<T, U> Line<T, U> where
-    T: Copy + One + Zero + ApproxEq<T> +
-       ops::Add<T, Output=T> + ops::Sub<T, Output=T> + ops::Mul<T, Output=T>
+impl<T, U> Line<T, U>
+where
+    T: Copy
+        + One
+        + Zero
+        + ApproxEq<T>
+        + ops::Add<T, Output = T>
+        + ops::Sub<T, Output = T>
+        + ops::Mul<T, Output = T>,
 {
     /// Check if the line has consistent parameters.
     pub fn is_valid(&self) -> bool {
@@ -64,17 +69,14 @@ impl<T, U> Line<T, U> where
     /// Check if two lines match each other.
     pub fn matches(&self, other: &Self) -> bool {
         let diff = self.origin - other.origin;
-        is_zero_vec(self.dir.cross(other.dir)) &&
-        is_zero_vec(self.dir.cross(diff))
+        is_zero_vec(self.dir.cross(other.dir)) && is_zero_vec(self.dir.cross(diff))
     }
 
     /// Intersect an edge given by the end points.
     /// Returns the fraction of the edge where the intersection occurs.
-    fn intersect_edge(
-        &self,
-        edge: ops::Range<Point3D<T, U>>,
-    ) -> Option<T>
-    where T: ops::Div<T, Output=T>
+    fn intersect_edge(&self, edge: ops::Range<Point3D<T, U>>) -> Option<T>
+    where
+        T: ops::Div<T, Output = T>,
     {
         let edge_vec = edge.end - edge.start;
         let origin_vec = self.origin - edge.start;
@@ -92,7 +94,6 @@ impl<T, U> Line<T, U> where
         }
     }
 }
-
 
 /// An infinite plane in 3D space, defined by equation:
 /// dot(v, normal) + offset = 0
@@ -122,14 +123,22 @@ impl<T: Clone, U> Clone for Plane<T, U> {
 pub struct NegativeHemisphereError;
 
 impl<
-    T: Copy + Zero + One + Float + ApproxEq<T> +
-        ops::Sub<T, Output=T> + ops::Add<T, Output=T> +
-        ops::Mul<T, Output=T> + ops::Div<T, Output=T>,
-    U,
-> Plane<T, U> {
+        T: Copy
+            + Zero
+            + One
+            + Float
+            + ApproxEq<T>
+            + ops::Sub<T, Output = T>
+            + ops::Add<T, Output = T>
+            + ops::Mul<T, Output = T>
+            + ops::Div<T, Output = T>,
+        U,
+    > Plane<T, U>
+{
     /// Construct a new plane from unnormalized equation.
     pub fn from_unnormalized(
-        normal: Vector3D<T, U>, offset: T
+        normal: Vector3D<T, U>,
+        offset: T,
     ) -> Result<Option<Self>, NegativeHemisphereError> {
         let square_len = normal.square_length();
         if square_len < T::approx_epsilon() * T::approx_epsilon() {
@@ -163,7 +172,9 @@ impl<
     /// Compute the distance across the line to the plane plane,
     /// starting from the line origin.
     pub fn distance_to_line(&self, line: &Line<T, U>) -> T
-    where T: ops::Neg<Output=T> {
+    where
+        T: ops::Neg<Output = T>,
+    {
         self.signed_distance_to(&line.origin) / -self.normal.dot(line.dir)
     }
 
@@ -197,11 +208,10 @@ impl<
         let w = self.normal.dot(other.normal);
         let divisor = T::one() - w * w;
         if divisor < T::approx_epsilon() * T::approx_epsilon() {
-            return None
+            return None;
         }
-        let origin = Point3D::origin() +
-            self.normal * ((other.offset * w - self.offset) / divisor) -
-            other.normal* ((other.offset - self.offset * w) / divisor);
+        let origin = Point3D::origin() + self.normal * ((other.offset * w - self.offset) / divisor)
+            - other.normal * ((other.offset - self.offset * w) / divisor);
 
         let cross_dir = self.normal.cross(other.normal);
         // note: the cross product isn't too close to zero
@@ -213,8 +223,6 @@ impl<
         })
     }
 }
-
-
 
 /// Generic plane splitter interface
 pub trait Splitter<T, U, A> {
@@ -230,11 +238,7 @@ pub trait Splitter<T, U, A> {
     fn sort(&mut self, view: Vector3D<T, U>) -> &[Polygon<T, U, A>];
 
     /// Process a set of polygons at once.
-    fn solve(
-        &mut self,
-        input: &[Polygon<T, U, A>],
-        view: Vector3D<T, U>,
-    ) -> &[Polygon<T, U, A>]
+    fn solve(&mut self, input: &[Polygon<T, U, A>], view: Vector3D<T, U>) -> &[Polygon<T, U, A>]
     where
         T: Clone,
         U: Clone,
@@ -248,14 +252,13 @@ pub trait Splitter<T, U, A> {
     }
 }
 
-
 /// Helper method used for benchmarks and tests.
 /// Constructs a 3D grid of polygons.
 #[doc(hidden)]
 pub fn make_grid(count: usize) -> Vec<Polygon<f32, (), usize>> {
-    let mut polys: Vec<Polygon<f32, (), usize>> = Vec::with_capacity(count*3);
+    let mut polys: Vec<Polygon<f32, (), usize>> = Vec::with_capacity(count * 3);
     let len = count as f32;
-    polys.extend((0 .. count).map(|i| Polygon {
+    polys.extend((0..count).map(|i| Polygon {
         points: [
             Point3D::new(0.0, i as f32, 0.0),
             Point3D::new(len, i as f32, 0.0),
@@ -268,7 +271,7 @@ pub fn make_grid(count: usize) -> Vec<Polygon<f32, (), usize>> {
         },
         anchor: 0,
     }));
-    polys.extend((0 .. count).map(|i| Polygon {
+    polys.extend((0..count).map(|i| Polygon {
         points: [
             Point3D::new(i as f32, 0.0, 0.0),
             Point3D::new(i as f32, len, 0.0),
@@ -281,7 +284,7 @@ pub fn make_grid(count: usize) -> Vec<Polygon<f32, (), usize>> {
         },
         anchor: 0,
     }));
-    polys.extend((0 .. count).map(|i| Polygon {
+    polys.extend((0..count).map(|i| Polygon {
         points: [
             Point3D::new(0.0, 0.0, i as f32),
             Point3D::new(len, 0.0, i as f32),
