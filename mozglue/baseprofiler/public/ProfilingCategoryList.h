@@ -36,6 +36,9 @@
     SUBCATEGORY(OTHER, OTHER_PreferenceRead, "Preference Read") \
     SUBCATEGORY(OTHER, OTHER_Profiling, "Profiling") \
   END_CATEGORY \
+  BEGIN_CATEGORY(TEST, "Test", "darkgray") \
+    SUBCATEGORY(TEST, TEST, "Test") \
+  END_CATEGORY \
   BEGIN_CATEGORY(LAYOUT, "Layout", "purple") \
     SUBCATEGORY(LAYOUT, LAYOUT, "Other") \
     SUBCATEGORY(LAYOUT, LAYOUT_FrameConstruction, "Frame construction") \
@@ -103,6 +106,7 @@
     SUBCATEGORY(IPC, IPC, "Other") \
   END_CATEGORY \
   BEGIN_CATEGORY(MEDIA, "Media", "orange") \
+    SUBCATEGORY(MEDIA, MEDIA, "Other") \
     SUBCATEGORY(MEDIA, MEDIA_CUBEB, "Cubeb") \
     SUBCATEGORY(MEDIA, MEDIA_PLAYBACK, "Playback") \
     SUBCATEGORY(MEDIA, MEDIA_RT, "Real-time rendering") \
