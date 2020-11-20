@@ -155,13 +155,6 @@ nsresult nsFaviconService::Init() {
   mExpireUnassociatedIconsTimer = NS_NewTimer();
   NS_ENSURE_STATE(mExpireUnassociatedIconsTimer);
 
-  // Check if there are still icon payloads to be converted.
-  bool shouldConvertPayloads =
-      Preferences::GetBool(PREF_CONVERT_PAYLOADS, false);
-  if (shouldConvertPayloads) {
-    ConvertUnsupportedPayloads(mDB->MainConn());
-  }
-
   return NS_OK;
 }
 
@@ -791,27 +784,6 @@ nsresult nsFaviconService::GetFaviconDataAsync(
 
   nsCOMPtr<mozIStoragePendingStatement> pendingStatement;
   return stmt->ExecuteAsync(aCallback, getter_AddRefs(pendingStatement));
-}
-
-void  // static
-nsFaviconService::ConvertUnsupportedPayloads(mozIStorageConnection* aDBConn) {
-  MOZ_ASSERT(NS_IsMainThread());
-  // Ensure imgTools are initialized, so that the image decoders can be used
-  // off the main thread.
-  nsCOMPtr<imgITools> imgTools =
-      do_CreateInstance("@mozilla.org/image/tools;1");
-
-  Preferences::SetBool(PREF_CONVERT_PAYLOADS, true);
-  MOZ_ASSERT(aDBConn);
-  if (aDBConn) {
-    RefPtr<FetchAndConvertUnsupportedPayloads> event =
-        new FetchAndConvertUnsupportedPayloads(aDBConn);
-    nsCOMPtr<nsIEventTarget> target = do_GetInterface(aDBConn);
-    MOZ_ASSERT(target);
-    if (target) {
-      (void)target->Dispatch(event, NS_DISPATCH_NORMAL);
-    }
-  }
 }
 
 NS_IMETHODIMP

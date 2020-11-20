@@ -74,11 +74,6 @@ class nsFaviconService final : public nsIFaviconService,
     return gFaviconService;
   }
 
-  /**
-   * Fetch and migrate favicons from an unsupported payload to a supported one.
-   */
-  static void ConvertUnsupportedPayloads(mozIStorageConnection* aDBConn);
-
   // addition to API for strings to prevent excessive parsing of URIs
   nsresult GetFaviconLinkForIconString(const nsCString& aIcon,
                                        nsIURI** aOutput);
