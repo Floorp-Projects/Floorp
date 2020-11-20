@@ -10,20 +10,19 @@
 #include "mozilla/Components.h"
 #include "nsIClassInfoImpl.h"
 
-namespace mozilla {
-namespace glean {
+namespace mozilla::glean {
 
 NS_IMPL_CLASSINFO(GleanString, nullptr, 0, {0})
 NS_IMPL_ISUPPORTS_CI(GleanString, nsIGleanString)
 
 NS_IMETHODIMP
-GleanString::Set(const nsACString& value, JSContext* cx) {
-  this->mString.Set(value);
+GleanString::Set(const nsACString& aValue) {
+  this->mString.Set(aValue);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GleanString::TestGetValue(const nsACString& aStorageName, JSContext* cx,
+GleanString::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
                           JS::MutableHandleValue aResult) {
   auto result =
       this->mString.TestGetValue(PromiseFlatCString(aStorageName).get());
@@ -32,10 +31,9 @@ GleanString::TestGetValue(const nsACString& aStorageName, JSContext* cx,
   } else {
     const NS_ConvertUTF8toUTF16 str(result.value());
     aResult.set(
-        JS::StringValue(JS_NewUCStringCopyN(cx, str.Data(), str.Length())));
+        JS::StringValue(JS_NewUCStringCopyN(aCx, str.Data(), str.Length())));
   }
   return NS_OK;
 }
 
-}  // namespace glean
-}  // namespace mozilla
+}  // namespace mozilla::glean

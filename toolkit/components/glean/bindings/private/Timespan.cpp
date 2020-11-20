@@ -10,20 +10,19 @@
 #include "mozilla/Components.h"
 #include "nsIClassInfoImpl.h"
 
-namespace mozilla {
-namespace glean {
+namespace mozilla::glean {
 
 NS_IMPL_CLASSINFO(GleanTimespan, nullptr, 0, {0})
 NS_IMPL_ISUPPORTS_CI(GleanTimespan, nsIGleanTimespan)
 
 NS_IMETHODIMP
-GleanTimespan::Start(JSContext* cx) {
+GleanTimespan::Start() {
   this->mTimespan.Start();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GleanTimespan::Stop(JSContext* cx) {
+GleanTimespan::Stop() {
   this->mTimespan.Stop();
   return NS_OK;
 }
@@ -41,5 +40,4 @@ GleanTimespan::TestGetValue(const nsACString& aStorageName,
   return NS_OK;
 }
 
-}  // namespace glean
-}  // namespace mozilla
+}  // namespace mozilla::glean
