@@ -1584,6 +1584,7 @@ impl TextureUnits {
         for unit in &mut self.units {
             if let Some((region, rect)) = unit.allocate(slab_size) {
                 allocation = Some((unit.texture_id, region, rect));
+                break;
             }
         }
 
