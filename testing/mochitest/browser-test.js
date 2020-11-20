@@ -1527,7 +1527,7 @@ function testScope(aTester, aTest, expected) {
 
 function decorateTaskFn(fn) {
   fn = fn.bind(this);
-  fn.skip = () => (fn.__skipMe = true);
+  fn.skip = (val = true) => (fn.__skipMe = val);
   fn.only = () => (this.__runOnlyThisTask = fn);
   return fn;
 }
