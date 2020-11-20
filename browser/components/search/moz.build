@@ -21,7 +21,5 @@ XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 
 JAR_MANIFESTS += ["jar.mn"]
 
-SPHINX_TREES["/browser/search"] = "docs"
-
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Search")

@@ -4749,15 +4749,14 @@ browser.search:
     bug_numbers:
       - 1495548
       - 1505411
-      - 1664849
     description: >
-      Records counts of SERP pages with adverts displayed. The key format is ‘<provider>:<sap|organic>’.
+      Records counts of SERP pages with adverts displayed. The key format is ‘<engine-name>’.
     expires: never
     keyed: true
     kind: uint
     notification_emails:
       - fx-search@mozilla.com
-      - teon@mozilla.com
+      - adw@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -4769,15 +4768,14 @@ browser.search:
     bug_numbers:
       - 1495548
       - 1505411
-      - 1664849
     description: >
-      Records clicks of adverts on SERP pages. The key format is ‘<provider>:<sap|organic>’.
+      Records clicks of adverts on SERP pages. The key format is ‘<engine-name>’.
     expires: never
     keyed: true
     kind: uint
     notification_emails:
       - fx-search@mozilla.com
-      - teon@mozilla.com
+      - adw@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'

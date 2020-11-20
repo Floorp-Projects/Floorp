@@ -199,16 +199,19 @@ class TelemetryHandler {
 
     this._reportSerpPage(info, url);
 
-    let item = this._browserInfoByURL.get(url);
-    if (item) {
-      item.browsers.add(browser);
-      item.count++;
-    } else {
-      this._browserInfoByURL.set(url, {
-        browsers: new WeakSet([browser]),
-        info,
-        count: 1,
-      });
+    // If we have a code, then we also track this for potential ad clicks.
+    if (info.code) {
+      let item = this._browserInfoByURL.get(url);
+      if (item) {
+        item.browsers.add(browser);
+        item.count++;
+      } else {
+        this._browserInfoByURL.set(url, {
+          browsers: new WeakSet([browser]),
+          info,
+          count: 1,
+        });
+      }
     }
   }
 
@@ -696,13 +699,13 @@ class ContentHandler {
       }
 
       let originURL = channel.originURI && channel.originURI.spec;
-      let item = this._findBrowserItemForURL(originURL);
-      if (!originURL || !item) {
+      let info = this._findBrowserItemForURL(originURL);
+      if (!originURL || !info) {
         return;
       }
 
       let URL = channel.finalURL;
-      let info = this._getProviderInfoForURL(URL, true);
+      info = this._getProviderInfoForURL(URL, true);
       if (!info) {
         return;
       }
@@ -710,7 +713,7 @@ class ContentHandler {
       try {
         Services.telemetry.keyedScalarAdd(
           SEARCH_AD_CLICKS_SCALAR,
-          `${info.telemetryId}:${item.info.code ? "sap" : "organic"}`,
+          info.telemetryId,
           1
         );
         channel._adClickRecorded = true;
@@ -745,12 +748,12 @@ class ContentHandler {
       return;
     }
 
-    logConsole.debug("Counting ads in page for", item.info.provider, info.url);
     Services.telemetry.keyedScalarAdd(
       SEARCH_WITH_ADS_SCALAR,
-      `${item.info.provider}:${item.info.code ? "sap" : "organic"}`,
+      item.info.provider,
       1
     );
+    logConsole.debug("Counting ads in page for", item.info.provider, info.url);
   }
 }
 
