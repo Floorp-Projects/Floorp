@@ -709,7 +709,7 @@ bool WebRenderBridgeParent::AddSharedExternalImage(
 
   auto imageType =
       mApi->GetBackendType() == WebRenderBackend::SOFTWARE
-          ? wr::ExternalImageType::TextureHandle(wr::ImageBufferKind::Texture2D)
+          ? wr::ExternalImageType::TextureHandle(wr::TextureTarget::Default)
           : wr::ExternalImageType::Buffer();
   wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
                                  dSurf->GetFormat());
@@ -823,7 +823,7 @@ bool WebRenderBridgeParent::UpdateSharedExternalImage(
 
   auto imageType =
       mApi->GetBackendType() == WebRenderBackend::SOFTWARE
-          ? wr::ExternalImageType::TextureHandle(wr::ImageBufferKind::Texture2D)
+          ? wr::ExternalImageType::TextureHandle(wr::TextureTarget::Default)
           : wr::ExternalImageType::Buffer();
   wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
                                  dSurf->GetFormat());
