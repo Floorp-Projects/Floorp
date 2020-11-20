@@ -287,10 +287,12 @@ class Preferences {
    * @returns {*} The preference value.
    */
   get(pref) {
-    if (!this._map.has(pref)) {
-      this._map.set(pref, this._getPrefValue(pref));
+    let value = this._map.get(pref);
+    if (value === undefined) {
+      value = this._getPrefValue(pref);
+      this._map.set(pref, value);
     }
-    return this._map.get(pref);
+    return value;
   }
 
   /**
