@@ -1,11 +1,9 @@
-use {Intersection, NegativeHemisphereError, Plane, Polygon};
+use crate::{Intersection, NegativeHemisphereError, Plane, Polygon};
 
-use euclid::{Trig, Rect, Scale, Transform3D, Vector3D};
-use euclid::approxeq::ApproxEq;
+use euclid::{approxeq::ApproxEq, Rect, Scale, Transform3D, Trig, Vector3D};
 use num_traits::{Float, One, Zero};
 
 use std::{fmt, iter, mem, ops};
-
 
 /// A helper object to clip polygons by a number of planes.
 #[derive(Debug)]
@@ -16,13 +14,20 @@ pub struct Clipper<T, U, A> {
 }
 
 impl<
-    T: Copy + fmt::Debug + ApproxEq<T> +
-        ops::Sub<T, Output=T> + ops::Add<T, Output=T> +
-        ops::Mul<T, Output=T> + ops::Div<T, Output=T> +
-        Zero + One + Float,
-    U: fmt::Debug,
-    A: Copy + fmt::Debug,
-> Clipper<T, U, A> {
+        T: Copy
+            + fmt::Debug
+            + ApproxEq<T>
+            + ops::Sub<T, Output = T>
+            + ops::Add<T, Output = T>
+            + ops::Mul<T, Output = T>
+            + ops::Div<T, Output = T>
+            + Zero
+            + One
+            + Float,
+        U: fmt::Debug,
+        A: Copy + fmt::Debug,
+    > Clipper<T, U, A>
+{
     /// Create a new clipper object.
     pub fn new() -> Self {
         Clipper {
@@ -49,33 +54,26 @@ impl<
             Some(bounds) => {
                 let mx = Vector3D::new(t.m11, t.m21, t.m31);
                 let left = bounds.origin.x;
-                let plane_left = Plane::from_unnormalized(
-                    mx - mw * Scale::new(left),
-                    t.m41 - t.m44 * left,
-                )?;
+                let plane_left =
+                    Plane::from_unnormalized(mx - mw * Scale::new(left), t.m41 - t.m44 * left)?;
                 let right = bounds.origin.x + bounds.size.width;
-                let plane_right = Plane::from_unnormalized(
-                    mw * Scale::new(right) - mx,
-                    t.m44 * right - t.m41,
-                )?;
+                let plane_right =
+                    Plane::from_unnormalized(mw * Scale::new(right) - mx, t.m44 * right - t.m41)?;
 
                 let my = Vector3D::new(t.m12, t.m22, t.m32);
                 let top = bounds.origin.y;
-                let plane_top = Plane::from_unnormalized(
-                    my - mw * Scale::new(top),
-                    t.m42 - t.m44 * top,
-                )?;
+                let plane_top =
+                    Plane::from_unnormalized(my - mw * Scale::new(top), t.m42 - t.m44 * top)?;
                 let bottom = bounds.origin.y + bounds.size.height;
-                let plane_bottom = Plane::from_unnormalized(
-                    mw * Scale::new(bottom) - my,
-                    t.m44 * bottom - t.m42,
-                )?;
+                let plane_bottom =
+                    Plane::from_unnormalized(mw * Scale::new(bottom) - my, t.m44 * bottom - t.m42)?;
 
-                Some(plane_left
-                    .into_iter()
-                    .chain(plane_right)
-                    .chain(plane_top)
-                    .chain(plane_bottom)
+                Some(
+                    plane_left
+                        .into_iter()
+                        .chain(plane_right)
+                        .chain(plane_top)
+                        .chain(plane_bottom),
                 )
             }
             None => None,
@@ -84,8 +82,7 @@ impl<
         Ok(bounds_iter_maybe
             .into_iter()
             .flat_map(|pi| pi)
-            .chain(plane_positive)
-        )
+            .chain(plane_positive))
     }
 
     /// Add a clipping plane to the list. The plane will clip everything behind it,
@@ -96,7 +93,7 @@ impl<
 
     /// Clip specified polygon by the contained planes, return the fragmented polygons.
     pub fn clip(&mut self, polygon: Polygon<T, U, A>) -> &[Polygon<T, U, A>] {
-        debug!("\tClipping {:?}", polygon);
+        log::debug!("\tClipping {:?}", polygon);
         self.results.clear();
         self.results.push(polygon);
 
@@ -112,17 +109,15 @@ impl<
                             iter::once(poly)
                                 .chain(res1)
                                 .chain(res2)
-                                .filter(|p| clip.signed_distance_sum_to(p) > T::zero())
+                                .filter(|p| clip.signed_distance_sum_to(p) > T::zero()),
                         );
-                        continue
+                        continue;
                     }
                     Intersection::Coplanar => {
                         let ndot = poly.plane.normal.dot(clip.normal);
                         clip.offset - ndot * poly.plane.offset
                     }
-                    Intersection::Outside => {
-                        clip.signed_distance_sum_to(&poly)
-                    }
+                    Intersection::Outside => clip.signed_distance_sum_to(&poly),
                 };
 
                 if dist > T::zero() {
@@ -157,7 +152,8 @@ impl<
             self.clips.pop();
         }
 
-        let polys = self.results
+        let polys = self
+            .results
             .drain(..)
             .flat_map(move |poly| poly.transform(transform));
         Ok(polys)
