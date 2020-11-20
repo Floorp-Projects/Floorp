@@ -355,6 +355,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
       ParseNode* pn, OptionalEmitter& oe,
       ValueUsage valueUsage = ValueUsage::WantValue);
 
+  MOZ_MUST_USE bool emitDeclarationInstantiation(ParseNode* body);
+
   // Emit global, eval, or module code for tree rooted at body. Always
   // encompasses the entire source.
   MOZ_MUST_USE bool emitScript(ParseNode* body);
