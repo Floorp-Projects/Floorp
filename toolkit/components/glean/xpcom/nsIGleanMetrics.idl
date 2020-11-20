@@ -19,23 +19,6 @@ interface nsIGleanDatetime : nsISupports
   /**
    * **Test-only API**
    *
-   * Tests whether a value is stored for the metric.
-   *
-   * This function will attempt to await the last parent-process task (if any)
-   * writing to the the metric's storage engine before returning a value.
-   * This function will not wait for data from child processes.
-   *
-   * Parent process only. Panics in child processes.
-   *
-   * @param aStorageName the name of the ping to retrieve the metric for.
-   * @return true if metric value exists, otherwise false
-   */
-  [implicit_jscontext]
-  bool testHasValue(in ACString aStorageName);
-
-  /**
-   * **Test-only API**
-   *
    * Gets the currently stored value as an integer.
    *
    * This function will attempt to await the last parent-process task (if any)
@@ -45,10 +28,10 @@ interface nsIGleanDatetime : nsISupports
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
-   * @return value of the stored metric.
+   * @return value of the stored metric, or undefined if there is no value.
    */
   [implicit_jscontext]
-  ACString testGetValue(in ACString aStorageName);
+  jsval testGetValue(in ACString aStorageName);
 };
 
 [scriptable, uuid(05b89d2a-d57c-11ea-82da-3f63399a6f5a)]
@@ -65,23 +48,6 @@ interface nsIGleanCounter : nsISupports
   /**
    * **Test-only API**
    *
-   * Tests whether a value is stored for the metric.
-   *
-   * This function will attempt to await the last parent-process task (if any)
-   * writing to the the metric's storage engine before returning a value.
-   * This function will not wait for data from child processes.
-   *
-   * Parent process only. Panics in child processes.
-   *
-   * @param aStorageName the name of the ping to retrieve the metric for.
-   * @return true if metric value exists, otherwise false
-   */
-  [implicit_jscontext]
-  bool testHasValue(in ACString aStorageName);
-
-  /**
-   * **Test-only API**
-   *
    * Gets the currently stored value as an integer.
    *
    * This function will attempt to await the last parent-process task (if any)
@@ -91,10 +57,9 @@ interface nsIGleanCounter : nsISupports
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
-   * @return value of the stored metric.
+   * @return value of the stored metric, or undefined if there is no value.
    */
-  [implicit_jscontext]
-  long testGetValue(in ACString aStorageName);
+  jsval testGetValue(in ACString aStorageName);
 };
 
 [scriptable, uuid(d84a3555-46f1-48c1-9122-e8e88b069d2b)]
@@ -111,23 +76,6 @@ interface nsIGleanString : nsISupports
   /**
    * **Test-only API**
    *
-   * Tests whether a value is stored for the metric.
-   *
-   * This function will attempt to await the last parent-process task (if any)
-   * writing to the the metric's storage engine before returning a value.
-   * This function will not wait for data from child processes.
-   *
-   * Parent process only. Panics in child processes.
-   *
-   * @param aStorageName the name of the ping to retrieve the metric for.
-   * @return true if metric value exists, otherwise false
-   */
-  [implicit_jscontext]
-  bool testHasValue(in ACString aStorageName);
-
-  /**
-   * **Test-only API**
-   *
    * Gets the currently stored value as a string.
    *
    * This function will attempt to await the last parent-process task (if any)
@@ -137,10 +85,10 @@ interface nsIGleanString : nsISupports
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
-   * @return value of the stored metric.
+   * @return value of the stored metric, or undefined if there is no value.
    */
   [implicit_jscontext]
-  ACString testGetValue(in ACString aStorageName);
+  jsval testGetValue(in ACString aStorageName);
 };
 
 [scriptable, uuid(2586530c-030f-11eb-93cb-cbf30d25225a)]
@@ -170,23 +118,6 @@ interface nsIGleanTimespan : nsISupports
   /**
    * **Test-only API**
    *
-   * Tests whether a value is stored for the metric.
-   *
-   * This function will attempt to await the last parent-process task (if any)
-   * writing to the the metric's storage engine before returning a value.
-   * This function will not wait for data from child processes.
-   *
-   * Parent process only. Panics in child processes.
-   *
-   * @param aStorageName the name of the ping to retrieve the metric for.
-   * @return true if metric value exists, otherwise false
-   */
-  [implicit_jscontext]
-  bool testHasValue(in ACString aStorageName);
-
-  /**
-   * **Test-only API**
-   *
    * Gets the currently stored value as an integer.
    *
    * This function will attempt to await the last parent-process task (if any)
@@ -196,10 +127,9 @@ interface nsIGleanTimespan : nsISupports
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
-   * @return value of the stored metric.
+   * @return value of the stored metric, or undefined if there is no value.
    */
-  [implicit_jscontext]
-  long long testGetValue(in ACString aStorageName);
+  jsval testGetValue(in ACString aStorageName);
 };
 
 [scriptable, uuid(395700e7-06f6-46be-adcc-ea58977fda6d)]
@@ -222,23 +152,6 @@ interface nsIGleanUuid : nsISupports
   /**
    * **Test-only API**
    *
-   * Tests whether a value is stored for the metric.
-   *
-   * This function will attempt to await the last parent-process task (if any)
-   * writing to the the metric's storage engine before returning a value.
-   * This function will not wait for data from child processes.
-   *
-   * Parent process only. Panics in child processes.
-   *
-   * @param aStorageName the name of the ping to retrieve the metric for.
-   * @return true if metric value exists, otherwise false
-   */
-  [implicit_jscontext]
-  bool testHasValue(in ACString aStorageName);
-
-  /**
-   * **Test-only API**
-   *
    * Gets the currently stored value as an integer.
    *
    * This function will attempt to await the last parent-process task (if any)
@@ -248,8 +161,8 @@ interface nsIGleanUuid : nsISupports
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
-   * @return value of the stored metric.
+   * @return value of the stored metric, or undefined if there is no value.
    */
   [implicit_jscontext]
-  ACString testGetValue(in ACString aStorageName);
+  jsval testGetValue(in ACString aStorageName);
 };

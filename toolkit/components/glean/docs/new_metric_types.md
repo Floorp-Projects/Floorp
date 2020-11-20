@@ -89,6 +89,9 @@ Each metric type has six pieces you'll need to cover:
    [`bindings/private/`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/bindings/private/).
    Its methods should be named the same as the ones in the Rust API,
    transformed to `CamelCase`. They should all be public.
+   Multiplex the FFI's `test_have` and `test_get` functions into a single
+   `TestGetValue` function that returns a
+   `mozilla::Maybe` wrapping the C++ type that best fits the metric type.
 3. **IDL** - Duplicate the public API (including its docs) to
    [`xpcom/nsIGleanMetrics.idl`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/xpcom/nsIGleanMetrics.idl)
    with the name `nsIGleanX` (e.g. `nsIGleanCounter`).
@@ -98,6 +101,7 @@ Each metric type has six pieces you'll need to cover:
    [GUID](https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Generating_GUIDs)
    because this is XPCOM,
    but you'll only need the canonical form since we're only exposing to JS.
+   The `testGetValue` method will return a `jsval`.
 4. **JS Impl** - Add an `nsIGleanX`-deriving, `XMetric`-owning type called `GleanX`
    (e.g. `GleanCounter`) in the same header and `.cpp` as `XMetric` in
    [`bindings/private/`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/bindings/private/).
@@ -109,7 +113,9 @@ Each metric type has six pieces you'll need to cover:
    `CamelCase` and need macros like `NS_IMETHODIMP`.
    Delegate operations to the owned `XMetric`, returning `NS_OK`
    no matter what in non-test methods.
-   (Test-only methods can return `NS_ERROR` codes on failures).
+   Test-only methods can return `NS_ERROR` codes on failures,
+   but mostly return `NS_OK` and use `undefined` in the
+   `JS::MutableHandleValue` result to signal no value.
 5. **Tests** - Two languages means two test suites.
    Add a never-expiring test-only metric of your type to
    [`test_metrics.yaml`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/test_metrics.yaml).
