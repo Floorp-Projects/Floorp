@@ -397,6 +397,22 @@ linux64-clang-11-macosx-cross:
             - artifact: clang.tar.zst
               dest: clang-mac
 
+linux64-clang-11-macosx-aarch64-cross:
+    description: "Clang 11 toolchain repack with MacOS aarch64 Compiler RT libs"
+    treeherder:
+        symbol: TL(clang11-macosx-aarch64)
+    worker-type: b-linux
+    worker:
+        max-run-time: 600
+    run:
+        script: repack-clang-linux-macosx-aarch64-cross.sh
+        toolchain-alias: linux64-clang-macosx-aarch64-cross
+        toolchain-artifact: public/build/clang.tar.zst
+    fetches:
+        toolchain:
+            - linux64-clang-11
+            - macosx64-aarch64-compiler-rt-11
+
 linux64-clang-11-win-cross:
     description: "Clang 11 toolchain repack with Windows Compiler RT libs"
     treeherder:
