@@ -901,11 +901,6 @@ bool SandboxBroker::SetSecurityLevelForRDDProcess() {
   result = mPolicy->SetProcessMitigations(mitigations);
   SANDBOX_ENSURE_SUCCESS(result, "Invalid flags for SetProcessMitigations.");
 
-  if (StaticPrefs::security_sandbox_rdd_win32k_disable()) {
-    result = AddWin32kLockdownPolicy(mPolicy, false);
-    SANDBOX_ENSURE_SUCCESS(result, "Failed to add the win32k lockdown policy");
-  }
-
   mitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
                 sandbox::MITIGATION_DLL_SEARCH_ORDER |
                 sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
