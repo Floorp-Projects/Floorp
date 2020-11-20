@@ -981,6 +981,11 @@ inline AspectRatio StyleRatio<StyleNonNegativeNumber>::ToLayoutRatio() const {
   return AspectRatio::FromSize(_0, _1);
 }
 
+template <>
+inline AspectRatio StyleAspectRatio::ToLayoutRatio() const {
+  return HasRatio() ? ratio.AsRatio().ToLayoutRatio() : AspectRatio();
+}
+
 }  // namespace mozilla
 
 #endif
