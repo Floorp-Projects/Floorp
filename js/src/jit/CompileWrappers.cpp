@@ -162,12 +162,6 @@ bool CompileZone::canNurseryAllocateBigInts() {
          zone()->allocNurseryBigInts;
 }
 
-void CompileZone::setMinorGCShouldCancelIonCompilations() {
-  MOZ_ASSERT(CurrentThreadCanAccessZone(zone()));
-  JSRuntime* rt = zone()->runtimeFromMainThread();
-  rt->gc.storeBuffer().setShouldCancelIonCompilations();
-}
-
 uintptr_t CompileZone::nurseryCellHeader(JS::TraceKind kind) {
   return gc::NurseryCellHeader::MakeValue(zone(), kind);
 }

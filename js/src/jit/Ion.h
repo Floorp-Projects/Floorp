@@ -113,10 +113,10 @@ inline size_t NumLocalsAndArgs(JSScript* script) {
 // backend compilation.
 class MOZ_RAII AutoEnterIonBackend {
  public:
-  explicit AutoEnterIonBackend(bool safeForMinorGC) {
+  AutoEnterIonBackend() {
 #ifdef DEBUG
     JitContext* jcx = GetJitContext();
-    jcx->enterIonBackend(safeForMinorGC);
+    jcx->enterIonBackend();
 #endif
   }
 

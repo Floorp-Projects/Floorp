@@ -25,7 +25,6 @@
 #define FOR_EACH_NURSERY_PROFILE_TIME(_)      \
   /* Key                       Header text */ \
   _(Total, "total")                           \
-  _(CancelIonCompilations, "canIon")          \
   _(TraceValues, "mkVals")                    \
   _(TraceCells, "mkClls")                     \
   _(TraceSlots, "mkSlts")                     \

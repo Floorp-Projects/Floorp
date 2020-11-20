@@ -464,8 +464,6 @@ class StoreBuffer {
 
   bool aboutToOverflow_;
   bool enabled_;
-  bool cancelIonCompilations_;
-  bool hasTypeSetPointers_;
   bool mayHavePointersToDeadCells_;
 #ifdef DEBUG
   bool mEntered; /* For ReentrancyGuard. */
@@ -488,15 +486,6 @@ class StoreBuffer {
 
   /* Get the overflowed status. */
   bool isAboutToOverflow() const { return aboutToOverflow_; }
-
-  bool cancelIonCompilations() const { return cancelIonCompilations_; }
-
-  /*
-   * Type inference data structures are moved during sweeping, so if we we are
-   * to sweep them then we must make sure that the storebuffer has no pointers
-   * into them.
-   */
-  bool hasTypeSetPointers() const { return hasTypeSetPointers_; }
 
   /*
    * Brain transplants may add whole cell buffer entires for dead cells. We must
@@ -536,8 +525,6 @@ class StoreBuffer {
     put(bufferGeneric, t);
   }
 
-  void setShouldCancelIonCompilations() { cancelIonCompilations_ = true; }
-  void setHasTypeSetPointers() { hasTypeSetPointers_ = true; }
   void setMayHavePointersToDeadCells() { mayHavePointersToDeadCells_ = true; }
 
   /* Methods to trace the source of all edges in the store buffer. */
