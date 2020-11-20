@@ -34,6 +34,9 @@
 // override
 - (void)stateChanged:(uint64_t)state isEnabled:(BOOL)enabled;
 
+// override
+- (BOOL)moxIgnoreWithParent:(mozAccessible*)parent;
+
 @end
 
 @interface mozCheckboxAccessible : mozButtonAccessible
