@@ -15,17 +15,9 @@
   <video id="remote" autoplay width="240" />
   <script>
 
-[{ kind: { video: true, audio: false }, mimeType: "" },
- { kind: { video: false, audio: true }, mimeType: "" },
- { kind: { video: true, audio: true }, mimeType: "" },
- { kind: { video: false, audio: true }, mimeType: "audio/webm;codecs=opus" },
- { kind: { video: true, audio: false }, mimeType: "video/webm;codecs=vp8" },
- { kind: { video: true, audio: true }, mimeType: "video/webm;codecs=vp8,opus" },
- { kind: { video: true, audio: false }, mimeType: "video/webm;codecs=vp9" },
- { kind: { video: true, audio: true }, mimeType: "video/webm;codecs=vp9,opus" }]
-  .forEach(({kind, mimeType}) => {
-    const formatString = JSON.stringify(kind) +
-        ` with format ${mimeType || "[passthrough]"}.`;
+function runTests({kind, mimeType}) {
+    const formatString =
+        `${JSON.stringify(kind)} with format ${mimeType || "[passthrough]"}.`;
     promise_test(async t => {
       const [localPc, remotePc, stream] = await startConnection(
           t, kind.audio, kind.video);
@@ -63,6 +55,28 @@
       await stopPromise;
     }, "PeerConnection MediaRecorder gets ondata on stopping recorded " +
             "tracks " + formatString);
+}
+
+[{ kind: { video: true, audio: false }, mimeType: "" },
+ { kind: { video: false, audio: true }, mimeType: "" },
+ { kind: { video: true, audio: true }, mimeType: "" }].forEach(runTests);
+
+[{ kind: { video: false, audio: true }, mimeType: "audio/webm;codecs=opus" },
+ { kind: { video: true, audio: false }, mimeType: "video/webm;codecs=vp8" },
+ { kind: { video: true, audio: true }, mimeType: "video/webm;codecs=vp8,opus" },
+ { kind: { video: true, audio: false }, mimeType: "video/webm;codecs=vp9" },
+ { kind: { video: true, audio: true }, mimeType: "video/webm;codecs=vp9,opus" }]
+  .forEach(({kind, mimeType}) => {
+    if (MediaRecorder.isTypeSupported(mimeType)) {
+      return runTests({kind, mimeType});
+    }
+    const formatString = `${JSON.stringify(kind)} with format ${mimeType}.`;
+    promise_test(async t => {
+      const [,, stream] = await startConnection(t, kind.audio, kind.video);
+      assert_throws_dom('NotSupportedError', () => {
+        new MediaRecorder(stream, {mimeType});
+      });
+    }, "MediaRecorder constructor throws when not supporting " + formatString);
   });
 
   </script>
