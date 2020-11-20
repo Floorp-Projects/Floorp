@@ -359,3 +359,21 @@ macosx64-sdk-11.0:
         toolchain-artifact: project/gecko/mac-sdk/MacOSX11.0.sdk.tar.zst
     # Expiry similar to that of fetches
     expires-after: 1000 years
+
+macosx64-aarch64-compiler-rt-11:
+    description: "macOS aarch64 Compiler-rt for Clang 11 toolchain build"
+    treeherder:
+        symbol: TM(aarch64-crt)
+    run:
+        using: toolchain-script
+        script: build-compiler-rt.sh
+        arguments:
+            - aarch64-apple-darwin
+        toolchain-artifact: public/build/compiler-rt.tar.zst
+    fetches:
+        fetch:
+            - clang-11
+        toolchain:
+            - linux64-cctools-port-clang-11
+            - linux64-clang-11-macosx-cross
+            - macosx64-sdk-11.0
