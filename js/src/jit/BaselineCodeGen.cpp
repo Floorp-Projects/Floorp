@@ -1529,99 +1529,6 @@ bool BaselineInterpreterCodeGen::emitWarmUpCounterIncrement() {
   return true;
 }
 
-template <>
-bool BaselineCompilerCodeGen::emitArgumentTypeChecks() {
-  if (!IsTypeInferenceEnabled()) {
-    return true;
-  }
-
-  if (!handler.function()) {
-    return true;
-  }
-
-  frame.pushThis();
-  frame.popRegsAndSync(1);
-
-  if (!emitNextIC()) {
-    return false;
-  }
-
-  size_t nargs = handler.function()->nargs();
-
-  for (size_t i = 0; i < nargs; i++) {
-    frame.pushArg(i);
-    frame.popRegsAndSync(1);
-
-    if (!emitNextIC()) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-template <>
-bool BaselineInterpreterCodeGen::emitArgumentTypeChecks() {
-  if (!IsTypeInferenceEnabled()) {
-    return true;
-  }
-
-  Register scratch1 = R1.scratchReg();
-
-  // If the script is not a function, we're done.
-  Label done;
-  masm.loadPtr(frame.addressOfCalleeToken(), scratch1);
-  masm.branchTestPtr(Assembler::NonZero, scratch1, Imm32(CalleeTokenScriptBit),
-                     &done);
-
-  // CalleeToken_Function or CalleeToken_FunctionConstructing.
-  masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch1);
-
-  // The frame's scratch slot is used to store two 32-bit values: nargs (lower
-  // half) and the argument index (upper half).
-  masm.load16ZeroExtend(Address(scratch1, JSFunction::offsetOfNargs()),
-                        scratch1);
-  masm.store32(scratch1, frame.addressOfScratchValueLow32());
-
-  // Type check |this|.
-  masm.loadValue(frame.addressOfThis(), R0);
-  if (!emitNextIC()) {
-    return false;
-  }
-  frame.bumpInterpreterICEntry();
-
-  // Type check arguments. Scratch1 holds the next argument's index.
-  masm.move32(Imm32(0), scratch1);
-
-  // Bounds check.
-  Label top;
-  masm.bind(&top);
-  masm.branch32(Assembler::Equal, frame.addressOfScratchValueLow32(), scratch1,
-                &done);
-  {
-    // Load the argument, increment argument index and store the index in the
-    // scratch slot.
-    BaseValueIndex addr(BaselineFrameReg, scratch1,
-                        BaselineFrame::offsetOfArg(0));
-    masm.loadValue(addr, R0);
-    masm.add32(Imm32(1), scratch1);
-    masm.store32(scratch1, frame.addressOfScratchValueHigh32());
-
-    // Type check the argument.
-    if (!emitNextIC()) {
-      return false;
-    }
-    frame.bumpInterpreterICEntry();
-
-    // Restore argument index.
-    masm.load32(frame.addressOfScratchValueHigh32(), scratch1);
-    masm.jump(&top);
-  }
-
-  masm.bind(&done);
-  return true;
-}
-
 bool BaselineCompiler::emitDebugTrap() {
   MOZ_ASSERT(compileDebugInstrumentation());
   MOZ_ASSERT(frame.numUnsyncedSlots() == 0);
@@ -6686,10 +6593,6 @@ bool BaselineCodeGen<Handler>::emitPrologue() {
   }
 
   warmUpCheckPrologueOffset_ = CodeOffset(masm.currentOffset());
-
-  if (!emitArgumentTypeChecks()) {
-    return false;
-  }
 
   return true;
 }

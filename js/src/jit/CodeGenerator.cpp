@@ -10638,11 +10638,10 @@ void CodeGenerator::emitArrayPush(LInstruction* lir, Register obj,
 
   // TODO(post-Warp): reuse/share the CacheIR implementation when IonBuilder and
   // TI are gone (bug 1654180).
-  if (!IsTypeInferenceEnabled()) {
-    // Bailout if the incremented length does not fit in int32.
-    bailoutCmp32(Assembler::AboveOrEqual, length, Imm32(INT32_MAX),
-                 lir->snapshot());
-  }
+
+  // Bailout if the incremented length does not fit in int32.
+  bailoutCmp32(Assembler::AboveOrEqual, length, Imm32(INT32_MAX),
+               lir->snapshot());
 
 #ifdef DEBUG
   // Assert that there are no copy-on-write elements.
@@ -11203,23 +11202,6 @@ bool CodeGenerator::generate() {
 
   if (frameClass_ != FrameSizeClass::None()) {
     deoptTable_.emplace(gen->jitRuntime()->getBailoutTable(frameClass_));
-  }
-
-  if (IsTypeInferenceEnabled()) {
-    // Skip over the alternative entry to IonScript code.
-    Label skipPrologue;
-    masm.jump(&skipPrologue);
-
-    // An alternative entry to the IonScript code, which doesn't test the
-    // arguments.
-    masm.flushBuffer();
-    setSkipArgCheckEntryOffset(masm.size());
-    masm.setFramePushed(0);
-    if (!generatePrologue()) {
-      return false;
-    }
-
-    masm.bind(&skipPrologue);
   }
 
   // Reset native => bytecode map table with top-level script and startPc.

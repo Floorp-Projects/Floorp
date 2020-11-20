@@ -497,7 +497,8 @@ static bool IsLCovEnabled(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool IsTypeInferenceEnabled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(js::IsTypeInferenceEnabled());
+  // TODO(no-TI): remove testing function.
+  args.rval().setBoolean(false);
   return true;
 }
 

@@ -1087,12 +1087,8 @@ void GetPropIRGenerator::attachMegamorphicNativeSlot(ObjOperandId objId,
                                                      bool handleMissing) {
   MOZ_ASSERT(mode_ == ICState::Mode::Megamorphic);
 
-  // The stub handles the missing-properties case only if we're seeing one
-  // now, to make sure Ion ICs correctly monitor the undefined type. Without
-  // TI we don't use type monitoring so always allow |undefined|.
-  if (!IsTypeInferenceEnabled()) {
-    handleMissing = true;
-  }
+  // TODO(no-TI): remove.
+  handleMissing = true;
 
   if (cacheKind_ == CacheKind::GetProp ||
       cacheKind_ == CacheKind::GetPropSuper) {
@@ -4456,11 +4452,6 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(
 
   ObjOperandId objId = writer.guardToObject(objValId);
   maybeEmitIdGuard(id);
-
-  if (IsTypeInferenceEnabled()) {
-    // Guard on the group for the property type barrier and group change.
-    writer.guardGroup(objId, oldGroup);
-  }
 
   // TODO(no-TI): remove GuardGroupHasUnanalyzedNewScript, group-changing code
   // from AddAndStore* ops.
