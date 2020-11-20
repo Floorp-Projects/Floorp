@@ -110,7 +110,8 @@ async function simulateRestart(
   if (AboutHomeStartupCache.initted) {
     let processManager = browser.messageManager.processMessageManager;
     let pp = browser.browsingContext.currentWindowGlobal.domProcess;
-    AboutHomeStartupCache.sendCacheInputStreams(processManager, pp);
+    let { childID } = pp;
+    AboutHomeStartupCache.onContentProcessCreated(childID, processManager, pp);
 
     info("Waiting for AboutHomeStartupCache cache entry");
     await AboutHomeStartupCache.ensureCacheEntry();
