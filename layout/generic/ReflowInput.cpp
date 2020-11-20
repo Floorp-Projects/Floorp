@@ -1468,6 +1468,25 @@ void ReflowInput::CalculateHypotheticalPosition(
   }
 }
 
+LogicalSize ReflowInput::CalculateAbsoluteSizeWithResolvedAutoBlockSize(
+    nscoord aAutoBSize, const LogicalSize& aTentativeComputedSize) const {
+  MOZ_ASSERT(aAutoBSize != NS_UNCONSTRAINEDSIZE,
+             "Shouldn't give an unresolved block size");
+  MOZ_ASSERT(!mFrame->IsFrameOfType(nsIFrame::eReplaced),
+             "Replaced element shouldn't have the unconstrained block size");
+
+  LogicalSize resultSize = aTentativeComputedSize;
+  WritingMode wm = GetWritingMode();
+
+  // For non-replaced elements with block-size auto, the block-size
+  // fills the remaining space, and we clamp it by min/max size constraints.
+  resultSize.BSize(wm) = ApplyMinMaxBSize(aAutoBSize);
+
+  // TODO: Handle aspect-ratio here in the next patch.
+
+  return resultSize;
+}
+
 void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
                                           const ReflowInput* aCBReflowInput,
                                           const LogicalSize& aCBSize,
@@ -1695,19 +1714,13 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
       }
 
       if (computedSize.ISize(cbwm) == NS_UNCONSTRAINEDSIZE) {
-        // For non-replaced elements with block-size auto, the block-size
-        // fills the remaining space.
-        computedSize.ISize(cbwm) = autoISize;
-
-        // XXX Do these need box-sizing adjustments?
-        LogicalSize maxSize = ComputedMaxSize(cbwm);
-        LogicalSize minSize = ComputedMinSize(cbwm);
-        if (computedSize.ISize(cbwm) > maxSize.ISize(cbwm)) {
-          computedSize.ISize(cbwm) = maxSize.ISize(cbwm);
-        }
-        if (computedSize.ISize(cbwm) < minSize.ISize(cbwm)) {
-          computedSize.ISize(cbwm) = minSize.ISize(cbwm);
-        }
+        // We handle the unconstrained block-size in current block's writing
+        // mode 'wm'.
+        nscoord autoBSizeInWM = autoISize;
+        LogicalSize computedSizeInWM =
+            CalculateAbsoluteSizeWithResolvedAutoBlockSize(
+                autoBSizeInWM, computedSize.ConvertTo(wm, cbwm));
+        computedSize = computedSizeInWM.ConvertTo(cbwm, wm);
       }
     }
 
@@ -1788,19 +1801,12 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
     }
 
     if (computedSize.BSize(cbwm) == NS_UNCONSTRAINEDSIZE) {
-      // For non-replaced elements with block-size auto, the block-size
-      // fills the remaining space.
-      computedSize.BSize(cbwm) = autoBSize;
-
-      // XXX Do these need box-sizing adjustments?
-      LogicalSize maxSize = ComputedMaxSize(cbwm);
-      LogicalSize minSize = ComputedMinSize(cbwm);
-      if (computedSize.BSize(cbwm) > maxSize.BSize(cbwm)) {
-        computedSize.BSize(cbwm) = maxSize.BSize(cbwm);
-      }
-      if (computedSize.BSize(cbwm) < minSize.BSize(cbwm)) {
-        computedSize.BSize(cbwm) = minSize.BSize(cbwm);
-      }
+      // We handle the unconstrained block-size in current block's writing mode
+      // 'wm'.
+      LogicalSize computedSizeInWM =
+          CalculateAbsoluteSizeWithResolvedAutoBlockSize(
+              autoBSize, computedSize.ConvertTo(wm, cbwm));
+      computedSize = computedSizeInWM.ConvertTo(cbwm, wm);
     }
 
     // The block-size might still not fill all the available space in case:
