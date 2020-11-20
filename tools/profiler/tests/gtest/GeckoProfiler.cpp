@@ -1471,10 +1471,9 @@ TEST(GeckoProfiler, Markers)
           EXPECT_EQ(display[5u].asString(), "timeline-fileio");
           EXPECT_EQ(display[6u].asString(), "stack-chart");
 
-          // TODO Uncomment when fixed in next patch.
-          // EXPECT_EQ_JSON(schema["chartLabel"], String, "chart label");
+          EXPECT_EQ_JSON(schema["chartLabel"], String, "chart label");
           EXPECT_EQ_JSON(schema["tooltipLabel"], String, "tooltip label");
-          // EXPECT_EQ_JSON(schema["tableLabel"], String, "table label");
+          EXPECT_EQ_JSON(schema["tableLabel"], String, "table label");
 
           ASSERT_EQ(data.size(), 14u);
 
