@@ -22,6 +22,10 @@
     promise_test(async t => {
       const [localPc, remotePc, stream] = await startConnection(
           t, args.audio, /*video=*/true, args.codecPreference);
+
+      // Needed for the tests to get exercised in Chrome (bug)
+      document.getElementById('remote').srcObject = stream;
+
       const recorder = new MediaRecorder(stream);  // Passthrough.
       const onstartPromise = new Promise(resolve => {
         recorder.onstart = t.step_func(() => {
@@ -42,6 +46,10 @@
 promise_test(async t => {
   const [localPc, remotePc, stream, transceivers] = await startConnection(
       t, /*audio=*/false, /*video=*/true, /*videoCodecPreference=*/"VP8");
+
+  // Needed for the tests to get exercised in Chrome (bug)
+  document.getElementById('remote').srcObject = stream;
+
   const recorder = new MediaRecorder(stream);  // Possibly passthrough.
   recorder.start();
   await waitForReceivedFramesOrPackets(t, remotePc, false, true, 10);
