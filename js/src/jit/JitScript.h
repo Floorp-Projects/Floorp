@@ -245,12 +245,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   // analyzed by IonBuilder. This is done lazily to improve performance and
   // memory usage as most scripts are never Ion-compiled.
   struct CachedIonData {
-    // The freeze constraints added to stack type sets will only directly
-    // invalidate the script containing those stack type sets. This Vector
-    // contains compilations that inlined this script, so we can invalidate
-    // them as well.
-    RecompileInfoVector inlinedCompilations_;
-
     // For functions with a call object, template objects to use for the call
     // object and decl env object (linked via the call object's enclosing
     // scope).
@@ -342,24 +336,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
 
   void setHadIonOSR() { flags_.hadIonOSR = true; }
   bool hadIonOSR() const { return flags_.hadIonOSR; }
-
-  RecompileInfoVector* maybeInlinedCompilations(
-      const js::AutoSweepJitScript& sweep) {
-    MOZ_ASSERT(sweep.jitScript() == this);
-    if (!hasCachedIonData()) {
-      return nullptr;
-    }
-    return &cachedIonData().inlinedCompilations_;
-  }
-  MOZ_MUST_USE bool addInlinedCompilation(const js::AutoSweepJitScript& sweep,
-                                          RecompileInfo info) {
-    MOZ_ASSERT(sweep.jitScript() == this);
-    auto& inlinedCompilations = cachedIonData().inlinedCompilations_;
-    if (!inlinedCompilations.empty() && inlinedCompilations.back() == info) {
-      return true;
-    }
-    return inlinedCompilations.append(info);
-  }
 
   uint32_t numICEntries() const { return icScript_.numICEntries(); }
 

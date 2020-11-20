@@ -31,6 +31,7 @@
 #include "jit/FoldLinearArithConstants.h"
 #include "jit/InlineScriptTree.h"
 #include "jit/InstructionReordering.h"
+#include "jit/Invalidation.h"
 #include "jit/IonAnalysis.h"
 #include "jit/IonCompileTask.h"
 #include "jit/IonIC.h"
@@ -451,8 +452,96 @@ void JitRealm::traceWeak(JSTracer* trc, JS::Realm* realm) {
   }
 }
 
+bool JitZone::addInlinedCompilation(const RecompileInfo& info,
+                                    JSScript* inlined) {
+  MOZ_ASSERT(inlined != info.script());
+
+  auto p = inlinedCompilations_.lookupForAdd(inlined);
+  if (p) {
+    auto& compilations = p->value();
+    if (!compilations.empty() && compilations.back() == info) {
+      return true;
+    }
+    return compilations.append(info);
+  }
+
+  RecompileInfoVector compilations;
+  if (!compilations.append(info)) {
+    return false;
+  }
+  return inlinedCompilations_.add(p, inlined, std::move(compilations));
+}
+
+void jit::AddPendingInvalidation(RecompileInfoVector& invalid,
+                                 JSScript* script) {
+  MOZ_ASSERT(script);
+
+  CancelOffThreadIonCompile(script);
+
+  // Let the script warm up again before attempting another compile.
+  script->resetWarmUpCounterToDelayIonCompilation();
+
+  JitScript* jitScript = script->maybeJitScript();
+  if (!jitScript) {
+    return;
+  }
+
+  auto addPendingInvalidation = [&invalid](const RecompileInfo& info) {
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    if (!invalid.append(info)) {
+      // BUG 1536159: For diagnostics, compute the size of the failed
+      // allocation. This presumes the vector growth strategy is to double. This
+      // is only used for crash reporting so not a problem if we get it wrong.
+      size_t allocSize = 2 * sizeof(RecompileInfo) * invalid.capacity();
+      oomUnsafe.crash(allocSize, "Could not update RecompileInfoVector");
+    }
+  };
+
+  // Trigger invalidation of the IonScript.
+  if (jitScript->hasIonScript()) {
+    RecompileInfo info(script, jitScript->ionScript()->compilationId());
+    addPendingInvalidation(info);
+  }
+
+  // Trigger invalidation of any callers inlining this script.
+  auto* inlinedCompilations =
+      script->zone()->jitZone()->maybeInlinedCompilations(script);
+  if (inlinedCompilations) {
+    for (const RecompileInfo& info : *inlinedCompilations) {
+      addPendingInvalidation(info);
+    }
+    script->zone()->jitZone()->removeInlinedCompilations(script);
+  }
+}
+
+IonScript* RecompileInfo::maybeIonScriptToInvalidate() const {
+  // Make sure this is not called under CodeGenerator::link (before the
+  // IonScript is created).
+  MOZ_ASSERT_IF(script_->zone()->types.currentCompilationId(),
+                script_->zone()->types.currentCompilationId().ref() != id_);
+
+  if (!script_->hasIonScript() ||
+      script_->ionScript()->compilationId() != id_) {
+    return nullptr;
+  }
+
+  return script_->ionScript();
+}
+
+bool RecompileInfo::traceWeak(JSTracer* trc) {
+  // Sweep the RecompileInfo if either the script is dead or the IonScript has
+  // been invalidated.
+
+  if (!TraceManuallyBarrieredWeakEdge(trc, &script_, "RecompileInfo::script")) {
+    return false;
+  }
+
+  return maybeIonScriptToInvalidate() != nullptr;
+}
+
 void JitZone::traceWeak(JSTracer* trc) {
   baselineCacheIRStubCodes_.traceWeak(trc);
+  inlinedCompilations_.traceWeak(trc);
 }
 
 size_t JitRealm::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
@@ -2512,9 +2601,8 @@ static void ClearIonScriptAfterInvalidation(JSContext* cx, JSScript* script,
   }
 }
 
-void jit::Invalidate(TypeZone& types, JSFreeOp* fop,
-                     const RecompileInfoVector& invalid, bool resetUses,
-                     bool cancelOffThread) {
+void jit::Invalidate(JSContext* cx, const RecompileInfoVector& invalid,
+                     bool resetUses, bool cancelOffThread) {
   JitSpew(JitSpew_IonInvalidate, "Start invalidation.");
 
   // Add an invalidation reference to all invalidated IonScripts to indicate
@@ -2525,7 +2613,7 @@ void jit::Invalidate(TypeZone& types, JSFreeOp* fop,
       CancelOffThreadIonCompile(info.script());
     }
 
-    IonScript* ionScript = info.maybeIonScriptToInvalidate(types);
+    IonScript* ionScript = info.maybeIonScriptToInvalidate();
     if (!ionScript) {
       continue;
     }
@@ -2546,7 +2634,7 @@ void jit::Invalidate(TypeZone& types, JSFreeOp* fop,
     return;
   }
 
-  JSContext* cx = TlsContext.get();
+  JSFreeOp* fop = cx->defaultFreeOp();
   for (JitActivationIterator iter(cx); !iter.done(); ++iter) {
     InvalidateActivation(fop, iter, false);
   }
@@ -2555,7 +2643,7 @@ void jit::Invalidate(TypeZone& types, JSFreeOp* fop,
   // IonScript will be immediately destroyed. Otherwise, it will be held live
   // until its last invalidated frame is destroyed.
   for (const RecompileInfo& info : invalid) {
-    IonScript* ionScript = info.maybeIonScriptToInvalidate(types);
+    IonScript* ionScript = info.maybeIonScriptToInvalidate();
     if (!ionScript) {
       continue;
     }
@@ -2579,16 +2667,10 @@ void jit::Invalidate(TypeZone& types, JSFreeOp* fop,
   // Finally, null out jitScript->ionScript_ for IonScripts that are still on
   // the stack.
   for (const RecompileInfo& info : invalid) {
-    if (IonScript* ionScript = info.maybeIonScriptToInvalidate(types)) {
+    if (IonScript* ionScript = info.maybeIonScriptToInvalidate()) {
       ClearIonScriptAfterInvalidation(cx, info.script(), ionScript, resetUses);
     }
   }
-}
-
-void jit::Invalidate(JSContext* cx, const RecompileInfoVector& invalid,
-                     bool resetUses, bool cancelOffThread) {
-  jit::Invalidate(cx->zone()->types, cx->runtime()->defaultFreeOp(), invalid,
-                  resetUses, cancelOffThread);
 }
 
 void jit::IonScript::invalidate(JSContext* cx, JSScript* script, bool resetUses,

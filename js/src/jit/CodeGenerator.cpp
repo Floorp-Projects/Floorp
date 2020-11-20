@@ -35,6 +35,7 @@
 #include "jit/BaselineCodeGen.h"
 #include "jit/CompileInfo.h"
 #include "jit/InlineScriptTree.h"
+#include "jit/Invalidation.h"
 #include "jit/IonIC.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/IonScript.h"
@@ -43,6 +44,7 @@
 #include "jit/JitRealm.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
+#include "jit/JitZone.h"
 #include "jit/Linker.h"
 #include "jit/Lowering.h"
 #include "jit/MIRGenerator.h"
@@ -11245,12 +11247,14 @@ bool CodeGenerator::generate() {
   return !masm.oom();
 }
 
-static bool AddInlinedCompilations(HandleScript script,
+static bool AddInlinedCompilations(JSContext* cx, HandleScript script,
                                    IonCompilationId compilationId,
                                    const WarpSnapshot* snapshot,
                                    bool* isValid) {
   MOZ_ASSERT(!*isValid);
   RecompileInfo recompileInfo(script, compilationId);
+
+  JitZone* jitZone = cx->zone()->jitZone();
 
   for (const auto* scriptSnapshot : snapshot->scripts()) {
     JSScript* inlinedScript = scriptSnapshot->script();
@@ -11269,9 +11273,7 @@ static bool AddInlinedCompilations(HandleScript script,
       return true;
     }
 
-    AutoSweepJitScript sweep(inlinedScript);
-    if (!inlinedScript->jitScript()->addInlinedCompilation(sweep,
-                                                           recompileInfo)) {
+    if (!jitZone->addInlinedCompilation(recompileInfo, inlinedScript)) {
       return false;
     }
   }
@@ -11325,7 +11327,7 @@ bool CodeGenerator::link(JSContext* cx, const WarpSnapshot* snapshot) {
 
   // If an inlined script is invalidated (for example, by attaching
   // a debugger), we must also invalidate the parent IonScript.
-  if (!AddInlinedCompilations(script, compilationId, snapshot, &isValid)) {
+  if (!AddInlinedCompilations(cx, script, compilationId, snapshot, &isValid)) {
     return false;
   }
   if (!isValid) {

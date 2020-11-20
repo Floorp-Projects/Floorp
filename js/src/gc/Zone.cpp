@@ -15,6 +15,7 @@
 #include "gc/PublicIterators.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
+#include "jit/Invalidation.h"
 #include "jit/Ion.h"
 #include "jit/JitZone.h"
 #include "vm/Runtime.h"

@@ -9,6 +9,7 @@
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
+#include "jit/Invalidation.h"
 #include "jit/Ion.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitFrames.h"
@@ -463,7 +464,7 @@ static bool InvalidateScriptsInZone(JSContext* cx, Zone* zone,
 
   // No need to cancel off-thread Ion compiles again, we already did it
   // above.
-  Invalidate(zone->types, cx->runtime()->defaultFreeOp(), invalid,
+  Invalidate(cx, invalid,
              /* resetUses = */ true, /* cancelOffThread = */ false);
   return true;
 }
