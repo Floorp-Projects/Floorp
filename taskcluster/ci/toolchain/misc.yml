@@ -33,7 +33,7 @@ linux64-llvm-dsymutil:
         toolchain-artifact: public/build/llvm-dsymutil.tar.xz
     fetches:
         fetch:
-            - clang-10
+            - clang-11
         toolchain:
             - linux64-gcc-7
 
