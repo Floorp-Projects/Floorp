@@ -15,8 +15,15 @@
 #include <algorithm>
 #include <limits>
 
+namespace IPC {
+template <typename T>
+struct ParamTraits;
+}  // namespace IPC
+
 namespace mozilla {
 
+enum LogicalAxis : uint8_t;
+class LogicalSize;
 class WritingMode;
 
 struct AspectRatio {
@@ -63,6 +70,38 @@ struct AspectRatio {
 
   [[nodiscard]] inline AspectRatio ConvertToWritingMode(
       const WritingMode& aWM) const;
+
+  /**
+   * This method computes the ratio-dependent size by the ratio-determining size
+   * and aspect-ratio (i.e. preferred aspect ratio). Basically this function
+   * will be used in the calculation of 'auto' sizes when the preferred
+   * aspect ratio is not 'auto'.
+   *
+   * @param aRatioDependentAxis  The ratio depenedent axis of the box.
+   * @param aWM  The writing mode of the box.
+   * @param aRatioDetermingSize  The size on the ratio determining axis.
+   *                             Basically, we use this size and |mRatio| to
+   *                             compute the size on the ratio-dependent axis.
+   * @param aContentBoxSizeToBoxSizingAdjust  The border padding box size
+   *                                          adjustment. We need this because
+   *                                          aspect-ratio should take the
+   *                                          box-sizing into account if its
+   *                                          style is '<ratio>'. If its style
+   *                                          is 'auto & <ratio>', we should use
+   *                                          content-box dimensions always.
+   *                                          If the callers want the ratio to
+   *                                          apply to the content-box size, we
+   *                                          should pass a zero LogicalSize.
+   *
+   * The return value is the content-box size on the ratio-dependent axis.
+   * Plese see the definition of the ratio-dependent axis and the
+   * ratio-determining axis in the spec:
+   * https://drafts.csswg.org/css-sizing-4/#aspect-ratio
+   */
+  [[nodiscard]] nscoord ComputeRatioDependentSize(
+      LogicalAxis aRatioDependentAxis, const WritingMode& aWM,
+      nscoord aRatioDeterminingSize,
+      const LogicalSize& aContentBoxSizeToBoxSizingAdjust) const;
 
   bool operator==(const AspectRatio& aOther) const {
     return mRatio == aOther.mRatio;
