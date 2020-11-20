@@ -26,7 +26,7 @@ class BitmapKtTest {
         subject = Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888)
     }
 
-    @Ignore // TODO: convert to integration test. Robolectric's shadows are incomplete and cause this to fail.
+    @Ignore("convert to integration test. Robolectric's shadows are incomplete and cause this to fail.")
     @Test
     fun `WHEN withRoundedCorners is called THEN returned bitmap's corners should be transparent and center with color`() {
         val dimen = 200

@@ -31,10 +31,21 @@ private const val KEY_LABELS = "labels"
 class ContextMenuFragment : DialogFragment() {
     internal var feature: ContextMenuFeature? = null
 
-    @VisibleForTesting internal val itemIds: List<String> by lazy { arguments!!.getStringArrayList(KEY_IDS)!! }
-    @VisibleForTesting internal val itemLabels: List<String> by lazy { arguments!!.getStringArrayList(KEY_LABELS)!! }
-    @VisibleForTesting internal val sessionId: String by lazy { arguments!!.getString(KEY_SESSION_ID)!! }
-    @VisibleForTesting internal val title: String by lazy { arguments!!.getString(KEY_TITLE)!! }
+    @VisibleForTesting internal val itemIds: List<String> by lazy {
+        requireArguments().getStringArrayList(KEY_IDS)!!
+    }
+
+    @VisibleForTesting internal val itemLabels: List<String> by lazy {
+        requireArguments().getStringArrayList(KEY_LABELS)!!
+    }
+
+    @VisibleForTesting internal val sessionId: String by lazy {
+        requireArguments().getString(KEY_SESSION_ID)!!
+    }
+
+    @VisibleForTesting internal val title: String by lazy {
+        requireArguments().getString(KEY_TITLE)!!
+    }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val inflater = LayoutInflater.from(requireContext())

@@ -14,6 +14,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 
@@ -28,9 +29,14 @@ class SimpleRedirectDialogFragmentTest {
 
         val onConfirm = { onConfirmCalled = true }
         val onCancel = { onCancelCalled = true }
+
         val fragment = spy(SimpleRedirectDialogFragment.newInstance(themeResId = R.style.Theme_AppCompat_Light))
+        doNothing().`when`(fragment).dismiss()
+
         doReturn(testContext).`when`(fragment).requireContext()
-        doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
+        @Suppress("DEPRECATION")
+        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
+
         fragment.setAppLinkRedirectUrl(webUrl)
         fragment.onConfirmRedirect = onConfirm
         fragment.onCancelRedirect = onCancel
@@ -51,9 +57,14 @@ class SimpleRedirectDialogFragmentTest {
 
         val onConfirm = { onConfirmCalled = true }
         val onCancel = { onCancelCalled = true }
+
         val fragment = spy(SimpleRedirectDialogFragment.newInstance(themeResId = R.style.Theme_AppCompat_Light))
+        doNothing().`when`(fragment).dismiss()
+
         doReturn(testContext).`when`(fragment).requireContext()
-        doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
+        @Suppress("DEPRECATION")
+        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
+
         fragment.setAppLinkRedirectUrl(webUrl)
         fragment.onConfirmRedirect = onConfirm
         fragment.onCancelRedirect = onCancel
@@ -74,9 +85,14 @@ class SimpleRedirectDialogFragmentTest {
 
         val onConfirm = { onConfirmCalled = true }
         val onCancel = { onCancelCalled = true }
+
         val fragment = spy(SimpleRedirectDialogFragment.newInstance(themeResId = R.style.Theme_AppCompat_Light))
+        doNothing().`when`(fragment).dismiss()
+
         doReturn(testContext).`when`(fragment).requireContext()
-        doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
+        @Suppress("DEPRECATION")
+        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
+
         fragment.setAppLinkRedirectUrl(webUrl)
         fragment.onConfirmRedirect = onConfirm
         fragment.onCancelRedirect = onCancel

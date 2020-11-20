@@ -19,6 +19,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -140,11 +141,15 @@ class SitePermissionsDialogFragmentTest {
                 shouldSelectDoNotAskAgainCheckBox = false
             )
         )
+        doNothing().`when`(fragment).dismiss()
 
         fragment.feature = mockFeature
 
         doReturn(testContext).`when`(fragment).requireContext()
-        doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
+
+        @Suppress("DEPRECATION")
+        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
+        doReturn(mockFragmentManager()).`when`(fragment).getParentFragmentManager()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -168,11 +173,15 @@ class SitePermissionsDialogFragmentTest {
                 shouldSelectDoNotAskAgainCheckBox = false
             )
         )
+        doNothing().`when`(fragment).dismiss()
 
         fragment.feature = mockFeature
 
         doReturn(testContext).`when`(fragment).requireContext()
-        doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
+
+        @Suppress("DEPRECATION")
+        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
+        doReturn(mockFragmentManager()).`when`(fragment).getParentFragmentManager()
 
         fragment.onDismiss(mock())
 
@@ -193,11 +202,15 @@ class SitePermissionsDialogFragmentTest {
                 shouldSelectDoNotAskAgainCheckBox = false
             )
         )
+        doNothing().`when`(fragment).dismiss()
 
         fragment.feature = mockFeature
 
         doReturn(testContext).`when`(fragment).requireContext()
-        doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
+
+        @Suppress("DEPRECATION")
+        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
+        doReturn(mockFragmentManager()).`when`(fragment).getParentFragmentManager()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -222,11 +235,15 @@ class SitePermissionsDialogFragmentTest {
                 shouldSelectDoNotAskAgainCheckBox = true
             )
         )
+        doNothing().`when`(fragment).dismiss()
 
         fragment.feature = mockFeature
 
         doReturn(testContext).`when`(fragment).requireContext()
-        doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
+
+        @Suppress("DEPRECATION")
+        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
+        doReturn(mockFragmentManager()).`when`(fragment).getParentFragmentManager()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -251,11 +268,15 @@ class SitePermissionsDialogFragmentTest {
                 shouldSelectDoNotAskAgainCheckBox = true
             )
         )
+        doNothing().`when`(fragment).dismiss()
 
         fragment.feature = mockFeature
 
         doReturn(testContext).`when`(fragment).requireContext()
-        doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
+
+        @Suppress("DEPRECATION")
+        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
+        doReturn(mockFragmentManager()).`when`(fragment).getParentFragmentManager()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()

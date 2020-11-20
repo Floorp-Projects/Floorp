@@ -14,6 +14,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat.createBlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
 import androidx.core.graphics.BlendModeCompat.SRC_IN
@@ -86,10 +87,10 @@ internal class ColorViewHolder(
 
         // Remove padding for the shadow
         val backgroundPadding = Rect()
-        itemView.context.getDrawable(R.drawable.color_picker_row_bg)?.getPadding(backgroundPadding)
+        ContextCompat.getDrawable(itemView.context, R.drawable.color_picker_row_bg)?.getPadding(backgroundPadding)
         height -= backgroundPadding.top + backgroundPadding.bottom
 
-        itemView.context.getDrawable(R.drawable.color_picker_checkmark)?.apply {
+        ContextCompat.getDrawable(itemView.context, R.drawable.color_picker_checkmark)?.apply {
             setBounds(0, 0, height, height)
         }
     }

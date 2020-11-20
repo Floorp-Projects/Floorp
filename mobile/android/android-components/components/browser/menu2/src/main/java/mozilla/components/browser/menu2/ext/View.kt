@@ -10,6 +10,7 @@ import android.os.Build.VERSION.SDK_INT
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import mozilla.components.concept.menu.candidate.ContainerStyle
 import mozilla.components.concept.menu.candidate.HighPriorityHighlightEffect
@@ -76,7 +77,8 @@ internal fun View.applyBackgroundEffect(
         .resolveAttribute(android.R.attr.selectableItemBackground)
 
     if (highlight != null) {
-        val selectableBackground = context.getDrawable(selectableBackgroundRes)
+        val selectableBackground = ContextCompat.getDrawable(
+            context, selectableBackgroundRes)
 
         setBackgroundColor(highlight.backgroundTint)
         if (SDK_INT >= Build.VERSION_CODES.M) {

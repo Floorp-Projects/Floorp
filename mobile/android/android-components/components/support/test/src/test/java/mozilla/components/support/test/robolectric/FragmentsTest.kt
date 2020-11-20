@@ -25,6 +25,6 @@ class FragmentsTest {
     fun `setupFragment should add fragment with correct tag`() {
         val fragment = createAddedTestFragment(fragmentTag = "aTag") { Fragment() }
 
-        assertNotNull(fragment.fragmentManager?.findFragmentByTag("aTag"))
+        assertNotNull(fragment.parentFragmentManager.findFragmentByTag("aTag"))
     }
 }

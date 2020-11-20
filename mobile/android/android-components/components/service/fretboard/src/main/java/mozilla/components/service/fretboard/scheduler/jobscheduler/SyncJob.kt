@@ -12,6 +12,7 @@ import java.util.concurrent.Executors
 /**
  * JobScheduler job used to updating the list of experiments
  */
+@Suppress("SpecifyJobSchedulerIdRange") // Just suppressing since this component is going away.
 abstract class SyncJob : JobService() {
     private val executor = Executors.newSingleThreadExecutor()
 

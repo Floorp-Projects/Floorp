@@ -73,7 +73,7 @@ class WebExtensionActionPopupActivity : AppCompatActivity() {
                 session.register(this, view)
                 consumePopupSession()
             } else {
-                consumeFrom(context!!.components.store) { state ->
+                consumeFrom(requireContext().components.store) { state ->
                     state.extensions[webExtensionId]?.let { extState ->
                         extState.popupSession?.let {
                             if (engineSession == null) {

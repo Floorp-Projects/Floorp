@@ -8,6 +8,7 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
 
 object DrawableUtils {
@@ -15,8 +16,8 @@ object DrawableUtils {
      * Return a tinted drawable object associated with a particular resource ID.
      */
     fun loadAndTintDrawable(context: Context, @DrawableRes resourceId: Int, @ColorInt color: Int): Drawable {
-        val drawable = context.resources.getDrawable(resourceId, context.theme)
-        val wrapped = DrawableCompat.wrap(drawable.mutate())
+        val drawable = ResourcesCompat.getDrawable(context.resources, resourceId, context.theme)
+        val wrapped = DrawableCompat.wrap(drawable!!.mutate())
         DrawableCompat.setTint(wrapped, color)
         return wrapped
     }

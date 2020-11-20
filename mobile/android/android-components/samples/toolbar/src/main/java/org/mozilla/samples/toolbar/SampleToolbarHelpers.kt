@@ -14,6 +14,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -113,14 +114,14 @@ class UrlBoxProgressView(
         }
 
     private var backgroundDrawable = ClipDrawable(
-        resources.getDrawable(R.drawable.sample_url_background, context.theme),
+        ResourcesCompat.getDrawable(resources, R.drawable.sample_url_background, context.theme),
         Gravity.END,
         ClipDrawable.HORIZONTAL).apply {
         level = MAX_LEVEL
     }
 
     private var progressDrawable = ClipDrawable(
-        resources.getDrawable(R.drawable.sample_url_progress, context.theme),
+        ResourcesCompat.getDrawable(resources, R.drawable.sample_url_progress, context.theme),
         Gravity.START,
         ClipDrawable.HORIZONTAL).apply {
         level = 0

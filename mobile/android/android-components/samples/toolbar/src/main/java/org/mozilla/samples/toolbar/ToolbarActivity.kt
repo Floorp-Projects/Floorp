@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -119,7 +120,7 @@ class ToolbarActivity : AppCompatActivity() {
         // //////////////////////////////////////////////////////////////////////////////////////////
 
         val back = BrowserToolbar.Button(
-            resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_back),
+            resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_back)!!,
             "Back"
         ) {
             simulateReload()
@@ -128,7 +129,7 @@ class ToolbarActivity : AppCompatActivity() {
         toolbar.addNavigationAction(back)
 
         val forward = BrowserToolbar.Button(
-            resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_forward),
+            resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_forward)!!,
             "Forward"
         ) {
             simulateReload()
@@ -141,7 +142,7 @@ class ToolbarActivity : AppCompatActivity() {
         // //////////////////////////////////////////////////////////////////////////////////////////
 
         val reload = BrowserToolbar.Button(
-            resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_refresh),
+            resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_refresh)!!,
             "Reload") {
             simulateReload()
         }
@@ -316,7 +317,8 @@ class ToolbarActivity : AppCompatActivity() {
             URLStringUtils.toDisplayUrl(url)
         }
 
-        toolbar.display.setUrlBackground(getDrawable(R.drawable.fenix_url_background))
+        toolbar.display.setUrlBackground(
+            ContextCompat.getDrawable(this, R.drawable.fenix_url_background))
         toolbar.display.hint = "Search or enter address"
         toolbar.display.setOnUrlLongClickListener {
             Toast.makeText(this, "Long click!", Toast.LENGTH_SHORT).show()
@@ -355,8 +357,10 @@ class ToolbarActivity : AppCompatActivity() {
             icon = 0xFF0c0c0d.toInt()
         )
 
-        toolbar.edit.setUrlBackground(getDrawable(R.drawable.fenix_url_background))
-        toolbar.edit.setIcon(getDrawable(R.drawable.mozac_ic_search)!!, "Search")
+        toolbar.edit.setUrlBackground(
+            ContextCompat.getDrawable(this, R.drawable.fenix_url_background))
+        toolbar.edit.setIcon(
+            ContextCompat.getDrawable(this, R.drawable.mozac_ic_search)!!, "Search")
 
         toolbar.setOnUrlCommitListener { url ->
             simulateReload()
@@ -496,7 +500,7 @@ class ToolbarActivity : AppCompatActivity() {
         toolbar.invalidateActions()
     }
 
-    private fun Resources.getThemedDrawable(@DrawableRes resId: Int) = getDrawable(resId, theme)
+    private fun Resources.getThemedDrawable(@DrawableRes resId: Int) = ResourcesCompat.getDrawable(this, resId, theme)
 
     companion object {
         private val PROGRESS_RANGE = 0..100

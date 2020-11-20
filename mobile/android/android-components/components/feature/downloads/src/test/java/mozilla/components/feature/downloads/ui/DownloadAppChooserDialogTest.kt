@@ -21,6 +21,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.doReturn
 import org.robolectric.annotation.Config
@@ -55,12 +56,14 @@ class DownloadAppChooserDialogTest {
         }
 
         val fragment = spy(DownloadAppChooserDialog.newInstance())
+        doNothing().`when`(fragment).dismiss()
 
         fragment.setApps(apps)
         fragment.onAppSelected = onAppSelected
 
         doReturn(testContext).`when`(fragment).requireContext()
-        doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
+        @Suppress("DEPRECATION")
+        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
 
         val downloadDialog = fragment.onCreateDialog(null)
         downloadDialog.show()
@@ -83,11 +86,13 @@ class DownloadAppChooserDialogTest {
         }
 
         val fragment = spy(DownloadAppChooserDialog.newInstance())
+        doNothing().`when`(fragment).dismiss()
 
         fragment.onDismiss = onDismiss
 
         doReturn(testContext).`when`(fragment).requireContext()
-        doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
+        @Suppress("DEPRECATION")
+        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
 
         val downloadDialog = fragment.onCreateDialog(null)
         downloadDialog.show()

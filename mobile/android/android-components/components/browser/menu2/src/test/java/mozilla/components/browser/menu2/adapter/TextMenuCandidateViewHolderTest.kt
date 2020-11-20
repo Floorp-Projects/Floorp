@@ -41,6 +41,9 @@ class TextMenuCandidateViewHolderTest {
         doReturn(context).`when`(view).context
         doReturn(textView).`when`(view).findViewById<TextView>(R.id.label)
 
+        val resources: Resources = mock()
+        doReturn(resources).`when`(context).resources
+
         doReturn(mock<Resources.Theme>()).`when`(context).theme
     }
 

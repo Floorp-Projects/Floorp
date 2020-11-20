@@ -57,7 +57,7 @@
 
     </LinearLayout>
 
-    <Switch
+    <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/blocking_switch"
         android:layout_width="wrap_content"
         android:layout_height="48dp"

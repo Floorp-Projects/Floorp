@@ -8,6 +8,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.Engine
@@ -62,7 +63,7 @@ class ClipboardSuggestionProvider(
             description = url,
             editSuggestion = url,
             flags = setOf(AwesomeBar.Suggestion.Flag.CLIPBOARD),
-            icon = icon ?: context.getDrawable(R.drawable.mozac_ic_search)?.toBitmap(),
+            icon = icon ?: ContextCompat.getDrawable(context, R.drawable.mozac_ic_search)?.toBitmap(),
             title = title,
             onSuggestionClicked = {
                 loadUrlUseCase.invoke(url)

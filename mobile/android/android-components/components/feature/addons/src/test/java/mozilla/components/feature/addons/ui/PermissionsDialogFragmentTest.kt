@@ -19,6 +19,7 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 
@@ -69,7 +70,9 @@ class PermissionsDialogFragmentTest {
         }
 
         doReturn(testContext).`when`(fragment).requireContext()
-        doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
+
+        @Suppress("DEPRECATION")
+        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -96,7 +99,10 @@ class PermissionsDialogFragmentTest {
         }
 
         doReturn(testContext).`when`(fragment).requireContext()
-        doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
+
+        @Suppress("DEPRECATION")
+        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
+        doReturn(mockFragmentManager()).`when`(fragment).getParentFragmentManager()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -128,7 +134,9 @@ class PermissionsDialogFragmentTest {
     ): PermissionsDialogFragment {
         return spy(
             PermissionsDialogFragment.newInstance(addon, promptsStyling = promptsStyling)
-        )
+        ).apply {
+            doNothing().`when`(this).dismiss()
+        }
     }
 
     private fun mockFragmentManager(): FragmentManager {

@@ -474,8 +474,8 @@ class BrowserToolbarBottomBehaviorTest {
 
         val layoutParams: CoordinatorLayout.LayoutParams = CoordinatorLayout.LayoutParams(0, 0)
 
-        val snackbarLayout = Snackbar.SnackbarLayout(testContext)
-        snackbarLayout.layoutParams = layoutParams
+        val snackbarLayout: Snackbar.SnackbarLayout = mock()
+        doReturn(layoutParams).`when`(snackbarLayout).layoutParams
 
         behavior.layoutDependsOn(
             parent = mock(),

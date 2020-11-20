@@ -36,6 +36,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -86,7 +87,9 @@ class AddonInstallationDialogFragmentTest {
         }
 
         doReturn(testContext).`when`(fragment).requireContext()
-        doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
+
+        @Suppress("DEPRECATION")
+        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -114,7 +117,10 @@ class AddonInstallationDialogFragmentTest {
         }
 
         doReturn(testContext).`when`(fragment).requireContext()
-        doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
+
+        @Suppress("DEPRECATION")
+        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
+        doReturn(mockFragmentManager()).`when`(fragment).getParentFragmentManager()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -204,7 +210,9 @@ class AddonInstallationDialogFragmentTest {
         addonCollectionProvider: AddonCollectionProvider,
         promptsStyling: AddonInstallationDialogFragment.PromptsStyling? = null
     ): AddonInstallationDialogFragment {
-        return spy(AddonInstallationDialogFragment.newInstance(addon, addonCollectionProvider, promptsStyling = promptsStyling))
+        return spy(AddonInstallationDialogFragment.newInstance(addon, addonCollectionProvider, promptsStyling = promptsStyling)).apply {
+            doNothing().`when`(this).dismiss()
+        }
     }
 
     private fun mockFragmentManager(): FragmentManager {
