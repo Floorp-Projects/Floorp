@@ -3335,8 +3335,8 @@
      * only once per binding. There must be a correct entry for the new binding
      * in `script->bodyScope()`. (All this ensures that at run time, there is
      * no existing conflicting binding. This is checked by the
-     * `JSOp::CheckGlobalOrEvalDecl` bytecode instruction that must appear
-     * before `JSOp::Def{Var,Let,Const,Fun}`.)
+     * `JSOp::GlobalOrEvalDeclInstantiation` bytecode instruction that must
+     * appear before `JSOp::Def{Var,Let,Const,Fun}`.)
      *
      * Throw a SyntaxError if the current VariableEnvironment is the global
      * environment and a binding with the same name exists on the global
@@ -3399,15 +3399,19 @@
      * Implements: [GlobalDeclarationInstantiation][1] steps 5, 6, 10 and 12,
      * and [EvalDeclarationInstantiation][2] steps 5 and 8.
      *
+     * The `lastFun` argument is a GCThingIndex of the last hoisted top-level
+     * function that is part of top-level script initialization. The gcthings
+     * from index `0` thru `lastFun` contain only scopes and hoisted functions.
+     *
      * [1]: https://tc39.es/ecma262/#sec-globaldeclarationinstantiation
      * [2]: https://tc39.es/ecma262/#sec-evaldeclarationinstantiation
      *
      *   Category: Variables and scopes
      *   Type: Creating and deleting bindings
-     *   Operands:
+     *   Operands: uint32_t lastFun
      *   Stack: =>
      */ \
-    MACRO(CheckGlobalOrEvalDecl, check_global_or_eval_decl, NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(GlobalOrEvalDeclInstantiation, global_or_eval_decl_instantiation, NULL, 5, 0, 0, JOF_GCTHING) \
     /*
      * Look up a variable on the environment chain and delete it. Push `true`
      * on success (if a binding was deleted, or if no such binding existed in

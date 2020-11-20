@@ -846,7 +846,8 @@ bool EmitterScope::enterGlobal(BytecodeEmitter* bce,
   // Resolve binding names and emit Def{Var,Let,Const} prologue ops.
   if (globalsc->bindings) {
     // Check for declaration conflicts before the Def* ops.
-    if (!bce->emit1(JSOp::CheckGlobalOrEvalDecl)) {
+    if (!bce->emitGCIndexOp(JSOp::GlobalOrEvalDeclInstantiation,
+                            GCThingIndex())) {
       return false;
     }
 
@@ -922,7 +923,8 @@ bool EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc) {
     // the frame. For now, handle everything dynamically.
     if (!hasEnvironment() && evalsc->bindings) {
       // Check for declaration conflicts before the DefVar ops.
-      if (!bce->emit1(JSOp::CheckGlobalOrEvalDecl)) {
+      if (!bce->emitGCIndexOp(JSOp::GlobalOrEvalDeclInstantiation,
+                              GCThingIndex())) {
         return false;
       }
 

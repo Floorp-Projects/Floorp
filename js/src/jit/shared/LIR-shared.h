@@ -7985,15 +7985,13 @@ class LThrowRuntimeLexicalError : public LCallInstructionHelper<0, 0, 0> {
   }
 };
 
-class LGlobalNameConflictsCheck : public LInstructionHelper<0, 0, 0> {
+class LGlobalDeclInstantiation : public LInstructionHelper<0, 0, 0> {
  public:
-  LIR_HEADER(GlobalNameConflictsCheck)
+  LIR_HEADER(GlobalDeclInstantiation)
 
-  LGlobalNameConflictsCheck() : LInstructionHelper(classOpcode) {}
+  LGlobalDeclInstantiation() : LInstructionHelper(classOpcode) {}
 
-  MGlobalNameConflictsCheck* mir() {
-    return mir_->toGlobalNameConflictsCheck();
-  }
+  MGlobalDeclInstantiation* mir() { return mir_->toGlobalDeclInstantiation(); }
 };
 
 class LMemoryBarrier : public LInstructionHelper<0, 0, 0> {

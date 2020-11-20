@@ -664,7 +664,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::DefLet:
       case JSOp::DefConst:
       case JSOp::DefFun:
-      case JSOp::CheckGlobalOrEvalDecl:
+      case JSOp::GlobalOrEvalDeclInstantiation:
       case JSOp::BindVar:
       case JSOp::MutateProto:
       case JSOp::Callee:
