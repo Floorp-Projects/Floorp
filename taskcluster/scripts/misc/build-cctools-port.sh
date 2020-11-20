@@ -82,6 +82,10 @@ cp $CLANG_DIR/bin/dsymutil $CROSSTOOLS_BUILD_DIR/bin/x86_64-apple-darwin-dsymuti
 # various build scripts based on cmake want to find `lipo` without a prefix
 cp $CROSSTOOLS_BUILD_DIR/bin/x86_64-apple-darwin-lipo $CROSSTOOLS_BUILD_DIR/bin/lipo
 
+(cd $CROSSTOOLS_BUILD_DIR/bin/; for i in x86_64-apple-darwin-*; do
+    ln $i aarch64${i#x86_64}
+done)
+
 # Put a tarball in the artifacts dir
 mkdir -p $UPLOAD_DIR
 tar cJf $UPLOAD_DIR/cctools.tar.xz -C $CROSSTOOLS_BUILD_DIR/.. `basename $CROSSTOOLS_BUILD_DIR`
