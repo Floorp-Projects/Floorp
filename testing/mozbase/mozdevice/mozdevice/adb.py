@@ -1972,8 +1972,15 @@ class ADBDevice(ADBCommand):
             self._logger.warning(
                 "retryable logcat clear error?: {}. Retrying...".format(str(e))
             )
-            self.command_output(cmds, timeout=timeout)
-            self.shell_output("log logcat cleared", timeout=timeout)
+            try:
+                self.command_output(cmds, timeout=timeout)
+                self.shell_output("log logcat cleared", timeout=timeout)
+            except ADBProcessError as e2:
+                if "failed to clear" not in str(e):
+                    raise
+                self._logger.warning(
+                    "Ignoring failure to clear logcat: {}.".format(str(e2))
+                )
 
     def get_logcat(
         self,
