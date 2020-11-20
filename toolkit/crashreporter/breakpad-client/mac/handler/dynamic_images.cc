@@ -214,13 +214,6 @@ kern_return_t ReadTaskMemory(task_port_t target_task,
 
 #pragma mark -
 
-// Bit in mach_header.flags that indicates whether or not the image is in the
-// dyld shared cache. The dyld shared cache is a single image into which
-// commonly used system dylibs and frameworks are incorporated. dyld maps it
-// into every process at load time. The component images all have the same
-// slide.
-#define MH_SHAREDCACHE 0x80000000
-
 //==============================================================================
 // Traits structs for specializing function templates to handle
 // 32-bit/64-bit Mach-O files.

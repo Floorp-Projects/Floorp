@@ -102,6 +102,13 @@ typedef mach_header breakpad_mach_header;
 typedef segment_command breakpad_mach_segment_command;
 #endif
 
+// Bit in mach_header.flags that indicates whether or not the image is in the
+// dyld shared cache. The dyld shared cache is a single image into which
+// commonly used system dylibs and frameworks are incorporated. dyld maps it
+// into every process at load time. The component images all have the same
+// slide.
+#define MH_SHAREDCACHE 0x80000000
+
 // Helper functions to deal with 32-bit/64-bit Mach-O differences.
 class DynamicImage;
 template<typename MachBits>
@@ -152,6 +159,9 @@ class DynamicImage {
 
   // Address where the image should be loaded
   mach_vm_address_t GetVMAddr() const {return vmaddr_;}
+
+  bool GetInDyldSharedCache()
+    {return (shared_cache_slide_ && (slide_ == shared_cache_slide_));}
 
   // Difference between GetLoadAddress() and GetVMAddr()
   ptrdiff_t GetVMAddrSlide() const {return slide_;}
