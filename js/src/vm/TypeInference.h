@@ -27,7 +27,6 @@
 #include "threading/ProtectedData.h"  // js::ZoneData
 #include "util/DiagnosticAssertions.h"
 #include "vm/Shape.h"
-#include "vm/TypeSet.h"
 
 namespace js {
 
