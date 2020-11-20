@@ -29,6 +29,7 @@ class gfxConfigManager {
         mFeatureGPUProcess(nullptr),
         mWrForceEnabled(false),
         mWrForceDisabled(false),
+        mWrSoftwareForceEnabled(false),
         mWrCompositorForceEnabled(false),
         mWrForceAngle(false),
         mWrForceAngleNoGPUProcess(false),
@@ -43,6 +44,7 @@ class gfxConfigManager {
         mDisableHwCompositingNoWr(false),
         mIsNightly(false),
         mSafeMode(false),
+        mIsHeadless(false),
         mIsWin10OrLater(false) {}
 
   void Init();
@@ -75,6 +77,7 @@ class gfxConfigManager {
   Maybe<bool> mWrCompositorEnabled;
   bool mWrForceEnabled;
   bool mWrForceDisabled;
+  bool mWrSoftwareForceEnabled;
   bool mWrCompositorForceEnabled;
   bool mWrForceAngle;
   bool mWrForceAngleNoGPUProcess;
@@ -98,6 +101,7 @@ class gfxConfigManager {
   bool mDisableHwCompositingNoWr;
   bool mIsNightly;
   bool mSafeMode;
+  bool mIsHeadless;
   bool mIsWin10OrLater;
 };
 
