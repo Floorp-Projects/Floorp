@@ -2258,8 +2258,6 @@
   </toolbox>
   </box>
 
-  <hbox id="fullscr-toggler" hidden="true"/>
-
   <hbox flex="1" id="browser">
     <vbox id="browser-border-start" hidden="true" layer="true"/>
     <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
@@ -2331,5 +2329,8 @@
   </vbox>
 
   <html:div id="a11y-announcement" role="alert"/>
+
+  <!-- Put it at the very end to make sure it's not covered by anything. -->
+  <html:div id="fullscr-toggler" hidden="hidden"/>
 </html:body>
 </html>
