@@ -1048,9 +1048,7 @@ class ADBDevice(ADBCommand):
                     "attached and no device specified"
                 )
             if len(devices) == 0:
-                # We could error here, but this way we'll wait-for-device before we next
-                # run a command, which seems more friendly
-                return None
+                raise ADBError("No connected devices found.")
             device = devices[0]
 
         # Allow : in device serial if it matches a tcpip device serial.
