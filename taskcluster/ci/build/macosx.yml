@@ -261,6 +261,7 @@ macosx64-x64-shippable/opt:
 
 macosx64-aarch64-shippable/opt:
     description: "MacOS X aarch64 Cross-compile"
+    use-pgo: macosx64-shippable/opt
     attributes:
         enable-full-crashsymbols: true
         skip-verify-test-packaging: true
@@ -271,7 +272,7 @@ macosx64-aarch64-shippable/opt:
         type: shippable
     treeherder:
         platform: osx-aarch64-shippable/opt
-        symbol: B
+        symbol: Bpgo(B)
         tier: 1
     run-on-projects: ['release']
     worker:
