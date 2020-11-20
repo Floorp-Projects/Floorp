@@ -3,6 +3,14 @@
 
 "use strict";
 
+add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.newtabpage.activity-stream.feeds.section.highlights", true],
+    ],
+  });
+});
+
 add_task(async function test_firefox_home_without_policy_without_pocket() {
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
