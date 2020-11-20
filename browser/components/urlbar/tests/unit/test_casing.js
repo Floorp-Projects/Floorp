@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const ENGINE_NAME = "engine-suggestions.xml";
+const AUTOFILL_PROVIDERNAME = "Autofill";
 const HEURISTIC_FALLBACK_PROVIDERNAME = "HeuristicFallback";
 const UNIFIEDCOMPLETE_PROVIDERNAME = "UnifiedComplete";
 
@@ -42,19 +43,16 @@ add_task(async function test_casing_2() {
   let context = createContext("mozilla.org/T", { isPrivate: false });
   await check_results({
     context,
+    autofilled: "mozilla.org/Test/",
+    completed: "http://mozilla.org/test/",
     matches: [
       makeVisitResult(context, {
-        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-        uri: "http://mozilla.org/T",
-        title: "http://mozilla.org/T",
-        iconUri: "page-icon:http://mozilla.org/",
-        heuristic: true,
-        providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
-      }),
-      makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
         uri: "http://mozilla.org/test/",
-        title: "test visit for http://mozilla.org/test/",
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        title: "mozilla.org/test/",
+        iconUri: "page-icon:http://mozilla.org/test/",
+        heuristic: true,
+        providerName: AUTOFILL_PROVIDERNAME,
       }),
     ],
   });
@@ -90,19 +88,16 @@ add_task(async function test_casing_4() {
   let context = createContext("mOzilla.org/t", { isPrivate: false });
   await check_results({
     context,
+    autofilled: "mOzilla.org/test/",
+    completed: "http://mozilla.org/Test/",
     matches: [
       makeVisitResult(context, {
-        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-        uri: "http://mozilla.org/t",
-        title: "http://mozilla.org/t",
-        iconUri: "page-icon:http://mozilla.org/",
-        heuristic: true,
-        providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
-      }),
-      makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
         uri: "http://mozilla.org/Test/",
-        title: "test visit for http://mozilla.org/Test/",
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        title: "mozilla.org/Test/",
+        iconUri: "page-icon:http://mozilla.org/Test/",
+        heuristic: true,
+        providerName: AUTOFILL_PROVIDERNAME,
       }),
     ],
   });
@@ -190,19 +185,16 @@ add_task(async function test_untrimmed_path_casing() {
   let context = createContext("http://mOzilla.org/t", { isPrivate: false });
   await check_results({
     context,
+    autofilled: "http://mOzilla.org/test/",
+    completed: "http://mozilla.org/Test/",
     matches: [
       makeVisitResult(context, {
-        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-        uri: "http://mozilla.org/t",
-        title: "http://mozilla.org/t",
-        iconUri: "page-icon:http://mozilla.org/",
-        heuristic: true,
-        providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
-      }),
-      makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
         uri: "http://mozilla.org/Test/",
-        title: "test visit for http://mozilla.org/Test/",
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        title: "mozilla.org/Test/",
+        iconUri: "page-icon:http://mozilla.org/Test/",
+        heuristic: true,
+        providerName: AUTOFILL_PROVIDERNAME,
       }),
     ],
   });
@@ -238,19 +230,16 @@ add_task(async function test_untrimmed_path_www_casing() {
   let context = createContext("http://www.mOzilla.org/t", { isPrivate: false });
   await check_results({
     context,
+    autofilled: "http://www.mOzilla.org/test/",
+    completed: "http://www.mozilla.org/Test/",
     matches: [
       makeVisitResult(context, {
-        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-        uri: "http://www.mozilla.org/t",
-        title: "http://www.mozilla.org/t",
-        iconUri: "page-icon:http://www.mozilla.org/",
-        heuristic: true,
-        providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
-      }),
-      makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
         uri: "http://www.mozilla.org/Test/",
-        title: "test visit for http://www.mozilla.org/Test/",
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        title: "www.mozilla.org/Test/",
+        iconUri: "page-icon:http://www.mozilla.org/Test/",
+        heuristic: true,
+        providerName: AUTOFILL_PROVIDERNAME,
       }),
     ],
   });
