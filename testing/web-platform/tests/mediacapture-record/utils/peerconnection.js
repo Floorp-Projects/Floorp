@@ -38,16 +38,14 @@ function setTransceiverCodecPreference(transceiver, codecPreference) {
  * Starts a connection between two peer connections, using a audio and/or video
  * stream.
  * @param {*} t Test instance.
- * @param {boolean} useAudio True if audio should be used.
- * @param {boolean} useVideo True if video should be used.
+ * @param {boolean} audio True if audio should be used.
+ * @param {boolean} video True if video should be used.
  * @param {string} [videoCodecPreference] String containing the codec preference.
  * @returns an array with the two connected peer connections, the remote stream,
  * and an object containing transceivers by kind.
  */
-async function startConnection(t, useAudio, useVideo, videoCodecPreference) {
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: useAudio, video: useVideo
-  });
+async function startConnection(t, audio, video, videoCodecPreference) {
+  const stream = await navigator.mediaDevices.getUserMedia({audio, video});
   t.add_cleanup(() => stream.getTracks().forEach(track => track.stop()));
   const pc1 = new RTCPeerConnection();
   t.add_cleanup(() => pc1.close());
@@ -61,25 +59,16 @@ async function startConnection(t, useAudio, useVideo, videoCodecPreference) {
       setTransceiverCodecPreference(transceiver, videoCodecPreference);
     }
   }
-  function doExchange(localPc, remotePc) {
-    localPc.addEventListener('icecandidate', ({candidate}) => {
-      if (candidate && remotePc.signalingState !== 'closed') {
-        remotePc.addIceCandidate(candidate);
-      }
+  for (const [local, remote] of [[pc1, pc2], [pc2, pc1]]) {
+    local.addEventListener('icecandidate', ({candidate}) => {
+      if (!candidate || remote.signalingState == 'closed') return;
+      remote.addIceCandidate(candidate);
     });
   }
-  doExchange(pc1, pc2);
-  doExchange(pc2, pc1);
   const haveTrackEvent = new Promise(r => pc2.ontrack = r);
   await exchangeOfferAnswer(pc1, pc2);
   const {streams} = await haveTrackEvent;
-  const remoteStream = streams[0];
-  // The srcObject sink is needed for the tests to get exercised in Chrome (bug)
-  const remoteVideo = document.getElementById('remote');
-  if (remoteVideo) {
-    remoteVideo.srcObject = remoteStream;
-  }
-  return [pc1, pc2, remoteStream, transceivers]
+  return [pc1, pc2, streams[0], transceivers];
 }
 
 /**
