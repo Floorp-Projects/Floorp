@@ -9,20 +9,19 @@
 
 #include "nsIGleanMetrics.h"
 
-namespace mozilla {
-namespace glean {
+namespace mozilla::glean {
 
 namespace impl {
 extern "C" {
-void fog_timespan_start(uint32_t id);
-void fog_timespan_stop(uint32_t id);
-uint32_t fog_timespan_test_has_value(uint32_t id, const char* storageName);
-int64_t fog_timespan_test_get_value(uint32_t id, const char* storageName);
+void fog_timespan_start(uint32_t aId);
+void fog_timespan_stop(uint32_t aId);
+uint32_t fog_timespan_test_has_value(uint32_t aId, const char* aStorageName);
+int64_t fog_timespan_test_get_value(uint32_t aId, const char* aStorageName);
 }
 
 class TimespanMetric {
  public:
-  constexpr explicit TimespanMetric(uint32_t id) : mId(id) {}
+  constexpr explicit TimespanMetric(uint32_t aId) : mId(aId) {}
 
   /**
    * Start tracking time for the provided metric.
@@ -74,7 +73,7 @@ class GleanTimespan final : public nsIGleanTimespan {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIGLEANTIMESPAN
 
-  explicit GleanTimespan(uint32_t id) : mTimespan(id){};
+  explicit GleanTimespan(uint32_t aId) : mTimespan(aId){};
 
  private:
   virtual ~GleanTimespan() = default;
@@ -82,7 +81,6 @@ class GleanTimespan final : public nsIGleanTimespan {
   const impl::TimespanMetric mTimespan;
 };
 
-}  // namespace glean
-}  // namespace mozilla
+}  // namespace mozilla::glean
 
-#endif /* mozilla_glean_GleanTimespan.h */
+#endif /* mozilla_glean_GleanTimespan_h */

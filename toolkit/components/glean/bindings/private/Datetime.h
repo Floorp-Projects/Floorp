@@ -11,34 +11,33 @@
 #include "nsString.h"
 #include "prtime.h"
 
-namespace mozilla {
-namespace glean {
+namespace mozilla::glean {
 
 namespace impl {
 extern "C" {
-void fog_datetime_set(uint32_t id, int32_t year, uint32_t month, uint32_t day,
-                      uint32_t hour, uint32_t minute, uint32_t second,
-                      uint32_t nano, int32_t offset_seconds);
-uint32_t fog_datetime_test_has_value(uint32_t id, const char* storageName);
-void fog_datetime_test_get_value(uint32_t id, const char* storageName,
-                                 nsACString& value);
+void fog_datetime_set(uint32_t aId, int32_t aYear, uint32_t aMonth,
+                      uint32_t aDay, uint32_t aHour, uint32_t aMinute,
+                      uint32_t aSecond, uint32_t aNano, int32_t aOffsetSeconds);
+uint32_t fog_datetime_test_has_value(uint32_t aId, const char* aStorageName);
+void fog_datetime_test_get_value(uint32_t aId, const char* aStorageName,
+                                 nsACString& aValue);
 }
 
 class DatetimeMetric {
  public:
-  constexpr explicit DatetimeMetric(uint32_t id) : mId(id) {}
+  constexpr explicit DatetimeMetric(uint32_t aId) : mId(aId) {}
 
   /*
    * Set the datetime to the provided value, or the local now.
    *
    * @param amount The date value to set.
    */
-  void Set(const PRExplodedTime* value = nullptr) const {
+  void Set(const PRExplodedTime* aValue = nullptr) const {
     PRExplodedTime exploded;
-    if (!value) {
+    if (!aValue) {
       PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &exploded);
     } else {
-      exploded = *value;
+      exploded = *aValue;
     }
 
     int32_t offset =
@@ -81,7 +80,7 @@ class GleanDatetime final : public nsIGleanDatetime {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIGLEANDATETIME
 
-  explicit GleanDatetime(uint32_t id) : mDatetime(id){};
+  explicit GleanDatetime(uint32_t aId) : mDatetime(aId){};
 
  private:
   virtual ~GleanDatetime() = default;
@@ -89,7 +88,6 @@ class GleanDatetime final : public nsIGleanDatetime {
   const impl::DatetimeMetric mDatetime;
 };
 
-}  // namespace glean
-}  // namespace mozilla
+}  // namespace mozilla::glean
 
-#endif /* mozilla_glean_GleanDatetime.h */
+#endif /* mozilla_glean_GleanDatetime_h */

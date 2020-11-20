@@ -10,15 +10,14 @@
 #include "mozilla/Components.h"
 #include "nsIClassInfoImpl.h"
 
-namespace mozilla {
-namespace glean {
+namespace mozilla::glean {
 
 NS_IMPL_CLASSINFO(GleanCounter, nullptr, 0, {0})
 NS_IMPL_ISUPPORTS_CI(GleanCounter, nsIGleanCounter)
 
 NS_IMETHODIMP
-GleanCounter::Add(uint32_t amount, JSContext* cx) {
-  this->mCounter.Add(amount);
+GleanCounter::Add(uint32_t aAmount) {
+  this->mCounter.Add(aAmount);
   return NS_OK;
 }
 
@@ -35,5 +34,4 @@ GleanCounter::TestGetValue(const nsACString& aStorageName,
   return NS_OK;
 }
 
-}  // namespace glean
-}  // namespace mozilla
+}  // namespace mozilla::glean

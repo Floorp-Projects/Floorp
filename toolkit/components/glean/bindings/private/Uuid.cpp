@@ -10,26 +10,25 @@
 #include "mozilla/Components.h"
 #include "nsIClassInfoImpl.h"
 
-namespace mozilla {
-namespace glean {
+namespace mozilla::glean {
 
 NS_IMPL_CLASSINFO(GleanUuid, nullptr, 0, {0})
 NS_IMPL_ISUPPORTS_CI(GleanUuid, nsIGleanUuid)
 
 NS_IMETHODIMP
-GleanUuid::Set(const nsACString& value, JSContext* cx) {
-  this->mUuid.Set(value);
+GleanUuid::Set(const nsACString& aValue) {
+  this->mUuid.Set(aValue);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GleanUuid::GenerateAndSet(JSContext* cx) {
+GleanUuid::GenerateAndSet() {
   this->mUuid.GenerateAndSet();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GleanUuid::TestGetValue(const nsACString& aStorageName, JSContext* cx,
+GleanUuid::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
                         JS::MutableHandleValue aResult) {
   auto result =
       this->mUuid.TestGetValue(PromiseFlatCString(aStorageName).get());
@@ -38,10 +37,9 @@ GleanUuid::TestGetValue(const nsACString& aStorageName, JSContext* cx,
   } else {
     const NS_ConvertUTF8toUTF16 str(result.value());
     aResult.set(
-        JS::StringValue(JS_NewUCStringCopyN(cx, str.Data(), str.Length())));
+        JS::StringValue(JS_NewUCStringCopyN(aCx, str.Data(), str.Length())));
   }
   return NS_OK;
 }
 
-}  // namespace glean
-}  // namespace mozilla
+}  // namespace mozilla::glean

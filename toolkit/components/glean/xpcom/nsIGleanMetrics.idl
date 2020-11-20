@@ -9,12 +9,12 @@
 interface nsIGleanDatetime : nsISupports
 {
   /**
-   *  Set the datetime to the provided value, or the local now.
+   * Set the datetime to the provided value, or the local now.
    *
-   * @param value The time value in milliseconds since epoch. Defaults to local now.
+   * @param aValue The time value in milliseconds since epoch. Defaults to local now.
    */
   [optional_argc]
-  void set([optional] in PRTime value);
+  void set([optional] in PRTime aValue);
 
   /**
    * **Test-only API**
@@ -42,7 +42,6 @@ interface nsIGleanCounter : nsISupports
   *
   * @param amount The amount to increase by. Should be positive.
   */
-  [implicit_jscontext]
   void add(in uint32_t amount);
 
   /**
@@ -70,7 +69,6 @@ interface nsIGleanString : nsISupports
   *
   * @param value The string to set the metric to.
   */
-  [implicit_jscontext]
   void set(in ACString value);
 
   /**
@@ -101,7 +99,6 @@ interface nsIGleanTimespan : nsISupports
    * called with no corresponding [stop]): in that case the original
    * start time will be preserved.
    */
-  [implicit_jscontext]
   void start();
 
   /**
@@ -112,7 +109,6 @@ interface nsIGleanTimespan : nsISupports
    * This will record an error if no [start] was called or there is an already
    * existing value.
    */
-  [implicit_jscontext]
   void stop();
 
   /**
@@ -140,13 +136,11 @@ interface nsIGleanUuid : nsISupports
    *
    * @param aValue The UUID to set the metric to.
    */
-  [implicit_jscontext]
   void set(in ACString aValue);
 
   /**
    * Generate a new random UUID and set the metric to it.
    */
-  [implicit_jscontext]
   void generateAndSet();
 
   /**
