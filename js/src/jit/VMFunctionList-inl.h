@@ -105,9 +105,6 @@ namespace jit {
   _(DebugLeaveThenRecreateLexicalEnv,                                          \
     js::jit::DebugLeaveThenRecreateLexicalEnv)                                 \
   _(Debug_CheckSelfHosted, js::Debug_CheckSelfHosted)                          \
-  _(DefFunOperation, js::DefFunOperation)                                      \
-  _(DefLexicalOperation, js::DefLexicalOperation)                              \
-  _(DefVarOperation, js::DefVarOperation)                                      \
   _(DelElemOperationNonStrict, js::DelElemOperation<false>)                    \
   _(DelElemOperationStrict, js::DelElemOperation<true>)                        \
   _(DelPropOperationNonStrict, js::DelPropOperation<false>)                    \

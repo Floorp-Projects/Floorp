@@ -6532,46 +6532,6 @@ void CodeGenerator::visitCheckOverRecursed(LCheckOverRecursed* lir) {
   masm.bind(ool->rejoin());
 }
 
-void CodeGenerator::visitDefVar(LDefVar* lir) {
-  Register envChain = ToRegister(lir->environmentChain());
-
-  JSScript* script = current->mir()->info().script();
-  jsbytecode* pc = lir->mir()->resumePoint()->pc();
-
-  pushArg(ImmPtr(pc));        // jsbytecode*
-  pushArg(ImmGCPtr(script));  // JSScript*
-  pushArg(envChain);          // JSObject*
-
-  using Fn = bool (*)(JSContext*, HandleObject, HandleScript, jsbytecode*);
-  callVM<Fn, DefVarOperation>(lir);
-}
-
-void CodeGenerator::visitDefLexical(LDefLexical* lir) {
-  Register envChain = ToRegister(lir->environmentChain());
-
-  JSScript* script = current->mir()->info().script();
-  jsbytecode* pc = lir->mir()->resumePoint()->pc();
-
-  pushArg(ImmPtr(pc));        // jsbytecode*
-  pushArg(ImmGCPtr(script));  // JSScript*
-  pushArg(envChain);          // JSObject*
-
-  using Fn = bool (*)(JSContext*, HandleObject, HandleScript, jsbytecode*);
-  callVM<Fn, DefLexicalOperation>(lir);
-}
-
-void CodeGenerator::visitDefFun(LDefFun* lir) {
-  Register envChain = ToRegister(lir->environmentChain());
-
-  Register fun = ToRegister(lir->fun());
-  pushArg(fun);
-  pushArg(envChain);
-  pushArg(ImmGCPtr(current->mir()->info().script()));
-
-  using Fn = bool (*)(JSContext*, HandleScript, HandleObject, HandleFunction);
-  callVM<Fn, DefFunOperation>(lir);
-}
-
 void CodeGenerator::visitCheckOverRecursedFailure(
     CheckOverRecursedFailure* ool) {
   // The OOL path is hit if the recursion depth has been exceeded.

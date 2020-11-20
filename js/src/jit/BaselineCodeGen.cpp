@@ -3858,66 +3858,6 @@ bool BaselineCodeGen<Handler>::emit_SetIntrinsic() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_DefVar() {
-  frame.syncStack(0);
-
-  masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
-
-  prepareVMCall();
-
-  pushBytecodePCArg();
-  pushScriptArg();
-  pushArg(R0.scratchReg());
-
-  using Fn = bool (*)(JSContext*, HandleObject, HandleScript, jsbytecode*);
-  return callVM<Fn, DefVarOperation>();
-}
-
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emitDefLexical(JSOp op) {
-  MOZ_ASSERT(op == JSOp::DefConst || op == JSOp::DefLet);
-
-  frame.syncStack(0);
-
-  masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
-
-  prepareVMCall();
-
-  pushBytecodePCArg();
-  pushScriptArg();
-  pushArg(R0.scratchReg());
-
-  using Fn = bool (*)(JSContext*, HandleObject, HandleScript, jsbytecode*);
-  return callVM<Fn, DefLexicalOperation>();
-}
-
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_DefConst() {
-  return emitDefLexical(JSOp::DefConst);
-}
-
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_DefLet() {
-  return emitDefLexical(JSOp::DefLet);
-}
-
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_DefFun() {
-  frame.popRegsAndSync(1);
-  masm.unboxObject(R0, R0.scratchReg());
-  masm.loadPtr(frame.addressOfEnvironmentChain(), R1.scratchReg());
-
-  prepareVMCall();
-
-  pushArg(R0.scratchReg());
-  pushArg(R1.scratchReg());
-  pushScriptArg();
-
-  using Fn = bool (*)(JSContext*, HandleScript, HandleObject, HandleFunction);
-  return callVM<Fn, DefFunOperation>();
-}
-
-template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_GlobalOrEvalDeclInstantiation() {
   frame.syncStack(0);
 
