@@ -670,7 +670,99 @@ TEST(GeckoProfiler, Markers)
   MOZ_RELEASE_ASSERT(
       profiler_add_marker("FirstMarker", geckoprofiler::category::OTHER,
                           MarkerTiming::Interval(ts1, ts2),
-                          geckoprofiler::markers::Text{}, "FirstMarker"));
+                          geckoprofiler::markers::Text{}, "First Marker"));
+
+  // User-defined marker type with different properties, and fake schema.
+  struct GtestMarker {
+    static constexpr Span<const char> MarkerTypeName() {
+      return MakeStringSpan("markers-gtest");
+    }
+    static void StreamJSONMarkerData(
+        mozilla::baseprofiler::SpliceableJSONWriter& aWriter, int aInt,
+        double aDouble, const mozilla::ProfilerString8View& aText,
+        const mozilla::ProfilerString8View& aUniqueText,
+        const mozilla::TimeStamp& aTime) {
+      aWriter.NullProperty("null");
+      aWriter.BoolProperty("bool-false", false);
+      aWriter.BoolProperty("bool-true", true);
+      aWriter.IntProperty("int", aInt);
+      aWriter.DoubleProperty("double", aDouble);
+      aWriter.StringProperty("text", aText);
+      aWriter.UniqueStringProperty("unique text", aUniqueText);
+      aWriter.UniqueStringProperty("unique text again", aUniqueText);
+      mozilla::baseprofiler::WritePropertyTime(aWriter, "time", aTime);
+    }
+    static mozilla::MarkerSchema MarkerTypeDisplay() {
+      // Note: This is an test function that is not intended to actually output
+      // that correctly matches StreamJSONMarkerData data above! Instead we only
+      // test that it outputs the expected JSON at the end.
+      using MS = mozilla::MarkerSchema;
+      MS schema{MS::Location::markerChart,      MS::Location::markerTable,
+                MS::Location::timelineOverview, MS::Location::timelineMemory,
+                MS::Location::timelineIPC,      MS::Location::timelineFileIO,
+                MS::Location::stackChart};
+      // All label functions.
+      schema.SetChartLabel("chart label");
+      schema.SetTooltipLabel("tooltip label");
+      schema.SetTableLabel("table label");
+      // All data functions, all formats, all "searchable" values.
+      schema.AddKeyFormat("key with url", MS::Format::url);
+      schema.AddKeyLabelFormat("key with label filePath", "label filePath",
+                               MS::Format::filePath);
+      schema.AddKeyFormatSearchable("key with string not-searchable",
+                                    MS::Format::string,
+                                    MS::Searchable::notSearchable);
+      schema.AddKeyLabelFormatSearchable("key with label duration searchable",
+                                         "label duration", MS::Format::duration,
+                                         MS::Searchable::searchable);
+      schema.AddKeyFormat("key with time", MS::Format::time);
+      schema.AddKeyFormat("key with seconds", MS::Format::seconds);
+      schema.AddKeyFormat("key with milliseconds", MS::Format::milliseconds);
+      schema.AddKeyFormat("key with microseconds", MS::Format::microseconds);
+      schema.AddKeyFormat("key with nanoseconds", MS::Format::nanoseconds);
+      schema.AddKeyFormat("key with bytes", MS::Format::bytes);
+      schema.AddKeyFormat("key with percentage", MS::Format::percentage);
+      schema.AddKeyFormat("key with integer", MS::Format::integer);
+      schema.AddKeyFormat("key with decimal", MS::Format::decimal);
+      schema.AddStaticLabelValue("static label", "static value");
+      return schema;
+    }
+  };
+  MOZ_RELEASE_ASSERT(
+      profiler_add_marker("Gtest custom marker", geckoprofiler::category::OTHER,
+                          MarkerTiming::Interval(ts1, ts2), GtestMarker{}, 42,
+                          43.0, "gtest text", "gtest unique text", ts1));
+
+  // User-defined marker type with no data, special frontend schema.
+  struct GtestSpecialMarker {
+    static constexpr Span<const char> MarkerTypeName() {
+      return MakeStringSpan("markers-gtest-special");
+    }
+    static void StreamJSONMarkerData(
+        mozilla::baseprofiler::SpliceableJSONWriter& aWriter) {}
+    static mozilla::MarkerSchema MarkerTypeDisplay() {
+      return mozilla::MarkerSchema::SpecialFrontendLocation{};
+    }
+  };
+  MOZ_RELEASE_ASSERT(profiler_add_marker("Gtest special marker",
+                                         geckoprofiler::category::OTHER, {},
+                                         GtestSpecialMarker{}));
+
+  // User-defined marker type that is never used, so it shouldn't appear in the
+  // output.
+  struct GtestUnusedMarker {
+    static constexpr Span<const char> MarkerTypeName() {
+      return MakeStringSpan("markers-gtest-unused");
+    }
+    static void StreamJSONMarkerData(
+        mozilla::baseprofiler::SpliceableJSONWriter& aWriter) {}
+    static mozilla::MarkerSchema MarkerTypeDisplay() {
+      return mozilla::MarkerSchema::SpecialFrontendLocation{};
+    }
+  };
+
+  // Make sure the compiler doesn't complain about this unused struct.
+  mozilla::Unused << GtestUnusedMarker{};
 
   // Other markers in alphabetical order of payload class names.
 
@@ -815,6 +907,8 @@ TEST(GeckoProfiler, Markers)
     S_Markers2ExplicitDefaultEmptyOptions,
     S_Markers2ExplicitDefaultWithOptions,
     S_FirstMarker,
+    S_CustomMarker,
+    S_SpecialMarker,
     S_NetworkMarkerPayload_start,
     S_NetworkMarkerPayload_stop,
     S_NetworkMarkerPayload_redirect,
@@ -1113,6 +1207,35 @@ TEST(GeckoProfiler, Markers)
                 ts1Double = marker[START_TIME].asDouble();
                 ts2Double = marker[END_TIME].asDouble();
                 state = State(S_FirstMarker + 1);
+                EXPECT_EQ(typeString, "Text");
+                EXPECT_EQ_JSON(payload["name"], String, "First Marker");
+
+              } else if (nameString == "Gtest custom marker") {
+                EXPECT_EQ(state, S_CustomMarker);
+                state = State(S_CustomMarker + 1);
+                EXPECT_EQ(typeString, "markers-gtest");
+                EXPECT_EQ(payload.size(), 1u + 9u);
+                EXPECT_TRUE(payload["null"].isNull());
+                EXPECT_EQ_JSON(payload["bool-false"], Bool, false);
+                EXPECT_EQ_JSON(payload["bool-true"], Bool, true);
+                EXPECT_EQ_JSON(payload["int"], Int64, 42);
+                EXPECT_EQ_JSON(payload["double"], Double, 43.0);
+                EXPECT_EQ_JSON(payload["text"], String, "gtest text");
+                // Unique strings can be fetched from the string table.
+                ASSERT_TRUE(payload["unique text"].isUInt());
+                auto textIndex = payload["unique text"].asUInt();
+                const Json::Value& uniqueText = stringTable[textIndex];
+                ASSERT_TRUE(uniqueText.isString());
+                ASSERT_EQ(uniqueText.asString(), "gtest unique text");
+                // The duplicate unique text should have the exact same index.
+                EXPECT_EQ_JSON(payload["unique text again"], UInt, textIndex);
+                EXPECT_EQ_JSON(payload["time"], Double, ts1Double);
+
+              } else if (nameString == "Gtest special marker") {
+                EXPECT_EQ(state, S_SpecialMarker);
+                state = State(S_SpecialMarker + 1);
+                EXPECT_EQ(typeString, "markers-gtest-special");
+                EXPECT_EQ(payload.size(), 1u) << "Only 'type' in the payload";
 
               } else if (nameString == "Load 1: http://mozilla.org/") {
                 EXPECT_EQ(state, S_NetworkMarkerPayload_start);
@@ -1337,6 +1460,114 @@ TEST(GeckoProfiler, Markers)
           EXPECT_EQ(display[1u].asString(), "marker-table");
 
           ASSERT_EQ(data.size(), 0u);
+
+        } else if (nameString == "markers-gtest") {
+          EXPECT_EQ(display.size(), 7u);
+          EXPECT_EQ(display[0u].asString(), "marker-chart");
+          EXPECT_EQ(display[1u].asString(), "marker-table");
+          EXPECT_EQ(display[2u].asString(), "timeline-overview");
+          EXPECT_EQ(display[3u].asString(), "timeline-memory");
+          EXPECT_EQ(display[4u].asString(), "timeline-ipc");
+          EXPECT_EQ(display[5u].asString(), "timeline-fileio");
+          EXPECT_EQ(display[6u].asString(), "stack-chart");
+
+          // TODO Uncomment when fixed in next patch.
+          // EXPECT_EQ_JSON(schema["chartLabel"], String, "chart label");
+          EXPECT_EQ_JSON(schema["tooltipLabel"], String, "tooltip label");
+          // EXPECT_EQ_JSON(schema["tableLabel"], String, "table label");
+
+          ASSERT_EQ(data.size(), 14u);
+
+          ASSERT_TRUE(data[0u].isObject());
+          EXPECT_EQ_JSON(data[0u]["key"], String, "key with url");
+          EXPECT_TRUE(data[0u]["label"].isNull());
+          EXPECT_EQ_JSON(data[0u]["format"], String, "url");
+          EXPECT_TRUE(data[0u]["searchable"].isNull());
+
+          ASSERT_TRUE(data[1u].isObject());
+          EXPECT_EQ_JSON(data[1u]["key"], String, "key with label filePath");
+          EXPECT_EQ_JSON(data[1u]["label"], String, "label filePath");
+          EXPECT_EQ_JSON(data[1u]["format"], String, "file-path");
+          EXPECT_TRUE(data[1u]["searchable"].isNull());
+
+          ASSERT_TRUE(data[2u].isObject());
+          EXPECT_EQ_JSON(data[2u]["key"], String,
+                         "key with string not-searchable");
+          EXPECT_TRUE(data[2u]["label"].isNull());
+          EXPECT_EQ_JSON(data[2u]["format"], String, "string");
+          EXPECT_EQ_JSON(data[2u]["searchable"], Bool, false);
+
+          ASSERT_TRUE(data[3u].isObject());
+          EXPECT_EQ_JSON(data[3u]["key"], String,
+                         "key with label duration searchable");
+          EXPECT_TRUE(data[3u]["label duration"].isNull());
+          EXPECT_EQ_JSON(data[3u]["format"], String, "duration");
+          EXPECT_EQ_JSON(data[3u]["searchable"], Bool, true);
+
+          ASSERT_TRUE(data[4u].isObject());
+          EXPECT_EQ_JSON(data[4u]["key"], String, "key with time");
+          EXPECT_TRUE(data[4u]["label"].isNull());
+          EXPECT_EQ_JSON(data[4u]["format"], String, "time");
+          EXPECT_TRUE(data[4u]["searchable"].isNull());
+
+          ASSERT_TRUE(data[5u].isObject());
+          EXPECT_EQ_JSON(data[5u]["key"], String, "key with seconds");
+          EXPECT_TRUE(data[5u]["label"].isNull());
+          EXPECT_EQ_JSON(data[5u]["format"], String, "seconds");
+          EXPECT_TRUE(data[5u]["searchable"].isNull());
+
+          ASSERT_TRUE(data[6u].isObject());
+          EXPECT_EQ_JSON(data[6u]["key"], String, "key with milliseconds");
+          EXPECT_TRUE(data[6u]["label"].isNull());
+          EXPECT_EQ_JSON(data[6u]["format"], String, "milliseconds");
+          EXPECT_TRUE(data[6u]["searchable"].isNull());
+
+          ASSERT_TRUE(data[7u].isObject());
+          EXPECT_EQ_JSON(data[7u]["key"], String, "key with microseconds");
+          EXPECT_TRUE(data[7u]["label"].isNull());
+          EXPECT_EQ_JSON(data[7u]["format"], String, "microseconds");
+          EXPECT_TRUE(data[7u]["searchable"].isNull());
+
+          ASSERT_TRUE(data[8u].isObject());
+          EXPECT_EQ_JSON(data[8u]["key"], String, "key with nanoseconds");
+          EXPECT_TRUE(data[8u]["label"].isNull());
+          EXPECT_EQ_JSON(data[8u]["format"], String, "nanoseconds");
+          EXPECT_TRUE(data[8u]["searchable"].isNull());
+
+          ASSERT_TRUE(data[9u].isObject());
+          EXPECT_EQ_JSON(data[9u]["key"], String, "key with bytes");
+          EXPECT_TRUE(data[9u]["label"].isNull());
+          EXPECT_EQ_JSON(data[9u]["format"], String, "bytes");
+          EXPECT_TRUE(data[9u]["searchable"].isNull());
+
+          ASSERT_TRUE(data[10u].isObject());
+          EXPECT_EQ_JSON(data[10u]["key"], String, "key with percentage");
+          EXPECT_TRUE(data[10u]["label"].isNull());
+          EXPECT_EQ_JSON(data[10u]["format"], String, "percentage");
+          EXPECT_TRUE(data[10u]["searchable"].isNull());
+
+          ASSERT_TRUE(data[11u].isObject());
+          EXPECT_EQ_JSON(data[11u]["key"], String, "key with integer");
+          EXPECT_TRUE(data[11u]["label"].isNull());
+          EXPECT_EQ_JSON(data[11u]["format"], String, "integer");
+          EXPECT_TRUE(data[11u]["searchable"].isNull());
+
+          ASSERT_TRUE(data[12u].isObject());
+          EXPECT_EQ_JSON(data[12u]["key"], String, "key with decimal");
+          EXPECT_TRUE(data[12u]["label"].isNull());
+          EXPECT_EQ_JSON(data[12u]["format"], String, "decimal");
+          EXPECT_TRUE(data[12u]["searchable"].isNull());
+
+          ASSERT_TRUE(data[13u].isObject());
+          EXPECT_EQ_JSON(data[13u]["label"], String, "static label");
+          EXPECT_EQ_JSON(data[13u]["value"], String, "static value");
+
+        } else if (nameString == "markers-gtest-special") {
+          EXPECT_EQ(display.size(), 0u);
+          ASSERT_EQ(data.size(), 0u);
+
+        } else if (nameString == "markers-gtest-unused") {
+          ADD_FAILURE() << "Schema for GtestUnusedMarker should not be here";
 
         } else {
           ADD_FAILURE() << "Unknown marker schema '" << nameString.c_str()
