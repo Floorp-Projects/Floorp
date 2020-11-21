@@ -52,7 +52,7 @@ void GraphDriver::SetState(GraphTime aIterationStart, GraphTime aIterationEnd,
 }
 
 #ifdef DEBUG
-bool GraphDriver::InIteration() {
+bool GraphDriver::InIteration() const {
   return OnThread() || Graph()->InDriverIteration(this);
 }
 #endif
@@ -399,7 +399,7 @@ class AudioCallbackDriver::FallbackWrapper : public GraphInterface {
     MOZ_CRASH("Unexpected DeviceChanged from fallback SystemClockDriver");
   }
 #ifdef DEBUG
-  bool InDriverIteration(GraphDriver* aDriver) override {
+  bool InDriverIteration(const GraphDriver* aDriver) const override {
     return !mOwner->ThreadRunning() && mOwner->InIteration();
   }
 #endif
@@ -1229,6 +1229,11 @@ TimeDuration AudioCallbackDriver::AudioOutputLatency() {
 
   return TimeDuration::FromSeconds(static_cast<double>(latencyFrames) /
                                    mSampleRate);
+}
+
+bool AudioCallbackDriver::OnFallback() const {
+  MOZ_ASSERT(InIteration());
+  return mFallbackDriverState == FallbackDriverState::Running;
 }
 
 void AudioCallbackDriver::FallbackToSystemClockDriver() {
