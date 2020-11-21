@@ -69,12 +69,6 @@ class SearchSettings {
    */
   _searchService = null;
 
-  /*
-   * A copy of the settings so we can persist metadata for engines that
-   * are not currently active.
-   */
-  _currentSettings = null;
-
   addObservers() {
     Services.obs.addObserver(this, SearchUtils.TOPIC_ENGINE_MODIFIED);
     Services.obs.addObserver(this, SearchUtils.TOPIC_SEARCH_SERVICE);
@@ -130,7 +124,6 @@ class SearchSettings {
       Services.prefs.clearUserPref(prefName);
     }
 
-    this._currentSettings = json;
     return json;
   }
 
@@ -202,21 +195,6 @@ class SearchSettings {
     settings.version = SearchUtils.SETTINGS_VERSION;
     settings.engines = [...this._searchService._engines.values()];
     settings.metaData = this._metaData;
-
-    // Persist metadata for AppProvided engines even if they aren't currently
-    // active, this means if they become active again their settings
-    // will be restored.
-    if (this._currentSettings?.engines) {
-      for (let engine of this._currentSettings.engines) {
-        let included = settings.engines.some(e => e._name == engine._name);
-        if (engine._isAppProvided && !included) {
-          settings.engines.push(engine);
-        }
-      }
-    }
-
-    // Update the local copy.
-    this._currentSettings = settings;
 
     try {
       if (!settings.engines.length) {
