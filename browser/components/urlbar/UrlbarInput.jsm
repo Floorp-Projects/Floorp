@@ -372,7 +372,7 @@ class UrlbarInput {
     // If we're switching tabs, restore the tab's search mode.  Otherwise, if
     // the URI is valid, exit search mode.  This must happen after setting
     // proxystate above because search mode depends on it.
-    if (dueToTabSwitch) {
+    if (dueToTabSwitch && !valid) {
       this.restoreSearchModeState();
     } else if (valid) {
       this.searchMode = null;
@@ -1499,11 +1499,17 @@ class UrlbarInput {
     // Enter search mode if the browser is selected.
     if (browser == this.window.gBrowser.selectedBrowser) {
       this._updateSearchModeUI(searchMode);
-      if (searchMode && !searchMode.isPreview && !areSearchModesSame) {
-        try {
-          BrowserUsageTelemetry.recordSearchMode(searchMode);
-        } catch (ex) {
-          Cu.reportError(ex);
+      if (searchMode) {
+        // Set userTypedValue to the query string so that it's properly restored
+        // when switching back to the current tab and across sessions.
+        this.window.gBrowser.userTypedValue = this.untrimmedValue;
+        this.valueIsTyped = true;
+        if (!searchMode.isPreview && !areSearchModesSame) {
+          try {
+            BrowserUsageTelemetry.recordSearchMode(searchMode);
+          } catch (ex) {
+            Cu.reportError(ex);
+          }
         }
       }
     }
@@ -1757,12 +1763,8 @@ class UrlbarInput {
 
     this.searchMode = searchMode;
 
-    // Set userTypedValue to the payload's query string so that it's properly
-    // restored when switching back to the current tab and across sessions.
     let value = result.payload.query?.trimStart() || "";
     this._setValue(value, false);
-    this.window.gBrowser.userTypedValue = value;
-    this.valueIsTyped = true;
 
     if (startQuery) {
       this.startQuery({ allowAutofill: false });

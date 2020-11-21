@@ -187,6 +187,78 @@ add_task(async function switchTabs() {
   }
 });
 
+// Start loading a SERP from search mode then immediately switch to a new tab so
+// the SERP finishes loading in the background. Switch back to the SERP tab and
+// observe that we don't re-enter search mode despite having an entry for that
+// tab in UrlbarInput._searchModesByBrowser. See bug 1675926.
+//
+// This subtest intermittently does not test bug 1675926 (NB: this does not mean
+// it is an intermittent failure). The false-positive occurs if the SERP page
+// finishes loading before we switch tabs. We include this subtest so we have
+// one covering real-world behaviour. A subtest that is guaranteed to test this
+// behaviour that does not simulate real world behaviour is included below.
+add_task(async function slow_load() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.suggest.searches", false]],
+  });
+  const engineName = "Test";
+  let engine = await Services.search.addEngineWithDetails(engineName, {
+    template: "http://example.com/?search={searchTerms}",
+  });
+  const originalTab = gBrowser.selectedTab;
+  const newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "test",
+    fireInputEvent: true,
+  });
+  await UrlbarTestUtils.enterSearchMode(window, { engineName });
+
+  const loadPromise = BrowserTestUtils.browserLoaded(newTab.linkedBrowser);
+  // Select the search mode heuristic to load the example.com SERP.
+  EventUtils.synthesizeKey("KEY_Enter");
+  // Switch away from the tab before we let it load.
+  await BrowserTestUtils.switchTab(gBrowser, originalTab);
+  await loadPromise;
+
+  // Switch back to the search mode tab and confirm we don't restore search
+  // mode.
+  await BrowserTestUtils.switchTab(gBrowser, newTab);
+  await UrlbarTestUtils.assertSearchMode(window, null);
+
+  BrowserTestUtils.removeTab(newTab);
+  await Services.search.removeEngine(engine);
+  await SpecialPowers.popPrefEnv();
+});
+
+// Tests the same behaviour as slow_load, but in a more reliable way using
+// non-real-world behaviour.
+add_task(async function slow_load_guaranteed() {
+  const engineName = "Test";
+  let engine = await Services.search.addEngineWithDetails(engineName, {
+    template: "http://example.com/?search={searchTerms}",
+  });
+  const backgroundTab = BrowserTestUtils.addTab(gBrowser);
+
+  // Simulate a tab that was in search mode, loaded a SERP, then was switched
+  // away from before setURI was called.
+  backgroundTab.ownerGlobal.gURLBar.searchMode = { engineName };
+  let loadPromise = BrowserTestUtils.browserLoaded(backgroundTab.linkedBrowser);
+  BrowserTestUtils.loadURI(
+    backgroundTab.linkedBrowser,
+    "http://example.com/?search=test"
+  );
+  await loadPromise;
+
+  // Switch to the background mode tab and confirm we don't restore search mode.
+  await BrowserTestUtils.switchTab(gBrowser, backgroundTab);
+  await UrlbarTestUtils.assertSearchMode(window, null);
+
+  BrowserTestUtils.removeTab(backgroundTab);
+  await Services.search.removeEngine(engine);
+});
+
 // Enters search mode by typing a restriction char with no search string.
 // Search mode and the search string should be restored after switching back to
 // the tab.

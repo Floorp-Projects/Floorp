@@ -26,9 +26,9 @@ add_task(async function setURI() {
   for (let test of [
     // initialURL, searchString, url, expectSearchMode
 
-    ["about:blank", null, null, true],
-    ["about:blank", null, "about:blank", true],
-    ["about:blank", null, "http://www.example.com/", false],
+    ["about:blank", "", null, true],
+    ["about:blank", "", "about:blank", true],
+    ["about:blank", "", "http://www.example.com/", true],
 
     ["about:blank", "about:blank", null, false],
     ["about:blank", "about:blank", "about:blank", false],
@@ -42,9 +42,9 @@ add_task(async function setURI() {
     ["about:blank", "not a URL", "about:blank", true],
     ["about:blank", "not a URL", "http://www.example.com/", true],
 
-    ["http://www.example.com/", null, null, false],
-    ["http://www.example.com/", null, "about:blank", true],
-    ["http://www.example.com/", null, "http://www.example.com/", false],
+    ["http://www.example.com/", "", null, true],
+    ["http://www.example.com/", "", "about:blank", true],
+    ["http://www.example.com/", "", "http://www.example.com/", true],
 
     ["http://www.example.com/", "about:blank", null, false],
     ["http://www.example.com/", "about:blank", "about:blank", false],
@@ -105,8 +105,8 @@ async function doSetURITest(initialURL, searchString, url, expectSearchMode) {
     await UrlbarTestUtils.promisePopupClose(window);
     Assert.strictEqual(
       gBrowser.selectedBrowser.userTypedValue,
-      searchString || null,
-      `userTypedValue should be ${searchString || null}`
+      searchString,
+      `userTypedValue should be ${searchString}`
     );
 
     // Call setURI.
