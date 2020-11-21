@@ -2564,11 +2564,38 @@ class nsDisplayItem : public nsDisplayItemBase {
   nsDisplayItem() = delete;
   nsDisplayItem(const nsDisplayItem&) = delete;
 
-  virtual void RestoreState() {
+  /**
+   * Roll back side effects carried out by processing the display list.
+   *
+   * @return true if the rollback actually modified anything, to help the caller
+   * decide whether to invalidate cached information about this node.
+   */
+  virtual bool RestoreState() {
+    if (mClipChain == mState.mClipChain && mClip == mState.mClip &&
+        !mItemFlags.contains(ItemFlag::DisableSubpixelAA)) {
+      return false;
+    }
+
     mClipChain = mState.mClipChain;
     mClip = mState.mClip;
     mItemFlags -= ItemFlag::DisableSubpixelAA;
+    return true;
   }
+
+  /**
+   * Invalidate cached information that depends on this node's contents, after
+   * a mutation of those contents.
+   *
+   * Specifically, if you mutate an |nsDisplayItem| in a way that would change
+   * the WebRender display list items generated for it, you should call this
+   * method.
+   *
+   * If a |RestoreState| method exists to restore some piece of state, that's a
+   * good indication that modifications to said state should be accompanied by a
+   * call to this method. Opacity flattening's effects on
+   * |nsDisplayBackgroundColor| items are one example.
+   */
+  virtual void InvalidateItemCacheEntry() {}
 
   struct HitTestState {
     explicit HitTestState() = default;
@@ -2749,8 +2776,8 @@ class nsDisplayItem : public nsDisplayItemBase {
   }
 
   /**
-   * This function is called when an item's list of children has been omdified
-   * by RetaineDisplayListBuilder.
+   * This function is called when an item's list of children has been modified
+   * by RetainedDisplayListBuilder.
    */
   virtual void InvalidateCachedChildInfo(nsDisplayListBuilder* aBuilder) {}
 
@@ -3264,6 +3291,13 @@ class nsPaintedDisplayItem : public nsDisplayItem {
    * |DisplayItemCache| has assigned a cache slot for the item.
    */
   mozilla::Maybe<uint16_t>& CacheIndex() { return mCacheIndex; }
+
+  void InvalidateItemCacheEntry() override {
+    // |nsPaintedDisplayItem|s may have |DisplayItemCache| entries
+    // that no longer match after a mutation. The cache will notice
+    // on its own that the entry is no longer in use, and free it.
+    mCacheIndex = mozilla::Nothing();
+  }
 
  protected:
   nsPaintedDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
@@ -4923,9 +4957,13 @@ class nsDisplayBackgroundColor : public nsPaintedDisplayItem {
 
   NS_DISPLAY_DECL_NAME("BackgroundColor", TYPE_BACKGROUND_COLOR)
 
-  void RestoreState() override {
-    nsPaintedDisplayItem::RestoreState();
+  bool RestoreState() override {
+    if (!nsPaintedDisplayItem::RestoreState() && mColor == mState.mColor) {
+      return false;
+    }
+
     mColor = mState.mColor;
+    return true;
   }
 
   bool HasBackgroundClipText() const {
@@ -5086,10 +5124,15 @@ class nsDisplayBoxShadowOuter final : public nsPaintedDisplayItem {
 
   NS_DISPLAY_DECL_NAME("BoxShadowOuter", TYPE_BOX_SHADOW_OUTER)
 
-  void RestoreState() override {
-    nsPaintedDisplayItem::RestoreState();
+  bool RestoreState() override {
+    if (!nsPaintedDisplayItem::RestoreState() && mOpacity == 1.0f &&
+        mVisibleRegion.IsEmpty()) {
+      return false;
+    }
+
     mVisibleRegion.SetEmpty();
     mOpacity = 1.0f;
+    return true;
   }
 
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
@@ -5144,9 +5187,13 @@ class nsDisplayBoxShadowInner : public nsPaintedDisplayItem {
 
   NS_DISPLAY_DECL_NAME("BoxShadowInner", TYPE_BOX_SHADOW_INNER)
 
-  void RestoreState() override {
-    nsPaintedDisplayItem::RestoreState();
+  bool RestoreState() override {
+    if (!nsPaintedDisplayItem::RestoreState() && mVisibleRegion.IsEmpty()) {
+      return false;
+    }
+
     mVisibleRegion.SetEmpty();
+    return true;
   }
 
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
@@ -5609,9 +5656,13 @@ class nsDisplayOpacity : public nsDisplayWrapList {
 
   NS_DISPLAY_DECL_NAME("Opacity", TYPE_OPACITY)
 
-  void RestoreState() override {
-    nsDisplayWrapList::RestoreState();
+  bool RestoreState() override {
+    if (!nsDisplayWrapList::RestoreState() && mOpacity == mState.mOpacity) {
+      return false;
+    }
+
     mOpacity = mState.mOpacity;
+    return true;
   }
 
   void InvalidateCachedChildInfo(nsDisplayListBuilder* aBuilder) override {
@@ -6445,9 +6496,13 @@ class nsDisplayEffectsBase : public nsDisplayWrapList {
   void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) override;
 
-  void RestoreState() override {
-    nsDisplayWrapList::RestoreState();
+  bool RestoreState() override {
+    if (!nsDisplayWrapList::RestoreState() && !mHandleOpacity) {
+      return false;
+    }
+
     mHandleOpacity = false;
+    return true;
   }
 
   bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
@@ -6777,9 +6832,13 @@ class nsDisplayTransform : public nsDisplayHitTestInfoBase {
 
   NS_DISPLAY_DECL_NAME("nsDisplayTransform", TYPE_TRANSFORM)
 
-  void RestoreState() override {
-    nsDisplayHitTestInfoBase::RestoreState();
+  bool RestoreState() override {
+    if (!nsDisplayHitTestInfoBase::RestoreState() && !mShouldFlatten) {
+      return false;
+    }
+
     mShouldFlatten = false;
+    return true;
   }
 
   void UpdateBounds(nsDisplayListBuilder* aBuilder) override;
@@ -7218,10 +7277,15 @@ class nsDisplayText final : public nsPaintedDisplayItem {
 
   NS_DISPLAY_DECL_NAME("Text", TYPE_TEXT)
 
-  void RestoreState() final {
-    nsPaintedDisplayItem::RestoreState();
+  bool RestoreState() final {
+    if (!nsPaintedDisplayItem::RestoreState() && mIsFrameSelected.isNothing() &&
+        mOpacity == 1.0f) {
+      return false;
+    }
+
     mIsFrameSelected.reset();
     mOpacity = 1.0f;
+    return true;
   }
 
   nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const final {
