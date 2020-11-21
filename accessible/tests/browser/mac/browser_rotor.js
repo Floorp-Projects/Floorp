@@ -1040,11 +1040,10 @@ addAccessibleTask(
       "AXUIElementsForSearchPredicate",
       NSDictionary(searchPred)
     );
-    is(results.length, 1, "WebArea is before root group");
     is(
-      results[0].getAttributeValue("AXRole"),
-      "AXWebArea",
-      "Got web area accessible"
+      results.length,
+      0,
+      "Searching backwards from root group should yield no results"
     );
 
     const rootGroup = webArea.getAttributeValue("AXChildren")[0];
