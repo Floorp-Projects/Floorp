@@ -14,11 +14,11 @@ import React from "react";
 import { Search } from "content-src/components/Search/Search";
 import { Sections } from "content-src/components/Sections/Sections";
 
-const PrefsButton = props => (
+export const PrefsButton = ({ onClick, icon }) => (
   <div className="prefs-button">
     <button
-      className="icon icon-settings"
-      onClick={props.onClick}
+      className={`icon ${icon || "icon-settings"}`}
+      onClick={onClick}
       data-l10n-id="newtab-settings-button"
     />
   </div>
@@ -150,6 +150,9 @@ export class BaseContent extends React.PureComponent {
     const { initialized } = App;
     const prefs = props.Prefs.values;
 
+    // Values from experiment data
+    const { prefsButtonIcon } = prefs.featureConfig || {};
+
     const isDiscoveryStream =
       props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
     let filteredSections = props.Sections.filter(
@@ -217,11 +220,15 @@ export class BaseContent extends React.PureComponent {
             <ConfirmDialog />
           </main>
         </div>
-        {canShowCustomizationMenu ? (
-          <PrefsButton onClick={this.openCustomizationMenu} />
-        ) : (
-          <PrefsButton onClick={this.openPreferences} />
-        )}
+        <PrefsButton
+          onClick={
+            canShowCustomizationMenu
+              ? this.openCustomizationMenu
+              : this.openPreferences
+          }
+          icon={prefsButtonIcon}
+        />
+
         {canShowCustomizationMenu && this.state.customizeMenuVisible && (
           <CustomizeMenu onClose={this.closeCustomizationMenu} />
         )}
