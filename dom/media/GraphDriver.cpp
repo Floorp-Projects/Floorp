@@ -966,6 +966,9 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     result = IterationResult::CreateStillProcessing();
   }
 
+  MOZ_ASSERT(mBuffer.Available() == 0,
+             "The graph should have filled the buffer");
+
   mBuffer.BufferFilled();
 
 #ifdef MOZ_SAMPLE_TYPE_FLOAT32
