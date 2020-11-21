@@ -3095,7 +3095,7 @@ AbstractThread* MediaTrackGraph::AbstractMainThread() {
 }
 
 #ifdef DEBUG
-bool MediaTrackGraphImpl::InDriverIteration(GraphDriver* aDriver) {
+bool MediaTrackGraphImpl::InDriverIteration(const GraphDriver* aDriver) const {
   return aDriver->OnThread() ||
          (mGraphRunner && mGraphRunner->InDriverIteration(aDriver));
 }
@@ -3447,7 +3447,8 @@ void MediaTrackGraphImpl::NotifyWhenGraphStarted(
       // ControlMessage.
       MediaTrackGraphImpl* graphImpl = mMediaTrack->GraphImpl();
       if (graphImpl->CurrentDriver()->AsAudioCallbackDriver() &&
-          graphImpl->CurrentDriver()->ThreadRunning()) {
+          graphImpl->CurrentDriver()->ThreadRunning() &&
+          !graphImpl->CurrentDriver()->AsAudioCallbackDriver()->OnFallback()) {
         // Avoid Resolve's locking on the graph thread by doing it on main.
         graphImpl->Dispatch(NS_NewRunnableFunction(
             "MediaTrackGraphImpl::NotifyWhenGraphStarted::Resolver",

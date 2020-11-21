@@ -46,14 +46,14 @@ class GraphRunner final : public Runnable {
   /**
    * Returns true if called on mThread.
    */
-  bool OnThread();
+  bool OnThread() const;
 
 #ifdef DEBUG
   /**
    * Returns true if called on mThread, and aDriver was the driver that called
    * OneIteration() last.
    */
-  bool InDriverIteration(GraphDriver* aDriver);
+  bool InDriverIteration(const GraphDriver* aDriver) const;
 #endif
 
  private:
