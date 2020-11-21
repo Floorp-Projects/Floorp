@@ -118,7 +118,8 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
             ListFlags aFlags = ListFlags()) const final;
 #endif
 
-  LogicalSides GetLogicalSkipSides() const final;
+  LogicalSides GetLogicalSkipSides(
+      const Maybe<SkipSidesDuringReflow>&) const final;
 
   static void ReleaseGlobals() {
     if (gIconLoad) {
