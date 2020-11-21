@@ -269,7 +269,8 @@ class nsTableRowFrame : public nsContainerFrame {
                             bool aBorderCollapse,
                             TableCellReflowInput& aReflowInput);
 
-  LogicalSides GetLogicalSkipSides() const override;
+  LogicalSides GetLogicalSkipSides(
+      const Maybe<SkipSidesDuringReflow>&) const override;
 
   // row-specific methods
 

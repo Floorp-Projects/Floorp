@@ -570,7 +570,8 @@ class nsTableFrame : public nsContainerFrame {
 
   void InitChildReflowInput(ReflowInput& aReflowInput);
 
-  LogicalSides GetLogicalSkipSides() const override;
+  LogicalSides GetLogicalSkipSides(
+      const Maybe<SkipSidesDuringReflow>& = Nothing()) const override;
 
   void IterateBCBorders(BCPaintBorderAction& aAction, const nsRect& aDirtyRect);
 

@@ -1879,8 +1879,8 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
   }
 
   if (NS_UNCONSTRAINEDSIZE != aReflowInput.ComputedBSize()) {
-    // Note: We don't use blockEndEdgeOfChildren because it includes the
-    // previous margin.
+    // Note: We don't use blockEndEdgeOfChildren because it inclues the previous
+    // margin.
     nscoord contentBSize = aState.mBCoord + nonCarriedOutBDirMargin;
     finalSize.BSize(wm) =
         ComputeFinalBSize(aReflowInput, aState.mReflowStatus, contentBSize,
@@ -3769,12 +3769,9 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
       // input for ColumnSet so that ColumnSet can use it to compute its max
       // column block size.
       if (frame->IsColumnSetFrame()) {
-        if (availSize.BSize(wm) != NS_UNCONSTRAINEDSIZE &&
-            StyleBorder()->mBoxDecorationBreak ==
-                StyleBoxDecorationBreak::Clone) {
+        if (availSize.BSize(wm) != NS_UNCONSTRAINEDSIZE) {
           // If the available size is constrained, we need to subtract
-          // ColumnSetWrapper's block-end border and padding, if we know we're
-          // going to use it.
+          // ColumnSetWrapper's block-end border and padding.
           availSize.BSize(wm) -= aState.BorderPadding().BEnd(wm);
         }
 
@@ -7668,12 +7665,13 @@ nscoord nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
   NS_ASSERTION(!(IsTrueOverflowContainer() && computedBSizeLeftOver),
                "overflow container must not have computedBSizeLeftOver");
 
+  const nsReflowStatus statusFromChildren = aStatus;
   const nscoord availBSize = aReflowInput.AvailableBSize();
   nscoord finalBSize = NSCoordSaturatingAdd(
       NSCoordSaturatingAdd(aBorderPadding.BStart(wm), computedBSizeLeftOver),
       aBorderPadding.BEnd(wm));
 
-  if (aStatus.IsIncomplete() && finalBSize <= availBSize) {
+  if (statusFromChildren.IsIncomplete() && finalBSize <= availBSize) {
     // We used up all of our element's remaining computed block-size on this
     // page/column, but our children are incomplete. Set aStatus to
     // overflow-incomplete.
@@ -7696,7 +7694,7 @@ nscoord nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
     return std::min(finalBSize, aBEndEdgeOfChildren);
   }
 
-  if (aStatus.IsComplete()) {
+  if (statusFromChildren.IsComplete()) {
     if (computedBSizeLeftOver > 0 && NS_UNCONSTRAINEDSIZE != availBSize &&
         finalBSize > availBSize) {
       if (ShouldAvoidBreakInside(aReflowInput)) {

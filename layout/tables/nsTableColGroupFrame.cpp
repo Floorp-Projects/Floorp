@@ -297,7 +297,8 @@ void nsTableColGroupFrame::RemoveFrame(ChildListID aListID,
   }
 }
 
-nsIFrame::LogicalSides nsTableColGroupFrame::GetLogicalSkipSides() const {
+nsIFrame::LogicalSides nsTableColGroupFrame::GetLogicalSkipSides(
+    const Maybe<SkipSidesDuringReflow>&) const {
   LogicalSides skip(mWritingMode);
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                    StyleBoxDecorationBreak::Clone)) {

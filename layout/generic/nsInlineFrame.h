@@ -148,7 +148,8 @@ class nsInlineFrame : public nsContainerFrame {
       : nsContainerFrame(aStyle, aPresContext, aID),
         mBaseline(NS_INTRINSIC_ISIZE_UNKNOWN) {}
 
-  LogicalSides GetLogicalSkipSides() const override;
+  LogicalSides GetLogicalSkipSides(
+      const Maybe<SkipSidesDuringReflow>&) const override;
 
   void ReflowFrames(nsPresContext* aPresContext,
                     const ReflowInput& aReflowInput, InlineReflowInput& rs,
