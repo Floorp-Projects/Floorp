@@ -42,10 +42,9 @@ MockCubebStream::MockCubebStream(cubeb* aContext, cubeb_devid aInputDevice,
 MockCubebStream::~MockCubebStream() = default;
 
 int MockCubebStream::Start() {
-  mStateCallback(reinterpret_cast<cubeb_stream*>(this), mUserPtr,
-                 CUBEB_STATE_STARTED);
+  mStateCallback(AsCubebStream(), mUserPtr, CUBEB_STATE_STARTED);
   mStreamStop = false;
-  reinterpret_cast<MockCubeb*>(context)->StartStream(this);
+  MockCubeb::AsMock(context)->StartStream(this);
   return CUBEB_OK;
 }
 
@@ -53,13 +52,20 @@ int MockCubebStream::Stop() {
   mOutputVerificationEvent.Notify(MakeTuple(
       mAudioVerifier.PreSilenceSamples(), mAudioVerifier.EstimatedFreq(),
       mAudioVerifier.CountDiscontinuities()));
-  int rv = reinterpret_cast<MockCubeb*>(context)->StopStream(this);
+  int rv = MockCubeb::AsMock(context)->StopStream(this);
   mStreamStop = true;
   if (rv == CUBEB_OK) {
-    mStateCallback(reinterpret_cast<cubeb_stream*>(this), mUserPtr,
-                   CUBEB_STATE_STOPPED);
+    mStateCallback(AsCubebStream(), mUserPtr, CUBEB_STATE_STOPPED);
   }
   return rv;
+}
+
+cubeb_stream* MockCubebStream::AsCubebStream() {
+  return reinterpret_cast<cubeb_stream*>(this);
+}
+
+MockCubebStream* MockCubebStream::AsMock(cubeb_stream* aStream) {
+  return reinterpret_cast<MockCubebStream*>(aStream);
 }
 
 cubeb_devid MockCubebStream::GetInputDeviceID() const { return mInputDeviceID; }
@@ -115,7 +121,7 @@ void MockCubebStream::Process10Ms() {
   if (mInputParams.rate) {
     mAudioGenerator.GenerateInterleaved(mInputBuffer, nrFrames);
   }
-  cubeb_stream* stream = reinterpret_cast<cubeb_stream*>(this);
+  cubeb_stream* stream = AsCubebStream();
   const long outframes =
       mDataCallback(stream, mUserPtr, mHasInput ? mInputBuffer : nullptr,
                     mHasOutput ? mOutputBuffer : nullptr, nrFrames);
@@ -137,10 +143,9 @@ void MockCubebStream::Process10Ms() {
     mForceErrorState = false;
     // Let the audio thread (this thread!) run to completion before
     // being released, by joining and releasing on main.
-    NS_DispatchBackgroundTask(NS_NewRunnableFunction(
-        __func__, [cubeb = reinterpret_cast<MockCubeb*>(context), this] {
-          cubeb->StopStream(this);
-        }));
+    NS_DispatchBackgroundTask(
+        NS_NewRunnableFunction(__func__, [cubeb = MockCubeb::AsMock(context),
+                                          this] { cubeb->StopStream(this); }));
     mStateCallback(stream, mUserPtr, CUBEB_STATE_ERROR);
     mErrorForcedEvent.Notify();
     mStreamStop = true;
@@ -153,6 +158,10 @@ MockCubeb::MockCubeb() : ops(&mock_ops) {}
 MockCubeb::~MockCubeb() { MOZ_ASSERT(!mFakeAudioThread); };
 
 cubeb* MockCubeb::AsCubebContext() { return reinterpret_cast<cubeb*>(this); }
+
+MockCubeb* MockCubeb::AsMock(cubeb* aContext) {
+  return reinterpret_cast<MockCubeb*>(aContext);
+}
 
 int MockCubeb::EnumerateDevices(cubeb_device_type aType,
                                 cubeb_device_collection* collection) {
@@ -297,14 +306,14 @@ int MockCubeb::StreamInit(cubeb* aContext, cubeb_stream** aStream,
   MockCubebStream* mockStream = new MockCubebStream(
       aContext, aInputDevice, aInputStreamParams, aOutputDevice,
       aOutputStreamParams, aDataCallback, aStateCallback, aUserPtr);
-  *aStream = reinterpret_cast<cubeb_stream*>(mockStream);
+  *aStream = mockStream->AsCubebStream();
   mStreamInitEvent.Notify(mockStream);
   return CUBEB_OK;
 }
 
 void MockCubeb::StreamDestroy(cubeb_stream* aStream) {
   mStreamDestroyEvent.Notify();
-  MockCubebStream* mockStream = reinterpret_cast<MockCubebStream*>(aStream);
+  MockCubebStream* mockStream = MockCubebStream::AsMock(aStream);
   delete mockStream;
 }
 
