@@ -42,9 +42,7 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
       mBorderPadding(
           mReflowInput
               .ComputedLogicalBorderPadding(mReflowInput.GetWritingMode())
-              .ApplySkipSides(aFrame->GetLogicalSkipSides(
-                  Some(nsIFrame::SkipSidesDuringReflow{aReflowInput,
-                                                       aConsumedBSize})))),
+              .ApplySkipSides(aFrame->PreReflowBlockLevelLogicalSkipSides())),
       mPrevBEndMargin(),
       mLineNumber(0),
       mFloatBreakType(StyleClear::None),
@@ -120,8 +118,11 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
     // We are in a paginated situation. The block-end edge is just inside the
     // block-end border and padding. The content area block-size doesn't include
     // either border or padding edge.
-    mContentArea.BSize(wm) = std::max(
-        0, aReflowInput.AvailableBSize() - mBorderPadding.BStartEnd(wm));
+    auto bp = aFrame->StyleBorder()->mBoxDecorationBreak ==
+                      StyleBoxDecorationBreak::Clone
+                  ? mBorderPadding.BStartEnd(wm)
+                  : mBorderPadding.BStart(wm);
+    mContentArea.BSize(wm) = std::max(0, aReflowInput.AvailableBSize() - bp);
   } else {
     // When we are not in a paginated situation, then we always use a
     // unconstrained block-size.
