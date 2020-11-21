@@ -222,7 +222,7 @@ MochiKit.Base.update(MochiKit.Signal.Event.prototype, {
                 shift+1 kp      33
 
                 Safari key event behavior:
-                (Safari sets charCode and keyCode to something crazy for
+                (Safari sets charCode and keyCode to something weird for
                 special keys.)
                 key     event   charCode    keyCode
                 DOWN    ku,kd   63233       40

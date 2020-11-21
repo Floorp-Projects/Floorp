@@ -7,7 +7,7 @@
  * Test that if the "privileged about content process" crashes, that it
  * drops its internal reference to the "privileged about content process"
  * process manager, and that a subsequent restart of that process type
- * results in a new cached document load. Also tests that crashing of
+ * results in a dynamic document load. Also tests that crashing of
  * any other content process type doesn't clear the process manager
  * reference.
  */
@@ -24,11 +24,20 @@ add_task(async function test_process_crash() {
     );
   });
 
-  let latestProcManager = AboutHomeStartupCache._procManager;
-
   await BrowserTestUtils.withNewTab("about:home", async browser => {
-    await ensureCachedAboutHome(browser);
+    // The cache should still be considered "valid and used", since it was
+    // used successfully before the crash.
+    await ensureDynamicAboutHome(
+      browser,
+      AboutHomeStartupCache.CACHE_RESULT_SCALARS.VALID_AND_USED
+    );
+
+    // Now simulate a restart to attach the AboutHomeStartupCache to
+    // the new privileged about content process.
+    await simulateRestart(browser);
   });
+
+  let latestProcManager = AboutHomeStartupCache._procManager;
 
   await BrowserTestUtils.withNewTab("http://example.com", async browser => {
     await BrowserTestUtils.crashFrame(browser);

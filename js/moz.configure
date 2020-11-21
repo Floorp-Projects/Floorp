@@ -742,17 +742,13 @@ set_define("ENABLE_SHARED_MEMORY", enable_shared_memory)
 # Support for WebAssembly SIMD
 # =====================================================
 
-# Currently off by default for ARM64 (whether simulator or hardware)
-# and not properly supported by Cranelift, but can be enabled so as
-# to be tested with baseline.
-
 
 @depends("--enable-jit", "--enable-simulator", target)
 def default_wasm_simd(jit_enabled, simulator, target):
     if not jit_enabled or simulator:
         return
 
-    if target.cpu in ("x86_64", "x86"):
+    if target.cpu in ("x86_64", "x86", "aarch64"):
         return True
 
 

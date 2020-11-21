@@ -10,31 +10,28 @@
 #include "mozilla/Components.h"
 #include "nsIClassInfoImpl.h"
 
-namespace mozilla {
-namespace glean {
+namespace mozilla::glean {
 
 NS_IMPL_CLASSINFO(GleanCounter, nullptr, 0, {0})
 NS_IMPL_ISUPPORTS_CI(GleanCounter, nsIGleanCounter)
 
 NS_IMETHODIMP
-GleanCounter::Add(uint32_t amount, JSContext* cx) {
-  this->mCounter.Add(amount);
+GleanCounter::Add(uint32_t aAmount) {
+  this->mCounter.Add(aAmount);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GleanCounter::TestHasValue(const nsACString& aStorageName, JSContext* cx,
-                           bool* result) {
-  *result = this->mCounter.TestHasValue(PromiseFlatCString(aStorageName).get());
+GleanCounter::TestGetValue(const nsACString& aStorageName,
+                           JS::MutableHandleValue aResult) {
+  auto result =
+      this->mCounter.TestGetValue(PromiseFlatCString(aStorageName).get());
+  if (result.isNothing()) {
+    aResult.set(JS::UndefinedValue());
+  } else {
+    aResult.set(JS::Int32Value(result.value()));
+  }
   return NS_OK;
 }
 
-NS_IMETHODIMP
-GleanCounter::TestGetValue(const nsACString& aStorageName, JSContext* cx,
-                           int32_t* result) {
-  *result = this->mCounter.TestGetValue(PromiseFlatCString(aStorageName).get());
-  return NS_OK;
-}
-
-}  // namespace glean
-}  // namespace mozilla
+}  // namespace mozilla::glean

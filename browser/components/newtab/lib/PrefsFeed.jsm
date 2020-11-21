@@ -23,10 +23,17 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/AppConstants.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExperimentAPI",
+  "resource://messaging-system/experiments/ExperimentAPI.jsm"
+);
+
 this.PrefsFeed = class PrefsFeed {
   constructor(prefMap) {
     this._prefMap = prefMap;
     this._prefs = new Prefs();
+    this.onExperimentUpdated = this.onExperimentUpdated.bind(this);
   }
 
   onPrefChanged(name, value) {
@@ -62,8 +69,67 @@ this.PrefsFeed = class PrefsFeed {
     this._prefMap.set(key, { value });
   }
 
+  /**
+   * Combine default values with experiment values for
+   * the feature config.
+   * */
+  getFeatureConfigFromExperimentData(experimentData) {
+    return {
+      // Icon that shows up in the corner to link to preferences
+      prefsButtonIcon: "icon-settings",
+
+      // Override defaults with any experiment values, if any exist.
+      ...(experimentData?.branch?.feature?.value || {}),
+    };
+  }
+
+  /**
+   * Helper for initializing experiment and feature config data in .init()
+   * */
+  addExperimentDataToValues(values) {
+    let experimentData;
+    try {
+      experimentData = ExperimentAPI.getExperiment({
+        featureId: "newtab",
+      });
+    } catch (e) {
+      Cu.reportError(e);
+    }
+    values.experimentData = experimentData;
+    values.featureConfig = this.getFeatureConfigFromExperimentData(
+      experimentData
+    );
+  }
+
+  /**
+   * Handler for when experiment data updates.
+   */
+  onExperimentUpdated(event, experimentData) {
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.PREF_CHANGED,
+        data: { name: "experimentData", value: experimentData },
+      })
+    );
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.PREF_CHANGED,
+        data: {
+          name: "featureConfig",
+          value: this.getFeatureConfigFromExperimentData(experimentData),
+        },
+      })
+    );
+  }
+
   init() {
     this._prefs.observeBranch(this);
+    ExperimentAPI.on(
+      "update",
+      { featureId: "newtab" },
+      this.onExperimentUpdated
+    );
+
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
 
     // Get the initial value of each activity stream pref
@@ -111,6 +177,8 @@ this.PrefsFeed = class PrefsFeed {
       value: handoffToAwesomebarPrefValue,
     });
 
+    this.addExperimentDataToValues(values);
+
     this._setBoolPref(values, "newNewtabExperience.enabled", false);
     this._setBoolPref(values, "customizationMenu.enabled", false);
     this._setBoolPref(values, "logowordmark.alwaysVisible", false);
@@ -143,6 +211,7 @@ this.PrefsFeed = class PrefsFeed {
 
   removeListeners() {
     this._prefs.ignoreBranch(this);
+    ExperimentAPI.off(this.onExperimentUpdated);
   }
 
   async _setIndexedDBPref(id, value) {

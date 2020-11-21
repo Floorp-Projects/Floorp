@@ -1001,6 +1001,8 @@ const nsAString& GfxDriverInfo::GetDriverVendor(DriverVendor id) {
     DECLARE_DRIVER_VENDOR_ID(MesaUnknown, "mesa/unknown");
     DECLARE_DRIVER_VENDOR_ID(MesaNouveau, "mesa/nouveau");
     DECLARE_DRIVER_VENDOR_ID(NonMesaAll, "non-mesa/all");
+    DECLARE_DRIVER_VENDOR_ID(HardwareMesaAll, "mesa/hw-all");
+    DECLARE_DRIVER_VENDOR_ID(SoftwareMesaAll, "mesa/sw-all");
     case DriverVendor::Max:  // Suppress a warning.
       DECLARE_DRIVER_VENDOR_ID(All, "");
   }

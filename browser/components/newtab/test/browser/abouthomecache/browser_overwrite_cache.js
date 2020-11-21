@@ -22,6 +22,7 @@ add_task(async function test_overwrite_cache() {
         </head>
         <body>
           <h1 id="${TEST_ID}">Something new</h1>
+          <div id="root"></div>
         </body>
         <script src="about:home?jscache"></script>
       </html>`,

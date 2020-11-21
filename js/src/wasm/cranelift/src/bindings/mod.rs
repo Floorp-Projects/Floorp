@@ -25,8 +25,9 @@ use cranelift_codegen::ir::immediates::{Ieee32, Ieee64};
 use cranelift_codegen::ir::{self, InstBuilder, SourceLoc};
 use cranelift_codegen::isa;
 
-use cranelift_wasm::{wasmparser, FuncIndex, GlobalIndex, SignatureIndex, TableIndex, TypeIndex,
-                     WasmResult};
+use cranelift_wasm::{
+    wasmparser, FuncIndex, GlobalIndex, SignatureIndex, TableIndex, TypeIndex, WasmResult,
+};
 
 use crate::compile;
 use crate::utils::BasicError;
@@ -54,6 +55,7 @@ fn typecode_to_type(type_code: TypeCode) -> WasmResult<Option<ir::Type>> {
         TypeCode::I64 => Ok(Some(ir::types::I64)),
         TypeCode::F32 => Ok(Some(ir::types::F32)),
         TypeCode::F64 => Ok(Some(ir::types::F64)),
+        TypeCode::V128 => Ok(Some(ir::types::I8X16)),
         TypeCode::FuncRef => Ok(Some(REF_TYPE)),
         TypeCode::ExternRef => Ok(Some(REF_TYPE)),
         TypeCode::BlockVoid => Ok(None),
@@ -92,7 +94,7 @@ impl GlobalDesc {
         unsafe { low_level::global_isIndirect(self.0) }
     }
 
-    /// Insert an instruction at `pos` that materialized the constant value.
+    /// Insert an instruction at `pos` that materializes the constant value.
     pub fn emit_constant(self, pos: &mut FuncCursor) -> WasmResult<ir::Value> {
         unsafe {
             let v = low_level::global_constantValue(self.0);
@@ -101,6 +103,14 @@ impl GlobalDesc {
                 TypeCode::I64 => Ok(pos.ins().iconst(ir::types::I64, v.u.i64)),
                 TypeCode::F32 => Ok(pos.ins().f32const(Ieee32::with_bits(v.u.i32 as u32))),
                 TypeCode::F64 => Ok(pos.ins().f64const(Ieee64::with_bits(v.u.i64 as u64))),
+                TypeCode::V128 => {
+                    let c = pos
+                        .func
+                        .dfg
+                        .constants
+                        .insert(ir::ConstantData::from(&v.u.v128 as &[u8]));
+                    Ok(pos.ins().vconst(ir::types::I8X16, c))
+                }
                 TypeCode::NullableRef | TypeCode::ExternRef | TypeCode::FuncRef => {
                     assert!(v.u.r as usize == 0);
                     Ok(pos.ins().null(REF_TYPE))
@@ -196,6 +206,7 @@ fn typecode_to_parser_type(ty: TypeCode) -> wasmparser::Type {
         TypeCode::I64 => wasmparser::Type::I64,
         TypeCode::F32 => wasmparser::Type::F32,
         TypeCode::F64 => wasmparser::Type::F64,
+        TypeCode::V128 => wasmparser::Type::V128,
         TypeCode::FuncRef => wasmparser::Type::FuncRef,
         TypeCode::ExternRef => wasmparser::Type::ExternRef,
         TypeCode::BlockVoid => wasmparser::Type::EmptyBlockType,

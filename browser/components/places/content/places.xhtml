@@ -356,9 +356,7 @@
     </tree>
     <splitter collapse="none" persist="state"></splitter>
     <vbox id="contentView" flex="4">
-      <deck id="placesViewsDeck"
-            selectedIndex="0"
-            flex="1">
+      <vbox id="placesViewsBox" flex="1">
         <tree id="placeContent"
               class="plain placesTree"
               context="placesContext"
@@ -408,9 +406,9 @@
                      seltype="multiple"
                      id="downloadsRichListBox"
                      context="downloadsContextMenu"/>
-      </deck>
-      <deck id="detailsDeck" style="height: 11em;">
-        <vbox id="itemsCountBox" align="center">
+      </vbox>
+      <vbox id="detailsPane" style="height: 11em;">
+        <vbox id="itemsCountBox" align="center" flex="1" hidden="true">
           <spacer flex="3"/>
           <label id="itemsCountText"/>
           <spacer flex="1"/>
@@ -419,10 +417,10 @@
           </description>
           <spacer flex="3"/>
         </vbox>
-        <vbox id="infoBox">
+        <vbox id="infoBox" flex="1">
 #include editBookmarkPanel.inc.xhtml
         </vbox>
-      </deck>
+      </vbox>
     </vbox>
   </hbox>
 </window>

@@ -2384,6 +2384,76 @@ bool BytecodeEmitter::defineHoistedTopLevelFunctions(ParseNode* body) {
   return emitHoistedFunctionsInList(&body->as<ListNode>());
 }
 
+// For Global and sloppy-Eval scripts, this performs most of the steps of the
+// spec's [GlobalDeclarationInstantiation] and [EvalDeclarationInstantiation]
+// operations.
+//
+// Note that while strict-Eval is handled in the same part of the spec, it never
+// fails for global-redeclaration checks so those scripts initialize directly in
+// their bytecode.
+bool BytecodeEmitter::emitDeclarationInstantiation(ParseNode* body) {
+  if (sc->isModuleContext()) {
+    // ES Modules have dedicated variable and lexial environments and therefore
+    // do not have to perform redeclaration checks. We initialize their bindings
+    // elsewhere in bytecode.
+    return true;
+  }
+
+  if (sc->isEvalContext() && sc->strict()) {
+    // Strict Eval has a dedicated variables (and lexical) environment and
+    // therefore does not have to perform redeclaration checks. We initialize
+    // their bindings elsewhere in the bytecode.
+    return true;
+  }
+
+  // If we have no variables bindings, then we are done!
+  if (sc->isGlobalContext()) {
+    if (!sc->asGlobalContext()->bindings) {
+      return true;
+    }
+  } else {
+    MOZ_ASSERT(sc->isEvalContext());
+
+    if (!sc->asEvalContext()->bindings) {
+      return true;
+    }
+  }
+
+#if DEBUG
+  // There should be no emitted functions yet.
+  for (const auto& thing : perScriptData().gcThingList().objects()) {
+    MOZ_ASSERT(thing.isEmptyGlobalScope() || thing.isScope());
+  }
+#endif
+
+  // Emit the hoisted functions to gc-things list. There is no bytecode
+  // generated yet to bind them.
+  if (!defineHoistedTopLevelFunctions(body)) {
+    return false;
+  }
+
+  // Save the last GCThingIndex emitted. The hoisted functions are contained in
+  // the gc-things list up until this point. This set of gc-things also contain
+  // initial scopes (of which there must be at least one).
+  MOZ_ASSERT(perScriptData().gcThingList().length() > 0);
+  GCThingIndex lastFun =
+      GCThingIndex(perScriptData().gcThingList().length() - 1);
+
+#if DEBUG
+  for (const auto& thing : perScriptData().gcThingList().objects()) {
+    MOZ_ASSERT(thing.isEmptyGlobalScope() || thing.isScope() ||
+               thing.isFunction());
+  }
+#endif
+
+  // Check for declaration conflicts and initialize the bindings.
+  if (!emitGCIndexOp(JSOp::GlobalOrEvalDeclInstantiation, lastFun)) {
+    return false;
+  }
+
+  return true;
+}
+
 bool BytecodeEmitter::emitScript(ParseNode* body) {
   AutoFrontendTraceLog traceLog(cx, TraceLogger_BytecodeEmission,
                                 parser->errorReporter(), body);
@@ -2414,10 +2484,14 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
   bool isSloppyEval = sc->isEvalContext() && !sc->strict();
   if (isSloppyEval && body->is<LexicalScopeNode>() &&
       !body->as<LexicalScopeNode>().isEmptyScope()) {
-    // Sloppy eval scripts may need to emit DEFFUNs in the prologue. If there is
-    // an immediately enclosed lexical scope, we need to enter the lexical
-    // scope in the prologue for the DEFFUNs to pick up the right
-    // environment chain.
+    // Sloppy eval scripts may emit hoisted functions bindings with a
+    // `JSOp::GlobalOrEvalDeclInstantiation` opcode below. If this eval needs a
+    // top-level lexical environment, we must ensure that environment is created
+    // before those functions are created and bound.
+    //
+    // This differs from the global-script case below because the global-lexical
+    // environment exists outside the script itself. In the case of strict eval
+    // scripts, the `emitterScope` above is already sufficient.
     EmitterScope lexicalEmitterScope(this);
     LexicalScopeNode* scope = &body->as<LexicalScopeNode>();
 
@@ -2426,7 +2500,7 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
       return false;
     }
 
-    if (!defineHoistedTopLevelFunctions(scope->scopeBody())) {
+    if (!emitDeclarationInstantiation(scope->scopeBody())) {
       return false;
     }
 
@@ -2447,10 +2521,8 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
       return false;
     }
   } else {
-    if (sc->isGlobalContext() || isSloppyEval) {
-      if (!defineHoistedTopLevelFunctions(body)) {
-        return false;
-      }
+    if (!emitDeclarationInstantiation(body)) {
+      return false;
     }
 
     if (!switchToMain()) {

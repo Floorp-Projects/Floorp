@@ -203,7 +203,7 @@ startupRecorder.prototype = {
       let env = Cc["@mozilla.org/process/environment;1"].getService(
         Ci.nsIEnvironment
       );
-      if (!env.exists("MOZ_PROFILER_STARTUP")) {
+      if (!env.exists("MOZ_PROFILER_STARTUP_PERFORMANCE_TEST")) {
         this._resolve();
         this._resolve = null;
         return;

@@ -377,7 +377,7 @@ class SdpFingerprintAttributeList : public SdpAttribute {
   };
 
   // For use by application programmers. Enforces that it's a known and
-  // non-crazy algorithm.
+  // reasonable algorithm.
   void PushEntry(std::string algorithm_str,
                  const std::vector<uint8_t>& fingerprint,
                  bool enforcePlausible = true) {

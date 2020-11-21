@@ -10,39 +10,34 @@
 #include "mozilla/Components.h"
 #include "nsIClassInfoImpl.h"
 
-namespace mozilla {
-namespace glean {
+namespace mozilla::glean {
 
 NS_IMPL_CLASSINFO(GleanTimespan, nullptr, 0, {0})
 NS_IMPL_ISUPPORTS_CI(GleanTimespan, nsIGleanTimespan)
 
 NS_IMETHODIMP
-GleanTimespan::Start(JSContext* cx) {
+GleanTimespan::Start() {
   this->mTimespan.Start();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GleanTimespan::Stop(JSContext* cx) {
+GleanTimespan::Stop() {
   this->mTimespan.Stop();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GleanTimespan::TestHasValue(const nsACString& aStorageName, JSContext* cx,
-                            bool* result) {
-  *result =
-      this->mTimespan.TestHasValue(PromiseFlatCString(aStorageName).get());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GleanTimespan::TestGetValue(const nsACString& aStorageName, JSContext* cx,
-                            int64_t* result) {
-  *result =
+GleanTimespan::TestGetValue(const nsACString& aStorageName,
+                            JS::MutableHandleValue aResult) {
+  auto result =
       this->mTimespan.TestGetValue(PromiseFlatCString(aStorageName).get());
+  if (result.isNothing()) {
+    aResult.set(JS::UndefinedValue());
+  } else {
+    aResult.set(JS::DoubleValue(result.value()));
+  }
   return NS_OK;
 }
 
-}  // namespace glean
-}  // namespace mozilla
+}  // namespace mozilla::glean

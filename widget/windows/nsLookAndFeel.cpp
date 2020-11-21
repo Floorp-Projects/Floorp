@@ -365,12 +365,17 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
   return res;
 }
 
-nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
-  nsresult res = nsXPLookAndFeel::GetIntImpl(aID, aResult);
-  if (NS_SUCCEEDED(res)) return res;
-  res = NS_OK;
+nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
+  nsresult res = NS_OK;
 
   switch (aID) {
+    case IntID::ScrollButtonLeftMouseButtonAction:
+      aResult = 0;
+      break;
+    case IntID::ScrollButtonMiddleMouseButtonAction:
+    case IntID::ScrollButtonRightMouseButtonAction:
+      aResult = 3;
+      break;
     case IntID::CaretBlinkTime:
       // IntID::CaretBlinkTime is often called by updating editable text
       // that has focus. So it should be cached to improve performance.
@@ -611,10 +616,8 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
   return res;
 }
 
-nsresult nsLookAndFeel::GetFloatImpl(FloatID aID, float& aResult) {
-  nsresult res = nsXPLookAndFeel::GetFloatImpl(aID, aResult);
-  if (NS_SUCCEEDED(res)) return res;
-  res = NS_OK;
+nsresult nsLookAndFeel::NativeGetFloat(FloatID aID, float& aResult) {
+  nsresult res = NS_OK;
 
   switch (aID) {
     case FloatID::IMEUnderlineRelativeSize:
@@ -779,8 +782,8 @@ bool nsLookAndFeel::GetSysFont(LookAndFeel::FontID anID, nsString& aFontName,
   return true;
 }
 
-bool nsLookAndFeel::GetFontImpl(FontID anID, nsString& aFontName,
-                                gfxFontStyle& aFontStyle) {
+bool nsLookAndFeel::NativeGetFont(FontID anID, nsString& aFontName,
+                                  gfxFontStyle& aFontStyle) {
   CachedSystemFont& cacheSlot = mSystemFontCache[size_t(anID)];
 
   bool status;

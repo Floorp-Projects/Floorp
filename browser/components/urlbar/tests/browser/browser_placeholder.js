@@ -276,7 +276,6 @@ async function doSearchModeTest(expectedSearchMode, expectedPlaceholderL10n) {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.localOneOffs", true],
       ["browser.urlbar.update2.oneOffsRefresh", true],
     ],
   });
