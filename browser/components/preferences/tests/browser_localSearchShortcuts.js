@@ -160,7 +160,18 @@ add_task(async function keywordNotEditable_isEditable() {
 // Pressing the enter key while a row is selected shouldn't allow the keyword to
 // be edited.
 add_task(async function keywordNotEditable_enterKey() {
+  let col = gTree.columns.getNamedColumn("engineKeyword");
   await forEachLocalShortcutRow(async (row, shortcut) => {
+    Assert.ok(
+      shortcut.restrict,
+      "Sanity check: Shortcut restriction char is non-empty"
+    );
+    Assert.equal(
+      gTree.view.getCellText(row, col),
+      shortcut.restrict,
+      "Sanity check: Keyword column has correct restriction char initially"
+    );
+
     gTree.view.selection.select(row);
     EventUtils.synthesizeKey("KEY_Enter", {}, gTree.ownerGlobal);
     EventUtils.sendString("newkeyword");
@@ -171,12 +182,9 @@ add_task(async function keywordNotEditable_enterKey() {
     await new Promise(r => setTimeout(r, 500));
 
     Assert.equal(
-      gTree.view.getCellText(
-        row,
-        gTree.columns.getNamedColumn("engineKeyword")
-      ),
-      "",
-      "Keyword column text should be empty"
+      gTree.view.getCellText(row, col),
+      shortcut.restrict,
+      "Keyword column is still restriction char"
     );
   });
 });
@@ -185,6 +193,16 @@ add_task(async function keywordNotEditable_enterKey() {
 add_task(async function keywordNotEditable_click() {
   let col = gTree.columns.getNamedColumn("engineKeyword");
   await forEachLocalShortcutRow(async (row, shortcut) => {
+    Assert.ok(
+      shortcut.restrict,
+      "Sanity check: Shortcut restriction char is non-empty"
+    );
+    Assert.equal(
+      gTree.view.getCellText(row, col),
+      shortcut.restrict,
+      "Sanity check: Keyword column has correct restriction char initially"
+    );
+
     let rect = gTree.getCoordsForCellItem(row, col, "text");
     let x = rect.x + rect.width / 2;
     let y = rect.y + rect.height / 2;
@@ -220,8 +238,8 @@ add_task(async function keywordNotEditable_click() {
 
     Assert.equal(
       gTree.view.getCellText(row, col),
-      "",
-      "Keyword column text should be empty"
+      shortcut.restrict,
+      "Keyword column is still restriction char"
     );
   });
 });
