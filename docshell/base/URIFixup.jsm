@@ -377,6 +377,16 @@ URIFixup.prototype = {
       }
     }
 
+    // Handle "www.<something>" as a URI.
+    const asciiHost = info.fixedURI?.asciiHost;
+    if (
+      asciiHost?.length > 4 &&
+      asciiHost?.startsWith("www.") &&
+      asciiHost?.lastIndexOf(".") == 3
+    ) {
+      return info;
+    }
+
     // Memoize the public suffix check, since it may be expensive and should
     // only run once when necessary.
     let suffixInfo;
@@ -756,9 +766,9 @@ function maybeSetAlternateFixedURI(info, fixupFlags) {
   if (numDots == 0) {
     newHost = prefix + oldHost + suffix;
   } else if (numDots == 1) {
-    if (prefix && oldHost.toLowerCase() == prefix) {
+    if (prefix && oldHost == prefix) {
       newHost = oldHost + suffix;
-    } else if (suffix) {
+    } else if (suffix && !oldHost.startsWith(prefix)) {
       newHost = prefix + oldHost;
     }
   }
