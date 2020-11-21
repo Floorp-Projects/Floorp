@@ -208,7 +208,6 @@ class DefaultBrowserToolbarControllerTest {
 
     @Test
     fun handleToolbarCloseTabPressWithLastPrivateSession() {
-        val browsingModeManager = SimpleBrowsingModeManager(BrowsingMode.Private)
         val item = TabCounterMenu.Item.CloseTab
         val sessions = listOf(
             mockk<Session> {
@@ -218,7 +217,6 @@ class DefaultBrowserToolbarControllerTest {
 
         every { currentSession.private } returns true
         every { sessionManager.sessions } returns sessions
-        every { activity.browsingModeManager } returns browsingModeManager
 
         val controller = createController()
         controller.handleTabCounterItemInteraction(item)
@@ -226,7 +224,6 @@ class DefaultBrowserToolbarControllerTest {
             homeViewModel.sessionToDelete = "1"
             navController.navigate(BrowserFragmentDirections.actionGlobalHome())
         }
-        assertEquals(BrowsingMode.Normal, browsingModeManager.mode)
     }
 
     @Test

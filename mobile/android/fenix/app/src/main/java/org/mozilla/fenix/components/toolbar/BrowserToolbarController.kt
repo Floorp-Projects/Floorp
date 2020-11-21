@@ -13,7 +13,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
 import org.mozilla.fenix.browser.BrowserFragmentDirections
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
@@ -108,8 +107,6 @@ class DefaultBrowserToolbarController(
                 sessionManager.selectedSession?.let {
                     // When closing the last tab we must show the undo snackbar in the home fragment
                     if (sessionManager.sessionsOfType(it.private).count() == 1) {
-                        // The tab tray always returns to normal mode so do that here too
-                        activity.browsingModeManager.mode = BrowsingMode.Normal
                         homeViewModel.sessionToDelete = it.id
                         navController.navigate(
                             BrowserFragmentDirections.actionGlobalHome()
