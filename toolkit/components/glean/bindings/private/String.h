@@ -10,20 +10,19 @@
 #include "nsIGleanMetrics.h"
 #include "nsString.h"
 
-namespace mozilla {
-namespace glean {
+namespace mozilla::glean {
 
 namespace impl {
 extern "C" {
-void fog_string_set(uint32_t id, const nsACString& value);
-uint32_t fog_string_test_has_value(uint32_t id, const char* storageName);
-void fog_string_test_get_value(uint32_t id, const char* storageName,
-                               nsACString& value);
+void fog_string_set(uint32_t aId, const nsACString& aValue);
+uint32_t fog_string_test_has_value(uint32_t aId, const char* aStorageName);
+void fog_string_test_get_value(uint32_t aId, const char* aStorageName,
+                               nsACString& aValue);
 }
 
 class StringMetric {
  public:
-  constexpr explicit StringMetric(uint32_t id) : mId(id) {}
+  constexpr explicit StringMetric(uint32_t aId) : mId(aId) {}
 
   /*
    * Set to the specified value.
@@ -31,27 +30,9 @@ class StringMetric {
    * Truncates the value if it is longer than 100 bytes and logs an error.
    * See https://mozilla.github.io/glean/book/user/metrics/string.html#limits.
    *
-   * @param value The string to set the metric to.
+   * @param aValue The string to set the metric to.
    */
-  void Set(const nsACString& value) const { fog_string_set(mId, value); }
-
-  /**
-   * **Test-only API**
-   *
-   * Tests whether a value is stored for the metric.
-   *
-   * This function will attempt to await the last parent-process task (if any)
-   * writing to the the metric's storage engine before returning a value.
-   * This function will not wait for data from child processes.
-   *
-   * Parent process only. Panics in child processes.
-   *
-   * @param aStorageName the name of the ping to retrieve the metric for.
-   * @return true if metric value exists, otherwise false
-   */
-  bool TestHasValue(const char* aStorageName) const {
-    return fog_string_test_has_value(mId, aStorageName) != 0;
-  }
+  void Set(const nsACString& aValue) const { fog_string_set(mId, aValue); }
 
   /**
    * **Test-only API**
@@ -65,12 +46,15 @@ class StringMetric {
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
-   * @return value of the stored metric.
+   * @return value of the stored metric, or Nothing() if there is no value.
    */
-  nsCString TestGetValue(const char* aStorageName) const {
+  Maybe<nsCString> TestGetValue(const char* aStorageName) const {
+    if (!fog_string_test_has_value(mId, aStorageName)) {
+      return Nothing();
+    }
     nsCString ret;
     fog_string_test_get_value(mId, aStorageName, ret);
-    return ret;
+    return Some(ret);
   }
 
  private:
@@ -83,7 +67,7 @@ class GleanString final : public nsIGleanString {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIGLEANSTRING
 
-  explicit GleanString(uint32_t id) : mString(id){};
+  explicit GleanString(uint32_t aId) : mString(aId){};
 
  private:
   virtual ~GleanString() = default;
@@ -91,7 +75,6 @@ class GleanString final : public nsIGleanString {
   const impl::StringMetric mString;
 };
 
-}  // namespace glean
-}  // namespace mozilla
+}  // namespace mozilla::glean
 
-#endif /* mozilla_glean_GleanString.h */
+#endif /* mozilla_glean_GleanString_h */

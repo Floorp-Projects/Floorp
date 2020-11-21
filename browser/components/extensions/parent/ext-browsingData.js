@@ -260,10 +260,6 @@ const clearPasswords = async function(options) {
   }
 };
 
-const clearPluginData = options => {
-  return clearData(options, Ci.nsIClearDataService.CLEAR_PLUGIN_DATA);
-};
-
 const clearServiceWorkers = options => {
   if (!options.hostnames) {
     return ServiceWorkerCleanUp.removeAll();
@@ -343,7 +339,9 @@ const doRemoval = (options, dataToRemove, extension) => {
           removalPromises.push(clearPasswords(options));
           break;
         case "pluginData":
-          removalPromises.push(clearPluginData(options));
+          extension?.logger.warn(
+            "pluginData has been deprecated (along with Flash plugin support)"
+          );
           break;
         case "serviceWorkers":
           removalPromises.push(clearServiceWorkers(options));
@@ -433,7 +431,7 @@ this.browsingData = class extends ExtensionAPI {
           return doRemoval(options, { passwords: true });
         },
         removePluginData(options) {
-          return doRemoval(options, { pluginData: true });
+          return doRemoval(options, { pluginData: true }, extension);
         },
       },
     };

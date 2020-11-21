@@ -9,20 +9,19 @@
 
 #include "nsIGleanMetrics.h"
 
-namespace mozilla {
-namespace glean {
+namespace mozilla::glean {
 
 namespace impl {
 extern "C" {
-void fog_timespan_start(uint32_t id);
-void fog_timespan_stop(uint32_t id);
-uint32_t fog_timespan_test_has_value(uint32_t id, const char* storageName);
-int64_t fog_timespan_test_get_value(uint32_t id, const char* storageName);
+void fog_timespan_start(uint32_t aId);
+void fog_timespan_stop(uint32_t aId);
+uint32_t fog_timespan_test_has_value(uint32_t aId, const char* aStorageName);
+int64_t fog_timespan_test_get_value(uint32_t aId, const char* aStorageName);
 }
 
 class TimespanMetric {
  public:
-  constexpr explicit TimespanMetric(uint32_t id) : mId(id) {}
+  constexpr explicit TimespanMetric(uint32_t aId) : mId(aId) {}
 
   /**
    * Start tracking time for the provided metric.
@@ -46,24 +45,6 @@ class TimespanMetric {
   /**
    * **Test-only API**
    *
-   * Tests whether a value is stored for the metric.
-   *
-   * This function will attempt to await the last parent-process task (if any)
-   * writing to the the metric's storage engine before returning a value.
-   * This function will not wait for data from child processes.
-   *
-   * Parent process only. Panics in child processes.
-   *
-   * @param aStorageName the name of the ping to retrieve the metric for.
-   * @return true if metric value exists, otherwise false
-   */
-  bool TestHasValue(const char* aStorageName) const {
-    return fog_timespan_test_has_value(mId, aStorageName) != 0;
-  }
-
-  /**
-   * **Test-only API**
-   *
    * Gets the currently stored value as an integer.
    *
    * This function will attempt to await the last parent-process task (if any)
@@ -73,10 +54,13 @@ class TimespanMetric {
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
-   * @return value of the stored metric.
+   * @return value of the stored metric, or Nothing() if there is no value.
    */
-  int64_t TestGetValue(const char* aStorageName) const {
-    return fog_timespan_test_get_value(mId, aStorageName);
+  Maybe<int64_t> TestGetValue(const char* aStorageName) const {
+    if (!fog_timespan_test_has_value(mId, aStorageName)) {
+      return Nothing();
+    }
+    return Some(fog_timespan_test_get_value(mId, aStorageName));
   }
 
  private:
@@ -89,7 +73,7 @@ class GleanTimespan final : public nsIGleanTimespan {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIGLEANTIMESPAN
 
-  explicit GleanTimespan(uint32_t id) : mTimespan(id){};
+  explicit GleanTimespan(uint32_t aId) : mTimespan(aId){};
 
  private:
   virtual ~GleanTimespan() = default;
@@ -97,7 +81,6 @@ class GleanTimespan final : public nsIGleanTimespan {
   const impl::TimespanMetric mTimespan;
 };
 
-}  // namespace glean
-}  // namespace mozilla
+}  // namespace mozilla::glean
 
-#endif /* mozilla_glean_GleanTimespan.h */
+#endif /* mozilla_glean_GleanTimespan_h */

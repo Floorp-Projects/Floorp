@@ -78,6 +78,45 @@ describe("PrefsFeed", () => {
     assert.equal(data.bar, 2);
     assert.isTrue(data.isPrivateBrowsingEnabled);
   });
+  it("should dispatch PREFS_INITIAL_VALUES with a .featureConfig", () => {
+    sandbox.stub(global.ExperimentAPI, "getExperiment").returns({
+      active: true,
+      branch: {
+        slug: "foo",
+        feature: {
+          featureId: "newtab",
+          value: { prefsButtonIcon: "icon-foo" },
+        },
+      },
+    });
+    feed.onAction({ type: at.INIT });
+    assert.equal(
+      feed.store.dispatch.firstCall.args[0].type,
+      at.PREFS_INITIAL_VALUES
+    );
+    const [{ data }] = feed.store.dispatch.firstCall.args;
+    assert.deepEqual(data.featureConfig, { prefsButtonIcon: "icon-foo" });
+  });
+  it("should dispatch PREFS_INITIAL_VALUES with a default feature config if no experiment is returned", () => {
+    sandbox.stub(global.ExperimentAPI, "getExperiment").returns(null);
+    feed.onAction({ type: at.INIT });
+    assert.equal(
+      feed.store.dispatch.firstCall.args[0].type,
+      at.PREFS_INITIAL_VALUES
+    );
+    const [{ data }] = feed.store.dispatch.firstCall.args;
+    assert.deepEqual(data.featureConfig, { prefsButtonIcon: "icon-settings" });
+  });
+  it("should dispatch PREFS_INITIAL_VALUES with a default feature config ExperimentAPI throws", () => {
+    sandbox.stub(global.ExperimentAPI, "getExperiment").throws();
+    feed.onAction({ type: at.INIT });
+    assert.equal(
+      feed.store.dispatch.firstCall.args[0].type,
+      at.PREFS_INITIAL_VALUES
+    );
+    const [{ data }] = feed.store.dispatch.firstCall.args;
+    assert.deepEqual(data.featureConfig, { prefsButtonIcon: "icon-settings" });
+  });
   it("should add one branch observer on init", () => {
     feed.onAction({ type: at.INIT });
     assert.calledOnce(feed._prefs.observeBranch);
@@ -104,6 +143,36 @@ describe("PrefsFeed", () => {
       })
     );
   });
+  it("should send 2 PREF_CHANGED actions when onExperimentUpdated is called", () => {
+    const experimentData = {
+      active: true,
+      slug: "foo",
+      branch: {
+        slug: "boo",
+        feature: {
+          featureId: "newtab",
+          value: { prefsButtonIcon: "icon-boo" },
+        },
+      },
+    };
+    feed.onExperimentUpdated({}, experimentData);
+    assert.calledTwice(feed.store.dispatch);
+    assert.calledWith(
+      feed.store.dispatch,
+      ac.BroadcastToContent({
+        type: at.PREF_CHANGED,
+        data: { name: "experimentData", value: experimentData },
+      })
+    );
+    assert.calledWith(
+      feed.store.dispatch,
+      ac.BroadcastToContent({
+        type: at.PREF_CHANGED,
+        data: { name: "featureConfig", value: { prefsButtonIcon: "icon-boo" } },
+      })
+    );
+  });
+
   it("should set storage pref on UPDATE_SECTION_PREFS", async () => {
     await feed.onAction({
       type: at.UPDATE_SECTION_PREFS,

@@ -13,31 +13,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SearchOneOffs: "resource:///modules/SearchOneOffs.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
-
-// Maps from RESULT_SOURCE values to { restrict } objects.
-const LOCAL_MODES = new Map([
-  [
-    UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
-    {
-      restrict: UrlbarTokenizer.RESTRICT.BOOKMARK,
-    },
-  ],
-  [
-    UrlbarUtils.RESULT_SOURCE.TABS,
-    {
-      restrict: UrlbarTokenizer.RESTRICT.OPENPAGE,
-    },
-  ],
-  [
-    UrlbarUtils.RESULT_SOURCE.HISTORY,
-    {
-      restrict: UrlbarTokenizer.RESTRICT.HISTORY,
-    },
-  ],
-]);
 
 /**
  * The one-off search buttons in the urlbar.
@@ -305,6 +282,23 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
   }
 
   /**
+   * Overrides the willHide method in the superclass to account for the local
+   * search mode buttons.
+   *
+   * @returns {boolean}
+   *   True if we will hide the one-offs when they are requested.
+   */
+  async willHide() {
+    // We need to call super.willHide() even when we return false below because
+    // it has the necessary side effect of creating this._engineInfo.
+    let superWillHide = await super.willHide();
+    if (UrlbarUtils.LOCAL_SEARCH_MODES.some(m => UrlbarPrefs.get(m.pref))) {
+      return false;
+    }
+    return superWillHide;
+  }
+
+  /**
    * Called when a pref tracked by UrlbarPrefs changes.
    *
    * @param {string} changedPref
@@ -315,9 +309,11 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
     // Invalidate the engine cache when the local-one-offs-related prefs change
     // so that the one-offs rebuild themselves the next time the view opens.
     if (
-      ["update2", "update2.localOneOffs", "update2.oneOffsRefresh"].includes(
-        changedPref
-      )
+      [
+        "update2",
+        "update2.oneOffsRefresh",
+        ...UrlbarUtils.LOCAL_SEARCH_MODES.map(m => m.pref),
+      ].includes(changedPref)
     ) {
       this.invalidateCache();
     }
@@ -342,11 +338,14 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
   _rebuildEngineList(engines) {
     super._rebuildEngineList(engines);
 
-    if (!this.view.oneOffsRefresh || !UrlbarPrefs.get("update2.localOneOffs")) {
+    if (!this.view.oneOffsRefresh) {
       return;
     }
 
-    for (let [source, { restrict }] of LOCAL_MODES) {
+    for (let { source, pref, restrict } of UrlbarUtils.LOCAL_SEARCH_MODES) {
+      if (!UrlbarPrefs.get(pref)) {
+        continue;
+      }
       let name = UrlbarUtils.getResultSourceName(source);
       let button = this.document.createXULElement("button");
       button.id = `urlbar-engine-one-off-item-${name}`;

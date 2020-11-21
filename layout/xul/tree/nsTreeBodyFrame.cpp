@@ -1979,7 +1979,7 @@ nsRect nsTreeBodyFrame::GetImageSize(int32_t aRowIndex, nsTreeColumn* aCol,
   bool needHeight = false;
 
   // We have to load image even though we already have a size.
-  // Don't change this, otherwise things start to go crazy.
+  // Don't change this, otherwise things start to go awry.
   bool useImageRegion = true;
   nsCOMPtr<imgIContainer> image;
   GetImage(aRowIndex, aCol, aUseContext, aComputedStyle, useImageRegion,

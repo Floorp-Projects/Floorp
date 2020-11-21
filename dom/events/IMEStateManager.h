@@ -8,6 +8,7 @@
 #define mozilla_IMEStateManager_h_
 
 #include "mozilla/EventForwards.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "nsIWidget.h"
@@ -390,6 +391,50 @@ class IMEStateManager {
   // Set to true only if this is an instance in a content process and
   // only while `IMEStateManager::StopIMEStateManagement()`.
   static bool sCleaningUpForStoppingIMEStateManagement;
+
+  // Set to true when:
+  // - In the main process, a window belonging to this app is active in the
+  //   desktop.
+  // - In a content process, the process has focus.
+  //
+  // This is updated by `OnChangeFocusInternal()` is called in the main
+  // process.  Therefore, this indicates the active state which
+  // `IMEStateManager` notified the focus change, there is timelag from
+  // the `nsFocusManager`'s status update.  This allows that all methods
+  // to handle something specially when they are called while the process
+  // is being activated or inactivated.  E.g., `OnFocusMovedBetweenBrowsers()`
+  // is called twice before `OnChangeFocusInternal()` when the main process
+  // becomes active.  In this case, it wants to wait a following call of
+  // `OnChangeFocusInternal()` to keep active composition.  See also below.
+  static bool sIsActive;
+
+  // While the application is being activated, `OnFocusMovedBetweenBrowsers()`
+  // are called twice before `OnChangeFocusInternal()`.  First time, aBlur is
+  // the last focused `BrowserParent` at deactivating and aFocus is always
+  // `nullptr`.  Then, it'll be called again with actually focused
+  // `BrowserParent` when a content in a remote process has focus.  If we need
+  // to keep active composition while all windows are deactivated, we shouldn't
+  // commit it at the first call since usually, the second call's aFocus
+  // and the first call's aBlur are same `BrowserParent`.  For solving this
+  // issue, we need to merge the given `BrowserParent`s of multiple calls of
+  // `OnFocusMovedBetweenBrowsers()`. The following struct is the data for
+  // calling `OnFocusMovedBetweenBrowsers()` later from
+  // `OnChangeFocusInternal()`.  Note that focus can be moved even while the
+  // main process is not active because JS can change focus.  In such case,
+  // composition is committed at that time.  Therefore, this is required only
+  // when the main process is activated and there is a composition in a remote
+  // process.
+  struct PendingFocusedBrowserSwitchingData final {
+    RefPtr<BrowserParent> mBrowserParentBlurred;
+    RefPtr<BrowserParent> mBrowserParentFocused;
+
+    PendingFocusedBrowserSwitchingData() = delete;
+    explicit PendingFocusedBrowserSwitchingData(BrowserParent* aBlur,
+                                                BrowserParent* aFocus)
+        : mBrowserParentBlurred(aBlur), mBrowserParentFocused(aFocus) {}
+  };
+  static Maybe<PendingFocusedBrowserSwitchingData>
+      sPendingFocusedBrowserSwitchingData;
 
   class MOZ_STACK_CLASS GettingNewIMEStateBlocker final {
    public:

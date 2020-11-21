@@ -193,12 +193,37 @@ void ChromeUtils::ReleaseAssert(GlobalObject& aGlobal, bool aCondition,
 /* static */
 void ChromeUtils::AddProfilerMarker(
     GlobalObject& aGlobal, const nsACString& aName,
-    const Optional<DOMHighResTimeStamp>& aStartTime,
+    const ProfilerMarkerOptionsOrDouble& aOptions,
     const Optional<nsACString>& aText) {
 #ifdef MOZ_GECKO_PROFILER
   MarkerOptions options;
+  MarkerCategory category = ::geckoprofiler::category::JS;
 
-  if (aStartTime.WasPassed()) {
+  DOMHighResTimeStamp startTime = 0;
+  if (aOptions.IsDouble()) {
+    startTime = aOptions.GetAsDouble();
+  } else {
+    const ProfilerMarkerOptions& opt = aOptions.GetAsProfilerMarkerOptions();
+    startTime = opt.mStartTime;
+
+    if (opt.mCaptureStack) {
+      options.Set(MarkerStack::Capture());
+    }
+#  define BEGIN_CATEGORY(name, labelAsString, color) \
+    if (opt.mCategory.Equals(labelAsString)) {       \
+      category = ::geckoprofiler::category::name;    \
+    } else
+#  define SUBCATEGORY(supercategory, name, labelAsString)
+#  define END_CATEGORY
+    MOZ_PROFILING_CATEGORY_LIST(BEGIN_CATEGORY, SUBCATEGORY, END_CATEGORY)
+#  undef BEGIN_CATEGORY
+#  undef SUBCATEGORY
+#  undef END_CATEGORY
+    {
+      category = ::geckoprofiler::category::OTHER;
+    }
+  }
+  if (startTime) {
     RefPtr<Performance> performance;
 
     if (NS_IsMainThread()) {
@@ -218,18 +243,22 @@ void ChromeUtils::AddProfilerMarker(
     if (performance) {
       options.Set(MarkerTiming::IntervalUntilNowFrom(
           performance->CreationTimeStamp() +
-          TimeDuration::FromMilliseconds(aStartTime.Value())));
+          TimeDuration::FromMilliseconds(startTime)));
     } else {
       options.Set(MarkerTiming::IntervalUntilNowFrom(
           TimeStamp::ProcessCreation() +
-          TimeDuration::FromMilliseconds(aStartTime.Value())));
+          TimeDuration::FromMilliseconds(startTime)));
     }
   }
 
-  if (aText.WasPassed()) {
-    PROFILER_MARKER_TEXT(aName, JS, std::move(options), aText.Value());
-  } else {
-    PROFILER_MARKER_UNTYPED(aName, JS, std::move(options));
+  {
+    AUTO_PROFILER_STATS(ChromeUtils::AddProfilerMarker);
+    if (aText.WasPassed()) {
+      profiler_add_marker(aName, category, std::move(options),
+                          ::geckoprofiler::markers::Text{}, aText.Value());
+    } else {
+      profiler_add_marker(aName, category, std::move(options));
+    }
   }
 #endif  // MOZ_GECKO_PROFILER
 }

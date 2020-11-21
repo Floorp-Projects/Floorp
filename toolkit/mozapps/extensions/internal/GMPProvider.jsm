@@ -13,7 +13,6 @@ const { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 // These symbols are, unfortunately, accessed via the module global from
 // tests, and therefore cannot be lexical definitions.
@@ -151,8 +150,8 @@ GMPWrapper.prototype = {
   },
   get gmpPath() {
     if (!this._gmpPath && this.isInstalled) {
-      this._gmpPath = OS.Path.join(
-        OS.Constants.Path.profileDir,
+      this._gmpPath = PathUtils.join(
+        Services.dirsvc.get("ProfD", Ci.nsIFile).path,
         this._plugin.id,
         GMPPrefs.getString(GMPPrefs.KEY_PLUGIN_VERSION, null, this._plugin.id)
       );
@@ -451,8 +450,8 @@ GMPWrapper.prototype = {
   },
   get pluginFullpath() {
     if (this.isInstalled) {
-      let path = OS.Path.join(
-        OS.Constants.Path.profileDir,
+      let path = PathUtils.join(
+        Services.dirsvc.get("ProfD", Ci.nsIFile).path,
         this._plugin.id,
         this.version
       );
@@ -587,8 +586,8 @@ GMPWrapper.prototype = {
     AddonManagerPrivate.callAddonListeners("onInstalling", this, false);
     this._gmpPath = null;
     if (this.isInstalled) {
-      this._gmpPath = OS.Path.join(
-        OS.Constants.Path.profileDir,
+      this._gmpPath = PathUtils.join(
+        Services.dirsvc.get("ProfD", Ci.nsIFile).path,
         this._plugin.id,
         GMPPrefs.getString(GMPPrefs.KEY_PLUGIN_VERSION, null, this._plugin.id)
       );
@@ -656,7 +655,7 @@ GMPWrapper.prototype = {
   _arePluginFilesOnDisk() {
     let fileExists = function(aGmpPath, aFileName) {
       let f = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-      let path = OS.Path.join(aGmpPath, aFileName);
+      let path = PathUtils.join(aGmpPath, aFileName);
       f.initWithPath(path);
       return f.exists();
     };
@@ -772,9 +771,9 @@ var GMPProvider = {
       let greDir = Services.dirsvc.get(NS_GRE_DIR, Ci.nsIFile);
       let path = greDir.path;
       if (GMPUtils._isWindowsOnARM64()) {
-        path = OS.Path.join(path, "i686");
+        path = PathUtils.join(path, "i686");
       }
-      let clearkeyPath = OS.Path.join(
+      let clearkeyPath = PathUtils.join(
         path,
         CLEARKEY_PLUGIN_ID,
         CLEARKEY_VERSION

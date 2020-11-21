@@ -1468,6 +1468,84 @@ void ReflowInput::CalculateHypotheticalPosition(
   }
 }
 
+bool ReflowInput::IsInlineSizeComputableByBlockSizeAndAspectRatio(
+    nscoord aBlockSize) const {
+  WritingMode wm = GetWritingMode();
+  MOZ_ASSERT(!mStylePosition->mOffset.GetBStart(wm).IsAuto() &&
+                 !mStylePosition->mOffset.GetBEnd(wm).IsAuto(),
+             "If any of the block-start and block-end are auto, aBlockSize "
+             "doesn't make sense");
+  MOZ_ASSERT(
+      aBlockSize >= 0 && aBlockSize != NS_UNCONSTRAINEDSIZE,
+      "The caller shouldn't give us an unresolved or invalid block size");
+
+  if (!mStylePosition->mAspectRatio.HasFiniteRatio()) {
+    return false;
+  }
+
+  // We don't have to compute the inline size by aspect-ratio and the resolved
+  // block size (from insets) for replaced elements.
+  if (mFrame->IsFrameOfType(nsIFrame::eReplaced)) {
+    return false;
+  }
+
+  // If inline size is specified, we should have it by mFrame->ComputeSize()
+  // already.
+  if (mStylePosition->ISize(wm).IsLengthPercentage()) {
+    return false;
+  }
+
+  // If both inline insets are non-auto, mFrame->ComputeSize() should get a
+  // possible inline size by those insets, so we don't rely on aspect-ratio.
+  if (!mStylePosition->mOffset.GetIStart(wm).IsAuto() &&
+      !mStylePosition->mOffset.GetIEnd(wm).IsAuto()) {
+    return false;
+  }
+
+  // Just an error handling. If |aBlockSize| is NS_UNCONSTRAINEDSIZE, there must
+  // be something wrong, and we don't want to continue the calculation for
+  // aspect-ratio. So we return false if this happens.
+  return aBlockSize != NS_UNCONSTRAINEDSIZE;
+}
+
+LogicalSize ReflowInput::CalculateAbsoluteSizeWithResolvedAutoBlockSize(
+    nscoord aAutoBSize, bool aNeedsComputeInlineSizeByAspectRatio,
+    const LogicalSize& aTentativeComputedSize) {
+  MOZ_ASSERT(aAutoBSize != NS_UNCONSTRAINEDSIZE,
+             "Shouldn't give an unresolved block size");
+  MOZ_ASSERT(!mFrame->IsFrameOfType(nsIFrame::eReplaced),
+             "Replaced element shouldn't have the unconstrained block size");
+
+  LogicalSize resultSize = aTentativeComputedSize;
+  WritingMode wm = GetWritingMode();
+
+  // For non-replaced elements with block-size auto, the block-size
+  // fills the remaining space, and we clamp it by min/max size constraints.
+  resultSize.BSize(wm) = ApplyMinMaxBSize(aAutoBSize);
+
+  if (!aNeedsComputeInlineSizeByAspectRatio) {
+    return resultSize;
+  }
+
+  // Calculate transferred inline size through aspect-ratio.
+  // For non-replaced elements, we always take box-sizing into account.
+  const auto boxSizingAdjust =
+      mStylePosition->mBoxSizing == StyleBoxSizing::Border
+          ? ComputedLogicalBorderPadding(wm).Size(wm)
+          : LogicalSize(wm);
+  auto transferredISize =
+      mStylePosition->mAspectRatio.ToLayoutRatio().ComputeRatioDependentSize(
+          LogicalAxis::eLogicalAxisInline, wm, aAutoBSize, boxSizingAdjust);
+  resultSize.ISize(wm) = ApplyMinMaxISize(transferredISize);
+
+  MOZ_ASSERT(mFlags.mBSizeIsSetByAspectRatio,
+             "This flag should have been set because nsIFrame::ComputeSize() "
+             "returns AspectRatioUsage::ToComputeBSize unintentionally");
+  mFlags.mBSizeIsSetByAspectRatio = false;
+
+  return resultSize;
+}
+
 void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
                                           const ReflowInput* aCBReflowInput,
                                           const LogicalSize& aCBSize,
@@ -1694,20 +1772,18 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
         autoISize = 0;
       }
 
-      if (computedSize.ISize(cbwm) == NS_UNCONSTRAINEDSIZE) {
-        // For non-replaced elements with block-size auto, the block-size
-        // fills the remaining space.
-        computedSize.ISize(cbwm) = autoISize;
-
-        // XXX Do these need box-sizing adjustments?
-        LogicalSize maxSize = ComputedMaxSize(cbwm);
-        LogicalSize minSize = ComputedMinSize(cbwm);
-        if (computedSize.ISize(cbwm) > maxSize.ISize(cbwm)) {
-          computedSize.ISize(cbwm) = maxSize.ISize(cbwm);
-        }
-        if (computedSize.ISize(cbwm) < minSize.ISize(cbwm)) {
-          computedSize.ISize(cbwm) = minSize.ISize(cbwm);
-        }
+      // We handle the unconstrained block-size in current block's writing
+      // mode 'wm'.
+      nscoord autoBSizeInWM = autoISize;
+      bool needsComputeInlineSizeByAspectRatio =
+          IsInlineSizeComputableByBlockSizeAndAspectRatio(autoBSizeInWM);
+      if (computedSize.ISize(cbwm) == NS_UNCONSTRAINEDSIZE ||
+          needsComputeInlineSizeByAspectRatio) {
+        LogicalSize computedSizeInWM =
+            CalculateAbsoluteSizeWithResolvedAutoBlockSize(
+                autoBSizeInWM, needsComputeInlineSizeByAspectRatio,
+                computedSize.ConvertTo(wm, cbwm));
+        computedSize = computedSizeInWM.ConvertTo(cbwm, wm);
       }
     }
 
@@ -1787,20 +1863,30 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
       autoBSize = 0;
     }
 
-    if (computedSize.BSize(cbwm) == NS_UNCONSTRAINEDSIZE) {
-      // For non-replaced elements with block-size auto, the block-size
-      // fills the remaining space.
-      computedSize.BSize(cbwm) = autoBSize;
-
-      // XXX Do these need box-sizing adjustments?
-      LogicalSize maxSize = ComputedMaxSize(cbwm);
-      LogicalSize minSize = ComputedMinSize(cbwm);
-      if (computedSize.BSize(cbwm) > maxSize.BSize(cbwm)) {
-        computedSize.BSize(cbwm) = maxSize.BSize(cbwm);
-      }
-      if (computedSize.BSize(cbwm) < minSize.BSize(cbwm)) {
-        computedSize.BSize(cbwm) = minSize.BSize(cbwm);
-      }
+    // |autoBSize| is in the writing mode of the containing block, so if |wm|
+    // and |cbwm| are orthogonal, |autoBSize| is |autoBSizeInCBWM|. After
+    // converting its writing mode into |wm|, it is |autoISizeInWM|, instead of
+    // |autoBSizeInWM|, so it shouldn't be the input of
+    // IsInlineSizeComputableByBlockSizeAndAspectRatio() because we assume
+    // its input should be the block-size of the current block.
+    // That's why we have to check the orthogonal for |wm| and |cbwm| first.
+    bool needsComputeInlineSizeByAspectRatio =
+        !wm.IsOrthogonalTo(cbwm) &&
+        IsInlineSizeComputableByBlockSizeAndAspectRatio(autoBSize);
+    // 'computedSize.BSize(cbwm) == NS_UNCONSTRAINEDSIZE' implicitly makes
+    // sure that |wm| and |cbwm| are not orthogonal.
+    // (If |wm| and |cbwm| are orthogonal, computedSize.BSize(cbwm) is
+    // computedSize.ISize(wm), and we always get a constrained inline size via
+    // nsIFrame::ComputeSize.)
+    if (computedSize.BSize(cbwm) == NS_UNCONSTRAINEDSIZE ||
+        needsComputeInlineSizeByAspectRatio) {
+      // We handle the unconstrained block-size in current block's writing mode
+      // 'wm'.
+      LogicalSize computedSizeInWM =
+          CalculateAbsoluteSizeWithResolvedAutoBlockSize(
+              autoBSize, needsComputeInlineSizeByAspectRatio,
+              computedSize.ConvertTo(wm, cbwm));
+      computedSize = computedSizeInWM.ConvertTo(cbwm, wm);
     }
 
     // The block-size might still not fill all the available space in case:

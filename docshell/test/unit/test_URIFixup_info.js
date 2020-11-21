@@ -659,6 +659,11 @@ var testcases = [
     shouldRunTest: flags =>
       !(flags & Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS),
   },
+  {
+    input: "www.mozilla",
+    fixedURI: "http://www.mozilla/",
+    protocolChange: true,
+  },
 ];
 
 if (AppConstants.platform == "win") {

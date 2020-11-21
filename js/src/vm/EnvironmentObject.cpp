@@ -3562,6 +3562,168 @@ bool js::CheckCanDeclareGlobalBinding(JSContext* cx,
   return true;
 }
 
+// Add the var/let/const bindings to the variables environment of a global or
+// sloppy-eval script. The redeclaration checks should already have been
+// performed.
+static bool InitGlobalOrEvalDeclarations(
+    JSContext* cx, HandleScript script,
+    Handle<LexicalEnvironmentObject*> lexicalEnv, HandleObject varObj) {
+  Rooted<BindingIter> bi(cx, BindingIter(script));
+  for (; bi; bi++) {
+    if (bi.isTopLevelFunction()) {
+      continue;
+    }
+
+    RootedPropertyName name(cx, bi.name()->asPropertyName());
+    unsigned attrs = script->isForEval() ? JSPROP_ENUMERATE
+                                         : JSPROP_ENUMERATE | JSPROP_PERMANENT;
+
+    switch (bi.kind()) {
+      case BindingKind::Var: {
+        Rooted<PropertyResult> prop(cx);
+        RootedObject obj2(cx);
+        if (!LookupProperty(cx, varObj, name, &obj2, &prop)) {
+          return false;
+        }
+
+        if (!prop || (obj2 != varObj && varObj->is<GlobalObject>())) {
+          if (!DefineDataProperty(cx, varObj, name, UndefinedHandleValue,
+                                  attrs)) {
+            return false;
+          }
+        }
+
+        if (varObj->is<GlobalObject>()) {
+          if (!varObj->as<GlobalObject>().realm()->addToVarNames(cx, name)) {
+            return false;
+          }
+        }
+
+        break;
+      }
+
+      case BindingKind::Const:
+        attrs |= JSPROP_READONLY;
+        [[fallthrough]];
+
+      case BindingKind::Let: {
+        RootedId id(cx, NameToId(name));
+        RootedValue uninitialized(cx, MagicValue(JS_UNINITIALIZED_LEXICAL));
+        if (!NativeDefineDataProperty(cx, lexicalEnv, id, uninitialized,
+                                      attrs)) {
+          return false;
+        }
+
+        break;
+      }
+
+      default:
+        MOZ_CRASH("Expected binding kind");
+        return false;
+    }
+  }
+
+  return true;
+}
+
+// Define the hoisted top-level functions on the variables environment of a
+// global or sloppy-eval script. Redeclaration checks must already have been
+// performed.
+static bool InitHoistedFunctionDeclarations(JSContext* cx, HandleScript script,
+                                            HandleObject envChain,
+                                            HandleObject varObj,
+                                            GCThingIndex lastFun) {
+  // The inner-functions up to `lastFun` are the hoisted function declarations
+  // of the script. We must clone and bind them now.
+  for (size_t i = 0; i <= lastFun; ++i) {
+    const JS::GCCellPtr& thing = script->gcthings()[i];
+
+    // Skip the initial scopes. In practice, there is at most one variables and
+    // one lexical scope.
+    if (thing.is<js::Scope>()) {
+      MOZ_ASSERT(i < 2);
+      continue;
+    }
+
+    RootedFunction fun(cx, &thing.as<JSObject>().as<JSFunction>());
+    RootedPropertyName name(cx, fun->explicitName()->asPropertyName());
+
+    // Clone the function before exposing to script as a binding.
+    JSObject* clone = Lambda(cx, fun, envChain);
+    if (!clone) {
+      return false;
+    }
+    RootedValue rval(cx, ObjectValue(*clone));
+
+    Rooted<PropertyResult> prop(cx);
+    RootedObject pobj(cx);
+    if (!LookupProperty(cx, varObj, name, &pobj, &prop)) {
+      return false;
+    }
+
+    // ECMA requires functions defined when entering Eval code to be
+    // impermanent.
+    unsigned attrs = script->isForEval() ? JSPROP_ENUMERATE
+                                         : JSPROP_ENUMERATE | JSPROP_PERMANENT;
+
+    if (!prop || pobj != varObj) {
+      if (!DefineDataProperty(cx, varObj, name, rval, attrs)) {
+        return false;
+      }
+
+      if (varObj->is<GlobalObject>()) {
+        if (!varObj->as<GlobalObject>().realm()->addToVarNames(cx, name)) {
+          return false;
+        }
+      }
+
+      // Done processing this function.
+      continue;
+    }
+
+    /*
+     * A DebugEnvironmentProxy is okay here, and sometimes necessary. If
+     * Debugger.Frame.prototype.eval defines a function with the same name as an
+     * extant variable in the frame, the DebugEnvironmentProxy takes care of
+     * storing the function in the stack frame (for non-aliased variables) or on
+     * the scope object (for aliased).
+     */
+    MOZ_ASSERT(varObj->isNative() || varObj->is<DebugEnvironmentProxy>());
+    if (varObj->is<GlobalObject>()) {
+      Shape* shape = prop.shape();
+      if (shape->configurable()) {
+        if (!DefineDataProperty(cx, varObj, name, rval, attrs)) {
+          return false;
+        }
+      } else {
+        MOZ_ASSERT(shape->isDataDescriptor());
+        MOZ_ASSERT(shape->writable());
+        MOZ_ASSERT(shape->enumerable());
+      }
+
+      // Careful: the presence of a shape, even one appearing to derive from
+      // a variable declaration, doesn't mean it's in [[VarNames]].
+      if (!varObj->as<GlobalObject>().realm()->addToVarNames(cx, name)) {
+        return false;
+      }
+    }
+
+    /*
+     * Non-global properties, and global properties which we aren't simply
+     * redefining, must be set.  First, this preserves their attributes.
+     * Second, this will produce warnings and/or errors as necessary if the
+     * specified Call object property is not writable (const).
+     */
+
+    RootedId id(cx, NameToId(name));
+    if (!PutProperty(cx, varObj, id, rval, script->strict())) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 bool js::CheckGlobalDeclarationConflicts(
     JSContext* cx, HandleScript script,
     Handle<LexicalEnvironmentObject*> lexicalEnv, HandleObject varObj) {
@@ -3730,26 +3892,30 @@ static bool CheckEvalDeclarationConflicts(JSContext* cx, HandleScript script,
   return true;
 }
 
-bool js::CheckGlobalOrEvalDeclarationConflicts(JSContext* cx,
-                                               HandleObject envChain,
-                                               HandleScript script) {
+bool js::GlobalOrEvalDeclInstantiation(JSContext* cx, HandleObject envChain,
+                                       HandleScript script,
+                                       GCThingIndex lastFun) {
   MOZ_ASSERT(script->isGlobalCode() || script->isForEval());
 
   RootedObject varObj(cx, &GetVariablesObject(envChain));
+  Rooted<LexicalEnvironmentObject*> lexicalEnv(cx);
 
   if (script->isForEval()) {
     if (!CheckEvalDeclarationConflicts(cx, script, envChain, varObj)) {
       return false;
     }
   } else {
-    Rooted<LexicalEnvironmentObject*> lexicalEnv(
-        cx, &NearestEnclosingExtensibleLexicalEnvironment(envChain));
+    lexicalEnv = &NearestEnclosingExtensibleLexicalEnvironment(envChain);
     if (!CheckGlobalDeclarationConflicts(cx, script, lexicalEnv, varObj)) {
       return false;
     }
   }
 
-  return true;
+  if (!InitGlobalOrEvalDeclarations(cx, script, lexicalEnv, varObj)) {
+    return false;
+  }
+
+  return InitHoistedFunctionDeclarations(cx, script, envChain, varObj, lastFun);
 }
 
 bool js::InitFunctionEnvironmentObjects(JSContext* cx, AbstractFramePtr frame) {

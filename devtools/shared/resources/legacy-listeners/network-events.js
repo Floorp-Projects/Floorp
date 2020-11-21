@@ -86,9 +86,6 @@ module.exports = async function({
     } = resource;
 
     switch (packet.updateType) {
-      case "requestPostData":
-        resourceUpdates.contentSize = packet.dataSize;
-        break;
       case "responseStart":
         resourceUpdates.httpVersion = packet.response.httpVersion;
         resourceUpdates.status = packet.response.status;
@@ -111,9 +108,6 @@ module.exports = async function({
       case "securityInfo":
         resourceUpdates.securityState = packet.state;
         resourceUpdates.isRacing = packet.isRacing;
-        break;
-      case "responseCache":
-        resourceUpdates.responseCache = packet.responseCache;
         break;
     }
 
@@ -145,8 +139,6 @@ module.exports = async function({
         resourceUpdates,
       },
     ]);
-
-    resources.delete(resource.actor);
   }
 
   webConsoleFront.on("serverNetworkEvent", onNetworkEvent);

@@ -25,6 +25,7 @@ categories:
         - widget/cocoa
         - code-quality
         - writing-rust-code
+        - tools/profiler
     build_doc:
         - mach
         - tools/try

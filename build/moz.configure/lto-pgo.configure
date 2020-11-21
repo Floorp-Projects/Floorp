@@ -183,12 +183,22 @@ imply_option("MOZ_LD64_KNOWN_GOOD", depends_if("MOZ_AUTOMATION")(lambda _: True)
 @depends(
     "--enable-lto",
     c_compiler,
+    "MOZ_AUTOMATION",
     "MOZ_LD64_KNOWN_GOOD",
     target,
     "--enable-profile-generate",
+    new_pass_manager_flags,
 )
 @imports("multiprocessing")
-def lto(value, c_compiler, ld64_known_good, target, instrumented_build):
+def lto(
+    value,
+    c_compiler,
+    automation,
+    ld64_known_good,
+    target,
+    instrumented_build,
+    newpm_flags,
+):
     cflags = []
     ldflags = []
     enabled = None
@@ -278,16 +288,24 @@ def lto(value, c_compiler, ld64_known_good, target, instrumented_build):
         # binary size growth while still getting good performance.
         # (For hot functions, PGO will put a multiplier on this limit.)
         if target.os == "WINNT":
-            ldflags.append("-opt:ltonewpassmanager")
             ldflags.append("-mllvm:-import-instr-limit=10")
-            ldflags.append("-mllvm:-import-hot-multiplier=30")
         elif target.os == "OSX":
-            # ld64 doesn't seem to have an option for the new pass manager
             ldflags.append("-Wl,-mllvm,-import-instr-limit=10")
         elif c_compiler.type == "clang":
-            ldflags.append("-Wl,-plugin-opt=new-pass-manager")
             ldflags.append("-Wl,-plugin-opt=-import-instr-limit=10")
-            ldflags.append("-Wl,-plugin-opt=-import-hot-multiplier=30")
+
+        # If we're using the new pass manager, we can also enable the new PM
+        # during LTO. Further we can use the resulting size savings to increase
+        # the import limit in hot functions.
+        if newpm_flags:
+            if target.os == "WINNT" and (automation or c_compiler.version >= "12.0.0"):
+                # On Windows, this flag requires a change from clang-12, which
+                # is applied as a patch to our automation toolchain.
+                ldflags.append("-opt:ltonewpassmanager")
+                ldflags.append("-mllvm:-import-hot-multiplier=30")
+            elif target.os != "OSX" and c_compiler.type == "clang":
+                ldflags.append("-Wl,-plugin-opt=new-pass-manager")
+                ldflags.append("-Wl,-plugin-opt=-import-hot-multiplier=30")
 
     return namespace(
         enabled=enabled,

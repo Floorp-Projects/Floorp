@@ -131,7 +131,7 @@ class Device final : public DOMEventTargetHelper {
   already_AddRefed<RenderPipeline> CreateRenderPipeline(
       const dom::GPURenderPipelineDescriptor& aDesc);
 
-  // IMPL_EVENT_HANDLER(uncapturederror)
+  IMPL_EVENT_HANDLER(uncapturederror)
 };
 
 }  // namespace webgpu

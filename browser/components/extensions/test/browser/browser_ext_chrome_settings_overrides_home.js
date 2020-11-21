@@ -38,6 +38,32 @@ function isConfirmed(id) {
   return !!(item && item.value);
 }
 
+async function assertPreferencesShown(_spotlight) {
+  await TestUtils.waitForCondition(
+    () => gBrowser.currentURI.spec == "about:preferences#home",
+    "Should open about:preferences."
+  );
+
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [_spotlight],
+    async spotlight => {
+      let doc = content.document;
+      let section = await ContentTaskUtils.waitForCondition(
+        () => doc.querySelector(".spotlight"),
+        "The spotlight should appear."
+      );
+      Assert.equal(
+        section.getAttribute("data-subcategory"),
+        spotlight,
+        "The correct section is spotlighted."
+      );
+    }
+  );
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+}
+
 add_task(async function test_multiple_extensions_overriding_home_page() {
   let defaultHomePage = getHomePageURL();
 
@@ -368,36 +394,53 @@ add_task(async function test_doorhanger_homepage_button() {
 
   let popupShown = promisePopupShown(panel);
   BrowserHome();
-  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, () =>
+    gURLBar.value.endsWith("ext2.html")
+  );
   await popupShown;
 
-  ok(gURLBar.value.endsWith("ext2.html"), "ext2 is in control");
-
-  // Click Restore Settings.
+  // Click Manage.
   let popupHidden = promisePopupHidden(panel);
-  let prefPromise = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
+  // Ensures the preferences tab opens, checks the spotlight, and then closes it
+  let spotlightShown = assertPreferencesShown("homeOverride");
   popupnotification.secondaryButton.click();
-  await prefPromise;
   await popupHidden;
+  await spotlightShown;
+
+  let prefPromise = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
+  await ext2.unload();
+  await prefPromise;
 
   // Expect a new doorhanger for the next extension.
-  await promisePopupShown(panel);
+  popupShown = promisePopupShown(panel);
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+  let openHomepage = TestUtils.topicObserved("browser-open-homepage-start");
+  BrowserHome();
+  await openHomepage;
+  await popupShown;
+  await TestUtils.waitForCondition(
+    () => gURLBar.value.endsWith("ext1.html"),
+    "ext1 is in control"
+  );
 
-  ok(gURLBar.value.endsWith("ext1.html"), "ext1 is in control");
-
-  // Click Restore Settings again.
+  // Click manage again.
   popupHidden = promisePopupHidden(panel);
-  prefPromise = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
+  // Ensures the preferences tab opens, checks the spotlight, and then closes it
+  spotlightShown = assertPreferencesShown("homeOverride");
   popupnotification.secondaryButton.click();
   await popupHidden;
+  await spotlightShown;
+
+  prefPromise = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
+  await ext1.unload();
   await prefPromise;
 
-  await BrowserTestUtils.waitForLocationChange(gBrowser, defaultHomePage);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  openHomepage = TestUtils.topicObserved("browser-open-homepage-start");
+  BrowserHome();
+  await openHomepage;
 
   is(getHomePageURL(), defaultHomePage, "The homepage is set back to default");
-
-  await ext1.unload();
-  await ext2.unload();
 });
 
 add_task(async function test_doorhanger_new_window() {
@@ -444,25 +487,40 @@ add_task(async function test_doorhanger_new_window() {
     "extension-homepage-notification-description"
   );
 
-  ok(win.gURLBar.value.endsWith("ext2.html"), "ext2 is in control");
+  await TestUtils.waitForCondition(
+    () => win.gURLBar.value.endsWith("ext2.html"),
+    "ext2 is in control"
+  );
+
   is(
     description.textContent,
     "An extension,  Ext2, changed what you see when you open your homepage and new windows.Learn more",
     "The extension name is in the popup"
   );
 
-  // Click Restore Settings.
+  // Click Manage.
   let popupHidden = promisePopupHidden(panel);
-  let prefPromise = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
   let popupnotification = doc.getElementById("extension-homepage-notification");
   popupnotification.secondaryButton.click();
-  await prefPromise;
   await popupHidden;
 
-  // Expect a new doorhanger for the next extension.
-  await promisePopupShown(panel);
+  let prefPromise = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
+  await ext2.unload();
+  await prefPromise;
 
-  ok(win.gURLBar.value.endsWith("ext1.html"), "ext1 is in control");
+  // Expect a new doorhanger for the next extension.
+  let popupShown = promisePopupShown(panel);
+  await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:blank");
+  let openHomepage = TestUtils.topicObserved("browser-open-homepage-start");
+  win.BrowserHome();
+  await openHomepage;
+  await popupShown;
+
+  await TestUtils.waitForCondition(
+    () => win.gURLBar.value.endsWith("ext1.html"),
+    "ext1 is in control"
+  );
+
   is(
     description.textContent,
     "An extension,  Ext1, changed what you see when you open your homepage and new windows.Learn more",
@@ -473,18 +531,24 @@ add_task(async function test_doorhanger_new_window() {
   popupnotification.button.click();
   await TestUtils.waitForCondition(() => isConfirmed(ext1Id));
 
-  ok(getHomePageURL().endsWith("ext1.html"), "The homepage is still the set");
+  ok(
+    getHomePageURL().endsWith("ext1.html"),
+    "The homepage is still the first eextension"
+  );
 
   await BrowserTestUtils.closeWindow(win);
   await ext1.unload();
-  await ext2.unload();
 
   ok(!isConfirmed(ext1Id), "The confirmation is cleaned up on uninstall");
-});
+  // Skipping for window leak in debug builds, follow up bug: 1678412
+}).skip(AppConstants.DEBUG);
 
 add_task(async function test_overriding_home_page_incognito_not_allowed() {
   await SpecialPowers.pushPrefEnv({
-    set: [["extensions.allowPrivateBrowsingByDefault", false]],
+    set: [
+      ["extensions.allowPrivateBrowsingByDefault", false],
+      ["browser.startup.page", 1],
+    ],
   });
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -504,6 +568,7 @@ add_task(async function test_overriding_home_page_incognito_not_allowed() {
 
   let windowOpenedPromise = BrowserTestUtils.waitForNewWindow({ url });
   let win = OpenBrowserWindow();
+
   await windowOpenedPromise;
   let doc = win.document;
   let panel = ExtensionControlledPopup._getAndMaybeCreatePanel(doc);
@@ -604,12 +669,14 @@ add_task(async function test_overriding_home_page_incognito_external() {
   let windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
   let win = OpenBrowserWindow({ private: true });
   await windowOpenedPromise;
+  let openHomepage = TestUtils.topicObserved("browser-open-homepage-start");
   win.BrowserHome();
   await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+  await openHomepage;
 
   is(win.gURLBar.value, "", "home page not used in private window");
   is(
-    gBrowser.selectedBrowser.currentURI.spec,
+    win.gBrowser.selectedBrowser.currentURI.spec,
     "about:home",
     "home page not used in private window"
   );

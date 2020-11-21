@@ -581,15 +581,6 @@ bool DelElemOperation(JSContext* cx, HandleValue val, HandleValue index,
 
 JSObject* BindVarOperation(JSContext* cx, JSObject* envChain);
 
-bool DefVarOperation(JSContext* cx, HandleObject envChain, HandleScript script,
-                     jsbytecode* pc);
-
-bool DefLexicalOperation(JSContext* cx, HandleObject envChain,
-                         HandleScript script, jsbytecode* pc);
-
-bool DefFunOperation(JSContext* cx, HandleScript script, HandleObject envChain,
-                     HandleFunction funArg);
-
 JSObject* SingletonObjectLiteralOperation(JSContext* cx, HandleScript script,
                                           jsbytecode* pc);
 
@@ -664,7 +655,7 @@ void ReportInNotObjectError(JSContext* cx, HandleValue lref, int lindex,
 
 // The parser only reports redeclarations that occurs within a single
 // script. Due to the extensibility of the global lexical scope, we also check
-// for redeclarations during runtime in JSOp::Def{Var,Let,Const}.
+// for redeclarations during runtime in JSOp::GlobalOrEvalDeclInstantation.
 void ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name,
                                 const char* redeclKind);
 

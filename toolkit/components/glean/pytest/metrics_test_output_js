@@ -61,6 +61,12 @@ static already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
       return metric.forget();
       break;
     }
+    case 12: /* Datetime */
+    {
+      RefPtr<nsISupports> metric = new GleanDatetime(metricId);
+      return metric.forget();
+      break;
+    }
     default:
     MOZ_ASSERT_UNREACHABLE("Invalid type ID reached when trying to instantiate a new metric");
     return nullptr;

@@ -1333,7 +1333,8 @@ bool MinidumpGenerator::WriteModuleStream(unsigned int index,
     }
 
     if (!WriteCVRecord(module, image->GetCPUType(), image->GetCPUSubtype(),
-        name.c_str(), false)) {
+        name.c_str(), /* in_memory */ false, /* out_of_process */ true,
+        image->GetInDyldSharedCache())) {
       return false;
     }
   } else {
@@ -1357,6 +1358,7 @@ bool MinidumpGenerator::WriteModuleStream(unsigned int index,
 
     int cpu_type = header->cputype;
     int cpu_subtype = (header->cpusubtype & ~CPU_SUBTYPE_MASK);
+    bool in_dyld_shared_cache = ((header->flags & MH_SHAREDCACHE) != 0);
     unsigned long slide = _dyld_get_image_vmaddr_slide(index);
     const char* name = _dyld_get_image_name(index);
     const struct load_command *cmd =
@@ -1384,8 +1386,10 @@ bool MinidumpGenerator::WriteModuleStream(unsigned int index,
 #if TARGET_OS_IPHONE
           in_memory = true;
 #endif
-          if (!WriteCVRecord(module, cpu_type, cpu_subtype, name, in_memory))
+          if (!WriteCVRecord(module, cpu_type, cpu_subtype, name, in_memory,
+                             /* out_of_process */ false, in_dyld_shared_cache)) {
             return false;
+          }
 
           return true;
         }
@@ -1422,7 +1426,8 @@ int MinidumpGenerator::FindExecutableModule() {
 }
 
 bool MinidumpGenerator::WriteCVRecord(MDRawModule *module, int cpu_type, int cpu_subtype,
-                                      const char *module_path, bool in_memory) {
+                                      const char *module_path, bool in_memory,
+                                      bool out_of_process, bool in_dyld_shared_cache) {
   TypedMDRVA<MDCVInfoPDB70> cv(&writer_);
 
   // Only return the last path component of the full module path
@@ -1456,25 +1461,27 @@ bool MinidumpGenerator::WriteCVRecord(MDRawModule *module, int cpu_type, int cpu
   // shared cache", which gets loaded into each process on startup. If one of
   // our system libraries isn't in the file system, we can only get a UUID
   // (aka a debug id) for it by looking at a copy of the module loaded into
-  // the currently running process. Setting 'in_memory' to 'true' makes this
-  // happen.
-  //
-  // We're always called in the main process. But the crashing process might
-  // be either the same process or a different one (a child process). If it's
-  // a child process, it makes sense to set 'in_memory' to 'false', since (in
-  // principle) the child process might not have the same modules in memory as
-  // the main process does. But if we do that on macOS 11 we'll fail to get
-  // debug ids for most of the system libraries. Moreover it's fair to assume
-  // that all (or at least almost all) the system libraries loaded into any
-  // child process will also be loaded into the main process.
+  // the crashing process. Setting 'in_memory' to 'true' makes this happen.
   //
   // We should be reluctant to change the value of 'in_memory' from 'false' to
   // 'true'. But we'll sometimes need to do that to work around the problem
-  // discussed above. In any case we only do it if all else has failed.
+  // discussed above. In any case we only do it if all else has failed. This
+  // resolves https://bugzilla.mozilla.org/show_bug.cgi?id=1662862.
   //
-  // These changes resolve https://bugzilla.mozilla.org/show_bug.cgi?id=1662862.
+  // We're always called in the main process. But the crashing process might
+  // be either the same process or a different one (a child process). If it's
+  // a child process, the modules we'll be looking at are in that process's
+  // memory space, to which we generally don't have access. But because the
+  // dyld shared cache is loaded into all processes, we do have access to
+  // child process modules that are in the dyld shared cache. So it's fine to
+  // look at these modules, but we must prevent ourselves from trying to
+  // child process modules that aren't in the dyld shared cache. This resolves
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1676102.
   while (true) {
     if (in_memory) {
+      if (out_of_process && !in_dyld_shared_cache) {
+        break;
+      }
       MacFileUtilities::MachoID macho(module_path,
           reinterpret_cast<void *>(module->base_of_image),
           static_cast<size_t>(module->size_of_image));

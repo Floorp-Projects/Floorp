@@ -1912,31 +1912,12 @@ class UrlbarView {
 
     let engine = this.oneOffSearchButtons.selectedButton?.engine;
     let source = this.oneOffSearchButtons.selectedButton?.source;
-    switch (source) {
-      case UrlbarUtils.RESULT_SOURCE.BOOKMARKS:
-        source = {
-          attribute: "bookmarks",
-          l10nId: "urlbar-result-action-search-bookmarks",
-          icon: "chrome://browser/skin/bookmark.svg",
-        };
-        break;
-      case UrlbarUtils.RESULT_SOURCE.HISTORY:
-        source = {
-          attribute: "history",
-          l10nId: "urlbar-result-action-search-history",
-          icon: "chrome://browser/skin/history.svg",
-        };
-        break;
-      case UrlbarUtils.RESULT_SOURCE.TABS:
-        source = {
-          attribute: "tabs",
-          l10nId: "urlbar-result-action-search-tabs",
-          icon: "chrome://browser/skin/tab.svg",
-        };
-        break;
-      default:
-        source = null;
-        break;
+
+    let localSearchMode;
+    if (source) {
+      localSearchMode = UrlbarUtils.LOCAL_SEARCH_MODES.find(
+        m => m.source == source
+      );
     }
 
     for (let item of this._rows.children) {
@@ -1968,7 +1949,7 @@ class UrlbarView {
         this.oneOffsRefresh &&
         result.heuristic &&
         !engine &&
-        !source &&
+        !localSearchMode &&
         this.input.searchMode &&
         !this.input.searchMode.isPreview
       ) {
@@ -1981,7 +1962,11 @@ class UrlbarView {
 
       // If a one-off button is the only selection, force the heuristic result
       // to show its action text, so the engine name is visible.
-      if (result.heuristic && !this.selectedElement && (source || engine)) {
+      if (
+        result.heuristic &&
+        !this.selectedElement &&
+        (localSearchMode || engine)
+      ) {
         item.setAttribute("show-action-text", "true");
       } else {
         item.removeAttribute("show-action-text");
@@ -2019,17 +2004,21 @@ class UrlbarView {
         result.type == UrlbarUtils.RESULT_TYPE.URL
       ) {
         title.textContent =
-          source || engine
+          localSearchMode || engine
             ? this._queryContext.searchString
             : result.payload.title;
       }
 
       // Update result action text.
-      if (source) {
+      if (localSearchMode) {
         // Update the result action text for a local one-off.
-        this.document.l10n.setAttributes(action, source.l10nId);
+        let name = UrlbarUtils.getResultSourceName(localSearchMode.source);
+        this.document.l10n.setAttributes(
+          action,
+          `urlbar-result-action-search-${name}`
+        );
         if (result.heuristic) {
-          item.setAttribute("source", source.attribute);
+          item.setAttribute("source", name);
         }
       } else if (engine && !result.payload.inPrivateWindow) {
         // Update the result action text for an engine one-off.
@@ -2053,10 +2042,10 @@ class UrlbarView {
       }
 
       // Update result favicons.
-      let iconOverride = source?.icon || engine?.iconURI?.spec;
+      let iconOverride = localSearchMode?.icon || engine?.iconURI?.spec;
       if (
         !iconOverride &&
-        (source || engine) &&
+        (localSearchMode || engine) &&
         result.type == UrlbarUtils.RESULT_TYPE.URL
       ) {
         // For one-offs without an icon, do not allow restyled URL results to

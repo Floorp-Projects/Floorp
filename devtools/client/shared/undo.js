@@ -79,7 +79,6 @@ UndoStack.prototype = {
     this._stack.push(entry);
     this._index = this._stack.length;
     entry.do();
-    this._change();
   },
 
   /**
@@ -111,7 +110,6 @@ UndoStack.prototype = {
       return false;
     }
     this._stack[--this._index].undo();
-    this._change();
     return true;
   },
 
@@ -132,15 +130,7 @@ UndoStack.prototype = {
       return false;
     }
     this._stack[this._index++].do();
-    this._change();
     return true;
-  },
-
-  _change: function() {
-    if (this._controllerWindow) {
-      this._controllerWindow.goUpdateCommand("cmd_undo");
-      this._controllerWindow.goUpdateCommand("cmd_redo");
-    }
   },
 
   /**

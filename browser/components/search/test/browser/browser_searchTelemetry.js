@@ -37,8 +37,8 @@ function getPageUrl(useExample = false, useAdPage = false) {
   return `http://${server}/browser/browser/components/search/test/browser/${page}`;
 }
 
-function getSERPUrl(page) {
-  return page + "?s=test&abc=ff";
+function getSERPUrl(page, organic = false) {
+  return `${page}?s=test${organic ? "" : "&abc=ff"}`;
 }
 
 function getSERPFollowOnUrl(page) {
@@ -202,7 +202,26 @@ add_task(async function test_track_ad() {
   await assertTelemetry(
     { "example.in-content:sap:ff": 1 },
     {
-      "browser.search.with_ads": { example: 1 },
+      "browser.search.with_ads": { "example:sap": 1 },
+    }
+  );
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_track_ad_organic() {
+  Services.telemetry.clearScalars();
+  searchCounts.clear();
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    getSERPUrl(getPageUrl(false, true), true)
+  );
+
+  await assertTelemetry(
+    { "example.in-content:organic:none": 1 },
+    {
+      "browser.search.with_ads": { "example:organic": 1 },
     }
   );
 
@@ -226,7 +245,7 @@ add_task(async function test_track_ad_new_window() {
   await assertTelemetry(
     { "example.in-content:sap:ff": 1 },
     {
-      "browser.search.with_ads": { example: 1 },
+      "browser.search.with_ads": { "example:sap": 1 },
     }
   );
 
@@ -256,7 +275,7 @@ add_task(async function test_track_ad_pages_without_ads() {
   await assertTelemetry(
     { "example.in-content:sap:ff": 2 },
     {
-      "browser.search.with_ads": { example: 1 },
+      "browser.search.with_ads": { "example:sap": 1 },
     }
   );
 
@@ -265,20 +284,25 @@ add_task(async function test_track_ad_pages_without_ads() {
   }
 });
 
-add_task(async function test_track_ad_click() {
+async function track_ad_click(testOrganic) {
   // Note: the above tests have already checked a page with no ad-urls.
   searchCounts.clear();
   Services.telemetry.clearScalars();
 
+  let expectedScalarKey = `example:${testOrganic ? "organic" : "sap"}`;
+  let expectedHistogramKey = `example.in-content:${
+    testOrganic ? "organic:none" : "sap:ff"
+  }`;
+
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    getSERPUrl(getPageUrl(false, true))
+    getSERPUrl(getPageUrl(false, true), testOrganic)
   );
 
   await assertTelemetry(
-    { "example.in-content:sap:ff": 1 },
+    { [expectedHistogramKey]: 1 },
     {
-      "browser.search.with_ads": { example: 1 },
+      "browser.search.with_ads": { [expectedScalarKey]: 1 },
     }
   );
 
@@ -291,10 +315,10 @@ add_task(async function test_track_ad_click() {
   await new Promise(resolve => setTimeout(resolve, ADLINK_CHECK_TIMEOUT_MS));
 
   await assertTelemetry(
-    { "example.in-content:sap:ff": 1 },
+    { [expectedHistogramKey]: 1 },
     {
-      "browser.search.with_ads": { example: 1 },
-      "browser.search.ad_clicks": { example: 1 },
+      "browser.search.with_ads": { [expectedScalarKey]: 1 },
+      "browser.search.ad_clicks": { [expectedScalarKey]: 1 },
     }
   );
 
@@ -307,10 +331,10 @@ add_task(async function test_track_ad_click() {
 
   // We've gone back, so we register an extra display & if it is with ads or not.
   await assertTelemetry(
-    { "example.in-content:sap:ff": 2 },
+    { [expectedHistogramKey]: 2 },
     {
-      "browser.search.with_ads": { example: 2 },
-      "browser.search.ad_clicks": { example: 1 },
+      "browser.search.with_ads": { [expectedScalarKey]: 2 },
+      "browser.search.ad_clicks": { [expectedScalarKey]: 1 },
     }
   );
 
@@ -323,14 +347,22 @@ add_task(async function test_track_ad_click() {
   await new Promise(resolve => setTimeout(resolve, ADLINK_CHECK_TIMEOUT_MS));
 
   await assertTelemetry(
-    { "example.in-content:sap:ff": 2 },
+    { [expectedHistogramKey]: 2 },
     {
-      "browser.search.with_ads": { example: 2 },
-      "browser.search.ad_clicks": { example: 2 },
+      "browser.search.with_ads": { [expectedScalarKey]: 2 },
+      "browser.search.ad_clicks": { [expectedScalarKey]: 2 },
     }
   );
 
   BrowserTestUtils.removeTab(tab);
+}
+
+add_task(async function test_track_ad_click() {
+  await track_ad_click(false);
+});
+
+add_task(async function test_track_ad_click_organic() {
+  await track_ad_click(true);
 });
 
 add_task(async function test_track_ad_click_with_location_change_other_tab() {
@@ -342,7 +374,7 @@ add_task(async function test_track_ad_click_with_location_change_other_tab() {
   await assertTelemetry(
     { "example.in-content:sap:ff": 1 },
     {
-      "browser.search.with_ads": { example: 1 },
+      "browser.search.with_ads": { "example:sap": 1 },
     }
   );
 
@@ -362,8 +394,8 @@ add_task(async function test_track_ad_click_with_location_change_other_tab() {
   await assertTelemetry(
     { "example.in-content:sap:ff": 1 },
     {
-      "browser.search.with_ads": { example: 1 },
-      "browser.search.ad_clicks": { example: 1 },
+      "browser.search.with_ads": { "example:sap": 1 },
+      "browser.search.ad_clicks": { "example:sap": 1 },
     }
   );
 

@@ -586,27 +586,8 @@ static int32_t ConvertGTKStepperStyleToMozillaScrollArrowStyle(
                           mozilla::LookAndFeel::eScrollArrow_StartForward);
 }
 
-nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
+nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
   nsresult res = NS_OK;
-
-  // Set these before they can get overrided in the nsXPLookAndFeel.
-  switch (aID) {
-    case IntID::ScrollButtonLeftMouseButtonAction:
-      aResult = 0;
-      return NS_OK;
-    case IntID::ScrollButtonMiddleMouseButtonAction:
-      aResult = 1;
-      return NS_OK;
-    case IntID::ScrollButtonRightMouseButtonAction:
-      aResult = 2;
-      return NS_OK;
-    default:
-      break;
-  }
-
-  res = nsXPLookAndFeel::GetIntImpl(aID, aResult);
-  if (NS_SUCCEEDED(res)) return res;
-  res = NS_OK;
 
   // We use delayed initialization by EnsureInit() here
   // to make sure mozilla::Preferences is available (Bug 115807).
@@ -614,6 +595,15 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
   // are read, and so EnsureInit(), which depends on preference values,
   // is deliberately delayed until required.
   switch (aID) {
+    case IntID::ScrollButtonLeftMouseButtonAction:
+      aResult = 0;
+      break;
+    case IntID::ScrollButtonMiddleMouseButtonAction:
+      aResult = 1;
+      break;
+    case IntID::ScrollButtonRightMouseButtonAction:
+      aResult = 2;
+      break;
     case IntID::CaretBlinkTime:
       EnsureInit();
       aResult = mCaretBlinkTime;
@@ -819,12 +809,8 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
   return res;
 }
 
-nsresult nsLookAndFeel::GetFloatImpl(FloatID aID, float& aResult) {
-  nsresult res = NS_OK;
-  res = nsXPLookAndFeel::GetFloatImpl(aID, aResult);
-  if (NS_SUCCEEDED(res)) return res;
-  res = NS_OK;
-
+nsresult nsLookAndFeel::NativeGetFloat(FloatID aID, float& aResult) {
+  nsresult rv = NS_OK;
   switch (aID) {
     case FloatID::IMEUnderlineRelativeSize:
       aResult = 1.0f;
@@ -838,9 +824,9 @@ nsresult nsLookAndFeel::GetFloatImpl(FloatID aID, float& aResult) {
       break;
     default:
       aResult = -1.0;
-      res = NS_ERROR_FAILURE;
+      rv = NS_ERROR_FAILURE;
   }
-  return res;
+  return rv;
 }
 
 static void GetSystemFontInfo(GtkStyleContext* aStyle, nsString* aFontName,
@@ -879,8 +865,8 @@ static void GetSystemFontInfo(GtkStyleContext* aStyle, nsString* aFontName,
   pango_font_description_free(desc);
 }
 
-bool nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
-                                gfxFontStyle& aFontStyle) {
+bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName,
+                                  gfxFontStyle& aFontStyle) {
   switch (aID) {
     case FontID::Menu:          // css2
     case FontID::PullDownMenu:  // css3

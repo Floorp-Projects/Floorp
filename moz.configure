@@ -194,8 +194,8 @@ add_old_configure_assignment("PKG_CONFIG", pkg_config)
 include("build/moz.configure/memory.configure", when="--enable-compile-environment")
 include("build/moz.configure/headers.configure", when="--enable-compile-environment")
 include("build/moz.configure/warnings.configure", when="--enable-compile-environment")
-include("build/moz.configure/lto-pgo.configure", when="--enable-compile-environment")
 include("build/moz.configure/flags.configure", when="--enable-compile-environment")
+include("build/moz.configure/lto-pgo.configure", when="--enable-compile-environment")
 # rust.configure is included by js/moz.configure.
 
 option("--enable-valgrind", help="Enable Valgrind integration hooks")

@@ -46,7 +46,7 @@ This singleton component lives inside of the "privileged about content process",
 
 When the `AboutRedirector` in the "privileged about content process" notices that a request has been made to `about:home`, it asks `nsIAboutNewTabService` to return a new `nsIChannel` for that document. The `AboutNewTabChildService` then checks to see if the `AboutHomeStartupCacheChild` can return an `nsIChannel` for any cached content.
 
-If, at this point, nothing has been streamed from the parent, we fall back to loading the dynamic `about:home` document. This might occur if the cache doesn't exist yet, or if we were too slow to pull it off of the disk.
+If, at this point, nothing has been streamed from the parent, we fall back to loading the dynamic `about:home` document. This might occur if the cache doesn't exist yet, or if we were too slow to pull it off of the disk. Subsequent attempts to load `about:home` will bypass the cache and load the dynamic document instead. This is true even if the privileged about content process crashes and a new one is created.
 
 The `AboutHomeStartupCacheChild` will also be responsible for generating the cache periodically. Periodically, the `AboutNewTabService` will send down the most up-to-date state for `about:home` from the parent process, and then the `AboutHomeStartupCacheChild` will generate document markup using ReactDOMServer within a `ChromeWorker`. After that's generated, the "privileged about content process" will send up `nsIInputStream` instances for both the markup and the script for the initial page state. The `AboutHomeStartupCache` singleton inside of `BrowserGlue` is responsible for receiving those `nsIInputStream`'s and persisting them in the HTTP cache for the next start.
 

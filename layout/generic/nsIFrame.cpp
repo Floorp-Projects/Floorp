@@ -5999,33 +5999,6 @@ AspectRatio nsIFrame::GetAspectRatio() const {
 /* virtual */
 AspectRatio nsIFrame::GetIntrinsicRatio() const { return AspectRatio(); }
 
-static nscoord ComputeInlineSizeFromAspectRatio(
-    WritingMode aWM, const StyleAspectRatio& aAspectRatio, nscoord aBlockSize,
-    const LogicalSize& aBoxSizingAdjustment) {
-  MOZ_ASSERT(aAspectRatio.HasFiniteRatio(),
-             "Infinite or zero ratio may have undefined behavior when "
-             "computing the size");
-  return aAspectRatio.ratio.AsRatio()
-             .ToLayoutRatio()
-             .ConvertToWritingMode(aWM)
-             .ApplyTo(aBlockSize + aBoxSizingAdjustment.BSize(aWM)) -
-         aBoxSizingAdjustment.ISize(aWM);
-}
-
-static nscoord ComputeBlockSizeFromAspectRatio(
-    WritingMode aWM, const StyleAspectRatio& aAspectRatio, nscoord aInlineSize,
-    const LogicalSize& aBoxSizingAdjustment) {
-  MOZ_ASSERT(aAspectRatio.HasFiniteRatio(),
-             "Infinite or zero ratio may have undefined behavior when "
-             "computing the size");
-  return aAspectRatio.ratio.AsRatio()
-             .ToLayoutRatio()
-             .ConvertToWritingMode(aWM)
-             .Inverted()
-             .ApplyTo(aInlineSize + aBoxSizingAdjustment.ISize(aWM)) -
-         aBoxSizingAdjustment.BSize(aWM);
-}
-
 static bool ShouldApplyAutomaticMinimumOnInlineAxis(
     WritingMode aWM, const nsStyleDisplay* aDisplay,
     const nsStylePosition* aPosition) {
@@ -6066,13 +6039,17 @@ static MinMaxSize ComputeTransferredMinMaxInlineSize(
   MinMaxSize transferredISize;
 
   if (aMinMaxBSize.mMinSize > 0) {
-    transferredISize.mMinSize = ComputeInlineSizeFromAspectRatio(
-        aWM, aAspectRatio, aMinMaxBSize.mMinSize, aBoxSizingAdjustment);
+    transferredISize.mMinSize =
+        aAspectRatio.ToLayoutRatio().ComputeRatioDependentSize(
+            LogicalAxis::eLogicalAxisInline, aWM, aMinMaxBSize.mMinSize,
+            aBoxSizingAdjustment);
   }
 
   if (aMinMaxBSize.mMaxSize != NS_UNCONSTRAINEDSIZE) {
-    transferredISize.mMaxSize = ComputeInlineSizeFromAspectRatio(
-        aWM, aAspectRatio, aMinMaxBSize.mMaxSize, aBoxSizingAdjustment);
+    transferredISize.mMaxSize =
+        aAspectRatio.ToLayoutRatio().ComputeRatioDependentSize(
+            LogicalAxis::eLogicalAxisInline, aWM, aMinMaxBSize.mMaxSize,
+            aBoxSizingAdjustment);
   }
 
   // Minimum size wins over maximum size.
@@ -6206,8 +6183,9 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
     auto bSize = nsLayoutUtils::ComputeBSizeValue(
         aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
         blockStyleCoord->AsLengthPercentage());
-    result.ISize(aWM) = ComputeInlineSizeFromAspectRatio(
-        aWM, stylePos->mAspectRatio, bSize, boxSizingAdjust);
+    result.ISize(aWM) =
+        stylePos->mAspectRatio.ToLayoutRatio().ComputeRatioDependentSize(
+            LogicalAxis::eLogicalAxisInline, aWM, bSize, boxSizingAdjust);
     aspectRatioUsage = AspectRatioUsage::ToComputeISize;
   } else if (MOZ_UNLIKELY(isGridItem) && !IsTrueOverflowContainer()) {
     // 'auto' inline-size for grid-level box - fill the CB for 'stretch' /
@@ -6339,8 +6317,10 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
           blockStyleCoord->AsLengthPercentage());
     } else if (stylePos->mAspectRatio.HasFiniteRatio() &&
                result.ISize(aWM) != NS_UNCONSTRAINEDSIZE) {
-      result.BSize(aWM) = ComputeBlockSizeFromAspectRatio(
-          aWM, stylePos->mAspectRatio, result.ISize(aWM), boxSizingAdjust);
+      result.BSize(aWM) =
+          stylePos->mAspectRatio.ToLayoutRatio().ComputeRatioDependentSize(
+              LogicalAxis::eLogicalAxisBlock, aWM, result.ISize(aWM),
+              boxSizingAdjust);
       MOZ_ASSERT(aspectRatioUsage == AspectRatioUsage::None);
       aspectRatioUsage = AspectRatioUsage::ToComputeBSize;
     } else if (MOZ_UNLIKELY(isGridItem) && blockStyleCoord->IsAuto() &&

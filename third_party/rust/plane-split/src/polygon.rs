@@ -1,13 +1,9 @@
-use {Line, Plane, is_zero};
+use crate::{is_zero, Line, Plane};
 
-use euclid::default::Point2D;
-use euclid::{Transform3D, Point3D, Vector3D, Rect};
-use euclid::approxeq::ApproxEq;
-use euclid::Trig;
+use euclid::{approxeq::ApproxEq, default::Point2D, Point3D, Rect, Transform3D, Trig, Vector3D};
 use num_traits::{Float, One, Zero};
 
 use std::{fmt, iter, mem, ops};
-
 
 /// The projection of a `Polygon` on a line.
 pub struct LineProjection<T> {
@@ -15,12 +11,18 @@ pub struct LineProjection<T> {
     pub markers: [T; 4],
 }
 
-impl<T> LineProjection<T> where
-    T : Copy + PartialOrd + ops::Sub<T, Output=T> + ops::Add<T, Output=T>
+impl<T> LineProjection<T>
+where
+    T: Copy + PartialOrd + ops::Sub<T, Output = T> + ops::Add<T, Output = T>,
 {
     /// Get the min/max of the line projection markers.
     pub fn get_bounds(&self) -> (T, T) {
-        let (mut a, mut b, mut c, mut d) = (self.markers[0], self.markers[1], self.markers[2], self.markers[3]);
+        let (mut a, mut b, mut c, mut d) = (
+            self.markers[0],
+            self.markers[1],
+            self.markers[2],
+            self.markers[3],
+        );
         // bitonic sort of 4 elements
         // we could not just use `min/max` since they require `Ord` bound
         //TODO: make it nicer
@@ -49,13 +51,20 @@ impl<T> LineProjection<T> where
         let span = self.get_bounds();
         let other_span = other.get_bounds();
         // compute the total footprint
-        let left = if span.0 < other_span.0 { span.0 } else { other_span.0 };
-        let right = if span.1 > other_span.1 { span.1 } else { other_span.1 };
+        let left = if span.0 < other_span.0 {
+            span.0
+        } else {
+            other_span.0
+        };
+        let right = if span.1 > other_span.1 {
+            span.1
+        } else {
+            other_span.1
+        };
         // they intersect if the footprint is smaller than the sum
         right - left < span.1 - span.0 + other_span.1 - other_span.0
     }
 }
-
 
 /// Polygon intersection results.
 pub enum Intersection<T> {
@@ -84,7 +93,6 @@ impl<T> Intersection<T> {
     }
 }
 
-
 /// A convex polygon with 4 points lying on a plane.
 #[derive(Debug, PartialEq)]
 pub struct Polygon<T, U, A> {
@@ -102,9 +110,9 @@ impl<T: Clone, U, A: Copy> Clone for Polygon<T, U, A> {
         Polygon {
             points: [
                 self.points[0].clone(),
-                 self.points[1].clone(),
-                 self.points[2].clone(),
-                 self.points[3].clone(),
+                self.points[1].clone(),
+                self.points[2].clone(),
+                self.points[3].clone(),
             ],
             plane: self.plane.clone(),
             anchor: self.anchor,
@@ -112,27 +120,31 @@ impl<T: Clone, U, A: Copy> Clone for Polygon<T, U, A> {
     }
 }
 
-impl<T, U, A> Polygon<T, U, A> where
-    T: Copy + fmt::Debug + ApproxEq<T> +
-        ops::Sub<T, Output=T> + ops::Add<T, Output=T> +
-        ops::Mul<T, Output=T> + ops::Div<T, Output=T> +
-        Zero + One + Float,
+impl<T, U, A> Polygon<T, U, A>
+where
+    T: Copy
+        + fmt::Debug
+        + ApproxEq<T>
+        + ops::Sub<T, Output = T>
+        + ops::Add<T, Output = T>
+        + ops::Mul<T, Output = T>
+        + ops::Div<T, Output = T>
+        + Zero
+        + One
+        + Float,
     U: fmt::Debug,
     A: Copy,
 {
     /// Construct a polygon from points that are already transformed.
     /// Return None if the polygon doesn't contain any space.
-    pub fn from_points(
-        points: [Point3D<T, U>; 4],
-        anchor: A,
-    ) -> Option<Self> {
+    pub fn from_points(points: [Point3D<T, U>; 4], anchor: A) -> Option<Self> {
         let edge1 = points[1] - points[0];
         let edge2 = points[2] - points[0];
         let edge3 = points[3] - points[0];
         let edge4 = points[3] - points[1];
 
         if edge2.square_length() < T::epsilon() || edge4.square_length() < T::epsilon() {
-            return None
+            return None;
         }
 
         // one of them can be zero for redundant polygons produced by plane splitting
@@ -148,15 +160,11 @@ impl<T, U, A> Polygon<T, U, A> where
             normal_rough2 / square_length2.sqrt()
         };
 
-        let offset = -points[0].to_vector()
-            .dot(normal);
+        let offset = -points[0].to_vector().dot(normal);
 
         Some(Polygon {
             points,
-            plane: Plane {
-                normal,
-                offset,
-            },
+            plane: Plane { normal, offset },
             anchor,
         })
     }
@@ -188,7 +196,7 @@ impl<T, U, A> Polygon<T, U, A> where
         anchor: A,
     ) -> Option<Self>
     where
-        T: Trig + ops::Neg<Output=T>,
+        T: Trig + ops::Neg<Output = T>,
     {
         let min = rect.min();
         let max = rect.max();
@@ -210,7 +218,7 @@ impl<T, U, A> Polygon<T, U, A> where
         anchor: A,
     ) -> Option<Self>
     where
-        T: Trig + ops::Neg<Output=T>,
+        T: Trig + ops::Neg<Output = T>,
     {
         let min = rect.min();
         let max = rect.max();
@@ -230,15 +238,12 @@ impl<T, U, A> Polygon<T, U, A> where
             None
         } else {
             let normal = normal_raw / normal_sql.sqrt();
-            let offset = -Vector3D::new(transform.m41, transform.m42, transform.m43)
-                .dot(normal) / transform.m44;
+            let offset = -Vector3D::new(transform.m41, transform.m42, transform.m43).dot(normal)
+                / transform.m44;
 
             Some(Polygon {
                 points,
-                plane: Plane {
-                    normal,
-                    offset,
-                },
+                plane: Plane { normal, offset },
                 anchor,
             })
         }
@@ -266,9 +271,7 @@ impl<T, U, A> Polygon<T, U, A> where
     }
 
     /// Transform a polygon by an affine transform (preserving straight lines).
-    pub fn transform<V>(
-        &self, transform: &Transform3D<T, U, V>
-    ) -> Option<Polygon<T, V, A>>
+    pub fn transform<V>(&self, transform: &Transform3D<T, U, V>) -> Option<Polygon<T, V, A>>
     where
         T: Trig,
         V: fmt::Debug,
@@ -289,7 +292,8 @@ impl<T, U, A> Polygon<T, U, A> where
     /// Check if all the points are indeed placed on the plane defined by
     /// the normal and offset, and the winding order is consistent.
     pub fn is_valid(&self) -> bool {
-        let is_planar = self.points
+        let is_planar = self
+            .points
             .iter()
             .all(|p| is_zero(self.plane.signed_distance_to(p)));
         let edges = [
@@ -309,8 +313,8 @@ impl<T, U, A> Polygon<T, U, A> where
     /// Check if the polygon doesn't contain any space. This may happen
     /// after a sequence of splits, and such polygons should be discarded.
     pub fn is_empty(&self) -> bool {
-        (self.points[0] - self.points[2]).square_length() < T::epsilon() ||
-        (self.points[1] - self.points[3]).square_length() < T::epsilon()
+        (self.points[0] - self.points[2]).square_length() < T::epsilon()
+            || (self.points[1] - self.points[3]).square_length() < T::epsilon()
     }
 
     /// Check if this polygon contains another one.
@@ -335,13 +339,13 @@ impl<T, U, A> Polygon<T, U, A> where
     /// Compute the line of intersection with an infinite plane.
     pub fn intersect_plane(&self, other: &Plane<T, U>) -> Intersection<Line<T, U>> {
         if other.are_outside(&self.points) {
-            debug!("\t\tOutside of the plane");
-            return Intersection::Outside
+            log::debug!("\t\tOutside of the plane");
+            return Intersection::Outside;
         }
         match self.plane.intersect(&other) {
             Some(line) => Intersection::Inside(line),
             None => {
-                debug!("\t\tCoplanar");
+                log::debug!("\t\tCoplanar");
                 Intersection::Coplanar
             }
         }
@@ -350,8 +354,8 @@ impl<T, U, A> Polygon<T, U, A> where
     /// Compute the line of intersection with another polygon.
     pub fn intersect(&self, other: &Self) -> Intersection<Line<T, U>> {
         if self.plane.are_outside(&other.points) || other.plane.are_outside(&self.points) {
-            debug!("\t\tOne is completely outside of the other");
-            return Intersection::Outside
+            log::debug!("\t\tOne is completely outside of the other");
+            return Intersection::Outside;
         }
         match self.plane.intersect(&other.plane) {
             Some(line) => {
@@ -361,12 +365,12 @@ impl<T, U, A> Polygon<T, U, A> where
                     Intersection::Inside(line)
                 } else {
                     // projections on the line don't intersect
-                    debug!("\t\tProjection is outside");
+                    log::debug!("\t\tProjection is outside");
                     Intersection::Outside
                 }
             }
             None => {
-                debug!("\t\tCoplanar");
+                log::debug!("\t\tCoplanar");
                 Intersection::Coplanar
             }
         }
@@ -379,7 +383,7 @@ impl<T, U, A> Polygon<T, U, A> where
     ) -> (Option<Self>, Option<Self>) {
         //TODO: can be optimized for when the polygon has a redundant 4th vertex
         //TODO: can be simplified greatly if only working with triangles
-        debug!("\t\tReached complex case [{}, {}]", first.0, second.0);
+        log::debug!("\t\tReached complex case [{}, {}]", first.0, second.0);
         let base = first.0;
         assert!(base < self.points.len());
         match second.0 - first.0 {
@@ -392,7 +396,7 @@ impl<T, U, A> Polygon<T, U, A> where
                         self.points[(base + 2) & 3],
                         self.points[base],
                     ],
-                    .. self.clone()
+                    ..self.clone()
                 };
                 // triangle on the near side of the diagonal
                 let other2 = Polygon {
@@ -402,15 +406,10 @@ impl<T, U, A> Polygon<T, U, A> where
                         self.points[base],
                         self.points[base],
                     ],
-                    .. self.clone()
+                    ..self.clone()
                 };
                 // triangle being cut out
-                self.points = [
-                    first.1,
-                    self.points[(base + 1) & 3],
-                    second.1,
-                    second.1,
-                ];
+                self.points = [first.1, self.points[(base + 1) & 3], second.1, second.1];
                 (Some(other1), Some(other2))
             }
             2 => {
@@ -422,7 +421,7 @@ impl<T, U, A> Polygon<T, U, A> where
                         self.points[(base + 2) & 3],
                         second.1,
                     ],
-                    .. self.clone()
+                    ..self.clone()
                 };
                 // rect on the near side
                 self.points = [
@@ -442,7 +441,7 @@ impl<T, U, A> Polygon<T, U, A> where
                         self.points[(base + 3) & 3],
                         second.1,
                     ],
-                    .. self.clone()
+                    ..self.clone()
                 };
                 // triangle on the far side of the diagonal
                 let other2 = Polygon {
@@ -452,15 +451,10 @@ impl<T, U, A> Polygon<T, U, A> where
                         self.points[(base + 3) & 3],
                         self.points[(base + 3) & 3],
                     ],
-                    .. self.clone()
+                    ..self.clone()
                 };
                 // triangle being cut out
-                self.points = [
-                    first.1,
-                    second.1,
-                    self.points[base],
-                    self.points[base],
-                ];
+                self.points = [first.1, second.1, self.points[base], self.points[base]];
                 (Some(other1), Some(other2))
             }
             _ => panic!("Unexpected indices {} {}", first.0, second.0),
@@ -471,24 +465,29 @@ impl<T, U, A> Polygon<T, U, A> where
     /// Will do nothing if the line doesn't belong to the polygon plane.
     #[deprecated(note = "Use split_with_normal instead")]
     pub fn split(&mut self, line: &Line<T, U>) -> (Option<Self>, Option<Self>) {
-        debug!("\tSplitting");
+        log::debug!("\tSplitting");
         // check if the cut is within the polygon plane first
-        if !is_zero(self.plane.normal.dot(line.dir)) ||
-           !is_zero(self.plane.signed_distance_to(&line.origin)) {
-            debug!("\t\tDoes not belong to the plane, normal dot={:?}, origin distance={:?}",
-                self.plane.normal.dot(line.dir), self.plane.signed_distance_to(&line.origin));
-            return (None, None)
+        if !is_zero(self.plane.normal.dot(line.dir))
+            || !is_zero(self.plane.signed_distance_to(&line.origin))
+        {
+            log::debug!(
+                "\t\tDoes not belong to the plane, normal dot={:?}, origin distance={:?}",
+                self.plane.normal.dot(line.dir),
+                self.plane.signed_distance_to(&line.origin)
+            );
+            return (None, None);
         }
         // compute the intersection points for each edge
         let mut cuts = [None; 4];
-        for ((&b, &a), cut) in self.points
+        for ((&b, &a), cut) in self
+            .points
             .iter()
             .cycle()
             .skip(1)
             .zip(self.points.iter())
             .zip(cuts.iter_mut())
         {
-            if let Some(t) = line.intersect_edge(a .. b) {
+            if let Some(t) = line.intersect_edge(a..b) {
                 if t >= T::zero() && t < T::one() {
                     *cut = Some(a + (b - a) * t);
                 }
@@ -499,7 +498,7 @@ impl<T, U, A> Polygon<T, U, A> where
             Some(pos) => pos,
             None => return (None, None),
         };
-        let second = match cuts[first+1 ..].iter().position(|c| c.is_some()) {
+        let second = match cuts[first + 1..].iter().position(|c| c.is_some()) {
             Some(pos) => first + 1 + pos,
             None => return (None, None),
         };
@@ -514,9 +513,11 @@ impl<T, U, A> Polygon<T, U, A> where
     /// forms the side direction here, and figuring out the actual line of split isn't needed.
     /// Will do nothing if the line doesn't belong to the polygon plane.
     pub fn split_with_normal(
-        &mut self, line: &Line<T, U>, normal: &Vector3D<T, U>,
+        &mut self,
+        line: &Line<T, U>,
+        normal: &Vector3D<T, U>,
     ) -> (Option<Self>, Option<Self>) {
-        debug!("\tSplitting with normal");
+        log::debug!("\tSplitting with normal");
         // figure out which side of the split does each point belong to
         let mut sides = [T::zero(); 4];
         let (mut cut_positive, mut cut_negative) = (None, None);
@@ -548,8 +549,15 @@ impl<T, U, A> Polygon<T, U, A> where
             // Given that we are intersecting two straight lines, the triangles on both
             // sides of intersection are alike, so distances along the [point0, point1] line
             // are proportional to the side vector lengths we just computed: (side0, side1).
-            let point = (*point0 * side1.abs() + point1.to_vector() * side0.abs()) / (side0 - side1).abs();
-            debug_assert_eq!(*cut, None);
+            let point =
+                (*point0 * side1.abs() + point1.to_vector() * side0.abs()) / (side0 - side1).abs();
+            if cut.is_some() {
+                // We don't expect that the direction changes more than once, unless
+                // the polygon is close to redundant, and we hit precision issues when
+                // computing the sides.
+                log::warn!("Splitting failed due to precision issues: {:?}", sides);
+                break;
+            }
             *cut = Some((i, point));
         }
         // form new polygons
@@ -562,4 +570,28 @@ impl<T, U, A> Polygon<T, U, A> where
             (None, None)
         }
     }
+}
+
+#[test]
+fn test_split_precision() {
+    // regression test for https://bugzilla.mozilla.org/show_bug.cgi?id=1678454
+    let mut polygon = Polygon::<_, (), ()> {
+        points: [
+            Point3D::new(300.0102, 150.00958, 0.0),
+            Point3D::new(606.0, 306.0, 0.0),
+            Point3D::new(300.21954, 150.11946, 0.0),
+            Point3D::new(300.08844, 150.05064, 0.0),
+        ],
+        plane: Plane {
+            normal: Vector3D::zero(),
+            offset: 0.0,
+        },
+        anchor: (),
+    };
+    let line = Line {
+        origin: Point3D::new(3.0690663, -5.8472385, 0.0),
+        dir: Vector3D::new(0.8854436, 0.46474677, -0.0),
+    };
+    let normal = Vector3D::new(0.46474662, -0.8854434, -0.0006389789);
+    polygon.split_with_normal(&line, &normal);
 }

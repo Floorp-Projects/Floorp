@@ -386,7 +386,7 @@ class Mitmproxy(Playback):
                             "values": data["replay-confidence"],
                             "subtest-prefix-type": False,
                             "unit": "%",
-                            "shouldAlert": True,
+                            "shouldAlert": False,
                             "lowerIsBetter": False,
                         },
                         "recording-proportion-used": {

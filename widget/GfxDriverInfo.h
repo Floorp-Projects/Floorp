@@ -236,6 +236,10 @@ enum DriverVendor : uint8_t {
   MesaUnknown,
   // Wildcard for all non-Mesa drivers.
   NonMesaAll,
+  // Wildcard for all hardware Mesa drivers.
+  HardwareMesaAll,
+  // Wildcard for all software Mesa drivers.
+  SoftwareMesaAll,
 
   Max
 };

@@ -162,9 +162,16 @@ add_autofill_task(async function wwwShouldNotMatchNoWWW() {
     await check_results({
       context,
       matches: [
+        makeVisitResult(context, {
+          source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+          uri: "http://www." + search + "/",
+          title: "http://www." + search + "/",
+          displayUrl: "http://www." + search,
+          heuristic: true,
+          providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
+        }),
         makeSearchResult(context, {
           engineName: ENGINE_NAME,
-          heuristic: true,
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
         }),
       ],
@@ -392,9 +399,16 @@ add_autofill_task(async function httpsWWWShouldNotMatchNoWWW() {
     await check_results({
       context,
       matches: [
+        makeVisitResult(context, {
+          source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+          uri: "http://www." + search + "/",
+          title: "http://www." + search + "/",
+          displayUrl: "http://www." + search,
+          heuristic: true,
+          providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
+        }),
         makeSearchResult(context, {
           engineName: ENGINE_NAME,
-          heuristic: true,
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
         }),
       ],
