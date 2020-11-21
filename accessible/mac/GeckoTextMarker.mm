@@ -277,7 +277,7 @@ bool GeckoTextMarker::Previous() {
   return false;
 }
 
-uint32_t GeckoTextMarker::CharacterCount(const AccessibleOrProxy& aContainer) {
+static uint32_t CharacterCount(const AccessibleOrProxy& aContainer) {
   if (aContainer.IsProxy()) {
     return aContainer.AsProxy()->CharacterCount();
   }
@@ -335,7 +335,8 @@ AccessibleOrProxy GeckoTextMarker::Leaf() {
 
 GeckoTextMarkerRange::GeckoTextMarkerRange(
     AccessibleOrProxy aDoc, AXTextMarkerRangeRef aTextMarkerRange) {
-  if (CFGetTypeID(aTextMarkerRange) != AXTextMarkerRangeGetTypeID()) {
+  if (!aTextMarkerRange ||
+      CFGetTypeID(aTextMarkerRange) != AXTextMarkerRangeGetTypeID()) {
     return;
   }
 
@@ -440,6 +441,30 @@ void GeckoTextMarkerRange::Select() const {
     RefPtr<HyperTextAccessibleWrap> end = mEnd.ContainerAsHyperTextWrap();
     htWrap->SelectRange(mStart.mOffset, end, mEnd.mOffset);
   }
+}
+
+bool GeckoTextMarkerRange::Crop(const AccessibleOrProxy& aContainer) {
+  GeckoTextMarker containerStart(aContainer, 0);
+  GeckoTextMarker containerEnd(aContainer, CharacterCount(aContainer));
+
+  if (mEnd < containerStart || containerEnd < mStart) {
+    // The range ends before the container, or starts after it.
+    return false;
+  }
+
+  if (mStart < containerStart) {
+    // If range start is before container start, adjust range start to
+    // start of container.
+    mStart = containerStart;
+  }
+
+  if (containerEnd < mEnd) {
+    // If range end is after container end, adjust range end to end of
+    // container.
+    mEnd = containerEnd;
+  }
+
+  return true;
 }
 }
 }

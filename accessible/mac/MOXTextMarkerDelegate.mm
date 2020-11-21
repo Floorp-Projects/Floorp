@@ -75,6 +75,10 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
   mSelection = nil;
 }
 
+- (mozilla::a11y::GeckoTextMarkerRange)selection {
+  return mozilla::a11y::GeckoTextMarkerRange(mGeckoDocAccessible, mSelection);
+}
+
 - (id)moxStartTextMarker {
   GeckoTextMarker geckoTextPoint(mGeckoDocAccessible, 0);
   return geckoTextPoint.CreateAXTextMarker();
