@@ -232,8 +232,12 @@ let JSWINDOWACTORS = {
       },
     },
     // The wildcard on about:newtab is for the ?endpoint query parameter
-    // that is used for snippets debugging.
-    matches: ["about:home", "about:welcome", "about:newtab*"],
+    // that is used for snippets debugging. The wildcard for about:home
+    // is similar, and also allows for falling back to loading the
+    // about:home document dynamically if an attempt is made to load
+    // about:home?jscache from the AboutHomeStartupCache as a top-level
+    // load.
+    matches: ["about:home*", "about:welcome", "about:newtab*"],
     remoteTypes: ["privilegedabout"],
   },
 
@@ -4874,6 +4878,7 @@ var AboutHomeStartupCache = {
   _initted: false,
   _hasWrittenThisSession: false,
   _finalized: false,
+  _firstPrivilegedProcessCreated: false,
 
   init() {
     if (this._initted) {
@@ -4919,6 +4924,10 @@ var AboutHomeStartupCache = {
     Services.obs.addObserver(this, "process-type-set");
     Services.obs.addObserver(this, "ipc:content-shutdown");
     Services.obs.addObserver(this, "intl:app-locales-changed");
+
+    this.log.trace("Constructing pipes.");
+    this._pagePipe = this.makePipe();
+    this._scriptPipe = this.makePipe();
 
     this._cacheEntryPromise = new Promise(resolve => {
       this._cacheEntryResolver = resolve;
@@ -4994,9 +5003,12 @@ var AboutHomeStartupCache = {
       this.log = null;
     }
 
+    this._procManager = null;
+    this._procManagerID = null;
     this._appender = null;
     this._cacheDeferred = null;
     this._finalized = false;
+    this._firstPrivilegedProcessCreated = false;
   },
 
   _aboutHomeURI: null,
@@ -5131,20 +5143,6 @@ var AboutHomeStartupCache = {
     return pipe;
   },
 
-  /**
-   * Constructs and caches two nsIPipe instances - one for the about:home
-   * page, and one for its hydration script. If these nsIPipe instances
-   * already exist, this function does nothing.
-   */
-  makePipes() {
-    if (this._pagePipe && this._scriptPipe) {
-      return;
-    }
-    this.log.trace("Constructing pipes.");
-    this._pagePipe = this.makePipe();
-    this._scriptPipe = this.makePipe();
-  },
-
   get pagePipe() {
     return this._pagePipe;
   },
@@ -5162,13 +5160,8 @@ var AboutHomeStartupCache = {
    * In the event that the nsICacheEntry doesn't contain anything usable,
    * the nsInputStreams on the nsIPipe's are closed.
    */
-  maybeConnectToPipes() {
-    if (!this._cacheEntry) {
-      this.log.trace(
-        "Not connecting to pipes yet - the cache entry isn't available yet"
-      );
-      return;
-    }
+  connectToPipes() {
+    this.log.trace(`Connecting nsICacheEntry to pipes.`);
 
     // If the cache doesn't yet exist, we'll know because the version metadata
     // won't exist yet.
@@ -5247,47 +5240,7 @@ var AboutHomeStartupCache = {
     }
 
     this.setDeferredResult(this.CACHE_RESULT_SCALARS.VALID_AND_USED);
-    this.log.trace("Streams connected to pipes. Dropping references to pipes.");
-    this._pagePipe = null;
-    this._scriptPipe = null;
-  },
-
-  /**
-   * Sends down the nsIPipe's to a recently created "privileged about
-   * content process".
-   *
-   * @param aProcManager (ContentProcessMessageManager)
-   *   The message manager for the newly created "privileged about
-   *   content process".
-   * @param aProcessParent
-   *   The nsIDOMProcessParent for the tab.
-   */
-  sendCacheInputStreams(aProcManager, aProcessParent) {
-    if (aProcManager.remoteType != E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE) {
-      throw new Error(
-        "Cannot send about:home cache to a non-privileged content process."
-      );
-    }
-    // Construct the nsIPipe's if they haven't been made already, which
-    // can occur if the nsICacheEntry hasn't been retrieved yet.
-    this.makePipes();
-    this.log.info("Sending input streams down to content process.");
-    let actor = aProcessParent.getActor("BrowserProcess");
-    actor.sendAsyncMessage(this.SEND_STREAMS_MESSAGE, {
-      pageInputStream: this.pagePipe.inputStream,
-      scriptInputStream: this.scriptPipe.inputStream,
-    });
-
-    // We might have the nsICacheEntry already, so we can connect it
-    // to the pipes immediately. Otherwise, we'll wait until the cache
-    // entry has been retrieved.
-    if (this._cacheEntry) {
-      this.log.trace(
-        "The cache entry is already available. Connecting to pipes " +
-          "immediately."
-      );
-      this.maybeConnectToPipes();
-    }
+    this.log.trace("Streams connected to pipes.");
   },
 
   /**
@@ -5431,15 +5384,36 @@ var AboutHomeStartupCache = {
    */
   onContentProcessCreated(childID, procManager, processParent) {
     if (procManager.remoteType == E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE) {
+      if (this._finalized) {
+        this.log.trace(
+          "Ignoring privileged about content process launch after finalization."
+        );
+        return;
+      }
+
+      if (this._firstPrivilegedProcessCreated) {
+        this.log.trace(
+          "Ignoring non-first privileged about content processes."
+        );
+        return;
+      }
+
       this.log.trace(
-        `A privileged about content process is launching with ID ${childID}.` +
-          "Sending it the cache input streams."
+        `A privileged about content process is launching with ID ${childID}.`
       );
-      this.sendCacheInputStreams(procManager, processParent);
+
+      this.log.info("Sending input streams down to content process.");
+      let actor = processParent.getActor("BrowserProcess");
+      actor.sendAsyncMessage(this.SEND_STREAMS_MESSAGE, {
+        pageInputStream: this.pagePipe.inputStream,
+        scriptInputStream: this.scriptPipe.inputStream,
+      });
+
       procManager.addMessageListener(this.CACHE_RESPONSE_MESSAGE, this);
       procManager.addMessageListener(this.CACHE_USAGE_RESULT_MESSAGE, this);
       this._procManager = procManager;
       this._procManagerID = childID;
+      this._firstPrivilegedProcessCreated = true;
     }
   },
 
@@ -5453,7 +5427,9 @@ var AboutHomeStartupCache = {
    *   ipc:content-shutdown.
    */
   onContentProcessShutdown(childID) {
+    this.log.info(`Content process shutdown: ${childID}`);
     if (this._procManagerID == childID) {
+      this.log.info("It was the current privileged about process.");
       if (this._cacheDeferred) {
         this.log.error(
           "A privileged about content process shut down while cache streams " +
@@ -5653,9 +5629,7 @@ var AboutHomeStartupCache = {
     this.log.trace("Cache entry is available.");
 
     this._cacheEntry = aEntry;
-    this.makePipes();
-    this.maybeConnectToPipes();
-
+    this.connectToPipes();
     this._cacheEntryResolver(this._cacheEntry);
   },
 };

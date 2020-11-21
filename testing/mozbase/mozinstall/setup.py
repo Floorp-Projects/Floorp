@@ -13,7 +13,7 @@ try:
 except IOError:
     description = None
 
-PACKAGE_VERSION = "2.0.0"
+PACKAGE_VERSION = "2.0.1"
 
 deps = [
     "mozinfo >= 0.7",

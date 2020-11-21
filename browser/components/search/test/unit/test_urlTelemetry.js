@@ -19,7 +19,7 @@ const TESTS = [
     trackingUrl:
       "https://www.google.com/search?q=test&ie=utf-8&oe=utf-8&client=firefox-b-1-ab",
     expectedSearchCountEntry: "google.in-content:sap:firefox-b-1-ab",
-    expectedAdKey: "google",
+    expectedAdKey: "google:sap",
     adUrls: [
       "https://www.googleadservices.com/aclk=foobar",
       "https://www.googleadservices.com/pagead/aclk=foobar",
@@ -43,6 +43,9 @@ const TESTS = [
     trackingUrl:
       "https://www.google.com/search?source=hp&ei=EI_VALUE&q=test&oq=test&gs_l=GS_L_VALUE",
     expectedSearchCountEntry: "google.in-content:organic:none",
+    expectedAdKey: "google:organic",
+    adUrls: ["https://www.googleadservices.com/aclk=foobar"],
+    nonAdUrls: ["https://www.googleadservices.com/?aclk=foobar"],
   },
   {
     title: "Google organic UK",
@@ -66,7 +69,7 @@ const TESTS = [
     title: "Bing search access point",
     trackingUrl: "https://www.bing.com/search?q=test&pc=MOZI&form=MOZLBR",
     expectedSearchCountEntry: "bing.in-content:sap:MOZI",
-    expectedAdKey: "bing",
+    expectedAdKey: "bing:sap",
     adUrls: [
       "https://www.bing.com/aclick?ld=foo",
       "https://www.bing.com/fd/ls/GLinkPingPost.aspx?IG=bar&url=https%3A%2F%2Fwww.bing.com%2Faclick",
@@ -110,12 +113,15 @@ const TESTS = [
     trackingUrl:
       "https://www.bing.com/search?q=test&qs=n&form=QBLH&sp=-1&pq=&sc=0-0&sk=&cvid=CVID_VALUE",
     expectedSearchCountEntry: "bing.in-content:organic:none",
+    expectedAdKey: "bing:organic",
+    adUrls: ["https://www.bing.com/aclick?ld=foo"],
+    nonAdUrls: ["https://www.bing.com/fd/ls/ls.gif?IG=foo"],
   },
   {
     title: "DuckDuckGo search access point",
     trackingUrl: "https://duckduckgo.com/?q=test&t=ffab",
     expectedSearchCountEntry: "duckduckgo.in-content:sap:ffab",
-    expectedAdKey: "duckduckgo",
+    expectedAdKey: "duckduckgo:sap",
     adUrls: [
       "https://duckduckgo.com/y.js?ad_provider=foo",
       "https://duckduckgo.com/y.js?f=bar&ad_provider=foo",
@@ -131,6 +137,9 @@ const TESTS = [
     title: "DuckDuckGo organic",
     trackingUrl: "https://duckduckgo.com/?q=test&t=hi&ia=news",
     expectedSearchCountEntry: "duckduckgo.in-content:organic:hi",
+    expectedAdKey: "duckduckgo:organic",
+    adUrls: ["https://duckduckgo.com/y.js?ad_provider=foo"],
+    nonAdUrls: ["https://duckduckgo.com/?q=foo&t=ffab&ia=images&iax=images"],
   },
   {
     title: "Baidu search access point",

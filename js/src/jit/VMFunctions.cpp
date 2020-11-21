@@ -1449,11 +1449,14 @@ bool GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame,
   return false;
 }
 
-bool GlobalNameConflictsCheckFromIon(JSContext* cx, HandleScript script) {
-  Rooted<LexicalEnvironmentObject*> globalLexical(
-      cx, &cx->global()->lexicalEnvironment());
-  return CheckGlobalDeclarationConflicts(cx, script, globalLexical,
-                                         cx->global());
+bool GlobalDeclInstantiationFromIon(JSContext* cx, HandleScript script,
+                                    jsbytecode* pc) {
+  MOZ_ASSERT(!script->hasNonSyntacticScope());
+
+  RootedObject envChain(cx, &cx->global()->lexicalEnvironment());
+  GCThingIndex lastFun = GET_GCTHING_INDEX(pc);
+
+  return GlobalOrEvalDeclInstantiation(cx, envChain, script, lastFun);
 }
 
 bool InitFunctionEnvironmentObjects(JSContext* cx, BaselineFrame* frame) {

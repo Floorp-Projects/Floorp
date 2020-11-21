@@ -1128,11 +1128,40 @@ var PlacesMenuDNDHandler = {
  * toolbar. It also has helper functions for the managed bookmarks button.
  */
 var PlacesToolbarHelper = {
+  /**
+   * If init is called and _canShowPromise is null, this method
+   * is overwritten and won't run.
+   * If we get called and nobody has tried to call `init` yet,
+   * just create a resolved promise for _canShowPromise.
+   */
+  _readyToShowCallback() {
+    this._canShowPromise = Promise.resolve();
+  },
+  _readyToShow: false,
+  _canShowPromise: null,
+
   get _viewElt() {
     return document.getElementById("PlacesToolbar");
   },
 
-  init: function PTH_init() {
+  /**
+   * Initialize. This will await _canShowPromise - which is either created
+   * as a resolved promise if the idle task calling startShowingToolbar is
+   * called first, or created here and resolved once startShowingToolbar is
+   * called.
+   */
+  init() {
+    if (!this._readyToShow) {
+      this._canShowPromise = new Promise(resolve => {
+        this._readyToShowCallback = resolve;
+      });
+      this._canShowPromise.then(() => this._realInit());
+    } else {
+      this._realInit();
+    }
+  },
+
+  _realInit() {
     let viewElt = this._viewElt;
     if (!viewElt || viewElt._placesView) {
       return;
@@ -1163,7 +1192,20 @@ var PlacesToolbarHelper = {
       return;
     }
 
+    if (
+      toolbar.id == "PersonalToolbar" &&
+      !toolbar.hasAttribute("initialized")
+    ) {
+      toolbar.setAttribute("initialized", "true");
+      BookmarkingUI.updateEmptyToolbarMessage();
+    }
+
     new PlacesToolbar(`place:parent=${PlacesUtils.bookmarks.toolbarGuid}`);
+  },
+
+  startShowingToolbar() {
+    this._readyToShow = true;
+    this._readyToShowCallback();
   },
 
   handleEvent(event) {
@@ -1176,12 +1218,16 @@ var PlacesToolbarHelper = {
     }
   },
 
+  /**
+   * This is a no-op if we haven't been initialized.
+   */
   uninit: function PTH_uninit() {
     if (this._isObservingToolbars) {
       delete this._isObservingToolbars;
       window.removeEventListener("toolbarvisibilitychange", this);
     }
     CustomizableUI.removeListener(this);
+    this._readyToShowCallback = () => {};
   },
 
   customizeStart: function PTH_customizeStart() {
@@ -1651,41 +1697,47 @@ var BookmarkingUI = {
     return menu;
   },
 
+  /**
+   * Check if we need to make the empty toolbar message `hidden`.
+   * We'll have it unhidden during startup, to make sure the toolbar
+   * has height, and we'll unhide it if there is nothing else on the toolbar.
+   * We hide it in customize mode, unless there's nothing on the toolbar.
+   */
   updateEmptyToolbarMessage() {
-    let hasVisibleChildren = !!this.toolbar.querySelector(
-      `#PersonalToolbar > toolbarpaletteitem > toolbarbutton:not([hidden]),
-       #PersonalToolbar > toolbarpaletteitem > toolbaritem:not([hidden]):not(#personal-bookmarks),
-       #PersonalToolbar > toolbarbutton:not([hidden]),
-       #PersonalToolbar > toolbaritem:not([hidden]):not(#personal-bookmarks)`
-    );
+    let emptyMsg = document.getElementById("personal-toolbar-empty");
 
-    let toolbarBookmarkCount = 0;
-    // Prevent loading PlacesUtil.jsm during startup.
-    if (Cu.isModuleLoaded("resource://gre/modules/PlacesUtils.jsm")) {
-      toolbarBookmarkCount = PlacesUtils.getChildCountForFolder(
-        PlacesUtils.bookmarks.toolbarGuid
-      );
-    } else {
-      const kPlacesInitComplete = "places-init-complete";
-      let observer = {
-        observe() {
-          Services.obs.removeObserver(observer, kPlacesInitComplete);
-          BookmarkingUI.updateEmptyToolbarMessage();
-        },
-      };
-      Services.obs.addObserver(observer, kPlacesInitComplete);
+    // If the bookmarks are here but it's early in startup, show the message.
+    // It'll get made visibility: hidden early in startup anyway - it's just
+    // to ensure the toolbar has height.
+    if (!this.toolbar.hasAttribute("initialized")) {
+      emptyMsg.hidden = false;
+      return;
     }
 
-    let bookmarksToolbarItemsPlacement = CustomizableUI.getPlacementOfWidget(
-      "personal-bookmarks"
+    // Do we have visible kids?
+    let hasVisibleChildren = !!this.toolbar.querySelector(
+      `:scope > toolbarpaletteitem > toolbarbutton:not([hidden]),
+       :scope > toolbarpaletteitem > toolbaritem:not([hidden]):not(#personal-bookmarks),
+       :scope > toolbarbutton:not([hidden]),
+       :scope > toolbaritem:not([hidden]):not(#personal-bookmarks)`
     );
-    hasVisibleChildren ||=
-      bookmarksToolbarItemsPlacement?.area == CustomizableUI.AREA_BOOKMARKS &&
-      (this._isCustomizing || !!toolbarBookmarkCount);
 
-    document.getElementById(
-      "personal-toolbar-empty"
-    ).hidden = hasVisibleChildren;
+    if (!hasVisibleChildren) {
+      // Hmm, apparently not. Check for bookmarks or customize mode:
+      let bookmarksToolbarItemsPlacement = CustomizableUI.getPlacementOfWidget(
+        "personal-bookmarks"
+      );
+      let bookmarksItemInToolbar =
+        bookmarksToolbarItemsPlacement?.area == CustomizableUI.AREA_BOOKMARKS;
+
+      hasVisibleChildren =
+        bookmarksItemInToolbar &&
+        (this._isCustomizing ||
+          !!PlacesUtils.getChildCountForFolder(
+            PlacesUtils.bookmarks.toolbarGuid
+          ));
+    }
+    emptyMsg.hidden = hasVisibleChildren;
   },
 
   openLibraryIfLinkClicked(event) {

@@ -559,7 +559,8 @@ var actionUtils = {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* WEBPACK VAR INJECTION */(function(global) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_Base", function() { return _Base; });
+/* WEBPACK VAR INJECTION */(function(global) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PrefsButton", function() { return PrefsButton; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_Base", function() { return _Base; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "BaseContent", function() { return BaseContent; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Base", function() { return Base; });
 /* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
@@ -591,16 +592,17 @@ function _extends() { _extends = Object.assign || function (target) { for (var i
 
 
 
-
-const PrefsButton = props => react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("div", {
+const PrefsButton = ({
+  onClick,
+  icon
+}) => react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("div", {
   className: "prefs-button"
 }, react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("button", {
-  className: "icon icon-settings",
-  onClick: props.onClick,
+  className: `icon ${icon || "icon-settings"}`,
+  onClick: onClick,
   "data-l10n-id": "newtab-settings-button"
 })); // Returns a function will not be continuously triggered when called. The
 // function will be triggered if called again after `wait` milliseconds.
-
 
 function debounce(func, wait) {
   let timer;
@@ -738,7 +740,11 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
     const {
       initialized
     } = App;
-    const prefs = props.Prefs.values;
+    const prefs = props.Prefs.values; // Values from experiment data
+
+    const {
+      prefsButtonIcon
+    } = prefs.featureConfig || {};
     const isDiscoveryStream = props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
     let filteredSections = props.Sections.filter(section => section.id !== "topstories");
     const pocketEnabled = prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"];
@@ -767,10 +773,9 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
       className: "borderless-error"
     }, react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_DiscoveryStreamBase_DiscoveryStreamBase__WEBPACK_IMPORTED_MODULE_5__["DiscoveryStreamBase"], {
       locale: props.App.locale
-    })) : react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_Sections_Sections__WEBPACK_IMPORTED_MODULE_10__["Sections"], null)), react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_ConfirmDialog_ConfirmDialog__WEBPACK_IMPORTED_MODULE_3__["ConfirmDialog"], null))), canShowCustomizationMenu ? react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(PrefsButton, {
-      onClick: this.openCustomizationMenu
-    }) : react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(PrefsButton, {
-      onClick: this.openPreferences
+    })) : react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_Sections_Sections__WEBPACK_IMPORTED_MODULE_10__["Sections"], null)), react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_ConfirmDialog_ConfirmDialog__WEBPACK_IMPORTED_MODULE_3__["ConfirmDialog"], null))), react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(PrefsButton, {
+      onClick: canShowCustomizationMenu ? this.openCustomizationMenu : this.openPreferences,
+      icon: prefsButtonIcon
     }), canShowCustomizationMenu && this.state.customizeMenuVisible && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_CustomizeMenu_CustomizeMenu__WEBPACK_IMPORTED_MODULE_7__["CustomizeMenu"], {
       onClose: this.closeCustomizationMenu
     }));

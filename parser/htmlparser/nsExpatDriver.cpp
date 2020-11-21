@@ -828,6 +828,10 @@ nsresult nsExpatDriver::HandleError() {
                                                 nsPrintfCString("%u", code)},
             mozilla::Telemetry::EventExtraEntry{
                 "location"_ns, nsPrintfCString("%u:%u", lineNumber, colNumber)},
+            mozilla::Telemetry::EventExtraEntry{
+                "last_line"_ns, NS_ConvertUTF16toUTF8(mLastLine)},
+            mozilla::Telemetry::EventExtraEntry{
+                "last_line_len"_ns, nsPrintfCString("%u", mLastLine.Length())},
         });
 
     mozilla::Telemetry::SetEventRecordingEnabled("ysod"_ns, true);

@@ -128,30 +128,6 @@ void LIRGenerator::visitCheckOverRecursed(MCheckOverRecursed* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitDefVar(MDefVar* ins) {
-  LDefVar* lir =
-      new (alloc()) LDefVar(useRegisterAtStart(ins->environmentChain()));
-  add(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitDefLexical(MDefLexical* ins) {
-  LDefLexical* lir =
-      new (alloc()) LDefLexical(useRegisterAtStart(ins->environmentChain()));
-  add(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitDefFun(MDefFun* ins) {
-  MDefinition* fun = ins->fun();
-  MOZ_ASSERT(fun->type() == MIRType::Object);
-
-  LDefFun* lir = new (alloc()) LDefFun(
-      useRegisterAtStart(fun), useRegisterAtStart(ins->environmentChain()));
-  add(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitNewArray(MNewArray* ins) {
   LNewArray* lir = new (alloc()) LNewArray(temp());
   define(lir, ins);
@@ -5310,9 +5286,8 @@ void LIRGenerator::visitThrowRuntimeLexicalError(
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitGlobalNameConflictsCheck(
-    MGlobalNameConflictsCheck* ins) {
-  LGlobalNameConflictsCheck* lir = new (alloc()) LGlobalNameConflictsCheck();
+void LIRGenerator::visitGlobalDeclInstantiation(MGlobalDeclInstantiation* ins) {
+  LGlobalDeclInstantiation* lir = new (alloc()) LGlobalDeclInstantiation();
   add(lir, ins);
   assignSafepoint(lir, ins);
 }

@@ -45,6 +45,8 @@ add_task(async function() {
   Services.obs.notifyObservers(null, "startupcache-invalidate");
   Services.obs.notifyObservers(null, "chrome-flush-caches");
 
+  let bookmarksToolbarRect = await getBookmarksToolbarRect();
+
   let win = window.openDialog(
     AppConstants.BROWSER_CHROME_URL,
     "_blank",
@@ -53,8 +55,6 @@ add_task(async function() {
   );
 
   await disableFxaBadge();
-
-  let bookmarksToolbarRect = await getBookmarksToolbarRect();
 
   let alreadyFocused = false;
   let inRange = (val, min, max) => min <= val && val <= max;
@@ -101,12 +101,31 @@ add_task(async function() {
           },
         },
         {
-          name: "bug 1667237 - the bookmarks toolbar shouldn't flicker",
+          name: "Initial bookmark icon appearing after startup",
           condition: r =>
-            r.y1 >= bookmarksToolbarRect.top &&
-            r.y2 <= bookmarksToolbarRect.bottom &&
-            r.x1 >= bookmarksToolbarRect.left &&
-            r.x2 <= bookmarksToolbarRect.right,
+            r.w == 16 &&
+            r.h == 16 && // icon size
+            inRange(
+              r.y1,
+              bookmarksToolbarRect.top,
+              bookmarksToolbarRect.top + bookmarksToolbarRect.height / 2
+            ) && // in the toolbar
+            inRange(r.x1, 11, 13), // very close to the left of the screen
+        },
+        {
+          // Note that the length and x values here are a bit weird because on
+          // some fonts, we appear to detect the two words separately.
+          name:
+            "Initial bookmark text ('Getting Started' or 'Get Involved') appearing after startup",
+          condition: r =>
+            inRange(r.w, 25, 120) && // length of text
+            inRange(r.h, 9, 15) && // height of text
+            inRange(
+              r.y1,
+              bookmarksToolbarRect.top,
+              bookmarksToolbarRect.top + bookmarksToolbarRect.height / 2
+            ) && // in the toolbar
+            inRange(r.x1, 30, 90), // close to the left of the screen
         },
       ],
     },

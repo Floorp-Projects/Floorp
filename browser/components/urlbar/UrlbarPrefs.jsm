@@ -131,6 +131,11 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // homepage is opened.
   ["searchTips.test.ignoreShowLimits", false],
 
+  // Whether to show each local search shortcut button in the view.
+  ["shortcuts.bookmarks", true],
+  ["shortcuts.tabs", true],
+  ["shortcuts.history", true],
+
   // Whether speculative connections should be enabled.
   ["speculativeConnect.enabled", true],
 
@@ -187,10 +192,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   //  1 - Show search history
   //  2 - Show search and browsing history
   ["update2.emptySearchBehavior", 0],
-
-  // Whether the urlbar displays one-offs to filter searches to history,
-  // bookmarks, or tabs.
-  ["update2.localOneOffs", true],
 
   // Whether the urlbar one-offs act as search filters instead of executing a
   // search immediately.
@@ -286,10 +287,12 @@ class Preferences {
    * @returns {*} The preference value.
    */
   get(pref) {
-    if (!this._map.has(pref)) {
-      this._map.set(pref, this._getPrefValue(pref));
+    let value = this._map.get(pref);
+    if (value === undefined) {
+      value = this._getPrefValue(pref);
+      this._map.set(pref, value);
     }
-    return this._map.get(pref);
+    return value;
   }
 
   /**

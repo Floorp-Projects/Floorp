@@ -4084,9 +4084,10 @@ void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
 
 #ifdef PRINT_TIMINGS
   uint64_t end = get_time_value();
-  printf("draw(%s, %d): %fms for %d pixels in %d rows (avg %f pixels/row, %fns/pixel)\n",
+  printf("%7.3fms draw(%s, %d): %d pixels in %d rows (avg %f pixels/row, %fns/pixel)\n",
+         double(end - start)/(1000.*1000.),
          ctx->programs[ctx->current_program].impl->get_name(),
-         instancecount, double(end - start)/(1000.*1000.),
+         instancecount,
          ctx->shaded_pixels, ctx->shaded_rows,
          double(ctx->shaded_pixels)/ctx->shaded_rows,
          double(end - start)/max(ctx->shaded_pixels, 1));
