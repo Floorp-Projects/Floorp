@@ -9,7 +9,14 @@ function testRangeAtMarker(macDoc, marker, attribute, expected, msg) {
   is(stringForRange(macDoc, range), expected, msg);
 }
 
-function testUIElement(macDoc, marker, msg, expectedRole, expectedValue) {
+function testUIElement(
+  macDoc,
+  marker,
+  msg,
+  expectedRole,
+  expectedValue,
+  expectedRange
+) {
   let elem = macDoc.getParameterizedAttributeValue(
     "AXUIElementForTextMarker",
     marker
@@ -26,7 +33,7 @@ function testUIElement(macDoc, marker, msg, expectedRole, expectedValue) {
   );
   is(
     stringForRange(macDoc, elemRange),
-    expectedValue,
+    expectedRange,
     `${msg}: element range matches element value`
   );
 }
