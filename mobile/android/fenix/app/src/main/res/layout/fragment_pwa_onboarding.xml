@@ -3,74 +3,76 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/createShortcutWrapper"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/scrim_background"
     android:fitsSystemWindows="true"
     tools:context="org.mozilla.fenix.shortcut.PwaOnboardingDialogFragment">
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginStart="32dp"
-        android:layout_marginEnd="32dp"
         android:layout_marginTop="16dp"
+        android:layout_marginEnd="32dp"
         android:layout_marginBottom="16dp"
-        android:paddingTop="16dp"
-        android:paddingBottom="16dp"
+        android:background="@drawable/dialog_background"
         android:paddingStart="16dp"
+        android:paddingTop="16dp"
         android:paddingEnd="16dp"
-        android:background="@drawable/dialog_background">
+        android:paddingBottom="16dp">
+
         <TextView
             android:id="@+id/dialog_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="@string/add_to_homescreen_title"
             android:textAppearance="@style/HeaderTextStyle"
             android:textSize="20sp"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            android:text="@string/add_to_homescreen_title"/>
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
             android:id="@+id/home_icon"
-            android:importantForAccessibility="no"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:layout_marginTop="16dp"
             android:layout_marginStart="0dp"
+            android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
-            app:srcCompat="@drawable/ic_add_to_homescreen"
-            app:layout_constraintTop_toBottomOf="@id/dialog_title"
+            android:importantForAccessibility="no"
+            app:layout_constraintEnd_toStartOf="@id/description"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/description" />
+            app:layout_constraintTop_toBottomOf="@id/dialog_title"
+            app:srcCompat="@drawable/ic_add_to_homescreen" />
+
         <TextView
             android:id="@+id/description"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:text="@string/add_to_homescreen_description_2"
             android:textColor="?primaryText"
             android:textSize="16sp"
-            android:text="@string/add_to_homescreen_description_2"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/home_icon"
-            app:layout_constraintTop_toTopOf="@id/home_icon"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toTopOf="@id/home_icon" />
 
         <com.google.android.material.button.MaterialButton
-            style="@style/Widget.MaterialComponents.Button"
             android:id="@+id/add_button"
+            style="@style/PositiveButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:backgroundTint="?accent"
-            android:padding="10dp"
+            android:letterSpacing="0"
             android:text="@string/add_to_homescreen_title"
             android:textAllCaps="false"
             android:textColor="?contrastText"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:letterSpacing="0"
             app:layout_constraintBottom_toTopOf="@id/cancel_button"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -81,13 +83,13 @@
             style="@style/Widget.MaterialComponents.Button.TextButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:padding="10dp"
+            android:fontFamily="@font/metropolis_semibold"
+            android:letterSpacing="0"
             android:text="@string/add_to_homescreen_continue"
             android:textAllCaps="false"
             android:textColor="?primaryText"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:letterSpacing="0"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

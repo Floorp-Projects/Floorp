@@ -1,32 +1,31 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-    <LinearLayout
-        xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/sync_error_background_color"
+        android:baselineAligned="false"
         android:gravity="center_vertical"
         android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:background="@color/sync_error_background_color"
-        android:baselineAligned="false">
+        android:paddingEnd="16dp">
 
         <FrameLayout
             android:id="@+id/icon_frame"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
+
             <androidx.preference.internal.PreferenceImageView
                 android:id="@android:id/icon"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:maxWidth="48dp"
-                app:maxHeight="48dp"/>
+                app:maxHeight="48dp"
+                app:maxWidth="48dp" />
         </FrameLayout>
 
         <RelativeLayout
@@ -34,26 +33,26 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="15dp"
             android:layout_marginEnd="6dp"
-            android:paddingStart="0dp"
-            android:paddingEnd="0dp"
-            android:paddingTop="16dp"
-            android:paddingBottom="16dp"
+            android:layout_weight="1"
             android:gravity="center_horizontal"
-            android:layout_weight="1">
+            android:paddingStart="0dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="0dp"
+            android:paddingBottom="16dp">
 
             <TextView
                 android:id="@+id/errorSummary"
-                app:drawableStartCompat="@drawable/ic_info"
-                android:text="@string/sync_add_new_device_message"
-                android:drawablePadding="8dp"
-                app:drawableTint="@color/sync_error_text_color"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/sync_error_text_color"
-                android:textSize="16sp"
+                android:drawablePadding="8dp"
                 android:ellipsize="marquee"
                 android:fadingEdge="horizontal"
-                android:visibility="visible"/>
+                android:text="@string/sync_add_new_device_message"
+                android:textColor="@color/sync_error_text_color"
+                android:textSize="16sp"
+                android:visibility="visible"
+                app:drawableStartCompat="@drawable/ic_info"
+                app:drawableTint="@color/sync_error_text_color" />
 
         </RelativeLayout>
 
@@ -62,18 +61,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
-            android:orientation="vertical"/>
+            android:orientation="vertical" />
 
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/learn_button"
         style="@style/NeutralButton"
-        android:padding="16dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:text="@string/sync_add_new_device_learn_button" />
 
@@ -82,8 +80,8 @@
         style="@style/NeutralButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
         android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:text="@string/sync_add_new_device_connect_button" />
 </LinearLayout>

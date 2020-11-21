@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -7,9 +8,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?attr/foundation"
+    android:paddingStart="20dp"
     android:paddingTop="20dp"
     android:paddingEnd="20dp"
-    android:paddingStart="20dp"
     android:paddingBottom="10dp">
 
     <ImageView
@@ -17,10 +18,10 @@
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:importantForAccessibility="no"
-        app:srcCompat="@drawable/ic_info"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:tint="@color/contrast_text_private_theme"/>
+        app:srcCompat="@drawable/ic_info"
+        tools:tint="@color/contrast_text_private_theme" />
 
     <TextView
         android:id="@+id/title"
@@ -33,7 +34,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="@string/search_suggestions_onboarding_title"
-        tools:textAppearance="?android:attr/textAppearanceListItem"/>
+        tools:textAppearance="?android:attr/textAppearanceListItem" />
 
     <TextView
         android:id="@+id/text"
@@ -45,7 +46,7 @@
         app:layout_constraintStart_toStartOf="@id/title"
         app:layout_constraintTop_toBottomOf="@id/title"
         tools:text="@string/search_suggestions_onboarding_text"
-        tools:textAppearance="?attr/textAppearanceListItemSmall"/>
+        tools:textAppearance="?attr/textAppearanceListItemSmall" />
 
     <org.mozilla.fenix.utils.LinkTextView
         android:id="@+id/learn_more"
@@ -60,24 +61,27 @@
         app:layout_constraintEnd_toStartOf="@id/dismiss"
         app:layout_constraintStart_toStartOf="@id/title"
         app:layout_constraintTop_toBottomOf="@id/text"
-        tools:textColor="@color/accent_high_contrast_private_theme"/>
+        tools:textColor="@color/accent_high_contrast_private_theme" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/allow"
         style="@style/NeutralButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:text="@string/search_suggestions_onboarding_allow_button"
         android:layout_marginTop="20dp"
+        android:paddingHorizontal="12dp"
+        android:text="@string/search_suggestions_onboarding_allow_button"
         app:layout_constraintEnd_toEndOf="@id/title"
         app:layout_constraintTop_toBottomOf="@id/text" />
 
     <TextView
         android:id="@+id/dismiss"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:padding="20dp"
+        android:layout_height="48dp"
+        android:fontFamily="@font/metropolis_semibold"
+        android:gravity="center_vertical"
+        android:letterSpacing="0"
+        android:paddingHorizontal="20dp"
         android:text="@string/search_suggestions_onboarding_do_not_allow_button"
         android:textColor="#ffffff"
         android:textStyle="bold"
