@@ -62,8 +62,7 @@ class nsFirstLetterFrame final : public nsContainerFrame {
   virtual bool CanContinueTextRun() const override;
   virtual nscoord GetLogicalBaseline(
       mozilla::WritingMode aWritingMode) const override;
-  virtual LogicalSides GetLogicalSkipSides(
-      const Maybe<SkipSidesDuringReflow>&) const override;
+  virtual LogicalSides GetLogicalSkipSides() const override;
 
   // override of nsFrame method
   virtual nsresult GetChildFrameContainingOffset(
