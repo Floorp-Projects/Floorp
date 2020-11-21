@@ -38,7 +38,18 @@ async function testInput(browser, accDoc) {
   ]);
   await SpecialPowers.spawn(browser, [], () => {
     let elm = content.document.getElementById("input");
-    elm.setSelectionRange(6, 9);
+    if (elm.setSelectionRange) {
+      elm.setSelectionRange(6, 9);
+    } else {
+      let r = new content.Range();
+      let textNode = elm.firstElementChild.firstChild;
+      r.setStart(textNode, 6);
+      r.setEnd(textNode, 9);
+
+      let s = content.getSelection();
+      s.removeAllRanges();
+      s.addRange(r);
+    }
   });
   await evt;
 
@@ -80,7 +91,11 @@ async function testInput(browser, accDoc) {
 
   let domSelection = await SpecialPowers.spawn(browser, [], () => {
     let elm = content.document.querySelector("input#input");
-    return elm.value.substring(elm.selectionStart, elm.selectionEnd);
+    if (elm) {
+      return elm.value.substring(elm.selectionStart, elm.selectionEnd);
+    }
+
+    return content.getSelection().toString();
   });
 
   is(domSelection, "lmer Fu", "correct DOM selection");
@@ -98,4 +113,68 @@ async function testInput(browser, accDoc) {
 addAccessibleTask(
   `<input aria-label="Name" id="input" value="Elmer Fudd">`,
   testInput
+);
+
+/**
+ * contenteditable selection test
+ */
+addAccessibleTask(
+  `<div aria-label="Name" tabindex="0" role="textbox" aria-multiline="true" id="input" contenteditable>
+     <p>Elmer Fudd</p>
+   </div>`,
+  testInput
+);
+
+/**
+ * test contenteditable with selection that extends past editable part
+ */
+addAccessibleTask(
+  `<span aria-label="Name"
+         tabindex="0"
+         role="textbox"
+         id="input"
+         contenteditable>Elmer Fudd</span> <span id="notinput">is the name</span>`,
+  async (browser, accDoc) => {
+    let evt = Promise.all([
+      waitForMacEvent("AXFocusedUIElementChanged", "input"),
+      waitForMacEvent("AXSelectedTextChanged", "body"),
+      waitForMacEvent("AXSelectedTextChanged", "input"),
+    ]);
+    await SpecialPowers.spawn(browser, [], () => {
+      content.document.getElementById("input").focus();
+    });
+    await evt;
+
+    evt = waitForEvent(EVENT_TEXT_CARET_MOVED);
+    await SpecialPowers.spawn(browser, [], () => {
+      let input = content.document.getElementById("input");
+      let notinput = content.document.getElementById("notinput");
+
+      let r = new content.Range();
+      r.setStart(input.firstChild, 4);
+      r.setEnd(notinput.firstChild, 6);
+
+      let s = content.getSelection();
+      s.removeAllRanges();
+      s.addRange(r);
+    });
+    await evt;
+
+    let input = getNativeInterface(accDoc, "input");
+
+    is(
+      input.getAttributeValue("AXSelectedText"),
+      "r Fudd",
+      "Correct text is selected in #input"
+    );
+
+    is(
+      stringForRange(
+        input,
+        input.getAttributeValue("AXSelectedTextMarkerRange")
+      ),
+      "r Fudd is the",
+      "Correct text is selected in document"
+    );
+  }
 );
