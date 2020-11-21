@@ -1933,11 +1933,6 @@ bool IonCacheIRCompiler::emitMegamorphicSetElement(ObjOperandId objId,
   return true;
 }
 
-bool IonCacheIRCompiler::emitTypeMonitorResult() {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  return emitReturnFromIC();
-}
-
 bool IonCacheIRCompiler::emitReturnFromIC() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   if (!savedLiveRegs_) {

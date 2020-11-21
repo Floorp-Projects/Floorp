@@ -4190,11 +4190,6 @@ bool WarpCacheIRTranspiler::emitMetaTwoByte(MetaTwoByteKind kind,
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitTypeMonitorResult() {
-  MOZ_ASSERT(pushedResult_, "Didn't push result MDefinition");
-  return true;
-}
-
 bool WarpCacheIRTranspiler::emitReturnFromIC() { return true; }
 
 bool WarpCacheIRTranspiler::emitBailout() {

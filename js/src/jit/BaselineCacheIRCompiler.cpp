@@ -2090,14 +2090,6 @@ bool BaselineCacheIRCompiler::emitMegamorphicSetElement(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitTypeMonitorResult() {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  allocator.discardStack(masm);
-  // TODO(no-TI): remove CacheIR instruction.
-  EmitReturnFromIC(masm);
-  return true;
-}
-
 bool BaselineCacheIRCompiler::emitReturnFromIC() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   allocator.discardStack(masm);

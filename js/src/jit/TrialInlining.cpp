@@ -227,8 +227,7 @@ Maybe<InlinableCallData> FindInlinableCallData(ICStub* stub) {
           return mozilla::Nothing();
         }
         if (data.isSome()) {
-          MOZ_ASSERT(op == CacheOp::ReturnFromIC ||
-                     op == CacheOp::TypeMonitorResult);
+          MOZ_ASSERT(op == CacheOp::ReturnFromIC);
         }
         reader.skip(argLength);
         break;
@@ -298,8 +297,7 @@ Maybe<InlinableGetterData> FindInlinableGetterData(ICStub* stub) {
           return mozilla::Nothing();
         }
         if (data.isSome()) {
-          MOZ_ASSERT(op == CacheOp::ReturnFromIC ||
-                     op == CacheOp::TypeMonitorResult);
+          MOZ_ASSERT(op == CacheOp::ReturnFromIC);
         }
         reader.skip(argLength);
         break;
@@ -367,8 +365,7 @@ Maybe<InlinableSetterData> FindInlinableSetterData(ICStub* stub) {
           return mozilla::Nothing();
         }
         if (data.isSome()) {
-          MOZ_ASSERT(op == CacheOp::ReturnFromIC ||
-                     op == CacheOp::TypeMonitorResult);
+          MOZ_ASSERT(op == CacheOp::ReturnFromIC);
         }
         reader.skip(argLength);
         break;
