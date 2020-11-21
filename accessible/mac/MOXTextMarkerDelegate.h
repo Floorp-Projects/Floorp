@@ -8,6 +8,7 @@
 #import <Cocoa/Cocoa.h>
 
 #import "MOXAccessibleProtocol.h"
+#import "GeckoTextMarker.h"
 
 #include "AccessibleOrProxy.h"
 
@@ -30,6 +31,8 @@
                       at:(int32_t)endOffset;
 
 - (void)invalidateSelection;
+
+- (mozilla::a11y::GeckoTextMarkerRange)selection;
 
 // override
 - (id)moxStartTextMarker;
