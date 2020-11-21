@@ -214,14 +214,18 @@ TEST(TestAudioTrackGraph, ErrorCallback)
   CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
 
   MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
-      MediaTrackGraph::AUDIO_THREAD_DRIVER, /*window*/ nullptr,
+      MediaTrackGraph::SYSTEM_THREAD_DRIVER, /*window*/ nullptr,
       MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE, nullptr);
 
   // Dummy track to make graph rolling. Add it and remove it to remove the
   // graph from the global hash table and let it shutdown.
+  //
+  // We open an input through this track so that there's something triggering
+  // EnsureNextIteration on the fallback driver after the callback driver has
+  // gotten the error.
   RefPtr<AudioInputTrack> inputTrack;
   RefPtr<AudioInputProcessing> listener;
-  Unused << WaitFor(Invoke([&] {
+  auto started = Invoke([&] {
     inputTrack = AudioInputTrack::Create(graph);
     listener = new AudioInputProcessing(2, PRINCIPAL_HANDLE_NONE);
     inputTrack->GraphImpl()->AppendMessage(
@@ -229,13 +233,6 @@ TEST(TestAudioTrackGraph, ErrorCallback)
     inputTrack->SetInputProcessing(listener);
     inputTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(inputTrack, listener));
-    return graph->NotifyWhenDeviceStarted(inputTrack);
-  }));
-
-  // We open an input through this track so that there's something triggering
-  // EnsureNextIteration on the fallback driver after the callback driver has
-  // gotten the error.
-  auto started = Invoke([&] {
     inputTrack->OpenAudioInput((void*)1, listener);
     return graph->NotifyWhenDeviceStarted(inputTrack);
   });
@@ -275,15 +272,18 @@ TEST(TestAudioTrackGraph, AudioInputTrack)
   MockCubeb* cubeb = new MockCubeb();
   CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
 
+  // Start on a system clock driver, then switch to full-duplex in one go. If we
+  // did output-then-full-duplex we'd risk a second NotifyWhenDeviceStarted
+  // resolving early after checking the first audio driver only.
   MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
-      MediaTrackGraph::AUDIO_THREAD_DRIVER, /*window*/ nullptr,
+      MediaTrackGraph::SYSTEM_THREAD_DRIVER, /*window*/ nullptr,
       MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE, nullptr);
 
   RefPtr<AudioInputTrack> inputTrack;
   RefPtr<ProcessedMediaTrack> outputTrack;
   RefPtr<MediaInputPort> port;
   RefPtr<AudioInputProcessing> listener;
-  Unused << WaitFor(Invoke([&] {
+  auto p = Invoke([&] {
     inputTrack = AudioInputTrack::Create(graph);
     outputTrack = graph->CreateForwardedInputTrack(MediaSegment::AUDIO);
     outputTrack->QueueSetAutoend(false);
@@ -296,15 +296,11 @@ TEST(TestAudioTrackGraph, AudioInputTrack)
     inputTrack->SetInputProcessing(listener);
     inputTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(inputTrack, listener));
-    return graph->NotifyWhenDeviceStarted(inputTrack);
-  }));
-
-  DispatchFunction([&] {
     // Device id does not matter. Ignore.
     inputTrack->OpenAudioInput((void*)1, listener);
+    return graph->NotifyWhenDeviceStarted(inputTrack);
   });
 
-  auto p = Invoke([&] { return graph->NotifyWhenDeviceStarted(inputTrack); });
   RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
   EXPECT_TRUE(stream->mHasInput);
   Unused << WaitFor(p);
@@ -354,10 +350,9 @@ TEST(TestAudioTrackGraph, AudioInputTrack)
   // driver has started to complete the switch, *usually* resulting two
   // 10ms-iterations of silence; sometimes only one.
   EXPECT_LE(preSilenceSamples, 128U + 2 * inputRate / 100 /* 2*10ms */);
-  // Waveform may start after the beginning. In this case, there is a gap
-  // at the beginning and the end which is counted as discontinuity.
-  EXPECT_GE(nrDiscontinuities, 0U);
-  EXPECT_LE(nrDiscontinuities, 2U);
+  // The waveform from AudioGenerator starts at 0, but we don't control its
+  // ending, so we expect a discontinuity there.
+  EXPECT_LE(nrDiscontinuities, 1U);
 }
 
 TEST(TestAudioTrackGraph, ReOpenAudioInput)
