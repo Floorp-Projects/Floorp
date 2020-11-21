@@ -92,14 +92,12 @@ JSObject* MediaSession::WrapObject(JSContext* aCx,
 MediaMetadata* MediaSession::GetMetadata() const { return mMediaMetadata; }
 
 void MediaSession::SetMetadata(MediaMetadata* aMetadata) {
-  MOZ_ASSERT(mSessionDocState == SessionDocStatus::eActive);
   mMediaMetadata = aMetadata;
   NotifyMetadataUpdated();
 }
 
 void MediaSession::SetPlaybackState(
     const MediaSessionPlaybackState& aPlaybackState) {
-  MOZ_ASSERT(mSessionDocState == SessionDocStatus::eActive);
   if (mDeclaredPlaybackState == aPlaybackState) {
     return;
   }
@@ -113,7 +111,6 @@ MediaSessionPlaybackState MediaSession::PlaybackState() const {
 
 void MediaSession::SetActionHandler(MediaSessionAction aAction,
                                     MediaSessionActionHandler* aHandler) {
-  MOZ_ASSERT(mSessionDocState == SessionDocStatus::eActive);
   MOZ_ASSERT(size_t(aAction) < ArrayLength(mActionHandlers));
   // If the media session changes its supported action, then we would propagate
   // this information to the chrome process in order to run the media session
@@ -136,7 +133,6 @@ MediaSessionActionHandler* MediaSession::GetActionHandler(
 
 void MediaSession::SetPositionState(const MediaPositionState& aState,
                                     ErrorResult& aRv) {
-  MOZ_ASSERT(mSessionDocState == SessionDocStatus::eActive);
   // https://w3c.github.io/mediasession/#dom-mediasession-setpositionstate
   // If the state is an empty dictionary then clear the position state.
   if (!aState.IsAnyMemberPresent()) {
@@ -245,12 +241,39 @@ void MediaSession::NotifyMediaSessionDocStatus(SessionDocStatus aState) {
   }
   if (aState == SessionDocStatus::eActive) {
     updater->NotifySessionCreated(currentBC->Id());
+    // If media session set its attributes before its document becomes active,
+    // then we would notify those attributes which hasn't been notified as well
+    // because attributes update would only happen if its document is already
+    // active.
+    NotifyMediaSessionAttributes();
   } else {
     updater->NotifySessionDestroyed(currentBC->Id());
   }
 }
 
+void MediaSession::NotifyMediaSessionAttributes() {
+  MOZ_ASSERT(mSessionDocState == SessionDocStatus::eActive);
+  if (mDeclaredPlaybackState != MediaSessionPlaybackState::None) {
+    NotifyPlaybackStateUpdated();
+  }
+  if (mMediaMetadata) {
+    NotifyMetadataUpdated();
+  }
+  for (size_t idx = 0; idx < ArrayLength(mActionHandlers); idx++) {
+    MediaSessionAction action = static_cast<MediaSessionAction>(idx);
+    if (mActionHandlers[action]) {
+      NotifyEnableSupportedAction(action);
+    }
+  }
+  if (mPositionState) {
+    NotifyPositionStateChanged();
+  }
+}
+
 void MediaSession::NotifyPlaybackStateUpdated() {
+  if (mSessionDocState != SessionDocStatus::eActive) {
+    return;
+  }
   RefPtr<BrowsingContext> currentBC = GetParentObject()->GetBrowsingContext();
   MOZ_ASSERT(currentBC,
              "Update session playback state after context destroyed!");
@@ -260,6 +283,9 @@ void MediaSession::NotifyPlaybackStateUpdated() {
 }
 
 void MediaSession::NotifyMetadataUpdated() {
+  if (mSessionDocState != SessionDocStatus::eActive) {
+    return;
+  }
   RefPtr<BrowsingContext> currentBC = GetParentObject()->GetBrowsingContext();
   MOZ_ASSERT(currentBC, "Update session metadata after context destroyed!");
 
@@ -273,6 +299,9 @@ void MediaSession::NotifyMetadataUpdated() {
 }
 
 void MediaSession::NotifyEnableSupportedAction(MediaSessionAction aAction) {
+  if (mSessionDocState != SessionDocStatus::eActive) {
+    return;
+  }
   RefPtr<BrowsingContext> currentBC = GetParentObject()->GetBrowsingContext();
   MOZ_ASSERT(currentBC, "Update action after context destroyed!");
   if (RefPtr<IMediaInfoUpdater> updater = ContentMediaAgent::Get(currentBC)) {
@@ -281,6 +310,9 @@ void MediaSession::NotifyEnableSupportedAction(MediaSessionAction aAction) {
 }
 
 void MediaSession::NotifyDisableSupportedAction(MediaSessionAction aAction) {
+  if (mSessionDocState != SessionDocStatus::eActive) {
+    return;
+  }
   RefPtr<BrowsingContext> currentBC = GetParentObject()->GetBrowsingContext();
   MOZ_ASSERT(currentBC, "Update action after context destroyed!");
   if (RefPtr<IMediaInfoUpdater> updater = ContentMediaAgent::Get(currentBC)) {
@@ -289,6 +321,9 @@ void MediaSession::NotifyDisableSupportedAction(MediaSessionAction aAction) {
 }
 
 void MediaSession::NotifyPositionStateChanged() {
+  if (mSessionDocState != SessionDocStatus::eActive) {
+    return;
+  }
   RefPtr<BrowsingContext> currentBC = GetParentObject()->GetBrowsingContext();
   MOZ_ASSERT(currentBC, "Update action after context destroyed!");
   if (RefPtr<IMediaInfoUpdater> updater = ContentMediaAgent::Get(currentBC)) {
