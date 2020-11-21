@@ -8,6 +8,7 @@
 
 #include <cinttypes>
 #include "nsPrintfCString.h"
+#include "mozilla/gfx/gfxVars.h"
 
 namespace mozilla {
 namespace layers {
@@ -30,6 +31,10 @@ const char* GetLayersBackendName(LayersBackend aBackend) {
     case LayersBackend::LAYERS_CLIENT:
       return "client";
     case LayersBackend::LAYERS_WR:
+      MOZ_ASSERT(gfxVars::UseWebRender());
+      if (gfxVars::UseSoftwareWebRender()) {
+        return "webrender_software";
+      }
       return "webrender";
     case LayersBackend::LAYERS_BASIC:
       return "basic";
