@@ -813,8 +813,6 @@ SearchService.prototype = {
         );
       }
     }
-    let settings = await this._settings.get();
-    this._loadEnginesMetadataFromSettings(settings.engines);
 
     // Now set the sort out the default engines and notify as appropriate.
     this._currentEngine = null;
