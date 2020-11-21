@@ -458,6 +458,10 @@
     <string name="preferences_marketing_data">Marketin tzij</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Ke\'akomonij taq tzij chi rij ri taq samaj nawokisaj pa %1$s rik\'in Leanplum, ri ya\'öl qamarketin richin oyonib\'äl.</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Taq tijonïk</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Taya\' q\'ij chi ri Mozilla nuyäk chuqa\' nub\'än taq tijonïk</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Taq solna\'oj</string>
     <!-- Summary for experiments preferences -->

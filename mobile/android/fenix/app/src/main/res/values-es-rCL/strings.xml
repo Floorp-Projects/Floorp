@@ -441,6 +441,10 @@
     <string name="preferences_marketing_data">Datos de marketing</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Comparte datos acerca de las funcionalidades que usas en %1$s con Leanplum, nuestro proveedor de marketing para móviles.</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Estudios</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Permite a Mozilla instalar y realizar estudios</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Experimentos</string>
     <!-- Summary for experiments preferences -->
@@ -590,6 +594,8 @@
     <string name="tab_tray_title">Pestañas abiertas</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Guardar en la colección</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">Seleccionar</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Compartir todas las pestañas</string>
     <!-- Text shown in the menu to view recently closed tabs -->

@@ -444,6 +444,10 @@
     <string name="preferences_marketing_data">Pazarlama verileri</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Kullandığınız %1$s özellikleri ile ilgili verileri mobil pazarlama hizmeti aldığımız Leanplum ile paylaşır.</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Araştırmalar</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Mozilla’nın araştırmalar yükleyip çalıştırmasına izin verir</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Deneyler</string>
     <!-- Summary for experiments preferences -->

@@ -456,6 +456,10 @@
     <string name="preferences_marketing_data">营销数据</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">与我们的移动营销供应商 Leanplum 分享您使用 %1$s 的哪些功能。</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">研究</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">允许 Mozilla 安装和运行研究</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">实验</string>
     <!-- Summary for experiments preferences -->
