@@ -143,10 +143,6 @@ function listenFor(name, key) {
   };
 }
 
-async function visibleEngines() {
-  return (await Services.search.getVisibleEngines()).map(e => e.identifier);
-}
-
 add_task(async function setup() {
   Services.prefs.setBoolPref("browser.search.separatePrivateDefault", true);
   Services.prefs.setBoolPref(
@@ -300,41 +296,5 @@ add_task(async function test_config_updated_engine_changes() {
     Services.search.wrappedJSObject._settings.getAttribute("useSavedOrder"),
     false,
     "Should not have set the useSavedOrder preference"
-  );
-});
-
-add_task(async function test_user_settings_persist() {
-  let reload = SearchTestUtils.promiseSearchNotification("engines-reloaded");
-  Region._setHomeRegion("");
-  await reload;
-
-  Assert.ok(
-    (await visibleEngines()).includes("engine-rel-searchform-purpose"),
-    "Rel Searchform engine should be included by default"
-  );
-
-  let settingsFileWritten = promiseAfterSettings();
-  let engine = await Services.search.getEngineByName(
-    "engine-rel-searchform-purpose"
-  );
-  await Services.search.removeEngine(engine);
-  await settingsFileWritten;
-
-  Assert.ok(
-    !(await visibleEngines()).includes("engine-rel-searchform-purpose"),
-    "Rel Searchform engine has been removed"
-  );
-
-  reload = SearchTestUtils.promiseSearchNotification("engines-reloaded");
-  Region._setHomeRegion("FR");
-  await reload;
-
-  reload = SearchTestUtils.promiseSearchNotification("engines-reloaded");
-  Region._setHomeRegion("");
-  await reload;
-
-  Assert.ok(
-    !(await visibleEngines()).includes("engine-rel-searchform-purpose"),
-    "Rel Searchform removal should be remembered"
   );
 });
