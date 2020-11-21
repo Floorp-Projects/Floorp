@@ -328,8 +328,7 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
   void InitChildReflowInput(nsPresContext& aPresContext, bool aBorderCollapse,
                             ReflowInput& aReflowInput);
 
-  LogicalSides GetLogicalSkipSides(
-      const Maybe<SkipSidesDuringReflow>&) const override;
+  LogicalSides GetLogicalSkipSides() const override;
 
   void PlaceChild(nsPresContext* aPresContext,
                   TableRowGroupReflowInput& aReflowInput, nsIFrame* aKidFrame,

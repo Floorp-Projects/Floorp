@@ -2457,8 +2457,7 @@ void nsImageFrame::List(FILE* out, const char* aPrefix,
 }
 #endif
 
-nsIFrame::LogicalSides nsImageFrame::GetLogicalSkipSides(
-    const Maybe<SkipSidesDuringReflow>&) const {
+LogicalSides nsImageFrame::GetLogicalSkipSides() const {
   LogicalSides skip(mWritingMode);
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                    StyleBoxDecorationBreak::Clone)) {
