@@ -17,6 +17,10 @@ if ("ShadowRoot" in this) {
 }
 </script>
 <a id="test-mailto" href="mailto:codemonkey@mozilla.com">Mail the monkey!</a><br>
+<div id="test-paste-listener" onpaste="doSomething()">
+  ABCD
+  <p id="test-paste-listener-child">EFGH</p>
+</div>
 <input id="test-input"><br>
 <img id="test-image" src="ctxmenu-image.png">
 <svg>
