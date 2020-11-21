@@ -234,10 +234,10 @@ nscoord nsSplittableFrame::GetEffectiveComputedBSize(
   return std::max(0, bSize);
 }
 
-LogicalSides nsSplittableFrame::GetBlockLevelLogicalSkipSides(
-    bool aAfterReflow) const {
+nsIFrame::LogicalSides nsSplittableFrame::GetLogicalSkipSides(
+    const Maybe<SkipSidesDuringReflow>& aDuringReflow) const {
   LogicalSides skip(mWritingMode);
-  if (MOZ_UNLIKELY(IsTrueOverflowContainer())) {
+  if (IsTrueOverflowContainer()) {
     skip |= eLogicalSideBitsBBoth;
     return skip;
   }
@@ -251,18 +251,49 @@ LogicalSides nsSplittableFrame::GetBlockLevelLogicalSkipSides(
     skip |= eLogicalSideBitsBStart;
   }
 
-  // Always skip block-end side if we have a *later* sibling across column-span
-  // split.
-  if (HasColumnSpanSiblings()) {
-    skip |= eLogicalSideBitsBEnd;
-  }
-
-  if (aAfterReflow) {
+  if (aDuringReflow) {
+    nscoord availBSize = aDuringReflow->mReflowInput.AvailableBSize();
+    // We're in the midst of reflow right now, so it's possible that we haven't
+    // created a next-in-flow yet. If our content block-size is going to exceed
+    // our available block-size, though, then we're going to need a
+    // next-in-flow, it just hasn't been created yet.
+    if (NS_UNCONSTRAINEDSIZE != availBSize) {
+      nscoord effectiveBSize = GetEffectiveComputedBSize(
+          aDuringReflow->mReflowInput, aDuringReflow->mConsumedBSize);
+      if (effectiveBSize != NS_UNCONSTRAINEDSIZE &&
+          effectiveBSize > availBSize) {
+        // Our computed block-size is going to exceed our available block-size,
+        // so we're going to need a next-in-flow.
+        skip |= eLogicalSideBitsBEnd;
+      }
+    }
+  } else {
     nsIFrame* nif = GetNextContinuation();
     if (nif && !nif->IsTrueOverflowContainer()) {
       skip |= eLogicalSideBitsBEnd;
     }
   }
 
+  // Always skip block-end side if we have a *later* sibling across column-span
+  // split.
+  if (HasColumnSpanSiblings()) {
+    skip |= eLogicalSideBitsBEnd;
+  }
+
+  return skip;
+}
+
+LogicalSides nsSplittableFrame::PreReflowBlockLevelLogicalSkipSides() const {
+  LogicalSides skip(mWritingMode);
+  if (MOZ_UNLIKELY(IsTrueOverflowContainer())) {
+    skip |= mozilla::eLogicalSideBitsBBoth;
+    return skip;
+  }
+  if (MOZ_LIKELY(StyleBorder()->mBoxDecorationBreak !=
+                 StyleBoxDecorationBreak::Clone) &&
+      GetPrevInFlow()) {
+    skip |= mozilla::eLogicalSideBitsBStart;
+    return skip;
+  }
   return skip;
 }
