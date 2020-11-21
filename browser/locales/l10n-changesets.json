@@ -447,7 +447,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "91d7266bd0ae88bc832932c86dcb764f37f93e34"
+        "revision": "78c84cc27a5b8871b936b2f6981b0872d1c1f2df"
     },
     "es-ES": {
         "pin": false,
