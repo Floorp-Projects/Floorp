@@ -118,6 +118,21 @@ PopupBlocker::GetPopupControlState() {
 }
 
 /* static */
+bool PopupBlocker::CanShowPopupByPermission(nsIPrincipal* aPrincipal) {
+  MOZ_ASSERT(aPrincipal);
+  uint32_t permit = GetPopupPermission(aPrincipal);
+
+  if (permit == nsIPermissionManager::ALLOW_ACTION) {
+    return true;
+  }
+  if (permit == nsIPermissionManager::DENY_ACTION) {
+    return false;
+  }
+
+  return !StaticPrefs::dom_disable_open_during_load();
+}
+
+/* static */
 uint32_t PopupBlocker::GetPopupPermission(nsIPrincipal* aPrincipal) {
   uint32_t permit = nsIPermissionManager::UNKNOWN_ACTION;
   nsCOMPtr<nsIPermissionManager> permissionManager =

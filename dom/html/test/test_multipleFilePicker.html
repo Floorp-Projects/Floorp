@@ -37,7 +37,7 @@ let pickerCount = 0;
   }
   setTimeout(_ => {
     is(pickerCount, 0, "No file picker initially");
-    synthesizeMouseAtCenter(foo, {});
+    sendMouseEvent({type:'click'}, 'foo');
   }, 0);
 }))
 
