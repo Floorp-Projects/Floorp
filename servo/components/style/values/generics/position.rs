@@ -174,7 +174,7 @@ pub struct Ratio<N>(pub N, pub N);
 
 impl<N> ToCss for Ratio<N>
 where
-    N: ToCss
+    N: ToCss,
 {
     fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
     where

@@ -71,14 +71,7 @@ pub struct GenericCrossFade<Image, Color, Percentage> {
 /// A `<percent> | none` value. Represents optional percentage values
 /// assosicated with cross-fade images.
 #[derive(
-    Clone,
-    Debug,
-    MallocSizeOf,
-    PartialEq,
-    ToComputedValue,
-    ToResolvedValue,
-    ToShmem,
-    ToCss,
+    Clone, Debug, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem, ToCss,
 )]
 #[repr(C, u8)]
 pub enum PercentOrNone<Percentage> {
@@ -91,14 +84,7 @@ pub enum PercentOrNone<Percentage> {
 
 /// An optional percent and a cross fade image.
 #[derive(
-    Clone,
-    Debug,
-    MallocSizeOf,
-    PartialEq,
-    ToComputedValue,
-    ToResolvedValue,
-    ToShmem,
-    ToCss,
+    Clone, Debug, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem, ToCss,
 )]
 #[repr(C)]
 pub struct GenericCrossFadeElement<Image, Color, Percentage> {
@@ -112,15 +98,7 @@ pub struct GenericCrossFadeElement<Image, Color, Percentage> {
 /// An image or a color. `cross-fade` takes either when blending
 /// images together.
 #[derive(
-    Clone,
-    Debug,
-    MallocSizeOf,
-    PartialEq,
-    ToComputedValue,
-    ToResolvedValue,
-    ToShmem,
-    ToCss,
-    Parse,
+    Clone, Debug, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem, ToCss, Parse,
 )]
 #[repr(C, u8)]
 pub enum GenericCrossFadeImage<I, C> {
