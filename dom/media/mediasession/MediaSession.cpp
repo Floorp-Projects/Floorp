@@ -104,13 +104,7 @@ void MediaSession::SetPlaybackState(
     return;
   }
   mDeclaredPlaybackState = aPlaybackState;
-
-  RefPtr<BrowsingContext> currentBC = GetParentObject()->GetBrowsingContext();
-  MOZ_ASSERT(currentBC,
-             "Update session playback state after context destroyed!");
-  if (RefPtr<IMediaInfoUpdater> updater = ContentMediaAgent::Get(currentBC)) {
-    updater->SetDeclaredPlaybackState(currentBC->Id(), mDeclaredPlaybackState);
-  }
+  NotifyPlaybackStateUpdated();
 }
 
 MediaSessionPlaybackState MediaSession::PlaybackState() const {
@@ -253,6 +247,15 @@ void MediaSession::NotifyMediaSessionDocStatus(SessionDocStatus aState) {
     updater->NotifySessionCreated(currentBC->Id());
   } else {
     updater->NotifySessionDestroyed(currentBC->Id());
+  }
+}
+
+void MediaSession::NotifyPlaybackStateUpdated() {
+  RefPtr<BrowsingContext> currentBC = GetParentObject()->GetBrowsingContext();
+  MOZ_ASSERT(currentBC,
+             "Update session playback state after context destroyed!");
+  if (RefPtr<IMediaInfoUpdater> updater = ContentMediaAgent::Get(currentBC)) {
+    updater->SetDeclaredPlaybackState(currentBC->Id(), mDeclaredPlaybackState);
   }
 }
 

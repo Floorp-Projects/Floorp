@@ -92,6 +92,7 @@ class MediaSession final : public nsIDocumentActivity, public nsWrapperCache {
   // These methods are used to propagate media session's status to the chrome
   // process.
   void NotifyMediaSessionDocStatus(SessionDocStatus aState);
+  void NotifyPlaybackStateUpdated();
   void NotifyMetadataUpdated();
   void NotifyEnableSupportedAction(MediaSessionAction aAction);
   void NotifyDisableSupportedAction(MediaSessionAction aAction);
