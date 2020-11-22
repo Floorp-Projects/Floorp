@@ -929,7 +929,7 @@ EngineView.prototype = {
     } else if (column.id == "engineKeyword") {
       let shortcut = this._getLocalShortcut(index);
       if (shortcut) {
-        return "";
+        return shortcut.restrict;
       }
       return this._engineStore.engines[index].originalEngine.aliases.join(", ");
     }
