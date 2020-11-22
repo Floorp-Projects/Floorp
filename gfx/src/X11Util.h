@@ -27,8 +27,12 @@ namespace mozilla {
  */
 inline Display* DefaultXDisplay() {
 #if defined(MOZ_WIDGET_GTK)
-  return GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
+  GdkDisplay* gdkDisplay = gdk_display_get_default();
+  if (GDK_IS_X11_DISPLAY(gdkDisplay)) {
+    return GDK_DISPLAY_XDISPLAY(gdkDisplay);
+  }
 #endif
+  return nullptr;
 }
 
 /**
