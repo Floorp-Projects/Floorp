@@ -661,19 +661,15 @@ nsColorPickerShownCallback::Done(const nsAString& aColor) {
 
 NS_IMPL_ISUPPORTS(nsColorPickerShownCallback, nsIColorPickerShownCallback)
 
-bool HTMLInputElement::IsPopupBlocked() const {
-  nsCOMPtr<nsPIDOMWindowOuter> win = OwnerDoc()->GetWindow();
-  MOZ_ASSERT(win, "window should not be null");
-  if (!win) {
-    return true;
+static bool IsPopupBlocked(Document* aDoc) {
+  if (aDoc->ConsumeTransientUserGestureActivation()) {
+    return false;
   }
 
-  // Check if page can open a popup without abuse regardless of allowed events
-  if (PopupBlocker::GetPopupControlState() <= PopupBlocker::openBlocked) {
-    return !PopupBlocker::TryUsePopupOpeningToken(OwnerDoc()->NodePrincipal());
-  }
-
-  return !PopupBlocker::CanShowPopupByPermission(OwnerDoc()->NodePrincipal());
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns, aDoc,
+                                  nsContentUtils::eDOM_PROPERTIES,
+                                  "InputPickerBlockedNoUserActivation");
+  return true;
 }
 
 nsresult HTMLInputElement::InitColorPicker() {
@@ -689,7 +685,7 @@ nsresult HTMLInputElement::InitColorPicker() {
     return NS_ERROR_FAILURE;
   }
 
-  if (IsPopupBlocked()) {
+  if (IsPopupBlocked(doc)) {
     return NS_OK;
   }
 
@@ -734,7 +730,7 @@ nsresult HTMLInputElement::InitFilePicker(FilePickerType aType) {
     return NS_ERROR_FAILURE;
   }
 
-  if (IsPopupBlocked()) {
+  if (IsPopupBlocked(doc)) {
     return NS_OK;
   }
 
