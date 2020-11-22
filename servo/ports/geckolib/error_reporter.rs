@@ -38,9 +38,8 @@ impl ErrorReporter {
     ) -> Option<Self> {
         let mut window_id = 0;
 
-        let enabled = unsafe {
-            bindings::Gecko_ErrorReportingEnabled(sheet, loader, &mut window_id)
-        };
+        let enabled =
+            unsafe { bindings::Gecko_ErrorReportingEnabled(sheet, loader, &mut window_id) };
 
         if !enabled {
             return None;
@@ -374,7 +373,7 @@ impl<'a> ErrorHelpers<'a> for ContextualParseError<'a> {
             ContextualParseError::InvalidMediaRule(_, ref err) => {
                 let err: &CStr = match err.kind {
                     ParseErrorKind::Custom(StyleParseErrorKind::MediaQueryExpectedFeatureName(
-                        ..
+                        ..,
                     )) => cstr!("PEMQExpectedFeatureName"),
                     ParseErrorKind::Custom(StyleParseErrorKind::MediaQueryExpectedFeatureValue) => {
                         cstr!("PEMQExpectedFeatureValue")
@@ -430,7 +429,8 @@ impl ErrorReporter {
             Action::Drop => cstr!("PEDeclDropped").as_ptr(),
         };
         let selector_list = error.selector_list().map(|l| l.to_css_string());
-        let selector_list_ptr = selector_list.as_ref().map_or(ptr::null(), |s| s.as_ptr()) as *const _;
+        let selector_list_ptr =
+            selector_list.as_ref().map_or(ptr::null(), |s| s.as_ptr()) as *const _;
         let params = error.error_params();
         let param = params.main_param;
         let pre_param = params.prefix_param;

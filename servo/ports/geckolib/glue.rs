@@ -136,9 +136,9 @@ use style::use_counters::UseCounters;
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
 use style::values::computed::{self, Context, ToComputedValue};
 use style::values::distance::ComputeSquaredDistance;
-use style::values::{CustomIdent, KeyframesName, specified, AtomIdent};
 use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
+use style::values::{specified, AtomIdent, CustomIdent, KeyframesName};
 use style_traits::{CssWriter, ParsingMode, StyleParseErrorKind, ToCss};
 use to_shmem::SharedMemoryBuilder;
 
@@ -2737,7 +2737,9 @@ pub extern "C" fn Servo_MediaRule_GetMedia(rule: &RawServoMediaRule) -> Strong<R
 #[no_mangle]
 pub extern "C" fn Servo_NamespaceRule_GetPrefix(rule: &RawServoNamespaceRule) -> *mut nsAtom {
     read_locked_arc(rule, |rule: &NamespaceRule| {
-        rule.prefix.as_ref().map_or(atom!("").as_ptr(), |a| a.as_ptr())
+        rule.prefix
+            .as_ref()
+            .map_or(atom!("").as_ptr(), |a| a.as_ptr())
     })
 }
 
@@ -4121,10 +4123,7 @@ pub unsafe extern "C" fn Servo_ParseProperty(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_ParseEasing(
-    easing: &nsAString,
-    output: &mut nsTimingFunction,
-) -> bool {
+pub extern "C" fn Servo_ParseEasing(easing: &nsAString, output: &mut nsTimingFunction) -> bool {
     use style::properties::longhands::transition_timing_function;
 
     let context = ParserContext::new(
