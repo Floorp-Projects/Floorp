@@ -407,6 +407,16 @@ skip script test262/annexB/built-ins/Function/createdynfn-no-line-terminator-htm
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1462745
 skip script test262/annexB/language/function-code/block-decl-nested-blocks-with-fun-decl.js
 
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1508683
+# All of these tests pass except with --more-compartments.
+ignore-flag(--more-compartments) script test262/built-ins/RegExp/prototype/multiline/cross-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/RegExp/prototype/global/cross-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/RegExp/prototype/sticky/cross-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/RegExp/prototype/ignoreCase/cross-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/RegExp/prototype/unicode/cross-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/RegExp/prototype/dotAll/cross-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/RegExp/prototype/source/cross-realm.js
+
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1545038
 # All of these tests pass except with --more-compartments.
 ignore-flag(--more-compartments) script test262/built-ins/String/prototype/valueOf/non-generic-realm.js
