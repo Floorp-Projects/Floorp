@@ -21,7 +21,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=885996
 
   var test = runTest();
   var testData = [
-    { id: 'normal', type: 'no-user-activation', result: false },
     { id: 'normal', result: true },
     { id: 'hidden', result: false },
     { id: 'normal', type: 'untrusted', result: true },
@@ -67,13 +66,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=885996
 
       switch (currentTest.type) {
         case 'untrusted':
-          SpecialPowers.wrap(document).notifyUserGestureActivation();
           var e = document.createEvent('MouseEvents');
           e.initEvent('click', true, false);
           document.getElementById(element.dispatchEvent(e));
           break;
         case 'prevent-default-1':
-          SpecialPowers.wrap(document).notifyUserGestureActivation();
           element.onclick = function() {
             return false;
           };
@@ -81,18 +78,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=885996
           element.onclick = function() {};
           break;
         case 'prevent-default-2':
-          SpecialPowers.wrap(document).notifyUserGestureActivation();
           element.onclick = function(event) {
             event.preventDefault();
           };
           element.click();
           element.onclick = function() {};
           break;
-        case 'no-user-activation':
-          element.click();
-          break;
         case 'click-method':
-          SpecialPowers.wrap(document).notifyUserGestureActivation();
           element.click();
           break;
         case 'right-click':

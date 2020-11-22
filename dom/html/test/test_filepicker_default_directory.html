@@ -69,7 +69,6 @@ function launchNextTest() {
       ['dom.input.fallbackUploadDir', tests[testIndex][0]],
     ]},
   function () {
-    SpecialPowers.wrap(document).notifyUserGestureActivation();
     f.click();
   });
 }

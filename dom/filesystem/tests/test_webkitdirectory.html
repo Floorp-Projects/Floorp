@@ -44,7 +44,7 @@ function populateInputFile(aInputFile) {
     let promptHandled = waitForPromptHandled();
     let changeEvent = waitForEvent(input, "change");
 
-    clickWithUserActivation(input);
+    input.click();
 
     await promptHandled;
     await changeEvent;
@@ -105,11 +105,6 @@ function test_webkitdirectory_attribute() {
   next();
 }
 
-function clickWithUserActivation(input) {
-  SpecialPowers.wrap(document).notifyUserGestureActivation();
-  input.click();
-}
-
 function test_changeDataWhileWorking() {
   var url = SimpleTest.getTestFileURL("script_fileList.js");
   var script = SpecialPowers.loadChromeScript(url);
@@ -137,7 +132,7 @@ function test_changeDataWhileWorking() {
     var input = document.getElementById("inputFileDirectoryChange");
 
     promptHandled = waitForPromptHandled();
-    clickWithUserActivation(input);
+    input.click();
   })
 
   // Before onchange, let's take the 'test' directory
@@ -163,7 +158,7 @@ function test_changeDataWhileWorking() {
       let input = document.getElementById("inputFileDirectoryChange");
       let changeEvent = waitForEvent(input, "change");
 
-      clickWithUserActivation(input);
+      input.click();
 
       await promptHandled;
       await changeEvent;
