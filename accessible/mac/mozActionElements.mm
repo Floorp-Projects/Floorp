@@ -77,23 +77,6 @@ enum CheckboxValue {
   }
 }
 
-- (BOOL)moxIgnoreWithParent:(mozAccessible*)parent {
-  if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
-    if (acc->IsContent() &&
-        acc->GetContent()->IsXULElement(nsGkAtoms::menulist)) {
-      // The way select elements work is that content has a COMBOBOX accessible,
-      // when it is clicked it expands a COMBOBOX in our top-level main XUL
-      // window. The latter COMBOBOX is a stand-in for the content one while it
-      // is expanded.
-      // XXX: VO focus behaves weirdly if we expose the dummy XUL COMBOBOX in
-      // the tree. We are only interested in its menu child.
-      return YES;
-    }
-  }
-
-  return [super moxIgnoreWithParent:parent];
-}
-
 @end
 
 @implementation mozRadioButtonAccessible
