@@ -17,6 +17,8 @@ UNIFIED_SOURCES += [
     "MediaSession.cpp",
 ]
 
+CRASHTEST_MANIFESTS += ["test/crashtests/crashtests.list"]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"

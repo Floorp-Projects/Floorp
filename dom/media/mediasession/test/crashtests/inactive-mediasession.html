@@ -1,0 +1,16 @@
+<html>
+<head></head>
+<script>
+const frame = document.createElementNS('http://www.w3.org/1999/xhtml', 'frame');
+document.documentElement.appendChild(frame);
+
+const windowPointer = frame.contentWindow;
+document.documentElement.replaceWith();
+
+// Setting attributes on inactive media session should not cause crash.
+windowPointer.navigator.mediaSession.setActionHandler('nexttrack', null);
+windowPointer.navigator.mediaSession.playbackState = "playing";
+windowPointer.navigator.mediaSession.setPositionState();
+windowPointer.navigator.mediaSession.metadata = null;
+</script>
+</html>
