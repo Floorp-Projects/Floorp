@@ -38,6 +38,7 @@ SimpleTest.waitForFocus(function() {
     });
   });
 
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
   b.click();
 });
 
