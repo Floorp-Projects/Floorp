@@ -51,6 +51,7 @@ function childFrameScript() {
     });
 
     input.focus();
+    content.document.notifyUserGestureActivation();
     input.click();
   }
 

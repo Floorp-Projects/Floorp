@@ -1397,15 +1397,6 @@ class HTMLInputElement final : public TextControlElement,
   nsresult InitFilePicker(FilePickerType aType);
   nsresult InitColorPicker();
 
-  /**
-   * Use this function before trying to open a picker.
-   * It checks if the page is allowed to open a new pop-up.
-   * If it returns true, you should not create the picker.
-   *
-   * @return true if popup should be blocked, false otherwise
-   */
-  bool IsPopupBlocked() const;
-
   GetFilesHelper* GetOrCreateGetFilesHelper(bool aRecursiveFlag,
                                             ErrorResult& aRv);
 

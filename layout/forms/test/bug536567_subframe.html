@@ -6,6 +6,7 @@
 
 window.onload = function() {
   var fileInput = document.getElementById("target");
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
   fileInput.click();
 };
 

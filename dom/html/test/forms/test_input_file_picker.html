@@ -153,6 +153,7 @@ function launchNextTest() {
   // Focusing the element will scroll them into view so making sure the clicks
   // will work.
   document.getElementById(testData[currentTest][0]).focus();
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
 
   if (testData[currentTest][0] == "untrusted-click") {
     var e = document.createEvent('MouseEvents');
