@@ -4,7 +4,7 @@
     <string name="mozac_feature_downloads_notification_channel">Preuzimanja</string>
 
     <!-- Text shown on the second row of a paused download notification. -->
-    <string name="mozac_feature_downloads_paused_notification_text">Preuzimanje pauzirano</string>
+    <string name="mozac_feature_downloads_paused_notification_text">Preuzimanje je zaustavljeno</string>
     <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
     <string name="mozac_feature_downloads_completed_notification_text2">Preuzimanje završeno</string>
     <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
@@ -27,7 +27,7 @@
     <string name="mozac_feature_downloads_open_not_supported1">Nije pronađena aplikacija za otvaranje %1$s datoteka</string>
 
     <!-- Button that pauses the download when pressed -->
-    <string name="mozac_feature_downloads_button_pause">Pauza</string>
+    <string name="mozac_feature_downloads_button_pause">Zaustavi</string>
     <!-- Button that resumes the download when pressed -->
     <string name="mozac_feature_downloads_button_resume">Nastavi</string>
     <!-- Button that cancels the download when pressed -->

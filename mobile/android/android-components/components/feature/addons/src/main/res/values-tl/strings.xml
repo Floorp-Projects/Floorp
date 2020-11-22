@@ -48,6 +48,20 @@
     <string name="mozac_feature_addons_permissions_geolocation_description">I-access ang iyong lokasyon</string>
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">Tignan ang browsing history</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">Subaybayan ang paggamit ng extension at pag-manage sa mga tema</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">Makipagpalit ng mga mensahe sa mga app bukod dito sa isang ito</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">Ipakita sayo ang mga abiso</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">Kontrolin ang mga browser proxy setting</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">I-access ang mga kasasara lang na mga tab</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">Itago at ipakita ang mga browser tab</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">I-access ang kasaysayan ng pag-browse</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Bersyon</string>
     <!-- The authors of an add-on. -->
@@ -56,6 +70,8 @@
     <string name="mozac_feature_addons_last_updated">Huling na-update</string>
     <!-- The developer website (Homepage) of the add-on. -->
     <string name="mozac_feature_addons_home_page">Homepage</string>
+    <!-- A link where users can find more information about add-ons permissions. -->
+    <string name="mozac_feature_addons_learn_more">Alamin ang tungkol sa mga permiso</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Marka</string>
     <!-- The settings of the add-on. -->
@@ -76,6 +92,8 @@
     <string name="mozac_feature_addons_installed_section">Naka-install</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
     <string name="mozac_feature_addons_recommended_section">Inirerekomenda</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
+    <string name="mozac_feature_addons_unsupported_section">Hindi pa suportado</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
     <string name="mozac_feature_addons_disabled_section">Hindi pinagagana</string>
     <!-- Displays a page with all the details of an add-on. -->
@@ -86,6 +104,8 @@
     <string name="mozac_feature_addons_remove">Alisin</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">Idagdag ang %1$s?</string>
+    <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">Nangangailangan ito ng iyong pahintulot na:</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">Idagdag</string>
     <!-- This is a button to cancel the add-on installation . -->
@@ -106,16 +126,36 @@
     <string name="mozac_feature_addons_updater_notification_deny_button">Tanggihan</string>
     <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons-->
     <string name="mozac_feature_addons_updater_notification_title">Ang %1$s ay may bagong update</string>
+    <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
+    <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">May %1$d bagong permisong kinakailangan</string>
+    <!-- The content of the notification displayed when an add-on needs a new permission-->
+    <string name="mozac_feature_addons_updater_notification_content_singular">May bagong permisong kinakailangan</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Mga update ng Add-on</string>
+    <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_one">Idagdag ang %1$s sa %2$s</string>
+    <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_two">Idagdag ang %1$s at %2$s sa %3$s</string>
+    <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Idagdag sila sa %1$s</string>
+    <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
+    <string name="mozac_feature_addons_failed_to_query_add_ons">Bigong mag-query ng mga Add-on!</string>
+    <!-- Error shown when unable to find a translation for an add-on field. %1$s is the locale of the user and %2$s is the default language of the add-on -->
+    <string name="mozac_feature_addons_failed_to_translate">Hindi natagpuan ang pagsalin para sa locale na %1$s o sa wikang %2$s</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
     <string name="mozac_feature_addons_unsupported_caption">1 add-on</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
+    <string name="mozac_feature_addons_unsupported_caption_plural">%1$s add-on</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">Alamin</string>
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
     <string name="mozac_feature_addons_updater_status_error">Error</string>
+    <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
+    <string name="mozac_feature_addons_updater_dialog_last_attempt">Huling pagtatangka:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">Katayuan:</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_title">Naidagdag na ang %1$s sa %2$s</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_installed_dialog_description">Buksan ito sa menu</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
