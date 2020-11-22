@@ -269,16 +269,14 @@ impl Parse for CrossFadeElement {
 }
 
 impl PercentOrNone {
-    fn parse_or_none<'i, 't>(
-        context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-    ) -> Self {
+    fn parse_or_none<'i, 't>(context: &ParserContext, input: &mut Parser<'i, 't>) -> Self {
         // We clamp our values here as this is the way that Safari and
         // Chrome's implementation handle out-of-bounds percentages
         // but whether or not this behavior follows the specification
         // is still being discussed. See:
         // <https://github.com/w3c/csswg-drafts/issues/5333>
-        if let Ok(percent) = input.try_parse(|input| Percentage::parse_non_negative(context, input)) {
+        if let Ok(percent) = input.try_parse(|input| Percentage::parse_non_negative(context, input))
+        {
             Self::Percent(percent.clamp_to_hundred())
         } else {
             Self::None

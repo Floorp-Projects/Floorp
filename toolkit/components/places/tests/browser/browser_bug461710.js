@@ -18,21 +18,18 @@ add_task(async function() {
     },
     {
       private: false,
-      topic: "visited-status-resolution",
       subtest: "link_page.html",
       color: kRed,
       message: "Visited link coloring should work outside of private mode",
     },
     {
       private: true,
-      topic: "visited-status-resolution",
       subtest: "link_page-2.html",
       color: kBlue,
       message: "Visited link coloring should not work inside of private mode",
     },
     {
       private: false,
-      topic: "visited-status-resolution",
       subtest: "link_page-3.html",
       color: kRed,
       message: "Visited link coloring should work outside of private mode",
@@ -42,16 +39,22 @@ add_task(async function() {
   let uri = Services.io.newURI(prefix + tests[0].subtest);
   for (let test of tests) {
     info(test.subtest);
-    let promise = TestUtils.topicObserved(test.topic, subject =>
-      uri.equals(subject.QueryInterface(Ci.nsIURI))
-    );
+    let promise = null;
+    if (test.topic) {
+      promise = TestUtils.topicObserved(test.topic, subject =>
+        uri.equals(subject.QueryInterface(Ci.nsIURI))
+      );
+    }
     await BrowserTestUtils.withNewTab(
       {
         gBrowser: test.private ? privateWindow.gBrowser : normalWindow.gBrowser,
         url: prefix + test.subtest,
       },
       async function(browser) {
-        await promise;
+        if (promise) {
+          await promise;
+        }
+
         if (test.color) {
           // In e10s waiting for visited-status-resolution is not enough to ensure links
           // have been updated, because it only tells us that messages to update links

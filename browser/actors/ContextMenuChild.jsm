@@ -924,6 +924,17 @@ class ContextMenuChild extends JSWindowActorChild {
     context.shouldInitInlineSpellCheckerUINoChildren = false;
     context.shouldInitInlineSpellCheckerUIWithChildren = false;
 
+    context.hasPasteEventListeners = (function() {
+      let els = Services.els;
+      const composed = false; // Paste event listener is not composed.
+      for (let item of els.getEventTargetChainFor(context.target, composed)) {
+        if (els.hasListenersFor(item, "paste")) {
+          return true;
+        }
+      }
+      return false;
+    })();
+
     this._setContextForNodesNoChildren(editFlags);
     this._setContextForNodesWithChildren(editFlags);
 
