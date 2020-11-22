@@ -271,6 +271,51 @@ add_task(async function test_mailto() {
   ]);
 });
 
+add_task(async function test_paste_event_listener() {
+  const expected = [
+    "context-navigation",
+    null,
+    [
+      "context-back",
+      false,
+      "context-forward",
+      false,
+      "context-reload",
+      true,
+      "context-bookmarkpage",
+      true,
+    ],
+    null,
+    "---",
+    null,
+    ...(hasPocket ? ["context-pocket", true] : []),
+    "---",
+    null,
+    "context-sendpagetodevice",
+    true,
+    [],
+    null,
+    "---",
+    null,
+    "context-viewbgimage",
+    false,
+    "context-paste",
+    null,
+    "---",
+    null,
+    "context-selectall",
+    true,
+    "---",
+    null,
+    "context-viewsource",
+    true,
+    "context-viewinfo",
+    true,
+  ];
+  await test_contextmenu("#test-paste-listener", expected);
+  await test_contextmenu("#test-paste-listener-child", expected);
+});
+
 add_task(async function test_image() {
   for (let selector of ["#test-image", "#test-svg-image"]) {
     await test_contextmenu(

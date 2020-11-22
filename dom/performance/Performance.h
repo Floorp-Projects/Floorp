@@ -121,7 +121,7 @@ class Performance : public DOMEventTargetHelper {
   void QueueNotificationObserversTask();
 
  protected:
-  explicit Performance(bool aSystemPrincipal);
+  Performance(nsIGlobalObject* aGlobal, bool aSystemPrincipal);
   Performance(nsPIDOMWindowInner* aWindow, bool aSystemPrincipal);
 
   virtual ~Performance();
