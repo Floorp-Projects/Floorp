@@ -19,8 +19,8 @@ use style::global_style_data::GLOBAL_STYLE_DATA;
 use style::media_queries::MediaList;
 use style::parser::ParserContext;
 use style::shared_lock::{Locked, SharedRwLock};
-use style::stylesheets::AllowImportRules;
 use style::stylesheets::import_rule::ImportSheet;
+use style::stylesheets::AllowImportRules;
 use style::stylesheets::{ImportRule, Origin, StylesheetLoader as StyleStylesheetLoader};
 use style::stylesheets::{StylesheetContents, UrlExtraData};
 use style::use_counters::UseCounters;
@@ -59,14 +59,7 @@ impl StyleStylesheetLoader for StylesheetLoader {
         // so this raw pointer will still be valid.
 
         let child_sheet = unsafe {
-            Gecko_LoadStyleSheet(
-                self.0,
-                self.1,
-                self.2,
-                self.3,
-                &url,
-                media.into_strong(),
-            )
+            Gecko_LoadStyleSheet(self.0, self.1, self.2, self.3, &url, media.into_strong())
         };
 
         debug_assert!(
