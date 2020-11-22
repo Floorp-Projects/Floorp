@@ -136,10 +136,9 @@ use style::use_counters::UseCounters;
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
 use style::values::computed::{self, Context, ToComputedValue};
 use style::values::distance::ComputeSquaredDistance;
-use style::values::specified;
+use style::values::{CustomIdent, KeyframesName, specified, AtomIdent};
 use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
-use style::values::{CustomIdent, KeyframesName};
 use style_traits::{CssWriter, ParsingMode, StyleParseErrorKind, ToCss};
 use to_shmem::SharedMemoryBuilder;
 
@@ -2738,7 +2737,7 @@ pub extern "C" fn Servo_MediaRule_GetMedia(rule: &RawServoMediaRule) -> Strong<R
 #[no_mangle]
 pub extern "C" fn Servo_NamespaceRule_GetPrefix(rule: &RawServoNamespaceRule) -> *mut nsAtom {
     read_locked_arc(rule, |rule: &NamespaceRule| {
-        rule.prefix.as_ref().unwrap_or(&atom!("")).as_ptr()
+        rule.prefix.as_ref().map_or(atom!("").as_ptr(), |a| a.as_ptr())
     })
 }
 
@@ -6253,7 +6252,7 @@ pub extern "C" fn Servo_StyleSet_MightHaveAttributeDependency(
     let element = GeckoElement(element);
 
     unsafe {
-        Atom::with(local_name, |atom| {
+        AtomIdent::with(local_name, |atom| {
             data.stylist.any_applicable_rule_data(element, |data| {
                 data.might_have_attribute_dependency(atom)
             })
