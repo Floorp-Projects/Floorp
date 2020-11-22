@@ -441,6 +441,10 @@
     <string name="preferences_marketing_data">Marketingowe daty</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Źěli daty wó tom, kótare funkcije w %1$s wužywaśo, z Leanplum, našym póbitowarjom za mobilny marketing.</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Studije</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Mozilla dowóliś, studije instalěrowaś a pśewjasć</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Eksperimenty</string>
 
