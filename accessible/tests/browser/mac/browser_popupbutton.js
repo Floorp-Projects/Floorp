@@ -69,12 +69,8 @@ addAccessibleTask(
     let menuParent = menu.getAttributeValue("AXParent");
     is(
       menuParent.getAttributeValue("AXRole"),
-      "AXGroup",
-      "dropdown parent is a group"
-    );
-    ok(
-      menuParent.attributeNames.includes("AXMain"),
-      "group is main/root element"
+      "AXPopUpButton",
+      "dropdown parent is a popup button"
     );
 
     let menuItems = menu.getAttributeValue("AXChildren").map(c => {
