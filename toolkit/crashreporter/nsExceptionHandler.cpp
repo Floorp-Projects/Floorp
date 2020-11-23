@@ -142,12 +142,8 @@ typedef std::wstring xpstring;
 #  define XP_PATH_MAX (MAX_PATH + 1)
 // "<reporter path>" "<minidump path>"
 #  define CMDLINE_SIZE ((XP_PATH_MAX * 2) + 6)
-#  ifdef _USE_32BIT_TIME_T
-#    define XP_TTOA(time, buffer) ltoa(time, buffer, 10)
-#  else
-#    define XP_TTOA(time, buffer) _i64toa(time, buffer, 10)
-#  endif
-#  define XP_STOA(size, buffer) _ui64toa(size, buffer, 10)
+#  define XP_TTOA(time, buffer) _i64toa((time), (buffer), 10)
+#  define XP_STOA(size, buffer) _ui64toa((size), (buffer), 10)
 #else
 typedef char XP_CHAR;
 typedef std::string xpstring;
@@ -159,12 +155,14 @@ typedef std::string xpstring;
 #  define XP_PATH_MAX PATH_MAX
 #  ifdef XP_LINUX
 #    define XP_STRLEN(x) my_strlen(x)
-#    define XP_TTOA(time, buffer) my_inttostring(time, buffer, sizeof(buffer))
-#    define XP_STOA(size, buffer) my_inttostring(size, buffer, sizeof(buffer))
+#    define XP_TTOA(time, buffer) \
+      my_u64tostring(uint64_t(time), (buffer), sizeof(buffer))
+#    define XP_STOA(size, buffer) \
+      my_u64tostring((size), (buffer), sizeof(buffer))
 #  else
 #    define XP_STRLEN(x) strlen(x)
-#    define XP_TTOA(time, buffer) sprintf(buffer, "%ld", time)
-#    define XP_STOA(size, buffer) sprintf(buffer, "%zu", (size_t)size)
+#    define XP_TTOA(time, buffer) sprintf(buffer, "%" PRIu64, uint64_t(time))
+#    define XP_STOA(size, buffer) sprintf(buffer, "%zu", size_t(size))
 #    define my_strlen strlen
 #    define my_memchr memchr
 #    define sys_close close
@@ -199,7 +197,7 @@ static XP_CHAR* crashReporterPath;
 static XP_CHAR* memoryReportPath;
 #ifdef XP_MACOSX
 static XP_CHAR* libraryPath;  // Path where the NSS library is
-#endif                        // XP_MACOSX
+#endif
 
 // Where crash events should go.
 static XP_CHAR* eventsDirectory;
@@ -392,10 +390,10 @@ static void* gBreakpadReservedVM;
 #endif
 
 #ifdef XP_LINUX
-static inline void my_inttostring(intmax_t t, char* buffer,
-                                  size_t buffer_length) {
-  my_memset(buffer, 0, buffer_length);
-  my_uitos(buffer, t, my_uint_len(t));
+static inline void my_u64tostring(uint64_t aValue, char* aBuffer,
+                                  size_t aBufferLength) {
+  my_memset(aBuffer, 0, aBufferLength);
+  my_uitos(aBuffer, aValue, my_uint_len(aValue));
 }
 #endif
 
@@ -619,6 +617,12 @@ class JSONAnnotationWriter : public AnnotationWriter {
     WriteSuffix();
   };
 
+  void Write(Annotation aAnnotation, uint64_t aValue) override {
+    char buffer[32] = {};
+    XP_STOA(aValue, buffer);
+    Write(aAnnotation, buffer);
+  };
+
  private:
   void WritePrefix() {
     if (mEmpty) {
@@ -665,6 +669,12 @@ class BinaryAnnotationWriter : public AnnotationWriter {
     mPlatformWriter.WriteBuffer((const char*)&aAnnotation, sizeof(aAnnotation));
     mPlatformWriter.WriteBuffer((const char*)&len, sizeof(len));
     mPlatformWriter.WriteBuffer(aValue, len);
+  };
+
+  void Write(Annotation aAnnotation, uint64_t aValue) override {
+    char buffer[32] = {};
+    XP_STOA(aValue, buffer);
+    Write(aAnnotation, buffer);
   };
 
  private:
@@ -724,14 +734,8 @@ static void WritePHCAddrInfo(AnnotationWriter& writer,
         break;
     }
     writer.Write(Annotation::PHCKind, kindString);
-
-    char baseAddrString[32];
-    XP_STOA(uintptr_t(aAddrInfo->mBaseAddr), baseAddrString);
-    writer.Write(Annotation::PHCBaseAddress, baseAddrString);
-
-    char usableSizeString[32];
-    XP_TTOA(aAddrInfo->mUsableSize, usableSizeString);
-    writer.Write(Annotation::PHCUsableSize, usableSizeString);
+    writer.Write(Annotation::PHCBaseAddress, uintptr_t(aAddrInfo->mBaseAddr));
+    writer.Write(Annotation::PHCUsableSize, aAddrInfo->mUsableSize);
 
     WritePHCStackTrace(writer, Annotation::PHCAllocStack,
                        aAddrInfo->mAllocStack);
@@ -765,63 +769,28 @@ static void OpenAPIData(PlatformWriter& aWriter, const XP_CHAR* dump_path,
   aWriter.Open(extraDataPath);
 }
 
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
-
-static void WriteMemoryAnnotation(AnnotationTable& aTable,
-                                  Annotation aAnnotation, uint64_t aValue) {
-  // This function is used to write values of 64 bits, which can safely be
-  // assumed to fit within 20 decimal digits, so we need neither allocation nor
-  // overflow checking.
-  char buffer[128];
-#  ifdef XP_LINUX
-  // Under Linux, we cannot call into libc from the exception handler,
-  // so we need to call `my_inttostring`.
-  intmax_t value = intmax_t(aValue);
-  if (uint64_t(value) != aValue) {
-    // Our uint64_t doesn't cast properly to intmax_t. In this (unlikely) case,
-    // report the maximal value that can be represented with intmax_t.
-    value = intmax_t(-1);
-  }
-  my_inttostring(value, buffer, sizeof(buffer));
-  aTable[aAnnotation] = nsDependentCString(buffer);
-#  else
-  if (SprintfLiteral(buffer, "%llu", aValue) > 0) {
-    aTable[aAnnotation] = nsDependentCString(buffer);
-  }
-#  endif  // XP_LINUX || else
-}
-
-#endif  // XP_WIN || XP_MACOSX || XP_LINUX
-
 #ifdef XP_WIN
-static void AnnotateMemoryStatus(AnnotationTable& aTable) {
+static void AnnotateMemoryStatus(AnnotationWriter& aWriter) {
   MEMORYSTATUSEX statex;
   statex.dwLength = sizeof(statex);
   if (GlobalMemoryStatusEx(&statex)) {
-    WriteMemoryAnnotation(aTable, Annotation::SystemMemoryUsePercentage,
-                          statex.dwMemoryLoad);
-    WriteMemoryAnnotation(aTable, Annotation::TotalVirtualMemory,
-                          statex.ullTotalVirtual);
-    WriteMemoryAnnotation(aTable, Annotation::AvailableVirtualMemory,
-                          statex.ullAvailVirtual);
-    WriteMemoryAnnotation(aTable, Annotation::TotalPhysicalMemory,
-                          statex.ullTotalPhys);
-    WriteMemoryAnnotation(aTable, Annotation::AvailablePhysicalMemory,
-                          statex.ullAvailPhys);
+    aWriter.Write(Annotation::SystemMemoryUsePercentage, statex.dwMemoryLoad);
+    aWriter.Write(Annotation::TotalVirtualMemory, statex.ullTotalVirtual);
+    aWriter.Write(Annotation::AvailableVirtualMemory, statex.ullAvailVirtual);
+    aWriter.Write(Annotation::TotalPhysicalMemory, statex.ullTotalPhys);
+    aWriter.Write(Annotation::AvailablePhysicalMemory, statex.ullAvailPhys);
   }
 
   PERFORMANCE_INFORMATION info;
   if (K32GetPerformanceInfo(&info, sizeof(info))) {
-    WriteMemoryAnnotation(aTable, Annotation::TotalPageFile,
-                          info.CommitLimit * info.PageSize);
-    WriteMemoryAnnotation(
-        aTable, Annotation::AvailablePageFile,
-        (info.CommitLimit - info.CommitTotal) * info.PageSize);
+    aWriter.Write(Annotation::TotalPageFile, info.CommitLimit * info.PageSize);
+    aWriter.Write(Annotation::AvailablePageFile,
+                  (info.CommitLimit - info.CommitTotal) * info.PageSize);
   }
 }
 #elif XP_MACOSX
 // Extract the total physical memory of the system.
-static void WritePhysicalMemoryStatus(AnnotationTable& aTable) {
+static void WritePhysicalMemoryStatus(AnnotationWriter& aWriter) {
   uint64_t physicalMemoryByteSize = 0;
   const size_t NAME_LEN = 2;
   int name[NAME_LEN] = {/* Hardware */ CTL_HW,
@@ -830,27 +799,26 @@ static void WritePhysicalMemoryStatus(AnnotationTable& aTable) {
   if (sysctl(name, NAME_LEN, &physicalMemoryByteSize, &infoByteSize,
              /* We do not replace data */ nullptr,
              /* We do not replace data */ 0) != -1) {
-    WriteMemoryAnnotation(aTable, Annotation::TotalPhysicalMemory,
-                          physicalMemoryByteSize);
+    aWriter.Write(Annotation::TotalPhysicalMemory, physicalMemoryByteSize);
   }
 }
 
 // Extract available and purgeable physical memory.
-static void WriteAvailableMemoryStatus(AnnotationTable& aTable) {
+static void WriteAvailableMemoryStatus(AnnotationWriter& aWriter) {
   auto host = mach_host_self();
   vm_statistics64_data_t stats;
   unsigned int count = HOST_VM_INFO64_COUNT;
   if (host_statistics64(host, HOST_VM_INFO64, (host_info64_t)&stats, &count) ==
       KERN_SUCCESS) {
-    WriteMemoryAnnotation(aTable, Annotation::AvailablePhysicalMemory,
-                          stats.free_count * vm_page_size);
-    WriteMemoryAnnotation(aTable, Annotation::PurgeablePhysicalMemory,
-                          stats.purgeable_count * vm_page_size);
+    aWriter.Write(Annotation::AvailablePhysicalMemory,
+                  stats.free_count * vm_page_size);
+    aWriter.Write(Annotation::PurgeablePhysicalMemory,
+                  stats.purgeable_count * vm_page_size);
   }
 }
 
 // Extract the status of the swap.
-static void WriteSwapFileStatus(AnnotationTable& aTable) {
+static void WriteSwapFileStatus(AnnotationWriter& aWriter) {
   const size_t NAME_LEN = 2;
   int name[] = {/* Hardware */ CTL_VM,
                 /* 64-bit physical memory size */ VM_SWAPUSAGE};
@@ -859,19 +827,18 @@ static void WriteSwapFileStatus(AnnotationTable& aTable) {
   if (sysctl(name, NAME_LEN, &swapUsage, &infoByteSize,
              /* We do not replace data */ nullptr,
              /* We do not replace data */ 0) != -1) {
-    WriteMemoryAnnotation(aTable, Annotation::AvailableSwapMemory,
-                          swapUsage.xsu_avail);
+    aWriter.Write(Annotation::AvailableSwapMemory, swapUsage.xsu_avail);
   }
 }
-static void AnnotateMemoryStatus(AnnotationTable& aTable) {
-  WritePhysicalMemoryStatus(aTable);
-  WriteAvailableMemoryStatus(aTable);
-  WriteSwapFileStatus(aTable);
+static void AnnotateMemoryStatus(AnnotationWriter& aWriter) {
+  WritePhysicalMemoryStatus(aWriter);
+  WriteAvailableMemoryStatus(aWriter);
+  WriteSwapFileStatus(aWriter);
 }
 
 #elif XP_LINUX
 
-static void AnnotateMemoryStatus(AnnotationTable& aTable) {
+static void AnnotateMemoryStatus(AnnotationWriter& aWriter) {
   // We can't simply call `sysinfo` as this requires libc.
   // So we need to parse /proc/meminfo.
 
@@ -1112,8 +1079,7 @@ static void AnnotateMemoryStatus(AnnotationTable& aTable) {
                   pointOfInterest.dest->value = value;
                 }
                 if (pointOfInterest.annotation != Annotation::Count) {
-                  WriteMemoryAnnotation(aTable, pointOfInterest.annotation,
-                                        value);
+                  aWriter.Write(pointOfInterest.annotation, value);
                 }
               }
               break;
@@ -1134,13 +1100,11 @@ static void AnnotateMemoryStatus(AnnotationTable& aTable) {
     uint64_t availablePageFile = (committedAS.value <= commitLimit.value)
                                      ? (commitLimit.value - committedAS.value)
                                      : 0;
-    WriteMemoryAnnotation(aTable, Annotation::AvailablePageFile,
-                          availablePageFile);
+    aWriter.Write(Annotation::AvailablePageFile, availablePageFile);
   }
   if (memTotal.found && swapTotal.found) {
     // If available, attempt to determine the available virtual memory.
-    WriteMemoryAnnotation(aTable, Annotation::TotalPageFile,
-                          memTotal.value + swapTotal.value);
+    aWriter.Write(Annotation::TotalPageFile, memTotal.value + swapTotal.value);
   }
 }
 
@@ -1298,14 +1262,18 @@ static void WriteMozCrashReason(AnnotationWriter& aWriter) {
   }
 }
 
-static void WriteAnnotations(AnnotationWriter& writer,
+static void WriteAnnotations(AnnotationWriter& aWriter,
                              const AnnotationTable& aAnnotations) {
   for (auto key : MakeEnumeratedRange(Annotation::Count)) {
     const nsCString& value = aAnnotations[key];
     if (!value.IsEmpty()) {
-      writer.Write(key, value.get(), value.Length());
+      aWriter.Write(key, value.get(), value.Length());
     }
   }
+}
+
+static void WriteSynthesizedAnnotations(AnnotationWriter& aWriter) {
+  AnnotateMemoryStatus(aWriter);
 }
 
 static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
@@ -1313,10 +1281,8 @@ static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
                                                 time_t crashTime) {
   JSONAnnotationWriter writer(pw);
   WriteAnnotations(writer, crashReporterAPIData_Table);
-
-  char crashTimeString[32];
-  XP_TTOA(crashTime, crashTimeString);
-  writer.Write(Annotation::CrashTime, crashTimeString);
+  WriteSynthesizedAnnotations(writer);
+  writer.Write(Annotation::CrashTime, uint64_t(crashTime));
 
   double uptimeTS = (TimeStamp::NowLoRes() - TimeStamp::ProcessCreation())
                         .ToSecondsSigDigits();
@@ -1326,12 +1292,10 @@ static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
 
   // calculate time since last crash (if possible).
   if (lastCrashTime != 0) {
-    time_t timeSinceLastCrash = crashTime - lastCrashTime;
+    uint64_t timeSinceLastCrash = crashTime - lastCrashTime;
 
     if (timeSinceLastCrash != 0) {
-      char timeSinceLastCrashString[32];
-      XP_TTOA(timeSinceLastCrash, timeSinceLastCrashString);
-      writer.Write(Annotation::SecondsSinceLastCrash, timeSinceLastCrashString);
+      writer.Write(Annotation::SecondsSinceLastCrash, timeSinceLastCrash);
     }
   }
 
@@ -1339,18 +1303,15 @@ static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
     writer.Write(Annotation::IsGarbageCollecting, "1");
   }
 
-  char buffer[128];
   if (eventloopNestingLevel > 0) {
-    XP_STOA(eventloopNestingLevel, buffer);
-    writer.Write(Annotation::EventLoopNestingLevel, buffer);
+    writer.Write(Annotation::EventLoopNestingLevel, eventloopNestingLevel);
   }
 
 #ifdef XP_WIN
   if (gBreakpadReservedVM) {
-    _ui64toa(uintptr_t(gBreakpadReservedVM), buffer, 10);
-    writer.Write(Annotation::BreakpadReserveAddress, buffer);
-    _ui64toa(kReserveSize, buffer, 10);
-    writer.Write(Annotation::BreakpadReserveSize, buffer);
+    writer.Write(Annotation::BreakpadReserveAddress,
+                 uintptr_t(gBreakpadReservedVM));
+    writer.Write(Annotation::BreakpadReserveSize, kReserveSize);
   }
 
 #  ifdef HAS_DLL_BLOCKLIST
@@ -1363,16 +1324,12 @@ static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
 
   WriteMainThreadRunnableName(writer);
 
-  char oomAllocationSizeBuffer[32] = "";
   if (gOOMAllocationSize) {
-    XP_STOA(gOOMAllocationSize, oomAllocationSizeBuffer);
-    writer.Write(Annotation::OOMAllocationSize, oomAllocationSizeBuffer);
+    writer.Write(Annotation::OOMAllocationSize, gOOMAllocationSize);
   }
 
-  char texturesSizeBuffer[32] = "";
   if (gTexturesSize) {
-    XP_STOA(gTexturesSize, texturesSizeBuffer);
-    writer.Write(Annotation::TextureUsage, texturesSizeBuffer);
+    writer.Write(Annotation::TextureUsage, gTexturesSize);
   }
 
   if (memoryReportPath) {
@@ -1654,10 +1611,8 @@ static void PrepareChildExceptionTimeAnnotations(
   apiData.OpenHandle(GetAnnotationTimeCrashFd());
   BinaryAnnotationWriter writer(apiData);
 
-  char oomAllocationSizeBuffer[32] = "";
   if (gOOMAllocationSize) {
-    XP_STOA(gOOMAllocationSize, oomAllocationSizeBuffer);
-    writer.Write(Annotation::OOMAllocationSize, oomAllocationSizeBuffer);
+    writer.Write(Annotation::OOMAllocationSize, gOOMAllocationSize);
   }
 
   WriteMozCrashReason(writer);
@@ -2486,8 +2441,6 @@ static void MergeContentCrashAnnotations(AnnotationTable& aDst) {
 
 // Adds crash time, uptime and memory report annotations
 static void AddCommonAnnotations(AnnotationTable& aAnnotations) {
-  AnnotateMemoryStatus(aAnnotations);
-
   nsAutoCString crashTime;
   crashTime.AppendInt((uint64_t)time(nullptr));
   aAnnotations[Annotation::CrashTime] = crashTime;
@@ -3175,6 +3128,7 @@ static bool WriteExtraFile(PlatformWriter& pw,
 
   JSONAnnotationWriter writer(pw);
   WriteAnnotations(writer, aAnnotations);
+  WriteSynthesizedAnnotations(writer);
 
   return true;
 }

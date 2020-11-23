@@ -9,12 +9,12 @@ add_task(async function run_test() {
   await do_crash(
     function() {
       crashType = CrashTestUtils.CRASH_OOM;
-      crashReporter.annotateCrashReport("TestKey", "Yes");
     },
     function(mdump, extra) {
-      Assert.equal(extra.TestKey, "Yes");
       Assert.ok("OOMAllocationSize" in extra);
       Assert.ok(Number(extra.OOMAllocationSize) > 0);
+      Assert.ok("TotalPhysicalMemory" in extra);
+      Assert.ok(Number(extra.TotalPhysicalMemory) >= 0);
     },
     true
   );

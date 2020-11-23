@@ -15,13 +15,19 @@ add_task(async function run_test() {
       crashType = CrashTestUtils.CRASH_OOM;
     },
     function(mdump, extra) {
-      Assert.ok("SystemMemoryUsePercentage" in extra);
-      Assert.ok("TotalVirtualMemory" in extra);
-      Assert.ok("AvailableVirtualMemory" in extra);
-      Assert.ok("TotalPageFile" in extra);
-      Assert.ok("AvailablePageFile" in extra);
       Assert.ok("TotalPhysicalMemory" in extra);
       Assert.ok("AvailablePhysicalMemory" in extra);
+
+      if (mozinfo.os == "win") {
+        Assert.ok("SystemMemoryUsePercentage" in extra);
+        Assert.ok("TotalVirtualMemory" in extra);
+        Assert.ok("AvailableVirtualMemory" in extra);
+        Assert.ok("TotalPageFile" in extra);
+        Assert.ok("AvailablePageFile" in extra);
+      } else if (mozinfo.so == "linux") {
+        Assert.ok("TotalPageFile" in extra);
+        Assert.ok("AvailablePageFile" in extra);
+      }
     }
   );
 });
