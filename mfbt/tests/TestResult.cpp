@@ -14,7 +14,7 @@ using mozilla::Ok;
 using mozilla::Result;
 using mozilla::UniquePtr;
 
-enum struct UnusedZeroEnum : int32_t { Ok = 0, NotOk = 1 };
+enum struct UnusedZeroEnum : int16_t { Ok = 0, NotOk = 1 };
 
 namespace mozilla::detail {
 template <>
@@ -73,6 +73,9 @@ static_assert(std::is_trivially_destructible_v<Result<uintptr_t, Failed>>);
 static_assert(std::is_trivially_destructible_v<Result<Ok, UnusedZeroEnum>>);
 static_assert(std::is_trivially_destructible_v<Result<Ok, Failed>>);
 
+static_assert(
+    sizeof(Result<bool, UnusedZeroEnum>) <= sizeof(uintptr_t),
+    "Result with bool value type should not be larger than pointer-sized");
 static_assert(sizeof(Result<Ok, Failed>) == sizeof(uint8_t),
               "Result with empty value type should be size 1");
 static_assert(sizeof(Result<int*, Failed>) == sizeof(uintptr_t),

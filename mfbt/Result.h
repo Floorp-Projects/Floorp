@@ -13,7 +13,6 @@
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
-#include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CompactPair.h"
@@ -82,20 +81,28 @@ class ResultImplementation<V, E, PackingStrategy::Variant> {
   const E& inspectErr() const { return mStorage.template as<E>(); }
 };
 
-// The purpose of EmptyWrapper is to make an empty class look like
-// AlignedStorage2 for the purposes of the PackingStrategy::NullIsOk
-// specializations of ResultImplementation below. We can't use AlignedStorage2
-// itself with an empty class, since it would no longer be empty, and we want to
-// avoid changing AlignedStorage2 just for this purpose.
+// The purpose of AlignedStorageOrEmpty is to make an empty class look like
+// std::aligned_storage_t for the purposes of the PackingStrategy::NullIsOk
+// specializations of ResultImplementation below. We can't use
+// std::aligned_storage_t itself with an empty class, since it would no longer
+// be empty.
+template <typename V, bool IsEmpty = std::is_empty_v<V>>
+struct AlignedStorageOrEmpty;
+
 template <typename V>
-struct EmptyWrapper : V {
-  const V* addr() const { return this; }
-  V* addr() { return this; }
+struct AlignedStorageOrEmpty<V, true> : V {
+  constexpr V* addr() { return this; }
+  constexpr const V* addr() const { return this; }
 };
 
 template <typename V>
-using AlignedStorageOrEmpty =
-    std::conditional_t<std::is_empty_v<V>, EmptyWrapper<V>, AlignedStorage2<V>>;
+struct AlignedStorageOrEmpty<V, false> {
+  V* addr() { return reinterpret_cast<V*>(&mData); }
+  const V* addr() const { return reinterpret_cast<const V*>(&mData); }
+
+ private:
+  std::aligned_storage_t<sizeof(V), alignof(V)> mData;
+};
 
 template <typename V, typename E>
 class ResultImplementationNullIsOkBase {
@@ -171,7 +178,7 @@ class ResultImplementationNullIsOkBase {
   const V& inspect() const { return *mValue.first().addr(); }
   V unwrap() { return std::move(*mValue.first().addr()); }
 
-  const E& inspectErr() const {
+  decltype(auto) inspectErr() const {
     return UnusedZero<E>::Inspect(mValue.second());
   }
   E unwrapErr() { return UnusedZero<E>::Unwrap(mValue.second()); }
