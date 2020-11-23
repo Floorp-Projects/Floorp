@@ -265,12 +265,19 @@ tooltip {
      for repaints.
      These properties are not implemented on other platforms. */
   panel[type="arrow"]:not([animate="false"]) {
-    -moz-window-opacity: 0;
-    -moz-window-transform: translateY(-70px);
     transition-property: -moz-window-transform, -moz-window-opacity;
     transition-duration: 0.18s, 0.18s;
     transition-timing-function:
       var(--animation-easing-function), ease-out;
+  }
+
+  /* Only do the fade-in animation on pre-Big Sur to avoid missing shadows on
+   * Big Sur, see bug 1672091. */
+  @media (-moz-mac-big-sur-theme: 0) {
+    panel[type="arrow"]:not([animate="false"]) {
+      -moz-window-opacity: 0;
+      -moz-window-transform: translateY(-70px);
+    }
   }
 
   panel[type="arrow"][side="bottom"]:not([animate="false"]) {
@@ -288,6 +295,7 @@ tooltip {
   }
 
   panel[type="arrow"][animate][animate="cancel"] {
+    -moz-window-opacity: 0;
     -moz-window-transform: none;
   }
 %else
