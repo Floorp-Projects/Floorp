@@ -8,11 +8,9 @@
 #define mozilla_dom_Animation_h
 
 #include "X11UndefineNone.h"
-#include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/AnimationPerformanceWarning.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EffectCompositor.h"  // For EffectCompositor::CascadeLevel
 #include "mozilla/LinkedList.h"
@@ -22,17 +20,16 @@
 #include "mozilla/dom/AnimationBinding.h"  // for AnimationPlayState
 #include "mozilla/dom/AnimationEffect.h"
 #include "mozilla/dom/AnimationTimeline.h"
-#include "mozilla/dom/Promise.h"
-#include "nsCSSPropertyID.h"
-#include "nsIGlobalObject.h"
 
 struct JSContext;
 class nsCSSPropertyIDSet;
 class nsIFrame;
+class nsIGlobalObject;
 
 namespace mozilla {
 
 struct AnimationRule;
+class MicroTaskRunnable;
 
 namespace dom {
 
@@ -40,15 +37,15 @@ class AsyncFinishNotification;
 class CSSAnimation;
 class CSSTransition;
 class Document;
+class Promise;
 
 class Animation : public DOMEventTargetHelper,
                   public LinkedListElement<Animation> {
  protected:
-  virtual ~Animation() = default;
+  virtual ~Animation();
 
  public:
-  explicit Animation(nsIGlobalObject* aGlobal)
-      : DOMEventTargetHelper(aGlobal), mAnimationIndex(sNextAnimationIndex++) {}
+  explicit Animation(nsIGlobalObject* aGlobal);
 
   // Constructs a copy of |aOther| with a new effect and timeline.
   // This is only intended to be used while making a static clone of a document
