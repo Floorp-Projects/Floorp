@@ -246,36 +246,14 @@ nsFaviconService::GetDefaultFaviconMimeType(nsACString& _retval) {
   return NS_OK;
 }
 
-void nsFaviconService::SendFaviconNotifications(nsIURI* aPageURI,
-                                                nsIURI* aFaviconURI,
-                                                const nsACString& aGUID) {
-  nsAutoCString faviconSpec;
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  if (history && NS_SUCCEEDED(aFaviconURI->GetSpec(faviconSpec))) {
-    // Invalide page-icon image cache, since the icon is about to change.
-    nsCString spec;
-    nsresult rv = aPageURI->GetSpec(spec);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    if (NS_SUCCEEDED(rv)) {
-      nsCString pageIconSpec("page-icon:");
-      pageIconSpec.Append(spec);
-      nsCOMPtr<nsIURI> pageIconURI;
-      rv = NS_NewURI(getter_AddRefs(pageIconURI), pageIconSpec);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-      if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<imgICache> imgCache;
-        rv = GetImgTools()->GetImgCacheForDocument(nullptr,
-                                                   getter_AddRefs(imgCache));
-        MOZ_ASSERT(NS_SUCCEEDED(rv));
-        if (NS_SUCCEEDED(rv)) {
-          Unused << imgCache->RemoveEntry(pageIconURI, nullptr);
-        }
-      }
-    }
-
-    history->SendPageChangedNotification(
-        aPageURI, nsINavHistoryObserver::ATTRIBUTE_FAVICON,
-        NS_ConvertUTF8toUTF16(faviconSpec), aGUID);
+void nsFaviconService::ClearImageCache(nsIURI* aImageURI) {
+  MOZ_ASSERT(aImageURI, "Must pass a non-null URI");
+  nsCOMPtr<imgICache> imgCache;
+  nsresult rv =
+      GetImgTools()->GetImgCacheForDocument(nullptr, getter_AddRefs(imgCache));
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  if (NS_SUCCEEDED(rv)) {
+    Unused << imgCache->RemoveEntry(aImageURI, nullptr);
   }
 }
 

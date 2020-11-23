@@ -1899,53 +1899,6 @@ NS_IMETHODIMP
 nsNavBookmarks::OnManyFrecenciesChanged() { return NS_OK; }
 
 NS_IMETHODIMP
-nsNavBookmarks::OnPageChanged(nsIURI* aURI, uint32_t aChangedAttribute,
-                              const nsAString& aNewValue,
-                              const nsACString& aGUID) {
-  NS_ENSURE_ARG(aURI);
-
-  nsresult rv;
-  if (aChangedAttribute == nsINavHistoryObserver::ATTRIBUTE_FAVICON) {
-    ItemChangeData changeData;
-    rv = aURI->GetSpec(changeData.bookmark.url);
-    NS_ENSURE_SUCCESS(rv, rv);
-    changeData.property = "favicon"_ns;
-    changeData.isAnnotation = false;
-    CopyUTF16toUTF8(aNewValue, changeData.newValue);
-    changeData.bookmark.lastModified = 0;
-    changeData.bookmark.type = TYPE_BOOKMARK;
-
-    // Favicons may be set to either pure URIs or to folder URIs
-    if (aURI->SchemeIs("place")) {
-      nsNavHistory* history = nsNavHistory::GetHistoryService();
-      NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-
-      nsCOMPtr<nsINavHistoryQuery> query;
-      nsCOMPtr<nsINavHistoryQueryOptions> options;
-      rv = history->QueryStringToQuery(changeData.bookmark.url,
-                                       getter_AddRefs(query),
-                                       getter_AddRefs(options));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      RefPtr<nsNavHistoryQuery> queryObj = do_QueryObject(query);
-      if (queryObj->Parents().Length() == 1) {
-        // Fetch missing data.
-        rv = FetchItemInfo(queryObj->Parents()[0], changeData.bookmark);
-        NS_ENSURE_SUCCESS(rv, rv);
-        NotifyItemChanged(changeData);
-      }
-    } else {
-      RefPtr<AsyncGetBookmarksForURI<ItemChangeMethod, ItemChangeData>>
-          notifier =
-              new AsyncGetBookmarksForURI<ItemChangeMethod, ItemChangeData>(
-                  this, &nsNavBookmarks::NotifyItemChanged, changeData);
-      notifier->Init();
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNavBookmarks::OnDeleteVisits(nsIURI* aURI, bool aPartialRemoval,
                                const nsACString& aGUID, uint16_t aReason,
                                uint32_t aTransitionType) {
