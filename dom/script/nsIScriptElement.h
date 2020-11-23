@@ -7,22 +7,21 @@
 #ifndef nsIScriptElement_h___
 #define nsIScriptElement_h___
 
-#include "nsISupports.h"
-#include "nsIURI.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/CORSMode.h"
+#include "mozilla/dom/FromParser.h"
 #include "nsCOMPtr.h"
+#include "nsID.h"
 #include "nsIScriptLoaderObserver.h"
 #include "nsIWeakReferenceUtils.h"
-#include "nsIParser.h"
-#include "nsIContent.h"
-#include "nsContentCreatorFunctions.h"
-#include "mozilla/CORSMode.h"
-#include "ReferrerInfo.h"
 #include "nsStringFwd.h"
 #include "nscore.h"
 
 // XXX Avoid including this here by moving function bodies to the cpp file
 #include "nsIPrincipal.h"
 
+class nsIParser;
 class nsIPrincipal;
 class nsIURI;
 
@@ -173,57 +172,32 @@ class nsIScriptElement : public nsIScriptLoaderObserver {
     mDefer = false;
   }
 
-  void SetCreatorParser(nsIParser* aParser) {
-    mCreatorParser = do_GetWeakReference(aParser);
-  }
+  void SetCreatorParser(nsIParser* aParser);
 
   /**
    * Unblocks the creator parser
    */
-  void UnblockParser() {
-    nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
-    if (parser) {
-      parser->UnblockParser();
-    }
-  }
+  void UnblockParser();
 
   /**
    * Attempts to resume parsing asynchronously
    */
-  void ContinueParserAsync() {
-    nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
-    if (parser) {
-      parser->ContinueInterruptedParsingAsync();
-    }
-  }
+  void ContinueParserAsync();
 
   /**
    * Informs the creator parser that the evaluation of this script is starting
    */
-  void BeginEvaluating() {
-    nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
-    if (parser) {
-      parser->IncrementScriptNestingLevel();
-    }
-  }
+  void BeginEvaluating();
 
   /**
    * Informs the creator parser that the evaluation of this script is ending
    */
-  void EndEvaluating() {
-    nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
-    if (parser) {
-      parser->DecrementScriptNestingLevel();
-    }
-  }
+  void EndEvaluating();
 
   /**
    * Retrieves a pointer to the creator parser if this has one or null if not
    */
-  already_AddRefed<nsIParser> GetCreatorParser() {
-    nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
-    return parser.forget();
-  }
+  already_AddRefed<nsIParser> GetCreatorParser();
 
   /**
    * This method is called when the parser finishes creating the script
@@ -254,9 +228,7 @@ class nsIScriptElement : public nsIScriptLoaderObserver {
   /**
    * Get referrer policy of the script element
    */
-  virtual mozilla::dom::ReferrerPolicy GetReferrerPolicy() {
-    return mozilla::dom::ReferrerPolicy::_empty;
-  }
+  virtual mozilla::dom::ReferrerPolicy GetReferrerPolicy();
 
   /**
    * Fire an error event
