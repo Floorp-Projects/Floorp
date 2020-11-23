@@ -81,7 +81,7 @@ class MIRGenerator final {
 
   // Collect the evaluation result of phases after IonBuilder, such that
   // off-thread compilation can report what error got encountered.
-  void setOffThreadStatus(AbortReasonOr<Ok> result) {
+  void setOffThreadStatus(AbortReasonOr<Ok>&& result) {
     MOZ_ASSERT(offThreadStatus_.isOk());
     offThreadStatus_ = std::move(result);
   }
