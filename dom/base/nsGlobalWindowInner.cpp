@@ -2519,6 +2519,10 @@ void nsGlobalWindowInner::UpdateTopInnerWindow() {
   mTopInnerWindow->UpdateWebSocketCount(-(int32_t)mNumOfOpenWebSockets);
 }
 
+bool nsGlobalWindowInner::IsInSyncOperation() {
+  return GetExtantDoc() && GetExtantDoc()->IsInSyncOperation();
+}
+
 bool nsGlobalWindowInner::IsSharedMemoryAllowed() const {
   MOZ_ASSERT(NS_IsMainThread());
 

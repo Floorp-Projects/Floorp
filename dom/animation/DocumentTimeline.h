@@ -26,25 +26,10 @@ class DocumentTimeline final : public AnimationTimeline,
                                public nsATimerAdjustmentObserver,
                                public LinkedListElement<DocumentTimeline> {
  public:
-  DocumentTimeline(Document* aDocument, const TimeDuration& aOriginTime)
-      : AnimationTimeline(aDocument->GetParentObject()),
-        mDocument(aDocument),
-        mIsObservingRefreshDriver(false),
-        mOriginTime(aOriginTime) {
-    if (mDocument) {
-      mDocument->Timelines().insertBack(this);
-    }
-  }
+  DocumentTimeline(Document* aDocument, const TimeDuration& aOriginTime);
 
  protected:
-  virtual ~DocumentTimeline() {
-    MOZ_ASSERT(!mIsObservingRefreshDriver,
-               "Timeline should have disassociated"
-               " from the refresh driver before being destroyed");
-    if (isInList()) {
-      remove();
-    }
-  }
+  virtual ~DocumentTimeline();
 
  public:
   NS_DECL_ISUPPORTS_INHERITED

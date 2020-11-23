@@ -5719,4 +5719,26 @@ void EditorBase::TopLevelEditSubActionData::WillDeleteRange(
                        "failed, but ignored");
 }
 
+nsPIDOMWindowOuter* EditorBase::GetWindow() const {
+  return mDocument ? mDocument->GetWindow() : nullptr;
+}
+
+nsPIDOMWindowInner* EditorBase::GetInnerWindow() const {
+  return mDocument ? mDocument->GetInnerWindow() : nullptr;
+}
+
+PresShell* EditorBase::GetPresShell() const {
+  return mDocument ? mDocument->GetPresShell() : nullptr;
+}
+
+nsISelectionController* EditorBase::GetSelectionController() const {
+  if (mSelectionController) {
+    return mSelectionController;
+  }
+  if (!mDocument) {
+    return nullptr;
+  }
+  return mDocument->GetPresShell();
+}
+
 }  // namespace mozilla

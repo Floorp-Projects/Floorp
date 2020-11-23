@@ -4,10 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Document.h"
-#include "nsCOMArray.h"
+#include "js/RootingAPI.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "nsContentList.h"
-#include "nsPIDOMWindow.h"
+
+class JSObject;
+class nsINode;
+struct JSContext;
 
 namespace mozilla {
 class ErrorResult;

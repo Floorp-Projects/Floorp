@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "StorageAccess.h"
+
 #include "mozilla/dom/Document.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/ContentBlocking.h"
@@ -329,6 +331,16 @@ bool StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
         aRejectedReason);
   }
   return disabled;
+}
+
+bool StorageDisabledByAntiTracking(dom::Document* aDocument, nsIURI* aURI) {
+  uint32_t rejectedReason = 0;
+  // Note that GetChannel() below may return null, but that's OK, since the
+  // callee is able to deal with a null channel argument, and if passed null,
+  // will only fail to notify the UI in case storage gets blocked.
+  return StorageDisabledByAntiTracking(
+      aDocument->GetInnerWindow(), aDocument->GetChannel(),
+      aDocument->NodePrincipal(), aURI, rejectedReason);
 }
 
 bool ShouldPartitionStorage(StorageAccess aAccess) {

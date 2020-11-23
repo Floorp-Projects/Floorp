@@ -6840,6 +6840,38 @@ bool nsDocShell::CanSavePresentation(uint32_t aLoadType,
 }
 
 void nsDocShell::ReportBFCacheComboTelemetry(uint16_t aCombo) {
+  // There are 11 possible reasons to make a request fails to use BFCache
+  // (see BFCacheStatus in dom/base/Document.h), and we'd like to record
+  // the common combinations for reasons which make requests fail to use
+  // BFCache. These combinations are generated based on some local browsings,
+  // we need to adjust them when necessary.
+  enum BFCacheStatusCombo : uint16_t {
+    BFCACHE_SUCCESS,
+    SUCCESS_NOT_ONLY_TOPLEVEL =
+        mozilla::dom::BFCacheStatus::NOT_ONLY_TOPLEVEL_IN_BCG,
+    UNLOAD = mozilla::dom::BFCacheStatus::UNLOAD_LISTENER,
+    UNLOAD_REQUEST = mozilla::dom::BFCacheStatus::UNLOAD_LISTENER |
+                     mozilla::dom::BFCacheStatus::REQUEST,
+    REQUEST = mozilla::dom::BFCacheStatus::REQUEST,
+    UNLOAD_REQUEST_PEER = mozilla::dom::BFCacheStatus::UNLOAD_LISTENER |
+                          mozilla::dom::BFCacheStatus::REQUEST |
+                          mozilla::dom::BFCacheStatus::ACTIVE_PEER_CONNECTION,
+    UNLOAD_REQUEST_PEER_MSE =
+        mozilla::dom::BFCacheStatus::UNLOAD_LISTENER |
+        mozilla::dom::BFCacheStatus::REQUEST |
+        mozilla::dom::BFCacheStatus::ACTIVE_PEER_CONNECTION |
+        mozilla::dom::BFCacheStatus::CONTAINS_MSE_CONTENT,
+    UNLOAD_REQUEST_MSE = mozilla::dom::BFCacheStatus::UNLOAD_LISTENER |
+                         mozilla::dom::BFCacheStatus::REQUEST |
+                         mozilla::dom::BFCacheStatus::CONTAINS_MSE_CONTENT,
+    SUSPENDED_UNLOAD_REQUEST_PEER =
+        mozilla::dom::BFCacheStatus::SUSPENDED |
+        mozilla::dom::BFCacheStatus::UNLOAD_LISTENER |
+        mozilla::dom::BFCacheStatus::REQUEST |
+        mozilla::dom::BFCacheStatus::ACTIVE_PEER_CONNECTION,
+    REMOTE_SUBFRAMES = mozilla::dom::BFCacheStatus::CONTAINS_REMOTE_SUBFRAMES
+  };
+
   switch (aCombo) {
     case BFCACHE_SUCCESS:
       Telemetry::AccumulateCategorical(

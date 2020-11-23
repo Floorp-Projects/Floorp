@@ -41,6 +41,26 @@ NS_INTERFACE_MAP_END_INHERITING(AnimationTimeline)
 NS_IMPL_ADDREF_INHERITED(DocumentTimeline, AnimationTimeline)
 NS_IMPL_RELEASE_INHERITED(DocumentTimeline, AnimationTimeline)
 
+DocumentTimeline::DocumentTimeline(Document* aDocument,
+                                   const TimeDuration& aOriginTime)
+    : AnimationTimeline(aDocument->GetParentObject()),
+      mDocument(aDocument),
+      mIsObservingRefreshDriver(false),
+      mOriginTime(aOriginTime) {
+  if (mDocument) {
+    mDocument->Timelines().insertBack(this);
+  }
+}
+
+DocumentTimeline::~DocumentTimeline() {
+  MOZ_ASSERT(!mIsObservingRefreshDriver,
+             "Timeline should have disassociated"
+             " from the refresh driver before being destroyed");
+  if (isInList()) {
+    remove();
+  }
+}
+
 JSObject* DocumentTimeline::WrapObject(JSContext* aCx,
                                        JS::Handle<JSObject*> aGivenProto) {
   return DocumentTimeline_Binding::Wrap(aCx, this, aGivenProto);

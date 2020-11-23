@@ -6,14 +6,15 @@
 #ifndef nsCopySupport_h__
 #define nsCopySupport_h__
 
-#include "nsError.h"
-#include "mozilla/dom/Document.h"
+#include <cstdint>
+#include "ErrorList.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/BasicEvents.h"
 #include "nsStringFwd.h"
-#include "mozilla/EventForwards.h"
 
 class nsINode;
 class nsIImageLoadingContent;
-class nsIContent;
 class nsITransferable;
 class nsILoadContext;
 

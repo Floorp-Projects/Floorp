@@ -9,13 +9,13 @@
 
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/JSActorService.h"
+#include "mozilla/extensions/MatchPattern.h"
 #include "mozilla/ErrorResult.h"
 #include "nsIURI.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsIObserver.h"
 #include "nsIDOMEventListener.h"
-#include "mozilla/extensions/WebExtensionContentScript.h"
 
 namespace mozilla {
 namespace dom {

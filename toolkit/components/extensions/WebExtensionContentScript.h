@@ -19,6 +19,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
 #include "nsIDocShell.h"
+#include "nsPIDOMWindow.h"
 #include "nsWrapperCache.h"
 
 class nsILoadInfo;

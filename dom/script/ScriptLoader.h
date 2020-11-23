@@ -14,7 +14,6 @@
 #include "nsCOMArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
-#include "mozilla/dom/Document.h"
 #include "nsIIncrementalStreamLoader.h"
 #include "nsINode.h"
 #include "nsIObserver.h"
@@ -43,6 +42,7 @@ namespace mozilla {
 namespace dom {
 
 class AutoJSAPI;
+class Document;
 class LoadedScript;
 class ModuleLoadRequest;
 class ModuleScript;
@@ -302,24 +302,7 @@ class ScriptLoader final : public nsISupports {
    * Starts deferring deferred scripts and puts them in the mDeferredRequests
    * queue instead.
    */
-  void BeginDeferringScripts() {
-    mDeferEnabled = true;
-    if (mDeferCheckpointReached) {
-      // We already completed a parse and were just waiting for some async
-      // scripts to load (and were already blocking the load event waiting for
-      // that to happen), when document.open() happened and now we're doing a
-      // new parse.  We shouldn't block the load event again, but _should_ reset
-      // mDeferCheckpointReached to false.  It'll get set to true again when the
-      // DeferCheckpointReached call that corresponds to this
-      // BeginDeferringScripts call happens (on document.close()), since we just
-      // set mDeferEnabled to true.
-      mDeferCheckpointReached = false;
-    } else {
-      if (mDocument) {
-        mDocument->BlockOnload();
-      }
-    }
-  }
+  void BeginDeferringScripts();
 
   /**
    * Notifies the script loader that parsing is done.  If aTerminated is true,
@@ -380,9 +363,7 @@ class ScriptLoader final : public nsISupports {
     return true;
   }
 
-  mozilla::dom::DocGroup* GetDocGroup() const {
-    return mDocument->GetDocGroup();
-  }
+  mozilla::dom::DocGroup* GetDocGroup() const;
 
   /**
    * Register the fact that we saw the load event, and that we need to save the
@@ -718,19 +699,9 @@ class ScriptLoader final : public nsISupports {
 
 class nsAutoScriptLoaderDisabler {
  public:
-  explicit nsAutoScriptLoaderDisabler(Document* aDoc) {
-    mLoader = aDoc->ScriptLoader();
-    mWasEnabled = mLoader->GetEnabled();
-    if (mWasEnabled) {
-      mLoader->SetEnabled(false);
-    }
-  }
+  explicit nsAutoScriptLoaderDisabler(Document* aDoc);
 
-  ~nsAutoScriptLoaderDisabler() {
-    if (mWasEnabled) {
-      mLoader->SetEnabled(true);
-    }
-  }
+  ~nsAutoScriptLoaderDisabler();
 
   bool mWasEnabled;
   RefPtr<ScriptLoader> mLoader;

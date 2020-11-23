@@ -34,7 +34,7 @@ class AnimationEffect : public nsISupports, public nsWrapperCache {
 
   virtual KeyframeEffect* AsKeyframeEffect() { return nullptr; }
 
-  nsISupports* GetParentObject() const { return ToSupports(mDocument); }
+  nsISupports* GetParentObject() const;
 
   bool IsCurrent() const;
   bool IsInEffect() const;

@@ -41,6 +41,16 @@ inline nsIAccessiblePivot* DocAccessible::VirtualCursor() {
   return mVirtualCursor;
 }
 
+inline bool DocAccessible::IsContentLoaded() const {
+  // eDOMLoaded flag check is used for error pages as workaround to make this
+  // method return correct result since error pages do not receive 'pageshow'
+  // event and as consequence Document::IsShowing() returns false.
+  return mDocumentNode && mDocumentNode->IsVisible() &&
+         (mDocumentNode->IsShowing() || HasLoadState(eDOMLoaded));
+}
+
+inline bool DocAccessible::IsHidden() const { return mDocumentNode->Hidden(); }
+
 inline void DocAccessible::FireDelayedEvent(AccEvent* aEvent) {
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eDocLoad)) logging::DocLoadEventFired(aEvent);

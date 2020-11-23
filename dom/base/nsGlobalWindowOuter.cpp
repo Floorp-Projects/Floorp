@@ -7441,6 +7441,10 @@ nsIDOMWindowUtils* nsGlobalWindowOuter::WindowUtils() {
   return mWindowUtils;
 }
 
+bool nsGlobalWindowOuter::IsInSyncOperation() {
+  return GetExtantDoc() && GetExtantDoc()->IsInSyncOperation();
+}
+
 // Note: This call will lock the cursor, it will not change as it moves.
 // To unlock, the cursor must be set back to Auto.
 void nsGlobalWindowOuter::SetCursorOuter(const nsACString& aCursor,

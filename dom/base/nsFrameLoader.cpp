@@ -9,6 +9,8 @@
  * handling of loads in it, recursion-checking).
  */
 
+#include "nsFrameLoader.h"
+
 #include "base/basictypes.h"
 
 #include "prenv.h"
@@ -30,7 +32,6 @@
 #include "nsUnicharUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsFrameLoader.h"
 #include "nsFrameLoaderOwner.h"
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"

@@ -7,7 +7,9 @@
 #include "IDTracker.h"
 
 #include "mozilla/Encoding.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "nsAtom.h"
 #include "nsContentUtils.h"
 #include "nsIURI.h"
@@ -48,6 +50,10 @@ static DocumentOrShadowRoot* FindTreeToWatch(nsIContent& aContent,
 
   return aContent.OwnerDoc();
 }
+
+IDTracker::IDTracker() = default;
+
+IDTracker::~IDTracker() { Unlink(); }
 
 void IDTracker::ResetToURIFragmentID(nsIContent* aFromContent, nsIURI* aURI,
                                      nsIReferrerInfo* aReferrerInfo,
@@ -221,6 +227,18 @@ IDTracker::DocumentLoadNotification::Observe(nsISupports* aSubject,
     mTarget->ElementChanged(nullptr, mTarget->mElement);
   }
   return NS_OK;
+}
+
+DocumentOrShadowRoot* IDTracker::GetWatchDocOrShadowRoot() const {
+  if (!mWatchDocumentOrShadowRoot) {
+    return nullptr;
+  }
+  MOZ_ASSERT(mWatchDocumentOrShadowRoot->IsDocument() ||
+             mWatchDocumentOrShadowRoot->IsShadowRoot());
+  if (ShadowRoot* shadow = ShadowRoot::FromNode(*mWatchDocumentOrShadowRoot)) {
+    return shadow;
+  }
+  return mWatchDocumentOrShadowRoot->AsDocument();
 }
 
 }  // namespace mozilla::dom

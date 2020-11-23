@@ -6,14 +6,13 @@
 #ifndef __nsRFPService_h__
 #define __nsRFPService_h__
 
-#include "mozilla/Atomics.h"
-#include "mozilla/EventForwards.h"
-#include "mozilla/Mutex.h"
-#include "mozilla/dom/Document.h"
+#include <cstdint>
+#include "ErrorList.h"
+#include "PLDHashTable.h"
+#include "mozilla/BasicEvents.h"
 #include "nsIObserver.h"
-
-#include "nsDataHashtable.h"
-#include "nsString.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
 
 // Defines regarding spoofed values of Navigator object. These spoofed values
 // are returned when 'privacy.resistFingerprinting' is true.
@@ -59,10 +58,18 @@
 #  define SPOOFED_HTTP_UA_OS "Windows NT 10.0"
 #endif
 
+struct JSContext;
+template <class KeyClass, class DataType>
+class nsDataHashtable;
+
 // Forward declare LRUCache, defined in nsRFPService.cpp
 class LRUCache;
 
 namespace mozilla {
+class WidgetKeyboardEvent;
+namespace dom {
+class Document;
+}
 
 enum KeyboardLang { EN = 0x01 };
 
@@ -96,35 +103,19 @@ class KeyboardHashKey : public PLDHashEntryHdr {
   typedef const KeyboardHashKey* KeyTypePointer;
 
   KeyboardHashKey(const KeyboardLangs aLang, const KeyboardRegions aRegion,
-                  const KeyNameIndexType aKeyIdx, const nsAString& aKey)
-      : mLang(aLang), mRegion(aRegion), mKeyIdx(aKeyIdx), mKey(aKey) {}
+                  const KeyNameIndexType aKeyIdx, const nsAString& aKey);
 
-  explicit KeyboardHashKey(KeyTypePointer aOther)
-      : mLang(aOther->mLang),
-        mRegion(aOther->mRegion),
-        mKeyIdx(aOther->mKeyIdx),
-        mKey(aOther->mKey) {}
+  explicit KeyboardHashKey(KeyTypePointer aOther);
 
-  KeyboardHashKey(KeyboardHashKey&& aOther)
-      : PLDHashEntryHdr(std::move(aOther)),
-        mLang(std::move(aOther.mLang)),
-        mRegion(std::move(aOther.mRegion)),
-        mKeyIdx(std::move(aOther.mKeyIdx)),
-        mKey(std::move(aOther.mKey)) {}
+  KeyboardHashKey(KeyboardHashKey&& aOther);
 
-  ~KeyboardHashKey() = default;
+  ~KeyboardHashKey();
 
-  bool KeyEquals(KeyTypePointer aOther) const {
-    return mLang == aOther->mLang && mRegion == aOther->mRegion &&
-           mKeyIdx == aOther->mKeyIdx && mKey == aOther->mKey;
-  }
+  bool KeyEquals(KeyTypePointer aOther) const;
 
-  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+  static KeyTypePointer KeyToPointer(KeyType aKey);
 
-  static PLDHashNumber HashKey(KeyTypePointer aKey) {
-    PLDHashNumber hash = mozilla::HashString(aKey->mKey);
-    return mozilla::AddToHash(hash, aKey->mRegion, aKey->mKeyIdx, aKey->mLang);
-  }
+  static PLDHashNumber HashKey(KeyTypePointer aKey);
 
   enum { ALLOW_MEMMOVE = true };
 

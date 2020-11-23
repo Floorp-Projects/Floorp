@@ -17,7 +17,6 @@
 #include "nsIObserver.h"
 #include "nsIDOMEventListener.h"
 #include "mozilla/EventListenerManager.h"
-#include "mozilla/extensions/WebExtensionContentScript.h"
 
 namespace mozilla {
 namespace dom {

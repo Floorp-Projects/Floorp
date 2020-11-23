@@ -44,6 +44,8 @@ typedef uint16_t nsMediaReadyState;
 typedef uint32_t SuspendTypes;
 typedef uint32_t AudibleChangedReasons;
 
+class nsIStreamListener;
+
 namespace mozilla {
 class AbstractThread;
 class ChannelMediaDecoder;

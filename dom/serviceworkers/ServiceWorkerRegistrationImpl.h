@@ -7,22 +7,22 @@
 #ifndef mozilla_dom_serviceworkerregistrationimpl_h
 #define mozilla_dom_serviceworkerregistrationimpl_h
 
-#include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/Unused.h"
-#include "nsCycleCollectionParticipant.h"
-#include "mozilla/dom/Document.h"
-#include "nsPIDOMWindow.h"
-#include "ServiceWorkerManager.h"
 #include "ServiceWorkerRegistration.h"
 #include "ServiceWorkerRegistrationListener.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
+#include "mozilla/dom/ServiceWorkerUtils.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
 
 namespace mozilla {
 namespace dom {
 
-class Promise;
-class PushManager;
-class ServiceWorker;
+class ServiceWorkerRegistrationInfo;
 class WeakWorkerRef;
+class WorkerPrivate;
 
 ////////////////////////////////////////////////////
 // Main Thread implementation

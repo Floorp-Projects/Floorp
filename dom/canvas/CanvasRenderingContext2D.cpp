@@ -1445,6 +1445,16 @@ bool CanvasRenderingContext2D::TryBasicTarget(
   return true;
 }
 
+PresShell* CanvasRenderingContext2D::GetPresShell() {
+  if (mCanvasElement) {
+    return mCanvasElement->OwnerDoc()->GetPresShell();
+  }
+  if (mDocShell) {
+    return mDocShell->GetPresShell();
+  }
+  return nullptr;
+}
+
 NS_IMETHODIMP
 CanvasRenderingContext2D::SetDimensions(int32_t aWidth, int32_t aHeight) {
   // Zero sized surfaces can cause problems.

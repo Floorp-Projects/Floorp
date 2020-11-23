@@ -7,12 +7,15 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/dom/Document.h"
 #include "nsIDOMEventListener.h"
 #include "nsRefPtrHashtable.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 #include "mozilla/StaticPtr.h"
+
+namespace mozilla::dom {
+class Document;
+}
 
 namespace mozilla {
 namespace a11y {
@@ -187,10 +190,7 @@ class DocManager : public nsIWebProgressListener,
  * Note this returns the doc accessible for the primary pres shell if there is
  * more than one.
  */
-inline DocAccessible* GetExistingDocAccessible(const dom::Document* aDocument) {
-  PresShell* presShell = aDocument->GetPresShell();
-  return presShell ? presShell->GetDocAccessible() : nullptr;
-}
+DocAccessible* GetExistingDocAccessible(const dom::Document* aDocument);
 
 }  // namespace a11y
 }  // namespace mozilla

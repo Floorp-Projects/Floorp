@@ -6,24 +6,21 @@
 #ifndef GMPService_h_
 #define GMPService_h_
 
-#include "ChromiumCDMParent.h"
 #include "GMPContentParent.h"
 #include "GMPCrashHelper.h"
-#include "MediaResult.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/Monitor.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/dom/Document.h"
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
-#include "nsIAsyncShutdown.h"
-#include "nsISupportsImpl.h"
-#include "nsIThread.h"
+#include "nsIObserver.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsThreadUtils.h"
+
+class nsIAsyncShutdownClient;
+class nsIRunnable;
+class nsISerialEventTarget;
+class nsIThread;
 
 template <class>
 struct already_AddRefed;
@@ -31,6 +28,7 @@ struct already_AddRefed;
 namespace mozilla {
 
 class GMPCrashHelper;
+class MediaResult;
 
 extern LogModule* GetGMPLog();
 

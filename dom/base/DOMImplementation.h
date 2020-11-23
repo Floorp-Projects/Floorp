@@ -13,7 +13,6 @@
 #include "mozilla/ErrorResult.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "mozilla/dom/Document.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIURI.h"
 #include "nsIWeakReferenceUtils.h"
@@ -27,17 +26,11 @@ template <typename T>
 class Optional;
 
 class DOMImplementation final : public nsISupports, public nsWrapperCache {
-  ~DOMImplementation() = default;
+  ~DOMImplementation();
 
  public:
   DOMImplementation(Document* aOwner, nsIGlobalObject* aScriptObject,
-                    nsIURI* aDocumentURI, nsIURI* aBaseURI)
-      : mOwner(aOwner),
-        mScriptObject(do_GetWeakReference(aScriptObject)),
-        mDocumentURI(aDocumentURI),
-        mBaseURI(aBaseURI) {
-    MOZ_ASSERT(aOwner);
-  }
+                    nsIURI* aDocumentURI, nsIURI* aBaseURI);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMImplementation)

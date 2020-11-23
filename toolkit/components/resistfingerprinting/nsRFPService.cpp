@@ -6,35 +6,71 @@
 #include "nsRFPService.h"
 
 #include <algorithm>
-#include <memory>
-#include <time.h>
+#include <cfloat>
+#include <cinttypes>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#include <new>
+#include <type_traits>
+#include <utility>
 
+#include "MainThreadUtils.h"
+
+#include "mozilla/ArrayIterator.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/Casting.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/dom/Element.h"
+#include "mozilla/HashFunctions.h"
+#include "mozilla/HelperMacros.h"
+#include "mozilla/Likely.h"
 #include "mozilla/Logging.h"
+#include "mozilla/MacroForEach.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticPtr.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_privacy.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
+#include "mozilla/fallible.h"
 
+#include "nsBaseHashtable.h"
 #include "nsCOMPtr.h"
+#include "nsComponentManagerUtils.h"
 #include "nsCoord.h"
+#include "nsDataHashtable.h"
+#include "nsDebug.h"
+#include "nsError.h"
+#include "nsHashKeys.h"
+#include "nsJSUtils.h"
+#include "nsLiteralString.h"
+#include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
-#include "nsXULAppAPI.h"
-#include "nsPrintfCString.h"
+#include "nsStringFlags.h"
+#include "nsTArray.h"
+#include "nsTLiteralString.h"
+#include "nsTPromiseFlatString.h"
+#include "nsTStringRepr.h"
+#include "nsXPCOM.h"
 
 #include "nsICryptoHash.h"
+#include "nsIGlobalObject.h"
 #include "nsIObserverService.h"
 #include "nsIRandomGenerator.h"
 #include "nsIXULAppInfo.h"
-#include "nsJSUtils.h"
 
+#include "nscore.h"
 #include "prenv.h"
-#include "nss.h"
+#include "prtime.h"
+#include "xpcpublic.h"
 
 #include "js/Date.h"
 
@@ -67,6 +103,41 @@ static bool sInitialized = false;
 nsDataHashtable<KeyboardHashKey, const SpoofingKeyboardCode*>*
     nsRFPService::sSpoofingKeyboardCodes = nullptr;
 static mozilla::StaticMutex sLock;
+
+KeyboardHashKey::KeyboardHashKey(const KeyboardLangs aLang,
+                                 const KeyboardRegions aRegion,
+                                 const KeyNameIndexType aKeyIdx,
+                                 const nsAString& aKey)
+    : mLang(aLang), mRegion(aRegion), mKeyIdx(aKeyIdx), mKey(aKey) {}
+
+KeyboardHashKey::KeyboardHashKey(KeyTypePointer aOther)
+    : mLang(aOther->mLang),
+      mRegion(aOther->mRegion),
+      mKeyIdx(aOther->mKeyIdx),
+      mKey(aOther->mKey) {}
+
+KeyboardHashKey::KeyboardHashKey(KeyboardHashKey&& aOther)
+    : PLDHashEntryHdr(std::move(aOther)),
+      mLang(std::move(aOther.mLang)),
+      mRegion(std::move(aOther.mRegion)),
+      mKeyIdx(std::move(aOther.mKeyIdx)),
+      mKey(std::move(aOther.mKey)) {}
+
+KeyboardHashKey::~KeyboardHashKey() = default;
+
+bool KeyboardHashKey::KeyEquals(KeyTypePointer aOther) const {
+  return mLang == aOther->mLang && mRegion == aOther->mRegion &&
+         mKeyIdx == aOther->mKeyIdx && mKey == aOther->mKey;
+}
+
+KeyboardHashKey::KeyTypePointer KeyboardHashKey::KeyToPointer(KeyType aKey) {
+  return &aKey;
+}
+
+PLDHashNumber KeyboardHashKey::HashKey(KeyTypePointer aKey) {
+  PLDHashNumber hash = mozilla::HashString(aKey->mKey);
+  return mozilla::AddToHash(hash, aKey->mRegion, aKey->mKeyIdx, aKey->mLang);
+}
 
 /* static */
 nsRFPService* nsRFPService::GetOrCreate() {
