@@ -11,6 +11,7 @@ include "mozilla/dom/PermissionMessageUtils.h";
 include "mozilla/dom/PropertyBagUtils.h";
 include "mozilla/dom/ReferrerInfoUtils.h";
 include "mozilla/dom/TabMessageUtils.h";
+include "mozilla/ipc/URIUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
 
 include IPCBlob;
@@ -40,7 +41,7 @@ using hal::ScreenOrientation from "mozilla/HalScreenConfiguration.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using refcounted class nsIPrincipal from "nsIPrincipal.h";
 using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
-using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
+using refcounted class nsIURI from "nsIURI.h";
 using refcounted class nsIContentSecurityPolicy from "nsIContentSecurityPolicy.h";
 using refcounted class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
 using refcounted class nsIReferrerInfo from "nsIReferrerInfo.h";

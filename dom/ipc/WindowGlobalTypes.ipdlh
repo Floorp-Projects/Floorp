@@ -6,6 +6,7 @@
 
 include "mozilla/dom/PermissionMessageUtils.h";
 include "mozilla/ipc/TransportSecurityInfoUtils.h";
+include "mozilla/ipc/URIUtils.h";
 
 include NeckoChannelParams;
 include DOMTypes;

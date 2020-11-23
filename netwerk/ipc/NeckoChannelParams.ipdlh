@@ -18,6 +18,7 @@ include DOMTypes;
 
 include "mozilla/dom/PropertyBagUtils.h";
 include "mozilla/dom/ReferrerInfoUtils.h";
+include "mozilla/ipc/URIUtils.h";
 
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using RequestHeaderTuples from "mozilla/net/PHttpChannelParams.h";
