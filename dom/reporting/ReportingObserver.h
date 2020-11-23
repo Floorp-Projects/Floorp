@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_ReportingObserver_h
 #define mozilla_dom_ReportingObserver_h
 
-#include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"

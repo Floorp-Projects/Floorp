@@ -8,7 +8,7 @@
 #define mozilla_dom_MediaCapabilities_h_
 
 #include "DDLoggedTypeTraits.h"
-#include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Maybe.h"
