@@ -13076,7 +13076,7 @@ nsDocShell::IssueWarning(uint32_t aWarning, bool aAsError) {
   if (mContentViewer) {
     RefPtr<Document> doc = mContentViewer->GetDocument();
     if (doc) {
-      doc->WarnOnceAbout(Document::DeprecatedOperations(aWarning), aAsError);
+      doc->WarnOnceAbout(DeprecatedOperations(aWarning), aAsError);
     }
   }
   return NS_OK;

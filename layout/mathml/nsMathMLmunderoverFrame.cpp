@@ -584,7 +584,7 @@ nsresult nsMathMLmunderoverFrame::Place(DrawTarget* aDrawTarget,
       mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::align,
                                      valueAlign)) {
     mContent->OwnerDoc()->WarnOnceAbout(
-        dom::Document::eMathML_DeprecatedAlignmentAttributes);
+        dom::DeprecatedOperations::eMathML_DeprecatedAlignmentAttributes);
     if (valueAlign.EqualsLiteral("left")) {
       alignPosition = left;
     } else if (valueAlign.EqualsLiteral("right")) {
