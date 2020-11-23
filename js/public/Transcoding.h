@@ -17,11 +17,7 @@
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint8_t, uint32_t
 
-#include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle
-
-struct JS_PUBLIC_API JSContext;
-class JS_PUBLIC_API JSObject;
-class JS_PUBLIC_API JSScript;
+#include "js/TypeDecls.h"
 
 namespace JS {
 

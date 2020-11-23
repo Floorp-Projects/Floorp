@@ -19,7 +19,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "js/GCPolicyAPI.h"
-#include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
 
 namespace JS {
 template <typename T>

@@ -17,12 +17,8 @@
 
 #include "jstypes.h"  // JS_FRIEND_API, JS_PUBLIC_API
 
-#include "js/GCVector.h"    // JS::StackGCVector
-#include "js/RootingAPI.h"  // JS::Handle
-
-struct JS_PUBLIC_API JSContext;
-class JS_PUBLIC_API JSObject;
-class JS_PUBLIC_API JSScript;
+#include "js/GCVector.h"  // JS::StackGCVector
+#include "js/TypeDecls.h"
 
 // A 'JSMEnvironment' refers to an environment chain constructed for JSM loading
 // in a shared global. Internally it is a NonSyntacticVariablesObject with a

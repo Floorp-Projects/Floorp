@@ -6,7 +6,7 @@
 #define GetUserMediaRequest_h__
 
 #include <cstdint>
-#include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCycleCollectionParticipant.h"

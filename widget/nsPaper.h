@@ -12,7 +12,7 @@
 #include "mozilla/Maybe.h"
 #include "nsIPaper.h"
 #include "nsISupportsImpl.h"
-#include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
 #include "nsString.h"
 
 struct JSContext;
