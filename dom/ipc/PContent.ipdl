@@ -69,6 +69,8 @@ include LookAndFeelTypes;
 include protocol PSandboxTesting;
 #endif
 
+include "mozilla/AntiTrackingIPCUtils.h";
+
 using refcounted class nsIDOMGeoPosition from "nsGeoPositionIPCSerialiser.h";
 using refcounted class nsIAlertNotification from "mozilla/AlertNotificationIPCSerializer.h";
 

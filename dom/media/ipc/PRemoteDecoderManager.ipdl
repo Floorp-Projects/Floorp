@@ -7,6 +7,7 @@ include protocol PTexture;
 include protocol PRemoteDecoder;
 include LayersSurfaces;
 include "mozilla/dom/MediaIPCUtils.h";
+include "mozilla/layers/LayersMessageUtils.h";
 
 using VideoInfo from "MediaInfo.h";
 using AudioInfo from "MediaInfo.h";

@@ -65,6 +65,7 @@ include RemoteWorkerTypes;
 include MIDITypes;
 
 include "mozilla/dom/cache/IPCUtils.h";
+include "mozilla/dom/quota/SerializationHelpers.h";
 include "mozilla/layers/LayersMessageUtils.h";
 
 using mozilla::dom::cache::Namespace
