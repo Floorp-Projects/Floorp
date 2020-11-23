@@ -7,36 +7,57 @@
 #ifndef FRAMELAYERBUILDER_H_
 #define FRAMELAYERBUILDER_H_
 
-#include "nsCSSPropertyIDSet.h"
-#include "nsTHashtable.h"
-#include "nsHashKeys.h"
-#include "nsTArray.h"
-#include "nsRegion.h"
-#include "nsIFrame.h"
-#include "DisplayItemClip.h"
-#include "mozilla/gfx/MatrixFwd.h"
-#include "mozilla/layers/LayersTypes.h"
-#include "mozilla/UniquePtr.h"
-#include "LayerState.h"
-#include "Layers.h"
-#include "LayerUserData.h"
-#include "nsDisplayItemTypes.h"
-#include "TransformClipNode.h"
+#include <cstddef>  // for size_t
+#include <cstdint>  // for uint32_t, UINT32_MAX, int32_t, uint64_t, uint8_t
+#include <iosfwd>   // for stringstream
+#include <vector>   // for vector
+#include "DisplayItemClip.h"  // for DisplayItemClip
+#include "LayerState.h"       // for LayerState
+#include "LayerUserData.h"    // for LayerUserData
+#include "Units.h"            // for LayerIntPoint, LayoutDeviceToLayerScale2D
+#include "gfxPoint.h"         // for gfxSize
+#include "mozilla/AlreadyAddRefed.h"  // for already_AddRefed
+#include "mozilla/Assertions.h"  // for AssertionConditionType, MOZ_ASSERT_HELPER2
+#include "mozilla/FunctionRef.h"          // for FunctionRef
+#include "mozilla/RefPtr.h"               // for RefPtr
+#include "mozilla/UniquePtr.h"            // for UniquePtr
+#include "mozilla/gfx/Matrix.h"           // for Matrix, Matrix4x4
+#include "mozilla/gfx/Point.h"            // for Size
+#include "mozilla/layers/LayerManager.h"  // for LayerManager, LayerManager::NONE, LayerManager::PaintedLayerCreationHint, LayerMetricsW...
+#include "mozilla/layers/LayersTypes.h"   // for DrawRegionClip, EventRegions
+#include "nsColor.h"                      // for NS_RGBA, nscolor
+#include "nsDebug.h"                      // for NS_WARNING
+#include "nsDisplayItemTypes.h"           // for DisplayItemType
+#include "nsISupports.h"  // for NS_INLINE_DECL_REFCOUNTING, NS_LOG_ADDREF, NS_LOG_RELEASE
+#include "nsPoint.h"   // for nsIntPoint
+#include "nsRect.h"    // for nsRect (ptr only), nsIntRect
+#include "nsRegion.h"  // for nsIntRegion, nsRegion
+#include "nsTArray.h"  // for AutoTArray, nsTArray_Impl
+#include "nscore.h"    // for nsrefcnt
 
-class nsDisplayListBuilder;
-class nsDisplayList;
-class nsDisplayItem;
-class nsPaintedDisplayItem;
 class gfxContext;
+class nsDisplayItem;
 class nsDisplayItemGeometry;
+class nsDisplayList;
+class nsDisplayListBuilder;
 class nsDisplayMasksAndClipPaths;
+class nsIFrame;
+class nsPaintedDisplayItem;
+class nsPresContext;
+class nsRootPresContext;
 
 namespace mozilla {
 struct ActiveScrolledRoot;
 struct DisplayItemClipChain;
+class TransformClipNode;
+template <class T>
+class Maybe;
+template <typename T>
+class SmallPointerArray;
+
 namespace layers {
 class ContainerLayer;
-class LayerManager;
+class Layer;
 class BasicLayerManager;
 class PaintedLayer;
 class ImageLayer;
@@ -212,46 +233,7 @@ class RefCountedRegion {
   bool mIsInfinite;
 };
 
-struct InactiveLayerData {
-  RefPtr<layers::BasicLayerManager> mLayerManager;
-  RefPtr<layers::Layer> mLayer;
-  UniquePtr<layers::LayerProperties> mProps;
-
-  ~InactiveLayerData();
-};
-
-struct AssignedDisplayItem {
-  AssignedDisplayItem(nsPaintedDisplayItem* aItem, LayerState aLayerState,
-                      DisplayItemData* aData, const nsRect& aContentRect,
-                      DisplayItemEntryType aType, const bool aHasOpacity,
-                      const RefPtr<TransformClipNode>& aTransform,
-                      const bool aIsMerged);
-  AssignedDisplayItem(AssignedDisplayItem&& aRhs) = default;
-
-  bool HasOpacity() const { return mHasOpacity; }
-
-  bool HasTransform() const { return mTransform; }
-
-  nsPaintedDisplayItem* mItem;
-  DisplayItemData* mDisplayItemData;
-
-  /**
-   * If the display item is being rendered as an inactive
-   * layer, then this stores the layer manager being
-   * used for the inactive transaction.
-   */
-  UniquePtr<InactiveLayerData> mInactiveLayerData;
-  RefPtr<TransformClipNode> mTransform;
-
-  nsRect mContentRect;
-  LayerState mLayerState;
-  DisplayItemEntryType mType;
-
-  bool mReused;
-  bool mMerged;
-  bool mHasOpacity;
-  bool mHasPaintRect;
-};
+struct AssignedDisplayItem;
 
 struct ContainerLayerParameters {
   ContainerLayerParameters()
@@ -561,36 +543,6 @@ class FrameLayerBuilder : public layers::LayerUserData {
   static DisplayItemData* GetOldDataFor(nsDisplayItem* aItem);
 
   /**
-   * Return the layer that all display items of aFrame were assigned to in the
-   * last paint, or nullptr if there was no single layer assigned to all of the
-   * frame's display items (i.e. zero, or more than one).
-   * This function is for testing purposes and not performance sensitive.
-   */
-  template <class T>
-  static T* GetDebugSingleOldLayerForFrame(nsIFrame* aFrame) {
-    SmallPointerArray<DisplayItemData>& array = aFrame->DisplayItemData();
-
-    Layer* layer = nullptr;
-    for (DisplayItemData* data : array) {
-      DisplayItemData::AssertDisplayItemData(data);
-      if (data->mLayer->GetType() != T::Type()) {
-        continue;
-      }
-      if (layer && layer != data->mLayer) {
-        // More than one layer assigned, bail.
-        return nullptr;
-      }
-      layer = data->mLayer;
-    }
-
-    if (!layer) {
-      return nullptr;
-    }
-
-    return static_cast<T*>(layer);
-  }
-
-  /**
    * Destroy any stored LayerManagerDataProperty and the associated data for
    * aFrame.
    */
@@ -724,6 +676,10 @@ class FrameLayerBuilder : public layers::LayerUserData {
   bool CheckInLayerTreeCompressionMode();
 
   void ComputeGeometryChangeForItem(DisplayItemData* aData);
+
+  // Defined and used only in dom/base/nsDOMWindowUtils.cpp
+  template <class T>
+  static T* GetDebugSingleOldLayerForFrame(nsIFrame* aFrame);
 
  protected:
   /**

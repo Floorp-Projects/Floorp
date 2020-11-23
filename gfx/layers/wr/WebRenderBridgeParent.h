@@ -12,20 +12,17 @@
 
 #include "CompositableHost.h"  // for CompositableHost, ImageCompositeNotificationInfo
 #include "GLContextProvider.h"
-#include "Layers.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/layers/CompositableTransactionParent.h"
-#include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/CompositorVsyncSchedulerOwner.h"
+#include "mozilla/layers/LayerManager.h"
 #include "mozilla/layers/PWebRenderBridgeParent.h"
-#include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
-#include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/webrender/WebRenderAPI.h"
-#include "mozilla/webrender/RenderThread.h"
 #include "nsTArrayForwardDeclare.h"
 
 namespace mozilla {
@@ -40,7 +37,8 @@ class CompositorWidget;
 
 namespace wr {
 class WebRenderAPI;
-}
+class WebRenderPipelineInfo;
+}  // namespace wr
 
 namespace layers {
 
@@ -49,6 +47,7 @@ class Compositor;
 class CompositorBridgeParentBase;
 class CompositorVsyncScheduler;
 class OMTASampler;
+class UiCompositorControllerParent;
 class WebRenderImageHost;
 struct WrAnimations;
 

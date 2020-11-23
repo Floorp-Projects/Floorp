@@ -7,38 +7,57 @@
 #ifndef GFX_CLIENTLAYERMANAGER_H
 #define GFX_CLIENTLAYERMANAGER_H
 
-#include <stdint.h>  // for int32_t
-#include "Layers.h"
-#include "gfxContext.h"          // for gfxContext
-#include "mozilla/Attributes.h"  // for override
-#include "mozilla/LinkedList.h"  // for LinkedList
-#include "mozilla/StaticPrefs_apz.h"
-#include "mozilla/WidgetUtils.h"  // for ScreenRotation
-#include "mozilla/gfx/Rect.h"     // for Rect
-#include "mozilla/layers/CompositorTypes.h"
-#include "mozilla/layers/FocusTarget.h"   // for FocusTarget
-#include "mozilla/layers/LayersTypes.h"   // for BufferMode, LayersBackend, etc
-#include "mozilla/layers/PaintThread.h"   // For PaintThread
-#include "mozilla/layers/ShadowLayers.h"  // for ShadowLayerForwarder, etc
-#include "mozilla/layers/APZTestData.h"   // for APZTestData
-#include "mozilla/layers/MemoryPressureObserver.h"
-#include "nsCOMPtr.h"         // for already_AddRefed
-#include "nsISupportsImpl.h"  // for Layer::Release, etc
-#include "nsRect.h"           // for mozilla::gfx::IntRect
-#include "nsTArray.h"         // for nsTArray
-#include "nscore.h"           // for nsAString
-#include "mozilla/layers/TransactionIdAllocator.h"
-#include "nsIWidget.h"  // For plugin window configuration information structs
+#include <cstddef>                    // for size_t
+#include <cstdint>                    // for uint32_t, int32_t
+#include <new>                        // for operator new
+#include <string>                     // for string
+#include <utility>                    // for forward
+#include "gfxContext.h"               // for gfxContext
+#include "mozilla/AlreadyAddRefed.h"  // for already_AddRefed
+#include "mozilla/Assertions.h"  // for AssertionConditionType, MOZ_ASSERT, MOZ_ASSERT_HELPER2
+#include "mozilla/RefPtr.h"                  // for RefPtr
+#include "mozilla/TimeStamp.h"               // for TimeStamp, BaseTimeDuration
+#include "mozilla/WidgetUtils.h"             // for ScreenRotation
+#include "mozilla/gfx/Point.h"               // for IntSize
+#include "mozilla/gfx/Types.h"               // for SurfaceFormat
+#include "mozilla/layers/APZTestData.h"      // for APZTestData, SequenceNumber
+#include "mozilla/layers/CompositorTypes.h"  // for TextureFactoryIdentifier
+#include "mozilla/layers/LayerManager.h"  // for LayerManager::DrawPaintedLayerCallback, DidCompositeObserver (ptr only), Laye...
+#include "mozilla/layers/LayersTypes.h"  // for LayerHandle, LayersBackend, TransactionId, BufferMode, LayersBackend::LAYERS_...
+#include "mozilla/layers/MemoryPressureObserver.h"  // for MemoryPressureListener, MemoryPressureObserver (ptr only), MemoryPressureReason
+#include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid, ScrollableLayerGuid::ViewID
+#include "mozilla/layers/ShadowLayers.h"  // for ShadowLayerForwarder, ShadowableLayer
+#include "nsISupports.h"                  // for MOZ_COUNTED_DEFAULT_CTOR
+#include "nsIThread.h"                    // for TimeDuration
+#include "nsIWidget.h"                    // for nsIWidget
+#include "nsRegion.h"                     // for nsIntRegion
+#include "nsStringFwd.h"                  // for nsCString, nsAString
+#include "nsTArray.h"                     // for nsTArray
 
-class nsDisplayListBuilder;
+// XXX Includes that could be avoided by moving function implementation to the
+// cpp file.
+#include "mozilla/StaticPrefs_apz.h"  // for apz_test_logging_enabled
 
 namespace mozilla {
 namespace layers {
 
+class CanvasLayer;
+class ColorLayer;
+class ContainerLayer;
 class ClientPaintedLayer;
 class CompositorBridgeChild;
-class ImageLayer;
+class FocusTarget;
 class FrameUniformityData;
+class ImageLayer;
+class Layer;
+class PCompositorBridgeChild;
+class PaintTiming;
+class PaintedLayer;
+class PersistentBufferProvider;
+class ReadbackLayer;
+class ReadbackProcessor;
+class RefLayer;
+class TransactionIdAllocator;
 
 class ClientLayerManager final : public LayerManager,
                                  public MemoryPressureListener {
@@ -356,9 +375,7 @@ class ClientLayer : public ShadowableLayer {
 
   virtual ClientPaintedLayer* AsThebes() { return nullptr; }
 
-  static inline ClientLayer* ToClientLayer(Layer* aLayer) {
-    return static_cast<ClientLayer*>(aLayer->ImplData());
-  }
+  static ClientLayer* ToClientLayer(Layer* aLayer);
 
   template <typename LayerType>
   static inline void RenderMaskLayers(LayerType* aLayer) {

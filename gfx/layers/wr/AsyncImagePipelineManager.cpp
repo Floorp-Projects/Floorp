@@ -731,5 +731,13 @@ wr::Epoch AsyncImagePipelineManager::GetNextImageEpoch() {
   return mAsyncImageEpoch;
 }
 
+AsyncImagePipelineManager::WebRenderPipelineInfoHolder::
+    WebRenderPipelineInfoHolder(RefPtr<const wr::WebRenderPipelineInfo>&& aInfo,
+                                ipc::FileDescriptor&& aFenceFd)
+    : mInfo(aInfo), mFenceFd(aFenceFd) {}
+
+AsyncImagePipelineManager::WebRenderPipelineInfoHolder::
+    ~WebRenderPipelineInfoHolder() = default;
+
 }  // namespace layers
 }  // namespace mozilla

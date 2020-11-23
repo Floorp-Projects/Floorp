@@ -130,6 +130,47 @@ static inline MaskLayerImageCache* GetMaskLayerImageCache() {
   return gMaskLayerImageCache;
 }
 
+struct InactiveLayerData {
+  RefPtr<layers::BasicLayerManager> mLayerManager;
+  RefPtr<layers::Layer> mLayer;
+  UniquePtr<layers::LayerProperties> mProps;
+
+  ~InactiveLayerData();
+};
+
+struct AssignedDisplayItem {
+  AssignedDisplayItem(nsPaintedDisplayItem* aItem, LayerState aLayerState,
+                      DisplayItemData* aData, const nsRect& aContentRect,
+                      DisplayItemEntryType aType, const bool aHasOpacity,
+                      const RefPtr<TransformClipNode>& aTransform,
+                      const bool aIsMerged);
+  AssignedDisplayItem(AssignedDisplayItem&& aRhs) = default;
+
+  bool HasOpacity() const { return mHasOpacity; }
+
+  bool HasTransform() const { return mTransform; }
+
+  nsPaintedDisplayItem* mItem;
+  DisplayItemData* mDisplayItemData;
+
+  /**
+   * If the display item is being rendered as an inactive
+   * layer, then this stores the layer manager being
+   * used for the inactive transaction.
+   */
+  UniquePtr<InactiveLayerData> mInactiveLayerData;
+  RefPtr<TransformClipNode> mTransform;
+
+  nsRect mContentRect;
+  LayerState mLayerState;
+  DisplayItemEntryType mType;
+
+  bool mReused;
+  bool mMerged;
+  bool mHasOpacity;
+  bool mHasPaintRect;
+};
+
 struct DisplayItemEntry {
   DisplayItemEntry(nsDisplayItem* aItem, DisplayItemEntryType aType)
       : mItem(aItem), mType(aType) {}

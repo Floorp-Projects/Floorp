@@ -5,18 +5,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageLayerComposite.h"
-#include "CompositableHost.h"            // for CompositableHost
-#include "Layers.h"                      // for WriteSnapshotToDumpFile, etc
-#include "gfx2DGlue.h"                   // for ToFilter
-#include "gfxEnv.h"                      // for gfxEnv
-#include "gfxRect.h"                     // for gfxRect
-#include "mozilla/Assertions.h"          // for MOZ_ASSERT, etc
-#include "mozilla/gfx/Matrix.h"          // for Matrix4x4
-#include "mozilla/gfx/Point.h"           // for IntSize, Point
-#include "mozilla/gfx/Rect.h"            // for Rect
-#include "mozilla/layers/Compositor.h"   // for Compositor
-#include "mozilla/layers/Effects.h"      // for EffectChain
-#include "mozilla/layers/ImageHost.h"    // for ImageHost
+#include "CompositableHost.h"           // for CompositableHost
+#include "Layers.h"                     // for WriteSnapshotToDumpFile, etc
+#include "gfx2DGlue.h"                  // for ToFilter
+#include "gfxEnv.h"                     // for gfxEnv
+#include "gfxRect.h"                    // for gfxRect
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/gfx/Matrix.h"         // for Matrix4x4
+#include "mozilla/gfx/Point.h"          // for IntSize, Point
+#include "mozilla/gfx/Rect.h"           // for Rect
+#include "mozilla/layers/Compositor.h"  // for Compositor
+#include "mozilla/layers/Effects.h"     // for EffectChain
+#include "mozilla/layers/ImageHost.h"   // for ImageHost
+#include "mozilla/layers/LayerManagerCompositeUtils.h"
 #include "mozilla/layers/TextureHost.h"  // for TextureHost, etc
 #include "mozilla/mozalloc.h"            // for operator delete
 #include "nsAString.h"

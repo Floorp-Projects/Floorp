@@ -13,7 +13,8 @@
 #include "mozilla/gfx/Rect.h"            // for Rect
 #include "mozilla/layers/Compositor.h"   // for Compositor
 #include "mozilla/layers/Effects.h"      // for EffectChain
-#include "mozilla/mozalloc.h"            // for operator delete
+#include "mozilla/layers/LayerManagerCompositeUtils.h"
+#include "mozilla/mozalloc.h"  // for operator delete
 #include "nsAString.h"
 #include "mozilla/RefPtr.h"   // for nsRefPtr
 #include "nsISupportsImpl.h"  // for MOZ_COUNT_CTOR, etc

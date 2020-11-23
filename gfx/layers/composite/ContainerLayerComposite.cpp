@@ -27,6 +27,7 @@
 #include "mozilla/layers/Effects.h"          // for Effect, EffectChain, etc
 #include "mozilla/layers/TextureHost.h"      // for CompositingRenderTarget
 #include "mozilla/layers/APZUtils.h"         // for AsyncTransform
+#include "mozilla/layers/LayerManagerCompositeUtils.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"  // for LayerMetricsWrapper
 #include "mozilla/layers/LayersHelpers.h"
 #include "mozilla/mozalloc.h"  // for operator delete, etc

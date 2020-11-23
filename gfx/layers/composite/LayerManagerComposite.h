@@ -7,36 +7,37 @@
 #ifndef GFX_LayerManagerComposite_H
 #define GFX_LayerManagerComposite_H
 
-#include <stdint.h>            // for int32_t, uint32_t
-#include "CompositableHost.h"  // for CompositableHost, ImageCompositeNotificationInfo
-#include "GLDefs.h"            // for GLenum
-#include "Layers.h"
-#include "Units.h"               // for ParentLayerIntRect
-#include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
-#include "mozilla/Attributes.h"  // for override
-#include "mozilla/RefPtr.h"      // for RefPtr, already_AddRefed
-#include "mozilla/gfx/2D.h"
-#include "mozilla/gfx/Point.h"  // for IntSize
-#include "mozilla/gfx/Rect.h"   // for Rect
-#include "mozilla/gfx/Types.h"  // for SurfaceFormat
-#include "mozilla/layers/CompositionRecorder.h"
-#include "mozilla/layers/CompositorTypes.h"
-#include "mozilla/layers/Effects.h"  // for EffectChain
-#include "mozilla/layers/LayersMessages.h"
-#include "mozilla/layers/LayersTypes.h"  // for LayersBackend, etc
-#include "mozilla/Maybe.h"               // for Maybe
-#include "mozilla/RefPtr.h"
-#include "mozilla/UniquePtr.h"
-#include "nsAString.h"
-#include "mozilla/RefPtr.h"   // for nsRefPtr
-#include "nsCOMPtr.h"         // for already_AddRefed
-#include "nsDebug.h"          // for NS_ASSERTION
-#include "nsISupportsImpl.h"  // for Layer::AddRef, etc
-#include "nsRect.h"           // for mozilla::gfx::IntRect
-#include "nsRegion.h"         // for nsIntRegion
-#include "nscore.h"           // for nsAString, etc
-#include "LayerTreeInvalidation.h"
-#include "mozilla/layers/ScreenshotGrabber.h"
+#include <cstdint>             // for uint64_t, int32_t
+#include <deque>               // for deque
+#include <new>                 // for operator new
+#include <type_traits>         // for remove_reference<>::type
+#include <utility>             // for move, forward
+#include "CompositableHost.h"  // for ImageCompositeNotificationInfo
+#include "Units.h"  // for LayerIntRegion, ParentLayerIntRect, RenderTargetIntRect
+#include "mozilla/AlreadyAddRefed.h"  // for already_AddRefed
+#include "mozilla/Assertions.h"  // for MOZ_CRASH, AssertionConditionType, MOZ_ASSERT, MOZ_AS...
+#include "mozilla/Maybe.h"        // for Maybe
+#include "mozilla/RefPtr.h"       // for RefPtr
+#include "mozilla/TimeStamp.h"    // for TimeStamp, BaseTimeDuration
+#include "mozilla/UniquePtr.h"    // for UniquePtr
+#include "mozilla/gfx/2D.h"       // for DrawTarget
+#include "mozilla/gfx/Matrix.h"   // for Matrix4x4
+#include "mozilla/gfx/Point.h"    // for IntSize
+#include "mozilla/gfx/Polygon.h"  // for Polygon
+#include "mozilla/gfx/Rect.h"     // for IntRect
+#include "mozilla/gfx/Types.h"    // for DeviceColor (ptr only), SurfaceFormat
+#include "mozilla/layers/CompositionRecorder.h"  // for CompositionRecorder, CollectedFrames (ptr only)
+#include "mozilla/layers/Compositor.h"  // for Compositor
+#include "mozilla/layers/CompositorTypes.h"  // for DiagnosticTypes, TextureFactoryIdentifier
+#include "mozilla/layers/LayerManager.h"  // for LayerManager::END_DEFAULT, LayerManager::EndTransacti...
+#include "mozilla/layers/LayersTypes.h"  // for CompositionOpportunityId, LayersBackend, LayersBacken...
+#include "mozilla/layers/ScreenshotGrabber.h"  // for ScreenshotGrabber
+#include "nsDebug.h"                           // for NS_WARNING
+#include "nsIThread.h"                         // for TimeDuration
+#include "nsRegion.h"                          // for nsIntRegion
+#include "nsRegionFwd.h"                       // for IntRegion
+#include "nsStringFwd.h"                       // for nsCString, nsAString
+#include "nsTArray.h"                          // for nsTArray
 
 class gfxContext;
 
@@ -45,30 +46,37 @@ class gfxContext;
 #endif
 
 namespace mozilla {
-namespace gfx {
-class DrawTarget;
-}  // namespace gfx
-
 namespace layers {
 
+class CanvasLayer;
 class CanvasLayerComposite;
+class ColorLayer;
 class ColorLayerComposite;
-class Compositor;
+class ContainerLayer;
 class ContainerLayerComposite;
 class Diagnostics;
 struct EffectChain;
 class ImageLayer;
 class ImageLayerComposite;
 class LayerComposite;
+class NativeLayer;
+class NativeLayerRoot;
 class RefLayerComposite;
+class PaintTiming;
+class PaintedLayer;
 class PaintedLayerComposite;
+class RefLayer;
+class SurfacePoolHandle;
 class TextRenderer;
+class TextureSourceProvider;
 class CompositingRenderTarget;
 struct FPSState;
 class PaintCounter;
 class LayerMLGPU;
 class LayerManagerMLGPU;
 class UiCompositorControllerParent;
+class Layer;
+struct LayerProperties;
 
 static const int kVisualWarningDuration = 150;  // ms
 
@@ -289,7 +297,7 @@ class LayerManagerComposite final : public HostLayerManager {
     MOZ_CRASH("GFX: Use EndTransaction(aTimeStamp)");
   }
 
-  void SetRoot(Layer* aLayer) override { mRoot = aLayer; }
+  void SetRoot(Layer* aLayer) override;
 
   // XXX[nrc]: never called, we should move this logic to ClientLayerManager
   // (bug 946926).
@@ -699,138 +707,6 @@ class LayerComposite : public HostLayer {
   bool mLayerComposited;
   gfx::IntRect mClearRect;
 };
-
-// Render aLayer using aCompositor and apply all mask layers of aLayer: The
-// layer's own mask layer (aLayer->GetMaskLayer()), and any ancestor mask
-// layers.
-// If more than one mask layer needs to be applied, we use intermediate surfaces
-// (CompositingRenderTargets) for rendering, applying one mask layer at a time.
-// Callers need to provide a callback function aRenderCallback that does the
-// actual rendering of the source. It needs to have the following form:
-// void (EffectChain& effectChain, const Rect& clipRect)
-// aRenderCallback is called exactly once, inside this function, unless aLayer's
-// visible region is completely clipped out (in that case, aRenderCallback won't
-// be called at all).
-// This function calls aLayer->AsHostLayer()->AddBlendModeEffect for the
-// final rendering pass.
-//
-// (This function should really live in LayerManagerComposite.cpp, but we
-// need to use templates for passing lambdas until bug 1164522 is resolved.)
-template <typename RenderCallbackType>
-void RenderWithAllMasks(Layer* aLayer, Compositor* aCompositor,
-                        const gfx::IntRect& aClipRect,
-                        RenderCallbackType aRenderCallback) {
-  Layer* firstMask = nullptr;
-  size_t maskLayerCount = 0;
-  size_t nextAncestorMaskLayer = 0;
-
-  size_t ancestorMaskLayerCount = aLayer->GetAncestorMaskLayerCount();
-  if (Layer* ownMask = aLayer->GetMaskLayer()) {
-    firstMask = ownMask;
-    maskLayerCount = ancestorMaskLayerCount + 1;
-    nextAncestorMaskLayer = 0;
-  } else if (ancestorMaskLayerCount > 0) {
-    firstMask = aLayer->GetAncestorMaskLayerAt(0);
-    maskLayerCount = ancestorMaskLayerCount;
-    nextAncestorMaskLayer = 1;
-  } else {
-    // no mask layers at all
-  }
-
-  if (maskLayerCount <= 1) {
-    // This is the common case. Render in one pass and return.
-    EffectChain effectChain(aLayer);
-    LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(firstMask,
-                                                            effectChain);
-    static_cast<LayerComposite*>(aLayer->AsHostLayer())
-        ->AddBlendModeEffect(effectChain);
-    aRenderCallback(effectChain, aClipRect);
-    return;
-  }
-
-  // We have multiple mask layers.
-  // We split our list of mask layers into three parts:
-  //  (1) The first mask
-  //  (2) The list of intermediate masks (every mask except first and last)
-  //  (3) The final mask.
-  // Part (2) can be empty.
-  // For parts (1) and (2) we need to allocate intermediate surfaces to render
-  // into. The final mask gets rendered into the original render target.
-
-  // Calculate the size of the intermediate surfaces.
-  gfx::Rect visibleRect(
-      aLayer->GetLocalVisibleRegion().GetBounds().ToUnknownRect());
-  gfx::Matrix4x4 transform = aLayer->GetEffectiveTransform();
-  // TODO: Use RenderTargetIntRect and TransformBy here
-  gfx::IntRect surfaceRect = RoundedOut(
-      transform.TransformAndClipBounds(visibleRect, gfx::Rect(aClipRect)));
-  if (surfaceRect.IsEmpty()) {
-    return;
-  }
-
-  RefPtr<CompositingRenderTarget> originalTarget =
-      aCompositor->GetCurrentRenderTarget();
-
-  RefPtr<CompositingRenderTarget> firstTarget =
-      aCompositor->CreateRenderTarget(surfaceRect, INIT_MODE_CLEAR);
-  if (!firstTarget) {
-    return;
-  }
-
-  // Render the source while applying the first mask.
-  aCompositor->SetRenderTarget(firstTarget);
-  {
-    EffectChain firstEffectChain(aLayer);
-    LayerManagerComposite::AutoAddMaskEffect firstMaskEffect(firstMask,
-                                                             firstEffectChain);
-    aRenderCallback(firstEffectChain, aClipRect - surfaceRect.TopLeft());
-    // firstTarget now contains the transformed source with the first mask and
-    // opacity already applied.
-  }
-
-  // Apply the intermediate masks.
-  gfx::IntRect intermediateClip(surfaceRect - surfaceRect.TopLeft());
-  RefPtr<CompositingRenderTarget> previousTarget = firstTarget;
-  for (size_t i = nextAncestorMaskLayer; i < ancestorMaskLayerCount - 1; i++) {
-    Layer* intermediateMask = aLayer->GetAncestorMaskLayerAt(i);
-    RefPtr<CompositingRenderTarget> intermediateTarget =
-        aCompositor->CreateRenderTarget(surfaceRect, INIT_MODE_CLEAR);
-    if (!intermediateTarget) {
-      break;
-    }
-    aCompositor->SetRenderTarget(intermediateTarget);
-    EffectChain intermediateEffectChain(aLayer);
-    LayerManagerComposite::AutoAddMaskEffect intermediateMaskEffect(
-        intermediateMask, intermediateEffectChain);
-    if (intermediateMaskEffect.Failed()) {
-      continue;
-    }
-    intermediateEffectChain.mPrimaryEffect =
-        new EffectRenderTarget(previousTarget);
-    aCompositor->DrawQuad(gfx::Rect(surfaceRect), intermediateClip,
-                          intermediateEffectChain, 1.0, gfx::Matrix4x4());
-    previousTarget = intermediateTarget;
-  }
-
-  aCompositor->SetRenderTarget(originalTarget);
-
-  // Apply the final mask, rendering into originalTarget.
-  EffectChain finalEffectChain(aLayer);
-  finalEffectChain.mPrimaryEffect = new EffectRenderTarget(previousTarget);
-  Layer* finalMask = aLayer->GetAncestorMaskLayerAt(ancestorMaskLayerCount - 1);
-
-  // The blend mode needs to be applied in this final step, because this is
-  // where we're blending with the actual background (which is in
-  // originalTarget).
-  static_cast<LayerComposite*>(aLayer->AsHostLayer())
-      ->AddBlendModeEffect(finalEffectChain);
-  LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(finalMask,
-                                                          finalEffectChain);
-  if (!autoMaskEffect.Failed()) {
-    aCompositor->DrawQuad(gfx::Rect(surfaceRect), aClipRect, finalEffectChain,
-                          1.0, gfx::Matrix4x4());
-  }
-}
 
 }  // namespace layers
 }  // namespace mozilla

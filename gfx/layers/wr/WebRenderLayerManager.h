@@ -7,29 +7,37 @@
 #ifndef GFX_WEBRENDERLAYERMANAGER_H
 #define GFX_WEBRENDERLAYERMANAGER_H
 
-#include <unordered_set>
-#include <unordered_map>
-#include <vector>
+#include <cstddef>                    // for size_t
+#include <cstdint>                    // for uint32_t, int32_t, INT32_MAX
+#include <string>                     // for string
+#include "Units.h"                    // for LayoutDeviceIntSize
+#include "mozilla/AlreadyAddRefed.h"  // for already_AddRefed
+#include "mozilla/Assertions.h"  // for AssertionConditionType, MOZ_ASSERT, MOZ_ASSERT_HELPER2
+#include "mozilla/Attributes.h"               // for MOZ_NON_OWNING_REF
+#include "mozilla/RefPtr.h"                   // for RefPtr
+#include "mozilla/StaticPrefs_apz.h"          // for apz_test_logging_enabled
+#include "mozilla/TimeStamp.h"                // for TimeStamp
+#include "mozilla/gfx/Point.h"                // for IntSize
+#include "mozilla/gfx/Types.h"                // for SurfaceFormat
+#include "mozilla/layers/APZTestData.h"       // for APZTestData
+#include "mozilla/layers/CompositorTypes.h"   // for TextureFactoryIdentifier
+#include "mozilla/layers/DisplayItemCache.h"  // for DisplayItemCache
+#include "mozilla/layers/FocusTarget.h"       // for FocusTarget
+#include "mozilla/layers/LayerManager.h"  // for DidCompositeObserver (ptr only), LayerManager::END_DEFAULT, LayerManager::En...
+#include "mozilla/layers/LayersTypes.h"  // for TransactionId, LayersBackend, CompositionPayload (ptr only), LayersBackend::...
+#include "mozilla/layers/RenderRootStateManager.h"  // for RenderRootStateManager
+#include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid, ScrollableLayerGuid::ViewID
+#include "mozilla/layers/WebRenderCommandBuilder.h"  // for WebRenderCommandBuilder
+#include "mozilla/layers/WebRenderScrollData.h"      // for WebRenderScrollData
+#include "nsHashKeys.h"                              // for nsRefPtrHashKey
+#include "nsRegion.h"                                // for nsIntRegion
+#include "nsStringFwd.h"                             // for nsCString, nsAString
+#include "nsTArray.h"                                // for nsTArray
+#include "nsTHashtable.h"  // for nsTHashtable<>::Iterator, nsTHashtable
 
-#include "Layers.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/MozPromise.h"
-#include "mozilla/StaticPrefs_apz.h"
-#include "mozilla/SVGIntegrationUtils.h"  // for WrFiltersHolder
-#include "mozilla/layers/APZTestData.h"
-#include "mozilla/layers/FocusTarget.h"
-#include "mozilla/layers/IpcResourceUpdateQueue.h"
-#include "mozilla/layers/RenderRootStateManager.h"
-#include "mozilla/layers/SharedSurfacesChild.h"
-#include "mozilla/layers/StackingContextHelper.h"
-#include "mozilla/layers/TransactionIdAllocator.h"
-#include "mozilla/layers/WebRenderCommandBuilder.h"
-#include "mozilla/layers/WebRenderScrollData.h"
-#include "mozilla/layers/WebRenderUserData.h"
-#include "mozilla/webrender/WebRenderAPI.h"
-#include "mozilla/webrender/WebRenderTypes.h"
-#include "nsDisplayList.h"
-
+class gfxContext;
+class nsDisplayList;
+class nsDisplayListBuilder;
 class nsIWidget;
 
 namespace mozilla {
@@ -40,6 +48,7 @@ namespace layers {
 
 class CompositorBridgeChild;
 class KnowsCompositor;
+class Layer;
 class PCompositorBridgeChild;
 class WebRenderBridgeChild;
 class WebRenderParentCommand;

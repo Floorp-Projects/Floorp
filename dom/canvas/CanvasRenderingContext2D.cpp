@@ -75,6 +75,8 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/dom/CanvasGradient.h"
+#include "mozilla/dom/CanvasPattern.h"
 #include "mozilla/dom/DOMMatrix.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/ImageData.h"
@@ -911,6 +913,25 @@ CanvasRenderingContext2D::ContextState::ContextState(const ContextState& aOther)
       fontExplicitLanguage(aOther.fontExplicitLanguage) {}
 
 CanvasRenderingContext2D::ContextState::~ContextState() = default;
+
+void CanvasRenderingContext2D::ContextState::SetColorStyle(Style aWhichStyle,
+                                                           nscolor aColor) {
+  colorStyles[aWhichStyle] = aColor;
+  gradientStyles[aWhichStyle] = nullptr;
+  patternStyles[aWhichStyle] = nullptr;
+}
+
+void CanvasRenderingContext2D::ContextState::SetPatternStyle(
+    Style aWhichStyle, CanvasPattern* aPat) {
+  gradientStyles[aWhichStyle] = nullptr;
+  patternStyles[aWhichStyle] = aPat;
+}
+
+void CanvasRenderingContext2D::ContextState::SetGradientStyle(
+    Style aWhichStyle, CanvasGradient* aGrad) {
+  gradientStyles[aWhichStyle] = aGrad;
+  patternStyles[aWhichStyle] = nullptr;
+}
 
 /**
  ** CanvasRenderingContext2D impl

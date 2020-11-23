@@ -7,15 +7,24 @@
 #ifndef GFX_BASICIMPLDATA_H
 #define GFX_BASICIMPLDATA_H
 
-#include "Layers.h"           // for Layer (ptr only), etc
-#include "gfxContext.h"       // for gfxContext, etc
-#include "nsDebug.h"          // for NS_ASSERTION
-#include "nsISupportsImpl.h"  // for MOZ_COUNT_CTOR, etc
-#include "mozilla/gfx/Types.h"
+#include "mozilla/AlreadyAddRefed.h"  // for already_AddRefed
+#include "mozilla/gfx/Point.h"        // for Point
+#include "mozilla/gfx/Types.h"  // for CompositionOp, CompositionOp::OP_OVER, CompositionOp::OP_SOURCE
+#include "mozilla/layers/LayerManager.h"  // for LayerManager, LayerManager::DrawPaintedLayerCallback
+#include "nsDebug.h"      // for NS_ASSERTION
+#include "nsISupports.h"  // for MOZ_COUNTED_DTOR_VIRTUAL, MOZ_COUNT_CTOR
+
+class gfxContext;
 
 namespace mozilla {
+namespace gfx {
+class DrawTarget;
+class SourceSurface;
+}  // namespace gfx
+
 namespace layers {
 
+class Layer;
 class ReadbackProcessor;
 
 /**

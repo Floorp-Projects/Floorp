@@ -7,10 +7,8 @@
 #ifndef NSSUBDOCUMENTFRAME_H_
 #define NSSUBDOCUMENTFRAME_H_
 
-#include "Layers.h"
 #include "LayerState.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/layers/WebRenderScrollData.h"
 #include "nsDisplayList.h"
 #include "nsAtomicContainerFrame.h"
 #include "nsIReflowCallback.h"
@@ -20,6 +18,14 @@
 namespace mozilla {
 class PresShell;
 }  // namespace mozilla
+
+namespace mozilla::layers {
+class Layer;
+class RefLayer;
+class RenderRootStateManager;
+class WebRenderLayerScrollData;
+class WebRenderScrollData;
+}  // namespace mozilla::layers
 
 /******************************************************************************
  * nsSubDocumentFrame

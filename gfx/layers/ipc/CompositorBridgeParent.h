@@ -15,38 +15,25 @@
 //       which the deadline will be 15ms + throttle threshold
 //#define COMPOSITOR_PERFORMANCE_WARNING
 
-#include <stdint.h>                   // for uint64_t
-#include "Layers.h"                   // for Layer
-#include "mozilla/Assertions.h"       // for MOZ_ASSERT_HELPER2
-#include "mozilla/Attributes.h"       // for override
-#include "mozilla/GfxMessageUtils.h"  // for WebGLVersion
+#include <stdint.h>  // for uint64_t
+#include <unordered_map>
+#include "mozilla/Assertions.h"  // for MOZ_ASSERT_HELPER2
 #include "mozilla/Maybe.h"
 #include "mozilla/Monitor.h"    // for Monitor
 #include "mozilla/RefPtr.h"     // for RefPtr
 #include "mozilla/TimeStamp.h"  // for TimeStamp
-#include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/gfx/Point.h"  // for IntSize
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/SharedMemory.h"
-#include "mozilla/layers/CompositionRecorder.h"
 #include "mozilla/layers/CompositorController.h"
-#include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/CompositorVsyncSchedulerOwner.h"
 #include "mozilla/layers/ISurfaceAllocator.h"  // for IShmemAllocator
-#include "mozilla/layers/LayersMessages.h"     // for TargetConfig
+#include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/MetricsSharingController.h"
-#include "mozilla/layers/PCompositorBridgeTypes.h"
 #include "mozilla/layers/PCompositorBridgeParent.h"
-#include "mozilla/layers/APZTestData.h"
 #include "mozilla/webrender/WebRenderTypes.h"
-#include "mozilla/webrender/RenderThread.h"
-#include "mozilla/widget/CompositorWidget.h"
-#include "nsISupportsImpl.h"
-#include "ThreadSafeRefcountingWithMainThreadDestruction.h"
-#include "mozilla/layers/UiCompositorControllerParent.h"
-#include "mozilla/VsyncDispatcher.h"
 
-class nsIWidget;
+struct DxgiAdapterDesc;
 
 namespace mozilla {
 
@@ -74,11 +61,24 @@ class PWebGPUParent;
 class WebGPUParent;
 }  // namespace webgpu
 
+namespace widget {
+class CompositorWidget;
+}
+
+namespace wr {
+class WebRenderPipelineInfo;
+struct Epoch;
+struct MemoryReport;
+struct PipelineId;
+struct RendererStats;
+}  // namespace wr
+
 namespace layers {
 
 class APZCTreeManager;
 class APZCTreeManagerParent;
 class APZSampler;
+class APZTestData;
 class APZUpdater;
 class AsyncCompositionManager;
 class AsyncImagePipelineManager;
@@ -87,17 +87,19 @@ class CompositorAnimationStorage;
 class CompositorBridgeParent;
 class CompositorManagerParent;
 class CompositorVsyncScheduler;
+class FrameUniformityData;
 class GeckoContentController;
 class HostLayerManager;
 class IAPZCTreeManager;
+class Layer;
 class LayerTransactionParent;
 class OMTASampler;
-class PAPZParent;
 class ContentCompositorBridgeParent;
 class CompositorThreadHolder;
 class InProcessCompositorSession;
-class TextureData;
+class UiCompositorControllerParent;
 class WebRenderBridgeParent;
+struct CollectedFrames;
 
 struct ScopedLayerTreeRegistration {
   ScopedLayerTreeRegistration(APZCTreeManager* aApzctm, LayersId aLayersId,

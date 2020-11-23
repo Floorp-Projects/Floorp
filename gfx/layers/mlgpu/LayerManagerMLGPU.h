@@ -7,19 +7,28 @@
 #ifndef MOZILLA_GFX_LAYERMANAGERMLGPU_H
 #define MOZILLA_GFX_LAYERMANAGERMLGPU_H
 
-#include "Layers.h"
-#include "mozilla/layers/LayerManagerComposite.h"
-#include "LayerMLGPU.h"
-#include "mozilla/layers/MLGPUScreenshotGrabber.h"
+#include <cstdint>                    // for uint32_t
+#include "mozilla/AlreadyAddRefed.h"  // for already_AddRefed
+#include "mozilla/Assertions.h"  // for AssertionConditionType, MOZ_ASSERT, MOZ_ASSERT_HELPER1
+#include "mozilla/Maybe.h"                   // for Maybe
+#include "mozilla/RefPtr.h"                  // for RefPtr
+#include "mozilla/TimeStamp.h"               // for TimeStamp
+#include "mozilla/UniquePtr.h"               // for UniquePtr
+#include "mozilla/gfx/Rect.h"                // for IntRect
+#include "mozilla/layers/CompositorTypes.h"  // for TextureFactoryIdentifier
+#include "mozilla/layers/LayerManager.h"  // for LayerManager::EndTransactionFlags, LayerManager::DrawPaintedLayerCallback
+#include "mozilla/layers/LayerManagerComposite.h"   // for HostLayerManager
+#include "mozilla/layers/LayersTypes.h"             // for LayersBackend
+#include "mozilla/layers/MLGPUScreenshotGrabber.h"  // for MLGPUScreenshotGrabber
+#include "nsRegion.h"                               // for nsIntRegion
+#include "nsStringFwd.h"                            // for nsCString
 
 namespace mozilla {
 namespace layers {
 
 class FrameBuilder;
-class LayerManagerMLGPU;
 class RenderPassMLGPU;
 class SharedBufferMLGPU;
-class RenderViewMLGPU;
 class TextRenderer;
 class TextureSourceProviderMLGPU;
 class MLGBuffer;
