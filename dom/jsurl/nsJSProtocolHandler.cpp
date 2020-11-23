@@ -43,6 +43,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/DOMSecurityMonitor.h"
+#include "mozilla/dom/JSExecutionContext.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "nsContentSecurityManager.h"
@@ -54,6 +55,7 @@
 
 using mozilla::IsAscii;
 using mozilla::dom::AutoEntryScript;
+using mozilla::dom::JSExecutionContext;
 
 static NS_DEFINE_CID(kJSURICID, NS_JSURI_CID);
 
@@ -299,7 +301,7 @@ nsresult nsJSThunk::EvaluateScript(
   options.setFileAndLine(mURL.get(), 1);
   options.setIntroductionType("javascriptURL");
   {
-    nsJSUtils::ExecutionContext exec(cx, globalJSObject);
+    JSExecutionContext exec(cx, globalJSObject);
     exec.SetCoerceToString(true);
     exec.Compile(options, NS_ConvertUTF8toUTF16(script));
     rv = exec.ExecScript(&v);

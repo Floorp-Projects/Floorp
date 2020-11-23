@@ -125,6 +125,7 @@
 #include "mozilla/dom/ImageBitmapSource.h"
 #include "mozilla/dom/InstallTriggerBinding.h"
 #include "mozilla/dom/IntlUtils.h"
+#include "mozilla/dom/JSExecutionContext.h"
 #include "mozilla/dom/LSObject.h"
 #include "mozilla/dom/LoadedScript.h"
 #include "mozilla/dom/LocalStorage.h"
@@ -5972,7 +5973,7 @@ bool WindowScriptTimeoutHandler::Call(const char* aExecutionReason) {
   options.setIntroductionType("domTimer");
   JS::Rooted<JSObject*> global(aes.cx(), mGlobal->GetGlobalJSObject());
   {
-    nsJSUtils::ExecutionContext exec(aes.cx(), global);
+    JSExecutionContext exec(aes.cx(), global);
     nsresult rv = exec.Compile(options, mExpr);
 
     JS::Rooted<JSScript*> script(aes.cx(), exec.MaybeGetScript());
