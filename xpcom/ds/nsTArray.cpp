@@ -7,6 +7,7 @@
 #include <string.h>
 #include "nsTArray.h"
 #include "nsXPCOM.h"
+#include "nsCycleCollectionNoteChild.h"
 #include "nsDebug.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/IntegerPrintfMacros.h"
@@ -27,4 +28,8 @@ MOZ_NORETURN MOZ_COLD void InvalidArrayIndex_CRASH(size_t aIndex,
   MOZ_CRASH_UNSAFE_PRINTF(
       "ElementAt(aIndex = %" PRIu64 ", aLength = %" PRIu64 ")",
       static_cast<uint64_t>(aIndex), static_cast<uint64_t>(aLength));
+}
+
+void ::detail::SetCycleCollectionArrayFlag(uint32_t& aFlags) {
+  aFlags |= CycleCollectionEdgeNameArrayFlag;
 }
