@@ -253,9 +253,8 @@ class AsyncImagePipelineManager final {
 
   struct WebRenderPipelineInfoHolder {
     WebRenderPipelineInfoHolder(RefPtr<const wr::WebRenderPipelineInfo>&& aInfo,
-                                ipc::FileDescriptor&& aFenceFd)
-        : mInfo(aInfo), mFenceFd(aFenceFd) {}
-    ~WebRenderPipelineInfoHolder() {}
+                                ipc::FileDescriptor&& aFenceFd);
+    ~WebRenderPipelineInfoHolder();
     RefPtr<const wr::WebRenderPipelineInfo> mInfo;
     ipc::FileDescriptor mFenceFd;
   };

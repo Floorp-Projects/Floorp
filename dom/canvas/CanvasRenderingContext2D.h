@@ -7,11 +7,8 @@
 
 #include <vector>
 #include "mozilla/dom/BasicRenderingContext2D.h"
-#include "mozilla/dom/CanvasGradient.h"
-#include "mozilla/dom/CanvasPattern.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Attributes.h"
@@ -19,11 +16,9 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SurfaceFromElementResult.h"
-#include "mozilla/SVGObserverUtils.h"
 #include "mozilla/UniquePtr.h"
 #include "FilterDescription.h"
 #include "gfx2DGlue.h"
-#include "Layers.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsBidi.h"
 #include "nsColor.h"
@@ -39,6 +34,11 @@ namespace gl {
 class SourceSurface;
 }  // namespace gl
 
+namespace layers {
+class PersistentBufferProvider;
+enum class LayersBackend : int8_t;
+}  // namespace layers
+
 namespace dom {
 class
     HTMLImageElementOrSVGImageElementOrHTMLCanvasElementOrHTMLVideoElementOrImageBitmap;
@@ -49,7 +49,9 @@ class ImageData;
 class StringOrCanvasGradientOrCanvasPattern;
 class OwningStringOrCanvasGradientOrCanvasPattern;
 class TextMetrics;
+class CanvasGradient;
 class CanvasPath;
+class CanvasPattern;
 
 extern const mozilla::gfx::Float SIGMA_MAX;
 
@@ -898,21 +900,9 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
     ContextState(const ContextState& aOther);
     ~ContextState();
 
-    void SetColorStyle(Style aWhichStyle, nscolor aColor) {
-      colorStyles[aWhichStyle] = aColor;
-      gradientStyles[aWhichStyle] = nullptr;
-      patternStyles[aWhichStyle] = nullptr;
-    }
-
-    void SetPatternStyle(Style aWhichStyle, CanvasPattern* aPat) {
-      gradientStyles[aWhichStyle] = nullptr;
-      patternStyles[aWhichStyle] = aPat;
-    }
-
-    void SetGradientStyle(Style aWhichStyle, CanvasGradient* aGrad) {
-      gradientStyles[aWhichStyle] = aGrad;
-      patternStyles[aWhichStyle] = nullptr;
-    }
+    void SetColorStyle(Style aWhichStyle, nscolor aColor);
+    void SetPatternStyle(Style aWhichStyle, CanvasPattern* aPat);
+    void SetGradientStyle(Style aWhichStyle, CanvasGradient* aGrad);
 
     /**
      * returns true iff the given style is a solid color.

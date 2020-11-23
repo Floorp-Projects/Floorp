@@ -5,53 +5,54 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Layers.h"
-#include <algorithm>  // for max, min
-#include "apz/src/AsyncPanZoomController.h"
+
+#include <inttypes.h>          // for PRIu64
+#include <stdio.h>             // for stderr
+#include <algorithm>           // for max, min
+#include <list>                // for list
+#include <set>                 // for set
+#include <string>              // for char_traits, string, basic_string
+#include <type_traits>         // for remove_reference<>::type
 #include "CompositableHost.h"  // for CompositableHost
-#include "ImageContainer.h"    // for ImageContainer, etc
-#include "ImageLayers.h"       // for ImageLayer
-#include "LayerSorter.h"       // for SortLayersBy3DZOrder
-#include "LayerUserData.h"
-#include "ReadbackLayer.h"   // for ReadbackLayer
-#include "UnitTransforms.h"  // for ViewAs
-#include "gfxEnv.h"
-#include "gfxPlatform.h"  // for gfxPlatform
-#include "gfxUtils.h"     // for gfxUtils, etc
-#include "gfx2DGlue.h"
-#include "mozilla/DebugOnly.h"  // for DebugOnly
-#include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/StaticPrefs_layers.h"
-#include "mozilla/Telemetry.h"  // for Accumulate
-#include "mozilla/ToString.h"
-#include "mozilla/dom/Animation.h"              // for dom::Animation
-#include "mozilla/dom/KeyframeEffect.h"         // for dom::Animation
-#include "mozilla/EffectSet.h"                  // for dom::Animation
-#include "mozilla/gfx/2D.h"                     // for DrawTarget
-#include "mozilla/gfx/BaseSize.h"               // for BaseSize
-#include "mozilla/gfx/Matrix.h"                 // for Matrix4x4
-#include "mozilla/gfx/Polygon.h"                // for Polygon
-#include "mozilla/layers/BSPTree.h"             // for BSPTree
-#include "mozilla/layers/CompositableClient.h"  // for CompositableClient
-#include "mozilla/layers/Compositor.h"          // for Compositor
-#include "mozilla/layers/CompositorTypes.h"
-#include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite
-#include "mozilla/layers/LayerMetricsWrapper.h"    // for LayerMetricsWrapper
-#include "mozilla/layers/LayersMessages.h"         // for TransformFunction, etc
-#include "mozilla/layers/LayersTypes.h"            // for TextureDumpMode
-#include "mozilla/layers/PersistentBufferProvider.h"
+#include "GeckoProfiler.h"  // for profiler_can_accept_markers, PROFILER_MARKER_TEXT
+#include "ImageLayers.h"    // for ImageLayer
+#include "LayerUserData.h"  // for LayerUserData
+#include "ReadbackLayer.h"  // for ReadbackLayer
+#include "TreeTraversal.h"  // for ForwardIterator, ForEachNode, DepthFirstSearch, TraversalFlag, TraversalFl...
+#include "UnitTransforms.h"  // for ViewAs, PixelCastJustification, PixelCastJustification::RenderTargetIsPare...
+#include "apz/src/AsyncPanZoomController.h"  // for AsyncPanZoomController
+#include "gfx2DGlue.h"              // for ThebesMatrix, ToPoint, ThebesRect
+#include "gfxEnv.h"                 // for gfxEnv
+#include "gfxMatrix.h"              // for gfxMatrix
+#include "gfxUtils.h"               // for gfxUtils, gfxUtils::sDumpPaintFile
+#include "mozilla/ArrayIterator.h"  // for ArrayIterator
+#include "mozilla/BaseProfilerMarkersPrerequisites.h"  // for MarkerTiming
+#include "mozilla/DebugOnly.h"                         // for DebugOnly
+#include "mozilla/Logging.h"  // for LogLevel, LogLevel::Debug, MOZ_LOG_TEST
+#include "mozilla/ScrollPositionUpdate.h"  // for ScrollPositionUpdate
+#include "mozilla/Telemetry.h"             // for AccumulateTimeDelta
+#include "mozilla/TelemetryHistogramEnums.h"  // for KEYPRESS_PRESENT_LATENCY, SCROLL_PRESENT_LATENCY
+#include "mozilla/ToString.h"  // for ToString
+#include "mozilla/gfx/2D.h"  // for SourceSurface, DrawTarget, DataSourceSurface
+#include "mozilla/gfx/BasePoint3D.h"  // for BasePoint3D<>::(anonymous union)::(anonymous), BasePoint3D<>::(anonymous)
+#include "mozilla/gfx/BaseRect.h"  // for operator<<, BaseRect (ptr only)
+#include "mozilla/gfx/BaseSize.h"  // for operator<<, BaseSize<>::(anonymous union)::(anonymous), BaseSize<>::(anony...
+#include "mozilla/gfx/Matrix.h"  // for Matrix4x4, Matrix, Matrix4x4Typed<>::(anonymous union)::(anonymous), Matri...
+#include "mozilla/gfx/MatrixFwd.h"                 // for Float
+#include "mozilla/gfx/Polygon.h"                   // for Polygon, PolygonTyped
+#include "mozilla/layers/BSPTree.h"                // for LayerPolygon, BSPTree
+#include "mozilla/layers/CompositableClient.h"     // for CompositableClient
+#include "mozilla/layers/Compositor.h"             // for Compositor
+#include "mozilla/layers/LayerManagerComposite.h"  // for HostLayer
+#include "mozilla/layers/LayersMessages.h"  // for SpecificLayerAttributes, CompositorAnimations (ptr only), ContainerLayerAt...
+#include "mozilla/layers/LayersTypes.h"  // for EventRegions, operator<<, CompositionPayload, CSSTransformMatrix, MOZ_LAYE...
 #include "mozilla/layers/ShadowLayers.h"  // for ShadowableLayer
-#include "nsAString.h"
-#include "nsCSSValue.h"       // for nsCSSValue::Array, etc
-#include "nsDisplayList.h"    // for nsDisplayItem
-#include "nsPrintfCString.h"  // for nsPrintfCString
-#include "protobuf/LayerScopePacket.pb.h"
-#include "mozilla/Compression.h"
-#include "TreeTraversal.h"  // for ForEachNode
-
-#include <list>
-#include <set>
-
-uint8_t gLayerManagerLayerBuilder;
+#include "nsBaseHashtable.h"  // for nsBaseHashtable<>::Iterator, nsBaseHashtable<>::LookupResult
+#include "nsISupportsUtils.h"              // for NS_ADDREF, NS_RELEASE
+#include "nsPrintfCString.h"               // for nsPrintfCString
+#include "nsRegionFwd.h"                   // for IntRegion
+#include "nsString.h"                      // for nsTSubstring
+#include "protobuf/LayerScopePacket.pb.h"  // for LayersPacket::Layer, LayersPacket, LayersPacket_Layer::Matrix, LayersPacke...
 
 // Undo the damage done by mozzconf.h
 #undef compress
@@ -64,152 +65,6 @@ typedef ScrollableLayerGuid::ViewID ViewID;
 
 using namespace mozilla::gfx;
 using namespace mozilla::Compression;
-
-//--------------------------------------------------
-// LayerManager
-
-/* static */ mozilla::LogModule* LayerManager::GetLog() {
-  static LazyLogModule sLog("Layers");
-  return sLog;
-}
-
-ScrollableLayerGuid::ViewID LayerManager::GetRootScrollableLayerId() {
-  if (!mRoot) {
-    return ScrollableLayerGuid::NULL_SCROLL_ID;
-  }
-
-  LayerMetricsWrapper layerMetricsRoot = LayerMetricsWrapper(mRoot);
-
-  LayerMetricsWrapper rootScrollableLayerMetrics =
-      BreadthFirstSearch<ForwardIterator>(
-          layerMetricsRoot, [](LayerMetricsWrapper aLayerMetrics) {
-            return aLayerMetrics.Metrics().IsScrollable();
-          });
-
-  return rootScrollableLayerMetrics.IsValid()
-             ? rootScrollableLayerMetrics.Metrics().GetScrollId()
-             : ScrollableLayerGuid::NULL_SCROLL_ID;
-}
-
-LayerMetricsWrapper LayerManager::GetRootContentLayer() {
-  if (!mRoot) {
-    return LayerMetricsWrapper();
-  }
-
-  LayerMetricsWrapper root(mRoot);
-
-  return BreadthFirstSearch<ForwardIterator>(
-      root, [](LayerMetricsWrapper aLayerMetrics) {
-        return aLayerMetrics.Metrics().IsRootContent();
-      });
-}
-
-already_AddRefed<DrawTarget> LayerManager::CreateOptimalDrawTarget(
-    const gfx::IntSize& aSize, SurfaceFormat aFormat) {
-  return gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(aSize,
-                                                                      aFormat);
-}
-
-already_AddRefed<DrawTarget> LayerManager::CreateOptimalMaskDrawTarget(
-    const gfx::IntSize& aSize) {
-  return CreateOptimalDrawTarget(aSize, SurfaceFormat::A8);
-}
-
-already_AddRefed<DrawTarget> LayerManager::CreateDrawTarget(
-    const IntSize& aSize, SurfaceFormat aFormat) {
-  return gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(aSize,
-                                                                     aFormat);
-}
-
-already_AddRefed<PersistentBufferProvider>
-LayerManager::CreatePersistentBufferProvider(
-    const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat) {
-  RefPtr<PersistentBufferProviderBasic> bufferProvider =
-      PersistentBufferProviderBasic::Create(
-          aSize, aFormat,
-          gfxPlatform::GetPlatform()->GetPreferredCanvasBackend());
-
-  if (!bufferProvider) {
-    bufferProvider = PersistentBufferProviderBasic::Create(
-        aSize, aFormat, gfxPlatform::GetPlatform()->GetFallbackCanvasBackend());
-  }
-
-  return bufferProvider.forget();
-}
-
-already_AddRefed<ImageContainer> LayerManager::CreateImageContainer(
-    ImageContainer::Mode flag) {
-  RefPtr<ImageContainer> container = new ImageContainer(flag);
-  return container.forget();
-}
-
-bool LayerManager::LayersComponentAlphaEnabled() {
-  // If MOZ_GFX_OPTIMIZE_MOBILE is defined, we force component alpha off
-  // and ignore the preference.
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-  return false;
-#else
-  return StaticPrefs::
-      layers_componentalpha_enabled_AtStartup_DoNotUseDirectly();
-#endif
-}
-
-bool LayerManager::AreComponentAlphaLayersEnabled() {
-  return LayerManager::LayersComponentAlphaEnabled();
-}
-
-/*static*/
-void LayerManager::LayerUserDataDestroy(void* data) {
-  delete static_cast<LayerUserData*>(data);
-}
-
-UniquePtr<LayerUserData> LayerManager::RemoveUserData(void* aKey) {
-  UniquePtr<LayerUserData> d(static_cast<LayerUserData*>(
-      mUserData.Remove(static_cast<gfx::UserDataKey*>(aKey))));
-  return d;
-}
-
-void LayerManager::PayloadPresented() {
-  RecordCompositionPayloadsPresented(mPayload);
-}
-
-void LayerManager::AddPartialPrerenderedAnimation(
-    uint64_t aCompositorAnimationId, dom::Animation* aAnimation) {
-  mPartialPrerenderedAnimations.Put(aCompositorAnimationId, RefPtr{aAnimation});
-  aAnimation->SetPartialPrerendered(aCompositorAnimationId);
-}
-
-void LayerManager::RemovePartialPrerenderedAnimation(
-    uint64_t aCompositorAnimationId, dom::Animation* aAnimation) {
-  MOZ_ASSERT(aAnimation);
-#ifdef DEBUG
-  RefPtr<dom::Animation> animation;
-  if (mPartialPrerenderedAnimations.Remove(aCompositorAnimationId,
-                                           getter_AddRefs(animation)) &&
-      // It may be possible that either animation's effect has already been
-      // nulled out via Animation::SetEffect() so ignore such cases.
-      aAnimation->GetEffect() && aAnimation->GetEffect()->AsKeyframeEffect() &&
-      animation->GetEffect() && animation->GetEffect()->AsKeyframeEffect()) {
-    MOZ_ASSERT(EffectSet::GetEffectSetForEffect(
-                   aAnimation->GetEffect()->AsKeyframeEffect()) ==
-               EffectSet::GetEffectSetForEffect(
-                   animation->GetEffect()->AsKeyframeEffect()));
-  }
-#else
-  mPartialPrerenderedAnimations.Remove(aCompositorAnimationId);
-#endif
-  aAnimation->ResetPartialPrerendered();
-}
-
-void LayerManager::UpdatePartialPrerenderedAnimations(
-    const nsTArray<uint64_t>& aJankedAnimations) {
-  for (uint64_t id : aJankedAnimations) {
-    RefPtr<dom::Animation> animation;
-    if (mPartialPrerenderedAnimations.Remove(id, getter_AddRefs(animation))) {
-      animation->UpdatePartialPrerendered();
-    }
-  }
-}
 
 //--------------------------------------------------
 // Layer

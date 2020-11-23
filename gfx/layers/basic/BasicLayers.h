@@ -8,12 +8,12 @@
 #define GFX_BASICLAYERS_H
 
 #include <stdint.h>  // for INT32_MAX, int32_t
-#include "Layers.h"  // for Layer (ptr only), etc
 #include "gfxTypes.h"
-#include "gfxContext.h"                  // for gfxContext
-#include "mozilla/Attributes.h"          // for override
-#include "mozilla/WidgetUtils.h"         // for ScreenRotation
-#include "mozilla/layers/LayersTypes.h"  // for BufferMode, LayersBackend, etc
+#include "gfxContext.h"                   // for gfxContext
+#include "mozilla/Attributes.h"           // for override
+#include "mozilla/WidgetUtils.h"          // for ScreenRotation
+#include "mozilla/layers/LayerManager.h"  // for LayerManager::DrawPaintedLayerCallback, LayerManager::END_DEFAULT, LayerManager::EndTra...
+#include "mozilla/layers/LayersTypes.h"   // for BufferMode, LayersBackend, etc
 #include "mozilla/TimeStamp.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"         // for already_AddRefed
@@ -26,9 +26,14 @@ class nsIWidget;
 namespace mozilla {
 namespace layers {
 
+class CanvasLayer;
+class ColorLayer;
+class ContainerLayer;
 class ImageFactory;
 class ImageLayer;
+class Layer;
 class PaintLayerContext;
+class PaintedLayer;
 class ReadbackLayer;
 
 /**

@@ -895,5 +895,9 @@ ClientLayerManager::CreatePersistentBufferProvider(const gfx::IntSize& aSize,
 
 ClientLayer::~ClientLayer() { MOZ_COUNT_DTOR(ClientLayer); }
 
+ClientLayer* ClientLayer::ToClientLayer(Layer* aLayer) {
+  return static_cast<ClientLayer*>(aLayer->ImplData());
+}
+
 }  // namespace layers
 }  // namespace mozilla

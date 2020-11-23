@@ -7,42 +7,36 @@
 #ifndef MOZILLA_GFX_TILEDCONTENTCLIENT_H
 #define MOZILLA_GFX_TILEDCONTENTCLIENT_H
 
-#include <stddef.h>   // for size_t
-#include <stdint.h>   // for uint16_t
-#include <algorithm>  // for swap
-#include <limits>
-#include "Layers.h"            // for LayerManager, etc
-#include "TiledLayerBuffer.h"  // for TiledLayerBuffer
-#include "Units.h"             // for CSSPoint
-#include "gfxTypes.h"
-#include "mozilla/Attributes.h"                 // for override
-#include "mozilla/gfx/2D.h"                     // for gfx::Tile
-#include "mozilla/RefPtr.h"                     // for RefPtr
-#include "mozilla/ipc/Shmem.h"                  // for Shmem
-#include "mozilla/ipc/SharedMemory.h"           // for SharedMemory
-#include "mozilla/layers/APZUtils.h"            // for AsyncTransform
+#include <cstdint>               // for uint64_t, uint16_t, uint8_t
+#include <iosfwd>                // for stringstream
+#include <utility>               // for move
+#include "ClientLayerManager.h"  // for ClientLayerManager
+#include "Units.h"  // for CSSToParentLayerScale2D, ParentLayerPoint, LayerIntRect, LayerRect, LayerToParent...
+#include "gfxTypes.h"               // for gfxContentType, gfxContentType::COLOR
+#include "mozilla/Maybe.h"          // for Maybe
+#include "mozilla/RefPtr.h"         // for RefPtr, operator==, operator!=
+#include "mozilla/TypedEnumBits.h"  // for CastableTypedEnumResult, UnsignedIntegerTypeForEnum, MOZ_MAKE_ENUM_CLASS_BITWISE_...
+#include "mozilla/gfx/2D.h"         // for DrawTarget, DrawTargetCapture
+#include "mozilla/gfx/Rect.h"       // for IntRect
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
-#include "mozilla/layers/CompositorTypes.h"     // for TextureInfo, etc
-#include "mozilla/layers/LayersMessages.h"      // for TileDescriptor
-#include "mozilla/layers/LayersTypes.h"         // for TextureDumpMode
-#include "mozilla/layers/PaintThread.h"         // for CapturedTiledPaintState
-#include "mozilla/layers/TextureClient.h"
-#include "mozilla/layers/TextureClientPool.h"
-#include "ClientLayerManager.h"
-#include "mozilla/mozalloc.h"  // for operator delete
-#include "nsISupportsImpl.h"   // for MOZ_COUNT_DTOR
-#include "nsPoint.h"           // for nsIntPoint
-#include "nsRect.h"            // for mozilla::gfx::IntRect
-#include "nsRegion.h"          // for nsIntRegion
-#include "nsTArray.h"          // for nsTArray, nsTArray_Impl, etc
-#include "nsExpirationTracker.h"
-#include "mozilla/layers/ISurfaceAllocator.h"
+#include "mozilla/layers/CompositorTypes.h"  // for TextureInfo, CompositableType, CompositableType::CONTENT_TILED
+#include "mozilla/layers/LayerManager.h"  // for LayerManager, LayerManager::DrawPaintedLayerCallback
+#include "mozilla/layers/LayersMessages.h"  // for TileDescriptor
+#include "mozilla/layers/LayersTypes.h"  // for SurfaceMode, TextureDumpMode, Compress, SurfaceMode::SURFACE_OPAQUE
+#include "mozilla/layers/ShadowLayers.h"       // for ShadowLayerForwarder
+#include "mozilla/layers/TextureClient.h"      // for TextureClient
+#include "mozilla/layers/TextureClientPool.h"  // for TextureClientAllocator
+#include "nsExpirationTracker.h"               // for nsExpirationState
+#include "nsRegion.h"                          // for nsIntRegion
+#include "nsTArray.h"  // for AutoTArray, nsTArray (ptr only)
 
 namespace mozilla {
 namespace layers {
 
 class ClientTiledPaintedLayer;
-class ClientLayerManager;
+class LayerMetricsWrapper;
+struct AsyncTransform;
+struct FrameMetrics;
 
 enum class TilePaintFlags : uint8_t {
   None = 0x0,

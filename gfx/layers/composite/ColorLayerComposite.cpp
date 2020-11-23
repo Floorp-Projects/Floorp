@@ -13,8 +13,9 @@
 #include "mozilla/layers/Compositor.h"       // for Compositor
 #include "mozilla/layers/CompositorTypes.h"  // for DiagnosticFlags::COLOR
 #include "mozilla/layers/Effects.h"          // for Effect, EffectChain, etc
-#include "mozilla/mozalloc.h"                // for operator delete, etc
-#include "UnitTransforms.h"                  // for ViewAs
+#include "mozilla/layers/LayerManagerCompositeUtils.h"
+#include "mozilla/mozalloc.h"  // for operator delete, etc
+#include "UnitTransforms.h"    // for ViewAs
 
 namespace mozilla {
 namespace layers {
