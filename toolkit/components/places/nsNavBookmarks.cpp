@@ -195,9 +195,6 @@ nsresult nsNavBookmarks::Init() {
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_STATE(history);
   history->AddObserver(this, true);
-  AutoTArray<PlacesEventType, 1> events;
-  events.AppendElement(PlacesEventType::Page_visited);
-  PlacesObservers::AddListener(events, this);
 
   // DO NOT PUT STUFF HERE that can fail. See observer comment above.
 
@@ -1774,21 +1771,6 @@ nsNavBookmarks::GetObservers(
   return NS_OK;
 }
 
-void nsNavBookmarks::NotifyItemVisited(const ItemVisitData& aData) {
-  nsCOMPtr<nsIURI> uri;
-  MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), aData.bookmark.url));
-  // Notify the visit only if we have a valid uri, otherwise the observer
-  // couldn't gather enough data from the notification.
-  // This should be false only if there's a bug in the code preceding us.
-  if (uri) {
-    NOTIFY_OBSERVERS(
-        mCanNotify, mObservers, nsINavBookmarkObserver,
-        OnItemVisited(aData.bookmark.id, aData.visitId, aData.time,
-                      aData.transitionType, uri, aData.bookmark.parentId,
-                      aData.bookmark.guid, aData.bookmark.parentGuid));
-  }
-}
-
 void nsNavBookmarks::NotifyItemChanged(const ItemChangeData& aData) {
   // A guid must always be defined.
   MOZ_ASSERT(!aData.bookmark.guid.IsEmpty());
@@ -1843,29 +1825,6 @@ nsNavBookmarks::OnEndUpdateBatch() {
   NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavBookmarkObserver,
                    OnEndUpdateBatch());
   return NS_OK;
-}
-
-void nsNavBookmarks::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
-  for (const auto& event : aEvents) {
-    if (NS_WARN_IF(event->Type() != PlacesEventType::Page_visited)) {
-      continue;
-    }
-
-    const dom::PlacesVisit* visit = event->AsPlacesVisit();
-    if (NS_WARN_IF(!visit)) {
-      continue;
-    }
-
-    ItemVisitData visitData;
-    visitData.visitId = visit->mVisitId;
-    CopyUTF16toUTF8(visit->mUrl, visitData.bookmark.url);
-    visitData.time = visit->mVisitTime * 1000;
-    visitData.transitionType = visit->mTransitionType;
-    RefPtr<AsyncGetBookmarksForURI<ItemVisitMethod, ItemVisitData>> notifier =
-        new AsyncGetBookmarksForURI<ItemVisitMethod, ItemVisitData>(
-            this, &nsNavBookmarks::NotifyItemVisited, visitData);
-    notifier->Init();
-  }
 }
 
 NS_IMETHODIMP

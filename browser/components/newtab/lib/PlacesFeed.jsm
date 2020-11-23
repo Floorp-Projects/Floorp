@@ -103,8 +103,6 @@ class BookmarksObserver extends Observer {
 
   onEndUpdateBatch() {}
 
-  onItemVisited() {}
-
   onItemMoved() {}
 
   // Disabled due to performance cost, see Issue 3203 /

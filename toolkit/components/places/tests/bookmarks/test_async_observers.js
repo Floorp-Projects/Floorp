@@ -28,28 +28,6 @@ add_task(async function setup() {
   Assert.equal(gBookmarkGuids.length, 2);
 });
 
-add_task(async function test_add_visit() {
-  // Add a visit to the bookmark and wait for the observer.
-  let guids = new Set(gBookmarkGuids);
-  Assert.equal(guids.size, 2);
-  let promiseNotifications = PlacesTestUtils.waitForNotification(
-    "onItemVisited",
-    (id, visitId, time, transition, uri, parentId, guid, parentGuid) => {
-      info(`Got a visit notification for ${guid}.`);
-      Assert.ok(visitId > 0);
-      guids.delete(guid);
-      return guids.size == 0;
-    }
-  );
-
-  await PlacesTestUtils.addVisits({
-    uri: "http://book.ma.rk/",
-    transition: TRANSITION_TYPED,
-    visitDate: NOW,
-  });
-  await promiseNotifications;
-});
-
 add_task(async function test_add_icon() {
   // Add a visit to the bookmark and wait for the observer.
   let guids = new Set(gBookmarkGuids);
