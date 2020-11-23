@@ -70,6 +70,7 @@ include protocol PSandboxTesting;
 #endif
 
 include "ipc/DataStorageIPCUtils.h";
+include "ipc/MediaControlIPC.h";
 include "mozilla/AntiTrackingIPCUtils.h";
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/dom/BindingIPCUtils.h";
@@ -125,9 +126,9 @@ using base::SharedMemoryHandle from "base/shared_memory.h";
 using mozilla::fontlist::Pointer from "SharedFontList.h";
 using gfxSparseBitSet from "gfxFontUtils.h";
 using FontVisibility from "gfxFontEntry.h";
-using mozilla::dom::MediaControlAction from "ipc/MediaControlIPC.h";
-using mozilla::dom::MediaPlaybackState from "ipc/MediaControlIPC.h";
-using mozilla::dom::MediaAudibleState from "ipc/MediaControlIPC.h";
+using mozilla::dom::MediaControlAction from "mozilla/dom/MediaControlKeySource.h";
+using mozilla::dom::MediaPlaybackState from "mozilla/dom/MediaPlaybackStatus.h";
+using mozilla::dom::MediaAudibleState from "mozilla/dom/MediaPlaybackStatus.h";
 using mozilla::dom::MediaMetadataBase from "mozilla/dom/MediaMetadata.h";
 using mozilla::dom::MediaSessionAction from "mozilla/dom/MediaSessionBinding.h";
 using mozilla::dom::MediaSessionPlaybackState from "mozilla/dom/MediaSessionBinding.h";
