@@ -32,7 +32,6 @@
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/PrototypeList.h"
 #include "mozilla/dom/RemoteObjectProxy.h"
-#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/SegmentedVector.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Likely.h"
@@ -2463,6 +2462,10 @@ void ConstructJSImplementation(const char* aContractId,
                                nsIGlobalObject* aGlobal,
                                JS::MutableHandle<JSObject*> aObject,
                                ErrorResult& aRv);
+
+// XXX Avoid pulling in the whole ScriptSettings.h, however there should be a
+// unique declaration of this function somewhere else.
+JS::RootingContext* RootingCx();
 
 template <typename T>
 already_AddRefed<T> ConstructJSImplementation(const char* aContractId,
