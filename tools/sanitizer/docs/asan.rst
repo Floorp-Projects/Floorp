@@ -255,7 +255,7 @@ immediately output symbolized traces. To use it, just set the
 environment variable ``ASAN_SYMBOLIZER_PATH`` to reflect the location of
 your ``llvm-symbolizer`` binary, before running the process. This
 program is usually included in an LLVM distribution. Stacks without
-symbols can also be post-processed, see bellow.
+symbols can also be post-processed, see below.
 
 .. warning::
 
