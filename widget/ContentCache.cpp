@@ -94,8 +94,6 @@ class GetEscapedUTF8String final : public NS_ConvertUTF16toUTF8 {
 
 LazyLogModule sContentCacheLog("ContentCacheWidgets");
 
-ContentCache::ContentCache() : mCompositionStart(UINT32_MAX) {}
-
 /*****************************************************************************
  * mozilla::ContentCacheInChild
  *****************************************************************************/
@@ -105,7 +103,7 @@ ContentCacheInChild::ContentCacheInChild() : ContentCache() {}
 void ContentCacheInChild::Clear() {
   MOZ_LOG(sContentCacheLog, LogLevel::Info, ("0x%p Clear()", this));
 
-  mCompositionStart = UINT32_MAX;
+  mCompositionStart.reset();
   mText.Truncate();
   mSelection.Clear();
   mFirstCharRect.SetEmpty();
@@ -293,7 +291,7 @@ bool ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
            this, aWidget, GetNotificationName(aNotification), mCaret.mOffset,
            GetBoolName(mCaret.IsValid())));
 
-  mCompositionStart = UINT32_MAX;
+  mCompositionStart.reset();
   mTextRectArray.Clear();
   mSelection.ClearAnchorCharRects();
   mSelection.ClearFocusCharRects();
@@ -310,7 +308,7 @@ bool ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
   if (textComposition) {
     // mCompositionStart may be updated by some composition event handlers.
     // So, let's update it with the latest information.
-    mCompositionStart = textComposition->NativeOffsetOfStartComposition();
+    mCompositionStart = Some(textComposition->NativeOffsetOfStartComposition());
     // Note that TextComposition::String() may not be modified here because
     // it's modified after all edit action listeners are performed but this
     // is called while some of them are performed.
@@ -318,7 +316,7 @@ bool ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
     //      composition immediately, we should cache next character of current
     //      composition too.
     uint32_t length = textComposition->LastData().Length() + 1;
-    mTextRectArray.mStart = mCompositionStart;
+    mTextRectArray.mStart = mCompositionStart.value();
     if (NS_WARN_IF(!QueryCharRectArray(aWidget, mTextRectArray.mStart, length,
                                        mTextRectArray.mRects))) {
       MOZ_LOG(sContentCacheLog, LogLevel::Error,
@@ -485,7 +483,6 @@ ContentCacheInParent::ContentCacheInParent(BrowserParent& aBrowserParent)
       mBrowserParent(aBrowserParent),
       mCommitStringByRequest(nullptr),
       mPendingEventsNeedingAck(0),
-      mCompositionStartInChild(UINT32_MAX),
       mPendingCommitLength(0),
       mPendingCompositionCount(0),
       mPendingCommitCount(0),
@@ -506,8 +503,10 @@ void ContentCacheInParent::AssignContent(const ContentCache& aOther,
   // process is managing the composition in the remote process.  Therefore,
   // we shouldn't update composition start offset of TextComposition with
   // old composition which is still being handled by the child process.
-  if (mWidgetHasComposition && mPendingCompositionCount == 1) {
-    IMEStateManager::MaybeStartOffsetUpdatedInChild(aWidget, mCompositionStart);
+  if (mWidgetHasComposition && mPendingCompositionCount == 1 &&
+      mCompositionStart.isSome()) {
+    IMEStateManager::MaybeStartOffsetUpdatedInChild(aWidget,
+                                                    mCompositionStart.value());
   }
 
   // When this instance allows to query content relative to composition string,
@@ -516,17 +515,16 @@ void ContentCacheInParent::AssignContent(const ContentCache& aOther,
   // string.
   mCompositionStartInChild = aOther.mCompositionStart;
   if (mWidgetHasComposition || mPendingCommitCount) {
-    if (aOther.mCompositionStart != UINT32_MAX) {
-      if (mCompositionStart != aOther.mCompositionStart) {
-        mCompositionStart = aOther.mCompositionStart;
+    if (mCompositionStartInChild.isSome()) {
+      if (mCompositionStart.valueOr(UINT32_MAX) !=
+          mCompositionStartInChild.value()) {
+        mCompositionStart = mCompositionStartInChild;
         mPendingCommitLength = 0;
       }
-    } else if (mCompositionStart != mSelection.StartOffset()) {
-      mCompositionStart = mSelection.StartOffset();
+    } else if (mCompositionStart.isSome() &&
+               mCompositionStart.value() != mSelection.StartOffset()) {
+      mCompositionStart = Some(mSelection.StartOffset());
       mPendingCommitLength = 0;
-      NS_WARNING_ASSERTION(mCompositionStart != UINT32_MAX,
-                           "mCompositionStart shouldn't be invalid offset when "
-                           "the widget has composition");
     }
   }
 
@@ -551,8 +549,8 @@ void ContentCacheInParent::AssignContent(const ContentCache& aOther,
        GetRectText(mSelection.mRect).get(), GetRectText(mFirstCharRect).get(),
        mCaret.mOffset, GetRectText(mCaret.mRect).get(), mTextRectArray.mStart,
        mTextRectArray.mRects.Length(), GetBoolName(mWidgetHasComposition),
-       mPendingCompositionCount, mCompositionStart, mPendingCommitLength,
-       GetRectText(mEditorRect).get()));
+       mPendingCompositionCount, mCompositionStart.valueOr(UINT32_MAX),
+       mPendingCommitLength, GetRectText(mEditorRect).get()));
 }
 
 bool ContentCacheInParent::HandleQueryContentEvent(
@@ -601,7 +599,7 @@ bool ContentCacheInParent::HandleQueryContentEvent(
              this, ToChar(aEvent.mMessage), aEvent.mInput.mOffset,
              aEvent.mInput.mLength, GetBoolName(aWidget->PluginHasFocus()),
              GetBoolName(mWidgetHasComposition), mPendingCommitCount,
-             mCompositionStart, mPendingCommitLength,
+             mCompositionStart.valueOr(UINT32_MAX), mPendingCommitLength,
              mSelection.IsValid() ? mSelection.StartOffset() : -1,
              mSelection.IsValid() ? mSelection.Length() : -1));
     if (aWidget->PluginHasFocus()) {
@@ -616,8 +614,9 @@ bool ContentCacheInParent::HandleQueryContentEvent(
         return false;
       }
     } else if (mWidgetHasComposition || mPendingCommitCount) {
-      if (NS_WARN_IF(!aEvent.mInput.MakeOffsetAbsolute(mCompositionStart +
-                                                       mPendingCommitLength))) {
+      if (NS_WARN_IF(mCompositionStart.isNothing()) ||
+          NS_WARN_IF(!aEvent.mInput.MakeOffsetAbsolute(
+              mCompositionStart.value() + mPendingCommitLength))) {
         MOZ_LOG(
             sContentCacheLog, LogLevel::Error,
             ("0x%p HandleQueryContentEvent(), FAILED due to "
@@ -626,7 +625,7 @@ bool ContentCacheInParent::HandleQueryContentEvent(
              "mCompositionStart=%" PRIu32 ", mPendingCommitLength=%" PRIu32 ", "
              "aEvent={ mMessage=%s, mInput={ mOffset=%" PRId64
              ", mLength=%" PRIu32 " } }",
-             this, mCompositionStart, mPendingCommitLength,
+             this, mCompositionStart.valueOr(UINT32_MAX), mPendingCommitLength,
              ToChar(aEvent.mMessage), aEvent.mInput.mOffset,
              aEvent.mInput.mLength));
         return false;
@@ -1098,15 +1097,15 @@ bool ContentCacheInParent::OnCompositionEvent(
   if (!mWidgetHasComposition) {
     if (aEvent.mWidget && aEvent.mWidget->PluginHasFocus()) {
       // If focus is on plugin, we cannot get selection range
-      mCompositionStart = 0;
-    } else if (mCompositionStartInChild != UINT32_MAX) {
+      mCompositionStart = Some(0);
+    } else if (mCompositionStartInChild.isSome()) {
       // If there is pending composition in the remote process, let's use
       // its start offset temporarily because this stores a lot of information
       // around it and the user must look around there, so, showing some UI
       // around it must make sense.
       mCompositionStart = mCompositionStartInChild;
     } else {
-      mCompositionStart = mSelection.StartOffset();
+      mCompositionStart = Some(mSelection.StartOffset());
     }
     MOZ_ASSERT(aEvent.mMessage == eCompositionStart);
     MOZ_RELEASE_ASSERT(mPendingCompositionCount < UINT8_MAX);
@@ -1286,7 +1285,7 @@ void ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
   // now, we can forget composition string informations.
   if (!mWidgetHasComposition && !mPendingCompositionCount &&
       !mPendingCommitCount) {
-    mCompositionStart = UINT32_MAX;
+    mCompositionStart.reset();
   }
 
   if (NS_WARN_IF(!mPendingEventsNeedingAck)) {
