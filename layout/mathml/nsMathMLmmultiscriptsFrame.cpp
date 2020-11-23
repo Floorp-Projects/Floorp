@@ -113,7 +113,7 @@ nsresult nsMathMLmmultiscriptsFrame::Place(DrawTarget* aDrawTarget,
         mContent->AsElement()->GetAttr(kNameSpaceID_None,
                                        nsGkAtoms::subscriptshift_, value)) {
       mContent->OwnerDoc()->WarnOnceAbout(
-          dom::Document::eMathML_DeprecatedScriptShiftAttributes);
+          dom::DeprecatedOperations::eMathML_DeprecatedScriptShiftAttributes);
       ParseNumericValue(value, &subScriptShift, 0, PresContext(),
                         mComputedStyle, fontSizeInflation);
     }
@@ -132,7 +132,7 @@ nsresult nsMathMLmmultiscriptsFrame::Place(DrawTarget* aDrawTarget,
         mContent->AsElement()->GetAttr(kNameSpaceID_None,
                                        nsGkAtoms::superscriptshift_, value)) {
       mContent->OwnerDoc()->WarnOnceAbout(
-          dom::Document::eMathML_DeprecatedScriptShiftAttributes);
+          dom::DeprecatedOperations::eMathML_DeprecatedScriptShiftAttributes);
       ParseNumericValue(value, &supScriptShift, 0, PresContext(),
                         mComputedStyle, fontSizeInflation);
     }

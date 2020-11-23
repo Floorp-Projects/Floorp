@@ -4398,7 +4398,8 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
     case StyleDisplayInside::MozBox: {
       if (!aElement.IsInNativeAnonymousSubtree() &&
           aElement.OwnerDoc()->IsContentDocument()) {
-        aElement.OwnerDoc()->WarnOnceAbout(Document::eMozBoxOrInlineBoxDisplay);
+        aElement.OwnerDoc()->WarnOnceAbout(
+            DeprecatedOperations::eMozBoxOrInlineBoxDisplay);
       }
 
       // If we're emulating -moz-box with flexbox, then treat it as non-XUL and

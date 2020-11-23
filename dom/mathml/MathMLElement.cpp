@@ -208,7 +208,8 @@ bool MathMLElement::ParseNamedSpaceValue(const nsString& aString,
     }
   }
   if (0 != i) {
-    aDocument.WarnOnceAbout(dom::Document::eMathML_DeprecatedMathSpaceValue);
+    aDocument.WarnOnceAbout(
+        dom::DeprecatedOperations::eMathML_DeprecatedMathSpaceValue);
     aCSSValue.SetFloatValue(float(i) / float(18), eCSSUnit_EM);
     return true;
   }
@@ -384,7 +385,8 @@ void MathMLElement::MapMathMLAttributesInto(
   if (value && value->Type() == nsAttrValue::eString &&
       !aDecls.PropertyIsSet(eCSSProperty__moz_script_size_multiplier)) {
     aDecls.Document()->WarnOnceAbout(
-        dom::Document::eMathML_DeprecatedScriptsizemultiplierAttribute);
+        dom::DeprecatedOperations::
+            eMathML_DeprecatedScriptsizemultiplierAttribute);
     auto str = value->GetStringValue();
     str.CompressWhitespace();
     // MathML numbers can't have leading '+'
@@ -417,7 +419,7 @@ void MathMLElement::MapMathMLAttributesInto(
   if (value && value->Type() == nsAttrValue::eString &&
       !aDecls.PropertyIsSet(eCSSProperty__moz_script_min_size)) {
     aDecls.Document()->WarnOnceAbout(
-        dom::Document::eMathML_DeprecatedScriptminsizeAttribute);
+        dom::DeprecatedOperations::eMathML_DeprecatedScriptminsizeAttribute);
     nsCSSValue scriptMinSize;
     ParseNumericValue(value->GetStringValue(), scriptMinSize,
                       PARSE_ALLOW_UNITLESS | CONVERT_UNITLESS_TO_PERCENT,
@@ -489,7 +491,7 @@ void MathMLElement::MapMathMLAttributesInto(
     value = aAttributes->GetAttr(nsGkAtoms::fontsize_);
     if (value) {
       aDecls.Document()->WarnOnceAbout(
-          dom::Document::eMathML_DeprecatedStyleAttribute);
+          dom::DeprecatedOperations::eMathML_DeprecatedStyleAttribute);
     }
   }
   if (value && value->Type() == nsAttrValue::eString &&
@@ -511,7 +513,7 @@ void MathMLElement::MapMathMLAttributesInto(
       for (uint32_t i = 0; i < ArrayLength(sizes); ++i) {
         if (str.EqualsASCII(sizes[i])) {
           aDecls.Document()->WarnOnceAbout(
-              dom::Document::eMathML_DeprecatedMathSizeValue);
+              dom::DeprecatedOperations::eMathML_DeprecatedMathSizeValue);
           aDecls.SetKeywordValue(eCSSProperty_font_size, values[i]);
           break;
         }
@@ -535,7 +537,7 @@ void MathMLElement::MapMathMLAttributesInto(
   value = aAttributes->GetAttr(nsGkAtoms::fontfamily_);
   if (value) {
     aDecls.Document()->WarnOnceAbout(
-        dom::Document::eMathML_DeprecatedStyleAttribute);
+        dom::DeprecatedOperations::eMathML_DeprecatedStyleAttribute);
   }
   if (value && value->Type() == nsAttrValue::eString &&
       !aDecls.PropertyIsSet(eCSSProperty_font_family)) {
@@ -555,7 +557,7 @@ void MathMLElement::MapMathMLAttributesInto(
   value = aAttributes->GetAttr(nsGkAtoms::fontstyle_);
   if (value) {
     aDecls.Document()->WarnOnceAbout(
-        dom::Document::eMathML_DeprecatedStyleAttribute);
+        dom::DeprecatedOperations::eMathML_DeprecatedStyleAttribute);
     if (value->Type() == nsAttrValue::eString &&
         !aDecls.PropertyIsSet(eCSSProperty_font_style)) {
       auto str = value->GetStringValue();
@@ -583,7 +585,7 @@ void MathMLElement::MapMathMLAttributesInto(
   value = aAttributes->GetAttr(nsGkAtoms::fontweight_);
   if (value) {
     aDecls.Document()->WarnOnceAbout(
-        dom::Document::eMathML_DeprecatedStyleAttribute);
+        dom::DeprecatedOperations::eMathML_DeprecatedStyleAttribute);
     if (value->Type() == nsAttrValue::eString &&
         !aDecls.PropertyIsSet(eCSSProperty_font_weight)) {
       auto str = value->GetStringValue();
@@ -682,7 +684,7 @@ void MathMLElement::MapMathMLAttributesInto(
     value = aAttributes->GetAttr(nsGkAtoms::background);
     if (value) {
       aDecls.Document()->WarnOnceAbout(
-          dom::Document::eMathML_DeprecatedStyleAttribute);
+          dom::DeprecatedOperations::eMathML_DeprecatedStyleAttribute);
     }
   }
   if (value) {
@@ -714,7 +716,7 @@ void MathMLElement::MapMathMLAttributesInto(
     value = aAttributes->GetAttr(nsGkAtoms::color);
     if (value) {
       aDecls.Document()->WarnOnceAbout(
-          dom::Document::eMathML_DeprecatedStyleAttribute);
+          dom::DeprecatedOperations::eMathML_DeprecatedStyleAttribute);
     }
   }
   nscolor color;
@@ -916,7 +918,7 @@ bool MathMLElement::IsLink(nsIURI** aURI) const {
         FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::actuate, sActuateVals,
                         eCaseMatters) != Element::ATTR_VALUE_NO_MATCH) {
       OwnerDoc()->WarnOnceAbout(
-          dom::Document::eMathML_DeprecatedXLinkAttribute);
+          dom::DeprecatedOperations::eMathML_DeprecatedXLinkAttribute);
       hasHref = true;
     }
   }
@@ -944,7 +946,8 @@ void MathMLElement::GetLinkTarget(nsAString& aTarget) {
   const nsAttrValue* target =
       mAttrs.GetAttr(nsGkAtoms::target, kNameSpaceID_XLink);
   if (target) {
-    OwnerDoc()->WarnOnceAbout(dom::Document::eMathML_DeprecatedXLinkAttribute);
+    OwnerDoc()->WarnOnceAbout(
+        dom::DeprecatedOperations::eMathML_DeprecatedXLinkAttribute);
     target->ToString(aTarget);
   }
 
@@ -966,7 +969,7 @@ void MathMLElement::GetLinkTarget(nsAString& aTarget) {
     }
     if (hasDeprecatedShowAttribute) {
       OwnerDoc()->WarnOnceAbout(
-          dom::Document::eMathML_DeprecatedXLinkAttribute);
+          dom::DeprecatedOperations::eMathML_DeprecatedXLinkAttribute);
     }
     OwnerDoc()->GetBaseTarget(aTarget);
   }
@@ -1033,7 +1036,7 @@ nsresult MathMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                     aNameSpaceID == kNameSpaceID_XLink))) {
     if (aValue && aNameSpaceID == kNameSpaceID_XLink) {
       OwnerDoc()->WarnOnceAbout(
-          dom::Document::eMathML_DeprecatedXLinkAttribute);
+          dom::DeprecatedOperations::eMathML_DeprecatedXLinkAttribute);
     }
     // Note: When unsetting href, there may still be another href since there
     // are 2 possible namespaces.
