@@ -117,6 +117,14 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+static bool ShouldUseNACScope(const nsINode* aNode) {
+  return aNode->IsInNativeAnonymousSubtree();
+}
+
+static bool ShouldUseUAWidgetScope(const nsINode* aNode) {
+  return aNode->HasBeenInUAWidget();
+}
+
 void* nsINode::operator new(size_t aSize, nsNodeInfoManager* aManager) {
   if (StaticPrefs::dom_arena_allocator_enabled_AtStartup()) {
     MOZ_ASSERT(aManager, "nsNodeInfoManager needs to be initialized");
@@ -3436,6 +3444,18 @@ DocGroup* nsINode::GetDocGroup() const { return OwnerDoc()->GetDocGroup(); }
 
 nsINode* nsINode::GetFlattenedTreeParentNodeNonInline() const {
   return GetFlattenedTreeParentNode();
+}
+
+ParentObject nsINode::GetParentObject() const {
+  ParentObject p(OwnerDoc());
+  // Note that mReflectionScope is a no-op for chrome, and other places
+  // where we don't check this value.
+  if (ShouldUseNACScope(this)) {
+    p.mReflectionScope = ReflectionScope::NAC;
+  } else if (ShouldUseUAWidgetScope(this)) {
+    p.mReflectionScope = ReflectionScope::UAWidget;
+  }
+  return p;
 }
 
 NS_IMPL_ISUPPORTS(nsNodeWeakReference, nsIWeakReference)

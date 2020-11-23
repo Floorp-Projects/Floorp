@@ -19,6 +19,15 @@
 
 //----------------------------------------------------------------------
 
+nsXULControllerData::nsXULControllerData(uint32_t inControllerID,
+                                         nsIController* inController)
+    : mControllerID(inControllerID), mController(inController) {}
+
+nsresult nsXULControllerData::GetController(nsIController** outController) {
+  NS_IF_ADDREF(*outController = mController);
+  return NS_OK;
+}
+
 nsXULControllers::nsXULControllers() : mCurControllerID(0) {}
 
 nsXULControllers::~nsXULControllers(void) { DeleteControllers(); }

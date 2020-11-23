@@ -105,11 +105,7 @@ class CharacterData : public nsIContent {
 
   void SetTextContentInternal(const nsAString& aTextContent,
                               nsIPrincipal* aSubjectPrincipal,
-                              ErrorResult& aError) final {
-    // Batch possible DOMSubtreeModified events.
-    mozAutoSubtreeModified subtree(OwnerDoc(), nullptr);
-    return SetNodeValue(aTextContent, aError);
-  }
+                              ErrorResult& aError) final;
 
   // Implementation for nsIContent
   nsresult BindToTree(BindContext&, nsINode& aParent) override;

@@ -35,6 +35,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ChromeMessageBroadcaster.h"
 #include "mozilla/dom/DebuggerNotificationManager.h"
+#include "mozilla/dom/Location.h"
 #include "mozilla/dom/NavigatorBinding.h"
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/StorageEventBinding.h"
@@ -117,7 +118,6 @@ class IdleRequestCallback;
 class IncrementalRunnable;
 class InstallTriggerImpl;
 class IntlUtils;
-class Location;
 class MediaQueryList;
 class OwningExternalOrWindowProxy;
 class Promise;
