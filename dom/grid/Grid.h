@@ -8,7 +8,6 @@
 #define mozilla_dom_Grid_h
 
 #include "GridArea.h"
-#include "mozilla/dom/Element.h"
 #include "nsGridContainerFrame.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
@@ -16,6 +15,7 @@
 namespace mozilla {
 namespace dom {
 
+class Element;
 class GridDimension;
 
 class Grid : public nsISupports, public nsWrapperCache {

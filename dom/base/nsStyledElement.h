@@ -16,7 +16,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Element.h"
 #include "nsString.h"
-#include "mozilla/dom/Element.h"
 
 namespace mozilla {
 class DeclarationBlock;

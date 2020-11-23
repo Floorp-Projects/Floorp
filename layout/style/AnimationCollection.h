@@ -7,7 +7,6 @@
 #ifndef mozilla_AnimationCollection_h
 #define mozilla_AnimationCollection_h
 
-#include "mozilla/dom/Element.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/RefPtr.h"
@@ -19,6 +18,9 @@ class nsIFrame;
 class nsPresContext;
 
 namespace mozilla {
+namespace dom {
+class Element;
+}
 
 // Traits class to define the specific atoms used when storing specializations
 // of AnimationCollection as a property on an Element (e.g. which atom
@@ -46,12 +48,7 @@ class AnimationCollection
     LinkedListElement<SelfType>::remove();
   }
 
-  void Destroy() {
-    mCalledDestroy = true;
-
-    // This will call our destructor.
-    mElement->RemoveProperty(mElementProperty);
-  }
+  void Destroy();
 
   static void PropertyDtor(void* aObject, nsAtom* aPropertyName,
                            void* aPropertyValue, void* aData);

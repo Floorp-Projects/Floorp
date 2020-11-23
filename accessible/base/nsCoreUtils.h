@@ -7,7 +7,6 @@
 #define nsCoreUtils_h_
 
 #include "mozilla/EventForwards.h"
-#include "mozilla/dom/Element.h"
 #include "nsIAccessibleEvent.h"
 #include "nsIContent.h"
 #include "mozilla/FlushType.h"
@@ -296,11 +295,7 @@ class nsCoreUtils {
   /**
    * Return true if the given node is table header element.
    */
-  static bool IsHTMLTableHeader(nsIContent* aContent) {
-    return aContent->NodeInfo()->Equals(nsGkAtoms::th) ||
-           (aContent->IsElement() && aContent->AsElement()->HasAttr(
-                                         kNameSpaceID_None, nsGkAtoms::scope));
-  }
+  static bool IsHTMLTableHeader(nsIContent* aContent);
 
   /**
    * Returns true if the given string is empty or contains whitespace symbols

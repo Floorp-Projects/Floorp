@@ -13,7 +13,6 @@
 #include "mozilla/TextControlElement.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/WeakPtr.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLInputElementBinding.h"
 #include "mozilla/dom/Nullable.h"
 #include "nsCycleCollectionParticipant.h"
@@ -32,6 +31,7 @@ class TextInputListener;
 class TextInputSelectionController;
 
 namespace dom {
+class Element;
 class HTMLInputElement;
 }  // namespace dom
 
