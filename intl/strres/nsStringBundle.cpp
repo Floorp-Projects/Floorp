@@ -14,6 +14,7 @@
 #include "nsNetUtil.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsIURI.h"
 #include "nsIObserverService.h"

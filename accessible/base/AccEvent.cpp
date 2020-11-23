@@ -17,6 +17,7 @@
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/UserActivation.h"
 
+#include "nsComponentManagerUtils.h"
 #include "nsIMutableArray.h"
 
 using namespace mozilla;

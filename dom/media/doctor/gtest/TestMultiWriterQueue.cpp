@@ -9,6 +9,7 @@
 #include "DDTimeStamp.h"
 #include "mozilla/Assertions.h"
 #include "nsDeque.h"
+#include "nsIThread.h"
 #include "nsThreadUtils.h"
 
 #include <gtest/gtest.h>

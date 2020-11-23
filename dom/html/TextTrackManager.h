@@ -12,6 +12,7 @@
 #include "mozilla/dom/TextTrackCueList.h"
 #include "mozilla/StaticPtr.h"
 #include "nsContentUtils.h"
+#include "nsIDOMEventListener.h"
 #include "TimeUnits.h"
 
 class nsIWebVTTParserWrapper;

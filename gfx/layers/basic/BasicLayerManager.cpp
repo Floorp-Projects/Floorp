@@ -36,7 +36,8 @@
 #include "mozilla/gfx/BaseRect.h"   // for BaseRect
 #include "mozilla/gfx/Matrix.h"     // for Matrix
 #include "mozilla/gfx/PathHelpers.h"
-#include "mozilla/gfx/Rect.h"            // for IntRect, Rect
+#include "mozilla/gfx/Rect.h"  // for IntRect, Rect
+#include "mozilla/layers/BSPTree.h"
 #include "mozilla/layers/LayersTypes.h"  // for BufferMode::BUFFER_NONE, etc
 #include "mozilla/mozalloc.h"            // for operator new
 #include "nsCOMPtr.h"                    // for already_AddRefed

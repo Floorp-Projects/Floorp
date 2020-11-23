@@ -8,6 +8,7 @@
 
 #include "nsDebug.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/dom/SVGAnimateMotionElement.h"
 #include "mozilla/dom/SVGGeometryElement.h"
 #include "nsContentUtils.h"

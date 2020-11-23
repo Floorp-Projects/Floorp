@@ -10,6 +10,7 @@
 #include "nsNetUtil.h"
 #include "NullPrincipal.h"
 #include "nsCycleCollector.h"
+#include "nsIChannel.h"
 #include "nsSandboxFlags.h"
 
 #include "nsFtpProtocolHandler.h"

@@ -7,15 +7,28 @@
 #ifndef mozilla_dom_PerformanceNavigationTiming_h___
 #define mozilla_dom_PerformanceNavigationTiming_h___
 
-#include "nsCOMPtr.h"
-#include "nsITimedChannel.h"
-#include "nsRFPService.h"
-#include "mozilla/dom/PerformanceResourceTiming.h"
+#include <stdint.h>
+#include <utility>
+#include "js/RootingAPI.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/PerformanceNavigationTimingBinding.h"
-#include "nsIHttpChannel.h"
+#include "mozilla/dom/PerformanceResourceTiming.h"
+#include "nsDOMNavigationTiming.h"
+#include "nsISupports.h"
+#include "nsLiteralString.h"
+#include "nsString.h"
+#include "nsTLiteralString.h"
+
+class JSObject;
+class nsIHttpChannel;
+class nsITimedChannel;
+struct JSContext;
 
 namespace mozilla {
 namespace dom {
+
+class Performance;
+class PerformanceTimingData;
 
 // https://www.w3.org/TR/navigation-timing-2/#sec-PerformanceNavigationTiming
 class PerformanceNavigationTiming final : public PerformanceResourceTiming {

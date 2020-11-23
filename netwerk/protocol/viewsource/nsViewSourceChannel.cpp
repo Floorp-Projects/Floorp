@@ -17,6 +17,7 @@
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
+#include "nsViewSourceChannel.h"
 
 NS_IMPL_ADDREF(nsViewSourceChannel)
 NS_IMPL_RELEASE(nsViewSourceChannel)

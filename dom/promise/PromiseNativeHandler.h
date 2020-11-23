@@ -9,6 +9,7 @@
 
 #include <functional>
 #include "js/TypeDecls.h"
+#include "mozilla/Maybe.h"
 #include "nsISupports.h"
 
 namespace mozilla {

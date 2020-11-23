@@ -15,6 +15,9 @@
 #include "nsThreadUtils.h"
 #include "plstr.h"
 
+class nsAtom;
+class nsIContent;
+class nsINode;
 class nsIURI;
 class nsIReferrerInfo;
 

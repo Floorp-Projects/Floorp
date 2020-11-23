@@ -14,6 +14,7 @@
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsIChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsINetworkInterceptController.h"
@@ -23,6 +24,7 @@
 #include "nsIUploadChannel2.h"
 #include "nsThreadUtils.h"
 #include "nsICacheInfoChannel.h"
+#include "nsNetUtil.h"
 
 #include "ServiceWorkerCloneData.h"
 #include "ServiceWorkerManager.h"
@@ -49,6 +51,7 @@
 #include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
+#include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/RemoteLazyInputStreamStorage.h"
 

@@ -11,6 +11,7 @@
 #include "Role.h"
 #include "States.h"
 
+#include "mozilla/dom/Element.h"
 #include "nsIPersistentProperties2.h"
 #include "nsComponentManagerUtils.h"
 

@@ -11,6 +11,7 @@
 #include "SVGNumberPairSMILType.h"
 #include "mozilla/SMILValue.h"
 #include "mozilla/SVGContentUtils.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla::dom;
 

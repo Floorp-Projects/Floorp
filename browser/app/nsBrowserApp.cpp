@@ -6,6 +6,7 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/XREAppData.h"
+#include "XREShellData.h"
 #include "application.ini.h"
 #include "mozilla/Bootstrap.h"
 #if defined(XP_WIN)

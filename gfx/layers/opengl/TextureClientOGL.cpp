@@ -16,6 +16,7 @@
 #  include <jni.h>
 #  include <android/native_window.h>
 #  include <android/native_window_jni.h>
+#  include <sys/socket.h>
 #  include "mozilla/ipc/FileDescriptor.h"
 #  include "mozilla/java/GeckoSurfaceWrappers.h"
 #  include "mozilla/java/SurfaceAllocatorWrappers.h"

@@ -5,6 +5,7 @@
 
 #include "GLContextProvider.h"
 #include "GLContextCGL.h"
+#include "GLLibraryLoader.h"
 #include "nsDebug.h"
 #include "nsIWidget.h"
 #include <OpenGL/gl.h>
@@ -14,6 +15,7 @@
 #include "mozilla/StaticPrefs_gl.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "prenv.h"
+#include "prlink.h"
 #include "GeckoProfiler.h"
 #include "MozFramebuffer.h"
 #include "mozilla/layers/CompositorOptions.h"

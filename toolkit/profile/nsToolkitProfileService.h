@@ -8,6 +8,7 @@
 #ifndef nsToolkitProfileService_h
 #define nsToolkitProfileService_h
 
+#include "mozilla/LinkedList.h"
 #include "nsIToolkitProfileService.h"
 #include "nsIToolkitProfile.h"
 #include "nsIFactory.h"

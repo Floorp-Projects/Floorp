@@ -8,6 +8,7 @@
 #include "mozilla/dom/ReportingHeader.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/Unused.h"
+#include "nsIThread.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {

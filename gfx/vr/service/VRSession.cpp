@@ -12,7 +12,11 @@
 #  include <d3d11.h>
 #endif  // defined(XP_WIN)
 
-#ifndef MOZILLA_INTERNAL_API
+#if defined(MOZILLA_INTERNAL_API)
+#  if defined(XP_WIN)
+#    include "mozilla/gfx/Logging.h"
+#  endif
+#else
 #  define NS_WARNING(s)
 #endif
 

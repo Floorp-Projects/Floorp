@@ -9,6 +9,7 @@
 #include <string>
 #include <unordered_set>
 
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/MediaErrorBinding.h"
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"

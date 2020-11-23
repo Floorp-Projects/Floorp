@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/ClipboardEvent.h"
 #include "mozilla/ContentEvents.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "nsIClipboard.h"
 

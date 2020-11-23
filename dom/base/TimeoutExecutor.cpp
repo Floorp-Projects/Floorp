@@ -7,6 +7,7 @@
 #include "TimeoutExecutor.h"
 
 #include "mozilla/EventQueue.h"
+#include "mozilla/Logging.h"
 #include "mozilla/dom/TimeoutManager.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIEventTarget.h"

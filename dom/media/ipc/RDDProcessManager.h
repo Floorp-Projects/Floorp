@@ -9,6 +9,7 @@
 #include "mozilla/PRemoteDecoderManagerChild.h"
 #include "mozilla/RDDProcessHost.h"
 #include "mozilla/ipc/TaskFactory.h"
+#include "nsIObserver.h"
 
 namespace mozilla {
 

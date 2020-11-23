@@ -40,6 +40,7 @@
 #include "nsIObserverService.h"
 #include "nsCharSeparatedTokenizer.h"
 
+#include "nsComponentManagerUtils.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsCRT.h"

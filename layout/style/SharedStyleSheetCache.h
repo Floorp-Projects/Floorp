@@ -20,6 +20,7 @@
 //    might re-create it.
 
 #include "mozilla/PrincipalHashKey.h"
+#include "mozilla/WeakPtr.h"
 #include "mozilla/css/Loader.h"
 #include "nsDataHashtable.h"
 #include "nsIMemoryReporter.h"

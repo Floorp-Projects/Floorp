@@ -7,6 +7,7 @@
 #ifndef mozilla_glean_GleanString_h
 #define mozilla_glean_GleanString_h
 
+#include "mozilla/Maybe.h"
 #include "nsIGleanMetrics.h"
 #include "nsString.h"
 

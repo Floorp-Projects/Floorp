@@ -53,6 +53,7 @@ class nsWebBrowserInitInfo {
   }
 
 class mozIDOMWindowProxy;
+class nsDocShell;
 
 namespace mozilla {
 namespace dom {

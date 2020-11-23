@@ -17,6 +17,7 @@
 #include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
+#include "nsXULAppAPI.h"
 #include "prlink.h"
 
 #include <math.h>

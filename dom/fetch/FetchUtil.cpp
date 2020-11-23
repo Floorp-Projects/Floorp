@@ -10,6 +10,8 @@
 #include "nsCRT.h"
 #include "nsError.h"
 #include "nsIAsyncInputStream.h"
+#include "nsIHttpChannel.h"
+#include "nsNetUtil.h"
 #include "nsStreamUtils.h"
 #include "nsString.h"
 #include "mozilla/dom/Document.h"

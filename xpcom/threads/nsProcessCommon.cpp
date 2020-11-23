@@ -15,6 +15,7 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "nsCOMPtr.h"
+#include "nsIFile.h"
 #include "nsMemory.h"
 #include "nsProcess.h"
 #include "prio.h"

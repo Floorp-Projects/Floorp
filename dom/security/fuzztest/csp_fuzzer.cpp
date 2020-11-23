@@ -5,6 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "FuzzingInterface.h"
+#include "mozilla/BasePrincipal.h"
+#include "nsComponentManagerUtils.h"
 #include "nsCSPContext.h"
 #include "nsNetUtil.h"
 #include "nsStringFwd.h"

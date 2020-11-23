@@ -12,6 +12,10 @@
 #include "Units.h"
 
 namespace mozilla {
+namespace gfx {
+class DrawTarget;
+}
+
 namespace widget {
 
 struct ScrollbarParams {

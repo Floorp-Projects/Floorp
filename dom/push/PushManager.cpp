@@ -28,6 +28,7 @@
 
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
+#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 namespace dom {

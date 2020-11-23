@@ -10,6 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/RangeUtils.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/StaticRange.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"

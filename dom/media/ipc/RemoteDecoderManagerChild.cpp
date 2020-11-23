@@ -18,6 +18,7 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
+#include "nsContentUtils.h"
 #include "nsIObserver.h"
 
 namespace mozilla {

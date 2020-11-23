@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ConsoleReportCollector.h"
+
+#include "mozilla/dom/Document.h"
 #include "mozilla/net/NeckoChannelParams.h"
 
 #include "ConsoleUtils.h"

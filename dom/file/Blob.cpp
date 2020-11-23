@@ -12,6 +12,7 @@
 #include "mozilla/dom/BodyStream.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "MultipartBlobImpl.h"
 #include "nsIGlobalObject.h"
 #include "nsIInputStream.h"

@@ -7,6 +7,7 @@
 
 #include <utility>
 
+#include "mozilla/UniquePtrExtensions.h"
 #include "nsGkAtoms.h"
 #include "txExecutionState.h"
 #include "txStringUtils.h"

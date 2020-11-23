@@ -16,6 +16,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Result.h"
 #include "mozilla/TimeStamp.h"
+#include "nsIFile.h"
 #include "nsIHangDetails.h"
 #include "nsTArray.h"
 

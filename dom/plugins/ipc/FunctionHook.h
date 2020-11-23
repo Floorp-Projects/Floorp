@@ -16,6 +16,10 @@
 #endif
 
 namespace mozilla {
+
+template <class T>
+class StaticAutoPtr;
+
 namespace plugins {
 
 // "PluginHooks" logging helpers

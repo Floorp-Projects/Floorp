@@ -8,6 +8,7 @@
 #define mozilla_dom_U2FTokenTransport_h
 
 #include "mozilla/dom/PWebAuthnTransaction.h"
+#include "mozilla/MozPromise.h"
 
 /*
  * Abstract class representing a transport manager for U2F Keys (software,

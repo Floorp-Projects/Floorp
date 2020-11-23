@@ -7,6 +7,7 @@
 #include "MemoryBlobImpl.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/SHA1.h"
+#include "nsIMemoryReporter.h"
 #include "nsMemory.h"
 #include "nsPrintfCString.h"
 #include "nsRFPService.h"

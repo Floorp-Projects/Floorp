@@ -12,6 +12,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsCOMPtr.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIFile.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"

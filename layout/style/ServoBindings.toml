@@ -28,6 +28,7 @@ headers = [
     "mozilla/GeckoBindings.h",
     "mozilla/ServoBindings.h",
     "mozilla/ComputedStyle.h",
+    "mozilla/PresShell.h",
     "mozilla/ServoTraversalStatistics.h",
     "mozilla/SizeOfState.h",
     "nsCSSProps.h",

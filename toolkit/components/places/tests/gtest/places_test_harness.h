@@ -13,6 +13,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsINavHistoryService.h"
 #include "nsIObserverService.h"
+#include "nsIThread.h"
 #include "nsIURI.h"
 #include "mozilla/IHistory.h"
 #include "mozIStorageConnection.h"

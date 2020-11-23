@@ -10,7 +10,6 @@
 #include "mozilla/dom/UIEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/EventForwards.h"
-#include "nsRFPService.h"
 
 namespace mozilla {
 namespace dom {

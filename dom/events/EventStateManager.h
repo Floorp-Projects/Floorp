@@ -14,6 +14,7 @@
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsRefPtrHashtable.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/layers/APZPublicUtils.h"
 #include "Units.h"
@@ -37,6 +38,7 @@ class EnterLeaveDispatcher;
 class EventStates;
 class IMEContentObserver;
 class ScrollbarsForWheel;
+class TextEditor;
 class WheelTransaction;
 
 namespace dom {

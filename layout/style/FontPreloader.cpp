@@ -8,6 +8,7 @@
 
 #include "gfxUserFontSet.h"
 #include "nsIClassOfService.h"
+#include "nsIHttpChannel.h"
 #include "nsISupportsPriority.h"
 
 namespace mozilla {

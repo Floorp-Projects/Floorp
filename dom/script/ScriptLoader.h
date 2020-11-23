@@ -16,6 +16,8 @@
 #include "nsTArray.h"
 #include "mozilla/dom/Document.h"
 #include "nsIIncrementalStreamLoader.h"
+#include "nsINode.h"
+#include "nsIObserver.h"
 #include "nsURIHashKey.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/ScriptLoadRequest.h"
@@ -27,6 +29,7 @@
 #include "mozilla/Vector.h"
 #include "ScriptKind.h"
 
+class nsIScriptGlobalObject;
 class nsIURI;
 
 namespace JS {
@@ -44,6 +47,7 @@ class LoadedScript;
 class ModuleLoadRequest;
 class ModuleScript;
 class ScriptLoadHandler;
+class ScriptLoader;
 class ScriptRequestProcessor;
 
 class AsyncCompileShutdownObserver final : public nsIObserver {

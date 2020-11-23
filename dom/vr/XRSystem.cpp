@@ -5,9 +5,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/XRSystem.h"
+
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/XRPermissionRequest.h"
 #include "mozilla/dom/XRSession.h"
 #include "mozilla/dom/BindingCallContext.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/PermissionMessageUtils.h"

@@ -10,6 +10,8 @@
 #include "mozilla/dom/GridBinding.h"
 #include "nsWrapperCache.h"
 
+class nsAtom;
+
 namespace mozilla {
 namespace dom {
 

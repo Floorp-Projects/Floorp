@@ -12,6 +12,7 @@
 #include "nsStubDocumentObserver.h"
 #include "nsITreeView.h"
 #include "nsITreeSelection.h"
+#include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
 
@@ -20,6 +21,8 @@ class nsTreeColumn;
 class Row;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 class DataTransfer;
 class Document;

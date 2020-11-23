@@ -10,8 +10,6 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Tuple.h"
-#include "mozilla/Variant.h"
 
 #include <stddef.h>
 #include <utility>

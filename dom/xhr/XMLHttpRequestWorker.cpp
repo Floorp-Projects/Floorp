@@ -17,6 +17,7 @@
 #include "js/TracingAPI.h"
 #include "js/Value.h"  // JS::{Undefined,}Value
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/File.h"

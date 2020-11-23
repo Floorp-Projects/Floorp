@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/cache/CacheStorage.h"
 
+#include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/CacheStorageBinding.h"

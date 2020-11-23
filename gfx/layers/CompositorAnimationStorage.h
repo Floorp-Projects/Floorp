@@ -11,7 +11,9 @@
 #include "mozilla/layers/LayersMessages.h"  // for TransformData, etc
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/Variant.h"
+#include "nsClassHashtable.h"
 #include "X11UndefineNone.h"
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
 

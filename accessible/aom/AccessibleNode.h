@@ -12,6 +12,7 @@
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/DOMString.h"
 #include "mozilla/dom/Nullable.h"
 
 class nsINode;

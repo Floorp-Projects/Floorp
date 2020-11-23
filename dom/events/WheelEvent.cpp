@@ -7,6 +7,7 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/WheelEvent.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "prtime.h"
 
 namespace mozilla::dom {

@@ -8,8 +8,11 @@
 #define mozilla_dom_ModuleLoadRequest_h
 
 #include "ScriptLoadRequest.h"
+#include "js/RootingAPI.h"
+#include "js/Value.h"
 #include "nsURIHashKey.h"
 #include "mozilla/MozPromise.h"
+#include "nsTHashtable.h"
 
 namespace mozilla {
 namespace dom {

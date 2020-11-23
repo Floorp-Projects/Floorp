@@ -10,6 +10,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/StructuredCloneTesterBinding.h"
+#include "nsIGlobalObject.h"
 #include "xpcpublic.h"
 
 namespace mozilla {

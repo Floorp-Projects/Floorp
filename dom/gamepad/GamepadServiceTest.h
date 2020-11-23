@@ -9,6 +9,7 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/GamepadBinding.h"
+#include "mozilla/dom/TypedArray.h"
 #include "mozilla/WeakPtr.h"
 
 namespace mozilla {

@@ -5,10 +5,12 @@
 
 #include "ChannelMediaResource.h"
 
+#include "mozilla/Preferences.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsICachingChannel.h"
 #include "nsIClassOfService.h"
+#include "nsIHttpChannel.h"
 #include "nsIInputStream.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsITimedChannel.h"

@@ -6,6 +6,7 @@
 #ifndef PendingTransactionQueue_h__
 #define PendingTransactionQueue_h__
 
+#include "nsClassHashtable.h"
 #include "nsHttpTransaction.h"
 #include "PendingTransactionInfo.h"
 

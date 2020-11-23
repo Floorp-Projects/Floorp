@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/nsCSPContext.h"
 #include "nsCOMPtr.h"
+#include "nsComponentManagerUtils.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentTypeParser.h"
 #include "nsContentUtils.h"

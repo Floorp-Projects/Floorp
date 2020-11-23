@@ -12,6 +12,7 @@
 #include "mozilla/dom/ParentProcessMessageManager.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ipc/SharedMap.h"
+#include "mozilla/HoldDropJSObjects.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

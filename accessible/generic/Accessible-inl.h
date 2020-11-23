@@ -10,6 +10,7 @@
 #include "DocAccessible.h"
 #include "ARIAMap.h"
 #include "nsCoreUtils.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/PresShell.h"
 
 #ifdef A11Y_LOG

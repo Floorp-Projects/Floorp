@@ -9,6 +9,7 @@
 #include "BackgroundParent.h"  // for AssertIsOnBackgroundThread
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/RemoteWorkerService.h"
+#include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsIAsyncInputStream.h"
 #include "nsICancelableRunnable.h"

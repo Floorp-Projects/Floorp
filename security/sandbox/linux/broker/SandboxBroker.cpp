@@ -24,6 +24,7 @@
 
 #include <utility>
 
+#include "GeckoProfiler.h"
 #include "SpecialSystemDirectory.h"
 #include "base/string_util.h"
 #include "mozilla/Assertions.h"

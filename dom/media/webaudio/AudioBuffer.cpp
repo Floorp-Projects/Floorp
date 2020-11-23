@@ -14,6 +14,7 @@
 #include "AudioChannelFormat.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/MemoryReporting.h"
 #include "AudioNodeEngine.h"
 #include "nsPrintfCString.h"

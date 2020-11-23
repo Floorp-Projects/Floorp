@@ -16,6 +16,8 @@
 #include "nsIDOMEventListener.h"
 #include "nsCycleCollectionParticipant.h"
 
+class nsIContent;
+
 namespace mozilla {
 namespace dom {
 class MouseEvent;

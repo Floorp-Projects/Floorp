@@ -6,6 +6,7 @@
 
 #include "PrecompiledScript.h"
 
+#include "nsIIncrementalStreamLoader.h"
 #include "nsIURI.h"
 #include "nsIChannel.h"
 #include "nsNetUtil.h"

@@ -26,11 +26,12 @@
 #include "mozilla/layers/KeyboardMap.h"      // for KeyboardMap
 #include "mozilla/layers/TouchCounter.h"     // for TouchCounter
 #include "mozilla/layers/ZoomConstraints.h"  // for ZoomConstraints
-#include "mozilla/RecursiveMutex.h"          // for RecursiveMutex
-#include "mozilla/RefPtr.h"                  // for RefPtr
-#include "mozilla/TimeStamp.h"               // for mozilla::TimeStamp
-#include "mozilla/UniquePtr.h"               // for UniquePtr
-#include "nsCOMPtr.h"                        // for already_AddRefed
+#include "mozilla/webrender/webrender_ffi.h"
+#include "mozilla/RecursiveMutex.h"  // for RecursiveMutex
+#include "mozilla/RefPtr.h"          // for RefPtr
+#include "mozilla/TimeStamp.h"       // for mozilla::TimeStamp
+#include "mozilla/UniquePtr.h"       // for UniquePtr
+#include "nsCOMPtr.h"                // for already_AddRefed
 #include "OvershootDetector.h"
 
 namespace mozilla {

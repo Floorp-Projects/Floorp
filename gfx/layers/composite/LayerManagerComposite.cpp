@@ -12,12 +12,13 @@
 #include "CompositableHost.h"         // for CompositableHost
 #include "ContainerLayerComposite.h"  // for ContainerLayerComposite, etc
 #include "Diagnostics.h"
-#include "FPSCounter.h"                    // for FPSState, FPSCounter
-#include "FrameMetrics.h"                  // for FrameMetrics
-#include "GeckoProfiler.h"                 // for profiler_*
-#include "ImageLayerComposite.h"           // for ImageLayerComposite
-#include "Layers.h"                        // for Layer, ContainerLayer, etc
-#include "LayerScope.h"                    // for LayerScope Tool
+#include "FPSCounter.h"           // for FPSState, FPSCounter
+#include "FrameMetrics.h"         // for FrameMetrics
+#include "GeckoProfiler.h"        // for profiler_*
+#include "ImageLayerComposite.h"  // for ImageLayerComposite
+#include "Layers.h"               // for Layer, ContainerLayer, etc
+#include "LayerScope.h"           // for LayerScope Tool
+#include "LayerTreeInvalidation.h"
 #include "protobuf/LayerScopePacket.pb.h"  // for protobuf (LayerScope)
 #include "PaintedLayerComposite.h"         // for PaintedLayerComposite
 #include "TiledContentHost.h"
@@ -46,8 +47,10 @@
 #include "mozilla/layers/Effects.h"              // for Effect, EffectChain, etc
 #include "mozilla/layers/LayerMetricsWrapper.h"  // for LayerMetricsWrapper
 #include "mozilla/layers/LayersTypes.h"          // for etc
-#include "mozilla/widget/CompositorWidget.h"     // for WidgetRenderingContext
-#include "ipc/CompositorBench.h"                 // for CompositorBench
+#include "mozilla/layers/NativeLayer.h"
+#include "mozilla/layers/UiCompositorControllerParent.h"
+#include "mozilla/widget/CompositorWidget.h"  // for WidgetRenderingContext
+#include "ipc/CompositorBench.h"              // for CompositorBench
 #include "ipc/ShadowLayerUtils.h"
 #include "mozilla/mozalloc.h"  // for operator new, etc
 #include "nsAppRunner.h"

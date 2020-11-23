@@ -14,6 +14,7 @@
 #include "nsContentUtils.h"
 #include "nsIPrincipal.h"
 #include "nsPIDOMWindow.h"
+#include "nsThreadUtils.h"
 
 #define DATASET                                    \
   (!IsPrivateBrowsing() && IsSessionScopedOrLess() \

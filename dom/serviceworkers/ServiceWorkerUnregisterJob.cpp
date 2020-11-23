@@ -8,6 +8,7 @@
 
 #include "mozilla/Unused.h"
 #include "nsIPushService.h"
+#include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "ServiceWorkerManager.h"
 

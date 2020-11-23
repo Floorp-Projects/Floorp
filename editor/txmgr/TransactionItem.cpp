@@ -6,6 +6,7 @@
 #include "TransactionItem.h"
 
 #include "mozilla/mozalloc.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/TransactionManager.h"
 #include "mozilla/TransactionStack.h"

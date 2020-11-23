@@ -7,6 +7,7 @@
 #ifndef mozilla_glean_GleanCounter_h
 #define mozilla_glean_GleanCounter_h
 
+#include "mozilla/Maybe.h"
 #include "nsIGleanMetrics.h"
 
 namespace mozilla::glean {

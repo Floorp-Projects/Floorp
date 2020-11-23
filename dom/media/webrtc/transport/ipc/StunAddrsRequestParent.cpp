@@ -5,6 +5,8 @@
 #include "StunAddrsRequestParent.h"
 
 #include "../runnable_utils.h"
+#include "mozilla/StaticPtr.h"
+#include "nsIThread.h"
 #include "nsNetUtil.h"
 
 #include "transport/nricectx.h"

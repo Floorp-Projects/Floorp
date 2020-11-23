@@ -13,7 +13,12 @@
 #include "mozilla/dom/WebAuthnUtil.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
 #include "mozilla/Unused.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
+#include "nsIThread.h"
 #include "nsTextFormatter.h"
 #include "mozilla/Telemetry.h"
 

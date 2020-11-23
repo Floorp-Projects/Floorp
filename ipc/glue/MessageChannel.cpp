@@ -11,6 +11,7 @@
 
 #include <utility>
 
+#include "CrashAnnotations.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DebugOnly.h"
@@ -18,6 +19,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtrExtensions.h"
@@ -28,9 +30,14 @@
 #include "nsContentUtils.h"
 #include "nsDataHashtable.h"
 #include "nsDebug.h"
+#include "nsExceptionHandler.h"
 #include "nsIMemoryReporter.h"
 #include "nsISupportsImpl.h"
 #include "nsPrintfCString.h"
+
+#ifdef OS_WIN
+#  include "mozilla/gfx/Logging.h"
+#endif
 
 #ifdef MOZ_TASK_TRACER
 #  include "GeckoTaskTracer.h"

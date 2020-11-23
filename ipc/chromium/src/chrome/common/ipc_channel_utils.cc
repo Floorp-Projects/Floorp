@@ -6,6 +6,7 @@
 
 #include "chrome/common/ipc_channel_utils.h"
 
+#include "GeckoProfiler.h"
 #include "chrome/common/ipc_message.h"
 
 namespace IPC {

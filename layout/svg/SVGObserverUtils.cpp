@@ -27,6 +27,7 @@
 #include "nsInterfaceHashtable.h"
 #include "nsIReflowCallback.h"
 #include "nsISupportsImpl.h"
+#include "nsNetUtil.h"
 #include "nsTHashtable.h"
 #include "nsURIHashKey.h"
 #include "SVGFilterFrame.h"

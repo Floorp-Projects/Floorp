@@ -10,12 +10,15 @@
 #include "MainThreadUtils.h"          // for NS_IsMainThread
 #include "mozilla/Assertions.h"       // for MOZ_ASSERT
 #include "mozilla/ClearOnShutdown.h"  // for ClearOnShutdown
+#include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/CheckerboardReportServiceBinding.h"  // for dom::CheckerboardReports
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "nsContentUtils.h"  // for nsContentUtils
+#include "nsIObserverService.h"
 #include "nsXULAppAPI.h"
 
 namespace mozilla {

@@ -7,6 +7,7 @@
 #include "mozilla/ProcInfo.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Logging.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "nsLocalFile.h"
 #include "nsMemoryReporterManager.h"

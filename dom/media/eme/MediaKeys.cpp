@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/MediaKeys.h"
 #include "GMPCrashHelper.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/MediaKeysBinding.h"
 #include "mozilla/dom/MediaKeyMessageEvent.h"

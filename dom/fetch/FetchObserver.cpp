@@ -6,6 +6,7 @@
 
 #include "FetchObserver.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/EventBinding.h"
 
 namespace mozilla::dom {
 

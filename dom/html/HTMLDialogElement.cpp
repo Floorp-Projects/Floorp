@@ -10,6 +10,7 @@
 #include "mozilla/dom/HTMLUnknownElement.h"
 #include "mozilla/StaticPrefs_dom.h"
 
+#include "nsContentUtils.h"
 #include "nsFocusManager.h"
 #include "nsIFrame.h"
 

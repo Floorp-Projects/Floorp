@@ -15,6 +15,7 @@
 #include "gfx2DGlue.h"
 #include "nsNPAPIPluginInstance.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Logging.h"
 #ifdef MOZ_X11
 #  include "gfxXlibSurface.h"
 #endif

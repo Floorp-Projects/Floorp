@@ -7,6 +7,7 @@
 #include "BodyConsumer.h"
 
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/BodyUtil.h"
 #include "mozilla/dom/File.h"
@@ -21,8 +22,11 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "nsComponentManagerUtils.h"
+#include "nsIFile.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsIStreamLoader.h"
+#include "nsNetUtil.h"
 #include "nsProxyRelease.h"
 
 // Undefine the macro of CreateFile to avoid FileCreatorHelper#CreateFile being

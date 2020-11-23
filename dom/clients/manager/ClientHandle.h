@@ -24,6 +24,7 @@ class ClientHandleChild;
 class ClientOpConstructorArgs;
 class PClientManagerChild;
 class ServiceWorkerDescriptor;
+enum class CallerType : uint32_t;
 
 namespace ipc {
 class StructuredCloneData;

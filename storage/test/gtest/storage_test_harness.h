@@ -16,6 +16,7 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsMemory.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "mozilla/ReentrantMonitor.h"
 

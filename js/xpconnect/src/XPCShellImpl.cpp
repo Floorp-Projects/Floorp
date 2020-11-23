@@ -56,6 +56,7 @@
 #  include "mozilla/WinDllServices.h"
 #  include <windows.h>
 #  if defined(MOZ_SANDBOX)
+#    include "XREShellData.h"
 #    include "sandboxBroker.h"
 #  endif
 #endif

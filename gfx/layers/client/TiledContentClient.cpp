@@ -27,7 +27,8 @@
 #include "nsISupportsImpl.h"      // for gfxContext::AddRef, etc
 #include "nsExpirationTracker.h"  // for nsExpirationTracker
 #include "nsMathUtils.h"          // for NS_lroundf
-#include "UnitTransforms.h"       // for TransformTo
+#include "TiledLayerBuffer.h"
+#include "UnitTransforms.h"  // for TransformTo
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/UniquePtr.h"
 

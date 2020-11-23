@@ -8,6 +8,7 @@
 
 #include "GridLines.h"
 #include "mozilla/dom/GridBinding.h"
+#include "nsAtom.h"
 
 namespace mozilla::dom {
 

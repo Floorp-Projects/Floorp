@@ -62,6 +62,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/EnumSet.h"
 
+#include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"

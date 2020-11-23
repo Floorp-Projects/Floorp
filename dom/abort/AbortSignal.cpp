@@ -7,6 +7,7 @@
 #include "AbortSignal.h"
 
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/AbortSignalBinding.h"
 #include "mozilla/RefPtr.h"
 

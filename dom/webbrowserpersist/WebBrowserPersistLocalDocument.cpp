@@ -34,6 +34,7 @@
 #include "nsFrameLoader.h"
 #include "nsGlobalWindowOuter.h"
 #include "nsIContent.h"
+#include "nsICookieJarSettings.h"
 #include "nsIDOMWindowUtils.h"
 #include "mozilla/dom/Document.h"
 #include "nsIDocumentEncoder.h"

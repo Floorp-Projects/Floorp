@@ -7,6 +7,9 @@
 #ifndef mozilla_dom_PushSubscriptionOptions_h
 #define mozilla_dom_PushSubscriptionOptions_h
 
+#include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
+#include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"

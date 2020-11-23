@@ -9,6 +9,7 @@
 
 #include "mozilla/Mutex.h"
 #include "mozilla/ipc/Shmem.h"
+#include "nsTArray.h"
 
 extern mozilla::LazyLogModule sShmemPoolLog;
 #define SHMEMPOOL_LOG(args) \

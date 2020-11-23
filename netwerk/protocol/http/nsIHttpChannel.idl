@@ -8,6 +8,10 @@
 interface nsIHttpHeaderVisitor;
 interface nsIReferrerInfo;
 
+%{C++
+#include "GeckoProfiler.h"
+%}
+
 /**
  * nsIHttpChannel
  *

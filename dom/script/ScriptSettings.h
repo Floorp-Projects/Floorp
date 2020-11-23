@@ -10,21 +10,33 @@
 #define mozilla_dom_ScriptSettings_h
 
 #include "MainThreadUtils.h"
-#include "nsIGlobalObject.h"
-#include "nsIPrincipal.h"
 #include "xpcpublic.h"
 
 #include "mozilla/dom/JSExecutionManager.h"
 #include "mozilla/Maybe.h"
 
 #include "jsapi.h"
-#include "js/Exception.h"
 #include "js/Debug.h"
 #include "js/Warnings.h"  // JS::WarningReporter
 
+#ifdef MOZ_GECKO_PROFILER
+#  include "GeckoProfiler.h"
+#endif
+
+class JSFunction;
+class JSObject;
+class JSScript;
+class nsIGlobalObject;
+class nsIPrincipal;
 class nsPIDOMWindowInner;
 class nsGlobalWindowInner;
 class nsIScriptContext;
+struct JSContext;
+
+namespace JS {
+class ExceptionStack;
+class Value;
+}  // namespace JS
 
 namespace mozilla {
 namespace dom {

@@ -15,6 +15,8 @@
 
 #include "chrome/common/process_watcher.h"
 #include "mozilla/Result.h"
+#include "mozilla/XREAppData.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIBrowserDOMWindow.h"
 
 #ifdef ACCESSIBILITY

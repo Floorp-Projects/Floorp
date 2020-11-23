@@ -7,6 +7,7 @@
 #ifndef mozilla_DataStorage_h
 #define mozilla_DataStorage_h
 
+#include <functional>
 #include "mozilla/Atomics.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/MemoryReporting.h"

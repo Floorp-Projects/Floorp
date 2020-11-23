@@ -11,6 +11,7 @@
 #include "MediaFormatReader.h"
 #include "BaseMediaResource.h"
 #include "MediaShutdownManager.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "VideoUtils.h"
 

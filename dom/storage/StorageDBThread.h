@@ -22,6 +22,7 @@
 #include "nsClassHashtable.h"
 #include "nsIFile.h"
 #include "nsIThreadInternal.h"
+#include "nsThreadUtils.h"
 
 class mozIStorageConnection;
 

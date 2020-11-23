@@ -12,6 +12,9 @@
 #include "mozilla/dom/BodyExtractor.h"
 #include "mozilla/dom/TypedArray.h"
 
+// XXX Avoid including this here by moving function bodies to the cpp file
+#include "mozilla/dom/BlobImpl.h"
+
 namespace mozilla {
 namespace dom {
 

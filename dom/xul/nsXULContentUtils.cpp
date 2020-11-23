@@ -14,6 +14,7 @@
 
 #include "nsCollationCID.h"
 #include "nsCOMPtr.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIContent.h"
 #include "nsICollation.h"
 #include "mozilla/dom/Document.h"

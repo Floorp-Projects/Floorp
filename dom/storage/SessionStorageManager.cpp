@@ -14,6 +14,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/PBackgroundSessionStorageCache.h"
 #include "mozilla/dom/PBackgroundSessionStorageManager.h"
 #include "mozilla/ipc/BackgroundChild.h"

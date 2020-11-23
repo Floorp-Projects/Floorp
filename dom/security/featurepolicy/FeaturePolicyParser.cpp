@@ -6,6 +6,7 @@
 
 #include "FeaturePolicyParser.h"
 
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Feature.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/PolicyTokenizer.h"

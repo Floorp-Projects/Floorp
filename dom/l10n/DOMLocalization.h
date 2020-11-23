@@ -15,6 +15,9 @@
 #include "mozilla/dom/L10nOverlaysBinding.h"
 #include "mozilla/dom/LocalizationBinding.h"
 
+// XXX Avoid including this here by moving function bodies to the cpp file
+#include "nsINode.h"
+
 namespace mozilla {
 namespace dom {
 

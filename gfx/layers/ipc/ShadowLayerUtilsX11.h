@@ -7,6 +7,7 @@
 #ifndef mozilla_layers_ShadowLayerUtilsX11_h
 #define mozilla_layers_ShadowLayerUtilsX11_h
 
+#include "mozilla/gfx/Point.h"
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/AlreadyAddRefed.h"
 

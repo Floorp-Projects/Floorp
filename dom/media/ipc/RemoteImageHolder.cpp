@@ -10,6 +10,7 @@
 #include "mozilla/PRemoteDecoderChild.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/layers/VideoBridgeUtils.h"
 
 namespace mozilla {
 

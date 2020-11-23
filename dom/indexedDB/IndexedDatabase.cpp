@@ -16,6 +16,7 @@
 #include "mozilla/dom/WorkerScope.h"
 #include "MainThreadUtils.h"
 #include "jsapi.h"
+#include "nsIFile.h"
 #include "nsIGlobalObject.h"
 #include "nsQueryObject.h"
 #include "nsString.h"

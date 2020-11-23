@@ -7,8 +7,10 @@
 
 #include "imgRequest.h"
 #include "Layers.h"  // for LayerManager
+#include "nsIObserverService.h"
 #include "nsRefreshDriver.h"
 #include "nsContentUtils.h"
+#include "mozilla/Services.h"
 #include "mozilla/SizeOfState.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Tuple.h"  // for Tie

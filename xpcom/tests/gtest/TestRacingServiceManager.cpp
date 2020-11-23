@@ -8,6 +8,7 @@
 #include "nsXULAppAPI.h"
 #include "nsIThread.h"
 
+#include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
 #include "pratom.h"

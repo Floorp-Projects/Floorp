@@ -28,6 +28,9 @@
 #include "mozilla/Attributes.h"
 #include "Units.h"
 
+// XXX Avoid including this here by moving function bodies to the cpp file.
+#include "mozilla/dom/Element.h"
+
 // X.h defines KeyPress
 #ifdef KeyPress
 #  undef KeyPress

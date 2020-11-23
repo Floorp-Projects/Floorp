@@ -6,9 +6,11 @@
 #include "ClientWebGLContext.h"
 
 #include "ClientWebGLExtensions.h"
+#include "Layers.h"
 #include "gfxCrashReporterUtils.h"
 #include "HostWebGLContext.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/WebGLContextEvent.h"
 #include "mozilla/dom/WorkerCommon.h"

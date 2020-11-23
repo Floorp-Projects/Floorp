@@ -13,6 +13,7 @@
 
 // Config stuff
 #include "mozilla/dom/RTCConfigurationBinding.h"
+#include "mozilla/Preferences.h"
 
 // Parsing STUN/TURN URIs
 #include "nsIURI.h"

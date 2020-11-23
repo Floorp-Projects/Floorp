@@ -7,6 +7,7 @@
 #ifndef mozStorageBindingParamsArray_h
 #define mozStorageBindingParamsArray_h
 
+#include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
 

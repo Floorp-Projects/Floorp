@@ -8,6 +8,7 @@
 
 #include "nsIPushService.h"
 #include "nsIScriptObjectPrincipal.h"
+#include "nsServiceManagerUtils.h"
 
 #include "mozilla/Base64.h"
 #include "mozilla/Unused.h"
@@ -18,6 +19,7 @@
 #include "mozilla/dom/PushUtil.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
 
 namespace mozilla {

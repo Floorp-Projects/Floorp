@@ -12,6 +12,9 @@
  * For detail, see PresentationService.cpp
  */
 namespace mozilla {
+
+class LazyLogModule;
+
 namespace dom {
 extern mozilla::LazyLogModule gPresentationLog;
 }

@@ -14,6 +14,7 @@
 #include "mozilla/LoadTainting.h"
 #include "mozilla/UniquePtr.h"
 
+#include "nsIChannelEventSink.h"
 #include "nsIInputStream.h"
 #include "nsISupportsImpl.h"
 #ifdef DEBUG

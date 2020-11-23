@@ -11,6 +11,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"

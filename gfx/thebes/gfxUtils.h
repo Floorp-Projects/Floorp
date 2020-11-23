@@ -6,6 +6,8 @@
 #ifndef GFX_UTILS_H
 #define GFX_UTILS_H
 
+#include "gfxMatrix.h"
+#include "gfxRect.h"
 #include "gfxTypes.h"
 #include "ImageTypes.h"
 #include "imgIContainer.h"

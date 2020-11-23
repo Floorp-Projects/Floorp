@@ -14,6 +14,7 @@
 #include "GLScreenBuffer.h"
 #include "MozFramebuffer.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "mozilla/IntegerRange.h"
 #include "nsPrintfCString.h"
 #include "WebGLContext.h"
 #include "WebGLContextUtils.h"

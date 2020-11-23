@@ -42,6 +42,7 @@
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/HangDetails.h"
+#include "mozilla/Preferences.h"
 #include "nscore.h"
 #include "nsDebugImpl.h"
 #include "nsIGfxInfo.h"

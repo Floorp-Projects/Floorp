@@ -7,6 +7,7 @@
 #ifndef MOZILLA_GFX_RENDERTEXTUREHOSTSWGL_H
 #define MOZILLA_GFX_RENDERTEXTUREHOSTSWGL_H
 
+#include "GLTypes.h"
 #include "RenderTextureHost.h"
 
 namespace mozilla {

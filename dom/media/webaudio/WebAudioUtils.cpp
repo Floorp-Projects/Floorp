@@ -8,9 +8,12 @@
 #include "AudioNodeTrack.h"
 #include "blink/HRTFDatabaseLoader.h"
 
+#include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
+#include "nsJSUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "AudioEventTimeline.h"
 
 #include "mozilla/SchedulerGroup.h"

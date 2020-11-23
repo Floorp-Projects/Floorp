@@ -12,6 +12,7 @@
 #include "mozilla/PermissionManager.h"
 #include "mozilla/ScopeExit.h"
 #include "nsContentUtils.h"
+#include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 
 using namespace mozilla;

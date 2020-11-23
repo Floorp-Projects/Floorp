@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "RemoteSandboxBrokerChild.h"
+#include "chrome/common/ipc_channel.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "nsDebugImpl.h"
 #include "mozilla/ipc/CrashReporterClient.h"

@@ -7,6 +7,7 @@
 #ifndef CustomEvent_h__
 #define CustomEvent_h__
 
+#include "js/Value.h"
 #include "mozilla/dom/Event.h"
 
 namespace mozilla {

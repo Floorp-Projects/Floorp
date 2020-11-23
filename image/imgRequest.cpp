@@ -31,6 +31,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 
 #include "plstr.h"   // PL_strcasestr(...)

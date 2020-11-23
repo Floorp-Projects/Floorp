@@ -9,6 +9,7 @@
 #include "nsIAccessibleEvent.h"
 #include "nsIGSettingsService.h"
 #include "nsMai.h"
+#include "nsServiceManagerUtils.h"
 #include "AtkSocketAccessible.h"
 #include "prenv.h"
 #include "prlink.h"

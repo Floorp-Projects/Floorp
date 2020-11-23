@@ -60,6 +60,7 @@
 #include "mozilla/layers/OMTASampler.h"
 #include "mozilla/layers/PLayerTransactionParent.h"
 #include "mozilla/layers/RemoteContentController.h"
+#include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/layers/AsyncImagePipelineManager.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -112,7 +113,6 @@ using namespace mozilla::ipc;
 using namespace mozilla::gfx;
 
 using base::ProcessId;
-using base::Thread;
 
 using mozilla::Telemetry::LABELS_CONTENT_FRAME_TIME_REASON;
 

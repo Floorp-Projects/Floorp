@@ -7,6 +7,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/RWLock.h"
+#include "nsIThread.h"
 #include "gtest/gtest.h"
 
 using mozilla::RWLock;

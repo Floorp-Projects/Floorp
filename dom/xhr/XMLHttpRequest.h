@@ -8,8 +8,11 @@
 #define mozilla_dom_XMLHttpRequest_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/XMLHttpRequestEventTarget.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
+
+class nsIInputStream;
 
 namespace mozilla {
 namespace dom {

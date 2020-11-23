@@ -6,6 +6,7 @@
 
 #include "gtest/gtest.h"
 #include "GMPUtils.h"
+#include "mozilla/ArrayUtils.h"
 #include "nsString.h"
 
 #include <string>

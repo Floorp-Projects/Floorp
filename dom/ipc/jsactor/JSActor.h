@@ -22,6 +22,10 @@ class nsQueryJSActor;
 namespace mozilla {
 namespace dom {
 
+namespace ipc {
+class StructuredCloneData;
+}
+
 class JSActorManager;
 class JSActorMessageMeta;
 class QueryPromiseHandler;

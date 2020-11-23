@@ -7,6 +7,7 @@
 #include "nsHttp.h"
 #include "nsHttpHandler.h"
 #include "nsNetAddr.h"
+#include "nsNetUtil.h"
 
 namespace mozilla {
 namespace net {

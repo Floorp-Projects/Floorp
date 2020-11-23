@@ -25,6 +25,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/BrowserChild.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/WebrtcProxyConfig.h"
 #include "MediaManager.h"

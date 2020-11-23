@@ -10,7 +10,9 @@
 #include "mozilla/dom/MIDIOutputBinding.h"
 #include "mozilla/dom/MIDIUtils.h"
 #include "nsDOMNavigationTiming.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Performance.h"
 
 using namespace mozilla;

@@ -33,6 +33,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozJSComponentLoader.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsNetCID.h"

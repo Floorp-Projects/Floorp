@@ -9,6 +9,7 @@
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
 #include "mozilla/dom/Document.h"
+#include "nsIGlobalObject.h"
 #include "nsIHttpChannel.h"
 #include "nsSerializationHelper.h"
 #include "mozilla/BasePrincipal.h"

@@ -36,6 +36,10 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
+#if !defined(DEBUG) && !defined(MOZ_ENABLE_JS_DUMP)
+#  include "mozilla/StaticPrefs_browser.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::dom;
 

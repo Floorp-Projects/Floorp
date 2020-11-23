@@ -15,6 +15,7 @@
 #include "nsIStreamListener.h"
 #include "nsIChannelEventSink.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
+#include "nsIDOMEventListener.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIProgressEventSink.h"
@@ -60,6 +61,8 @@ class nsIJARChannel;
 class nsILoadGroup;
 
 namespace mozilla {
+class ProfileChunkedBuffer;
+
 namespace dom {
 
 class DOMString;

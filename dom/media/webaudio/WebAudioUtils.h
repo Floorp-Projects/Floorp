@@ -11,6 +11,7 @@
 #include <limits>
 #include <type_traits>
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/Logging.h"
 #include "MediaSegment.h"
 
 // Forward declaration

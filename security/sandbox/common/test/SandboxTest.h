@@ -8,6 +8,7 @@
 
 #include "SandboxTestingParent.h"
 #include "mozISandboxTest.h"
+#include "mozilla/GfxMessageUtils.h"
 
 #if !defined(MOZ_DEBUG) || !defined(ENABLE_TESTS)
 #  error "This file should not be used outside of debug with tests"

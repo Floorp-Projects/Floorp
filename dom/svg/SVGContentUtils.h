@@ -16,6 +16,7 @@
 #include "mozilla/ServoStyleConsts.h"
 #include "nsError.h"
 #include "nsStringFwd.h"
+#include "nsTArray.h"
 #include "gfx2DGlue.h"
 #include "nsDependentSubstring.h"
 

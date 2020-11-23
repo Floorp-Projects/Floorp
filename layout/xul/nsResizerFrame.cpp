@@ -22,6 +22,7 @@
 #include "mozilla/MouseEvents.h"
 #include "nsContentUtils.h"
 #include "nsMenuPopupFrame.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIScreenManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MouseEventBinding.h"

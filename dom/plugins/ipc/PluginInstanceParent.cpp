@@ -9,6 +9,7 @@
 
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/ToString.h"
 #include "mozilla/dom/Element.h"

@@ -11,6 +11,7 @@
 #include "AltSvcTransactionParent.h"
 #include "mozilla/net/HttpTransactionParent.h"
 #include "nsHttpConnectionInfo.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsISpeculativeConnect.h"
 #include "nsIOService.h"

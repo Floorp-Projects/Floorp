@@ -13,6 +13,7 @@
 #include "nsContentUtils.h"
 #include "nsProxyRelease.h"
 #include "nsContentSecurityManager.h"
+#include "nsComponentManagerUtils.h"
 
 #include "nsIFileURL.h"
 

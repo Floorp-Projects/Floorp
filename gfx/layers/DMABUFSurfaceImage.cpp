@@ -9,6 +9,7 @@
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/DMABUFTextureClientOGL.h"
+#include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/UniquePtr.h"
 
 using namespace mozilla;

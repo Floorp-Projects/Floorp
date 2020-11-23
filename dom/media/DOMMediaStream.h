@@ -14,6 +14,7 @@
 #include "MediaTrackConstraints.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/RelativeTimeline.h"
+#include "mozilla/WeakPtr.h"
 
 namespace mozilla {
 

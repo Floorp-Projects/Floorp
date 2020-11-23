@@ -18,6 +18,7 @@
 
 #include "nsIDOMXULContainerElement.h"
 #include "nsIPersistentProperties2.h"
+#include "nsISimpleEnumerator.h"
 #include "mozilla/a11y/PDocAccessibleChild.h"
 #include "mozilla/dom/Element.h"
 #include "nsAccessibilityService.h"

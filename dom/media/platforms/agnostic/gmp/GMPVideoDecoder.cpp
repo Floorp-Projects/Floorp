@@ -9,6 +9,7 @@
 #include "GMPVideoHost.h"
 #include "MediaData.h"
 #include "mozilla/EndianUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "AnnexB.h"
 #include "MP4Decoder.h"
 #include "prsystem.h"

@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include "nsContentSecurityManager.h"
 #include "nsContentSecurityUtils.h"
+#include "nsNetUtil.h"
 #include "nsStringFwd.h"
 
 using namespace mozilla;

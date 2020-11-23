@@ -12,6 +12,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIMutableArray.h"
+#include "nsServiceManagerUtils.h"
 #include "nsSimpleEnumerator.h"
 #include "PaymentRequestService.h"
 

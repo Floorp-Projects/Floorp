@@ -18,6 +18,9 @@
 #include "math.h"
 #include "WebAudioUtils.h"
 
+// XXX Avoid including this here by moving function bodies to the cpp file
+#include "js/GCAPI.h"
+
 namespace mozilla {
 
 class AudioNodeTrack;

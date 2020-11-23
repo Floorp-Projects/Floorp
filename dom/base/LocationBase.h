@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_LocationBase_h
 #define mozilla_dom_LocationBase_h
 
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/ErrorResult.h"
 #include "nsStringFwd.h"
 

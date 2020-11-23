@@ -17,6 +17,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
 #include "nsAppRunner.h"
+#include "nsIFile.h"
 #include "nsIOutputStream.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"

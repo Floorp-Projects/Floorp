@@ -13,7 +13,9 @@
 #  include "nsIStringEnumerator.h"
 #endif
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
+#include "nsContentUtils.h"
 #include "nsIAppWindow.h"
 
 namespace mozilla {

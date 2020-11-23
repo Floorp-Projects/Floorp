@@ -8,6 +8,8 @@
 
 #include "RendererOGL.h"
 
+#include "mozilla/gfx/2D.h"
+
 using mozilla::layers::ProfilerScreenshots;
 
 namespace mozilla {

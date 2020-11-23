@@ -25,6 +25,7 @@
 #include "mozIStorageStatement.h"
 #include "mozStorageHelper.h"
 #include "nsCOMPtr.h"
+#include "nsComponentManagerUtils.h"
 #include "nsCRT.h"
 #include "nsHttp.h"
 #include "nsIContentPolicy.h"

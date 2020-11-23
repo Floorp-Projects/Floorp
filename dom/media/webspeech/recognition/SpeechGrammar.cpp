@@ -6,6 +6,7 @@
 
 #include "SpeechGrammar.h"
 
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/SpeechGrammarBinding.h"
 
 namespace mozilla::dom {

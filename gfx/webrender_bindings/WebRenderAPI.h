@@ -17,6 +17,7 @@
 #include "mozilla/layers/ScrollableLayerGuid.h"
 #include "mozilla/layers/SyncObject.h"
 #include "mozilla/layers/CompositionRecorder.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/Range.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/webrender/webrender_ffi.h"
@@ -24,6 +25,7 @@
 #include "GLTypes.h"
 #include "Units.h"
 
+class gfxContext;
 class nsDisplayItem;
 class nsPaintedDisplayItem;
 class nsDisplayTransform;
@@ -43,6 +45,7 @@ class CompositorBridgeParent;
 class DisplayItemCache;
 class WebRenderBridgeParent;
 class RenderRootStateManager;
+class StackingContextHelper;
 struct DisplayListData;
 }  // namespace layers
 

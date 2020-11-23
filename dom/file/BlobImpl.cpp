@@ -7,6 +7,8 @@
 #include "BlobImpl.h"
 #include "File.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/ErrorResult.h"
+#include "nsIInputStream.h"
 
 namespace mozilla::dom {
 
