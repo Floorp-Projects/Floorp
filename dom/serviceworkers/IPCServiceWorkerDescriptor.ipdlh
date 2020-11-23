@@ -4,7 +4,9 @@
 
 include PBackgroundSharedTypes;
 
-using ServiceWorkerState from "mozilla/dom/ServiceWorkerIPCUtils.h";
+include "mozilla/dom/ServiceWorkerIPCUtils.h";
+
+using ServiceWorkerState from "mozilla/dom/ServiceWorkerBinding.h";
 
 namespace mozilla {
 namespace dom {
