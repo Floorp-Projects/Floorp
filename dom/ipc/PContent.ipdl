@@ -69,6 +69,7 @@ include LookAndFeelTypes;
 include protocol PSandboxTesting;
 #endif
 
+include "ipc/DataStorageIPCUtils.h";
 include "mozilla/AntiTrackingIPCUtils.h";
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/dom/DocShellMessageUtils.h";
