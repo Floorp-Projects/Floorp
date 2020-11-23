@@ -43,6 +43,7 @@ EXPORTS.mozilla.ipc += [
     "Neutering.h",
     "ProcessChild.h",
     "ProtocolUtils.h",
+    "ProtocolUtilsFwd.h",
     "ScopedXREEmbed.h",
     "SharedMemory.h",
     "SharedMemoryBasic.h",

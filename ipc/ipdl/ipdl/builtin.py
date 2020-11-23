@@ -52,7 +52,7 @@ HeaderIncludes = (
     "mozilla/OperatorNewExtensions.h",
     "mozilla/UniquePtr.h",
     "mozilla/ipc/FileDescriptor.h",
-    "mozilla/ipc/ProtocolUtils.h",
+    "mozilla/ipc/ProtocolUtilsFwd.h",
     "mozilla/ipc/Shmem.h",
 )
 
@@ -60,6 +60,7 @@ CppIncludes = (
     "ipc/IPCMessageUtils.h",
     "nsIFile.h",
     "GeckoProfiler.h",
+    "mozilla/ipc/ProtocolUtils.h",
     "mozilla/ipc/ShmemMessageUtils.h",
     "mozilla/ipc/TaintingIPCUtils.h",
 )
