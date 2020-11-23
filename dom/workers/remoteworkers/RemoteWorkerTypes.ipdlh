@@ -11,8 +11,10 @@ include DOMTypes;
 include NeckoChannelParams;
 include ProtocolTypes;
 
+include "mozilla/dom/ClientIPCUtils.h";
+
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
-using mozilla::StorageAccess from "mozilla/dom/ClientIPCUtils.h";
+using mozilla::StorageAccess from "mozilla/StorageAccess.h";
 
 namespace mozilla {
 namespace dom {

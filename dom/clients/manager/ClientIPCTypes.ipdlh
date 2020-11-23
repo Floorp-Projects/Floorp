@@ -7,11 +7,14 @@ include DOMTypes;
 include PBackgroundSharedTypes;
 include IPCServiceWorkerDescriptor;
 include ProtocolTypes;
+
+include "mozilla/dom/ClientIPCUtils.h";
+
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
-using ClientType from "mozilla/dom/ClientIPCUtils.h";
-using FrameType from "mozilla/dom/ClientIPCUtils.h";
-using mozilla::StorageAccess from "mozilla/dom/ClientIPCUtils.h";
-using VisibilityState from "mozilla/dom/ClientIPCUtils.h";
+using ClientType from "mozilla/dom/ClientsBinding.h";
+using FrameType from "mozilla/dom/ClientBinding.h";
+using mozilla::StorageAccess from "mozilla/StorageAccess.h";
+using VisibilityState from "mozilla/dom/DocumentBinding.h";
 using CallerType from "mozilla/dom/BindingIPCUtils.h";
 using mozilla::CopyableErrorResult from "ipc/ErrorIPCUtils.h";
 
