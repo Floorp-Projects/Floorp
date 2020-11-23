@@ -14,6 +14,7 @@
 #include "nsIObserverService.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCID.h"
+#include "mozilla/ResultVariant.h"
 #include "mozilla/Services.h"
 #include "mozilla/WidgetUtils.h"
 #include "mozilla/WindowsVersion.h"

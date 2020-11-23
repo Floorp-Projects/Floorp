@@ -87,6 +87,7 @@ EXPORTS.mozilla = [
     "RefPtr.h",
     "Result.h",
     "ResultExtensions.h",
+    "ResultVariant.h",
     "ReverseIterator.h",
     "RollingMean.h",
     "Saturate.h",

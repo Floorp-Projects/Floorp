@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <string.h>
-#include "mozilla/Result.h"
+#include "mozilla/ResultVariant.h"
 #include "mozilla/UniquePtr.h"
 
 using mozilla::Err;
