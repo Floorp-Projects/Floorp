@@ -9,14 +9,16 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/MessageManagerGlobal.h"
+#include "mozilla/dom/MessageManagerCallback.h"
 #include "nsCOMPtr.h"
-#include "nsFrameMessageManager.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptContext.h"
 #include "nsServiceManagerUtils.h"
 #include "nsWeakReference.h"
 #include "nsWrapperCache.h"
 #include "xpcpublic.h"
+
+class nsFrameMessageManager;
 
 namespace mozilla {
 namespace dom {

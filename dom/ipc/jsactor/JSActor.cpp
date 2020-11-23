@@ -22,6 +22,7 @@
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "js/Promise.h"
 #include "xpcprivate.h"
+#include "nsFrameMessageManager.h"
 #include "nsICrashReporter.h"
 
 namespace mozilla::dom {

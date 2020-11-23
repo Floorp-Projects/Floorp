@@ -68,7 +68,7 @@ class RefMessageBody final {
       Sequence<OwningNonNull<mozilla::dom::MessagePort>>& aPorts);
 
  private:
-  ~RefMessageBody() = default;
+  ~RefMessageBody();
 
   const nsID mPortID;
 
