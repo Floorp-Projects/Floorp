@@ -7,7 +7,7 @@
 #ifndef GFX_UPDATEIMAGEHELPER_H
 #define GFX_UPDATEIMAGEHELPER_H
 
-#include "Layers.h"
+#include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ImageClient.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"

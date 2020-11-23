@@ -8,13 +8,12 @@
 #define GFX_WEBRENDERUSERDATA_H
 
 #include <vector>
-#include "BasicLayers.h"  // for BasicLayerManager
-#include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/layers/AnimationInfo.h"
 #include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIFrame.h"
+#include "nsRefPtrHashtable.h"
 #include "ImageTypes.h"
 
 class nsDisplayItemGeometry;
@@ -33,12 +32,14 @@ class SourceSurface;
 }
 
 namespace layers {
+class BasicLayerManager;
 class CanvasLayer;
 class ImageClient;
 class ImageContainer;
 class WebRenderBridgeChild;
 class WebRenderCanvasData;
 class WebRenderCanvasRenderer;
+class WebRenderCanvasRendererAsync;
 class WebRenderImageData;
 class WebRenderFallbackData;
 class WebRenderLocalCanvasData;

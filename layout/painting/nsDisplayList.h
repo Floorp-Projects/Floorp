@@ -60,6 +60,10 @@
 #include <algorithm>
 #include <unordered_set>
 
+// XXX Includes that could be avoided by moving function implementations to the
+// cpp file.
+#include "gfxPlatform.h"
+
 class gfxContext;
 class nsIContent;
 class nsDisplayList;

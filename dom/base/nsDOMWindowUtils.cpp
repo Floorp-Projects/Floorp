@@ -178,6 +178,37 @@ class OldWindowSize : public LinkedListElement<OldWindowSize> {
   nsSize mSize;
 };
 
+/**
+ * Return the layer that all display items of aFrame were assigned to in the
+ * last paint, or nullptr if there was no single layer assigned to all of the
+ * frame's display items (i.e. zero, or more than one).
+ * This function is for testing purposes and not performance sensitive.
+ */
+template <class T>
+T* mozilla::FrameLayerBuilder::GetDebugSingleOldLayerForFrame(
+    nsIFrame* aFrame) {
+  SmallPointerArray<DisplayItemData>& array = aFrame->DisplayItemData();
+
+  Layer* layer = nullptr;
+  for (DisplayItemData* data : array) {
+    DisplayItemData::AssertDisplayItemData(data);
+    if (data->mLayer->GetType() != T::Type()) {
+      continue;
+    }
+    if (layer && layer != data->mLayer) {
+      // More than one layer assigned, bail.
+      return nullptr;
+    }
+    layer = data->mLayer;
+  }
+
+  if (!layer) {
+    return nullptr;
+  }
+
+  return static_cast<T*>(layer);
+}
+
 namespace {
 
 class NativeInputRunnable final : public PrioritizableRunnable {

@@ -591,6 +591,8 @@ void LayerManagerComposite::EndTransaction(const TimeStamp& aTimeStamp,
 #endif
 }
 
+void LayerManagerComposite::SetRoot(Layer* aLayer) { mRoot = aLayer; }
+
 void LayerManagerComposite::UpdateAndRender() {
   mCompositionOpportunityId = mCompositionOpportunityId.Next();
 
