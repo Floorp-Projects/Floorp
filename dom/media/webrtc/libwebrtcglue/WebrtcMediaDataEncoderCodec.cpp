@@ -9,7 +9,7 @@
 #include "MediaData.h"
 #include "PEMFactory.h"
 #include "VideoUtils.h"
-#include "mozilla/Result.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Span.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/media/MediaUtils.h"
@@ -32,7 +32,7 @@ extern LazyLogModule sPEMLog;
 
 using namespace media;
 using namespace layers;
-using MimeTypeResult = Result<nsCString, bool>;
+using MimeTypeResult = Maybe<nsLiteralCString>;
 
 static const char* GetModeName(webrtc::H264PacketizationMode aMode) {
   if (aMode == webrtc::H264PacketizationMode::SingleNalUnit) {
@@ -48,15 +48,15 @@ static MimeTypeResult ConvertWebrtcCodecTypeToMimeType(
     const webrtc::VideoCodecType& aType) {
   switch (aType) {
     case webrtc::VideoCodecType::kVideoCodecVP8:
-      return nsCString("video/vp8");
+      return Some("video/vp8"_ns);
     case webrtc::VideoCodecType::kVideoCodecVP9:
-      return nsCString("video/vp9");
+      return Some("video/vp9"_ns);
     case webrtc::VideoCodecType::kVideoCodecH264:
-      return nsCString("video/avc");
+      return Some("video/avc"_ns);
     default:
       break;
   }
-  return MimeTypeResult(false);
+  return Nothing();
 }
 
 static MediaDataEncoder::H264Specific::ProfileLevel ConvertProfileLevel(
@@ -110,12 +110,12 @@ bool WebrtcMediaDataEncoder::SetupConfig(
     const webrtc::VideoCodec* aCodecSettings) {
   MimeTypeResult mimeType =
       ConvertWebrtcCodecTypeToMimeType(aCodecSettings->codecType);
-  if (mimeType.isErr()) {
+  if (!mimeType) {
     LOG("Get incorrect mime type");
     return false;
   }
   mInfo = VideoInfo(aCodecSettings->width, aCodecSettings->height);
-  mInfo.mMimeType = mimeType.unwrap();
+  mInfo.mMimeType = mimeType.extract();
   mMode = aCodecSettings->H264().packetizationMode == 1
               ? webrtc::H264PacketizationMode::NonInterleaved
               : webrtc::H264PacketizationMode::SingleNalUnit;
