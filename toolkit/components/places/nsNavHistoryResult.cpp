@@ -765,7 +765,7 @@ nsresult nsNavHistoryContainerResultNode::ReverseUpdateStats(
       mParent->mTime = mTime;
     }
 
-    if (shouldNotify) {
+    if (shouldNotify && !result->CanSkipHistoryDetailsNotifications()) {
       NOTIFY_RESULT_OBSERVERS(
           result, NodeHistoryDetailsChanged(TO_ICONTAINER(mParent), oldTime,
                                             oldAccessCount));
@@ -1231,7 +1231,8 @@ nsresult nsNavHistoryContainerResultNode::InsertChildAt(
 
   mAccessCount += aNode->mAccessCount;
   if (mTime < aNode->mTime) mTime = aNode->mTime;
-  if (!mParent || mParent->AreChildrenVisible()) {
+  if ((!mParent || mParent->AreChildrenVisible()) &&
+      !result->CanSkipHistoryDetailsNotifications()) {
     NOTIFY_RESULT_OBSERVERS(
         result, NodeHistoryDetailsChanged(TO_ICONTAINER(this), oldTime,
                                           oldAccessCount));
@@ -1431,7 +1432,8 @@ bool nsNavHistoryContainerResultNode::UpdateURIs(
     if (oldAccessCount != node->mAccessCount || oldTime != node->mTime) {
       parent->mAccessCount += node->mAccessCount - oldAccessCount;
       if (node->mTime > parent->mTime) parent->mTime = node->mTime;
-      if (parent->AreChildrenVisible()) {
+      if (parent->AreChildrenVisible() &&
+          !result->CanSkipHistoryDetailsNotifications()) {
         NOTIFY_RESULT_OBSERVERS_RET(
             result,
             NodeHistoryDetailsChanged(TO_ICONTAINER(parent), parentOldTime,
@@ -3208,7 +3210,7 @@ nsNavHistoryResultNode::OnItemChanged(
   } else if (aProperty.EqualsLiteral("cleartime")) {
     PRTime oldTime = mTime;
     mTime = 0;
-    if (shouldNotify) {
+    if (shouldNotify && !result->CanSkipHistoryDetailsNotifications()) {
       NOTIFY_RESULT_OBSERVERS(
           result, NodeHistoryDetailsChanged(this, oldTime, mAccessCount));
     }
@@ -3309,9 +3311,9 @@ nsresult nsNavHistoryFolderResultNode::OnItemVisited(nsIURI* aURI,
     }
     node->mFrecency = visitNode->mFrecency;
 
-    if (AreChildrenVisible()) {
+    nsNavHistoryResult* result = GetResult();
+    if (AreChildrenVisible() && !result->CanSkipHistoryDetailsNotifications()) {
       // Sorting has not changed, just redraw the row if it's visible.
-      nsNavHistoryResult* result = GetResult();
       NOTIFY_RESULT_OBSERVERS(
           result,
           NodeHistoryDetailsChanged(node, nodeOldTime, nodeOldAccessCount));
@@ -3482,7 +3484,9 @@ nsNavHistoryResult::nsNavHistoryResult(
       mIsMobilePrefObserver(false),
       mBookmarkFolderObservers(64),
       mBatchInProgress(false),
-      mSuppressNotifications(false) {
+      mSuppressNotifications(false),
+      mIsHistoryDetailsObserver(false),
+      mObserversWantHistoryDetails(true) {
   mSortingMode = aOptions->SortingMode();
 
   mRootNode->mResult = this;
@@ -3520,12 +3524,30 @@ void nsNavHistoryResult::StopObserving() {
     nsNavHistory* history = nsNavHistory::GetHistoryService();
     if (history) {
       history->RemoveObserver(this);
-      events.AppendElement(PlacesEventType::Page_visited);
       mIsHistoryObserver = false;
     }
   }
+  if (mIsHistoryDetailsObserver) {
+    events.AppendElement(PlacesEventType::Page_visited);
+    mIsHistoryDetailsObserver = false;
+  }
 
   PlacesObservers::RemoveListener(events, this);
+}
+
+bool nsNavHistoryResult::CanSkipHistoryDetailsNotifications() const {
+  return !mObserversWantHistoryDetails &&
+         mOptions->QueryType() ==
+             nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS &&
+         mSortingMode != nsINavHistoryQueryOptions::SORT_BY_DATE_ASCENDING &&
+         mSortingMode != nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING &&
+         mSortingMode !=
+             nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_ASCENDING &&
+         mSortingMode !=
+             nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_DESCENDING &&
+         mSortingMode !=
+             nsINavHistoryQueryOptions::SORT_BY_FRECENCY_ASCENDING &&
+         mSortingMode != nsINavHistoryQueryOptions::SORT_BY_FRECENCY_DESCENDING;
 }
 
 void nsNavHistoryResult::AddHistoryObserver(
@@ -3534,10 +3556,13 @@ void nsNavHistoryResult::AddHistoryObserver(
     nsNavHistory* history = nsNavHistory::GetHistoryService();
     NS_ASSERTION(history, "Can't create history service");
     history->AddObserver(this, true);
-    AutoTArray<PlacesEventType, 1> events;
-    events.AppendElement(PlacesEventType::Page_visited);
-    PlacesObservers::AddListener(events, this);
     mIsHistoryObserver = true;
+    if (!mIsHistoryDetailsObserver) {
+      AutoTArray<PlacesEventType, 1> events;
+      events.AppendElement(PlacesEventType::Page_visited);
+      PlacesObservers::AddListener(events, this);
+      mIsHistoryDetailsObserver = true;
+    }
   }
   // Don't add duplicate observers.  In some case we don't unregister when
   // children are cleared (see ClearChildren) and the next FillChildren call
@@ -3600,8 +3625,9 @@ void nsNavHistoryResult::EnsureIsObservingBookmarks() {
   events.AppendElement(PlacesEventType::Bookmark_removed);
   // If we're not observing visits yet, also add a page-visited observer to
   // serve onItemVisited.
-  if (!mIsHistoryObserver) {
+  if (!mIsHistoryObserver && !mIsHistoryDetailsObserver) {
     events.AppendElement(PlacesEventType::Page_visited);
+    mIsHistoryDetailsObserver = true;
   }
   PlacesObservers::AddListener(events, this);
   mIsBookmarksObserver = true;
@@ -3660,10 +3686,24 @@ nsNavHistoryResult::SetSortingMode(uint16_t aSortingMode) {
 
   mSortingMode = aSortingMode;
 
+  // If the sorting mode changed to one requiring history details, we must
+  // ensure to start observing.
+  bool addedListener = UpdateHistoryDetailsObservers();
+
   if (!mRootNode->mExpanded) {
     // Need to do this later when node will be expanded.
     mNeedsToApplySortingMode = true;
     return NS_OK;
+  }
+
+  if (addedListener) {
+    // We must do a full refresh because the history details may be stale.
+    if (mRootNode->IsQuery()) {
+      return mRootNode->GetAsQuery()->Refresh();
+    }
+    if (mRootNode->IsFolder()) {
+      return mRootNode->GetAsFolder()->Refresh();
+    }
   }
 
   // Actually do sorting.
@@ -3686,6 +3726,8 @@ nsNavHistoryResult::AddObserver(nsINavHistoryResultObserver* aObserver,
   NS_ENSURE_ARG(aObserver);
   nsresult rv = mObservers.AppendWeakElementUnlessExists(aObserver, aOwnsWeak);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  UpdateHistoryDetailsObservers();
 
   rv = aObserver->SetResult(this);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3710,7 +3752,44 @@ nsNavHistoryResult::AddObserver(nsINavHistoryResultObserver* aObserver,
 NS_IMETHODIMP
 nsNavHistoryResult::RemoveObserver(nsINavHistoryResultObserver* aObserver) {
   NS_ENSURE_ARG(aObserver);
-  return mObservers.RemoveWeakElement(aObserver);
+  nsresult rv = mObservers.RemoveWeakElement(aObserver);
+  NS_ENSURE_SUCCESS(rv, rv);
+  UpdateHistoryDetailsObservers();
+  return NS_OK;
+}
+
+bool nsNavHistoryResult::UpdateHistoryDetailsObservers() {
+  bool observersWantHistoryDetails = false;
+  // One observer set to true is enough to set observersWantHistoryDetails.
+  for (uint32_t i = 0; i < mObservers.Length() && !observersWantHistoryDetails;
+       ++i) {
+    const nsCOMPtr<nsINavHistoryResultObserver>& entry =
+        mObservers.ElementAt(i).GetValue();
+    if (entry) {
+      // If the observer doesn't implement the attribute, we assume true.
+      bool observe;
+      observersWantHistoryDetails =
+          NS_FAILED(entry->GetObserveHistoryDetails(&observe)) || observe;
+    }
+  }
+
+  mObserversWantHistoryDetails = observersWantHistoryDetails;
+  // If one observer wants history details we may have to add the listener.
+  if (!CanSkipHistoryDetailsNotifications()) {
+    if (!mIsHistoryDetailsObserver) {
+      AutoTArray<PlacesEventType, 1> events;
+      events.AppendElement(PlacesEventType::Page_visited);
+      PlacesObservers::AddListener(events, this);
+      mIsHistoryDetailsObserver = true;
+      return true;
+    }
+  } else {
+    AutoTArray<PlacesEventType, 1> events;
+    events.AppendElement(PlacesEventType::Page_visited);
+    PlacesObservers::RemoveListener(events, this);
+    mIsHistoryDetailsObserver = false;
+  }
+  return false;
 }
 
 NS_IMETHODIMP

@@ -575,6 +575,9 @@ PlacesViewBase.prototype = {
     }
   },
 
+  // Opt-out of history details updates, since all the views derived from this
+  // are not showing them.
+  observeHistoryDetails: false,
   nodeHistoryDetailsChanged() {},
   nodeTagsChanged() {},
   nodeDateAddedChanged() {},
