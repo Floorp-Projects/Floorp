@@ -16,6 +16,7 @@
 #include <fstream>
 #include "platform.h"
 #include "shared-libraries.h"
+#include "GeckoProfiler.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Unused.h"
 #include "nsDebug.h"

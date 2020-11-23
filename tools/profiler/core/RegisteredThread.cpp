@@ -6,6 +6,19 @@
 
 #include "RegisteredThread.h"
 
+#include "js/AllocationRecording.h"
+#include "js/ProfilingStack.h"
+#include "js/TraceLoggerAPI.h"
+
+RacyRegisteredThread::RacyRegisteredThread(int aThreadId)
+    : mProfilingStackOwner(
+          mozilla::MakeNotNull<RefPtr<mozilla::ProfilingStackOwner>>()),
+      mThreadId(aThreadId),
+      mSleep(AWAKE),
+      mIsBeingProfiled(false) {
+  MOZ_COUNT_CTOR(RacyRegisteredThread);
+}
+
 RegisteredThread::RegisteredThread(ThreadInfo* aInfo, nsIThread* aThread,
                                    void* aStackTop)
     : mRacyRegisteredThread(aInfo->ThreadId()),
@@ -60,4 +73,57 @@ void RegisteredThread::GetRunningEventDelay(const mozilla::TimeStamp& aNow,
   }
   aDelay = mozilla::TimeDuration();
   aRunning = mozilla::TimeDuration();
+}
+
+void RegisteredThread::SetJSContext(JSContext* aContext) {
+  // This function runs on-thread.
+
+  MOZ_ASSERT(aContext && !mContext);
+
+  mContext = aContext;
+
+  // We give the JS engine a non-owning reference to the ProfilingStack. It's
+  // important that the JS engine doesn't touch this once the thread dies.
+  js::SetContextProfilingStack(aContext,
+                               &RacyRegisteredThread().ProfilingStack());
+}
+
+void RegisteredThread::PollJSSampling() {
+  // This function runs on-thread.
+
+  // We can't start/stop profiling until we have the thread's JSContext.
+  if (mContext) {
+    // It is possible for mJSSampling to go through the following sequences.
+    //
+    // - INACTIVE, ACTIVE_REQUESTED, INACTIVE_REQUESTED, INACTIVE
+    //
+    // - ACTIVE, INACTIVE_REQUESTED, ACTIVE_REQUESTED, ACTIVE
+    //
+    // Therefore, the if and else branches here aren't always interleaved.
+    // This is ok because the JS engine can handle that.
+    //
+    if (mJSSampling == ACTIVE_REQUESTED) {
+      mJSSampling = ACTIVE;
+      js::EnableContextProfilingStack(mContext, true);
+      if (JSTracerEnabled()) {
+        JS::StartTraceLogger(mContext);
+      }
+      if (JSAllocationsEnabled()) {
+        // TODO - This probability should not be hardcoded. See Bug 1547284.
+        JS::EnableRecordingAllocations(mContext,
+                                       profiler_add_js_allocation_marker, 0.01);
+      }
+      js::RegisterContextProfilingEventMarker(mContext, profiler_add_js_marker);
+
+    } else if (mJSSampling == INACTIVE_REQUESTED) {
+      mJSSampling = INACTIVE;
+      js::EnableContextProfilingStack(mContext, false);
+      if (JSTracerEnabled()) {
+        JS::StopTraceLogger(mContext);
+      }
+      if (JSAllocationsEnabled()) {
+        JS::DisableRecordingAllocations(mContext);
+      }
+    }
+  }
 }
