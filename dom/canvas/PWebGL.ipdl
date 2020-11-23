@@ -10,7 +10,7 @@ include protocol PLayerTransaction;
 
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::SurfaceDescriptor from "mozilla/layers/LayersTypes.h";
-using std::string from "ipc/IPCMessageUtils.h";
+using std::string from "string";
 using mozilla::uvec2 from "mozilla/dom/WebGLIpdl.h";
 using mozilla::webgl::Int32Vector from "mozilla/dom/WebGLIpdl.h";
 using mozilla::webgl::CompileResult from "mozilla/dom/WebGLIpdl.h";

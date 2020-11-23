@@ -55,7 +55,7 @@ using mozilla::layers::MaybeZoomConstraints from "mozilla/layers/ZoomConstraints
 using mozilla::layers::GeckoContentController_TapType from "mozilla/layers/GeckoContentControllerTypes.h";
 using ScrollableLayerGuid::ViewID from "mozilla/layers/ScrollableLayerGuid.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
-using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
+using mozilla::WindowsHandle from "mozilla/ipc/IPCTypes.h";
 using class mozilla::WidgetCompositionEvent from "ipc/nsGUIEventIPC.h";
 using struct mozilla::widget::IMENotification from "mozilla/widget/IMEData.h";
 using struct mozilla::widget::IMENotificationRequests from "mozilla/widget/IMEData.h";

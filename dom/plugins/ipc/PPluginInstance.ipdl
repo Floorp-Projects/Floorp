@@ -25,7 +25,7 @@ using gfxSurfaceType from "gfxTypes.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
 using mozilla::gfx::IntRect from "mozilla/gfx/2D.h";
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
-using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
+using mozilla::WindowsHandle from "mozilla/ipc/IPCTypes.h";
 using mozilla::plugins::WindowsSharedMemoryHandle from "mozilla/plugins/PluginMessageUtils.h";
 using mozilla::layers::SurfaceDescriptorX11 from "gfxipc/ShadowLayerUtils.h";
 using nsIntRect from "nsRect.h";

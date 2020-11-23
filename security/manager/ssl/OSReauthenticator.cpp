@@ -20,7 +20,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
-#include "ipc/IPCMessageUtils.h"
+#include "mozilla/ipc/IPCTypes.h"
 
 NS_IMPL_ISUPPORTS(OSReauthenticator, nsIOSReauthenticator)
 

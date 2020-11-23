@@ -35,6 +35,7 @@ EXPORTS.mozilla.ipc += [
     "IPCStreamDestination.h",
     "IPCStreamSource.h",
     "IPCStreamUtils.h",
+    "IPCTypes.h",
     "IPDLParamTraits.h",
     "LibrarySandboxPreload.h",
     "MessageChannel.h",

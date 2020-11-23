@@ -12,7 +12,7 @@ include "mozilla/GfxMessageUtils.h";
 using mozilla::a11y::role from "mozilla/a11y/IPCTypes.h";
 using mozilla::a11y::IAccessibleHolder from "mozilla/a11y/IPCTypes.h";
 using mozilla::a11y::IDispatchHolder from "mozilla/a11y/IPCTypes.h";
-using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
+using mozilla::WindowsHandle from "mozilla/ipc/IPCTypes.h";
 using mozilla::LayoutDeviceIntRect from "Units.h";
 
 namespace mozilla {

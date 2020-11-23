@@ -7,7 +7,7 @@ using nsIntRegion from "nsRegion.h";
 using struct mozilla::layers::SurfaceDescriptorX11 from "gfxipc/ShadowLayerUtils.h";
 using mozilla::StereoMode from "ImageTypes.h";
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
-using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
+using mozilla::WindowsHandle from "mozilla/ipc/IPCTypes.h";
 using mozilla::gfx::YUVColorSpace from "mozilla/gfx/Types.h";
 using mozilla::gfx::ColorDepth from "mozilla/gfx/Types.h";
 using mozilla::gfx::ColorRange from "mozilla/gfx/Types.h";

@@ -7,7 +7,7 @@
 include protocol PContent;
 
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
-using mozilla::void_t from "ipc/IPCMessageUtils.h";
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace loader {
