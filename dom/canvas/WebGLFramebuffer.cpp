@@ -1263,11 +1263,16 @@ static void GetBackbufferFormats(const WebGLContext* webgl,
 }
 
 /*static*/
-void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint srcX0,
-                                       GLint srcY0, GLint srcX1, GLint srcY1,
-                                       GLint dstX0, GLint dstY0, GLint dstX1,
-                                       GLint dstY1, GLbitfield mask,
+void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint _srcX0,
+                                       GLint _srcY0, GLint _srcX1, GLint _srcY1,
+                                       GLint _dstX0, GLint _dstY0, GLint _dstX1,
+                                       GLint _dstY1, GLbitfield mask,
                                        GLenum filter) {
+  auto srcP0 = ivec2{_srcX0, _srcY0};
+  auto srcP1 = ivec2{_srcX1, _srcY1};
+  auto dstP0 = ivec2{_dstX0, _dstY0};
+  auto dstP1 = ivec2{_dstX1, _dstY1};
+
   const GLbitfield depthAndStencilBits =
       LOCAL_GL_DEPTH_BUFFER_BIT | LOCAL_GL_STENCIL_BUFFER_BIT;
   if (bool(mask & depthAndStencilBits) && filter == LOCAL_GL_LINEAR) {
@@ -1420,7 +1425,7 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint srcX0,
       return;
     }
 
-    if (dstX0 != srcX0 || dstX1 != srcX1 || dstY0 != srcY0 || dstY1 != srcY1) {
+    if (srcP0 != dstP0 || srcP1 != dstP1) {
       webgl->ErrorInvalidOperation(
           "If the source is multisampled, then the"
           " source and dest regions must match exactly.");
@@ -1510,11 +1515,82 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint srcX0,
   }
 
   // -
+  // Mutually constrain src and dst rects for eldritch blits.
+
+  [&]{
+    using fvec2 = avec2<float>; // Switch to float, because there's no perfect solution anyway.
+
+    const auto zero2f = fvec2{0, 0};
+    const auto srcSizef = AsVec(srcSize).StaticCast<fvec2>();
+    const auto dstSizef = AsVec(dstSize).StaticCast<fvec2>();
+
+    const auto srcP0f = srcP0.StaticCast<fvec2>();
+    const auto srcP1f = srcP1.StaticCast<fvec2>();
+    const auto dstP0f = dstP0.StaticCast<fvec2>();
+    const auto dstP1f = dstP1.StaticCast<fvec2>();
+
+    const auto srcRectDiff = srcP1f - srcP0f;
+    const auto dstRectDiff = dstP1f - dstP0f;
+
+    // Skip if zero-sized.
+    if (!srcRectDiff.x || !srcRectDiff.y || !dstRectDiff.x || !dstRectDiff.y) {
+      srcP0 = srcP1 = dstP0 = dstP1 = {0,0};
+      return;
+    }
+
+    // Clamp the rect points
+    const auto srcQ0 = srcP0f.ClampMinMax(zero2f, srcSizef);
+    const auto srcQ1 = srcP1f.ClampMinMax(zero2f, srcSizef);
+
+    // Normalized to the [0,1] abstact copy rect
+    const auto srcQ0Norm = (srcQ0 - srcP0f) / srcRectDiff;
+    const auto srcQ1Norm = (srcQ1 - srcP0f) / srcRectDiff;
+
+    // Map into dst
+    const auto srcQ0InDst = dstP0f + srcQ0Norm * dstRectDiff;
+    const auto srcQ1InDst = dstP0f + srcQ1Norm * dstRectDiff;
+
+    // Clamp the rect points
+    const auto dstQ0 = srcQ0InDst.ClampMinMax(zero2f, dstSizef);
+    const auto dstQ1 = srcQ1InDst.ClampMinMax(zero2f, dstSizef);
+
+    // Alright, time to go back to src!
+    // Normalized to the [0,1] abstact copy rect
+    const auto dstQ0Norm = (dstQ0 - dstP0f) / dstRectDiff;
+    const auto dstQ1Norm = (dstQ1 - dstP0f) / dstRectDiff;
+
+    // Map into src
+    const auto dstQ0InSrc = srcP0f + dstQ0Norm * srcRectDiff;
+    const auto dstQ1InSrc = srcP0f + dstQ1Norm * srcRectDiff;
+
+    const auto srcQ0Constrained = dstQ0InSrc.ClampMinMax(zero2f, srcSizef);
+    const auto srcQ1Constrained = dstQ1InSrc.ClampMinMax(zero2f, srcSizef);
+
+    // Round, don't floor:
+    srcP0 = (srcQ0Constrained + 0.5).StaticCast<ivec2>();
+    srcP1 = (srcQ1Constrained + 0.5).StaticCast<ivec2>();
+    dstP0 = (dstQ0 + 0.5).StaticCast<ivec2>();
+    dstP1 = (dstQ1 + 0.5).StaticCast<ivec2>();
+  }();
+
+  bool inBounds = true;
+  inBounds &= ( srcP0 == srcP0.Clamp({0,0}, AsVec(srcSize)) );
+  inBounds &= ( srcP1 == srcP1.Clamp({0,0}, AsVec(srcSize)) );
+  inBounds &= ( dstP0 == dstP0.Clamp({0,0}, AsVec(dstSize)) );
+  inBounds &= ( dstP1 == dstP1.Clamp({0,0}, AsVec(dstSize)) );
+  if (!inBounds) {
+    webgl->ErrorImplementationBug("Subrects still not within src and dst after constraining.");
+    return;
+  }
+
+  // -
+  // Execute as constrained
 
   const auto& gl = webgl->gl;
   const ScopedDrawCallWrapper wrapper(*webgl);
-  gl->fBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1,
-                       mask, filter);
+
+  gl->fBlitFramebuffer(srcP0.x, srcP0.y, srcP1.x, srcP1.y, dstP0.x, dstP0.y,
+                       dstP1.x, dstP1.y, mask, filter);
 
   // -
 
@@ -1557,13 +1633,14 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint srcX0,
 
       if (srcColorFormat->isSRGB) {
         // srgb -> linear
-        gl->fBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, srcX0, srcY0, srcX1,
-                             srcY1, LOCAL_GL_COLOR_BUFFER_BIT,
-                             LOCAL_GL_NEAREST);
+        gl->fBlitFramebuffer(srcP0.x, srcP0.y, srcP1.x, srcP1.y, srcP0.x,
+                             srcP0.y, srcP1.x, srcP1.y,
+                             LOCAL_GL_COLOR_BUFFER_BIT, LOCAL_GL_NEAREST);
       } else {
         // linear -> srgb
-        gl->fBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1,
-                             dstY1, LOCAL_GL_COLOR_BUFFER_BIT, filter);
+        gl->fBlitFramebuffer(srcP0.x, srcP0.y, srcP1.x, srcP1.y, dstP0.x,
+                             dstP0.y, dstP1.x, dstP1.y,
+                             LOCAL_GL_COLOR_BUFFER_BIT, filter);
       }
 
       const auto& blitHelper = *gl->BlitHelper();
@@ -1577,13 +1654,14 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint srcX0,
 
       if (srcColorFormat->isSRGB) {
         // srgb -> linear
-        gl->fBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1,
-                             dstY1, LOCAL_GL_COLOR_BUFFER_BIT, filter);
+        gl->fBlitFramebuffer(srcP0.x, srcP0.y, srcP1.x, srcP1.y, dstP0.x,
+                             dstP0.y, dstP1.x, dstP1.y,
+                             LOCAL_GL_COLOR_BUFFER_BIT, filter);
       } else {
         // linear -> srgb
-        gl->fBlitFramebuffer(dstX0, dstY0, dstX1, dstY1, dstX0, dstY0, dstX1,
-                             dstY1, LOCAL_GL_COLOR_BUFFER_BIT,
-                             LOCAL_GL_NEAREST);
+        gl->fBlitFramebuffer(dstP0.x, dstP0.y, dstP1.x, dstP1.y, dstP0.x,
+                             dstP0.y, dstP1.x, dstP1.y,
+                             LOCAL_GL_COLOR_BUFFER_BIT, LOCAL_GL_NEAREST);
       }
     }
   }
@@ -1598,13 +1676,16 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint srcX0,
     if (webgl->mRasterizerDiscardEnabled) {
       gl->fDisable(LOCAL_GL_RASTERIZER_DISCARD);
     }
-    const WebGLContext::ScissorRect dstRect = {
-        std::min(dstX0, dstX1), std::min(dstY0, dstY1), abs(dstX1 - dstX0),
-        abs(dstY1 - dstY0)};
-    dstRect.Apply(*gl);
-    gl->fClearColor(0, 0, 0, 1);
 
-    webgl->DoColorMask(0x8);
+    const auto dstRectMin = MinExtents(dstP0, dstP1);
+    const auto dstRectMax = MaxExtents(dstP0, dstP1);
+    const auto dstRectSize = dstRectMax - dstRectMin;
+    const WebGLContext::ScissorRect dstRect = {dstRectMin.x, dstRectMin.y,
+                                               dstRectSize.x, dstRectSize.y};
+    dstRect.Apply(*gl);
+
+    gl->fClearColor(0, 0, 0, 1);
+    webgl->DoColorMask(1 << 3);
     gl->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
 
     if (!webgl->mScissorTestEnabled) {
