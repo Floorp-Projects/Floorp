@@ -7,70 +7,64 @@
 #ifndef GFX_LAYERS_H
 #define GFX_LAYERS_H
 
-#include <map>
-#include <unordered_set>
-#include <stdint.h>        // for uint32_t, uint64_t, uint8_t
-#include <stdio.h>         // for FILE
-#include <sys/types.h>     // for int32_t
-#include "FrameMetrics.h"  // for FrameMetrics
-#include "Units.h"         // for LayerMargin, LayerPoint, ParentLayerIntRect
-#include "gfxContext.h"
-#include "gfxTypes.h"
-#include "gfxPoint.h"  // for gfxPoint
-#include "gfxRect.h"   // for gfxRect
-#include "gfx2DGlue.h"
-#include "mozilla/Assertions.h"  // for MOZ_ASSERT_HELPER2, etc
-#include "mozilla/Array.h"
-#include "mozilla/DebugOnly.h"      // for DebugOnly
-#include "mozilla/EventForwards.h"  // for nsPaintEvent
-#include "mozilla/Maybe.h"          // for Maybe
-#include "mozilla/Poison.h"
-#include "mozilla/RefPtr.h"                // for already_AddRefed
-#include "mozilla/TimeStamp.h"             // for TimeStamp, TimeDuration
-#include "mozilla/UniquePtr.h"             // for UniquePtr
-#include "mozilla/dom/Animation.h"         // for dom::Animation
-#include "mozilla/gfx/BaseMargin.h"        // for BaseMargin
-#include "mozilla/gfx/BasePoint.h"         // for BasePoint
-#include "mozilla/gfx/Point.h"             // for IntSize
-#include "mozilla/gfx/TiledRegion.h"       // for TiledIntRegion
-#include "mozilla/gfx/Types.h"             // for SurfaceFormat
-#include "mozilla/gfx/UserData.h"          // for UserData, etc
-#include "mozilla/layers/AnimationInfo.h"  // for AnimationInfo
-#include "mozilla/layers/BSPTree.h"        // for LayerPolygon
-#include "mozilla/layers/CanvasRenderer.h"
-#include "mozilla/layers/LayerAttributes.h"
-#include "mozilla/layers/LayersTypes.h"
-#include "mozilla/webrender/WebRenderTypes.h"
-#include "mozilla/mozalloc.h"        // for operator delete, etc
-#include "nsCOMPtr.h"                // for already_AddRefed
-#include "nsCSSPropertyID.h"         // for nsCSSPropertyID
-#include "nsDebug.h"                 // for NS_ASSERTION
-#include "nsISupportsImpl.h"         // for Layer::Release, etc
-#include "nsRect.h"                  // for mozilla::gfx::IntRect
-#include "nsRefPtrHashtable.h"       // for nsRefPtrHashtable
-#include "nsRegion.h"                // for nsIntRegion
-#include "nsString.h"                // for nsCString
-#include "nsTArray.h"                // for nsTArray
-#include "nsTArrayForwardDeclare.h"  // for nsTArray
-#include "nscore.h"                  // for nsACString, nsAString
-#include "mozilla/Logging.h"         // for PRLogModuleInfo
-#include "nsIWidget.h"  // For plugin window configuration information structs
-#include "ImageContainer.h"
+#include <cstdint>           // for uint32_t, uint64_t, int32_t, uint8_t
+#include <cstring>           // for memcpy
+#include <iosfwd>            // for stringstream
+#include <new>               // for operator new
+#include <unordered_set>     // for unordered_set
+#include <utility>           // for forward, move
+#include "FrameMetrics.h"    // for ScrollMetadata, FrameMetrics::ViewID, Fra...
+#include "ImageContainer.h"  // for ImageContainer, ImageContainer::Mode, Ima...
+#include "Units.h"           // for LayerIntRegion, ParentLayerIntRect, Layer...
+#include "gfxPoint.h"        // for gfxPoint
+#include "gfxRect.h"         // for gfxRect
+#include "mozilla/AlreadyAddRefed.h"  // for already_AddRefed
+#include "mozilla/Maybe.h"            // for Maybe, Nothing (ptr only)
+#include "mozilla/Poison.h"           // for CorruptionCanary
+#include "mozilla/RefPtr.h"           // for RefPtr, operator!=
+#include "mozilla/TimeStamp.h"        // for TimeStamp
+#include "mozilla/UniquePtr.h"        // for UniquePtr, MakeUnique
+#include "mozilla/dom/Animation.h"    // for Animation
+#include "mozilla/gfx/BasePoint.h"  // for BasePoint<>::(anonymous union)::(anonymous)
+#include "mozilla/gfx/BaseSize.h"     // for BaseSize
+#include "mozilla/gfx/Matrix.h"       // for Matrix4x4, Matrix, Matrix4x4Typed
+#include "mozilla/gfx/Point.h"        // for Point, PointTyped, IntSize
+#include "mozilla/gfx/Polygon.h"      // for Polygon
+#include "mozilla/gfx/Rect.h"         // for IntRectTyped, IntRect
+#include "mozilla/gfx/TiledRegion.h"  // for TiledIntRegion
+#include "mozilla/gfx/Types.h"  // for CompositionOp, DeviceColor, SamplingFilter
+#include "mozilla/gfx/UserData.h"  // for UserData, UserDataKey (ptr only)
+#include "mozilla/layers/AnimationInfo.h"    // for AnimationInfo
+#include "mozilla/layers/CompositorTypes.h"  // for TextureFactoryIdentifier
+#include "mozilla/layers/LayerAttributes.h"  // for SimpleLayerAttributes, ScrollbarData (ptr...
+#include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid, ScrollableLayerGuid:...
+#include "nsHashKeys.h"                          // for nsUint64HashKey
+#include "nsISupports.h"        // for NS_INLINE_DECL_REFCOUNTING
+#include "nsIWidget.h"          // for nsIWidget
+#include "nsPoint.h"            // for nsIntPoint
+#include "nsRect.h"             // for nsIntRect
+#include "nsRefPtrHashtable.h"  // for nsRefPtrHashtable
+#include "nsRegion.h"           // for nsIntRegion
+#include "nsStringFlags.h"      // for operator&
+#include "nsStringFwd.h"        // for nsCString, nsAString, nsACString
+#include "nsTArray.h"  // for nsTArray, nsTArray_Impl, nsTArray_Impl<>:...
+
+// XXX These includes could be avoided by moving function implementations to the
+// cpp file
+#include "gfx2DGlue.h"           // for ThebesPoint
+#include "mozilla/Assertions.h"  // for AssertionConditionType, MOZ_ASSERT, MOZ_A...
+#include "mozilla/DebugOnly.h"              // for DebugOnly
+#include "mozilla/layers/CanvasRenderer.h"  // for CanvasRenderer
+#include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_LOG_IF_SHADOWABLE, Composition...
+#include "nsDebug.h"                     // for NS_ASSERTION, NS_WARNING
 
 class gfxContext;
-class nsDisplayListBuilder;
-class nsDisplayItem;
 
 extern uint8_t gLayerManagerLayerBuilder;
 
 namespace mozilla {
 
-class ComputedTimingFunction;
 class FrameLayerBuilder;
-
-namespace gl {
-class GLContext;
-}  // namespace gl
 
 namespace gfx {
 class DrawTarget;
@@ -108,6 +102,7 @@ class FrameUniformityData;
 class PersistentBufferProvider;
 class GlyphArray;
 class WebRenderLayerManager;
+struct LayerPolygon;
 struct AnimData;
 
 namespace layerscope {
