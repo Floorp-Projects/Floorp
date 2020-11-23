@@ -22,6 +22,8 @@ include protocol PRemoteDecoderManager;
 include protocol PSandboxTesting;
 #endif
 
+include "mozilla/layers/LayersMessageUtils.h";
+
 using base::ProcessId from "base/process.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
 using mozilla::Telemetry::HistogramAccumulation from "mozilla/TelemetryComms.h";
