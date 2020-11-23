@@ -13,44 +13,68 @@
 #ifndef mozilla_dom_Element_h__
 #define mozilla_dom_Element_h__
 
+#include <cstdio>
+#include <cstdint>
+#include <cstdlib>
+#include <utility>
 #include "AttrArray.h"
-#include "nsAttrValue.h"
-#include "nsAttrValueInlines.h"
-#include "nsChangeHint.h"
-#include "nsContentUtils.h"
-#include "nsDOMAttributeMap.h"
-#include "nsRect.h"
+#include "ErrorList.h"
 #include "Units.h"
+#include "js/RootingAPI.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/BasicEvents.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/FlushType.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/PseudoStyleType.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/RustCell.h"
-#include "mozilla/SMILAttr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/BorrowedAttrInfo.h"
+#include "mozilla/dom/DOMString.h"
 #include "mozilla/dom/DirectionalityUtils.h"
 #include "mozilla/dom/FragmentOrElement.h"
 #include "mozilla/dom/NameSpaceConstants.h"
 #include "mozilla/dom/NodeInfo.h"
-#include "mozilla/dom/PointerEventHandler.h"
+#include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "mozilla/dom/ShadowRootBinding.h"
+#include "nsAtom.h"
+#include "nsAttrValue.h"
+#include "nsAttrValueInlines.h"
+#include "nsCaseTreatment.h"
+#include "nsChangeHint.h"
+#include "nsDataHashtable.h"
+#include "nsDebug.h"
+#include "nsError.h"
+#include "nsGkAtoms.h"
+#include "nsHashKeys.h"
+#include "nsIContent.h"
+#include "nsID.h"
+#include "nsINode.h"
+#include "nsLiteralString.h"
+#include "nsRect.h"
+#include "nsString.h"
+#include "nsStringFlags.h"
+#include "nsTLiteralString.h"
+#include "nscore.h"
 
+class JSObject;
 class mozAutoDocUpdate;
-class nsIFrame;
-class nsIMozBrowserFrame;
-class nsIScrollableFrame;
-class nsIURI;
+class nsAttrName;
 class nsAttrValueOrString;
 class nsContentList;
+class nsDOMAttributeMap;
+class nsDOMCSSAttributeDeclaration;
+class nsDOMStringMap;
 class nsDOMTokenList;
 class nsFocusManager;
 class nsGlobalWindowInner;
 class nsGlobalWindowOuter;
-class nsDOMCSSAttributeDeclaration;
-class nsDOMStringMap;
-struct ServoNodeData;
-
+class nsIAutoCompletePopup;
+class nsIBrowser;
 class nsIDOMXULButtonElement;
 class nsIDOMXULContainerElement;
 class nsIDOMXULContainerItemElement;
@@ -61,29 +85,52 @@ class nsIDOMXULRadioGroupElement;
 class nsIDOMXULRelatedElement;
 class nsIDOMXULSelectControlElement;
 class nsIDOMXULSelectControlItemElement;
-class nsIBrowser;
-class nsIAutoCompletePopup;
+class nsIFrame;
+class nsIHTMLCollection;
+class nsIMozBrowserFrame;
+class nsIPrincipal;
+class nsIScrollableFrame;
+class nsIURI;
+class nsMappedAttributes;
+class nsPresContext;
+class nsWindowSizes;
+struct JSContext;
+struct ServoNodeData;
+template <class E>
+class nsTArray;
+template <class T>
+class nsGetterAddRefs;
 
 namespace mozilla {
 class DeclarationBlock;
+class ErrorResult;
+class OOMReporter;
+class SMILAttr;
 struct MutationClosureData;
 class TextEditor;
 namespace css {
 struct URLValue;
 }  // namespace css
 namespace dom {
+struct CustomElementData;
 struct GetAnimationsOptions;
 struct ScrollIntoViewOptions;
 struct ScrollToOptions;
 struct FocusOptions;
 struct ShadowRootInit;
 struct ScrollOptions;
+class Attr;
 class BooleanOrScrollIntoViewOptions;
+class Document;
 class DOMIntersectionObserver;
 class DOMMatrixReadOnly;
 class Element;
 class ElementOrCSSPseudoElement;
+class Promise;
+class ShadowRoot;
 class UnrestrictedDoubleOrKeyframeAnimationOptions;
+template <typename T>
+class Optional;
 enum class CallerType : uint32_t;
 typedef nsDataHashtable<nsRefPtrHashKey<DOMIntersectionObserver>, int32_t>
     IntersectionObserverList;
@@ -1089,14 +1136,7 @@ class Element : public FragmentOrElement {
   nsDOMTokenList* ClassList();
   nsDOMTokenList* Part();
 
-  nsDOMAttributeMap* Attributes() {
-    nsDOMSlots* slots = DOMSlots();
-    if (!slots->mAttributeMap) {
-      slots->mAttributeMap = new nsDOMAttributeMap(this);
-    }
-
-    return slots->mAttributeMap;
-  }
+  nsDOMAttributeMap* Attributes();
 
   void GetAttributeNames(nsTArray<nsString>& aResult);
 
@@ -1198,56 +1238,9 @@ class Element : public FragmentOrElement {
   void InsertAdjacentText(const nsAString& aWhere, const nsAString& aData,
                           ErrorResult& aError);
 
-  void SetPointerCapture(int32_t aPointerId, ErrorResult& aError) {
-    if (nsContentUtils::ShouldResistFingerprinting(GetComposedDoc()) &&
-        aPointerId != PointerEventHandler::GetSpoofedPointerIdForRFP()) {
-      aError.ThrowNotFoundError("Invalid pointer id");
-      return;
-    }
-    const PointerInfo* pointerInfo =
-        PointerEventHandler::GetPointerInfo(aPointerId);
-    if (!pointerInfo) {
-      aError.ThrowNotFoundError("Invalid pointer id");
-      return;
-    }
-    if (!IsInComposedDoc()) {
-      aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-      return;
-    }
-    if (OwnerDoc()->GetPointerLockElement()) {
-      // Throw an exception 'InvalidStateError' while the page has a locked
-      // element.
-      aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-      return;
-    }
-    if (!pointerInfo->mActiveState ||
-        pointerInfo->mActiveDocument != OwnerDoc()) {
-      return;
-    }
-    PointerEventHandler::RequestPointerCaptureById(aPointerId, this);
-  }
-  void ReleasePointerCapture(int32_t aPointerId, ErrorResult& aError) {
-    if (nsContentUtils::ShouldResistFingerprinting(GetComposedDoc()) &&
-        aPointerId != PointerEventHandler::GetSpoofedPointerIdForRFP()) {
-      aError.ThrowNotFoundError("Invalid pointer id");
-      return;
-    }
-    if (!PointerEventHandler::GetPointerInfo(aPointerId)) {
-      aError.ThrowNotFoundError("Invalid pointer id");
-      return;
-    }
-    if (HasPointerCapture(aPointerId)) {
-      PointerEventHandler::ReleasePointerCaptureById(aPointerId);
-    }
-  }
-  bool HasPointerCapture(long aPointerId) {
-    PointerCaptureInfo* pointerCaptureInfo =
-        PointerEventHandler::GetPointerCaptureInfo(aPointerId);
-    if (pointerCaptureInfo && pointerCaptureInfo->mPendingElement == this) {
-      return true;
-    }
-    return false;
-  }
+  void SetPointerCapture(int32_t aPointerId, ErrorResult& aError);
+  void ReleasePointerCapture(int32_t aPointerId, ErrorResult& aError);
+  bool HasPointerCapture(long aPointerId);
   void SetCapture(bool aRetargetToElement);
 
   void SetCaptureAlways(bool aRetargetToElement);

@@ -7,57 +7,101 @@
 #ifndef mozilla_dom_Document_h___
 #define mozilla_dom_Document_h___
 
-#include "mozilla/EventStates.h"  // for EventStates
-#include "mozilla/FlushType.h"    // for enum
-#include "mozilla/MozPromise.h"   // for MozPromise
-#include "mozilla/FunctionRef.h"  // for FunctionRef
-#include "nsCOMArray.h"           // for member
-#include "nsCompatibility.h"      // for member
-#include "nsCOMPtr.h"             // for member
-#include "nsGkAtoms.h"            // for static class members
-#include "nsIApplicationCacheContainer.h"
-#include "nsIContentViewer.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsILoadContext.h"
-#include "nsILoadGroup.h"  // for member (in nsCOMPtr)
-#include "nsINode.h"       // for base class
-#include "nsIParser.h"
-#include "nsIChannelEventSink.h"
-#include "nsIProgressEventSink.h"
-#include "nsIRadioGroupContainer.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIScriptObjectPrincipal.h"
-#include "nsIURI.h"                 // for use in inline functions
-#include "nsIWeakReferenceUtils.h"  // for nsWeakPtr
-#include "nsPIDOMWindow.h"          // for use in inline functions
-#include "nsPropertyTable.h"        // for member
-#include "nsStringFwd.h"
-#include "nsStubMutationObserver.h"
-#include "nsTHashtable.h"  // for member
-#include "nsURIHashKey.h"
-#include "mozilla/UseCounter.h"
-#include "mozilla/WeakPtr.h"
-#include "Units.h"
-#include "nsContentListDeclarations.h"
-#include "nsExpirationTracker.h"
-#include "nsClassHashtable.h"
-#include "nsWindowSizes.h"
+#include <bitset>
+#include <cstddef>
+#include <cstdint>
+#include <new>
+#include <utility>
+#include "ErrorList.h"
+#include "MainThreadUtils.h"
 #include "ReferrerInfo.h"
+#include "Units.h"
+#include "imgIRequest.h"
+#include "js/RootingAPI.h"
+#include "js/friend/DOMProxy.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/CallState.h"
+#include "mozilla/BasicEvents.h"
+#include "mozilla/BitSet.h"
 #include "mozilla/CORSMode.h"
-#include "mozilla/dom/DispatcherTrait.h"
-#include "mozilla/dom/DocumentOrShadowRoot.h"
-#include "mozilla/dom/ViewportMetaData.h"
+#include "mozilla/CallState.h"
+#include "mozilla/EventStates.h"
+#include "mozilla/FlushType.h"
+#include "mozilla/FunctionRef.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/PreloadService.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/Result.h"
 #include "mozilla/SegmentedVector.h"
+#include "mozilla/TaskCategory.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
-#include <bitset>                // for member
-#include "js/friend/DOMProxy.h"  // JS::ExpandoAndGeneration
+#include "mozilla/UseCounter.h"
+#include "mozilla/WeakPtr.h"
+#include "mozilla/dom/DispatcherTrait.h"
+#include "mozilla/dom/DocumentOrShadowRoot.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/Nullable.h"
+#include "mozilla/dom/ReferrerPolicyBinding.h"
+#include "mozilla/dom/ViewportMetaData.h"
+#include "nsAtom.h"
+#include "nsCOMArray.h"
+#include "nsCOMPtr.h"
+#include "nsClassHashtable.h"
+#include "nsCompatibility.h"
+#include "nsContentListDeclarations.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsDataHashtable.h"
+#include "nsDebug.h"
+#include "nsExpirationTracker.h"
+#include "nsGkAtoms.h"
+#include "nsHashKeys.h"
+#include "nsIApplicationCacheContainer.h"
+#include "nsIChannel.h"
+#include "nsIChannelEventSink.h"
+#include "nsIContentViewer.h"
+#include "nsID.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsILoadContext.h"
+#include "nsILoadGroup.h"
+#include "nsILoadInfo.h"
+#include "nsINode.h"
+#include "nsIObserver.h"
+#include "nsIParser.h"
+#include "nsIPrincipal.h"
+#include "nsIProgressEventSink.h"
+#include "nsIRadioGroupContainer.h"
+#include "nsIReferrerInfo.h"
+#include "nsIRequestObserver.h"
+#include "nsIScriptObjectPrincipal.h"
+#include "nsIStreamListener.h"
+#include "nsISupports.h"
+#include "nsISupportsUtils.h"
+#include "nsIURI.h"
+#include "nsIWeakReferenceUtils.h"
+#include "nsLiteralString.h"
+#include "nsPIDOMWindow.h"
+#include "nsPropertyTable.h"
+#include "nsRefPtrHashtable.h"
+#include "nsString.h"
+#include "nsStubMutationObserver.h"
+#include "nsTArray.h"
+#include "nsTHashtable.h"
+#include "nsTLiteralString.h"
+#include "nsTObserverArray.h"
+#include "nsThreadUtils.h"
+#include "nsURIHashKey.h"
+#include "nsViewportInfo.h"
+#include "nsWeakReference.h"
+#include "nsWindowSizes.h"
+#include "nsXULElement.h"
+#include "nscore.h"
 
 // XXX We need to include this here to ensure that DefaultDeleter for Servo
 // types is specialized before the template is instantiated. Probably, this
@@ -79,51 +123,68 @@ class ElementCreationOptionsOrString;
 }  // namespace mozilla
 #endif  // MOZILLA_INTERNAL_API
 
+class InfallibleAllocPolicy;
+class JSObject;
+class JSTracer;
+class PLDHashTable;
 class gfxUserFontSet;
-class imgIRequest;
+class mozIDOMWindowProxy;
 class nsCachableElementsByNameNodeList;
 class nsCommandManager;
 class nsContentList;
-class nsDocShell;
+class nsCycleCollectionTraversalCallback;
+class nsDOMCaretPosition;
 class nsDOMNavigationTiming;
+class nsDocShell;
 class nsFrameLoader;
 class nsFrameLoaderOwner;
+class nsGenericHTMLElement;
 class nsGlobalWindowInner;
-class nsHtml5TreeOpExecutor;
 class nsHTMLCSSStyleSheet;
 class nsHTMLDocument;
 class nsHTMLStyleSheet;
-class nsGenericHTMLElement;
+class nsHtml5TreeOpExecutor;
+class nsIAppWindow;
+class nsIApplicationCache;
+class nsIAsyncVerifyRedirectCallback;
 class nsIBFCacheEntry;
 class nsIContent;
+class nsIContentSecurityPolicy;
 class nsIContentSink;
+class nsICookieJarSettings;
+class nsIDOMXULCommandDispatcher;
 class nsIDocShell;
 class nsIDocShellTreeItem;
 class nsIDocumentEncoder;
 class nsIDocumentObserver;
-class nsIDOMXULCommandDispatcher;
+class nsIEventTarget;
+class nsIFrame;
+class nsIGlobalObject;
 class nsIHTMLCollection;
+class nsIInputStream;
 class nsILayoutHistoryState;
 class nsIObjectLoadingContent;
+class nsIPermissionDelegateHandler;
+class nsIRadioVisitor;
 class nsIRequest;
 class nsIRunnable;
+class nsIScriptGlobalObject;
 class nsISecurityConsoleMessage;
+class nsISerialEventTarget;
 class nsIStructuredCloneContainer;
 class nsIVariant;
-class nsViewManager;
+class nsNodeInfoManager;
+class nsPIWindowRoot;
 class nsPresContext;
 class nsRange;
 class nsSimpleContentList;
 class nsTextNode;
-class nsDOMCaretPosition;
-class nsViewportInfo;
-class nsIGlobalObject;
-class nsIAppWindow;
+class nsViewManager;
 class nsXULPrototypeDocument;
-class nsXULPrototypeElement;
-class nsIPermissionDelegateHandler;
-struct nsFont;
+struct JSContext;
+struct RawServoSelectorList;
 struct StyleUseCounters;
+struct nsFont;
 
 namespace mozilla {
 class AbstractThread;
@@ -164,7 +225,6 @@ class ClientState;
 class CDATASection;
 class Comment;
 class CSSImportRule;
-struct CustomElementDefinition;
 class DocumentL10n;
 class DocumentFragment;
 class DocumentTimeline;
@@ -172,8 +232,8 @@ class DocumentType;
 class DOMImplementation;
 class DOMIntersectionObserver;
 class DOMStringList;
-class Element;
 class Event;
+class EventListener;
 struct FailedCertSecurityInfo;
 class FeaturePolicy;
 class FontFaceSet;
@@ -181,6 +241,7 @@ class FrameRequestCallback;
 class ImageTracker;
 class HTMLAllCollection;
 class HTMLBodyElement;
+class HTMLInputElement;
 class HTMLMetaElement;
 class HTMLDialogElement;
 class HTMLSharedElement;
@@ -191,6 +252,7 @@ class Location;
 class MediaQueryList;
 struct NetErrorInfo;
 class NodeFilter;
+class NodeInfo;
 class NodeIterator;
 enum class OrientationType : uint8_t;
 class ProcessingInstruction;
@@ -198,6 +260,7 @@ class Promise;
 class ScriptLoader;
 class Selection;
 class ServiceWorkerDescriptor;
+class ShadowRoot;
 class SVGDocument;
 class SVGElement;
 class SVGSVGElement;
@@ -206,6 +269,9 @@ class Touch;
 class TouchList;
 class TreeWalker;
 enum class ViewportFitType : uint8_t;
+class WindowContext;
+class WindowGlobalChild;
+class WindowProxyHolder;
 class XPathEvaluator;
 class XPathExpression;
 class XPathNSResolver;
@@ -5262,26 +5328,6 @@ inline mozilla::dom::Document* nsINode::GetOwnerDocument() const {
 }
 
 inline nsINode* nsINode::OwnerDocAsNode() const { return OwnerDoc(); }
-
-inline bool ShouldUseNACScope(const nsINode* aNode) {
-  return aNode->IsInNativeAnonymousSubtree();
-}
-
-inline bool ShouldUseUAWidgetScope(const nsINode* aNode) {
-  return aNode->HasBeenInUAWidget();
-}
-
-inline mozilla::dom::ParentObject nsINode::GetParentObject() const {
-  mozilla::dom::ParentObject p(OwnerDoc());
-  // Note that mReflectionScope is a no-op for chrome, and other places
-  // where we don't check this value.
-  if (ShouldUseNACScope(this)) {
-    p.mReflectionScope = mozilla::dom::ReflectionScope::NAC;
-  } else if (ShouldUseUAWidgetScope(this)) {
-    p.mReflectionScope = mozilla::dom::ReflectionScope::UAWidget;
-  }
-  return p;
-}
 
 inline mozilla::dom::Document* nsINode::AsDocument() {
   MOZ_ASSERT(IsDocument());
