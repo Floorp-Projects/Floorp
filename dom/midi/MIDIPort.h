@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Observer.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/MIDIAccess.h"
 #include "mozilla/dom/MIDIPortInterface.h"
 

@@ -10,7 +10,6 @@
 #include <string>
 
 #include "js/TypeDecls.h"            // for JSContext, JSObject
-#include "mozilla/ErrorResult.h"     // for ErrorResult
 #include "mozilla/StaticPtr.h"       // for StaticRefPtr
 #include "nsCOMPtr.h"                // for nsCOMPtr
 #include "nsISupports.h"             // for NS_INLINE_DECL_REFCOUNTING

@@ -11,12 +11,13 @@
 #include "mozilla/extensions/PStreamFilterChild.h"
 #include "mozilla/extensions/StreamFilter.h"
 
-#include "mozilla/ErrorResult.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/dom/StreamFilterBinding.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace extensions {
 
 using mozilla::dom::StreamFilterStatus;

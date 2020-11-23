@@ -8,14 +8,12 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/PreloadHashKey.h"
 #include "mozilla/WeakPtr.h"
-#include "nsIChannelEventSink.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIRedirectResultListener.h"
+#include "nsCOMPtr.h"
+#include "nsISupports.h"
 #include "nsITimer.h"
 #include "nsIURI.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsTArray.h"
-#include "nsProxyRelease.h"
-#include "nsWeakReference.h"
 
 class nsIChannel;
 class nsINode;

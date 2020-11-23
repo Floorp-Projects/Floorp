@@ -12,10 +12,10 @@
 
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/SVGElement.h"
 
 namespace mozilla {
+class ErrorResult;
 
 // These constants represent the range of valid enum values for the <align>
 // parameter. They exclude the sentinel _UNKNOWN value.

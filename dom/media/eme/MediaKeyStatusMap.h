@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_MediaKeyStatuses_h
 #define mozilla_dom_MediaKeyStatuses_h
 
-#include "mozilla/ErrorResult.h"
 #include "mozilla/Attributes.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
@@ -19,6 +18,8 @@
 class nsPIDOMWindowInner;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class ArrayBufferViewOrArrayBuffer;

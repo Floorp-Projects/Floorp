@@ -8,7 +8,6 @@
 #define mozilla_dom_MediaKeySystemAccess_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
@@ -21,6 +20,7 @@
 namespace mozilla {
 
 class DecoderDoctorDiagnostics;
+class ErrorResult;
 
 namespace dom {
 

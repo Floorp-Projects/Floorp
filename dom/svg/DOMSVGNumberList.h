@@ -14,10 +14,10 @@
 #include "nsTArray.h"
 #include "SVGNumberList.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/RefPtr.h"
 
 namespace mozilla {
+class ErrorResult;
 
 namespace dom {
 class DOMSVGNumber;

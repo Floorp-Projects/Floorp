@@ -7,13 +7,14 @@
 #ifndef mozilla_dom_FileSystemTaskBase_h
 #define mozilla_dom_FileSystemTaskBase_h
 
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/PFileSystemRequestChild.h"
 #include "nsIGlobalObject.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class BlobImpl;

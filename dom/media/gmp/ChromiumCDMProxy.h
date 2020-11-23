@@ -8,12 +8,12 @@
 #define ChromiumCDMProxy_h_
 
 #include "mozilla/AbstractThread.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/CDMProxy.h"
 #include "ChromiumCDMParent.h"
 
 namespace mozilla {
 
+class ErrorResult;
 class MediaRawData;
 class DecryptJob;
 class ChromiumCDMCallbackProxy;

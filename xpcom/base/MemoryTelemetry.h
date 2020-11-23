@@ -9,13 +9,14 @@
 
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Result.h"
-#include "nsIEventTarget.h"
 #include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsTArray.h"
 #include "nsWeakReference.h"
 
 #include <functional>
+
+class nsIEventTarget;
 
 namespace mozilla {
 

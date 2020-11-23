@@ -12,7 +12,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/ReflowOutput.h"
 #include "mozilla/RelativeTo.h"
 #include "mozilla/StaticPrefs_nglayout.h"
 #include "mozilla/SurfaceFromElementResult.h"
@@ -20,18 +19,15 @@
 #include "mozilla/ToString.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WritingModes.h"
 #include "mozilla/layout/FrameChildList.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
 #include "mozilla/gfx/2D.h"
 
-#include "gfx2DGlue.h"
 #include "gfxPoint.h"
 #include "nsBoundingMetrics.h"
 #include "nsCSSPropertyIDSet.h"
-#include "nsClassHashtable.h"
-#include "nsGkAtoms.h"
 #include "nsThreadUtils.h"
-#include "ImageContainer.h"  // for layers::Image
 #include "Units.h"
 #include "mozilla/layers/LayersTypes.h"
 #include <limits>
@@ -80,6 +76,7 @@ class EventListenerManager;
 enum class LayoutFrameType : uint8_t;
 struct IntrinsicSize;
 struct ContainerLayerParameters;
+class ReflowOutput;
 class WritingMode;
 class DisplayItemClip;
 class EffectSet;

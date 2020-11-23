@@ -8,7 +8,9 @@
 #define TupleCycleCollection_h
 
 #include "mozilla/Tuple.h"
-#include "nsCycleCollectionTraversalCallback.h"
+#include "nsCycleCollectionNoteChild.h"
+
+class nsCycleCollectionTraversalCallback;
 
 template <typename... Elements>
 inline void ImplCycleCollectionUnlink(mozilla::Tuple<Elements...>& aField) {

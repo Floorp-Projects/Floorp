@@ -9,10 +9,11 @@
 
 #include <type_traits>
 
-#include "nsISupportsImpl.h"
-#include "nsString.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/Char16.h"
+#include "mozilla/MemoryReporting.h"
+#include "nsISupports.h"
+#include "nsString.h"
 
 namespace mozilla {
 struct AtomsSizes;

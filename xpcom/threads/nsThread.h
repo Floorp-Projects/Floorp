@@ -7,37 +7,41 @@
 #ifndef nsThread_h__
 #define nsThread_h__
 
+#include "MainThreadUtils.h"
 #include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/Array.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/IntegerTypeTraits.h"
+#include "mozilla/EventQueue.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/NotNull.h"
-#include "mozilla/SynchronizedEventQueue.h"
+#include "mozilla/PerformanceCounter.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/TaskDispatcher.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/dom/DocGroup.h"
 #include "nsIDirectTaskDispatcher.h"
+#include "nsIEventTarget.h"
+#include "nsISerialEventTarget.h"
 #include "nsISupportsPriority.h"
+#include "nsIThread.h"
 #include "nsIThreadInternal.h"
-#include "nsString.h"
-#include "nsTObserverArray.h"
-#include "nsThreadUtils.h"
-#include "prenv.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 class CycleCollectedJSContext;
-class EventQueue;
+class SynchronizedEventQueue;
 class ThreadEventQueue;
 class ThreadEventTarget;
+
+template <typename T, size_t Length>
+class Array;
 }  // namespace mozilla
 
 using mozilla::NotNull;
 
+class nsIRunnable;
 class nsLocalExecutionRecord;
 class nsThreadEnumerator;
 
@@ -376,8 +380,6 @@ struct nsThreadShutdownContext {
   bool mAwaitingShutdownAck;
   bool mIsMainThreadJoining;
 };
-
-class nsLocalExecutionRecord;
 
 // This RAII class controls the duration of the associated nsThread's local
 // execution mode and provides access to the local event target. (See

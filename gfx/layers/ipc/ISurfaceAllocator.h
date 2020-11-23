@@ -16,7 +16,6 @@
 #include "nsIMemoryReporter.h"              // for nsIMemoryReporter
 #include "mozilla/Atomics.h"                // for Atomic
 #include "mozilla/layers/LayersMessages.h"  // for ShmemSection
-#include "LayersTypes.h"
 
 namespace mozilla {
 namespace ipc {

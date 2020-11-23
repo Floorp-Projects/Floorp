@@ -15,7 +15,8 @@
 #include "nsError.h"             // for nsresult
 #include "nsFont.h"              // for nsFont
 #include "nsISupports.h"         // for NS_INLINE_DECL_REFCOUNTING
-#include "nscore.h"              // for char16_t
+#include "nsStyleConsts.h"
+#include "nscore.h"  // for char16_t
 
 class gfxContext;
 class gfxFontGroup;

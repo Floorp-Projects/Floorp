@@ -16,14 +16,9 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/BrowserBridgeParent.h"
-#include "mozilla/dom/File.h"
 #include "mozilla/dom/PBrowserParent.h"
-#include "mozilla/dom/PContent.h"
-#include "mozilla/dom/PFilePickerParent.h"
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/dom/ipc/IdType.h"
-#include "mozilla/gfx/CrossProcessPaint.h"
-#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layout/RemoteLayerTreeOwner.h"
 #include "nsCOMPtr.h"
 #include "nsIAuthPromptProvider.h"
@@ -32,17 +27,24 @@
 #include "nsIKeyEventInPluginCallback.h"
 #include "nsIRemoteTab.h"
 #include "nsIWidget.h"
-#include "nsIXULBrowserWindow.h"
 #include "nsWeakReference.h"
 
+class imgIContainer;
+class nsCycleCollectionTraversalCallback;
+class nsDocShellLoadState;
 class nsFrameLoader;
+class nsIBrowser;
 class nsIContent;
-class nsIPrincipal;
-class nsIURI;
-class nsILoadContext;
+class nsIContentSecurityPolicy;
 class nsIDocShell;
+class nsILoadContext;
+class nsIPrincipal;
+class nsIRequest;
+class nsIURI;
 class nsIWebBrowserPersistDocumentReceiver;
 class nsIWebProgress;
+class nsIXULBrowserWindow;
+class nsPIDOMWindowOuter;
 
 namespace mozilla {
 
@@ -50,17 +52,12 @@ namespace a11y {
 class DocAccessibleParent;
 }
 
-namespace layers {
-struct TextureFactoryIdentifier;
-}  // namespace layers
-
 namespace widget {
 struct IMENotification;
 }  // namespace widget
 
 namespace gfx {
 class SourceSurface;
-class DataSourceSurface;
 }  // namespace gfx
 
 namespace dom {

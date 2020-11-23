@@ -7,7 +7,6 @@
 #define mozilla_devtools_HeapSnapshot__
 
 #include "js/HashTable.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/devtools/DeserializedNode.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Nullable.h"
@@ -27,6 +26,8 @@
 #include "nsXPCOM.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace devtools {
 
 class DominatorTree;

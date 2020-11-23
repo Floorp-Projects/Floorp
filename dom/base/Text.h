@@ -8,9 +8,10 @@
 #define mozilla_dom_Text_h
 
 #include "mozilla/dom/CharacterData.h"
-#include "mozilla/ErrorResult.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class Text : public CharacterData {

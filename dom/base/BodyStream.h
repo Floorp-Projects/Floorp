@@ -15,7 +15,6 @@
 #include "nsISupportsImpl.h"
 #include "nsNetCID.h"
 #include "nsWeakReference.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/Mutex.h"
 
 class nsIGlobalObject;
@@ -23,6 +22,8 @@ class nsIGlobalObject;
 class nsIInputStream;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class BodyStream;

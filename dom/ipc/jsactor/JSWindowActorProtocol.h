@@ -10,7 +10,6 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/JSActorService.h"
 #include "mozilla/extensions/MatchPattern.h"
-#include "mozilla/ErrorResult.h"
 #include "nsIURI.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -18,6 +17,8 @@
 #include "nsIDOMEventListener.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 struct WindowActorOptions;

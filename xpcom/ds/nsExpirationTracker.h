@@ -7,16 +7,25 @@
 #ifndef NSEXPIRATIONTRACKER_H_
 #define NSEXPIRATIONTRACKER_H_
 
-#include "mozilla/Logging.h"
+#include <cstring>
+#include "MainThreadUtils.h"
+#include "nsAlgorithm.h"
+#include "nsDebug.h"
 #include "nsTArray.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
-#include "nsComponentManagerUtils.h"
 #include "nsIEventTarget.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "nsISupports.h"
+#include "nsIThread.h"
 #include "nsThreadUtils.h"
-#include "mozilla/Attributes.h"
+#include "nscore.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Likely.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/RefCountType.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
 
 /**

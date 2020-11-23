@@ -9,7 +9,7 @@
 
 #include "mozilla/gfx/RectAbsolute.h"
 #include "nsCoord.h"
-#include "nsPoint.h"
+#include "nsMargin.h"
 #include "nsRect.h"
 
 struct nsRectAbsolute

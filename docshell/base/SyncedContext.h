@@ -7,12 +7,16 @@
 #ifndef mozilla_dom_SyncedContext_h
 #define mozilla_dom_SyncedContext_h
 
-#include "mozilla/EnumSet.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/Tuple.h"
+#include <array>
+#include <type_traits>
 #include <utility>
+#include "mozilla/Attributes.h"
+#include "mozilla/EnumSet.h"
+#include "nsStringFwd.h"
+#include "nscore.h"
+
+// Referenced via macro definitions
+#include "mozilla/ErrorResult.h"
 
 class PickleIterator;
 
@@ -31,6 +35,8 @@ struct IPDLParamTraits;
 namespace dom {
 class ContentParent;
 class ContentChild;
+template <typename T>
+class MaybeDiscarded;
 
 namespace syncedcontext {
 

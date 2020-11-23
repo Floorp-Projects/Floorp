@@ -7,7 +7,6 @@
 #define nsHistory_h___
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/HistoryBinding.h"
 #include "mozilla/dom/ChildSHistory.h"
 #include "nsCOMPtr.h"
@@ -21,6 +20,10 @@ class nsIDocShell;
 class nsISHistory;
 class nsIWeakReference;
 class nsPIDOMWindowInner;
+
+namespace mozilla {
+class ErrorResult;
+}
 
 // Script "History" object
 class nsHistory final : public nsISupports, public nsWrapperCache {

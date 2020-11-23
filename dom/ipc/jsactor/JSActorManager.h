@@ -9,11 +9,12 @@
 
 #include "js/TypeDecls.h"
 #include "mozilla/dom/JSActor.h"
-#include "mozilla/ErrorResult.h"
 #include "nsRefPtrHashtable.h"
 #include "nsString.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace ipc {
 class IProtocol;
 }

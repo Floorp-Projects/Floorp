@@ -64,6 +64,7 @@
 #ifndef mozilla_LinkedList_h
 #define mozilla_LinkedList_h
 
+#include <algorithm>
 #include <utility>
 
 #include "mozilla/Assertions.h"

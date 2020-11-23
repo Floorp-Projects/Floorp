@@ -14,6 +14,7 @@
 #include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
 #include "nsIEventTarget.h"
+#include "nsISerialEventTarget.h"
 #include "nsIThread.h"
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
@@ -21,6 +22,8 @@
 #ifdef XPCOM_GLUE_AVOID_NSPR
 #  error NS_ProxyRelease implementation depends on NSPR.
 #endif
+
+class nsIRunnable;
 
 namespace detail {
 

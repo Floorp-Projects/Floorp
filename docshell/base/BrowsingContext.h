@@ -15,7 +15,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Span.h"
 #include "mozilla/Tuple.h"
-#include "mozilla/WeakPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/FeaturePolicy.h"
 #include "mozilla/dom/LocationBase.h"

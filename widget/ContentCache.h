@@ -10,14 +10,16 @@
 
 #include <stdint.h>
 
+#include "mozilla/widget/IMEData.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/WritingModes.h"
-#include "nsIWidget.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "Units.h"
+
+class nsIWidget;
 
 namespace mozilla {
 

@@ -8,7 +8,6 @@
 #define mozilla_dom_MediaKeyMessageEvent_h__
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "nsCOMPtr.h"
@@ -18,6 +17,8 @@
 #include "mozilla/dom/MediaKeyMessageEventBinding.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 struct MediaKeyMessageEventInit;

@@ -7,17 +7,13 @@
 #ifndef NSCOORD_H
 #define NSCOORD_H
 
-#include "mozilla/FloatingPoint.h"
-
-#include "nsAlgorithm.h"
-#include "nscore.h"
-#include "nsMathUtils.h"
-#include <math.h>
-#include <float.h>
-#include <stdlib.h>
-
-#include "nsDebug.h"
 #include <algorithm>
+#include <cstdint>
+#include <cstdlib>
+#include <math.h>
+
+#include "mozilla/Assertions.h"
+#include "nsMathUtils.h"
 
 /*
  * Basic type used for the geometry classes.

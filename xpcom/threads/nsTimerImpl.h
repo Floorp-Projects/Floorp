@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Logging.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Variant.h"
@@ -32,7 +31,12 @@ extern mozilla::LogModule* GetTimerLog();
     }                                                \
   }
 
+class nsIObserver;
 class nsTimerImplHolder;
+
+namespace mozilla {
+class LogModule;
+}
 
 // TimerThread, nsTimerEvent, and nsTimer have references to these. nsTimer has
 // a separate lifecycle so we can Cancel() the underlying timer when the user of

@@ -7,9 +7,10 @@
 #ifndef mozilla_MemoryInfo_h
 #define mozilla_MemoryInfo_h
 
+#include <cstddef>
+#include <cstdint>
+#include "mozilla/Attributes.h"
 #include "mozilla/EnumSet.h"
-#include "nsTArray.h"
-
 /**
  * MemoryInfo is a helper class which describes the attributes and sizes of a
  * particular region of VM memory on Windows. It roughtly corresponds to the

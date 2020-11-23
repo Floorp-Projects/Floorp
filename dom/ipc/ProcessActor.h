@@ -7,18 +7,16 @@
 #ifndef mozilla_dom_ProcessActor_h
 #define mozilla_dom_ProcessActor_h
 
-#include "nsWrapperCache.h"
-#include "nsISupports.h"
-#include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/ErrorResult.h"
-#include "nsIURI.h"
-#include "nsRefPtrHashtable.h"
-#include "nsString.h"
-#include "mozilla/dom/JSActor.h"
 #include "mozilla/dom/JSActorManager.h"
+#include "nsStringFwd.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
+
+class JSActorProtocol;
+class JSActorService;
 
 // Common base class for Content{Parent, Child} and InProcess{Parent, Child}.
 class ProcessActor : public JSActorManager {

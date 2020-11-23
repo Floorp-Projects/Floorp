@@ -13,7 +13,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "mozilla/dom/XSLTProcessorBinding.h"
@@ -26,6 +25,8 @@ class txResultRecycler;
 class txIGlobalParameter;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class DocGroup;

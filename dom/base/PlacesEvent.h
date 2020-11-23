@@ -8,10 +8,11 @@
 #define mozilla_dom_PlacesEvent_h
 
 #include "mozilla/dom/PlacesEventBinding.h"
-#include "mozilla/ErrorResult.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class PlacesEvent : public nsWrapperCache {

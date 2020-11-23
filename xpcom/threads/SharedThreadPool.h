@@ -7,13 +7,17 @@
 #ifndef SharedThreadPool_h_
 #define SharedThreadPool_h_
 
-#include <queue>
-#include "mozilla/RefPtr.h"
-#include "nsThreadUtils.h"
-#include "nsIThreadPool.h"
-#include "nsISupports.h"
-#include "nsISupportsImpl.h"
+#include <utility>
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/RefCountType.h"
 #include "nsCOMPtr.h"
+#include "nsID.h"
+#include "nsIEventTarget.h"
+#include "nsIThreadPool.h"
+#include "nsString.h"
+#include "nscore.h"
+
+class nsIRunnable;
 
 namespace mozilla {
 

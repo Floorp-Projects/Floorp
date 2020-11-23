@@ -8,7 +8,6 @@
 #define XULTreeElement_h__
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "nsString.h"
@@ -20,6 +19,8 @@ class nsTreeColumn;
 class nsTreeColumns;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 struct TreeCellInfo;

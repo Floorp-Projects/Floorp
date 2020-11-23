@@ -8,7 +8,6 @@
 #define mozilla_dom_BlobImpl_h
 
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/ErrorResult.h"
 #include "nsISupportsImpl.h"
 #include "nsString.h"
 
@@ -22,6 +21,8 @@
 class nsIInputStream;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 // This is the abstract class for any File backend. It must be nsISupports

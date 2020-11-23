@@ -7,8 +7,8 @@
 #ifndef mozilla_BezierUtils_h_
 #define mozilla_BezierUtils_h_
 
-#include "mozilla/gfx/2D.h"
-#include "gfxRect.h"
+#include "mozilla/gfx/Point.h"
+#include "mozilla/gfx/Types.h"
 
 namespace mozilla {
 namespace gfx {

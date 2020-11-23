@@ -12,7 +12,6 @@
 #include "js/Array.h"  // JS::GetArrayLength
 #include "js/RootingAPI.h"
 #include "jsapi.h"
-#include "mozilla/ErrorResult.h"
 #include "nsString.h"
 
 class mozIStorageStatement;

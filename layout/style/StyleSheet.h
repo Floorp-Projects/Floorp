@@ -14,17 +14,17 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ServoBindingTypes.h"
-#include "mozilla/ServoUtils.h"
+#include "mozilla/ServoTypes.h"
 #include "mozilla/StyleSheetInfo.h"
-#include "mozilla/URLExtraData.h"
 #include "nsICSSLoaderObserver.h"
+#include "nsIPrincipal.h"
 #include "nsWrapperCache.h"
-#include "nsCompatibility.h"
 #include "nsStringFwd.h"
 
+class nsIGlobalObject;
 class nsINode;
 class nsIPrincipal;
-struct RawServoSharedMemoryBuilder;
+struct ServoCssRules;
 class nsIReferrerInfo;
 
 namespace mozilla {
@@ -53,7 +53,6 @@ class CSSRuleList;
 class DocumentOrShadowRoot;
 class MediaList;
 class ShadowRoot;
-class SRIMetadata;
 struct CSSStyleSheetInit;
 }  // namespace dom
 

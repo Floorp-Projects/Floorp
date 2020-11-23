@@ -13,7 +13,6 @@
 #include "nsTArray.h"
 #include "SVGPointList.h"  // IWYU pragma: keep
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/RefPtr.h"
 
 // {61812ad1-c078-4cd1-87e6-bc1c1b8d7284}
@@ -26,6 +25,7 @@
 
 namespace mozilla {
 
+class ErrorResult;
 class SVGAnimatedPointList;
 
 namespace dom {

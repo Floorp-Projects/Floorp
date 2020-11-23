@@ -9,7 +9,6 @@
 
 #include "mozilla/CDMCaps.h"
 #include "mozilla/DataMutex.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/MozPromise.h"
 
 #include "mozilla/dom/MediaKeyMessageEvent.h"
@@ -18,6 +17,7 @@
 #include "nsIThread.h"
 
 namespace mozilla {
+class ErrorResult;
 class MediaRawData;
 class ChromiumCDMProxy;
 
