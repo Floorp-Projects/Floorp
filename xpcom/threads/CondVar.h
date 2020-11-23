@@ -10,10 +10,11 @@
 #include "mozilla/BlockingResourceBase.h"
 #include "mozilla/PlatformConditionVariable.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/TimeStamp.h"
 
-#ifdef MOZILLA_INTERNAL_API
+#if defined(MOZILLA_INTERNAL_API) && !defined(DEBUG)
 #  include "GeckoProfiler.h"
-#endif  // MOZILLA_INTERNAL_API
+#endif  // defined( MOZILLA_INTERNAL_API) && !defined(DEBUG)
 
 namespace mozilla {
 

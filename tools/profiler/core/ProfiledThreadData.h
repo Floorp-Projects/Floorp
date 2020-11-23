@@ -7,16 +7,24 @@
 #ifndef ProfiledThreadData_h
 #define ProfiledThreadData_h
 
-#include "platform.h"
-#include "ProfileBufferEntry.h"
 #include "ThreadInfo.h"
 
-#include "js/ProfilingStack.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
-#include "nsIEventTarget.h"
+#include "mozilla/RefPtr.h"
+#include "nsStringFwd.h"
 
 class ProfileBuffer;
+class ProfilerCodeAddressService;
+class UniqueStacks;
+class nsIEventTarget;
+struct JITFrameInfo;
+struct JSContext;
+
+namespace mozilla::baseprofiler {
+class SpliceableJSONWriter;
+}
 
 // This class contains information about a thread that is only relevant while
 // the profiler is running, for any threads (both alive and dead) whose thread
@@ -61,14 +69,15 @@ class ProfiledThreadData final {
   mozilla::Maybe<uint64_t>& LastSample() { return mLastSample; }
 
   void StreamJSON(const ProfileBuffer& aBuffer, JSContext* aCx,
-                  SpliceableJSONWriter& aWriter, const nsACString& aProcessName,
-                  const nsACString& aETLDplus1,
+                  mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+                  const nsACString& aProcessName, const nsACString& aETLDplus1,
                   const mozilla::TimeStamp& aProcessStartTime,
                   double aSinceTime, bool aJSTracerEnabled,
                   ProfilerCodeAddressService* aService);
 
-  void StreamTraceLoggerJSON(JSContext* aCx, SpliceableJSONWriter& aWriter,
-                             const mozilla::TimeStamp& aProcessStartTime);
+  void StreamTraceLoggerJSON(
+      JSContext* aCx, mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+      const mozilla::TimeStamp& aProcessStartTime);
 
   const RefPtr<ThreadInfo> Info() const { return mThreadInfo; }
 
@@ -119,14 +128,13 @@ class ProfiledThreadData final {
 // Stream all samples and markers from aBuffer with the given aThreadId (or 0
 // for everything, which is assumed to be a single backtrace sample.)
 // Returns the thread id of the output sample(s), or 0 if none was present.
-int StreamSamplesAndMarkers(const char* aName, int aThreadId,
-                            const ProfileBuffer& aBuffer,
-                            SpliceableJSONWriter& aWriter,
-                            const nsACString& aProcessName,
-                            const nsACString& aETLDplus1,
-                            const mozilla::TimeStamp& aProcessStartTime,
-                            const mozilla::TimeStamp& aRegisterTime,
-                            const mozilla::TimeStamp& aUnregisterTime,
-                            double aSinceTime, UniqueStacks& aUniqueStacks);
+int StreamSamplesAndMarkers(
+    const char* aName, int aThreadId, const ProfileBuffer& aBuffer,
+    mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+    const nsACString& aProcessName, const nsACString& aETLDplus1,
+    const mozilla::TimeStamp& aProcessStartTime,
+    const mozilla::TimeStamp& aRegisterTime,
+    const mozilla::TimeStamp& aUnregisterTime, double aSinceTime,
+    UniqueStacks& aUniqueStacks);
 
 #endif  // ProfiledThreadData_h

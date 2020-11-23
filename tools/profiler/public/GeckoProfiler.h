@@ -87,11 +87,9 @@ profiler_capture_backtrace() {
 
 #else  // !MOZ_GECKO_PROFILER
 
-#  include "js/AllocationRecording.h"
-#  include "js/ProfilingFrameIterator.h"
+#  include "js/ProfilingCategory.h"
 #  include "js/ProfilingStack.h"
 #  include "js/RootingAPI.h"
-#  include "js/TypeDecls.h"
 #  include "mozilla/Assertions.h"
 #  include "mozilla/Atomics.h"
 #  include "mozilla/Attributes.h"
@@ -109,6 +107,12 @@ profiler_capture_backtrace() {
 
 class ProfilerBacktrace;
 class ProfilerCodeAddressService;
+struct JSContext;
+
+namespace JS {
+struct RecordAllocationInfo;
+}
+
 namespace mozilla {
 class ProfileBufferControlledChunkManager;
 class ProfileChunkedBuffer;

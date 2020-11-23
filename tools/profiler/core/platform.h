@@ -31,15 +31,16 @@
 
 #include "PlatformMacros.h"
 
-#include "GeckoProfiler.h"
-
 #include "mozilla/Logging.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "nsString.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <functional>
-#include <stdint.h>
+
+class ProfilerCodeAddressService;
 
 namespace mozilla {
 struct SymbolTable;
