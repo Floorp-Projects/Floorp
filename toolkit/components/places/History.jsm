@@ -116,7 +116,10 @@ function notify(observers, notification, args = []) {
     try {
       observer[notification](...args);
     } catch (ex) {
-      if (AppConstants.DEBUG || Cu.isInAutomation) {
+      if (
+        ex.result != Cr.NS_ERROR_XPC_JSOBJECT_HAS_NO_FUNCTION_NAMED &&
+        (AppConstants.DEBUG || Cu.isInAutomation)
+      ) {
         Cu.reportError(ex);
       }
     }
