@@ -234,6 +234,12 @@ class nsNavHistory final : public nsSupportsWeakReference,
   nsresult URIToResultNode(nsIURI* aURI, nsNavHistoryQueryOptions* aOptions,
                            nsNavHistoryResultNode** aResult);
 
+  // used by other places components to send history notifications (for example,
+  // when the favicon has changed)
+  void SendPageChangedNotification(nsIURI* aURI, uint32_t aChangedAttribute,
+                                   const nsAString& aValue,
+                                   const nsACString& aGUID);
+
   /**
    * Returns current number of days stored in history.
    */

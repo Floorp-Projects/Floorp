@@ -379,6 +379,7 @@ BookmarkObserver.prototype = {
     }
     this.notifications.push({ name: "onItemChanged", params });
   },
+  onItemVisited() {},
   onItemMoved(
     itemId,
     oldParentId,

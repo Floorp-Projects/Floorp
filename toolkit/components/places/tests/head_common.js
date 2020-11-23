@@ -724,6 +724,7 @@ NavBookmarkObserver.prototype = {
   onEndUpdateBatch() {},
   onItemRemoved() {},
   onItemChanged() {},
+  onItemVisited() {},
   onItemMoved() {},
   QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
 };
@@ -740,6 +741,7 @@ NavHistoryObserver.prototype = {
   onTitleChanged() {},
   onDeleteURI() {},
   onClearHistory() {},
+  onPageChanged() {},
   onDeleteVisits() {},
   QueryInterface: ChromeUtils.generateQI(["nsINavHistoryObserver"]),
 };

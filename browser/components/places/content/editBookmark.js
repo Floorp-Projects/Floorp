@@ -1297,6 +1297,7 @@ var gEditItemOverlay = {
 
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
+  onItemVisited() {},
 };
 
 XPCOMUtils.defineLazyGetter(gEditItemOverlay, "_folderTree", () => {

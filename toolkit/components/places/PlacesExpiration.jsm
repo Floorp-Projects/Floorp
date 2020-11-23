@@ -590,6 +590,7 @@ nsPlacesExpiration.prototype = {
 
   onTitleChanged() {},
   onDeleteURI() {},
+  onPageChanged() {},
   onDeleteVisits() {},
 
   // nsITimerCallback

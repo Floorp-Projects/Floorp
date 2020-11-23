@@ -82,6 +82,7 @@ XPCOMUtils.defineLazyGetter(this, "gHistoryObserver", function() {
     onFrecencyChanged() {},
     onManyFrecenciesChanged() {},
     onDeleteURI() {},
+    onPageChanged() {},
     onDeleteVisits() {},
     QueryInterface: ChromeUtils.generateQI(["nsINavHistoryObserver"]),
   });

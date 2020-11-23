@@ -71,12 +71,16 @@ enum BookmarkDate { LAST_MODIFIED };
 }  // namespace places
 }  // namespace mozilla
 
-class nsNavBookmarks final : public nsINavBookmarksService,
-                             public nsIObserver,
-                             public nsSupportsWeakReference {
+class nsNavBookmarks final
+    : public nsINavBookmarksService,
+      public nsINavHistoryObserver,
+      public nsIObserver,
+      public nsSupportsWeakReference,
+      public mozilla::places::INativePlacesEventCallback {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVBOOKMARKSSERVICE
+  NS_DECL_NSINAVHISTORYOBSERVER
   NS_DECL_NSIOBSERVER
 
   nsNavBookmarks();
@@ -199,6 +203,15 @@ class nsNavBookmarks final : public nsINavBookmarksService,
    */
   void NotifyItemChanged(const ItemChangeData& aData);
 
+  /**
+   * Part of INativePlacesEventCallback - handles events from the places
+   * observer system.
+   * @param aCx
+   *        A JSContext for extracting the values from aEvents.
+   * @param aEvents
+   *        An array of weakly typed events detailing what changed.
+   */
+  void HandlePlacesEvent(const PlacesEventSequence& aEvents) override;
   static const int32_t kGetChildrenIndex_Guid;
   static const int32_t kGetChildrenIndex_Position;
   static const int32_t kGetChildrenIndex_Type;

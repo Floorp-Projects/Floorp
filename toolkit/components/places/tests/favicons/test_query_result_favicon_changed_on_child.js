@@ -47,12 +47,10 @@ add_task(async function test_query_result_favicon_changed_on_child() {
       }
     },
     nodeIconChanged(aNode) {
-      if (PlacesUtils.nodeIsContainer(aNode)) {
-        do_throw(
-          "The icon should be set only for the page," +
-            " not for the containing query."
-        );
-      }
+      do_throw(
+        "The icon should be set only for the page," +
+          " not for the containing query."
+      );
     },
   };
   result.addObserver(resultObserver);

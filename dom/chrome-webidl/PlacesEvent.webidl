@@ -15,10 +15,6 @@ enum PlacesEventType {
    * (or a bookmark folder/separator) is created.
    */
   "bookmark-removed",
-  /**
-   * data: PlacesFavicon. Fired whenever a favicon changes.
-   */
-  "favicon-changed",
 };
 
 [ChromeOnly, Exposed=Window]
@@ -189,30 +185,4 @@ interface PlacesBookmarkRemoved : PlacesBookmark {
    * The item is a descendant of an item whose notification has been sent out.
    */
   readonly attribute boolean isDescendantRemoval;
-};
-
-dictionary PlacesFaviconInit {
-  required DOMString url;
-  required ByteString pageGuid;
-  required DOMString faviconUrl;
-};
-
-[ChromeOnly, Exposed=Window]
-interface PlacesFavicon : PlacesEvent {
-  constructor(PlacesFaviconInit initDict);
-
-  /**
-   * The URI of the changed page.
-   */
-  readonly attribute DOMString url;
-
-  /**
-   * The unique id associated with the page.
-   */
-  readonly attribute ByteString pageGuid;
-
-  /**
-   * The URI of the new favicon.
-   */
-  readonly attribute DOMString faviconUrl;
 };

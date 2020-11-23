@@ -15,12 +15,20 @@ function copyFavicons(source, dest, inPrivate) {
   });
 }
 
-function promisePageChanged(url) {
-  return PlacesTestUtils.waitForNotification(
-    "favicon-changed",
-    events => events.some(e => e.url == url),
-    "places"
-  );
+function promisePageChanged() {
+  return new Promise(resolve => {
+    let observer = new NavHistoryObserver();
+    observer.onPageChanged = (uri, attribute, newValue, guid) => {
+      info("onPageChanged for attribute " + attribute + " and uri " + uri.spec);
+      if (attribute == Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON) {
+        PlacesUtils.history.removeObserver(observer);
+        Assert.ok(newValue, "newValue should be a valid value");
+        Assert.ok(guid, "Guid should be a valid value");
+        resolve(uri);
+      }
+    };
+    PlacesUtils.history.addObserver(observer, false);
+  });
 }
 
 add_task(async function test_copyFavicons_inputcheck() {
@@ -96,13 +104,17 @@ add_task(async function test_copyFavicons() {
   await setFaviconForPage(TEST_URI1, SMALLPNG_DATA_URI);
   await setFaviconForPage(TEST_URI1, SMALLSVG_DATA_URI);
   await PlacesTestUtils.addVisits(TEST_URI2);
-  let promiseChange = promisePageChanged(TEST_URI2.spec);
+  let promiseChange = promisePageChanged();
   Assert.equal(
     (await copyFavicons(TEST_URI1, TEST_URI2, false)).spec,
     SMALLSVG_DATA_URI.spec,
     "Icon should have been copied"
   );
-  await promiseChange;
+  Assert.equal(
+    (await promiseChange).spec,
+    TEST_URI2.spec,
+    "Notification should have fired"
+  );
   Assert.equal(
     await getFaviconUrlForPage(TEST_URI2, 1),
     SMALLPNG_DATA_URI.spec,
@@ -119,13 +131,17 @@ add_task(async function test_copyFavicons() {
     url: TEST_URI3,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
-  promiseChange = promisePageChanged(TEST_URI3.spec);
+  promiseChange = promisePageChanged();
   Assert.equal(
     (await copyFavicons(TEST_URI1, TEST_URI3, true)).spec,
     SMALLSVG_DATA_URI.spec,
     "Icon should have been copied"
   );
-  await promiseChange;
+  Assert.equal(
+    (await promiseChange).spec,
+    TEST_URI3.spec,
+    "Notification should have fired"
+  );
   Assert.equal(
     await getFaviconUrlForPage(TEST_URI3, 1),
     SMALLPNG_DATA_URI.spec,
@@ -148,13 +164,17 @@ add_task(async function test_copyFavicons_overlap() {
   await setFaviconForPage(TEST_URI1, SMALLSVG_DATA_URI);
   await PlacesTestUtils.addVisits(TEST_URI2);
   await setFaviconForPage(TEST_URI2, SMALLPNG_DATA_URI);
-  let promiseChange = promisePageChanged(TEST_URI2.spec);
+  let promiseChange = promisePageChanged();
   Assert.equal(
     (await copyFavicons(TEST_URI1, TEST_URI2, false)).spec,
     SMALLSVG_DATA_URI.spec,
     "Icon should have been copied"
   );
-  await promiseChange;
+  Assert.equal(
+    (await promiseChange).spec,
+    TEST_URI2.spec,
+    "Notification should have fired"
+  );
   Assert.equal(
     await getFaviconUrlForPage(TEST_URI2, 1),
     SMALLPNG_DATA_URI.spec,

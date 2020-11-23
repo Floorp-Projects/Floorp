@@ -86,6 +86,8 @@ class HistoryObserver extends Observer {
 
   onManyFrecenciesChanged() {}
 
+  onPageChanged() {}
+
   onDeleteVisits() {}
 }
 
@@ -102,6 +104,8 @@ class BookmarksObserver extends Observer {
   onBeginUpdateBatch() {}
 
   onEndUpdateBatch() {}
+
+  onItemVisited() {}
 
   onItemMoved() {}
 

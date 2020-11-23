@@ -50,6 +50,9 @@ add_task(async function test_remove_single() {
         onClearHistory() {
           reject("Unexpected call to onClearHistory");
         },
+        onPageChanged(aUri) {
+          reject(new Error("Unexpected call to onPageChanged " + aUri.spec));
+        },
         onFrecencyChanged(aURI) {
           try {
             Assert.ok(!shouldRemove, "Observing onFrecencyChanged");

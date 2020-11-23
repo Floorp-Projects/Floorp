@@ -156,11 +156,21 @@ function waitOnFaviconResponse(aFaviconURL) {
 }
 
 function waitOnFaviconLoaded(aFaviconURL) {
-  return PlacesTestUtils.waitForNotification(
-    "favicon-changed",
-    events => events.some(e => e.faviconUrl == aFaviconURL),
-    "places"
-  );
+  return new Promise(resolve => {
+    let observer = {
+      onPageChanged(uri, attr, value, id) {
+        if (
+          attr === Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON &&
+          value === aFaviconURL
+        ) {
+          resolve();
+          PlacesUtils.history.removeObserver(observer, false);
+        }
+      },
+    };
+
+    PlacesUtils.history.addObserver(observer);
+  });
 }
 
 async function assignCookies(aBrowser, aURL, aCookieValue) {

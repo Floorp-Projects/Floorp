@@ -54,6 +54,7 @@ add_task(async function run_test() {
 
     onBeginUpdateBatch() {},
     onEndUpdateBatch() {},
+    onItemVisited() {},
     onItemMoved() {},
   };
   PlacesUtils.bookmarks.addObserver(bookmarksObserver);

@@ -12,6 +12,7 @@ NavHistoryObserver.prototype = {
   onTitleChanged() {},
   onDeleteURI() {},
   onClearHistory() {},
+  onPageChanged() {},
   onDeleteVisits() {},
   QueryInterface: ChromeUtils.generateQI(["nsINavHistoryObserver"]),
 };
@@ -203,5 +204,34 @@ add_task(async function test_onTitleChanged() {
     uri: testuri,
     title,
   });
+  await promiseNotify;
+});
+
+add_task(async function test_onPageChanged() {
+  let promiseNotify = onNotify(function onPageChanged(
+    aURI,
+    aChangedAttribute,
+    aNewValue,
+    aGUID
+  ) {
+    Assert.equal(aChangedAttribute, Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON);
+    Assert.ok(aURI.equals(testuri));
+    Assert.equal(aNewValue, SMALLPNG_DATA_URI.spec);
+    do_check_guid_for_uri(aURI, aGUID);
+  });
+
+  let [testuri] = await task_add_visit();
+
+  // The new favicon for the page must have data associated with it in order to
+  // receive the onPageChanged notification.  To keep this test self-contained,
+  // we use an URI representing the smallest possible PNG file.
+  PlacesUtils.favicons.setAndFetchFaviconForPage(
+    testuri,
+    SMALLPNG_DATA_URI,
+    false,
+    PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+    null,
+    Services.scriptSecurityManager.getSystemPrincipal()
+  );
   await promiseNotify;
 });
