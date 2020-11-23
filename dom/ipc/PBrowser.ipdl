@@ -42,6 +42,7 @@ include "mozilla/GfxMessageUtils.h";
 include "mozilla/LayoutMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
 include "mozilla/ipc/TransportSecurityInfoUtils.h";
+include "mozilla/ipc/URIUtils.h";
 
 using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
 using mozilla::gfx::MaybeMatrix4x4 from "mozilla/gfx/Matrix.h";

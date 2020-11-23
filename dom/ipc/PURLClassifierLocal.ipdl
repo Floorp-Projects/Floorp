@@ -9,7 +9,9 @@ include protocol PContent;
 
 include PURLClassifierInfo;
 
-using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
+include "mozilla/ipc/URIUtils.h";
+
+using refcounted class nsIURI from "nsIURI.h";
 
 namespace mozilla {
 namespace dom {

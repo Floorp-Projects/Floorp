@@ -77,6 +77,7 @@ include "mozilla/dom/CSPMessageUtils.h";
 include "mozilla/dom/DocShellMessageUtils.h";
 include "mozilla/dom/ReferrerInfoUtils.h";
 include "mozilla/ipc/ByteBufUtils.h";
+include "mozilla/ipc/URIUtils.h";
 include "mozilla/PermissionDelegateIPCUtils.h";
 
 using refcounted class nsIDOMGeoPosition from "nsGeoPositionIPCSerialiser.h";
