@@ -8,7 +8,7 @@
 
 #include "mozilla/Algorithm.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Result.h"
+#include "mozilla/ResultVariant.h"
 
 #include <iterator>
 #include <vector>

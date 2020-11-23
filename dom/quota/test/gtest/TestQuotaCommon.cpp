@@ -22,6 +22,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/ResultVariant.h"
 #include "mozilla/Unused.h"
 #include "mozilla/fallible.h"
 #include "nsCOMPtr.h"

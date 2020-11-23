@@ -19,7 +19,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Result.h"
+#include "mozilla/ResultVariant.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
