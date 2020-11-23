@@ -82,6 +82,11 @@ abstract class EngineSession(
         fun onRepostPromptCancelled() = Unit
 
         /**
+         * User cancelled a beforeunload prompt. Navigating to another page is cancelled.
+         */
+        fun onBeforeUnloadPromptDenied() = Unit
+
+        /**
          * The engine received a request to open or close a window.
          *
          * @param windowRequest the request to describing the required window action.

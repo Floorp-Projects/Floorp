@@ -427,6 +427,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         val onDeny: () -> Unit = {
             if (!geckoPrompt.isComplete) {
                 geckoResult.complete(geckoPrompt.confirm(AllowOrDeny.DENY))
+                geckoEngineSession.notifyObservers { onBeforeUnloadPromptDenied() }
             }
         }
 

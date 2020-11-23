@@ -1051,6 +1051,30 @@ class GeckoPromptDelegateTest {
     }
 
     @Test
+    fun `onBeforeUnloadPrompt will inform listeners when if navigation is cancelled`() {
+        val mockSession = GeckoEngineSession(runtime)
+        var onBeforeUnloadPromptCancelledCalled = false
+        var request: PromptRequest.BeforeUnload = mock()
+
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest as PromptRequest.BeforeUnload
+            }
+
+            override fun onBeforeUnloadPromptDenied() {
+                onBeforeUnloadPromptCancelledCalled = true
+            }
+        })
+        val prompt = mock<GeckoBeforeUnloadPrompt>()
+        doReturn(false).`when`(prompt).isComplete
+
+        GeckoPromptDelegate(mockSession).onBeforeUnloadPrompt(mock(), prompt)
+        request.onStay()
+
+        assertTrue(onBeforeUnloadPromptCancelledCalled)
+    }
+
+    @Test
     fun `onSharePrompt must provide a Share PromptRequest`() {
         val mockSession = GeckoEngineSession(runtime)
         var request: PromptRequest.Share? = null

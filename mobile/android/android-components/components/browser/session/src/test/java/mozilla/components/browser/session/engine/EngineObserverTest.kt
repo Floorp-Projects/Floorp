@@ -459,6 +459,16 @@ class EngineObserverTest {
     }
 
     @Test
+    fun engineObserverHandlesOnBeforeUnloadDenied() {
+        val session = Session("")
+        val store: BrowserStore = mock()
+        val observer = EngineObserver(session, store)
+
+        observer.onBeforeUnloadPromptDenied()
+        verify(store).dispatch(ContentAction.UpdateRefreshCanceledStateAction(session.id, true))
+    }
+
+    @Test
     fun engineObserverNotifiesFullscreenMode() {
         val session = Session("https://www.mozilla.org", id = "test-id")
         val store: BrowserStore = mock()

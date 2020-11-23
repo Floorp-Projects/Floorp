@@ -289,6 +289,10 @@ internal class EngineObserver(
         store?.dispatch(ContentAction.UpdateRefreshCanceledStateAction(session.id, true))
     }
 
+    override fun onBeforeUnloadPromptDenied() {
+        store?.dispatch(ContentAction.UpdateRefreshCanceledStateAction(session.id, true))
+    }
+
     override fun onWindowRequest(windowRequest: WindowRequest) {
         store?.dispatch(
             ContentAction.UpdateWindowRequestAction(
