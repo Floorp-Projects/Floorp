@@ -7,44 +7,45 @@
 #ifndef mozilla_dom_FileList_h
 #define mozilla_dom_FileList_h
 
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/UnionTypes.h"
+#include <cstdint>
+#include "js/RootingAPI.h"
+#include "mozilla/Assertions.h"
+#include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsISupports.h"
+#include "nsTArray.h"
 #include "nsWrapperCache.h"
 
+class nsCycleCollectionTraversalCallback;
+template <class T>
+class RefPtr;
+
 namespace mozilla {
+class ErrorResult;
 namespace dom {
 
 class BlobImpls;
 class File;
+template <typename T>
+class Sequence;
 
 class FileList final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FileList)
 
-  explicit FileList(nsISupports* aParent) : mParent(aParent) {}
+  explicit FileList(nsISupports* aParent);
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
   nsISupports* GetParentObject() { return mParent; }
 
-  bool Append(File* aFile) {
-    MOZ_ASSERT(aFile);
-    return mFiles.AppendElement(aFile, fallible);
-  }
+  bool Append(File* aFile);
 
-  bool Remove(uint32_t aIndex) {
-    if (aIndex < mFiles.Length()) {
-      mFiles.RemoveElementAt(aIndex);
-      return true;
-    }
+  bool Remove(uint32_t aIndex);
 
-    return false;
-  }
-
-  void Clear() { return mFiles.Clear(); }
+  void Clear();
 
   File* Item(uint32_t aIndex) const;
 
@@ -55,7 +56,7 @@ class FileList final : public nsISupports, public nsWrapperCache {
   void ToSequence(Sequence<RefPtr<File>>& aSequence, ErrorResult& aRv) const;
 
  private:
-  ~FileList() = default;
+  ~FileList();
 
   FallibleTArray<RefPtr<File>> mFiles;
   nsCOMPtr<nsISupports> mParent;
