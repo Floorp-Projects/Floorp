@@ -13,7 +13,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIWebVTTParserWrapper.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLDivElement.h"
 #include "mozilla/dom/TextTrack.h"
 #include "mozilla/StateWatching.h"
@@ -21,6 +20,7 @@
 namespace mozilla {
 namespace dom {
 
+class Document;
 class HTMLTrackElement;
 class TextTrackRegion;
 

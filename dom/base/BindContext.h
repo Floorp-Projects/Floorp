@@ -10,12 +10,14 @@
 #define mozilla_dom_BindContext_h__
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "nsINode.h"
 
 namespace mozilla {
 namespace dom {
+
+class Document;
 
 struct MOZ_STACK_CLASS BindContext final {
   // The document that owns the tree we're getting bound to.

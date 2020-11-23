@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/CORSMode.h"
-#include "mozilla/dom/Document.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/UniquePtr.h"
 
@@ -34,7 +33,9 @@ class imgCacheExpirationTracker;
 class imgMemoryReporter;
 
 namespace mozilla {
-namespace image {}  // namespace image
+namespace dom {
+class Document;
+}
 }  // namespace mozilla
 
 class imgCacheEntry {

@@ -14,6 +14,10 @@
 #include "nsIParserUtils.h"
 #include "nsTreeSanitizer.h"
 
+// XXX(Bug 1673929) This is not really needed here, but the generated
+// SanitizerBinding.cpp needs it and does not include it.
+#include "mozilla/dom/Document.h"
+
 class nsISupports;
 
 namespace mozilla {

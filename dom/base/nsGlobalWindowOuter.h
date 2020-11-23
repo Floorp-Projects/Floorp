@@ -43,7 +43,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
 #include "nsWrapperCacheInlines.h"
-#include "mozilla/dom/Document.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "Units.h"
@@ -93,6 +92,7 @@ class Console;
 class Crypto;
 class CustomElementRegistry;
 class DocGroup;
+class Document;
 class External;
 class Function;
 class Gamepad;
@@ -674,9 +674,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   nsIDOMWindowUtils* WindowUtils();
 
-  virtual bool IsInSyncOperation() override {
-    return GetExtantDoc() && GetExtantDoc()->IsInSyncOperation();
-  }
+  virtual bool IsInSyncOperation() override;
 
   void ParentWindowChanged() {
     // Reset our storage access permission flag when we get reparented.

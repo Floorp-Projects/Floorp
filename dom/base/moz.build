@@ -142,6 +142,7 @@ EXPORTS.mozilla.dom += [
     "AnonymousContent.h",
     "Attr.h",
     "AutoPrintEventDispatcher.h",
+    "AutoSuppressEventHandlingAndSuspend.h",
     "BarProps.h",
     "BindContext.h",
     "BodyConsumer.h",

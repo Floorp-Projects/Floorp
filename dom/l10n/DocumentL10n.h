@@ -7,11 +7,14 @@
 #ifndef mozilla_dom_l10n_DocumentL10n_h
 #define mozilla_dom_l10n_DocumentL10n_h
 
-#include "mozilla/dom/Document.h"
 #include "mozilla/dom/DOMLocalization.h"
+
+class nsIContentSink;
 
 namespace mozilla {
 namespace dom {
+
+class Document;
 
 enum class DocumentL10nState {
   // State set when the DocumentL10n gets constructed.

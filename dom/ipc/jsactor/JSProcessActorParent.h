@@ -13,7 +13,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/JSActor.h"
-#include "mozilla/extensions/WebExtensionContentScript.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDOMProcessParent.h"
 #include "nsWrapperCache.h"

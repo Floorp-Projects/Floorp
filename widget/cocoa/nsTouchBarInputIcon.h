@@ -12,7 +12,6 @@
 
 #import <Cocoa/Cocoa.h>
 
-#include "mozilla/dom/Document.h"
 #include "nsTouchBarInput.h"
 #include "nsTouchBarNativeAPIDefines.h"
 #include "IconLoaderHelperCocoa.h"
@@ -22,6 +21,10 @@ using namespace mozilla::dom;
 class nsIURI;
 class nsIPrincipal;
 class imgRequestProxy;
+
+namespace mozilla::dom {
+class Document;
+}
 
 class nsTouchBarInputIcon : public mozilla::widget::IconLoaderListenerCocoa {
  public:

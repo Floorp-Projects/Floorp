@@ -403,9 +403,7 @@ class Element : public FragmentOrElement {
    * attribute on this element.
    */
   virtual UniquePtr<SMILAttr> GetAnimatedAttr(int32_t aNamespaceID,
-                                              nsAtom* aName) {
-    return nullptr;
-  }
+                                              nsAtom* aName);
 
   /**
    * Get the SMIL override style for this element. This is a style declaration

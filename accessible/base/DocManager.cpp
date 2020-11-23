@@ -541,3 +541,9 @@ void DocManager::RemoteDocAdded(DocAccessibleParent* aDoc) {
   sRemoteDocuments->AppendElement(aDoc);
   ProxyCreated(aDoc, Interfaces::DOCUMENT | Interfaces::HYPERTEXT);
 }
+
+DocAccessible* mozilla::a11y::GetExistingDocAccessible(
+    const dom::Document* aDocument) {
+  PresShell* presShell = aDocument->GetPresShell();
+  return presShell ? presShell->GetDocAccessible() : nullptr;
+}

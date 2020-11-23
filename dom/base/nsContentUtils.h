@@ -3525,26 +3525,6 @@ class MOZ_STACK_CLASS nsAutoScriptBlockerSuppressNodeRemoved
 namespace mozilla {
 namespace dom {
 
-/**
- * Suppresses event handling and suspends the active inner window for all
- * in-process documents in a BrowsingContextGroup. This should be used while
- * spinning the event loop for a synchronous operation (like `window.open()`)
- * which affects operations in any other window in the same BrowsingContext
- * group.
- */
-
-class MOZ_RAII AutoSuppressEventHandlingAndSuspend {
- public:
-  explicit AutoSuppressEventHandlingAndSuspend(BrowsingContextGroup* aGroup);
-  ~AutoSuppressEventHandlingAndSuspend();
-
- private:
-  void SuppressBrowsingContext(BrowsingContext* aBC);
-
-  AutoTArray<RefPtr<Document>, 16> mDocuments;
-  AutoTArray<nsCOMPtr<nsPIDOMWindowInner>, 16> mWindows;
-};
-
 class TreeOrderComparator {
  public:
   bool Equals(nsINode* aElem1, nsINode* aElem2) const {

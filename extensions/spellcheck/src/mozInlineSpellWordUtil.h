@@ -9,7 +9,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Document.h"
 #include "nsCOMPtr.h"
-#include "mozilla/dom/Document.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -20,6 +19,10 @@ class nsINode;
 
 namespace mozilla {
 class TextEditor;
+
+namespace dom {
+class Document;
+}
 }  // namespace mozilla
 
 struct NodeOffset {

@@ -338,6 +338,14 @@ void DocAccessible::URL(nsAString& aURL) const {
   CopyUTF8toUTF16(theURL, aURL);
 }
 
+void DocAccessible::Title(nsString& aTitle) const {
+  mDocumentNode->GetTitle(aTitle);
+}
+
+void DocAccessible::MimeType(nsAString& aType) const {
+  mDocumentNode->GetContentType(aType);
+}
+
 void DocAccessible::DocType(nsAString& aType) const {
   dom::DocumentType* docType = mDocumentNode->GetDoctype();
   if (docType) docType->GetPublicId(aType);
@@ -448,6 +456,8 @@ nsIFrame* DocAccessible::GetFrame() const {
 
   return root;
 }
+
+nsINode* DocAccessible::GetNode() const { return mDocumentNode; }
 
 // DocAccessible protected member
 nsRect DocAccessible::RelativeBounds(nsIFrame** aRelativeFrame) const {
@@ -2675,4 +2685,9 @@ void DocAccessible::SetRoleMapEntryForDoc(dom::Element* aElement) {
   }
   // No other ARIA roles are valid on body elements.
   SetRoleMapEntry(nullptr);
+}
+
+Accessible* DocAccessible::GetAccessible(nsINode* aNode) const {
+  return aNode == mDocumentNode ? const_cast<DocAccessible*>(this)
+                                : mNodeToAccessibleMap.Get(aNode);
 }

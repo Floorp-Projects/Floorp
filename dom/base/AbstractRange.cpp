@@ -82,6 +82,8 @@ AbstractRange::AbstractRange(nsINode* aNode)
   Init(aNode);
 }
 
+AbstractRange::~AbstractRange() = default;
+
 void AbstractRange::Init(nsINode* aNode) {
   MOZ_ASSERT(aNode, "range isn't in a document!");
   mOwner = aNode->OwnerDoc();
@@ -203,9 +205,20 @@ nsresult AbstractRange::SetStartAndEndInternal(
   return NS_OK;
 }
 
+nsINode* AbstractRange::GetParentObject() const { return mOwner; }
+
 JSObject* AbstractRange::WrapObject(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {
   MOZ_CRASH("Must be overridden");
+}
+
+void AbstractRange::ClearForReuse() {
+  mOwner = nullptr;
+  mStart = RangeBoundary();
+  mEnd = RangeBoundary();
+  mIsPositioned = false;
+  mIsGenerated = false;
+  mCalledByJS = false;
 }
 
 }  // namespace mozilla::dom
