@@ -40,6 +40,7 @@ class PlacesEvent : public nsWrapperCache {
   virtual const PlacesBookmarkRemoved* AsPlacesBookmarkRemoved() const {
     return nullptr;
   }
+  virtual const PlacesFavicon* AsPlacesFavicon() const { return nullptr; }
 
  protected:
   virtual ~PlacesEvent() = default;
