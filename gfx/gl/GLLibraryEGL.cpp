@@ -483,7 +483,8 @@ bool GLLibraryEGL::Init(nsACString* const out_failureId) {
   const SymbolLoader pfnLoader(mSymbols.fGetProcAddress);
 
   const auto fnLoadSymbols = [&](const SymLoadStruct* symbols) {
-    if (pfnLoader.LoadSymbols(symbols)) return true;
+    const bool shouldWarn = gfxEnv::GlSpew();
+    if (pfnLoader.LoadSymbols(symbols, shouldWarn)) return true;
 
     ClearSymbols(symbols);
     return false;
