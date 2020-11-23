@@ -18,6 +18,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/ContentChild.h"
+#include "nsComponentManagerUtils.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"

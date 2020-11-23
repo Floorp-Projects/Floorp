@@ -12,7 +12,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Span.h"  // for Span
-#include "mozilla/Variant.h"
 
 #include <algorithm>
 #include <type_traits>

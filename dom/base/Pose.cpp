@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "js/experimental/TypedData.h"  // JS_GetFloat32ArrayData
+#include "mozilla/ErrorResult.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/Pose.h"

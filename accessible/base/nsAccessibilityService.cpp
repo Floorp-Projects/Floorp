@@ -27,6 +27,7 @@
 #include "nsDOMTokenList.h"
 #include "nsEventShell.h"
 #include "nsIFrameInlines.h"
+#include "nsServiceManagerUtils.h"
 #include "nsTextFormatter.h"
 #include "OuterDocAccessible.h"
 #include "Role.h"

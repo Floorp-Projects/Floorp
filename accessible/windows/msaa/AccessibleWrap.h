@@ -18,6 +18,9 @@
 #include "mozilla/a11y/ProxyAccessible.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/mscom/Utils.h"
+#include "mozilla/StaticPtr.h"
+#include "nsXULAppAPI.h"
+#include "Units.h"
 
 #if defined(__GNUC__) || defined(__clang__)
 // Inheriting from both XPCOM and MSCOM interfaces causes a lot of warnings

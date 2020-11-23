@@ -11,6 +11,7 @@
 #include "nsIAsyncInputStream.h"
 #include "nsITimedChannel.h"
 #include "nsNetCID.h"
+#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 

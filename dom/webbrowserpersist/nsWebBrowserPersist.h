@@ -23,6 +23,8 @@
 #include "nsIWebBrowserPersist.h"
 #include "nsIWebBrowserPersistDocument.h"
 
+#include "mozilla/MozPromise.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/UniquePtr.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"

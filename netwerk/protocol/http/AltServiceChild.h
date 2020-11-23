@@ -8,6 +8,8 @@
 
 #include "mozilla/net/PAltServiceChild.h"
 
+class nsIInterfaceRequestor;
+
 namespace mozilla {
 namespace net {
 

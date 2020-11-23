@@ -11,8 +11,11 @@
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/Services.h"
 #include "mozilla/StorageAccess.h"
+#include "nsIObserverService.h"
 #include "nsPIDOMWindow.h"
 
 namespace mozilla {

@@ -32,6 +32,7 @@
 #include "nsNetUtil.h"
 #include "nsPresContext.h"
 #include "nsQueryObject.h"
+#include "nsServiceManagerUtils.h"
 
 namespace mozilla::dom {
 

@@ -6,8 +6,12 @@
 
 #include "mozilla/dom/PushSubscriptionOptions.h"
 
+#include "MainThreadUtils.h"
 #include "mozilla/dom/PushSubscriptionOptionsBinding.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/dom/PushUtil.h"
+#include "nsIGlobalObject.h"
 
 namespace mozilla {
 namespace dom {

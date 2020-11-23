@@ -18,6 +18,7 @@
 #include "mozIStorageConnection.h"
 #include "nsIPrincipal.h"
 #include "nsIRunnable.h"
+#include "nsIThread.h"
 #include "nsThreadUtils.h"
 
 namespace {

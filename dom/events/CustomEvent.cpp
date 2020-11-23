@@ -8,6 +8,7 @@
 #include "mozilla/dom/CustomEventBinding.h"
 
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "nsContentUtils.h"
 
 using namespace mozilla;

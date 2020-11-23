@@ -10,6 +10,7 @@
 #include "mozilla/dom/XRInputSourceEvent.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/DocumentInlines.h"
+#include "mozilla/dom/Promise.h"
 #include "XRSystem.h"
 #include "XRRenderState.h"
 #include "XRBoundedReferenceSpace.h"

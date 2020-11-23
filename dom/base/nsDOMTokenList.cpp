@@ -14,6 +14,7 @@
 #include "nsDataHashtable.h"
 #include "nsError.h"
 #include "nsHashKeys.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/DOMTokenListBinding.h"
 #include "mozilla/BloomFilter.h"

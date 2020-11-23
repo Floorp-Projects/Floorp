@@ -19,9 +19,12 @@
 #include "gfxTypes.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/gfx/Matrix.h"
+#include "mozilla/gfx/ScaleFactor.h"
+#include "mozilla/gfx/ScaleFactors2D.h"
 #include "nsRect.h"
 #include "nsRegion.h"
 #include "mozilla/Array.h"
+#include "mozilla/ipc/IPDLParamTraits.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/Shmem.h"
 

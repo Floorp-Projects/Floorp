@@ -26,6 +26,7 @@
 #include "nsThreadUtils.h"
 #include "nsJSUtils.h"
 #include "nsCRT.h"
+#include "nsComponentManagerUtils.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIConsoleService.h"

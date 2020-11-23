@@ -13,6 +13,7 @@
 #include "nsIPrintSettings.h"
 #include "nsIAppWindow.h"
 #include "nsXPCOM.h"
+#include "nsIObserver.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
 #include "nsPIDOMWindow.h"

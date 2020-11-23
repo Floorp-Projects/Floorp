@@ -9,6 +9,7 @@
 
 #include "mozilla/Vector.h"
 
+#include "js/AllocPolicy.h"
 #include "js/GCPolicyAPI.h"
 #include "js/RootingAPI.h"
 #include "js/TracingAPI.h"

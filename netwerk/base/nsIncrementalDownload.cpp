@@ -18,6 +18,7 @@
 #include "nsIObserver.h"
 #include "nsIStreamListener.h"
 #include "nsIFile.h"
+#include "nsIHttpChannel.h"
 #include "nsITimer.h"
 #include "nsIURI.h"
 #include "nsIInputStream.h"

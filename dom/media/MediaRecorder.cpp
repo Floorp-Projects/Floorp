@@ -37,6 +37,7 @@
 #include "nsIScriptError.h"
 #include "nsMimeTypes.h"
 #include "nsProxyRelease.h"
+#include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
 
 mozilla::LazyLogModule gMediaRecorderLog("MediaRecorder");

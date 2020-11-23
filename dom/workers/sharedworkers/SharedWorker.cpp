@@ -7,6 +7,7 @@
 #include "SharedWorker.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/Event.h"

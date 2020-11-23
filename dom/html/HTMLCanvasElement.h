@@ -22,6 +22,7 @@
 
 class nsDisplayListBuilder;
 class nsICanvasRenderingContextInternal;
+class nsIInputStream;
 class nsITimerCallback;
 enum class gfxAlphaType;
 

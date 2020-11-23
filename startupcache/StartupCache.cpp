@@ -34,6 +34,7 @@
 #include "nsIProtocolHandler.h"
 #include "GeckoProfiler.h"
 #include "nsAppRunner.h"
+#include "xpcpublic.h"
 
 #if defined(XP_WIN)
 #  include <windows.h>

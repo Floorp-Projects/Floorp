@@ -8,6 +8,7 @@
 
 #include "SVGPointList.h"
 #include "nsCharSeparatedTokenizer.h"
+#include "nsContentUtils.h"
 #include "nsTextFormatter.h"
 #include "SVGContentUtils.h"
 

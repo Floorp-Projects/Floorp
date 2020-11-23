@@ -14,6 +14,7 @@
 #include <cctype>
 #include "nsCRTGlue.h"
 #include "nsExceptionHandler.h"
+#include "nsUnicharUtils.h"
 #include "prenv.h"
 #include "nsPrintfCString.h"
 #include "nsWhitespaceTokenizer.h"

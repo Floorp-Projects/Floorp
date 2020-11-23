@@ -20,7 +20,8 @@
 #include "mozilla/mozalloc.h"                 // for operator delete, etc
 #include "nsDebug.h"                          // for NS_WARNING, NS_ASSERTION
 #include "nsISupportsImpl.h"                  // for Image::AddRef, etc
-#include "nsRect.h"                           // for mozilla::gfx::IntRect
+#include "nsProxyRelease.h"
+#include "nsRect.h"  // for mozilla::gfx::IntRect
 
 // Just big enough for a 1080p RGBA32 frame
 #define MAX_FRAME_SIZE (16 * 1024 * 1024)

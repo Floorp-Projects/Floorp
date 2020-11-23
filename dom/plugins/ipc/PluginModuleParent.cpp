@@ -12,6 +12,7 @@
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/dom/Element.h"

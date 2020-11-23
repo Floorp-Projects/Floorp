@@ -8,6 +8,7 @@
 
 #include "mozilla/EventStates.h"
 #include "mozilla/SVGObserverUtils.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/SVGFEImageElementBinding.h"
 #include "mozilla/dom/SVGFilterElement.h"
 #include "mozilla/dom/UserActivation.h"

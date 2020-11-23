@@ -20,6 +20,7 @@
 #include "Units.h"
 
 class nsFrameLoader;
+class nsIContent;
 
 namespace mozilla {
 

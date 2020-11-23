@@ -10,6 +10,7 @@
 #include "nsIScriptLoaderObserver.h"
 #include "txOutputFormat.h"
 #include "nsCOMArray.h"
+#include "nsCOMPtr.h"
 #include "nsICSSLoaderObserver.h"
 #include "txStack.h"
 #include "mozilla/Attributes.h"

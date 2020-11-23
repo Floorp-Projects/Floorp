@@ -11,6 +11,7 @@
 #include "base/process_util.h"
 #include "base/waitable_event.h"
 #include "chrome/common/child_process_host.h"
+#include "chrome/common/ipc_message.h"
 
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/Atomics.h"

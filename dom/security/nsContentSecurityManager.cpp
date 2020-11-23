@@ -21,6 +21,7 @@
 #include "nsIParentChannel.h"
 #include "nsIStreamListener.h"
 #include "nsIRedirectHistoryEntry.h"
+#include "nsNetUtil.h"
 #include "nsReadableUtils.h"
 #include "nsIXPConnect.h"
 
@@ -35,6 +36,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/Components.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/Telemetry.h"

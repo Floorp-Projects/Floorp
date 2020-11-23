@@ -18,6 +18,7 @@
 #include "nsObjCExceptions.h"
 
 #include "mozilla/EventForwards.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 
 // Declare the backingScaleFactor method that we want to call

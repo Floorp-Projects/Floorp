@@ -16,6 +16,7 @@
 #include "MediaShutdownManager.h"
 #include "mozilla/java/GeckoHLSResourceWrapperNatives.h"
 #include "nsContentUtils.h"
+#include "nsIChannel.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "mozilla/dom/HTMLMediaElement.h"

@@ -7,11 +7,13 @@
 #include "nsImageModule.h"
 
 #include "mozilla/ModuleUtils.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_image.h"
 
 #include "DecodePool.h"
 #include "ImageFactory.h"
 #include "nsICategoryManager.h"
+#include "nsServiceManagerUtils.h"
 #include "ShutdownTracker.h"
 #include "SurfaceCache.h"
 #include "imgLoader.h"

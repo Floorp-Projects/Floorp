@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/SyncMessageSender.h"
 #include "mozilla/dom/MessageManagerBinding.h"
+#include "mozilla/HoldDropJSObjects.h"
 
 namespace mozilla {
 namespace dom {

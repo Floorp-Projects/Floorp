@@ -29,6 +29,7 @@
 #include "ScopedGLHelpers.h"
 
 #include "mozilla/layers/LayersSurfaces.h"
+#include "mozilla/ScopeExit.h"
 
 /*
 TODO:

@@ -9,6 +9,7 @@
 #include "mozilla/DataMutex.h"
 #include "nsHostResolver.h"
 #include "nsIObserver.h"
+#include "nsITimer.h"
 #include "nsWeakReference.h"
 #include "TRRServiceBase.h"
 

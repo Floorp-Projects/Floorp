@@ -40,6 +40,7 @@
 #include "nsGlobalWindowInner.h"
 #include "nsQueryObject.h"
 #include "nsFrameLoaderOwner.h"
+#include "nsNetUtil.h"
 #include "nsSerializationHelper.h"
 #include "nsIBrowser.h"
 #include "nsIPromptCollection.h"

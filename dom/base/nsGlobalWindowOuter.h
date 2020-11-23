@@ -63,6 +63,7 @@ class nsIDocShellTreeOwner;
 class nsIDOMWindowUtils;
 class nsIScrollableFrame;
 class nsIControllers;
+class nsIPrintSettings;
 class nsIScriptContext;
 class nsIScriptTimeoutHandler;
 class nsIBrowserChild;
@@ -297,7 +298,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   // Outer windows only.
   virtual void SetInitialPrincipalToSubject(
       nsIContentSecurityPolicy* aCSP,
-      const Maybe<nsILoadInfo::CrossOriginEmbedderPolicy>& aCoep) override;
+      const mozilla::Maybe<nsILoadInfo::CrossOriginEmbedderPolicy>& aCoep)
+      override;
 
   virtual already_AddRefed<nsISupports> SaveWindowState() override;
   virtual nsresult RestoreWindowState(nsISupports* aState) override;
@@ -856,7 +858,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                     mozilla::dom::CallerType aCallerType,
                     mozilla::ErrorResult& aError);
   nsRect GetInnerScreenRect();
-  static Maybe<mozilla::CSSIntSize> GetRDMDeviceSize(const Document& aDocument);
+  static mozilla::Maybe<mozilla::CSSIntSize> GetRDMDeviceSize(
+      const Document& aDocument);
 
   // Outer windows only.
   // If aLookForCallerOnJSStack is true, this method will look at the JS stack
@@ -1007,7 +1010,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
       mozilla::dom::BrowsingContext** aSource, nsAString& aOrigin,
       nsIURI** aTargetOriginURI, nsIPrincipal** aCallerPrincipal,
       nsGlobalWindowInner** aCallerInnerWindow, nsIURI** aCallerURI,
-      Maybe<nsID>* aCallerAgentClusterId, nsACString* aScriptLocation,
+      mozilla::Maybe<nsID>* aCallerAgentClusterId, nsACString* aScriptLocation,
       mozilla::ErrorResult& aError);
 
   // Ask the user if further dialogs should be blocked, if dialogs are currently

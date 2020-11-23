@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BasicCardPayment.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/PaymentMethodChangeEvent.h"
 #include "mozilla/dom/PaymentRequestUpdateEvent.h"
 #include "PaymentRequestUtils.h"

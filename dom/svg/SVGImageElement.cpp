@@ -13,6 +13,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "imgINotificationObserver.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/SVGImageElementBinding.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/UserActivation.h"

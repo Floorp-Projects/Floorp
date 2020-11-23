@@ -29,6 +29,8 @@
 #include "nsFrameSelection.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIHapticFeedback.h"
+#include "nsIScrollableFrame.h"
+#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 

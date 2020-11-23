@@ -22,6 +22,7 @@
 #include "mozilla/layers/DeviceAttachmentsD3D11.h"
 #include "mozilla/layers/MLGDeviceD3D11.h"
 #include "mozilla/layers/PaintThread.h"
+#include "mozilla/Preferences.h"
 #include "nsExceptionHandler.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"

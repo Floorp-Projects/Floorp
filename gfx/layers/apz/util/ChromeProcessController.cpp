@@ -17,6 +17,7 @@
 #include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/DoubleTapToZoom.h"
+#include "mozilla/layers/RepaintRequest.h"
 #include "mozilla/dom/Document.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsLayoutUtils.h"

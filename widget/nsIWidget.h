@@ -34,6 +34,10 @@
 #include "Units.h"
 #include "mozilla/dom/BindingDeclarations.h"
 
+#ifdef MOZ_IS_GCC
+#  include "VsyncSource.h"
+#endif
+
 // forward declarations
 class nsIBidiKeyboard;
 class nsIRollupListener;

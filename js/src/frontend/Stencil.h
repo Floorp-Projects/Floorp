@@ -11,6 +11,7 @@
 #include "mozilla/Maybe.h"       // mozilla::{Maybe, Nothing}
 #include "mozilla/Range.h"       // mozilla::Range
 #include "mozilla/Span.h"        // mozilla::Span
+#include "mozilla/Variant.h"     // mozilla::Variant
 
 #include <stdint.h>  // char16_t, uint8_t, uint32_t
 #include <stdlib.h>  // size_t

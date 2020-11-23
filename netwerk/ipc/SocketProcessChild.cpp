@@ -35,6 +35,7 @@
 #include "nsHttpHandler.h"
 #include "nsIDNSService.h"
 #include "nsIHttpActivityObserver.h"
+#include "nsNetUtil.h"
 #include "nsNSSComponent.h"
 #include "nsSocketTransportService2.h"
 #include "nsThreadManager.h"

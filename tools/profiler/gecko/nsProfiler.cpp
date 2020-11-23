@@ -21,6 +21,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/Preferences.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIFileStreams.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"

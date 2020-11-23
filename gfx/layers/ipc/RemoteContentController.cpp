@@ -12,6 +12,7 @@
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZCTreeManagerParent.h"  // for APZCTreeManagerParent
 #include "mozilla/layers/APZThreadUtils.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/MatrixMessage.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/Unused.h"

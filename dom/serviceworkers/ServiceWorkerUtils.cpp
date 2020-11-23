@@ -6,6 +6,8 @@
 
 #include "ServiceWorkerUtils.h"
 
+#include "mozilla/BasePrincipal.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/ServiceWorkerRegistrarTypes.h"

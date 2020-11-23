@@ -14,6 +14,7 @@
 #endif  // MOZILLA_INTERNAL_API
 
 #include "mozilla/BlockingResourceBase.h"
+#include "nsISupports.h"
 
 //
 // Provides:

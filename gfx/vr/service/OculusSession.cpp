@@ -15,6 +15,7 @@
 #include "mozilla/dom/GamepadEventTypes.h"
 #include "mozilla/dom/GamepadBinding.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/SharedLibrary.h"
 #include "OculusSession.h"
 

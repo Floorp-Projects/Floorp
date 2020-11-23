@@ -13,6 +13,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/InternalMutationEvent.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsError.h"
 #include "nsUnicharUtils.h"

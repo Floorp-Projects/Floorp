@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AnimationHelper.h"
+#include "base/process_util.h"
 #include "gfx2DGlue.h"                       // for ThebesRect
 #include "gfxLineSegment.h"                  // for gfxLineSegment
 #include "gfxPoint.h"                        // for gfxPoint

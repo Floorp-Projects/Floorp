@@ -23,6 +23,9 @@
 
 #include <type_traits>
 
+// XXX Avoid including this here by moving function bodies to the cpp file
+#include "mozilla/FloatingPoint.h"
+
 class imgRequestProxy;
 class nsAtom;
 class nsIContent;

@@ -14,6 +14,7 @@
 #include <map>
 #include <queue>
 #include <stack>
+#include <vector>
 
 #ifdef DEBUG
 #  include <string.h>
@@ -35,9 +36,11 @@
 
 #include "MozFramebuffer.h"
 #include "nsTArray.h"
+#include "GLConsts.h"
 #include "GLDefs.h"
 #include "GLLibraryLoader.h"
 #include "nsISupportsImpl.h"
+#include "GLTypes.h"
 #include "nsRegionFwd.h"
 #include "nsString.h"
 #include "plstr.h"
@@ -49,6 +52,10 @@
 #include "mozilla/WeakPtr.h"
 #include "gfx2DGlue.h"
 #include "GeckoProfiler.h"
+
+#ifdef MOZ_WIDGET_ANDROID
+#  include "GeckoProfiler.h"
+#endif
 
 namespace mozilla {
 namespace gfx {

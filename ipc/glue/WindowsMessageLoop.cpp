@@ -16,6 +16,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/JSExecutionManager.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/PaintTracker.h"

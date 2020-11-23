@@ -15,6 +15,7 @@
 #endif
 #include "MediaContainerType.h"
 #include "PDMFactory.h"
+#include "PlatformDecoderModule.h"
 #include "VideoUtils.h"
 
 namespace mozilla {

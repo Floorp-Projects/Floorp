@@ -225,8 +225,6 @@ Variant_base* convertVariantToStorageVariant(nsIVariant* aVariant) {
       NS_WARNING("Unsupported variant type");
       return nullptr;
   }
-
-  return nullptr;
 }
 
 namespace {

@@ -70,9 +70,11 @@
 #include "mozInlineSpellChecker.h"
 #include <stdlib.h>
 #include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsNetUtil.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/Components.h"
+#include "mozilla/Services.h"
 
 using mozilla::dom::ContentParent;
 using namespace mozilla;

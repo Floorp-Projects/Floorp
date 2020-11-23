@@ -31,6 +31,11 @@
 
 #include <prio.h>
 
+namespace JS {
+class CompileOptions;
+class OffThreadToken;
+}  // namespace JS
+
 namespace mozilla {
 namespace dom {
 class ContentParent;

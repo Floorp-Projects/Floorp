@@ -9,6 +9,7 @@
 #include "ClientManager.h"
 #include "ClientSource.h"
 #include "MainThreadUtils.h"
+#include "mozilla/dom/ClientsBinding.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "nsContentUtils.h"

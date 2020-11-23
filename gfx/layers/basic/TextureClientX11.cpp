@@ -10,6 +10,7 @@
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/ShadowLayerUtilsX11.h"
+#include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
 #include "gfx2DGlue.h"

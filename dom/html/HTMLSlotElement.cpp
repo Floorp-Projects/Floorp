@@ -10,6 +10,7 @@
 #include "mozilla/dom/HTMLSlotElementBinding.h"
 #include "mozilla/dom/HTMLUnknownElement.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "nsContentUtils.h"
 #include "nsGkAtoms.h"
 
 nsGenericHTMLElement* NS_NewHTMLSlotElement(

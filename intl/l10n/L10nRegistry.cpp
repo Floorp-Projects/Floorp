@@ -7,6 +7,7 @@
 #include "nsIChannel.h"
 #include "nsILoadInfo.h"
 #include "nsIStreamLoader.h"
+#include "nsNetUtil.h"
 #include "nsString.h"
 
 namespace mozilla {

@@ -17,6 +17,8 @@
 namespace mozilla {
 class EventChainPostVisitor;
 class EventChainPreVisitor;
+class PreloaderBase;
+
 namespace dom {
 
 // NOTE(emilio): If we stop inheriting from Link, we need to remove the

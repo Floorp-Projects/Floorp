@@ -15,6 +15,7 @@
 #include "mozilla/TimeStamp.h"
 #include "nsINamed.h"
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/TimeoutHandler.h"

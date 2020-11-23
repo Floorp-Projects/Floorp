@@ -7,6 +7,7 @@
 #ifndef mozilla_Sandbox_h
 #define mozilla_Sandbox_h
 
+#include "mozilla/Maybe.h"
 #include "mozilla/Types.h"
 #include "nsXULAppAPI.h"
 #include <vector>

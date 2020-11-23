@@ -22,6 +22,9 @@
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 
+// XXX Avoid including this here by moving function bodies to the cpp file
+#include "nsPIDOMWindow.h"
+
 namespace mozilla {
 namespace dom {
 

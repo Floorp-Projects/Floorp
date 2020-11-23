@@ -33,6 +33,7 @@
 #include "mozAutoDocUpdate.h"
 #include "nsAttrValueOrString.h"
 #include "nsCSSProps.h"
+#include "nsCSSValue.h"
 #include "nsContentUtils.h"
 #include "nsDOMCSSAttrDeclaration.h"
 #include "nsICSSDeclaration.h"

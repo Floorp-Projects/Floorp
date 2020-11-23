@@ -6,6 +6,8 @@
 
 #include "GamepadTestChannelChild.h"
 
+#include "mozilla/dom/GamepadServiceTest.h"
+
 namespace mozilla::dom {
 
 already_AddRefed<GamepadTestChannelChild> GamepadTestChannelChild::Create(

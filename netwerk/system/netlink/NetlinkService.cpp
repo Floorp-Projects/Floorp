@@ -13,6 +13,7 @@
 #include "nsThreadUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "NetlinkService.h"
+#include "nsIThread.h"
 #include "nsString.h"
 #include "nsPrintfCString.h"
 #include "mozilla/Logging.h"

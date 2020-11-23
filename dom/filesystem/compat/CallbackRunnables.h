@@ -10,6 +10,7 @@
 #include "FileSystemDirectoryEntry.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
+#include "nsThreadUtils.h"
 
 class nsIGlobalObject;
 

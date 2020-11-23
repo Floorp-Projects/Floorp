@@ -9,6 +9,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIPaymentActionResponse.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace dom {

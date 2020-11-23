@@ -19,6 +19,7 @@ webidl Document;
 #include "mozilla/RefPtr.h"
 #include "nsRect.h"
 #include "nsSize.h"
+#include "nsTArray.h"
 #include "limits.h"
 
 namespace mozilla {

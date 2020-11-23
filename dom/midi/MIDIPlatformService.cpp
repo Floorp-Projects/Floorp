@@ -7,6 +7,8 @@
 #include "MIDIPlatformService.h"
 #include "MIDIMessageQueue.h"
 #include "TestMIDIPlatformService.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/MIDIManagerParent.h"
 #include "mozilla/dom/MIDIPlatformRunnables.h"

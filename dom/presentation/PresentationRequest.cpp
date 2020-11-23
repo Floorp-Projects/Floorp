@@ -15,6 +15,7 @@
 #include "PresentationCallbacks.h"
 #include "PresentationLog.h"
 #include "PresentationTransportBuilderConstructor.h"
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Navigator.h"

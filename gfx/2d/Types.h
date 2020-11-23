@@ -684,13 +684,13 @@ constexpr HalfCorner FullToHalfCorner(Corner aCorner, bool aIsVertical) {
   return HalfCorner(aCorner * 2 + aIsVertical);
 }
 
-constexpr bool SideIsVertical(Side aSide) { return aSide % 2; }
+constexpr bool SideIsVertical(mozilla::Side aSide) { return aSide % 2; }
 
 // @param aIsSecond when true, return the clockwise second of the two
 // corners associated with aSide. For example, with aSide = eSideBottom the
 // result is eCornerBottomRight when aIsSecond is false, and
 // eCornerBottomLeft when aIsSecond is true.
-constexpr Corner SideToFullCorner(Side aSide, bool aIsSecond) {
+constexpr Corner SideToFullCorner(mozilla::Side aSide, bool aIsSecond) {
   return Corner((aSide + aIsSecond) % 4);
 }
 
@@ -701,7 +701,7 @@ constexpr Corner SideToFullCorner(Side aSide, bool aIsSecond) {
 // eCornerTopRightY when aIsParallel is false (because "X" is parallel with
 // eSideTop/eSideBottom, similarly "Y" is parallel with
 // eSideLeft/eSideRight)
-constexpr HalfCorner SideToHalfCorner(Side aSide, bool aIsSecond,
+constexpr HalfCorner SideToHalfCorner(mozilla::Side aSide, bool aIsSecond,
                                       bool aIsParallel) {
   return HalfCorner(((aSide + aIsSecond) * 2 + (aSide + !aIsParallel) % 2) % 8);
 }

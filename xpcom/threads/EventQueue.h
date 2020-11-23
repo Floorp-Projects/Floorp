@@ -9,6 +9,7 @@
 
 #include "mozilla/Mutex.h"
 #include "mozilla/Queue.h"
+#include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 
 class nsIRunnable;

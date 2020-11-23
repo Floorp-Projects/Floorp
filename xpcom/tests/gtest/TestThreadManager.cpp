@@ -6,6 +6,7 @@
 
 #include "nsIThreadManager.h"
 #include "nsCOMPtr.h"
+#include "nsIThread.h"
 #include "nsXPCOM.h"
 #include "nsThreadUtils.h"
 #include "nsServiceManagerUtils.h"

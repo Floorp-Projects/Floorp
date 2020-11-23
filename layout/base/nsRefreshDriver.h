@@ -13,6 +13,7 @@
 #define nsRefreshDriver_h_
 
 #include "mozilla/FlushType.h"
+#include "mozilla/ProfileChunkedBuffer.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"

@@ -19,6 +19,7 @@
 
 #include "mozStorageConnection.h"
 #include "mozIStorageStatement.h"
+#include "mozIStorageStatementCallback.h"
 #include "mozIStorageAsyncStatement.h"
 #include "mozIStoragePendingStatement.h"
 #include "mozIStorageError.h"

@@ -21,6 +21,7 @@
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/SRILogHelper.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"
 #include "nsUnicharUtils.h"

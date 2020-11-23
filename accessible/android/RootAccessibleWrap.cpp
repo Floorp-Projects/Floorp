@@ -8,6 +8,7 @@
 #include "Accessible-inl.h"
 #include "AccessibleOrProxy.h"
 #include "DocAccessibleParent.h"
+#include "DocAccessible-inl.h"
 #include "ProxyAccessibleWrap.h"
 #include "SessionAccessibility.h"
 #include "mozilla/PresShell.h"

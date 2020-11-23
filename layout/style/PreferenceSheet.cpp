@@ -9,6 +9,7 @@
 #include "ServoCSSParser.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Encoding.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_devtools.h"
 #include "mozilla/Telemetry.h"

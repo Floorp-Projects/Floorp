@@ -13,6 +13,7 @@
 
 #include "js/TypeDecls.h"
 #include "js/RootingAPI.h"
+#include "js/Value.h"
 #include "nsString.h"
 
 namespace mozilla {

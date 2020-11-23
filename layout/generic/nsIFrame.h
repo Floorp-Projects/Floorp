@@ -54,7 +54,9 @@
 #include "LayoutConstants.h"
 #include "mozilla/layout/FrameChildList.h"
 #include "mozilla/AspectRatio.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/RelativeTo.h"
 #include "mozilla/Result.h"
 #include "mozilla/SmallPointerArray.h"
 #include "mozilla/PresShell.h"
@@ -64,6 +66,7 @@
 #include "nsFrameList.h"
 #include "nsFrameState.h"
 #include "mozilla/ReflowInput.h"
+#include "nsIContent.h"
 #include "nsITheme.h"
 #include "nsQueryFrame.h"
 #include "mozilla/ComputedStyle.h"
@@ -72,9 +75,11 @@
 #include "nsChangeHint.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/EnumSet.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/CompositorHitTestInfo.h"
 #include "mozilla/gfx/MatrixFwd.h"
 #include "nsDisplayItemTypes.h"
+#include "nsPresContext.h"
 
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/AccTypes.h"
@@ -102,6 +107,7 @@ class nsAtom;
 class nsView;
 class nsFrameSelection;
 class nsIWidget;
+class nsIScrollableFrame;
 class nsISelectionController;
 class nsBoxLayoutState;
 class nsBoxLayout;
@@ -119,6 +125,7 @@ class nsAbsoluteContainingBlock;
 class nsContainerFrame;
 class nsPlaceholderFrame;
 class nsStyleChangeList;
+class nsViewManager;
 class nsWindowSizes;
 
 struct nsBoxLayoutMetrics;
@@ -133,6 +140,10 @@ class EventStates;
 class ServoRestyleState;
 class DisplayItemData;
 class EffectSet;
+class LazyLogModule;
+class PresShell;
+class WidgetGUIEvent;
+class WidgetMouseEvent;
 
 namespace layers {
 class Layer;

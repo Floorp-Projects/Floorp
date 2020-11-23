@@ -12,6 +12,7 @@
 #include "JavaExceptions.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Swizzle.h"
+#include "nsNetUtil.h"
 
 namespace mozilla {
 namespace widget {

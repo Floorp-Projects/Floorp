@@ -25,6 +25,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/dom/DocumentBinding.h"
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layout/LayoutTelemetryTools.h"
 #include "mozilla/widget/ThemeChangeKind.h"

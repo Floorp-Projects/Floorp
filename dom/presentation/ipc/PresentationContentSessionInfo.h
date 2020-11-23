@@ -10,6 +10,10 @@
 #include "nsCOMPtr.h"
 #include "nsIPresentationSessionTransport.h"
 
+// XXX Avoid including this here by moving function bodies to the cpp file
+#include "nsIPresentationService.h"
+#include "nsXULAppAPI.h"
+
 namespace mozilla {
 namespace dom {
 

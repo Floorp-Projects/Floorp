@@ -24,6 +24,7 @@
 #include "prtime.h"
 #include "nsICaptivePortalService.h"
 #include "nsIObserverService.h"
+#include "nsWeakReference.h"
 
 #define NS_N(x) (sizeof(x) / sizeof(*x))
 

@@ -9,6 +9,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsExceptionHandler.h"
 #include "nsICrashService.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
 namespace ipc {

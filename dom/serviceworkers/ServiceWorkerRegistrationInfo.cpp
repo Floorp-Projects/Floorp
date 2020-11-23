@@ -10,6 +10,7 @@
 #include "ServiceWorkerPrivate.h"
 #include "ServiceWorkerRegistrationListener.h"
 
+#include "mozilla/Preferences.h"
 #include "mozilla/SchedulerGroup.h"
 
 namespace mozilla {

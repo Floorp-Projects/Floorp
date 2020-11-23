@@ -62,6 +62,16 @@ struct FileDescriptor {};
 #endif
 
 namespace mozilla {
+template <typename...>
+class Variant;
+
+namespace detail {
+template <typename...>
+struct VariantTag;
+}
+}  // namespace mozilla
+
+namespace mozilla {
 
 // This is a cross-platform approximation to HANDLE, which we expect
 // to be typedef'd to void* or thereabouts.

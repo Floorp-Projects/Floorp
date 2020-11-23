@@ -8,6 +8,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Monitor.h"
 
+#include "nsComponentManagerUtils.h"
 #include "nsIconChannel.h"
 #include "nsIIconURI.h"
 #include "nsIInterfaceRequestor.h"
@@ -21,6 +22,7 @@
 #include "nsNetCID.h"
 #include "nsIFile.h"
 #include "nsIFileURL.h"
+#include "nsIInputStream.h"
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsDirectoryServiceDefs.h"

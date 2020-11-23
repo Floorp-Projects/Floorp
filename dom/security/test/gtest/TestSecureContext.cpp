@@ -14,6 +14,7 @@
 #include "nsIPrincipal.h"
 #include "nsScriptSecurityManager.h"
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 

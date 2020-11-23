@@ -7,6 +7,8 @@
 #include "mozilla/dom/WebAuthenticationBinding.h"
 #include "mozilla/dom/AuthenticatorAttestationResponse.h"
 
+#include "mozilla/HoldDropJSObjects.h"
+
 namespace mozilla {
 namespace dom {
 

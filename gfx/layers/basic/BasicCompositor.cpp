@@ -18,6 +18,7 @@
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/gfx/ssse3-scaler.h"
 #include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/layers/NativeLayer.h"
 #include "mozilla/SSE.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_nglayout.h"

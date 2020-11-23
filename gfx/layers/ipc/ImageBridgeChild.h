@@ -18,6 +18,7 @@
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/PImageBridgeChild.h"
+#include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsRegion.h"  // for nsIntRegion

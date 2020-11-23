@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLIFrameElement.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLIFrameElementBinding.h"
 #include "mozilla/dom/FeaturePolicy.h"
 #include "mozilla/MappedDeclarations.h"

@@ -22,6 +22,7 @@
 #include "nsIHttpAuthenticableChannel.h"
 #include "nsIAuthModule.h"
 #include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIProxyInfo.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"

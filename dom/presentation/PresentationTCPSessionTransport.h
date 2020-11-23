@@ -9,6 +9,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIPresentationSessionTransport.h"
 #include "nsIPresentationSessionTransportBuilder.h"

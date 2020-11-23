@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/Mutex.h"
+#include "nsCOMPtr.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIInputStreamLength.h"
 

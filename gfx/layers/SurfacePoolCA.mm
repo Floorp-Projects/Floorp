@@ -14,6 +14,7 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_gfx.h"
 
+#include "GeckoProfiler.h"
 #include "GLContextCGL.h"
 #include "MozFramebuffer.h"
 

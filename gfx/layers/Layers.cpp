@@ -53,6 +53,10 @@
 
 uint8_t gLayerManagerLayerBuilder;
 
+// Undo the damage done by mozzconf.h
+#undef compress
+#include "mozilla/Compression.h"
+
 namespace mozilla {
 namespace layers {
 

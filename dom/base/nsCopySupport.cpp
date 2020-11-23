@@ -16,8 +16,10 @@
 #include "nsRange.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
+#include "nsComponentManagerUtils.h"
 #include "nsFocusManager.h"
 #include "nsFrameSelection.h"
+#include "nsServiceManagerUtils.h"
 #include "mozilla/dom/DataTransfer.h"
 
 #include "nsIDocShell.h"

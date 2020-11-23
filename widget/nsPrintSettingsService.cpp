@@ -19,6 +19,7 @@
 
 #include "nsArray.h"
 #include "nsXPCOM.h"
+#include "nsXULAppAPI.h"
 
 #include "nsIStringEnumerator.h"
 #include "stdlib.h"

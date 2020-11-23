@@ -6,6 +6,7 @@
 
 #include "ImageMemoryReporter.h"
 #include "Image.h"
+#include "base/process_util.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/StaticPrefs_image.h"
 #include "nsIMemoryReporter.h"

@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Span.h"
-#include "mozilla/Variant.h"
 
 #include "builtin/ModuleObject.h"
 #include "ds/LifoAlloc.h"
@@ -18,7 +17,6 @@
 #include "frontend/SharedContext.h"
 #include "frontend/Stencil.h"
 #include "frontend/UsedNameTracker.h"
-#include "js/GCVariant.h"
 #include "js/GCVector.h"
 #include "js/HashTable.h"
 #include "js/RealmOptions.h"

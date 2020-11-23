@@ -7,6 +7,7 @@
 #include "DDMediaLogs.h"
 
 #include "DDLogUtils.h"
+#include "nsIThread.h"
 #include "nsIThreadManager.h"
 #include "mozilla/JSONWriter.h"
 

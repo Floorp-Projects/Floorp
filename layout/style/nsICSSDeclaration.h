@@ -21,6 +21,7 @@
 #include "mozilla/Attributes.h"
 #include "nsCSSPropertyID.h"
 #include "mozilla/dom/CSSValue.h"
+#include "mozilla/ErrorResult.h"
 #include "nsWrapperCache.h"
 #include "nsStringFwd.h"
 #include "mozilla/ErrorResult.h"

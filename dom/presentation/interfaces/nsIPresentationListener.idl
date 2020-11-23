@@ -4,6 +4,10 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#include "nsTArray.h"
+%}
+
 [ref] native URLArrayRef(const nsTArray<nsString>);
 
 [uuid(0105f837-4279-4715-9d5b-2dc3f8b65353)]

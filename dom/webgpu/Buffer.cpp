@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/ipc/Shmem.h"
 #include "ipc/WebGPUChild.h"
 #include "js/RootingAPI.h"

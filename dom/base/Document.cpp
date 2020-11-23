@@ -129,6 +129,7 @@
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/NetErrorInfoBinding.h"
 #include "mozilla/dom/Performance.h"
+#include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/TreeOrderedArrayInlines.h"
 #include "mozilla/dom/ResizeObserver.h"
 #include "mozilla/dom/ResizeObserverController.h"

@@ -8,6 +8,7 @@
 
 #include "HTMLSplitOnSpacesTokenizer.h"
 #include "js/Value.h"
+#include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemUtils.h"

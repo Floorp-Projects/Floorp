@@ -10,9 +10,11 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/widget/MediaKeysEventSourceFactory.h"
 #include "nsContentUtils.h"
+#include "nsIObserverService.h"
 
 #undef LOG
 #define LOG(msg, ...)                        \

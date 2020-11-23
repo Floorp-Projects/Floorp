@@ -18,6 +18,7 @@
 #include "mozilla/net/ParentChannelListener.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIBrowser.h"
+#include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIParentChannel.h"

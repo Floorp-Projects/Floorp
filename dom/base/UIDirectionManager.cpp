@@ -8,6 +8,7 @@
 #include "mozilla/Preferences.h"
 #include "nsIWindowMediator.h"
 #include "nsDocShell.h"
+#include "nsServiceManagerUtils.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/SimpleEnumerator.h"
 

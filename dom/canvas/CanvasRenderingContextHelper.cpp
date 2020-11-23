@@ -7,6 +7,7 @@
 #include "GLContext.h"
 #include "ImageBitmapRenderingContext.h"
 #include "ImageEncoder.h"
+#include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/Telemetry.h"

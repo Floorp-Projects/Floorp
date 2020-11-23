@@ -46,7 +46,7 @@ class nsPrinterListBase : public nsIPrinterList {
   // background thread.
   virtual RefPtr<nsIPrinter> CreatePrinter(PrinterInfo) const = 0;
 
-  Maybe<PrinterInfo> NamedOrDefaultPrinter(nsString aName) const;
+  mozilla::Maybe<PrinterInfo> NamedOrDefaultPrinter(nsString aName) const;
 
   // No copy or move, we're an identity.
   nsPrinterListBase(const nsPrinterListBase&) = delete;
@@ -59,13 +59,14 @@ class nsPrinterListBase : public nsIPrinterList {
   // This could be implemented in terms of Printers() and then searching the
   // returned printer info for a printer of the given name, but we expect
   // backends to have more efficient methods of implementing this.
-  virtual Maybe<PrinterInfo> PrinterByName(nsString aName) const = 0;
+  virtual mozilla::Maybe<PrinterInfo> PrinterByName(nsString aName) const = 0;
 
   // Same as NamedPrinter, but uses the system name.
   // Depending on whether or not there is a more efficient way to address the
   // printer for a given backend, this may or may not be equivalent to
   // NamedPrinter.
-  virtual Maybe<PrinterInfo> PrinterBySystemName(nsString aName) const = 0;
+  virtual mozilla::Maybe<PrinterInfo> PrinterBySystemName(
+      nsString aName) const = 0;
 
   // This is implemented separately from the IDL interface version so that it
   // can be made const, which allows it to be used while resolving promises.

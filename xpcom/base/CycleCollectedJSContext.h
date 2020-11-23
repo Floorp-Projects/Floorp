@@ -17,6 +17,7 @@
 #include "js/Promise.h"
 
 #include "nsCOMPtr.h"
+#include "nsRefPtrHashtable.h"
 #include "nsTArray.h"
 
 class nsCycleCollectionNoteRootCallback;

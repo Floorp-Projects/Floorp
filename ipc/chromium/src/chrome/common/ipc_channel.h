@@ -13,6 +13,10 @@
 #include "chrome/common/ipc_message.h"
 #include "mozilla/UniquePtr.h"
 
+#ifdef OS_WIN
+#  include <string>
+#endif
+
 namespace IPC {
 
 //------------------------------------------------------------------------------

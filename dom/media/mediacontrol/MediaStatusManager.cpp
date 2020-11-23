@@ -14,6 +14,7 @@
 #include "nsIChromeRegistry.h"
 #include "nsIObserverService.h"
 #include "nsIXULAppInfo.h"
+#include "nsNetUtil.h"
 
 #ifdef MOZ_PLACES
 #  include "nsIFaviconService.h"

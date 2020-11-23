@@ -5,6 +5,7 @@
 
 #include "ImageBitmapRenderingContext.h"
 #include "mozilla/dom/ImageBitmapRenderingContextBinding.h"
+#include "nsComponentManagerUtils.h"
 #include "ImageContainer.h"
 #include "ImageLayers.h"
 

@@ -22,6 +22,7 @@
 #include "mozilla/Telemetry.h"
 #include "nsBufferedStreams.h"
 #include "nsCategoryCache.h"
+#include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsFileStreams.h"
 #include "nsHashKeys.h"

@@ -252,7 +252,7 @@ class nsDocLoader : public nsIDocumentLoader,
   // of the completed load, instead of using the load group's status.
   void DocLoaderIsEmpty(
       bool aFlushLayout,
-      const Maybe<nsresult>& aOverrideStatus = mozilla::Nothing());
+      const mozilla::Maybe<nsresult>& aOverrideStatus = mozilla::Nothing());
 
  protected:
   struct nsStatusInfo : public mozilla::LinkedListElement<nsStatusInfo> {

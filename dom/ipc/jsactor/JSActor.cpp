@@ -7,6 +7,7 @@
 #include "mozilla/dom/JSActor.h"
 #include "mozilla/dom/JSActorBinding.h"
 
+#include "chrome/common/ipc_channel.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FunctionRef.h"
 #include "mozilla/dom/ClonedErrorHolder.h"
@@ -18,6 +19,7 @@
 #include "mozilla/dom/PWindowGlobal.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/RootedDictionary.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "js/Promise.h"
 #include "xpcprivate.h"
 #include "nsICrashReporter.h"

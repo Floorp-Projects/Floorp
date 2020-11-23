@@ -14,6 +14,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/dom/Document.h"
 
 #include "nsMappedAttributeElement.h"
 #include "nsString.h"

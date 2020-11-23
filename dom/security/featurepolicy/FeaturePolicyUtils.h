@@ -12,6 +12,12 @@
 
 #include "mozilla/dom/FeaturePolicy.h"
 
+class PickleIterator;
+
+namespace IPC {
+class Message;
+}
+
 namespace mozilla {
 namespace dom {
 

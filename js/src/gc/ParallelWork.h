@@ -8,7 +8,6 @@
 #define gc_ParallelWork_h
 
 #include "mozilla/Maybe.h"
-#include "mozilla/Variant.h"
 
 #include "gc/GC.h"
 #include "gc/GCParallelTask.h"

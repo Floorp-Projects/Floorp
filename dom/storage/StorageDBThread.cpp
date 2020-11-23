@@ -10,6 +10,7 @@
 #include "LocalStorageCache.h"
 #include "LocalStorageManager.h"
 
+#include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsThreadUtils.h"

@@ -8,6 +8,7 @@
 
 #include "gtest/gtest.h"
 #include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsRFPService.h"
 

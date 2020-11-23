@@ -41,6 +41,7 @@
 #include "AudioChannelService.h"
 #include "PuppetWidget.h"
 #include "nsDeque.h"
+#include "nsIRemoteTab.h"
 
 class nsBrowserStatusFilter;
 class nsIDOMWindow;

@@ -7,6 +7,8 @@
 
 #include "WebExecutorSupport.h"
 
+#include "nsIAsyncVerifyRedirectCallback.h"
+#include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsINSSErrorsService.h"

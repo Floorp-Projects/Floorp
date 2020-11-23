@@ -6,6 +6,7 @@
 
 #include "nsIDocShell.h"
 #include "mozilla/dom/Document.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIDocumentLoader.h"
 #include "nsIObserverService.h"
 #include "nsIXULRuntime.h"

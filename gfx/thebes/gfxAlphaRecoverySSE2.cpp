@@ -5,6 +5,7 @@
 
 #include "gfxAlphaRecovery.h"
 #include "gfxImageSurface.h"
+#include "nsDebug.h"
 #include <emmintrin.h>
 
 // This file should only be compiled on x86 and x64 systems.  Additionally,

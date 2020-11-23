@@ -6,6 +6,7 @@
 
 #include "VRDisplayPresentation.h"
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/XRWebGLLayer.h"
 #include "mozilla/Unused.h"
 #include "VRDisplayClient.h"

@@ -17,6 +17,7 @@
 namespace mozilla {
 class PresShell;
 namespace layers {
+class CanvasRenderer;
 class Layer;
 class LayerManager;
 class WebRenderCanvasData;

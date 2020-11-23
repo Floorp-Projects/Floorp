@@ -9,6 +9,7 @@
 
 #include "AudioNode.h"
 #include "nsPrintfCString.h"
+#include "mozilla/RefCounted.h"
 #include "mozilla/dom/StereoPannerNodeBinding.h"
 
 namespace mozilla {

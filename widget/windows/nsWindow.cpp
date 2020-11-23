@@ -129,6 +129,7 @@
 #include "WidgetUtils.h"
 #include "WinContentSystemParameters.h"
 #include "nsIWidgetListener.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/gfx/2D.h"
@@ -147,6 +148,7 @@
 #include "InputDeviceUtils.h"
 #include "ScreenHelperWin.h"
 #include "mozilla/StaticPrefs_apz.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_layout.h"
 
 #include "nsIGfxInfo.h"

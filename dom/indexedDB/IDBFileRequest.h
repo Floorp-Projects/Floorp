@@ -10,6 +10,7 @@
 #include "DOMRequest.h"
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsString.h"
 

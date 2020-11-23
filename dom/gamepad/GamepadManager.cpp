@@ -12,6 +12,7 @@
 #include "mozilla/dom/GamepadEvent.h"
 #include "mozilla/dom/GamepadEventChannelChild.h"
 #include "mozilla/dom/GamepadMonitoring.h"
+#include "mozilla/dom/Promise.h"
 
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"

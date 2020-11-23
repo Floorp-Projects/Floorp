@@ -9,6 +9,7 @@
 #include "base/compiler_specific.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/StaticPrefs_mathml.h"
 #include "mozilla/TextUtils.h"

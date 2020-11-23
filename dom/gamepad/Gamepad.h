@@ -17,6 +17,7 @@
 #include "mozilla/dom/Performance.h"
 #include <stdint.h>
 #include "nsCOMPtr.h"
+#include "nsDataHashtable.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"

@@ -8,6 +8,7 @@
 
 #include <string.h>  // for memcpy, memset
 
+#include "GeckoProfiler.h"
 #include "GLImages.h"    // for SurfaceTextureImage
 #include "YCbCrUtils.h"  // for YCbCr conversions
 #include "gfx2DGlue.h"
@@ -29,6 +30,7 @@
 #include "mozilla/layers/SharedRGBImage.h"
 #include "mozilla/layers/SharedSurfacesChild.h"  // for SharedSurfacesAnimation
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
+#include "nsProxyRelease.h"
 #include "nsISupportsUtils.h"  // for NS_IF_ADDREF
 
 #ifdef XP_MACOSX

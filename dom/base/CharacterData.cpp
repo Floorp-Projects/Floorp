@@ -30,6 +30,7 @@
 #include "mozilla/dom/DirectionalityUtils.h"
 #include "nsCCUncollectableMarker.h"
 #include "mozAutoDocUpdate.h"
+#include "nsIContentInlines.h"
 #include "nsTextNode.h"
 #include "nsBidiUtils.h"
 #include "PLDHashTable.h"

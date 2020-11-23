@@ -8,6 +8,7 @@
 
 #include "ClientTiledPaintedLayer.h"
 #include "mozilla/StaticPrefs_layers.h"
+#include "mozilla/layers/APZUtils.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"
 
 namespace mozilla {

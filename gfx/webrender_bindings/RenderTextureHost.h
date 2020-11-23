@@ -8,6 +8,7 @@
 #define MOZILLA_GFX_RENDERTEXTUREHOST_H
 
 #include "GLConsts.h"
+#include "GLTypes.h"
 #include "nsISupportsImpl.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/LayersSurfaces.h"

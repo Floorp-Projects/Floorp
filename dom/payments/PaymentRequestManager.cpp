@@ -7,6 +7,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/PaymentRequestChild.h"
 #include "mozilla/dom/BrowserChild.h"
+#include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
 #include "nsString.h"
 #include "nsIPrincipal.h"

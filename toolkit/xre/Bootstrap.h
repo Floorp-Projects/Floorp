@@ -19,6 +19,10 @@
 #ifdef MOZ_WIDGET_ANDROID
 #  include "jni.h"
 
+namespace mozilla {
+struct StaticXREAppData;
+}
+
 extern "C" NS_EXPORT void GeckoStart(JNIEnv* aEnv, char** argv, int argc,
                                      const mozilla::StaticXREAppData& aAppData);
 #endif
@@ -30,6 +34,8 @@ class BrokerServices;
 #endif
 
 namespace mozilla {
+
+struct StaticXREAppData;
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
 namespace sandboxing {

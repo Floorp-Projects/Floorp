@@ -10,6 +10,7 @@
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/PWindowGlobalParent.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/WindowGlobalActorsBinding.h"

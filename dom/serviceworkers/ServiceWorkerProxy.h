@@ -13,6 +13,7 @@
 namespace mozilla {
 namespace dom {
 
+class ClientInfo;
 class ClientState;
 class ServiceWorkerCloneData;
 class ServiceWorkerInfo;
