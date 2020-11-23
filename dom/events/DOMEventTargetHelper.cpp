@@ -7,13 +7,12 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/Sprintf.h"
-#include "nsGlobalWindow.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/Likely.h"
+#include "MainThreadUtils.h"
 
 namespace mozilla {
 
@@ -86,6 +85,42 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMEventTargetHelper)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(DOMEventTargetHelper,
                                                    LastRelease())
+
+DOMEventTargetHelper::DOMEventTargetHelper()
+    : mParentObject(nullptr),
+      mOwnerWindow(nullptr),
+      mHasOrHasHadOwnerWindow(false),
+      mIsKeptAlive(false) {}
+
+DOMEventTargetHelper::DOMEventTargetHelper(nsPIDOMWindowInner* aWindow)
+    : mParentObject(nullptr),
+      mOwnerWindow(nullptr),
+      mHasOrHasHadOwnerWindow(false),
+      mIsKeptAlive(false) {
+  nsIGlobalObject* global = aWindow ? aWindow->AsGlobal() : nullptr;
+  BindToOwner(global);
+}
+
+DOMEventTargetHelper::DOMEventTargetHelper(nsIGlobalObject* aGlobalObject)
+    : mParentObject(nullptr),
+      mOwnerWindow(nullptr),
+      mHasOrHasHadOwnerWindow(false),
+      mIsKeptAlive(false) {
+  BindToOwner(aGlobalObject);
+}
+
+DOMEventTargetHelper::DOMEventTargetHelper(DOMEventTargetHelper* aOther)
+    : mParentObject(nullptr),
+      mOwnerWindow(nullptr),
+      mHasOrHasHadOwnerWindow(false),
+      mIsKeptAlive(false) {
+  if (!aOther) {
+    BindToOwner(static_cast<nsIGlobalObject*>(nullptr));
+    return;
+  }
+  BindToOwner(aOther->GetParentObject());
+  mHasOrHasHadOwnerWindow = aOther->HasOrHasHadOwner();
+}
 
 DOMEventTargetHelper::~DOMEventTargetHelper() {
   if (mParentObject) {
@@ -308,6 +343,14 @@ nsresult DOMEventTargetHelper::CheckCurrentGlobalCorrectness() const {
   }
 
   return NS_OK;
+}
+
+bool DOMEventTargetHelper::HasListenersFor(const nsAString& aType) const {
+  return mListenerManager && mListenerManager->HasListenersFor(aType);
+}
+
+bool DOMEventTargetHelper::HasListenersFor(nsAtom* aTypeWithOn) const {
+  return mListenerManager && mListenerManager->HasListenersFor(aTypeWithOn);
 }
 
 }  // namespace mozilla
