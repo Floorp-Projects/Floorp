@@ -8,12 +8,15 @@
 #ifndef ipc_glue_MessageLink_h
 #define ipc_glue_MessageLink_h 1
 
-#include "base/basictypes.h"
+#include <cstdint>
 #include "base/message_loop.h"
-
-#include "mozilla/WeakPtr.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ipc/Transport.h"
+
+namespace IPC {
+class Message;
+}
 
 namespace mozilla {
 namespace ipc {
