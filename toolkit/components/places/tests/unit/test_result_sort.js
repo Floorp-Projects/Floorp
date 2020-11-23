@@ -6,23 +6,6 @@
 
 const NHQO = Ci.nsINavHistoryQueryOptions;
 
-/**
- * Waits for onItemVisited notifications to be received.
- */
-function promiseOnItemVisited() {
-  return new Promise(resolve => {
-    let bookmarksObserver = {
-      __proto__: NavBookmarkObserver.prototype,
-      onItemVisited: function BO_onItemVisited() {
-        PlacesUtils.bookmarks.removeObserver(this);
-        // Enqueue to be sure that all onItemVisited notifications ran.
-        executeSoon(resolve);
-      },
-    };
-    PlacesUtils.bookmarks.addObserver(bookmarksObserver);
-  });
-}
-
 add_task(async function test() {
   const uri1 = "http://foo.tld/a";
   const uri2 = "http://foo.tld/b";
@@ -108,12 +91,7 @@ add_task(async function test() {
 
   // Add a visit, then check frecency ordering.
 
-  // When the bookmarks service gets onVisit, it asynchronously fetches all
-  // items for that visit, and then notifies onItemVisited.  Thus we must
-  // explicitly wait for that.
-  let waitForVisited = promiseOnItemVisited();
   await PlacesTestUtils.addVisits({ uri: uri2, transition: TRANSITION_TYPED });
-  await waitForVisited;
 
   info("Sort by frecency desc");
   result.sortingMode = NHQO.SORT_BY_FRECENCY_DESCENDING;
