@@ -24,7 +24,7 @@ using mozilla::plugins::NativeWindowHandle from "mozilla/plugins/PluginMessageUt
 using gfxSurfaceType from "gfxTypes.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
 using mozilla::gfx::IntRect from "mozilla/gfx/2D.h";
-using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
+using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
 using mozilla::WindowsHandle from "mozilla/ipc/IPCTypes.h";
 using mozilla::plugins::WindowsSharedMemoryHandle from "mozilla/plugins/PluginMessageUtils.h";
 using mozilla::layers::SurfaceDescriptorX11 from "gfxipc/ShadowLayerUtils.h";

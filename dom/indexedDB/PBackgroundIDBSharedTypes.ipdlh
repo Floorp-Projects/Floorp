@@ -16,11 +16,9 @@ include ProtocolTypes;
 include "mozilla/dom/indexedDB/SerializationHelpers.h";
 include "mozilla/dom/quota/SerializationHelpers.h";
 
-using struct mozilla::null_t
-  from "ipc/IPCMessageUtils.h";
+using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
 
-using struct mozilla::void_t
-  from "ipc/IPCMessageUtils.h";
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 
 using mozilla::dom::IDBCursor::Direction
   from "mozilla/dom/IDBCursor.h";

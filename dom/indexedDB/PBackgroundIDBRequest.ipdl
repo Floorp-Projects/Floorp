@@ -14,8 +14,7 @@ include PBackgroundIDBSharedTypes;
 
 include "mozilla/dom/indexedDB/SerializationHelpers.h";
 
-using struct mozilla::void_t
-  from "ipc/IPCMessageUtils.h";
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 
 using class mozilla::dom::indexedDB::Key
   from "mozilla/dom/indexedDB/Key.h";
