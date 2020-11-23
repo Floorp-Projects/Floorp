@@ -22,6 +22,7 @@
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/ipc/MessageLink.h"
+#include "mozilla/ipc/ProtocolUtilsFwd.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
