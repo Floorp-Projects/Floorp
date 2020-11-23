@@ -27,7 +27,6 @@ jobs-from:
     - cbindgen.yml
     - cctools-port.yml
     - clang-tidy.yml
-    - clang-tidy-external.yml
     - clang.yml
     - dump-syms.yml
     - fix-stacks.yml

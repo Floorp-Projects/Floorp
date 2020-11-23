@@ -96,3 +96,30 @@ win64-clang-tidy:
         fetch:
             - cmake
             - ninja
+
+linux64-clang-tidy-external:
+    attributes:
+        local-toolchain: false
+    index:
+        job-name: linux64-clang-tidy-external
+    treeherder:
+        symbol: TL(linux66-clang-tidy-e)
+    worker:
+        artifacts:
+            - name: project/civet/clang-tidy.tar.zst
+              path: /builds/worker/private-artifacts/clang-tidy.tar.zst
+              type: file
+    run:
+        toolchain-artifact: project/civet/clang-tidy.tar.zst
+        script: build-clang-tidy-external.sh
+        arguments:
+            - 'build/build-clang/clang-tidy-external-linux64.json'
+        resources:
+            - 'build/build-clang/clang-tidy-external-linux64.json'
+    run-on-projects: []
+    fetches:
+        fetch:
+            - civet-source
+        toolchain:
+            - linux64-binutils
+            - linux64-gcc-7
