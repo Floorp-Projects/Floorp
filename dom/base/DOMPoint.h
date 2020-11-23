@@ -7,20 +7,23 @@
 #ifndef MOZILLA_DOMPOINT_H_
 #define MOZILLA_DOMPOINT_H_
 
-#include "js/StructuredClone.h"
-#include "DOMMatrix.h"
-#include "nsWrapperCache.h"
-#include "nsIGlobalObject.h"
-#include "nsISupports.h"
-#include "nsCycleCollectionParticipant.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
+#include "js/RootingAPI.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
 #include "nsCOMPtr.h"
-#include "mozilla/dom/BindingDeclarations.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsISupports.h"
+#include "nsWrapperCache.h"
 
+class JSObject;
 class nsIGlobalObject;
+struct JSContext;
+struct JSStructuredCloneReader;
+struct JSStructuredCloneWriter;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class GlobalObject;

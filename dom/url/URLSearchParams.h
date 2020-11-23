@@ -7,21 +7,35 @@
 #ifndef mozilla_dom_URLSearchParams_h
 #define mozilla_dom_URLSearchParams_h
 
-#include "js/StructuredClone.h"
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/ErrorResult.h"
+#include <cstdint>
+#include "ErrorList.h"
+#include "js/RootingAPI.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
+#include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsWrapperCache.h"
 #include "nsISupports.h"
-#include "nsIInputStream.h"
+#include "nsStringFwd.h"
+#include "nsTArray.h"
+#include "nsWrapperCache.h"
 
+class JSObject;
 class nsIGlobalObject;
+class nsIInputStream;
+struct JSContext;
+struct JSStructuredCloneReader;
+struct JSStructuredCloneWriter;
 
 namespace mozilla {
+
+class ErrorResult;
 class URLParams;
 
 namespace dom {
 
+class GlobalObject;
 class URLSearchParams;
 class USVStringSequenceSequenceOrUSVStringUSVStringRecordOrUSVString;
 

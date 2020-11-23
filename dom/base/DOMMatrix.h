@@ -7,26 +7,36 @@
 #ifndef MOZILLA_DOM_DOMMATRIX_H_
 #define MOZILLA_DOM_DOMMATRIX_H_
 
-#include "js/StructuredClone.h"
-#include "nsWrapperCache.h"
-#include "nsISupports.h"
-#include "nsCycleCollectionParticipant.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
+#include <cstring>
+#include <utility>
+#include "js/RootingAPI.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/UniquePtr.h"
-#include "nsCOMPtr.h"
-#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/gfx/Matrix.h"  // for Matrix4x4Double
+#include "mozilla/gfx/Matrix.h"
+#include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
+#include "nsWrapperCache.h"
 
+class JSObject;
 class nsIGlobalObject;
+struct JSContext;
+struct JSStructuredCloneReader;
+struct JSStructuredCloneWriter;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class GlobalObject;
 class DOMMatrix;
 class DOMPoint;
+template <typename T>
+class Optional;
 class UTF8StringOrUnrestrictedDoubleSequenceOrDOMMatrixReadOnly;
 struct DOMPointInit;
 struct DOMMatrixInit;

@@ -24,8 +24,6 @@ class IDBMutableFile;
 
 namespace indexedDB {
 
-class SerializedStructuredCloneReadInfo;
-
 struct StructuredCloneFileBase {
   enum FileType {
     eBlob,

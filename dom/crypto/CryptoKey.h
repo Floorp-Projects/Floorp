@@ -7,23 +7,36 @@
 #ifndef mozilla_dom_CryptoKey_h
 #define mozilla_dom_CryptoKey_h
 
-#include "nsCycleCollectionParticipant.h"
-#include "nsWrapperCache.h"
-#include "nsIGlobalObject.h"
-#include "pk11pub.h"
-#include "keyhi.h"
+#include <cstdint>
+#include "ErrorList.h"
 #include "ScopedNSSTypes.h"
-#include "mozilla/ErrorResult.h"
+#include "js/RootingAPI.h"
+#include "keythi.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/CryptoBuffer.h"
 #include "mozilla/dom/KeyAlgorithmProxy.h"
-#include "js/StructuredClone.h"
-#include "js/TypeDecls.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsIGlobalObject.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
+#include "nsTArrayForwardDeclare.h"
+#include "nsWrapperCache.h"
 
 #define CRYPTOKEY_SC_VERSION 0x00000001
 
+class JSObject;
 class nsIGlobalObject;
+struct JSContext;
+struct JSStructuredCloneReader;
+struct JSStructuredCloneWriter;
 
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
 
 /*

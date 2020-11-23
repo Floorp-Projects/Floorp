@@ -6,11 +6,17 @@
 
 #include "mozilla/dom/DOMQuad.h"
 
+#include <algorithm>
+#include "mozilla/FloatingPoint.h"
+#include "mozilla/MacroForEach.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/DOMPoint.h"
 #include "mozilla/dom/DOMQuadBinding.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/DOMRectBinding.h"
-#include "mozilla/FloatingPoint.h"
+#include "mozilla/gfx/BasePoint.h"
+#include "mozilla/gfx/MatrixFwd.h"
+#include "nsIGlobalObject.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
