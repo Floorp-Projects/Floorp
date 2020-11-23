@@ -19,7 +19,6 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
 #include "mozilla/TypeTraits.h"
-#include "mozilla/Variant.h"
 #include "Units.h"
 
 namespace mozilla {

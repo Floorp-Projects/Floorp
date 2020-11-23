@@ -11,7 +11,6 @@
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/layers/WebRenderScrollData.h"
-#include "mozilla/Variant.h"
 
 namespace mozilla {
 
