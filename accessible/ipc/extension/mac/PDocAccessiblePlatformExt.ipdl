@@ -6,6 +6,8 @@
 
 include protocol PDocAccessible;
 
+include "mozilla/GfxMessageUtils.h";
+
 using mozilla::a11y::EWhichRange from "mozilla/a11y/IPCTypes.h";
 using nsIntRect from "nsRect.h";
 
