@@ -7,16 +7,17 @@
 #ifndef RegisteredThread_h
 #define RegisteredThread_h
 
-#include "GeckoProfiler.h"
 #include "platform.h"
 #include "ThreadInfo.h"
 
-#include "js/TraceLoggerAPI.h"
-#include "jsapi.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
 #include "nsIEventTarget.h"
 #include "nsIThread.h"
+
+namespace mozilla {
+class ProfilingStackOwner;
+}
 
 // This class contains the state for a single thread that is accessible without
 // protection from gPSMutex in platform.cpp. Because there is no external
@@ -25,14 +26,7 @@
 //
 class RacyRegisteredThread final {
  public:
-  explicit RacyRegisteredThread(int aThreadId)
-      : mProfilingStackOwner(
-            mozilla::MakeNotNull<RefPtr<mozilla::ProfilingStackOwner>>()),
-        mThreadId(aThreadId),
-        mSleep(AWAKE),
-        mIsBeingProfiled(false) {
-    MOZ_COUNT_CTOR(RacyRegisteredThread);
-  }
+  explicit RacyRegisteredThread(int aThreadId);
 
   MOZ_COUNTED_DTOR(RacyRegisteredThread)
 
@@ -177,18 +171,7 @@ class RegisteredThread final {
 
   // Set the JSContext of the thread to be sampled. Sampling cannot begin until
   // this has been set.
-  void SetJSContext(JSContext* aContext) {
-    // This function runs on-thread.
-
-    MOZ_ASSERT(aContext && !mContext);
-
-    mContext = aContext;
-
-    // We give the JS engine a non-owning reference to the ProfilingStack. It's
-    // important that the JS engine doesn't touch this once the thread dies.
-    js::SetContextProfilingStack(aContext,
-                                 &RacyRegisteredThread().ProfilingStack());
-  }
+  void SetJSContext(JSContext* aContext);
 
   void ClearJSContext() {
     // This function runs on-thread.
@@ -224,46 +207,7 @@ class RegisteredThread final {
   }
 
   // Poll to see if JS sampling should be started/stopped.
-  void PollJSSampling() {
-    // This function runs on-thread.
-
-    // We can't start/stop profiling until we have the thread's JSContext.
-    if (mContext) {
-      // It is possible for mJSSampling to go through the following sequences.
-      //
-      // - INACTIVE, ACTIVE_REQUESTED, INACTIVE_REQUESTED, INACTIVE
-      //
-      // - ACTIVE, INACTIVE_REQUESTED, ACTIVE_REQUESTED, ACTIVE
-      //
-      // Therefore, the if and else branches here aren't always interleaved.
-      // This is ok because the JS engine can handle that.
-      //
-      if (mJSSampling == ACTIVE_REQUESTED) {
-        mJSSampling = ACTIVE;
-        js::EnableContextProfilingStack(mContext, true);
-        if (JSTracerEnabled()) {
-          JS::StartTraceLogger(mContext);
-        }
-        if (JSAllocationsEnabled()) {
-          // TODO - This probability should not be hardcoded. See Bug 1547284.
-          JS::EnableRecordingAllocations(
-              mContext, profiler_add_js_allocation_marker, 0.01);
-        }
-        js::RegisterContextProfilingEventMarker(mContext,
-                                                profiler_add_js_marker);
-
-      } else if (mJSSampling == INACTIVE_REQUESTED) {
-        mJSSampling = INACTIVE;
-        js::EnableContextProfilingStack(mContext, false);
-        if (JSTracerEnabled()) {
-          JS::StopTraceLogger(mContext);
-        }
-        if (JSAllocationsEnabled()) {
-          JS::DisableRecordingAllocations(mContext);
-        }
-      }
-    }
-  }
+  void PollJSSampling();
 
  private:
   class RacyRegisteredThread mRacyRegisteredThread;

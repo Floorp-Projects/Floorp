@@ -11,6 +11,7 @@
 #include "ProfileBuffer.h"
 #include "ProfilerBacktrace.h"
 
+#include "js/ProfilingFrameIterator.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "mozilla/Logging.h"
