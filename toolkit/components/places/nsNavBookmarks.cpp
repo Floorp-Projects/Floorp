@@ -60,69 +60,6 @@ bool SkipTags(nsCOMPtr<nsINavBookmarkObserver> obs) {
   return skipTags;
 }
 
-template <typename Method, typename DataType>
-class AsyncGetBookmarksForURI : public AsyncStatementCallback {
- public:
-  AsyncGetBookmarksForURI(nsNavBookmarks* aBookmarksSvc, Method aCallback,
-                          const DataType& aData)
-      : mBookmarksSvc(aBookmarksSvc), mCallback(aCallback), mData(aData) {}
-
-  void Init() {
-    RefPtr<Database> DB = Database::GetDatabase();
-    if (DB) {
-      nsCOMPtr<mozIStorageAsyncStatement> stmt = DB->GetAsyncStatement(
-          "/* do not warn (bug 1175249) */ "
-          "SELECT b.id, b.guid, b.parent, b.lastModified, t.guid, t.parent "
-          "FROM moz_bookmarks b "
-          "JOIN moz_bookmarks t on t.id = b.parent "
-          "WHERE b.fk = (SELECT id FROM moz_places WHERE url_hash = "
-          "hash(:page_url) AND url = :page_url) "
-          "ORDER BY b.lastModified DESC, b.id DESC ");
-      if (stmt) {
-        (void)URIBinder::Bind(stmt, "page_url"_ns, mData.bookmark.url);
-        nsCOMPtr<mozIStoragePendingStatement> pendingStmt;
-        (void)stmt->ExecuteAsync(this, getter_AddRefs(pendingStmt));
-      }
-    }
-  }
-
-  NS_IMETHOD HandleResult(mozIStorageResultSet* aResultSet) override {
-    nsCOMPtr<mozIStorageRow> row;
-    while (NS_SUCCEEDED(aResultSet->GetNextRow(getter_AddRefs(row))) && row) {
-      // Skip tags, for the use-cases of this async getter they are useless.
-      int64_t grandParentId = -1, tagsFolderId = -1;
-      nsresult rv = row->GetInt64(5, &grandParentId);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = mBookmarksSvc->GetTagsFolder(&tagsFolderId);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (grandParentId == tagsFolderId) {
-        continue;
-      }
-
-      mData.bookmark.grandParentId = grandParentId;
-      rv = row->GetInt64(0, &mData.bookmark.id);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = row->GetUTF8String(1, mData.bookmark.guid);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = row->GetInt64(2, &mData.bookmark.parentId);
-      NS_ENSURE_SUCCESS(rv, rv);
-      // lastModified (3) should not be set for the use-cases of this getter.
-      rv = row->GetUTF8String(4, mData.bookmark.parentGuid);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (mCallback) {
-        ((*mBookmarksSvc).*mCallback)(mData);
-      }
-    }
-    return NS_OK;
-  }
-
- private:
-  RefPtr<nsNavBookmarks> mBookmarksSvc;
-  Method mCallback;
-  DataType mData;
-};
-
 // Returns the sync change counter increment for a change source constant.
 inline int64_t DetermineSyncChangeDelta(uint16_t aSource) {
   return aSource == nsINavBookmarksService::SOURCE_SYNC ? 0 : 1;
@@ -159,8 +96,8 @@ nsNavBookmarks::~nsNavBookmarks() {
   if (gBookmarksService == this) gBookmarksService = nullptr;
 }
 
-NS_IMPL_ISUPPORTS(nsNavBookmarks, nsINavBookmarksService, nsINavHistoryObserver,
-                  nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsNavBookmarks, nsINavBookmarksService, nsIObserver,
+                  nsISupportsWeakReference)
 
 Atomic<int64_t> nsNavBookmarks::sLastInsertedItemId(0);
 
@@ -188,13 +125,6 @@ nsresult nsNavBookmarks::Init() {
   }
 
   mCanNotify = true;
-
-  // Allows us to notify on title changes. MUST BE LAST so it is impossible
-  // to fail after this call, or the history service will have a reference to
-  // us and we won't go away.
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  NS_ENSURE_STATE(history);
-  history->AddObserver(this, true);
 
   // DO NOT PUT STUFF HERE that can fail. See observer comment above.
 
@@ -1807,69 +1737,5 @@ nsNavBookmarks::Observe(nsISupports* aSubject, const char* aTopic,
     mObservers.Clear();
   }
 
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//// nsINavHistoryObserver
-
-NS_IMETHODIMP
-nsNavBookmarks::OnBeginUpdateBatch() { return NS_OK; }
-
-NS_IMETHODIMP
-nsNavBookmarks::OnEndUpdateBatch() { return NS_OK; }
-
-NS_IMETHODIMP
-nsNavBookmarks::OnDeleteURI(nsIURI* aURI, const nsACString& aGUID,
-                            uint16_t aReason) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavBookmarks::OnClearHistory() {
-  // TODO(bryner): we should notify on visited-time change for all URIs
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavBookmarks::OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle,
-                               const nsACString& aGUID) {
-  // NOOP. We don't consume page titles from moz_places anymore.
-  // Title-change notifications are sent from SetItemTitle.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavBookmarks::OnFrecencyChanged(nsIURI* aURI, int32_t aNewFrecency,
-                                  const nsACString& aGUID, bool aHidden,
-                                  PRTime aLastVisitDate) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavBookmarks::OnManyFrecenciesChanged() { return NS_OK; }
-
-NS_IMETHODIMP
-nsNavBookmarks::OnDeleteVisits(nsIURI* aURI, bool aPartialRemoval,
-                               const nsACString& aGUID, uint16_t aReason,
-                               uint32_t aTransitionType) {
-  NS_ENSURE_ARG(aURI);
-
-  // Notify "cleartime" only if all visits to the page have been removed.
-  if (!aPartialRemoval) {
-    // If the page is bookmarked, notify observers for each associated bookmark.
-    ItemChangeData changeData;
-    nsresult rv = aURI->GetSpec(changeData.bookmark.url);
-    NS_ENSURE_SUCCESS(rv, rv);
-    changeData.property = "cleartime"_ns;
-    changeData.isAnnotation = false;
-    changeData.bookmark.lastModified = 0;
-    changeData.bookmark.type = TYPE_BOOKMARK;
-
-    RefPtr<AsyncGetBookmarksForURI<ItemChangeMethod, ItemChangeData>> notifier =
-        new AsyncGetBookmarksForURI<ItemChangeMethod, ItemChangeData>(
-            this, &nsNavBookmarks::NotifyItemChanged, changeData);
-    notifier->Init();
-  }
   return NS_OK;
 }

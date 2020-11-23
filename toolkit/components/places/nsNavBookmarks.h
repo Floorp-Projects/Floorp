@@ -72,13 +72,11 @@ enum BookmarkDate { LAST_MODIFIED };
 }  // namespace mozilla
 
 class nsNavBookmarks final : public nsINavBookmarksService,
-                             public nsINavHistoryObserver,
                              public nsIObserver,
                              public nsSupportsWeakReference {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVBOOKMARKSSERVICE
-  NS_DECL_NSINAVHISTORYOBSERVER
   NS_DECL_NSIOBSERVER
 
   nsNavBookmarks();
