@@ -15,6 +15,7 @@
 #include "SynchronousTask.h"
 #include "mozilla/Unused.h"
 #include "mozilla/gfx/Types.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"

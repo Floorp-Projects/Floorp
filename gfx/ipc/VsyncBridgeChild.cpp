@@ -7,6 +7,7 @@
 #include "VsyncIOThreadHolder.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/ipc/Endpoint.h"
 
 namespace mozilla {
 namespace gfx {

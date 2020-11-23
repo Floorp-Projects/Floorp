@@ -14,6 +14,7 @@
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/dom/WidevineCDMManifestBinding.h"
 #include "mozilla/ipc/CrashReporterHost.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxInfo.h"

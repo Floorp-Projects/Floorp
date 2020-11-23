@@ -8,6 +8,7 @@
 
 #include "ProfilerChild.h"
 
+#include "mozilla/ipc/Endpoint.h"
 #include "nsThreadUtils.h"
 
 using namespace mozilla::ipc;

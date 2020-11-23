@@ -7,6 +7,7 @@
 #include "SocketProcessLogging.h"
 
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "SocketProcessChild.h"
 
 namespace mozilla {

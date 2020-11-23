@@ -12,6 +12,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/GPUChild.h"
+#include "mozilla/ipc/Endpoint.h"
 
 using namespace mozilla;
 using namespace mozilla::ipc;

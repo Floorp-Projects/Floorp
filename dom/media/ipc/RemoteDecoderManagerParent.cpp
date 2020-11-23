@@ -17,6 +17,7 @@
 #include "mozilla/RDDParent.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/gfx/GPUParent.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/VideoBridgeChild.h"
 

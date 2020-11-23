@@ -21,6 +21,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/GamepadManager.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/SyncObject.h"
 #include "mozilla/layers/TextureForwarder.h"
 

@@ -28,6 +28,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/webgpu/WebGPUChild.h"
 #include "mozilla/mozalloc.h"  // for operator new, etc
 #include "mozilla/Telemetry.h"

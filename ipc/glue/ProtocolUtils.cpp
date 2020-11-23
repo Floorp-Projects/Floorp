@@ -14,6 +14,7 @@
 
 #include "mozilla/IntegerPrintfMacros.h"
 
+#include "mozilla/ipc/ProtocolMessageUtils.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 
 #include "mozilla/ipc/MessageChannel.h"
