@@ -6,33 +6,41 @@
 #ifndef nsIWidget_h__
 #define nsIWidget_h__
 
-#include "mozilla/UniquePtr.h"
-#include "nsISupports.h"
-#include "nsColor.h"
-#include "nsRect.h"
-#include "nsString.h"
-
-#include "nsCOMPtr.h"
-#include "nsWidgetInitData.h"
-#include "nsTArray.h"
-#include "nsITheme.h"
-#include "nsITimer.h"
-#include "nsRegionFwd.h"
-#include "nsXULAppAPI.h"
-#include "mozilla/Maybe.h"
+#include <cmath>
+#include <cstdint>
+#include "ErrorList.h"
+#include "Units.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
-#include "mozilla/layers/ScrollableLayerGuid.h"
-#include "mozilla/layers/ZoomConstraints.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/gfx/Point.h"
-#include "mozilla/widget/IMEData.h"
-#include "VsyncSource.h"
-#include "nsDataHashtable.h"
-#include "nsIObserver.h"
-#include "nsIWidgetListener.h"
-#include "Units.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/gfx/Matrix.h"
+#include "mozilla/gfx/Rect.h"
+#include "mozilla/layers/LayersTypes.h"
+#include "mozilla/layers/ScrollableLayerGuid.h"
+#include "mozilla/layers/ZoomConstraints.h"
+#include "mozilla/widget/IMEData.h"
+#include "nsCOMPtr.h"
+#include "nsColor.h"
+#include "nsDataHashtable.h"
+#include "nsDebug.h"
+#include "nsID.h"
+#include "nsIObserver.h"
+#include "nsISupports.h"
+#include "nsITheme.h"
+#include "nsITimer.h"
+#include "nsIWidgetListener.h"
+#include "nsRect.h"
+#include "nsSize.h"
+#include "nsStringFwd.h"
+#include "nsTArray.h"
+#include "nsWidgetInitData.h"
+#include "nsXULAppAPI.h"
 
 #ifdef MOZ_IS_GCC
 #  include "VsyncSource.h"
@@ -47,8 +55,15 @@ class ViewWrapper;
 class nsIScreen;
 class nsIRunnable;
 class nsIKeyEventInPluginCallback;
+class nsUint64HashKey;
 
 namespace mozilla {
+class NativeEventData;
+class WidgetGUIEvent;
+class WidgetInputEvent;
+class WidgetKeyboardEvent;
+class WidgetPluginEvent;
+struct FontRange;
 
 enum class StyleWindowShadow : uint8_t;
 
@@ -74,8 +89,7 @@ class PLayerTransactionChild;
 class WebRenderBridgeChild;
 }  // namespace layers
 namespace gfx {
-class DrawTarget;
-class SourceSurface;
+class VsyncSource;
 }  // namespace gfx
 namespace widget {
 class TextEventDispatcher;
