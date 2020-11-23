@@ -958,7 +958,6 @@ BookmarksTracker.prototype = {
       this._batchSawScoreIncrement = false;
     }
   },
-  onItemVisited() {},
 };
 
 /**

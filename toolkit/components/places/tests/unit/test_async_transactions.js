@@ -101,8 +101,6 @@ var observer = {
     changesForGuid.set(aProperty, change);
   },
 
-  onItemVisited: () => {},
-
   onItemMoved(
     aItemId,
     aOldParent,

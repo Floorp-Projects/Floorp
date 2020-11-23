@@ -399,7 +399,6 @@ class nsNavHistoryResultNode : public nsINavHistoryResultNode {
   int64_t mTime;
   int32_t mBookmarkIndex;
   int64_t mItemId;
-  int64_t mFolderId;
   int64_t mVisitId;
   int64_t mFromVisitId;
   PRTime mDateAdded;
@@ -602,8 +601,10 @@ class nsNavHistoryContainerResultNode
                                                 void* closure);
 
   // finding children: THESE DO NOT ADDREF
-  nsNavHistoryResultNode* FindChildURI(const nsACString& aSpec,
-                                       uint32_t* aNodeIndex);
+  nsNavHistoryResultNode* FindChildByURI(const nsACString& aSpec,
+                                         uint32_t* aNodeIndex);
+  void FindChildrenByURI(const nsCString& aSpec,
+                         nsCOMArray<nsNavHistoryResultNode>* aMatches);
   // returns the index of the given node, -1 if not found
   int32_t FindChild(nsNavHistoryResultNode* aNode) {
     return mChildren.IndexOf(aNode);
@@ -686,7 +687,6 @@ class nsNavHistoryQueryResultNode final
                        uint16_t aItemType, nsIURI* aURI, PRTime aDateAdded,
                        const nsACString& aGUID, const nsACString& aParentGUID,
                        uint16_t aSource);
-
   nsresult OnItemRemoved(int64_t aItemId, int64_t aParentFolder, int32_t aIndex,
                          uint16_t aItemType, nsIURI* aURI,
                          const nsACString& aGUID, const nsACString& aParentGUID,
@@ -777,6 +777,7 @@ class nsNavHistoryFolderResultNode final
                          uint16_t aItemType, nsIURI* aURI,
                          const nsACString& aGUID, const nsACString& aParentGUID,
                          uint16_t aSource);
+  nsresult OnItemVisited(nsIURI* aURI, int64_t aVisitId, PRTime aTime);
   virtual void OnRemoving() override;
 
   // this indicates whether the folder contents are valid, they don't go away

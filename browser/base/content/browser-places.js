@@ -2358,7 +2358,6 @@ var BookmarkingUI = {
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
   onBeforeItemRemoved() {},
-  onItemVisited() {},
   onItemMoved(
     aItemId,
     aProperty,

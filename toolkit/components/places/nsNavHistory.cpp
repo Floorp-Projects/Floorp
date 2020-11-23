@@ -2849,19 +2849,10 @@ nsresult nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
 
   // itemId
   int64_t itemId = aRow->AsInt64(kGetInfoIndex_ItemId);
-  int64_t parentId = -1;
   if (itemId == 0) {
     // This is not a bookmark.  For non-bookmarks we use a -1 itemId value.
     // Notice ids in sqlite tables start from 1, so itemId cannot ever be 0.
     itemId = -1;
-  } else {
-    // This is a bookmark, so it has a parent.
-    int64_t itemParentId = aRow->AsInt64(kGetInfoIndex_ItemParentId);
-    if (itemParentId > 0) {
-      // The Places root has parent == 0, but that item id does not really
-      // exist. We want to set the parent only if it's a real one.
-      parentId = itemParentId;
-    }
   }
 
   if (IsQueryURI(url)) {
@@ -2920,7 +2911,6 @@ nsresult nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
 
     if (itemId != -1) {
       resultNode->mItemId = itemId;
-      resultNode->mFolderId = parentId;
       resultNode->mDateAdded = aRow->AsInt64(kGetInfoIndex_ItemDateAdded);
       resultNode->mLastModified = aRow->AsInt64(kGetInfoIndex_ItemLastModified);
 
