@@ -181,6 +181,19 @@ class nsNavHistoryResult final
   nsMaybeWeakPtrArray<nsINavHistoryResultObserver> mObservers;
   bool mSuppressNotifications;
 
+  // Tracks whether observers for history details were added.
+  bool mIsHistoryDetailsObserver;
+  // Tracks whether any result observer is interested in history details
+  // updates.
+  bool mObserversWantHistoryDetails;
+  /**
+   *  Updates mObserversWantHistoryDetails when observers are added/removed.
+   *  @returns Whether we started observing for history changes.
+   */
+  bool UpdateHistoryDetailsObservers();
+  // Whether NodeHistoryDetailsChanged can be skipped.
+  bool CanSkipHistoryDetailsNotifications() const;
+
   ContainerObserverList mRefreshParticipants;
   void requestRefresh(nsNavHistoryContainerResultNode* aContainer);
 
