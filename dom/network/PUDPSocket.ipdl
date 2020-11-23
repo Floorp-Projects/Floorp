@@ -18,7 +18,7 @@ include "mozilla/net/DNS.h";
 include "prio.h";
 
 using mozilla::net::NetAddr from "mozilla/net/DNS.h";
-using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 
 struct UDPAddressInfo {
   nsCString addr;

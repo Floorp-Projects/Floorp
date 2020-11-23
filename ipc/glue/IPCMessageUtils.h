@@ -14,6 +14,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "mozilla/ipc/IPCCore.h"
 #include "mozilla/BitSet.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/EnumTypeTraits.h"
@@ -72,15 +73,6 @@ struct VariantTag;
 }  // namespace mozilla
 
 namespace mozilla {
-
-// XXX there are out of place and might be generally useful.  Could
-// move to nscore.h or something.
-struct void_t {
-  bool operator==(const void_t&) const { return true; }
-};
-struct null_t {
-  bool operator==(const null_t&) const { return true; }
-};
 
 struct SerializedStructuredCloneBuffer final {
   SerializedStructuredCloneBuffer() = default;

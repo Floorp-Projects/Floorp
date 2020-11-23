@@ -14,8 +14,7 @@ include IPCStream;
 include protocol PRemoteLazyInputStream;
 include ProtocolTypes;
 
-using struct mozilla::void_t
-  from "ipc/IPCMessageUtils.h";
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 
 using moveonly struct mozilla::SerializedStructuredCloneBuffer
   from "ipc/IPCMessageUtils.h";

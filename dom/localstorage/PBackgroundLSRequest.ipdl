@@ -4,8 +4,7 @@
 
 include protocol PBackground;
 
-using struct mozilla::null_t
-  from "ipc/IPCMessageUtils.h";
+using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
 
 namespace mozilla {
 namespace dom {

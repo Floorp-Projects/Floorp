@@ -10,7 +10,7 @@ include LayersSurfaces;
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/layers/WebRenderMessageUtils.h";
 
-using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 using mozilla::TimeDuration from "mozilla/TimeStamp.h";
 using mozilla::CSSToLayoutDeviceScale from "Units.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
