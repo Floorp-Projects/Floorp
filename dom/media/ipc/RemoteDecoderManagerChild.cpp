@@ -16,7 +16,7 @@
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
-#include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "nsContentUtils.h"
 #include "nsIObserver.h"

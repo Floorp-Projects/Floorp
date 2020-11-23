@@ -21,6 +21,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/gfx/Point.h"  // for IntSize
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/MessageChannel.h"         // for MessageChannel, etc
 #include "mozilla/ipc/Transport.h"              // for Transport
 #include "mozilla/layers/CompositableClient.h"  // for CompositableChild, etc

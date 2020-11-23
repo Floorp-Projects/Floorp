@@ -11,6 +11,7 @@
 #include "mozilla/layers/UiCompositorControllerMessageTypes.h"
 #include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/StaticPtr.h"
 #include "nsBaseWidget.h"
 #include "nsProxyRelease.h"

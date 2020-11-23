@@ -22,6 +22,7 @@
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/InProcessChild.h"
 #include "mozilla/dom/InProcessParent.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/PresShell.h"
 #include "nsContentUtils.h"
 #include "nsDocShell.h"

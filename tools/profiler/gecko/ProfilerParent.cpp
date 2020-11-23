@@ -12,6 +12,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/IOInterposer.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ProfileBufferControlledChunkManager.h"
 #include "mozilla/RefPtr.h"

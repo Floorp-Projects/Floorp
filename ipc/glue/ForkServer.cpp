@@ -7,6 +7,7 @@
 #include "mozilla/Logging.h"
 #include "chrome/common/chrome_switches.h"
 #include "mozilla/BlockingResourceBase.h"
+#include "mozilla/ipc/ProtocolMessageUtils.h"
 #include "nsTraceRefcnt.h"
 
 #include <string.h>

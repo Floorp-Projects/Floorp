@@ -15,6 +15,7 @@
 #include "mozilla/SyncRunnable.h"  // for LaunchRDDProcess
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/VideoBridgeParent.h"
 #include "nsAppRunner.h"
