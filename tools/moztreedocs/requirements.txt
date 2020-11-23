@@ -222,10 +222,9 @@ snowballstemmer==2.0.0 \
     --hash=sha256:209f257d7533fdb3cb73bdbd24f436239ca3b2fa67d56f6ff88e86be08cc5ef0 \
     --hash=sha256:df3bac3df4c2c01363f3dd2cfa78cce2840a79b9f1c2d2de9ce8d31683992f52 \
     # via -r requirements.in, sphinx
-sphinx-copybutton==0.3.0 \
-    --hash=sha256:4becad3a1e7c50211f1477e34fd4b6d027680e1612f497cb5b88cf85bccddaaa \
-    --hash=sha256:4cd06afd0588aa43eba968bfc6105e1ec6546c50a51f880af1d89afaebc6fb58 \
-    # via -r requirements.in
+sphinx-copybutton==0.3.1 \
+    --hash=sha256:0e0461df394515284e3907e3f418a0c60ef6ab6c9a27a800c8552772d0a402a2 \
+    --hash=sha256:5125c718e763596e6e52d92e15ee0d6f4800ad3817939be6dee51218870b3e3d
 sphinx-js==3.0.1 \
     --hash=sha256:00d8d8bb4fe0e4c8cf940c7412af257c7fb83eaedc69d79765f9a012d719ce20 \
     --hash=sha256:6dd8e79c5ad09fef389af5021d7a672066f6e12a51130497f6c611544d62734b \
