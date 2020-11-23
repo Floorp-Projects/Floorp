@@ -12,6 +12,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
+#include "nsDocShellLoadState.h"
 #include "nsFocusManager.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIDocShell.h"

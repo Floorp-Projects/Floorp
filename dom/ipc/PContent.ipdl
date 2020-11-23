@@ -71,6 +71,7 @@ include protocol PSandboxTesting;
 
 include "mozilla/AntiTrackingIPCUtils.h";
 include "mozilla/GfxMessageUtils.h";
+include "mozilla/dom/DocShellMessageUtils.h";
 
 using refcounted class nsIDOMGeoPosition from "nsGeoPositionIPCSerialiser.h";
 using refcounted class nsIAlertNotification from "mozilla/AlertNotificationIPCSerializer.h";
@@ -109,7 +110,7 @@ using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
 using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextTransaction from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextInitializer from "mozilla/dom/BrowsingContext.h";
-using mozilla::dom::PermitUnloadResult from "mozilla/dom/DocShellMessageUtils.h";
+using mozilla::dom::PermitUnloadResult from "nsIContentViewer.h";
 using mozilla::dom::MaybeDiscardedWindowContext from "mozilla/dom/WindowContext.h";
 using mozilla::dom::WindowContextTransaction from "mozilla/dom/WindowContext.h";
 using base::SharedMemoryHandle from "base/shared_memory.h";

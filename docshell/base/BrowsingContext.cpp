@@ -50,6 +50,7 @@
 #include "nsIXULRuntime.h"
 
 #include "nsDocShell.h"
+#include "nsDocShellLoadState.h"
 #include "nsFocusManager.h"
 #include "nsGlobalWindowOuter.h"
 #include "nsIObserverService.h"
