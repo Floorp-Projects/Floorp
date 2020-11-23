@@ -4,10 +4,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/Directory.h"
 #include "mozilla/dom/FileList.h"
-#include "mozilla/dom/FileListBinding.h"
+
+#include <new>
+#include <utility>
+#include "ErrorList.h"
+#include "js/RootingAPI.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/MacroForEach.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/FileListBinding.h"
+#include "mozilla/fallible.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsCycleCollectionTraversalCallback.h"
+#include "nsISupports.h"
+#include "nsTArray.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla::dom {
 
@@ -21,10 +36,30 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FileList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FileList)
 
+FileList::FileList(nsISupports* aParent) : mParent(aParent) {}
+
+FileList::~FileList() = default;
+
 JSObject* FileList::WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) {
   return mozilla::dom::FileList_Binding::Wrap(aCx, this, aGivenProto);
 }
+
+bool FileList::Append(File* aFile) {
+  MOZ_ASSERT(aFile);
+  return mFiles.AppendElement(aFile, fallible);
+}
+
+bool FileList::Remove(uint32_t aIndex) {
+  if (aIndex < mFiles.Length()) {
+    mFiles.RemoveElementAt(aIndex);
+    return true;
+  }
+
+  return false;
+}
+
+void FileList::Clear() { return mFiles.Clear(); }
 
 File* FileList::Item(uint32_t aIndex) const {
   if (aIndex >= mFiles.Length()) {
