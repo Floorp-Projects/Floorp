@@ -13,7 +13,7 @@ include ProtocolTypes;
 
 include "mozilla/dom/ClientIPCUtils.h";
 
-using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 using mozilla::StorageAccess from "mozilla/StorageAccess.h";
 
 namespace mozilla {

@@ -12,7 +12,7 @@ include protocol PRemoteLazyInputStream;
 
 include IPCBlob;
 
-using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 
 namespace mozilla {
 namespace dom {

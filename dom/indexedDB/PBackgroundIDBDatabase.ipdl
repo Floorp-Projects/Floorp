@@ -19,8 +19,7 @@ include PBackgroundIDBSharedTypes;
 
 include "mozilla/dom/indexedDB/SerializationHelpers.h";
 
-using struct mozilla::null_t
-  from "ipc/IPCMessageUtils.h";
+using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
 
 using mozilla::dom::IDBTransaction::Mode
   from "mozilla/dom/IDBTransaction.h";

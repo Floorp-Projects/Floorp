@@ -9,7 +9,7 @@ include protocol PNecko;
 
 include "mozilla/net/NeckoMessageUtils.h";
 
-using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 
 struct TCPError {
   nsString name;
