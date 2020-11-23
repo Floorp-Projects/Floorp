@@ -323,6 +323,19 @@ nsresult BasePrincipal::ToJSON(nsACString& aResult) {
   return NS_OK;
 }
 
+bool BasePrincipal::FastSubsumesIgnoringFPD(
+    nsIPrincipal* aOther, DocumentDomainConsideration aConsideration) {
+  MOZ_ASSERT(aOther);
+
+  if (Kind() == eContentPrincipal &&
+      !dom::ChromeUtils::IsOriginAttributesEqualIgnoringFPD(
+          mOriginAttributes, Cast(aOther)->mOriginAttributes)) {
+    return false;
+  }
+
+  return SubsumesInternal(aOther, aConsideration);
+}
+
 bool BasePrincipal::Subsumes(nsIPrincipal* aOther,
                              DocumentDomainConsideration aConsideration) {
   MOZ_ASSERT(aOther);
