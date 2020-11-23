@@ -18,7 +18,7 @@
 
 #include "mozilla/Mutex.h"
 #include "nsCOMPtr.h"
-#include "nsTArray.h"
+#include "nsTArrayForwardDeclare.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"
 

@@ -8,7 +8,6 @@
 #define nsGenericHTMLFrameElement_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/nsBrowserElement.h"
 
 #include "nsFrameLoader.h"
@@ -17,6 +16,8 @@
 #include "nsIMozBrowserFrame.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 class BrowserParent;
 template <typename>

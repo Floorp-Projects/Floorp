@@ -7,12 +7,18 @@
 #ifndef nsThreadManager_h__
 #define nsThreadManager_h__
 
-#include "mozilla/Mutex.h"
-#include "mozilla/TaskController.h"
 #include "nsIThreadManager.h"
 #include "nsThread.h"
 
 class nsIRunnable;
+class nsIEventTarget;
+class nsISerialEventTarget;
+class nsIThread;
+
+namespace mozilla {
+class IdleTaskManager;
+class SynchronizedEventQueue;
+}  // namespace mozilla
 
 class BackgroundEventTarget;
 

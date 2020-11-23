@@ -8,16 +8,17 @@
 #define mozilla_dom_PathUtils__
 
 #include "mozilla/DataMutex.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/dom/DOMParser.h"
+#include "mozilla/Result.h"
 #include "mozilla/dom/Promise.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class PathUtils final {

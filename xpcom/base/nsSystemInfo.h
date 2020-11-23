@@ -10,11 +10,12 @@
 #include "nsHashPropertyBag.h"
 #include "nsISystemInfo.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/LazyIdleThread.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/dom/PContent.h"
 #endif  // MOZ_WIDGET_ANDROID
+
+class nsISerialEventTarget;
 
 struct FolderDiskInfo {
   nsCString model;

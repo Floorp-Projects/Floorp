@@ -9,10 +9,9 @@
 #include "nsISupportsImpl.h"
 
 #include "mozilla/dom/ipc/IdType.h"
-#include "mozilla/dom/Promise.h"
-#include "mozilla/dom/DOMRect.h"
-#include "mozilla/gfx/2D.h"
-#include "mozilla/Maybe.h"
+#include "mozilla/gfx/Point.h"
+#include "mozilla/gfx/RecordedEvent.h"
+#include "mozilla/gfx/Rect.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/ipc/ByteBuf.h"
 #include "nsColor.h"
@@ -20,7 +19,8 @@
 #include "nsHashKeys.h"
 #include "nsRefPtrHashtable.h"
 #include "nsTHashtable.h"
-#include "mozilla/gfx/RecordedEvent.h"
+
+class nsIDocShell;
 
 namespace IPC {
 template <typename T>
@@ -30,6 +30,8 @@ struct ParamTraits;
 namespace mozilla {
 
 namespace dom {
+class DOMRect;
+class Promise;
 class WindowGlobalParent;
 }  // namespace dom
 

@@ -11,9 +11,10 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
-#include "mozilla/ErrorResult.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class TextTrackCue;

@@ -10,11 +10,9 @@
 #include "mozilla/Mutex.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
-#include "nsIEventTarget.h"
 #include "nsIMemoryReporter.h"
-#include "nsITimer.h"
+#include "nsISupports.h"
 #include "nsServiceManagerUtils.h"
-#include "nsDataHashtable.h"
 
 #ifdef XP_WIN
 #  include <windows.h>
@@ -27,6 +25,9 @@ class MemoryReport;
 }  // namespace dom
 }  // namespace mozilla
 
+class mozIDOMWindowProxy;
+class nsIEventTarget;
+class nsIRunnable;
 class nsITimer;
 
 class nsMemoryReporterManager final : public nsIMemoryReporterManager,

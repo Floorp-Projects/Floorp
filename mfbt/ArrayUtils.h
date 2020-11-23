@@ -14,17 +14,21 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 
-#include <algorithm>
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
+#  include <algorithm>
 #  include <type_traits>
 
 #  include "mozilla/Alignment.h"
-#  include "mozilla/Array.h"
-#  include "mozilla/EnumeratedArray.h"
 
 namespace mozilla {
+
+template <typename T, size_t Length>
+class Array;
+template <typename IndexType, IndexType SizeAsEnumValue, typename ValueType>
+class EnumeratedArray;
 
 /*
  * Safely subtract two pointers when it is known that aEnd >= aBegin, yielding a

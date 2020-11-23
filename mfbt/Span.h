@@ -22,21 +22,24 @@
 #ifndef mozilla_Span_h
 #define mozilla_Span_h
 
-#include <algorithm>
 #include <array>
+#include <cstddef>
+#include <cstdint>
 #include <iterator>
 #include <limits>
 #include <string>
 #include <type_traits>
 #include <utility>
 
-#include "mozilla/Array.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
-#include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
+
+template <typename T, size_t Length>
+class Array;
 
 // Stuff from gsl_util
 

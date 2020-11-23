@@ -8,12 +8,13 @@
 #define mozilla_dom_PaymentRequestUpdateEvent_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/PaymentRequestUpdateEventBinding.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class Promise;

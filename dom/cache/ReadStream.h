@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_cache_ReadStream_h
 #define mozilla_dom_cache_ReadStream_h
 
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/RefPtr.h"
@@ -18,6 +17,8 @@
 #include "nsTArrayForwardDeclare.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace ipc {
 class AutoIPCStream;
 }  // namespace ipc

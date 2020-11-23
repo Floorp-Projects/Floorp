@@ -7,15 +7,19 @@
 #if !defined(StateMirroring_h_)
 #  define StateMirroring_h_
 
-#  include "mozilla/Maybe.h"
-#  include "mozilla/MozPromise.h"
-#  include "mozilla/StateWatching.h"
-#  include "mozilla/TaskDispatcher.h"
-#  include "mozilla/UniquePtr.h"
-#  include "mozilla/Unused.h"
-
+#  include <cstddef>
+#  include "mozilla/AbstractThread.h"
+#  include "mozilla/AlreadyAddRefed.h"
+#  include "mozilla/Assertions.h"
 #  include "mozilla/Logging.h"
-#  include "nsISupportsImpl.h"
+#  include "mozilla/Maybe.h"
+#  include "mozilla/RefPtr.h"
+#  include "mozilla/StateWatching.h"
+#  include "nsCOMPtr.h"
+#  include "nsIRunnable.h"
+#  include "nsISupports.h"
+#  include "nsTArray.h"
+#  include "nsThreadUtils.h"
 
 /*
  * The state-mirroring machinery allows pieces of interesting state to be

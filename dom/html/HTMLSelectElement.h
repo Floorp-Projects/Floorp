@@ -13,7 +13,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/HTMLOptionsCollection.h"
-#include "mozilla/ErrorResult.h"
 #include "nsCheapSets.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
@@ -27,6 +26,7 @@ class nsISelectControlFrame;
 
 namespace mozilla {
 
+class ErrorResult;
 class EventChainPostVisitor;
 class EventChainPreVisitor;
 class SelectContentData;

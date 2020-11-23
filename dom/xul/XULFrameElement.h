@@ -8,7 +8,6 @@
 #define XULFrameElement_h__
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "js/TypeDecls.h"
@@ -23,6 +22,8 @@ class nsIWebNavigation;
 class nsFrameLoader;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class BrowsingContext;

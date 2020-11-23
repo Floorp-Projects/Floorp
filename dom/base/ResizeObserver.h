@@ -10,7 +10,6 @@
 #include "js/TypeDecls.h"
 #include "mozilla/AppUnits.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/WritingModes.h"
 #include "mozilla/dom/DOMRect.h"
@@ -26,6 +25,8 @@
 #include "nsPIDOMWindow.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class Element;

@@ -10,7 +10,6 @@
 #include "nsWrapperCache.h"
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIScriptGlobalObject.h"
@@ -19,6 +18,8 @@
 #include "nsString.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 class Document;
 class DocumentType;

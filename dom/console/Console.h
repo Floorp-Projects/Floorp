@@ -7,19 +7,18 @@
 #ifndef mozilla_dom_Console_h
 #define mozilla_dom_Console_h
 
+#include "domstubs.h"
 #include "mozilla/dom/ConsoleBinding.h"
-#include "mozilla/JSObjectHolder.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
-#include "nsDOMNavigationTiming.h"
-#include "nsPIDOMWindow.h"
 
 class nsIConsoleAPIStorage;
-class nsIPrincipal;
+class nsIGlobalObject;
+class nsPIDOMWindowInner;
 class nsIStackFrame;
 
 namespace mozilla {
@@ -28,7 +27,6 @@ namespace dom {
 class AnyCallback;
 class ConsoleCallData;
 class ConsoleInstance;
-class ConsoleInstanceDumpCallback;
 class ConsoleRunnable;
 class ConsoleCallDataRunnable;
 class ConsoleProfileRunnable;

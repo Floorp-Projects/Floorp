@@ -21,8 +21,8 @@ webidl BrowsingContext;
 native LoadContextRef(already_AddRefed<nsISupports>);
 %{C++
 #include "nsTArray.h"
-#include "mozilla/BasePrincipal.h"
 #include "mozilla/LoadTainting.h"
+#include "mozilla/OriginAttributes.h"
 #include "mozilla/UniquePtr.h"
 #include "nsStringFwd.h"
 

@@ -14,11 +14,12 @@
 #include "nsString.h"
 #include "nsWeakReference.h"
 #include "nsWrapperCache.h"
-#include "mozilla/ErrorResult.h"
 
 class nsPIDOMWindowInner;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class ContentParent;

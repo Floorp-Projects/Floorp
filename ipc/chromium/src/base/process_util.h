@@ -13,6 +13,7 @@
 #include "base/basictypes.h"
 
 #if defined(OS_WIN)
+#  include "mozilla/ipc/EnvironmentMap.h"
 #  include <windows.h>
 #  include <tlhelp32.h>
 #elif defined(OS_LINUX) || defined(__GLIBC__)
@@ -23,19 +24,18 @@
 #  include <mach/mach.h>
 #endif
 
-#include <functional>
+#include <cstddef>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include "base/command_line.h"
 #include "base/process.h"
 
 #include "mozilla/UniquePtr.h"
-#include "mozilla/ipc/EnvironmentMap.h"
 
 #if defined(MOZ_ENABLE_FORKSERVER)
-#  include "nsString.h"
+#  include "nsStringFwd.h"
 #  include "mozilla/Tuple.h"
 #  include "mozilla/ipc/FileDescriptorShuffle.h"
 
@@ -49,6 +49,8 @@ class FileDescriptor;
 #if defined(OS_MACOSX)
 struct kinfo_proc;
 #endif
+
+class CommandLine;
 
 namespace base {
 

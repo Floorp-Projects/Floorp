@@ -7,7 +7,6 @@
 #define _mozilla_dom_ClientHandleParent_h
 
 #include "mozilla/dom/PClientHandleParent.h"
-#include "mozilla/ErrorResult.h"
 
 namespace mozilla {
 namespace dom {

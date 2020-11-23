@@ -8,7 +8,6 @@
 #define mozilla_intl_l10n_FluentBundle_h
 
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/FluentBinding.h"
@@ -19,6 +18,7 @@
 class nsIGlobalObject;
 
 namespace mozilla {
+class ErrorResult;
 
 namespace dom {
 struct FluentMessage;

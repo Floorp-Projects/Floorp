@@ -10,7 +10,6 @@
 #include <stdint.h>
 
 #include "mozilla/HangAnnotations.h"
-#include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/Result.h"
 
 // We only support OSX and Windows, because on Linux we're forced to read

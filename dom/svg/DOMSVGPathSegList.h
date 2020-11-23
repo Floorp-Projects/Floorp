@@ -13,12 +13,12 @@
 #include "nsTArray.h"
 #include "SVGPathData.h"  // IWYU pragma: keep
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/SVGElement.h"
 
 namespace mozilla {
 
+class ErrorResult;
 class SVGAnimatedPathSegList;
 
 namespace dom {

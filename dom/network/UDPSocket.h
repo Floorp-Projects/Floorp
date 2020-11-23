@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/SocketCommonBinding.h"
 #include "nsIUDPSocket.h"
@@ -23,6 +22,7 @@ struct JSContext;
 //
 
 namespace mozilla {
+class ErrorResult;
 class LazyLogModule;
 
 namespace net {

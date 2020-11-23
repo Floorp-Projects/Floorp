@@ -7,7 +7,6 @@
 #ifndef MOZILLA_GFX_RECORDEDEVENT_H_
 #define MOZILLA_GFX_RECORDEDEVENT_H_
 
-#include "2D.h"
 #include <ostream>
 #include <sstream>
 #include <cstring>
@@ -15,6 +14,8 @@
 #include <vector>
 
 #include "RecordingTypes.h"
+#include "mozilla/gfx/Point.h"
+#include "mozilla/gfx/Types.h"
 #include "mozilla/ipc/ByteBuf.h"
 
 namespace mozilla {

@@ -9,16 +9,15 @@
 
 #include "gfxTypes.h"
 #include <stdint.h>                        // for uint32_t
+#include "mozilla/AlreadyAddRefed.h"       // for already_AddRefed
 #include "mozilla/Assertions.h"            // for MOZ_ASSERT, etc
 #include "mozilla/RefPtr.h"                // for RefPtr, already_AddRefed
 #include "mozilla/gfx/2D.h"                // for DrawTarget, etc
 #include "mozilla/gfx/MatrixFwd.h"         // for Matrix
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
 #include "mozilla/mozalloc.h"              // for operator delete
-#include "nsCOMPtr.h"                      // for already_AddRefed
 #include "nsISupportsImpl.h"               // for MOZ_COUNT_CTOR, etc
 #include "nsRegion.h"                      // for nsIntRegion
-#include "LayersTypes.h"
 
 namespace mozilla {
 namespace layers {

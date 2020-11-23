@@ -7,13 +7,16 @@
 #if !defined(StateWatching_h_)
 #  define StateWatching_h_
 
+#  include <cstddef>
+#  include <new>
+#  include <utility>
 #  include "mozilla/AbstractThread.h"
+#  include "mozilla/Assertions.h"
 #  include "mozilla/Logging.h"
-#  include "mozilla/TaskDispatcher.h"
-#  include "mozilla/UniquePtr.h"
-#  include "mozilla/Unused.h"
-
-#  include "nsISupportsImpl.h"
+#  include "mozilla/RefPtr.h"
+#  include "nsISupports.h"
+#  include "nsTArray.h"
+#  include "nsThreadUtils.h"
 
 /*
  * The state-watching machinery automates the process of responding to changes

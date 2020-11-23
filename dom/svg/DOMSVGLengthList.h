@@ -14,7 +14,6 @@
 #include "nsTArray.h"
 #include "SVGLengthList.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/Unused.h"
 
 // {cbecb7a4-d6f3-47b5-b5a3-3e5bdbf5b2f9}
@@ -26,6 +25,7 @@
   }
 
 namespace mozilla {
+class ErrorResult;
 
 namespace dom {
 class DOMSVGLength;

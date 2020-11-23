@@ -7,7 +7,6 @@
 #ifndef MOZILLA_GEOMETRYUTILS_H_
 #define MOZILLA_GEOMETRYUTILS_H_
 
-#include "mozilla/ErrorResult.h"
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
 
@@ -19,6 +18,7 @@
 class nsINode;
 
 namespace mozilla {
+class ErrorResult;
 
 namespace dom {
 struct BoxQuadOptions;

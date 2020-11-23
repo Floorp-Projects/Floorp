@@ -8,7 +8,6 @@
 #define mozilla_dom_MediaStreamError_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "nsWrapperCache.h"
 #include "js/TypeDecls.h"
 #include "nsPIDOMWindow.h"

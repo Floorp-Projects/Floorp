@@ -12,7 +12,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/Nullable.h"
-#include "mozilla/ErrorResult.h"
 #include "nsWrapperCache.h"
 #include "nsHashKeys.h"
 #include "nsInterfaceHashtable.h"
@@ -28,6 +27,8 @@ class nsIPrincipal;
 class nsIURI;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 class AddonManager;
 class BodyExtractorBase;

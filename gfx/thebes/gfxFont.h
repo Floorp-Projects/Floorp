@@ -7,46 +7,76 @@
 #ifndef GFX_FONT_H
 #define GFX_FONT_H
 
+#include <new>
+#include <utility>
+#include "PLDHashTable.h"
+#include "ThebesRLBoxTypes.h"
+#include "gfxFontVariations.h"
+#include "gfxRect.h"
 #include "gfxTypes.h"
-#include "gfxFontEntry.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/FontPropertyTypes.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/ServoStyleConsts.h"
+#include "mozilla/TypedEnumBits.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/gfx/MatrixFwd.h"
+#include "mozilla/gfx/Point.h"
+#include "nsCOMPtr.h"
+#include "nsColor.h"
+#include "nsDataHashtable.h"
+#include "nsExpirationTracker.h"
+#include "nsFontMetrics.h"
+#include "nsHashKeys.h"
+#include "nsIMemoryReporter.h"
+#include "nsIObserver.h"
+#include "nsISupports.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
-#include "nsHashKeys.h"
-#include "gfxRect.h"
-#include "nsExpirationTracker.h"
+#include "nsUnicodeScriptCodes.h"
+#include "nscore.h"
+
+// Only required for function bodys
+#include <stdlib.h>
+#include <string.h>
+#include <algorithm>
+#include "mozilla/Assertions.h"
+#include "mozilla/HashFunctions.h"
+#include "mozilla/ServoUtils.h"
+#include "mozilla/gfx/2D.h"
+#include "gfxFontEntry.h"
+#include "gfxFontFeatures.h"
+#include "gfxFontUtils.h"
 #include "gfxPlatform.h"
 #include "nsAtom.h"
-#include "mozilla/HashFunctions.h"
-#include "nsIMemoryReporter.h"
-#include "nsIObserver.h"
-#include "mozilla/MemoryReporting.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/FontPropertyTypes.h"
-#include "mozilla/TypedEnumBits.h"
-#include <algorithm>
-#include "DrawMode.h"
-#include "nsDataHashtable.h"
-#include "mozilla/gfx/2D.h"
-#include "nsColor.h"
-#include "nsFontMetrics.h"
-#include "mozilla/ServoUtils.h"
-#include "ThebesRLBoxTypes.h"
+#include "nsDebug.h"
+#include "nsMathUtils.h"
 
-typedef struct _cairo cairo_t;
-typedef struct _cairo_scaled_font cairo_scaled_font_t;
-
-#ifdef DEBUG
-#  include <stdio.h>
-#endif
-
-class gfxTextRun;
+class gfxContext;
 class gfxGlyphExtents;
+class gfxMathTable;
 class gfxPattern;
 class gfxShapedText;
 class gfxShapedWord;
 class gfxSkipChars;
-class gfxMathTable;
+class gfxTextRun;
+class nsIEventTarget;
+class nsITimer;
+struct gfxTextRunDrawCallbacks;
+enum class DrawMode : int;
+
+namespace mozilla {
+class SVGContextPaint;
+namespace layout {
+class TextDrawTarget;
+}
+}  // namespace mozilla
+
+typedef struct _cairo cairo_t;
+typedef struct _cairo_scaled_font cairo_scaled_font_t;
 
 #define FONT_MAX_SIZE 2000.0
 
@@ -61,16 +91,6 @@ class gfxMathTable;
 #else
 #  define OBLIQUE_SKEW_FACTOR 0.25f
 #endif
-
-struct gfxTextRunDrawCallbacks;
-
-namespace mozilla {
-class SVGContextPaint;
-
-namespace layout {
-class TextDrawTarget;
-}
-}  // namespace mozilla
 
 struct gfxFontStyle {
   typedef mozilla::FontStretch FontStretch;

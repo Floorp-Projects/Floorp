@@ -7,8 +7,15 @@
 #ifndef nsCycleCollectionNoteRootCallback_h__
 #define nsCycleCollectionNoteRootCallback_h__
 
+#include "nscore.h"
+
 class nsCycleCollectionParticipant;
 class nsISupports;
+class JSObject;
+
+namespace JS {
+class GCCellPtr;
+}
 
 class nsCycleCollectionNoteRootCallback {
  public:

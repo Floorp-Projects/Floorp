@@ -9,7 +9,6 @@
 
 #include "AudioEventTimeline.h"
 #include "AudioNodeTrack.h"
-#include "mozilla/ErrorResult.h"
 #include "AudioSegment.h"
 
 namespace mozilla {

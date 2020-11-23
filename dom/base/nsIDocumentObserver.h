@@ -6,13 +6,13 @@
 #ifndef nsIDocumentObserver_h___
 #define nsIDocumentObserver_h___
 
-#include "mozilla/EventStates.h"
-#include "mozilla/StyleSheet.h"
 #include "nsISupports.h"
 #include "nsIMutationObserver.h"
 
 class nsIContent;
 namespace mozilla {
+class EventStates;
+
 namespace dom {
 class Document;
 }

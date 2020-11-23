@@ -7,14 +7,15 @@
 #ifndef CodeAddressService_h__
 #define CodeAddressService_h__
 
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
 #include "mozilla/AllocPolicy.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/HashTable.h"
-#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StackWalk.h"
-#include "mozilla/Types.h"
 
 namespace mozilla {
 

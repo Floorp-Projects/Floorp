@@ -12,7 +12,6 @@
 #include "nsWrapperCache.h"
 
 #include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/RefPtr.h"
 
 #include "mozilla/dom/BindingDeclarations.h"
@@ -23,6 +22,8 @@
 class nsIGlobalObject;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class Promise;

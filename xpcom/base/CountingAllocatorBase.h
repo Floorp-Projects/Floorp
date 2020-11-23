@@ -7,6 +7,7 @@
 #ifndef CountingAllocatorBase_h
 #define CountingAllocatorBase_h
 
+#include <cstdlib>
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/mozalloc.h"

@@ -21,10 +21,11 @@
 
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/NonRefcountedDOMObject.h"
-#include "mozilla/ErrorResult.h"
 #include "nsID.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class MozQueryInterface final : public NonRefcountedDOMObject {

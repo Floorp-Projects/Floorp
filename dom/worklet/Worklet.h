@@ -8,7 +8,6 @@
 #define mozilla_dom_Worklet_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "nsRefPtrHashtable.h"
 #include "nsWrapperCache.h"
 #include "nsCOMPtr.h"
@@ -17,6 +16,7 @@ class nsPIDOMWindowInner;
 
 namespace mozilla {
 
+class ErrorResult;
 class WorkletImpl;
 
 namespace dom {

@@ -9,7 +9,6 @@
 
 #include "DecoderDoctorLogger.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsCOMPtr.h"
@@ -24,6 +23,7 @@
 struct JSContext;
 
 namespace mozilla {
+class ErrorResult;
 
 namespace dom {
 class MediaKeySession;

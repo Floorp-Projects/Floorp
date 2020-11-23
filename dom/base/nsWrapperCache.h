@@ -10,8 +10,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Assertions.h"
 #include "js/HeapAPI.h"
-#include "js/Id.h"     // must come before js/RootingAPI.h
-#include "js/Value.h"  // must come before js/RootingAPI.h
 #include "js/RootingAPI.h"
 #include "js/TracingAPI.h"
 #include "jsfriendapi.h"

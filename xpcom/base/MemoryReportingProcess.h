@@ -15,6 +15,9 @@ namespace ipc {
 class FileDescriptor;
 }  // namespace ipc
 
+template <class T>
+class Maybe;
+
 // Top-level process actors should implement this to integrate with
 // nsMemoryReportManager.
 class MemoryReportingProcess {

@@ -8,12 +8,13 @@
 
 #include "mozilla/devtools/HeapSnapshot.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/RefCounted.h"
 #include "js/UbiNodeDominatorTree.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace devtools {
 
 class DominatorTree final : public nsISupports, public nsWrapperCache {

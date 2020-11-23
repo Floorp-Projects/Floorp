@@ -6,20 +6,35 @@
 #ifndef GFX_FONT_UTILS_H
 #define GFX_FONT_UTILS_H
 
-#include "gfxFontVariations.h"
+#include <string.h>
+#include <algorithm>
+#include <new>
+#include <utility>
 #include "gfxPlatform.h"
-#include "nsComponentManagerUtils.h"
-#include "nsTArray.h"
 #include "ipc/IPCMessageUtils.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
-#include "mozilla/Encoding.h"
 #include "mozilla/EndianUtils.h"
-#include "mozilla/Likely.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
-
+#include "nsStringFwd.h"
+#include "nsTArray.h"
+#include "nscore.h"
 #include "zlib.h"
-#include <algorithm>
+
+class PickleIterator;
+class gfxFontEntry;
+struct gfxFontVariationAxis;
+struct gfxFontVariationInstance;
+
+namespace mozilla {
+class Encoding;
+namespace gfx {
+struct DeviceColor;
+}
+}  // namespace mozilla
 
 /* Bug 341128 - w32api defines min/max which causes problems with <bitset> */
 #ifdef __MINGW32__

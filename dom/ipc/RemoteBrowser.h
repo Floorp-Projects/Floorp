@@ -7,19 +7,15 @@
 #ifndef mozilla_dom_ipc_RemoteBrowser_h
 #define mozilla_dom_ipc_RemoteBrowser_h
 
-#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ipc/IdType.h"
-#include "mozilla/dom/EffectsInfo.h"
 #include "mozilla/layers/LayersTypes.h"
-#include "nsILoadContext.h"
-#include "nsIPrincipal.h"
 #include "nsISupports.h"
-#include "nsISupportsImpl.h"
-#include "nsIURI.h"
 #include "nsRect.h"
 #include "Units.h"
 
+class nsDocShellLoadState;
 class nsFrameLoader;
+class nsILoadContext;
 class nsIContent;
 
 namespace mozilla {
@@ -28,6 +24,8 @@ namespace dom {
 
 class BrowserHost;
 class BrowserBridgeHost;
+class BrowsingContext;
+class EffectsInfo;
 class OwnerShowInfo;
 
 /**

@@ -29,7 +29,6 @@
 #include "nsWrapperCache.h"
 
 #include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/TypedArray.h"
 
@@ -40,6 +39,8 @@ class nsIGlobalObject;
 class nsIPrincipal;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class OwningArrayBufferViewOrArrayBufferOrString;

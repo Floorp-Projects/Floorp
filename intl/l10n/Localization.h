@@ -10,7 +10,6 @@
 #include "nsWeakReference.h"
 #include "nsIObserver.h"
 #include "mozILocalization.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/LocalizationBinding.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
@@ -20,6 +19,8 @@ class nsIGlobalObject;
 using namespace mozilla::dom;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace intl {
 
 typedef Record<nsCString, Nullable<OwningUTF8StringOrDouble>> L10nArgs;

@@ -10,7 +10,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {

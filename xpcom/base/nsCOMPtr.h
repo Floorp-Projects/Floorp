@@ -21,7 +21,6 @@
  */
 
 #include <type_traits>
-#include <utility>
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"

@@ -8,7 +8,6 @@
 #define nsObserverList_h___
 
 #include "nsISupports.h"
-#include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsIObserver.h"
 #include "nsHashKeys.h"

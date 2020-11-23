@@ -9,7 +9,6 @@
 
 #include <stdint.h>
 
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/VRDisplayBinding.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -25,6 +24,8 @@
 #include "gfxVR.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace gfx {
 class VRDisplayClient;
 class VRDisplayPresentation;

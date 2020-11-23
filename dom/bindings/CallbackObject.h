@@ -17,28 +17,47 @@
 #ifndef mozilla_dom_CallbackObject_h
 #define mozilla_dom_CallbackObject_h
 
-#include "nsISupports.h"
-#include "nsISupportsImpl.h"
-#include "nsCycleCollectionParticipant.h"
+#include <cstddef>
+#include <cstdint>
+#include <utility>
+#include "js/RootingAPI.h"
 #include "js/Wrapper.h"
-#include "mozilla/Assertions.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/HoldDropJSObjects.h"
-#include "mozilla/MemoryReporting.h"
-#include "mozilla/OwningNonNull.h"
-#include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/BindingCallContext.h"
-#include "nsWrapperCache.h"
-#include "nsJSEnvironment.h"
-#include "xpcpublic.h"
 #include "jsapi.h"
-#include "js/ContextOptions.h"
-#include "js/Object.h"  // JS::GetCompartment
-#include "js/TracingAPI.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/dom/BindingCallContext.h"
+#include "mozilla/dom/ScriptSettings.h"
+#include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsID.h"
+#include "nsIGlobalObject.h"
+#include "nsISupports.h"
+#include "nsISupportsUtils.h"
+#include "nsStringFwd.h"
+
+class JSAutoRealm;
+class JSObject;
+class JSTracer;
+class nsCycleCollectionTraversalCallback;
+struct JSContext;
+
+namespace JS {
+class AutoSetAsyncStackForNewCalls;
+class Realm;
+class Value;
+}  // namespace JS
 
 namespace mozilla {
 
+class ErrorResult;
 class PromiseJobRunnable;
+template <class T>
+class OwningNonNull;
 
 namespace dom {
 

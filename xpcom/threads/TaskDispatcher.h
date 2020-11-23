@@ -12,7 +12,6 @@
 #  include "mozilla/AbstractThread.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/UniquePtr.h"
-#  include "mozilla/Unused.h"
 #  include "nsIDirectTaskDispatcher.h"
 #  include "nsISupportsImpl.h"
 #  include "nsTArray.h"

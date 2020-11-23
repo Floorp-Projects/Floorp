@@ -7,13 +7,13 @@
 #ifndef mozilla_BlockingResourceBase_h
 #define mozilla_BlockingResourceBase_h
 
-#include "mozilla/Logging.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/ThreadLocal.h"
 
 #include "nscore.h"
 #include "nsDebug.h"
-#include "nsError.h"
-#include "nsISupportsImpl.h"
+
+#include "prtypes.h"
 
 #ifdef DEBUG
 
@@ -22,13 +22,11 @@
 
 #  include "prinit.h"
 
-#  include "nsString.h"
-
 #  ifndef MOZ_CALLSTACK_DISABLED
+#    include "mozilla/Maybe.h"
 #    include "nsTArray.h"
 #  endif
 
-#  include "nsXPCOM.h"
 #endif
 
 //

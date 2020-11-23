@@ -19,7 +19,7 @@
 #define NS_ERROR_SEVERITY_SUCCESS 0
 #define NS_ERROR_SEVERITY_ERROR 1
 
-#include "ErrorList.h"
+#include "ErrorList.h"  // IWYU pragma: export
 
 /**
  * @name Standard Error Handling Macros

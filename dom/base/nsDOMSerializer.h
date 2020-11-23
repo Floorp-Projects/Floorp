@@ -8,11 +8,14 @@
 #define nsDOMSerializer_h_
 
 #include "mozilla/dom/NonRefcountedDOMObject.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/XMLSerializerBinding.h"
 
 class nsINode;
 class nsIOutputStream;
+
+namespace mozilla {
+class ErrorResult;
+}
 
 class nsDOMSerializer final : public mozilla::dom::NonRefcountedDOMObject {
  public:

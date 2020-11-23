@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_PresentationReceiver_h
 #define mozilla_dom_PresentationReceiver_h
 
-#include "mozilla/ErrorResult.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIPresentationListener.h"
@@ -17,6 +16,8 @@
 class nsPIDOMWindowInner;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class PresentationConnection;

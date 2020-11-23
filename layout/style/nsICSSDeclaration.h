@@ -24,12 +24,13 @@
 #include "mozilla/ErrorResult.h"
 #include "nsWrapperCache.h"
 #include "nsStringFwd.h"
-#include "mozilla/ErrorResult.h"
 #include "nsCOMPtr.h"
 
 class nsINode;
 class nsIPrincipal;
 namespace mozilla {
+class ErrorResult;
+
 namespace css {
 class Rule;
 }  // namespace css

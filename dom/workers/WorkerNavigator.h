@@ -11,7 +11,6 @@
 #include "js/RootingAPI.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/workerinternals/RuntimeService.h"
@@ -22,6 +21,8 @@
 #include "nsWrapperCache.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace webgpu {
 class Instance;
 }  // namespace webgpu

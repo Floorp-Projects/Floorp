@@ -7,27 +7,30 @@
 #ifndef mozilla_dom_ScriptLoader_h
 #define mozilla_dom_ScriptLoader_h
 
+#include "js/TypeDecls.h"
 #include "nsCOMPtr.h"
 #include "nsRefPtrHashtable.h"
-#include "mozilla/Encoding.h"
 #include "nsIScriptElement.h"
 #include "nsCOMArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
-#include "nsIIncrementalStreamLoader.h"
 #include "nsINode.h"
 #include "nsIObserver.h"
+#include "nsIScriptLoaderObserver.h"
 #include "nsURIHashKey.h"
 #include "mozilla/CORSMode.h"
+#include "mozilla/dom/LoadedScript.h"
 #include "mozilla/dom/ScriptLoadRequest.h"
-#include "mozilla/dom/SRIMetadata.h"
-#include "mozilla/dom/SRICheck.h"
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
-#include "mozilla/Vector.h"
 #include "ScriptKind.h"
 
+class nsCycleCollectionTraversalCallback;
+class nsIChannel;
+class nsIConsoleReportCollector;
+class nsIContent;
+class nsIIncrementalStreamLoader;
+class nsIPrincipal;
 class nsIScriptGlobalObject;
 class nsIURI;
 
@@ -39,16 +42,25 @@ class SourceText;
 }  // namespace JS
 
 namespace mozilla {
+
+class LazyLogModule;
+union Utf8Unit;
+
 namespace dom {
 
 class AutoJSAPI;
+class DocGroup;
 class Document;
 class LoadedScript;
 class ModuleLoadRequest;
 class ModuleScript;
+class SRICheckDataVerifier;
+class SRIMetadata;
 class ScriptLoadHandler;
 class ScriptLoader;
 class ScriptRequestProcessor;
+
+enum class ReferrerPolicy : uint8_t;
 
 class AsyncCompileShutdownObserver final : public nsIObserver {
   ~AsyncCompileShutdownObserver() { Unregister(); }

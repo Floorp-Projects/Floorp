@@ -10,7 +10,6 @@
 #include "mozilla/dom/ClientOpPromise.h"
 #include "mozilla/dom/DOMMozPromiseRequestHolder.h"
 #include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/ErrorResult.h"
 
 class nsIGlobalObject;
 

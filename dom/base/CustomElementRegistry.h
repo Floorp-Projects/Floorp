@@ -11,7 +11,6 @@
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CycleCollectedJSContext.h"  // for MicroTaskRunnable
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/CustomElementRegistryBinding.h"
 #include "mozilla/dom/Document.h"
@@ -23,6 +22,8 @@
 #include "nsContentUtils.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 struct CustomElementData;

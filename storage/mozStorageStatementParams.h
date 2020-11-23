@@ -8,11 +8,12 @@
 #define MOZSTORAGESTATEMENTPARAMS_H
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "nsPIDOMWindow.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace storage {
 
 class Statement;

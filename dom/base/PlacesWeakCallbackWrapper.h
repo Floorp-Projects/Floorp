@@ -9,7 +9,6 @@
 
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/PlacesObserversBinding.h"
-#include "mozilla/ErrorResult.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsWrapperCache.h"
 

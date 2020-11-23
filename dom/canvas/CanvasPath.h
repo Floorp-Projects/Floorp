@@ -10,9 +10,10 @@
 #include "nsWrapperCache.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/ErrorResult.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 enum class CanvasWindingRule : uint8_t;

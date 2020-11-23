@@ -18,7 +18,6 @@
 #include "mozilla/PreferenceSheet.h"
 #include "mozilla/PresShellForwards.h"
 #include "mozilla/ScrollStyles.h"
-#include "mozilla/ServoStyleSet.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
@@ -27,23 +26,20 @@
 #include "nsCompatibility.h"
 #include "nsCoord.h"
 #include "nsCOMPtr.h"
+#include "nsHashKeys.h"
 #include "nsRect.h"
 #include "nsStringFwd.h"
-#include "gfxFontConstants.h"
+#include "nsTHashtable.h"
 #include "nsAtom.h"
-#include "nsCRT.h"
 #include "nsIWidgetListener.h"  // for nsSizeMode
 #include "nsGkAtoms.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsChangeHint.h"
-#include <algorithm>
 #include "gfxTypes.h"
 #include "gfxRect.h"
 #include "nsTArray.h"
-#include "prclist.h"
 #include "nsThreadUtils.h"
 #include "Units.h"
-#include "prenv.h"
 
 class nsBidi;
 class nsIPrintSettings;
@@ -81,6 +77,7 @@ class EventStateManager;
 class CounterStyleManager;
 class PresShell;
 class RestyleManager;
+class ServoStyleSet;
 class StaticPresData;
 struct MediaFeatureChange;
 enum class MediaFeatureChangePropagation : uint8_t;

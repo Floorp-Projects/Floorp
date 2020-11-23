@@ -9,12 +9,13 @@
 
 #include "mozilla/dom/MIDIPort.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "nsWrapperCache.h"
 
 struct JSContext;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class MIDIPortInfo;

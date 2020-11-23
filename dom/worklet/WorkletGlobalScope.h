@@ -8,7 +8,6 @@
 #define mozilla_dom_WorkletGlobalScope_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -25,6 +24,7 @@
 
 namespace mozilla {
 
+class ErrorResult;
 class WorkletImpl;
 
 namespace dom {

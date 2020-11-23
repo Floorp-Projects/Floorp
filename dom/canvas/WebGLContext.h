@@ -20,7 +20,6 @@
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/EnumeratedArray.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/UniquePtr.h"

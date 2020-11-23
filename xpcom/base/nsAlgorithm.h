@@ -7,7 +7,8 @@
 #ifndef nsAlgorithm_h___
 #define nsAlgorithm_h___
 
-#include "nsCharTraits.h"  // for |nsCharSourceTraits|, |nsCharSinkTraits|
+#include <cstdint>
+#include "mozilla/Assertions.h"
 
 template <class T>
 inline T NS_ROUNDUP(const T& aA, const T& aB) {

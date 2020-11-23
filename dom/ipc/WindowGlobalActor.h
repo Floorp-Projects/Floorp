@@ -10,7 +10,6 @@
 #include "nsWrapperCache.h"
 #include "nsISupports.h"
 #include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/ErrorResult.h"
 #include "nsIURI.h"
 #include "nsString.h"
 #include "mozilla/dom/JSActor.h"
@@ -18,6 +17,8 @@
 #include "mozilla/dom/WindowGlobalTypes.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 // Common base class for WindowGlobal{Parent, Child}.

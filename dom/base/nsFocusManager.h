@@ -12,7 +12,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsIFocusManager.h"
 #include "nsIObserver.h"
-#include "nsIWidget.h"
 #include "nsWeakReference.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"

@@ -15,12 +15,9 @@
 #ifndef SCREEN_BUFFER_H_
 #define SCREEN_BUFFER_H_
 
-#include "GLContextTypes.h"
-#include "GLDefs.h"
-#include "mozilla/gfx/2D.h"
+#include "GLTypes.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/UniquePtr.h"
-#include "SurfaceTypes.h"
 
 #include <queue>
 #include <memory>

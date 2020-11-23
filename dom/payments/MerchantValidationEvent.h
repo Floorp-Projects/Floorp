@@ -8,7 +8,6 @@
 #define mozilla_dom_MerchantValidationEvent_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/Result.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/MerchantValidationEventBinding.h"
@@ -17,6 +16,8 @@
 class nsIURI;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class Promise;

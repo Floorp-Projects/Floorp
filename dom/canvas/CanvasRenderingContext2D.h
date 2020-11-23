@@ -13,7 +13,6 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EnumeratedArray.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SurfaceFromElementResult.h"
 #include "mozilla/UniquePtr.h"
@@ -28,6 +27,7 @@ class nsGlobalWindowInner;
 class nsXULElement;
 
 namespace mozilla {
+class ErrorResult;
 class PresShell;
 
 namespace gl {

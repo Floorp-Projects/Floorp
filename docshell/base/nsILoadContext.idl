@@ -14,7 +14,9 @@ webidl Element;
 
 %{C++
 #ifdef MOZILLA_INTERNAL_API
-#include "mozilla/BasePrincipal.h" // for OriginAttributes
+namespace mozilla {
+class OriginAttributes;
+}
 #endif
 %}
 

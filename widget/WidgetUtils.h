@@ -8,12 +8,11 @@
 #ifndef mozilla_WidgetUtils_h
 #define mozilla_WidgetUtils_h
 
-#include "mozilla/EventForwards.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/gfx/Matrix.h"
-#include "nsCOMPtr.h"
-#include "nsIWidget.h"
 #include "nsRect.h"
 
+class nsIWidget;
 class nsPIDOMWindowOuter;
 
 namespace mozilla {

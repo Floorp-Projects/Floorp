@@ -8,6 +8,7 @@
 #define mozilla_dom_BaseBlobImpl_h
 
 #include "mozilla/dom/BlobImpl.h"
+#include "mozilla/ErrorResult.h"
 
 namespace mozilla {
 namespace dom {

@@ -11,23 +11,15 @@
 #include <utility>
 
 #include "mozilla/Atomics.h"
-#include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/Tuple.h"
 #include "mozilla/dom/DOMTypes.h"
-#include "mozilla/dom/ReferrerInfo.h"
-#include "mozilla/net/ChannelEventQueue.h"
 #include "mozilla/net/DNS.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/PrivateBrowsingChannel.h"
-#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsHashPropertyBag.h"
 #include "nsHttp.h"
-#include "nsHttpConnectionInfo.h"
 #include "nsHttpHandler.h"
 #include "nsHttpRequestHead.h"
-#include "nsHttpResponseHead.h"
-#include "nsIApplicationCache.h"
 #include "nsIClassOfService.h"
 #include "nsIClassifiedChannel.h"
 #include "nsIConsoleReportCollector.h"
@@ -37,9 +29,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsILoadInfo.h"
-#include "nsIProgressEventSink.h"
 #include "nsIResumableChannel.h"
-#include "nsISecurityConsoleMessage.h"
 #include "nsIStringEnumerator.h"
 #include "nsISupportsPriority.h"
 #include "nsIThrottledInputChannel.h"
@@ -47,7 +37,6 @@
 #include "nsITraceableChannel.h"
 #include "nsIURI.h"
 #include "nsIUploadChannel2.h"
-#include "nsProxyInfo.h"
 #include "nsStringEnumerator.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
@@ -59,6 +48,7 @@
     }                                                \
   }
 
+class nsIProgressEventSink;
 class nsISecurityConsoleMessage;
 class nsIPrincipal;
 

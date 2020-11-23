@@ -18,6 +18,7 @@
 #  define STDOUT_FILENO 1
 #endif
 
+#include "base/command_line.h"
 #include "base/histogram.h"
 #include "base/logging.h"
 #include "base/win_util.h"

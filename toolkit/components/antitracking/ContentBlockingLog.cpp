@@ -8,19 +8,17 @@
 #include "ContentBlockingLog.h"
 
 #include "nsITrackingDBService.h"
-#include "nsStringStream.h"
+#include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RandomNum.h"
+#include "mozilla/ReverseIterator.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPrefs_telemetry.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Unused.h"
 #include "mozilla/XorShift128PlusRNG.h"
-#include "mozilla/ipc/IPCStreamUtils.h"
 
 namespace mozilla {
 

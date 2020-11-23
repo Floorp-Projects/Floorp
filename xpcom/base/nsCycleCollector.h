@@ -13,11 +13,12 @@ class nsISupports;
 template <class T>
 struct already_AddRefed;
 
-#include "nsError.h"
-#include "nsID.h"
-
+#include <cstdint>
 #include "mozilla/Attributes.h"
-#include "js/SliceBudget.h"
+
+namespace js {
+class SliceBudget;
+}
 
 namespace mozilla {
 class CycleCollectedJSContext;

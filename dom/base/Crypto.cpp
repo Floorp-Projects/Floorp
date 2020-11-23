@@ -4,18 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "Crypto.h"
-#include "jsfriendapi.h"
+#include "js/ScalarType.h"
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferViewType
 #include "nsCOMPtr.h"
 #include "nsIRandomGenerator.h"
-#include "MainThreadUtils.h"
-#include "nsXULAppAPI.h"
 
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/CryptoBinding.h"
+#include "mozilla/dom/SubtleCrypto.h"
 #include "nsServiceManagerUtils.h"
-
-using mozilla::dom::ContentChild;
 
 namespace mozilla::dom {
 

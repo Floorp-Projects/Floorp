@@ -9,7 +9,6 @@
 
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/CryptoBuffer.h"
 #include "nsCycleCollectionParticipant.h"

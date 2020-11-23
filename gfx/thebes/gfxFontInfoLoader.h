@@ -10,12 +10,11 @@
 #include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsIThread.h"
-#include "nsRefPtrHashtable.h"
 #include "nsString.h"
-#include "gfxFont.h"
+#include "gfxFontEntry.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/TimeStamp.h"
-#include "nsISupportsImpl.h"
+#include "nsISupports.h"
 
 // data retrieved for a given face
 

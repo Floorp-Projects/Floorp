@@ -10,11 +10,12 @@
 #include "nsString.h"
 #include "nsError.h"
 
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FormData.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class BodyUtil final {

@@ -7,28 +7,24 @@
 #ifndef GFX_IMAGECONTAINER_H
 #define GFX_IMAGECONTAINER_H
 
-#include <stdint.h>     // for uint32_t, uint8_t, uint64_t
-#include <sys/types.h>  // for int32_t
-#include "gfxTypes.h"
-#include "ImageTypes.h"              // for ImageFormat, etc
+#include <stdint.h>      // for int32_t, uint32_t, uint8_t, uint64_t
+#include "ImageTypes.h"  // for ImageFormat, etc
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"      // for MOZ_ASSERT_HELPER2
 #include "mozilla/Mutex.h"           // for Mutex
 #include "mozilla/RecursiveMutex.h"  // for RecursiveMutex, etc
 #include "mozilla/ThreadSafeWeakPtr.h"
-#include "mozilla/TimeStamp.h"           // for TimeStamp
-#include "mozilla/gfx/Point.h"           // For IntSize
+#include "mozilla/TimeStamp.h"  // for TimeStamp
+#include "mozilla/gfx/Point.h"  // For IntSize
+#include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/Types.h"           // For ColorDepth
 #include "mozilla/layers/LayersTypes.h"  // for LayersBackend, etc
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/mozalloc.h"  // for operator delete, etc
-#include "nsCOMPtr.h"          // for already_AddRefed
 #include "nsDebug.h"           // for NS_ASSERTION
 #include "nsISupportsImpl.h"   // for Image::Release, etc
-#include "nsRect.h"            // for mozilla::gfx::IntRect
 #include "nsTArray.h"          // for nsTArray
 #include "mozilla/Atomics.h"
-#include "mozilla/WeakPtr.h"
-#include "nsThreadUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "nsDataHashtable.h"
 #include "mozilla/EnumeratedArray.h"

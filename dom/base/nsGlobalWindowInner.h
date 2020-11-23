@@ -41,7 +41,6 @@
 #include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/CallState.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/OwningNonNull.h"
@@ -98,6 +97,8 @@ class PromiseDocumentFlushedResolver;
 
 namespace mozilla {
 class AbstractThread;
+class ErrorResult;
+
 namespace dom {
 class BarProp;
 class BrowsingContext;

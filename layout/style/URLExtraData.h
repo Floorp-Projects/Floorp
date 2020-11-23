@@ -11,7 +11,6 @@
 
 #include <utility>
 
-#include "ReferrerInfo.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UserAgentStyleSheetID.h"
 #include "mozilla/dom/URL.h"

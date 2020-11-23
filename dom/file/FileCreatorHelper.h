@@ -8,7 +8,6 @@
 #define mozilla_dom_FileCreatorHelper_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h"
 
@@ -22,6 +21,8 @@ class nsIFile;
 class nsIGlobalObject;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 struct ChromeFilePropertyBag;

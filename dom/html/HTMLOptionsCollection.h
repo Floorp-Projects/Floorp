@@ -11,13 +11,14 @@
 #include "nsWrapperCache.h"
 
 #include "mozilla/dom/HTMLOptionElement.h"
-#include "mozilla/ErrorResult.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsGenericHTMLElement.h"
 #include "nsTArray.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class DocGroup;

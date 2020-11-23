@@ -14,9 +14,9 @@
 #include "SVGTransformList.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 
 namespace mozilla {
+class ErrorResult;
 
 namespace dom {
 struct DOMMatrix2DInit;

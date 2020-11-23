@@ -9,7 +9,6 @@
 
 #include "mozilla/PermissionDelegateHandler.h"
 #include "mozilla/Span.h"
-#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/MaybeDiscarded.h"
 #include "mozilla/dom/SyncedContext.h"
 #include "mozilla/dom/UserActivation.h"
@@ -27,6 +26,7 @@ namespace dom {
 
 class WindowGlobalParent;
 class WindowGlobalInit;
+class BrowsingContext;
 class BrowsingContextGroup;
 
 #define MOZ_EACH_WC_FIELD(FIELD)                                       \

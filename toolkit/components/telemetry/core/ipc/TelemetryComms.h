@@ -9,8 +9,8 @@
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/TelemetryProcessEnums.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Variant.h"
 #include "nsITelemetry.h"
-#include "nsVariant.h"
 
 namespace mozilla {
 namespace Telemetry {

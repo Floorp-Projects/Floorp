@@ -10,7 +10,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
@@ -37,6 +36,8 @@ class nsAtom;
 class nsISerialEventTarget;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class AnyCallback;

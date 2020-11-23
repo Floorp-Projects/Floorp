@@ -7,18 +7,24 @@
 #ifndef mozilla_dom_StructuredCloneBlob_h
 #define mozilla_dom_StructuredCloneBlob_h
 
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/StructuredCloneHolder.h"
-#include "mozilla/dom/StructuredCloneHolderBinding.h"
-
-#include "jsapi.h"
-
+#include "js/TypeDecls.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/dom/StructuredCloneHolder.h"
 #include "nsIMemoryReporter.h"
 #include "nsISupports.h"
 
+struct JSStructuredCloneReader;
+struct JSStructuredCloneWriter;
+
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
+
+class GlobalObject;
 
 class StructuredCloneBlob final : public nsIMemoryReporter {
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)

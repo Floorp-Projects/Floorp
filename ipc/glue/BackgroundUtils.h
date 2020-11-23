@@ -9,7 +9,7 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/BasePrincipal.h"
+#include "mozilla/OriginAttributes.h"
 #include "nsCOMPtr.h"
 #include "nscore.h"
 
@@ -48,6 +48,11 @@ struct ParamTraits<mozilla::OriginAttributes>
 }  // namespace IPC
 
 namespace mozilla {
+
+namespace dom {
+class Document;
+}
+
 namespace net {
 class ChildLoadInfoForwarderArgs;
 class LoadInfoArgs;

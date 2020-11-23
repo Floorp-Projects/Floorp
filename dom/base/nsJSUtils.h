@@ -15,8 +15,6 @@
  */
 
 #include "mozilla/Assertions.h"
-#include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "GeckoProfiler.h"
 #include "jsapi.h"
@@ -34,6 +32,8 @@ class nsIScriptGlobalObject;
 class nsXBLPrototypeBinding;
 
 namespace mozilla {
+union Utf8Unit;
+
 namespace dom {
 class AutoJSAPI;
 class Element;

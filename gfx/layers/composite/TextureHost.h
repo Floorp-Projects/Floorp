@@ -7,18 +7,17 @@
 #ifndef MOZILLA_GFX_TEXTUREHOST_H
 #define MOZILLA_GFX_TEXTUREHOST_H
 
-#include <functional>
-#include <stddef.h>  // for size_t
-#include <stdint.h>  // for uint64_t, uint32_t, uint8_t
-#include "gfxTypes.h"
+#include <stddef.h>              // for size_t
+#include <stdint.h>              // for uint64_t, uint32_t, uint8_t
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"  // for override
 #include "mozilla/RefPtr.h"      // for RefPtr, already_AddRefed, etc
-#include "mozilla/gfx/2D.h"      // for DataSourceSurface
-#include "mozilla/gfx/Point.h"   // for IntSize, IntPoint
-#include "mozilla/gfx/Types.h"   // for SurfaceFormat, etc
+#include "mozilla/gfx/Logging.h"
+#include "mozilla/gfx/Matrix.h"
+#include "mozilla/gfx/Point.h"  // for IntSize, IntPoint
+#include "mozilla/gfx/Rect.h"
+#include "mozilla/gfx/Types.h"  // for SurfaceFormat, etc
 #include "mozilla/ipc/FileDescriptor.h"
-#include "mozilla/layers/Compositor.h"       // for Compositor
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags, etc
 #include "mozilla/layers/LayersTypes.h"      // for LayerRenderState, etc
 #include "mozilla/layers/LayersSurfaces.h"
@@ -29,14 +28,18 @@
 #include "nsCOMPtr.h"         // for already_AddRefed
 #include "nsDebug.h"          // for NS_WARNING
 #include "nsISupportsImpl.h"  // for MOZ_COUNT_CTOR, etc
-#include "nsRegion.h"         // for nsIntRegion
-#include "nsTraceRefcnt.h"    // for MOZ_COUNT_CTOR, etc
-#include "nscore.h"           // for nsACString
+#include "nsRect.h"
+#include "nsRegion.h"       // for nsIntRegion
+#include "nsTraceRefcnt.h"  // for MOZ_COUNT_CTOR, etc
+#include "nscore.h"         // for nsACString
 #include "mozilla/layers/AtomicRefCountedWithFinalize.h"
-#include "mozilla/gfx/Rect.h"
 
 class MacIOSurface;
 namespace mozilla {
+namespace gfx {
+class DataSourceSurface;
+}
+
 namespace ipc {
 class Shmem;
 }  // namespace ipc
@@ -66,6 +69,7 @@ class TextureReadLock;
 class TextureSourceOGL;
 class TextureSourceD3D11;
 class TextureSourceBasic;
+class TextureSourceProvider;
 class DataTextureSource;
 class PTextureParent;
 class TextureParent;

@@ -13,7 +13,7 @@
 #include "mozilla/PodOperations.h"
 
 #include <algorithm>
-#include <iterator>
+#include <cstddef>
 #include <new>
 #include <vector>
 

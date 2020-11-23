@@ -7,8 +7,9 @@
 #define MOZILLA_GFX_FONTSRCPRINCIPAL_H
 
 #include "nsCOMPtr.h"
-#include "nsIPrincipal.h"
 #include "PLDHashTable.h"
+
+class nsIPrincipal;
 
 namespace mozilla {
 namespace net {
