@@ -20,17 +20,12 @@
 /* non-XPCOM class for holding controllers and their IDs */
 class nsXULControllerData final {
  public:
-  nsXULControllerData(uint32_t inControllerID, nsIController* inController)
-      : mControllerID(inControllerID), mController(inController) {}
-
+  nsXULControllerData(uint32_t inControllerID, nsIController* inController);
   ~nsXULControllerData() = default;
 
   uint32_t GetControllerID() { return mControllerID; }
 
-  nsresult GetController(nsIController** outController) {
-    NS_IF_ADDREF(*outController = mController);
-    return NS_OK;
-  }
+  nsresult GetController(nsIController** outController);
 
   uint32_t mControllerID;
   nsCOMPtr<nsIController> mController;

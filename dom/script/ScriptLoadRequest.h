@@ -126,18 +126,9 @@ class ScriptLoadRequest
     mIsTracking = true;
   }
 
-  void BlockOnload(Document* aDocument) {
-    MOZ_ASSERT(!mLoadBlockedDocument);
-    aDocument->BlockOnload();
-    mLoadBlockedDocument = aDocument;
-  }
+  void BlockOnload(Document* aDocument);
 
-  void MaybeUnblockOnload() {
-    if (mLoadBlockedDocument) {
-      mLoadBlockedDocument->UnblockOnload(false);
-      mLoadBlockedDocument = nullptr;
-    }
-  }
+  void MaybeUnblockOnload();
 
   enum class Progress : uint8_t {
     eLoading,         // Request either source or bytecode

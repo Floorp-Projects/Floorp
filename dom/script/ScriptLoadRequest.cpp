@@ -127,6 +127,19 @@ ScriptLoadRequest::~ScriptLoadRequest() {
   DropJSObjects(this);
 }
 
+void ScriptLoadRequest::BlockOnload(Document* aDocument) {
+  MOZ_ASSERT(!mLoadBlockedDocument);
+  aDocument->BlockOnload();
+  mLoadBlockedDocument = aDocument;
+}
+
+void ScriptLoadRequest::MaybeUnblockOnload() {
+  if (mLoadBlockedDocument) {
+    mLoadBlockedDocument->UnblockOnload(false);
+    mLoadBlockedDocument = nullptr;
+  }
+}
+
 void ScriptLoadRequest::SetReady() {
   MOZ_ASSERT(mProgress != Progress::eReady);
   mProgress = Progress::eReady;

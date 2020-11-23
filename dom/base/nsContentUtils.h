@@ -104,7 +104,6 @@ class nsStringBuffer;
 class nsStringHashKey;
 class nsTextFragment;
 class nsView;
-class nsViewportInfo;
 class nsWrapperCache;
 class nsAttrValue;
 class nsITransferable;

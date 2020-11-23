@@ -4,7 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-bool nsPIDOMWindowOuter::IsLoading() const {
+#ifndef dom_base_nsPIDOMWindowInlines_h___
+#define dom_base_nsPIDOMWindowInlines_h___
+
+inline bool nsPIDOMWindowOuter::IsLoading() const {
   auto* win = GetCurrentInnerWindow();
 
   if (!win) {
@@ -16,7 +19,7 @@ bool nsPIDOMWindowOuter::IsLoading() const {
   return win->IsLoading();
 }
 
-bool nsPIDOMWindowInner::IsLoading() const {
+inline bool nsPIDOMWindowInner::IsLoading() const {
   if (!mOuterWindow) {
     NS_ERROR("IsLoading() called on orphan inner window!");
 
@@ -26,7 +29,7 @@ bool nsPIDOMWindowInner::IsLoading() const {
   return !mIsDocumentLoaded;
 }
 
-bool nsPIDOMWindowOuter::IsHandlingResizeEvent() const {
+inline bool nsPIDOMWindowOuter::IsHandlingResizeEvent() const {
   auto* win = GetCurrentInnerWindow();
 
   if (!win) {
@@ -38,7 +41,7 @@ bool nsPIDOMWindowOuter::IsHandlingResizeEvent() const {
   return win->IsHandlingResizeEvent();
 }
 
-bool nsPIDOMWindowInner::IsHandlingResizeEvent() const {
+inline bool nsPIDOMWindowInner::IsHandlingResizeEvent() const {
   if (!mOuterWindow) {
     NS_ERROR("IsHandlingResizeEvent() called on orphan inner window!");
 
@@ -48,30 +51,38 @@ bool nsPIDOMWindowInner::IsHandlingResizeEvent() const {
   return mIsHandlingResizeEvent;
 }
 
-bool nsPIDOMWindowInner::HasActiveDocument() { return IsCurrentInnerWindow(); }
+inline bool nsPIDOMWindowInner::HasActiveDocument() {
+  return IsCurrentInnerWindow();
+}
 
-bool nsPIDOMWindowInner::IsTopInnerWindow() const {
+inline bool nsPIDOMWindowInner::IsTopInnerWindow() const {
   return mTopInnerWindow == this;
 }
 
-nsIDocShell* nsPIDOMWindowOuter::GetDocShell() const { return mDocShell; }
+inline nsIDocShell* nsPIDOMWindowOuter::GetDocShell() const {
+  return mDocShell;
+}
 
-nsIDocShell* nsPIDOMWindowInner::GetDocShell() const {
+inline nsIDocShell* nsPIDOMWindowInner::GetDocShell() const {
   return mOuterWindow ? mOuterWindow->GetDocShell() : nullptr;
 }
 
-mozilla::dom::BrowsingContext* nsPIDOMWindowOuter::GetBrowsingContext() const {
+inline mozilla::dom::BrowsingContext* nsPIDOMWindowOuter::GetBrowsingContext()
+    const {
   return mBrowsingContext;
 }
 
-mozilla::dom::BrowsingContext* nsPIDOMWindowInner::GetBrowsingContext() const {
+inline mozilla::dom::BrowsingContext* nsPIDOMWindowInner::GetBrowsingContext()
+    const {
   return mBrowsingContext;
 }
 
-mozilla::dom::Element* nsPIDOMWindowOuter::GetFocusedElement() const {
+inline mozilla::dom::Element* nsPIDOMWindowOuter::GetFocusedElement() const {
   return mInnerWindow ? mInnerWindow->GetFocusedElement() : nullptr;
 }
 
-mozilla::dom::Element* nsPIDOMWindowInner::GetFocusedElement() const {
+inline mozilla::dom::Element* nsPIDOMWindowInner::GetFocusedElement() const {
   return mFocusedElement;
 }
+
+#endif
