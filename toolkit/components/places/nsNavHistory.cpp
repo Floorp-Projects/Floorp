@@ -2920,7 +2920,6 @@ nsresult nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
 
     if (itemId != -1) {
       resultNode->mItemId = itemId;
-      resultNode->mFolderId = parentId;
       resultNode->mDateAdded = aRow->AsInt64(kGetInfoIndex_ItemDateAdded);
       resultNode->mLastModified = aRow->AsInt64(kGetInfoIndex_ItemLastModified);
 

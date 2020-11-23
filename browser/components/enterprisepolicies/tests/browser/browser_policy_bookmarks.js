@@ -113,7 +113,6 @@ async function promiseAllChangesMade({ itemsToAdd, itemsToRemove }) {
       onBeginUpdateBatch() {},
       onEndUpdateBatch() {},
       onItemChanged() {},
-      onItemVisited() {},
       onItemMoved() {},
     };
     PlacesUtils.bookmarks.addObserver(bmObserver);

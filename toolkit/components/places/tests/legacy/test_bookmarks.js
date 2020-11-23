@@ -66,11 +66,6 @@ var bookmarksObserver = {
     this._itemChangedValue = value;
     this._itemChangedOldValue = oldValue;
   },
-  onItemVisited(id, visitID, time) {
-    this._itemVisitedId = id;
-    this._itemVisitedVistId = visitID;
-    this._itemVisitedTime = time;
-  },
   onItemMoved(id, oldParent, oldIndex, newParent, newIndex, itemType) {
     this._itemMovedId = id;
     this._itemMovedOldParent = oldParent;
