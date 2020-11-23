@@ -7,11 +7,15 @@
 #ifndef nsCycleCollectionTraversalCallback_h__
 #define nsCycleCollectionTraversalCallback_h__
 
-#include "jspubtd.h"
-#include "js/HeapAPI.h"
-#include "nsISupports.h"
+#include <cstdint>
+#include "nscore.h"
 
 class nsCycleCollectionParticipant;
+class nsISupports;
+
+namespace JS {
+class GCCellPtr;
+}
 
 class NS_NO_VTABLE nsCycleCollectionTraversalCallback {
  public:
