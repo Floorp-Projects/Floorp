@@ -523,6 +523,25 @@ static nsresult GetAppleModelId(nsAutoCString& aModelId) {
   aModelId.Truncate(numChars - 1);
   return NS_OK;
 }
+
+static nsresult ProcessIsRosettaTranslated(bool& isRosetta) {
+#  if defined(__aarch64__)
+  // There is no need to call sysctlbyname() if we are running as arm64.
+  isRosetta = false;
+#  else
+  int ret = 0;
+  size_t size = sizeof(ret);
+  if (sysctlbyname("sysctl.proc_translated", &ret, &size, NULL, 0) == -1) {
+    if (errno != ENOENT) {
+      fprintf(stderr, "Failed to check for translation environment\n");
+    }
+    isRosetta = false;
+  } else {
+    isRosetta = (ret == 1);
+  }
+#  endif
+  return NS_OK;
+}
 #endif
 
 using namespace mozilla;
@@ -937,6 +956,11 @@ nsresult nsSystemInfo::Init() {
   nsAutoCString modelId;
   if (NS_SUCCEEDED(GetAppleModelId(modelId))) {
     rv = SetPropertyAsACString(u"appleModelId"_ns, modelId);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  bool isRosetta;
+  if (NS_SUCCEEDED(ProcessIsRosettaTranslated(isRosetta))) {
+    rv = SetPropertyAsBool(u"rosettaStatus"_ns, isRosetta);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 #endif
