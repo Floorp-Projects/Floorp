@@ -30,6 +30,7 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     "LoadedScript.cpp",
     "ModuleLoadRequest.cpp",
+    "nsIScriptElement.cpp",
     "ScriptElement.cpp",
     "ScriptLoader.cpp",
     "ScriptLoadHandler.cpp",
