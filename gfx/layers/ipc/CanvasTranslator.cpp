@@ -9,6 +9,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"

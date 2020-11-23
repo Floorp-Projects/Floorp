@@ -10,12 +10,12 @@
 #include "base/process.h"      // for ProcessId
 #include "base/task.h"         // for CancelableTask, DeleteTask, etc
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/gfx/Point.h"           // for IntSize
-#include "mozilla/Hal.h"                 // for hal::SetCurrentThreadPriority()
-#include "mozilla/HalTypes.h"            // for hal::THREAD_PRIORITY_COMPOSITOR
+#include "mozilla/gfx/Point.h"  // for IntSize
+#include "mozilla/Hal.h"        // for hal::SetCurrentThreadPriority()
+#include "mozilla/HalTypes.h"   // for hal::THREAD_PRIORITY_COMPOSITOR
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/MessageChannel.h"  // for MessageChannel, etc
-#include "mozilla/ipc/ProtocolUtils.h"
-#include "mozilla/ipc/Transport.h"                           // for Transport
+#include "mozilla/ipc/Transport.h"       // for Transport
 #include "mozilla/media/MediaSystemResourceManagerParent.h"  // for MediaSystemResourceManagerParent
 #include "mozilla/layers/BufferTexture.h"
 #include "mozilla/layers/CompositableTransactionParent.h"

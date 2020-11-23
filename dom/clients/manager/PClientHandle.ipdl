@@ -10,6 +10,8 @@ include protocol PFileDescriptorSet;
 include protocol PRemoteLazyInputStream;
 include ClientIPCTypes;
 
+include "mozilla/ipc/ProtocolMessageUtils.h";
+
 namespace mozilla {
 namespace dom {
 

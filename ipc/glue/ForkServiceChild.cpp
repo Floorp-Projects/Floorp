@@ -8,6 +8,7 @@
 #include "mozilla/ipc/IPDLParamTraits.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "mozilla/ipc/ProtocolMessageUtils.h"
 #include "mozilla/StaticPrefs_dom.h"
 
 #include <unistd.h>

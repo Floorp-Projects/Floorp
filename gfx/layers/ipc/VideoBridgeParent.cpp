@@ -6,6 +6,7 @@
 
 #include "VideoBridgeParent.h"
 #include "CompositorThread.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/VideoBridgeUtils.h"
 

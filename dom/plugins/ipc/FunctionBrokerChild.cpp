@@ -7,6 +7,8 @@
 #include "FunctionBrokerChild.h"
 #include "FunctionBrokerThread.h"
 
+#include "mozilla/ipc/Endpoint.h"
+
 namespace mozilla::plugins {
 
 FunctionBrokerChild* FunctionBrokerChild::sInstance = nullptr;

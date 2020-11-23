@@ -6,6 +6,7 @@
 
 #include "VRGPUParent.h"
 
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/ProcessChild.h"
 
 namespace mozilla {

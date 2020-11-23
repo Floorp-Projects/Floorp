@@ -7,40 +7,42 @@
 #ifndef mozilla_ipc_ProtocolUtils_h
 #define mozilla_ipc_ProtocolUtils_h 1
 
-#include "base/process.h"
-#include "base/process_util.h"
-#include "chrome/common/ipc_message_utils.h"
-
-#include "prenv.h"
-
+#include <cstddef>
+#include <cstdint>
+#include <utility>
 #include "IPCMessageStart.h"
+#include "base/basictypes.h"
+#include "base/process.h"
+#include "chrome/common/ipc_message.h"
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ipc/ByteBuf.h"
-#include "mozilla/ipc/FileDescriptor.h"
-#include "mozilla/ipc/MessageChannel.h"
-#include "mozilla/ipc/Shmem.h"
-#include "mozilla/ipc/Transport.h"
-#include "mozilla/ipc/MessageLink.h"
-#include "mozilla/ipc/ProtocolUtilsFwd.h"
-#include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/MozPromise.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/NotNull.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Scoped.h"
 #include "mozilla/UniquePtr.h"
-#include "MainThreadUtils.h"
-
+#include "mozilla/ipc/MessageChannel.h"
+#include "mozilla/ipc/MessageLink.h"
+#include "mozilla/ipc/SharedMemory.h"
+#include "mozilla/ipc/Shmem.h"
 #include "nsDataHashtable.h"
-#include "nsHashKeys.h"
+#include "nsDebug.h"
+#include "nsISupports.h"
+#include "nsTArrayForwardDeclare.h"
+#include "nsTHashtable.h"
+
+// XXX Things that could be replaced by a forward header
+#include "mozilla/ipc/Transport.h"  // for Transport
+
+// XXX Things that could be moved to ProtocolUtils.cpp
+#include "base/process_util.h"  // for CloseProcessHandle
+#include "prenv.h"              // for PR_GetEnv
 
 #if defined(ANDROID) && defined(DEBUG)
 #  include <android/log.h>
 #endif
 
-template <typename T>
-class nsTHashtable;
 template <typename T>
 class nsPtrHashKey;
 
@@ -68,7 +70,10 @@ enum {
 
 }  // namespace
 
+class MessageLoop;
+class PickleIterator;
 class nsISerialEventTarget;
+class nsUint32HashKey;
 
 namespace mozilla {
 class SchedulerGroup;
@@ -86,8 +91,6 @@ namespace ipc {
 #ifdef FUZZING
 class ProtocolFuzzerHelper;
 #endif
-
-class MessageChannel;
 
 #ifdef XP_WIN
 const base::ProcessHandle kInvalidProcessHandle = INVALID_HANDLE_VALUE;
@@ -373,6 +376,9 @@ class IPCResult {
 template <class PFooSide>
 class Endpoint;
 
+template <class PFooSide>
+class ManagedEndpoint;
+
 /**
  * All top-level protocols should inherit this class.
  *
@@ -618,8 +624,6 @@ MOZ_NEVER_INLINE void ArrayLengthReadError(const char* aElementName);
 
 MOZ_NEVER_INLINE void SentinelReadError(const char* aElementName);
 
-struct PrivateIPDLInterface {};
-
 #if defined(XP_WIN)
 // This is a restricted version of Windows' DuplicateHandle() function
 // that works inside the sandbox and can send handles but not retrieve
@@ -635,210 +639,6 @@ bool DuplicateHandle(HANDLE aSourceHandle, DWORD aTargetProcessId,
  * call. Returns the system error.
  */
 void AnnotateSystemError();
-
-/**
- * An endpoint represents one end of a partially initialized IPDL channel. To
- * set up a new top-level protocol:
- *
- * Endpoint<PFooParent> parentEp;
- * Endpoint<PFooChild> childEp;
- * nsresult rv;
- * rv = PFoo::CreateEndpoints(parentPid, childPid, &parentEp, &childEp);
- *
- * You're required to pass in parentPid and childPid, which are the pids of the
- * processes in which the parent and child endpoints will be used.
- *
- * Endpoints can be passed in IPDL messages or sent to other threads using
- * PostTask. Once an Endpoint has arrived at its destination process and thread,
- * you need to create the top-level actor and bind it to the endpoint:
- *
- * FooParent* parent = new FooParent();
- * bool rv1 = parentEp.Bind(parent, processActor);
- * bool rv2 = parent->SendBar(...);
- *
- * (See Bind below for an explanation of processActor.) Once the actor is bound
- * to the endpoint, it can send and receive messages.
- */
-template <class PFooSide>
-class Endpoint {
- public:
-  typedef base::ProcessId ProcessId;
-
-  Endpoint()
-      : mValid(false),
-        mMode(static_cast<mozilla::ipc::Transport::Mode>(0)),
-        mMyPid(0),
-        mOtherPid(0) {}
-
-  Endpoint(const PrivateIPDLInterface&, mozilla::ipc::Transport::Mode aMode,
-           TransportDescriptor aTransport, ProcessId aMyPid,
-           ProcessId aOtherPid)
-      : mValid(true),
-        mMode(aMode),
-        mTransport(aTransport),
-        mMyPid(aMyPid),
-        mOtherPid(aOtherPid) {}
-
-  Endpoint(Endpoint&& aOther)
-      : mValid(aOther.mValid),
-        mTransport(aOther.mTransport),
-        mMyPid(aOther.mMyPid),
-        mOtherPid(aOther.mOtherPid) {
-    if (aOther.mValid) {
-      mMode = aOther.mMode;
-    }
-    aOther.mValid = false;
-  }
-
-  Endpoint& operator=(Endpoint&& aOther) {
-    mValid = aOther.mValid;
-    if (aOther.mValid) {
-      mMode = aOther.mMode;
-    }
-    mTransport = aOther.mTransport;
-    mMyPid = aOther.mMyPid;
-    mOtherPid = aOther.mOtherPid;
-
-    aOther.mValid = false;
-    return *this;
-  }
-
-  ~Endpoint() {
-    if (mValid) {
-      CloseDescriptor(mTransport);
-    }
-  }
-
-  ProcessId OtherPid() const { return mOtherPid; }
-
-  // This method binds aActor to this endpoint. After this call, the actor can
-  // be used to send and receive messages. The endpoint becomes invalid.
-  bool Bind(PFooSide* aActor) {
-    MOZ_RELEASE_ASSERT(mValid);
-    MOZ_RELEASE_ASSERT(mMyPid == base::GetCurrentProcId());
-
-    UniquePtr<Transport> transport =
-        mozilla::ipc::OpenDescriptor(mTransport, mMode);
-    if (!transport) {
-      return false;
-    }
-    if (!aActor->Open(
-            std::move(transport), mOtherPid, XRE_GetIOMessageLoop(),
-            mMode == Transport::MODE_SERVER ? ParentSide : ChildSide)) {
-      return false;
-    }
-    mValid = false;
-    return true;
-  }
-
-  bool IsValid() const { return mValid; }
-
- private:
-  friend struct IPC::ParamTraits<Endpoint<PFooSide>>;
-
-  Endpoint(const Endpoint&) = delete;
-  Endpoint& operator=(const Endpoint&) = delete;
-
-  bool mValid;
-  mozilla::ipc::Transport::Mode mMode;
-  TransportDescriptor mTransport;
-  ProcessId mMyPid, mOtherPid;
-};
-
-#if defined(XP_MACOSX)
-void AnnotateCrashReportWithErrno(CrashReporter::Annotation tag, int error);
-#else
-static inline void AnnotateCrashReportWithErrno(CrashReporter::Annotation tag,
-                                                int error) {}
-#endif
-
-// This function is used internally to create a pair of Endpoints. See the
-// comment above Endpoint for a description of how it might be used.
-template <class PFooParent, class PFooChild>
-nsresult CreateEndpoints(const PrivateIPDLInterface& aPrivate,
-                         base::ProcessId aParentDestPid,
-                         base::ProcessId aChildDestPid,
-                         Endpoint<PFooParent>* aParentEndpoint,
-                         Endpoint<PFooChild>* aChildEndpoint) {
-  MOZ_RELEASE_ASSERT(aParentDestPid);
-  MOZ_RELEASE_ASSERT(aChildDestPid);
-
-  TransportDescriptor parentTransport, childTransport;
-  nsresult rv;
-  if (NS_FAILED(rv = CreateTransport(aParentDestPid, &parentTransport,
-                                     &childTransport))) {
-    AnnotateCrashReportWithErrno(
-        CrashReporter::Annotation::IpcCreateEndpointsNsresult, int(rv));
-    return rv;
-  }
-
-  *aParentEndpoint =
-      Endpoint<PFooParent>(aPrivate, mozilla::ipc::Transport::MODE_SERVER,
-                           parentTransport, aParentDestPid, aChildDestPid);
-
-  *aChildEndpoint =
-      Endpoint<PFooChild>(aPrivate, mozilla::ipc::Transport::MODE_CLIENT,
-                          childTransport, aChildDestPid, aParentDestPid);
-
-  return NS_OK;
-}
-
-/**
- * A managed endpoint represents one end of a partially initialized managed
- * IPDL actor. It is used for situations where the usual IPDL Constructor
- * methods do not give sufficient control over the construction of actors, such
- * as when constructing actors within replies, or constructing multiple related
- * actors simultaneously.
- *
- * FooParent* parent = new FooParent();
- * ManagedEndpoint<PFooChild> childEp = parentMgr->OpenPFooEndpoint(parent);
- *
- * ManagedEndpoints should be sent using IPDL messages or other mechanisms to
- * the other side of the manager channel. Once the ManagedEndpoint has arrived
- * at its destination, you can create the actor, and bind it to the endpoint.
- *
- * FooChild* child = new FooChild();
- * childMgr->BindPFooEndpoint(childEp, child);
- *
- * WARNING: If the remote side of an endpoint has not been bound before it
- * begins to receive messages, an IPC routing error will occur, likely causing
- * a browser crash.
- */
-template <class PFooSide>
-class ManagedEndpoint {
- public:
-  ManagedEndpoint() : mId(0) {}
-
-  ManagedEndpoint(const PrivateIPDLInterface&, int32_t aId) : mId(aId) {}
-
-  ManagedEndpoint(ManagedEndpoint&& aOther) : mId(aOther.mId) {
-    aOther.mId = 0;
-  }
-
-  ManagedEndpoint& operator=(ManagedEndpoint&& aOther) {
-    mId = aOther.mId;
-    aOther.mId = 0;
-    return *this;
-  }
-
-  bool IsValid() const { return mId != 0; }
-
-  Maybe<int32_t> ActorId() const { return IsValid() ? Some(mId) : Nothing(); }
-
-  bool operator==(const ManagedEndpoint& _o) const { return mId == _o.mId; }
-
- private:
-  friend struct IPC::ParamTraits<ManagedEndpoint<PFooSide>>;
-
-  ManagedEndpoint(const ManagedEndpoint&) = delete;
-  ManagedEndpoint& operator=(const ManagedEndpoint&) = delete;
-
-  // The routing ID for the to-be-created endpoint.
-  int32_t mId;
-
-  // XXX(nika): Might be nice to have other info for assertions?
-  // e.g. mManagerId, mManagerType, etc.
-};
 
 // The ActorLifecycleProxy is a helper type used internally by IPC to maintain a
 // maybe-owning reference to an IProtocol object. For well-behaved actors
@@ -924,119 +724,5 @@ Protocol* SingleManagedOrNull(const ManagedContainer<Protocol>& aManagees) {
 }
 
 }  // namespace mozilla
-
-namespace IPC {
-
-template <>
-struct ParamTraits<mozilla::ipc::ActorHandle> {
-  typedef mozilla::ipc::ActorHandle paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    IPC::WriteParam(aMsg, aParam.mId);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    int id;
-    if (IPC::ReadParam(aMsg, aIter, &id)) {
-      aResult->mId = id;
-      return true;
-    }
-    return false;
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    aLog->append(StringPrintf(L"(%d)", aParam.mId));
-  }
-};
-
-template <class PFooSide>
-struct ParamTraits<mozilla::ipc::Endpoint<PFooSide>> {
-  typedef mozilla::ipc::Endpoint<PFooSide> paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    IPC::WriteParam(aMsg, aParam.mValid);
-    if (!aParam.mValid) {
-      return;
-    }
-
-    IPC::WriteParam(aMsg, static_cast<uint32_t>(aParam.mMode));
-
-    // We duplicate the descriptor so that our own file descriptor remains
-    // valid after the write. An alternative would be to set
-    // aParam.mTransport.mValid to false, but that won't work because aParam
-    // is const.
-    mozilla::ipc::TransportDescriptor desc =
-        mozilla::ipc::DuplicateDescriptor(aParam.mTransport);
-    IPC::WriteParam(aMsg, desc);
-
-    IPC::WriteParam(aMsg, aParam.mMyPid);
-    IPC::WriteParam(aMsg, aParam.mOtherPid);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    MOZ_RELEASE_ASSERT(!aResult->mValid);
-
-    if (!IPC::ReadParam(aMsg, aIter, &aResult->mValid)) {
-      return false;
-    }
-    if (!aResult->mValid) {
-      // Object is empty, but read succeeded.
-      return true;
-    }
-
-    uint32_t mode;
-    if (!IPC::ReadParam(aMsg, aIter, &mode) ||
-        !IPC::ReadParam(aMsg, aIter, &aResult->mTransport) ||
-        !IPC::ReadParam(aMsg, aIter, &aResult->mMyPid) ||
-        !IPC::ReadParam(aMsg, aIter, &aResult->mOtherPid)) {
-      return false;
-    }
-    aResult->mMode = Channel::Mode(mode);
-    return true;
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    aLog->append(StringPrintf(L"Endpoint"));
-  }
-};
-
-template <class PFooSide>
-struct ParamTraits<mozilla::ipc::ManagedEndpoint<PFooSide>> {
-  typedef mozilla::ipc::ManagedEndpoint<PFooSide> paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    IPC::WriteParam(aMsg, aParam.mId);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    MOZ_RELEASE_ASSERT(aResult->mId == 0);
-
-    if (!IPC::ReadParam(aMsg, aIter, &aResult->mId)) {
-      return false;
-    }
-    return true;
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    aLog->append(StringPrintf(L"ManagedEndpoint"));
-  }
-};
-
-}  // namespace IPC
-
-namespace mozilla::ipc {
-template <>
-struct IPDLParamTraits<FileDescriptor> {
-  typedef FileDescriptor paramType;
-
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
-                    const paramType& aParam);
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, paramType* aResult);
-};
-}  // namespace mozilla::ipc
 
 #endif  // mozilla_ipc_ProtocolUtils_h

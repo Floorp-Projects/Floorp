@@ -11,6 +11,7 @@
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/layers/CanvasDrawEventRecorder.h"
 #include "nsIObserverService.h"

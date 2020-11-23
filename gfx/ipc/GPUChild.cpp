@@ -19,6 +19,7 @@
 #if defined(XP_WIN)
 #  include "mozilla/gfx/DeviceManagerDx.h"
 #endif
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/APZInputBridgeChild.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/Unused.h"

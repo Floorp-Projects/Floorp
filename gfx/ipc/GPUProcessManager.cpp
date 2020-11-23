@@ -22,6 +22,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUChild.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/APZCTreeManagerChild.h"
 #include "mozilla/layers/APZInputBridgeChild.h"
 #include "mozilla/layers/CompositorBridgeChild.h"

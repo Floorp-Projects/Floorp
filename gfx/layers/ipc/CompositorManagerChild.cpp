@@ -14,6 +14,7 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/dom/ContentChild.h"  // for ContentChild
 #include "mozilla/dom/BrowserChild.h"  // for BrowserChild
+#include "mozilla/ipc/Endpoint.h"
 #include "VsyncSource.h"
 
 namespace mozilla {

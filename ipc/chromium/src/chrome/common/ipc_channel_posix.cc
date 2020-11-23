@@ -32,6 +32,7 @@
 #include "chrome/common/file_descriptor_set_posix.h"
 #include "chrome/common/ipc_channel_utils.h"
 #include "chrome/common/ipc_message_utils.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/StaticMutex.h"

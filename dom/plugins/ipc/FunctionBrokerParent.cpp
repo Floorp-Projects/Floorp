@@ -8,6 +8,8 @@
 #include "FunctionBroker.h"
 #include "FunctionBrokerThread.h"
 
+#include "mozilla/ipc/Endpoint.h"
+
 namespace mozilla::plugins {
 
 #if defined(XP_WIN)

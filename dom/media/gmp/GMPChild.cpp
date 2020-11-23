@@ -25,6 +25,7 @@
 #include "GMPVideoHost.h"
 #include "mozilla/Algorithm.h"
 #include "mozilla/ipc/CrashReporterClient.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/TextUtils.h"
 #include "nsDebugImpl.h"

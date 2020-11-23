@@ -6,6 +6,7 @@
 
 #include "VRGPUChild.h"
 
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "VRManager.h"
 

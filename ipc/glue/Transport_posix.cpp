@@ -10,6 +10,7 @@
 
 #include "base/eintr_wrapper.h"
 
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "ProtocolUtils.h"
