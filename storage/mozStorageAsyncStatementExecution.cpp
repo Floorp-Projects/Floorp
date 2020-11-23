@@ -20,6 +20,10 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Telemetry.h"
 
+#ifndef MOZ_STORAGE_SORTWARNING_SQL_DUMP
+extern mozilla::LazyLogModule gStorageLog;
+#endif
+
 namespace mozilla {
 namespace storage {
 

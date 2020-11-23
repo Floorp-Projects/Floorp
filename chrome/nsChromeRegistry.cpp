@@ -9,6 +9,7 @@
 #include "nsChromeRegistryContent.h"
 
 #include "nsCOMPtr.h"
+#include "nsComponentManagerUtils.h"
 #include "nsError.h"
 #include "nsEscape.h"
 #include "nsNetUtil.h"

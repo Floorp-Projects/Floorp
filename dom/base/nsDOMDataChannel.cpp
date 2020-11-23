@@ -12,15 +12,18 @@
 #include "nsDOMDataChannelDeclarations.h"
 #include "nsDOMDataChannel.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/Blob.h"
 
 #include "nsError.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIScriptContext.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsProxyRelease.h"
 

@@ -9,6 +9,7 @@
 #include "gfxContext.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/SVGDocument.h"
 #include "mozilla/StaticPrefs_svg.h"

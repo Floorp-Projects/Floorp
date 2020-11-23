@@ -9,6 +9,7 @@
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "nsContentUtils.h"
+#include "nsIFile.h"
 #include "nsIFileChannel.h"
 #include "nsIFileStreams.h"
 #include "nsITimedChannel.h"

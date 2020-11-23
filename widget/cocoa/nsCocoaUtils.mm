@@ -9,6 +9,7 @@
 
 #include "AppleUtils.h"
 #include "gfx2DGlue.h"
+#include "gfxContext.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "ImageRegion.h"

@@ -7,6 +7,8 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Logging.h"
 #include "mozilla/NullPrincipal.h"
+#include "nsIChannel.h"
+#include "nsNetUtil.h"
 
 mozilla::LazyLogModule gFetchImageLog("FetchImageHelper");
 

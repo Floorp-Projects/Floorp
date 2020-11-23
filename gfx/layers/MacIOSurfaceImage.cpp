@@ -10,6 +10,7 @@
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/MacIOSurfaceTextureClientOGL.h"
+#include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/UniquePtr.h"
 #include "YCbCrUtils.h"

@@ -13,6 +13,7 @@
 #include "nsDataHashtable.h"
 #include "mozilla/Atomics.h"
 #include "nsIAsyncShutdown.h"
+#include "nsRefPtrHashtable.h"
 #include "nsThreadUtils.h"
 #include "mozilla/MozPromise.h"
 #include "GMPStorage.h"
@@ -21,6 +22,8 @@ template <class>
 struct already_AddRefed;
 
 namespace mozilla {
+class OriginAttributesPattern;
+
 namespace gmp {
 
 class GMPParent;

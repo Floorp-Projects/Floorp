@@ -20,6 +20,7 @@
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 
+class nsDocShell;
 class nsICookieJarSettings;
 class nsINode;
 class nsPIDOMWindowOuter;

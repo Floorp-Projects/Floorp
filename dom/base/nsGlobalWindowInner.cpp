@@ -24,6 +24,7 @@
 #include "mozilla/dom/ContentMediaController.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/CSPEvalChecker.h"
+#include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/DebuggerNotification.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"

@@ -12,6 +12,8 @@
 #include "mozilla/dom/TypedArray.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class OwningArrayBufferViewOrArrayBuffer;

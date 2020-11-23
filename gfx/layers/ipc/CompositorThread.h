@@ -7,6 +7,7 @@
 #define mozilla_layers_CompositorThread_h
 
 #include "nsISupportsImpl.h"
+#include "nsIThread.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 
 class nsISerialEventTarget;

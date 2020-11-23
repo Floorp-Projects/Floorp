@@ -7,6 +7,7 @@
 #include <fstream>
 #include "mozilla/JSONWriter.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "nsIThread.h"
 #include "nsString.h"
 
 #include "OpenVRSession.h"

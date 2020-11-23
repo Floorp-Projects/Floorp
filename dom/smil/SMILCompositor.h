@@ -14,10 +14,13 @@
 #include "mozilla/SMILAnimationFunction.h"
 #include "mozilla/SMILCompositorTable.h"
 #include "mozilla/UniquePtr.h"
+#include "nsCSSPropertyID.h"
 #include "nsString.h"
 #include "nsTHashtable.h"
 
 namespace mozilla {
+
+class ComputedStyle;
 
 //----------------------------------------------------------------------
 // SMILCompositor

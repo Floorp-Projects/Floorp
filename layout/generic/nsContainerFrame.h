@@ -11,6 +11,7 @@
 
 #include "mozilla/Attributes.h"
 #include "LayoutConstants.h"
+#include "nsISelectionDisplay.h"
 #include "nsSplittableFrame.h"
 #include "nsFrameList.h"
 #include "nsLineBox.h"

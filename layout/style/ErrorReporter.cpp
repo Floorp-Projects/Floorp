@@ -16,6 +16,7 @@
 #include "mozilla/Services.h"
 #include "nsIConsoleService.h"
 #include "mozilla/dom/Document.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIDocShell.h"
 #include "nsIFactory.h"
 #include "nsINode.h"

@@ -11,6 +11,7 @@
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "Units.h"  // for ScreenRect
+#include "UnitTransforms.h"
 
 namespace mozilla {
 namespace layers {

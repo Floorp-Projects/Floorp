@@ -7,6 +7,7 @@
 #include "AntiTrackingUtils.h"
 
 #include "AntiTrackingLog.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/net/CookieJarSettings.h"
@@ -18,6 +19,7 @@
 #include "mozIThirdPartyUtil.h"
 #include "nsGlobalWindowInner.h"
 #include "nsIChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsIPermission.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"

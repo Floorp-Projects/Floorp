@@ -5,7 +5,10 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
+#include "nsIObserverService.h"
 #include "nsThreadUtils.h"
 #include "TelemetryFixture.h"
 #include "TelemetryTestHelpers.h"

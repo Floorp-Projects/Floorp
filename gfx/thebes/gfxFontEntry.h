@@ -13,6 +13,7 @@
 #include "gfxFontUtils.h"
 #include "gfxFontVariations.h"
 #include "gfxPlatform.h"
+#include "gfxRect.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "mozilla/HashFunctions.h"

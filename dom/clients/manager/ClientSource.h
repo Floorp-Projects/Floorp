@@ -24,6 +24,8 @@ class nsISerialEventTarget;
 class nsPIDOMWindowInner;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class ClientClaimArgs;

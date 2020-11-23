@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TemporaryIPCBlobChild.h"
+#include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/MutableBlobStorage.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include <private/pprio.h>

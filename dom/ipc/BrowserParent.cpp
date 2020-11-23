@@ -45,6 +45,7 @@
 #include "mozilla/layout/RemoteLayerTreeOwner.h"
 #include "mozilla/plugins/PPluginWidgetParent.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/CookieJarSettings.h"

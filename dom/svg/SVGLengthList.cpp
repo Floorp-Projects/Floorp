@@ -6,6 +6,7 @@
 
 #include "SVGLengthList.h"
 #include "nsCharSeparatedTokenizer.h"
+#include "nsContentUtils.h"
 #include "nsError.h"
 #include "nsString.h"
 #include "SVGElement.h"

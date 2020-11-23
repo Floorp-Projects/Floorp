@@ -36,6 +36,7 @@
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/PWindowGlobalParent.h"
 #include "mozilla/dom/Performance.h"
+#include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ReportingHeader.h"
 #include "mozilla/dom/UnionTypes.h"

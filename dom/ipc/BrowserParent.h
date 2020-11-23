@@ -30,6 +30,7 @@
 #include "nsIBrowserDOMWindow.h"
 #include "nsIDOMEventListener.h"
 #include "nsIKeyEventInPluginCallback.h"
+#include "nsIRemoteTab.h"
 #include "nsIWidget.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsWeakReference.h"

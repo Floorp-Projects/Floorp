@@ -6,6 +6,7 @@
 #include "MediaPlaybackDelayPolicy.h"
 
 #include "nsPIDOMWindow.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/StaticPrefs_media.h"
 

@@ -29,6 +29,7 @@
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 
 namespace mozilla {

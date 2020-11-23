@@ -32,6 +32,7 @@
 #include "mozilla/ModuleUtils.h"
 #include "SpecialSystemDirectory.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 
 // Time to wait for the remoting service to start

@@ -11,6 +11,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/Document.h"
 
 #include "nsContentUtils.h"
 #include "nsISupportsPrimitives.h"

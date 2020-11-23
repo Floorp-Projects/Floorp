@@ -10,7 +10,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Variant.h"
 
 #include "jsapi.h"
 

@@ -11,6 +11,7 @@
 #include "mozilla/dom/PMessagePort.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "xpcpublic.h"
 
 namespace mozilla {
 

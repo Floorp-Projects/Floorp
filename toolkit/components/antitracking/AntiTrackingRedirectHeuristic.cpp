@@ -20,6 +20,7 @@
 #include "nsIChannel.h"
 #include "nsIClassifiedChannel.h"
 #include "nsICookieService.h"
+#include "nsIHttpChannel.h"
 #include "nsIRedirectHistoryEntry.h"
 #include "nsIScriptError.h"
 #include "nsIURI.h"

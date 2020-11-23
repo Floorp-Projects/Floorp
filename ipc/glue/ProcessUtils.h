@@ -9,6 +9,7 @@
 
 #include "FileDescriptor.h"
 #include "base/shared_memory.h"
+#include "mozilla/Maybe.h"
 
 namespace mozilla {
 namespace ipc {

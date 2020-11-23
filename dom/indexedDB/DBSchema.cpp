@@ -6,6 +6,10 @@
 
 #include "DBSchema.h"
 
+// local includes
+#include "ActorsParentCommon.h"
+#include "IndexedDBCommon.h"
+
 // global includes
 #include "ErrorList.h"
 #include "GeckoProfiler.h"

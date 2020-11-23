@@ -31,6 +31,8 @@
 #include "mozilla/dom/OffscreenCanvasBinding.h"
 #include "mozilla/dom/PMessagePort.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/StructuredCloneBlob.h"
+#include "mozilla/dom/StructuredCloneHolderBinding.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/WebIDLSerializable.h"

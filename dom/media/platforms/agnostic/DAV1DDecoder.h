@@ -8,6 +8,7 @@
 
 #  include "PlatformDecoderModule.h"
 #  include "dav1d/dav1d.h"
+#  include "nsRefPtrHashtable.h"
 
 namespace mozilla {
 

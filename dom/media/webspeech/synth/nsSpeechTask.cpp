@@ -8,6 +8,7 @@
 #include "AudioSegment.h"
 #include "nsSpeechTask.h"
 #include "nsSynthVoiceRegistry.h"
+#include "nsXULAppAPI.h"
 #include "SharedBuffer.h"
 #include "SpeechSynthesis.h"
 

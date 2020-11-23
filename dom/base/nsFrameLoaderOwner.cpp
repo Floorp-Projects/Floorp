@@ -7,6 +7,7 @@
 #include "nsFrameLoaderOwner.h"
 #include "nsFrameLoader.h"
 #include "nsFocusManager.h"
+#include "nsNetUtil.h"
 #include "nsSubDocumentFrame.h"
 #include "nsQueryObject.h"
 #include "mozilla/AsyncEventDispatcher.h"

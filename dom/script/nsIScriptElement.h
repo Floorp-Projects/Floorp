@@ -17,6 +17,19 @@
 #include "nsContentCreatorFunctions.h"
 #include "mozilla/CORSMode.h"
 #include "ReferrerInfo.h"
+#include "nsStringFwd.h"
+#include "nscore.h"
+
+// XXX Avoid including this here by moving function bodies to the cpp file
+#include "nsIPrincipal.h"
+
+class nsIPrincipal;
+class nsIURI;
+
+namespace mozilla::dom {
+class Document;
+enum class ReferrerPolicy : uint8_t;
+}  // namespace mozilla::dom
 
 // Must be kept in sync with xpcom/rust/xpcom/src/interfaces/nonidl.rs
 #define NS_ISCRIPTELEMENT_IID                        \

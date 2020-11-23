@@ -23,6 +23,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsIWindowMediator.h"
 #include "nsImportModule.h"
+#include "nsITelemetry.h"
 #include "nsNetCID.h"
 #include "nsObserverService.h"
 #include "nsReadableUtils.h"

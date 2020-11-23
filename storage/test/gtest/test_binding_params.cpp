@@ -6,6 +6,7 @@
 
 #include "storage_test_harness.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozStorageHelper.h"
 
 using namespace mozilla;

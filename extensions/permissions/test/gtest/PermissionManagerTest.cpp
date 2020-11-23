@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsNetUtil.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/PermissionManager.h"
 #include "mozilla/RefPtr.h"

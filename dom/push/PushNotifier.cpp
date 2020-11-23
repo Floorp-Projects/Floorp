@@ -14,6 +14,7 @@
 #include "nsXPCOM.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
 

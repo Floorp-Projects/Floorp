@@ -12,6 +12,7 @@
 #include "Role.h"
 #include "States.h"
 
+#include "mozilla/dom/Element.h"
 #include "nsIDOMXULMenuListElement.h"
 
 using namespace mozilla::a11y;

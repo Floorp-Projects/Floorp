@@ -23,6 +23,8 @@ namespace mozilla {
 namespace dom {
 class Document;
 class DocumentType;
+template <typename T>
+class Optional;
 
 class DOMImplementation final : public nsISupports, public nsWrapperCache {
   ~DOMImplementation() = default;

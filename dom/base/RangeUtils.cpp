@@ -8,6 +8,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/AbstractRange.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsContentUtils.h"
 

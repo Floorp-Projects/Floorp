@@ -12,6 +12,7 @@
 
 #include "VideoSink.h"
 
+#include "GeckoProfiler.h"
 #include "MediaQueue.h"
 #include "VideoUtils.h"
 

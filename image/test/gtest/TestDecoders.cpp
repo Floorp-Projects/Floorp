@@ -14,6 +14,7 @@
 #include "ImageOps.h"
 #include "imgIContainer.h"
 #include "ImageFactory.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/gfx/2D.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"

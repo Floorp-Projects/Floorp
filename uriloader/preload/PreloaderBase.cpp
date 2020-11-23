@@ -11,6 +11,7 @@
 #include "nsIChannel.h"
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIRedirectResultListener.h"
 
 // Change this if we want to cancel and remove the associated preload on removal
 // of all <link rel=preload> tags from the tree.

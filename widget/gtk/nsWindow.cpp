@@ -20,6 +20,8 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WidgetUtils.h"
+#include "mozilla/XREAppData.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/WheelEventBinding.h"
 #include "nsAppRunner.h"
 #include <algorithm>

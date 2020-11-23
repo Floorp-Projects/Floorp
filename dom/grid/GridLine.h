@@ -12,6 +12,8 @@
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 
+class nsAtom;
+
 namespace mozilla {
 namespace dom {
 

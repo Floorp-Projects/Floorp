@@ -13,6 +13,7 @@
 #include "nsScriptError.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsGlobalWindow.h"
 #include "nsCycleCollectionParticipant.h"

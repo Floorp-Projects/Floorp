@@ -6,6 +6,7 @@
 #ifndef mozilla_image_ImageRegion_h
 #define mozilla_image_ImageRegion_h
 
+#include "gfxMatrix.h"
 #include "gfxRect.h"
 #include "mozilla/gfx/Types.h"
 

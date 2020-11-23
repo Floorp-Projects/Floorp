@@ -17,6 +17,8 @@ struct AudioWorkletNodeOptions;
 class MessagePort;
 struct NamedAudioParamTimeline;
 struct ProcessorErrorDetails;
+template <typename KeyType, typename ValueType>
+class Record;
 
 class AudioWorkletNode : public AudioNode {
  public:

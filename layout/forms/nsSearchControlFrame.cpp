@@ -7,6 +7,7 @@
 #include "nsSearchControlFrame.h"
 
 #include "HTMLInputElement.h"
+#include "mozilla/PresShell.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
 #include "nsStyleConsts.h"

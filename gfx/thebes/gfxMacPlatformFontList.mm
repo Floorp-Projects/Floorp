@@ -61,6 +61,7 @@
 #include "nsCharTraits.h"
 #include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
+#include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
 

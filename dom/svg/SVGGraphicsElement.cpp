@@ -7,6 +7,7 @@
 #include "mozilla/dom/SVGGraphicsElement.h"
 
 #include "mozilla/dom/BindContext.h"
+#include "mozilla/dom/Document.h"
 
 namespace mozilla {
 namespace dom {

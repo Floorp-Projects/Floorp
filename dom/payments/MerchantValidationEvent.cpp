@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/MerchantValidationEvent.h"
 #include "nsNetCID.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/PaymentRequest.h"
 #include "mozilla/dom/Location.h"
 #include "mozilla/dom/URL.h"

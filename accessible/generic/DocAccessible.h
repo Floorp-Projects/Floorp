@@ -18,6 +18,7 @@
 #include "nsIDocumentObserver.h"
 #include "nsIObserver.h"
 #include "nsITimer.h"
+#include "nsWeakReference.h"
 
 class nsAccessiblePivot;
 

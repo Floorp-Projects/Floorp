@@ -13,6 +13,7 @@
 #include "IDBTransaction.h"
 #include "IndexedDatabaseInlines.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
 #include "nsString.h"

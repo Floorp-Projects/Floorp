@@ -9,6 +9,7 @@
 #include "GLContext.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/RefPtr.h"
 #include "nsLayoutUtils.h"
 #include "WebGLBuffer.h"

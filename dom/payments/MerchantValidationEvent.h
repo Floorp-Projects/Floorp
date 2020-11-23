@@ -14,6 +14,8 @@
 #include "mozilla/dom/MerchantValidationEventBinding.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 
+class nsIURI;
+
 namespace mozilla {
 namespace dom {
 

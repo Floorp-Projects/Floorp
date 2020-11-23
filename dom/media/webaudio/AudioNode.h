@@ -14,6 +14,7 @@
 #include "AudioContext.h"
 #include "MediaTrackGraph.h"
 #include "WebAudioUtils.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsPrintfCString.h"
 #include "nsWeakReference.h"

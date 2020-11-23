@@ -9,6 +9,7 @@
 
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/Role.h"
+#  include "ipc/IPCMessageUtils.h"
 
 namespace IPC {
 

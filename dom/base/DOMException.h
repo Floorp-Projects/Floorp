@@ -14,6 +14,7 @@
 #endif
 
 #include <stdint.h>
+#include "js/Value.h"
 #include "jspubtd.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"

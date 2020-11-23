@@ -10,6 +10,7 @@
 #include "mozilla/glean/Glean.h"
 #include "mozilla/glean/Category.h"
 #include "mozilla/glean/GleanJSMetricsLookup.h"
+#include "MainThreadUtils.h"
 
 namespace mozilla::glean {
 

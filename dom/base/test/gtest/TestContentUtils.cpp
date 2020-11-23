@@ -10,6 +10,7 @@
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SimpleGlobalObject.h"
 
 struct IsURIInListMatch {

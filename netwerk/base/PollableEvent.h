@@ -10,6 +10,8 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 
+struct PRFileDesc;
+
 namespace mozilla {
 namespace net {
 

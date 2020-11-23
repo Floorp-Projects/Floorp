@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_ReadableStream_h
 #define mozilla_dom_ReadableStream_h
 
+#include "js/experimental/TypedData.h"
 #include "mozilla/dom/SpiderMonkeyInterface.h"
 
 namespace mozilla {

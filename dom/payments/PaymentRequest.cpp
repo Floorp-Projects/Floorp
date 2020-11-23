@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BasicCardPayment.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/PaymentMethodChangeEvent.h"
@@ -22,6 +23,7 @@
 #include "nsIScriptError.h"
 #include "nsIURLParser.h"
 #include "nsNetCID.h"
+#include "nsServiceManagerUtils.h"
 #include "mozilla/dom/MerchantValidationEvent.h"
 #include "PaymentResponse.h"
 

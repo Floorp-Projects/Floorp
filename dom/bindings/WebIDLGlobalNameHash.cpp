@@ -18,6 +18,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
+#include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/JSSlots.h"
 #include "mozilla/dom/PrototypeList.h"
 #include "mozilla/dom/RegisterBindings.h"

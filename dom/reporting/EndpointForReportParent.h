@@ -10,6 +10,10 @@
 #include "mozilla/dom/PEndpointForReportParent.h"
 
 namespace mozilla {
+namespace ipc {
+class PrincipalInfo;
+}
+
 namespace dom {
 
 class EndpointForReport;

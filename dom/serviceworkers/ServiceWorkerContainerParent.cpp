@@ -7,6 +7,7 @@
 #include "ServiceWorkerContainerParent.h"
 
 #include "ServiceWorkerContainerProxy.h"
+#include "mozilla/dom/ClientInfo.h"
 
 namespace mozilla {
 namespace dom {

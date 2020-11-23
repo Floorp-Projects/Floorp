@@ -14,6 +14,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ErrorResult.h"
 #include "nsFrameMessageManager.h"
+#include "prenv.h"
 
 namespace mozilla::dom {
 

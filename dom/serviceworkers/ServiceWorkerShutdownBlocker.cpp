@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "MainThreadUtils.h"
+#include "nsComponentManagerUtils.h"
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsIWritablePropertyBag2.h"

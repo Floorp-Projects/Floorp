@@ -16,6 +16,8 @@
 #include "Key.h"
 #include "ThreadLocal.h"
 
+#include "mozilla/dom/Event.h"
+
 namespace mozilla::dom::indexedDB {
 
 namespace {

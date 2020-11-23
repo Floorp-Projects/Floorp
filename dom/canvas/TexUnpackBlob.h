@@ -11,6 +11,8 @@
 #include "WebGLStrongTypes.h"
 #include "WebGLTypes.h"
 
+#include <memory>
+
 namespace mozilla {
 
 class UniqueBuffer;

@@ -17,7 +17,9 @@ using webgpu::ffi::WGPUTextureCopyView from "mozilla/webgpu/ffi/wgpu.h";
 using webgpu::ffi::WGPUExtent3d from "mozilla/webgpu/ffi/wgpu.h";
 using webgpu::ffi::WGPUHostMap from "mozilla/webgpu/ffi/wgpu.h";
 
+include "mozilla/ipc/ByteBufUtils.h";
 include "mozilla/webgpu/WebGPUSerialize.h";
+include "mozilla/layers/WebRenderMessageUtils.h";
 include protocol PCompositorBridge;
 
 namespace mozilla {

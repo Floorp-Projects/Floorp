@@ -8,6 +8,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
+#include "nsIChannel.h"
 
 #include "mozilla/widget/EventDispatcher.h"
 #include "mozilla/widget/nsWindow.h"

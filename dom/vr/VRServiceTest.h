@@ -8,6 +8,7 @@
 #define mozilla_dom_VRServiceTest_h_
 
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/VRServiceTestBinding.h"
 
 #include "gfxVR.h"

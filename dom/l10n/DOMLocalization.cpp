@@ -6,9 +6,11 @@
 
 #include "js/ForOfIterator.h"  // JS::ForOfIterator
 #include "js/JSON.h"           // JS_ParseJSON
+#include "nsContentUtils.h"
 #include "nsIScriptError.h"
 #include "DOMLocalization.h"
 #include "mozilla/intl/LocaleService.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/L10nOverlays.h"
 
 using namespace mozilla;

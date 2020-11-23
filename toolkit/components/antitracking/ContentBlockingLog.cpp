@@ -12,6 +12,7 @@
 #include "nsTArray.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/RandomNum.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_privacy.h"

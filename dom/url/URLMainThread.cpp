@@ -12,6 +12,7 @@
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace dom {

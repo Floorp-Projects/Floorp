@@ -17,6 +17,7 @@
 #include "nsClassHashtable.h"
 #include "mozilla/SHA1.h"
 #include "mozilla/UniquePtr.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace net {

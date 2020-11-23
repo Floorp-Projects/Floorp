@@ -12,6 +12,8 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRef.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/TaskCategory.h"
 #include "nsContentUtils.h"
 #include "nsIAsyncInputStream.h"

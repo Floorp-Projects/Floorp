@@ -9,6 +9,9 @@
 
 #include "mozilla/dom/PServiceWorkerRegistrationChild.h"
 
+// XXX Avoid including this here by moving function bodies to the cpp file
+#include "mozilla/dom/WorkerRef.h"
+
 namespace mozilla {
 namespace dom {
 

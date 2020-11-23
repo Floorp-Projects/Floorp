@@ -19,6 +19,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/Logging.h"
 #include "nsNSSComponent.h"
 #include "nsPromiseFlatString.h"
 #include "nsServiceManagerUtils.h"

@@ -8,6 +8,7 @@
 #include "ScriptLoader.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "nsContentUtils.h"
 #include "nsPresContext.h"

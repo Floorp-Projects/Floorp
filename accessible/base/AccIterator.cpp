@@ -9,6 +9,7 @@
 #  include "XULTreeAccessible.h"
 #endif
 
+#include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "mozilla/dom/HTMLLabelElement.h"
 
 using namespace mozilla;

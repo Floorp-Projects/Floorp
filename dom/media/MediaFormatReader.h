@@ -13,6 +13,7 @@
 #  include "MediaMetadataManager.h"
 #  include "MediaPromiseDefs.h"
 #  include "PDMFactory.h"
+#  include "PlatformDecoderModule.h"
 #  include "SeekTarget.h"
 #  include "mozilla/Atomics.h"
 #  include "mozilla/Maybe.h"

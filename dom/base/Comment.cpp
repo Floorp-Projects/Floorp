@@ -11,7 +11,9 @@
 #include "nsCOMPtr.h"
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/CommentBinding.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "nsPIDOMWindow.h"
 
 using namespace mozilla;
 using namespace dom;

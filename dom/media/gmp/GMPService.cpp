@@ -5,6 +5,7 @@
 
 #include "GMPService.h"
 
+#include "ChromiumCDMParent.h"
 #include "GMPLog.h"
 #include "GMPParent.h"
 #include "GMPProcessParent.h"
@@ -14,6 +15,7 @@
 #include "GeckoChildProcessHost.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/PluginCrashedEvent.h"
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxInfo.h"

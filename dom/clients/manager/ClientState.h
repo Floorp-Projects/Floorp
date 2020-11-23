@@ -12,6 +12,7 @@
 #include "mozilla/StorageAccess.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Variant.h"
 #include "nsContentUtils.h"
 
 namespace mozilla {

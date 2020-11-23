@@ -9,6 +9,7 @@
 #include "MediaStreamTrack.h"
 #include "DOMMediaStream.h"
 #include "CrossGraphPort.h"
+#include "nsClassHashtable.h"
 
 namespace mozilla {
 namespace dom {

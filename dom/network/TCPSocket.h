@@ -8,6 +8,7 @@
 #define mozilla_dom_TCPSocket_h
 
 #include "mozilla/dom/TCPSocketBinding.h"
+#include "mozilla/dom/TypedArray.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsITransport.h"
 #include "nsIStreamListener.h"

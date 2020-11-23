@@ -6,7 +6,9 @@
 
 #include "OffscreenCanvas.h"
 
+#include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/OffscreenCanvasBinding.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/layers/CanvasRenderer.h"

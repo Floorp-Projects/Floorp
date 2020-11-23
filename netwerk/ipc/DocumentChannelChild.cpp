@@ -6,7 +6,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DocumentChannelChild.h"
+
+#include "mozilla/extensions/StreamFilterParent.h"
+#include "mozilla/net/HttpBaseChannel.h"
+#include "mozilla/net/NeckoChild.h"
+#include "nsHashPropertyBag.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIObjectLoadingContent.h"
+#include "nsIWritablePropertyBag.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;

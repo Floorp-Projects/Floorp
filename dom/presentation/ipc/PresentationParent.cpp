@@ -5,10 +5,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DCPresentationChannelDescription.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/ContentProcessManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/Unused.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIPresentationSessionTransport.h"
 #include "nsIPresentationSessionTransportBuilder.h"
 #include "nsServiceManagerUtils.h"

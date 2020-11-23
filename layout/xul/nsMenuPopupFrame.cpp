@@ -36,6 +36,7 @@
 #include "nsIBaseWindow.h"
 #include "nsISound.h"
 #include "nsIScreenManager.h"
+#include "nsServiceManagerUtils.h"
 #include "nsStyleConsts.h"
 #include "nsStyleStructInlines.h"
 #include "nsTransitionManager.h"

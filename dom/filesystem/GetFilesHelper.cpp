@@ -9,11 +9,13 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/FileBlobImpl.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "FileSystemUtils.h"
 #include "nsContentUtils.h"
+#include "nsNetCID.h"
 #include "nsProxyRelease.h"
 
 namespace mozilla::dom {

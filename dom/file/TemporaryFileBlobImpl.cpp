@@ -7,6 +7,7 @@
 #include "TemporaryFileBlobImpl.h"
 
 #include "RemoteLazyInputStreamThread.h"
+#include "mozilla/ErrorResult.h"
 #include "nsFileStreams.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"

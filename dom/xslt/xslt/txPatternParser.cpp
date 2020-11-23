@@ -12,6 +12,8 @@
 #include "txStylesheetCompiler.h"
 #include "txPatternOptimizer.h"
 
+#include "mozilla/UniquePtrExtensions.h"
+
 using mozilla::UniquePtr;
 
 nsresult txPatternParser::createPattern(const nsString& aPattern,

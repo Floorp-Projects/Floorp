@@ -11,8 +11,12 @@
 #include "mozilla/dom/L10nOverlaysBinding.h"
 #include "mozilla/dom/LocalizationBinding.h"
 
+class nsINode;
+
 namespace mozilla {
 namespace dom {
+
+class DocumentFragment;
 
 class L10nOverlays {
  public:

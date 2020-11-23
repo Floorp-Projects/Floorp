@@ -20,6 +20,7 @@
 #include "nsIDNSService.h"
 #include "nsPIDNSService.h"
 #include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "nsQueryObject.h"

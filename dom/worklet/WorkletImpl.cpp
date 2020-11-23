@@ -11,6 +11,7 @@
 
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/RegisterWorkletBindings.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WorkletBinding.h"

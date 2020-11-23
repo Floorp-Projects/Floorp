@@ -7,10 +7,13 @@
 #ifndef GFX_VR_MANAGER_H
 #define GFX_VR_MANAGER_H
 
+#include "nsHashKeys.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
+#include "nsThreadUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
+#include "mozilla/Monitor.h"
 #include "mozilla/TimeStamp.h"
 #include "gfxVR.h"
 

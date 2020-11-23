@@ -8,6 +8,7 @@
 #include "prthread.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollector.h"
+#include "nsJSEnvironment.h"
 #include "mozilla/dom/AtomList.h"
 #include "mozilla/dom/WorkletGlobalScope.h"
 #include "mozilla/dom/WorkletPrincipals.h"

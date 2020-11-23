@@ -15,6 +15,8 @@
 #include "nsClassHashtable.h"
 #include "nsWrapperCache.h"
 
+class nsIRequest;
+
 namespace mozilla {
 
 class ErrorResult;

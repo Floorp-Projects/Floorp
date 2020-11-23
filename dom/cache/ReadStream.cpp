@@ -13,6 +13,7 @@
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/SnappyUncompressInputStream.h"
 #include "nsIAsyncInputStream.h"
+#include "nsIThread.h"
 #include "nsStringStream.h"
 #include "nsTArray.h"
 

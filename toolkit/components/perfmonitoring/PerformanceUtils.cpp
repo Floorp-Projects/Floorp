@@ -11,6 +11,7 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/WorkerDebugger.h"
 #include "mozilla/dom/WorkerDebuggerManager.h"
 
@@ -19,6 +20,7 @@
 #include "jsfriendapi.h"
 #include "js/MemoryMetrics.h"
 #include "nsWindowMemoryReporter.h"
+#include "nsWindowSizes.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

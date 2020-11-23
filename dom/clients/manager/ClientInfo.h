@@ -10,6 +10,7 @@
 #include "X11UndefineNone.h"
 #include "mozilla/dom/ClientBinding.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {

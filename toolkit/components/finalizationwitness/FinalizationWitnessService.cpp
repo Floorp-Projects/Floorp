@@ -10,6 +10,7 @@
 #include "js/Object.h"  // JS::GetClass, JS::GetReservedSlot
 #include "js/PropertySpec.h"
 #include "mozJSComponentLoader.h"
+#include "nsIThread.h"
 #include "nsZipArchive.h"
 
 #include "mozilla/Scoped.h"

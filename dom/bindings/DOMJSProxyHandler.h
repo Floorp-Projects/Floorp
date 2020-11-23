@@ -17,6 +17,10 @@
 #include "js/String.h"  // JS::AtomToLinearString, JS::GetLinearString{CharAt,Length}
 #include "nsString.h"
 
+// XXX Avoid including this (and maybe some of those above by moving inline
+// function bodies out)
+#include "jsfriendapi.h"
+
 namespace mozilla {
 namespace dom {
 

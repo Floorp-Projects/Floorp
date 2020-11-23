@@ -8,6 +8,7 @@
 
 #include "GridArea.h"
 #include "GridDimension.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/GridBinding.h"
 #include "nsGridContainerFrame.h"
 

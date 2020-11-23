@@ -21,12 +21,15 @@
 #include "nsISecureBrowserUI.h"
 
 class nsISHistory;
+class nsIWidget;
 class nsSHistory;
 class nsBrowserStatusFilter;
 class nsSecureBrowserUI;
 class CallerWillNotifyHistoryIndexAndLengthChanges;
 
 namespace mozilla {
+enum class CallState;
+
 namespace net {
 class DocumentLoadListener;
 }

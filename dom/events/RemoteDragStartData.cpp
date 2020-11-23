@@ -4,8 +4,10 @@
 
 #include "nsContentAreaDragDrop.h"
 #include "RemoteDragStartData.h"
+#include "nsContentUtils.h"
 #include "nsICookieJarSettings.h"
 #include "nsVariant.h"
+#include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/DOMTypes.h"

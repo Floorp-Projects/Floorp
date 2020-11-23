@@ -9,6 +9,7 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/PointerEvent.h"
 #include "mozilla/dom/PointerEventBinding.h"
+#include "mozilla/dom/PointerEventHandler.h"
 #include "mozilla/MouseEvents.h"
 #include "nsContentUtils.h"
 #include "prtime.h"

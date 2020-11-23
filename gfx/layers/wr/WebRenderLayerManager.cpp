@@ -7,6 +7,7 @@
 #include "WebRenderLayerManager.h"
 
 #include "BasicLayers.h"
+#include "Layers.h"
 
 #include "GeckoProfiler.h"
 #include "mozilla/StaticPrefs_apz.h"
@@ -17,6 +18,7 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TextureClient.h"
+#include "mozilla/layers/TransactionIdAllocator.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/UpdateImageHelper.h"
 #include "nsDisplayList.h"

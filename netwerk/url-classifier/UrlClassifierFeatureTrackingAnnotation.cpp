@@ -11,6 +11,7 @@
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/net/UrlClassifierCommon.h"
+#include "nsIChannel.h"
 #include "nsIClassifiedChannel.h"
 #include "nsIWebProgressListener.h"
 #include "nsContentUtils.h"

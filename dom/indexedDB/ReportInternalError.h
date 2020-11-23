@@ -8,6 +8,7 @@
 #define mozilla_dom_indexeddb_reportinternalerror_h__
 
 #include "nsDebug.h"
+#include "nsPrintfCString.h"
 
 #include "IndexedDatabase.h"
 

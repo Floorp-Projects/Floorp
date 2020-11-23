@@ -16,6 +16,7 @@
 #include "nsIGlobalObject.h"
 #include "nsWrapperCache.h"
 #include "js/TypeDecls.h"
+#include "js/Value.h"
 #include "nsISupportsImpl.h"
 #include "nsCycleCollectionParticipant.h"
 

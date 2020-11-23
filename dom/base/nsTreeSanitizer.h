@@ -5,10 +5,22 @@
 #ifndef nsTreeSanitizer_h_
 #define nsTreeSanitizer_h_
 
+#include "nsAtom.h"
+#include "nsHashKeys.h"
 #include "nsIPrincipal.h"
 #include "mozilla/dom/Element.h"
+#include "nsTHashtable.h"
 
 class nsIContent;
+class nsINode;
+
+namespace mozilla {
+class DeclarationBlock;
+}
+
+namespace mozilla::dom {
+class DocumentFragment;
+}  // namespace mozilla::dom
 
 /**
  * See the documentation of nsIParserUtils::sanitize for documentation

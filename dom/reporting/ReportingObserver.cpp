@@ -9,6 +9,7 @@
 #include "mozilla/dom/ReportingBinding.h"
 #include "nsContentUtils.h"
 #include "nsIGlobalObject.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace dom {

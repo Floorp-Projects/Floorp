@@ -9,6 +9,8 @@
 #include "nsStreamUtils.h"
 #include "nsNetCID.h"
 #include "nsIClassInfoImpl.h"
+#include "nsIEventTarget.h"
+#include "nsThreadUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include <algorithm>

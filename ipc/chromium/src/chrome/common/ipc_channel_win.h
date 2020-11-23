@@ -8,6 +8,7 @@
 #define CHROME_COMMON_IPC_CHANNEL_WIN_H_
 
 #include "chrome/common/ipc_channel.h"
+#include "chrome/common/ipc_message.h"
 
 #include <string>
 

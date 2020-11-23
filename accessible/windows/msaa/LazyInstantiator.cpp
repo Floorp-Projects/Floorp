@@ -22,6 +22,7 @@
 #include "nsXPCOM.h"
 #include "RootAccessibleWrap.h"
 #include "WinUtils.h"
+#include "prenv.h"
 
 #include <oaidl.h>
 

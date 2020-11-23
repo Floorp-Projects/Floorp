@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/FeaturePolicyViolationReportBody.h"
+
+#include "mozilla/JSONWriter.h"
 #include "mozilla/dom/FeaturePolicyBinding.h"
 
 namespace mozilla {

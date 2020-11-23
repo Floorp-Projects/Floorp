@@ -10,6 +10,7 @@
 #include "PrioEncoder.h"
 
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/ErrorResult.h"
 
 #include "mprio.h"
 

@@ -16,6 +16,7 @@
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "nsCharSeparatedTokenizer.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::dom::SVGTransform_Binding;

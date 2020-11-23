@@ -25,6 +25,10 @@ class nsILoadInfo;
 class nsPIDOMWindowOuter;
 
 namespace mozilla {
+namespace dom {
+class WindowGlobalChild;
+}
+
 namespace extensions {
 
 using dom::Nullable;

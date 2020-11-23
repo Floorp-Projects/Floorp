@@ -10,8 +10,11 @@
 
 #include "nsContentUtils.h"
 #include "nsICacheInfoChannel.h"
+#include "nsIHttpChannel.h"
+#include "nsJSUtils.h"
 #include "nsMimeTypes.h"
 
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/ScriptDecoding.h"  // mozilla::dom::ScriptDecoding
 #include "mozilla/Telemetry.h"
 #include "mozilla/StaticPrefs_dom.h"

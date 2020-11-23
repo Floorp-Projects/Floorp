@@ -19,6 +19,7 @@
 #include "nsRange.h"
 
 #include "mozilla/dom/BorrowedAttrInfo.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/PresShell.h"

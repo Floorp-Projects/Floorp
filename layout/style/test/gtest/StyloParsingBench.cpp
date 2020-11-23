@@ -9,6 +9,7 @@
 #include "nsString.h"
 #include "ExampleStylesheet.h"
 #include "ServoBindings.h"
+#include "mozilla/dom/DOMString.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/NullPrincipalURI.h"

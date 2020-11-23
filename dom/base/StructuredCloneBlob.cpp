@@ -10,6 +10,7 @@
 #include "js/Utility.h"
 #include "js/Wrapper.h"
 #include "mozilla/dom/BlobImpl.h"
+#include "mozilla/dom/StructuredCloneHolderBinding.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"

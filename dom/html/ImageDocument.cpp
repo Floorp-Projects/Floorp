@@ -14,6 +14,7 @@
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "nsRect.h"
 #include "nsIImageLoadingContent.h"

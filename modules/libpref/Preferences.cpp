@@ -46,6 +46,7 @@
 #include "nsClassHashtable.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
+#include "nsComponentManagerUtils.h"
 #include "nsCRT.h"
 #include "nsDataHashtable.h"
 #include "nsDirectoryServiceDefs.h"

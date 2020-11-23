@@ -18,7 +18,9 @@
 #  include "nsILocalFileMac.h"
 #endif
 
+#include "GeckoProfiler.h"
 #include "MainThreadUtils.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Sprintf.h"
 #include "nsXPCOMPrivate.h"
 #include "prenv.h"

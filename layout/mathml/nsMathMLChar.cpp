@@ -9,6 +9,7 @@
 #include "gfxContext.h"
 #include "gfxTextRun.h"
 #include "gfxUtils.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/MathAlgorithms.h"

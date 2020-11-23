@@ -6,6 +6,7 @@
 
 #include "WebRenderUserData.h"
 
+#include "BasicLayers.h"
 #include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageClient.h"

@@ -10,6 +10,8 @@
 #include "gfxPlatform.h"
 
 #include "imgITools.h"
+#include "mozilla/Preferences.h"
+#include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"

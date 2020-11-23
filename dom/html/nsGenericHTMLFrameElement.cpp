@@ -6,6 +6,7 @@
 
 #include "nsGenericHTMLFrameElement.h"
 
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/XULFrameElement.h"
 #include "mozilla/dom/BrowserBridgeChild.h"

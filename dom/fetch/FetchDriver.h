@@ -30,6 +30,8 @@ class nsILoadGroup;
 class nsIPrincipal;
 
 namespace mozilla {
+class PreloaderBase;
+
 namespace dom {
 
 class Document;

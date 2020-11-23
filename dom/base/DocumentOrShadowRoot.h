@@ -10,6 +10,7 @@
 #include "mozilla/dom/NameSpaceConstants.h"
 #include "mozilla/IdentifierMapEntry.h"
 #include "mozilla/RelativeTo.h"
+#include "mozilla/ReverseIterator.h"
 #include "nsClassHashtable.h"
 #include "nsContentListDeclarations.h"
 #include "nsTArray.h"

@@ -16,6 +16,8 @@
 #include "nsIPromptService.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIStringBundle.h"
 #include "nsContentUtils.h"
 #include "nsCRT.h"

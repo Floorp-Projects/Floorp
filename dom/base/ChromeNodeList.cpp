@@ -5,7 +5,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ChromeNodeList.h"
+
+#include <new>
+#include <utility>
+#include "mozilla/ErrorResult.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ChromeNodeListBinding.h"
+#include "mozilla/dom/Document.h"
+#include "nsCOMPtr.h"
+#include "nsINode.h"
+#include "nsISupports.h"
+#include "nsPIDOMWindow.h"
+#include "nsString.h"
+#include "nsTArray.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

@@ -8,6 +8,7 @@
 #define mozilla_dom_SyncedContext_h
 
 #include "mozilla/EnumSet.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Tuple.h"

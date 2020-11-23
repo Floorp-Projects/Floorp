@@ -14,6 +14,7 @@
 #include "content_decryption_module_ext.h"
 #include "gmp-api/gmp-entrypoints.h"
 #include "gmp-api/gmp-video-codec.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/HelperMacros.h"
 
 #ifdef XP_WIN

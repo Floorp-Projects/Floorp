@@ -19,6 +19,10 @@
 #  include "mozilla/a11y/Role.h"
 #endif
 
+#if defined(XP_WIN)
+#  include "Units.h"
+#endif
+
 namespace mozilla {
 namespace a11y {
 

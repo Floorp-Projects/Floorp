@@ -41,6 +41,7 @@
 #include "nsFocusManager.h"
 #include "nsQueryActor.h"
 #include "nsQueryObject.h"
+#include "nsServiceManagerUtils.h"
 #include "xpcpublic.h"
 
 using namespace mozilla;

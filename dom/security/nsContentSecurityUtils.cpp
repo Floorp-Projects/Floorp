@@ -10,12 +10,14 @@
 
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIURI.h"
 #include "nsITransfer.h"
+#include "nsNetUtil.h"
 #include "nsSandboxFlags.h"
 #if defined(XP_WIN)
 #  include "WinUtils.h"
@@ -24,10 +26,12 @@
 
 #include "FramingChecker.h"
 #include "js/Array.h"  // JS::GetArrayLength
+#include "js/ContextOptions.h"
 #include "js/RegExp.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/StaticPrefs_security.h"

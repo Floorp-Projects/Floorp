@@ -6,6 +6,7 @@
 
 #include "IndexedDBCommon.h"
 
+#include "js/StructuredClone.h"
 #include "mozilla/SnappyUncompressInputStream.h"
 
 namespace mozilla::dom::indexedDB {

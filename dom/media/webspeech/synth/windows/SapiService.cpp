@@ -9,6 +9,7 @@
 #include "nsServiceManagerUtils.h"
 #include "GeckoProfiler.h"
 #include "nsEscape.h"
+#include "nsXULAppAPI.h"
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/nsSynthVoiceRegistry.h"

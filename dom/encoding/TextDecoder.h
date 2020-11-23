@@ -11,12 +11,10 @@
 #include "mozilla/dom/TextDecoderBinding.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/Encoding.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
-
-class ErrorResult;
-
 namespace dom {
 
 class ArrayBufferViewOrArrayBuffer;

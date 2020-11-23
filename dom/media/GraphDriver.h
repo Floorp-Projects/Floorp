@@ -7,6 +7,7 @@
 #define GRAPHDRIVER_H_
 
 #include "nsAutoRef.h"
+#include "nsIThread.h"
 #include "AudioBufferUtils.h"
 #include "AudioMixer.h"
 #include "AudioSegment.h"

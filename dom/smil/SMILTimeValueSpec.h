@@ -13,6 +13,9 @@
 #include "nsStringFwd.h"
 #include "nsIDOMEventListener.h"
 
+// XXX Avoid including this here by moving function bodies to the cpp file
+#include "mozilla/dom/Element.h"
+
 namespace mozilla {
 
 class EventListenerManager;

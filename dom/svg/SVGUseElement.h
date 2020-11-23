@@ -26,6 +26,7 @@ nsresult NS_NewSVGUseElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
+class Encoding;
 class SVGUseFrame;
 struct URLExtraData;
 

@@ -29,6 +29,7 @@
 #include "endpointer.h"
 
 #include "mozilla/dom/SpeechRecognitionEvent.h"
+#include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/Document.h"
 #include "nsIObserverService.h"

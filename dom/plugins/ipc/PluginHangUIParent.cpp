@@ -8,6 +8,7 @@
 
 #include "PluginHangUIParent.h"
 
+#include "base/command_line.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/plugins/PluginModuleParent.h"

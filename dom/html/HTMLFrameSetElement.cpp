@@ -6,6 +6,7 @@
 
 #include "HTMLFrameSetElement.h"
 #include "mozilla/dom/HTMLFrameSetElementBinding.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/EventHandlerBinding.h"
 #include "nsGlobalWindow.h"
 #include "mozilla/UniquePtrExtensions.h"

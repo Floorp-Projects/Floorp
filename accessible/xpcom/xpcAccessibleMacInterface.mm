@@ -8,8 +8,11 @@
 
 #include "nsCocoaUtils.h"
 #include "nsContentUtils.h"
+#include "nsIObserverService.h"
+#include "nsISimpleEnumerator.h"
 #include "nsIXPConnect.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/Services.h"
 #include "nsString.h"
 
 #import "mozAccessible.h"

@@ -11,6 +11,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_image.h"
 #include "mozilla/TaskController.h"
 #include "mozilla/TimeStamp.h"
@@ -22,6 +23,7 @@
 #include "prsystem.h"
 
 #include "Decoder.h"
+#include "GeckoProfiler.h"
 #include "IDecodingTask.h"
 #include "RasterImage.h"
 

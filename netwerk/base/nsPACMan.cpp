@@ -8,6 +8,7 @@
 
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIAuthPrompt.h"
 #include "nsIDHCPClient.h"

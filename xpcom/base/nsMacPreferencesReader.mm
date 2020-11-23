@@ -5,6 +5,8 @@
 #include "nsMacPreferencesReader.h"
 
 #include "js/JSON.h"
+#include "js/RootingAPI.h"
+#include "js/Value.h"
 #include "JSONWriter.h"
 
 NS_IMPL_ISUPPORTS(nsMacPreferencesReader, nsIMacPreferencesReader)

@@ -25,6 +25,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "nsXULPrototypeCache.h"
 #include "mozilla/DeclarationBlock.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Text.h"
 

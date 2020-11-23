@@ -4,14 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozStorageStatementParams.h"
+
 #include "nsJSUtils.h"
 #include "nsMemory.h"
 #include "nsString.h"
 
 #include "jsapi.h"
 
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/MozStorageStatementParamsBinding.h"
 #include "mozStoragePrivateHelpers.h"
+#include "mozStorageStatement.h"
 
 namespace mozilla {
 namespace storage {

@@ -12,13 +12,16 @@
 #include <vector>
 
 #include "GLDefs.h"
+#include "ImageContainer.h"
 #include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Range.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/ResultVariant.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/BuildConstants.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/gfx/Rect.h"
 #include "mozilla/ipc/Shmem.h"
 #include "gfxTypes.h"
 

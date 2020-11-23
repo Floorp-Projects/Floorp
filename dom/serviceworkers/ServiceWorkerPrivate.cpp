@@ -14,6 +14,7 @@
 #include "ServiceWorkerUtils.h"
 #include "nsContentUtils.h"
 #include "nsICacheInfoChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsINamed.h"
@@ -29,6 +30,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/CycleCollectedJSContext.h"  // for MicroTaskRunnable
 #include "mozilla/JSObjectHolder.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/dom/Client.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/FetchUtil.h"

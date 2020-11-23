@@ -23,6 +23,7 @@
 #include "nsTArray.h"
 #include "nsIPrintSettingsWin.h"
 
+#include "nsComponentManagerUtils.h"
 #include "nsPrinterWin.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"

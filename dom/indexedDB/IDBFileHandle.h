@@ -11,6 +11,7 @@
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/FileModeBinding.h"
+#include "mozilla/dom/TypedArray.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIRunnable.h"

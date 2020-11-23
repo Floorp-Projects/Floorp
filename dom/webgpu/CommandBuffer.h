@@ -6,6 +6,7 @@
 #ifndef GPU_CommandBuffer_H_
 #define GPU_CommandBuffer_H_
 
+#include "mozilla/WeakPtr.h"
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
 

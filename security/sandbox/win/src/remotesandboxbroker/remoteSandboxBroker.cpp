@@ -6,6 +6,9 @@
 
 #include "remoteSandboxBroker.h"
 
+#include "mozilla/SpinEventLoopUntil.h"
+#include "nsIThread.h"
+
 namespace mozilla {
 
 RemoteSandboxBroker::RemoteSandboxBroker() {}

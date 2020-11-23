@@ -298,6 +298,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(SessionHistoryEntry, NS_SESSIONHISTORYENTRY_IID)
 
 namespace ipc {
 
+class IProtocol;
+
 // Allow sending SessionHistoryInfo objects over IPC.
 template <>
 struct IPDLParamTraits<dom::SessionHistoryInfo> {

@@ -11,6 +11,7 @@
 #include "mozilla/dom/IntersectionObserverBinding.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/Variant.h"
+#include "nsDOMNavigationTiming.h"
 #include "nsTArray.h"
 
 namespace mozilla {

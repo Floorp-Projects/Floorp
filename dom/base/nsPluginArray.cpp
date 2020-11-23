@@ -17,6 +17,7 @@
 #include "nsPluginTags.h"
 #include "nsIObserverService.h"
 #include "nsIWeakReference.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsContentUtils.h"

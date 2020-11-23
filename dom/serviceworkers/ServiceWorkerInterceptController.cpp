@@ -7,6 +7,7 @@
 #include "ServiceWorkerInterceptController.h"
 
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StorageAccess.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"

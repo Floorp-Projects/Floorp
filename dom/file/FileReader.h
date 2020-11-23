@@ -13,6 +13,7 @@
 #include "nsIAsyncInputStream.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsINamed.h"
+#include "nsITimer.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsWeakReference.h"

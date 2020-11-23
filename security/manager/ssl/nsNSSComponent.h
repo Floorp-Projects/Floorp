@@ -18,6 +18,7 @@
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsNSSCallbacks.h"
+#include "nsServiceManagerUtils.h"
 #include "prerror.h"
 #include "sslt.h"
 

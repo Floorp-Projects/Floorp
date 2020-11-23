@@ -6,6 +6,7 @@
 #ifndef __nsFormFillController__
 #define __nsFormFillController__
 
+#include "mozilla/TimeStamp.h"
 #include "nsIFormFillController.h"
 #include "nsIAutoCompleteInput.h"
 #include "nsIAutoCompleteSearch.h"

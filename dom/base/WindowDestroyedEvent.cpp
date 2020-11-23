@@ -12,9 +12,11 @@
 #include "nsIPrincipal.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIAppStartup.h"
+#include "nsJSPrincipals.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "xpcpublic.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/Components.h"
 
 namespace mozilla {

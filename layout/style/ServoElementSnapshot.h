@@ -7,6 +7,7 @@
 #ifndef mozilla_ServoElementSnapshot_h
 #define mozilla_ServoElementSnapshot_h
 
+#include "AttrArray.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/dom/BorrowedAttrInfo.h"

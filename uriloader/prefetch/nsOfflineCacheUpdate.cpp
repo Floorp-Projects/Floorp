@@ -16,6 +16,7 @@
 #include "nsIURL.h"
 #include "nsICryptoHash.h"
 #include "nsICacheEntry.h"
+#include "nsIHttpChannel.h"
 #include "nsIPrincipal.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"

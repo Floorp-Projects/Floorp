@@ -11,6 +11,7 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsIFile.h"
 #include "nsIProperties.h"
 #include "nsServiceManagerUtils.h"
 

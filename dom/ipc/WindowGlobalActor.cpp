@@ -11,6 +11,7 @@
 #include "mozJSComponentLoader.h"
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/Logging.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/JSActorService.h"
 #include "mozilla/dom/JSWindowActorParent.h"
 #include "mozilla/dom/JSWindowActorChild.h"
@@ -21,6 +22,7 @@
 #include "mozilla/dom/WindowGlobalParent.h"
 
 #include "nsGlobalWindowInner.h"
+#include "nsNetUtil.h"
 
 namespace mozilla::dom {
 

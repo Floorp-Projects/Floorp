@@ -6,8 +6,11 @@
 
 #include "Localization.h"
 #include "nsImportModule.h"
+#include "nsIObserverService.h"
 #include "nsContentUtils.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/Preferences.h"
 
 #define INTL_APP_LOCALES_CHANGED "intl:app-locales-changed"
 #define L10N_PSEUDO_PREF "intl.l10n.pseudo"

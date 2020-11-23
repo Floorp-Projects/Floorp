@@ -11,6 +11,7 @@
 #include "XRInputSpace.h"
 #include "VRDisplayClient.h"
 
+#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/Gamepad.h"
 #include "mozilla/dom/GamepadManager.h"
 

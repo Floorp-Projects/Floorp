@@ -9,6 +9,7 @@
 #include "CryptoBuffer.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
+#include "mozilla/Preferences.h"
 #include "nsNSSComponent.h"
 #include "nsThreadUtils.h"
 #include "pk11pub.h"

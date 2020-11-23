@@ -8,10 +8,12 @@
 
 #include <memory>
 
+#include "gfxRect.h"
 #include "mozilla/gfx/2D.h"
 #include "nsISupports.h"
 #include "nsIInputStream.h"
 #include "nsIDocShell.h"
+#include "nsRefreshObservers.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/PresShell.h"

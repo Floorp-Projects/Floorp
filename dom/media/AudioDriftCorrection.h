@@ -7,6 +7,7 @@
 #define MOZILLA_AUDIO_DRIFT_CORRECTION_H_
 
 #include "DynamicResampler.h"
+#include "mozilla/Preferences.h"
 
 namespace mozilla {
 

@@ -9,9 +9,11 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/StaticPrefs_toolkit.h"
 #include "mozilla/TimeStamp.h"
 #include "nsDataHashtable.h"
+#include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsITimer.h"
 #include "nsTArray.h"
@@ -21,7 +23,6 @@ using mozilla::Runnable;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
 using mozilla::StaticRefPtr;
-using mozilla::TaskCategory;
 using mozilla::TimeStamp;
 
 // Batches and streams Telemetry samples to a JNI delegate which will

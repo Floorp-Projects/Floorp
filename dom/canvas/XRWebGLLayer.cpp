@@ -9,6 +9,7 @@
 #include "mozilla/dom/XRView.h"
 #include "mozilla/dom/XRViewport.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "WebGLFramebuffer.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_webgl.h"
@@ -17,6 +18,7 @@
 #include "MozFramebuffer.h"
 #include "VRDisplayClient.h"
 #include "ClientWebGLContext.h"
+#include "nsContentUtils.h"
 #include "nsIScriptError.h"
 
 using namespace mozilla::gl;

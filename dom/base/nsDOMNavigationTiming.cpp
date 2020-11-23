@@ -12,6 +12,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/PerformanceNavigation.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/ipc/IPDLParamTraits.h"

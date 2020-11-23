@@ -10,6 +10,7 @@
 #include "nsIGlobalObject.h"
 #include "ipc/WebGPUChild.h"
 #include "ipc/WebGPUTypes.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 
 namespace mozilla {

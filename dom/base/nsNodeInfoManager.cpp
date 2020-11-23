@@ -17,6 +17,7 @@
 #include "mozilla/dom/NodeInfoInlines.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsAtom.h"

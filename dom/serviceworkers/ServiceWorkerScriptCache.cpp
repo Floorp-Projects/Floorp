@@ -20,6 +20,7 @@
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/StaticPrefs_extensions.h"
 #include "nsICacheInfoChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsIStreamLoader.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsIUUIDGenerator.h"

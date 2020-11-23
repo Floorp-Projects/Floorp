@@ -11,6 +11,7 @@
 #include "nsICacheStorage.h"
 
 #include "nsString.h"
+#include "nsIChannel.h"
 #include "nsIOutputStream.h"
 #include "nsILoadContextInfo.h"
 

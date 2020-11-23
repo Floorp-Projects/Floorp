@@ -14,11 +14,12 @@
 
 struct JSContext;
 class JSObject;
-class ComputedStyle;
 struct RawServoDeclarationBlock;
 
 namespace mozilla {
 struct AnimationProperty;
+class ComputedStyle;
+
 enum class PseudoStyleType : uint8_t;
 class ErrorResult;
 struct Keyframe;

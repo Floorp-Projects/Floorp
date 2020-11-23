@@ -4,12 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef mozilla_dom_GamepadTestChannelChild_h_
+#define mozilla_dom_GamepadTestChannelChild_h_
+
 #include "mozilla/dom/PGamepadTestChannelChild.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/WeakPtr.h"
-
-#ifndef mozilla_dom_GamepadTestChannelChild_h_
-#  define mozilla_dom_GamepadTestChannelChild_h_
+#include "nsRefPtrHashtable.h"
 
 namespace mozilla {
 namespace dom {

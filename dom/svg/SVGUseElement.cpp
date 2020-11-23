@@ -8,6 +8,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/SVGUseFrame.h"
 #include "mozilla/URLExtraData.h"

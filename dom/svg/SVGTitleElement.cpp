@@ -7,6 +7,8 @@
 #include "mozilla/dom/SVGTitleElement.h"
 #include "mozilla/dom/SVGTitleElementBinding.h"
 
+#include "mozilla/dom/Document.h"
+
 NS_IMPL_NS_NEW_SVG_ELEMENT(Title)
 
 namespace mozilla {

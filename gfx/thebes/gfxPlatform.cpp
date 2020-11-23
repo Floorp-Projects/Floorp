@@ -39,10 +39,12 @@
 #include "mozilla/Services.h"
 #include "nsAppRunner.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsCSSProps.h"
 
 #include "gfxCrashReporterUtils.h"
 #include "gfxPlatform.h"
 
+#include "gfxBlur.h"
 #include "gfxEnv.h"
 #include "gfxTextRun.h"
 #include "gfxUserFontSet.h"

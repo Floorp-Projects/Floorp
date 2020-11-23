@@ -13,6 +13,7 @@
 #include "gfxConfig.h"
 #include "gfxPlatform.h"
 #include "nsIGfxInfo.h"
+#include "nsPrintfCString.h"
 #include "nsXULAppAPI.h"
 
 #ifdef XP_WIN

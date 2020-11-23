@@ -11,6 +11,7 @@
 #include "mozilla/dom/MIDIUtils.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/Unused.h"
+#include "nsIThread.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

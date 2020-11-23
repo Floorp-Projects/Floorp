@@ -18,6 +18,7 @@
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "nsIObserver.h"
 #include "nsThreadUtils.h"
 class nsBaseWidget;
 
@@ -36,6 +37,7 @@ class PVideoBridgeParent;
 class RemoteCompositorSession;
 class InProcessCompositorSession;
 class UiCompositorControllerChild;
+class LayerManager;
 }  // namespace layers
 namespace widget {
 class CompositorWidget;

@@ -10,6 +10,7 @@
 #ifndef nsTHashtable_h__
 #define nsTHashtable_h__
 
+#include <iterator>
 #include <new>
 #include <type_traits>
 #include <utility>

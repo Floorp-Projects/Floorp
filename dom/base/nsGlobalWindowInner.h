@@ -74,6 +74,7 @@ class nsIControllers;
 class nsIScriptContext;
 class nsIScriptTimeoutHandler;
 class nsIBrowserChild;
+class nsIPrintSettings;
 class nsITimeoutHandler;
 class nsIWebBrowserChrome;
 class nsIWebProgressListener;

@@ -13,6 +13,7 @@
 #include "mozilla/dom/FileCreatorHelper.h"
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/Promise.h"
+#include "nsIFile.h"
 #include "nsXULAppAPI.h"
 
 namespace mozilla::dom {

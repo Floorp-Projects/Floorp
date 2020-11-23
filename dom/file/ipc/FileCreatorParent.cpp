@@ -8,6 +8,7 @@
 #include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/MultipartBlobImpl.h"
+#include "nsIFile.h"
 
 namespace mozilla::dom {
 

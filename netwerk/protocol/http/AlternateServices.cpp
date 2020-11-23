@@ -8,6 +8,7 @@
 
 #include "AlternateServices.h"
 #include "LoadInfo.h"
+#include "nsComponentManagerUtils.h"
 #include "nsEscape.h"
 #include "nsHttpConnectionInfo.h"
 #include "nsHttpChannel.h"

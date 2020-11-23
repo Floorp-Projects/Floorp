@@ -21,6 +21,7 @@
 #include "Layers.h"
 #include "MaskLayerImageCache.h"
 #include "MatrixStack.h"
+#include "TransformClipNode.h"
 #include "UnitTransforms.h"
 #include "Units.h"
 #include "gfx2DGlue.h"

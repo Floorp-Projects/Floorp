@@ -7,6 +7,7 @@
 #ifndef MOZILLA_GFX_RENDERPASSMLGPU_H
 #define MOZILLA_GFX_RENDERPASSMLGPU_H
 
+#include "LayerMLGPU.h"
 #include "LayerManagerMLGPU.h"
 #include "ShaderDefinitionsMLGPU.h"
 #include "SharedBufferMLGPU.h"

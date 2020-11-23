@@ -9,11 +9,19 @@
 
 #include "mozilla/dom/Element.h"
 #include "nsAtom.h"
+#include "nsTArray.h"
 
+class PLDHashTable;
 class nsXULElement;
 
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
+
+class Document;
+class Element;
 
 class XULBroadcastManager final {
  public:

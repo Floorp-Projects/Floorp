@@ -9,6 +9,7 @@
 #include "ClientState.h"
 #include "ClientSource.h"
 #include "ClientSourceChild.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/Unused.h"
 #include "nsIDocShell.h"
 #include "nsDocShellLoadState.h"

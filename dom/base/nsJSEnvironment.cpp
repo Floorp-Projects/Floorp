@@ -27,9 +27,11 @@
 #include "nsAtom.h"
 #include "nsContentUtils.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "nsIContent.h"
 #include "nsCycleCollector.h"
 #include "nsXPCOMCIDInternal.h"
+#include "nsServiceManagerUtils.h"
 #include "nsTextFormatter.h"
 #ifdef XP_WIN
 #  include <process.h>

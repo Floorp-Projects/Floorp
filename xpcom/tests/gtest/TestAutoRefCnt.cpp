@@ -7,6 +7,7 @@
 #include "nsISupportsImpl.h"
 
 #include "mozilla/Atomics.h"
+#include "nsIThread.h"
 #include "nsThreadUtils.h"
 
 #include "gtest/gtest.h"

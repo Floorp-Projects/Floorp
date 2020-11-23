@@ -8,6 +8,7 @@
 #define MOZILLA_GFX_DCLAYER_TREE_H
 
 #include <unordered_map>
+#include <vector>
 #include <windows.h>
 
 #include "GLTypes.h"

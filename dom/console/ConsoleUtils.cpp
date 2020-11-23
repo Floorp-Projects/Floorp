@@ -9,6 +9,7 @@
 #include "nsContentUtils.h"
 #include "nsIConsoleAPIStorage.h"
 #include "nsIXPConnect.h"
+#include "nsServiceManagerUtils.h"
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/NullPrincipal.h"

@@ -6,6 +6,8 @@
 #include "nsString.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
+#include "nsIChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsILoadInfo.h"
 #include "nsIProxiedProtocolHandler.h"
 #include "nsIOService.h"

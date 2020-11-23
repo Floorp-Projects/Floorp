@@ -14,6 +14,7 @@
 
 // Local Includes
 #include "Navigator.h"
+#include "mozilla/Encoding.h"
 #include "nsContentSecurityManager.h"
 #include "nsScreen.h"
 #include "nsHistory.h"

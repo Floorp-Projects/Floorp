@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/PopupBlocker.h"
 #include "nsCOMPtr.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"

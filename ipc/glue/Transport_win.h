@@ -12,6 +12,7 @@
 #include "base/process.h"
 #include "ipc/IPCMessageUtils.h"
 #include "nsWindowsHelpers.h"
+#include "nsXULAppAPI.h"
 
 namespace mozilla {
 namespace ipc {

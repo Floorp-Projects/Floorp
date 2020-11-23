@@ -9,6 +9,7 @@
 #include "mozHunspellFileMgrHost.h"
 #include "mozilla/DebugOnly.h"
 #include "nsContentUtils.h"
+#include "nsIChannel.h"
 #include "nsILoadInfo.h"
 #include "nsNetUtil.h"
 

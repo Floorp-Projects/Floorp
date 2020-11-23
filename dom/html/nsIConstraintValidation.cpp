@@ -15,6 +15,7 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/ValidityState.h"
 #include "nsIFormControl.h"
+#include "nsISimpleEnumerator.h"
 #include "nsContentUtils.h"
 
 #include "nsIFormSubmitObserver.h"

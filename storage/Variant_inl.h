@@ -12,6 +12,9 @@
 #  error "Do not include this file directly!"
 #endif
 
+#include "js/RootingAPI.h"
+#include "js/Value.h"
+
 namespace mozilla {
 namespace storage {
 

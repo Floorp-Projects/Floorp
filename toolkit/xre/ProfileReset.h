@@ -5,6 +5,7 @@
 
 #include "nsToolkitProfileService.h"
 #include "nsIFile.h"
+#include "nsIThread.h"
 #include "nsThreadUtils.h"
 
 static bool gProfileResetCleanupCompleted = false;

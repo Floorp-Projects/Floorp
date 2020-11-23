@@ -53,6 +53,8 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 
+#include "Orientation.h"
+
 #ifdef LoadImage
 // Undefine LoadImage to prevent naming conflict with Windows.
 #  undef LoadImage

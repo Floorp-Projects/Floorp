@@ -31,6 +31,8 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/DirectionalityUtils.h"
 #include "mozilla/dom/FragmentOrElement.h"
+#include "mozilla/dom/NameSpaceConstants.h"
+#include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/PointerEventHandler.h"
 #include "mozilla/dom/ShadowRootBinding.h"
 

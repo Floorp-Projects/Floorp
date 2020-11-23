@@ -14,6 +14,10 @@
 #  include <mach/mach_host.h>
 #endif
 
+#ifdef CPU_USAGE_WATCHER_ACTIVE
+#  include "mozilla/BackgroundHangMonitor.h"
+#endif
+
 namespace mozilla {
 
 #ifdef CPU_USAGE_WATCHER_ACTIVE

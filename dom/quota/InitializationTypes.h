@@ -20,6 +20,9 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryHistogramEnums.h"
 
+// Undo X11/X.h's definition of None
+#undef None
+
 namespace mozilla {
 namespace dom {
 namespace quota {

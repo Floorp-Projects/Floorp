@@ -11,6 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIAsyncInputStream.h"
+#include "nsIContentPolicy.h"
 #include "nsIStreamListener.h"
 
 class nsIChannel;
@@ -18,6 +19,10 @@ class nsILoadGroup;
 class nsIInterfaceRequestor;
 
 namespace mozilla {
+
+namespace dom {
+enum class ReferrerPolicy : uint8_t;
+}
 
 class FetchPreloader : public PreloaderBase, public nsIStreamListener {
   NS_DECL_ISUPPORTS

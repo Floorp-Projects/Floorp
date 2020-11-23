@@ -11,6 +11,7 @@
 #include "jsfriendapi.h"
 #include "nsINode.h"
 #include "mozilla/dom/MediaKeys.h"
+#include "mozilla/HoldDropJSObjects.h"
 
 namespace mozilla::dom {
 

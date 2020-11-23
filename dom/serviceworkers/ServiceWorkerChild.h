@@ -8,6 +8,7 @@
 #define mozilla_dom_serviceworkerchild_h__
 
 #include "mozilla/dom/PServiceWorkerChild.h"
+#include "mozilla/dom/WorkerRef.h"
 
 namespace mozilla {
 namespace dom {

@@ -12,6 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/SRILogHelper.h"
 #include "mozilla/dom/SRIMetadata.h"
+#include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
 #include "nsIConsoleReportCollector.h"

@@ -7,6 +7,7 @@
 #define mozInlineSpellWordUtil_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/Document.h"
 #include "nsCOMPtr.h"
 #include "mozilla/dom/Document.h"
 #include "nsString.h"

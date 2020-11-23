@@ -14,6 +14,7 @@
 #include "mozilla/dom/nsSpeechTask.h"
 
 #include "nsThreadUtils.h"
+#include "nsXULAppAPI.h"
 #include "prenv.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/DebugOnly.h"

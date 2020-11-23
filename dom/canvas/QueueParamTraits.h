@@ -8,6 +8,7 @@
 #ifndef _QUEUEPARAMTRAITS_H_
 #define _QUEUEPARAMTRAITS_H_ 1
 
+#include "ipc/IPCMessageUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/IntegerRange.h"
@@ -17,6 +18,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TypeTraits.h"
+#include "nsExceptionHandler.h"
 #include "nsString.h"
 #include "WebGLTypes.h"
 

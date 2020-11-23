@@ -6,6 +6,7 @@
 
 #include "ContentFrameMessageManager.h"
 #include "js/RootingAPI.h"
+#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 using namespace mozilla;

@@ -8,7 +8,6 @@
 #define vm_Scope_h
 
 #include "mozilla/Maybe.h"
-#include "mozilla/Variant.h"
 
 #include <stddef.h>
 

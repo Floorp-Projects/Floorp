@@ -8,6 +8,7 @@
 
 #include "Key.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/IDBKeyRangeBinding.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"

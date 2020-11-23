@@ -51,6 +51,7 @@ class ClientLayerManager;
 class CompositorBridgeParent;
 class CompositorManagerChild;
 class CompositorOptions;
+class LayerManager;
 class TextureClient;
 class TextureClientPool;
 struct FrameMetrics;

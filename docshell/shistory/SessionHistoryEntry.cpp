@@ -6,13 +6,17 @@
 
 #include "SessionHistoryEntry.h"
 #include "nsDocShellLoadState.h"
+#include "nsIHttpChannel.h"
 #include "nsSHEntryShared.h"
 #include "nsStructuredCloneContainer.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/PresState.h"
 #include "mozilla/Tuple.h"
+#include "mozilla/dom/CSPMessageUtils.h"
 #include "mozilla/dom/nsCSPContext.h"
+#include "mozilla/dom/ReferrerInfoUtils.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
+#include "mozilla/ipc/URIUtils.h"
 
 extern mozilla::LazyLogModule gSHLog;
 

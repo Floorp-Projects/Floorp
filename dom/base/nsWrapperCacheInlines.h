@@ -8,6 +8,7 @@
 #define nsWrapperCacheInline_h___
 
 #include "nsWrapperCache.h"
+#include "js/RootingAPI.h"
 #include "js/TracingAPI.h"
 
 inline JSObject* nsWrapperCache::GetWrapperPreserveColor() const {

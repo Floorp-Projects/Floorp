@@ -407,8 +407,9 @@ class nsDocShell final : public nsDocLoader,
    * `aCacheKey` gets passed to DoURILoad call.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  nsresult InternalLoad(nsDocShellLoadState* aLoadState,
-                        Maybe<uint32_t> aCacheKey = mozilla::Nothing());
+  nsresult InternalLoad(
+      nsDocShellLoadState* aLoadState,
+      mozilla::Maybe<uint32_t> aCacheKey = mozilla::Nothing());
 
   // Clear the document's storage access flag if needed.
   void MaybeClearStorageAccessFlag();
@@ -513,7 +514,7 @@ class nsDocShell final : public nsDocLoader,
       const mozilla::dom::LoadingSessionHistoryInfo& aLoadingInfo);
 
   already_AddRefed<nsIInputStream> GetPostDataFromCurrentEntry() const;
-  Maybe<uint32_t> GetCacheKeyFromCurrentEntry() const;
+  mozilla::Maybe<uint32_t> GetCacheKeyFromCurrentEntry() const;
 
   // Loading and/or active entries are only set when pref
   // fission.sessionHistoryInParent is on.
@@ -598,7 +599,7 @@ class nsDocShell final : public nsDocLoader,
   nsresult CreateAboutBlankContentViewer(
       nsIPrincipal* aPrincipal, nsIPrincipal* aPartitionedPrincipal,
       nsIContentSecurityPolicy* aCSP, nsIURI* aBaseURI,
-      const Maybe<nsILoadInfo::CrossOriginEmbedderPolicy>& aCOEP =
+      const mozilla::Maybe<nsILoadInfo::CrossOriginEmbedderPolicy>& aCOEP =
           mozilla::Nothing(),
       bool aTryToSaveOldPresentation = true, bool aCheckPermitUnload = true,
       mozilla::dom::WindowGlobalChild* aActor = nullptr);
@@ -663,8 +664,8 @@ class nsDocShell final : public nsDocLoader,
 
   // This method calls SetHistoryEntry and updates mOSHE and mLSHE in BC to be
   // the same as in docshell
-  void SetHistoryEntryAndUpdateBC(const Maybe<nsISHEntry*>& aLSHE,
-                                  const Maybe<nsISHEntry*>& aOSHE);
+  void SetHistoryEntryAndUpdateBC(const mozilla::Maybe<nsISHEntry*>& aLSHE,
+                                  const mozilla::Maybe<nsISHEntry*>& aOSHE);
 
   static nsresult ReloadDocument(
       nsDocShell* aDocShell, mozilla::dom::Document* aDocument,
@@ -689,8 +690,8 @@ class nsDocShell final : public nsDocLoader,
   // will be set as the originalURI. If LoadReplace is true, LOAD_REPLACE flag
   // will be set on the nsIChannel.
   // If `aCacheKey` is supplied, use it for the session history entry.
-  nsresult DoURILoad(nsDocShellLoadState* aLoadState, Maybe<uint32_t> aCacheKey,
-                     nsIRequest** aRequest);
+  nsresult DoURILoad(nsDocShellLoadState* aLoadState,
+                     mozilla::Maybe<uint32_t> aCacheKey, nsIRequest** aRequest);
 
   static nsresult AddHeadersToChannel(nsIInputStream* aHeadersData,
                                       nsIChannel* aChannel);

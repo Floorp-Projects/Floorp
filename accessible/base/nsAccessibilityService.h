@@ -13,9 +13,11 @@
 #include "mozilla/a11y/SelectionManager.h"
 #include "mozilla/Preferences.h"
 
+#include "nsIContent.h"
 #include "nsIObserver.h"
 #include "nsIAccessibleEvent.h"
 #include "nsIEventListenerService.h"
+#include "nsXULAppAPI.h"
 #include "xpcAccessibilityService.h"
 
 class nsImageFrame;

@@ -9,6 +9,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 
+#include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIHttpChannel.h"
@@ -17,8 +18,10 @@
 #include "nsIUploadChannel2.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsStringStream.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 

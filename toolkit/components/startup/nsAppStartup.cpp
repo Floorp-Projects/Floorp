@@ -28,6 +28,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Unused.h"
 
+#include "GeckoProfiler.h"
 #include "prprf.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsWidgetsCID.h"

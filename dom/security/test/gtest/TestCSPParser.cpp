@@ -11,8 +11,11 @@
 
 #include "nsIContentSecurityPolicy.h"
 #include "nsNetUtil.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/nsCSPContext.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsStringFwd.h"
 
 /*

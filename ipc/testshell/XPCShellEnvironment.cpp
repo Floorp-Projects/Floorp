@@ -27,6 +27,7 @@
 
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "mozilla/XPCOM.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"

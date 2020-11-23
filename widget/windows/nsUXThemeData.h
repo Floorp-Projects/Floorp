@@ -11,6 +11,7 @@
 
 #include "nscore.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/Maybe.h"
 #include "WinUtils.h"
 
 #include "nsWindowDefs.h"
@@ -68,7 +69,7 @@ class nsUXThemeData {
   // loading attempt has failed because OpenThemeData is a heavy task and
   // it's less likely that the API returns a different result.
   class ThemeHandle final {
-    Maybe<HANDLE> mHandle;
+    mozilla::Maybe<HANDLE> mHandle;
 
    public:
     ThemeHandle() = default;

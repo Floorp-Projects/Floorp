@@ -17,6 +17,7 @@
 #include "mozilla/Sprintf.h"
 #include "nsIXULAppInfo.h"
 #include "nsIOutputStream.h"
+#include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 
 // avoid redefined macro in unified build

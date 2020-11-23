@@ -8,6 +8,7 @@
 
 #include "ipc/PresentationIPCService.h"
 #include "mozilla/Services.h"
+#include "nsArrayUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsIMutableArray.h"
 #include "nsIObserverService.h"
@@ -15,6 +16,8 @@
 #include "nsIPresentationDevicePrompt.h"
 #include "nsIPresentationListener.h"
 #include "nsIPresentationRequestUIGlue.h"
+#include "nsIPresentationSessionRequest.h"
+#include "nsIPresentationTerminateRequest.h"
 #include "nsISupportsPrimitives.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"

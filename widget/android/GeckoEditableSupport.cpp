@@ -16,6 +16,7 @@
 #include "mozilla/java/GeckoEditableChildWrappers.h"
 #include "mozilla/java/GeckoServiceChildProcessWrappers.h"
 #include "mozilla/Logging.h"
+#include "mozilla/MiscEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_intl.h"
 #include "mozilla/TextComposition.h"

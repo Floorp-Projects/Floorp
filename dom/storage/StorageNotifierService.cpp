@@ -9,6 +9,7 @@
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace dom {

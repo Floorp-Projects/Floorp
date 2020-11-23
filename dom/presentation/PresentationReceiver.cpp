@@ -6,9 +6,11 @@
 
 #include "PresentationReceiver.h"
 
+#include "mozilla/Logging.h"
 #include "mozilla/dom/PresentationReceiverBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "nsContentUtils.h"
+#include "nsIDocShell.h"
 #include "nsIPresentationService.h"
 #include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"

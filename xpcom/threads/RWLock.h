@@ -10,6 +10,7 @@
 #define mozilla_RWLock_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/BlockingResourceBase.h"
 
 #ifndef XP_WIN

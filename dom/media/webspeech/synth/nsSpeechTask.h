@@ -10,6 +10,7 @@
 #include "SpeechSynthesisUtterance.h"
 #include "AudioChannelAgent.h"
 #include "nsISpeechService.h"
+#include "nsWeakReference.h"
 
 namespace mozilla {
 

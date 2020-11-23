@@ -8,6 +8,7 @@
 #include "mozilla/dom/DOMPoint.h"
 #include "mozilla/dom/Pose.h"
 #include "mozilla/dom/DOMPointBinding.h"
+#include "mozilla/HoldDropJSObjects.h"
 
 namespace mozilla {
 namespace dom {

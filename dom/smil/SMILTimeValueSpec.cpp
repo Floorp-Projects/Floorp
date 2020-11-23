@@ -12,6 +12,7 @@
 #include "mozilla/SMILTimedElement.h"
 #include "mozilla/SMILTimeValueSpec.h"
 #include "mozilla/SMILTimeValue.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/dom/TimeEvent.h"

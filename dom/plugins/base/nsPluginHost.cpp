@@ -10,6 +10,7 @@
 
 #include <cstdlib>
 #include <stdio.h>
+#include "nsComponentManagerUtils.h"
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginStreamListener.h"
 #include "nsNPAPIPluginInstance.h"

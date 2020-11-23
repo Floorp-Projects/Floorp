@@ -23,6 +23,8 @@ struct JSContext;
 //
 
 namespace mozilla {
+class LazyLogModule;
+
 namespace net {
 extern LazyLogModule gUDPSocketLog;
 #define UDPSOCKET_LOG(args) \

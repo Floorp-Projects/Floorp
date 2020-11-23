@@ -8,6 +8,8 @@
 
 #include <base/process.h>
 #include <stdint.h>
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/ChromeUtilsBinding.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/MozPromise.h"

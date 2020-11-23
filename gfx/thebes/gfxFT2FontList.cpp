@@ -45,6 +45,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIMemory.h"
+#include "nsMemory.h"
 #include "gfxFontConstants.h"
 
 #include "mozilla/EndianUtils.h"

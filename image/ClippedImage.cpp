@@ -12,6 +12,7 @@
 
 #include "ImageRegion.h"
 #include "Orientation.h"
+#include "gfxContext.h"
 #include "gfxDrawable.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"

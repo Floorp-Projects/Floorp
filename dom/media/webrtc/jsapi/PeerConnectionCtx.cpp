@@ -24,6 +24,7 @@
 #include "mozilla/StaticPtr.h"
 
 #include "nsCRTGlue.h"
+#include "nsIIOService.h"
 
 #include "gmp-video-decode.h"  // GMP_API_VIDEO_DECODER
 #include "gmp-video-encode.h"  // GMP_API_VIDEO_ENCODER

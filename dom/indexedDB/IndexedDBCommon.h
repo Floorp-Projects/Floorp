@@ -9,6 +9,9 @@
 
 #include "mozilla/dom/quota/QuotaCommon.h"
 
+class JSStructuredCloneData;
+class nsIInputStream;
+
 // IndexedDB equivalents of QM_TRY.
 #define IDB_TRY_GLUE(...) \
   QM_TRY_META(mozilla::dom::indexedDB, MOZ_UNIQUE_VAR(tryResult), ##__VA_ARGS__)

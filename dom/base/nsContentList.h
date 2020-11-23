@@ -30,6 +30,9 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/NameSpaceConstants.h"
 
+// XXX Avoid including this here by moving function bodies to the cpp file.
+#include "nsIContent.h"
+
 namespace mozilla {
 namespace dom {
 class Element;

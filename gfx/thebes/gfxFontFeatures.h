@@ -7,6 +7,7 @@
 #ifndef GFX_FONT_FEATURES_H
 #define GFX_FONT_FEATURES_H
 
+#include "nsAtom.h"
 #include "nsTHashtable.h"
 #include "nsTArray.h"
 #include "nsString.h"

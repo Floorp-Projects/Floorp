@@ -18,6 +18,8 @@
     }                                                \
   }
 
+class nsIInputStream;
+class nsIPrincipal;
 class nsIUDPSocketInternal;
 
 namespace mozilla {

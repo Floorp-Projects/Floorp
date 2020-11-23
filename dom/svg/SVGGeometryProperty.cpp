@@ -11,6 +11,7 @@
 #include "SVGImageElement.h"
 #include "SVGRectElement.h"
 #include "SVGUseElement.h"
+#include "nsCSSValue.h"
 
 namespace mozilla {
 namespace dom {

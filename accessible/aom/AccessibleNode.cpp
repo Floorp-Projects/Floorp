@@ -8,12 +8,16 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/StaticPrefs_accessibility.h"
+#include "nsContentUtils.h"
 #include "nsIPersistentProperties2.h"
 #include "nsISimpleEnumerator.h"
 
 #include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "DocAccessible.h"
+
+#include "mozilla/dom/Document.h"  // for inline nsINode::GetParentObject
+#include "mozilla/dom/ToJSValue.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

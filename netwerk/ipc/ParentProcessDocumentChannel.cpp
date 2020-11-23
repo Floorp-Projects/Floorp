@@ -10,6 +10,7 @@
 #include "mozilla/net/ParentChannelWrapper.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "mozilla/StaticPrefs_extensions.h"
+#include "nsCRT.h"
 #include "nsDocShell.h"
 #include "nsIObserverService.h"
 #include "nsIClassifiedChannel.h"

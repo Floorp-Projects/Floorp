@@ -29,6 +29,7 @@
 #include "mozilla/gfx/gfxVars.h"    // for gfxVars
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite, etc
+#include "mozilla/layers/NativeLayer.h"
 #include "mozilla/layers/CompositingRenderTargetOGL.h"
 #include "mozilla/layers/Effects.h"      // for EffectChain, TexturedEffect, etc
 #include "mozilla/layers/TextureHost.h"  // for TextureSource, etc
@@ -40,6 +41,7 @@
 #include "mozilla/mozalloc.h"  // for operator delete, etc
 #include "nsAppRunner.h"
 #include "nsAString.h"
+#include "nsClassHashtable.h"
 #include "nsIConsoleService.h"      // for nsIConsoleService, etc
 #include "nsIWidget.h"              // for nsIWidget
 #include "nsLiteralString.h"        // for NS_LITERAL_STRING

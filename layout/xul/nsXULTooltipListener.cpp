@@ -21,6 +21,7 @@
 #  include "nsXULPopupManager.h"
 #endif
 #include "nsIPopupContainer.h"
+#include "nsServiceManagerUtils.h"
 #include "nsTreeColumns.h"
 #include "nsContentUtils.h"
 #include "mozilla/ErrorResult.h"

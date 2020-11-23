@@ -10,6 +10,7 @@
 #include "js/GCAPI.h"
 #include "jsfriendapi.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/PrimitiveConversions.h"
 #include "mozilla/dom/TypedArray.h"

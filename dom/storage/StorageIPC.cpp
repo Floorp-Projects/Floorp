@@ -12,6 +12,7 @@
 #include "SessionStorageManager.h"
 #include "SessionStorageCache.h"
 
+#include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundChild.h"

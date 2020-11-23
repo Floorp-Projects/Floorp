@@ -7,6 +7,7 @@
 #include "PendingAnimationTracker.h"
 
 #include "mozilla/PresShell.h"
+#include "mozilla/dom/AnimationEffect.h"
 #include "mozilla/dom/AnimationTimeline.h"
 #include "mozilla/dom/Nullable.h"
 #include "nsIFrame.h"

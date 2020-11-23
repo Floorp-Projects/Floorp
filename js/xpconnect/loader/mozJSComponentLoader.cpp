@@ -36,6 +36,7 @@
 #include "mozJSLoaderUtils.h"
 #include "nsIFileURL.h"
 #include "nsIJARURI.h"
+#include "nsIChannel.h"
 #include "nsNetUtil.h"
 #include "nsJSPrincipals.h"
 #include "nsJSUtils.h"

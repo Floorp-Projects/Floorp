@@ -14,6 +14,7 @@
 #include "mozilla/dom/MediaControllerBinding.h"
 #include "mozilla/Logging.h"
 #include "nsReadableUtils.h"
+#include "nsServiceManagerUtils.h"
 
 extern mozilla::LazyLogModule gMediaControlLog;
 

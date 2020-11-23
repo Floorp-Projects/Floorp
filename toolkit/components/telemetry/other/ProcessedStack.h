@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "ipc/IPCMessageUtils.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/Vector.h"
 #include "nsString.h"

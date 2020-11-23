@@ -10,6 +10,7 @@
 #include "nsDOMString.h"
 #include "MainThreadUtils.h"
 #include "SystemPrincipal.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsIStreamListener.h"
 #include "nsStringStream.h"
 #include "nsCRT.h"
@@ -23,6 +24,7 @@
 #include "mozilla/NullPrincipal.h"
 #include "NullPrincipalURI.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 using namespace mozilla;

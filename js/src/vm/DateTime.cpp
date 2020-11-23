@@ -22,6 +22,7 @@
 #endif /* !defined(XP_WIN) */
 
 #include "js/Date.h"
+#include "js/GCAPI.h"
 #include "threading/ExclusiveData.h"
 
 #if JS_HAS_INTL_API && !MOZ_SYSTEM_ICU

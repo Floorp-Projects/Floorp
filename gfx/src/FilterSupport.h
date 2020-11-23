@@ -7,7 +7,9 @@
 #ifndef __FilterSupport_h
 #define __FilterSupport_h
 
+#include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Matrix.h"
+#include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Rect.h"
 #include "nsRegion.h"
 #include "nsTArray.h"
@@ -15,6 +17,7 @@
 namespace mozilla {
 namespace gfx {
 class FilterPrimitiveDescription;
+class FilterNode;
 struct FilterDescription;
 }  // namespace gfx
 }  // namespace mozilla
@@ -98,8 +101,6 @@ const unsigned short SVG_FECOMPOSITE_OPERATOR_ATOP = 4;
 const unsigned short SVG_FECOMPOSITE_OPERATOR_XOR = 5;
 const unsigned short SVG_FECOMPOSITE_OPERATOR_ARITHMETIC = 6;
 
-class DrawTarget;
-class SourceSurface;
 struct FilterAttribute;
 
 // Limits

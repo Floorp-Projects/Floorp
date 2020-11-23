@@ -22,6 +22,10 @@
 #include "js/TypeDecls.h"
 #include "nsIGlobalObject.h"
 
+// XXX(Bug 1674080) Remove this and let Codegen.py generate it instead when
+// needed.
+#include "mozilla/HoldDropJSObjects.h"
+
 class nsIContent;
 class nsPresContext;
 class PickleIterator;

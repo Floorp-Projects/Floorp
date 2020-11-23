@@ -8,11 +8,13 @@
 
 #include "mozilla/dom/PresentationAvailabilityBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIPresentationService.h"
 #include "nsServiceManagerUtils.h"
+#include "AvailabilityCollection.h"
 #include "PresentationLog.h"
 
 namespace mozilla {

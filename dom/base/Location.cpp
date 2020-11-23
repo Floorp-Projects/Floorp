@@ -27,6 +27,8 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Components.h"
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/ServoStyleConsts.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"

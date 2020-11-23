@@ -8,6 +8,7 @@
 #define mozilla_dom_BrowsingContext_h
 
 #include "GVAutoplayRequestUtils.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/HalScreenConfiguration.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"

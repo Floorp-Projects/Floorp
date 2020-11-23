@@ -6,6 +6,7 @@
 
 #include "ScriptLoadRequest.h"
 
+#include "mozilla/dom/Document.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Unused.h"

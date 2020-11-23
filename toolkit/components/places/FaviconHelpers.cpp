@@ -10,8 +10,10 @@
 #include "nsICachingChannel.h"
 #include "nsIClassOfService.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
+#include "nsIHttpChannel.h"
 #include "nsIPrincipal.h"
 
+#include "nsComponentManagerUtils.h"
 #include "nsNavHistory.h"
 #include "nsFaviconService.h"
 

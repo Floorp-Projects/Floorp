@@ -16,6 +16,8 @@
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 
+#include "js/RootingAPI.h"
+#include "js/Value.h"
 #include "mozilla/jni/Refs.h"
 
 #include "nsIMutableArray.h"

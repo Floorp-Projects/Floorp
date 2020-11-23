@@ -8,7 +8,10 @@
 
 #include <ctype.h>
 
+#include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/PresentationBinding.h"
+#include "mozilla/dom/PresentationRequest.h"
 #include "mozilla/dom/Promise.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"

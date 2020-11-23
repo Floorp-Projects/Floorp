@@ -7,6 +7,7 @@
 #include "GMPUtils.h"
 
 #include "GMPService.h"
+#include "VideoLimits.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/Base64.h"
 #include "nsCOMPtr.h"

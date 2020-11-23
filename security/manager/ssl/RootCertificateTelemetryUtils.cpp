@@ -12,6 +12,7 @@
 #include "mozilla/Logging.h"
 #include "nsINSSComponent.h"
 #include "nsNSSCertHelper.h"
+#include "nsServiceManagerUtils.h"
 #include "pk11pub.h"
 
 namespace mozilla {
