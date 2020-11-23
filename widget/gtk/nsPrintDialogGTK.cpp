@@ -801,6 +801,14 @@ void nsFlatpakPrintPortal::FinishPrintDialog(GVariant* parameters) {
 
     g_variant_lookup(options, "token", "u", &mToken);
 
+    // Force printing to file because only filedescriptor of the file
+    // can be passed to portal
+    int fd = g_file_open_tmp("gtkprintXXXXXX", &filename, NULL);
+    uri = g_filename_to_uri(filename, NULL, NULL);
+    gtk_print_settings_set(printSettings, GTK_PRINT_SETTINGS_OUTPUT_URI, uri);
+    g_free(uri);
+    close(fd);
+
     // Save native settings in the session object
     mPrintAndPageSettings->SetGtkPrintSettings(printSettings);
     mPrintAndPageSettings->SetGtkPageSetup(pageSetup);
