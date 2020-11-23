@@ -58,6 +58,9 @@ app-basics-enabled-plugins = Enabled Plugins
 app-basics-build-config = Build Configuration
 app-basics-user-agent = User Agent
 app-basics-os = OS
+# Rosetta is Apple's translation process to run apps containing x86_64
+# instructions on Apple Silicon. This should remain in English.
+app-basics-rosetta = Rosetta Translated
 app-basics-memory-use = Memory Use
 app-basics-performance = Performance
 app-basics-service-workers = Registered Service Workers

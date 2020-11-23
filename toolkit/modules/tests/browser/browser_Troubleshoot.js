@@ -180,6 +180,10 @@ const SNAPSHOT_SCHEMA = {
           required: true,
           type: "string",
         },
+        rosetta: {
+          required: false,
+          type: "boolean",
+        },
         vendor: {
           type: "string",
         },
