@@ -16,7 +16,6 @@
 #include "nsRefreshObservers.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/OffscreenCanvas.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/NotNull.h"

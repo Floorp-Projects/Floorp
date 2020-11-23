@@ -6,6 +6,7 @@
 #include "nsICanvasRenderingContextInternal.h"
 
 #include "mozilla/dom/Document.h"
+#include "mozilla/PresShell.h"
 #include "nsRefreshDriver.h"
 
 nsICanvasRenderingContextInternal::nsICanvasRenderingContextInternal()

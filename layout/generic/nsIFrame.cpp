@@ -434,9 +434,28 @@ void nsIFrame::FindCloserFrameForSelection(
 
 void nsIFrame::ContentStatesChanged(mozilla::EventStates aStates) {}
 
+void WeakFrame::Clear(mozilla::PresShell* aPresShell) {
+  if (aPresShell) {
+    aPresShell->RemoveWeakFrame(this);
+  }
+  mFrame = nullptr;
+}
+
 AutoWeakFrame::AutoWeakFrame(const WeakFrame& aOther)
     : mPrev(nullptr), mFrame(nullptr) {
   Init(aOther.GetFrame());
+}
+
+void AutoWeakFrame::Clear(mozilla::PresShell* aPresShell) {
+  if (aPresShell) {
+    aPresShell->RemoveAutoWeakFrame(this);
+  }
+  mFrame = nullptr;
+  mPrev = nullptr;
+}
+
+AutoWeakFrame::~AutoWeakFrame() {
+  Clear(mFrame ? mFrame->PresContext()->GetPresShell() : nullptr);
 }
 
 void AutoWeakFrame::Init(nsIFrame* aFrame) {
@@ -11313,6 +11332,28 @@ nsIFrame::PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
   bool clip = HasAnyStateBits(NS_BLOCK_CLIP_PAGINATED_OVERFLOW) &&
               PresContext()->IsPaginated() && IsBlockFrame();
   return clip ? PhysicalAxes::Both : PhysicalAxes::None;
+}
+
+void nsIFrame::AddPaintedPresShell(mozilla::PresShell* aPresShell) {
+  PaintedPresShellList()->AppendElement(do_GetWeakReference(aPresShell));
+}
+
+void nsIFrame::UpdatePaintCountForPaintedPresShells() {
+  for (nsWeakPtr& item : *PaintedPresShellList()) {
+    if (RefPtr<mozilla::PresShell> presShell = do_QueryReferent(item)) {
+      presShell->IncrementPaintCount();
+    }
+  }
+}
+
+bool nsIFrame::DidPaintPresShell(mozilla::PresShell* aPresShell) {
+  for (nsWeakPtr& item : *PaintedPresShellList()) {
+    RefPtr<mozilla::PresShell> presShell = do_QueryReferent(item);
+    if (presShell == aPresShell) {
+      return true;
+    }
+  }
+  return false;
 }
 
 #ifdef DEBUG

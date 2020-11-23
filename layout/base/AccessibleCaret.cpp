@@ -281,6 +281,10 @@ AccessibleCaret::PositionChangedResult AccessibleCaret::SetPosition(
                         : PositionChangedResult::Position;
 }
 
+nsIFrame* AccessibleCaret::RootFrame() const {
+  return mPresShell->GetRootFrame();
+}
+
 nsIFrame* AccessibleCaret::CustomContentContainerFrame() const {
   nsCanvasFrame* canvasFrame = mPresShell->GetCanvasFrame();
   Element* container = canvasFrame->GetCustomContentContainer();
