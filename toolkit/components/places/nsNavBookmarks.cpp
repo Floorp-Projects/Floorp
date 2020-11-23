@@ -1814,18 +1814,10 @@ nsNavBookmarks::Observe(nsISupports* aSubject, const char* aTopic,
 //// nsINavHistoryObserver
 
 NS_IMETHODIMP
-nsNavBookmarks::OnBeginUpdateBatch() {
-  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavBookmarkObserver,
-                   OnBeginUpdateBatch());
-  return NS_OK;
-}
+nsNavBookmarks::OnBeginUpdateBatch() { return NS_OK; }
 
 NS_IMETHODIMP
-nsNavBookmarks::OnEndUpdateBatch() {
-  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavBookmarkObserver,
-                   OnEndUpdateBatch());
-  return NS_OK;
-}
+nsNavBookmarks::OnEndUpdateBatch() { return NS_OK; }
 
 NS_IMETHODIMP
 nsNavBookmarks::OnDeleteURI(nsIURI* aURI, const nsACString& aGUID,
