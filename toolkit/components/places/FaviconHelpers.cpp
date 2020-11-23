@@ -14,6 +14,9 @@
 
 #include "nsNavHistory.h"
 #include "nsFaviconService.h"
+
+#include "mozilla/dom/PlacesFavicon.h"
+#include "mozilla/dom/PlacesObservers.h"
 #include "mozilla/storage.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -30,6 +33,7 @@
 #include "ImageOps.h"
 #include "imgIEncoder.h"
 
+using namespace mozilla;
 using namespace mozilla::places;
 using namespace mozilla::storage;
 
@@ -737,29 +741,29 @@ AsyncFetchAndSetIconForPage::OnStopRequest(nsIRequest* aRequest,
   // type. This allow us to measure common file sizes while also observing each
   // type popularity.
   if (payload.mimeType.EqualsLiteral(PNG_MIME_TYPE)) {
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_PNG_SIZES,
-                                   payload.data.Length());
+    Telemetry::Accumulate(Telemetry::PLACES_FAVICON_PNG_SIZES,
+                          payload.data.Length());
   } else if (payload.mimeType.EqualsLiteral("image/x-icon") ||
              payload.mimeType.EqualsLiteral("image/vnd.microsoft.icon")) {
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_ICO_SIZES,
-                                   payload.data.Length());
+    Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_ICO_SIZES,
+                          payload.data.Length());
   } else if (payload.mimeType.EqualsLiteral("image/jpeg") ||
              payload.mimeType.EqualsLiteral("image/pjpeg")) {
-    mozilla::Telemetry::Accumulate(
-        mozilla::Telemetry::PLACES_FAVICON_JPEG_SIZES, payload.data.Length());
+    Telemetry::Accumulate(Telemetry::PLACES_FAVICON_JPEG_SIZES,
+                          payload.data.Length());
   } else if (payload.mimeType.EqualsLiteral("image/gif")) {
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_GIF_SIZES,
-                                   payload.data.Length());
+    Telemetry::Accumulate(Telemetry::PLACES_FAVICON_GIF_SIZES,
+                          payload.data.Length());
   } else if (payload.mimeType.EqualsLiteral("image/bmp") ||
              payload.mimeType.EqualsLiteral("image/x-windows-bmp")) {
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_BMP_SIZES,
-                                   payload.data.Length());
+    Telemetry::Accumulate(Telemetry::PLACES_FAVICON_BMP_SIZES,
+                          payload.data.Length());
   } else if (payload.mimeType.EqualsLiteral(SVG_MIME_TYPE)) {
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLACES_FAVICON_SVG_SIZES,
-                                   payload.data.Length());
+    Telemetry::Accumulate(Telemetry::PLACES_FAVICON_SVG_SIZES,
+                          payload.data.Length());
   } else {
-    mozilla::Telemetry::Accumulate(
-        mozilla::Telemetry::PLACES_FAVICON_OTHER_SIZES, payload.data.Length());
+    Telemetry::Accumulate(Telemetry::PLACES_FAVICON_OTHER_SIZES,
+                          payload.data.Length());
   }
 
   rv = favicons->OptimizeIconSizes(mIcon);
@@ -1092,6 +1096,9 @@ NotifyIconObservers::NotifyIconObservers(
       mIcon(aIcon),
       mPage(aPage) {}
 
+// MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is marked
+// MOZ_CAN_RUN_SCRIPT.  See bug 1535398.
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 NotifyIconObservers::Run() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1106,12 +1113,29 @@ NotifyIconObservers::Run() {
         nsCOMPtr<nsIURI> pageURI;
         MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(pageURI), mPage.spec));
         if (pageURI) {
+          // Invalide page-icon image cache, since the icon is about to change.
           nsFaviconService* favicons = nsFaviconService::GetFaviconService();
           MOZ_ASSERT(favicons);
           if (favicons) {
-            (void)favicons->SendFaviconNotifications(pageURI, iconURI,
-                                                     mPage.guid);
+            nsCString pageIconSpec("page-icon:");
+            pageIconSpec.Append(mPage.spec);
+            nsCOMPtr<nsIURI> pageIconURI;
+            if (NS_SUCCEEDED(
+                    NS_NewURI(getter_AddRefs(pageIconURI), pageIconSpec))) {
+              favicons->ClearImageCache(pageIconURI);
+            }
           }
+
+          // Notify about the favicon change.
+          dom::Sequence<OwningNonNull<dom::PlacesEvent>> events;
+          RefPtr<dom::PlacesFavicon> faviconEvent = new dom::PlacesFavicon();
+          AppendUTF8toUTF16(mPage.spec, faviconEvent->mUrl);
+          AppendUTF8toUTF16(mIcon.spec, faviconEvent->mFaviconUrl);
+          faviconEvent->mPageGuid.Assign(mPage.guid);
+          bool success =
+              !!events.AppendElement(faviconEvent.forget(), fallible);
+          MOZ_RELEASE_ASSERT(success);
+          dom::PlacesObservers::NotifyListeners(events);
         }
       }
     }
