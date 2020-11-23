@@ -851,5 +851,13 @@ Promise::PromiseState Promise::State() const {
   return PromiseState::Pending;
 }
 
+void Promise::SetSettledPromiseIsHandled() {
+  AutoAllowLegacyScriptExecution exemption;
+  AutoEntryScript aes(mGlobal, "Set settled promise handled");
+  JSContext* cx = aes.cx();
+  JS::RootedObject promiseObj(cx, mPromiseObj);
+  JS::SetSettledPromiseIsHandled(cx, promiseObj);
+}
+
 }  // namespace dom
 }  // namespace mozilla
