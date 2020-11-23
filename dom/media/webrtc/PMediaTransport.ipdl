@@ -13,7 +13,7 @@ include "mozilla/media/webrtc/WebrtcIPCTraits.h";
 using StringVector from "mozilla/media/webrtc/WebrtcIPCTraits.h";
 using CandidateInfo from "mozilla/media/webrtc/WebrtcIPCTraits.h";
 using DtlsDigestList from "mozilla/media/webrtc/WebrtcIPCTraits.h";
-using std::string from "ipc/IPCMessageUtils.h";
+using std::string from "string";
 using struct mozilla::dom::NotReallyMovableButLetsPretendItIsRTCStatsCollection from "mozilla/dom/RTCStatsReportBinding.h";
 using WebrtcGlobalLog from "mozilla/media/webrtc/WebrtcGlobal.h";
 using mozilla::dom::RTCIceServer from "mozilla/dom/RTCConfigurationBinding.h";

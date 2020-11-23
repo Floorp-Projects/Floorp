@@ -43,18 +43,20 @@ Types = (
 HeaderIncludes = (
     "mozilla/Attributes.h",
     "IPCMessageStart.h",
-    "ipc/IPCMessageUtils.h",
     "mozilla/RefPtr.h",
     "nsString.h",
     "nsTArray.h",
-    "mozilla/ipc/ProtocolUtils.h",
-    "mozilla/ipc/TaintingIPCUtils.h",
     "nsTHashtable.h",
     "mozilla/OperatorNewExtensions.h",
     "mozilla/UniquePtr.h",
+    "mozilla/ipc/FileDescriptor.h",
+    "mozilla/ipc/ProtocolUtils.h",
+    "mozilla/ipc/Shmem.h",
 )
 
 CppIncludes = (
+    "ipc/IPCMessageUtils.h",
     "nsIFile.h",
     "GeckoProfiler.h",
+    "mozilla/ipc/TaintingIPCUtils.h",
 )

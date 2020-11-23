@@ -7,7 +7,7 @@
 
 include protocol PNecko;
 
-using mozilla::net::WebSocketFrameData from "ipc/IPCMessageUtils.h";
+using class mozilla::net::WebSocketFrameData from "mozilla/net/WebSocketFrame.h";
 
 namespace mozilla {
 namespace net {

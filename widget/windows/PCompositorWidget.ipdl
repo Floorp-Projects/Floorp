@@ -7,7 +7,7 @@
 include protocol PCompositorBridge;
 
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
-using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
+using mozilla::WindowsHandle from "mozilla/ipc/IPCTypes.h";
 using nsTransparencyMode from "mozilla/widget/WidgetMessageUtils.h";
 
 namespace mozilla {
