@@ -14,6 +14,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/WritingModes.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -40,14 +41,14 @@ class ContentCache {
   typedef CopyableTArray<LayoutDeviceIntRect> RectArray;
   typedef widget::IMENotification IMENotification;
 
-  ContentCache();
+  ContentCache() = default;
 
  protected:
   // Whole text in the target
   nsString mText;
 
   // Start offset of the composition string.
-  uint32_t mCompositionStart;
+  Maybe<uint32_t> mCompositionStart;
 
   enum { ePrevCharRect = 1, eNextCharRect = 0 };
 
@@ -409,7 +410,7 @@ class ContentCacheInParent final : public ContentCache {
   uint32_t mPendingEventsNeedingAck;
   // mCompositionStartInChild stores current composition start offset in the
   // remote process.
-  uint32_t mCompositionStartInChild;
+  Maybe<uint32_t> mCompositionStartInChild;
   // mPendingCommitLength is commit string length of the first pending
   // composition.  This is used by relative offset query events when querying
   // new composition start offset.
