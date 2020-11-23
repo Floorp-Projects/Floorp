@@ -1171,6 +1171,13 @@ imgCacheValidator* imgRequestProxy::GetValidator() const {
   return owner->GetValidator();
 }
 
+nsITimedChannel* imgRequestProxy::TimedChannel() {
+  if (!GetOwner()) {
+    return nullptr;
+  }
+  return GetOwner()->GetTimedChannel();
+}
+
 ////////////////// imgRequestProxyStatic methods
 
 class StaticBehaviour : public ProxyBehaviour {
