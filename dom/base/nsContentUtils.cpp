@@ -9598,7 +9598,7 @@ void nsContentUtils::EnqueueUpgradeReaction(
 
 /* static */
 void nsContentUtils::EnqueueLifecycleCallback(
-    Document::ElementCallbackType aType, Element* aCustomElement,
+    ElementCallbackType aType, Element* aCustomElement,
     LifecycleCallbackArgs* aArgs,
     LifecycleAdoptedCallbackArgs* aAdoptedCallbackArgs,
     CustomElementDefinition* aDefinition) {

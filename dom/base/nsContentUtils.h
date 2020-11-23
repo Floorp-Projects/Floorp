@@ -188,6 +188,7 @@ class MessageBroadcaster;
 class NodeInfo;
 class Selection;
 class WorkerPrivate;
+enum class ElementCallbackType;
 }  // namespace dom
 
 namespace intl {
@@ -3051,7 +3052,7 @@ class nsContentUtils {
       Element* aElement, mozilla::dom::CustomElementDefinition* aDefinition);
 
   static void EnqueueLifecycleCallback(
-      Document::ElementCallbackType aType, Element* aCustomElement,
+      mozilla::dom::ElementCallbackType aType, Element* aCustomElement,
       mozilla::dom::LifecycleCallbackArgs* aArgs = nullptr,
       mozilla::dom::LifecycleAdoptedCallbackArgs* aAdoptedCallbackArgs =
           nullptr,

@@ -3298,14 +3298,6 @@ class Document : public nsINode,
   // GetDoctype defined above
   Element* GetDocumentElement() const { return GetRootElement(); }
 
-  enum ElementCallbackType {
-    eConnected,
-    eDisconnected,
-    eAdopted,
-    eAttributeChanged,
-    eGetCustomInterface
-  };
-
   WindowContext* GetTopLevelWindowContext() const;
 
   Document* GetTopLevelContentDocument();
