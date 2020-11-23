@@ -46,6 +46,7 @@ EXPORTS.mozilla.ipc += [
     "ProtocolUtils.h",
     "ProtocolUtilsFwd.h",
     "ScopedXREEmbed.h",
+    "SerializedStructuredCloneBuffer.h",
     "SharedMemory.h",
     "SharedMemoryBasic.h",
     "Shmem.h",
