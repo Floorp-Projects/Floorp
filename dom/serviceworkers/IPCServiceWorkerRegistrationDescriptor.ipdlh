@@ -5,8 +5,10 @@
 include PBackgroundSharedTypes;
 include IPCServiceWorkerDescriptor;
 
+include "ipc/ErrorIPCUtils.h";
+
 using ServiceWorkerUpdateViaCache from "mozilla/dom/ServiceWorkerIPCUtils.h";
-using mozilla::CopyableErrorResult from "ipc/ErrorIPCUtils.h";
+using mozilla::CopyableErrorResult from "mozilla/ErrorResult.h";
 
 namespace mozilla {
 namespace dom {

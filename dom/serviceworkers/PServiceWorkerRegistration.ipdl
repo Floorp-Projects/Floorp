@@ -6,6 +6,8 @@ include protocol PBackground;
 
 include IPCServiceWorkerRegistrationDescriptor;
 
+include "ipc/ErrorIPCUtils.h";
+
 namespace mozilla {
 namespace dom {
 
