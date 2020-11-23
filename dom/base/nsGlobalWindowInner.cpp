@@ -2891,7 +2891,7 @@ bool nsGlobalWindowInner::ResolveComponentsShim(
   // Warn once.
   nsCOMPtr<Document> doc = GetExtantDoc();
   if (doc) {
-    doc->WarnOnceAbout(Document::eComponents, /* asError = */ true);
+    doc->WarnOnceAbout(DeprecatedOperations::eComponents, /* asError = */ true);
   }
 
   // Create a fake Components object.
@@ -2993,7 +2993,8 @@ bool nsGlobalWindowInner::DoResolve(
       !xpc::IsXrayWrapper(aObj) &&
       !nsContentUtils::ObjectPrincipal(aObj)->IsSystemPrincipal()) {
     if (GetExtantDoc()) {
-      GetExtantDoc()->WarnOnceAbout(Document::eWindow_Cc_ontrollers);
+      GetExtantDoc()->WarnOnceAbout(
+          DeprecatedOperations::eWindow_Cc_ontrollers);
     }
     const JSClass* clazz;
     if (aId ==
@@ -3877,13 +3878,13 @@ void nsGlobalWindowInner::SetResizable(bool aResizable) const {
 
 void nsGlobalWindowInner::CaptureEvents() {
   if (mDoc) {
-    mDoc->WarnOnceAbout(Document::eUseOfCaptureEvents);
+    mDoc->WarnOnceAbout(DeprecatedOperations::eUseOfCaptureEvents);
   }
 }
 
 void nsGlobalWindowInner::ReleaseEvents() {
   if (mDoc) {
-    mDoc->WarnOnceAbout(Document::eUseOfReleaseEvents);
+    mDoc->WarnOnceAbout(DeprecatedOperations::eUseOfReleaseEvents);
   }
 }
 

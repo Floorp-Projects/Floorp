@@ -594,7 +594,8 @@ class XULInContentErrorReporter : public Runnable {
       : mozilla::Runnable("XULInContentErrorReporter"), mDocument(aDocument) {}
 
   NS_IMETHOD Run() override {
-    mDocument->WarnOnceAbout(Document::eImportXULIntoContent, false);
+    mDocument->WarnOnceAbout(DeprecatedOperations::eImportXULIntoContent,
+                             false);
     return NS_OK;
   }
 
@@ -623,7 +624,7 @@ nsresult nsXULElement::BindToTree(BindContext& aContext, nsINode& aParent) {
 
   Document& doc = aContext.OwnerDoc();
   if (!IsInNativeAnonymousSubtree() && !doc.AllowXULXBL() &&
-      !doc.HasWarnedAbout(Document::eImportXULIntoContent)) {
+      !doc.HasWarnedAbout(DeprecatedOperations::eImportXULIntoContent)) {
     nsContentUtils::AddScriptRunner(new XULInContentErrorReporter(doc));
   }
 

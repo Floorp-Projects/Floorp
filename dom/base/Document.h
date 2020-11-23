@@ -328,6 +328,13 @@ class ResizeObserver;
 class ResizeObserverController;
 class PostMessageEvent;
 
+#define DEPRECATED_OPERATION(_op) e##_op,
+enum class DeprecatedOperations : uint16_t {
+#include "nsDeprecatedOperationList.h"
+  eDeprecatedOperationCount
+};
+#undef DEPRECATED_OPERATION
+
 // Document states
 
 // RTL locale: specific to the XUL localedir attribute
@@ -3205,12 +3212,6 @@ class Document : public nsINode,
   // Update state on links in mLinksToUpdate.
   void FlushPendingLinkUpdates();
 
-#define DEPRECATED_OPERATION(_op) e##_op,
-  enum DeprecatedOperations {
-#include "nsDeprecatedOperationList.h"
-    eDeprecatedOperationCount
-  };
-#undef DEPRECATED_OPERATION
   bool HasWarnedAbout(DeprecatedOperations aOperation) const;
   void WarnOnceAbout(
       DeprecatedOperations aOperation, bool asError = false,
@@ -4230,7 +4231,9 @@ class Document : public nsINode,
       InternalCommandDataHashtable;
   static InternalCommandDataHashtable* sInternalCommandDataHashtable;
 
-  mutable std::bitset<eDeprecatedOperationCount> mDeprecationWarnedAbout;
+  mutable std::bitset<static_cast<size_t>(
+      DeprecatedOperations::eDeprecatedOperationCount)>
+      mDeprecationWarnedAbout;
   mutable std::bitset<eDocumentWarningCount> mDocWarningWarnedAbout;
 
   // Lazy-initialization to have mDocGroup initialized in prior to the

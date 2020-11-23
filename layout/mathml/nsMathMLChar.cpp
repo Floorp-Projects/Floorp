@@ -1534,7 +1534,8 @@ nsresult nsMathMLChar::StretchInternal(
               u"https://developer.mozilla.org/docs/Mozilla/"
               "MathML_Project/Fonts"_ns};
           aForFrame->PresContext()->Document()->WarnOnceAbout(
-              dom::Document::eMathML_DeprecatedStixgeneralOperatorStretching,
+              dom::DeprecatedOperations::
+                  eMathML_DeprecatedStixgeneralOperatorStretching,
               false, params);
         }
         break;

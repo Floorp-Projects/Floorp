@@ -944,7 +944,7 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
   }
 
   window->GetExtantDoc()->WarnOnceAbout(
-      Document::eCreateImageBitmapCanvasRenderingContext2D);
+      DeprecatedOperations::eCreateImageBitmapCanvasRenderingContext2D);
 
   // Check write-only mode.
   bool writeOnly =

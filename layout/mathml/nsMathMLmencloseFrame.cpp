@@ -108,7 +108,7 @@ nsresult nsMathMLmencloseFrame::AddNotation(const nsAString& aNotation) {
   } else if (aNotation.EqualsLiteral("radical")) {
     if (!StaticPrefs::mathml_deprecated_menclose_notation_radical_disabled()) {
       mContent->OwnerDoc()->WarnOnceAbout(
-          dom::Document::eMathML_DeprecatedMencloseNotationRadical);
+          dom::DeprecatedOperations::eMathML_DeprecatedMencloseNotationRadical);
       rv = AllocateMathMLChar(NOTATION_RADICAL);
       NS_ENSURE_SUCCESS(rv, rv);
       mNotationsToDraw += NOTATION_RADICAL;

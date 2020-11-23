@@ -141,7 +141,7 @@ nscoord nsMathMLmfracFrame::CalcLineThickness(nsPresContext* aPresContext,
       }
       if (isDeprecatedLineThicknessValue) {
         mContent->OwnerDoc()->WarnOnceAbout(
-            dom::Document::eMathML_DeprecatedLineThicknessValue);
+            dom::DeprecatedOperations::eMathML_DeprecatedLineThicknessValue);
       }
     }
   }
@@ -259,7 +259,7 @@ nsresult nsMathMLmfracFrame::PlaceInternal(DrawTarget* aDrawTarget,
     if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::bevelled_,
                                        value)) {
       mContent->OwnerDoc()->WarnOnceAbout(
-          dom::Document::eMathML_DeprecatedBevelledAttribute);
+          dom::DeprecatedOperations::eMathML_DeprecatedBevelledAttribute);
       mIsBevelled = value.EqualsLiteral("true");
     }
   }
@@ -405,7 +405,7 @@ nsresult nsMathMLmfracFrame::PlaceInternal(DrawTarget* aDrawTarget,
       if (mContent->AsElement()->GetAttr(kNameSpaceID_None,
                                          nsGkAtoms::numalign_, value)) {
         mContent->OwnerDoc()->WarnOnceAbout(
-            dom::Document::eMathML_DeprecatedAlignmentAttributes);
+            dom::DeprecatedOperations::eMathML_DeprecatedAlignmentAttributes);
         if (value.EqualsLiteral("left")) {
           dxNum = leftSpace;
         } else if (value.EqualsLiteral("right")) {
@@ -417,7 +417,7 @@ nsresult nsMathMLmfracFrame::PlaceInternal(DrawTarget* aDrawTarget,
       if (mContent->AsElement()->GetAttr(kNameSpaceID_None,
                                          nsGkAtoms::denomalign_, value)) {
         mContent->OwnerDoc()->WarnOnceAbout(
-            dom::Document::eMathML_DeprecatedAlignmentAttributes);
+            dom::DeprecatedOperations::eMathML_DeprecatedAlignmentAttributes);
         if (value.EqualsLiteral("left")) {
           dxDen = leftSpace;
         } else if (value.EqualsLiteral("right")) {

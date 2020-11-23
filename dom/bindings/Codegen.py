@@ -9191,7 +9191,7 @@ class CGPerSignatureCall(CGThing):
                 CGGeneric(
                     dedent(
                         """
-                DeprecationWarning(cx, obj, Document::e%s);
+                DeprecationWarning(cx, obj, DeprecatedOperations::e%s);
                 """
                         % deprecated[0]
                     )
@@ -11483,7 +11483,7 @@ class CGSpecializedLenientSetter(CGSpecializedSetter):
         assert all(ord(c) < 128 for c in attrName)
         return dedent(
             """
-            DeprecationWarning(cx, obj, Document::eLenientSetter);
+            DeprecationWarning(cx, obj, DeprecatedOperations::eLenientSetter);
             return true;
             """
         )
