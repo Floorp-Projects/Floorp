@@ -3591,7 +3591,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.nonForwardDeclaredHeaders.add(using.header)
 
     def visitCxxInclude(self, inc):
-        self.nonForwardDeclaredHeaders.add(inc.file)
+        self.externalIncludes.add(inc.file)
 
     def visitInclude(self, inc):
         ip = inc.tu.protocol
