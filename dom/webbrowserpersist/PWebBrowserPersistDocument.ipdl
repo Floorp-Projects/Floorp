@@ -14,7 +14,9 @@ include PBackgroundSharedTypes;
 include IPCStream;
 include NeckoChannelParams;
 
-using refcounted class nsIReferrerInfo from "mozilla/dom/ReferrerInfoUtils.h";
+include "mozilla/dom/ReferrerInfoUtils.h";
+
+using refcounted class nsIReferrerInfo from "nsIReferrerInfo.h";
 
 namespace mozilla {
 

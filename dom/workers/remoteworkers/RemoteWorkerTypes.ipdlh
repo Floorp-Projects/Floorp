@@ -12,6 +12,7 @@ include NeckoChannelParams;
 include ProtocolTypes;
 
 include "mozilla/dom/ClientIPCUtils.h";
+include "mozilla/dom/ReferrerInfoUtils.h";
 
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 using mozilla::StorageAccess from "mozilla/StorageAccess.h";

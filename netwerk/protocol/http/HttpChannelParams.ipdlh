@@ -9,12 +9,13 @@
 include IPCServiceWorkerDescriptor;
 include NeckoChannelParams;
 
+include "mozilla/dom/ReferrerInfoUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
 
 using class mozilla::net::nsHttpHeaderArray from "nsHttpHeaderArray.h";
 using mozilla::net::NetAddr from "mozilla/net/DNS.h";
 using nsILoadInfo::CrossOriginOpenerPolicy from "nsILoadInfo.h";
-using refcounted class nsIReferrerInfo from "mozilla/dom/ReferrerInfoUtils.h";
+using refcounted class nsIReferrerInfo from "nsIReferrerInfo.h";
 
 namespace mozilla {
 namespace net {
