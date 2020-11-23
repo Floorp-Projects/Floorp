@@ -54,8 +54,8 @@ use crate::{
 };
 
 use ::libc::{self};
+use std::sync::atomic::Ordering;
 use std::sync::{atomic::AtomicBool, Arc};
-use std::{ptr::null_mut, sync::atomic::Ordering};
 
 pub const PRECACHE_OUTPUT_SIZE: usize = 8192;
 pub const PRECACHE_OUTPUT_MAX: usize = PRECACHE_OUTPUT_SIZE - 1;
@@ -86,21 +86,15 @@ impl Default for precache_output {
 
 #[repr(C)]
 #[repr(align(16))]
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct qcms_transform {
     pub matrix: [[f32; 4]; 3],
     pub input_gamma_table_r: Option<Vec<f32>>,
     pub input_gamma_table_g: Option<Vec<f32>>,
     pub input_gamma_table_b: Option<Vec<f32>>,
-    pub input_clut_table_r: *mut f32,
-    pub input_clut_table_g: *mut f32,
-    pub input_clut_table_b: *mut f32,
     pub input_clut_table_length: u16,
     pub clut: Option<Vec<f32>>,
     pub grid_size: u16,
-    pub output_clut_table_r: *mut f32,
-    pub output_clut_table_g: *mut f32,
-    pub output_clut_table_b: *mut f32,
     pub output_clut_table_length: u16,
     pub input_gamma_table_gray: Option<Vec<f32>>,
     pub out_gamma_r: f32,
@@ -119,44 +113,6 @@ pub struct qcms_transform {
     pub output_table_g: Option<Arc<precache_output>>,
     pub output_table_b: Option<Arc<precache_output>>,
     pub transform_fn: transform_fn_t,
-}
-
-impl Default for qcms_transform {
-    fn default() -> qcms_transform {
-        qcms_transform {
-            matrix: Default::default(),
-            input_gamma_table_r: Default::default(),
-            input_gamma_table_b: Default::default(),
-            input_gamma_table_g: Default::default(),
-            input_clut_table_r: null_mut(),
-            input_clut_table_g: null_mut(),
-            input_clut_table_b: null_mut(),
-            input_clut_table_length: Default::default(),
-            clut: Default::default(),
-            grid_size: Default::default(),
-            output_clut_table_r: null_mut(),
-            output_clut_table_g: null_mut(),
-            output_clut_table_b: null_mut(),
-            output_clut_table_length: Default::default(),
-            input_gamma_table_gray: Default::default(),
-            out_gamma_r: Default::default(),
-            out_gamma_g: Default::default(),
-            out_gamma_b: Default::default(),
-            out_gamma_gray: Default::default(),
-            output_gamma_lut_r: Default::default(),
-            output_gamma_lut_g: Default::default(),
-            output_gamma_lut_b: Default::default(),
-            output_gamma_lut_gray: Default::default(),
-            output_gamma_lut_r_length: Default::default(),
-            output_gamma_lut_g_length: Default::default(),
-            output_gamma_lut_b_length: Default::default(),
-            output_gamma_lut_gray_length: Default::default(),
-            output_table_r: Default::default(),
-            output_table_g: Default::default(),
-            output_table_b: Default::default(),
-            transform_fn: Default::default(),
-        }
-    }
 }
 
 pub type transform_fn_t = Option<
