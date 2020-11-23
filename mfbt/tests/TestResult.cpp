@@ -14,27 +14,11 @@ using mozilla::Ok;
 using mozilla::Result;
 using mozilla::UniquePtr;
 
-enum struct UnusedZeroEnum : int16_t { Ok = 0, NotOk = 1 };
+enum struct TestUnusedZeroEnum : int16_t { Ok = 0, NotOk = 1 };
 
 namespace mozilla::detail {
 template <>
-struct UnusedZero<UnusedZeroEnum> {
-  using StorageType = UnusedZeroEnum;
-
-  static constexpr bool value = true;
-  static constexpr StorageType nullValue = UnusedZeroEnum::Ok;
-
-  static constexpr StorageType GetDefaultValue() {
-    return UnusedZeroEnum::NotOk;
-  }
-
-  static constexpr void AssertValid(StorageType aValue) {}
-  static constexpr const UnusedZeroEnum& Inspect(const StorageType& aValue) {
-    return aValue;
-  }
-  static constexpr UnusedZeroEnum Unwrap(StorageType aValue) { return aValue; }
-  static constexpr StorageType Store(UnusedZeroEnum aValue) { return aValue; }
-};
+struct UnusedZero<TestUnusedZeroEnum> : UnusedZeroEnum<TestUnusedZeroEnum> {};
 }  // namespace mozilla::detail
 
 struct Failed {};
@@ -64,17 +48,18 @@ struct UnusedZero<Failed> {
 // for a reference type and for a non-reference type
 static_assert(mozilla::detail::SelectResultImpl<uintptr_t, Failed>::value ==
               mozilla::detail::PackingStrategy::NullIsOk);
-static_assert(mozilla::detail::SelectResultImpl<Ok, UnusedZeroEnum>::value ==
-              mozilla::detail::PackingStrategy::NullIsOk);
+static_assert(
+    mozilla::detail::SelectResultImpl<Ok, TestUnusedZeroEnum>::value ==
+    mozilla::detail::PackingStrategy::NullIsOk);
 static_assert(mozilla::detail::SelectResultImpl<Ok, Failed>::value ==
               mozilla::detail::PackingStrategy::LowBitTagIsError);
 
 static_assert(std::is_trivially_destructible_v<Result<uintptr_t, Failed>>);
-static_assert(std::is_trivially_destructible_v<Result<Ok, UnusedZeroEnum>>);
+static_assert(std::is_trivially_destructible_v<Result<Ok, TestUnusedZeroEnum>>);
 static_assert(std::is_trivially_destructible_v<Result<Ok, Failed>>);
 
 static_assert(
-    sizeof(Result<bool, UnusedZeroEnum>) <= sizeof(uintptr_t),
+    sizeof(Result<bool, TestUnusedZeroEnum>) <= sizeof(uintptr_t),
     "Result with bool value type should not be larger than pointer-sized");
 static_assert(sizeof(Result<Ok, Failed>) == sizeof(uint8_t),
               "Result with empty value type should be size 1");
@@ -114,8 +99,8 @@ static GenericErrorResult<Failed> Fail() {
   return Err(failed);
 }
 
-static GenericErrorResult<UnusedZeroEnum> FailUnusedZeroEnum() {
-  return Err(UnusedZeroEnum::NotOk);
+static GenericErrorResult<TestUnusedZeroEnum> FailTestUnusedZeroEnum() {
+  return Err(TestUnusedZeroEnum::NotOk);
 }
 
 static Result<Ok, Failed> Task1(bool pass) {
@@ -125,10 +110,10 @@ static Result<Ok, Failed> Task1(bool pass) {
   return Ok();
 }
 
-static Result<Ok, UnusedZeroEnum> Task1UnusedZeroEnumErr(bool pass) {
+static Result<Ok, TestUnusedZeroEnum> Task1UnusedZeroEnumErr(bool pass) {
   if (!pass) {
-    return FailUnusedZeroEnum();  // implicit conversion from GenericErrorResult
-                                  // to Result
+    return FailTestUnusedZeroEnum();  // implicit conversion from
+                                      // GenericErrorResult to Result
   }
   return Ok();
 }
@@ -139,8 +124,8 @@ static Result<int, Failed> Task2(bool pass, int value) {
   return value;      // implicit conversion from T to Result<T, E>
 }
 
-static Result<int, UnusedZeroEnum> Task2UnusedZeroEnumErr(bool pass,
-                                                          int value) {
+static Result<int, TestUnusedZeroEnum> Task2UnusedZeroEnumErr(bool pass,
+                                                              int value) {
   MOZ_TRY(Task1UnusedZeroEnumErr(
       pass));    // converts one type of result to another in the error case
   return value;  // implicit conversion from T to Result<T, E>
@@ -163,9 +148,9 @@ static void BasicTests() {
   MOZ_RELEASE_ASSERT(!Task1UnusedZeroEnumErr(true).isErr());
   MOZ_RELEASE_ASSERT(!Task1UnusedZeroEnumErr(false).isOk());
   MOZ_RELEASE_ASSERT(Task1UnusedZeroEnumErr(false).isErr());
-  MOZ_RELEASE_ASSERT(UnusedZeroEnum::NotOk ==
+  MOZ_RELEASE_ASSERT(TestUnusedZeroEnum::NotOk ==
                      Task1UnusedZeroEnumErr(false).inspectErr());
-  MOZ_RELEASE_ASSERT(UnusedZeroEnum::NotOk ==
+  MOZ_RELEASE_ASSERT(TestUnusedZeroEnum::NotOk ==
                      Task1UnusedZeroEnumErr(false).unwrapErr());
 
   // MOZ_TRY works.

@@ -356,6 +356,34 @@ struct UnusedZero {
   static const bool value = false;
 };
 
+// This template can be used as a helper for specializing UnusedZero for scoped
+// enum types which never use 0 as an error value, e.g.
+//
+// namespace mozilla::detail {
+//
+// template <>
+// struct UnusedZero<MyEnumType> : UnusedZeroEnum<MyEnumType> {};
+//
+// }  // namespace mozilla::detail
+//
+template <typename T>
+struct UnusedZeroEnum {
+  using StorageType = std::underlying_type_t<T>;
+
+  static constexpr bool value = true;
+  static constexpr StorageType nullValue = 0;
+
+  static constexpr T Inspect(const StorageType& aValue) {
+    return static_cast<T>(aValue);
+  }
+  static constexpr T Unwrap(StorageType aValue) {
+    return static_cast<T>(aValue);
+  }
+  static constexpr StorageType Store(T aValue) {
+    return static_cast<StorageType>(aValue);
+  }
+};
+
 // A bit of help figuring out which of the above specializations to use.
 //
 // We begin by safely assuming types don't have a spare bit, unless they are
