@@ -15,12 +15,12 @@
 #include "nsTArray.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIChannelEventSink.h"
-#include "nsIHttpChannel.h"
 #include "nsIThreadRetargetableStreamListener.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"
 
+class nsIHttpChannel;
 class nsIURI;
 class nsIPrincipal;
 class nsINetworkInterceptController;
