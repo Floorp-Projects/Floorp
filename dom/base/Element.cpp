@@ -1706,7 +1706,8 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
     // connected.
     if (CustomElementData* data = GetCustomElementData()) {
       if (data->mState == CustomElementData::State::eCustom) {
-        nsContentUtils::EnqueueLifecycleCallback(Document::eConnected, this);
+        nsContentUtils::EnqueueLifecycleCallback(
+            ElementCallbackType::eConnected, this);
       } else {
         // Step 7.7.2.2 https://dom.spec.whatwg.org/#concept-node-insert
         nsContentUtils::TryToUpgradeElement(this);
@@ -1940,7 +1941,8 @@ void Element::UnbindFromTree(bool aNullParent) {
     CustomElementData* data = GetCustomElementData();
     if (data) {
       if (data->mState == CustomElementData::State::eCustom) {
-        nsContentUtils::EnqueueLifecycleCallback(Document::eDisconnected, this);
+        nsContentUtils::EnqueueLifecycleCallback(
+            ElementCallbackType::eDisconnected, this);
       } else {
         // Remove an unresolved custom element that is a candidate for upgrade
         // when a custom element is disconnected.
@@ -2495,7 +2497,8 @@ nsresult Element::SetAttrAndNotify(
                                     (ns.IsEmpty() ? VoidString() : ns)};
 
       nsContentUtils::EnqueueLifecycleCallback(
-          Document::eAttributeChanged, this, &args, nullptr, definition);
+          ElementCallbackType::eAttributeChanged, this, &args, nullptr,
+          definition);
     }
   }
 
@@ -2677,7 +2680,8 @@ nsresult Element::OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
                                     (ns.IsEmpty() ? VoidString() : ns)};
 
       nsContentUtils::EnqueueLifecycleCallback(
-          Document::eAttributeChanged, this, &args, nullptr, definition);
+          ElementCallbackType::eAttributeChanged, this, &args, nullptr,
+          definition);
     }
   }
 
@@ -2789,7 +2793,8 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
           VoidString(), (ns.IsEmpty() ? VoidString() : ns)};
 
       nsContentUtils::EnqueueLifecycleCallback(
-          Document::eAttributeChanged, this, &args, nullptr, definition);
+          ElementCallbackType::eAttributeChanged, this, &args, nullptr,
+          definition);
     }
   }
 
