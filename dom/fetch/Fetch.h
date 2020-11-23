@@ -13,7 +13,6 @@
 #include "nsString.h"
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/AbortSignal.h"
 #include "mozilla/dom/BodyConsumer.h"
 #include "mozilla/dom/BodyStream.h"
@@ -25,6 +24,8 @@ class nsIGlobalObject;
 class nsIEventTarget;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class BlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString;

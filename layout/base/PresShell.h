@@ -13,7 +13,6 @@
 
 #include <stdio.h>  // for FILE definition
 #include "FrameMetrics.h"
-#include "GeckoProfiler.h"
 #include "TouchManager.h"
 #include "Units.h"
 #include "Visibility.h"
@@ -95,6 +94,10 @@ class EventStates;
 class GeckoMVMContext;
 class OverflowChangedTracker;
 class StyleSheet;
+
+#ifdef MOZ_GECKO_PROFILER
+class ProfileChunkedBuffer;
+#endif
 
 #ifdef ACCESSIBILITY
 namespace a11y {

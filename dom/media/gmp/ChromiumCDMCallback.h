@@ -7,10 +7,13 @@
 #define ChromiumCDMCallback_h_
 
 #include "mozilla/CDMProxy.h"
-#include "mozilla/ErrorResult.h"                      // For ErrorResult
 #include "mozilla/dom/MediaKeyStatusMapBinding.h"     // For MediaKeyStatus
 #include "mozilla/dom/MediaKeyMessageEventBinding.h"  // For MediaKeyMessageType
 #include "mozilla/gmp/GMPTypes.h"                     // For CDMKeyInformation
+
+namespace mozilla {
+class ErrorResult;
+}
 
 class ChromiumCDMCallback {
  public:

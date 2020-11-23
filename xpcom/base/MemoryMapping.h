@@ -7,9 +7,10 @@
 #ifndef mozilla_MemoryMapping_h
 #define mozilla_MemoryMapping_h
 
+#include <cstdint>
 #include "mozilla/EnumSet.h"
-#include "nsString.h"
-#include "nsTArray.h"
+#include "nsStringFwd.h"
+#include "nsTArrayForwardDeclare.h"
 
 /**
  * MemoryMapping is a helper class which describes an entry in the Linux

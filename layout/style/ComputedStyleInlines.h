@@ -15,9 +15,11 @@
 #define ComputedStyleInlines_h
 
 #include "mozilla/ComputedStyle.h"
-#include "mozilla/ServoComputedDataInlines.h"
-#include "mozilla/ServoUtils.h"
-#include "nsPresContext.h"
+
+#include "MainThreadUtils.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Unused.h"
+#include "nsStyleStruct.h"
 
 namespace mozilla {
 

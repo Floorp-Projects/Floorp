@@ -9,9 +9,10 @@
 #ifndef nsITheme_h_
 #define nsITheme_h_
 
+#include "mozilla/AlreadyAddRefed.h"
 #include "nsISupports.h"
-#include "nsCOMPtr.h"
-#include "nsColor.h"
+#include "nsID.h"
+#include "nscore.h"
 #include "Units.h"
 
 struct nsRect;

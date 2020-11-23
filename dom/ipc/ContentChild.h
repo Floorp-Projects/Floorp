@@ -8,14 +8,13 @@
 #define mozilla_dom_ContentChild_h
 
 #include "mozilla/Atomics.h"
-#include "mozilla/dom/MediaControlKeySource.h"
+#include "mozilla/dom/BlobImpl.h"
+#include "mozilla/dom/GetFilesHelper.h"
 #include "mozilla/dom/PContentChild.h"
 #include "mozilla/dom/ProcessActor.h"
 #include "mozilla/dom/RemoteType.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/ProtocolUtils.h"
-#include "mozilla/widget/ThemeChangeKind.h"
-#include "mozilla/LookAndFeel.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsClassHashtable.h"
@@ -46,8 +45,17 @@ class RemoteSpellcheckEngineChild;
 class ChildProfilerController;
 class BenchmarkStorageChild;
 
+namespace ipc {
+class PChildToParentStreamChild;
+class PFileDescriptorSetChild;
+}  // namespace ipc
+
 namespace loader {
 class PScriptCacheChild;
+}
+
+namespace widget {
+enum class ThemeChangeKind : uint8_t;
 }
 
 using mozilla::loader::PScriptCacheChild;
@@ -71,8 +79,8 @@ class AlertObserver;
 class ConsoleListener;
 class ClonedMessageData;
 class BrowserChild;
-class GetFilesHelperChild;
 class TabContext;
+enum class CallerType : uint32_t;
 
 class ContentChild final : public PContentChild,
                            public nsIDOMProcessChild,

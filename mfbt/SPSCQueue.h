@@ -14,9 +14,11 @@
 #include "mozilla/PodOperations.h"
 #include <algorithm>
 #include <atomic>
-#include <cstdint>
+#include <cstddef>
+#include <limits>
 #include <memory>
 #include <thread>
+#include <type_traits>
 
 namespace mozilla {
 

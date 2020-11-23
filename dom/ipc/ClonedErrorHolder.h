@@ -13,12 +13,13 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 
 class nsIGlobalObject;
 class nsQueryActorChild;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class ClonedErrorHolder final {

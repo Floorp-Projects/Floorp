@@ -6,10 +6,11 @@
 #ifndef _mozilla_dom_ClientOpPromise_h
 #define _mozilla_dom_ClientOpPromise_h
 
-#include "mozilla/ErrorResult.h"
 #include "mozilla/MozPromise.h"
 
 namespace mozilla {
+class CopyableErrorResult;
+
 namespace dom {
 
 class ClientOpResult;

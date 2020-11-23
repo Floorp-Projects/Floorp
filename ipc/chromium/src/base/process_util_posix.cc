@@ -20,6 +20,7 @@
 #include <set>
 
 #include "base/basictypes.h"
+#include "base/command_line.h"
 #include "base/eintr_wrapper.h"
 #include "base/logging.h"
 #include "base/platform_thread.h"

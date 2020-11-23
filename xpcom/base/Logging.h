@@ -7,6 +7,8 @@
 #ifndef mozilla_logging_h
 #define mozilla_logging_h
 
+#include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 
@@ -14,7 +16,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
-#include "mozilla/TimeStamp.h"
 
 // We normally have logging enabled everywhere, but measurements showed that
 // having logging enabled on Android is quite expensive (hundreds of kilobytes
@@ -39,6 +40,8 @@
 #define MOZ_LOG_PID_TOKEN "%PID"
 
 namespace mozilla {
+
+class TimeStamp;
 
 // While not a 100% mapping to PR_LOG's numeric values, mozilla::LogLevel does
 // maintain a direct mapping for the Disabled, Debug and Verbose levels.

@@ -10,7 +10,6 @@
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditTransactionBase.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/Text.h"

@@ -8,7 +8,6 @@
 #define mozilla_net_nsNetworkInfoService_h
 
 #include "nsISupportsImpl.h"
-#include "mozilla/ErrorResult.h"
 
 #include "nsINetworkInfoService.h"
 

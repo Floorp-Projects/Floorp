@@ -12,7 +12,6 @@
 #define nsDOMAttributeMap_h
 
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsRefPtrHashtable.h"
 #include "nsString.h"
@@ -22,6 +21,8 @@ class nsAtom;
 class nsINode;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 class Attr;
 class DocGroup;

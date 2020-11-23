@@ -14,6 +14,8 @@
 #include "nsCOMPtr.h"
 #include "nsWrapperCache.h"
 #include "nsISupports.h"
+#include "nsTArrayForwardDeclare.h"
+#include "nsString.h"
 
 class nsIPrincipal;
 class nsPIDOMWindowInner;

@@ -8,7 +8,6 @@
 #define XULPopupElement_h__
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "nsString.h"
@@ -17,6 +16,8 @@
 struct JSContext;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class DOMRect;

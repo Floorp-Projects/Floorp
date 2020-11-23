@@ -21,9 +21,9 @@
 
 #include "nsCOMPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/ErrorResult.h"
 #include "nsWrapperCache.h"
 #include "nsThreadUtils.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/LinkedList.h"
 #include "nsID.h"
 

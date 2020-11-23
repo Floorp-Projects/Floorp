@@ -15,7 +15,6 @@
 #include "nsDataHashtable.h"
 #include "PlatformDecoderModule.h"
 #include "ImageContainer.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/Span.h"
 #include "ReorderQueue.h"
 
@@ -23,6 +22,7 @@ class ChromiumCDMCallback;
 
 namespace mozilla {
 
+class ErrorResult;
 class MediaRawData;
 class ChromiumCDMProxy;
 

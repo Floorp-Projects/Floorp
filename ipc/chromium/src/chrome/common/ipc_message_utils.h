@@ -7,16 +7,19 @@
 #ifndef CHROME_COMMON_IPC_MESSAGE_UTILS_H_
 #define CHROME_COMMON_IPC_MESSAGE_UTILS_H_
 
+#include <cstdint>
+#include <map>
 #include <string>
 #include <type_traits>
-#include <vector>
-#include <map>
-
-#include "base/file_path.h"
-#include "base/process.h"
+#include <utility>
+#include "ErrorList.h"
+#include "base/basictypes.h"
+#include "base/compiler_specific.h"
+#include "base/logging.h"
+#include "base/pickle.h"
 #include "base/string_util.h"
-#include "base/string16.h"
-#include "base/time.h"
+#include "build/build_config.h"
+#include "chrome/common/ipc_message.h"
 
 #if defined(OS_POSIX)
 #  include "chrome/common/file_descriptor_set_posix.h"
@@ -24,7 +27,6 @@
 #if defined(OS_WIN)
 #  include "windows.h"
 #endif
-#include "chrome/common/ipc_message.h"
 
 template <typename T>
 class RefPtr;

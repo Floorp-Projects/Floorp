@@ -12,7 +12,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/MediaMetadata.h"
 #include "mozilla/dom/MediaSessionBinding.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/EnumeratedArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDocumentActivity.h"
@@ -21,6 +20,8 @@
 class nsPIDOMWindowInner;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 // https://w3c.github.io/mediasession/#position-state

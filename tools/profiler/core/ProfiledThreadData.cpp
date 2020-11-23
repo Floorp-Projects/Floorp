@@ -9,8 +9,9 @@
 #include "ProfileBuffer.h"
 
 #include "js/TraceLoggerAPI.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/ProfileJSONWriter.h"
+#include "mozilla/Span.h"
+#include "nsXULAppAPI.h"
 
 #if defined(GP_OS_darwin)
 #  include <pthread.h>
@@ -216,9 +217,9 @@ int StreamSamplesAndMarkers(const char* aName, int aThreadId,
   int processedThreadId = 0;
 
   aWriter.StringProperty("processType",
-                         MakeStringSpan(XRE_GetProcessTypeString()));
+                         mozilla::MakeStringSpan(XRE_GetProcessTypeString()));
 
-  aWriter.StringProperty("name", MakeStringSpan(aName));
+  aWriter.StringProperty("name", mozilla::MakeStringSpan(aName));
 
   // Use given process name (if any), unless we're the parent process.
   if (XRE_IsParentProcess()) {

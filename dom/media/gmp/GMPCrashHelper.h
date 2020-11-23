@@ -9,7 +9,8 @@
 
 #  include "MainThreadUtils.h"
 #  include "nsISupportsImpl.h"
-#  include "nsPIDOMWindow.h"
+
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 

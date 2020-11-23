@@ -7,10 +7,15 @@
 #ifndef mozilla_HoldDropJSObjects_h
 #define mozilla_HoldDropJSObjects_h
 
-#include "nsCycleCollectionParticipant.h"
+#include <type_traits>
+#include "nsCycleCollectionNoteChild.h"
 
 class nsISupports;
 class nsScriptObjectTracer;
+
+namespace JS {
+class Zone;
+}
 
 // Only HoldJSObjects and DropJSObjects should be called directly.
 

@@ -7,13 +7,15 @@
 #if !defined(AbstractThread_h_)
 #  define AbstractThread_h_
 
-#  include "mozilla/RefPtr.h"
+#  include "mozilla/AlreadyAddRefed.h"
 #  include "mozilla/ThreadLocal.h"
 #  include "nscore.h"
-#  include "nsIRunnable.h"
 #  include "nsISerialEventTarget.h"
-#  include "nsISupportsImpl.h"
-#  include "nsIThread.h"
+#  include "nsISupports.h"
+
+class nsIEventTarget;
+class nsIRunnable;
+class nsIThread;
 
 namespace mozilla {
 

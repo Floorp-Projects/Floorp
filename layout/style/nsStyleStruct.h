@@ -16,8 +16,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/ServoStyleConstsInlines.h"
 #include "mozilla/StaticPrefs_layout.h"
-#include "mozilla/StaticPtr.h"
-#include "mozilla/StyleColorInlines.h"
 #include "mozilla/UniquePtr.h"
 #include "nsColor.h"
 #include "nsCoord.h"
@@ -27,28 +25,21 @@
 #include "nsStyleConsts.h"
 #include "nsChangeHint.h"
 #include "nsTimingFunction.h"
-#include "nsCOMPtr.h"
 #include "nsTArray.h"
-#include "nsCSSValue.h"
 #include "imgIContainer.h"
 #include "imgRequestProxy.h"
-#include "Orientation.h"
 #include "CounterStyleManager.h"
 #include <cstddef>  // offsetof()
-#include <utility>
 #include "X11UndefineNone.h"
 
 class nsIFrame;
 class nsIURI;
 class nsTextFrame;
-class nsPresContext;
 struct nsStyleDisplay;
 struct nsStyleVisibility;
 namespace mozilla {
 class ComputedStyle;
-namespace dom {
-class ImageTracker;
-}  // namespace dom
+
 }  // namespace mozilla
 
 namespace mozilla {

@@ -5,9 +5,10 @@
 #ifndef mozilla_Buffer_h
 #define mozilla_Buffer_h
 
-#include <algorithm>
+#include <cstddef>
 #include <iterator>
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"

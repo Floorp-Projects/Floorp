@@ -8,7 +8,6 @@
 #define NSMARGIN_H
 
 #include "nsCoord.h"
-#include "nsPoint.h"
 #include "mozilla/gfx/BaseMargin.h"
 #include "mozilla/gfx/Rect.h"
 

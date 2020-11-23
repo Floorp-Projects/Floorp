@@ -21,7 +21,6 @@
 #include "nsIContentPolicy.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIRequest.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Promise.h"
 #include "nsAttrValue.h"
@@ -35,6 +34,8 @@ class imgRequestProxy;
 
 namespace mozilla {
 class AsyncEventDispatcher;
+class ErrorResult;
+
 namespace dom {
 struct BindContext;
 class Document;

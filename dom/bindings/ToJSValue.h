@@ -7,24 +7,37 @@
 #ifndef mozilla_dom_ToJSValue_h
 #define mozilla_dom_ToJSValue_h
 
-#include "mozilla/Assertions.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/CallbackObject.h"
-#include "mozilla/dom/NonRefcountedDOMObject.h"
-#include "mozilla/dom/TypedArray.h"
-#include "jsapi.h"
-#include "js/Array.h"  // JS::NewArrayObject
-#include "nsISupports.h"
-#include "nsTArray.h"
-#include "nsWrapperCache.h"
-#include <type_traits>
+#include <cstddef>  // for size_t
+#include <cstdint>  // for int32_t, int64_t, uint32_t, uint64_t
+#include <type_traits>  // for is_base_of, enable_if_t, enable_if, is_pointer, is_same, void_t
+#include <utility>          // for forward
+#include "ErrorList.h"      // for nsresult
+#include "js/Array.h"       // for NewArrayObject
+#include "js/GCVector.h"    // for RootedVector, MutableWrappedPtrOperations
+#include "js/RootingAPI.h"  // for MutableHandle, Rooted, Handle, Heap
+#include "js/Value.h"       // for Value
+#include "js/ValueArray.h"  // for HandleValueArray
+#include "jsapi.h"          // for CurrentGlobalOrNull
+#include "mozilla/Assertions.h"  // for AssertionConditionType, MOZ_ASSERT, MOZ_ASSERT_HELPER1
+#include "mozilla/Attributes.h"        // for MOZ_MUST_USE
+#include "mozilla/UniquePtr.h"         // for UniquePtr
+#include "mozilla/Unused.h"            // for Unused
+#include "mozilla/dom/BindingUtils.h"  // for MaybeWrapValue, MaybeWrapObjectOrNullValue, XPCOMObjectToJsval, GetOrCreateDOMReflector
+#include "mozilla/dom/CallbackObject.h"  // for CallbackObject
+#include "nsID.h"                        // for NS_GET_TEMPLATE_IID, nsIID
+#include "nsISupports.h"                 // for nsISupports
+#include "nsStringFwd.h"                 // for nsAString
+#include "nsTArrayForwardDeclare.h"
+#include "xpcObjectHelper.h"  // for xpcObjectHelper
 
 namespace mozilla {
 namespace dom {
 
+class CallbackObject;
 class Promise;
 class WindowProxyHolder;
+template <typename TypedArrayType>
+class TypedArrayCreator;
 
 // If ToJSValue returns false, it must set an exception on the
 // JSContext.

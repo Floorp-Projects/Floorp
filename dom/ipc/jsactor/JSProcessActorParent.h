@@ -9,7 +9,6 @@
 
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/JSActor.h"
@@ -18,6 +17,8 @@
 #include "nsWrapperCache.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class JSProcessActorParent final : public JSActor {

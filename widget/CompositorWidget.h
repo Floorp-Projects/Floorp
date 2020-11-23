@@ -8,10 +8,13 @@
 #include "nsISupports.h"
 #include "mozilla/RefPtr.h"
 #include "Units.h"
-#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Rect.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/LayersTypes.h"
-#include "mozilla/layers/NativeLayer.h"
+
+#ifdef MOZ_IS_GCC
+#  include "mozilla/layers/NativeLayer.h"
+#endif
 
 class nsIWidget;
 class nsBaseWidget;
@@ -25,7 +28,7 @@ namespace layers {
 class Compositor;
 class LayerManager;
 class LayerManagerComposite;
-class Compositor;
+class NativeLayerRoot;
 }  // namespace layers
 namespace gfx {
 class DrawTarget;

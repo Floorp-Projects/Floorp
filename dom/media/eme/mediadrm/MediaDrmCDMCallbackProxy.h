@@ -8,11 +8,12 @@
 #define MediaDrmCDMCallbackProxy_h_
 
 #include "mozilla/CDMProxy.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/DecryptorProxyCallback.h"
 
 namespace mozilla {
 class CDMProxy;
+class ErrorResult;
+
 // Proxies call backs from the MediaDrmProxy -> MediaDrmProxySupport back to the
 // MediaKeys object on the main thread. We used annotation calledFrom = "gecko"
 // to ensure running on main thread.

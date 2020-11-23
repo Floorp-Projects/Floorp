@@ -11,10 +11,11 @@
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/CORSMode.h"
 
-#include "nsIURI.h"
 #include "nsIReferrerInfo.h"
 
 class nsIPrincipal;
+class nsIURI;
+struct RawServoStyleSheetContents;
 
 namespace mozilla {
 class StyleSheet;

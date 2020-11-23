@@ -7,8 +7,8 @@
 #ifndef NS_TPRIORITY_QUEUE_H_
 #define NS_TPRIORITY_QUEUE_H_
 
+#include "mozilla/Assertions.h"
 #include "nsTArray.h"
-#include "nsDebug.h"
 
 /**
  * A templatized priority queue data structure that uses an nsTArray to serve as

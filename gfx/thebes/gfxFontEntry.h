@@ -6,53 +6,62 @@
 #ifndef GFX_FONTENTRY_H
 #define GFX_FONTENTRY_H
 
-#include "gfxTypes.h"
-#include "nsString.h"
-#include "gfxFontConstants.h"
-#include "gfxFontFeatures.h"
+#include <math.h>
+#include <new>
+#include <utility>
+#include "ThebesRLBoxTypes.h"
 #include "gfxFontUtils.h"
 #include "gfxFontVariations.h"
-#include "gfxPlatform.h"
 #include "gfxRect.h"
-#include "nsTArray.h"
-#include "nsTHashtable.h"
-#include "mozilla/HashFunctions.h"
-#include "mozilla/MemoryReporting.h"
-#include "MainThreadUtils.h"
-#include "nsUnicodeScriptCodes.h"
-#include "nsDataHashtable.h"
+#include "gfxTypes.h"
 #include "harfbuzz/hb.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/FontPropertyTypes.h"
-#include "mozilla/gfx/2D.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/TypedEnumBits.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/WeakPtr.h"
-#include "ThebesRLBoxTypes.h"
-#include <math.h>
+#include "nsDataHashtable.h"
+#include "nsDebug.h"
+#include "nsHashKeys.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
+#include "nsTArray.h"
+#include "nsUnicodeScriptCodes.h"
+#include "nscore.h"
 
-typedef struct gr_face gr_face;
-typedef struct FT_MM_Var_ FT_MM_Var;
-
-#ifdef DEBUG
-#  include <stdio.h>
-#endif
-
-struct gfxFontStyle;
+class FontInfoData;
 class gfxContext;
 class gfxFont;
 class gfxFontFamily;
-class gfxUserFontData;
+class gfxPlatformFontList;
 class gfxSVGGlyphs;
-class FontInfoData;
-struct FontListSizes;
+class gfxUserFontData;
 class nsAtom;
+struct FontListSizes;
+struct gfxFontFeature;
+struct gfxFontStyle;
+enum class eFontPresentation : uint8_t;
+
+namespace IPC {
+template <class P>
+struct ParamTraits;
+}
 
 namespace mozilla {
 class SVGContextPaint;
 namespace fontlist {
-struct Family;
 struct Face;
+struct Family;
 }  // namespace fontlist
+namespace gfx {
+struct DeviceColor;
+}
 }  // namespace mozilla
+
+typedef struct gr_face gr_face;
+typedef struct FT_MM_Var_ FT_MM_Var;
 
 #define NO_FONT_LANGUAGE_OVERRIDE 0
 

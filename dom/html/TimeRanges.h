@@ -11,10 +11,10 @@
 #include "nsISupports.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
-#include "mozilla/ErrorResult.h"
 #include "TimeUnits.h"
 
 namespace mozilla {
+class ErrorResult;
 
 namespace dom {
 class TimeRanges;

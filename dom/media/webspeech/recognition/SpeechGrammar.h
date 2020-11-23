@@ -14,9 +14,10 @@
 #include "js/TypeDecls.h"
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class GlobalObject;

@@ -12,12 +12,10 @@
 
 #include <utility>
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/Attributes.h"  // for MOZ_ALWAYS_INLINE
-#include "mozilla/FunctionTypeTraits.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Types.h"
 #include "mozilla/fallible.h"
 #include "nscore.h"
 

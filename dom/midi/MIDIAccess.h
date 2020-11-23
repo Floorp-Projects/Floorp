@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/Observer.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
@@ -17,6 +16,8 @@
 struct JSContext;
 
 namespace mozilla {
+class ErrorResult;
+
 // Predeclare void_t here, as including IPCMessageUtils brings in windows.h and
 // causes binding compilation problems.
 struct void_t;

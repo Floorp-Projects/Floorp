@@ -8,7 +8,6 @@
 #define mozilla_dom_SessionStoreUtils_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/SessionStoreUtilsBinding.h"
 #include "SessionStoreData.h"
@@ -17,6 +16,8 @@ class nsIDocument;
 class nsGlobalWindowInner;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class GlobalObject;

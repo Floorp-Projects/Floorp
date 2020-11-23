@@ -4,8 +4,6 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "base/basictypes.h"
-
 #include "nsXULAppAPI.h"
 
 #include <stdlib.h>
@@ -17,7 +15,6 @@
 
 #include "nsIAppShell.h"
 #include "nsAppStartupNotifier.h"
-#include "nsIFile.h"
 #include "nsIToolkitProfile.h"
 
 #ifdef XP_WIN
@@ -27,10 +24,7 @@
 #  include "mozilla/WinDllServices.h"
 #endif
 
-#include "nsAppDirectoryServiceDefs.h"
 #include "nsAppRunner.h"
-#include "nsAutoRef.h"
-#include "nsDirectoryServiceDefs.h"
 #include "nsExceptionHandler.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
@@ -39,6 +33,7 @@
 #include "nsXREDirProvider.h"
 #ifdef MOZ_ASAN_REPORTER
 #  include "CmdLineAndEnvUtils.h"
+#  include "nsIFile.h"
 #endif
 
 #include "mozilla/Omnijar.h"
@@ -46,13 +41,10 @@
 #  include "nsVersionComparator.h"
 #  include "chrome/common/mach_ipc_mac.h"
 #endif
-#include "nsX11ErrorHandler.h"
 #include "nsGDKErrorHandler.h"
 #include "base/at_exit.h"
-#include "base/command_line.h"
 #include "base/message_loop.h"
 #include "base/process_util.h"
-#include "chrome/common/child_process.h"
 #if defined(MOZ_WIDGET_ANDROID)
 #  include "chrome/common/ipc_channel.h"
 #  include "mozilla/jni/Utils.h"
@@ -66,18 +58,14 @@
 #include "mozilla/UniquePtr.h"
 
 #include "mozilla/ipc/BrowserProcessSubThread.h"
-#include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/IOThreadChild.h"
 #include "mozilla/ipc/ProcessChild.h"
-#include "ScopedXREEmbed.h"
 
 #include "mozilla/plugins/PluginProcessChild.h"
 #include "mozilla/dom/ContentProcess.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/ContentChild.h"
 
 #include "mozilla/ipc/TestShellParent.h"
-#include "mozilla/ipc/XPCShellEnvironment.h"
 #if defined(XP_WIN)
 #  include "mozilla/WindowsConsole.h"
 #  include "mozilla/WindowsDllBlocklist.h"
@@ -99,7 +87,6 @@
 #if defined(MOZ_SANDBOX)
 #  include "XREChildData.h"
 #  include "mozilla/SandboxSettings.h"
-#  include "mozilla/Preferences.h"
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)

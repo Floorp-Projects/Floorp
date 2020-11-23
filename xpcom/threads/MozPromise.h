@@ -15,7 +15,6 @@
 #  include "mozilla/Monitor.h"
 #  include "mozilla/Mutex.h"
 #  include "mozilla/RefPtr.h"
-#  include "mozilla/Tuple.h"
 #  include "mozilla/UniquePtr.h"
 #  include "mozilla/Variant.h"
 #  include "nsIDirectTaskDispatcher.h"

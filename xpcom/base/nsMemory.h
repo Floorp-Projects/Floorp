@@ -7,7 +7,7 @@
 #ifndef nsMemory_h__
 #define nsMemory_h__
 
-#include "nsXPCOM.h"
+#include "nsError.h"
 
 class nsIMemory;
 

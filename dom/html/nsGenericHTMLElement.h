@@ -13,7 +13,6 @@
 #include "nsIFormControl.h"
 #include "nsGkAtoms.h"
 #include "nsContentCreatorFunctions.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/DOMRect.h"
@@ -27,6 +26,7 @@ class nsIURI;
 struct nsSize;
 
 namespace mozilla {
+class ErrorResult;
 class EventChainPostVisitor;
 class EventChainPreVisitor;
 class EventChainVisitor;

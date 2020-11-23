@@ -8,7 +8,6 @@
 #define mozilla_dom_Blob_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/BodyConsumer.h"
@@ -21,6 +20,8 @@ class nsIGlobalObject;
 class nsIInputStream;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 struct BlobPropertyBag;

@@ -14,10 +14,9 @@
 #include "mozilla/gfx/Rect.h"    // for Rect
 #include "mozilla/gfx/Types.h"   // for SamplingFilter, etc
 #include "mozilla/layers/CompositorTypes.h"  // for EffectTypes, etc
-#include "mozilla/layers/LayersTypes.h"
-#include "mozilla/layers/TextureHost.h"  // for CompositingRenderTarget, etc
-#include "mozilla/mozalloc.h"            // for operator delete, etc
-#include "nscore.h"                      // for nsACString
+#include "mozilla/layers/TextureHost.h"      // for CompositingRenderTarget, etc
+#include "mozilla/mozalloc.h"                // for operator delete, etc
+#include "nscore.h"                          // for nsACString
 #include "mozilla/EnumeratedArray.h"
 
 namespace mozilla {
