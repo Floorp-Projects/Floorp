@@ -10,7 +10,6 @@
 #include <bitset>
 #include "nsISupportsUtils.h"
 #include "nsIURI.h"
-#include "nsIHttpChannel.h"
 #include "mozilla/dom/Document.h"
 #include "nsIStreamListener.h"
 #include "nsIChannelEventSink.h"
@@ -57,6 +56,7 @@ typedef Status __StatusTmp;
 typedef __StatusTmp Status;
 #endif
 
+class nsIHttpChannel;
 class nsIJARChannel;
 class nsILoadGroup;
 
@@ -562,8 +562,7 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
     NS_DECL_ISUPPORTS
     NS_DECL_NSIHTTPHEADERVISITOR
     nsHeaderVisitor(const XMLHttpRequestMainThread& aXMLHttpRequest,
-                    NotNull<nsIHttpChannel*> aHttpChannel)
-        : mXHR(aXMLHttpRequest), mHttpChannel(aHttpChannel) {}
+                    NotNull<nsIHttpChannel*> aHttpChannel);
     const nsACString& Headers() {
       for (uint32_t i = 0; i < mHeaderList.Length(); i++) {
         HeaderEntry& header = mHeaderList.ElementAt(i);
@@ -577,7 +576,7 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
     }
 
    private:
-    virtual ~nsHeaderVisitor() = default;
+    virtual ~nsHeaderVisitor();
 
     nsTArray<HeaderEntry> mHeaderList;
     nsCString mHeaders;

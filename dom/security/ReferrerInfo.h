@@ -9,7 +9,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIReferrerInfo.h"
-#include "nsIHttpChannel.h"
 #include "nsReadableUtils.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/HashFunctions.h"
@@ -24,6 +23,7 @@
     }                                                \
   }
 
+class nsIHttpChannel;
 class nsIURI;
 class nsIChannel;
 class nsILoadInfo;

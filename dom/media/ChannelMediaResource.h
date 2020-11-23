@@ -10,9 +10,10 @@
 #include "MediaCache.h"
 #include "mozilla/Mutex.h"
 #include "nsIChannelEventSink.h"
-#include "nsIHttpChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIThreadRetargetableStreamListener.h"
+
+class nsIHttpChannel;
 
 namespace mozilla {
 
