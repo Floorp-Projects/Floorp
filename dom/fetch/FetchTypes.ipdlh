@@ -8,13 +8,15 @@ include PBackgroundSharedTypes;
 
 include protocol PRemoteLazyInputStream;
 
-using HeadersGuardEnum from "mozilla/dom/FetchIPCTypes.h";
-using ReferrerPolicy from "mozilla/dom/FetchIPCTypes.h";
-using RequestCache from "mozilla/dom/FetchIPCTypes.h";
-using RequestCredentials from "mozilla/dom/FetchIPCTypes.h";
-using RequestMode from "mozilla/dom/FetchIPCTypes.h";
-using RequestRedirect from "mozilla/dom/FetchIPCTypes.h";
-using ResponseType from "mozilla/dom/FetchIPCTypes.h";
+include "mozilla/dom/FetchIPCTypes.h";
+
+using HeadersGuardEnum from "mozilla/dom/HeadersBinding.h";
+using ReferrerPolicy from "mozilla/dom/ReferrerPolicyBinding.h";
+using RequestCache from "mozilla/dom/RequestBinding.h";
+using RequestCredentials from "mozilla/dom/RequestBinding.h";
+using RequestMode from "mozilla/dom/RequestBinding.h";
+using RequestRedirect from "mozilla/dom/RequestBinding.h";
+using ResponseType from "mozilla/dom/ResponseBinding.h";
 using struct nsID from "nsID.h";
 
 namespace mozilla {
