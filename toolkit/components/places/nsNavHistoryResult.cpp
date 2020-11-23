@@ -2483,8 +2483,7 @@ nsNavHistoryQueryResultNode::OnItemChanged(
   // Some node could observe both bookmarks and history.  But a node observing
   // only history should never get a bookmark notification.
   NS_WARNING_ASSERTION(
-      mResult && (mResult->mIsAllBookmarksObserver ||
-                  mResult->mIsBookmarkFolderObserver),
+      mResult && mResult->mIsBookmarksObserver,
       "history observers should not get OnItemChanged, but should get the "
       "corresponding history notifications instead");
 
@@ -2513,8 +2512,7 @@ nsNavHistoryQueryResultNode::OnItemVisited(int64_t aItemId, int64_t aVisitId,
   // for bookmark queries, "all bookmark" observer should get OnItemVisited
   // but it is ignored.
   if (mLiveUpdate != QUERYUPDATE_COMPLEX_WITH_BOOKMARKS)
-    NS_WARNING_ASSERTION(mResult && (mResult->mIsAllBookmarksObserver ||
-                                     mResult->mIsBookmarkFolderObserver),
+    NS_WARNING_ASSERTION(mResult && mResult->mIsBookmarksObserver,
                          "history observers should not get OnItemVisited, but "
                          "should get OnVisit "
                          "instead");
@@ -3476,8 +3474,7 @@ nsNavHistoryResult::nsNavHistoryResult(
       mOptions(aOptions),
       mNeedsToApplySortingMode(false),
       mIsHistoryObserver(false),
-      mIsBookmarkFolderObserver(false),
-      mIsAllBookmarksObserver(false),
+      mIsBookmarksObserver(false),
       mIsMobilePrefObserver(false),
       mBookmarkFolderObservers(64),
       mBatchInProgress(false),
@@ -3501,12 +3498,11 @@ nsNavHistoryResult::~nsNavHistoryResult() {
 void nsNavHistoryResult::StopObserving() {
   AutoTArray<PlacesEventType, 4> events;
   events.AppendElement(PlacesEventType::Favicon_changed);
-  if (mIsBookmarkFolderObserver || mIsAllBookmarksObserver) {
+  if (mIsBookmarksObserver) {
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
     if (bookmarks) {
       bookmarks->RemoveObserver(this);
-      mIsBookmarkFolderObserver = false;
-      mIsAllBookmarksObserver = false;
+      mIsBookmarksObserver = false;
     }
     events.AppendElement(PlacesEventType::Bookmark_added);
     events.AppendElement(PlacesEventType::Bookmark_removed);
@@ -3549,19 +3545,7 @@ void nsNavHistoryResult::AddHistoryObserver(
 
 void nsNavHistoryResult::AddAllBookmarksObserver(
     nsNavHistoryQueryResultNode* aNode) {
-  if (!mIsAllBookmarksObserver && !mIsBookmarkFolderObserver) {
-    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-    if (!bookmarks) {
-      MOZ_ASSERT_UNREACHABLE("Can't create bookmark service");
-      return;
-    }
-    bookmarks->AddObserver(this, true);
-    AutoTArray<PlacesEventType, 2> events;
-    events.AppendElement(PlacesEventType::Bookmark_added);
-    events.AppendElement(PlacesEventType::Bookmark_removed);
-    PlacesObservers::AddListener(events, this);
-    mIsAllBookmarksObserver = true;
-  }
+  EnsureIsObservingBookmarks();
   // Don't add duplicate observers.  In some case we don't unregister when
   // children are cleared (see ClearChildren) and the next FillChildren call
   // will try to add the observer again.
@@ -3587,19 +3571,7 @@ void nsNavHistoryResult::AddMobilePrefsObserver(
 
 void nsNavHistoryResult::AddBookmarkFolderObserver(
     nsNavHistoryFolderResultNode* aNode, int64_t aFolder) {
-  if (!mIsBookmarkFolderObserver && !mIsAllBookmarksObserver) {
-    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-    if (!bookmarks) {
-      MOZ_ASSERT_UNREACHABLE("Can't create bookmark service");
-      return;
-    }
-    bookmarks->AddObserver(this, true);
-    AutoTArray<PlacesEventType, 2> events;
-    events.AppendElement(PlacesEventType::Bookmark_added);
-    events.AppendElement(PlacesEventType::Bookmark_removed);
-    PlacesObservers::AddListener(events, this);
-    mIsBookmarkFolderObserver = true;
-  }
+  EnsureIsObservingBookmarks();
   // Don't add duplicate observers.  In some case we don't unregister when
   // children are cleared (see ClearChildren) and the next FillChildren call
   // will try to add the observer again.
@@ -3607,6 +3579,23 @@ void nsNavHistoryResult::AddBookmarkFolderObserver(
   if (list->IndexOf(aNode) == FolderObserverList::NoIndex) {
     list->AppendElement(aNode);
   }
+}
+
+void nsNavHistoryResult::EnsureIsObservingBookmarks() {
+  if (mIsBookmarksObserver) {
+    return;
+  }
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  if (!bookmarks) {
+    MOZ_ASSERT_UNREACHABLE("Can't create bookmark service");
+    return;
+  }
+  bookmarks->AddObserver(this, true);
+  AutoTArray<PlacesEventType, 2> events;
+  events.AppendElement(PlacesEventType::Bookmark_added);
+  events.AppendElement(PlacesEventType::Bookmark_removed);
+  PlacesObservers::AddListener(events, this);
+  mIsBookmarksObserver = true;
 }
 
 void nsNavHistoryResult::RemoveHistoryObserver(

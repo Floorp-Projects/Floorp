@@ -124,6 +124,7 @@ class nsNavHistoryResult final
   void RemoveAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode);
   void RemoveMobilePrefsObserver(nsNavHistoryQueryResultNode* aNode);
   void StopObserving();
+  void EnsureIsObservingBookmarks();
 
   nsresult OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,
                    uint32_t aTransitionType, const nsACString& aGUID,
@@ -153,8 +154,7 @@ class nsNavHistoryResult final
 
   // node observers
   bool mIsHistoryObserver;
-  bool mIsBookmarkFolderObserver;
-  bool mIsAllBookmarksObserver;
+  bool mIsBookmarksObserver;
   bool mIsMobilePrefObserver;
 
   typedef nsTArray<RefPtr<nsNavHistoryQueryResultNode> > QueryObserverList;
