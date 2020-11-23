@@ -94,17 +94,12 @@ class nsFaviconService final : public nsIFaviconService,
                                mozIStorageStatementCallback* aCallback);
 
   /**
-   * Call to send out favicon changed notifications. Should only be called
-   * when there is data loaded for the favicon.
-   * @param aPageURI
-   *        The URI of the page to notify about.
-   * @param aFaviconURI
-   *        The moz-anno:favicon URI of the icon.
-   * @param aGUID
-   *        The unique ID associated with the page.
+   * Clears the image cache for the given image spec.
+   *
+   * @param aImageURI
+   *        The URI of the image to clear cache for.
    */
-  void SendFaviconNotifications(nsIURI* aPageURI, nsIURI* aFaviconURI,
-                                const nsACString& aGUID);
+  void ClearImageCache(nsIURI* aImageURI);
 
   static mozilla::Atomic<int64_t> sLastInsertedIconId;
   static void StoreLastInsertedId(const nsACString& aTable,

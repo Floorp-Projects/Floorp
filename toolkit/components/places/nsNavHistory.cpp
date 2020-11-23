@@ -37,6 +37,7 @@
 #include "nsThreadUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsMathUtils.h"
+#include "nsReadableUtils.h"
 #include "mozilla/storage.h"
 #include "mozilla/Preferences.h"
 #include <algorithm>
@@ -3213,15 +3214,6 @@ nsresult nsNavHistory::URIToResultNode(nsIURI* aURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return RowToResult(row, aOptions, aResult);
-}
-
-void nsNavHistory::SendPageChangedNotification(nsIURI* aURI,
-                                               uint32_t aChangedAttribute,
-                                               const nsAString& aNewValue,
-                                               const nsACString& aGUID) {
-  MOZ_ASSERT(!aGUID.IsEmpty());
-  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver,
-                   OnPageChanged(aURI, aChangedAttribute, aNewValue, aGUID));
 }
 
 void nsNavHistory::GetAgeInDaysString(int32_t aInt, const char* aName,
