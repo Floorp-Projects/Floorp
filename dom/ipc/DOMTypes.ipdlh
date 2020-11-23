@@ -8,6 +8,7 @@ include "mozilla/GfxMessageUtils.h";
 include "mozilla/dom/CSPMessageUtils.h";
 include "mozilla/dom/DocShellMessageUtils.h";
 include "mozilla/dom/PermissionMessageUtils.h";
+include "mozilla/dom/PropertyBagUtils.h";
 include "mozilla/dom/ReferrerInfoUtils.h";
 include "mozilla/dom/TabMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
@@ -43,7 +44,7 @@ using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
 using refcounted class nsIContentSecurityPolicy from "nsIContentSecurityPolicy.h";
 using refcounted class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
 using refcounted class nsIReferrerInfo from "nsIReferrerInfo.h";
-using refcounted class nsIVariant from "mozilla/dom/PropertyBagUtils.h";
+using refcounted class nsIVariant from "nsIVariant.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
 
