@@ -156,11 +156,6 @@ add_task(async function test_removeVisitsByFilter() {
       onClearHistory() {
         this.deferred.reject("Unexpected call to onClearHistory");
       },
-      onPageChanged(uri) {
-        this.deferred.reject(
-          new Error("Unexpected call to onPageChanged " + uri.spec)
-        );
-      },
       onFrecencyChanged(aURI) {
         info("onFrecencyChanged " + aURI.spec);
         let deferred = frecencyChangePromises.get(aURI.spec);

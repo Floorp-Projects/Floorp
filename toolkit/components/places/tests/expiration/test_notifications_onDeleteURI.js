@@ -88,7 +88,6 @@ add_task(async function test_notifications_onDeleteURI() {
         do_check_valid_places_guid(aGUID);
         Assert.equal(aReason, Ci.nsINavHistoryObserver.REASON_EXPIRED);
       },
-      onPageChanged() {},
       onDeleteVisits() {},
     };
     hs.addObserver(historyObserver);

@@ -920,11 +920,6 @@ BookmarksTracker.prototype = {
       return;
     }
 
-    // Ignore favicon changes to avoid unnecessary churn.
-    if (property == "favicon") {
-      return;
-    }
-
     this._log.trace(
       "onItemChanged: " +
         itemId +

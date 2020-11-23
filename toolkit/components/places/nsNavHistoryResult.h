@@ -73,9 +73,6 @@ class nsTrimInt64HashKey : public PLDHashEntryHdr {
   NS_IMETHOD OnDeleteURI(nsIURI* aURI, const nsACString& aGUID,        \
                          uint16_t aReason) __VA_ARGS__;                \
   NS_IMETHOD OnClearHistory() __VA_ARGS__;                             \
-  NS_IMETHOD OnPageChanged(nsIURI* aURI, uint32_t aChangedAttribute,   \
-                           const nsAString& aNewValue,                 \
-                           const nsACString& aGUID) __VA_ARGS__;       \
   NS_IMETHOD OnDeleteVisits(nsIURI* aURI, bool aPartialRemoval,        \
                             const nsACString& aGUID, uint16_t aReason, \
                             uint32_t aTransitionType) __VA_ARGS__;
@@ -133,7 +130,9 @@ class nsNavHistoryResult final
                    bool aHidden, uint32_t aVisitCount,
                    const nsAString& aLastKnownTitle);
 
- public:
+  void OnIconChanged(nsIURI* aURI, nsIURI* aFaviconURI,
+                     const nsACString& aGUID);
+
   explicit nsNavHistoryResult(nsNavHistoryContainerResultNode* mRoot,
                               const RefPtr<nsNavHistoryQuery>& aQuery,
                               const RefPtr<nsNavHistoryQueryOptions>& aOptions);
