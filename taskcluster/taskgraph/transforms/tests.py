@@ -162,7 +162,7 @@ def runs_on_central(task):
     return match_run_on_projects("mozilla-central", task["run-on-projects"])
 
 
-def gv_e10s_filter(task):
+def gv_e10s_multi_filter(task):
     return get_mobile_project(task) == "geckoview" and task["e10s"]
 
 
@@ -175,24 +175,24 @@ def fission_filter(task):
 
 
 TEST_VARIANTS = {
-    "geckoview-e10s-single": {
-        "description": "{description} with single-process e10s",
-        "filterfn": gv_e10s_filter,
+    "geckoview-e10s-multi": {
+        "description": "{description} with e10s-multi enabled",
+        "filterfn": gv_e10s_multi_filter,
         "replace": {
             "run-on-projects": ["trunk"],
         },
-        "suffix": "e10s-single",
+        "suffix": "e10s-multi",
         "merge": {
             "mozharness": {
                 "extra-options": [
-                    "--setpref=dom.ipc.processCount=1",
+                    "--setpref=dom.ipc.processCount=3",
                 ],
             },
         },
     },
     "geckoview-fission": {
         "description": "{description} with fission enabled",
-        "filterfn": gv_e10s_filter,
+        "filterfn": gv_e10s_multi_filter,
         "suffix": "fis",
         "merge": {
             # Ensures the default state is to not run anywhere.
