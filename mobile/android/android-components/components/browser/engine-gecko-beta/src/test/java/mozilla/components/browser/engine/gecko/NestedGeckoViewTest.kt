@@ -28,6 +28,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.PanZoomController.INPUT_RESULT_HANDLED
+import org.mozilla.geckoview.PanZoomController.INPUT_RESULT_UNHANDLED
 import org.robolectric.Robolectric.buildActivity
 
 @RunWith(AndroidJUnit4::class)
@@ -126,15 +127,19 @@ class NestedGeckoViewTest {
     @Test
     fun `verify onTouchEvent when ACTION_UP or ACTION_CANCEL`() {
         val nestedWebView = spy(NestedGeckoView(context))
+        nestedWebView.inputResult = INPUT_RESULT_HANDLED
         val mockChildHelper: NestedScrollingChildHelper = mock()
         nestedWebView.childHelper = mockChildHelper
         doReturn(true).`when`(nestedWebView).callSuperOnTouchEvent(any())
 
         nestedWebView.onTouchEvent(mockMotionEvent(ACTION_UP))
         verify(mockChildHelper).stopNestedScroll()
+        assertEquals(INPUT_RESULT_UNHANDLED, nestedWebView.inputResult)
 
+        nestedWebView.inputResult = INPUT_RESULT_HANDLED
         nestedWebView.onTouchEvent(mockMotionEvent(ACTION_CANCEL))
         verify(mockChildHelper, times(2)).stopNestedScroll()
+        assertEquals(INPUT_RESULT_UNHANDLED, nestedWebView.inputResult)
 
         // onTouchEventForResult should be called only for ACTION_DOWN
         verify(nestedWebView, times(0)).updateInputResult(any())
