@@ -47,6 +47,7 @@ EXPORTS.mozilla.ipc += [
     "SharedMemory.h",
     "SharedMemoryBasic.h",
     "Shmem.h",
+    "ShmemMessageUtils.h",
     "TaintingIPCUtils.h",
     "TaskFactory.h",
     "Transport.h",

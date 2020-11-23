@@ -16,6 +16,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/QueueParamTraits.h"
+#include "mozilla/ipc/ShmemMessageUtils.h"
 #include "CrossProcessSemaphore.h"
 #include "nsThreadUtils.h"
 
