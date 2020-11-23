@@ -6,9 +6,16 @@
 
 #include "mozilla/dom/DOMRect.h"
 
-#include "nsPresContext.h"
-#include "mozilla/dom/DOMRectListBinding.h"
+#include <cmath>
+#include "js/StructuredClone.h"
+#include "mozilla/AppUnits.h"
+#include "mozilla/Casting.h"
+#include "mozilla/MacroForEach.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/DOMRectBinding.h"
+#include "mozilla/dom/DOMRectListBinding.h"
+#include "nsIGlobalObject.h"
+#include "nsRect.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

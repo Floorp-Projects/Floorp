@@ -7,22 +7,32 @@
 #ifndef MOZILLA_DOMRECT_H_
 #define MOZILLA_DOMRECT_H_
 
-#include "js/StructuredClone.h"
-#include "nsTArray.h"
-#include "nsCOMPtr.h"
-#include "nsWrapperCache.h"
-#include "nsCycleCollectionParticipant.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/ErrorResult.h"
+#include <algorithm>
+#include <cstdint>
+#include <new>
+#include <utility>
+#include "js/RootingAPI.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/RefPtr.h"
+#include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsISupports.h"
+#include "nsTArray.h"
+#include "nsWrapperCache.h"
 
-struct nsRect;
+class JSObject;
 class nsIGlobalObject;
+struct JSContext;
+struct JSStructuredCloneReader;
+struct JSStructuredCloneWriter;
+struct nsRect;
 
 namespace mozilla {
 namespace dom {
 
+class GlobalObject;
 struct DOMRectInit;
 
 class DOMRectReadOnly : public nsISupports, public nsWrapperCache {

@@ -7,6 +7,7 @@
 #include "FluentBundle.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "nsIInputStream.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 #include "unicode/numberformatter.h"

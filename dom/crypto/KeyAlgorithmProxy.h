@@ -7,10 +7,21 @@
 #ifndef mozilla_dom_KeyAlgorithmProxy_h
 #define mozilla_dom_KeyAlgorithmProxy_h
 
-#include "pk11pub.h"
-#include "js/StructuredClone.h"
+#include <cstdint>
+#include <utility>
+#include "js/RootingAPI.h"
+#include "mozilla/dom/CryptoBuffer.h"
 #include "mozilla/dom/KeyAlgorithmBinding.h"
+#include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/WebCryptoCommon.h"
+#include "nsLiteralString.h"
+#include "nsStringFwd.h"
+#include "pkcs11t.h"
+
+class JSObject;
+struct JSContext;
+struct JSStructuredCloneReader;
+struct JSStructuredCloneWriter;
 
 #define KEY_ALGORITHM_SC_VERSION 0x00000001
 

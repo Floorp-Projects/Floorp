@@ -7,12 +7,29 @@
 #ifndef mozilla_dom_WebCryptoCommon_h
 #define mozilla_dom_WebCryptoCommon_h
 
+// XXX Several of these dependencies could be removed by moving implementations
+// to the cpp file.
+
+#include <cstdint>
+#include <cstring>
 #include "js/StructuredClone.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/dom/CryptoBuffer.h"
+#include "mozilla/fallible.h"
 #include "nsContentUtils.h"
-#include "nsString.h"
-#include "pk11pub.h"
+#include "nsLiteralString.h"
+#include "nsStringFwd.h"
+#include "pkcs11t.h"
+#include "plarena.h"
+#include "secasn1t.h"
+#include "seccomon.h"
+#include "secitem.h"
+#include "secoid.h"
+#include "secoidt.h"
+
+struct JSStructuredCloneReader;
+struct JSStructuredCloneWriter;
 
 // WebCrypto algorithm names
 #define WEBCRYPTO_ALG_AES_CBC "AES-CBC"
