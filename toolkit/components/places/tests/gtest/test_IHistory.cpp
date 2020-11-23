@@ -9,6 +9,7 @@
 #include "nsIPrefService.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsNetUtil.h"
 

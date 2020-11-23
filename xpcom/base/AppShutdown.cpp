@@ -17,6 +17,7 @@
 #include "mozilla/PoisonIOInterposer.h"
 #include "mozilla/Printf.h"
 #include "mozilla/scache/StartupCache.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticPrefs_toolkit.h"
 #include "mozilla/LateWriteChecks.h"

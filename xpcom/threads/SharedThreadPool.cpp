@@ -8,6 +8,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Services.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPtr.h"
 #include "nsDataHashtable.h"
 #include "nsXPCOMCIDInternal.h"

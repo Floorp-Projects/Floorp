@@ -6,6 +6,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/SpinEventLoopUntil.h"
 
 #include "mozStorageService.h"
 #include "mozStorageConnection.h"

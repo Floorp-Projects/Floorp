@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "Helpers.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsStreamUtils.h"

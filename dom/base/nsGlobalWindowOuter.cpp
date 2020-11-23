@@ -88,6 +88,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Likely.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Unused.h"
 

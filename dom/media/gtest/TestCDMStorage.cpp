@@ -12,6 +12,7 @@
 #include "gtest/gtest.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "nsIFile.h"
 #include "nsNSSComponent.h"  //For EnsureNSSInitializedChromeOrContent
 #include "nsThreadUtils.h"

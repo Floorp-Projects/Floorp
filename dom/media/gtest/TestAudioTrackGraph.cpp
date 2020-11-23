@@ -15,6 +15,7 @@
 #endif  // MOZ_WEBRTC
 #include "MockCubeb.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SpinEventLoopUntil.h"
 
 #define DRIFT_BUFFERING_PREF "media.clockdrift.buffering"
 

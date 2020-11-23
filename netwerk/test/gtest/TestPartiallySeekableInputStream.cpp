@@ -5,6 +5,7 @@
 #include "nsStreamUtils.h"
 #include "nsString.h"
 #include "nsStringStream.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/net/PartiallySeekableInputStream.h"
 
 using mozilla::GetCurrentSerialEventTarget;

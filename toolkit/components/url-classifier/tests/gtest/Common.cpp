@@ -9,6 +9,7 @@
 #include "HashStore.h"
 #include "LookupCacheV4.h"
 #include "mozilla/Components.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIThread.h"

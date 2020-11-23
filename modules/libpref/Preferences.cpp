@@ -33,6 +33,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefsAll.h"
 #include "mozilla/SyncRunnable.h"

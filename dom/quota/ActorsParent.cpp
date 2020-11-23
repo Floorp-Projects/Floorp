@@ -55,6 +55,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"

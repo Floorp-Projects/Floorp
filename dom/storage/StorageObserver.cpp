@@ -25,6 +25,7 @@
 #include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "nsServiceManagerUtils.h"
 
 namespace mozilla {

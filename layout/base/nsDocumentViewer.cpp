@@ -47,6 +47,7 @@
 #include "mozilla/Encoding.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_javascript.h"

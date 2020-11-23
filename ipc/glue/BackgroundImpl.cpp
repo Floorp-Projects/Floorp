@@ -20,6 +20,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/Services.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ContentChild.h"

@@ -8,6 +8,7 @@
 
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"

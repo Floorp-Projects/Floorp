@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 
+#include "mozilla/SpinEventLoopUntil.h"
 #include "nsBufferedStreams.h"
 #include "nsStreamUtils.h"
 #include "nsIThread.h"

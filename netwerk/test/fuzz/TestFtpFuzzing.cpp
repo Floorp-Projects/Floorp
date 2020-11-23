@@ -1,4 +1,5 @@
 #include "mozilla/Preferences.h"
+#include "mozilla/SpinEventLoopUntil.h"
 
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"

@@ -84,6 +84,7 @@
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/Scoped.h"
 #include "mozilla/SnappyCompressOutputStream.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TaskCategory.h"
 #include "mozilla/TimeStamp.h"

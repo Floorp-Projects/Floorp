@@ -17,6 +17,7 @@
 
 #include "NullHttpTransaction.h"
 #include "mozilla/Services.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "mozilla/net/DNS.h"

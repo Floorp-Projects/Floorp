@@ -16,6 +16,7 @@
 #include "nsIThread.h"
 #include "nsIURI.h"
 #include "mozilla/IHistory.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "mozIStorageAsyncStatement.h"

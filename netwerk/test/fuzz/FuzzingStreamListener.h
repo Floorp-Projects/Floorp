@@ -1,12 +1,12 @@
 #ifndef FuzzingStreamListener_h__
 #define FuzzingStreamListener_h__
 
+#include "mozilla/SpinEventLoopUntil.h"
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
 #include "nsString.h"
 #include "nsNetUtil.h"
 #include "nsIStreamListener.h"
-#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace net {

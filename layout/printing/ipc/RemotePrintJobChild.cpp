@@ -6,6 +6,7 @@
 
 #include "RemotePrintJobChild.h"
 
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/Unused.h"
 #include "nsPagePrintTimer.h"
 #include "nsPrintJob.h"

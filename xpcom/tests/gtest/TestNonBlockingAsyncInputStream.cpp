@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "mozilla/NonBlockingAsyncInputStream.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "nsIAsyncInputStream.h"
 #include "nsStreamUtils.h"
 #include "nsString.h"
