@@ -223,8 +223,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
 
         observeTabSelection(requireComponents.core.store)
 
-        if (!onboarding.userHasBeenOnboarded()) {
-            observeTabSource(requireComponents.core.store)
+        lifecycleScope.launch(IO) {
+            if (!onboarding.userHasBeenOnboarded()) {
+                observeTabSource(requireComponents.core.store)
+            }
         }
 
         requireContext().accessibilityManager.addAccessibilityStateChangeListener(this)
