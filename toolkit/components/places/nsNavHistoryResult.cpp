@@ -287,7 +287,6 @@ nsNavHistoryResultNode::nsNavHistoryResultNode(const nsACString& aURI,
       mTime(aTime),
       mBookmarkIndex(-1),
       mItemId(-1),
-      mFolderId(-1),
       mVisitId(-1),
       mFromVisitId(-1),
       mDateAdded(0),
@@ -1164,7 +1163,7 @@ int32_t nsNavHistoryContainerResultNode::SortComparison_FrecencyGreater(
  *
  * @note Does not addref the node!
  */
-nsNavHistoryResultNode* nsNavHistoryContainerResultNode::FindChildURI(
+nsNavHistoryResultNode* nsNavHistoryContainerResultNode::FindChildByURI(
     const nsACString& aSpec, uint32_t* aNodeIndex) {
   for (int32_t i = 0; i < mChildren.Count(); ++i) {
     if (mChildren[i]->IsURI()) {
@@ -1175,6 +1174,20 @@ nsNavHistoryResultNode* nsNavHistoryContainerResultNode::FindChildURI(
     }
   }
   return nullptr;
+}
+
+/**
+ * Searches for matches for the given URI.
+ */
+void nsNavHistoryContainerResultNode::FindChildrenByURI(
+    const nsCString& aSpec, nsCOMArray<nsNavHistoryResultNode>* aMatches) {
+  for (int32_t i = 0; i < mChildren.Count(); ++i) {
+    if (mChildren[i]->IsURI()) {
+      if (aSpec.Equals(mChildren[i]->mURI)) {
+        aMatches->AppendObject(mChildren[i]);
+      }
+    }
+  }
 }
 
 /**
@@ -1382,7 +1395,7 @@ bool nsNavHistoryContainerResultNode::UpdateURIs(
     RecursiveFindURIs(aOnlyOne, this, aSpec, &matches);
   } else if (aOnlyOne) {
     uint32_t nodeIndex;
-    nsNavHistoryResultNode* node = FindChildURI(aSpec, &nodeIndex);
+    nsNavHistoryResultNode* node = FindChildByURI(aSpec, &nodeIndex);
     if (node) matches.AppendObject(node);
   } else {
     MOZ_ASSERT(
@@ -1822,6 +1835,9 @@ nsresult nsNavHistoryQueryResultNode::FillChildren() {
 
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_STATE(result);
+
+  // Ensure to add history observer before bookmarks observer, because the
+  // latter wants to know if an history observer was added.
 
   if (mOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY ||
       mOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_UNIFIED) {
@@ -2499,23 +2515,6 @@ nsNavHistoryQueryResultNode::OnItemChanged(
     rv = NotifyIfTagsChanged(uri);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavHistoryQueryResultNode::OnItemVisited(int64_t aItemId, int64_t aVisitId,
-                                           PRTime aTime,
-                                           uint32_t aTransitionType,
-                                           nsIURI* aURI, int64_t aParentId,
-                                           const nsACString& aGUID,
-                                           const nsACString& aParentGUID) {
-  // for bookmark queries, "all bookmark" observer should get OnItemVisited
-  // but it is ignored.
-  if (mLiveUpdate != QUERYUPDATE_COMPLEX_WITH_BOOKMARKS)
-    NS_WARNING_ASSERTION(mResult && mResult->mIsBookmarksObserver,
-                         "history observers should not get OnItemVisited, but "
-                         "should get OnVisit "
-                         "instead");
   return NS_OK;
 }
 
@@ -3261,13 +3260,9 @@ nsNavHistoryFolderResultNode::OnItemChanged(
 /**
  * Updates visit count and last visit time and refreshes.
  */
-NS_IMETHODIMP
-nsNavHistoryFolderResultNode::OnItemVisited(int64_t aItemId, int64_t aVisitId,
-                                            PRTime aTime,
-                                            uint32_t aTransitionType,
-                                            nsIURI* aURI, int64_t aParentId,
-                                            const nsACString& aGUID,
-                                            const nsACString& aParentGUID) {
+nsresult nsNavHistoryFolderResultNode::OnItemVisited(nsIURI* aURI,
+                                                     int64_t aVisitId,
+                                                     PRTime aTime) {
   if (mOptions->ExcludeItems())
     return NS_OK;  // don't update items when we aren't displaying them
 
@@ -3275,58 +3270,67 @@ nsNavHistoryFolderResultNode::OnItemVisited(int64_t aItemId, int64_t aVisitId,
 
   if (!StartIncrementalUpdate()) return NS_OK;
 
-  uint32_t nodeIndex;
-  nsNavHistoryResultNode* node = FindChildById(aItemId, &nodeIndex);
-  if (!node) return NS_ERROR_FAILURE;
-
-  // Update node.
-  uint32_t nodeOldAccessCount = node->mAccessCount;
-  PRTime nodeOldTime = node->mTime;
-  node->mTime = aTime;
-  ++node->mAccessCount;
+  nsAutoCString spec;
+  nsresult rv = aURI->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMArray<nsNavHistoryResultNode> nodes;
+  FindChildrenByURI(spec, &nodes);
+  if (!nodes.Count()) {
+    return NS_OK;
+  }
 
   // Update us.
   int32_t oldAccessCount = mAccessCount;
   ++mAccessCount;
   if (aTime > mTime) mTime = aTime;
-  nsresult rv = ReverseUpdateStats(mAccessCount - oldAccessCount);
+  rv = ReverseUpdateStats(mAccessCount - oldAccessCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Update frecency for proper frecency ordering.
-  // TODO (bug 832617): we may avoid one query here, by providing the new
-  // frecency value in the notification.
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(history, NS_OK);
-  RefPtr<nsNavHistoryResultNode> visitNode;
-  rv = history->VisitIdToResultNode(aVisitId, mOptions,
-                                    getter_AddRefs(visitNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!visitNode) {
-    // Certain result types manage the nodes by themselves.
-    return NS_OK;
-  }
-  node->mFrecency = visitNode->mFrecency;
+  // Update nodes.
+  for (int32_t i = 0; i < nodes.Count(); ++i) {
+    nsNavHistoryResultNode* node = nodes[i];
+    uint32_t nodeOldAccessCount = node->mAccessCount;
+    PRTime nodeOldTime = node->mTime;
+    node->mTime = aTime;
+    ++node->mAccessCount;
 
-  if (AreChildrenVisible()) {
-    // Sorting has not changed, just redraw the row if it's visible.
-    nsNavHistoryResult* result = GetResult();
-    NOTIFY_RESULT_OBSERVERS(result, NodeHistoryDetailsChanged(
-                                        node, nodeOldTime, nodeOldAccessCount));
-  }
+    // Update frecency for proper frecency ordering.
+    // TODO (bug 832617): we may avoid one query here, by providing the new
+    // frecency value in the notification.
+    nsNavHistory* history = nsNavHistory::GetHistoryService();
+    NS_ENSURE_TRUE(history, NS_OK);
+    RefPtr<nsNavHistoryResultNode> visitNode;
+    rv = history->VisitIdToResultNode(aVisitId, mOptions,
+                                      getter_AddRefs(visitNode));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!visitNode) {
+      // Certain result types manage the nodes by themselves.
+      return NS_OK;
+    }
+    node->mFrecency = visitNode->mFrecency;
 
-  // Update sorting if necessary.
-  uint32_t sortType = GetSortType();
-  if (sortType == nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_ASCENDING ||
-      sortType == nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_DESCENDING ||
-      sortType == nsINavHistoryQueryOptions::SORT_BY_DATE_ASCENDING ||
-      sortType == nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING ||
-      sortType == nsINavHistoryQueryOptions::SORT_BY_FRECENCY_ASCENDING ||
-      sortType == nsINavHistoryQueryOptions::SORT_BY_FRECENCY_DESCENDING) {
-    int32_t childIndex = FindChild(node);
-    NS_ASSERTION(childIndex >= 0,
-                 "Could not find child we just got a reference to");
-    if (childIndex >= 0) {
-      EnsureItemPosition(childIndex);
+    if (AreChildrenVisible()) {
+      // Sorting has not changed, just redraw the row if it's visible.
+      nsNavHistoryResult* result = GetResult();
+      NOTIFY_RESULT_OBSERVERS(
+          result,
+          NodeHistoryDetailsChanged(node, nodeOldTime, nodeOldAccessCount));
+    }
+
+    // Update sorting if necessary.
+    uint32_t sortType = GetSortType();
+    if (sortType == nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_ASCENDING ||
+        sortType == nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_DESCENDING ||
+        sortType == nsINavHistoryQueryOptions::SORT_BY_DATE_ASCENDING ||
+        sortType == nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING ||
+        sortType == nsINavHistoryQueryOptions::SORT_BY_FRECENCY_ASCENDING ||
+        sortType == nsINavHistoryQueryOptions::SORT_BY_FRECENCY_DESCENDING) {
+      int32_t childIndex = FindChild(node);
+      NS_ASSERTION(childIndex >= 0,
+                   "Could not find child we just got a reference to");
+      if (childIndex >= 0) {
+        EnsureItemPosition(childIndex);
+      }
     }
   }
 
@@ -3591,9 +3595,14 @@ void nsNavHistoryResult::EnsureIsObservingBookmarks() {
     return;
   }
   bookmarks->AddObserver(this, true);
-  AutoTArray<PlacesEventType, 2> events;
+  AutoTArray<PlacesEventType, 3> events;
   events.AppendElement(PlacesEventType::Bookmark_added);
   events.AppendElement(PlacesEventType::Bookmark_removed);
+  // If we're not observing visits yet, also add a page-visited observer to
+  // serve onItemVisited.
+  if (!mIsHistoryObserver) {
+    events.AppendElement(PlacesEventType::Page_visited);
+  }
   PlacesObservers::AddListener(events, this);
   mIsBookmarksObserver = true;
 }
@@ -3862,26 +3871,6 @@ nsNavHistoryResult::OnItemChanged(
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNavHistoryResult::OnItemVisited(int64_t aItemId, int64_t aVisitId,
-                                  PRTime aVisitTime, uint32_t aTransitionType,
-                                  nsIURI* aURI, int64_t aParentId,
-                                  const nsACString& aGUID,
-                                  const nsACString& aParentGUID) {
-  NS_ENSURE_ARG(aURI);
-
-  ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(
-      aParentId, OnItemVisited(aItemId, aVisitId, aVisitTime, aTransitionType,
-                               aURI, aParentId, aGUID, aParentGUID));
-  ENUMERATE_ALL_BOOKMARKS_OBSERVERS(
-      OnItemVisited(aItemId, aVisitId, aVisitTime, aTransitionType, aURI,
-                    aParentId, aGUID, aParentGUID));
-  // Note: we do NOT call history observers in this case.  This notification is
-  // the same as OnVisit, except that here we know the item is a bookmark.
-  // History observers will handle the history notification instead.
-  return NS_OK;
-}
-
 /**
  * Need to notify both the source and the destination folders (if they are
  * different).
@@ -3969,7 +3958,6 @@ nsresult nsNavHistoryResult::OnVisit(nsIURI* aURI, int64_t aVisitId,
   if (!added || todayIsMissing) {
     // None of registered query observers has accepted our URI.  This means,
     // that a matching query either was not expanded or it does not exist.
-    uint32_t resultType = mRootNode->mOptions->ResultType();
     if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY ||
         resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_SITE_QUERY) {
       // If the visit falls into the Today bucket and the bucket exists, it was
@@ -3993,6 +3981,22 @@ nsresult nsNavHistoryResult::OnVisit(nsIURI* aURI, int64_t aVisitId,
     // cause changes to the array.
     ENUMERATE_QUERY_OBSERVERS(Refresh(), mHistoryObservers,
                               IsContainersQuery());
+
+    // Also notify onItemVisited to bookmark folder observers, that are not
+    // observing history.
+    if (!mIsHistoryObserver && mRootNode->IsFolder()) {
+      nsAutoCString spec;
+      nsresult rv = aURI->GetSpec(spec);
+      NS_ENSURE_SUCCESS(rv, rv);
+      // Find all the folders containing the visited URI, and notify them.
+      nsCOMArray<nsNavHistoryResultNode> nodes;
+      mRootNode->RecursiveFindURIs(true, mRootNode, spec, &nodes);
+      for (int32_t i = 0; i < nodes.Count(); ++i) {
+        nsNavHistoryResultNode* node = nodes[i];
+        ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(
+            node->mParent->mItemId, OnItemVisited(aURI, aVisitId, aTime));
+      }
+    }
   }
 
   return NS_OK;
