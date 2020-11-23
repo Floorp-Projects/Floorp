@@ -36,7 +36,7 @@ using mozilla::dom::quota::PersistenceType
   from "mozilla/dom/quota/PersistenceType.h";
 
 using moveonly mozilla::SerializedStructuredCloneBuffer
-  from "ipc/IPCMessageUtils.h";
+  from "mozilla/ipc/SerializedStructuredCloneBuffer.h";
 
 namespace mozilla {
 namespace dom {
