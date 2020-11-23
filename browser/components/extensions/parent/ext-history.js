@@ -123,7 +123,6 @@ const getHistoryObserver = () => {
       onClearHistory() {
         this.emit("visitRemoved", { allHistory: true, urls: [] });
       }
-      onPageChanged() {}
       onFrecencyChanged() {}
       onManyFrecenciesChanged() {}
       onDeleteVisits(uri, partialRemoval, guid, reason) {

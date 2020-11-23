@@ -335,7 +335,6 @@ var DownloadCache = {
   onTitleChanged() {},
   onFrecencyChanged() {},
   onManyFrecenciesChanged() {},
-  onPageChanged() {},
   onDeleteVisits() {},
 };
 
