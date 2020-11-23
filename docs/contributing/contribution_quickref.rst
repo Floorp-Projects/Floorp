@@ -131,6 +131,19 @@ To visualize your patch in the repository, run:
 
 :ref:`More information <Mercurial Overview>`
 
+To make sure the change follows the coding style
+------------------------------------------------
+
+To detect coding style violations, use mach lint:
+
+.. code-block:: shell
+
+    $ ./mach lint path/to/the/file/or/directory/you/changed
+
+    # To get the autofix, add --fix:
+    $ ./mach lint path/to/the/file/or/directory/you/changed --fix
+
+:ref:`More information <Code quality>`
 
 To test a change locally
 ------------------------
