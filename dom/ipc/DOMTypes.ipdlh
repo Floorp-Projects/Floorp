@@ -17,7 +17,7 @@ include ProtocolTypes;
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 
 using moveonly struct mozilla::SerializedStructuredCloneBuffer
-  from "ipc/IPCMessageUtils.h";
+  from "mozilla/ipc/SerializedStructuredCloneBuffer.h";
 
 using class mozilla::dom::LoadingSessionHistoryInfo
   from "mozilla/dom/SessionHistoryEntry.h";
