@@ -9,6 +9,7 @@
 #include "nsXPCOM.h"
 #include "nsThreadUtils.h"
 #include "gtest/gtest.h"
+#include "mozilla/SpinEventLoopUntil.h"
 
 #include <functional>
 

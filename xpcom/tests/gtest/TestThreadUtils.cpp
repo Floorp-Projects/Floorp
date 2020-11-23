@@ -8,6 +8,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/IdleTaskRunner.h"
 #include "mozilla/RefCounted.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/UniquePtr.h"
 
 #include "gtest/gtest.h"

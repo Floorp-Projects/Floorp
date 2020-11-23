@@ -64,6 +64,7 @@ EXPORTS.mozilla += [
     "RWLock.h",
     "SchedulerGroup.h",
     "SharedThreadPool.h",
+    "SpinEventLoopUntil.h",
     "StateMirroring.h",
     "StateWatching.h",
     "SynchronizedEventQueue.h",

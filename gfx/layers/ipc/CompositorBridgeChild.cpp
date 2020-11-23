@@ -42,6 +42,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Unused.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "nsThreadUtils.h"
 #if defined(XP_WIN)
 #  include "WinUtils.h"

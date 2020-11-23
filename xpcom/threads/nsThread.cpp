@@ -31,6 +31,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPrefs_threads.h"
 #include "mozilla/TaskController.h"
 #include "nsXPCOMPrivate.h"

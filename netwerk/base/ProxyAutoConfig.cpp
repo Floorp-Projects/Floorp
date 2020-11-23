@@ -24,6 +24,7 @@
 #include "prnetdb.h"
 #include "nsITimer.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/net/DNS.h"
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "nsServiceManagerUtils.h"

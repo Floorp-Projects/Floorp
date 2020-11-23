@@ -48,6 +48,7 @@
 #include "mozilla/LoadInfo.h"
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/plugins/PluginTypes.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ipc/URIUtils.h"

@@ -8,6 +8,7 @@
 
 #include "nsThreadUtils.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/SpinEventLoopUntil.h"
 
 class GMPTestMonitor {
  public:

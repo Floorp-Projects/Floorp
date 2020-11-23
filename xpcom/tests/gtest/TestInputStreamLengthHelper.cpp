@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "mozilla/InputStreamLengthHelper.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "nsCOMPtr.h"
 #include "nsIInputStream.h"
 #include "nsStreamUtils.h"

@@ -20,6 +20,7 @@
 #include "mozilla/XREAppData.h"
 
 #include "mozilla/Services.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/Unused.h"
 #include "prtime.h"
 

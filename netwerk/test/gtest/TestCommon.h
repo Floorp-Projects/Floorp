@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/SpinEventLoopUntil.h"
 
 //-----------------------------------------------------------------------------
 

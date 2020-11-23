@@ -12,6 +12,7 @@
 #include "WebMDecoder.h"
 #include "WebMDemuxer.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "nsMimeTypes.h"
 
 using namespace mozilla;

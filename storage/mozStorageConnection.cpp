@@ -19,6 +19,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/quota/QuotaObject.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPrefs_storage.h"
 
 #include "mozIStorageCompletionCallback.h"

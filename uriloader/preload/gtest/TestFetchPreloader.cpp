@@ -6,6 +6,7 @@
 #include "mozilla/FetchPreloader.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PreloadHashKey.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
 #include "nsIStreamListener.h"

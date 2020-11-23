@@ -8,6 +8,7 @@
 #include "AnnexB.h"
 #include "ImageContainer.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/media/MediaUtils.h"  // For media::Await
 #include "nsMimeTypes.h"
 #include "PEMFactory.h"
