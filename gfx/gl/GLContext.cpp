@@ -25,6 +25,7 @@
 #include "gfxEnv.h"
 #include "gfxUtils.h"
 #include "GLContextProvider.h"
+#include "GLLibraryLoader.h"
 #include "GLTextureImage.h"
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
