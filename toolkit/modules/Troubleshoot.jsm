@@ -230,6 +230,11 @@ var dataProviders = {
       );
     } catch (e) {}
 
+    // MacOSX: Check for rosetta status, if it exists
+    try {
+      data.rosetta = Services.sysinfo.getProperty("rosettaStatus");
+    } catch (e) {}
+
     data.numTotalWindows = 0;
     data.numFissionWindows = 0;
     data.numRemoteWindows = 0;
