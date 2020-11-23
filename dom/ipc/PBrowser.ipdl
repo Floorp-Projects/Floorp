@@ -33,6 +33,7 @@ include PBackgroundSharedTypes;
 
 include "mozilla/AntiTrackingIPCUtils.h";
 include "mozilla/dom/BindingIPCUtils.h";
+include "mozilla/dom/CSPMessageUtils.h";
 include "mozilla/dom/DocShellMessageUtils.h";
 include "mozilla/dom/PermissionMessageUtils.h";
 include "mozilla/dom/TabMessageUtils.h";
