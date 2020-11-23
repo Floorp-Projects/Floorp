@@ -73,6 +73,7 @@ include "ipc/DataStorageIPCUtils.h";
 include "mozilla/AntiTrackingIPCUtils.h";
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/dom/DocShellMessageUtils.h";
+include "mozilla/ipc/ByteBufUtils.h";
 include "mozilla/PermissionDelegateIPCUtils.h";
 
 using refcounted class nsIDOMGeoPosition from "nsGeoPositionIPCSerialiser.h";

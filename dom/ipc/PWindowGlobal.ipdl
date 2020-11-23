@@ -15,6 +15,8 @@ include DOMTypes;
 include ClientIPCTypes;
 include NeckoChannelParams;
 
+include "mozilla/layers/LayersMessageUtils.h";
+
 using JSActorMessageKind from "mozilla/dom/JSActor.h";
 using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
 using moveonly mozilla::gfx::PaintFragment from "mozilla/gfx/CrossProcessPaint.h";
