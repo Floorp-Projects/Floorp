@@ -1580,9 +1580,7 @@ class nsDisplayListBuilder {
     return aFrame->GetParent()->GetProperty(OutOfFlowDisplayDataProperty());
   }
 
-  nsPresContext* CurrentPresContext() {
-    return CurrentPresShellState()->mPresShell->GetPresContext();
-  }
+  nsPresContext* CurrentPresContext();
 
   OutOfFlowDisplayData* GetCurrentFixedBackgroundDisplayData() {
     auto& displayData = CurrentPresShellState()->mFixedBackgroundDisplayData;
@@ -4218,10 +4216,7 @@ class nsDisplayReflowCount : public nsPaintedDisplayItem {
 
   NS_DISPLAY_DECL_NAME("nsDisplayReflowCount", TYPE_REFLOW_COUNT)
 
-  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
-    mFrame->PresShell()->PaintCount(mFrameName, aCtx, mFrame->PresContext(),
-                                    mFrame, ToReferenceFrame(), mColor);
-  }
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
  protected:
   const char* mFrameName;

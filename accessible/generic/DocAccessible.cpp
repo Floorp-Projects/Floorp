@@ -1187,6 +1187,10 @@ nsresult DocAccessible::HandleAccEvent(AccEvent* aEvent) {
 ////////////////////////////////////////////////////////////////////////////////
 // Public members
 
+nsPresContext* DocAccessible::PresContext() const {
+  return mPresShell->GetPresContext();
+}
+
 void* DocAccessible::GetNativeWindow() const {
   if (!mPresShell) {
     return nullptr;

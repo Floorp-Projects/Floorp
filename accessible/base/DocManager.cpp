@@ -62,6 +62,19 @@ DocAccessible* DocManager::GetDocAccessible(Document* aDocument) {
   return CreateDocOrRootAccessible(aDocument);
 }
 
+DocAccessible* DocManager::GetDocAccessible(const PresShell* aPresShell) {
+  if (!aPresShell) {
+    return nullptr;
+  }
+
+  DocAccessible* doc = aPresShell->GetDocAccessible();
+  if (doc) {
+    return doc;
+  }
+
+  return GetDocAccessible(aPresShell->GetDocument());
+}
+
 Accessible* DocManager::FindAccessibleInCache(nsINode* aNode) const {
   for (auto iter = mDocAccessibleCache.ConstIter(); !iter.Done(); iter.Next()) {
     DocAccessible* docAccessible = iter.UserData();

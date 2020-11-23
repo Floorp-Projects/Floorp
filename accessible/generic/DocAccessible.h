@@ -131,7 +131,7 @@ class DocAccessible : public HyperTextAccessibleWrap,
   /**
    * Return the presentation shell's context.
    */
-  nsPresContext* PresContext() const { return mPresShell->GetPresContext(); }
+  nsPresContext* PresContext() const;
 
   /**
    * Return true if associated DOM document was loaded and isn't unloading.
