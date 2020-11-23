@@ -5,7 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBrowser;
-using refcounted class nsIPrincipal from "mozilla/dom/PermissionMessageUtils.h";
+
+include "mozilla/dom/PermissionMessageUtils.h";
+
+using refcounted class nsIPrincipal from "nsIPrincipal.h";
 
 namespace mozilla {
 namespace dom {
