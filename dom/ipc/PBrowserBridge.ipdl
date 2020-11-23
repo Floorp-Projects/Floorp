@@ -12,6 +12,7 @@ include protocol PDocAccessible;
 include DOMTypes;
 
 include "mozilla/LayoutMessageUtils.h";
+include "mozilla/dom/BindingIPCUtils.h";
 include "mozilla/dom/DocShellMessageUtils.h";
 include "mozilla/dom/TabMessageUtils.h";
 

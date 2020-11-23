@@ -4,6 +4,7 @@
 
 include protocol PBrowser;
 
+include "mozilla/dom/BindingIPCUtils.h";
 include "mozilla/GfxMessageUtils.h";
 
 using mozilla::dom::CallerType from "mozilla/dom/BindingDeclarations.h";
