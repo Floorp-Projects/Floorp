@@ -467,6 +467,7 @@ UNIFIED_SOURCES += [
     "ipc/CanvasChild.cpp",
     "ipc/CanvasThread.cpp",
     "ipc/CanvasTranslator.cpp",
+    "ipc/CompositableForwarder.cpp",
     "ipc/CompositableTransactionParent.cpp",
     "ipc/CompositorBench.cpp",
     "ipc/CompositorBridgeChild.cpp",
