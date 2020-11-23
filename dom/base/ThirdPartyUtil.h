@@ -7,17 +7,25 @@
 #ifndef ThirdPartyUtil_h__
 #define ThirdPartyUtil_h__
 
+#include <cstdint>
+#include "ErrorList.h"
 #include "mozIThirdPartyUtil.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/dom/Document.h"
-#include "nsCOMPtr.h"
-#include "nsEffectiveTLDService.h"
+#include "mozilla/RefPtr.h"
+#include "nsISupports.h"
 #include "nsString.h"
-#include "nsPIDOMWindow.h"
-#include "mozilla/dom/WindowGlobalParent.h"
 
+class mozIDOMWindowProxy;
+class nsEffectiveTLDService;
+class nsIChannel;
+class nsIPrincipal;
 class nsIURI;
 class nsPIDOMWindowOuter;
+
+namespace mozilla {
+namespace dom {
+class WindowGlobalParent;
+}
+}  // namespace mozilla
 
 class ThirdPartyUtil final : public mozIThirdPartyUtil {
  public:

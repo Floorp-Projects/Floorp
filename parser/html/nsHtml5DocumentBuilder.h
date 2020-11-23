@@ -10,8 +10,11 @@
 #include "mozilla/dom/Document.h"
 #include "nsContentSink.h"
 #include "nsHtml5DocumentMode.h"
-#include "mozilla/dom/Document.h"
 #include "nsIContent.h"
+
+namespace mozilla::dom {
+class Document;
+}
 
 typedef nsIContent* nsIContentPtr;
 

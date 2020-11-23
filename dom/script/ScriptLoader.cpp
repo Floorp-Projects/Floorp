@@ -4153,6 +4153,41 @@ bool ScriptLoader::MaybeRemovedDeferRequests() {
   return false;
 }
 
+DocGroup* ScriptLoader::GetDocGroup() const { return mDocument->GetDocGroup(); }
+
+void ScriptLoader::BeginDeferringScripts() {
+  mDeferEnabled = true;
+  if (mDeferCheckpointReached) {
+    // We already completed a parse and were just waiting for some async
+    // scripts to load (and were already blocking the load event waiting for
+    // that to happen), when document.open() happened and now we're doing a
+    // new parse.  We shouldn't block the load event again, but _should_ reset
+    // mDeferCheckpointReached to false.  It'll get set to true again when the
+    // DeferCheckpointReached call that corresponds to this
+    // BeginDeferringScripts call happens (on document.close()), since we just
+    // set mDeferEnabled to true.
+    mDeferCheckpointReached = false;
+  } else {
+    if (mDocument) {
+      mDocument->BlockOnload();
+    }
+  }
+}
+
+nsAutoScriptLoaderDisabler::nsAutoScriptLoaderDisabler(Document* aDoc) {
+  mLoader = aDoc->ScriptLoader();
+  mWasEnabled = mLoader->GetEnabled();
+  if (mWasEnabled) {
+    mLoader->SetEnabled(false);
+  }
+}
+
+nsAutoScriptLoaderDisabler::~nsAutoScriptLoaderDisabler() {
+  if (mWasEnabled) {
+    mLoader->SetEnabled(true);
+  }
+}
+
 #undef TRACE_FOR_TEST
 #undef TRACE_FOR_TEST_BOOL
 #undef TRACE_FOR_TEST_NONE

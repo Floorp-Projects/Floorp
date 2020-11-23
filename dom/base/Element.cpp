@@ -1974,6 +1974,11 @@ void Element::UnbindFromTree(bool aNullParent) {
   MOZ_ASSERT(!document || document->GetServoRestyleRoot() != this);
 }
 
+UniquePtr<SMILAttr> Element::GetAnimatedAttr(int32_t aNamespaceID,
+                                             nsAtom* aName) {
+  return nullptr;
+}
+
 nsDOMCSSAttributeDeclaration* Element::SMILOverrideStyle() {
   Element::nsExtendedDOMSlots* slots = ExtendedDOMSlots();
 

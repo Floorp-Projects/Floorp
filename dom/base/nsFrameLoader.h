@@ -21,7 +21,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/Promise.h"
@@ -61,6 +60,7 @@ class OriginAttributes;
 namespace dom {
 class ChromeMessageSender;
 class ContentParent;
+class Document;
 class TabListener;
 class InProcessBrowserChildMessageManager;
 class MessageSender;

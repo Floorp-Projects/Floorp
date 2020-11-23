@@ -31,7 +31,7 @@ class AuthenticatorResponse : public nsISupports, public nsWrapperCache {
   virtual ~AuthenticatorResponse();
 
  public:
-  nsISupports* GetParentObject() const { return mParent; }
+  nsISupports* GetParentObject() const;
 
   void GetFormat(nsString& aRetVal) const;
 

@@ -90,11 +90,7 @@ class DOMIntersectionObserver final : public nsISupports,
 
  public:
   DOMIntersectionObserver(already_AddRefed<nsPIDOMWindowInner>&& aOwner,
-                          dom::IntersectionCallback& aCb)
-      : mOwner(aOwner),
-        mDocument(mOwner->GetExtantDoc()),
-        mCallback(RefPtr<dom::IntersectionCallback>(&aCb)),
-        mConnected(false) {}
+                          dom::IntersectionCallback& aCb);
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMIntersectionObserver)
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_INTERSECTION_OBSERVER_IID)
@@ -110,7 +106,7 @@ class DOMIntersectionObserver final : public nsISupports,
     return IntersectionObserver_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-  nsISupports* GetParentObject() const { return mOwner; }
+  nsISupports* GetParentObject() const;
 
   nsINode* GetRoot() const { return mRoot; }
 

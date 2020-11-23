@@ -7,19 +7,31 @@
 #ifndef mozilla_dom_AbstractRange_h
 #define mozilla_dom_AbstractRange_h
 
+#include <cstdint>
+#include "ErrorList.h"
+#include "js/RootingAPI.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RangeBoundary.h"
-#include "mozilla/dom/Document.h"
-#include "nsIContent.h"
-#include "nsINode.h"
+#include "mozilla/RefPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsISupports.h"
 #include "nsWrapperCache.h"
+
+class JSObject;
+class nsIContent;
+class nsINode;
+struct JSContext;
 
 namespace mozilla {
 namespace dom {
 
+class Document;
+
 class AbstractRange : public nsISupports, public nsWrapperCache {
  protected:
   explicit AbstractRange(nsINode* aNode);
-  virtual ~AbstractRange() = default;
+  virtual ~AbstractRange();
 
  public:
   AbstractRange() = delete;
@@ -75,7 +87,7 @@ class AbstractRange : public nsISupports, public nsWrapperCache {
                               StartOffset() == EndOffset());
   }
 
-  nsINode* GetParentObject() const { return mOwner; }
+  nsINode* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
@@ -96,14 +108,7 @@ class AbstractRange : public nsISupports, public nsWrapperCache {
   void Init(nsINode* aNode);
 
  private:
-  void ClearForReuse() {
-    mOwner = nullptr;
-    mStart = RangeBoundary();
-    mEnd = RangeBoundary();
-    mIsPositioned = false;
-    mIsGenerated = false;
-    mCalledByJS = false;
-  }
+  void ClearForReuse();
 
  protected:
   RefPtr<Document> mOwner;

@@ -12,6 +12,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/ThrottledEventQueue.h"
+#include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/JSExecutionManager.h"
 #include "nsDOMMutationObserver.h"
@@ -146,6 +147,16 @@ nsresult DocGroup::GetKey(nsIPrincipal* aPrincipal, bool aCrossOriginIsolated,
 
 void DocGroup::SetExecutionManager(JSExecutionManager* aManager) {
   mExecutionManager = aManager;
+}
+
+mozilla::dom::CustomElementReactionsStack*
+DocGroup::CustomElementReactionsStack() {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mReactionsStack) {
+    mReactionsStack = new mozilla::dom::CustomElementReactionsStack();
+  }
+
+  return mReactionsStack;
 }
 
 void DocGroup::AddDocument(Document* aDocument) {

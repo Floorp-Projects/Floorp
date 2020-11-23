@@ -6,6 +6,8 @@
 
 #include "mozilla/dom/AuthenticatorResponse.h"
 
+#include "nsPIDOMWindow.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -41,6 +43,8 @@ AuthenticatorResponse::AuthenticatorResponse(nsPIDOMWindowInner* aParent)
 AuthenticatorResponse::~AuthenticatorResponse() {
   // Call DropJSObjects() in subclasses.
 }
+
+nsISupports* AuthenticatorResponse::GetParentObject() const { return mParent; }
 
 void AuthenticatorResponse::GetClientDataJSON(
     JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal) {

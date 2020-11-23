@@ -383,6 +383,10 @@ bool nsCoreUtils::IsErrorPage(Document* aDocument) {
   return StringBeginsWith(path, neterror) || StringBeginsWith(path, certerror);
 }
 
+PresShell* nsCoreUtils::GetPresShellFor(nsINode* aNode) {
+  return aNode->OwnerDoc()->GetPresShell();
+}
+
 bool nsCoreUtils::GetID(nsIContent* aContent, nsAString& aID) {
   return aContent->IsElement() &&
          aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::id, aID);

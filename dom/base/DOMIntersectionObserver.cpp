@@ -76,6 +76,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMIntersectionObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mQueuedEntries)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+DOMIntersectionObserver::DOMIntersectionObserver(
+    already_AddRefed<nsPIDOMWindowInner>&& aOwner,
+    dom::IntersectionCallback& aCb)
+    : mOwner(aOwner),
+      mDocument(mOwner->GetExtantDoc()),
+      mCallback(RefPtr<dom::IntersectionCallback>(&aCb)),
+      mConnected(false) {}
+
 already_AddRefed<DOMIntersectionObserver> DOMIntersectionObserver::Constructor(
     const GlobalObject& aGlobal, dom::IntersectionCallback& aCb,
     ErrorResult& aRv) {
@@ -184,6 +192,8 @@ DOMIntersectionObserver::CreateLazyLoadObserver(Document& aDocument) {
 bool DOMIntersectionObserver::SetRootMargin(const nsAString& aString) {
   return Servo_IntersectionObserverRootMargin_Parse(&aString, &mRootMargin);
 }
+
+nsISupports* DOMIntersectionObserver::GetParentObject() const { return mOwner; }
 
 void DOMIntersectionObserver::GetRootMargin(DOMString& aRetVal) {
   nsString& retVal = aRetVal;

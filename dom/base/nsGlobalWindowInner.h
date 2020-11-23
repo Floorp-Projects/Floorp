@@ -47,7 +47,6 @@
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/TimeStamp.h"
 #include "nsWrapperCacheInlines.h"
-#include "mozilla/dom/Document.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/WindowProxyHolder.h"
@@ -948,9 +947,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   void UpdateTopInnerWindow();
 
-  virtual bool IsInSyncOperation() override {
-    return GetExtantDoc() && GetExtantDoc()->IsInSyncOperation();
-  }
+  virtual bool IsInSyncOperation() override;
 
   bool IsSharedMemoryAllowed() const override;
 

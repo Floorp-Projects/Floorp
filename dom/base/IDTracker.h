@@ -9,11 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/ShadowRoot.h"
-#include "nsAtom.h"
-#include "mozilla/dom/Document.h"
 #include "nsThreadUtils.h"
-#include "plstr.h"
 
 class nsAtom;
 class nsIContent;
@@ -23,6 +19,8 @@ class nsIReferrerInfo;
 
 namespace mozilla {
 namespace dom {
+
+class Document;
 
 /**
  * Class to track what element is referenced by a given ID.
@@ -45,9 +43,9 @@ class IDTracker {
  public:
   typedef mozilla::dom::Element Element;
 
-  IDTracker() = default;
+  IDTracker();
 
-  ~IDTracker() { Unlink(); }
+  ~IDTracker();
 
   /**
    * Find which element, if any, is referenced.
@@ -180,18 +178,7 @@ class IDTracker {
   };
   friend class DocumentLoadNotification;
 
-  DocumentOrShadowRoot* GetWatchDocOrShadowRoot() const {
-    if (!mWatchDocumentOrShadowRoot) {
-      return nullptr;
-    }
-    MOZ_ASSERT(mWatchDocumentOrShadowRoot->IsDocument() ||
-               mWatchDocumentOrShadowRoot->IsShadowRoot());
-    if (ShadowRoot* shadow =
-            ShadowRoot::FromNode(*mWatchDocumentOrShadowRoot)) {
-      return shadow;
-    }
-    return mWatchDocumentOrShadowRoot->AsDocument();
-  }
+  DocumentOrShadowRoot* GetWatchDocOrShadowRoot() const;
 
   RefPtr<nsAtom> mWatchID;
   nsCOMPtr<nsINode>
