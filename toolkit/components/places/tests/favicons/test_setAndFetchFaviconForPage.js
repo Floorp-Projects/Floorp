@@ -72,16 +72,16 @@ add_task(async function() {
 
     let pageGuid;
     let promise = PlacesTestUtils.waitForNotification(
-      "favicon-changed",
-      events =>
-        events.some(e => {
-          if (e.url == pageURI.spec && e.faviconUrl == faviconURI.spec) {
-            pageGuid = e.pageGuid;
-            return true;
-          }
-          return false;
-        }),
-      "places"
+      "onPageChanged",
+      (uri, prop, value, guid) => {
+        pageGuid = guid;
+        return (
+          prop == Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON &&
+          uri.equals(pageURI) &&
+          value == faviconURI.spec
+        );
+      },
+      "history"
     );
 
     PlacesUtils.favicons.setAndFetchFaviconForPage(

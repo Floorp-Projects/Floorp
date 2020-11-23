@@ -66,6 +66,9 @@ var gBookmarksObserver = {
   onItemChanged() {
     return this.validate("onItemChanged", arguments);
   },
+  onItemVisited() {
+    return this.validate("onItemVisited", arguments);
+  },
   onItemMoved() {
     return this.validate("onItemMoved", arguments);
   },
@@ -117,6 +120,9 @@ var gBookmarkSkipObserver = {
   },
   onItemChanged() {
     return this.validate("onItemChanged", arguments);
+  },
+  onItemVisited() {
+    return this.validate("onItemVisited", arguments);
   },
   onItemMoved() {
     return this.validate("onItemMoved", arguments);
@@ -594,6 +600,43 @@ add_task(async function onItemMoved_bookmark() {
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     index: 0,
   });
+  await promise;
+});
+
+add_task(async function onItemMoved_bookmark() {
+  let bm = await PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    index: 0,
+  });
+  let uri = Services.io.newURI(bm.url.href);
+  let promise = Promise.all([
+    gBookmarkSkipObserver.setup(["onItemVisited"]),
+    gBookmarksObserver.setup([
+      {
+        name: "onItemVisited",
+        args: [
+          { name: "itemId", check: v => typeof v == "number" && v > 0 },
+          { name: "visitId", check: v => typeof v == "number" && v > 0 },
+          { name: "time", check: v => typeof v == "number" && v > 0 },
+          {
+            name: "transitionType",
+            check: v => v === PlacesUtils.history.TRANSITION_TYPED,
+          },
+          { name: "uri", check: v => v instanceof Ci.nsIURI && v.equals(uri) },
+          { name: "parentId", check: v => v === gUnfiledFolderId },
+          {
+            name: "guid",
+            check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
+          },
+          {
+            name: "parentGuid",
+            check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
+          },
+        ],
+      },
+    ]),
+  ]);
+  await PlacesTestUtils.addVisits({ uri, transition: TRANSITION_TYPED });
   await promise;
 });
 

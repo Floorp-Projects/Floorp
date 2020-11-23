@@ -73,12 +73,16 @@ var EXPORTED_SYMBOLS = ["History"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -115,14 +119,7 @@ function notify(observers, notification, args = []) {
   for (let observer of observers) {
     try {
       observer[notification](...args);
-    } catch (ex) {
-      if (
-        ex.result != Cr.NS_ERROR_XPC_JSOBJECT_HAS_NO_FUNCTION_NAMED &&
-        (AppConstants.DEBUG || Cu.isInAutomation)
-      ) {
-        Cu.reportError(ex);
-      }
-    }
+    } catch (ex) {}
   }
 }
 
@@ -1037,12 +1034,11 @@ function removeOrphanIcons(db) {
 var notifyCleanup = async function(db, pages, transition = -1) {
   let notifiedCount = 0;
   let observers = PlacesUtils.history.getObservers();
-  let bookmarkObservers = PlacesUtils.bookmarks.getObservers();
 
   let reason = Ci.nsINavHistoryObserver.REASON_DELETED;
 
   for (let page of pages) {
-    let uri = Services.io.newURI(page.url.href);
+    let uri = NetUtil.newURI(page.url.href);
     let guid = page.guid;
     if (page.hasVisits || page.hasForeign) {
       // We have removed all visits, but the page is still alive, e.g.
@@ -1054,34 +1050,6 @@ var notifyCleanup = async function(db, pages, transition = -1) {
         reason,
         transition,
       ]);
-      // Also asynchronously notify bookmarks for this uri if all the visits
-      // have been removed.
-      if (!page.hasVisits) {
-        PlacesUtils.bookmarks
-          .fetch({ url: page.url }, async bookmark => {
-            let itemId = await PlacesUtils.promiseItemId(bookmark.guid);
-            let parentId = await PlacesUtils.promiseItemId(bookmark.parentGuid);
-            notify(
-              bookmarkObservers,
-              "onItemChanged",
-              [
-                itemId,
-                "cleartime",
-                false,
-                "",
-                0,
-                PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                parentId,
-                bookmark.guid,
-                bookmark.parentGuid,
-                "",
-                PlacesUtils.bookmarks.SOURCES.DEFAULT,
-              ],
-              { concurrent: true }
-            );
-          })
-          .catch(Cu.reportError);
-      }
     } else {
       // The page has been entirely removed.
       notify(observers, "onDeleteURI", [uri, guid, reason]);

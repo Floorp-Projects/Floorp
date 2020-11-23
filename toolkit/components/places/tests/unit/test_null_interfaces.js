@@ -21,8 +21,14 @@ var testServices = [
   ],
   [
     "browser/nav-bookmarks-service;1",
-    ["nsINavBookmarksService"],
-    ["createFolder", "getObservers"],
+    ["nsINavBookmarksService", "nsINavHistoryObserver"],
+    [
+      "createFolder",
+      "getObservers",
+      "onFrecencyChanged",
+      "onTitleChanged",
+      "onDeleteURI",
+    ],
   ],
   ["browser/favicon-service;1", ["nsIFaviconService"], []],
   ["browser/tagging-service;1", ["nsITaggingService"], []],

@@ -28,12 +28,15 @@ add_task(async function same_host_redirect() {
   });
 
   let promise = PlacesTestUtils.waitForNotification(
-    "favicon-changed",
-    events =>
-      events.some(
-        e => e.url == srcUrl && e.faviconUrl == SMALLPNG_DATA_URI.spec
-      ),
-    "places"
+    "onPageChanged",
+    (uri, prop, value, guid) => {
+      return (
+        prop == Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON &&
+        uri.spec == srcUrl &&
+        value == SMALLPNG_DATA_URI.spec
+      );
+    },
+    "history"
   );
 
   PlacesUtils.favicons.setAndFetchFaviconForPage(
@@ -72,12 +75,15 @@ add_task(async function other_host_redirect() {
 
   let promise = Promise.race([
     PlacesTestUtils.waitForNotification(
-      "favicon-changed",
-      events =>
-        events.some(
-          e => e.url == srcUrl && e.faviconUrl == SMALLPNG_DATA_URI.spec
-        ),
-      "places"
+      "onPageChanged",
+      (uri, prop, value, guid) => {
+        return (
+          prop == Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON &&
+          uri.spec == srcUrl &&
+          value == SMALLPNG_DATA_URI.spec
+        );
+      },
+      "history"
     ),
     new Promise((resolve, reject) =>
       do_timeout(300, () => reject(new Error("timeout")))

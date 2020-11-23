@@ -73,6 +73,9 @@ class nsTrimInt64HashKey : public PLDHashEntryHdr {
   NS_IMETHOD OnDeleteURI(nsIURI* aURI, const nsACString& aGUID,        \
                          uint16_t aReason) __VA_ARGS__;                \
   NS_IMETHOD OnClearHistory() __VA_ARGS__;                             \
+  NS_IMETHOD OnPageChanged(nsIURI* aURI, uint32_t aChangedAttribute,   \
+                           const nsAString& aNewValue,                 \
+                           const nsACString& aGUID) __VA_ARGS__;       \
   NS_IMETHOD OnDeleteVisits(nsIURI* aURI, bool aPartialRemoval,        \
                             const nsACString& aGUID, uint16_t aReason, \
                             uint32_t aTransitionType) __VA_ARGS__;
@@ -124,16 +127,13 @@ class nsNavHistoryResult final
   void RemoveAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode);
   void RemoveMobilePrefsObserver(nsNavHistoryQueryResultNode* aNode);
   void StopObserving();
-  void EnsureIsObservingBookmarks();
 
   nsresult OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,
                    uint32_t aTransitionType, const nsACString& aGUID,
                    bool aHidden, uint32_t aVisitCount,
                    const nsAString& aLastKnownTitle);
 
-  void OnIconChanged(nsIURI* aURI, nsIURI* aFaviconURI,
-                     const nsACString& aGUID);
-
+ public:
   explicit nsNavHistoryResult(nsNavHistoryContainerResultNode* mRoot,
                               const RefPtr<nsNavHistoryQuery>& aQuery,
                               const RefPtr<nsNavHistoryQueryOptions>& aOptions);
@@ -154,7 +154,8 @@ class nsNavHistoryResult final
 
   // node observers
   bool mIsHistoryObserver;
-  bool mIsBookmarksObserver;
+  bool mIsBookmarkFolderObserver;
+  bool mIsAllBookmarksObserver;
   bool mIsMobilePrefObserver;
 
   typedef nsTArray<RefPtr<nsNavHistoryQueryResultNode> > QueryObserverList;
@@ -180,19 +181,6 @@ class nsNavHistoryResult final
 
   nsMaybeWeakPtrArray<nsINavHistoryResultObserver> mObservers;
   bool mSuppressNotifications;
-
-  // Tracks whether observers for history details were added.
-  bool mIsHistoryDetailsObserver;
-  // Tracks whether any result observer is interested in history details
-  // updates.
-  bool mObserversWantHistoryDetails;
-  /**
-   *  Updates mObserversWantHistoryDetails when observers are added/removed.
-   *  @returns Whether we started observing for history changes.
-   */
-  bool UpdateHistoryDetailsObservers();
-  // Whether NodeHistoryDetailsChanged can be skipped.
-  bool CanSkipHistoryDetailsNotifications() const;
 
   ContainerObserverList mRefreshParticipants;
   void requestRefresh(nsNavHistoryContainerResultNode* aContainer);
@@ -412,6 +400,7 @@ class nsNavHistoryResultNode : public nsINavHistoryResultNode {
   int64_t mTime;
   int32_t mBookmarkIndex;
   int64_t mItemId;
+  int64_t mFolderId;
   int64_t mVisitId;
   int64_t mFromVisitId;
   PRTime mDateAdded;
@@ -614,10 +603,8 @@ class nsNavHistoryContainerResultNode
                                                 void* closure);
 
   // finding children: THESE DO NOT ADDREF
-  nsNavHistoryResultNode* FindChildByURI(const nsACString& aSpec,
-                                         uint32_t* aNodeIndex);
-  void FindChildrenByURI(const nsCString& aSpec,
-                         nsCOMArray<nsNavHistoryResultNode>* aMatches);
+  nsNavHistoryResultNode* FindChildURI(const nsACString& aSpec,
+                                       uint32_t* aNodeIndex);
   // returns the index of the given node, -1 if not found
   int32_t FindChild(nsNavHistoryResultNode* aNode) {
     return mChildren.IndexOf(aNode);
@@ -700,6 +687,7 @@ class nsNavHistoryQueryResultNode final
                        uint16_t aItemType, nsIURI* aURI, PRTime aDateAdded,
                        const nsACString& aGUID, const nsACString& aParentGUID,
                        uint16_t aSource);
+
   nsresult OnItemRemoved(int64_t aItemId, int64_t aParentFolder, int32_t aIndex,
                          uint16_t aItemType, nsIURI* aURI,
                          const nsACString& aGUID, const nsACString& aParentGUID,
@@ -790,7 +778,6 @@ class nsNavHistoryFolderResultNode final
                          uint16_t aItemType, nsIURI* aURI,
                          const nsACString& aGUID, const nsACString& aParentGUID,
                          uint16_t aSource);
-  nsresult OnItemVisited(nsIURI* aURI, int64_t aVisitId, PRTime aTime);
   virtual void OnRemoving() override;
 
   // this indicates whether the folder contents are valid, they don't go away

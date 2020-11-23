@@ -452,6 +452,7 @@ TaggingService.prototype = {
     }
   },
 
+  onItemVisited() {},
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
 

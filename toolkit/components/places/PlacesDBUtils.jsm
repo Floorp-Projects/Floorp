@@ -104,10 +104,7 @@ var PlacesDBUtils = {
    */
   async _refreshUI() {
     // Send batch update notifications to update the UI.
-    let observers = [
-      ...PlacesUtils.history.getObservers(),
-      ...PlacesUtils.bookmarks.getObservers(),
-    ];
+    let observers = PlacesUtils.history.getObservers();
     for (let observer of observers) {
       observer.onBeginUpdateBatch();
       observer.onEndUpdateBatch();

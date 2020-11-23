@@ -28,19 +28,53 @@ add_task(async function setup() {
   Assert.equal(gBookmarkGuids.length, 2);
 });
 
+add_task(async function test_add_visit() {
+  // Add a visit to the bookmark and wait for the observer.
+  let guids = new Set(gBookmarkGuids);
+  Assert.equal(guids.size, 2);
+  let promiseNotifications = PlacesTestUtils.waitForNotification(
+    "onItemVisited",
+    (id, visitId, time, transition, uri, parentId, guid, parentGuid) => {
+      info(`Got a visit notification for ${guid}.`);
+      Assert.ok(visitId > 0);
+      guids.delete(guid);
+      return guids.size == 0;
+    }
+  );
+
+  await PlacesTestUtils.addVisits({
+    uri: "http://book.ma.rk/",
+    transition: TRANSITION_TYPED,
+    visitDate: NOW,
+  });
+  await promiseNotifications;
+});
+
 add_task(async function test_add_icon() {
   // Add a visit to the bookmark and wait for the observer.
   let guids = new Set(gBookmarkGuids);
   Assert.equal(guids.size, 2);
   let promiseNotifications = PlacesTestUtils.waitForNotification(
-    "favicon-changed",
-    events =>
-      events.some(
-        event =>
-          event.url == "http://book.ma.rk/" &&
-          event.faviconUrl.startsWith("data:image/png;base64")
-      ),
-    "places"
+    "onItemChanged",
+    (
+      id,
+      property,
+      isAnno,
+      newValue,
+      lastModified,
+      itemType,
+      parentId,
+      guid
+    ) => {
+      info(`Got a changed notification for ${guid}.`);
+      Assert.equal(property, "favicon");
+      Assert.ok(!isAnno);
+      Assert.equal(newValue, SMALLPNG_DATA_URI.spec);
+      Assert.equal(lastModified, 0);
+      Assert.equal(itemType, PlacesUtils.bookmarks.TYPE_BOOKMARK);
+      guids.delete(guid);
+      return guids.size == 0;
+    }
   );
 
   PlacesUtils.favicons.setAndFetchFaviconForPage(
@@ -83,4 +117,32 @@ add_task(async function test_remove_page() {
 
   await PlacesUtils.history.remove("http://book.ma.rk/");
   await promiseNotifications;
+});
+
+add_task(async function shutdown() {
+  // Check that async observers don't try to create async statements after
+  // shutdown.  That would cause assertions, since the async thread is gone
+  // already.  Note that in such a case the notifications are not fired, so we
+  // cannot test for them.
+  // Put an history notification that triggers AsyncGetBookmarksForURI between
+  // asyncClose() and the actual connection closing.  Enqueuing a main-thread
+  // event as a shutdown blocker should ensure it runs before
+  // places-connection-closed.
+  // Notice this code is not using helpers cause it depends on a very specific
+  // order, a change in the helpers code could make this test useless.
+
+  let shutdownClient = PlacesUtils.history.shutdownClient.jsclient;
+  shutdownClient.addBlocker("Places Expiration: shutdown", function() {
+    Services.tm.mainThread.dispatch(() => {
+      // WARNING: this is very bad, never use out of testing code.
+      PlacesUtils.bookmarks
+        .QueryInterface(Ci.nsINavHistoryObserver)
+        .onPageChanged(
+          NetUtil.newURI("http://book.ma.rk/"),
+          Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON,
+          "test",
+          "test"
+        );
+    }, Ci.nsIThread.DISPATCH_NORMAL);
+  });
 });

@@ -21,12 +21,15 @@ add_task(async function() {
   // point we can be sure previous calls didn't send a notification.
   let lastPageURI = Services.io.newURI("http://example.com/verification");
   let promiseIconChanged = PlacesTestUtils.waitForNotification(
-    "favicon-changed",
-    events =>
-      events.some(
-        e => e.url == lastPageURI.spec && e.faviconUrl == SMALLPNG_DATA_URI.spec
-      ),
-    "places"
+    "onPageChanged",
+    (uri, prop, value) => {
+      return (
+        prop == Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON &&
+        uri.equals(lastPageURI) &&
+        value == SMALLPNG_DATA_URI.spec
+      );
+    },
+    "history"
   );
 
   info("Test null page uri");

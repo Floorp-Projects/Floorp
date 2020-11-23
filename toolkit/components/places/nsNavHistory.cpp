@@ -37,7 +37,6 @@
 #include "nsThreadUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsMathUtils.h"
-#include "nsReadableUtils.h"
 #include "mozilla/storage.h"
 #include "mozilla/Preferences.h"
 #include <algorithm>
@@ -2920,6 +2919,7 @@ nsresult nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
 
     if (itemId != -1) {
       resultNode->mItemId = itemId;
+      resultNode->mFolderId = parentId;
       resultNode->mDateAdded = aRow->AsInt64(kGetInfoIndex_ItemDateAdded);
       resultNode->mLastModified = aRow->AsInt64(kGetInfoIndex_ItemLastModified);
 
@@ -3213,6 +3213,15 @@ nsresult nsNavHistory::URIToResultNode(nsIURI* aURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return RowToResult(row, aOptions, aResult);
+}
+
+void nsNavHistory::SendPageChangedNotification(nsIURI* aURI,
+                                               uint32_t aChangedAttribute,
+                                               const nsAString& aNewValue,
+                                               const nsACString& aGUID) {
+  MOZ_ASSERT(!aGUID.IsEmpty());
+  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver,
+                   OnPageChanged(aURI, aChangedAttribute, aNewValue, aGUID));
 }
 
 void nsNavHistory::GetAgeInDaysString(int32_t aInt, const char* aName,

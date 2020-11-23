@@ -172,6 +172,8 @@ let observer = new (class extends EventEmitter {
     }
   }
 
+  onItemVisited() {}
+
   onItemMoved(
     id,
     oldParentId,

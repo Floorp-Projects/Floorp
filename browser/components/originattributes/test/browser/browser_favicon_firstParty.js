@@ -11,9 +11,6 @@ const CC = Components.Constructor;
 const { PlacesUtils } = ChromeUtils.import(
   "resource://gre/modules/PlacesUtils.jsm"
 );
-const { PlacesTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PlacesTestUtils.jsm"
-);
 
 let EventUtils = {};
 Services.scriptloader.loadSubScript(
@@ -174,11 +171,21 @@ function waitOnFaviconResponse(aFaviconURL) {
 }
 
 function waitOnFaviconLoaded(aFaviconURL) {
-  return PlacesTestUtils.waitForNotification(
-    "favicon-changed",
-    events => events.some(e => e.faviconUrl == aFaviconURL),
-    "places"
-  );
+  return new Promise(resolve => {
+    let observer = {
+      onPageChanged(uri, attr, value, id) {
+        if (
+          attr === Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON &&
+          value === aFaviconURL
+        ) {
+          resolve();
+          PlacesUtils.history.removeObserver(observer, false);
+        }
+      },
+    };
+
+    PlacesUtils.history.addObserver(observer);
+  });
 }
 
 async function openTab(aURL) {

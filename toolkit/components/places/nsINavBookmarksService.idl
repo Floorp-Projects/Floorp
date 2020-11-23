@@ -72,6 +72,7 @@ interface nsINavBookmarkObserver : nsISupports
    *       guid          | The new bookmark guid.
    *       cleartime     | Empty string (all visits to this item were removed).
    *       title         | The new title.
+   *       favicon       | The "moz-anno" URL of the new favicon.
    *       uri           | new URL.
    *       tags          | Empty string (tags for this item changed)
    *       dateAdded     | PRTime (as string) when the item was first added.
@@ -82,6 +83,7 @@ interface nsINavBookmarkObserver : nsISupports
    *       guid          | The old bookmark guid.
    *       cleartime     | Empty string (currently unused).
    *       title         | Empty string (currently unused).
+   *       favicon       | Empty string (currently unused).
    *       uri           | old URL.
    *       tags          | Empty string (currently unused).
    *       dateAdded     | Empty string (currently unused).
@@ -98,6 +100,45 @@ interface nsINavBookmarkObserver : nsISupports
                      in ACString aParentGuid,
                      in AUTF8String aOldValue,
                      in unsigned short aSource);
+
+  /**
+   * Notifies that the item was visited.  Can be invoked only for TYPE_BOOKMARK
+   * items.
+   *
+   * @param aItemId
+   *        The id of the bookmark that was visited.
+   * @param aVisitId
+   *        The id of the visit.
+   * @param aTime
+   *        The time of the visit.
+   * @param aTransitionType
+   *        The transition for the visit.  See nsINavHistoryService::TRANSITION_*
+   *        constants for a list of possible values.
+   * @param aURI
+   *        The nsIURI for this bookmark.
+   * @param aParentId
+   *        The id of the folder containing the item.
+   * @param aGuid
+   *        The unique ID associated with the item.
+   * @param aParentGuid
+   *        The unique ID associated with the item's parent.
+   *
+   * @see onItemChanged with property = "cleartime" for when all visits to an
+   *      item are removed.
+   *
+   * @note The reported time is the time of the visit that was added, which may
+   *       be well in the past since the visit time can be specified.  This
+   *       means that the visit the observer is told about may not be the most
+   *       recent visit for that page.
+   */
+  void onItemVisited(in long long aItemId,
+                     in long long aVisitId,
+                     in PRTime aTime,
+                     in unsigned long aTransitionType,
+                     in nsIURI aURI,
+                     in long long aParentId,
+                     in ACString aGuid,
+                     in ACString aParentGuid);
 
   /**
    * Notifies that an item has been moved.
