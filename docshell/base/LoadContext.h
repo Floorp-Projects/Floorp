@@ -11,9 +11,12 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BasePrincipal.h"
 #include "nsIWeakReferenceUtils.h"
-#include "mozilla/dom/Element.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadContext.h"
+
+namespace mozilla::dom {
+class Element;
+}
 
 namespace mozilla {
 

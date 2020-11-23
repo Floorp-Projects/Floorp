@@ -11,8 +11,6 @@
 #include "mozilla/a11y/Role.h"
 #include "mozilla/a11y/States.h"
 
-#include "mozilla/dom/Element.h"
-
 #include "mozilla/UniquePtr.h"
 
 #include "nsIContent.h"
@@ -24,6 +22,10 @@ struct nsRoleMapEntry;
 
 class nsIFrame;
 class nsIPersistentProperties;
+
+namespace mozilla::dom {
+class Element;
+}
 
 namespace mozilla {
 namespace a11y {
@@ -161,7 +163,7 @@ class Accessible : public nsISupports {
   virtual nsINode* GetNode() const;
 
   nsIContent* GetContent() const { return mContent; }
-  dom::Element* Elm() const { return dom::Element::FromNodeOrNull(mContent); }
+  dom::Element* Elm() const;
 
   /**
    * Return node type information of DOM node associated with the accessible.

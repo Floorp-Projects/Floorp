@@ -260,6 +260,20 @@ void ScriptLoadRequest::PrioritizeAsPreload() {
   }
 }
 
+nsIScriptElement* ScriptLoadRequest::GetScriptElement() const {
+  nsCOMPtr<nsIScriptElement> scriptElement =
+      do_QueryInterface(mFetchOptions->mElement);
+  return scriptElement;
+}
+
+void ScriptLoadRequest::SetIsLoadRequest(nsIScriptElement* aElement) {
+  MOZ_ASSERT(aElement);
+  MOZ_ASSERT(!GetScriptElement());
+  MOZ_ASSERT(IsPreload());
+  mFetchOptions->mElement = do_QueryInterface(aElement);
+  mFetchOptions->mIsPreload = false;
+}
+
 //////////////////////////////////////////////////////////////
 // ScriptLoadRequestList
 //////////////////////////////////////////////////////////////

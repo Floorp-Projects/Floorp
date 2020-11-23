@@ -21,7 +21,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WindowProxyHolder.h"
@@ -61,6 +60,7 @@ namespace dom {
 class ChromeMessageSender;
 class ContentParent;
 class Document;
+class Element;
 class TabListener;
 class InProcessBrowserChildMessageManager;
 class MessageSender;
@@ -262,7 +262,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
    */
   bool OwnerIsMozBrowserFrame();
 
-  nsIContent* GetParentObject() const { return mOwnerContent; }
+  nsIContent* GetParentObject() const;
 
   /**
    * MessageManagerCallback methods that we override.
@@ -313,17 +313,13 @@ class nsFrameLoader final : public nsStubMutationObserver,
    * Return the primary frame for our owning content, or null if it
    * can't be found.
    */
-  nsIFrame* GetPrimaryFrameOfOwningContent() const {
-    return mOwnerContent ? mOwnerContent->GetPrimaryFrame() : nullptr;
-  }
+  nsIFrame* GetPrimaryFrameOfOwningContent() const;
 
   /**
    * Return the document that owns this, or null if we don't have
    * an owner.
    */
-  Document* GetOwnerDoc() const {
-    return mOwnerContent ? mOwnerContent->OwnerDoc() : nullptr;
-  }
+  Document* GetOwnerDoc() const;
 
   /**
    * Returns whether this frame is a remote frame.

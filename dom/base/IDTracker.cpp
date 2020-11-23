@@ -188,6 +188,8 @@ void IDTracker::Unlink() {
   mReferencingImage = false;
 }
 
+void IDTracker::ElementChanged(Element* aFrom, Element* aTo) { mElement = aTo; }
+
 bool IDTracker::Observe(Element* aOldElement, Element* aNewElement,
                         void* aData) {
   IDTracker* p = static_cast<IDTracker*>(aData);
@@ -206,6 +208,23 @@ bool IDTracker::Observe(Element* aOldElement, Element* aNewElement,
     p->mWatchID = nullptr;
   }
   return keepTracking;
+}
+
+IDTracker::ChangeNotification::ChangeNotification(IDTracker* aTarget,
+                                                  Element* aFrom, Element* aTo)
+    : mozilla::Runnable("IDTracker::ChangeNotification"),
+      Notification(aTarget),
+      mFrom(aFrom),
+      mTo(aTo) {}
+
+IDTracker::ChangeNotification::~ChangeNotification() = default;
+
+void IDTracker::ChangeNotification::SetTo(Element* aTo) { mTo = aTo; }
+
+void IDTracker::ChangeNotification::Clear() {
+  Notification::Clear();
+  mFrom = nullptr;
+  mTo = nullptr;
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(IDTracker::ChangeNotification, mozilla::Runnable)

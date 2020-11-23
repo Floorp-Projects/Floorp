@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_PopupBlocker_h
 #define mozilla_dom_PopupBlocker_h
 
-#include "Element.h"
 #include "mozilla/BasicEvents.h"
 
 class nsIPrincipal;

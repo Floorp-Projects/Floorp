@@ -10,12 +10,15 @@
 #  include "nsCOMPtr.h"
 #endif
 
-#include "mozilla/HTMLEditor.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/Document.h"
 
 class nsIDocShell;
 class nsEditingSession;
+
+namespace mozilla {
+class HTMLEditor;
+}
 
 class nsDocShellEditorData {
  public:

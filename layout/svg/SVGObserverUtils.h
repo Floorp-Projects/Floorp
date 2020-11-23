@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/IDTracker.h"
 #include "FrameProperties.h"
-#include "mozilla/dom/Element.h"
 #include "nsID.h"
 #include "nsIFrame.h"  // only for LayoutFrameType
 #include "nsIMutationObserver.h"
@@ -35,6 +34,7 @@ class SVGPaintServerFrame;
 
 namespace dom {
 class CanvasRenderingContext2D;
+class Element;
 class SVGGeometryElement;
 }  // namespace dom
 }  // namespace mozilla

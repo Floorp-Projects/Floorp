@@ -7,7 +7,6 @@
 #ifndef mozilla_RangeUtils_h
 #define mozilla_RangeUtils_h
 
-#include "Element.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RangeBoundary.h"
 #include "nsIContent.h"

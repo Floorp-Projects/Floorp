@@ -12,7 +12,6 @@
 
 #include "nsCOMPtr.h"
 
-#include "mozilla/dom/Element.h"
 #include "nsIDOMEventListener.h"
 #include "nsCycleCollectionParticipant.h"
 
@@ -20,6 +19,7 @@ class nsIContent;
 
 namespace mozilla {
 namespace dom {
+class Element;
 class MouseEvent;
 }  // namespace dom
 }  // namespace mozilla

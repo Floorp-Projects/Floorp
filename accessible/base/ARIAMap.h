@@ -14,9 +14,12 @@
 
 #include "nsAtom.h"
 #include "nsIContent.h"
-#include "mozilla/dom/Element.h"
 
 class nsINode;
+
+namespace mozilla::dom {
+class Element;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Value constants
@@ -276,10 +279,7 @@ bool HasDefinedARIAHidden(nsIContent* aContent);
  */
 class AttrIterator {
  public:
-  explicit AttrIterator(nsIContent* aContent)
-      : mElement(dom::Element::FromNode(aContent)), mAttrIdx(0) {
-    mAttrCount = mElement ? mElement->GetAttrCount() : 0;
-  }
+  explicit AttrIterator(nsIContent* aContent);
 
   bool Next(nsAString& aAttrName, nsAString& aAttrValue);
 

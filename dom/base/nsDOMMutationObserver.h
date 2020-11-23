@@ -12,7 +12,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/MutationObserverBinding.h"
 #include "mozilla/dom/Nullable.h"
@@ -33,6 +32,10 @@ class nsIPrincipal;
 
 class nsDOMMutationObserver;
 using mozilla::dom::MutationObservingInfo;
+
+namespace mozilla::dom {
+class Element;
+}
 
 class nsDOMMutationRecord final : public nsISupports, public nsWrapperCache {
   virtual ~nsDOMMutationRecord() = default;
@@ -247,33 +250,7 @@ class nsMutationReceiverBase : public nsStubAnimationObserver {
   bool IsObservable(nsIContent* aContent);
 
   bool ObservesAttr(nsINode* aRegisterTarget, mozilla::dom::Element* aElement,
-                    int32_t aNameSpaceID, nsAtom* aAttr) {
-    if (mParent) {
-      return mParent->ObservesAttr(aRegisterTarget, aElement, aNameSpaceID,
-                                   aAttr);
-    }
-    if (!Attributes() || (!Subtree() && aElement != Target()) ||
-        (Subtree() &&
-         aRegisterTarget->SubtreeRoot() != aElement->SubtreeRoot()) ||
-        !IsObservable(aElement)) {
-      return false;
-    }
-    if (AllAttributes()) {
-      return true;
-    }
-
-    if (aNameSpaceID != kNameSpaceID_None) {
-      return false;
-    }
-
-    nsTArray<RefPtr<nsAtom>>& filters = AttributeFilter();
-    for (size_t i = 0; i < filters.Length(); ++i) {
-      if (filters[i] == aAttr) {
-        return true;
-      }
-    }
-    return false;
-  }
+                    int32_t aNameSpaceID, nsAtom* aAttr);
 
   // The target for the MutationObserver.observe() method.
   nsINode* mTarget;

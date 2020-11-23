@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/RefPtr.h"
 #include "nsCSSPseudoElements.h"
 #include "nsWrapperCache.h"
@@ -49,10 +48,7 @@ class CSSPseudoElement final : public nsWrapperCache {
     aRetVal.Append(
         nsDependentAtomString(nsCSSPseudoElements::GetPseudoAtom(mPseudoType)));
   }
-  already_AddRefed<dom::Element> Element() const {
-    RefPtr<dom::Element> retVal(mOriginatingElement);
-    return retVal.forget();
-  }
+  already_AddRefed<dom::Element> Element() const;
 
   // Given an element:pseudoType pair, returns the CSSPseudoElement stored as a
   // property on |aElement|. If there is no CSSPseudoElement for the specified

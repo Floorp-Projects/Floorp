@@ -2130,6 +2130,10 @@ nsIFrame* Accessible::GetFrame() const {
 
 nsINode* Accessible::GetNode() const { return mContent; }
 
+dom::Element* Accessible::Elm() const {
+  return dom::Element::FromNodeOrNull(mContent);
+}
+
 void Accessible::Language(nsAString& aLanguage) {
   aLanguage.Truncate();
 

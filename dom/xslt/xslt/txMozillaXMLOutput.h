@@ -14,7 +14,6 @@
 #include "nsICSSLoaderObserver.h"
 #include "txStack.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/Element.h"
 
 class nsIContent;
 class nsAtom;
@@ -26,6 +25,7 @@ namespace mozilla {
 namespace dom {
 class Document;
 class DocumentFragment;
+class Element;
 }  // namespace dom
 }  // namespace mozilla
 

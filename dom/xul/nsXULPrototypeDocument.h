@@ -14,7 +14,6 @@
 #include "nsISerializable.h"
 #include "nsCycleCollectionParticipant.h"
 #include <functional>
-#include "mozilla/dom/Element.h"
 
 class nsAtom;
 class nsIPrincipal;
@@ -22,6 +21,10 @@ class nsIURI;
 class nsNodeInfoManager;
 class nsXULPrototypeElement;
 class nsXULPrototypePI;
+
+namespace mozilla::dom {
+class Element;
+}
 
 /**
  * A "prototype" document that stores shared document information
