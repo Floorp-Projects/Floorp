@@ -7,35 +7,56 @@
 #ifndef xpcpublic_h
 #define xpcpublic_h
 
-#include "jsapi.h"
-#include "js/BuildId.h"  // JS::BuildIdCharVector
-#include "js/HeapAPI.h"
+#include <cstddef>
+#include <cstdint>
+#include "ErrorList.h"
+#include "js/BuildId.h"
+#include "js/ErrorReport.h"
 #include "js/GCAPI.h"
-#include "js/Object.h"  // JS::GetCompartment
-#include "js/Proxy.h"
-#include "js/String.h"  // JS::IsExternalString
-#include "js/Wrapper.h"
-
+#include "js/Object.h"
+#include "js/RootingAPI.h"
+#include "js/String.h"
+#include "js/TypeDecls.h"
+#include "js/Utility.h"
+#include "js/Value.h"
+#include "jsapi.h"
+#include "jsfriendapi.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/dom/DOMString.h"
+#include "mozilla/fallible.h"
 #include "nsAtom.h"
+#include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsIURI.h"
-#include "nsIPrincipal.h"
-#include "nsIGlobalObject.h"
-#include "nsWrapperCache.h"
-#include "nsString.h"
-#include "nsTArray.h"
-#include "mozilla/dom/JSSlots.h"
-#include "mozilla/fallible.h"
-#include "nsMathUtils.h"
 #include "nsStringBuffer.h"
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/Preferences.h"
+#include "nsStringFwd.h"
+#include "nsTArray.h"
+#include "nsWrapperCache.h"
 
+class JSObject;
+class JSString;
+class JSTracer;
 class nsGlobalWindowInner;
+class nsIAddonInterposition;
 class nsIGlobalObject;
-class nsIPrincipal;
 class nsIHandleReportCallback;
+class nsIPrincipal;
+class nsPIDOMWindowInner;
+struct JSContext;
+struct nsID;
 struct nsXPTInterfaceInfo;
+
+namespace JS {
+class Compartment;
+class Realm;
+class RealmOptions;
+class Value;
+struct RuntimeStats;
+}  // namespace JS
 
 namespace mozilla {
 class BasePrincipal;
