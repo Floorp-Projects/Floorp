@@ -2,12 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-using mozilla::dom::GamepadServiceType from "mozilla/dom/GamepadMessageUtils.h";
-using mozilla::dom::GamepadPoseState from "mozilla/dom/GamepadMessageUtils.h";
-using mozilla::dom::GamepadTouchState from "mozilla/dom/GamepadMessageUtils.h";
-using mozilla::dom::GamepadLightIndicatorType from "mozilla/dom/GamepadMessageUtils.h";
-using mozilla::dom::GamepadMappingType from "mozilla/dom/GamepadMessageUtils.h";
-using mozilla::dom::GamepadHand from "mozilla/dom/GamepadMessageUtils.h";
+include "mozilla/dom/GamepadMessageUtils.h";
+
+using mozilla::dom::GamepadServiceType from "mozilla/dom/GamepadServiceType.h";
+using mozilla::dom::GamepadPoseState from "mozilla/dom/GamepadPoseState.h";
+using mozilla::dom::GamepadTouchState from "mozilla/dom/GamepadTouchState.h";
+using mozilla::dom::GamepadLightIndicatorType from "mozilla/dom/GamepadLightIndicatorBinding.h";
+using mozilla::dom::GamepadMappingType from "mozilla/dom/GamepadBinding.h";
+using mozilla::dom::GamepadHand from "mozilla/dom/GamepadBinding.h";
 
 
 namespace mozilla {
