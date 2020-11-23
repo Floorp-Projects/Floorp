@@ -309,16 +309,6 @@ interface nsINavHistoryQueryResultNode : nsINavHistoryContainerResultNode
 interface nsINavHistoryResultObserver : nsISupports
 {
   /**
-   * Whether the observer is interested into history details changes.
-   * Those include visits additions and removals. If the observer doesn't
-   * provide this attribute, it will default to true.
-   * In practice, the observer won't receive nodeHistoryDetailsChanged.
-   * Note: this is only read when the observer is added, it cannot be changed
-   * dynamically.
-   */
-  readonly attribute boolean observeHistoryDetails;
-
-  /**
    * Called when 'aItem' is inserted into 'aParent' at index 'aNewIndex'.
    * The item previously at index (if any) and everything below it will have
    * been shifted down by one. The item may be a container or a leaf.
@@ -668,6 +658,29 @@ interface nsINavHistoryObserver : nsISupports
    * Notification that all of history is being deleted.
    */
   void onClearHistory();
+
+  /**
+   * onPageChanged attribute indicating that favicon has been updated.
+   * aNewValue parameter will be set to the new favicon URI string.
+   */
+  const unsigned long ATTRIBUTE_FAVICON = 3;
+
+  /**
+   * An attribute of this page changed.
+   *
+   * @param aURI
+   *        The URI of the page on which an attribute changed.
+   * @param aChangedAttribute
+   *        The attribute whose value changed.  See ATTRIBUTE_* constants.
+   * @param aNewValue
+   *        The attribute's new value.
+   * @param aGUID
+   *        The unique ID associated with the page.
+   */
+  void onPageChanged(in nsIURI aURI,
+                     in unsigned long aChangedAttribute,
+                     in AString aNewValue,
+                     in ACString aGUID);
 
   /**
    * Called when some visits of an history entry are expired.

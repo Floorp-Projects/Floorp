@@ -122,6 +122,7 @@ add_task(async function test_notifications_onDeleteVisits() {
         do_check_valid_places_guid(aGUID);
         Assert.equal(aReason, Ci.nsINavHistoryObserver.REASON_EXPIRED);
       },
+      onPageChanged() {},
       onDeleteVisits(aURI, aPartialRemoval, aGUID, aReason) {
         currentTest.receivedNotifications++;
         do_check_guid_for_uri(aURI, aGUID);

@@ -100,9 +100,11 @@ FaviconObserver.prototype = {
 
 function waitOnFaviconLoaded(aFaviconURL) {
   return PlacesTestUtils.waitForNotification(
-    "favicon-changed",
-    events => events.some(e => e.faviconUrl == aFaviconURL),
-    "places"
+    "onPageChanged",
+    (uri, attr, value, id) =>
+      attr === Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON &&
+      value === aFaviconURL,
+    "history"
   );
 }
 

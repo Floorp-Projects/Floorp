@@ -1270,6 +1270,7 @@ DownloadHistoryObserver.prototype = {
   onTitleChanged() {},
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
+  onPageChanged() {},
   onDeleteVisits() {},
 };
 
