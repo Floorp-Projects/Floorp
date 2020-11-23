@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_PushSubscription_h
 #define mozilla_dom_PushSubscription_h
 
-#include "jsapi.h"
+#include "js/RootingAPI.h"
 #include "nsCOMPtr.h"
 #include "nsWrapperCache.h"
 

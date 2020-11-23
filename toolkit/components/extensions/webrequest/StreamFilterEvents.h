@@ -11,7 +11,8 @@
 #include "mozilla/dom/StreamFilterDataEventBinding.h"
 #include "mozilla/extensions/StreamFilter.h"
 
-#include "jsapi.h"
+#include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
 
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/Event.h"

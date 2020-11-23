@@ -187,6 +187,21 @@ class TempAllocPolicy : public AllocPolicyBase {
   }
 };
 
+/*
+ * A replacement for MallocAllocPolicy that allocates in the JS heap and adds no
+ * extra behaviours.
+ *
+ * This is currently used for allocating source buffers for parsing. Since these
+ * are temporary and will not be freed by GC, the memory is not tracked by the
+ * usual accounting.
+ */
+class MallocAllocPolicy : public AllocPolicyBase {
+ public:
+  void reportAllocOverflow() const {}
+
+  MOZ_MUST_USE bool checkSimulatedOOM() const { return true; }
+};
+
 } /* namespace js */
 
 #endif /* js_AllocPolicy_h */

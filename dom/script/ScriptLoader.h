@@ -36,6 +36,8 @@ class nsIURI;
 
 namespace JS {
 
+class CompileOptions;
+
 template <typename UnitT>
 class SourceText;
 
