@@ -12,7 +12,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CORSMode.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
@@ -30,6 +29,7 @@ class nsICacheInfoChannel;
 namespace mozilla {
 namespace dom {
 
+class Element;
 class ModuleLoadRequest;
 class ScriptLoadRequestList;
 
@@ -248,11 +248,7 @@ class ScriptLoadRequest
   enum ReferrerPolicy ReferrerPolicy() const {
     return mFetchOptions->mReferrerPolicy;
   }
-  nsIScriptElement* GetScriptElement() const {
-    nsCOMPtr<nsIScriptElement> scriptElement =
-        do_QueryInterface(mFetchOptions->mElement);
-    return scriptElement;
-  }
+  nsIScriptElement* GetScriptElement() const;
   nsIPrincipal* TriggeringPrincipal() const {
     return mFetchOptions->mTriggeringPrincipal;
   }
@@ -265,13 +261,7 @@ class ScriptLoadRequest
   }
 
   // Make a preload request into an actual load request for the given element.
-  void SetIsLoadRequest(nsIScriptElement* aElement) {
-    MOZ_ASSERT(aElement);
-    MOZ_ASSERT(!GetScriptElement());
-    MOZ_ASSERT(IsPreload());
-    mFetchOptions->mElement = do_QueryInterface(aElement);
-    mFetchOptions->mIsPreload = false;
-  }
+  void SetIsLoadRequest(nsIScriptElement* aElement);
 
   FromParser GetParserCreated() const {
     nsIScriptElement* element = GetScriptElement();

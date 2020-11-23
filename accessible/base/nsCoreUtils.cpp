@@ -542,6 +542,12 @@ void nsCoreUtils::ScrollTo(PresShell* aPresShell, nsIContent* aContent,
                                     ScrollFlags::ScrollOverflowHidden);
 }
 
+bool nsCoreUtils::IsHTMLTableHeader(nsIContent* aContent) {
+  return aContent->NodeInfo()->Equals(nsGkAtoms::th) ||
+         (aContent->IsElement() &&
+          aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::scope));
+}
+
 bool nsCoreUtils::IsWhitespaceString(const nsAString& aString) {
   nsAString::const_char_iterator iterBegin, iterEnd;
 

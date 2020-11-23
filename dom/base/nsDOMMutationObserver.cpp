@@ -72,6 +72,36 @@ bool nsMutationReceiverBase::IsObservable(nsIContent* aContent) {
          (Observer()->IsChrome() || !aContent->IsInNativeAnonymousSubtree());
 }
 
+bool nsMutationReceiverBase::ObservesAttr(nsINode* aRegisterTarget,
+                                          mozilla::dom::Element* aElement,
+                                          int32_t aNameSpaceID, nsAtom* aAttr) {
+  if (mParent) {
+    return mParent->ObservesAttr(aRegisterTarget, aElement, aNameSpaceID,
+                                 aAttr);
+  }
+  if (!Attributes() || (!Subtree() && aElement != Target()) ||
+      (Subtree() &&
+       aRegisterTarget->SubtreeRoot() != aElement->SubtreeRoot()) ||
+      !IsObservable(aElement)) {
+    return false;
+  }
+  if (AllAttributes()) {
+    return true;
+  }
+
+  if (aNameSpaceID != kNameSpaceID_None) {
+    return false;
+  }
+
+  nsTArray<RefPtr<nsAtom>>& filters = AttributeFilter();
+  for (size_t i = 0; i < filters.Length(); ++i) {
+    if (filters[i] == aAttr) {
+      return true;
+    }
+  }
+  return false;
+}
+
 NS_IMPL_ADDREF(nsMutationReceiver)
 NS_IMPL_RELEASE(nsMutationReceiver)
 

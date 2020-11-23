@@ -128,6 +128,14 @@ AnimationCollection<AnimationType>::GetPropertyAtomForPseudoType(
   return propName;
 }
 
+template <class AnimationType>
+void AnimationCollection<AnimationType>::Destroy() {
+  mCalledDestroy = true;
+
+  // This will call our destructor.
+  mElement->RemoveProperty(mElementProperty);
+}
+
 // Explicit class instantiations
 
 template class AnimationCollection<dom::CSSAnimation>;

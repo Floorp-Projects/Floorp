@@ -62,6 +62,10 @@ CharacterData::~CharacterData() {
   }
 }
 
+Element* CharacterData::GetNameSpaceElement() {
+  return Element::FromNodeOrNull(GetParentNode());
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(CharacterData)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(CharacterData)

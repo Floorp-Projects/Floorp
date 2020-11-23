@@ -8,7 +8,6 @@
 #include "nsAtom.h"
 #include "nsHashKeys.h"
 #include "nsIPrincipal.h"
-#include "mozilla/dom/Element.h"
 #include "nsTHashtable.h"
 
 class nsIContent;
@@ -20,7 +19,8 @@ class DeclarationBlock;
 
 namespace mozilla::dom {
 class DocumentFragment;
-}  // namespace mozilla::dom
+class Element;
+}
 
 /**
  * See the documentation of nsIParserUtils::sanitize for documentation

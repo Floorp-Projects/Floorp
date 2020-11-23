@@ -8,7 +8,6 @@
 #define mozilla_dom_HTMLFormSubmission_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/HTMLDialogElement.h"
 #include "nsCOMPtr.h"
@@ -25,6 +24,7 @@ namespace dom {
 
 class Blob;
 class Directory;
+class Element;
 class HTMLFormElement;
 
 /**
@@ -122,14 +122,7 @@ class HTMLFormSubmission {
    */
   HTMLFormSubmission(nsIURI* aActionURL, const nsAString& aTarget,
                      mozilla::NotNull<const mozilla::Encoding*> aEncoding,
-                     Element* aSubmitter)
-      : mActionURL(aActionURL),
-        mTarget(aTarget),
-        mEncoding(aEncoding),
-        mSubmitter(aSubmitter),
-        mInitiatedFromUserInput(UserActivation::IsHandlingUserInput()) {
-    MOZ_COUNT_CTOR(HTMLFormSubmission);
-  }
+                     Element* aSubmitter);
 
   // The action url.
   nsCOMPtr<nsIURI> mActionURL;

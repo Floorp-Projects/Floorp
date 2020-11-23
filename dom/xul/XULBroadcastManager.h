@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_XULBroadcastManager_h
 #define mozilla_dom_XULBroadcastManager_h
 
-#include "mozilla/dom/Element.h"
 #include "nsAtom.h"
 #include "nsTArray.h"
 
@@ -75,47 +74,7 @@ class XULBroadcastManager final {
    */
   PLDHashTable* mBroadcasterMap;
 
-  class nsDelayedBroadcastUpdate {
-   public:
-    nsDelayedBroadcastUpdate(Element* aBroadcaster, Element* aListener,
-                             const nsAString& aAttr)
-        : mBroadcaster(aBroadcaster),
-          mListener(aListener),
-          mAttr(aAttr),
-          mSetAttr(false),
-          mNeedsAttrChange(false) {}
-
-    nsDelayedBroadcastUpdate(Element* aBroadcaster, Element* aListener,
-                             nsAtom* aAttrName, const nsAString& aAttr,
-                             bool aSetAttr, bool aNeedsAttrChange)
-        : mBroadcaster(aBroadcaster),
-          mListener(aListener),
-          mAttr(aAttr),
-          mAttrName(aAttrName),
-          mSetAttr(aSetAttr),
-          mNeedsAttrChange(aNeedsAttrChange) {}
-
-    nsDelayedBroadcastUpdate(const nsDelayedBroadcastUpdate& aOther) = delete;
-    nsDelayedBroadcastUpdate(nsDelayedBroadcastUpdate&& aOther) = default;
-
-    nsCOMPtr<Element> mBroadcaster;
-    nsCOMPtr<Element> mListener;
-    // Note if mAttrName isn't used, this is the name of the attr, otherwise
-    // this is the value of the attribute.
-    nsString mAttr;
-    RefPtr<nsAtom> mAttrName;
-    bool mSetAttr;
-    bool mNeedsAttrChange;
-
-    class Comparator {
-     public:
-      static bool Equals(const nsDelayedBroadcastUpdate& a,
-                         const nsDelayedBroadcastUpdate& b) {
-        return a.mBroadcaster == b.mBroadcaster && a.mListener == b.mListener &&
-               a.mAttrName == b.mAttrName;
-      }
-    };
-  };
+  class nsDelayedBroadcastUpdate;
   nsTArray<nsDelayedBroadcastUpdate> mDelayedBroadcasters;
   nsTArray<nsDelayedBroadcastUpdate> mDelayedAttrChangeBroadcasts;
   bool mHandlingDelayedAttrChange;

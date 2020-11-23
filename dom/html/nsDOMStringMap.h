@@ -12,7 +12,6 @@
 #include "nsTArray.h"
 #include "nsString.h"
 #include "nsWrapperCache.h"
-#include "mozilla/dom/Element.h"
 #include "js/friend/DOMProxy.h"  // JS::ExpandoAndGeneration
 #include "js/RootingAPI.h"       // JS::Handle
 
