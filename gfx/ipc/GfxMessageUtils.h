@@ -26,7 +26,7 @@
 #include "mozilla/Array.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 #include "mozilla/ipc/ProtocolUtils.h"
-#include "mozilla/ipc/Shmem.h"
+#include "mozilla/ipc/ShmemMessageUtils.h"
 
 #include <stdint.h>
 
