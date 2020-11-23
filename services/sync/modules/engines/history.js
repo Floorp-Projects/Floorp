@@ -610,7 +610,6 @@ HistoryTracker.prototype = {
 
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
-  onPageChanged() {},
   onTitleChanged() {},
   onBeforeDeleteURI() {},
 };

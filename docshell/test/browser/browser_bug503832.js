@@ -35,7 +35,6 @@ add_task(async function() {
       },
       onDeleteURI(aURI) {},
       onClearHistory() {},
-      onPageChanged(aURI, aWhat, aValue) {},
       onDeleteVisits() {},
       QueryInterface: ChromeUtils.generateQI(["nsINavHistoryObserver"]),
     };
