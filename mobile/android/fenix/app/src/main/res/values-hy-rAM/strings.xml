@@ -96,6 +96,8 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Բաց թողնել</string>
 
+    <!-- Text for the banner message to tell users about our grid view feature. -->
+    <string name="tab_tray_grid_view_banner_message">Փոխել բաց ներդիրների դասավորությունը: Գնացեք կարգավորումներ և ընտրեք ցանցը՝ ներդիրի տեսքի ներքո:</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_grid_view_banner_positive_button_text">Անցնել Կարգավորումներին</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
@@ -440,6 +442,10 @@
     <string name="preferences_marketing_data">Շուկայավարման տվյալներ</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Համօգտագործում է տվյալներն այն գործառույթների վերաբերյալ, որոնք դուք օգտագործում եք %1$s-ում Leanplum-ի հետ, բջջային մարկետինգի մեր մատակարարի:</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Ուսումնասիրություններ</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Թույլ է տալիս Mozilla-ին տեղադրել և իրականացնել ուսումնասիրություններ</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Փորձեր</string>
     <!-- Summary for experiments preferences -->

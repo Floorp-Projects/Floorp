@@ -95,6 +95,8 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Ignorar</string>
 
+    <!-- Text for the banner message to tell users about our grid view feature. -->
+    <string name="tab_tray_grid_view_banner_message">Cambiatz la disposicion dels onglet dubèrts. Anatz als paramètres e seleccionatz « »Gresilha » jos « Vista onglet ».</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_grid_view_banner_positive_button_text">Anar als paramètres</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
@@ -443,6 +445,10 @@
     <string name="preferences_marketing_data">Donadas marketing</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Parteja de donadas sus las foncionalitats qu’utilizatz amb Leanplum, nòstre provesidor de marketing mobil.</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Estudis</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Permet a Mozilla d’installar e lançar estudis</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Experimentacions</string>
 
@@ -621,6 +627,8 @@
     <string name="tab_tray_multiselect_menu_content_description">Menú dels onglets seleccionats</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Suprimir l’onglet de la colleccion</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">Seleccionar d’onglets</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Tampar l’onglet</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
