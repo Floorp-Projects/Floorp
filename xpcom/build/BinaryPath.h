@@ -160,6 +160,17 @@ class BinaryPath {
       return NS_ERROR_FAILURE;
     }
     aResult[len] = '\0';
+#  if defined(XP_LINUX)
+    // Removing suffix " (deleted)" from the binary path
+    const char suffix[] = " (deleted)";
+    const size_t suffix_len = sizeof(suffix);
+    if (len >= suffix_len) {
+      char* result_end = &aResult[len - (suffix_len - 1)];
+      if (memcmp(result_end, suffix, suffix_len) == 0) {
+        *result_end = '\0';
+      }
+    }
+#  endif
     return NS_OK;
   }
 
