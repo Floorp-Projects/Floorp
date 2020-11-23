@@ -7,7 +7,7 @@
 #ifndef MOZILLA_DOMPOINT_H_
 #define MOZILLA_DOMPOINT_H_
 
-#include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "nsCOMPtr.h"
