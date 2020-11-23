@@ -10,6 +10,7 @@
 #include "AudioNodeTrack.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/PodOperations.h"
+#include "nsMathUtils.h"
 
 namespace mozilla {
 
