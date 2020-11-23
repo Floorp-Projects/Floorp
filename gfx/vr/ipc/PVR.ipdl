@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 using mozilla::TimeStamp from "mozilla/TimeStamp.h";
-using mozilla::gfx::VRControllerType from "VRMessageUtils.h";
+using mozilla::gfx::VRControllerType from "moz_external_vr.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
 include "VRMessageUtils.h";
 
@@ -12,8 +12,6 @@ include GraphicsMessages;
 include MemoryReportTypes;
 include PrefsTypes;
 include protocol PVRGPU;
-
-include "VRMessageUtils.h";
 
 namespace mozilla {
 namespace gfx {
