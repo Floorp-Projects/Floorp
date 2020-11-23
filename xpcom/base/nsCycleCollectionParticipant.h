@@ -7,10 +7,14 @@
 #ifndef nsCycleCollectionParticipant_h__
 #define nsCycleCollectionParticipant_h__
 
-#include "mozilla/MacroArgs.h"
+#include <type_traits>
+#include "js/HeapAPI.h"
+#include "js/TypeDecls.h"
 #include "mozilla/MacroForEach.h"
 #include "nsCycleCollectionNoteChild.h"
-#include "js/RootingAPI.h"
+#include "nsDebug.h"
+#include "nsID.h"
+#include "nscore.h"
 
 /**
  * Note: the following two IIDs only differ in one bit in the last byte.  This
@@ -49,11 +53,15 @@ class nsCycleCollectionISupports {
 NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionISupports,
                               NS_CYCLECOLLECTIONISUPPORTS_IID)
 
+class nsCycleCollectionTraversalCallback;
+class nsISupports;
 class nsWrapperCache;
 
 namespace JS {
 template <class T>
 class Heap;
+template <typename T>
+class TenuredHeap;
 } /* namespace JS */
 
 /*
