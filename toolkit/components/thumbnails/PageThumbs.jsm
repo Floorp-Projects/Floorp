@@ -874,7 +874,6 @@ var PageThumbsHistoryObserver = {
   onTitleChanged() {},
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
-  onPageChanged() {},
   onDeleteVisits() {},
 
   QueryInterface: ChromeUtils.generateQI([

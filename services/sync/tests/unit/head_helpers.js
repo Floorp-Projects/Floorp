@@ -640,7 +640,6 @@ async function promiseVisit(expectedType, expectedURI) {
         done("removed", uri.spec);
       },
       onClearHistory() {},
-      onPageChanged() {},
       onDeleteVisits() {},
     };
     PlacesUtils.history.addObserver(observer, false);
