@@ -23,6 +23,7 @@
 
 namespace mozilla {
 
+struct StylePathCommand;
 struct SVGMark;
 enum class StyleStrokeLinecap : uint8_t;
 

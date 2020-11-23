@@ -20,6 +20,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/gfx/MatrixFwd.h"
 #include "mozilla/UniquePtr.h"
+#include "nsCSSPropertyID.h"
 #include "nsChangeHint.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
