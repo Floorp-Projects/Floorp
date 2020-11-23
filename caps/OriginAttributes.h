@@ -7,7 +7,6 @@
 #ifndef mozilla_OriginAttributes_h
 #define mozilla_OriginAttributes_h
 
-#include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/ChromeUtilsBinding.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "nsIScriptSecurityManager.h"
