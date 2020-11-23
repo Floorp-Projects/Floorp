@@ -6,9 +6,11 @@
 
 include protocol PCompositorBridge;
 
+include "mozilla/widget/WidgetMessageUtils.h";
+
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 using mozilla::WindowsHandle from "mozilla/ipc/IPCTypes.h";
-using nsTransparencyMode from "mozilla/widget/WidgetMessageUtils.h";
+using nsTransparencyMode from "nsIWidget.h";
 
 namespace mozilla {
 namespace widget {
