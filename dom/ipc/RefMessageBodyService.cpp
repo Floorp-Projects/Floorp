@@ -134,6 +134,8 @@ RefMessageBody::RefMessageBody(const nsID& aPortID,
       mMaxCount(Nothing()),
       mCount(0) {}
 
+RefMessageBody::~RefMessageBody() = default;
+
 void RefMessageBody::Read(JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
                           const JS::CloneDataPolicy& aCloneDataPolicy,
                           ErrorResult& aRv) {

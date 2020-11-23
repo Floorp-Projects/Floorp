@@ -35,7 +35,7 @@
 #  include <sys/prctl.h>
 #endif
 
-static LazyLogModule sEventDispatchAndRunLog("events");
+static mozilla::LazyLogModule sEventDispatchAndRunLog("events");
 #ifdef LOG1
 #  undef LOG1
 #endif

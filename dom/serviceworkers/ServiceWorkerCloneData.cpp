@@ -6,8 +6,13 @@
 
 #include "ServiceWorkerCloneData.h"
 
+#include <utility>
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/DOMTypes.h"
+#include "mozilla/dom/StructuredCloneHolder.h"
+#include "nsISerialEventTarget.h"
 #include "nsProxyRelease.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace dom {

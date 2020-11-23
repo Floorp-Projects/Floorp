@@ -202,6 +202,7 @@ EXPORTS.mozilla.dom += [
     "MaybeCrossOriginObject.h",
     "MessageBroadcaster.h",
     "MessageListenerManager.h",
+    "MessageManagerCallback.h",
     "MessageManagerGlobal.h",
     "MessageSender.h",
     "MimeType.h",
