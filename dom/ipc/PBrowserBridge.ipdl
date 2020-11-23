@@ -12,6 +12,7 @@ include protocol PDocAccessible;
 include DOMTypes;
 
 include "mozilla/LayoutMessageUtils.h";
+include "mozilla/dom/DocShellMessageUtils.h";
 include "mozilla/dom/TabMessageUtils.h";
 
 using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";

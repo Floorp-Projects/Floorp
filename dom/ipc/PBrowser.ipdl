@@ -32,6 +32,7 @@ include PTabContext;
 include PBackgroundSharedTypes;
 
 include "mozilla/AntiTrackingIPCUtils.h";
+include "mozilla/dom/DocShellMessageUtils.h";
 include "mozilla/dom/TabMessageUtils.h";
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/LayoutMessageUtils.h";
