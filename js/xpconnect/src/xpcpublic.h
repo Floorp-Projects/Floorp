@@ -20,7 +20,6 @@
 #include "js/Utility.h"
 #include "js/Value.h"
 #include "jsapi.h"
-#include "jsfriendapi.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -36,6 +35,10 @@
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
+
+// XXX only for NukeAllWrappersForRealm, which is only used in
+// dom/base/WindowDestroyedEvent.cpp outside of js
+#include "jsfriendapi.h"
 
 class JSObject;
 class JSString;

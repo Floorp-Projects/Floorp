@@ -8,7 +8,7 @@
 #define mozilla_dom_SpiderMonkeyInterface_h
 
 #include "jsapi.h"
-#include "jsfriendapi.h"
+#include "js/RootingAPI.h"
 #include "js/TracingAPI.h"
 
 namespace mozilla {
