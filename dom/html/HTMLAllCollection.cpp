@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/HTMLAllCollection.h"
 
+#include "jsfriendapi.h"
 #include "mozilla/dom/HTMLAllCollectionBinding.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/Document.h"

@@ -18,10 +18,7 @@
 
 #include "GeckoProfiler.h"
 #include "jsapi.h"
-#include "jsfriendapi.h"
 #include "js/Conversions.h"
-#include "js/SourceText.h"
-#include "js/StableStringChars.h"
 #include "js/String.h"  // JS::{,Lossy}CopyLinearStringChars, JS::CopyStringChars, JS::Get{,Linear}StringLength, JS::MaxStringLength, JS::StringHasLatin1Chars
 #include "nsString.h"
 #include "xpcpublic.h"

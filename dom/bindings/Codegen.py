@@ -1650,7 +1650,8 @@ def UnionTypes(unionTypes, config):
                     headers.add("mozilla/dom/ToJSValue.h")
                 elif f.isInterface():
                     if f.isSpiderMonkeyInterface():
-                        headers.add("jsfriendapi.h")
+                        headers.add("js/RootingAPI.h")
+                        headers.add("js/Value.h")
                         if f.isReadableStream():
                             headers.add("mozilla/dom/ReadableStream.h")
                         else:
@@ -1765,7 +1766,7 @@ def UnionConversions(unionTypes, config):
                     headers.add("mozilla/dom/ToJSValue.h")
                 elif f.isInterface():
                     if f.isSpiderMonkeyInterface():
-                        headers.add("jsfriendapi.h")
+                        headers.add("js/RootingAPI.h")
                         if f.isReadableStream():
                             headers.add("mozilla/dom/ReadableStream.h")
                         else:
@@ -18013,7 +18014,7 @@ class CGBindingRoot(CGThing):
         bindingDeclareHeaders["jsapi.h"] = any(
             descriptorHasCrossOriginProperties(d) for d in descriptors
         )
-        bindingDeclareHeaders["jspubtd.h"] = not bindingDeclareHeaders["jsapi.h"]
+        bindingDeclareHeaders["js/TypeDecls.h"] = not bindingDeclareHeaders["jsapi.h"]
         bindingDeclareHeaders["js/RootingAPI.h"] = not bindingDeclareHeaders["jsapi.h"]
 
         def descriptorHasIteratorAlias(desc):
