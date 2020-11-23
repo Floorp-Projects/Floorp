@@ -31,8 +31,7 @@ ${whitelist}
  * @param aAnnotation a crash annotation
  * @returns A constant string holding the annotation name
  */
-static inline const char*
-AnnotationToString(Annotation aAnnotation) {
+static inline const char* AnnotationToString(Annotation aAnnotation) {
   return kAnnotationStrings[static_cast<uint32_t>(aAnnotation)];
 }
 
@@ -62,9 +61,11 @@ bool IsAnnotationWhitelistedForPing(Annotation aAnnotation);
  */
 class AnnotationWriter {
  public:
-  virtual void Write(Annotation aAnnotation, const char* aValue, size_t aLen = 0) = 0;
+  virtual void Write(Annotation aAnnotation, const char* aValue,
+                     size_t aLen = 0) = 0;
+  virtual void Write(Annotation aAnnotation, uint64_t aValue) = 0;
 };
 
-} // namespace CrashReporter
+}  // namespace CrashReporter
 
-#endif // CrashAnnotations_h
+#endif  // CrashAnnotations_h
