@@ -90,9 +90,6 @@ add_task(async function test_remove_many() {
     onClearHistory() {
       Assert.ok(false, "Unexpected call to onClearHistory");
     },
-    onPageChanged(aURI) {
-      Assert.ok(false, "Unexpected call to onPageChanged " + aURI.spec);
-    },
     onFrecencyChanged(aURI) {
       let origin = pages.find(x => x.uri.spec == aURI.spec);
       Assert.ok(origin);

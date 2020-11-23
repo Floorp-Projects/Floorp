@@ -455,9 +455,6 @@ function getObserverPromise(bookmarkedUri) {
       onClearHistory() {
         reject(new Error("Unexpected call to onClearHistory"));
       },
-      onPageChanged(aUri) {
-        reject(new Error("Unexpected call to onPageChanged"));
-      },
       onFrecencyChanged(aURI) {},
       onManyFrecenciesChanged() {},
       onDeleteURI(aURI) {

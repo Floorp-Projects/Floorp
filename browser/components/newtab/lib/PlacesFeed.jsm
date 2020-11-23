@@ -86,8 +86,6 @@ class HistoryObserver extends Observer {
 
   onManyFrecenciesChanged() {}
 
-  onPageChanged() {}
-
   onDeleteVisits() {}
 }
 

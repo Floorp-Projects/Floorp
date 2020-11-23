@@ -1335,23 +1335,23 @@ nsresult nsNavHistoryContainerResultNode::RemoveChildAt(int32_t aIndex) {
  * terminate as soon as it finds a single match.  This would be used when there
  * are URI results so there will only ever be one copy of any URI.
  *
- * When aOnlyOne is false, it will check all elements.  This is for visit
- * style results that may have multiple copies of any given URI.
+ * When aOnlyOne is false, it will check all elements.  This is for non-history
+ * or visit style results that may have multiple copies of any given URI.
  */
 void nsNavHistoryContainerResultNode::RecursiveFindURIs(
     bool aOnlyOne, nsNavHistoryContainerResultNode* aContainer,
     const nsCString& aSpec, nsCOMArray<nsNavHistoryResultNode>* aMatches) {
-  for (int32_t child = 0; child < aContainer->mChildren.Count(); ++child) {
-    uint32_t type;
-    aContainer->mChildren[child]->GetType(&type);
-    if (nsNavHistoryResultNode::IsTypeURI(type)) {
-      // compare URIs
-      nsNavHistoryResultNode* uriNode = aContainer->mChildren[child];
-      if (uriNode->mURI.Equals(aSpec)) {
-        // found
-        aMatches->AppendObject(uriNode);
-        if (aOnlyOne) return;
+  for (int32_t i = 0; i < aContainer->mChildren.Count(); ++i) {
+    auto* node = aContainer->mChildren[i];
+    if (node->IsURI()) {
+      if (node->mURI.Equals(aSpec)) {
+        aMatches->AppendObject(node);
+        if (aOnlyOne) {
+          return;
+        }
       }
+    } else if (node->IsContainer() && node->GetAsContainer()->mExpanded) {
+      RecursiveFindURIs(aOnlyOne, node->GetAsContainer(), aSpec, aMatches);
     }
   }
 }
@@ -2324,28 +2324,6 @@ static nsresult setFaviconCallback(nsNavHistoryResultNode* aNode,
 }
 
 NS_IMETHODIMP
-nsNavHistoryQueryResultNode::OnPageChanged(nsIURI* aURI,
-                                           uint32_t aChangedAttribute,
-                                           const nsAString& aNewValue,
-                                           const nsACString& aGUID) {
-  nsAutoCString spec;
-  nsresult rv = aURI->GetSpec(spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  switch (aChangedAttribute) {
-    case nsINavHistoryObserver::ATTRIBUTE_FAVICON: {
-      bool onlyOneEntry =
-          mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_URI;
-      UpdateURIs(true, onlyOneEntry, false, spec, setFaviconCallback, nullptr);
-      break;
-    }
-    default:
-      NS_WARNING("Unknown page changed notification");
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNavHistoryQueryResultNode::OnDeleteVisits(nsIURI* aURI, bool aPartialRemoval,
                                             const nsACString& aGUID,
                                             uint16_t aReason,
@@ -3207,13 +3185,11 @@ nsNavHistoryResultNode::OnItemChanged(
     const nsACString& aNewValue, PRTime aLastModified, uint16_t aItemType,
     int64_t aParentId, const nsACString& aGUID, const nsACString& aParentGUID,
     const nsACString& aOldValue, uint16_t aSource) {
-  if (aItemId != mItemId) return NS_OK;
-
-  // Last modified isn't changed for favicon updates and it is notified as `0`,
-  // so don't reset it here.
-  if (!aProperty.EqualsLiteral("favicon")) {
-    mLastModified = aLastModified;
+  if (aItemId != mItemId) {
+    return NS_OK;
   }
+
+  mLastModified = aLastModified;
 
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_STATE(result);
@@ -3232,8 +3208,6 @@ nsNavHistoryResultNode::OnItemChanged(
     mURI = aNewValue;
     if (shouldNotify)
       NOTIFY_RESULT_OBSERVERS(result, NodeURIChanged(this, oldURI));
-  } else if (aProperty.EqualsLiteral("favicon")) {
-    if (shouldNotify) NOTIFY_RESULT_OBSERVERS(result, NodeIconChanged(this));
   } else if (aProperty.EqualsLiteral("cleartime")) {
     PRTime oldTime = mTime;
     mTime = 0;
@@ -3525,7 +3499,8 @@ nsNavHistoryResult::~nsNavHistoryResult() {
 }
 
 void nsNavHistoryResult::StopObserving() {
-  AutoTArray<PlacesEventType, 3> events;
+  AutoTArray<PlacesEventType, 4> events;
+  events.AppendElement(PlacesEventType::Favicon_changed);
   if (mIsBookmarkFolderObserver || mIsAllBookmarksObserver) {
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
     if (bookmarks) {
@@ -3721,6 +3696,14 @@ nsNavHistoryResult::AddObserver(nsINavHistoryResultObserver* aObserver,
   // Not doing so would then notify a not coupled batch end.
   if (mBatchInProgress) {
     NOTIFY_RESULT_OBSERVERS(this, Batching(true));
+  }
+
+  if (!mRootNode->IsQuery() ||
+      mRootNode->GetAsQuery()->mLiveUpdate != QUERYUPDATE_NONE) {
+    // Pretty much all the views show favicons, thus observe changes to them.
+    AutoTArray<PlacesEventType, 1> events;
+    events.AppendElement(PlacesEventType::Favicon_changed);
+    PlacesObservers::AddListener(events, this);
   }
 
   return NS_OK;
@@ -4026,9 +4009,44 @@ nsresult nsNavHistoryResult::OnVisit(nsIURI* aURI, int64_t aVisitId,
   return NS_OK;
 }
 
+void nsNavHistoryResult::OnIconChanged(nsIURI* aURI, nsIURI* aFaviconURI,
+                                       const nsACString& aGUID) {
+  if (!mRootNode->mExpanded) {
+    return;
+  }
+  // Find all nodes for the given URI and update them.
+  nsAutoCString spec;
+  if (NS_SUCCEEDED(aURI->GetSpec(spec))) {
+    bool onlyOneEntry =
+        mOptions->QueryType() ==
+            nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY &&
+        mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_URI;
+    mRootNode->UpdateURIs(true, onlyOneEntry, false, spec, setFaviconCallback,
+                          nullptr);
+  }
+}
+
 void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
   for (const auto& event : aEvents) {
     switch (event->Type()) {
+      case PlacesEventType::Favicon_changed: {
+        const dom::PlacesFavicon* faviconEvent = event->AsPlacesFavicon();
+        if (NS_WARN_IF(!faviconEvent)) {
+          continue;
+        }
+        nsCOMPtr<nsIURI> uri, faviconUri;
+        MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), faviconEvent->mUrl));
+        if (!uri) {
+          continue;
+        }
+        MOZ_ALWAYS_SUCCEEDS(
+            NS_NewURI(getter_AddRefs(faviconUri), faviconEvent->mFaviconUrl));
+        if (!faviconUri) {
+          continue;
+        }
+        OnIconChanged(uri, faviconUri, faviconEvent->mPageGuid);
+        break;
+      }
       case PlacesEventType::Page_visited: {
         const dom::PlacesVisit* visit = event->AsPlacesVisit();
         if (NS_WARN_IF(!visit)) {
@@ -4139,17 +4157,6 @@ nsNavHistoryResult::OnDeleteURI(nsIURI* aURI, const nsACString& aGUID,
 NS_IMETHODIMP
 nsNavHistoryResult::OnClearHistory() {
   ENUMERATE_HISTORY_OBSERVERS(OnClearHistory());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavHistoryResult::OnPageChanged(nsIURI* aURI, uint32_t aChangedAttribute,
-                                  const nsAString& aValue,
-                                  const nsACString& aGUID) {
-  NS_ENSURE_ARG(aURI);
-
-  ENUMERATE_HISTORY_OBSERVERS(
-      OnPageChanged(aURI, aChangedAttribute, aValue, aGUID));
   return NS_OK;
 }
 

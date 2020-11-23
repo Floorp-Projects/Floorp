@@ -55,7 +55,7 @@ add_task(async function() {
   let sidebarRect = await getRectForSidebarItem(bm.guid);
   let sidebarShot1 = TestUtils.screenshotArea(sidebarRect, window);
 
-  await new Promise(resolve => {
+  let iconURI = await new Promise(resolve => {
     PlacesUtils.favicons.setAndFetchFaviconForPage(
       PAGE_URI,
       ICON_URI,
@@ -65,28 +65,29 @@ add_task(async function() {
       Services.scriptSecurityManager.getSystemPrincipal()
     );
   });
+  Assert.ok(iconURI.equals(ICON_URI), "Succesfully set the icon");
 
   // The icon is read asynchronously from the network, we don't have an easy way
-  // to wait for that.
-  await new Promise(resolve => {
-    setTimeout(resolve, 3000);
-  });
+  // to wait for that, thus we must poll.
+  await TestUtils.waitForCondition(() => {
+    // Assert.notEqual truncates the strings, so it is unusable here for failure
+    // debugging purposes.
+    let toolbarShot2 = TestUtils.screenshotArea(toolbarElt, window);
+    if (toolbarShot1 != toolbarShot2) {
+      info("Before toolbar: " + toolbarShot1);
+      info("After toolbar: " + toolbarShot2);
+    }
+    return toolbarShot1 != toolbarShot2;
+  }, "Waiting for the toolbar icon to update");
 
-  // Assert.notEqual truncates the strings, so it is unusable here for failure
-  // debugging purposes.
-  let toolbarShot2 = TestUtils.screenshotArea(toolbarElt, window);
-  if (toolbarShot1 != toolbarShot2) {
-    info("Before toolbar: " + toolbarShot1);
-    info("After toolbar: " + toolbarShot2);
-  }
-  Assert.notEqual(toolbarShot1, toolbarShot2, "The UI should have updated");
-
-  let sidebarShot2 = TestUtils.screenshotArea(sidebarRect, window);
-  if (sidebarShot1 != sidebarShot2) {
-    info("Before sidebar: " + sidebarShot1);
-    info("After sidebar: " + sidebarShot2);
-  }
-  Assert.notEqual(sidebarShot1, sidebarShot2, "The UI should have updated");
+  await TestUtils.waitForCondition(() => {
+    let sidebarShot2 = TestUtils.screenshotArea(sidebarRect, window);
+    if (sidebarShot1 != sidebarShot2) {
+      info("Before sidebar: " + sidebarShot1);
+      info("After sidebar: " + sidebarShot2);
+    }
+    return sidebarShot1 != sidebarShot2;
+  }, "Waiting for the sidebar icon to update");
 });
 
 /**

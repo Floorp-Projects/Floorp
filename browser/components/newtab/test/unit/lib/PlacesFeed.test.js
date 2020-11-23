@@ -751,7 +751,6 @@ describe("PlacesFeed", () => {
         observer.onTitleChanged();
         observer.onFrecencyChanged();
         observer.onManyFrecenciesChanged();
-        observer.onPageChanged();
         observer.onDeleteVisits();
       });
     });
