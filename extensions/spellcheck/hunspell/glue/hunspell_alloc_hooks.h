@@ -44,6 +44,12 @@
  * allocated using C memory allocation functions.
  */
 
+// XXX(Bug 1677529) Without undefining MALLOC_H, an ASAN build breaks. Maybe
+// this is actually the right thing to do, but Bug 1677529 should check that.
+#if defined(MALLOC_H) && !defined(XP_DARWIN)
+#  undef MALLOC_H
+#endif
+
 #include "mozilla/mozalloc.h"
 #include "mozHunspellAllocator.h"
 

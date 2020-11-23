@@ -23,29 +23,26 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/DbgMacro.h"
 #include "mozilla/FunctionTypeTraits.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/Span.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/fallible.h"
 #include "mozilla/mozalloc.h"
 #include "nsAlgorithm.h"
-#include "nsCycleCollectionNoteChild.h"
 #include "nsDebug.h"
-#include "nsISupportsImpl.h"
+#include "nsISupports.h"
 #include "nsQuickSort.h"
 #include "nsRegionFwd.h"
 #include "nsTArrayForwardDeclare.h"
-#include "nscore.h"
 
 namespace JS {
 template <class T>
 class Heap;
 } /* namespace JS */
 
+class nsCycleCollectionTraversalCallback;
 class nsRegion;
 
 namespace mozilla::a11y {
@@ -104,6 +101,9 @@ class Endpoint;
 }  // namespace mozilla::ipc
 
 class JSStructuredCloneData;
+
+template <class T>
+class RefPtr;
 
 //
 // nsTArray<E> is a resizable array class, like std::vector.
@@ -2662,11 +2662,17 @@ inline void ImplCycleCollectionUnlink(nsTArray_Impl<E, Alloc>& aField) {
   aField.Clear();
 }
 
+namespace detail {
+// This is defined in the cpp file to avoid including
+// nsCycleCollectionNoteChild.h in this header file.
+void SetCycleCollectionArrayFlag(uint32_t& aFlags);
+}  // namespace detail
+
 template <typename E, typename Alloc>
 inline void ImplCycleCollectionTraverse(
     nsCycleCollectionTraversalCallback& aCallback,
     nsTArray_Impl<E, Alloc>& aField, const char* aName, uint32_t aFlags = 0) {
-  aFlags |= CycleCollectionEdgeNameArrayFlag;
+  ::detail::SetCycleCollectionArrayFlag(aFlags);
   size_t length = aField.Length();
   for (size_t i = 0; i < length; ++i) {
     ImplCycleCollectionTraverse(aCallback, aField[i], aName, aFlags);
