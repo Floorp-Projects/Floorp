@@ -41,6 +41,7 @@
 #include "nsWildCard.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/JSExecutionContext.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "nsIXPConnect.h"
@@ -93,6 +94,7 @@ using mozilla::plugins::PluginModuleContentParent;
 using namespace mozilla;
 using namespace mozilla::plugins::parent;
 using mozilla::dom::Document;
+using mozilla::dom::JSExecutionContext;
 
 // We should make this const...
 static NPNetscapeFuncs sBrowserFuncs = {
@@ -981,7 +983,7 @@ bool _evaluate(NPP npp, NPObject* npobj, NPString* script, NPVariant* result) {
   MOZ_ASSERT(obj);
   nsresult rv = NS_OK;
   {
-    nsJSUtils::ExecutionContext exec(cx, obj);
+    JSExecutionContext exec(cx, obj);
     exec.SetScopeChain(scopeChain);
     exec.Compile(options, utf16script);
     rv = exec.ExecScript(&rval);

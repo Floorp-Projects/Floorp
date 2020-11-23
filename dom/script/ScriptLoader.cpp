@@ -30,6 +30,7 @@
 #include "nsJSUtils.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/JSExecutionContext.h"
 #include "mozilla/dom/ScriptDecoding.h"  // mozilla::dom::ScriptDecoding
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SRILogHelper.h"
@@ -2845,7 +2846,7 @@ class MOZ_RAII AutoSetProcessingScriptTag {
 
 static nsresult ExecuteCompiledScript(JSContext* aCx,
                                       ScriptLoadRequest* aRequest,
-                                      nsJSUtils::ExecutionContext& aExec,
+                                      JSExecutionContext& aExec,
                                       ClassicScript* aLoaderScript) {
   JS::Rooted<JSScript*> script(aCx, aExec.GetScript());
   if (!script) {
@@ -2986,7 +2987,7 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
       if (NS_SUCCEEDED(rv)) {
         if (aRequest->IsBytecode()) {
           TRACE_FOR_TEST(aRequest->GetScriptElement(), "scriptloader_execute");
-          nsJSUtils::ExecutionContext exec(cx, global);
+          JSExecutionContext exec(cx, global);
           if (aRequest->mOffThreadToken) {
             LOG(("ScriptLoadRequest (%p): Decode Bytecode & Join and Execute",
                  aRequest));
@@ -3018,7 +3019,7 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
           bool encodeBytecode = ShouldCacheBytecode(aRequest);
 
           {
-            nsJSUtils::ExecutionContext exec(cx, global);
+            JSExecutionContext exec(cx, global);
             exec.SetEncodeBytecode(encodeBytecode);
             TRACE_FOR_TEST(aRequest->GetScriptElement(),
                            "scriptloader_execute");
