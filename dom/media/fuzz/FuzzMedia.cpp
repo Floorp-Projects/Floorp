@@ -9,6 +9,7 @@
 #include "FlacDemuxer.h"
 #include "FuzzingInterface.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "MP3Demuxer.h"
 #include "MP4Demuxer.h"
 #include "OggDemuxer.h"

@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/File.h"

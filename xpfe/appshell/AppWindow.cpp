@@ -56,6 +56,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/Services.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/dom/BarProps.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/Element.h"

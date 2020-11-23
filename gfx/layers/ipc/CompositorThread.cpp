@@ -9,6 +9,7 @@
 #include "MainThreadUtils.h"
 #include "VRManagerParent.h"
 #include "mozilla/BackgroundHangMonitor.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/layers/CanvasTranslator.h"
 #include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/ImageBridgeParent.h"

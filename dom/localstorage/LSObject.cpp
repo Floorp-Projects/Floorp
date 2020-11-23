@@ -21,6 +21,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/RemoteLazyInputStreamThread.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StorageAccess.h"

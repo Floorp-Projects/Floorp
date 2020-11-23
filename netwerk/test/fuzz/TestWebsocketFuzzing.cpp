@@ -2,6 +2,7 @@
 
 #include "FuzzingInterface.h"
 #include "FuzzyLayer.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
