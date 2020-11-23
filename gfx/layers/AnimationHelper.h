@@ -15,7 +15,6 @@
 #include "mozilla/TimeStamp.h"                 // for TimeStamp
 #include "mozilla/TimingParams.h"
 #include "mozilla/Types.h"  // for SideBits
-#include "mozilla/Variant.h"
 #include "X11UndefineNone.h"
 #include <unordered_map>
 

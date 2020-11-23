@@ -11,6 +11,7 @@
 #include <windows.h>
 
 #include "GLTypes.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
