@@ -6,17 +6,24 @@
 
 #include "nsStructuredCloneContainer.h"
 
+#include <cstddef>
+#include <utility>
+#include "ErrorList.h"
+#include "js/RootingAPI.h"
+#include "js/StructuredClone.h"
+#include "js/Value.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Base64.h"
+#include "mozilla/DebugOnly.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/fallible.h"
 #include "nsCOMPtr.h"
-#include "nsIGlobalObject.h"
+#include "nsDebug.h"
+#include "nsError.h"
 #include "nsIVariant.h"
 #include "nsIXPConnect.h"
-#include "nsServiceManagerUtils.h"
-#include "nsContentUtils.h"
-#include "jsapi.h"
-#include "xpcpublic.h"
-
-#include "mozilla/Base64.h"
-#include "mozilla/dom/ScriptSettings.h"
+#include "nsString.h"
+#include "nscore.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

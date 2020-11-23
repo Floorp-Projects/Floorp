@@ -11,14 +11,16 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
+#include "mozilla/dom/MessageManagerCallback.h"
 #include "nsCOMPtr.h"
-#include "nsFrameMessageManager.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
 #include "nsDocShell.h"
 #include "nsCOMArray.h"
 #include "nsWeakReference.h"
+
+class nsFrameMessageManager;
 
 namespace mozilla {
 class EventChainPreVisitor;

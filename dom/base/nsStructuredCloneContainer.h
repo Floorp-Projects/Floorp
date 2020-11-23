@@ -7,9 +7,12 @@
 #ifndef nsStructuredCloneContainer_h__
 #define nsStructuredCloneContainer_h__
 
-#include "nsIStructuredCloneContainer.h"
-#include "mozilla/Attributes.h"
+#include <cstdint>
 #include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "nsIStructuredCloneContainer.h"
+#include "nsISupports.h"
+
+class nsIVariant;
 
 #define NS_STRUCTUREDCLONECONTAINER_CONTRACTID \
   "@mozilla.org/docshell/structured-clone-container;1"

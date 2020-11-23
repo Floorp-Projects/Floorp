@@ -30,7 +30,7 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDocShell.h"
-#include "nsFrameMessageManager.h"
+#include "mozilla/dom/MessageManagerCallback.h"
 #include "nsID.h"
 #include "nsIFrame.h"
 #include "nsIMutationObserver.h"

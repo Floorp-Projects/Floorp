@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/PContentParent.h"
 #include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/dom/MessageManagerCallback.h"
 #include "mozilla/dom/MediaSessionBinding.h"
 #include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/dom/RemoteType.h"
@@ -34,7 +35,6 @@
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsPluginTags.h"
-#include "nsFrameMessageManager.h"
 #include "nsHashKeys.h"
 #include "nsIAsyncShutdown.h"
 #include "nsIDOMProcessParent.h"
