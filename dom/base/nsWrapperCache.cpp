@@ -6,6 +6,7 @@
 
 #include "nsWrapperCacheInlines.h"
 
+#include "jsfriendapi.h"
 #include "js/Class.h"
 #include "js/Proxy.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
@@ -51,6 +52,12 @@ void nsWrapperCache::ReleaseWrapper(void* aScriptObjectHolder) {
 }
 
 #ifdef DEBUG
+
+void nsWrapperCache::AssertUpdatedWrapperZone(const JSObject* aNewObject,
+                                              const JSObject* aOldObject) {
+  MOZ_ASSERT(js::GetObjectZoneFromAnyThread(aNewObject) ==
+             js::GetObjectZoneFromAnyThread(aOldObject));
+}
 
 class DebugWrapperTraversalCallback
     : public nsCycleCollectionTraversalCallback {
