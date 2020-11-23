@@ -9,17 +9,16 @@
 #  include "mozilla/X11Util.h"
 #endif
 
-#include "GLLibraryLoader.h"
+#include "GLTypes.h"
 #include "mozilla/EnumTypeTraits.h"
-#include "mozilla/StaticMutex.h"
-#include "mozilla/StaticPtr.h"
-#include "mozilla/ThreadLocal.h"
-#include "GeckoProfiler.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/RefPtr.h"
+#include "nsISupports.h"
+#include "prlink.h"
 
 #include <bitset>
 #include <memory>
 #include <unordered_map>
-#include <vector>
 
 #if defined(MOZ_X11)
 #  define EGL_DEFAULT_DISPLAY ((EGLNativeDisplayType)mozilla::DefaultXDisplay())
@@ -45,7 +44,8 @@ class DataSourceSurface;
 
 namespace gl {
 
-class GLContext;
+class SymbolLoader;
+
 PRLibrary* LoadApitraceLibrary();
 
 void BeforeEGLCall(const char* funcName);
