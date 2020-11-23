@@ -666,21 +666,6 @@ extern JS_PUBLIC_API bool IsProfileTimelineRecordingEnabled();
 
 }  // namespace JS
 
-/*
- * A replacement for MallocAllocPolicy that allocates in the JS heap and adds no
- * extra behaviours.
- *
- * This is currently used for allocating source buffers for parsing. Since these
- * are temporary and will not be freed by GC, the memory is not tracked by the
- * usual accounting.
- */
-class JS_PUBLIC_API JSMallocAllocPolicy : public js::AllocPolicyBase {
- public:
-  void reportAllocOverflow() const {}
-
-  MOZ_MUST_USE bool checkSimulatedOOM() const { return true; }
-};
-
 /**
  * Set the size of the native stack that should not be exceed. To disable
  * stack size checking pass 0.

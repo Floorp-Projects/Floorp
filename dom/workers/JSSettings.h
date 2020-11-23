@@ -9,9 +9,9 @@
 
 #include <stdint.h>
 
-#include "jsapi.h"
 #include "js/ContextOptions.h"
 #include "js/GCAPI.h"
+#include "js/RealmOptions.h"
 #include "mozilla/Maybe.h"
 #include "nsString.h"
 #include "nsTArray.h"
