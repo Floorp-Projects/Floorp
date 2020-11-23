@@ -93,7 +93,7 @@ external:
             ./mach --log-no-times static-analysis check --checks="-*,mozilla-civet-*" --outgoing --output $HOME/clang-tidy.json --format json
     fetches:
         toolchain:
-            - linux-clang-tidy-external
+            - linux64-clang-tidy-external
     worker:
         artifacts:
             - type: file
