@@ -3197,8 +3197,8 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
       CustomElementData* data = elem->GetCustomElementData();
       if (data && data->mState == CustomElementData::State::eCustom) {
         LifecycleAdoptedCallbackArgs args = {oldDoc, newDoc};
-        nsContentUtils::EnqueueLifecycleCallback(Document::eAdopted, elem,
-                                                 nullptr, &args);
+        nsContentUtils::EnqueueLifecycleCallback(ElementCallbackType::eAdopted,
+                                                 elem, nullptr, &args);
       }
     }
 
