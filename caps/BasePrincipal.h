@@ -7,26 +7,36 @@
 #ifndef mozilla_BasePrincipal_h
 #define mozilla_BasePrincipal_h
 
-#include "nsJSPrincipals.h"
-
-#include "mozilla/Attributes.h"
+#include <stdint.h>
+#include "ErrorList.h"
+#include "js/RootingAPI.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/OriginAttributes.h"
-
-class nsAtom;
-class nsIContentSecurityPolicy;
-class nsIObjectOutputStream;
-class nsIObjectInputStream;
-class nsIURI;
+#include "mozilla/RefPtr.h"
+#include "mozilla/dom/ReferrerPolicyBinding.h"
+#include "nsAtom.h"
+#include "nsIPrincipal.h"
+#include "nsJSPrincipals.h"
+#include "nsStringFwd.h"
+#include "nscore.h"
 
 class ExpandedPrincipal;
-
+class mozIDOMWindow;
+class nsIChannel;
+class nsIReferrerInfo;
+class nsISupports;
+class nsIURI;
+namespace JS {
+class Value;
+}
 namespace Json {
 class Value;
 }
+struct JSContext;
+
 namespace mozilla {
-namespace dom {
-class Document;
-}
+
 namespace extensions {
 class WebExtensionPolicy;
 }
@@ -321,8 +331,8 @@ class BasePrincipal : public nsJSPrincipals {
       nsIURI* aURI, const OriginAttributes& aAttrs,
       const nsACString& aOriginNoSuffix);
 
-  inline bool FastSubsumesIgnoringFPD(
-      nsIPrincipal* aOther, DocumentDomainConsideration aConsideration);
+  bool FastSubsumesIgnoringFPD(nsIPrincipal* aOther,
+                               DocumentDomainConsideration aConsideration);
 
   RefPtr<nsAtom> mOriginNoSuffix;
   RefPtr<nsAtom> mOriginSuffix;
@@ -395,19 +405,6 @@ inline bool BasePrincipal::FastSubsumesConsideringDomain(nsIPrincipal* aOther) {
   }
 
   return Subsumes(aOther, ConsiderDocumentDomain);
-}
-
-inline bool BasePrincipal::FastSubsumesIgnoringFPD(
-    nsIPrincipal* aOther, DocumentDomainConsideration aConsideration) {
-  MOZ_ASSERT(aOther);
-
-  if (Kind() == eContentPrincipal &&
-      !dom::ChromeUtils::IsOriginAttributesEqualIgnoringFPD(
-          mOriginAttributes, Cast(aOther)->mOriginAttributes)) {
-    return false;
-  }
-
-  return SubsumesInternal(aOther, aConsideration);
 }
 
 inline bool BasePrincipal::FastSubsumesIgnoringFPD(nsIPrincipal* aOther) {
