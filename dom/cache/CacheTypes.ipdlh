@@ -9,9 +9,11 @@ include IPCStream;
 include ChannelInfo;
 include PBackgroundSharedTypes;
 
+include "mozilla/dom/cache/IPCUtils.h";
+
 using HeadersGuardEnum from "mozilla/dom/FetchIPCTypes.h";
-using Namespace from "mozilla/dom/cache/IPCUtils.h";
-using OpenMode from "mozilla/dom/cache/IPCUtils.h";
+using Namespace from "mozilla/dom/cache/Types.h";
+using OpenMode from "mozilla/dom/cache/Types.h";
 using ReferrerPolicy from "mozilla/dom/FetchIPCTypes.h";
 using RequestCredentials from "mozilla/dom/FetchIPCTypes.h";
 using RequestMode from "mozilla/dom/FetchIPCTypes.h";
