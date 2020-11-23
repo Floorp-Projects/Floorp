@@ -6,8 +6,16 @@
 
 #include "mozilla/dom/DOMPoint.h"
 
-#include "mozilla/dom/DOMPointBinding.h"
+#include <cstdint>
+#include "js/StructuredClone.h"
+#include "mozilla/Casting.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/MacroForEach.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/DOMMatrix.h"
+#include "mozilla/dom/DOMPointBinding.h"
+#include "nsIGlobalObject.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

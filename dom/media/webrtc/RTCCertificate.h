@@ -7,26 +7,39 @@
 #ifndef mozilla_dom_RTCCertificate_h
 #define mozilla_dom_RTCCertificate_h
 
+#include <cstdint>
+#include "ScopedNSSTypes.h"
+#include "certt.h"
+#include "js/RootingAPI.h"
+#include "keythi.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/RefPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsWrapperCache.h"
 #include "nsIGlobalObject.h"
+#include "nsISupports.h"
+#include "nsWrapperCache.h"
 #include "prtime.h"
 #include "sslt.h"
-#include "ScopedNSSTypes.h"
 
-#include "mozilla/ErrorResult.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/dom/CryptoKey.h"
-#include "mozilla/dom/RTCCertificateBinding.h"
-#include "js/StructuredClone.h"
-#include "js/TypeDecls.h"
+class JSObject;
+struct JSContext;
+struct JSStructuredCloneReader;
+struct JSStructuredCloneWriter;
+
+namespace JS {
+class Compartment;
+}
 
 namespace mozilla {
 class DtlsIdentity;
+class ErrorResult;
+
 namespace dom {
 
+class GlobalObject;
 class ObjectOrString;
+class Promise;
 
 class RTCCertificate final : public nsISupports, public nsWrapperCache {
  public:
