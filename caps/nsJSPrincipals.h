@@ -6,8 +6,13 @@
 
 #ifndef nsJSPrincipals_h__
 #define nsJSPrincipals_h__
-#include "jsapi.h"
+
+#include "js/Principals.h"
 #include "nsIPrincipal.h"
+
+struct JSContext;
+struct JSStructuredCloneReader;
+struct JSStructuredCloneWriter;
 
 namespace mozilla {
 namespace ipc {
