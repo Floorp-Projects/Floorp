@@ -7,32 +7,16 @@
 #ifndef nsDocShell_h__
 #define nsDocShell_h__
 
-#include <utility>
-
-#include "GeckoProfiler.h"
 #include "Units.h"
-#include "jsapi.h"
-#include "mozilla/BasePrincipal.h"
-#include "mozilla/HalScreenConfiguration.h"
-#include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/ObservedDocShell.h"
 #include "mozilla/ScrollbarPreferences.h"
-#include "mozilla/StaticPrefs_browser.h"
-#include "mozilla/TimeStamp.h"
 #include "mozilla/TimelineConsumers.h"
-#include "mozilla/TimelineMarker.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/dom/ChildSHistory.h"
-#include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/dom/WindowProxyHolder.h"
-#include "mozilla/gfx/Matrix.h"
 #include "nsCOMPtr.h"
-#include "nsCRT.h"
 #include "nsCharsetSource.h"
-#include "nsContentUtils.h"
 #include "nsDocLoader.h"
 #include "nsIAuthPromptProvider.h"
 #include "nsIBaseWindow.h"
@@ -41,7 +25,6 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadContext.h"
-#include "nsILoadURIDelegate.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIRefreshURI.h"
 #include "nsIWebNavigation.h"
@@ -58,6 +41,7 @@
 namespace mozilla {
 class Encoding;
 class HTMLEditor;
+class ObservedDocShell;
 enum class TaskCategory;
 namespace dom {
 class ClientInfo;
@@ -79,8 +63,6 @@ class nsIHttpChannel;
 class nsIMutableArray;
 class nsIPrompt;
 class nsIScrollableFrame;
-class nsISecureBrowserUI;
-class nsISHistory;
 class nsIStringBundle;
 class nsIURIFixup;
 class nsIURIFixupInfo;
@@ -90,11 +72,9 @@ class nsIWidget;
 class nsIReferrerInfo;
 
 class nsCommandManager;
-class nsDocShell;
 class nsDocShellEditorData;
 class nsDOMNavigationTiming;
 class nsDSURIContentListener;
-class nsGlobalWindowInner;
 class nsGlobalWindowOuter;
 
 class FramingChecker;
