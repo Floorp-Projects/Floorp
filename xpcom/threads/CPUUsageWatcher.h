@@ -11,6 +11,7 @@
 
 #include "mozilla/HangAnnotations.h"
 #include "mozilla/BackgroundHangMonitor.h"
+#include "mozilla/Result.h"
 
 // We only support OSX and Windows, because on Linux we're forced to read
 // from /proc/stat in order to get global CPU values. We would prefer to not
@@ -21,14 +22,24 @@
 
 namespace mozilla {
 
+// Start error values at 1 to allow using the UnusedZero Result
+// optimization.
 enum CPUUsageWatcherError : uint8_t {
-  ClockGetTimeError,
+  ClockGetTimeError = 1,
   GetNumberOfProcessorsError,
   GetProcessTimesError,
   GetSystemTimesError,
   HostStatisticsError,
   ProcStatError,
 };
+
+namespace detail {
+
+template <>
+struct UnusedZero<CPUUsageWatcherError> : UnusedZeroEnum<CPUUsageWatcherError> {
+};
+
+}  // namespace detail
 
 class CPUUsageHangAnnotator : public BackgroundHangAnnotator {
  public:
