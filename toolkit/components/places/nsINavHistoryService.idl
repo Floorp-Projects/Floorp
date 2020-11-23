@@ -660,29 +660,6 @@ interface nsINavHistoryObserver : nsISupports
   void onClearHistory();
 
   /**
-   * onPageChanged attribute indicating that favicon has been updated.
-   * aNewValue parameter will be set to the new favicon URI string.
-   */
-  const unsigned long ATTRIBUTE_FAVICON = 3;
-
-  /**
-   * An attribute of this page changed.
-   *
-   * @param aURI
-   *        The URI of the page on which an attribute changed.
-   * @param aChangedAttribute
-   *        The attribute whose value changed.  See ATTRIBUTE_* constants.
-   * @param aNewValue
-   *        The attribute's new value.
-   * @param aGUID
-   *        The unique ID associated with the page.
-   */
-  void onPageChanged(in nsIURI aURI,
-                     in unsigned long aChangedAttribute,
-                     in AString aNewValue,
-                     in ACString aGUID);
-
-  /**
    * Called when some visits of an history entry are expired.
    *
    * @param aURI
