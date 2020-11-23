@@ -17959,7 +17959,6 @@ class CGBindingRoot(CGThing):
                 "mozilla/dom/BindingDeclarations.h",
                 "mozilla/dom/Nullable.h",
                 "mozilla/ErrorResult.h",
-                "GeckoProfiler.h",
             ),
             True,
         )
@@ -17993,6 +17992,9 @@ class CGBindingRoot(CGThing):
             d.interface.isIteratorInterface() or d.interface.isIterable()
             for d in descriptors
         )
+
+        # XXX Not sure when we actually need this
+        bindingHeaders["GeckoProfiler.h"] = True
 
         def descriptorHasCrossOriginProperties(desc):
             def hasCrossOriginProperty(m):
