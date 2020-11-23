@@ -17,7 +17,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SurfaceFromElementResult.h"
 #include "mozilla/SVGObserverUtils.h"
@@ -34,6 +33,8 @@ class nsGlobalWindowInner;
 class nsXULElement;
 
 namespace mozilla {
+class PresShell;
+
 namespace gl {
 class SourceSurface;
 }  // namespace gl
@@ -1002,29 +1003,7 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
   friend class AdjustedTargetForFilter;
 
   // other helpers
-  void GetAppUnitsValues(int32_t* aPerDevPixel, int32_t* aPerCSSPixel) {
-    // If we don't have a canvas element, we just return something generic.
-    if (aPerDevPixel) {
-      *aPerDevPixel = 60;
-    }
-    if (aPerCSSPixel) {
-      *aPerCSSPixel = 60;
-    }
-    PresShell* presShell = GetPresShell();
-    if (!presShell) {
-      return;
-    }
-    nsPresContext* presContext = presShell->GetPresContext();
-    if (!presContext) {
-      return;
-    }
-    if (aPerDevPixel) {
-      *aPerDevPixel = presContext->AppUnitsPerDevPixel();
-    }
-    if (aPerCSSPixel) {
-      *aPerCSSPixel = AppUnitsPerCSSPixel();
-    }
-  }
+  void GetAppUnitsValues(int32_t* aPerDevPixel, int32_t* aPerCSSPixel);
 
   friend struct CanvasBidiProcessor;
   friend class CanvasDrawObserver;

@@ -476,6 +476,10 @@ void nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter::
   mUsed = true;
 }
 
+nsPresContext* nsDisplayListBuilder::CurrentPresContext() {
+  return CurrentPresShellState()->mPresShell->GetPresContext();
+}
+
 /* static */
 nsRect nsDisplayListBuilder::OutOfFlowDisplayData::ComputeVisibleRectForFrame(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
@@ -4522,6 +4526,14 @@ bool nsDisplayImageContainer::CanOptimizeToImageLayer(
 
   return true;
 }
+
+#if defined(MOZ_REFLOW_PERF_DSP) && defined(MOZ_REFLOW_PERF)
+void nsDisplayReflowCount::Paint(nsDisplayListBuilder* aBuilder,
+                                 gfxContext* aCtx) {
+  mFrame->PresShell()->PaintCount(mFrameName, aCtx, mFrame->PresContext(),
+                                  mFrame, ToReferenceFrame(), mColor);
+}
+#endif
 
 void nsDisplayBackgroundColor::ApplyOpacity(nsDisplayListBuilder* aBuilder,
                                             float aOpacity,

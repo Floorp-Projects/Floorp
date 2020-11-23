@@ -7,10 +7,10 @@
 
 #include "Units.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/PresShellForwards.h"
 #include "nsISupportsImpl.h"
 #include "nsStringFwd.h"
 #include "nsViewportInfo.h"
-#include "PresShell.h"
 
 class nsIDOMEventListener;
 class nsIObserver;

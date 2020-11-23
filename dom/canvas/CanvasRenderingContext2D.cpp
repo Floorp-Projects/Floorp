@@ -5442,6 +5442,31 @@ bool CanvasRenderingContext2D::ShouldForceInactiveLayer(
   return !aManager->CanUseCanvasLayerForSize(GetSize());
 }
 
+void CanvasRenderingContext2D::GetAppUnitsValues(int32_t* aPerDevPixel,
+                                                 int32_t* aPerCSSPixel) {
+  // If we don't have a canvas element, we just return something generic.
+  if (aPerDevPixel) {
+    *aPerDevPixel = 60;
+  }
+  if (aPerCSSPixel) {
+    *aPerCSSPixel = 60;
+  }
+  PresShell* presShell = GetPresShell();
+  if (!presShell) {
+    return;
+  }
+  nsPresContext* presContext = presShell->GetPresContext();
+  if (!presContext) {
+    return;
+  }
+  if (aPerDevPixel) {
+    *aPerDevPixel = presContext->AppUnitsPerDevPixel();
+  }
+  if (aPerCSSPixel) {
+    *aPerCSSPixel = AppUnitsPerCSSPixel();
+  }
+}
+
 void CanvasRenderingContext2D::SetWriteOnly() {
   mWriteOnly = true;
   if (mCanvasElement) {

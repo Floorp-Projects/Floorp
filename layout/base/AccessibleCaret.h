@@ -159,7 +159,7 @@ class AccessibleCaret {
     return mCaretElementHolder->GetElementById(sCaretImageElementId);
   }
 
-  nsIFrame* RootFrame() const { return mPresShell->GetRootFrame(); }
+  nsIFrame* RootFrame() const;
 
   nsIFrame* CustomContentContainerFrame() const;
 

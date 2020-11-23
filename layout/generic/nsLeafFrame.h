@@ -24,11 +24,8 @@ class nsLeafFrame : public nsIFrame {
   NS_DECL_ABSTRACT_FRAME(nsLeafFrame)
 
   // nsIFrame replacements
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override {
-    DO_GLOBAL_REFLOW_COUNT_DSP("nsLeafFrame");
-    DisplayBorderBackgroundOutline(aBuilder, aLists);
-  }
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsDisplayListSet& aLists) override;
 
   /**
    * Both GetMinISize and GetPrefISize will return whatever GetIntrinsicISize

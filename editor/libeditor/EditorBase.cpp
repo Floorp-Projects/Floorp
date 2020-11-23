@@ -5731,6 +5731,19 @@ PresShell* EditorBase::GetPresShell() const {
   return mDocument ? mDocument->GetPresShell() : nullptr;
 }
 
+nsPresContext* EditorBase::GetPresContext() const {
+  PresShell* presShell = GetPresShell();
+  return presShell ? presShell->GetPresContext() : nullptr;
+}
+
+already_AddRefed<nsCaret> EditorBase::GetCaret() const {
+  PresShell* presShell = GetPresShell();
+  if (NS_WARN_IF(!presShell)) {
+    return nullptr;
+  }
+  return presShell->GetCaret();
+}
+
 nsISelectionController* EditorBase::GetSelectionController() const {
   if (mSelectionController) {
     return mSelectionController;

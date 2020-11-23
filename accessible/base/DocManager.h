@@ -6,18 +6,20 @@
 #define mozilla_a11_DocManager_h_
 
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/PresShell.h"
 #include "nsIDOMEventListener.h"
 #include "nsRefPtrHashtable.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 #include "mozilla/StaticPtr.h"
+#include "nsINode.h"
 
 namespace mozilla::dom {
 class Document;
 }
 
 namespace mozilla {
+class PresShell;
+
 namespace a11y {
 
 class Accessible;
@@ -44,18 +46,7 @@ class DocManager : public nsIWebProgressListener,
   /**
    * Return document accessible for the given presshell.
    */
-  DocAccessible* GetDocAccessible(const PresShell* aPresShell) {
-    if (!aPresShell) {
-      return nullptr;
-    }
-
-    DocAccessible* doc = aPresShell->GetDocAccessible();
-    if (doc) {
-      return doc;
-    }
-
-    return GetDocAccessible(aPresShell->GetDocument());
-  }
+  DocAccessible* GetDocAccessible(const PresShell* aPresShell);
 
   /**
    * Search through all document accessibles for an accessible with the given

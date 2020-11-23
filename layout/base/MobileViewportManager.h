@@ -9,6 +9,7 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/MVMContext.h"
+#include "mozilla/PresShellForwards.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
 #include "nsIObserver.h"
