@@ -8,6 +8,7 @@ include PBackgroundSharedTypes;
 include IPCServiceWorkerDescriptor;
 include ProtocolTypes;
 
+include "mozilla/dom/BindingIPCUtils.h";
 include "mozilla/dom/ClientIPCUtils.h";
 include "ipc/ErrorIPCUtils.h";
 
@@ -16,7 +17,7 @@ using ClientType from "mozilla/dom/ClientsBinding.h";
 using FrameType from "mozilla/dom/ClientBinding.h";
 using mozilla::StorageAccess from "mozilla/StorageAccess.h";
 using VisibilityState from "mozilla/dom/DocumentBinding.h";
-using CallerType from "mozilla/dom/BindingIPCUtils.h";
+using CallerType from "mozilla/dom/BindingDeclarations.h";
 using mozilla::CopyableErrorResult from "mozilla/ErrorResult.h";
 
 namespace mozilla {
