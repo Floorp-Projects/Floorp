@@ -11,7 +11,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Types.h"
-#include "mozilla/Result.h"
+#include "mozilla/ResultVariant.h"
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 

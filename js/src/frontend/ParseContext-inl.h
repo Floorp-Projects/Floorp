@@ -8,6 +8,9 @@
 #define frontend_ParseContext_inl_h
 
 #include "frontend/ParseContext.h"
+
+#include "mozilla/ResultVariant.h"
+
 #include "frontend/Parser.h"
 #include "vm/JSContext.h"
 

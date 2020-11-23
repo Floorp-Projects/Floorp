@@ -9,7 +9,7 @@
 #include "MediaData.h"
 #include "MediaResource.h"
 #include "MoofParser.h"
-#include "mozilla/Result.h"
+#include "mozilla/ResultVariant.h"
 #include "MP4Interval.h"
 #include "nsISupportsImpl.h"
 #include "TimeUnits.h"

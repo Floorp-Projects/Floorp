@@ -16,6 +16,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Range.h"
 #include "mozilla/RefCounted.h"
+#include "mozilla/ResultVariant.h"
 #include "mozilla/gfx/BuildConstants.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/ipc/Shmem.h"

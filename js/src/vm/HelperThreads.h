@@ -11,6 +11,7 @@
 #ifndef vm_HelperThreads_h
 #define vm_HelperThreads_h
 
+#include "mozilla/Variant.h"
 #include "NamespaceImports.h"
 
 #include "js/OffThreadScriptCompilation.h"

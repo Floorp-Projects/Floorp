@@ -7,6 +7,7 @@
 #define FetchPreloader_h_
 
 #include "mozilla/PreloaderBase.h"
+#include "mozilla/Variant.h"
 #include "nsCOMPtr.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIAsyncInputStream.h"

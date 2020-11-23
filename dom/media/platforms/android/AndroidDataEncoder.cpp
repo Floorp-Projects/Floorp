@@ -11,6 +11,7 @@
 
 #include "ImageContainer.h"
 #include "mozilla/Logging.h"
+#include "mozilla/ResultVariant.h"
 
 #include "nsMimeTypes.h"
 
