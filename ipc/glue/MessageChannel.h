@@ -9,36 +9,33 @@
 #define ipc_glue_MessageChannel_h 1
 
 #include "base/basictypes.h"
-#include "base/message_loop.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/DebugOnly.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/MozPromise.h"
 #include "mozilla/Vector.h"
 #if defined(OS_WIN)
 #  include "mozilla/ipc/Neutering.h"
 #endif  // defined(OS_WIN)
 #include <math.h>
 
-#include <deque>
 #include <functional>
 #include <map>
 #include <stack>
 #include <vector>
 
-#include "MessageLink.h"
+#include "MessageLink.h"  // for HasResultCodes
 #include "mozilla/ipc/Transport.h"
 
 #ifdef MOZ_GECKO_PROFILER
-#  include "mozilla/ProfilerMarkersPrerequisites.h"
+#  include "mozilla/BaseProfilerMarkers.h"
 #endif
 
+class MessageLoop;
 class nsIEventTarget;
 
 namespace mozilla {
 namespace ipc {
 
-class MessageChannel;
 class IToplevelProtocol;
 class ActorLifecycleProxy;
 
