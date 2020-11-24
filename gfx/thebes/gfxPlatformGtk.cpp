@@ -32,6 +32,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_layers.h"
+#include "nsIGfxInfo.h"
 #include "nsMathUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsUnicodeProperties.h"
@@ -702,8 +703,13 @@ already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
   // and fail silently.
   if (gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
     bool useGlxVsync = false;
-    // Nvidia doesn't support GLX at the same time as EGL.
-    if (!gfxVars::UseEGL()) {
+
+    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+    nsString adapterDriverVendor;
+    gfxInfo->GetAdapterDriverVendor(adapterDriverVendor);
+
+    // Nvidia doesn't support GLX at the same time as EGL but Mesa does.
+    if (!gfxVars::UseEGL() || (adapterDriverVendor.Find("mesa") != -1)) {
       useGlxVsync = gl::sGLXLibrary.SupportsVideoSync();
     }
     if (useGlxVsync) {
