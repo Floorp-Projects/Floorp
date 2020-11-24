@@ -8,12 +8,16 @@ import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import org.junit.Test
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 
 class ListenerDelegateTest {
     @Test
     fun `delegate invokes nullable listener`() {
         val listener: SyncedTabsView.Listener? = mockk(relaxed = true)
-        val delegate = ListenerDelegate { listener }
+        val metrics: MetricController = mockk(relaxed = true)
+
+        val delegate = ListenerDelegate(metrics) { listener }
 
         delegate.onRefresh()
 
@@ -22,5 +26,6 @@ class ListenerDelegateTest {
         delegate.onTabClicked(mockk())
 
         verify { listener?.onTabClicked(any()) }
+        verify { metrics.track(Event.SyncedTabOpened) }
     }
 }

@@ -21,6 +21,9 @@ import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.sync.ext.toAdapterItem
 import org.mozilla.fenix.sync.ext.toStringRes
 import java.lang.IllegalStateException
@@ -32,8 +35,9 @@ class SyncedTabsLayout @JvmOverloads constructor(
 ) : FrameLayout(context, attrs, defStyleAttr), SyncedTabsView {
 
     override var listener: SyncedTabsView.Listener? = null
+    private val metrics = context.components.analytics.metrics
 
-    private val adapter = SyncedTabsAdapter(ListenerDelegate { listener })
+    private val adapter = SyncedTabsAdapter(ListenerDelegate(metrics) { listener })
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
 
     init {
@@ -110,6 +114,7 @@ class SyncedTabsLayout @JvmOverloads constructor(
  * when we get a null reference, we never get a new binding to the non-null listener.
  */
 class ListenerDelegate(
+    private val metrics: MetricController,
     private val listener: (() -> SyncedTabsView.Listener?)
 ) : SyncedTabsView.Listener {
     override fun onRefresh() {
@@ -118,5 +123,6 @@ class ListenerDelegate(
 
     override fun onTabClicked(tab: Tab) {
         listener.invoke()?.onTabClicked(tab)
+        metrics.track(Event.SyncedTabOpened)
     }
 }

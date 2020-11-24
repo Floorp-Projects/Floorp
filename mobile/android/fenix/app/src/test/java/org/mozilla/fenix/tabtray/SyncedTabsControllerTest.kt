@@ -25,6 +25,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.sync.SyncedTabsViewHolder
 import org.mozilla.fenix.tabtray.TabTrayDialogFragmentAction.EnterMultiSelectMode
@@ -65,8 +66,9 @@ class SyncedTabsControllerTest {
         )
 
         view = LayoutInflater.from(testContext).inflate(R.layout.about_list_item, null)
+        val metrics: MetricController = mockk()
         controller =
-            SyncedTabsController(lifecycleOwner, view, store, concatAdapter, coroutineContext)
+            SyncedTabsController(lifecycleOwner, view, store, concatAdapter, coroutineContext, metrics)
     }
 
     @After

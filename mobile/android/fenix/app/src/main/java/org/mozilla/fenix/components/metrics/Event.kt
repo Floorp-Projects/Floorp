@@ -187,6 +187,8 @@ sealed class Event {
 
     object TabSettingsOpened : Event()
 
+    object SyncedTabOpened : Event()
+
     object RecentlyClosedTabsOpened : Event()
 
     // Interaction events with extras

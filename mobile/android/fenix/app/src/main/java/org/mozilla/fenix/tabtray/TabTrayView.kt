@@ -97,9 +97,10 @@ class TabTrayView(
 
     private var tabsTouchHelper: TabsTouchHelper
     private val collectionsButtonAdapter = SaveToCollectionsButtonAdapter(interactor, isPrivate)
+    private val metrics = container.context.components.analytics.metrics
 
     private val syncedTabsController =
-        SyncedTabsController(lifecycleOwner, view, store, concatAdapter)
+        SyncedTabsController(lifecycleOwner, view, store, concatAdapter, metrics = metrics)
     private val syncedTabsFeature = ViewBoundFeatureWrapper<SyncedTabsFeature>()
 
     private var hasLoaded = false

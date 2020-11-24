@@ -21,6 +21,7 @@ import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.sync.ListenerDelegate
 import org.mozilla.fenix.sync.SyncedTabsAdapter
 import org.mozilla.fenix.sync.ext.toAdapterList
@@ -34,11 +35,12 @@ class SyncedTabsController(
     private val view: View,
     store: TabTrayDialogFragmentStore,
     private val concatAdapter: ConcatAdapter,
-    coroutineContext: CoroutineContext = Dispatchers.Main
+    coroutineContext: CoroutineContext = Dispatchers.Main,
+    metrics: MetricController
 ) : SyncedTabsView {
     override var listener: SyncedTabsView.Listener? = null
 
-    val adapter = SyncedTabsAdapter(ListenerDelegate { listener })
+    val adapter = SyncedTabsAdapter(ListenerDelegate(metrics) { listener })
 
     private val scope: CoroutineScope = CoroutineScope(coroutineContext)
 
