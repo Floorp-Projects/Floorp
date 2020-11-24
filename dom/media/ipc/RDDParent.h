@@ -37,6 +37,7 @@ class RDDParent final : public PRDDParent {
       Endpoint<PRemoteDecoderManagerParent>&& aEndpoint);
   mozilla::ipc::IPCResult RecvInitVideoBridge(
       Endpoint<PVideoBridgeChild>&& aEndpoint,
+      const bool& aCreateHardwareDevice,
       const ContentDeviceData& aContentDeviceData);
   mozilla::ipc::IPCResult RecvRequestMemoryReport(
       const uint32_t& generation, const bool& anonymize,
