@@ -10,6 +10,9 @@
 
 namespace IPC {
 
+template <typename>
+struct ParamTraits;
+
 template <>
 struct ParamTraits<nsITransportSecurityInfo*> {
   static void Write(Message* aMsg, nsITransportSecurityInfo* aParam);
