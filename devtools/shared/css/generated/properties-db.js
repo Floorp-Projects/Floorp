@@ -10457,6 +10457,7 @@ exports.CSS_PROPERTIES = {
       "none",
       "pan-x",
       "pan-y",
+      "pinch-zoom",
       "revert",
       "unset"
     ]
