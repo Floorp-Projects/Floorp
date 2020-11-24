@@ -692,9 +692,6 @@ nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
 
     if (!mRefreshDriver) {
       mRefreshDriver = new nsRefreshDriver(this);
-      if (XRE_IsContentProcess()) {
-        mRefreshDriver->InitializeTimer();
-      }
     }
   }
 
