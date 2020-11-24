@@ -11194,9 +11194,12 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
     } else if (touchAction & StyleTouchAction::MANIPULATION) {
       result += CompositorHitTestFlags::eTouchActionDoubleTapZoomDisabled;
     } else {
-      // This path handles the cases none | [pan-x || pan-y] and so both
-      // double-tap and pinch zoom are disabled in here.
-      result += CompositorHitTestFlags::eTouchActionPinchZoomDisabled;
+      // This path handles the cases none | [pan-x || pan-y || pinch-zoom] so
+      // double-tap is disabled in here.
+      if (!(touchAction & StyleTouchAction::PINCH_ZOOM)) {
+        result += CompositorHitTestFlags::eTouchActionPinchZoomDisabled;
+      }
+
       result += CompositorHitTestFlags::eTouchActionDoubleTapZoomDisabled;
 
       if (!(touchAction & StyleTouchAction::PAN_X)) {
