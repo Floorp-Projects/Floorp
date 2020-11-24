@@ -119,6 +119,7 @@ function InitializeCollator(collator, locales, options) {
     //     opt: // opt object computed in InitializeCollator
     //       {
     //         localeMatcher: "lookup" / "best fit",
+    //         co: string matching a Unicode extension type / undefined
     //         kn: true / false / undefined,
     //         kf: "upper" / "lower" / "false" / undefined
     //       }
@@ -157,6 +158,12 @@ function InitializeCollator(collator, locales, options) {
     // Steps 9-10.
     var matcher = GetOption(options, "localeMatcher", "string", ["lookup", "best fit"], "best fit");
     opt.localeMatcher = matcher;
+
+    // https://github.com/tc39/ecma402/pull/459
+    var collation = GetOption(options, "collation", "string", undefined, undefined);
+    if (collation !== undefined)
+        collation = intl_ValidateAndCanonicalizeUnicodeExtensionType(collation, "collation", "co");
+    opt.co = collation;
 
     // Steps 11-13.
     var numericValue = GetOption(options, "numeric", "boolean", undefined, undefined);
