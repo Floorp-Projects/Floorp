@@ -59,7 +59,7 @@ class StreamFilterParent final : public PStreamFilterParent,
 
   using ChildEndpointPromise = MozPromise<ChildEndpoint, bool, true>;
 
-  static MOZ_MUST_USE RefPtr<ChildEndpointPromise> Create(
+  [[nodiscard]] static RefPtr<ChildEndpointPromise> Create(
       ContentParent* aContentParent, uint64_t aChannelId,
       const nsAString& aAddonId);
 
