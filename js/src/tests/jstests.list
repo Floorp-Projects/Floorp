@@ -291,9 +291,6 @@ skip script test262/built-ins/Function/prototype/toString/built-in-function-obje
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1225839
 ignore-flag(--more-compartments) script test262/built-ins/Function/internals/Call/class-ctor-realm.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1670062
-skip script test262/intl402/Collator/constructor-options-throwing-getters.js
-
 # These two tests assume that assignment to function calls is a SyntaxError.  We
 # historically implemented otherwise, as web reality.  Perhaps that can be
 # reevaluated at some point.
@@ -439,9 +436,6 @@ ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return
 ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-null-realm.js
 ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js
 ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1362154
-skip script test262/built-ins/String/prototype/replaceAll/searchValue-replacer-RegExp-call.js
 
 # Depends upon the SharedArrayBuffer constructor being defined as a global
 # property -- and right now, it's only defined for cross-site-isolated pages
