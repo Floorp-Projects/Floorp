@@ -22,6 +22,10 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Dine private faner vil visast her.</string>
 
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">Baidu</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 open fane. Trykk for å byte fane.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -95,6 +99,11 @@
     <string name="tab_tray_close_tabs_banner_positive_button_text">Vis alternativ</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Ignorer</string>
+
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_grid_view_banner_positive_button_text">Gå til Innstillingar</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_grid_view_banner_negative_button_text">Avvis</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -435,6 +444,8 @@
     <string name="preferences_marketing_data">Marknadsføringsdata</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Deler data om kva for funksjonar du brukar i %1$s med Leanplum, den mobile marknadsføringsleverandøren vår.</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">undersøking</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Eksperiment</string>
     <!-- Summary for experiments preferences -->
@@ -588,6 +599,8 @@
     <string name="tab_tray_title">Opne faner</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Lagre i samling</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">Vel</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Del alle faner</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -602,6 +615,8 @@
     <string name="tab_tray_menu_home">Gå til startskjerm</string>
     <!-- Shortcut action to toggle private mode -->
     <string name="tab_tray_menu_toggle">Veksle fanemodus</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">Bokmerke</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Fjern fane frå samlinga</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
