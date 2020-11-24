@@ -1090,11 +1090,6 @@ already_AddRefed<KeyframeEffect> KeyframeEffect::Constructor(
   return effect.forget();
 }
 
-already_AddRefed<Element> KeyframeEffect::GetTarget() const {
-  RefPtr<Element> ret = mTarget.mElement;
-  return ret.forget();
-}
-
 void KeyframeEffect::SetPseudoElement(const nsAString& aPseudoElement,
                                       ErrorResult& aRv) {
   PseudoStyleType pseudoType = PseudoStyleType::NotPseudo;

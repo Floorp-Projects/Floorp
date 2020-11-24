@@ -142,7 +142,7 @@ class KeyframeEffect : public AnimationEffect {
       const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
       ErrorResult& aRv);
 
-  already_AddRefed<Element> GetTarget() const;
+  Element* GetTarget() const { return mTarget.mElement.get(); }
   NonOwningAnimationTarget GetAnimationTarget() const {
     return NonOwningAnimationTarget(mTarget.mElement, mTarget.mPseudoType);
   }
