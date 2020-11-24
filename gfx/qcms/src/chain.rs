@@ -72,7 +72,7 @@ fn lerp(mut a: f32, mut b: f32, mut t: f32) -> f32 {
     return a * (1.0 - t) + b * t;
 }
 
-unsafe extern "C" fn build_lut_matrix(mut lut: Option<&lutType>) -> matrix {
+fn build_lut_matrix(mut lut: Option<&lutType>) -> matrix {
     let mut result: matrix = matrix {
         m: [[0.; 3]; 3],
         invalid: false,
@@ -89,12 +89,12 @@ unsafe extern "C" fn build_lut_matrix(mut lut: Option<&lutType>) -> matrix {
         result.m[2][2] = s15Fixed16Number_to_float((*lut).e22);
         result.invalid = false
     } else {
-        result = std::mem::zeroed();
+        result.m = Default::default();
         result.invalid = true
     }
     return result;
 }
-unsafe extern "C" fn build_mAB_matrix(lut: &lutmABType) -> matrix {
+fn build_mAB_matrix(lut: &lutmABType) -> matrix {
     let mut result: matrix = matrix {
         m: [[0.; 3]; 3],
         invalid: false,
