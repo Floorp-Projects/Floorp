@@ -107,9 +107,13 @@ void WMFDecoderModule::Init() {
     // means that we've given up on the GPU process (it's been crashing) so we
     // should disable DXVA
     sDXVAEnabled = !StaticPrefs::media_gpu_process_decoder();
-  } else if (XRE_IsGPUProcess() || XRE_IsRDDProcess()) {
-    // Always allow DXVA in the GPU or RDD process.
+  } else if (XRE_IsGPUProcess()) {
+    // Always allow DXVA in the GPU process.
     sDXVAEnabled = true;
+  } else if (XRE_IsRDDProcess()) {
+    // Only allows DXVA if we have an image device. We may have explicitly
+    // disabled its creation following an earlier RDD process crash.
+    sDXVAEnabled = !!DeviceManagerDx::Get()->GetImageDevice();
   } else {
     // Only allow DXVA in the UI process if we aren't in e10s Firefox
     sDXVAEnabled = !mozilla::BrowserTabsRemoteAutostart();

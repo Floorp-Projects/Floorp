@@ -168,6 +168,7 @@ mozilla::ipc::IPCResult RDDParent::RecvNewContentRemoteDecoderManager(
 
 mozilla::ipc::IPCResult RDDParent::RecvInitVideoBridge(
     Endpoint<PVideoBridgeChild>&& aEndpoint,
+    const bool& aCreateHardwareDevice,
     const ContentDeviceData& aContentDeviceData) {
   if (!RemoteDecoderManagerParent::CreateVideoBridgeToOtherProcess(
           std::move(aEndpoint))) {
@@ -189,7 +190,9 @@ mozilla::ipc::IPCResult RDDParent::RecvInitVideoBridge(
     auto* devmgr = DeviceManagerDx::Get();
     if (devmgr) {
       devmgr->ImportDeviceInfo(aContentDeviceData.d3d11());
-      devmgr->CreateContentDevices();
+      if (aCreateHardwareDevice) {
+        devmgr->CreateContentDevices();
+      }
     }
   }
 #endif

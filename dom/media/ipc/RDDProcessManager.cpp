@@ -193,6 +193,8 @@ void RDDProcessManager::OnProcessUnexpectedShutdown(RDDProcessHost* aHost) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mProcess && mProcess == aHost);
 
+  mNumUnexpectedCrashes++;
+
   DestroyProcess();
 }
 
@@ -283,7 +285,8 @@ bool RDDProcessManager::CreateVideoBridge() {
   ContentDeviceData contentDeviceData;
   gfxPlatform::GetPlatform()->BuildContentDeviceData(&contentDeviceData);
 
-  mRDDChild->SendInitVideoBridge(std::move(childPipe), contentDeviceData);
+  mRDDChild->SendInitVideoBridge(std::move(childPipe),
+                                 mNumUnexpectedCrashes == 0, contentDeviceData);
   if (gpuProcessPid != -1) {
     gpuManager->InitVideoBridge(std::move(parentPipe));
   } else {
