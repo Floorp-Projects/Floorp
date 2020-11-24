@@ -47,7 +47,7 @@ class CSSPseudoElement final : public nsWrapperCache {
     aRetVal.Append(
         nsDependentAtomString(nsCSSPseudoElements::GetPseudoAtom(mPseudoType)));
   }
-  already_AddRefed<dom::Element> Element() const;
+  dom::Element* Element() const { return mOriginatingElement.get(); }
 
   // Given an element:pseudoType pair, returns the CSSPseudoElement stored as a
   // property on |aElement|. If there is no CSSPseudoElement for the specified

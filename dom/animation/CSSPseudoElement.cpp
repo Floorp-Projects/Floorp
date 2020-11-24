@@ -44,11 +44,6 @@ JSObject* CSSPseudoElement::WrapObject(JSContext* aCx,
   return CSSPseudoElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<dom::Element> CSSPseudoElement::Element() const {
-  RefPtr<dom::Element> retVal(mOriginatingElement);
-  return retVal.forget();
-}
-
 /* static */
 already_AddRefed<CSSPseudoElement> CSSPseudoElement::GetCSSPseudoElement(
     dom::Element* aElement, PseudoStyleType aType) {
