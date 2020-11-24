@@ -419,14 +419,9 @@ interface nsIPrincipal : nsISerializable
      * principals which allow mutating |domain|, such as ContentPrincipal,
      * override the default implementation in BasePrincipal.
      *
+     * TODO(nika): Use this in DocGroup.
      */
     readonly attribute ACString siteOrigin;
-
-    /**
-     * The base part of |siteOrigin| without the concatenation with
-     * |originSuffix|.
-     */
-    readonly attribute ACString siteOriginNoSuffix;
 
     /**
      * The base domain of the principal URI to which this principal pertains
