@@ -1051,6 +1051,8 @@ struct ParamTraits<mozilla::ContentCache> {
     WriteParam(aMsg, aParam.mCaret.mRect);
     WriteParam(aMsg, aParam.mTextRectArray.mStart);
     WriteParam(aMsg, aParam.mTextRectArray.mRects);
+    WriteParam(aMsg, aParam.mLastCommitStringTextRectArray.mStart);
+    WriteParam(aMsg, aParam.mLastCommitStringTextRectArray.mRects);
     WriteParam(aMsg, aParam.mEditorRect);
   }
 
@@ -1071,6 +1073,10 @@ struct ParamTraits<mozilla::ContentCache> {
            ReadParam(aMsg, aIter, &aResult->mCaret.mRect) &&
            ReadParam(aMsg, aIter, &aResult->mTextRectArray.mStart) &&
            ReadParam(aMsg, aIter, &aResult->mTextRectArray.mRects) &&
+           ReadParam(aMsg, aIter,
+                     &aResult->mLastCommitStringTextRectArray.mStart) &&
+           ReadParam(aMsg, aIter,
+                     &aResult->mLastCommitStringTextRectArray.mRects) &&
            ReadParam(aMsg, aIter, &aResult->mEditorRect);
   }
 };

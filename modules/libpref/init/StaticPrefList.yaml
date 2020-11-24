@@ -1574,6 +1574,16 @@
   value: false
   mirror: always
 
+# Allow control characters appear in composition string.
+# When this is false, control characters except
+# CHARACTER TABULATION (horizontal tab) are removed from
+# both composition string and data attribute of compositionupdate
+# and compositionend events.
+- name: dom.compositionevent.allow_control_characters
+  type: bool
+  value: false
+  mirror: always
+
 # Is support for CSSPseudoElement enabled?
 - name: dom.css_pseudo_element.enabled
   type: bool
@@ -5069,6 +5079,15 @@
 # So, this supports web apps which listen to only keydown or keyup events
 # to get a change to do something at every text input.
   value: @IS_ANDROID@
+  mirror: always
+
+# If you use legacy Chinese IME which puts an ideographic space to composition
+# string as placeholder, this pref might be useful.  If this is true and when
+# web contents forcibly commits composition (e.g., moving focus), the
+# ideographic space will be ignored (i.e., commits with empty string).
+- name: intl.ime.remove_placeholder_character_at_commit
+  type: bool
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------

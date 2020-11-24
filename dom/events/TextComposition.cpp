@@ -15,10 +15,10 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MiscEvents.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_intl.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/Unused.h"
@@ -71,8 +71,8 @@ TextComposition::TextComposition(nsPresContext* aPresContext, nsINode* aNode,
       mHasDispatchedDOMTextEvent(false),
       mHasReceivedCommitEvent(false),
       mWasNativeCompositionEndEventDiscarded(false),
-      mAllowControlCharacters(Preferences::GetBool(
-          "dom.compositionevent.allow_control_characters", false)),
+      mAllowControlCharacters(
+          StaticPrefs::dom_compositionevent_allow_control_characters()),
       mWasCompositionStringEmpty(true) {
   MOZ_ASSERT(aCompositionEvent->mNativeIMEContext.IsValid());
 }
@@ -233,6 +233,18 @@ static void RemoveControlCharactersFrom(nsAString& aStr,
   aStr.SetLength(curDest - dest);
 }
 
+nsString TextComposition::CommitStringIfCommittedAsIs() const {
+  nsString result(mLastData);
+  if (!mAllowControlCharacters) {
+    RemoveControlCharactersFrom(result, nullptr);
+  }
+  if (StaticPrefs::intl_ime_remove_placeholder_character_at_commit() &&
+      mLastData == IDEOGRAPHIC_SPACE) {
+    return EmptyString();
+  }
+  return result;
+}
+
 void TextComposition::DispatchCompositionEvent(
     WidgetCompositionEvent* aCompositionEvent, nsEventStatus* aStatus,
     EventDispatchingCallback* aCallBack, bool aIsSynthesized) {
@@ -279,9 +291,8 @@ void TextComposition::DispatchCompositionEvent(
     aCompositionEvent->mRanges = nullptr;
     NS_ASSERTION(aCompositionEvent->mData.IsEmpty(),
                  "mData of eCompositionCommitAsIs should be empty string");
-    bool removePlaceholderCharacter = Preferences::GetBool(
-        "intl.ime.remove_placeholder_character_at_commit", false);
-    if (removePlaceholderCharacter && mLastData == IDEOGRAPHIC_SPACE) {
+    if (StaticPrefs::intl_ime_remove_placeholder_character_at_commit() &&
+        mLastData == IDEOGRAPHIC_SPACE) {
       // If the last data is an ideographic space (FullWidth space), it might be
       // a placeholder character of some Chinese IME.  So, committing with
       // this data might not be expected by users.  Let's use empty string.
