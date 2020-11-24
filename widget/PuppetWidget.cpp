@@ -342,6 +342,7 @@ nsresult PuppetWidget::DispatchEvent(WidgetGUIEvent* aEvent,
     }
 #endif  // #ifdef DEBUG
     mNativeIMEContext = compositionEvent->mNativeIMEContext;
+    mContentCache.OnCompositionEvent(*compositionEvent);
   }
 
   // If the event is a composition event or a keyboard event, it should be

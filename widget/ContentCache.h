@@ -215,7 +215,9 @@ class ContentCache {
     LayoutDeviceIntRect GetUnionRect(uint32_t aOffset, uint32_t aLength) const;
     LayoutDeviceIntRect GetUnionRectAsFarAsPossible(
         uint32_t aOffset, uint32_t aLength, bool aRoundToExistingOffset) const;
-  } mTextRectArray;
+  };
+  TextRectArray mTextRectArray;
+  TextRectArray mLastCommitStringTextRectArray;
 
   LayoutDeviceIntRect mEditorRect;
 
@@ -225,7 +227,13 @@ class ContentCache {
 
 class ContentCacheInChild final : public ContentCache {
  public:
-  ContentCacheInChild();
+  ContentCacheInChild() = default;
+
+  /**
+   * Called when composition event will be dispatched in this process from
+   * PuppetWidget.
+   */
+  void OnCompositionEvent(const WidgetCompositionEvent& aCompositionEvent);
 
   /**
    * When IME loses focus, this should be called and making this forget the
@@ -264,6 +272,13 @@ class ContentCacheInChild final : public ContentCache {
                   const IMENotification* aNotification = nullptr);
   bool CacheTextRects(nsIWidget* aWidget,
                       const IMENotification* aNotification = nullptr);
+
+  // Once composition is committed, all of the commit string may be composed
+  // again by Kakutei-Undo of Japanese IME.  Therefore, we need to keep
+  // storing the last composition start to cache all character rects of the
+  // last commit string.
+  Maybe<uint32_t> mLastCommitStringStart;
+  nsString mLastCommitString;
 };
 
 class ContentCacheInParent final : public ContentCache {
