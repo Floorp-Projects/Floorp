@@ -3160,7 +3160,7 @@ pref("font.size.monospace.x-math", 13);
   pref("font.name-list.fantasy.he", "Times New Roman");
 
   pref("font.name-list.serif.ja", "Hiragino Mincho ProN, Hiragino Mincho Pro");
-  pref("font.name-list.sans-serif.ja", "Hiragino Kaku Gothic ProN, Hiragino Kaku Gothic Pro");
+  pref("font.name-list.sans-serif.ja", "Hiragino Kaku Gothic ProN, Hiragino Kaku Gothic Pro, Hiragino Sans");
   pref("font.name-list.monospace.ja", "Osaka-Mono");
 
   pref("font.name-list.serif.ko", "AppleMyungjo");
