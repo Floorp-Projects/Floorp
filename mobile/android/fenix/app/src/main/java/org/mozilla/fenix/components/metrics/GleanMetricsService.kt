@@ -674,6 +674,10 @@ private val Event.wrapper: EventWrapper<*>?
             { ProgressiveWebApp.backgroundKeys.valueOf(it) }
         )
 
+        is Event.RecentlyClosedTabsOpened -> EventWrapper<NoExtraKeys>(
+            { Events.recentlyClosedTabsOpened.record(it) }
+        )
+
         Event.MasterPasswordMigrationDisplayed -> EventWrapper<NoExtraKeys>(
             { MasterPassword.displayed.record(it) }
         )

@@ -250,6 +250,7 @@ class DefaultTabTrayController(
     override fun handleRecentlyClosedClicked() {
         val directions = TabTrayDialogFragmentDirections.actionGlobalRecentlyClosed()
         navController.navigate(directions)
+        metrics.track(Event.RecentlyClosedTabsOpened)
     }
 
     override fun handleGoToTabsSettingClicked() {
