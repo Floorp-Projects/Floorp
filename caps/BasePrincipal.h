@@ -156,7 +156,8 @@ class BasePrincipal : public nsJSPrincipals {
       bool* aIsInIsolatedMozBrowserElement) final;
   NS_IMETHOD GetUserContextId(uint32_t* aUserContextId) final;
   NS_IMETHOD GetPrivateBrowsingId(uint32_t* aPrivateBrowsingId) final;
-  NS_IMETHOD GetSiteOrigin(nsACString& aOrigin) override;
+  NS_IMETHOD GetSiteOrigin(nsACString& aSiteOrigin) final;
+  NS_IMETHOD GetSiteOriginNoSuffix(nsACString& aSiteOrigin) override;
   NS_IMETHOD IsThirdPartyURI(nsIURI* uri, bool* aRes) override;
   NS_IMETHOD IsThirdPartyPrincipal(nsIPrincipal* uri, bool* aRes) override;
   NS_IMETHOD IsThirdPartyChannel(nsIChannel* aChannel, bool* aRes) override;
