@@ -55,6 +55,8 @@ class TextComposition final {
   // The latest CompositionEvent.data value except compositionstart event.
   // This value is modified at dispatching compositionupdate.
   const nsString& LastData() const { return mLastData; }
+  // Returns commit string if it'll be commited as-is.
+  nsString CommitStringIfCommittedAsIs() const;
   // The composition string which is already handled by the focused editor.
   // I.e., this value must be same as the composition string on the focused
   // editor.  This value is modified at a call of

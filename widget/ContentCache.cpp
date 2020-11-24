@@ -33,7 +33,7 @@ static const char* GetNotificationName(const IMENotification* aNotification) {
   return ToChar(aNotification->mMessage);
 }
 
-class GetRectText : public nsAutoCString {
+class MOZ_STACK_CLASS GetRectText : public nsAutoCString {
  public:
   explicit GetRectText(const LayoutDeviceIntRect& aRect) {
     AssignLiteral("{ x=");
@@ -49,7 +49,7 @@ class GetRectText : public nsAutoCString {
   virtual ~GetRectText() = default;
 };
 
-class GetWritingModeName : public nsAutoCString {
+class MOZ_STACK_CLASS GetWritingModeName : public nsAutoCString {
  public:
   explicit GetWritingModeName(const WritingMode& aWritingMode) {
     if (!aWritingMode.IsVertical()) {
@@ -65,7 +65,8 @@ class GetWritingModeName : public nsAutoCString {
   virtual ~GetWritingModeName() = default;
 };
 
-class GetEscapedUTF8String final : public NS_ConvertUTF16toUTF8 {
+class MOZ_STACK_CLASS GetEscapedUTF8String final
+    : public NS_ConvertUTF16toUTF8 {
  public:
   explicit GetEscapedUTF8String(const nsAString& aString)
       : NS_ConvertUTF16toUTF8(aString) {
@@ -98,18 +99,62 @@ LazyLogModule sContentCacheLog("ContentCacheWidgets");
  * mozilla::ContentCacheInChild
  *****************************************************************************/
 
-ContentCacheInChild::ContentCacheInChild() : ContentCache() {}
-
 void ContentCacheInChild::Clear() {
   MOZ_LOG(sContentCacheLog, LogLevel::Info, ("0x%p Clear()", this));
 
   mCompositionStart.reset();
+  mLastCommitStringStart.reset();
+  mLastCommitString.Truncate();
   mText.Truncate();
   mSelection.Clear();
   mFirstCharRect.SetEmpty();
   mCaret.Clear();
   mTextRectArray.Clear();
+  mLastCommitStringTextRectArray.Clear();
   mEditorRect.SetEmpty();
+}
+
+void ContentCacheInChild::OnCompositionEvent(
+    const WidgetCompositionEvent& aCompositionEvent) {
+  if (aCompositionEvent.CausesDOMCompositionEndEvent()) {
+    RefPtr<TextComposition> composition =
+        IMEStateManager::GetTextCompositionFor(aCompositionEvent.mWidget);
+    if (composition) {
+      if (aCompositionEvent.mMessage == eCompositionCommitAsIs) {
+        mLastCommitString = composition->CommitStringIfCommittedAsIs();
+      } else {
+        mLastCommitString = aCompositionEvent.mData;
+      }
+      // We don't need to store canceling information because this is required
+      // by undoing of last commit (Kakutei-Undo of Japanese IME).
+      if (!mLastCommitString.IsEmpty()) {
+        mLastCommitStringStart =
+            Some(composition->NativeOffsetOfStartComposition());
+        MOZ_LOG(
+            sContentCacheLog, LogLevel::Debug,
+            ("0x%p OnCompositionEvent(), stored last composition string data "
+             "(aCompositionEvent={ mMessage=%s, mData=\"%s\"}, "
+             "mLastCommitStringStart=%u, mLastCommitString=\"%s\")",
+             this, ToChar(aCompositionEvent.mMessage),
+             GetEscapedUTF8String(aCompositionEvent.mData).get(),
+             mLastCommitStringStart.value(),
+             GetEscapedUTF8String(mLastCommitString).get()));
+        return;
+      }
+    }
+  }
+  if (mLastCommitStringStart.isSome()) {
+    MOZ_LOG(sContentCacheLog, LogLevel::Debug,
+            ("0x%p OnCompositionEvent(), resetting the last composition string "
+             "data (aCompositionEvent={ mMessage=%s, mData=\"%s\"}, "
+             "mLastCommitStringStart=%u, mLastCommitString=\"%s\")",
+             this, ToChar(aCompositionEvent.mMessage),
+             GetEscapedUTF8String(aCompositionEvent.mData).get(),
+             mLastCommitStringStart.value(),
+             GetEscapedUTF8String(mLastCommitString).get()));
+    mLastCommitStringStart.reset();
+    mLastCommitString.Truncate();
+  }
 }
 
 bool ContentCacheInChild::CacheAll(nsIWidget* aWidget,
@@ -242,6 +287,25 @@ bool ContentCacheInChild::CacheText(nsIWidget* aWidget,
       sContentCacheLog, LogLevel::Info,
       ("0x%p CacheText(), Succeeded, mText.Length()=%u", this, mText.Length()));
 
+  // Forget last commit range if string in the range is different from the
+  // last commit string.
+  if (mLastCommitStringStart.isSome() &&
+      nsDependentSubstring(mText, mLastCommitStringStart.value(),
+                           mLastCommitString.Length()) != mLastCommitString) {
+    MOZ_LOG(sContentCacheLog, LogLevel::Debug,
+            ("0x%p CacheText(), resetting the last composition string data "
+             "(mLastCommitStringStart=%u, mLastCommitString=\"%s\", current "
+             "string=\"%s\")",
+             this, mLastCommitStringStart.value(),
+             GetEscapedUTF8String(mLastCommitString).get(),
+             GetEscapedUTF8String(
+                 nsDependentSubstring(mText, mLastCommitStringStart.value(),
+                                      mLastCommitString.Length()))
+                 .get()));
+    mLastCommitStringStart.reset();
+    mLastCommitString.Truncate();
+  }
+
   return CacheSelection(aWidget, aNotification);
 }
 
@@ -293,6 +357,7 @@ bool ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
 
   mCompositionStart.reset();
   mTextRectArray.Clear();
+  mLastCommitStringTextRectArray.Clear();
   mSelection.ClearAnchorCharRects();
   mSelection.ClearFocusCharRects();
   mSelection.mRect.SetEmpty();
@@ -430,6 +495,29 @@ bool ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
     }
   }
 
+  if (mLastCommitStringStart.isSome()) {
+    mLastCommitStringTextRectArray.mStart = mLastCommitStringStart.value();
+    if (mLastCommitString.Length() == 1) {
+      MOZ_ASSERT(mSelection.Collapsed());
+      MOZ_ASSERT(mSelection.mAnchor - 1 == mLastCommitStringStart.value());
+      mLastCommitStringTextRectArray.mRects.AppendElement(
+          mSelection.mAnchorCharRects[ePrevCharRect]);
+    } else if (NS_WARN_IF(!QueryCharRectArray(
+                   aWidget, mLastCommitStringTextRectArray.mStart,
+                   mLastCommitString.Length(),
+                   mLastCommitStringTextRectArray.mRects))) {
+      MOZ_LOG(sContentCacheLog, LogLevel::Error,
+              ("0x%p CacheTextRects(), FAILED, "
+               "couldn't retrieve text rect array of the last commit string",
+               this));
+      mLastCommitStringTextRectArray.Clear();
+      mLastCommitStringStart.reset();
+      mLastCommitString.Truncate();
+    }
+    MOZ_ASSERT(mLastCommitStringTextRectArray.mRects.Length() ==
+               mLastCommitString.Length());
+  }
+
   MOZ_LOG(
       sContentCacheLog, LogLevel::Info,
       ("0x%p CacheTextRects(), Succeeded, "
@@ -437,7 +525,8 @@ bool ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
        " }, mSelection={ mAnchor=%u, mAnchorCharRects[eNextCharRect]=%s, "
        "mAnchorCharRects[ePrevCharRect]=%s, mFocus=%u, "
        "mFocusCharRects[eNextCharRect]=%s, mFocusCharRects[ePrevCharRect]=%s, "
-       "mRect=%s }, mFirstCharRect=%s",
+       "mRect=%s }, mFirstCharRect=%s, mLastCommitStringTextRectArray={ "
+       "mStart=%u, mRects.Length()=%zu }",
        this, mText.Length(), mTextRectArray.mStart,
        mTextRectArray.mRects.Length(), mSelection.mAnchor,
        GetRectText(mSelection.mAnchorCharRects[eNextCharRect]).get(),
@@ -445,7 +534,9 @@ bool ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
        mSelection.mFocus,
        GetRectText(mSelection.mFocusCharRects[eNextCharRect]).get(),
        GetRectText(mSelection.mFocusCharRects[ePrevCharRect]).get(),
-       GetRectText(mSelection.mRect).get(), GetRectText(mFirstCharRect).get()));
+       GetRectText(mSelection.mRect).get(), GetRectText(mFirstCharRect).get(),
+       mLastCommitStringTextRectArray.mStart,
+       mLastCommitStringTextRectArray.mRects.Length()));
   return true;
 }
 
@@ -467,6 +558,24 @@ void ContentCacheInChild::SetSelection(nsIWidget* aWidget,
     mSelection.mFocus = aStartOffset;
   }
   mSelection.mWritingMode = aWritingMode;
+
+  if (mLastCommitStringStart.isSome()) {
+    // Forget last commit string range if selection is not collapsed
+    // at end of the last commit string.
+    if (!mSelection.Collapsed() ||
+        mSelection.mAnchor !=
+            mLastCommitStringStart.value() + mLastCommitString.Length()) {
+      MOZ_LOG(sContentCacheLog, LogLevel::Debug,
+              ("0x%p SetSelection(), forgetting last commit composition data "
+               "(mSelection={ mAnchor=%u, mFocus=%u, Collapsed()=%s } "
+               "mLastCommitStringStart=%u, mLastCommitString={ Length()=%u }",
+               this, mSelection.mAnchor, mSelection.mFocus,
+               GetBoolName(mSelection.Collapsed()),
+               mLastCommitStringStart.value(), mLastCommitString.Length()));
+      mLastCommitStringStart.reset();
+      mLastCommitString.Truncate();
+    }
+  }
 
   if (NS_WARN_IF(!CacheCaret(aWidget))) {
     return;
@@ -497,6 +606,7 @@ void ContentCacheInParent::AssignContent(const ContentCache& aOther,
   mFirstCharRect = aOther.mFirstCharRect;
   mCaret = aOther.mCaret;
   mTextRectArray = aOther.mTextRectArray;
+  mLastCommitStringTextRectArray = aOther.mLastCommitStringTextRectArray;
   mEditorRect = aOther.mEditorRect;
 
   // Only when there is one composition, the TextComposition instance in this
@@ -538,7 +648,8 @@ void ContentCacheInParent::AssignContent(const ContentCache& aOther,
        "mFirstCharRect=%s, mCaret={ mOffset=%u, mRect=%s }, mTextRectArray={ "
        "mStart=%u, mRects.Length()=%zu }, mWidgetHasComposition=%s, "
        "mPendingCompositionCount=%u, mCompositionStart=%u, "
-       "mPendingCommitLength=%u, mEditorRect=%s",
+       "mPendingCommitLength=%u, mEditorRect=%s, "
+       "mLastCommitStringTextRectArray={ mStart=%u, mRects.Length()=%zu }",
        this, GetNotificationName(aNotification), mText.Length(),
        mSelection.mAnchor, mSelection.mFocus,
        GetWritingModeName(mSelection.mWritingMode).get(),
@@ -550,7 +661,9 @@ void ContentCacheInParent::AssignContent(const ContentCache& aOther,
        mCaret.mOffset, GetRectText(mCaret.mRect).get(), mTextRectArray.mStart,
        mTextRectArray.mRects.Length(), GetBoolName(mWidgetHasComposition),
        mPendingCompositionCount, mCompositionStart.valueOr(UINT32_MAX),
-       mPendingCommitLength, GetRectText(mEditorRect).get()));
+       mPendingCommitLength, GetRectText(mEditorRect).get(),
+       mLastCommitStringTextRectArray.mStart,
+       mLastCommitStringTextRectArray.mRects.Length()));
 }
 
 bool ContentCacheInParent::HandleQueryContentEvent(
@@ -858,10 +971,13 @@ bool ContentCacheInParent::GetTextRect(uint32_t aOffset,
           ("0x%p GetTextRect(aOffset=%u, "
            "aRoundToExistingOffset=%s), "
            "mTextRectArray={ mStart=%u, mRects.Length()=%zu }, "
-           "mSelection={ mAnchor=%u, mFocus=%u }",
+           "mSelection={ mAnchor=%u, mFocus=%u }, "
+           "mLastCommitStringTextRectArray={ mStart=%u, mRects.Length()=%zu }",
            this, aOffset, GetBoolName(aRoundToExistingOffset),
            mTextRectArray.mStart, mTextRectArray.mRects.Length(),
-           mSelection.mAnchor, mSelection.mFocus));
+           mSelection.mAnchor, mSelection.mFocus,
+           mLastCommitStringTextRectArray.mStart,
+           mLastCommitStringTextRectArray.mRects.Length()));
 
   if (!aOffset) {
     NS_WARNING_ASSERTION(!mFirstCharRect.IsEmpty(), "empty rect");
@@ -893,24 +1009,39 @@ bool ContentCacheInParent::GetTextRect(uint32_t aOffset,
     return !aTextRect.IsEmpty();
   }
 
+  if (mTextRectArray.InRange(aOffset)) {
+    aTextRect = mTextRectArray.GetRect(aOffset);
+    return !aTextRect.IsEmpty();
+  }
+
+  if (mLastCommitStringTextRectArray.InRange(aOffset)) {
+    aTextRect = mLastCommitStringTextRectArray.GetRect(aOffset);
+    return !aTextRect.IsEmpty();
+  }
+
+  if (!aRoundToExistingOffset) {
+    aTextRect.SetEmpty();
+    return false;
+  }
+
+  if (!mTextRectArray.IsValid()) {
+    // If there are no rects in mTextRectArray, we should refer the start of
+    // the selection because IME must query a char rect around it if there is
+    // no composition.
+    aTextRect = mSelection.StartCharRect();
+    return !aTextRect.IsEmpty();
+  }
+
+  // Although we may have mLastCommitStringTextRectArray here and it must have
+  // previous character rects at selection.  However, we should stop using it
+  // because it's stored really short time after commiting a composition.
+  // So, multiple query may return different rect and it may cause flickerling
+  // the IME UI.
   uint32_t offset = aOffset;
-  if (!mTextRectArray.InRange(aOffset)) {
-    if (!aRoundToExistingOffset) {
-      aTextRect.SetEmpty();
-      return false;
-    }
-    if (!mTextRectArray.IsValid()) {
-      // If there are no rects in mTextRectArray, we should refer the start of
-      // the selection because IME must query a char rect around it if there is
-      // no composition.
-      aTextRect = mSelection.StartCharRect();
-      return !aTextRect.IsEmpty();
-    }
-    if (offset < mTextRectArray.StartOffset()) {
-      offset = mTextRectArray.StartOffset();
-    } else {
-      offset = mTextRectArray.EndOffset() - 1;
-    }
+  if (offset < mTextRectArray.StartOffset()) {
+    offset = mTextRectArray.StartOffset();
+  } else {
+    offset = mTextRectArray.EndOffset() - 1;
   }
   aTextRect = mTextRectArray.GetRect(offset);
   return !aTextRect.IsEmpty();
@@ -923,10 +1054,13 @@ bool ContentCacheInParent::GetUnionTextRects(
           ("0x%p GetUnionTextRects(aOffset=%u, "
            "aLength=%u, aRoundToExistingOffset=%s), mTextRectArray={ "
            "mStart=%u, mRects.Length()=%zu }, "
-           "mSelection={ mAnchor=%u, mFocus=%u }",
+           "mSelection={ mAnchor=%u, mFocus=%u }, "
+           "mLastCommitStringTextRectArray={ mStart=%u, mRects.Length()=%zu }",
            this, aOffset, aLength, GetBoolName(aRoundToExistingOffset),
            mTextRectArray.mStart, mTextRectArray.mRects.Length(),
-           mSelection.mAnchor, mSelection.mFocus));
+           mSelection.mAnchor, mSelection.mFocus,
+           mLastCommitStringTextRectArray.mStart,
+           mLastCommitStringTextRectArray.mRects.Length()));
 
   CheckedInt<uint32_t> endOffset = CheckedInt<uint32_t>(aOffset) + aLength;
   if (!endOffset.isValid()) {
@@ -978,17 +1112,27 @@ bool ContentCacheInParent::GetUnionTextRects(
   // in most cases.
 
   if (!aOffset && aOffset != mSelection.mAnchor &&
-      aOffset != mSelection.mFocus && !mTextRectArray.InRange(aOffset)) {
+      aOffset != mSelection.mFocus && !mTextRectArray.InRange(aOffset) &&
+      !mLastCommitStringTextRectArray.InRange(aOffset)) {
     // The first character rect isn't cached.
     return false;
   }
 
-  if ((aRoundToExistingOffset && mTextRectArray.HasRects()) ||
-      mTextRectArray.IsOverlappingWith(aOffset, aLength)) {
-    aUnionTextRect = mTextRectArray.GetUnionRectAsFarAsPossible(
+  // Use mLastCommitStringTextRectArray only when it overlaps with aOffset
+  // even if aROundToExistingOffset is true for avoiding flickerling IME UI.
+  // See the last comment in GetTextRect() for the detail.
+  if (mLastCommitStringTextRectArray.IsOverlappingWith(aOffset, aLength)) {
+    aUnionTextRect = mLastCommitStringTextRectArray.GetUnionRectAsFarAsPossible(
         aOffset, aLength, aRoundToExistingOffset);
   } else {
     aUnionTextRect.SetEmpty();
+  }
+
+  if ((aRoundToExistingOffset && mTextRectArray.HasRects()) ||
+      mTextRectArray.IsOverlappingWith(aOffset, aLength)) {
+    aUnionTextRect =
+        aUnionTextRect.Union(mTextRectArray.GetUnionRectAsFarAsPossible(
+            aOffset, aLength, aRoundToExistingOffset));
   }
 
   if (!aOffset) {
