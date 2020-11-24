@@ -30,7 +30,7 @@ class ContentPrincipal final : public BasePrincipal {
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   NS_IMETHOD GetAddonId(nsAString& aAddonId) override;
-  NS_IMETHOD GetSiteOrigin(nsACString& aSiteOrigin) override;
+  NS_IMETHOD GetSiteOriginNoSuffix(nsACString& aSiteOrigin) override;
   bool IsContentPrincipal() const override { return true; }
 
   ContentPrincipal();
