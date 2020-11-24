@@ -228,7 +228,6 @@ class nsContextMenu {
     this.onSpellcheckable = context.onSpellcheckable;
     this.onTextInput = context.onTextInput;
     this.onVideo = context.onVideo;
-    this.hasPasteEventListeners = context.hasPasteEventListeners;
 
     this.target = context.target;
     this.targetIdentifier = context.targetIdentifier;
@@ -446,7 +445,6 @@ class nsContextMenu {
       this.onTextInput ||
       this.onLink ||
       this.isContentSelected ||
-      this.hasPasteEventListeners ||
       this.onImage ||
       this.onCanvas ||
       this.onVideo ||
@@ -758,15 +756,9 @@ class nsContextMenu {
     this.showItem("context-sep-undo", this.onTextInput);
     this.showItem("context-cut", this.onTextInput);
     this.showItem("context-copy", this.isContentSelected || this.onTextInput);
-    this.showItem(
-      "context-paste",
-      this.hasPasteEventListeners || this.onTextInput
-    );
+    this.showItem("context-paste", this.onTextInput);
     this.showItem("context-delete", this.onTextInput);
-    this.showItem(
-      "context-sep-paste",
-      this.hasPasteEventListeners || this.onTextInput
-    );
+    this.showItem("context-sep-paste", this.onTextInput);
     this.showItem(
       "context-selectall",
       !(
