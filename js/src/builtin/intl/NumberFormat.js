@@ -181,18 +181,33 @@ function SetNumberFormatDigitOptions(lazyData, options, mnfdDefault, mxfdDefault
         // Step 12.a (Omitted).
 
         // Step 12.b.
-        mnfd = DefaultNumberOption(mnfd, 0, 20, mnfdDefault);
+        mnfd = DefaultNumberOption(mnfd, 0, 20, undefined);
 
         // Step 12.c.
-        const mxfdActualDefault = std_Math_max(mnfd, mxfdDefault);
+        mxfd = DefaultNumberOption(mxfd, 0, 20, undefined);
 
-        // Step 12.d.
-        mxfd = DefaultNumberOption(mxfd, mnfd, 20, mxfdActualDefault);
-
-        // Step 12.e.
-        lazyData.minimumFractionDigits = mnfd;
+        // Steps 12.d-e.
+        // Inlined DefaultNumberOption, only the fallback case applies here.
+        if (mnfd === undefined) {
+            assert(mxfd !== undefined, "mxfd isn't undefined when mnfd is undefined");
+            mnfd = std_Math_min(mnfdDefault, mxfd);
+        }
 
         // Step 12.f.
+        // Inlined DefaultNumberOption, only the fallback case applies here.
+        else if (mxfd === undefined) {
+            mxfd = std_Math_max(mxfdDefault, mnfd);
+        }
+
+        // Step 12.g.
+        else if (mnfd > mxfd) {
+            ThrowRangeError(JSMSG_INVALID_DIGITS_VALUE, mxfd);
+        }
+
+        // Step 12.h.
+        lazyData.minimumFractionDigits = mnfd;
+
+        // Step 12.i.
         lazyData.maximumFractionDigits = mxfd;
     }
 
