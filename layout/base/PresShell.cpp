@@ -2804,9 +2804,11 @@ void PresShell::FrameNeedsReflow(nsIFrame* aFrame,
       do {
         nsIFrame* f = stack.PopLastElement();
 
-        if (styleChange) {
-          if (f->IsPlaceholderFrame()) {
-            nsIFrame* oof = nsPlaceholderFrame::GetRealFrameForPlaceholder(f);
+        if (styleChange && f->IsPlaceholderFrame()) {
+          // Call `GetOutOfFlowFrame` directly because we can get here from
+          // frame destruction and the placeholder might be already torn down.
+          if (nsIFrame* oof =
+                  static_cast<nsPlaceholderFrame*>(f)->GetOutOfFlowFrame()) {
             if (!nsLayoutUtils::IsProperAncestorFrame(subtreeRoot, oof)) {
               // We have another distinct subtree we need to mark.
               subtrees.AppendElement(oof);
