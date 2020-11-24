@@ -663,184 +663,133 @@ bool js::regexp_construct_raw_flags(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-MOZ_ALWAYS_INLINE bool IsRegExpPrototype(HandleValue v, JSContext* cx) {
-  return (v.isObject() &&
-          cx->global()->maybeGetRegExpPrototype() == &v.toObject());
+// This is a specialized implementation of "UnwrapAndTypeCheckThis" for RegExp
+// getters that need to return a special value for same-realm
+// %RegExp.prototype%.
+template <typename Fn>
+static bool RegExpGetter(JSContext* cx, CallArgs& args, const char* methodName,
+                         Fn&& fn,
+                         HandleValue fallbackValue = UndefinedHandleValue) {
+  JSObject* obj = nullptr;
+  if (args.thisv().isObject()) {
+    obj = &args.thisv().toObject();
+    if (IsWrapper(obj)) {
+      obj = CheckedUnwrapStatic(obj);
+      if (!obj) {
+        ReportAccessDenied(cx);
+        return false;
+      }
+    }
+  }
+
+  if (obj) {
+    // Step 4ff
+    if (obj->is<RegExpObject>()) {
+      return fn(&obj->as<RegExpObject>());
+    }
+
+    // Step 3.a. "If SameValue(R, %RegExp.prototype%) is true, return
+    // undefined."
+    // Or `return "(?:)"` for get RegExp.prototype.source.
+    if (obj == cx->global()->maybeGetRegExpPrototype()) {
+      args.rval().set(fallbackValue);
+      return true;
+    }
+
+    // fall-through
+  }
+
+  // Step 2. and Step 3.b.
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             JSMSG_INCOMPATIBLE_REGEXP_GETTER, methodName,
+                             InformalValueTypeName(args.thisv()));
+  return false;
 }
 
-// ES 2017 draft 21.2.5.4.
-MOZ_ALWAYS_INLINE bool regexp_global_impl(JSContext* cx, const CallArgs& args) {
-  MOZ_ASSERT(IsRegExpObject(args.thisv()));
-
-  // Steps 4-6.
-  RegExpObject* reObj = &args.thisv().toObject().as<RegExpObject>();
-  args.rval().setBoolean(reObj->global());
-  return true;
-}
-
+// ES2021 draft rev 0b3a808af87a9123890767152a26599cc8fde161
+// 21.2.5.5 get RegExp.prototype.global
 bool js::regexp_global(JSContext* cx, unsigned argc, JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-
-  // Step 3.a.
-  if (IsRegExpPrototype(args.thisv(), cx)) {
-    args.rval().setUndefined();
+  return RegExpGetter(cx, args, "global", [args](RegExpObject* unwrapped) {
+    args.rval().setBoolean(unwrapped->global());
     return true;
-  }
-
-  // Steps 1-3.
-  return CallNonGenericMethod<IsRegExpObject, regexp_global_impl>(cx, args);
+  });
 }
 
-// ES 2017 draft 21.2.5.5.
-MOZ_ALWAYS_INLINE bool regexp_ignoreCase_impl(JSContext* cx,
-                                              const CallArgs& args) {
-  MOZ_ASSERT(IsRegExpObject(args.thisv()));
-
-  // Steps 4-6.
-  RegExpObject* reObj = &args.thisv().toObject().as<RegExpObject>();
-  args.rval().setBoolean(reObj->ignoreCase());
-  return true;
-}
-
+// ES2021 draft rev 0b3a808af87a9123890767152a26599cc8fde161
+// 21.2.5.6 get RegExp.prototype.ignoreCase
 bool js::regexp_ignoreCase(JSContext* cx, unsigned argc, JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-
-  // Step 3.a.
-  if (IsRegExpPrototype(args.thisv(), cx)) {
-    args.rval().setUndefined();
+  return RegExpGetter(cx, args, "ignoreCase", [args](RegExpObject* unwrapped) {
+    args.rval().setBoolean(unwrapped->ignoreCase());
     return true;
-  }
-
-  // Steps 1-3.
-  return CallNonGenericMethod<IsRegExpObject, regexp_ignoreCase_impl>(cx, args);
+  });
 }
 
-// ES 2017 draft 21.2.5.7.
-MOZ_ALWAYS_INLINE bool regexp_multiline_impl(JSContext* cx,
-                                             const CallArgs& args) {
-  MOZ_ASSERT(IsRegExpObject(args.thisv()));
-
-  // Steps 4-6.
-  RegExpObject* reObj = &args.thisv().toObject().as<RegExpObject>();
-  args.rval().setBoolean(reObj->multiline());
-  return true;
-}
-
+// ES2021 draft rev 0b3a808af87a9123890767152a26599cc8fde161
+// 21.2.5.9 get RegExp.prototype.multiline
 bool js::regexp_multiline(JSContext* cx, unsigned argc, JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-
-  // Step 3.a.
-  if (IsRegExpPrototype(args.thisv(), cx)) {
-    args.rval().setUndefined();
+  return RegExpGetter(cx, args, "multiline", [args](RegExpObject* unwrapped) {
+    args.rval().setBoolean(unwrapped->multiline());
     return true;
-  }
-
-  // Steps 1-3.
-  return CallNonGenericMethod<IsRegExpObject, regexp_multiline_impl>(cx, args);
+  });
 }
 
-// ES 2017 draft 21.2.5.10.
-MOZ_ALWAYS_INLINE bool regexp_source_impl(JSContext* cx, const CallArgs& args) {
-  MOZ_ASSERT(IsRegExpObject(args.thisv()));
-
-  // Step 5.
-  RegExpObject* reObj = &args.thisv().toObject().as<RegExpObject>();
-  RootedAtom src(cx, reObj->getSource());
-  if (!src) {
-    return false;
-  }
-
-  // Step 7.
-  JSString* str = EscapeRegExpPattern(cx, src);
-  if (!str) {
-    return false;
-  }
-
-  args.rval().setString(str);
-  return true;
-}
-
+// ES2021 draft rev 0b3a808af87a9123890767152a26599cc8fde161
+// 21.2.5.12 get RegExp.prototype.source
 static bool regexp_source(JSContext* cx, unsigned argc, JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
+  // Step 3.a. Return "(?:)" for %RegExp.prototype%.
+  RootedValue fallback(cx, StringValue(cx->names().emptyRegExp));
+  return RegExpGetter(
+      cx, args, "source",
+      [cx, args](RegExpObject* unwrapped) {
+        RootedAtom src(cx, unwrapped->getSource());
+        MOZ_ASSERT(src);
+        // Mark potentially cross-compartment JSAtom.
+        cx->markAtom(src);
 
-  // Step 3.a.
-  if (IsRegExpPrototype(args.thisv(), cx)) {
-    args.rval().setString(cx->names().emptyRegExp);
-    return true;
-  }
+        // Step 7.
+        JSAtom* escaped = EscapeRegExpPattern(cx, src);
+        if (!escaped) {
+          return false;
+        }
 
-  // Steps 1-4.
-  return CallNonGenericMethod<IsRegExpObject, regexp_source_impl>(cx, args);
+        args.rval().setString(escaped);
+        return true;
+      },
+      fallback);
 }
 
-// ES 2020 draft 21.2.5.3.
-MOZ_ALWAYS_INLINE bool regexp_dotAll_impl(JSContext* cx, const CallArgs& args) {
-  MOZ_ASSERT(IsRegExpObject(args.thisv()));
-
-  // Steps 4-6.
-  RegExpObject* reObj = &args.thisv().toObject().as<RegExpObject>();
-  args.rval().setBoolean(reObj->dotAll());
-  return true;
-}
-
+// ES2021 draft rev 0b3a808af87a9123890767152a26599cc8fde161
+// 21.2.5.3 get RegExp.prototype.dotAll
 bool js::regexp_dotAll(JSContext* cx, unsigned argc, JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-
-  // Step 3.a.
-  if (IsRegExpPrototype(args.thisv(), cx)) {
-    args.rval().setUndefined();
+  return RegExpGetter(cx, args, "dotAll", [args](RegExpObject* unwrapped) {
+    args.rval().setBoolean(unwrapped->dotAll());
     return true;
-  }
-
-  // Steps 1-3.
-  return CallNonGenericMethod<IsRegExpObject, regexp_dotAll_impl>(cx, args);
+  });
 }
 
-// ES 2017 draft 21.2.5.12.
-MOZ_ALWAYS_INLINE bool regexp_sticky_impl(JSContext* cx, const CallArgs& args) {
-  MOZ_ASSERT(IsRegExpObject(args.thisv()));
-
-  // Steps 4-6.
-  RegExpObject* reObj = &args.thisv().toObject().as<RegExpObject>();
-  args.rval().setBoolean(reObj->sticky());
-  return true;
-}
-
+// ES2021 draft rev 0b3a808af87a9123890767152a26599cc8fde161
+// 21.2.5.14 get RegExp.prototype.sticky
 bool js::regexp_sticky(JSContext* cx, unsigned argc, JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-
-  // Step 3.a.
-  if (IsRegExpPrototype(args.thisv(), cx)) {
-    args.rval().setUndefined();
+  return RegExpGetter(cx, args, "sticky", [args](RegExpObject* unwrapped) {
+    args.rval().setBoolean(unwrapped->sticky());
     return true;
-  }
-
-  // Steps 1-3.
-  return CallNonGenericMethod<IsRegExpObject, regexp_sticky_impl>(cx, args);
+  });
 }
 
-// ES 2017 draft 21.2.5.15.
-MOZ_ALWAYS_INLINE bool regexp_unicode_impl(JSContext* cx,
-                                           const CallArgs& args) {
-  MOZ_ASSERT(IsRegExpObject(args.thisv()));
-
-  // Steps 4-6.
-  RegExpObject* reObj = &args.thisv().toObject().as<RegExpObject>();
-  args.rval().setBoolean(reObj->unicode());
-  return true;
-}
-
+// ES2021 draft rev 0b3a808af87a9123890767152a26599cc8fde161
+// 21.2.5.17 get RegExp.prototype.unicode
 bool js::regexp_unicode(JSContext* cx, unsigned argc, JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-
-  // Step 3.a.
-  if (IsRegExpPrototype(args.thisv(), cx)) {
-    args.rval().setUndefined();
+  return RegExpGetter(cx, args, "unicode", [args](RegExpObject* unwrapped) {
+    args.rval().setBoolean(unwrapped->unicode());
     return true;
-  }
-
-  // Steps 1-3.
-  return CallNonGenericMethod<IsRegExpObject, regexp_unicode_impl>(cx, args);
+  });
 }
 
 const JSPropertySpec js::regexp_properties[] = {
