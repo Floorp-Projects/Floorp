@@ -72,14 +72,18 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
     private lateinit var tabTrayDialogStore: TabTrayDialogFragmentStore
 
     private val snackbarAnchor: View?
-        get() = if (tabTrayView.fabView.new_tab_button.isVisible ||
-            tabTrayView.mode != Mode.Normal
-        ) tabTrayView.fabView.new_tab_button
-        /* During selection of the tabs to the collection, the FAB is not visible,
-           which leads to not attaching a needed AnchorView. That's why, we're not only checking, if it's not visible,
-           but also if we're not in a "Normal" mode, so after selecting tabs for a collection, we're pushing snackbar
-           above the FAB, as we're switching from "Multiselect" to "Normal". */
-        else null
+        get() =
+            // Fab is hidden when Talkback is activated. See #16592
+            if (requireContext().settings().accessibilityServicesEnabled) null
+            else if (tabTrayView.fabView.new_tab_button.isVisible ||
+                tabTrayView.mode != Mode.Normal
+            ) tabTrayView.fabView.new_tab_button
+            /* During selection of the tabs to the collection, the FAB is not visible,
+               which leads to not attaching a needed AnchorView. That's why, we're not only
+               checking, if it's not visible, but also if we're not in a "Normal" mode, so after
+               selecting tabs for a collection, we're pushing snackbar
+               above the FAB, as we're switching from "Multiselect" to "Normal". */
+            else null
 
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
         override fun onCollectionCreated(title: String, sessions: List<Session>) {
