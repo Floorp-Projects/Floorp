@@ -780,11 +780,8 @@ void nsFlatpakPrintPortal::FinishPrintDialog(GVariant* parameters) {
   g_variant_get(parameters, "(u@a{sv})", &response, &options);
   mResult = GTK_PRINT_OPERATION_RESULT_CANCEL;
   if (response == 0) {
-    GVariant* v;
-
-    char* filename;
-    char* uri;
-    v = g_variant_lookup_value(options, "settings", G_VARIANT_TYPE_VARDICT);
+    GVariant* v =
+        g_variant_lookup_value(options, "settings", G_VARIANT_TYPE_VARDICT);
     static auto s_gtk_print_settings_new_from_gvariant =
         reinterpret_cast<GtkPrintSettings* (*)(GVariant*)>(
             dlsym(RTLD_DEFAULT, "gtk_print_settings_new_from_gvariant"));
@@ -800,14 +797,6 @@ void nsFlatpakPrintPortal::FinishPrintDialog(GVariant* parameters) {
     g_variant_unref(v);
 
     g_variant_lookup(options, "token", "u", &mToken);
-
-    // Force printing to file because only filedescriptor of the file
-    // can be passed to portal
-    int fd = g_file_open_tmp("gtkprintXXXXXX", &filename, NULL);
-    uri = g_filename_to_uri(filename, NULL, NULL);
-    gtk_print_settings_set(printSettings, GTK_PRINT_SETTINGS_OUTPUT_URI, uri);
-    g_free(uri);
-    close(fd);
 
     // Save native settings in the session object
     mPrintAndPageSettings->SetGtkPrintSettings(printSettings);
