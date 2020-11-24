@@ -4,22 +4,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBackground;
+include protocol PBrowser;
 include "mozilla/layers/LayersMessageUtils.h";
 
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using mozilla::VsyncEvent from "mozilla/VsyncDispatcher.h";
 
 namespace mozilla {
-namespace layout {
+namespace dom {
 
 /*
- * The PVsync is a sub-protocol in PBackground and it is used to notify
- * the vsync event from chrome to content process. It also provides the
+ * The PVsync is a sub-protocol in PBackground or PBrowser and it is used to
+ * notify the vsync event from chrome to content process. It also provides the
  * interfaces for content to observe/unobserve vsync event notifications.
  */
 async protocol PVsync
 {
-  manager PBackground;
+  manager PBackground or PBrowser;
 
 child:
   // Send vsync event from chrome to content process.
@@ -35,10 +36,9 @@ parent:
   async RequestVsyncRate();
 
   // This message is never sent. Each PVsync actor will stay alive as long as
-  // its PBackground manager.
+  // its PBackground or PBrowser manager.
   async __delete__();
 };
 
-} // namespace layout
+} // namespace dom
 } // namespace mozilla
-
