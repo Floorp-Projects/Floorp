@@ -91,7 +91,7 @@ add_task(async function test_history() {
     is(history.count, 2, "Should be two history items");
     is(history.index, 1, "Should be at the right place in history");
     let entry = history.getEntryAtIndex(0);
-    is(entry.URI.spec, DUMMY2, "Should have the right history entry");
+    is(entry.URI.spec, DUMMY1, "Should have the right history entry");
     entry = history.getEntryAtIndex(1);
     is(entry.URI.spec, DUMMY2, "Should have the right history entry");
   }
