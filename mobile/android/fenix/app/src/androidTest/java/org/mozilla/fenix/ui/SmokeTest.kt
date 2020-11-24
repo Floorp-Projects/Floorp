@@ -214,7 +214,7 @@ class SmokeTest {
         homeScreen {
         }.openSearch {
             verifyKeyboardVisibility()
-            clickSearchEngineButton()
+            clickSearchEngineShortcutButton()
             verifySearchEngineList()
             changeDefaultSearchEngine("Amazon.com")
             verifySearchEngineIcon("Amazon.com")
@@ -222,7 +222,7 @@ class SmokeTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openTabDrawer {
         }.openNewTab {
-            clickSearchEngineButton()
+            clickSearchEngineShortcutButton()
             mDevice.waitForIdle()
             changeDefaultSearchEngine("Bing")
             verifySearchEngineIcon("Bing")
@@ -230,7 +230,7 @@ class SmokeTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openTabDrawer {
         }.openNewTab {
-            clickSearchEngineButton()
+            clickSearchEngineShortcutButton()
             mDevice.waitForIdle()
             changeDefaultSearchEngine("DuckDuckGo")
             verifySearchEngineIcon("DuckDuckGo")
@@ -238,7 +238,7 @@ class SmokeTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openTabDrawer {
         }.openNewTab {
-            clickSearchEngineButton()
+            clickSearchEngineShortcutButton()
             changeDefaultSearchEngine("Wikipedia")
             verifySearchEngineIcon("Wikipedia")
         }.goToSearchEngine {
@@ -252,6 +252,25 @@ class SmokeTest {
             clickUrlbar {
                 verifyDefaultSearchEngine("Google")
             }
+        }
+    }
+
+    @Test
+    fun addPredefinedSearchEngineTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSearchSubMenu {
+            openAddSearchEngineMenu()
+            verifyAddSearchEngineList()
+            addNewSearchEngine("YouTube")
+            verifyEngineListContains("YouTube")
+        }.goBack {
+        }.goBack {
+        }.openSearch {
+            verifyKeyboardVisibility()
+            clickSearchEngineShortcutButton()
+            verifyEnginesListShortcutContains("YouTube")
         }
     }
 }

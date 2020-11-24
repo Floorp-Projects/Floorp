@@ -13,6 +13,7 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -20,6 +21,8 @@ import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers
+import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.click
 
 /**
  * Implementation of Robot Pattern for the settings search sub menu.
@@ -32,11 +35,25 @@ class SettingsSubMenuSearchRobot {
     fun verifyShowClipboardSuggestions() = assertShowClipboardSuggestions()
     fun verifySearchBrowsingHistory() = assertSearchBrowsingHistory()
     fun verifySearchBookmarks() = assertSearchBookmarks()
+
     fun changeDefaultSearchEngine(searchEngineName: String) =
-        selectDefaultSearchEngine(searchEngineName)
+        selectSearchEngine(searchEngineName)
 
     fun disableShowSearchSuggestions() = toggleShowSearchSuggestions()
     fun enableShowSearchShortcuts() = toggleShowSearchShortcuts()
+
+    fun openAddSearchEngineMenu() = addSearchEngineButton().click()
+
+    fun verifyAddSearchEngineList() = assertAddSearchEngineList()
+
+    fun verifyEngineListContains(searchEngineName: String) = assertEngineListContains(searchEngineName)
+
+    fun saveNewSearchEngine() = addSearchEngineSaveButton().click()
+
+    fun addNewSearchEngine(searchEngineName: String) {
+        selectSearchEngine(searchEngineName)
+        saveNewSearchEngine()
+    }
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -120,14 +137,10 @@ private fun assertSearchBookmarks() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun selectDefaultSearchEngine(searchEngine: String) {
+private fun selectSearchEngine(searchEngine: String) {
     onView(withText(searchEngine))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
         .perform(click())
-}
-
-private fun selectDuckDuckGoAsSearchEngine() {
-    selectDefaultSearchEngine("DuckDuckGo")
 }
 
 private fun toggleShowSearchSuggestions() {
@@ -154,3 +167,17 @@ private fun toggleShowSearchShortcuts() {
 
 private fun goBackButton() =
     onView(CoreMatchers.allOf(withContentDescription("Navigate up")))
+
+private fun addSearchEngineButton() = onView(withText("Add search engine"))
+
+private fun assertAddSearchEngineList() {
+    onView(withText("Reddit")).check(matches(isDisplayed()))
+    onView(withText("YouTube")).check(matches(isDisplayed()))
+    onView(withText("Other")).check(matches(isDisplayed()))
+}
+
+private fun addSearchEngineSaveButton() = onView(withId(R.id.add_search_engine))
+
+private fun assertEngineListContains(searchEngineName: String) {
+    onView(withId(R.id.search_engine_group)).check(matches(hasDescendant(withText(searchEngineName))))
+}

@@ -6,18 +6,19 @@
 
 package org.mozilla.fenix.ui.robots
 
-import android.widget.ToggleButton
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.swipeDown
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
+import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -62,15 +63,16 @@ class SearchRobot {
     }
     fun verifyDefaultSearchEngine(expectedText: String) = assertDefaultSearchEngine(expectedText)
 
+    fun verifyEnginesListShortcutContains(searchEngineName: String) = assertEngineListShortcutContains(searchEngineName)
+
     fun changeDefaultSearchEngine(searchEngineName: String) =
         selectDefaultSearchEngine(searchEngineName)
 
-    fun clickSearchEngineButton() {
-        val searchEngineButton = mDevice.findObject(UiSelector()
-            .instance(1)
-            .className(ToggleButton::class.java))
-        searchEngineButton.waitForExists(waitingTime)
-        searchEngineButton.click()
+    fun clickSearchEngineShortcutButton() {
+        val searchEnginesShortcutButton = mDevice.findObject(UiSelector()
+            .resourceId("org.mozilla.fenix.debug:id/search_engines_shortcut_button"))
+        searchEnginesShortcutButton.waitForExists(waitingTime)
+        searchEnginesShortcutButton.click()
     }
 
     fun clickScanButton() {
@@ -264,6 +266,12 @@ private fun assertSearchEngineList() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     onView(withText("Wikipedia"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
+
+private fun assertEngineListShortcutContains(searchEngineName: String) {
+    onView(withId(R.id.awesome_bar))
+        .perform(swipeDown())
+        .check(matches(hasDescendant(withText(searchEngineName))))
 }
 
 private fun selectDefaultSearchEngine(searchEngine: String) {
