@@ -413,6 +413,7 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
   }
   RefPtr<layers::MemoryTextureHost> textureHost = new layers::MemoryTextureHost(
       textureHostData, aDesc, layers::TextureFlags::NO_FLAGS);
+  textureHost->DisableExternalTextures();
   textureHost->CreateRenderTexture(aExternalId);
   nsTArray<RawId> bufferIds(aBufferIds.Clone());
   RefPtr<PresentationData> data = new PresentationData();
