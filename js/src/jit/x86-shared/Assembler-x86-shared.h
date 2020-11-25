@@ -1656,6 +1656,9 @@ class AssemblerX86Shared : public AssemblerShared {
   void lzcntl(const Register& src, const Register& dest) {
     masm.lzcntl_rr(src.encoding(), dest.encoding());
   }
+  void tzcntl(const Register& src, const Register& dest) {
+    masm.tzcntl_rr(src.encoding(), dest.encoding());
+  }
   void popcntl(const Register& src, const Register& dest) {
     masm.popcntl_rr(src.encoding(), dest.encoding());
   }
