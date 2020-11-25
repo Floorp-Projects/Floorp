@@ -1667,17 +1667,17 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
     switch (ins->bitop()) {
       case JSOp::Lsh:
         if (shift) {
-          masm.shll(Imm32(shift), lhs);
+          masm.lshift32(Imm32(shift), lhs);
         }
         break;
       case JSOp::Rsh:
         if (shift) {
-          masm.sarl(Imm32(shift), lhs);
+          masm.rshift32Arithmetic(Imm32(shift), lhs);
         }
         break;
       case JSOp::Ursh:
         if (shift) {
-          masm.shrl(Imm32(shift), lhs);
+          masm.rshift32(Imm32(shift), lhs);
         } else if (ins->mir()->toUrsh()->fallible()) {
           // x >>> 0 can overflow.
           masm.test32(lhs, lhs);
@@ -1688,16 +1688,16 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
         MOZ_CRASH("Unexpected shift op");
     }
   } else {
-    MOZ_ASSERT(ToRegister(rhs) == ecx);
+    Register shift = ToRegister(rhs);
     switch (ins->bitop()) {
       case JSOp::Lsh:
-        masm.shll_cl(lhs);
+        masm.lshift32(shift, lhs);
         break;
       case JSOp::Rsh:
-        masm.sarl_cl(lhs);
+        masm.rshift32Arithmetic(shift, lhs);
         break;
       case JSOp::Ursh:
-        masm.shrl_cl(lhs);
+        masm.rshift32(shift, lhs);
         if (ins->mir()->toUrsh()->fallible()) {
           // x >>> 0 can overflow.
           masm.test32(lhs, lhs);
@@ -1740,16 +1740,19 @@ void CodeGenerator::visitShiftI64(LShiftI64* lir) {
     return;
   }
 
-  MOZ_ASSERT(ToRegister(rhs) == ecx);
+  Register shift = ToRegister(rhs);
+#ifdef JS_CODEGEN_X86
+  MOZ_ASSERT(shift == ecx);
+#endif
   switch (lir->bitop()) {
     case JSOp::Lsh:
-      masm.lshift64(ecx, ToRegister64(lhs));
+      masm.lshift64(shift, ToRegister64(lhs));
       break;
     case JSOp::Rsh:
-      masm.rshift64Arithmetic(ecx, ToRegister64(lhs));
+      masm.rshift64Arithmetic(shift, ToRegister64(lhs));
       break;
     case JSOp::Ursh:
-      masm.rshift64(ecx, ToRegister64(lhs));
+      masm.rshift64(shift, ToRegister64(lhs));
       break;
     default:
       MOZ_CRASH("Unexpected shift op");
@@ -1769,8 +1772,8 @@ void CodeGenerator::visitUrshD(LUrshD* ins) {
       masm.shrl(Imm32(shift), lhs);
     }
   } else {
-    MOZ_ASSERT(ToRegister(rhs) == ecx);
-    masm.shrl_cl(lhs);
+    Register shift = ToRegister(rhs);
+    masm.rshift32(shift, lhs);
   }
 
   masm.convertUInt32ToDouble(lhs, out);

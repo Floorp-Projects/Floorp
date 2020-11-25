@@ -1734,6 +1734,19 @@ class AssemblerX86Shared : public AssemblerShared {
     masm.shldl_CLr(src.encoding(), dest.encoding());
   }
 
+  void sarxl(Register src, Register shift, Register dest) {
+    MOZ_ASSERT(HasBMI2());
+    masm.sarxl_rrr(src.encoding(), shift.encoding(), dest.encoding());
+  }
+  void shlxl(Register src, Register shift, Register dest) {
+    MOZ_ASSERT(HasBMI2());
+    masm.shlxl_rrr(src.encoding(), shift.encoding(), dest.encoding());
+  }
+  void shrxl(Register src, Register shift, Register dest) {
+    MOZ_ASSERT(HasBMI2());
+    masm.shrxl_rrr(src.encoding(), shift.encoding(), dest.encoding());
+  }
+
   void roll(const Imm32 imm, Register dest) {
     masm.roll_ir(imm.value, dest.encoding());
   }
