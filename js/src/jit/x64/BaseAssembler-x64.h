@@ -200,6 +200,12 @@ class BaseAssemblerX64 : public BaseAssembler {
     m_formatter.twoByteOp64(OP2_BSF_GvEv, src, dst);
   }
 
+  void lzcntq_rr(RegisterID src, RegisterID dst) {
+    spew("lzcntq     %s, %s", GPReg64Name(src), GPReg64Name(dst));
+    m_formatter.legacySSEPrefix(VEX_SS);
+    m_formatter.twoByteOp64(OP2_LZCNT_GvEv, src, dst);
+  }
+
   void popcntq_rr(RegisterID src, RegisterID dst) {
     spew("popcntq    %s, %s", GPReg64Name(src), GPReg64Name(dst));
     m_formatter.legacySSEPrefix(VEX_SS);

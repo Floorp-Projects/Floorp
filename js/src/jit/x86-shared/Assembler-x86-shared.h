@@ -1653,6 +1653,9 @@ class AssemblerX86Shared : public AssemblerShared {
     masm.bsfl_rr(src.encoding(), dest.encoding());
   }
   void bswapl(Register reg) { masm.bswapl_r(reg.encoding()); }
+  void lzcntl(const Register& src, const Register& dest) {
+    masm.lzcntl_rr(src.encoding(), dest.encoding());
+  }
   void popcntl(const Register& src, const Register& dest) {
     masm.popcntl_rr(src.encoding(), dest.encoding());
   }

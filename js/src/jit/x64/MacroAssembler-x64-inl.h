@@ -390,8 +390,10 @@ void MacroAssembler::cmpPtrSet(Condition cond, T1 lhs, T2 rhs, Register dest) {
 // Bit counting functions
 
 void MacroAssembler::clz64(Register64 src, Register dest) {
-  // On very recent chips (Haswell and newer) there is actually an
-  // LZCNT instruction that does all of this.
+  if (AssemblerX86Shared::HasLZCNT()) {
+    lzcntq(src.reg, dest);
+    return;
+  }
 
   Label nonzero;
   bsrq(src.reg, dest);

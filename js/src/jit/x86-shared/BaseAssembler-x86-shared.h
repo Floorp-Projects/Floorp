@@ -1581,6 +1581,12 @@ class BaseAssembler : public GenericAssembler {
     m_formatter.twoByteOp(OP2_BSF_GvEv, src, dst);
   }
 
+  void lzcntl_rr(RegisterID src, RegisterID dst) {
+    spew("lzcntl     %s, %s", GPReg32Name(src), GPReg32Name(dst));
+    m_formatter.legacySSEPrefix(VEX_SS);
+    m_formatter.twoByteOp(OP2_LZCNT_GvEv, src, dst);
+  }
+
   void popcntl_rr(RegisterID src, RegisterID dst) {
     spew("popcntl    %s, %s", GPReg32Name(src), GPReg32Name(dst));
     m_formatter.legacySSEPrefix(VEX_SS);

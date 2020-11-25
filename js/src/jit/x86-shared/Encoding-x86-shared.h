@@ -270,6 +270,7 @@ enum TwoByteOpcodeID {
   OP2_POPCNT_GvEv = 0xB8,
   OP2_BSF_GvEv = 0xBC,
   OP2_BSR_GvEv = 0xBD,
+  OP2_LZCNT_GvEv = 0xBD,
   OP2_MOVSX_GvEb = 0xBE,
   OP2_MOVSX_GvEw = 0xBF,
   OP2_MOVZX_GvEb = 0xB6,
