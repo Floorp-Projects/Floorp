@@ -12,6 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
+#include "mozilla/Mutex.h"
 
 class nsIEventTarget;
 
@@ -83,6 +84,7 @@ class nsSegmentedBuffer {
 
  private:
   void FreeOMT(void* aPtr);
+  void FreeOMT(std::function<void()>&& aTask);
 
   nsCOMPtr<nsIEventTarget> mIOThread;
 };
