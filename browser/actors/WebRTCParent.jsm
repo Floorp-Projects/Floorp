@@ -761,6 +761,8 @@ function prompt(aActor, aBrowser, aRequest) {
         );
         menupopup.appendChild(doc.createXULElement("menuseparator"));
 
+        let isPipeWire = false;
+
         // Build the list of 'devices'.
         let monitorIndex = 1;
         for (let i = 0; i < devices.length; ++i) {
@@ -788,6 +790,7 @@ function prompt(aActor, aBrowser, aRequest) {
             // Don't mark it as scary as there's an extra confirmation step by
             // PipeWire portal dialog.
             if (name == PIPEWIRE_PORTAL_NAME && device.id == PIPEWIRE_ID) {
+              isPipeWire = true;
               let sawcStringId = "getUserMedia.sharePipeWirePortal.label";
               let item = addDeviceToList(
                 menupopup,
@@ -913,39 +916,41 @@ function prompt(aActor, aBrowser, aRequest) {
             perms.EXPIRE_SESSION
           );
 
-          video.deviceId = deviceId;
-          let constraints = {
-            video: { mediaSource: type, deviceId: { exact: deviceId } },
-          };
-          chromeWin.navigator.mediaDevices.getUserMedia(constraints).then(
-            stream => {
-              if (video.deviceId != deviceId) {
-                // The user has selected a different device or closed the panel
-                // before getUserMedia finished.
-                stream.getTracks().forEach(t => t.stop());
-                return;
+          if (!isPipeWire) {
+            video.deviceId = deviceId;
+            let constraints = {
+              video: { mediaSource: type, deviceId: { exact: deviceId } },
+            };
+            chromeWin.navigator.mediaDevices.getUserMedia(constraints).then(
+              stream => {
+                if (video.deviceId != deviceId) {
+                  // The user has selected a different device or closed the panel
+                  // before getUserMedia finished.
+                  stream.getTracks().forEach(t => t.stop());
+                  return;
+                }
+                video.srcObject = stream;
+                video.stream = stream;
+                doc.getElementById("webRTC-preview").hidden = false;
+                video.onloadedmetadata = function(e) {
+                  video.play();
+                };
+              },
+              err => {
+                if (
+                  err.name == "OverconstrainedError" &&
+                  err.constraint == "deviceId"
+                ) {
+                  // Window has disappeared since enumeration, which can happen.
+                  // No preview for you.
+                  return;
+                }
+                Cu.reportError(
+                  `error in preview: ${err.message} ${err.constraint}`
+                );
               }
-              video.srcObject = stream;
-              video.stream = stream;
-              doc.getElementById("webRTC-preview").hidden = false;
-              video.onloadedmetadata = function(e) {
-                video.play();
-              };
-            },
-            err => {
-              if (
-                err.name == "OverconstrainedError" &&
-                err.constraint == "deviceId"
-              ) {
-                // Window has disappeared since enumeration, which can happen.
-                // No preview for you.
-                return;
-              }
-              Cu.reportError(
-                `error in preview: ${err.message} ${err.constraint}`
-              );
-            }
-          );
+            );
+          }
         };
         menupopup.addEventListener("command", menupopup._commandEventListener);
       }
