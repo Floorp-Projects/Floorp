@@ -111,8 +111,11 @@ gfxPlatformGtk::gfxPlatformGtk() {
   MOZ_RELEASE_ASSERT(gPlatformFTLibrary);
   Factory::SetFTLibrary(gPlatformFTLibrary);
 
-  g_signal_connect(gdk_screen_get_default(), "notify::resolution",
-                   G_CALLBACK(screen_resolution_changed), nullptr);
+  GdkScreen* gdkScreen = gdk_screen_get_default();
+  if (gdkScreen) {
+    g_signal_connect(gdkScreen, "notify::resolution",
+                     G_CALLBACK(screen_resolution_changed), nullptr);
+  }
 }
 
 gfxPlatformGtk::~gfxPlatformGtk() {
