@@ -1134,6 +1134,41 @@ class BaseAssemblerX64 : public BaseAssembler {
                             dst);
   }
 
+  // BMI instructions:
+
+  void sarxq_rrr(RegisterID src, RegisterID shift, RegisterID dst) {
+    spew("sarxq      %s, %s, %s", GPReg64Name(src), GPReg64Name(shift),
+         GPReg64Name(dst));
+
+    RegisterID rm = src;
+    XMMRegisterID src0 = static_cast<XMMRegisterID>(shift);
+    int reg = dst;
+    m_formatter.threeByteOpVex64(VEX_SS /* = F3 */, OP3_SARX_GyEyBy, ESCAPE_38,
+                                 rm, src0, reg);
+  }
+
+  void shlxq_rrr(RegisterID src, RegisterID shift, RegisterID dst) {
+    spew("shlxq      %s, %s, %s", GPReg64Name(src), GPReg64Name(shift),
+         GPReg64Name(dst));
+
+    RegisterID rm = src;
+    XMMRegisterID src0 = static_cast<XMMRegisterID>(shift);
+    int reg = dst;
+    m_formatter.threeByteOpVex64(VEX_PD /* = 66 */, OP3_SHLX_GyEyBy, ESCAPE_38,
+                                 rm, src0, reg);
+  }
+
+  void shrxq_rrr(RegisterID src, RegisterID shift, RegisterID dst) {
+    spew("shrxq      %s, %s, %s", GPReg64Name(src), GPReg64Name(shift),
+         GPReg64Name(dst));
+
+    RegisterID rm = src;
+    XMMRegisterID src0 = static_cast<XMMRegisterID>(shift);
+    int reg = dst;
+    m_formatter.threeByteOpVex64(VEX_SD /* = F2 */, OP3_SHRX_GyEyBy, ESCAPE_38,
+                                 rm, src0, reg);
+  }
+
  private:
   MOZ_MUST_USE JmpSrc twoByteRipOpSimd(const char* name, VexOperandType ty,
                                        TwoByteOpcodeID opcode,

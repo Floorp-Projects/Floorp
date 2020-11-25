@@ -289,6 +289,10 @@ void MacroAssembler::lshift64(Imm32 imm, Register64 dest) {
 }
 
 void MacroAssembler::lshift64(Register shift, Register64 srcDest) {
+  if (Assembler::HasBMI2()) {
+    shlxq(srcDest.reg, shift, srcDest.reg);
+    return;
+  }
   MOZ_ASSERT(shift == rcx);
   shlq_cl(srcDest.reg);
 }
@@ -303,6 +307,10 @@ void MacroAssembler::rshift64(Imm32 imm, Register64 dest) {
 }
 
 void MacroAssembler::rshift64(Register shift, Register64 srcDest) {
+  if (Assembler::HasBMI2()) {
+    shrxq(srcDest.reg, shift, srcDest.reg);
+    return;
+  }
   MOZ_ASSERT(shift == rcx);
   shrq_cl(srcDest.reg);
 }
@@ -318,6 +326,10 @@ void MacroAssembler::rshift64Arithmetic(Imm32 imm, Register64 dest) {
 }
 
 void MacroAssembler::rshift64Arithmetic(Register shift, Register64 srcDest) {
+  if (Assembler::HasBMI2()) {
+    sarxq(srcDest.reg, shift, srcDest.reg);
+    return;
+  }
   MOZ_ASSERT(shift == rcx);
   sarq_cl(srcDest.reg);
 }

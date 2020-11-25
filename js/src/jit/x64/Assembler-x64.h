@@ -810,6 +810,18 @@ class Assembler : public AssemblerX86Shared {
   void shlq_cl(Register dest) { masm.shlq_CLr(dest.encoding()); }
   void shrq_cl(Register dest) { masm.shrq_CLr(dest.encoding()); }
   void sarq_cl(Register dest) { masm.sarq_CLr(dest.encoding()); }
+  void sarxq(Register src, Register shift, Register dest) {
+    MOZ_ASSERT(HasBMI2());
+    masm.sarxq_rrr(src.encoding(), shift.encoding(), dest.encoding());
+  }
+  void shlxq(Register src, Register shift, Register dest) {
+    MOZ_ASSERT(HasBMI2());
+    masm.shlxq_rrr(src.encoding(), shift.encoding(), dest.encoding());
+  }
+  void shrxq(Register src, Register shift, Register dest) {
+    MOZ_ASSERT(HasBMI2());
+    masm.shrxq_rrr(src.encoding(), shift.encoding(), dest.encoding());
+  }
   void rolq(Imm32 imm, Register dest) {
     masm.rolq_ir(imm.value, dest.encoding());
   }

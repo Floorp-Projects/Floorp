@@ -7067,9 +7067,41 @@ class BaseCompiler final : public BaseCompilerInterface {
 #endif
   }
 
-  void pop2xI32ForShiftOrRotate(RegI32* r0, RegI32* r1) {
+  void pop2xI32ForShift(RegI32* r0, RegI32* r1) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    // r1 must be ecx for a variable shift, unless BMI2 is available.
+    if (!Assembler::HasBMI2()) {
+      *r1 = popI32(specific_.ecx);
+      *r0 = popI32();
+      return;
+    }
+#endif
+    pop2xI32(r0, r1);
+  }
+
+  void pop2xI64ForShift(RegI64* r0, RegI64* r1) {
+#if defined(JS_CODEGEN_X86)
     // r1 must be ecx for a variable shift.
+    needI32(specific_.ecx);
+    *r1 = popI64ToSpecific(widenI32(specific_.ecx));
+    *r0 = popI64();
+#else
+#  if defined(JS_CODEGEN_X64)
+    // r1 must be rcx for a variable shift, unless BMI2 is available.
+    if (!Assembler::HasBMI2()) {
+      needI64(specific_.rcx);
+      *r1 = popI64ToSpecific(specific_.rcx);
+      *r0 = popI64();
+      return;
+    }
+#  endif
+    pop2xI64(r0, r1);
+#endif
+  }
+
+  void pop2xI32ForRotate(RegI32* r0, RegI32* r1) {
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    // r1 must be ecx for a variable rotate.
     *r1 = popI32(specific_.ecx);
     *r0 = popI32();
 #else
@@ -7077,9 +7109,9 @@ class BaseCompiler final : public BaseCompilerInterface {
 #endif
   }
 
-  void pop2xI64ForShiftOrRotate(RegI64* r0, RegI64* r1) {
+  void pop2xI64ForRotate(RegI64* r0, RegI64* r1) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-    // r1 must be ecx for a variable shift.
+    // r1 must be ecx for a variable rotate.
     needI32(specific_.ecx);
     *r1 = popI64ToSpecific(widenI32(specific_.ecx));
     *r0 = popI64();
@@ -8909,7 +8941,7 @@ void BaseCompiler::emitShlI32() {
     pushI32(r);
   } else {
     RegI32 r, rs;
-    pop2xI32ForShiftOrRotate(&r, &rs);
+    pop2xI32ForShift(&r, &rs);
     maskShiftCount32(rs);
     masm.lshift32(rs, r);
     freeI32(rs);
@@ -8925,7 +8957,7 @@ void BaseCompiler::emitShlI64() {
     pushI64(r);
   } else {
     RegI64 r, rs;
-    pop2xI64ForShiftOrRotate(&r, &rs);
+    pop2xI64ForShift(&r, &rs);
     masm.lshift64(lowPart(rs), r);
     freeI64(rs);
     pushI64(r);
@@ -8940,7 +8972,7 @@ void BaseCompiler::emitShrI32() {
     pushI32(r);
   } else {
     RegI32 r, rs;
-    pop2xI32ForShiftOrRotate(&r, &rs);
+    pop2xI32ForShift(&r, &rs);
     maskShiftCount32(rs);
     masm.rshift32Arithmetic(rs, r);
     freeI32(rs);
@@ -8956,7 +8988,7 @@ void BaseCompiler::emitShrI64() {
     pushI64(r);
   } else {
     RegI64 r, rs;
-    pop2xI64ForShiftOrRotate(&r, &rs);
+    pop2xI64ForShift(&r, &rs);
     masm.rshift64Arithmetic(lowPart(rs), r);
     freeI64(rs);
     pushI64(r);
@@ -8971,7 +9003,7 @@ void BaseCompiler::emitShrU32() {
     pushI32(r);
   } else {
     RegI32 r, rs;
-    pop2xI32ForShiftOrRotate(&r, &rs);
+    pop2xI32ForShift(&r, &rs);
     maskShiftCount32(rs);
     masm.rshift32(rs, r);
     freeI32(rs);
@@ -8987,7 +9019,7 @@ void BaseCompiler::emitShrU64() {
     pushI64(r);
   } else {
     RegI64 r, rs;
-    pop2xI64ForShiftOrRotate(&r, &rs);
+    pop2xI64ForShift(&r, &rs);
     masm.rshift64(lowPart(rs), r);
     freeI64(rs);
     pushI64(r);
@@ -9002,7 +9034,7 @@ void BaseCompiler::emitRotrI32() {
     pushI32(r);
   } else {
     RegI32 r, rs;
-    pop2xI32ForShiftOrRotate(&r, &rs);
+    pop2xI32ForRotate(&r, &rs);
     masm.rotateRight(rs, r, r);
     freeI32(rs);
     pushI32(r);
@@ -9019,7 +9051,7 @@ void BaseCompiler::emitRotrI64() {
     pushI64(r);
   } else {
     RegI64 r, rs;
-    pop2xI64ForShiftOrRotate(&r, &rs);
+    pop2xI64ForRotate(&r, &rs);
     masm.rotateRight64(lowPart(rs), r, r, maybeHighPart(rs));
     freeI64(rs);
     pushI64(r);
@@ -9034,7 +9066,7 @@ void BaseCompiler::emitRotlI32() {
     pushI32(r);
   } else {
     RegI32 r, rs;
-    pop2xI32ForShiftOrRotate(&r, &rs);
+    pop2xI32ForRotate(&r, &rs);
     masm.rotateLeft(rs, r, r);
     freeI32(rs);
     pushI32(r);
@@ -9051,7 +9083,7 @@ void BaseCompiler::emitRotlI64() {
     pushI64(r);
   } else {
     RegI64 r, rs;
-    pop2xI64ForShiftOrRotate(&r, &rs);
+    pop2xI64ForRotate(&r, &rs);
     masm.rotateLeft64(lowPart(rs), r, r, maybeHighPart(rs));
     freeI64(rs);
     pushI64(r);
@@ -13854,9 +13886,17 @@ bool BaseCompiler::emitVectorShiftRightI64x2(bool isUnsigned) {
   }
 #  endif
 
-#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+#  if defined(JS_CODEGEN_X86)
   needI32(specific_.ecx);
   RegI32 count = popI32ToSpecific(specific_.ecx);
+#  elif defined(JS_CODEGEN_X64)
+  RegI32 count;
+  if (Assembler::HasBMI2()) {
+    count = popI32();
+  } else {
+    needI32(specific_.ecx);
+    count = popI32ToSpecific(specific_.ecx);
+  }
 #  elif defined(JS_CODEGEN_ARM64)
   RegI32 count = popI32();
 #  endif

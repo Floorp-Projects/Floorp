@@ -22,6 +22,7 @@ static const size_t MaxInstructionSize = 16;
 // Operand size/types as listed in the Appendix A.2.  Tables of the instructions
 // and their operands can be found in the Appendix A.3.
 //
+// B = reg (VEX.vvvv of VEX prefix)
 // E = reg/mem
 // G = reg (reg field of ModR/M)
 // U = xmm (R/M field of ModR/M)
@@ -39,6 +40,7 @@ static const size_t MaxInstructionSize = 16;
 // ps = packed float 32 (xmm)
 // sd = scalar double (xmm)
 // pd = packed double (xmm)
+// y = 32/64-bit
 // z = 16/32/64-bit
 // vqp = (*)
 //
@@ -365,7 +367,10 @@ enum ThreeByteOpcodeID {
   OP3_PMAXUW_VdqWdq = 0x3E,
   OP3_PMAXUD_VdqWdq = 0x3F,
   OP3_PMULLD_VdqWdq = 0x40,
-  OP3_VBLENDVPS_VdqWdq = 0x4A
+  OP3_VBLENDVPS_VdqWdq = 0x4A,
+  OP3_SHLX_GyEyBy = 0xF7,
+  OP3_SARX_GyEyBy = 0xF7,
+  OP3_SHRX_GyEyBy = 0xF7,
 };
 
 // Test whether the given opcode should be printed with its operands reversed.
