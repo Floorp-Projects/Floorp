@@ -25,6 +25,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
@@ -45,6 +46,7 @@ class HistoryControllerTest {
     private val invalidateOptionsMenu: () -> Unit = mockk(relaxed = true)
     private val deleteHistoryItems: (Set<HistoryItem>) -> Unit = mockk(relaxed = true)
     private val syncHistory: suspend () -> Unit = mockk(relaxed = true)
+    private val metrics: MetricController = mockk(relaxed = true)
     private val controller = DefaultHistoryController(
         store,
         navController,
@@ -56,7 +58,8 @@ class HistoryControllerTest {
         displayDeleteAll,
         invalidateOptionsMenu,
         deleteHistoryItems,
-        syncHistory
+        syncHistory,
+        metrics
     )
 
     @Before

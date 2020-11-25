@@ -15,6 +15,8 @@ import mozilla.components.concept.engine.prompt.ShareData
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 
 @Suppress("TooManyFunctions")
 interface HistoryController {
@@ -43,7 +45,8 @@ class DefaultHistoryController(
     private val displayDeleteAll: () -> Unit,
     private val invalidateOptionsMenu: () -> Unit,
     private val deleteHistoryItems: (Set<HistoryItem>) -> Unit,
-    private val syncHistory: suspend () -> Unit
+    private val syncHistory: suspend () -> Unit,
+    private val metrics: MetricController
 ) : HistoryController {
     override fun handleOpen(item: HistoryItem, mode: BrowsingMode?) {
         openToBrowser(item, mode)
@@ -111,5 +114,6 @@ class DefaultHistoryController(
             HistoryFragmentDirections.actionGlobalRecentlyClosed(),
             NavOptions.Builder().setPopUpTo(R.id.recentlyClosedFragment, true).build()
         )
+        metrics.track(Event.RecentlyClosedTabsOpened)
     }
 }

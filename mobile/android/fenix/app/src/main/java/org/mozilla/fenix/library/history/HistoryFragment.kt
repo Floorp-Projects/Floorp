@@ -92,8 +92,9 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
             ::displayDeleteAllDialog,
             ::invalidateOptionsMenu,
             ::deleteHistoryItems,
-            ::syncHistory
-        )
+            ::syncHistory,
+            requireComponents.analytics.metrics
+            )
         historyInteractor = HistoryInteractor(
             historyController
         )
