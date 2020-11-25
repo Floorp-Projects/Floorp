@@ -807,7 +807,6 @@ unsafe extern "C" fn qcms_modular_transform_create_mAB(
             if transform.is_null() {
                 current_block = 7590209878260659629;
             } else {
-                append_transform(transform, &mut next_transform);
                 (*transform).input_clut_table_r =
                     build_input_gamma_table((*lut).a_curves[0].as_deref());
                 (*transform).input_clut_table_g =
@@ -823,6 +822,7 @@ unsafe extern "C" fn qcms_modular_transform_create_mAB(
                             _: usize,
                         ) -> (),
                 );
+                append_transform(transform, &mut next_transform);
                 if (*lut).num_grid_points[0] as i32 != (*lut).num_grid_points[1] as i32
                     || (*lut).num_grid_points[1] as i32 != (*lut).num_grid_points[2] as i32
                 {
@@ -834,7 +834,6 @@ unsafe extern "C" fn qcms_modular_transform_create_mAB(
                     if transform.is_null() {
                         current_block = 7590209878260659629;
                     } else {
-                        append_transform(transform, &mut next_transform);
                         clut_length = (::std::mem::size_of::<f32>() as f64
                             * ((*lut).num_grid_points[0] as f64).powf(3f64)
                             * 3f64) as usize;
@@ -861,6 +860,7 @@ unsafe extern "C" fn qcms_modular_transform_create_mAB(
                                     )
                                         -> (),
                             );
+                            append_transform(transform, &mut next_transform);
                             current_block = 10652014663920648156;
                         }
                     }
@@ -879,7 +879,6 @@ unsafe extern "C" fn qcms_modular_transform_create_mAB(
                 if transform.is_null() {
                     current_block = 7590209878260659629;
                 } else {
-                    append_transform(transform, &mut next_transform);
                     (*transform).input_clut_table_r =
                         build_input_gamma_table((*lut).m_curves[0].as_deref());
                     (*transform).input_clut_table_g =
@@ -895,12 +894,12 @@ unsafe extern "C" fn qcms_modular_transform_create_mAB(
                                 _: usize,
                             ) -> (),
                     );
+                    append_transform(transform, &mut next_transform);
                     // Prepare Matrix
                     transform = qcms_modular_transform_alloc();
                     if transform.is_null() {
                         current_block = 7590209878260659629;
                     } else {
-                        append_transform(transform, &mut next_transform);
                         (*transform).matrix = build_mAB_matrix(lut);
                         if (*transform).matrix.invalid {
                             current_block = 7590209878260659629;
@@ -920,6 +919,7 @@ unsafe extern "C" fn qcms_modular_transform_create_mAB(
                             );
                             current_block = 980989089337379490;
                         }
+                        append_transform(transform, &mut next_transform);
                     }
                 }
             } else {
@@ -932,7 +932,6 @@ unsafe extern "C" fn qcms_modular_transform_create_mAB(
                         // Prepare B curve
                         transform = qcms_modular_transform_alloc();
                         if !transform.is_null() {
-                            append_transform(transform, &mut next_transform);
                             (*transform).input_clut_table_r =
                                 build_input_gamma_table((*lut).b_curves[0].as_deref());
                             (*transform).input_clut_table_g =
@@ -949,6 +948,7 @@ unsafe extern "C" fn qcms_modular_transform_create_mAB(
                                     )
                                         -> (),
                             );
+                            append_transform(transform, &mut next_transform);
                             if (*lut).reversed {
                                 // mBA are identical to mAB except that the transformation order
                                 // is reversed
