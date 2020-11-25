@@ -904,6 +904,9 @@ class Assembler : public AssemblerX86Shared {
     masm.bsfq_rr(src.encoding(), dest.encoding());
   }
   void bswapq(const Register& reg) { masm.bswapq_r(reg.encoding()); }
+  void lzcntq(const Register& src, const Register& dest) {
+    masm.lzcntq_rr(src.encoding(), dest.encoding());
+  }
   void popcntq(const Register& src, const Register& dest) {
     masm.popcntq_rr(src.encoding(), dest.encoding());
   }
