@@ -68,7 +68,7 @@ void WebRenderImageHost::UseTextureHost(
 
   if (GetAsyncRef()) {
     for (const auto& it : mWrBridges) {
-      WebRenderBridgeParent* wrBridge = it.second;
+      RefPtr<WebRenderBridgeParent> wrBridge = it.second->WrBridge();
       if (wrBridge && wrBridge->CompositorScheduler()) {
         wrBridge->CompositorScheduler()->ScheduleComposition();
       }
@@ -86,7 +86,7 @@ void WebRenderImageHost::UseTextureHost(
           img.mFrameID > mLastFrameID || img.mProducerID != mLastProducerID;
       if (frameComesAfter && !img.mTimeStamp.IsNull()) {
         for (const auto& it : mWrBridges) {
-          WebRenderBridgeParent* wrBridge = it.second;
+          RefPtr<WebRenderBridgeParent> wrBridge = it.second->WrBridge();
           if (wrBridge) {
             wrBridge->AsyncImageManager()->CompositeUntil(
                 img.mTimeStamp + TimeDuration::FromMilliseconds(BIAS_TIME_MS));
@@ -257,7 +257,9 @@ void WebRenderImageHost::SetWrBridge(const wr::PipelineId& aPipelineId,
   const auto it = mWrBridges.find(wr::AsUint64(aPipelineId));
   MOZ_ASSERT(it == mWrBridges.end());
 #endif
-  mWrBridges.emplace(wr::AsUint64(aPipelineId), aWrBridge);
+  RefPtr<WebRenderBridgeParentRef> ref =
+      aWrBridge->GetWebRenderBridgeParentRef();
+  mWrBridges.emplace(wr::AsUint64(aPipelineId), ref);
 }
 
 void WebRenderImageHost::ClearWrBridge(const wr::PipelineId& aPipelineId,
