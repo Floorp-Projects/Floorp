@@ -18,6 +18,7 @@ namespace layers {
 
 class AsyncImagePipelineManager;
 class WebRenderBridgeParent;
+class WebRenderBridgeParentRef;
 
 /**
  * ImageHost. Works with ImageClientSingle and ImageClientBuffered
@@ -88,7 +89,7 @@ class WebRenderImageHost : public CompositableHost, public ImageComposite {
 
   void SetCurrentTextureHost(TextureHost* aTexture);
 
-  std::unordered_map<uint64_t, WeakPtr<WebRenderBridgeParent>> mWrBridges;
+  std::unordered_map<uint64_t, RefPtr<WebRenderBridgeParentRef>> mWrBridges;
 
   AsyncImagePipelineManager* mCurrentAsyncImageManager;
 

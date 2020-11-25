@@ -21,7 +21,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/WeakPtr.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "nsTArrayForwardDeclare.h"
 
@@ -48,6 +48,7 @@ class CompositorBridgeParentBase;
 class CompositorVsyncScheduler;
 class OMTASampler;
 class UiCompositorControllerParent;
+class WebRenderBridgeParentRef;
 class WebRenderImageHost;
 struct WrAnimations;
 
@@ -99,8 +100,7 @@ struct CompositorAnimationIdsForEpoch {
 class WebRenderBridgeParent final : public PWebRenderBridgeParent,
                                     public CompositorVsyncSchedulerOwner,
                                     public CompositableParentManager,
-                                    public layers::FrameRecorder,
-                                    public SupportsWeakPtr {
+                                    public layers::FrameRecorder {
  public:
   WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
                         const wr::PipelineId& aPipelineId,
@@ -332,6 +332,8 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   nsTArray<CompositionPayload> TakePendingScrollPayload(
       const std::pair<wr::PipelineId, wr::Epoch>& aKey);
 
+  RefPtr<WebRenderBridgeParentRef> GetWebRenderBridgeParentRef();
+
  private:
   class ScheduleSharedSurfaceRelease;
 
@@ -511,6 +513,8 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
 
   TimeStamp mMostRecentComposite;
 
+  RefPtr<WebRenderBridgeParentRef> mWebRenderBridgeRef;
+
 #if defined(MOZ_WIDGET_ANDROID)
   UiCompositorControllerParent* mScreenPixelsTarget;
 #endif
@@ -524,6 +528,26 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   DataMutex<nsClassHashtable<PipelineIdAndEpochHashEntry,
                              nsTArray<CompositionPayload>>>
       mPendingScrollPayloads;
+};
+
+// Use this class, since WebRenderBridgeParent could not supports
+// ThreadSafeWeakPtr.
+// This class provides a ref of WebRenderBridgeParent when
+// the WebRenderBridgeParent is not destroyed. Then it works similar to
+// weak pointer.
+class WebRenderBridgeParentRef final {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderBridgeParentRef)
+
+  explicit WebRenderBridgeParentRef(WebRenderBridgeParent* aWebRenderBridge);
+
+  RefPtr<WebRenderBridgeParent> WrBridge();
+  void Clear();
+
+ protected:
+  ~WebRenderBridgeParentRef();
+
+  RefPtr<WebRenderBridgeParent> mWebRenderBridge;
 };
 
 }  // namespace layers
