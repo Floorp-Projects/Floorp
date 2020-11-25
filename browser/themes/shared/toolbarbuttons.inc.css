@@ -174,7 +174,7 @@ toolbar[brighttext] .toolbaritem-combined-buttons > separator {
 #PersonalToolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover,
 #tabbrowser-arrowscrollbox:not([scrolledtostart=true])::part(scrollbutton-up):hover,
 #tabbrowser-arrowscrollbox:not([scrolledtoend=true])::part(scrollbutton-down):hover,
-.findbar-button:not(:is([checked="true"],[disabled="true"])):hover,
+.findbar-button:not([checked="true"],[disabled="true"]):hover,
 toolbarbutton.bookmark-item:not(.subviewbutton):hover:not([disabled="true"]):not([open]),
 toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-icon,
 toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-text,
