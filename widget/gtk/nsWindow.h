@@ -422,7 +422,7 @@ class nsWindow final : public nsBaseWidget {
   static void HideWaylandOpenedPopups();
   void NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
                                       bool aFlippedX, bool aFlippedY);
-  static bool IsMainWindowTransparent();
+  static bool IsToplevelWindowTransparent();
 
  protected:
   virtual ~nsWindow();
@@ -469,7 +469,6 @@ class nsWindow final : public nsBaseWidget {
 #endif
   bool mWindowScaleFactorChanged;
   int mWindowScaleFactor;
-  bool mIsAccelerated;
 
  private:
   void DestroyChildWindows();
@@ -538,6 +537,8 @@ class nsWindow final : public nsBaseWidget {
   Visual* mXVisual;
   int mXDepth;
   mozilla::widget::WindowSurfaceProvider mSurfaceProvider;
+
+  bool ConfigureX11GLVisual(bool aUseAlpha);
 #endif
 #ifdef MOZ_WAYLAND
   RefPtr<mozilla::gfx::VsyncSource> mWaylandVsyncSource;
