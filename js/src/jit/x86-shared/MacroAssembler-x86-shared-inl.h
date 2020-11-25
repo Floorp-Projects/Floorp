@@ -83,6 +83,11 @@ void MacroAssembler::clz32(Register src, Register dest, bool knownNotZero) {
 }
 
 void MacroAssembler::ctz32(Register src, Register dest, bool knownNotZero) {
+  if (AssemblerX86Shared::HasBMI1()) {
+    tzcntl(src, dest);
+    return;
+  }
+
   bsfl(src, dest);
   if (!knownNotZero) {
     Label nonzero;
