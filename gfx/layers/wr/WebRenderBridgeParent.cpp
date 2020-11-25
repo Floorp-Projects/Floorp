@@ -398,6 +398,11 @@ void WebRenderBridgeParent::Destroy() {
     return;
   }
   mDestroyed = true;
+  if (mWebRenderBridgeRef) {
+    // Break mutual reference
+    mWebRenderBridgeRef->Clear();
+    mWebRenderBridgeRef = nullptr;
+  }
   ClearResources();
 }
 
@@ -2465,6 +2470,39 @@ void WebRenderBridgeParent::ExtractImageCompositeNotifications(
     return;
   }
   mAsyncImageManager->FlushImageNotifications(aNotifications);
+}
+
+RefPtr<WebRenderBridgeParentRef>
+WebRenderBridgeParent::GetWebRenderBridgeParentRef() {
+  if (mDestroyed) {
+    return nullptr;
+  }
+
+  if (!mWebRenderBridgeRef) {
+    mWebRenderBridgeRef = new WebRenderBridgeParentRef(this);
+  }
+  return mWebRenderBridgeRef;
+}
+
+WebRenderBridgeParentRef::WebRenderBridgeParentRef(
+    WebRenderBridgeParent* aWebRenderBridge)
+    : mWebRenderBridge(aWebRenderBridge) {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  MOZ_ASSERT(mWebRenderBridge);
+}
+
+RefPtr<WebRenderBridgeParent> WebRenderBridgeParentRef::WrBridge() {
+  return mWebRenderBridge;
+}
+
+void WebRenderBridgeParentRef::Clear() {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  mWebRenderBridge = nullptr;
+}
+
+WebRenderBridgeParentRef::~WebRenderBridgeParentRef() {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  MOZ_ASSERT(!mWebRenderBridge);
 }
 
 }  // namespace layers
