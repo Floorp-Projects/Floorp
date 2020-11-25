@@ -9,6 +9,10 @@
     <string name="content_description_menu">Iba pang pagpipilian</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_private_browsing_button">Paganahin ang private browsing</string>
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">Baidu</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">JD</string>
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d ang napili</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
@@ -121,6 +125,8 @@
     <string name="browser_menu_powered_by2">Powered by %1$s</string>
     <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Reader view</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">Buksan sa app</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Itsura</string>
 
@@ -163,6 +169,10 @@
     <string name="preferences_about">Tungkol sa %1$s</string>
     <!-- Preference for settings related to saved passwords -->
     <string name="preferences_passwords">Mga Password</string>
+    <!-- Preference category for privacy settings -->
+    <string name="preferences_category_privacy">Pribasiya</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Pribasiya at Seguridad</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Accessibility</string>
     <!-- Preference category for account information -->
@@ -181,20 +191,40 @@
     <string name="preferences_language">Wika</string>
 
 
+    <!-- Preference category for developer tools -->
+    <string name="developer_tools_category">Developer tools</string>
+
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">OK</string>
 
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Kanselahin</string>
+
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">Kasaysayan</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Mga Bookmark</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Mga Login</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">mag-Sign out</string>
     <!-- Preference displays and allows changing current FxA device name -->
     <string name="preferences_sync_device_name">Ngalan ng device</string>
 
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%1$s ng %2$s %3$s</string>
+
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetry</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Marketing data</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Mga eksperimento</string>
+
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Mozilla location service</string>
 
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Buksan ang Camera</string>
@@ -207,6 +237,9 @@
     <!-- Preference for using bottom toolbar -->
     <string name="preference_bottom_toolbar">Ilalim</string>
 
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Light</string>
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Madilim</string>
 
@@ -223,18 +256,58 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Isara</string>
 
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d mga tab</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d tab</string>
+
     <!-- Tab Management -->
     <!-- Title of preference for tabs management -->
     <string name="preferences_tabs">Mga Tab</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Listahan</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Grid</string>
 
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Magdagdag ng Tab</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">Pumili</string>
     <!-- Shortcut action to open new tab -->
     <string name="tab_tray_menu_open_new_tab">Bagong Tab</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
     <string name="current_session_delete">Burahin</string>
 
+
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">i-Save</string>
+    <!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Alisin</string>
+    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
+    <string name="tab_tray_save_to_collection">i-Save</string>
+
+
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Kopyahin</string>
+
+
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">Kopyahin</string>
+
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">Kopyahin ang URL</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Kopyahin</string>
+
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Kopyahin ang password</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Kopyahin ang username</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Kopyahin ang site</string>
 
     </resources>

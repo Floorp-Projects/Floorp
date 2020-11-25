@@ -446,6 +446,10 @@
     <string name="preferences_marketing_data">Podatki za trženje</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Deli podatke o možnostih, ki jih uporabljate v %1$su z Leanplumom, našim ponudnikom mobilnega oglaševanja.</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Raziskave</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Dovoli Mozilli namestitev in izvajanje raziskav</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Poskusi</string>
     <!-- Summary for experiments preferences -->
@@ -501,6 +505,8 @@
     <!-- Preferences for using pull to refresh in a webpage -->
     <string name="preference_gestures_website_pull_to_refresh">Povlecite za osvežitev</string>
 
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Pomaknite se, da skrijete orodno vrstico</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
     <string name="preference_gestures_swipe_toolbar_switch_tabs">Podrsaj orodno vrstico vstran za preklop med zavihki</string>
 

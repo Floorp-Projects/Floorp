@@ -1242,7 +1242,7 @@
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Entre com sua câmera</string>
     <!-- Text shown for settings option for sign with email -->
-    <string name="sign_in_with_email">Usar e-mail</string>
+    <string name="sign_in_with_email">Usar email</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[Não tem conta? <u>Crie uma</u> para sincronizar o Firefox entre dispositivos.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->

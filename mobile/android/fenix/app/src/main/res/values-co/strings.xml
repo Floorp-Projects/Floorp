@@ -103,6 +103,8 @@
     <!-- Text for the banner message to tell users about our grid view feature. -->
     <string name="tab_tray_grid_view_banner_message">Mudificà l’accunciamentu di l’unghjette aperte. Andate in e preferenze è selezziunate « Quadrittere » sottu « Vista di l’unghjette ».</string>
 
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_grid_view_banner_positive_button_text">Andà à e preferenze</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_grid_view_banner_negative_button_text">Ignurà</string>
 
@@ -447,6 +449,10 @@
     <string name="preferences_marketing_data">Dati di cummercializazione</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Scumparte i dati nant’à e funzioni di %1$s chì voi impiegate cù Leanplum, u nostru furnidore di cummercializazione mubile.</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Studii</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Permette à Mozilla d’installà è di lancià studii</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Sperimentazioni</string>
     <!-- Summary for experiments preferences -->

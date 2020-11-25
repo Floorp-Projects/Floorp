@@ -22,6 +22,10 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">プライベートタブがここに表示されます。</string>
 
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">Baidu</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">開いているタブ 1 個。タップしてタブを切り替えます。</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -95,6 +99,13 @@
     <string name="tab_tray_close_tabs_banner_positive_button_text">オプションを表示</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">閉じる</string>
+
+    <!-- Text for the banner message to tell users about our grid view feature. -->
+    <string name="tab_tray_grid_view_banner_message">開いたタブのレイアウトを変更します。設定画面を開き、タブビューの下のグリッドを選択してください。</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_grid_view_banner_positive_button_text">設定を開く</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_grid_view_banner_negative_button_text">閉じる</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -441,6 +452,10 @@
     <string name="preferences_marketing_data">マーケティングデータ</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">%1$s で使用した機能に関するデータをモバイルマーケティングベンダーの Leanplum と共有します。</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">調査</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">調査機能のインストールと実行を Mozilla に許可する</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">実験的な機能</string>
     <!-- Summary for experiments preferences -->
@@ -590,6 +605,8 @@
     <string name="tab_tray_title">開いているタブ</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">コレクションに保存</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">選択</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">すべてのタブを共有</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -604,8 +621,18 @@
     <string name="tab_tray_menu_home">ホーム画面を開く</string>
     <!-- Shortcut action to toggle private mode -->
     <string name="tab_tray_menu_toggle">タブモードを切り替え</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">ブックマーク</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">閉じる</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">選択したタブを共有</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">選択したタブのメニュー</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">タブをコレクションから削除</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">タブを選択</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">タブを閉じる</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -986,6 +1013,12 @@
     <string name="snackbar_tab_closed">タブを閉じました</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">すべてのタブを閉じました</string>
+    <!-- Text shown in snackbar when user closes tabs -->
+    <string name="snackbar_message_tabs_closed">タブを閉じました</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">ブックマークを保存しました</string>
+    <!-- Text shown in snackbar action for viewing bookmarks -->
+    <string name="snackbar_message_bookmarks_view">表示</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">トップサイトに追加しました。</string>
     <!-- Text shown in snackbar when user closes a private tab -->
