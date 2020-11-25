@@ -114,12 +114,12 @@ input[type="checkbox"] {
  * If we're not sharing either the screen or the window, we can
  * hide the entire display sharing section.
  */
-:root:not(:is([sharingscreen],[sharingwindow])) > body > #display-share,
-:root:not(:is([sharingscreen],[sharingwindow])) > body > #display-share + .separator,
+:root:not([sharingscreen],[sharingwindow]) > body > #display-share,
+:root:not([sharingscreen],[sharingwindow]) > body > #display-share + .separator,
 :root:not([sharingvideo]) > body > #device-share > #camera-mute-toggle,
 :root:not([sharingaudio]) > body > #device-share > #microphone-mute-toggle,
-:root:not(:is([sharingvideo],[sharingaudio])) > body > #device-share,
-:root:not(:is([sharingvideo],[sharingaudio])) > body > #device-share + .separator {
+:root:not([sharingvideo],[sharingaudio]) > body > #device-share,
+:root:not([sharingvideo],[sharingaudio]) > body > #device-share + .separator {
   display:none;
 }
 

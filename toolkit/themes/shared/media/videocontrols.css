@@ -745,7 +745,7 @@
 }
 
 .pip-wrapper:is([small-video],[has-used]) > .pip-expanded,
-.pip-wrapper[position="right"]:not(:is([small-video],[has-used])) > .pip-icon {
+.pip-wrapper[position="right"]:not([small-video],[has-used]) > .pip-icon {
   display: none;
 }
 
@@ -786,18 +786,18 @@
   pointer-events: none;
 }
 
-.pip-wrapper:not(:is([small-video],[has-used])) > .pip-expanded {
+.pip-wrapper:not([small-video],[has-used]) > .pip-expanded {
   opacity: 1;
   scale: 1;
   pointer-events: auto;
 }
 
-.pip-wrapper:not(:is([small-video],[has-used])).hovering > .pip-expanded {
+.pip-wrapper:not([small-video],[has-used]).hovering > .pip-expanded {
   border-bottom-right-radius: 0px;
   border-bottom-left-radius: 0px;
 }
 
-.pip-wrapper:not(:is([small-video],[has-used])) > .pip-small {
+.pip-wrapper:not([small-video],[has-used]) > .pip-small {
   opacity: 0;
   transition: opacity 200ms;
 }
@@ -844,7 +844,7 @@
 @media (prefers-reduced-motion) {
   .pip-wrapper,
   .pip-expanded,
-  .pip-wrapper:not(:is([small-video],[has-used])) > .pip-small,
+  .pip-wrapper:not([small-video],[has-used]) > .pip-small,
   .pip-explainer {
     transition: none;
   }

@@ -1444,7 +1444,7 @@ var PanelView = class extends AssociatedToNode {
       // Non-hidden <label> or <description> elements that also aren't empty
       // and also don't have a value attribute can be multiline (if their
       // text content is long enough).
-      let isMultiline = ":not(:is([hidden],[value],:empty))";
+      let isMultiline = ":not([hidden],[value],:empty)";
       let selector = [
         "description" + isMultiline,
         "label" + isMultiline,

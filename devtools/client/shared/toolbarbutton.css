@@ -59,11 +59,11 @@
 
 /* Selectable button which is unchecked. */
 
-.devtools-toolbarbutton[label]:not(:is([checked=true],[disabled])):hover {
+.devtools-toolbarbutton[label]:not([checked=true],[disabled]):hover {
   background-color: var(--toolbarbutton-hover-background);
 }
 
-.devtools-toolbarbutton:not(:is([checked=true],[disabled]))[label]:focus {
+.devtools-toolbarbutton:not([checked=true],[disabled])[label]:focus {
   background-color: var(--toolbarbutton-focus-background);
   color: var(--toolbarbutton-focus-color);
 }
