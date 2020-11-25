@@ -331,7 +331,20 @@ events:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-04-01"
-
+  recently_closed_tabs_opened:
+    type: event
+    description: |
+      An event that indicates that the user
+      has accessed recently closed tabs list.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/15366
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/16739
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-05-10"
 onboarding:
   fxa_auto_signin:
     type: event
