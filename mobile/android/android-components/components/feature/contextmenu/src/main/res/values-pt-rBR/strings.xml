@@ -31,11 +31,11 @@
     <!-- Text for context menu item to open the link in an external app. -->
     <string name="mozac_feature_contextmenu_open_link_in_external_app">Abrir link em app externo</string>
     <!-- Text for context menu item to share the email with another app. -->
-    <string name="mozac_feature_contextmenu_share_email_address">Compartilhar endereço de e-mail</string>
+    <string name="mozac_feature_contextmenu_share_email_address">Compartilhar endereço de email</string>
     <!-- Text for context menu item to copy the email address to the clipboard. -->
-    <string name="mozac_feature_contextmenu_copy_email_address">Copiar endereço de e-mail</string>
+    <string name="mozac_feature_contextmenu_copy_email_address">Copiar endereço de email</string>
     <!-- Text for confirmation "snackbar" shown after copying a email address to the clipboard. -->
-    <string name="mozac_feature_contextmenu_snackbar_email_address_copied">Endereço de e-mail copiado para área de transferência</string>
+    <string name="mozac_feature_contextmenu_snackbar_email_address_copied">Endereço de email copiado para área de transferência</string>
     <!-- Text for context menu item to add to a contact. -->
     <string name="mozac_feature_contextmenu_add_to_contact">Adicionar em um contato</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
@@ -45,7 +45,7 @@
     <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
     <string name="mozac_selection_context_menu_share">Compartilhar</string>
     <!-- Action shown in a text selection context menu. This will prompt a new email from the selected text. -->
-    <string name="mozac_selection_context_menu_email">E-mail</string>
+    <string name="mozac_selection_context_menu_email">Email</string>
     <!-- Action shown in a text selection context menu. This will prompt a new call from the selected text. -->
     <string name="mozac_selection_context_menu_call">Chamar</string>
 </resources>
