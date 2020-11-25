@@ -30,7 +30,7 @@ button {
 
 /* .......... hover state .......... */
 
-button:hover:not(:is(:active,[disabled="true"],[open="true"],[checked="true"],[default="true"])) {
+button:hover:not(:active,[disabled="true"],[open="true"],[checked="true"],[default="true"]) {
   color: -moz-buttonhovertext;
 }
 

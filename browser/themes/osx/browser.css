@@ -123,7 +123,7 @@
 }
 
 /* Draw the bottom border of the tabs toolbar when titlebar isn't using vibrancy */
-:root:not(:is([inFullscreen], [tabsintitlebar])) #nav-bar:not([tabs-hidden="true"]),
+:root:not([inFullscreen], [tabsintitlebar]) #nav-bar:not([tabs-hidden="true"]),
 #nav-bar:not([tabs-hidden="true"]):-moz-lwtheme {
   box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--tabs-border-color);
 }

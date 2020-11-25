@@ -13,8 +13,8 @@
 % There's no calc() here (and therefore lots of calc() where this is used) because
 % we don't support nested calc(): https://bugzilla.mozilla.org/show_bug.cgi?id=968761
 %define menuPanelButtonWidth (@menuPanelWidth@ / 3 - 0.1px)
-%define buttonStateHover :not(:is([disabled],[open],:active)):is(:hover,:focus)
-%define menuStateHover :not(:is([disabled],:active))[_moz-menuactive]
+%define buttonStateHover :not([disabled],[open],:active):is(:hover,:focus)
+%define menuStateHover :not([disabled],:active)[_moz-menuactive]
 %define buttonStateActive :not([disabled]):is([open],:hover:active)
 %define menuStateActive :not([disabled])[_moz-menuactive]:active
 %define menuStateMenuActive :not([disabled])[_moz-menuactive]

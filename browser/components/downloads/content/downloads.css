@@ -43,20 +43,20 @@
   display: none;
 }
 
-.download-state:not(:is([state="6"], /* Blocked (parental) */
-                        [state="8"], /* Blocked (dirty)    */
-                        [state="9"]) /* Blocked (policy)   */)
-                                           .downloadBlockedBadge,
+.download-state:not([state="6"],/* Blocked (parental) */
+                    [state="8"],/* Blocked (dirty)    */
+                    [state="9"] /* Blocked (policy)   */)
+                                        .downloadBlockedBadge,
 
-.download-state:not(:is([state="-1"],/* Starting (initial) */
-                        [state="5"], /* Starting (queued)  */
-                        [state="0"], /* Downloading        */
-                        [state="4"], /* Paused             */
-                        [state="7"]) /* Scanning           */)
-                                           .downloadProgress,
+.download-state:not([state="-1"],/* Starting (initial) */
+                    [state="5"], /* Starting (queued)  */
+                    [state="0"], /* Downloading        */
+                    [state="4"], /* Paused             */
+                    [state="7"]  /* Scanning           */)
+                                            .downloadProgress,
 
 .download-state:not(    [state="0"]  /* Downloading        */)
-                                           .downloadPauseMenuItem,
+                                            .downloadPauseMenuItem,
 
 .download-state:not(    [state="4"]  /* Paused             */)
                                            .downloadResumeMenuItem,
@@ -68,30 +68,30 @@
 .download-state[state="8"]:not(.temporary-block)
                                            .downloadUnblockMenuItem,
 
-.download-state:not(:is([state="1"], /* Finished           */
-                        [state="2"], /* Failed             */
-                        [state="3"], /* Canceled           */
-                        [state="6"], /* Blocked (parental) */
-                        [state="8"], /* Blocked (dirty)    */
-                        [state="9"]) /* Blocked (policy)   */)
-                                           .downloadRemoveFromHistoryMenuItem,
+.download-state:not([state="1"], /* Finished           */
+                    [state="2"], /* Failed             */
+                    [state="3"], /* Canceled           */
+                    [state="6"], /* Blocked (parental) */
+                    [state="8"], /* Blocked (dirty)    */
+                    [state="9"]  /* Blocked (policy)   */)
+                           .downloadRemoveFromHistoryMenuItem,
 
-.download-state:not(:is([state="-1"],/* Starting (initial) */
-                        [state="0"], /* Downloading        */
-                        [state="1"], /* Finished           */
-                        [state="4"], /* Paused             */
-                        [state="5"]) /* Starting (queued)  */)
-                                           .downloadShowMenuItem,
+.download-state:not([state="-1"],/* Starting (initial) */
+                    [state="0"], /* Downloading        */
+                    [state="1"], /* Finished           */
+                    [state="4"], /* Paused             */
+                    [state="5"]  /* Starting (queued)  */)
+                                         .downloadShowMenuItem,
 .download-state[state="1"]:not([exists])
                                            .downloadShowMenuItem,
 
-.download-state:not(:is([state="-1"],/* Starting (initial) */
-                        [state="0"], /* Downloading        */
-                        [state="1"], /* Finished           */
-                        [state="4"], /* Paused             */
-                        [state="5"], /* Starting (queued)  */
-                        [state="8"]) /* Blocked (dirty)    */)
-                                           .downloadCommandsSeparator,
+.download-state:not([state="-1"],/* Starting (initial) */
+                    [state="0"], /* Downloading        */
+                    [state="1"], /* Finished           */
+                    [state="4"], /* Paused             */
+                    [state="5"], /* Starting (queued)  */
+                    [state="8"] /* Blocked (dirty)    */)
+                                        .downloadCommandsSeparator,
 .download-state[state="1"]:not([exists])
                                            .downloadCommandsSeparator,
 .download-state[state="8"]:not(.temporary-block)
@@ -108,19 +108,18 @@
 
 /*** Visibility of download button labels ***/
 
-.download-state:not(:is([state="-1"],/* Starting (initial) */
-                        [state="5"], /* Starting (queued)  */
-                        [state="0"], /* Downloading        */
-                        [state="4"]) /* Paused             */)
+.download-state:not([state="-1"],/* Starting (initial) */
+                    [state="5"], /* Starting (queued)  */
+                    [state="0"], /* Downloading        */
+                    [state="4"]  /* Paused             */)
                                            .downloadCancel,
 
-.download-state:not(:is([state="2"], /* Failed             */
-                        [state="3"]) /* Canceled           */)
+.download-state:not([state="2"], /* Failed             */
+                    [state="3"]  /* Canceled           */)
                                            .downloadRetry,
 
 .download-state:not(    [state="1"]  /* Finished           */)
-                                           .downloadShow
-{
+                                           .downloadShow {
   display: none;
 }
 

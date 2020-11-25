@@ -485,7 +485,7 @@ strong {
   width: 100%;
 }
 
-.tooltip-container[type="doorhanger"] .menuitem > .command:not(:is([disabled],[open],:active)):is(:hover,:focus) {
+.tooltip-container[type="doorhanger"] .menuitem > .command:not([disabled],[open],:active):is(:hover,:focus) {
   background-color: var(--theme-arrowpanel-dimmed);
 }
 
