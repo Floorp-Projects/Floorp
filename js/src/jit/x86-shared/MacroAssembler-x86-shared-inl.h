@@ -66,8 +66,10 @@ void MacroAssembler::xor32(Register src, Register dest) { xorl(src, dest); }
 void MacroAssembler::xor32(Imm32 imm, Register dest) { xorl(imm, dest); }
 
 void MacroAssembler::clz32(Register src, Register dest, bool knownNotZero) {
-  // On very recent chips (Haswell and newer?) there is actually an
-  // LZCNT instruction that does all of this.
+  if (AssemblerX86Shared::HasLZCNT()) {
+    lzcntl(src, dest);
+    return;
+  }
 
   bsrl(src, dest);
   if (!knownNotZero) {
