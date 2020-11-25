@@ -898,17 +898,23 @@ void BaseCapturerPipeWire::CaptureFrame() {
   callback_->OnCaptureResult(Result::SUCCESS, std::move(result));
 }
 
+// Keep in sync with defines at browser/actors/WebRTCParent.jsm
+// With PipeWire we can't select which system resource is shared so
+// we don't create a window/screen list. Instead we place these constants
+// as window name/id so frontend code can identify PipeWire backend
+// and does not try to create screen/window preview.
+
+#define PIPEWIRE_ID   0xaffffff
+#define PIPEWIRE_NAME "####_PIPEWIRE_PORTAL_####"
+
 bool BaseCapturerPipeWire::GetSourceList(SourceList* sources) {
-  RTC_DCHECK(sources->size() == 0);
-  // List of available screens is already presented by the xdg-desktop-portal.
-  // But we have to add an empty source as the code expects it.
-  sources->push_back({0});
+  sources->push_back({PIPEWIRE_ID, 0, PIPEWIRE_NAME});
   return true;
 }
 
 bool BaseCapturerPipeWire::SelectSource(SourceId id) {
   // Screen selection is handled by the xdg-desktop-portal.
-  return true;
+  return id == PIPEWIRE_ID;
 }
 
 // static
