@@ -43,7 +43,9 @@ int32_t WidgetUtilsGTK::IsTouchDeviceSupportPresent() {
   return result;
 }
 
-bool IsMainWindowTransparent() { return nsWindow::IsMainWindowTransparent(); }
+bool IsMainWindowTransparent() {
+  return nsWindow::IsToplevelWindowTransparent();
+}
 
 }  // namespace widget
 

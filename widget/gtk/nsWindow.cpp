@@ -505,8 +505,6 @@ nsWindow::nsWindow() {
 
   mWindowScaleFactorChanged = true;
   mWindowScaleFactor = 1;
-
-  mIsAccelerated = false;
 }
 
 nsWindow::~nsWindow() {
@@ -4178,7 +4176,10 @@ gboolean nsWindow::OnTouchEvent(GdkEventTouch* aEvent) {
   return TRUE;
 }
 
-bool nsWindow::IsMainWindowTransparent() {
+// Return true if toplevel window is transparent.
+// It's transparent when we're running on composited screens
+// and we can draw main window without system titlebar.
+bool nsWindow::IsToplevelWindowTransparent() {
   static bool transparencyConfigured = false;
 
   if (!transparencyConfigured) {
@@ -4194,6 +4195,8 @@ bool nsWindow::IsMainWindowTransparent() {
         sTransparentMainWindow =
             Preferences::GetBool("mozilla.widget.use-argb-visuals");
       } else {
+        // Enable transparent toplevel window if we can draw main window
+        // without system titlebar as Gtk+ themes use titlebar round corners.
         sTransparentMainWindow = GetSystemCSDSupportLevel() != CSD_SUPPORT_NONE;
       }
     }
@@ -4219,6 +4222,58 @@ static GdkWindow* CreateGdkWindow(GdkWindow* parent, GtkWidget* widget) {
   gdk_window_set_user_data(window, widget);
 
   return window;
+}
+
+// Configure GL visual on X11. We add alpha silently
+// if we use WebRender to workaround NVIDIA specific Bug 1663273.
+bool nsWindow::ConfigureX11GLVisual(bool aUseAlpha) {
+  if (!mIsX11Display) {
+    return false;
+  }
+
+  // If using WebRender on X11, we need to select a visual with a depth
+  // buffer, as well as an alpha channel if transparency is requested. This
+  // must be done before the widget is realized.
+  bool useWebRender = gfx::gfxVars::UseWebRender();
+  auto* screen = gtk_widget_get_screen(mShell);
+  int visualId = 0;
+  bool haveVisual;
+
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1663003
+  // We need to use GLX to get visual even on EGL until
+  // EGL can provide compositable visual:
+  // https://gitlab.freedesktop.org/mesa/mesa/-/issues/149
+  if ((true /* !gfx::gfxVars::UseEGL() */)) {
+    auto* display = GDK_DISPLAY_XDISPLAY(gtk_widget_get_display(mShell));
+    int screenNumber = GDK_SCREEN_XNUMBER(screen);
+    haveVisual = GLContextGLX::FindVisual(display, screenNumber, useWebRender,
+                                          aUseAlpha || useWebRender, &visualId);
+  } else {
+    haveVisual = GLContextEGL::FindVisual(useWebRender,
+                                          aUseAlpha || useWebRender, &visualId);
+  }
+
+  GdkVisual* gdkVisual = nullptr;
+  if (haveVisual) {
+    // If we're using CSD, rendering will go through mContainer, but
+    // it will inherit this visual as it is a child of mShell.
+    gdkVisual = gdk_x11_screen_lookup_visual(screen, visualId);
+  }
+  if (!gdkVisual) {
+    NS_WARNING("We're missing X11 Visual!");
+    if (aUseAlpha || useWebRender) {
+      // We try to use a fallback alpha visual
+      GdkScreen* screen = gtk_widget_get_screen(mShell);
+      gdkVisual = gdk_screen_get_rgba_visual(screen);
+    }
+  }
+  if (gdkVisual) {
+    // TODO: We use alpha visual even on non-compositing screens (Bug 1479135).
+    gtk_widget_set_visual(mShell, gdkVisual);
+    mHasAlphaVisual = aUseAlpha;
+  }
+
+  return true;
 }
 
 nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
@@ -4271,8 +4326,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   ConstrainSize(&mBounds.width, &mBounds.height);
 
   GtkWidget* eventWidget = nullptr;
-  bool needsAlphaVisual = (mWindowType == eWindowType_popup &&
-                           (aInitData && aInitData->mSupportTranslucency));
+  bool popupNeedsAlphaVisual = (mWindowType == eWindowType_popup &&
+                                (aInitData && aInitData->mSupportTranslucency));
 
   // Figure out our parent window - only used for eWindowType_child
   GtkWidget* parentMozContainer = nullptr;
@@ -4342,9 +4397,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       // gfxVars, used below.
       Unused << gfxPlatform::GetPlatform();
 
-      mIsAccelerated = ComputeShouldAccelerate();
-      bool useWebRender = gfx::gfxVars::UseWebRender() && mIsAccelerated;
-
       if (mWindowType == eWindowType_toplevel ||
           mWindowType == eWindowType_dialog) {
         bool isPopup = mIsPIPWindow || mWindowType == eWindowType_dialog;
@@ -4352,56 +4404,24 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       }
 
       // Don't use transparency for PictureInPicture windows.
+      bool toplevelNeedsAlphaVisual = false;
       if (mWindowType == eWindowType_toplevel && !mIsPIPWindow) {
-        needsAlphaVisual = IsMainWindowTransparent();
-        if (!needsAlphaVisual && mCSDSupportLevel != CSD_SUPPORT_NONE) {
-          mTransparencyBitmapForTitlebar = TitlebarCanUseShapeMask();
-        }
+        toplevelNeedsAlphaVisual = IsToplevelWindowTransparent() ||
+                                   mCSDSupportLevel != CSD_SUPPORT_NONE;
       }
 
-      bool isSetVisual = false;
-      // If using WebRender on X11, we need to select a visual with a depth
-      // buffer, as well as an alpha channel if transparency is requested. This
-      // must be done before the widget is realized.
-
-      // Use GL/WebRender compatible visual only when it is necessary, since
-      // the visual consumes more memory.
-      if (mIsX11Display && mIsAccelerated) {
-        if (useWebRender) {
-          // WebRender rquests AlphaVisual for making readback to work
-          // correctly.
-          needsAlphaVisual = true;
-        }
-        auto screen = gtk_widget_get_screen(mShell);
-        int visualId = 0;
-        bool haveVisual;
-
-        // See https://bugzilla.mozilla.org/show_bug.cgi?id=1663003
-        // We need to use GLX to get visual even on EGL until
-        // EGL can provide compositable visual:
-        // https://gitlab.freedesktop.org/mesa/mesa/-/issues/149
-        if ((true /* !gfx::gfxVars::UseEGL() */)) {
-          auto display = GDK_DISPLAY_XDISPLAY(gtk_widget_get_display(mShell));
-          int screenNumber = GDK_SCREEN_XNUMBER(screen);
-          haveVisual = GLContextGLX::FindVisual(
-              display, screenNumber, useWebRender, needsAlphaVisual, &visualId);
-        } else {
-          haveVisual = GLContextEGL::FindVisual(useWebRender, needsAlphaVisual,
-                                                &visualId);
-        }
-        if (haveVisual) {
-          // If we're using CSD, rendering will go through mContainer, but
-          // it will inherit this visual as it is a child of mShell.
-          gtk_widget_set_visual(mShell,
-                                gdk_x11_screen_lookup_visual(screen, visualId));
-          mHasAlphaVisual = needsAlphaVisual;
-          isSetVisual = true;
-        } else {
-          NS_WARNING("We're missing X11 Visual!");
-        }
+      bool isGLVisualSet = false;
+      bool isAccelerated = ComputeShouldAccelerate();
+#ifdef MOZ_X11
+      if (isAccelerated) {
+        isGLVisualSet = ConfigureX11GLVisual(popupNeedsAlphaVisual ||
+                                             toplevelNeedsAlphaVisual);
       }
-
-      if (!isSetVisual && needsAlphaVisual) {
+#endif
+      if (!isGLVisualSet &&
+          (popupNeedsAlphaVisual || toplevelNeedsAlphaVisual)) {
+        // We're running on composited screen so we can use alpha visual
+        // for both toplevel and popups.
         GdkScreen* screen = gtk_widget_get_screen(mShell);
         if (gdk_screen_is_composited(screen)) {
           GdkVisual* visual = gdk_screen_get_rgba_visual(screen);
@@ -4409,6 +4429,12 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
             gtk_widget_set_visual(mShell, visual);
             mHasAlphaVisual = true;
           }
+        } else if (toplevelNeedsAlphaVisual) {
+          MOZ_ASSERT(mIsX11Display, "Wayland without compositing?");
+          mTransparencyBitmapForTitlebar = TitlebarCanUseShapeMask();
+        } else /* popupNeedsAlphaVisual */ {
+          // X11 popup shape masks are configured later at
+          // WindowSurfaceProvider but for SW rendering only (Bug 1479135).
         }
       }
 
@@ -4528,7 +4554,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       GtkWidget* container = moz_container_new();
       mContainer = MOZ_CONTAINER(container);
 #ifdef MOZ_WAYLAND
-      if (!mIsX11Display && mIsAccelerated) {
+      if (!mIsX11Display && isAccelerated) {
         mCompositorInitiallyPaused = true;
         RefPtr<nsWindow> self(this);
         moz_container_wayland_add_initial_draw_callback(
@@ -4812,7 +4838,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     GdkVisual* gdkVisual = gdk_window_get_visual(mGdkWindow);
     mXVisual = gdk_x11_visual_get_xvisual(gdkVisual);
     mXDepth = gdk_visual_get_depth(gdkVisual);
-    bool shaped = needsAlphaVisual && !mHasAlphaVisual;
+    bool shaped = popupNeedsAlphaVisual && !mHasAlphaVisual;
 
     mSurfaceProvider.Initialize(mXDisplay, mXWindow, mXVisual, mXDepth, shaped);
 
