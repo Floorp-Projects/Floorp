@@ -46,27 +46,27 @@
 .download-state:not([state="6"],/* Blocked (parental) */
                     [state="8"],/* Blocked (dirty)    */
                     [state="9"] /* Blocked (policy)   */)
-                                        .downloadBlockedBadge,
+                                           .downloadBlockedBadge,
 
 .download-state:not([state="-1"],/* Starting (initial) */
                     [state="5"], /* Starting (queued)  */
                     [state="0"], /* Downloading        */
                     [state="4"], /* Paused             */
                     [state="7"]  /* Scanning           */)
-                                            .downloadProgress,
+                                           .downloadProgress,
 
-.download-state:not(    [state="0"]  /* Downloading        */)
-                                            .downloadPauseMenuItem,
+.download-state:not([state="0"]  /* Downloading        */)
+                                           .downloadPauseMenuItem,
 
-.download-state:not(    [state="4"]  /* Paused             */)
+.download-state:not([state="4"]  /* Paused             */)
                                            .downloadResumeMenuItem,
 
 /* Blocked (dirty) downloads that have not been confirmed and
    have temporary data. */
-.download-state:not(    [state="8"]  /* Blocked (dirty)    */)
+.download-state:not([state="8"]  /* Blocked (dirty)    */)
                                            .downloadUnblockMenuItem,
-.download-state[state="8"]:not(.temporary-block)
-                                           .downloadUnblockMenuItem,
+
+.download-state[state="8"]:not(.temporary-block) .downloadUnblockMenuItem,
 
 .download-state:not([state="1"], /* Finished           */
                     [state="2"], /* Failed             */
@@ -74,28 +74,28 @@
                     [state="6"], /* Blocked (parental) */
                     [state="8"], /* Blocked (dirty)    */
                     [state="9"]  /* Blocked (policy)   */)
-                           .downloadRemoveFromHistoryMenuItem,
+                                           .downloadRemoveFromHistoryMenuItem,
 
 .download-state:not([state="-1"],/* Starting (initial) */
                     [state="0"], /* Downloading        */
                     [state="1"], /* Finished           */
                     [state="4"], /* Paused             */
                     [state="5"]  /* Starting (queued)  */)
-                                         .downloadShowMenuItem,
-.download-state[state="1"]:not([exists])
                                            .downloadShowMenuItem,
+
+.download-state[state="1"]:not([exists])   .downloadShowMenuItem,
 
 .download-state:not([state="-1"],/* Starting (initial) */
                     [state="0"], /* Downloading        */
                     [state="1"], /* Finished           */
                     [state="4"], /* Paused             */
                     [state="5"], /* Starting (queued)  */
-                    [state="8"] /* Blocked (dirty)    */)
-                                        .downloadCommandsSeparator,
-.download-state[state="1"]:not([exists])
+                    [state="8"]  /* Blocked (dirty)    */)
                                            .downloadCommandsSeparator,
-.download-state[state="8"]:not(.temporary-block)
-                                           .downloadCommandsSeparator,
+
+.download-state[state="1"]:not([exists])   .downloadCommandsSeparator,
+
+.download-state[state="8"]:not(.temporary-block) .downloadCommandsSeparator,
 
 /* the system-viewer context menu items are only shown for certain mime-types
    and can be individually enabled via prefs */
@@ -118,7 +118,7 @@
                     [state="3"]  /* Canceled           */)
                                            .downloadRetry,
 
-.download-state:not(    [state="1"]  /* Finished           */)
+.download-state:not([state="1"]  /* Finished           */)
                                            .downloadShow {
   display: none;
 }
