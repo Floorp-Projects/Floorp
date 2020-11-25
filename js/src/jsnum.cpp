@@ -1575,6 +1575,13 @@ static JSString* NumberToStringWithBase(JSContext* cx, double d, int base) {
       MOZ_ASSERT(StaticStrings::hasUnit(c));
       return cx->staticStrings().getUnit(c);
     }
+    if (unsigned(i) < unsigned(base * base)) {
+      static constexpr char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+      char chars[] = {digits[i / base], digits[i % base]};
+      JSString* str = cx->staticStrings().lookup(chars, 2);
+      MOZ_ASSERT(str);
+      return str;
+    }
 
     if (JSLinearString* str = realm->dtoaCache.lookup(base, d)) {
       return str;
