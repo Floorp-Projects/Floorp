@@ -404,6 +404,11 @@ void MacroAssembler::clz64(Register64 src, Register dest) {
 }
 
 void MacroAssembler::ctz64(Register64 src, Register dest) {
+  if (AssemblerX86Shared::HasBMI1()) {
+    tzcntq(src.reg, dest);
+    return;
+  }
+
   Label nonzero;
   bsfq(src.reg, dest);
   j(Assembler::NonZero, &nonzero);
