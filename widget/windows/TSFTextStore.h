@@ -825,7 +825,7 @@ class TSFTextStore final : public ITextStoreACP,
         mLastComposition.reset();
       }
       mMinTextModifiedOffset = NOT_MODIFIED;
-      mLatestCompositionStartOffset = mLatestCompositionEndOffset = LONG_MAX;
+      mLatestCompositionRange.reset();
       mInitialized = true;
     }
 
@@ -883,15 +883,9 @@ class TSFTextStore final : public ITextStoreACP,
       MOZ_ASSERT(mInitialized);
       return mMinTextModifiedOffset;
     }
-    LONG LatestCompositionStartOffset() const {
+    const Maybe<StartAndEndOffsets<LONG>>& LatestCompositionRange() const {
       MOZ_ASSERT(mInitialized);
-      MOZ_ASSERT(HasOrHadComposition());
-      return mLatestCompositionStartOffset;
-    }
-    LONG LatestCompositionEndOffset() const {
-      MOZ_ASSERT(mInitialized);
-      MOZ_ASSERT(HasOrHadComposition());
-      return mLatestCompositionEndOffset;
+      return mLatestCompositionRange;
     }
 
     // Returns true if layout of the character at the aOffset has not been
@@ -910,8 +904,7 @@ class TSFTextStore final : public ITextStoreACP,
     }
 
     bool HasOrHadComposition() const {
-      return mInitialized && mLatestCompositionStartOffset != LONG_MAX &&
-             mLatestCompositionEndOffset != LONG_MAX;
+      return mLatestCompositionRange.isSome();
     }
 
     TSFTextStore::Composition& Composition() { return mComposition; }
@@ -924,10 +917,8 @@ class TSFTextStore final : public ITextStoreACP,
                                    PrintStringDetail::kMaxLengthForEditor)
                      .get()
               << ", mLastComposition=" << aContent.mLastComposition
-              << ", mLatestCompositionStartOffset="
-              << aContent.mLatestCompositionStartOffset
-              << ", mLatestCompositionEndOffset="
-              << aContent.mLatestCompositionEndOffset
+              << ", mLatestCompositionRange="
+              << aContent.mLatestCompositionRange
               << ", mMinTextModifiedOffset=" << aContent.mMinTextModifiedOffset
               << ", mInitialized=" << aContent.mInitialized << " }";
       return aStream;
@@ -944,10 +935,8 @@ class TSFTextStore final : public ITextStoreACP,
     TSFTextStore::Composition& mComposition;
     TSFTextStore::Selection& mSelection;
 
-    // The latest composition's start and end offset.  If composition hasn't
-    // been started since this instance is initialized, they are LONG_MAX.
-    LONG mLatestCompositionStartOffset;
-    LONG mLatestCompositionEndOffset;
+    // The latest composition's start and end offset.
+    Maybe<StartAndEndOffsets<LONG>> mLatestCompositionRange;
 
     // The minimum offset of modified part of the text.
     enum : uint32_t { NOT_MODIFIED = UINT32_MAX };

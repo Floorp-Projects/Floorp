@@ -36,6 +36,69 @@ class MOZ_STACK_CLASS PrintStringDetail : public nsAutoCString {
   static nsCString PrintCharData(char32_t aChar);
 };
 
+// StartAndEndOffsets represents a range in flat-text.
+template <typename IntType>
+class StartAndEndOffsets {
+ protected:
+  static IntType MaxOffset() { return std::numeric_limits<IntType>::max(); }
+
+ public:
+  StartAndEndOffsets() = delete;
+  explicit StartAndEndOffsets(IntType aStartOffset, IntType aEndOffset)
+      : mStartOffset(aStartOffset),
+        mEndOffset(aStartOffset <= aEndOffset ? aEndOffset : aStartOffset) {
+    MOZ_ASSERT(aStartOffset <= mEndOffset);
+  }
+
+  IntType StartOffset() const { return mStartOffset; }
+  IntType Length() const { return mEndOffset - mStartOffset; }
+  IntType EndOffset() const { return mEndOffset; }
+
+  bool IsOffsetInRange(IntType aOffset) const {
+    return aOffset >= mStartOffset && aOffset < mEndOffset;
+  }
+  bool IsOffsetInRangeOrEndOffset(IntType aOffset) const {
+    return aOffset >= mStartOffset && aOffset <= mEndOffset;
+  }
+
+  void MoveTo(IntType aNewStartOffset) {
+    auto delta = static_cast<int64_t>(mStartOffset) - aNewStartOffset;
+    mStartOffset += delta;
+    mEndOffset += delta;
+  }
+  void SetOffsetAndLength(IntType aNewOffset, IntType aNewLength) {
+    mStartOffset = aNewOffset;
+    CheckedInt<IntType> endOffset(aNewOffset + aNewLength);
+    mEndOffset = endOffset.isValid() ? endOffset.value() : MaxOffset();
+  }
+  void SetEndOffset(IntType aEndOffset) {
+    MOZ_ASSERT(mStartOffset <= aEndOffset);
+    mEndOffset = std::max(aEndOffset, mStartOffset);
+  }
+  void SetStartAndEndOffsets(IntType aStartOffset, IntType aEndOffset) {
+    MOZ_ASSERT(aStartOffset <= aEndOffset);
+    mStartOffset = aStartOffset;
+    mEndOffset = aStartOffset <= aEndOffset ? aEndOffset : aStartOffset;
+  }
+  void SetLength(IntType aNewLength) {
+    CheckedInt<IntType> endOffset(mStartOffset + aNewLength);
+    mEndOffset = endOffset.isValid() ? endOffset.value() : MaxOffset();
+  }
+
+  friend std::ostream& operator<<(
+      std::ostream& aStream,
+      const StartAndEndOffsets<IntType>& aStartAndEndOffsets) {
+    aStream << "{ mStartOffset=" << aStartAndEndOffsets.mStartOffset
+            << ", mEndOffset=" << aStartAndEndOffsets.mEndOffset
+            << ", Length()=" << aStartAndEndOffsets.Length() << " }";
+    return aStream;
+  }
+
+ private:
+  IntType mStartOffset;
+  IntType mEndOffset;
+};
+
 // OffsetAndData class is designed for storing composition string and its
 // start offset.  Length() and EndOffset() return only valid length or
 // offset.  I.e., if the string is too long for inserting at the offset,
@@ -58,6 +121,9 @@ class OffsetAndData {
     return endOffset.isValid() ? mData.Length() : MaxOffset() - mOffset;
   }
   IntType EndOffset() const { return mOffset + Length(); }
+  StartAndEndOffsets<IntType> CreateStartAndEndOffsets() const {
+    return StartAndEndOffsets<IntType>(StartOffset(), EndOffset());
+  }
   const nsString& DataRef() const {
     // In strictly speaking, we should return substring which may be shrunken
     // for rounding to the max offset.  However, it's unrealistic edge case,
