@@ -338,25 +338,6 @@ const uint32_t kShadowMaxWALSize = 512 * 1024;
 
 const uint32_t kShadowJournalSizeLimit = kShadowMaxWALSize * 3;
 
-/**
- * Automatically kill database actors if LocalStorage shutdown takes this long.
- */
-#define SHUTDOWN_FORCE_KILL_TIMEOUT_MS 5000
-
-/**
- * Automatically crash the browser if LocalStorage shutdown takes this long.
- * We've chosen a value that is longer than the value for QuotaManager shutdown
- * timer which is currently set to 30 seconds.  We've also chosen a value that
- * is long enough that it is unlikely for the problem to be falsely triggered by
- * slow system I/O.  We've also chosen a value long enough so that automated
- * tests should time out and fail if LocalStorage shutdown hangs.  Also, this
- * value is long enough so that testers can notice the LocalStorage shutdown
- * hang; we want to know about the hangs, not hide them.  On the other hand this
- * value is less than 60 seconds which is used by nsTerminator to crash a hung
- * main process.
- */
-#define SHUTDOWN_FORCE_CRASH_TIMEOUT_MS 45000
-
 bool IsOnConnectionThread();
 
 void AssertIsOnConnectionThread();
@@ -2813,12 +2794,14 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   void StopIdleMaintenance() override;
 
-  void ShutdownWorkThreads() override;
-
  private:
   ~QuotaClient() override;
 
-  void ShutdownTimedOut();
+  void InitiateShutdown() override;
+  bool IsShutdownCompleted() const override;
+  void ForceKillActors() override;
+  void ShutdownTimedOut() override;
+  void FinalizeShutdown() override;
 
   nsresult CreateArchivedOriginScope(
       const OriginScope& aOriginScope,
@@ -9150,10 +9133,8 @@ void QuotaClient::StartIdleMaintenance() { AssertIsOnBackgroundThread(); }
 
 void QuotaClient::StopIdleMaintenance() { AssertIsOnBackgroundThread(); }
 
-void QuotaClient::ShutdownWorkThreads() {
-  AssertIsOnBackgroundThread();
+void QuotaClient::InitiateShutdown() {
   MOZ_ASSERT(!mShutdownRequested);
-
   mShutdownRequested = true;
 
   // gPrepareDatastoreOps are short lived objects running a state machine.
@@ -9180,46 +9161,18 @@ void QuotaClient::ShutdownWorkThreads() {
     gPreparedObsevers->Clear();
     gPreparedObsevers = nullptr;
   }
-
-  nsCOMPtr<nsITimer> timer = NS_NewTimer();
-
-  MOZ_ALWAYS_SUCCEEDS(timer->InitWithNamedFuncCallback(
-      [](nsITimer* aTimer, void* aClosure) {
-        ForceKillDatabases();
-
-        MOZ_ALWAYS_SUCCEEDS(aTimer->InitWithNamedFuncCallback(
-            [](nsITimer* aTimer, void* aClosure) {
-              auto quotaClient = static_cast<QuotaClient*>(aClosure);
-
-              quotaClient->ShutdownTimedOut();
-            },
-            aClosure, SHUTDOWN_FORCE_CRASH_TIMEOUT_MS, nsITimer::TYPE_ONE_SHOT,
-            "localstorage::QuotaClient::ShutdownWorkThreads::ForceCrashTimer"));
-      },
-      this, SHUTDOWN_FORCE_KILL_TIMEOUT_MS, nsITimer::TYPE_ONE_SHOT,
-      "localstorage::QuotaClient::ShutdownWorkThreads::ForceKillTimer"));
-
-  // This should release any local storage related quota objects or directory
-  // locks.
-  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() {
-    // Don't have to check gPrivateDatastores and gPreparedDatastores since we
-    // nulled it out above.
-    return !gPrepareDatastoreOps && !gDatastores && !gLiveDatabases;
-  }));
-
-  MOZ_ALWAYS_SUCCEEDS(timer->Cancel());
-
-  // And finally, shutdown the connection thread.
-  if (gConnectionThread) {
-    gConnectionThread->Shutdown();
-
-    gConnectionThread = nullptr;
-  }
 }
+
+bool QuotaClient::IsShutdownCompleted() const {
+  // Don't have to check gPrivateDatastores and gPreparedDatastores since we
+  // nulled it out in InitiateShutdown.
+  return !gPrepareDatastoreOps && !gDatastores && !gLiveDatabases;
+}
+
+void QuotaClient::ForceKillActors() { ForceKillDatabases(); }
 
 void QuotaClient::ShutdownTimedOut() {
   AssertIsOnBackgroundThread();
-  MOZ_DIAGNOSTIC_ASSERT(gPrepareDatastoreOps || gDatastores || gLiveDatabases);
 
   nsCString data;
 
@@ -9290,6 +9243,15 @@ void QuotaClient::ShutdownTimedOut() {
       CrashReporter::Annotation::LocalStorageShutdownTimeout, data);
 
   MOZ_CRASH("LocalStorage shutdown timed out");
+}
+
+void QuotaClient::FinalizeShutdown() {
+  // And finally, shutdown the connection thread.
+  if (gConnectionThread) {
+    gConnectionThread->Shutdown();
+
+    gConnectionThread = nullptr;
+  }
 }
 
 nsresult QuotaClient::CreateArchivedOriginScope(

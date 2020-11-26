@@ -246,11 +246,29 @@ void CacheQuotaClient::StartIdleMaintenance() {}
 
 void CacheQuotaClient::StopIdleMaintenance() {}
 
-void CacheQuotaClient::ShutdownWorkThreads() {
+void CacheQuotaClient::InitiateShutdown() {
   AssertIsOnBackgroundThread();
 
-  // spins the event loop and synchronously shuts down all Managers
-  Manager::ShutdownAll();
+  Manager::InitiateShutdown();
+}
+
+bool CacheQuotaClient::IsShutdownCompleted() const {
+  AssertIsOnBackgroundThread();
+
+  return Manager::IsShutdownAllComplete();
+}
+
+void CacheQuotaClient::ForceKillActors() {
+  // Currently we don't implement killing actors (are there any to kill here?).
+}
+
+void CacheQuotaClient::ShutdownTimedOut() {
+  // XXX Crash here like in the other quota clients? (But maybe this handling
+  // will be moved to the QuotaManager)
+}
+
+void CacheQuotaClient::FinalizeShutdown() {
+  // Nothing to do here.
 }
 
 nsresult CacheQuotaClient::UpgradeStorageFrom2_0To2_1(nsIFile* aDirectory) {
