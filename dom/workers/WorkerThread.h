@@ -7,17 +7,21 @@
 #ifndef mozilla_dom_workers_WorkerThread_h__
 #define mozilla_dom_workers_WorkerThread_h__
 
-#include "mozilla/Attributes.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/CondVar.h"
-#include "mozilla/DebugOnly.h"
-#include "mozilla/dom/SafeRefPtr.h"
-#include "nsISupportsImpl.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/PerformanceCounter.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/SafeRefPtr.h"
+#include "nsISupports.h"
 #include "nsThread.h"
+#include "nscore.h"
 
 class nsIRunnable;
 
 namespace mozilla {
+class Runnable;
+
 namespace dom {
 
 class WorkerRunnable;

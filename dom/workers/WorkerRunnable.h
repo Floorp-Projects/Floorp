@@ -7,18 +7,24 @@
 #ifndef mozilla_dom_workers_workerrunnable_h__
 #define mozilla_dom_workers_workerrunnable_h__
 
-#include "mozilla/dom/WorkerCommon.h"
+#include <cstdint>
+#include <utility>
+#include "MainThreadUtils.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerStatus.h"
-
+#include "nsCOMPtr.h"
 #include "nsICancelableRunnable.h"
-
-#include "mozilla/Atomics.h"
-#include "nsISupportsImpl.h"
-#include "nsThreadUtils.h" /* nsRunnable */
+#include "nsIRunnable.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
+#include "nsThreadUtils.h"
+#include "nscore.h"
 
 struct JSContext;
 class nsIEventTarget;
+class nsIGlobalObject;
 
 namespace mozilla {
 
@@ -355,7 +361,7 @@ class WorkerMainThreadRunnable : public Runnable {
 
   explicit WorkerMainThreadRunnable(WorkerPrivate* aWorkerPrivate,
                                     const nsACString& aTelemetryKey);
-  ~WorkerMainThreadRunnable() = default;
+  ~WorkerMainThreadRunnable();
 
   virtual bool MainThreadRun() = 0;
 
