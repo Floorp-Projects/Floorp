@@ -19,7 +19,8 @@ var popup = window.open("file_bug680257.html");
 
 var gTestContinuation = null;
 function continueAsync() {
-  setTimeout(function() { gTestContinuation.next(); })
+  popup.addEventListener("hashchange",
+    function(e) { gTestContinuation.next(); }, { once: true });
 }
 
 // The popup will call into popupLoaded() once it loads.
@@ -38,6 +39,8 @@ function* runTests() {
   checkPopupLinkStyle(false, "Initial");
 
   popup.location.hash = "a";
+  continueAsync();
+  yield;
   checkPopupLinkStyle(true, "After setting hash");
 
   popup.history.back();
