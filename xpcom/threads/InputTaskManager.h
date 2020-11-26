@@ -8,6 +8,7 @@
 #define mozilla_InputTaskManager_h
 
 #include "TaskController.h"
+#include "mozilla/StaticPtr.h"
 
 namespace mozilla {
 

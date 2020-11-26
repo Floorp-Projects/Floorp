@@ -18,7 +18,6 @@
 #include "MediaInfo.h"
 #include "VideoUtils.h"
 #include "VPXDecoder.h"
-#include "mozilla/CDMProxy.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/RemoteDecoderModule.h"
@@ -229,6 +228,8 @@ PDMFactory::PDMFactory() {
   CreatePDMs();
   CreateNullPDM();
 }
+
+PDMFactory::~PDMFactory() = default;
 
 PDMFactory::PDMFactory(const RemoteDecodeIn& aProcess) {
   switch (aProcess) {

@@ -7,18 +7,36 @@
 #if !defined(PDMFactory_h_)
 #  define PDMFactory_h_
 
+#  include <utility>
 #  include "DecoderDoctorDiagnostics.h"
-#  include "PlatformDecoderModule.h"
-#  include "mozilla/StaticMutex.h"
-
-class CDMProxy;
+#  include "mozilla/AlreadyAddRefed.h"
+#  include "mozilla/EnumSet.h"
+#  include "mozilla/MozPromise.h"
+#  include "mozilla/RefPtr.h"
+#  include "nsISupports.h"
+#  include "nsStringFwd.h"
+#  include "nsTArray.h"
 
 namespace mozilla {
 
+class CDMProxy;
+class MediaDataDecoder;
+class MediaResult;
 class PDMFactoryImpl;
+class PlatformDecoderModule;
+class StaticMutex;
+template <typename T>
+struct MaxEnumValue;
 template <class T>
 class StaticAutoPtr;
+struct CreateDecoderParams;
+struct CreateDecoderParamsForAsync;
+struct SupportDecoderParams;
 enum class RemoteDecodeIn;
+
+using PDMCreateDecoderPromise =
+    MozPromise<RefPtr<MediaDataDecoder>, MediaResult,
+               /* IsExclusive = */ true>;
 
 class PDMFactory final {
  public:
@@ -33,7 +51,7 @@ class PDMFactory final {
 
   // Factory method that creates the appropriate PlatformDecoderModule for
   // the platform we're running on.
-  RefPtr<PlatformDecoderModule::CreateDecoderPromise> CreateDecoder(
+  RefPtr<PDMCreateDecoderPromise> CreateDecoder(
       const CreateDecoderParams& aParams);
 
   bool SupportsMimeType(const nsACString& aMimeType,
@@ -78,7 +96,7 @@ class PDMFactory final {
   static void SetSupported(const MediaCodecsSupported& aSupported);
 
  private:
-  virtual ~PDMFactory() = default;
+  virtual ~PDMFactory();
   // Will set PDM list for the required process.
   // This is used to determine which PDMs are available on the given process
   // from the content process.
@@ -104,11 +122,10 @@ class PDMFactory final {
       const SupportDecoderParams& aParams,
       DecoderDoctorDiagnostics* aDiagnostics) const;
 
-  RefPtr<PlatformDecoderModule::CreateDecoderPromise> CreateDecoderWithPDM(
+  RefPtr<PDMCreateDecoderPromise> CreateDecoderWithPDM(
       PlatformDecoderModule* aPDM, const CreateDecoderParams& aParams);
-  RefPtr<PlatformDecoderModule::CreateDecoderPromise>
-  CheckAndMaybeCreateDecoder(CreateDecoderParamsForAsync&& aParams,
-                             uint32_t aIndex);
+  RefPtr<PDMCreateDecoderPromise> CheckAndMaybeCreateDecoder(
+      CreateDecoderParamsForAsync&& aParams, uint32_t aIndex);
 
   nsTArray<RefPtr<PlatformDecoderModule>> mCurrentPDMs;
   RefPtr<PlatformDecoderModule> mEMEPDM;

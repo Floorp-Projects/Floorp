@@ -10,6 +10,7 @@
 #include "nsThreadUtils.h"
 #include <algorithm>
 #include <initializer_list>
+#include "GeckoProfiler.h"
 #include "mozilla/EventQueue.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/InputTaskManager.h"
@@ -21,6 +22,7 @@
 #include "nsIThreadInternal.h"
 #include "nsQueryObject.h"
 #include "nsThread.h"
+#include "prenv.h"
 #include "prsystem.h"
 
 #ifdef XP_WIN
