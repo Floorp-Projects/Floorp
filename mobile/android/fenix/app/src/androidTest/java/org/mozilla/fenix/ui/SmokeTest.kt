@@ -4,7 +4,10 @@
 
 package org.mozilla.fenix.ui
 
+import android.view.View
 import androidx.core.net.toUri
+import androidx.recyclerview.widget.RecyclerView
+import androidx.test.espresso.IdlingRegistry
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
@@ -12,9 +15,12 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.clickUrlbar
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -27,6 +33,8 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 class SmokeTest {
     private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     private lateinit var mockWebServer: MockWebServer
+    private var awesomeBar: ViewVisibilityIdlingResource? = null
+    private var searchSuggestionsIdlingResource: RecyclerViewIdlingResource? = null
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
@@ -272,5 +280,47 @@ class SmokeTest {
             clickSearchEngineShortcutButton()
             verifyEnginesListShortcutContains("YouTube")
         }
+    }
+
+    @Test
+    fun toggleSearchSuggestions() {
+        // Goes through the settings and changes the search suggestion toggle, then verifies it changes.
+        homeScreen {
+        }.openNavigationToolbar {
+            typeSearchTerm("mozilla")
+            val awesomeBarView = getAwesomebarView()
+            awesomeBarView?.let {
+                awesomeBar = ViewVisibilityIdlingResource(it, View.VISIBLE)
+            }
+            IdlingRegistry.getInstance().register(awesomeBar!!)
+            searchSuggestionsIdlingResource =
+                RecyclerViewIdlingResource(awesomeBarView as RecyclerView, 1)
+            IdlingRegistry.getInstance().register(searchSuggestionsIdlingResource!!)
+            verifySearchSuggestionsAreMoreThan(1)
+            IdlingRegistry.getInstance().unregister(searchSuggestionsIdlingResource!!)
+        }.goBack {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSearchSubMenu {
+            disableShowSearchSuggestions()
+        }.goBack {
+        }.goBack {
+        }.openNavigationToolbar {
+            typeSearchTerm("mozilla")
+            searchSuggestionsIdlingResource =
+                RecyclerViewIdlingResource(getAwesomebarView() as RecyclerView)
+            IdlingRegistry.getInstance().register(searchSuggestionsIdlingResource!!)
+            verifySearchSuggestionsAreEqualTo(0)
+            IdlingRegistry.getInstance().unregister(searchSuggestionsIdlingResource!!)
+        }
+    }
+
+    // This finds the dialog fragment child of the homeFragment, otherwise the awesomeBar would return null
+    private fun getAwesomebarView(): View? {
+        val homeFragment = activityTestRule.activity.supportFragmentManager.primaryNavigationFragment
+        val searchDialogFragment = homeFragment?.childFragmentManager?.fragments?.first {
+            it.javaClass.simpleName == "SearchDialogFragment"
+        }
+        return searchDialogFragment?.view?.findViewById(R.id.awesome_bar)
     }
 }

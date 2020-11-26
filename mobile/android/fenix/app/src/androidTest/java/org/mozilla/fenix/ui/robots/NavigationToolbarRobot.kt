@@ -43,15 +43,17 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
  */
 class NavigationToolbarRobot {
 
-    fun verifySearchSuggestionsAreMoreThan(suggestionSize: Int, searchTerm: String) =
-        assertSuggestionsAreMoreThan(suggestionSize, searchTerm)
+    fun verifySearchSuggestionsAreMoreThan(suggestionSize: Int) =
+        assertSuggestionsAreMoreThan(suggestionSize)
 
-    fun verifySearchSuggestionsAreEqualTo(suggestionSize: Int, searchTerm: String) =
-        assertSuggestionsAreEqualTo(suggestionSize, searchTerm)
+    fun verifySearchSuggestionsAreEqualTo(suggestionSize: Int) =
+        assertSuggestionsAreEqualTo(suggestionSize)
 
     fun verifyNoHistoryBookmarks() = assertNoHistoryBookmarks()
 
     fun verifyTabButtonShortcutMenuItems() = assertTabButtonShortcutMenuItems()
+
+    fun typeSearchTerm(searchTerm: String) = awesomeBar().perform(typeText(searchTerm))
 
     class Transition {
 
@@ -246,18 +248,12 @@ fun clickUrlbar(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
     return SearchRobot.Transition()
 }
 
-private fun assertSuggestionsAreEqualTo(suggestionSize: Int, searchTerm: String) {
-    mDevice.waitForIdle()
-    awesomeBar().perform(typeText(searchTerm))
-
+private fun assertSuggestionsAreEqualTo(suggestionSize: Int) {
     mDevice.waitForIdle()
     onView(withId(R.id.awesome_bar)).check(suggestionsAreEqualTo(suggestionSize))
 }
 
-private fun assertSuggestionsAreMoreThan(suggestionSize: Int, searchTerm: String) {
-    mDevice.waitForIdle()
-    awesomeBar().perform(typeText(searchTerm))
-
+private fun assertSuggestionsAreMoreThan(suggestionSize: Int) {
     mDevice.waitForIdle()
     onView(withId(R.id.awesome_bar)).check(suggestionsAreGreaterThan(suggestionSize))
 }

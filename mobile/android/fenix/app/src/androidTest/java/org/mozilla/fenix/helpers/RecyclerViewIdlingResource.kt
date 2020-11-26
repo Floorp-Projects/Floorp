@@ -9,7 +9,7 @@ class RecyclerViewIdlingResource constructor(private val recycler: androidx.recy
     private var callback: ResourceCallback? = null
 
     override fun isIdleNow(): Boolean {
-        if (recycler.adapter != null && recycler.adapter!!.itemCount > minItemCount) {
+        if (recycler.adapter != null && recycler.adapter!!.itemCount >= minItemCount) {
             if (callback != null) {
                 callback!!.onTransitionToIdle()
             }
