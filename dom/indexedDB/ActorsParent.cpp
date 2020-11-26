@@ -381,20 +381,6 @@ constexpr auto kIdbDeletionMarkerFilePrefix = u"idb-deleting-"_ns;
 
 const uint32_t kDeleteTimeoutMs = 1000;
 
-/**
- * Automatically crash the browser if IndexedDB shutdown takes this long.  We've
- * chosen a value that is longer than the value for QuotaManager shutdown timer
- * which is currently set to 30 seconds.  We've also chosen a value that is long
- * long enough that it is unlikely for the problem to be falsely triggered by
- * slow system I/O.  We've also chosen a value long enough so that automated
- * tests should time out and fail if IndexedDB shutdown hangs.  Also, this value
- * is long enough so that testers can notice the IndexedDB shutdown hang; we
- * want to know about the hangs, not hide them.  On the other hand this value is
- * less than 60 seconds which is used by nsTerminator to crash a hung main
- * process.
- */
-#define SHUTDOWN_TIMEOUT_MS 50000
-
 #ifdef DEBUG
 
 const int32_t kDEBUGThreadPriority = nsISupportsPriority::PRIORITY_NORMAL;
@@ -5141,12 +5127,14 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   void StopIdleMaintenance() override;
 
-  void ShutdownWorkThreads() override;
-
  private:
   ~QuotaClient() override;
 
-  void ShutdownTimedOut();
+  void InitiateShutdown() override;
+  bool IsShutdownCompleted() const override;
+  void ForceKillActors() override;
+  void ShutdownTimedOut() override;
+  void FinalizeShutdown() override;
 
   static void DeleteTimerCallback(nsITimer* aTimer, void* aClosure);
 
@@ -13253,66 +13241,26 @@ void QuotaClient::StopIdleMaintenance() {
   }
 }
 
-void QuotaClient::ShutdownWorkThreads() {
+void QuotaClient::InitiateShutdown() {
   AssertIsOnBackgroundThread();
 
   mShutdownRequested.Flip();
 
   AbortOperations(VoidCString());
+}
 
-  nsCOMPtr<nsITimer> timer = NS_NewTimer();
+bool QuotaClient::IsShutdownCompleted() const {
+  return (!gFactoryOps || gFactoryOps->IsEmpty()) &&
+         (!gLiveDatabaseHashtable || !gLiveDatabaseHashtable->Count()) &&
+         !mCurrentMaintenance;
+}
 
-  MOZ_ALWAYS_SUCCEEDS(timer->InitWithNamedFuncCallback(
-      [](nsITimer* aTimer, void* aClosure) {
-        auto quotaClient = static_cast<QuotaClient*>(aClosure);
-
-        quotaClient->ShutdownTimedOut();
-      },
-      this, SHUTDOWN_TIMEOUT_MS, nsITimer::TYPE_ONE_SHOT,
-      "indexeddb::QuotaClient::ShutdownWorkThreads::SpinEventLoopTimer"));
-
-  // This should release any IDB related quota objects or directory locks.
-  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() {
-    return (!gFactoryOps || gFactoryOps->IsEmpty()) &&
-           (!gLiveDatabaseHashtable || !gLiveDatabaseHashtable->Count()) &&
-           !mCurrentMaintenance;
-  }));
-
-  MOZ_ALWAYS_SUCCEEDS(timer->Cancel());
-
-  // And finally, shutdown all threads.
-  RefPtr<ConnectionPool> connectionPool = gConnectionPool.get();
-  if (connectionPool) {
-    connectionPool->Shutdown();
-
-    gConnectionPool = nullptr;
-  }
-
-  RefPtr<FileHandleThreadPool> fileHandleThreadPool =
-      gFileHandleThreadPool.get();
-  if (fileHandleThreadPool) {
-    fileHandleThreadPool->Shutdown();
-
-    gFileHandleThreadPool = nullptr;
-  }
-
-  if (mMaintenanceThreadPool) {
-    mMaintenanceThreadPool->Shutdown();
-    mMaintenanceThreadPool = nullptr;
-  }
-
-  if (mDeleteTimer) {
-    MOZ_ALWAYS_SUCCEEDS(mDeleteTimer->Cancel());
-    mDeleteTimer = nullptr;
-  }
+void QuotaClient::ForceKillActors() {
+  // Currently we don't implement force killing actors.
 }
 
 void QuotaClient::ShutdownTimedOut() {
   AssertIsOnBackgroundThread();
-  MOZ_DIAGNOSTIC_ASSERT(
-      (gFactoryOps && !gFactoryOps->IsEmpty()) ||
-      (gLiveDatabaseHashtable && gLiveDatabaseHashtable->Count()) ||
-      mCurrentMaintenance);
 
   nsCString data;
 
@@ -13374,6 +13322,33 @@ void QuotaClient::ShutdownTimedOut() {
       CrashReporter::Annotation::IndexedDBShutdownTimeout, data);
 
   MOZ_CRASH("IndexedDB shutdown timed out");
+}
+
+void QuotaClient::FinalizeShutdown() {
+  RefPtr<ConnectionPool> connectionPool = gConnectionPool.get();
+  if (connectionPool) {
+    connectionPool->Shutdown();
+
+    gConnectionPool = nullptr;
+  }
+
+  RefPtr<FileHandleThreadPool> fileHandleThreadPool =
+      gFileHandleThreadPool.get();
+  if (fileHandleThreadPool) {
+    fileHandleThreadPool->Shutdown();
+
+    gFileHandleThreadPool = nullptr;
+  }
+
+  if (mMaintenanceThreadPool) {
+    mMaintenanceThreadPool->Shutdown();
+    mMaintenanceThreadPool = nullptr;
+  }
+
+  if (mDeleteTimer) {
+    MOZ_ALWAYS_SUCCEEDS(mDeleteTimer->Cancel());
+    mDeleteTimer = nullptr;
+  }
 }
 
 void QuotaClient::DeleteTimerCallback(nsITimer* aTimer, void* aClosure) {

@@ -136,7 +136,14 @@ class Client {
 
   virtual void StopIdleMaintenance() = 0;
 
-  virtual void ShutdownWorkThreads() = 0;
+  void ShutdownWorkThreads();
+
+ private:
+  virtual void InitiateShutdown() = 0;
+  virtual bool IsShutdownCompleted() const = 0;
+  virtual void ForceKillActors() = 0;
+  virtual void ShutdownTimedOut() = 0;
+  virtual void FinalizeShutdown() = 0;
 
  protected:
   virtual ~Client() = default;

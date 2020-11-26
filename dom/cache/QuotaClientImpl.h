@@ -54,8 +54,6 @@ class CacheQuotaClient final : public quota::Client {
 
   virtual void StopIdleMaintenance() override;
 
-  virtual void ShutdownWorkThreads() override;
-
   nsresult UpgradeStorageFrom2_0To2_1(nsIFile* aDirectory) override;
 
   template <typename Callable>
@@ -131,6 +129,12 @@ class CacheQuotaClient final : public quota::Client {
 
  private:
   ~CacheQuotaClient();
+
+  void InitiateShutdown() override;
+  bool IsShutdownCompleted() const override;
+  void ForceKillActors() override;
+  void ShutdownTimedOut() override;
+  void FinalizeShutdown() override;
 
   Result<UsageInfo, nsresult> GetUsageForOriginInternal(
       PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,

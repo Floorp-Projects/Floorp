@@ -7,9 +7,13 @@
 #include "Client.h"
 
 // Global includes
+#include "BackgroundParent.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/SpinEventLoopUntil.h"
 
 namespace mozilla::dom::quota {
+
+using mozilla::ipc::AssertIsOnBackgroundThread;
 
 namespace {
 
@@ -17,6 +21,27 @@ const char kIDBPrefix = 'I';
 const char kDOMCachePrefix = 'C';
 const char kSDBPrefix = 'S';
 const char kLSPrefix = 'L';
+
+/**
+ * If shutdown takes this long, kill actors of a quota client, to avoid reaching
+ * the crash timeout.
+ */
+#define SHUTDOWN_FORCE_KILL_TIMEOUT_MS 5000
+
+/**
+ * Automatically crash the browser if shutdown of a quota client takes this
+ * long. We've chosen a value that is longer than the value for QuotaManager
+ * shutdown timer which is currently set to 30 seconds, so that the QuotaManager
+ * abort may still make the quota client's shutdown complete in time.  We've
+ * also chosen a value that is long enough that it is unlikely for the problem
+ * to be falsely triggered by slow system I/O.  We've also chosen a value long
+ * enough so that automated tests should time out and fail if shutdown of a
+ * quota client takes too long.  Also, this value is long enough so that testers
+ * can notice the timeout; we want to know about the timeouts, not hide them. On
+ * the other hand this value is less than 60 seconds which is used by
+ * nsTerminator to crash a hung main process.
+ */
+#define SHUTDOWN_FORCE_CRASH_TIMEOUT_MS 45000
 
 template <Client::Type type>
 struct ClientTypeTraits;
@@ -229,6 +254,43 @@ bool Client::TypeFromPrefix(char aPrefix, Type& aType, const fallible_t&) {
   }
   aType = type;
   return true;
+}
+
+void Client::ShutdownWorkThreads() {
+  AssertIsOnBackgroundThread();
+
+  InitiateShutdown();
+
+  if (!IsShutdownCompleted()) {
+    nsCOMPtr<nsITimer> timer = NS_NewTimer();
+
+    MOZ_ALWAYS_SUCCEEDS(timer->InitWithNamedFuncCallback(
+        [](nsITimer* aTimer, void* aClosure) {
+          auto* const quotaClient = static_cast<Client*>(aClosure);
+
+          quotaClient->ForceKillActors();
+
+          MOZ_ALWAYS_SUCCEEDS(aTimer->InitWithNamedFuncCallback(
+              [](nsITimer* aTimer, void* aClosure) {
+                auto* const quotaClient = static_cast<Client*>(aClosure);
+
+                MOZ_DIAGNOSTIC_ASSERT(!quotaClient->IsShutdownCompleted());
+                quotaClient->ShutdownTimedOut();
+              },
+              aClosure, SHUTDOWN_FORCE_CRASH_TIMEOUT_MS,
+              nsITimer::TYPE_ONE_SHOT,
+              "quota::Client::ShutdownWorkThreads::ForceCrashTimer"));
+        },
+        this, SHUTDOWN_FORCE_KILL_TIMEOUT_MS, nsITimer::TYPE_ONE_SHOT,
+        "quota::Client::ShutdownWorkThreads::ForceKillTimer"));
+
+    MOZ_ALWAYS_TRUE(
+        SpinEventLoopUntil([this] { return IsShutdownCompleted(); }));
+
+    MOZ_ALWAYS_SUCCEEDS(timer->Cancel());
+  }
+
+  FinalizeShutdown();
 }
 
 }  // namespace mozilla::dom::quota
