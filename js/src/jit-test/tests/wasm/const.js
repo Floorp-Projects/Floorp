@@ -37,10 +37,10 @@ testConst('i64', '-1', -1);
 testConst('i64', '0xffffffffffffffff', -1);
 
 testConst('i64', '0xdeadc0de', 0xdeadc0de);
-testConst('i64', '0x1337c0de00000000', 0x1337c0de);
+testConst('i64', '0x1337c0de00000000', '0x1337c0de00000000');
 
 testConst('i64', '0x0102030405060708', '0x0102030405060708');
-testConst('i64', '-0x0102030405060708', '-0x0102030505060708');
+testConst('i64', '-0x0102030405060708', '-0x0102030405060708');
 
 // INT64_MAX
 testConst('i64', '9223372036854775807', '0x7fffffffffffffff');
