@@ -291,6 +291,18 @@ var testSpec = protocol.generateActorSpec({
         value: RetVal("json"),
       },
     },
+    isPausedDebuggerOverlayVisible: {
+      request: {},
+      response: {
+        value: RetVal("boolean"),
+      },
+    },
+    clickPausedDebuggerOverlayButton: {
+      request: {
+        id: Arg(0, "string"),
+      },
+      response: {},
+    },
   },
 });
 
@@ -833,6 +845,44 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
    */
   getWindowDimensions: function() {
     return getWindowDimensions(this.content);
+  },
+
+  /**
+   * @returns {PausedDebuggerOverlay} The paused overlay instance
+   */
+  _getPausedDebuggerOverlay() {
+    // We use `_pauseOverlay` since it's the cached value; `pauseOverlay` is a getter that
+    // will create the overlay when called (if it does not exist yet).
+    return this.targetActor?.threadActor?._pauseOverlay;
+  },
+
+  isPausedDebuggerOverlayVisible() {
+    const pauseOverlay = this._getPausedDebuggerOverlay();
+    if (!pauseOverlay) {
+      return false;
+    }
+
+    const root = pauseOverlay.getElement("root");
+    return root.getAttribute("hidden") !== "true";
+  },
+
+  /**
+   * Simulates a click on a button of the debugger pause overlay.
+   *
+   * @param {String} id: The id of the element (e.g. "paused-dbg-resume-button").
+   */
+  async clickPausedDebuggerOverlayButton(id) {
+    const pauseOverlay = this._getPausedDebuggerOverlay();
+    if (!pauseOverlay) {
+      return;
+    }
+
+    // Because the highlighter markup elements live inside an anonymous content frame which
+    // does not expose an API to dispatch events to them, we can't directly dispatch
+    // events to the nodes themselves.
+    // We're directly calling `handleEvent` on the pause overlay, which is the mouse events
+    // listener callback on the overlay.
+    pauseOverlay.handleEvent({ type: "mousedown", target: { id } });
   },
 });
 exports.TestActor = TestActor;
