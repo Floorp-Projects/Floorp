@@ -2832,18 +2832,8 @@ TSFTextStore::Content& TSFTextStore::ContentForTSFRef() {
   }
 
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-          ("0x%p   TSFTextStore::ContentForTSFRef(): "
-           "mContentForTSF={ mText=\"%s\" (Length()=%u), "
-           "mLastCompositionString=\"%s\" (Length()=%u), "
-           "mMinTextModifiedOffset=%u }",
-           this,
-           mContentForTSF.Text().Length() <= 40
-               ? GetEscapedUTF8String(mContentForTSF.Text()).get()
-               : "<omitted>",
-           mContentForTSF.Text().Length(),
-           GetEscapedUTF8String(mContentForTSF.LastCompositionString()).get(),
-           mContentForTSF.LastCompositionString().Length(),
-           mContentForTSF.MinTextModifiedOffset()));
+          ("0x%p   TSFTextStore::ContentForTSFRef(): mContentForTSF=%s", this,
+           mozilla::ToString(mContentForTSF).c_str()));
 
   return mContentForTSF;
 }
@@ -4812,9 +4802,9 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
       // first character of composition string is stored since it was
       // selection start or caret position.
       LONG maxCachedOffset = mContentForTSF.LatestCompositionEndOffset();
-      if (mContentForTSF.WasLastComposition()) {
+      if (mContentForTSF.LastComposition().isSome()) {
         maxCachedOffset = std::min(
-            maxCachedOffset, mContentForTSF.LastCompositionStringEndOffset());
+            maxCachedOffset, mContentForTSF.LastComposition()->EndOffset());
       }
       aACPStart = std::min(aACPStart, maxCachedOffset);
     }
@@ -7111,11 +7101,14 @@ void TSFTextStore::Content::ReplaceTextWith(LONG aStart, LONG aLength,
           static_cast<uint32_t>(aLength), aReplaceString);
       // TIP may set composition string twice or more times during a document
       // lock.  Therefore, we should compute the first difference offset with
-      // mLastCompositionString.
-      if (mComposition.DataRef() != mLastCompositionString) {
-        firstDifferentOffset = mComposition.StartOffset() +
-                               FirstDifferentCharOffset(mComposition.DataRef(),
-                                                        mLastCompositionString);
+      // mLastComposition.
+      if (mLastComposition.isNothing()) {
+        firstDifferentOffset = mComposition.StartOffset();
+      } else if (mComposition.DataRef() != mLastComposition->DataRef()) {
+        firstDifferentOffset =
+            mComposition.StartOffset() +
+            FirstDifferentCharOffset(mComposition.DataRef(),
+                                     mLastComposition->DataRef());
         // The previous change to the composition string is canceled.
         if (mMinTextModifiedOffset >=
                 static_cast<uint32_t>(mComposition.StartOffset()) &&
@@ -7134,11 +7127,10 @@ void TSFTextStore::Content::ReplaceTextWith(LONG aStart, LONG aLength,
           sTextStoreLog, LogLevel::Debug,
           ("0x%p   TSFTextStore::Content::ReplaceTextWith(aStart=%d, "
            "aLength=%d, aReplaceString=\"%s\"), mComposition=%s, "
-           "mLastCompositionString=\"%s\", mMinTextModifiedOffset=%u, "
+           "mLastComposition=%s, mMinTextModifiedOffset=%u, "
            "firstDifferentOffset=%u",
            this, aStart, aLength, GetEscapedUTF8String(aReplaceString).get(),
-           ToString(mComposition).c_str(),
-           GetEscapedUTF8String(mLastCompositionString).get(),
+           ToString(mComposition).c_str(), ToString(mLastComposition).c_str(),
            mMinTextModifiedOffset, firstDifferentOffset));
     } else {
       firstDifferentOffset =

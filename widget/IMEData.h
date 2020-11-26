@@ -26,6 +26,7 @@ class WritingMode;
 class MOZ_STACK_CLASS PrintStringDetail : public nsAutoCString {
  public:
   static constexpr uint32_t kMaxLengthForCompositionString = 8;
+  static constexpr uint32_t kMaxLengthForEditor = 20;
 
   PrintStringDetail() = delete;
   explicit PrintStringDetail(const nsAString& aString,
