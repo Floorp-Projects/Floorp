@@ -109,9 +109,6 @@ class WindowProxyHolder;
   FIELD(CurrentInnerWindowId, uint64_t)                                      \
   FIELD(HadOriginalOpener, bool)                                             \
   FIELD(IsPopupSpam, bool)                                                   \
-  /* Controls whether the BrowsingContext is currently considered to be      \
-   * activated by a gesture */                                               \
-  FIELD(UserActivationState, UserActivation::State)                          \
   /* Hold the audio muted state and should be used on top level browsing     \
    * contexts only */                                                        \
   FIELD(Muted, bool)                                                         \
