@@ -14,6 +14,7 @@
 #  include "MediaEventSource.h"
 #  include "MediaInfo.h"
 #  include "MediaResult.h"
+#  include "PDMFactory.h"
 #  include "mozilla/EnumSet.h"
 #  include "mozilla/EnumTypeTraits.h"
 #  include "mozilla/MozPromise.h"
@@ -329,9 +330,7 @@ class PlatformDecoderModule {
            SupportsColorDepth(videoInfo->mColorDepth, aDiagnostics);
   }
 
-  typedef MozPromise<RefPtr<MediaDataDecoder>, MediaResult,
-                     /* IsExclusive = */ true>
-      CreateDecoderPromise;
+  using CreateDecoderPromise = PDMCreateDecoderPromise;
 
  protected:
   PlatformDecoderModule() = default;
