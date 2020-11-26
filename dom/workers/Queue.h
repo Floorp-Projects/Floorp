@@ -7,8 +7,6 @@
 #ifndef mozilla_dom_workerinternal_Queue_h
 #define mozilla_dom_workerinternal_Queue_h
 
-#include "mozilla/dom/WorkerCommon.h"
-
 #include "mozilla/Mutex.h"
 #include "nsTArray.h"
 

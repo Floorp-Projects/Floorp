@@ -8,9 +8,11 @@
 #define mozilla_dom_workers_WorkerDebugger_h
 
 #include "mozilla/PerformanceTypes.h"
-#include "mozilla/dom/DOMTypes.h"
-#include "mozilla/dom/WorkerCommon.h"
+#include "nsCOMPtr.h"
 #include "nsIWorkerDebugger.h"
+
+class mozIDOMWindow;
+class nsIPrincipal;
 
 namespace mozilla {
 namespace dom {

@@ -6,6 +6,7 @@
 
 #include "Principal.h"
 
+#include "JSSettings.h"
 #include "jsapi.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/StructuredCloneTags.h"

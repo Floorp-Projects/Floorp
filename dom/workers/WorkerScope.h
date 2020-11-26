@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_workerscope_h__
 #define mozilla_dom_workerscope_h__
 
+#include "js/TypeDecls.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -14,18 +15,11 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/dom/ClientSource.h"
-#include "mozilla/dom/Console.h"
-#include "mozilla/dom/DOMString.h"
-#include "mozilla/dom/EventCallbackDebuggerNotification.h"
 #include "mozilla/dom/ImageBitmapSource.h"
-#include "mozilla/dom/RequestBinding.h"
-#include "mozilla/dom/RequestBinding.h"
 #include "nsCOMPtr.h"
-#include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIGlobalObject.h"
-#include "nsISupportsImpl.h"
+#include "nsISupports.h"
 #include "nsWeakReference.h"
 
 #ifdef XP_WIN
@@ -43,25 +37,32 @@ namespace dom {
 class AnyCallback;
 enum class CallerType : uint32_t;
 class ClientInfo;
+class ClientSource;
 class Clients;
 class Console;
 class Crypto;
 class DOMString;
 class DebuggerNotificationManager;
+enum class EventCallbackDebuggerNotificationType : uint8_t;
+class EventHandlerNonNull;
 class Function;
 class IDBFactory;
 class OnErrorEventHandlerNonNull;
 template <typename T>
 class Optional;
+class Performance;
 struct PostMessageOptions;
 class Promise;
+class RequestOrUSVString;
 template <typename T>
 class Sequence;
 class ServiceWorkerDescriptor;
+class ServiceWorkerRegistration;
 class ServiceWorkerRegistrationDescriptor;
 class WorkerLocation;
 class WorkerNavigator;
 class WorkerPrivate;
+struct RequestInit;
 
 namespace cache {
 
@@ -97,13 +98,9 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
 
   bool IsSharedMemoryAllowed() const final;
 
-  Maybe<ClientInfo> GetClientInfo() const final {
-    return Some(mClientSource->Info());
-  }
+  Maybe<ClientInfo> GetClientInfo() const final;
 
-  Maybe<ServiceWorkerDescriptor> GetController() const final {
-    return mClientSource->GetController();
-  }
+  Maybe<ServiceWorkerDescriptor> GetController() const final;
 
   virtual void Control(const ServiceWorkerDescriptor& aServiceWorker);
 
@@ -139,7 +136,7 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
   void WorkerPrivateSaysAllowScript() { StopForbiddingScript(); }
 
  protected:
-  ~WorkerGlobalScopeBase() = default;
+  ~WorkerGlobalScopeBase();
 
   const NotNull<WorkerPrivate*> mWorkerPrivate;
 
@@ -155,7 +152,7 @@ class NamedWorkerGlobalScopeMixin {
  public:
   explicit NamedWorkerGlobalScopeMixin(const nsAString& aName) : mName(aName) {}
 
-  void GetName(DOMString& aName) const { aName.AsAString() = mName; }
+  void GetName(DOMString& aName) const;
 
  protected:
   ~NamedWorkerGlobalScopeMixin() = default;
@@ -187,9 +184,7 @@ class WorkerGlobalScope : public WorkerGlobalScopeBase,
   DebuggerNotificationManager* GetExistingDebuggerNotificationManager() final;
 
   Maybe<EventCallbackDebuggerNotificationType> GetDebuggerNotificationType()
-      const final {
-    return Some(EventCallbackDebuggerNotificationType::Global);
-  }
+      const final;
 
   // WorkerGlobalScope WebIDL implementation
   WorkerGlobalScope* Self() { return this; }
@@ -283,7 +278,7 @@ class WorkerGlobalScope : public WorkerGlobalScopeBase,
   void StorageAccessPermissionGranted();
 
  protected:
-  ~WorkerGlobalScope() = default;
+  ~WorkerGlobalScope();
 
  private:
   MOZ_CAN_RUN_SCRIPT
@@ -391,7 +386,7 @@ class ServiceWorkerGlobalScope final : public WorkerGlobalScope {
   IMPL_EVENT_HANDLER(pushsubscriptionchange)
 
  private:
-  ~ServiceWorkerGlobalScope() = default;
+  ~ServiceWorkerGlobalScope();
 
   void NoteFetchHandlerWasAdded() const;
 

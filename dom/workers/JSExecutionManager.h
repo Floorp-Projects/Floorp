@@ -7,24 +7,23 @@
 #ifndef mozilla_dom_workers_jsexecutionmanager_h__
 #define mozilla_dom_workers_jsexecutionmanager_h__
 
-#include "mozilla/dom/WorkerCommon.h"
-#include "mozilla/dom/WorkerRef.h"
-#include "mozilla/dom/WorkerStatus.h"
-#include "mozilla/StaticPtr.h"
-
-#include "nsICancelableRunnable.h"
-
-#include "mozilla/Atomics.h"
+#include <stdint.h>
+#include <deque>
+#include "MainThreadUtils.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/Mutex.h"
-#include "nsISupportsImpl.h"
-#include "nsThreadUtils.h" /* nsRunnable */
+#include "mozilla/RefPtr.h"
+#include "nsISupports.h"
 
-#include <deque>
-
-struct JSContext;
-class nsIEventTarget;
 class nsIGlobalObject;
+namespace mozilla {
+
+class ErrorResult;
+
+namespace dom {
+class WorkerPrivate;
 
 // The code in this file is responsible for throttling JS execution. It does
 // this by introducing a JSExecutionManager class. An execution manager may be
@@ -55,12 +54,6 @@ class nsIGlobalObject;
 // only runs in a serialized manner. On the main thread we therefore may have
 // 1 execution manager per DocGroup, as this is the granularity at which
 // SharedArrayBuffers may be present.
-
-namespace mozilla {
-
-class ErrorResult;
-
-namespace dom {
 
 class AutoRequestJSThreadExecution;
 class AutoYieldJSThreadExecution;

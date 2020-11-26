@@ -4,9 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WorkerRef.h"
+#include "mozilla/dom/WorkerRef.h"
 
-#include "mozilla/Unused.h"
+#include "nsDebug.h"
 #include "WorkerRunnable.h"
 #include "WorkerPrivate.h"
 
