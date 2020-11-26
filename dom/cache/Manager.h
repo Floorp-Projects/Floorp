@@ -125,8 +125,9 @@ class Manager final : public SafeRefCounted<Manager> {
   static Result<SafeRefPtr<Manager>, nsresult> AcquireCreateIfNonExistent(
       const SafeRefPtr<ManagerId>& aManagerId);
 
-  // Synchronously shutdown.  This spins the event loop.
-  static void ShutdownAll();
+  static void InitiateShutdown();
+
+  static bool IsShutdownAllComplete();
 
   // Cancel actions for given origin or all actions if passed string is null.
   static void Abort(const nsACString& aOrigin);
