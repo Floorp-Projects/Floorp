@@ -981,7 +981,7 @@ Accessible* XULTreeColumAccessible::GetSiblingAtOffset(int32_t aOffset,
 
   RefPtr<dom::XULTreeElement> tree = nsCoreUtils::GetTree(mContent);
   if (tree) {
-    nsCOMPtr<nsITreeView> treeView = tree->GetView();
+    nsCOMPtr<nsITreeView> treeView = tree->GetView(FlushType::None);
     if (treeView) {
       int32_t rowCount = 0;
       treeView->GetRowCount(&rowCount);

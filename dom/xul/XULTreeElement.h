@@ -47,7 +47,7 @@ class XULTreeElement final : public nsXULElement {
   already_AddRefed<nsITreeView> GetView(CallerType /* unused */) {
     return GetView();
   }
-  already_AddRefed<nsITreeView> GetView();
+  already_AddRefed<nsITreeView> GetView(FlushType = FlushType::Frames);
 
   void SetView(nsITreeView* arg, CallerType aCallerType, ErrorResult& aRv);
 

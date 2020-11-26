@@ -106,9 +106,9 @@ nsTreeBodyFrame* XULTreeElement::GetTreeBodyFrame(FlushType aFlushType) {
   return mTreeBody;
 }
 
-already_AddRefed<nsITreeView> XULTreeElement::GetView() {
+already_AddRefed<nsITreeView> XULTreeElement::GetView(FlushType aFlushType) {
   if (!mTreeBody) {
-    if (!GetTreeBodyFrame()) {
+    if (!GetTreeBodyFrame(aFlushType)) {
       return nullptr;
     }
 
