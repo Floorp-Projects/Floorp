@@ -15,6 +15,7 @@
 #include "WritingModes.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextEventDispatcher.h"
@@ -810,8 +811,7 @@ class TSFTextStore final : public ITextStoreACP,
 
     void Clear() {
       mText.Truncate();
-      mLastCompositionString.Truncate();
-      mLastCompositionStart = -1;
+      mLastComposition.reset();
       mInitialized = false;
     }
 
@@ -820,11 +820,9 @@ class TSFTextStore final : public ITextStoreACP,
     void Init(const nsAString& aText) {
       mText = aText;
       if (mComposition.IsComposing()) {
-        mLastCompositionString = mComposition.DataRef();
-        mLastCompositionStart = mComposition.StartOffset();
+        mLastComposition = Some(mComposition);
       } else {
-        mLastCompositionString.Truncate();
-        mLastCompositionStart = -1;
+        mLastComposition.reset();
       }
       mMinTextModifiedOffset = NOT_MODIFIED;
       mLatestCompositionStartOffset = mLatestCompositionEndOffset = LONG_MAX;
@@ -841,11 +839,9 @@ class TSFTextStore final : public ITextStoreACP,
         return;
       }
       if (mComposition.IsComposing()) {
-        mLastCompositionString = mComposition.DataRef();
-        mLastCompositionStart = mComposition.StartOffset();
+        mLastComposition = Some(mComposition);
       } else {
-        mLastCompositionString.Truncate();
-        mLastCompositionStart = -1;
+        mLastComposition.reset();
       }
     }
 
@@ -879,18 +875,9 @@ class TSFTextStore final : public ITextStoreACP,
       MOZ_ASSERT(mInitialized);
       return mText;
     }
-    const nsString& LastCompositionString() const {
+    const Maybe<OffsetAndData<LONG>>& LastComposition() const {
       MOZ_ASSERT(mInitialized);
-      return mLastCompositionString;
-    }
-    LONG LastCompositionStringEndOffset() const {
-      MOZ_ASSERT(mInitialized);
-      MOZ_ASSERT(WasLastComposition());
-      return mLastCompositionStart + mLastCompositionString.Length();
-    }
-    bool WasLastComposition() const {
-      MOZ_ASSERT(mInitialized);
-      return mLastCompositionStart >= 0;
+      return mLastComposition;
     }
     uint32_t MinTextModifiedOffset() const {
       MOZ_ASSERT(mInitialized);
@@ -930,17 +917,32 @@ class TSFTextStore final : public ITextStoreACP,
     TSFTextStore::Composition& Composition() { return mComposition; }
     TSFTextStore::Selection& Selection() { return mSelection; }
 
+    friend std::ostream& operator<<(std::ostream& aStream,
+                                    const Content& aContent) {
+      aStream << "{ mText="
+              << PrintStringDetail(aContent.mText,
+                                   PrintStringDetail::kMaxLengthForEditor)
+                     .get()
+              << ", mLastComposition=" << aContent.mLastComposition
+              << ", mLatestCompositionStartOffset="
+              << aContent.mLatestCompositionStartOffset
+              << ", mLatestCompositionEndOffset="
+              << aContent.mLatestCompositionEndOffset
+              << ", mMinTextModifiedOffset=" << aContent.mMinTextModifiedOffset
+              << ", mInitialized=" << aContent.mInitialized << " }";
+      return aStream;
+    }
+
    private:
     nsString mText;
-    // mLastCompositionString stores the composition string when the document
-    // is locked. This is necessary to compute mMinTextModifiedOffset.
-    nsString mLastCompositionString;
+
+    // mLastComposition may store the composition string and its start offset
+    // when the document is locked. This is necessary to compute
+    // mMinTextModifiedOffset.
+    Maybe<OffsetAndData<LONG>> mLastComposition;
+
     TSFTextStore::Composition& mComposition;
     TSFTextStore::Selection& mSelection;
-
-    // mLastCompositionStart stores the start offset of composition when
-    // mLastCompositionString is set.
-    LONG mLastCompositionStart;
 
     // The latest composition's start and end offset.  If composition hasn't
     // been started since this instance is initialized, they are LONG_MAX.
