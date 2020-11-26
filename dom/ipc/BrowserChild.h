@@ -29,7 +29,6 @@
 #include "mozilla/dom/CoalescedMouseData.h"
 #include "mozilla/dom/CoalescedWheelData.h"
 #include "mozilla/dom/MessageManagerCallback.h"
-#include "mozilla/dom/VsyncChild.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventForwards.h"
@@ -437,12 +436,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   PFilePickerChild* AllocPFilePickerChild(const nsString& aTitle,
                                           const int16_t& aMode);
 
-  virtual PVsyncChild* AllocPVsyncChild();
-
-  virtual bool DeallocPVsyncChild(PVsyncChild* aActor);
-
-  RefPtr<VsyncChild> GetVsyncChild();
-
   bool DeallocPFilePickerChild(PFilePickerChild* aActor);
 
   nsIWebNavigation* WebNavigation() const { return mWebNav; }
@@ -754,8 +747,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
       const mozilla::layers::CompositorOptions& aCompositorOptions);
   void InitAPZState();
 
-  void InitVsyncChild();
-
   void DestroyWindow();
 
   void ApplyParentShowInfo(const ParentShowInfo&);
@@ -822,8 +813,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   bool mDidFakeShow;
   bool mTriedBrowserInit;
   hal::ScreenOrientation mOrientation;
-
-  RefPtr<VsyncChild> mVsyncChild;
 
   bool mIgnoreKeyPressEvent;
   RefPtr<APZEventState> mAPZEventState;
