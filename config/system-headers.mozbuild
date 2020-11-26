@@ -1344,6 +1344,9 @@ if CONFIG['MOZ_WAYLAND']:
         'wayland-client.h',
         'wayland-egl.h',
         'wayland-util.h',
+        'va/va.h',
+        'va/va_dec_vp9.h',
+        'va/va_dec_vp8.h',
     ]
 
 if CONFIG['OS_TARGET'] in ('Android', 'Linux', 'FreeBSD'):
