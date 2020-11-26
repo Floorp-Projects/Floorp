@@ -12,7 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "mozilla/Mutex.h"
+#include "mozilla/DataMutex.h"
 
 class nsIEventTarget;
 
@@ -83,10 +83,36 @@ class nsSegmentedBuffer {
   int32_t mLastSegmentIndex;
 
  private:
+  class FreeOMTPointers {
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FreeOMTPointers)
+
+   public:
+    FreeOMTPointers() : mTasks("nsSegmentedBuffer::FreeOMTPointers") {}
+
+    void FreeAll();
+
+    // Adds a task to the array. Returns the size of the array.
+    size_t AddTask(std::function<void()>&& aTask) {
+      auto tasks = mTasks.Lock();
+      tasks->AppendElement(std::move(aTask));
+      return tasks->Length();
+    }
+
+   private:
+    ~FreeOMTPointers() = default;
+
+    mozilla::DataMutex<nsTArray<std::function<void()>>> mTasks;
+  };
+
   void FreeOMT(void* aPtr);
   void FreeOMT(std::function<void()>&& aTask);
 
   nsCOMPtr<nsIEventTarget> mIOThread;
+
+  // This object is created the first time we need to dispatch to another thread
+  // to free segments. It is only freed when the nsSegmentedBufer is destroyed
+  // or when the runnable is finally handled and its refcount goes to 0.
+  RefPtr<FreeOMTPointers> mFreeOMT;
 };
 
 // NS_SEGMENTARRAY_INITIAL_SIZE: This number needs to start out as a
