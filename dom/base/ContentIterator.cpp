@@ -113,8 +113,31 @@ static bool NodeIsInTraversalRange(nsINode* aNode, bool aIsPreMode,
   return ComparePostMode(aStart, aEnd, *aNode);
 }
 
+// Each concreate class of ContentIteratorBase may be owned by another class
+// which may be owned by JS.  Therefore, all of them should be in the cycle
+// collection.  However, we cannot make non-refcountable classes only with the
+// macros.  So, we need to make them cycle collectable without the macros.
+void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                                 ContentIteratorBase& aField, const char* aName,
+                                 uint32_t aFlags = 0) {
+  ImplCycleCollectionTraverse(aCallback, aField.mCurNode, aName, aFlags);
+  ImplCycleCollectionTraverse(aCallback, aField.mFirst, aName, aFlags);
+  ImplCycleCollectionTraverse(aCallback, aField.mLast, aName, aFlags);
+  ImplCycleCollectionTraverse(aCallback, aField.mClosestCommonInclusiveAncestor,
+                              aName, aFlags);
+}
+
+void ImplCycleCollectionUnlink(ContentIteratorBase& aField) {
+  ImplCycleCollectionUnlink(aField.mCurNode);
+  ImplCycleCollectionUnlink(aField.mFirst);
+  ImplCycleCollectionUnlink(aField.mLast);
+  ImplCycleCollectionUnlink(aField.mClosestCommonInclusiveAncestor);
+}
+
 ContentIteratorBase::ContentIteratorBase(Order aOrder)
     : mIsDone(false), mOrder(aOrder) {}
+
+ContentIteratorBase::~ContentIteratorBase() = default;
 
 /******************************************************
  * Init routines
