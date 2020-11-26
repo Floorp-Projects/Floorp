@@ -18,6 +18,7 @@ apps:
       GTK_USE_PORTAL: 1
     slots:
       - dbus-daemon
+      - mpris
     plugs:
       - avahi-observe
       - browser-sandbox
