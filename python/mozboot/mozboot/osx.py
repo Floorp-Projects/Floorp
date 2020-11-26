@@ -369,7 +369,6 @@ class OSXBootstrapper(BaseBootstrapper):
         packages = [
             "git",
             "gnu-tar",
-            "node",
             "terminal-notifier",
             "watchman",
         ]
@@ -440,7 +439,7 @@ class OSXBootstrapper(BaseBootstrapper):
             self.run_as_root([self.port, "-v", "install"] + missing)
 
     def ensure_macports_system_packages(self, install_mercurial):
-        packages = ["gnutar", "watchman", "nodejs8"]
+        packages = ["gnutar", "watchman"]
         if install_mercurial:
             packages.append("mercurial")
 
