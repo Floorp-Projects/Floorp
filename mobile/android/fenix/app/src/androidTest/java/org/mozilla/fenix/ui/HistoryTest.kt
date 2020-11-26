@@ -84,7 +84,7 @@ class HistoryTest {
         }.openHistory {
             verifyHistoryListExists()
             historyListIdlingResource =
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list), 1)
             IdlingRegistry.getInstance().register(historyListIdlingResource!!)
             verifyHistoryMenuView()
             verifyVisitedTimeTitle()
@@ -104,7 +104,7 @@ class HistoryTest {
         }.openHistory {
             verifyHistoryListExists()
             historyListIdlingResource =
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list), 1)
             IdlingRegistry.getInstance().register(historyListIdlingResource!!)
         }.openThreeDotMenu {
         }.clickCopy {
@@ -123,7 +123,7 @@ class HistoryTest {
         }.openHistory {
             verifyHistoryListExists()
             historyListIdlingResource =
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list), 1)
             IdlingRegistry.getInstance().register(historyListIdlingResource!!)
         }.openThreeDotMenu {
         }.clickShare {
@@ -145,7 +145,7 @@ class HistoryTest {
         }.openHistory {
             verifyHistoryListExists()
             historyListIdlingResource =
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list), 1)
             IdlingRegistry.getInstance().register(historyListIdlingResource!!)
         }.openThreeDotMenu {
         }.clickOpenInNormalTab {
@@ -166,7 +166,7 @@ class HistoryTest {
         }.openHistory {
             verifyHistoryListExists()
             historyListIdlingResource =
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list), 1)
             IdlingRegistry.getInstance().register(historyListIdlingResource!!)
         }.openThreeDotMenu {
         }.clickOpenInPrivateTab {
@@ -187,7 +187,7 @@ class HistoryTest {
         }.openHistory {
             verifyHistoryListExists()
             historyListIdlingResource =
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list), 1)
             IdlingRegistry.getInstance().register(historyListIdlingResource!!)
         }.openThreeDotMenu {
             IdlingRegistry.getInstance().unregister(historyListIdlingResource!!)
@@ -208,7 +208,7 @@ class HistoryTest {
         }.openHistory {
             verifyHistoryListExists()
             historyListIdlingResource =
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list), 1)
             IdlingRegistry.getInstance().register(historyListIdlingResource!!)
             clickDeleteHistoryButton()
             IdlingRegistry.getInstance().unregister(historyListIdlingResource!!)
@@ -230,7 +230,7 @@ class HistoryTest {
         }.openHistory {
             verifyHistoryListExists()
             historyListIdlingResource =
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list), 1)
             IdlingRegistry.getInstance().register(historyListIdlingResource!!)
             longTapSelectItem(firstWebPage.url)
         }
@@ -260,7 +260,7 @@ class HistoryTest {
         }.openHistory {
             verifyHistoryListExists()
             historyListIdlingResource =
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list), 1)
             IdlingRegistry.getInstance().register(historyListIdlingResource!!)
             longTapSelectItem(firstWebPage.url)
             openActionBarOverflowOrOptionsMenu(activityTestRule.activity)
@@ -284,7 +284,7 @@ class HistoryTest {
         }.openHistory {
             verifyHistoryListExists()
             historyListIdlingResource =
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list), 1)
             IdlingRegistry.getInstance().register(historyListIdlingResource!!)
             longTapSelectItem(firstWebPage.url)
             openActionBarOverflowOrOptionsMenu(activityTestRule.activity)
@@ -311,7 +311,7 @@ class HistoryTest {
         }.openHistory {
             verifyHistoryListExists()
             historyListIdlingResource =
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list), 1)
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list), 2)
             IdlingRegistry.getInstance().register(historyListIdlingResource!!)
             longTapSelectItem(firstWebPage.url)
             longTapSelectItem(secondWebPage.url)
@@ -339,7 +339,7 @@ class HistoryTest {
         }.openHistory {
             verifyHistoryListExists()
             historyListIdlingResource =
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list), 1)
             IdlingRegistry.getInstance().register(historyListIdlingResource!!)
             longTapSelectItem(firstWebPage.url)
         }

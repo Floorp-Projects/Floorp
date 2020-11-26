@@ -296,7 +296,7 @@ class SmokeTest {
             searchSuggestionsIdlingResource =
                 RecyclerViewIdlingResource(awesomeBarView as RecyclerView, 1)
             IdlingRegistry.getInstance().register(searchSuggestionsIdlingResource!!)
-            verifySearchSuggestionsAreMoreThan(1)
+            verifySearchSuggestionsAreMoreThan(0)
             IdlingRegistry.getInstance().unregister(searchSuggestionsIdlingResource!!)
         }.goBack {
         }.openThreeDotMenu {
