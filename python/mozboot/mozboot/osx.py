@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import platform
 import re
 import subprocess
 import sys
@@ -187,6 +188,13 @@ class OSXBootstrapper(BaseBootstrapper):
 
         if self.os_version < StrictVersion("10.6"):
             raise Exception("OS X 10.6 or above is required.")
+
+        if platform.machine() == "arm64":
+            print(
+                "Bootstrap is not supported on Apple Silicon yet.\n"
+                "Please see instructions at https://bit.ly/36bUmEx in the meanwhile"
+            )
+            sys.exit(1)
 
         self.minor_version = version.split(".")[1]
 
