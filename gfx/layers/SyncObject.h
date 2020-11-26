@@ -63,6 +63,8 @@ class SyncObjectClient : public external::AtomicRefCounted<SyncObjectClient> {
 
   virtual bool IsSyncObjectValid() = 0;
 
+  virtual void EnsureInitialized() = 0;
+
  protected:
   SyncObjectClient() = default;
 };

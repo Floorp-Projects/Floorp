@@ -64,6 +64,9 @@ class KnowsCompositor {
   // The sync object for the global content device.
   RefPtr<SyncObjectClient> GetSyncObject() {
     auto lock = mData.Lock();
+    if (lock.ref().mSyncObject) {
+      lock.ref().mSyncObject->EnsureInitialized();
+    }
     return lock.ref().mSyncObject;
   }
 
