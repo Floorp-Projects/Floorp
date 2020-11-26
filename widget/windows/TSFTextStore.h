@@ -20,6 +20,7 @@
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextRange.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/widget/IMEData.h"
 
 #include <msctf.h>
 #include <textstor.h>
@@ -453,27 +454,18 @@ class TSFTextStore final : public ITextStoreACP,
    */
   void DispatchKeyboardEventAsProcessedByIME(const MSG& aMsg);
 
-  class Composition final {
+  // Composition class stores a copy of the active composition string.  Only
+  // the data is updated during an InsertTextAtSelection call if we have a
+  // composition.  The data acts as a buffer until OnUpdateComposition is
+  // called and the data is flushed to editor through eCompositionChange.
+  // This allows all changes to be updated in batches to avoid inconsistencies
+  // and artifacts.
+  class Composition final : public OffsetAndData<LONG> {
    public:
-    // nullptr if no composition is active, otherwise the current composition
-    RefPtr<ITfCompositionView> mView;
-
-    // Current copy of the active composition string. Only mString is
-    // changed during a InsertTextAtSelection call if we have a composition.
-    // mString acts as a buffer until OnUpdateComposition is called
-    // and mString is flushed to editor through eCompositionChange.
-    // This way all changes are updated in batches to avoid
-    // inconsistencies/artifacts.
-    nsString mString;
-
-    // The start of the current active composition, in ACP offsets
-    LONG mStart;
+    Composition() : OffsetAndData<LONG>(0, EmptyString()) {}
 
     bool IsComposing() const { return (mView != nullptr); }
-
-    LONG EndOffset() const {
-      return mStart + static_cast<LONG>(mString.Length());
-    }
+    ITfCompositionView* GetView() const { return mView; }
 
     // Start() and End() updates the members for emulating the latest state.
     // Unless flush the pending actions, this data never matches the actual
@@ -482,6 +474,19 @@ class TSFTextStore final : public ITextStoreACP,
                LONG aCompositionStartOffset,
                const nsAString& aCompositionString);
     void End();
+
+    friend std::ostream& operator<<(std::ostream& aStream,
+                                    const Composition& aComposition) {
+      aStream << "{ mView=0x" << aComposition.mView.get() << ", IsComposing()="
+              << (aComposition.IsComposing() ? "true" : "false")
+              << ", OffsetAndData<LONG>="
+              << static_cast<const OffsetAndData<LONG>&>(aComposition) << " }";
+      return aStream;
+    }
+
+   private:
+    // nullptr if no composition is active, otherwise the current composition
+    RefPtr<ITfCompositionView> mView;
   };
   // While the document is locked, we cannot dispatch any events which cause
   // DOM events since the DOM events' handlers may modify the locked document.
@@ -815,8 +820,8 @@ class TSFTextStore final : public ITextStoreACP,
     void Init(const nsAString& aText) {
       mText = aText;
       if (mComposition.IsComposing()) {
-        mLastCompositionString = mComposition.mString;
-        mLastCompositionStart = mComposition.mStart;
+        mLastCompositionString = mComposition.DataRef();
+        mLastCompositionStart = mComposition.StartOffset();
       } else {
         mLastCompositionString.Truncate();
         mLastCompositionStart = -1;
@@ -836,8 +841,8 @@ class TSFTextStore final : public ITextStoreACP,
         return;
       }
       if (mComposition.IsComposing()) {
-        mLastCompositionString = mComposition.mString;
-        mLastCompositionStart = mComposition.mStart;
+        mLastCompositionString = mComposition.DataRef();
+        mLastCompositionStart = mComposition.StartOffset();
       } else {
         mLastCompositionString.Truncate();
         mLastCompositionStart = -1;
