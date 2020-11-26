@@ -234,6 +234,10 @@ PausedDebuggerOverlay.prototype = {
     this.getElement("reason").setTextContent(reason);
     toolbar.removeAttribute("hidden");
 
+    // When the debugger pauses execution in a page, events will not be delivered
+    // to any handlers added to elements on that page. So here we use the
+    // document's setSuppressedEventListener interface to still be able to act on mouse
+    // events (they'll be handled by the `handleEvent` method)
     this.env.window.document.setSuppressedEventListener(this);
     return true;
   },
