@@ -228,10 +228,16 @@ void BrowsingContextGroup::Destroy() {
   mDestroyed = true;
 #endif
 
-  mHosts.Clear();
+  // Make sure to call `RemoveBrowsingContextGroup` for every entry in both
+  // `mHosts` and `mSubscribers`. This will visit most entries twice, but
+  // `RemoveBrowsingContextGroup` is safe to call multiple times.
+  for (auto& entry : mHosts) {
+    entry.GetData()->RemoveBrowsingContextGroup(this);
+  }
   for (auto& entry : mSubscribers) {
     entry.GetKey()->RemoveBrowsingContextGroup(this);
   }
+  mHosts.Clear();
   mSubscribers.Clear();
 
   if (sBrowsingContextGroups) {
