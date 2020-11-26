@@ -505,6 +505,8 @@ class SyncObjectD3D11Client : public SyncObjectClient {
 
   bool IsSyncObjectValid() override;
 
+  void EnsureInitialized() override {}
+
   SyncType GetSyncType() override { return SyncType::D3D11; }
 
   void RegisterTexture(ID3D11Texture2D* aTexture);
@@ -530,6 +532,8 @@ class SyncObjectD3D11ClientContentDevice : public SyncObjectD3D11Client {
   bool Synchronize(bool aFallible) override;
 
   bool IsSyncObjectValid() override;
+
+  void EnsureInitialized() override;
 
  private:
   RefPtr<ID3D11Device> mContentDevice;
