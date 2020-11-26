@@ -3142,6 +3142,11 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
 
   JS::RootedScript script(aCx, aRequest->mScript);
   if (!JS::FinishIncrementalEncoding(aCx, script, aRequest->mScriptBytecode)) {
+    // Encoding can be aborted for non-supported syntax (e.g. asm.js), or
+    // any other internal error.
+    // We don't care the error and just give up encoding.
+    JS_ClearPendingException(aCx);
+
     LOG(("ScriptLoadRequest (%p): Cannot serialize bytecode", aRequest));
     return;
   }
@@ -3221,8 +3226,10 @@ void ScriptLoader::GiveUpBytecodeEncoding() {
 
     if (aes.isSome()) {
       JS::RootedScript script(aes->cx(), request->mScript);
-      Unused << JS::FinishIncrementalEncoding(aes->cx(), script,
-                                              request->mScriptBytecode);
+      if (!JS::FinishIncrementalEncoding(aes->cx(), script,
+                                         request->mScriptBytecode)) {
+        JS_ClearPendingException(aes->cx());
+      }
     }
 
     request->mScriptBytecode.clearAndFree();
