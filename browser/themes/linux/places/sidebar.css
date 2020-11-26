@@ -19,7 +19,7 @@
   margin-inline-start: 4px;
 }
 
-#viewButton:-moz-focusring:not(:hover):not([open]) {
+#viewButton:-moz-focusring:not(:hover, [open]) {
   outline: 1px dotted -moz-DialogText;
 }
 

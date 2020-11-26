@@ -8,8 +8,7 @@ test_newtab({
   before: setDefaultTopSites,
   // Test verifies the menu options for a default top site.
   test: async function defaultTopSites_menuOptions() {
-    const siteSelector =
-      ".top-site-outer:not(.search-shortcut):not(.placeholder)";
+    const siteSelector = ".top-site-outer:not(.search-shortcut, .placeholder)";
     await ContentTaskUtils.waitForCondition(
       () => content.document.querySelector(siteSelector),
       "Topsite tippytop icon not found"
@@ -48,8 +47,7 @@ test_newtab({
   before: setDefaultTopSites,
   // Test verifies that the next top site in queue replaces a dismissed top site.
   test: async function defaultTopSites_dismiss() {
-    const siteSelector =
-      ".top-site-outer:not(.search-shortcut):not(.placeholder)";
+    const siteSelector = ".top-site-outer:not(.search-shortcut, .placeholder)";
     await ContentTaskUtils.waitForCondition(
       () => content.document.querySelector(siteSelector),
       "Topsite tippytop icon not found"

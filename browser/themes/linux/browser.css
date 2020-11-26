@@ -185,8 +185,8 @@ menuitem.bookmark-item {
   }
 }
 
-#urlbar:not(:-moz-lwtheme):not([focused="true"]) > #urlbar-background,
-#searchbar:not(:-moz-lwtheme):not(:focus-within) {
+#urlbar:not(:-moz-lwtheme, [focused="true"]) > #urlbar-background,
+#searchbar:not(:-moz-lwtheme, :focus-within) {
   border-color: ThreeDShadow;
 }
 

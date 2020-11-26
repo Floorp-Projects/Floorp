@@ -121,7 +121,7 @@
   transition-duration: 150ms;
 }
 
-#UITourTooltipButtons > button:not(.button-link):not(:active):hover {
+#UITourTooltipButtons > button:not(.button-link, :active):hover {
   background-color: hsla(210,4%,10%,.15);
   border-color: hsla(210,4%,10%,.15);
   box-shadow: 0 1px 0 0 hsla(210,4%,10%,.05) inset;

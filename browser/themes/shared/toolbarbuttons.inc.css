@@ -171,14 +171,14 @@ toolbar[brighttext] .toolbaritem-combined-buttons > separator {
   opacity: .3;
 }
 
-#PersonalToolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover,
+#PersonalToolbar .toolbarbutton-1:not([disabled=true], [checked], [open], :active):hover,
 #tabbrowser-arrowscrollbox:not([scrolledtostart=true])::part(scrollbutton-up):hover,
 #tabbrowser-arrowscrollbox:not([scrolledtoend=true])::part(scrollbutton-down):hover,
 .findbar-button:not([checked="true"],[disabled="true"]):hover,
-toolbarbutton.bookmark-item:not(.subviewbutton):hover:not([disabled="true"]):not([open]),
-toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-icon,
-toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-text,
-toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-badge-stack {
+toolbarbutton.bookmark-item:not(.subviewbutton, [disabled=true], [open]):hover,
+toolbar .toolbarbutton-1:not([disabled=true], [checked], [open], :active):hover > .toolbarbutton-icon,
+toolbar .toolbarbutton-1:not([disabled=true], [checked], [open], :active):hover > .toolbarbutton-text,
+toolbar .toolbarbutton-1:not([disabled=true], [checked], [open], :active):hover > .toolbarbutton-badge-stack {
   background-color: var(--toolbarbutton-hover-background);
   color: inherit;
 }
@@ -278,7 +278,7 @@ toolbar .toolbarbutton-1:-moz-focusring {
   padding: 10px;
 }
 
-:root:not([uidensity=compact]) #back-button:not([disabled]):not([open]):hover > .toolbarbutton-icon {
+:root:not([uidensity=compact]) #back-button:not([disabled], [open]):hover > .toolbarbutton-icon {
   background-color: var(--backbutton-hover-background) !important;
   box-shadow: 0 1px 6px hsla(0,0%,0%,.1);
   border-color: hsla(240,5%,5%,.35);

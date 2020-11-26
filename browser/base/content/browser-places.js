@@ -1717,9 +1717,9 @@ var BookmarkingUI = {
     // Do we have visible kids?
     let hasVisibleChildren = !!this.toolbar.querySelector(
       `:scope > toolbarpaletteitem > toolbarbutton:not([hidden]),
-       :scope > toolbarpaletteitem > toolbaritem:not([hidden]):not(#personal-bookmarks),
+       :scope > toolbarpaletteitem > toolbaritem:not([hidden], #personal-bookmarks),
        :scope > toolbarbutton:not([hidden]),
-       :scope > toolbaritem:not([hidden]):not(#personal-bookmarks)`
+       :scope > toolbaritem:not([hidden], #personal-bookmarks)`
     );
 
     if (!hasVisibleChildren) {

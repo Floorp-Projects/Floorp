@@ -32,7 +32,7 @@
 %define appmenuWarningBackgroundColorActiveBrightText hsla(55,100%,50%,.2)
 %define appmenuWarningColorBrightText #F9F9FA
 
-:root:not([uidensity=compact]):not([chromehidden~="toolbar"]) #PanelUI-button {
+:root:not([uidensity=compact], [chromehidden~="toolbar"]) #PanelUI-button {
   margin-inline-start: 3px;
   border-inline-start: 1px solid;
   border-image: linear-gradient(
@@ -44,7 +44,7 @@
   border-image-slice: 1;
 }
 
-:root:not([uidensity=compact]):not([chromehidden~="toolbar"]) #nav-bar[brighttext] > #PanelUI-button {
+:root:not([uidensity=compact], [chromehidden~="toolbar"]) #nav-bar[brighttext] > #PanelUI-button {
   border-image-source: linear-gradient(
     transparent 4px,
     var(--lwt-toolbar-vertical-separator, rgba(255,255,255,.2)) 4px,
@@ -1811,7 +1811,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   list-style-image: url("chrome://browser/skin/reload.svg");
 }
 
-.subviewbutton.download:not([canShow]):not([canRetry]) > .action-button {
+.subviewbutton.download:not([canShow], [canRetry]) > .action-button {
   fill: currentColor;
   fill-opacity: 0.4;
 }

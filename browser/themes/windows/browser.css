@@ -190,11 +190,11 @@
   /* Please keep the menu text colors in this media block in sync with
    * compacttheme.css, minus the :not(:-moz-lwtheme) condition - see Bug 1165718.
    */
-  :root[tabsintitlebar]:not([inFullscreen]):not(:-moz-lwtheme) {
+  :root[tabsintitlebar]:not([inFullscreen], :-moz-lwtheme) {
     color: CaptionText;
   }
 
-  :root[tabsintitlebar]:not([inFullscreen]):not(:-moz-lwtheme):-moz-window-inactive {
+  :root[tabsintitlebar]:not([inFullscreen], :-moz-lwtheme):-moz-window-inactive {
     color: InactiveCaptionText;
   }
 }
@@ -274,8 +274,8 @@
   :root:not([inDOMFullscreen]) #titlebar:-moz-lwtheme {
     visibility: hidden;
   }
-  :root:not([inDOMFullscreen]):not([chromehidden~="menubar"]) #toolbar-menubar:-moz-lwtheme,
-  :root:not([inDOMFullscreen]):not([chromehidden~="toolbar"]) #TabsToolbar:-moz-lwtheme {
+  :root:not([inDOMFullscreen], [chromehidden~="menubar"]) #toolbar-menubar:-moz-lwtheme,
+  :root:not([inDOMFullscreen], [chromehidden~="toolbar"]) #TabsToolbar:-moz-lwtheme {
     visibility: visible;
   }
 }
@@ -530,8 +530,8 @@ menuitem.bookmark-item {
 }
 
 @media (-moz-windows-default-theme: 0) {
-  #urlbar:not(:-moz-lwtheme):not([focused="true"]) > #urlbar-background,
-  #searchbar:not(:-moz-lwtheme):not(:focus-within) {
+  #urlbar:not(:-moz-lwtheme, [focused="true"]) > #urlbar-background,
+  #searchbar:not(:-moz-lwtheme, :focus-within) {
     border-color: ThreeDShadow;
   }
 }

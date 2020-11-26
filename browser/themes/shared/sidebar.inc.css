@@ -78,8 +78,8 @@
   padding: 2px 4px;
 }
 
-#sidebar-switcher-target:-moz-focusring:not(:hover):not([open]),
-#sidebar-close:-moz-focusring:not(:hover):not([open]) {
+#sidebar-switcher-target:-moz-focusring:not(:hover, [open]),
+#sidebar-close:-moz-focusring:not(:hover, [open]) {
   outline: 1px dotted;
 }
 

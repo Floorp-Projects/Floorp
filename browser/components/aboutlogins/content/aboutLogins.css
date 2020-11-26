@@ -56,7 +56,7 @@ login-list {
 :root:not(.initialized) login-intro,
 :root:not(.initialized) login-item,
 :root.empty-search login-intro,
-:root:not(.no-logins):not(.empty-search):not(.login-selected) login-intro,
+:root:not(.no-logins, .empty-search, .login-selected) login-intro,
 login-item[data-editing="true"] + login-intro,
 .login-selected login-intro,
 :root:not(.login-selected) login-item:not([data-editing="true"]),
