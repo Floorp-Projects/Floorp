@@ -59,12 +59,10 @@
 #include "nsViewManager.h"
 #include "GeckoProfiler.h"
 #include "nsNPAPIPluginInstance.h"
-#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/CallbackDebuggerNotification.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/Selection.h"
-#include "mozilla/dom/VsyncChild.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/RestyleManager.h"
 #include "Layers.h"
@@ -77,6 +75,7 @@
 
 #include "BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/layout/VsyncChild.h"
 #include "VsyncSource.h"
 #include "mozilla/VsyncDispatcher.h"
 #include "mozilla/Unused.h"
@@ -246,6 +245,26 @@ class RefreshDriverTimer {
   }
 
   TimeStamp MostRecentRefresh() const { return mLastFireTime; }
+
+  void SwapRefreshDrivers(RefreshDriverTimer* aNewTimer) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    for (nsRefreshDriver* driver : mContentRefreshDrivers) {
+      aNewTimer->AddRefreshDriver(driver);
+      driver->mActiveTimer = aNewTimer;
+    }
+    mContentRefreshDrivers.Clear();
+
+    for (nsRefreshDriver* driver : mRootRefreshDrivers) {
+      aNewTimer->AddRefreshDriver(driver);
+      driver->mActiveTimer = aNewTimer;
+    }
+    mRootRefreshDrivers.Clear();
+
+    aNewTimer->mLastFireTime = mLastFireTime;
+
+    StopTimer();
+  }
 
   virtual TimeDuration GetTimerRate() = 0;
 
@@ -427,45 +446,56 @@ class SimpleTimerBasedRefreshDriverTimer : public RefreshDriverTimer {
  */
 class VsyncRefreshDriverTimer : public RefreshDriverTimer {
  public:
-  VsyncRefreshDriverTimer()
-      : mVsyncChild(nullptr), mVsyncRate(TimeDuration::Forever()) {
+  VsyncRefreshDriverTimer() : mVsyncChild(nullptr) {
     MOZ_ASSERT(XRE_IsParentProcess());
     MOZ_ASSERT(NS_IsMainThread());
-    mVsyncSource = gfxPlatform::GetPlatform()->GetHardwareVsync();
     mVsyncObserver = new RefreshDriverVsyncObserver(this);
+    RefPtr<mozilla::gfx::VsyncSource> vsyncSource =
+        gfxPlatform::GetPlatform()->GetHardwareVsync();
     MOZ_ALWAYS_TRUE(mVsyncDispatcher =
-                        mVsyncSource->GetRefreshTimerVsyncDispatcher());
+                        vsyncSource->GetRefreshTimerVsyncDispatcher());
+    mVsyncDispatcher->AddChildRefreshTimer(mVsyncObserver);
+    mVsyncRate = vsyncSource->GetGlobalDisplay().GetVsyncRate();
+  }
+
+  explicit VsyncRefreshDriverTimer(VsyncChild* aVsyncChild)
+      : mVsyncChild(aVsyncChild) {
+    MOZ_ASSERT(!XRE_IsParentProcess());
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mVsyncChild);
+    mVsyncObserver = new RefreshDriverVsyncObserver(this);
+    mVsyncChild->SetVsyncObserver(mVsyncObserver);
+    mVsyncRate = mVsyncChild->GetVsyncRate();
   }
 
   // Constructor for when we have a local vsync source. As it is local, we do
   // not have to worry about it being re-inited by gfxPlatform on frame rate
   // change on the global source.
   explicit VsyncRefreshDriverTimer(const RefPtr<gfx::VsyncSource>& aVsyncSource)
-      : mVsyncSource(aVsyncSource),
-        mVsyncChild(nullptr),
-        mVsyncRate(TimeDuration::Forever()) {
+      : mVsyncChild(nullptr) {
     MOZ_ASSERT(XRE_IsParentProcess());
     MOZ_ASSERT(NS_IsMainThread());
+    mVsyncSource = aVsyncSource;
     mVsyncObserver = new RefreshDriverVsyncObserver(this);
     MOZ_ALWAYS_TRUE(mVsyncDispatcher =
                         aVsyncSource->GetRefreshTimerVsyncDispatcher());
-  }
-
-  explicit VsyncRefreshDriverTimer(const RefPtr<VsyncChild>& aVsyncChild)
-      : mVsyncSource(nullptr),
-        mVsyncDispatcher(nullptr),
-        mVsyncChild(aVsyncChild),
-        mVsyncRate(TimeDuration::Forever()) {
-    MOZ_ASSERT(XRE_IsContentProcess());
-    MOZ_ASSERT(NS_IsMainThread());
-    mVsyncObserver = new RefreshDriverVsyncObserver(this);
+    mVsyncDispatcher->AddChildRefreshTimer(mVsyncObserver);
+    mVsyncRate = aVsyncSource->GetGlobalDisplay().GetVsyncRate();
   }
 
   TimeDuration GetTimerRate() override {
-    if (mVsyncSource) {
-      mVsyncRate = mVsyncSource->GetGlobalDisplay().GetVsyncRate();
-    } else if (mVsyncChild) {
-      mVsyncRate = mVsyncChild->GetVsyncRate();
+    if (mVsyncRate != TimeDuration::Forever()) {
+      return mVsyncRate;
+    }
+
+    if (mVsyncChild) {
+      // VsyncChild::VsyncRate() is a simple getter for the cached
+      // hardware vsync rate. We depend on that
+      // VsyncChild::GetVsyncRate() being called in the constructor
+      // will result in a response with the actual vsync rate sooner
+      // or later. Until that happens VsyncChild::VsyncRate() returns
+      // TimeDuration::Forever() and we have to guess below.
+      mVsyncRate = mVsyncChild->VsyncRate();
     }
 
     // If hardware queries fail / are unsupported, we have to just guess.
@@ -742,11 +772,16 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
   };  // RefreshDriverVsyncObserver
 
   ~VsyncRefreshDriverTimer() override {
-    if (mVsyncDispatcher) {
+    if (XRE_IsParentProcess()) {
       mVsyncDispatcher->RemoveChildRefreshTimer(mVsyncObserver);
       mVsyncDispatcher = nullptr;
-    } else if (mVsyncChild) {
-      mVsyncChild->RemoveChildRefreshTimer(mVsyncObserver);
+    } else {
+      // Since the PVsyncChild actors live through the life of the process, just
+      // send the unobserveVsync message to disable vsync event. We don't need
+      // to handle the cleanup stuff of this actor. PVsyncChild::ActorDestroy()
+      // will be called and clean up this actor.
+      Unused << mVsyncChild->SendUnobserve();
+      mVsyncChild->SetVsyncObserver(nullptr);
       mVsyncChild = nullptr;
     }
 
@@ -762,10 +797,10 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
 
     mLastFireTime = TimeStamp::Now();
 
-    if (mVsyncDispatcher) {
+    if (XRE_IsParentProcess()) {
       mVsyncDispatcher->AddChildRefreshTimer(mVsyncObserver);
-    } else if (mVsyncChild) {
-      mVsyncChild->AddChildRefreshTimer(mVsyncObserver);
+    } else {
+      Unused << mVsyncChild->SendObserve();
       mVsyncObserver->OnTimerStart();
     }
 
@@ -776,10 +811,10 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     // Protect updates to `sActiveVsyncTimers`.
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (mVsyncDispatcher) {
+    if (XRE_IsParentProcess()) {
       mVsyncDispatcher->RemoveChildRefreshTimer(mVsyncObserver);
-    } else if (mVsyncChild) {
-      mVsyncChild->RemoveChildRefreshTimer(mVsyncObserver);
+    } else {
+      Unused << mVsyncChild->SendUnobserve();
     }
 
     MOZ_ASSERT(sActiveVsyncTimers > 0);
@@ -971,12 +1006,34 @@ class InactiveRefreshDriverTimer final
 
 }  // namespace mozilla
 
-static nsTArray<RefreshDriverTimer*>* sRegularRateTimers;
+static StaticRefPtr<RefreshDriverTimer> sRegularRateTimer;
 static StaticRefPtr<InactiveRefreshDriverTimer> sThrottledRateTimer;
+
+static void CreateContentVsyncRefreshTimer(void*) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!XRE_IsParentProcess());
+
+  // Create the PVsync actor child for vsync-base refresh timer.
+  // PBackgroundChild is created synchronously. We will still use software
+  // timer before PVsync ready, and change to use hw timer when the connection
+  // is done. Please check nsRefreshDriver::PVsyncActorCreated().
+
+  PBackgroundChild* actorChild = BackgroundChild::GetOrCreateForCurrentThread();
+  if (NS_WARN_IF(!actorChild)) {
+    return;
+  }
+
+  layout::PVsyncChild* actor = actorChild->SendPVsyncConstructor();
+  if (NS_WARN_IF(!actor)) {
+    return;
+  }
+
+  layout::VsyncChild* child = static_cast<layout::VsyncChild*>(actor);
+  nsRefreshDriver::PVsyncActorCreated(child);
+}
 
 void nsRefreshDriver::CreateVsyncRefreshTimer() {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mOwnTimer);
 
   PodArrayZero(sJankLevels);
 
@@ -985,25 +1042,32 @@ void nsRefreshDriver::CreateVsyncRefreshTimer() {
   }
 
   // If available, we fetch the widget-specific vsync source.
+  //
+  // NOTE(heycam): If we are initializing an nsRefreshDriver under
+  // nsPresContext::Init, then this GetRootWidget() call will fail, as the
+  // pres context does not yet have a pres shell. For now, null check the
+  // pres shell to avoid a console warning.
   nsPresContext* pc = GetPresContext();
   nsIWidget* widget = pc->GetPresShell() ? pc->GetRootWidget() : nullptr;
   if (widget) {
-    if (RefPtr<gfx::VsyncSource> localVsyncSource = widget->GetVsyncSource()) {
+    RefPtr<gfx::VsyncSource> localVsyncSource = widget->GetVsyncSource();
+    if (localVsyncSource) {
       mOwnTimer = new VsyncRefreshDriverTimer(localVsyncSource);
-    } else if (BrowserChild* browserChild = widget->GetOwningBrowserChild()) {
-      if (RefPtr<VsyncChild> localVsyncSource = browserChild->GetVsyncChild()) {
-        mOwnTimer = new VsyncRefreshDriverTimer(localVsyncSource);
-      }
+      return;
     }
   }
 
-  if (!mOwnTimer) {
-    mOwnTimer = new StartupRefreshDriverTimer(GetRegularTimerInterval());
+  if (XRE_IsParentProcess()) {
+    // Make sure all vsync systems are ready.
+    gfxPlatform::GetPlatform();
+    // In parent process, we don't need to use ipc. We can create the
+    // VsyncRefreshDriverTimer directly.
+    sRegularRateTimer = new VsyncRefreshDriverTimer();
+    return;
   }
-  if (!sRegularRateTimers) {
-    sRegularRateTimers = new nsTArray<RefreshDriverTimer*>();
-  }
-  sRegularRateTimers->AppendElement(mOwnTimer.get());
+
+  // If this process is not created by NUWA, just create the vsync timer here.
+  CreateContentVsyncRefreshTimer(nullptr);
 }
 
 static uint32_t GetFirstFrameDelay(imgIRequest* req) {
@@ -1021,10 +1085,8 @@ static uint32_t GetFirstFrameDelay(imgIRequest* req) {
 
 /* static */
 void nsRefreshDriver::Shutdown() {
-  MOZ_ASSERT(NS_IsMainThread());
   // clean up our timers
-  delete sRegularRateTimers;
-  sRegularRateTimers = nullptr;
+  sRegularRateTimer = nullptr;
   sThrottledRateTimer = nullptr;
 }
 
@@ -1080,10 +1142,26 @@ RefreshDriverTimer* nsRefreshDriver::ChooseTimer() {
     return sThrottledRateTimer;
   }
 
-  if (!mOwnTimer) {
+  if (!sRegularRateTimer && !mOwnTimer) {
+    double rate = GetRegularTimerInterval();
+
+    // Try to use vsync-base refresh timer first for sRegularRateTimer.
     CreateVsyncRefreshTimer();
+
+    if (mOwnTimer) {
+      return mOwnTimer.get();
+    }
+
+    if (!sRegularRateTimer) {
+      sRegularRateTimer = new StartupRefreshDriverTimer(rate);
+    }
   }
-  return mOwnTimer.get();
+
+  if (mOwnTimer) {
+    return mOwnTimer.get();
+  }
+
+  return sRegularRateTimer;
 }
 
 nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
@@ -1134,9 +1212,6 @@ nsRefreshDriver::~nsRefreshDriver() {
   if (mRootRefresh) {
     mRootRefresh->RemoveRefreshObserver(this, FlushType::Style);
     mRootRefresh = nullptr;
-  }
-  if (mOwnTimer && sRegularRateTimers) {
-    sRegularRateTimers->RemoveElement(mOwnTimer.get());
   }
 }
 
@@ -2600,6 +2675,21 @@ void nsRefreshDriver::SetThrottled(bool aThrottled) {
 
 nsPresContext* nsRefreshDriver::GetPresContext() const { return mPresContext; }
 
+/*static*/
+void nsRefreshDriver::PVsyncActorCreated(VsyncChild* aVsyncChild) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!XRE_IsParentProcess());
+  RefPtr<RefreshDriverTimer> vsyncRefreshDriverTimer =
+      new VsyncRefreshDriverTimer(aVsyncChild);
+
+  // If we are using software timer, swap current timer to
+  // VsyncRefreshDriverTimer.
+  if (sRegularRateTimer) {
+    sRegularRateTimer->SwapRefreshDrivers(vsyncRefreshDriverTimer);
+  }
+  sRegularRateTimer = std::move(vsyncRefreshDriverTimer);
+}
+
 void nsRefreshDriver::DoRefresh() {
   // Don't do a refresh unless we're in a state where we should be refreshing.
   if (!IsFrozen() && mPresContext && mActiveTimer) {
@@ -2676,34 +2766,27 @@ TimeStamp nsRefreshDriver::GetIdleDeadlineHint(TimeStamp aDefault) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!aDefault.IsNull());
 
-  if (!sRegularRateTimers || sRegularRateTimers->IsEmpty()) {
+  if (!sRegularRateTimer) {
     return aDefault;
   }
 
   // For computing idleness of refresh drivers we only care about
-  // sRegularRateTimers, since we consider refresh drivers attached to
+  // sRegularRateTimer, since we consider refresh drivers attached to
   // sThrottledRateTimer to be inactive. This implies that tasks
   // resulting from a tick on the sRegularRateTimer counts as being
   // busy but tasks resulting from a tick on sThrottledRateTimer
   // counts as being idle.
-  return sRegularRateTimers->ElementAt(0)->GetIdleDeadlineHint(aDefault);
+  return sRegularRateTimer->GetIdleDeadlineHint(aDefault);
 }
 
 /* static */
 Maybe<TimeStamp> nsRefreshDriver::GetNextTickHint() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!sRegularRateTimers) {
+  if (!sRegularRateTimer) {
     return Nothing();
   }
-
-  for (RefreshDriverTimer* timer : *sRegularRateTimers) {
-    Maybe<TimeStamp> tickHint = timer->GetNextTickHint();
-    if (tickHint.isSome()) {
-      return tickHint;
-    }
-  }
-  return Nothing();
+  return sRegularRateTimer->GetNextTickHint();
 }
 
 void nsRefreshDriver::Disconnect() {
