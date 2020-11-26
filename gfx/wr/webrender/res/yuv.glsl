@@ -74,24 +74,22 @@ const mat3 IdentityColorMatrix = mat3(
 );
 
 mat3 get_yuv_color_matrix(int color_space) {
-    switch (color_space) {
-        case YUV_COLOR_SPACE_REC601:
-            return YuvColorMatrixRec601;
-        case YUV_COLOR_SPACE_REC709:
-            return YuvColorMatrixRec709;
-        case YUV_COLOR_SPACE_IDENTITY:
-            return IdentityColorMatrix;
-        default:
-            return YuvColorMatrixRec2020;
+    if (color_space == YUV_COLOR_SPACE_REC601) {
+        return YuvColorMatrixRec601;
+    } else if (color_space == YUV_COLOR_SPACE_REC709) {
+        return YuvColorMatrixRec709;
+    } else if (color_space == YUV_COLOR_SPACE_IDENTITY) {
+        return IdentityColorMatrix;
+    } else {
+        return YuvColorMatrixRec2020;
     }
 }
 
 vec3 get_yuv_offset_vector(int color_space) {
-    switch (color_space) {
-        case YUV_COLOR_SPACE_IDENTITY:
-            return vec3(0.0, 0.0, 0.0);
-        default:
-            return vec3(0.06275, 0.50196, 0.50196);
+    if (color_space == YUV_COLOR_SPACE_IDENTITY) {
+        return vec3(0.0, 0.0, 0.0);
+    } else {
+        return vec3(0.06275, 0.50196, 0.50196);
     }
 }
 
