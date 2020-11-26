@@ -4410,12 +4410,13 @@ TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
   if (IsHandlingCompositionInContent() &&
       mContentForTSF.HasOrHadComposition() &&
       mContentForTSF.IsLayoutChanged() &&
-      mContentForTSF.MinOffsetOfLayoutChanged() > LONG_MAX) {
+      mContentForTSF.MinModifiedOffset().value() >
+          static_cast<uint32_t>(LONG_MAX)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::GetTextExt(), FAILED due to the text "
              "is too big for TSF (cannot treat modified offset as LONG), "
-             "mContentForTSF.MinOffsetOfLayoutChanged()=%u",
-             this, mContentForTSF.MinOffsetOfLayoutChanged()));
+             "mContentForTSF.MinModifiedOffset()=%s",
+             this, ToString(mContentForTSF.MinModifiedOffset()).c_str()));
     return E_FAIL;
   }
 
@@ -4623,7 +4624,7 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
           aACPStart == aACPEnd && selectionForTSF.IsCollapsed() &&
           selectionForTSF.EndOffset() == aACPEnd) {
         int32_t minOffsetOfLayoutChanged =
-            static_cast<int32_t>(mContentForTSF.MinOffsetOfLayoutChanged());
+            static_cast<int32_t>(mContentForTSF.MinModifiedOffset().value());
         aACPEnd = aACPStart = std::max(minOffsetOfLayoutChanged - 1, 0);
       } else {
         return false;
@@ -4652,7 +4653,7 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
       else if (aACPStart == aACPEnd && selectionForTSF.IsCollapsed() &&
                selectionForTSF.EndOffset() == aACPEnd) {
         int32_t minOffsetOfLayoutChanged =
-            static_cast<int32_t>(mContentForTSF.MinOffsetOfLayoutChanged());
+            static_cast<int32_t>(mContentForTSF.MinModifiedOffset().value());
         aACPEnd = aACPStart = std::max(minOffsetOfLayoutChanged - 1, 0);
       } else {
         return false;
@@ -4782,7 +4783,7 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
   // useful because it may return caret rect or old character's rect which
   // the user still see.  That must be useful information for TIP.
   int32_t firstModifiedOffset =
-      static_cast<int32_t>(mContentForTSF.MinOffsetOfLayoutChanged());
+      static_cast<int32_t>(mContentForTSF.MinModifiedOffset().value());
   LONG lastUnmodifiedOffset = std::max(firstModifiedOffset - 1, 0);
   if (mContentForTSF.IsLayoutChangedAt(aACPStart)) {
     if (aACPStart >= mContentForTSF.LatestCompositionRange()->StartOffset()) {
@@ -7076,10 +7077,12 @@ inline uint32_t FirstDifferentCharOffset(const nsAString& aStr1,
 void TSFTextStore::Content::ReplaceTextWith(LONG aStart, LONG aLength,
                                             const nsAString& aReplaceString) {
   MOZ_ASSERT(mInitialized);
+  MOZ_ASSERT(aStart >= 0);
+  MOZ_ASSERT(aLength >= 0);
   const nsDependentSubstring replacedString = GetSubstring(
       static_cast<uint32_t>(aStart), static_cast<uint32_t>(aLength));
   if (aReplaceString != replacedString) {
-    uint32_t firstDifferentOffset = mMinTextModifiedOffset;
+    uint32_t firstDifferentOffset = mMinModifiedOffset.valueOr(UINT32_MAX);
     if (mComposition.IsComposing()) {
       // Emulate text insertion during compositions, because during a
       // composition, editor expects the whole composition string to
@@ -7102,35 +7105,39 @@ void TSFTextStore::Content::ReplaceTextWith(LONG aStart, LONG aLength,
             FirstDifferentCharOffset(mComposition.DataRef(),
                                      mLastComposition->DataRef());
         // The previous change to the composition string is canceled.
-        if (mMinTextModifiedOffset >=
+        if (mMinModifiedOffset.isSome() &&
+            mMinModifiedOffset.value() >=
                 static_cast<uint32_t>(mComposition.StartOffset()) &&
-            mMinTextModifiedOffset < firstDifferentOffset) {
-          mMinTextModifiedOffset = firstDifferentOffset;
+            mMinModifiedOffset.value() < firstDifferentOffset) {
+          mMinModifiedOffset = Some(firstDifferentOffset);
         }
-      } else if (mMinTextModifiedOffset < LONG_MAX &&
+      } else if (mMinModifiedOffset.isSome() &&
+                 mMinModifiedOffset.value() < static_cast<uint32_t>(LONG_MAX) &&
                  mComposition.IsOffsetInRange(
-                     static_cast<long>(mMinTextModifiedOffset))) {
+                     static_cast<long>(mMinModifiedOffset.value()))) {
         // The previous change to the composition string is canceled.
-        mMinTextModifiedOffset = firstDifferentOffset =
-            mComposition.EndOffset();
+        firstDifferentOffset = mComposition.EndOffset();
+        mMinModifiedOffset = Some(firstDifferentOffset);
       }
       mLatestCompositionRange = Some(mComposition.CreateStartAndEndOffsets());
       MOZ_LOG(
           sTextStoreLog, LogLevel::Debug,
           ("0x%p   TSFTextStore::Content::ReplaceTextWith(aStart=%d, "
            "aLength=%d, aReplaceString=\"%s\"), mComposition=%s, "
-           "mLastComposition=%s, mMinTextModifiedOffset=%u, "
+           "mLastComposition=%s, mMinModifiedOffset=%s, "
            "firstDifferentOffset=%u",
            this, aStart, aLength, GetEscapedUTF8String(aReplaceString).get(),
            ToString(mComposition).c_str(), ToString(mLastComposition).c_str(),
-           mMinTextModifiedOffset, firstDifferentOffset));
+           ToString(mMinModifiedOffset).c_str(), firstDifferentOffset));
     } else {
       firstDifferentOffset =
           static_cast<uint32_t>(aStart) +
           FirstDifferentCharOffset(aReplaceString, replacedString);
     }
-    mMinTextModifiedOffset =
-        std::min(mMinTextModifiedOffset, firstDifferentOffset);
+    mMinModifiedOffset =
+        mMinModifiedOffset.isNothing()
+            ? Some(firstDifferentOffset)
+            : Some(std::min(mMinModifiedOffset.value(), firstDifferentOffset));
     mText.Replace(static_cast<uint32_t>(aStart), static_cast<uint32_t>(aLength),
                   aReplaceString);
   }
