@@ -21,6 +21,7 @@ import subprocess
 from contextlib import contextmanager
 import tarfile
 import tempfile
+import textwrap
 
 import requests
 import pytoml as toml
@@ -29,7 +30,7 @@ import zstandard
 
 
 def log(msg):
-    print("repack: %s" % msg)
+    print("repack: %s" % msg, flush=True)
 
 
 def fetch_file(url):
@@ -348,45 +349,159 @@ def fetch_manifest(channel="stable", host=None, targets=()):
     return manifest
 
 
-def repack(
-    host, targets, channel="stable", cargo_channel=None, compiler_builtins_hack=False
-):
-    log("Repacking rust for %s supporting %s..." % (host, targets))
+def patch_src(patch, module):
+    log("Patching Rust src... {} with {}".format(module, patch))
+    patch = os.path.realpath(patch)
+    subprocess.check_call(["patch", "-d", module, "-p1", "-i", patch, "--fuzz=0", "-s"])
 
-    manifest = fetch_manifest(channel, host, targets)
-    log("Using manifest for rust %s as of %s." % (channel, manifest["date"]))
-    if cargo_channel == channel:
-        cargo_manifest = manifest
-    else:
-        cargo_manifest = fetch_manifest(cargo_channel, host, targets)
-        log(
-            "Using manifest for cargo %s as of %s."
-            % (cargo_channel, cargo_manifest["date"])
-        )
 
-    log("Fetching packages...")
-    rustc = fetch_package(manifest, "rustc", host)
-    cargo = fetch_package(cargo_manifest, "cargo", host)
-    stds = fetch_std(manifest, targets)
-    rustsrc = fetch_package(manifest, "rust-src", host)
-    rustfmt = fetch_optional(manifest, "rustfmt-preview", host)
+def build_src(install_dir, host, targets, patch):
+    install_dir = os.path.abspath(install_dir)
+    fetches = os.environ["MOZ_FETCHES_DIR"]
+    rust_dir = os.path.join(fetches, "rust")
+    patch_dir = os.path.join(os.environ["GECKO_PATH"], "build", "build-rust")
 
-    log("Installing packages...")
-    install_dir = "rustc"
-    # Clear any previous install directory.
+    # Clear and remake any previous install directory.
     try:
         shutil.rmtree(install_dir)
     except OSError as e:
         if e.errno != errno.ENOENT:
             raise
-    install(os.path.basename(rustc["url"]), install_dir)
-    install(os.path.basename(cargo["url"]), install_dir)
-    install(os.path.basename(rustsrc["url"]), install_dir)
-    if rustfmt:
-        install(os.path.basename(rustfmt["url"]), install_dir)
-    for std in stds:
-        install(os.path.basename(std["url"]), install_dir)
-        pass
+    os.makedirs(install_dir)
+
+    # Patch the src (see the --patch flag's description for details)
+    if patch:
+        for p in patch:
+            module, colon, file = p.partition(":")
+            if not colon:
+                module, file = "", p
+            patch_file = os.path.join(patch_dir, file)
+            patch_module = os.path.join(rust_dir, module)
+            patch_src(patch_file, patch_module)
+
+    log("Building Rust...")
+
+    # Rust builds are configured primarily through a config.toml file.
+    #
+    # `sysconfdir` is overloaded to be relative instead of absolute.
+    # This is the default of `install.sh`, but for whatever reason
+    # `x.py install` has its own default of `/etc` which we don't want.
+    #
+    # `missing-tools` is set so `rustfmt` is allowed to fail. This means
+    # we can "succeed" at building Rust while failing to build, say, Cargo.
+    # Ideally the build system would have better granularity:
+    # https://github.com/rust-lang/rust/issues/79249
+    base_config = textwrap.dedent(
+        """
+        [build]
+        extended = true
+        tools = ["analysis", "cargo", "rustfmt", "src"]
+
+        [install]
+        prefix = "{prefix}"
+        sysconfdir = "etc"
+
+        [dist]
+        missing-tools = true
+
+        """.format(
+            prefix=install_dir
+        )
+    )
+
+    # Rust requires these to be specified per-target
+    target_config = textwrap.dedent(
+        """
+        [target.{target}]
+        cc = "clang"
+        cxx = "clang++"
+        linker = "clang"
+
+        """
+    )
+
+    final_config = base_config
+    for target in sorted(set(targets) | set([host])):
+        final_config = final_config + target_config.format(target=target)
+
+    with open(os.path.join(rust_dir, "config.toml"), "w") as file:
+        file.write(final_config)
+
+    # Setup the env so compilers and toolchains are visible
+    binutils = os.path.join(fetches, "binutils", "bin")
+    clang = os.path.join(fetches, "clang")
+    clang_bin = os.path.join(clang, "bin")
+    clang_lib = os.path.join(clang, "lib")
+
+    env = os.environ.copy()
+    env.update(
+        {
+            "PATH": os.pathsep.join((binutils, clang_bin, os.environ["PATH"])),
+            "LD_LIBRARY_PATH": clang_lib,
+        }
+    )
+
+    # x.py install does everything we need for us.
+    # If you're running into issues, consider using `-vv` to debug it.
+    command = ["python3", "x.py", "install", "-v", "--host", host]
+    for target in targets:
+        command.extend(["--target", target])
+
+    subprocess.check_call(command, stderr=subprocess.STDOUT, env=env, cwd=rust_dir)
+
+
+def repack(
+    host,
+    targets,
+    channel="stable",
+    cargo_channel=None,
+    compiler_builtins_hack=False,
+    patch=None,
+):
+    install_dir = "rustc"
+    if channel == "dev":
+        build_src(install_dir, host, targets, patch)
+    else:
+        if patch:
+            raise ValueError(
+                'Patch specified, but channel "%s" is not "dev"!'
+                "\nPatches are only for building from source." % channel
+            )
+        log("Repacking rust for %s supporting %s..." % (host, targets))
+        manifest = fetch_manifest(channel, host, targets)
+        log("Using manifest for rust %s as of %s." % (channel, manifest["date"]))
+        if cargo_channel == channel:
+            cargo_manifest = manifest
+        else:
+            cargo_manifest = fetch_manifest(cargo_channel, host, targets)
+            log(
+                "Using manifest for cargo %s as of %s."
+                % (cargo_channel, cargo_manifest["date"])
+            )
+
+        log("Fetching packages...")
+        rustc = fetch_package(manifest, "rustc", host)
+        cargo = fetch_package(cargo_manifest, "cargo", host)
+        stds = fetch_std(manifest, targets)
+        rustsrc = fetch_package(manifest, "rust-src", host)
+        rustfmt = fetch_optional(manifest, "rustfmt-preview", host)
+
+        log("Installing packages...")
+
+        # Clear any previous install directory.
+        try:
+            shutil.rmtree(install_dir)
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
+        install(os.path.basename(rustc["url"]), install_dir)
+        install(os.path.basename(cargo["url"]), install_dir)
+        install(os.path.basename(rustsrc["url"]), install_dir)
+        if rustfmt:
+            install(os.path.basename(rustfmt["url"]), install_dir)
+        for std in stds:
+            install(os.path.basename(std["url"]), install_dir)
+            pass
     # Workaround for https://github.com/rust-lang/rust/issues/74657:
     # Remove the .llvmbc and .llvmcmd sections (sections for the LLVM bitcode)
     # from the compiler_builtins rlib.
@@ -544,8 +659,19 @@ def args():
         "--channel",
         help="Release channel to use:"
         " 1.xx.y, beta-yyyy-mm-dd,"
-        " or nightly-yyyy-mm-dd.",
+        " nightly-yyyy-mm-dd,"
+        " bors-$rev (grab a build from rust's CI),"
+        " or 1.xx.y-dev (build from source).",
         required=True,
+    )
+    parser.add_argument(
+        "--patch",
+        nargs="+",
+        help="apply the given patch file to a dev build."
+        " Patch files should be placed in /build/rust-build."
+        " Patches can be prefixed with `module-path:` to specify they"
+        " apply to that git submodule in the Rust source."
+        " e.g. `src/llvm-project:mypatch.diff` patches rust's llvm.",
     )
     parser.add_argument(
         "--cargo-channel",

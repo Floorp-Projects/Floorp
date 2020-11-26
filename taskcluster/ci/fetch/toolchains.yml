@@ -431,6 +431,13 @@ clang-11:
         repo: https://github.com/llvm/llvm-project
         revision: 176249bd6732a8044d457092ed932768724a6f06
 
+rust-1.47.0-dev:
+    description: Rust 1.47.0-dev source code
+    fetch:
+        type: git
+        repo: https://github.com/rust-lang/rust/
+        revision: 18bf6b4f01a6feaf7259ba7cdae58031af1b7b39
+
 wasi-sdk:
     description: wasi-sdk source code
     fetch:
