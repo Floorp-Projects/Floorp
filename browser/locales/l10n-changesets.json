@@ -609,7 +609,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "e0f3aaf58566465f20507e88a09ffe55dcce06e0"
+        "revision": "b66f7a360f7b47b2f0b943ecdc88f4de5dba371f"
     },
     "ga-IE": {
         "pin": false,
@@ -1191,7 +1191,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "2f33e4a2e4ca043968b686ae16e5462aceae68e7"
+        "revision": "4e1b8e93d3bb9f13ae58163e0d552ba0efa8eb42"
     },
     "nn-NO": {
         "pin": false,
@@ -1695,7 +1695,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "a3a9d4efa7c3c374b044c3e7c282ba017941364b"
+        "revision": "60cba3729576a8eea6f76b767665803002d6099e"
     },
     "zh-TW": {
         "pin": false,
