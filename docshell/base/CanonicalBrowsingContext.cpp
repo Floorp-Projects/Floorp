@@ -1566,6 +1566,12 @@ bool CanonicalBrowsingContext::AttemptSpeculativeLoadInParent(
     return false;
   }
 
+  // Session-history-in-parent implementation relies currently on getting a
+  // round trip through a child process.
+  if (aLoadState->LoadIsFromSessionHistory()) {
+    return false;
+  }
+
   // If we successfully open the DocumentChannel, then it'll register
   // itself using aLoadIdentifier and be kept alive until it completes
   // loading.
