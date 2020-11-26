@@ -5,6 +5,7 @@
 job-defaults:
     suite:
         category: web-platform-tests
+    force-py2: true
     instance-size: xlarge
     max-run-time:
         by-test-platform:

@@ -5,6 +5,7 @@
 job-defaults:
     max-run-time: 1800
     suite: raptor
+    force-py2: true
     webrender-run-on-projects: []
     variants: ["webrender"]
     run-on-projects:
