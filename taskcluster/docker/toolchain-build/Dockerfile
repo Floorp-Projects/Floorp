@@ -33,6 +33,7 @@ RUN apt-get update && \
       libucl-dev \
       ninja-build \
       p7zip-full \
+      pkg-config \
       procps \
       python-pip \
       python-setuptools \
