@@ -148,11 +148,9 @@ void KnowsCompositor::IdentifyTextureHost(
   auto lock = mData.Lock();
   lock.ref().mTextureFactoryIdentifier = aIdentifier;
 
-  if (XRE_IsContentProcess() || !mozilla::BrowserTabsRemoteAutostart()) {
-    lock.ref().mSyncObject =
-        SyncObjectClient::CreateSyncObjectClientForContentDevice(
-            aIdentifier.mSyncHandle);
-  }
+  lock.ref().mSyncObject =
+      SyncObjectClient::CreateSyncObjectClientForContentDevice(
+          aIdentifier.mSyncHandle);
 }
 
 KnowsCompositor::KnowsCompositor()

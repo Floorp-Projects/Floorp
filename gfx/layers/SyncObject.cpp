@@ -42,8 +42,6 @@ SyncObjectClient::CreateSyncObjectClientForContentDevice(SyncHandle aHandle) {
     return nullptr;
   }
 
-  MOZ_ASSERT(XRE_IsContentProcess() || !mozilla::BrowserTabsRemoteAutostart());
-
   return MakeAndAddRef<SyncObjectD3D11ClientContentDevice>(aHandle);
 #endif
 }
