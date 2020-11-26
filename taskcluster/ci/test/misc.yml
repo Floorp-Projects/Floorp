@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
+    force-py2: true
     test-manifest-loader: null  # don't load tests in the taskgraph
 
 geckoview-junit:

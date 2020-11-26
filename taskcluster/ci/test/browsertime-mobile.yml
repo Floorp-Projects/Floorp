@@ -5,6 +5,7 @@
 job-defaults:
     max-run-time: 3600
     suite: raptor
+    force-py2: true
     run-on-projects:
         by-app:
             refbrow: []
