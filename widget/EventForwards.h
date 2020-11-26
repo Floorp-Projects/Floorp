@@ -460,6 +460,11 @@ enum MouseButtonsFlag {
 
 enum class TextRangeType : RawTextRangeType;
 
+// IMEData.h
+
+template <typename IntType>
+class OffsetAndData;
+
 }  // namespace mozilla
 
 #endif  // mozilla_EventForwards_h__

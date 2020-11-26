@@ -6,6 +6,7 @@
 #ifndef mozilla_widget_IMEData_h_
 #define mozilla_widget_IMEData_h_
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/EventForwards.h"
 
 #include "nsPoint.h"
@@ -19,6 +20,86 @@ class nsIWidget;
 namespace mozilla {
 
 class WritingMode;
+
+// Helper class to logging string which may contain various Unicode characters
+// and/or may be too long string for logging.
+class MOZ_STACK_CLASS PrintStringDetail : public nsAutoCString {
+ public:
+  static constexpr uint32_t kMaxLengthForCompositionString = 8;
+
+  PrintStringDetail() = delete;
+  explicit PrintStringDetail(const nsAString& aString,
+                             uint32_t aMaxLength = UINT32_MAX);
+
+ private:
+  static nsCString PrintCharData(char32_t aChar);
+};
+
+// OffsetAndData class is designed for storing composition string and its
+// start offset.  Length() and EndOffset() return only valid length or
+// offset.  I.e., if the string is too long for inserting at the offset,
+// the length is shrunken.  However, the string itself is not shrunken.
+// Therefore, moving it to where all of the string can be contained,
+// they will return longer/bigger value.
+template <typename IntType>
+class OffsetAndData {
+ protected:
+  static IntType MaxOffset() { return std::numeric_limits<IntType>::max(); }
+
+ public:
+  OffsetAndData() = delete;
+  explicit OffsetAndData(IntType aStartOffset, const nsAString& aData)
+      : mData(aData), mOffset(aStartOffset) {}
+
+  IntType StartOffset() const { return mOffset; }
+  IntType Length() const {
+    CheckedInt<IntType> endOffset(mOffset + mData.Length());
+    return endOffset.isValid() ? mData.Length() : MaxOffset() - mOffset;
+  }
+  IntType EndOffset() const { return mOffset + Length(); }
+  const nsString& DataRef() const {
+    // In strictly speaking, we should return substring which may be shrunken
+    // for rounding to the max offset.  However, it's unrealistic edge case,
+    // and creating new string is not so cheap job in a hot path.  Therefore,
+    // this just returns the data as-is.
+    return mData;
+  }
+
+  bool IsOffsetInRange(IntType aOffset) const {
+    return aOffset >= mOffset && aOffset < EndOffset();
+  }
+  bool IsOffsetInRangeOrEndOffset(IntType aOffset) const {
+    return aOffset >= mOffset && aOffset <= EndOffset();
+  }
+
+  void MoveTo(IntType aNewOffset) { mOffset = aNewOffset; }
+  void SetOffsetAndData(IntType aStartOffset, const nsAString& aData) {
+    mOffset = aStartOffset;
+    mData = aData;
+  }
+  void SetData(const nsAString& aData) { mData = aData; }
+  void ReplaceData(nsAString::size_type aCutStart,
+                   nsAString::size_type aCutLength,
+                   const nsAString& aNewString) {
+    mData.Replace(aCutStart, aCutLength, aNewString);
+  }
+
+  friend std::ostream& operator<<(
+      std::ostream& aStream, const OffsetAndData<IntType>& aOffsetAndData) {
+    aStream << "{ mOffset=" << aOffsetAndData.mOffset << ", mData="
+            << PrintStringDetail(
+                   aOffsetAndData.mData,
+                   PrintStringDetail::kMaxLengthForCompositionString)
+                   .get()
+            << ", Length()=" << aOffsetAndData.Length()
+            << ", EndOffset()=" << aOffsetAndData.EndOffset() << " }";
+    return aStream;
+  }
+
+ private:
+  nsString mData;
+  IntType mOffset;
+};
 
 namespace widget {
 
