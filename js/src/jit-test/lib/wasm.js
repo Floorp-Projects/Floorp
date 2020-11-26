@@ -182,7 +182,10 @@ function wasmFullPassI64(text, expected, maybeImports, ...args) {
 
     let augmentedSrc = _augmentSrc(text, [ { type: 'i64', func: '$run', args, expected } ]);
     let augmentedBinary = wasmTextToBinary(augmentedSrc);
-    new WebAssembly.Instance(new WebAssembly.Module(augmentedBinary), maybeImports).exports.assert_0();
+
+    let module = new WebAssembly.Module(augmentedBinary);
+    let instance = new WebAssembly.Instance(module, maybeImports);
+    assertEq(instance.exports.assert_0(), 1);
 }
 
 function wasmRunWithDebugger(wast, lib, init, done) {
