@@ -102,6 +102,7 @@ if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
             'vaapi_vp8.c',
             'vaapi_vp9.c',
         ]
+        USE_LIBS += ['mozva']
 
 if CONFIG['MOZ_LIBAV_FFT']:
     SOURCES += [
