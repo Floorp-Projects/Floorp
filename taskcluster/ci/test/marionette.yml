@@ -4,7 +4,6 @@
 ---
 job-defaults:
     suite: marionette
-    force-py2: true
     mozharness:
         script: marionette.py
         config:
