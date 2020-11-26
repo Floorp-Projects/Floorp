@@ -9,7 +9,6 @@ const protocol = require("devtools/shared/protocol");
 const { LongStringActor } = require("devtools/server/actors/string");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const Services = require("Services");
-const defer = require("devtools/shared/defer");
 const { isWindowIncluded } = require("devtools/shared/layout/utils");
 const specs = require("devtools/shared/specs/storage");
 const { parseItemValue } = require("devtools/shared/storage/utils");
@@ -1626,10 +1625,10 @@ const extensionStorageHelpers = {
     switch (msg.json.method) {
       case "backToChild": {
         const [func, rv] = msg.json.args;
-        const deferred = this.unresolvedPromises.get(func);
-        if (deferred) {
+        const resolve = this.unresolvedPromises.get(func);
+        if (resolve) {
           this.unresolvedPromises.delete(func);
-          deferred.resolve(rv);
+          resolve(rv);
         }
         break;
       }
@@ -1652,9 +1651,9 @@ const extensionStorageHelpers = {
   },
 
   callParentProcessAsync(methodName, ...args) {
-    const deferred = defer();
-
-    this.unresolvedPromises.set(methodName, deferred);
+    const promise = new Promise(resolve => {
+      this.unresolvedPromises.set(methodName, resolve);
+    });
 
     this.ppmm.sendAsyncMessage(
       "debug:storage-extensionStorage-request-parent",
@@ -1664,7 +1663,7 @@ const extensionStorageHelpers = {
       }
     );
 
-    return deferred.promise;
+    return promise;
   },
 };
 
@@ -2699,10 +2698,10 @@ StorageActors.createActor(
         switch (msg.json.method) {
           case "backToChild": {
             const [func, rv] = msg.json.args;
-            const deferred = unresolvedPromises.get(func);
-            if (deferred) {
+            const resolve = unresolvedPromises.get(func);
+            if (resolve) {
               unresolvedPromises.delete(func);
-              deferred.resolve(rv);
+              resolve(rv);
             }
             break;
           }
@@ -2715,16 +2714,16 @@ StorageActors.createActor(
 
       const unresolvedPromises = new Map();
       function callParentProcessAsync(methodName, ...args) {
-        const deferred = defer();
-
-        unresolvedPromises.set(methodName, deferred);
+        const promise = new Promise(resolve => {
+          unresolvedPromises.set(methodName, resolve);
+        });
 
         mm.sendAsyncMessage("debug:storage-indexedDB-request-parent", {
           method: methodName,
           args: args,
         });
 
-        return deferred.promise;
+        return promise;
       }
     },
 
