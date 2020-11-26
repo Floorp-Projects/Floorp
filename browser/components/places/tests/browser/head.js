@@ -17,6 +17,7 @@ function openLibrary(callback, aLeftPaneRoot) {
     aLeftPaneRoot
   );
   waitForFocus(function() {
+    checkLibraryPaneVisibility(library, aLeftPaneRoot);
     callback(library);
   }, library);
 
@@ -39,6 +40,7 @@ function promiseLibrary(aLeftPaneRoot) {
           aLeftPaneRoot
         );
       }
+      checkLibraryPaneVisibility(library, aLeftPaneRoot);
       resolve(library);
     } else {
       openLibrary(resolve, aLeftPaneRoot);
@@ -60,6 +62,32 @@ function promiseLibraryClosed(organizer) {
     // Close Library window.
     organizer.close();
   });
+}
+
+function checkLibraryPaneVisibility(library, selectedPane) {
+  // Make sure right view is shown
+  if (selectedPane == "Downloads") {
+    Assert.ok(
+      library.ContentTree.view.hidden,
+      "Bookmark/History tree is hidden"
+    );
+    Assert.ok(
+      !library.document.getElementById("downloadsRichListBox").hidden,
+      "Downloads are shown"
+    );
+  } else {
+    Assert.ok(
+      !library.ContentTree.view.hidden,
+      "Bookmark/History tree is shown"
+    );
+    Assert.ok(
+      library.document.getElementById("downloadsRichListBox").hidden,
+      "Downloads are hidden"
+    );
+  }
+
+  // Check currentView getter
+  Assert.ok(!library.ContentArea.currentView.hidden, "Current view is shown");
 }
 
 /**

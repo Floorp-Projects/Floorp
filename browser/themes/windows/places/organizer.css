@@ -108,7 +108,7 @@
 
 /* Info box */
 
-#detailsDeck {
+#detailsPane {
   border-top: 1px solid var(--organizer-border-color);
   padding: 5px;
 }
@@ -240,7 +240,7 @@
     background-color: var(--organizer-background-primary-color);
   }
 
-  #detailsDeck {
+  #detailsPane {
     background-color: var(--organizer-background-intermediate-color);
     color: var(--organizer-text-primary-color);
   }
