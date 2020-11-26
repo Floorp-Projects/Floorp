@@ -654,7 +654,7 @@ class TSFTextStore final : public ITextStoreACP,
    * this just return the reference to it.  Otherwise, this initializes it
    * with eQuerySelectedText.  Please check if the result is valid before
    * actually using it.
-   * Note that this is also called by ContentForTSFRef().
+   * Note that this is also called by ContentForTSF().
    */
   Selection& SelectionForTSFRef();
 
@@ -803,30 +803,13 @@ class TSFTextStore final : public ITextStoreACP,
 
   class Content final {
    public:
-    Content(TSFTextStore::Composition& aComposition,
-            TSFTextStore::Selection& aSelection)
-        : mComposition(aComposition), mSelection(aSelection) {
-      Clear();
-    }
-
-    void Clear() {
-      mText.Truncate();
-      mLastComposition.reset();
-      mInitialized = false;
-    }
-
-    bool IsInitialized() const { return mInitialized; }
-
-    void Init(const nsAString& aText) {
-      mText = aText;
+    Content(TSFTextStore& aTSFTextStore, const nsAString& aText)
+        : mText(aText),
+          mComposition(aTSFTextStore.mComposition),
+          mSelection(aTSFTextStore.mSelectionForTSF) {
       if (mComposition.IsComposing()) {
         mLastComposition = Some(mComposition);
-      } else {
-        mLastComposition.reset();
       }
-      mMinModifiedOffset.reset();
-      mLatestCompositionRange.reset();
-      mInitialized = true;
     }
 
     void OnLayoutChanged() { mMinModifiedOffset.reset(); }
@@ -835,9 +818,6 @@ class TSFTextStore final : public ITextStoreACP,
     // events are handled in the focused content which may be in a remote
     // process.
     void OnCompositionEventsHandled() {
-      if (!mInitialized) {
-        return;
-      }
       if (mComposition.IsComposing()) {
         mLastComposition = Some(mComposition);
       } else {
@@ -871,20 +851,14 @@ class TSFTextStore final : public ITextStoreACP,
         const PendingAction& aCanceledCompositionEnd);
     void EndComposition(const PendingAction& aCompEnd);
 
-    const nsString& Text() const {
-      MOZ_ASSERT(mInitialized);
-      return mText;
-    }
+    const nsString& TextRef() const { return mText; }
     const Maybe<OffsetAndData<LONG>>& LastComposition() const {
-      MOZ_ASSERT(mInitialized);
       return mLastComposition;
     }
     const Maybe<uint32_t>& MinModifiedOffset() const {
-      MOZ_ASSERT(mInitialized);
       return mMinModifiedOffset;
     }
     const Maybe<StartAndEndOffsets<LONG>>& LatestCompositionRange() const {
-      MOZ_ASSERT(mInitialized);
       return mLatestCompositionRange;
     }
 
@@ -895,9 +869,7 @@ class TSFTextStore final : public ITextStoreACP,
     }
     // Returns true if layout of the content has been changed, i.e., the new
     // layout has not been calculated.
-    bool IsLayoutChanged() const {
-      return mInitialized && mMinModifiedOffset.isSome();
-    }
+    bool IsLayoutChanged() const { return mMinModifiedOffset.isSome(); }
     bool HasOrHadComposition() const {
       return mLatestCompositionRange.isSome();
     }
@@ -914,8 +886,7 @@ class TSFTextStore final : public ITextStoreACP,
               << ", mLastComposition=" << aContent.mLastComposition
               << ", mLatestCompositionRange="
               << aContent.mLatestCompositionRange
-              << ", mMinModifiedOffset=" << aContent.mMinModifiedOffset
-              << ", mInitialized=" << aContent.mInitialized << " }";
+              << ", mMinModifiedOffset=" << aContent.mMinModifiedOffset << " }";
       return aStream;
     }
 
@@ -935,13 +906,11 @@ class TSFTextStore final : public ITextStoreACP,
 
     // The minimum offset of modified part of the text.
     Maybe<uint32_t> mMinModifiedOffset;
-
-    bool mInitialized;
   };
   // mContentForTSF is cache of content.  The information is expected by TSF
   // and TIP.  Therefore, this is useful for answering the query from TSF or
   // TIP.
-  // This is initialized by ContentForTSFRef() automatically (therefore, don't
+  // This is initialized by ContentForTSF() automatically (therefore, don't
   // access this member directly except at calling Clear(), IsInitialized(),
   // IsLayoutChangeAfter() or IsLayoutChanged()).
   // This is cleared when:
@@ -950,9 +919,9 @@ class TSFTextStore final : public ITextStoreACP,
   //    the focused editor which may be in a remote process.
   // So, if two compositions are created very quickly, this cache may not be
   // cleared between eCompositionCommit(AsIs) and eCompositionStart.
-  Content mContentForTSF;
+  Maybe<Content> mContentForTSF;
 
-  Content& ContentForTSFRef();
+  Maybe<Content>& ContentForTSF();
 
   // CanAccessActualContentDirectly() returns true when TSF/TIP can access
   // actual content directly.  In other words, mContentForTSF and/or
