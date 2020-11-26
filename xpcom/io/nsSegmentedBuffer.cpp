@@ -134,6 +134,16 @@ void nsSegmentedBuffer::FreeOMT(std::function<void()>&& aTask) {
     return;
   }
 
+  if (mFreeOMT) {
+    // There is a runnable pending which will handle this object
+    if (mFreeOMT->AddTask(std::move(aTask)) > 1) {
+      return;
+    }
+  } else {
+    mFreeOMT = MakeRefPtr<FreeOMTPointers>();
+    mFreeOMT->AddTask(std::move(aTask));
+  }
+
   if (!mIOThread) {
     mIOThread = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
   }
@@ -141,8 +151,24 @@ void nsSegmentedBuffer::FreeOMT(std::function<void()>&& aTask) {
   // During the shutdown we are not able to obtain the IOThread and/or the
   // dispatching of runnable fails.
   if (!mIOThread || NS_FAILED(mIOThread->Dispatch(NS_NewRunnableFunction(
-                        "nsSegmentedBuffer::FreeOMT", aTask)))) {
-    aTask();
+                        "nsSegmentedBuffer::FreeOMT",
+                        [obj = mFreeOMT]() { obj->FreeAll(); })))) {
+    mFreeOMT->FreeAll();
+  }
+}
+
+void nsSegmentedBuffer::FreeOMTPointers::FreeAll() {
+  // Take all the tasks from the object. If AddTask is called after we release
+  // the lock, then another runnable will be dispatched for that task. This is
+  // necessary to avoid blocking the main thread while memory is being freed.
+  nsTArray<std::function<void()>> tasks = [this]() {
+    auto t = mTasks.Lock();
+    return std::move(*t);
+  }();
+
+  // Finally run all the tasks to free memory.
+  for (auto& task : tasks) {
+    task();
   }
 }
 
