@@ -463,6 +463,8 @@ enum class TextRangeType : RawTextRangeType;
 // IMEData.h
 
 template <typename IntType>
+class StartAndEndOffsets;
+template <typename IntType>
 class OffsetAndData;
 
 }  // namespace mozilla

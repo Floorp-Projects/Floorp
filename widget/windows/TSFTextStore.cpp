@@ -4341,36 +4341,27 @@ TSFTextStore::GetACPFromPoint(TsViewCookie vcView, const POINT* pt,
 STDMETHODIMP
 TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
                          RECT* prc, BOOL* pfClipped) {
-  MOZ_LOG(
-      sTextStoreLog, LogLevel::Info,
-      ("0x%p TSFTextStore::GetTextExt(vcView=%ld, "
-       "acpStart=%ld, acpEnd=%ld, prc=0x%p, pfClipped=0x%p), "
-       "IsHandlingCompositionInParent()=%s, "
-       "IsHandlingCompositionInContent()=%s, "
-       "mContentForTSF={ MinOffsetOfLayoutChanged()=%u, "
-       "LatestCompositionStartOffset()=%d, LatestCompositionEndOffset()=%d, "
-       "mSelection={ acpStart=%ld, acpEnd=%ld, style.ase=%s, "
-       "style.fInterimChar=%s } "
-       "}, mComposition=%s, "
-       "mDeferNotifyingTSF=%s, mWaitingQueryLayout=%s, "
-       "IMEHandler::IsA11yHandlingNativeCaret()=%s",
-       this, vcView, acpStart, acpEnd, prc, pfClipped,
-       GetBoolName(IsHandlingCompositionInParent()),
-       GetBoolName(IsHandlingCompositionInContent()),
-       mContentForTSF.MinOffsetOfLayoutChanged(),
-       mContentForTSF.HasOrHadComposition()
-           ? mContentForTSF.LatestCompositionStartOffset()
-           : -1,
-       mContentForTSF.HasOrHadComposition()
-           ? mContentForTSF.LatestCompositionEndOffset()
-           : -1,
-       mContentForTSF.Selection().StartOffset(),
-       mContentForTSF.Selection().EndOffset(),
-       GetActiveSelEndName(mContentForTSF.Selection().ActiveSelEnd()),
-       GetBoolName(mContentForTSF.Selection().IsInterimChar()),
-       ToString(mComposition).c_str(), GetBoolName(mDeferNotifyingTSF),
-       GetBoolName(mWaitingQueryLayout),
-       GetBoolName(IMEHandler::IsA11yHandlingNativeCaret())));
+  MOZ_LOG(sTextStoreLog, LogLevel::Info,
+          ("0x%p TSFTextStore::GetTextExt(vcView=%ld, "
+           "acpStart=%ld, acpEnd=%ld, prc=0x%p, pfClipped=0x%p), "
+           "IsHandlingCompositionInParent()=%s, "
+           "IsHandlingCompositionInContent()=%s, mContentForTSF=%s, "
+           "mSelection={ acpStart=%ld, acpEnd=%ld, style.ase=%s, "
+           "style.fInterimChar=%s } "
+           "}, mComposition=%s, "
+           "mDeferNotifyingTSF=%s, mWaitingQueryLayout=%s, "
+           "IMEHandler::IsA11yHandlingNativeCaret()=%s",
+           this, vcView, acpStart, acpEnd, prc, pfClipped,
+           GetBoolName(IsHandlingCompositionInParent()),
+           GetBoolName(IsHandlingCompositionInContent()),
+           mozilla::ToString(mContentForTSF).c_str(),
+           mContentForTSF.Selection().StartOffset(),
+           mContentForTSF.Selection().EndOffset(),
+           GetActiveSelEndName(mContentForTSF.Selection().ActiveSelEnd()),
+           GetBoolName(mContentForTSF.Selection().IsInterimChar()),
+           ToString(mComposition).c_str(), GetBoolName(mDeferNotifyingTSF),
+           GetBoolName(mWaitingQueryLayout),
+           GetBoolName(IMEHandler::IsA11yHandlingNativeCaret())));
 
   if (!IsReadLocked()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
@@ -4471,7 +4462,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
     // yet, ContentCacheInParent is still open for relative offset query from
     // the latest composition.
     options.mRelativeToInsertionPoint = true;
-    startOffset -= mContentForTSF.LatestCompositionStartOffset();
+    startOffset -= mContentForTSF.LatestCompositionRange()->StartOffset();
   } else if (!CanAccessActualContentDirectly()) {
     // If TSF/TIP cannot access actual content directly, there may be pending
     // text and/or selection changes which have not been notified TSF yet.
@@ -4588,10 +4579,10 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
 
   MOZ_ASSERT(!mComposition.IsComposing() ||
              mComposition.StartOffset() ==
-                 mContentForTSF.LatestCompositionStartOffset());
+                 mContentForTSF.LatestCompositionRange()->StartOffset());
   MOZ_ASSERT(!mComposition.IsComposing() ||
              mComposition.EndOffset() ==
-                 mContentForTSF.LatestCompositionEndOffset());
+                 mContentForTSF.LatestCompositionRange()->EndOffset());
 
   // If TSF does not have the bug, we need to hack only with a few TIPs.
   static const bool sAlllowToStopHackingIfFine =
@@ -4708,10 +4699,10 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
       }
       // If the range is in the composition string, we should return rectangle
       // in it as far as possible.
-      if (aACPStart < mContentForTSF.LatestCompositionStartOffset() ||
-          aACPStart > mContentForTSF.LatestCompositionEndOffset() ||
-          aACPEnd < mContentForTSF.LatestCompositionStartOffset() ||
-          aACPEnd > mContentForTSF.LatestCompositionEndOffset()) {
+      if (!mContentForTSF.LatestCompositionRange()->IsOffsetInRangeOrEndOffset(
+              aACPStart) ||
+          !mContentForTSF.LatestCompositionRange()->IsOffsetInRangeOrEndOffset(
+              aACPEnd)) {
         return false;
       }
       break;
@@ -4725,10 +4716,10 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
               DoNotReturnNoLayoutErrorToJapanist10OfCompositionString()) {
         return false;
       }
-      if (aACPStart < mContentForTSF.LatestCompositionStartOffset() ||
-          aACPStart > mContentForTSF.LatestCompositionEndOffset() ||
-          aACPEnd < mContentForTSF.LatestCompositionStartOffset() ||
-          aACPEnd > mContentForTSF.LatestCompositionEndOffset()) {
+      if (!mContentForTSF.LatestCompositionRange()->IsOffsetInRangeOrEndOffset(
+              aACPStart) ||
+          !mContentForTSF.LatestCompositionRange()->IsOffsetInRangeOrEndOffset(
+              aACPEnd)) {
         return false;
       }
       break;
@@ -4742,7 +4733,7 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
       if (!TSFPrefs::DoNotReturnNoLayoutErrorToFreeChangJie()) {
         return false;
       }
-      aACPEnd = mContentForTSF.LatestCompositionStartOffset();
+      aACPEnd = mContentForTSF.LatestCompositionRange()->StartOffset();
       aACPStart = std::min(aACPStart, aACPEnd);
       break;
     // Some Traditional Chinese TIPs of Microsoft don't show candidate window
@@ -4757,7 +4748,7 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
           !TSFPrefs::DoNotReturnNoLayoutErrorToMSTraditionalTIP()) {
         return false;
       }
-      aACPEnd = mContentForTSF.LatestCompositionStartOffset();
+      aACPEnd = mContentForTSF.LatestCompositionRange()->StartOffset();
       aACPStart = std::min(aACPStart, aACPEnd);
       break;
     // Some Simplified Chinese TIPs of Microsoft don't show candidate window
@@ -4774,7 +4765,7 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
           !TSFPrefs::DoNotReturnNoLayoutErrorToMSSimplifiedTIP()) {
         return false;
       }
-      aACPEnd = mContentForTSF.LatestCompositionStartOffset();
+      aACPEnd = mContentForTSF.LatestCompositionRange()->StartOffset();
       aACPStart = std::min(aACPStart, aACPEnd);
       break;
     default:
@@ -4794,14 +4785,15 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
       static_cast<int32_t>(mContentForTSF.MinOffsetOfLayoutChanged());
   LONG lastUnmodifiedOffset = std::max(firstModifiedOffset - 1, 0);
   if (mContentForTSF.IsLayoutChangedAt(aACPStart)) {
-    if (aACPStart >= mContentForTSF.LatestCompositionStartOffset()) {
+    if (aACPStart >= mContentForTSF.LatestCompositionRange()->StartOffset()) {
       // If mContentForTSF has last composition string and current
       // composition string, we can assume that ContentCacheInParent has
       // cached rects of composition string at least length of current
       // composition string.  Otherwise, we can assume that rect for
       // first character of composition string is stored since it was
       // selection start or caret position.
-      LONG maxCachedOffset = mContentForTSF.LatestCompositionEndOffset();
+      LONG maxCachedOffset =
+          mContentForTSF.LatestCompositionRange()->EndOffset();
       if (mContentForTSF.LastComposition().isSome()) {
         maxCachedOffset = std::min(
             maxCachedOffset, mContentForTSF.LastComposition()->EndOffset());
@@ -4831,8 +4823,8 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
   // should keep using the original aACPEnd.  Otherwise, we should set
   // aACPEnd to larger value of aACPStart and lastUnmodifiedOffset.
   else if (mContentForTSF.IsLayoutChangedAt(aACPEnd) &&
-           (aACPEnd < mContentForTSF.LatestCompositionStartOffset() ||
-            aACPEnd > mContentForTSF.LatestCompositionEndOffset())) {
+           !mContentForTSF.LatestCompositionRange()->IsOffsetInRangeOrEndOffset(
+               aACPEnd)) {
     aACPEnd = std::max(aACPStart, lastUnmodifiedOffset);
   }
 
@@ -7122,7 +7114,7 @@ void TSFTextStore::Content::ReplaceTextWith(LONG aStart, LONG aLength,
         mMinTextModifiedOffset = firstDifferentOffset =
             mComposition.EndOffset();
       }
-      mLatestCompositionEndOffset = mComposition.EndOffset();
+      mLatestCompositionRange = Some(mComposition.CreateStartAndEndOffsets());
       MOZ_LOG(
           sTextStoreLog, LogLevel::Debug,
           ("0x%p   TSFTextStore::Content::ReplaceTextWith(aStart=%d, "
@@ -7159,8 +7151,7 @@ void TSFTextStore::Content::StartComposition(
       aCompositionView, aCompStart.mSelectionStart,
       GetSubstring(static_cast<uint32_t>(aCompStart.mSelectionStart),
                    static_cast<uint32_t>(aCompStart.mSelectionLength)));
-  mLatestCompositionStartOffset = mComposition.StartOffset();
-  mLatestCompositionEndOffset = mComposition.EndOffset();
+  mLatestCompositionRange = Some(mComposition.CreateStartAndEndOffsets());
   if (!aPreserveSelection) {
     // XXX Do we need to set a new writing-mode here when setting a new
     // selection? Currently, we just preserve the existing value.
@@ -7188,8 +7179,7 @@ void TSFTextStore::Content::RestoreCommittedComposition(
   // Restore the committed string as composing string.
   mComposition.Start(aCompositionView, aCanceledCompositionEnd.mSelectionStart,
                      aCanceledCompositionEnd.mData);
-  mLatestCompositionStartOffset = mComposition.StartOffset();
-  mLatestCompositionEndOffset = mComposition.EndOffset();
+  mLatestCompositionRange = Some(mComposition.CreateStartAndEndOffsets());
 }
 
 void TSFTextStore::Content::EndComposition(const PendingAction& aCompEnd) {
