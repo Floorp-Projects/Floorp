@@ -270,6 +270,7 @@ class TabTrayView(
         if (
             view.context.settings().shouldShowGridViewBanner &&
             view.context.settings().canShowCfr &&
+            view.context.settings().listTabView &&
             tabs.size >= TAB_COUNT_SHOW_CFR
         ) {
             InfoBanner(
